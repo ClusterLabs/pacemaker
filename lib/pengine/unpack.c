@@ -2296,8 +2296,8 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
         rsc->clone_name = NULL;
 
     } else {
-        GList *possible_matches = pe__resource_actions(rsc, node, RSC_STOP,
-                                                       FALSE);
+        GList *possible_matches = pe__resource_actions(rsc, node,
+                                                       PCMK_ACTION_STOP, FALSE);
         GList *gIter = possible_matches;
 
         for (; gIter != NULL; gIter = gIter->next) {
@@ -2404,7 +2404,7 @@ calculate_active_ops(const GList *sorted_op_list, int *start_index,
         task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
         status = crm_element_value(rsc_op, XML_LRM_ATTR_OPSTATUS);
 
-        if (pcmk__str_eq(task, CRMD_ACTION_STOP, pcmk__str_casei)
+        if (pcmk__str_eq(task, PCMK_ACTION_STOP, pcmk__str_casei)
             && pcmk__str_eq(status, "0", pcmk__str_casei)) {
             *stop_index = counter;
 
@@ -2836,7 +2836,7 @@ non_monitor_after(const char *rsc_id, const char *node_name,
 
         task = crm_element_value(op, XML_LRM_ATTR_TASK);
 
-        if (pcmk__str_any_of(task, PCMK_ACTION_START, CRMD_ACTION_STOP,
+        if (pcmk__str_any_of(task, PCMK_ACTION_START, PCMK_ACTION_STOP,
                              CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED, NULL)
             && pe__is_newer_op(op, xml_op, same_node) > 0) {
             return true;
@@ -3499,7 +3499,7 @@ unpack_rsc_op_failure(struct action_history *history, xmlNode **last_failure,
         *on_fail = action->on_fail;
     }
 
-    if (strcmp(history->task, CRMD_ACTION_STOP) == 0) {
+    if (strcmp(history->task, PCMK_ACTION_STOP) == 0) {
         resource_location(history->rsc, history->node, -INFINITY,
                           "__stop_fail__", history->rsc->cluster);
 
@@ -3573,7 +3573,7 @@ block_if_unrecoverable(struct action_history *history)
 {
     char *last_change_s = NULL;
 
-    if (strcmp(history->task, CRMD_ACTION_STOP) != 0) {
+    if (strcmp(history->task, PCMK_ACTION_STOP) != 0) {
         return; // All actions besides stop are always recoverable
     }
     if (pe_can_fence(history->node->details->data_set, history->node)) {
@@ -4156,7 +4156,7 @@ update_resource_state(struct action_history *history, int exit_status,
         history->rsc->role = RSC_ROLE_STARTED;
         clear_past_failure = true;
 
-    } else if (pcmk__str_eq(history->task, CRMD_ACTION_STOP, pcmk__str_none)) {
+    } else if (pcmk__str_eq(history->task, PCMK_ACTION_STOP, pcmk__str_none)) {
         history->rsc->role = RSC_ROLE_STOPPED;
         clear_past_failure = true;
 
@@ -4247,7 +4247,7 @@ can_affect_state(struct action_history *history)
      * active and/or failed.
      */
      return pcmk__str_any_of(history->task, CRMD_ACTION_STATUS,
-                             PCMK_ACTION_START, CRMD_ACTION_STOP,
+                             PCMK_ACTION_START, PCMK_ACTION_STOP,
                              CRMD_ACTION_PROMOTE, CRMD_ACTION_DEMOTE,
                              CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED,
                              "asyncmon", NULL);
@@ -4650,7 +4650,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     failure_strategy = get_action_on_fail(&history);
     if ((failure_strategy == action_fail_ignore)
         || (failure_strategy == action_fail_restart_container
-            && (strcmp(history.task, CRMD_ACTION_STOP) == 0))) {
+            && (strcmp(history.task, PCMK_ACTION_STOP) == 0))) {
 
         char *last_change_s = last_change_str(xml_op);
 

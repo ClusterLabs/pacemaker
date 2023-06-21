@@ -675,8 +675,8 @@ void pcmk__order_after_each(pe_action_t *after, GList *list);
                                  (rsc2), PCMK_ACTION_START, (flags))
 
 #define pcmk__order_stops(rsc1, rsc2, flags)                 \
-    pcmk__order_resource_actions((rsc1), CRMD_ACTION_STOP,   \
-                                 (rsc2), CRMD_ACTION_STOP, (flags))
+    pcmk__order_resource_actions((rsc1), PCMK_ACTION_STOP,   \
+                                 (rsc2), PCMK_ACTION_STOP, (flags))
 
 
 // Ticket constraints (pcmk_sched_tickets.c)

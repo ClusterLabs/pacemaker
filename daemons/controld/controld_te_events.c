@@ -205,7 +205,7 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
         value = pcmk__s(controld_globals.transition_graph->failed_start_offset,
                         CRM_INFINITY_S);
 
-    } else if (pcmk__str_eq(task, CRMD_ACTION_STOP, pcmk__str_none)) {
+    } else if (pcmk__str_eq(task, PCMK_ACTION_STOP, pcmk__str_none)) {
         do_update = TRUE;
         value = pcmk__s(controld_globals.transition_graph->failed_stop_offset,
                         CRM_INFINITY_S);

@@ -931,7 +931,8 @@ check_instance_state(const pe_resource_t *instance, uint32_t *state)
                              (optional? "optional" : "unrunnable"));
             }
 
-        } else if (pcmk__str_eq(RSC_STOP, action->task, pcmk__str_none)) {
+        } else if (pcmk__str_eq(PCMK_ACTION_STOP, action->task,
+                                pcmk__str_none)) {
             /* Only stop actions can be pseudo-actions for primitives. That
              * indicates that the node they are on is being fenced, so the stop
              * is implied rather than actually executed.
@@ -999,7 +1000,7 @@ pcmk__create_instance_actions(pe_resource_t *collective, GList *instances)
     }
 
     // Create pseudo-actions for rsc stop and stopped
-    stop = pe__new_rsc_pseudo_action(collective, RSC_STOP,
+    stop = pe__new_rsc_pseudo_action(collective, PCMK_ACTION_STOP,
                                      !pcmk_is_set(state, instance_stopping),
                                      true);
     stopped = pe__new_rsc_pseudo_action(collective, RSC_STOPPED,
@@ -1268,7 +1269,7 @@ find_instance_action(const pe_action_t *action, const pe_resource_t *instance,
      * everything except promote and demote (which can only be performed on the
      * containerized resource).
      */
-    if ((for_first && !pcmk__str_any_of(action->task, CRMD_ACTION_STOP,
+    if ((for_first && !pcmk__str_any_of(action->task, PCMK_ACTION_STOP,
                                         CRMD_ACTION_STOPPED, NULL))
 
         || (!for_first && pcmk__str_any_of(action->task, CRMD_ACTION_PROMOTE,
@@ -1290,7 +1291,7 @@ find_instance_action(const pe_action_t *action, const pe_resource_t *instance,
     }
 
     if (pcmk_is_set(instance->flags, pe_rsc_orphan)
-        || pcmk__str_any_of(action_name, RSC_STOP, RSC_DEMOTE, NULL)) {
+        || pcmk__str_any_of(action_name, PCMK_ACTION_STOP, RSC_DEMOTE, NULL)) {
         crm_trace("No %s action found for %s%s",
                   action_name,
                   pcmk_is_set(instance->flags, pe_rsc_orphan)? "orphan " : "",

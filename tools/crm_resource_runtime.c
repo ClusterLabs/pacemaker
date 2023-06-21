@@ -1324,8 +1324,9 @@ max_delay_for_resource(pe_working_set_t * data_set, pe_resource_t *rsc)
         }
 
     } else if(rsc) {
-        char *key = crm_strdup_printf("%s_%s_0", rsc->id, RSC_STOP);
-        pe_action_t *stop = custom_action(rsc, key, RSC_STOP, NULL, TRUE, FALSE, data_set);
+        char *key = crm_strdup_printf("%s_%s_0", rsc->id, PCMK_ACTION_STOP);
+        pe_action_t *stop = custom_action(rsc, key, PCMK_ACTION_STOP, NULL,
+                                          TRUE, FALSE, data_set);
         const char *value = g_hash_table_lookup(stop->meta, XML_ATTR_TIMEOUT);
         long long result_ll;
 

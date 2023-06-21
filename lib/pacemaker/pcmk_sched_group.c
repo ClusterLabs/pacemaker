@@ -127,7 +127,7 @@ pcmk__group_create_actions(pe_resource_t *rsc)
     // Create pseudo-actions for group itself to serve as ordering points
     create_group_pseudo_op(rsc, PCMK_ACTION_START);
     create_group_pseudo_op(rsc, RSC_STARTED);
-    create_group_pseudo_op(rsc, RSC_STOP);
+    create_group_pseudo_op(rsc, PCMK_ACTION_STOP);
     create_group_pseudo_op(rsc, RSC_STOPPED);
     if (crm_is_true(g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_PROMOTABLE))) {
         create_group_pseudo_op(rsc, RSC_DEMOTE);
@@ -210,8 +210,8 @@ member_internal_constraints(gpointer data, gpointer user_data)
 
     // Stop group -> stop member -> group is stopped
     pcmk__order_stops(member->parent, member, down_flags);
-    pcmk__order_resource_actions(member, RSC_STOP, member->parent, RSC_STOPPED,
-                                 post_down_flags);
+    pcmk__order_resource_actions(member, PCMK_ACTION_STOP, member->parent,
+                                 RSC_STOPPED, post_down_flags);
 
     // Start group -> start member -> group is started
     pcmk__order_starts(member->parent, member, pe_order_implies_first_printed);
@@ -257,7 +257,7 @@ member_internal_constraints(gpointer data, gpointer user_data)
          */
         if ((member->running_on != NULL)
             && (member_data->previous_member->running_on == NULL)) {
-            pcmk__order_resource_actions(member, RSC_STOP,
+            pcmk__order_resource_actions(member, PCMK_ACTION_STOP,
                                          member_data->previous_member,
                                          PCMK_ACTION_START,
                                          pe_order_implies_first
@@ -307,7 +307,7 @@ pcmk__group_internal_constraints(pe_resource_t *rsc)
     /* Order group pseudo-actions relative to each other for restarting:
      * stop group -> group is stopped -> start group -> group is started
      */
-    pcmk__order_resource_actions(rsc, RSC_STOP, rsc, RSC_STOPPED,
+    pcmk__order_resource_actions(rsc, PCMK_ACTION_STOP, rsc, RSC_STOPPED,
                                  pe_order_runnable_left);
     pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, PCMK_ACTION_START,
                                  pe_order_optional);

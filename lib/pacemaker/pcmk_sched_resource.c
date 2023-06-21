@@ -136,7 +136,7 @@ pcmk__rsc_agent_changed(pe_resource_t *rsc, pe_node_t *node,
     }
     if (changed && active_on_node) {
         // Make sure the resource is restarted
-        custom_action(rsc, stop_key(rsc), CRMD_ACTION_STOP, node, FALSE, TRUE,
+        custom_action(rsc, stop_key(rsc), PCMK_ACTION_STOP, node, FALSE, TRUE,
                       rsc->cluster);
         pe__set_resource_flags(rsc, pe_rsc_start_pending);
     }
@@ -461,7 +461,7 @@ pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force,
             pe_rsc_debug(rsc, "Updating %s for %s assignment failure",
                          op->uuid, rsc->id);
 
-            if (pcmk__str_eq(op->task, RSC_STOP, pcmk__str_none)) {
+            if (pcmk__str_eq(op->task, PCMK_ACTION_STOP, pcmk__str_none)) {
                 pe__clear_action_flags(op, pe_action_optional);
 
             } else if (pcmk__str_eq(op->task, PCMK_ACTION_START,

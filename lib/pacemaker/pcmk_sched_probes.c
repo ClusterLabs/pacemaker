@@ -243,7 +243,8 @@ pcmk__probe_rsc_on_node(pe_resource_t *rsc, pe_node_t *node)
             reason = "node's guest will stop";
 
             // Order resource start after guest stop (in case it's restarting)
-            pcmk__new_ordering(guest, pcmk__op_key(guest->id, RSC_STOP, 0),
+            pcmk__new_ordering(guest,
+                               pcmk__op_key(guest->id, PCMK_ACTION_STOP, 0),
                                NULL, top,
                                pcmk__op_key(top->id, PCMK_ACTION_START, 0),
                                NULL, pe_order_optional, rsc->cluster);
@@ -365,12 +366,12 @@ add_probe_orderings_for_stops(pe_working_set_t *data_set)
         }
 
         // Skip orderings for first actions other than stop
-        if ((first != NULL) && !pcmk__str_eq(first->task, RSC_STOP,
+        if ((first != NULL) && !pcmk__str_eq(first->task, PCMK_ACTION_STOP,
                                              pcmk__str_none)) {
             continue;
         } else if ((first == NULL)
                    && !pcmk__ends_with(order->lh_action_task,
-                                       "_" RSC_STOP "_0")) {
+                                       "_" PCMK_ACTION_STOP "_0")) {
             continue;
         }
 
@@ -381,12 +382,12 @@ add_probe_orderings_for_stops(pe_working_set_t *data_set)
         if ((order->rh_rsc != NULL)
             && (order->lh_rsc->container == order->rh_rsc)) {
 
-            if ((then != NULL) && pcmk__str_eq(then->task, RSC_STOP,
+            if ((then != NULL) && pcmk__str_eq(then->task, PCMK_ACTION_STOP,
                                                pcmk__str_none)) {
                 continue;
             } else if ((then == NULL)
                        && pcmk__ends_with(order->rh_action_task,
-                                          "_" RSC_STOP "_0")) {
+                                          "_" PCMK_ACTION_STOP "_0")) {
                 continue;
             }
         }
@@ -564,8 +565,8 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
             GList *then_actions = NULL;
 
             if (pcmk__str_eq(after->task, PCMK_ACTION_START, pcmk__str_none)) {
-                then_actions = pe__resource_actions(after->rsc, NULL, RSC_STOP,
-                                                    FALSE);
+                then_actions = pe__resource_actions(after->rsc, NULL,
+                                                    PCMK_ACTION_STOP, FALSE);
 
             } else if (pcmk__str_eq(after->task, RSC_PROMOTE, pcmk__str_none)) {
                 then_actions = pe__resource_actions(after->rsc, NULL,

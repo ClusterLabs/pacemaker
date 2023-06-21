@@ -462,7 +462,7 @@ pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
                 pe_action_t *rsc_action = item->data;
 
                 if (!pe__same_node(rsc_action->node, action->node)
-                    && pcmk__str_eq(rsc_action->task, RSC_STOP,
+                    && pcmk__str_eq(rsc_action->task, PCMK_ACTION_STOP,
                                     pcmk__str_none)) {
                     pcmk__new_ordering(remote, start_key(remote), NULL,
                                        action->rsc, NULL, rsc_action,
@@ -611,8 +611,9 @@ pcmk__connection_host_for_action(const pe_action_t *action)
      * the connection's pseudo-start on the migration target, so the target is
      * the router node.
      */
-    if (pcmk__strcase_any_of(task, "cancel", "stop", "demote", "migrate_from",
-                             "migrate_to", NULL) && !partial_migration) {
+    if (pcmk__strcase_any_of(task, "cancel", PCMK_ACTION_STOP, "demote",
+                             "migrate_from", "migrate_to", NULL)
+        && !partial_migration) {
         crm_trace("Routing %s for %s through remote connection's "
                   "current node %s (moving)%s",
                   action->task, (action->rsc? action->rsc->id : "no resource"),

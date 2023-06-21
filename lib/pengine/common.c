@@ -357,7 +357,7 @@ fail2text(enum action_fail_response fail)
 enum action_tasks
 text2task(const char *task)
 {
-    if (pcmk__str_eq(task, CRMD_ACTION_STOP, pcmk__str_casei)) {
+    if (pcmk__str_eq(task, PCMK_ACTION_STOP, pcmk__str_casei)) {
         return stop_rsc;
     } else if (pcmk__str_eq(task, CRMD_ACTION_STOPPED, pcmk__str_casei)) {
         return stopped_rsc;
@@ -412,7 +412,7 @@ task2text(enum action_tasks task)
             result = "no_action";
             break;
         case stop_rsc:
-            result = CRMD_ACTION_STOP;
+            result = PCMK_ACTION_STOP;
             break;
         case stopped_rsc:
             result = CRMD_ACTION_STOPPED;

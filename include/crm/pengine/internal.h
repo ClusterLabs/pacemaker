@@ -407,9 +407,9 @@ pe_action_t *custom_action(pe_resource_t *rsc, char *key, const char *task,
 		rsc, stopped_key(rsc), CRMD_ACTION_STOPPED, node,	\
 		optional, TRUE, rsc->cluster);
 
-#  define stop_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_STOP, 0)
+#  define stop_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_STOP, 0)
 #  define stop_action(rsc, node, optional) custom_action(			\
-		rsc, stop_key(rsc), CRMD_ACTION_STOP, node,		\
+		rsc, stop_key(rsc), PCMK_ACTION_STOP, node,		\
 		optional, TRUE, rsc->cluster);
 
 #  define reload_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_RELOAD_AGENT, 0)

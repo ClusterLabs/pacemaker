@@ -182,7 +182,7 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
         xmlNode *tmp = NULL;
 
         tmp = create_xml_node(actions, "action");
-        crm_xml_add(tmp, "name", "stop");
+        crm_xml_add(tmp, "name", PCMK_ACTION_STOP);
         crm_xml_add(tmp, "timeout", CRM_DEFAULT_OP_TIMEOUT_S);
 
         tmp = create_xml_node(actions, "action");

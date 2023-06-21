@@ -675,7 +675,7 @@ add_notif_keys(const pe_resource_t *rsc, notify_data_t *n_data)
     n_data->stop = notify_entries_to_strings(n_data->stop,
                                              &rsc_list, &node_list);
     if ((strcmp(" ", (const char *) rsc_list->str) != 0)
-        && pcmk__str_eq(n_data->action, RSC_STOP, pcmk__str_none)) {
+        && pcmk__str_eq(n_data->action, PCMK_ACTION_STOP, pcmk__str_none)) {
         required = true;
     }
     add_notify_env_free_gs(n_data, "notify_stop_resource", rsc_list);
@@ -867,7 +867,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
     if ((rsc->role != RSC_ROLE_STOPPED)
         && ((task == stop_rsc) || (task == action_demote))) {
 
-        stop = find_first_action(rsc->actions, NULL, RSC_STOP, NULL);
+        stop = find_first_action(rsc->actions, NULL, PCMK_ACTION_STOP, NULL);
 
         for (iter = rsc->running_on; iter != NULL; iter = iter->next) {
             pe_node_t *current_node = (pe_node_t *) iter->data;
@@ -987,7 +987,8 @@ pe__order_notifs_after_fencing(const pe_action_t *stop, pe_resource_t *rsc,
     notify_data_t *n_data;
 
     crm_info("Ordering notifications for implied %s after fencing", stop->uuid);
-    n_data = pe__action_notif_pseudo_ops(rsc, RSC_STOP, NULL, stonith_op);
+    n_data = pe__action_notif_pseudo_ops(rsc, PCMK_ACTION_STOP, NULL,
+                                         stonith_op);
 
     if (n_data != NULL) {
         collect_resource_data(rsc, false, n_data);

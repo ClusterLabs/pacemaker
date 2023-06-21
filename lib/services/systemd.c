@@ -308,7 +308,7 @@ set_result_from_method_error(svc_action_t *op, const DBusError *error)
         || strstr(error->name, "org.freedesktop.systemd1.LoadFailed")
         || strstr(error->name, "org.freedesktop.systemd1.NoSuchUnit")) {
 
-        if (pcmk__str_eq(op->action, "stop", pcmk__str_casei)) {
+        if (pcmk__str_eq(op->action, PCMK_ACTION_STOP, pcmk__str_casei)) {
             crm_trace("Masking systemd stop failure (%s) for %s "
                       "because unknown service can be considered stopped",
                       error->name, pcmk__s(op->rsc, "unknown resource"));
@@ -961,7 +961,7 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
         method = "StartUnit";
         systemd_create_override(op->agent, op->timeout);
 
-    } else if (pcmk__str_eq(op->action, "stop", pcmk__str_none)) {
+    } else if (pcmk__str_eq(op->action, PCMK_ACTION_STOP, pcmk__str_none)) {
         method = "StopUnit";
         systemd_remove_override(op->agent, op->timeout);
 

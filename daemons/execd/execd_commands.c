@@ -517,7 +517,7 @@ schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     /* The controller expects the executor to automatically cancel
      * recurring operations before a resource stops.
      */
-    if (pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {
+    if (pcmk__str_eq(cmd->action, PCMK_ACTION_STOP, pcmk__str_casei)) {
         cancel_all_recurring(rsc, NULL);
     }
 
@@ -844,8 +844,8 @@ action_complete(svc_action_t * action)
 
     if (pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_SYSTEMD, pcmk__str_casei)) {
         if (pcmk__result_ok(&(cmd->result))
-            && pcmk__strcase_any_of(cmd->action, PCMK_ACTION_START, "stop",
-                                    NULL)) {
+            && pcmk__strcase_any_of(cmd->action, PCMK_ACTION_START,
+                                    PCMK_ACTION_STOP, NULL)) {
             /* systemd returns from start and stop actions after the action
              * begins, not after it completes. We have to jump through a few
              * hoops so that we don't report 'complete' to the rest of pacemaker
@@ -861,7 +861,8 @@ action_complete(svc_action_t * action)
                 goagain = true;
 
             } else if (pcmk__result_ok(&(cmd->result))
-                       && pcmk__str_eq(cmd->real_action, "stop", pcmk__str_casei)) {
+                       && pcmk__str_eq(cmd->real_action, PCMK_ACTION_STOP,
+                                       pcmk__str_casei)) {
                 goagain = true;
 
             } else {
@@ -882,7 +883,8 @@ action_complete(svc_action_t * action)
                     if (pcmk__str_eq(cmd->real_action, PCMK_ACTION_START,
                                      pcmk__str_casei)) {
                         cmd->result.exit_status = PCMK_OCF_UNKNOWN_ERROR;
-                    } else if (pcmk__str_eq(cmd->real_action, "stop", pcmk__str_casei)) {
+                    } else if (pcmk__str_eq(cmd->real_action, PCMK_ACTION_STOP,
+                                            pcmk__str_casei)) {
                         cmd->result.exit_status = PCMK_OCF_OK;
                     }
                 }
@@ -1013,7 +1015,7 @@ stonith_action_complete(lrmd_cmd_t *cmd, int exit_status,
                                  pcmk__str_none)) {
                     exit_status = PCMK_OCF_NOT_RUNNING;
 
-                } else if (pcmk__str_eq(cmd->action, CRMD_ACTION_STOP,
+                } else if (pcmk__str_eq(cmd->action, PCMK_ACTION_STOP,
                                         pcmk__str_none)) {
                     exit_status = PCMK_OCF_OK;
 
@@ -1041,7 +1043,8 @@ stonith_action_complete(lrmd_cmd_t *cmd, int exit_status,
             pcmk__set_result(&rsc->fence_probe_result, CRM_EX_OK,
                              PCMK_EXEC_DONE, NULL); // "running"
 
-        } else if (pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {
+        } else if (pcmk__str_eq(cmd->action, PCMK_ACTION_STOP,
+                                pcmk__str_casei)) {
             pcmk__set_result(&rsc->fence_probe_result, CRM_EX_ERROR,
                              PCMK_EXEC_NO_FENCE_DEVICE, NULL); // "not running"
         }
@@ -1257,7 +1260,7 @@ execute_stonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
             do_monitor = TRUE;
         }
 
-    } else if (pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(cmd->action, PCMK_ACTION_STOP, pcmk__str_casei)) {
         rc = execd_stonith_stop(stonith_api, rsc);
 
     } else if (pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)) {
@@ -1299,7 +1302,7 @@ execute_nonstonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
 #if SUPPORT_NAGIOS
     /* Recurring operations are cancelled anyway for a stop operation */
     if (pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)
-        && pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {
+        && pcmk__str_eq(cmd->action, PCMK_ACTION_STOP, pcmk__str_casei)) {
 
         cmd->result.exit_status = PCMK_OCF_OK;
         cmd_finalize(cmd, rsc);

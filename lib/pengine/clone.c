@@ -1480,7 +1480,8 @@ pe__create_clone_notif_pseudo_ops(pe_resource_t *clone,
     }
 
     if (clone_data->stop_notify == NULL) {
-        clone_data->stop_notify = pe__action_notif_pseudo_ops(clone, RSC_STOP,
+        clone_data->stop_notify = pe__action_notif_pseudo_ops(clone,
+                                                              PCMK_ACTION_STOP,
                                                               stop, stopped);
         if ((clone_data->start_notify != NULL)
             && (clone_data->stop_notify != NULL)) {

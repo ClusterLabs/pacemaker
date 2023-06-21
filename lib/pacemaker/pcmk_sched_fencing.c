@@ -119,7 +119,7 @@ order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
     target = stonith_op->node;
 
     /* Get a list of stop actions potentially implied by the fencing */
-    action_list = pe__resource_actions(rsc, target, RSC_STOP, FALSE);
+    action_list = pe__resource_actions(rsc, target, PCMK_ACTION_STOP, FALSE);
 
     /* If resource requires fencing, implicit actions must occur after fencing.
      *
@@ -134,7 +134,8 @@ order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
     }
 
     if (action_list && order_implicit) {
-        parent_stop = find_first_action(top->actions, NULL, RSC_STOP, NULL);
+        parent_stop = find_first_action(top->actions, NULL, PCMK_ACTION_STOP,
+                                        NULL);
     }
 
     for (iter = action_list; iter != NULL; iter = iter->next) {
@@ -365,7 +366,7 @@ pcmk__fence_guest(pe_node_t *node)
      */
     container = node->details->remote_rsc->container;
     if (container) {
-        stop = find_first_action(container->actions, NULL, CRMD_ACTION_STOP,
+        stop = find_first_action(container->actions, NULL, PCMK_ACTION_STOP,
                                  NULL);
 
         if (find_first_action(container->actions, NULL, PCMK_ACTION_START,
@@ -412,7 +413,7 @@ pcmk__fence_guest(pe_node_t *node)
          * which will be ordered after any container (re-)probe.
          */
         stop = find_first_action(node->details->remote_rsc->actions, NULL,
-                                 RSC_STOP, NULL);
+                                 PCMK_ACTION_STOP, NULL);
 
         if (stop) {
             order_actions(stop, stonith_op, pe_order_optional);

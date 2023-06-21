@@ -173,7 +173,7 @@ extern char *crm_system_name;
 
 #  define CRMD_ACTION_STARTED		"running"
 
-#  define CRMD_ACTION_STOP		"stop"
+#  define CRMD_ACTION_STOP		PCMK_ACTION_STOP
 #  define CRMD_ACTION_STOPPED		"stopped"
 
 #  define CRMD_ACTION_PROMOTE		"promote"
@@ -197,7 +197,7 @@ extern char *crm_system_name;
 
 #  define RSC_STARTED	CRMD_ACTION_STARTED
 
-#  define RSC_STOP	CRMD_ACTION_STOP
+#  define RSC_STOP	PCMK_ACTION_STOP
 #  define RSC_STOPPED	CRMD_ACTION_STOPPED
 
 #  define RSC_PROMOTE	CRMD_ACTION_PROMOTE

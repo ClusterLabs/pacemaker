@@ -103,8 +103,8 @@ is_op_dup(const pe_resource_t *rsc, const char *name, guint interval_ms)
 static bool
 op_cannot_recur(const char *name)
 {
-    return pcmk__str_any_of(name, RSC_STOP, PCMK_ACTION_START, RSC_DEMOTE,
-                            RSC_PROMOTE, CRMD_ACTION_RELOAD_AGENT,
+    return pcmk__str_any_of(name, PCMK_ACTION_STOP, PCMK_ACTION_START,
+                            RSC_DEMOTE, RSC_PROMOTE, CRMD_ACTION_RELOAD_AGENT,
                             CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED, NULL);
 }
 
@@ -430,7 +430,7 @@ static void
 order_after_stops(pe_resource_t *rsc, const pe_node_t *node,
                   pe_action_t *action)
 {
-    GList *stop_ops = pe__resource_actions(rsc, node, RSC_STOP, TRUE);
+    GList *stop_ops = pe__resource_actions(rsc, node, PCMK_ACTION_STOP, TRUE);
 
     for (GList *iter = stop_ops; iter != NULL; iter = iter->next) {
         pe_action_t *stop = (pe_action_t *) iter->data;

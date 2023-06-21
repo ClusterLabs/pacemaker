@@ -510,7 +510,9 @@ is_rsc_active(lrm_state_t * lrm_state, const char *rsc_id)
 
     crm_trace("Processing %s: %s.%d=%d", rsc_id, entry->last->op_type,
               entry->last->interval_ms, entry->last->rc);
-    if (entry->last->rc == PCMK_OCF_OK && pcmk__str_eq(entry->last->op_type, CRMD_ACTION_STOP, pcmk__str_casei)) {
+    if ((entry->last->rc == PCMK_OCF_OK)
+        && pcmk__str_eq(entry->last->op_type, PCMK_ACTION_STOP,
+                        pcmk__str_casei)) {
         return FALSE;
 
     } else if (entry->last->rc == PCMK_OCF_OK
@@ -1619,7 +1621,8 @@ construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
     lrmd__set_result(op, PCMK_OCF_UNKNOWN, PCMK_EXEC_PENDING, NULL);
 
     if (rsc_op == NULL) {
-        CRM_LOG_ASSERT(pcmk__str_eq(CRMD_ACTION_STOP, operation, pcmk__str_casei));
+        CRM_LOG_ASSERT(pcmk__str_eq(operation, PCMK_ACTION_STOP,
+                                    pcmk__str_casei));
         op->user_data = NULL;
         /* the stop_all_resources() case
          * by definition there is no DC (or they'd be shutting
@@ -1663,7 +1666,7 @@ construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
         }
     }
 
-    if (!pcmk__str_eq(operation, RSC_STOP, pcmk__str_casei)) {
+    if (!pcmk__str_eq(operation, PCMK_ACTION_STOP, pcmk__str_casei)) {
         op->params = params;
 
     } else {
@@ -1703,7 +1706,8 @@ construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
     op->user_data = strdup(transition);
 
     if (op->interval_ms != 0) {
-        if (pcmk__strcase_any_of(operation, PCMK_ACTION_START, CRMD_ACTION_STOP, NULL)) {
+        if (pcmk__strcase_any_of(operation, PCMK_ACTION_START, PCMK_ACTION_STOP,
+                                 NULL)) {
             crm_err("Start and Stop actions cannot have an interval: %u",
                     op->interval_ms);
             op->interval_ms = 0;
@@ -1888,7 +1892,7 @@ should_nack_action(const char *action)
         case S_TRANSITION_ENGINE:
             break;
         default:
-            if (!pcmk__str_eq(action, CRMD_ACTION_STOP, pcmk__str_none)) {
+            if (!pcmk__str_eq(action, PCMK_ACTION_STOP, pcmk__str_none)) {
                 return "Controller cannot attempt actions at this time";
             }
             break;

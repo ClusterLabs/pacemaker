@@ -1115,7 +1115,8 @@ rsc_action_default(pcmk__output_t *out, va_list args)
     } else {
         start_node = current;
     }
-    possible_matches = pe__resource_actions(rsc, start_node, RSC_STOP, false);
+    possible_matches = pe__resource_actions(rsc, start_node, PCMK_ACTION_STOP,
+                                            false);
     if (possible_matches) {
         stop = possible_matches->data;
         g_list_free(possible_matches);
@@ -1124,7 +1125,8 @@ rsc_action_default(pcmk__output_t *out, va_list args)
          * stop_unexpected, and not stopping on its current node, but it should
          * be stopping elsewhere.
          */
-        possible_matches = pe__resource_actions(rsc, NULL, RSC_STOP, false);
+        possible_matches = pe__resource_actions(rsc, NULL, PCMK_ACTION_STOP,
+                                                false);
         if (possible_matches != NULL) {
             stop = possible_matches->data;
             g_list_free(possible_matches);

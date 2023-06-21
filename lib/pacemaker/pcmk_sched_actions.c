@@ -456,7 +456,7 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
         && !pcmk_is_set(first->rsc->flags, pe_rsc_managed)
         && pcmk_is_set(first->rsc->flags, pe_rsc_block)
         && !pcmk_is_set(first->flags, pe_action_runnable)
-        && pcmk__str_eq(first->task, RSC_STOP, pcmk__str_none)) {
+        && pcmk__str_eq(first->task, PCMK_ACTION_STOP, pcmk__str_none)) {
 
         if (pcmk_is_set(then->flags, pe_action_runnable)) {
             pe__clear_action_flags(then, pe_action_runnable);
@@ -714,7 +714,7 @@ handle_asymmetric_ordering(const pe_action_t *first, pe_action_t *then)
         enum rsc_role_e then_rsc_role = then->rsc->fns->state(then->rsc, TRUE);
 
         if ((then_rsc_role == RSC_ROLE_STOPPED)
-            && pcmk__str_eq(then->task, RSC_STOP, pcmk__str_none)) {
+            && pcmk__str_eq(then->task, PCMK_ACTION_STOP, pcmk__str_none)) {
             /* If 'then' should stop after 'first' but is already stopped, the
              * ordering is irrelevant.
              */
@@ -1300,7 +1300,7 @@ pcmk__action_locks_rsc_to_node(const pe_action_t *action)
      * a demote would cause the controller to clear the lock)
      */
     if (action->node->details->shutdown && (action->task != NULL)
-        && (strcmp(action->task, RSC_STOP) != 0)) {
+        && (strcmp(action->task, PCMK_ACTION_STOP) != 0)) {
         return false;
     }
 
@@ -1572,7 +1572,7 @@ schedule_reload(gpointer data, gpointer user_data)
     if (pcmk_is_set(rsc->flags, pe_rsc_start_pending)) {
         pe_rsc_trace(rsc, "%s: preventing agent reload because start pending",
                      rsc->id);
-        custom_action(rsc, stop_key(rsc), CRMD_ACTION_STOP, node, FALSE, TRUE,
+        custom_action(rsc, stop_key(rsc), PCMK_ACTION_STOP, node, FALSE, TRUE,
                       rsc->cluster);
         return;
     }

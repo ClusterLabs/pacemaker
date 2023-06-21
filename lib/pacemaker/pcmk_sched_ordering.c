@@ -42,9 +42,9 @@ static const char *
 invert_action(const char *action)
 {
     if (pcmk__str_eq(action, PCMK_ACTION_START, pcmk__str_none)) {
-        return RSC_STOP;
+        return PCMK_ACTION_STOP;
 
-    } else if (pcmk__str_eq(action, RSC_STOP, pcmk__str_none)) {
+    } else if (pcmk__str_eq(action, PCMK_ACTION_STOP, pcmk__str_none)) {
         return PCMK_ACTION_START;
 
     } else if (pcmk__str_eq(action, RSC_PROMOTE, pcmk__str_none)) {
@@ -735,7 +735,7 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
         action_2 = invert_action(action_2);
     }
 
-    if (pcmk__str_eq(RSC_STOP, action_1, pcmk__str_none)
+    if (pcmk__str_eq(PCMK_ACTION_STOP, action_1, pcmk__str_none)
         || pcmk__str_eq(RSC_DEMOTE, action_1, pcmk__str_none)) {
         /* Assuming: A -> ( B || C) -> D
          * The one-or-more logic only applies during the start/promote phase.
@@ -1127,7 +1127,7 @@ pcmk__order_stops_before_shutdown(pe_node_t *node, pe_action_t *shutdown_op)
 
         // Only stops on the node shutting down are relevant
         if (!pe__same_node(action->node, node)
-            || !pcmk__str_eq(action->task, RSC_STOP, pcmk__str_none)) {
+            || !pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_none)) {
             continue;
         }
 
@@ -1304,7 +1304,7 @@ rsc_order_first(pe_resource_t *first_rsc, pe__ordering_t *order)
         key = pcmk__op_key(first_rsc->id, op_type, interval_ms);
 
         if ((first_rsc->fns->state(first_rsc, TRUE) == RSC_ROLE_STOPPED)
-            && pcmk__str_eq(op_type, RSC_STOP, pcmk__str_none)) {
+            && pcmk__str_eq(op_type, PCMK_ACTION_STOP, pcmk__str_none)) {
             free(key);
             pe_rsc_trace(first_rsc,
                          "Ignoring constraint %d: first (%s for %s) not found",
@@ -1464,7 +1464,7 @@ pcmk__promotable_restart_ordering(pe_resource_t *rsc)
                                  pe_order_optional);
 
     // Order stop, start, and promote after all instances are demoted
-    pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_STOP,
+    pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, PCMK_ACTION_STOP,
                                  pe_order_optional);
     pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, PCMK_ACTION_START,
                                  pe_order_optional);

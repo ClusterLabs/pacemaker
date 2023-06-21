@@ -22,6 +22,7 @@ extern "C" {
 
 // Action names as strings
 #define PCMK_ACTION_START               "start"
+#define PCMK_ACTION_STOP                "stop"
 
 #ifdef __cplusplus
 }

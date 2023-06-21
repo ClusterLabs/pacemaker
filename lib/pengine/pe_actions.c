@@ -338,7 +338,7 @@ update_resource_action_runnable(pe_action_t *action, bool for_graph,
                    action->uuid, pe__node_name(action->node));
         if (pcmk_is_set(action->rsc->flags, pe_rsc_managed)
             && for_graph
-            && pcmk__str_eq(action->task, CRMD_ACTION_STOP, pcmk__str_casei)
+            && pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_casei)
             && !(action->node->details->unclean)) {
             pe_fence_node(data_set, action->node, "stop is unrunnable", false);
         }
@@ -411,7 +411,7 @@ update_resource_flags_for_action(pe_resource_t *rsc, const pe_action_t *action)
     /* @COMPAT pe_rsc_starting and pe_rsc_stopping are not actually used
      * within Pacemaker, and should be deprecated and eventually removed
      */
-    if (pcmk__str_eq(action->task, CRMD_ACTION_STOP, pcmk__str_casei)) {
+    if (pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_casei)) {
         pe__set_resource_flags(rsc, pe_rsc_stopping);
 
     } else if (pcmk__str_eq(action->task, PCMK_ACTION_START, pcmk__str_casei)) {
@@ -438,7 +438,7 @@ unpack_operation_on_fail(pe_action_t * action)
     const char *interval_spec = NULL;
     const char *value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ON_FAIL);
 
-    if (pcmk__str_eq(action->task, CRMD_ACTION_STOP, pcmk__str_casei)
+    if (pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_casei)
         && !valid_stop_on_fail(value)) {
 
         pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for %s stop "
@@ -867,7 +867,9 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
             action->on_fail = action_fail_reset_remote;
         }
 
-    } else if (value == NULL && pcmk__str_eq(action->task, CRMD_ACTION_STOP, pcmk__str_casei)) {
+    } else if ((value == NULL)
+               && pcmk__str_eq(action->task, PCMK_ACTION_STOP,
+                               pcmk__str_casei)) {
         if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
             action->on_fail = action_fail_fence;
             value = "resource fence (default)";

@@ -158,7 +158,7 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action)
         }
 
     } else if (action->rsc && action->rsc->is_remote_node
-               && pcmk__str_eq(action->task, CRMD_ACTION_STOP,
+               && pcmk__str_eq(action->task, PCMK_ACTION_STOP,
                                pcmk__str_none)) {
 
         /* Stopping a remote connection resource makes connected node down,
@@ -1062,7 +1062,7 @@ pcmk__create_graph(pe_working_set_t *data_set)
             && !pcmk_is_set(action->rsc->flags, pe_rsc_maintenance)
             && !pcmk_any_flags_set(action->flags,
                                    pe_action_optional|pe_action_runnable)
-            && pcmk__str_eq(action->task, RSC_STOP, pcmk__str_none)) {
+            && pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_none)) {
             /* Eventually we should just ignore the 'fence' case, but for now
              * it's the best way to detect (in CTS) when CIB resource updates
              * are being lost.

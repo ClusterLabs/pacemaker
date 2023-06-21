@@ -883,7 +883,7 @@ should_preserve_lock(lrmd_event_data_t *op)
     if (!pcmk_is_set(controld_globals.flags, controld_shutdown_lock_enabled)) {
         return false;
     }
-    if (!strcmp(op->op_type, RSC_STOP) && (op->rc == PCMK_OCF_OK)) {
+    if (!strcmp(op->op_type, PCMK_ACTION_STOP) && (op->rc == PCMK_OCF_OK)) {
         return true;
     }
     if (!strcmp(op->op_type, RSC_STATUS) && (op->rc == PCMK_OCF_NOT_RUNNING)) {

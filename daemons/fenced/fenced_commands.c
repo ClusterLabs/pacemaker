@@ -554,7 +554,7 @@ stonith_device_execute(stonith_device_t * device)
 #if SUPPORT_CIBSECRETS
     exec_rc = pcmk__substitute_secrets(device->id, device->params);
     if (exec_rc != pcmk_rc_ok) {
-        if (pcmk__str_eq(cmd->action, "stop", pcmk__str_none)) {
+        if (pcmk__str_eq(cmd->action, PCMK_ACTION_STOP, pcmk__str_none)) {
             crm_info("Proceeding with stop operation for %s "
                      "despite being unable to load CIB secrets (%s)",
                      device->id, pcmk_rc_str(exec_rc));

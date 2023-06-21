@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2022 the Pacemaker project contributors
+ * Copyright 2010-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -954,7 +954,7 @@ action_launch_child(svc_action_t *op)
 #if SUPPORT_CIBSECRETS
     rc = pcmk__substitute_secrets(op->rsc, op->params);
     if (rc != pcmk_rc_ok) {
-        if (pcmk__str_eq(op->action, "stop", pcmk__str_casei)) {
+        if (pcmk__str_eq(op->action, PCMK_ACTION_STOP, pcmk__str_casei)) {
             crm_info("Proceeding with stop operation for %s "
                      "despite being unable to load CIB secrets (%s)",
                      op->rsc, pcmk_rc_str(rc));

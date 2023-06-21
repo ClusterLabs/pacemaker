@@ -423,7 +423,7 @@ check_remote_node_state(const remote_ra_cmd_t *cmd)
         CRM_CHECK(node != NULL, return);
         pcmk__update_peer_state(__func__, node, CRM_NODE_MEMBER, 0);
 
-    } else if (pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(cmd->action, PCMK_ACTION_STOP, pcmk__str_casei)) {
         lrm_state_t *lrm_state = lrm_state_find(cmd->rsc_id);
         remote_ra_data_t *ra_data = lrm_state? lrm_state->remote_ra_data : NULL;
 
@@ -697,7 +697,8 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
             handle_remote_ra_stop(lrm_state, NULL);
             remote_node_down(lrm_state->node_name, DOWN_KEEP_LRM);
             /* now fake the reply of a successful 'stop' */
-            synthesize_lrmd_success(NULL, lrm_state->node_name, "stop");
+            synthesize_lrmd_success(NULL, lrm_state->node_name,
+                                    PCMK_ACTION_STOP);
         }
         return;
     }
@@ -788,7 +789,9 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
         }
         cmd_handled = TRUE;
 
-    } else if (op->type == lrmd_event_new_client && pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {
+    } else if ((op->type == lrmd_event_new_client)
+               && pcmk__str_eq(cmd->action, PCMK_ACTION_STOP,
+                               pcmk__str_casei)) {
 
         handle_remote_ra_stop(lrm_state, cmd);
         cmd_handled = TRUE;
@@ -935,7 +938,7 @@ handle_remote_ra_exec(gpointer user_data)
             }
             report_remote_ra_result(cmd);
 
-        } else if (!strcmp(cmd->action, "stop")) {
+        } else if (!strcmp(cmd->action, PCMK_ACTION_STOP)) {
 
             if (pcmk_is_set(ra_data->status, expect_takeover)) {
                 /* briefly wait on stop for the takeover event to occur. If the
@@ -1048,7 +1051,7 @@ is_remote_ra_supported_action(const char *action)
 {
     return pcmk__str_any_of(action,
                             PCMK_ACTION_START,
-                            CRMD_ACTION_STOP,
+                            PCMK_ACTION_STOP,
                             CRMD_ACTION_STATUS,
                             CRMD_ACTION_MIGRATE,
                             CRMD_ACTION_MIGRATED,
