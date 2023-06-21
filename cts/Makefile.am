@@ -21,9 +21,6 @@ test_SCRIPTS		= cts-attrd \
 dist_test_DATA		= README.md			\
 			  valgrind-pcmk.suppressions
 
-ctsdir		= 	$(testdir)/cts
-cts_SCRIPTS		= lxc_autogen.sh
-
 clidir		= $(testdir)/cli
 dist_cli_DATA	= cli/constraints.xml 				\
 		  cli/crmadmin-cluster-remote-guest-nodes.xml	\

@@ -19,8 +19,12 @@ pkgpython_PYTHON = __init__.py \
 				   nearquorumpointtest.py \
 				   partialstart.py \
 				   reattach.py \
+				   remotebasic.py \
 				   remotedriver.py \
+				   remotemigrate.py \
+				   remotestonithd.py \
 				   resourcerecover.py \
+				   remoterscfailure.py \
 				   restarttest.py \
 				   restartonebyone.py \
 				   resynccib.py \

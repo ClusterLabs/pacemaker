@@ -78,13 +78,8 @@ using virtual machines. Key differences:
   technology -- for example, the ``libvirt-daemon-lxc`` package to get the
   `libvirt-lxc <http://libvirt.org/drvlxc.html>`_ driver for LXC containers.
 
-* Libvirt XML definitions must be generated for the containers. The
-  ``pacemaker-cts`` package includes a script for this purpose,
-  ``/usr/share/pacemaker/tests/cts/lxc_autogen.sh``. Run it with the
-  ``--help`` option for details on how to use it. It is intended for testing
-  purposes only, and hardcodes various parameters that would need to be set
-  appropriately in real usage. Of course, you can create XML definitions
-  manually, following the appropriate libvirt driver documentation.
+* Libvirt XML definitions must be generated for the containers. You can create
+  XML definitions manually, following the appropriate libvirt driver documentation.
 
 * To share the authentication key, either share the host's ``/etc/pacemaker``
   directory with the container, or copy the key into the container's

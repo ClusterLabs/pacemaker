@@ -50,11 +50,6 @@ CTS includes:
   cluster test environment benchmarking code. It is not particularly useful for
   end users.
 
-* LXC generator: The lxc\_autogen.sh script can be used to create some guest
-  nodes for testing using LXC containers. It is not particularly useful for end
-  users. In an installed deployment, it is in the cts subdirectory of this
-  directory; in a source distribution, it is in this directory.
-
 * Valgrind suppressions: When memory-testing Pacemaker code with valgrind,
   various bugs in non-Pacemaker libraries and such can clutter the results. The
   valgrind-pcmk.suppressions file in this directory can be used with valgrind's
@@ -265,31 +260,6 @@ valgrind. For example:
     ExecStart=
     ExecStart=/usr/bin/valgrind /usr/sbin/pacemaker-remoted
     EOF
-
-
-### Optional: Container testing
-
-If the --container-tests option is given to CTSlab.py, it will enable
-testing of LXC resources (currently only the RemoteLXC test,
-which starts a remote node using an LXC container).
-
-The container tests have additional package dependencies (see the toplevel
-INSTALL.md). Also, SELinux must be enabled (in either permissive or enforcing
-mode), libvirtd must be enabled and running, and root must be able to ssh
-without a password between all cluster nodes (not just from the exerciser).
-Before running the tests, you can verify your environment with:
-
-    /usr/share/pacemaker/tests/cts/lxc_autogen.sh -v
-
-LXC tests will create two containers with hardcoded parameters: a NAT'ed bridge
-named virbr0 using the IP network 192.168.123.0/24 will be created on the
-cluster node hosting the containers; the host will be assigned
-52:54:00:A8:12:35 as the MAC address and 192.168.123.1 as the IP address.
-Each container will be assigned a random MAC address starting with 52:54:,
-the IP address 192.168.123.11 or 192.168.123.12, the hostname lxc1 or lxc2
-(which will be added to the host's /etc/hosts file), and 196MB RAM.
-
-The test will revert all of the configuration when it is done.
 
 
 ### Mini-HOWTO: Allow passwordless remote SSH connections
