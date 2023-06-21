@@ -40,6 +40,9 @@ extern "C" {
 //! \deprecated Use PCMK_ACTION_START instead
 #define CRMD_ACTION_START PCMK_ACTION_START
 
+//! \deprecated Use PCMK_ACTION_MONITOR instead
+#define CRMD_ACTION_STATUS PCMK_ACTION_MONITOR
+
 //! \deprecated Use PCMK_ACTION_STOP instead
 #define CRMD_ACTION_STOP PCMK_ACTION_STOP
 

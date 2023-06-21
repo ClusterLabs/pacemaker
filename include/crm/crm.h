@@ -183,7 +183,6 @@ extern char *crm_system_name;
 #  define CRMD_ACTION_NOTIFY		"notify"
 #  define CRMD_ACTION_NOTIFIED		"notified"
 
-#  define CRMD_ACTION_STATUS		PCMK_ACTION_MONITOR
 #  define CRMD_ACTION_METADATA		"meta-data"
 #  define CRMD_METADATA_CALL_TIMEOUT   30000
 
