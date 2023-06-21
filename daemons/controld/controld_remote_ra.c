@@ -964,7 +964,7 @@ handle_remote_ra_exec(gpointer user_data)
             pcmk__set_result(&(cmd->result), PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
             report_remote_ra_result(cmd);
         } else if (pcmk__str_any_of(cmd->action, PCMK_ACTION_RELOAD,
-                                    CRMD_ACTION_RELOAD_AGENT, NULL))  {
+                                    PCMK_ACTION_RELOAD_AGENT, NULL))  {
             /* Currently the only reloadable parameter is reconnect_interval,
              * which is only used by the scheduler via the CIB, so reloads are a
              * no-op.
@@ -1059,7 +1059,7 @@ is_remote_ra_supported_action(const char *action)
                             PCMK_ACTION_MONITOR,
                             CRMD_ACTION_MIGRATE,
                             CRMD_ACTION_MIGRATED,
-                            CRMD_ACTION_RELOAD_AGENT,
+                            PCMK_ACTION_RELOAD_AGENT,
                             PCMK_ACTION_RELOAD,
                             NULL);
 }

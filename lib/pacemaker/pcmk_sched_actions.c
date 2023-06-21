@@ -578,7 +578,7 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
              * (e.g. a required stop cancels any agent reload).
              */
             pe__set_action_flags(other->action, pe_action_optional);
-            if (!strcmp(first->task, CRMD_ACTION_RELOAD_AGENT)) {
+            if (!strcmp(first->task, PCMK_ACTION_RELOAD_AGENT)) {
                 pe__clear_resource_flags(first->rsc, pe_rsc_reload);
             }
         }
@@ -1136,7 +1136,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
      * only ever get results for actions scheduled by us, so we can reasonably
      * assume any "reload" is actually a pre-1.1 agent reload.
      */
-    if (pcmk__str_any_of(task, PCMK_ACTION_RELOAD, CRMD_ACTION_RELOAD_AGENT,
+    if (pcmk__str_any_of(task, PCMK_ACTION_RELOAD, PCMK_ACTION_RELOAD_AGENT,
                          NULL)) {
         if (op->op_status == PCMK_EXEC_DONE) {
             task = PCMK_ACTION_START;
@@ -1580,7 +1580,7 @@ schedule_reload(gpointer data, gpointer user_data)
 
     // Schedule the reload
     pe__set_resource_flags(rsc, pe_rsc_reload);
-    reload = custom_action(rsc, reload_key(rsc), CRMD_ACTION_RELOAD_AGENT, node,
+    reload = custom_action(rsc, reload_key(rsc), PCMK_ACTION_RELOAD_AGENT, node,
                            FALSE, TRUE, rsc->cluster);
     pe_action_set_reason(reload, "resource definition change", FALSE);
 

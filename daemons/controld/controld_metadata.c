@@ -172,7 +172,7 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
 
         const char *action_name = crm_element_value(match, "name");
 
-        if (pcmk__str_eq(action_name, CRMD_ACTION_RELOAD_AGENT,
+        if (pcmk__str_eq(action_name, PCMK_ACTION_RELOAD_AGENT,
                          pcmk__str_none)) {
             if (ocf1_1) {
                 controld_set_ra_flags(md, key, ra_supports_reload_agent);

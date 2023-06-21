@@ -412,7 +412,7 @@ pe_action_t *custom_action(pe_resource_t *rsc, char *key, const char *task,
 		rsc, stop_key(rsc), PCMK_ACTION_STOP, node,		\
 		optional, TRUE, rsc->cluster);
 
-#  define reload_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_RELOAD_AGENT, 0)
+#  define reload_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_RELOAD_AGENT, 0)
 #  define start_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_START, 0)
 #  define start_action(rsc, node, optional) custom_action(		\
 		rsc, start_key(rsc), PCMK_ACTION_START, node,           \

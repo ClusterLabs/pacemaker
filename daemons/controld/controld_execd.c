@@ -224,7 +224,7 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
 
         if (op->params && pcmk__strcase_any_of(op->op_type, PCMK_ACTION_START,
                                                PCMK_ACTION_RELOAD,
-                                               CRMD_ACTION_RELOAD_AGENT,
+                                               PCMK_ACTION_RELOAD_AGENT,
                                                PCMK_ACTION_MONITOR, NULL)) {
             if (entry->stop_params) {
                 g_hash_table_destroy(entry->stop_params);
@@ -1938,7 +1938,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
     }
 
     if (pcmk__str_any_of(operation, PCMK_ACTION_RELOAD,
-                         CRMD_ACTION_RELOAD_AGENT, NULL)) {
+                         PCMK_ACTION_RELOAD_AGENT, NULL)) {
         /* Pre-2.1.0 DCs will schedule reload actions only, and 2.1.0+ DCs
          * will schedule reload-agent actions only. In either case, we need
          * to map that to whatever the resource agent actually supports.
@@ -1948,7 +1948,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
             && pcmk_is_set(md->ra_flags, ra_supports_legacy_reload)) {
             operation = PCMK_ACTION_RELOAD;
         } else {
-            operation = CRMD_ACTION_RELOAD_AGENT;
+            operation = PCMK_ACTION_RELOAD_AGENT;
         }
     }
 
