@@ -178,8 +178,6 @@ extern char *crm_system_name;
 #  define CRMD_METADATA_CALL_TIMEOUT   30000
 
 /* short names */
-#  define RSC_CANCEL	PCMK_ACTION_CANCEL
-
 #  define RSC_MIGRATE	CRMD_ACTION_MIGRATE
 #  define RSC_MIGRATED	CRMD_ACTION_MIGRATED
 
