@@ -244,7 +244,7 @@ replica_internal_constraints(pe__bundle_replica_t *replica, void *user_data)
 
     // Start replica container -> bundle is started
     pcmk__order_resource_actions(replica->container, PCMK_ACTION_START, bundle,
-                                 RSC_STARTED,
+                                 PCMK_ACTION_RUNNING,
                                  pe_order_implies_then_printed);
 
     // Stop replica container -> bundle is stopped
@@ -308,8 +308,8 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
                                  pe_order_implies_first_printed);
 
     // Bundled clone is started -> bundle is started
-    pcmk__order_resource_actions(bundled_resource, RSC_STARTED,
-                                 rsc, RSC_STARTED,
+    pcmk__order_resource_actions(bundled_resource, PCMK_ACTION_RUNNING,
+                                 rsc, PCMK_ACTION_RUNNING,
                                  pe_order_implies_then_printed);
 
     // Stop bundle -> stop bundled clone

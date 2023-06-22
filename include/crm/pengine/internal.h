@@ -418,9 +418,9 @@ pe_action_t *custom_action(pe_resource_t *rsc, char *key, const char *task,
 		rsc, start_key(rsc), PCMK_ACTION_START, node,           \
 		optional, TRUE, rsc->cluster)
 
-#  define started_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_STARTED, 0)
+#  define started_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_RUNNING, 0)
 #  define started_action(rsc, node, optional) custom_action(		\
-		rsc, started_key(rsc), CRMD_ACTION_STARTED, node,	\
+		rsc, started_key(rsc), PCMK_ACTION_RUNNING, node,	\
 		optional, TRUE, rsc->cluster)
 
 #  define promote_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_PROMOTE, 0)

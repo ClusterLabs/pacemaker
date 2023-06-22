@@ -991,7 +991,7 @@ pcmk__create_instance_actions(pe_resource_t *collective, GList *instances)
     start = pe__new_rsc_pseudo_action(collective, PCMK_ACTION_START,
                                       !pcmk_is_set(state, instance_starting),
                                       true);
-    started = pe__new_rsc_pseudo_action(collective, RSC_STARTED,
+    started = pe__new_rsc_pseudo_action(collective, PCMK_ACTION_RUNNING,
                                         !pcmk_is_set(state, instance_starting),
                                         false);
     started->priority = INFINITY;

@@ -126,7 +126,8 @@ pcmk__clone_internal_constraints(pe_resource_t *rsc)
     // Restart ordering: Stop -> stopped -> start -> started
     pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, PCMK_ACTION_START,
                                  pe_order_optional);
-    pcmk__order_resource_actions(rsc, PCMK_ACTION_START, rsc, RSC_STARTED,
+    pcmk__order_resource_actions(rsc, PCMK_ACTION_START,
+                                 rsc, PCMK_ACTION_RUNNING,
                                  pe_order_runnable_left);
     pcmk__order_resource_actions(rsc, PCMK_ACTION_STOP, rsc, RSC_STOPPED,
                                  pe_order_runnable_left);
@@ -135,7 +136,8 @@ pcmk__clone_internal_constraints(pe_resource_t *rsc)
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
         pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, PCMK_ACTION_STOP,
                                      pe_order_optional);
-        pcmk__order_resource_actions(rsc, RSC_STARTED, rsc, PCMK_ACTION_PROMOTE,
+        pcmk__order_resource_actions(rsc, PCMK_ACTION_RUNNING,
+                                     rsc, PCMK_ACTION_PROMOTE,
                                      pe_order_runnable_left);
     }
 
@@ -155,8 +157,8 @@ pcmk__clone_internal_constraints(pe_resource_t *rsc)
         // Start clone -> start instance -> clone started
         pcmk__order_starts(rsc, instance, pe_order_runnable_left
                                           |pe_order_implies_first_printed);
-        pcmk__order_resource_actions(instance, PCMK_ACTION_START, rsc,
-                                     RSC_STARTED,
+        pcmk__order_resource_actions(instance, PCMK_ACTION_START,
+                                     rsc, PCMK_ACTION_RUNNING,
                                      pe_order_implies_then_printed);
 
         // Stop clone -> stop instance -> clone stopped

@@ -59,11 +59,11 @@ invert_action(const char *action)
     } else if (pcmk__str_eq(action, RSC_DEMOTED, pcmk__str_none)) {
         return RSC_PROMOTED;
 
-    } else if (pcmk__str_eq(action, RSC_STARTED, pcmk__str_none)) {
+    } else if (pcmk__str_eq(action, PCMK_ACTION_RUNNING, pcmk__str_none)) {
         return RSC_STOPPED;
 
     } else if (pcmk__str_eq(action, RSC_STOPPED, pcmk__str_none)) {
-        return RSC_STARTED;
+        return PCMK_ACTION_RUNNING;
     }
     crm_warn("Unknown action '%s' specified in order constraint", action);
     return NULL;
@@ -1473,7 +1473,8 @@ pcmk__promotable_restart_ordering(pe_resource_t *rsc)
                                  pe_order_optional);
 
     // Order promote after all instances are started
-    pcmk__order_resource_actions(rsc, RSC_STARTED, rsc, PCMK_ACTION_PROMOTE,
+    pcmk__order_resource_actions(rsc, PCMK_ACTION_RUNNING,
+                                 rsc, PCMK_ACTION_PROMOTE,
                                  pe_order_optional);
 
     // Order demote after all instances are demoted
