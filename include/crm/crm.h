@@ -173,8 +173,6 @@ extern char *crm_system_name;
 #  define CRMD_METADATA_CALL_TIMEOUT   30000
 
 /* short names */
-#  define RSC_STARTED	PCMK_ACTION_RUNNING
-
 #  define RSC_STOPPED	CRMD_ACTION_STOPPED
 
 #  define RSC_PROMOTED	CRMD_ACTION_PROMOTED

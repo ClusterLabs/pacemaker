@@ -106,6 +106,9 @@ extern "C" {
 //! \deprecated Use PCMK_ACTION_START instead
 #define RSC_START PCMK_ACTION_START
 
+//! \deprecated Use PCMK_ACTION_RUNNING instead
+#define RSC_STARTED PCMK_ACTION_RUNNING
+
 //! \deprecated Use PCMK_ACTION_MONITOR instead
 #define RSC_STATUS PCMK_ACTION_MONITOR
 
