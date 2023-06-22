@@ -32,16 +32,17 @@ class ScenarioComponent(object):
 
         raise NotImplementedError
 
-    def TearDown(self, CM):
+    def teardown(self, CM):
         '''Tear down (undo) the given ScenarioComponent'''
-        raise ValueError("Abstract Class member (Setup)")
+
+        raise NotImplementedError
 
 
 class Scenario(object):
     (
 '''The basic idea of a scenario is that of an ordered list of
 ScenarioComponent objects.  Each ScenarioComponent is setup() in turn,
-and then after the tests have been run, they are torn down using TearDown()
+and then after the tests have been run, they are torn down using teardown()
 (in reverse order).
 
 A Scenario is applicable to a particular cluster manager iff each
@@ -113,14 +114,14 @@ A partially set up scenario is torn down if it fails during setup.
                 # OOPS!  We failed.  Tear partial setups down.
                 self.audit()
                 self.ClusterManager.log("Tearing down partial setup")
-                self.TearDown(j)
+                self.teardown(j)
                 return False
             j += 1
 
         self.audit()
         return True
 
-    def TearDown(self, max=None):
+    def teardown(self, max=None):
 
         '''Tear Down the Scenario - in reverse order.'''
 
@@ -128,7 +129,7 @@ A partially set up scenario is torn down if it fails during setup.
             max = len(self.Components)-1
         j = max
         while j >= 0:
-            self.Components[j].TearDown(self.ClusterManager)
+            self.Components[j].teardown(self.ClusterManager)
             j -= 1
 
         self.audit()
@@ -270,7 +271,7 @@ A partially set up scenario is torn down if it fails during setup.
             if not should_continue(self.ClusterManager.Env):
                 self.ClusterManager.log("Shutting down.")
                 self.summarize()
-                self.TearDown()
+                self.teardown()
                 raise ValueError("Looks like we hit a BadNews jackpot!")
 
         if self.BadNews:
@@ -339,20 +340,19 @@ as they might have been rebooted or crashed for some reason beforehand.
         CM.log("Starting Cluster Manager on all nodes.")
         return CM.startall(verbose=True, quick=True)
 
-    def TearDown(self, CM, force=False):
+    def teardown(self, CM):
         '''Set up the given ScenarioComponent'''
 
         # Stop the cluster manager everywhere
 
         CM.log("Stopping Cluster Manager on all nodes")
-        return CM.stopall(verbose=True, force=force)
+        CM.stopall(verbose=True, force=False)
 
 
 class LeaveBooted(BootCluster):
-    def TearDown(self, CM):
+    def teardown(self, CM):
         '''Set up the given ScenarioComponent'''
 
         # Stop the cluster manager everywhere
 
         CM.log("Leaving Cluster running on all nodes")
-        return 1

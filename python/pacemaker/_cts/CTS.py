@@ -106,10 +106,10 @@ class CtsLab:
             self._logger.traceback(traceback)
 
             scenario.summarize()
-            scenario.TearDown()
+            scenario.teardown()
             return ExitStatus.ERROR
 
-        scenario.TearDown()
+        scenario.teardown()
         scenario.summarize()
 
         if scenario.Stats["failure"] > 0:

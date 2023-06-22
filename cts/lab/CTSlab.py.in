@@ -33,7 +33,7 @@ def sig_handler(signum, frame) :
     LogFactory().log("Interrupted by signal %d"%signum)
     if scenario: scenario.summarize()
     if signum == 15 :
-        if scenario: scenario.TearDown()
+        if scenario: scenario.teardown()
         sys.exit(1)
 
 
