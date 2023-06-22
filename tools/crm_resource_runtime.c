@@ -1522,8 +1522,8 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc,
                            NULL, XML_RSC_ATTR_TARGET_ROLE, &orig_target_role);
         rc = cli_resource_update_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS,
                                            NULL, XML_RSC_ATTR_TARGET_ROLE,
-                                           RSC_STOPPED, FALSE, cib, cib_options,
-                                           force);
+                                           PCMK_ACTION_STOPPED, FALSE, cib,
+                                           cib_options, force);
     }
     if(rc != pcmk_rc_ok) {
         out->err(out, "Could not set target-role for %s: %s (%d)", rsc_id, pcmk_strerror(rc), rc);

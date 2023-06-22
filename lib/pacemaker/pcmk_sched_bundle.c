@@ -249,7 +249,7 @@ replica_internal_constraints(pe__bundle_replica_t *replica, void *user_data)
 
     // Stop replica container -> bundle is stopped
     pcmk__order_resource_actions(replica->container, PCMK_ACTION_STOP, bundle,
-                                 RSC_STOPPED,
+                                 PCMK_ACTION_STOPPED,
                                  pe_order_implies_then_printed);
 
     if (replica->ip != NULL) {
@@ -318,8 +318,8 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
                                  pe_order_implies_first_printed);
 
     // Bundled clone is stopped -> bundle is stopped
-    pcmk__order_resource_actions(bundled_resource, RSC_STOPPED,
-                                 rsc, RSC_STOPPED,
+    pcmk__order_resource_actions(bundled_resource, PCMK_ACTION_STOPPED,
+                                 rsc, PCMK_ACTION_STOPPED,
                                  pe_order_implies_then_printed);
 
     bundled_resource->cmds->internal_constraints(bundled_resource);

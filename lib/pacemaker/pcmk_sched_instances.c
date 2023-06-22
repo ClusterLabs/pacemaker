@@ -1003,7 +1003,7 @@ pcmk__create_instance_actions(pe_resource_t *collective, GList *instances)
     stop = pe__new_rsc_pseudo_action(collective, PCMK_ACTION_STOP,
                                      !pcmk_is_set(state, instance_stopping),
                                      true);
-    stopped = pe__new_rsc_pseudo_action(collective, RSC_STOPPED,
+    stopped = pe__new_rsc_pseudo_action(collective, PCMK_ACTION_STOPPED,
                                         !pcmk_is_set(state, instance_stopping),
                                         true);
     stopped->priority = INFINITY;
@@ -1270,7 +1270,7 @@ find_instance_action(const pe_action_t *action, const pe_resource_t *instance,
      * containerized resource).
      */
     if ((for_first && !pcmk__str_any_of(action->task, PCMK_ACTION_STOP,
-                                        CRMD_ACTION_STOPPED, NULL))
+                                        PCMK_ACTION_STOPPED, NULL))
 
         || (!for_first && pcmk__str_any_of(action->task, PCMK_ACTION_PROMOTE,
                                            CRMD_ACTION_PROMOTED,
@@ -1369,7 +1369,7 @@ update_interleaved_actions(pe_action_t *first, pe_action_t *then,
     const char *orig_first_task = orig_action_name(first);
 
     // Stops and demotes must be interleaved with instance on current node
-    bool current = pcmk__ends_with(first->uuid, "_" CRMD_ACTION_STOPPED "_0")
+    bool current = pcmk__ends_with(first->uuid, "_" PCMK_ACTION_STOPPED "_0")
                    || pcmk__ends_with(first->uuid,
                                       "_" CRMD_ACTION_DEMOTED "_0");
 

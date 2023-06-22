@@ -402,9 +402,9 @@ pe_action_t *custom_action(pe_resource_t *rsc, char *key, const char *task,
 		rsc, delete_key(rsc), PCMK_ACTION_DELETE, node, \
 		optional, TRUE, rsc->cluster);
 
-#  define stopped_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_STOPPED, 0)
+#  define stopped_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_STOPPED, 0)
 #  define stopped_action(rsc, node, optional) custom_action(		\
-		rsc, stopped_key(rsc), CRMD_ACTION_STOPPED, node,	\
+		rsc, stopped_key(rsc), PCMK_ACTION_STOPPED, node,	\
 		optional, TRUE, rsc->cluster);
 
 #  define stop_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_STOP, 0)

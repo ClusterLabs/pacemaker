@@ -163,7 +163,7 @@ extern char *crm_system_name;
 #  define CRMD_JOINSTATE_MEMBER         "member"
 #  define CRMD_JOINSTATE_NACK           "banned"
 
-#  define CRMD_ACTION_STOPPED		"stopped"
+#  define CRMD_ACTION_STOPPED		PCMK_ACTION_STOPPED
 
 #  define CRMD_ACTION_PROMOTED		"promoted"
 #  define CRMD_ACTION_DEMOTED		"demoted"
@@ -173,7 +173,7 @@ extern char *crm_system_name;
 #  define CRMD_METADATA_CALL_TIMEOUT   30000
 
 /* short names */
-#  define RSC_STOPPED	CRMD_ACTION_STOPPED
+#  define RSC_STOPPED	PCMK_ACTION_STOPPED
 
 #  define RSC_PROMOTED	CRMD_ACTION_PROMOTED
 #  define RSC_DEMOTED	CRMD_ACTION_DEMOTED
