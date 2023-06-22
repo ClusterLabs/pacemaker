@@ -163,8 +163,6 @@ extern char *crm_system_name;
 #  define CRMD_JOINSTATE_MEMBER         "member"
 #  define CRMD_JOINSTATE_NACK           "banned"
 
-#  define CRMD_ACTION_STOPPED		PCMK_ACTION_STOPPED
-
 #  define CRMD_ACTION_PROMOTED		"promoted"
 #  define CRMD_ACTION_DEMOTED		"demoted"
 
