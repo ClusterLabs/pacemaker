@@ -1379,7 +1379,7 @@ pe__create_promotable_pseudo_ops(pe_resource_t *clone, bool any_promoting,
                                        !any_demoting, true);
 
     // Create a "demoted" action for when all demotions are done
-    action_complete = pe__new_rsc_pseudo_action(clone, RSC_DEMOTED,
+    action_complete = pe__new_rsc_pseudo_action(clone, PCMK_ACTION_DEMOTED,
                                                 !any_demoting, true);
     action_complete->priority = INFINITY;
 

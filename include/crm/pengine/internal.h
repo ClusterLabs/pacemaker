@@ -438,9 +438,9 @@ pe_action_t *custom_action(pe_resource_t *rsc, char *key, const char *task,
 		rsc, demote_key(rsc), PCMK_ACTION_DEMOTE, node, \
 		optional, TRUE, rsc->cluster)
 
-#  define demoted_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_DEMOTED, 0)
+#  define demoted_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_DEMOTED, 0)
 #  define demoted_action(rsc, node, optional) custom_action(		\
-		rsc, demoted_key(rsc), CRMD_ACTION_DEMOTED, node,	\
+		rsc, demoted_key(rsc), PCMK_ACTION_DEMOTED, node,	\
 		optional, TRUE, rsc->cluster)
 
 extern int pe_get_configured_timeout(pe_resource_t *rsc, const char *action,

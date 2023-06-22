@@ -54,9 +54,9 @@ invert_action(const char *action)
         return PCMK_ACTION_PROMOTE;
 
     } else if (pcmk__str_eq(action, PCMK_ACTION_PROMOTED, pcmk__str_none)) {
-        return RSC_DEMOTED;
+        return PCMK_ACTION_DEMOTED;
 
-    } else if (pcmk__str_eq(action, RSC_DEMOTED, pcmk__str_none)) {
+    } else if (pcmk__str_eq(action, PCMK_ACTION_DEMOTED, pcmk__str_none)) {
         return PCMK_ACTION_PROMOTED;
 
     } else if (pcmk__str_eq(action, PCMK_ACTION_RUNNING, pcmk__str_none)) {
@@ -1467,11 +1467,14 @@ pcmk__promotable_restart_ordering(pe_resource_t *rsc)
                                  pe_order_optional);
 
     // Order stop, start, and promote after all instances are demoted
-    pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, PCMK_ACTION_STOP,
+    pcmk__order_resource_actions(rsc, PCMK_ACTION_DEMOTED,
+                                 rsc, PCMK_ACTION_STOP,
                                  pe_order_optional);
-    pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, PCMK_ACTION_START,
+    pcmk__order_resource_actions(rsc, PCMK_ACTION_DEMOTED,
+                                 rsc, PCMK_ACTION_START,
                                  pe_order_optional);
-    pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, PCMK_ACTION_PROMOTE,
+    pcmk__order_resource_actions(rsc, PCMK_ACTION_DEMOTED,
+                                 rsc, PCMK_ACTION_PROMOTE,
                                  pe_order_optional);
 
     // Order promote after all instances are started
@@ -1480,6 +1483,7 @@ pcmk__promotable_restart_ordering(pe_resource_t *rsc)
                                  pe_order_optional);
 
     // Order demote after all instances are demoted
-    pcmk__order_resource_actions(rsc, PCMK_ACTION_DEMOTE, rsc, RSC_DEMOTED,
+    pcmk__order_resource_actions(rsc, PCMK_ACTION_DEMOTE,
+                                 rsc, PCMK_ACTION_DEMOTED,
                                  pe_order_optional);
 }

@@ -136,7 +136,8 @@ pcmk__clone_internal_constraints(pe_resource_t *rsc)
 
     // Demoted -> stop and started -> promote
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
-        pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, PCMK_ACTION_STOP,
+        pcmk__order_resource_actions(rsc, PCMK_ACTION_DEMOTED,
+                                     rsc, PCMK_ACTION_STOP,
                                      pe_order_optional);
         pcmk__order_resource_actions(rsc, PCMK_ACTION_RUNNING,
                                      rsc, PCMK_ACTION_PROMOTE,

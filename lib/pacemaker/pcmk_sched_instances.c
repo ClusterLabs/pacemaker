@@ -1275,7 +1275,7 @@ find_instance_action(const pe_action_t *action, const pe_resource_t *instance,
         || (!for_first && pcmk__str_any_of(action->task, PCMK_ACTION_PROMOTE,
                                            PCMK_ACTION_PROMOTED,
                                            PCMK_ACTION_DEMOTE,
-                                           CRMD_ACTION_DEMOTED, NULL))) {
+                                           PCMK_ACTION_DEMOTED, NULL))) {
 
         rsc = pe__get_rsc_in_container(instance);
     }
@@ -1371,7 +1371,7 @@ update_interleaved_actions(pe_action_t *first, pe_action_t *then,
     // Stops and demotes must be interleaved with instance on current node
     bool current = pcmk__ends_with(first->uuid, "_" PCMK_ACTION_STOPPED "_0")
                    || pcmk__ends_with(first->uuid,
-                                      "_" CRMD_ACTION_DEMOTED "_0");
+                                      "_" PCMK_ACTION_DEMOTED "_0");
 
     // Update the specified actions for each "then" instance individually
     instances = get_instance_list(then->rsc);
