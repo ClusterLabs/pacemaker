@@ -118,6 +118,9 @@ extern "C" {
 //! \deprecated Use PCMK_ACTION_STOP instead
 #define RSC_STOP PCMK_ACTION_STOP
 
+//! \deprecated Use PCMK_ACTION_STOPPED instead
+#define RSC_STOPPED PCMK_ACTION_STOPPED
+
 //!@{
 //! \deprecated This macro will be removed in a future release
 
