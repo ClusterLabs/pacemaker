@@ -109,6 +109,9 @@ extern "C" {
 //! \deprecated Use PCMK_ACTION_PROMOTE instead
 #define RSC_PROMOTE PCMK_ACTION_PROMOTE
 
+//! \deprecated Use PCMK_ACTION_PROMOTED instead
+#define RSC_PROMOTED PCMK_ACTION_PROMOTED
+
 //! \deprecated Use PCMK_ACTION_START instead
 #define RSC_START PCMK_ACTION_START
 
