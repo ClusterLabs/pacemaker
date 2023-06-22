@@ -79,8 +79,6 @@ extern "C" {
 
 extern char *crm_system_name;
 
-/* *INDENT-OFF* */
-
 // How we represent "infinite" scores
 #  define CRM_SCORE_INFINITY    1000000
 #  define CRM_INFINITY_S        "INFINITY"
@@ -164,10 +162,6 @@ extern char *crm_system_name;
 #  define CRMD_JOINSTATE_NACK           "banned"
 
 #  define CRMD_METADATA_CALL_TIMEOUT   30000
-
-/* short names */
-#  define RSC_NOTIFIED	PCMK_ACTION_NOTIFIED
-/* *INDENT-ON* */
 
 #  include <crm/common/actions.h>
 #  include <crm/common/cib.h>

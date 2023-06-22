@@ -112,6 +112,9 @@ extern "C" {
 //! \deprecated Use PCMK_ACTION_MIGRATE_FROM instead
 #define RSC_MIGRATED PCMK_ACTION_MIGRATE_FROM
 
+//! \deprecated Use PCMK_ACTION_NOTIFIED instead
+#define RSC_NOTIFIED PCMK_ACTION_NOTIFIED
+
 //! \deprecated Use PCMK_ACTION_NOTIFY instead
 #define RSC_NOTIFY PCMK_ACTION_NOTIFY
 
