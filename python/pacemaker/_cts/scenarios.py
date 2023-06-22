@@ -156,7 +156,8 @@ A partially set up scenario is torn down if it fails during setup.
         did_run = False
 
         self.ClusterManager.instance_errorstoignore_clear()
-        self.ClusterManager.log(("Running test %s" % test.name).ljust(35) + (" (%s) " % nodechoice).ljust(15) + "[" + ("%d" % testcount).rjust(3) + "]")
+        choice = "(%s)" % nodechoice
+        self.ClusterManager.log("Running test {:<22} {:<15} [{:>3}]".format(test.name, choice, testcount))
 
         starttime = test.set_timer()
         if not test.setup(nodechoice):
@@ -208,7 +209,7 @@ A partially set up scenario is torn down if it fails during setup.
 
     def summarize(self):
         self.ClusterManager.log("****************")
-        self.ClusterManager.log("Overall Results:" + repr(self.Stats))
+        self.ClusterManager.log("Overall Results:%r" % self.Stats)
         self.ClusterManager.log("****************")
 
         stat_filter = {
@@ -221,11 +222,14 @@ A partially set up scenario is torn down if it fails during setup.
         for test in self.Tests:
             for key in list(stat_filter.keys()):
                 stat_filter[key] = test.stats[key]
-            self.ClusterManager.log(("Test %s: "%test.name).ljust(25) + " %s"%repr(stat_filter))
+
+            name = "Test %s:" % test.name
+            self.ClusterManager.log("{:<25} {!r}".format(name, stat_filter))
 
         self.ClusterManager.debug("Detailed Results")
         for test in self.Tests:
-            self.ClusterManager.debug(("Test %s: "%test.name).ljust(25) + " %s"%repr(test.stats))
+            name = "Test %s:" % test.name
+            self.ClusterManager.debug("{:<25} {!r}".format(name, stat_filter))
 
         self.ClusterManager.log("<<<<<<<<<<<<<<<< TESTS COMPLETED")
 
@@ -241,10 +245,10 @@ A partially set up scenario is torn down if it fails during setup.
         failed = 0
         for audit in self.Audits:
             if not audit():
-                self.ClusterManager.log("Audit " + audit.name + " FAILED.")
+                self.ClusterManager.log("Audit %s FAILED." % audit.name)
                 failed += 1
             else:
-                self.ClusterManager.debug("Audit " + audit.name + " passed.")
+                self.ClusterManager.debug("Audit %s passed." % audit.name)
 
         while errcount < 1000:
             match = None
@@ -257,7 +261,7 @@ A partially set up scenario is torn down if it fails during setup.
                     if add_err and re.search(ignore, match):
                         add_err = False
                 if add_err:
-                    self.ClusterManager.log("BadNews: " + match)
+                    self.ClusterManager.log("BadNews: %s" % match)
                     self.incr("BadNews")
                     errcount += 1
             else:
