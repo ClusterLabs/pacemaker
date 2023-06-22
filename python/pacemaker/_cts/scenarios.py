@@ -121,7 +121,7 @@ A partially set up scenario is torn down if it fails during setup.
 
         '''Tear Down the Scenario - in reverse order.'''
 
-        if max == None:
+        if not max:
             max = len(self.Components)-1
         j = max
         while j >= 0:
@@ -153,7 +153,7 @@ A partially set up scenario is torn down if it fails during setup.
         nodechoice = self.ClusterManager.Env.random_node()
 
         ret = True
-        did_run = 0
+        did_run = False
 
         self.ClusterManager.instance_errorstoignore_clear()
         self.ClusterManager.log(("Running test %s" % test.name).ljust(35) + (" (%s) " % nodechoice).ljust(15) + "[" + ("%d" % testcount).rjust(3) + "]")
@@ -168,7 +168,7 @@ A partially set up scenario is torn down if it fails during setup.
             test.skipped()
 
         else:
-            did_run = 1
+            did_run = True
             ret = test(nodechoice)
 
         if not test.teardown(nodechoice):
@@ -201,7 +201,7 @@ A partially set up scenario is torn down if it fails during setup.
         else:
             self.incr("failure")
             self.ClusterManager.statall()
-            did_run = 1  # Force the test count to be incremented anyway so test extraction works
+            did_run = True  # Force the test count to be incremented anyway so test extraction works
 
         self.audit(test.errors_to_ignore)
         return did_run
@@ -252,11 +252,11 @@ A partially set up scenario is torn down if it fails during setup.
                 match = self.BadNews.look(0)
 
             if match:
-                add_err = 1
+                add_err = True
                 for ignore in ignorelist:
-                    if add_err == 1 and re.search(ignore, match):
-                        add_err = 0
-                if add_err == 1:
+                    if add_err and re.search(ignore, match):
+                        add_err = False
+                if add_err:
                     self.ClusterManager.log("BadNews: " + match)
                     self.incr("BadNews")
                     errcount += 1
