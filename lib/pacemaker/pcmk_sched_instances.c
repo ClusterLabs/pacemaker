@@ -1326,7 +1326,7 @@ orig_action_name(const pe_action_t *action)
     enum action_tasks orig_task = no_action;
 
     if (pcmk__strcase_any_of(action->task, PCMK_ACTION_NOTIFY,
-                             CRMD_ACTION_NOTIFIED, NULL)) {
+                             PCMK_ACTION_NOTIFIED, NULL)) {
         // action->uuid is RSC_(confirmed-){pre,post}_notify_ACTION_INTERVAL
         CRM_CHECK(parse_op_key(action->uuid, NULL, &action_type, NULL),
                   return task2text(no_action));

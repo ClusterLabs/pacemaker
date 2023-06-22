@@ -74,8 +74,8 @@ create_action_name(const pe_action_t *action, bool verbose)
             interval_ms = 0;
         }
 
-        if (pcmk__strcase_any_of(action->task, PCMK_ACTION_NOTIFY, RSC_NOTIFIED,
-                                 NULL)) {
+        if (pcmk__strcase_any_of(action->task, PCMK_ACTION_NOTIFY,
+                                 PCMK_ACTION_NOTIFIED, NULL)) {
             const char *n_type = g_hash_table_lookup(action->meta,
                                                      "notify_key_type");
             const char *n_task = g_hash_table_lookup(action->meta,

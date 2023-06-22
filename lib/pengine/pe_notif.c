@@ -273,7 +273,7 @@ add_notify_data_to_action_meta(const notify_data_t *n_data, pe_action_t *action)
  *
  * \param[in,out] rsc           Clone resource that notification is for
  * \param[in]     action        Action to use in notify action key
- * \param[in]     notif_action  PCMK_ACTION_NOTIFY or RSC_NOTIFIED
+ * \param[in]     notif_action  PCMK_ACTION_NOTIFY or PCMK_ACTION_NOTIFIED
  * \param[in]     notif_type    "pre", "post", "confirmed-pre", "confirmed-post"
  *
  * \return Newly created notify pseudo-action
@@ -454,7 +454,8 @@ pe__action_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
         add_hash_param(n_data->pre->meta, "notify_operation", n_data->action);
 
         // Create "pre-" notifications complete pseudo-action for clone
-        n_data->pre_done = new_notify_pseudo_action(rsc, action, RSC_NOTIFIED,
+        n_data->pre_done = new_notify_pseudo_action(rsc, action,
+                                                    PCMK_ACTION_NOTIFIED,
                                                     "confirmed-pre");
         pe__set_action_flags(n_data->pre_done, pe_action_runnable);
         add_hash_param(n_data->pre_done->meta, "notify_type", "pre");
@@ -482,7 +483,7 @@ pe__action_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
 
         // Create "post-" notifications complete pseudo-action for clone
         n_data->post_done = new_notify_pseudo_action(rsc, complete,
-                                                     RSC_NOTIFIED,
+                                                     PCMK_ACTION_NOTIFIED,
                                                      "confirmed-post");
         n_data->post_done->priority = INFINITY;
         if (pcmk_is_set(complete->flags, pe_action_runnable)) {

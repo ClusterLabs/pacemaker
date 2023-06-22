@@ -163,12 +163,12 @@ extern char *crm_system_name;
 #  define CRMD_JOINSTATE_MEMBER         "member"
 #  define CRMD_JOINSTATE_NACK           "banned"
 
-#  define CRMD_ACTION_NOTIFIED		"notified"
+#  define CRMD_ACTION_NOTIFIED		PCMK_ACTION_NOTIFIED
 
 #  define CRMD_METADATA_CALL_TIMEOUT   30000
 
 /* short names */
-#  define RSC_NOTIFIED	CRMD_ACTION_NOTIFIED
+#  define RSC_NOTIFIED	PCMK_ACTION_NOTIFIED
 /* *INDENT-ON* */
 
 #  include <crm/common/actions.h>
