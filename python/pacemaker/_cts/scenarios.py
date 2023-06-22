@@ -11,6 +11,7 @@ import sys
 import time
 
 from pacemaker._cts.audits import ClusterAudit
+from pacemaker._cts.input import should_continue
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.watcher import LogWatcher
 
@@ -174,15 +175,10 @@ A partially set up scenario is torn down if it fails during setup.
 
         if not test.teardown(nodechoice):
             self.ClusterManager.log("Teardown failed")
-            if self.ClusterManager.Env["continue"]:
-                answer = "Y"
-            else:
-                try:
-                    answer = input('Continue? [nY]')
-                except EOFError as e:
-                    answer = "n"
-            if answer and answer == "n":
+
+            if not should_continue(self.ClusterManager.Env):
                 raise ValueError("Teardown of %s on %s failed" % (test.name, nodechoice))
+
             ret = False
 
         stoptime = time.time()
@@ -269,14 +265,8 @@ A partially set up scenario is torn down if it fails during setup.
             else:
                 break
         else:
-            if self.ClusterManager.Env["continue"]:
-                answer = "Y"
-            else:
-                try:
-                    answer = input('Big problems. Continue? [nY]')
-                except EOFError as e:
-                    answer = "n"
-            if answer and answer == "n":
+            print("Big problems")
+            if not should_continue(self.ClusterManager.Env):
                 self.ClusterManager.log("Shutting down.")
                 self.summarize()
                 self.TearDown()
