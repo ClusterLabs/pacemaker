@@ -603,50 +603,135 @@ assign_instance(pe_resource_t *instance, const pe_node_t *prefer,
                      instance->id);
         return NULL;
     }
-
-    if (prefer != NULL) { // Possible early assignment to preferred node
-
-        // Get preferred node with instance's scores
-        pe_node_t *allowed = g_hash_table_lookup(instance->allowed_nodes,
-                                                 prefer->details->id);
-
-        if ((allowed == NULL) || (allowed->weight < 0)) {
-            pe_rsc_trace(instance,
-                         "Not assigning %s to preferred node %s: unavailable",
-                         instance->id, pe__node_name(prefer));
-            return NULL;
-        }
-    }
-
     ban_unavailable_allowed_nodes(instance, max_per_node);
 
-    if (prefer == NULL) { // Final assignment
-        chosen = instance->cmds->assign(instance, NULL, true);
-
-    } else { // Possible early assignment to preferred node
-        GHashTable *backup = NULL;
-
-        pcmk__copy_node_tables(instance, &backup);
-        chosen = instance->cmds->assign(instance, prefer, false);
-
-        if (!pe__same_node(chosen, prefer)) {
-            // Revert nodes if preferred node won't be assigned
-            if (chosen != NULL) {
-                pe_rsc_info(instance,
-                            "Not assigning %s to preferred node %s: "
-                            "%s is better",
-                            instance->id, pe__node_name(prefer),
-                            pe__node_name(chosen));
-                chosen = NULL;
-            }
-            pcmk__restore_node_tables(instance, backup);
-            pcmk__unassign_resource(instance);
-        }
-        g_hash_table_destroy(backup);
-    }
-
+    // Failed early assignments are reversible (stop_if_fail=false)
+    chosen = instance->cmds->assign(instance, prefer, (prefer == NULL));
     increment_parent_count(instance, chosen);
     return chosen;
+}
+
+/*!
+ * \internal
+ * \brief Try to assign an instance to its current node early
+ *
+ * \param[in] rsc           Clone or bundle being assigned (for logs only)
+ * \param[in] instance      Clone instance or bundle replica container
+ * \param[in] current       Instance's current node
+ * \param[in] max_per_node  Maximum number of instances per node
+ * \param[in] available     Number of instances still available for assignment
+ *
+ * \return \c true if \p instance was successfully assigned to its current node,
+ *         or \c false otherwise
+ */
+static bool
+assign_instance_early(const pe_resource_t *rsc, pe_resource_t *instance,
+                      const pe_node_t *current, int max_per_node, int available)
+{
+    const pe_node_t *chosen = NULL;
+    int reserved = 0;
+
+    pe_resource_t *parent = instance->parent;
+    GHashTable *allowed_orig = NULL;
+    GHashTable *allowed_orig_parent = parent->allowed_nodes;
+
+    const pe_node_t *allowed_node = g_hash_table_lookup(instance->allowed_nodes,
+                                                        current->details->id);
+
+    pe_rsc_trace(instance, "Trying to assign %s to its current node %s",
+                 instance->id, pe__node_name(current));
+
+    if (!pcmk__node_available(allowed_node, true, false)) {
+        pe_rsc_info(instance,
+                    "Not assigning %s to current node %s: unavailable",
+                    instance->id, pe__node_name(current));
+        return false;
+    }
+
+    /* On each iteration, if instance gets assigned to a node other than its
+     * current one, we reserve one instance for the chosen node, unassign
+     * instance, restore instance's original node tables, and try again. This
+     * way, instances are proportionally assigned to nodes based on preferences,
+     * but shuffling of specific instances is minimized. If a node will be
+     * assigned instances at all, it preferentially receives instances that are
+     * currently active there.
+     *
+     * parent->allowed_nodes tracks the number of instances assigned to each
+     * node. If a node already has max_per_node instances assigned,
+     * ban_unavailable_allowed_nodes() marks it as unavailable.
+     *
+     * In the end, we restore the original parent->allowed_nodes to undo the
+     * changes to counts during tentative assignments. If we successfully
+     * assigned instance to its current node, we increment that node's counter.
+     */
+
+    // Back up the allowed node tables of instance and its children recursively
+    pcmk__copy_node_tables(instance, &allowed_orig);
+
+    // Update instances-per-node counts in a scratch table
+    parent->allowed_nodes = pcmk__copy_node_table(parent->allowed_nodes);
+
+    while (reserved < available) {
+        chosen = assign_instance(instance, current, max_per_node);
+
+        if (pe__same_node(chosen, current)) {
+            // Successfully assigned to current node
+            break;
+        }
+
+        // Assignment updates scores, so restore to original state
+        pe_rsc_debug(instance, "Rolling back node scores for %s", instance->id);
+        pcmk__restore_node_tables(instance, allowed_orig);
+
+        if (chosen == NULL) {
+            // Assignment failed, so give up
+            pe_rsc_info(instance,
+                        "Not assigning %s to current node %s: unavailable",
+                        instance->id, pe__node_name(current));
+            pe__set_resource_flags(instance, pe_rsc_provisional);
+            break;
+        }
+
+        // We prefer more strongly to assign an instance to the chosen node
+        pe_rsc_debug(instance,
+                     "Not assigning %s to current node %s: %s is better",
+                     instance->id, pe__node_name(current),
+                     pe__node_name(chosen));
+
+        // Reserve one instance for the chosen node and try again
+        if (++reserved >= available) {
+            pe_rsc_info(instance,
+                        "Not assigning %s to current node %s: "
+                        "other assignments are more important",
+                        instance->id, pe__node_name(current));
+
+        } else {
+            pe_rsc_debug(instance,
+                         "Reserved an instance of %s for %s. Retrying "
+                         "assignment of %s to %s",
+                         rsc->id, pe__node_name(chosen), instance->id,
+                         pe__node_name(current));
+        }
+
+        // Clear this assignment (frees chosen); leave instance counts in parent
+        pcmk__unassign_resource(instance);
+        chosen = NULL;
+    }
+
+    g_hash_table_destroy(allowed_orig);
+
+    // Restore original instances-per-node counts
+    g_hash_table_destroy(parent->allowed_nodes);
+    parent->allowed_nodes = allowed_orig_parent;
+
+    if (chosen == NULL) {
+        // Couldn't assign instance to current node
+        return false;
+    }
+    pe_rsc_trace(instance, "Assigned %s to current node %s",
+                 instance->id, pe__node_name(current));
+    increment_parent_count(instance, chosen);
+    return true;
 }
 
 /*!
@@ -758,22 +843,18 @@ pcmk__assign_instances(pe_resource_t *collective, GList *instances,
     // Assign as many instances as possible to their current location
     for (iter = instances; (iter != NULL) && (assigned < max_total);
          iter = iter->next) {
-        instance = (pe_resource_t *) iter->data;
+        int available = max_total - assigned;
 
+        instance = iter->data;
         if (!pcmk_is_set(instance->flags, pe_rsc_provisional)) {
             continue;   // Already assigned
         }
 
         current = preferred_node(collective, instance, optimal_per_node);
-        if (current != NULL) {
-            const pe_node_t *chosen = assign_instance(instance, current,
-                                                      max_per_node);
-
-            if (pe__same_node(chosen, current)) {
-                pe_rsc_trace(collective, "Assigned %s to current node %s",
-                             instance->id, pe__node_name(current));
-                assigned++;
-            }
+        if ((current != NULL)
+            && assign_instance_early(collective, instance, current,
+                                     max_per_node, available)) {
+            assigned++;
         }
     }
 
