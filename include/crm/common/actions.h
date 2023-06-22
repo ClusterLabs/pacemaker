@@ -30,6 +30,7 @@ extern "C" {
 #define PCMK_ACTION_MONITOR             "monitor"
 #define PCMK_ACTION_NOTIFY              "notify"
 #define PCMK_ACTION_PROMOTE             "promote"
+#define PCMK_ACTION_PROMOTED            "promoted"
 #define PCMK_ACTION_RELOAD              "reload"
 #define PCMK_ACTION_RELOAD_AGENT        "reload-agent"
 #define PCMK_ACTION_RUNNING             "running"

@@ -31,7 +31,7 @@ order_instance_promotion(pe_resource_t *clone, pe_resource_t *child,
                                  child, PCMK_ACTION_PROMOTE,
                                  pe_order_optional);
     pcmk__order_resource_actions(child, PCMK_ACTION_PROMOTE,
-                                 clone, RSC_PROMOTED,
+                                 clone, PCMK_ACTION_PROMOTED,
                                  pe_order_optional);
 
     // If clone is ordered, order this instance relative to last

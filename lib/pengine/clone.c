@@ -1362,7 +1362,7 @@ pe__create_promotable_pseudo_ops(pe_resource_t *clone, bool any_promoting,
                                        !any_promoting, true);
 
     // Create a "promoted" action for when all promotions are done
-    action_complete = pe__new_rsc_pseudo_action(clone, RSC_PROMOTED,
+    action_complete = pe__new_rsc_pseudo_action(clone, PCMK_ACTION_PROMOTED,
                                                 !any_promoting, true);
     action_complete->priority = INFINITY;
 

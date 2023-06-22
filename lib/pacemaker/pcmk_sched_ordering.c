@@ -53,11 +53,11 @@ invert_action(const char *action)
     } else if (pcmk__str_eq(action, PCMK_ACTION_DEMOTE, pcmk__str_none)) {
         return PCMK_ACTION_PROMOTE;
 
-    } else if (pcmk__str_eq(action, RSC_PROMOTED, pcmk__str_none)) {
+    } else if (pcmk__str_eq(action, PCMK_ACTION_PROMOTED, pcmk__str_none)) {
         return RSC_DEMOTED;
 
     } else if (pcmk__str_eq(action, RSC_DEMOTED, pcmk__str_none)) {
-        return RSC_PROMOTED;
+        return PCMK_ACTION_PROMOTED;
 
     } else if (pcmk__str_eq(action, PCMK_ACTION_RUNNING, pcmk__str_none)) {
         return PCMK_ACTION_STOPPED;

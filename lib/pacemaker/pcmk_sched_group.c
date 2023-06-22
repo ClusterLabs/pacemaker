@@ -133,7 +133,7 @@ pcmk__group_create_actions(pe_resource_t *rsc)
         create_group_pseudo_op(rsc, PCMK_ACTION_DEMOTE);
         create_group_pseudo_op(rsc, RSC_DEMOTED);
         create_group_pseudo_op(rsc, PCMK_ACTION_PROMOTE);
-        create_group_pseudo_op(rsc, RSC_PROMOTED);
+        create_group_pseudo_op(rsc, PCMK_ACTION_PROMOTED);
     }
 }
 
@@ -199,7 +199,7 @@ member_internal_constraints(gpointer data, gpointer user_data)
 
         // Promote group -> promote member -> group is promoted
         pcmk__order_resource_actions(member, PCMK_ACTION_PROMOTE,
-                                     member->parent, RSC_PROMOTED,
+                                     member->parent, PCMK_ACTION_PROMOTED,
                                      pe_order_runnable_left
                                      |pe_order_implies_then
                                      |pe_order_implies_then_printed);
