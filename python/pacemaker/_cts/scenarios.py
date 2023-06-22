@@ -27,9 +27,10 @@ class ScenarioComponent(object):
 
         raise NotImplementedError
 
-    def SetUp(self, CM):
+    def setup(self, CM):
         '''Set up the given ScenarioComponent'''
-        raise ValueError("Abstract Class member (Setup)")
+
+        raise NotImplementedError
 
     def TearDown(self, CM):
         '''Tear down (undo) the given ScenarioComponent'''
@@ -39,7 +40,7 @@ class ScenarioComponent(object):
 class Scenario(object):
     (
 '''The basic idea of a scenario is that of an ordered list of
-ScenarioComponent objects.  Each ScenarioComponent is SetUp() in turn,
+ScenarioComponent objects.  Each ScenarioComponent is setup() in turn,
 and then after the tests have been run, they are torn down using TearDown()
 (in reverse order).
 
@@ -89,7 +90,7 @@ A partially set up scenario is torn down if it fails during setup.
 
         return True
 
-    def SetUp(self):
+    def setup(self):
         '''Set up the Scenario. Return TRUE on success.'''
 
         self.ClusterManager.prepare()
@@ -108,16 +109,16 @@ A partially set up scenario is torn down if it fails during setup.
 
         j = 0
         while j < len(self.Components):
-            if not self.Components[j].SetUp(self.ClusterManager):
+            if not self.Components[j].setup(self.ClusterManager):
                 # OOPS!  We failed.  Tear partial setups down.
                 self.audit()
                 self.ClusterManager.log("Tearing down partial setup")
                 self.TearDown(j)
-                return None
+                return False
             j += 1
 
         self.audit()
-        return 1
+        return True
 
     def TearDown(self, max=None):
 
@@ -326,7 +327,7 @@ as they might have been rebooted or crashed for some reason beforehand.
         '''BootCluster is so generic it is always Applicable'''
         return True
 
-    def SetUp(self, CM):
+    def setup(self, CM):
         '''Basic Cluster Manager startup.  Start everything'''
 
         CM.prepare()

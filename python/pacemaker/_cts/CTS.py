@@ -93,7 +93,7 @@ class CtsLab:
         for node in self._env["nodes"]:
             self._logger.log("    * %s" % (node))
 
-        if not scenario.SetUp():
+        if not scenario.setup():
             return ExitStatus.ERROR
 
         # We want to alert on any exceptions caused by running a scenario, so
