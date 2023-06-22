@@ -46,6 +46,9 @@ extern "C" {
 //! \deprecated Use PCMK_ACTION_DEMOTE instead
 #define CRMD_ACTION_DEMOTE PCMK_ACTION_DEMOTE
 
+//! \deprecated Use PCMK_ACTION_DEMOTED instead
+#define CRMD_ACTION_DEMOTED PCMK_ACTION_DEMOTED
+
 //! \deprecated Use PCMK_ACTION_META_DATA instead
 #define CRMD_ACTION_METADATA PCMK_ACTION_META_DATA
 
