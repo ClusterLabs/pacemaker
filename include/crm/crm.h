@@ -168,8 +168,6 @@ extern char *crm_system_name;
 #  define CRMD_METADATA_CALL_TIMEOUT   30000
 
 /* short names */
-#  define RSC_DEMOTED	PCMK_ACTION_DEMOTED
-
 #  define RSC_NOTIFIED	CRMD_ACTION_NOTIFIED
 /* *INDENT-ON* */
 

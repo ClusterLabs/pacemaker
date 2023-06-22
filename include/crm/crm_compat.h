@@ -97,6 +97,9 @@ extern "C" {
 //! \deprecated Use PCMK_ACTION_DEMOTE instead
 #define RSC_DEMOTE PCMK_ACTION_DEMOTE
 
+//! \deprecated Use PCMK_ACTION_DEMOTED instead
+#define RSC_DEMOTED PCMK_ACTION_DEMOTED
+
 //! \deprecated Use PCMK_ACTION_META_DATA instead
 #define RSC_METADATA PCMK_ACTION_META_DATA
 
