@@ -566,10 +566,8 @@ assign_instance(pe_resource_t *instance, const pe_node_t *prefer,
     pe_rsc_trace(instance, "Assigning %s (preferring %s)", instance->id,
                  ((prefer == NULL)? "no node" : prefer->details->uname));
 
-    if (!pcmk_is_set(instance->flags, pe_rsc_provisional)) {
-        // Instance is already assigned
-        return instance->fns->location(instance, NULL, FALSE) != NULL;
-    }
+    CRM_CHECK(pcmk_is_set(instance->flags, pe_rsc_provisional),
+              return (instance->fns->location(instance, NULL, FALSE) != NULL));
 
     if (pcmk_is_set(instance->flags, pe_rsc_allocating)) {
         pe_rsc_debug(instance,
