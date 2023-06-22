@@ -113,7 +113,7 @@ A partially set up scenario is torn down if it fails during setup.
                 self.ClusterManager.log("Tearing down partial setup")
                 self.TearDown(j)
                 return None
-            j = j + 1
+            j += 1
 
         self.audit()
         return 1
@@ -127,7 +127,7 @@ A partially set up scenario is torn down if it fails during setup.
         j = max
         while j >= 0:
             self.Components[j].TearDown(self.ClusterManager)
-            j = j - 1
+            j -= 1
 
         self.audit()
         self.ClusterManager.install_support("uninstall")
@@ -136,7 +136,7 @@ A partially set up scenario is torn down if it fails during setup.
         '''Increment (or initialize) the value associated with the given name'''
         if not name in self.Stats:
             self.Stats[name] = 0
-        self.Stats[name] = self.Stats[name]+1
+        self.Stats[name] += 1
 
     def run(self, Iterations):
         self.ClusterManager.oprofileStart()
@@ -154,7 +154,6 @@ A partially set up scenario is torn down if it fails during setup.
         nodechoice = self.ClusterManager.Env.random_node()
 
         ret = True
-        where = ""
         did_run = 0
 
         self.ClusterManager.instance_errorstoignore_clear()
@@ -191,7 +190,7 @@ A partially set up scenario is torn down if it fails during setup.
             test.stats["min_time"] = test_time
             test.stats["max_time"] = test_time
         else:
-            test.stats["elapsed_time"] = test.stats["elapsed_time"] + elapsed_time
+            test.stats["elapsed_time"] += elapsed_time
             if test_time < test.stats["min_time"]:
                 test.stats["min_time"] = test_time
             if test_time > test.stats["max_time"]:
@@ -261,7 +260,7 @@ A partially set up scenario is torn down if it fails during setup.
                 if add_err == 1:
                     self.ClusterManager.log("BadNews: " + match)
                     self.incr("BadNews")
-                    errcount = errcount + 1
+                    errcount += 1
             else:
                 break
         else:
