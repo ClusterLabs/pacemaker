@@ -20,12 +20,12 @@ class ScenarioComponent(object):
     def __init__(self, Env):
         self.Env = Env
 
-    def IsApplicable(self):
+    def is_applicable(self):
         '''Return True if the current ScenarioComponent is applicable
         in the given LabEnvironment given to the constructor.
         '''
 
-        raise ValueError("Abstract Class member (IsApplicable)")
+        raise NotImplementedError
 
     def SetUp(self, CM):
         '''Set up the given ScenarioComponent'''
@@ -77,15 +77,16 @@ A partially set up scenario is torn down if it fails during setup.
             if not issubclass(test.__class__, CTSTest):
                 raise ValueError("Init value must be a subclass of CTSTest")
 
-    def IsApplicable(self):
+    def is_applicable(self):
         (
-'''A Scenario IsApplicable() iff each of its ScenarioComponents IsApplicable()
+'''A Scenario is_applicable() iff each of its ScenarioComponents is_applicable()
 '''
         )
 
         for comp in self.Components:
-            if not comp.IsApplicable():
-                return None
+            if not comp.is_applicable():
+                return False
+
         return True
 
     def SetUp(self):
@@ -321,7 +322,7 @@ as they might have been rebooted or crashed for some reason beforehand.
     def __init__(self, Env):
         pass
 
-    def IsApplicable(self):
+    def is_applicable(self):
         '''BootCluster is so generic it is always Applicable'''
         return True
 
