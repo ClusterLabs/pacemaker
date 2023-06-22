@@ -15,8 +15,9 @@ from pacemaker._cts.watcher import LogWatcher
 
 class ScenarioComponent:
 
-    def __init__(self, Env):
-        self.Env = Env
+    def __init__(self, cm, env):
+        self._cm = cm
+        self._env = env
 
     def is_applicable(self):
         '''Return True if the current ScenarioComponent is applicable
@@ -25,12 +26,12 @@ class ScenarioComponent:
 
         raise NotImplementedError
 
-    def setup(self, CM):
+    def setup(self):
         '''Set up the given ScenarioComponent'''
 
         raise NotImplementedError
 
-    def teardown(self, CM):
+    def teardown(self):
         '''Tear down (undo) the given ScenarioComponent'''
 
         raise NotImplementedError
@@ -106,7 +107,7 @@ A partially set up scenario is torn down if it fails during setup.
 
         j = 0
         while j < len(self.Components):
-            if not self.Components[j].setup(self.ClusterManager):
+            if not self.Components[j].setup():
                 # OOPS!  We failed.  Tear partial setups down.
                 self.audit()
                 self.ClusterManager.log("Tearing down partial setup")
@@ -125,7 +126,7 @@ A partially set up scenario is torn down if it fails during setup.
             max = len(self.Components)-1
         j = max
         while j >= 0:
-            self.Components[j].teardown(self.ClusterManager)
+            self.Components[j].teardown()
             j -= 1
 
         self.audit()
@@ -324,38 +325,35 @@ This ScenarioComponent simply starts the cluster manager on all the nodes.
 It is fairly robust as it waits for all nodes to come up before starting
 as they might have been rebooted or crashed for some reason beforehand.
 ''')
-    def __init__(self, Env):
-        pass
-
     def is_applicable(self):
         '''BootCluster is so generic it is always Applicable'''
         return True
 
-    def setup(self, CM):
+    def setup(self):
         '''Basic Cluster Manager startup.  Start everything'''
 
-        CM.prepare()
+        self._cm.prepare()
 
         #        Clear out the cobwebs ;-)
-        CM.stopall(verbose=True, force=True)
+        self._cm.stopall(verbose=True, force=True)
 
         # Now start the Cluster Manager on all the nodes.
-        CM.log("Starting Cluster Manager on all nodes.")
-        return CM.startall(verbose=True, quick=True)
+        self._cm.log("Starting Cluster Manager on all nodes.")
+        return self._cm.startall(verbose=True, quick=True)
 
-    def teardown(self, CM):
+    def teardown(self):
         '''Set up the given ScenarioComponent'''
 
         # Stop the cluster manager everywhere
 
-        CM.log("Stopping Cluster Manager on all nodes")
-        CM.stopall(verbose=True, force=False)
+        self._cm.log("Stopping Cluster Manager on all nodes")
+        self._cm.stopall(verbose=True, force=False)
 
 
 class LeaveBooted(BootCluster):
-    def teardown(self, CM):
+    def teardown(self):
         '''Set up the given ScenarioComponent'''
 
         # Stop the cluster manager everywhere
 
-        CM.log("Leaving Cluster running on all nodes")
+        self._cm.log("Leaving Cluster running on all nodes")
