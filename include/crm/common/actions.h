@@ -25,6 +25,7 @@ extern "C" {
 #define PCMK_ACTION_DELETE              "delete"
 #define PCMK_ACTION_DEMOTE              "demote"
 #define PCMK_ACTION_META_DATA           "meta-data"
+#define PCMK_ACTION_MIGRATE_FROM        "migrate_from"
 #define PCMK_ACTION_MIGRATE_TO          "migrate_to"
 #define PCMK_ACTION_MONITOR             "monitor"
 #define PCMK_ACTION_NOTIFY              "notify"

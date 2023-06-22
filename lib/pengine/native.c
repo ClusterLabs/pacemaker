@@ -382,7 +382,8 @@ native_pending_state(const pe_resource_t *rsc)
                             pcmk__str_casei)) {
         pending_state = "Migrating";
 
-    } else if (pcmk__str_eq(rsc->pending_task, CRMD_ACTION_MIGRATED, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(rsc->pending_task, PCMK_ACTION_MIGRATE_FROM,
+                            pcmk__str_casei)) {
        /* Work might be done in here. */
         pending_state = "Migrating";
 

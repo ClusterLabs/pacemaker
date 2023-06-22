@@ -107,7 +107,7 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
      * contain underbars. Here, list action names and name prefixes that can.
      */
     const char *actions_with_underbars[] = {
-        CRMD_ACTION_MIGRATED,
+        PCMK_ACTION_MIGRATE_FROM,
         PCMK_ACTION_MIGRATE_TO,
         NULL
     };
@@ -473,7 +473,7 @@ crm_op_needs_metadata(const char *rsc_class, const char *op)
     return pcmk__str_any_of(op, PCMK_ACTION_START, PCMK_ACTION_MONITOR,
                             PCMK_ACTION_PROMOTE, PCMK_ACTION_DEMOTE,
                             PCMK_ACTION_RELOAD, PCMK_ACTION_RELOAD_AGENT,
-                            PCMK_ACTION_MIGRATE_TO, CRMD_ACTION_MIGRATED,
+                            PCMK_ACTION_MIGRATE_TO, PCMK_ACTION_MIGRATE_FROM,
                             PCMK_ACTION_NOTIFY, NULL);
 }
 

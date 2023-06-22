@@ -187,7 +187,7 @@ apply_remote_ordering(pe_action_t *action)
               remote_rsc->id, state2text(state));
 
     if (pcmk__strcase_any_of(action->task, PCMK_ACTION_MIGRATE_TO,
-                             CRMD_ACTION_MIGRATED, NULL)) {
+                             PCMK_ACTION_MIGRATE_FROM, NULL)) {
         /* Migration ops map to "no_action", but we need to apply the same
          * ordering as for stop or demote (see get_router_node()).
          */
@@ -329,7 +329,7 @@ apply_container_ordering(pe_action_t *action)
               container->id);
 
     if (pcmk__strcase_any_of(action->task, PCMK_ACTION_MIGRATE_TO,
-                             CRMD_ACTION_MIGRATED, NULL)) {
+                             PCMK_ACTION_MIGRATE_FROM, NULL)) {
         /* Migration ops map to "no_action", but we need to apply the same
          * ordering as for stop or demote (see get_router_node()).
          */
@@ -612,7 +612,7 @@ pcmk__connection_host_for_action(const pe_action_t *action)
      * the router node.
      */
     if (pcmk__strcase_any_of(task, PCMK_ACTION_CANCEL, PCMK_ACTION_STOP,
-                             PCMK_ACTION_DEMOTE, "migrate_from",
+                             PCMK_ACTION_DEMOTE, PCMK_ACTION_MIGRATE_FROM,
                              PCMK_ACTION_MIGRATE_TO, NULL)
         && !partial_migration) {
         crm_trace("Routing %s for %s through remote connection's "

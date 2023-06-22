@@ -2408,7 +2408,8 @@ calculate_active_ops(const GList *sorted_op_list, int *start_index,
             && pcmk__str_eq(status, "0", pcmk__str_casei)) {
             *stop_index = counter;
 
-        } else if (pcmk__strcase_any_of(task, PCMK_ACTION_START, CRMD_ACTION_MIGRATED, NULL)) {
+        } else if (pcmk__strcase_any_of(task, PCMK_ACTION_START,
+                                        PCMK_ACTION_MIGRATE_FROM, NULL)) {
             *start_index = counter;
 
         } else if ((implied_monitor_start <= *stop_index)
@@ -2704,7 +2705,8 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
                        " and @" XML_LRM_ATTR_MIGRATE_TARGET "='", source, "']",
                        NULL);
 
-    } else if ((source != NULL) && (strcmp(op, CRMD_ACTION_MIGRATED) == 0)) {
+    } else if ((source != NULL)
+               && (strcmp(op, PCMK_ACTION_MIGRATE_FROM) == 0)) {
         pcmk__g_strcat(xpath,
                        " and @" XML_LRM_ATTR_MIGRATE_SOURCE "='", source, "']",
                        NULL);
@@ -2840,7 +2842,8 @@ non_monitor_after(const char *rsc_id, const char *node_name,
         task = crm_element_value(op, XML_LRM_ATTR_TASK);
 
         if (pcmk__str_any_of(task, PCMK_ACTION_START, PCMK_ACTION_STOP,
-                             PCMK_ACTION_MIGRATE_TO, CRMD_ACTION_MIGRATED, NULL)
+                             PCMK_ACTION_MIGRATE_TO, PCMK_ACTION_MIGRATE_FROM,
+                             NULL)
             && pe__is_newer_op(op, xml_op, same_node) > 0) {
             return true;
         }
@@ -3040,8 +3043,8 @@ unpack_migrate_to_success(struct action_history *history)
                                         true, history->rsc->cluster);
 
     // Check for a migrate_from action from this source on the target
-    migrate_from = find_lrm_op(history->rsc->id, CRMD_ACTION_MIGRATED, target,
-                               source, -1, history->rsc->cluster);
+    migrate_from = find_lrm_op(history->rsc->id, PCMK_ACTION_MIGRATE_FROM,
+                               target, source, -1, history->rsc->cluster);
     if (migrate_from != NULL) {
         if (source_newer_op) {
             /* There's a newer non-monitor operation on the source and a
@@ -3155,9 +3158,9 @@ unpack_migrate_to_failure(struct action_history *history)
     history->rsc->role = RSC_ROLE_STARTED;
 
     // Check for migrate_from on the target
-    target_migrate_from = find_lrm_op(history->rsc->id, CRMD_ACTION_MIGRATED,
-                                      target, source, PCMK_OCF_OK,
-                                      history->rsc->cluster);
+    target_migrate_from = find_lrm_op(history->rsc->id,
+                                      PCMK_ACTION_MIGRATE_FROM, target, source,
+                                      PCMK_OCF_OK, history->rsc->cluster);
 
     if (/* If the resource state is unknown on the target, it will likely be
          * probed there.
@@ -3509,7 +3512,7 @@ unpack_rsc_op_failure(struct action_history *history, xmlNode **last_failure,
     } else if (strcmp(history->task, PCMK_ACTION_MIGRATE_TO) == 0) {
         unpack_migrate_to_failure(history);
 
-    } else if (strcmp(history->task, CRMD_ACTION_MIGRATED) == 0) {
+    } else if (strcmp(history->task, PCMK_ACTION_MIGRATE_FROM) == 0) {
         unpack_migrate_from_failure(history);
 
     } else if (strcmp(history->task, PCMK_ACTION_PROMOTE) == 0) {
@@ -4176,7 +4179,7 @@ update_resource_state(struct action_history *history, int exit_status,
         }
         history->rsc->role = RSC_ROLE_UNPROMOTED;
 
-    } else if (pcmk__str_eq(history->task, CRMD_ACTION_MIGRATED,
+    } else if (pcmk__str_eq(history->task, PCMK_ACTION_MIGRATE_FROM,
                             pcmk__str_none)) {
         history->rsc->role = RSC_ROLE_STARTED;
         clear_past_failure = true;
@@ -4252,7 +4255,7 @@ can_affect_state(struct action_history *history)
      return pcmk__str_any_of(history->task, PCMK_ACTION_MONITOR,
                              PCMK_ACTION_START, PCMK_ACTION_STOP,
                              PCMK_ACTION_PROMOTE, PCMK_ACTION_DEMOTE,
-                             PCMK_ACTION_MIGRATE_TO, CRMD_ACTION_MIGRATED,
+                             PCMK_ACTION_MIGRATE_TO, PCMK_ACTION_MIGRATE_FROM,
                              "asyncmon", NULL);
 #else
      return !pcmk__str_any_of(history->task, PCMK_ACTION_NOTIFY,

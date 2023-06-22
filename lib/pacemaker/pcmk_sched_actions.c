@@ -1167,7 +1167,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
      * multiple nodes and is important for future cluster transitions.
      */
     } else if (pcmk__str_any_of(op->op_type, PCMK_ACTION_MIGRATE_TO,
-                                CRMD_ACTION_MIGRATED, NULL)) {
+                                PCMK_ACTION_MIGRATE_FROM, NULL)) {
         op_id = strdup(key);
 
     } else if (did_rsc_op_fail(op, target_rc)) {
@@ -1242,7 +1242,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     }
 
     if (pcmk__str_any_of(op->op_type, PCMK_ACTION_MIGRATE_TO,
-                         CRMD_ACTION_MIGRATED, NULL)) {
+                         PCMK_ACTION_MIGRATE_FROM, NULL)) {
         /*
          * Record migrate_source and migrate_target always for migrate ops.
          */
@@ -1470,7 +1470,7 @@ task_for_digest(const char *task, guint interval_ms)
      * the resource.
      */
     if ((interval_ms == 0)
-        && pcmk__str_any_of(task, PCMK_ACTION_MONITOR, RSC_MIGRATED,
+        && pcmk__str_any_of(task, PCMK_ACTION_MONITOR, PCMK_ACTION_MIGRATE_FROM,
                             PCMK_ACTION_PROMOTE, NULL)) {
         task = PCMK_ACTION_START;
     }
@@ -1816,7 +1816,7 @@ process_rsc_history(const xmlNode *rsc_entry, pe_resource_t *rsc,
                    || pcmk__strcase_any_of(task, PCMK_ACTION_MONITOR,
                                            PCMK_ACTION_START,
                                            PCMK_ACTION_PROMOTE,
-                                           RSC_MIGRATED, NULL)) {
+                                           PCMK_ACTION_MIGRATE_FROM, NULL)) {
             /* If a resource operation failed, and the operation's definition
              * has changed, clear any fail count so they can be retried fresh.
              */

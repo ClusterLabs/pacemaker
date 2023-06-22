@@ -410,7 +410,8 @@ check_remote_node_state(const remote_ra_cmd_t *cmd)
     if (pcmk__str_eq(cmd->action, PCMK_ACTION_START, pcmk__str_casei)) {
         remote_node_up(cmd->rsc_id);
 
-    } else if (pcmk__str_eq(cmd->action, "migrate_from", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(cmd->action, PCMK_ACTION_MIGRATE_FROM,
+                            pcmk__str_casei)) {
         /* After a successful migration, we don't need to do remote_node_up()
          * because the DC already knows the node is up, and we don't want to
          * clear LRM history etc. We do need to add the remote node to this
@@ -525,8 +526,8 @@ retry_start_cmd_cb(gpointer data)
         return FALSE;
     }
     cmd = ra_data->cur_cmd;
-    if (!pcmk__strcase_any_of(cmd->action, PCMK_ACTION_START, "migrate_from",
-                              NULL)) {
+    if (!pcmk__strcase_any_of(cmd->action, PCMK_ACTION_START,
+                              PCMK_ACTION_MIGRATE_FROM, NULL)) {
         return FALSE;
     }
     update_remaining_timeout(cmd);
@@ -713,8 +714,8 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
     /* Start actions and migrate from actions complete after connection
      * comes back to us. */
     if ((op->type == lrmd_event_connect)
-        && pcmk__strcase_any_of(cmd->action, PCMK_ACTION_START, "migrate_from",
-                                NULL)) {
+        && pcmk__strcase_any_of(cmd->action, PCMK_ACTION_START,
+                                PCMK_ACTION_MIGRATE_FROM, NULL)) {
         if (op->connection_rc < 0) {
             update_remaining_timeout(cmd);
 
@@ -906,8 +907,8 @@ handle_remote_ra_exec(gpointer user_data)
         ra_data->cmds = g_list_remove_link(ra_data->cmds, first);
         g_list_free_1(first);
 
-        if (pcmk__str_any_of(cmd->action, PCMK_ACTION_START, "migrate_from",
-                             NULL)) {
+        if (pcmk__str_any_of(cmd->action, PCMK_ACTION_START,
+                             PCMK_ACTION_MIGRATE_FROM, NULL)) {
             lrm_remote_clear_flags(lrm_state, expect_takeover | takeover_complete);
             if (handle_remote_ra_start(lrm_state, cmd,
                                        cmd->timeout) == pcmk_rc_ok) {
@@ -1059,7 +1060,7 @@ is_remote_ra_supported_action(const char *action)
                             PCMK_ACTION_STOP,
                             PCMK_ACTION_MONITOR,
                             PCMK_ACTION_MIGRATE_TO,
-                            CRMD_ACTION_MIGRATED,
+                            PCMK_ACTION_MIGRATE_FROM,
                             PCMK_ACTION_RELOAD_AGENT,
                             PCMK_ACTION_RELOAD,
                             NULL);

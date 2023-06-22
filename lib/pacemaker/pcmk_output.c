@@ -1152,7 +1152,9 @@ rsc_action_default(pcmk__output_t *out, va_list args)
 
         CRM_CHECK(next != NULL, return rc);
 
-        possible_matches = pe__resource_actions(rsc, next, RSC_MIGRATED, false);
+        possible_matches = pe__resource_actions(rsc, next,
+                                                PCMK_ACTION_MIGRATE_FROM,
+                                                false);
         if (possible_matches) {
             migrate_op = possible_matches->data;
         }

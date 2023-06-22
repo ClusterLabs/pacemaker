@@ -60,7 +60,7 @@ best_op(const pe_resource_t *rsc, const pe_node_t *node)
                        && pcmk__strcase_any_of(task, PCMK_ACTION_MONITOR,
                                                PCMK_ACTION_START,
                                                PCMK_ACTION_PROMOTE,
-                                               RSC_MIGRATED, NULL);
+                                               PCMK_ACTION_MIGRATE_FROM, NULL);
 
         if (best == NULL) {
             goto is_best;

@@ -172,7 +172,7 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action)
             input = ((pe_action_wrapper_t *) iter->data)->action;
             if ((input->rsc != NULL)
                 && pcmk__str_eq(action->rsc->id, input->rsc->id, pcmk__str_none)
-                && pcmk__str_eq(input->task, CRMD_ACTION_MIGRATED,
+                && pcmk__str_eq(input->task, PCMK_ACTION_MIGRATE_FROM,
                                 pcmk__str_none)) {
                 migrating = true;
                 break;
