@@ -5,9 +5,7 @@ __all__ = [ "AllOnce", "Boot", "BootCluster", "LeaveBooted", "RandomTests", "Seq
 __copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
-import os
 import re
-import sys
 import time
 
 from pacemaker._cts.audits import ClusterAudit
@@ -15,7 +13,7 @@ from pacemaker._cts.input import should_continue
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.watcher import LogWatcher
 
-class ScenarioComponent(object):
+class ScenarioComponent:
 
     def __init__(self, Env):
         self.Env = Env
@@ -38,7 +36,7 @@ class ScenarioComponent(object):
         raise NotImplementedError
 
 
-class Scenario(object):
+class Scenario:
     (
 '''The basic idea of a scenario is that of an ordered list of
 ScenarioComponent objects.  Each ScenarioComponent is setup() in turn,
@@ -64,8 +62,6 @@ A partially set up scenario is torn down if it fails during setup.
         self.TestSets = []
         self.Stats = {"success":0, "failure":0, "BadNews":0, "skipped":0}
         self.Sets = []
-
-        #self.ns=CTS.NodeStatus(self.Env)
 
         for comp in Components:
             if not issubclass(comp.__class__, ScenarioComponent):
