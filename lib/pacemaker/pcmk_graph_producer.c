@@ -663,7 +663,8 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
         // load orderings are relevant only if actions are for same node
 
         if ((action->rsc != NULL)
-            && pcmk__str_eq(action->task, RSC_MIGRATE, pcmk__str_none)) {
+            && pcmk__str_eq(action->task, PCMK_ACTION_MIGRATE_TO,
+                            pcmk__str_none)) {
 
             pe_node_t *assigned = action->rsc->allocated_to;
 

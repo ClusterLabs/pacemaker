@@ -439,7 +439,9 @@ pcmk__create_utilization_constraints(pe_resource_t *rsc,
         pcmk__new_ordering(NULL, NULL, load_stopped, rsc, start_key(rsc), NULL,
                            pe_order_load, rsc->cluster);
         pcmk__new_ordering(NULL, NULL, load_stopped,
-                           rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0), NULL,
+                           rsc,
+                           pcmk__op_key(rsc->id, PCMK_ACTION_MIGRATE_TO, 0),
+                           NULL,
                            pe_order_load, rsc->cluster);
     }
 }

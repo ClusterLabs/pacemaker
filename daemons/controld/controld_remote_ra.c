@@ -958,11 +958,12 @@ handle_remote_ra_exec(gpointer user_data)
 
             handle_remote_ra_stop(lrm_state, cmd);
 
-        } else if (!strcmp(cmd->action, "migrate_to")) {
+        } else if (strcmp(cmd->action, PCMK_ACTION_MIGRATE_TO) == 0) {
             lrm_remote_clear_flags(lrm_state, takeover_complete);
             lrm_remote_set_flags(lrm_state, expect_takeover);
             pcmk__set_result(&(cmd->result), PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
             report_remote_ra_result(cmd);
+
         } else if (pcmk__str_any_of(cmd->action, PCMK_ACTION_RELOAD,
                                     PCMK_ACTION_RELOAD_AGENT, NULL))  {
             /* Currently the only reloadable parameter is reconnect_interval,
@@ -1057,7 +1058,7 @@ is_remote_ra_supported_action(const char *action)
                             PCMK_ACTION_START,
                             PCMK_ACTION_STOP,
                             PCMK_ACTION_MONITOR,
-                            CRMD_ACTION_MIGRATE,
+                            PCMK_ACTION_MIGRATE_TO,
                             CRMD_ACTION_MIGRATED,
                             PCMK_ACTION_RELOAD_AGENT,
                             PCMK_ACTION_RELOAD,

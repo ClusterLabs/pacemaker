@@ -1166,7 +1166,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     /* Migration history is preserved separately, which usually matters for
      * multiple nodes and is important for future cluster transitions.
      */
-    } else if (pcmk__str_any_of(op->op_type, CRMD_ACTION_MIGRATE,
+    } else if (pcmk__str_any_of(op->op_type, PCMK_ACTION_MIGRATE_TO,
                                 CRMD_ACTION_MIGRATED, NULL)) {
         op_id = strdup(key);
 
@@ -1241,8 +1241,8 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
         }
     }
 
-    if (pcmk__str_any_of(op->op_type, CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED,
-                         NULL)) {
+    if (pcmk__str_any_of(op->op_type, PCMK_ACTION_MIGRATE_TO,
+                         CRMD_ACTION_MIGRATED, NULL)) {
         /*
          * Record migrate_source and migrate_target always for migrate ops.
          */

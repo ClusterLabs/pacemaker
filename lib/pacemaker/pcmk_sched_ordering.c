@@ -1084,7 +1084,7 @@ ordering_is_invalid(pe_action_t *action, pe_action_wrapper_t *input)
      * break the order "load_stopped_node2" -> "rscA_migrate_to node1".
      */
     if ((input->type == pe_order_load) && action->rsc
-        && pcmk__str_eq(action->task, RSC_MIGRATE, pcmk__str_none)
+        && pcmk__str_eq(action->task, PCMK_ACTION_MIGRATE_TO, pcmk__str_none)
         && pcmk__graph_has_loop(action, action, input)) {
         return true;
     }

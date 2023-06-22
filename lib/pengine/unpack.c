@@ -2699,7 +2699,7 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
                    NULL);
 
     /* Need to check against transition_magic too? */
-    if ((source != NULL) && (strcmp(op, CRMD_ACTION_MIGRATE) == 0)) {
+    if ((source != NULL) && (strcmp(op, PCMK_ACTION_MIGRATE_TO) == 0)) {
         pcmk__g_strcat(xpath,
                        " and @" XML_LRM_ATTR_MIGRATE_TARGET "='", source, "']",
                        NULL);
@@ -2840,7 +2840,7 @@ non_monitor_after(const char *rsc_id, const char *node_name,
         task = crm_element_value(op, XML_LRM_ATTR_TASK);
 
         if (pcmk__str_any_of(task, PCMK_ACTION_START, PCMK_ACTION_STOP,
-                             CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED, NULL)
+                             PCMK_ACTION_MIGRATE_TO, CRMD_ACTION_MIGRATED, NULL)
             && pe__is_newer_op(op, xml_op, same_node) > 0) {
             return true;
         }
@@ -3222,7 +3222,7 @@ unpack_migrate_from_failure(struct action_history *history)
     history->rsc->role = RSC_ROLE_STARTED;
 
     // Check for a migrate_to on the source
-    source_migrate_to = find_lrm_op(history->rsc->id, CRMD_ACTION_MIGRATE,
+    source_migrate_to = find_lrm_op(history->rsc->id, PCMK_ACTION_MIGRATE_TO,
                                     source, target, PCMK_OCF_OK,
                                     history->rsc->cluster);
 
@@ -3506,7 +3506,7 @@ unpack_rsc_op_failure(struct action_history *history, xmlNode **last_failure,
         resource_location(history->rsc, history->node, -INFINITY,
                           "__stop_fail__", history->rsc->cluster);
 
-    } else if (strcmp(history->task, CRMD_ACTION_MIGRATE) == 0) {
+    } else if (strcmp(history->task, PCMK_ACTION_MIGRATE_TO) == 0) {
         unpack_migrate_to_failure(history);
 
     } else if (strcmp(history->task, CRMD_ACTION_MIGRATED) == 0) {
@@ -4181,7 +4181,7 @@ update_resource_state(struct action_history *history, int exit_status,
         history->rsc->role = RSC_ROLE_STARTED;
         clear_past_failure = true;
 
-    } else if (pcmk__str_eq(history->task, CRMD_ACTION_MIGRATE,
+    } else if (pcmk__str_eq(history->task, PCMK_ACTION_MIGRATE_TO,
                             pcmk__str_none)) {
         unpack_migrate_to_success(history);
 
@@ -4252,7 +4252,7 @@ can_affect_state(struct action_history *history)
      return pcmk__str_any_of(history->task, PCMK_ACTION_MONITOR,
                              PCMK_ACTION_START, PCMK_ACTION_STOP,
                              PCMK_ACTION_PROMOTE, PCMK_ACTION_DEMOTE,
-                             CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED,
+                             PCMK_ACTION_MIGRATE_TO, CRMD_ACTION_MIGRATED,
                              "asyncmon", NULL);
 #else
      return !pcmk__str_any_of(history->task, PCMK_ACTION_NOTIFY,
@@ -4478,7 +4478,7 @@ process_pending_action(struct action_history *history,
     } else if (strcmp(history->task, PCMK_ACTION_PROMOTE) == 0) {
         history->rsc->role = RSC_ROLE_PROMOTED;
 
-    } else if ((strcmp(history->task, CRMD_ACTION_MIGRATE) == 0)
+    } else if ((strcmp(history->task, PCMK_ACTION_MIGRATE_TO) == 0)
                && history->node->details->unclean) {
         /* A migrate_to action is pending on a unclean source, so force a stop
          * on the target.

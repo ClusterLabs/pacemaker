@@ -518,7 +518,8 @@ is_rsc_active(lrm_state_t * lrm_state, const char *rsc_id)
         return FALSE;
 
     } else if (entry->last->rc == PCMK_OCF_OK
-               && pcmk__str_eq(entry->last->op_type, CRMD_ACTION_MIGRATE, pcmk__str_casei)) {
+               && pcmk__str_eq(entry->last->op_type, PCMK_ACTION_MIGRATE_TO,
+                               pcmk__str_casei)) {
         // A stricter check is too complex ... leave that to the scheduler
         return FALSE;
 
@@ -1857,7 +1858,7 @@ static bool
 should_cancel_recurring(const char *rsc_id, const char *action, guint interval_ms)
 {
     if (is_remote_lrmd_ra(NULL, NULL, rsc_id) && (interval_ms == 0)
-        && (strcmp(action, CRMD_ACTION_MIGRATE) == 0)) {
+        && (strcmp(action, PCMK_ACTION_MIGRATE_TO) == 0)) {
         /* Don't stop monitoring a migrating Pacemaker Remote connection
          * resource until the entire migration has completed. We must detect if
          * the connection is unexpectedly severed, even during a migration.
