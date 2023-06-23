@@ -164,13 +164,13 @@ class Scenario:
 
         self._cm.oprofileStart()
         try:
-            self.run_loop(iterations)
+            self._run_loop(iterations)
             self._cm.oprofileStop()
         except:
             self._cm.oprofileStop()
             raise
 
-    def run_loop(self, iterations):
+    def _run_loop(self, iterations):
         """ Do the hard part of the run method - actually run all the tests the
             given number of times.
         """
@@ -324,7 +324,7 @@ class Scenario:
 class AllOnce(Scenario):
     """ Every Test Once """
 
-    def run_loop(self, iterations):
+    def _run_loop(self, iterations):
         testcount = 1
         for test in self.tests:
             self.run_test(test, testcount)
@@ -334,7 +334,7 @@ class AllOnce(Scenario):
 class RandomTests(Scenario):
     """ Random Test Execution """
 
-    def run_loop(self, iterations):
+    def _run_loop(self, iterations):
         testcount = 1
         while testcount <= iterations:
             test = self._cm.Env.random_gen.choice(self.tests)
@@ -345,7 +345,7 @@ class RandomTests(Scenario):
 class Sequence(Scenario):
     """ Named Tests in Sequence """
 
-    def run_loop(self, iterations):
+    def _run_loop(self, iterations):
         testcount = 1
         while testcount <= iterations:
             for test in self.tests:
@@ -356,7 +356,7 @@ class Sequence(Scenario):
 class Boot(Scenario):
     """ Start the Cluster """
 
-    def run_loop(self, iterations):
+    def _run_loop(self, iterations):
         return
 
 
