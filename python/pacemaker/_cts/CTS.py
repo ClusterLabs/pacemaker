@@ -112,10 +112,10 @@ class CtsLab:
         scenario.teardown()
         scenario.summarize()
 
-        if scenario.Stats["failure"] > 0:
+        if scenario.stats["failure"] > 0:
             return ExitStatus.ERROR
 
-        if scenario.Stats["success"] != iterations:
+        if scenario.stats["success"] != iterations:
             self._logger.log("No failure count but success != requested iterations")
             return ExitStatus.ERROR
 

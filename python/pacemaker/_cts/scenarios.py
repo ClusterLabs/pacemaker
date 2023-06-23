@@ -50,29 +50,27 @@ ScenarioComponent is applicable.
 A partially set up scenario is torn down if it fails during setup.
 ''')
 
-    def __init__(self, ClusterManager, Components, Audits, Tests):
+    def __init__(self, cm, components, audits, tests):
 
         "Initialize the Scenario from the list of ScenarioComponents"
 
-        self.ClusterManager = ClusterManager
-        self.Components = Components
-        self.Audits  = Audits
-        self.Tests = Tests
+        self.stats = { "success": 0, "failure": 0, "BadNews": 0, "skipped": 0 }
+        self.tests = tests
 
-        self.BadNews = None
-        self.TestSets = []
-        self.Stats = {"success":0, "failure":0, "BadNews":0, "skipped":0}
-        self.Sets = []
+        self._audits  = audits
+        self._bad_news = None
+        self._cm = cm
+        self._components = components
 
-        for comp in Components:
+        for comp in components:
             if not issubclass(comp.__class__, ScenarioComponent):
                 raise ValueError("Init value must be subclass of ScenarioComponent")
 
-        for audit in Audits:
+        for audit in audits:
             if not issubclass(audit.__class__, ClusterAudit):
                 raise ValueError("Init value must be subclass of ClusterAudit")
 
-        for test in Tests:
+        for test in tests:
             if not issubclass(test.__class__, CTSTest):
                 raise ValueError("Init value must be a subclass of CTSTest")
 
@@ -82,7 +80,7 @@ A partially set up scenario is torn down if it fails during setup.
 '''
         )
 
-        for comp in self.Components:
+        for comp in self._components:
             if not comp.is_applicable():
                 return False
 
@@ -91,26 +89,26 @@ A partially set up scenario is torn down if it fails during setup.
     def setup(self):
         '''Set up the Scenario. Return TRUE on success.'''
 
-        self.ClusterManager.prepare()
+        self._cm.prepare()
         self.audit() # Also detects remote/local log config
-        self.ClusterManager.ns.wait_for_all_nodes(self.ClusterManager.Env["nodes"])
+        self._cm.ns.wait_for_all_nodes(self._cm.Env["nodes"])
 
         self.audit()
-        self.ClusterManager.install_support()
+        self._cm.install_support()
 
-        self.BadNews = LogWatcher(self.ClusterManager.Env["LogFileName"],
-                                  self.ClusterManager.templates.get_patterns("BadNews"),
-                                  self.ClusterManager.Env["nodes"],
-                                  self.ClusterManager.Env["LogWatcher"],
+        self._bad_news = LogWatcher(self._cm.Env["LogFileName"],
+                                  self._cm.templates.get_patterns("BadNews"),
+                                  self._cm.Env["nodes"],
+                                  self._cm.Env["LogWatcher"],
                                   "BadNews", 0)
-        self.BadNews.set_watch() # Call after we've figured out what type of log watching to do in LogAudit
+        self._bad_news.set_watch() # Call after we've figured out what type of log watching to do in LogAudit
 
         j = 0
-        while j < len(self.Components):
-            if not self.Components[j].setup():
+        while j < len(self._components):
+            if not self._components[j].setup():
                 # OOPS!  We failed.  Tear partial setups down.
                 self.audit()
-                self.ClusterManager.log("Tearing down partial setup")
+                self._cm.log("Tearing down partial setup")
                 self.teardown(j)
                 return False
             j += 1
@@ -123,52 +121,52 @@ A partially set up scenario is torn down if it fails during setup.
         '''Tear Down the Scenario - in reverse order.'''
 
         if not n_components:
-            n_components = len(self.Components)-1
+            n_components = len(self._components)-1
 
         j = n_components
 
         while j >= 0:
-            self.Components[j].teardown()
+            self._components[j].teardown()
             j -= 1
 
         self.audit()
-        self.ClusterManager.install_support("uninstall")
+        self._cm.install_support("uninstall")
 
     def incr(self, name):
         '''Increment (or initialize) the value associated with the given name'''
-        if not name in self.Stats:
-            self.Stats[name] = 0
-        self.Stats[name] += 1
+        if not name in self.stats:
+            self.stats[name] = 0
+        self.stats[name] += 1
 
     def run(self, Iterations):
-        self.ClusterManager.oprofileStart()
+        self._cm.oprofileStart()
         try:
             self.run_loop(Iterations)
-            self.ClusterManager.oprofileStop()
+            self._cm.oprofileStop()
         except:
-            self.ClusterManager.oprofileStop()
+            self._cm.oprofileStop()
             raise
 
     def run_loop(self, Iterations):
         raise ValueError("Abstract Class member (run_loop)")
 
     def run_test(self, test, testcount):
-        nodechoice = self.ClusterManager.Env.random_node()
+        nodechoice = self._cm.Env.random_node()
 
         ret = True
         did_run = False
 
-        self.ClusterManager.instance_errorstoignore_clear()
+        self._cm.instance_errorstoignore_clear()
         choice = "(%s)" % nodechoice
-        self.ClusterManager.log("Running test {:<22} {:<15} [{:>3}]".format(test.name, choice, testcount))
+        self._cm.log("Running test {:<22} {:<15} [{:>3}]".format(test.name, choice, testcount))
 
         starttime = test.set_timer()
         if not test.setup(nodechoice):
-            self.ClusterManager.log("Setup failed")
+            self._cm.log("Setup failed")
             ret = False
 
         elif not test.can_run_now(nodechoice):
-            self.ClusterManager.log("Skipped")
+            self._cm.log("Skipped")
             test.skipped()
 
         else:
@@ -176,15 +174,15 @@ A partially set up scenario is torn down if it fails during setup.
             ret = test(nodechoice)
 
         if not test.teardown(nodechoice):
-            self.ClusterManager.log("Teardown failed")
+            self._cm.log("Teardown failed")
 
-            if not should_continue(self.ClusterManager.Env):
+            if not should_continue(self._cm.Env):
                 raise ValueError("Teardown of %s on %s failed" % (test.name, nodechoice))
 
             ret = False
 
         stoptime = time.time()
-        self.ClusterManager.oprofileSave(testcount)
+        self._cm.oprofileSave(testcount)
 
         elapsed_time = stoptime - starttime
         test_time = stoptime - test.get_timer()
@@ -204,16 +202,16 @@ A partially set up scenario is torn down if it fails during setup.
             test.log_timer()
         else:
             self.incr("failure")
-            self.ClusterManager.statall()
+            self._cm.statall()
             did_run = True  # Force the test count to be incremented anyway so test extraction works
 
         self.audit(test.errors_to_ignore)
         return did_run
 
     def summarize(self):
-        self.ClusterManager.log("****************")
-        self.ClusterManager.log("Overall Results:%r" % self.Stats)
-        self.ClusterManager.log("****************")
+        self._cm.log("****************")
+        self._cm.log("Overall Results:%r" % self.stats)
+        self._cm.log("****************")
 
         stat_filter = {
             "calls":0,
@@ -221,20 +219,20 @@ A partially set up scenario is torn down if it fails during setup.
             "skipped":0,
             "auditfail":0,
             }
-        self.ClusterManager.log("Test Summary")
-        for test in self.Tests:
+        self._cm.log("Test Summary")
+        for test in self.tests:
             for key in list(stat_filter.keys()):
                 stat_filter[key] = test.stats[key]
 
             name = "Test %s:" % test.name
-            self.ClusterManager.log("{:<25} {!r}".format(name, stat_filter))
+            self._cm.log("{:<25} {!r}".format(name, stat_filter))
 
-        self.ClusterManager.debug("Detailed Results")
-        for test in self.Tests:
+        self._cm.debug("Detailed Results")
+        for test in self.tests:
             name = "Test %s:" % test.name
-            self.ClusterManager.debug("{:<25} {!r}".format(name, stat_filter))
+            self._cm.debug("{:<25} {!r}".format(name, stat_filter))
 
-        self.ClusterManager.log("<<<<<<<<<<<<<<<< TESTS COMPLETED")
+        self._cm.log("<<<<<<<<<<<<<<<< TESTS COMPLETED")
 
     def audit(self, local_ignore=None):
         errcount = 0
@@ -244,22 +242,22 @@ A partially set up scenario is torn down if it fails during setup.
         if local_ignore:
             ignorelist.extend(local_ignore)
 
-        ignorelist.extend(self.ClusterManager.errorstoignore())
-        ignorelist.extend(self.ClusterManager.instance_errorstoignore())
+        ignorelist.extend(self._cm.errorstoignore())
+        ignorelist.extend(self._cm.instance_errorstoignore())
 
         # This makes sure everything is stabilized before starting...
         failed = 0
-        for audit in self.Audits:
+        for audit in self._audits:
             if not audit():
-                self.ClusterManager.log("Audit %s FAILED." % audit.name)
+                self._cm.log("Audit %s FAILED." % audit.name)
                 failed += 1
             else:
-                self.ClusterManager.debug("Audit %s passed." % audit.name)
+                self._cm.debug("Audit %s passed." % audit.name)
 
         while errcount < 1000:
             match = None
-            if self.BadNews:
-                match = self.BadNews.look(0)
+            if self._bad_news:
+                match = self._bad_news.look(0)
 
             if match:
                 add_err = True
@@ -267,21 +265,21 @@ A partially set up scenario is torn down if it fails during setup.
                     if add_err and re.search(ignore, match):
                         add_err = False
                 if add_err:
-                    self.ClusterManager.log("BadNews: %s" % match)
+                    self._cm.log("BadNews: %s" % match)
                     self.incr("BadNews")
                     errcount += 1
             else:
                 break
         else:
             print("Big problems")
-            if not should_continue(self.ClusterManager.Env):
-                self.ClusterManager.log("Shutting down.")
+            if not should_continue(self._cm.Env):
+                self._cm.log("Shutting down.")
                 self.summarize()
                 self.teardown()
                 raise ValueError("Looks like we hit a BadNews jackpot!")
 
-        if self.BadNews:
-            self.BadNews.end()
+        if self._bad_news:
+            self._bad_news.end()
         return failed
 
 
@@ -289,7 +287,7 @@ class AllOnce(Scenario):
     '''Every Test Once''' # Accessable as __doc__
     def run_loop(self, Iterations):
         testcount = 1
-        for test in self.Tests:
+        for test in self.tests:
             self.run_test(test, testcount)
             testcount += 1
 
@@ -299,7 +297,7 @@ class RandomTests(Scenario):
     def run_loop(self, Iterations):
         testcount = 1
         while testcount <= Iterations:
-            test = self.ClusterManager.Env.random_gen.choice(self.Tests)
+            test = self._cm.Env.random_gen.choice(self.tests)
             self.run_test(test, testcount)
             testcount += 1
 
@@ -309,7 +307,7 @@ class Sequence(Scenario):
     def run_loop(self, Iterations):
         testcount = 1
         while testcount <= Iterations:
-            for test in self.Tests:
+            for test in self.tests:
                 self.run_test(test, testcount)
                 testcount += 1
 
