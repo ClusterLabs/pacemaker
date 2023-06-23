@@ -116,10 +116,10 @@ class Scenario:
         self._cm.install_support()
 
         self._bad_news = LogWatcher(self._cm.Env["LogFileName"],
-                                  self._cm.templates.get_patterns("BadNews"),
-                                  self._cm.Env["nodes"],
-                                  self._cm.Env["LogWatcher"],
-                                  "BadNews", 0)
+                                    self._cm.templates.get_patterns("BadNews"),
+                                    self._cm.Env["nodes"],
+                                    self._cm.Env["LogWatcher"],
+                                    "BadNews", 0)
         self._bad_news.set_watch() # Call after we've figured out what type of log watching to do in LogAudit
 
         j = 0
@@ -130,6 +130,7 @@ class Scenario:
                 self._cm.log("Tearing down partial setup")
                 self.teardown(j)
                 return False
+
             j += 1
 
         self.audit()
@@ -157,12 +158,14 @@ class Scenario:
 
         if not name in self.stats:
             self.stats[name] = 0
+
         self.stats[name] += 1
 
     def run(self, iterations):
         """ Run all tests in the scenario the given number of times """
 
         self._cm.oprofileStart()
+
         try:
             self._run_loop(iterations)
             self._cm.oprofileStop()
@@ -192,14 +195,13 @@ class Scenario:
         self._cm.log("Running test {:<22} {:<15} [{:>3}]".format(test.name, choice, testcount))
 
         starttime = test.set_timer()
+
         if not test.setup(nodechoice):
             self._cm.log("Setup failed")
             ret = False
-
         elif not test.can_run_now(nodechoice):
             self._cm.log("Skipped")
             test.skipped()
-
         else:
             did_run = True
             ret = test(nodechoice)
@@ -217,14 +219,17 @@ class Scenario:
 
         elapsed_time = stoptime - starttime
         test_time = stoptime - test.get_timer()
+
         if "min_time" not in test.stats:
             test.stats["elapsed_time"] = elapsed_time
             test.stats["min_time"] = test_time
             test.stats["max_time"] = test_time
         else:
             test.stats["elapsed_time"] += elapsed_time
+
             if test_time < test.stats["min_time"]:
                 test.stats["min_time"] = test_time
+
             if test_time > test.stats["max_time"]:
                 test.stats["max_time"] = test_time
 
@@ -246,12 +251,8 @@ class Scenario:
         self._cm.log("Overall Results:%r" % self.stats)
         self._cm.log("****************")
 
-        stat_filter = {
-            "calls":0,
-            "failure":0,
-            "skipped":0,
-            "auditfail":0,
-            }
+        stat_filter = { "calls": 0, "failure": 0, "skipped": 0, "auditfail": 0 }
+
         self._cm.log("Test Summary")
         for test in self.tests:
             for key in list(stat_filter.keys()):
@@ -299,9 +300,11 @@ class Scenario:
 
             if match:
                 add_err = True
+
                 for ignore in ignorelist:
                     if add_err and re.search(ignore, match):
                         add_err = False
+
                 if add_err:
                     self._cm.log("BadNews: %s" % match)
                     self.incr("BadNews")
@@ -318,6 +321,7 @@ class Scenario:
 
         if self._bad_news:
             self._bad_news.end()
+
         return failed
 
 
@@ -326,6 +330,7 @@ class AllOnce(Scenario):
 
     def _run_loop(self, iterations):
         testcount = 1
+
         for test in self.tests:
             self.run_test(test, testcount)
             testcount += 1
@@ -336,6 +341,7 @@ class RandomTests(Scenario):
 
     def _run_loop(self, iterations):
         testcount = 1
+
         while testcount <= iterations:
             test = self._cm.Env.random_gen.choice(self.tests)
             self.run_test(test, testcount)
@@ -347,6 +353,7 @@ class Sequence(Scenario):
 
     def _run_loop(self, iterations):
         testcount = 1
+
         while testcount <= iterations:
             for test in self.tests:
                 self.run_test(test, testcount)
