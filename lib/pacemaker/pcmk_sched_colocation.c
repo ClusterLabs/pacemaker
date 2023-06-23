@@ -1196,41 +1196,23 @@ pcmk__colocation_affects(const pe_resource_t *dependent,
         return pcmk__coloc_affects_nothing;
     }
 
-    if ((colocation->score > 0)
-        && (colocation->dependent_role != RSC_ROLE_UNKNOWN)
+    if ((colocation->dependent_role != RSC_ROLE_UNKNOWN)
         && (colocation->dependent_role != dependent->next_role)) {
-
-        crm_trace("Skipping colocation '%s': dependent limited to %s role "
+        crm_trace("Skipping %scolocation '%s': dependent limited to %s role "
                   "but %s next role is %s",
+                  ((colocation->score < 0)? "anti-" : ""),
                   colocation->id, role2text(colocation->dependent_role),
                   dependent->id, role2text(dependent->next_role));
         return pcmk__coloc_affects_nothing;
     }
 
-    if ((colocation->score > 0)
-        && (colocation->primary_role != RSC_ROLE_UNKNOWN)
+    if ((colocation->primary_role != RSC_ROLE_UNKNOWN)
         && (colocation->primary_role != primary->next_role)) {
-
-        crm_trace("Skipping colocation '%s': primary limited to %s role "
+        crm_trace("Skipping %scolocation '%s': primary limited to %s role "
                   "but %s next role is %s",
+                  ((colocation->score < 0)? "anti-" : ""),
                   colocation->id, role2text(colocation->primary_role),
                   primary->id, role2text(primary->next_role));
-        return pcmk__coloc_affects_nothing;
-    }
-
-    if ((colocation->score < 0)
-        && (colocation->dependent_role != RSC_ROLE_UNKNOWN)
-        && (colocation->dependent_role == dependent->next_role)) {
-        crm_trace("Skipping anti-colocation '%s': dependent role %s matches",
-                  colocation->id, role2text(colocation->dependent_role));
-        return pcmk__coloc_affects_nothing;
-    }
-
-    if ((colocation->score < 0)
-        && (colocation->primary_role != RSC_ROLE_UNKNOWN)
-        && (colocation->primary_role == primary->next_role)) {
-        crm_trace("Skipping anti-colocation '%s': primary role %s matches",
-                  colocation->id, role2text(colocation->primary_role));
         return pcmk__coloc_affects_nothing;
     }
 
