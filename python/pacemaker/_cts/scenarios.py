@@ -138,17 +138,17 @@ A partially set up scenario is torn down if it fails during setup.
             self.stats[name] = 0
         self.stats[name] += 1
 
-    def run(self, Iterations):
+    def run(self, iterations):
         self._cm.oprofileStart()
         try:
-            self.run_loop(Iterations)
+            self.run_loop(iterations)
             self._cm.oprofileStop()
         except:
             self._cm.oprofileStop()
             raise
 
-    def run_loop(self, Iterations):
-        raise ValueError("Abstract Class member (run_loop)")
+    def run_loop(self, iterations):
+        raise NotImplementedError
 
     def run_test(self, test, testcount):
         nodechoice = self._cm.Env.random_node()
@@ -285,7 +285,7 @@ A partially set up scenario is torn down if it fails during setup.
 
 class AllOnce(Scenario):
     '''Every Test Once''' # Accessable as __doc__
-    def run_loop(self, Iterations):
+    def run_loop(self, iterations):
         testcount = 1
         for test in self.tests:
             self.run_test(test, testcount)
@@ -294,9 +294,9 @@ class AllOnce(Scenario):
 
 class RandomTests(Scenario):
     '''Random Test Execution'''
-    def run_loop(self, Iterations):
+    def run_loop(self, iterations):
         testcount = 1
-        while testcount <= Iterations:
+        while testcount <= iterations:
             test = self._cm.Env.random_gen.choice(self.tests)
             self.run_test(test, testcount)
             testcount += 1
@@ -304,9 +304,9 @@ class RandomTests(Scenario):
 
 class Sequence(Scenario):
     '''Named Tests in Sequence'''
-    def run_loop(self, Iterations):
+    def run_loop(self, iterations):
         testcount = 1
-        while testcount <= Iterations:
+        while testcount <= iterations:
             for test in self.tests:
                 self.run_test(test, testcount)
                 testcount += 1
@@ -314,8 +314,8 @@ class Sequence(Scenario):
 
 class Boot(Scenario):
     '''Start the Cluster'''
-    def run_loop(self, Iterations):
-        testcount = 0
+    def run_loop(self, iterations):
+        return
 
 
 class BootCluster(ScenarioComponent):
