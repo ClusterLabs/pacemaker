@@ -101,10 +101,7 @@ if __name__ == '__main__':
                Tests.append(match)
 
     # Scenario selection
-    if Environment["scenario"] == "basic-sanity":
-        scenario = RandomTests(cm, [ BasicSanityCheck(Environment) ], Audits, Tests)
-
-    elif Environment["scenario"] == "all-once":
+    if Environment["scenario"] == "all-once":
         NumIter = len(Tests)
         scenario = AllOnce(
             cm, [ BootCluster(Environment) ], Audits, Tests)

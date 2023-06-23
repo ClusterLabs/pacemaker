@@ -174,7 +174,7 @@ class LogAudit(ClusterAudit):
     def is_applicable(self):
         """ Return True if this audit is applicable in the current test configuration. """
 
-        if self._cm.Env["DoBSC"] or self._cm.Env["LogAuditDisabled"]:
+        if self._cm.Env["LogAuditDisabled"]:
             return False
 
         return True
@@ -238,7 +238,7 @@ class DiskAudit(ClusterAudit):
     def is_applicable(self):
         """ Return True if this audit is applicable in the current test configuration. """
 
-        return not self._cm.Env["DoBSC"]
+        return True
 
 
 class FileAudit(ClusterAudit):
