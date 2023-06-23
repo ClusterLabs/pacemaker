@@ -1,5 +1,4 @@
-""" Test scenario classes for Pacemaker's Cluster Test Suite (CTS)
-"""
+""" Test scenario classes for Pacemaker's Cluster Test Suite (CTS) """
 
 __all__ = [ "AllOnce", "Boot", "BootCluster", "LeaveBooted", "RandomTests", "Sequence" ]
 __copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
@@ -14,47 +13,66 @@ from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.watcher import LogWatcher
 
 class ScenarioComponent:
+    """ The base class for all scenario components.  A scenario component is
+        one single step in a scenario.  Each component is basically just a setup
+        and teardown method.
+    """
 
     def __init__(self, cm, env):
+        """ Create a new ScenarioComponent instance
+
+            Arguments:
+
+            cm  -- A ClusterManager instance
+            env -- An Environment instance
+        """
+
         # pylint: disable=invalid-name
         self._cm = cm
         self._env = env
 
     def is_applicable(self):
-        '''Return True if the current ScenarioComponent is applicable
-        in the given LabEnvironment given to the constructor.
-        '''
+        """ Return True if this component is applicable in the given Environment.
+            This method must be provided by all subclasses.
+        """
 
         raise NotImplementedError
 
     def setup(self):
-        '''Set up the given ScenarioComponent'''
+        """ Set up the component, returning True on success.  This method must be
+            provided by all subclasses.
+        """
 
         raise NotImplementedError
 
     def teardown(self):
-        '''Tear down (undo) the given ScenarioComponent'''
+        """ Tear down the given component.  This method must be provided by all
+            subclasses.
+        """
 
         raise NotImplementedError
 
 
 class Scenario:
-    (
-'''The basic idea of a scenario is that of an ordered list of
-ScenarioComponent objects.  Each ScenarioComponent is setup() in turn,
-and then after the tests have been run, they are torn down using teardown()
-(in reverse order).
-
-A Scenario is applicable to a particular cluster manager iff each
-ScenarioComponent is applicable.
-
-A partially set up scenario is torn down if it fails during setup.
-''')
+    """ The base class for scenario.  A scenario is an ordered list of
+        ScenarioComponent objects.  A scenario proceeds by setting up all its
+        components in sequence, running a list of tests and audits, and then
+        tearing down its components in reverse.
+    """
 
     def __init__(self, cm, components, audits, tests):
-        # pylint: disable=invalid-name
+        """ Create a new Scenario instance
 
-        "Initialize the Scenario from the list of ScenarioComponents"
+            Arguments:
+
+            cm         -- A ClusterManager instance
+            components -- A list of ScenarioComponents comprising this Scenario
+            audits     -- A list of ClusterAudits that will be performed as
+                          part of this Scenario
+            tests      -- A list of CTSTests that will be run
+        """
+
+        # pylint: disable=invalid-name
 
         self.stats = { "success": 0, "failure": 0, "BadNews": 0, "skipped": 0 }
         self.tests = tests
@@ -77,10 +95,7 @@ A partially set up scenario is torn down if it fails during setup.
                 raise ValueError("Init value must be a subclass of CTSTest")
 
     def is_applicable(self):
-        (
-'''A Scenario is_applicable() iff each of its ScenarioComponents is_applicable()
-'''
-        )
+        """ Return True if all ScenarioComponents are applicable """
 
         for comp in self._components:
             if not comp.is_applicable():
@@ -89,7 +104,9 @@ A partially set up scenario is torn down if it fails during setup.
         return True
 
     def setup(self):
-        '''Set up the Scenario. Return TRUE on success.'''
+        """ Set up the scenario, returning True on success.  If setup fails at
+            some point, tear down those components that did successfully set up.
+        """
 
         self._cm.prepare()
         self.audit() # Also detects remote/local log config
@@ -119,8 +136,9 @@ A partially set up scenario is torn down if it fails during setup.
         return True
 
     def teardown(self, n_components=None):
-
-        '''Tear Down the Scenario - in reverse order.'''
+        """ Tear down the scenario in the reverse order it was set up.  If
+            n_components is not None, only tear down that many components.
+        """
 
         if not n_components:
             n_components = len(self._components)-1
@@ -135,12 +153,15 @@ A partially set up scenario is torn down if it fails during setup.
         self._cm.install_support("uninstall")
 
     def incr(self, name):
-        '''Increment (or initialize) the value associated with the given name'''
+        """ Increment the given stats key """
+
         if not name in self.stats:
             self.stats[name] = 0
         self.stats[name] += 1
 
     def run(self, iterations):
+        """ Run all tests in the scenario the given number of times """
+
         self._cm.oprofileStart()
         try:
             self.run_loop(iterations)
@@ -150,9 +171,17 @@ A partially set up scenario is torn down if it fails during setup.
             raise
 
     def run_loop(self, iterations):
+        """ Do the hard part of the run method - actually run all the tests the
+            given number of times.
+        """
+
         raise NotImplementedError
 
     def run_test(self, test, testcount):
+        """ Run the given test.  testcount is the number of tests (including
+            this one) that have been run across all iterations.
+        """
+
         nodechoice = self._cm.Env.random_node()
 
         ret = True
@@ -211,6 +240,8 @@ A partially set up scenario is torn down if it fails during setup.
         return did_run
 
     def summarize(self):
+        """ Output scenario results """
+
         self._cm.log("****************")
         self._cm.log("Overall Results:%r" % self.stats)
         self._cm.log("****************")
@@ -237,6 +268,11 @@ A partially set up scenario is torn down if it fails during setup.
         self._cm.log("<<<<<<<<<<<<<<<< TESTS COMPLETED")
 
     def audit(self, local_ignore=None):
+        """ Perform all scenario audits and log results.  If there are too many
+            failures, prompt the user to confirm that the scenario should continue
+            running.
+        """
+
         errcount = 0
 
         ignorelist = ["CTS:"]
@@ -286,7 +322,8 @@ A partially set up scenario is torn down if it fails during setup.
 
 
 class AllOnce(Scenario):
-    '''Every Test Once''' # Accessable as __doc__
+    """ Every Test Once """
+
     def run_loop(self, iterations):
         testcount = 1
         for test in self.tests:
@@ -295,7 +332,8 @@ class AllOnce(Scenario):
 
 
 class RandomTests(Scenario):
-    '''Random Test Execution'''
+    """ Random Test Execution """
+
     def run_loop(self, iterations):
         testcount = 1
         while testcount <= iterations:
@@ -305,7 +343,8 @@ class RandomTests(Scenario):
 
 
 class Sequence(Scenario):
-    '''Named Tests in Sequence'''
+    """ Named Tests in Sequence """
+
     def run_loop(self, iterations):
         testcount = 1
         while testcount <= iterations:
@@ -315,24 +354,25 @@ class Sequence(Scenario):
 
 
 class Boot(Scenario):
-    '''Start the Cluster'''
+    """ Start the Cluster """
+
     def run_loop(self, iterations):
         return
 
 
 class BootCluster(ScenarioComponent):
-    (
-'''BootCluster is the most basic of ScenarioComponents.
-This ScenarioComponent simply starts the cluster manager on all the nodes.
-It is fairly robust as it waits for all nodes to come up before starting
-as they might have been rebooted or crashed for some reason beforehand.
-''')
+    """ The BootCluster component simply starts the cluster manager on all
+        nodes, waiting for each to come up before starting given that a node
+        might have been rebooted or crashed beforehand.
+    """
+
     def is_applicable(self):
-        '''BootCluster is so generic it is always Applicable'''
+        """ BootCluster is always applicable """
+
         return True
 
     def setup(self):
-        '''Basic Cluster Manager startup.  Start everything'''
+        """ Set up the component, returning True on success """
 
         self._cm.prepare()
 
@@ -344,18 +384,18 @@ as they might have been rebooted or crashed for some reason beforehand.
         return self._cm.startall(verbose=True, quick=True)
 
     def teardown(self):
-        '''Set up the given ScenarioComponent'''
-
-        # Stop the cluster manager everywhere
+        """ Tear down the component """
 
         self._cm.log("Stopping Cluster Manager on all nodes")
         self._cm.stopall(verbose=True, force=False)
 
 
 class LeaveBooted(BootCluster):
-    def teardown(self):
-        '''Set up the given ScenarioComponent'''
+    """ The LeaveBooted component leaves all nodes up when the scenario
+        is complete.
+    """
 
-        # Stop the cluster manager everywhere
+    def teardown(self):
+        """ Tear down the component """
 
         self._cm.log("Leaving Cluster running on all nodes")
