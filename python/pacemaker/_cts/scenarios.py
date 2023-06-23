@@ -233,11 +233,14 @@ A partially set up scenario is torn down if it fails during setup.
 
         self.ClusterManager.log("<<<<<<<<<<<<<<<< TESTS COMPLETED")
 
-    def audit(self, LocalIgnore=[]):
+    def audit(self, local_ignore=None):
         errcount = 0
-        ignorelist = []
-        ignorelist.append("CTS:")
-        ignorelist.extend(LocalIgnore)
+
+        ignorelist = ["CTS:"]
+
+        if local_ignore:
+            ignorelist.extend(local_ignore)
+
         ignorelist.extend(self.ClusterManager.errorstoignore())
         ignorelist.extend(self.ClusterManager.instance_errorstoignore())
 
