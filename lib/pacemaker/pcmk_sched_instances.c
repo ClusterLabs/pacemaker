@@ -578,7 +578,7 @@ increment_parent_count(pe_resource_t *instance, const pe_node_t *assigned_to)
 
 /*!
  * \internal
- * \brief Choose a node for an instance
+ * \brief Assign an instance to a node
  *
  * \param[in,out] instance      Clone instance or bundle replica container
  * \param[in]     prefer        If not NULL, attempt early assignment to this
@@ -586,9 +586,9 @@ increment_parent_count(pe_resource_t *instance, const pe_node_t *assigned_to)
  *                              perform final assignment
  * \param[in]     max_per_node  Assign at most this many instances to one node
  *
- * \return true if \p instance could be assigned to a node, otherwise false
+ * \return Node to which \p instance is assigned
  */
-static bool
+static const pe_node_t *
 assign_instance(pe_resource_t *instance, const pe_node_t *prefer,
                 int max_per_node)
 {
@@ -601,7 +601,7 @@ assign_instance(pe_resource_t *instance, const pe_node_t *prefer,
         pe_rsc_debug(instance,
                      "Assignment loop detected involving %s colocations",
                      instance->id);
-        return false;
+        return NULL;
     }
 
     if (prefer != NULL) { // Possible early assignment to preferred node
@@ -614,7 +614,7 @@ assign_instance(pe_resource_t *instance, const pe_node_t *prefer,
             pe_rsc_trace(instance,
                          "Not assigning %s to preferred node %s: unavailable",
                          instance->id, pe__node_name(prefer));
-            return false;
+            return NULL;
         }
     }
 
@@ -642,7 +642,7 @@ assign_instance(pe_resource_t *instance, const pe_node_t *prefer,
     }
 
     increment_parent_count(instance, chosen);
-    return chosen != NULL;
+    return chosen;
 }
 
 /*!
@@ -761,11 +761,15 @@ pcmk__assign_instances(pe_resource_t *collective, GList *instances,
         }
 
         current = preferred_node(collective, instance, optimal_per_node);
-        if ((current != NULL)
-            && assign_instance(instance, current, max_per_node)) {
-            pe_rsc_trace(collective, "Assigned %s to current node %s",
-                         instance->id, pe__node_name(current));
-            assigned++;
+        if (current != NULL) {
+            const pe_node_t *chosen = assign_instance(instance, current,
+                                                      max_per_node);
+
+            if (pe__same_node(chosen, current)) {
+                pe_rsc_trace(collective, "Assigned %s to current node %s",
+                             instance->id, pe__node_name(current));
+                assigned++;
+            }
         }
     }
 
@@ -800,7 +804,7 @@ pcmk__assign_instances(pe_resource_t *collective, GList *instances,
             resource_location(instance, NULL, -INFINITY,
                               "collective_limit_reached", collective->cluster);
 
-        } else if (assign_instance(instance, NULL, max_per_node)) {
+        } else if (assign_instance(instance, NULL, max_per_node) != NULL) {
             assigned++;
         }
     }
