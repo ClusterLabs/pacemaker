@@ -118,13 +118,15 @@ A partially set up scenario is torn down if it fails during setup.
         self.audit()
         return True
 
-    def teardown(self, max=None):
+    def teardown(self, n_components=None):
 
         '''Tear Down the Scenario - in reverse order.'''
 
-        if not max:
-            max = len(self.Components)-1
-        j = max
+        if not n_components:
+            n_components = len(self.Components)-1
+
+        j = n_components
+
         while j >= 0:
             self.Components[j].teardown()
             j -= 1
