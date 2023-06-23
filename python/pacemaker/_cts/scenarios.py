@@ -255,7 +255,7 @@ class Scenario:
 
         self._cm.log("Test Summary")
         for test in self.tests:
-            for key in list(stat_filter.keys()):
+            for key in stat_filter:
                 stat_filter[key] = test.stats[key]
 
             name = "Test %s:" % test.name
