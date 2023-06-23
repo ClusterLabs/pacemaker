@@ -545,6 +545,39 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
 
 /*!
  * \internal
+ * \brief Increment the parent's instance count after assigning an instance
+ *
+ * An instance's parent tracks how many instances have been assigned to each
+ * node via its pe_node_t:count member. After assigning an instance to a node,
+ * find the corresponding node in the parent's allowed table and increment it.
+ *
+ * \param[in,out] instance     Instance whose parent to update
+ * \param[in]     assigned_to  Node to which the instance was assigned
+ */
+static void
+increment_parent_count(pe_resource_t *instance, const pe_node_t *assigned_to)
+{
+    pe_node_t *allowed = NULL;
+
+    if (assigned_to == NULL) {
+        return;
+    }
+    allowed = pcmk__top_allowed_node(instance, assigned_to);
+
+    if (allowed == NULL) {
+        /* The instance is allowed on the node, but its parent isn't. This
+         * shouldn't be possible if the resource is managed, and we won't be
+         * able to limit the number of instances assigned to the node.
+         */
+        CRM_LOG_ASSERT(!pcmk_is_set(instance->flags, pe_rsc_managed));
+
+    } else {
+        allowed->count++;
+    }
+}
+
+/*!
+ * \internal
  * \brief Choose a node for an instance
  *
  * \param[in,out] instance      Clone instance or bundle replica container
@@ -560,9 +593,7 @@ assign_instance(pe_resource_t *instance, const pe_node_t *prefer,
                 int max_per_node)
 {
     pe_node_t *chosen = NULL;
-    pe_node_t *allowed = NULL;
 
-    CRM_ASSERT(instance != NULL);
     pe_rsc_trace(instance, "Assigning %s (preferring %s)", instance->id,
                  ((prefer == NULL)? "no node" : prefer->details->uname));
 
@@ -576,8 +607,8 @@ assign_instance(pe_resource_t *instance, const pe_node_t *prefer,
     if (prefer != NULL) { // Possible early assignment to preferred node
 
         // Get preferred node with instance's scores
-        allowed = g_hash_table_lookup(instance->allowed_nodes,
-                                      prefer->details->id);
+        pe_node_t *allowed = g_hash_table_lookup(instance->allowed_nodes,
+                                                 prefer->details->id);
 
         if ((allowed == NULL) || (allowed->weight < 0)) {
             pe_rsc_trace(instance,
@@ -610,20 +641,7 @@ assign_instance(pe_resource_t *instance, const pe_node_t *prefer,
         g_hash_table_destroy(backup);
     }
 
-    // The parent tracks how many instances have been assigned to each node
-    if (chosen != NULL) {
-        allowed = pcmk__top_allowed_node(instance, chosen);
-        if (allowed == NULL) {
-            /* The instance is allowed on the node, but its parent isn't. This
-             * shouldn't be possible if the resource is managed, and we won't be
-             * able to limit the number of instances assigned to the node.
-             */
-            CRM_LOG_ASSERT(!pcmk_is_set(instance->flags, pe_rsc_managed));
-
-        } else {
-            allowed->count++;
-        }
-    }
+    increment_parent_count(instance, chosen);
     return chosen != NULL;
 }
 
