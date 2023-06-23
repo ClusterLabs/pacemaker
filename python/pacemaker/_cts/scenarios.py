@@ -16,6 +16,7 @@ from pacemaker._cts.watcher import LogWatcher
 class ScenarioComponent:
 
     def __init__(self, cm, env):
+        # pylint: disable=invalid-name
         self._cm = cm
         self._env = env
 
@@ -51,6 +52,7 @@ A partially set up scenario is torn down if it fails during setup.
 ''')
 
     def __init__(self, cm, components, audits, tests):
+        # pylint: disable=invalid-name
 
         "Initialize the Scenario from the list of ScenarioComponents"
 
