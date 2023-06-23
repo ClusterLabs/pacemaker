@@ -1,0 +1,54 @@
+Current cluster status:
+  * Node List:
+    * Online: [ node1 node2 node3 ]
+    * GuestOnline: [ base-bundle-0 base-bundle-1 base-bundle-2 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started node2
+    * Container bundle set: base-bundle [localhost/pcmktest]:
+      * base-bundle-0	(ocf:pacemaker:Stateful):	 Promoted node3
+      * base-bundle-1	(ocf:pacemaker:Stateful):	 Unpromoted node2
+      * base-bundle-2	(ocf:pacemaker:Stateful):	 Unpromoted node1
+
+Transition Summary:
+  * Stop       base-bundle-podman-0     (                                node3 )  due to node availability
+  * Stop       base-bundle-0            (                                node3 )  due to unrunnable base-bundle-podman-0 start
+  * Stop       base:0                   (               Promoted base-bundle-0 )  due to unrunnable base-bundle-podman-0 start
+  * Promote    base:1                   ( Unpromoted -> Promoted base-bundle-1 )
+
+Executing Cluster Transition:
+  * Resource action: base            cancel=16000 on base-bundle-1
+  * Resource action: base            cancel=15000 on base-bundle-0
+  * Pseudo action:   base-bundle_demote_0
+  * Pseudo action:   base-bundle-clone_demote_0
+  * Resource action: base            demote on base-bundle-0
+  * Pseudo action:   base-bundle-clone_demoted_0
+  * Pseudo action:   base-bundle_demoted_0
+  * Pseudo action:   base-bundle_stop_0
+  * Pseudo action:   base-bundle-clone_stop_0
+  * Resource action: base            stop on base-bundle-0
+  * Pseudo action:   base-bundle-clone_stopped_0
+  * Pseudo action:   base-bundle-clone_start_0
+  * Resource action: base-bundle-0   stop on node3
+  * Pseudo action:   base-bundle-clone_running_0
+  * Resource action: base-bundle-podman-0 stop on node3
+  * Pseudo action:   base-bundle_stopped_0
+  * Pseudo action:   base-bundle_running_0
+  * Pseudo action:   base-bundle_promote_0
+  * Pseudo action:   base-bundle-clone_promote_0
+  * Resource action: base            promote on base-bundle-1
+  * Pseudo action:   base-bundle-clone_promoted_0
+  * Pseudo action:   base-bundle_promoted_0
+  * Resource action: base            monitor=15000 on base-bundle-1
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 node2 node3 ]
+    * GuestOnline: [ base-bundle-1 base-bundle-2 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started node2
+    * Container bundle set: base-bundle [localhost/pcmktest]:
+      * base-bundle-0	(ocf:pacemaker:Stateful):	 Stopped
+      * base-bundle-1	(ocf:pacemaker:Stateful):	 Promoted node2
+      * base-bundle-2	(ocf:pacemaker:Stateful):	 Unpromoted node1
