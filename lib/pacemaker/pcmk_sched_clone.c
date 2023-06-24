@@ -18,13 +18,24 @@
  * \internal
  * \brief Assign a clone resource's instances to nodes
  *
- * \param[in,out] rsc     Clone resource to assign
- * \param[in]     prefer  Node to prefer, if all else is equal
+ * \param[in,out] rsc           Clone resource to assign
+ * \param[in]     prefer        Node to prefer, if all else is equal
+ * \param[in]     stop_if_fail  If \c true and a primitive descendant of \p rsc
+ *                              can't be assigned to a node, set the
+ *                              descendant's next role to stopped and update
+ *                              existing actions
  *
  * \return NULL (clones are not assigned to a single node)
+ *
+ * \note If \p stop_if_fail is \c false, then \c pcmk__unassign_resource() can
+ *       completely undo the assignment. A successful assignment can be either
+ *       undone or left alone as final. A failed assignment has the same effect
+ *       as calling pcmk__unassign_resource(); there are no side effects on
+ *       roles or actions.
  */
 pe_node_t *
-pcmk__clone_assign(pe_resource_t *rsc, const pe_node_t *prefer)
+pcmk__clone_assign(pe_resource_t *rsc, const pe_node_t *prefer,
+                   bool stop_if_fail)
 {
     CRM_ASSERT(pe_rsc_is_clone(rsc));
 
@@ -53,7 +64,8 @@ pcmk__clone_assign(pe_resource_t *rsc, const pe_node_t *prefer)
 
         pe_rsc_trace(rsc, "%s: Assigning colocation %s primary %s first",
                      rsc->id, constraint->id, constraint->primary->id);
-        constraint->primary->cmds->assign(constraint->primary, prefer);
+        constraint->primary->cmds->assign(constraint->primary, prefer,
+                                          stop_if_fail);
     }
 
     /* If any resources are colocated with this one, consider their preferences.
@@ -285,7 +297,7 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
         } else if (colocation->score >= INFINITY) {
             crm_notice("%s cannot run because it cannot interleave with "
                        "any instance of %s", dependent->id, primary->id);
-            pcmk__assign_resource(dependent, NULL, true);
+            pcmk__assign_resource(dependent, NULL, true, true);
 
         } else {
             pe_rsc_debug(primary,

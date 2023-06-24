@@ -70,12 +70,24 @@ struct resource_alloc_functions_s {
      * \internal
      * \brief Assign a resource to a node
      *
-     * \param[in,out] rsc     Resource to assign to a node
-     * \param[in]     prefer  Node to prefer, if all else is equal
+     * \param[in,out] rsc           Resource to assign to a node
+     * \param[in]     prefer        Node to prefer, if all else is equal
+     * \param[in]     stop_if_fail  If \c true and \p rsc can't be assigned to a
+     *                              node, set next role to stopped and update
+     *                              existing actions (if \p rsc is not a
+     *                              primitive, this applies to its primitive
+     *                              descendants instead)
      *
      * \return Node that \p rsc is assigned to, if assigned entirely to one node
+     *
+     * \note If \p stop_if_fail is \c false, then \c pcmk__unassign_resource()
+     *       can completely undo the assignment. A successful assignment can be
+     *       either undone or left alone as final. A failed assignment has the
+     *       same effect as calling pcmk__unassign_resource(); there are no side
+     *       effects on roles or actions.
      */
-    pe_node_t *(*assign)(pe_resource_t *rsc, const pe_node_t *prefer);
+    pe_node_t *(*assign)(pe_resource_t *rsc, const pe_node_t *prefer,
+                         bool stop_if_fail);
 
     /*!
      * \internal
@@ -688,7 +700,8 @@ void pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pe_action_t *action);
 // Primitives (pcmk_sched_primitive.c)
 
 G_GNUC_INTERNAL
-pe_node_t *pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer);
+pe_node_t *pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer,
+                                  bool stop_if_fail);
 
 G_GNUC_INTERNAL
 void pcmk__primitive_create_actions(pe_resource_t *rsc);
@@ -735,7 +748,8 @@ void pcmk__primitive_shutdown_lock(pe_resource_t *rsc);
 // Groups (pcmk_sched_group.c)
 
 G_GNUC_INTERNAL
-pe_node_t *pcmk__group_assign(pe_resource_t *rsc, const pe_node_t *prefer);
+pe_node_t *pcmk__group_assign(pe_resource_t *rsc, const pe_node_t *prefer,
+                              bool stop_if_fail);
 
 G_GNUC_INTERNAL
 void pcmk__group_create_actions(pe_resource_t *rsc);
@@ -795,7 +809,8 @@ void pcmk__group_shutdown_lock(pe_resource_t *rsc);
 // Clones (pcmk_sched_clone.c)
 
 G_GNUC_INTERNAL
-pe_node_t *pcmk__clone_assign(pe_resource_t *rsc, const pe_node_t *prefer);
+pe_node_t *pcmk__clone_assign(pe_resource_t *rsc, const pe_node_t *prefer,
+                              bool stop_if_fail);
 
 G_GNUC_INTERNAL
 void pcmk__clone_create_actions(pe_resource_t *rsc);
@@ -843,7 +858,8 @@ void pcmk__clone_shutdown_lock(pe_resource_t *rsc);
 // Bundles (pcmk_sched_bundle.c)
 
 G_GNUC_INTERNAL
-pe_node_t *pcmk__bundle_assign(pe_resource_t *rsc, const pe_node_t *prefer);
+pe_node_t *pcmk__bundle_assign(pe_resource_t *rsc, const pe_node_t *prefer,
+                               bool stop_if_fail);
 
 G_GNUC_INTERNAL
 void pcmk__bundle_create_actions(pe_resource_t *rsc);
@@ -1010,7 +1026,8 @@ G_GNUC_INTERNAL
 void pcmk__output_resource_actions(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
-bool pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force);
+bool pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force,
+                           bool stop_if_fail);
 
 G_GNUC_INTERNAL
 void pcmk__unassign_resource(pe_resource_t *rsc);

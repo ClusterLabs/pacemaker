@@ -621,22 +621,26 @@ assign_instance(pe_resource_t *instance, const pe_node_t *prefer,
     ban_unavailable_allowed_nodes(instance, max_per_node);
 
     if (prefer == NULL) { // Final assignment
-        chosen = instance->cmds->assign(instance, NULL);
+        chosen = instance->cmds->assign(instance, NULL, true);
 
     } else { // Possible early assignment to preferred node
         GHashTable *backup = NULL;
 
         pcmk__copy_node_tables(instance, &backup);
-        chosen = instance->cmds->assign(instance, prefer);
+        chosen = instance->cmds->assign(instance, prefer, false);
 
-        // Revert nodes if preferred node won't be assigned
-        if ((chosen != NULL) && !pe__same_node(chosen, prefer)) {
-            crm_info("Not assigning %s to preferred node %s: %s is better",
-                     instance->id, pe__node_name(prefer),
-                     pe__node_name(chosen));
+        if (!pe__same_node(chosen, prefer)) {
+            // Revert nodes if preferred node won't be assigned
+            if (chosen != NULL) {
+                pe_rsc_info(instance,
+                            "Not assigning %s to preferred node %s: "
+                            "%s is better",
+                            instance->id, pe__node_name(prefer),
+                            pe__node_name(chosen));
+                chosen = NULL;
+            }
             pcmk__restore_node_tables(instance, backup);
             pcmk__unassign_resource(instance);
-            chosen = NULL;
         }
         g_hash_table_destroy(backup);
     }
@@ -1180,7 +1184,7 @@ unassign_if_mandatory(const pe_action_t *first, const pe_action_t *then,
                     "Inhibiting %s from being active "
                     "because there is no %s instance to interleave",
                     then_instance->id, first->rsc->id);
-        return pcmk__assign_resource(then_instance, NULL, true);
+        return pcmk__assign_resource(then_instance, NULL, true, true);
     }
     return false;
 }

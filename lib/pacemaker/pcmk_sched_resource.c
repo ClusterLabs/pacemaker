@@ -369,25 +369,38 @@ add_assigned_resource(pe_node_t *node, pe_resource_t *rsc)
  *
  * Assign a specified resource and its children (if any) to a specified node, if
  * the node can run the resource (or unconditionally, if \p force is true). Mark
- * the resources as no longer provisional. If a resource can't be assigned (or
- * \p node is \c NULL), unassign any previous assignment, set next role to
- * stopped, and update any existing actions scheduled for it.
+ * the resources as no longer provisional.
  *
- * \param[in,out] rsc    Resource to assign
- * \param[in,out] node   Node to assign \p rsc to
- * \param[in]     force  If true, assign to \p node even if unavailable
+ * If a resource can't be assigned (or \p node is \c NULL), unassign any
+ * previous assignment. If \p stop_if_fail is \c true, set next role to stopped
+ * and update any existing actions scheduled for the resource.
+ *
+ * \param[in,out] rsc           Resource to assign
+ * \param[in,out] node          Node to assign \p rsc to
+ * \param[in]     force         If true, assign to \p node even if unavailable
+ * \param[in]     stop_if_fail  If \c true and either \p rsc can't be assigned
+ *                              or \p chosen is \c NULL, set next role to
+ *                              stopped and update existing actions (if \p rsc
+ *                              is not a primitive, this applies to its
+ *                              primitive descendants instead)
  *
  * \return \c true if the assignment of \p rsc changed, or \c false otherwise
  *
  * \note Assigning a resource to the NULL node using this function is different
- *       from calling pcmk__unassign_resource(), in that it will also update any
+ *       from calling pcmk__unassign_resource(), in that it may also update any
  *       actions created for the resource.
  * \note The \c resource_alloc_functions_t:assign() method is preferred, unless
  *       a resource should be assigned to the \c NULL node or every resource in
  *       a tree should be assigned to the same node.
+ * \note If \p stop_if_fail is \c false, then \c pcmk__unassign_resource() can
+ *       completely undo the assignment. A successful assignment can be either
+ *       undone or left alone as final. A failed assignment has the same effect
+ *       as calling pcmk__unassign_resource(); there are no side effects on
+ *       roles or actions.
  */
 bool
-pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force)
+pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force,
+                      bool stop_if_fail)
 {
     bool changed = false;
 
@@ -397,7 +410,8 @@ pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force)
         for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
             pe_resource_t *child_rsc = iter->data;
 
-            changed |= pcmk__assign_resource(child_rsc, node, force);
+            changed |= pcmk__assign_resource(child_rsc, node, force,
+                                             stop_if_fail);
         }
         return changed;
     }
@@ -416,7 +430,10 @@ pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force)
                      rsc->id, pe__node_name(node),
                      (pcmk__node_available(node, true, false)? "" : "not"),
                      pcmk_readable_score(node->weight));
-        pe__set_next_role(rsc, RSC_ROLE_STOPPED, "node availability");
+
+        if (stop_if_fail) {
+            pe__set_next_role(rsc, RSC_ROLE_STOPPED, "node availability");
+        }
         node = NULL;
     }
 
@@ -432,6 +449,10 @@ pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force)
         char *rc_stopped = NULL;
 
         pe_rsc_debug(rsc, "Could not assign %s to a node", rsc->id);
+
+        if (!stop_if_fail) {
+            return changed;
+        }
         pe__set_next_role(rsc, RSC_ROLE_STOPPED, "unable to assign");
 
         for (GList *iter = rsc->actions; iter != NULL; iter = iter->next) {

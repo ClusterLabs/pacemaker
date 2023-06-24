@@ -142,13 +142,23 @@ sorted_allowed_nodes(const pe_resource_t *rsc)
  * \internal
  * \brief Assign a resource to its best allowed node, if possible
  *
- * \param[in,out] rsc     Resource to choose a node for
- * \param[in]     prefer  If not NULL, prefer this node when all else equal
+ * \param[in,out] rsc           Resource to choose a node for
+ * \param[in]     prefer        If not \c NULL, prefer this node when all else
+ *                              equal
+ * \param[in]     stop_if_fail  If \c true and \p rsc can't be assigned to a
+ *                              node, set next role to stopped and update
+ *                              existing actions
  *
  * \return true if \p rsc could be assigned to a node, otherwise false
+ *
+ * \note If \p stop_if_fail is \c false, then \c pcmk__unassign_resource() can
+ *       completely undo the assignment. A successful assignment can be either
+ *       undone or left alone as final. A failed assignment has the same effect
+ *       as calling pcmk__unassign_resource(); there are no side effects on
+ *       roles or actions.
  */
 static bool
-assign_best_node(pe_resource_t *rsc, const pe_node_t *prefer)
+assign_best_node(pe_resource_t *rsc, const pe_node_t *prefer, bool stop_if_fail)
 {
     GList *nodes = NULL;
     pe_node_t *chosen = NULL;
@@ -267,7 +277,7 @@ assign_best_node(pe_resource_t *rsc, const pe_node_t *prefer)
                      pe__node_name(chosen), rsc->id, g_list_length(nodes));
     }
 
-    pcmk__assign_resource(rsc, chosen, false);
+    pcmk__assign_resource(rsc, chosen, false, stop_if_fail);
     g_list_free(nodes);
     return rsc->allocated_to != NULL;
 }
@@ -297,7 +307,7 @@ apply_this_with(pcmk__colocation_t *colocation, pe_resource_t *rsc)
                      "(score=%d role=%s)",
                      rsc->id, colocation->id, other->id,
                      colocation->score, role2text(colocation->dependent_role));
-        other->cmds->assign(other, NULL);
+        other->cmds->assign(other, NULL, true);
     }
 
     // Apply the colocation score to this resource's allowed node scores
@@ -356,13 +366,23 @@ remote_connection_assigned(const pe_resource_t *connection)
  * \internal
  * \brief Assign a primitive resource to a node
  *
- * \param[in,out] rsc     Resource to assign to a node
- * \param[in]     prefer  Node to prefer, if all else is equal
+ * \param[in,out] rsc           Resource to assign to a node
+ * \param[in]     prefer        Node to prefer, if all else is equal
+ * \param[in]     stop_if_fail  If \c true and \p rsc can't be assigned to a
+ *                              node, set next role to stopped and update
+ *                              existing actions
  *
  * \return Node that \p rsc is assigned to, if assigned entirely to one node
+ *
+ * \note If \p stop_if_fail is \c false, then \c pcmk__unassign_resource() can
+ *       completely undo the assignment. A successful assignment can be either
+ *       undone or left alone as final. A failed assignment has the same effect
+ *       as calling pcmk__unassign_resource(); there are no side effects on
+ *       roles or actions.
  */
 pe_node_t *
-pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer)
+pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer,
+                       bool stop_if_fail)
 {
     GList *this_with_colocations = NULL;
     GList *with_this_colocations = NULL;
@@ -376,7 +396,7 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer)
         && !pcmk_is_set(rsc->parent->flags, pe_rsc_allocating)) {
         pe_rsc_debug(rsc, "%s: Assigning parent %s first",
                      rsc->id, rsc->parent->id);
-        rsc->parent->cmds->assign(rsc->parent, prefer);
+        rsc->parent->cmds->assign(rsc->parent, prefer, stop_if_fail);
     }
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
@@ -486,17 +506,21 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer)
         }
         pe_rsc_info(rsc, "Unmanaged resource %s assigned to %s: %s", rsc->id,
                     (assign_to? assign_to->details->uname : "no node"), reason);
-        pcmk__assign_resource(rsc, assign_to, true);
+        pcmk__assign_resource(rsc, assign_to, true, stop_if_fail);
 
     } else if (pcmk_is_set(rsc->cluster->flags, pe_flag_stop_everything)) {
-        pe_rsc_debug(rsc, "Forcing %s to stop: stop-all-resources", rsc->id);
-        pcmk__assign_resource(rsc, NULL, true);
+        // Must stop at some point, but be consistent with stop_if_fail
+        if (stop_if_fail) {
+            pe_rsc_debug(rsc, "Forcing %s to stop: stop-all-resources",
+                         rsc->id);
+        }
+        pcmk__assign_resource(rsc, NULL, true, stop_if_fail);
 
-    } else if (!assign_best_node(rsc, prefer)) {
+    } else if (!assign_best_node(rsc, prefer, stop_if_fail)) {
         // Assignment failed
         if (!pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
             pe_rsc_info(rsc, "Resource %s cannot run anywhere", rsc->id);
-        } else if (rsc->running_on != NULL) {
+        } else if ((rsc->running_on != NULL) && stop_if_fail) {
             pe_rsc_info(rsc, "Stopping orphan resource %s", rsc->id);
         }
     }
