@@ -381,7 +381,14 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer)
     }
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
-        return rsc->allocated_to; // Assignment has already been done
+        // Assignment has already been done
+        const char *node_name = "no node";
+
+        if (rsc->allocated_to != NULL) {
+            node_name = pe__node_name(rsc->allocated_to);
+        }
+        pe_rsc_debug(rsc, "%s: pre-assigned to %s", rsc->id, node_name);
+        return rsc->allocated_to;
     }
 
     // Ensure we detect assignment loops
@@ -486,20 +493,13 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer)
         pe_rsc_debug(rsc, "Forcing %s to stop: stop-all-resources", rsc->id);
         pcmk__finalize_assignment(rsc, NULL, true);
 
-    } else if (pcmk_is_set(rsc->flags, pe_rsc_provisional)
-               && assign_best_node(rsc, prefer)) {
-        // Assignment successful
-
-    } else if (rsc->allocated_to == NULL) {
+    } else if (!assign_best_node(rsc, prefer)) {
+        // Assignment failed
         if (!pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
             pe_rsc_info(rsc, "Resource %s cannot run anywhere", rsc->id);
         } else if (rsc->running_on != NULL) {
             pe_rsc_info(rsc, "Stopping orphan resource %s", rsc->id);
         }
-
-    } else {
-        pe_rsc_debug(rsc, "%s: pre-assigned to %s", rsc->id,
-                     pe__node_name(rsc->allocated_to));
     }
 
     pe__clear_resource_flags(rsc, pe_rsc_allocating);
