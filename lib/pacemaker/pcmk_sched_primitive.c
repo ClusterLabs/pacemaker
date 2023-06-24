@@ -277,15 +277,12 @@ assign_best_node(pe_resource_t *rsc, const pe_node_t *prefer)
  * \internal
  * \brief Apply a "this with" colocation to a node's allowed node scores
  *
- * \param[in,out] data       Colocation to apply
- * \param[in,out] user_data  Resource being assigned
+ * \param[in,out] colocation  Colocation to apply
+ * \param[in,out] rsc         Resource being assigned
  */
 static void
-apply_this_with(gpointer data, gpointer user_data)
+apply_this_with(pcmk__colocation_t *colocation, pe_resource_t *rsc)
 {
-    pcmk__colocation_t *colocation = (pcmk__colocation_t *) data;
-    pe_resource_t *rsc = (pe_resource_t *) user_data;
-
     GHashTable *archive = NULL;
     pe_resource_t *other = colocation->primary;
 
