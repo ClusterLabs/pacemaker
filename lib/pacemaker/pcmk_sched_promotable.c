@@ -440,6 +440,8 @@ set_sort_index_to_node_score(gpointer data, gpointer user_data)
 static void
 sort_promotable_instances(pe_resource_t *clone)
 {
+    GList *colocations = NULL;
+
     if (pe__set_clone_flag(clone, pe__clone_promotion_constrained)
             == pcmk_rc_already) {
         return;
@@ -456,13 +458,15 @@ sort_promotable_instances(pe_resource_t *clone)
     pe__show_node_scores(true, clone, "Before", clone->allowed_nodes,
                          clone->cluster);
 
-    /* Because the this_with_colocations() and with_this_colocations() methods
-     * boil down to copies of rsc_cons and rsc_cons_lhs for clones, we can use
-     * those here directly for efficiency.
-     */
     g_list_foreach(clone->children, add_sort_index_to_node_score, clone);
-    g_list_foreach(clone->rsc_cons, apply_coloc_to_dependent, clone);
-    g_list_foreach(clone->rsc_cons_lhs, apply_coloc_to_primary, clone);
+
+    colocations = pcmk__this_with_colocations(clone);
+    g_list_foreach(colocations, apply_coloc_to_dependent, clone);
+    g_list_free(colocations);
+
+    colocations = pcmk__with_this_colocations(clone);
+    g_list_foreach(colocations, apply_coloc_to_primary, clone);
+    g_list_free(colocations);
 
     // Ban resource from all nodes if it needs a ticket but doesn't have it
     pcmk__require_promotion_tickets(clone);

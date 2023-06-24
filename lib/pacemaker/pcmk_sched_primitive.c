@@ -1108,7 +1108,7 @@ pcmk__with_primitive_colocations(const pe_resource_t *rsc,
          */
         pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
         if (rsc->parent != NULL) {
-            rsc->parent->cmds->with_this_colocations(rsc->parent, rsc, list);
+            rsc->parent->cmds->with_this_colocations(rsc->parent, orig_rsc, list);
         }
     } else {
         // For an ancestor, add only explicitly configured constraints
@@ -1137,7 +1137,7 @@ pcmk__primitive_with_colocations(const pe_resource_t *rsc,
          */
         pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
         if (rsc->parent != NULL) {
-            rsc->parent->cmds->this_with_colocations(rsc->parent, rsc, list);
+            rsc->parent->cmds->this_with_colocations(rsc->parent, orig_rsc, list);
         }
     } else {
         // For an ancestor, add only explicitly configured constraints

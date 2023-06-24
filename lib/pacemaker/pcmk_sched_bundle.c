@@ -488,8 +488,8 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
     struct coloc_data coloc_data = { colocation, dependent, NULL };
 
     /* This should never be called for the bundle itself as a dependent.
-     * Instead, we add its colocation constraints to its containers and call the
-     * apply_coloc_score() method for the containers as dependents.
+     * Instead, we add its colocation constraints to its containers and bundled
+     * primitive and call the apply_coloc_score() method for them as dependents.
      */
     CRM_ASSERT((primary != NULL) && (primary->variant == pe_container)
                && (dependent != NULL) && (dependent->variant == pe_native)
@@ -548,13 +548,41 @@ void
 pcmk__with_bundle_colocations(const pe_resource_t *rsc,
                               const pe_resource_t *orig_rsc, GList **list)
 {
+    const pe_resource_t *bundled_rsc = NULL;
+
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container)
                && (orig_rsc != NULL) && (list != NULL));
 
-    // Only the bundle itself and its containers get the bundle's constraints
+    // The bundle itself and its containers always get its colocations
     if ((orig_rsc == rsc)
         || pcmk_is_set(orig_rsc->flags, pe_rsc_replica_container)) {
 
+        pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
+        return;
+    }
+
+    /* The bundled resource gets the colocations if it's promotable and we've
+     * begun choosing roles
+     */
+    bundled_rsc = pe__bundled_resource(rsc);
+    if ((bundled_rsc == NULL)
+        || !pcmk_is_set(bundled_rsc->flags, pe_rsc_promotable)
+        || (pe__const_top_resource(orig_rsc, false) != bundled_rsc)) {
+        return;
+    }
+
+    if (orig_rsc == bundled_rsc) {
+        if (pe__clone_flag_is_set(orig_rsc, pe__clone_promotion_constrained)) {
+            /* orig_rsc is the clone and we're setting roles (or have already
+             * done so)
+             */
+            pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
+        }
+
+    } else if (!pcmk_is_set(orig_rsc->flags, pe_rsc_provisional)) {
+        /* orig_rsc is an instance and is already assigned. If something
+         * requests colocations for orig_rsc now, it's for setting roles.
+         */
         pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
     }
 }
@@ -564,13 +592,40 @@ void
 pcmk__bundle_with_colocations(const pe_resource_t *rsc,
                               const pe_resource_t *orig_rsc, GList **list)
 {
+    const pe_resource_t *bundled_rsc = NULL;
+
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container)
                && (orig_rsc != NULL) && (list != NULL));
 
-    // Only the bundle itself and its containers get the bundle's constraints
+    // The bundle itself and its containers always get its colocations
     if ((orig_rsc == rsc)
         || pcmk_is_set(orig_rsc->flags, pe_rsc_replica_container)) {
 
+        pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
+    }
+
+    /* The bundled resource gets the colocations if it's promotable and we've
+     * begun choosing roles
+     */
+    bundled_rsc = pe__bundled_resource(rsc);
+    if ((bundled_rsc == NULL)
+        || !pcmk_is_set(bundled_rsc->flags, pe_rsc_promotable)
+        || (pe__const_top_resource(orig_rsc, false) != bundled_rsc)) {
+        return;
+    }
+
+    if (orig_rsc == bundled_rsc) {
+        if (pe__clone_flag_is_set(orig_rsc, pe__clone_promotion_constrained)) {
+            /* orig_rsc is the clone and we're setting roles (or have already
+             * done so)
+             */
+            pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
+        }
+
+    } else if (!pcmk_is_set(orig_rsc->flags, pe_rsc_provisional)) {
+        /* orig_rsc is an instance and is already assigned. If something
+         * requests colocations for orig_rsc now, it's for setting roles.
+         */
         pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
     }
 }

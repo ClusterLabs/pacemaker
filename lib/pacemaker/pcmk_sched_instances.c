@@ -143,34 +143,33 @@ new_node_table(pe_node_t *node)
 static void
 apply_parent_colocations(const pe_resource_t *rsc, GHashTable **nodes)
 {
-    GList *iter = NULL;
-    pcmk__colocation_t *colocation = NULL;
-    pe_resource_t *other = NULL;
-    float factor = 0.0;
+    GList *colocations = pcmk__this_with_colocations(rsc);
 
-    /* Because the this_with_colocations() and with_this_colocations() methods
-     * boil down to copies of rsc_cons and rsc_cons_lhs for clones and bundles,
-     * we can use those here directly for efficiency.
-     */
-    for (iter = rsc->parent->rsc_cons; iter != NULL; iter = iter->next) {
-        colocation = (pcmk__colocation_t *) iter->data;
-        other = colocation->primary;
-        factor = colocation->score / (float) INFINITY,
+    for (const GList *iter = colocations; iter != NULL; iter = iter->next) {
+        const pcmk__colocation_t *colocation = iter->data;
+        pe_resource_t *other = colocation->primary;
+        float factor = colocation->score / (float) INFINITY;
+
         other->cmds->add_colocated_node_scores(other, rsc, rsc->id, nodes,
                                                colocation, factor,
                                                pcmk__coloc_select_default);
     }
-    for (iter = rsc->parent->rsc_cons_lhs; iter != NULL; iter = iter->next) {
-        colocation = (pcmk__colocation_t *) iter->data;
+    g_list_free(colocations);
+    colocations = pcmk__with_this_colocations(rsc);
+
+    for (const GList *iter = colocations; iter != NULL; iter = iter->next) {
+        const pcmk__colocation_t *colocation = iter->data;
+        pe_resource_t *other = colocation->dependent;
+        float factor = colocation->score / (float) INFINITY;
+
         if (!pcmk__colocation_has_influence(colocation, rsc)) {
             continue;
         }
-        other = colocation->dependent;
-        factor = colocation->score / (float) INFINITY,
         other->cmds->add_colocated_node_scores(other, rsc, rsc->id, nodes,
                                                colocation, factor,
                                                pcmk__coloc_select_nonnegative);
     }
+    g_list_free(colocations);
 }
 
 /*!
