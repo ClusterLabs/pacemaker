@@ -20,13 +20,23 @@
  * \internal
  * \brief Assign a group resource to a node
  *
- * \param[in,out] rsc     Group resource to assign to a node
- * \param[in]     prefer  Node to prefer, if all else is equal
+ * \param[in,out] rsc           Group resource to assign to a node
+ * \param[in]     prefer        Node to prefer, if all else is equal
+ * \param[in]     stop_if_fail  If \c true and a child of \p rsc can't be
+ *                              assigned to a node, set the child's next role to
+ *                              stopped and update existing actions
  *
  * \return Node that \p rsc is assigned to, if assigned entirely to one node
+ *
+ * \note If \p stop_if_fail is \c false, then \c pcmk__unassign_resource() can
+ *       completely undo the assignment. A successful assignment can be either
+ *       undone or left alone as final. A failed assignment has the same effect
+ *       as calling pcmk__unassign_resource(); there are no side effects on
+ *       roles or actions.
  */
 pe_node_t *
-pcmk__group_assign(pe_resource_t *rsc, const pe_node_t *prefer)
+pcmk__group_assign(pe_resource_t *rsc, const pe_node_t *prefer,
+                   bool stop_if_fail)
 {
     pe_node_t *first_assigned_node = NULL;
     pe_resource_t *first_member = NULL;
@@ -61,7 +71,7 @@ pcmk__group_assign(pe_resource_t *rsc, const pe_node_t *prefer)
 
         pe_rsc_trace(rsc, "Assigning group %s member %s",
                      rsc->id, member->id);
-        node = member->cmds->assign(member, prefer);
+        node = member->cmds->assign(member, prefer, stop_if_fail);
         if (first_assigned_node == NULL) {
             first_assigned_node = node;
         }

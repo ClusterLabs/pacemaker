@@ -19,7 +19,8 @@
 #  include <crm/common/xml.h>
 #  include <pcmki/pcmki_scheduler.h>
 
-pe_node_t *pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer);
+pe_node_t *pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer,
+                                 bool stop_if_fail);
 void pcmk__bundle_create_actions(pe_resource_t *rsc);
 bool pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node);
 void pcmk__bundle_internal_constraints(pe_resource_t *rsc);

@@ -36,13 +36,24 @@ is_bundle_node(pe__bundle_variant_data_t *data, pe_node_t *node)
  * \internal
  * \brief Assign a bundle resource to a node
  *
- * \param[in,out] rsc     Resource to assign to a node
- * \param[in]     prefer  Node to prefer, if all else is equal
+ * \param[in,out] rsc           Resource to assign to a node
+ * \param[in]     prefer        Node to prefer, if all else is equal
+ * \param[in]     stop_if_fail  If \c true and a primitive descendant of \p rsc
+ *                              can't be assigned to a node, set the
+ *                              descendant's next role to stopped and update
+ *                              existing actions
  *
  * \return Node that \p rsc is assigned to, if assigned entirely to one node
+ *
+ * \note If \p stop_if_fail is \c false, then \c pcmk__unassign_resource() can
+ *       completely undo the assignment. A successful assignment can be either
+ *       undone or left alone as final. A failed assignment has the same effect
+ *       as calling pcmk__unassign_resource(); there are no side effects on
+ *       roles or actions.
  */
 pe_node_t *
-pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
+pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer,
+                      bool stop_if_fail)
 {
     GList *containers = NULL;
     pe__bundle_variant_data_t *bundle_data = NULL;
@@ -71,7 +82,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
         if (replica->ip) {
             pe_rsc_trace(rsc, "Allocating bundle %s IP %s",
                          rsc->id, replica->ip->id);
-            replica->ip->cmds->assign(replica->ip, prefer);
+            replica->ip->cmds->assign(replica->ip, prefer, stop_if_fail);
         }
 
         container_host = replica->container->allocated_to;
@@ -89,7 +100,8 @@ pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
         if (replica->remote) {
             pe_rsc_trace(rsc, "Allocating bundle %s connection %s",
                          rsc->id, replica->remote->id);
-            replica->remote->cmds->assign(replica->remote, prefer);
+            replica->remote->cmds->assign(replica->remote, prefer,
+                                          stop_if_fail);
         }
 
         // Explicitly allocate replicas' children before bundle child
@@ -110,7 +122,8 @@ pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
             pe__set_resource_flags(replica->child->parent, pe_rsc_allocating);
             pe_rsc_trace(rsc, "Allocating bundle %s replica child %s",
                          rsc->id, replica->child->id);
-            replica->child->cmds->assign(replica->child, replica->node);
+            replica->child->cmds->assign(replica->child, replica->node,
+                                         stop_if_fail);
             pe__clear_resource_flags(replica->child->parent,
                                        pe_rsc_allocating);
         }
@@ -129,7 +142,8 @@ pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
         }
         pe_rsc_trace(rsc, "Allocating bundle %s child %s",
                      rsc->id, bundle_data->child->id);
-        bundle_data->child->cmds->assign(bundle_data->child, prefer);
+        bundle_data->child->cmds->assign(bundle_data->child, prefer,
+                                         stop_if_fail);
     }
 
     pe__clear_resource_flags(rsc, pe_rsc_allocating|pe_rsc_provisional);
@@ -457,7 +471,7 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
         } else if (colocation->score >= INFINITY) {
             crm_notice("Cannot pair %s with instance of %s",
                        dependent->id, primary->id);
-            pcmk__assign_resource(dependent, NULL, true);
+            pcmk__assign_resource(dependent, NULL, true, true);
 
         } else {
             pe_rsc_debug(primary, "Cannot pair %s with instance of %s",
