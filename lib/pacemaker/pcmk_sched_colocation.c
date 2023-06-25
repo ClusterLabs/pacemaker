@@ -180,12 +180,10 @@ pcmk__add_this_with(GList **list, const pcmk__colocation_t *colocation)
 {
     CRM_ASSERT((list != NULL) && (colocation != NULL));
 
-    crm_trace("Adding colocation %s (%s with %s%s%s @%d) "
+    crm_trace("Adding colocation %s (%s with %s using %s @%d) "
               "to 'this with' list",
               colocation->id, colocation->dependent->id,
-              colocation->primary->id,
-              (colocation->node_attribute == NULL)? "" : " using ",
-              pcmk__s(colocation->node_attribute, ""),
+              colocation->primary->id, colocation->node_attribute,
               colocation->score);
     *list = g_list_insert_sorted(*list, (gpointer) colocation,
                                  cmp_primary_priority);
@@ -231,12 +229,10 @@ pcmk__add_with_this(GList **list, const pcmk__colocation_t *colocation)
 {
     CRM_ASSERT((list != NULL) && (colocation != NULL));
 
-    crm_trace("Adding colocation %s (%s with %s%s%s @%d) "
+    crm_trace("Adding colocation %s (%s with %s using %s @%d) "
               "to 'with this' list",
               colocation->id, colocation->dependent->id,
-              colocation->primary->id,
-              (colocation->node_attribute == NULL)? "" : " using ",
-              pcmk__s(colocation->node_attribute, ""),
+              colocation->primary->id, colocation->node_attribute,
               colocation->score);
     *list = g_list_insert_sorted(*list, (gpointer) colocation,
                                  cmp_dependent_priority);
@@ -373,15 +369,11 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
     new_con->score = score;
     new_con->dependent_role = text2role(dependent_role);
     new_con->primary_role = text2role(primary_role);
-    new_con->node_attribute = node_attr;
+    new_con->node_attribute = pcmk__s(node_attr, CRM_ATTR_UNAME);
     new_con->influence = influence;
 
-    if (node_attr == NULL) {
-        node_attr = CRM_ATTR_UNAME;
-    }
-
     pe_rsc_trace(dependent, "%s ==> %s (%s %d)",
-                 dependent->id, primary->id, node_attr, score);
+                 dependent->id, primary->id, new_con->node_attribute, score);
 
     pcmk__add_this_with(&(dependent->rsc_cons), new_con);
     pcmk__add_with_this(&(primary->rsc_cons_lhs), new_con);
@@ -1152,15 +1144,11 @@ pcmk__apply_coloc_to_scores(pe_resource_t *dependent,
                             const pe_resource_t *primary,
                             const pcmk__colocation_t *colocation)
 {
-    const char *attribute = CRM_ATTR_ID;
+    const char *attribute = colocation->node_attribute;
     const char *value = NULL;
     GHashTable *work = NULL;
     GHashTableIter iter;
     pe_node_t *node = NULL;
-
-    if (colocation->node_attribute != NULL) {
-        attribute = colocation->node_attribute;
-    }
 
     if (primary->allocated_to != NULL) {
         value = pe_node_attribute_raw(primary->allocated_to, attribute);
@@ -1253,15 +1241,11 @@ pcmk__apply_coloc_to_priority(pe_resource_t *dependent,
 {
     const char *dependent_value = NULL;
     const char *primary_value = NULL;
-    const char *attribute = CRM_ATTR_ID;
+    const char *attribute = colocation->node_attribute;
     int score_multiplier = 1;
 
     if ((primary->allocated_to == NULL) || (dependent->allocated_to == NULL)) {
         return;
-    }
-
-    if (colocation->node_attribute != NULL) {
-        attribute = colocation->node_attribute;
     }
 
     dependent_value = pe_node_attribute_raw(dependent->allocated_to, attribute);
@@ -1389,11 +1373,7 @@ add_node_scores_matching_attr(GHashTable *nodes, const pe_resource_t *rsc,
 {
     GHashTableIter iter;
     pe_node_t *node = NULL;
-    const char *attr = CRM_ATTR_UNAME;
-
-    if ((colocation != NULL) && (colocation->node_attribute != NULL)) {
-        attr = colocation->node_attribute;
-    }
+    const char *attr = colocation->node_attribute;
 
     // Iterate through each node
     g_hash_table_iter_init(&iter, nodes);
@@ -1440,8 +1420,7 @@ add_node_scores_matching_attr(GHashTable *nodes, const pe_resource_t *rsc,
              * unless stickiness uses a rule to vary by node, and that seems
              * acceptable to ignore.)
              */
-            if ((colocation == NULL)
-                || (colocation->primary->stickiness >= -score)
+            if ((colocation->primary->stickiness >= -score)
                 || !pcmk__colocation_has_influence(colocation, NULL)
                 || !allowed_on_one(colocation->dependent)) {
                 crm_trace("%s: Filtering %d + %f * %d "

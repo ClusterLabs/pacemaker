@@ -1157,17 +1157,13 @@ update_dependent_allowed_nodes(pe_resource_t *dependent,
     GHashTableIter iter;
     pe_node_t *node = NULL;
     const char *primary_value = NULL;
-    const char *attr = NULL;
+    const char *attr = colocation->node_attribute;
 
     if (colocation->score >= INFINITY) {
         return; // Colocation is mandatory, so allowed node scores don't matter
     }
 
     // Get value of primary's colocation node attribute
-    attr = colocation->node_attribute;
-    if (attr == NULL) {
-        attr = CRM_ATTR_UNAME;
-    }
     primary_value = pe_node_attribute_raw(primary_node, attr);
 
     pe_rsc_trace(colocation->primary,
