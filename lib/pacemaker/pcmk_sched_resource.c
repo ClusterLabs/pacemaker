@@ -598,13 +598,6 @@ pcmk__threshold_reached(pe_resource_t *rsc, const pe_node_t *node,
     return false;
 }
 
-static void *
-convert_const_pointer(const void *ptr)
-{
-    /* Worst function ever */
-    return (void *)ptr;
-}
-
 /*!
  * \internal
  * \brief Get a node's score
@@ -639,9 +632,13 @@ get_node_score(const pe_node_t *node, GHashTable *nodes)
 static gint
 cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
 {
-    const pe_resource_t *resource1 = a;
-    const pe_resource_t *resource2 = b;
-    const GList *nodes = (const GList *) data;
+    /* GLib insists that this function require gconstpointer arguments, but we
+     * make a small, temporary change to each argument (setting the
+     * pe_rsc_merging flag) during comparison
+     */
+    pe_resource_t *resource1 = (pe_resource_t *) a;
+    pe_resource_t *resource2 = (pe_resource_t *) b;
+    const GList *nodes = data;
 
     int rc = 0;
     int r1_score = -INFINITY;
@@ -672,12 +669,12 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
     }
 
     // Calculate and log node scores
-    resource1->cmds->add_colocated_node_scores(convert_const_pointer(resource1),
-                                               resource1->id, &r1_nodes, NULL,
-                                               1, pcmk__coloc_select_this_with);
-    resource2->cmds->add_colocated_node_scores(convert_const_pointer(resource2),
-                                               resource2->id, &r2_nodes, NULL,
-                                               1, pcmk__coloc_select_this_with);
+    resource1->cmds->add_colocated_node_scores(resource1, resource1->id,
+                                               &r1_nodes, NULL, 1,
+                                               pcmk__coloc_select_this_with);
+    resource2->cmds->add_colocated_node_scores(resource2, resource2->id,
+                                               &r2_nodes, NULL, 1,
+                                               pcmk__coloc_select_this_with);
     pe__show_node_scores(true, NULL, resource1->id, r1_nodes,
                          resource1->cluster);
     pe__show_node_scores(true, NULL, resource2->id, r2_nodes,
