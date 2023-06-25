@@ -33,109 +33,137 @@
 // Used to temporarily mark a node as unusable
 #define INFINITY_HACK   (INFINITY * -100)
 
+/*!
+ * \internal
+ * \brief Compare two colocations according to priority
+ *
+ * Compare two colocations according to the order in which they should be
+ * considered, based on either their dependent resources or their primary
+ * resources -- preferring (in order):
+ *  * Colocation that is not \c NULL
+ *  * Colocation whose resource has higher priority
+ *  * Colocation whose resource is of a higher-level variant
+ *    (bundle > clone > group > primitive)
+ *  * Colocation whose resource is promotable, if both are clones
+ *  * Colocation whose resource has lower ID in lexicographic order
+ *
+ * \param[in] colocation1  First colocation to compare
+ * \param[in] colocation2  Second colocation to compare
+ * \param[in] dependent    If \c true, compare colocations by dependent
+ *                         priority; otherwise compare them by primary priority
+ *
+ * \return A negative number if \p colocation1 should be considered first,
+ *         a positive number if \p colocation2 should be considered first,
+ *         or 0 if order doesn't matter
+ */
+static gint
+cmp_colocation_priority(const pcmk__colocation_t *colocation1,
+                        const pcmk__colocation_t *colocation2, bool dependent)
+{
+    const pe_resource_t *rsc1 = NULL;
+    const pe_resource_t *rsc2 = NULL;
+
+    if (colocation1 == NULL) {
+        return 1;
+    }
+    if (colocation2 == NULL) {
+        return -1;
+    }
+
+    if (dependent) {
+        rsc1 = colocation1->dependent;
+        rsc2 = colocation2->dependent;
+        CRM_ASSERT(colocation1->primary != NULL);
+    } else {
+        rsc1 = colocation1->primary;
+        rsc2 = colocation2->primary;
+        CRM_ASSERT(colocation1->dependent != NULL);
+    }
+    CRM_ASSERT((rsc1 != NULL) && (rsc2 != NULL));
+
+    if (rsc1->priority > rsc2->priority) {
+        return -1;
+    }
+    if (rsc1->priority < rsc2->priority) {
+        return 1;
+    }
+
+    // Process clones before primitives and groups
+    if (rsc1->variant > rsc2->variant) {
+        return -1;
+    }
+    if (rsc1->variant < rsc2->variant) {
+        return 1;
+    }
+
+    /* @COMPAT scheduler <2.0.0: Process promotable clones before nonpromotable
+     * clones (probably unnecessary, but avoids having to update regression
+     * tests)
+     */
+    if (rsc1->variant == pe_clone) {
+        if (pcmk_is_set(rsc1->flags, pe_rsc_promotable)
+            && !pcmk_is_set(rsc2->flags, pe_rsc_promotable)) {
+            return -1;
+        }
+        if (!pcmk_is_set(rsc1->flags, pe_rsc_promotable)
+            && pcmk_is_set(rsc2->flags, pe_rsc_promotable)) {
+            return 1;
+        }
+    }
+
+    return strcmp(rsc1->id, rsc2->id);
+}
+
+/*!
+ * \internal
+ * \brief Compare two colocations according to priority based on dependents
+ *
+ * Compare two colocations according to the order in which they should be
+ * considered, based on their dependent resources -- preferring (in order):
+ *  * Colocation that is not \c NULL
+ *  * Colocation whose resource has higher priority
+ *  * Colocation whose resource is of a higher-level variant
+ *    (bundle > clone > group > primitive)
+ *  * Colocation whose resource is promotable, if both are clones
+ *  * Colocation whose resource has lower ID in lexicographic order
+ *
+ * \param[in] a  First colocation to compare
+ * \param[in] b  Second colocation to compare
+ *
+ * \return A negative number if \p a should be considered first,
+ *         a positive number if \p b should be considered first,
+ *         or 0 if order doesn't matter
+ */
 static gint
 cmp_dependent_priority(gconstpointer a, gconstpointer b)
 {
-    const pcmk__colocation_t *rsc_constraint1 = (const pcmk__colocation_t *) a;
-    const pcmk__colocation_t *rsc_constraint2 = (const pcmk__colocation_t *) b;
-    const pe_resource_t *dependent1 = NULL;
-    const pe_resource_t *dependent2 = NULL;
-
-    if (a == NULL) {
-        return 1;
-    }
-    if (b == NULL) {
-        return -1;
-    }
-
-    dependent1 = rsc_constraint1->dependent;
-    dependent2 = rsc_constraint2->dependent;
-
-    CRM_ASSERT((dependent1 != NULL) && (dependent2 != NULL)
-               && (rsc_constraint1->primary != NULL));
-
-    if (dependent1->priority > dependent2->priority) {
-        return -1;
-    }
-    if (dependent1->priority < dependent2->priority) {
-        return 1;
-    }
-
-    /* Process clones before primitives and groups */
-    if (dependent1->variant > dependent2->variant) {
-        return -1;
-    }
-    if (dependent1->variant < dependent2->variant) {
-        return 1;
-    }
-
-    /* @COMPAT scheduler <2.0.0: Process promotable clones before nonpromotable
-     * clones (probably unnecessary, but avoids having to update regression
-     * tests)
-     */
-    if (dependent1->variant == pe_clone) {
-        if (pcmk_is_set(dependent1->flags, pe_rsc_promotable)
-            && !pcmk_is_set(dependent2->flags, pe_rsc_promotable)) {
-            return -1;
-        } else if (!pcmk_is_set(dependent1->flags, pe_rsc_promotable)
-                   && pcmk_is_set(dependent2->flags, pe_rsc_promotable)) {
-            return 1;
-        }
-    }
-
-    return strcmp(dependent1->id, dependent2->id);
+    return cmp_colocation_priority(a, b, true);
 }
 
+/*!
+ * \internal
+ * \brief Compare two colocations according to priority based on primaries
+ *
+ * Compare two colocations according to the order in which they should be
+ * considered, based on their primary resources -- preferring (in order):
+ *  * Colocation that is not \c NULL
+ *  * Colocation whose primary has higher priority
+ *  * Colocation whose primary is of a higher-level variant
+ *    (bundle > clone > group > primitive)
+ *  * Colocation whose primary is promotable, if both are clones
+ *  * Colocation whose primary has lower ID in lexicographic order
+ *
+ * \param[in] a  First colocation to compare
+ * \param[in] b  Second colocation to compare
+ *
+ * \return A negative number if \p a should be considered first,
+ *         a positive number if \p b should be considered first,
+ *         or 0 if order doesn't matter
+ */
 static gint
 cmp_primary_priority(gconstpointer a, gconstpointer b)
 {
-    const pcmk__colocation_t *rsc_constraint1 = (const pcmk__colocation_t *) a;
-    const pcmk__colocation_t *rsc_constraint2 = (const pcmk__colocation_t *) b;
-    const pe_resource_t *primary1 = NULL;
-    const pe_resource_t *primary2 = NULL;
-
-    if (a == NULL) {
-        return 1;
-    }
-    if (b == NULL) {
-        return -1;
-    }
-
-    primary1 = rsc_constraint1->primary;
-    primary2 = rsc_constraint2->primary;
-
-    CRM_ASSERT((primary1 != NULL) && (primary2 != NULL)
-               && (rsc_constraint1->dependent != NULL));
-
-    if (primary1->priority > primary2->priority) {
-        return -1;
-    }
-    if (primary1->priority < primary2->priority) {
-        return 1;
-    }
-
-    /* Process clones before primitives and groups */
-    if (primary1->variant > primary2->variant) {
-        return -1;
-    } else if (primary1->variant < primary2->variant) {
-        return 1;
-    }
-
-    /* @COMPAT scheduler <2.0.0: Process promotable clones before nonpromotable
-     * clones (probably unnecessary, but avoids having to update regression
-     * tests)
-     */
-    if (primary1->variant == pe_clone) {
-        if (pcmk_is_set(primary1->flags, pe_rsc_promotable)
-            && !pcmk_is_set(primary2->flags, pe_rsc_promotable)) {
-            return -1;
-        } else if (!pcmk_is_set(primary1->flags, pe_rsc_promotable)
-            && pcmk_is_set(primary2->flags, pe_rsc_promotable)) {
-            return 1;
-        }
-    }
-
-    return strcmp(primary1->id, primary2->id);
+    return cmp_colocation_priority(a, b, false);
 }
 
 /*!
