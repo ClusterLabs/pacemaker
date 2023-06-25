@@ -378,7 +378,7 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
     pcmk__add_this_with(&(dependent->rsc_cons), new_con);
     pcmk__add_with_this(&(primary->rsc_cons_lhs), new_con);
 
-    dependent->cluster->colocation_constraints = g_list_append(
+    dependent->cluster->colocation_constraints = g_list_prepend(
         dependent->cluster->colocation_constraints, new_con);
 
     if (score <= -INFINITY) {
