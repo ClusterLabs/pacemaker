@@ -355,9 +355,9 @@ apply_coloc_to_dependent(gpointer data, gpointer user_data)
                  colocation->id, colocation->dependent->id,
                  colocation->primary->id,
                  pcmk_readable_score(colocation->score));
-    primary->cmds->add_colocated_node_scores(primary, clone->id,
-                                             &clone->allowed_nodes,
-                                             colocation, factor, flags);
+    primary->cmds->add_colocated_node_scores(primary, clone, clone->id,
+                                             &clone->allowed_nodes, colocation,
+                                             factor, flags);
 }
 
 /*!
@@ -386,7 +386,7 @@ apply_coloc_to_primary(gpointer data, gpointer user_data)
                  colocation->id, colocation->dependent->id,
                  colocation->primary->id,
                  pcmk_readable_score(colocation->score));
-    dependent->cmds->add_colocated_node_scores(dependent, clone->id,
+    dependent->cmds->add_colocated_node_scores(dependent, clone, clone->id,
                                                &clone->allowed_nodes,
                                                colocation, factor, flags);
 }

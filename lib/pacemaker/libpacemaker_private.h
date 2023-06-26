@@ -204,24 +204,30 @@ struct resource_alloc_functions_s {
      * scores of the best nodes matching the attribute used for each of the
      * resource's relevant colocations.
      *
-     * \param[in,out] rsc         Resource to check colocations for
-     * \param[in]     log_id      Resource ID for logs (if NULL, use \p rsc ID)
-     * \param[in,out] nodes       Nodes to update (set initial contents to NULL
-     *                            to copy \p rsc's allowed nodes)
+     * \param[in,out] source_rsc  Resource whose node scores to add
+     * \param[in]     target_rsc  Resource on whose behalf to update \p *nodes
+     * \param[in]     log_id      Resource ID for logs (if \c NULL, use
+     *                            \p source_rsc ID)
+     * \param[in,out] nodes       Nodes to update (set initial contents to
+     *                            \c NULL to copy allowed nodes from
+     *                            \p source_rsc)
      * \param[in]     colocation  Original colocation constraint (used to get
      *                            configured primary resource's stickiness, and
-     *                            to get colocation node attribute; if NULL,
-     *                            \p rsc's own matching node scores will not be
-     *                            added, and *nodes must be NULL as well)
+     *                            to get colocation node attribute; if \c NULL,
+     *                            <tt>source_rsc</tt>'s own matching node scores
+     *                            will not be added, and \p *nodes must be
+     *                            \c NULL as well)
      * \param[in]     factor      Incorporate scores multiplied by this factor
      * \param[in]     flags       Bitmask of enum pcmk__coloc_select values
      *
-     * \note NULL *nodes, NULL colocation, and the pcmk__coloc_select_this_with
-     *       flag are used together (and only by cmp_resources()).
+     * \note \c NULL \p target_rsc, \c NULL \p *nodes, \c NULL \p colocation,
+     *       and the \c pcmk__coloc_select_this_with flag are used together (and
+     *       only by \c cmp_resources()).
      * \note The caller remains responsible for freeing \p *nodes.
      */
-    void (*add_colocated_node_scores)(pe_resource_t *rsc, const char *log_id,
-                                      GHashTable **nodes,
+    void (*add_colocated_node_scores)(pe_resource_t *source_rsc,
+                                      const pe_resource_t *target_rsc,
+                                      const char *log_id, GHashTable **nodes,
                                       const pcmk__colocation_t *colocation,
                                       float factor, uint32_t flags);
 
@@ -495,8 +501,9 @@ void pcmk__apply_coloc_to_priority(pe_resource_t *dependent,
                                    const pcmk__colocation_t *colocation);
 
 G_GNUC_INTERNAL
-void pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
-                                     GHashTable **nodes,
+void pcmk__add_colocated_node_scores(pe_resource_t *source_rsc,
+                                     const pe_resource_t *target_rsc,
+                                     const char *log_id, GHashTable **nodes,
                                      const pcmk__colocation_t *colocation,
                                      float factor, uint32_t flags);
 
@@ -772,7 +779,8 @@ void pcmk__group_with_colocations(const pe_resource_t *rsc,
                                   const pe_resource_t *orig_rsc, GList **list);
 
 G_GNUC_INTERNAL
-void pcmk__group_add_colocated_node_scores(pe_resource_t *rsc,
+void pcmk__group_add_colocated_node_scores(pe_resource_t *source_rsc,
+                                           const pe_resource_t *target_rsc,
                                            const char *log_id,
                                            GHashTable **nodes,
                                            const pcmk__colocation_t *colocation,

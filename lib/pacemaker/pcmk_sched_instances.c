@@ -156,7 +156,7 @@ apply_parent_colocations(const pe_resource_t *rsc, GHashTable **nodes)
         colocation = (pcmk__colocation_t *) iter->data;
         other = colocation->primary;
         factor = colocation->score / (float) INFINITY,
-        other->cmds->add_colocated_node_scores(other, rsc->id, nodes,
+        other->cmds->add_colocated_node_scores(other, rsc, rsc->id, nodes,
                                                colocation, factor,
                                                pcmk__coloc_select_default);
     }
@@ -167,7 +167,7 @@ apply_parent_colocations(const pe_resource_t *rsc, GHashTable **nodes)
         }
         other = colocation->dependent;
         factor = colocation->score / (float) INFINITY,
-        other->cmds->add_colocated_node_scores(other, rsc->id, nodes,
+        other->cmds->add_colocated_node_scores(other, rsc, rsc->id, nodes,
                                                colocation, factor,
                                                pcmk__coloc_select_nonnegative);
     }
