@@ -17,6 +17,14 @@
 #include <crm/pengine/pe_types.h> // pe_action_t, pe_node_t, pe_working_set_t
 #include <crm/pengine/internal.h> // pe__location_t
 
+// Colocation flags
+enum pcmk__coloc_flags {
+    pcmk__coloc_none        = 0U,
+
+    // Primary is affected even if already active
+    pcmk__coloc_influence   = (1U << 0),
+};
+
 // Flags to modify the behavior of add_colocated_node_scores()
 enum pcmk__coloc_select {
     // With no other flags, apply all "with this" colocations
@@ -509,7 +517,7 @@ G_GNUC_INTERNAL
 void pcmk__new_colocation(const char *id, const char *node_attr, int score,
                           pe_resource_t *dependent, pe_resource_t *primary,
                           const char *dependent_role, const char *primary_role,
-                          bool influence);
+                          uint32_t flags);
 
 G_GNUC_INTERNAL
 void pcmk__block_colocation_dependents(pe_action_t *action);
@@ -555,7 +563,8 @@ pcmk__colocation_has_influence(const pcmk__colocation_t *colocation,
     /* The dependent in a colocation influences the primary's location
      * if the influence option is true or the primary is not yet active.
      */
-    return colocation->influence || (rsc->running_on == NULL);
+    return pcmk_is_set(colocation->flags, pcmk__coloc_influence)
+           || (rsc->running_on == NULL);
 }
 
 

@@ -49,7 +49,7 @@ assign_replica(pe__bundle_replica_t *replica, void *user_data)
             pcmk__new_colocation("replica-remote-with-host-remote", NULL,
                                  INFINITY, replica->remote,
                                  container_host->details->remote_rsc, NULL,
-                                 NULL, true);
+                                 NULL, pcmk__coloc_influence);
         }
         pe_rsc_trace(bundle, "Assigning bundle %s connection %s",
                      bundle->id, replica->remote->id);
@@ -240,7 +240,8 @@ replica_internal_constraints(pe__bundle_replica_t *replica, void *user_data)
                           pe_order_implies_first|pe_order_preserve);
 
         pcmk__new_colocation("ip-with-container", NULL, INFINITY, replica->ip,
-                             replica->container, NULL, NULL, true);
+                             replica->container, NULL, NULL,
+                             pcmk__coloc_influence);
     }
 
     if (replica->remote != NULL) {
