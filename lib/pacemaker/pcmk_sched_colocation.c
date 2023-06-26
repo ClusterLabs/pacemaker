@@ -21,15 +21,6 @@
 #include "crm/msg_xml.h"
 #include "libpacemaker_private.h"
 
-#define EXPAND_CONSTRAINT_IDREF(__set, __rsc, __name) do {                  \
-        __rsc = pcmk__find_constraint_resource(data_set->resources,         \
-                                               __name);                     \
-        if (__rsc == NULL) {                                                \
-            pcmk__config_err("%s: No resource found for %s", __set, __name);\
-            return;                                                         \
-        }                                                                   \
-    } while (0)
-
 // Used to temporarily mark a node as unusable
 #define INFINITY_HACK   (INFINITY * -100)
 
@@ -461,6 +452,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
     int local_score = score;
     bool sequential = false;
     uint32_t flags = pcmk__coloc_none;
+    const char *xml_rsc_id = NULL;
     const char *score_s = crm_element_value(set, XML_RULE_ATTR_SCORE);
 
     if (score_s) {
@@ -485,7 +477,14 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
         for (xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
-            EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
+            xml_rsc_id = ID(xml_rsc);
+            resource = pcmk__find_constraint_resource(data_set->resources,
+                                                      xml_rsc_id);
+            if (resource == NULL) {
+                pcmk__config_err("%s: No resource found for %s",
+                                 set_id, xml_rsc_id);
+                return;
+            }
             if (with != NULL) {
                 pe_rsc_trace(resource, "Colocating %s with %s",
                              resource->id, with->id);
@@ -502,7 +501,14 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
         for (xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
-            EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
+            xml_rsc_id = ID(xml_rsc);
+            resource = pcmk__find_constraint_resource(data_set->resources,
+                                                      xml_rsc_id);
+            if (resource == NULL) {
+                pcmk__config_err("%s: No resource found for %s",
+                                 set_id, xml_rsc_id);
+                return;
+            }
             if (last != NULL) {
                 pe_rsc_trace(resource, "Colocating %s with %s",
                              last->id, resource->id);
@@ -524,18 +530,30 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
 
             xmlNode *xml_rsc_with = NULL;
 
-            EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
-
+            xml_rsc_id = ID(xml_rsc);
+            resource = pcmk__find_constraint_resource(data_set->resources,
+                                                      xml_rsc_id);
+            if (resource == NULL) {
+                pcmk__config_err("%s: No resource found for %s",
+                                 set_id, xml_rsc_id);
+                return;
+            }
             flags = unpack_influence(coloc_id, resource, influence_s);
             for (xml_rsc_with = first_named_child(set, XML_TAG_RESOURCE_REF);
                  xml_rsc_with != NULL;
                  xml_rsc_with = crm_next_same_xml(xml_rsc_with)) {
 
-                if (pcmk__str_eq(resource->id, ID(xml_rsc_with),
-                                 pcmk__str_none)) {
+                xml_rsc_id = ID(xml_rsc_with);
+                if (pcmk__str_eq(resource->id, xml_rsc_id, pcmk__str_none)) {
                     break;
                 }
-                EXPAND_CONSTRAINT_IDREF(set_id, with, ID(xml_rsc_with));
+                with = pcmk__find_constraint_resource(data_set->resources,
+                                                      xml_rsc_id);
+                if (with == NULL) {
+                    pcmk__config_err("%s: No resource found for %s",
+                                     set_id, xml_rsc_id);
+                    return;
+                }
                 pe_rsc_trace(resource, "Anti-Colocating %s with %s",
                              resource->id, with->id);
                 pcmk__new_colocation(set_id, NULL, local_score,
@@ -553,6 +571,7 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
     pe_resource_t *rsc_1 = NULL;
     pe_resource_t *rsc_2 = NULL;
 
+    const char *xml_rsc_id = NULL;
     const char *role_1 = crm_element_value(set1, "role");
     const char *role_2 = crm_element_value(set2, "role");
 
@@ -571,21 +590,30 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
         // Get the first one
         xml_rsc = first_named_child(set1, XML_TAG_RESOURCE_REF);
         if (xml_rsc != NULL) {
-            EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
+            xml_rsc_id = ID(xml_rsc);
+            rsc_1 = pcmk__find_constraint_resource(data_set->resources,
+                                                   xml_rsc_id);
+            if (rsc_1 == NULL) {
+                pcmk__config_err("%s: No resource found for %s",
+                                 id, xml_rsc_id);
+                return;
+            }
         }
     }
 
     rc = pcmk__xe_get_bool_attr(set2, "sequential", &sequential);
     if (rc != pcmk_rc_ok || sequential) {
         // Get the last one
-        const char *rid = NULL;
-
         for (xml_rsc = first_named_child(set2, XML_TAG_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
-            rid = ID(xml_rsc);
+            xml_rsc_id = ID(xml_rsc);
         }
-        EXPAND_CONSTRAINT_IDREF(id, rsc_2, rid);
+        rsc_2 = pcmk__find_constraint_resource(data_set->resources, xml_rsc_id);
+        if (rsc_2 == NULL) {
+            pcmk__config_err("%s: No resource found for %s", id, xml_rsc_id);
+            return;
+        }
     }
 
     if ((rsc_1 != NULL) && (rsc_2 != NULL)) {
@@ -598,7 +626,14 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
         for (xml_rsc = first_named_child(set2, XML_TAG_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
-            EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc));
+            xml_rsc_id = ID(xml_rsc);
+            rsc_2 = pcmk__find_constraint_resource(data_set->resources,
+                                                   xml_rsc_id);
+            if (rsc_2 == NULL) {
+                pcmk__config_err("%s: No resource found for %s",
+                                 id, xml_rsc_id);
+                return;
+            }
             pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2, role_1,
                                  role_2, flags);
         }
@@ -607,7 +642,14 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
         for (xml_rsc = first_named_child(set1, XML_TAG_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
-            EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
+            xml_rsc_id = ID(xml_rsc);
+            rsc_1 = pcmk__find_constraint_resource(data_set->resources,
+                                                   xml_rsc_id);
+            if (rsc_1 == NULL) {
+                pcmk__config_err("%s: No resource found for %s",
+                                 id, xml_rsc_id);
+                return;
+            }
             flags = unpack_influence(id, rsc_1, influence_s);
             pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2, role_1,
                                  role_2, flags);
@@ -619,14 +661,28 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
 
             xmlNode *xml_rsc_2 = NULL;
 
-            EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
+            xml_rsc_id = ID(xml_rsc);
+            rsc_1 = pcmk__find_constraint_resource(data_set->resources,
+                                                   xml_rsc_id);
+            if (rsc_1 == NULL) {
+                pcmk__config_err("%s: No resource found for %s",
+                                 id, xml_rsc_id);
+                return;
+            }
 
             flags = unpack_influence(id, rsc_1, influence_s);
             for (xml_rsc_2 = first_named_child(set2, XML_TAG_RESOURCE_REF);
                  xml_rsc_2 != NULL;
                  xml_rsc_2 = crm_next_same_xml(xml_rsc_2)) {
 
-                EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc_2));
+                xml_rsc_id = ID(xml_rsc_2);
+                rsc_2 = pcmk__find_constraint_resource(data_set->resources,
+                                                       xml_rsc_id);
+                if (rsc_2 == NULL) {
+                    pcmk__config_err("%s: No resource found for %s",
+                                     id, xml_rsc_id);
+                    return;
+                }
                 pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2,
                                      role_1, role_2, flags);
             }
