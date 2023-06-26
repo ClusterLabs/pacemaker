@@ -987,10 +987,6 @@ G_GNUC_INTERNAL
 void pcmk__output_resource_actions(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
-bool pcmk__finalize_assignment(pe_resource_t *rsc, pe_node_t *chosen,
-                               bool force);
-
-G_GNUC_INTERNAL
 bool pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force);
 
 G_GNUC_INTERNAL

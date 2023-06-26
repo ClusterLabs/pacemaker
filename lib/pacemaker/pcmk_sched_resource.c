@@ -365,53 +365,73 @@ add_assigned_resource(pe_node_t *node, pe_resource_t *rsc)
 
 /*!
  * \internal
- * \brief Assign a specified primitive resource to a node
+ * \brief Assign a specified resource (of any variant) to a node
  *
- * Assign a specified primitive resource to a specified node, if the node can
- * run the resource (or unconditionally, if \p force is true). Mark the resource
- * as no longer provisional. If the primitive can't be assigned (or \p chosen is
- * NULL), unassign any previous assignment for it, set its next role to stopped,
- * and update any existing actions scheduled for it. This is not done
- * recursively for children, so it should be called only for primitives.
+ * Assign a specified resource and its children (if any) to a specified node, if
+ * the node can run the resource (or unconditionally, if \p force is true). Mark
+ * the resources as no longer provisional. If a resource can't be assigned (or
+ * \p node is \c NULL), unassign any previous assignment, set next role to
+ * stopped, and update any existing actions scheduled for it.
  *
- * \param[in,out] rsc     Resource to assign
- * \param[in,out] chosen  Node to assign \p rsc to
- * \param[in]     force   If true, assign to \p chosen even if unavailable
+ * \param[in,out] rsc    Resource to assign
+ * \param[in,out] node   Node to assign \p rsc to
+ * \param[in]     force  If true, assign to \p node even if unavailable
  *
- * \return true if \p rsc could be assigned, otherwise false
+ * \return \c true if the assignment of \p rsc changed, or \c false otherwise
  *
  * \note Assigning a resource to the NULL node using this function is different
  *       from calling pcmk__unassign_resource(), in that it will also update any
  *       actions created for the resource.
+ * \note The \c resource_alloc_functions_t:assign() method is preferred, unless
+ *       a resource should be assigned to the \c NULL node or every resource in
+ *       a tree should be assigned to the same node.
  */
 bool
-pcmk__finalize_assignment(pe_resource_t *rsc, pe_node_t *chosen, bool force)
+pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force)
 {
-    pcmk__output_t *out = rsc->cluster->priv;
+    bool changed = false;
 
-    CRM_ASSERT(rsc->variant == pe_native);
+    CRM_ASSERT(rsc != NULL);
 
-    if (!force && (chosen != NULL)) {
-        if ((chosen->weight < 0)
-            // Allow graph to assume that guest node connections will come up
-            || (!pcmk__node_available(chosen, true, false)
-                && !pe__is_guest_node(chosen))) {
+    if (rsc->children != NULL) {
+        for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+            pe_resource_t *child_rsc = iter->data;
 
-            crm_debug("All nodes for resource %s are unavailable, unclean or "
-                      "shutting down (%s can%s run resources, with score %s)",
-                      rsc->id, pe__node_name(chosen),
-                      (pcmk__node_available(chosen, true, false)? "" : "not"),
-                      pcmk_readable_score(chosen->weight));
-            pe__set_next_role(rsc, RSC_ROLE_STOPPED, "node availability");
-            chosen = NULL;
+            changed |= pcmk__assign_resource(child_rsc, node, force);
         }
+        return changed;
     }
 
+    // Assigning a primitive
+
+    if (!force && (node != NULL)
+        && ((node->weight < 0)
+            // Allow graph to assume that guest node connections will come up
+            || (!pcmk__node_available(node, true, false)
+                && !pe__is_guest_node(node)))) {
+
+        pe_rsc_debug(rsc,
+                     "All nodes for resource %s are unavailable, unclean or "
+                     "shutting down (%s can%s run resources, with score %s)",
+                     rsc->id, pe__node_name(node),
+                     (pcmk__node_available(node, true, false)? "" : "not"),
+                     pcmk_readable_score(node->weight));
+        pe__set_next_role(rsc, RSC_ROLE_STOPPED, "node availability");
+        node = NULL;
+    }
+
+    if (rsc->allocated_to != NULL) {
+        changed = !pe__same_node(rsc->allocated_to, node);
+    } else {
+        changed = (node != NULL);
+    }
     pcmk__unassign_resource(rsc);
     pe__clear_resource_flags(rsc, pe_rsc_provisional);
 
-    if (chosen == NULL) {
-        crm_debug("Could not assign %s to a node", rsc->id);
+    if (node == NULL) {
+        char *rc_stopped = NULL;
+
+        pe_rsc_debug(rsc, "Could not assign %s to a node", rsc->id);
         pe__set_next_role(rsc, RSC_ROLE_STOPPED, "unable to assign");
 
         for (GList *iter = rsc->actions; iter != NULL; iter = iter->next) {
@@ -425,80 +445,43 @@ pcmk__finalize_assignment(pe_resource_t *rsc, pe_node_t *chosen, bool force)
 
             } else if (pcmk__str_eq(op->task, RSC_START, pcmk__str_none)) {
                 pe__clear_action_flags(op, pe_action_runnable);
-                //pe__set_resource_flags(rsc, pe_rsc_block);
 
             } else {
                 // Cancel recurring actions, unless for stopped state
                 const char *interval_ms_s = NULL;
                 const char *target_rc_s = NULL;
-                char *rc_stopped = pcmk__itoa(PCMK_OCF_NOT_RUNNING);
 
                 interval_ms_s = g_hash_table_lookup(op->meta,
                                                     XML_LRM_ATTR_INTERVAL_MS);
                 target_rc_s = g_hash_table_lookup(op->meta,
                                                   XML_ATTR_TE_TARGET_RC);
-                if ((interval_ms_s != NULL)
-                    && !pcmk__str_eq(interval_ms_s, "0", pcmk__str_none)
+                if (rc_stopped == NULL) {
+                    rc_stopped = pcmk__itoa(PCMK_OCF_NOT_RUNNING);
+                }
+
+                if (!pcmk__str_eq(interval_ms_s, "0", pcmk__str_null_matches)
                     && !pcmk__str_eq(rc_stopped, target_rc_s, pcmk__str_none)) {
+
                     pe__clear_action_flags(op, pe_action_runnable);
                 }
-                free(rc_stopped);
             }
         }
-        return false;
+        free(rc_stopped);
+        return changed;
     }
 
-    crm_debug("Assigning %s to %s", rsc->id, pe__node_name(chosen));
-    rsc->allocated_to = pe__copy_node(chosen);
+    pe_rsc_debug(rsc, "Assigning %s to %s", rsc->id, pe__node_name(node));
+    rsc->allocated_to = pe__copy_node(node);
 
-    add_assigned_resource(chosen, rsc);
-    chosen->details->num_resources++;
-    chosen->count++;
-    pcmk__consume_node_capacity(chosen->details->utilization, rsc);
+    add_assigned_resource(node, rsc);
+    node->details->num_resources++;
+    node->count++;
+    pcmk__consume_node_capacity(node->details->utilization, rsc);
 
     if (pcmk_is_set(rsc->cluster->flags, pe_flag_show_utilization)) {
-        out->message(out, "resource-util", rsc, chosen, __func__);
-    }
-    return true;
-}
+        pcmk__output_t *out = rsc->cluster->priv;
 
-/*!
- * \internal
- * \brief Assign a specified resource (of any variant) to a node
- *
- * Assign a specified resource and its children (if any) to a specified node, if
- * the node can run the resource (or unconditionally, if \p force is true). Mark
- * the resources as no longer provisional. If the resources can't be assigned
- * (or \p chosen is NULL), unassign any previous assignments, set next role to
- * stopped, and update any existing actions scheduled for them.
- *
- * \param[in,out] rsc     Resource to assign
- * \param[in,out] chosen  Node to assign \p rsc to
- * \param[in]     force   If true, assign to \p chosen even if unavailable
- *
- * \return true if \p rsc could be assigned, otherwise false
- *
- * \note Assigning a resource to the NULL node using this function is different
- *       from calling pcmk__unassign_resource(), in that it will also update any
- *       actions created for the resource.
- */
-bool
-pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force)
-{
-    bool changed = false;
-
-    if (rsc->children == NULL) {
-        if (rsc->allocated_to != NULL) {
-            changed = true;
-        }
-        pcmk__finalize_assignment(rsc, node, force);
-
-    } else {
-        for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-            pe_resource_t *child_rsc = (pe_resource_t *) iter->data;
-
-            changed |= pcmk__assign_resource(child_rsc, node, force);
-        }
+        out->message(out, "resource-util", rsc, node, __func__);
     }
     return changed;
 }
