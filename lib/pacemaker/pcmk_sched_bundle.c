@@ -46,7 +46,7 @@ assign_replica(pe__bundle_replica_t *replica, void *user_data)
              * the same host because Pacemaker Remote only supports a single
              * active connection.
              */
-            pcmk__new_colocation("replica-remote-with-host-remote", NULL,
+            pcmk__new_colocation("#replica-remote-with-host-remote", NULL,
                                  INFINITY, replica->remote,
                                  container_host->details->remote_rsc, NULL,
                                  NULL, pcmk__coloc_influence);
@@ -239,14 +239,14 @@ replica_internal_constraints(pe__bundle_replica_t *replica, void *user_data)
         pcmk__order_stops(replica->container, replica->ip,
                           pe_order_implies_first|pe_order_preserve);
 
-        pcmk__new_colocation("ip-with-container", NULL, INFINITY, replica->ip,
+        pcmk__new_colocation("#ip-with-container", NULL, INFINITY, replica->ip,
                              replica->container, NULL, NULL,
                              pcmk__coloc_influence);
     }
 
     if (replica->remote != NULL) {
         /* This handles ordering and colocating remote relative to container
-         * (via "resource-with-container"). Since IP is also ordered and
+         * (via "#resource-with-container"). Since IP is also ordered and
          * colocated relative to the container, we don't need to do anything
          * explicit here with IP.
          */
