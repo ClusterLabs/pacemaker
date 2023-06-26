@@ -1,5 +1,5 @@
 #
-# Copyright 2020-2022 the Pacemaker project contributors
+# Copyright 2020-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -26,6 +26,7 @@ check_PROGRAMS = \
 		pcmk__parse_ll_range_test	\
 		pcmk__s_test				\
 		pcmk__scan_double_test		\
+		pcmk__scan_ll_test			\
 		pcmk__scan_min_int_test		\
 		pcmk__scan_port_test		\
 		pcmk__starts_with_test 		\

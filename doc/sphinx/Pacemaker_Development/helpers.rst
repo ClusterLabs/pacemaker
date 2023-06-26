@@ -476,14 +476,13 @@ The Pacemaker build process uses ``lcov`` and special make targets to generate
 an HTML coverage report that can be inspected with any web browser.
 
 To start, you'll need to install the ``lcov`` package which is included in most
-distributions.  Next, reconfigure and rebuild the source tree:
+distributions.  Next, reconfigure the source tree:
 
 .. code-block:: none
 
    $ ./configure --with-coverage
-   $ make
 
-Then simply run ``make coverage``.  This will do the same thing as ``make check``,
+Then run ``make -C devel coverage``.  This will do the same thing as ``make check``,
 but will generate a bunch of intermediate files as part of the compiler's output.
 Essentially, the coverage tools run all the unit tests and make a note if a given
 line if code is executed as a part of some test program.  This will include not
