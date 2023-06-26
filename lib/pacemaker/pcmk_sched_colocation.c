@@ -464,12 +464,17 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
         return;
     }
 
-    /* The "ordering" attribute specifies whether resources in a positive-score
-     * set are colocated with the previous or next resource.
+    /* @COMPAT The deprecated "ordering" attribute specifies whether resources
+     * in a positive-score set are colocated with the previous or next resource.
      */
     if (pcmk__str_eq(crm_element_value(set, "ordering"), "group",
                      pcmk__str_null_matches|pcmk__str_casei)) {
         with_previous = true;
+    } else {
+        pe_warn_once(pe_wo_set_ordering,
+                     "Support for 'ordering' other than 'group' in "
+                     XML_CONS_TAG_RSC_SET " (such as %s) is deprecated and "
+                     "will be removed in a future release", set_id);
     }
 
     if ((pcmk__xe_get_bool_attr(set, "sequential", &sequential) == pcmk_rc_ok)

@@ -171,6 +171,7 @@ enum pe_warn_once_e {
     pe_wo_group_coloc   = (1 << 12),
     pe_wo_upstart       = (1 << 13),
     pe_wo_nagios        = (1 << 14),
+    pe_wo_set_ordering  = (1 << 15),
 };
 
 extern uint32_t pe_wo;
