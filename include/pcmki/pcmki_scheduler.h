@@ -29,7 +29,7 @@ typedef struct {
     int primary_role;   // Colocation applies only if primary has this role
 
     int score;
-    bool influence; // Whether dependent influences active primary placement
+    uint32_t flags;     // Group of enum pcmk__coloc_flags
 } pcmk__colocation_t;
 
 void pcmk__unpack_constraints(pe_working_set_t *data_set);
