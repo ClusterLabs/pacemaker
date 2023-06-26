@@ -306,20 +306,23 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
 {
     pcmk__colocation_t *new_con = NULL;
 
-    if (score == 0) {
-        crm_trace("Ignoring colocation '%s' because score is 0", id);
-        return;
-    }
+    CRM_CHECK(id != NULL, return);
+
     if ((dependent == NULL) || (primary == NULL)) {
         pcmk__config_err("Ignoring colocation '%s' because resource "
                          "does not exist", id);
         return;
     }
 
-    new_con = calloc(1, sizeof(pcmk__colocation_t));
-    if (new_con == NULL) {
+    if (score == 0) {
+        pe_rsc_trace(dependent,
+                     "Ignoring colocation '%s' (%s with %s) because score is 0",
+                     id, dependent->id, primary->id);
         return;
     }
+
+    new_con = calloc(1, sizeof(pcmk__colocation_t));
+    CRM_ASSERT(new_con != NULL);
 
     if (pcmk__str_eq(dependent_role, RSC_ROLE_STARTED_S,
                      pcmk__str_null_matches|pcmk__str_casei)) {
@@ -344,8 +347,9 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
         node_attr = CRM_ATTR_UNAME;
     }
 
-    pe_rsc_trace(dependent, "%s ==> %s (%s %d)",
-                 dependent->id, primary->id, node_attr, score);
+    pe_rsc_trace(dependent, "Added colocation %s (%s with %s @%s using %s)",
+                 new_con->id, dependent->id, primary->id,
+                 pcmk_readable_score(score), node_attr);
 
     pcmk__add_this_with(&(dependent->rsc_cons), new_con);
     pcmk__add_with_this(&(primary->rsc_cons_lhs), new_con);
