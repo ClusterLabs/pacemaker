@@ -651,7 +651,8 @@ promotion_attr_value(const pe_resource_t *rsc, const pe_node_t *node,
         node_type = pe__rsc_node_current;
     }
     attr_name = pcmk_promotion_score_name(name);
-    attr_value = pe_node_attribute_calculated(node, attr_name, rsc, node_type);
+    attr_value = pe__node_attribute_calculated(node, attr_name, rsc, node_type,
+                                               false);
     free(attr_name);
     return attr_value;
 }
