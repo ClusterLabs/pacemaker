@@ -490,8 +490,9 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
             resource = pcmk__find_constraint_resource(data_set->resources,
                                                       xml_rsc_id);
             if (resource == NULL) {
-                pcmk__config_err("%s: No resource found for %s",
-                                 set_id, xml_rsc_id);
+                // Should be possible only with validation disabled
+                pcmk__config_err("Ignoring %s and later resources in set %s: "
+                                 "No such resource", xml_rsc_id, set_id);
                 return;
             }
             if (other != NULL) {
@@ -526,8 +527,9 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
             resource = pcmk__find_constraint_resource(data_set->resources,
                                                       xml_rsc_id);
             if (resource == NULL) {
-                pcmk__config_err("%s: No resource found for %s",
-                                 set_id, xml_rsc_id);
+                // Should be possible only with validation disabled
+                pcmk__config_err("Ignoring %s and later resources in set %s: "
+                                 "No such resource", xml_rsc_id, set_id);
                 return;
             }
             flags = unpack_influence(coloc_id, resource, influence_s);
@@ -541,11 +543,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
                 }
                 other = pcmk__find_constraint_resource(data_set->resources,
                                                        xml_rsc_id);
-                if (other == NULL) {
-                    pcmk__config_err("%s: No resource found for %s",
-                                     set_id, xml_rsc_id);
-                    return;
-                }
+                CRM_ASSERT(other != NULL); // We already processed it
                 pe_rsc_trace(resource, "Anti-Colocating %s with %s",
                              resource->id, other->id);
                 pcmk__new_colocation(set_id, NULL, local_score,
@@ -578,7 +576,7 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
     }
 
     rc = pcmk__xe_get_bool_attr(set1, "sequential", &sequential);
-    if (rc != pcmk_rc_ok || sequential) {
+    if ((rc != pcmk_rc_ok) || sequential) {
         // Get the first one
         xml_rsc = first_named_child(set1, XML_TAG_RESOURCE_REF);
         if (xml_rsc != NULL) {
@@ -586,15 +584,17 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
             rsc_1 = pcmk__find_constraint_resource(data_set->resources,
                                                    xml_rsc_id);
             if (rsc_1 == NULL) {
-                pcmk__config_err("%s: No resource found for %s",
-                                 id, xml_rsc_id);
+                // Should be possible only with validation disabled
+                pcmk__config_err("Ignoring colocation of set %s with set %s "
+                                 "because first resource %s not found",
+                                 ID(set1), ID(set2), xml_rsc_id);
                 return;
             }
         }
     }
 
     rc = pcmk__xe_get_bool_attr(set2, "sequential", &sequential);
-    if (rc != pcmk_rc_ok || sequential) {
+    if ((rc != pcmk_rc_ok) || sequential) {
         // Get the last one
         for (xml_rsc = first_named_child(set2, XML_TAG_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
@@ -603,7 +603,10 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
         }
         rsc_2 = pcmk__find_constraint_resource(data_set->resources, xml_rsc_id);
         if (rsc_2 == NULL) {
-            pcmk__config_err("%s: No resource found for %s", id, xml_rsc_id);
+            // Should be possible only with validation disabled
+            pcmk__config_err("Ignoring colocation of set %s with set %s "
+                             "because last resource %s not found",
+                             ID(set1), ID(set2), xml_rsc_id);
             return;
         }
     }
@@ -624,6 +627,10 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
             if (rsc_2 == NULL) {
                 pcmk__config_err("%s: No resource found for %s",
                                  id, xml_rsc_id);
+                // Should be possible only with validation disabled
+                pcmk__config_err("Ignoring resource %s and later in set %s "
+                                 "for colocation with set %s: No such resource",
+                                 xml_rsc_id, set2, set1);
                 return;
             }
             pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2, role_1,
@@ -638,8 +645,10 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
             rsc_1 = pcmk__find_constraint_resource(data_set->resources,
                                                    xml_rsc_id);
             if (rsc_1 == NULL) {
-                pcmk__config_err("%s: No resource found for %s",
-                                 id, xml_rsc_id);
+                // Should be possible only with validation disabled
+                pcmk__config_err("Ignoring resource %s and later in set %s "
+                                 "for colocation with set %s: No such resource",
+                                 xml_rsc_id, set1, set2);
                 return;
             }
             flags = unpack_influence(id, rsc_1, influence_s);
@@ -657,8 +666,10 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
             rsc_1 = pcmk__find_constraint_resource(data_set->resources,
                                                    xml_rsc_id);
             if (rsc_1 == NULL) {
-                pcmk__config_err("%s: No resource found for %s",
-                                 id, xml_rsc_id);
+                // Should be possible only with validation disabled
+                pcmk__config_err("Ignoring resource %s and later in set %s "
+                                 "for colocation with set %s: No such resource",
+                                 xml_rsc_id, set1, set2);
                 return;
             }
 
@@ -671,8 +682,11 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
                 rsc_2 = pcmk__find_constraint_resource(data_set->resources,
                                                        xml_rsc_id);
                 if (rsc_2 == NULL) {
-                    pcmk__config_err("%s: No resource found for %s",
-                                     id, xml_rsc_id);
+                    // Should be possible only with validation disabled
+                    pcmk__config_err("Ignoring resource %s and later in set %s "
+                                     "for colocation with %s in set %s: "
+                                     "No such resource",
+                                     xml_rsc_id, set2, ID(xml_rsc), set1);
                     return;
                 }
                 pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2,
