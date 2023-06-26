@@ -71,10 +71,10 @@ pcmk__primitive_assign: fs_mysql allocation score on webcluster01: -INFINITY
 pcmk__primitive_assign: fs_mysql allocation score on webcluster02: -INFINITY
 pcmk__primitive_assign: intip_0_main allocation score on webcluster01: -INFINITY
 pcmk__primitive_assign: intip_0_main allocation score on webcluster02: -INFINITY
-pcmk__primitive_assign: intip_1_master allocation score on webcluster01: 200
-pcmk__primitive_assign: intip_1_master allocation score on webcluster02: 0
-pcmk__primitive_assign: intip_2_slave allocation score on webcluster01: 0
-pcmk__primitive_assign: intip_2_slave allocation score on webcluster02: 100
+pcmk__primitive_assign: intip_1_active allocation score on webcluster01: 200
+pcmk__primitive_assign: intip_1_active allocation score on webcluster02: 0
+pcmk__primitive_assign: intip_2_passive allocation score on webcluster01: 0
+pcmk__primitive_assign: intip_2_passive allocation score on webcluster02: 100
 pcmk__primitive_assign: mysql-proxy:0 allocation score on webcluster01: -INFINITY
 pcmk__primitive_assign: mysql-proxy:0 allocation score on webcluster02: -INFINITY
 pcmk__primitive_assign: mysql-proxy:1 allocation score on webcluster01: -INFINITY

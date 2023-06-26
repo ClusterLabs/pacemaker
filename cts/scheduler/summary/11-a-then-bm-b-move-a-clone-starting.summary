@@ -11,7 +11,7 @@ Current cluster status:
 
 Transition Summary:
   * Move       myclone:0     ( f20node1 -> f20node2 )
-  * Move       vm            ( f20node1 -> f20node2 )  due to unrunnable myclone-clone stop
+  * Move       vm            ( f20node1 -> f20node2 )  due to unmigrateable myclone-clone stop
 
 Executing Cluster Transition:
   * Resource action: myclone         monitor on f20node2
