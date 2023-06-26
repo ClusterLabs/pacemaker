@@ -23,6 +23,9 @@ enum pcmk__coloc_flags {
 
     // Primary is affected even if already active
     pcmk__coloc_influence   = (1U << 0),
+
+    // Colocation was explicitly configured in CIB
+    pcmk__coloc_explicit    = (1U << 1),
 };
 
 // Flags to modify the behavior of add_colocated_node_scores()

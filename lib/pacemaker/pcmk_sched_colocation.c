@@ -496,7 +496,8 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
                 return;
             }
             if (other != NULL) {
-                flags = unpack_influence(coloc_id, resource, influence_s);
+                flags = pcmk__coloc_explicit
+                        | unpack_influence(coloc_id, resource, influence_s);
                 if (with_previous) {
                     pe_rsc_trace(resource, "Colocating %s with %s in set %s",
                                  resource->id, other->id, set_id);
@@ -532,7 +533,8 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
                                  "No such resource", xml_rsc_id, set_id);
                 return;
             }
-            flags = unpack_influence(coloc_id, resource, influence_s);
+            flags = pcmk__coloc_explicit
+                    | unpack_influence(coloc_id, resource, influence_s);
             for (xml_rsc_with = first_named_child(set, XML_TAG_RESOURCE_REF);
                  xml_rsc_with != NULL;
                  xml_rsc_with = crm_next_same_xml(xml_rsc_with)) {
@@ -612,12 +614,12 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
     }
 
     if ((rsc_1 != NULL) && (rsc_2 != NULL)) {
-        flags = unpack_influence(id, rsc_1, influence_s);
+        flags = pcmk__coloc_explicit | unpack_influence(id, rsc_1, influence_s);
         pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2, role_1, role_2,
                              flags);
 
     } else if (rsc_1 != NULL) {
-        flags = unpack_influence(id, rsc_1, influence_s);
+        flags = pcmk__coloc_explicit | unpack_influence(id, rsc_1, influence_s);
         for (xml_rsc = first_named_child(set2, XML_TAG_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
@@ -651,7 +653,8 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
                                  xml_rsc_id, set1, set2);
                 return;
             }
-            flags = unpack_influence(id, rsc_1, influence_s);
+            flags = pcmk__coloc_explicit
+                    | unpack_influence(id, rsc_1, influence_s);
             pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2, role_1,
                                  role_2, flags);
         }
@@ -673,7 +676,8 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
                 return;
             }
 
-            flags = unpack_influence(id, rsc_1, influence_s);
+            flags = pcmk__coloc_explicit
+                    | unpack_influence(id, rsc_1, influence_s);
             for (xml_rsc_2 = first_named_child(set2, XML_TAG_RESOURCE_REF);
                  xml_rsc_2 != NULL;
                  xml_rsc_2 = crm_next_same_xml(xml_rsc_2)) {
@@ -791,7 +795,7 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
         score_i = char2score(score);
     }
 
-    flags = unpack_influence(id, dependent, influence_s);
+    flags = pcmk__coloc_explicit | unpack_influence(id, dependent, influence_s);
     pcmk__new_colocation(id, attr, score_i, dependent, primary,
                          dependent_role, primary_role, flags);
 }
