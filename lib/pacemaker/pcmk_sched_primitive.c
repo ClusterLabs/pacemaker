@@ -998,7 +998,7 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
             } else {
                 score = INFINITY; /* Force them to run on the same host */
             }
-            pcmk__new_colocation("resource-with-container", NULL, score, rsc,
+            pcmk__new_colocation("#resource-with-container", NULL, score, rsc,
                                  rsc->container, NULL, NULL,
                                  pcmk__coloc_influence);
         }

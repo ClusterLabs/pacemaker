@@ -80,7 +80,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
              * host because pacemaker-remoted only supports a single
              * active connection
              */
-            pcmk__new_colocation("child-remote-with-docker-remote", NULL,
+            pcmk__new_colocation("#replica-remote-with-host-remote", NULL,
                                  INFINITY, replica->remote,
                                  container_host->details->remote_rsc, NULL,
                                  NULL, pcmk__coloc_influence);
@@ -251,14 +251,14 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
             pcmk__order_stops(replica->container, replica->ip,
                               pe_order_implies_first|pe_order_preserve);
 
-            pcmk__new_colocation("ip-with-docker", NULL, INFINITY, replica->ip,
+            pcmk__new_colocation("#ip-with-container", NULL, INFINITY, replica->ip,
                                  replica->container, NULL, NULL,
                                  pcmk__coloc_influence);
         }
 
         if (replica->remote) {
             /* This handles ordering and colocating remote relative to container
-             * (via "resource-with-container"). Since IP is also ordered and
+             * (via "#resource-with-container"). Since IP is also ordered and
              * colocated relative to the container, we don't need to do anything
              * explicit here with IP.
              */
