@@ -625,7 +625,8 @@ stonith_api_list(stonith_t * stonith, int call_options, const char *id, char **l
     int rc;
     xmlNode *output = NULL;
 
-    rc = stonith_api_call(stonith, call_options, id, "list", NULL, timeout, &output);
+    rc = stonith_api_call(stonith, call_options, id, PCMK_ACTION_LIST, NULL,
+                          timeout, &output);
 
     if (output && list_info) {
         const char *list_str;

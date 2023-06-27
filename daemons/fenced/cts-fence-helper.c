@@ -278,7 +278,8 @@ run_standard_test(void)
     stonith_key_value_freeall(params, 1, 1);
     params = NULL;
 
-    single_test(st->cmds->list(st, st_opts, "test-id", NULL, 1), "list", 1, 0);
+    single_test(st->cmds->list(st, st_opts, "test-id", NULL, 1),
+                PCMK_ACTION_LIST, 1, 0);
 
     single_test(st->cmds->monitor(st, st_opts, "test-id", 1), "Monitor", 1, 0);
 

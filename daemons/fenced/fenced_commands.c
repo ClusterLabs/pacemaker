@@ -948,7 +948,7 @@ read_action_metadata(stonith_device_t *device)
 
         action = crm_element_value(match, "name");
 
-        if (pcmk__str_eq(action, "list", pcmk__str_none)) {
+        if (pcmk__str_eq(action, PCMK_ACTION_LIST, pcmk__str_none)) {
             stonith__set_device_flags(device->flags, device->id,
                                       st_device_supports_list);
         } else if (pcmk__str_eq(action, "status", pcmk__str_none)) {
@@ -1972,7 +1972,7 @@ execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
                              "Watchdog fence device not configured");
             return;
 
-        } else if (pcmk__str_eq(action, "list", pcmk__str_none)) {
+        } else if (pcmk__str_eq(action, PCMK_ACTION_LIST, pcmk__str_none)) {
             pcmk__set_result(result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
             pcmk__set_result_output(result,
                                     list_to_string(stonith_watchdog_targets,
@@ -2176,7 +2176,8 @@ can_fence_host_with_device(stonith_device_t *dev,
         time_t now = time(NULL);
 
         if (dev->targets == NULL || dev->targets_age + 60 < now) {
-            int device_timeout = get_action_timeout(dev, "list", search->per_device_timeout);
+            int device_timeout = get_action_timeout(dev, PCMK_ACTION_LIST,
+                                                    search->per_device_timeout);
 
             if (device_timeout > search->per_device_timeout) {
                 crm_notice("Since the pcmk_list_timeout(%ds) parameter of %s is larger than stonith-timeout(%ds), timeout may occur",
@@ -2186,7 +2187,7 @@ can_fence_host_with_device(stonith_device_t *dev,
             crm_trace("Running '%s' to check whether %s is eligible to fence %s (%s)",
                       check_type, dev_id, target, action);
 
-            schedule_internal_command(__func__, dev, "list", NULL,
+            schedule_internal_command(__func__, dev, PCMK_ACTION_LIST, NULL,
                                       search->per_device_timeout, search, dynamic_list_search_cb);
 
             /* we'll respond to this search request async in the cb */
@@ -2767,8 +2768,8 @@ st_child_done(int pid, const pcmk__action_result_t *result, void *user_data)
     /* The device is ready to do something else now */
     if (device) {
         if (!device->verified && pcmk__result_ok(result)
-            && pcmk__strcase_any_of(cmd->action, "list", PCMK_ACTION_MONITOR,
-                                    "status", NULL)) {
+            && pcmk__strcase_any_of(cmd->action, PCMK_ACTION_LIST,
+                                    PCMK_ACTION_MONITOR, "status", NULL)) {
 
             device->verified = TRUE;
         }
