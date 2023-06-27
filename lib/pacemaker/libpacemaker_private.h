@@ -495,6 +495,12 @@ G_GNUC_INTERNAL
 void pcmk__add_with_this_list(GList **list, GList *addition);
 
 G_GNUC_INTERNAL
+GList *pcmk__with_this_colocations(const pe_resource_t *rsc);
+
+G_GNUC_INTERNAL
+GList *pcmk__this_with_colocations(const pe_resource_t *rsc);
+
+G_GNUC_INTERNAL
 void pcmk__new_colocation(const char *id, const char *node_attr, int score,
                           pe_resource_t *dependent, pe_resource_t *primary,
                           const char *dependent_role, const char *primary_role,

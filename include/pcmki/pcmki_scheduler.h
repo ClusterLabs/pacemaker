@@ -35,9 +35,6 @@ void pcmk__unpack_constraints(pe_working_set_t *data_set);
 void pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
                             pe_working_set_t *data_set);
 
-GList *pcmk__with_this_colocations(const pe_resource_t *rsc);
-GList *pcmk__this_with_colocations(const pe_resource_t *rsc);
-
 GList *pcmk__copy_node_list(const GList *list, bool reset);
 
 xmlNode *pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *event,
