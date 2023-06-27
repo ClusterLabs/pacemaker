@@ -12,12 +12,24 @@ Current cluster status:
       * vip	(ocf:pacemaker:Dummy):	 Started rhel8-3
 
 Transition Summary:
-  * Stop       vip     ( rhel8-3 )  due to node availability
+  * Move       foo     ( rhel8-4 -> rhel8-3 )
+  * Move       bar     ( rhel8-4 -> rhel8-3 )
+  * Restart    vip     (            rhel8-3 )  due to required bar start
 
 Executing Cluster Transition:
   * Pseudo action:   grp_stop_0
   * Resource action: vip             stop on rhel8-3
+  * Resource action: bar             stop on rhel8-4
+  * Resource action: foo             stop on rhel8-4
   * Pseudo action:   grp_stopped_0
+  * Pseudo action:   grp_start_0
+  * Resource action: foo             start on rhel8-3
+  * Resource action: bar             start on rhel8-3
+  * Resource action: vip             start on rhel8-3
+  * Resource action: vip             monitor=10000 on rhel8-3
+  * Pseudo action:   grp_running_0
+  * Resource action: foo             monitor=10000 on rhel8-3
+  * Resource action: bar             monitor=10000 on rhel8-3
 Using the original execution date of: 2023-06-20 20:45:06Z
 
 Revised Cluster Status:
@@ -28,6 +40,6 @@ Revised Cluster Status:
     * Fencing	(stonith:fence_xvm):	 Started rhel8-1
     * vip-dep	(ocf:pacemaker:Dummy):	 Started rhel8-3
     * Resource Group: grp:
-      * foo	(ocf:pacemaker:Dummy):	 Started rhel8-4
-      * bar	(ocf:pacemaker:Dummy):	 Started rhel8-4
-      * vip	(ocf:pacemaker:Dummy):	 Stopped
+      * foo	(ocf:pacemaker:Dummy):	 Started rhel8-3
+      * bar	(ocf:pacemaker:Dummy):	 Started rhel8-3
+      * vip	(ocf:pacemaker:Dummy):	 Started rhel8-3
