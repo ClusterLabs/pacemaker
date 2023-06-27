@@ -262,7 +262,7 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
         pe_warn_once(pe_wo_poweroff,
                      "Support for stonith-action of 'poweroff' is deprecated "
                      "and will be removed in a future release (use 'off' instead)");
-        data_set->stonith_action = "off";
+        data_set->stonith_action = PCMK_ACTION_OFF;
     }
     crm_trace("STONITH will %s nodes", data_set->stonith_action);
 

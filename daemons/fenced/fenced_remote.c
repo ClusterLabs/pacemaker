@@ -311,7 +311,7 @@ op_phase_off(remote_fencing_op_t *op)
     /* Happily, "off" and "on" are shorter than "reboot", so we can reuse the
      * memory allocation at each phase.
      */
-    strcpy(op->action, "off");
+    strcpy(op->action, PCMK_ACTION_OFF);
 }
 
 /*!
@@ -1794,7 +1794,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
          * node back on when we should.
          */
         device = op->devices->data;
-        if (pcmk__str_eq(fenced_device_reboot_action(device), "off",
+        if (pcmk__str_eq(fenced_device_reboot_action(device), PCMK_ACTION_OFF,
                          pcmk__str_none)) {
             crm_info("Not turning %s back on using %s because the device is "
                      "configured to stay off (pcmk_reboot_action='off')",
@@ -2160,8 +2160,8 @@ add_device_properties(const xmlNode *xml, remote_fencing_op_t *op,
          * values for "off" and "on" in child elements, just in case the reboot
          * winds up getting remapped.
          */
-        if (pcmk__str_eq(ID(child), "off", pcmk__str_none)) {
-            parse_action_specific(child, peer->host, device, "off",
+        if (pcmk__str_eq(ID(child), PCMK_ACTION_OFF, pcmk__str_none)) {
+            parse_action_specific(child, peer->host, device, PCMK_ACTION_OFF,
                                   op, st_phase_off, props);
         } else if (pcmk__str_eq(ID(child), "on", pcmk__str_none)) {
             parse_action_specific(child, peer->host, device, "on",

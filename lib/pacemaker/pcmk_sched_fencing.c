@@ -357,7 +357,7 @@ pcmk__fence_guest(pe_node_t *node)
      * are creating a pseudo-event to describe fencing that is already occurring
      * by other means (container recovery).
      */
-    const char *fence_action = "off";
+    const char *fence_action = PCMK_ACTION_OFF;
 
     CRM_ASSERT(node != NULL);
 

@@ -625,7 +625,7 @@ main(int argc, char **argv)
             break;
 
         case 'F':
-            rc = request_fencing(st, target, "off", &error);
+            rc = request_fencing(st, target, PCMK_ACTION_OFF, &error);
             break;
 
         case 'U':

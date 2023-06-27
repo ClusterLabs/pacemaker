@@ -553,7 +553,7 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
     data = create_xml_node(NULL, F_STONITH_DEVICE);
     crm_xml_add(data, F_STONITH_ORIGIN, __func__);
     crm_xml_add(data, F_STONITH_TARGET, target);
-    crm_xml_add(data, F_STONITH_ACTION, "off");
+    crm_xml_add(data, F_STONITH_ACTION, PCMK_ACTION_OFF);
     rc = stonith_send_command(stonith, STONITH_OP_QUERY, data, &output, call_options, timeout);
 
     if (rc < 0) {
@@ -692,7 +692,8 @@ static int
 stonith_api_confirm(stonith_t * stonith, int call_options, const char *target)
 {
     stonith__set_call_options(call_options, target, st_opt_manual_ack);
-    return stonith_api_fence(stonith, call_options, target, "off", 0, 0);
+    return stonith_api_fence(stonith, call_options, target, PCMK_ACTION_OFF, 0,
+                             0);
 }
 
 static int
@@ -1971,7 +1972,7 @@ stonith_api_kick(uint32_t nodeid, const char *uname, int timeout, bool off)
 {
     int rc = pcmk_ok;
     stonith_t *st = stonith_api_new();
-    const char *action = off? "off" : "reboot";
+    const char *action = off? PCMK_ACTION_OFF : "reboot";
 
     api_log_open();
     if (st == NULL) {
@@ -2110,7 +2111,7 @@ stonith_action_str(const char *action)
         return "fencing";
     } else if (!strcmp(action, "on")) {
         return "unfencing";
-    } else if (!strcmp(action, "off")) {
+    } else if (strcmp(action, PCMK_ACTION_OFF) == 0) {
         return "turning off";
     } else {
         return action;
@@ -2170,7 +2171,8 @@ parse_list_line(const char *line, int len, GList **output)
                          line + entry_start, entry_start, i);
                 free(entry);
 
-            } else if (pcmk__strcase_any_of(entry, "on", "off", NULL)) {
+            } else if (pcmk__strcase_any_of(entry, "on", PCMK_ACTION_OFF,
+                                            NULL)) {
                 /* Some agents print the target status in the list output,
                  * though none are known now (the separate list-status command
                  * is used for this, but it can also print "UNKNOWN"). To handle

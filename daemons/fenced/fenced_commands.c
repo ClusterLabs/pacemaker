@@ -227,7 +227,7 @@ get_action_timeout(const stonith_device_t *device, const char *action,
             && !pcmk_is_set(device->flags, st_device_supports_reboot)) {
             crm_trace("%s doesn't support reboot, using timeout for off instead",
                       device->id);
-            action = "off";
+            action = PCMK_ACTION_OFF;
         }
 
         /* If the device config specified an action-specific timeout, use it */
@@ -577,7 +577,7 @@ stonith_device_execute(stonith_device_t * device)
                    "because agent '%s' does not support reboot",
                    ((cmd->target == NULL)? "" : " targeting "),
                    pcmk__s(cmd->target, ""), device->id, device->agent);
-        action_str = "off";
+        action_str = PCMK_ACTION_OFF;
     }
 
     if (pcmk_is_set(device->flags, st_device_supports_parameter_port)) {
@@ -1028,11 +1028,11 @@ xml2device_params(const char *name, const xmlNode *dev)
             crm_warn("Ignoring %s='reboot' (see stonith-action cluster property instead)",
                      STONITH_ATTR_ACTION_OP);
 
-        } else if (strcmp(value, "off") == 0) {
+        } else if (strcmp(value, PCMK_ACTION_OFF) == 0) {
             map_action(params, "reboot", value);
 
         } else {
-            map_action(params, "off", value);
+            map_action(params, PCMK_ACTION_OFF, value);
             map_action(params, "reboot", value);
         }
 
@@ -2111,7 +2111,7 @@ localhost_is_eligible_with_remap(const stonith_device_t *device,
          * the disallowed actions with the results. We never allow self-fencing
          * for remapped "on" actions because the target is off at that point.
          */
-        if (localhost_is_eligible(device, "off", target, allow_self)
+        if (localhost_is_eligible(device, PCMK_ACTION_OFF, target, allow_self)
             || localhost_is_eligible(device, "on", target, FALSE)) {
             return true;
         }
@@ -2434,7 +2434,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
             && pcmk__str_eq(query->action, "reboot", pcmk__str_none)) {
             crm_trace("%s doesn't support reboot, using values for off instead",
                       device->id);
-            action = "off";
+            action = PCMK_ACTION_OFF;
         }
 
         /* Add action-specific values if available */
@@ -2453,7 +2453,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
              */
             add_disallowed(dev, action, device, query->target,
                            pcmk_is_set(query->call_options, st_opt_allow_suicide));
-            add_action_reply(dev, "off", device, query->target,
+            add_action_reply(dev, PCMK_ACTION_OFF, device, query->target,
                              pcmk_is_set(query->call_options, st_opt_allow_suicide));
             add_action_reply(dev, "on", device, query->target, FALSE);
         }
