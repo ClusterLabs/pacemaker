@@ -1436,10 +1436,11 @@ static pcmk__cluster_option_t fencer_options[] = {
              "Then use this to specify the maximum number of actions can be performed in parallel on this device. -1 is unlimited.")
     },
     {
-	"pcmk_reboot_action",NULL, "string", NULL, "reboot", NULL,
-	N_("Advanced use only: An alternate command to run instead of 'reboot'"),
+        "pcmk_reboot_action", NULL, "string", NULL,
+        PCMK_ACTION_REBOOT, NULL,
+        N_("Advanced use only: An alternate command to run instead of 'reboot'"),
         N_("Some devices do not support the standard commands or may provide additional ones.\n"
-                 "Use this to specify an alternate, device-specific, command that implements the \'reboot\' action.")
+           "Use this to specify an alternate, device-specific, command that implements the \'reboot\' action.")
     },
     {
 	"pcmk_reboot_timeout",NULL, "time", NULL, "60s", NULL,

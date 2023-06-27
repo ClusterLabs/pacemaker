@@ -488,7 +488,8 @@ crm_op_needs_metadata(const char *rsc_class, const char *op)
 bool
 pcmk__is_fencing_action(const char *action)
 {
-    return pcmk__str_any_of(action, PCMK_ACTION_OFF, "reboot", "poweroff", NULL);
+    return pcmk__str_any_of(action, PCMK_ACTION_OFF, PCMK_ACTION_REBOOT,
+                            "poweroff", NULL);
 }
 
 bool

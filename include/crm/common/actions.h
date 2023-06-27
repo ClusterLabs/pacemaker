@@ -36,6 +36,7 @@ extern "C" {
 #define PCMK_ACTION_ON                  "on"
 #define PCMK_ACTION_PROMOTE             "promote"
 #define PCMK_ACTION_PROMOTED            "promoted"
+#define PCMK_ACTION_REBOOT              "reboot"
 #define PCMK_ACTION_RELOAD              "reload"
 #define PCMK_ACTION_RELOAD_AGENT        "reload-agent"
 #define PCMK_ACTION_RUNNING             "running"

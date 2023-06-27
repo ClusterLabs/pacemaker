@@ -371,7 +371,7 @@ pcmk__fence_guest(pe_node_t *node)
 
         if (find_first_action(container->actions, NULL, PCMK_ACTION_START,
                               NULL)) {
-            fence_action = "reboot";
+            fence_action = PCMK_ACTION_REBOOT;
         }
     }
 

@@ -216,7 +216,8 @@ run_fence_failure_test(void)
                                 3, 0),
                 "Fence failure results off", 1, -ENODATA);
 
-    single_test(st->cmds->fence(st, st_opts, "false_1_node2", "reboot", 3, 0),
+    single_test(st->cmds->fence(st, st_opts, "false_1_node2",
+                                PCMK_ACTION_REBOOT, 3, 0),
                 "Fence failure results reboot", 1, -ENODATA);
 
     single_test(st->cmds->remove_device(st, st_opts, "test-id1"),

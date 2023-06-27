@@ -1972,7 +1972,7 @@ stonith_api_kick(uint32_t nodeid, const char *uname, int timeout, bool off)
 {
     int rc = pcmk_ok;
     stonith_t *st = stonith_api_new();
-    const char *action = off? PCMK_ACTION_OFF : "reboot";
+    const char *action = off? PCMK_ACTION_OFF : PCMK_ACTION_REBOOT;
 
     api_log_open();
     if (st == NULL) {

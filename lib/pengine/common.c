@@ -104,7 +104,7 @@ static pcmk__cluster_option_t pe_opts[] = {
     },
     {
         "stonith-action", NULL, "select", "reboot, off, poweroff",
-        "reboot", pcmk__is_fencing_action,
+        PCMK_ACTION_REBOOT, pcmk__is_fencing_action,
         N_("Action to send to fence device when a node needs to be fenced "
             "(\"poweroff\" is a deprecated alias for \"off\")"),
         NULL

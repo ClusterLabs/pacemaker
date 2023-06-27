@@ -223,7 +223,7 @@ get_action_timeout(const stonith_device_t *device, const char *action,
         /* If "reboot" was requested but the device does not support it,
          * we will remap to "off", so check timeout for "off" instead
          */
-        if (pcmk__str_eq(action, "reboot", pcmk__str_none)
+        if (pcmk__str_eq(action, PCMK_ACTION_REBOOT, pcmk__str_none)
             && !pcmk_is_set(device->flags, st_device_supports_reboot)) {
             crm_trace("%s doesn't support reboot, using timeout for off instead",
                       device->id);
@@ -277,7 +277,7 @@ fenced_device_reboot_action(const char *device_id)
             action = g_hash_table_lookup(device->params, "pcmk_reboot_action");
         }
     }
-    return pcmk__s(action, "reboot");
+    return pcmk__s(action, PCMK_ACTION_REBOOT);
 }
 
 /*!
@@ -570,7 +570,7 @@ stonith_device_execute(stonith_device_t * device)
 #endif
 
     action_str = cmd->action;
-    if (pcmk__str_eq(cmd->action, "reboot", pcmk__str_none)
+    if (pcmk__str_eq(cmd->action, PCMK_ACTION_REBOOT, pcmk__str_none)
         && !pcmk_is_set(device->flags, st_device_supports_reboot)) {
 
         crm_notice("Remapping 'reboot' action%s%s using %s to 'off' "
@@ -954,7 +954,7 @@ read_action_metadata(stonith_device_t *device)
         } else if (pcmk__str_eq(action, PCMK_ACTION_STATUS, pcmk__str_none)) {
             stonith__set_device_flags(device->flags, device->id,
                                       st_device_supports_status);
-        } else if (pcmk__str_eq(action, "reboot", pcmk__str_none)) {
+        } else if (pcmk__str_eq(action, PCMK_ACTION_REBOOT, pcmk__str_none)) {
             stonith__set_device_flags(device->flags, device->id,
                                       st_device_supports_reboot);
         } else if (pcmk__str_eq(action, PCMK_ACTION_ON, pcmk__str_none)) {
@@ -1024,16 +1024,16 @@ xml2device_params(const char *name, const xmlNode *dev)
         if (*value == '\0') {
             crm_warn("Ignoring empty '%s' parameter", STONITH_ATTR_ACTION_OP);
 
-        } else if (strcmp(value, "reboot") == 0) {
+        } else if (strcmp(value, PCMK_ACTION_REBOOT) == 0) {
             crm_warn("Ignoring %s='reboot' (see stonith-action cluster property instead)",
                      STONITH_ATTR_ACTION_OP);
 
         } else if (strcmp(value, PCMK_ACTION_OFF) == 0) {
-            map_action(params, "reboot", value);
+            map_action(params, PCMK_ACTION_REBOOT, value);
 
         } else {
             map_action(params, PCMK_ACTION_OFF, value);
-            map_action(params, "reboot", value);
+            map_action(params, PCMK_ACTION_REBOOT, value);
         }
 
         g_hash_table_remove(params, STONITH_ATTR_ACTION_OP);
@@ -2105,7 +2105,7 @@ localhost_is_eligible_with_remap(const stonith_device_t *device,
 
     // Check potential remaps
 
-    if (pcmk__str_eq(action, "reboot", pcmk__str_none)) {
+    if (pcmk__str_eq(action, PCMK_ACTION_REBOOT, pcmk__str_none)) {
         /* "reboot" might get remapped to "off" then "on", so even if reboot is
          * disallowed, return true if either of those is allowed. We'll report
          * the disallowed actions with the results. We never allow self-fencing
@@ -2431,7 +2431,8 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
          * capable device that doesn't support "reboot", remap to "off" instead.
          */
         if (!pcmk_is_set(device->flags, st_device_supports_reboot)
-            && pcmk__str_eq(query->action, "reboot", pcmk__str_none)) {
+            && pcmk__str_eq(query->action, PCMK_ACTION_REBOOT,
+                            pcmk__str_none)) {
             crm_trace("%s doesn't support reboot, using values for off instead",
                       device->id);
             action = PCMK_ACTION_OFF;
@@ -2439,7 +2440,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
 
         /* Add action-specific values if available */
         add_action_specific_attributes(dev, action, device, query->target);
-        if (pcmk__str_eq(query->action, "reboot", pcmk__str_none)) {
+        if (pcmk__str_eq(query->action, PCMK_ACTION_REBOOT, pcmk__str_none)) {
             /* A "reboot" *might* get remapped to "off" then "on", so after
              * sending the "reboot"-specific values in the main element, we add
              * sub-elements for "off" and "on" values.

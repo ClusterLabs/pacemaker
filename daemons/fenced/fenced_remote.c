@@ -292,7 +292,7 @@ init_stonith_remote_op_hash_table(GHashTable **table)
 static const char *
 op_requested_action(const remote_fencing_op_t *op)
 {
-    return ((op->phase > st_phase_requested)? "reboot" : op->action);
+    return ((op->phase > st_phase_requested)? PCMK_ACTION_REBOOT : op->action);
 }
 
 /*!
@@ -362,7 +362,7 @@ undo_op_remap(remote_fencing_op_t *op)
         crm_info("Undoing remap of reboot targeting %s for %s "
                  CRM_XS " id=%.8s", op->target, op->client_name, op->id);
         op->phase = st_phase_requested;
-        strcpy(op->action, "reboot");
+        strcpy(op->action, PCMK_ACTION_REBOOT);
     }
 }
 
@@ -966,7 +966,7 @@ advance_topology_level(remote_fencing_op_t *op, bool empty_ok)
         }
 
         if ((g_list_next(op->devices_list) != NULL)
-            && pcmk__str_eq(op->action, "reboot", pcmk__str_none)) {
+            && pcmk__str_eq(op->action, PCMK_ACTION_REBOOT, pcmk__str_none)) {
             /* A reboot has been requested for a topology level with multiple
              * devices. Instead of rebooting the devices sequentially, we will
              * turn them all off, then turn them all on again. (Think about

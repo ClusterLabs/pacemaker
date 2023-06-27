@@ -625,7 +625,7 @@ main(int argc, char **argv)
             break;
 
         case 'B':
-            rc = request_fencing(st, target, "reboot", &error);
+            rc = request_fencing(st, target, PCMK_ACTION_REBOOT, &error);
             break;
 
         case 'F':
