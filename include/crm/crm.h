@@ -143,7 +143,7 @@ extern char *crm_system_name;
 #  define CRM_OP_IPC_FWD		"ipc_fwd"
 #  define CRM_OP_INVOKE_LRM	"lrm_invoke"
 #  define CRM_OP_LRM_REFRESH "lrm_refresh" //!< Deprecated since 1.1.10
-#  define CRM_OP_LRM_DELETE	"lrm_delete"
+#  define CRM_OP_LRM_DELETE         PCMK_ACTION_LRM_DELETE
 #  define CRM_OP_LRM_FAIL		"lrm_fail"
 #  define CRM_OP_PROBED		"probe_complete"
 #  define CRM_OP_REPROBE		"probe_again"

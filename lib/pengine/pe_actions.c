@@ -184,7 +184,7 @@ new_action(char *key, const char *task, pe_resource_t *rsc,
         action->node = pe__copy_node(node);
     }
 
-    if (pcmk__str_eq(task, CRM_OP_LRM_DELETE, pcmk__str_casei)) {
+    if (pcmk__str_eq(task, PCMK_ACTION_LRM_DELETE, pcmk__str_casei)) {
         // Resource history deletion for a node can be done on the DC
         pe__set_action_flags(action, pe_action_dc);
     }
@@ -483,7 +483,8 @@ unpack_operation_on_fail(pe_action_t * action)
 
             value = on_fail;
         }
-    } else if (pcmk__str_eq(action->task, CRM_OP_LRM_DELETE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(action->task, PCMK_ACTION_LRM_DELETE,
+                            pcmk__str_casei)) {
         value = "ignore";
 
     } else if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
@@ -1490,8 +1491,8 @@ pe__clear_resource_history(pe_resource_t *rsc, const pe_node_t *node,
     char *key = NULL;
 
     CRM_ASSERT(rsc && node);
-    key = pcmk__op_key(rsc->id, CRM_OP_LRM_DELETE, 0);
-    return custom_action(rsc, key, CRM_OP_LRM_DELETE, node, FALSE, TRUE,
+    key = pcmk__op_key(rsc->id, PCMK_ACTION_LRM_DELETE, 0);
+    return custom_action(rsc, key, PCMK_ACTION_LRM_DELETE, node, FALSE, TRUE,
                          data_set);
 }
 

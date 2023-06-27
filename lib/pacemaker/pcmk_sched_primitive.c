@@ -940,7 +940,7 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
     }
 
     // Don't clear resource history if probing on same node
-    pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, CRM_OP_LRM_DELETE, 0),
+    pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_LRM_DELETE, 0),
                        NULL, rsc,
                        pcmk__op_key(rsc->id, PCMK_ACTION_MONITOR, 0),
                        NULL, pe_order_same_node|pe_order_then_cancels_first,

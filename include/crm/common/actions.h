@@ -28,6 +28,7 @@ extern "C" {
 #define PCMK_ACTION_DEMOTED             "demoted"
 #define PCMK_ACTION_DO_SHUTDOWN         "do_shutdown"
 #define PCMK_ACTION_LIST                "list"
+#define PCMK_ACTION_LRM_DELETE          "lrm_delete"
 #define PCMK_ACTION_LOAD_STOPPED        "load_stopped"
 #define PCMK_ACTION_MAINTENANCE_NODES   "maintenance_nodes"
 #define PCMK_ACTION_META_DATA           "meta-data"

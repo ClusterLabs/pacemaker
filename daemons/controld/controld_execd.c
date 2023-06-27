@@ -1444,7 +1444,7 @@ do_lrm_invoke(long long action,
         from_host = crm_element_value(input->msg, F_CRM_HOST_FROM);
     }
 
-    if (pcmk__str_eq(crm_op, CRM_OP_LRM_DELETE, pcmk__str_none)) {
+    if (pcmk__str_eq(crm_op, PCMK_ACTION_LRM_DELETE, pcmk__str_none)) {
         if (!pcmk__str_eq(from_sys, CRM_SYSTEM_TENGINE, pcmk__str_none)) {
             crm_rsc_delete = TRUE; // from crm_resource
         }
