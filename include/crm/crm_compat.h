@@ -37,6 +37,9 @@ extern "C" {
 //! \deprecated This defined constant will be removed in a future release
 #define CRM_OP_LRM_QUERY "lrm_query"
 
+//! \deprecated Use PCMK_ACTION_CLONE_ONE_OR_MORE instead
+#define CRM_OP_RELAXED_CLONE PCMK_ACTION_CLONE_ONE_OR_MORE
+
 //! \deprecated This defined constant will be removed in a future release
 #define CRM_ATTR_RA_VERSION "#ra-version"
 

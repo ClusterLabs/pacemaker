@@ -150,7 +150,6 @@ extern char *crm_system_name;
 #  define CRM_OP_CLEAR_FAILCOUNT  "clear_failcount"
 #  define CRM_OP_REMOTE_STATE     "remote_state"
 #  define CRM_OP_RELAXED_SET  "one-or-more"
-#  define CRM_OP_RELAXED_CLONE      PCMK_ACTION_CLONE_ONE_OR_MORE
 #  define CRM_OP_RM_NODE_CACHE "rm_node_cache"
 #  define CRM_OP_MAINTENANCE_NODES  PCMK_ACTION_MAINTENANCE_NODES
 
