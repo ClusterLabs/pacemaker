@@ -1,0 +1,42 @@
+Current cluster status:
+  * Node List:
+    * Online: [ node1 node2 node3 ]
+    * GuestOnline: [ base-bundle-0 base-bundle-1 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started node2
+    * Container bundle set: base-bundle [localhost/pcmktest]:
+      * base-bundle-0	(ocf:pacemaker:Stateful):	 Started node3
+      * base-bundle-1	(ocf:pacemaker:Stateful):	 Started node2
+      * base-bundle-2	(ocf:pacemaker:Stateful):	 Stopped
+
+Transition Summary:
+  * Start      base-bundle-podman-2     (         node1 )
+  * Start      base-bundle-2            (         node1 )
+  * Start      base:2                   ( base-bundle-2 )
+
+Executing Cluster Transition:
+  * Pseudo action:   base-bundle_start_0
+  * Pseudo action:   base-bundle-clone_start_0
+  * Resource action: base-bundle-podman-2 start on node1
+  * Resource action: base-bundle-2   monitor on node3
+  * Resource action: base-bundle-2   monitor on node2
+  * Resource action: base-bundle-2   monitor on node1
+  * Resource action: base-bundle-podman-2 monitor=60000 on node1
+  * Resource action: base-bundle-2   start on node1
+  * Resource action: base            start on base-bundle-2
+  * Pseudo action:   base-bundle-clone_running_0
+  * Resource action: base-bundle-2   monitor=30000 on node1
+  * Pseudo action:   base-bundle_running_0
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 node2 node3 ]
+    * GuestOnline: [ base-bundle-0 base-bundle-1 base-bundle-2 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started node2
+    * Container bundle set: base-bundle [localhost/pcmktest]:
+      * base-bundle-0	(ocf:pacemaker:Stateful):	 Started node3
+      * base-bundle-1	(ocf:pacemaker:Stateful):	 Started node2
+      * base-bundle-2	(ocf:pacemaker:Stateful):	 Started node1

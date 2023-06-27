@@ -33,109 +33,137 @@
 // Used to temporarily mark a node as unusable
 #define INFINITY_HACK   (INFINITY * -100)
 
+/*!
+ * \internal
+ * \brief Compare two colocations according to priority
+ *
+ * Compare two colocations according to the order in which they should be
+ * considered, based on either their dependent resources or their primary
+ * resources -- preferring (in order):
+ *  * Colocation that is not \c NULL
+ *  * Colocation whose resource has higher priority
+ *  * Colocation whose resource is of a higher-level variant
+ *    (bundle > clone > group > primitive)
+ *  * Colocation whose resource is promotable, if both are clones
+ *  * Colocation whose resource has lower ID in lexicographic order
+ *
+ * \param[in] colocation1  First colocation to compare
+ * \param[in] colocation2  Second colocation to compare
+ * \param[in] dependent    If \c true, compare colocations by dependent
+ *                         priority; otherwise compare them by primary priority
+ *
+ * \return A negative number if \p colocation1 should be considered first,
+ *         a positive number if \p colocation2 should be considered first,
+ *         or 0 if order doesn't matter
+ */
+static gint
+cmp_colocation_priority(const pcmk__colocation_t *colocation1,
+                        const pcmk__colocation_t *colocation2, bool dependent)
+{
+    const pe_resource_t *rsc1 = NULL;
+    const pe_resource_t *rsc2 = NULL;
+
+    if (colocation1 == NULL) {
+        return 1;
+    }
+    if (colocation2 == NULL) {
+        return -1;
+    }
+
+    if (dependent) {
+        rsc1 = colocation1->dependent;
+        rsc2 = colocation2->dependent;
+        CRM_ASSERT(colocation1->primary != NULL);
+    } else {
+        rsc1 = colocation1->primary;
+        rsc2 = colocation2->primary;
+        CRM_ASSERT(colocation1->dependent != NULL);
+    }
+    CRM_ASSERT((rsc1 != NULL) && (rsc2 != NULL));
+
+    if (rsc1->priority > rsc2->priority) {
+        return -1;
+    }
+    if (rsc1->priority < rsc2->priority) {
+        return 1;
+    }
+
+    // Process clones before primitives and groups
+    if (rsc1->variant > rsc2->variant) {
+        return -1;
+    }
+    if (rsc1->variant < rsc2->variant) {
+        return 1;
+    }
+
+    /* @COMPAT scheduler <2.0.0: Process promotable clones before nonpromotable
+     * clones (probably unnecessary, but avoids having to update regression
+     * tests)
+     */
+    if (rsc1->variant == pe_clone) {
+        if (pcmk_is_set(rsc1->flags, pe_rsc_promotable)
+            && !pcmk_is_set(rsc2->flags, pe_rsc_promotable)) {
+            return -1;
+        }
+        if (!pcmk_is_set(rsc1->flags, pe_rsc_promotable)
+            && pcmk_is_set(rsc2->flags, pe_rsc_promotable)) {
+            return 1;
+        }
+    }
+
+    return strcmp(rsc1->id, rsc2->id);
+}
+
+/*!
+ * \internal
+ * \brief Compare two colocations according to priority based on dependents
+ *
+ * Compare two colocations according to the order in which they should be
+ * considered, based on their dependent resources -- preferring (in order):
+ *  * Colocation that is not \c NULL
+ *  * Colocation whose resource has higher priority
+ *  * Colocation whose resource is of a higher-level variant
+ *    (bundle > clone > group > primitive)
+ *  * Colocation whose resource is promotable, if both are clones
+ *  * Colocation whose resource has lower ID in lexicographic order
+ *
+ * \param[in] a  First colocation to compare
+ * \param[in] b  Second colocation to compare
+ *
+ * \return A negative number if \p a should be considered first,
+ *         a positive number if \p b should be considered first,
+ *         or 0 if order doesn't matter
+ */
 static gint
 cmp_dependent_priority(gconstpointer a, gconstpointer b)
 {
-    const pcmk__colocation_t *rsc_constraint1 = (const pcmk__colocation_t *) a;
-    const pcmk__colocation_t *rsc_constraint2 = (const pcmk__colocation_t *) b;
-    const pe_resource_t *dependent1 = NULL;
-    const pe_resource_t *dependent2 = NULL;
-
-    if (a == NULL) {
-        return 1;
-    }
-    if (b == NULL) {
-        return -1;
-    }
-
-    dependent1 = rsc_constraint1->dependent;
-    dependent2 = rsc_constraint2->dependent;
-
-    CRM_ASSERT((dependent1 != NULL) && (dependent2 != NULL)
-               && (rsc_constraint1->primary != NULL));
-
-    if (dependent1->priority > dependent2->priority) {
-        return -1;
-    }
-    if (dependent1->priority < dependent2->priority) {
-        return 1;
-    }
-
-    /* Process clones before primitives and groups */
-    if (dependent1->variant > dependent2->variant) {
-        return -1;
-    }
-    if (dependent1->variant < dependent2->variant) {
-        return 1;
-    }
-
-    /* @COMPAT scheduler <2.0.0: Process promotable clones before nonpromotable
-     * clones (probably unnecessary, but avoids having to update regression
-     * tests)
-     */
-    if (dependent1->variant == pe_clone) {
-        if (pcmk_is_set(dependent1->flags, pe_rsc_promotable)
-            && !pcmk_is_set(dependent2->flags, pe_rsc_promotable)) {
-            return -1;
-        } else if (!pcmk_is_set(dependent1->flags, pe_rsc_promotable)
-                   && pcmk_is_set(dependent2->flags, pe_rsc_promotable)) {
-            return 1;
-        }
-    }
-
-    return strcmp(dependent1->id, dependent2->id);
+    return cmp_colocation_priority(a, b, true);
 }
 
+/*!
+ * \internal
+ * \brief Compare two colocations according to priority based on primaries
+ *
+ * Compare two colocations according to the order in which they should be
+ * considered, based on their primary resources -- preferring (in order):
+ *  * Colocation that is not \c NULL
+ *  * Colocation whose primary has higher priority
+ *  * Colocation whose primary is of a higher-level variant
+ *    (bundle > clone > group > primitive)
+ *  * Colocation whose primary is promotable, if both are clones
+ *  * Colocation whose primary has lower ID in lexicographic order
+ *
+ * \param[in] a  First colocation to compare
+ * \param[in] b  Second colocation to compare
+ *
+ * \return A negative number if \p a should be considered first,
+ *         a positive number if \p b should be considered first,
+ *         or 0 if order doesn't matter
+ */
 static gint
 cmp_primary_priority(gconstpointer a, gconstpointer b)
 {
-    const pcmk__colocation_t *rsc_constraint1 = (const pcmk__colocation_t *) a;
-    const pcmk__colocation_t *rsc_constraint2 = (const pcmk__colocation_t *) b;
-    const pe_resource_t *primary1 = NULL;
-    const pe_resource_t *primary2 = NULL;
-
-    if (a == NULL) {
-        return 1;
-    }
-    if (b == NULL) {
-        return -1;
-    }
-
-    primary1 = rsc_constraint1->primary;
-    primary2 = rsc_constraint2->primary;
-
-    CRM_ASSERT((primary1 != NULL) && (primary2 != NULL)
-               && (rsc_constraint1->dependent != NULL));
-
-    if (primary1->priority > primary2->priority) {
-        return -1;
-    }
-    if (primary1->priority < primary2->priority) {
-        return 1;
-    }
-
-    /* Process clones before primitives and groups */
-    if (primary1->variant > primary2->variant) {
-        return -1;
-    } else if (primary1->variant < primary2->variant) {
-        return 1;
-    }
-
-    /* @COMPAT scheduler <2.0.0: Process promotable clones before nonpromotable
-     * clones (probably unnecessary, but avoids having to update regression
-     * tests)
-     */
-    if (primary1->variant == pe_clone) {
-        if (pcmk_is_set(primary1->flags, pe_rsc_promotable)
-            && !pcmk_is_set(primary2->flags, pe_rsc_promotable)) {
-            return -1;
-        } else if (!pcmk_is_set(primary1->flags, pe_rsc_promotable)
-            && pcmk_is_set(primary2->flags, pe_rsc_promotable)) {
-            return 1;
-        }
-    }
-
-    return strcmp(primary1->id, primary2->id);
+    return cmp_colocation_priority(a, b, false);
 }
 
 /*!
@@ -152,12 +180,10 @@ pcmk__add_this_with(GList **list, const pcmk__colocation_t *colocation)
 {
     CRM_ASSERT((list != NULL) && (colocation != NULL));
 
-    crm_trace("Adding colocation %s (%s with %s%s%s @%d) "
+    crm_trace("Adding colocation %s (%s with %s using %s @%d) "
               "to 'this with' list",
               colocation->id, colocation->dependent->id,
-              colocation->primary->id,
-              (colocation->node_attribute == NULL)? "" : " using ",
-              pcmk__s(colocation->node_attribute, ""),
+              colocation->primary->id, colocation->node_attribute,
               colocation->score);
     *list = g_list_insert_sorted(*list, (gpointer) colocation,
                                  cmp_primary_priority);
@@ -203,12 +229,10 @@ pcmk__add_with_this(GList **list, const pcmk__colocation_t *colocation)
 {
     CRM_ASSERT((list != NULL) && (colocation != NULL));
 
-    crm_trace("Adding colocation %s (%s with %s%s%s @%d) "
+    crm_trace("Adding colocation %s (%s with %s using %s @%d) "
               "to 'with this' list",
               colocation->id, colocation->dependent->id,
-              colocation->primary->id,
-              (colocation->node_attribute == NULL)? "" : " using ",
-              pcmk__s(colocation->node_attribute, ""),
+              colocation->primary->id, colocation->node_attribute,
               colocation->score);
     *list = g_list_insert_sorted(*list, (gpointer) colocation,
                                  cmp_dependent_priority);
@@ -345,20 +369,16 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
     new_con->score = score;
     new_con->dependent_role = text2role(dependent_role);
     new_con->primary_role = text2role(primary_role);
-    new_con->node_attribute = node_attr;
+    new_con->node_attribute = pcmk__s(node_attr, CRM_ATTR_UNAME);
     new_con->influence = influence;
 
-    if (node_attr == NULL) {
-        node_attr = CRM_ATTR_UNAME;
-    }
-
     pe_rsc_trace(dependent, "%s ==> %s (%s %d)",
-                 dependent->id, primary->id, node_attr, score);
+                 dependent->id, primary->id, new_con->node_attribute, score);
 
     pcmk__add_this_with(&(dependent->rsc_cons), new_con);
     pcmk__add_with_this(&(primary->rsc_cons_lhs), new_con);
 
-    dependent->cluster->colocation_constraints = g_list_append(
+    dependent->cluster->colocation_constraints = g_list_prepend(
         dependent->cluster->colocation_constraints, new_con);
 
     if (score <= -INFINITY) {
@@ -1124,15 +1144,11 @@ pcmk__apply_coloc_to_scores(pe_resource_t *dependent,
                             const pe_resource_t *primary,
                             const pcmk__colocation_t *colocation)
 {
-    const char *attribute = CRM_ATTR_ID;
+    const char *attribute = colocation->node_attribute;
     const char *value = NULL;
     GHashTable *work = NULL;
     GHashTableIter iter;
     pe_node_t *node = NULL;
-
-    if (colocation->node_attribute != NULL) {
-        attribute = colocation->node_attribute;
-    }
 
     if (primary->allocated_to != NULL) {
         value = pe_node_attribute_raw(primary->allocated_to, attribute);
@@ -1225,15 +1241,11 @@ pcmk__apply_coloc_to_priority(pe_resource_t *dependent,
 {
     const char *dependent_value = NULL;
     const char *primary_value = NULL;
-    const char *attribute = CRM_ATTR_ID;
+    const char *attribute = colocation->node_attribute;
     int score_multiplier = 1;
 
     if ((primary->allocated_to == NULL) || (dependent->allocated_to == NULL)) {
         return;
-    }
-
-    if (colocation->node_attribute != NULL) {
-        attribute = colocation->node_attribute;
     }
 
     dependent_value = pe_node_attribute_raw(dependent->allocated_to, attribute);
@@ -1361,11 +1373,7 @@ add_node_scores_matching_attr(GHashTable *nodes, const pe_resource_t *rsc,
 {
     GHashTableIter iter;
     pe_node_t *node = NULL;
-    const char *attr = CRM_ATTR_UNAME;
-
-    if ((colocation != NULL) && (colocation->node_attribute != NULL)) {
-        attr = colocation->node_attribute;
-    }
+    const char *attr = colocation->node_attribute;
 
     // Iterate through each node
     g_hash_table_iter_init(&iter, nodes);
@@ -1412,8 +1420,7 @@ add_node_scores_matching_attr(GHashTable *nodes, const pe_resource_t *rsc,
              * unless stickiness uses a rule to vary by node, and that seems
              * acceptable to ignore.)
              */
-            if ((colocation == NULL)
-                || (colocation->primary->stickiness >= -score)
+            if ((colocation->primary->stickiness >= -score)
                 || !pcmk__colocation_has_influence(colocation, NULL)
                 || !allowed_on_one(colocation->dependent)) {
                 crm_trace("%s: Filtering %d + %f * %d "

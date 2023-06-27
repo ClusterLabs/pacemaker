@@ -40,7 +40,6 @@
       </primitive>
       <bundle id="bundle-a">
         <meta_attributes id="bundle-a-meta_attributes">
-          <nvpair id="bundle-a-meta_attributes-interleave" name="interleave" value="true"/>
           <nvpair id="bundle-a-meta_attributes-promotable" name="promotable" value="true"/>
           <nvpair id="bundle-a-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
         </meta_attributes>

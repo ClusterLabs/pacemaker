@@ -1,0 +1,364 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="31" operation="monitor" operation_key="base:2_monitor_15000" on_node="base-bundle-2" on_node_uuid="base-bundle-2" router_node="node1">
+        <primitive id="base" long-id="base:2" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_interval="15000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="base-bundle-2" CRM_meta_on_node_uuid="base-bundle-2" CRM_meta_op_target_rc="8" CRM_meta_physical_host="node1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Promoted" CRM_meta_timeout="15000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="23" operation="start" operation_key="base-bundle-2_start_0" on_node="node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="29" operation="start" operation_key="base:2_start_0" on_node="base-bundle-2" on_node_uuid="base-bundle-2" router_node="node1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="30" operation="promote" operation_key="base:2_promote_0" on_node="base-bundle-2" on_node_uuid="base-bundle-2" router_node="node1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="30" operation="promote" operation_key="base:2_promote_0" on_node="base-bundle-2" on_node_uuid="base-bundle-2" router_node="node1">
+        <primitive id="base" long-id="base:2" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="base-bundle-2" CRM_meta_on_node_uuid="base-bundle-2" CRM_meta_physical_host="node1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="21" operation="start" operation_key="base-bundle-podman-2_start_0" on_node="node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="23" operation="start" operation_key="base-bundle-2_start_0" on_node="node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="29" operation="start" operation_key="base:2_start_0" on_node="base-bundle-2" on_node_uuid="base-bundle-2" router_node="node1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="42" operation="promote" operation_key="base-bundle-clone_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="29" operation="start" operation_key="base:2_start_0" on_node="base-bundle-2" on_node_uuid="base-bundle-2" router_node="node1">
+        <primitive id="base" long-id="base:2" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="base-bundle-2" CRM_meta_on_node_uuid="base-bundle-2" CRM_meta_physical_host="node1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="21" operation="start" operation_key="base-bundle-podman-2_start_0" on_node="node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="23" operation="start" operation_key="base-bundle-2_start_0" on_node="node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="38" operation="start" operation_key="base-bundle-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <rsc_op id="35" operation="monitor" operation_key="base_monitor_16000" internal_operation_key="base:1_monitor_16000" on_node="base-bundle-1" on_node_uuid="base-bundle-1" router_node="node2">
+        <primitive id="base" long-id="base:1" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_interval="16000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="base-bundle-1" CRM_meta_on_node_uuid="base-bundle-1" CRM_meta_physical_host="node2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Unpromoted" CRM_meta_timeout="16000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="33" operation="demote" operation_key="base_demote_0" internal_operation_key="base:1_demote_0" on_node="base-bundle-1" on_node_uuid="base-bundle-1" router_node="node2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <rsc_op id="33" operation="demote" operation_key="base_demote_0" internal_operation_key="base:1_demote_0" on_node="base-bundle-1" on_node_uuid="base-bundle-1" router_node="node2">
+        <primitive id="base" long-id="base:1" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="base-bundle-1" CRM_meta_on_node_uuid="base-bundle-1" CRM_meta_physical_host="node2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="6" operation="cancel" operation_key="base_monitor_15000" internal_operation_key="base:1_monitor_15000" on_node="base-bundle-1" on_node_uuid="base-bundle-1" router_node="node2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="44" operation="demote" operation_key="base-bundle-clone_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <rsc_op id="6" operation="cancel" operation_key="base_monitor_15000" internal_operation_key="base:1_monitor_15000" on_node="base-bundle-1" on_node_uuid="base-bundle-1" router_node="node2">
+        <primitive id="base" long-id="base:1" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="15000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="base-bundle-1" CRM_meta_on_node_uuid="base-bundle-1" CRM_meta_operation="monitor" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Promoted" CRM_meta_timeout="15000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="6" priority="1000000">
+    <action_set>
+      <pseudo_event id="45" operation="demoted" operation_key="base-bundle-clone_demoted_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="33" operation="demote" operation_key="base_demote_0" internal_operation_key="base:1_demote_0" on_node="base-bundle-1" on_node_uuid="base-bundle-1" router_node="node2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="44" operation="demote" operation_key="base-bundle-clone_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <pseudo_event id="44" operation="demote" operation_key="base-bundle-clone_demote_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="48" operation="demote" operation_key="base-bundle_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="8" priority="1000000">
+    <action_set>
+      <pseudo_event id="43" operation="promoted" operation_key="base-bundle-clone_promoted_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="30" operation="promote" operation_key="base:2_promote_0" on_node="base-bundle-2" on_node_uuid="base-bundle-2" router_node="node1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="9">
+    <action_set>
+      <pseudo_event id="42" operation="promote" operation_key="base-bundle-clone_promote_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="39" operation="running" operation_key="base-bundle-clone_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="45" operation="demoted" operation_key="base-bundle-clone_demoted_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="46" operation="promote" operation_key="base-bundle_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="10" priority="1000000">
+    <action_set>
+      <pseudo_event id="39" operation="running" operation_key="base-bundle-clone_running_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="29" operation="start" operation_key="base:2_start_0" on_node="base-bundle-2" on_node_uuid="base-bundle-2" router_node="node1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="38" operation="start" operation_key="base-bundle-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="11">
+    <action_set>
+      <pseudo_event id="38" operation="start" operation_key="base-bundle-clone_start_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="25" operation="start" operation_key="base-bundle_start_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="45" operation="demoted" operation_key="base-bundle-clone_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="12">
+    <action_set>
+      <rsc_op id="22" operation="monitor" operation_key="base-bundle-podman-2_monitor_60000" on_node="node1" on_node_uuid="1">
+        <primitive id="base-bundle-podman-2" class="ocf" provider="heartbeat" type="podman"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="localhost/pcmktest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/base-bundle-2" reuse="false" run_cmd="/usr/sbin/pacemaker-remoted" run_opts=" -e PCMK_stderr=1 -e PCMK_remote_port=3121 -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/base-bundle-2:/var/log -p 3121:3121 "/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="21" operation="start" operation_key="base-bundle-podman-2_start_0" on_node="node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="13">
+    <action_set>
+      <rsc_op id="21" operation="start" operation_key="base-bundle-podman-2_start_0" on_node="node1" on_node_uuid="1">
+        <primitive id="base-bundle-podman-2" class="ocf" provider="heartbeat" type="podman"/>
+        <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="localhost/pcmktest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/base-bundle-2" reuse="false" run_cmd="/usr/sbin/pacemaker-remoted" run_opts=" -e PCMK_stderr=1 -e PCMK_remote_port=3121 -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/base-bundle-2:/var/log -p 3121:3121 "/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="25" operation="start" operation_key="base-bundle_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="14">
+    <action_set>
+      <rsc_op id="24" operation="monitor" operation_key="base-bundle-2_monitor_30000" on_node="node1" on_node_uuid="1">
+        <primitive id="base-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="base-bundle-podman-2" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="30000" addr="node1"  port="3121"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="23" operation="start" operation_key="base-bundle-2_start_0" on_node="node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="15">
+    <action_set>
+      <rsc_op id="23" operation="start" operation_key="base-bundle-2_start_0" on_node="node1" on_node_uuid="1">
+        <primitive id="base-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="base-bundle-podman-2" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" addr="node1"  port="3121"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="8" operation="monitor" operation_key="base-bundle-2_monitor_0" on_node="node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="9" operation="monitor" operation_key="base-bundle-2_monitor_0" on_node="node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="10" operation="monitor" operation_key="base-bundle-2_monitor_0" on_node="node3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="21" operation="start" operation_key="base-bundle-podman-2_start_0" on_node="node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="16">
+    <action_set>
+      <rsc_op id="10" operation="monitor" operation_key="base-bundle-2_monitor_0" on_node="node3" on_node_uuid="3">
+        <primitive id="base-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="base-bundle-podman-2" CRM_meta_on_node="node3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="node1"  port="3121"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="21" operation="start" operation_key="base-bundle-podman-2_start_0" on_node="node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="17">
+    <action_set>
+      <rsc_op id="9" operation="monitor" operation_key="base-bundle-2_monitor_0" on_node="node2" on_node_uuid="2">
+        <primitive id="base-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="base-bundle-podman-2" CRM_meta_on_node="node2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="node1"  port="3121"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="21" operation="start" operation_key="base-bundle-podman-2_start_0" on_node="node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="18">
+    <action_set>
+      <rsc_op id="8" operation="monitor" operation_key="base-bundle-2_monitor_0" on_node="node1" on_node_uuid="1">
+        <primitive id="base-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="base-bundle-podman-2" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="node1"  port="3121"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="21" operation="start" operation_key="base-bundle-podman-2_start_0" on_node="node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="19" priority="1000000">
+    <action_set>
+      <pseudo_event id="49" operation="demoted" operation_key="base-bundle_demoted_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="45" operation="demoted" operation_key="base-bundle-clone_demoted_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="48" operation="demote" operation_key="base-bundle_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="20">
+    <action_set>
+      <pseudo_event id="48" operation="demote" operation_key="base-bundle_demote_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="21" priority="1000000">
+    <action_set>
+      <pseudo_event id="47" operation="promoted" operation_key="base-bundle_promoted_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="43" operation="promoted" operation_key="base-bundle-clone_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="22">
+    <action_set>
+      <pseudo_event id="46" operation="promote" operation_key="base-bundle_promote_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="26" operation="running" operation_key="base-bundle_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="49" operation="demoted" operation_key="base-bundle_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="23" priority="1000000">
+    <action_set>
+      <pseudo_event id="26" operation="running" operation_key="base-bundle_running_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="21" operation="start" operation_key="base-bundle-podman-2_start_0" on_node="node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="39" operation="running" operation_key="base-bundle-clone_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="24">
+    <action_set>
+      <pseudo_event id="25" operation="start" operation_key="base-bundle_start_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="49" operation="demoted" operation_key="base-bundle_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>

@@ -453,6 +453,39 @@ TESTS = [
         [ "cloned-group", "Make sure only the correct number of cloned groups are started" ],
         [ "cloned-group-stop", "Ensure stopping qpidd also stops glance and cinder" ],
         [ "clone-no-shuffle", "Don't prioritize allocation of instances that must be moved" ],
+        [ "clone-recover-no-shuffle-1",
+          "Don't shuffle instances when starting a new primitive instance" ],
+        [ "clone-recover-no-shuffle-2",
+          "Don't shuffle instances when starting a new group instance" ],
+        [ "clone-recover-no-shuffle-3",
+          "Don't shuffle instances when starting a new bundle instance" ],
+        [ "clone-recover-no-shuffle-4",
+          "Don't shuffle instances when starting a new primitive instance with "
+          "location preference "],
+        [ "clone-recover-no-shuffle-5",
+          "Don't shuffle instances when starting a new group instance with "
+          "location preference" ],
+        [ "clone-recover-no-shuffle-6",
+          "Don't shuffle instances when starting a new bundle instance with "
+          "location preference" ],
+        [ "clone-recover-no-shuffle-7",
+          "Don't shuffle instances when starting a new primitive instance that "
+          "will be promoted" ],
+        [ "clone-recover-no-shuffle-8",
+          "Don't shuffle instances when starting a new group instance that "
+          "will be promoted " ],
+        [ "clone-recover-no-shuffle-9",
+          "Don't shuffle instances when starting a new bundle instance that "
+          "will be promoted " ],
+        [ "clone-recover-no-shuffle-10",
+          "Don't shuffle instances when starting a new primitive instance that "
+          "won't be promoted" ],
+        [ "clone-recover-no-shuffle-11",
+          "Don't shuffle instances when starting a new group instance that "
+          "won't be promoted " ],
+        [ "clone-recover-no-shuffle-12",
+          "Don't shuffle instances when starting a new bundle instance that "
+          "won't be promoted " ],
         [ "clone-max-zero", "Orphan processing with clone-max=0" ],
         [ "clone-anon-dup",
           "Bug LF#2087 - Correctly parse the state of anonymous clones that are active more than once per node" ],
@@ -1004,6 +1037,18 @@ TESTS = [
         [ "bundle-replicas-change", "Change bundle from 1 replica to multiple" ],
         [ "bundle-connection-with-container", "Don't move a container due to connection preferences" ],
         [ "nested-remote-recovery", "Recover bundle's container hosted on remote node" ],
+        [ "bundle-promoted-location-1",
+          "Promotable bundle, positive location" ],
+        [ "bundle-promoted-location-2",
+          "Promotable bundle, negative location" ],
+        [ "bundle-promoted-location-3",
+          "Promotable bundle, positive location for promoted role" ],
+        [ "bundle-promoted-location-4",
+          "Promotable bundle, negative location for promoted role" ],
+        [ "bundle-promoted-location-5",
+          "Promotable bundle, positive location for unpromoted role" ],
+        [ "bundle-promoted-location-6",
+          "Promotable bundle, negative location for unpromoted role" ],
         [ "bundle-promoted-colocation-1",
           "Primary promoted bundle, dependent primitive (mandatory coloc)" ],
         [ "bundle-promoted-colocation-2",
