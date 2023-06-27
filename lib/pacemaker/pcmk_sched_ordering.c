@@ -751,7 +751,7 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
      * irrelevant in regards to set2.
      */
     if (!require_all) {
-        char *task = crm_strdup_printf(CRM_OP_RELAXED_SET ":%s", ID(set1));
+        char *task = crm_strdup_printf(PCMK_ACTION_ONE_OR_MORE ":%s", ID(set1));
         pe_action_t *unordered_action = get_pseudo_op(task, data_set);
 
         free(task);

@@ -38,6 +38,7 @@ extern "C" {
 #define PCMK_ACTION_NOTIFY              "notify"
 #define PCMK_ACTION_OFF                 "off"
 #define PCMK_ACTION_ON                  "on"
+#define PCMK_ACTION_ONE_OR_MORE         "one-or-more"
 #define PCMK_ACTION_PROMOTE             "promote"
 #define PCMK_ACTION_PROMOTED            "promoted"
 #define PCMK_ACTION_REBOOT              "reboot"
