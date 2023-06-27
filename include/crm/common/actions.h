@@ -22,6 +22,7 @@ extern "C" {
 
 // Action names as strings
 #define PCMK_ACTION_CANCEL              "cancel"
+#define PCMK_ACTION_CLONE_ONE_OR_MORE   "clone-one-or-more"
 #define PCMK_ACTION_DELETE              "delete"
 #define PCMK_ACTION_DEMOTE              "demote"
 #define PCMK_ACTION_DEMOTED             "demoted"

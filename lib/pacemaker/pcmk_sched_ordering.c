@@ -335,7 +335,7 @@ clone_min_ordering(const char *id,
                    uint32_t flags, int clone_min)
 {
     // Create a pseudo-action for when the minimum instances are active
-    char *task = crm_strdup_printf(CRM_OP_RELAXED_CLONE ":%s", id);
+    char *task = crm_strdup_printf(PCMK_ACTION_CLONE_ONE_OR_MORE ":%s", id);
     pe_action_t *clone_min_met = get_pseudo_op(task, rsc_first->cluster);
 
     free(task);
