@@ -444,7 +444,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
                       const char *influence_s, pe_working_set_t *data_set)
 {
     xmlNode *xml_rsc = NULL;
-    pe_resource_t *with = NULL;
+    pe_resource_t *other = NULL;
     pe_resource_t *resource = NULL;
     const char *set_id = ID(set);
     const char *role = crm_element_value(set, "role");
@@ -477,7 +477,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
         return;
     }
 
-    if ((local_score > 0) && with_previous) {
+    if (local_score > 0) {
         for (xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
@@ -489,38 +489,21 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
                                  set_id, xml_rsc_id);
                 return;
             }
-            if (with != NULL) {
-                pe_rsc_trace(resource, "Colocating %s with %s",
-                             resource->id, with->id);
+            if (other != NULL) {
                 flags = unpack_influence(coloc_id, resource, influence_s);
-                pcmk__new_colocation(set_id, NULL, local_score, resource,
-                                     with, role, role, flags);
+                if (with_previous) {
+                    pe_rsc_trace(resource, "Colocating %s with %s in set %s",
+                                 resource->id, other->id, set_id);
+                    pcmk__new_colocation(set_id, NULL, local_score, resource,
+                                         other, role, role, flags);
+                } else {
+                    pe_rsc_trace(resource, "Colocating %s with %s in set %s",
+                                 other->id, resource->id, set_id);
+                    pcmk__new_colocation(set_id, NULL, local_score, other,
+                                         resource, role, role, flags);
+                }
             }
-            with = resource;
-        }
-
-    } else if (local_score > 0) {
-        pe_resource_t *last = NULL;
-
-        for (xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
-             xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
-
-            xml_rsc_id = ID(xml_rsc);
-            resource = pcmk__find_constraint_resource(data_set->resources,
-                                                      xml_rsc_id);
-            if (resource == NULL) {
-                pcmk__config_err("%s: No resource found for %s",
-                                 set_id, xml_rsc_id);
-                return;
-            }
-            if (last != NULL) {
-                pe_rsc_trace(resource, "Colocating %s with %s",
-                             last->id, resource->id);
-                flags = unpack_influence(coloc_id, resource, influence_s);
-                pcmk__new_colocation(set_id, NULL, local_score, last,
-                                     resource, role, role, flags);
-            }
-            last = resource;
+            other = resource;
         }
 
     } else {
@@ -551,17 +534,17 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
                 if (pcmk__str_eq(resource->id, xml_rsc_id, pcmk__str_none)) {
                     break;
                 }
-                with = pcmk__find_constraint_resource(data_set->resources,
-                                                      xml_rsc_id);
-                if (with == NULL) {
+                other = pcmk__find_constraint_resource(data_set->resources,
+                                                       xml_rsc_id);
+                if (other == NULL) {
                     pcmk__config_err("%s: No resource found for %s",
                                      set_id, xml_rsc_id);
                     return;
                 }
                 pe_rsc_trace(resource, "Anti-Colocating %s with %s",
-                             resource->id, with->id);
+                             resource->id, other->id);
                 pcmk__new_colocation(set_id, NULL, local_score,
-                                     resource, with, role, role, flags);
+                                     resource, other, role, role, flags);
             }
         }
     }
