@@ -399,7 +399,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
     pe_resource_t *resource = NULL;
     const char *set_id = ID(set);
     const char *role = crm_element_value(set, "role");
-    const char *ordering = crm_element_value(set, "ordering");
+    bool with_previous = false;
     int local_score = score;
     bool sequential = false;
     uint32_t flags = pcmk__coloc_none;
@@ -415,15 +415,18 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
         return;
     }
 
-    if (ordering == NULL) {
-        ordering = "group";
+    /* The "ordering" attribute specifies whether resources in a positive-score
+     * set are colocated with the previous or next resource.
+     */
+    if (pcmk__str_eq(crm_element_value(set, "ordering"), "group",
+                     pcmk__str_null_matches|pcmk__str_casei)) {
+        with_previous = true;
     }
 
     if (pcmk__xe_get_bool_attr(set, "sequential", &sequential) == pcmk_rc_ok && !sequential) {
         return;
 
-    } else if ((local_score > 0)
-               && pcmk__str_eq(ordering, "group", pcmk__str_casei)) {
+    } else if ((local_score > 0) && with_previous) {
         for (xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
