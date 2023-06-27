@@ -47,7 +47,7 @@ execute_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *pseudo)
     const char *task = crm_element_value(pseudo->xml, XML_LRM_ATTR_TASK);
 
     /* send to peers as well? */
-    if (pcmk__str_eq(task, CRM_OP_MAINTENANCE_NODES, pcmk__str_casei)) {
+    if (pcmk__str_eq(task, PCMK_ACTION_MAINTENANCE_NODES, pcmk__str_casei)) {
         GHashTableIter iter;
         crm_node_t *node = NULL;
 

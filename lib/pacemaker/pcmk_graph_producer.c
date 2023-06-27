@@ -117,7 +117,7 @@ add_maintenance_update(pe_working_set_t *data_set)
     pe_action_t *action = NULL;
 
     if (add_maintenance_nodes(NULL, data_set) != 0) {
-        action = get_pseudo_op(CRM_OP_MAINTENANCE_NODES, data_set);
+        action = get_pseudo_op(PCMK_ACTION_MAINTENANCE_NODES, data_set);
         pe__set_action_flags(action, pe_action_print_always);
     }
 }
@@ -421,7 +421,7 @@ create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
         crm_xml_add(action_xml, PCMK__XA_MODE, XML_TAG_CIB);
 
     } else if (pcmk_is_set(action->flags, pe_action_pseudo)) {
-        if (pcmk__str_eq(action->task, CRM_OP_MAINTENANCE_NODES,
+        if (pcmk__str_eq(action->task, PCMK_ACTION_MAINTENANCE_NODES,
                          pcmk__str_none)) {
             needs_maintenance_info = true;
         }

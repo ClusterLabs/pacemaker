@@ -152,7 +152,7 @@ extern char *crm_system_name;
 #  define CRM_OP_RELAXED_SET  "one-or-more"
 #  define CRM_OP_RELAXED_CLONE  "clone-one-or-more"
 #  define CRM_OP_RM_NODE_CACHE "rm_node_cache"
-#  define CRM_OP_MAINTENANCE_NODES "maintenance_nodes"
+#  define CRM_OP_MAINTENANCE_NODES  PCMK_ACTION_MAINTENANCE_NODES
 
 /* Possible cluster membership states */
 #  define CRMD_JOINSTATE_DOWN           "down"
