@@ -313,7 +313,7 @@ probe_needed_before_action(const pe_action_t *probe, const pe_action_t *then)
     }
 
     // Probes should be done on a node before shutting it down
-    if (pcmk__str_eq(then->task, CRM_OP_SHUTDOWN, pcmk__str_none)
+    if (pcmk__str_eq(then->task, PCMK_ACTION_DO_SHUTDOWN, pcmk__str_none)
         && (probe->node != NULL) && (then->node != NULL)
         && !pe__same_node(probe->node, then->node)) {
         return false;

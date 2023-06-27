@@ -1165,7 +1165,7 @@ pcmk__order_stops_before_shutdown(pe_node_t *node, pe_action_t *shutdown_op)
                      action->uuid, pe__node_name(node));
         pe__clear_action_flags(action, pe_action_optional);
         pcmk__new_ordering(action->rsc, NULL, action, NULL,
-                           strdup(CRM_OP_SHUTDOWN), shutdown_op,
+                           strdup(PCMK_ACTION_DO_SHUTDOWN), shutdown_op,
                            pe_order_optional|pe_order_runnable_left,
                            node->details->data_set);
     }

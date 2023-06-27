@@ -1049,11 +1049,11 @@ pcmk__new_shutdown_action(pe_node_t *node)
 
     CRM_ASSERT(node != NULL);
 
-    shutdown_id = crm_strdup_printf("%s-%s", CRM_OP_SHUTDOWN,
+    shutdown_id = crm_strdup_printf("%s-%s", PCMK_ACTION_DO_SHUTDOWN,
                                     node->details->uname);
 
-    shutdown_op = custom_action(NULL, shutdown_id, CRM_OP_SHUTDOWN, node, FALSE,
-                                TRUE, node->details->data_set);
+    shutdown_op = custom_action(NULL, shutdown_id, PCMK_ACTION_DO_SHUTDOWN,
+                                node, FALSE, TRUE, node->details->data_set);
 
     pcmk__order_stops_before_shutdown(node, shutdown_op);
     add_hash_param(shutdown_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
@@ -1397,7 +1397,8 @@ pcmk__output_actions(pe_working_set_t *data_set)
             continue; // This action was not scheduled
         }
 
-        if (pcmk__str_eq(action->task, CRM_OP_SHUTDOWN, pcmk__str_none)) {
+        if (pcmk__str_eq(action->task, PCMK_ACTION_DO_SHUTDOWN,
+                         pcmk__str_none)) {
             task = strdup("Shutdown");
 
         } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_none)) {

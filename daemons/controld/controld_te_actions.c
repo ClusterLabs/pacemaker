@@ -148,7 +148,8 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
              id, task, on_node, (is_local? " locally" : ""),
              (no_wait? " without waiting" : ""));
 
-    if (is_local && pcmk__str_eq(task, CRM_OP_SHUTDOWN, pcmk__str_none)) {
+    if (is_local
+        && pcmk__str_eq(task, PCMK_ACTION_DO_SHUTDOWN, pcmk__str_none)) {
         /* defer until everything else completes */
         crm_info("Controller request '%s' is a local shutdown", id);
         graph->completion_action = pcmk__graph_shutdown;
@@ -156,7 +157,7 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         te_action_confirmed(action, graph);
         return pcmk_rc_ok;
 
-    } else if (pcmk__str_eq(task, CRM_OP_SHUTDOWN, pcmk__str_none)) {
+    } else if (pcmk__str_eq(task, PCMK_ACTION_DO_SHUTDOWN, pcmk__str_none)) {
         crm_node_t *peer = crm_get_peer(0, router_node);
 
         pcmk__update_peer_expected(__func__, peer, CRMD_JOINSTATE_DOWN);

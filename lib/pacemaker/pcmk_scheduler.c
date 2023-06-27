@@ -617,7 +617,8 @@ schedule_fencing_and_shutdowns(pe_working_set_t *data_set)
          * clone stop that's also ordered before the shutdowns, thus leading to
          * a graph loop.
          */
-        if (pcmk__str_eq(dc_down->task, CRM_OP_SHUTDOWN, pcmk__str_none)) {
+        if (pcmk__str_eq(dc_down->task, PCMK_ACTION_DO_SHUTDOWN,
+                         pcmk__str_none)) {
             pcmk__order_after_each(dc_down, shutdown_ops);
         }
 

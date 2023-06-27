@@ -139,7 +139,7 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action)
     CRM_CHECK((xml != NULL) && (action != NULL) && (action->node != NULL),
               return);
 
-    if (pcmk__str_eq(action->task, CRM_OP_SHUTDOWN, pcmk__str_none)) {
+    if (pcmk__str_eq(action->task, PCMK_ACTION_DO_SHUTDOWN, pcmk__str_none)) {
 
         /* Shutdown makes the action's node down */
         xmlNode *downed = create_xml_node(xml, XML_GRAPH_TAG_DOWNED);
@@ -410,7 +410,7 @@ create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
         }
 
     } else if (pcmk__str_any_of(action->task,
-                                CRM_OP_SHUTDOWN,
+                                PCMK_ACTION_DO_SHUTDOWN,
                                 CRM_OP_CLEAR_FAILCOUNT, NULL)) {
         action_xml = create_xml_node(parent, XML_GRAPH_TAG_CRM_EVENT);
 
@@ -533,8 +533,8 @@ should_add_action_to_graph(const pe_action_t *action)
      * determined to be required and runnable by this point)
      */
     if (pcmk_is_set(action->flags, pe_action_pseudo)
-        || pcmk__strcase_any_of(action->task, CRM_OP_FENCE, CRM_OP_SHUTDOWN,
-                                NULL)) {
+        || pcmk__strcase_any_of(action->task, CRM_OP_FENCE,
+                                PCMK_ACTION_DO_SHUTDOWN, NULL)) {
         return true;
     }
 
