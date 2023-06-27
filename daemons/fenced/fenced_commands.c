@@ -951,7 +951,7 @@ read_action_metadata(stonith_device_t *device)
         if (pcmk__str_eq(action, PCMK_ACTION_LIST, pcmk__str_none)) {
             stonith__set_device_flags(device->flags, device->id,
                                       st_device_supports_list);
-        } else if (pcmk__str_eq(action, "status", pcmk__str_none)) {
+        } else if (pcmk__str_eq(action, PCMK_ACTION_STATUS, pcmk__str_none)) {
             stonith__set_device_flags(device->flags, device->id,
                                       st_device_supports_status);
         } else if (pcmk__str_eq(action, "reboot", pcmk__str_none)) {
@@ -2209,7 +2209,7 @@ can_fence_host_with_device(stonith_device_t *dev,
 
         crm_trace("Running '%s' to check whether %s is eligible to fence %s (%s)",
                   check_type, dev_id, target, action);
-        schedule_internal_command(__func__, dev, "status", target,
+        schedule_internal_command(__func__, dev, PCMK_ACTION_STATUS, target,
                                   search->per_device_timeout, search, status_search_cb);
         /* we'll respond to this search request async in the cb */
         return;
@@ -2769,7 +2769,8 @@ st_child_done(int pid, const pcmk__action_result_t *result, void *user_data)
     if (device) {
         if (!device->verified && pcmk__result_ok(result)
             && pcmk__strcase_any_of(cmd->action, PCMK_ACTION_LIST,
-                                    PCMK_ACTION_MONITOR, "status", NULL)) {
+                                    PCMK_ACTION_MONITOR, PCMK_ACTION_STATUS,
+                                    NULL)) {
 
             device->verified = TRUE;
         }

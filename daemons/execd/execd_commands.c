@@ -266,7 +266,7 @@ normalize_action_name(lrmd_rsc_t * rsc, const char *action)
 {
     if (pcmk__str_eq(action, PCMK_ACTION_MONITOR, pcmk__str_casei) &&
         pcmk_is_set(pcmk_get_ra_caps(rsc->class), pcmk_ra_cap_status)) {
-        return "status";
+        return PCMK_ACTION_STATUS;
     }
     return action;
 }

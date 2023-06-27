@@ -563,7 +563,8 @@ services__execute_upstart(svc_action_t *op)
         goto cleanup;
     }
 
-    if (pcmk__strcase_any_of(op->action, PCMK_ACTION_MONITOR, "status", NULL)) {
+    if (pcmk__strcase_any_of(op->action, PCMK_ACTION_MONITOR,
+                             PCMK_ACTION_STATUS, NULL)) {
         DBusPendingCall *pending = NULL;
         char *state = NULL;
         char *path = get_first_instance(job, op->timeout);

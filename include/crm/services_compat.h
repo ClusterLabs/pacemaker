@@ -68,7 +68,7 @@ static inline enum ocf_exitcode
 services_get_ocf_exitcode(const char *action, int lsb_exitcode)
 {
     /* For non-status actions, LSB and OCF share error code meaning <= 7 */
-    if ((action != NULL) && (strcmp(action, "status") != 0)
+    if ((action != NULL) && (strcmp(action, PCMK_ACTION_STATUS) != 0)
         && (strcmp(action, PCMK_ACTION_MONITOR) != 0)) {
         if ((lsb_exitcode < 0) || (lsb_exitcode > PCMK_LSB_NOT_RUNNING)) {
             return PCMK_OCF_UNKNOWN_ERROR;

@@ -656,7 +656,8 @@ static int
 stonith_api_status(stonith_t * stonith, int call_options, const char *id, const char *port,
                    int timeout)
 {
-    return stonith_api_call(stonith, call_options, id, "status", port, timeout, NULL);
+    return stonith_api_call(stonith, call_options, id, PCMK_ACTION_STATUS, port,
+                            timeout, NULL);
 }
 
 static int

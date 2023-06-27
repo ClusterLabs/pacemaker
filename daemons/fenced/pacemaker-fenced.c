@@ -1533,10 +1533,11 @@ static pcmk__cluster_option_t fencer_options[] = {
            " Use this option to alter the number of times Pacemaker retries \'monitor\' actions before giving up.")
     },
     {
-	"pcmk_status_action",NULL, "string", NULL, "status", NULL,
-	N_("Advanced use only: An alternate command to run instead of \'status\'"),
+        "pcmk_status_action", NULL, "string", NULL,
+        PCMK_ACTION_STATUS, NULL,
+        N_("Advanced use only: An alternate command to run instead of \'status\'"),
         N_("Some devices do not support the standard commands or may provide additional ones."
-                 "Use this to specify an alternate, device-specific, command that implements the \'status\' action.")
+           "Use this to specify an alternate, device-specific, command that implements the \'status\' action.")
     },
     {
 	"pcmk_status_timeout",NULL, "time", NULL, "60s", NULL,

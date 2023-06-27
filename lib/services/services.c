@@ -234,7 +234,7 @@ copy_action_arguments(svc_action_t *op, uint32_t ra_caps, const char *name,
 
     if (pcmk_is_set(ra_caps, pcmk_ra_cap_status)
         && pcmk__str_eq(action, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
-        action = "status";
+        action = PCMK_ACTION_STATUS;
     }
     op->action = strdup(action);
     if (op->action == NULL) {
