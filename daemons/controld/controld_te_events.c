@@ -111,7 +111,7 @@ fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node)
             } else if (action->type == pcmk__cluster_graph_action) {
                 const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
 
-                if (pcmk__str_eq(task, CRM_OP_FENCE, pcmk__str_casei)) {
+                if (pcmk__str_eq(task, PCMK_ACTION_STONITH, pcmk__str_casei)) {
                     continue;
                 }
             }

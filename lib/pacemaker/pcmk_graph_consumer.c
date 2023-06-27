@@ -253,7 +253,7 @@ initiate_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
         case pcmk__cluster_graph_action:
             if (pcmk__str_eq(crm_element_value(action->xml, XML_LRM_ATTR_TASK),
-                             CRM_OP_FENCE, pcmk__str_none)) {
+                             PCMK_ACTION_STONITH, pcmk__str_none)) {
                 crm_trace("Executing fencing action %d (%s)",
                           action->id, id);
                 return graph_fns->fence(graph, action);

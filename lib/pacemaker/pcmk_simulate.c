@@ -96,7 +96,8 @@ create_action_name(const pe_action_t *action, bool verbose)
         }
         free(key);
 
-    } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_none)) {
+    } else if (pcmk__str_eq(action->task, PCMK_ACTION_STONITH,
+                            pcmk__str_none)) {
         const char *op = g_hash_table_lookup(action->meta, "stonith_action");
 
         action_name = crm_strdup_printf("%s%s '%s' %s",

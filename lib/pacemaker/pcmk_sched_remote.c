@@ -546,7 +546,7 @@ pcmk__connection_host_for_action(const pe_action_t *action)
     bool partial_migration = false;
     const char *task = action->task;
 
-    if (pcmk__str_eq(task, CRM_OP_FENCE, pcmk__str_none)
+    if (pcmk__str_eq(task, PCMK_ACTION_STONITH, pcmk__str_none)
         || !pe__is_guest_or_remote_node(action->node)) {
         return NULL;
     }

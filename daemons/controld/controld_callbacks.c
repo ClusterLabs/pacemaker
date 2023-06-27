@@ -276,7 +276,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
         if (down) {
             const char *task = crm_element_value(down->xml, XML_LRM_ATTR_TASK);
 
-            if (pcmk__str_eq(task, CRM_OP_FENCE, pcmk__str_casei)) {
+            if (pcmk__str_eq(task, PCMK_ACTION_STONITH, pcmk__str_casei)) {
 
                 /* tengine_stonith_callback() confirms fence actions */
                 crm_trace("Updating CIB %s fencer reported fencing of %s complete",

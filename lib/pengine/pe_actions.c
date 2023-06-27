@@ -1098,11 +1098,13 @@ pe_fence_op(pe_node_t *node, const char *op, bool optional,
         op = data_set->stonith_action;
     }
 
-    op_key = crm_strdup_printf("%s-%s-%s", CRM_OP_FENCE, node->details->uname, op);
+    op_key = crm_strdup_printf("%s-%s-%s",
+                               PCMK_ACTION_STONITH, node->details->uname, op);
 
     stonith_op = lookup_singleton(data_set, op_key);
     if(stonith_op == NULL) {
-        stonith_op = custom_action(NULL, op_key, CRM_OP_FENCE, node, TRUE, TRUE, data_set);
+        stonith_op = custom_action(NULL, op_key, PCMK_ACTION_STONITH, node,
+                                   TRUE, TRUE, data_set);
 
         add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET, node->details->uname);
         add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET_UUID, node->details->id);

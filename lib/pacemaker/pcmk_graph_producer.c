@@ -145,7 +145,8 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action)
         xmlNode *downed = create_xml_node(xml, XML_GRAPH_TAG_DOWNED);
         add_node_to_xml_by_id(action->node->details->id, downed);
 
-    } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_none)) {
+    } else if (pcmk__str_eq(action->task, PCMK_ACTION_STONITH,
+                            pcmk__str_none)) {
 
         /* Fencing makes the action's node and any hosted guest nodes down */
         const char *fence = g_hash_table_lookup(action->meta, "stonith_action");
@@ -362,7 +363,7 @@ add_action_attributes(pe_action_t *action, xmlNode *action_xml)
 
         pcmk__add_bundle_meta_to_xml(args_xml, action);
 
-    } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_none)
+    } else if (pcmk__str_eq(action->task, PCMK_ACTION_STONITH, pcmk__str_none)
                && (action->node != NULL)) {
         /* Pass the node's attributes as meta-attributes.
          *
@@ -401,7 +402,7 @@ create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
 
     // Create the top-level element based on task
 
-    if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_none)) {
+    if (pcmk__str_eq(action->task, PCMK_ACTION_STONITH, pcmk__str_none)) {
         /* All fences need node info; guest node fences are pseudo-events */
         if (pcmk_is_set(action->flags, pe_action_pseudo)) {
             action_xml = create_xml_node(parent, XML_GRAPH_TAG_PSEUDO_EVENT);
@@ -533,7 +534,7 @@ should_add_action_to_graph(const pe_action_t *action)
      * determined to be required and runnable by this point)
      */
     if (pcmk_is_set(action->flags, pe_action_pseudo)
-        || pcmk__strcase_any_of(action->task, CRM_OP_FENCE,
+        || pcmk__strcase_any_of(action->task, PCMK_ACTION_STONITH,
                                 PCMK_ACTION_DO_SHUTDOWN, NULL)) {
         return true;
     }

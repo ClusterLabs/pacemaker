@@ -201,7 +201,7 @@ order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
          crm_info("Moving healthy resource %s off %s before fencing",
                   rsc->id, pe__node_name(node));
          pcmk__new_ordering(rsc, stop_key(rsc), NULL, NULL,
-                            strdup(CRM_OP_FENCE), stonith_op,
+                            strdup(PCMK_ACTION_STONITH), stonith_op,
                             pe_order_optional, rsc->cluster);
 #endif
     }

@@ -303,7 +303,7 @@ static bool
 probe_needed_before_action(const pe_action_t *probe, const pe_action_t *then)
 {
     // Probes on a node are performed after unfencing it, not before
-    if (pcmk__str_eq(then->task, CRM_OP_FENCE, pcmk__str_none)
+    if (pcmk__str_eq(then->task, PCMK_ACTION_STONITH, pcmk__str_none)
         && pe__same_node(probe->node, then->node)) {
         const char *op = g_hash_table_lookup(then->meta, "stonith_action");
 
