@@ -1269,8 +1269,8 @@ stop_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
         }
 
         if (pcmk_is_set(rsc->flags, pe_rsc_needs_unfencing)) {
-            pe_action_t *unfence = pe_fence_op(current, "on", true, NULL, false,
-                                               rsc->cluster);
+            pe_action_t *unfence = pe_fence_op(current, PCMK_ACTION_ON, true,
+                                               NULL, false, rsc->cluster);
 
             order_actions(stop, unfence, pe_order_implies_first);
             if (!pcmk__node_unfenced(current)) {

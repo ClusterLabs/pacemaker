@@ -321,8 +321,8 @@ pcmk__order_vs_unfence(const pe_resource_t *rsc, pe_node_t *node,
          * the node being unfenced, and all its resources being stopped,
          * whenever a new resource is added -- which would be highly suboptimal.
          */
-        pe_action_t *unfence = pe_fence_op(node, "on", TRUE, NULL, FALSE,
-                                           node->details->data_set);
+        pe_action_t *unfence = pe_fence_op(node, PCMK_ACTION_ON, TRUE, NULL,
+                                           FALSE, node->details->data_set);
 
         order_actions(unfence, action, order);
 
@@ -463,7 +463,7 @@ pcmk__order_restart_vs_unfence(gpointer data, gpointer user_data)
     pe_node_t *node = (pe_node_t *) data;
     pe_resource_t *rsc = (pe_resource_t *) user_data;
 
-    pe_action_t *unfence = pe_fence_op(node, "on", true, NULL, false,
+    pe_action_t *unfence = pe_fence_op(node, PCMK_ACTION_ON, true, NULL, false,
                                        rsc->cluster);
 
     crm_debug("Ordering any stops of %s before %s, and any starts after",

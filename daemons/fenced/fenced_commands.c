@@ -124,7 +124,7 @@ static gboolean
 is_action_required(const char *action, const stonith_device_t *device)
 {
     return (device != NULL) && device->automatic_unfencing
-           && pcmk__str_eq(action, "on", pcmk__str_none);
+           && pcmk__str_eq(action, PCMK_ACTION_ON, pcmk__str_none);
 }
 
 static int
@@ -957,7 +957,7 @@ read_action_metadata(stonith_device_t *device)
         } else if (pcmk__str_eq(action, "reboot", pcmk__str_none)) {
             stonith__set_device_flags(device->flags, device->id,
                                       st_device_supports_reboot);
-        } else if (pcmk__str_eq(action, "on", pcmk__str_none)) {
+        } else if (pcmk__str_eq(action, PCMK_ACTION_ON, pcmk__str_none)) {
             /* "automatic" means the cluster will unfence node when it joins */
             /* "required" is a deprecated synonym for "automatic" */
             if (pcmk__xe_attr_is_true(match, "automatic") || pcmk__xe_attr_is_true(match, "required")) {
@@ -1132,7 +1132,7 @@ build_device_from_xml(xmlNode *dev)
         device->automatic_unfencing = TRUE;
     }
 
-    if (is_action_required("on", device)) {
+    if (is_action_required(PCMK_ACTION_ON, device)) {
         crm_info("Fencing device '%s' requires unfencing", device->id);
     }
 
@@ -2112,7 +2112,7 @@ localhost_is_eligible_with_remap(const stonith_device_t *device,
          * for remapped "on" actions because the target is off at that point.
          */
         if (localhost_is_eligible(device, PCMK_ACTION_OFF, target, allow_self)
-            || localhost_is_eligible(device, "on", target, FALSE)) {
+            || localhost_is_eligible(device, PCMK_ACTION_ON, target, FALSE)) {
             return true;
         }
     }
@@ -2147,7 +2147,7 @@ can_fence_host_with_device(stonith_device_t *dev,
     /* Answer immediately if the device does not support the action
      * or the local node is not allowed to perform it
      */
-    if (pcmk__str_eq(action, "on", pcmk__str_none)
+    if (pcmk__str_eq(action, PCMK_ACTION_ON, pcmk__str_none)
         && !pcmk_is_set(dev->flags, st_device_supports_on)) {
         check_type = "Agent does not support 'on'";
         goto search_report_results;
@@ -2455,7 +2455,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
                            pcmk_is_set(query->call_options, st_opt_allow_suicide));
             add_action_reply(dev, PCMK_ACTION_OFF, device, query->target,
                              pcmk_is_set(query->call_options, st_opt_allow_suicide));
-            add_action_reply(dev, "on", device, query->target, FALSE);
+            add_action_reply(dev, PCMK_ACTION_ON, device, query->target, FALSE);
         }
 
         /* A query without a target wants device parameters */

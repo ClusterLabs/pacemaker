@@ -252,7 +252,8 @@ run_fence_failure_rollover_test(void)
                 "Fence rollover results off", 1, 0);
 
     /* Expect -ENODEV because fence_dummy requires 'on' to be executed on target */
-    single_test(st->cmds->fence(st, st_opts, "false_1_node2", "on", 3, 0),
+    single_test(st->cmds->fence(st, st_opts, "false_1_node2", PCMK_ACTION_ON, 3,
+                                0),
                 "Fence rollover results on", 1, -ENODEV);
 
     single_test(st->cmds->remove_device(st, st_opts, "test-id1"),
@@ -300,7 +301,8 @@ run_standard_test(void)
                 "Fence false_1_node1", 1, 0);
 
     /* Expect -ENODEV because fence_dummy requires 'on' to be executed on target */
-    single_test(st->cmds->fence(st, st_opts, "false_1_node1", "on", 1, 0),
+    single_test(st->cmds->fence(st, st_opts, "false_1_node1", PCMK_ACTION_ON, 1,
+                                0),
                 "Unfence false_1_node1", 1, -ENODEV);
 
     /* Confirm that an invalid level index is rejected */
@@ -379,7 +381,7 @@ standard_dev_test(void)
     rc = st->cmds->status(st, st_opts, "test-id", "false_1_node1", 10);
     crm_debug("Status false_1_node1: %d", rc);
 
-    rc = st->cmds->fence(st, st_opts, "false_1_node1", "on", 10, 0);
+    rc = st->cmds->fence(st, st_opts, "false_1_node1", PCMK_ACTION_ON, 10, 0);
     crm_debug("Unfence false_1_node1: %d", rc);
 
     rc = st->cmds->status(st, st_opts, "test-id", "false_1_node1", 10);
@@ -391,7 +393,7 @@ standard_dev_test(void)
     rc = st->cmds->status(st, st_opts, "test-id", "some-host", 10);
     crm_debug("Status alias: %d", rc);
 
-    rc = st->cmds->fence(st, st_opts, "false_1_node1", "on", 10, 0);
+    rc = st->cmds->fence(st, st_opts, "false_1_node1", PCMK_ACTION_ON, 10, 0);
     crm_debug("Unfence false_1_node1: %d", rc);
 
     rc = st->cmds->remove_device(st, st_opts, "test-id");

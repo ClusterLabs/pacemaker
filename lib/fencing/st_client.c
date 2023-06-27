@@ -2109,7 +2109,7 @@ stonith_action_str(const char *action)
 {
     if (action == NULL) {
         return "fencing";
-    } else if (!strcmp(action, "on")) {
+    } else if (strcmp(action, PCMK_ACTION_ON) == 0) {
         return "unfencing";
     } else if (strcmp(action, PCMK_ACTION_OFF) == 0) {
         return "turning off";
@@ -2171,8 +2171,8 @@ parse_list_line(const char *line, int len, GList **output)
                          line + entry_start, entry_start, i);
                 free(entry);
 
-            } else if (pcmk__strcase_any_of(entry, "on", PCMK_ACTION_OFF,
-                                            NULL)) {
+            } else if (pcmk__strcase_any_of(entry, PCMK_ACTION_ON,
+                                            PCMK_ACTION_OFF, NULL)) {
                 /* Some agents print the target status in the list output,
                  * though none are known now (the separate list-status command
                  * is used for this, but it can also print "UNKNOWN"). To handle

@@ -687,7 +687,7 @@ simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
     out->message(out, "inject-fencing-action", target, op);
 
-    if (!pcmk__str_eq(op, "on", pcmk__str_casei)) {
+    if (!pcmk__str_eq(op, PCMK_ACTION_ON, pcmk__str_casei)) {
         int rc = pcmk_ok;
         GString *xpath = g_string_sized_new(512);
 

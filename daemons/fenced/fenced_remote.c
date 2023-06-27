@@ -329,7 +329,7 @@ op_phase_on(remote_fencing_op_t *op)
              "remapping to 'on' for %s " CRM_XS " id=%.8s",
              op->target, op->client_name, op->id);
     op->phase = st_phase_on;
-    strcpy(op->action, "on");
+    strcpy(op->action, PCMK_ACTION_ON);
 
     /* Skip devices with automatic unfencing, because the cluster will handle it
      * when the node rejoins.
@@ -1541,7 +1541,7 @@ get_op_total_timeout(const remote_fencing_op_t *op,
         GList *iter = NULL;
         GList *auto_list = NULL;
 
-        if (pcmk__str_eq(op->action, "on", pcmk__str_none)
+        if (pcmk__str_eq(op->action, PCMK_ACTION_ON, pcmk__str_none)
             && (op->automatic_list != NULL)) {
             auto_list = g_list_copy(op->automatic_list);
         }
@@ -1695,7 +1695,7 @@ advance_topology_device_in_level(remote_fencing_op_t *op, const char *device,
 
     /* Handle automatic unfencing if an "on" action was requested */
     if ((op->phase == st_phase_requested)
-        && pcmk__str_eq(op->action, "on", pcmk__str_none)) {
+        && pcmk__str_eq(op->action, PCMK_ACTION_ON, pcmk__str_none)) {
         /* If the device we just executed was required, it's not anymore */
         remove_required_device(op, device);
 
@@ -2097,7 +2097,7 @@ parse_action_specific(const xmlNode *xml, const char *peer, const char *device,
     }
 
     /* Handle devices with automatic unfencing */
-    if (pcmk__str_eq(action, "on", pcmk__str_none)) {
+    if (pcmk__str_eq(action, PCMK_ACTION_ON, pcmk__str_none)) {
         int required = 0;
 
         crm_element_value_int(xml, F_STONITH_DEVICE_REQUIRED, &required);
@@ -2163,8 +2163,8 @@ add_device_properties(const xmlNode *xml, remote_fencing_op_t *op,
         if (pcmk__str_eq(ID(child), PCMK_ACTION_OFF, pcmk__str_none)) {
             parse_action_specific(child, peer->host, device, PCMK_ACTION_OFF,
                                   op, st_phase_off, props);
-        } else if (pcmk__str_eq(ID(child), "on", pcmk__str_none)) {
-            parse_action_specific(child, peer->host, device, "on",
+        } else if (pcmk__str_eq(ID(child), PCMK_ACTION_ON, pcmk__str_none)) {
+            parse_action_specific(child, peer->host, device, PCMK_ACTION_ON,
                                   op, st_phase_on, props);
         }
     }

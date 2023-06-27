@@ -518,7 +518,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
 
     crmd_alert_fencing_op(event);
 
-    if (pcmk__str_eq("on", event->action, pcmk__str_none)) {
+    if (pcmk__str_eq(PCMK_ACTION_ON, event->action, pcmk__str_none)) {
         // Unfencing doesn't need special handling, just a log message
         if (succeeded) {
             crm_notice("%s was unfenced by %s at the request of %s@%s",
@@ -846,7 +846,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
         crm_info("Fence operation %d for %s succeeded", data->call_id, target);
         if (!(pcmk_is_set(action->flags, pcmk__graph_action_confirmed))) {
             te_action_confirmed(action, NULL);
-            if (pcmk__str_eq("on", op, pcmk__str_casei)) {
+            if (pcmk__str_eq(PCMK_ACTION_ON, op, pcmk__str_casei)) {
                 const char *value = NULL;
                 char *now = pcmk__ttoa(time(NULL));
                 gboolean is_remote_node = FALSE;

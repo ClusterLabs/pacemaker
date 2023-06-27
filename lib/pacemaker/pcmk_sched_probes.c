@@ -307,7 +307,7 @@ probe_needed_before_action(const pe_action_t *probe, const pe_action_t *then)
         && pe__same_node(probe->node, then->node)) {
         const char *op = g_hash_table_lookup(then->meta, "stonith_action");
 
-        if (pcmk__str_eq(op, "on", pcmk__str_casei)) {
+        if (pcmk__str_eq(op, PCMK_ACTION_ON, pcmk__str_casei)) {
             return false;
         }
     }

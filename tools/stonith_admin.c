@@ -344,7 +344,11 @@ request_fencing(stonith_t *st, const char *target, const char *command,
 
     if (rc != pcmk_rc_ok) {
         const char *rc_str = pcmk_rc_str(rc);
-        const char *what = (strcmp(command, "on") == 0)? "unfence" : "fence";
+        const char *what = "fence";
+
+        if (strcmp(command, PCMK_ACTION_ON) == 0) {
+            what = "unfence";
+        }
 
         // If reason is identical to return code string, don't display it twice
         if (pcmk__str_eq(rc_str, reason, pcmk__str_none)) {
@@ -629,7 +633,7 @@ main(int argc, char **argv)
             break;
 
         case 'U':
-            rc = request_fencing(st, target, "on", &error);
+            rc = request_fencing(st, target, PCMK_ACTION_ON, &error);
             break;
 
         case 'h':
