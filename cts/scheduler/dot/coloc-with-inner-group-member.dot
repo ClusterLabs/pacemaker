@@ -1,0 +1,8 @@
+ digraph "g" {
+"grp_stop_0" -> "grp_stopped_0" [ style = bold]
+"grp_stop_0" -> "vip_stop_0 rhel8-3" [ style = bold]
+"grp_stop_0" [ style=bold color="green" fontcolor="orange"]
+"grp_stopped_0" [ style=bold color="green" fontcolor="orange"]
+"vip_stop_0 rhel8-3" -> "grp_stopped_0" [ style = bold]
+"vip_stop_0 rhel8-3" [ style=bold color="green" fontcolor="black"]
+}

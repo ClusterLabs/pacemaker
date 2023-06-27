@@ -80,6 +80,10 @@ TESTS = [
         [ "group-dependents", "Account for the location preferences of things colocated with a group" ],
         [ "group-stop-ordering", "Ensure blocked group member stop does not force other member stops" ],
         [ "colocate-unmanaged-group", "Respect mandatory colocations even if earlier group member is unmanaged" ],
+        [
+            "coloc-with-inner-group-member",
+            "Consider explicit colocations with inner group members"
+        ],
     ],
     [
         [ "rsc_dep1", "Must not" ],
