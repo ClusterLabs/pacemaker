@@ -415,7 +415,7 @@ pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
          * any start of the resource in this transition.
          */
         if (action->rsc->is_remote_node &&
-            pcmk__str_eq(action->task, CRM_OP_CLEAR_FAILCOUNT,
+            pcmk__str_eq(action->task, PCMK_ACTION_CLEAR_FAILCOUNT,
                          pcmk__str_none)) {
 
             pcmk__new_ordering(action->rsc, NULL, action, action->rsc,

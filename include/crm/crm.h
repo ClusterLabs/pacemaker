@@ -147,7 +147,7 @@ extern char *crm_system_name;
 #  define CRM_OP_LRM_FAIL		"lrm_fail"
 #  define CRM_OP_PROBED		"probe_complete"
 #  define CRM_OP_REPROBE		"probe_again"
-#  define CRM_OP_CLEAR_FAILCOUNT  "clear_failcount"
+#  define CRM_OP_CLEAR_FAILCOUNT    PCMK_ACTION_CLEAR_FAILCOUNT
 #  define CRM_OP_REMOTE_STATE     "remote_state"
 #  define CRM_OP_RM_NODE_CACHE "rm_node_cache"
 #  define CRM_OP_MAINTENANCE_NODES  PCMK_ACTION_MAINTENANCE_NODES
