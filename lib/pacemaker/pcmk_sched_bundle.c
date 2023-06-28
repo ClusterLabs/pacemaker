@@ -333,14 +333,14 @@ struct match_data {
  * \internal
  * \brief Check whether a replica container is assigned to a given node
  *
- * \param[in,out] replica    Replica to check
+ * \param[in]     replica    Replica to check
  * \param[in,out] user_data  struct match_data with node to compare against
  *
  * \return true if the replica does not match (to indicate further replicas
  *         should be processed), otherwise false
  */
 static bool
-match_replica_container(pe__bundle_replica_t *replica, void *user_data)
+match_replica_container(const pe__bundle_replica_t *replica, void *user_data)
 {
     struct match_data *match_data = user_data;
 
@@ -364,7 +364,8 @@ match_replica_container(pe__bundle_replica_t *replica, void *user_data)
  *         otherwise NULL.
  */
 static pe_resource_t *
-compatible_container(const pe_resource_t *dependent, pe_resource_t *bundle)
+compatible_container(const pe_resource_t *dependent,
+                     const pe_resource_t *bundle)
 {
     GList *scratch = NULL;
     struct match_data match_data = { NULL, NULL };
@@ -372,8 +373,8 @@ compatible_container(const pe_resource_t *dependent, pe_resource_t *bundle)
     // If dependent is assigned, only check there
     match_data.node = dependent->fns->location(dependent, NULL, 0);
     if (match_data.node != NULL) {
-        pe__foreach_bundle_replica(bundle, match_replica_container,
-                                   &match_data);
+        pe__foreach_const_bundle_replica(bundle, match_replica_container,
+                                         &match_data);
         return match_data.container;
     }
 
@@ -381,9 +382,9 @@ compatible_container(const pe_resource_t *dependent, pe_resource_t *bundle)
     scratch = g_hash_table_get_values(dependent->allowed_nodes);
     scratch = pcmk__sort_nodes(scratch, NULL);
     for (const GList *iter = scratch; iter != NULL; iter = iter->next) {
-        match_data.node = (const pe_node_t *) iter->data;
-        pe__foreach_bundle_replica(bundle, match_replica_container,
-                                   &match_data);
+        match_data.node = iter->data;
+        pe__foreach_const_bundle_replica(bundle, match_replica_container,
+                                         &match_data);
         if (match_data.container != NULL) {
             break;
         }

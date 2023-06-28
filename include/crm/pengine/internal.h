@@ -601,6 +601,10 @@ pe_resource_t *pe__first_container(const pe_resource_t *bundle);
 void pe__foreach_bundle_replica(pe_resource_t *bundle,
                                 bool (*fn)(pe__bundle_replica_t *, void *),
                                 void *user_data);
+void pe__foreach_const_bundle_replica(const pe_resource_t *bundle,
+                                      bool (*fn)(const pe__bundle_replica_t *,
+                                                 void *),
+                                      void *user_data);
 pe_resource_t *pe__find_bundle_replica(const pe_resource_t *bundle,
                                        const pe_node_t *node);
 bool pe__bundle_needs_remote_name(pe_resource_t *rsc);
