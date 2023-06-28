@@ -859,6 +859,77 @@ crm_ipc_new(const char *name, size_t max_size)
 }
 
 /*!
+ * \internal
+ * \brief Connect a generic (not daemon-specific) IPC object
+ *
+ * \param[in,out] ipc  Generic IPC object to connect
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__connect_generic_ipc(crm_ipc_t *ipc)
+{
+    uid_t cl_uid = 0;
+    gid_t cl_gid = 0;
+    pid_t found_pid = 0;
+    uid_t found_uid = 0;
+    gid_t found_gid = 0;
+    int rc = pcmk_rc_ok;
+
+    if (ipc == NULL) {
+        return EINVAL;
+    }
+
+    ipc->need_reply = FALSE;
+    ipc->ipc = qb_ipcc_connect(ipc->server_name, ipc->buf_size);
+    if (ipc->ipc == NULL) {
+        return errno;
+    }
+
+    rc = qb_ipcc_fd_get(ipc->ipc, &ipc->pfd.fd);
+    if (rc < 0) { // -errno
+        crm_ipc_close(ipc);
+        return -rc;
+    }
+
+    rc = pcmk_daemon_user(&cl_uid, &cl_gid);
+    rc = pcmk_legacy2rc(rc);
+    if (rc != pcmk_rc_ok) {
+        crm_ipc_close(ipc);
+        return rc;
+    }
+
+    rc = is_ipc_provider_expected(ipc->ipc, ipc->pfd.fd, cl_uid, cl_gid,
+                                  &found_pid, &found_uid, &found_gid);
+    if (rc != pcmk_rc_ok) {
+        if (rc == pcmk_rc_ipc_unauthorized) {
+            crm_info("%s IPC provider authentication failed: process %lld has "
+                     "uid %lld (expected %lld) and gid %lld (expected %lld)",
+                     ipc->server_name,
+                     (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
+                     (long long) found_uid, (long long) cl_uid,
+                     (long long) found_gid, (long long) cl_gid);
+        }
+        crm_ipc_close(ipc);
+        return rc;
+    }
+
+    ipc->max_buf_size = qb_ipcc_get_buffer_size(ipc->ipc);
+    if (ipc->max_buf_size > ipc->buf_size) {
+        free(ipc->buffer);
+        ipc->buffer = calloc(ipc->max_buf_size, sizeof(char));
+        if (ipc->buffer == NULL) {
+            rc = errno;
+            crm_ipc_close(ipc);
+            return rc;
+        }
+        ipc->buf_size = ipc->max_buf_size;
+    }
+
+    return pcmk_rc_ok;
+}
+
+/*!
  * \brief Establish an IPC connection to a Pacemaker component
  *
  * \param[in,out] client  Connection instance obtained from crm_ipc_new()
@@ -870,74 +941,26 @@ crm_ipc_new(const char *name, size_t max_size)
 bool
 crm_ipc_connect(crm_ipc_t *client)
 {
-    uid_t cl_uid = 0;
-    gid_t cl_gid = 0;
-    pid_t found_pid = 0; uid_t found_uid = 0; gid_t found_gid = 0;
-    int rv;
+    int rc = pcmk__connect_generic_ipc(client);
 
-    if (client == NULL) {
-        errno = EINVAL;
-        return false;
+    if (rc == pcmk_rc_ok) {
+        return true;
     }
-
-    client->need_reply = FALSE;
-    client->ipc = qb_ipcc_connect(client->server_name, client->buf_size);
-
-    if (client->ipc == NULL) {
+    if ((client != NULL) && (client->ipc == NULL)) {
+        errno = (rc > 0)? rc : ENOTCONN;
         crm_debug("Could not establish %s IPC connection: %s (%d)",
                   client->server_name, pcmk_rc_str(errno), errno);
-        return false;
-    }
-
-    client->pfd.fd = crm_ipc_get_fd(client);
-    if (client->pfd.fd < 0) {
-        rv = errno;
-        /* message already omitted */
-        crm_ipc_close(client);
-        errno = rv;
-        return false;
-    }
-
-    rv = pcmk_daemon_user(&cl_uid, &cl_gid);
-    if (rv < 0) {
-        /* message already omitted */
-        crm_ipc_close(client);
-        errno = -rv;
-        return false;
-    }
-
-    rv = is_ipc_provider_expected(client->ipc, client->pfd.fd, cl_uid, cl_gid,
-                                  &found_pid, &found_uid, &found_gid);
-    if (rv == pcmk_rc_ipc_unauthorized) {
-        crm_err("%s IPC provider authentication failed: process %lld has "
-                "uid %lld (expected %lld) and gid %lld (expected %lld)",
-                client->server_name,
-                (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
-                (long long) found_uid, (long long) cl_uid,
-                (long long) found_gid, (long long) cl_gid);
-        crm_ipc_close(client);
+    } else if (rc == pcmk_rc_ipc_unauthorized) {
+        crm_err("%s IPC provider authentication failed",
+                (client == NULL)? "Pacemaker" : client->server_name);
         errno = ECONNABORTED;
-        return false;
-
-    } else if (rv != pcmk_rc_ok) {
-        crm_perror(LOG_ERR, "Could not verify authenticity of %s IPC provider",
-                   client->server_name);
-        crm_ipc_close(client);
-        if (rv > 0) {
-            errno = rv;
-        } else {
-            errno = ENOTCONN;
-        }
-        return false;
+    } else {
+        crm_perror(LOG_ERR,
+                   "Could not verify authenticity of %s IPC provider",
+                   (client == NULL)? "Pacemaker" : client->server_name);
+        errno = ENOTCONN;
     }
-
-    client->max_buf_size = qb_ipcc_get_buffer_size(client->ipc);
-    if (client->max_buf_size > client->buf_size) {
-        free(client->buffer);
-        client->buffer = calloc(1, client->max_buf_size);
-        client->buf_size = client->max_buf_size;
-    }
-    return true;
+    return false;
 }
 
 void

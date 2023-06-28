@@ -96,6 +96,7 @@ extern "C" {
 int pcmk__ipc_is_authentic_process_active(const char *name, uid_t refuid,
                                           gid_t refgid, pid_t *gotpid);
 
+int pcmk__connect_generic_ipc(crm_ipc_t *ipc);
 
 /*
  * Server-related
