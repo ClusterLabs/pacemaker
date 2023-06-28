@@ -1409,78 +1409,99 @@ is_ipc_provider_expected(qb_ipcc_connection_t *qb_ipc, int sock,
                          uid_t refuid, gid_t refgid,
                          pid_t *gotpid, uid_t *gotuid, gid_t *gotgid)
 {
-    int ret = 0;
-    pid_t found_pid = 0; uid_t found_uid = 0; gid_t found_gid = 0;
-#if defined(HAVE_UCRED)
-    struct ucred ucred;
-    socklen_t ucred_len = sizeof(ucred);
-#endif
+    int rc = EOPNOTSUPP;
+    pid_t found_pid = 0;
+    uid_t found_uid = 0;
+    gid_t found_gid = 0;
 
 #ifdef HAVE_QB_IPCC_AUTH_GET
-    if (qb_ipc && !qb_ipcc_auth_get(qb_ipc, &found_pid, &found_uid, &found_gid)) {
-        goto do_checks;
+    if (qb_ipc != NULL) {
+        rc = qb_ipcc_auth_get(qb_ipc, &found_pid, &found_uid, &found_gid);
+        rc = -rc; // libqb returns 0 or -errno
+        if (rc == pcmk_rc_ok) {
+            goto found;
+        }
     }
 #endif
 
-#if defined(HAVE_UCRED)
-    if (!getsockopt(sock, SOL_SOCKET, SO_PEERCRED,
-                    &ucred, &ucred_len)
-                && ucred_len == sizeof(ucred)) {
-        found_pid = ucred.pid; found_uid = ucred.uid; found_gid = ucred.gid;
+#ifdef HAVE_UCRED
+    {
+        struct ucred ucred;
+        socklen_t ucred_len = sizeof(ucred);
 
-#elif defined(HAVE_SOCKPEERCRED)
-    struct sockpeercred sockpeercred;
-    socklen_t sockpeercred_len = sizeof(sockpeercred);
-
-    if ((getsockopt(sock, SOL_SOCKET, SO_PEERCRED,
-                    &sockpeercred, &sockpeercred_len) == 0)
-        && (sockpeercred_len == sizeof(sockpeercred))) {
-        found_pid = sockpeercred.pid;
-        found_uid = sockpeercred.uid; found_gid = sockpeercred.gid;
-
-#elif defined(HAVE_GETPEEREID)
-    if (!getpeereid(sock, &found_uid, &found_gid)) {
-        found_pid = PCMK__SPECIAL_PID;  /* cannot obtain PID (FreeBSD) */
-
-#elif defined(HAVE_GETPEERUCRED)
-    ucred_t *ucred;
-    if (!getpeerucred(sock, &ucred)) {
-        errno = 0;
-        found_pid = ucred_getpid(ucred);
-        found_uid = ucred_geteuid(ucred); found_gid = ucred_getegid(ucred);
-        ret = errno;
-        ucred_free(ucred);
-        if (ret != 0) {
-            return ret;
-        }
-    }
-
-#else
-#  error "No way to authenticate a Unix socket peer"
-    errno = 0;
-    if (0) {
-#endif
-#ifdef HAVE_QB_IPCC_AUTH_GET
-    do_checks:
-#endif
-        if (gotpid != NULL) {
-            *gotpid = found_pid;
-        }
-        if (gotuid != NULL) {
-            *gotuid = found_uid;
-        }
-        if (gotgid != NULL) {
-            *gotgid = found_gid;
-        }
-        if (found_uid == 0 || found_uid == refuid || found_gid == refgid) {
-		ret = 0;
+        if (getsockopt(sock, SOL_SOCKET, SO_PEERCRED, &ucred, &ucred_len) < 0) {
+            rc = errno;
+        } else if (ucred_len != sizeof(ucred)) {
+            rc = EOPNOTSUPP;
         } else {
-                ret = pcmk_rc_ipc_unauthorized;
+            found_pid = ucred.pid;
+            found_uid = ucred.uid;
+            found_gid = ucred.gid;
+            goto found;
         }
-    } else {
-        ret = (errno > 0) ? errno : pcmk_rc_error;
     }
-    return ret;
+#endif
+
+#ifdef HAVE_SOCKPEERCRED
+    {
+        struct sockpeercred sockpeercred;
+        socklen_t sockpeercred_len = sizeof(sockpeercred);
+
+        if (getsockopt(sock, SOL_SOCKET, SO_PEERCRED,
+                       &sockpeercred, &sockpeercred_len) < 0) {
+            rc = errno;
+        } else if (sockpeercred_len != sizeof(sockpeercred)) {
+            rc = EOPNOTSUPP;
+        } else {
+            found_pid = sockpeercred.pid;
+            found_uid = sockpeercred.uid;
+            found_gid = sockpeercred.gid;
+            goto found;
+        }
+    }
+#endif
+
+#ifdef HAVE_GETPEEREID // For example, FreeBSD
+    if (getpeereid(sock, &found_uid, &found_gid) < 0) {
+        rc = errno;
+    } else {
+        found_pid = PCMK__SPECIAL_PID;
+        goto found;
+    }
+#endif
+
+#ifdef HAVE_GETPEERUCRED
+    {
+        ucred_t *ucred = NULL;
+
+        if (getpeerucred(sock, &ucred) < 0) {
+            rc = errno;
+        } else {
+            found_pid = ucred_getpid(ucred);
+            found_uid = ucred_geteuid(ucred);
+            found_gid = ucred_getegid(ucred);
+            ucred_free(ucred);
+            goto found;
+        }
+    }
+#endif
+
+    return rc; // If we get here, nothing succeeded
+
+found:
+    if (gotpid != NULL) {
+        *gotpid = found_pid;
+    }
+    if (gotuid != NULL) {
+        *gotuid = found_uid;
+    }
+    if (gotgid != NULL) {
+        *gotgid = found_gid;
+    }
+    if ((found_uid != 0) && (found_uid != refuid) && (found_gid != refgid)) {
+        return pcmk_rc_ipc_unauthorized;
+    }
+    return pcmk_rc_ok;
 }
 
 int
