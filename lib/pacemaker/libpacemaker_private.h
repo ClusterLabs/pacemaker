@@ -484,16 +484,20 @@ G_GNUC_INTERNAL
 void pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-void pcmk__add_this_with(GList **list, const pcmk__colocation_t *colocation);
+void pcmk__add_this_with(GList **list, const pcmk__colocation_t *colocation,
+                         const pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
-void pcmk__add_this_with_list(GList **list, GList *addition);
+void pcmk__add_this_with_list(GList **list, GList *addition,
+                              const pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
-void pcmk__add_with_this(GList **list, const pcmk__colocation_t *colocation);
+void pcmk__add_with_this(GList **list, const pcmk__colocation_t *colocation,
+                         const pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
-void pcmk__add_with_this_list(GList **list, GList *addition);
+void pcmk__add_with_this_list(GList **list, GList *addition,
+                              const pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
 GList *pcmk__with_this_colocations(const pe_resource_t *rsc);

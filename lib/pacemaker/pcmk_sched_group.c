@@ -677,7 +677,7 @@ pcmk__with_group_colocations(const pe_resource_t *rsc,
     if ((rsc == orig_rsc) || (orig_rsc == pe__last_group_member(rsc))) {
         crm_trace("Adding 'with %s' colocations to list for %s",
                   rsc->id, orig_rsc->id);
-        pcmk__add_with_this_list(list, rsc->rsc_cons_lhs);
+        pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
         if (rsc->parent != NULL) { // Cloned group
             rsc->parent->cmds->with_this_colocations(rsc->parent, orig_rsc,
                                                      list);
@@ -705,7 +705,7 @@ pcmk__group_with_colocations(const pe_resource_t *rsc,
         || (orig_rsc == (const pe_resource_t *) rsc->children->data)) {
         crm_trace("Adding '%s with' colocations to list for %s",
                   rsc->id, orig_rsc->id);
-        pcmk__add_this_with_list(list, rsc->rsc_cons);
+        pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
         if (rsc->parent != NULL) { // Cloned group
             rsc->parent->cmds->this_with_colocations(rsc->parent, orig_rsc,
                                                      list);
@@ -735,7 +735,7 @@ pcmk__group_with_colocations(const pe_resource_t *rsc,
 
                 colocation = (const pcmk__colocation_t *) cons_iter->data;
                 if (colocation->score == INFINITY) {
-                    pcmk__add_this_with(list, colocation);
+                    pcmk__add_this_with(list, colocation, orig_rsc);
                 }
             }
             // @TODO Add mandatory (or all?) clone constraints if cloned
