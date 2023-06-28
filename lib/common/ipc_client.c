@@ -1448,11 +1448,12 @@ is_ipc_provider_expected(qb_ipcc_connection_t *qb_ipc, int sock,
         errno = 0;
         found_pid = ucred_getpid(ucred);
         found_uid = ucred_geteuid(ucred); found_gid = ucred_getegid(ucred);
-        ret = -errno;
+        ret = errno;
         ucred_free(ucred);
-        if (ret) {
-            return (ret < 0) ? ret : -pcmk_err_generic;
+        if (ret != 0) {
+            return ret;
         }
+    }
 
 #else
 #  error "No way to authenticate a Unix socket peer"
