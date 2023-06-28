@@ -393,7 +393,7 @@ dispatch_ipc_source_data(const char *buffer, ssize_t length, gpointer user_data)
  *       meaning no data is available; all other values indicate errors.
  * \todo This does not allow the caller to poll multiple file descriptors at
  *       once. If there is demand for that, we could add a wrapper for
- *       crm_ipc_get_fd(api->ipc), so the caller can call poll() themselves.
+ *       pcmk__ipc_fd(api->ipc), so the caller can call poll() themselves.
  */
 int
 pcmk_poll_ipc(const pcmk_ipc_api_t *api, int timeout_ms)
@@ -404,7 +404,14 @@ pcmk_poll_ipc(const pcmk_ipc_api_t *api, int timeout_ms)
     if ((api == NULL) || (api->dispatch_type != pcmk_ipc_dispatch_poll)) {
         return EINVAL;
     }
-    pollfd.fd = crm_ipc_get_fd(api->ipc);
+
+    rc = pcmk__ipc_fd(api->ipc, &(pollfd.fd));
+    if (rc != pcmk_rc_ok) {
+        crm_debug("Could not obtain file descriptor for %s IPC: %s",
+                  pcmk_ipc_name(api, true), pcmk_rc_str(rc));
+        return rc;
+    }
+
     pollfd.events = POLLIN;
     rc = poll(&pollfd, 1, timeout_ms);
     if (rc < 0) {

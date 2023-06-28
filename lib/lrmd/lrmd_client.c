@@ -1046,7 +1046,12 @@ lrmd_ipc_connect(lrmd_t * lrmd, int *fd)
         /* No mainloop */
         native->ipc = crm_ipc_new(CRM_SYSTEM_LRMD, 0);
         if (native->ipc && crm_ipc_connect(native->ipc)) {
-            *fd = crm_ipc_get_fd(native->ipc);
+            rc = pcmk__ipc_fd(native->ipc, fd);
+            if (rc != pcmk_rc_ok) {
+                crm_err("Connection to executor failed: "
+                        "Could not get IPC file descriptor");
+                rc = -ENOTCONN;
+            }
         } else if (native->ipc) {
             crm_perror(LOG_ERR, "Connection to executor failed");
             rc = -ENOTCONN;
