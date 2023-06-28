@@ -16,7 +16,7 @@ try:
     from pacemaker._cts.CTS import CtsLab
     from pacemaker._cts.audits import audit_list
     from pacemaker._cts.logging import LogFactory
-    from pacemaker._cts.scenarios import *
+    from pacemaker._cts.scenarios import AllOnce, Boot, BootCluster, LeaveBooted, RandomTests, Sequence
     from pacemaker._cts.tests import test_list
 except ImportError as e:
     sys.stderr.write("abort: %s\n" % e)
