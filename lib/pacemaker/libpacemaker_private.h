@@ -947,6 +947,12 @@ G_GNUC_INTERNAL
 GHashTable *pcmk__copy_node_table(GHashTable *nodes);
 
 G_GNUC_INTERNAL
+void pcmk__copy_node_tables(const pe_resource_t *rsc, GHashTable **copy);
+
+G_GNUC_INTERNAL
+void pcmk__restore_node_tables(pe_resource_t *rsc, GHashTable *backup);
+
+G_GNUC_INTERNAL
 GList *pcmk__sort_nodes(GList *nodes, pe_node_t *active_node);
 
 G_GNUC_INTERNAL
