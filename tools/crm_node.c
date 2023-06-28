@@ -416,7 +416,9 @@ tools_remove_node_cache(const char *node_name, long nodeid, const char *target)
     if (!conn) {
         return -ENOTCONN;
     }
-    if (!crm_ipc_connect(conn)) {
+    rc = pcmk__connect_generic_ipc(conn);
+    if (rc != pcmk_rc_ok) {
+        errno = (rc > 0)? rc : ENOTCONN;
         crm_perror(LOG_ERR, "Connection to %s failed", target);
         crm_ipc_destroy(conn);
         return -ENOTCONN;

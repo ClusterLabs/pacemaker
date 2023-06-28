@@ -881,9 +881,9 @@ pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
     CRM_CHECK((ipc != NULL) && (callbacks != NULL), return EINVAL);
 
     ipc_name = pcmk__s(crm_ipc_name(ipc), "Pacemaker");
-    if (!crm_ipc_connect(ipc)) {
-        int rc = errno;
-        crm_debug("Connection to %s failed: %d", ipc_name, errno);
+    rc = pcmk__connect_generic_ipc(ipc);
+    if (rc != pcmk_rc_ok) {
+        crm_debug("Connection to %s failed: %s", ipc_name, pcmk_rc_str(rc));
         return rc;
     }
 

@@ -230,7 +230,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (crm_ipc_connect(old_instance)) {
+    if (pcmk__connect_generic_ipc(old_instance) == pcmk_rc_ok) {
         /* IPC end-point already up */
         crm_ipc_close(old_instance);
         crm_ipc_destroy(old_instance);

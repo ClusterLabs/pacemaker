@@ -476,16 +476,17 @@ connect_with_main_loop(pcmk_ipc_api_t *api)
 static int
 connect_without_main_loop(pcmk_ipc_api_t *api)
 {
-    int rc;
+    int rc = pcmk__connect_generic_ipc(api->ipc);
 
-    if (!crm_ipc_connect(api->ipc)) {
-        rc = errno;
+    if (rc != pcmk_rc_ok) {
+        crm_err("Could not connect to %s IPC: %s",
+                pcmk_ipc_name(api, true), pcmk_rc_str(rc));
         crm_ipc_close(api->ipc);
-        return rc;
+    } else {
+        crm_debug("Connected to %s IPC (without main loop)",
+                  pcmk_ipc_name(api, true));
     }
-    crm_debug("Connected to %s IPC (without main loop)",
-              pcmk_ipc_name(api, true));
-    return pcmk_rc_ok;
+    return rc;
 }
 
 /*!
