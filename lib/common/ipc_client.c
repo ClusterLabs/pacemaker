@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -926,8 +926,6 @@ crm_ipc_connect(crm_ipc_t *client)
         }
         return false;
     }
-
-    qb_ipcc_context_set(client->ipc, client);
 
     client->max_buf_size = qb_ipcc_get_buffer_size(client->ipc);
     if (client->max_buf_size > client->buf_size) {
