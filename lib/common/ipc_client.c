@@ -1432,9 +1432,9 @@ is_ipc_provider_expected(qb_ipcc_connection_t *qb_ipc, int sock,
     struct sockpeercred sockpeercred;
     socklen_t sockpeercred_len = sizeof(sockpeercred);
 
-    if (!getsockopt(sock, SOL_SOCKET, SO_PEERCRED,
-                    &sockpeercred, &sockpeercred_len)
-                && sockpeercred_len == sizeof(sockpeercred_len)) {
+    if ((getsockopt(sock, SOL_SOCKET, SO_PEERCRED,
+                    &sockpeercred, &sockpeercred_len) == 0)
+        && (sockpeercred_len == sizeof(sockpeercred))) {
         found_pid = sockpeercred.pid;
         found_uid = sockpeercred.uid; found_gid = sockpeercred.gid;
 
