@@ -505,13 +505,14 @@ pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force)
 
 /*!
  * \internal
- * \brief Remove any assignment of a specified resource to a node
+ * \brief Remove any node assignment from a specified resource and its children
  *
  * If a specified resource has been assigned to a node, remove that assignment
- * and mark the resource as provisional again. This is not done recursively for
- * children, so it should be called only for primitives.
+ * and mark the resource as provisional again.
  *
  * \param[in,out] rsc  Resource to unassign
+ *
+ * \note This function is called recursively on \p rsc and its children.
  */
 void
 pcmk__unassign_resource(pe_resource_t *rsc)
@@ -519,21 +520,33 @@ pcmk__unassign_resource(pe_resource_t *rsc)
     pe_node_t *old = rsc->allocated_to;
 
     if (old == NULL) {
+        crm_info("Unassigning %s", rsc->id);
+    } else {
+        crm_info("Unassigning %s from %s", rsc->id, pe__node_name(old));
+    }
+
+    pe__set_resource_flags(rsc, pe_rsc_provisional);
+
+    if (rsc->children == NULL) {
+        if (old == NULL) {
+            return;
+        }
+        rsc->allocated_to = NULL;
+
+        /* We're going to free the pe_node_t, but its details member is shared
+         * and will remain, so update that appropriately first.
+         */
+        old->details->allocated_rsc = g_list_remove(old->details->allocated_rsc,
+                                                    rsc);
+        old->details->num_resources--;
+        pcmk__release_node_capacity(old->details->utilization, rsc);
+        free(old);
         return;
     }
 
-    crm_info("Unassigning %s from %s", rsc->id, pe__node_name(old));
-    pe__set_resource_flags(rsc, pe_rsc_provisional);
-    rsc->allocated_to = NULL;
-
-    /* We're going to free the pe_node_t, but its details member is shared and
-     * will remain, so update that appropriately first.
-     */
-    old->details->allocated_rsc = g_list_remove(old->details->allocated_rsc,
-                                                rsc);
-    old->details->num_resources--;
-    pcmk__release_node_capacity(old->details->utilization, rsc);
-    free(old);
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        pcmk__unassign_resource((pe_resource_t *) iter->data);
+    }
 }
 
 /*!
