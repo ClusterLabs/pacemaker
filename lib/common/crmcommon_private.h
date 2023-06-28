@@ -266,47 +266,6 @@ pcmk__ipc_methods_t *pcmk__schedulerd_api_methods(void);
 //! XML has been moved
 #define PCMK__XML_PREFIX_MOVED "+~"
 
-/*!
- * \brief Check the authenticity of the IPC socket peer process
- *
- * If everything goes well, peer's authenticity is verified by the means
- * of comparing against provided referential UID and GID (either satisfies),
- * and the result of this check can be deduced from the return value.
- * As an exception, detected UID of 0 ("root") satisfies arbitrary
- * provided referential daemon's credentials.
- *
- * \param[in]  qb_ipc  libqb client connection if available
- * \param[in]  sock    IPC related, connected Unix socket to check peer of
- * \param[in]  refuid  referential UID to check against
- * \param[in]  refgid  referential GID to check against
- * \param[out] gotpid  to optionally store obtained PID of the peer
- *                     (not available on FreeBSD, special value of 1
- *                     used instead, and the caller is required to
- *                     special case this value respectively)
- * \param[out] gotuid  to optionally store obtained UID of the peer
- * \param[out] gotgid  to optionally store obtained GID of the peer
- *
- * \return Standard Pacemaker return code
- *         ie: 0 if it the connection is authentic
- *         pcmk_rc_ipc_unauthorized if the connection is not authentic,
- *         standard errors.
- *
- * \note While this function is tolerant on what constitutes authorized
- *       IPC daemon process (its effective user matches UID=0 or \p refuid,
- *       or at least its group matches \p refgid), either or both (in case
- *       of UID=0) mismatches on the expected credentials of such peer
- *       process \e shall be investigated at the caller when value of 1
- *       gets returned there, since higher-than-expected privileges in
- *       respect to the expected/intended credentials possibly violate
- *       the least privilege principle and may pose an additional risk
- *       (i.e. such accidental inconsistency shall be eventually fixed).
- */
-int pcmk__crm_ipc_is_authentic_process(qb_ipcc_connection_t *qb_ipc, int sock,
-                                       uid_t refuid, gid_t refgid,
-                                       pid_t *gotpid, uid_t *gotuid,
-                                       gid_t *gotgid);
-
-
 /*
  * Output
  */

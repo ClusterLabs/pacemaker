@@ -31,6 +31,10 @@
 #include <crm/common/ipc_internal.h>
 #include "crmcommon_private.h"
 
+static int is_ipc_provider_expected(qb_ipcc_connection_t *qb_ipc, int sock,
+                                    uid_t refuid, gid_t refgid, pid_t *gotpid,
+                                    uid_t *gotuid, gid_t *gotgid);
+
 /*!
  * \brief Create a new object for using Pacemaker daemon IPC
  *
@@ -902,9 +906,9 @@ crm_ipc_connect(crm_ipc_t *client)
         return false;
     }
 
-    if ((rv = pcmk__crm_ipc_is_authentic_process(client->ipc, client->pfd.fd, cl_uid, cl_gid,
-                                                  &found_pid, &found_uid,
-                                                  &found_gid)) == pcmk_rc_ipc_unauthorized) {
+    rv = is_ipc_provider_expected(client->ipc, client->pfd.fd, cl_uid, cl_gid,
+                                  &found_pid, &found_uid, &found_gid);
+    if (rv == pcmk_rc_ipc_unauthorized) {
         crm_err("%s IPC provider authentication failed: process %lld has "
                 "uid %lld (expected %lld) and gid %lld (expected %lld)",
                 client->server_name,
@@ -1383,9 +1387,27 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
     return rc;
 }
 
-int
-pcmk__crm_ipc_is_authentic_process(qb_ipcc_connection_t *qb_ipc, int sock, uid_t refuid, gid_t refgid,
-                                   pid_t *gotpid, uid_t *gotuid, gid_t *gotgid)
+/*!
+ * \brief Ensure an IPC provider has expected user or group
+ *
+ * \param[in]  qb_ipc  libqb client connection if available
+ * \param[in]  sock    Connected Unix socket for IPC
+ * \param[in]  refuid  Expected user ID
+ * \param[in]  refgid  Expected group ID
+ * \param[out] gotpid  If not NULL, where to store provider's actual process ID
+ *                     (or 1 on platforms where ID is not available)
+ * \param[out] gotuid  If not NULL, where to store provider's actual user ID
+ * \param[out] gotgid  If not NULL, where to store provider's actual group ID
+ *
+ * \return Standard Pacemaker return code
+ * \note An actual user ID of 0 (root) will always be considered authorized,
+ *       regardless of the expected values provided. The caller can use the
+ *       output arguments to be stricter than this function.
+ */
+static int
+is_ipc_provider_expected(qb_ipcc_connection_t *qb_ipc, int sock,
+                         uid_t refuid, gid_t refgid,
+                         pid_t *gotpid, uid_t *gotuid, gid_t *gotgid)
 {
     int ret = 0;
     pid_t found_pid = 0; uid_t found_uid = 0; gid_t found_gid = 0;
@@ -1464,8 +1486,8 @@ int
 crm_ipc_is_authentic_process(int sock, uid_t refuid, gid_t refgid,
                              pid_t *gotpid, uid_t *gotuid, gid_t *gotgid)
 {
-    int ret  = pcmk__crm_ipc_is_authentic_process(NULL, sock, refuid, refgid,
-                                                  gotpid, gotuid, gotgid);
+    int ret = is_ipc_provider_expected(NULL, sock, refuid, refgid,
+                                       gotpid, gotuid, gotgid);
 
     /* The old function had some very odd return codes*/
     if (ret == 0) {
@@ -1526,8 +1548,8 @@ pcmk__ipc_is_authentic_process_active(const char *name, uid_t refuid,
         goto bail;
     }
 
-    auth_rc = pcmk__crm_ipc_is_authentic_process(c, fd, refuid, refgid, &found_pid,
-                                                 &found_uid, &found_gid);
+    auth_rc = is_ipc_provider_expected(c, fd, refuid, refgid,
+                                       &found_pid, &found_uid, &found_gid);
     if (auth_rc == pcmk_rc_ipc_unauthorized) {
         crm_err("Daemon (IPC %s) effectively blocked with unauthorized"
                 " process %lld (uid: %lld, gid: %lld)",
