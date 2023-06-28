@@ -1002,18 +1002,40 @@ crm_ipc_destroy(crm_ipc_t * client)
     }
 }
 
+/*!
+ * \internal
+ * \brief Get the file descriptor for a generic IPC object
+ *
+ * \param[in,out] ipc  Generic IPC object to get file descriptor for
+ * \param[out]    fd   Where to store file descriptor
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__ipc_fd(crm_ipc_t *ipc, int *fd)
+{
+    if ((ipc == NULL) || (fd == NULL)) {
+        return EINVAL;
+    }
+    if ((ipc->ipc == NULL) || (ipc->pfd.fd < 0)) {
+        return ENOTCONN;
+    }
+    *fd = ipc->pfd.fd;
+    return pcmk_rc_ok;
+}
+
 int
 crm_ipc_get_fd(crm_ipc_t * client)
 {
-    int fd = 0;
+    int fd = -1;
 
-    if (client && client->ipc && (qb_ipcc_fd_get(client->ipc, &fd) == 0)) {
-        return fd;
+    if (pcmk__ipc_fd(client, &fd) != pcmk_rc_ok) {
+        crm_err("Could not obtain file descriptor for %s IPC",
+                ((client == NULL)? "unspecified" : client->server_name));
+        errno = EINVAL;
+        return -EINVAL;
     }
-    errno = EINVAL;
-    crm_perror(LOG_ERR, "Could not obtain file descriptor for %s IPC",
-               (client? client->server_name : "unspecified"));
-    return -errno;
+    return fd;
 }
 
 bool
