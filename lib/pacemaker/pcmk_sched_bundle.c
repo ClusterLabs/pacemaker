@@ -403,13 +403,13 @@ struct coloc_data {
  * \internal
  * \brief Apply a colocation score to replica node scores or resource priority
  *
- * \param[in,out] replica    Replica to apply colocation score to
+ * \param[in]     replica    Replica of primary bundle resource in colocation
  * \param[in,out] user_data  struct coloc_data for colocation being applied
  *
  * \return true (to indicate that any further replicas should be processed)
  */
 static bool
-replica_apply_coloc_score(pe__bundle_replica_t *replica, void *user_data)
+replica_apply_coloc_score(const pe__bundle_replica_t *replica, void *user_data)
 {
     struct coloc_data *coloc_data = user_data;
     pe_node_t *chosen = NULL;
@@ -452,12 +452,13 @@ replica_apply_coloc_score(pe__bundle_replica_t *replica, void *user_data)
  * we are choosing promotable clone instance roles).
  *
  * \param[in,out] dependent      Dependent resource in colocation
- * \param[in,out] primary        Primary resource in colocation
+ * \param[in]     primary        Primary resource in colocation
  * \param[in]     colocation     Colocation constraint to apply
  * \param[in]     for_dependent  true if called on behalf of dependent
  */
 void
-pcmk__bundle_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
+pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
+                               const pe_resource_t *primary,
                                const pcmk__colocation_t *colocation,
                                bool for_dependent)
 {
@@ -486,9 +487,9 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
      * of its instances. Look for a compatible instance of this bundle.
      */
     if (colocation->dependent->variant > pe_group) {
-        pe_resource_t *primary_container = NULL;
+        const pe_resource_t *primary_container = compatible_container(dependent,
+                                                                      primary);
 
-        primary_container = compatible_container(dependent, primary);
         if (primary_container != NULL) { // Success, we found one
             pe_rsc_debug(primary, "Pairing %s with %s",
                          dependent->id, primary_container->id);
@@ -509,7 +510,8 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
         return;
     }
 
-    pe__foreach_bundle_replica(primary, replica_apply_coloc_score, &coloc_data);
+    pe__foreach_const_bundle_replica(primary, replica_apply_coloc_score,
+                                     &coloc_data);
 
     if (colocation->score >= INFINITY) {
         node_list_exclude(dependent->allowed_nodes, coloc_data.container_hosts,
