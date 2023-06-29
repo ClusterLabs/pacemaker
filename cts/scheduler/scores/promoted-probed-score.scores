@@ -4,8 +4,8 @@ AdminDrbd:1 promotion score on orestes-corosync.nevis.columbia.edu: INFINITY
 pcmk__clone_assign: AdminClone allocation score on hypatia-corosync.nevis.columbia.edu: 0
 pcmk__clone_assign: AdminClone allocation score on orestes-corosync.nevis.columbia.edu: INFINITY
 pcmk__clone_assign: AdminDrbd:0 allocation score on hypatia-corosync.nevis.columbia.edu: 5
-pcmk__clone_assign: AdminDrbd:0 allocation score on orestes-corosync.nevis.columbia.edu: 0
-pcmk__clone_assign: AdminDrbd:1 allocation score on hypatia-corosync.nevis.columbia.edu: 0
+pcmk__clone_assign: AdminDrbd:0 allocation score on orestes-corosync.nevis.columbia.edu: 5
+pcmk__clone_assign: AdminDrbd:1 allocation score on hypatia-corosync.nevis.columbia.edu: 5
 pcmk__clone_assign: AdminDrbd:1 allocation score on orestes-corosync.nevis.columbia.edu: 5
 pcmk__clone_assign: AdminLvm:0 allocation score on hypatia-corosync.nevis.columbia.edu: 0
 pcmk__clone_assign: AdminLvm:0 allocation score on orestes-corosync.nevis.columbia.edu: 0
@@ -272,7 +272,7 @@ pcmk__group_assign: Xinetd:0 allocation score on orestes-corosync.nevis.columbia
 pcmk__group_assign: Xinetd:1 allocation score on hypatia-corosync.nevis.columbia.edu: -INFINITY
 pcmk__group_assign: Xinetd:1 allocation score on orestes-corosync.nevis.columbia.edu: 0
 pcmk__primitive_assign: AdminDrbd:0 allocation score on hypatia-corosync.nevis.columbia.edu: 5
-pcmk__primitive_assign: AdminDrbd:0 allocation score on orestes-corosync.nevis.columbia.edu: 0
+pcmk__primitive_assign: AdminDrbd:0 allocation score on orestes-corosync.nevis.columbia.edu: 5
 pcmk__primitive_assign: AdminDrbd:1 allocation score on hypatia-corosync.nevis.columbia.edu: -INFINITY
 pcmk__primitive_assign: AdminDrbd:1 allocation score on orestes-corosync.nevis.columbia.edu: 5
 pcmk__primitive_assign: AdminLvm:0 allocation score on hypatia-corosync.nevis.columbia.edu: 5
