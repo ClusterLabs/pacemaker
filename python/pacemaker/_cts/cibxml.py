@@ -8,6 +8,48 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 import sys
 
 
+def key_val_string(**kwargs):
+    """ Given keyword arguments as key=value pairs, construct a single string
+        containing all those pairs separated by spaces.  This is suitable for
+        using in an XML element as a list of its attributes.
+
+        Any pairs that have value=None will be skipped.
+
+        Note that a dictionary can be passed to this function instead of kwargs
+        by using a construction like:
+
+        key_val_string(**{"a": 1, "b": 2})
+    """
+
+    retval = ""
+
+    for (k, v) in kwargs.items():
+        if v is None:
+            continue
+
+        retval += ' %s="%s"' % (k, v)
+
+    return retval
+
+
+def element(element_name, **kwargs):
+    """ Create an XML element string with the given element_name and attributes.
+        This element does not support having any children, so it will be closed
+        on the same line.  The attributes are processed by key_val_string.
+    """
+
+    return "<%s %s/>" % (element_name, key_val_string(**kwargs))
+
+
+def containing_element(element_name, inner, **kwargs):
+    """ Like element, but surrounds some child text passed by the inner
+        parameter.
+    """
+
+    attrs = key_val_string(**kwargs)
+    return "<%s %s>%s</%s>" % (element_name, attrs, inner, element_name)
+
+
 class CibBase:
     def __init__(self, factory, tag, _id, **kwargs):
         self._children = []
@@ -35,8 +77,8 @@ class XmlBase(CibBase):
         text = '''<%s''' % self._tag
         if self.name:
             text += ''' id="%s"''' % self.name
-        for (k, v) in self._kwargs.items():
-            text += ''' %s="%s"''' % (k, v)
+
+        text += key_val_string(**self._kwargs)
 
         if not self._children:
             text += '''/>'''
@@ -253,41 +295,45 @@ class Resource(XmlBase):
         text = "<constraints>"
 
         for (k, v) in self._scores.items():
-            text += '''<rsc_location id="prefer-%s" rsc="%s">''' % (k, self.name)
-            text += v.show()
+            attrs = {"id": "prefer-%s" % k, "rsc": self.name}
+            text += containing_element("rsc_location", v.show(), **attrs)
 
         for (k, kargs) in self._needs.items():
-            text += '''<rsc_order id="%s-after-%s" first="%s" then="%s"''' % (self.name, k, k, self.name)
-            for (kw, kw_v) in kargs.items():
-                text += ''' %s="%s"''' % (kw, kw_v)
-            text += '''/>'''
+            attrs = {"id": "%s-after-%s" % (self.name, k), "first": k, "then": self.name}
+            text += element("rsc_order", **attrs, **kargs)
 
         for (k, kargs) in self._coloc.items():
-            text += '''<rsc_colocation id="%s-with-%s" rsc="%s" with-rsc="%s"''' % (self.name, k, self.name, k)
-            for (kw, kw_v) in kargs.items():
-                text += ''' %s="%s"''' % (kw, kw_v)
-            text += '''/>'''
+            attrs = {"id": "%s-with-%s" % (self.name, k), "rsc": self.name, "with-rsc": k}
+            text += element("rsc_colocation", **attrs)
 
         text += "</constraints>"
         return text
 
     def show(self):
         text = '''<primitive id="%s" class="%s" type="%s"''' % (self.name, self._standard, self._rtype)
+
         if self._provider:
             text += ''' provider="%s"''' % self._provider
+
         text += '''>'''
 
         if len(self._meta) > 0:
-            text += '''<meta_attributes id="%s-meta">''' % self.name
+            nvpairs = ""
             for (p, v) in self._meta.items():
-                text += '''<nvpair id="%s-%s" name="%s" value="%s"/>''' % (self.name, p, p, v)
-            text += '''</meta_attributes>'''
+                attrs = {"id": "%s-%s" % (self.name, p), "name": p, "value": v}
+                nvpairs += element("nvpair", **attrs)
+
+            text += containing_element("meta_attributes", nvpairs,
+                                       id="%s-meta" % self.name)
 
         if len(self._param) > 0:
-            text += '''<instance_attributes id="%s-params">''' % self.name
+            nvpairs = ""
             for (p, v) in self._param.items():
-                text += '''<nvpair id="%s-%s" name="%s" value="%s"/>''' % (self.name, p, p, v)
-            text += '''</instance_attributes>'''
+                attrs = {"id": "%s-%s" % (self.name, p), "name": p, "value": v}
+                nvpairs += element("nvpair", **attrs)
+
+            text += containing_element("instance_attributes", nvpairs,
+                                       id="%s-params" % self.name)
 
         if len(self._op) > 0:
             text += '''<operations>'''
@@ -320,10 +366,13 @@ class Group(Resource):
         text = '''<%s id="%s">''' % (self.tag, self.name)
 
         if len(self._meta) > 0:
-            text += '''<meta_attributes id="%s-meta">''' % self.name
+            nvpairs = ""
             for (p, v) in self._meta.items():
-                text += '''<nvpair id="%s-%s" name="%s" value="%s"/>''' % (self.name, p, p, v)
-            text += '''</meta_attributes>'''
+                attrs = {"id": "%s-%s" % (self.name, p), "name": p, "value": v}
+                nvpairs += element("nvpair", **attrs)
+
+            text += containing_element("meta_attributes", nvpairs,
+                                       id="%s-meta" % self.name)
 
         for c in self._children:
             text += c.show()
