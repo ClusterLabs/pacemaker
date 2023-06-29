@@ -479,12 +479,82 @@ connect_without_main_loop(pcmk_ipc_api_t *api)
     int rc = pcmk__connect_generic_ipc(api->ipc);
 
     if (rc != pcmk_rc_ok) {
-        crm_err("Could not connect to %s IPC: %s",
-                pcmk_ipc_name(api, true), pcmk_rc_str(rc));
         crm_ipc_close(api->ipc);
     } else {
         crm_debug("Connected to %s IPC (without main loop)",
                   pcmk_ipc_name(api, true));
+    }
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Connect to a Pacemaker daemon via IPC (retrying after soft errors)
+ *
+ * \param[in,out] api            IPC API instance
+ * \param[in]     dispatch_type  How IPC replies should be dispatched
+ * \param[in]     attempts       How many times to try (in case of soft error)
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__connect_ipc(pcmk_ipc_api_t *api, enum pcmk_ipc_dispatch dispatch_type,
+                  int attempts)
+{
+    int rc = pcmk_rc_ok;
+
+    if ((api == NULL) || (attempts < 1)) {
+        return EINVAL;
+    }
+
+    if (api->ipc == NULL) {
+        api->ipc = crm_ipc_new(pcmk_ipc_name(api, false), api->ipc_size_max);
+        if (api->ipc == NULL) {
+            return ENOMEM;
+        }
+    }
+
+    if (crm_ipc_connected(api->ipc)) {
+        crm_trace("Already connected to %s", pcmk_ipc_name(api, true));
+        return pcmk_rc_ok;
+    }
+
+    api->dispatch_type = dispatch_type;
+
+    crm_debug("Attempting connection to %s (up to %d time%s)",
+              pcmk_ipc_name(api, true), attempts, pcmk__plural_s(attempts));
+    for (int remaining = attempts - 1; remaining >= 0; --remaining) {
+        switch (dispatch_type) {
+            case pcmk_ipc_dispatch_main:
+                rc = connect_with_main_loop(api);
+                break;
+
+            case pcmk_ipc_dispatch_sync:
+            case pcmk_ipc_dispatch_poll:
+                rc = connect_without_main_loop(api);
+                break;
+        }
+
+        if ((remaining == 0) || ((rc != EAGAIN) && (rc != EALREADY))) {
+            break; // Result is final
+        }
+
+        // Retry after soft error (interrupted by signal, etc.)
+        pcmk__sleep_ms((attempts - remaining) * 500);
+        crm_debug("Re-attempting connection to %s (%d attempt%s remaining)",
+                  pcmk_ipc_name(api, true), remaining,
+                  pcmk__plural_s(remaining));
+    }
+
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    if ((api->cmds != NULL) && (api->cmds->post_connect != NULL)) {
+        rc = api->cmds->post_connect(api);
+        if (rc != pcmk_rc_ok) {
+            crm_ipc_close(api->ipc);
+        }
     }
     return rc;
 }
@@ -500,64 +570,11 @@ connect_without_main_loop(pcmk_ipc_api_t *api)
 int
 pcmk_connect_ipc(pcmk_ipc_api_t *api, enum pcmk_ipc_dispatch dispatch_type)
 {
-    const int n_attempts = 2;
-    int rc = pcmk_rc_ok;
-
-    if (api == NULL) {
-        crm_err("Cannot connect to uninitialized API object");
-        return EINVAL;
-    }
-
-    if (api->ipc == NULL) {
-        api->ipc = crm_ipc_new(pcmk_ipc_name(api, false),
-                                  api->ipc_size_max);
-        if (api->ipc == NULL) {
-            crm_err("Failed to re-create IPC API");
-            return ENOMEM;
-        }
-    }
-
-    if (crm_ipc_connected(api->ipc)) {
-        crm_trace("Already connected to %s IPC API", pcmk_ipc_name(api, true));
-        return pcmk_rc_ok;
-    }
-
-    api->dispatch_type = dispatch_type;
-
-    for (int i = 0; i < n_attempts; i++) {
-        switch (dispatch_type) {
-            case pcmk_ipc_dispatch_main:
-                rc = connect_with_main_loop(api);
-                break;
-
-            case pcmk_ipc_dispatch_sync:
-            case pcmk_ipc_dispatch_poll:
-                rc = connect_without_main_loop(api);
-                break;
-        }
-
-        if (rc != EAGAIN) {
-            break;
-        }
-
-        /* EAGAIN may occur due to interruption by a signal or due to some
-         * transient issue. Try one more time to be more resilient.
-         */
-        if (i < (n_attempts - 1)) {
-            crm_trace("Connection to %s IPC API failed with EAGAIN, retrying",
-                      pcmk_ipc_name(api, true));
-        }
-    }
+    int rc = pcmk__connect_ipc(api, dispatch_type, 2);
 
     if (rc != pcmk_rc_ok) {
-        return rc;
-    }
-
-    if ((api->cmds != NULL) && (api->cmds->post_connect != NULL)) {
-        rc = api->cmds->post_connect(api);
-        if (rc != pcmk_rc_ok) {
-            crm_ipc_close(api->ipc);
-        }
+        crm_err("Connection to %s failed: %s",
+                pcmk_ipc_name(api, true), pcmk_rc_str(rc));
     }
     return rc;
 }
