@@ -9,107 +9,111 @@ import sys
 
 
 class CibBase:
-    def __init__(self, Factory, tag, _id, **kwargs):
-        self.tag = tag
+    def __init__(self, factory, tag, _id, **kwargs):
+        self._children = []
+        self._factory = factory
+        self._kwargs = kwargs
+        self._tag = tag
+
         self.name = _id
-        self.kwargs = kwargs
-        self.children = []
-        self.Factory = Factory
 
     def __repr__(self):
-        return "%s-%s" % (self.tag, self.name)
+        return "%s-%s" % (self._tag, self.name)
 
     def add_child(self, child):
-        self.children.append(child)
+        self._children.append(child)
 
     def __setitem__(self, key, value):
         if value:
-            self.kwargs[key] = value
+            self._kwargs[key] = value
         else:
-            self.kwargs.pop(key, None)
+            self._kwargs.pop(key, None)
 
 
 class XmlBase(CibBase):
     def show(self):
-        text = '''<%s''' % self.tag
+        text = '''<%s''' % self._tag
         if self.name:
             text += ''' id="%s"''' % self.name
-        for (k, v) in self.kwargs.items():
+        for (k, v) in self._kwargs.items():
             text += ''' %s="%s"''' % (k, v)
 
-        if not self.children:
+        if not self._children:
             text += '''/>'''
             return text
 
         text += '''>'''
 
-        for c in self.children:
+        for c in self._children:
             text += c.show()
 
-        text += '''</%s>''' % self.tag
+        text += '''</%s>''' % self._tag
         return text
 
     def _run(self, operation, xml, section="all", options=""):
         if self.name:
             label = self.name
         else:
-            label = "<%s>" % self.tag
-        self.Factory.debug("Writing out %s" % label)
-        fixed  = "HOME=/root CIB_file=%s" % self.Factory.tmpfile
+            label = "<%s>" % self._tag
+
+        self._factory.debug("Writing out %s" % label)
+
+        fixed  = "HOME=/root CIB_file=%s" % self._factory.tmpfile
         fixed += " cibadmin --%s --scope %s %s --xml-text '%s'" % (operation, section, options, xml)
-        (rc, _) = self.Factory.rsh(self.Factory.target, fixed)
+
+        (rc, _) = self._factory.rsh(self._factory.target, fixed)
         if rc != 0:
-            self.Factory.log("Configure call failed: %s" % fixed)
+            self._factory.log("Configure call failed: %s" % fixed)
             sys.exit(1)
 
 
 class InstanceAttributes(XmlBase):
     """ Create an <instance_attributes> section with name-value pairs """
 
-    def __init__(self, Factory, name, attrs):
-        XmlBase.__init__(self, Factory, "instance_attributes", name)
+    def __init__(self, factory, name, attrs):
+        XmlBase.__init__(self, factory, "instance_attributes", name)
 
         # Create an <nvpair> for each attribute
         for (attr, value) in attrs.items():
-            self.add_child(XmlBase(Factory, "nvpair", "%s-%s" % (name, attr),
-                name=attr, value=value))
+            self.add_child(XmlBase(factory, "nvpair", "%s-%s" % (name, attr),
+                                   name=attr, value=value))
 
 
 class Node(XmlBase):
     """ Create a <node> section with node attributes for one node """
 
-    def __init__(self, Factory, node_name, node_id, node_attrs):
-        XmlBase.__init__(self, Factory, "node", node_id, uname=node_name)
-        self.add_child(InstanceAttributes(Factory, "%s-1" % node_name, node_attrs))
+    def __init__(self, factory, node_name, node_id, node_attrs):
+        XmlBase.__init__(self, factory, "node", node_id, uname=node_name)
+        self.add_child(InstanceAttributes(factory, "%s-1" % node_name, node_attrs))
 
 
 class Nodes(XmlBase):
     """ Create a <nodes> section """
 
-    def __init__(self, Factory):
-        XmlBase.__init__(self, Factory, "nodes", None)
+    def __init__(self, factory):
+        XmlBase.__init__(self, factory, "nodes", None)
 
     def add_node(self, node_name, node_id, node_attrs):
-        self.add_child(Node(self.Factory, node_name, node_id, node_attrs))
+        self.add_child(Node(self._factory, node_name, node_id, node_attrs))
 
     def commit(self):
         self._run("modify", self.show(), "configuration", "--allow-create")
 
 
 class FencingTopology(XmlBase):
-    def __init__(self, Factory):
-        XmlBase.__init__(self, Factory, "fencing-topology", None)
+    def __init__(self, factory):
+        XmlBase.__init__(self, factory, "fencing-topology", None)
 
     def level(self, index, target, devices, target_attr=None, target_value=None):
         # Generate XML ID (sanitizing target-by-attribute levels)
 
         if target:
             xml_id = "cts-%s.%d" % (target, index)
-            self.add_child(XmlBase(self.Factory, "fencing-level", xml_id, target=target, index=index, devices=devices))
+            self.add_child(XmlBase(self._factory, "fencing-level", xml_id, target=target, index=index, devices=devices))
 
         else:
             xml_id = "%s-%s.%d" % (target_attr, target_value, index)
-            child = XmlBase(self.Factory, "fencing-level", xml_id, index=index, devices=devices)
+            child = XmlBase(self._factory, "fencing-level", xml_id, index=index, devices=devices)
             child["target-attribute"]=target_attr
             child["target-value"]=target_value
             self.add_child(child)
@@ -119,40 +123,40 @@ class FencingTopology(XmlBase):
 
 
 class Option(XmlBase):
-    def __init__(self, Factory, section="cib-bootstrap-options"):
-        XmlBase.__init__(self, Factory, "cluster_property_set", section)
+    def __init__(self, factory, section="cib-bootstrap-options"):
+        XmlBase.__init__(self, factory, "cluster_property_set", section)
 
     def __setitem__(self, key, value):
-        self.add_child(XmlBase(self.Factory, "nvpair", "cts-%s" % key, name=key, value=value))
+        self.add_child(XmlBase(self._factory, "nvpair", "cts-%s" % key, name=key, value=value))
 
     def commit(self):
         self._run("modify", self.show(), "crm_config", "--allow-create")
 
 
 class OpDefaults(XmlBase):
-    def __init__(self, Factory):
-        XmlBase.__init__(self, Factory, "op_defaults", None)
-        self.meta = XmlBase(self.Factory, "meta_attributes", "cts-op_defaults-meta")
+    def __init__(self, factory):
+        XmlBase.__init__(self, factory, "op_defaults", None)
+        self.meta = XmlBase(self._factory, "meta_attributes", "cts-op_defaults-meta")
         self.add_child(self.meta)
 
     def __setitem__(self, key, value):
-        self.meta.add_child(XmlBase(self.Factory, "nvpair", "cts-op_defaults-%s" % key, name=key, value=value))
+        self.meta.add_child(XmlBase(self._factory, "nvpair", "cts-op_defaults-%s" % key, name=key, value=value))
 
     def commit(self):
         self._run("modify", self.show(), "configuration", "--allow-create")
 
 
 class Alerts(XmlBase):
-    def __init__(self, Factory):
-        XmlBase.__init__(self, Factory, "alerts", None)
-        self.alert_count = 0
+    def __init__(self, factory):
+        XmlBase.__init__(self, factory, "alerts", None)
+        self._alert_count = 0
 
     def add_alert(self, path, recipient):
-        self.alert_count += 1
-        alert = XmlBase(self.Factory, "alert", "alert-%d" % self.alert_count,
+        self._alert_count += 1
+        alert = XmlBase(self._factory, "alert", "alert-%d" % self._alert_count,
                         path=path)
-        recipient1 = XmlBase(self.Factory, "recipient",
-                             "alert-%d-recipient-1" % self.alert_count,
+        recipient1 = XmlBase(self._factory, "recipient",
+                             "alert-%d-recipient-1" % self._alert_count,
                              value=recipient)
         alert.add_child(recipient1)
         self.add_child(alert)
@@ -162,64 +166,68 @@ class Alerts(XmlBase):
 
 
 class Expression(XmlBase):
-    def __init__(self, Factory, name, attr, op, value=None):
-        XmlBase.__init__(self, Factory, "expression", name, attribute=attr, operation=op)
+    def __init__(self, factory, name, attr, op, value=None):
+        XmlBase.__init__(self, factory, "expression", name, attribute=attr, operation=op)
         if value:
             self["value"] = value
 
 
 class Rule(XmlBase):
-    def __init__(self, Factory, name, score, op="and", expr=None):
-        XmlBase.__init__(self, Factory, "rule", "%s" % name)
+    def __init__(self, factory, name, score, op="and", expr=None):
+        XmlBase.__init__(self, factory, "rule", "%s" % name)
+
         self["boolean-op"] = op
         self["score"] = score
+
         if expr:
             self.add_child(expr)
 
 
 class Resource(XmlBase):
-    def __init__(self, Factory, name, rtype, standard, provider=None):
-        XmlBase.__init__(self, Factory, "native", name)
+    def __init__(self, factory, name, rtype, standard, provider=None):
+        XmlBase.__init__(self, factory, "native", name)
 
-        self.rtype = rtype
-        self.standard = standard
-        self.provider = provider
+        self._provider = provider
+        self._rtype = rtype
+        self._standard = standard
 
-        self.op = []
-        self.meta = {}
-        self.param = {}
+        self._meta = {}
+        self._op = []
+        self._param = {}
 
-        self.scores = {}
-        self.needs = {}
-        self.coloc = {}
+        self._coloc = {}
+        self._needs = {}
+        self._scores = {}
 
-        if self.standard == "ocf" and not provider:
-            self.provider = "heartbeat"
-        elif self.standard == "lsb":
-            self.provider = None
+        if self._standard == "ocf" and not provider:
+            self._provider = "heartbeat"
+        elif self._standard == "lsb":
+            self._provider = None
 
     def __setitem__(self, key, value):
-        self.add_param(key, value)
+        self._add_param(key, value)
 
     def add_op(self, name, interval, **kwargs):
-        self.op.append(
-            XmlBase(self.Factory, "op", "%s-%s" % (name, interval), name=name, interval=interval, **kwargs))
+        self._op.append(XmlBase(self._factory, "op", "%s-%s" % (name, interval),
+                                name=name, interval=interval, **kwargs))
 
-    def add_param(self, name, value):
-        self.param[name] = value
+    def _add_param(self, name, value):
+        self._param[name] = value
 
     def add_meta(self, name, value):
-        self.meta[name] = value
+        self._meta[name] = value
 
     def prefer(self, node, score="INFINITY", rule=None):
         if not rule:
-            rule = Rule(self.Factory, "prefer-%s-r" % node, score,
-                        expr=Expression(self.Factory, "prefer-%s-e" % node, "#uname", "eq", node))
-        self.scores[node] = rule
+            rule = Rule(self._factory, "prefer-%s-r" % node, score,
+                        expr=Expression(self._factory, "prefer-%s-e" % node, "#uname", "eq", node))
+
+        self._scores[node] = rule
 
     def after(self, resource, kind="Mandatory", first="start", then="start", **kwargs):
         kargs = kwargs.copy()
         kargs["kind"] = kind
+
         if then:
             kargs["first-action"] = "start"
             kargs["then-action"] = then
@@ -227,33 +235,34 @@ class Resource(XmlBase):
         if first:
             kargs["first-action"] = first
 
-        self.needs[resource] = kargs
+        self._needs[resource] = kargs
 
     def colocate(self, resource, score="INFINITY", role=None, withrole=None, **kwargs):
         kargs = kwargs.copy()
         kargs["score"] = score
+
         if role:
             kargs["rsc-role"] = role
+
         if withrole:
             kargs["with-rsc-role"] = withrole
 
-        self.coloc[resource] = kargs
+        self._coloc[resource] = kargs
 
-    def constraints(self):
+    def _constraints(self):
         text = "<constraints>"
 
-        for (k, v) in self.scores.items():
+        for (k, v) in self._scores.items():
             text += '''<rsc_location id="prefer-%s" rsc="%s">''' % (k, self.name)
             text += v.show()
-            text += '''</rsc_location>'''
 
-        for (k, kargs) in self.needs.items():
+        for (k, kargs) in self._needs.items():
             text += '''<rsc_order id="%s-after-%s" first="%s" then="%s"''' % (self.name, k, k, self.name)
             for (kw, kw_v) in kargs.items():
                 text += ''' %s="%s"''' % (kw, kw_v)
             text += '''/>'''
 
-        for (k, kargs) in self.coloc.items():
+        for (k, kargs) in self._coloc.items():
             text += '''<rsc_colocation id="%s-with-%s" rsc="%s" with-rsc="%s"''' % (self.name, k, self.name, k)
             for (kw, kw_v) in kargs.items():
                 text += ''' %s="%s"''' % (kw, kw_v)
@@ -263,30 +272,32 @@ class Resource(XmlBase):
         return text
 
     def show(self):
-        text = '''<primitive id="%s" class="%s" type="%s"''' % (self.name, self.standard, self.rtype)
-        if self.provider:
-            text += ''' provider="%s"''' % self.provider
+        text = '''<primitive id="%s" class="%s" type="%s"''' % (self.name, self._standard, self._rtype)
+        if self._provider:
+            text += ''' provider="%s"''' % self._provider
         text += '''>'''
 
-        if len(self.meta) > 0:
+        if len(self._meta) > 0:
             text += '''<meta_attributes id="%s-meta">''' % self.name
-            for (p, v) in self.meta.items():
+            for (p, v) in self._meta.items():
                 text += '''<nvpair id="%s-%s" name="%s" value="%s"/>''' % (self.name, p, p, v)
             text += '''</meta_attributes>'''
 
-        if len(self.param) > 0:
+        if len(self._param) > 0:
             text += '''<instance_attributes id="%s-params">''' % self.name
-            for (p, v) in self.param.items():
+            for (p, v) in self._param.items():
                 text += '''<nvpair id="%s-%s" name="%s" value="%s"/>''' % (self.name, p, p, v)
             text += '''</instance_attributes>'''
 
-        if len(self.op) > 0:
+        if len(self._op) > 0:
             text += '''<operations>'''
-            for o in self.op:
+
+            for o in self._op:
                 key = o.name
                 o.name = "%s-%s" % (self.name, key)
                 text += o.show()
                 o.name = key
+
             text += '''</operations>'''
 
         text += '''</primitive>'''
@@ -294,12 +305,12 @@ class Resource(XmlBase):
 
     def commit(self):
         self._run("create", self.show(), "resources")
-        self._run("modify", self.constraints())
+        self._run("modify", self._constraints())
 
 
 class Group(Resource):
-    def __init__(self, Factory, name):
-        Resource.__init__(self, Factory, name, None, None)
+    def __init__(self, factory, name):
+        Resource.__init__(self, factory, name, None, None)
         self.tag = "group"
 
     def __setitem__(self, key, value):
@@ -308,27 +319,29 @@ class Group(Resource):
     def show(self):
         text = '''<%s id="%s">''' % (self.tag, self.name)
 
-        if len(self.meta) > 0:
+        if len(self._meta) > 0:
             text += '''<meta_attributes id="%s-meta">''' % self.name
-            for (p, v) in self.meta.items():
+            for (p, v) in self._meta.items():
                 text += '''<nvpair id="%s-%s" name="%s" value="%s"/>''' % (self.name, p, p, v)
             text += '''</meta_attributes>'''
 
-        for c in self.children:
+        for c in self._children:
             text += c.show()
+
         text += '''</%s>''' % self.tag
         return text
 
 
 class Clone(Group):
-    def __init__(self, Factory, name, child=None):
-        Group.__init__(self, Factory, name)
+    def __init__(self, factory, name, child=None):
+        Group.__init__(self, factory, name)
         self.tag = "clone"
+
         if child:
             self.add_child(child)
 
     def add_child(self, child):
-        if not self.children:
-            self.children.append(child)
+        if not self._children:
+            self._children.append(child)
         else:
-            self.Factory.log("Clones can only have a single child. Ignoring %s" % child.name)
+            self._factory.log("Clones can only have a single child. Ignoring %s" % child.name)
