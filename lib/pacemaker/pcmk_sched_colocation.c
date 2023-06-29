@@ -175,11 +175,11 @@ pcmk__add_this_with(GList **list, const pcmk__colocation_t *colocation,
     CRM_ASSERT((list != NULL) && (colocation != NULL) && (rsc != NULL));
 
     pe_rsc_trace(rsc,
-                 "Adding colocation %s (%s with %s using %s @%d) to "
+                 "Adding colocation %s (%s with %s using %s @%s) to "
                  "'this with' list for %s",
                  colocation->id, colocation->dependent->id,
                  colocation->primary->id, colocation->node_attribute,
-                 colocation->score, rsc->id);
+                 pcmk_readable_score(colocation->score), rsc->id);
     *list = g_list_insert_sorted(*list, (gpointer) colocation,
                                  cmp_primary_priority);
 }
@@ -235,11 +235,11 @@ pcmk__add_with_this(GList **list, const pcmk__colocation_t *colocation,
     CRM_ASSERT((list != NULL) && (colocation != NULL) && (rsc != NULL));
 
     pe_rsc_trace(rsc,
-                 "Adding colocation %s (%s with %s using %s @%d) to "
+                 "Adding colocation %s (%s with %s using %s @%s) to "
                  "'with this' list for %s",
                  colocation->id, colocation->dependent->id,
                  colocation->primary->id, colocation->node_attribute,
-                 colocation->score, rsc->id);
+                 pcmk_readable_score(colocation->score), rsc->id);
     *list = g_list_insert_sorted(*list, (gpointer) colocation,
                                  cmp_dependent_priority);
 }
@@ -387,10 +387,6 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
     new_con->primary_role = text2role(primary_role);
     new_con->node_attribute = pcmk__s(node_attr, CRM_ATTR_UNAME);
     new_con->flags = flags;
-
-    pe_rsc_trace(dependent, "Added colocation %s (%s with %s @%s using %s)",
-                 new_con->id, dependent->id, primary->id,
-                 pcmk_readable_score(score), new_con->node_attribute);
 
     pcmk__add_this_with(&(dependent->rsc_cons), new_con, dependent);
     pcmk__add_with_this(&(primary->rsc_cons_lhs), new_con, primary);
@@ -546,8 +542,6 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
                 other = pcmk__find_constraint_resource(data_set->resources,
                                                        xml_rsc_id);
                 CRM_ASSERT(other != NULL); // We already processed it
-                pe_rsc_trace(resource, "Anti-Colocating %s with %s",
-                             resource->id, other->id);
                 pcmk__new_colocation(set_id, NULL, local_score,
                                      resource, other, role, role, flags);
             }
@@ -555,9 +549,21 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
     }
 }
 
+/*!
+ * \internal
+ * \brief Colocate two resource sets relative to each other
+ *
+ * \param[in]     id           Colocation XML ID
+ * \param[in]     set1         Dependent set
+ * \param[in]     set2         Primary set
+ * \param[in]     score        Colocation score
+ * \param[in]     influence_s  Value of colocation's "influence" attribute
+ * \param[in,out] data_set     Cluster working set
+ */
 static void
-colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
-                  const char *influence_s, pe_working_set_t *data_set)
+colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
+                  int score, const char *influence_s,
+                  pe_working_set_t *data_set)
 {
     xmlNode *xml_rsc = NULL;
     pe_resource_t *rsc_1 = NULL;
@@ -572,8 +578,8 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
     uint32_t flags = pcmk__coloc_none;
 
     if (score == 0) {
-        crm_trace("Ignoring colocation '%s' between sets because score is 0",
-                  id);
+        crm_trace("Ignoring colocation '%s' between sets %s and %s "
+                  "because score is 0", id, ID(set1), ID(set2));
         return;
     }
 
@@ -613,12 +619,12 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
         }
     }
 
-    if ((rsc_1 != NULL) && (rsc_2 != NULL)) {
+    if ((rsc_1 != NULL) && (rsc_2 != NULL)) { // Both sets are sequential
         flags = pcmk__coloc_explicit | unpack_influence(id, rsc_1, influence_s);
         pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2, role_1, role_2,
                              flags);
 
-    } else if (rsc_1 != NULL) {
+    } else if (rsc_1 != NULL) { // Only set1 is sequential
         flags = pcmk__coloc_explicit | unpack_influence(id, rsc_1, influence_s);
         for (xml_rsc = first_named_child(set2, XML_TAG_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
@@ -627,19 +633,17 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
             rsc_2 = pcmk__find_constraint_resource(data_set->resources,
                                                    xml_rsc_id);
             if (rsc_2 == NULL) {
-                pcmk__config_err("%s: No resource found for %s",
-                                 id, xml_rsc_id);
                 // Should be possible only with validation disabled
-                pcmk__config_err("Ignoring resource %s and later in set %s "
-                                 "for colocation with set %s: No such resource",
-                                 xml_rsc_id, set2, set1);
+                pcmk__config_err("Ignoring set %s colocation with resource %s "
+                                 "and later in set %s: No such resource",
+                                 ID(set1), xml_rsc_id, ID(set2));
                 return;
             }
             pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2, role_1,
                                  role_2, flags);
         }
 
-    } else if (rsc_2 != NULL) {
+    } else if (rsc_2 != NULL) { // Only set2 is sequential
         for (xml_rsc = first_named_child(set1, XML_TAG_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
@@ -650,7 +654,7 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
                 // Should be possible only with validation disabled
                 pcmk__config_err("Ignoring resource %s and later in set %s "
                                  "for colocation with set %s: No such resource",
-                                 xml_rsc_id, set1, set2);
+                                 xml_rsc_id, ID(set1), ID(set2));
                 return;
             }
             flags = pcmk__coloc_explicit
@@ -659,7 +663,7 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
                                  role_2, flags);
         }
 
-    } else {
+    } else { // Neither set is sequential
         for (xml_rsc = first_named_child(set1, XML_TAG_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
@@ -672,7 +676,7 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
                 // Should be possible only with validation disabled
                 pcmk__config_err("Ignoring resource %s and later in set %s "
                                  "for colocation with set %s: No such resource",
-                                 xml_rsc_id, set1, set2);
+                                 xml_rsc_id, ID(set1), ID(set2));
                 return;
             }
 
@@ -687,10 +691,10 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
                                                        xml_rsc_id);
                 if (rsc_2 == NULL) {
                     // Should be possible only with validation disabled
-                    pcmk__config_err("Ignoring resource %s and later in set %s "
-                                     "for colocation with %s in set %s: "
+                    pcmk__config_err("Ignoring set %s resource %s colocation with "
+                                     "resource %s and later in set %s: "
                                      "No such resource",
-                                     xml_rsc_id, set2, ID(xml_rsc), set1);
+                                     ID(set1), ID(xml_rsc), xml_rsc_id, ID(set2));
                     return;
                 }
                 pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2,
