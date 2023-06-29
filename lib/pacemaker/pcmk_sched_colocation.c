@@ -886,22 +886,29 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
     xmlNode *expanded_xml = NULL;
 
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
-    const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
-    const char *influence_s = crm_element_value(xml_obj,
-                                                XML_COLOC_ATTR_INFLUENCE);
+    const char *score = NULL;
+    const char *influence_s = NULL;
 
-    if (score) {
-        score_i = char2score(score);
+    if (pcmk__str_empty(id)) {
+        pcmk__config_err("Ignoring " XML_CONS_TAG_RSC_DEPEND
+                         " without " CRM_ATTR_ID);
+        return;
     }
 
     if (unpack_colocation_tags(xml_obj, &expanded_xml,
                                data_set) != pcmk_rc_ok) {
         return;
     }
-    if (expanded_xml) {
+    if (expanded_xml != NULL) {
         orig_xml = xml_obj;
         xml_obj = expanded_xml;
     }
+
+    score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
+    if (score != NULL) {
+        score_i = char2score(score);
+    }
+    influence_s = crm_element_value(xml_obj, XML_COLOC_ATTR_INFLUENCE);
 
     for (set = first_named_child(xml_obj, XML_CONS_TAG_RSC_SET); set != NULL;
          set = crm_next_same_xml(set)) {
@@ -914,6 +921,11 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
             return;
         }
 
+        if (pcmk__str_empty(ID(set))) {
+            pcmk__config_err("Ignoring " XML_CONS_TAG_RSC_SET
+                             " without " CRM_ATTR_ID);
+            continue;
+        }
         unpack_colocation_set(set, score_i, id, influence_s, data_set);
 
         if (last != NULL) {
