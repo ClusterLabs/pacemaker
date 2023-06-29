@@ -20,11 +20,14 @@ pcmk__group_assign: resource_ipaddr1_single allocation score on power720-4: 0
 pcmk__group_assign: resource_nfsserver_single allocation score on power720-1: 0
 pcmk__group_assign: resource_nfsserver_single allocation score on power720-2: 1000
 pcmk__group_assign: resource_nfsserver_single allocation score on power720-4: 0
-pcmk__primitive_assign: export_home_ocfs2:0 allocation score on power720-1: 0
+pcmk__primitive_assign: export_home_ocfs2:0 allocation score on power720-1: INFINITY
 pcmk__primitive_assign: export_home_ocfs2:0 allocation score on power720-2: -INFINITY
 pcmk__primitive_assign: export_home_ocfs2:0 allocation score on power720-4: -INFINITY
-pcmk__primitive_assign: export_home_ocfs2:1 allocation score on power720-1: 0
-pcmk__primitive_assign: export_home_ocfs2:1 allocation score on power720-2: 1000
+pcmk__primitive_assign: export_home_ocfs2:1 allocation score on power720-1: -INFINITY
+pcmk__primitive_assign: export_home_ocfs2:1 allocation score on power720-1: INFINITY
+pcmk__primitive_assign: export_home_ocfs2:1 allocation score on power720-2: 3000
+pcmk__primitive_assign: export_home_ocfs2:1 allocation score on power720-2: 3000
+pcmk__primitive_assign: export_home_ocfs2:1 allocation score on power720-4: -INFINITY
 pcmk__primitive_assign: export_home_ocfs2:1 allocation score on power720-4: -INFINITY
 pcmk__primitive_assign: export_home_ocfs2:2 allocation score on power720-1: -INFINITY
 pcmk__primitive_assign: export_home_ocfs2:2 allocation score on power720-2: -INFINITY

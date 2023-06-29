@@ -51,9 +51,9 @@ pcmk__bundle_assign: haproxy-bundle allocation score on overcloud-novacompute-0:
 pcmk__bundle_assign: haproxy-bundle-docker-0 allocation score on overcloud-controller-0: INFINITY
 pcmk__bundle_assign: haproxy-bundle-docker-0 allocation score on overcloud-controller-0: INFINITY
 pcmk__bundle_assign: haproxy-bundle-docker-0 allocation score on overcloud-controller-1: 0
-pcmk__bundle_assign: haproxy-bundle-docker-0 allocation score on overcloud-controller-1: 0
+pcmk__bundle_assign: haproxy-bundle-docker-0 allocation score on overcloud-controller-1: INFINITY
 pcmk__bundle_assign: haproxy-bundle-docker-0 allocation score on overcloud-controller-2: 0
-pcmk__bundle_assign: haproxy-bundle-docker-0 allocation score on overcloud-controller-2: 0
+pcmk__bundle_assign: haproxy-bundle-docker-0 allocation score on overcloud-controller-2: INFINITY
 pcmk__bundle_assign: haproxy-bundle-docker-0 allocation score on overcloud-novacompute-0: -INFINITY
 pcmk__bundle_assign: haproxy-bundle-docker-0 allocation score on overcloud-novacompute-0: -INFINITY
 pcmk__bundle_assign: haproxy-bundle-docker-1 allocation score on overcloud-controller-0: -INFINITY
@@ -61,7 +61,7 @@ pcmk__bundle_assign: haproxy-bundle-docker-1 allocation score on overcloud-contr
 pcmk__bundle_assign: haproxy-bundle-docker-1 allocation score on overcloud-controller-1: INFINITY
 pcmk__bundle_assign: haproxy-bundle-docker-1 allocation score on overcloud-controller-1: INFINITY
 pcmk__bundle_assign: haproxy-bundle-docker-1 allocation score on overcloud-controller-2: 0
-pcmk__bundle_assign: haproxy-bundle-docker-1 allocation score on overcloud-controller-2: 0
+pcmk__bundle_assign: haproxy-bundle-docker-1 allocation score on overcloud-controller-2: INFINITY
 pcmk__bundle_assign: haproxy-bundle-docker-1 allocation score on overcloud-novacompute-0: -INFINITY
 pcmk__bundle_assign: haproxy-bundle-docker-1 allocation score on overcloud-novacompute-0: -INFINITY
 pcmk__bundle_assign: haproxy-bundle-docker-2 allocation score on overcloud-controller-0: -INFINITY
@@ -238,12 +238,12 @@ pcmk__primitive_assign: galera:0 allocation score on galera-bundle-0: INFINITY
 pcmk__primitive_assign: galera:1 allocation score on galera-bundle-1: INFINITY
 pcmk__primitive_assign: galera:2 allocation score on galera-bundle-2: INFINITY
 pcmk__primitive_assign: haproxy-bundle-docker-0 allocation score on overcloud-controller-0: INFINITY
-pcmk__primitive_assign: haproxy-bundle-docker-0 allocation score on overcloud-controller-1: 0
-pcmk__primitive_assign: haproxy-bundle-docker-0 allocation score on overcloud-controller-2: 0
+pcmk__primitive_assign: haproxy-bundle-docker-0 allocation score on overcloud-controller-1: INFINITY
+pcmk__primitive_assign: haproxy-bundle-docker-0 allocation score on overcloud-controller-2: INFINITY
 pcmk__primitive_assign: haproxy-bundle-docker-0 allocation score on overcloud-novacompute-0: -INFINITY
 pcmk__primitive_assign: haproxy-bundle-docker-1 allocation score on overcloud-controller-0: -INFINITY
 pcmk__primitive_assign: haproxy-bundle-docker-1 allocation score on overcloud-controller-1: INFINITY
-pcmk__primitive_assign: haproxy-bundle-docker-1 allocation score on overcloud-controller-2: 0
+pcmk__primitive_assign: haproxy-bundle-docker-1 allocation score on overcloud-controller-2: INFINITY
 pcmk__primitive_assign: haproxy-bundle-docker-1 allocation score on overcloud-novacompute-0: -INFINITY
 pcmk__primitive_assign: haproxy-bundle-docker-2 allocation score on overcloud-controller-0: -INFINITY
 pcmk__primitive_assign: haproxy-bundle-docker-2 allocation score on overcloud-controller-1: -INFINITY

@@ -67,7 +67,7 @@ pcmk__primitive_assign: prmDiskd1:0 allocation score on bl460g1n7: -INFINITY
 pcmk__primitive_assign: prmDiskd1:0 allocation score on bl460g1n8: -INFINITY
 pcmk__primitive_assign: prmDiskd1:1 allocation score on bl460g1n6: INFINITY
 pcmk__primitive_assign: prmDiskd1:1 allocation score on bl460g1n7: -INFINITY
-pcmk__primitive_assign: prmDiskd1:1 allocation score on bl460g1n8: 0
+pcmk__primitive_assign: prmDiskd1:1 allocation score on bl460g1n8: 200
 pcmk__primitive_assign: prmDiskd1:2 allocation score on bl460g1n6: -INFINITY
 pcmk__primitive_assign: prmDiskd1:2 allocation score on bl460g1n7: -INFINITY
 pcmk__primitive_assign: prmDiskd1:2 allocation score on bl460g1n8: INFINITY
@@ -76,7 +76,7 @@ pcmk__primitive_assign: prmDiskd2:0 allocation score on bl460g1n7: -INFINITY
 pcmk__primitive_assign: prmDiskd2:0 allocation score on bl460g1n8: -INFINITY
 pcmk__primitive_assign: prmDiskd2:1 allocation score on bl460g1n6: INFINITY
 pcmk__primitive_assign: prmDiskd2:1 allocation score on bl460g1n7: -INFINITY
-pcmk__primitive_assign: prmDiskd2:1 allocation score on bl460g1n8: 0
+pcmk__primitive_assign: prmDiskd2:1 allocation score on bl460g1n8: 200
 pcmk__primitive_assign: prmDiskd2:2 allocation score on bl460g1n6: -INFINITY
 pcmk__primitive_assign: prmDiskd2:2 allocation score on bl460g1n7: -INFINITY
 pcmk__primitive_assign: prmDiskd2:2 allocation score on bl460g1n8: INFINITY
@@ -88,7 +88,7 @@ pcmk__primitive_assign: prmPing:0 allocation score on bl460g1n7: -INFINITY
 pcmk__primitive_assign: prmPing:0 allocation score on bl460g1n8: -INFINITY
 pcmk__primitive_assign: prmPing:1 allocation score on bl460g1n6: INFINITY
 pcmk__primitive_assign: prmPing:1 allocation score on bl460g1n7: -INFINITY
-pcmk__primitive_assign: prmPing:1 allocation score on bl460g1n8: 0
+pcmk__primitive_assign: prmPing:1 allocation score on bl460g1n8: 200
 pcmk__primitive_assign: prmPing:2 allocation score on bl460g1n6: -INFINITY
 pcmk__primitive_assign: prmPing:2 allocation score on bl460g1n7: -INFINITY
 pcmk__primitive_assign: prmPing:2 allocation score on bl460g1n8: INFINITY

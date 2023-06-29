@@ -9,7 +9,7 @@ pcmk__bundle_assign: galera:0 allocation score on galera-bundle-0: 500
 pcmk__bundle_assign: haproxy-bundle allocation score on undercloud: 0
 pcmk__bundle_assign: haproxy-bundle allocation score on undercloud: 0
 pcmk__bundle_assign: haproxy-bundle-docker-0 allocation score on undercloud: 0
-pcmk__bundle_assign: haproxy-bundle-docker-0 allocation score on undercloud: 0
+pcmk__bundle_assign: haproxy-bundle-docker-0 allocation score on undercloud: INFINITY
 pcmk__bundle_assign: openstack-cinder-volume allocation score on undercloud: 0
 pcmk__bundle_assign: openstack-cinder-volume-docker-0 allocation score on undercloud: INFINITY
 pcmk__bundle_assign: rabbitmq-bundle allocation score on undercloud: 0
@@ -37,7 +37,7 @@ pcmk__clone_assign: redis:0 allocation score on redis-bundle-0: INFINITY
 pcmk__primitive_assign: galera-bundle-0 allocation score on undercloud: 10000
 pcmk__primitive_assign: galera-bundle-docker-0 allocation score on undercloud: 0
 pcmk__primitive_assign: galera:0 allocation score on galera-bundle-0: INFINITY
-pcmk__primitive_assign: haproxy-bundle-docker-0 allocation score on undercloud: 0
+pcmk__primitive_assign: haproxy-bundle-docker-0 allocation score on undercloud: INFINITY
 pcmk__primitive_assign: ip-192.168.122.247 allocation score on undercloud: INFINITY
 pcmk__primitive_assign: ip-192.168.122.248 allocation score on undercloud: INFINITY
 pcmk__primitive_assign: ip-192.168.122.249 allocation score on undercloud: INFINITY

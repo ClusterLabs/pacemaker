@@ -236,7 +236,7 @@ pcmk__primitive_assign: prmPingd:1 allocation score on sby1: INFINITY
 pcmk__primitive_assign: prmPingd:1 allocation score on sby2: 0
 pcmk__primitive_assign: prmPingd:2 allocation score on act1: -INFINITY
 pcmk__primitive_assign: prmPingd:2 allocation score on act2: INFINITY
-pcmk__primitive_assign: prmPingd:2 allocation score on act3: 0
+pcmk__primitive_assign: prmPingd:2 allocation score on act3: INFINITY
 pcmk__primitive_assign: prmPingd:2 allocation score on sby1: 0
 pcmk__primitive_assign: prmPingd:2 allocation score on sby2: 0
 pcmk__primitive_assign: prmPingd:3 allocation score on act1: -INFINITY

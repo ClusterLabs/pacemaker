@@ -55,7 +55,7 @@ pcmk__primitive_assign: apache2:0 allocation score on webcluster01: -INFINITY
 pcmk__primitive_assign: apache2:0 allocation score on webcluster02: -INFINITY
 pcmk__primitive_assign: apache2:1 allocation score on webcluster01: -INFINITY
 pcmk__primitive_assign: apache2:1 allocation score on webcluster02: -INFINITY
-pcmk__primitive_assign: drbd_mysql:0 allocation score on webcluster01: 0
+pcmk__primitive_assign: drbd_mysql:0 allocation score on webcluster01: 100
 pcmk__primitive_assign: drbd_mysql:0 allocation score on webcluster02: -INFINITY
 pcmk__primitive_assign: drbd_mysql:1 allocation score on webcluster01: -INFINITY
 pcmk__primitive_assign: drbd_mysql:1 allocation score on webcluster02: -INFINITY
