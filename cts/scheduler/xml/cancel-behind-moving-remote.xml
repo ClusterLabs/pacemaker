@@ -1,5 +1,19 @@
 <cib crm_feature_set="3.4.1" validate-with="pacemaker-3.7" epoch="184" num_updates="0" admin_epoch="0" cib-last-written="Mon Feb 15 01:40:51 2021" update-origin="controller-0" update-client="crm_resource" update-user="root" have-quorum="1" dc-uuid="2" execution-date="1613353251">
   <configuration>
+    <!-- This test output is incorrect. ip-172.17.1.87 is colocated with the
+         promoted role of ovn-dbs-bundle and is banned from controller-2.
+         ovn-dbs-bundle should promote on either controller-0 or controller-1,
+         so that ip-172-17.1.87 is allowed to run.
+
+         However, ovn-dbs-bundle promotes on controller-2, and ip-172-17.1.87
+         is stopped.
+
+         The output was correct prior to the addition of this comment,
+         immediately after fixing a clone shuffling issue. However, that is
+         believed to be due to luck. Role-based colocations for promotable
+         bundles do not work correctly in general; see the
+         bundle-promoted-*colocation-* tests.
+      -->
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
