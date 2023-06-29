@@ -8,7 +8,7 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 import sys
 
 
-class CibBase(object):
+class CibBase:
     def __init__(self, Factory, tag, _id, **kwargs):
         self.tag = tag
         self.name = _id
@@ -30,13 +30,10 @@ class CibBase(object):
 
 
 class XmlBase(CibBase):
-    def __init__(self, Factory, tag, _id, **kwargs):
-        CibBase.__init__(self, Factory, tag, _id, **kwargs)
-
     def show(self):
         text = '''<%s''' % self.tag
         if self.name:
-            text += ''' id="%s"''' % (self.name)
+            text += ''' id="%s"''' % self.name
         for (k, v) in self.kwargs.items():
             text += ''' %s="%s"''' % (k, v)
 
@@ -58,11 +55,11 @@ class XmlBase(CibBase):
         else:
             label = "<%s>" % self.tag
         self.Factory.debug("Writing out %s" % label)
-        fixed  = "HOME=/root CIB_file="+self.Factory.tmpfile
+        fixed  = "HOME=/root CIB_file=%s" % self.Factory.tmpfile
         fixed += " cibadmin --%s --scope %s %s --xml-text '%s'" % (operation, section, options, xml)
         (rc, _) = self.Factory.rsh(self.Factory.target, fixed)
         if rc != 0:
-            self.Factory.log("Configure call failed: "+fixed)
+            self.Factory.log("Configure call failed: %s" % fixed)
             sys.exit(1)
 
 
@@ -151,7 +148,7 @@ class Alerts(XmlBase):
         self.alert_count = 0
 
     def add_alert(self, path, recipient):
-        self.alert_count = self.alert_count + 1
+        self.alert_count += 1
         alert = XmlBase(self.Factory, "alert", "alert-%d" % self.alert_count,
                         path=path)
         recipient1 = XmlBase(self.Factory, "recipient",
@@ -268,7 +265,7 @@ class Resource(XmlBase):
     def show(self):
         text = '''<primitive id="%s" class="%s" type="%s"''' % (self.name, self.standard, self.rtype)
         if self.provider:
-            text += ''' provider="%s"''' % (self.provider)
+            text += ''' provider="%s"''' % self.provider
         text += '''>'''
 
         if len(self.meta) > 0:
@@ -330,8 +327,8 @@ class Clone(Group):
         if child:
             self.add_child(child)
 
-    def add_child(self, resource):
+    def add_child(self, child):
         if not self.children:
-            self.children.append(resource)
+            self.children.append(child)
         else:
-            self.Factory.log("Clones can only have a single child. Ignoring %s" % resource.name)
+            self.Factory.log("Clones can only have a single child. Ignoring %s" % child.name)
