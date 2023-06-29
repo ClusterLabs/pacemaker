@@ -551,12 +551,11 @@ pcmk__with_bundle_colocations(const pe_resource_t *rsc,
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container)
                && (orig_rsc != NULL) && (list != NULL));
 
-    if (rsc == orig_rsc) { // Colocations are wanted for bundle itself
-        pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
+    // Only the bundle itself and its containers get the bundle's constraints
+    if ((orig_rsc == rsc)
+        || pcmk_is_set(orig_rsc->flags, pe_rsc_replica_container)) {
 
-    // Only the bundle replicas' containers get the bundle's constraints
-    } else if (pcmk_is_set(orig_rsc->flags, pe_rsc_replica_container)) {
-        pcmk__add_collective_constraints(list, orig_rsc, rsc, true);
+        pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
     }
 }
 
@@ -568,12 +567,11 @@ pcmk__bundle_with_colocations(const pe_resource_t *rsc,
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container)
                && (orig_rsc != NULL) && (list != NULL));
 
-    if (rsc == orig_rsc) { // Colocations are wanted for bundle itself
-        pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
+    // Only the bundle itself and its containers get the bundle's constraints
+    if ((orig_rsc == rsc)
+        || pcmk_is_set(orig_rsc->flags, pe_rsc_replica_container)) {
 
-    // Only the bundle replicas' containers get the bundle's constraints
-    } else if (pcmk_is_set(orig_rsc->flags, pe_rsc_replica_container)) {
-        pcmk__add_collective_constraints(list, orig_rsc, rsc, false);
+        pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
     }
 }
 

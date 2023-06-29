@@ -939,12 +939,6 @@ uint32_t pcmk__collective_action_flags(pe_action_t *action,
                                        const GList *instances,
                                        const pe_node_t *node);
 
-G_GNUC_INTERNAL
-void pcmk__add_collective_constraints(GList **list,
-                                      const pe_resource_t *instance,
-                                      const pe_resource_t *collective,
-                                      bool with_this);
-
 
 // Injections (pcmk_injections.c)
 
