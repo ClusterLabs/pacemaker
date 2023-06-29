@@ -361,8 +361,7 @@ ipc_connect(data_t *data, enum pcmk_ipc_server server, pcmk_ipc_callback_t cb,
         pcmk_register_ipc_callback(api, cb, data);
     }
 
-    rc = pcmk_connect_ipc(api, dispatch_type);
-
+    rc = pcmk__connect_ipc(api, dispatch_type, 5);
     if (rc != pcmk_rc_ok) {
         if (rc == EREMOTEIO) {
             data->pcmkd_state = pcmk_pacemakerd_state_remote;
@@ -370,6 +369,9 @@ ipc_connect(data_t *data, enum pcmk_ipc_server server, pcmk_ipc_callback_t cb,
                 /* EREMOTEIO may be expected and acceptable for some callers
                  * on a Pacemaker Remote node
                  */
+                crm_debug("Ignoring %s connection failure: No "
+                          "Pacemaker Remote connection",
+                          pcmk_ipc_name(api, true));
                 rc = pcmk_rc_ok;
             } else {
                 out->err(out, "error: Could not connect to %s: %s",

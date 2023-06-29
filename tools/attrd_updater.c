@@ -446,10 +446,11 @@ send_attrd_query(pcmk__output_t *out, const char *attr_name,
     pcmk_register_ipc_callback(attrd_api, attrd_event_cb, out);
 
     // Connect to attrd (without main loop)
-    rc = pcmk_connect_ipc(attrd_api, pcmk_ipc_dispatch_sync);
+    rc = pcmk__connect_ipc(attrd_api, pcmk_ipc_dispatch_sync, 5);
     if (rc != pcmk_rc_ok) {
         g_set_error(&error, PCMK__RC_ERROR, rc,
-                    "Could not connect to attrd: %s", pcmk_rc_str(rc));
+                    "Could not connect to %s: %s",
+                    pcmk_ipc_name(attrd_api, true), pcmk_rc_str(rc));
         pcmk_free_ipc_api(attrd_api);
         return rc;
     }

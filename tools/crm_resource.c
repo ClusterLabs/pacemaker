@@ -1808,11 +1808,12 @@ main(int argc, char **argv)
         }
         pcmk_register_ipc_callback(controld_api, controller_event_callback,
                                    NULL);
-        rc = pcmk_connect_ipc(controld_api, pcmk_ipc_dispatch_main);
+        rc = pcmk__connect_ipc(controld_api, pcmk_ipc_dispatch_main, 5);
         if (rc != pcmk_rc_ok) {
             exit_code = pcmk_rc2exitc(rc);
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        _("Error connecting to the controller: %s"), pcmk_rc_str(rc));
+                        _("Error connecting to %s: %s"),
+                        pcmk_ipc_name(controld_api, true), pcmk_rc_str(rc));
             goto done;
         }
     }
