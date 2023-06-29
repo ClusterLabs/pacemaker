@@ -217,16 +217,17 @@ can_interleave(const pcmk__colocation_t *colocation)
  * we are choosing promotable clone instance roles).
  *
  * \param[in,out] dependent      Dependent resource in colocation
- * \param[in,out] primary        Primary resource in colocation
+ * \param[in]     primary        Primary resource in colocation
  * \param[in]     colocation     Colocation constraint to apply
  * \param[in]     for_dependent  true if called on behalf of dependent
  */
 void
-pcmk__clone_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
+pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
+                              const pe_resource_t *primary,
                               const pcmk__colocation_t *colocation,
                               bool for_dependent)
 {
-    GList *iter = NULL;
+    const GList *iter = NULL;
 
     /* This should never be called for the clone itself as a dependent. Instead,
      * we add its colocation constraints to its instances and call the
@@ -270,7 +271,7 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
 
     // Apply interleaved colocations
     if (can_interleave(colocation)) {
-        pe_resource_t *primary_instance = NULL;
+        const pe_resource_t *primary_instance = NULL;
 
         primary_instance = pcmk__find_compatible_instance(dependent, primary,
                                                           RSC_ROLE_UNKNOWN,
@@ -320,7 +321,7 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
 
     // Apply optional colocations
     for (iter = primary->children; iter != NULL; iter = iter->next) {
-        pe_resource_t *instance = (pe_resource_t *) iter->data;
+        const pe_resource_t *instance = iter->data;
 
         instance->cmds->apply_coloc_score(dependent, instance, colocation,
                                           false);
@@ -335,7 +336,7 @@ pcmk__with_clone_colocations(const pe_resource_t *rsc,
     CRM_CHECK((rsc != NULL) && (orig_rsc != NULL) && (list != NULL), return);
 
     if (rsc == orig_rsc) { // Colocations are wanted for clone itself
-        pcmk__add_with_this_list(list, rsc->rsc_cons_lhs);
+        pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
     } else {
         pcmk__add_collective_constraints(list, orig_rsc, rsc, true);
     }
@@ -349,7 +350,7 @@ pcmk__clone_with_colocations(const pe_resource_t *rsc,
     CRM_CHECK((rsc != NULL) && (orig_rsc != NULL) && (list != NULL), return);
 
     if (rsc == orig_rsc) { // Colocations are wanted for clone itself
-        pcmk__add_this_with_list(list, rsc->rsc_cons);
+        pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
     } else {
         pcmk__add_collective_constraints(list, orig_rsc, rsc, false);
     }

@@ -102,11 +102,12 @@ struct resource_alloc_functions_s {
      * we are choosing promotable clone instance roles).
      *
      * \param[in,out] dependent      Dependent resource in colocation
-     * \param[in,out] primary        Primary resource in colocation
+     * \param[in]     primary        Primary resource in colocation
      * \param[in]     colocation     Colocation constraint to apply
      * \param[in]     for_dependent  true if called on behalf of dependent
      */
-    void (*apply_coloc_score)(pe_resource_t *dependent, pe_resource_t *primary,
+    void (*apply_coloc_score)(pe_resource_t *dependent,
+                              const pe_resource_t *primary,
                               const pcmk__colocation_t *colocation,
                               bool for_dependent);
 
@@ -483,16 +484,26 @@ G_GNUC_INTERNAL
 void pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-void pcmk__add_this_with(GList **list, const pcmk__colocation_t *colocation);
+void pcmk__add_this_with(GList **list, const pcmk__colocation_t *colocation,
+                         const pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
-void pcmk__add_this_with_list(GList **list, GList *addition);
+void pcmk__add_this_with_list(GList **list, GList *addition,
+                              const pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
-void pcmk__add_with_this(GList **list, const pcmk__colocation_t *colocation);
+void pcmk__add_with_this(GList **list, const pcmk__colocation_t *colocation,
+                         const pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
-void pcmk__add_with_this_list(GList **list, GList *addition);
+void pcmk__add_with_this_list(GList **list, GList *addition,
+                              const pe_resource_t *rsc);
+
+G_GNUC_INTERNAL
+GList *pcmk__with_this_colocations(const pe_resource_t *rsc);
+
+G_GNUC_INTERNAL
+GList *pcmk__this_with_colocations(const pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
 void pcmk__new_colocation(const char *id, const char *node_attr, int score,
@@ -679,7 +690,7 @@ uint32_t pcmk__primitive_action_flags(pe_action_t *action,
 
 G_GNUC_INTERNAL
 void pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
-                                       pe_resource_t *primary,
+                                       const pe_resource_t *primary,
                                        const pcmk__colocation_t *colocation,
                                        bool for_dependent);
 
@@ -722,7 +733,7 @@ void pcmk__group_internal_constraints(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
 void pcmk__group_apply_coloc_score(pe_resource_t *dependent,
-                                   pe_resource_t *primary,
+                                   const pe_resource_t *primary,
                                    const pcmk__colocation_t *colocation,
                                    bool for_dependent);
 
@@ -785,7 +796,7 @@ void pcmk__clone_internal_constraints(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
 void pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
-                                   pe_resource_t *primary,
+                                   const pe_resource_t *primary,
                                    const pcmk__colocation_t *colocation,
                                    bool for_dependent);
 
@@ -833,7 +844,7 @@ void pcmk__bundle_internal_constraints(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
 void pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
-                                    pe_resource_t *primary,
+                                    const pe_resource_t *primary,
                                     const pcmk__colocation_t *colocation,
                                     bool for_dependent);
 
@@ -979,10 +990,6 @@ void pcmk__noop_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml);
 
 G_GNUC_INTERNAL
 void pcmk__output_resource_actions(pe_resource_t *rsc);
-
-G_GNUC_INTERNAL
-bool pcmk__finalize_assignment(pe_resource_t *rsc, pe_node_t *chosen,
-                               bool force);
 
 G_GNUC_INTERNAL
 bool pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force);

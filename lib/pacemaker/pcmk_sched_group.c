@@ -315,11 +315,11 @@ pcmk__group_internal_constraints(pe_resource_t *rsc)
  * resources) or priority (if we are choosing promotable clone instance roles).
  *
  * \param[in,out] dependent      Dependent group resource in colocation
- * \param[in,out] primary        Primary resource in colocation
+ * \param[in]     primary        Primary resource in colocation
  * \param[in]     colocation     Colocation constraint to apply
  */
 static void
-colocate_group_with(pe_resource_t *dependent, pe_resource_t *primary,
+colocate_group_with(pe_resource_t *dependent, const pe_resource_t *primary,
                     const pcmk__colocation_t *colocation)
 {
     pe_resource_t *member = NULL;
@@ -368,7 +368,7 @@ static void
 colocate_with_group(pe_resource_t *dependent, const pe_resource_t *primary,
                     const pcmk__colocation_t *colocation)
 {
-    pe_resource_t *member = NULL;
+    const pe_resource_t *member = NULL;
 
     pe_rsc_trace(primary,
                  "Processing colocation %s (%s with group %s) for primary",
@@ -409,8 +409,9 @@ colocate_with_group(pe_resource_t *dependent, const pe_resource_t *primary,
     }
 
     // Colocate dependent with each member individually
-    for (GList *iter = primary->children; iter != NULL; iter = iter->next) {
-        member = (pe_resource_t *) iter->data;
+    for (const GList *iter = primary->children; iter != NULL;
+         iter = iter->next) {
+        member = iter->data;
         member->cmds->apply_coloc_score(dependent, member, colocation, false);
     }
 }
@@ -424,12 +425,13 @@ colocate_with_group(pe_resource_t *dependent, const pe_resource_t *primary,
  * we are choosing promotable clone instance roles).
  *
  * \param[in,out] dependent      Dependent resource in colocation
- * \param[in,out] primary        Primary resource in colocation
+ * \param[in]     primary        Primary resource in colocation
  * \param[in]     colocation     Colocation constraint to apply
  * \param[in]     for_dependent  true if called on behalf of dependent
  */
 void
-pcmk__group_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
+pcmk__group_apply_coloc_score(pe_resource_t *dependent,
+                              const pe_resource_t *primary,
                               const pcmk__colocation_t *colocation,
                               bool for_dependent)
 {
@@ -675,7 +677,7 @@ pcmk__with_group_colocations(const pe_resource_t *rsc,
     if ((rsc == orig_rsc) || (orig_rsc == pe__last_group_member(rsc))) {
         crm_trace("Adding 'with %s' colocations to list for %s",
                   rsc->id, orig_rsc->id);
-        pcmk__add_with_this_list(list, rsc->rsc_cons_lhs);
+        pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
         if (rsc->parent != NULL) { // Cloned group
             rsc->parent->cmds->with_this_colocations(rsc->parent, orig_rsc,
                                                      list);
@@ -703,7 +705,7 @@ pcmk__group_with_colocations(const pe_resource_t *rsc,
         || (orig_rsc == (const pe_resource_t *) rsc->children->data)) {
         crm_trace("Adding '%s with' colocations to list for %s",
                   rsc->id, orig_rsc->id);
-        pcmk__add_this_with_list(list, rsc->rsc_cons);
+        pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
         if (rsc->parent != NULL) { // Cloned group
             rsc->parent->cmds->this_with_colocations(rsc->parent, orig_rsc,
                                                      list);
@@ -733,7 +735,7 @@ pcmk__group_with_colocations(const pe_resource_t *rsc,
 
                 colocation = (const pcmk__colocation_t *) cons_iter->data;
                 if (colocation->score == INFINITY) {
-                    pcmk__add_this_with(list, colocation);
+                    pcmk__add_this_with(list, colocation, orig_rsc);
                 }
             }
             // @TODO Add mandatory (or all?) clone constraints if cloned

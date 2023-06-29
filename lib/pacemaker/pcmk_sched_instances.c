@@ -1648,9 +1648,9 @@ pcmk__add_collective_constraints(GList **list, const pe_resource_t *instance,
             || (!with_this && (colocation->score == INFINITY))) {
 
             if (with_this) {
-                pcmk__add_with_this(list, colocation);
+                pcmk__add_with_this(list, colocation, instance);
             } else {
-                pcmk__add_this_with(list, colocation);
+                pcmk__add_this_with(list, colocation, instance);
             }
         }
     }

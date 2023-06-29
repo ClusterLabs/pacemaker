@@ -220,6 +220,33 @@ pe__foreach_bundle_replica(pe_resource_t *bundle,
     }
 }
 
+/*!
+ * \internal
+ * \brief Iterate over const bundle replicas
+ *
+ * \param[in]     bundle     Bundle to iterate over
+ * \param[in]     fn         Function to call for each replica (its return value
+ *                           indicates whether to continue iterating)
+ * \param[in,out] user_data  Pointer to pass to \p fn
+ */
+void
+pe__foreach_const_bundle_replica(const pe_resource_t *bundle,
+                                 bool (*fn)(const pe__bundle_replica_t *,
+                                            void *),
+                                 void *user_data)
+{
+    const pe__bundle_variant_data_t *bundle_data = NULL;
+
+    get_bundle_variant_data(bundle_data, bundle);
+    for (const GList *iter = bundle_data->replicas; iter != NULL;
+         iter = iter->next) {
+
+        if (!fn((const pe__bundle_replica_t *) iter->data, user_data)) {
+            break;
+        }
+    }
+}
+
 static char *
 next_ip(const char *last_ip)
 {

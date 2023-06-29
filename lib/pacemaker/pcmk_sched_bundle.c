@@ -333,14 +333,14 @@ struct match_data {
  * \internal
  * \brief Check whether a replica container is assigned to a given node
  *
- * \param[in,out] replica    Replica to check
+ * \param[in]     replica    Replica to check
  * \param[in,out] user_data  struct match_data with node to compare against
  *
  * \return true if the replica does not match (to indicate further replicas
  *         should be processed), otherwise false
  */
 static bool
-match_replica_container(pe__bundle_replica_t *replica, void *user_data)
+match_replica_container(const pe__bundle_replica_t *replica, void *user_data)
 {
     struct match_data *match_data = user_data;
 
@@ -364,7 +364,8 @@ match_replica_container(pe__bundle_replica_t *replica, void *user_data)
  *         otherwise NULL.
  */
 static pe_resource_t *
-compatible_container(const pe_resource_t *dependent, pe_resource_t *bundle)
+compatible_container(const pe_resource_t *dependent,
+                     const pe_resource_t *bundle)
 {
     GList *scratch = NULL;
     struct match_data match_data = { NULL, NULL };
@@ -372,8 +373,8 @@ compatible_container(const pe_resource_t *dependent, pe_resource_t *bundle)
     // If dependent is assigned, only check there
     match_data.node = dependent->fns->location(dependent, NULL, 0);
     if (match_data.node != NULL) {
-        pe__foreach_bundle_replica(bundle, match_replica_container,
-                                   &match_data);
+        pe__foreach_const_bundle_replica(bundle, match_replica_container,
+                                         &match_data);
         return match_data.container;
     }
 
@@ -381,9 +382,9 @@ compatible_container(const pe_resource_t *dependent, pe_resource_t *bundle)
     scratch = g_hash_table_get_values(dependent->allowed_nodes);
     scratch = pcmk__sort_nodes(scratch, NULL);
     for (const GList *iter = scratch; iter != NULL; iter = iter->next) {
-        match_data.node = (const pe_node_t *) iter->data;
-        pe__foreach_bundle_replica(bundle, match_replica_container,
-                                   &match_data);
+        match_data.node = iter->data;
+        pe__foreach_const_bundle_replica(bundle, match_replica_container,
+                                         &match_data);
         if (match_data.container != NULL) {
             break;
         }
@@ -402,13 +403,13 @@ struct coloc_data {
  * \internal
  * \brief Apply a colocation score to replica node scores or resource priority
  *
- * \param[in,out] replica    Replica to apply colocation score to
+ * \param[in]     replica    Replica of primary bundle resource in colocation
  * \param[in,out] user_data  struct coloc_data for colocation being applied
  *
  * \return true (to indicate that any further replicas should be processed)
  */
 static bool
-replica_apply_coloc_score(pe__bundle_replica_t *replica, void *user_data)
+replica_apply_coloc_score(const pe__bundle_replica_t *replica, void *user_data)
 {
     struct coloc_data *coloc_data = user_data;
     pe_node_t *chosen = NULL;
@@ -451,12 +452,13 @@ replica_apply_coloc_score(pe__bundle_replica_t *replica, void *user_data)
  * we are choosing promotable clone instance roles).
  *
  * \param[in,out] dependent      Dependent resource in colocation
- * \param[in,out] primary        Primary resource in colocation
+ * \param[in]     primary        Primary resource in colocation
  * \param[in]     colocation     Colocation constraint to apply
  * \param[in]     for_dependent  true if called on behalf of dependent
  */
 void
-pcmk__bundle_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
+pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
+                               const pe_resource_t *primary,
                                const pcmk__colocation_t *colocation,
                                bool for_dependent)
 {
@@ -485,9 +487,9 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
      * of its instances. Look for a compatible instance of this bundle.
      */
     if (colocation->dependent->variant > pe_group) {
-        pe_resource_t *primary_container = NULL;
+        const pe_resource_t *primary_container = compatible_container(dependent,
+                                                                      primary);
 
-        primary_container = compatible_container(dependent, primary);
         if (primary_container != NULL) { // Success, we found one
             pe_rsc_debug(primary, "Pairing %s with %s",
                          dependent->id, primary_container->id);
@@ -508,7 +510,8 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
         return;
     }
 
-    pe__foreach_bundle_replica(primary, replica_apply_coloc_score, &coloc_data);
+    pe__foreach_const_bundle_replica(primary, replica_apply_coloc_score,
+                                     &coloc_data);
 
     if (colocation->score >= INFINITY) {
         node_list_exclude(dependent->allowed_nodes, coloc_data.container_hosts,
@@ -526,7 +529,7 @@ pcmk__with_bundle_colocations(const pe_resource_t *rsc,
                && (orig_rsc != NULL) && (list != NULL));
 
     if (rsc == orig_rsc) { // Colocations are wanted for bundle itself
-        pcmk__add_with_this_list(list, rsc->rsc_cons_lhs);
+        pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
 
     // Only the bundle replicas' containers get the bundle's constraints
     } else if (pcmk_is_set(orig_rsc->flags, pe_rsc_replica_container)) {
@@ -543,7 +546,7 @@ pcmk__bundle_with_colocations(const pe_resource_t *rsc,
                && (orig_rsc != NULL) && (list != NULL));
 
     if (rsc == orig_rsc) { // Colocations are wanted for bundle itself
-        pcmk__add_this_with_list(list, rsc->rsc_cons);
+        pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
 
     // Only the bundle replicas' containers get the bundle's constraints
     } else if (pcmk_is_set(orig_rsc->flags, pe_rsc_replica_container)) {

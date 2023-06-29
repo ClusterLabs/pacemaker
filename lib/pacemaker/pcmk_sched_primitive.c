@@ -153,7 +153,6 @@ assign_best_node(pe_resource_t *rsc, const pe_node_t *prefer)
     GList *nodes = NULL;
     pe_node_t *chosen = NULL;
     pe_node_t *best = NULL;
-    bool result = false;
     const pe_node_t *most_free_node = pcmk__ban_insufficient_capacity(rsc);
 
     if (prefer == NULL) {
@@ -268,9 +267,9 @@ assign_best_node(pe_resource_t *rsc, const pe_node_t *prefer)
                      pe__node_name(chosen), rsc->id, g_list_length(nodes));
     }
 
-    result = pcmk__finalize_assignment(rsc, chosen, false);
+    pcmk__assign_resource(rsc, chosen, false);
     g_list_free(nodes);
-    return result;
+    return rsc->allocated_to != NULL;
 }
 
 /*!
@@ -487,11 +486,11 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer)
         }
         pe_rsc_info(rsc, "Unmanaged resource %s assigned to %s: %s", rsc->id,
                     (assign_to? assign_to->details->uname : "no node"), reason);
-        pcmk__finalize_assignment(rsc, assign_to, true);
+        pcmk__assign_resource(rsc, assign_to, true);
 
     } else if (pcmk_is_set(rsc->cluster->flags, pe_flag_stop_everything)) {
         pe_rsc_debug(rsc, "Forcing %s to stop: stop-all-resources", rsc->id);
-        pcmk__finalize_assignment(rsc, NULL, true);
+        pcmk__assign_resource(rsc, NULL, true);
 
     } else if (!assign_best_node(rsc, prefer)) {
         // Assignment failed
@@ -1027,13 +1026,13 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
  * we are choosing promotable clone instance roles).
  *
  * \param[in,out] dependent      Dependent resource in colocation
- * \param[in,out] primary        Primary resource in colocation
+ * \param[in]     primary        Primary resource in colocation
  * \param[in]     colocation     Colocation constraint to apply
  * \param[in]     for_dependent  true if called on behalf of dependent
  */
 void
 pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
-                                  pe_resource_t *primary,
+                                  const pe_resource_t *primary,
                                   const pcmk__colocation_t *colocation,
                                   bool for_dependent)
 {
@@ -1079,7 +1078,7 @@ pcmk__with_primitive_colocations(const pe_resource_t *rsc,
                && (rsc == orig_rsc) && (list != NULL));
 
     // Add primitive's own colocations plus any relevant ones from parent
-    pcmk__add_with_this_list(list, rsc->rsc_cons_lhs);
+    pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
     if (rsc->parent != NULL) {
         rsc->parent->cmds->with_this_colocations(rsc->parent, rsc, list);
     }
@@ -1097,7 +1096,7 @@ pcmk__primitive_with_colocations(const pe_resource_t *rsc,
                && (rsc == orig_rsc) && (list != NULL));
 
     // Add primitive's own colocations plus any relevant ones from parent
-    pcmk__add_this_with_list(list, rsc->rsc_cons);
+    pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
     if (rsc->parent != NULL) {
         rsc->parent->cmds->this_with_colocations(rsc->parent, rsc, list);
     }

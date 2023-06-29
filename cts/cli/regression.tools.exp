@@ -5711,26 +5711,26 @@ Original: cluster02 capacity:
 Original: httpd-bundle-0 capacity:
 Original: httpd-bundle-1 capacity:
 Original: httpd-bundle-2 capacity:
-pcmk__finalize_assignment: ping:0 utilization on cluster02:
-pcmk__finalize_assignment: ping:1 utilization on cluster01:
-pcmk__finalize_assignment: Fencing utilization on cluster01:
-pcmk__finalize_assignment: dummy utilization on cluster02:
-pcmk__finalize_assignment: httpd-bundle-docker-0 utilization on cluster01:
-pcmk__finalize_assignment: httpd-bundle-docker-1 utilization on cluster02:
-pcmk__finalize_assignment: httpd-bundle-ip-192.168.122.131 utilization on cluster01:
-pcmk__finalize_assignment: httpd-bundle-0 utilization on cluster01:
-pcmk__finalize_assignment: httpd:0 utilization on httpd-bundle-0:
-pcmk__finalize_assignment: httpd-bundle-ip-192.168.122.132 utilization on cluster02:
-pcmk__finalize_assignment: httpd-bundle-1 utilization on cluster02:
-pcmk__finalize_assignment: httpd:1 utilization on httpd-bundle-1:
-pcmk__finalize_assignment: httpd-bundle-2 utilization on cluster01:
-pcmk__finalize_assignment: httpd:2 utilization on httpd-bundle-2:
-pcmk__finalize_assignment: Public-IP utilization on cluster02:
-pcmk__finalize_assignment: Email utilization on cluster02:
-pcmk__finalize_assignment: mysql-proxy:0 utilization on cluster02:
-pcmk__finalize_assignment: mysql-proxy:1 utilization on cluster01:
-pcmk__finalize_assignment: promotable-rsc:0 utilization on cluster02:
-pcmk__finalize_assignment: promotable-rsc:1 utilization on cluster01:
+pcmk__assign_resource: ping:0 utilization on cluster02:
+pcmk__assign_resource: ping:1 utilization on cluster01:
+pcmk__assign_resource: Fencing utilization on cluster01:
+pcmk__assign_resource: dummy utilization on cluster02:
+pcmk__assign_resource: httpd-bundle-docker-0 utilization on cluster01:
+pcmk__assign_resource: httpd-bundle-docker-1 utilization on cluster02:
+pcmk__assign_resource: httpd-bundle-ip-192.168.122.131 utilization on cluster01:
+pcmk__assign_resource: httpd-bundle-0 utilization on cluster01:
+pcmk__assign_resource: httpd:0 utilization on httpd-bundle-0:
+pcmk__assign_resource: httpd-bundle-ip-192.168.122.132 utilization on cluster02:
+pcmk__assign_resource: httpd-bundle-1 utilization on cluster02:
+pcmk__assign_resource: httpd:1 utilization on httpd-bundle-1:
+pcmk__assign_resource: httpd-bundle-2 utilization on cluster01:
+pcmk__assign_resource: httpd:2 utilization on httpd-bundle-2:
+pcmk__assign_resource: Public-IP utilization on cluster02:
+pcmk__assign_resource: Email utilization on cluster02:
+pcmk__assign_resource: mysql-proxy:0 utilization on cluster02:
+pcmk__assign_resource: mysql-proxy:1 utilization on cluster01:
+pcmk__assign_resource: promotable-rsc:0 utilization on cluster02:
+pcmk__assign_resource: promotable-rsc:1 utilization on cluster01:
 Remaining: cluster01 capacity:
 Remaining: cluster02 capacity:
 Remaining: httpd-bundle-0 capacity:
