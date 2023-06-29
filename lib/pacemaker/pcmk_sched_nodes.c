@@ -84,6 +84,82 @@ pcmk__copy_node_table(GHashTable *nodes)
 
 /*!
  * \internal
+ * \brief Free a table of node tables
+ *
+ * \param[in,out] data  Table to free
+ *
+ * \note This is a \c GDestroyNotify wrapper for \c g_hash_table_destroy().
+ */
+static void
+destroy_node_tables(gpointer data)
+{
+    g_hash_table_destroy((GHashTable *) data);
+}
+
+/*!
+ * \internal
+ * \brief Recursively copy the node tables of a resource
+ *
+ * Build a hash table containing copies of the allowed nodes tables of \p rsc
+ * and its entire tree of descendants. The key is the resource ID, and the value
+ * is a copy of the resource's node table.
+ *
+ * \param[in]     rsc   Resource whose node table to copy
+ * \param[in,out] copy  Where to store the copied node tables
+ *
+ * \note \p *copy should be \c NULL for the top-level call.
+ * \note The caller is responsible for freeing \p copy using
+ *       \c g_hash_table_destroy().
+ */
+void
+pcmk__copy_node_tables(const pe_resource_t *rsc, GHashTable **copy)
+{
+    CRM_ASSERT((rsc != NULL) && (copy != NULL));
+
+    if (*copy == NULL) {
+        *copy = pcmk__strkey_table(NULL, destroy_node_tables);
+    }
+
+    g_hash_table_insert(*copy, rsc->id,
+                        pcmk__copy_node_table(rsc->allowed_nodes));
+
+    for (const GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        pcmk__copy_node_tables((const pe_resource_t *) iter->data, copy);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Recursively restore the node tables of a resource from backup
+ *
+ * Given a hash table containing backup copies of the allowed nodes tables of
+ * \p rsc and its entire tree of descendants, replace the resources' current
+ * node tables with the backed-up copies.
+ *
+ * \param[in,out] rsc     Resource whose node tables to restore
+ * \param[in]     backup  Table of backup node tables (created by
+ *                        \c pcmk__copy_node_tables())
+ *
+ * \note This function frees the resources' current node tables.
+ */
+void
+pcmk__restore_node_tables(pe_resource_t *rsc, GHashTable *backup)
+{
+    CRM_ASSERT((rsc != NULL) && (backup != NULL));
+
+    g_hash_table_destroy(rsc->allowed_nodes);
+
+    // Copy to avoid danger with multiple restores
+    rsc->allowed_nodes = g_hash_table_lookup(backup, rsc->id);
+    rsc->allowed_nodes = pcmk__copy_node_table(rsc->allowed_nodes);
+
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        pcmk__restore_node_tables((pe_resource_t *) iter->data, backup);
+    }
+}
+
+/*!
+ * \internal
  * \brief Copy a list of node objects
  *
  * \param[in] list   List to copy

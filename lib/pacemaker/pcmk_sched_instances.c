@@ -596,8 +596,9 @@ assign_instance(pe_resource_t *instance, const pe_node_t *prefer,
         chosen = instance->cmds->assign(instance, NULL);
 
     } else { // Possible early assignment to preferred node
-        GHashTable *backup = pcmk__copy_node_table(instance->allowed_nodes);
+        GHashTable *backup = NULL;
 
+        pcmk__copy_node_tables(instance, &backup);
         chosen = instance->cmds->assign(instance, prefer);
 
         // Revert nodes if preferred node won't be assigned
@@ -605,13 +606,11 @@ assign_instance(pe_resource_t *instance, const pe_node_t *prefer,
             crm_info("Not assigning %s to preferred node %s: %s is better",
                      instance->id, pe__node_name(prefer),
                      pe__node_name(chosen));
-            g_hash_table_destroy(instance->allowed_nodes);
-            instance->allowed_nodes = backup;
+            pcmk__restore_node_tables(instance, backup);
             pcmk__unassign_resource(instance);
             chosen = NULL;
-        } else if (backup != NULL) {
-            g_hash_table_destroy(backup);
         }
+        g_hash_table_destroy(backup);
     }
 
     // The parent tracks how many instances have been assigned to each node
