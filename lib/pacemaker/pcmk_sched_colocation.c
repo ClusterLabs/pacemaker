@@ -584,9 +584,9 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
             if (rsc_2 == NULL) {
                 // Should be possible only with validation disabled
                 pcmk__config_err("Ignoring set %s colocation with resource %s "
-                                 "and later in set %s: No such resource",
+                                 "in set %s: No such resource",
                                  ID(set1), xml_rsc_id, ID(set2));
-                return;
+                continue;
             }
             pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2, role_1,
                                  role_2, flags);
@@ -601,10 +601,10 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
                                                    xml_rsc_id);
             if (rsc_1 == NULL) {
                 // Should be possible only with validation disabled
-                pcmk__config_err("Ignoring resource %s and later in set %s "
-                                 "for colocation with set %s: No such resource",
-                                 xml_rsc_id, ID(set1), ID(set2));
-                return;
+                pcmk__config_err("Ignoring colocation of set %s resource %s "
+                                 "with set %s: No such resource",
+                                 ID(set1), xml_rsc_id, ID(set2));
+                continue;
             }
             flags = pcmk__coloc_explicit
                     | unpack_influence(id, rsc_1, influence_s);
@@ -623,10 +623,10 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
                                                    xml_rsc_id);
             if (rsc_1 == NULL) {
                 // Should be possible only with validation disabled
-                pcmk__config_err("Ignoring resource %s and later in set %s "
-                                 "for colocation with set %s: No such resource",
-                                 xml_rsc_id, ID(set1), ID(set2));
-                return;
+                pcmk__config_err("Ignoring colocation of set %s resource %s "
+                                 "with set %s: No such resource",
+                                 ID(set1), xml_rsc_id, ID(set2));
+                continue;
             }
 
             flags = pcmk__coloc_explicit
@@ -640,11 +640,11 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
                                                        xml_rsc_id);
                 if (rsc_2 == NULL) {
                     // Should be possible only with validation disabled
-                    pcmk__config_err("Ignoring set %s resource %s colocation with "
-                                     "resource %s and later in set %s: "
-                                     "No such resource",
-                                     ID(set1), ID(xml_rsc), xml_rsc_id, ID(set2));
-                    return;
+                    pcmk__config_err("Ignoring colocation of set %s resource "
+                                     "%s with set %s resource %s: No such "
+                                     "resource", ID(set1), ID(xml_rsc),
+                                     ID(set2), xml_rsc_id);
+                    continue;
                 }
                 pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2,
                                      role_1, role_2, flags);
