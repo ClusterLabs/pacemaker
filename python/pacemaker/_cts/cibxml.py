@@ -37,8 +37,8 @@ class XmlBase(CibBase):
         text = '''<%s''' % self.tag
         if self.name:
             text += ''' id="%s"''' % (self.name)
-        for k in list(self.kwargs.keys()):
-            text += ''' %s="%s"''' % (k, self.kwargs[k])
+        for (k, v) in self.kwargs.items():
+            text += ''' %s="%s"''' % (k, v)
 
         if not self.children:
             text += '''/>'''
@@ -73,7 +73,7 @@ class InstanceAttributes(XmlBase):
         XmlBase.__init__(self, Factory, "instance_attributes", name)
 
         # Create an <nvpair> for each attribute
-        for (attr, value) in list(attrs.items()):
+        for (attr, value) in attrs.items():
             self.add_child(XmlBase(Factory, "nvpair", "%s-%s" % (name, attr),
                 name=attr, value=value))
 
@@ -245,23 +245,21 @@ class Resource(XmlBase):
     def constraints(self):
         text = "<constraints>"
 
-        for k in list(self.scores.keys()):
+        for (k, v) in self.scores.items():
             text += '''<rsc_location id="prefer-%s" rsc="%s">''' % (k, self.name)
-            text += self.scores[k].show()
+            text += v.show()
             text += '''</rsc_location>'''
 
-        for k in list(self.needs.keys()):
+        for (k, kargs) in self.needs.items():
             text += '''<rsc_order id="%s-after-%s" first="%s" then="%s"''' % (self.name, k, k, self.name)
-            kargs = self.needs[k]
-            for kw in list(kargs.keys()):
-                text += ''' %s="%s"''' % (kw, kargs[kw])
+            for (kw, kw_v) in kargs.items():
+                text += ''' %s="%s"''' % (kw, kw_v)
             text += '''/>'''
 
-        for k in list(self.coloc.keys()):
+        for (k, kargs) in self.coloc.items():
             text += '''<rsc_colocation id="%s-with-%s" rsc="%s" with-rsc="%s"''' % (self.name, k, self.name, k)
-            kargs = self.coloc[k]
-            for kw in list(kargs.keys()):
-                text += ''' %s="%s"''' % (kw, kargs[kw])
+            for (kw, kw_v) in kargs.items():
+                text += ''' %s="%s"''' % (kw, kw_v)
             text += '''/>'''
 
         text += "</constraints>"
@@ -275,14 +273,14 @@ class Resource(XmlBase):
 
         if len(self.meta) > 0:
             text += '''<meta_attributes id="%s-meta">''' % self.name
-            for p in list(self.meta.keys()):
-                text += '''<nvpair id="%s-%s" name="%s" value="%s"/>''' % (self.name, p, p, self.meta[p])
+            for (p, v) in self.meta.items():
+                text += '''<nvpair id="%s-%s" name="%s" value="%s"/>''' % (self.name, p, p, v)
             text += '''</meta_attributes>'''
 
         if len(self.param) > 0:
             text += '''<instance_attributes id="%s-params">''' % self.name
-            for p in list(self.param.keys()):
-                text += '''<nvpair id="%s-%s" name="%s" value="%s"/>''' % (self.name, p, p, self.param[p])
+            for (p, v) in self.param.items():
+                text += '''<nvpair id="%s-%s" name="%s" value="%s"/>''' % (self.name, p, p, v)
             text += '''</instance_attributes>'''
 
         if len(self.op) > 0:
@@ -315,8 +313,8 @@ class Group(Resource):
 
         if len(self.meta) > 0:
             text += '''<meta_attributes id="%s-meta">''' % self.name
-            for p in list(self.meta.keys()):
-                text += '''<nvpair id="%s-%s" name="%s" value="%s"/>''' % (self.name, p, p, self.meta[p])
+            for (p, v) in self.meta.items():
+                text += '''<nvpair id="%s-%s" name="%s" value="%s"/>''' % (self.name, p, p, v)
             text += '''</meta_attributes>'''
 
         for c in self.children:
