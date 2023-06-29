@@ -8,32 +8,11 @@ import os
 import warnings
 import tempfile
 
+from cts.cib_xml import *
+
 from pacemaker.buildoptions import BuildOptions
 from pacemaker._cts.CTS import CtsLab
 from pacemaker._cts.network import next_ip
-
-
-class CibBase(object):
-    def __init__(self, Factory, tag, _id, **kwargs):
-        self.tag = tag
-        self.name = _id
-        self.kwargs = kwargs
-        self.children = []
-        self.Factory = Factory
-
-    def __repr__(self):
-        return "%s-%s" % (self.tag, self.name)
-
-    def add_child(self, child):
-        self.children.append(child)
-
-    def __setitem__(self, key, value):
-        if value:
-            self.kwargs[key] = value
-        else:
-            self.kwargs.pop(key, None)
-
-from cts.cib_xml import *
 
 
 class ConfigBase(object):

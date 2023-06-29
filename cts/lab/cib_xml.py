@@ -6,7 +6,26 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 
 import sys
 
-from cts.CIB     import CibBase
+
+class CibBase(object):
+    def __init__(self, Factory, tag, _id, **kwargs):
+        self.tag = tag
+        self.name = _id
+        self.kwargs = kwargs
+        self.children = []
+        self.Factory = Factory
+
+    def __repr__(self):
+        return "%s-%s" % (self.tag, self.name)
+
+    def add_child(self, child):
+        self.children.append(child)
+
+    def __setitem__(self, key, value):
+        if value:
+            self.kwargs[key] = value
+        else:
+            self.kwargs.pop(key, None)
 
 
 class XmlBase(CibBase):
