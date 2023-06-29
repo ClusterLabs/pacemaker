@@ -701,8 +701,8 @@ pcmk__with_group_colocations(const pe_resource_t *rsc,
     }
 
     // Add explicit colocations with the group's (other) children
-    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-        pe_resource_t *member = iter->data;
+    for (const GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        const pe_resource_t *member = iter->data;
 
         if (member != orig_rsc) {
             member->cmds->with_this_colocations(member, orig_rsc, list);
@@ -748,7 +748,8 @@ pcmk__group_with_colocations(const pe_resource_t *rsc,
         }
 
         // Add explicit colocations involving the group's (other) children
-        for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        for (const GList *iter = rsc->children;
+             iter != NULL; iter = iter->next) {
             member = iter->data;
             if (member != orig_rsc) {
                 member->cmds->this_with_colocations(member, orig_rsc, list);
@@ -762,7 +763,7 @@ pcmk__group_with_colocations(const pe_resource_t *rsc,
      * However, if an earlier group member is unmanaged, this chaining will not
      * happen, so the group's mandatory colocations must be explicitly added.
      */
-    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+    for (const GList *iter = rsc->children; iter != NULL; iter = iter->next) {
         member = iter->data;
         if (orig_rsc == member) {
             break; // We've seen all earlier members, and none are unmanaged
