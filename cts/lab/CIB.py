@@ -8,10 +8,9 @@ import os
 import warnings
 import tempfile
 
-from cts.cib_xml import *
-
 from pacemaker.buildoptions import BuildOptions
 from pacemaker._cts.CTS import CtsLab
+from pacemaker._cts.cibxml import Alerts, Clone, Expression, FencingTopology, Group, Nodes, OpDefaults, Option, Resource, Rule
 from pacemaker._cts.network import next_ip
 
 

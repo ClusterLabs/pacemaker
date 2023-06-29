@@ -19,7 +19,6 @@ dist_halib_SCRIPTS	= cts-log-watcher
 ctslibdir		= $(pythondir)/cts
 ctslib_PYTHON		= __init__.py		\
 			  CIB.py		\
-			  cib_xml.py		\
 			  ClusterManager.py	\
 			  CM_corosync.py
 
