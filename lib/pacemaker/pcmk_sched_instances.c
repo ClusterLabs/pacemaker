@@ -566,9 +566,6 @@ assign_instance(pe_resource_t *instance, const pe_node_t *prefer,
     pe_rsc_trace(instance, "Assigning %s (preferring %s)", instance->id,
                  ((prefer == NULL)? "no node" : prefer->details->uname));
 
-    CRM_CHECK(pcmk_is_set(instance->flags, pe_rsc_provisional),
-              return (instance->fns->location(instance, NULL, FALSE) != NULL));
-
     if (pcmk_is_set(instance->flags, pe_rsc_allocating)) {
         pe_rsc_debug(instance,
                      "Assignment loop detected involving %s colocations",
@@ -740,6 +737,10 @@ pcmk__assign_instances(pe_resource_t *collective, GList *instances,
     for (iter = instances; (iter != NULL) && (assigned < max_total);
          iter = iter->next) {
         instance = (pe_resource_t *) iter->data;
+
+        if (!pcmk_is_set(instance->flags, pe_rsc_provisional)) {
+            continue;   // Already assigned
+        }
 
         current = preferred_node(collective, instance, optimal_per_node);
         if ((current != NULL)
