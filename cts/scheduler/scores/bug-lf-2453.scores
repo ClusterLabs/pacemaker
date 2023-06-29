@@ -17,6 +17,10 @@ pcmk__primitive_assign: DummyResource:1 allocation score on domu1: -INFINITY
 pcmk__primitive_assign: DummyResource:1 allocation score on domu2: INFINITY
 pcmk__primitive_assign: PrimitiveResource1 allocation score on domu1: INFINITY
 pcmk__primitive_assign: apache:0 allocation score on domu1: -INFINITY
+pcmk__primitive_assign: apache:0 allocation score on domu1: -INFINITY
+pcmk__primitive_assign: apache:0 allocation score on domu2: -INFINITY
 pcmk__primitive_assign: apache:0 allocation score on domu2: -INFINITY
 pcmk__primitive_assign: apache:1 allocation score on domu1: -INFINITY
+pcmk__primitive_assign: apache:1 allocation score on domu1: -INFINITY
+pcmk__primitive_assign: apache:1 allocation score on domu2: -INFINITY
 pcmk__primitive_assign: apache:1 allocation score on domu2: -INFINITY

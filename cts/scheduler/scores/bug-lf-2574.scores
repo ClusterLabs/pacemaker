@@ -39,7 +39,10 @@ pcmk__primitive_assign: prmDummy1:2 allocation score on srv01: -INFINITY
 pcmk__primitive_assign: prmDummy1:2 allocation score on srv02: -INFINITY
 pcmk__primitive_assign: prmDummy1:2 allocation score on srv03: -INFINITY
 pcmk__primitive_assign: prmPingd:0 allocation score on srv01: -INFINITY
+pcmk__primitive_assign: prmPingd:0 allocation score on srv01: -INFINITY
 pcmk__primitive_assign: prmPingd:0 allocation score on srv02: -INFINITY
+pcmk__primitive_assign: prmPingd:0 allocation score on srv02: -INFINITY
+pcmk__primitive_assign: prmPingd:0 allocation score on srv03: -INFINITY
 pcmk__primitive_assign: prmPingd:0 allocation score on srv03: -INFINITY
 pcmk__primitive_assign: prmPingd:1 allocation score on srv01: -INFINITY
 pcmk__primitive_assign: prmPingd:1 allocation score on srv02: -INFINITY
