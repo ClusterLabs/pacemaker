@@ -93,7 +93,7 @@ class CtsLab:
         for node in self._env["nodes"]:
             self._logger.log("    * %s" % (node))
 
-        if not scenario.SetUp():
+        if not scenario.setup():
             return ExitStatus.ERROR
 
         # We want to alert on any exceptions caused by running a scenario, so
@@ -106,16 +106,16 @@ class CtsLab:
             self._logger.traceback(traceback)
 
             scenario.summarize()
-            scenario.TearDown()
+            scenario.teardown()
             return ExitStatus.ERROR
 
-        scenario.TearDown()
+        scenario.teardown()
         scenario.summarize()
 
-        if scenario.Stats["failure"] > 0:
+        if scenario.stats["failure"] > 0:
             return ExitStatus.ERROR
 
-        if scenario.Stats["success"] != iterations:
+        if scenario.stats["success"] != iterations:
             self._logger.log("No failure count but success != requested iterations")
             return ExitStatus.ERROR
 

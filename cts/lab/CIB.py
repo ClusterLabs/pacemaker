@@ -278,9 +278,6 @@ class CIB12(ConfigBase):
         o["dc-deadtime"] = "5s"
         o["no-quorum-policy"] = no_quorum
 
-        if self.CM.Env["DoBSC"]:
-            o["ident-string"] = "Linux-HA TEST configuration file - REMOVEME!!"
-
         o.commit()
 
         o = OpDefaults(self.Factory)

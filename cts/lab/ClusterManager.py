@@ -69,9 +69,6 @@ class ClusterManager(UserDict):
         self.cluster_monitor = 0
         self.use_short_names = 1
 
-        if self.Env["DoBSC"]:
-            del self.templates["Pat:They_stopped"]
-
         self._finalConditions()
 
         self.check_transitions = 0

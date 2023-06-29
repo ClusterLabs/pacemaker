@@ -21,8 +21,7 @@ ctslib_PYTHON		= __init__.py		\
 			  CIB.py		\
 			  cib_xml.py		\
 			  ClusterManager.py	\
-			  CM_corosync.py	\
-			  CTSscenarios.py
+			  CM_corosync.py
 
 ctsdir			= $(datadir)/$(PACKAGE)/tests/cts
 cts_SCRIPTS		= CTSlab.py		\

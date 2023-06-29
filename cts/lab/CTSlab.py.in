@@ -12,11 +12,11 @@ sys.path.insert(0, pdir) # So that things work from the source directory
 
 try:
     from cts.CM_corosync  import *
-    from cts.CTSscenarios import *
 
     from pacemaker._cts.CTS import CtsLab
     from pacemaker._cts.audits import audit_list
     from pacemaker._cts.logging import LogFactory
+    from pacemaker._cts.scenarios import AllOnce, Boot, BootCluster, LeaveBooted, RandomTests, Sequence
     from pacemaker._cts.tests import test_list
 except ImportError as e:
     sys.stderr.write("abort: %s\n" % e)
@@ -33,7 +33,7 @@ def sig_handler(signum, frame) :
     LogFactory().log("Interrupted by signal %d"%signum)
     if scenario: scenario.summarize()
     if signum == 15 :
-        if scenario: scenario.TearDown()
+        if scenario: scenario.teardown()
         sys.exit(1)
 
 
@@ -101,21 +101,18 @@ if __name__ == '__main__':
                Tests.append(match)
 
     # Scenario selection
-    if Environment["scenario"] == "basic-sanity":
-        scenario = RandomTests(cm, [ BasicSanityCheck(Environment) ], Audits, Tests)
-
-    elif Environment["scenario"] == "all-once":
+    if Environment["scenario"] == "all-once":
         NumIter = len(Tests)
         scenario = AllOnce(
-            cm, [ BootCluster(Environment) ], Audits, Tests)
+            cm, [ BootCluster(cm, Environment) ], Audits, Tests)
     elif Environment["scenario"] == "sequence":
         scenario = Sequence(
-            cm, [ BootCluster(Environment) ], Audits, Tests)
+            cm, [ BootCluster(cm, Environment) ], Audits, Tests)
     elif Environment["scenario"] == "boot":
-        scenario = Boot(cm, [ LeaveBooted(Environment)], Audits, [])
+        scenario = Boot(cm, [ LeaveBooted(cm, Environment)], Audits, [])
     else:
         scenario = RandomTests(
-            cm, [ BootCluster(Environment) ], Audits, Tests)
+            cm, [ BootCluster(cm, Environment) ], Audits, Tests)
 
     LogFactory().log(">>>>>>>>>>>>>>>> BEGINNING " + repr(NumIter) + " TEST" + plural_s(NumIter, True) + " ")
     LogFactory().log("Stack:                  %s (%s)" % (Environment["Stack"], Environment["Name"]))

@@ -23,6 +23,7 @@ pkgpython_PYTHON = CTS.py \
 				   patterns.py \
 				   process.py \
 				   remote.py \
+				   scenarios.py \
 				   test.py \
 				   timer.py \
 				   watcher.py

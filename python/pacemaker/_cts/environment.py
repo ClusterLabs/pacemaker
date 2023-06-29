@@ -403,9 +403,6 @@ class Environment:
         grp4.add_argument("--boot",
                           action="store_true",
                           help="")
-        grp4.add_argument("--bsc",
-                          action="store_true",
-                          help="")
         grp4.add_argument("--cib-filename",
                           metavar="PATH",
                           help="Install the given CIB file to the cluster")
@@ -542,10 +539,6 @@ class Environment:
         # alphabetically.
         if args.boot:
             self["scenario"] = "boot"
-
-        if args.bsc:
-            self["DoBSC"] = True
-            self["scenario"] = "basic-sanity"
 
         if args.cib_filename:
             self["CIBfilename"] = args.cib_filename
