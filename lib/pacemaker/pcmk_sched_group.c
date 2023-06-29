@@ -168,10 +168,15 @@ member_internal_constraints(gpointer data, gpointer user_data)
         }
 
     } else if (member_data->colocated) {
+        uint32_t flags = pcmk__coloc_none;
+
+        if (pcmk_is_set(member->flags, pe_rsc_critical)) {
+            flags |= pcmk__coloc_influence;
+        }
+
         // Colocate this member with the previous one
-        pcmk__new_colocation("group:internal_colocation", NULL, INFINITY,
-                             member, member_data->previous_member, NULL, NULL,
-                             pcmk_is_set(member->flags, pe_rsc_critical));
+        pcmk__new_colocation("#group-members", NULL, INFINITY, member,
+                             member_data->previous_member, NULL, NULL, flags);
     }
 
     if (member_data->promotable) {
@@ -671,16 +676,36 @@ pcmk__with_group_colocations(const pe_resource_t *rsc,
     }
 
     /* "With this" colocations are needed only for the group itself and for its
-     * last member. Add the group's colocations plus any relevant
-     * parent colocations if cloned.
+     * last member. (Previous members will chain via the group internal
+     * colocations.)
      */
-    if ((rsc == orig_rsc) || (orig_rsc == pe__last_group_member(rsc))) {
-        crm_trace("Adding 'with %s' colocations to list for %s",
-                  rsc->id, orig_rsc->id);
-        pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
-        if (rsc->parent != NULL) { // Cloned group
-            rsc->parent->cmds->with_this_colocations(rsc->parent, orig_rsc,
-                                                     list);
+    if ((orig_rsc != rsc) && (orig_rsc != pe__last_group_member(rsc))) {
+        return;
+    }
+
+    pe_rsc_trace(rsc, "Adding 'with %s' colocations to list for %s",
+                 rsc->id, orig_rsc->id);
+
+    // Add the group's own colocations
+    pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
+
+    // If cloned, add any relevant colocations with the clone
+    if (rsc->parent != NULL) {
+        rsc->parent->cmds->with_this_colocations(rsc->parent, orig_rsc,
+                                                 list);
+    }
+
+    if (!pe__group_flag_is_set(rsc, pe__group_colocated)) {
+        // @COMPAT Non-colocated groups are deprecated
+        return;
+    }
+
+    // Add explicit colocations with the group's (other) children
+    for (const GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        const pe_resource_t *member = iter->data;
+
+        if (member != orig_rsc) {
+            member->cmds->with_this_colocations(member, orig_rsc, list);
         }
     }
 }
@@ -690,6 +715,8 @@ void
 pcmk__group_with_colocations(const pe_resource_t *rsc,
                              const pe_resource_t *orig_rsc, GList **list)
 {
+    const pe_resource_t *member = NULL;
+
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_group)
                && (orig_rsc != NULL) && (list != NULL));
 
@@ -698,17 +725,35 @@ pcmk__group_with_colocations(const pe_resource_t *rsc,
         return;
     }
 
-    /* Colocations for the group itself, or for its first member, consist of the
-     * group's colocations plus any relevant parent colocations if cloned.
+    /* "This with" colocations are normally needed only for the group itself and
+     * for its first member.
      */
     if ((rsc == orig_rsc)
         || (orig_rsc == (const pe_resource_t *) rsc->children->data)) {
-        crm_trace("Adding '%s with' colocations to list for %s",
-                  rsc->id, orig_rsc->id);
+        pe_rsc_trace(rsc, "Adding '%s with' colocations to list for %s",
+                     rsc->id, orig_rsc->id);
+
+        // Add the group's own colocations
         pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
-        if (rsc->parent != NULL) { // Cloned group
+
+        // If cloned, add any relevant colocations involving the clone
+        if (rsc->parent != NULL) {
             rsc->parent->cmds->this_with_colocations(rsc->parent, orig_rsc,
                                                      list);
+        }
+
+        if (!pe__group_flag_is_set(rsc, pe__group_colocated)) {
+            // @COMPAT Non-colocated groups are deprecated
+            return;
+        }
+
+        // Add explicit colocations involving the group's (other) children
+        for (const GList *iter = rsc->children;
+             iter != NULL; iter = iter->next) {
+            member = iter->data;
+            if (member != orig_rsc) {
+                member->cmds->this_with_colocations(member, orig_rsc, list);
+            }
         }
         return;
     }
@@ -718,9 +763,8 @@ pcmk__group_with_colocations(const pe_resource_t *rsc,
      * However, if an earlier group member is unmanaged, this chaining will not
      * happen, so the group's mandatory colocations must be explicitly added.
      */
-    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-        const pe_resource_t *member = (const pe_resource_t *) iter->data;
-
+    for (const GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        member = iter->data;
         if (orig_rsc == member) {
             break; // We've seen all earlier members, and none are unmanaged
         }

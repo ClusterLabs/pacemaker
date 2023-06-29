@@ -21,15 +21,6 @@
 #include "crm/msg_xml.h"
 #include "libpacemaker_private.h"
 
-#define EXPAND_CONSTRAINT_IDREF(__set, __rsc, __name) do {                  \
-        __rsc = pcmk__find_constraint_resource(data_set->resources,         \
-                                               __name);                     \
-        if (__rsc == NULL) {                                                \
-            pcmk__config_err("%s: No resource found for %s", __set, __name);\
-            return;                                                         \
-        }                                                                   \
-    } while (0)
-
 // Used to temporarily mark a node as unusable
 #define INFINITY_HACK   (INFINITY * -100)
 
@@ -184,11 +175,11 @@ pcmk__add_this_with(GList **list, const pcmk__colocation_t *colocation,
     CRM_ASSERT((list != NULL) && (colocation != NULL) && (rsc != NULL));
 
     pe_rsc_trace(rsc,
-                 "Adding colocation %s (%s with %s using %s @%d) to "
+                 "Adding colocation %s (%s with %s using %s @%s) to "
                  "'this with' list for %s",
                  colocation->id, colocation->dependent->id,
                  colocation->primary->id, colocation->node_attribute,
-                 colocation->score, rsc->id);
+                 pcmk_readable_score(colocation->score), rsc->id);
     *list = g_list_insert_sorted(*list, (gpointer) colocation,
                                  cmp_primary_priority);
 }
@@ -244,11 +235,11 @@ pcmk__add_with_this(GList **list, const pcmk__colocation_t *colocation,
     CRM_ASSERT((list != NULL) && (colocation != NULL) && (rsc != NULL));
 
     pe_rsc_trace(rsc,
-                 "Adding colocation %s (%s with %s using %s @%d) to "
+                 "Adding colocation %s (%s with %s using %s @%s) to "
                  "'with this' list for %s",
                  colocation->id, colocation->dependent->id,
                  colocation->primary->id, colocation->node_attribute,
-                 colocation->score, rsc->id);
+                 pcmk_readable_score(colocation->score), rsc->id);
     *list = g_list_insert_sorted(*list, (gpointer) colocation,
                                  cmp_dependent_priority);
 }
@@ -350,30 +341,33 @@ anti_colocation_order(pe_resource_t *first_rsc, int first_role,
  * \param[in,out] primary         Resource to colocate \p dependent with
  * \param[in]     dependent_role  Current role of \p dependent
  * \param[in]     primary_role    Current role of \p primary
- * \param[in]     influence       Whether colocation constraint has influence
+ * \param[in]     flags           Group of enum pcmk__coloc_flags
  */
 void
 pcmk__new_colocation(const char *id, const char *node_attr, int score,
                      pe_resource_t *dependent, pe_resource_t *primary,
                      const char *dependent_role, const char *primary_role,
-                     bool influence)
+                     uint32_t flags)
 {
     pcmk__colocation_t *new_con = NULL;
 
-    if (score == 0) {
-        crm_trace("Ignoring colocation '%s' because score is 0", id);
-        return;
-    }
+    CRM_CHECK(id != NULL, return);
+
     if ((dependent == NULL) || (primary == NULL)) {
         pcmk__config_err("Ignoring colocation '%s' because resource "
                          "does not exist", id);
         return;
     }
 
-    new_con = calloc(1, sizeof(pcmk__colocation_t));
-    if (new_con == NULL) {
+    if (score == 0) {
+        pe_rsc_trace(dependent,
+                     "Ignoring colocation '%s' (%s with %s) because score is 0",
+                     id, dependent->id, primary->id);
         return;
     }
+
+    new_con = calloc(1, sizeof(pcmk__colocation_t));
+    CRM_ASSERT(new_con != NULL);
 
     if (pcmk__str_eq(dependent_role, RSC_ROLE_STARTED_S,
                      pcmk__str_null_matches|pcmk__str_casei)) {
@@ -392,10 +386,7 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
     new_con->dependent_role = text2role(dependent_role);
     new_con->primary_role = text2role(primary_role);
     new_con->node_attribute = pcmk__s(node_attr, CRM_ATTR_UNAME);
-    new_con->influence = influence;
-
-    pe_rsc_trace(dependent, "%s ==> %s (%s %d)",
-                 dependent->id, primary->id, new_con->node_attribute, score);
+    new_con->flags = flags;
 
     pcmk__add_this_with(&(dependent->rsc_cons), new_con, dependent);
     pcmk__add_with_this(&(primary->rsc_cons_lhs), new_con, primary);
@@ -419,10 +410,11 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
  * \param[in] rsc          Resource involved in constraint (for default)
  * \param[in] influence_s  String value of influence option
  *
- * \return true if string evaluates true, false if string evaluates false,
- *         or value of resource's critical option if string is NULL or invalid
+ * \return pcmk__coloc_influence if string evaluates true, or string is NULL or
+ *         invalid and resource's critical option evaluates true, otherwise
+ *         pcmk__coloc_none
  */
-static bool
+static uint32_t
 unpack_influence(const char *coloc_id, const pe_resource_t *rsc,
                  const char *influence_s)
 {
@@ -434,10 +426,13 @@ unpack_influence(const char *coloc_id, const pe_resource_t *rsc,
                              XML_COLOC_ATTR_INFLUENCE " (using default)",
                              coloc_id);
         } else {
-            return (influence_i != 0);
+            return (influence_i == 0)? pcmk__coloc_none : pcmk__coloc_influence;
         }
     }
-    return pcmk_is_set(rsc->flags, pe_rsc_critical);
+    if (pcmk_is_set(rsc->flags, pe_rsc_critical)) {
+        return pcmk__coloc_influence;
+    }
+    return pcmk__coloc_none;
 }
 
 static void
@@ -445,14 +440,15 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
                       const char *influence_s, pe_working_set_t *data_set)
 {
     xmlNode *xml_rsc = NULL;
-    pe_resource_t *with = NULL;
+    pe_resource_t *other = NULL;
     pe_resource_t *resource = NULL;
     const char *set_id = ID(set);
     const char *role = crm_element_value(set, "role");
-    const char *ordering = crm_element_value(set, "ordering");
+    bool with_previous = false;
     int local_score = score;
     bool sequential = false;
-
+    uint32_t flags = pcmk__coloc_none;
+    const char *xml_rsc_id = NULL;
     const char *score_s = crm_element_value(set, XML_RULE_ATTR_SCORE);
 
     if (score_s) {
@@ -464,8 +460,17 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
         return;
     }
 
-    if (ordering == NULL) {
-        ordering = "group";
+    /* @COMPAT The deprecated "ordering" attribute specifies whether resources
+     * in a positive-score set are colocated with the previous or next resource.
+     */
+    if (pcmk__str_eq(crm_element_value(set, "ordering"), "group",
+                     pcmk__str_null_matches|pcmk__str_casei)) {
+        with_previous = true;
+    } else {
+        pe_warn_once(pe_wo_set_ordering,
+                     "Support for 'ordering' other than 'group' in "
+                     XML_CONS_TAG_RSC_SET " (such as %s) is deprecated and "
+                     "will be removed in a future release", set_id);
     }
 
     if ((pcmk__xe_get_bool_attr(set, "sequential", &sequential) == pcmk_rc_ok)
@@ -473,39 +478,35 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
         return;
     }
 
-    if ((local_score > 0) && pcmk__str_eq(ordering, "group", pcmk__str_casei)) {
+    if (local_score > 0) {
         for (xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
-            EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
-            if (with != NULL) {
-                pe_rsc_trace(resource, "Colocating %s with %s",
-                             resource->id, with->id);
-                pcmk__new_colocation(set_id, NULL, local_score, resource,
-                                     with, role, role,
-                                     unpack_influence(coloc_id, resource,
-                                                      influence_s));
+            xml_rsc_id = ID(xml_rsc);
+            resource = pcmk__find_constraint_resource(data_set->resources,
+                                                      xml_rsc_id);
+            if (resource == NULL) {
+                // Should be possible only with validation disabled
+                pcmk__config_err("Ignoring %s and later resources in set %s: "
+                                 "No such resource", xml_rsc_id, set_id);
+                return;
             }
-            with = resource;
-        }
-
-    } else if (local_score > 0) {
-        pe_resource_t *last = NULL;
-
-        for (xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
-             xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
-
-            EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
-            if (last != NULL) {
-                pe_rsc_trace(resource, "Colocating %s with %s",
-                             last->id, resource->id);
-                pcmk__new_colocation(set_id, NULL, local_score, last,
-                                     resource, role, role,
-                                     unpack_influence(coloc_id, last,
-                                                      influence_s));
+            if (other != NULL) {
+                flags = pcmk__coloc_explicit
+                        | unpack_influence(coloc_id, resource, influence_s);
+                if (with_previous) {
+                    pe_rsc_trace(resource, "Colocating %s with %s in set %s",
+                                 resource->id, other->id, set_id);
+                    pcmk__new_colocation(set_id, NULL, local_score, resource,
+                                         other, role, role, flags);
+                } else {
+                    pe_rsc_trace(resource, "Colocating %s with %s in set %s",
+                                 other->id, resource->id, set_id);
+                    pcmk__new_colocation(set_id, NULL, local_score, other,
+                                         resource, role, role, flags);
+                }
             }
-
-            last = resource;
+            other = resource;
         }
 
     } else {
@@ -518,113 +519,186 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
             xmlNode *xml_rsc_with = NULL;
-            bool influence = true;
 
-            EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
-            influence = unpack_influence(coloc_id, resource, influence_s);
-
+            xml_rsc_id = ID(xml_rsc);
+            resource = pcmk__find_constraint_resource(data_set->resources,
+                                                      xml_rsc_id);
+            if (resource == NULL) {
+                // Should be possible only with validation disabled
+                pcmk__config_err("Ignoring %s and later resources in set %s: "
+                                 "No such resource", xml_rsc_id, set_id);
+                return;
+            }
+            flags = pcmk__coloc_explicit
+                    | unpack_influence(coloc_id, resource, influence_s);
             for (xml_rsc_with = first_named_child(set, XML_TAG_RESOURCE_REF);
                  xml_rsc_with != NULL;
                  xml_rsc_with = crm_next_same_xml(xml_rsc_with)) {
 
-                if (pcmk__str_eq(resource->id, ID(xml_rsc_with),
-                                 pcmk__str_none)) {
+                xml_rsc_id = ID(xml_rsc_with);
+                if (pcmk__str_eq(resource->id, xml_rsc_id, pcmk__str_none)) {
                     break;
                 }
-                EXPAND_CONSTRAINT_IDREF(set_id, with, ID(xml_rsc_with));
-                pe_rsc_trace(resource, "Anti-Colocating %s with %s",
-                             resource->id, with->id);
+                other = pcmk__find_constraint_resource(data_set->resources,
+                                                       xml_rsc_id);
+                CRM_ASSERT(other != NULL); // We already processed it
                 pcmk__new_colocation(set_id, NULL, local_score,
-                                     resource, with, role, role, influence);
+                                     resource, other, role, role, flags);
             }
         }
     }
 }
 
+/*!
+ * \internal
+ * \brief Colocate two resource sets relative to each other
+ *
+ * \param[in]     id           Colocation XML ID
+ * \param[in]     set1         Dependent set
+ * \param[in]     set2         Primary set
+ * \param[in]     score        Colocation score
+ * \param[in]     influence_s  Value of colocation's "influence" attribute
+ * \param[in,out] data_set     Cluster working set
+ */
 static void
-colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
-                  const char *influence_s, pe_working_set_t *data_set)
+colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
+                  int score, const char *influence_s,
+                  pe_working_set_t *data_set)
 {
     xmlNode *xml_rsc = NULL;
     pe_resource_t *rsc_1 = NULL;
     pe_resource_t *rsc_2 = NULL;
 
+    const char *xml_rsc_id = NULL;
     const char *role_1 = crm_element_value(set1, "role");
     const char *role_2 = crm_element_value(set2, "role");
 
     int rc = pcmk_rc_ok;
     bool sequential = false;
+    uint32_t flags = pcmk__coloc_none;
 
     if (score == 0) {
-        crm_trace("Ignoring colocation '%s' between sets because score is 0",
-                  id);
+        crm_trace("Ignoring colocation '%s' between sets %s and %s "
+                  "because score is 0", id, ID(set1), ID(set2));
         return;
     }
 
     rc = pcmk__xe_get_bool_attr(set1, "sequential", &sequential);
-    if (rc != pcmk_rc_ok || sequential) {
+    if ((rc != pcmk_rc_ok) || sequential) {
         // Get the first one
         xml_rsc = first_named_child(set1, XML_TAG_RESOURCE_REF);
         if (xml_rsc != NULL) {
-            EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
+            xml_rsc_id = ID(xml_rsc);
+            rsc_1 = pcmk__find_constraint_resource(data_set->resources,
+                                                   xml_rsc_id);
+            if (rsc_1 == NULL) {
+                // Should be possible only with validation disabled
+                pcmk__config_err("Ignoring colocation of set %s with set %s "
+                                 "because first resource %s not found",
+                                 ID(set1), ID(set2), xml_rsc_id);
+                return;
+            }
         }
     }
 
     rc = pcmk__xe_get_bool_attr(set2, "sequential", &sequential);
-    if (rc != pcmk_rc_ok || sequential) {
+    if ((rc != pcmk_rc_ok) || sequential) {
         // Get the last one
-        const char *rid = NULL;
-
         for (xml_rsc = first_named_child(set2, XML_TAG_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
-            rid = ID(xml_rsc);
+            xml_rsc_id = ID(xml_rsc);
         }
-        EXPAND_CONSTRAINT_IDREF(id, rsc_2, rid);
+        rsc_2 = pcmk__find_constraint_resource(data_set->resources, xml_rsc_id);
+        if (rsc_2 == NULL) {
+            // Should be possible only with validation disabled
+            pcmk__config_err("Ignoring colocation of set %s with set %s "
+                             "because last resource %s not found",
+                             ID(set1), ID(set2), xml_rsc_id);
+            return;
+        }
     }
 
-    if ((rsc_1 != NULL) && (rsc_2 != NULL)) {
+    if ((rsc_1 != NULL) && (rsc_2 != NULL)) { // Both sets are sequential
+        flags = pcmk__coloc_explicit | unpack_influence(id, rsc_1, influence_s);
         pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2, role_1, role_2,
-                             unpack_influence(id, rsc_1, influence_s));
+                             flags);
 
-    } else if (rsc_1 != NULL) {
-        bool influence = unpack_influence(id, rsc_1, influence_s);
-
+    } else if (rsc_1 != NULL) { // Only set1 is sequential
+        flags = pcmk__coloc_explicit | unpack_influence(id, rsc_1, influence_s);
         for (xml_rsc = first_named_child(set2, XML_TAG_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
-            EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc));
+            xml_rsc_id = ID(xml_rsc);
+            rsc_2 = pcmk__find_constraint_resource(data_set->resources,
+                                                   xml_rsc_id);
+            if (rsc_2 == NULL) {
+                // Should be possible only with validation disabled
+                pcmk__config_err("Ignoring set %s colocation with resource %s "
+                                 "in set %s: No such resource",
+                                 ID(set1), xml_rsc_id, ID(set2));
+                continue;
+            }
             pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2, role_1,
-                                 role_2, influence);
+                                 role_2, flags);
         }
 
-    } else if (rsc_2 != NULL) {
+    } else if (rsc_2 != NULL) { // Only set2 is sequential
         for (xml_rsc = first_named_child(set1, XML_TAG_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
-            EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
+            xml_rsc_id = ID(xml_rsc);
+            rsc_1 = pcmk__find_constraint_resource(data_set->resources,
+                                                   xml_rsc_id);
+            if (rsc_1 == NULL) {
+                // Should be possible only with validation disabled
+                pcmk__config_err("Ignoring colocation of set %s resource %s "
+                                 "with set %s: No such resource",
+                                 ID(set1), xml_rsc_id, ID(set2));
+                continue;
+            }
+            flags = pcmk__coloc_explicit
+                    | unpack_influence(id, rsc_1, influence_s);
             pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2, role_1,
-                                 role_2,
-                                 unpack_influence(id, rsc_1, influence_s));
+                                 role_2, flags);
         }
 
-    } else {
+    } else { // Neither set is sequential
         for (xml_rsc = first_named_child(set1, XML_TAG_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
             xmlNode *xml_rsc_2 = NULL;
-            bool influence = true;
 
-            EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
-            influence = unpack_influence(id, rsc_1, influence_s);
+            xml_rsc_id = ID(xml_rsc);
+            rsc_1 = pcmk__find_constraint_resource(data_set->resources,
+                                                   xml_rsc_id);
+            if (rsc_1 == NULL) {
+                // Should be possible only with validation disabled
+                pcmk__config_err("Ignoring colocation of set %s resource %s "
+                                 "with set %s: No such resource",
+                                 ID(set1), xml_rsc_id, ID(set2));
+                continue;
+            }
 
+            flags = pcmk__coloc_explicit
+                    | unpack_influence(id, rsc_1, influence_s);
             for (xml_rsc_2 = first_named_child(set2, XML_TAG_RESOURCE_REF);
                  xml_rsc_2 != NULL;
                  xml_rsc_2 = crm_next_same_xml(xml_rsc_2)) {
 
-                EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc_2));
+                xml_rsc_id = ID(xml_rsc_2);
+                rsc_2 = pcmk__find_constraint_resource(data_set->resources,
+                                                       xml_rsc_id);
+                if (rsc_2 == NULL) {
+                    // Should be possible only with validation disabled
+                    pcmk__config_err("Ignoring colocation of set %s resource "
+                                     "%s with set %s resource %s: No such "
+                                     "resource", ID(set1), ID(xml_rsc),
+                                     ID(set2), xml_rsc_id);
+                    continue;
+                }
                 pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2,
-                                     role_1, role_2, influence);
+                                     role_1, role_2, flags);
             }
         }
     }
@@ -635,6 +709,7 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
                          const char *influence_s, pe_working_set_t *data_set)
 {
     int score_i = 0;
+    uint32_t flags = pcmk__coloc_none;
 
     const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
     const char *dependent_id = crm_element_value(xml_obj,
@@ -724,9 +799,9 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
         score_i = char2score(score);
     }
 
+    flags = pcmk__coloc_explicit | unpack_influence(id, dependent, influence_s);
     pcmk__new_colocation(id, attr, score_i, dependent, primary,
-                         dependent_role, primary_role,
-                         unpack_influence(id, dependent, influence_s));
+                         dependent_role, primary_role, flags);
 }
 
 // \return Standard Pacemaker return code
@@ -867,22 +942,29 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
     xmlNode *expanded_xml = NULL;
 
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
-    const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
-    const char *influence_s = crm_element_value(xml_obj,
-                                                XML_COLOC_ATTR_INFLUENCE);
+    const char *score = NULL;
+    const char *influence_s = NULL;
 
-    if (score) {
-        score_i = char2score(score);
+    if (pcmk__str_empty(id)) {
+        pcmk__config_err("Ignoring " XML_CONS_TAG_RSC_DEPEND
+                         " without " CRM_ATTR_ID);
+        return;
     }
 
     if (unpack_colocation_tags(xml_obj, &expanded_xml,
                                data_set) != pcmk_rc_ok) {
         return;
     }
-    if (expanded_xml) {
+    if (expanded_xml != NULL) {
         orig_xml = xml_obj;
         xml_obj = expanded_xml;
     }
+
+    score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
+    if (score != NULL) {
+        score_i = char2score(score);
+    }
+    influence_s = crm_element_value(xml_obj, XML_COLOC_ATTR_INFLUENCE);
 
     for (set = first_named_child(xml_obj, XML_CONS_TAG_RSC_SET); set != NULL;
          set = crm_next_same_xml(set)) {
@@ -895,6 +977,11 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
             return;
         }
 
+        if (pcmk__str_empty(ID(set))) {
+            pcmk__config_err("Ignoring " XML_CONS_TAG_RSC_SET
+                             " without " CRM_ATTR_ID);
+            continue;
+        }
         unpack_colocation_set(set, score_i, id, influence_s, data_set);
 
         if (last != NULL) {
