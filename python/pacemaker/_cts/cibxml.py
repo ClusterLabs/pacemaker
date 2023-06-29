@@ -92,7 +92,7 @@ class XmlBase(CibBase):
         text += '''</%s>''' % self._tag
         return text
 
-    def _run(self, operation, xml, section="all", options=""):
+    def _run(self, operation, xml, section, options=""):
         if self.name:
             label = self.name
         else:
@@ -351,7 +351,7 @@ class Resource(XmlBase):
 
     def commit(self):
         self._run("create", self.show(), "resources")
-        self._run("modify", self._constraints())
+        self._run("modify", self._constraints(), "constraints")
 
 
 class Group(Resource):
