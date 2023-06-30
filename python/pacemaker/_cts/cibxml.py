@@ -605,7 +605,7 @@ class Resource(XmlBase):
 
         text += '''>'''
 
-        if len(self._meta) > 0:
+        if self._meta:
             nvpairs = ""
             for (p, v) in self._meta.items():
                 attrs = {"id": "%s-%s" % (self.name, p), "name": p, "value": v}
@@ -614,7 +614,7 @@ class Resource(XmlBase):
             text += containing_element("meta_attributes", nvpairs,
                                        id="%s-meta" % self.name)
 
-        if len(self._param) > 0:
+        if self._param:
             nvpairs = ""
             for (p, v) in self._param.items():
                 attrs = {"id": "%s-%s" % (self.name, p), "name": p, "value": v}
@@ -623,7 +623,7 @@ class Resource(XmlBase):
             text += containing_element("instance_attributes", nvpairs,
                                        id="%s-params" % self.name)
 
-        if len(self._op) > 0:
+        if self._op:
             text += '''<operations>'''
 
             for o in self._op:
