@@ -1235,14 +1235,15 @@ pcmk__apply_coloc_to_scores(pe_resource_t *dependent,
                             const pe_resource_t *primary,
                             const pcmk__colocation_t *colocation)
 {
-    const char *attribute = colocation->node_attribute;
+    const char *attr = colocation->node_attribute;
     const char *value = NULL;
     GHashTable *work = NULL;
     GHashTableIter iter;
     pe_node_t *node = NULL;
 
     if (primary->allocated_to != NULL) {
-        value = pe_node_attribute_raw(primary->allocated_to, attribute);
+        value = pcmk__colocation_node_attr(primary->allocated_to, attr,
+                                           primary);
 
     } else if (colocation->score < 0) {
         // Nothing to do (anti-colocation with something that is not running)
@@ -1261,9 +1262,12 @@ pcmk__apply_coloc_to_scores(pe_resource_t *dependent,
                          colocation->id, dependent->id, pe__node_name(node),
                          pcmk_readable_score(node->weight),
                          pcmk_readable_score(colocation->score), primary->id);
+            continue;
+        }
 
-        } else if (pcmk__str_eq(pe_node_attribute_raw(node, attribute), value,
-                                pcmk__str_casei)) {
+        if (pcmk__str_eq(pcmk__colocation_node_attr(node, attr, dependent),
+                         value, pcmk__str_casei)) {
+
             /* Add colocation score only if optional (or minus infinity). A
              * mandatory colocation is a requirement rather than a preference,
              * so we don't need to consider it for relative assignment purposes.
@@ -1280,8 +1284,10 @@ pcmk__apply_coloc_to_scores(pe_resource_t *dependent,
                              pcmk_readable_score(node->weight),
                              pcmk_readable_score(colocation->score));
             }
+            continue;
+        }
 
-        } else if (colocation->score >= CRM_SCORE_INFINITY) {
+        if (colocation->score >= CRM_SCORE_INFINITY) {
             /* Only mandatory colocations are relevant when the colocation
              * attribute doesn't match, because an attribute not matching is not
              * a negative preference -- the colocation is simply relevant only
@@ -1292,7 +1298,7 @@ pcmk__apply_coloc_to_scores(pe_resource_t *dependent,
                          "Banned %s from %s because colocation %s attribute %s "
                          "does not match",
                          dependent->id, pe__node_name(node), colocation->id,
-                         attribute);
+                         attr);
         }
     }
 
@@ -1332,15 +1338,17 @@ pcmk__apply_coloc_to_priority(pe_resource_t *dependent,
 {
     const char *dependent_value = NULL;
     const char *primary_value = NULL;
-    const char *attribute = colocation->node_attribute;
+    const char *attr = colocation->node_attribute;
     int score_multiplier = 1;
 
     if ((primary->allocated_to == NULL) || (dependent->allocated_to == NULL)) {
         return;
     }
 
-    dependent_value = pe_node_attribute_raw(dependent->allocated_to, attribute);
-    primary_value = pe_node_attribute_raw(primary->allocated_to, attribute);
+    dependent_value = pcmk__colocation_node_attr(dependent->allocated_to, attr,
+                                                 dependent);
+    primary_value = pcmk__colocation_node_attr(primary->allocated_to, attr,
+                                               primary);
 
     if (!pcmk__str_eq(dependent_value, primary_value, pcmk__str_casei)) {
         if ((colocation->score == INFINITY)
@@ -1392,7 +1400,7 @@ best_node_score_matching_attr(const pe_resource_t *rsc, const char *attr,
 
         if ((node->weight > best_score)
             && pcmk__node_available(node, false, false)
-            && pcmk__str_eq(value, pe_node_attribute_raw(node, attr),
+            && pcmk__str_eq(value, pcmk__colocation_node_attr(node, attr, rsc),
                             pcmk__str_casei)) {
 
             best_score = node->weight;
@@ -1476,7 +1484,7 @@ add_node_scores_matching_attr(GHashTable *nodes,
         int delta = 0;
         int score = 0;
         int new_score = 0;
-        const char *value = pe_node_attribute_raw(node, attr);
+        const char *value = pcmk__colocation_node_attr(node, attr, target_rsc);
 
         score = best_node_score_matching_attr(source_rsc, attr, value);
 
