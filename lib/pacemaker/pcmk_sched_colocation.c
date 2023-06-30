@@ -1459,8 +1459,8 @@ allowed_on_one(const pe_resource_t *rsc)
  */
 static void
 add_node_scores_matching_attr(GHashTable *nodes, const pe_resource_t *rsc,
-                              pcmk__colocation_t *colocation, float factor,
-                              bool only_positive)
+                              const pcmk__colocation_t *colocation,
+                              float factor, bool only_positive)
 {
     GHashTableIter iter;
     pe_node_t *node = NULL;
@@ -1595,7 +1595,7 @@ add_node_scores_matching_attr(GHashTable *nodes, const pe_resource_t *rsc,
 void
 pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
                                 GHashTable **nodes,
-                                pcmk__colocation_t *colocation,
+                                const pcmk__colocation_t *colocation,
                                 float factor, uint32_t flags)
 {
     GHashTable *work = NULL;
@@ -1648,7 +1648,7 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
         flags |= pcmk__coloc_select_active;
 
         for (GList *iter = colocations; iter != NULL; iter = iter->next) {
-            pcmk__colocation_t *constraint = (pcmk__colocation_t *) iter->data;
+            pcmk__colocation_t *constraint = iter->data;
 
             pe_resource_t *other = NULL;
             float other_factor = factor * constraint->score / (float) INFINITY;
@@ -1712,8 +1712,8 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
 void
 pcmk__add_dependent_scores(gpointer data, gpointer user_data)
 {
-    pcmk__colocation_t *colocation = (pcmk__colocation_t *) data;
-    pe_resource_t *rsc = (pe_resource_t *) user_data;
+    pcmk__colocation_t *colocation = data;
+    pe_resource_t *rsc = user_data;
 
     pe_resource_t *other = colocation->dependent;
     const float factor = colocation->score / (float) INFINITY;

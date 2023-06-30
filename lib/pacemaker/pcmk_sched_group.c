@@ -825,7 +825,7 @@ pcmk__group_with_colocations(const pe_resource_t *rsc,
 void
 pcmk__group_add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
                                       GHashTable **nodes,
-                                      pcmk__colocation_t *colocation,
+                                      const pcmk__colocation_t *colocation,
                                       float factor, uint32_t flags)
 {
     pe_resource_t *member = NULL;

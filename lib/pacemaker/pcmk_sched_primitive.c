@@ -426,16 +426,18 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer,
     // Apply mandatory colocations first, to satisfy as many as possible
     for (iter = this_with_colocations; iter != NULL; iter = iter->next) {
         colocation = iter->data;
+
         if ((colocation->score <= -CRM_SCORE_INFINITY)
             || (colocation->score >= CRM_SCORE_INFINITY)) {
-            apply_this_with(iter->data, rsc);
+            apply_this_with(colocation, rsc);
         }
     }
     for (iter = with_this_colocations; iter != NULL; iter = iter->next) {
         colocation = iter->data;
+
         if ((colocation->score <= -CRM_SCORE_INFINITY)
             || (colocation->score >= CRM_SCORE_INFINITY)) {
-            pcmk__add_dependent_scores(iter->data, rsc);
+            pcmk__add_dependent_scores(colocation, rsc);
         }
     }
 
@@ -448,7 +450,7 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer,
 
         if ((colocation->score > -CRM_SCORE_INFINITY)
             && (colocation->score < CRM_SCORE_INFINITY)) {
-            apply_this_with(iter->data, rsc);
+            apply_this_with(colocation, rsc);
         }
     }
     for (iter = with_this_colocations; iter != NULL; iter = iter->next) {
@@ -456,7 +458,7 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer,
 
         if ((colocation->score > -CRM_SCORE_INFINITY)
             && (colocation->score < CRM_SCORE_INFINITY)) {
-            pcmk__add_dependent_scores(iter->data, rsc);
+            pcmk__add_dependent_scores(colocation, rsc);
         }
     }
 

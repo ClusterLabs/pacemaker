@@ -222,7 +222,7 @@ struct resource_alloc_functions_s {
      */
     void (*add_colocated_node_scores)(pe_resource_t *rsc, const char *log_id,
                                       GHashTable **nodes,
-                                      pcmk__colocation_t *colocation,
+                                      const pcmk__colocation_t *colocation,
                                       float factor, uint32_t flags);
 
     /*!
@@ -497,7 +497,7 @@ void pcmk__apply_coloc_to_priority(pe_resource_t *dependent,
 G_GNUC_INTERNAL
 void pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
                                      GHashTable **nodes,
-                                     pcmk__colocation_t *colocation,
+                                     const pcmk__colocation_t *colocation,
                                      float factor, uint32_t flags);
 
 G_GNUC_INTERNAL
@@ -775,7 +775,7 @@ G_GNUC_INTERNAL
 void pcmk__group_add_colocated_node_scores(pe_resource_t *rsc,
                                            const char *log_id,
                                            GHashTable **nodes,
-                                           pcmk__colocation_t *colocation,
+                                           const pcmk__colocation_t *colocation,
                                            float factor, uint32_t flags);
 
 G_GNUC_INTERNAL

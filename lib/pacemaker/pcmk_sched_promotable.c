@@ -339,25 +339,25 @@ add_sort_index_to_node_score(gpointer data, gpointer user_data)
 static void
 apply_coloc_to_dependent(gpointer data, gpointer user_data)
 {
-    pcmk__colocation_t *constraint = (pcmk__colocation_t *) data;
-    pe_resource_t *clone = (pe_resource_t *) user_data;
-    pe_resource_t *primary = constraint->primary;
+    pcmk__colocation_t *colocation = data;
+    pe_resource_t *clone = user_data;
+    pe_resource_t *primary = colocation->primary;
     uint32_t flags = pcmk__coloc_select_default;
-    float factor = constraint->score / (float) INFINITY;
+    float factor = colocation->score / (float) INFINITY;
 
-    if (constraint->dependent_role != RSC_ROLE_PROMOTED) {
+    if (colocation->dependent_role != RSC_ROLE_PROMOTED) {
         return;
     }
-    if (constraint->score < INFINITY) {
+    if (colocation->score < INFINITY) {
         flags = pcmk__coloc_select_active;
     }
     pe_rsc_trace(clone, "Applying colocation %s (promoted %s with %s) @%s",
-                 constraint->id, constraint->dependent->id,
-                 constraint->primary->id,
-                 pcmk_readable_score(constraint->score));
+                 colocation->id, colocation->dependent->id,
+                 colocation->primary->id,
+                 pcmk_readable_score(colocation->score));
     primary->cmds->add_colocated_node_scores(primary, clone->id,
                                              &clone->allowed_nodes,
-                                             constraint, factor, flags);
+                                             colocation, factor, flags);
 }
 
 /*!
@@ -370,25 +370,25 @@ apply_coloc_to_dependent(gpointer data, gpointer user_data)
 static void
 apply_coloc_to_primary(gpointer data, gpointer user_data)
 {
-    pcmk__colocation_t *constraint = (pcmk__colocation_t *) data;
-    pe_resource_t *clone = (pe_resource_t *) user_data;
-    pe_resource_t *dependent = constraint->dependent;
-    const float factor = constraint->score / (float) INFINITY;
+    pcmk__colocation_t *colocation = data;
+    pe_resource_t *clone = user_data;
+    pe_resource_t *dependent = colocation->dependent;
+    const float factor = colocation->score / (float) INFINITY;
     const uint32_t flags = pcmk__coloc_select_active
                            |pcmk__coloc_select_nonnegative;
 
-    if ((constraint->primary_role != RSC_ROLE_PROMOTED)
-         || !pcmk__colocation_has_influence(constraint, NULL)) {
+    if ((colocation->primary_role != RSC_ROLE_PROMOTED)
+         || !pcmk__colocation_has_influence(colocation, NULL)) {
         return;
     }
 
     pe_rsc_trace(clone, "Applying colocation %s (%s with promoted %s) @%s",
-                 constraint->id, constraint->dependent->id,
-                 constraint->primary->id,
-                 pcmk_readable_score(constraint->score));
+                 colocation->id, colocation->dependent->id,
+                 colocation->primary->id,
+                 pcmk_readable_score(colocation->score));
     dependent->cmds->add_colocated_node_scores(dependent, clone->id,
                                                &clone->allowed_nodes,
-                                               constraint, factor, flags);
+                                               colocation, factor, flags);
 }
 
 /*!
