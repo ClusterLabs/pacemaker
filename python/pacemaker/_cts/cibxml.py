@@ -48,7 +48,7 @@ def containing_element(element_name, inner, **kwargs):
     return "<%s %s>%s</%s>" % (element_name, attrs, inner, element_name)
 
 
-class CibBase:
+class XmlBase:
     def __init__(self, factory, tag, _id, **kwargs):
         self._children = []
         self._factory = factory
@@ -69,8 +69,6 @@ class CibBase:
         else:
             self._kwargs.pop(key, None)
 
-
-class XmlBase(CibBase):
     def show(self):
         text = '''<%s''' % self._tag
         if self.name:
