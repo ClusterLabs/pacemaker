@@ -1,11 +1,1 @@
-<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
-  <synapse id="0">
-    <action_set>
-      <rsc_op id="50" operation="stop" operation_key="vip_stop_0" on_node="node3" on_node_uuid="3">
-        <primitive id="vip" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_name="stop" CRM_meta_on_node="node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" cidr_netmask="32"  ip="192.168.22.81"/>
-      </rsc_op>
-    </action_set>
-    <inputs/>
-  </synapse>
-</transition_graph>
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0"/>

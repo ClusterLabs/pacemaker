@@ -55,10 +55,10 @@ pcmk__primitive_assign: base-bundle-2 allocation score on node2: 0
 pcmk__primitive_assign: base-bundle-2 allocation score on node3: 10000
 pcmk__primitive_assign: base-bundle-podman-0 allocation score on node1: 0
 pcmk__primitive_assign: base-bundle-podman-0 allocation score on node2: 0
-pcmk__primitive_assign: base-bundle-podman-0 allocation score on node3: -INFINITY
+pcmk__primitive_assign: base-bundle-podman-0 allocation score on node3: 0
 pcmk__primitive_assign: base-bundle-podman-1 allocation score on node1: -INFINITY
 pcmk__primitive_assign: base-bundle-podman-1 allocation score on node2: 0
-pcmk__primitive_assign: base-bundle-podman-1 allocation score on node3: -INFINITY
+pcmk__primitive_assign: base-bundle-podman-1 allocation score on node3: 0
 pcmk__primitive_assign: base-bundle-podman-2 allocation score on node1: -INFINITY
 pcmk__primitive_assign: base-bundle-podman-2 allocation score on node2: -INFINITY
 pcmk__primitive_assign: base-bundle-podman-2 allocation score on node3: 0
