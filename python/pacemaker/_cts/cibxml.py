@@ -5,8 +5,6 @@ __all__ = [ "Alerts", "Clone", "Expression", "FencingTopology", "Group", "Nodes"
 __copyright__ = "Copyright 2008-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
-import sys
-
 
 def key_val_string(**kwargs):
     """ Given keyword arguments as key=value pairs, construct a single string
@@ -105,8 +103,7 @@ class XmlBase(CibBase):
 
         (rc, _) = self._factory.rsh(self._factory.target, fixed)
         if rc != 0:
-            self._factory.log("Configure call failed: %s" % fixed)
-            sys.exit(1)
+            raise RuntimeError("Configure call failed: %s" % fixed)
 
 
 class InstanceAttributes(XmlBase):
