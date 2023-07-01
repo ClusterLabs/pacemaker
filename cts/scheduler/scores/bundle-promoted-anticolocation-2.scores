@@ -67,4 +67,4 @@ pcmk__primitive_assign: base:1 allocation score on base-bundle-1: INFINITY
 pcmk__primitive_assign: base:2 allocation score on base-bundle-2: INFINITY
 pcmk__primitive_assign: vip allocation score on node1: 0
 pcmk__primitive_assign: vip allocation score on node2: 0
-pcmk__primitive_assign: vip allocation score on node3: 0
+pcmk__primitive_assign: vip allocation score on node3: -5000

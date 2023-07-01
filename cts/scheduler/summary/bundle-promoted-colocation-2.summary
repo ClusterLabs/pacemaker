@@ -12,8 +12,12 @@ Current cluster status:
     * vip	(ocf:heartbeat:IPaddr2):	 Started node1
 
 Transition Summary:
+  * Move       vip     ( node1 -> node3 )
 
 Executing Cluster Transition:
+  * Resource action: vip             stop on node1
+  * Resource action: vip             start on node3
+  * Resource action: vip             monitor=10000 on node3
 
 Revised Cluster Status:
   * Node List:
@@ -26,4 +30,4 @@ Revised Cluster Status:
       * base-bundle-0	(ocf:pacemaker:Stateful):	 Unpromoted node1
       * base-bundle-1	(ocf:pacemaker:Stateful):	 Unpromoted node2
       * base-bundle-2	(ocf:pacemaker:Stateful):	 Promoted node3
-    * vip	(ocf:heartbeat:IPaddr2):	 Started node1
+    * vip	(ocf:heartbeat:IPaddr2):	 Started node3
