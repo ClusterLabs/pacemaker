@@ -1231,8 +1231,8 @@ pcmk__update_dependent_with_promotable(const pe_resource_t *primary,
                      "Applying %s (mandatory %s with %s) to %s",
                      colocation->id, colocation->dependent->id,
                      colocation->primary->id, dependent->id);
-        node_list_exclude(dependent->allowed_nodes, affected_nodes,
-                          TRUE);
+        pcmk__colocation_intersect_nodes(dependent, primary, colocation,
+                                         affected_nodes, true);
     }
     g_list_free(affected_nodes);
 }

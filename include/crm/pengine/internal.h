@@ -376,8 +376,6 @@ pe__current_node(const pe_resource_t *rsc)
 
 
 /* Binary like operators for lists of nodes */
-extern void node_list_exclude(GHashTable * list, GList *list2, gboolean merge_scores);
-
 GHashTable *pe__node_list2table(const GList *list);
 
 extern pe_action_t *get_pseudo_op(const char *name, pe_working_set_t * data_set);

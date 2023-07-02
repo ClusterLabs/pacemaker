@@ -103,47 +103,6 @@ pe__copy_node(const pe_node_t *this_node)
     return new_node;
 }
 
-/* any node in list1 or list2 and not in the other gets a score of -INFINITY */
-void
-node_list_exclude(GHashTable * hash, GList *list, gboolean merge_scores)
-{
-    pe_node_t *other_node = NULL;
-    GList *gIter = list;
-
-    GHashTableIter iter;
-    pe_node_t *node = NULL;
-
-    g_hash_table_iter_init(&iter, hash);
-    while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-
-        other_node = pe_find_node_id(list, node->details->id);
-        if (other_node == NULL) {
-            node->weight = -INFINITY;
-            crm_trace("Banning dependent from %s (no primary instance)",
-                      pe__node_name(node));
-        } else if (merge_scores) {
-            node->weight = pcmk__add_scores(node->weight, other_node->weight);
-            crm_trace("Added primary's score %s to dependent's score for %s "
-                      "(now %s)", pcmk_readable_score(other_node->weight),
-                      pe__node_name(node), pcmk_readable_score(node->weight));
-        }
-    }
-
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *node = (pe_node_t *) gIter->data;
-
-        other_node = g_hash_table_lookup(hash, node->details->id);
-
-        if (other_node == NULL) {
-            pe_node_t *new_node = pe__copy_node(node);
-
-            new_node->weight = -INFINITY;
-            g_hash_table_insert(hash, (gpointer) new_node->details->id,
-                                new_node);
-        }
-    }
-}
-
 /*!
  * \internal
  * \brief Create a node hash table from a node list

@@ -1752,6 +1752,62 @@ pcmk__add_dependent_scores(gpointer data, gpointer user_data)
 
 /*!
  * \internal
+ * \brief Exclude nodes from a dependent's node table if not in a given list
+ *
+ * Given a dependent resource in a colocation and a list of nodes where the
+ * primary resource will run, set a node's score to \c -INFINITY in the
+ * dependent's node table if not found in the primary nodes list.
+ *
+ * \param[in,out] dependent      Dependent resource
+ * \param[in]     primary        Primary resource (for logging only)
+ * \param[in]     colocation     Colocation constraint (for logging only)
+ * \param[in]     primary_nodes  List of nodes where the primary will have
+ *                               unblocked instances in a suitable role
+ * \param[in]     merge_scores   If \c true and a node is found in both \p table
+ *                               and \p list, add the node's score in \p list to
+ *                               the node's score in \p table
+ */
+void
+pcmk__colocation_intersect_nodes(pe_resource_t *dependent,
+                                 const pe_resource_t *primary,
+                                 const pcmk__colocation_t *colocation,
+                                 const GList *primary_nodes, bool merge_scores)
+{
+    GHashTableIter iter;
+    pe_node_t *dependent_node = NULL;
+
+    CRM_ASSERT((dependent != NULL) && (primary != NULL)
+               && (colocation != NULL));
+
+    g_hash_table_iter_init(&iter, dependent->allowed_nodes);
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &dependent_node)) {
+        const pe_node_t *primary_node = NULL;
+
+        primary_node = pe_find_node_id(primary_nodes,
+                                       dependent_node->details->id);
+        if (primary_node == NULL) {
+            dependent_node->weight = -INFINITY;
+            pe_rsc_trace(dependent,
+                         "Banning %s from %s (no primary instance) for %s",
+                         dependent->id, pe__node_name(dependent_node),
+                         colocation->id);
+
+        } else if (merge_scores) {
+            dependent_node->weight = pcmk__add_scores(dependent_node->weight,
+                                                      primary_node->weight);
+            pe_rsc_trace(dependent,
+                         "Added %s's score %s to %s's score for %s (now %s) "
+                         "for colocation %s",
+                         primary->id, pcmk_readable_score(primary_node->weight),
+                         dependent->id, pe__node_name(dependent_node),
+                         pcmk_readable_score(dependent_node->weight),
+                         colocation->id);
+        }
+    }
+}
+
+/*!
+ * \internal
  * \brief Get all colocations affecting a resource as the primary
  *
  * \param[in] rsc  Resource to get colocations for

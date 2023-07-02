@@ -492,6 +492,13 @@ G_GNUC_INTERNAL
 void pcmk__add_dependent_scores(gpointer data, gpointer user_data);
 
 G_GNUC_INTERNAL
+void pcmk__colocation_intersect_nodes(pe_resource_t *dependent,
+                                      const pe_resource_t *primary,
+                                      const pcmk__colocation_t *colocation,
+                                      const GList *primary_nodes,
+                                      bool merge_scores);
+
+G_GNUC_INTERNAL
 void pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
