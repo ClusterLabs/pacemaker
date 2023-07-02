@@ -107,7 +107,6 @@ pe__copy_node(const pe_node_t *this_node)
 void
 node_list_exclude(GHashTable * hash, GList *list, gboolean merge_scores)
 {
-    GHashTable *result = hash;
     pe_node_t *other_node = NULL;
     GList *gIter = list;
 
@@ -133,13 +132,14 @@ node_list_exclude(GHashTable * hash, GList *list, gboolean merge_scores)
     for (; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
 
-        other_node = pe_hash_table_lookup(result, node->details->id);
+        other_node = g_hash_table_lookup(hash, node->details->id);
 
         if (other_node == NULL) {
             pe_node_t *new_node = pe__copy_node(node);
 
             new_node->weight = -INFINITY;
-            g_hash_table_insert(result, (gpointer) new_node->details->id, new_node);
+            g_hash_table_insert(hash, (gpointer) new_node->details->id,
+                                new_node);
         }
     }
 }
@@ -382,7 +382,7 @@ resource_node_score(pe_resource_t *rsc, const pe_node_t *node, int score,
         }
     }
 
-    match = pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
+    match = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
     if (match == NULL) {
         match = pe__copy_node(node);
         g_hash_table_insert(rsc->allowed_nodes, (gpointer) match->details->id, match);

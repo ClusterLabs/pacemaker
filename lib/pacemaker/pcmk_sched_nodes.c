@@ -426,5 +426,5 @@ pcmk__top_allowed_node(const pe_resource_t *rsc, const pe_node_t *node)
     } else {
         allowed_nodes = rsc->parent->allowed_nodes;
     }
-    return pe_hash_table_lookup(allowed_nodes, node->details->id);
+    return g_hash_table_lookup(allowed_nodes, node->details->id);
 }

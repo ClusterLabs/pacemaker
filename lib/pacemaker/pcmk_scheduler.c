@@ -204,8 +204,8 @@ apply_stickiness(gpointer data, gpointer user_data)
      * longer explicitly enabled.
      */
     if (!pcmk_is_set(rsc->cluster->flags, pe_flag_symmetric_cluster)
-        && (pe_hash_table_lookup(rsc->allowed_nodes,
-                                 node->details->id) == NULL)) {
+        && (g_hash_table_lookup(rsc->allowed_nodes,
+                                node->details->id) == NULL)) {
         pe_rsc_debug(rsc,
                      "Ignoring %s stickiness because the cluster is "
                      "asymmetric and %s is not explicitly allowed",

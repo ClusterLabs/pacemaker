@@ -645,10 +645,9 @@ pcmk__apply_location(pe_resource_t *rsc, pe__location_t *location)
          iter != NULL; iter = iter->next) {
 
         pe_node_t *node = iter->data;
-        pe_node_t *allowed_node = NULL;
+        pe_node_t *allowed_node = g_hash_table_lookup(rsc->allowed_nodes,
+                                                      node->details->id);
 
-        allowed_node = (pe_node_t *) pe_hash_table_lookup(rsc->allowed_nodes,
-                                                          node->details->id);
         if (allowed_node == NULL) {
             pe_rsc_trace(rsc, "* = %d on %s",
                          node->weight, pe__node_name(node));

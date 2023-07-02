@@ -380,15 +380,6 @@ extern void node_list_exclude(GHashTable * list, GList *list2, gboolean merge_sc
 
 GHashTable *pe__node_list2table(const GList *list);
 
-static inline gpointer
-pe_hash_table_lookup(GHashTable * hash, gconstpointer key)
-{
-    if (hash) {
-        return g_hash_table_lookup(hash, key);
-    }
-    return NULL;
-}
-
 extern pe_action_t *get_pseudo_op(const char *name, pe_working_set_t * data_set);
 extern gboolean order_actions(pe_action_t * lh_action, pe_action_t * rh_action, enum pe_ordering order);
 

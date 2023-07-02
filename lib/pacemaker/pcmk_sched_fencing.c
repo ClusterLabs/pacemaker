@@ -28,13 +28,13 @@
 static bool
 rsc_is_known_on(const pe_resource_t *rsc, const pe_node_t *node)
 {
-   if (pe_hash_table_lookup(rsc->known_on, node->details->id)) {
+   if (g_hash_table_lookup(rsc->known_on, node->details->id) != NULL) {
        return TRUE;
 
    } else if ((rsc->variant == pe_native)
               && pe_rsc_is_anon_clone(rsc->parent)
-              && pe_hash_table_lookup(rsc->parent->known_on,
-                                      node->details->id)) {
+              && (g_hash_table_lookup(rsc->parent->known_on,
+                                      node->details->id) != NULL)) {
        /* We check only the parent, not the uber-parent, because we cannot
         * assume that the resource is known if it is in an anonymously cloned
         * group (which may be only partially known).
@@ -73,8 +73,8 @@ order_start_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
 
             case rsc_req_quorum:
                 if (pcmk__str_eq(action->task, RSC_START, pcmk__str_none)
-                    && pe_hash_table_lookup(rsc->allowed_nodes,
-                                            target->details->id)
+                    && (g_hash_table_lookup(rsc->allowed_nodes,
+                                            target->details->id) != NULL)
                     && !rsc_is_known_on(rsc, target)) {
 
                     /* If we don't know the status of the resource on the node
