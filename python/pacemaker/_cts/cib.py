@@ -41,10 +41,10 @@ class CIB12(ConfigBase):
 
     def _show(self, command=""):
         output = ""
-        (_, result) = self.Factory.rsh(self.Factory.target, "HOME=/root CIB_file="+self.Factory.tmpfile+" cibadmin -Ql "+command, verbose=1)
+        (_, result) = self.Factory.rsh(self.Factory.target, "HOME=/root CIB_file=%s cibadmin -Ql %s" % (self.Factory.tmpfile, command), verbose=1)
         for line in result:
             output += line
-            self.Factory.debug("Generated Config: "+line)
+            self.Factory.debug("Generated Config: %s" % line)
         return output
 
     def NewIP(self, name=None, standard="ocf"):
@@ -53,9 +53,9 @@ class CIB12(ConfigBase):
             if not name:
                 if ":" in ip:
                     (prefix, sep, suffix) = ip.rpartition(":")
-                    name = "r"+suffix
+                    name = "r%s" % suffix
                 else:
-                    name = "r"+ip
+                    name = "r%s" % ip
 
             r = Resource(self.Factory, name, self.CM.Env["IPagent"], standard)
             r["ip"] = ip
@@ -110,9 +110,9 @@ class CIB12(ConfigBase):
         # Force a rebuild
         self.cts_cib = None
 
-        self.Factory.tmpfile = BuildOptions.CIB_DIR + "/cib.xml"
+        self.Factory.tmpfile = "%s/cib.xml" % BuildOptions.CIB_DIR
         self.contents(target)
-        self.Factory.rsh(self.Factory.target, "chown " + BuildOptions.DAEMON_USER + " " + self.Factory.tmpfile)
+        self.Factory.rsh(self.Factory.target, "chown %s %s" % (BuildOptions.DAEMON_USER, self.Factory.tmpfile))
 
         self.Factory.tmpfile = old
 
@@ -140,7 +140,7 @@ class CIB12(ConfigBase):
         if self.CM.Env["DoFencing"]:
 
             # Define the "real" fencing device
-            st = Resource(self.Factory, "Fencing", ""+self.CM.Env["stonith-type"], "stonith")
+            st = Resource(self.Factory, "Fencing", self.CM.Env["stonith-type"], "stonith")
 
             # Set a threshold for unreliable stonith devices such as the vmware one
             st.add_meta("migration-threshold", "5")
@@ -179,7 +179,7 @@ class CIB12(ConfigBase):
             stl = FencingTopology(self.Factory)
             for node in self.CM.Env["nodes"]:
                 # Remote node tests will rename the node
-                remote_node = "remote-" + node
+                remote_node = "remote-%s" % node
 
                 # Randomly assign node to a fencing method
                 ftype = self.CM.Env.random_gen.choice(["levels-and", "levels-or ", "broadcast "])
@@ -288,15 +288,15 @@ class CIB12(ConfigBase):
         # generate cib
         self.cts_cib = self._show()
 
-        if self.Factory.tmpfile != BuildOptions.CIB_DIR + "/cib.xml":
-            self.Factory.rsh(self.Factory.target, "rm -f "+self.Factory.tmpfile)
+        if self.Factory.tmpfile != "%s/cib.xml" % BuildOptions.CIB_DIR:
+            self.Factory.rsh(self.Factory.target, "rm -f %s" % self.Factory.tmpfile)
 
         return self.cts_cib
 
     def add_resources(self):
         # Per-node resources
         for node in self.CM.Env["nodes"]:
-            name = "rsc_"+node
+            name = "rsc_%s" % node
             r = self.NewIP(name)
             r.prefer(node, "100")
             r.commit()
