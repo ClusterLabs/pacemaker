@@ -31,9 +31,6 @@ class ConfigBase:
 
         self.Factory.tmpfile = tmpfile
 
-    def version(self):
-        return self.version
-
 
 class CIB12(ConfigBase):
     version = "pacemaker-1.2"
@@ -52,7 +49,7 @@ class CIB12(ConfigBase):
             ip = next_ip(self.CM.Env["IPBase"])
             if not name:
                 if ":" in ip:
-                    (prefix, sep, suffix) = ip.rpartition(":")
+                    (_, _, suffix) = ip.rpartition(":")
                     name = "r%s" % suffix
                 else:
                     name = "r%s" % ip
