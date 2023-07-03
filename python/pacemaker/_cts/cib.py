@@ -26,10 +26,12 @@ class CIB:
 
         if not tmpfile:
             warnings.filterwarnings("ignore")
+
             # pylint: disable=consider-using-with
-            f=tempfile.NamedTemporaryFile(delete=True)
+            f = tempfile.NamedTemporaryFile(delete=True)
             f.close()
             tmpfile = f.name
+
             warnings.resetwarnings()
 
         self._factory.tmpfile = tmpfile
@@ -37,9 +39,11 @@ class CIB:
     def _show(self, command=""):
         output = ""
         (_, result) = self._factory.rsh(self._factory.target, "HOME=/root CIB_file=%s cibadmin -Ql %s" % (self._factory.tmpfile, command), verbose=1)
+
         for line in result:
             output += line
             self._factory.debug("Generated Config: %s" % line)
+
         return output
 
     def new_ip(self, name=None, standard="ocf"):
@@ -65,6 +69,7 @@ class CIB:
             if not name:
                 name = "r%s%d" % (self._cm.Env["IPagent"], self._counter)
                 self._counter += 1
+
             r = Resource(self._factory, name, self._cm.Env["IPagent"], standard)
 
         r.add_op("monitor", "5s")
@@ -181,8 +186,10 @@ class CIB:
 
                 # For levels-and, randomly choose targeting by node name or attribute
                 by = ""
+
                 if ftype == "levels-and":
                     node_id = self.get_node_id(node)
+
                     if node_id == 0 or self._cm.Env.random_gen.choice([True, False]):
                         by = " (by name)"
                     else:
@@ -209,14 +216,17 @@ class CIB:
                     for n in [ node, remote_node ]:
                         stl.level(1, n, "FencingFail")
                         stl.level(2, n, "Fencing")
+
                     stf_nodes.extend([node, remote_node])
 
             # If any levels-and nodes were targeted by attribute,
             # create the attributes and a level for the attribute.
             if attr_nodes:
                 stn = Nodes(self._factory)
+
                 for (node_name, node_id) in attr_nodes.items():
                     stn.add_node(node_name, node_id, { "cts-fencing" : "levels-and" })
+
                 stl.level(1, None, "FencingPass,Fencing", "cts-fencing", "levels-and")
 
             # Create a Dummy agent that always passes for levels-and
@@ -330,8 +340,7 @@ class CIB:
         g.add_child(self.new_ip())
 
         if self._cm.Env["have_systemd"]:
-            sysd = Resource(self._factory, "petulant",
-                            "pacemaker-cts-dummyd@10", "service")
+            sysd = Resource(self._factory, "petulant", "pacemaker-cts-dummyd@10", "service")
             sysd.add_op("monitor", "P10S")
             g.add_child(sysd)
         else:
