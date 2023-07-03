@@ -77,70 +77,89 @@ holds. So the decision was made to place them in an easy-to-find location.
    :class: longtable
    :widths: 1 3
 
-   +------------------+-----------------------------------------------------------+
-   | Attribute        | Description                                               |
-   +==================+===========================================================+
-   | admin_epoch      | .. index::                                                |
-   |                  |    pair: admin_epoch; cib                                 |
-   |                  |                                                           |
-   |                  | When a node joins the cluster, the cluster performs a     |
-   |                  | check to see which node has the best configuration. It    |
-   |                  | asks the node with the highest (``admin_epoch``,          |
-   |                  | ``epoch``, ``num_updates``) tuple to replace the          |
-   |                  | configuration on all the nodes -- which makes setting     |
-   |                  | them, and setting them correctly, very important.         |
-   |                  | ``admin_epoch`` is never modified by the cluster; you can |
-   |                  | use this to make the configurations on any inactive nodes |
-   |                  | obsolete.                                                 |
-   |                  |                                                           |
-   |                  | **Warning:** Never set this value to zero. In such cases, |
-   |                  | the cluster cannot tell the difference between your       |
-   |                  | configuration and the "empty" one used when nothing is    |
-   |                  | found on disk.                                            |
-   +------------------+-----------------------------------------------------------+
-   | epoch            | .. index::                                                |
-   |                  |    pair: epoch; cib                                       |
-   |                  |                                                           |
-   |                  | The cluster increments this every time the configuration  |
-   |                  | is updated (usually by the administrator).                |
-   +------------------+-----------------------------------------------------------+
-   | num_updates      | .. index::                                                |
-   |                  |    pair: num_updates; cib                                 |
-   |                  |                                                           |
-   |                  | The cluster increments this every time the configuration  |
-   |                  | or status is updated (usually by the cluster) and resets  |
-   |                  | it to 0 when epoch changes.                               |
-   +------------------+-----------------------------------------------------------+
-   | validate-with    | .. index::                                                |
-   |                  |    pair: validate-with; cib                               |
-   |                  |                                                           |
-   |                  | Determines the type of XML validation that will be done   |
-   |                  | on the configuration.  If set to ``none``, the cluster    |
-   |                  | will not verify that updates conform to the DTD (nor      |
-   |                  | reject ones that don't).                                  |
-   +------------------+-----------------------------------------------------------+
-   | cib-last-written | .. index::                                                |
-   |                  |    pair: cib-last-written; cib                            |
-   |                  |                                                           |
-   |                  | Indicates when the configuration was last written to      |
-   |                  | disk. Maintained by the cluster; for informational        |
-   |                  | purposes only.                                            |
-   +------------------+-----------------------------------------------------------+
-   | have-quorum      | .. index::                                                |
-   |                  |    pair: have-quorum; cib                                 |
-   |                  |                                                           |
-   |                  | Indicates if the cluster has quorum. If false, this may   |
-   |                  | mean that the cluster cannot start resources or fence     |
-   |                  | other nodes (see ``no-quorum-policy`` below). Maintained  |
-   |                  | by the cluster.                                           |
-   +------------------+-----------------------------------------------------------+
-   | dc-uuid          | .. index::                                                |
-   |                  |    pair: dc-uuid; cib                                     |
-   |                  |                                                           |
-   |                  | Indicates which cluster node is the current leader. Used  |
-   |                  | by the cluster when placing resources and determining the |
-   |                  | order of some events. Maintained by the cluster.          |
-   +------------------+-----------------------------------------------------------+
+   +-------------------+-----------------------------------------------------------+
+   | Attribute         | Description                                               |
+   +===================+===========================================================+
+   | admin_epoch       | .. index::                                                |
+   |                   |    pair: admin_epoch; cib                                 |
+   |                   |                                                           |
+   |                   | When a node joins the cluster, the cluster performs a     |
+   |                   | check to see which node has the best configuration. It    |
+   |                   | asks the node with the highest (``admin_epoch``,          |
+   |                   | ``epoch``, ``num_updates``) tuple to replace the          |
+   |                   | configuration on all the nodes -- which makes setting     |
+   |                   | them, and setting them correctly, very important.         |
+   |                   | ``admin_epoch`` is never modified by the cluster; you can |
+   |                   | use this to make the configurations on any inactive nodes |
+   |                   | obsolete.                                                 |
+   |                   |                                                           |
+   |                   | **Warning:** Never set this value to zero. In such cases, |
+   |                   | the cluster cannot tell the difference between your       |
+   |                   | configuration and the "empty" one used when nothing is    |
+   |                   | found on disk.                                            |
+   +-------------------+-----------------------------------------------------------+
+   | epoch             | .. index::                                                |
+   |                   |    pair: epoch; cib                                       |
+   |                   |                                                           |
+   |                   | The cluster increments this every time the configuration  |
+   |                   | is updated (usually by the administrator).                |
+   +-------------------+-----------------------------------------------------------+
+   | num_updates       | .. index::                                                |
+   |                   |    pair: num_updates; cib                                 |
+   |                   |                                                           |
+   |                   | The cluster increments this every time the configuration  |
+   |                   | or status is updated (usually by the cluster) and resets  |
+   |                   | it to 0 when epoch changes.                               |
+   +-------------------+-----------------------------------------------------------+
+   | validate-with     | .. index::                                                |
+   |                   |    pair: validate-with; cib                               |
+   |                   |                                                           |
+   |                   | Determines the type of XML validation that will be done   |
+   |                   | on the configuration.  If set to ``none``, the cluster    |
+   |                   | will not verify that updates conform to the DTD (nor      |
+   |                   | reject ones that don't).                                  |
+   +-------------------+-----------------------------------------------------------+
+   | remote-tls-port   | .. index::                                                |
+   |                   |    pair: remote-tls-port; cib                             |
+   |                   |                                                           |
+   |                   | If set to a TCP port number, the CIB manager will listen  |
+   |                   | for anonymously encrypted remote connections on this      |
+   |                   | port, to allow for CIB administration from hosts not in   |
+   |                   | the cluster. No key is used, so this should be used only  |
+   |                   | on a protected network where man-in-the-middle attacks    |
+   |                   | can be avoided.                                           |
+   +-------------------+-----------------------------------------------------------+
+   | remote-clear-port | .. index::                                                |
+   |                   |    pair: remote-clear-port; cib                           |
+   |                   |                                                           |
+   |                   | If set to a TCP port number, the CIB manager will listen  |
+   |                   | for remote connections on this port, to allow for CIB     |
+   |                   | administration from hosts not in the cluster. No          |
+   |                   | encryption is used, so this should be used only on a      |
+   |                   | protected network.                                        |
+   +-------------------+-----------------------------------------------------------+
+   | cib-last-written  | .. index::                                                |
+   |                   |    pair: cib-last-written; cib                            |
+   |                   |                                                           |
+   |                   | Indicates when the configuration was last written to      |
+   |                   | disk. Maintained by the cluster; for informational        |
+   |                   | purposes only.                                            |
+   +-------------------+-----------------------------------------------------------+
+   | have-quorum       | .. index::                                                |
+   |                   |    pair: have-quorum; cib                                 |
+   |                   |                                                           |
+   |                   | Indicates if the cluster has quorum. If false, this may   |
+   |                   | mean that the cluster cannot start resources or fence     |
+   |                   | other nodes (see ``no-quorum-policy`` below). Maintained  |
+   |                   | by the cluster.                                           |
+   +-------------------+-----------------------------------------------------------+
+   | dc-uuid           | .. index::                                                |
+   |                   |    pair: dc-uuid; cib                                     |
+   |                   |                                                           |
+   |                   | Indicates which cluster node is the current leader. Used  |
+   |                   | by the cluster when placing resources and determining the |
+   |                   | order of some events. Maintained by the cluster.          |
+   +-------------------+-----------------------------------------------------------+
 
 .. _cluster_options:
 
