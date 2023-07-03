@@ -172,80 +172,79 @@ class CIB12(ConfigBase):
             st.commit()
 
             # Test advanced fencing logic
-            if True:
-                stf_nodes = []
-                stt_nodes = []
-                attr_nodes = {}
+            stf_nodes = []
+            stt_nodes = []
+            attr_nodes = {}
 
-                # Create the levels
-                stl = FencingTopology(self.Factory)
-                for node in self.CM.Env["nodes"]:
-                    # Remote node tests will rename the node
-                    remote_node = "remote-" + node
+            # Create the levels
+            stl = FencingTopology(self.Factory)
+            for node in self.CM.Env["nodes"]:
+                # Remote node tests will rename the node
+                remote_node = "remote-" + node
 
-                    # Randomly assign node to a fencing method
-                    ftype = self.CM.Env.random_gen.choice(["levels-and", "levels-or ", "broadcast "])
+                # Randomly assign node to a fencing method
+                ftype = self.CM.Env.random_gen.choice(["levels-and", "levels-or ", "broadcast "])
 
-                    # For levels-and, randomly choose targeting by node name or attribute
-                    by = ""
-                    if ftype == "levels-and":
-                        node_id = self.get_node_id(node)
-                        if node_id == 0 or self.CM.Env.random_gen.choice([True, False]):
-                            by = " (by name)"
-                        else:
-                            attr_nodes[node] = node_id
-                            by = " (by attribute)"
+                # For levels-and, randomly choose targeting by node name or attribute
+                by = ""
+                if ftype == "levels-and":
+                    node_id = self.get_node_id(node)
+                    if node_id == 0 or self.CM.Env.random_gen.choice([True, False]):
+                        by = " (by name)"
+                    else:
+                        attr_nodes[node] = node_id
+                        by = " (by attribute)"
 
-                    self.CM.log(" - Using %s fencing for node: %s%s" % (ftype, node, by))
+                self.CM.log(" - Using %s fencing for node: %s%s" % (ftype, node, by))
 
-                    if ftype == "levels-and":
-                        # If targeting by name, add a topology level for this node
-                        if node not in attr_nodes:
-                            stl.level(1, node, "FencingPass,Fencing")
+                if ftype == "levels-and":
+                    # If targeting by name, add a topology level for this node
+                    if node not in attr_nodes:
+                        stl.level(1, node, "FencingPass,Fencing")
 
-                        # Always target remote nodes by name, otherwise we would need to add
-                        # an attribute to the remote node only during remote tests (we don't
-                        # want nonexistent remote nodes showing up in the non-remote tests).
-                        # That complexity is not worth the effort.
-                        stl.level(1, remote_node, "FencingPass,Fencing")
+                    # Always target remote nodes by name, otherwise we would need to add
+                    # an attribute to the remote node only during remote tests (we don't
+                    # want nonexistent remote nodes showing up in the non-remote tests).
+                    # That complexity is not worth the effort.
+                    stl.level(1, remote_node, "FencingPass,Fencing")
 
-                        # Add the node (and its remote equivalent) to the list of levels-and nodes.
-                        stt_nodes.extend([node, remote_node])
+                    # Add the node (and its remote equivalent) to the list of levels-and nodes.
+                    stt_nodes.extend([node, remote_node])
 
-                    elif ftype == "levels-or ":
-                        for n in [ node, remote_node ]:
-                            stl.level(1, n, "FencingFail")
-                            stl.level(2, n, "Fencing")
-                        stf_nodes.extend([node, remote_node])
+                elif ftype == "levels-or ":
+                    for n in [ node, remote_node ]:
+                        stl.level(1, n, "FencingFail")
+                        stl.level(2, n, "Fencing")
+                    stf_nodes.extend([node, remote_node])
 
-                # If any levels-and nodes were targeted by attribute,
-                # create the attributes and a level for the attribute.
-                if attr_nodes:
-                    stn = Nodes(self.Factory)
-                    for (node_name, node_id) in list(attr_nodes.items()):
-                        stn.add_node(node_name, node_id, { "cts-fencing" : "levels-and" })
-                    stl.level(1, None, "FencingPass,Fencing", "cts-fencing", "levels-and")
+            # If any levels-and nodes were targeted by attribute,
+            # create the attributes and a level for the attribute.
+            if attr_nodes:
+                stn = Nodes(self.Factory)
+                for (node_name, node_id) in list(attr_nodes.items()):
+                    stn.add_node(node_name, node_id, { "cts-fencing" : "levels-and" })
+                stl.level(1, None, "FencingPass,Fencing", "cts-fencing", "levels-and")
 
-                # Create a Dummy agent that always passes for levels-and
-                if len(stt_nodes):
-                    stt = Resource(self.Factory, "FencingPass", "fence_dummy", "stonith")
-                    stt["pcmk_host_list"] = " ".join(stt_nodes)
-                    # Wait this many seconds before doing anything, handy for letting disks get flushed too
-                    stt["random_sleep_range"] = "30"
-                    stt["mode"] = "pass"
-                    stt.commit()
+            # Create a Dummy agent that always passes for levels-and
+            if len(stt_nodes):
+                stt = Resource(self.Factory, "FencingPass", "fence_dummy", "stonith")
+                stt["pcmk_host_list"] = " ".join(stt_nodes)
+                # Wait this many seconds before doing anything, handy for letting disks get flushed too
+                stt["random_sleep_range"] = "30"
+                stt["mode"] = "pass"
+                stt.commit()
 
-                # Create a Dummy agent that always fails for levels-or
-                if len(stf_nodes):
-                    stf = Resource(self.Factory, "FencingFail", "fence_dummy", "stonith")
-                    stf["pcmk_host_list"] = " ".join(stf_nodes)
-                    # Wait this many seconds before doing anything, handy for letting disks get flushed too
-                    stf["random_sleep_range"] = "30"
-                    stf["mode"] = "fail"
-                    stf.commit()
+            # Create a Dummy agent that always fails for levels-or
+            if len(stf_nodes):
+                stf = Resource(self.Factory, "FencingFail", "fence_dummy", "stonith")
+                stf["pcmk_host_list"] = " ".join(stf_nodes)
+                # Wait this many seconds before doing anything, handy for letting disks get flushed too
+                stf["random_sleep_range"] = "30"
+                stf["mode"] = "fail"
+                stf.commit()
 
-                # Now commit the levels themselves
-                stl.commit()
+            # Now commit the levels themselves
+            stl.commit()
 
         o = Option(self.Factory)
         o["stonith-enabled"] = self.CM.Env["DoFencing"]
