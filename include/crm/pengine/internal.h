@@ -35,6 +35,7 @@ enum pe__clone_flags {
 
 bool pe__clone_is_ordered(const pe_resource_t *clone);
 int pe__set_clone_flag(pe_resource_t *clone, enum pe__clone_flags flag);
+bool pe__clone_flag_is_set(const pe_resource_t *clone, uint32_t flags);
 
 
 enum pe__group_flags {

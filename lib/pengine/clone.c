@@ -1321,6 +1321,26 @@ pe__set_clone_flag(pe_resource_t *clone, enum pe__clone_flags flag)
 
 /*!
  * \internal
+ * \brief Check whether a clone flag is set
+ *
+ * \param[in] group  Clone resource to check
+ * \param[in] flags  Flag or flags to check
+ *
+ * \return \c true if all \p flags are set for \p clone, otherwise \c false
+ */
+bool
+pe__clone_flag_is_set(const pe_resource_t *clone, uint32_t flags)
+{
+    clone_variant_data_t *clone_data = NULL;
+
+    get_clone_variant_data(clone_data, clone);
+    CRM_ASSERT(clone_data != NULL);
+
+    return pcmk_all_flags_set(clone_data->flags, flags);
+}
+
+/*!
+ * \internal
  * \brief Create pseudo-actions needed for promotable clones
  *
  * \param[in,out] clone          Promotable clone to create actions for
