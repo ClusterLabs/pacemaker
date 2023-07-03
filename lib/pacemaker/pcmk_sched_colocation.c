@@ -1123,6 +1123,37 @@ pcmk__block_colocation_dependents(pe_action_t *action)
 
 /*!
  * \internal
+ * \brief Get the resource to use for role comparisons
+ *
+ * A bundle replica includes a container and possibly an instance of the bundled
+ * resource. The dependent in a "with bundle" colocation is colocated with a
+ * particular bundle container. However, if the colocation includes a role, then
+ * the role must be checked on the bundled resource instance inside the
+ * container. The container itself will never be promoted; the bundled resource
+ * may be.
+ *
+ * If the given resource is a bundle replica container, return the resource
+ * inside it, if any. Otherwise, return the resource itself.
+ *
+ * \param[in] rsc  Resource to check
+ *
+ * \return Resource to use for role comparisons
+ */
+static const pe_resource_t *
+get_resource_for_role(const pe_resource_t *rsc)
+{
+    if (pcmk_is_set(rsc->flags, pe_rsc_replica_container)) {
+        const pe_resource_t *child = pe__get_rsc_in_container(rsc);
+
+        if (child != NULL) {
+            return child;
+        }
+    }
+    return rsc;
+}
+
+/*!
+ * \internal
  * \brief Determine how a colocation constraint should affect a resource
  *
  * Colocation constraints have different effects at different points in the
@@ -1144,15 +1175,24 @@ pcmk__colocation_affects(const pe_resource_t *dependent,
                          const pe_resource_t *primary,
                          const pcmk__colocation_t *colocation, bool preview)
 {
+    const pe_resource_t *dependent_role_rsc = NULL;
+    const pe_resource_t *primary_role_rsc = NULL;
+
+    CRM_ASSERT((dependent != NULL) && (primary != NULL)
+               && (colocation != NULL));
+
     if (!preview && pcmk_is_set(primary->flags, pe_rsc_provisional)) {
         // Primary resource has not been assigned yet, so we can't do anything
         return pcmk__coloc_affects_nothing;
     }
 
+    dependent_role_rsc = get_resource_for_role(dependent);
+    primary_role_rsc = get_resource_for_role(primary);
+
     if ((colocation->dependent_role >= RSC_ROLE_UNPROMOTED)
-        && (dependent->parent != NULL)
-        && pcmk_is_set(dependent->parent->flags, pe_rsc_promotable)
-        && !pcmk_is_set(dependent->flags, pe_rsc_provisional)) {
+        && (dependent_role_rsc->parent != NULL)
+        && pcmk_is_set(dependent_role_rsc->parent->flags, pe_rsc_promotable)
+        && !pcmk_is_set(dependent_role_rsc->flags, pe_rsc_provisional)) {
 
         /* This is a colocation by role, and the dependent is a promotable clone
          * that has already been assigned, so the colocation should now affect
@@ -1197,22 +1237,23 @@ pcmk__colocation_affects(const pe_resource_t *dependent,
     }
 
     if ((colocation->dependent_role != RSC_ROLE_UNKNOWN)
-        && (colocation->dependent_role != dependent->next_role)) {
+        && (colocation->dependent_role != dependent_role_rsc->next_role)) {
         crm_trace("Skipping %scolocation '%s': dependent limited to %s role "
                   "but %s next role is %s",
                   ((colocation->score < 0)? "anti-" : ""),
                   colocation->id, role2text(colocation->dependent_role),
-                  dependent->id, role2text(dependent->next_role));
+                  dependent_role_rsc->id,
+                  role2text(dependent_role_rsc->next_role));
         return pcmk__coloc_affects_nothing;
     }
 
     if ((colocation->primary_role != RSC_ROLE_UNKNOWN)
-        && (colocation->primary_role != primary->next_role)) {
+        && (colocation->primary_role != primary_role_rsc->next_role)) {
         crm_trace("Skipping %scolocation '%s': primary limited to %s role "
                   "but %s next role is %s",
                   ((colocation->score < 0)? "anti-" : ""),
                   colocation->id, role2text(colocation->primary_role),
-                  primary->id, role2text(primary->next_role));
+                  primary_role_rsc->id, role2text(primary_role_rsc->next_role));
         return pcmk__coloc_affects_nothing;
     }
 
@@ -1341,6 +1382,11 @@ pcmk__apply_coloc_to_priority(pe_resource_t *dependent,
     const char *attr = colocation->node_attribute;
     int score_multiplier = 1;
 
+    const pe_resource_t *primary_role_rsc = NULL;
+
+    CRM_ASSERT((dependent != NULL) && (primary != NULL) &&
+               (colocation != NULL));
+
     if ((primary->allocated_to == NULL) || (dependent->allocated_to == NULL)) {
         return;
     }
@@ -1349,6 +1395,8 @@ pcmk__apply_coloc_to_priority(pe_resource_t *dependent,
                                                  dependent);
     primary_value = pcmk__colocation_node_attr(primary->allocated_to, attr,
                                                primary);
+
+    primary_role_rsc = get_resource_for_role(primary);
 
     if (!pcmk__str_eq(dependent_value, primary_value, pcmk__str_casei)) {
         if ((colocation->score == INFINITY)
@@ -1359,7 +1407,7 @@ pcmk__apply_coloc_to_priority(pe_resource_t *dependent,
     }
 
     if ((colocation->primary_role != RSC_ROLE_UNKNOWN)
-        && (colocation->primary_role != primary->next_role)) {
+        && (colocation->primary_role != primary_role_rsc->next_role)) {
         return;
     }
 

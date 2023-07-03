@@ -377,6 +377,26 @@ match_replica_container(const pe__bundle_replica_t *replica, void *user_data)
 
 /*!
  * \internal
+ * \brief Get the host to which a bundle node is assigned
+ *
+ * \param[in] node  Possible bundle node to check
+ *
+ * \return Node to which the container for \p node is assigned if \p node is a
+ *         bundle node, otherwise \p node itself
+ */
+static const pe_node_t *
+get_bundle_node_host(const pe_node_t *node)
+{
+    if (pe__is_bundle_node(node)) {
+        const pe_resource_t *container = node->details->remote_rsc->container;
+
+        return container->fns->location(container, NULL, 0);
+    }
+    return node;
+}
+
+/*!
+ * \internal
  * \brief Find a bundle container compatible with a dependent resource
  *
  * \param[in] dependent  Dependent resource in colocation with bundle
@@ -395,6 +415,7 @@ compatible_container(const pe_resource_t *dependent,
 
     // If dependent is assigned, only check there
     match_data.node = dependent->fns->location(dependent, NULL, 0);
+    match_data.node = get_bundle_node_host(match_data.node);
     if (match_data.node != NULL) {
         pe__foreach_const_bundle_replica(bundle, match_replica_container,
                                          &match_data);
@@ -406,6 +427,11 @@ compatible_container(const pe_resource_t *dependent,
     scratch = pcmk__sort_nodes(scratch, NULL);
     for (const GList *iter = scratch; iter != NULL; iter = iter->next) {
         match_data.node = iter->data;
+        match_data.node = get_bundle_node_host(match_data.node);
+        if (match_data.node == NULL) {
+            continue;
+        }
+
         pe__foreach_const_bundle_replica(bundle, match_replica_container,
                                          &match_data);
         if (match_data.container != NULL) {
@@ -602,6 +628,7 @@ pcmk__bundle_with_colocations(const pe_resource_t *rsc,
         || pcmk_is_set(orig_rsc->flags, pe_rsc_replica_container)) {
 
         pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
+        return;
     }
 
     /* The bundled resource gets the colocations if it's promotable and we've
