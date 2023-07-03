@@ -65,7 +65,6 @@ class ClusterManager(UserDict):
 
         self.cib_installed = 0
         self.config = None
-        self.cluster_monitor = 0
         self.use_short_names = 1
 
         self._finalConditions()

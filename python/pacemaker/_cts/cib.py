@@ -272,16 +272,6 @@ class CIB12(ConfigBase):
         if self.CM.Env["CIBResource"]:
             self.add_resources()
 
-        if self.CM.cluster_monitor == 1:
-            mon = Resource(self.Factory, "cluster_mon", "ocf", "ClusterMon", "pacemaker")
-            mon.add_op("start", "0", requires="nothing")
-            mon.add_op("monitor", "5s", requires="nothing")
-            mon["update"] = "10"
-            mon["extra_options"] = "-r -n"
-            mon["user"] = "abeekhof"
-            mon["htmlfile"] = "/suse/abeekhof/Export/cluster.html"
-            mon.commit()
-
         # generate cib
         self.cts_cib = self._show()
 
