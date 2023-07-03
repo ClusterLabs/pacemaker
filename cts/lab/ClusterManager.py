@@ -73,7 +73,7 @@ class ClusterManager(UserDict):
         self.check_elections = 0
         self.CIBsync = {}
         self.CibFactory = ConfigFactory(self)
-        self.cib = self.CibFactory.createConfig(self.Env["Schema"])
+        self.cib = self.CibFactory.create_config(self.Env["Schema"])
 
     def __getitem__(self, key):
         if key == "Name":

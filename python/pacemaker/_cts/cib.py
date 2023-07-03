@@ -15,11 +15,11 @@ from pacemaker._cts.network import next_ip
 
 class ConfigBase:
     cts_cib = None
-    version = "unknown"
     Factory = None
 
-    def __init__(self, CM, factory, tmpfile=None):
+    def __init__(self, CM, version, factory, tmpfile=None):
         self.CM = CM
+        self.version = version
         self.Factory = factory
 
         if not tmpfile:
@@ -32,8 +32,7 @@ class ConfigBase:
         self.Factory.tmpfile = tmpfile
 
 
-class CIB12(ConfigBase):
-    version = "pacemaker-1.2"
+class CIB(ConfigBase):
     counter = 1
 
     def _show(self, command=""):
@@ -358,20 +357,10 @@ class CIB12(ConfigBase):
         lsb.commit()
 
 
-class CIB20(CIB12):
-    version = "pacemaker-2.5"
-
-class CIB30(CIB12):
-    version = "pacemaker-3.7"
-
-
 class ConfigFactory:
     def __init__(self, CM):
         self.CM = CM
         self.rsh = self.CM.rsh
-        self.register("pacemaker12", CIB12, CM, self)
-        self.register("pacemaker20", CIB20, CM, self)
-        self.register("pacemaker30", CIB30, CM, self)
         if not self.CM.Env["ListTests"]:
             self.target = self.CM.Env["nodes"][0]
         self.tmpfile = None
@@ -382,43 +371,5 @@ class ConfigFactory:
     def debug(self, args):
         self.CM.debug("cib: %s" % args)
 
-    def register(self, methodName, constructor, *args, **kargs):
-        """register a constructor"""
-        _args = [constructor]
-        _args.extend(args)
-        setattr(self, methodName, ConfigFactoryItem(*_args, **kargs))
-
-    def unregister(self, methodName):
-        """unregister a constructor"""
-        delattr(self, methodName)
-
-    def createConfig(self, name="pacemaker-1.0"):
-        if name == "pacemaker-1.0":
-            name = "pacemaker10"
-        elif name == "pacemaker-1.2":
-            name = "pacemaker12"
-        elif name == "pacemaker-2.0":
-            name = "pacemaker20"
-        elif name.startswith("pacemaker-3."):
-            name = "pacemaker30"
-
-        if hasattr(self, name):
-            return getattr(self, name)()
-
-        self.CM.log("Configuration variant '%s' is unknown.  Defaulting to latest config" % name)
-        return self.pacemaker30()
-
-
-class ConfigFactoryItem:
-    def __init__(self, function, *args, **kargs):
-        self._function = function
-        self._args = args
-        self._kargs = kargs
-
-    def __call__(self, *args, **kargs):
-        """call function"""
-        _args = list(self._args)
-        _args.extend(args)
-        _kargs = self._kargs.copy()
-        _kargs.update(kargs)
-        return self._function(*_args,**_kargs)
+    def create_config(self, name="pacemaker-1.0"):
+        return CIB(self.CM, name, self)
