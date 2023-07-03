@@ -220,12 +220,12 @@ class CIB12(ConfigBase):
             # create the attributes and a level for the attribute.
             if attr_nodes:
                 stn = Nodes(self.Factory)
-                for (node_name, node_id) in list(attr_nodes.items()):
+                for (node_name, node_id) in attr_nodes.items():
                     stn.add_node(node_name, node_id, { "cts-fencing" : "levels-and" })
                 stl.level(1, None, "FencingPass,Fencing", "cts-fencing", "levels-and")
 
             # Create a Dummy agent that always passes for levels-and
-            if len(stt_nodes):
+            if stt_nodes:
                 stt = Resource(self.Factory, "FencingPass", "fence_dummy", "stonith")
                 stt["pcmk_host_list"] = " ".join(stt_nodes)
                 # Wait this many seconds before doing anything, handy for letting disks get flushed too
@@ -234,7 +234,7 @@ class CIB12(ConfigBase):
                 stt.commit()
 
             # Create a Dummy agent that always fails for levels-or
-            if len(stf_nodes):
+            if stf_nodes:
                 stf = Resource(self.Factory, "FencingFail", "fence_dummy", "stonith")
                 stf["pcmk_host_list"] = " ".join(stf_nodes)
                 # Wait this many seconds before doing anything, handy for letting disks get flushed too
