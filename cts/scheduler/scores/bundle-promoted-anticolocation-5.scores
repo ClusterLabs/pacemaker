@@ -1,6 +1,6 @@
 
 bundle-a-rsc:0 promotion score on bundle-a-0: 11
-bundle-a-rsc:1 promotion score on bundle-a-1: 13
+bundle-a-rsc:1 promotion score on bundle-a-1: -INFINITY
 bundle-a-rsc:2 promotion score on bundle-a-2: 12
 bundle-b-rsc:0 promotion score on bundle-b-0: 12
 bundle-b-rsc:1 promotion score on bundle-b-1: 14

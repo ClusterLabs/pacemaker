@@ -12,8 +12,6 @@
          In this situation, bundle-a should demote its currently promoted
          instance and promote the instance on the node where bundle-b is
          promoted.
-
-         This test output is currently incorrect.
       -->
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">

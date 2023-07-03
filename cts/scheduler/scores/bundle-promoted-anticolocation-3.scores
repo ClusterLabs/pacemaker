@@ -1,7 +1,7 @@
 
 base:0 promotion score on base-bundle-0: 11
 base:1 promotion score on base-bundle-1: 12
-base:2 promotion score on base-bundle-2: 13
+base:2 promotion score on base-bundle-2: -INFINITY
 pcmk__bundle_assign: base-bundle allocation score on node1: 0
 pcmk__bundle_assign: base-bundle allocation score on node2: 0
 pcmk__bundle_assign: base-bundle allocation score on node3: 0
