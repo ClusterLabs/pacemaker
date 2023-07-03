@@ -1,20 +1,19 @@
 """ CIB generator for Pacemaker's Cluster Test Suite (CTS)
 """
 
+__all__ = ["ConfigFactory"]
 __copyright__ = "Copyright 2008-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
-import os
 import warnings
 import tempfile
 
 from pacemaker.buildoptions import BuildOptions
-from pacemaker._cts.CTS import CtsLab
 from pacemaker._cts.cibxml import Alerts, Clone, Expression, FencingTopology, Group, Nodes, OpDefaults, Option, Resource, Rule
 from pacemaker._cts.network import next_ip
 
 
-class ConfigBase(object):
+class ConfigBase:
     cts_cib = None
     version = "unknown"
     Factory = None
@@ -60,7 +59,7 @@ class CIB12(ConfigBase):
 
             r = Resource(self.Factory, name, self.CM.Env["IPagent"], standard)
             r["ip"] = ip
-        
+
             if ":" in ip:
                 r["cidr_netmask"] = "64"
                 r["nic"] = "eth0"
@@ -70,7 +69,7 @@ class CIB12(ConfigBase):
         else:
             if not name:
                 name = "r%s%d" % (self.CM.Env["IPagent"], self.counter)
-                self.counter = self.counter + 1
+                self.counter += 1
             r = Resource(self.Factory, name, self.CM.Env["IPagent"], standard)
 
         r.add_op("monitor", "5s")
@@ -379,7 +378,7 @@ class CIB30(CIB12):
     version = "pacemaker-3.7"
 
 
-class ConfigFactory(object):
+class ConfigFactory:
     def __init__(self, CM):
         self.CM = CM
         self.rsh = self.CM.rsh
@@ -408,23 +407,22 @@ class ConfigFactory(object):
 
     def createConfig(self, name="pacemaker-1.0"):
         if name == "pacemaker-1.0":
-            name = "pacemaker10";
+            name = "pacemaker10"
         elif name == "pacemaker-1.2":
-            name = "pacemaker12";
+            name = "pacemaker12"
         elif name == "pacemaker-2.0":
-            name = "pacemaker20";
+            name = "pacemaker20"
         elif name.startswith("pacemaker-3."):
-            name = "pacemaker30";
+            name = "pacemaker30"
 
         if hasattr(self, name):
             return getattr(self, name)()
-        else:
-            self.CM.log("Configuration variant '%s' is unknown.  Defaulting to latest config" % name)
 
+        self.CM.log("Configuration variant '%s' is unknown.  Defaulting to latest config" % name)
         return self.pacemaker30()
 
 
-class ConfigFactoryItem(object):
+class ConfigFactoryItem:
     def __init__(self, function, *args, **kargs):
         self._function = function
         self._args = args
