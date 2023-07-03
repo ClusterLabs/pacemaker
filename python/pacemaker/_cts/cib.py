@@ -287,8 +287,6 @@ class CIB12(ConfigBase):
             mon["htmlfile"] = "/suse/abeekhof/Export/cluster.html"
             mon.commit()
 
-            #self._create('''location prefer-dc cluster_mon rule -INFINITY: \#is_dc eq false''')
-
         # generate cib
         self.cts_cib = self._show()
 
@@ -380,18 +378,6 @@ class CIB20(CIB12):
 
 class CIB30(CIB12):
     version = "pacemaker-3.7"
-
-#class HASI(CIB10):
-#    def add_resources(self):
-#        # DLM resource
-#        self._create('''primitive dlm ocf:pacemaker:controld op monitor interval=120s''')
-#        self._create('''clone dlm-clone dlm meta globally-unique=false interleave=true''')
-
-        # O2CB resource
-#        self._create('''primitive o2cb ocf:ocfs2:o2cb op monitor interval=120s''')
-#        self._create('''clone o2cb-clone o2cb meta globally-unique=false interleave=true''')
-#        self._create('''colocation o2cb-with-dlm INFINITY: o2cb-clone dlm-clone''')
-#        self._create('''order start-o2cb-after-dlm mandatory: dlm-clone o2cb-clone''')
 
 
 class ConfigFactory(object):
