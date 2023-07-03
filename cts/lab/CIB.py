@@ -452,27 +452,3 @@ class ConfigFactoryItem(object):
         _kargs = self._kargs.copy()
         _kargs.update(kargs)
         return self._function(*_args,**_kargs)
-
-if __name__ == '__main__':
-    """ Unit test (pass cluster node names as command line arguments) """
-
-    import cts.CM_corosync
-    import sys
-
-    if len(sys.argv) < 2:
-        print("Usage: %s <node> ..." % sys.argv[0])
-        sys.exit(1)
-
-    args = [
-        "--nodes", " ".join(sys.argv[1:]),
-        "--clobber-cib",
-        "--populate-resources",
-        "--stack", "corosync",
-        "--test-ip-base", "fe80::1234:56:7890:1000",
-        "--stonith", "rhcs",
-    ]
-    env = CtsLab(args)
-    cm = CM_corosync.crm_corosync()
-    CibFactory = ConfigFactory(cm)
-    cib = CibFactory.createConfig("pacemaker-3.0")
-    print(cib.contents())
