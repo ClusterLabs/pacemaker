@@ -549,8 +549,8 @@ _____________________
    |                |                | If ``rsc`` and ``with-rsc`` are specified, and ``rsc`` |
    |                |                | is a :ref:`promotable clone <s-resource-promotable>`,  |
    |                |                | the constraint applies only to ``rsc`` instances in    |
-   |                |                | this role. Allowed values: ``Started``, ``Promoted``,  |
-   |                |                | ``Unpromoted``. For details, see                       |
+   |                |                | this role. Allowed values: ``Started``, ``Stopped``,   |
+   |                |                | ``Promoted``, ``Unpromoted``. For details, see         |
    |                |                | :ref:`promotable-clone-constraints`.                   |
    +----------------+----------------+--------------------------------------------------------+
    | with-rsc-role  | Started        | .. index::                                             |
@@ -562,8 +562,8 @@ _____________________
    |                |                | ``with-rsc`` is a                                      |
    |                |                | :ref:`promotable clone <s-resource-promotable>`, the   |
    |                |                | constraint applies only to ``with-rsc`` instances in   |
-   |                |                | this role. Allowed values: ``Started``, ``Promoted``,  |
-   |                |                | ``Unpromoted``. For details, see                       |
+   |                |                | this role. Allowed values: ``Started``, ``Stopped``,   |
+   |                |                | ``Promoted``, ``Unpromoted``. For details, see         |
    |                |                | :ref:`promotable-clone-constraints`.                   |
    +----------------+----------------+--------------------------------------------------------+
    | influence      | value of       | .. index::                                             |
