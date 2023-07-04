@@ -101,6 +101,37 @@ enum cib_op_attr {
 
 /*!
  * \internal
+ * \enum cib__op_type
+ * \brief Types of CIB operations
+ */
+enum cib__op_type {
+    cib__op_abs_delete,
+    cib__op_apply_patch,
+    cib__op_bump,
+    cib__op_create,
+    cib__op_delete,
+    cib__op_erase,
+    cib__op_is_primary,
+    cib__op_modify,
+    cib__op_noop,
+    cib__op_ping,
+    cib__op_primary,
+    cib__op_query,
+    cib__op_replace,
+    cib__op_secondary,
+    cib__op_shutdown,
+    cib__op_sync_all,
+    cib__op_sync_one,
+    cib__op_upgrade,
+
+    // @TODO: Refactor transactions and remove these
+    cib__op_init_transact,
+    cib__op_commit_transact,
+    cib__op_discard_transact,
+};
+
+/*!
+ * \internal
  * \brief Set given <tt>enum cib_change_section_info</tt> flags
  *
  * \param[in,out] flags_orig    Group of flags to update
