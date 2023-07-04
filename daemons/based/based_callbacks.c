@@ -60,8 +60,8 @@ qb_ipcs_service_t *ipcs_shm = NULL;
 
 static int cib_process_command(xmlNode *request,
                                const cib_operation_t *operation,
-                               xmlNode **reply, xmlNode **cib_diff,
-                               bool privileged);
+                               cib__op_fn_t op_function, xmlNode **reply,
+                               xmlNode **cib_diff, bool privileged);
 
 static gboolean cib_common_callback(qb_ipcs_connection_t *c, void *data,
                                     size_t size, gboolean privileged);
@@ -1077,6 +1077,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
     const char *reply_to = crm_element_value(request, F_CIB_ISREPLY);
 
     const cib_operation_t *operation = NULL;
+    cib__op_fn_t op_function = NULL;
 
     crm_element_value_int(request, F_CIB_CALLOPTS, &call_options);
 
@@ -1103,11 +1104,18 @@ cib_process_request(xmlNode *request, gboolean privileged,
         crm_trace("Processing local %s operation from %s/%s intended for %s", op, client_name, call_id, target);
     }
 
-    rc = cib_get_operation(op, &operation);
+    rc = cib__get_operation(op, &operation);
+    rc = pcmk_rc2legacy(rc);
     if (rc != pcmk_ok) {
         /* TODO: construct error reply? */
         crm_err("Pre-processing of command failed: %s", pcmk_strerror(rc));
         return rc;
+    }
+
+    op_function = based_get_op_function(operation);
+    if (op_function == NULL) {
+        crm_err("Operation %s not supported by CIB manager", op);
+        return -EOPNOTSUPP;
     }
 
     if (pcmk_is_set(call_options, cib_transaction)) {
@@ -1160,8 +1168,8 @@ cib_process_request(xmlNode *request, gboolean privileged,
         int level = LOG_INFO;
         const char *section = crm_element_value(request, F_CIB_SECTION);
 
-        rc = cib_process_command(request, operation, &op_reply, &result_diff,
-                                 privileged);
+        rc = cib_process_command(request, operation, op_function, &op_reply,
+                                 &result_diff, privileged);
 
         if (!is_update) {
             level = LOG_TRACE;
@@ -1466,7 +1474,8 @@ contains_config_change(xmlNode *diff)
 
 static int
 cib_process_command(xmlNode *request, const cib_operation_t *operation,
-                    xmlNode **reply, xmlNode **cib_diff, bool privileged)
+                    cib__op_fn_t op_function, xmlNode **reply,
+                    xmlNode **cib_diff, bool privileged)
 {
     xmlNode *input = NULL;
     xmlNode *output = NULL;
@@ -1512,7 +1521,7 @@ cib_process_command(xmlNode *request, const cib_operation_t *operation,
     input = prepare_input(request, operation->type, &section);
 
     if (!pcmk_is_set(operation->flags, cib_op_attr_modifies)) {
-        rc = cib_perform_op(op, call_options, operation->fn, true, section,
+        rc = cib_perform_op(op, call_options, op_function, true, section,
                             request, input, false, &config_changed, &the_cib,
                             &result_cib, NULL, &output);
 
@@ -1557,7 +1566,7 @@ cib_process_command(xmlNode *request, const cib_operation_t *operation,
     }
 
     // result_cib must not be modified after cib_perform_op() returns
-    rc = cib_perform_op(op, call_options, operation->fn, false, section,
+    rc = cib_perform_op(op, call_options, op_function, false, section,
                         request, input, manage_counters, &config_changed,
                         &the_cib, &result_cib, cib_diff, &output);
 

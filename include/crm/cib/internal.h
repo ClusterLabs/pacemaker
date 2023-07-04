@@ -156,7 +156,6 @@ typedef struct cib_operation_s {
     const char *name;
     enum cib__op_type type;
     uint32_t flags; //!< Group of <tt>enum cib_op_attr</tt> flags
-    cib__op_fn_t fn;
 } cib_operation_t;
 
 typedef struct cib_notify_client_s {
@@ -209,6 +208,8 @@ xmlNode *cib_create_op(int call_id, const char *op, const char *host,
 
 void cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc);
 void cib_native_notify(gpointer data, gpointer user_data);
+
+int cib__get_operation(const char *op, const cib_operation_t **operation);
 
 int cib_process_query(const char *op, int options, const char *section, xmlNode * req,
                       xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,

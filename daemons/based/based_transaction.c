@@ -154,9 +154,8 @@ validate_transaction_request(const xmlNode *request)
     const char *host = crm_element_value(request, F_CIB_HOST);
 
     const cib_operation_t *operation = NULL;
-    int rc = cib_get_operation(op, &operation);
+    int rc = cib__get_operation(op, &operation);
 
-    rc = pcmk_legacy2rc(rc);
     if (rc != pcmk_rc_ok) {
         // cib_get_operation() logs error
         return rc;
