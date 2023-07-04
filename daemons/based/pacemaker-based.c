@@ -16,7 +16,8 @@
 #include <bzlib.h>
 #include <sys/types.h>
 
-#include <libxml/parser.h>
+#include <glib.h>
+#include <libxml/tree.h>
 
 #include <crm/crm.h>
 #include <crm/cib/internal.h>

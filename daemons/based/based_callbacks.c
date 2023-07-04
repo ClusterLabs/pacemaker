@@ -20,6 +20,9 @@
 #include <fcntl.h>
 #include <inttypes.h>   // PRIu64
 
+#include <glib.h>
+#include <libxml/tree.h>
+
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
