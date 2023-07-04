@@ -161,12 +161,12 @@ get_client(const char *client_id)
  * operation that supports running against a file). We can easily ignore the
  * prepare and cleanup functions.
  *
- * The main challenge is that the fn member (cib_op_t) may differ depending on
- * whether we're processing the request on the server side or with the
+ * The main challenge is that the fn member (cib__op_fn_t) may differ depending
+ * on whether we're processing the request on the server side or with the
  * file-based client. Processor functions defined in pacemaker-based shouldn't
  * be declared in libcib, but we need them accessible via the table somehow.
  *
- * Maybe use an enum that indexes into an array of cib_op_t functions. That
+ * Maybe use an enum that indexes into an array of cib__op_fn_t functions. That
  * would be obnoxiously similar to the call_type (index) argument that we
  * eliminated in c13bf8b2.
  */

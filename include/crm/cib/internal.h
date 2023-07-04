@@ -149,15 +149,15 @@ gboolean cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, 
 
 gboolean cib_read_config(GHashTable * options, xmlNode * current_cib);
 
-typedef int (*cib_op_t) (const char *, int, const char *, xmlNode *,
-                         xmlNode *, xmlNode *, xmlNode **, xmlNode **);
+typedef int (*cib__op_fn_t)(const char *, int, const char *, xmlNode *,
+                            xmlNode *, xmlNode *, xmlNode **, xmlNode **);
 
 typedef struct cib_operation_s {
     const char *name;
     enum cib__op_type type;
     uint32_t flags; //!< Group of <tt>enum cib_op_attr</tt> flags
     int (*prepare) (xmlNode *, xmlNode **, const char **);
-    cib_op_t fn;
+    cib__op_fn_t fn;
 } cib_operation_t;
 
 typedef struct cib_notify_client_s {
@@ -198,7 +198,7 @@ struct timer_rec_s {
 
 cib_t *cib_new_variant(void);
 
-int cib_perform_op(const char *op, int call_options, cib_op_t fn,
+int cib_perform_op(const char *op, int call_options, cib__op_fn_t fn,
                    bool is_query, const char *section, xmlNode *req,
                    xmlNode *input, bool manage_counters, bool *config_changed,
                    xmlNode **current_cib, xmlNode **result_cib, xmlNode **diff,
