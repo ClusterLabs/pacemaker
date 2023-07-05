@@ -1,6 +1,6 @@
 #!@BASH_PATH@
 #
-# Copyright 2012-2021 the Pacemaker project contributors
+# Copyright 2012-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -27,7 +27,7 @@ yesno() {
     local RESPONSE
 
     read -p "$1 " RESPONSE
-    case $(echo "$RESPONSE" | tr A-Z a-z) in
+    case $(echo "$RESPONSE" | tr '[:upper:]' '[:lower:]') in
         y|yes|ano|ja|si|oui) return 0 ;;
         *) return 1 ;;
     esac
@@ -38,7 +38,7 @@ prompt_to_continue() {
 }
 
 find_last_release() {
-    if [ ! -z "$1" ]; then
+    if [ -n "$1" ]; then
         echo "$1"
     else
         git tag -l | grep Pacemaker | grep -v rc | sort -Vr | head -n 1
@@ -63,7 +63,7 @@ find_sources() {
     # than backslashed continuation lines, to allow this script to detect
     # source files correctly. Warn if that's not the case.
     if
-        grep "lib${LIB}_la_SOURCES.*\\\\" $AMFILE
+        grep "lib${LIB}_la_SOURCES.*\\\\" "$AMFILE"
     then
         echo -e "\033[1;35m -- Sources list for lib$LIB is probably truncated! --\033[0m"
         echo "Edit to use '+=' rather than backslashed continuation lines"
@@ -75,11 +75,11 @@ find_sources() {
 
     for SOURCE in $SOURCES; do
         if
-            echo $SOURCE | grep -q "/"
+            echo "$SOURCE" | grep -q "/"
         then
             echo "$SOURCE"
         else
-            echo "$(dirname $AMFILE)/$SOURCE"
+            echo "$(dirname "$AMFILE")/$SOURCE"
         fi
     done
 }
@@ -111,7 +111,7 @@ shared_lib_name() {
     local LIB="$1"
     local VERSION="$2"
 
-    echo "lib${LIB}.so.$(echo $VERSION | cut -d: -f 1)"
+    echo "lib${LIB}.so.$(echo "$VERSION" | cut -d: -f 1)"
 }
 
 process_lib() {
@@ -135,11 +135,10 @@ process_lib() {
     AMFILE="$(find_makefile "$LIB")"
 
     # Get current shared library version
-    VER_NOW=$(cat $AMFILE | extract_version $LIB)
+    VER_NOW=$(extract_version "$LIB" < "$AMFILE")
 
     # Check whether library existed at last release
-    git cat-file -e $LAST_RELEASE:$AMFILE 2>/dev/null
-    if [ $? -ne 0 ]; then
+    if ! git cat-file -e "$LAST_RELEASE:$AMFILE" 2>/dev/null; then
         echo "lib$LIB is new, not changing version ($VER_NOW)"
         prompt_to_continue
         echo ""
@@ -158,7 +157,7 @@ process_lib() {
         DEFAULT_CHANGE="i" # Removed public header is incompatible change
     elif [ -n "$HEADERS_ADDED" ]; then
         DEFAULT_CHANGE="c" # Additions are likely compatible
-    elif git diff --quiet -w $LAST_RELEASE..HEAD $HEADERS_HEAD $SOURCES ; then
+    elif git diff --quiet -w "$LAST_RELEASE..HEAD" $HEADERS_HEAD $SOURCES ; then
         echo "No changes to $LIB interface"
         prompt_to_continue
         echo ""
@@ -179,12 +178,12 @@ process_lib() {
             echo "++ $HEADER is new"
         done
     fi
-    git --no-pager diff --color -w $LAST_RELEASE..HEAD $HEADERS_HEAD
+    git --no-pager diff --color -w "$LAST_RELEASE..HEAD" $HEADERS_HEAD
 
     echo ""
     if yesno "Show commits (minus refactor/build/merge) touching lib$LIB since $LAST_RELEASE [y/N]?"
     then
-        git log --color $LAST_RELEASE..HEAD -z $HEADERS_HEAD $SOURCES $AMFILE \
+        git log --color "$LAST_RELEASE..HEAD" -z $HEADERS_HEAD $SOURCES "$AMFILE" \
             | grep -vzE "Refactor:|Build:|Merge pull request"
         echo
         prompt_to_continue
@@ -203,7 +202,7 @@ process_lib() {
     echo ""
     echo "- Headers: $HEADERS_HEAD"
     echo "- Changed sources since $LAST_RELEASE:"
-    git --no-pager diff --color -w $LAST_RELEASE..HEAD --stat $SOURCES
+    git --no-pager diff --color -w "$LAST_RELEASE..HEAD" --stat $SOURCES
     echo ""
 
     # Ask for human guidance
@@ -212,14 +211,14 @@ process_lib() {
     [ -z "$CHANGE" ] && CHANGE="$DEFAULT_CHANGE"
 
     # Get (and show) shared library version at last release
-    VER=$(git show $LAST_RELEASE:$AMFILE | extract_version $LIB)
-    VER_1=$(echo $VER | awk -F: '{print $1}')
-    VER_2=$(echo $VER | awk -F: '{print $2}')
-    VER_3=$(echo $VER | awk -F: '{print $3}')
+    VER=$(git show "$LAST_RELEASE:$AMFILE" | extract_version "$LIB")
+    VER_1=$(echo "$VER" | awk -F: '{print $1}')
+    VER_2=$(echo "$VER" | awk -F: '{print $2}')
+    VER_3=$(echo "$VER" | awk -F: '{print $3}')
     echo "lib$LIB version at $LAST_RELEASE: $VER"
 
     # Show current shared library version if changed
-    if [ $VER_NOW != $VER ]; then
+    if [ "$VER_NOW" != "$VER" ]; then
         echo "lib$LIB version currently: $VER_NOW"
     fi
 
@@ -227,25 +226,25 @@ process_lib() {
     case $CHANGE in
         i|I)
             echo "New backwards-incompatible version: x+1:0:0"
-            VER_1=$(expr $VER_1 + 1)
+            (( VER_1++ ))
             VER_2=0
             VER_3=0
 
             # Some headers define constants for shared library names,
             # update them if the name changed
             for H in $HEADERS_HEAD; do
-                sed -i -e "s/$(shared_lib_name "$LIB" "$VER_NOW")/$(shared_lib_name "$LIB" "$VER_1:0:0")/" $H
+                sed -i -e "s/$(shared_lib_name "$LIB" "$VER_NOW")/$(shared_lib_name "$LIB" "$VER_1:0:0")/" "$H"
             done
             ;;
         c|C)
             echo "New version with backwards-compatible extensions: x+1:0:z+1"
-            VER_1=$(expr $VER_1 + 1)
+            (( VER_1++ ))
             VER_2=0
-            VER_3=$(expr $VER_3 + 1)
+            (( VER_3++ ))
             ;;
         F|f)
             echo "Code changed though interfaces didn't: x:y+1:z"
-            VER_2=$(expr $VER_2 + 1)
+            (( VER_2++ ))
             ;;
         *)
             echo "Not updating lib$LIB version"
@@ -255,11 +254,11 @@ process_lib() {
     esac
     VER_NEW=$VER_1:$VER_2:$VER_3
 
-    if [ ! -z $CHANGE ]; then
+    if [ -n "$CHANGE" ]; then
         if [ "$VER_NEW" != "$VER_NOW" ]; then
             echo "Updating lib$LIB version from $VER_NOW to $VER_NEW"
             prompt_to_continue
-            sed -i "s/version-info\s*$VER_NOW/version-info $VER_NEW/" $AMFILE
+            sed -i "s/version-info\s*$VER_NOW/version-info $VER_NEW/" "$AMFILE"
         else
             echo "No version change needed for lib$LIB"
             prompt_to_continue

@@ -243,27 +243,9 @@ For security reasons, the cluster does not listen for remote connections by
 default.  If you wish to allow remote access, you need to set the
 ``remote-tls-port`` (encrypted) or ``remote-clear-port`` (unencrypted) CIB
 properties (i.e., those kept in the ``cib`` tag, like ``num_updates`` and
-``epoch``).
-
-.. table:: **Extra top-level CIB properties for remote access**
-
-   +----------------------+-----------+------------------------------------------------------+
-   | CIB Property         | Default   | Description                                          |
-   +======================+===========+======================================================+
-   | remote-tls-port      |           | .. index::                                           |
-   |                      |           |    single: remote-tls-port                           |
-   |                      |           |    single: CIB property; remote-tls-port             |
-   |                      |           |                                                      |
-   |                      |           | Listen for encrypted remote connections              |
-   |                      |           | on this port.                                        |
-   +----------------------+-----------+------------------------------------------------------+
-   | remote-clear-port    |           | .. index::                                           |
-   |                      |           |    single: remote-clear-port                         |
-   |                      |           |    single: CIB property; remote-clear-port           |
-   |                      |           |                                                      |
-   |                      |           | Listen for plaintext remote connections              |
-   |                      |           | on this port.                                        |
-   +----------------------+-----------+------------------------------------------------------+
+``epoch``). Encrypted communication is keyless, which makes it subject to
+man-in-the-middle attacks, and thus either option should be used only on
+protected networks.
 
 .. important::
 

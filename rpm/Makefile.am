@@ -1,5 +1,5 @@
 #
-# Copyright 2003-2022 the Pacemaker project contributors
+# Copyright 2003-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -23,6 +23,10 @@ include $(top_srcdir)/mk/release.mk
 
 EXTRA_DIST		= pacemaker.spec.in		\
 			  rpmlintrc
+
+# Extra options to pass to rpmbuild (this can be used to override the location
+# options this file normally passes, or to override macros used by the spec)
+RPM_EXTRA		?=
 
 # Where to put RPM artifacts; possible values:
 #
@@ -68,7 +72,7 @@ RPMTYPE		= $(shell case "$(RPMDEST)" in 			\
 			esac)
 RPM_SPEC_DIR	= $(RPM_SPEC_DIR_$(RPMTYPE))
 RPM_SRCRPM_DIR	= $(RPM_SRCRPM_DIR_$(RPMTYPE))
-RPM_OPTS	= $(RPM_OPTS_$(RPMTYPE))
+RPM_OPTS	= $(RPM_OPTS_$(RPMTYPE)) $(RPM_EXTRA)
 RPM_CLEAN	= $(RPM_CLEAN_$(RPMTYPE))
 
 WITH		?= --without doc
