@@ -29,10 +29,10 @@ pacemaker_based_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la \
 
 pacemaker_based_SOURCES	= pacemaker-based.c \
 			  based_callbacks.c \
-			  based_common.c \
 			  based_io.c \
 			  based_messages.c \
 			  based_notify.c \
+			  based_operation.c \
 			  based_remote.c \
 			  based_transaction.c
 

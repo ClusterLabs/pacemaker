@@ -43,6 +43,7 @@ gchar *cib_root = NULL;
 static gboolean preserve_status = FALSE;
 
 gboolean cib_writes_enabled = TRUE;
+gboolean stand_alone = FALSE;
 
 int remote_fd = 0;
 int remote_tls_fd = 0;

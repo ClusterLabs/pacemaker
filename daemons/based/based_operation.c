@@ -31,8 +31,6 @@
 
 #include <pacemaker-based.h>
 
-gboolean stand_alone = FALSE;
-
 static const cib_operation_t cib_server_ops[] = {
     {
         PCMK__CIB_REQUEST_QUERY, cib__op_query,
