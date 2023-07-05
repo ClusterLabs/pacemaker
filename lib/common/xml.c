@@ -42,7 +42,8 @@
  * parsing without XML_PARSE_RECOVER, and if that fails, try parsing again with
  * it, logging a warning if it succeeds.
  */
-#define PCMK__XML_PARSE_OPTS    (XML_PARSE_NOBLANKS | XML_PARSE_RECOVER)
+#define PCMK__XML_PARSE_OPTS_WITHOUT_RECOVER    (XML_PARSE_NOBLANKS)
+#define PCMK__XML_PARSE_OPTS_WITH_RECOVER       (XML_PARSE_NOBLANKS | XML_PARSE_RECOVER)
 
 bool
 pcmk__tracking_xml_changes(xmlNode *xml, bool lazy)
@@ -848,7 +849,17 @@ string2xml(const char *input)
     xmlCtxtResetLastError(ctxt);
     xmlSetGenericErrorFunc(ctxt, pcmk__log_xmllib_err);
     output = xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
-                            PCMK__XML_PARSE_OPTS);
+                            PCMK__XML_PARSE_OPTS_WITHOUT_RECOVER);
+
+    if (output == NULL) {
+        output = xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
+                                PCMK__XML_PARSE_OPTS_WITH_RECOVER);
+        if (output) {
+            crm_warn("Successfully recovered from XML errors "
+                     "(note: a future release will treat this as a fatal failure)");
+        }
+    }
+
     if (output) {
         xml = xmlDocGetRootElement(output);
     }
@@ -1027,16 +1038,45 @@ filename2xml(const char *filename)
     if (pcmk__str_eq(filename, "-", pcmk__str_null_matches)) {
         /* STDIN_FILENO == fileno(stdin) */
         output = xmlCtxtReadFd(ctxt, STDIN_FILENO, "unknown.xml", NULL,
-                               PCMK__XML_PARSE_OPTS);
+                               PCMK__XML_PARSE_OPTS_WITHOUT_RECOVER);
+
+        if (output == NULL) {
+            output = xmlCtxtReadFd(ctxt, STDIN_FILENO, "unknown.xml", NULL,
+                                   PCMK__XML_PARSE_OPTS_WITH_RECOVER);
+            if (output) {
+                crm_warn("Successfully recovered from XML errors "
+                         "(note: a future release will treat this as a fatal failure)");
+            }
+        }
 
     } else if (uncompressed) {
-        output = xmlCtxtReadFile(ctxt, filename, NULL, PCMK__XML_PARSE_OPTS);
+        output = xmlCtxtReadFile(ctxt, filename, NULL,
+                                 PCMK__XML_PARSE_OPTS_WITHOUT_RECOVER);
+
+        if (output == NULL) {
+            output = xmlCtxtReadFile(ctxt, filename, NULL,
+                                     PCMK__XML_PARSE_OPTS_WITH_RECOVER);
+            if (output) {
+                crm_warn("Successfully recovered from XML errors "
+                         "(note: a future release will treat this as a fatal failure)");
+            }
+        }        
 
     } else {
         char *input = decompress_file(filename);
 
         output = xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
-                                PCMK__XML_PARSE_OPTS);
+                                PCMK__XML_PARSE_OPTS_WITHOUT_RECOVER);
+
+        if (output == NULL) {
+            output = xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
+                                    PCMK__XML_PARSE_OPTS_WITH_RECOVER);
+            if (output) {
+                crm_warn("Successfully recovered from XML errors "
+                         "(note: a future release will treat this as a fatal failure)");
+            }
+        }        
+
         free(input);
     }
 
