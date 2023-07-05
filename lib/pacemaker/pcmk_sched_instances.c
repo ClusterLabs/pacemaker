@@ -135,8 +135,8 @@ ban_unavailable_allowed_nodes(pe_resource_t *instance, int max_per_node)
                     pe_resource_t *child = (pe_resource_t *) child_iter->data;
                     pe_node_t *child_node = NULL;
 
-                    child_node = pe_hash_table_lookup(child->allowed_nodes,
-                                                      node->details->id);
+                    child_node = g_hash_table_lookup(child->allowed_nodes,
+                                                     node->details->id);
                     if (child_node != NULL) {
                         pe_rsc_trace(instance,
                                      "Banning %s child %s "
@@ -308,8 +308,9 @@ static bool
 node_is_allowed(const pe_resource_t *rsc, pe_node_t **node)
 {
     if (*node != NULL) {
-        pe_node_t *allowed = pe_hash_table_lookup(rsc->allowed_nodes,
-                                                  (*node)->details->id);
+        pe_node_t *allowed = g_hash_table_lookup(rsc->allowed_nodes,
+                                                 (*node)->details->id);
+
         if ((allowed == NULL) || (allowed->weight < 0)) {
             pe_rsc_trace(rsc, "%s: current location (%s) is unavailable",
                          rsc->id, pe__node_name(*node));

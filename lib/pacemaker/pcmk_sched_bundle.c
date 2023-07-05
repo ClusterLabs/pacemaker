@@ -515,8 +515,8 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
                                      &coloc_data);
 
     if (colocation->score >= INFINITY) {
-        node_list_exclude(dependent->allowed_nodes, coloc_data.container_hosts,
-                          FALSE);
+        pcmk__colocation_intersect_nodes(dependent, primary, colocation,
+                                         coloc_data.container_hosts, false);
     }
     g_list_free(coloc_data.container_hosts);
 }

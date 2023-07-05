@@ -314,7 +314,8 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
                 primary_nodes = g_list_prepend(primary_nodes, chosen);
             }
         }
-        node_list_exclude(dependent->allowed_nodes, primary_nodes, FALSE);
+        pcmk__colocation_intersect_nodes(dependent, primary, colocation,
+                                         primary_nodes, false);
         g_list_free(primary_nodes);
         return;
     }

@@ -203,7 +203,7 @@ node_to_be_promoted_on(const pe_resource_t *rsc)
     }
 
     parent = pe__const_top_resource(rsc, false);
-    local_node = pe_hash_table_lookup(parent->allowed_nodes, node->details->id);
+    local_node = g_hash_table_lookup(parent->allowed_nodes, node->details->id);
 
     if (local_node == NULL) {
         /* It should not be possible for the scheduler to have assigned the
@@ -318,8 +318,7 @@ add_sort_index_to_node_score(gpointer data, gpointer user_data)
         return;
     }
 
-    node = (pe_node_t *) pe_hash_table_lookup(clone->allowed_nodes,
-                                              chosen->details->id);
+    node = g_hash_table_lookup(clone->allowed_nodes, chosen->details->id);
     CRM_ASSERT(node != NULL);
 
     node->weight = pcmk__add_scores(child->sort_index, node->weight);
@@ -419,11 +418,10 @@ set_sort_index_to_node_score(gpointer data, gpointer user_data)
                      child->id, child->sort_index);
 
     } else {
-        const pe_node_t *node = NULL;
+        const pe_node_t *node = g_hash_table_lookup(clone->allowed_nodes,
+                                                    chosen->details->id);
 
-        node = pe_hash_table_lookup(clone->allowed_nodes, chosen->details->id);
         CRM_ASSERT(node != NULL);
-
         child->sort_index = node->weight;
         pe_rsc_trace(clone,
                      "Adding scores for %s: final sort index for %s is %d",
@@ -549,8 +547,8 @@ anonymous_known_on(const pe_resource_t *clone, const char *id,
 static bool
 is_allowed(const pe_resource_t *rsc, const pe_node_t *node)
 {
-    pe_node_t *allowed = pe_hash_table_lookup(rsc->allowed_nodes,
-                                              node->details->id);
+    pe_node_t *allowed = g_hash_table_lookup(rsc->allowed_nodes,
+                                             node->details->id);
 
     return (allowed != NULL) && (allowed->weight >= 0);
 }
@@ -603,7 +601,7 @@ promotion_score_applies(const pe_resource_t *rsc, const pe_node_t *node)
     /* Otherwise, we've probed and/or started the resource *somewhere*, so
      * consider promotion scores on nodes where we know the status.
      */
-    if ((pe_hash_table_lookup(rsc->known_on, node->details->id) != NULL)
+    if ((g_hash_table_lookup(rsc->known_on, node->details->id) != NULL)
         || (pe_find_node_id(rsc->running_on, node->details->id) != NULL)) {
         reason = "known";
     } else {
@@ -1233,8 +1231,8 @@ pcmk__update_dependent_with_promotable(const pe_resource_t *primary,
                      "Applying %s (mandatory %s with %s) to %s",
                      colocation->id, colocation->dependent->id,
                      colocation->primary->id, dependent->id);
-        node_list_exclude(dependent->allowed_nodes, affected_nodes,
-                          TRUE);
+        pcmk__colocation_intersect_nodes(dependent, primary, colocation,
+                                         affected_nodes, true);
     }
     g_list_free(affected_nodes);
 }
