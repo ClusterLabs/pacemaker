@@ -691,11 +691,10 @@ create_xml_node(xmlNode * parent, const char *name)
             return NULL;
         }
 
-        node = xmlNewDocRawNode(doc, NULL, (pcmkXmlStr) name, NULL);
+        node = xmlNewChild(parent, NULL, (pcmkXmlStr) name, NULL);
         if (node == NULL) {
             return NULL;
         }
-        xmlAddChild(parent, node);
     }
     pcmk__mark_xml_created(node);
     return node;
