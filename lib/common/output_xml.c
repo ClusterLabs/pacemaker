@@ -287,7 +287,10 @@ xml_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
     CRM_ASSERT(out != NULL);
 
     parent = pcmk__output_create_xml_node(out, name, NULL);
-    cdata_node = xmlNewCDataBlock(getDocPtr(parent), (pcmkXmlStr) buf, strlen(buf));
+    if (parent == NULL) {
+        return;
+    }
+    cdata_node = xmlNewCDataBlock(parent->doc, (pcmkXmlStr) buf, strlen(buf));
     xmlAddChild(parent, cdata_node);
 }
 
