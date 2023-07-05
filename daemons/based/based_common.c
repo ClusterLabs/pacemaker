@@ -33,97 +33,21 @@
 
 gboolean stand_alone = FALSE;
 
-extern int cib_perform_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff,
-                               gboolean privileged);
-
-static xmlNode *
-cib_prepare_common(xmlNode * root, const char *section)
-{
-    xmlNode *data = NULL;
-
-    /* extract the CIB from the fragment */
-    if (root == NULL) {
-        return NULL;
-    }
-
-    if (pcmk__str_any_of(crm_element_name(root), F_CRM_DATA, F_CIB_CALLDATA,
-                         NULL)) {
-        data = first_named_child(root, XML_TAG_CIB);
-
-    } else {
-        data = root;
-    }
-
-    /* grab the section specified for the command */
-    if (section != NULL && data != NULL && pcmk__str_eq(crm_element_name(data), XML_TAG_CIB, pcmk__str_none)) {
-        data = pcmk_find_cib_element(data, section);
-    }
-
-    /* crm_log_xml_trace(root, "cib:input"); */
-    return data;
-}
-
-static int
-cib_prepare_none(xmlNode * request, xmlNode ** data, const char **section)
-{
-    *data = NULL;
-    *section = crm_element_value(request, F_CIB_SECTION);
-    return pcmk_ok;
-}
-
-static int
-cib_prepare_data(xmlNode * request, xmlNode ** data, const char **section)
-{
-    xmlNode *input_fragment = get_message_xml(request, F_CIB_CALLDATA);
-
-    *section = crm_element_value(request, F_CIB_SECTION);
-    *data = cib_prepare_common(input_fragment, *section);
-    /* crm_log_xml_debug(*data, "data"); */
-    return pcmk_ok;
-}
-
-static int
-cib_prepare_sync(xmlNode * request, xmlNode ** data, const char **section)
-{
-    *data = NULL;
-    *section = crm_element_value(request, F_CIB_SECTION);
-    return pcmk_ok;
-}
-
-static int
-cib_prepare_diff(xmlNode * request, xmlNode ** data, const char **section)
-{
-    xmlNode *input_fragment = NULL;
-
-    *data = NULL;
-    *section = NULL;
-
-    if (pcmk__xe_attr_is_true(request, F_CIB_GLOBAL_UPDATE)) {
-        input_fragment = get_message_xml(request, F_CIB_UPDATE_DIFF);
-    } else {
-        input_fragment = get_message_xml(request, F_CIB_CALLDATA);
-    }
-
-    CRM_CHECK(input_fragment != NULL, crm_log_xml_warn(request, "no input"));
-    *data = cib_prepare_common(input_fragment, NULL);
-    return pcmk_ok;
-}
-
 static const cib_operation_t cib_server_ops[] = {
     {
         PCMK__CIB_REQUEST_QUERY, cib__op_query,
         cib_op_attr_none,
-        cib_prepare_none, cib_process_query
+        cib_process_query
     },
     {
         PCMK__CIB_REQUEST_MODIFY, cib__op_modify,
         cib_op_attr_modifies|cib_op_attr_privileged|cib_op_attr_transaction,
-        cib_prepare_data, cib_process_modify
+        cib_process_modify
     },
     {
         PCMK__CIB_REQUEST_APPLY_PATCH, cib__op_apply_patch,
         cib_op_attr_modifies|cib_op_attr_privileged|cib_op_attr_transaction,
-        cib_prepare_diff, cib_server_process_diff
+        cib_server_process_diff
     },
     {
         PCMK__CIB_REQUEST_REPLACE, cib__op_replace,
@@ -132,27 +56,27 @@ static const cib_operation_t cib_server_ops[] = {
         |cib_op_attr_replaces
         |cib_op_attr_writes_through
         |cib_op_attr_transaction,
-        cib_prepare_data, cib_process_replace_svr
+        cib_process_replace_svr
     },
     {
         PCMK__CIB_REQUEST_CREATE, cib__op_create,
         cib_op_attr_modifies|cib_op_attr_privileged|cib_op_attr_transaction,
-        cib_prepare_data, cib_process_create
+        cib_process_create
     },
     {
         PCMK__CIB_REQUEST_DELETE, cib__op_delete,
         cib_op_attr_modifies|cib_op_attr_privileged|cib_op_attr_transaction,
-        cib_prepare_data, cib_process_delete
+        cib_process_delete
     },
     {
         PCMK__CIB_REQUEST_SYNC_TO_ALL, cib__op_sync_all,
         cib_op_attr_privileged,
-        cib_prepare_sync, cib_process_sync
+        cib_process_sync
     },
     {
         PCMK__CIB_REQUEST_BUMP, cib__op_bump,
         cib_op_attr_modifies|cib_op_attr_privileged|cib_op_attr_transaction,
-        cib_prepare_none, cib_process_bump
+        cib_process_bump
     },
     {
         PCMK__CIB_REQUEST_ERASE, cib__op_erase,
@@ -160,17 +84,17 @@ static const cib_operation_t cib_server_ops[] = {
         |cib_op_attr_privileged
         |cib_op_attr_replaces
         |cib_op_attr_transaction,
-        cib_prepare_none, cib_process_erase
+        cib_process_erase
     },
     {
         PCMK__CIB_REQUEST_NOOP, cib__op_noop,
         cib_op_attr_none,
-        cib_prepare_none, cib_process_noop
+        cib_process_noop
     },
     {
         PCMK__CIB_REQUEST_ABS_DELETE, cib__op_abs_delete,
         cib_op_attr_modifies|cib_op_attr_privileged,
-        cib_prepare_data, cib_process_delete_absolute
+        cib_process_delete_absolute
     },
     {
         PCMK__CIB_REQUEST_UPGRADE, cib__op_upgrade,
@@ -178,38 +102,38 @@ static const cib_operation_t cib_server_ops[] = {
         |cib_op_attr_privileged
         |cib_op_attr_writes_through
         |cib_op_attr_transaction,
-        cib_prepare_none, cib_process_upgrade_server
+        cib_process_upgrade_server
     },
     {
         PCMK__CIB_REQUEST_SECONDARY, cib__op_secondary,
         cib_op_attr_privileged|cib_op_attr_local,
-        cib_prepare_none, cib_process_readwrite
+        cib_process_readwrite
     },
     {
         PCMK__CIB_REQUEST_SYNC_TO_ONE, cib__op_sync_one,
         cib_op_attr_privileged,
-        cib_prepare_sync, cib_process_sync_one
+        cib_process_sync_one
     },
     {
         // @COMPAT: Drop cib_op_attr_modifies when we drop legacy mode support
         PCMK__CIB_REQUEST_PRIMARY, cib__op_primary,
         cib_op_attr_modifies|cib_op_attr_privileged|cib_op_attr_local,
-        cib_prepare_data, cib_process_readwrite
+        cib_process_readwrite
     },
     {
         PCMK__CIB_REQUEST_IS_PRIMARY, cib__op_is_primary,
         cib_op_attr_privileged,
-        cib_prepare_none, cib_process_readwrite
+        cib_process_readwrite
     },
     {
         PCMK__CIB_REQUEST_SHUTDOWN, cib__op_shutdown,
         cib_op_attr_privileged,
-        cib_prepare_sync, cib_process_shutdown_req
+        cib_process_shutdown_req
     },
     {
         CRM_OP_PING, cib__op_ping,
         cib_op_attr_none,
-        cib_prepare_none, cib_process_ping
+        cib_process_ping
     },
 
     /* PCMK__CIB_REQUEST_*_TRANSACT requests must be processed locally because
@@ -219,7 +143,7 @@ static const cib_operation_t cib_server_ops[] = {
     {
         PCMK__CIB_REQUEST_INIT_TRANSACT, cib__op_init_transact,
         cib_op_attr_privileged|cib_op_attr_local,
-        cib_prepare_none, cib_process_init_transaction,
+        cib_process_init_transaction,
     },
     {
         PCMK__CIB_REQUEST_COMMIT_TRANSACT, cib__op_commit_transact,
@@ -228,12 +152,12 @@ static const cib_operation_t cib_server_ops[] = {
         |cib_op_attr_local
         |cib_op_attr_replaces
         |cib_op_attr_writes_through,
-        cib_prepare_none, cib_process_commit_transaction,
+        cib_process_commit_transaction,
     },
     {
         PCMK__CIB_REQUEST_DISCARD_TRANSACT, cib__op_discard_transact,
         cib_op_attr_privileged|cib_op_attr_local,
-        cib_prepare_none, cib_process_discard_transaction,
+        cib_process_discard_transaction,
     },
 };
 

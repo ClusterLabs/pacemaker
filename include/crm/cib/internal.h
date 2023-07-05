@@ -156,7 +156,6 @@ typedef struct cib_operation_s {
     const char *name;
     enum cib__op_type type;
     uint32_t flags; //!< Group of <tt>enum cib_op_attr</tt> flags
-    int (*prepare) (xmlNode *, xmlNode **, const char **);
     cib__op_fn_t fn;
 } cib_operation_t;
 

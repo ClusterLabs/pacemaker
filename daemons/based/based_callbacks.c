@@ -1278,6 +1278,57 @@ cib_process_request(xmlNode *request, gboolean privileged,
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Get a CIB operation's input from the request XML
+ *
+ * \param[in]  request  CIB request XML
+ * \param[in]  type     CIB operation type
+ * \param[out] section  Where to store CIB section name
+ *
+ * \return Input XML for CIB operation
+ *
+ * \note If not \c NULL, the return value is a non-const pointer to part of
+ *       \p request. The caller should not free it directly.
+ */
+static xmlNode *
+prepare_input(const xmlNode *request, enum cib__op_type type,
+              const char **section)
+{
+    xmlNode *root = NULL;
+
+    if (type == cib__op_apply_patch) {
+        if (pcmk__xe_attr_is_true(request, F_CIB_GLOBAL_UPDATE)) {
+            root = get_message_xml(request, F_CIB_UPDATE_DIFF);
+        } else {
+            root = get_message_xml(request, F_CIB_CALLDATA);
+        }
+        *section = NULL;
+
+    } else {
+        root = get_message_xml(request, F_CIB_CALLDATA);
+        *section = crm_element_value(request, F_CIB_SECTION);
+    }
+
+    if (root == NULL) {
+        return NULL;
+    }
+
+    if (pcmk__str_any_of(crm_element_name(root), F_CRM_DATA, F_CIB_CALLDATA,
+                         NULL)) {
+        root = first_named_child(root, XML_TAG_CIB);
+    }
+
+    // Grab the specified section
+    if ((root != NULL) && (*section != NULL)
+        && pcmk__str_eq(crm_element_name(root), XML_TAG_CIB, pcmk__str_none)) {
+
+        root = pcmk_find_cib_element(root, *section);
+    }
+
+    return root;
+}
+
 static char *
 calculate_section_digest(const char *xpath, xmlNode * xml_obj)
 {
@@ -1458,11 +1509,7 @@ cib_process_command(xmlNode *request, const cib_operation_t *operation,
         goto done;
     }
 
-    rc = operation->prepare(request, &input, &section);
-    if (rc != pcmk_ok) {
-        crm_trace("Failed to prepare operation: %s", pcmk_strerror(rc));
-        goto done;
-    }
+    input = prepare_input(request, operation->type, &section);
 
     if (!pcmk_is_set(operation->flags, cib_op_attr_modifies)) {
         rc = cib_perform_op(op, call_options, operation->fn, true, section,

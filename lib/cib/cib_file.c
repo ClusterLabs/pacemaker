@@ -174,62 +174,62 @@ static const cib_operation_t cib_file_ops[] = {
     {
         PCMK__CIB_REQUEST_APPLY_PATCH, cib__op_apply_patch,
         cib_op_attr_modifies|cib_op_attr_transaction,
-        NULL, cib_process_diff
+        cib_process_diff
     },
     {
         PCMK__CIB_REQUEST_BUMP, cib__op_bump,
         cib_op_attr_modifies|cib_op_attr_transaction,
-        NULL, cib_process_bump
+        cib_process_bump
     },
     {
         PCMK__CIB_REQUEST_CREATE, cib__op_create,
         cib_op_attr_modifies|cib_op_attr_transaction,
-        NULL, cib_process_create
+        cib_process_create
     },
     {
         PCMK__CIB_REQUEST_DELETE, cib__op_delete,
         cib_op_attr_modifies|cib_op_attr_transaction,
-        NULL, cib_process_delete
+        cib_process_delete
     },
     {
         PCMK__CIB_REQUEST_ERASE, cib__op_erase,
         cib_op_attr_modifies|cib_op_attr_transaction,
-        NULL, cib_process_erase
+        cib_process_erase
     },
     {
         PCMK__CIB_REQUEST_MODIFY, cib__op_modify,
         cib_op_attr_modifies|cib_op_attr_transaction,
-        NULL, cib_process_modify
+        cib_process_modify
     },
     {
         PCMK__CIB_REQUEST_QUERY, cib__op_query,
         cib_op_attr_none,
-        NULL, cib_process_query
+        cib_process_query
     },
     {
         PCMK__CIB_REQUEST_REPLACE, cib__op_replace,
         cib_op_attr_modifies|cib_op_attr_transaction,
-        NULL, cib_process_replace
+        cib_process_replace
     },
     {
         PCMK__CIB_REQUEST_UPGRADE, cib__op_upgrade,
         cib_op_attr_modifies|cib_op_attr_transaction,
-        NULL, cib_process_upgrade
+        cib_process_upgrade
     },
     {
         PCMK__CIB_REQUEST_INIT_TRANSACT, cib__op_init_transact,
         cib_op_attr_none,
-        NULL, cib_file_process_init_transaction
+        cib_file_process_init_transaction
     },
     {
         PCMK__CIB_REQUEST_COMMIT_TRANSACT, cib__op_commit_transact,
         cib_op_attr_modifies,
-        NULL, cib_file_process_commit_transaction
+        cib_file_process_commit_transaction
     },
     {
         PCMK__CIB_REQUEST_DISCARD_TRANSACT, cib__op_discard_transact,
         cib_op_attr_none,
-        NULL, cib_file_process_discard_transaction
+        cib_file_process_discard_transaction
     },
 };
 
