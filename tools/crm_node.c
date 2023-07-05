@@ -280,10 +280,10 @@ run_controller_mainloop(uint32_t nodeid, bool list_nodes)
     pcmk_register_ipc_callback(controld_api, controller_event_cb, NULL);
 
     // Connect to controller
-    rc = pcmk_connect_ipc(controld_api, pcmk_ipc_dispatch_main);
+    rc = pcmk__connect_ipc(controld_api, pcmk_ipc_dispatch_main, 5);
     if (rc != pcmk_rc_ok) {
-        fprintf(stderr, "error: Could not connect to controller: %s\n",
-                pcmk_rc_str(rc));
+        fprintf(stderr, "error: Could not connect to %s: %s\n",
+                pcmk_ipc_name(controld_api, true), pcmk_rc_str(rc));
         exit_code = pcmk_rc2exitc(rc);
         return;
     }
@@ -386,10 +386,10 @@ controller_remove_node(const char *node_name, long nodeid)
     }
 
     // Connect to controller (without main loop)
-    rc = pcmk_connect_ipc(controld_api, pcmk_ipc_dispatch_sync);
+    rc = pcmk__connect_ipc(controld_api, pcmk_ipc_dispatch_sync, 5);
     if (rc != pcmk_rc_ok) {
-        fprintf(stderr, "error: Could not connect to controller: %s\n",
-                pcmk_rc_str(rc));
+        fprintf(stderr, "error: Could not connect to %s: %s\n",
+                pcmk_ipc_name(controld_api, true), pcmk_rc_str(rc));
         pcmk_free_ipc_api(controld_api);
         return rc;
     }
@@ -416,7 +416,9 @@ tools_remove_node_cache(const char *node_name, long nodeid, const char *target)
     if (!conn) {
         return -ENOTCONN;
     }
-    if (!crm_ipc_connect(conn)) {
+    rc = pcmk__connect_generic_ipc(conn);
+    if (rc != pcmk_rc_ok) {
+        errno = (rc > 0)? rc : ENOTCONN;
         crm_perror(LOG_ERR, "Connection to %s failed", target);
         crm_ipc_destroy(conn);
         return -ENOTCONN;

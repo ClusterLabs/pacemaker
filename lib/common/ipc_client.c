@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -30,6 +30,10 @@
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_internal.h>
 #include "crmcommon_private.h"
+
+static int is_ipc_provider_expected(qb_ipcc_connection_t *qb_ipc, int sock,
+                                    uid_t refuid, gid_t refgid, pid_t *gotpid,
+                                    uid_t *gotuid, gid_t *gotgid);
 
 /*!
  * \brief Create a new object for using Pacemaker daemon IPC
@@ -389,7 +393,7 @@ dispatch_ipc_source_data(const char *buffer, ssize_t length, gpointer user_data)
  *       meaning no data is available; all other values indicate errors.
  * \todo This does not allow the caller to poll multiple file descriptors at
  *       once. If there is demand for that, we could add a wrapper for
- *       crm_ipc_get_fd(api->ipc), so the caller can call poll() themselves.
+ *       pcmk__ipc_fd(api->ipc), so the caller can call poll() themselves.
  */
 int
 pcmk_poll_ipc(const pcmk_ipc_api_t *api, int timeout_ms)
@@ -400,7 +404,14 @@ pcmk_poll_ipc(const pcmk_ipc_api_t *api, int timeout_ms)
     if ((api == NULL) || (api->dispatch_type != pcmk_ipc_dispatch_poll)) {
         return EINVAL;
     }
-    pollfd.fd = crm_ipc_get_fd(api->ipc);
+
+    rc = pcmk__ipc_fd(api->ipc, &(pollfd.fd));
+    if (rc != pcmk_rc_ok) {
+        crm_debug("Could not obtain file descriptor for %s IPC: %s",
+                  pcmk_ipc_name(api, true), pcmk_rc_str(rc));
+        return rc;
+    }
+
     pollfd.events = POLLIN;
     rc = poll(&pollfd, 1, timeout_ms);
     if (rc < 0) {
@@ -465,16 +476,87 @@ connect_with_main_loop(pcmk_ipc_api_t *api)
 static int
 connect_without_main_loop(pcmk_ipc_api_t *api)
 {
-    int rc;
+    int rc = pcmk__connect_generic_ipc(api->ipc);
 
-    if (!crm_ipc_connect(api->ipc)) {
-        rc = errno;
+    if (rc != pcmk_rc_ok) {
         crm_ipc_close(api->ipc);
+    } else {
+        crm_debug("Connected to %s IPC (without main loop)",
+                  pcmk_ipc_name(api, true));
+    }
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Connect to a Pacemaker daemon via IPC (retrying after soft errors)
+ *
+ * \param[in,out] api            IPC API instance
+ * \param[in]     dispatch_type  How IPC replies should be dispatched
+ * \param[in]     attempts       How many times to try (in case of soft error)
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__connect_ipc(pcmk_ipc_api_t *api, enum pcmk_ipc_dispatch dispatch_type,
+                  int attempts)
+{
+    int rc = pcmk_rc_ok;
+
+    if ((api == NULL) || (attempts < 1)) {
+        return EINVAL;
+    }
+
+    if (api->ipc == NULL) {
+        api->ipc = crm_ipc_new(pcmk_ipc_name(api, false), api->ipc_size_max);
+        if (api->ipc == NULL) {
+            return ENOMEM;
+        }
+    }
+
+    if (crm_ipc_connected(api->ipc)) {
+        crm_trace("Already connected to %s", pcmk_ipc_name(api, true));
+        return pcmk_rc_ok;
+    }
+
+    api->dispatch_type = dispatch_type;
+
+    crm_debug("Attempting connection to %s (up to %d time%s)",
+              pcmk_ipc_name(api, true), attempts, pcmk__plural_s(attempts));
+    for (int remaining = attempts - 1; remaining >= 0; --remaining) {
+        switch (dispatch_type) {
+            case pcmk_ipc_dispatch_main:
+                rc = connect_with_main_loop(api);
+                break;
+
+            case pcmk_ipc_dispatch_sync:
+            case pcmk_ipc_dispatch_poll:
+                rc = connect_without_main_loop(api);
+                break;
+        }
+
+        if ((remaining == 0) || ((rc != EAGAIN) && (rc != EALREADY))) {
+            break; // Result is final
+        }
+
+        // Retry after soft error (interrupted by signal, etc.)
+        pcmk__sleep_ms((attempts - remaining) * 500);
+        crm_debug("Re-attempting connection to %s (%d attempt%s remaining)",
+                  pcmk_ipc_name(api, true), remaining,
+                  pcmk__plural_s(remaining));
+    }
+
+    if (rc != pcmk_rc_ok) {
         return rc;
     }
-    crm_debug("Connected to %s IPC (without main loop)",
-              pcmk_ipc_name(api, true));
-    return pcmk_rc_ok;
+
+    if ((api->cmds != NULL) && (api->cmds->post_connect != NULL)) {
+        rc = api->cmds->post_connect(api);
+        if (rc != pcmk_rc_ok) {
+            crm_ipc_close(api->ipc);
+        }
+    }
+    return rc;
 }
 
 /*!
@@ -488,64 +570,11 @@ connect_without_main_loop(pcmk_ipc_api_t *api)
 int
 pcmk_connect_ipc(pcmk_ipc_api_t *api, enum pcmk_ipc_dispatch dispatch_type)
 {
-    const int n_attempts = 2;
-    int rc = pcmk_rc_ok;
-
-    if (api == NULL) {
-        crm_err("Cannot connect to uninitialized API object");
-        return EINVAL;
-    }
-
-    if (api->ipc == NULL) {
-        api->ipc = crm_ipc_new(pcmk_ipc_name(api, false),
-                                  api->ipc_size_max);
-        if (api->ipc == NULL) {
-            crm_err("Failed to re-create IPC API");
-            return ENOMEM;
-        }
-    }
-
-    if (crm_ipc_connected(api->ipc)) {
-        crm_trace("Already connected to %s IPC API", pcmk_ipc_name(api, true));
-        return pcmk_rc_ok;
-    }
-
-    api->dispatch_type = dispatch_type;
-
-    for (int i = 0; i < n_attempts; i++) {
-        switch (dispatch_type) {
-            case pcmk_ipc_dispatch_main:
-                rc = connect_with_main_loop(api);
-                break;
-
-            case pcmk_ipc_dispatch_sync:
-            case pcmk_ipc_dispatch_poll:
-                rc = connect_without_main_loop(api);
-                break;
-        }
-
-        if (rc != EAGAIN) {
-            break;
-        }
-
-        /* EAGAIN may occur due to interruption by a signal or due to some
-         * transient issue. Try one more time to be more resilient.
-         */
-        if (i < (n_attempts - 1)) {
-            crm_trace("Connection to %s IPC API failed with EAGAIN, retrying",
-                      pcmk_ipc_name(api, true));
-        }
-    }
+    int rc = pcmk__connect_ipc(api, dispatch_type, 2);
 
     if (rc != pcmk_rc_ok) {
-        return rc;
-    }
-
-    if ((api->cmds != NULL) && (api->cmds->post_connect != NULL)) {
-        rc = api->cmds->post_connect(api);
-        if (rc != pcmk_rc_ok) {
-            crm_ipc_close(api->ipc);
-        }
+        crm_err("Connection to %s failed: %s",
+                pcmk_ipc_name(api, true), pcmk_rc_str(rc));
     }
     return rc;
 }
@@ -855,6 +884,77 @@ crm_ipc_new(const char *name, size_t max_size)
 }
 
 /*!
+ * \internal
+ * \brief Connect a generic (not daemon-specific) IPC object
+ *
+ * \param[in,out] ipc  Generic IPC object to connect
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__connect_generic_ipc(crm_ipc_t *ipc)
+{
+    uid_t cl_uid = 0;
+    gid_t cl_gid = 0;
+    pid_t found_pid = 0;
+    uid_t found_uid = 0;
+    gid_t found_gid = 0;
+    int rc = pcmk_rc_ok;
+
+    if (ipc == NULL) {
+        return EINVAL;
+    }
+
+    ipc->need_reply = FALSE;
+    ipc->ipc = qb_ipcc_connect(ipc->server_name, ipc->buf_size);
+    if (ipc->ipc == NULL) {
+        return errno;
+    }
+
+    rc = qb_ipcc_fd_get(ipc->ipc, &ipc->pfd.fd);
+    if (rc < 0) { // -errno
+        crm_ipc_close(ipc);
+        return -rc;
+    }
+
+    rc = pcmk_daemon_user(&cl_uid, &cl_gid);
+    rc = pcmk_legacy2rc(rc);
+    if (rc != pcmk_rc_ok) {
+        crm_ipc_close(ipc);
+        return rc;
+    }
+
+    rc = is_ipc_provider_expected(ipc->ipc, ipc->pfd.fd, cl_uid, cl_gid,
+                                  &found_pid, &found_uid, &found_gid);
+    if (rc != pcmk_rc_ok) {
+        if (rc == pcmk_rc_ipc_unauthorized) {
+            crm_info("%s IPC provider authentication failed: process %lld has "
+                     "uid %lld (expected %lld) and gid %lld (expected %lld)",
+                     ipc->server_name,
+                     (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
+                     (long long) found_uid, (long long) cl_uid,
+                     (long long) found_gid, (long long) cl_gid);
+        }
+        crm_ipc_close(ipc);
+        return rc;
+    }
+
+    ipc->max_buf_size = qb_ipcc_get_buffer_size(ipc->ipc);
+    if (ipc->max_buf_size > ipc->buf_size) {
+        free(ipc->buffer);
+        ipc->buffer = calloc(ipc->max_buf_size, sizeof(char));
+        if (ipc->buffer == NULL) {
+            rc = errno;
+            crm_ipc_close(ipc);
+            return rc;
+        }
+        ipc->buf_size = ipc->max_buf_size;
+    }
+
+    return pcmk_rc_ok;
+}
+
+/*!
  * \brief Establish an IPC connection to a Pacemaker component
  *
  * \param[in,out] client  Connection instance obtained from crm_ipc_new()
@@ -866,76 +966,26 @@ crm_ipc_new(const char *name, size_t max_size)
 bool
 crm_ipc_connect(crm_ipc_t *client)
 {
-    uid_t cl_uid = 0;
-    gid_t cl_gid = 0;
-    pid_t found_pid = 0; uid_t found_uid = 0; gid_t found_gid = 0;
-    int rv;
+    int rc = pcmk__connect_generic_ipc(client);
 
-    if (client == NULL) {
-        errno = EINVAL;
-        return false;
+    if (rc == pcmk_rc_ok) {
+        return true;
     }
-
-    client->need_reply = FALSE;
-    client->ipc = qb_ipcc_connect(client->server_name, client->buf_size);
-
-    if (client->ipc == NULL) {
+    if ((client != NULL) && (client->ipc == NULL)) {
+        errno = (rc > 0)? rc : ENOTCONN;
         crm_debug("Could not establish %s IPC connection: %s (%d)",
                   client->server_name, pcmk_rc_str(errno), errno);
-        return false;
-    }
-
-    client->pfd.fd = crm_ipc_get_fd(client);
-    if (client->pfd.fd < 0) {
-        rv = errno;
-        /* message already omitted */
-        crm_ipc_close(client);
-        errno = rv;
-        return false;
-    }
-
-    rv = pcmk_daemon_user(&cl_uid, &cl_gid);
-    if (rv < 0) {
-        /* message already omitted */
-        crm_ipc_close(client);
-        errno = -rv;
-        return false;
-    }
-
-    if ((rv = pcmk__crm_ipc_is_authentic_process(client->ipc, client->pfd.fd, cl_uid, cl_gid,
-                                                  &found_pid, &found_uid,
-                                                  &found_gid)) == pcmk_rc_ipc_unauthorized) {
-        crm_err("%s IPC provider authentication failed: process %lld has "
-                "uid %lld (expected %lld) and gid %lld (expected %lld)",
-                client->server_name,
-                (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
-                (long long) found_uid, (long long) cl_uid,
-                (long long) found_gid, (long long) cl_gid);
-        crm_ipc_close(client);
+    } else if (rc == pcmk_rc_ipc_unauthorized) {
+        crm_err("%s IPC provider authentication failed",
+                (client == NULL)? "Pacemaker" : client->server_name);
         errno = ECONNABORTED;
-        return false;
-
-    } else if (rv != pcmk_rc_ok) {
-        crm_perror(LOG_ERR, "Could not verify authenticity of %s IPC provider",
-                   client->server_name);
-        crm_ipc_close(client);
-        if (rv > 0) {
-            errno = rv;
-        } else {
-            errno = ENOTCONN;
-        }
-        return false;
+    } else {
+        crm_perror(LOG_ERR,
+                   "Could not verify authenticity of %s IPC provider",
+                   (client == NULL)? "Pacemaker" : client->server_name);
+        errno = ENOTCONN;
     }
-
-    qb_ipcc_context_set(client->ipc, client);
-
-    client->max_buf_size = qb_ipcc_get_buffer_size(client->ipc);
-    if (client->max_buf_size > client->buf_size) {
-        free(client->buffer);
-        client->buffer = calloc(1, client->max_buf_size);
-        client->buf_size = client->max_buf_size;
-    }
-    return true;
+    return false;
 }
 
 void
@@ -977,18 +1027,40 @@ crm_ipc_destroy(crm_ipc_t * client)
     }
 }
 
+/*!
+ * \internal
+ * \brief Get the file descriptor for a generic IPC object
+ *
+ * \param[in,out] ipc  Generic IPC object to get file descriptor for
+ * \param[out]    fd   Where to store file descriptor
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__ipc_fd(crm_ipc_t *ipc, int *fd)
+{
+    if ((ipc == NULL) || (fd == NULL)) {
+        return EINVAL;
+    }
+    if ((ipc->ipc == NULL) || (ipc->pfd.fd < 0)) {
+        return ENOTCONN;
+    }
+    *fd = ipc->pfd.fd;
+    return pcmk_rc_ok;
+}
+
 int
 crm_ipc_get_fd(crm_ipc_t * client)
 {
-    int fd = 0;
+    int fd = -1;
 
-    if (client && client->ipc && (qb_ipcc_fd_get(client->ipc, &fd) == 0)) {
-        return fd;
+    if (pcmk__ipc_fd(client, &fd) != pcmk_rc_ok) {
+        crm_err("Could not obtain file descriptor for %s IPC",
+                ((client == NULL)? "unspecified" : client->server_name));
+        errno = EINVAL;
+        return -EINVAL;
     }
-    errno = EINVAL;
-    crm_perror(LOG_ERR, "Could not obtain file descriptor for %s IPC",
-               (client? client->server_name : "unspecified"));
-    return -errno;
+    return fd;
 }
 
 bool
@@ -1385,89 +1457,129 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
     return rc;
 }
 
-int
-pcmk__crm_ipc_is_authentic_process(qb_ipcc_connection_t *qb_ipc, int sock, uid_t refuid, gid_t refgid,
-                                   pid_t *gotpid, uid_t *gotuid, gid_t *gotgid)
+/*!
+ * \brief Ensure an IPC provider has expected user or group
+ *
+ * \param[in]  qb_ipc  libqb client connection if available
+ * \param[in]  sock    Connected Unix socket for IPC
+ * \param[in]  refuid  Expected user ID
+ * \param[in]  refgid  Expected group ID
+ * \param[out] gotpid  If not NULL, where to store provider's actual process ID
+ *                     (or 1 on platforms where ID is not available)
+ * \param[out] gotuid  If not NULL, where to store provider's actual user ID
+ * \param[out] gotgid  If not NULL, where to store provider's actual group ID
+ *
+ * \return Standard Pacemaker return code
+ * \note An actual user ID of 0 (root) will always be considered authorized,
+ *       regardless of the expected values provided. The caller can use the
+ *       output arguments to be stricter than this function.
+ */
+static int
+is_ipc_provider_expected(qb_ipcc_connection_t *qb_ipc, int sock,
+                         uid_t refuid, gid_t refgid,
+                         pid_t *gotpid, uid_t *gotuid, gid_t *gotgid)
 {
-    int ret = 0;
-    pid_t found_pid = 0; uid_t found_uid = 0; gid_t found_gid = 0;
-#if defined(HAVE_UCRED)
-    struct ucred ucred;
-    socklen_t ucred_len = sizeof(ucred);
-#endif
+    int rc = EOPNOTSUPP;
+    pid_t found_pid = 0;
+    uid_t found_uid = 0;
+    gid_t found_gid = 0;
 
 #ifdef HAVE_QB_IPCC_AUTH_GET
-    if (qb_ipc && !qb_ipcc_auth_get(qb_ipc, &found_pid, &found_uid, &found_gid)) {
-        goto do_checks;
+    if (qb_ipc != NULL) {
+        rc = qb_ipcc_auth_get(qb_ipc, &found_pid, &found_uid, &found_gid);
+        rc = -rc; // libqb returns 0 or -errno
+        if (rc == pcmk_rc_ok) {
+            goto found;
+        }
     }
 #endif
 
-#if defined(HAVE_UCRED)
-    if (!getsockopt(sock, SOL_SOCKET, SO_PEERCRED,
-                    &ucred, &ucred_len)
-                && ucred_len == sizeof(ucred)) {
-        found_pid = ucred.pid; found_uid = ucred.uid; found_gid = ucred.gid;
+#ifdef HAVE_UCRED
+    {
+        struct ucred ucred;
+        socklen_t ucred_len = sizeof(ucred);
 
-#elif defined(HAVE_SOCKPEERCRED)
-    struct sockpeercred sockpeercred;
-    socklen_t sockpeercred_len = sizeof(sockpeercred);
-
-    if (!getsockopt(sock, SOL_SOCKET, SO_PEERCRED,
-                    &sockpeercred, &sockpeercred_len)
-                && sockpeercred_len == sizeof(sockpeercred_len)) {
-        found_pid = sockpeercred.pid;
-        found_uid = sockpeercred.uid; found_gid = sockpeercred.gid;
-
-#elif defined(HAVE_GETPEEREID)
-    if (!getpeereid(sock, &found_uid, &found_gid)) {
-        found_pid = PCMK__SPECIAL_PID;  /* cannot obtain PID (FreeBSD) */
-
-#elif defined(HAVE_GETPEERUCRED)
-    ucred_t *ucred;
-    if (!getpeerucred(sock, &ucred)) {
-        errno = 0;
-        found_pid = ucred_getpid(ucred);
-        found_uid = ucred_geteuid(ucred); found_gid = ucred_getegid(ucred);
-        ret = -errno;
-        ucred_free(ucred);
-        if (ret) {
-            return (ret < 0) ? ret : -pcmk_err_generic;
-        }
-
-#else
-#  error "No way to authenticate a Unix socket peer"
-    errno = 0;
-    if (0) {
-#endif
-#ifdef HAVE_QB_IPCC_AUTH_GET
-    do_checks:
-#endif
-        if (gotpid != NULL) {
-            *gotpid = found_pid;
-        }
-        if (gotuid != NULL) {
-            *gotuid = found_uid;
-        }
-        if (gotgid != NULL) {
-            *gotgid = found_gid;
-        }
-        if (found_uid == 0 || found_uid == refuid || found_gid == refgid) {
-		ret = 0;
+        if (getsockopt(sock, SOL_SOCKET, SO_PEERCRED, &ucred, &ucred_len) < 0) {
+            rc = errno;
+        } else if (ucred_len != sizeof(ucred)) {
+            rc = EOPNOTSUPP;
         } else {
-                ret = pcmk_rc_ipc_unauthorized;
+            found_pid = ucred.pid;
+            found_uid = ucred.uid;
+            found_gid = ucred.gid;
+            goto found;
         }
-    } else {
-        ret = (errno > 0) ? errno : pcmk_rc_error;
     }
-    return ret;
+#endif
+
+#ifdef HAVE_SOCKPEERCRED
+    {
+        struct sockpeercred sockpeercred;
+        socklen_t sockpeercred_len = sizeof(sockpeercred);
+
+        if (getsockopt(sock, SOL_SOCKET, SO_PEERCRED,
+                       &sockpeercred, &sockpeercred_len) < 0) {
+            rc = errno;
+        } else if (sockpeercred_len != sizeof(sockpeercred)) {
+            rc = EOPNOTSUPP;
+        } else {
+            found_pid = sockpeercred.pid;
+            found_uid = sockpeercred.uid;
+            found_gid = sockpeercred.gid;
+            goto found;
+        }
+    }
+#endif
+
+#ifdef HAVE_GETPEEREID // For example, FreeBSD
+    if (getpeereid(sock, &found_uid, &found_gid) < 0) {
+        rc = errno;
+    } else {
+        found_pid = PCMK__SPECIAL_PID;
+        goto found;
+    }
+#endif
+
+#ifdef HAVE_GETPEERUCRED
+    {
+        ucred_t *ucred = NULL;
+
+        if (getpeerucred(sock, &ucred) < 0) {
+            rc = errno;
+        } else {
+            found_pid = ucred_getpid(ucred);
+            found_uid = ucred_geteuid(ucred);
+            found_gid = ucred_getegid(ucred);
+            ucred_free(ucred);
+            goto found;
+        }
+    }
+#endif
+
+    return rc; // If we get here, nothing succeeded
+
+found:
+    if (gotpid != NULL) {
+        *gotpid = found_pid;
+    }
+    if (gotuid != NULL) {
+        *gotuid = found_uid;
+    }
+    if (gotgid != NULL) {
+        *gotgid = found_gid;
+    }
+    if ((found_uid != 0) && (found_uid != refuid) && (found_gid != refgid)) {
+        return pcmk_rc_ipc_unauthorized;
+    }
+    return pcmk_rc_ok;
 }
 
 int
 crm_ipc_is_authentic_process(int sock, uid_t refuid, gid_t refgid,
                              pid_t *gotpid, uid_t *gotuid, gid_t *gotgid)
 {
-    int ret  = pcmk__crm_ipc_is_authentic_process(NULL, sock, refuid, refgid,
-                                                  gotpid, gotuid, gotgid);
+    int ret = is_ipc_provider_expected(NULL, sock, refuid, refgid,
+                                       gotpid, gotuid, gotgid);
 
     /* The old function had some very odd return codes*/
     if (ret == 0) {
@@ -1528,8 +1640,8 @@ pcmk__ipc_is_authentic_process_active(const char *name, uid_t refuid,
         goto bail;
     }
 
-    auth_rc = pcmk__crm_ipc_is_authentic_process(c, fd, refuid, refgid, &found_pid,
-                                                 &found_uid, &found_gid);
+    auth_rc = is_ipc_provider_expected(c, fd, refuid, refgid,
+                                       &found_pid, &found_uid, &found_gid);
     if (auth_rc == pcmk_rc_ipc_unauthorized) {
         crm_err("Daemon (IPC %s) effectively blocked with unauthorized"
                 " process %lld (uid: %lld, gid: %lld)",

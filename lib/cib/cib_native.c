@@ -296,12 +296,16 @@ cib_native_signon_raw(cib_t *cib, const char *name, enum cib_conn_type type,
 
     if (async_fd != NULL) {
         native->ipc = crm_ipc_new(channel, 0);
-
-        if (native->ipc && crm_ipc_connect(native->ipc)) {
-            *async_fd = crm_ipc_get_fd(native->ipc);
-
-        } else if (native->ipc) {
-            rc = -ENOTCONN;
+        if (native->ipc != NULL) {
+            rc = pcmk__connect_generic_ipc(native->ipc);
+            if (rc == pcmk_rc_ok) {
+                rc = pcmk__ipc_fd(native->ipc, async_fd);
+                if (rc != pcmk_rc_ok) {
+                    crm_info("Couldn't get file descriptor for %s IPC",
+                             channel);
+                }
+            }
+            rc = pcmk_rc2legacy(rc);
         }
 
     } else {

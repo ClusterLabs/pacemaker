@@ -172,25 +172,22 @@ static int
 connect_and_send_attrd_request(pcmk_ipc_api_t *api, xmlNode *request)
 {
     int rc = pcmk_rc_ok;
-    int max = 5;
 
-    while (max > 0) {
-        crm_info("Connecting to cluster... %d retries remaining", max);
-        rc = pcmk_connect_ipc(api, pcmk_ipc_dispatch_sync);
-
-        if (rc == pcmk_rc_ok) {
-            rc = pcmk__send_ipc_request(api, request);
-            break;
-        } else if (rc == EAGAIN || rc == EALREADY) {
-            sleep(5 - max);
-            max--;
-        } else {
-            crm_err("Could not connect to attrd: %s", pcmk_rc_str(rc));
-            break;
-        }
+    rc = pcmk__connect_ipc(api, pcmk_ipc_dispatch_sync, 5);
+    if (rc != pcmk_rc_ok) {
+        crm_err("Could not connect to %s: %s",
+                pcmk_ipc_name(api, true), pcmk_rc_str(rc));
+        return rc;
     }
 
-    return rc;
+    rc = pcmk__send_ipc_request(api, request);
+    if (rc != pcmk_rc_ok) {
+        crm_err("Could not send request to %s: %s",
+                pcmk_ipc_name(api, true), pcmk_rc_str(rc));
+        return rc;
+    }
+
+    return pcmk_rc_ok;
 }
 
 static int

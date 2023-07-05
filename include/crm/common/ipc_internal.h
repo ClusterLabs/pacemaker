@@ -96,6 +96,10 @@ extern "C" {
 int pcmk__ipc_is_authentic_process_active(const char *name, uid_t refuid,
                                           gid_t refgid, pid_t *gotpid);
 
+int pcmk__connect_generic_ipc(crm_ipc_t *ipc);
+int pcmk__ipc_fd(crm_ipc_t *ipc, int *fd);
+int pcmk__connect_ipc(pcmk_ipc_api_t *api, enum pcmk_ipc_dispatch dispatch_type,
+                      int attempts);
 
 /*
  * Server-related

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1105,13 +1105,20 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
     if (stonith_fd) {
         /* No mainloop */
         native->ipc = crm_ipc_new("stonith-ng", 0);
-
-        if (native->ipc && crm_ipc_connect(native->ipc)) {
-            *stonith_fd = crm_ipc_get_fd(native->ipc);
-        } else if (native->ipc) {
-            crm_ipc_close(native->ipc);
-            crm_ipc_destroy(native->ipc);
-            native->ipc = NULL;
+        if (native->ipc != NULL) {
+            rc = pcmk__connect_generic_ipc(native->ipc);
+            if (rc == pcmk_rc_ok) {
+                rc = pcmk__ipc_fd(native->ipc, stonith_fd);
+                if (rc != pcmk_rc_ok) {
+                    crm_debug("Couldn't get file descriptor for IPC: %s",
+                              pcmk_rc_str(rc));
+                }
+            }
+            if (rc != pcmk_rc_ok) {
+                crm_ipc_close(native->ipc);
+                crm_ipc_destroy(native->ipc);
+                native->ipc = NULL;
+            }
         }
 
     } else {
