@@ -125,7 +125,6 @@ typedef struct cib_operation_s {
     const char *name;
     uint32_t flags; //!< Group of <tt>enum cib_op_attr</tt> flags
     int (*prepare) (xmlNode *, xmlNode **, const char **);
-    int (*cleanup) (int, xmlNode **, xmlNode **);
     cib_op_t fn;
 } cib_operation_t;
 

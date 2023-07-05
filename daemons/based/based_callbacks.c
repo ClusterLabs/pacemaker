@@ -1618,11 +1618,10 @@ cib_process_command(xmlNode *request, const cib_operation_t *operation,
                                   output);
     }
 
-    crm_trace("cleanup");
-    operation->cleanup(call_options, &input, &output);
-
+    if (output != the_cib) {
+        free_xml(output);
+    }
     free_digests(&before_digests);
-
     crm_trace("done");
     return rc;
 }

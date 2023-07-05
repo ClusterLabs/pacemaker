@@ -109,54 +109,21 @@ cib_prepare_diff(xmlNode * request, xmlNode ** data, const char **section)
     return pcmk_ok;
 }
 
-static int
-cib_cleanup_query(int options, xmlNode ** data, xmlNode ** output)
-{
-    CRM_LOG_ASSERT(*data == NULL);
-    if (*output != the_cib) {
-        free_xml(*output);
-    }
-    return pcmk_ok;
-}
-
-static int
-cib_cleanup_data(int options, xmlNode ** data, xmlNode ** output)
-{
-    free_xml(*output);
-    *data = NULL;
-    return pcmk_ok;
-}
-
-static int
-cib_cleanup_output(int options, xmlNode ** data, xmlNode ** output)
-{
-    free_xml(*output);
-    return pcmk_ok;
-}
-
-static int
-cib_cleanup_none(int options, xmlNode ** data, xmlNode ** output)
-{
-    CRM_LOG_ASSERT(*data == NULL);
-    CRM_LOG_ASSERT(*output == NULL);
-    return pcmk_ok;
-}
-
 static const cib_operation_t cib_server_ops[] = {
     {
         PCMK__CIB_REQUEST_QUERY,
         cib_op_attr_none,
-        cib_prepare_none, cib_cleanup_query, cib_process_query
+        cib_prepare_none, cib_process_query
     },
     {
         PCMK__CIB_REQUEST_MODIFY,
         cib_op_attr_modifies|cib_op_attr_privileged|cib_op_attr_transaction,
-        cib_prepare_data, cib_cleanup_data, cib_process_modify
+        cib_prepare_data, cib_process_modify
     },
     {
         PCMK__CIB_REQUEST_APPLY_PATCH,
         cib_op_attr_modifies|cib_op_attr_privileged|cib_op_attr_transaction,
-        cib_prepare_diff, cib_cleanup_data, cib_server_process_diff
+        cib_prepare_diff, cib_server_process_diff
     },
     {
         PCMK__CIB_REQUEST_REPLACE,
@@ -165,27 +132,27 @@ static const cib_operation_t cib_server_ops[] = {
         |cib_op_attr_replaces
         |cib_op_attr_writes_through
         |cib_op_attr_transaction,
-        cib_prepare_data, cib_cleanup_data, cib_process_replace_svr
+        cib_prepare_data, cib_process_replace_svr
     },
     {
         PCMK__CIB_REQUEST_CREATE,
         cib_op_attr_modifies|cib_op_attr_privileged|cib_op_attr_transaction,
-        cib_prepare_data, cib_cleanup_data, cib_process_create
+        cib_prepare_data, cib_process_create
     },
     {
         PCMK__CIB_REQUEST_DELETE,
         cib_op_attr_modifies|cib_op_attr_privileged|cib_op_attr_transaction,
-        cib_prepare_data, cib_cleanup_data, cib_process_delete
+        cib_prepare_data, cib_process_delete
     },
     {
         PCMK__CIB_REQUEST_SYNC_TO_ALL,
         cib_op_attr_privileged,
-        cib_prepare_sync, cib_cleanup_none, cib_process_sync
+        cib_prepare_sync, cib_process_sync
     },
     {
         PCMK__CIB_REQUEST_BUMP,
         cib_op_attr_modifies|cib_op_attr_privileged|cib_op_attr_transaction,
-        cib_prepare_none, cib_cleanup_output, cib_process_bump
+        cib_prepare_none, cib_process_bump
     },
     {
         PCMK__CIB_REQUEST_ERASE,
@@ -193,17 +160,17 @@ static const cib_operation_t cib_server_ops[] = {
         |cib_op_attr_privileged
         |cib_op_attr_replaces
         |cib_op_attr_transaction,
-        cib_prepare_none, cib_cleanup_output, cib_process_erase
+        cib_prepare_none, cib_process_erase
     },
     {
         PCMK__CIB_REQUEST_NOOP,
         cib_op_attr_none,
-        cib_prepare_none, cib_cleanup_none, cib_process_noop
+        cib_prepare_none, cib_process_noop
     },
     {
         PCMK__CIB_REQUEST_ABS_DELETE,
         cib_op_attr_modifies|cib_op_attr_privileged,
-        cib_prepare_data, cib_cleanup_data, cib_process_delete_absolute
+        cib_prepare_data, cib_process_delete_absolute
     },
     {
         PCMK__CIB_REQUEST_UPGRADE,
@@ -211,38 +178,38 @@ static const cib_operation_t cib_server_ops[] = {
         |cib_op_attr_privileged
         |cib_op_attr_writes_through
         |cib_op_attr_transaction,
-        cib_prepare_none, cib_cleanup_output, cib_process_upgrade_server
+        cib_prepare_none, cib_process_upgrade_server
     },
     {
         PCMK__CIB_REQUEST_SECONDARY,
         cib_op_attr_privileged|cib_op_attr_local,
-        cib_prepare_none, cib_cleanup_none, cib_process_readwrite
+        cib_prepare_none, cib_process_readwrite
     },
     {
         PCMK__CIB_REQUEST_SYNC_TO_ONE,
         cib_op_attr_privileged,
-        cib_prepare_sync, cib_cleanup_none, cib_process_sync_one
+        cib_prepare_sync, cib_process_sync_one
     },
     {
         // @COMPAT: Drop cib_op_attr_modifies when we drop legacy mode support
         PCMK__CIB_REQUEST_PRIMARY,
         cib_op_attr_modifies|cib_op_attr_privileged|cib_op_attr_local,
-        cib_prepare_data, cib_cleanup_data, cib_process_readwrite
+        cib_prepare_data, cib_process_readwrite
     },
     {
         PCMK__CIB_REQUEST_IS_PRIMARY,
         cib_op_attr_privileged,
-        cib_prepare_none, cib_cleanup_none, cib_process_readwrite
+        cib_prepare_none, cib_process_readwrite
     },
     {
         PCMK__CIB_REQUEST_SHUTDOWN,
         cib_op_attr_privileged,
-        cib_prepare_sync, cib_cleanup_none, cib_process_shutdown_req
+        cib_prepare_sync, cib_process_shutdown_req
     },
     {
         CRM_OP_PING,
         cib_op_attr_none,
-        cib_prepare_none, cib_cleanup_output, cib_process_ping
+        cib_prepare_none, cib_process_ping
     },
 
     /* PCMK__CIB_REQUEST_*_TRANSACT requests must be processed locally because
@@ -252,7 +219,7 @@ static const cib_operation_t cib_server_ops[] = {
     {
         PCMK__CIB_REQUEST_INIT_TRANSACT,
         cib_op_attr_privileged|cib_op_attr_local,
-        cib_prepare_none, cib_cleanup_none, cib_process_init_transaction,
+        cib_prepare_none, cib_process_init_transaction,
     },
     {
         PCMK__CIB_REQUEST_COMMIT_TRANSACT,
@@ -261,12 +228,12 @@ static const cib_operation_t cib_server_ops[] = {
         |cib_op_attr_local
         |cib_op_attr_replaces
         |cib_op_attr_writes_through,
-        cib_prepare_none, cib_cleanup_none, cib_process_commit_transaction,
+        cib_prepare_none, cib_process_commit_transaction,
     },
     {
         PCMK__CIB_REQUEST_DISCARD_TRANSACT,
         cib_op_attr_privileged|cib_op_attr_local,
-        cib_prepare_none, cib_cleanup_none, cib_process_discard_transaction,
+        cib_prepare_none, cib_process_discard_transaction,
     },
 };
 
