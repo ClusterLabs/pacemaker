@@ -136,7 +136,7 @@ dedupXpathResults(xmlXPathObjectPtr xpathObj)
 
 /* the caller needs to check if the result contains a xmlDocPtr or xmlNodePtr */
 xmlXPathObjectPtr
-xpath_search(xmlNode * xml_top, const char *path)
+xpath_search(const xmlNode *xml_top, const char *path)
 {
     xmlDocPtr doc = NULL;
     xmlXPathObjectPtr xpathObj = NULL;
