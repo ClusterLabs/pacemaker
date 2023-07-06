@@ -151,10 +151,10 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
             // Append additional detail so the receiver can log the differences
             add_message_xml(*answer, F_CIB_CALLDATA, the_cib);
         },
-        {
+        if (the_cib != NULL) {
             // Always include at least the version details
-            const char *tag = TYPE(the_cib);
-            xmlNode *shallow = create_xml_node(NULL, tag);
+            xmlNode *shallow = create_xml_node(NULL,
+                                               (const char *) the_cib->name);
 
             copy_in_properties(shallow, the_cib);
             add_message_xml(*answer, F_CIB_CALLDATA, shallow);

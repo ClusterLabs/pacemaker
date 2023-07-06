@@ -477,7 +477,6 @@ extern "C" {
 #  define XML_DIFF_POSITION             "position"
 
 #  define ID(x) crm_element_value(x, XML_ATTR_ID)
-#  define TYPE(x) crm_element_name(x)
 
 #ifdef __cplusplus
 }

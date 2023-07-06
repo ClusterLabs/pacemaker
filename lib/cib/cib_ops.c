@@ -204,8 +204,8 @@ cib_process_query(const char *op, int options, const char *section, xmlNode * re
         result = -ENXIO;
 
     } else if (options & cib_no_children) {
-        const char *tag = TYPE(obj_root);
-        xmlNode *shallow = create_xml_node(*answer, tag);
+        xmlNode *shallow = create_xml_node(*answer,
+                                           (const char *) obj_root->name);
 
         copy_in_properties(shallow, obj_root);
         *answer = shallow;
@@ -706,7 +706,8 @@ update_results(xmlNode *failed, xmlNode *target, const char *operation,
         add_node_copy(xml_node, target);
 
         crm_xml_add(xml_node, XML_FAILCIB_ATTR_ID, ID(target));
-        crm_xml_add(xml_node, XML_FAILCIB_ATTR_OBJTYPE, TYPE(target));
+        crm_xml_add(xml_node, XML_FAILCIB_ATTR_OBJTYPE,
+                    (const char *) target->name);
         crm_xml_add(xml_node, XML_FAILCIB_ATTR_OP, operation);
         crm_xml_add(xml_node, XML_FAILCIB_ATTR_REASON, error_msg);
 
@@ -957,8 +958,8 @@ cib_process_xpath(const char *op, int options, const char *section,
         } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_QUERY, pcmk__str_none)) {
 
             if (options & cib_no_children) {
-                const char *tag = TYPE(match);
-                xmlNode *shallow = create_xml_node(*answer, tag);
+                xmlNode *shallow = create_xml_node(*answer,
+                                                   (const char *) match->name);
 
                 copy_in_properties(shallow, match);
 

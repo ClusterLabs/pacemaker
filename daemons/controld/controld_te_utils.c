@@ -410,7 +410,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
 
         do_crm_log(level, "Transition %d aborted by %s.%s: %s "
                    CRM_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",
-                   controld_globals.transition_graph->id, TYPE(reason),
+                   controld_globals.transition_graph->id, reason->name,
                    ID(reason), abort_text, add[0], add[1], add[2], fn, line,
                    (const char *) local_path->str,
                    pcmk__btoa(controld_globals.transition_graph->complete));
@@ -480,7 +480,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
             do_crm_log(level, "Transition %d aborted by %s.%s '%s': %s "
                        CRM_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",
                        controld_globals.transition_graph->id,
-                       TYPE(reason), (id? id : ""), (op? op : "change"),
+                       reason->name, pcmk__s(id, ""), pcmk__s(op, "change"),
                        abort_text, add[0], add[1], add[2], fn, line, path,
                        pcmk__btoa(controld_globals.transition_graph->complete));
         }

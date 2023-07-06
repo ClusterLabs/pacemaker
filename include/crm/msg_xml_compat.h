@@ -61,6 +61,9 @@ extern "C" {
 //! \deprecated Use \p XML_ATTR_ID instead
 #define XML_ATTR_UUID "id"
 
+//! \deprecated Use name member directly
+#define TYPE(x) (((x) == NULL)? NULL : (const char *) ((x)->name))
+
 #ifdef __cplusplus
 }
 #endif

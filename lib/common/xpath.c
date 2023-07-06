@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -295,9 +295,9 @@ pcmk__element_xpath(const xmlNode *xml)
     if (parent == NULL) {
         g_string_append_c(xpath, '/');
     } else if (parent->parent == NULL) {
-        g_string_append(xpath, TYPE(xml));
+        g_string_append(xpath, (const gchar *) xml->name);
     } else {
-        pcmk__g_strcat(xpath, "/", TYPE(xml), NULL);
+        pcmk__g_strcat(xpath, "/", (const char *) xml->name, NULL);
     }
 
     id = ID(xml);
