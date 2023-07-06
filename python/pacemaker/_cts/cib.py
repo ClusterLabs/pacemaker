@@ -418,7 +418,7 @@ class ConfigFactory:
 
         self._cm.debug("cib: %s" % args)
 
-    def create_config(self, name="pacemaker-1.0"):
+    def create_config(self, name="pacemaker-%s" % BuildOptions.CIB_SCHEMA_VERSION):
         """ Return a CIB object for the given schema version """
 
         return CIB(self._cm, name, self)
