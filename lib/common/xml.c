@@ -623,21 +623,6 @@ pcmk__xe_remove_matching_attrs(xmlNode *element,
     }
 }
 
-xmlDoc *
-getDocPtr(xmlNode * node)
-{
-    xmlDoc *doc = NULL;
-
-    CRM_CHECK(node != NULL, return NULL);
-
-    doc = node->doc;
-    if (doc == NULL) {
-        doc = xmlNewDoc((pcmkXmlStr) "1.0");
-        xmlDocSetRootElement(doc, node);
-    }
-    return doc;
-}
-
 xmlNode *
 add_node_copy(xmlNode * parent, xmlNode * src_node)
 {
@@ -2751,6 +2736,21 @@ void
 crm_destroy_xml(gpointer data)
 {
     free_xml(data);
+}
+
+xmlDoc *
+getDocPtr(xmlNode *node)
+{
+    xmlDoc *doc = NULL;
+
+    CRM_CHECK(node != NULL, return NULL);
+
+    doc = node->doc;
+    if (doc == NULL) {
+        doc = xmlNewDoc((pcmkXmlStr) "1.0");
+        xmlDocSetRootElement(doc, node);
+    }
+    return doc;
 }
 
 int
