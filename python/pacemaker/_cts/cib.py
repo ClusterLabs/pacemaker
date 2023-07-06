@@ -36,9 +36,9 @@ class CIB:
 
         self._factory.tmpfile = tmpfile
 
-    def _show(self, command=""):
+    def _show(self):
         output = ""
-        (_, result) = self._factory.rsh(self._factory.target, "HOME=/root CIB_file=%s cibadmin -Ql %s" % (self._factory.tmpfile, command), verbose=1)
+        (_, result) = self._factory.rsh(self._factory.target, "HOME=/root CIB_file=%s cibadmin -Ql" % self._factory.tmpfile, verbose=1)
 
         for line in result:
             output += line
@@ -46,7 +46,7 @@ class CIB:
 
         return output
 
-    def new_ip(self, name=None, standard="ocf"):
+    def new_ip(self, name=None):
         if self._cm.Env["IPagent"] == "IPaddr2":
             ip = next_ip(self._cm.Env["IPBase"])
             if not name:
@@ -56,7 +56,7 @@ class CIB:
                 else:
                     name = "r%s" % ip
 
-            r = Resource(self._factory, name, self._cm.Env["IPagent"], standard)
+            r = Resource(self._factory, name, self._cm.Env["IPagent"], "ocf")
             r["ip"] = ip
 
             if ":" in ip:
@@ -70,7 +70,7 @@ class CIB:
                 name = "r%s%d" % (self._cm.Env["IPagent"], self._counter)
                 self._counter += 1
 
-            r = Resource(self._factory, name, self._cm.Env["IPagent"], standard)
+            r = Resource(self._factory, name, self._cm.Env["IPagent"], "ocf")
 
         r.add_op("monitor", "5s")
         return r
@@ -116,7 +116,7 @@ class CIB:
 
         self._factory.tmpfile = old
 
-    def contents(self, target=None):
+    def contents(self, target):
         # fencing resource
         if self._cib:
             return self._cib
