@@ -59,7 +59,7 @@ qb_ipcs_service_t *ipcs_rw = NULL;
 qb_ipcs_service_t *ipcs_shm = NULL;
 
 static int cib_process_command(xmlNode *request,
-                               const cib_operation_t *operation,
+                               const cib__operation_t *operation,
                                cib__op_fn_t op_function, xmlNode **reply,
                                xmlNode **cib_diff, bool privileged);
 
@@ -572,7 +572,7 @@ queue_local_notify(xmlNode * notify_src, const char *client_id, gboolean sync_re
 
 static void
 parse_local_options_v1(const pcmk__client_t *cib_client,
-                       const cib_operation_t *operation, int call_options,
+                       const cib__operation_t *operation, int call_options,
                        const char *host, const char *op, gboolean *local_notify,
                        gboolean *needs_reply, gboolean *process,
                        gboolean *needs_forward)
@@ -616,7 +616,7 @@ parse_local_options_v1(const pcmk__client_t *cib_client,
 
 static void
 parse_local_options_v2(const pcmk__client_t *cib_client,
-                       const cib_operation_t *operation, int call_options,
+                       const cib__operation_t *operation, int call_options,
                        const char *host, const char *op, gboolean *local_notify,
                        gboolean *needs_reply, gboolean *process,
                        gboolean *needs_forward)
@@ -676,7 +676,7 @@ parse_local_options_v2(const pcmk__client_t *cib_client,
 
 static void
 parse_local_options(const pcmk__client_t *cib_client,
-                    const cib_operation_t *operation, int call_options,
+                    const cib__operation_t *operation, int call_options,
                     const char *host, const char *op, gboolean *local_notify,
                     gboolean *needs_reply, gboolean *process,
                     gboolean *needs_forward)
@@ -706,7 +706,7 @@ parse_local_options(const pcmk__client_t *cib_client,
 }
 
 static gboolean
-parse_peer_options_v1(const cib_operation_t *operation, xmlNode *request,
+parse_peer_options_v1(const cib__operation_t *operation, xmlNode *request,
                       gboolean *local_notify, gboolean *needs_reply,
                       gboolean *process)
 {
@@ -804,7 +804,7 @@ parse_peer_options_v1(const cib_operation_t *operation, xmlNode *request,
 }
 
 static gboolean
-parse_peer_options_v2(const cib_operation_t *operation, xmlNode *request,
+parse_peer_options_v2(const cib__operation_t *operation, xmlNode *request,
                       gboolean *local_notify, gboolean *needs_reply,
                       gboolean *process)
 {
@@ -925,7 +925,7 @@ parse_peer_options_v2(const cib_operation_t *operation, xmlNode *request,
 }
 
 static gboolean
-parse_peer_options(const cib_operation_t *operation, xmlNode *request,
+parse_peer_options(const cib__operation_t *operation, xmlNode *request,
                    gboolean *local_notify, gboolean *needs_reply,
                    gboolean *process)
 {
@@ -1076,7 +1076,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
     const char *client_name = crm_element_value(request, F_CIB_CLIENTNAME);
     const char *reply_to = crm_element_value(request, F_CIB_ISREPLY);
 
-    const cib_operation_t *operation = NULL;
+    const cib__operation_t *operation = NULL;
     cib__op_fn_t op_function = NULL;
 
     crm_element_value_int(request, F_CIB_CALLOPTS, &call_options);
@@ -1426,7 +1426,7 @@ get_change_sections(const struct digest_data *before,
  */
 static bool
 should_replace_notify(const struct digest_data *before_digests,
-                      xmlNode *after_cib, const cib_operation_t *operation,
+                      xmlNode *after_cib, const cib__operation_t *operation,
                       int call_options, uint32_t *change_sections)
 {
     struct digest_data after_digests = { 0, };
@@ -1473,7 +1473,7 @@ contains_config_change(xmlNode *diff)
 }
 
 static int
-cib_process_command(xmlNode *request, const cib_operation_t *operation,
+cib_process_command(xmlNode *request, const cib__operation_t *operation,
                     cib__op_fn_t op_function, xmlNode **reply,
                     xmlNode **cib_diff, bool privileged)
 {

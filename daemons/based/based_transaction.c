@@ -153,7 +153,7 @@ validate_transaction_request(const xmlNode *request)
     const char *op = crm_element_value(request, F_CIB_OPERATION);
     const char *host = crm_element_value(request, F_CIB_HOST);
 
-    const cib_operation_t *operation = NULL;
+    const cib__operation_t *operation = NULL;
     int rc = cib__get_operation(op, &operation);
 
     if (rc != pcmk_rc_ok) {

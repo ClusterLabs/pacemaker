@@ -32,7 +32,7 @@
 // @TODO: Free this via crm_exit() when libcib gets merged with libcrmcommon
 static GHashTable *operation_table = NULL;
 
-static const cib_operation_t cib_ops[] = {
+static const cib__operation_t cib_ops[] = {
     {
         PCMK__CIB_REQUEST_ABS_DELETE, cib__op_abs_delete,
         cib__op_attr_modifies|cib__op_attr_privileged
@@ -145,7 +145,7 @@ static const cib_operation_t cib_ops[] = {
 
 /*!
  * \internal
- * \brief Get the \c cib_operation_t object for a given CIB operation name
+ * \brief Get the \c cib__operation_t object for a given CIB operation name
  *
  * \param[in]  op         CIB operation name
  * \param[out] operation  Where to store CIB operation object
@@ -153,7 +153,7 @@ static const cib_operation_t cib_ops[] = {
  * \return Standard Pacemaker return code
  */
 int
-cib__get_operation(const char *op, const cib_operation_t **operation)
+cib__get_operation(const char *op, const cib__operation_t **operation)
 {
     CRM_ASSERT((op != NULL) && (operation != NULL));
 
@@ -161,7 +161,7 @@ cib__get_operation(const char *op, const cib_operation_t **operation)
         operation_table = pcmk__strkey_table(NULL, NULL);
 
         for (int lpc = 0; lpc < PCMK__NELEM(cib_ops); lpc++) {
-            const cib_operation_t *oper = &(cib_ops[lpc]);
+            const cib__operation_t *oper = &(cib_ops[lpc]);
 
             g_hash_table_insert(operation_table, (gpointer) oper->name,
                                 (gpointer) oper);

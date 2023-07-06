@@ -54,7 +54,7 @@ typedef struct cib_file_opaque_s {
 } cib_file_opaque_t;
 
 static int cib_file_extend_transaction(cib_t *cib,
-                                       const cib_operation_t *operation,
+                                       const cib__operation_t *operation,
                                        xmlNode *request);
 
 static void cib_file_discard_transaction(cib_t *cib);
@@ -189,7 +189,7 @@ static gboolean cib_do_chown = FALSE;
  * \return Function that performs \p operation for a CIB file client
  */
 static cib__op_fn_t
-file_get_op_function(const cib_operation_t *operation)
+file_get_op_function(const cib__operation_t *operation)
 {
     enum cib__op_type type = operation->type;
 
@@ -236,7 +236,7 @@ static int
 cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
 {
     int rc = pcmk_ok;
-    const cib_operation_t *operation = NULL;
+    const cib__operation_t *operation = NULL;
     cib__op_fn_t op_function = NULL;
 
     int call_id = 0;
@@ -322,7 +322,7 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     xmlNode *output = NULL;
     cib_file_opaque_t *private = cib->variant_opaque;
 
-    const cib_operation_t *operation = NULL;
+    const cib__operation_t *operation = NULL;
 
     crm_info("Handling %s operation for %s as %s",
              pcmk__s(op, "invalid"), pcmk__s(section, "entire CIB"),
@@ -1115,7 +1115,7 @@ cib_file_init_transaction(cib_t *cib)
  * \return Standard Pacemaker return code
  */
 static int
-cib_file_extend_transaction(cib_t *cib, const cib_operation_t *operation,
+cib_file_extend_transaction(cib_t *cib, const cib__operation_t *operation,
                             xmlNode *request)
 {
     cib_file_opaque_t *private = cib->variant_opaque;

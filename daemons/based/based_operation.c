@@ -53,7 +53,7 @@ static const cib__op_fn_t cib_op_functions[] = {
  * \return Function that performs \p operation within \c pacemaker-based
  */
 cib__op_fn_t
-based_get_op_function(const cib_operation_t *operation)
+based_get_op_function(const cib__operation_t *operation)
 {
     enum cib__op_type type = operation->type;
 
