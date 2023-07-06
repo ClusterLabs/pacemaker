@@ -161,7 +161,7 @@ validate_transaction_request(const xmlNode *request)
         return rc;
     }
 
-    if (!pcmk_is_set(operation->flags, cib_op_attr_transaction)) {
+    if (!pcmk_is_set(operation->flags, cib__op_attr_transaction)) {
         crm_err("Operation '%s' is not supported in CIB transaction", op);
         return EOPNOTSUPP;
     }

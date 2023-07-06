@@ -86,17 +86,17 @@ enum cib_change_section_info {
 
 /*!
  * \internal
- * \enum cib_op_attr
+ * \enum cib__op_attr
  * \brief Flags for CIB operation attributes
  */
-enum cib_op_attr {
-    cib_op_attr_none           = 0,         //!< No special attributes
-    cib_op_attr_modifies       = (1 << 1),  //!< Modifies CIB
-    cib_op_attr_privileged     = (1 << 2),  //!< Requires privileges
-    cib_op_attr_local          = (1 << 3),  //!< Must only be processed locally
-    cib_op_attr_replaces       = (1 << 4),  //!< Replaces CIB
-    cib_op_attr_writes_through = (1 << 5),  //!< Writes to disk on success
-    cib_op_attr_transaction    = (1 << 6),  //!< Supported in a transaction
+enum cib__op_attr {
+    cib__op_attr_none           = 0,        //!< No special attributes
+    cib__op_attr_modifies       = (1 << 1), //!< Modifies CIB
+    cib__op_attr_privileged     = (1 << 2), //!< Requires privileges
+    cib__op_attr_local          = (1 << 3), //!< Must only be processed locally
+    cib__op_attr_replaces       = (1 << 4), //!< Replaces CIB
+    cib__op_attr_writes_through = (1 << 5), //!< Writes to disk on success
+    cib__op_attr_transaction    = (1 << 6), //!< Supported in a transaction
 };
 
 /*!
@@ -155,7 +155,7 @@ typedef int (*cib__op_fn_t)(const char *, int, const char *, xmlNode *,
 typedef struct cib_operation_s {
     const char *name;
     enum cib__op_type type;
-    uint32_t flags; //!< Group of <tt>enum cib_op_attr</tt> flags
+    uint32_t flags; //!< Group of <tt>enum cib__op_attr</tt> flags
 } cib_operation_t;
 
 typedef struct cib_notify_client_s {

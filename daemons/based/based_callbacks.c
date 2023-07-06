@@ -577,7 +577,7 @@ parse_local_options_v1(const pcmk__client_t *cib_client,
                        gboolean *needs_reply, gboolean *process,
                        gboolean *needs_forward)
 {
-    if (pcmk_is_set(operation->flags, cib_op_attr_modifies)
+    if (pcmk_is_set(operation->flags, cib__op_attr_modifies)
         && !pcmk_is_set(call_options, cib_inhibit_bcast)) {
         /* we need to send an update anyway */
         *needs_reply = TRUE;
@@ -627,8 +627,8 @@ parse_local_options_v2(const pcmk__client_t *cib_client,
     *local_notify = TRUE;
     *needs_forward = FALSE;
 
-    if (pcmk_is_set(operation->flags, cib_op_attr_local)) {
-        /* Always process locally if cib_op_attr_local is set.
+    if (pcmk_is_set(operation->flags, cib__op_attr_local)) {
+        /* Always process locally if cib__op_attr_local is set.
          *
          * @COMPAT: Currently host is ignored. At a compatibility break, throw
          * an error (from cib_process_request() or earlier) if host is not NULL or
@@ -647,7 +647,7 @@ parse_local_options_v2(const pcmk__client_t *cib_client,
         return;
     }
 
-    if (pcmk_is_set(operation->flags, cib_op_attr_modifies)
+    if (pcmk_is_set(operation->flags, cib__op_attr_modifies)
         || !pcmk__str_eq(host, OUR_NODENAME,
                          pcmk__str_casei|pcmk__str_null_matches)) {
 
@@ -874,7 +874,7 @@ parse_peer_options_v2(const cib_operation_t *operation, xmlNode *request,
         return FALSE;
 
     } else if (is_reply
-               && pcmk_is_set(operation->flags, cib_op_attr_modifies)) {
+               && pcmk_is_set(operation->flags, cib__op_attr_modifies)) {
         crm_trace("Ignoring legacy %s reply sent from %s to local clients", op, originator);
         return FALSE;
 
@@ -1120,10 +1120,10 @@ cib_process_request(xmlNode *request, gboolean privileged,
 
     if (pcmk_is_set(call_options, cib_transaction)) {
         /* We're committing a transaction now, processing each request. If
-         * cib_op_attr_transaction is not set, based_extend_transaction() should
+         * cib__op_attr_transaction is not set, based_extend_transaction() should
          * have blocked the request from being added to the transaction.
          */
-        CRM_CHECK(pcmk_is_set(operation->flags, cib_op_attr_transaction),
+        CRM_CHECK(pcmk_is_set(operation->flags, cib__op_attr_transaction),
                   return -EOPNOTSUPP);
     }
 
@@ -1137,7 +1137,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
         return rc;
     }
 
-    is_update = pcmk_is_set(operation->flags, cib_op_attr_modifies);
+    is_update = pcmk_is_set(operation->flags, cib__op_attr_modifies);
 
     if (pcmk_is_set(call_options, cib_discard_reply)) {
         /* If the request will modify the CIB, and we are in legacy mode, we
@@ -1433,7 +1433,7 @@ should_replace_notify(const struct digest_data *before_digests,
 
     *change_sections = cib_change_section_none;
 
-    if (!pcmk_is_set(operation->flags, cib_op_attr_replaces)
+    if (!pcmk_is_set(operation->flags, cib__op_attr_replaces)
         || pcmk_is_set(call_options, cib_inhibit_notify)) {
         return false;
     }
@@ -1512,7 +1512,7 @@ cib_process_command(xmlNode *request, const cib_operation_t *operation,
     op = crm_element_value(request, F_CIB_OPERATION);
     crm_element_value_int(request, F_CIB_CALLOPTS, &call_options);
 
-    if (!privileged && pcmk_is_set(operation->flags, cib_op_attr_privileged)) {
+    if (!privileged && pcmk_is_set(operation->flags, cib__op_attr_privileged)) {
         rc = -EACCES;
         crm_trace("Failed due to lack of privileges: %s", pcmk_strerror(rc));
         goto done;
@@ -1520,7 +1520,7 @@ cib_process_command(xmlNode *request, const cib_operation_t *operation,
 
     input = prepare_input(request, operation->type, &section);
 
-    if (!pcmk_is_set(operation->flags, cib_op_attr_modifies)) {
+    if (!pcmk_is_set(operation->flags, cib__op_attr_modifies)) {
         rc = cib_perform_op(op, call_options, op_function, true, section,
                             request, input, false, &config_changed, &the_cib,
                             &result_cib, NULL, &output);
@@ -1554,7 +1554,7 @@ cib_process_command(xmlNode *request, const cib_operation_t *operation,
     }
 
     // Calculate the digests of relevant sections before the operation
-    if (pcmk_is_set(operation->flags, cib_op_attr_replaces)
+    if (pcmk_is_set(operation->flags, cib__op_attr_replaces)
         && !pcmk_any_flags_set(call_options,
                                cib_dryrun|cib_inhibit_notify|cib_transaction)) {
 
@@ -1588,7 +1588,7 @@ cib_process_command(xmlNode *request, const cib_operation_t *operation,
      * negates the need to detect ordering changes.
      */
     if ((rc == pcmk_ok)
-        && pcmk_is_set(operation->flags, cib_op_attr_writes_through)) {
+        && pcmk_is_set(operation->flags, cib__op_attr_writes_through)) {
 
         config_changed = true;
     }

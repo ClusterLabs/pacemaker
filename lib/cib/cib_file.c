@@ -259,7 +259,7 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
     crm_element_value_int(request, F_CIB_CALLID, &call_id);
     crm_element_value_int(request, F_CIB_CALLOPTS, &call_options);
 
-    read_only = !pcmk_is_set(operation->flags, cib_op_attr_modifies);
+    read_only = !pcmk_is_set(operation->flags, cib__op_attr_modifies);
 
     // Mirror the logic in cib_prepare_common()
     if ((section != NULL) && (data != NULL)
@@ -1123,7 +1123,7 @@ cib_file_extend_transaction(cib_t *cib, const cib_operation_t *operation,
     if (private->transaction == NULL) {
         return pcmk_rc_no_transaction;
     }
-    if (!pcmk_is_set(operation->flags, cib_op_attr_transaction)) {
+    if (!pcmk_is_set(operation->flags, cib__op_attr_transaction)) {
         crm_err("Operation '%s' is not supported in CIB transaction",
                 operation->name);
         return EOPNOTSUPP;
