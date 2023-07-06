@@ -634,8 +634,6 @@ class ClusterManager(UserDict):
         return 1
 
     def is_node_dc(self, node, status_line=None):
-        rc = 0
-
         if not status_line:
             (_, out) = self.rsh(node, self.templates["StatusCmd"] % node, verbose=1)
 
@@ -643,19 +641,24 @@ class ClusterManager(UserDict):
                 status_line = out[0].strip()
 
         if not status_line:
-            rc = 0
-        elif status_line.find('S_IDLE') != -1:
-            rc = 1
-        elif status_line.find('S_INTEGRATION') != -1:
-            rc = 1
-        elif status_line.find('S_FINALIZE_JOIN') != -1:
-            rc = 1
-        elif status_line.find('S_POLICY_ENGINE') != -1:
-            rc = 1
-        elif status_line.find('S_TRANSITION_ENGINE') != -1:
-            rc = 1
+            return False
 
-        return rc
+        if status_line.find('S_IDLE') != -1:
+            return True
+
+        if status_line.find('S_INTEGRATION') != -1:
+            return True
+
+        if status_line.find('S_FINALIZE_JOIN') != -1:
+            return True
+
+        if status_line.find('S_POLICY_ENGINE') != -1:
+            return True
+
+        if status_line.find('S_TRANSITION_ENGINE') != -1:
+            return True
+
+        return False
 
     def active_resources(self, node):
         (_, output) = self.rsh(node, "crm_resource -c", verbose=1)
