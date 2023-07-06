@@ -143,9 +143,11 @@ class ClusterManager(UserDict):
         stonith = None
         stonithPats = []
         for peer in self.Env["nodes"]:
-            if self.ShouldBeStatus[peer] != "up":
-                stonithPats.append(self.templates["Pat:Fencing_ok"] % peer)
-                stonithPats.append(self.templates["Pat:Fencing_start"] % peer)
+            if self.ShouldBeStatus[peer] == "up":
+                continue
+
+            stonithPats.append(self.templates["Pat:Fencing_ok"] % peer)
+            stonithPats.append(self.templates["Pat:Fencing_start"] % peer)
 
         stonith = LogWatcher(self.Env["LogFileName"], stonithPats, self.Env["nodes"], self.Env["LogWatcher"], "StartupFencing", 0)
         stonith.set_watch()
@@ -423,13 +425,16 @@ class ClusterManager(UserDict):
             nodes = self.Env["nodes"]
 
         for node in nodes:
-            if node != target:
-                (rc, _) = self.rsh(target, self.templates["BreakCommCmd"] % self.key_for_node(node))
-                if rc != 0:
-                    self.logger.log("Could not break the communication between %s and %s: %d" % (target, node, rc))
-                    return None
+            if node == target:
+                continue
 
-                self.debug("Communication cut between %s and %s" % (target, node))
+            (rc, _) = self.rsh(target, self.templates["BreakCommCmd"] % self.key_for_node(node))
+            if rc != 0:
+                self.logger.log("Could not break the communication between %s and %s: %d" % (target, node, rc))
+                return None
+
+            self.debug("Communication cut between %s and %s" % (target, node))
+
         return 1
 
     def unisolate_node(self, target, nodes=None):
@@ -438,14 +443,16 @@ class ClusterManager(UserDict):
             nodes = self.Env["nodes"]
 
         for node in nodes:
-            if node != target:
-                restored = 0
+            if node == target:
+                continue
 
-                # Limit the amount of time we have asynchronous connectivity for
-                # Restore both sides as simultaneously as possible
-                self.rsh(target, self.templates["FixCommCmd"] % self.key_for_node(node), synchronous=False)
-                self.rsh(node, self.templates["FixCommCmd"] % self.key_for_node(target), synchronous=False)
-                self.debug("Communication restored between %s and %s" % (target, node))
+            restored = 0
+
+            # Limit the amount of time we have asynchronous connectivity for
+            # Restore both sides as simultaneously as possible
+            self.rsh(target, self.templates["FixCommCmd"] % self.key_for_node(node), synchronous=False)
+            self.rsh(node, self.templates["FixCommCmd"] % self.key_for_node(target), synchronous=False)
+            self.debug("Communication restored between %s and %s" % (target, node))
 
     def oprofileStart(self, node=None):
         if not node:
@@ -486,25 +493,27 @@ class ClusterManager(UserDict):
             self.log("Node %s is not up." % node)
             return None
 
-        if not node in self.CIBsync and self.Env["ClobberCIB"]:
-            self.CIBsync[node] = 1
-            self.rsh(node, "rm -f %s/cib*" % BuildOptions.CIB_DIR)
+        if node in self.CIBsync or not self.Env["ClobberCIB"]:
+            return
 
-            # Only install the CIB on the first node, all the other ones will pick it up from there
-            if self.cib_installed == 1:
-                return None
+        self.CIBsync[node] = 1
+        self.rsh(node, "rm -f %s/cib*" % BuildOptions.CIB_DIR)
 
-            self.cib_installed = 1
-            if self.Env["CIBfilename"] == None:
-                self.log("Installing Generated CIB on node %s" % node)
-                self.cib.install(node)
+        # Only install the CIB on the first node, all the other ones will pick it up from there
+        if self.cib_installed == 1:
+            return None
 
-            else:
-                self.log("Installing CIB (%s) on node %s" % (self.Env["CIBfilename"], node))
-                if self.rsh.copy(self.Env["CIBfilename"], "root@" + (self.templates["CIBfile"] % node)) != 0:
-                    raise ValueError("Can not scp file to %s %d" % node)
+        self.cib_installed = 1
+        if self.Env["CIBfilename"] == None:
+            self.log("Installing Generated CIB on node %s" % node)
+            self.cib.install(node)
 
-            self.rsh(node, "chown %s %s/cib.xml" % (BuildOptions.DAEMON_USER, BuildOptions.CIB_DIR))
+        else:
+            self.log("Installing CIB (%s) on node %s" % (self.Env["CIBfilename"], node))
+            if self.rsh.copy(self.Env["CIBfilename"], "root@" + (self.templates["CIBfile"] % node)) != 0:
+                raise ValueError("Can not scp file to %s %d" % node)
+
+        self.rsh(node, "chown %s %s/cib.xml" % (BuildOptions.DAEMON_USER, BuildOptions.CIB_DIR))
 
     def prepare(self):
         '''Finish the Initialization process. Prepare to test...'''
@@ -622,14 +631,16 @@ class ClusterManager(UserDict):
             if not self.partition_stable(partition, timeout):
                 return None
 
-        if double_check:
-            # Make sure we are really stable and that all resources,
-            # including those that depend on transient node attributes,
-            # are started if they were going to be
-            time.sleep(5)
-            for partition in partitions:
-                if not self.partition_stable(partition, timeout):
-                    return None
+        if not double_check:
+            return 1
+
+        # Make sure we are really stable and that all resources,
+        # including those that depend on transient node attributes,
+        # are started if they were going to be
+        time.sleep(5)
+        for partition in partitions:
+            if not self.partition_stable(partition, timeout):
+                return None
 
         return 1
 
@@ -664,26 +675,30 @@ class ClusterManager(UserDict):
         (_, output) = self.rsh(node, "crm_resource -c", verbose=1)
         resources = []
         for line in output:
-            if re.search("^Resource", line):
-                tmp = AuditResource(self, line)
-                if tmp.type == "primitive" and tmp.host == node:
-                    resources.append(tmp.id)
+            if not re.search("^Resource", line):
+                continue
+
+            tmp = AuditResource(self, line)
+            if tmp.type == "primitive" and tmp.host == node:
+                resources.append(tmp.id)
+
         return resources
 
     def ResourceLocation(self, rid):
         ResourceNodes = []
         for node in self.Env["nodes"]:
-            if self.ShouldBeStatus[node] == "up":
+            if self.ShouldBeStatus[node] != "up":
+                continue
 
-                cmd = self.templates["RscRunning"] % rid
-                (rc, lines) = self.rsh(node, cmd)
+            cmd = self.templates["RscRunning"] % rid
+            (rc, lines) = self.rsh(node, cmd)
 
-                if rc == 127:
-                    self.log("Command '%s' failed. Binary or pacemaker-cts package not installed?" % cmd)
-                    for line in lines:
-                        self.log("Output: %s " % line)
-                elif rc == 0:
-                    ResourceNodes.append(node)
+            if rc == 127:
+                self.log("Command '%s' failed. Binary or pacemaker-cts package not installed?" % cmd)
+                for line in lines:
+                    self.log("Output: %s " % line)
+            elif rc == 0:
+                ResourceNodes.append(node)
 
         return ResourceNodes
 
@@ -691,34 +706,35 @@ class ClusterManager(UserDict):
         ccm_partitions = []
 
         for node in self.Env["nodes"]:
-            if self.ShouldBeStatus[node] == "up":
-                (_, out) = self.rsh(node, self.templates["PartitionCmd"], verbose=1)
-
-                if not out:
-                    self.log("no partition details for %s" % node)
-                    continue
-
-                partition = out[0].strip()
-
-                if len(partition) > 2:
-                    nodes = partition.split()
-                    nodes.sort()
-                    partition = ' '.join(nodes)
-
-                    found = 0
-                    for a_partition in ccm_partitions:
-                        if partition == a_partition:
-                            found = 1
-                    if found == 0:
-                        self.debug("Adding partition from %s: %s" % (node, partition))
-                        ccm_partitions.append(partition)
-                    else:
-                        self.debug("Partition '%s' from %s is consistent with existing entries" % (partition, node))
-
-                else:
-                    self.log("bad partition details for %s" % node)
-            else:
+            if self.ShouldBeStatus[node] != "up":
                 self.debug("Node %s is down... skipping" % node)
+                continue
+
+            (_, out) = self.rsh(node, self.templates["PartitionCmd"], verbose=1)
+
+            if not out:
+                self.log("no partition details for %s" % node)
+                continue
+
+            partition = out[0].strip()
+
+            if len(partition) <= 2:
+                self.log("bad partition details for %s" % node)
+                continue
+
+            nodes = partition.split()
+            nodes.sort()
+            partition = ' '.join(nodes)
+
+            found = 0
+            for a_partition in ccm_partitions:
+                if partition == a_partition:
+                    found = 1
+            if found == 0:
+                self.debug("Adding partition from %s: %s" % (node, partition))
+                ccm_partitions.append(partition)
+            else:
+                self.debug("Partition '%s' from %s is consistent with existing entries" % (partition, node))
 
         self.debug("Found partitions: %r" % ccm_partitions)
         return ccm_partitions
@@ -732,17 +748,19 @@ class ClusterManager(UserDict):
             node_list = self.Env["nodes"]
 
         for node in node_list:
-            if self.ShouldBeStatus[node] == "up":
-                (_, quorum) = self.rsh(node, self.templates["QuorumCmd"], verbose=1)
-                quorum = quorum[0].strip()
+            if self.ShouldBeStatus[node] != "up":
+                continue
 
-                if quorum.find("1") != -1:
-                    return True
+            (_, quorum) = self.rsh(node, self.templates["QuorumCmd"], verbose=1)
+            quorum = quorum[0].strip()
 
-                if quorum.find("0") != -1:
-                    return False
+            if quorum.find("1") != -1:
+                return True
 
-                self.debug("WARN: Unexpected quorum test result from %s:%s" % (node, quorum))
+            if quorum.find("0") != -1:
+                return False
+
+            self.debug("WARN: Unexpected quorum test result from %s:%s" % (node, quorum))
 
         return False
 
