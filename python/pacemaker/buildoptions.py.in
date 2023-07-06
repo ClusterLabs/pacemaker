@@ -22,6 +22,9 @@ class BuildOptions:
     CIB_DIR = "@CRM_CONFIG_DIR@"
     """ Where CIB files are stored """
 
+    CIB_SCHEMA_VERSION = "@CIB_VERSION@"
+    """ Latest supported CIB schema version number """
+
     COROSYNC_CONFIG_FILE = "@PCMK__COROSYNC_CONF@"
     """ Path to the corosync config file """
 

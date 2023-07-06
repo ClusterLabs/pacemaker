@@ -363,6 +363,11 @@ API_VERSION=$({ git ls-files xml/api/*.rng 2>/dev/null || ls -1 xml/api/*.rng ; 
 AC_DEFINE_UNQUOTED([PCMK__API_VERSION], ["$API_VERSION"],
                    [Highest API schema version])
 
+# Detect highest CIB schema version
+CIB_VERSION=$({ git ls-files xml/*.rng 2>/dev/null || ls -1 xml/*.rng ; } dnl
+              | sed -n -e 's/^.*-\([[0-9]][[0-9.]]*\).rng$/\1/p' | sort -V | tail -1)
+AC_SUBST(CIB_VERSION)
+
 # Re-run configure at next make if any RNG changes, to re-detect highest
 AC_SUBST([CONFIG_STATUS_DEPENDENCIES],
          [$(echo '$(wildcard $(top_srcdir)/xml/api/*.rng)')])
