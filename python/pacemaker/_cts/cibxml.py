@@ -64,7 +64,7 @@ class XmlBase:
 
             Arguments:
 
-            factory -- A CIB.ConfigFactory instance
+            factory -- A ConfigFactory instance
             tag     -- The XML element's start and end tag
             _id     -- A unique name for the element
             kwargs  -- Any additional key/value pairs that should be added to
@@ -160,7 +160,7 @@ class InstanceAttributes(XmlBase):
 
             Arguments:
 
-            factory -- A CIB.ConfigFactory instance
+            factory -- A ConfigFactory instance
             _id     -- A unique name for the element
             attrs   -- Key/value pairs to add as nvpair child elements
         """
@@ -183,7 +183,7 @@ class Node(XmlBase):
 
             Arguments:
 
-            factory    -- A CIB.ConfigFactory instance
+            factory    -- A ConfigFactory instance
             node_name  -- The value of the uname attribute for this node
             node_id    -- A unique name for the element
             node_attrs -- Additional key/value pairs to set as instance
@@ -204,7 +204,7 @@ class Nodes(XmlBase):
 
             Arguments:
 
-            factory -- A CIB.ConfigFactory instance
+            factory -- A ConfigFactory instance
         """
 
         XmlBase.__init__(self, factory, "nodes", None)
@@ -238,7 +238,7 @@ class FencingTopology(XmlBase):
 
             Arguments:
 
-            factory -- A CIB.ConfigFactory instance
+            factory -- A ConfigFactory instance
         """
 
         XmlBase.__init__(self, factory, "fencing-topology", None)
@@ -285,7 +285,7 @@ class Option(XmlBase):
 
             Arguments:
 
-            factory -- A CIB.ConfigFactory instance
+            factory -- A ConfigFactory instance
             _id     -- A unique name for the element
         """
 
@@ -312,7 +312,7 @@ class OpDefaults(XmlBase):
 
             Arguments:
 
-            factory -- A CIB.ConfigFactory instance
+            factory -- A ConfigFactory instance
         """
 
         XmlBase.__init__(self, factory, "op_defaults", None)
@@ -340,7 +340,7 @@ class Alerts(XmlBase):
 
             Arguments:
 
-            factory -- A CIB.ConfigFactory instance
+            factory -- A ConfigFactory instance
         """
 
         XmlBase.__init__(self, factory, "alerts", None)
@@ -381,7 +381,7 @@ class Expression(XmlBase):
 
             Arguments:
 
-            factory -- A CIB.ConfigFactory instance
+            factory -- A ConfigFactory instance
             _id     -- A unique name for the element
             attr    -- The attribute to be tested
             op      -- The comparison to perform ("lt", "eq", "defined", etc.)
@@ -404,7 +404,7 @@ class Rule(XmlBase):
 
             Arguments:
 
-            factory -- A CIB.ConfigFactory instance
+            factory -- A ConfigFactory instance
             _id     -- A unique name for the element
             score   -- If this rule is used in a location constraint and
                        evaluates to true, apply this score to the constraint
@@ -434,7 +434,7 @@ class Resource(XmlBase):
 
             Arguments:
 
-            factory  -- A CIB.ConfigFactory instance
+            factory  -- A ConfigFactory instance
             _id      -- A unique name for the element
             rtype    -- The name of the resource agent
             standard -- The standard the resource agent follows ("ocf",
@@ -655,7 +655,7 @@ class Group(Resource):
 
             Arguments:
 
-            factory -- A CIB.ConfigFactory instance
+            factory -- A ConfigFactory instance
             _id     -- A unique name for the element
         """
 
@@ -699,7 +699,7 @@ class Clone(Group):
 
             Arguments:
 
-            factory -- A CIB.ConfigFactory instance
+            factory -- A ConfigFactory instance
             _id     -- A unique name for the element
             child   -- A Resource instance that can be added to this Clone
                        when it is created.  Alternately, use add_child later.

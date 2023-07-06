@@ -11,6 +11,7 @@ import socket
 import sys
 import time
 
+from pacemaker.buildoptions import BuildOptions
 from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.remote import RemoteFactory
 from pacemaker._cts.watcher import LogKind
@@ -437,7 +438,7 @@ class Environment:
                           help="Use QARSH to access nodes instead of SSH")
         grp4.add_argument("--schema",
                           metavar="SCHEMA",
-                          default="pacemaker-3.0",
+                          default="pacemaker-%s" % BuildOptions.CIB_SCHEMA_VERSION,
                           help="Create a CIB conforming to the given schema")
         grp4.add_argument("--seed",
                           metavar="SEED",

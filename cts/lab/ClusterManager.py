@@ -13,11 +13,10 @@ import time
 
 from collections import UserDict
 
-from cts.CIB         import ConfigFactory
-
 from pacemaker.buildoptions import BuildOptions
 from pacemaker._cts.CTS import NodeStatus, Process
 from pacemaker._cts.audits import AuditResource
+from pacemaker._cts.cib import ConfigFactory
 from pacemaker._cts.environment import EnvFactory
 from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.patterns import PatternSelector
@@ -66,7 +65,6 @@ class ClusterManager(UserDict):
 
         self.cib_installed = 0
         self.config = None
-        self.cluster_monitor = 0
         self.use_short_names = 1
 
         self._finalConditions()
@@ -75,7 +73,7 @@ class ClusterManager(UserDict):
         self.check_elections = 0
         self.CIBsync = {}
         self.CibFactory = ConfigFactory(self)
-        self.cib = self.CibFactory.createConfig(self.Env["Schema"])
+        self.cib = self.CibFactory.create_config(self.Env["Schema"])
 
     def __getitem__(self, key):
         if key == "Name":
