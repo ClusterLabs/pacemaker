@@ -510,8 +510,11 @@ class ClusterManager(UserDict):
 
         else:
             self.log("Installing CIB (%s) on node %s" % (self.Env["CIBfilename"], node))
-            if self.rsh.copy(self.Env["CIBfilename"], "root@" + (self.templates["CIBfile"] % node)) != 0:
-                raise ValueError("Can not scp file to %s %d" % node)
+
+            rc = self.rsh.copy(self.Env["CIBfilename"], "root@" + (self.templates["CIBfile"] % node))
+
+            if rc != 0:
+                raise ValueError("Can not scp file to %s %d" % (node, rc))
 
         self.rsh(node, "chown %s %s/cib.xml" % (BuildOptions.DAEMON_USER, BuildOptions.CIB_DIR))
 
