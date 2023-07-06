@@ -15,8 +15,24 @@ Current cluster status:
       * bundle-b-2	(ocf:pacemaker:Stateful):	 Promoted node2
 
 Transition Summary:
+  * Demote     bundle-a-rsc:1     ( Promoted -> Unpromoted bundle-a-1 )
+  * Promote    bundle-a-rsc:2     ( Unpromoted -> Promoted bundle-a-2 )
 
 Executing Cluster Transition:
+  * Resource action: bundle-a-rsc    cancel=16000 on bundle-a-2
+  * Resource action: bundle-a-rsc    cancel=15000 on bundle-a-1
+  * Pseudo action:   bundle-a_demote_0
+  * Pseudo action:   bundle-a-clone_demote_0
+  * Resource action: bundle-a-rsc    demote on bundle-a-1
+  * Pseudo action:   bundle-a-clone_demoted_0
+  * Pseudo action:   bundle-a_demoted_0
+  * Pseudo action:   bundle-a_promote_0
+  * Resource action: bundle-a-rsc    monitor=16000 on bundle-a-1
+  * Pseudo action:   bundle-a-clone_promote_0
+  * Resource action: bundle-a-rsc    promote on bundle-a-2
+  * Pseudo action:   bundle-a-clone_promoted_0
+  * Pseudo action:   bundle-a_promoted_0
+  * Resource action: bundle-a-rsc    monitor=15000 on bundle-a-2
 
 Revised Cluster Status:
   * Node List:
@@ -27,8 +43,8 @@ Revised Cluster Status:
     * Fencing	(stonith:fence_xvm):	 Started node2
     * Container bundle set: bundle-a [localhost/pcmktest]:
       * bundle-a-0	(ocf:pacemaker:Stateful):	 Unpromoted node1
-      * bundle-a-1	(ocf:pacemaker:Stateful):	 Promoted node3
-      * bundle-a-2	(ocf:pacemaker:Stateful):	 Unpromoted node2
+      * bundle-a-1	(ocf:pacemaker:Stateful):	 Unpromoted node3
+      * bundle-a-2	(ocf:pacemaker:Stateful):	 Promoted node2
     * Container bundle set: bundle-b [localhost/pcmktest]:
       * bundle-b-0	(ocf:pacemaker:Stateful):	 Unpromoted node1
       * bundle-b-1	(ocf:pacemaker:Stateful):	 Unpromoted node3

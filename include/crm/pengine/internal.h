@@ -35,6 +35,7 @@ enum pe__clone_flags {
 
 bool pe__clone_is_ordered(const pe_resource_t *clone);
 int pe__set_clone_flag(pe_resource_t *clone, enum pe__clone_flags flag);
+bool pe__clone_flag_is_set(const pe_resource_t *clone, uint32_t flags);
 
 
 enum pe__group_flags {
@@ -602,10 +603,11 @@ const char *pe__add_bundle_remote_name(pe_resource_t *rsc,
                                        pe_working_set_t *data_set,
                                        xmlNode *xml, const char *field);
 
-const char *pe_node_attribute_calculated(const pe_node_t *node,
-                                         const char *name,
-                                         const pe_resource_t *rsc,
-                                         enum pe__rsc_node node_type);
+const char *pe__node_attribute_calculated(const pe_node_t *node,
+                                          const char *name,
+                                          const pe_resource_t *rsc,
+                                          enum pe__rsc_node node_type,
+                                          bool force_host);
 const char *pe_node_attribute_raw(const pe_node_t *node, const char *name);
 bool pe__is_universal_clone(const pe_resource_t *rsc,
                             const pe_working_set_t *data_set);

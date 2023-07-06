@@ -12,11 +12,6 @@
          * Instance base:0 should remain started on node3
          * Instance base:1 should remain started on node2
          * Instance base:2 should start on node1
-
-         This test output is incorrect:
-         * Instance base:0 moves from node3 to node1
-         * Instance base:1 moves from node2 to node3
-         * Instance base:2 starts on node2
       -->
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">

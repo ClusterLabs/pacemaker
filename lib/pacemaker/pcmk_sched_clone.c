@@ -18,14 +18,27 @@
  * \internal
  * \brief Assign a clone resource's instances to nodes
  *
- * \param[in,out] rsc     Clone resource to assign
- * \param[in]     prefer  Node to prefer, if all else is equal
+ * \param[in,out] rsc           Clone resource to assign
+ * \param[in]     prefer        Node to prefer, if all else is equal
+ * \param[in]     stop_if_fail  If \c true and a primitive descendant of \p rsc
+ *                              can't be assigned to a node, set the
+ *                              descendant's next role to stopped and update
+ *                              existing actions
  *
  * \return NULL (clones are not assigned to a single node)
+ *
+ * \note If \p stop_if_fail is \c false, then \c pcmk__unassign_resource() can
+ *       completely undo the assignment. A successful assignment can be either
+ *       undone or left alone as final. A failed assignment has the same effect
+ *       as calling pcmk__unassign_resource(); there are no side effects on
+ *       roles or actions.
  */
 pe_node_t *
-pcmk__clone_assign(pe_resource_t *rsc, const pe_node_t *prefer)
+pcmk__clone_assign(pe_resource_t *rsc, const pe_node_t *prefer,
+                   bool stop_if_fail)
 {
+    GList *colocations = NULL;
+
     CRM_ASSERT(pe_rsc_is_clone(rsc));
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
@@ -44,23 +57,22 @@ pcmk__clone_assign(pe_resource_t *rsc, const pe_node_t *prefer)
         pcmk__add_promotion_scores(rsc);
     }
 
-    /* If this clone is colocated with any other resources, assign those first.
-     * Since the this_with_colocations() method boils down to a copy of rsc_cons
-     * for clones, we can use that here directly for efficiency.
-     */
-    for (GList *iter = rsc->rsc_cons; iter != NULL; iter = iter->next) {
+    // If this clone is colocated with any other resources, assign those first
+    colocations = pcmk__this_with_colocations(rsc);
+    for (GList *iter = colocations; iter != NULL; iter = iter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) iter->data;
 
         pe_rsc_trace(rsc, "%s: Assigning colocation %s primary %s first",
                      rsc->id, constraint->id, constraint->primary->id);
-        constraint->primary->cmds->assign(constraint->primary, prefer);
+        constraint->primary->cmds->assign(constraint->primary, prefer,
+                                          stop_if_fail);
     }
+    g_list_free(colocations);
 
-    /* If any resources are colocated with this one, consider their preferences.
-     * Because the with_this_colocations() method boils down to a copy of
-     * rsc_cons_lhs for clones, we can use that here directly for efficiency.
-     */
-    g_list_foreach(rsc->rsc_cons_lhs, pcmk__add_dependent_scores, rsc);
+    // If any resources are colocated with this one, consider their preferences
+    colocations = pcmk__with_this_colocations(rsc);
+    g_list_foreach(colocations, pcmk__add_dependent_scores, rsc);
+    g_list_free(colocations);
 
     pe__show_node_scores(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
                          rsc, __func__, rsc->allowed_nodes, rsc->cluster);
@@ -285,7 +297,7 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
         } else if (colocation->score >= INFINITY) {
             crm_notice("%s cannot run because it cannot interleave with "
                        "any instance of %s", dependent->id, primary->id);
-            pcmk__assign_resource(dependent, NULL, true);
+            pcmk__assign_resource(dependent, NULL, true, true);
 
         } else {
             pe_rsc_debug(primary,
@@ -336,10 +348,10 @@ pcmk__with_clone_colocations(const pe_resource_t *rsc,
 {
     CRM_CHECK((rsc != NULL) && (orig_rsc != NULL) && (list != NULL), return);
 
-    if (rsc == orig_rsc) { // Colocations are wanted for clone itself
-        pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
-    } else {
-        pcmk__add_collective_constraints(list, orig_rsc, rsc, true);
+    pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
+
+    if (rsc->parent != NULL) {
+        rsc->parent->cmds->with_this_colocations(rsc->parent, orig_rsc, list);
     }
 }
 
@@ -350,10 +362,10 @@ pcmk__clone_with_colocations(const pe_resource_t *rsc,
 {
     CRM_CHECK((rsc != NULL) && (orig_rsc != NULL) && (list != NULL), return);
 
-    if (rsc == orig_rsc) { // Colocations are wanted for clone itself
-        pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
-    } else {
-        pcmk__add_collective_constraints(list, orig_rsc, rsc, false);
+    pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
+
+    if (rsc->parent != NULL) {
+        rsc->parent->cmds->this_with_colocations(rsc->parent, orig_rsc, list);
     }
 }
 

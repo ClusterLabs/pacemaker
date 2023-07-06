@@ -11,48 +11,22 @@ Current cluster status:
       * base-bundle-2	(ocf:pacemaker:Stateful):	 Stopped
 
 Transition Summary:
-  * Move       base-bundle-podman-0     ( node3 -> node1 )
-  * Move       base-bundle-0            ( node3 -> node1 )
-  * Restart    base:0                   (  base-bundle-0 )  due to required base-bundle-podman-0 start
-  * Move       base-bundle-podman-1     ( node2 -> node3 )
-  * Move       base-bundle-1            ( node2 -> node3 )
-  * Restart    base:1                   (  base-bundle-1 )  due to required base-bundle-podman-1 start
-  * Start      base-bundle-podman-2     (          node2 )
-  * Start      base-bundle-2            (          node2 )
-  * Start      base:2                   (  base-bundle-2 )
+  * Start      base-bundle-podman-2     (         node1 )
+  * Start      base-bundle-2            (         node1 )
+  * Start      base:2                   ( base-bundle-2 )
 
 Executing Cluster Transition:
-  * Pseudo action:   base-bundle_stop_0
   * Pseudo action:   base-bundle_start_0
-  * Pseudo action:   base-bundle-clone_stop_0
-  * Resource action: base-bundle-podman-2 start on node2
+  * Pseudo action:   base-bundle-clone_start_0
+  * Resource action: base-bundle-podman-2 start on node1
   * Resource action: base-bundle-2   monitor on node3
   * Resource action: base-bundle-2   monitor on node2
   * Resource action: base-bundle-2   monitor on node1
-  * Resource action: base            stop on base-bundle-1
-  * Resource action: base-bundle-1   stop on node2
-  * Resource action: base-bundle-podman-2 monitor=60000 on node2
-  * Resource action: base-bundle-2   start on node2
-  * Resource action: base            stop on base-bundle-0
-  * Pseudo action:   base-bundle-clone_stopped_0
-  * Pseudo action:   base-bundle-clone_start_0
-  * Resource action: base-bundle-0   stop on node3
-  * Resource action: base-bundle-podman-1 stop on node2
-  * Resource action: base-bundle-2   monitor=30000 on node2
-  * Resource action: base-bundle-podman-0 stop on node3
-  * Resource action: base-bundle-podman-1 start on node3
-  * Resource action: base-bundle-1   start on node3
-  * Pseudo action:   base-bundle_stopped_0
-  * Resource action: base-bundle-podman-0 start on node1
-  * Resource action: base-bundle-0   start on node1
-  * Resource action: base-bundle-podman-1 monitor=60000 on node3
-  * Resource action: base-bundle-1   monitor=30000 on node3
-  * Resource action: base            start on base-bundle-0
-  * Resource action: base            start on base-bundle-1
+  * Resource action: base-bundle-podman-2 monitor=60000 on node1
+  * Resource action: base-bundle-2   start on node1
   * Resource action: base            start on base-bundle-2
   * Pseudo action:   base-bundle-clone_running_0
-  * Resource action: base-bundle-podman-0 monitor=60000 on node1
-  * Resource action: base-bundle-0   monitor=30000 on node1
+  * Resource action: base-bundle-2   monitor=30000 on node1
   * Pseudo action:   base-bundle_running_0
 
 Revised Cluster Status:
@@ -63,6 +37,6 @@ Revised Cluster Status:
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Started node2
     * Container bundle set: base-bundle [localhost/pcmktest]:
-      * base-bundle-0	(ocf:pacemaker:Stateful):	 Started node1
-      * base-bundle-1	(ocf:pacemaker:Stateful):	 Started node3
-      * base-bundle-2	(ocf:pacemaker:Stateful):	 Started node2
+      * base-bundle-0	(ocf:pacemaker:Stateful):	 Started node3
+      * base-bundle-1	(ocf:pacemaker:Stateful):	 Started node2
+      * base-bundle-2	(ocf:pacemaker:Stateful):	 Started node1

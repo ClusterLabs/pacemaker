@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -523,11 +523,36 @@ add_hash_param(GHashTable * hash, const char *name, const char *value)
     }
 }
 
+/*!
+ * \internal
+ * \brief Look up an attribute value on the appropriate node
+ *
+ * If \p node is a guest node and either the \c XML_RSC_ATTR_TARGET meta
+ * attribute is set to "host" for \p rsc or \p force_host is \c true, query the
+ * attribute on the node's host. Otherwise, query the attribute on \p node
+ * itself.
+ *
+ * \param[in] node        Node to query attribute value on by default
+ * \param[in] name        Name of attribute to query
+ * \param[in] rsc         Resource on whose behalf we're querying
+ * \param[in] node_type   Type of resource location lookup
+ * \param[in] force_host  Force a lookup on the guest node's host, regardless of
+ *                        the \c XML_RSC_ATTR_TARGET value
+ *
+ * \return Value of the attribute on \p node or on the host of \p node
+ *
+ * \note If \p force_host is \c true, \p node \e must be a guest node.
+ */
 const char *
-pe_node_attribute_calculated(const pe_node_t *node, const char *name,
-                             const pe_resource_t *rsc,
-                             enum pe__rsc_node node_type)
+pe__node_attribute_calculated(const pe_node_t *node, const char *name,
+                              const pe_resource_t *rsc,
+                              enum pe__rsc_node node_type,
+                              bool force_host)
 {
+    // @TODO: Use pe__is_guest_node() after merging libpe_{rules,status}
+    bool is_guest = (node != NULL) && (node->details->type == node_remote)
+                    && (node->details->remote_rsc != NULL)
+                    && (node->details->remote_rsc->container != NULL);
     const char *source = NULL;
     const char *node_type_s = NULL;
     const char *reason = NULL;
@@ -535,29 +560,20 @@ pe_node_attribute_calculated(const pe_node_t *node, const char *name,
     const pe_resource_t *container = NULL;
     const pe_node_t *host = NULL;
 
-    if(node == NULL) {
-        return NULL;
+    CRM_ASSERT((node != NULL) && (name != NULL) && (rsc != NULL)
+               && (!force_host || is_guest));
 
-    } else if(rsc == NULL) {
-        return g_hash_table_lookup(node->details->attrs, name);
-    }
-
-    source = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET);
-    if(source == NULL || !pcmk__str_eq("host", source, pcmk__str_casei)) {
-        return g_hash_table_lookup(node->details->attrs, name);
-    }
-
-    /* Use attributes set for the containers location
-     * instead of for the container itself
-     *
-     * Useful when the container is using the host's local
-     * storage
+    /* Ignore XML_RSC_ATTR_TARGET if node is not a guest node. This represents a
+     * user configuration error.
      */
+    source = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET);
+    if (!force_host
+        && (!is_guest || !pcmk__str_eq(source, "host", pcmk__str_casei))) {
 
-    CRM_ASSERT(node->details->remote_rsc != NULL);
+        return g_hash_table_lookup(node->details->attrs, name);
+    }
 
     container = node->details->remote_rsc->container;
-    CRM_ASSERT(container != NULL);
 
     switch (node_type) {
         case pe__rsc_node_assigned:

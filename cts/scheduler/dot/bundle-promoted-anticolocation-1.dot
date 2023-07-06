@@ -1,3 +1,7 @@
  digraph "g" {
+"vip_monitor_10000 node1" [ style=bold color="green" fontcolor="black"]
+"vip_start_0 node1" -> "vip_monitor_10000 node1" [ style = bold]
+"vip_start_0 node1" [ style=bold color="green" fontcolor="black"]
+"vip_stop_0 node3" -> "vip_start_0 node1" [ style = bold]
 "vip_stop_0 node3" [ style=bold color="green" fontcolor="black"]
 }

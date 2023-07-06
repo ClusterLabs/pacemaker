@@ -18,44 +18,6 @@
 
 /*!
  * \internal
- * \brief Check whether a clone or bundle has instances for all available nodes
- *
- * \param[in] collective  Clone or bundle to check
- *
- * \return true if \p collective has enough instances for all of its available
- *         allowed nodes, otherwise false
- */
-static bool
-can_run_everywhere(const pe_resource_t *collective)
-{
-    GHashTableIter iter;
-    pe_node_t *node = NULL;
-    int available_nodes = 0;
-    int max_instances = 0;
-
-    switch (collective->variant) {
-        case pe_clone:
-            max_instances = pe__clone_max(collective);
-            break;
-        case pe_container:
-            max_instances = pe__bundle_max(collective);
-            break;
-        default:
-            return false; // Not actually possible
-    }
-
-    g_hash_table_iter_init(&iter, collective->allowed_nodes);
-    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-        if (pcmk__node_available(node, false, false)
-            && (max_instances < ++available_nodes)) {
-            return false;
-        }
-    }
-    return true;
-}
-
-/*!
- * \internal
  * \brief Check whether a node is allowed to run an instance
  *
  * \param[in] instance      Clone instance or bundle container to check
@@ -181,34 +143,33 @@ new_node_table(pe_node_t *node)
 static void
 apply_parent_colocations(const pe_resource_t *rsc, GHashTable **nodes)
 {
-    GList *iter = NULL;
-    pcmk__colocation_t *colocation = NULL;
-    pe_resource_t *other = NULL;
-    float factor = 0.0;
+    GList *colocations = pcmk__this_with_colocations(rsc);
 
-    /* Because the this_with_colocations() and with_this_colocations() methods
-     * boil down to copies of rsc_cons and rsc_cons_lhs for clones and bundles,
-     * we can use those here directly for efficiency.
-     */
-    for (iter = rsc->parent->rsc_cons; iter != NULL; iter = iter->next) {
-        colocation = (pcmk__colocation_t *) iter->data;
-        other = colocation->primary;
-        factor = colocation->score / (float) INFINITY,
-        other->cmds->add_colocated_node_scores(other, rsc->id, nodes,
+    for (const GList *iter = colocations; iter != NULL; iter = iter->next) {
+        const pcmk__colocation_t *colocation = iter->data;
+        pe_resource_t *other = colocation->primary;
+        float factor = colocation->score / (float) INFINITY;
+
+        other->cmds->add_colocated_node_scores(other, rsc, rsc->id, nodes,
                                                colocation, factor,
                                                pcmk__coloc_select_default);
     }
-    for (iter = rsc->parent->rsc_cons_lhs; iter != NULL; iter = iter->next) {
-        colocation = (pcmk__colocation_t *) iter->data;
+    g_list_free(colocations);
+    colocations = pcmk__with_this_colocations(rsc);
+
+    for (const GList *iter = colocations; iter != NULL; iter = iter->next) {
+        const pcmk__colocation_t *colocation = iter->data;
+        pe_resource_t *other = colocation->dependent;
+        float factor = colocation->score / (float) INFINITY;
+
         if (!pcmk__colocation_has_influence(colocation, rsc)) {
             continue;
         }
-        other = colocation->dependent;
-        factor = colocation->score / (float) INFINITY,
-        other->cmds->add_colocated_node_scores(other, rsc->id, nodes,
+        other->cmds->add_colocated_node_scores(other, rsc, rsc->id, nodes,
                                                colocation, factor,
                                                pcmk__coloc_select_nonnegative);
     }
+    g_list_free(colocations);
 }
 
 /*!
@@ -546,7 +507,40 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
 
 /*!
  * \internal
- * \brief Choose a node for an instance
+ * \brief Increment the parent's instance count after assigning an instance
+ *
+ * An instance's parent tracks how many instances have been assigned to each
+ * node via its pe_node_t:count member. After assigning an instance to a node,
+ * find the corresponding node in the parent's allowed table and increment it.
+ *
+ * \param[in,out] instance     Instance whose parent to update
+ * \param[in]     assigned_to  Node to which the instance was assigned
+ */
+static void
+increment_parent_count(pe_resource_t *instance, const pe_node_t *assigned_to)
+{
+    pe_node_t *allowed = NULL;
+
+    if (assigned_to == NULL) {
+        return;
+    }
+    allowed = pcmk__top_allowed_node(instance, assigned_to);
+
+    if (allowed == NULL) {
+        /* The instance is allowed on the node, but its parent isn't. This
+         * shouldn't be possible if the resource is managed, and we won't be
+         * able to limit the number of instances assigned to the node.
+         */
+        CRM_LOG_ASSERT(!pcmk_is_set(instance->flags, pe_rsc_managed));
+
+    } else {
+        allowed->count++;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Assign an instance to a node
  *
  * \param[in,out] instance      Clone instance or bundle replica container
  * \param[in]     prefer        If not NULL, attempt early assignment to this
@@ -554,81 +548,152 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
  *                              perform final assignment
  * \param[in]     max_per_node  Assign at most this many instances to one node
  *
- * \return true if \p instance could be assigned to a node, otherwise false
+ * \return Node to which \p instance is assigned
  */
-static bool
+static const pe_node_t *
 assign_instance(pe_resource_t *instance, const pe_node_t *prefer,
                 int max_per_node)
 {
     pe_node_t *chosen = NULL;
-    pe_node_t *allowed = NULL;
 
-    CRM_ASSERT(instance != NULL);
     pe_rsc_trace(instance, "Assigning %s (preferring %s)", instance->id,
                  ((prefer == NULL)? "no node" : prefer->details->uname));
-
-    CRM_CHECK(pcmk_is_set(instance->flags, pe_rsc_provisional),
-              return (instance->fns->location(instance, NULL, FALSE) != NULL));
 
     if (pcmk_is_set(instance->flags, pe_rsc_allocating)) {
         pe_rsc_debug(instance,
                      "Assignment loop detected involving %s colocations",
                      instance->id);
+        return NULL;
+    }
+    ban_unavailable_allowed_nodes(instance, max_per_node);
+
+    // Failed early assignments are reversible (stop_if_fail=false)
+    chosen = instance->cmds->assign(instance, prefer, (prefer == NULL));
+    increment_parent_count(instance, chosen);
+    return chosen;
+}
+
+/*!
+ * \internal
+ * \brief Try to assign an instance to its current node early
+ *
+ * \param[in] rsc           Clone or bundle being assigned (for logs only)
+ * \param[in] instance      Clone instance or bundle replica container
+ * \param[in] current       Instance's current node
+ * \param[in] max_per_node  Maximum number of instances per node
+ * \param[in] available     Number of instances still available for assignment
+ *
+ * \return \c true if \p instance was successfully assigned to its current node,
+ *         or \c false otherwise
+ */
+static bool
+assign_instance_early(const pe_resource_t *rsc, pe_resource_t *instance,
+                      const pe_node_t *current, int max_per_node, int available)
+{
+    const pe_node_t *chosen = NULL;
+    int reserved = 0;
+
+    pe_resource_t *parent = instance->parent;
+    GHashTable *allowed_orig = NULL;
+    GHashTable *allowed_orig_parent = parent->allowed_nodes;
+
+    const pe_node_t *allowed_node = g_hash_table_lookup(instance->allowed_nodes,
+                                                        current->details->id);
+
+    pe_rsc_trace(instance, "Trying to assign %s to its current node %s",
+                 instance->id, pe__node_name(current));
+
+    if (!pcmk__node_available(allowed_node, true, false)) {
+        pe_rsc_info(instance,
+                    "Not assigning %s to current node %s: unavailable",
+                    instance->id, pe__node_name(current));
         return false;
     }
 
-    if (prefer != NULL) { // Possible early assignment to preferred node
+    /* On each iteration, if instance gets assigned to a node other than its
+     * current one, we reserve one instance for the chosen node, unassign
+     * instance, restore instance's original node tables, and try again. This
+     * way, instances are proportionally assigned to nodes based on preferences,
+     * but shuffling of specific instances is minimized. If a node will be
+     * assigned instances at all, it preferentially receives instances that are
+     * currently active there.
+     *
+     * parent->allowed_nodes tracks the number of instances assigned to each
+     * node. If a node already has max_per_node instances assigned,
+     * ban_unavailable_allowed_nodes() marks it as unavailable.
+     *
+     * In the end, we restore the original parent->allowed_nodes to undo the
+     * changes to counts during tentative assignments. If we successfully
+     * assigned instance to its current node, we increment that node's counter.
+     */
 
-        // Get preferred node with instance's scores
-        allowed = g_hash_table_lookup(instance->allowed_nodes,
-                                      prefer->details->id);
+    // Back up the allowed node tables of instance and its children recursively
+    pcmk__copy_node_tables(instance, &allowed_orig);
 
-        if ((allowed == NULL) || (allowed->weight < 0)) {
-            pe_rsc_trace(instance,
-                         "Not assigning %s to preferred node %s: unavailable",
-                         instance->id, pe__node_name(prefer));
-            return false;
+    // Update instances-per-node counts in a scratch table
+    parent->allowed_nodes = pcmk__copy_node_table(parent->allowed_nodes);
+
+    while (reserved < available) {
+        chosen = assign_instance(instance, current, max_per_node);
+
+        if (pe__same_node(chosen, current)) {
+            // Successfully assigned to current node
+            break;
         }
-    }
 
-    ban_unavailable_allowed_nodes(instance, max_per_node);
+        // Assignment updates scores, so restore to original state
+        pe_rsc_debug(instance, "Rolling back node scores for %s", instance->id);
+        pcmk__restore_node_tables(instance, allowed_orig);
 
-    if (prefer == NULL) { // Final assignment
-        chosen = instance->cmds->assign(instance, NULL);
+        if (chosen == NULL) {
+            // Assignment failed, so give up
+            pe_rsc_info(instance,
+                        "Not assigning %s to current node %s: unavailable",
+                        instance->id, pe__node_name(current));
+            pe__set_resource_flags(instance, pe_rsc_provisional);
+            break;
+        }
 
-    } else { // Possible early assignment to preferred node
-        GHashTable *backup = NULL;
-
-        pcmk__copy_node_tables(instance, &backup);
-        chosen = instance->cmds->assign(instance, prefer);
-
-        // Revert nodes if preferred node won't be assigned
-        if ((chosen != NULL) && !pe__same_node(chosen, prefer)) {
-            crm_info("Not assigning %s to preferred node %s: %s is better",
-                     instance->id, pe__node_name(prefer),
+        // We prefer more strongly to assign an instance to the chosen node
+        pe_rsc_debug(instance,
+                     "Not assigning %s to current node %s: %s is better",
+                     instance->id, pe__node_name(current),
                      pe__node_name(chosen));
-            pcmk__restore_node_tables(instance, backup);
-            pcmk__unassign_resource(instance);
-            chosen = NULL;
-        }
-        g_hash_table_destroy(backup);
-    }
 
-    // The parent tracks how many instances have been assigned to each node
-    if (chosen != NULL) {
-        allowed = pcmk__top_allowed_node(instance, chosen);
-        if (allowed == NULL) {
-            /* The instance is allowed on the node, but its parent isn't. This
-             * shouldn't be possible if the resource is managed, and we won't be
-             * able to limit the number of instances assigned to the node.
-             */
-            CRM_LOG_ASSERT(!pcmk_is_set(instance->flags, pe_rsc_managed));
+        // Reserve one instance for the chosen node and try again
+        if (++reserved >= available) {
+            pe_rsc_info(instance,
+                        "Not assigning %s to current node %s: "
+                        "other assignments are more important",
+                        instance->id, pe__node_name(current));
 
         } else {
-            allowed->count++;
+            pe_rsc_debug(instance,
+                         "Reserved an instance of %s for %s. Retrying "
+                         "assignment of %s to %s",
+                         rsc->id, pe__node_name(chosen), instance->id,
+                         pe__node_name(current));
         }
+
+        // Clear this assignment (frees chosen); leave instance counts in parent
+        pcmk__unassign_resource(instance);
+        chosen = NULL;
     }
-    return chosen != NULL;
+
+    g_hash_table_destroy(allowed_orig);
+
+    // Restore original instances-per-node counts
+    g_hash_table_destroy(parent->allowed_nodes);
+    parent->allowed_nodes = allowed_orig_parent;
+
+    if (chosen == NULL) {
+        // Couldn't assign instance to current node
+        return false;
+    }
+    pe_rsc_trace(instance, "Assigned %s to current node %s",
+                 instance->id, pe__node_name(current));
+    increment_parent_count(instance, chosen);
+    return true;
 }
 
 /*!
@@ -660,15 +725,13 @@ reset_allowed_node_counts(pe_resource_t *rsc)
  * \internal
  * \brief Check whether an instance has a preferred node
  *
- * \param[in] rsc               Clone or bundle being assigned (for logs only)
  * \param[in] instance          Clone instance or bundle replica container
  * \param[in] optimal_per_node  Optimal number of instances per node
  *
  * \return Instance's current node if still available, otherwise NULL
  */
 static const pe_node_t *
-preferred_node(const pe_resource_t *rsc, const pe_resource_t *instance,
-               int optimal_per_node)
+preferred_node(const pe_resource_t *instance, int optimal_per_node)
 {
     const pe_node_t *node = NULL;
     const pe_node_t *parent_node = NULL;
@@ -683,7 +746,7 @@ preferred_node(const pe_resource_t *rsc, const pe_resource_t *instance,
     // Check whether instance's current node can run resources
     node = pe__current_node(instance);
     if (!pcmk__node_available(node, true, false)) {
-        pe_rsc_trace(rsc, "Not assigning %s to %s early (unavailable)",
+        pe_rsc_trace(instance, "Not assigning %s to %s early (unavailable)",
                      instance->id, pe__node_name(node));
         return NULL;
     }
@@ -691,7 +754,7 @@ preferred_node(const pe_resource_t *rsc, const pe_resource_t *instance,
     // Check whether node already has optimal number of instances assigned
     parent_node = pcmk__top_allowed_node(instance, node);
     if ((parent_node != NULL) && (parent_node->count >= optimal_per_node)) {
-        pe_rsc_trace(rsc,
+        pe_rsc_trace(instance,
                      "Not assigning %s to %s early "
                      "(optimal instances already assigned)",
                      instance->id, pe__node_name(node));
@@ -740,13 +803,17 @@ pcmk__assign_instances(pe_resource_t *collective, GList *instances,
     // Assign as many instances as possible to their current location
     for (iter = instances; (iter != NULL) && (assigned < max_total);
          iter = iter->next) {
-        instance = (pe_resource_t *) iter->data;
+        int available = max_total - assigned;
 
-        current = preferred_node(collective, instance, optimal_per_node);
+        instance = iter->data;
+        if (!pcmk_is_set(instance->flags, pe_rsc_provisional)) {
+            continue;   // Already assigned
+        }
+
+        current = preferred_node(instance, optimal_per_node);
         if ((current != NULL)
-            && assign_instance(instance, current, max_per_node)) {
-            pe_rsc_trace(collective, "Assigned %s to current node %s",
-                         instance->id, pe__node_name(current));
+            && assign_instance_early(collective, instance, current,
+                                     max_per_node, available)) {
             assigned++;
         }
     }
@@ -782,7 +849,7 @@ pcmk__assign_instances(pe_resource_t *collective, GList *instances,
             resource_location(instance, NULL, -INFINITY,
                               "collective_limit_reached", collective->cluster);
 
-        } else if (assign_instance(instance, NULL, max_per_node)) {
+        } else if (assign_instance(instance, NULL, max_per_node) != NULL) {
             assigned++;
         }
     }
@@ -1158,7 +1225,7 @@ unassign_if_mandatory(const pe_action_t *first, const pe_action_t *then,
                     "Inhibiting %s from being active "
                     "because there is no %s instance to interleave",
                     then_instance->id, first->rsc->id);
-        return pcmk__assign_resource(then_instance, NULL, true);
+        return pcmk__assign_resource(then_instance, NULL, true, true);
     }
     return false;
 }
@@ -1596,62 +1663,4 @@ pcmk__collective_action_flags(pe_action_t *action, const GList *instances,
     }
 
     return flags;
-}
-
-/*!
- * \internal
- * \brief Add a collective resource's colocations to a list for an instance
- *
- * \param[in,out] list        Colocation list to add to
- * \param[in]     instance    Clone or bundle instance or instance group member
- * \param[in]     collective  Clone or bundle resource with colocations to add
- * \param[in]     with_this   If true, add collective's "with this" colocations,
- *                            otherwise add its "this with" colocations
- */
-void
-pcmk__add_collective_constraints(GList **list, const pe_resource_t *instance,
-                                 const pe_resource_t *collective,
-                                 bool with_this)
-{
-    const GList *colocations = NULL;
-    bool everywhere = false;
-
-    CRM_CHECK((list != NULL) && (instance != NULL), return);
-
-    if (collective == NULL) {
-        return;
-    }
-    switch (collective->variant) {
-        case pe_clone:
-        case pe_container:
-            break;
-        default:
-            return;
-    }
-
-    everywhere = can_run_everywhere(collective);
-
-    if (with_this) {
-        colocations = collective->rsc_cons_lhs;
-    } else {
-        colocations = collective->rsc_cons;
-    }
-
-    for (const GList *iter = colocations; iter != NULL; iter = iter->next) {
-        const pcmk__colocation_t *colocation = iter->data;
-
-        if (with_this
-            && !pcmk__colocation_has_influence(colocation, instance)) {
-           continue;
-        }
-        if (!everywhere || (colocation->score < 0)
-            || (!with_this && (colocation->score == INFINITY))) {
-
-            if (with_this) {
-                pcmk__add_with_this(list, colocation, instance);
-            } else {
-                pcmk__add_this_with(list, colocation, instance);
-            }
-        }
-    }
 }

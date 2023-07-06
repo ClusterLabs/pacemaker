@@ -70,12 +70,24 @@ struct resource_alloc_functions_s {
      * \internal
      * \brief Assign a resource to a node
      *
-     * \param[in,out] rsc     Resource to assign to a node
-     * \param[in]     prefer  Node to prefer, if all else is equal
+     * \param[in,out] rsc           Resource to assign to a node
+     * \param[in]     prefer        Node to prefer, if all else is equal
+     * \param[in]     stop_if_fail  If \c true and \p rsc can't be assigned to a
+     *                              node, set next role to stopped and update
+     *                              existing actions (if \p rsc is not a
+     *                              primitive, this applies to its primitive
+     *                              descendants instead)
      *
      * \return Node that \p rsc is assigned to, if assigned entirely to one node
+     *
+     * \note If \p stop_if_fail is \c false, then \c pcmk__unassign_resource()
+     *       can completely undo the assignment. A successful assignment can be
+     *       either undone or left alone as final. A failed assignment has the
+     *       same effect as calling pcmk__unassign_resource(); there are no side
+     *       effects on roles or actions.
      */
-    pe_node_t *(*assign)(pe_resource_t *rsc, const pe_node_t *prefer);
+    pe_node_t *(*assign)(pe_resource_t *rsc, const pe_node_t *prefer,
+                         bool stop_if_fail);
 
     /*!
      * \internal
@@ -192,25 +204,31 @@ struct resource_alloc_functions_s {
      * scores of the best nodes matching the attribute used for each of the
      * resource's relevant colocations.
      *
-     * \param[in,out] rsc         Resource to check colocations for
-     * \param[in]     log_id      Resource ID for logs (if NULL, use \p rsc ID)
-     * \param[in,out] nodes       Nodes to update (set initial contents to NULL
-     *                            to copy \p rsc's allowed nodes)
+     * \param[in,out] source_rsc  Resource whose node scores to add
+     * \param[in]     target_rsc  Resource on whose behalf to update \p *nodes
+     * \param[in]     log_id      Resource ID for logs (if \c NULL, use
+     *                            \p source_rsc ID)
+     * \param[in,out] nodes       Nodes to update (set initial contents to
+     *                            \c NULL to copy allowed nodes from
+     *                            \p source_rsc)
      * \param[in]     colocation  Original colocation constraint (used to get
      *                            configured primary resource's stickiness, and
-     *                            to get colocation node attribute; if NULL,
-     *                            \p rsc's own matching node scores will not be
-     *                            added, and *nodes must be NULL as well)
+     *                            to get colocation node attribute; if \c NULL,
+     *                            <tt>source_rsc</tt>'s own matching node scores
+     *                            will not be added, and \p *nodes must be
+     *                            \c NULL as well)
      * \param[in]     factor      Incorporate scores multiplied by this factor
      * \param[in]     flags       Bitmask of enum pcmk__coloc_select values
      *
-     * \note NULL *nodes, NULL colocation, and the pcmk__coloc_select_this_with
-     *       flag are used together (and only by cmp_resources()).
+     * \note \c NULL \p target_rsc, \c NULL \p *nodes, \c NULL \p colocation,
+     *       and the \c pcmk__coloc_select_this_with flag are used together (and
+     *       only by \c cmp_resources()).
      * \note The caller remains responsible for freeing \p *nodes.
      */
-    void (*add_colocated_node_scores)(pe_resource_t *rsc, const char *log_id,
-                                      GHashTable **nodes,
-                                      pcmk__colocation_t *colocation,
+    void (*add_colocated_node_scores)(pe_resource_t *source_rsc,
+                                      const pe_resource_t *target_rsc,
+                                      const char *log_id, GHashTable **nodes,
+                                      const pcmk__colocation_t *colocation,
                                       float factor, uint32_t flags);
 
     /*!
@@ -464,6 +482,35 @@ enum pcmk__coloc_affects {
     pcmk__coloc_affects_role,
 };
 
+/*!
+ * \internal
+ * \brief Get the value of a colocation's node attribute
+ *
+ * When looking up a colocation node attribute on a bundle node for a bundle
+ * primitive, we should always look on the bundle node's assigned host,
+ * regardless of the value of XML_RSC_ATTR_TARGET. At most one resource (the
+ * bundle primitive, if any) can run on a bundle node, so any colocation must
+ * necessarily be evaluated with respect to the bundle node (the container).
+ *
+ * \param[in] node  Node on which to look up the attribute
+ * \param[in] attr  Name of attribute to look up
+ * \param[in] rsc   Resource on whose behalf to look up the attribute
+ *
+ * \return Value of \p attr on \p node or on the host of \p node, as appropriate
+ */
+static inline const char *
+pcmk__colocation_node_attr(const pe_node_t *node, const char *attr,
+                           const pe_resource_t *rsc)
+{
+    const pe_resource_t *top = pe__const_top_resource(rsc, false);
+    const bool force_host = pe__is_bundle_node(node)
+                            && pe_rsc_is_bundled(rsc)
+                            && (top == pe__bundled_resource(rsc));
+
+    return pe__node_attribute_calculated(node, attr, rsc, pe__rsc_node_assigned,
+                                         force_host);
+}
+
 G_GNUC_INTERNAL
 enum pcmk__coloc_affects pcmk__colocation_affects(const pe_resource_t
                                                     *dependent,
@@ -483,9 +530,10 @@ void pcmk__apply_coloc_to_priority(pe_resource_t *dependent,
                                    const pcmk__colocation_t *colocation);
 
 G_GNUC_INTERNAL
-void pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
-                                     GHashTable **nodes,
-                                     pcmk__colocation_t *colocation,
+void pcmk__add_colocated_node_scores(pe_resource_t *source_rsc,
+                                     const pe_resource_t *target_rsc,
+                                     const char *log_id, GHashTable **nodes,
+                                     const pcmk__colocation_t *colocation,
                                      float factor, uint32_t flags);
 
 G_GNUC_INTERNAL
@@ -695,7 +743,8 @@ void pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pe_action_t *action);
 // Primitives (pcmk_sched_primitive.c)
 
 G_GNUC_INTERNAL
-pe_node_t *pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer);
+pe_node_t *pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer,
+                                  bool stop_if_fail);
 
 G_GNUC_INTERNAL
 void pcmk__primitive_create_actions(pe_resource_t *rsc);
@@ -742,7 +791,8 @@ void pcmk__primitive_shutdown_lock(pe_resource_t *rsc);
 // Groups (pcmk_sched_group.c)
 
 G_GNUC_INTERNAL
-pe_node_t *pcmk__group_assign(pe_resource_t *rsc, const pe_node_t *prefer);
+pe_node_t *pcmk__group_assign(pe_resource_t *rsc, const pe_node_t *prefer,
+                              bool stop_if_fail);
 
 G_GNUC_INTERNAL
 void pcmk__group_create_actions(pe_resource_t *rsc);
@@ -765,10 +815,11 @@ void pcmk__group_with_colocations(const pe_resource_t *rsc,
                                   const pe_resource_t *orig_rsc, GList **list);
 
 G_GNUC_INTERNAL
-void pcmk__group_add_colocated_node_scores(pe_resource_t *rsc,
+void pcmk__group_add_colocated_node_scores(pe_resource_t *source_rsc,
+                                           const pe_resource_t *target_rsc,
                                            const char *log_id,
                                            GHashTable **nodes,
-                                           pcmk__colocation_t *colocation,
+                                           const pcmk__colocation_t *colocation,
                                            float factor, uint32_t flags);
 
 G_GNUC_INTERNAL
@@ -802,7 +853,8 @@ void pcmk__group_shutdown_lock(pe_resource_t *rsc);
 // Clones (pcmk_sched_clone.c)
 
 G_GNUC_INTERNAL
-pe_node_t *pcmk__clone_assign(pe_resource_t *rsc, const pe_node_t *prefer);
+pe_node_t *pcmk__clone_assign(pe_resource_t *rsc, const pe_node_t *prefer,
+                              bool stop_if_fail);
 
 G_GNUC_INTERNAL
 void pcmk__clone_create_actions(pe_resource_t *rsc);
@@ -850,7 +902,8 @@ void pcmk__clone_shutdown_lock(pe_resource_t *rsc);
 // Bundles (pcmk_sched_bundle.c)
 
 G_GNUC_INTERNAL
-pe_node_t *pcmk__bundle_assign(pe_resource_t *rsc, const pe_node_t *prefer);
+pe_node_t *pcmk__bundle_assign(pe_resource_t *rsc, const pe_node_t *prefer,
+                               bool stop_if_fail);
 
 G_GNUC_INTERNAL
 void pcmk__bundle_create_actions(pe_resource_t *rsc);
@@ -929,12 +982,6 @@ G_GNUC_INTERNAL
 uint32_t pcmk__collective_action_flags(pe_action_t *action,
                                        const GList *instances,
                                        const pe_node_t *node);
-
-G_GNUC_INTERNAL
-void pcmk__add_collective_constraints(GList **list,
-                                      const pe_resource_t *instance,
-                                      const pe_resource_t *collective,
-                                      bool with_this);
 
 
 // Injections (pcmk_injections.c)
@@ -1017,7 +1064,8 @@ G_GNUC_INTERNAL
 void pcmk__output_resource_actions(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
-bool pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force);
+bool pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force,
+                           bool stop_if_fail);
 
 G_GNUC_INTERNAL
 void pcmk__unassign_resource(pe_resource_t *rsc);

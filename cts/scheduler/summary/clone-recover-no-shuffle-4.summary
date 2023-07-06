@@ -10,19 +10,13 @@ Current cluster status:
       * Stopped: [ node1 ]
 
 Transition Summary:
-  * Move       dummy:0     ( node2 -> node1 )
-  * Start      dummy:2     (          node2 )
+  * Start      dummy:2     ( node1 )
 
 Executing Cluster Transition:
-  * Pseudo action:   dummy-clone_stop_0
-  * Resource action: dummy           stop on node2
-  * Pseudo action:   dummy-clone_stopped_0
   * Pseudo action:   dummy-clone_start_0
   * Resource action: dummy           start on node1
-  * Resource action: dummy           start on node2
   * Pseudo action:   dummy-clone_running_0
   * Resource action: dummy           monitor=10000 on node1
-  * Resource action: dummy           monitor=10000 on node2
 Using the original execution date of: 2023-06-21 00:59:59Z
 
 Revised Cluster Status:

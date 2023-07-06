@@ -3,7 +3,7 @@ galera:0 promotion score on galera-bundle-0: 100
 galera:1 promotion score on galera-bundle-1: 100
 galera:2 promotion score on galera-bundle-2: 100
 ovndb_servers:0 promotion score on ovn-dbs-bundle-0: 5
-ovndb_servers:1 promotion score on ovn-dbs-bundle-1: 5
+ovndb_servers:1 promotion score on ovn-dbs-bundle-1: 1
 ovndb_servers:2 promotion score on ovn-dbs-bundle-2: 5
 pcmk__bundle_assign: galera-bundle allocation score on compute-0: -INFINITY
 pcmk__bundle_assign: galera-bundle allocation score on compute-1: -INFINITY
@@ -1799,8 +1799,8 @@ pcmk__primitive_assign: ip-172.17.1.151 allocation score on messaging-1: -INFINI
 pcmk__primitive_assign: ip-172.17.1.151 allocation score on messaging-2: -INFINITY
 pcmk__primitive_assign: ip-172.17.1.87 allocation score on compute-0: -INFINITY
 pcmk__primitive_assign: ip-172.17.1.87 allocation score on compute-1: -INFINITY
-pcmk__primitive_assign: ip-172.17.1.87 allocation score on controller-0: 0
-pcmk__primitive_assign: ip-172.17.1.87 allocation score on controller-1: -INFINITY
+pcmk__primitive_assign: ip-172.17.1.87 allocation score on controller-0: -INFINITY
+pcmk__primitive_assign: ip-172.17.1.87 allocation score on controller-1: 0
 pcmk__primitive_assign: ip-172.17.1.87 allocation score on controller-2: -INFINITY
 pcmk__primitive_assign: ip-172.17.1.87 allocation score on database-0: -INFINITY
 pcmk__primitive_assign: ip-172.17.1.87 allocation score on database-1: -INFINITY
@@ -1865,9 +1865,9 @@ pcmk__primitive_assign: openstack-cinder-volume-podman-0 allocation score on mes
 pcmk__primitive_assign: openstack-cinder-volume-podman-0 allocation score on messaging-2: -INFINITY
 pcmk__primitive_assign: ovn-dbs-bundle-0 allocation score on compute-0: -INFINITY
 pcmk__primitive_assign: ovn-dbs-bundle-0 allocation score on compute-1: -INFINITY
-pcmk__primitive_assign: ovn-dbs-bundle-0 allocation score on controller-0: 0
+pcmk__primitive_assign: ovn-dbs-bundle-0 allocation score on controller-0: 10000
 pcmk__primitive_assign: ovn-dbs-bundle-0 allocation score on controller-1: 0
-pcmk__primitive_assign: ovn-dbs-bundle-0 allocation score on controller-2: 10000
+pcmk__primitive_assign: ovn-dbs-bundle-0 allocation score on controller-2: 0
 pcmk__primitive_assign: ovn-dbs-bundle-0 allocation score on database-0: 0
 pcmk__primitive_assign: ovn-dbs-bundle-0 allocation score on database-1: 0
 pcmk__primitive_assign: ovn-dbs-bundle-0 allocation score on database-2: 0
@@ -1876,9 +1876,9 @@ pcmk__primitive_assign: ovn-dbs-bundle-0 allocation score on messaging-1: 0
 pcmk__primitive_assign: ovn-dbs-bundle-0 allocation score on messaging-2: 0
 pcmk__primitive_assign: ovn-dbs-bundle-1 allocation score on compute-0: -INFINITY
 pcmk__primitive_assign: ovn-dbs-bundle-1 allocation score on compute-1: -INFINITY
-pcmk__primitive_assign: ovn-dbs-bundle-1 allocation score on controller-0: 10000
+pcmk__primitive_assign: ovn-dbs-bundle-1 allocation score on controller-0: 0
 pcmk__primitive_assign: ovn-dbs-bundle-1 allocation score on controller-1: 0
-pcmk__primitive_assign: ovn-dbs-bundle-1 allocation score on controller-2: 0
+pcmk__primitive_assign: ovn-dbs-bundle-1 allocation score on controller-2: 10000
 pcmk__primitive_assign: ovn-dbs-bundle-1 allocation score on database-0: 0
 pcmk__primitive_assign: ovn-dbs-bundle-1 allocation score on database-1: 0
 pcmk__primitive_assign: ovn-dbs-bundle-1 allocation score on database-2: 0
@@ -1898,9 +1898,9 @@ pcmk__primitive_assign: ovn-dbs-bundle-2 allocation score on messaging-1: 0
 pcmk__primitive_assign: ovn-dbs-bundle-2 allocation score on messaging-2: 0
 pcmk__primitive_assign: ovn-dbs-bundle-podman-0 allocation score on compute-0: -INFINITY
 pcmk__primitive_assign: ovn-dbs-bundle-podman-0 allocation score on compute-1: -INFINITY
-pcmk__primitive_assign: ovn-dbs-bundle-podman-0 allocation score on controller-0: -INFINITY
+pcmk__primitive_assign: ovn-dbs-bundle-podman-0 allocation score on controller-0: 0
 pcmk__primitive_assign: ovn-dbs-bundle-podman-0 allocation score on controller-1: -INFINITY
-pcmk__primitive_assign: ovn-dbs-bundle-podman-0 allocation score on controller-2: 0
+pcmk__primitive_assign: ovn-dbs-bundle-podman-0 allocation score on controller-2: -INFINITY
 pcmk__primitive_assign: ovn-dbs-bundle-podman-0 allocation score on database-0: -INFINITY
 pcmk__primitive_assign: ovn-dbs-bundle-podman-0 allocation score on database-1: -INFINITY
 pcmk__primitive_assign: ovn-dbs-bundle-podman-0 allocation score on database-2: -INFINITY
@@ -1909,24 +1909,35 @@ pcmk__primitive_assign: ovn-dbs-bundle-podman-0 allocation score on messaging-1:
 pcmk__primitive_assign: ovn-dbs-bundle-podman-0 allocation score on messaging-2: -INFINITY
 pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on compute-0: -INFINITY
 pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on compute-0: -INFINITY
+pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on compute-0: -INFINITY
 pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on compute-1: -INFINITY
 pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on compute-1: -INFINITY
-pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on controller-0: 0
+pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on compute-1: -INFINITY
+pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on controller-0: -INFINITY
+pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on controller-0: -INFINITY
 pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on controller-0: 0
 pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on controller-1: -INFINITY
 pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on controller-1: 0
+pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on controller-1: 0
 pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on controller-2: -INFINITY
 pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on controller-2: -INFINITY
+pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on controller-2: 0
+pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on database-0: -INFINITY
 pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on database-0: -INFINITY
 pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on database-0: -INFINITY
 pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on database-1: -INFINITY
 pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on database-1: -INFINITY
+pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on database-1: -INFINITY
+pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on database-2: -INFINITY
 pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on database-2: -INFINITY
 pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on database-2: -INFINITY
 pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on messaging-0: -INFINITY
 pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on messaging-0: -INFINITY
+pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on messaging-0: -INFINITY
 pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on messaging-1: -INFINITY
 pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on messaging-1: -INFINITY
+pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on messaging-1: -INFINITY
+pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on messaging-2: -INFINITY
 pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on messaging-2: -INFINITY
 pcmk__primitive_assign: ovn-dbs-bundle-podman-1 allocation score on messaging-2: -INFINITY
 pcmk__primitive_assign: ovn-dbs-bundle-podman-2 allocation score on compute-0: -INFINITY

@@ -16,6 +16,11 @@
 
 #include "libpacemaker_private.h"
 
+struct assign_data {
+    const pe_node_t *prefer;
+    bool stop_if_fail;
+};
+
 /*!
  * \internal
  * \brief Assign a single bundle replica's resources (other than container)
@@ -29,14 +34,18 @@ static bool
 assign_replica(pe__bundle_replica_t *replica, void *user_data)
 {
     pe_node_t *container_host = NULL;
-    const pe_node_t *prefer = user_data;
+
+    struct assign_data *assign_data = user_data;
+    const pe_node_t *prefer = assign_data->prefer;
+    bool stop_if_fail = assign_data->stop_if_fail;
+
     const pe_resource_t *bundle = pe__const_top_resource(replica->container,
                                                          true);
 
     if (replica->ip != NULL) {
         pe_rsc_trace(bundle, "Assigning bundle %s IP %s",
                      bundle->id, replica->ip->id);
-        replica->ip->cmds->assign(replica->ip, prefer);
+        replica->ip->cmds->assign(replica->ip, prefer, stop_if_fail);
     }
 
     container_host = replica->container->allocated_to;
@@ -53,7 +62,7 @@ assign_replica(pe__bundle_replica_t *replica, void *user_data)
         }
         pe_rsc_trace(bundle, "Assigning bundle %s connection %s",
                      bundle->id, replica->remote->id);
-        replica->remote->cmds->assign(replica->remote, prefer);
+        replica->remote->cmds->assign(replica->remote, prefer, stop_if_fail);
     }
 
     if (replica->child != NULL) {
@@ -72,7 +81,8 @@ assign_replica(pe__bundle_replica_t *replica, void *user_data)
         pe__set_resource_flags(replica->child->parent, pe_rsc_allocating);
         pe_rsc_trace(bundle, "Assigning bundle %s replica child %s",
                      bundle->id, replica->child->id);
-        replica->child->cmds->assign(replica->child, replica->node);
+        replica->child->cmds->assign(replica->child, replica->node,
+                                     stop_if_fail);
         pe__clear_resource_flags(replica->child->parent, pe_rsc_allocating);
     }
     return true;
@@ -82,16 +92,28 @@ assign_replica(pe__bundle_replica_t *replica, void *user_data)
  * \internal
  * \brief Assign a bundle resource to a node
  *
- * \param[in,out] rsc     Resource to assign to a node
- * \param[in]     prefer  Node to prefer, if all else is equal
+ * \param[in,out] rsc           Resource to assign to a node
+ * \param[in]     prefer        Node to prefer, if all else is equal
+ * \param[in]     stop_if_fail  If \c true and a primitive descendant of \p rsc
+ *                              can't be assigned to a node, set the
+ *                              descendant's next role to stopped and update
+ *                              existing actions
  *
  * \return Node that \p rsc is assigned to, if assigned entirely to one node
+ *
+ * \note If \p stop_if_fail is \c false, then \c pcmk__unassign_resource() can
+ *       completely undo the assignment. A successful assignment can be either
+ *       undone or left alone as final. A failed assignment has the same effect
+ *       as calling pcmk__unassign_resource(); there are no side effects on
+ *       roles or actions.
  */
 pe_node_t *
-pcmk__bundle_assign(pe_resource_t *rsc, const pe_node_t *prefer)
+pcmk__bundle_assign(pe_resource_t *rsc, const pe_node_t *prefer,
+                    bool stop_if_fail)
 {
     GList *containers = NULL;
     pe_resource_t *bundled_resource = NULL;
+    struct assign_data assign_data = { prefer, stop_if_fail };
 
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container));
 
@@ -108,7 +130,7 @@ pcmk__bundle_assign(pe_resource_t *rsc, const pe_node_t *prefer)
     g_list_free(containers);
 
     // Then assign remaining replica resources
-    pe__foreach_bundle_replica(rsc, assign_replica, (void *) prefer);
+    pe__foreach_bundle_replica(rsc, assign_replica, (void *) &assign_data);
 
     // Finally, assign the bundled resources to each bundle node
     bundled_resource = pe__bundled_resource(rsc);
@@ -124,7 +146,7 @@ pcmk__bundle_assign(pe_resource_t *rsc, const pe_node_t *prefer)
                 node->weight = -INFINITY;
             }
         }
-        bundled_resource->cmds->assign(bundled_resource, prefer);
+        bundled_resource->cmds->assign(bundled_resource, prefer, stop_if_fail);
     }
 
     pe__clear_resource_flags(rsc, pe_rsc_allocating|pe_rsc_provisional);
@@ -355,6 +377,26 @@ match_replica_container(const pe__bundle_replica_t *replica, void *user_data)
 
 /*!
  * \internal
+ * \brief Get the host to which a bundle node is assigned
+ *
+ * \param[in] node  Possible bundle node to check
+ *
+ * \return Node to which the container for \p node is assigned if \p node is a
+ *         bundle node, otherwise \p node itself
+ */
+static const pe_node_t *
+get_bundle_node_host(const pe_node_t *node)
+{
+    if (pe__is_bundle_node(node)) {
+        const pe_resource_t *container = node->details->remote_rsc->container;
+
+        return container->fns->location(container, NULL, 0);
+    }
+    return node;
+}
+
+/*!
+ * \internal
  * \brief Find a bundle container compatible with a dependent resource
  *
  * \param[in] dependent  Dependent resource in colocation with bundle
@@ -373,6 +415,7 @@ compatible_container(const pe_resource_t *dependent,
 
     // If dependent is assigned, only check there
     match_data.node = dependent->fns->location(dependent, NULL, 0);
+    match_data.node = get_bundle_node_host(match_data.node);
     if (match_data.node != NULL) {
         pe__foreach_const_bundle_replica(bundle, match_replica_container,
                                          &match_data);
@@ -384,6 +427,11 @@ compatible_container(const pe_resource_t *dependent,
     scratch = pcmk__sort_nodes(scratch, NULL);
     for (const GList *iter = scratch; iter != NULL; iter = iter->next) {
         match_data.node = iter->data;
+        match_data.node = get_bundle_node_host(match_data.node);
+        if (match_data.node == NULL) {
+            continue;
+        }
+
         pe__foreach_const_bundle_replica(bundle, match_replica_container,
                                          &match_data);
         if (match_data.container != NULL) {
@@ -466,8 +514,8 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
     struct coloc_data coloc_data = { colocation, dependent, NULL };
 
     /* This should never be called for the bundle itself as a dependent.
-     * Instead, we add its colocation constraints to its containers and call the
-     * apply_coloc_score() method for the containers as dependents.
+     * Instead, we add its colocation constraints to its containers and bundled
+     * primitive and call the apply_coloc_score() method for them as dependents.
      */
     CRM_ASSERT((primary != NULL) && (primary->variant == pe_container)
                && (dependent != NULL) && (dependent->variant == pe_native)
@@ -501,7 +549,7 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
             crm_notice("%s cannot run because there is no compatible "
                        "instance of %s to colocate with",
                        dependent->id, primary->id);
-            pcmk__assign_resource(dependent, NULL, true);
+            pcmk__assign_resource(dependent, NULL, true, true);
 
         } else { // Failure, but we can ignore it
             pe_rsc_debug(primary,
@@ -526,15 +574,42 @@ void
 pcmk__with_bundle_colocations(const pe_resource_t *rsc,
                               const pe_resource_t *orig_rsc, GList **list)
 {
+    const pe_resource_t *bundled_rsc = NULL;
+
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container)
                && (orig_rsc != NULL) && (list != NULL));
 
-    if (rsc == orig_rsc) { // Colocations are wanted for bundle itself
-        pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
+    // The bundle itself and its containers always get its colocations
+    if ((orig_rsc == rsc)
+        || pcmk_is_set(orig_rsc->flags, pe_rsc_replica_container)) {
 
-    // Only the bundle replicas' containers get the bundle's constraints
-    } else if (pcmk_is_set(orig_rsc->flags, pe_rsc_replica_container)) {
-        pcmk__add_collective_constraints(list, orig_rsc, rsc, true);
+        pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
+        return;
+    }
+
+    /* The bundled resource gets the colocations if it's promotable and we've
+     * begun choosing roles
+     */
+    bundled_rsc = pe__bundled_resource(rsc);
+    if ((bundled_rsc == NULL)
+        || !pcmk_is_set(bundled_rsc->flags, pe_rsc_promotable)
+        || (pe__const_top_resource(orig_rsc, false) != bundled_rsc)) {
+        return;
+    }
+
+    if (orig_rsc == bundled_rsc) {
+        if (pe__clone_flag_is_set(orig_rsc, pe__clone_promotion_constrained)) {
+            /* orig_rsc is the clone and we're setting roles (or have already
+             * done so)
+             */
+            pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
+        }
+
+    } else if (!pcmk_is_set(orig_rsc->flags, pe_rsc_provisional)) {
+        /* orig_rsc is an instance and is already assigned. If something
+         * requests colocations for orig_rsc now, it's for setting roles.
+         */
+        pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
     }
 }
 
@@ -543,15 +618,42 @@ void
 pcmk__bundle_with_colocations(const pe_resource_t *rsc,
                               const pe_resource_t *orig_rsc, GList **list)
 {
+    const pe_resource_t *bundled_rsc = NULL;
+
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container)
                && (orig_rsc != NULL) && (list != NULL));
 
-    if (rsc == orig_rsc) { // Colocations are wanted for bundle itself
-        pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
+    // The bundle itself and its containers always get its colocations
+    if ((orig_rsc == rsc)
+        || pcmk_is_set(orig_rsc->flags, pe_rsc_replica_container)) {
 
-    // Only the bundle replicas' containers get the bundle's constraints
-    } else if (pcmk_is_set(orig_rsc->flags, pe_rsc_replica_container)) {
-        pcmk__add_collective_constraints(list, orig_rsc, rsc, false);
+        pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
+        return;
+    }
+
+    /* The bundled resource gets the colocations if it's promotable and we've
+     * begun choosing roles
+     */
+    bundled_rsc = pe__bundled_resource(rsc);
+    if ((bundled_rsc == NULL)
+        || !pcmk_is_set(bundled_rsc->flags, pe_rsc_promotable)
+        || (pe__const_top_resource(orig_rsc, false) != bundled_rsc)) {
+        return;
+    }
+
+    if (orig_rsc == bundled_rsc) {
+        if (pe__clone_flag_is_set(orig_rsc, pe__clone_promotion_constrained)) {
+            /* orig_rsc is the clone and we're setting roles (or have already
+             * done so)
+             */
+            pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
+        }
+
+    } else if (!pcmk_is_set(orig_rsc->flags, pe_rsc_provisional)) {
+        /* orig_rsc is an instance and is already assigned. If something
+         * requests colocations for orig_rsc now, it's for setting roles.
+         */
+        pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
     }
 }
 

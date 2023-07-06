@@ -19,7 +19,9 @@ pcmk__primitive_assign: dummy02 allocation score on bl460g1n13: -INFINITY
 pcmk__primitive_assign: dummy02 allocation score on bl460g1n14: 0
 pcmk__primitive_assign: dummy03 allocation score on bl460g1n13: -INFINITY
 pcmk__primitive_assign: dummy03 allocation score on bl460g1n14: 0
+pcmk__primitive_assign: prmDRBD:0 allocation score on bl460g1n13: -INFINITY
 pcmk__primitive_assign: prmDRBD:0 allocation score on bl460g1n13: INFINITY
+pcmk__primitive_assign: prmDRBD:0 allocation score on bl460g1n14: -INFINITY
 pcmk__primitive_assign: prmDRBD:0 allocation score on bl460g1n14: 0
 pcmk__primitive_assign: prmDRBD:1 allocation score on bl460g1n13: -INFINITY
 pcmk__primitive_assign: prmDRBD:1 allocation score on bl460g1n14: INFINITY

@@ -623,7 +623,7 @@
       </lrm>
       <transient_attributes id="hypatia-corosync.nevis.columbia.edu">
         <instance_attributes id="status-hypatia-corosync.nevis.columbia.edu">
-          <nvpair id="status-hypatia-corosync.nevis.columbia.edu-promoted-AdminDrbd.0" name="master-AdminDrbd:0" value="5"/>
+          <nvpair id="status-hypatia-corosync.nevis.columbia.edu-promoted-AdminDrbd" name="master-AdminDrbd" value="5"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -691,7 +691,7 @@
       </lrm>
       <transient_attributes id="orestes-corosync.nevis.columbia.edu">
         <instance_attributes id="status-orestes-corosync.nevis.columbia.edu">
-          <nvpair id="status-orestes-corosync.nevis.columbia.edu-promoted-AdminDrbd.1" name="master-AdminDrbd:1" value="5"/>
+          <nvpair id="status-orestes-corosync.nevis.columbia.edu-promoted-AdminDrbd" name="master-AdminDrbd" value="5"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

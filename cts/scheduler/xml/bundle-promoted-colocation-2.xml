@@ -11,8 +11,6 @@
 
          In this situation, the primitive should move to the same node as the
          bundle's promoted instance.
-
-         This test output is currently incorrect.
       -->
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">

@@ -39,8 +39,8 @@ Current cluster status:
     * Proxy	(ocf:heartbeat:VirtualDomain):	 Stopped
 
 Transition Summary:
-  * Promote    AdminDrbd:0                ( Stopped -> Promoted hypatia-corosync.nevis.columbia.edu )
-  * Promote    AdminDrbd:1                ( Stopped -> Promoted orestes-corosync.nevis.columbia.edu )
+  * Promote    AdminDrbd:0                ( Stopped -> Promoted orestes-corosync.nevis.columbia.edu )
+  * Promote    AdminDrbd:1                ( Stopped -> Promoted hypatia-corosync.nevis.columbia.edu )
   * Start      CronAmbientTemperature     (                     hypatia-corosync.nevis.columbia.edu )
   * Start      StonithHypatia             (                     orestes-corosync.nevis.columbia.edu )
   * Start      StonithOrestes             (                     hypatia-corosync.nevis.columbia.edu )
@@ -83,18 +83,18 @@ Transition Summary:
   * Start      ExportUsrNevis:1           (                     orestes-corosync.nevis.columbia.edu )
   * Start      ExportUsrNevisOffsite:1    (                     orestes-corosync.nevis.columbia.edu )
   * Start      ExportWWW:1                (                     orestes-corosync.nevis.columbia.edu )
-  * Start      AdminLvm:0                 (                     hypatia-corosync.nevis.columbia.edu )
-  * Start      FSUsrNevis:0               (                     hypatia-corosync.nevis.columbia.edu )
-  * Start      FSVarNevis:0               (                     hypatia-corosync.nevis.columbia.edu )
-  * Start      FSVirtualMachines:0        (                     hypatia-corosync.nevis.columbia.edu )
-  * Start      FSMail:0                   (                     hypatia-corosync.nevis.columbia.edu )
-  * Start      FSWork:0                   (                     hypatia-corosync.nevis.columbia.edu )
-  * Start      AdminLvm:1                 (                     orestes-corosync.nevis.columbia.edu )
-  * Start      FSUsrNevis:1               (                     orestes-corosync.nevis.columbia.edu )
-  * Start      FSVarNevis:1               (                     orestes-corosync.nevis.columbia.edu )
-  * Start      FSVirtualMachines:1        (                     orestes-corosync.nevis.columbia.edu )
-  * Start      FSMail:1                   (                     orestes-corosync.nevis.columbia.edu )
-  * Start      FSWork:1                   (                     orestes-corosync.nevis.columbia.edu )
+  * Start      AdminLvm:0                 (                     orestes-corosync.nevis.columbia.edu )
+  * Start      FSUsrNevis:0               (                     orestes-corosync.nevis.columbia.edu )
+  * Start      FSVarNevis:0               (                     orestes-corosync.nevis.columbia.edu )
+  * Start      FSVirtualMachines:0        (                     orestes-corosync.nevis.columbia.edu )
+  * Start      FSMail:0                   (                     orestes-corosync.nevis.columbia.edu )
+  * Start      FSWork:0                   (                     orestes-corosync.nevis.columbia.edu )
+  * Start      AdminLvm:1                 (                     hypatia-corosync.nevis.columbia.edu )
+  * Start      FSUsrNevis:1               (                     hypatia-corosync.nevis.columbia.edu )
+  * Start      FSVarNevis:1               (                     hypatia-corosync.nevis.columbia.edu )
+  * Start      FSVirtualMachines:1        (                     hypatia-corosync.nevis.columbia.edu )
+  * Start      FSMail:1                   (                     hypatia-corosync.nevis.columbia.edu )
+  * Start      FSWork:1                   (                     hypatia-corosync.nevis.columbia.edu )
   * Start      KVM-guest                  (                     hypatia-corosync.nevis.columbia.edu )
   * Start      Proxy                      (                     orestes-corosync.nevis.columbia.edu )
 
@@ -125,74 +125,74 @@ Executing Cluster Transition:
   * Resource action: ExportUsrNevis:1 monitor on orestes-corosync.nevis.columbia.edu
   * Resource action: ExportUsrNevisOffsite:1 monitor on orestes-corosync.nevis.columbia.edu
   * Resource action: ExportWWW:1     monitor on orestes-corosync.nevis.columbia.edu
-  * Resource action: AdminLvm:0      monitor on hypatia-corosync.nevis.columbia.edu
-  * Resource action: FSUsrNevis:0    monitor on hypatia-corosync.nevis.columbia.edu
-  * Resource action: FSVarNevis:0    monitor on hypatia-corosync.nevis.columbia.edu
-  * Resource action: FSVirtualMachines:0 monitor on hypatia-corosync.nevis.columbia.edu
-  * Resource action: FSMail:0        monitor on hypatia-corosync.nevis.columbia.edu
-  * Resource action: FSWork:0        monitor on hypatia-corosync.nevis.columbia.edu
-  * Resource action: AdminLvm:1      monitor on orestes-corosync.nevis.columbia.edu
-  * Resource action: FSUsrNevis:1    monitor on orestes-corosync.nevis.columbia.edu
-  * Resource action: FSVarNevis:1    monitor on orestes-corosync.nevis.columbia.edu
-  * Resource action: FSVirtualMachines:1 monitor on orestes-corosync.nevis.columbia.edu
-  * Resource action: FSMail:1        monitor on orestes-corosync.nevis.columbia.edu
-  * Resource action: FSWork:1        monitor on orestes-corosync.nevis.columbia.edu
+  * Resource action: AdminLvm:0      monitor on orestes-corosync.nevis.columbia.edu
+  * Resource action: FSUsrNevis:0    monitor on orestes-corosync.nevis.columbia.edu
+  * Resource action: FSVarNevis:0    monitor on orestes-corosync.nevis.columbia.edu
+  * Resource action: FSVirtualMachines:0 monitor on orestes-corosync.nevis.columbia.edu
+  * Resource action: FSMail:0        monitor on orestes-corosync.nevis.columbia.edu
+  * Resource action: FSWork:0        monitor on orestes-corosync.nevis.columbia.edu
+  * Resource action: AdminLvm:1      monitor on hypatia-corosync.nevis.columbia.edu
+  * Resource action: FSUsrNevis:1    monitor on hypatia-corosync.nevis.columbia.edu
+  * Resource action: FSVarNevis:1    monitor on hypatia-corosync.nevis.columbia.edu
+  * Resource action: FSVirtualMachines:1 monitor on hypatia-corosync.nevis.columbia.edu
+  * Resource action: FSMail:1        monitor on hypatia-corosync.nevis.columbia.edu
+  * Resource action: FSWork:1        monitor on hypatia-corosync.nevis.columbia.edu
   * Resource action: KVM-guest       monitor on orestes-corosync.nevis.columbia.edu
   * Resource action: KVM-guest       monitor on hypatia-corosync.nevis.columbia.edu
   * Resource action: Proxy           monitor on orestes-corosync.nevis.columbia.edu
   * Resource action: Proxy           monitor on hypatia-corosync.nevis.columbia.edu
   * Pseudo action:   AdminClone_confirmed-pre_notify_start_0
   * Pseudo action:   AdminClone_start_0
-  * Resource action: AdminDrbd:0     start on hypatia-corosync.nevis.columbia.edu
-  * Resource action: AdminDrbd:1     start on orestes-corosync.nevis.columbia.edu
+  * Resource action: AdminDrbd:0     start on orestes-corosync.nevis.columbia.edu
+  * Resource action: AdminDrbd:1     start on hypatia-corosync.nevis.columbia.edu
   * Pseudo action:   AdminClone_running_0
   * Pseudo action:   AdminClone_post_notify_running_0
-  * Resource action: AdminDrbd:0     notify on hypatia-corosync.nevis.columbia.edu
-  * Resource action: AdminDrbd:1     notify on orestes-corosync.nevis.columbia.edu
+  * Resource action: AdminDrbd:0     notify on orestes-corosync.nevis.columbia.edu
+  * Resource action: AdminDrbd:1     notify on hypatia-corosync.nevis.columbia.edu
   * Pseudo action:   AdminClone_confirmed-post_notify_running_0
   * Pseudo action:   AdminClone_pre_notify_promote_0
-  * Resource action: AdminDrbd:0     notify on hypatia-corosync.nevis.columbia.edu
-  * Resource action: AdminDrbd:1     notify on orestes-corosync.nevis.columbia.edu
+  * Resource action: AdminDrbd:0     notify on orestes-corosync.nevis.columbia.edu
+  * Resource action: AdminDrbd:1     notify on hypatia-corosync.nevis.columbia.edu
   * Pseudo action:   AdminClone_confirmed-pre_notify_promote_0
   * Pseudo action:   AdminClone_promote_0
-  * Resource action: AdminDrbd:0     promote on hypatia-corosync.nevis.columbia.edu
-  * Resource action: AdminDrbd:1     promote on orestes-corosync.nevis.columbia.edu
+  * Resource action: AdminDrbd:0     promote on orestes-corosync.nevis.columbia.edu
+  * Resource action: AdminDrbd:1     promote on hypatia-corosync.nevis.columbia.edu
   * Pseudo action:   AdminClone_promoted_0
   * Pseudo action:   AdminClone_post_notify_promoted_0
-  * Resource action: AdminDrbd:0     notify on hypatia-corosync.nevis.columbia.edu
-  * Resource action: AdminDrbd:1     notify on orestes-corosync.nevis.columbia.edu
+  * Resource action: AdminDrbd:0     notify on orestes-corosync.nevis.columbia.edu
+  * Resource action: AdminDrbd:1     notify on hypatia-corosync.nevis.columbia.edu
   * Pseudo action:   AdminClone_confirmed-post_notify_promoted_0
   * Pseudo action:   FilesystemClone_start_0
-  * Resource action: AdminDrbd:0     monitor=59000 on hypatia-corosync.nevis.columbia.edu
-  * Resource action: AdminDrbd:1     monitor=59000 on orestes-corosync.nevis.columbia.edu
+  * Resource action: AdminDrbd:0     monitor=59000 on orestes-corosync.nevis.columbia.edu
+  * Resource action: AdminDrbd:1     monitor=59000 on hypatia-corosync.nevis.columbia.edu
   * Pseudo action:   FilesystemGroup:0_start_0
-  * Resource action: AdminLvm:0      start on hypatia-corosync.nevis.columbia.edu
-  * Resource action: FSUsrNevis:0    start on hypatia-corosync.nevis.columbia.edu
-  * Resource action: FSVarNevis:0    start on hypatia-corosync.nevis.columbia.edu
-  * Resource action: FSVirtualMachines:0 start on hypatia-corosync.nevis.columbia.edu
-  * Resource action: FSMail:0        start on hypatia-corosync.nevis.columbia.edu
-  * Resource action: FSWork:0        start on hypatia-corosync.nevis.columbia.edu
+  * Resource action: AdminLvm:0      start on orestes-corosync.nevis.columbia.edu
+  * Resource action: FSUsrNevis:0    start on orestes-corosync.nevis.columbia.edu
+  * Resource action: FSVarNevis:0    start on orestes-corosync.nevis.columbia.edu
+  * Resource action: FSVirtualMachines:0 start on orestes-corosync.nevis.columbia.edu
+  * Resource action: FSMail:0        start on orestes-corosync.nevis.columbia.edu
+  * Resource action: FSWork:0        start on orestes-corosync.nevis.columbia.edu
   * Pseudo action:   FilesystemGroup:1_start_0
-  * Resource action: AdminLvm:1      start on orestes-corosync.nevis.columbia.edu
-  * Resource action: FSUsrNevis:1    start on orestes-corosync.nevis.columbia.edu
-  * Resource action: FSVarNevis:1    start on orestes-corosync.nevis.columbia.edu
-  * Resource action: FSVirtualMachines:1 start on orestes-corosync.nevis.columbia.edu
-  * Resource action: FSMail:1        start on orestes-corosync.nevis.columbia.edu
-  * Resource action: FSWork:1        start on orestes-corosync.nevis.columbia.edu
+  * Resource action: AdminLvm:1      start on hypatia-corosync.nevis.columbia.edu
+  * Resource action: FSUsrNevis:1    start on hypatia-corosync.nevis.columbia.edu
+  * Resource action: FSVarNevis:1    start on hypatia-corosync.nevis.columbia.edu
+  * Resource action: FSVirtualMachines:1 start on hypatia-corosync.nevis.columbia.edu
+  * Resource action: FSMail:1        start on hypatia-corosync.nevis.columbia.edu
+  * Resource action: FSWork:1        start on hypatia-corosync.nevis.columbia.edu
   * Pseudo action:   FilesystemGroup:0_running_0
-  * Resource action: AdminLvm:0      monitor=30000 on hypatia-corosync.nevis.columbia.edu
-  * Resource action: FSUsrNevis:0    monitor=20000 on hypatia-corosync.nevis.columbia.edu
-  * Resource action: FSVarNevis:0    monitor=20000 on hypatia-corosync.nevis.columbia.edu
-  * Resource action: FSVirtualMachines:0 monitor=20000 on hypatia-corosync.nevis.columbia.edu
-  * Resource action: FSMail:0        monitor=20000 on hypatia-corosync.nevis.columbia.edu
-  * Resource action: FSWork:0        monitor=20000 on hypatia-corosync.nevis.columbia.edu
+  * Resource action: AdminLvm:0      monitor=30000 on orestes-corosync.nevis.columbia.edu
+  * Resource action: FSUsrNevis:0    monitor=20000 on orestes-corosync.nevis.columbia.edu
+  * Resource action: FSVarNevis:0    monitor=20000 on orestes-corosync.nevis.columbia.edu
+  * Resource action: FSVirtualMachines:0 monitor=20000 on orestes-corosync.nevis.columbia.edu
+  * Resource action: FSMail:0        monitor=20000 on orestes-corosync.nevis.columbia.edu
+  * Resource action: FSWork:0        monitor=20000 on orestes-corosync.nevis.columbia.edu
   * Pseudo action:   FilesystemGroup:1_running_0
-  * Resource action: AdminLvm:1      monitor=30000 on orestes-corosync.nevis.columbia.edu
-  * Resource action: FSUsrNevis:1    monitor=20000 on orestes-corosync.nevis.columbia.edu
-  * Resource action: FSVarNevis:1    monitor=20000 on orestes-corosync.nevis.columbia.edu
-  * Resource action: FSVirtualMachines:1 monitor=20000 on orestes-corosync.nevis.columbia.edu
-  * Resource action: FSMail:1        monitor=20000 on orestes-corosync.nevis.columbia.edu
-  * Resource action: FSWork:1        monitor=20000 on orestes-corosync.nevis.columbia.edu
+  * Resource action: AdminLvm:1      monitor=30000 on hypatia-corosync.nevis.columbia.edu
+  * Resource action: FSUsrNevis:1    monitor=20000 on hypatia-corosync.nevis.columbia.edu
+  * Resource action: FSVarNevis:1    monitor=20000 on hypatia-corosync.nevis.columbia.edu
+  * Resource action: FSVirtualMachines:1 monitor=20000 on hypatia-corosync.nevis.columbia.edu
+  * Resource action: FSMail:1        monitor=20000 on hypatia-corosync.nevis.columbia.edu
+  * Resource action: FSWork:1        monitor=20000 on hypatia-corosync.nevis.columbia.edu
   * Pseudo action:   FilesystemClone_running_0
   * Resource action: CronAmbientTemperature start on hypatia-corosync.nevis.columbia.edu
   * Pseudo action:   DhcpGroup_start_0

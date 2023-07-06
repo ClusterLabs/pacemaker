@@ -58,22 +58,18 @@ Current cluster status:
 Transition Summary:
   * Start      rabbitmq-bundle-1                      (                            controller-0 )  due to unrunnable rabbitmq-bundle-podman-1 start (blocked)
   * Start      rabbitmq:1                             (                       rabbitmq-bundle-1 )  due to unrunnable rabbitmq-bundle-podman-1 start (blocked)
-  * Start      ovn-dbs-bundle-podman-0                (                            controller-2 )
-  * Start      ovn-dbs-bundle-0                       (                            controller-2 )
+  * Start      ovn-dbs-bundle-podman-0                (                            controller-0 )
+  * Start      ovn-dbs-bundle-0                       (                            controller-0 )
   * Start      ovndb_servers:0                        (                        ovn-dbs-bundle-0 )
-  * Move       ovn-dbs-bundle-podman-1                (            controller-2 -> controller-0 )
-  * Move       ovn-dbs-bundle-1                       (            controller-2 -> controller-0 )
-  * Restart    ovndb_servers:1                        ( Unpromoted -> Promoted ovn-dbs-bundle-1 )  due to required ovn-dbs-bundle-podman-1 start
-  * Start      ip-172.17.1.87                         (                            controller-0 )
+  * Promote    ovndb_servers:2                        ( Unpromoted -> Promoted ovn-dbs-bundle-2 )
+  * Start      ip-172.17.1.87                         (                            controller-1 )
   * Move       stonith-fence_ipmilan-52540040bb56     (               messaging-2 -> database-0 )
   * Move       stonith-fence_ipmilan-525400e1534e     (               database-1 -> messaging-2 )
 
 Executing Cluster Transition:
   * Pseudo action:   rabbitmq-bundle-clone_pre_notify_start_0
-  * Resource action: ovndb_servers   cancel=30000 on ovn-dbs-bundle-1
-  * Pseudo action:   ovn-dbs-bundle-master_pre_notify_stop_0
-  * Cluster action:  clear_failcount for ovn-dbs-bundle-0 on controller-0
-  * Cluster action:  clear_failcount for ovn-dbs-bundle-1 on controller-2
+  * Resource action: ovndb_servers   cancel=30000 on ovn-dbs-bundle-2
+  * Pseudo action:   ovn-dbs-bundle-master_pre_notify_start_0
   * Cluster action:  clear_failcount for stonith-fence_compute-fence-nova on messaging-0
   * Cluster action:  clear_failcount for nova-evacuate on messaging-0
   * Cluster action:  clear_failcount for stonith-fence_ipmilan-525400aa1373 on database-0
@@ -87,70 +83,52 @@ Executing Cluster Transition:
   * Cluster action:  clear_failcount for stonith-fence_ipmilan-52540060dbba on messaging-0
   * Cluster action:  clear_failcount for stonith-fence_ipmilan-525400e018b6 on database-0
   * Cluster action:  clear_failcount for stonith-fence_ipmilan-525400c87cdb on database-2
-  * Pseudo action:   ovn-dbs-bundle_stop_0
+  * Pseudo action:   ovn-dbs-bundle_start_0
   * Pseudo action:   rabbitmq-bundle_start_0
   * Pseudo action:   rabbitmq-bundle-clone_confirmed-pre_notify_start_0
   * Pseudo action:   rabbitmq-bundle-clone_start_0
-  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-1
   * Resource action: ovndb_servers   notify on ovn-dbs-bundle-2
-  * Pseudo action:   ovn-dbs-bundle-master_confirmed-pre_notify_stop_0
-  * Pseudo action:   ovn-dbs-bundle-master_stop_0
+  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-1
+  * Pseudo action:   ovn-dbs-bundle-master_confirmed-pre_notify_start_0
+  * Pseudo action:   ovn-dbs-bundle-master_start_0
+  * Resource action: ovn-dbs-bundle-podman-0 start on controller-0
+  * Resource action: ovn-dbs-bundle-0 start on controller-0
   * Resource action: stonith-fence_ipmilan-52540040bb56 start on database-0
   * Resource action: stonith-fence_ipmilan-525400e1534e start on messaging-2
   * Pseudo action:   rabbitmq-bundle-clone_running_0
-  * Resource action: ovndb_servers   stop on ovn-dbs-bundle-1
-  * Pseudo action:   ovn-dbs-bundle-master_stopped_0
-  * Resource action: ovn-dbs-bundle-1 stop on controller-2
+  * Resource action: ovndb_servers   start on ovn-dbs-bundle-0
+  * Pseudo action:   ovn-dbs-bundle-master_running_0
+  * Resource action: ovn-dbs-bundle-podman-0 monitor=60000 on controller-0
+  * Resource action: ovn-dbs-bundle-0 monitor=30000 on controller-0
   * Resource action: stonith-fence_ipmilan-52540040bb56 monitor=60000 on database-0
   * Resource action: stonith-fence_ipmilan-525400e1534e monitor=60000 on messaging-2
   * Pseudo action:   rabbitmq-bundle-clone_post_notify_running_0
-  * Pseudo action:   ovn-dbs-bundle-master_post_notify_stopped_0
-  * Resource action: ovn-dbs-bundle-podman-1 stop on controller-2
+  * Pseudo action:   ovn-dbs-bundle-master_post_notify_running_0
   * Pseudo action:   rabbitmq-bundle-clone_confirmed-post_notify_running_0
   * Resource action: ovndb_servers   notify on ovn-dbs-bundle-2
-  * Pseudo action:   ovn-dbs-bundle-master_confirmed-post_notify_stopped_0
-  * Pseudo action:   ovn-dbs-bundle-master_pre_notify_start_0
-  * Pseudo action:   ovn-dbs-bundle_stopped_0
-  * Pseudo action:   ovn-dbs-bundle_start_0
-  * Pseudo action:   rabbitmq-bundle_running_0
-  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-2
-  * Pseudo action:   ovn-dbs-bundle-master_confirmed-pre_notify_start_0
-  * Pseudo action:   ovn-dbs-bundle-master_start_0
-  * Resource action: ovn-dbs-bundle-podman-0 start on controller-2
-  * Resource action: ovn-dbs-bundle-0 start on controller-2
-  * Resource action: ovn-dbs-bundle-podman-1 start on controller-0
-  * Resource action: ovn-dbs-bundle-1 start on controller-0
-  * Resource action: ovndb_servers   start on ovn-dbs-bundle-0
-  * Resource action: ovn-dbs-bundle-podman-0 monitor=60000 on controller-2
-  * Resource action: ovn-dbs-bundle-0 monitor=30000 on controller-2
-  * Resource action: ovn-dbs-bundle-podman-1 monitor=60000 on controller-0
-  * Resource action: ovn-dbs-bundle-1 monitor=30000 on controller-0
-  * Resource action: ovndb_servers   start on ovn-dbs-bundle-1
-  * Pseudo action:   ovn-dbs-bundle-master_running_0
-  * Pseudo action:   ovn-dbs-bundle-master_post_notify_running_0
-  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-1
-  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-2
   * Resource action: ovndb_servers   notify on ovn-dbs-bundle-0
+  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-1
   * Pseudo action:   ovn-dbs-bundle-master_confirmed-post_notify_running_0
   * Pseudo action:   ovn-dbs-bundle_running_0
+  * Pseudo action:   rabbitmq-bundle_running_0
   * Pseudo action:   ovn-dbs-bundle-master_pre_notify_promote_0
   * Pseudo action:   ovn-dbs-bundle_promote_0
-  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-1
   * Resource action: ovndb_servers   notify on ovn-dbs-bundle-2
   * Resource action: ovndb_servers   notify on ovn-dbs-bundle-0
+  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-1
   * Pseudo action:   ovn-dbs-bundle-master_confirmed-pre_notify_promote_0
   * Pseudo action:   ovn-dbs-bundle-master_promote_0
-  * Resource action: ip-172.17.1.87  start on controller-0
-  * Resource action: ovndb_servers   promote on ovn-dbs-bundle-1
+  * Resource action: ip-172.17.1.87  start on controller-1
+  * Resource action: ovndb_servers   promote on ovn-dbs-bundle-2
   * Pseudo action:   ovn-dbs-bundle-master_promoted_0
-  * Resource action: ip-172.17.1.87  monitor=10000 on controller-0
+  * Resource action: ip-172.17.1.87  monitor=10000 on controller-1
   * Pseudo action:   ovn-dbs-bundle-master_post_notify_promoted_0
-  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-1
   * Resource action: ovndb_servers   notify on ovn-dbs-bundle-2
   * Resource action: ovndb_servers   notify on ovn-dbs-bundle-0
+  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-1
   * Pseudo action:   ovn-dbs-bundle-master_confirmed-post_notify_promoted_0
   * Pseudo action:   ovn-dbs-bundle_promoted_0
-  * Resource action: ovndb_servers   monitor=10000 on ovn-dbs-bundle-1
+  * Resource action: ovndb_servers   monitor=10000 on ovn-dbs-bundle-2
   * Resource action: ovndb_servers   monitor=30000 on ovn-dbs-bundle-0
 Using the original execution date of: 2021-02-15 01:40:51Z
 
@@ -187,10 +165,10 @@ Revised Cluster Status:
       * haproxy-bundle-podman-1	(ocf:heartbeat:podman):	 Started controller-0
       * haproxy-bundle-podman-2	(ocf:heartbeat:podman):	 Started controller-1
     * Container bundle set: ovn-dbs-bundle [cluster.common.tag/rhosp16-openstack-ovn-northd:pcmklatest]:
-      * ovn-dbs-bundle-0	(ocf:ovn:ovndb-servers):	 Unpromoted controller-2
-      * ovn-dbs-bundle-1	(ocf:ovn:ovndb-servers):	 Promoted controller-0
-      * ovn-dbs-bundle-2	(ocf:ovn:ovndb-servers):	 Unpromoted controller-1
-    * ip-172.17.1.87	(ocf:heartbeat:IPaddr2):	 Started controller-0
+      * ovn-dbs-bundle-0	(ocf:ovn:ovndb-servers):	 Unpromoted controller-0
+      * ovn-dbs-bundle-1	(ocf:ovn:ovndb-servers):	 Unpromoted controller-2
+      * ovn-dbs-bundle-2	(ocf:ovn:ovndb-servers):	 Promoted controller-1
+    * ip-172.17.1.87	(ocf:heartbeat:IPaddr2):	 Started controller-1
     * stonith-fence_compute-fence-nova	(stonith:fence_compute):	 Started database-1
     * Clone Set: compute-unfence-trigger-clone [compute-unfence-trigger]:
       * Started: [ compute-0 compute-1 ]

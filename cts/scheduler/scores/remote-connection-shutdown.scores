@@ -2,7 +2,7 @@
 galera:0 promotion score on galera-bundle-0: 100
 galera:1 promotion score on galera-bundle-1: 100
 galera:2 promotion score on galera-bundle-2: 100
-ovndb_servers:0 promotion score on ovn-dbs-bundle-0: 10
+ovndb_servers:0 promotion score on ovn-dbs-bundle-0: INFINITY
 ovndb_servers:1 promotion score on ovn-dbs-bundle-1: 5
 ovndb_servers:2 promotion score on ovn-dbs-bundle-2: 5
 pcmk__bundle_assign: galera-bundle allocation score on compute-0: -INFINITY

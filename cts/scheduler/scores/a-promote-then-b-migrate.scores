@@ -5,7 +5,9 @@ pcmk__clone_assign: rsc1:0 allocation score on node1: 1
 pcmk__clone_assign: rsc1:0 allocation score on node2: 0
 pcmk__clone_assign: rsc1:1 allocation score on node1: 0
 pcmk__clone_assign: rsc1:1 allocation score on node2: 1
+pcmk__primitive_assign: rsc1:0 allocation score on node1: -INFINITY
 pcmk__primitive_assign: rsc1:0 allocation score on node1: 1
+pcmk__primitive_assign: rsc1:0 allocation score on node2: -INFINITY
 pcmk__primitive_assign: rsc1:0 allocation score on node2: 0
 pcmk__primitive_assign: rsc1:1 allocation score on node1: -INFINITY
 pcmk__primitive_assign: rsc1:1 allocation score on node2: 1

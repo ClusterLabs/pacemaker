@@ -1,7 +1,7 @@
 
 app:0 promotion score on app-bundle-0: 12
 app:1 promotion score on app-bundle-1: 13
-app:2 promotion score on app-bundle-2: 14
+app:2 promotion score on app-bundle-2: INFINITY
 base:0 promotion score on base-bundle-0: 12
 base:1 promotion score on base-bundle-1: 13
 base:2 promotion score on base-bundle-2: 14

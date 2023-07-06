@@ -338,25 +338,25 @@ add_sort_index_to_node_score(gpointer data, gpointer user_data)
 static void
 apply_coloc_to_dependent(gpointer data, gpointer user_data)
 {
-    pcmk__colocation_t *constraint = (pcmk__colocation_t *) data;
-    pe_resource_t *clone = (pe_resource_t *) user_data;
-    pe_resource_t *primary = constraint->primary;
+    pcmk__colocation_t *colocation = data;
+    pe_resource_t *clone = user_data;
+    pe_resource_t *primary = colocation->primary;
     uint32_t flags = pcmk__coloc_select_default;
-    float factor = constraint->score / (float) INFINITY;
+    float factor = colocation->score / (float) INFINITY;
 
-    if (constraint->dependent_role != RSC_ROLE_PROMOTED) {
+    if (colocation->dependent_role != RSC_ROLE_PROMOTED) {
         return;
     }
-    if (constraint->score < INFINITY) {
+    if (colocation->score < INFINITY) {
         flags = pcmk__coloc_select_active;
     }
     pe_rsc_trace(clone, "Applying colocation %s (promoted %s with %s) @%s",
-                 constraint->id, constraint->dependent->id,
-                 constraint->primary->id,
-                 pcmk_readable_score(constraint->score));
-    primary->cmds->add_colocated_node_scores(primary, clone->id,
-                                             &clone->allowed_nodes,
-                                             constraint, factor, flags);
+                 colocation->id, colocation->dependent->id,
+                 colocation->primary->id,
+                 pcmk_readable_score(colocation->score));
+    primary->cmds->add_colocated_node_scores(primary, clone, clone->id,
+                                             &clone->allowed_nodes, colocation,
+                                             factor, flags);
 }
 
 /*!
@@ -369,25 +369,25 @@ apply_coloc_to_dependent(gpointer data, gpointer user_data)
 static void
 apply_coloc_to_primary(gpointer data, gpointer user_data)
 {
-    pcmk__colocation_t *constraint = (pcmk__colocation_t *) data;
-    pe_resource_t *clone = (pe_resource_t *) user_data;
-    pe_resource_t *dependent = constraint->dependent;
-    const float factor = constraint->score / (float) INFINITY;
+    pcmk__colocation_t *colocation = data;
+    pe_resource_t *clone = user_data;
+    pe_resource_t *dependent = colocation->dependent;
+    const float factor = colocation->score / (float) INFINITY;
     const uint32_t flags = pcmk__coloc_select_active
                            |pcmk__coloc_select_nonnegative;
 
-    if ((constraint->primary_role != RSC_ROLE_PROMOTED)
-         || !pcmk__colocation_has_influence(constraint, NULL)) {
+    if ((colocation->primary_role != RSC_ROLE_PROMOTED)
+         || !pcmk__colocation_has_influence(colocation, NULL)) {
         return;
     }
 
     pe_rsc_trace(clone, "Applying colocation %s (%s with promoted %s) @%s",
-                 constraint->id, constraint->dependent->id,
-                 constraint->primary->id,
-                 pcmk_readable_score(constraint->score));
-    dependent->cmds->add_colocated_node_scores(dependent, clone->id,
+                 colocation->id, colocation->dependent->id,
+                 colocation->primary->id,
+                 pcmk_readable_score(colocation->score));
+    dependent->cmds->add_colocated_node_scores(dependent, clone, clone->id,
                                                &clone->allowed_nodes,
-                                               constraint, factor, flags);
+                                               colocation, factor, flags);
 }
 
 /*!
@@ -438,6 +438,8 @@ set_sort_index_to_node_score(gpointer data, gpointer user_data)
 static void
 sort_promotable_instances(pe_resource_t *clone)
 {
+    GList *colocations = NULL;
+
     if (pe__set_clone_flag(clone, pe__clone_promotion_constrained)
             == pcmk_rc_already) {
         return;
@@ -454,13 +456,15 @@ sort_promotable_instances(pe_resource_t *clone)
     pe__show_node_scores(true, clone, "Before", clone->allowed_nodes,
                          clone->cluster);
 
-    /* Because the this_with_colocations() and with_this_colocations() methods
-     * boil down to copies of rsc_cons and rsc_cons_lhs for clones, we can use
-     * those here directly for efficiency.
-     */
     g_list_foreach(clone->children, add_sort_index_to_node_score, clone);
-    g_list_foreach(clone->rsc_cons, apply_coloc_to_dependent, clone);
-    g_list_foreach(clone->rsc_cons_lhs, apply_coloc_to_primary, clone);
+
+    colocations = pcmk__this_with_colocations(clone);
+    g_list_foreach(colocations, apply_coloc_to_dependent, clone);
+    g_list_free(colocations);
+
+    colocations = pcmk__with_this_colocations(clone);
+    g_list_foreach(colocations, apply_coloc_to_primary, clone);
+    g_list_free(colocations);
 
     // Ban resource from all nodes if it needs a ticket but doesn't have it
     pcmk__require_promotion_tickets(clone);
@@ -649,7 +653,8 @@ promotion_attr_value(const pe_resource_t *rsc, const pe_node_t *node,
         node_type = pe__rsc_node_current;
     }
     attr_name = pcmk_promotion_score_name(name);
-    attr_value = pe_node_attribute_calculated(node, attr_name, rsc, node_type);
+    attr_value = pe__node_attribute_calculated(node, attr_name, rsc, node_type,
+                                               false);
     free(attr_name);
     return attr_value;
 }
@@ -1144,11 +1149,13 @@ pcmk__order_promotable_instances(pe_resource_t *clone)
  * \brief Update dependent's allowed nodes for colocation with promotable
  *
  * \param[in,out] dependent     Dependent resource to update
+ * \param[in]     primary       Primary resource
  * \param[in]     primary_node  Node where an instance of the primary will be
  * \param[in]     colocation    Colocation constraint to apply
  */
 static void
 update_dependent_allowed_nodes(pe_resource_t *dependent,
+                               const pe_resource_t *primary,
                                const pe_node_t *primary_node,
                                const pcmk__colocation_t *colocation)
 {
@@ -1161,8 +1168,7 @@ update_dependent_allowed_nodes(pe_resource_t *dependent,
         return; // Colocation is mandatory, so allowed node scores don't matter
     }
 
-    // Get value of primary's colocation node attribute
-    primary_value = pe_node_attribute_raw(primary_node, attr);
+    primary_value = pcmk__colocation_node_attr(primary_node, attr, primary);
 
     pe_rsc_trace(colocation->primary,
                  "Applying %s (%s with %s on %s by %s @%d) to %s",
@@ -1172,7 +1178,8 @@ update_dependent_allowed_nodes(pe_resource_t *dependent,
 
     g_hash_table_iter_init(&iter, dependent->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
-        const char *dependent_value = pe_node_attribute_raw(node, attr);
+        const char *dependent_value = pcmk__colocation_node_attr(node, attr,
+                                                                 dependent);
 
         if (pcmk__str_eq(primary_value, dependent_value, pcmk__str_casei)) {
             node->weight = pcmk__add_scores(node->weight, colocation->score);
@@ -1211,7 +1218,8 @@ pcmk__update_dependent_with_promotable(const pe_resource_t *primary,
             continue;
         }
         if (instance->fns->state(instance, FALSE) == colocation->primary_role) {
-            update_dependent_allowed_nodes(dependent, node, colocation);
+            update_dependent_allowed_nodes(dependent, primary, node,
+                                           colocation);
             affected_nodes = g_list_prepend(affected_nodes, node);
         }
     }

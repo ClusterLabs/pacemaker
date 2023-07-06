@@ -30,10 +30,10 @@ pcmk__clone_assign: pingd_node:1 allocation score on cxa1: 0
 pcmk__clone_assign: pingd_node:1 allocation score on cxb1: 1
 pcmk__primitive_assign: cyrus_address allocation score on cxa1: 210
 pcmk__primitive_assign: cyrus_address allocation score on cxb1: 200
-pcmk__primitive_assign: cyrus_drbd_node:0 allocation score on cxa1: 76
-pcmk__primitive_assign: cyrus_drbd_node:0 allocation score on cxb1: 0
+pcmk__primitive_assign: cyrus_drbd_node:0 allocation score on cxa1: 286
+pcmk__primitive_assign: cyrus_drbd_node:0 allocation score on cxb1: 200
 pcmk__primitive_assign: cyrus_drbd_node:1 allocation score on cxa1: -INFINITY
-pcmk__primitive_assign: cyrus_drbd_node:1 allocation score on cxb1: 76
+pcmk__primitive_assign: cyrus_drbd_node:1 allocation score on cxb1: 276
 pcmk__primitive_assign: cyrus_filesys allocation score on cxa1: -INFINITY
 pcmk__primitive_assign: cyrus_filesys allocation score on cxb1: -INFINITY
 pcmk__primitive_assign: cyrus_master allocation score on cxa1: -INFINITY
@@ -50,10 +50,10 @@ pcmk__primitive_assign: named_address allocation score on cxa1: 200
 pcmk__primitive_assign: named_address allocation score on cxb1: 210
 pcmk__primitive_assign: named_daemon allocation score on cxa1: -INFINITY
 pcmk__primitive_assign: named_daemon allocation score on cxb1: -INFINITY
-pcmk__primitive_assign: named_drbd_node:0 allocation score on cxa1: 76
-pcmk__primitive_assign: named_drbd_node:0 allocation score on cxb1: 0
+pcmk__primitive_assign: named_drbd_node:0 allocation score on cxa1: 276
+pcmk__primitive_assign: named_drbd_node:0 allocation score on cxb1: 210
 pcmk__primitive_assign: named_drbd_node:1 allocation score on cxa1: -INFINITY
-pcmk__primitive_assign: named_drbd_node:1 allocation score on cxb1: 76
+pcmk__primitive_assign: named_drbd_node:1 allocation score on cxb1: 286
 pcmk__primitive_assign: named_filesys allocation score on cxa1: -INFINITY
 pcmk__primitive_assign: named_filesys allocation score on cxb1: -INFINITY
 pcmk__primitive_assign: named_syslogd allocation score on cxa1: -INFINITY
