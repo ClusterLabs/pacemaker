@@ -1322,7 +1322,7 @@ prepare_input(const xmlNode *request, enum cib__op_type type,
         return NULL;
     }
 
-    if (pcmk__str_any_of(crm_element_name(root), F_CRM_DATA, F_CIB_CALLDATA,
+    if (pcmk__str_any_of((const char *) root->name, F_CRM_DATA, F_CIB_CALLDATA,
                          NULL)) {
         root = first_named_child(root, XML_TAG_CIB);
     }

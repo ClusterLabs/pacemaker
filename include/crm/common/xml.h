@@ -168,20 +168,14 @@ xmlNode *get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
 xmlNode *get_xpath_object_relative(const char *xpath, xmlNode * xml_obj, int error_level);
 
 static inline const char *
-crm_element_name(const xmlNode *xml)
-{
-    return xml? (const char *)(xml->name) : NULL;
-}
-
-static inline const char *
 crm_map_element_name(const xmlNode *xml)
 {
-    const char *name = crm_element_name(xml);
-
-    if (strcmp(name, "master") == 0) {
+    if (xml == NULL) {
+        return NULL;
+    } else if (strcmp((const char *) xml->name, "master") == 0) {
         return "clone";
     } else {
-        return name;
+        return (const char *) xml->name;
     }
 }
 

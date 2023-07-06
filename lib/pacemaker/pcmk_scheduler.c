@@ -330,7 +330,7 @@ assign_resources(pe_working_set_t *data_set)
 
         if (!rsc->is_remote_node) {
             pe_rsc_trace(rsc, "Assigning %s resource '%s'",
-                         crm_element_name(rsc->xml), rsc->id);
+                         rsc->xml->name, rsc->id);
             rsc->cmds->assign(rsc, NULL, true);
         }
     }

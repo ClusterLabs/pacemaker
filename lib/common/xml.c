@@ -351,7 +351,7 @@ pcmk__xml_match(const xmlNode *haystack, const xmlNode *needle, bool exact)
         const char *id = ID(needle);
         const char *attr = (id == NULL)? NULL : XML_ATTR_ID;
 
-        return pcmk__xe_match(haystack, crm_element_name(needle), attr, id);
+        return pcmk__xe_match(haystack, (const char *) needle->name, attr, id);
     }
 }
 
@@ -384,11 +384,7 @@ xmlNode *
 find_xml_node(const xmlNode *root, const char *search_path, gboolean must_find)
 {
     xmlNode *a_child = NULL;
-    const char *name = "NULL";
-
-    if (root != NULL) {
-        name = crm_element_name(root);
-    }
+    const char *name = (root == NULL)? "<NULL>" : (const char *) root->name;
 
     if (search_path == NULL) {
         crm_warn("Will never find <NULL>");
@@ -398,7 +394,6 @@ find_xml_node(const xmlNode *root, const char *search_path, gboolean must_find)
     for (a_child = pcmk__xml_first_child(root); a_child != NULL;
          a_child = pcmk__xml_next(a_child)) {
         if (strcmp((const char *)a_child->name, search_path) == 0) {
-/* 		crm_trace("returning node (%s).", crm_element_name(a_child)); */
             return a_child;
         }
     }
@@ -453,7 +448,7 @@ pcmk__xe_match(const xmlNode *parent, const char *node_name,
               (attr_n? attr_n : ""),
               (attr_n? "=" : ""),
               (attr_n? attr_v : ""),
-              crm_element_name(parent));
+              (const char *) parent->name);
     return NULL;
 }
 
@@ -1406,18 +1401,15 @@ static void
 dump_xml_element(const xmlNode *data, uint32_t options, GString *buffer,
                  int depth)
 {
-    const char *name = crm_element_name(data);
     bool pretty = pcmk_is_set(options, pcmk__xml_fmt_pretty);
     bool filtered = pcmk_is_set(options, pcmk__xml_fmt_filtered);
     int spaces = pretty? (2 * depth) : 0;
-
-    CRM_ASSERT(name != NULL);
 
     for (int lpc = 0; lpc < spaces; lpc++) {
         g_string_append_c(buffer, ' ');
     }
 
-    pcmk__g_strcat(buffer, "<", name, NULL);
+    pcmk__g_strcat(buffer, "<", data->name, NULL);
 
     for (const xmlAttr *attr = pcmk__xe_first_attr(data); attr != NULL;
          attr = attr->next) {
@@ -1448,7 +1440,7 @@ dump_xml_element(const xmlNode *data, uint32_t options, GString *buffer,
             g_string_append_c(buffer, ' ');
         }
 
-        pcmk__g_strcat(buffer, "</", name, ">", NULL);
+        pcmk__g_strcat(buffer, "</", data->name, ">", NULL);
 
         if (pretty) {
             g_string_append_c(buffer, '\n');
@@ -2099,8 +2091,10 @@ xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml)
 void
 xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
 {
-    CRM_CHECK(pcmk__xe_is(old_xml, crm_element_name(new_xml)), return);
-    CRM_CHECK(pcmk__str_eq(ID(old_xml), ID(new_xml), pcmk__str_casei), return);
+    CRM_CHECK((old_xml != NULL) && (new_xml != NULL)
+              && pcmk__xe_is(old_xml, (const char *) new_xml->name)
+              && pcmk__str_eq(ID(old_xml), ID(new_xml), pcmk__str_none),
+              return);
 
     if(xml_tracking_changes(new_xml) == FALSE) {
         xml_track_changes(new_xml, NULL, NULL, FALSE);
@@ -2114,10 +2108,13 @@ can_prune_leaf(xmlNode * xml_node)
 {
     xmlNode *cIter = NULL;
     gboolean can_prune = TRUE;
-    const char *name = crm_element_name(xml_node);
 
-    if (pcmk__strcase_any_of(name, XML_TAG_RESOURCE_REF, XML_CIB_TAG_OBJ_REF,
-                             XML_ACL_TAG_ROLE_REF, XML_ACL_TAG_ROLE_REFv1, NULL)) {
+    CRM_CHECK(xml_node != NULL, return FALSE);
+
+    if (pcmk__strcase_any_of((const char *) xml_node->name,
+                             XML_TAG_RESOURCE_REF, XML_CIB_TAG_OBJ_REF,
+                             XML_ACL_TAG_ROLE_REF, XML_ACL_TAG_ROLE_REFv1,
+                             NULL)) {
         return FALSE;
     }
 
@@ -2253,7 +2250,7 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
         return;
     }
 
-    object_name = crm_element_name(update);
+    object_name = (const char *) update->name;
     object_href_val = ID(update);
     if (object_href_val != NULL) {
         object_href = XML_ATTR_ID;
@@ -2290,7 +2287,7 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
 #endif
     }
 
-    CRM_CHECK(pcmk__xe_is(target, crm_element_name(update)), return);
+    CRM_CHECK(pcmk__xe_is(target, (const char *) update->name), return);
 
     if (as_diff == FALSE) {
         /* So that expand_plus_plus() gets called */
@@ -2339,7 +2336,7 @@ update_xml_child(xmlNode * child, xmlNode * to_update)
     CRM_CHECK(child != NULL, return FALSE);
     CRM_CHECK(to_update != NULL, return FALSE);
 
-    if (!pcmk__xe_is(to_update, crm_element_name(child))) {
+    if (!pcmk__xe_is(to_update, (const char *) child->name)) {
         can_update = FALSE;
 
     } else if (!pcmk__str_eq(ID(to_update), ID(child), pcmk__str_none)) {
@@ -2416,7 +2413,7 @@ replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean 
     if (up_id == NULL || (child_id && strcmp(child_id, up_id) == 0)) {
         can_delete = TRUE;
     }
-    if (!pcmk__xe_is(update, crm_element_name(child))) {
+    if (!pcmk__xe_is(update, (const char *) child->name)) {
         can_delete = FALSE;
     }
     if (can_delete && delete_only) {
@@ -2485,14 +2482,10 @@ sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
     xmlNode *child = NULL;
     GSList *nvpairs = NULL;
     xmlNode *result = NULL;
-    const char *name = NULL;
 
     CRM_CHECK(input != NULL, return NULL);
 
-    name = crm_element_name(input);
-    CRM_CHECK(name != NULL, return NULL);
-
-    result = create_xml_node(parent, name);
+    result = create_xml_node(parent, (const char *) input->name);
     nvpairs = pcmk_xml_attrs2nvpairs(input);
     nvpairs = pcmk_sort_nvpairs(nvpairs);
     pcmk_nvpairs2xml_attrs(nvpairs, result);
@@ -2541,10 +2534,9 @@ xmlNode *
 crm_next_same_xml(const xmlNode *sibling)
 {
     xmlNode *match = pcmk__xe_next(sibling);
-    const char *name = crm_element_name(sibling);
 
     while (match != NULL) {
-        if (pcmk__xe_is(match, name)) {
+        if (pcmk__xe_is(match, (const char *) sibling->name)) {
             return match;
         }
         match = pcmk__xe_next(match);
@@ -2586,7 +2578,6 @@ crm_xml_cleanup(void)
 xmlNode *
 expand_idref(xmlNode * input, xmlNode * top)
 {
-    const char *tag = NULL;
     const char *ref = NULL;
     xmlNode *result = input;
 
@@ -2597,12 +2588,10 @@ expand_idref(xmlNode * input, xmlNode * top)
         top = input;
     }
 
-    tag = crm_element_name(result);
     ref = crm_element_value(result, XML_ATTR_IDREF);
-
     if (ref != NULL) {
         char *xpath_string = crm_strdup_printf("//%s[@" XML_ATTR_ID "='%s']",
-                                               tag, ref);
+                                               result->name, ref);
 
         result = get_xpath_object(xpath_string, top, LOG_ERR);
         if (result == NULL) {

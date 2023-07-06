@@ -272,7 +272,7 @@ unpack_template(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t * d
 
     id = ID(xml_obj);
     if (id == NULL) {
-        pe_err("'%s' object must have a id", crm_element_name(xml_obj));
+        pe_err("'%s' object must have a id", xml_obj->name);
         return FALSE;
     }
 
@@ -379,7 +379,7 @@ add_template_rsc(xmlNode * xml_obj, pe_working_set_t * data_set)
 
     id = ID(xml_obj);
     if (id == NULL) {
-        pe_err("'%s' object must have a id", crm_element_name(xml_obj));
+        pe_err("'%s' object must have a id", xml_obj->name);
         return FALSE;
     }
 
@@ -621,7 +621,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     id = crm_element_value(xml_obj, XML_ATTR_ID);
     if (id == NULL) {
         pe_err("Ignoring <%s> configuration without " XML_ATTR_ID,
-               crm_element_name(xml_obj));
+               xml_obj->name);
         return pcmk_rc_unpack_error;
     }
 
@@ -653,10 +653,10 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     ops = find_xml_node((*rsc)->xml, "operations", FALSE);
     (*rsc)->ops_xml = expand_idref(ops, data_set->input);
 
-    (*rsc)->variant = get_resource_type(crm_element_name((*rsc)->xml));
+    (*rsc)->variant = get_resource_type((const char *) (*rsc)->xml->name);
     if ((*rsc)->variant == pe_unknown) {
         pe_err("Ignoring resource '%s' of unknown type '%s'",
-               id, crm_element_name((*rsc)->xml));
+               id, (*rsc)->xml->name);
         common_free(*rsc);
         *rsc = NULL;
         return pcmk_rc_unpack_error;

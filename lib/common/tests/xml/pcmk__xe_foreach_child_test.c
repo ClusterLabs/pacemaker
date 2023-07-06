@@ -14,7 +14,7 @@
 
 static int compare_name_handler(xmlNode *xml, void *userdata) {
     function_called();
-    assert_string_equal((char *) userdata, crm_element_name(xml));
+    assert_string_equal((char *) userdata, (const char *) xml->name);
     return pcmk_rc_ok;
 }
 
@@ -140,7 +140,8 @@ const char *str3 =
 
 static int any_of_handler(xmlNode *xml, void *userdata) {
     function_called();
-    assert_true(pcmk__str_any_of(crm_element_name(xml), "node1", "node2", "node3", NULL));
+    assert_true(pcmk__str_any_of((const char *) xml->name,
+                                 "node1", "node2", "node3", NULL));
     return pcmk_rc_ok;
 }
 

@@ -259,7 +259,8 @@ add_resource_details(const pe_action_t *action, xmlNode *action_xml)
 
     // List affected resource
 
-    rsc_xml = create_xml_node(action_xml, crm_element_name(action->rsc->xml));
+    rsc_xml = create_xml_node(action_xml,
+                              (const char *) action->rsc->xml->name);
     if (pcmk_is_set(action->rsc->flags, pe_rsc_orphan)
         && (action->rsc->clone_name != NULL)) {
         /* Use the numbered instance name here, because if there is more

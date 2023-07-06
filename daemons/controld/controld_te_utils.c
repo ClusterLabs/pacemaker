@@ -430,6 +430,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
                     reason = reason->children;
                 }
             }
+            CRM_CHECK(reason != NULL, goto done);
         }
 
         if(strcmp(op, "delete") == 0) {
@@ -463,14 +464,14 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
                        magic, add[0], add[1], add[2], fn, line,
                        pcmk__btoa(controld_globals.transition_graph->complete));
 
-        } else if (pcmk__str_any_of(crm_element_name(reason),
+        } else if (pcmk__str_any_of((const char *) reason->name,
                    XML_CIB_TAG_STATE, XML_CIB_TAG_NODE, NULL)) {
             const char *uname = crm_peer_uname(ID(reason));
 
             do_crm_log(level, "Transition %d aborted by %s '%s' on %s: %s "
                        CRM_XS " cib=%d.%d.%d source=%s:%d complete=%s",
                        controld_globals.transition_graph->id,
-                       crm_element_name(reason), op, pcmk__s(uname, ID(reason)),
+                       reason->name, op, pcmk__s(uname, ID(reason)),
                        abort_text, add[0], add[1], add[2], fn, line,
                        pcmk__btoa(controld_globals.transition_graph->complete));
 
@@ -486,6 +487,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
         }
     }
 
+done:
     if (controld_globals.transition_graph->complete) {
         if (controld_get_period_transition_timer() > 0) {
             controld_stop_transition_timer();

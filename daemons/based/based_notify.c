@@ -206,10 +206,10 @@ cib_diff_notify(const char *op, int result, const char *call_id,
     crm_xml_add_int(update_msg, F_CIB_RC, result);
 
     if (update != NULL) {
-        type = crm_element_name(update);
+        type = (const char *) update->name;
         crm_trace("Setting type to update->name: %s", type);
     } else {
-        type = crm_element_name(diff);
+        type = (const char *) diff->name;
         crm_trace("Setting type to new_obj->name: %s", type);
     }
     crm_xml_add(update_msg, F_CIB_OBJID, ID(diff));

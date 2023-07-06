@@ -358,7 +358,7 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
                     rsc_attr_id = found_attr_id;
                 }
 
-                xml_top = create_xml_node(NULL, crm_element_name(rsc->xml));
+                xml_top = create_xml_node(NULL, (const char *) rsc->xml->name);
                 crm_xml_add(xml_top, XML_ATTR_ID, lookup_id);
 
                 xml_obj = create_xml_node(xml_top, attr_set_type);

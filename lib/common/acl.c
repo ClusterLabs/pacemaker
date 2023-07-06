@@ -68,7 +68,7 @@ create_acl(const xmlNode *xml, GList *acls, enum xml_private_flags mode)
     if ((tag == NULL) && (ref == NULL) && (xpath == NULL)) {
         // Schema should prevent this, but to be safe ...
         crm_trace("Ignoring ACL <%s> element without selection criteria",
-                  crm_element_name(xml));
+                  xml->name);
         return NULL;
     }
 
@@ -79,7 +79,7 @@ create_acl(const xmlNode *xml, GList *acls, enum xml_private_flags mode)
     if (xpath) {
         acl->xpath = g_strdup(xpath);
         crm_trace("Unpacked ACL <%s> element using xpath: %s",
-                  crm_element_name(xml), acl->xpath);
+                  xml->name, acl->xpath);
 
     } else {
         GString *buf = g_string_sized_new(128);
@@ -104,7 +104,7 @@ create_acl(const xmlNode *xml, GList *acls, enum xml_private_flags mode)
 
         g_string_free(buf, FALSE);
         crm_trace("Unpacked ACL <%s> element as xpath: %s",
-                  crm_element_name(xml), acl->xpath);
+                  xml->name, acl->xpath);
     }
 
     return g_list_append(acls, acl);
@@ -129,7 +129,7 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
 
     for (child = pcmk__xe_first_child(acl_entry); child;
          child = pcmk__xe_next(child)) {
-        const char *tag = crm_element_name(child);
+        const char *tag = (const char *) child->name;
         const char *kind = crm_element_value(child, XML_ACL_ATTR_KIND);
 
         if (pcmk__xe_is(child, XML_ACL_TAG_PERMISSION)) {
@@ -155,7 +155,7 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
 
                         if (role_id && strcmp(ref_role, role_id) == 0) {
                             crm_trace("Unpacking referenced role '%s' in ACL <%s> element",
-                                      role_id, crm_element_name(acl_entry));
+                                      role_id, acl_entry->name);
                             acls = parse_acl_entry(acl_top, role, acls);
                             break;
                         }
@@ -389,7 +389,7 @@ purge_xml_attributes(xmlNode *xml)
 
     if (test_acl_mode(nodepriv->flags, pcmk__xf_acl_read)) {
         crm_trace("%s[@" XML_ATTR_ID "=%s] is readable",
-                  crm_element_name(xml), ID(xml));
+                  xml->name, ID(xml));
         return true;
     }
 
@@ -568,22 +568,22 @@ pcmk__apply_creation_acl(xmlNode *xml, bool check_top)
         if (implicitly_allowed(xml)) {
             crm_trace("Creation of <%s> scaffolding with id=\"%s\""
                       " is implicitly allowed",
-                      crm_element_name(xml), display_id(xml));
+                      xml->name, display_id(xml));
 
         } else if (pcmk__check_acl(xml, NULL, pcmk__xf_acl_write)) {
             crm_trace("ACLs allow creation of <%s> with id=\"%s\"",
-                      crm_element_name(xml), display_id(xml));
+                      xml->name, display_id(xml));
 
         } else if (check_top) {
             crm_trace("ACLs disallow creation of <%s> with id=\"%s\"",
-                      crm_element_name(xml), display_id(xml));
+                      xml->name, display_id(xml));
             pcmk_free_xml_subtree(xml);
             return;
 
         } else {
             crm_notice("ACLs would disallow creation of %s<%s> with id=\"%s\"",
                        ((xml == xmlDocGetRootElement(xml->doc))? "root element " : ""),
-                       crm_element_name(xml), display_id(xml));
+                       xml->name, display_id(xml));
         }
     }
 

@@ -547,7 +547,7 @@ update_cib_object(xmlNode * parent, xmlNode * update)
     CRM_CHECK(update != NULL, return -EINVAL);
     CRM_CHECK(parent != NULL, return -EINVAL);
 
-    object_name = crm_element_name(update);
+    object_name = (const char *) update->name;
     CRM_CHECK(object_name != NULL, return -EINVAL);
 
     object_id = ID(update);
@@ -594,7 +594,7 @@ update_cib_object(xmlNode * parent, xmlNode * update)
                 remove = find_xml_node(target, replace_item, FALSE);
                 if (remove != NULL) {
                     crm_trace("Replacing node <%s> in <%s>",
-                              replace_item, crm_element_name(target));
+                              replace_item, target->name);
                     free_xml(remove);
                     remove = NULL;
                 }
@@ -626,7 +626,7 @@ update_cib_object(xmlNode * parent, xmlNode * update)
          a_child = pcmk__xml_next(a_child)) {
         int tmp_result = 0;
 
-        crm_trace("Updating child <%s%s%s%s>", crm_element_name(a_child),
+        crm_trace("Updating child <%s%s%s%s>", a_child->name,
                   ((ID(a_child) == NULL)? "" : " " XML_ATTR_ID "='"),
                   pcmk__s(ID(a_child), ""), ((ID(a_child) == NULL)? "" : "'"));
 
@@ -635,7 +635,7 @@ update_cib_object(xmlNode * parent, xmlNode * update)
         /*  only the first error is likely to be interesting */
         if (tmp_result != pcmk_ok) {
             crm_err("Error updating child <%s%s%s%s>",
-                    crm_element_name(a_child),
+                    a_child->name,
                     ((ID(a_child) == NULL)? "" : " " XML_ATTR_ID "='"),
                     pcmk__s(ID(a_child), ""),
                     ((ID(a_child) == NULL)? "" : "'"));
@@ -665,7 +665,7 @@ add_cib_object(xmlNode * parent, xmlNode * new_obj)
         return -EINVAL;
     }
 
-    object_name = crm_element_name(new_obj);
+    object_name = (const char *) new_obj->name;
     if (object_name == NULL) {
         return -EINVAL;
     }

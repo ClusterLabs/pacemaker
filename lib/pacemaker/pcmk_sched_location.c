@@ -379,7 +379,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     id = ID(xml_obj);
     if (id == NULL) {
         pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
-                         crm_element_name(xml_obj));
+                         xml_obj->name);
         return pcmk_rc_unpack_error;
     }
 

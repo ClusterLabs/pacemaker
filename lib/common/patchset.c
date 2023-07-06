@@ -419,7 +419,6 @@ process_v1_removals(xmlNode *target, xmlNode *patch)
     xmlNode *cIter = NULL;
 
     char *id = NULL;
-    const char *name = NULL;
     const char *value = NULL;
 
     if ((target == NULL) || (patch == NULL)) {
@@ -432,16 +431,15 @@ process_v1_removals(xmlNode *target, xmlNode *patch)
         subtract_xml_comment(target->parent, target, patch, &dummy);
     }
 
-    name = crm_element_name(target);
-    CRM_CHECK(name != NULL, return);
-    CRM_CHECK(pcmk__xe_is(target, crm_element_name(patch)), return);
+    CRM_CHECK(pcmk__xe_is(target, (const char *) patch->name), return);
     CRM_CHECK(pcmk__str_eq(ID(target), ID(patch), pcmk__str_casei), return);
 
     // Check for XML_DIFF_MARKER in a child
     id = crm_element_value_copy(target, XML_ATTR_ID);
     value = crm_element_value(patch, XML_DIFF_MARKER);
     if ((value != NULL) && (strcmp(value, "removed:top") == 0)) {
-        crm_trace("We are the root of the deletion: %s.id=%s", name, id);
+        crm_trace("We are the root of the deletion: %s.id=%s",
+                  target->name, id);
         free_xml(target);
         free(id);
         return;
@@ -481,18 +479,17 @@ process_v1_additions(xmlNode *parent, xmlNode *target, xmlNode *patch)
     }
 
     // Check for XML_DIFF_MARKER in a child
+    name = (const char *) patch->name;
     value = crm_element_value(patch, XML_DIFF_MARKER);
     if ((target == NULL) && (value != NULL)
         && (strcmp(value, "added:top") == 0)) {
         id = ID(patch);
-        name = crm_element_name(patch);
         crm_trace("We are the root of the addition: %s.id=%s", name, id);
         add_node_copy(parent, patch);
         return;
 
     } else if (target == NULL) {
         id = ID(patch);
-        name = crm_element_name(patch);
         crm_err("Could not locate: %s.id=%s", name, id);
         return;
     }
@@ -501,9 +498,7 @@ process_v1_additions(xmlNode *parent, xmlNode *target, xmlNode *patch)
         pcmk__xc_update(parent, target, patch);
     }
 
-    name = crm_element_name(target);
-    CRM_CHECK(name != NULL, return);
-    CRM_CHECK(pcmk__xe_is(target, crm_element_name(patch)), return);
+    CRM_CHECK(pcmk__xe_is(target, name), return);
     CRM_CHECK(pcmk__str_eq(ID(target), ID(patch), pcmk__str_casei), return);
 
     for (xIter = pcmk__xe_first_attr(patch); xIter != NULL;
@@ -1269,11 +1264,12 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
     }
 
     id = ID(left);
+    name = (const char *) left->name;
     if (right == NULL) {
         xmlNode *deleted = NULL;
 
         crm_trace("Processing <%s " XML_ATTR_ID "=%s> (complete copy)",
-                  crm_element_name(left), id);
+                  name, id);
         deleted = add_node_copy(parent, left);
         crm_xml_add(deleted, XML_DIFF_MARKER, marker);
 
@@ -1281,9 +1277,8 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
         return deleted;
     }
 
-    name = crm_element_name(left);
     CRM_CHECK(name != NULL, return NULL);
-    CRM_CHECK(pcmk__xe_is(left, crm_element_name(right)), return NULL);
+    CRM_CHECK(pcmk__xe_is(left, (const char *) right->name), return NULL);
 
     // Check for XML_DIFF_MARKER in a child
     value = crm_element_value(right, XML_DIFF_MARKER);
@@ -1385,8 +1380,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
                     xmlAttrPtr pIter = NULL;
 
                     crm_trace("Changes detected to %s in "
-                              "<%s " XML_ATTR_ID "=%s>",
-                              prop_name, crm_element_name(left), id);
+                              "<%s " XML_ATTR_ID "=%s>", prop_name, name, id);
                     for (pIter = pcmk__xe_first_attr(left); pIter != NULL;
                          pIter = pIter->next) {
                         const char *p_name = (const char *) pIter->name;
@@ -1400,8 +1394,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
                 } else {
                     crm_trace("Changes detected to %s (%s -> %s) in "
                               "<%s " XML_ATTR_ID "=%s>",
-                              prop_name, left_value, right_val,
-                              crm_element_name(left), id);
+                              prop_name, left_value, right_val, name, id);
                     crm_xml_add(diff, prop_name, left_value);
                 }
             }
