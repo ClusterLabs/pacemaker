@@ -13,12 +13,12 @@ from pacemaker._cts.cibxml import Alerts, Clone, Expression, FencingTopology, Gr
 from pacemaker._cts.network import next_ip
 
 
-class ConfigBase:
-    cts_cib = None
-    Factory = None
-
+class CIB:
     def __init__(self, CM, version, factory, tmpfile=None):
+        self.counter = 1
+        self.cts_cib = None
         self.CM = CM
+        self.num_nodes = 0
         self.version = version
         self.Factory = factory
 
@@ -30,10 +30,6 @@ class ConfigBase:
             warnings.resetwarnings()
 
         self.Factory.tmpfile = tmpfile
-
-
-class CIB(ConfigBase):
-    counter = 1
 
     def _show(self, command=""):
         output = ""
