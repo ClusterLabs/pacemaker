@@ -42,7 +42,7 @@ class ClusterManager(UserDict):
     def _finalConditions(self):
         for key in list(self.keys()):
             if self[key] == None:
-                raise ValueError("Improper derivation: self[" + key +   "] must be overridden by subclass.")
+                raise ValueError("Improper derivation: self[%s] must be overridden by subclass." % key)
 
     def __init__(self):
         self.Env = EnvFactory().getInstance()
@@ -74,14 +74,14 @@ class ClusterManager(UserDict):
         if key == "Name":
             return self.name
 
-        print("FIXME: Getting %s from %s" % (key, repr(self)))
+        print("FIXME: Getting %s from %r" % (key, self))
         if key in self.data:
             return self.data[key]
 
         return self.templates.get_patterns(key)
 
     def __setitem__(self, key, value):
-        print("FIXME: Setting %s=%s on %s" % (key, value, repr(self)))
+        print("FIXME: Setting %s=%s on %r" % (key, value, self))
         self.data[key] = value
 
     def key_for_node(self, node):
@@ -122,7 +122,7 @@ class ClusterManager(UserDict):
 
     def install_support(self, command="install"):
         for node in self.Env["nodes"]:
-            self.rsh(node, BuildOptions.DAEMON_DIR + "/cts-support " + command)
+            self.rsh(node, "%s/cts-support %s" % (BuildOptions.DAEMON_DIR, command))
 
     def prepare_fencing_watcher(self, name):
         # If we don't have quorum now but get it as a result of starting this node,
@@ -172,11 +172,10 @@ class ClusterManager(UserDict):
             peer_state[n] = "unknown"
 
         # Now see if any states need to be updated
-        self.debug("looking for: " + repr(stonith.regexes))
+        self.debug("looking for: %r" % stonith.regexes)
         shot = stonith.look(0)
         while shot:
-            line = repr(shot)
-            self.debug("Found: " + line)
+            self.debug("Found: %r" % shot)
             del stonith.regexes[stonith.whichmatch]
 
             # Extract node name
@@ -193,10 +192,10 @@ class ClusterManager(UserDict):
                     self.__instance_errors_to_ignore.append(self.templates["Pat:Fencing_start"] % peer)
 
             if not peer:
-                self.logger.log("ERROR: Unknown stonith match: %s" % line)
+                self.logger.log("ERROR: Unknown stonith match: %r" % shot)
 
             elif not peer in peer_list:
-                self.debug("Found peer: " + peer)
+                self.debug("Found peer: %s" % peer)
                 peer_list.append(peer)
 
             # Get the next one
@@ -214,8 +213,7 @@ class ClusterManager(UserDict):
                 # Wait for any in-progress operations to complete
                 shot = stonith.look(60)
                 while len(stonith.regexes) and shot:
-                    line = repr(shot)
-                    self.debug("Found: " + line)
+                    self.debug("Found: %r" % shot)
                     del stonith.regexes[stonith.whichmatch]
                     shot = stonith.look(60)
 
@@ -263,7 +261,7 @@ class ClusterManager(UserDict):
 
         self.ShouldBeStatus[node] = "any"
         if self.StataCM(node) and self.cluster_stable(self.Env["DeadTime"]):
-            self.logger.log ("%s was already started" % (node))
+            self.logger.log ("%s was already started" % node)
             return 1
 
         stonith = self.prepare_fencing_watcher(node)
@@ -271,7 +269,7 @@ class ClusterManager(UserDict):
 
         (rc, _) = self.rsh(node, self.templates["StartCmd"])
         if rc != 0:
-            self.logger.log ("Warn: Start command failed on node %s" % (node))
+            self.logger.log ("Warn: Start command failed on node %s" % node)
             self.fencing_cleanup(node, stonith)
             return None
 
@@ -280,7 +278,7 @@ class ClusterManager(UserDict):
 
         if watch.unmatched:
             for regex in watch.unmatched:
-                self.logger.log ("Warn: Startup pattern not found: %s" % (regex))
+                self.logger.log ("Warn: Startup pattern not found: %s" % regex)
 
         if watch_result and self.cluster_stable(self.Env["DeadTime"]):
             self.fencing_cleanup(node, stonith)
@@ -290,7 +288,7 @@ class ClusterManager(UserDict):
             self.fencing_cleanup(node, stonith)
             return 1
 
-        self.logger.log ("Warn: Start failed for node %s" % (node))
+        self.logger.log ("Warn: Start failed for node %s" % node)
         return None
 
     def StartaCMnoBlock(self, node, verbose=False):
@@ -379,7 +377,7 @@ class ClusterManager(UserDict):
         watch.look_for_all()
         if watch.unmatched:
             for regex in watch.unmatched:
-                self.logger.log ("Warn: Startup pattern not found: %s" % (regex))
+                self.logger.log ("Warn: Startup pattern not found: %s" % regex)
 
         if not self.cluster_stable():
             self.logger.log("Cluster did not stabilize")
@@ -490,7 +488,7 @@ class ClusterManager(UserDict):
 
         if not node in self.CIBsync and self.Env["ClobberCIB"]:
             self.CIBsync[node] = 1
-            self.rsh(node, "rm -f " + BuildOptions.CIB_DIR + "/cib*")
+            self.rsh(node, "rm -f %s/cib*" % BuildOptions.CIB_DIR)
 
             # Only install the CIB on the first node, all the other ones will pick it up from there
             if self.cib_installed == 1:
@@ -498,15 +496,15 @@ class ClusterManager(UserDict):
 
             self.cib_installed = 1
             if self.Env["CIBfilename"] == None:
-                self.log("Installing Generated CIB on node %s" % (node))
+                self.log("Installing Generated CIB on node %s" % node)
                 self.cib.install(node)
 
             else:
                 self.log("Installing CIB (%s) on node %s" % (self.Env["CIBfilename"], node))
                 if self.rsh.copy(self.Env["CIBfilename"], "root@" + (self.templates["CIBfile"] % node)) != 0:
-                    raise ValueError("Can not scp file to %s %d"%(node))
+                    raise ValueError("Can not scp file to %s %d" % node)
 
-            self.rsh(node, "chown " + BuildOptions.DAEMON_USER + " " + BuildOptions.CIB_DIR + "/cib.xml")
+            self.rsh(node, "chown %s %s/cib.xml" % (BuildOptions.DAEMON_USER, BuildOptions.CIB_DIR))
 
     def prepare(self):
         '''Finish the Initialization process. Prepare to test...'''
@@ -528,14 +526,14 @@ class ClusterManager(UserDict):
         idle_watch = LogWatcher(self.Env["LogFileName"], watchpats, [node], self.Env["LogWatcher"], "ClusterIdle")
         idle_watch.set_watch()
 
-        (_, out) = self.rsh(node, self.templates["StatusCmd"]%node, verbose=1)
+        (_, out) = self.rsh(node, self.templates["StatusCmd"] % node, verbose=1)
 
         if not out:
             out = ""
         else:
             out = out[0].strip()
 
-        self.debug("Node %s status: '%s'" %(node, out))
+        self.debug("Node %s status: '%s'" % (node, out))
 
         if out.find('ok') < 0:
             if self.ShouldBeStatus[node] == "up":
@@ -583,7 +581,7 @@ class ClusterManager(UserDict):
 
         if self.test_node_CM(node) == 2:
             return 1
-        self.log("Warn: Node %s not stable" % (node))
+        self.log("Warn: Node %s not stable" % node)
         return None
 
     def partition_stable(self, nodes, timeout=None):
@@ -614,7 +612,7 @@ class ClusterManager(UserDict):
                     return 1
             ret = idle_watch.look()
 
-        self.debug("Warn: Partition %s not IDLE after %ds" % (repr(nodes), timeout))
+        self.debug("Warn: Partition %r not IDLE after %ds" % (nodes, timeout))
         return None
 
     def cluster_stable(self, timeout=None, double_check=False):
@@ -639,7 +637,7 @@ class ClusterManager(UserDict):
         rc = 0
 
         if not status_line:
-            (_, out) = self.rsh(node, self.templates["StatusCmd"]%node, verbose=1)
+            (_, out) = self.rsh(node, self.templates["StatusCmd"] % node, verbose=1)
 
             if out:
                 status_line = out[0].strip()
@@ -674,13 +672,13 @@ class ClusterManager(UserDict):
         for node in self.Env["nodes"]:
             if self.ShouldBeStatus[node] == "up":
 
-                cmd = self.templates["RscRunning"] % (rid)
+                cmd = self.templates["RscRunning"] % rid
                 (rc, lines) = self.rsh(node, cmd)
 
                 if rc == 127:
                     self.log("Command '%s' failed. Binary or pacemaker-cts package not installed?" % cmd)
                     for line in lines:
-                        self.log("Output: "+line)
+                        self.log("Output: %s " % line)
                 elif rc == 0:
                     ResourceNodes.append(node)
 
@@ -719,7 +717,7 @@ class ClusterManager(UserDict):
             else:
                 self.debug("Node %s is down... skipping" % node)
 
-        self.debug("Found partitions: %s" % repr(ccm_partitions) )
+        self.debug("Found partitions: %r" % ccm_partitions)
         return ccm_partitions
 
     def HasQuorum(self, node_list):
@@ -741,7 +739,7 @@ class ClusterManager(UserDict):
                 if quorum.find("0") != -1:
                     return 0
 
-                self.debug("WARN: Unexpected quorum test result from " + node + ":" + quorum)
+                self.debug("WARN: Unexpected quorum test result from %s:%s" % (node, quorum))
 
         return 0
 
@@ -859,7 +857,7 @@ class ClusterManager(UserDict):
         if not out:
             return "off"
         out = out[0].strip()
-        self.debug("Standby result: "+out)
+        self.debug("Standby result: %s" % out)
         return out
 
     # status == "on" : Enter Standby mode
@@ -883,12 +881,12 @@ class ClusterManager(UserDict):
             </constraints>'
             """ % (rid, node, node, rid)
 
-        self.rsh(node, self.templates['CibAddXml'] % (rsc_xml))
-        self.rsh(node, self.templates['CibAddXml'] % (constraint_xml))
+        self.rsh(node, self.templates['CibAddXml'] % rsc_xml)
+        self.rsh(node, self.templates['CibAddXml'] % constraint_xml)
 
     def RemoveDummyRsc(self, node, rid):
-        constraint = "\"//rsc_location[@rsc='%s']\"" % (rid)
-        rsc = "\"//primitive[@id='%s']\"" % (rid)
+        constraint = "\"//rsc_location[@rsc='%s']\"" % rid
+        rsc = "\"//primitive[@id='%s']\"" % rid
 
         self.rsh(node, self.templates['CibDelXpath'] % constraint)
         self.rsh(node, self.templates['CibDelXpath'] % rsc)
