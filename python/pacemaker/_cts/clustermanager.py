@@ -39,11 +39,6 @@ class ClusterManager(UserDict):
     be in.
     '''
 
-    def __InitialConditions(self):
-        #if os.geteuid() != 0:
-        #  raise ValueError("Must Be Root!")
-        None
-
     def _finalConditions(self):
         for key in list(self.keys()):
             if self[key] == None:
@@ -52,7 +47,6 @@ class ClusterManager(UserDict):
     def __init__(self):
         self.Env = EnvFactory().getInstance()
         self.templates = PatternSelector(self.Env["Name"])
-        self.__InitialConditions()
         self.logger = LogFactory()
         self.TestLoggingLevel=0
         self.data = {}
@@ -276,7 +270,6 @@ class ClusterManager(UserDict):
                 self.logger.log ("Warn: Startup pattern not found: %s" % (regex))
 
         if watch_result and self.cluster_stable(self.Env["DeadTime"]):
-            #self.debug("Found match: "+ repr(watch_result))
             self.fencing_cleanup(node, stonith)
             return 1
 
@@ -312,8 +305,6 @@ class ClusterManager(UserDict):
         (rc, _) = self.rsh(node, self.templates["StopCmd"])
         if rc == 0:
             # Make sure we can continue even if corosync leaks
-            # fdata-* is the old name
-            #self.rsh(node, "rm -rf /dev/shm/qb-* /dev/shm/fdata-*")
             self.ShouldBeStatus[node] = "down"
             self.cluster_stable(self.Env["DeadTime"])
             return 1
@@ -490,11 +481,8 @@ class ClusterManager(UserDict):
             self.rsh(node, "opcontrol --dump")
             self.rsh(node, "opcontrol --save=cts.%d" % test)
             # Read back with: opreport -l session:cts.0 image:<directory>/c*
-            if None:
-                self.rsh(node, "opcontrol --reset")
-            else:
-                self.oprofileStop(node)
-                self.oprofileStart(node)
+            self.oprofileStop(node)
+            self.oprofileStart(node)
 
     def oprofileStop(self, node=None):
         if not node:
@@ -811,16 +799,6 @@ class ClusterManager(UserDict):
                     r"pacemaker-controld.*exited with status 2",
                     r"attrd.*exited with status 1",
                     r"cib.*exited with status 2",
-
-# Not if it was fenced
-#                    "A new node joined the cluster",
-
-#                    "WARN: determine_online_status: Node .* is unclean",
-#                    "Scheduling node .* for fencing",
-#                    "Executing .* fencing operation",
-#                    "tengine_stonith_callback: .*result=0",
-#                    "Processing I_NODE_JOIN:.* cause=C_HA_MESSAGE",
-#                    "State transition S_.* -> S_INTEGRATION.*input=I_NODE_JOIN",
                     "State transition S_STARTING -> S_PENDING",
                     ], badnews_ignore = common_ignore)
 
@@ -849,10 +827,6 @@ class ClusterManager(UserDict):
 
         controld = Process(self, "pacemaker-controld",
                     pats = [
-#                    "WARN: determine_online_status: Node .* is unclean",
-#                    "Scheduling node .* for fencing",
-#                    "Executing .* fencing operation",
-#                    "tengine_stonith_callback: .*result=0",
                     "State transition .* S_IDLE",
                     "State transition S_STARTING -> S_PENDING",
                     ], badnews_ignore = common_ignore)
