@@ -698,7 +698,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     (*rsc)->role = RSC_ROLE_STOPPED;
     (*rsc)->next_role = RSC_ROLE_UNKNOWN;
 
-    (*rsc)->recovery_type = recovery_stop_start;
+    (*rsc)->recovery_type = pcmk_multiply_active_restart;
     (*rsc)->stickiness = 0;
     (*rsc)->migration_threshold = INFINITY;
     (*rsc)->failure_timeout = 0;
@@ -786,17 +786,17 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MULTIPLE);
     if (pcmk__str_eq(value, "stop_only", pcmk__str_casei)) {
-        (*rsc)->recovery_type = recovery_stop_only;
+        (*rsc)->recovery_type = pcmk_multiply_active_stop;
         pe_rsc_trace((*rsc), "%s multiple running resource recovery: stop only",
                      (*rsc)->id);
 
     } else if (pcmk__str_eq(value, "block", pcmk__str_casei)) {
-        (*rsc)->recovery_type = recovery_block;
+        (*rsc)->recovery_type = pcmk_multiply_active_block;
         pe_rsc_trace((*rsc), "%s multiple running resource recovery: block",
                      (*rsc)->id);
 
     } else if (pcmk__str_eq(value, "stop_unexpected", pcmk__str_casei)) {
-        (*rsc)->recovery_type = recovery_stop_unexpected;
+        (*rsc)->recovery_type = pcmk_multiply_active_unexpected;
         pe_rsc_trace((*rsc), "%s multiple running resource recovery: "
                              "stop unexpected instances",
                      (*rsc)->id);
@@ -807,7 +807,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
             pe_warn("%s is not a valid value for " XML_RSC_ATTR_MULTIPLE
                     ", using default of \"stop_start\"", value);
         }
-        (*rsc)->recovery_type = recovery_stop_start;
+        (*rsc)->recovery_type = pcmk_multiply_active_restart;
         pe_rsc_trace((*rsc), "%s multiple running resource recovery: "
                              "stop/start", (*rsc)->id);
     }

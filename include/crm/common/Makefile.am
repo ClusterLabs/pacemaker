@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2022 the Pacemaker project contributors
+# Copyright 2004-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -27,8 +27,10 @@ header_HEADERS = acl.h \
 				 mainloop_compat.h \
 				 nvpair.h \
 				 output.h \
+				 resources.h		\
 				 results.h \
 				 results_compat.h \
+				 scheduler.h		\
 				 util.h \
 				 util_compat.h \
 				 xml.h \
