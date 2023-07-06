@@ -9,26 +9,10 @@
 
 #include <crm_internal.h>
 
-#include <sys/param.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <unistd.h>
-
-#include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
-
 #include <glib.h>
-#include <libxml/tree.h>
 
 #include <crm/crm.h>
 #include <crm/cib.h>
-#include <crm/msg_xml.h>
-#include <crm/common/ipc.h>
-#include <crm/cluster.h>
-
-#include <crm/common/xml.h>
-
 #include <pacemaker-based.h>
 
 static const cib__op_fn_t cib_op_functions[] = {
