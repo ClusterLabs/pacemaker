@@ -14,13 +14,14 @@ from pacemaker._cts.network import next_ip
 
 
 class CIB:
-    def __init__(self, CM, version, factory, tmpfile=None):
-        self.counter = 1
-        self.cts_cib = None
-        self.CM = CM
-        self.num_nodes = 0
+    def __init__(self, cm, version, factory, tmpfile=None):
+        self._cib = None
+        self._cm = cm
+        self._counter = 1
+        self._factory = factory
+        self._num_nodes = 0
+
         self.version = version
-        self.Factory = factory
 
         if not tmpfile:
             warnings.filterwarnings("ignore")
@@ -29,19 +30,19 @@ class CIB:
             tmpfile = f.name
             warnings.resetwarnings()
 
-        self.Factory.tmpfile = tmpfile
+        self._factory.tmpfile = tmpfile
 
     def _show(self, command=""):
         output = ""
-        (_, result) = self.Factory.rsh(self.Factory.target, "HOME=/root CIB_file=%s cibadmin -Ql %s" % (self.Factory.tmpfile, command), verbose=1)
+        (_, result) = self._factory.rsh(self._factory.target, "HOME=/root CIB_file=%s cibadmin -Ql %s" % (self._factory.tmpfile, command), verbose=1)
         for line in result:
             output += line
-            self.Factory.debug("Generated Config: %s" % line)
+            self._factory.debug("Generated Config: %s" % line)
         return output
 
-    def NewIP(self, name=None, standard="ocf"):
-        if self.CM.Env["IPagent"] == "IPaddr2":
-            ip = next_ip(self.CM.Env["IPBase"])
+    def new_ip(self, name=None, standard="ocf"):
+        if self._cm.Env["IPagent"] == "IPaddr2":
+            ip = next_ip(self._cm.Env["IPBase"])
             if not name:
                 if ":" in ip:
                     (_, _, suffix) = ip.rpartition(":")
@@ -49,7 +50,7 @@ class CIB:
                 else:
                     name = "r%s" % ip
 
-            r = Resource(self.Factory, name, self.CM.Env["IPagent"], standard)
+            r = Resource(self._factory, name, self._cm.Env["IPagent"], standard)
             r["ip"] = ip
 
             if ":" in ip:
@@ -60,9 +61,9 @@ class CIB:
 
         else:
             if not name:
-                name = "r%s%d" % (self.CM.Env["IPagent"], self.counter)
-                self.counter += 1
-            r = Resource(self.Factory, name, self.CM.Env["IPagent"], standard)
+                name = "r%s%d" % (self._cm.Env["IPagent"], self._counter)
+                self._counter += 1
+            r = Resource(self._factory, name, self._cm.Env["IPagent"], standard)
 
         r.add_op("monitor", "5s")
         return r
@@ -82,7 +83,7 @@ class CIB:
         # so each corosync.conf "object" is one record;
         # match the "node {" record that has "ring0_addr: node_name";
         # then print the substring of that record after "nodeid:"
-        (rc, output) = self.Factory.rsh(self.Factory.target,
+        (rc, output) = self._factory.rsh(self._factory.target,
             r"""awk -v RS="}" """
             r"""'/^(\s*nodelist\s*{)?\s*node\s*{.*(ring0_addr|name):\s*%s(\s+|$)/"""
             r"""{gsub(/.*nodeid:\s*/,"");gsub(/\s+.*$/,"");print}' %s"""
@@ -97,42 +98,42 @@ class CIB:
         return node_id
 
     def install(self, target):
-        old = self.Factory.tmpfile
+        old = self._factory.tmpfile
 
         # Force a rebuild
-        self.cts_cib = None
+        self._cib = None
 
-        self.Factory.tmpfile = "%s/cib.xml" % BuildOptions.CIB_DIR
+        self._factory.tmpfile = "%s/cib.xml" % BuildOptions.CIB_DIR
         self.contents(target)
-        self.Factory.rsh(self.Factory.target, "chown %s %s" % (BuildOptions.DAEMON_USER, self.Factory.tmpfile))
+        self._factory.rsh(self._factory.target, "chown %s %s" % (BuildOptions.DAEMON_USER, self._factory.tmpfile))
 
-        self.Factory.tmpfile = old
+        self._factory.tmpfile = old
 
     def contents(self, target=None):
         # fencing resource
-        if self.cts_cib:
-            return self.cts_cib
+        if self._cib:
+            return self._cib
 
         if target:
-            self.Factory.target = target
+            self._factory.target = target
 
-        self.Factory.rsh(self.Factory.target, "HOME=/root cibadmin --empty %s > %s" % (self.version, self.Factory.tmpfile))
-        self.num_nodes = len(self.CM.Env["nodes"])
+        self._factory.rsh(self._factory.target, "HOME=/root cibadmin --empty %s > %s" % (self.version, self._factory.tmpfile))
+        self._num_nodes = len(self._cm.Env["nodes"])
 
         no_quorum = "stop"
-        if self.num_nodes < 3:
+        if self._num_nodes < 3:
             no_quorum = "ignore"
-            self.Factory.log("Cluster only has %d nodes, configuring: no-quorum-policy=ignore" % self.num_nodes)
+            self._factory.log("Cluster only has %d nodes, configuring: no-quorum-policy=ignore" % self._num_nodes)
 
         # We don't need a nodes section unless we add attributes
         stn = None
 
         # Fencing resource
         # Define first so that the shell doesn't reject every update
-        if self.CM.Env["DoFencing"]:
+        if self._cm.Env["DoFencing"]:
 
             # Define the "real" fencing device
-            st = Resource(self.Factory, "Fencing", self.CM.Env["stonith-type"], "stonith")
+            st = Resource(self._factory, "Fencing", self._cm.Env["stonith-type"], "stonith")
 
             # Set a threshold for unreliable stonith devices such as the vmware one
             st.add_meta("migration-threshold", "5")
@@ -143,10 +144,10 @@ class CIB:
             # For remote node tests, a cluster node is stopped and brought back up
             # as a remote node with the name "remote-OLDNAME". To allow fencing
             # devices to fence these nodes, create a list of all possible node names.
-            all_node_names = [ prefix+n for n in self.CM.Env["nodes"] for prefix in ('', 'remote-') ]
+            all_node_names = [ prefix+n for n in self._cm.Env["nodes"] for prefix in ('', 'remote-') ]
 
             # Add all parameters specified by user
-            entries = self.CM.Env["stonith-params"].split(',')
+            entries = self._cm.Env["stonith-params"].split(',')
             for entry in entries:
                 try:
                     (name, value) = entry.split('=', 1)
@@ -168,25 +169,25 @@ class CIB:
             attr_nodes = {}
 
             # Create the levels
-            stl = FencingTopology(self.Factory)
-            for node in self.CM.Env["nodes"]:
+            stl = FencingTopology(self._factory)
+            for node in self._cm.Env["nodes"]:
                 # Remote node tests will rename the node
                 remote_node = "remote-%s" % node
 
                 # Randomly assign node to a fencing method
-                ftype = self.CM.Env.random_gen.choice(["levels-and", "levels-or ", "broadcast "])
+                ftype = self._cm.Env.random_gen.choice(["levels-and", "levels-or ", "broadcast "])
 
                 # For levels-and, randomly choose targeting by node name or attribute
                 by = ""
                 if ftype == "levels-and":
                     node_id = self.get_node_id(node)
-                    if node_id == 0 or self.CM.Env.random_gen.choice([True, False]):
+                    if node_id == 0 or self._cm.Env.random_gen.choice([True, False]):
                         by = " (by name)"
                     else:
                         attr_nodes[node] = node_id
                         by = " (by attribute)"
 
-                self.CM.log(" - Using %s fencing for node: %s%s" % (ftype, node, by))
+                self._cm.log(" - Using %s fencing for node: %s%s" % (ftype, node, by))
 
                 if ftype == "levels-and":
                     # If targeting by name, add a topology level for this node
@@ -211,14 +212,14 @@ class CIB:
             # If any levels-and nodes were targeted by attribute,
             # create the attributes and a level for the attribute.
             if attr_nodes:
-                stn = Nodes(self.Factory)
+                stn = Nodes(self._factory)
                 for (node_name, node_id) in attr_nodes.items():
                     stn.add_node(node_name, node_id, { "cts-fencing" : "levels-and" })
                 stl.level(1, None, "FencingPass,Fencing", "cts-fencing", "levels-and")
 
             # Create a Dummy agent that always passes for levels-and
             if stt_nodes:
-                stt = Resource(self.Factory, "FencingPass", "fence_dummy", "stonith")
+                stt = Resource(self._factory, "FencingPass", "fence_dummy", "stonith")
                 stt["pcmk_host_list"] = " ".join(stt_nodes)
                 # Wait this many seconds before doing anything, handy for letting disks get flushed too
                 stt["random_sleep_range"] = "30"
@@ -227,7 +228,7 @@ class CIB:
 
             # Create a Dummy agent that always fails for levels-or
             if stf_nodes:
-                stf = Resource(self.Factory, "FencingFail", "fence_dummy", "stonith")
+                stf = Resource(self._factory, "FencingFail", "fence_dummy", "stonith")
                 stf["pcmk_host_list"] = " ".join(stf_nodes)
                 # Wait this many seconds before doing anything, handy for letting disks get flushed too
                 stf["random_sleep_range"] = "30"
@@ -237,8 +238,8 @@ class CIB:
             # Now commit the levels themselves
             stl.commit()
 
-        o = Option(self.Factory)
-        o["stonith-enabled"] = self.CM.Env["DoFencing"]
+        o = Option(self._factory)
+        o["stonith-enabled"] = self._cm.Env["DoFencing"]
         o["start-failure-is-fatal"] = "false"
         o["pe-input-series-max"] = "5000"
         o["shutdown-escalation"] = "5min"
@@ -248,7 +249,7 @@ class CIB:
 
         o.commit()
 
-        o = OpDefaults(self.Factory)
+        o = OpDefaults(self._factory)
         o["timeout"] = "90s"
         o.commit()
 
@@ -257,35 +258,35 @@ class CIB:
             stn.commit()
 
         # Add an alerts section if possible
-        if self.Factory.rsh.exists_on_all(self.CM.Env["notification-agent"], self.CM.Env["nodes"]):
-            alerts = Alerts(self.Factory)
-            alerts.add_alert(self.CM.Env["notification-agent"],
-                             self.CM.Env["notification-recipient"])
+        if self._factory.rsh.exists_on_all(self._cm.Env["notification-agent"], self._cm.Env["nodes"]):
+            alerts = Alerts(self._factory)
+            alerts.add_alert(self._cm.Env["notification-agent"],
+                             self._cm.Env["notification-recipient"])
             alerts.commit()
 
         # Add resources?
-        if self.CM.Env["CIBResource"]:
+        if self._cm.Env["CIBResource"]:
             self.add_resources()
 
         # generate cib
-        self.cts_cib = self._show()
+        self._cib = self._show()
 
-        if self.Factory.tmpfile != "%s/cib.xml" % BuildOptions.CIB_DIR:
-            self.Factory.rsh(self.Factory.target, "rm -f %s" % self.Factory.tmpfile)
+        if self._factory.tmpfile != "%s/cib.xml" % BuildOptions.CIB_DIR:
+            self._factory.rsh(self._factory.target, "rm -f %s" % self._factory.tmpfile)
 
-        return self.cts_cib
+        return self._cib
 
     def add_resources(self):
         # Per-node resources
-        for node in self.CM.Env["nodes"]:
+        for node in self._cm.Env["nodes"]:
             name = "rsc_%s" % node
-            r = self.NewIP(name)
+            r = self.new_ip(name)
             r.prefer(node, "100")
             r.commit()
 
         # Migrator
         # Make this slightly sticky (since we have no other location constraints) to avoid relocation during Reattach
-        m = Resource(self.Factory, "migrator","Dummy",  "ocf", "pacemaker")
+        m = Resource(self._factory, "migrator","Dummy",  "ocf", "pacemaker")
         m["passwd"] = "whatever"
         m.add_meta("resource-stickiness","1")
         m.add_meta("allow-migrate", "1")
@@ -293,48 +294,48 @@ class CIB:
         m.commit()
 
         # Ping the test exerciser
-        p = Resource(self.Factory, "ping-1","ping",  "ocf", "pacemaker")
+        p = Resource(self._factory, "ping-1","ping",  "ocf", "pacemaker")
         p.add_op("monitor", "60s")
-        p["host_list"] = self.CM.Env["cts-exerciser"]
+        p["host_list"] = self._cm.Env["cts-exerciser"]
         p["name"] = "connected"
         p["debug"] = "true"
 
-        c = Clone(self.Factory, "Connectivity", p)
+        c = Clone(self._factory, "Connectivity", p)
         c["globally-unique"] = "false"
         c.commit()
 
         # promotable clone resource
-        s = Resource(self.Factory, "stateful-1", "Stateful", "ocf", "pacemaker")
+        s = Resource(self._factory, "stateful-1", "Stateful", "ocf", "pacemaker")
         s.add_op("monitor", "15s", timeout="60s")
         s.add_op("monitor", "16s", timeout="60s", role="Promoted")
-        ms = Clone(self.Factory, "promotable-1", s)
+        ms = Clone(self._factory, "promotable-1", s)
         ms["promotable"] = "true"
-        ms["clone-max"] = self.num_nodes
+        ms["clone-max"] = self._num_nodes
         ms["clone-node-max"] = 1
         ms["promoted-max"] = 1
         ms["promoted-node-max"] = 1
 
         # Require connectivity to run the promotable clone
-        r = Rule(self.Factory, "connected", "-INFINITY", op="or")
-        r.add_child(Expression(self.Factory, "m1-connected-1", "connected", "lt", "1"))
-        r.add_child(Expression(self.Factory, "m1-connected-2", "connected", "not_defined", None))
+        r = Rule(self._factory, "connected", "-INFINITY", op="or")
+        r.add_child(Expression(self._factory, "m1-connected-1", "connected", "lt", "1"))
+        r.add_child(Expression(self._factory, "m1-connected-2", "connected", "not_defined", None))
         ms.prefer("connected", rule=r)
 
         ms.commit()
 
         # Group Resource
-        g = Group(self.Factory, "group-1")
-        g.add_child(self.NewIP())
+        g = Group(self._factory, "group-1")
+        g.add_child(self.new_ip())
 
-        if self.CM.Env["have_systemd"]:
-            sysd = Resource(self.Factory, "petulant",
+        if self._cm.Env["have_systemd"]:
+            sysd = Resource(self._factory, "petulant",
                             "pacemaker-cts-dummyd@10", "service")
             sysd.add_op("monitor", "P10S")
             g.add_child(sysd)
         else:
-            g.add_child(self.NewIP())
+            g.add_child(self.new_ip())
 
-        g.add_child(self.NewIP())
+        g.add_child(self.new_ip())
 
         # Make group depend on the promotable clone
         g.after("promotable-1", first="promote", then="start")
@@ -343,7 +344,7 @@ class CIB:
         g.commit()
 
         # LSB resource
-        lsb = Resource(self.Factory, "lsb-dummy", "LSBDummy", "lsb")
+        lsb = Resource(self._factory, "lsb-dummy", "LSBDummy", "lsb")
         lsb.add_op("monitor", "5s")
 
         # LSB with group
@@ -354,18 +355,18 @@ class CIB:
 
 
 class ConfigFactory:
-    def __init__(self, CM):
-        self.CM = CM
-        self.rsh = self.CM.rsh
-        if not self.CM.Env["ListTests"]:
-            self.target = self.CM.Env["nodes"][0]
+    def __init__(self, cm):
+        self._cm = cm
+        self.rsh = self._cm.rsh
+        if not self._cm.Env["ListTests"]:
+            self.target = self._cm.Env["nodes"][0]
         self.tmpfile = None
 
     def log(self, args):
-        self.CM.log("cib: %s" % args)
+        self._cm.log("cib: %s" % args)
 
     def debug(self, args):
-        self.CM.debug("cib: %s" % args)
+        self._cm.debug("cib: %s" % args)
 
     def create_config(self, name="pacemaker-1.0"):
-        return CIB(self.CM, name, self)
+        return CIB(self._cm, name, self)
