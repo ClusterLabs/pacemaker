@@ -724,15 +724,13 @@ reset_allowed_node_counts(pe_resource_t *rsc)
  * \internal
  * \brief Check whether an instance has a preferred node
  *
- * \param[in] rsc               Clone or bundle being assigned (for logs only)
  * \param[in] instance          Clone instance or bundle replica container
  * \param[in] optimal_per_node  Optimal number of instances per node
  *
  * \return Instance's current node if still available, otherwise NULL
  */
 static const pe_node_t *
-preferred_node(const pe_resource_t *rsc, const pe_resource_t *instance,
-               int optimal_per_node)
+preferred_node(const pe_resource_t *instance, int optimal_per_node)
 {
     const pe_node_t *node = NULL;
     const pe_node_t *parent_node = NULL;
@@ -747,7 +745,7 @@ preferred_node(const pe_resource_t *rsc, const pe_resource_t *instance,
     // Check whether instance's current node can run resources
     node = pe__current_node(instance);
     if (!pcmk__node_available(node, true, false)) {
-        pe_rsc_trace(rsc, "Not assigning %s to %s early (unavailable)",
+        pe_rsc_trace(instance, "Not assigning %s to %s early (unavailable)",
                      instance->id, pe__node_name(node));
         return NULL;
     }
@@ -755,7 +753,7 @@ preferred_node(const pe_resource_t *rsc, const pe_resource_t *instance,
     // Check whether node already has optimal number of instances assigned
     parent_node = pcmk__top_allowed_node(instance, node);
     if ((parent_node != NULL) && (parent_node->count >= optimal_per_node)) {
-        pe_rsc_trace(rsc,
+        pe_rsc_trace(instance,
                      "Not assigning %s to %s early "
                      "(optimal instances already assigned)",
                      instance->id, pe__node_name(node));
@@ -811,7 +809,7 @@ pcmk__assign_instances(pe_resource_t *collective, GList *instances,
             continue;   // Already assigned
         }
 
-        current = preferred_node(collective, instance, optimal_per_node);
+        current = preferred_node(instance, optimal_per_node);
         if ((current != NULL)
             && assign_instance_early(collective, instance, current,
                                      max_per_node, available)) {
