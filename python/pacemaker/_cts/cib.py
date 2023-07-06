@@ -15,6 +15,7 @@ from pacemaker._cts.network import next_ip
 
 class CIB:
     def __init__(self, cm, version, factory, tmpfile=None):
+        # pylint: disable=invalid-name
         self._cib = None
         self._cm = cm
         self._counter = 1
@@ -25,6 +26,7 @@ class CIB:
 
         if not tmpfile:
             warnings.filterwarnings("ignore")
+            # pylint: disable=consider-using-with
             f=tempfile.NamedTemporaryFile(delete=True)
             f.close()
             tmpfile = f.name
@@ -356,6 +358,7 @@ class CIB:
 
 class ConfigFactory:
     def __init__(self, cm):
+        # pylint: disable=invalid-name
         self._cm = cm
         self.rsh = self._cm.rsh
         if not self._cm.Env["ListTests"]:
