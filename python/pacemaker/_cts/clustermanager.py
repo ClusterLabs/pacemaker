@@ -1,6 +1,7 @@
 """ ClusterManager class for Pacemaker's Cluster Test Suite (CTS)
 """
 
+__all__ = ["ClusterManager"]
 __copyright__ = """Copyright 2000-2023 the Pacemaker project contributors.
 Certain portions by Huang Zhen <zhenhltc@cn.ibm.com> are copyright 2004
 International Business Machines. The version control history for this file
