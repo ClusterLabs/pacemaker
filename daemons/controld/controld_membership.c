@@ -224,7 +224,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
         return;
     }
 
-    if (pcmk__str_eq(crm_element_name(output), XML_CIB_TAG_NODE, pcmk__str_casei)) {
+    if (pcmk__xe_is(output, XML_CIB_TAG_NODE)) {
         node_xml = output;
 
     } else {
@@ -238,7 +238,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
         crm_node_t *node = NULL;
         gboolean known = FALSE;
 
-        if (!pcmk__str_eq(crm_element_name(node_xml), XML_CIB_TAG_NODE, pcmk__str_casei)) {
+        if (!pcmk__xe_is(node_xml, XML_CIB_TAG_NODE)) {
             continue;
         }
 

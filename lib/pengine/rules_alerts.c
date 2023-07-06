@@ -123,21 +123,16 @@ unpack_alert_filter(xmlNode *basenode, pcmk__alert_t *entry)
     for (event_type = pcmk__xe_first_child(select); event_type != NULL;
          event_type = pcmk__xe_next(event_type)) {
 
-        const char *tagname = crm_element_name(event_type);
-
-        if (tagname == NULL) {
-            continue;
-
-        } else if (!strcmp(tagname, XML_CIB_TAG_ALERT_FENCING)) {
+        if (pcmk__xe_is(event_type, XML_CIB_TAG_ALERT_FENCING)) {
             flags |= pcmk__alert_fencing;
 
-        } else if (!strcmp(tagname, XML_CIB_TAG_ALERT_NODES)) {
+        } else if (pcmk__xe_is(event_type, XML_CIB_TAG_ALERT_NODES)) {
             flags |= pcmk__alert_node;
 
-        } else if (!strcmp(tagname, XML_CIB_TAG_ALERT_RESOURCES)) {
+        } else if (pcmk__xe_is(event_type, XML_CIB_TAG_ALERT_RESOURCES)) {
             flags |= pcmk__alert_resource;
 
-        } else if (!strcmp(tagname, XML_CIB_TAG_ALERT_ATTRIBUTES)) {
+        } else if (pcmk__xe_is(event_type, XML_CIB_TAG_ALERT_ATTRIBUTES)) {
             xmlNode *attr;
             const char *attr_name;
             int nattrs = 0;

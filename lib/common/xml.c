@@ -2099,8 +2099,7 @@ xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml)
 void
 xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
 {
-    CRM_CHECK(pcmk__str_eq(crm_element_name(old_xml), crm_element_name(new_xml), pcmk__str_casei),
-              return);
+    CRM_CHECK(pcmk__xe_is(old_xml, crm_element_name(new_xml)), return);
     CRM_CHECK(pcmk__str_eq(ID(old_xml), ID(new_xml), pcmk__str_casei), return);
 
     if(xml_tracking_changes(new_xml) == FALSE) {
@@ -2291,9 +2290,7 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
 #endif
     }
 
-    CRM_CHECK(pcmk__str_eq(crm_element_name(target), crm_element_name(update),
-                           pcmk__str_casei),
-              return);
+    CRM_CHECK(pcmk__xe_is(target, crm_element_name(update)), return);
 
     if (as_diff == FALSE) {
         /* So that expand_plus_plus() gets called */
@@ -2342,7 +2339,7 @@ update_xml_child(xmlNode * child, xmlNode * to_update)
     CRM_CHECK(child != NULL, return FALSE);
     CRM_CHECK(to_update != NULL, return FALSE);
 
-    if (!pcmk__str_eq(crm_element_name(to_update), crm_element_name(child), pcmk__str_none)) {
+    if (!pcmk__xe_is(to_update, crm_element_name(child))) {
         can_update = FALSE;
 
     } else if (!pcmk__str_eq(ID(to_update), ID(child), pcmk__str_none)) {
@@ -2376,7 +2373,7 @@ find_xml_children(xmlNode ** children, xmlNode * root,
     CRM_CHECK(root != NULL, return FALSE);
     CRM_CHECK(children != NULL, return FALSE);
 
-    if (tag != NULL && !pcmk__str_eq(tag, crm_element_name(root), pcmk__str_casei)) {
+    if ((tag != NULL) && !pcmk__xe_is(root, tag)) {
 
     } else if (value != NULL && !pcmk__str_eq(value, crm_element_value(root, field), pcmk__str_casei)) {
 
@@ -2419,7 +2416,7 @@ replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean 
     if (up_id == NULL || (child_id && strcmp(child_id, up_id) == 0)) {
         can_delete = TRUE;
     }
-    if (!pcmk__str_eq(crm_element_name(update), crm_element_name(child), pcmk__str_casei)) {
+    if (!pcmk__xe_is(update, crm_element_name(child))) {
         can_delete = FALSE;
     }
     if (can_delete && delete_only) {
@@ -2547,7 +2544,7 @@ crm_next_same_xml(const xmlNode *sibling)
     const char *name = crm_element_name(sibling);
 
     while (match != NULL) {
-        if (!strcmp(crm_element_name(match), name)) {
+        if (pcmk__xe_is(match, name)) {
             return match;
         }
         match = pcmk__xe_next(match);

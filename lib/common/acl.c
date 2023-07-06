@@ -132,7 +132,7 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
         const char *tag = crm_element_name(child);
         const char *kind = crm_element_value(child, XML_ACL_ATTR_KIND);
 
-        if (strcmp(XML_ACL_TAG_PERMISSION, tag) == 0){
+        if (pcmk__xe_is(child, XML_ACL_TAG_PERMISSION)) {
             CRM_ASSERT(kind != NULL);
             crm_trace("Unpacking ACL <%s> element of kind '%s'", tag, kind);
             tag = kind;
@@ -302,10 +302,9 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
 
             for (child = pcmk__xe_first_child(acls); child;
                  child = pcmk__xe_next(child)) {
-                const char *tag = crm_element_name(child);
 
-                if (!strcmp(tag, XML_ACL_TAG_USER)
-                    || !strcmp(tag, XML_ACL_TAG_USERv1)) {
+                if (pcmk__xe_is(child, XML_ACL_TAG_USER)
+                    || pcmk__xe_is(child, XML_ACL_TAG_USERv1)) {
                     const char *id = crm_element_value(child, XML_ATTR_NAME);
 
                     if (id == NULL) {
@@ -316,7 +315,7 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
                         crm_debug("Unpacking ACLs for user '%s'", id);
                         docpriv->acls = parse_acl_entry(acls, child, docpriv->acls);
                     }
-                } else if (!strcmp(tag, XML_ACL_TAG_GROUP)) {
+                } else if (pcmk__xe_is(child, XML_ACL_TAG_GROUP)) {
                     const char *id = crm_element_value(child, XML_ATTR_NAME);
 
                     if (id == NULL) {

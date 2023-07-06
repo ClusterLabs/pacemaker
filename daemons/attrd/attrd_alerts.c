@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2021 the Pacemaker project contributors
+ * Copyright 2015-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -92,7 +92,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     }
 
     crmalerts = output;
-    if (crmalerts && !pcmk__str_eq(crm_element_name(crmalerts), XML_CIB_TAG_ALERTS, pcmk__str_none)) {
+    if ((crmalerts != NULL) && !pcmk__xe_is(crmalerts, XML_CIB_TAG_ALERTS)) {
         crmalerts = first_named_child(crmalerts, XML_CIB_TAG_ALERTS);
     }
     if (!crmalerts) {

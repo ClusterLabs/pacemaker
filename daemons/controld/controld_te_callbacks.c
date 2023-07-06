@@ -225,12 +225,12 @@ process_resource_updates(const char *node, xmlNode *xml, xmlNode *change,
         return;
     }
 
-    if (strcmp(TYPE(xml), XML_CIB_TAG_LRM) == 0) {
+    if (pcmk__xe_is(xml, XML_CIB_TAG_LRM)) {
         xml = first_named_child(xml, XML_LRM_TAG_RESOURCES);
         CRM_CHECK(xml != NULL, return);
     }
 
-    CRM_CHECK(strcmp(TYPE(xml), XML_LRM_TAG_RESOURCES) == 0, return);
+    CRM_CHECK(pcmk__xe_is(xml, XML_LRM_TAG_RESOURCES), return);
 
     /*
      * Updates by, or in response to, TE actions will never contain updates

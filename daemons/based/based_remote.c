@@ -224,9 +224,9 @@ cib_remote_auth(xmlNode * login)
         return FALSE;
     }
 
-    tmp = crm_element_name(login);
-    if (!pcmk__str_eq(tmp, "cib_command", pcmk__str_casei)) {
-        crm_err("Wrong tag: %s", tmp);
+    if (!pcmk__xe_is(login, "cib_command")) {
+        crm_err("Unrecognizable message from remote client");
+        crm_log_xml_info(login, "bad");
         return FALSE;
     }
 
@@ -414,9 +414,8 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
 {
     const char *value = NULL;
 
-    value = crm_element_name(command);
-    if (!pcmk__str_eq(value, "cib_command", pcmk__str_casei)) {
-        crm_log_xml_trace(command, "Bad command: ");
+    if (!pcmk__xe_is(command, "cib_command")) {
+        crm_log_xml_trace(command, "bad");
         return;
     }
 

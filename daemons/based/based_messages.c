@@ -349,10 +349,10 @@ cib_process_replace_svr(const char *op, int options, const char *section, xmlNod
                         xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                         xmlNode ** answer)
 {
-    const char *tag = crm_element_name(input);
     int rc =
         cib_process_replace(op, options, section, req, input, existing_cib, result_cib, answer);
-    if (rc == pcmk_ok && pcmk__str_eq(tag, XML_TAG_CIB, pcmk__str_casei)) {
+
+    if ((rc == pcmk_ok) && pcmk__xe_is(input, XML_TAG_CIB)) {
         sync_in_progress = 0;
     }
     return rc;

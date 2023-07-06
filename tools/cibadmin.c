@@ -878,7 +878,7 @@ do_work(xmlNode *input, xmlNode **output)
     /* construct the request */
     the_cib->call_timeout = options.message_timeout_sec;
     if ((strcmp(options.cib_action, PCMK__CIB_REQUEST_REPLACE) == 0)
-        && pcmk__str_eq(crm_element_name(input), XML_TAG_CIB, pcmk__str_casei)) {
+        && pcmk__xe_is(input, XML_TAG_CIB)) {
         xmlNode *status = pcmk_find_cib_element(input, XML_CIB_TAG_STATUS);
 
         if (status == NULL) {

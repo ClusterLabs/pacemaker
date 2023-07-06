@@ -677,9 +677,7 @@ query_node_uname(cib_t * the_cib, const char *uuid, char **uname)
     }
 
     xml_obj = fragment;
-    CRM_CHECK(pcmk__str_eq(crm_element_name(xml_obj), XML_CIB_TAG_NODES, pcmk__str_casei),
-              return -ENOMSG);
-    CRM_ASSERT(xml_obj != NULL);
+    CRM_CHECK(pcmk__xe_is(xml_obj, XML_CIB_TAG_NODES), return -ENOMSG);
     crm_log_xml_trace(xml_obj, "Result section");
 
     rc = -ENXIO;

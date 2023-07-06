@@ -119,7 +119,6 @@ main(int argc, char **argv)
     xmlNode *status = NULL;
 
     pe_working_set_t *data_set = NULL;
-    const char *xml_tag = NULL;
 
     int rc = pcmk_rc_ok;
     crm_exit_t exit_code = CRM_EX_OK;
@@ -201,8 +200,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    xml_tag = crm_element_name(cib_object);
-    if (!pcmk__str_eq(xml_tag, XML_TAG_CIB, pcmk__str_casei)) {
+    if (!pcmk__xe_is(cib_object, XML_TAG_CIB)) {
         rc = EBADMSG;
         g_set_error(&error, PCMK__RC_ERROR, rc,
                     "This tool can only check complete configurations (i.e. those starting with <cib>).");

@@ -324,7 +324,6 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
                     xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                     xmlNode ** answer)
 {
-    const char *tag = NULL;
     int result = pcmk_ok;
 
     crm_trace("Processing %s for %s section",
@@ -341,16 +340,14 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
         return -EINVAL;
     }
 
-    tag = crm_element_name(input);
-
     if (pcmk__str_eq(XML_CIB_TAG_SECTION_ALL, section, pcmk__str_casei)) {
         section = NULL;
 
-    } else if (pcmk__str_eq(tag, section, pcmk__str_casei)) {
+    } else if (pcmk__xe_is(input, section)) {
         section = NULL;
     }
 
-    if (pcmk__str_eq(tag, XML_TAG_CIB, pcmk__str_casei)) {
+    if (pcmk__xe_is(input, XML_TAG_CIB)) {
         int updates = 0;
         int epoch = 0;
         int admin_epoch = 0;
@@ -453,7 +450,7 @@ cib_process_delete(const char *op, int options, const char *section, xmlNode * r
     }
 
     obj_root = pcmk_find_cib_element(*result_cib, section);
-    if(pcmk__str_eq(crm_element_name(input), section, pcmk__str_casei)) {
+    if (pcmk__xe_is(input, section)) {
         xmlNode *child = NULL;
         for (child = pcmk__xml_first_child(input); child;
              child = pcmk__xml_next(child)) {
@@ -736,7 +733,7 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
     } else if (pcmk__str_eq(XML_TAG_CIB, section, pcmk__str_casei)) {
         section = NULL;
 
-    } else if (pcmk__str_eq(crm_element_name(input), XML_TAG_CIB, pcmk__str_casei)) {
+    } else if (pcmk__xe_is(input, XML_TAG_CIB)) {
         section = NULL;
     }
 
@@ -755,7 +752,7 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
     failed = create_xml_node(NULL, XML_TAG_FAILED);
 
     update_section = pcmk_find_cib_element(*result_cib, section);
-    if (pcmk__str_eq(crm_element_name(input), section, pcmk__str_casei)) {
+    if (pcmk__xe_is(input, section)) {
         xmlNode *a_child = NULL;
 
         for (a_child = pcmk__xml_first_child(input); a_child != NULL;

@@ -35,7 +35,7 @@ print_constraint(xmlNode *xml_obj, void *userdata)
         return pcmk_rc_ok;
     }
 
-    if (!pcmk__str_eq(XML_CONS_TAG_RSC_DEPEND, crm_element_name(xml_obj), pcmk__str_casei)) {
+    if (!pcmk__xe_is(xml_obj, XML_CONS_TAG_RSC_DEPEND)) {
         return pcmk_rc_ok;
     }
 

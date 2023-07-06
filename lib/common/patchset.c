@@ -434,9 +434,7 @@ process_v1_removals(xmlNode *target, xmlNode *patch)
 
     name = crm_element_name(target);
     CRM_CHECK(name != NULL, return);
-    CRM_CHECK(pcmk__str_eq(crm_element_name(target), crm_element_name(patch),
-                           pcmk__str_casei),
-              return);
+    CRM_CHECK(pcmk__xe_is(target, crm_element_name(patch)), return);
     CRM_CHECK(pcmk__str_eq(ID(target), ID(patch), pcmk__str_casei), return);
 
     // Check for XML_DIFF_MARKER in a child
@@ -505,9 +503,7 @@ process_v1_additions(xmlNode *parent, xmlNode *target, xmlNode *patch)
 
     name = crm_element_name(target);
     CRM_CHECK(name != NULL, return);
-    CRM_CHECK(pcmk__str_eq(crm_element_name(target), crm_element_name(patch),
-                           pcmk__str_casei),
-              return);
+    CRM_CHECK(pcmk__xe_is(target, crm_element_name(patch)), return);
     CRM_CHECK(pcmk__str_eq(ID(target), ID(patch), pcmk__str_casei), return);
 
     for (xIter = pcmk__xe_first_attr(patch); xIter != NULL;
@@ -1287,9 +1283,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
 
     name = crm_element_name(left);
     CRM_CHECK(name != NULL, return NULL);
-    CRM_CHECK(pcmk__str_eq(crm_element_name(left), crm_element_name(right),
-                           pcmk__str_casei),
-              return NULL);
+    CRM_CHECK(pcmk__xe_is(left, crm_element_name(right)), return NULL);
 
     // Check for XML_DIFF_MARKER in a child
     value = crm_element_value(right, XML_DIFF_MARKER);

@@ -482,7 +482,6 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
 {
     enum pcmk__graph_action_type action_type;
     pcmk__graph_action_t *action = NULL;
-    const char *element = TYPE(xml_action);
     const char *value = ID(xml_action);
 
     if (value == NULL) {
@@ -491,19 +490,18 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
         return NULL;
     }
 
-    if (pcmk__str_eq(element, XML_GRAPH_TAG_RSC_OP, pcmk__str_none)) {
+    if (pcmk__xe_is(xml_action, XML_GRAPH_TAG_RSC_OP)) {
         action_type = pcmk__rsc_graph_action;
 
-    } else if (pcmk__str_eq(element, XML_GRAPH_TAG_PSEUDO_EVENT,
-                            pcmk__str_none)) {
+    } else if (pcmk__xe_is(xml_action, XML_GRAPH_TAG_PSEUDO_EVENT)) {
         action_type = pcmk__pseudo_graph_action;
 
-    } else if (pcmk__str_eq(element, XML_GRAPH_TAG_CRM_EVENT, pcmk__str_none)) {
+    } else if (pcmk__xe_is(xml_action, XML_GRAPH_TAG_CRM_EVENT)) {
         action_type = pcmk__cluster_graph_action;
 
     } else {
         crm_err("Ignoring transition graph action of unknown type '%s' (bug?)",
-                element);
+                crm_element_name(xml_action));
         crm_log_xml_trace(xml_action, "invalid");
         return NULL;
     }

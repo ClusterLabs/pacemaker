@@ -1329,7 +1329,7 @@ prepare_input(const xmlNode *request, enum cib__op_type type,
 
     // Grab the specified section
     if ((root != NULL) && (*section != NULL)
-        && pcmk__str_eq(crm_element_name(root), XML_TAG_CIB, pcmk__str_none)) {
+        && pcmk__xe_is(root, XML_TAG_CIB)) {
 
         root = pcmk_find_cib_element(root, *section);
     }

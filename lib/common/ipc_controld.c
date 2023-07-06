@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 the Pacemaker project contributors
+ * Copyright 2020-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -216,7 +216,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
      *
      * <ack function="dispatch_controller_ipc" line="391" status="112"/>
      */
-    if (pcmk__str_eq(crm_element_name(reply), "ack", pcmk__str_none)) {
+    if (pcmk__xe_is(reply, "ack")) {
         return true; // More replies needed
     }
 

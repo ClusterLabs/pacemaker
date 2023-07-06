@@ -245,6 +245,22 @@ char *pcmk__xml_artefact_path(enum pcmk__xml_artefact_ns ns,
 
 /*!
  * \internal
+ * \brief Check whether an XML element is of a particular type
+ *
+ * \param[in] xml   XML element to compare
+ * \param[in] name  XML element name to compare
+ *
+ * \return \c true if \p xml is of type \p name, otherwise \c false
+ */
+static inline bool
+pcmk__xe_is(const xmlNode *xml, const char *name)
+{
+    return (xml != NULL) && (xml->name != NULL) && (name != NULL)
+           && (strcmp((const char *) xml->name, name) == 0);
+}
+
+/*!
+ * \internal
  * \brief Return first non-text child node of an XML node
  *
  * \param[in] parent  XML node to check

@@ -104,25 +104,23 @@ pe_test_expression(xmlNode *expr, GHashTable *node_hash, enum rsc_role_e role,
 enum expression_type
 find_expression_type(xmlNode * expr)
 {
-    const char *tag = NULL;
     const char *attr = NULL;
 
     attr = crm_element_value(expr, XML_EXPR_ATTR_ATTRIBUTE);
-    tag = crm_element_name(expr);
 
-    if (pcmk__str_eq(tag, PCMK_XE_DATE_EXPRESSION, pcmk__str_none)) {
+    if (pcmk__xe_is(expr, PCMK_XE_DATE_EXPRESSION)) {
         return time_expr;
 
-    } else if (pcmk__str_eq(tag, PCMK_XE_RSC_EXPRESSION, pcmk__str_none)) {
+    } else if (pcmk__xe_is(expr, PCMK_XE_RSC_EXPRESSION)) {
         return rsc_expr;
 
-    } else if (pcmk__str_eq(tag, PCMK_XE_OP_EXPRESSION, pcmk__str_none)) {
+    } else if (pcmk__xe_is(expr, PCMK_XE_OP_EXPRESSION)) {
         return op_expr;
 
-    } else if (pcmk__str_eq(tag, XML_TAG_RULE, pcmk__str_none)) {
+    } else if (pcmk__xe_is(expr, XML_TAG_RULE)) {
         return nested_rule;
 
-    } else if (!pcmk__str_eq(tag, XML_TAG_EXPRESSION, pcmk__str_none)) {
+    } else if (!pcmk__xe_is(expr, XML_TAG_EXPRESSION)) {
         return not_expr;
 
     } else if (pcmk__str_any_of(attr, CRM_ATTR_UNAME, CRM_ATTR_KIND, CRM_ATTR_ID, NULL)) {
@@ -360,8 +358,7 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
     xmlNode *list = nvpair_list;
     xmlNode *an_attr = NULL;
 
-    name = crm_element_name(list->children);
-    if (pcmk__str_eq(XML_TAG_ATTRS, name, pcmk__str_casei)) {
+    if (pcmk__xe_is(list->children, XML_TAG_ATTRS)) {
         list = list->children;
     }
 

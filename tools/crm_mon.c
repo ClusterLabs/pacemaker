@@ -1840,7 +1840,7 @@ handle_rsc_op(xmlNode *xml, void *userdata)
 
     node = crm_element_value(rsc_op, XML_LRM_ATTR_TARGET);
 
-    while (n != NULL && !pcmk__str_eq(XML_CIB_TAG_STATE, TYPE(n), pcmk__str_casei)) {
+    while ((n != NULL) && !pcmk__xe_is(n, XML_CIB_TAG_STATE)) {
         n = n->parent;
     }
 
