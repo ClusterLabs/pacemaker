@@ -116,8 +116,8 @@ class ClusterManager(UserDict):
         '''How many nodes are up?'''
         count = 0
         for node in self.Env["nodes"]:
-          if self.ShouldBeStatus[node] == "up":
-            count = count + 1
+            if self.ShouldBeStatus[node] == "up":
+                count = count + 1
         return count
 
     def install_support(self, command="install"):
@@ -236,8 +236,10 @@ class ClusterManager(UserDict):
     def StartaCM(self, node, verbose=False):
 
         '''Start up the cluster manager on a given node'''
-        if verbose: self.logger.log("Starting %s on node %s" % (self.templates["Name"], node))
-        else: self.debug("Starting %s on node %s" % (self.templates["Name"], node))
+        if verbose:
+            self.logger.log("Starting %s on node %s" % (self.templates["Name"], node))
+        else:
+            self.debug("Starting %s on node %s" % (self.templates["Name"], node))
         ret = 1
 
         if not node in self.ShouldBeStatus:
@@ -284,7 +286,7 @@ class ClusterManager(UserDict):
             self.fencing_cleanup(node, stonith)
             return 1
 
-        elif self.StataCM(node) and self.cluster_stable(self.Env["DeadTime"]):
+        if self.StataCM(node) and self.cluster_stable(self.Env["DeadTime"]):
             self.fencing_cleanup(node, stonith)
             return 1
 
@@ -295,8 +297,10 @@ class ClusterManager(UserDict):
 
         '''Start up the cluster manager on a given node with none-block mode'''
 
-        if verbose: self.logger.log("Starting %s on node %s" % (self["Name"], node))
-        else: self.debug("Starting %s on node %s" % (self["Name"], node))
+        if verbose:
+            self.logger.log("Starting %s on node %s" % (self["Name"], node))
+        else:
+            self.debug("Starting %s on node %s" % (self["Name"], node))
 
         self.install_config(node)
         self.rsh(node, self.templates["StartCmd"], synchronous=False)
@@ -307,8 +311,10 @@ class ClusterManager(UserDict):
 
         '''Stop the cluster manager on a given node'''
 
-        if verbose: self.logger.log("Stopping %s on node %s" % (self["Name"], node))
-        else: self.debug("Stopping %s on node %s" % (self["Name"], node))
+        if verbose:
+            self.logger.log("Stopping %s on node %s" % (self["Name"], node))
+        else:
+            self.debug("Stopping %s on node %s" % (self["Name"], node))
 
         if self.ShouldBeStatus[node] != "up" and force == False:
             return 1
@@ -319,9 +325,8 @@ class ClusterManager(UserDict):
             self.ShouldBeStatus[node] = "down"
             self.cluster_stable(self.Env["DeadTime"])
             return 1
-        else:
-            self.logger.log ("ERROR: Could not stop %s on node %s" % (self["Name"], node))
 
+        self.logger.log ("ERROR: Could not stop %s on node %s" % (self["Name"], node))
         return None
 
     def StopaCMnoBlock(self, node):
@@ -425,8 +430,8 @@ class ClusterManager(UserDict):
                 if rc != 0:
                     self.logger.log("Could not break the communication between %s and %s: %d" % (target, node, rc))
                     return None
-                else:
-                    self.debug("Communication cut between %s and %s" % (target, node))
+
+                self.debug("Communication cut between %s and %s" % (target, node))
         return 1
 
     def unisolate_node(self, target, nodes=None):
@@ -732,10 +737,11 @@ class ClusterManager(UserDict):
 
                 if quorum.find("1") != -1:
                     return 1
-                elif quorum.find("0") != -1:
+
+                if quorum.find("0") != -1:
                     return 0
-                else:
-                    self.debug("WARN: Unexpected quorum test result from " + node + ":" + quorum)
+
+                self.debug("WARN: Unexpected quorum test result from " + node + ":" + quorum)
 
         return 0
 
