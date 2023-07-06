@@ -107,7 +107,7 @@ class SimulStartLite(CTSTest):
         did_fail = False
         unstable = []
         for node in self._env["nodes"]:
-            if self._cm.StataCM(node) == 0:
+            if not self._cm.stat_cm(node):
                 did_fail = True
                 unstable.append(node)
 

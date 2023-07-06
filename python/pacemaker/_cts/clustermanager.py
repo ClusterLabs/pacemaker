@@ -224,10 +224,10 @@ class ClusterManager(UserDict):
 
             # Poll until it comes up
             if self.Env["at-boot"]:
-                if not self.StataCM(peer):
+                if not self.stat_cm(peer):
                     time.sleep(self.Env["StartTime"])
 
-                if not self.StataCM(peer):
+                if not self.stat_cm(peer):
                     self.logger.log("ERROR: Peer %s failed to restart after being fenced" % peer)
                     return None
 
@@ -262,7 +262,7 @@ class ClusterManager(UserDict):
         self.install_config(node)
 
         self.ShouldBeStatus[node] = "any"
-        if self.StataCM(node) and self.cluster_stable(self.Env["DeadTime"]):
+        if self.stat_cm(node) and self.cluster_stable(self.Env["DeadTime"]):
             self.logger.log ("%s was already started" % node)
             return 1
 
@@ -286,7 +286,7 @@ class ClusterManager(UserDict):
             self.fencing_cleanup(node, stonith)
             return 1
 
-        if self.StataCM(node) and self.cluster_stable(self.Env["DeadTime"]):
+        if self.stat_cm(node) and self.cluster_stable(self.Env["DeadTime"]):
             self.fencing_cleanup(node, stonith)
             return 1
 
@@ -413,7 +413,7 @@ class ClusterManager(UserDict):
         if not nodelist:
             nodelist = self.Env["nodes"]
         for node in nodelist:
-            if self.StataCM(node):
+            if self.stat_cm(node):
                 result[node] = "up"
             else:
                 result[node] = "down"
@@ -526,7 +526,7 @@ class ClusterManager(UserDict):
             self.ShouldBeStatus[node] = ""
             if self.Env["experimental-tests"]:
                 self.unisolate_node(node)
-            self.StataCM(node)
+            self.stat_cm(node)
 
     def test_node_CM(self, node):
         '''Report the status of the cluster manager on a given node'''
@@ -579,13 +579,10 @@ class ClusterManager(UserDict):
         # Up and stable
         return 2
 
-    # Is the node up or is the node down
-    def StataCM(self, node):
-        '''Report the status of the cluster manager on a given node'''
+    def stat_cm(self, node):
+        """ Report the status of the cluster manager on a given node """
 
-        if self.test_node_CM(node) > 0:
-            return 1
-        return None
+        return self.test_node_CM(node) > 0
 
     # Being up and being stable is not the same question...
     def node_stable(self, node):

@@ -98,12 +98,12 @@ class NearQuorumPointTest(CTSTest):
         #get the "bad" nodes
         upnodes = []
         for node in stopset:
-            if self._cm.StataCM(node) == 1:
+            if self._cm.stat_cm(node):
                 upnodes.append(node)
 
         downnodes = []
         for node in startset:
-            if self._cm.StataCM(node) == 0:
+            if not self._cm.stat_cm(node):
                 downnodes.append(node)
 
         self._cm.fencing_cleanup("NearQuorumPoint", stonith)

@@ -75,7 +75,7 @@ class SimulStopLite(CTSTest):
         did_fail = False
         up_nodes = []
         for node in self._env["nodes"]:
-            if self._cm.StataCM(node) == 1:
+            if self._cm.stat_cm(node):
                 did_fail = True
                 up_nodes.append(node)
 
