@@ -769,7 +769,7 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
         update_results(failed, input, op, result);
     }
 
-    if ((result == pcmk_ok) && xml_has_children(failed)) {
+    if ((result == pcmk_ok) && (failed->children != NULL)) {
         result = -EINVAL;
     }
 

@@ -1711,15 +1711,6 @@ pcmk__xml2fd(int fd, xmlNode *cur)
     return pcmk_rc_ok;
 }
 
-gboolean
-xml_has_children(const xmlNode * xml_root)
-{
-    if (xml_root != NULL && xml_root->children != NULL) {
-        return TRUE;
-    }
-    return FALSE;
-}
-
 void
 xml_remove_prop(xmlNode * obj, const char *name)
 {
@@ -2745,6 +2736,15 @@ add_node_nocopy(xmlNode *parent, const char *name, xmlNode *child)
     add_node_copy(parent, child);
     free_xml(child);
     return 1;
+}
+
+gboolean
+xml_has_children(const xmlNode * xml_root)
+{
+    if (xml_root != NULL && xml_root->children != NULL) {
+        return TRUE;
+    }
+    return FALSE;
 }
 
 // LCOV_EXCL_STOP

@@ -565,7 +565,7 @@ command_query(pcmk__output_t *out, cib_t *cib)
     } else if (rc != pcmk_rc_ok) {
         // Don't do anything.
 
-    } else if (xml_has_children(result)) {
+    } else if (result->children != NULL) {
         struct output_data_s od = { out, use_pattern, false };
 
         pcmk__xe_foreach_child(result, NULL, output_one_attribute, &od);

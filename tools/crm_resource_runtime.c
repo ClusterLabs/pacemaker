@@ -133,7 +133,7 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
     }
 
     crm_log_xml_debug(xml_search, "Match");
-    if (xml_has_children(xml_search)) {
+    if (xml_search->children != NULL) {
         xmlNode *child = NULL;
 
         rc = ENOTUNIQ;

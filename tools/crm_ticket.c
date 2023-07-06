@@ -370,7 +370,7 @@ find_ticket_state(cib_t * the_cib, gchar *ticket_id, xmlNode ** ticket_state_xml
     }
 
     crm_log_xml_debug(xml_search, "Match");
-    if (xml_has_children(xml_search)) {
+    if (xml_search->children != NULL) {
         if (ticket_id) {
             fprintf(stdout, "Multiple ticket_states match ticket_id=%s\n", ticket_id);
         }

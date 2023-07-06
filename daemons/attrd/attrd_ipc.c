@@ -402,14 +402,18 @@ send_child_update(xmlNode *child, void *data)
 xmlNode *
 attrd_client_update(pcmk__request_t *request)
 {
-    xmlNode *xml = request->xml;
+    xmlNode *xml = NULL;
     const char *attr, *value, *regex;
+
+    CRM_CHECK((request != NULL) && (request->xml != NULL), return NULL);
+
+    xml = request->xml;
 
     /* If the message has children, that means it is a message from a newer
      * client that supports sending multiple operations at a time.  There are
      * two ways we can handle that.
      */
-    if (xml_has_children(xml)) {
+    if (xml->children != NULL) {
         if (ATTRD_SUPPORTS_MULTI_MESSAGE(minimum_protocol_version)) {
             /* First, if all peers support a certain protocol version, we can
              * just broadcast the big message and they'll handle it.  However,

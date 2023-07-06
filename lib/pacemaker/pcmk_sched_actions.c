@@ -1861,7 +1861,7 @@ process_node_history(pe_node_t *node, const xmlNode *lrm_rscs)
                                                       XML_LRM_TAG_RESOURCE);
          rsc_entry != NULL; rsc_entry = crm_next_same_xml(rsc_entry)) {
 
-        if (xml_has_children(rsc_entry)) {
+        if (rsc_entry->children != NULL) {
             GList *result = pcmk__rscs_matching_id(ID(rsc_entry),
                                                    node->details->data_set);
 

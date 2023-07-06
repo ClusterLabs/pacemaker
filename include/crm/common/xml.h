@@ -179,8 +179,6 @@ crm_map_element_name(const xmlNode *xml)
     }
 }
 
-gboolean xml_has_children(const xmlNode * root);
-
 char *calculate_on_disk_digest(xmlNode * local_cib);
 char *calculate_operation_digest(xmlNode * local_cib, const char *version);
 char *calculate_xml_versioned_digest(xmlNode * input, gboolean sort, gboolean do_filter,

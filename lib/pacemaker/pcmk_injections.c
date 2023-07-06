@@ -483,7 +483,7 @@ find_ticket_state(pcmk__output_t *out, cib_t *the_cib, const char *ticket_id,
     }
 
     crm_log_xml_debug(xml_search, "Match");
-    if (xml_has_children(xml_search) && (ticket_id != NULL)) {
+    if ((xml_search->children != NULL) && (ticket_id != NULL)) {
         out->err(out, "Multiple ticket_states match ticket_id=%s", ticket_id);
     }
     *ticket_state_xml = xml_search;

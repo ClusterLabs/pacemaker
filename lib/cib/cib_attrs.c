@@ -152,16 +152,15 @@ find_attr(cib_t *cib, const char *section, const char *node_uuid,
 static int
 handle_multiples(pcmk__output_t *out, xmlNode *search, const char *attr_name)
 {
-    if (xml_has_children(search)) {
+    if ((search != NULL) && (search->children != NULL)) {
         xmlNode *child = NULL;
-        out->info(out, "Multiple attributes match name=%s", attr_name);
 
+        out->info(out, "Multiple attributes match name=%s", attr_name);
         for (child = pcmk__xml_first_child(search); child != NULL;
              child = pcmk__xml_next(child)) {
             out->info(out, "  Value: %s \t(id=%s)",
                       crm_element_value(child, XML_NVPAIR_ATTR_VALUE), ID(child));
         }
-
         return ENOTUNIQ;
 
     } else {
@@ -184,9 +183,9 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
     char *local_attr_id = NULL;
     char *local_set_name = NULL;
 
-    CRM_CHECK(section != NULL, return EINVAL);
-    CRM_CHECK(attr_value != NULL, return EINVAL);
-    CRM_CHECK(attr_name != NULL || attr_id != NULL, return EINVAL);
+    CRM_CHECK((out != NULL) && (cib != NULL) && (section != NULL)
+              && ((attr_id != NULL) || (attr_name != NULL))
+              && (attr_value != NULL), return EINVAL);
 
     rc = find_attr(cib, section, node_uuid, set_type, set_name, attr_id,
                    attr_name, user_name, &xml_search);
@@ -487,7 +486,7 @@ read_attr_delegate(cib_t *cib, const char *section, const char *node_uuid,
                              attr_id, attr_name, user_name, &result);
 
     if (rc == pcmk_rc_ok) {
-        if (!xml_has_children(result)) {
+        if (result->children == NULL) {
             pcmk__str_update(attr_value, crm_element_value(result, XML_NVPAIR_ATTR_VALUE));
         } else {
             rc = ENOTUNIQ;
