@@ -128,7 +128,7 @@ class ClusterManager(UserDict):
         # If we don't have quorum now but get it as a result of starting this node,
         # then a bunch of nodes might get fenced
         upnode = None
-        if self.HasQuorum(None):
+        if self.has_quorum(None):
             self.debug("Have quorum")
             return None
 
@@ -162,10 +162,10 @@ class ClusterManager(UserDict):
             self.debug("Nothing to do")
             return peer_list
 
-        q = self.HasQuorum(None)
+        q = self.has_quorum(None)
         if not q and len(self.Env["nodes"]) > 2:
             # We didn't gain quorum - we shouldn't have shot anyone
-            self.debug("Quorum: %d Len: %d" % (q, len(self.Env["nodes"])))
+            self.debug("Quorum: %s Len: %d" % (q, len(self.Env["nodes"])))
             return peer_list
 
         for n in self.Env["nodes"]:
@@ -723,7 +723,7 @@ class ClusterManager(UserDict):
         self.debug("Found partitions: %r" % ccm_partitions)
         return ccm_partitions
 
-    def HasQuorum(self, node_list):
+    def has_quorum(self, node_list):
         # If we are auditing a partition, then one side will
         #   have quorum and the other not.
         # So the caller needs to tell us which we are checking
@@ -737,14 +737,14 @@ class ClusterManager(UserDict):
                 quorum = quorum[0].strip()
 
                 if quorum.find("1") != -1:
-                    return 1
+                    return True
 
                 if quorum.find("0") != -1:
-                    return 0
+                    return False
 
                 self.debug("WARN: Unexpected quorum test result from %s:%s" % (node, quorum))
 
-        return 0
+        return False
 
     def Components(self):
         complist = []

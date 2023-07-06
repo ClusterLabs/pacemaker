@@ -506,7 +506,7 @@ class PrimitiveAudit(ClusterAudit):
         if not self._setup():
             return result
 
-        quorum = self._cm.HasQuorum(None)
+        quorum = self._cm.has_quorum(None)
         for resource in self._resources:
             if resource.type == "primitive" and not self._audit_resource(resource, quorum):
                 result = False
