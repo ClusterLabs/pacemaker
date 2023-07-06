@@ -323,19 +323,6 @@ class ClusterManager(UserDict):
         self.ShouldBeStatus[node] = "down"
         return 1
 
-    def RereadCM(self, node):
-
-        '''Force the cluster manager on a given node to reread its config
-           This may be a no-op on certain cluster managers.
-        '''
-        (rc, _) = self.rsh(node, self.templates["RereadCmd"])
-        if rc == 0:
-            return 1
-        else:
-            self.logger.log ("Could not force %s on node %s to reread its config"
-            %        (self["Name"], node))
-        return None
-
     def startall(self, nodelist=None, verbose=False, quick=False):
 
         '''Start the cluster manager on every node in the cluster.
@@ -399,20 +386,6 @@ class ClusterManager(UserDict):
                 if not self.StopaCM(node, verbose=verbose, force=force):
                     ret = 0
         return ret
-
-    def rereadall(self, nodelist=None):
-
-        '''Force the cluster managers on every node in the cluster
-        to reread their config files.  We can do it on a subset of the
-        cluster if nodelist is not None.
-        '''
-
-        map = {}
-        if not nodelist:
-            nodelist = self.Env["nodes"]
-        for node in self.Env["nodes"]:
-            if self.ShouldBeStatus[node] == "up":
-                self.RereadCM(node)
 
     def statall(self, nodelist=None):
 
