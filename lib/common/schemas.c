@@ -606,8 +606,6 @@ validate_with(xmlNode *xml, int method, gboolean to_logs)
         return TRUE;
     }
 
-    CRM_CHECK(xml != NULL, return FALSE);
-
     if (pcmk__str_eq(schema->name, "pacemaker-next", pcmk__str_none)) {
         crm_warn("The pacemaker-next schema is deprecated and will be removed "
                  "in a future release.");
@@ -706,6 +704,8 @@ gboolean
 validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs)
 {
     int version = 0;
+
+    CRM_CHECK((xml_blob != NULL) && (xml_blob->doc != NULL), return FALSE);
 
     if (validation == NULL) {
         validation = crm_element_value(xml_blob, XML_ATTR_VALIDATION);
@@ -915,7 +915,6 @@ apply_transformation(xmlNode *xml, const char *transform, gboolean to_logs)
     int emergency_res;
 #endif
 
-    CRM_CHECK(xml != NULL, return FALSE);
     xform = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_xslt,
                                     transform);
 
@@ -1056,8 +1055,9 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
     CRM_CHECK(best != NULL, return -EINVAL);
     *best = 0;
 
-    CRM_CHECK(xml_blob != NULL, return -EINVAL);
-    CRM_CHECK(*xml_blob != NULL, return -EINVAL);
+    CRM_CHECK((xml_blob != NULL) && (*xml_blob != NULL)
+              && ((*xml_blob)->doc != NULL),
+              return -EINVAL);
 
     xml = *xml_blob;
     value = crm_element_value_copy(xml, XML_ATTR_VALIDATION);
