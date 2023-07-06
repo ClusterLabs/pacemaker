@@ -190,7 +190,7 @@ class Scenario:
         ret = True
         did_run = False
 
-        self._cm.instance_errorstoignore_clear()
+        self._cm.clear_instance_errors_to_ignore()
         choice = "(%s)" % nodechoice
         self._cm.log("Running test {:<22} {:<15} [{:>3}]".format(test.name, choice, testcount))
 
@@ -281,8 +281,8 @@ class Scenario:
         if local_ignore:
             ignorelist.extend(local_ignore)
 
-        ignorelist.extend(self._cm.errorstoignore())
-        ignorelist.extend(self._cm.instance_errorstoignore())
+        ignorelist.extend(self._cm.errors_to_ignore)
+        ignorelist.extend(self._cm.instance_errors_to_ignore)
 
         # This makes sure everything is stabilized before starting...
         failed = 0

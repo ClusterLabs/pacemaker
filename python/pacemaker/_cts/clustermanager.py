@@ -56,7 +56,7 @@ class ClusterManager(UserDict):
         self.ShouldBeStatus={}
         self.ns = NodeStatus(self.Env)
         self.OurNode = os.uname()[1].lower()
-        self.__instance_errorstoignore = []
+        self.__instance_errors_to_ignore = []
 
         self.cib_installed = 0
         self.config = None
@@ -87,13 +87,24 @@ class ClusterManager(UserDict):
     def key_for_node(self, node):
         return node
 
-    def instance_errorstoignore_clear(self):
-        '''Allows the test scenario to reset instance errors to ignore on each iteration.'''
-        self.__instance_errorstoignore = []
+    def clear_instance_errors_to_ignore(self):
+        """ Reset instance-specific errors to ignore on each iteration """
 
-    def instance_errorstoignore(self):
-        '''Return list of errors which are 'normal' for a specific test instance'''
-        return self.__instance_errorstoignore
+        self.__instance_errors_to_ignore = []
+
+    @property
+    def instance_errors_to_ignore(self):
+        """ Return a list of known errors that should be ignored for a specific
+            test instance
+        """
+
+        return self.__instance_errors_to_ignore
+
+    @property
+    def errors_to_ignore(self):
+        """ Return a list of known error messages that should be ignored """
+
+        return self.templates.get_patterns("BadNewsIgnore")
 
     def log(self, args):
         self.logger.log(args)
@@ -173,13 +184,13 @@ class ClusterManager(UserDict):
                 if re.search(self.templates["Pat:Fencing_ok"] % n, shot):
                     peer = n
                     peer_state[peer] = "complete"
-                    self.__instance_errorstoignore.append(self.templates["Pat:Fencing_ok"] % peer)
+                    self.__instance_errors_to_ignore.append(self.templates["Pat:Fencing_ok"] % peer)
 
                 elif peer_state[n] != "complete" and re.search(self.templates["Pat:Fencing_start"] % n, shot):
                     # TODO: Correctly detect multiple fencing operations for the same host
                     peer = n
                     peer_state[peer] = "in-progress"
-                    self.__instance_errorstoignore.append(self.templates["Pat:Fencing_start"] % peer)
+                    self.__instance_errors_to_ignore.append(self.templates["Pat:Fencing_start"] % peer)
 
             if not peer:
                 self.logger.log("ERROR: Unknown stonith match: %s" % line)
@@ -466,12 +477,6 @@ class ClusterManager(UserDict):
             self.debug("Stopping oprofile on %s" % node)
             self.rsh(node, "opcontrol --reset")
             self.rsh(node, "opcontrol --shutdown 2>&1 > /dev/null")
-
-    def errorstoignore(self):
-        # At some point implement a more elegant solution that
-        #   also produces a report at the end
-        """ Return a list of known error messages that should be ignored """
-        return self.templates.get_patterns("BadNewsIgnore")
 
     def install_config(self, node):
         if not self.ns.wait_for_node(node):
