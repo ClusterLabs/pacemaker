@@ -86,17 +86,48 @@ enum cib_change_section_info {
 
 /*!
  * \internal
- * \enum cib_op_attr
+ * \enum cib__op_attr
  * \brief Flags for CIB operation attributes
  */
-enum cib_op_attr {
-    cib_op_attr_none           = 0,         //!< No special attributes
-    cib_op_attr_modifies       = (1 << 1),  //!< Modifies CIB
-    cib_op_attr_privileged     = (1 << 2),  //!< Requires privileges
-    cib_op_attr_local          = (1 << 3),  //!< Must only be processed locally
-    cib_op_attr_replaces       = (1 << 4),  //!< Replaces CIB
-    cib_op_attr_writes_through = (1 << 5),  //!< Writes to disk on success
-    cib_op_attr_transaction    = (1 << 6),  //!< Supported in a transaction
+enum cib__op_attr {
+    cib__op_attr_none           = 0,        //!< No special attributes
+    cib__op_attr_modifies       = (1 << 1), //!< Modifies CIB
+    cib__op_attr_privileged     = (1 << 2), //!< Requires privileges
+    cib__op_attr_local          = (1 << 3), //!< Must only be processed locally
+    cib__op_attr_replaces       = (1 << 4), //!< Replaces CIB
+    cib__op_attr_writes_through = (1 << 5), //!< Writes to disk on success
+    cib__op_attr_transaction    = (1 << 6), //!< Supported in a transaction
+};
+
+/*!
+ * \internal
+ * \enum cib__op_type
+ * \brief Types of CIB operations
+ */
+enum cib__op_type {
+    cib__op_abs_delete,
+    cib__op_apply_patch,
+    cib__op_bump,
+    cib__op_create,
+    cib__op_delete,
+    cib__op_erase,
+    cib__op_is_primary,
+    cib__op_modify,
+    cib__op_noop,
+    cib__op_ping,
+    cib__op_primary,
+    cib__op_query,
+    cib__op_replace,
+    cib__op_secondary,
+    cib__op_shutdown,
+    cib__op_sync_all,
+    cib__op_sync_one,
+    cib__op_upgrade,
+
+    // @TODO: Refactor transactions and remove these
+    cib__op_init_transact,
+    cib__op_commit_transact,
+    cib__op_discard_transact,
 };
 
 /*!
@@ -118,16 +149,14 @@ gboolean cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, 
 
 gboolean cib_read_config(GHashTable * options, xmlNode * current_cib);
 
-typedef int (*cib_op_t) (const char *, int, const char *, xmlNode *,
-                         xmlNode *, xmlNode *, xmlNode **, xmlNode **);
+typedef int (*cib__op_fn_t)(const char *, int, const char *, xmlNode *,
+                            xmlNode *, xmlNode *, xmlNode **, xmlNode **);
 
-typedef struct cib_operation_s {
+typedef struct cib__operation_s {
     const char *name;
-    uint32_t flags; //!< Group of <tt>enum cib_op_attr</tt> flags
-    int (*prepare) (xmlNode *, xmlNode **, const char **);
-    int (*cleanup) (int, xmlNode **, xmlNode **);
-    cib_op_t fn;
-} cib_operation_t;
+    enum cib__op_type type;
+    uint32_t flags; //!< Group of <tt>enum cib__op_attr</tt> flags
+} cib__operation_t;
 
 typedef struct cib_notify_client_s {
     const char *event;
@@ -167,7 +196,7 @@ struct timer_rec_s {
 
 cib_t *cib_new_variant(void);
 
-int cib_perform_op(const char *op, int call_options, cib_op_t fn,
+int cib_perform_op(const char *op, int call_options, cib__op_fn_t fn,
                    bool is_query, const char *section, xmlNode *req,
                    xmlNode *input, bool manage_counters, bool *config_changed,
                    xmlNode **current_cib, xmlNode **result_cib, xmlNode **diff,
@@ -179,6 +208,8 @@ xmlNode *cib_create_op(int call_id, const char *op, const char *host,
 
 void cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc);
 void cib_native_notify(gpointer data, gpointer user_data);
+
+int cib__get_operation(const char *op, const cib__operation_t **operation);
 
 int cib_process_query(const char *op, int options, const char *section, xmlNode * req,
                       xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,

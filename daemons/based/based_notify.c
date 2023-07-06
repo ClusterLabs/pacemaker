@@ -21,6 +21,9 @@
 
 #include <time.h>
 
+#include <glib.h>
+#include <libxml/tree.h>
+
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
 #include <crm/msg_xml.h>

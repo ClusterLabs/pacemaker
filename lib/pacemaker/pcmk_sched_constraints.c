@@ -276,7 +276,7 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pe_working_set_t *data_set)
                     const char *obj_ref = iter->data;
                     xmlNode *new_rsc_ref = NULL;
 
-                    new_rsc_ref = xmlNewDocRawNode(getDocPtr(set), NULL,
+                    new_rsc_ref = xmlNewDocRawNode(set->doc, NULL,
                                                    (pcmkXmlStr)
                                                    XML_TAG_RESOURCE_REF,
                                                    NULL);

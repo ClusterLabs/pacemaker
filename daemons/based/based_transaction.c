@@ -153,16 +153,15 @@ validate_transaction_request(const xmlNode *request)
     const char *op = crm_element_value(request, F_CIB_OPERATION);
     const char *host = crm_element_value(request, F_CIB_HOST);
 
-    const cib_operation_t *operation = NULL;
-    int rc = cib_get_operation(op, &operation);
+    const cib__operation_t *operation = NULL;
+    int rc = cib__get_operation(op, &operation);
 
-    rc = pcmk_legacy2rc(rc);
     if (rc != pcmk_rc_ok) {
         // cib_get_operation() logs error
         return rc;
     }
 
-    if (!pcmk_is_set(operation->flags, cib_op_attr_transaction)) {
+    if (!pcmk_is_set(operation->flags, cib__op_attr_transaction)) {
         crm_err("Operation '%s' is not supported in CIB transaction", op);
         return EOPNOTSUPP;
     }

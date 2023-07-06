@@ -190,7 +190,7 @@ should_copy_cib(const char *op, const char *section, int call_options)
 }
 
 int
-cib_perform_op(const char *op, int call_options, cib_op_t fn, bool is_query,
+cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
                const char *section, xmlNode *req, xmlNode *input,
                bool manage_counters, bool *config_changed,
                xmlNode **current_cib, xmlNode **result_cib, xmlNode **diff,

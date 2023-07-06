@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,7 +23,9 @@
 
 #include <stdlib.h>
 #include <errno.h>
+
 #include <glib.h>
+#include <libxml/tree.h>
 
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>

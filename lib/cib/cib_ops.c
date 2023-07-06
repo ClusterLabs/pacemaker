@@ -19,12 +19,162 @@
 #include <sys/param.h>
 #include <sys/types.h>
 
+#include <glib.h>
+#include <libxml/tree.h>
+
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
 #include <crm/msg_xml.h>
 
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
+
+// @TODO: Free this via crm_exit() when libcib gets merged with libcrmcommon
+static GHashTable *operation_table = NULL;
+
+static const cib__operation_t cib_ops[] = {
+    {
+        PCMK__CIB_REQUEST_ABS_DELETE, cib__op_abs_delete,
+        cib__op_attr_modifies|cib__op_attr_privileged
+    },
+    {
+        PCMK__CIB_REQUEST_APPLY_PATCH, cib__op_apply_patch,
+        cib__op_attr_modifies
+        |cib__op_attr_privileged
+        |cib__op_attr_transaction
+    },
+    {
+        PCMK__CIB_REQUEST_BUMP, cib__op_bump,
+        cib__op_attr_modifies
+        |cib__op_attr_privileged
+        |cib__op_attr_transaction
+    },
+    {
+        PCMK__CIB_REQUEST_CREATE, cib__op_create,
+        cib__op_attr_modifies
+        |cib__op_attr_privileged
+        |cib__op_attr_transaction
+    },
+    {
+        PCMK__CIB_REQUEST_DELETE, cib__op_delete,
+        cib__op_attr_modifies
+        |cib__op_attr_privileged
+        |cib__op_attr_transaction
+    },
+    {
+        PCMK__CIB_REQUEST_ERASE, cib__op_erase,
+        cib__op_attr_modifies
+        |cib__op_attr_privileged
+        |cib__op_attr_replaces
+        |cib__op_attr_transaction
+    },
+    {
+        PCMK__CIB_REQUEST_IS_PRIMARY, cib__op_is_primary,
+        cib__op_attr_privileged
+    },
+    {
+        PCMK__CIB_REQUEST_MODIFY, cib__op_modify,
+        cib__op_attr_modifies
+        |cib__op_attr_privileged
+        |cib__op_attr_transaction
+    },
+    {
+        PCMK__CIB_REQUEST_NOOP, cib__op_noop, cib__op_attr_none
+    },
+    {
+        CRM_OP_PING, cib__op_ping, cib__op_attr_none
+    },
+    {
+        // @COMPAT: Drop cib__op_attr_modifies when we drop legacy mode support
+        PCMK__CIB_REQUEST_PRIMARY, cib__op_primary,
+        cib__op_attr_modifies|cib__op_attr_privileged|cib__op_attr_local
+    },
+    {
+        PCMK__CIB_REQUEST_QUERY, cib__op_query, cib__op_attr_none
+    },
+    {
+        PCMK__CIB_REQUEST_REPLACE, cib__op_replace,
+        cib__op_attr_modifies
+        |cib__op_attr_privileged
+        |cib__op_attr_replaces
+        |cib__op_attr_writes_through
+        |cib__op_attr_transaction
+    },
+    {
+        PCMK__CIB_REQUEST_SECONDARY, cib__op_secondary,
+        cib__op_attr_privileged|cib__op_attr_local
+    },
+    {
+        PCMK__CIB_REQUEST_SHUTDOWN, cib__op_shutdown, cib__op_attr_privileged
+    },
+    {
+        PCMK__CIB_REQUEST_SYNC_TO_ALL, cib__op_sync_all, cib__op_attr_privileged
+    },
+    {
+        PCMK__CIB_REQUEST_SYNC_TO_ONE, cib__op_sync_one, cib__op_attr_privileged
+    },
+    {
+        PCMK__CIB_REQUEST_UPGRADE, cib__op_upgrade,
+        cib__op_attr_modifies
+        |cib__op_attr_privileged
+        |cib__op_attr_writes_through
+        |cib__op_attr_transaction
+    },
+
+    /* PCMK__CIB_REQUEST_*_TRANSACT requests must be processed locally because
+     * they depend on the client table. Requests that manage transactions on
+     * other nodes would likely be problematic in many other ways as well.
+     */
+    {
+        PCMK__CIB_REQUEST_INIT_TRANSACT, cib__op_init_transact,
+        cib__op_attr_privileged|cib__op_attr_local
+    },
+    {
+        PCMK__CIB_REQUEST_COMMIT_TRANSACT, cib__op_commit_transact,
+        cib__op_attr_modifies
+        |cib__op_attr_privileged
+        |cib__op_attr_local
+        |cib__op_attr_replaces
+        |cib__op_attr_writes_through
+    },
+    {
+        PCMK__CIB_REQUEST_DISCARD_TRANSACT, cib__op_discard_transact,
+        cib__op_attr_privileged|cib__op_attr_local
+    },
+};
+
+/*!
+ * \internal
+ * \brief Get the \c cib__operation_t object for a given CIB operation name
+ *
+ * \param[in]  op         CIB operation name
+ * \param[out] operation  Where to store CIB operation object
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+cib__get_operation(const char *op, const cib__operation_t **operation)
+{
+    CRM_ASSERT((op != NULL) && (operation != NULL));
+
+    if (operation_table == NULL) {
+        operation_table = pcmk__strkey_table(NULL, NULL);
+
+        for (int lpc = 0; lpc < PCMK__NELEM(cib_ops); lpc++) {
+            const cib__operation_t *oper = &(cib_ops[lpc]);
+
+            g_hash_table_insert(operation_table, (gpointer) oper->name,
+                                (gpointer) oper);
+        }
+    }
+
+    *operation = g_hash_table_lookup(operation_table, op);
+    if (*operation == NULL) {
+        crm_err("Operation %s is invalid", op);
+        return EINVAL;
+    }
+    return pcmk_rc_ok;
+}
 
 int
 cib_process_query(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,

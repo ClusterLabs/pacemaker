@@ -575,9 +575,7 @@ pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name
 
     xml_node = pcmk__output_xml_peek_parent(out);
     CRM_ASSERT(xml_node != NULL);
-    xml_node = is_list
-        ? create_xml_node(xml_node, tag_name)
-        : xmlNewChild(xml_node, NULL, (pcmkXmlStr) tag_name, NULL);
+    xml_node = create_xml_node(xml_node, tag_name);
 
     va_start(args, pairs_count);
     while(pairs_count--) {

@@ -52,8 +52,6 @@ typedef const xmlChar *pcmkXmlStr;
 gboolean add_message_xml(xmlNode * msg, const char *field, xmlNode * xml);
 xmlNode *get_message_xml(const xmlNode *msg, const char *field);
 
-xmlDoc *getDocPtr(xmlNode * node);
-
 /*
  * \brief xmlCopyPropList ACLs-sensitive replacement expading i++ notation
  *
@@ -258,7 +256,7 @@ xmlNode *first_named_child(const xmlNode *parent, const char *name);
 xmlNode *crm_next_same_xml(const xmlNode *sibling);
 
 xmlNode *sorted_xml(xmlNode * input, xmlNode * parent, gboolean recursive);
-xmlXPathObjectPtr xpath_search(xmlNode * xml_top, const char *path);
+xmlXPathObjectPtr xpath_search(const xmlNode *xml_top, const char *path);
 void crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
                               void (*helper)(xmlNode*, void*), void *user_data);
 xmlNode *expand_idref(xmlNode * input, xmlNode * top);

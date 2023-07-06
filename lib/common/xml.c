@@ -623,39 +623,17 @@ pcmk__xe_remove_matching_attrs(xmlNode *element,
     }
 }
 
-xmlDoc *
-getDocPtr(xmlNode * node)
-{
-    xmlDoc *doc = NULL;
-
-    CRM_CHECK(node != NULL, return NULL);
-
-    doc = node->doc;
-    if (doc == NULL) {
-        doc = xmlNewDoc((pcmkXmlStr) "1.0");
-        xmlDocSetRootElement(doc, node);
-    }
-    return doc;
-}
-
 xmlNode *
 add_node_copy(xmlNode * parent, xmlNode * src_node)
 {
-    xmlDoc *doc = NULL;
     xmlNode *child = NULL;
 
     CRM_CHECK((parent != NULL) && (src_node != NULL), return NULL);
 
-    doc = getDocPtr(parent);
-    if (doc == NULL) {
-        return NULL;
-    }
-
-    child = xmlDocCopyNode(src_node, doc, 1);
+    child = xmlDocCopyNode(src_node, parent->doc, 1);
     if (child == NULL) {
         return NULL;
     }
-
     xmlAddChild(parent, child);
     pcmk__mark_xml_created(child);
     return child;
@@ -686,16 +664,10 @@ create_xml_node(xmlNode * parent, const char *name)
         xmlDocSetRootElement(doc, node);
 
     } else {
-        doc = getDocPtr(parent);
-        if (doc == NULL) {
-            return NULL;
-        }
-
-        node = xmlNewDocRawNode(doc, NULL, (pcmkXmlStr) name, NULL);
+        node = xmlNewChild(parent, NULL, (pcmkXmlStr) name, NULL);
         if (node == NULL) {
             return NULL;
         }
-        xmlAddChild(parent, node);
     }
     pcmk__mark_xml_created(node);
     return node;
@@ -1602,14 +1574,8 @@ pcmk__xml2text(xmlNodePtr data, uint32_t options, GString *buffer, int depth)
 #if (PCMK__XMLDUMP_STATS - 0)
         time_t next, new = time(NULL);
 #endif
-        xmlDoc *doc;
-        xmlOutputBuffer *xml_buffer;
+        xmlOutputBuffer *xml_buffer = xmlAllocOutputBuffer(NULL);
 
-        doc = getDocPtr(data);
-        /* doc will only be NULL if data is */
-        CRM_CHECK(doc != NULL, return);
-
-        xml_buffer = xmlAllocOutputBuffer(NULL);
         CRM_ASSERT(xml_buffer != NULL);
 
         /* XXX we could setup custom allocation scheme for the particular
@@ -1622,7 +1588,7 @@ pcmk__xml2text(xmlNodePtr data, uint32_t options, GString *buffer, int depth)
                parsed tree (but those would need to be strictly used as
                opposed to libxml's raw functions) */
 
-        xmlNodeDumpOutput(xml_buffer, doc, data, 0,
+        xmlNodeDumpOutput(xml_buffer, data->doc, data, 0,
                           pcmk_is_set(options, pcmk__xml_fmt_pretty), NULL);
         /* attempt adding final NL - failing shouldn't be fatal here */
         (void) xmlOutputBufferWrite(xml_buffer, sizeof("\n") - 1, "\n");
@@ -1751,7 +1717,6 @@ pcmk__xml2fd(int fd, xmlNode *cur)
 
     fsync(fd);
     return pcmk_rc_ok;
-    
 }
 
 gboolean
@@ -2771,6 +2736,21 @@ void
 crm_destroy_xml(gpointer data)
 {
     free_xml(data);
+}
+
+xmlDoc *
+getDocPtr(xmlNode *node)
+{
+    xmlDoc *doc = NULL;
+
+    CRM_CHECK(node != NULL, return NULL);
+
+    doc = node->doc;
+    if (doc == NULL) {
+        doc = xmlNewDoc((pcmkXmlStr) "1.0");
+        xmlDocSetRootElement(doc, node);
+    }
+    return doc;
 }
 
 int

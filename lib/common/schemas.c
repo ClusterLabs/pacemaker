@@ -592,37 +592,34 @@ crm_schema_cleanup(void)
 static gboolean
 validate_with(xmlNode *xml, int method, gboolean to_logs)
 {
-    xmlDocPtr doc = NULL;
     gboolean valid = FALSE;
     char *file = NULL;
+    struct schema_s *schema = NULL;
+    relaxng_ctx_cache_t **cache = NULL;
 
     if (method < 0) {
         return FALSE;
     }
 
-    if (known_schemas[method].validator == schema_validator_none) {
+    schema = &(known_schemas[method]);
+    if (schema->validator == schema_validator_none) {
         return TRUE;
     }
 
-    CRM_CHECK(xml != NULL, return FALSE);
-
-    if (pcmk__str_eq(known_schemas[method].name, "pacemaker-next",
-                     pcmk__str_none)) {
+    if (pcmk__str_eq(schema->name, "pacemaker-next", pcmk__str_none)) {
         crm_warn("The pacemaker-next schema is deprecated and will be removed "
                  "in a future release.");
     }
 
-    doc = getDocPtr(xml);
     file = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_rng,
-                                   known_schemas[method].name);
+                                   schema->name);
 
     crm_trace("Validating with %s (type=%d)",
-              pcmk__s(file, "missing schema"), known_schemas[method].validator);
-    switch (known_schemas[method].validator) {
+              pcmk__s(file, "missing schema"), schema->validator);
+    switch (schema->validator) {
         case schema_validator_rng:
-            valid =
-                validate_with_relaxng(doc, to_logs, file,
-                                      (relaxng_ctx_cache_t **) & (known_schemas[method].cache));
+            cache = (relaxng_ctx_cache_t **) &(schema->cache);
+            valid = validate_with_relaxng(xml->doc, to_logs, file, cache);
             break;
         default:
             crm_err("Unknown validator type: %d",
@@ -707,6 +704,8 @@ gboolean
 validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs)
 {
     int version = 0;
+
+    CRM_CHECK((xml_blob != NULL) && (xml_blob->doc != NULL), return FALSE);
 
     if (validation == NULL) {
         validation = crm_element_value(xml_blob, XML_ATTR_VALIDATION);
@@ -909,7 +908,6 @@ apply_transformation(xmlNode *xml, const char *transform, gboolean to_logs)
     char *xform = NULL;
     xmlNode *out = NULL;
     xmlDocPtr res = NULL;
-    xmlDocPtr doc = NULL;
     xsltStylesheet *xslt = NULL;
 #if PCMK_SCHEMAS_EMERGENCY_XSLT != 0
     xmlChar *emergency_result;
@@ -917,8 +915,6 @@ apply_transformation(xmlNode *xml, const char *transform, gboolean to_logs)
     int emergency_res;
 #endif
 
-    CRM_CHECK(xml != NULL, return FALSE);
-    doc = getDocPtr(xml);
     xform = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_xslt,
                                     transform);
 
@@ -935,7 +931,7 @@ apply_transformation(xmlNode *xml, const char *transform, gboolean to_logs)
     xslt = xsltParseStylesheetFile((pcmkXmlStr) xform);
     CRM_CHECK(xslt != NULL, goto cleanup);
 
-    res = xsltApplyStylesheet(xslt, doc, NULL);
+    res = xsltApplyStylesheet(xslt, xml->doc, NULL);
     CRM_CHECK(res != NULL, goto cleanup);
 
     xsltSetGenericErrorFunc(NULL, NULL);  /* restore default one */
@@ -1059,8 +1055,9 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
     CRM_CHECK(best != NULL, return -EINVAL);
     *best = 0;
 
-    CRM_CHECK(xml_blob != NULL, return -EINVAL);
-    CRM_CHECK(*xml_blob != NULL, return -EINVAL);
+    CRM_CHECK((xml_blob != NULL) && (*xml_blob != NULL)
+              && ((*xml_blob)->doc != NULL),
+              return -EINVAL);
 
     xml = *xml_blob;
     value = crm_element_value_copy(xml, XML_ATTR_VALIDATION);

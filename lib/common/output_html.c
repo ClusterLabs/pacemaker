@@ -152,7 +152,7 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
      * anything else that the user could add, and we want it done last to pick up
      * any options that may have been given.
      */
-    head_node = xmlNewNode(NULL, (pcmkXmlStr) "head");
+    head_node = xmlNewDocRawNode(NULL, NULL, (pcmkXmlStr) "head", NULL);
 
     if (title != NULL ) {
         pcmk_create_xml_text_node(head_node, "title", title);
@@ -458,7 +458,7 @@ pcmk__html_add_header(const char *name, ...) {
 
     va_start(ap, name);
 
-    header_node = xmlNewNode(NULL, (pcmkXmlStr) name);
+    header_node = xmlNewDocRawNode(NULL, NULL, (pcmkXmlStr) name, NULL);
     while (1) {
         char *key = va_arg(ap, char *);
         char *value;

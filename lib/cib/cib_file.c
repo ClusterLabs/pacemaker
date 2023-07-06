@@ -40,9 +40,6 @@
 // key: client ID (const char *) -> value: client (cib_t *)
 static GHashTable *client_table = NULL;
 
-// key: op name (const char *) -> value: operation (const cib_operation_t *)
-static GHashTable *op_table = NULL;
-
 enum cib_file_flags {
     cib_file_flag_dirty = (1 << 0),
     cib_file_flag_live  = (1 << 1),
@@ -57,7 +54,7 @@ typedef struct cib_file_opaque_s {
 } cib_file_opaque_t;
 
 static int cib_file_extend_transaction(cib_t *cib,
-                                       const cib_operation_t *operation,
+                                       const cib__operation_t *operation,
                                        xmlNode *request);
 
 static void cib_file_discard_transaction(cib_t *cib);
@@ -116,22 +113,12 @@ unregister_client(const cib_t *cib)
 
     g_hash_table_remove(client_table, private->id);
 
-    /* There's no clean way to free the tables at program exit time. We can't
-     * create a cleanup function in this file and add it to crm_exit(), which is
-     * in libcrmcommon. libcrmcommon doesn't link against libcib.
-     *
-     * As a hack for now, free the common tables when there are no more clients.
-     *
-     * @COMPAT: If libcib and libcrmcommon are merged, add this to crm_exit().
+    /* @COMPAT: Add to crm_exit() when libcib and libcrmcommon are merged,
+     * instead of destroying the client table when there are no more clients.
      */
     if (g_hash_table_size(client_table) == 0) {
         g_hash_table_destroy(client_table);
         client_table = NULL;
-
-        if (op_table != NULL) {
-            g_hash_table_destroy(op_table);
-            op_table = NULL;
-        }
     }
 }
 
@@ -152,85 +139,19 @@ get_client(const char *client_id)
     return g_hash_table_lookup(client_table, (gpointer) client_id);
 }
 
-/* This table is adapted from cib_server_ops in pacemaker-based. Flags that are
- * not used in cib_file.c (for example, cib_op_attr_replaces) are not currently
- * included. Also, cib_file.c does not use prepare or cleanup functions.
- *
- * @TODO: Try to create a shared table that merges cib_server_ops with
- * cib_file_ops. We would want a new cib_op_attr_file enum value (for an
- * operation that supports running against a file). We can easily ignore the
- * prepare and cleanup functions.
- *
- * The main challenge is that the fn member (cib_op_t) may differ depending on
- * whether we're processing the request on the server side or with the
- * file-based client. Processor functions defined in pacemaker-based shouldn't
- * be declared in libcib, but we need them accessible via the table somehow.
- *
- * Maybe use an enum that indexes into an array of cib_op_t functions. That
- * would be obnoxiously similar to the call_type (index) argument that we
- * eliminated in c13bf8b2.
- */
-static const cib_operation_t cib_file_ops[] = {
-    {
-        PCMK__CIB_REQUEST_APPLY_PATCH,
-        cib_op_attr_modifies|cib_op_attr_transaction,
-        NULL, NULL, cib_process_diff
-    },
-    {
-        PCMK__CIB_REQUEST_BUMP,
-        cib_op_attr_modifies|cib_op_attr_transaction,
-        NULL, NULL, cib_process_bump
-    },
-    {
-        PCMK__CIB_REQUEST_CREATE,
-        cib_op_attr_modifies|cib_op_attr_transaction,
-        NULL, NULL, cib_process_create
-    },
-    {
-        PCMK__CIB_REQUEST_DELETE,
-        cib_op_attr_modifies|cib_op_attr_transaction,
-        NULL, NULL, cib_process_delete
-    },
-    {
-        PCMK__CIB_REQUEST_ERASE,
-        cib_op_attr_modifies|cib_op_attr_transaction,
-        NULL, NULL, cib_process_erase
-    },
-    {
-        PCMK__CIB_REQUEST_MODIFY,
-        cib_op_attr_modifies|cib_op_attr_transaction,
-        NULL, NULL, cib_process_modify
-    },
-    {
-        PCMK__CIB_REQUEST_QUERY,
-        cib_op_attr_none,
-        NULL, NULL, cib_process_query
-    },
-    {
-        PCMK__CIB_REQUEST_REPLACE,
-        cib_op_attr_modifies|cib_op_attr_transaction,
-        NULL, NULL, cib_process_replace
-    },
-    {
-        PCMK__CIB_REQUEST_UPGRADE,
-        cib_op_attr_modifies|cib_op_attr_transaction,
-        NULL, NULL, cib_process_upgrade
-    },
-    {
-        PCMK__CIB_REQUEST_INIT_TRANSACT,
-        cib_op_attr_none,
-        NULL, NULL, cib_file_process_init_transaction
-    },
-    {
-        PCMK__CIB_REQUEST_COMMIT_TRANSACT,
-        cib_op_attr_modifies,
-        NULL, NULL, cib_file_process_commit_transaction
-    },
-    {
-        PCMK__CIB_REQUEST_DISCARD_TRANSACT,
-        cib_op_attr_none,
-        NULL, NULL, cib_file_process_discard_transaction
-    },
+static const cib__op_fn_t cib_op_functions[] = {
+    [cib__op_apply_patch]      = cib_process_diff,
+    [cib__op_bump]             = cib_process_bump,
+    [cib__op_create]           = cib_process_create,
+    [cib__op_delete]           = cib_process_delete,
+    [cib__op_erase]            = cib_process_erase,
+    [cib__op_modify]           = cib_process_modify,
+    [cib__op_query]            = cib_process_query,
+    [cib__op_replace]          = cib_process_replace,
+    [cib__op_upgrade]          = cib_process_upgrade,
+    [cib__op_init_transact]    = cib_file_process_init_transaction,
+    [cib__op_commit_transact]  = cib_file_process_commit_transaction,
+    [cib__op_discard_transact] = cib_file_process_discard_transaction,
 };
 
 /* cib_file_backup() and cib_file_write_with_digest() need to chown the
@@ -259,35 +180,25 @@ static gboolean cib_do_chown = FALSE;
                                                 #flags_to_clear);       \
     } while (0)
 
-static int
-get_operation(const char *op, const cib_operation_t **operation)
+/*!
+ * \internal
+ * \brief Get the function that performs a given CIB file operation
+ *
+ * \param[in] operation  Operation whose function to look up
+ *
+ * \return Function that performs \p operation for a CIB file client
+ */
+static cib__op_fn_t
+file_get_op_function(const cib__operation_t *operation)
 {
-    CRM_CHECK(op != NULL, return -EINVAL);
+    enum cib__op_type type = operation->type;
 
-    if (op_table == NULL) {
-        op_table = pcmk__strkey_table(NULL, NULL);
+    CRM_ASSERT(type >= 0);
 
-        for (int lpc = 0; lpc < PCMK__NELEM(cib_file_ops); lpc++) {
-            const cib_operation_t *oper = &(cib_file_ops[lpc]);
-
-            g_hash_table_insert(op_table, (gpointer) oper->name,
-                                (gpointer) oper);
-        }
+    if (type >= PCMK__NELEM(cib_op_functions)) {
+        return NULL;
     }
-
-    *operation = g_hash_table_lookup(op_table, op);
-
-    if (*operation == NULL) {
-        /* @COMPAT: EOPNOTSUPP makes more sense but would change existing
-         * behavior. If we merge the server and file ops tables in the future,
-         * then EINVAL makes sense: if we didn't find the op, it doesn't exist.
-         * Only an internal bug gets us to that point.
-         */
-        crm_err("Operation %s is invalid or unsupported for CIB file clients",
-                op);
-        return -EPROTONOSUPPORT;
-    }
-    return pcmk_ok;
+    return cib_op_functions[type];
 }
 
 /*!
@@ -325,7 +236,8 @@ static int
 cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
 {
     int rc = pcmk_ok;
-    const cib_operation_t *operation = NULL;
+    const cib__operation_t *operation = NULL;
+    cib__op_fn_t op_function = NULL;
 
     int call_id = 0;
     int call_options = cib_none;
@@ -340,15 +252,14 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
 
     cib_file_opaque_t *private = cib->variant_opaque;
 
-    rc = get_operation(op, &operation);
-    if (rc != pcmk_ok) {
-        goto done;
-    }
+    // We error checked these in callers
+    cib__get_operation(op, &operation);
+    op_function = file_get_op_function(operation);
 
     crm_element_value_int(request, F_CIB_CALLID, &call_id);
     crm_element_value_int(request, F_CIB_CALLOPTS, &call_options);
 
-    read_only = !pcmk_is_set(operation->flags, cib_op_attr_modifies);
+    read_only = !pcmk_is_set(operation->flags, cib__op_attr_modifies);
 
     // Mirror the logic in cib_prepare_common()
     if ((section != NULL) && (data != NULL)
@@ -357,7 +268,7 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
         data = pcmk_find_cib_element(data, section);
     }
 
-    rc = cib_perform_op(op, call_options, operation->fn, read_only, section,
+    rc = cib_perform_op(op, call_options, op_function, read_only, section,
                         request, data, true, &changed, &private->cib_xml,
                         &result_cib, &cib_diff, output);
 
@@ -411,7 +322,7 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     xmlNode *output = NULL;
     cib_file_opaque_t *private = cib->variant_opaque;
 
-    const cib_operation_t *operation = NULL;
+    const cib__operation_t *operation = NULL;
 
     crm_info("Handling %s operation for %s as %s",
              pcmk__s(op, "invalid"), pcmk__s(section, "entire CIB"),
@@ -425,9 +336,17 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
         return -ENOTCONN;
     }
 
-    rc = get_operation(op, &operation);
+    rc = cib__get_operation(op, &operation);
+    rc = pcmk_rc2legacy(rc);
     if (rc != pcmk_ok) {
-        return rc;
+        // @COMPAT: At compatibility break, use rc directly
+        return -EPROTONOSUPPORT;
+    }
+
+    if (file_get_op_function(operation) == NULL) {
+        // @COMPAT: At compatibility break, use EOPNOTSUPP
+        crm_err("Operation %s is not supported by CIB file clients", op);
+        return -EPROTONOSUPPORT;
     }
 
     cib->call_id++;
@@ -1196,7 +1115,7 @@ cib_file_init_transaction(cib_t *cib)
  * \return Standard Pacemaker return code
  */
 static int
-cib_file_extend_transaction(cib_t *cib, const cib_operation_t *operation,
+cib_file_extend_transaction(cib_t *cib, const cib__operation_t *operation,
                             xmlNode *request)
 {
     cib_file_opaque_t *private = cib->variant_opaque;
@@ -1204,13 +1123,16 @@ cib_file_extend_transaction(cib_t *cib, const cib_operation_t *operation,
     if (private->transaction == NULL) {
         return pcmk_rc_no_transaction;
     }
-
-    if (!pcmk_is_set(operation->flags, cib_op_attr_transaction)) {
+    if (!pcmk_is_set(operation->flags, cib__op_attr_transaction)) {
         crm_err("Operation '%s' is not supported in CIB transaction",
                 operation->name);
         return EOPNOTSUPP;
     }
-
+    if (file_get_op_function(operation) == NULL) {
+        crm_err("Operation %s is not supported by CIB file clients",
+                operation->name);
+        return EOPNOTSUPP;
+    }
     g_queue_push_tail(private->transaction, copy_xml(request));
     return pcmk_rc_ok;
 }

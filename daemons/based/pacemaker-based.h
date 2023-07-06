@@ -18,6 +18,9 @@
 #include <errno.h>
 #include <fcntl.h>
 
+#include <glib.h>
+#include <libxml/tree.h>
+
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/common/xml.h>
@@ -132,7 +135,7 @@ int cib_process_discard_transaction(const char *op, int options,
 void send_sync_request(const char *host);
 int sync_our_cib(xmlNode *request, gboolean all);
 
-int cib_get_operation(const char *op, const cib_operation_t **operation);
+cib__op_fn_t based_get_op_function(const cib__operation_t *operation);
 void cib_diff_notify(const char *op, int result, const char *call_id,
                      const char *client_id, const char *client_name,
                      const char *origin, xmlNode *update, xmlNode *diff);

@@ -20,6 +20,9 @@
 #include <fcntl.h>
 #include <inttypes.h>   // PRIu64
 
+#include <glib.h>
+#include <libxml/tree.h>
+
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
@@ -56,9 +59,9 @@ qb_ipcs_service_t *ipcs_rw = NULL;
 qb_ipcs_service_t *ipcs_shm = NULL;
 
 static int cib_process_command(xmlNode *request,
-                               const cib_operation_t *operation,
-                               xmlNode **reply, xmlNode **cib_diff,
-                               bool privileged);
+                               const cib__operation_t *operation,
+                               cib__op_fn_t op_function, xmlNode **reply,
+                               xmlNode **cib_diff, bool privileged);
 
 static gboolean cib_common_callback(qb_ipcs_connection_t *c, void *data,
                                     size_t size, gboolean privileged);
@@ -569,12 +572,12 @@ queue_local_notify(xmlNode * notify_src, const char *client_id, gboolean sync_re
 
 static void
 parse_local_options_v1(const pcmk__client_t *cib_client,
-                       const cib_operation_t *operation, int call_options,
+                       const cib__operation_t *operation, int call_options,
                        const char *host, const char *op, gboolean *local_notify,
                        gboolean *needs_reply, gboolean *process,
                        gboolean *needs_forward)
 {
-    if (pcmk_is_set(operation->flags, cib_op_attr_modifies)
+    if (pcmk_is_set(operation->flags, cib__op_attr_modifies)
         && !pcmk_is_set(call_options, cib_inhibit_bcast)) {
         /* we need to send an update anyway */
         *needs_reply = TRUE;
@@ -613,7 +616,7 @@ parse_local_options_v1(const pcmk__client_t *cib_client,
 
 static void
 parse_local_options_v2(const pcmk__client_t *cib_client,
-                       const cib_operation_t *operation, int call_options,
+                       const cib__operation_t *operation, int call_options,
                        const char *host, const char *op, gboolean *local_notify,
                        gboolean *needs_reply, gboolean *process,
                        gboolean *needs_forward)
@@ -624,8 +627,8 @@ parse_local_options_v2(const pcmk__client_t *cib_client,
     *local_notify = TRUE;
     *needs_forward = FALSE;
 
-    if (pcmk_is_set(operation->flags, cib_op_attr_local)) {
-        /* Always process locally if cib_op_attr_local is set.
+    if (pcmk_is_set(operation->flags, cib__op_attr_local)) {
+        /* Always process locally if cib__op_attr_local is set.
          *
          * @COMPAT: Currently host is ignored. At a compatibility break, throw
          * an error (from cib_process_request() or earlier) if host is not NULL or
@@ -644,7 +647,7 @@ parse_local_options_v2(const pcmk__client_t *cib_client,
         return;
     }
 
-    if (pcmk_is_set(operation->flags, cib_op_attr_modifies)
+    if (pcmk_is_set(operation->flags, cib__op_attr_modifies)
         || !pcmk__str_eq(host, OUR_NODENAME,
                          pcmk__str_casei|pcmk__str_null_matches)) {
 
@@ -673,7 +676,7 @@ parse_local_options_v2(const pcmk__client_t *cib_client,
 
 static void
 parse_local_options(const pcmk__client_t *cib_client,
-                    const cib_operation_t *operation, int call_options,
+                    const cib__operation_t *operation, int call_options,
                     const char *host, const char *op, gboolean *local_notify,
                     gboolean *needs_reply, gboolean *process,
                     gboolean *needs_forward)
@@ -703,7 +706,7 @@ parse_local_options(const pcmk__client_t *cib_client,
 }
 
 static gboolean
-parse_peer_options_v1(const cib_operation_t *operation, xmlNode *request,
+parse_peer_options_v1(const cib__operation_t *operation, xmlNode *request,
                       gboolean *local_notify, gboolean *needs_reply,
                       gboolean *process)
 {
@@ -801,7 +804,7 @@ parse_peer_options_v1(const cib_operation_t *operation, xmlNode *request,
 }
 
 static gboolean
-parse_peer_options_v2(const cib_operation_t *operation, xmlNode *request,
+parse_peer_options_v2(const cib__operation_t *operation, xmlNode *request,
                       gboolean *local_notify, gboolean *needs_reply,
                       gboolean *process)
 {
@@ -871,7 +874,7 @@ parse_peer_options_v2(const cib_operation_t *operation, xmlNode *request,
         return FALSE;
 
     } else if (is_reply
-               && pcmk_is_set(operation->flags, cib_op_attr_modifies)) {
+               && pcmk_is_set(operation->flags, cib__op_attr_modifies)) {
         crm_trace("Ignoring legacy %s reply sent from %s to local clients", op, originator);
         return FALSE;
 
@@ -922,7 +925,7 @@ parse_peer_options_v2(const cib_operation_t *operation, xmlNode *request,
 }
 
 static gboolean
-parse_peer_options(const cib_operation_t *operation, xmlNode *request,
+parse_peer_options(const cib__operation_t *operation, xmlNode *request,
                    gboolean *local_notify, gboolean *needs_reply,
                    gboolean *process)
 {
@@ -1073,7 +1076,8 @@ cib_process_request(xmlNode *request, gboolean privileged,
     const char *client_name = crm_element_value(request, F_CIB_CLIENTNAME);
     const char *reply_to = crm_element_value(request, F_CIB_ISREPLY);
 
-    const cib_operation_t *operation = NULL;
+    const cib__operation_t *operation = NULL;
+    cib__op_fn_t op_function = NULL;
 
     crm_element_value_int(request, F_CIB_CALLOPTS, &call_options);
 
@@ -1100,19 +1104,26 @@ cib_process_request(xmlNode *request, gboolean privileged,
         crm_trace("Processing local %s operation from %s/%s intended for %s", op, client_name, call_id, target);
     }
 
-    rc = cib_get_operation(op, &operation);
+    rc = cib__get_operation(op, &operation);
+    rc = pcmk_rc2legacy(rc);
     if (rc != pcmk_ok) {
         /* TODO: construct error reply? */
         crm_err("Pre-processing of command failed: %s", pcmk_strerror(rc));
         return rc;
     }
 
+    op_function = based_get_op_function(operation);
+    if (op_function == NULL) {
+        crm_err("Operation %s not supported by CIB manager", op);
+        return -EOPNOTSUPP;
+    }
+
     if (pcmk_is_set(call_options, cib_transaction)) {
         /* We're committing a transaction now, processing each request. If
-         * cib_op_attr_transaction is not set, based_extend_transaction() should
+         * cib__op_attr_transaction is not set, based_extend_transaction() should
          * have blocked the request from being added to the transaction.
          */
-        CRM_CHECK(pcmk_is_set(operation->flags, cib_op_attr_transaction),
+        CRM_CHECK(pcmk_is_set(operation->flags, cib__op_attr_transaction),
                   return -EOPNOTSUPP);
     }
 
@@ -1126,7 +1137,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
         return rc;
     }
 
-    is_update = pcmk_is_set(operation->flags, cib_op_attr_modifies);
+    is_update = pcmk_is_set(operation->flags, cib__op_attr_modifies);
 
     if (pcmk_is_set(call_options, cib_discard_reply)) {
         /* If the request will modify the CIB, and we are in legacy mode, we
@@ -1157,8 +1168,8 @@ cib_process_request(xmlNode *request, gboolean privileged,
         int level = LOG_INFO;
         const char *section = crm_element_value(request, F_CIB_SECTION);
 
-        rc = cib_process_command(request, operation, &op_reply, &result_diff,
-                                 privileged);
+        rc = cib_process_command(request, operation, op_function, &op_reply,
+                                 &result_diff, privileged);
 
         if (!is_update) {
             level = LOG_TRACE;
@@ -1275,6 +1286,57 @@ cib_process_request(xmlNode *request, gboolean privileged,
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Get a CIB operation's input from the request XML
+ *
+ * \param[in]  request  CIB request XML
+ * \param[in]  type     CIB operation type
+ * \param[out] section  Where to store CIB section name
+ *
+ * \return Input XML for CIB operation
+ *
+ * \note If not \c NULL, the return value is a non-const pointer to part of
+ *       \p request. The caller should not free it directly.
+ */
+static xmlNode *
+prepare_input(const xmlNode *request, enum cib__op_type type,
+              const char **section)
+{
+    xmlNode *root = NULL;
+
+    if (type == cib__op_apply_patch) {
+        if (pcmk__xe_attr_is_true(request, F_CIB_GLOBAL_UPDATE)) {
+            root = get_message_xml(request, F_CIB_UPDATE_DIFF);
+        } else {
+            root = get_message_xml(request, F_CIB_CALLDATA);
+        }
+        *section = NULL;
+
+    } else {
+        root = get_message_xml(request, F_CIB_CALLDATA);
+        *section = crm_element_value(request, F_CIB_SECTION);
+    }
+
+    if (root == NULL) {
+        return NULL;
+    }
+
+    if (pcmk__str_any_of(crm_element_name(root), F_CRM_DATA, F_CIB_CALLDATA,
+                         NULL)) {
+        root = first_named_child(root, XML_TAG_CIB);
+    }
+
+    // Grab the specified section
+    if ((root != NULL) && (*section != NULL)
+        && pcmk__str_eq(crm_element_name(root), XML_TAG_CIB, pcmk__str_none)) {
+
+        root = pcmk_find_cib_element(root, *section);
+    }
+
+    return root;
+}
+
 static char *
 calculate_section_digest(const char *xpath, xmlNode * xml_obj)
 {
@@ -1364,14 +1426,14 @@ get_change_sections(const struct digest_data *before,
  */
 static bool
 should_replace_notify(const struct digest_data *before_digests,
-                      xmlNode *after_cib, const cib_operation_t *operation,
+                      xmlNode *after_cib, const cib__operation_t *operation,
                       int call_options, uint32_t *change_sections)
 {
     struct digest_data after_digests = { 0, };
 
     *change_sections = cib_change_section_none;
 
-    if (!pcmk_is_set(operation->flags, cib_op_attr_replaces)
+    if (!pcmk_is_set(operation->flags, cib__op_attr_replaces)
         || pcmk_is_set(call_options, cib_inhibit_notify)) {
         return false;
     }
@@ -1411,8 +1473,9 @@ contains_config_change(xmlNode *diff)
 }
 
 static int
-cib_process_command(xmlNode *request, const cib_operation_t *operation,
-                    xmlNode **reply, xmlNode **cib_diff, bool privileged)
+cib_process_command(xmlNode *request, const cib__operation_t *operation,
+                    cib__op_fn_t op_function, xmlNode **reply,
+                    xmlNode **cib_diff, bool privileged)
 {
     xmlNode *input = NULL;
     xmlNode *output = NULL;
@@ -1449,20 +1512,16 @@ cib_process_command(xmlNode *request, const cib_operation_t *operation,
     op = crm_element_value(request, F_CIB_OPERATION);
     crm_element_value_int(request, F_CIB_CALLOPTS, &call_options);
 
-    if (!privileged && pcmk_is_set(operation->flags, cib_op_attr_privileged)) {
+    if (!privileged && pcmk_is_set(operation->flags, cib__op_attr_privileged)) {
         rc = -EACCES;
         crm_trace("Failed due to lack of privileges: %s", pcmk_strerror(rc));
         goto done;
     }
 
-    rc = operation->prepare(request, &input, &section);
-    if (rc != pcmk_ok) {
-        crm_trace("Failed to prepare operation: %s", pcmk_strerror(rc));
-        goto done;
-    }
+    input = prepare_input(request, operation->type, &section);
 
-    if (!pcmk_is_set(operation->flags, cib_op_attr_modifies)) {
-        rc = cib_perform_op(op, call_options, operation->fn, true, section,
+    if (!pcmk_is_set(operation->flags, cib__op_attr_modifies)) {
+        rc = cib_perform_op(op, call_options, op_function, true, section,
                             request, input, false, &config_changed, &the_cib,
                             &result_cib, NULL, &output);
 
@@ -1495,7 +1554,7 @@ cib_process_command(xmlNode *request, const cib_operation_t *operation,
     }
 
     // Calculate the digests of relevant sections before the operation
-    if (pcmk_is_set(operation->flags, cib_op_attr_replaces)
+    if (pcmk_is_set(operation->flags, cib__op_attr_replaces)
         && !pcmk_any_flags_set(call_options,
                                cib_dryrun|cib_inhibit_notify|cib_transaction)) {
 
@@ -1507,7 +1566,7 @@ cib_process_command(xmlNode *request, const cib_operation_t *operation,
     }
 
     // result_cib must not be modified after cib_perform_op() returns
-    rc = cib_perform_op(op, call_options, operation->fn, false, section,
+    rc = cib_perform_op(op, call_options, op_function, false, section,
                         request, input, manage_counters, &config_changed,
                         &the_cib, &result_cib, cib_diff, &output);
 
@@ -1529,7 +1588,7 @@ cib_process_command(xmlNode *request, const cib_operation_t *operation,
      * negates the need to detect ordering changes.
      */
     if ((rc == pcmk_ok)
-        && pcmk_is_set(operation->flags, cib_op_attr_writes_through)) {
+        && pcmk_is_set(operation->flags, cib__op_attr_writes_through)) {
 
         config_changed = true;
     }
@@ -1615,11 +1674,10 @@ cib_process_command(xmlNode *request, const cib_operation_t *operation,
                                   output);
     }
 
-    crm_trace("cleanup");
-    operation->cleanup(call_options, &input, &output);
-
+    if (output != the_cib) {
+        free_xml(output);
+    }
     free_digests(&before_digests);
-
     crm_trace("done");
     return rc;
 }

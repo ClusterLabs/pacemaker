@@ -136,9 +136,8 @@ dedupXpathResults(xmlXPathObjectPtr xpathObj)
 
 /* the caller needs to check if the result contains a xmlDocPtr or xmlNodePtr */
 xmlXPathObjectPtr
-xpath_search(xmlNode * xml_top, const char *path)
+xpath_search(const xmlNode *xml_top, const char *path)
 {
-    xmlDocPtr doc = NULL;
     xmlXPathObjectPtr xpathObj = NULL;
     xmlXPathContextPtr xpathCtx = NULL;
     const xmlChar *xpathExpr = (pcmkXmlStr) path;
@@ -147,9 +146,7 @@ xpath_search(xmlNode * xml_top, const char *path)
     CRM_CHECK(xml_top != NULL, return NULL);
     CRM_CHECK(strlen(path) > 0, return NULL);
 
-    doc = getDocPtr(xml_top);
-
-    xpathCtx = xmlXPathNewContext(doc);
+    xpathCtx = xmlXPathNewContext(xml_top->doc);
     CRM_ASSERT(xpathCtx != NULL);
 
     xpathObj = xmlXPathEvalExpression(xpathExpr, xpathCtx);
