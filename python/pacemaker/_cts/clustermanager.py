@@ -58,7 +58,7 @@ class ClusterManager(UserDict):
 
     def _finalConditions(self):
         for key in list(self.keys()):
-            if self[key] == None:
+            if self[key] is None:
                 raise ValueError("Improper derivation: self[%s] must be overridden by subclass." % key)
 
     def __init__(self):
@@ -235,7 +235,7 @@ class ClusterManager(UserDict):
             if peer_state[peer] == "in-progress":
                 # Wait for any in-progress operations to complete
                 shot = stonith.look(60)
-                while len(stonith.regexes) and shot:
+                while stonith.regexes and shot:
                     self.debug("Found: %r" % shot)
                     del stonith.regexes[stonith.whichmatch]
                     shot = stonith.look(60)
@@ -336,7 +336,7 @@ class ClusterManager(UserDict):
         else:
             self.debug("Stopping %s on node %s" % (self["Name"], node))
 
-        if self.ShouldBeStatus[node] != "up" and force == False:
+        if self.ShouldBeStatus[node] != "up" and not force:
             return 1
 
         (rc, _) = self.rsh(node, self.templates["StopCmd"])
@@ -417,7 +417,7 @@ class ClusterManager(UserDict):
         if not nodelist:
             nodelist = self.Env["nodes"]
         for node in self.Env["nodes"]:
-            if self.ShouldBeStatus[node] == "up" or force == True:
+            if self.ShouldBeStatus[node] == "up" or force:
                 if not self.StopaCM(node, verbose=verbose, force=force):
                     ret = 0
         return ret
@@ -523,7 +523,7 @@ class ClusterManager(UserDict):
             return None
 
         self.cib_installed = 1
-        if self.Env["CIBfilename"] == None:
+        if self.Env["CIBfilename"] is None:
             self.log("Installing Generated CIB on node %s" % node)
             self.cib.install(node)
 
@@ -618,7 +618,7 @@ class ClusterManager(UserDict):
 
         self.debug("Waiting for cluster stability...")
 
-        if timeout == None:
+        if timeout is None:
             timeout = self.Env["DeadTime"]
 
         if len(nodes) < 3:
