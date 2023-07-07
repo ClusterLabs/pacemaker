@@ -44,7 +44,7 @@ class StartTest(CTSTest):
         else:
             self.incr("them")
 
-        if self._cm.ShouldBeStatus[node] != "down":
+        if self._cm.expected_status[node] != "down":
             return self.skipped()
 
         if self._cm.start_cm(node):

@@ -57,15 +57,15 @@ class NearQuorumPointTest(CTSTest):
         #add search patterns
         watchpats = [ ]
         for node in stopset:
-            if self._cm.ShouldBeStatus[node] == "up":
+            if self._cm.expected_status[node] == "up":
                 watchpats.append(self.templates["Pat:We_stopped"] % node)
 
         for node in startset:
-            if self._cm.ShouldBeStatus[node] == "down":
+            if self._cm.expected_status[node] == "down":
                 watchpats.append(self.templates["Pat:Local_started"] % node)
             else:
                 for stopping in stopset:
-                    if self._cm.ShouldBeStatus[stopping] == "up":
+                    if self._cm.expected_status[stopping] == "up":
                         watchpats.append(self.templates["Pat:They_stopped"] % (node, self._cm.key_for_node(stopping)))
 
         if not watchpats:
@@ -80,11 +80,11 @@ class NearQuorumPointTest(CTSTest):
 
         #begin actions
         for node in stopset:
-            if self._cm.ShouldBeStatus[node] == "up":
+            if self._cm.expected_status[node] == "up":
                 self._cm.stop_cm_async(node)
 
         for node in startset:
-            if self._cm.ShouldBeStatus[node] == "down":
+            if self._cm.expected_status[node] == "down":
                 self._cm.start_cm_async(node)
 
         #get the result

@@ -66,7 +66,7 @@ class ClusterManager(UserDict):
         self.name = self.Env["Name"]
 
         self.rsh = RemoteFactory().getInstance()
-        self.ShouldBeStatus={}
+        self.expected_status = {}
         # pylint: disable=invalid-name
         self.ns = NodeStatus(self.Env)
         self.OurNode = os.uname()[1].lower()
@@ -126,7 +126,7 @@ class ClusterManager(UserDict):
         '''How many nodes are up?'''
         count = 0
         for node in self.Env["nodes"]:
-            if self.ShouldBeStatus[node] == "up":
+            if self.expected_status[node] == "up":
                 count = count + 1
         return count
 
@@ -152,7 +152,7 @@ class ClusterManager(UserDict):
         stonith = None
         stonithPats = []
         for peer in self.Env["nodes"]:
-            if self.ShouldBeStatus[peer] == "up":
+            if self.expected_status[peer] == "up":
                 continue
 
             stonithPats.extend([ self.templates["Pat:Fencing_ok"] % peer,
@@ -216,9 +216,9 @@ class ClusterManager(UserDict):
 
             self.debug("   Peer %s was fenced as a result of %s starting: %s" % (peer, node, peer_state[peer]))
             if self.Env["at-boot"]:
-                self.ShouldBeStatus[peer] = "up"
+                self.expected_status[peer] = "up"
             else:
-                self.ShouldBeStatus[peer] = "down"
+                self.expected_status[peer] = "down"
 
             if peer_state[peer] == "in-progress":
                 # Wait for any in-progress operations to complete
@@ -250,10 +250,10 @@ class ClusterManager(UserDict):
         else:
             self.debug("Starting %s on node %s" % (self.templates["Name"], node))
 
-        if not node in self.ShouldBeStatus:
-            self.ShouldBeStatus[node] = "down"
+        if not node in self.expected_status:
+            self.expected_status[node] = "down"
 
-        if self.ShouldBeStatus[node] != "down":
+        if self.expected_status[node] != "down":
             return True
 
         # Technically we should always be able to notice ourselves starting
@@ -268,7 +268,7 @@ class ClusterManager(UserDict):
 
         self.install_config(node)
 
-        self.ShouldBeStatus[node] = "any"
+        self.expected_status[node] = "any"
         if self.stat_cm(node) and self.cluster_stable(self.Env["DeadTime"]):
             self.logger.log ("%s was already started" % node)
             return True
@@ -282,7 +282,7 @@ class ClusterManager(UserDict):
             self.fencing_cleanup(node, stonith)
             return False
 
-        self.ShouldBeStatus[node] = "up"
+        self.expected_status[node] = "up"
         watch_result = watch.look_for_all()
 
         if watch.unmatched:
@@ -310,7 +310,7 @@ class ClusterManager(UserDict):
 
         self.install_config(node)
         self.rsh(node, self.templates["StartCmd"], synchronous=False)
-        self.ShouldBeStatus[node] = "up"
+        self.expected_status[node] = "up"
 
     def stop_cm(self, node, verbose=False, force=False):
         """ Stop the cluster manager on a given node """
@@ -320,13 +320,13 @@ class ClusterManager(UserDict):
         else:
             self.debug("Stopping %s on node %s" % (self["Name"], node))
 
-        if self.ShouldBeStatus[node] != "up" and not force:
+        if self.expected_status[node] != "up" and not force:
             return True
 
         (rc, _) = self.rsh(node, self.templates["StopCmd"])
         if rc == 0:
             # Make sure we can continue even if corosync leaks
-            self.ShouldBeStatus[node] = "down"
+            self.expected_status[node] = "down"
             self.cluster_stable(self.Env["DeadTime"])
             return True
 
@@ -339,7 +339,7 @@ class ClusterManager(UserDict):
         self.debug("Stopping %s on node %s" % (self["Name"], node))
 
         self.rsh(node, self.templates["StopCmd"], synchronous=False)
-        self.ShouldBeStatus[node] = "down"
+        self.expected_status[node] = "down"
 
     def startall(self, nodelist=None, verbose=False, quick=False):
         """ Start the cluster manager on every node in the cluster, or on every
@@ -350,7 +350,7 @@ class ClusterManager(UserDict):
             nodelist = self.Env["nodes"]
 
         for node in nodelist:
-            if self.ShouldBeStatus[node] == "down":
+            if self.expected_status[node] == "down":
                 self.ns.wait_for_all_nodes(nodelist, 300)
 
         if not quick:
@@ -394,7 +394,7 @@ class ClusterManager(UserDict):
         if not nodelist:
             nodelist = self.Env["nodes"]
         for node in self.Env["nodes"]:
-            if self.ShouldBeStatus[node] == "up" or force:
+            if self.expected_status[node] == "up" or force:
                 if not self.stop_cm(node, verbose=verbose, force=force):
                     ret = False
         return ret
@@ -517,7 +517,7 @@ class ClusterManager(UserDict):
 
         self.partitions_expected = 1
         for node in self.Env["nodes"]:
-            self.ShouldBeStatus[node] = ""
+            self.expected_status[node] = ""
             if self.Env["experimental-tests"]:
                 self.unisolate_node(node)
             self.stat_cm(node)
@@ -542,19 +542,19 @@ class ClusterManager(UserDict):
         self.debug("Node %s status: '%s'" % (node, out))
 
         if out.find('ok') < 0:
-            if self.ShouldBeStatus[node] == "up":
+            if self.expected_status[node] == "up":
                 self.log(
                     "Node status for %s is %s but we think it should be %s"
-                    % (node, "down", self.ShouldBeStatus[node]))
-            self.ShouldBeStatus[node] = "down"
+                    % (node, "down", self.expected_status[node]))
+            self.expected_status[node] = "down"
             return 0
 
-        if self.ShouldBeStatus[node] == "down":
+        if self.expected_status[node] == "down":
             self.log(
                 "Node status for %s is %s but we think it should be %s: %s"
-                % (node, "up", self.ShouldBeStatus[node], out))
+                % (node, "up", self.expected_status[node], out))
 
-        self.ShouldBeStatus[node] = "up"
+        self.expected_status[node] = "up"
 
         # check the output first - because syslog-ng loses messages
         if out.find('S_NOT_DC') != -1:
@@ -681,7 +681,7 @@ class ClusterManager(UserDict):
     def resource_location(self, rid):
         ResourceNodes = []
         for node in self.Env["nodes"]:
-            if self.ShouldBeStatus[node] != "up":
+            if self.expected_status[node] != "up":
                 continue
 
             cmd = self.templates["RscRunning"] % rid
@@ -700,7 +700,7 @@ class ClusterManager(UserDict):
         ccm_partitions = []
 
         for node in self.Env["nodes"]:
-            if self.ShouldBeStatus[node] != "up":
+            if self.expected_status[node] != "up":
                 self.debug("Node %s is down... skipping" % node)
                 continue
 
@@ -742,7 +742,7 @@ class ClusterManager(UserDict):
             node_list = self.Env["nodes"]
 
         for node in node_list:
-            if self.ShouldBeStatus[node] != "up":
+            if self.expected_status[node] != "up":
                 continue
 
             (_, quorum) = self.rsh(node, self.templates["QuorumCmd"], verbose=1)

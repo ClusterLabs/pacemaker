@@ -53,7 +53,7 @@ class StonithdTest(CTSTest):
 
         if not self._env["at-boot"]:
             self.debug("Expecting %s to stay down" % node)
-            self._cm.ShouldBeStatus[node] = "down"
+            self._cm.expected_status[node] = "down"
         else:
             self.debug("Expecting %s to come up again %d" % (node, self._env["at-boot"]))
             watchpats.extend([ "%s.* S_STARTING -> S_PENDING" % node,

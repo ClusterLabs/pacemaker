@@ -40,7 +40,7 @@ class StopTest(CTSTest):
         """ Stop the given node, returning whether this succeeded or not """
 
         self.incr("calls")
-        if self._cm.ShouldBeStatus[node] != "up":
+        if self._cm.expected_status[node] != "up":
             return self.skipped()
 
         # Technically we should always be able to notice ourselves stopping
@@ -49,7 +49,7 @@ class StopTest(CTSTest):
         # Any active node needs to notice this one left
         # (note that this won't work if we have multiple partitions)
         for other in self._env["nodes"]:
-            if self._cm.ShouldBeStatus[other] == "up" and other != node:
+            if self._cm.expected_status[other] == "up" and other != node:
                 patterns.append(self.templates["Pat:They_stopped"] %(other, self._cm.key_for_node(node)))
 
         watch = self.create_watch(patterns, self._env["DeadTime"])

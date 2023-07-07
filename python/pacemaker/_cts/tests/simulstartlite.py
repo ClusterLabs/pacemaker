@@ -45,7 +45,7 @@ class SimulStartLite(CTSTest):
         # We ignore the "node" parameter...
         node_list = []
         for node in self._env["nodes"]:
-            if self._cm.ShouldBeStatus[node] == "down":
+            if self._cm.expected_status[node] == "down":
                 self.incr("WasStopped")
                 node_list.append(node)
 

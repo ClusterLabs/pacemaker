@@ -284,7 +284,7 @@ class FileAudit(ClusterAudit):
                     self.known.append(line)
                     self._cm.log("Warning: Corosync core file on %s: %s" % (node, line))
 
-            if self._cm.ShouldBeStatus.get(node) == "down":
+            if self._cm.expected_status.get(node) == "down":
                 clean = False
                 (_, lsout) = self._cm.rsh(node, "ls -al /dev/shm | grep qb-", verbose=1)
 
@@ -473,13 +473,13 @@ class PrimitiveAudit(ClusterAudit):
         """
 
         for node in self._cm.Env["nodes"]:
-            if self._cm.ShouldBeStatus[node] == "up":
+            if self._cm.expected_status[node] == "up":
                 self._active_nodes.append(node)
             else:
                 self._inactive_nodes.append(node)
 
         for node in self._cm.Env["nodes"]:
-            if self._target is None and self._cm.ShouldBeStatus[node] == "up":
+            if self._target is None and self._cm.expected_status[node] == "up":
                 self._target = node
 
         if not self._target:
@@ -703,7 +703,7 @@ class ControllerStateAudit(ClusterAudit):
         unstable_list = []
 
         for node in self._cm.Env["nodes"]:
-            should_be = self._cm.ShouldBeStatus[node]
+            should_be = self._cm.expected_status[node]
             rc = self._cm.test_node_cm(node)
 
             if rc > 0:
@@ -933,9 +933,9 @@ class PartitionAudit(ClusterAudit):
 
         self.debug("Auditing partition: %s" % partition)
         for node in node_list:
-            if self._cm.ShouldBeStatus[node] != "up":
+            if self._cm.expected_status[node] != "up":
                 self._cm.log("Warn: Node %s appeared out of nowhere" % node)
-                self._cm.ShouldBeStatus[node] = "up"
+                self._cm.expected_status[node] = "up"
                 # not in itself a reason to fail the audit (not what we're
                 #  checking for in this audit)
 
@@ -955,7 +955,7 @@ class PartitionAudit(ClusterAudit):
 
             if not self._node_epoch[node]:
                 self._cm.log("Warn: Node %s dissappeared: cant determin epoch" % node)
-                self._cm.ShouldBeStatus[node] = "down"
+                self._cm.expected_status[node] = "down"
                 # not in itself a reason to fail the audit (not what we're
                 #  checking for in this audit)
             elif lowest_epoch is None or self._node_epoch[node] < lowest_epoch:
@@ -966,7 +966,7 @@ class PartitionAudit(ClusterAudit):
             passed = False
 
         for node in node_list:
-            if self._cm.ShouldBeStatus[node] != "up":
+            if self._cm.expected_status[node] != "up":
                 continue
 
             if self._cm.is_node_dc(node, self._node_state[node]):
@@ -993,7 +993,7 @@ class PartitionAudit(ClusterAudit):
 
         if not passed:
             for node in node_list:
-                if self._cm.ShouldBeStatus[node] == "up":
+                if self._cm.expected_status[node] == "up":
                     self._cm.log("epoch %s : %s"
                                 % (self._node_epoch[node], self._node_state[node]))
 

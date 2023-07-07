@@ -127,7 +127,7 @@ class ComponentFail(CTSTest):
             self._okerrpatterns.append(self.templates["Pat:Fencing_start"] % node)
 
             if not self._env["at-boot"]:
-                self._cm.ShouldBeStatus[node] = "down"
+                self._cm.expected_status[node] = "down"
 
             # If fencing occurred, chances are many (if not all) the expected logs
             # will not be sent - or will be lost when the node reboots

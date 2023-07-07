@@ -41,13 +41,13 @@ class FlipTest(CTSTest):
 
         self.incr("calls")
 
-        if self._cm.ShouldBeStatus[node] == "up":
+        if self._cm.expected_status[node] == "up":
             self.incr("stopped")
             ret = self._stop(node)
             kind = "up->down"
             # Give the cluster time to recognize it's gone...
             time.sleep(self._env["StableTime"])
-        elif self._cm.ShouldBeStatus[node] == "down":
+        elif self._cm.expected_status[node] == "down":
             self.incr("started")
             ret = self._start(node)
             kind = "down->up"
