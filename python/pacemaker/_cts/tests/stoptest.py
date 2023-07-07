@@ -55,7 +55,7 @@ class StopTest(CTSTest):
         watch = self.create_watch(patterns, self._env["DeadTime"])
         watch.set_watch()
 
-        if node == self._cm.OurNode:
+        if node == self._cm.our_node:
             self.incr("us")
         else:
             if self._cm.upcount() <= 1:
