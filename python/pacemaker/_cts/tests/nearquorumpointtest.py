@@ -66,7 +66,7 @@ class NearQuorumPointTest(CTSTest):
             else:
                 for stopping in stopset:
                     if self._cm.expected_status[stopping] == "up":
-                        watchpats.append(self.templates["Pat:They_stopped"] % (node, self._cm.key_for_node(stopping)))
+                        watchpats.append(self.templates["Pat:They_stopped"] % (node, stopping))
 
         if not watchpats:
             return self.skipped()

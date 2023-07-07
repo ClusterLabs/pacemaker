@@ -95,9 +95,6 @@ class ClusterManager(UserDict):
         print("FIXME: Setting %s=%s on %r" % (key, value, self))
         self._data[key] = value
 
-    def key_for_node(self, node):
-        return node
-
     def clear_instance_errors_to_ignore(self):
         """ Reset instance-specific errors to ignore on each iteration """
 
@@ -425,7 +422,7 @@ class ClusterManager(UserDict):
             if node == target:
                 continue
 
-            (rc, _) = self.rsh(target, self.templates["BreakCommCmd"] % self.key_for_node(node))
+            (rc, _) = self.rsh(target, self.templates["BreakCommCmd"] % node)
             if rc != 0:
                 self._logger.log("Could not break the communication between %s and %s: %d" % (target, node, rc))
                 return False
@@ -445,8 +442,8 @@ class ClusterManager(UserDict):
 
             # Limit the amount of time we have asynchronous connectivity for
             # Restore both sides as simultaneously as possible
-            self.rsh(target, self.templates["FixCommCmd"] % self.key_for_node(node), synchronous=False)
-            self.rsh(node, self.templates["FixCommCmd"] % self.key_for_node(target), synchronous=False)
+            self.rsh(target, self.templates["FixCommCmd"] % node, synchronous=False)
+            self.rsh(node, self.templates["FixCommCmd"] % target, synchronous=False)
             self.debug("Communication restored between %s and %s" % (target, node))
 
     def oprofile_start(self, node=None):
