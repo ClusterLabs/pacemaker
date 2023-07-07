@@ -54,7 +54,7 @@ class StandbyTest(CTSTest):
 
         self.debug("Make sure node %s is active" % node)
         if self._cm.StandbyStatus(node) != "off":
-            if not self._cm.SetStandbyMode(node, "off"):
+            if not self._cm.set_standby_mode(node, "off"):
                 return self.failure("can't set node %s to active mode" % node)
 
         self._cm.cluster_stable()
@@ -68,7 +68,7 @@ class StandbyTest(CTSTest):
         watch.set_watch()
 
         self.debug("Setting node %s to standby mode" % node)
-        if not self._cm.SetStandbyMode(node, "on"):
+        if not self._cm.set_standby_mode(node, "on"):
             return self.failure("can't set node %s to standby mode" % node)
 
         self.set_timer("on")
@@ -76,7 +76,7 @@ class StandbyTest(CTSTest):
         ret = watch.look_for_all()
         if not ret:
             self._logger.log("Patterns not found: %r" % watch.unmatched)
-            self._cm.SetStandbyMode(node, "off")
+            self._cm.set_standby_mode(node, "off")
             return self.failure("cluster didn't react to standby change on %s" % node)
 
         self._cm.cluster_stable()
@@ -92,11 +92,11 @@ class StandbyTest(CTSTest):
         if rscs_on_node:
             rc = self.failure("%s set to standby, %r is still running on it" % (node, rscs_on_node))
             self.debug("Setting node %s to active mode" % node)
-            self._cm.SetStandbyMode(node, "off")
+            self._cm.set_standby_mode(node, "off")
             return rc
 
         self.debug("Setting node %s to active mode" % node)
-        if not self._cm.SetStandbyMode(node, "off"):
+        if not self._cm.set_standby_mode(node, "off"):
             return self.failure("can't set node %s to active mode" % node)
 
         self.set_timer("off")

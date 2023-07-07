@@ -883,11 +883,15 @@ class ClusterManager(UserDict):
 
     # status == "on" : Enter Standby mode
     # status == "off": Enter Active mode
-    def SetStandbyMode(self, node, status):
+    def set_standby_mode(self, node, status):
         current_status = self.StandbyStatus(node)
+
+        if current_status == status:
+            return True
+
         cmd = self.templates["StandbyCmd"] % (node, status)
-        self.rsh(node, cmd)
-        return True
+        (rc, _) = self.rsh(node, cmd)
+        return rc == 0
 
     def AddDummyRsc(self, node, rid):
         rsc_xml = """ '<resources>
