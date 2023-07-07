@@ -348,10 +348,10 @@ class ClusterManager(UserDict):
         self.ShouldBeStatus[node] = "down"
 
     def startall(self, nodelist=None, verbose=False, quick=False):
+        """ Start the cluster manager on every node in the cluster, or on every
+            node in nodelist if not None
+        """
 
-        '''Start the cluster manager on every node in the cluster.
-        We can do it on a subset of the cluster if nodelist is not None.
-        '''
         if not nodelist:
             nodelist = self.Env["nodes"]
 
@@ -376,7 +376,7 @@ class ClusterManager(UserDict):
         watch.set_watch()
 
         if not self.start_cm(nodelist[0], verbose=verbose):
-            return 0
+            return False
         for node in nodelist:
             self.start_cm_async(node, verbose=verbose)
 
@@ -387,23 +387,22 @@ class ClusterManager(UserDict):
 
         if not self.cluster_stable():
             self.logger.log("Cluster did not stabilize")
-            return 0
+            return False
 
-        return 1
+        return True
 
     def stopall(self, nodelist=None, verbose=False, force=False):
+        """ Stop the cluster manager on every node in the cluster, or on every
+            node in nodelist if not None
+        """
 
-        '''Stop the cluster managers on every node in the cluster.
-        We can do it on a subset of the cluster if nodelist is not None.
-        '''
-
-        ret = 1
+        ret = True
         if not nodelist:
             nodelist = self.Env["nodes"]
         for node in self.Env["nodes"]:
             if self.ShouldBeStatus[node] == "up" or force:
                 if not self.stop_cm(node, verbose=verbose, force=force):
-                    ret = 0
+                    ret = False
         return ret
 
     def statall(self, nodelist=None):
