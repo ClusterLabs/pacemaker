@@ -24,6 +24,23 @@ from pacemaker._cts.patterns import PatternSelector
 from pacemaker._cts.remote import RemoteFactory
 from pacemaker._cts.watcher import LogWatcher
 
+# Throughout this file, pylint has trouble understanding that EnvFactory
+# and RemoteFactory are singleton instances that can be treated as callable
+# and subscriptable objects.  Various warnings are disabled because of this.
+# See also a comment about self._rsh in environment.py.
+# pylint: disable=unsubscriptable-object
+
+# pylint doesn't understand that self._rsh is callable (it stores the
+# singleton instance of RemoteExec, as returned by the getInstance method
+# of RemoteFactory).  It's possible we could fix this with type annotations,
+# but those were introduced with python 3.5 and we only support python 3.4.
+# I think we could also fix this by getting rid of the getInstance methods,
+# but that's a project for another day.  For now, just disable the warning.
+# pylint: disable=not-callable
+
+# ClusterManager has a lot of methods.
+# pylint: disable=too-many-public-methods
+
 class ClusterManager(UserDict):
     '''The Cluster Manager class.
     This is an subclass of the Python dictionary class.
@@ -45,6 +62,9 @@ class ClusterManager(UserDict):
                 raise ValueError("Improper derivation: self[%s] must be overridden by subclass." % key)
 
     def __init__(self):
+        # Eventually, ClusterManager should not be a UserDict subclass.  Until
+        # that point...
+        # pylint: disable=super-init-not-called
         self.Env = EnvFactory().getInstance()
         self.templates = PatternSelector(self.Env["Name"])
         self.logger = LogFactory()
@@ -54,6 +74,7 @@ class ClusterManager(UserDict):
 
         self.rsh = RemoteFactory().getInstance()
         self.ShouldBeStatus={}
+        # pylint: disable=invalid-name
         self.ns = NodeStatus(self.Env)
         self.OurNode = os.uname()[1].lower()
         self.__instance_errors_to_ignore = []
