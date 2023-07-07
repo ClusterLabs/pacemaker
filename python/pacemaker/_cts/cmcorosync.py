@@ -9,6 +9,12 @@ from pacemaker._cts.CTS import Process
 from pacemaker._cts.clustermanager import ClusterManager
 from pacemaker._cts.patterns import PatternSelector
 
+# Throughout this file, pylint has trouble understanding that EnvFactory
+# is a singleton instance that can be treated as a subscriptable object.
+# Various warnings are disabled because of this.  See also a comment about
+# self._rsh in environment.py.
+# pylint: disable=unsubscriptable-object
+
 class Corosync2(ClusterManager):
     '''
     Corosync version 2 cluster manager class
