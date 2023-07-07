@@ -78,7 +78,7 @@ class ClusterManager(UserDict):
         self.OurNode = os.uname()[1].lower()
         self.__instance_errors_to_ignore = []
 
-        self.cib_installed = 0
+        self.cib_installed = False
 
         self._finalConditions()
 
@@ -433,11 +433,11 @@ class ClusterManager(UserDict):
             (rc, _) = self.rsh(target, self.templates["BreakCommCmd"] % self.key_for_node(node))
             if rc != 0:
                 self.logger.log("Could not break the communication between %s and %s: %d" % (target, node, rc))
-                return None
+                return False
 
             self.debug("Communication cut between %s and %s" % (target, node))
 
-        return 1
+        return True
 
     def unisolate_node(self, target, nodes=None):
         '''fix the communication between the nodes'''
@@ -496,14 +496,14 @@ class ClusterManager(UserDict):
         if node in self.CIBsync or not self.Env["ClobberCIB"]:
             return
 
-        self.CIBsync[node] = 1
+        self.CIBsync[node] = True
         self.rsh(node, "rm -f %s/cib*" % BuildOptions.CIB_DIR)
 
         # Only install the CIB on the first node, all the other ones will pick it up from there
-        if self.cib_installed == 1:
+        if self.cib_installed:
             return
 
-        self.cib_installed = 1
+        self.cib_installed = True
         if self.Env["CIBfilename"] is None:
             self.log("Installing Generated CIB on node %s" % node)
             self.cib.install(node)
@@ -589,9 +589,9 @@ class ClusterManager(UserDict):
         '''Report the status of the cluster manager on a given node'''
 
         if self.test_node_CM(node) == 2:
-            return 1
+            return True
         self.log("Warn: Node %s not stable" % node)
-        return None
+        return False
 
     def partition_stable(self, nodes, timeout=None):
         watchpats = [ "Current ping state: S_IDLE",
@@ -604,7 +604,7 @@ class ClusterManager(UserDict):
 
         if len(nodes) < 3:
             self.debug("Cluster is inactive")
-            return 1
+            return True
 
         idle_watch = LogWatcher(self.Env["LogFileName"], watchpats, nodes.split(), self.Env["LogWatcher"], "ClusterStable", timeout)
         idle_watch.set_watch()
@@ -618,21 +618,21 @@ class ClusterManager(UserDict):
             self.debug(ret)
             for node in nodes.split():
                 if re.search(node, ret):
-                    return 1
+                    return True
             ret = idle_watch.look()
 
         self.debug("Warn: Partition %r not IDLE after %ds" % (nodes, timeout))
-        return None
+        return False
 
     def cluster_stable(self, timeout=None, double_check=False):
         partitions = self.find_partitions()
 
         for partition in partitions:
             if not self.partition_stable(partition, timeout):
-                return None
+                return False
 
         if not double_check:
-            return 1
+            return True
 
         # Make sure we are really stable and that all resources,
         # including those that depend on transient node attributes,
@@ -640,9 +640,9 @@ class ClusterManager(UserDict):
         time.sleep(5)
         for partition in partitions:
             if not self.partition_stable(partition, timeout):
-                return None
+                return False
 
-        return 1
+        return True
 
     def is_node_dc(self, node, status_line=None):
         if not status_line:
