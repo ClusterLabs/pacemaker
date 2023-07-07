@@ -13,8 +13,7 @@ class Corosync2(ClusterManager):
     '''
     Corosync version 2 cluster manager class
     '''
-    def __init__(self, name=None):
-        if not name: name="crm-corosync"
+    def __init__(self):
         ClusterManager.__init__(self)
 
         self._fullcomplist = {}
