@@ -53,13 +53,13 @@ class StandbyTest(CTSTest):
             return self.failure("Start all nodes failed")
 
         self.debug("Make sure node %s is active" % node)
-        if self._cm.StandbyStatus(node) != "off":
+        if self._cm.standby_status(node) != "off":
             if not self._cm.set_standby_mode(node, "off"):
                 return self.failure("can't set node %s to active mode" % node)
 
         self._cm.cluster_stable()
 
-        status = self._cm.StandbyStatus(node)
+        status = self._cm.standby_status(node)
         if status != "off":
             return self.failure("standby status of %s is [%s] but we expect [off]" % (node, status))
 
@@ -81,7 +81,7 @@ class StandbyTest(CTSTest):
 
         self._cm.cluster_stable()
 
-        status = self._cm.StandbyStatus(node)
+        status = self._cm.standby_status(node)
         if status != "on":
             return self.failure("standby status of %s is [%s] but we expect [on]" % (node, status))
 
@@ -102,7 +102,7 @@ class StandbyTest(CTSTest):
         self.set_timer("off")
         self._cm.cluster_stable()
 
-        status = self._cm.StandbyStatus(node)
+        status = self._cm.standby_status(node)
         if status != "off":
             return self.failure("standby status of %s is [%s] but we expect [off]" % (node, status))
 

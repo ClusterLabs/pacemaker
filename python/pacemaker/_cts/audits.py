@@ -422,7 +422,7 @@ class PrimitiveAudit(ClusterAudit):
         """ Perform the audit of a single resource """
 
         rc = True
-        active = self._cm.ResourceLocation(resource.id)
+        active = self._cm.resource_location(resource.id)
 
         if len(active) == 1:
             if quorum:
@@ -558,7 +558,7 @@ class GroupAudit(PrimitiveAudit):
                 if child.parent != group.id:
                     continue
 
-                nodes = self._cm.ResourceLocation(child.id)
+                nodes = self._cm.resource_location(child.id)
 
                 if first_match and len(nodes) > 0:
                     group_location = nodes[0]
@@ -704,7 +704,7 @@ class ControllerStateAudit(ClusterAudit):
 
         for node in self._cm.Env["nodes"]:
             should_be = self._cm.ShouldBeStatus[node]
-            rc = self._cm.test_node_CM(node)
+            rc = self._cm.test_node_cm(node)
 
             if rc > 0:
                 if should_be == "down":

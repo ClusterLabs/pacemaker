@@ -56,7 +56,7 @@ class ClusterManager(UserDict):
     be in.
     '''
 
-    def _finalConditions(self):
+    def _final_conditions(self):
         for key in list(self.keys()):
             if self[key] is None:
                 raise ValueError("Improper derivation: self[%s] must be overridden by subclass." % key)
@@ -80,7 +80,7 @@ class ClusterManager(UserDict):
 
         self.cib_installed = False
 
-        self._finalConditions()
+        self._final_conditions()
 
         self.CIBsync = {}
         self.CibFactory = ConfigFactory(self)
@@ -454,10 +454,10 @@ class ClusterManager(UserDict):
             self.rsh(node, self.templates["FixCommCmd"] % self.key_for_node(target), synchronous=False)
             self.debug("Communication restored between %s and %s" % (target, node))
 
-    def oprofileStart(self, node=None):
+    def oprofile_start(self, node=None):
         if not node:
             for n in self.Env["oprofile"]:
-                self.oprofileStart(n)
+                self.oprofile_start(n)
 
         elif node in self.Env["oprofile"]:
             self.debug("Enabling oprofile on %s" % node)
@@ -466,22 +466,22 @@ class ClusterManager(UserDict):
             self.rsh(node, "opcontrol --start")
             self.rsh(node, "opcontrol --reset")
 
-    def oprofileSave(self, test, node=None):
+    def oprofile_save(self, test, node=None):
         if not node:
             for n in self.Env["oprofile"]:
-                self.oprofileSave(test, n)
+                self.oprofile_save(test, n)
 
         elif node in self.Env["oprofile"]:
             self.rsh(node, "opcontrol --dump")
             self.rsh(node, "opcontrol --save=cts.%d" % test)
             # Read back with: opreport -l session:cts.0 image:<directory>/c*
-            self.oprofileStop(node)
-            self.oprofileStart(node)
+            self.oprofile_stop(node)
+            self.oprofile_start(node)
 
-    def oprofileStop(self, node=None):
+    def oprofile_stop(self, node=None):
         if not node:
             for n in self.Env["oprofile"]:
-                self.oprofileStop(n)
+                self.oprofile_stop(n)
 
         elif node in self.Env["oprofile"]:
             self.debug("Stopping oprofile on %s" % node)
@@ -528,7 +528,7 @@ class ClusterManager(UserDict):
                 self.unisolate_node(node)
             self.stat_cm(node)
 
-    def test_node_CM(self, node):
+    def test_node_cm(self, node):
         '''Report the status of the cluster manager on a given node'''
 
         watchpats = [ "Current ping state: (S_IDLE|S_NOT_DC)",
@@ -582,13 +582,13 @@ class ClusterManager(UserDict):
     def stat_cm(self, node):
         """ Report the status of the cluster manager on a given node """
 
-        return self.test_node_CM(node) > 0
+        return self.test_node_cm(node) > 0
 
     # Being up and being stable is not the same question...
     def node_stable(self, node):
         '''Report the status of the cluster manager on a given node'''
 
-        if self.test_node_CM(node) == 2:
+        if self.test_node_cm(node) == 2:
             return True
         self.log("Warn: Node %s not stable" % node)
         return False
@@ -684,7 +684,7 @@ class ClusterManager(UserDict):
 
         return resources
 
-    def ResourceLocation(self, rid):
+    def resource_location(self, rid):
         ResourceNodes = []
         for node in self.Env["nodes"]:
             if self.ShouldBeStatus[node] != "up":
@@ -869,7 +869,7 @@ class ClusterManager(UserDict):
 
         return complist
 
-    def StandbyStatus(self, node):
+    def standby_status(self, node):
         (_, out) = self.rsh(node, self.templates["StandbyQueryCmd"] % node, verbose=1)
         if not out:
             return "off"
@@ -880,7 +880,7 @@ class ClusterManager(UserDict):
     # status == "on" : Enter Standby mode
     # status == "off": Enter Active mode
     def set_standby_mode(self, node, status):
-        current_status = self.StandbyStatus(node)
+        current_status = self.standby_status(node)
 
         if current_status == status:
             return True
@@ -889,7 +889,7 @@ class ClusterManager(UserDict):
         (rc, _) = self.rsh(node, cmd)
         return rc == 0
 
-    def AddDummyRsc(self, node, rid):
+    def add_dummy_rsc(self, node, rid):
         rsc_xml = """ '<resources>
                 <primitive class=\"ocf\" id=\"%s\" provider=\"pacemaker\" type=\"Dummy\">
                     <operations>
@@ -905,7 +905,7 @@ class ClusterManager(UserDict):
         self.rsh(node, self.templates['CibAddXml'] % rsc_xml)
         self.rsh(node, self.templates['CibAddXml'] % constraint_xml)
 
-    def RemoveDummyRsc(self, node, rid):
+    def remove_dummy_rsc(self, node, rid):
         constraint = "\"//rsc_location[@rsc='%s']\"" % rid
         rsc = "\"//primitive[@id='%s']\"" % rid
 

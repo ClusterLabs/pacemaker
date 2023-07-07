@@ -86,7 +86,7 @@ class MaintenanceMode(CTSTest):
         watch = self.create_watch(pats, 60)
         watch.set_watch()
 
-        self._cm.AddDummyRsc(node, self._rid)
+        self._cm.add_dummy_rsc(node, self._rid)
 
         with Timer(self._logger, self.name, "addDummy"):
             watch.look_for_all()
@@ -104,7 +104,7 @@ class MaintenanceMode(CTSTest):
 
         watch = self.create_watch(pats, 60)
         watch.set_watch()
-        self._cm.RemoveDummyRsc(node, self._rid)
+        self._cm.remove_dummy_rsc(node, self._rid)
 
         with Timer(self._logger, self.name, "removeDummy"):
             watch.look_for_all()

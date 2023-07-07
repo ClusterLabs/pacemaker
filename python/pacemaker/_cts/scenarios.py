@@ -164,13 +164,13 @@ class Scenario:
     def run(self, iterations):
         """ Run all tests in the scenario the given number of times """
 
-        self._cm.oprofileStart()
+        self._cm.oprofile_start()
 
         try:
             self._run_loop(iterations)
-            self._cm.oprofileStop()
+            self._cm.oprofile_stop()
         except:
-            self._cm.oprofileStop()
+            self._cm.oprofile_stop()
             raise
 
     def _run_loop(self, iterations):
@@ -215,7 +215,7 @@ class Scenario:
             ret = False
 
         stoptime = time.time()
-        self._cm.oprofileSave(testcount)
+        self._cm.oprofile_save(testcount)
 
         elapsed_time = stoptime - starttime
         test_time = stoptime - test.get_timer()
