@@ -66,8 +66,8 @@ class CIB:
             specifying the resource's name.
         """
 
-        if self._cm.Env["IPagent"] == "IPaddr2":
-            ip = next_ip(self._cm.Env["IPBase"])
+        if self._cm.env["IPagent"] == "IPaddr2":
+            ip = next_ip(self._cm.env["IPBase"])
             if not name:
                 if ":" in ip:
                     (_, _, suffix) = ip.rpartition(":")
@@ -75,7 +75,7 @@ class CIB:
                 else:
                     name = "r%s" % ip
 
-            r = Resource(self._factory, name, self._cm.Env["IPagent"], "ocf")
+            r = Resource(self._factory, name, self._cm.env["IPagent"], "ocf")
             r["ip"] = ip
 
             if ":" in ip:
@@ -86,10 +86,10 @@ class CIB:
 
         else:
             if not name:
-                name = "r%s%d" % (self._cm.Env["IPagent"], self._counter)
+                name = "r%s%d" % (self._cm.env["IPagent"], self._counter)
                 self._counter += 1
 
-            r = Resource(self._factory, name, self._cm.Env["IPagent"], "ocf")
+            r = Resource(self._factory, name, self._cm.env["IPagent"], "ocf")
 
         r.add_op("monitor", "5s")
         return r
@@ -148,7 +148,7 @@ class CIB:
             self._factory.target = target
 
         self._factory.rsh(self._factory.target, "HOME=/root cibadmin --empty %s > %s" % (self.version, self._factory.tmpfile))
-        self._num_nodes = len(self._cm.Env["nodes"])
+        self._num_nodes = len(self._cm.env["nodes"])
 
         no_quorum = "stop"
         if self._num_nodes < 3:
@@ -160,10 +160,10 @@ class CIB:
 
         # Fencing resource
         # Define first so that the shell doesn't reject every update
-        if self._cm.Env["DoFencing"]:
+        if self._cm.env["DoFencing"]:
 
             # Define the "real" fencing device
-            st = Resource(self._factory, "Fencing", self._cm.Env["stonith-type"], "stonith")
+            st = Resource(self._factory, "Fencing", self._cm.env["stonith-type"], "stonith")
 
             # Set a threshold for unreliable stonith devices such as the vmware one
             st.add_meta("migration-threshold", "5")
@@ -174,10 +174,10 @@ class CIB:
             # For remote node tests, a cluster node is stopped and brought back up
             # as a remote node with the name "remote-OLDNAME". To allow fencing
             # devices to fence these nodes, create a list of all possible node names.
-            all_node_names = [ prefix+n for n in self._cm.Env["nodes"] for prefix in ('', 'remote-') ]
+            all_node_names = [ prefix+n for n in self._cm.env["nodes"] for prefix in ('', 'remote-') ]
 
             # Add all parameters specified by user
-            entries = self._cm.Env["stonith-params"].split(',')
+            entries = self._cm.env["stonith-params"].split(',')
             for entry in entries:
                 try:
                     (name, value) = entry.split('=', 1)
@@ -200,12 +200,12 @@ class CIB:
 
             # Create the levels
             stl = FencingTopology(self._factory)
-            for node in self._cm.Env["nodes"]:
+            for node in self._cm.env["nodes"]:
                 # Remote node tests will rename the node
                 remote_node = "remote-%s" % node
 
                 # Randomly assign node to a fencing method
-                ftype = self._cm.Env.random_gen.choice(["levels-and", "levels-or ", "broadcast "])
+                ftype = self._cm.env.random_gen.choice(["levels-and", "levels-or ", "broadcast "])
 
                 # For levels-and, randomly choose targeting by node name or attribute
                 by = ""
@@ -213,7 +213,7 @@ class CIB:
                 if ftype == "levels-and":
                     node_id = self.get_node_id(node)
 
-                    if node_id == 0 or self._cm.Env.random_gen.choice([True, False]):
+                    if node_id == 0 or self._cm.env.random_gen.choice([True, False]):
                         by = " (by name)"
                     else:
                         attr_nodes[node] = node_id
@@ -274,7 +274,7 @@ class CIB:
             stl.commit()
 
         o = Option(self._factory)
-        o["stonith-enabled"] = self._cm.Env["DoFencing"]
+        o["stonith-enabled"] = self._cm.env["DoFencing"]
         o["start-failure-is-fatal"] = "false"
         o["pe-input-series-max"] = "5000"
         o["shutdown-escalation"] = "5min"
@@ -293,14 +293,14 @@ class CIB:
             stn.commit()
 
         # Add an alerts section if possible
-        if self._factory.rsh.exists_on_all(self._cm.Env["notification-agent"], self._cm.Env["nodes"]):
+        if self._factory.rsh.exists_on_all(self._cm.env["notification-agent"], self._cm.env["nodes"]):
             alerts = Alerts(self._factory)
-            alerts.add_alert(self._cm.Env["notification-agent"],
-                             self._cm.Env["notification-recipient"])
+            alerts.add_alert(self._cm.env["notification-agent"],
+                             self._cm.env["notification-recipient"])
             alerts.commit()
 
         # Add resources?
-        if self._cm.Env["CIBResource"]:
+        if self._cm.env["CIBResource"]:
             self.add_resources()
 
         # generate cib
@@ -315,7 +315,7 @@ class CIB:
         """ Add various resources and their constraints to the CIB """
 
         # Per-node resources
-        for node in self._cm.Env["nodes"]:
+        for node in self._cm.env["nodes"]:
             name = "rsc_%s" % node
             r = self.new_ip(name)
             r.prefer(node, "100")
@@ -333,7 +333,7 @@ class CIB:
         # Ping the test exerciser
         p = Resource(self._factory, "ping-1","ping",  "ocf", "pacemaker")
         p.add_op("monitor", "60s")
-        p["host_list"] = self._cm.Env["cts-exerciser"]
+        p["host_list"] = self._cm.env["cts-exerciser"]
         p["name"] = "connected"
         p["debug"] = "true"
 
@@ -364,7 +364,7 @@ class CIB:
         g = Group(self._factory, "group-1")
         g.add_child(self.new_ip())
 
-        if self._cm.Env["have_systemd"]:
+        if self._cm.env["have_systemd"]:
             sysd = Resource(self._factory, "petulant", "pacemaker-cts-dummyd@10", "service")
             sysd.add_op("monitor", "P10S")
             g.add_child(sysd)
@@ -404,8 +404,8 @@ class ConfigFactory:
         # pylint: disable=invalid-name
         self._cm = cm
         self.rsh = self._cm.rsh
-        if not self._cm.Env["ListTests"]:
-            self.target = self._cm.Env["nodes"][0]
+        if not self._cm.env["ListTests"]:
+            self.target = self._cm.env["nodes"][0]
         self.tmpfile = None
 
     def log(self, args):

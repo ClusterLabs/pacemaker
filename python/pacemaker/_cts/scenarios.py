@@ -110,15 +110,15 @@ class Scenario:
 
         self._cm.prepare()
         self.audit() # Also detects remote/local log config
-        self._cm.ns.wait_for_all_nodes(self._cm.Env["nodes"])
+        self._cm.ns.wait_for_all_nodes(self._cm.env["nodes"])
 
         self.audit()
         self._cm.install_support()
 
-        self._bad_news = LogWatcher(self._cm.Env["LogFileName"],
+        self._bad_news = LogWatcher(self._cm.env["LogFileName"],
                                     self._cm.templates.get_patterns("BadNews"),
-                                    self._cm.Env["nodes"],
-                                    self._cm.Env["LogWatcher"],
+                                    self._cm.env["nodes"],
+                                    self._cm.env["LogWatcher"],
                                     "BadNews", 0)
         self._bad_news.set_watch() # Call after we've figured out what type of log watching to do in LogAudit
 
@@ -185,7 +185,7 @@ class Scenario:
             this one) that have been run across all iterations.
         """
 
-        nodechoice = self._cm.Env.random_node()
+        nodechoice = self._cm.env.random_node()
 
         ret = True
         did_run = False
@@ -209,7 +209,7 @@ class Scenario:
         if not test.teardown(nodechoice):
             self._cm.log("Teardown failed")
 
-            if not should_continue(self._cm.Env):
+            if not should_continue(self._cm.env):
                 raise ValueError("Teardown of %s on %s failed" % (test.name, nodechoice))
 
             ret = False
@@ -313,7 +313,7 @@ class Scenario:
                 break
         else:
             print("Big problems")
-            if not should_continue(self._cm.Env):
+            if not should_continue(self._cm.env):
                 self._cm.log("Shutting down.")
                 self.summarize()
                 self.teardown()
@@ -343,7 +343,7 @@ class RandomTests(Scenario):
         testcount = 1
 
         while testcount <= iterations:
-            test = self._cm.Env.random_gen.choice(self.tests)
+            test = self._cm.env.random_gen.choice(self.tests)
             self.run_test(test, testcount)
             testcount += 1
 

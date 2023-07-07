@@ -59,16 +59,16 @@ class ClusterManager(UserDict):
         # Eventually, ClusterManager should not be a UserDict subclass.  Until
         # that point...
         # pylint: disable=super-init-not-called
-        self.Env = EnvFactory().getInstance()
-        self.templates = PatternSelector(self.Env["Name"])
+        self.env = EnvFactory().getInstance()
+        self.templates = PatternSelector(self.env["Name"])
         self.logger = LogFactory()
         self.data = {}
-        self.name = self.Env["Name"]
+        self.name = self.env["Name"]
 
         self.rsh = RemoteFactory().getInstance()
         self.expected_status = {}
         # pylint: disable=invalid-name
-        self.ns = NodeStatus(self.Env)
+        self.ns = NodeStatus(self.env)
         self.OurNode = os.uname()[1].lower()
         self.__instance_errors_to_ignore = []
 
@@ -78,7 +78,7 @@ class ClusterManager(UserDict):
 
         self.CIBsync = {}
         self.CibFactory = ConfigFactory(self)
-        self.cib = self.CibFactory.create_config(self.Env["Schema"])
+        self.cib = self.CibFactory.create_config(self.env["Schema"])
 
     def __getitem__(self, key):
         if key == "Name":
@@ -125,13 +125,13 @@ class ClusterManager(UserDict):
     def upcount(self):
         '''How many nodes are up?'''
         count = 0
-        for node in self.Env["nodes"]:
+        for node in self.env["nodes"]:
             if self.expected_status[node] == "up":
                 count = count + 1
         return count
 
     def install_support(self, command="install"):
-        for node in self.Env["nodes"]:
+        for node in self.env["nodes"]:
             self.rsh(node, "%s/cts-support %s" % (BuildOptions.DAEMON_DIR, command))
 
     def prepare_fencing_watcher(self):
@@ -151,14 +151,14 @@ class ClusterManager(UserDict):
 
         stonith = None
         stonithPats = []
-        for peer in self.Env["nodes"]:
+        for peer in self.env["nodes"]:
             if self.expected_status[peer] == "up":
                 continue
 
             stonithPats.extend([ self.templates["Pat:Fencing_ok"] % peer,
                                  self.templates["Pat:Fencing_start"] % peer ])
 
-        stonith = LogWatcher(self.Env["LogFileName"], stonithPats, self.Env["nodes"], self.Env["LogWatcher"], "StartupFencing", 0)
+        stonith = LogWatcher(self.env["LogFileName"], stonithPats, self.env["nodes"], self.env["LogWatcher"], "StartupFencing", 0)
         stonith.set_watch()
         return stonith
 
@@ -174,12 +174,12 @@ class ClusterManager(UserDict):
             return peer_list
 
         q = self.has_quorum(None)
-        if not q and len(self.Env["nodes"]) > 2:
+        if not q and len(self.env["nodes"]) > 2:
             # We didn't gain quorum - we shouldn't have shot anyone
-            self.debug("Quorum: %s Len: %d" % (q, len(self.Env["nodes"])))
+            self.debug("Quorum: %s Len: %d" % (q, len(self.env["nodes"])))
             return peer_list
 
-        for n in self.Env["nodes"]:
+        for n in self.env["nodes"]:
             peer_state[n] = "unknown"
 
         # Now see if any states need to be updated
@@ -190,7 +190,7 @@ class ClusterManager(UserDict):
             del stonith.regexes[stonith.whichmatch]
 
             # Extract node name
-            for n in self.Env["nodes"]:
+            for n in self.env["nodes"]:
                 if re.search(self.templates["Pat:Fencing_ok"] % n, shot):
                     peer = n
                     peer_state[peer] = "complete"
@@ -215,7 +215,7 @@ class ClusterManager(UserDict):
         for peer in peer_list:
 
             self.debug("   Peer %s was fenced as a result of %s starting: %s" % (peer, node, peer_state[peer]))
-            if self.Env["at-boot"]:
+            if self.env["at-boot"]:
                 self.expected_status[peer] = "up"
             else:
                 self.expected_status[peer] = "down"
@@ -229,12 +229,12 @@ class ClusterManager(UserDict):
                     shot = stonith.look(60)
 
             # Now make sure the node is alive too
-            self.ns.wait_for_node(peer, self.Env["DeadTime"])
+            self.ns.wait_for_node(peer, self.env["DeadTime"])
 
             # Poll until it comes up
-            if self.Env["at-boot"]:
+            if self.env["at-boot"]:
                 if not self.stat_cm(peer):
-                    time.sleep(self.Env["StartTime"])
+                    time.sleep(self.env["StartTime"])
 
                 if not self.stat_cm(peer):
                     self.logger.log("ERROR: Peer %s failed to restart after being fenced" % peer)
@@ -264,12 +264,12 @@ class ClusterManager(UserDict):
             patterns.append(self.templates["Pat:NonDC_started"] % node)
 
         watch = LogWatcher(
-            self.Env["LogFileName"], patterns, self.Env["nodes"], self.Env["LogWatcher"], "StartaCM", self.Env["StartTime"]+10)
+            self.env["LogFileName"], patterns, self.env["nodes"], self.env["LogWatcher"], "StartaCM", self.env["StartTime"]+10)
 
         self.install_config(node)
 
         self.expected_status[node] = "any"
-        if self.stat_cm(node) and self.cluster_stable(self.Env["DeadTime"]):
+        if self.stat_cm(node) and self.cluster_stable(self.env["DeadTime"]):
             self.logger.log ("%s was already started" % node)
             return True
 
@@ -289,11 +289,11 @@ class ClusterManager(UserDict):
             for regex in watch.unmatched:
                 self.logger.log ("Warn: Startup pattern not found: %s" % regex)
 
-        if watch_result and self.cluster_stable(self.Env["DeadTime"]):
+        if watch_result and self.cluster_stable(self.env["DeadTime"]):
             self.fencing_cleanup(node, stonith)
             return True
 
-        if self.stat_cm(node) and self.cluster_stable(self.Env["DeadTime"]):
+        if self.stat_cm(node) and self.cluster_stable(self.env["DeadTime"]):
             self.fencing_cleanup(node, stonith)
             return True
 
@@ -327,7 +327,7 @@ class ClusterManager(UserDict):
         if rc == 0:
             # Make sure we can continue even if corosync leaks
             self.expected_status[node] = "down"
-            self.cluster_stable(self.Env["DeadTime"])
+            self.cluster_stable(self.env["DeadTime"])
             return True
 
         self.logger.log ("ERROR: Could not stop %s on node %s" % (self["Name"], node))
@@ -347,7 +347,7 @@ class ClusterManager(UserDict):
         """
 
         if not nodelist:
-            nodelist = self.Env["nodes"]
+            nodelist = self.env["nodes"]
 
         for node in nodelist:
             if self.expected_status[node] == "down":
@@ -366,7 +366,7 @@ class ClusterManager(UserDict):
                                self.templates["Pat:They_up"] % (nodelist[0], node) ])
 
         #   Start all the nodes - at about the same time...
-        watch = LogWatcher(self.Env["LogFileName"], watchpats, self.Env["nodes"], self.Env["LogWatcher"], "fast-start", self.Env["DeadTime"]+10)
+        watch = LogWatcher(self.env["LogFileName"], watchpats, self.env["nodes"], self.env["LogWatcher"], "fast-start", self.env["DeadTime"]+10)
         watch.set_watch()
 
         if not self.start_cm(nodelist[0], verbose=verbose):
@@ -392,8 +392,8 @@ class ClusterManager(UserDict):
 
         ret = True
         if not nodelist:
-            nodelist = self.Env["nodes"]
-        for node in self.Env["nodes"]:
+            nodelist = self.env["nodes"]
+        for node in self.env["nodes"]:
             if self.expected_status[node] == "up" or force:
                 if not self.stop_cm(node, verbose=verbose, force=force):
                     ret = False
@@ -407,7 +407,7 @@ class ClusterManager(UserDict):
 
         result = {}
         if not nodelist:
-            nodelist = self.Env["nodes"]
+            nodelist = self.env["nodes"]
         for node in nodelist:
             if self.stat_cm(node):
                 result[node] = "up"
@@ -418,7 +418,7 @@ class ClusterManager(UserDict):
     def isolate_node(self, target, nodes=None):
         '''isolate the communication between the nodes'''
         if not nodes:
-            nodes = self.Env["nodes"]
+            nodes = self.env["nodes"]
 
         for node in nodes:
             if node == target:
@@ -436,7 +436,7 @@ class ClusterManager(UserDict):
     def unisolate_node(self, target, nodes=None):
         '''fix the communication between the nodes'''
         if not nodes:
-            nodes = self.Env["nodes"]
+            nodes = self.env["nodes"]
 
         for node in nodes:
             if node == target:
@@ -450,10 +450,10 @@ class ClusterManager(UserDict):
 
     def oprofile_start(self, node=None):
         if not node:
-            for n in self.Env["oprofile"]:
+            for n in self.env["oprofile"]:
                 self.oprofile_start(n)
 
-        elif node in self.Env["oprofile"]:
+        elif node in self.env["oprofile"]:
             self.debug("Enabling oprofile on %s" % node)
             self.rsh(node, "opcontrol --init")
             self.rsh(node, "opcontrol --setup --no-vmlinux --separate=lib --callgraph=20 --image=all")
@@ -462,10 +462,10 @@ class ClusterManager(UserDict):
 
     def oprofile_save(self, test, node=None):
         if not node:
-            for n in self.Env["oprofile"]:
+            for n in self.env["oprofile"]:
                 self.oprofile_save(test, n)
 
-        elif node in self.Env["oprofile"]:
+        elif node in self.env["oprofile"]:
             self.rsh(node, "opcontrol --dump")
             self.rsh(node, "opcontrol --save=cts.%d" % test)
             # Read back with: opreport -l session:cts.0 image:<directory>/c*
@@ -474,10 +474,10 @@ class ClusterManager(UserDict):
 
     def oprofile_stop(self, node=None):
         if not node:
-            for n in self.Env["oprofile"]:
+            for n in self.env["oprofile"]:
                 self.oprofile_stop(n)
 
-        elif node in self.Env["oprofile"]:
+        elif node in self.env["oprofile"]:
             self.debug("Stopping oprofile on %s" % node)
             self.rsh(node, "opcontrol --reset")
             self.rsh(node, "opcontrol --shutdown 2>&1 > /dev/null")
@@ -487,7 +487,7 @@ class ClusterManager(UserDict):
             self.log("Node %s is not up." % node)
             return
 
-        if node in self.CIBsync or not self.Env["ClobberCIB"]:
+        if node in self.CIBsync or not self.env["ClobberCIB"]:
             return
 
         self.CIBsync[node] = True
@@ -498,14 +498,14 @@ class ClusterManager(UserDict):
             return
 
         self.cib_installed = True
-        if self.Env["CIBfilename"] is None:
+        if self.env["CIBfilename"] is None:
             self.log("Installing Generated CIB on node %s" % node)
             self.cib.install(node)
 
         else:
-            self.log("Installing CIB (%s) on node %s" % (self.Env["CIBfilename"], node))
+            self.log("Installing CIB (%s) on node %s" % (self.env["CIBfilename"], node))
 
-            rc = self.rsh.copy(self.Env["CIBfilename"], "root@" + (self.templates["CIBfile"] % node))
+            rc = self.rsh.copy(self.env["CIBfilename"], "root@" + (self.templates["CIBfile"] % node))
 
             if rc != 0:
                 raise ValueError("Can not scp file to %s %d" % (node, rc))
@@ -516,9 +516,9 @@ class ClusterManager(UserDict):
         '''Finish the Initialization process. Prepare to test...'''
 
         self.partitions_expected = 1
-        for node in self.Env["nodes"]:
+        for node in self.env["nodes"]:
             self.expected_status[node] = ""
-            if self.Env["experimental-tests"]:
+            if self.env["experimental-tests"]:
                 self.unisolate_node(node)
             self.stat_cm(node)
 
@@ -529,7 +529,7 @@ class ClusterManager(UserDict):
                       self.templates["Pat:NonDC_started"] % node,
                       self.templates["Pat:DC_started"] % node ]
 
-        idle_watch = LogWatcher(self.Env["LogFileName"], watchpats, [node], self.Env["LogWatcher"], "ClusterIdle")
+        idle_watch = LogWatcher(self.env["LogFileName"], watchpats, [node], self.env["LogWatcher"], "ClusterIdle")
         idle_watch.set_watch()
 
         (_, out) = self.rsh(node, self.templates["StatusCmd"] % node, verbose=1)
@@ -594,13 +594,13 @@ class ClusterManager(UserDict):
         self.debug("Waiting for cluster stability...")
 
         if timeout is None:
-            timeout = self.Env["DeadTime"]
+            timeout = self.env["DeadTime"]
 
         if len(nodes) < 3:
             self.debug("Cluster is inactive")
             return True
 
-        idle_watch = LogWatcher(self.Env["LogFileName"], watchpats, nodes.split(), self.Env["LogWatcher"], "ClusterStable", timeout)
+        idle_watch = LogWatcher(self.env["LogFileName"], watchpats, nodes.split(), self.env["LogWatcher"], "ClusterStable", timeout)
         idle_watch.set_watch()
 
         for node in nodes.split():
@@ -680,7 +680,7 @@ class ClusterManager(UserDict):
 
     def resource_location(self, rid):
         ResourceNodes = []
-        for node in self.Env["nodes"]:
+        for node in self.env["nodes"]:
             if self.expected_status[node] != "up":
                 continue
 
@@ -699,7 +699,7 @@ class ClusterManager(UserDict):
     def find_partitions(self):
         ccm_partitions = []
 
-        for node in self.Env["nodes"]:
+        for node in self.env["nodes"]:
             if self.expected_status[node] != "up":
                 self.debug("Node %s is down... skipping" % node)
                 continue
@@ -739,7 +739,7 @@ class ClusterManager(UserDict):
         # So the caller needs to tell us which we are checking
         # If no value for node_list is specified... assume all nodes
         if not node_list:
-            node_list = self.Env["nodes"]
+            node_list = self.env["nodes"]
 
         for node in node_list:
             if self.expected_status[node] != "up":

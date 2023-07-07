@@ -47,13 +47,13 @@ class crm_corosync(ClusterManager):
 
         # Processes running under valgrind can't be shot with "killall -9 processname",
         # so don't include them in the returned list
-        vgrind = self.Env["valgrind-procs"].split()
+        vgrind = self.env["valgrind-procs"].split()
         for key in list(self.fullcomplist.keys()):
-            if self.Env["valgrind-tests"]:
+            if self.env["valgrind-tests"]:
                 if key in vgrind:
                     self.log("Filtering %s from the component list as it is being profiled by valgrind" % key)
                     continue
-            if key == "pacemaker-fenced" and not self.Env["DoFencing"]:
+            if key == "pacemaker-fenced" and not self.env["DoFencing"]:
                 continue
             complist.append(self.fullcomplist[key])
 
