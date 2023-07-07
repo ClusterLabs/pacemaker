@@ -51,8 +51,8 @@ class ClusterManager(UserDict):
     '''
 
     def _final_conditions(self):
-        for key in list(self.keys()):
-            if self[key] is None:
+        for (key, val) in self._data.items():
+            if val is None:
                 raise ValueError("Improper derivation: self[%s] must be overridden by subclass." % key)
 
     def __init__(self):
@@ -128,7 +128,7 @@ class ClusterManager(UserDict):
         count = 0
         for node in self.env["nodes"]:
             if self.expected_status[node] == "up":
-                count = count + 1
+                count += 1
         return count
 
     def install_support(self, command="install"):
