@@ -47,7 +47,7 @@ class StartTest(CTSTest):
         if self._cm.ShouldBeStatus[node] != "down":
             return self.skipped()
 
-        if self._cm.StartaCM(node):
+        if self._cm.start_cm(node):
             return self.success()
 
         return self.failure("Startup %s on node %s failed"

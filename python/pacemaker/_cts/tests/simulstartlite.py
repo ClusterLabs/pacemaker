@@ -69,7 +69,7 @@ class SimulStartLite(CTSTest):
             stonith = self._cm.prepare_fencing_watcher()
 
             for node in node_list:
-                self._cm.StartaCMnoBlock(node)
+                self._cm.start_cm_async(node)
 
             watch.look_for_all()
 

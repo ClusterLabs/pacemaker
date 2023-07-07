@@ -248,9 +248,9 @@ class ClusterManager(UserDict):
 
         return peer_list
 
-    def StartaCM(self, node, verbose=False):
+    def start_cm(self, node, verbose=False):
+        """ Start up the cluster manager on a given node """
 
-        '''Start up the cluster manager on a given node'''
         if verbose:
             self.logger.log("Starting %s on node %s" % (self.templates["Name"], node))
         else:
@@ -260,7 +260,7 @@ class ClusterManager(UserDict):
             self.ShouldBeStatus[node] = "down"
 
         if self.ShouldBeStatus[node] != "down":
-            return 1
+            return True
 
         # Technically we should always be able to notice ourselves starting
         patterns = [ self.templates["Pat:Local_started"] % node ]
@@ -277,7 +277,7 @@ class ClusterManager(UserDict):
         self.ShouldBeStatus[node] = "any"
         if self.stat_cm(node) and self.cluster_stable(self.Env["DeadTime"]):
             self.logger.log ("%s was already started" % node)
-            return 1
+            return True
 
         stonith = self.prepare_fencing_watcher()
         watch.set_watch()
@@ -286,7 +286,7 @@ class ClusterManager(UserDict):
         if rc != 0:
             self.logger.log ("Warn: Start command failed on node %s" % node)
             self.fencing_cleanup(node, stonith)
-            return None
+            return False
 
         self.ShouldBeStatus[node] = "up"
         watch_result = watch.look_for_all()
@@ -297,18 +297,17 @@ class ClusterManager(UserDict):
 
         if watch_result and self.cluster_stable(self.Env["DeadTime"]):
             self.fencing_cleanup(node, stonith)
-            return 1
+            return True
 
         if self.stat_cm(node) and self.cluster_stable(self.Env["DeadTime"]):
             self.fencing_cleanup(node, stonith)
-            return 1
+            return True
 
         self.logger.log ("Warn: Start failed for node %s" % node)
-        return None
+        return False
 
-    def StartaCMnoBlock(self, node, verbose=False):
-
-        '''Start up the cluster manager on a given node with none-block mode'''
+    def start_cm_async(self, node, verbose=False):
+        """ Start up the cluster manager on a given node without blocking """
 
         if verbose:
             self.logger.log("Starting %s on node %s" % (self["Name"], node))
@@ -318,7 +317,6 @@ class ClusterManager(UserDict):
         self.install_config(node)
         self.rsh(node, self.templates["StartCmd"], synchronous=False)
         self.ShouldBeStatus[node] = "up"
-        return 1
 
     def StopaCM(self, node, verbose=False, force=False):
 
@@ -366,7 +364,7 @@ class ClusterManager(UserDict):
 
         if not quick:
             # This is used for "basic sanity checks", so only start one node ...
-            return self.StartaCM(nodelist[0], verbose=verbose)
+            return self.start_cm(nodelist[0], verbose=verbose)
 
         # Approximation of SimulStartList for --boot
         watchpats = [ self.templates["Pat:DC_IDLE"] ]
@@ -380,10 +378,10 @@ class ClusterManager(UserDict):
         watch = LogWatcher(self.Env["LogFileName"], watchpats, self.Env["nodes"], self.Env["LogWatcher"], "fast-start", self.Env["DeadTime"]+10)
         watch.set_watch()
 
-        if not self.StartaCM(nodelist[0], verbose=verbose):
+        if not self.start_cm(nodelist[0], verbose=verbose):
             return 0
         for node in nodelist:
-            self.StartaCMnoBlock(node, verbose=verbose)
+            self.start_cm_async(node, verbose=verbose)
 
         watch.look_for_all()
         if watch.unmatched:

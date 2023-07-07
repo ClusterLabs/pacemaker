@@ -85,7 +85,7 @@ class NearQuorumPointTest(CTSTest):
 
         for node in startset:
             if self._cm.ShouldBeStatus[node] == "down":
-                self._cm.StartaCMnoBlock(node)
+                self._cm.start_cm_async(node)
 
         #get the result
         if watch.look_for_all():
