@@ -318,9 +318,8 @@ class ClusterManager(UserDict):
         self.rsh(node, self.templates["StartCmd"], synchronous=False)
         self.ShouldBeStatus[node] = "up"
 
-    def StopaCM(self, node, verbose=False, force=False):
-
-        '''Stop the cluster manager on a given node'''
+    def stop_cm(self, node, verbose=False, force=False):
+        """ Stop the cluster manager on a given node """
 
         if verbose:
             self.logger.log("Stopping %s on node %s" % (self["Name"], node))
@@ -328,27 +327,25 @@ class ClusterManager(UserDict):
             self.debug("Stopping %s on node %s" % (self["Name"], node))
 
         if self.ShouldBeStatus[node] != "up" and not force:
-            return 1
+            return True
 
         (rc, _) = self.rsh(node, self.templates["StopCmd"])
         if rc == 0:
             # Make sure we can continue even if corosync leaks
             self.ShouldBeStatus[node] = "down"
             self.cluster_stable(self.Env["DeadTime"])
-            return 1
+            return True
 
         self.logger.log ("ERROR: Could not stop %s on node %s" % (self["Name"], node))
-        return None
+        return False
 
-    def StopaCMnoBlock(self, node):
-
-        '''Stop the cluster manager on a given node with none-block mode'''
+    def stop_cm_async(self, node):
+        """ Stop the cluster manager on a given node without blocking """
 
         self.debug("Stopping %s on node %s" % (self["Name"], node))
 
         self.rsh(node, self.templates["StopCmd"], synchronous=False)
         self.ShouldBeStatus[node] = "down"
-        return 1
 
     def startall(self, nodelist=None, verbose=False, quick=False):
 
@@ -405,7 +402,7 @@ class ClusterManager(UserDict):
             nodelist = self.Env["nodes"]
         for node in self.Env["nodes"]:
             if self.ShouldBeStatus[node] == "up" or force:
-                if not self.StopaCM(node, verbose=verbose, force=force):
+                if not self.stop_cm(node, verbose=verbose, force=force):
                     ret = 0
         return ret
 

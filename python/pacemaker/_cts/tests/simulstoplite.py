@@ -63,7 +63,7 @@ class SimulStopLite(CTSTest):
         self.set_timer()
         for node in self._env["nodes"]:
             if self._cm.ShouldBeStatus[node] == "up":
-                self._cm.StopaCMnoBlock(node)
+                self._cm.stop_cm_async(node)
 
         if watch.look_for_all():
             # Make sure they're completely down with no residule

@@ -63,7 +63,7 @@ class StopTest(CTSTest):
             else:
                 self.incr("them")
 
-        self._cm.StopaCM(node)
+        self._cm.stop_cm(node)
         watch.look_for_all()
 
         failreason = None
