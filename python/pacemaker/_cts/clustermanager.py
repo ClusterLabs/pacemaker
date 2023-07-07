@@ -146,8 +146,8 @@ class ClusterManager(UserDict):
             if self.ShouldBeStatus[peer] == "up":
                 continue
 
-            stonithPats.append(self.templates["Pat:Fencing_ok"] % peer)
-            stonithPats.append(self.templates["Pat:Fencing_start"] % peer)
+            stonithPats.extend([ self.templates["Pat:Fencing_ok"] % peer,
+                                 self.templates["Pat:Fencing_start"] % peer ])
 
         stonith = LogWatcher(self.Env["LogFileName"], stonithPats, self.Env["nodes"], self.Env["LogWatcher"], "StartupFencing", 0)
         stonith.set_watch()
@@ -248,9 +248,8 @@ class ClusterManager(UserDict):
         if self.ShouldBeStatus[node] != "down":
             return 1
 
-        patterns = []
         # Technically we should always be able to notice ourselves starting
-        patterns.append(self.templates["Pat:Local_started"] % node)
+        patterns = [ self.templates["Pat:Local_started"] % node ]
         if self.upcount() == 0:
             patterns.append(self.templates["Pat:DC_started"] % node)
         else:
@@ -359,13 +358,12 @@ class ClusterManager(UserDict):
             return 1
 
         # Approximation of SimulStartList for --boot
-        watchpats = [ ]
-        watchpats.append(self.templates["Pat:DC_IDLE"])
+        watchpats = [ self.templates["Pat:DC_IDLE"] ]
         for node in nodelist:
-            watchpats.append(self.templates["Pat:InfraUp"] % node)
-            watchpats.append(self.templates["Pat:PacemakerUp"] % node)
-            watchpats.append(self.templates["Pat:Local_started"] % node)
-            watchpats.append(self.templates["Pat:They_up"] % (nodelist[0], node))
+            watchpats.extend([ self.templates["Pat:InfraUp"] % node,
+                               self.templates["Pat:PacemakerUp"] % node,
+                               self.templates["Pat:Local_started"] % node,
+                               self.templates["Pat:They_up"] % (nodelist[0], node) ])
 
         #   Start all the nodes - at about the same time...
         watch = LogWatcher(self.Env["LogFileName"], watchpats, self.Env["nodes"], self.Env["LogWatcher"], "fast-start", self.Env["DeadTime"]+10)
@@ -531,10 +529,10 @@ class ClusterManager(UserDict):
     def test_node_CM(self, node):
         '''Report the status of the cluster manager on a given node'''
 
-        watchpats = [ ]
-        watchpats.append("Current ping state: (S_IDLE|S_NOT_DC)")
-        watchpats.append(self.templates["Pat:NonDC_started"] % node)
-        watchpats.append(self.templates["Pat:DC_started"] % node)
+        watchpats = [ "Current ping state: (S_IDLE|S_NOT_DC)",
+                      self.templates["Pat:NonDC_started"] % node,
+                      self.templates["Pat:DC_started"] % node ]
+
         idle_watch = LogWatcher(self.Env["LogFileName"], watchpats, [node], self.Env["LogWatcher"], "ClusterIdle")
         idle_watch.set_watch()
 
@@ -594,9 +592,9 @@ class ClusterManager(UserDict):
         return None
 
     def partition_stable(self, nodes, timeout=None):
-        watchpats = [ ]
-        watchpats.append("Current ping state: S_IDLE")
-        watchpats.append(self.templates["Pat:DC_IDLE"])
+        watchpats = [ "Current ping state: S_IDLE",
+                      self.templates["Pat:DC_IDLE"] ]
+
         self.debug("Waiting for cluster stability...")
 
         if timeout == None:
@@ -865,11 +863,7 @@ class ClusterManager(UserDict):
             r"pacemaker-controld.*exited with status 2",
             ])
 
-        complist.append(ccm)
-        complist.append(based)
-        complist.append(execd)
-        complist.append(controld)
-        complist.append(schedulerd)
+        complist.extend([ ccm, based, execd, controld, schedulerd ])
 
         return complist
 
