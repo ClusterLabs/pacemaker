@@ -15,7 +15,7 @@ import time
 from collections import UserDict
 
 from pacemaker.buildoptions import BuildOptions
-from pacemaker._cts.CTS import NodeStatus, Process
+from pacemaker._cts.CTS import NodeStatus
 from pacemaker._cts.audits import AuditResource
 from pacemaker._cts.cib import ConfigFactory
 from pacemaker._cts.environment import EnvFactory
@@ -23,12 +23,6 @@ from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.patterns import PatternSelector
 from pacemaker._cts.remote import RemoteFactory
 from pacemaker._cts.watcher import LogWatcher
-
-# Throughout this file, pylint has trouble understanding that EnvFactory
-# and RemoteFactory are singleton instances that can be treated as callable
-# and subscriptable objects.  Various warnings are disabled because of this.
-# See also a comment about self._rsh in environment.py.
-# pylint: disable=unsubscriptable-object
 
 # pylint doesn't understand that self._rsh is callable (it stores the
 # singleton instance of RemoteExec, as returned by the getInstance method
@@ -764,110 +758,9 @@ class ClusterManager(UserDict):
 
         return False
 
-    def Components(self):
-        complist = []
-        common_ignore = [
-                    "Pending action:",
-                    "(ERROR|error): crm_log_message_adv:",
-                    "(ERROR|error): MSG: No message to dump",
-                    "pending LRM operations at shutdown",
-                    "Lost connection to the CIB manager",
-                    "Connection to the CIB terminated...",
-                    "Sending message to the CIB manager FAILED",
-                    "Action A_RECOVER .* not supported",
-                    "(ERROR|error): stonithd_op_result_ready: not signed on",
-                    "pingd.*(ERROR|error): send_update: Could not send update",
-                    "send_ipc_message: IPC Channel to .* is not connected",
-                    "unconfirmed_actions: Waiting on .* unconfirmed actions",
-                    "cib_native_msgready: Message pending on command channel",
-                    r": Performing A_EXIT_1 - forcefully exiting ",
-                    r"Resource .* was active at shutdown.  You may ignore this error if it is unmanaged.",
-            ]
-
-        stonith_ignore = [
-            r"Updating failcount for child_DoFencing",
-            r"error.*: Fencer connection failed \(will retry\)",
-            "pacemaker-execd.*(ERROR|error): stonithd_receive_ops_result failed.",
-             ]
-
-        stonith_ignore.extend(common_ignore)
-
-        ccm = Process(self, "ccm", pats = [
-                    "State transition .* S_RECOVERY",
-                    "pacemaker-controld.*Action A_RECOVER .* not supported",
-                    r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
-                    r"pacemaker-controld.*: Could not recover from internal error",
-                    "pacemaker-controld.*I_ERROR.*crmd_cib_connection_destroy",
-                    # these status numbers are likely wrong now
-                    r"pacemaker-controld.*exited with status 2",
-                    r"attrd.*exited with status 1",
-                    r"cib.*exited with status 2",
-                    "State transition S_STARTING -> S_PENDING",
-                    ], badnews_ignore = common_ignore)
-
-        based = Process(self, "pacemaker-based", pats = [
-                    "State transition .* S_RECOVERY",
-                    "Lost connection to the CIB manager",
-                    "Connection to the CIB manager terminated",
-                    r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
-                    "pacemaker-controld.*I_ERROR.*crmd_cib_connection_destroy",
-                    r"pacemaker-controld.*: Could not recover from internal error",
-                    # these status numbers are likely wrong now
-                    r"pacemaker-controld.*exited with status 2",
-                    r"attrd.*exited with status 1",
-                    ], badnews_ignore = common_ignore)
-
-        execd = Process(self, "pacemaker-execd", pats = [
-                    "State transition .* S_RECOVERY",
-                    "LRM Connection failed",
-                    "pacemaker-controld.*I_ERROR.*lrm_connection_destroy",
-                    "State transition S_STARTING -> S_PENDING",
-                    r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
-                    r"pacemaker-controld.*: Could not recover from internal error",
-                    # this status number is likely wrong now
-                    r"pacemaker-controld.*exited with status 2",
-                    ], badnews_ignore = common_ignore)
-
-        controld = Process(self, "pacemaker-controld",
-                    pats = [
-                    "State transition .* S_IDLE",
-                    "State transition S_STARTING -> S_PENDING",
-                    ], badnews_ignore = common_ignore)
-
-        schedulerd = Process(self, "pacemaker-schedulerd", pats = [
-                    "State transition .* S_RECOVERY",
-                    r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
-                    r"pacemaker-controld.*: Could not recover from internal error",
-                    r"pacemaker-controld.*CRIT.*: Connection to the scheduler failed",
-                    "pacemaker-controld.*I_ERROR.*save_cib_contents",
-                    # this status number is likely wrong now
-                    r"pacemaker-controld.*exited with status 2",
-                    ], badnews_ignore = common_ignore, dc_only=True)
-
-        if self.Env["DoFencing"]:
-            complist.append(Process(self, "stoniths", dc_pats = [
-                        r"pacemaker-controld.*CRIT.*: Fencing daemon connection failed",
-                        "Attempting connection to fencing daemon",
-                    ], badnews_ignore = stonith_ignore))
-
-        ccm.pats.extend([
-            # these status numbers are likely wrong now
-            r"attrd.*exited with status 1",
-            r"pacemaker-(based|controld).*exited with status 2",
-            ])
-        based.pats.extend([
-            # these status numbers are likely wrong now
-            r"attrd.*exited with status 1",
-            r"pacemaker-controld.*exited with status 2",
-            ])
-        execd.pats.extend([
-            # these status numbers are likely wrong now
-            r"pacemaker-controld.*exited with status 2",
-            ])
-
-        complist.extend([ ccm, based, execd, controld, schedulerd ])
-
-        return complist
+    @property
+    def components(self):
+        raise NotImplementedError
 
     def standby_status(self, node):
         (_, out) = self.rsh(node, self.templates["StandbyQueryCmd"] % node, verbose=1)

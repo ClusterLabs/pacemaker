@@ -19,7 +19,8 @@ class crm_corosync(ClusterManager):
         self.fullcomplist = {}
         self.templates = PatternSelector(self.name)
 
-    def Components(self):
+    @property
+    def components(self):
         complist = []
         if not len(list(self.fullcomplist.keys())):
             for c in [ "pacemaker-based", "pacemaker-controld", "pacemaker-attrd", "pacemaker-execd", "pacemaker-fenced" ]:

@@ -39,7 +39,7 @@ class ComponentFail(CTSTest):
         self.is_unsafe = True
         self.name = "ComponentFail"
 
-        self._complist = cm.Components()
+        self._complist = cm.components
         self._okerrpatterns = []
         self._patterns = []
         self._startall = SimulStartLite(cm)
