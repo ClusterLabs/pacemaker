@@ -1,6 +1,7 @@
 """ Corosync-specific class for Pacemaker's Cluster Test Suite (CTS)
 """
 
+__all__ = ["Corosync2"]
 __copyright__ = "Copyright 2007-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
@@ -8,7 +9,7 @@ from pacemaker._cts.CTS import Process
 from pacemaker._cts.clustermanager import ClusterManager
 from pacemaker._cts.patterns import PatternSelector
 
-class crm_corosync(ClusterManager):
+class Corosync2(ClusterManager):
     '''
     Corosync version 2 cluster manager class
     '''

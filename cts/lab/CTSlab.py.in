@@ -11,9 +11,8 @@ pdir = os.path.dirname(sys.path[0])
 sys.path.insert(0, pdir) # So that things work from the source directory
 
 try:
-    from cts.CM_corosync  import *
-
     from pacemaker._cts.CTS import CtsLab
+    from pacemaker._cts.cmcorosync import Corosync2
     from pacemaker._cts.audits import audit_list
     from pacemaker._cts.logging import LogFactory
     from pacemaker._cts.scenarios import AllOnce, Boot, BootCluster, LeaveBooted, RandomTests, Sequence
@@ -59,7 +58,7 @@ if __name__ == '__main__':
     # Create the Cluster Manager object
     cm = None
     if Environment["Stack"] == "corosync 2+":
-        cm = crm_corosync()
+        cm = Corosync2()
         
     else:
         LogFactory().log("Unknown stack: "+Environment["stack"])
