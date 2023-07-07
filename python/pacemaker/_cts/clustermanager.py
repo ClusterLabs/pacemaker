@@ -68,7 +68,6 @@ class ClusterManager(UserDict):
         self.Env = EnvFactory().getInstance()
         self.templates = PatternSelector(self.Env["Name"])
         self.logger = LogFactory()
-        self.TestLoggingLevel=0
         self.data = {}
         self.name = self.Env["Name"]
 
@@ -80,13 +79,9 @@ class ClusterManager(UserDict):
         self.__instance_errors_to_ignore = []
 
         self.cib_installed = 0
-        self.config = None
-        self.use_short_names = 1
 
         self._finalConditions()
 
-        self.check_transitions = 0
-        self.check_elections = 0
         self.CIBsync = {}
         self.CibFactory = ConfigFactory(self)
         self.cib = self.CibFactory.create_config(self.Env["Schema"])
@@ -145,10 +140,9 @@ class ClusterManager(UserDict):
         for node in self.Env["nodes"]:
             self.rsh(node, "%s/cts-support %s" % (BuildOptions.DAEMON_DIR, command))
 
-    def prepare_fencing_watcher(self, name):
+    def prepare_fencing_watcher(self):
         # If we don't have quorum now but get it as a result of starting this node,
         # then a bunch of nodes might get fenced
-        upnode = None
         if self.has_quorum(None):
             self.debug("Have quorum")
             return None
@@ -261,7 +255,6 @@ class ClusterManager(UserDict):
             self.logger.log("Starting %s on node %s" % (self.templates["Name"], node))
         else:
             self.debug("Starting %s on node %s" % (self.templates["Name"], node))
-        ret = 1
 
         if not node in self.ShouldBeStatus:
             self.ShouldBeStatus[node] = "down"
@@ -286,7 +279,7 @@ class ClusterManager(UserDict):
             self.logger.log ("%s was already started" % node)
             return 1
 
-        stonith = self.prepare_fencing_watcher(node)
+        stonith = self.prepare_fencing_watcher()
         watch.set_watch()
 
         (rc, _) = self.rsh(node, self.templates["StartCmd"])
@@ -364,7 +357,6 @@ class ClusterManager(UserDict):
         '''Start the cluster manager on every node in the cluster.
         We can do it on a subset of the cluster if nodelist is not None.
         '''
-        map = {}
         if not nodelist:
             nodelist = self.Env["nodes"]
 
@@ -374,9 +366,7 @@ class ClusterManager(UserDict):
 
         if not quick:
             # This is used for "basic sanity checks", so only start one node ...
-            if not self.StartaCM(node, verbose=verbose):
-                return 0
-            return 1
+            return self.StartaCM(nodelist[0], verbose=verbose)
 
         # Approximation of SimulStartList for --boot
         watchpats = [ self.templates["Pat:DC_IDLE"] ]
@@ -413,7 +403,6 @@ class ClusterManager(UserDict):
         '''
 
         ret = 1
-        map = {}
         if not nodelist:
             nodelist = self.Env["nodes"]
         for node in self.Env["nodes"]:
@@ -465,8 +454,6 @@ class ClusterManager(UserDict):
             if node == target:
                 continue
 
-            restored = 0
-
             # Limit the amount of time we have asynchronous connectivity for
             # Restore both sides as simultaneously as possible
             self.rsh(target, self.templates["FixCommCmd"] % self.key_for_node(node), synchronous=False)
@@ -510,7 +497,7 @@ class ClusterManager(UserDict):
     def install_config(self, node):
         if not self.ns.wait_for_node(node):
             self.log("Node %s is not up." % node)
-            return None
+            return
 
         if node in self.CIBsync or not self.Env["ClobberCIB"]:
             return
@@ -520,7 +507,7 @@ class ClusterManager(UserDict):
 
         # Only install the CIB on the first node, all the other ones will pick it up from there
         if self.cib_installed == 1:
-            return None
+            return
 
         self.cib_installed = 1
         if self.Env["CIBfilename"] is None:

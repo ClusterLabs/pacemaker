@@ -66,7 +66,7 @@ class SimulStartLite(CTSTest):
             watch = self.create_watch(watchpats, self._env["DeadTime"]+10)
             watch.set_watch()
 
-            stonith = self._cm.prepare_fencing_watcher(self.name)
+            stonith = self._cm.prepare_fencing_watcher()
 
             for node in node_list:
                 self._cm.StartaCMnoBlock(node)

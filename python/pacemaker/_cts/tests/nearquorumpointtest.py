@@ -41,7 +41,7 @@ class NearQuorumPointTest(CTSTest):
         startset = []
         stopset = []
 
-        stonith = self._cm.prepare_fencing_watcher("NearQuorumPoint")
+        stonith = self._cm.prepare_fencing_watcher()
         #decide what to do with each node
         for node in self._env["nodes"]:
             action = self._env.random_gen.choice(["start", "stop"])
