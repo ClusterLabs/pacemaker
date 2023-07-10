@@ -60,6 +60,7 @@ extern "C" {
  */
 
 #define PCMK_META_ENABLED                   "enabled"
+#define PCMK_META_MIGRATION_THRESHOLD       "migration-threshold"
 
 
 /*
@@ -248,7 +249,7 @@ extern "C" {
 #  define XML_RSC_ATTR_UNIQUE		"globally-unique"
 #  define XML_RSC_ATTR_NOTIFY		"notify"
 #  define XML_RSC_ATTR_STICKINESS	"resource-stickiness"
-#  define XML_RSC_ATTR_FAIL_STICKINESS	"migration-threshold"
+#  define XML_RSC_ATTR_FAIL_STICKINESS PCMK_META_MIGRATION_THRESHOLD
 #  define XML_RSC_ATTR_FAIL_TIMEOUT	"failure-timeout"
 #  define XML_RSC_ATTR_MULTIPLE		"multiple-active"
 #  define XML_RSC_ATTR_REQUIRES		"requires"
