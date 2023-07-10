@@ -262,8 +262,7 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
     read_only = !pcmk_is_set(operation->flags, cib__op_attr_modifies);
 
     // Mirror the logic in cib_prepare_common()
-    if ((section != NULL) && (data != NULL)
-        && pcmk__str_eq(crm_element_name(data), XML_TAG_CIB, pcmk__str_none)) {
+    if ((section != NULL) && pcmk__xe_is(data, XML_TAG_CIB)) {
 
         data = pcmk_find_cib_element(data, section);
     }

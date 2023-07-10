@@ -1322,15 +1322,13 @@ prepare_input(const xmlNode *request, enum cib__op_type type,
         return NULL;
     }
 
-    if (pcmk__str_any_of(crm_element_name(root), F_CRM_DATA, F_CIB_CALLDATA,
+    if (pcmk__str_any_of((const char *) root->name, F_CRM_DATA, F_CIB_CALLDATA,
                          NULL)) {
         root = first_named_child(root, XML_TAG_CIB);
     }
 
     // Grab the specified section
-    if ((root != NULL) && (*section != NULL)
-        && pcmk__str_eq(crm_element_name(root), XML_TAG_CIB, pcmk__str_none)) {
-
+    if ((*section != NULL) && pcmk__xe_is(root, XML_TAG_CIB)) {
         root = pcmk_find_cib_element(root, *section);
     }
 

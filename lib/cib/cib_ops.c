@@ -204,8 +204,8 @@ cib_process_query(const char *op, int options, const char *section, xmlNode * re
         result = -ENXIO;
 
     } else if (options & cib_no_children) {
-        const char *tag = TYPE(obj_root);
-        xmlNode *shallow = create_xml_node(*answer, tag);
+        xmlNode *shallow = create_xml_node(*answer,
+                                           (const char *) obj_root->name);
 
         copy_in_properties(shallow, obj_root);
         *answer = shallow;
@@ -324,7 +324,6 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
                     xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                     xmlNode ** answer)
 {
-    const char *tag = NULL;
     int result = pcmk_ok;
 
     crm_trace("Processing %s for %s section",
@@ -341,16 +340,14 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
         return -EINVAL;
     }
 
-    tag = crm_element_name(input);
-
     if (pcmk__str_eq(XML_CIB_TAG_SECTION_ALL, section, pcmk__str_casei)) {
         section = NULL;
 
-    } else if (pcmk__str_eq(tag, section, pcmk__str_casei)) {
+    } else if (pcmk__xe_is(input, section)) {
         section = NULL;
     }
 
-    if (pcmk__str_eq(tag, XML_TAG_CIB, pcmk__str_casei)) {
+    if (pcmk__xe_is(input, XML_TAG_CIB)) {
         int updates = 0;
         int epoch = 0;
         int admin_epoch = 0;
@@ -453,7 +450,7 @@ cib_process_delete(const char *op, int options, const char *section, xmlNode * r
     }
 
     obj_root = pcmk_find_cib_element(*result_cib, section);
-    if(pcmk__str_eq(crm_element_name(input), section, pcmk__str_casei)) {
+    if (pcmk__xe_is(input, section)) {
         xmlNode *child = NULL;
         for (child = pcmk__xml_first_child(input); child;
              child = pcmk__xml_next(child)) {
@@ -550,7 +547,7 @@ update_cib_object(xmlNode * parent, xmlNode * update)
     CRM_CHECK(update != NULL, return -EINVAL);
     CRM_CHECK(parent != NULL, return -EINVAL);
 
-    object_name = crm_element_name(update);
+    object_name = (const char *) update->name;
     CRM_CHECK(object_name != NULL, return -EINVAL);
 
     object_id = ID(update);
@@ -597,7 +594,7 @@ update_cib_object(xmlNode * parent, xmlNode * update)
                 remove = find_xml_node(target, replace_item, FALSE);
                 if (remove != NULL) {
                     crm_trace("Replacing node <%s> in <%s>",
-                              replace_item, crm_element_name(target));
+                              replace_item, target->name);
                     free_xml(remove);
                     remove = NULL;
                 }
@@ -629,7 +626,7 @@ update_cib_object(xmlNode * parent, xmlNode * update)
          a_child = pcmk__xml_next(a_child)) {
         int tmp_result = 0;
 
-        crm_trace("Updating child <%s%s%s%s>", crm_element_name(a_child),
+        crm_trace("Updating child <%s%s%s%s>", a_child->name,
                   ((ID(a_child) == NULL)? "" : " " XML_ATTR_ID "='"),
                   pcmk__s(ID(a_child), ""), ((ID(a_child) == NULL)? "" : "'"));
 
@@ -638,7 +635,7 @@ update_cib_object(xmlNode * parent, xmlNode * update)
         /*  only the first error is likely to be interesting */
         if (tmp_result != pcmk_ok) {
             crm_err("Error updating child <%s%s%s%s>",
-                    crm_element_name(a_child),
+                    a_child->name,
                     ((ID(a_child) == NULL)? "" : " " XML_ATTR_ID "='"),
                     pcmk__s(ID(a_child), ""),
                     ((ID(a_child) == NULL)? "" : "'"));
@@ -668,7 +665,7 @@ add_cib_object(xmlNode * parent, xmlNode * new_obj)
         return -EINVAL;
     }
 
-    object_name = crm_element_name(new_obj);
+    object_name = (const char *) new_obj->name;
     if (object_name == NULL) {
         return -EINVAL;
     }
@@ -709,7 +706,8 @@ update_results(xmlNode *failed, xmlNode *target, const char *operation,
         add_node_copy(xml_node, target);
 
         crm_xml_add(xml_node, XML_FAILCIB_ATTR_ID, ID(target));
-        crm_xml_add(xml_node, XML_FAILCIB_ATTR_OBJTYPE, TYPE(target));
+        crm_xml_add(xml_node, XML_FAILCIB_ATTR_OBJTYPE,
+                    (const char *) target->name);
         crm_xml_add(xml_node, XML_FAILCIB_ATTR_OP, operation);
         crm_xml_add(xml_node, XML_FAILCIB_ATTR_REASON, error_msg);
 
@@ -736,7 +734,7 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
     } else if (pcmk__str_eq(XML_TAG_CIB, section, pcmk__str_casei)) {
         section = NULL;
 
-    } else if (pcmk__str_eq(crm_element_name(input), XML_TAG_CIB, pcmk__str_casei)) {
+    } else if (pcmk__xe_is(input, XML_TAG_CIB)) {
         section = NULL;
     }
 
@@ -755,7 +753,7 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
     failed = create_xml_node(NULL, XML_TAG_FAILED);
 
     update_section = pcmk_find_cib_element(*result_cib, section);
-    if (pcmk__str_eq(crm_element_name(input), section, pcmk__str_casei)) {
+    if (pcmk__xe_is(input, section)) {
         xmlNode *a_child = NULL;
 
         for (a_child = pcmk__xml_first_child(input); a_child != NULL;
@@ -771,7 +769,7 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
         update_results(failed, input, op, result);
     }
 
-    if ((result == pcmk_ok) && xml_has_children(failed)) {
+    if ((result == pcmk_ok) && (failed->children != NULL)) {
         result = -EINVAL;
     }
 
@@ -960,8 +958,8 @@ cib_process_xpath(const char *op, int options, const char *section,
         } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_QUERY, pcmk__str_none)) {
 
             if (options & cib_no_children) {
-                const char *tag = TYPE(match);
-                xmlNode *shallow = create_xml_node(*answer, tag);
+                xmlNode *shallow = create_xml_node(*answer,
+                                                   (const char *) match->name);
 
                 copy_in_properties(shallow, match);
 

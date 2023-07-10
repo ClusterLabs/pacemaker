@@ -784,7 +784,7 @@ unpack_resources(const xmlNode *xml_resources, pe_working_set_t * data_set)
 
         if (pcmk__str_empty(id)) {
             pcmk__config_err("Ignoring <%s> resource without ID",
-                             crm_element_name(xml_obj));
+                             xml_obj->name);
             continue;
         }
 
@@ -799,7 +799,7 @@ unpack_resources(const xmlNode *xml_resources, pe_working_set_t * data_set)
         }
 
         crm_trace("Unpacking <%s " XML_ATTR_ID "='%s'>",
-                  crm_element_name(xml_obj), id);
+                  xml_obj->name, id);
         if (pe__unpack_resource(xml_obj, &new_rsc, NULL,
                                 data_set) == pcmk_rc_ok) {
             data_set->resources = g_list_append(data_set->resources, new_rsc);
@@ -808,7 +808,7 @@ unpack_resources(const xmlNode *xml_resources, pe_working_set_t * data_set)
         } else {
             pcmk__config_err("Ignoring <%s> resource '%s' "
                              "because configuration is invalid",
-                             crm_element_name(xml_obj), id);
+                             xml_obj->name, id);
         }
     }
 
@@ -854,7 +854,7 @@ unpack_tags(xmlNode * xml_tags, pe_working_set_t * data_set)
 
         if (tag_id == NULL) {
             pcmk__config_err("Ignoring <%s> without " XML_ATTR_ID,
-                             crm_element_name(xml_tag));
+                             (const char *) xml_tag->name);
             continue;
         }
 
@@ -869,7 +869,7 @@ unpack_tags(xmlNode * xml_tags, pe_working_set_t * data_set)
 
             if (obj_ref == NULL) {
                 pcmk__config_err("Ignoring <%s> for tag '%s' without " XML_ATTR_ID,
-                                 crm_element_name(xml_obj_ref), tag_id);
+                                 xml_obj_ref->name, tag_id);
                 continue;
             }
 

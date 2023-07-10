@@ -35,12 +35,12 @@ print_constraint(xmlNode *xml_obj, void *userdata)
         return pcmk_rc_ok;
     }
 
-    if (!pcmk__str_eq(XML_CONS_TAG_RSC_DEPEND, crm_element_name(xml_obj), pcmk__str_casei)) {
+    if (!pcmk__xe_is(xml_obj, XML_CONS_TAG_RSC_DEPEND)) {
         return pcmk_rc_ok;
     }
 
     out->info(out, "Constraint %s %s %s %s %s %s %s",
-              crm_element_name(xml_obj),
+              xml_obj->name,
               cons_string(crm_element_value(xml_obj, XML_ATTR_ID)),
               cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE)),
               cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET)),
@@ -79,7 +79,7 @@ cli_resource_print_cts(pe_resource_t * rsc, pcmk__output_t *out)
     }
 
     out->info(out, "Resource: %s %s %s %s %s %s %s %s %d %lld %#.16llx",
-              crm_element_name(rsc->xml), rsc->id,
+              rsc->xml->name, rsc->id,
               rsc->clone_name ? rsc->clone_name : rsc->id, rsc->parent ? rsc->parent->id : "NA",
               rprov ? rprov : "NA", rclass, rtype, host ? host : "NA", needs_quorum, rsc->flags,
               rsc->flags);

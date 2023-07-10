@@ -503,7 +503,7 @@ crm_element_value(const xmlNode *data, const char *name)
         return NULL;
 
     } else if (name == NULL) {
-        crm_err("Couldn't find NULL in %s", crm_element_name(data));
+        crm_err("Couldn't find NULL in %s", data->name);
         return NULL;
     }
 
@@ -883,7 +883,7 @@ xml2list(const xmlNode *parent)
 
     nvpair_list = find_xml_node(parent, XML_TAG_ATTRS, FALSE);
     if (nvpair_list == NULL) {
-        crm_trace("No attributes in %s", crm_element_name(parent));
+        crm_trace("No attributes in %s", parent->name);
         crm_log_xml_trace(parent, "No attributes for resource op");
     }
 

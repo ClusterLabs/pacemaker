@@ -432,7 +432,7 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
     id = crm_element_value(xml_obj, XML_ATTR_ID);
     if (id == NULL) {
         pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
-                         crm_element_name(xml_obj));
+                         xml_obj->name);
         return;
     }
 

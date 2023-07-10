@@ -828,7 +828,7 @@ get_node_id(xmlNode *lrm_rsc_op)
 {
     xmlNode *node = lrm_rsc_op;
 
-    while (node != NULL && !pcmk__str_eq(XML_CIB_TAG_STATE, TYPE(node), pcmk__str_casei)) {
+    while ((node != NULL) && !pcmk__xe_is(node, XML_CIB_TAG_STATE)) {
         node = node->parent;
     }
 

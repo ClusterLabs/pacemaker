@@ -63,7 +63,7 @@ pcmk__unpack_constraints(pe_working_set_t *data_set)
 
         xmlNode *lifetime = NULL;
         const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
-        const char *tag = crm_element_name(xml_obj);
+        const char *tag = (const char *) xml_obj->name;
 
         if (id == NULL) {
             pcmk__config_err("Ignoring <%s> constraint without "
@@ -348,7 +348,7 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
     cons_id = ID(xml_obj);
     if (cons_id == NULL) {
         pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
-                         crm_element_name(xml_obj));
+                         xml_obj->name);
         return false;
     }
 

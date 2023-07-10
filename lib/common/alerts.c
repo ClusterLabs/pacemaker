@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2022 the Pacemaker project contributors
+ * Copyright 2015-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -231,12 +231,10 @@ pcmk__alert_in_patchset(xmlNode *msg, bool config)
                 /* this is not a change to an existing section ... */
 
                 xmlNode *section = NULL;
-                const char *name = NULL;
 
                 if ((strcmp(xpath, XPATH_CONFIG) != 0) ||
                     ((section = pcmk__xml_first_child(change)) == NULL) ||
-                    ((name = crm_element_name(section)) == NULL) ||
-                    (strcmp(name, XML_CIB_TAG_ALERTS) != 0)) {
+                    !pcmk__xe_is(section, XML_CIB_TAG_ALERTS)) {
 
                     /* ... nor is it a newly added alerts section */
                     continue;

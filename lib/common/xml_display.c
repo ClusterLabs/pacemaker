@@ -92,7 +92,6 @@ static int
 show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
                  const xmlNode *data, int depth, uint32_t options)
 {
-    const char *name = crm_element_name(data);
     int spaces = pcmk_is_set(options, pcmk__xml_fmt_pretty)? (2 * depth) : 0;
     int rc = pcmk_rc_no_output;
 
@@ -104,7 +103,7 @@ show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
         for (int lpc = 0; lpc < spaces; lpc++) {
             g_string_append_c(buffer, ' ');
         }
-        pcmk__g_strcat(buffer, "<", name, NULL);
+        pcmk__g_strcat(buffer, "<", data->name, NULL);
 
         for (const xmlAttr *attr = pcmk__xe_first_attr(data); attr != NULL;
              attr = attr->next) {
@@ -138,7 +137,7 @@ show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
             free(p_copy);
         }
 
-        if (xml_has_children(data)
+        if ((data->children != NULL)
             && pcmk_is_set(options, pcmk__xml_fmt_children)) {
             g_string_append_c(buffer, '>');
 
@@ -151,7 +150,7 @@ show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
                        buffer->str);
     }
 
-    if (!xml_has_children(data)) {
+    if (data->children == NULL) {
         return rc;
     }
 
@@ -171,7 +170,7 @@ show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
         int temp_rc = out->info(out, "%s%s%*s</%s>",
                                 pcmk__s(prefix, ""),
                                 pcmk__str_empty(prefix)? "" : " ",
-                                spaces, "", name);
+                                spaces, "", data->name);
         rc = pcmk__output_select_rc(rc, temp_rc);
     }
 
@@ -480,7 +479,7 @@ log_data_element(int log_level, const char *file, const char *function,
     }
 
     if (pcmk_is_set(options, pcmk__xml_fmt_pretty)
-        && (!xml_has_children(data)
+        && ((data->children == NULL)
             || (crm_element_value(data, XML_DIFF_MARKER) != NULL))) {
 
         if (pcmk_is_set(options, pcmk__xml_fmt_diff_plus)) {

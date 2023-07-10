@@ -133,7 +133,7 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
     }
 
     crm_log_xml_debug(xml_search, "Match");
-    if (xml_has_children(xml_search)) {
+    if (xml_search->children != NULL) {
         xmlNode *child = NULL;
 
         rc = ENOTUNIQ;
@@ -358,7 +358,7 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
                     rsc_attr_id = found_attr_id;
                 }
 
-                xml_top = create_xml_node(NULL, crm_element_name(rsc->xml));
+                xml_top = create_xml_node(NULL, (const char *) rsc->xml->name);
                 crm_xml_add(xml_top, XML_ATTR_ID, lookup_id);
 
                 xml_obj = create_xml_node(xml_top, attr_set_type);

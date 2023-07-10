@@ -723,9 +723,8 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     }
 
     crmconfig = output;
-    if ((crmconfig) &&
-        (crm_element_name(crmconfig)) &&
-        (strcmp(crm_element_name(crmconfig), XML_CIB_TAG_CRMCONFIG) != 0)) {
+    if ((crmconfig != NULL)
+        && !pcmk__xe_is(crmconfig, XML_CIB_TAG_CRMCONFIG)) {
         crmconfig = first_named_child(crmconfig, XML_CIB_TAG_CRMCONFIG);
     }
     if (!crmconfig) {
