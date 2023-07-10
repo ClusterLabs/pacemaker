@@ -250,7 +250,6 @@ extern "C" {
 #  define XML_RSC_ATTR_UNIQUE		"globally-unique"
 #  define XML_RSC_ATTR_NOTIFY		"notify"
 #  define XML_RSC_ATTR_STICKINESS	"resource-stickiness"
-#  define XML_RSC_ATTR_FAIL_TIMEOUT PCMK_META_FAILURE_TIMEOUT
 #  define XML_RSC_ATTR_MULTIPLE		"multiple-active"
 #  define XML_RSC_ATTR_REQUIRES		"requires"
 #  define XML_RSC_ATTR_CONTAINER	"container"
