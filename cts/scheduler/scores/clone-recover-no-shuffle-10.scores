@@ -28,4 +28,4 @@ pcmk__primitive_assign: dummy:1 allocation score on node2: 16
 pcmk__primitive_assign: dummy:1 allocation score on node3: 0
 pcmk__primitive_assign: dummy:2 allocation score on node1: 10
 pcmk__primitive_assign: dummy:2 allocation score on node2: -INFINITY
-pcmk__primitive_assign: dummy:2 allocation score on node3: 5
+pcmk__primitive_assign: dummy:2 allocation score on node3: -INFINITY

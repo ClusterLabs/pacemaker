@@ -9,6 +9,8 @@ pcmk__primitive_assign: rsc1 allocation score on node1: 0
 pcmk__primitive_assign: rsc1 allocation score on node2: 0
 pcmk__primitive_assign: rsc2:0 allocation score on node1: 1
 pcmk__primitive_assign: rsc2:0 allocation score on node1: 1
+pcmk__primitive_assign: rsc2:0 allocation score on node1: 1
+pcmk__primitive_assign: rsc2:0 allocation score on node2: -INFINITY
 pcmk__primitive_assign: rsc2:0 allocation score on node2: -INFINITY
 pcmk__primitive_assign: rsc2:0 allocation score on node2: 0
 pcmk__primitive_assign: rsc2:1 allocation score on node1: 0

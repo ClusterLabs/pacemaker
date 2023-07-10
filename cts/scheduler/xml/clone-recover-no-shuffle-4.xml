@@ -11,11 +11,6 @@
          * Instance dummy:0 should remain started on node2
          * Instance dummy:1 should remain started on node3
          * Instance dummy:2 should start on node1
-
-         This test output is incorrect:
-         * Instance dummy:0 moves from node2 to node1
-         * Instance dummy:1 remains started on node3 (correct)
-         * Instance dummy:2 starts on node2
       -->
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
