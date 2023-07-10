@@ -21,7 +21,10 @@ pcmk__primitive_assign: child_DoFencing:1 allocation score on hadev1: 1
 pcmk__primitive_assign: child_DoFencing:1 allocation score on hadev2: -INFINITY
 pcmk__primitive_assign: child_DoFencing:1 allocation score on hadev3: -INFINITY
 pcmk__primitive_assign: child_DoFencing:2 allocation score on hadev1: -INFINITY
+pcmk__primitive_assign: child_DoFencing:2 allocation score on hadev1: -INFINITY
 pcmk__primitive_assign: child_DoFencing:2 allocation score on hadev2: -INFINITY
+pcmk__primitive_assign: child_DoFencing:2 allocation score on hadev2: -INFINITY
+pcmk__primitive_assign: child_DoFencing:2 allocation score on hadev3: -INFINITY
 pcmk__primitive_assign: child_DoFencing:2 allocation score on hadev3: -INFINITY
 pcmk__primitive_assign: rsc_hadev1 allocation score on hadev1: 100
 pcmk__primitive_assign: rsc_hadev1 allocation score on hadev2: 0
