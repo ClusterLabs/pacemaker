@@ -23,6 +23,10 @@ extern "C" {
 //! Default timeout (in milliseconds) for non-metadata actions
 #define PCMK_DEFAULT_ACTION_TIMEOUT_MS      20000
 
+// @COMPAT We don't need a separate timeout for metadata, much less a longer one
+//! \deprecated Default timeout (in milliseconds) for metadata actions
+#define PCMK_DEFAULT_METADATA_TIMEOUT_MS    30000
+
 // Action names as strings
 #define PCMK_ACTION_CANCEL              "cancel"
 #define PCMK_ACTION_CLEAR_FAILCOUNT     "clear_failcount"
