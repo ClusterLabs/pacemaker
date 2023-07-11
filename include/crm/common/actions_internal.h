@@ -10,7 +10,9 @@
 #ifndef PCMK__CRM_COMMON_ACTIONS_INTERNAL__H
 #define PCMK__CRM_COMMON_ACTIONS_INTERNAL__H
 
+#include <stdbool.h>                        // bool
 #include <glib.h>                           // guint
+#include <libxml/tree.h>                    // xmlNode
 
 #include <crm/common/actions.h>             // PCMK_ACTION_MONITOR
 #include <crm/common/strings_internal.h>    // pcmk__str_eq()
@@ -18,6 +20,17 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+//! printf-style format to create operation key from resource, action, interval
+#define PCMK__OP_FMT "%s_%s_%u"
+
+char *pcmk__op_key(const char *rsc_id, const char *op_type, guint interval_ms);
+char *pcmk__notify_key(const char *rsc_id, const char *notify_type,
+                       const char *op_type);
+char *pcmk__transition_key(int transition_id, int action_id, int target_rc,
+                           const char *node);
+void pcmk__filter_op_for_digest(xmlNode *param_set);
+bool pcmk__is_fencing_action(const char *action);
 
 /*!
  * \internal
