@@ -158,8 +158,6 @@ extern char *crm_system_name;
 #  define CRMD_JOINSTATE_MEMBER         "member"
 #  define CRMD_JOINSTATE_NACK           "banned"
 
-#  define CRMD_METADATA_CALL_TIMEOUT   PCMK_DEFAULT_METADATA_TIMEOUT_MS
-
 #  include <crm/common/actions.h>
 #  include <crm/common/cib.h>
 #  include <crm/common/logging.h>
