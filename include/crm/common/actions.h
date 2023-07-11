@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,13 @@
 
 #ifndef PCMK__CRM_COMMON_ACTIONS__H
 #define PCMK__CRM_COMMON_ACTIONS__H
+
+#include <stdbool.h>                    // bool
+#include <strings.h>                    // strcasecmp()
+#include <glib.h>                       // gboolean, guint
+#include <libxml/tree.h>                // xmlNode
+
+#include <crm/lrmd_events.h>            // lrmd_event_data_t
 
 #ifdef __cplusplus
 extern "C" {
@@ -60,6 +67,29 @@ extern "C" {
 #define PCMK_ACTION_STOP                "stop"
 #define PCMK_ACTION_STOPPED             "stopped"
 #define PCMK_ACTION_VALIDATE_ALL        "validate-all"
+
+// For parsing various action-related string specifications
+gboolean parse_op_key(const char *key, char **rsc_id, char **op_type,
+                      guint *interval_ms);
+gboolean decode_transition_key(const char *key, char **uuid, int *transition_id,
+                               int *action_id, int *target_rc);
+gboolean decode_transition_magic(const char *magic, char **uuid,
+                                 int *transition_id, int *action_id,
+                                 int *op_status, int *op_rc, int *target_rc);
+
+// @COMPAT Either these shouldn't be in libcrmcommon or lrmd_event_data_t should
+int rsc_op_expected_rc(const lrmd_event_data_t *event);
+gboolean did_rsc_op_fail(lrmd_event_data_t *event, int target_rc);
+
+bool crm_op_needs_metadata(const char *rsc_class, const char *op);
+
+xmlNode *crm_create_op_xml(xmlNode *parent, const char *prefix,
+                           const char *task, const char *interval_spec,
+                           const char *timeout);
+
+bool pcmk_is_probe(const char *task, guint interval);
+bool pcmk_xe_is_probe(const xmlNode *xml_op);
+bool pcmk_xe_mask_probe_failure(const xmlNode *xml_op);
 
 #ifdef __cplusplus
 }
