@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -28,6 +28,9 @@ extern "C" {
 
 //! \deprecated Use crm_parse_interval_spec() instead
 #define crm_get_interval crm_parse_interval_spec
+
+//! \deprecated Do not use
+#define CRM_DEFAULT_OP_TIMEOUT_S "20s"
 
 //! \deprecated Use !pcmk_is_set() or !pcmk_all_flags_set() instead
 static inline gboolean

@@ -73,7 +73,6 @@ bool crm_op_needs_metadata(const char *rsc_class, const char *op);
 xmlNode *crm_create_op_xml(xmlNode *parent, const char *prefix,
                            const char *task, const char *interval_spec,
                            const char *timeout);
-#define CRM_DEFAULT_OP_TIMEOUT_S "20s"
 
 bool pcmk_is_probe(const char *task, guint interval);
 bool pcmk_xe_is_probe(const xmlNode *xml_op);
