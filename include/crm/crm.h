@@ -163,15 +163,6 @@ extern char *crm_system_name;
 #  include <crm/common/logging.h>
 #  include <crm/common/util.h>
 
-static inline const char *
-crm_action_str(const char *task, guint interval_ms) {
-    if ((task != NULL) && (interval_ms == 0)
-        && (strcasecmp(task, PCMK_ACTION_MONITOR) == 0)) {
-        return "probe";
-    }
-    return task;
-}
-
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 #include <crm/crm_compat.h>
 #endif
