@@ -53,22 +53,21 @@ class StandbyTest(CTSTest):
             return self.failure("Start all nodes failed")
 
         self.debug("Make sure node %s is active" % node)
-        if self._cm.standby_status(node) != "off":
-            if not self._cm.set_standby_mode(node, "off"):
+        if self._cm.in_standby_mode(node):
+            if not self._cm.set_standby_mode(node, False):
                 return self.failure("can't set node %s to active mode" % node)
 
         self._cm.cluster_stable()
 
-        status = self._cm.standby_status(node)
-        if status != "off":
-            return self.failure("standby status of %s is [%s] but we expect [off]" % (node, status))
+        if self._cm.in_standby_mode(node):
+            return self.failure("standby status of %s is [on] but we expect [off]" % node)
 
         watchpats = [ r"State transition .* -> S_POLICY_ENGINE" ]
         watch = self.create_watch(watchpats, self._env["DeadTime"]+10)
         watch.set_watch()
 
         self.debug("Setting node %s to standby mode" % node)
-        if not self._cm.set_standby_mode(node, "on"):
+        if not self._cm.set_standby_mode(node, True):
             return self.failure("can't set node %s to standby mode" % node)
 
         self.set_timer("on")
@@ -76,14 +75,13 @@ class StandbyTest(CTSTest):
         ret = watch.look_for_all()
         if not ret:
             self._logger.log("Patterns not found: %r" % watch.unmatched)
-            self._cm.set_standby_mode(node, "off")
+            self._cm.set_standby_mode(node, False)
             return self.failure("cluster didn't react to standby change on %s" % node)
 
         self._cm.cluster_stable()
 
-        status = self._cm.standby_status(node)
-        if status != "on":
-            return self.failure("standby status of %s is [%s] but we expect [on]" % (node, status))
+        if not self._cm.in_standby_mode(node):
+            return self.failure("standby status of %s is [off] but we expect [on]" % node)
 
         self.log_timer("on")
 
@@ -92,19 +90,18 @@ class StandbyTest(CTSTest):
         if rscs_on_node:
             rc = self.failure("%s set to standby, %r is still running on it" % (node, rscs_on_node))
             self.debug("Setting node %s to active mode" % node)
-            self._cm.set_standby_mode(node, "off")
+            self._cm.set_standby_mode(node, False)
             return rc
 
         self.debug("Setting node %s to active mode" % node)
-        if not self._cm.set_standby_mode(node, "off"):
+        if not self._cm.set_standby_mode(node, False):
             return self.failure("can't set node %s to active mode" % node)
 
         self.set_timer("off")
         self._cm.cluster_stable()
 
-        status = self._cm.standby_status(node)
-        if status != "off":
-            return self.failure("standby status of %s is [%s] but we expect [off]" % (node, status))
+        if self._cm.in_standby_mode(node):
+            return self.failure("standby status of %s is [on] but we expect [off]" % node)
 
         self.log_timer("off")
 

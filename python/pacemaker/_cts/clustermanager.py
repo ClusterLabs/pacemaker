@@ -844,29 +844,33 @@ class ClusterManager(UserDict):
 
         raise NotImplementedError
 
-    def standby_status(self, node):
+    def in_standby_mode(self, node):
         """ Return whether or not the node is in Standby """
 
         (_, out) = self.rsh(node, self.templates["StandbyQueryCmd"] % node, verbose=1)
 
         if not out:
-            return "off"
+            return False
 
         out = out[0].strip()
         self.debug("Standby result: %s" % out)
-        return out
+        return out == "on"
 
     def set_standby_mode(self, node, status):
-        """ Set node to Standby if status is "on", or Active if status is "off".
+        """ Set node to Standby if status is True, or Active if status is False.
             Return whether the node is now in the requested status.
         """
 
-        current_status = self.standby_status(node)
+        current_status = self.in_standby_mode(node)
 
         if current_status == status:
             return True
 
-        cmd = self.templates["StandbyCmd"] % (node, status)
+        if status:
+            cmd = self.templates["StandbyCmd"] % (node, "on")
+        else:
+            cmd = self.templates["StandbyCmd"] % (node, "off")
+
         (rc, _) = self.rsh(node, cmd)
         return rc == 0
 
