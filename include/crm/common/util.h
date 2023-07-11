@@ -59,7 +59,7 @@ char *crm_strdup_printf(char const *format, ...) G_GNUC_PRINTF(1, 2);
 
 guint crm_parse_interval_spec(const char *input);
 
-/* public operation functions (from operations.c) */
+// Public functions related to resource actions (from actions.c)
 gboolean parse_op_key(const char *key, char **rsc_id, char **op_type,
                       guint *interval_ms);
 gboolean decode_transition_key(const char *key, char **uuid, int *transition_id,

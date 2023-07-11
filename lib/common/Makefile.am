@@ -50,6 +50,7 @@ endif
 # Use += rather than backlashed continuation lines for parsing by bumplibs
 libcrmcommon_la_SOURCES	=
 libcrmcommon_la_SOURCES	+= acl.c
+libcrmcommon_la_SOURCES	+= actions.c
 libcrmcommon_la_SOURCES	+= agents.c
 libcrmcommon_la_SOURCES	+= alerts.c
 libcrmcommon_la_SOURCES	+= attrs.c
@@ -75,7 +76,6 @@ libcrmcommon_la_SOURCES	+= mainloop.c
 libcrmcommon_la_SOURCES	+= messages.c
 libcrmcommon_la_SOURCES	+= nodes.c
 libcrmcommon_la_SOURCES	+= nvpair.c
-libcrmcommon_la_SOURCES	+= operations.c
 libcrmcommon_la_SOURCES	+= options.c
 libcrmcommon_la_SOURCES	+= output.c
 libcrmcommon_la_SOURCES	+= output_html.c

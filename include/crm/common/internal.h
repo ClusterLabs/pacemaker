@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2022 the Pacemaker project contributors
+ * Copyright 2015-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -164,7 +164,7 @@ int pcmk__pidfile_matches(const char *filename, pid_t expected_pid,
 int pcmk__lock_pidfile(const char *filename, const char *name);
 
 
-/* internal functions related to resource operations (from operations.c) */
+// Internal functions related to resource actions (from actions.c)
 
 // printf-style format to create operation ID from resource, action, interval
 #define PCMK__OP_FMT "%s_%s_%u"

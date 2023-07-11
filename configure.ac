@@ -2063,6 +2063,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/common/Makefile                                 \
                 lib/common/tests/Makefile                           \
                 lib/common/tests/acl/Makefile                       \
+                lib/common/tests/actions/Makefile                   \
                 lib/common/tests/agents/Makefile                    \
                 lib/common/tests/cmdline/Makefile                   \
                 lib/common/tests/flags/Makefile                     \
@@ -2071,7 +2072,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/common/tests/iso8601/Makefile                   \
                 lib/common/tests/lists/Makefile                     \
                 lib/common/tests/nvpair/Makefile                    \
-                lib/common/tests/operations/Makefile                \
                 lib/common/tests/options/Makefile                   \
                 lib/common/tests/output/Makefile                    \
                 lib/common/tests/procfs/Makefile                    \
