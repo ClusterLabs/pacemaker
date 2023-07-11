@@ -20,6 +20,9 @@ extern "C" {
  * \ingroup core
  */
 
+//! Default timeout (in milliseconds) for non-metadata actions
+#define PCMK_DEFAULT_ACTION_TIMEOUT_MS      20000
+
 // Action names as strings
 #define PCMK_ACTION_CANCEL              "cancel"
 #define PCMK_ACTION_CLEAR_FAILCOUNT     "clear_failcount"

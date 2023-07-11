@@ -1949,7 +1949,7 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
 
     // If no timeout was provided, use the same default as the cluster
     if (timeout_ms == 0) {
-        timeout_ms = crm_get_msec(CRM_DEFAULT_OP_TIMEOUT_S);
+        timeout_ms = PCMK_DEFAULT_ACTION_TIMEOUT_MS;
     }
 
     set_agent_environment(params, timeout_ms, check_level, resource_verbose);

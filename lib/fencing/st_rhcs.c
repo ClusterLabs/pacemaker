@@ -180,14 +180,17 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
     xpathObj = xpath_search(xml, "//action[@name='stop']");
     if (numXpathResults(xpathObj) <= 0) {
         xmlNode *tmp = NULL;
+        const char *timeout_str = NULL;
+
+        timeout_str = pcmk__readable_interval(PCMK_DEFAULT_ACTION_TIMEOUT_MS);
 
         tmp = create_xml_node(actions, "action");
         crm_xml_add(tmp, "name", PCMK_ACTION_STOP);
-        crm_xml_add(tmp, "timeout", CRM_DEFAULT_OP_TIMEOUT_S);
+        crm_xml_add(tmp, "timeout", timeout_str);
 
         tmp = create_xml_node(actions, "action");
         crm_xml_add(tmp, "name", PCMK_ACTION_START);
-        crm_xml_add(tmp, "timeout", CRM_DEFAULT_OP_TIMEOUT_S);
+        crm_xml_add(tmp, "timeout", timeout_str);
     }
     freeXpathObject(xpathObj);
 
