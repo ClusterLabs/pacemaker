@@ -14,6 +14,7 @@
 #  include <crm/crm.h>
 #  include <crm/msg_xml.h>
 #  include <crm/common/xml.h>
+#  include <crm/lrmd_events.h>  // lrmd_event_data_t
 
 #ifdef __cplusplus
 extern "C" {

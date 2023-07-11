@@ -20,7 +20,7 @@
 
 #  include <libxml/tree.h>
 
-#  include <crm/lrmd.h>
+#  include <crm/lrmd_events.h>      // lrmd_event_data_t
 #  include <crm/common/acl.h>
 #  include <crm/common/agents.h>
 #  include <crm/common/results.h>

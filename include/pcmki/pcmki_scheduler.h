@@ -14,7 +14,7 @@
 #include <stdbool.h>            // bool
 #include <libxml/tree.h>        // xmlNode
 
-#include <crm/lrmd.h>           // lrmd_event_data_t
+#include <crm/lrmd_events.h>    // lrmd_event_data_t
 #include <crm/pengine/status.h> // pe_resource_t, pe_working_set_t
 
 typedef struct {
