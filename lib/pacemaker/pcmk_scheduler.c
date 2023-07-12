@@ -88,7 +88,8 @@ check_params(pe_resource_t *rsc, pe_node_t *node, const xmlNode *rsc_op,
 static bool
 failcount_clear_action_exists(const pe_node_t *node, const pe_resource_t *rsc)
 {
-    GList *list = pe__resource_actions(rsc, node, CRM_OP_CLEAR_FAILCOUNT, TRUE);
+    GList *list = pe__resource_actions(rsc, node, PCMK_ACTION_CLEAR_FAILCOUNT,
+                                       TRUE);
 
     if (list != NULL) {
         g_list_free(list);
@@ -617,7 +618,8 @@ schedule_fencing_and_shutdowns(pe_working_set_t *data_set)
          * clone stop that's also ordered before the shutdowns, thus leading to
          * a graph loop.
          */
-        if (pcmk__str_eq(dc_down->task, CRM_OP_SHUTDOWN, pcmk__str_none)) {
+        if (pcmk__str_eq(dc_down->task, PCMK_ACTION_DO_SHUTDOWN,
+                         pcmk__str_none)) {
             pcmk__order_after_each(dc_down, shutdown_ops);
         }
 

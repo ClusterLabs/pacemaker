@@ -1436,10 +1436,11 @@ static pcmk__cluster_option_t fencer_options[] = {
              "Then use this to specify the maximum number of actions can be performed in parallel on this device. -1 is unlimited.")
     },
     {
-	"pcmk_reboot_action",NULL, "string", NULL, "reboot", NULL,
-	N_("Advanced use only: An alternate command to run instead of 'reboot'"),
+        "pcmk_reboot_action", NULL, "string", NULL,
+        PCMK_ACTION_REBOOT, NULL,
+        N_("Advanced use only: An alternate command to run instead of 'reboot'"),
         N_("Some devices do not support the standard commands or may provide additional ones.\n"
-                 "Use this to specify an alternate, device-specific, command that implements the \'reboot\' action.")
+           "Use this to specify an alternate, device-specific, command that implements the \'reboot\' action.")
     },
     {
 	"pcmk_reboot_timeout",NULL, "time", NULL, "60s", NULL,
@@ -1455,10 +1456,11 @@ static pcmk__cluster_option_t fencer_options[] = {
            " Use this option to alter the number of times Pacemaker retries \'reboot\' actions before giving up.")
     },
     {
-	"pcmk_off_action",NULL, "string", NULL, "off", NULL,
-	N_("Advanced use only: An alternate command to run instead of \'off\'"),
+        "pcmk_off_action", NULL, "string", NULL,
+        PCMK_ACTION_OFF, NULL,
+        N_("Advanced use only: An alternate command to run instead of \'off\'"),
         N_("Some devices do not support the standard commands or may provide additional ones."
-                 "Use this to specify an alternate, device-specific, command that implements the \'off\' action.")
+           "Use this to specify an alternate, device-specific, command that implements the \'off\' action.")
     },
     {
 	"pcmk_off_timeout",NULL, "time", NULL, "60s", NULL,
@@ -1474,10 +1476,11 @@ static pcmk__cluster_option_t fencer_options[] = {
            " Use this option to alter the number of times Pacemaker retries \'off\' actions before giving up.")
     },
     {
-	"pcmk_on_action",NULL, "string", NULL, "on", NULL,
-	N_("Advanced use only: An alternate command to run instead of 'on'"),
+        "pcmk_on_action", NULL, "string", NULL,
+        PCMK_ACTION_ON, NULL,
+        N_("Advanced use only: An alternate command to run instead of 'on'"),
         N_("Some devices do not support the standard commands or may provide additional ones."
-                 "Use this to specify an alternate, device-specific, command that implements the \'on\' action.")
+           "Use this to specify an alternate, device-specific, command that implements the \'on\' action.")
     },
     {
 	"pcmk_on_timeout",NULL, "time", NULL, "60s", NULL,
@@ -1493,10 +1496,11 @@ static pcmk__cluster_option_t fencer_options[] = {
            " Use this option to alter the number of times Pacemaker retries \'on\' actions before giving up.")
     },
     {
-	"pcmk_list_action",NULL, "string", NULL, "list", NULL,
-	N_("Advanced use only: An alternate command to run instead of \'list\'"),
+        "pcmk_list_action",NULL, "string", NULL,
+        PCMK_ACTION_LIST, NULL,
+        N_("Advanced use only: An alternate command to run instead of \'list\'"),
         N_("Some devices do not support the standard commands or may provide additional ones."
-                 "Use this to specify an alternate, device-specific, command that implements the \'list\' action.")
+           "Use this to specify an alternate, device-specific, command that implements the \'list\' action.")
     },
     {
 	"pcmk_list_timeout",NULL, "time", NULL, "60s", NULL,
@@ -1512,7 +1516,8 @@ static pcmk__cluster_option_t fencer_options[] = {
            " Use this option to alter the number of times Pacemaker retries \'list\' actions before giving up.")
     },
     {
-	"pcmk_monitor_action",NULL, "string", NULL, "monitor", NULL,
+        "pcmk_monitor_action", NULL, "string", NULL,
+        PCMK_ACTION_MONITOR, NULL,
 	N_("Advanced use only: An alternate command to run instead of \'monitor\'"),
         N_("Some devices do not support the standard commands or may provide additional ones."
                  "Use this to specify an alternate, device-specific, command that implements the \'monitor\' action.")
@@ -1531,10 +1536,11 @@ static pcmk__cluster_option_t fencer_options[] = {
            " Use this option to alter the number of times Pacemaker retries \'monitor\' actions before giving up.")
     },
     {
-	"pcmk_status_action",NULL, "string", NULL, "status", NULL,
-	N_("Advanced use only: An alternate command to run instead of \'status\'"),
+        "pcmk_status_action", NULL, "string", NULL,
+        PCMK_ACTION_STATUS, NULL,
+        N_("Advanced use only: An alternate command to run instead of \'status\'"),
         N_("Some devices do not support the standard commands or may provide additional ones."
-                 "Use this to specify an alternate, device-specific, command that implements the \'status\' action.")
+           "Use this to specify an alternate, device-specific, command that implements the \'status\' action.")
     },
     {
 	"pcmk_status_timeout",NULL, "time", NULL, "60s", NULL,

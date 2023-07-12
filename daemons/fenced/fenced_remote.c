@@ -292,7 +292,7 @@ init_stonith_remote_op_hash_table(GHashTable **table)
 static const char *
 op_requested_action(const remote_fencing_op_t *op)
 {
-    return ((op->phase > st_phase_requested)? "reboot" : op->action);
+    return ((op->phase > st_phase_requested)? PCMK_ACTION_REBOOT : op->action);
 }
 
 /*!
@@ -311,7 +311,7 @@ op_phase_off(remote_fencing_op_t *op)
     /* Happily, "off" and "on" are shorter than "reboot", so we can reuse the
      * memory allocation at each phase.
      */
-    strcpy(op->action, "off");
+    strcpy(op->action, PCMK_ACTION_OFF);
 }
 
 /*!
@@ -329,7 +329,7 @@ op_phase_on(remote_fencing_op_t *op)
              "remapping to 'on' for %s " CRM_XS " id=%.8s",
              op->target, op->client_name, op->id);
     op->phase = st_phase_on;
-    strcpy(op->action, "on");
+    strcpy(op->action, PCMK_ACTION_ON);
 
     /* Skip devices with automatic unfencing, because the cluster will handle it
      * when the node rejoins.
@@ -362,7 +362,7 @@ undo_op_remap(remote_fencing_op_t *op)
         crm_info("Undoing remap of reboot targeting %s for %s "
                  CRM_XS " id=%.8s", op->target, op->client_name, op->id);
         op->phase = st_phase_requested;
-        strcpy(op->action, "reboot");
+        strcpy(op->action, PCMK_ACTION_REBOOT);
     }
 }
 
@@ -966,7 +966,7 @@ advance_topology_level(remote_fencing_op_t *op, bool empty_ok)
         }
 
         if ((g_list_next(op->devices_list) != NULL)
-            && pcmk__str_eq(op->action, "reboot", pcmk__str_none)) {
+            && pcmk__str_eq(op->action, PCMK_ACTION_REBOOT, pcmk__str_none)) {
             /* A reboot has been requested for a topology level with multiple
              * devices. Instead of rebooting the devices sequentially, we will
              * turn them all off, then turn them all on again. (Think about
@@ -1541,7 +1541,7 @@ get_op_total_timeout(const remote_fencing_op_t *op,
         GList *iter = NULL;
         GList *auto_list = NULL;
 
-        if (pcmk__str_eq(op->action, "on", pcmk__str_none)
+        if (pcmk__str_eq(op->action, PCMK_ACTION_ON, pcmk__str_none)
             && (op->automatic_list != NULL)) {
             auto_list = g_list_copy(op->automatic_list);
         }
@@ -1695,7 +1695,7 @@ advance_topology_device_in_level(remote_fencing_op_t *op, const char *device,
 
     /* Handle automatic unfencing if an "on" action was requested */
     if ((op->phase == st_phase_requested)
-        && pcmk__str_eq(op->action, "on", pcmk__str_none)) {
+        && pcmk__str_eq(op->action, PCMK_ACTION_ON, pcmk__str_none)) {
         /* If the device we just executed was required, it's not anymore */
         remove_required_device(op, device);
 
@@ -1794,7 +1794,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
          * node back on when we should.
          */
         device = op->devices->data;
-        if (pcmk__str_eq(fenced_device_reboot_action(device), "off",
+        if (pcmk__str_eq(fenced_device_reboot_action(device), PCMK_ACTION_OFF,
                          pcmk__str_none)) {
             crm_info("Not turning %s back on using %s because the device is "
                      "configured to stay off (pcmk_reboot_action='off')",
@@ -2097,7 +2097,7 @@ parse_action_specific(const xmlNode *xml, const char *peer, const char *device,
     }
 
     /* Handle devices with automatic unfencing */
-    if (pcmk__str_eq(action, "on", pcmk__str_none)) {
+    if (pcmk__str_eq(action, PCMK_ACTION_ON, pcmk__str_none)) {
         int required = 0;
 
         crm_element_value_int(xml, F_STONITH_DEVICE_REQUIRED, &required);
@@ -2160,11 +2160,11 @@ add_device_properties(const xmlNode *xml, remote_fencing_op_t *op,
          * values for "off" and "on" in child elements, just in case the reboot
          * winds up getting remapped.
          */
-        if (pcmk__str_eq(ID(child), "off", pcmk__str_none)) {
-            parse_action_specific(child, peer->host, device, "off",
+        if (pcmk__str_eq(ID(child), PCMK_ACTION_OFF, pcmk__str_none)) {
+            parse_action_specific(child, peer->host, device, PCMK_ACTION_OFF,
                                   op, st_phase_off, props);
-        } else if (pcmk__str_eq(ID(child), "on", pcmk__str_none)) {
-            parse_action_specific(child, peer->host, device, "on",
+        } else if (pcmk__str_eq(ID(child), PCMK_ACTION_ON, pcmk__str_none)) {
+            parse_action_specific(child, peer->host, device, PCMK_ACTION_ON,
                                   op, st_phase_on, props);
         }
     }

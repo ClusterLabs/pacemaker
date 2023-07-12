@@ -346,7 +346,8 @@ resource_agent_action_default(pcmk__output_t *out, va_list args) {
                  type, rc, exit_reason);
 
     /* hide output for validate-all if not in verbose */
-    if (verbose == 0 && pcmk__str_eq(action, "validate-all", pcmk__str_casei)) {
+    if ((verbose == 0)
+        && pcmk__str_eq(action, PCMK_ACTION_VALIDATE_ALL, pcmk__str_casei)) {
         return pcmk_rc_ok;
     }
 

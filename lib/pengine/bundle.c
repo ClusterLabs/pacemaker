@@ -388,7 +388,8 @@ create_ip_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         }
 
         xml_obj = create_xml_node(xml_ip, "operations");
-        crm_create_op_xml(xml_obj, ID(xml_ip), "monitor", "60s", NULL);
+        crm_create_op_xml(xml_obj, ID(xml_ip), PCMK_ACTION_MONITOR, "60s",
+                          NULL);
 
         // TODO: Other ops? Timeouts and intervals from underlying resource?
 
@@ -639,7 +640,8 @@ create_container_resource(pe_resource_t *parent,
     }
 
     xml_obj = create_xml_node(xml_container, "operations");
-    crm_create_op_xml(xml_obj, ID(xml_container), "monitor", "60s", NULL);
+    crm_create_op_xml(xml_obj, ID(xml_container), PCMK_ACTION_MONITOR, "60s",
+                      NULL);
 
     // TODO: Other ops? Timeouts and intervals from underlying resource?
     if (pe__unpack_resource(xml_container, &replica->container, parent,

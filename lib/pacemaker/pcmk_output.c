@@ -971,7 +971,7 @@ digests_text(pcmk__output_t *out, va_list args)
     if (interval_ms != 0) {
         action_desc = crm_strdup_printf("%ums-interval %s action", interval_ms,
                                         ((task == NULL)? "unknown" : task));
-    } else if (pcmk__str_eq(task, "monitor", pcmk__str_none)) {
+    } else if (pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_none)) {
         action_desc = strdup("probe action");
     } else {
         action_desc = crm_strdup_printf("%s action",
@@ -1103,7 +1103,8 @@ rsc_action_default(pcmk__output_t *out, va_list args)
     moving = (current != NULL) && (next != NULL)
              && !pe__same_node(current, next);
 
-    possible_matches = pe__resource_actions(rsc, next, RSC_START, false);
+    possible_matches = pe__resource_actions(rsc, next, PCMK_ACTION_START,
+                                            false);
     if (possible_matches) {
         start = possible_matches->data;
         g_list_free(possible_matches);
@@ -1114,7 +1115,8 @@ rsc_action_default(pcmk__output_t *out, va_list args)
     } else {
         start_node = current;
     }
-    possible_matches = pe__resource_actions(rsc, start_node, RSC_STOP, false);
+    possible_matches = pe__resource_actions(rsc, start_node, PCMK_ACTION_STOP,
+                                            false);
     if (possible_matches) {
         stop = possible_matches->data;
         g_list_free(possible_matches);
@@ -1123,20 +1125,23 @@ rsc_action_default(pcmk__output_t *out, va_list args)
          * stop_unexpected, and not stopping on its current node, but it should
          * be stopping elsewhere.
          */
-        possible_matches = pe__resource_actions(rsc, NULL, RSC_STOP, false);
+        possible_matches = pe__resource_actions(rsc, NULL, PCMK_ACTION_STOP,
+                                                false);
         if (possible_matches != NULL) {
             stop = possible_matches->data;
             g_list_free(possible_matches);
         }
     }
 
-    possible_matches = pe__resource_actions(rsc, next, RSC_PROMOTE, false);
+    possible_matches = pe__resource_actions(rsc, next, PCMK_ACTION_PROMOTE,
+                                            false);
     if (possible_matches) {
         promote = possible_matches->data;
         g_list_free(possible_matches);
     }
 
-    possible_matches = pe__resource_actions(rsc, next, RSC_DEMOTE, false);
+    possible_matches = pe__resource_actions(rsc, next, PCMK_ACTION_DEMOTE,
+                                            false);
     if (possible_matches) {
         demote = possible_matches->data;
         g_list_free(possible_matches);
@@ -1147,7 +1152,9 @@ rsc_action_default(pcmk__output_t *out, va_list args)
 
         CRM_CHECK(next != NULL, return rc);
 
-        possible_matches = pe__resource_actions(rsc, next, RSC_MIGRATED, false);
+        possible_matches = pe__resource_actions(rsc, next,
+                                                PCMK_ACTION_MIGRATE_FROM,
+                                                false);
         if (possible_matches) {
             migrate_op = possible_matches->data;
         }

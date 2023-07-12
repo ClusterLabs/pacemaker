@@ -78,8 +78,11 @@ probe_then_start(pe_resource_t *rsc1, pe_resource_t *rsc2)
         && (g_hash_table_lookup(rsc1->known_on,
                                 rsc1->allocated_to->details->id) == NULL)) {
 
-        pcmk__new_ordering(rsc1, pcmk__op_key(rsc1->id, RSC_STATUS, 0), NULL,
-                           rsc2, pcmk__op_key(rsc2->id, RSC_START, 0), NULL,
+        pcmk__new_ordering(rsc1,
+                           pcmk__op_key(rsc1->id, PCMK_ACTION_MONITOR, 0),
+                           NULL,
+                           rsc2, pcmk__op_key(rsc2->id, PCMK_ACTION_START, 0),
+                           NULL,
                            pe_order_optional, rsc1->cluster);
     }
 }
@@ -125,12 +128,12 @@ static pe_action_t *
 probe_action(pe_resource_t *rsc, pe_node_t *node)
 {
     pe_action_t *probe = NULL;
-    char *key = pcmk__op_key(rsc->id, RSC_STATUS, 0);
+    char *key = pcmk__op_key(rsc->id, PCMK_ACTION_MONITOR, 0);
 
     crm_debug("Scheduling probe of %s %s on %s",
               role2text(rsc->role), rsc->id, pe__node_name(node));
 
-    probe = custom_action(rsc, key, RSC_STATUS, node, FALSE, TRUE,
+    probe = custom_action(rsc, key, PCMK_ACTION_MONITOR, node, FALSE, TRUE,
                           rsc->cluster);
     pe__clear_action_flags(probe, pe_action_optional);
 
@@ -242,8 +245,10 @@ pcmk__probe_rsc_on_node(pe_resource_t *rsc, pe_node_t *node)
             reason = "node's guest will stop";
 
             // Order resource start after guest stop (in case it's restarting)
-            pcmk__new_ordering(guest, pcmk__op_key(guest->id, RSC_STOP, 0),
-                               NULL, top, pcmk__op_key(top->id, RSC_START, 0),
+            pcmk__new_ordering(guest,
+                               pcmk__op_key(guest->id, PCMK_ACTION_STOP, 0),
+                               NULL, top,
+                               pcmk__op_key(top->id, PCMK_ACTION_START, 0),
                                NULL, pe_order_optional, rsc->cluster);
             goto no_probe;
         }
@@ -271,7 +276,7 @@ pcmk__probe_rsc_on_node(pe_resource_t *rsc, pe_node_t *node)
 
     // Start or reload after probing the resource
     pcmk__new_ordering(rsc, NULL, probe,
-                       top, pcmk__op_key(top->id, RSC_START, 0), NULL,
+                       top, pcmk__op_key(top->id, PCMK_ACTION_START, 0), NULL,
                        flags, rsc->cluster);
     pcmk__new_ordering(rsc, NULL, probe, top, reload_key(rsc), NULL,
                        pe_order_optional, rsc->cluster);
@@ -298,17 +303,17 @@ static bool
 probe_needed_before_action(const pe_action_t *probe, const pe_action_t *then)
 {
     // Probes on a node are performed after unfencing it, not before
-    if (pcmk__str_eq(then->task, CRM_OP_FENCE, pcmk__str_none)
+    if (pcmk__str_eq(then->task, PCMK_ACTION_STONITH, pcmk__str_none)
         && pe__same_node(probe->node, then->node)) {
         const char *op = g_hash_table_lookup(then->meta, "stonith_action");
 
-        if (pcmk__str_eq(op, "on", pcmk__str_casei)) {
+        if (pcmk__str_eq(op, PCMK_ACTION_ON, pcmk__str_casei)) {
             return false;
         }
     }
 
     // Probes should be done on a node before shutting it down
-    if (pcmk__str_eq(then->task, CRM_OP_SHUTDOWN, pcmk__str_none)
+    if (pcmk__str_eq(then->task, PCMK_ACTION_DO_SHUTDOWN, pcmk__str_none)
         && (probe->node != NULL) && (then->node != NULL)
         && !pe__same_node(probe->node, then->node)) {
         return false;
@@ -363,12 +368,12 @@ add_probe_orderings_for_stops(pe_working_set_t *data_set)
         }
 
         // Skip orderings for first actions other than stop
-        if ((first != NULL) && !pcmk__str_eq(first->task, RSC_STOP,
+        if ((first != NULL) && !pcmk__str_eq(first->task, PCMK_ACTION_STOP,
                                              pcmk__str_none)) {
             continue;
         } else if ((first == NULL)
                    && !pcmk__ends_with(order->lh_action_task,
-                                       "_" RSC_STOP "_0")) {
+                                       "_" PCMK_ACTION_STOP "_0")) {
             continue;
         }
 
@@ -379,12 +384,12 @@ add_probe_orderings_for_stops(pe_working_set_t *data_set)
         if ((order->rh_rsc != NULL)
             && (order->lh_rsc->container == order->rh_rsc)) {
 
-            if ((then != NULL) && pcmk__str_eq(then->task, RSC_STOP,
+            if ((then != NULL) && pcmk__str_eq(then->task, PCMK_ACTION_STOP,
                                                pcmk__str_none)) {
                 continue;
             } else if ((then == NULL)
                        && pcmk__ends_with(order->rh_action_task,
-                                          "_" RSC_STOP "_0")) {
+                                          "_" PCMK_ACTION_STOP "_0")) {
                 continue;
             }
         }
@@ -405,7 +410,8 @@ add_probe_orderings_for_stops(pe_working_set_t *data_set)
         }
 
         // List all scheduled probes for the first resource
-        probes = pe__resource_actions(order->lh_rsc, NULL, RSC_STATUS, FALSE);
+        probes = pe__resource_actions(order->lh_rsc, NULL, PCMK_ACTION_MONITOR,
+                                      FALSE);
         if (probes == NULL) { // There aren't any
             continue;
         }
@@ -480,7 +486,8 @@ add_start_orderings_for_probe(pe_action_t *probe, pe_action_wrapper_t *after)
         // The order type is already enforced for its parent.
         || pcmk_is_set(after->type, pe_order_runnable_left)
         || (pe__const_top_resource(probe->rsc, false) != after->action->rsc)
-        || !pcmk__str_eq(after->action->task, RSC_START, pcmk__str_none)) {
+        || !pcmk__str_eq(after->action->task, PCMK_ACTION_START,
+                         pcmk__str_none)) {
         return;
     }
 
@@ -497,7 +504,8 @@ add_start_orderings_for_probe(pe_action_t *probe, pe_action_wrapper_t *after)
         if (then->action->rsc->running_on
             || (pe__const_top_resource(then->action->rsc, false)
                 != after->action->rsc)
-            || !pcmk__str_eq(then->action->task, RSC_START, pcmk__str_none)) {
+            || !pcmk__str_eq(then->action->task, PCMK_ACTION_START,
+                             pcmk__str_none)) {
             continue;
         }
 
@@ -537,7 +545,7 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
     // Validate that this is a resource probe followed by some action
     if ((after == NULL) || (probe == NULL) || (probe->rsc == NULL)
         || (probe->rsc->variant != pe_native)
-        || !pcmk__str_eq(probe->task, RSC_STATUS, pcmk__str_none)) {
+        || !pcmk__str_eq(probe->task, PCMK_ACTION_MONITOR, pcmk__str_none)) {
         return;
     }
 
@@ -559,13 +567,14 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
 
             GList *then_actions = NULL;
 
-            if (pcmk__str_eq(after->task, RSC_START, pcmk__str_none)) {
-                then_actions = pe__resource_actions(after->rsc, NULL, RSC_STOP,
-                                                    FALSE);
-
-            } else if (pcmk__str_eq(after->task, RSC_PROMOTE, pcmk__str_none)) {
+            if (pcmk__str_eq(after->task, PCMK_ACTION_START, pcmk__str_none)) {
                 then_actions = pe__resource_actions(after->rsc, NULL,
-                                                    RSC_DEMOTE, FALSE);
+                                                    PCMK_ACTION_STOP, FALSE);
+
+            } else if (pcmk__str_eq(after->task, PCMK_ACTION_PROMOTE,
+                                    pcmk__str_none)) {
+                then_actions = pe__resource_actions(after->rsc, NULL,
+                                                    PCMK_ACTION_DEMOTE, FALSE);
             }
 
             for (iter = then_actions; iter != NULL; iter = iter->next) {
@@ -686,7 +695,7 @@ add_start_restart_orderings_for_rsc(gpointer data, gpointer user_data)
     }
 
     // Find all probes for given resource
-    probes = pe__resource_actions(rsc, NULL, RSC_STATUS, FALSE);
+    probes = pe__resource_actions(rsc, NULL, PCMK_ACTION_MONITOR, FALSE);
 
     // Add probe restart orderings for each probe found
     for (GList *iter = probes; iter != NULL; iter = iter->next) {
@@ -754,7 +763,7 @@ order_then_probes(pe_working_set_t *data_set)
         GList *actions = NULL;
         GList *probes = NULL;
 
-        actions = pe__resource_actions(rsc, NULL, RSC_START, FALSE);
+        actions = pe__resource_actions(rsc, NULL, PCMK_ACTION_START, FALSE);
 
         if (actions) {
             start = actions->data;
@@ -766,7 +775,7 @@ order_then_probes(pe_working_set_t *data_set)
             continue;
         }
 
-        probes = pe__resource_actions(rsc, NULL, RSC_STATUS, FALSE);
+        probes = pe__resource_actions(rsc, NULL, PCMK_ACTION_MONITOR, FALSE);
 
         for (actions = start->actions_before; actions != NULL;
              actions = actions->next) {
@@ -791,7 +800,8 @@ order_then_probes(pe_working_set_t *data_set)
                     break;
                 }
 
-            } else if (!pcmk__str_eq(first->task, RSC_START, pcmk__str_none)) {
+            } else if (!pcmk__str_eq(first->task, PCMK_ACTION_START,
+                                     pcmk__str_none)) {
                 crm_trace("Not a start op %s for %s", first->uuid, start->uuid);
             }
 

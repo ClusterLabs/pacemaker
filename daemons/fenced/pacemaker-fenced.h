@@ -299,7 +299,7 @@ fenced_set_protocol_error(pcmk__action_result_t *result)
 static inline uint32_t
 fenced_support_flag(const char *action)
 {
-    if (pcmk__str_eq(action, "on", pcmk__str_none)) {
+    if (pcmk__str_eq(action, PCMK_ACTION_ON, pcmk__str_none)) {
         return st_device_supports_on;
     }
     return st_device_supports_none;

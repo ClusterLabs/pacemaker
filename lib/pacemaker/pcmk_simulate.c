@@ -55,7 +55,7 @@ create_action_name(const pe_action_t *action, bool verbose)
         action_host = "<none>";
     }
 
-    if (pcmk__str_eq(action->task, RSC_CANCEL, pcmk__str_none)) {
+    if (pcmk__str_eq(action->task, PCMK_ACTION_CANCEL, pcmk__str_none)) {
         prefix = "Cancel ";
         task = action->cancel_task;
     }
@@ -74,8 +74,8 @@ create_action_name(const pe_action_t *action, bool verbose)
             interval_ms = 0;
         }
 
-        if (pcmk__strcase_any_of(action->task, RSC_NOTIFY, RSC_NOTIFIED,
-                                 NULL)) {
+        if (pcmk__strcase_any_of(action->task, PCMK_ACTION_NOTIFY,
+                                 PCMK_ACTION_NOTIFIED, NULL)) {
             const char *n_type = g_hash_table_lookup(action->meta,
                                                      "notify_key_type");
             const char *n_task = g_hash_table_lookup(action->meta,
@@ -96,7 +96,8 @@ create_action_name(const pe_action_t *action, bool verbose)
         }
         free(key);
 
-    } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_none)) {
+    } else if (pcmk__str_eq(action->task, PCMK_ACTION_STONITH,
+                            pcmk__str_none)) {
         const char *op = g_hash_table_lookup(action->meta, "stonith_action");
 
         action_name = crm_strdup_printf("%s%s '%s' %s",
@@ -545,7 +546,8 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     }
 
     // Certain actions need to be displayed but don't need history entries
-    if (pcmk__strcase_any_of(operation, "delete", RSC_METADATA, NULL)) {
+    if (pcmk__strcase_any_of(operation, PCMK_ACTION_DELETE,
+                             PCMK_ACTION_META_DATA, NULL)) {
         out->message(out, "inject-rsc-action", resource, operation, node,
                      (guint) 0);
         goto done; // Confirm action and update graph
@@ -686,7 +688,7 @@ simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
     out->message(out, "inject-fencing-action", target, op);
 
-    if (!pcmk__str_eq(op, "on", pcmk__str_casei)) {
+    if (!pcmk__str_eq(op, PCMK_ACTION_ON, pcmk__str_casei)) {
         int rc = pcmk_ok;
         GString *xpath = g_string_sized_new(512);
 

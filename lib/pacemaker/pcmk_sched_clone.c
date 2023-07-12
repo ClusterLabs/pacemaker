@@ -124,18 +124,23 @@ pcmk__clone_internal_constraints(pe_resource_t *rsc)
     pe_rsc_trace(rsc, "Creating internal constraints for clone %s", rsc->id);
 
     // Restart ordering: Stop -> stopped -> start -> started
-    pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_START,
+    pcmk__order_resource_actions(rsc, PCMK_ACTION_STOPPED,
+                                 rsc, PCMK_ACTION_START,
                                  pe_order_optional);
-    pcmk__order_resource_actions(rsc, RSC_START, rsc, RSC_STARTED,
+    pcmk__order_resource_actions(rsc, PCMK_ACTION_START,
+                                 rsc, PCMK_ACTION_RUNNING,
                                  pe_order_runnable_left);
-    pcmk__order_resource_actions(rsc, RSC_STOP, rsc, RSC_STOPPED,
+    pcmk__order_resource_actions(rsc, PCMK_ACTION_STOP,
+                                 rsc, PCMK_ACTION_STOPPED,
                                  pe_order_runnable_left);
 
     // Demoted -> stop and started -> promote
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
-        pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_STOP,
+        pcmk__order_resource_actions(rsc, PCMK_ACTION_DEMOTED,
+                                     rsc, PCMK_ACTION_STOP,
                                      pe_order_optional);
-        pcmk__order_resource_actions(rsc, RSC_STARTED, rsc, RSC_PROMOTE,
+        pcmk__order_resource_actions(rsc, PCMK_ACTION_RUNNING,
+                                     rsc, PCMK_ACTION_PROMOTE,
                                      pe_order_runnable_left);
     }
 
@@ -155,12 +160,14 @@ pcmk__clone_internal_constraints(pe_resource_t *rsc)
         // Start clone -> start instance -> clone started
         pcmk__order_starts(rsc, instance, pe_order_runnable_left
                                           |pe_order_implies_first_printed);
-        pcmk__order_resource_actions(instance, RSC_START, rsc, RSC_STARTED,
+        pcmk__order_resource_actions(instance, PCMK_ACTION_START,
+                                     rsc, PCMK_ACTION_RUNNING,
                                      pe_order_implies_then_printed);
 
         // Stop clone -> stop instance -> clone stopped
         pcmk__order_stops(rsc, instance, pe_order_implies_first_printed);
-        pcmk__order_resource_actions(instance, RSC_STOP, rsc, RSC_STOPPED,
+        pcmk__order_resource_actions(instance, PCMK_ACTION_STOP,
+                                     rsc, PCMK_ACTION_STOPPED,
                                      pe_order_implies_then_printed);
 
         /* Instances of ordered clones must be started and stopped by instance

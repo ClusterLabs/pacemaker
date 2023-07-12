@@ -203,12 +203,14 @@ pcmk__bundle_create_actions(pe_resource_t *rsc)
         bundled_resource->cmds->create_actions(bundled_resource);
 
         if (pcmk_is_set(bundled_resource->flags, pe_rsc_promotable)) {
-            pe__new_rsc_pseudo_action(rsc, RSC_PROMOTE, true, true);
-            action = pe__new_rsc_pseudo_action(rsc, RSC_PROMOTED, true, true);
+            pe__new_rsc_pseudo_action(rsc, PCMK_ACTION_PROMOTE, true, true);
+            action = pe__new_rsc_pseudo_action(rsc, PCMK_ACTION_PROMOTED,
+                                               true, true);
             action->priority = INFINITY;
 
-            pe__new_rsc_pseudo_action(rsc, RSC_DEMOTE, true, true);
-            action = pe__new_rsc_pseudo_action(rsc, RSC_DEMOTED, true, true);
+            pe__new_rsc_pseudo_action(rsc, PCMK_ACTION_DEMOTE, true, true);
+            action = pe__new_rsc_pseudo_action(rsc, PCMK_ACTION_DEMOTED,
+                                               true, true);
             action->priority = INFINITY;
         }
     }
@@ -243,13 +245,13 @@ replica_internal_constraints(pe__bundle_replica_t *replica, void *user_data)
                       pe_order_implies_first_printed);
 
     // Start replica container -> bundle is started
-    pcmk__order_resource_actions(replica->container, RSC_START, bundle,
-                                 RSC_STARTED,
+    pcmk__order_resource_actions(replica->container, PCMK_ACTION_START, bundle,
+                                 PCMK_ACTION_RUNNING,
                                  pe_order_implies_then_printed);
 
     // Stop replica container -> bundle is stopped
-    pcmk__order_resource_actions(replica->container, RSC_STOP, bundle,
-                                 RSC_STOPPED,
+    pcmk__order_resource_actions(replica->container, PCMK_ACTION_STOP, bundle,
+                                 PCMK_ACTION_STOPPED,
                                  pe_order_implies_then_printed);
 
     if (replica->ip != NULL) {
@@ -303,21 +305,23 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
     }
 
     // Start bundle -> start bundled clone
-    pcmk__order_resource_actions(rsc, RSC_START, bundled_resource,
-                                 RSC_START, pe_order_implies_first_printed);
+    pcmk__order_resource_actions(rsc, PCMK_ACTION_START, bundled_resource,
+                                 PCMK_ACTION_START,
+                                 pe_order_implies_first_printed);
 
     // Bundled clone is started -> bundle is started
-    pcmk__order_resource_actions(bundled_resource, RSC_STARTED,
-                                 rsc, RSC_STARTED,
+    pcmk__order_resource_actions(bundled_resource, PCMK_ACTION_RUNNING,
+                                 rsc, PCMK_ACTION_RUNNING,
                                  pe_order_implies_then_printed);
 
     // Stop bundle -> stop bundled clone
-    pcmk__order_resource_actions(rsc, RSC_STOP, bundled_resource, RSC_STOP,
+    pcmk__order_resource_actions(rsc, PCMK_ACTION_STOP, bundled_resource,
+                                 PCMK_ACTION_STOP,
                                  pe_order_implies_first_printed);
 
     // Bundled clone is stopped -> bundle is stopped
-    pcmk__order_resource_actions(bundled_resource, RSC_STOPPED,
-                                 rsc, RSC_STOPPED,
+    pcmk__order_resource_actions(bundled_resource, PCMK_ACTION_STOPPED,
+                                 rsc, PCMK_ACTION_STOPPED,
                                  pe_order_implies_then_printed);
 
     bundled_resource->cmds->internal_constraints(bundled_resource);
@@ -328,22 +332,23 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
     pcmk__promotable_restart_ordering(rsc);
 
     // Demote bundle -> demote bundled clone
-    pcmk__order_resource_actions(rsc, RSC_DEMOTE, bundled_resource, RSC_DEMOTE,
+    pcmk__order_resource_actions(rsc, PCMK_ACTION_DEMOTE, bundled_resource,
+                                 PCMK_ACTION_DEMOTE,
                                  pe_order_implies_first_printed);
 
     // Bundled clone is demoted -> bundle is demoted
-    pcmk__order_resource_actions(bundled_resource, RSC_DEMOTED,
-                                 rsc, RSC_DEMOTED,
+    pcmk__order_resource_actions(bundled_resource, PCMK_ACTION_DEMOTED,
+                                 rsc, PCMK_ACTION_DEMOTED,
                                  pe_order_implies_then_printed);
 
     // Promote bundle -> promote bundled clone
-    pcmk__order_resource_actions(rsc, RSC_PROMOTE,
-                                 bundled_resource, RSC_PROMOTE,
+    pcmk__order_resource_actions(rsc, PCMK_ACTION_PROMOTE,
+                                 bundled_resource, PCMK_ACTION_PROMOTE,
                                  pe_order_implies_first_printed);
 
     // Bundled clone is promoted -> bundle is promoted
-    pcmk__order_resource_actions(bundled_resource, RSC_PROMOTED,
-                                 rsc, RSC_PROMOTED,
+    pcmk__order_resource_actions(bundled_resource, PCMK_ACTION_PROMOTED,
+                                 rsc, PCMK_ACTION_PROMOTED,
                                  pe_order_implies_then_printed);
 }
 
@@ -867,11 +872,12 @@ order_replica_start_after(pe__bundle_replica_t *replica, void *user_data)
         return true;
     }
     pcmk__new_ordering(probed_replica->container,
-                       pcmk__op_key(probed_replica->container->id, RSC_STATUS,
-                                    0),
+                       pcmk__op_key(probed_replica->container->id,
+                                    PCMK_ACTION_MONITOR, 0),
                        NULL, replica->container,
-                       pcmk__op_key(replica->container->id, RSC_START, 0), NULL,
-                       pe_order_optional|pe_order_same_node,
+                       pcmk__op_key(replica->container->id, PCMK_ACTION_START,
+                                    0),
+                       NULL, pe_order_optional|pe_order_same_node,
                        replica->container->cluster);
     return true;
 }
@@ -929,7 +935,8 @@ create_replica_probes(pe__bundle_replica_t *replica, void *user_data)
          * running. This is required for REMOTE_CONTAINER_HACK to correctly
          * probe remote resources.
          */
-        char *probe_uuid = pcmk__op_key(replica->remote->id, RSC_STATUS, 0);
+        char *probe_uuid = pcmk__op_key(replica->remote->id,
+                                        PCMK_ACTION_MONITOR, 0);
         pe_action_t *probe = find_first_action(replica->remote->actions,
                                                probe_uuid, NULL,
                                                probe_data->node);
@@ -940,8 +947,8 @@ create_replica_probes(pe__bundle_replica_t *replica, void *user_data)
             pe_rsc_trace(probe_data->bundle, "Ordering %s probe on %s",
                          replica->remote->id, pe__node_name(probe_data->node));
             pcmk__new_ordering(replica->container,
-                               pcmk__op_key(replica->container->id, RSC_START,
-                                            0),
+                               pcmk__op_key(replica->container->id,
+                                            PCMK_ACTION_START, 0),
                                NULL, replica->remote, NULL, probe,
                                pe_order_probe, probe_data->bundle->cluster);
         }

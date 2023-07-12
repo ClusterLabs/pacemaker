@@ -186,8 +186,8 @@ apply_remote_ordering(pe_action_t *action)
               pcmk_is_set(remote_rsc->flags, pe_rsc_failed)? "failed " : "",
               remote_rsc->id, state2text(state));
 
-    if (pcmk__strcase_any_of(action->task, CRMD_ACTION_MIGRATE,
-                             CRMD_ACTION_MIGRATED, NULL)) {
+    if (pcmk__strcase_any_of(action->task, PCMK_ACTION_MIGRATE_TO,
+                             PCMK_ACTION_MIGRATE_FROM, NULL)) {
         /* Migration ops map to "no_action", but we need to apply the same
          * ordering as for stop or demote (see get_router_node()).
          */
@@ -328,8 +328,8 @@ apply_container_ordering(pe_action_t *action)
               pcmk_is_set(container->flags, pe_rsc_failed)? "failed " : "",
               container->id);
 
-    if (pcmk__strcase_any_of(action->task, CRMD_ACTION_MIGRATE,
-                             CRMD_ACTION_MIGRATED, NULL)) {
+    if (pcmk__strcase_any_of(action->task, PCMK_ACTION_MIGRATE_TO,
+                             PCMK_ACTION_MIGRATE_FROM, NULL)) {
         /* Migration ops map to "no_action", but we need to apply the same
          * ordering as for stop or demote (see get_router_node()).
          */
@@ -415,11 +415,12 @@ pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
          * any start of the resource in this transition.
          */
         if (action->rsc->is_remote_node &&
-            pcmk__str_eq(action->task, CRM_OP_CLEAR_FAILCOUNT,
+            pcmk__str_eq(action->task, PCMK_ACTION_CLEAR_FAILCOUNT,
                          pcmk__str_none)) {
 
             pcmk__new_ordering(action->rsc, NULL, action, action->rsc,
-                               pcmk__op_key(action->rsc->id, RSC_START, 0),
+                               pcmk__op_key(action->rsc->id, PCMK_ACTION_START,
+                                            0),
                                NULL, pe_order_optional, data_set);
 
             continue;
@@ -455,13 +456,13 @@ pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
          * remote connection. This ensures that if the connection fails to
          * start, we leave the resource running on the original node.
          */
-        if (pcmk__str_eq(action->task, RSC_START, pcmk__str_none)) {
+        if (pcmk__str_eq(action->task, PCMK_ACTION_START, pcmk__str_none)) {
             for (GList *item = action->rsc->actions; item != NULL;
                  item = item->next) {
                 pe_action_t *rsc_action = item->data;
 
                 if (!pe__same_node(rsc_action->node, action->node)
-                    && pcmk__str_eq(rsc_action->task, RSC_STOP,
+                    && pcmk__str_eq(rsc_action->task, PCMK_ACTION_STOP,
                                     pcmk__str_none)) {
                     pcmk__new_ordering(remote, start_key(remote), NULL,
                                        action->rsc, NULL, rsc_action,
@@ -545,7 +546,7 @@ pcmk__connection_host_for_action(const pe_action_t *action)
     bool partial_migration = false;
     const char *task = action->task;
 
-    if (pcmk__str_eq(task, CRM_OP_FENCE, pcmk__str_none)
+    if (pcmk__str_eq(task, PCMK_ACTION_STONITH, pcmk__str_none)
         || !pe__is_guest_or_remote_node(action->node)) {
         return NULL;
     }
@@ -594,7 +595,7 @@ pcmk__connection_host_for_action(const pe_action_t *action)
      * on.
      */
 
-    if (pcmk__str_eq(task, "notify", pcmk__str_none)) {
+    if (pcmk__str_eq(task, PCMK_ACTION_NOTIFY, pcmk__str_none)) {
         task = g_hash_table_lookup(action->meta, "notify_operation");
     }
 
@@ -610,8 +611,10 @@ pcmk__connection_host_for_action(const pe_action_t *action)
      * the connection's pseudo-start on the migration target, so the target is
      * the router node.
      */
-    if (pcmk__strcase_any_of(task, "cancel", "stop", "demote", "migrate_from",
-                             "migrate_to", NULL) && !partial_migration) {
+    if (pcmk__strcase_any_of(task, PCMK_ACTION_CANCEL, PCMK_ACTION_STOP,
+                             PCMK_ACTION_DEMOTE, PCMK_ACTION_MIGRATE_FROM,
+                             PCMK_ACTION_MIGRATE_TO, NULL)
+        && !partial_migration) {
         crm_trace("Routing %s for %s through remote connection's "
                   "current node %s (moving)%s",
                   action->task, (action->rsc? action->rsc->id : "no resource"),

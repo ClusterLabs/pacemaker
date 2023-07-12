@@ -111,7 +111,7 @@ fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node)
             } else if (action->type == pcmk__cluster_graph_action) {
                 const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
 
-                if (pcmk__str_eq(task, CRM_OP_FENCE, pcmk__str_casei)) {
+                if (pcmk__str_eq(task, PCMK_ACTION_STONITH, pcmk__str_casei)) {
                     continue;
                 }
             }
@@ -196,16 +196,16 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
 
     /* Decide whether update is necessary and what value to use */
     if ((interval_ms > 0)
-        || pcmk__str_eq(task, CRMD_ACTION_PROMOTE, pcmk__str_none)
-        || pcmk__str_eq(task, CRMD_ACTION_DEMOTE, pcmk__str_none)) {
+        || pcmk__str_eq(task, PCMK_ACTION_PROMOTE, pcmk__str_none)
+        || pcmk__str_eq(task, PCMK_ACTION_DEMOTE, pcmk__str_none)) {
         do_update = TRUE;
 
-    } else if (pcmk__str_eq(task, CRMD_ACTION_START, pcmk__str_none)) {
+    } else if (pcmk__str_eq(task, PCMK_ACTION_START, pcmk__str_none)) {
         do_update = TRUE;
         value = pcmk__s(controld_globals.transition_graph->failed_start_offset,
                         CRM_INFINITY_S);
 
-    } else if (pcmk__str_eq(task, CRMD_ACTION_STOP, pcmk__str_none)) {
+    } else if (pcmk__str_eq(task, PCMK_ACTION_STOP, pcmk__str_none)) {
         do_update = TRUE;
         value = pcmk__s(controld_globals.transition_graph->failed_stop_offset,
                         CRM_INFINITY_S);
@@ -314,7 +314,7 @@ get_cancel_action(const char *id, const char *node)
             pcmk__graph_action_t *action = (pcmk__graph_action_t *) gIter2->data;
 
             task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
-            if (!pcmk__str_eq(CRMD_ACTION_CANCEL, task, pcmk__str_casei)) {
+            if (!pcmk__str_eq(PCMK_ACTION_CANCEL, task, pcmk__str_casei)) {
                 continue;
             }
 

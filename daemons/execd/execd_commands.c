@@ -213,7 +213,7 @@ log_finished(const lrmd_cmd_t *cmd, int exec_time_ms, int queue_time_ms)
     int log_level = LOG_INFO;
     GString *str = g_string_sized_new(100); // reasonable starting size
 
-    if (pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)) {
+    if (pcmk__str_eq(cmd->action, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
         log_level = LOG_DEBUG;
     }
 
@@ -253,7 +253,7 @@ log_execute(lrmd_cmd_t * cmd)
 {
     int log_level = LOG_INFO;
 
-    if (pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)) {
+    if (pcmk__str_eq(cmd->action, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
         log_level = LOG_DEBUG;
     }
 
@@ -264,9 +264,9 @@ log_execute(lrmd_cmd_t * cmd)
 static const char *
 normalize_action_name(lrmd_rsc_t * rsc, const char *action)
 {
-    if (pcmk__str_eq(action, "monitor", pcmk__str_casei) &&
+    if (pcmk__str_eq(action, PCMK_ACTION_MONITOR, pcmk__str_casei) &&
         pcmk_is_set(pcmk_get_ra_caps(rsc->class), pcmk_ra_cap_status)) {
-        return "status";
+        return PCMK_ACTION_STATUS;
     }
     return action;
 }
@@ -517,7 +517,7 @@ schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     /* The controller expects the executor to automatically cancel
      * recurring operations before a resource stops.
      */
-    if (pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {
+    if (pcmk__str_eq(cmd->action, PCMK_ACTION_STOP, pcmk__str_casei)) {
         cancel_all_recurring(rsc, NULL);
     }
 
@@ -844,7 +844,8 @@ action_complete(svc_action_t * action)
 
     if (pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_SYSTEMD, pcmk__str_casei)) {
         if (pcmk__result_ok(&(cmd->result))
-            && pcmk__strcase_any_of(cmd->action, "start", "stop", NULL)) {
+            && pcmk__strcase_any_of(cmd->action, PCMK_ACTION_START,
+                                    PCMK_ACTION_STOP, NULL)) {
             /* systemd returns from start and stop actions after the action
              * begins, not after it completes. We have to jump through a few
              * hoops so that we don't report 'complete' to the rest of pacemaker
@@ -852,7 +853,7 @@ action_complete(svc_action_t * action)
              */
             goagain = true;
             cmd->real_action = cmd->action;
-            cmd->action = strdup("monitor");
+            cmd->action = strdup(PCMK_ACTION_MONITOR);
 
         } else if (cmd->real_action != NULL) {
             // This is follow-up monitor to check whether start/stop completed
@@ -860,7 +861,8 @@ action_complete(svc_action_t * action)
                 goagain = true;
 
             } else if (pcmk__result_ok(&(cmd->result))
-                       && pcmk__str_eq(cmd->real_action, "stop", pcmk__str_casei)) {
+                       && pcmk__str_eq(cmd->real_action, PCMK_ACTION_STOP,
+                                       pcmk__str_casei)) {
                 goagain = true;
 
             } else {
@@ -878,9 +880,11 @@ action_complete(svc_action_t * action)
                 if ((cmd->result.execution_status == PCMK_EXEC_DONE)
                     && (cmd->result.exit_status == PCMK_OCF_NOT_RUNNING)) {
 
-                    if (pcmk__str_eq(cmd->real_action, "start", pcmk__str_casei)) {
+                    if (pcmk__str_eq(cmd->real_action, PCMK_ACTION_START,
+                                     pcmk__str_casei)) {
                         cmd->result.exit_status = PCMK_OCF_UNKNOWN_ERROR;
-                    } else if (pcmk__str_eq(cmd->real_action, "stop", pcmk__str_casei)) {
+                    } else if (pcmk__str_eq(cmd->real_action, PCMK_ACTION_STOP,
+                                            pcmk__str_casei)) {
                         cmd->result.exit_status = PCMK_OCF_OK;
                     }
                 }
@@ -891,12 +895,12 @@ action_complete(svc_action_t * action)
 
 #if SUPPORT_NAGIOS
     if (rsc && pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
-        if (action_matches(cmd, "monitor", 0)
+        if (action_matches(cmd, PCMK_ACTION_MONITOR, 0)
             && pcmk__result_ok(&(cmd->result))) {
             /* Successfully executed --version for the nagios plugin */
             cmd->result.exit_status = PCMK_OCF_NOT_RUNNING;
 
-        } else if (pcmk__str_eq(cmd->action, "start", pcmk__str_casei)
+        } else if (pcmk__str_eq(cmd->action, PCMK_ACTION_START, pcmk__str_casei)
                    && !pcmk__result_ok(&(cmd->result))) {
 #ifdef PCMK__TIME_USE_CGT
             goagain = true;
@@ -1007,11 +1011,11 @@ stonith_action_complete(lrmd_cmd_t *cmd, int exit_status,
                 /* This should be possible only for probes in practice, but
                  * interpret for all actions to be safe.
                  */
-                if (pcmk__str_eq(cmd->action, CRMD_ACTION_STATUS,
+                if (pcmk__str_eq(cmd->action, PCMK_ACTION_MONITOR,
                                  pcmk__str_none)) {
                     exit_status = PCMK_OCF_NOT_RUNNING;
 
-                } else if (pcmk__str_eq(cmd->action, CRMD_ACTION_STOP,
+                } else if (pcmk__str_eq(cmd->action, PCMK_ACTION_STOP,
                                         pcmk__str_none)) {
                     exit_status = PCMK_OCF_OK;
 
@@ -1035,11 +1039,12 @@ stonith_action_complete(lrmd_cmd_t *cmd, int exit_status,
     // Certain successful actions change the known state of the resource
     if ((rsc != NULL) && pcmk__result_ok(&(cmd->result))) {
 
-        if (pcmk__str_eq(cmd->action, "start", pcmk__str_casei)) {
+        if (pcmk__str_eq(cmd->action, PCMK_ACTION_START, pcmk__str_casei)) {
             pcmk__set_result(&rsc->fence_probe_result, CRM_EX_OK,
                              PCMK_EXEC_DONE, NULL); // "running"
 
-        } else if (pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {
+        } else if (pcmk__str_eq(cmd->action, PCMK_ACTION_STOP,
+                                pcmk__str_casei)) {
             pcmk__set_result(&rsc->fence_probe_result, CRM_EX_ERROR,
                              PCMK_EXEC_NO_FENCE_DEVICE, NULL); // "not running"
         }
@@ -1235,7 +1240,7 @@ execute_stonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
 
     stonith_t *stonith_api = get_stonith_connection();
 
-    if (pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)
+    if (pcmk__str_eq(cmd->action, PCMK_ACTION_MONITOR, pcmk__str_casei)
         && (cmd->interval_ms == 0)) {
         // Probes don't require a fencer connection
         stonith_action_complete(cmd, rsc->fence_probe_result.exit_status,
@@ -1249,16 +1254,17 @@ execute_stonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
                                 "No connection to fencer");
         return;
 
-    } else if (pcmk__str_eq(cmd->action, "start", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(cmd->action, PCMK_ACTION_START, pcmk__str_casei)) {
         rc = execd_stonith_start(stonith_api, rsc, cmd);
         if (rc == pcmk_ok) {
             do_monitor = TRUE;
         }
 
-    } else if (pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(cmd->action, PCMK_ACTION_STOP, pcmk__str_casei)) {
         rc = execd_stonith_stop(stonith_api, rsc);
 
-    } else if (pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(cmd->action, PCMK_ACTION_MONITOR,
+                            pcmk__str_casei)) {
         do_monitor = TRUE;
 
     } else {
@@ -1297,7 +1303,7 @@ execute_nonstonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
 #if SUPPORT_NAGIOS
     /* Recurring operations are cancelled anyway for a stop operation */
     if (pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)
-        && pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {
+        && pcmk__str_eq(cmd->action, PCMK_ACTION_STOP, pcmk__str_casei)) {
 
         cmd->result.exit_status = PCMK_OCF_OK;
         cmd_finalize(cmd, rsc);

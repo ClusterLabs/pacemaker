@@ -107,15 +107,15 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
      * contain underbars. Here, list action names and name prefixes that can.
      */
     const char *actions_with_underbars[] = {
-        CRMD_ACTION_MIGRATED,
-        CRMD_ACTION_MIGRATE,
+        PCMK_ACTION_MIGRATE_FROM,
+        PCMK_ACTION_MIGRATE_TO,
         NULL
     };
     const char *action_prefixes_with_underbars[] = {
-        "pre_" CRMD_ACTION_NOTIFY,
-        "post_" CRMD_ACTION_NOTIFY,
-        "confirmed-pre_" CRMD_ACTION_NOTIFY,
-        "confirmed-post_" CRMD_ACTION_NOTIFY,
+        "pre_" PCMK_ACTION_NOTIFY,
+        "post_" PCMK_ACTION_NOTIFY,
+        "confirmed-pre_" PCMK_ACTION_NOTIFY,
+        "confirmed-post_" PCMK_ACTION_NOTIFY,
         NULL,
     };
 
@@ -470,11 +470,11 @@ crm_op_needs_metadata(const char *rsc_class, const char *op)
     }
 
     // Metadata is needed only for these actions
-    return pcmk__str_any_of(op, CRMD_ACTION_START, CRMD_ACTION_STATUS,
-                            CRMD_ACTION_PROMOTE, CRMD_ACTION_DEMOTE,
-                            CRMD_ACTION_RELOAD, CRMD_ACTION_RELOAD_AGENT,
-                            CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED,
-                            CRMD_ACTION_NOTIFY, NULL);
+    return pcmk__str_any_of(op, PCMK_ACTION_START, PCMK_ACTION_MONITOR,
+                            PCMK_ACTION_PROMOTE, PCMK_ACTION_DEMOTE,
+                            PCMK_ACTION_RELOAD, PCMK_ACTION_RELOAD_AGENT,
+                            PCMK_ACTION_MIGRATE_TO, PCMK_ACTION_MIGRATE_FROM,
+                            PCMK_ACTION_NOTIFY, NULL);
 }
 
 /*!
@@ -488,7 +488,8 @@ crm_op_needs_metadata(const char *rsc_class, const char *op)
 bool
 pcmk__is_fencing_action(const char *action)
 {
-    return pcmk__str_any_of(action, "off", "reboot", "poweroff", NULL);
+    return pcmk__str_any_of(action, PCMK_ACTION_OFF, PCMK_ACTION_REBOOT,
+                            "poweroff", NULL);
 }
 
 bool
@@ -498,7 +499,8 @@ pcmk_is_probe(const char *task, guint interval)
         return false;
     }
 
-    return (interval == 0) && pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_none);
+    return (interval == 0)
+           && pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_none);
 }
 
 bool

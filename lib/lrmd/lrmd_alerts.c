@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2022 the Pacemaker project contributors
+ * Copyright 2015-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -355,7 +355,7 @@ lrmd_send_resource_alert(lrmd_t *lrmd, const GList *alert_list,
 
     target_rc = rsc_op_expected_rc(op);
     if ((op->interval_ms == 0) && (target_rc == op->rc)
-        && pcmk__str_eq(op->op_type, RSC_STATUS, pcmk__str_casei)) {
+        && pcmk__str_eq(op->op_type, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
 
         /* Don't send alerts for probes with the expected result. Leave it up to
          * the agent whether to alert for 'failed' probes. (Even if we find a

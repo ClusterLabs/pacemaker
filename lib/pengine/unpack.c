@@ -262,7 +262,7 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
         pe_warn_once(pe_wo_poweroff,
                      "Support for stonith-action of 'poweroff' is deprecated "
                      "and will be removed in a future release (use 'off' instead)");
-        data_set->stonith_action = "off";
+        data_set->stonith_action = PCMK_ACTION_OFF;
     }
     crm_trace("STONITH will %s nodes", data_set->stonith_action);
 
@@ -2296,8 +2296,8 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
         rsc->clone_name = NULL;
 
     } else {
-        GList *possible_matches = pe__resource_actions(rsc, node, RSC_STOP,
-                                                       FALSE);
+        GList *possible_matches = pe__resource_actions(rsc, node,
+                                                       PCMK_ACTION_STOP, FALSE);
         GList *gIter = possible_matches;
 
         for (; gIter != NULL; gIter = gIter->next) {
@@ -2404,20 +2404,24 @@ calculate_active_ops(const GList *sorted_op_list, int *start_index,
         task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
         status = crm_element_value(rsc_op, XML_LRM_ATTR_OPSTATUS);
 
-        if (pcmk__str_eq(task, CRMD_ACTION_STOP, pcmk__str_casei)
+        if (pcmk__str_eq(task, PCMK_ACTION_STOP, pcmk__str_casei)
             && pcmk__str_eq(status, "0", pcmk__str_casei)) {
             *stop_index = counter;
 
-        } else if (pcmk__strcase_any_of(task, CRMD_ACTION_START, CRMD_ACTION_MIGRATED, NULL)) {
+        } else if (pcmk__strcase_any_of(task, PCMK_ACTION_START,
+                                        PCMK_ACTION_MIGRATE_FROM, NULL)) {
             *start_index = counter;
 
-        } else if ((implied_monitor_start <= *stop_index) && pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
+        } else if ((implied_monitor_start <= *stop_index)
+                   && pcmk__str_eq(task, PCMK_ACTION_MONITOR,
+                                   pcmk__str_casei)) {
             const char *rc = crm_element_value(rsc_op, XML_LRM_ATTR_RC);
 
             if (pcmk__strcase_any_of(rc, "0", "8", NULL)) {
                 implied_monitor_start = counter;
             }
-        } else if (pcmk__strcase_any_of(task, CRMD_ACTION_PROMOTE, CRMD_ACTION_DEMOTE, NULL)) {
+        } else if (pcmk__strcase_any_of(task, PCMK_ACTION_PROMOTE,
+                                        PCMK_ACTION_DEMOTE, NULL)) {
             implied_clone_start = counter;
         }
     }
@@ -2696,12 +2700,13 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
                    NULL);
 
     /* Need to check against transition_magic too? */
-    if ((source != NULL) && (strcmp(op, CRMD_ACTION_MIGRATE) == 0)) {
+    if ((source != NULL) && (strcmp(op, PCMK_ACTION_MIGRATE_TO) == 0)) {
         pcmk__g_strcat(xpath,
                        " and @" XML_LRM_ATTR_MIGRATE_TARGET "='", source, "']",
                        NULL);
 
-    } else if ((source != NULL) && (strcmp(op, CRMD_ACTION_MIGRATED) == 0)) {
+    } else if ((source != NULL)
+               && (strcmp(op, PCMK_ACTION_MIGRATE_FROM) == 0)) {
         pcmk__g_strcat(xpath,
                        " and @" XML_LRM_ATTR_MIGRATE_SOURCE "='", source, "']",
                        NULL);
@@ -2796,7 +2801,7 @@ monitor_not_running_after(const char *rsc_id, const char *node_name,
     /* Any probe/monitor operation on the node indicating it was not running
      * there
      */
-    xmlNode *monitor = find_lrm_op(rsc_id, CRMD_ACTION_STATUS, node_name,
+    xmlNode *monitor = find_lrm_op(rsc_id, PCMK_ACTION_MONITOR, node_name,
                                    NULL, PCMK_OCF_NOT_RUNNING, data_set);
 
     return (monitor && pe__is_newer_op(monitor, xml_op, same_node) > 0);
@@ -2836,8 +2841,9 @@ non_monitor_after(const char *rsc_id, const char *node_name,
 
         task = crm_element_value(op, XML_LRM_ATTR_TASK);
 
-        if (pcmk__str_any_of(task, CRMD_ACTION_START, CRMD_ACTION_STOP,
-                             CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED, NULL)
+        if (pcmk__str_any_of(task, PCMK_ACTION_START, PCMK_ACTION_STOP,
+                             PCMK_ACTION_MIGRATE_TO, PCMK_ACTION_MIGRATE_FROM,
+                             NULL)
             && pe__is_newer_op(op, xml_op, same_node) > 0) {
             return true;
         }
@@ -3037,8 +3043,8 @@ unpack_migrate_to_success(struct action_history *history)
                                         true, history->rsc->cluster);
 
     // Check for a migrate_from action from this source on the target
-    migrate_from = find_lrm_op(history->rsc->id, CRMD_ACTION_MIGRATED, target,
-                               source, -1, history->rsc->cluster);
+    migrate_from = find_lrm_op(history->rsc->id, PCMK_ACTION_MIGRATE_FROM,
+                               target, source, -1, history->rsc->cluster);
     if (migrate_from != NULL) {
         if (source_newer_op) {
             /* There's a newer non-monitor operation on the source and a
@@ -3152,9 +3158,9 @@ unpack_migrate_to_failure(struct action_history *history)
     history->rsc->role = RSC_ROLE_STARTED;
 
     // Check for migrate_from on the target
-    target_migrate_from = find_lrm_op(history->rsc->id, CRMD_ACTION_MIGRATED,
-                                      target, source, PCMK_OCF_OK,
-                                      history->rsc->cluster);
+    target_migrate_from = find_lrm_op(history->rsc->id,
+                                      PCMK_ACTION_MIGRATE_FROM, target, source,
+                                      PCMK_OCF_OK, history->rsc->cluster);
 
     if (/* If the resource state is unknown on the target, it will likely be
          * probed there.
@@ -3219,7 +3225,7 @@ unpack_migrate_from_failure(struct action_history *history)
     history->rsc->role = RSC_ROLE_STARTED;
 
     // Check for a migrate_to on the source
-    source_migrate_to = find_lrm_op(history->rsc->id, CRMD_ACTION_MIGRATE,
+    source_migrate_to = find_lrm_op(history->rsc->id, PCMK_ACTION_MIGRATE_TO,
                                     source, target, PCMK_OCF_OK,
                                     history->rsc->cluster);
 
@@ -3499,20 +3505,20 @@ unpack_rsc_op_failure(struct action_history *history, xmlNode **last_failure,
         *on_fail = action->on_fail;
     }
 
-    if (strcmp(history->task, CRMD_ACTION_STOP) == 0) {
+    if (strcmp(history->task, PCMK_ACTION_STOP) == 0) {
         resource_location(history->rsc, history->node, -INFINITY,
                           "__stop_fail__", history->rsc->cluster);
 
-    } else if (strcmp(history->task, CRMD_ACTION_MIGRATE) == 0) {
+    } else if (strcmp(history->task, PCMK_ACTION_MIGRATE_TO) == 0) {
         unpack_migrate_to_failure(history);
 
-    } else if (strcmp(history->task, CRMD_ACTION_MIGRATED) == 0) {
+    } else if (strcmp(history->task, PCMK_ACTION_MIGRATE_FROM) == 0) {
         unpack_migrate_from_failure(history);
 
-    } else if (strcmp(history->task, CRMD_ACTION_PROMOTE) == 0) {
+    } else if (strcmp(history->task, PCMK_ACTION_PROMOTE) == 0) {
         history->rsc->role = RSC_ROLE_PROMOTED;
 
-    } else if (strcmp(history->task, CRMD_ACTION_DEMOTE) == 0) {
+    } else if (strcmp(history->task, PCMK_ACTION_DEMOTE) == 0) {
         if (action->on_fail == action_fail_block) {
             history->rsc->role = RSC_ROLE_PROMOTED;
             pe__set_next_role(history->rsc, RSC_ROLE_STOPPED,
@@ -3573,7 +3579,7 @@ block_if_unrecoverable(struct action_history *history)
 {
     char *last_change_s = NULL;
 
-    if (strcmp(history->task, CRMD_ACTION_STOP) != 0) {
+    if (strcmp(history->task, PCMK_ACTION_STOP) != 0) {
         return; // All actions besides stop are always recoverable
     }
     if (pe_can_fence(history->node->details->data_set, history->node)) {
@@ -3843,8 +3849,7 @@ static bool
 should_clear_for_param_change(const xmlNode *xml_op, const char *task,
                               pe_resource_t *rsc, pe_node_t *node)
 {
-    if (!strcmp(task, "start") || !strcmp(task, "monitor")) {
-
+    if (pcmk__str_any_of(task, PCMK_ACTION_START, PCMK_ACTION_MONITOR, NULL)) {
         if (pe__bundle_needs_remote_name(rsc)) {
             /* We haven't allocated resources yet, so we can't reliably
              * substitute addr parameters for the REMOTE_CONTAINER_HACK.
@@ -3916,7 +3921,8 @@ should_ignore_failure_timeout(const pe_resource_t *rsc, const char *task,
      */
     if (rsc->remote_reconnect_ms
         && pcmk_is_set(rsc->cluster->flags, pe_flag_stonith_enabled)
-        && (interval_ms != 0) && pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
+        && (interval_ms != 0)
+        && pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
 
         pe_node_t *remote_node = pe_find_node(rsc->cluster->nodes, rsc->id);
 
@@ -4063,7 +4069,7 @@ check_operation_expiry(struct action_history *history)
     }
 
     if (expired && (history->interval_ms == 0)
-        && pcmk__str_eq(history->task, CRMD_ACTION_STATUS, pcmk__str_none)) {
+        && pcmk__str_eq(history->task, PCMK_ACTION_MONITOR, pcmk__str_none)) {
         switch (history->exit_status) {
             case PCMK_OCF_OK:
             case PCMK_OCF_NOT_RUNNING:
@@ -4141,7 +4147,7 @@ update_resource_state(struct action_history *history, int exit_status,
     } else if (exit_status == PCMK_OCF_NOT_RUNNING) {
         clear_past_failure = true;
 
-    } else if (pcmk__str_eq(history->task, CRMD_ACTION_STATUS,
+    } else if (pcmk__str_eq(history->task, PCMK_ACTION_MONITOR,
                             pcmk__str_none)) {
         if ((last_failure != NULL)
             && pcmk__str_eq(history->key, pe__xe_history_key(last_failure),
@@ -4152,20 +4158,20 @@ update_resource_state(struct action_history *history, int exit_status,
             set_active(history->rsc);
         }
 
-    } else if (pcmk__str_eq(history->task, CRMD_ACTION_START, pcmk__str_none)) {
+    } else if (pcmk__str_eq(history->task, PCMK_ACTION_START, pcmk__str_none)) {
         history->rsc->role = RSC_ROLE_STARTED;
         clear_past_failure = true;
 
-    } else if (pcmk__str_eq(history->task, CRMD_ACTION_STOP, pcmk__str_none)) {
+    } else if (pcmk__str_eq(history->task, PCMK_ACTION_STOP, pcmk__str_none)) {
         history->rsc->role = RSC_ROLE_STOPPED;
         clear_past_failure = true;
 
-    } else if (pcmk__str_eq(history->task, CRMD_ACTION_PROMOTE,
+    } else if (pcmk__str_eq(history->task, PCMK_ACTION_PROMOTE,
                             pcmk__str_none)) {
         history->rsc->role = RSC_ROLE_PROMOTED;
         clear_past_failure = true;
 
-    } else if (pcmk__str_eq(history->task, CRMD_ACTION_DEMOTE,
+    } else if (pcmk__str_eq(history->task, PCMK_ACTION_DEMOTE,
                             pcmk__str_none)) {
         if (*on_fail == action_fail_demote) {
             // Demote clears an error only if on-fail=demote
@@ -4173,12 +4179,12 @@ update_resource_state(struct action_history *history, int exit_status,
         }
         history->rsc->role = RSC_ROLE_UNPROMOTED;
 
-    } else if (pcmk__str_eq(history->task, CRMD_ACTION_MIGRATED,
+    } else if (pcmk__str_eq(history->task, PCMK_ACTION_MIGRATE_FROM,
                             pcmk__str_none)) {
         history->rsc->role = RSC_ROLE_STARTED;
         clear_past_failure = true;
 
-    } else if (pcmk__str_eq(history->task, CRMD_ACTION_MIGRATE,
+    } else if (pcmk__str_eq(history->task, PCMK_ACTION_MIGRATE_TO,
                             pcmk__str_none)) {
         unpack_migrate_to_success(history);
 
@@ -4246,14 +4252,14 @@ can_affect_state(struct action_history *history)
      * Currently, unknown operations can affect whether a resource is considered
      * active and/or failed.
      */
-     return pcmk__str_any_of(history->task, CRMD_ACTION_STATUS,
-                             CRMD_ACTION_START, CRMD_ACTION_STOP,
-                             CRMD_ACTION_PROMOTE, CRMD_ACTION_DEMOTE,
-                             CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED,
+     return pcmk__str_any_of(history->task, PCMK_ACTION_MONITOR,
+                             PCMK_ACTION_START, PCMK_ACTION_STOP,
+                             PCMK_ACTION_PROMOTE, PCMK_ACTION_DEMOTE,
+                             PCMK_ACTION_MIGRATE_TO, PCMK_ACTION_MIGRATE_FROM,
                              "asyncmon", NULL);
 #else
-     return !pcmk__str_any_of(history->task, CRMD_ACTION_NOTIFY,
-                              CRMD_ACTION_METADATA, NULL);
+     return !pcmk__str_any_of(history->task, PCMK_ACTION_NOTIFY,
+                              PCMK_ACTION_META_DATA, NULL);
 #endif
 }
 
@@ -4468,14 +4474,14 @@ process_pending_action(struct action_history *history,
         return;
     }
 
-    if (strcmp(history->task, CRMD_ACTION_START) == 0) {
+    if (strcmp(history->task, PCMK_ACTION_START) == 0) {
         pe__set_resource_flags(history->rsc, pe_rsc_start_pending);
         set_active(history->rsc);
 
-    } else if (strcmp(history->task, CRMD_ACTION_PROMOTE) == 0) {
+    } else if (strcmp(history->task, PCMK_ACTION_PROMOTE) == 0) {
         history->rsc->role = RSC_ROLE_PROMOTED;
 
-    } else if ((strcmp(history->task, CRMD_ACTION_MIGRATE) == 0)
+    } else if ((strcmp(history->task, PCMK_ACTION_MIGRATE_TO) == 0)
                && history->node->details->unclean) {
         /* A migrate_to action is pending on a unclean source, so force a stop
          * on the target.
@@ -4650,7 +4656,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     failure_strategy = get_action_on_fail(&history);
     if ((failure_strategy == action_fail_ignore)
         || (failure_strategy == action_fail_restart_container
-            && (strcmp(history.task, CRMD_ACTION_STOP) == 0))) {
+            && (strcmp(history.task, PCMK_ACTION_STOP) == 0))) {
 
         char *last_change_s = last_change_str(xml_op);
 

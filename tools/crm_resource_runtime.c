@@ -1324,8 +1324,9 @@ max_delay_for_resource(pe_working_set_t * data_set, pe_resource_t *rsc)
         }
 
     } else if(rsc) {
-        char *key = crm_strdup_printf("%s_%s_0", rsc->id, RSC_STOP);
-        pe_action_t *stop = custom_action(rsc, key, RSC_STOP, NULL, TRUE, FALSE, data_set);
+        char *key = crm_strdup_printf("%s_%s_0", rsc->id, PCMK_ACTION_STOP);
+        pe_action_t *stop = custom_action(rsc, key, PCMK_ACTION_STOP, NULL,
+                                          TRUE, FALSE, data_set);
         const char *value = g_hash_table_lookup(stop->meta, XML_ATTR_TIMEOUT);
         long long result_ll;
 
@@ -1521,8 +1522,8 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc,
                            NULL, XML_RSC_ATTR_TARGET_ROLE, &orig_target_role);
         rc = cli_resource_update_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS,
                                            NULL, XML_RSC_ATTR_TARGET_ROLE,
-                                           RSC_STOPPED, FALSE, cib, cib_options,
-                                           force);
+                                           PCMK_ACTION_STOPPED, FALSE, cib,
+                                           cib_options, force);
     }
     if(rc != pcmk_rc_ok) {
         out->err(out, "Could not set target-role for %s: %s (%d)", rsc_id, pcmk_strerror(rc), rc);
@@ -1711,7 +1712,7 @@ action_is_pending(const pe_action_t *action)
 {
     if (pcmk_any_flags_set(action->flags, pe_action_optional|pe_action_pseudo)
         || !pcmk_is_set(action->flags, pe_action_runnable)
-        || pcmk__str_eq("notify", action->task, pcmk__str_casei)) {
+        || pcmk__str_eq(PCMK_ACTION_NOTIFY, action->task, pcmk__str_casei)) {
         return false;
     }
     return true;
@@ -1853,10 +1854,10 @@ get_action(const char *rsc_action) {
     const char *action = NULL;
 
     if (pcmk__str_eq(rsc_action, "validate", pcmk__str_casei)) {
-        action = "validate-all";
+        action = PCMK_ACTION_VALIDATE_ALL;
 
     } else if (pcmk__str_eq(rsc_action, "force-check", pcmk__str_casei)) {
-        action = "monitor";
+        action = PCMK_ACTION_MONITOR;
 
     } else if (pcmk__strcase_any_of(rsc_action, "force-start", "force-stop",
                                     "force-demote", "force-promote", NULL)) {

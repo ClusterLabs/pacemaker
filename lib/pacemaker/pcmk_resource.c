@@ -57,9 +57,10 @@ best_op(const pe_resource_t *rsc, const pe_node_t *node)
 
         crm_element_value_ms(lrm_rsc_op, XML_LRM_ATTR_INTERVAL, &interval_ms);
         effective_op = interval_ms == 0
-                       && pcmk__strcase_any_of(task, RSC_STATUS,
-                                               RSC_START, RSC_PROMOTE,
-                                               RSC_MIGRATED, NULL);
+                       && pcmk__strcase_any_of(task, PCMK_ACTION_MONITOR,
+                                               PCMK_ACTION_START,
+                                               PCMK_ACTION_PROMOTE,
+                                               PCMK_ACTION_MIGRATE_FROM, NULL);
 
         if (best == NULL) {
             goto is_best;
@@ -140,7 +141,7 @@ pcmk__resource_digests(pcmk__output_t *out, pe_resource_t *rsc,
         crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
     }
     if (task == NULL) { // Assume start if no history is available
-        task = RSC_START;
+        task = PCMK_ACTION_START;
         interval_ms = 0;
     }
 

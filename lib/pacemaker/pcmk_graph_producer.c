@@ -117,7 +117,7 @@ add_maintenance_update(pe_working_set_t *data_set)
     pe_action_t *action = NULL;
 
     if (add_maintenance_nodes(NULL, data_set) != 0) {
-        action = get_pseudo_op(CRM_OP_MAINTENANCE_NODES, data_set);
+        action = get_pseudo_op(PCMK_ACTION_MAINTENANCE_NODES, data_set);
         pe__set_action_flags(action, pe_action_print_always);
     }
 }
@@ -139,13 +139,14 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action)
     CRM_CHECK((xml != NULL) && (action != NULL) && (action->node != NULL),
               return);
 
-    if (pcmk__str_eq(action->task, CRM_OP_SHUTDOWN, pcmk__str_none)) {
+    if (pcmk__str_eq(action->task, PCMK_ACTION_DO_SHUTDOWN, pcmk__str_none)) {
 
         /* Shutdown makes the action's node down */
         xmlNode *downed = create_xml_node(xml, XML_GRAPH_TAG_DOWNED);
         add_node_to_xml_by_id(action->node->details->id, downed);
 
-    } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_none)) {
+    } else if (pcmk__str_eq(action->task, PCMK_ACTION_STONITH,
+                            pcmk__str_none)) {
 
         /* Fencing makes the action's node and any hosted guest nodes down */
         const char *fence = g_hash_table_lookup(action->meta, "stonith_action");
@@ -158,7 +159,7 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action)
         }
 
     } else if (action->rsc && action->rsc->is_remote_node
-               && pcmk__str_eq(action->task, CRMD_ACTION_STOP,
+               && pcmk__str_eq(action->task, PCMK_ACTION_STOP,
                                pcmk__str_none)) {
 
         /* Stopping a remote connection resource makes connected node down,
@@ -172,7 +173,7 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action)
             input = ((pe_action_wrapper_t *) iter->data)->action;
             if ((input->rsc != NULL)
                 && pcmk__str_eq(action->rsc->id, input->rsc->id, pcmk__str_none)
-                && pcmk__str_eq(input->task, CRMD_ACTION_MIGRATED,
+                && pcmk__str_eq(input->task, PCMK_ACTION_MIGRATE_FROM,
                                 pcmk__str_none)) {
                 migrating = true;
                 break;
@@ -197,7 +198,7 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action)
 static char *
 clone_op_key(const pe_action_t *action, guint interval_ms)
 {
-    if (pcmk__str_eq(action->task, RSC_NOTIFY, pcmk__str_none)) {
+    if (pcmk__str_eq(action->task, PCMK_ACTION_NOTIFY, pcmk__str_none)) {
         const char *n_type = g_hash_table_lookup(action->meta, "notify_type");
         const char *n_task = g_hash_table_lookup(action->meta,
                                                  "notify_operation");
@@ -363,7 +364,7 @@ add_action_attributes(pe_action_t *action, xmlNode *action_xml)
 
         pcmk__add_bundle_meta_to_xml(args_xml, action);
 
-    } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_none)
+    } else if (pcmk__str_eq(action->task, PCMK_ACTION_STONITH, pcmk__str_none)
                && (action->node != NULL)) {
         /* Pass the node's attributes as meta-attributes.
          *
@@ -402,7 +403,7 @@ create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
 
     // Create the top-level element based on task
 
-    if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_none)) {
+    if (pcmk__str_eq(action->task, PCMK_ACTION_STONITH, pcmk__str_none)) {
         /* All fences need node info; guest node fences are pseudo-events */
         if (pcmk_is_set(action->flags, pe_action_pseudo)) {
             action_xml = create_xml_node(parent, XML_GRAPH_TAG_PSEUDO_EVENT);
@@ -411,17 +412,18 @@ create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
         }
 
     } else if (pcmk__str_any_of(action->task,
-                                CRM_OP_SHUTDOWN,
-                                CRM_OP_CLEAR_FAILCOUNT, NULL)) {
+                                PCMK_ACTION_DO_SHUTDOWN,
+                                PCMK_ACTION_CLEAR_FAILCOUNT, NULL)) {
         action_xml = create_xml_node(parent, XML_GRAPH_TAG_CRM_EVENT);
 
-    } else if (pcmk__str_eq(action->task, CRM_OP_LRM_DELETE, pcmk__str_none)) {
+    } else if (pcmk__str_eq(action->task, PCMK_ACTION_LRM_DELETE,
+                            pcmk__str_none)) {
         // CIB-only clean-up for shutdown locks
         action_xml = create_xml_node(parent, XML_GRAPH_TAG_CRM_EVENT);
         crm_xml_add(action_xml, PCMK__XA_MODE, XML_TAG_CIB);
 
     } else if (pcmk_is_set(action->flags, pe_action_pseudo)) {
-        if (pcmk__str_eq(action->task, CRM_OP_MAINTENANCE_NODES,
+        if (pcmk__str_eq(action->task, PCMK_ACTION_MAINTENANCE_NODES,
                          pcmk__str_none)) {
             needs_maintenance_info = true;
         }
@@ -513,7 +515,7 @@ should_add_action_to_graph(const pe_action_t *action)
      */
     if ((action->rsc != NULL)
         && !pcmk_is_set(action->rsc->flags, pe_rsc_managed)
-        && !pcmk__str_eq(action->task, RSC_STATUS, pcmk__str_none)) {
+        && !pcmk__str_eq(action->task, PCMK_ACTION_MONITOR, pcmk__str_none)) {
         const char *interval_ms_s;
 
         /* A cancellation of a recurring monitor will get here because the task
@@ -534,8 +536,8 @@ should_add_action_to_graph(const pe_action_t *action)
      * determined to be required and runnable by this point)
      */
     if (pcmk_is_set(action->flags, pe_action_pseudo)
-        || pcmk__strcase_any_of(action->task, CRM_OP_FENCE, CRM_OP_SHUTDOWN,
-                                NULL)) {
+        || pcmk__strcase_any_of(action->task, PCMK_ACTION_STONITH,
+                                PCMK_ACTION_DO_SHUTDOWN, NULL)) {
         return true;
     }
 
@@ -664,7 +666,8 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
         // load orderings are relevant only if actions are for same node
 
         if ((action->rsc != NULL)
-            && pcmk__str_eq(action->task, RSC_MIGRATE, pcmk__str_none)) {
+            && pcmk__str_eq(action->task, PCMK_ACTION_MIGRATE_TO,
+                            pcmk__str_none)) {
 
             pe_node_t *assigned = action->rsc->allocated_to;
 
@@ -1063,7 +1066,7 @@ pcmk__create_graph(pe_working_set_t *data_set)
             && !pcmk_is_set(action->rsc->flags, pe_rsc_maintenance)
             && !pcmk_any_flags_set(action->flags,
                                    pe_action_optional|pe_action_runnable)
-            && pcmk__str_eq(action->task, RSC_STOP, pcmk__str_none)) {
+            && pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_none)) {
             /* Eventually we should just ignore the 'fence' case, but for now
              * it's the best way to detect (in CTS) when CIB resource updates
              * are being lost.

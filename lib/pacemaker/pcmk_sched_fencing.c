@@ -72,7 +72,8 @@ order_start_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
                 break;
 
             case rsc_req_quorum:
-                if (pcmk__str_eq(action->task, RSC_START, pcmk__str_none)
+                if (pcmk__str_eq(action->task, PCMK_ACTION_START,
+                                 pcmk__str_none)
                     && (g_hash_table_lookup(rsc->allowed_nodes,
                                             target->details->id) != NULL)
                     && !rsc_is_known_on(rsc, target)) {
@@ -118,7 +119,7 @@ order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
     target = stonith_op->node;
 
     /* Get a list of stop actions potentially implied by the fencing */
-    action_list = pe__resource_actions(rsc, target, RSC_STOP, FALSE);
+    action_list = pe__resource_actions(rsc, target, PCMK_ACTION_STOP, FALSE);
 
     /* If resource requires fencing, implicit actions must occur after fencing.
      *
@@ -133,7 +134,8 @@ order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
     }
 
     if (action_list && order_implicit) {
-        parent_stop = find_first_action(top->actions, NULL, RSC_STOP, NULL);
+        parent_stop = find_first_action(top->actions, NULL, PCMK_ACTION_STOP,
+                                        NULL);
     }
 
     for (iter = action_list; iter != NULL; iter = iter->next) {
@@ -199,7 +201,7 @@ order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
          crm_info("Moving healthy resource %s off %s before fencing",
                   rsc->id, pe__node_name(node));
          pcmk__new_ordering(rsc, stop_key(rsc), NULL, NULL,
-                            strdup(CRM_OP_FENCE), stonith_op,
+                            strdup(PCMK_ACTION_STONITH), stonith_op,
                             pe_order_optional, rsc->cluster);
 #endif
     }
@@ -207,7 +209,7 @@ order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
     g_list_free(action_list);
 
     /* Get a list of demote actions potentially implied by the fencing */
-    action_list = pe__resource_actions(rsc, target, RSC_DEMOTE, FALSE);
+    action_list = pe__resource_actions(rsc, target, PCMK_ACTION_DEMOTE, FALSE);
 
     for (iter = action_list; iter != NULL; iter = iter->next) {
         pe_action_t *action = iter->data;
@@ -319,8 +321,8 @@ pcmk__order_vs_unfence(const pe_resource_t *rsc, pe_node_t *node,
          * the node being unfenced, and all its resources being stopped,
          * whenever a new resource is added -- which would be highly suboptimal.
          */
-        pe_action_t *unfence = pe_fence_op(node, "on", TRUE, NULL, FALSE,
-                                           node->details->data_set);
+        pe_action_t *unfence = pe_fence_op(node, PCMK_ACTION_ON, TRUE, NULL,
+                                           FALSE, node->details->data_set);
 
         order_actions(unfence, action, order);
 
@@ -355,7 +357,7 @@ pcmk__fence_guest(pe_node_t *node)
      * are creating a pseudo-event to describe fencing that is already occurring
      * by other means (container recovery).
      */
-    const char *fence_action = "off";
+    const char *fence_action = PCMK_ACTION_OFF;
 
     CRM_ASSERT(node != NULL);
 
@@ -364,12 +366,12 @@ pcmk__fence_guest(pe_node_t *node)
      */
     container = node->details->remote_rsc->container;
     if (container) {
-        stop = find_first_action(container->actions, NULL, CRMD_ACTION_STOP,
+        stop = find_first_action(container->actions, NULL, PCMK_ACTION_STOP,
                                  NULL);
 
-        if (find_first_action(container->actions, NULL, CRMD_ACTION_START,
+        if (find_first_action(container->actions, NULL, PCMK_ACTION_START,
                               NULL)) {
-            fence_action = "reboot";
+            fence_action = PCMK_ACTION_REBOOT;
         }
     }
 
@@ -411,7 +413,7 @@ pcmk__fence_guest(pe_node_t *node)
          * which will be ordered after any container (re-)probe.
          */
         stop = find_first_action(node->details->remote_rsc->actions, NULL,
-                                 RSC_STOP, NULL);
+                                 PCMK_ACTION_STOP, NULL);
 
         if (stop) {
             order_actions(stop, stonith_op, pe_order_optional);
@@ -461,7 +463,7 @@ pcmk__order_restart_vs_unfence(gpointer data, gpointer user_data)
     pe_node_t *node = (pe_node_t *) data;
     pe_resource_t *rsc = (pe_resource_t *) user_data;
 
-    pe_action_t *unfence = pe_fence_op(node, "on", true, NULL, false,
+    pe_action_t *unfence = pe_fence_op(node, PCMK_ACTION_ON, true, NULL, false,
                                        rsc->cluster);
 
     crm_debug("Ordering any stops of %s before %s, and any starts after",

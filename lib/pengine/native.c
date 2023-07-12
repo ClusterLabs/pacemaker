@@ -371,23 +371,28 @@ native_pending_state(const pe_resource_t *rsc)
 {
     const char *pending_state = NULL;
 
-    if (pcmk__str_eq(rsc->pending_task, CRMD_ACTION_START, pcmk__str_casei)) {
+    if (pcmk__str_eq(rsc->pending_task, PCMK_ACTION_START, pcmk__str_casei)) {
         pending_state = "Starting";
 
-    } else if (pcmk__str_eq(rsc->pending_task, CRMD_ACTION_STOP, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(rsc->pending_task, PCMK_ACTION_STOP,
+                            pcmk__str_casei)) {
         pending_state = "Stopping";
 
-    } else if (pcmk__str_eq(rsc->pending_task, CRMD_ACTION_MIGRATE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(rsc->pending_task, PCMK_ACTION_MIGRATE_TO,
+                            pcmk__str_casei)) {
         pending_state = "Migrating";
 
-    } else if (pcmk__str_eq(rsc->pending_task, CRMD_ACTION_MIGRATED, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(rsc->pending_task, PCMK_ACTION_MIGRATE_FROM,
+                            pcmk__str_casei)) {
        /* Work might be done in here. */
         pending_state = "Migrating";
 
-    } else if (pcmk__str_eq(rsc->pending_task, CRMD_ACTION_PROMOTE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(rsc->pending_task, PCMK_ACTION_PROMOTE,
+                            pcmk__str_casei)) {
         pending_state = "Promoting";
 
-    } else if (pcmk__str_eq(rsc->pending_task, CRMD_ACTION_DEMOTE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(rsc->pending_task, PCMK_ACTION_DEMOTE,
+                            pcmk__str_casei)) {
         pending_state = "Demoting";
     }
 
@@ -399,7 +404,7 @@ native_pending_task(const pe_resource_t *rsc)
 {
     const char *pending_task = NULL;
 
-    if (pcmk__str_eq(rsc->pending_task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
+    if (pcmk__str_eq(rsc->pending_task, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
         pending_task = "Monitoring";
 
     /* Pending probes are not printed, even if pending

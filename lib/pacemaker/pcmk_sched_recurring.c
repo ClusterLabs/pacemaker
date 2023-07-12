@@ -103,9 +103,11 @@ is_op_dup(const pe_resource_t *rsc, const char *name, guint interval_ms)
 static bool
 op_cannot_recur(const char *name)
 {
-    return pcmk__str_any_of(name, RSC_STOP, RSC_START, RSC_DEMOTE, RSC_PROMOTE,
-                            CRMD_ACTION_RELOAD_AGENT, CRMD_ACTION_MIGRATE,
-                            CRMD_ACTION_MIGRATED, NULL);
+    return pcmk__str_any_of(name, PCMK_ACTION_STOP, PCMK_ACTION_START,
+                            PCMK_ACTION_DEMOTE, PCMK_ACTION_PROMOTE,
+                            PCMK_ACTION_RELOAD_AGENT,
+                            PCMK_ACTION_MIGRATE_TO, PCMK_ACTION_MIGRATE_FROM,
+                            NULL);
 }
 
 /*!
@@ -409,7 +411,7 @@ static void
 order_after_probes(pe_resource_t *rsc, const pe_node_t *node,
                    pe_action_t *action)
 {
-    GList *probes = pe__resource_actions(rsc, node, RSC_STATUS, FALSE);
+    GList *probes = pe__resource_actions(rsc, node, PCMK_ACTION_MONITOR, FALSE);
 
     for (GList *iter = probes; iter != NULL; iter = iter->next) {
         order_actions((pe_action_t *) iter->data, action,
@@ -430,7 +432,7 @@ static void
 order_after_stops(pe_resource_t *rsc, const pe_node_t *node,
                   pe_action_t *action)
 {
-    GList *stop_ops = pe__resource_actions(rsc, node, RSC_STOP, TRUE);
+    GList *stop_ops = pe__resource_actions(rsc, node, PCMK_ACTION_STOP, TRUE);
 
     for (GList *iter = stop_ops; iter != NULL; iter = iter->next) {
         pe_action_t *stop = (pe_action_t *) iter->data;
@@ -624,10 +626,10 @@ pcmk__new_cancel_action(pe_resource_t *rsc, const char *task, guint interval_ms,
     // @TODO dangerous if possible to schedule another action with this key
     key = pcmk__op_key(rsc->id, task, interval_ms);
 
-    cancel_op = custom_action(rsc, key, RSC_CANCEL, node, FALSE, TRUE,
+    cancel_op = custom_action(rsc, key, PCMK_ACTION_CANCEL, node, FALSE, TRUE,
                               rsc->cluster);
 
-    pcmk__str_update(&cancel_op->task, RSC_CANCEL);
+    pcmk__str_update(&cancel_op->task, PCMK_ACTION_CANCEL);
     pcmk__str_update(&cancel_op->cancel_task, task);
 
     interval_ms_s = crm_strdup_printf("%u", interval_ms);

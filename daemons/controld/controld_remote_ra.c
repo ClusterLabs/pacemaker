@@ -407,10 +407,11 @@ check_remote_node_state(const remote_ra_cmd_t *cmd)
         return;
     }
 
-    if (pcmk__str_eq(cmd->action, "start", pcmk__str_casei)) {
+    if (pcmk__str_eq(cmd->action, PCMK_ACTION_START, pcmk__str_casei)) {
         remote_node_up(cmd->rsc_id);
 
-    } else if (pcmk__str_eq(cmd->action, "migrate_from", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(cmd->action, PCMK_ACTION_MIGRATE_FROM,
+                            pcmk__str_casei)) {
         /* After a successful migration, we don't need to do remote_node_up()
          * because the DC already knows the node is up, and we don't want to
          * clear LRM history etc. We do need to add the remote node to this
@@ -423,7 +424,7 @@ check_remote_node_state(const remote_ra_cmd_t *cmd)
         CRM_CHECK(node != NULL, return);
         pcmk__update_peer_state(__func__, node, CRM_NODE_MEMBER, 0);
 
-    } else if (pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(cmd->action, PCMK_ACTION_STOP, pcmk__str_casei)) {
         lrm_state_t *lrm_state = lrm_state_find(cmd->rsc_id);
         remote_ra_data_t *ra_data = lrm_state? lrm_state->remote_ra_data : NULL;
 
@@ -525,7 +526,8 @@ retry_start_cmd_cb(gpointer data)
         return FALSE;
     }
     cmd = ra_data->cur_cmd;
-    if (!pcmk__strcase_any_of(cmd->action, "start", "migrate_from", NULL)) {
+    if (!pcmk__strcase_any_of(cmd->action, PCMK_ACTION_START,
+                              PCMK_ACTION_MIGRATE_FROM, NULL)) {
         return FALSE;
     }
     update_remaining_timeout(cmd);
@@ -696,7 +698,8 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
             handle_remote_ra_stop(lrm_state, NULL);
             remote_node_down(lrm_state->node_name, DOWN_KEEP_LRM);
             /* now fake the reply of a successful 'stop' */
-            synthesize_lrmd_success(NULL, lrm_state->node_name, "stop");
+            synthesize_lrmd_success(NULL, lrm_state->node_name,
+                                    PCMK_ACTION_STOP);
         }
         return;
     }
@@ -710,8 +713,9 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
 
     /* Start actions and migrate from actions complete after connection
      * comes back to us. */
-    if (op->type == lrmd_event_connect && pcmk__strcase_any_of(cmd->action, "start",
-                                                               "migrate_from", NULL)) {
+    if ((op->type == lrmd_event_connect)
+        && pcmk__strcase_any_of(cmd->action, PCMK_ACTION_START,
+                                PCMK_ACTION_MIGRATE_FROM, NULL)) {
         if (op->connection_rc < 0) {
             update_remaining_timeout(cmd);
 
@@ -746,7 +750,9 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
         report_remote_ra_result(cmd);
         cmd_handled = TRUE;
 
-    } else if (op->type == lrmd_event_poke && pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)) {
+    } else if ((op->type == lrmd_event_poke)
+               && pcmk__str_eq(cmd->action, PCMK_ACTION_MONITOR,
+                               pcmk__str_casei)) {
 
         if (cmd->monitor_timeout_id) {
             g_source_remove(cmd->monitor_timeout_id);
@@ -773,7 +779,9 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
         }
         cmd_handled = TRUE;
 
-    } else if (op->type == lrmd_event_disconnect && pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)) {
+    } else if ((op->type == lrmd_event_disconnect)
+               && pcmk__str_eq(cmd->action, PCMK_ACTION_MONITOR,
+                               pcmk__str_casei)) {
         if (pcmk_is_set(ra_data->status, remote_active) &&
             !pcmk_is_set(cmd->status, cmd_cancel)) {
             pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
@@ -786,7 +794,9 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
         }
         cmd_handled = TRUE;
 
-    } else if (op->type == lrmd_event_new_client && pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {
+    } else if ((op->type == lrmd_event_new_client)
+               && pcmk__str_eq(cmd->action, PCMK_ACTION_STOP,
+                               pcmk__str_casei)) {
 
         handle_remote_ra_stop(lrm_state, cmd);
         cmd_handled = TRUE;
@@ -897,7 +907,8 @@ handle_remote_ra_exec(gpointer user_data)
         ra_data->cmds = g_list_remove_link(ra_data->cmds, first);
         g_list_free_1(first);
 
-        if (!strcmp(cmd->action, "start") || !strcmp(cmd->action, "migrate_from")) {
+        if (pcmk__str_any_of(cmd->action, PCMK_ACTION_START,
+                             PCMK_ACTION_MIGRATE_FROM, NULL)) {
             lrm_remote_clear_flags(lrm_state, expect_takeover | takeover_complete);
             if (handle_remote_ra_start(lrm_state, cmd,
                                        cmd->timeout) == pcmk_rc_ok) {
@@ -909,7 +920,7 @@ handle_remote_ra_exec(gpointer user_data)
             }
             report_remote_ra_result(cmd);
 
-        } else if (!strcmp(cmd->action, "monitor")) {
+        } else if (!strcmp(cmd->action, PCMK_ACTION_MONITOR)) {
 
             if (lrm_state_is_connected(lrm_state) == TRUE) {
                 rc = lrm_state_poke_connection(lrm_state);
@@ -932,7 +943,7 @@ handle_remote_ra_exec(gpointer user_data)
             }
             report_remote_ra_result(cmd);
 
-        } else if (!strcmp(cmd->action, "stop")) {
+        } else if (!strcmp(cmd->action, PCMK_ACTION_STOP)) {
 
             if (pcmk_is_set(ra_data->status, expect_takeover)) {
                 /* briefly wait on stop for the takeover event to occur. If the
@@ -948,13 +959,14 @@ handle_remote_ra_exec(gpointer user_data)
 
             handle_remote_ra_stop(lrm_state, cmd);
 
-        } else if (!strcmp(cmd->action, "migrate_to")) {
+        } else if (strcmp(cmd->action, PCMK_ACTION_MIGRATE_TO) == 0) {
             lrm_remote_clear_flags(lrm_state, takeover_complete);
             lrm_remote_set_flags(lrm_state, expect_takeover);
             pcmk__set_result(&(cmd->result), PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
             report_remote_ra_result(cmd);
-        } else if (pcmk__str_any_of(cmd->action, CRMD_ACTION_RELOAD,
-                                    CRMD_ACTION_RELOAD_AGENT, NULL))  {
+
+        } else if (pcmk__str_any_of(cmd->action, PCMK_ACTION_RELOAD,
+                                    PCMK_ACTION_RELOAD_AGENT, NULL))  {
             /* Currently the only reloadable parameter is reconnect_interval,
              * which is only used by the scheduler via the CIB, so reloads are a
              * no-op.
@@ -1044,13 +1056,13 @@ static gboolean
 is_remote_ra_supported_action(const char *action)
 {
     return pcmk__str_any_of(action,
-                            CRMD_ACTION_START,
-                            CRMD_ACTION_STOP,
-                            CRMD_ACTION_STATUS,
-                            CRMD_ACTION_MIGRATE,
-                            CRMD_ACTION_MIGRATED,
-                            CRMD_ACTION_RELOAD_AGENT,
-                            CRMD_ACTION_RELOAD,
+                            PCMK_ACTION_START,
+                            PCMK_ACTION_STOP,
+                            PCMK_ACTION_MONITOR,
+                            PCMK_ACTION_MIGRATE_TO,
+                            PCMK_ACTION_MIGRATE_FROM,
+                            PCMK_ACTION_RELOAD_AGENT,
+                            PCMK_ACTION_RELOAD,
                             NULL);
 }
 
@@ -1063,7 +1075,9 @@ fail_all_monitor_cmds(GList * list)
 
     for (gIter = list; gIter != NULL; gIter = gIter->next) {
         cmd = gIter->data;
-        if ((cmd->interval_ms > 0) && pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)) {
+        if ((cmd->interval_ms > 0)
+            && pcmk__str_eq(cmd->action, PCMK_ACTION_MONITOR,
+                            pcmk__str_casei)) {
             rm_list = g_list_append(rm_list, cmd);
         }
     }
@@ -1152,8 +1166,9 @@ handle_dup_monitor(remote_ra_data_t *ra_data, guint interval_ms,
 
     if (ra_data->cur_cmd &&
         !pcmk_is_set(ra_data->cur_cmd->status, cmd_cancel) &&
-        (ra_data->cur_cmd->interval_ms == interval_ms) &&
-        pcmk__str_eq(ra_data->cur_cmd->action, "monitor", pcmk__str_casei)) {
+        (ra_data->cur_cmd->interval_ms == interval_ms)
+        && pcmk__str_eq(ra_data->cur_cmd->action, PCMK_ACTION_MONITOR,
+                        pcmk__str_casei)) {
 
         cmd = ra_data->cur_cmd;
         goto handle_dup;
@@ -1162,7 +1177,8 @@ handle_dup_monitor(remote_ra_data_t *ra_data, guint interval_ms,
     for (gIter = ra_data->recurring_cmds; gIter != NULL; gIter = gIter->next) {
         cmd = gIter->data;
         if ((cmd->interval_ms == interval_ms)
-            && pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)) {
+            && pcmk__str_eq(cmd->action, PCMK_ACTION_MONITOR,
+                            pcmk__str_casei)) {
             goto handle_dup;
         }
     }
@@ -1170,7 +1186,8 @@ handle_dup_monitor(remote_ra_data_t *ra_data, guint interval_ms,
     for (gIter = ra_data->cmds; gIter != NULL; gIter = gIter->next) {
         cmd = gIter->data;
         if ((cmd->interval_ms == interval_ms)
-            && pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)) {
+            && pcmk__str_eq(cmd->action, PCMK_ACTION_MONITOR,
+                            pcmk__str_casei)) {
             goto handle_dup;
         }
     }
@@ -1180,7 +1197,7 @@ handle_dup_monitor(remote_ra_data_t *ra_data, guint interval_ms,
 handle_dup:
 
     crm_trace("merging duplicate monitor cmd " PCMK__OP_FMT,
-              cmd->rsc_id, "monitor", interval_ms);
+              cmd->rsc_id, PCMK_ACTION_MONITOR, interval_ms);
 
     /* update the userdata */
     if (userdata) {
@@ -1400,7 +1417,7 @@ remote_ra_maintenance(lrm_state_t * lrm_state, gboolean maintenance)
 }
 
 #define XPATH_PSEUDO_MAINTENANCE "//" XML_GRAPH_TAG_PSEUDO_EVENT \
-    "[@" XML_LRM_ATTR_TASK "='" CRM_OP_MAINTENANCE_NODES "']/" \
+    "[@" XML_LRM_ATTR_TASK "='" PCMK_ACTION_MAINTENANCE_NODES "']/" \
     XML_GRAPH_TAG_MAINTENANCE
 
 /*!

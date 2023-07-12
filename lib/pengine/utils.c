@@ -589,7 +589,8 @@ trigger_unfencing(pe_resource_t *rsc, pe_node_t *node, const char *reason,
               && node->details->online
               && node->details->unclean == FALSE
               && node->details->shutdown == FALSE) {
-        pe_action_t *unfence = pe_fence_op(node, "on", FALSE, reason, FALSE, data_set);
+        pe_action_t *unfence = pe_fence_op(node, PCMK_ACTION_ON, FALSE, reason,
+                                           FALSE, data_set);
 
         if(dependency) {
             order_actions(unfence, dependency, pe_order_optional);

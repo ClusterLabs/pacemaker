@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -128,13 +128,14 @@ find_rsc_op_entry_helper(const pe_resource_t *rsc, const char *key,
     }
 
     do_retry = FALSE;
-    if (strstr(key, CRMD_ACTION_MIGRATE) || strstr(key, CRMD_ACTION_MIGRATED)) {
+    if ((strstr(key, PCMK_ACTION_MIGRATE_TO) != NULL)
+        || (strstr(key, PCMK_ACTION_MIGRATE_FROM) != NULL)) {
         local_key = pcmk__op_key(rsc->id, "migrate", 0);
         key = local_key;
         goto retry;
 
     } else if (strstr(key, "_notify_")) {
-        local_key = pcmk__op_key(rsc->id, "notify", 0);
+        local_key = pcmk__op_key(rsc->id, PCMK_ACTION_NOTIFY, 0);
         key = local_key;
         goto retry;
     }
@@ -183,7 +184,7 @@ new_action(char *key, const char *task, pe_resource_t *rsc,
         action->node = pe__copy_node(node);
     }
 
-    if (pcmk__str_eq(task, CRM_OP_LRM_DELETE, pcmk__str_casei)) {
+    if (pcmk__str_eq(task, PCMK_ACTION_LRM_DELETE, pcmk__str_casei)) {
         // Resource history deletion for a node can be done on the DC
         pe__set_action_flags(action, pe_action_dc);
     }
@@ -338,7 +339,7 @@ update_resource_action_runnable(pe_action_t *action, bool for_graph,
                    action->uuid, pe__node_name(action->node));
         if (pcmk_is_set(action->rsc->flags, pe_rsc_managed)
             && for_graph
-            && pcmk__str_eq(action->task, CRMD_ACTION_STOP, pcmk__str_casei)
+            && pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_casei)
             && !(action->node->details->unclean)) {
             pe_fence_node(data_set, action->node, "stop is unrunnable", false);
         }
@@ -411,10 +412,10 @@ update_resource_flags_for_action(pe_resource_t *rsc, const pe_action_t *action)
     /* @COMPAT pe_rsc_starting and pe_rsc_stopping are not actually used
      * within Pacemaker, and should be deprecated and eventually removed
      */
-    if (pcmk__str_eq(action->task, CRMD_ACTION_STOP, pcmk__str_casei)) {
+    if (pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_casei)) {
         pe__set_resource_flags(rsc, pe_rsc_stopping);
 
-    } else if (pcmk__str_eq(action->task, CRMD_ACTION_START, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(action->task, PCMK_ACTION_START, pcmk__str_casei)) {
         if (pcmk_is_set(action->flags, pe_action_runnable)) {
             pe__set_resource_flags(rsc, pe_rsc_starting);
         } else {
@@ -438,7 +439,7 @@ unpack_operation_on_fail(pe_action_t * action)
     const char *interval_spec = NULL;
     const char *value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ON_FAIL);
 
-    if (pcmk__str_eq(action->task, CRMD_ACTION_STOP, pcmk__str_casei)
+    if (pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_casei)
         && !valid_stop_on_fail(value)) {
 
         pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for %s stop "
@@ -446,7 +447,8 @@ unpack_operation_on_fail(pe_action_t * action)
                          "allowed for stop", action->rsc->id, value);
         return NULL;
 
-    } else if (pcmk__str_eq(action->task, CRMD_ACTION_DEMOTE, pcmk__str_casei) && !value) {
+    } else if (pcmk__str_eq(action->task, PCMK_ACTION_DEMOTE, pcmk__str_casei)
+               && (value == NULL)) {
         // demote on_fail defaults to monitor value for promoted role if present
         xmlNode *operation = NULL;
 
@@ -468,7 +470,7 @@ unpack_operation_on_fail(pe_action_t * action)
                 continue;
             } else if (pcmk__xe_get_bool_attr(operation, "enabled", &enabled) == pcmk_rc_ok && !enabled) {
                 continue;
-            } else if (!pcmk__str_eq(name, "monitor", pcmk__str_casei)
+            } else if (!pcmk__str_eq(name, PCMK_ACTION_MONITOR, pcmk__str_casei)
                        || !pcmk__strcase_any_of(role, RSC_ROLE_PROMOTED_S,
                                                 RSC_ROLE_PROMOTED_LEGACY_S,
                                                 NULL)) {
@@ -481,7 +483,8 @@ unpack_operation_on_fail(pe_action_t * action)
 
             value = on_fail;
         }
-    } else if (pcmk__str_eq(action->task, CRM_OP_LRM_DELETE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(action->task, PCMK_ACTION_LRM_DELETE,
+                            pcmk__str_casei)) {
         value = "ignore";
 
     } else if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
@@ -490,8 +493,8 @@ unpack_operation_on_fail(pe_action_t * action)
         interval_spec = crm_element_value(action->op_entry,
                                           XML_LRM_ATTR_INTERVAL);
 
-        if (!pcmk__str_eq(name, CRMD_ACTION_PROMOTE, pcmk__str_casei)
-            && (!pcmk__str_eq(name, CRMD_ACTION_STATUS, pcmk__str_casei)
+        if (!pcmk__str_eq(name, PCMK_ACTION_PROMOTE, pcmk__str_casei)
+            && (!pcmk__str_eq(name, PCMK_ACTION_MONITOR, pcmk__str_casei)
                 || !pcmk__strcase_any_of(role, RSC_ROLE_PROMOTED_S,
                                          RSC_ROLE_PROMOTED_LEGACY_S, NULL)
                 || (crm_parse_interval_spec(interval_spec) == 0))) {
@@ -604,7 +607,7 @@ find_min_interval_mon(pe_resource_t * rsc, gboolean include_disabled)
                 continue;
             }
 
-            if (!pcmk__str_eq(name, RSC_STATUS, pcmk__str_casei)) {
+            if (!pcmk__str_eq(name, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
                 continue;
             }
 
@@ -729,7 +732,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
      */
     if (pcmk_is_set(pcmk_get_ra_caps(rsc_rule_data.standard),
                     pcmk_ra_cap_fence_params)
-        && (pcmk__str_eq(action->task, RSC_START, pcmk__str_casei)
+        && (pcmk__str_eq(action->task, PCMK_ACTION_START, pcmk__str_casei)
             || is_probe)) {
 
         GHashTable *params = pe_rsc_params(action->rsc, action->node, data_set);
@@ -750,7 +753,8 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
     g_hash_table_replace(action->meta, strdup(XML_ATTR_TIMEOUT),
                          pcmk__itoa(timeout_ms));
 
-    if (!pcmk__strcase_any_of(action->task, RSC_START, RSC_PROMOTE, NULL)) {
+    if (!pcmk__strcase_any_of(action->task, PCMK_ACTION_START,
+                              PCMK_ACTION_PROMOTE, NULL)) {
         action->needs = rsc_req_nothing;
         value = "nothing (not start or promote)";
 
@@ -845,9 +849,10 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
      * failures. */
     } else if (((value == NULL) || !pcmk_is_set(action->rsc->flags, pe_rsc_managed))
                && pe__resource_is_remote_conn(action->rsc, data_set)
-               && !(pcmk__str_eq(action->task, CRMD_ACTION_STATUS, pcmk__str_casei)
+               && !(pcmk__str_eq(action->task, PCMK_ACTION_MONITOR,
+                                 pcmk__str_casei)
                     && (interval_ms == 0))
-               && !pcmk__str_eq(action->task, CRMD_ACTION_START, pcmk__str_casei)) {
+               && !pcmk__str_eq(action->task, PCMK_ACTION_START, pcmk__str_casei)) {
 
         if (!pcmk_is_set(action->rsc->flags, pe_rsc_managed)) {
             action->on_fail = action_fail_stop;
@@ -867,7 +872,9 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
             action->on_fail = action_fail_reset_remote;
         }
 
-    } else if (value == NULL && pcmk__str_eq(action->task, CRMD_ACTION_STOP, pcmk__str_casei)) {
+    } else if ((value == NULL)
+               && pcmk__str_eq(action->task, PCMK_ACTION_STOP,
+                               pcmk__str_casei)) {
         if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
             action->on_fail = action_fail_fence;
             value = "resource fence (default)";
@@ -898,7 +905,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
     }
     /* defaults */
     if (action->fail_role == RSC_ROLE_UNKNOWN) {
-        if (pcmk__str_eq(action->task, CRMD_ACTION_PROMOTE, pcmk__str_casei)) {
+        if (pcmk__str_eq(action->task, PCMK_ACTION_PROMOTE, pcmk__str_casei)) {
             action->fail_role = RSC_ROLE_UNPROMOTED;
         } else {
             action->fail_role = RSC_ROLE_STARTED;
@@ -1092,11 +1099,13 @@ pe_fence_op(pe_node_t *node, const char *op, bool optional,
         op = data_set->stonith_action;
     }
 
-    op_key = crm_strdup_printf("%s-%s-%s", CRM_OP_FENCE, node->details->uname, op);
+    op_key = crm_strdup_printf("%s-%s-%s",
+                               PCMK_ACTION_STONITH, node->details->uname, op);
 
     stonith_op = lookup_singleton(data_set, op_key);
     if(stonith_op == NULL) {
-        stonith_op = custom_action(NULL, op_key, CRM_OP_FENCE, node, TRUE, TRUE, data_set);
+        stonith_op = custom_action(NULL, op_key, PCMK_ACTION_STONITH, node,
+                                   TRUE, TRUE, data_set);
 
         add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET, node->details->uname);
         add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET_UUID, node->details->id);
@@ -1482,8 +1491,8 @@ pe__clear_resource_history(pe_resource_t *rsc, const pe_node_t *node,
     char *key = NULL;
 
     CRM_ASSERT(rsc && node);
-    key = pcmk__op_key(rsc->id, CRM_OP_LRM_DELETE, 0);
-    return custom_action(rsc, key, CRM_OP_LRM_DELETE, node, FALSE, TRUE,
+    key = pcmk__op_key(rsc->id, PCMK_ACTION_LRM_DELETE, 0);
+    return custom_action(rsc, key, PCMK_ACTION_LRM_DELETE, node, FALSE, TRUE,
                          data_set);
 }
 

@@ -1,7 +1,7 @@
 /*
  * Original copyright 2010 Senko Rasic <senko.rasic@dobarkod.hr>
  *                         and Ante Karamatic <ivoks@init.hr>
- * Later changes copyright 2012-2022 the Pacemaker project contributors
+ * Later changes copyright 2012-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -412,7 +412,7 @@ set_result_from_method_error(svc_action_t *op, const DBusError *error)
 
     if (strstr(error->name, UPSTART_06_API ".Error.UnknownInstance")) {
 
-        if (pcmk__str_eq(op->action, "stop", pcmk__str_casei)) {
+        if (pcmk__str_eq(op->action, PCMK_ACTION_STOP, pcmk__str_casei)) {
             crm_trace("Masking stop failure (%s) for %s "
                       "because unknown service can be considered stopped",
                       error->name, pcmk__s(op->rsc, "unknown resource"));
@@ -423,7 +423,7 @@ set_result_from_method_error(svc_action_t *op, const DBusError *error)
         services__set_result(op, PCMK_OCF_NOT_INSTALLED,
                              PCMK_EXEC_NOT_INSTALLED, "Upstart job not found");
 
-    } else if (pcmk__str_eq(op->action, "start", pcmk__str_casei)
+    } else if (pcmk__str_eq(op->action, PCMK_ACTION_START, pcmk__str_casei)
                && strstr(error->name, UPSTART_06_API ".Error.AlreadyStarted")) {
         crm_trace("Masking start failure (%s) for %s "
                   "because already started resource is OK",
@@ -462,7 +462,7 @@ job_method_complete(DBusPendingCall *pending, void *user_data)
         set_result_from_method_error(op, &error);
         dbus_error_free(&error);
 
-    } else if (pcmk__str_eq(op->action, "stop", pcmk__str_none)) {
+    } else if (pcmk__str_eq(op->action, PCMK_ACTION_STOP, pcmk__str_none)) {
         // Call has no return value
         crm_debug("DBus request for stop of %s succeeded",
                   pcmk__s(op->rsc, "unknown resource"));
@@ -539,14 +539,14 @@ services__execute_upstart(svc_action_t *op)
         goto cleanup;
     }
 
-    if (pcmk__str_eq(op->action, "meta-data", pcmk__str_casei)) {
+    if (pcmk__str_eq(op->action, PCMK_ACTION_META_DATA, pcmk__str_casei)) {
         op->stdout_data = upstart_job_metadata(op->agent);
         services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
         goto cleanup;
     }
 
     if (!object_path_for_job(op->agent, &job, op->timeout)) {
-        if (pcmk__str_eq(action, "stop", pcmk__str_none)) {
+        if (pcmk__str_eq(action, PCMK_ACTION_STOP, pcmk__str_none)) {
             services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
         } else {
             services__set_result(op, PCMK_OCF_NOT_INSTALLED,
@@ -563,7 +563,8 @@ services__execute_upstart(svc_action_t *op)
         goto cleanup;
     }
 
-    if (pcmk__strcase_any_of(op->action, "monitor", "status", NULL)) {
+    if (pcmk__strcase_any_of(op->action, PCMK_ACTION_MONITOR,
+                             PCMK_ACTION_STATUS, NULL)) {
         DBusPendingCall *pending = NULL;
         char *state = NULL;
         char *path = get_first_instance(job, op->timeout);
@@ -598,10 +599,10 @@ services__execute_upstart(svc_action_t *op)
 
         goto cleanup;
 
-    } else if (pcmk__str_eq(action, "start", pcmk__str_none)) {
+    } else if (pcmk__str_eq(action, PCMK_ACTION_START, pcmk__str_none)) {
         action = "Start";
 
-    } else if (pcmk__str_eq(action, "stop", pcmk__str_none)) {
+    } else if (pcmk__str_eq(action, PCMK_ACTION_STOP, pcmk__str_none)) {
         action = "Stop";
 
     } else if (pcmk__str_eq(action, "restart", pcmk__str_none)) {
@@ -665,7 +666,7 @@ services__execute_upstart(svc_action_t *op)
         set_result_from_method_error(op, &error);
         dbus_error_free(&error);
 
-    } else if (pcmk__str_eq(op->action, "stop", pcmk__str_none)) {
+    } else if (pcmk__str_eq(op->action, PCMK_ACTION_STOP, pcmk__str_none)) {
         // DBus call does not return a value
         services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
 

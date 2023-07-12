@@ -99,7 +99,7 @@ action_uuid_for_ordering(const char *first_uuid, const pe_resource_t *first_rsc)
     enum action_tasks remapped_task = no_action;
 
     // Only non-notify actions for collective resources need remapping
-    if ((strstr(first_uuid, "notify") != NULL)
+    if ((strstr(first_uuid, PCMK_ACTION_NOTIFY) != NULL)
         || (first_rsc->variant < pe_group)) {
         goto done;
     }
@@ -456,7 +456,7 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
         && !pcmk_is_set(first->rsc->flags, pe_rsc_managed)
         && pcmk_is_set(first->rsc->flags, pe_rsc_block)
         && !pcmk_is_set(first->flags, pe_action_runnable)
-        && pcmk__str_eq(first->task, RSC_STOP, pcmk__str_none)) {
+        && pcmk__str_eq(first->task, PCMK_ACTION_STOP, pcmk__str_none)) {
 
         if (pcmk_is_set(then->flags, pe_action_runnable)) {
             pe__clear_action_flags(then, pe_action_runnable);
@@ -534,7 +534,7 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
 
         if ((first->rsc != NULL)
             && (first->rsc->variant == pe_group)
-            && pcmk__str_eq(first->task, RSC_START, pcmk__str_none)) {
+            && pcmk__str_eq(first->task, PCMK_ACTION_START, pcmk__str_none)) {
 
             first_node = first->rsc->fns->location(first->rsc, NULL, FALSE);
             if (first_node != NULL) {
@@ -545,7 +545,7 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
 
         if ((then->rsc != NULL)
             && (then->rsc->variant == pe_group)
-            && pcmk__str_eq(then->task, RSC_START, pcmk__str_none)) {
+            && pcmk__str_eq(then->task, PCMK_ACTION_START, pcmk__str_none)) {
 
             then_node = then->rsc->fns->location(then->rsc, NULL, FALSE);
             if (then_node != NULL) {
@@ -578,7 +578,7 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
              * (e.g. a required stop cancels any agent reload).
              */
             pe__set_action_flags(other->action, pe_action_optional);
-            if (!strcmp(first->task, CRMD_ACTION_RELOAD_AGENT)) {
+            if (!strcmp(first->task, PCMK_ACTION_RELOAD_AGENT)) {
                 pe__clear_resource_flags(first->rsc, pe_rsc_reload);
             }
         }
@@ -714,13 +714,13 @@ handle_asymmetric_ordering(const pe_action_t *first, pe_action_t *then)
         enum rsc_role_e then_rsc_role = then->rsc->fns->state(then->rsc, TRUE);
 
         if ((then_rsc_role == RSC_ROLE_STOPPED)
-            && pcmk__str_eq(then->task, RSC_STOP, pcmk__str_none)) {
+            && pcmk__str_eq(then->task, PCMK_ACTION_STOP, pcmk__str_none)) {
             /* If 'then' should stop after 'first' but is already stopped, the
              * ordering is irrelevant.
              */
             return;
         } else if ((then_rsc_role >= RSC_ROLE_STARTED)
-            && pcmk__str_eq(then->task, RSC_START, pcmk__str_none)
+            && pcmk__str_eq(then->task, PCMK_ACTION_START, pcmk__str_none)
             && pe__rsc_running_on_only(then->rsc, then->node)) {
             /* Similarly if 'then' should start after 'first' but is already
              * started on a single node.
@@ -1049,11 +1049,11 @@ pcmk__new_shutdown_action(pe_node_t *node)
 
     CRM_ASSERT(node != NULL);
 
-    shutdown_id = crm_strdup_printf("%s-%s", CRM_OP_SHUTDOWN,
+    shutdown_id = crm_strdup_printf("%s-%s", PCMK_ACTION_DO_SHUTDOWN,
                                     node->details->uname);
 
-    shutdown_op = custom_action(NULL, shutdown_id, CRM_OP_SHUTDOWN, node, FALSE,
-                                TRUE, node->details->data_set);
+    shutdown_op = custom_action(NULL, shutdown_id, PCMK_ACTION_DO_SHUTDOWN,
+                                node, FALSE, TRUE, node->details->data_set);
 
     pcmk__order_stops_before_shutdown(node, shutdown_op);
     add_hash_param(shutdown_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
@@ -1136,17 +1136,17 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
      * only ever get results for actions scheduled by us, so we can reasonably
      * assume any "reload" is actually a pre-1.1 agent reload.
      */
-    if (pcmk__str_any_of(task, CRMD_ACTION_RELOAD, CRMD_ACTION_RELOAD_AGENT,
+    if (pcmk__str_any_of(task, PCMK_ACTION_RELOAD, PCMK_ACTION_RELOAD_AGENT,
                          NULL)) {
         if (op->op_status == PCMK_EXEC_DONE) {
-            task = CRMD_ACTION_START;
+            task = PCMK_ACTION_START;
         } else {
-            task = CRMD_ACTION_STATUS;
+            task = PCMK_ACTION_MONITOR;
         }
     }
 
     key = pcmk__op_key(op->rsc_id, task, op->interval_ms);
-    if (pcmk__str_eq(task, CRMD_ACTION_NOTIFY, pcmk__str_none)) {
+    if (pcmk__str_eq(task, PCMK_ACTION_NOTIFY, pcmk__str_none)) {
         const char *n_type = crm_meta_value(op->params, "notify_type");
         const char *n_task = crm_meta_value(op->params, "notify_operation");
 
@@ -1166,8 +1166,8 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     /* Migration history is preserved separately, which usually matters for
      * multiple nodes and is important for future cluster transitions.
      */
-    } else if (pcmk__str_any_of(op->op_type, CRMD_ACTION_MIGRATE,
-                                CRMD_ACTION_MIGRATED, NULL)) {
+    } else if (pcmk__str_any_of(op->op_type, PCMK_ACTION_MIGRATE_TO,
+                                PCMK_ACTION_MIGRATE_FROM, NULL)) {
         op_id = strdup(key);
 
     } else if (did_rsc_op_fail(op, target_rc)) {
@@ -1241,8 +1241,8 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
         }
     }
 
-    if (pcmk__str_any_of(op->op_type, CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED,
-                         NULL)) {
+    if (pcmk__str_any_of(op->op_type, PCMK_ACTION_MIGRATE_TO,
+                         PCMK_ACTION_MIGRATE_FROM, NULL)) {
         /*
          * Record migrate_source and migrate_target always for migrate ops.
          */
@@ -1300,7 +1300,7 @@ pcmk__action_locks_rsc_to_node(const pe_action_t *action)
      * a demote would cause the controller to clear the lock)
      */
     if (action->node->details->shutdown && (action->task != NULL)
-        && (strcmp(action->task, RSC_STOP) != 0)) {
+        && (strcmp(action->task, PCMK_ACTION_STOP) != 0)) {
         return false;
     }
 
@@ -1397,10 +1397,12 @@ pcmk__output_actions(pe_working_set_t *data_set)
             continue; // This action was not scheduled
         }
 
-        if (pcmk__str_eq(action->task, CRM_OP_SHUTDOWN, pcmk__str_none)) {
+        if (pcmk__str_eq(action->task, PCMK_ACTION_DO_SHUTDOWN,
+                         pcmk__str_none)) {
             task = strdup("Shutdown");
 
-        } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_none)) {
+        } else if (pcmk__str_eq(action->task, PCMK_ACTION_STONITH,
+                                pcmk__str_none)) {
             const char *op = g_hash_table_lookup(action->meta,
                                                  "stonith_action");
 
@@ -1469,9 +1471,10 @@ task_for_digest(const char *task, guint interval_ms)
     /* Certain actions need to be compared against the parameters used to start
      * the resource.
      */
-    if ((interval_ms == 0) && pcmk__str_any_of(task, RSC_STATUS, RSC_MIGRATED,
-                                               RSC_PROMOTE, NULL)) {
-        task = RSC_START;
+    if ((interval_ms == 0)
+        && pcmk__str_any_of(task, PCMK_ACTION_MONITOR, PCMK_ACTION_MIGRATE_FROM,
+                            PCMK_ACTION_PROMOTE, NULL)) {
+        task = PCMK_ACTION_START;
     }
     return task;
 }
@@ -1572,14 +1575,14 @@ schedule_reload(gpointer data, gpointer user_data)
     if (pcmk_is_set(rsc->flags, pe_rsc_start_pending)) {
         pe_rsc_trace(rsc, "%s: preventing agent reload because start pending",
                      rsc->id);
-        custom_action(rsc, stop_key(rsc), CRMD_ACTION_STOP, node, FALSE, TRUE,
+        custom_action(rsc, stop_key(rsc), PCMK_ACTION_STOP, node, FALSE, TRUE,
                       rsc->cluster);
         return;
     }
 
     // Schedule the reload
     pe__set_resource_flags(rsc, pe_rsc_reload);
-    reload = custom_action(rsc, reload_key(rsc), CRMD_ACTION_RELOAD_AGENT, node,
+    reload = custom_action(rsc, reload_key(rsc), PCMK_ACTION_RELOAD_AGENT, node,
                            FALSE, TRUE, rsc->cluster);
     pe_action_set_reason(reload, "resource definition change", FALSE);
 
@@ -1812,8 +1815,10 @@ process_rsc_history(const xmlNode *rsc_entry, pe_resource_t *rsc,
                                   task, interval_ms, node, "maintenance mode");
 
         } else if ((interval_ms > 0)
-                   || pcmk__strcase_any_of(task, RSC_STATUS, RSC_START,
-                                           RSC_PROMOTE, RSC_MIGRATED, NULL)) {
+                   || pcmk__strcase_any_of(task, PCMK_ACTION_MONITOR,
+                                           PCMK_ACTION_START,
+                                           PCMK_ACTION_PROMOTE,
+                                           PCMK_ACTION_MIGRATE_FROM, NULL)) {
             /* If a resource operation failed, and the operation's definition
              * has changed, clear any fail count so they can be retried fresh.
              */

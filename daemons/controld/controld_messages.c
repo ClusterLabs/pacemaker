@@ -701,7 +701,7 @@ handle_lrm_delete(xmlNode *stored_msg)
             crm_info("Notifying %s on %s that %s was%s deleted",
                      from_sys, (from_host? from_host : "local node"), rsc_id,
                      ((rc == pcmk_rc_ok)? "" : " not"));
-            op = lrmd_new_event(rsc_id, CRMD_ACTION_DELETE, 0);
+            op = lrmd_new_event(rsc_id, PCMK_ACTION_DELETE, 0);
             op->type = lrmd_event_exec_complete;
             op->user_data = strdup(transition? transition : FAKE_TE_ID);
             op->params = pcmk__strkey_table(free, free);

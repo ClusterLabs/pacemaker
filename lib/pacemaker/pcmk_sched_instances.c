@@ -920,7 +920,7 @@ check_instance_state(const pe_resource_t *instance, uint32_t *state)
         const pe_action_t *action = (const pe_action_t *) iter->data;
         const bool optional = pcmk_is_set(action->flags, pe_action_optional);
 
-        if (pcmk__str_eq(RSC_START, action->task, pcmk__str_none)) {
+        if (pcmk__str_eq(PCMK_ACTION_START, action->task, pcmk__str_none)) {
             if (!optional && pcmk_is_set(action->flags, pe_action_runnable)) {
                 pe_rsc_trace(instance, "Instance is starting due to %s",
                              action->uuid);
@@ -931,7 +931,8 @@ check_instance_state(const pe_resource_t *instance, uint32_t *state)
                              (optional? "optional" : "unrunnable"));
             }
 
-        } else if (pcmk__str_eq(RSC_STOP, action->task, pcmk__str_none)) {
+        } else if (pcmk__str_eq(PCMK_ACTION_STOP, action->task,
+                                pcmk__str_none)) {
             /* Only stop actions can be pseudo-actions for primitives. That
              * indicates that the node they are on is being fenced, so the stop
              * is implied rather than actually executed.
@@ -987,10 +988,10 @@ pcmk__create_instance_actions(pe_resource_t *collective, GList *instances)
     }
 
     // Create pseudo-actions for rsc start and started
-    start = pe__new_rsc_pseudo_action(collective, RSC_START,
+    start = pe__new_rsc_pseudo_action(collective, PCMK_ACTION_START,
                                       !pcmk_is_set(state, instance_starting),
                                       true);
-    started = pe__new_rsc_pseudo_action(collective, RSC_STARTED,
+    started = pe__new_rsc_pseudo_action(collective, PCMK_ACTION_RUNNING,
                                         !pcmk_is_set(state, instance_starting),
                                         false);
     started->priority = INFINITY;
@@ -999,10 +1000,10 @@ pcmk__create_instance_actions(pe_resource_t *collective, GList *instances)
     }
 
     // Create pseudo-actions for rsc stop and stopped
-    stop = pe__new_rsc_pseudo_action(collective, RSC_STOP,
+    stop = pe__new_rsc_pseudo_action(collective, PCMK_ACTION_STOP,
                                      !pcmk_is_set(state, instance_stopping),
                                      true);
-    stopped = pe__new_rsc_pseudo_action(collective, RSC_STOPPED,
+    stopped = pe__new_rsc_pseudo_action(collective, PCMK_ACTION_STOPPED,
                                         !pcmk_is_set(state, instance_stopping),
                                         true);
     stopped->priority = INFINITY;
@@ -1268,13 +1269,13 @@ find_instance_action(const pe_action_t *action, const pe_resource_t *instance,
      * everything except promote and demote (which can only be performed on the
      * containerized resource).
      */
-    if ((for_first && !pcmk__str_any_of(action->task, CRMD_ACTION_STOP,
-                                        CRMD_ACTION_STOPPED, NULL))
+    if ((for_first && !pcmk__str_any_of(action->task, PCMK_ACTION_STOP,
+                                        PCMK_ACTION_STOPPED, NULL))
 
-        || (!for_first && pcmk__str_any_of(action->task, CRMD_ACTION_PROMOTE,
-                                           CRMD_ACTION_PROMOTED,
-                                           CRMD_ACTION_DEMOTE,
-                                           CRMD_ACTION_DEMOTED, NULL))) {
+        || (!for_first && pcmk__str_any_of(action->task, PCMK_ACTION_PROMOTE,
+                                           PCMK_ACTION_PROMOTED,
+                                           PCMK_ACTION_DEMOTE,
+                                           PCMK_ACTION_DEMOTED, NULL))) {
 
         rsc = pe__get_rsc_in_container(instance);
     }
@@ -1290,7 +1291,8 @@ find_instance_action(const pe_action_t *action, const pe_resource_t *instance,
     }
 
     if (pcmk_is_set(instance->flags, pe_rsc_orphan)
-        || pcmk__str_any_of(action_name, RSC_STOP, RSC_DEMOTE, NULL)) {
+        || pcmk__str_any_of(action_name, PCMK_ACTION_STOP, PCMK_ACTION_DEMOTE,
+                            NULL)) {
         crm_trace("No %s action found for %s%s",
                   action_name,
                   pcmk_is_set(instance->flags, pe_rsc_orphan)? "orphan " : "",
@@ -1323,8 +1325,8 @@ orig_action_name(const pe_action_t *action)
     const char *action_name = action->task;
     enum action_tasks orig_task = no_action;
 
-    if (pcmk__strcase_any_of(action->task, CRMD_ACTION_NOTIFY,
-                             CRMD_ACTION_NOTIFIED, NULL)) {
+    if (pcmk__strcase_any_of(action->task, PCMK_ACTION_NOTIFY,
+                             PCMK_ACTION_NOTIFIED, NULL)) {
         // action->uuid is RSC_(confirmed-){pre,post}_notify_ACTION_INTERVAL
         CRM_CHECK(parse_op_key(action->uuid, NULL, &action_type, NULL),
                   return task2text(no_action));
@@ -1367,9 +1369,9 @@ update_interleaved_actions(pe_action_t *first, pe_action_t *then,
     const char *orig_first_task = orig_action_name(first);
 
     // Stops and demotes must be interleaved with instance on current node
-    bool current = pcmk__ends_with(first->uuid, "_" CRMD_ACTION_STOPPED "_0")
+    bool current = pcmk__ends_with(first->uuid, "_" PCMK_ACTION_STOPPED "_0")
                    || pcmk__ends_with(first->uuid,
-                                      "_" CRMD_ACTION_DEMOTED "_0");
+                                      "_" PCMK_ACTION_DEMOTED "_0");
 
     // Update the specified actions for each "then" instance individually
     instances = get_instance_list(then->rsc);

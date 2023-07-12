@@ -104,7 +104,7 @@ static pcmk__cluster_option_t pe_opts[] = {
     },
     {
         "stonith-action", NULL, "select", "reboot, off, poweroff",
-        "reboot", pcmk__is_fencing_action,
+        PCMK_ACTION_REBOOT, pcmk__is_fencing_action,
         N_("Action to send to fence device when a node needs to be fenced "
             "(\"poweroff\" is a deprecated alias for \"off\")"),
         NULL
@@ -357,43 +357,43 @@ fail2text(enum action_fail_response fail)
 enum action_tasks
 text2task(const char *task)
 {
-    if (pcmk__str_eq(task, CRMD_ACTION_STOP, pcmk__str_casei)) {
+    if (pcmk__str_eq(task, PCMK_ACTION_STOP, pcmk__str_casei)) {
         return stop_rsc;
-    } else if (pcmk__str_eq(task, CRMD_ACTION_STOPPED, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(task, PCMK_ACTION_STOPPED, pcmk__str_casei)) {
         return stopped_rsc;
-    } else if (pcmk__str_eq(task, CRMD_ACTION_START, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(task, PCMK_ACTION_START, pcmk__str_casei)) {
         return start_rsc;
-    } else if (pcmk__str_eq(task, CRMD_ACTION_STARTED, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(task, PCMK_ACTION_RUNNING, pcmk__str_casei)) {
         return started_rsc;
-    } else if (pcmk__str_eq(task, CRM_OP_SHUTDOWN, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(task, PCMK_ACTION_DO_SHUTDOWN, pcmk__str_casei)) {
         return shutdown_crm;
-    } else if (pcmk__str_eq(task, CRM_OP_FENCE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(task, PCMK_ACTION_STONITH, pcmk__str_casei)) {
         return stonith_node;
-    } else if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
         return monitor_rsc;
-    } else if (pcmk__str_eq(task, CRMD_ACTION_NOTIFY, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(task, PCMK_ACTION_NOTIFY, pcmk__str_casei)) {
         return action_notify;
-    } else if (pcmk__str_eq(task, CRMD_ACTION_NOTIFIED, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(task, PCMK_ACTION_NOTIFIED, pcmk__str_casei)) {
         return action_notified;
-    } else if (pcmk__str_eq(task, CRMD_ACTION_PROMOTE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(task, PCMK_ACTION_PROMOTE, pcmk__str_casei)) {
         return action_promote;
-    } else if (pcmk__str_eq(task, CRMD_ACTION_DEMOTE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(task, PCMK_ACTION_DEMOTE, pcmk__str_casei)) {
         return action_demote;
-    } else if (pcmk__str_eq(task, CRMD_ACTION_PROMOTED, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(task, PCMK_ACTION_PROMOTED, pcmk__str_casei)) {
         return action_promoted;
-    } else if (pcmk__str_eq(task, CRMD_ACTION_DEMOTED, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(task, PCMK_ACTION_DEMOTED, pcmk__str_casei)) {
         return action_demoted;
     }
 #if SUPPORT_TRACING
-    if (pcmk__str_eq(task, CRMD_ACTION_CANCEL, pcmk__str_casei)) {
+    if (pcmk__str_eq(task, PCMK_ACTION_CANCEL, pcmk__str_casei)) {
         return no_action;
-    } else if (pcmk__str_eq(task, CRMD_ACTION_DELETE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(task, PCMK_ACTION_DELETE, pcmk__str_casei)) {
         return no_action;
-    } else if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
         return no_action;
-    } else if (pcmk__str_eq(task, CRMD_ACTION_MIGRATE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(task, PCMK_ACTION_MIGRATE_TO, pcmk__str_casei)) {
         return no_action;
-    } else if (pcmk__str_eq(task, CRMD_ACTION_MIGRATED, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(task, PCMK_ACTION_MIGRATE_FROM, pcmk__str_casei)) {
         return no_action;
     }
     crm_trace("Unsupported action: %s", task);
@@ -412,43 +412,43 @@ task2text(enum action_tasks task)
             result = "no_action";
             break;
         case stop_rsc:
-            result = CRMD_ACTION_STOP;
+            result = PCMK_ACTION_STOP;
             break;
         case stopped_rsc:
-            result = CRMD_ACTION_STOPPED;
+            result = PCMK_ACTION_STOPPED;
             break;
         case start_rsc:
-            result = CRMD_ACTION_START;
+            result = PCMK_ACTION_START;
             break;
         case started_rsc:
-            result = CRMD_ACTION_STARTED;
+            result = PCMK_ACTION_RUNNING;
             break;
         case shutdown_crm:
-            result = CRM_OP_SHUTDOWN;
+            result = PCMK_ACTION_DO_SHUTDOWN;
             break;
         case stonith_node:
-            result = CRM_OP_FENCE;
+            result = PCMK_ACTION_STONITH;
             break;
         case monitor_rsc:
-            result = CRMD_ACTION_STATUS;
+            result = PCMK_ACTION_MONITOR;
             break;
         case action_notify:
-            result = CRMD_ACTION_NOTIFY;
+            result = PCMK_ACTION_NOTIFY;
             break;
         case action_notified:
-            result = CRMD_ACTION_NOTIFIED;
+            result = PCMK_ACTION_NOTIFIED;
             break;
         case action_promote:
-            result = CRMD_ACTION_PROMOTE;
+            result = PCMK_ACTION_PROMOTE;
             break;
         case action_promoted:
-            result = CRMD_ACTION_PROMOTED;
+            result = PCMK_ACTION_PROMOTED;
             break;
         case action_demote:
-            result = CRMD_ACTION_DEMOTE;
+            result = PCMK_ACTION_DEMOTE;
             break;
         case action_demoted:
-            result = CRMD_ACTION_DEMOTED;
+            result = PCMK_ACTION_DEMOTED;
             break;
     }
 

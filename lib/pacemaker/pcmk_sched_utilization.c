@@ -13,9 +13,6 @@
 
 #include "libpacemaker_private.h"
 
-// Name for a pseudo-op to use in ordering constraints for utilization
-#define LOAD_STOPPED "load_stopped"
-
 /*!
  * \internal
  * \brief Get integer utilization from a string
@@ -396,7 +393,7 @@ pcmk__ban_insufficient_capacity(pe_resource_t *rsc)
 static pe_action_t *
 new_load_stopped_op(pe_node_t *node)
 {
-    char *load_stopped_task = crm_strdup_printf(LOAD_STOPPED "_%s",
+    char *load_stopped_task = crm_strdup_printf(PCMK_ACTION_LOAD_STOPPED "_%s",
                                                 node->details->uname);
     pe_action_t *load_stopped = get_pseudo_op(load_stopped_task,
                                               node->details->data_set);
@@ -439,7 +436,9 @@ pcmk__create_utilization_constraints(pe_resource_t *rsc,
         pcmk__new_ordering(NULL, NULL, load_stopped, rsc, start_key(rsc), NULL,
                            pe_order_load, rsc->cluster);
         pcmk__new_ordering(NULL, NULL, load_stopped,
-                           rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0), NULL,
+                           rsc,
+                           pcmk__op_key(rsc->id, PCMK_ACTION_MIGRATE_TO, 0),
+                           NULL,
                            pe_order_load, rsc->cluster);
     }
 }

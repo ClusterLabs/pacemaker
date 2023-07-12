@@ -273,7 +273,7 @@ add_notify_data_to_action_meta(const notify_data_t *n_data, pe_action_t *action)
  *
  * \param[in,out] rsc           Clone resource that notification is for
  * \param[in]     action        Action to use in notify action key
- * \param[in]     notif_action  RSC_NOTIFY or RSC_NOTIFIED
+ * \param[in]     notif_action  PCMK_ACTION_NOTIFY or PCMK_ACTION_NOTIFIED
  * \param[in]     notif_type    "pre", "post", "confirmed-pre", "confirmed-post"
  *
  * \return Newly created notify pseudo-action
@@ -391,7 +391,7 @@ new_post_notify_action(pe_resource_t *rsc, const pe_node_t *node,
         interval_ms_s = g_hash_table_lookup(mon->meta,
                                             XML_LRM_ATTR_INTERVAL_MS);
         if (pcmk__str_eq(interval_ms_s, "0", pcmk__str_null_matches)
-            || pcmk__str_eq(mon->task, RSC_CANCEL, pcmk__str_none)) {
+            || pcmk__str_eq(mon->task, PCMK_ACTION_CANCEL, pcmk__str_none)) {
             continue; // Not a recurring monitor
         }
         order_actions(n_data->post_done, mon, pe_order_optional);
@@ -447,13 +447,15 @@ pe__action_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
     if (action != NULL) { // Need "pre-" pseudo-actions
 
         // Create "pre-" notify pseudo-action for clone
-        n_data->pre = new_notify_pseudo_action(rsc, action, RSC_NOTIFY, "pre");
+        n_data->pre = new_notify_pseudo_action(rsc, action, PCMK_ACTION_NOTIFY,
+                                               "pre");
         pe__set_action_flags(n_data->pre, pe_action_runnable);
         add_hash_param(n_data->pre->meta, "notify_type", "pre");
         add_hash_param(n_data->pre->meta, "notify_operation", n_data->action);
 
         // Create "pre-" notifications complete pseudo-action for clone
-        n_data->pre_done = new_notify_pseudo_action(rsc, action, RSC_NOTIFIED,
+        n_data->pre_done = new_notify_pseudo_action(rsc, action,
+                                                    PCMK_ACTION_NOTIFIED,
                                                     "confirmed-pre");
         pe__set_action_flags(n_data->pre_done, pe_action_runnable);
         add_hash_param(n_data->pre_done->meta, "notify_type", "pre");
@@ -468,8 +470,8 @@ pe__action_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
     if (complete != NULL) { // Need "post-" pseudo-actions
 
         // Create "post-" notify pseudo-action for clone
-        n_data->post = new_notify_pseudo_action(rsc, complete, RSC_NOTIFY,
-                                                "post");
+        n_data->post = new_notify_pseudo_action(rsc, complete,
+                                                PCMK_ACTION_NOTIFY, "post");
         n_data->post->priority = INFINITY;
         if (pcmk_is_set(complete->flags, pe_action_runnable)) {
             pe__set_action_flags(n_data->post, pe_action_runnable);
@@ -481,7 +483,7 @@ pe__action_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
 
         // Create "post-" notifications complete pseudo-action for clone
         n_data->post_done = new_notify_pseudo_action(rsc, complete,
-                                                     RSC_NOTIFIED,
+                                                     PCMK_ACTION_NOTIFIED,
                                                      "confirmed-post");
         n_data->post_done->priority = INFINITY;
         if (pcmk_is_set(complete->flags, pe_action_runnable)) {
@@ -675,14 +677,14 @@ add_notif_keys(const pe_resource_t *rsc, notify_data_t *n_data)
     n_data->stop = notify_entries_to_strings(n_data->stop,
                                              &rsc_list, &node_list);
     if ((strcmp(" ", (const char *) rsc_list->str) != 0)
-        && pcmk__str_eq(n_data->action, RSC_STOP, pcmk__str_none)) {
+        && pcmk__str_eq(n_data->action, PCMK_ACTION_STOP, pcmk__str_none)) {
         required = true;
     }
     add_notify_env_free_gs(n_data, "notify_stop_resource", rsc_list);
     add_notify_env_free_gs(n_data, "notify_stop_uname", node_list);
 
     if ((n_data->start != NULL)
-        && pcmk__str_eq(n_data->action, RSC_START, pcmk__str_none)) {
+        && pcmk__str_eq(n_data->action, PCMK_ACTION_START, pcmk__str_none)) {
         required = true;
     }
     n_data->start = notify_entries_to_strings(n_data->start,
@@ -691,7 +693,7 @@ add_notif_keys(const pe_resource_t *rsc, notify_data_t *n_data)
     add_notify_env_free_gs(n_data, "notify_start_uname", node_list);
 
     if ((n_data->demote != NULL)
-        && pcmk__str_eq(n_data->action, RSC_DEMOTE, pcmk__str_none)) {
+        && pcmk__str_eq(n_data->action, PCMK_ACTION_DEMOTE, pcmk__str_none)) {
         required = true;
     }
     n_data->demote = notify_entries_to_strings(n_data->demote,
@@ -700,7 +702,7 @@ add_notif_keys(const pe_resource_t *rsc, notify_data_t *n_data)
     add_notify_env_free_gs(n_data, "notify_demote_uname", node_list);
 
     if ((n_data->promote != NULL)
-        && pcmk__str_eq(n_data->action, RSC_PROMOTE, pcmk__str_none)) {
+        && pcmk__str_eq(n_data->action, PCMK_ACTION_PROMOTE, pcmk__str_none)) {
         required = true;
     }
     n_data->promote = notify_entries_to_strings(n_data->promote,
@@ -782,7 +784,8 @@ find_remote_start(pe_action_t *action)
         pe_resource_t *remote_rsc = action->node->details->remote_rsc;
 
         if (remote_rsc != NULL) {
-            return find_first_action(remote_rsc->actions, NULL, RSC_START,
+            return find_first_action(remote_rsc->actions, NULL,
+                                     PCMK_ACTION_START,
                                      NULL);
         }
     }
@@ -866,7 +869,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
     if ((rsc->role != RSC_ROLE_STOPPED)
         && ((task == stop_rsc) || (task == action_demote))) {
 
-        stop = find_first_action(rsc->actions, NULL, RSC_STOP, NULL);
+        stop = find_first_action(rsc->actions, NULL, PCMK_ACTION_STOP, NULL);
 
         for (iter = rsc->running_on; iter != NULL; iter = iter->next) {
             pe_node_t *current_node = (pe_node_t *) iter->data;
@@ -894,7 +897,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
     if ((rsc->next_role != RSC_ROLE_STOPPED)
         && ((task == start_rsc) || (task == action_promote))) {
 
-        start = find_first_action(rsc->actions, NULL, RSC_START, NULL);
+        start = find_first_action(rsc->actions, NULL, PCMK_ACTION_START, NULL);
         if (start != NULL) {
             pe_action_t *remote_start = find_remote_start(start);
 
@@ -986,7 +989,8 @@ pe__order_notifs_after_fencing(const pe_action_t *stop, pe_resource_t *rsc,
     notify_data_t *n_data;
 
     crm_info("Ordering notifications for implied %s after fencing", stop->uuid);
-    n_data = pe__action_notif_pseudo_ops(rsc, RSC_STOP, NULL, stonith_op);
+    n_data = pe__action_notif_pseudo_ops(rsc, PCMK_ACTION_STOP, NULL,
+                                         stonith_op);
 
     if (n_data != NULL) {
         collect_resource_data(rsc, false, n_data);
