@@ -121,7 +121,6 @@ configure
 /cts/cts-scheduler
 /cts/lab/CTS.py
 /cts/lab/CTSlab.py
-/cts/lab/OCFIPraTest.py
 /cts/lab/cluster_test
 /cts/lab/cts
 /cts/lab/cts-log-watcher
@@ -296,6 +295,7 @@ pacemaker_*.info
 /cts/cts-support
 /cts/fence_dummy
 /cts/lab/CTSvars.py
+/cts/lab/OCFIPraTest.py
 /cts/lxc_autogen.sh
 /cts/pacemaker-cts-dummyd
 /cts/pacemaker-cts-dummyd@.service

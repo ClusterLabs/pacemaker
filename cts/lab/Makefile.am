@@ -9,8 +9,7 @@
 
 MAINTAINERCLEANFILES    = Makefile.in
 
-noinst_SCRIPTS		= cluster_test		\
-			  OCFIPraTest.py
+noinst_SCRIPTS		= cluster_test
 
 # Commands intended to be run only via other commands
 halibdir		= $(CRM_DAEMON_DIR)
