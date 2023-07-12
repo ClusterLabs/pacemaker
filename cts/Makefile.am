@@ -74,3 +74,17 @@ cts-support-install:
 cts-support-uninstall:
 	$(MAKE) $(AM_MAKEFLAGS) -C support cts-support
 	$(builddir)/support/cts-support uninstall
+
+# Everything listed here is a python script, typically generated from a .in file
+# (though that is not a requirement).  We want to run pylint on all of these
+# things after they've been built.
+python_files = cts-attrd \
+			   cts-exec \
+			   cts-fencing \
+			   cts-lab \
+			   cts-log-watcher \
+			   cts-regression \
+			   cts-scheduler
+
+pylint: $(python_files)
+	PYTHONPATH=$(top_builddir)/python pylint --rcfile $(top_srcdir)/python/pylintrc $(python_files)
