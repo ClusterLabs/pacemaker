@@ -9,7 +9,5 @@
 
 MAINTAINERCLEANFILES    = Makefile.in
 
-noinst_SCRIPTS		= cluster_test
-
 ctsdir			= $(datadir)/$(PACKAGE)/tests/cts
 cts_SCRIPTS		= cts

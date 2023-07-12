@@ -50,6 +50,8 @@ dist_cli_DATA	= cli/constraints.xml 				\
 halibdir		= $(CRM_DAEMON_DIR)
 dist_halib_SCRIPTS	= cts-log-watcher
 
+noinst_SCRIPTS		= cluster_test
+
 scheduler-list:
 	@for T in "$(srcdir)"/scheduler/xml/*.xml; do       \
 		echo $$(basename $$T .xml);             \
