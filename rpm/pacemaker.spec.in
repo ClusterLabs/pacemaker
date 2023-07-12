@@ -633,14 +633,6 @@ mkdir -p ${RPM_BUILD_ROOT}%{_localstatedir}/lib/rpm-state/%{name}
 # Don't package libtool archives
 find %{buildroot} -name '*.la' -type f -print0 | xargs -0 rm -f
 
-# Byte-compile Python sources where suitable and the distro procedures known
-%if %{defined py_byte_compile}
-%{py_byte_compile %{python_path} %{buildroot}%{_datadir}/pacemaker/tests}
-%if !%{defined _python_bytecompile_extra}
-%{py_byte_compile %{python_path} %{buildroot}%{python_site}/cts}
-%endif
-%endif
-
 %post
 %if %{defined _unitdir}
 %systemd_post pacemaker.service
@@ -935,7 +927,6 @@ exit 0
 %license licenses/CC-BY-SA-4.0
 
 %files cts
-%{python_site}/cts
 %{python3_sitelib}/pacemaker/_cts/
 %{_datadir}/pacemaker/tests
 
