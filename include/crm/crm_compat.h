@@ -31,6 +31,9 @@ extern "C" {
 //! \deprecated This defined constant will be removed in a future release
 #define MAX_IPC_DELAY 120
 
+//! \deprecated Use PCMK_ACTION_STONITH instead
+#define CRM_OP_FENCE PCMK_ACTION_STONITH
+
 //! \deprecated This defined constant will be removed in a future release
 #define CRM_OP_LRM_QUERY "lrm_query"
 

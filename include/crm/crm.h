@@ -139,7 +139,6 @@ extern char *crm_system_name;
 #  define CRM_OP_LOCAL_SHUTDOWN 	"start_shutdown"
 #  define CRM_OP_SHUTDOWN_REQ	"req_shutdown"
 #  define CRM_OP_SHUTDOWN   PCMK_ACTION_DO_SHUTDOWN
-#  define CRM_OP_FENCE      PCMK_ACTION_STONITH
 #  define CRM_OP_REGISTER		"register"
 #  define CRM_OP_IPC_FWD		"ipc_fwd"
 #  define CRM_OP_INVOKE_LRM	"lrm_invoke"
