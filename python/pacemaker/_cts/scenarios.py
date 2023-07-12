@@ -110,15 +110,15 @@ class Scenario:
 
         self._cm.prepare()
         self.audit() # Also detects remote/local log config
-        self._cm.ns.wait_for_all_nodes(self._cm.Env["nodes"])
+        self._cm.ns.wait_for_all_nodes(self._cm.env["nodes"])
 
         self.audit()
         self._cm.install_support()
 
-        self._bad_news = LogWatcher(self._cm.Env["LogFileName"],
+        self._bad_news = LogWatcher(self._cm.env["LogFileName"],
                                     self._cm.templates.get_patterns("BadNews"),
-                                    self._cm.Env["nodes"],
-                                    self._cm.Env["LogWatcher"],
+                                    self._cm.env["nodes"],
+                                    self._cm.env["LogWatcher"],
                                     "BadNews", 0)
         self._bad_news.set_watch() # Call after we've figured out what type of log watching to do in LogAudit
 
@@ -164,13 +164,13 @@ class Scenario:
     def run(self, iterations):
         """ Run all tests in the scenario the given number of times """
 
-        self._cm.oprofileStart()
+        self._cm.oprofile_start()
 
         try:
             self._run_loop(iterations)
-            self._cm.oprofileStop()
+            self._cm.oprofile_stop()
         except:
-            self._cm.oprofileStop()
+            self._cm.oprofile_stop()
             raise
 
     def _run_loop(self, iterations):
@@ -185,12 +185,12 @@ class Scenario:
             this one) that have been run across all iterations.
         """
 
-        nodechoice = self._cm.Env.random_node()
+        nodechoice = self._cm.env.random_node()
 
         ret = True
         did_run = False
 
-        self._cm.instance_errorstoignore_clear()
+        self._cm.clear_instance_errors_to_ignore()
         choice = "(%s)" % nodechoice
         self._cm.log("Running test {:<22} {:<15} [{:>3}]".format(test.name, choice, testcount))
 
@@ -209,13 +209,13 @@ class Scenario:
         if not test.teardown(nodechoice):
             self._cm.log("Teardown failed")
 
-            if not should_continue(self._cm.Env):
+            if not should_continue(self._cm.env):
                 raise ValueError("Teardown of %s on %s failed" % (test.name, nodechoice))
 
             ret = False
 
         stoptime = time.time()
-        self._cm.oprofileSave(testcount)
+        self._cm.oprofile_save(testcount)
 
         elapsed_time = stoptime - starttime
         test_time = stoptime - test.get_timer()
@@ -281,8 +281,8 @@ class Scenario:
         if local_ignore:
             ignorelist.extend(local_ignore)
 
-        ignorelist.extend(self._cm.errorstoignore())
-        ignorelist.extend(self._cm.instance_errorstoignore())
+        ignorelist.extend(self._cm.errors_to_ignore)
+        ignorelist.extend(self._cm.instance_errors_to_ignore)
 
         # This makes sure everything is stabilized before starting...
         failed = 0
@@ -313,7 +313,7 @@ class Scenario:
                 break
         else:
             print("Big problems")
-            if not should_continue(self._cm.Env):
+            if not should_continue(self._cm.env):
                 self._cm.log("Shutting down.")
                 self.summarize()
                 self.teardown()
@@ -343,7 +343,7 @@ class RandomTests(Scenario):
         testcount = 1
 
         while testcount <= iterations:
-            test = self._cm.Env.random_gen.choice(self.tests)
+            test = self._cm.env.random_gen.choice(self.tests)
             self.run_test(test, testcount)
             testcount += 1
 

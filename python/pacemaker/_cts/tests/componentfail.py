@@ -39,7 +39,7 @@ class ComponentFail(CTSTest):
         self.is_unsafe = True
         self.name = "ComponentFail"
 
-        self._complist = cm.Components()
+        self._complist = cm.components
         self._okerrpatterns = []
         self._patterns = []
         self._startall = SimulStartLite(cm)
@@ -63,10 +63,10 @@ class ComponentFail(CTSTest):
 
         # select a component to kill
         chosen = self._env.random_gen.choice(self._complist)
-        while chosen.dc_only and node_is_dc == 0:
+        while chosen.dc_only and not node_is_dc:
             chosen = self._env.random_gen.choice(self._complist)
 
-        self.debug("...component %s (dc=%d)" % (chosen.name, node_is_dc))
+        self.debug("...component %s (dc=%s)" % (chosen.name, node_is_dc))
         self.incr(chosen.name)
 
         if chosen.name != "corosync":
@@ -127,7 +127,7 @@ class ComponentFail(CTSTest):
             self._okerrpatterns.append(self.templates["Pat:Fencing_start"] % node)
 
             if not self._env["at-boot"]:
-                self._cm.ShouldBeStatus[node] = "down"
+                self._cm.expected_status[node] = "down"
 
             # If fencing occurred, chances are many (if not all) the expected logs
             # will not be sent - or will be lost when the node reboots

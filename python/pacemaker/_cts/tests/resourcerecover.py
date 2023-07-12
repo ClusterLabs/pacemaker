@@ -139,7 +139,7 @@ class ResourceRecover(CTSTest):
             watch.look_for_all()
 
         self._cm.cluster_stable()
-        recovered = self._cm.ResourceLocation(self._rid)
+        recovered = self._cm.resource_location(self._rid)
 
         if watch.unmatched:
             return self.failure("Patterns not found: %r" % watch.unmatched)

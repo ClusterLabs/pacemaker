@@ -45,7 +45,7 @@ class SimulStartLite(CTSTest):
         # We ignore the "node" parameter...
         node_list = []
         for node in self._env["nodes"]:
-            if self._cm.ShouldBeStatus[node] == "down":
+            if self._cm.expected_status[node] == "down":
                 self.incr("WasStopped")
                 node_list.append(node)
 
@@ -66,10 +66,10 @@ class SimulStartLite(CTSTest):
             watch = self.create_watch(watchpats, self._env["DeadTime"]+10)
             watch.set_watch()
 
-            stonith = self._cm.prepare_fencing_watcher(self.name)
+            stonith = self._cm.prepare_fencing_watcher()
 
             for node in node_list:
-                self._cm.StartaCMnoBlock(node)
+                self._cm.start_cm_async(node)
 
             watch.look_for_all()
 
@@ -107,7 +107,7 @@ class SimulStartLite(CTSTest):
         did_fail = False
         unstable = []
         for node in self._env["nodes"]:
-            if self._cm.StataCM(node) == 0:
+            if not self._cm.stat_cm(node):
                 did_fail = True
                 unstable.append(node)
 

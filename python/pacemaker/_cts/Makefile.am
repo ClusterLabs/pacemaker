@@ -16,6 +16,7 @@ pkgpython_PYTHON = CTS.py \
 				   audits.py \
 				   cib.py \
 				   cibxml.py \
+				   clustermanager.py \
 				   corosync.py \
 				   environment.py \
 				   errors.py \

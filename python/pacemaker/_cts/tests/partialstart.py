@@ -50,7 +50,7 @@ class PartialStart(CTSTest):
         watch = self.create_watch(watchpats, self._env["DeadTime"] + 10)
         watch.set_watch()
 
-        self._cm.StartaCMnoBlock(node)
+        self._cm.start_cm_async(node)
         ret = watch.look_for_all()
         if not ret:
             self._logger.log("Patterns not found: %r" % watch.unmatched)

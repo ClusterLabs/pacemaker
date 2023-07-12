@@ -33,7 +33,7 @@ class RestartTest(CTSTest):
         self.incr("calls")
         self.incr("node:%s" % node)
 
-        if self._cm.StataCM(node):
+        if self._cm.stat_cm(node):
             self.incr("WasStopped")
             if not self._start(node):
                 return self.failure("start (setup) failure: %s" % node)
