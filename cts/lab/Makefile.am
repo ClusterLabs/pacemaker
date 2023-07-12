@@ -16,5 +16,4 @@ halibdir		= $(CRM_DAEMON_DIR)
 dist_halib_SCRIPTS	= cts-log-watcher
 
 ctsdir			= $(datadir)/$(PACKAGE)/tests/cts
-cts_SCRIPTS		= CTSlab.py		\
-			  cts
+cts_SCRIPTS		= cts

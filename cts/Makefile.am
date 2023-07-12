@@ -16,6 +16,7 @@ test_SCRIPTS		= cts-attrd \
 			  cts-cli		\
 			  cts-exec		\
 			  cts-fencing		\
+			  cts-lab 		\
 			  cts-regression	\
 			  cts-scheduler
 dist_test_DATA		= README.md			\

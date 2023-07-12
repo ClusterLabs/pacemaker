@@ -104,9 +104,9 @@ CTS includes:
 
 ### Run
 
-The primary interface to the CTS lab is the CTSlab.py executable:
+The primary interface to the CTS lab is the cts-lab executable:
 
-    /usr/share/pacemaker/tests/cts/CTSlab.py [options] <number-of-tests-to-run>
+    /usr/share/pacemaker/tests/cts-lab [options] <number-of-tests-to-run>
 
 As part of the options, specify the cluster nodes with --nodes, for example:
 
@@ -133,13 +133,13 @@ Configure some sort of fencing, for example to use fence\_xvm:
 
 Putting all the above together, a command line might look like:
 
-    /usr/share/pacemaker/tests/cts/CTSlab.py --nodes "pcmk-1 pcmk-2 pcmk-3" \
+    /usr/share/pacemaker/tests/cts-lab --nodes "pcmk-1 pcmk-2 pcmk-3" \
         --outputfile ~/cts.log --clobber-cib --populate-resources \
         --test-ip-base 192.168.9.100 --stonith xvm 50
 
 For more options, run with the --help option.
 
-There are also a couple of wrappers for CTSlab.py that some users may find more
+There are also a couple of wrappers for cts-lab that some users may find more
 convenient: cts, which is typically installed in the same place as the rest of
 the testing code; and cluster\_test, which is in the source directory and
 typically not installed.
@@ -167,7 +167,7 @@ setting the following environment variables on all cluster nodes:
         --gen-suppressions=all"
 
 If running the CTS lab with valgrind enabled on the cluster nodes, add these
-options to CTSlab.py:
+options to cts-lab:
 
     --valgrind-tests --valgrind-procs "pacemaker-attrd pacemaker-based pacemaker-controld pacemaker-execd pacemaker-schedulerd pacemaker-fenced"
 
