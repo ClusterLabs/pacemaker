@@ -118,12 +118,12 @@ configure
 /cts/cts-exec
 /cts/cts-fencing
 /cts/cts-lab
+/cts/cts-log-watcher
 /cts/cts-regression
 /cts/cts-scheduler
 /cts/lab/CTS.py
 /cts/lab/cluster_test
 /cts/lab/cts
-/cts/lab/cts-log-watcher
 /cts/support/LSBDummy
 /cts/support/cts-support
 /cts/support/fence_dummy
@@ -291,12 +291,12 @@ pacemaker_*.info
 /cts/cluster_test
 /cts/cts
 /cts/cts-coverage
-/cts/cts-log-watcher
 /cts/cts-support
 /cts/fence_dummy
 /cts/lab/CTSlab.py
 /cts/lab/CTSvars.py
 /cts/lab/OCFIPraTest.py
+/cts/lab/cts-log-watcher
 /cts/lxc_autogen.sh
 /cts/pacemaker-cts-dummyd
 /cts/pacemaker-cts-dummyd@.service

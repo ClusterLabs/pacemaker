@@ -11,9 +11,5 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 noinst_SCRIPTS		= cluster_test
 
-# Commands intended to be run only via other commands
-halibdir		= $(CRM_DAEMON_DIR)
-dist_halib_SCRIPTS	= cts-log-watcher
-
 ctsdir			= $(datadir)/$(PACKAGE)/tests/cts
 cts_SCRIPTS		= cts

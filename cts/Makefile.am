@@ -46,6 +46,10 @@ dist_cli_DATA	= cli/constraints.xml 				\
 		  cli/regression.validity.exp			\
 		  cli/regression.access_render.exp
 
+# Commands intended to be run only via other commands
+halibdir		= $(CRM_DAEMON_DIR)
+dist_halib_SCRIPTS	= cts-log-watcher
+
 scheduler-list:
 	@for T in "$(srcdir)"/scheduler/xml/*.xml; do       \
 		echo $$(basename $$T .xml);             \
