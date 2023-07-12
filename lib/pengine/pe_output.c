@@ -156,8 +156,9 @@ get_operation_list(xmlNode *rsc_entry) {
         }
 
         /* Ignore notifies and some probes */
-        if (pcmk__str_eq(task, PCMK_ACTION_NOTIFY, pcmk__str_casei)
-            || (pcmk__str_eq(task, "probe", pcmk__str_casei) && (op_rc_i == 7))) {
+        if (pcmk__str_eq(task, PCMK_ACTION_NOTIFY, pcmk__str_none)
+            || (pcmk__str_eq(task, "probe", pcmk__str_none)
+                && (op_rc_i == CRM_EX_NOT_RUNNING))) {
             continue;
         }
 
