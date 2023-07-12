@@ -16,10 +16,6 @@ noinst_SCRIPTS		= cluster_test		\
 halibdir		= $(CRM_DAEMON_DIR)
 dist_halib_SCRIPTS	= cts-log-watcher
 
-ctslibdir		= $(pythondir)/cts
-ctslib_PYTHON		= __init__.py		\
-			  CM_corosync.py
-
 ctsdir			= $(datadir)/$(PACKAGE)/tests/cts
 cts_SCRIPTS		= CTSlab.py		\
 			  cts
