@@ -46,6 +46,9 @@ dist_cli_DATA	= cli/constraints.xml 				\
 		  cli/regression.validity.exp			\
 		  cli/regression.access_render.exp
 
+ctsdir			= $(datadir)/$(PACKAGE)/tests/cts
+cts_SCRIPTS		= cts
+
 # Commands intended to be run only via other commands
 halibdir		= $(CRM_DAEMON_DIR)
 dist_halib_SCRIPTS	= cts-log-watcher
@@ -62,7 +65,7 @@ CLEANFILES	= $(builddir)/.regression.failed.diff
 clean-local:
 	rm -f scheduler/*/*.pe
 
-SUBDIRS	= benchmark lab scheduler support
+SUBDIRS	= benchmark scheduler support
 
 cts-support-install:
 	$(MAKE) $(AM_MAKEFLAGS) -C support cts-support

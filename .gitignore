@@ -114,6 +114,7 @@ configure
 /agents/stonith/fence_watchdog
 /cts/benchmark/clubench
 /cts/cluster_test
+/cts/cts
 /cts/cts-attrd
 /cts/cts-cli
 /cts/cts-exec
@@ -123,7 +124,6 @@ configure
 /cts/cts-regression
 /cts/cts-scheduler
 /cts/lab/CTS.py
-/cts/lab/cts
 /cts/support/LSBDummy
 /cts/support/cts-support
 /cts/support/fence_dummy
@@ -288,7 +288,6 @@ pacemaker_*.info
 /cts/HBDummy
 /cts/LSBDummy
 /cts/OCFIPraTest.py
-/cts/cts
 /cts/cts-coverage
 /cts/cts-support
 /cts/fence_dummy
@@ -296,6 +295,7 @@ pacemaker_*.info
 /cts/lab/CTSvars.py
 /cts/lab/OCFIPraTest.py
 /cts/lab/cluster_test
+/cts/lab/cts
 /cts/lab/cts-log-watcher
 /cts/lxc_autogen.sh
 /cts/pacemaker-cts-dummyd
