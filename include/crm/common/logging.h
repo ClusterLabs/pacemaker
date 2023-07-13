@@ -11,6 +11,7 @@
 #  define PCMK__CRM_COMMON_LOGGING__H
 
 #  include <stdio.h>
+#  include <stdint.h>           // uint8_t, uint32_t
 #  include <glib.h>
 #  include <qb/qblog.h>
 #  include <libxml/tree.h>
@@ -120,6 +121,9 @@ unsigned int set_crm_log_level(unsigned int level);
 
 unsigned int get_crm_log_level(void);
 
+void pcmk_log_xml_as(const char *file, const char *function, uint32_t line,
+                     uint32_t tags, uint8_t level, const char *text,
+                     const xmlNode *xml);
 void pcmk_log_xml_impl(uint8_t level, const char *text, const xmlNode *xml);
 
 /*
