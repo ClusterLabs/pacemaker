@@ -122,7 +122,6 @@ name_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **e
 gboolean
 remove_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     if (optarg == NULL) {
-        crm_err("-R option requires an argument");
         g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_INVALID_PARAM, "-R option requires an argument");
         return FALSE;
     }
@@ -153,7 +152,8 @@ controller_event_cb(pcmk_ipc_api_t *controld_api,
     switch (event_type) {
         case pcmk_ipc_event_disconnect:
             if (exit_code == CRM_EX_DISCONNECT) { // Unexpected
-                fprintf(stderr, "error: Lost connection to controller\n");
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                            "Lost connection to controller");
             }
             goto done;
             break;
@@ -166,8 +166,10 @@ controller_event_cb(pcmk_ipc_api_t *controld_api,
     }
 
     if (status != CRM_EX_OK) {
-        fprintf(stderr, "error: Bad reply from controller: %s\n",
-                crm_exit_str(status));
+        exit_code = status;
+        g_set_error(&error, PCMK__EXITC_ERROR, status,
+                    "Bad reply from controller: %s",
+                    crm_exit_str(status));
         goto done;
     }
 
@@ -175,15 +177,16 @@ controller_event_cb(pcmk_ipc_api_t *controld_api,
     switch (options.command) {
         case 'i':
             if (reply->reply_type != pcmk_controld_reply_info) {
-                fprintf(stderr,
-                        "error: Unknown reply type %d from controller\n",
-                        reply->reply_type);
+                exit_code = CRM_EX_PROTOCOL;
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                            "Unknown reply type %d from controller",
+                            reply->reply_type);
                 goto done;
             }
             if (reply->data.node_info.id == 0) {
-                fprintf(stderr,
-                        "error: Controller reply did not contain node ID\n");
                 exit_code = CRM_EX_PROTOCOL;
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                            "Controller reply did not contain node ID");
                 goto done;
             }
             printf("%d\n", reply->data.node_info.id);
@@ -192,14 +195,16 @@ controller_event_cb(pcmk_ipc_api_t *controld_api,
         case 'n':
         case 'N':
             if (reply->reply_type != pcmk_controld_reply_info) {
-                fprintf(stderr,
-                        "error: Unknown reply type %d from controller\n",
-                        reply->reply_type);
+                exit_code = CRM_EX_PROTOCOL;
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                            "Unknown reply type %d from controller",
+                            reply->reply_type);
                 goto done;
             }
             if (reply->data.node_info.uname == NULL) {
-                fprintf(stderr, "Node is not known to cluster\n");
                 exit_code = CRM_EX_NOHOST;
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                            "Node is not known to cluster");
                 goto done;
             }
             printf("%s\n", reply->data.node_info.uname);
@@ -207,9 +212,10 @@ controller_event_cb(pcmk_ipc_api_t *controld_api,
 
         case 'q':
             if (reply->reply_type != pcmk_controld_reply_info) {
-                fprintf(stderr,
-                        "error: Unknown reply type %d from controller\n",
-                        reply->reply_type);
+                exit_code = CRM_EX_PROTOCOL;
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                            "Unknown reply type %d from controller",
+                            reply->reply_type);
                 goto done;
             }
             printf("%d\n", reply->data.node_info.have_quorum);
@@ -222,9 +228,10 @@ controller_event_cb(pcmk_ipc_api_t *controld_api,
         case 'l':
         case 'p':
             if (reply->reply_type != pcmk_controld_reply_nodes) {
-                fprintf(stderr,
-                        "error: Unknown reply type %d from controller\n",
-                        reply->reply_type);
+                exit_code = CRM_EX_PROTOCOL;
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                            "Unknown reply type %d from controller",
+                            reply->reply_type);
                 goto done;
             }
             reply->data.nodes = g_list_sort(reply->data.nodes, sort_node);
@@ -250,8 +257,9 @@ controller_event_cb(pcmk_ipc_api_t *controld_api,
             break;
 
         default:
-            fprintf(stderr, "internal error: Controller reply not expected\n");
             exit_code = CRM_EX_SOFTWARE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Controller reply not expected");
             goto done;
     }
 
@@ -274,8 +282,9 @@ run_controller_mainloop(uint32_t nodeid, bool list_nodes)
     // Create controller IPC object
     rc = pcmk_new_ipc_api(&controld_api, pcmk_ipc_controld);
     if (rc != pcmk_rc_ok) {
-        fprintf(stderr, "error: Could not connect to controller: %s\n",
-                pcmk_rc_str(rc));
+        g_set_error(&error, PCMK__RC_ERROR, rc,
+                    "Could not connect to controller: %s",
+                    pcmk_rc_str(rc));
         return;
     }
     pcmk_register_ipc_callback(controld_api, controller_event_cb, NULL);
@@ -283,9 +292,10 @@ run_controller_mainloop(uint32_t nodeid, bool list_nodes)
     // Connect to controller
     rc = pcmk__connect_ipc(controld_api, pcmk_ipc_dispatch_main, 5);
     if (rc != pcmk_rc_ok) {
-        fprintf(stderr, "error: Could not connect to %s: %s\n",
-                pcmk_ipc_name(controld_api, true), pcmk_rc_str(rc));
         exit_code = pcmk_rc2exitc(rc);
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Could not connect to %s: %s",
+                    pcmk_ipc_name(controld_api, true), pcmk_rc_str(rc));
         return;
     }
 
@@ -295,10 +305,10 @@ run_controller_mainloop(uint32_t nodeid, bool list_nodes)
         rc = pcmk_controld_api_node_info(controld_api, nodeid);
     }
     if (rc != pcmk_rc_ok) {
-        fprintf(stderr, "error: Could not ping controller: %s\n",
-                pcmk_rc_str(rc));
         pcmk_disconnect_ipc(controld_api);
         exit_code = pcmk_rc2exitc(rc);
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Could not ping controller: %s", pcmk_rc_str(rc));
         return;
     }
 
@@ -330,6 +340,7 @@ print_node_name(void)
     }
 }
 
+/* Returns a standard Pacemaker return code */
 static int
 cib_remove_node(long id, const char *name)
 {
@@ -340,8 +351,12 @@ cib_remove_node(long id, const char *name)
 
     crm_trace("Removing %s from the CIB", name);
 
-    if(name == NULL && id == 0) {
-        return -ENOTUNIQ;
+    if (name == NULL && id == 0) {
+        exit_code = pcmk_rc2exitc(ENOTUNIQ);
+
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Neither node ID nor name given");
+        return ENOTUNIQ;
     }
 
     node = create_xml_node(NULL, XML_CIB_TAG_NODE);
@@ -359,13 +374,21 @@ cib_remove_node(long id, const char *name)
 
     rc = cib->cmds->remove(cib, XML_CIB_TAG_NODES, node, cib_sync_call);
     if (rc != pcmk_ok) {
-        printf("Could not remove %s[%ld] from " XML_CIB_TAG_NODES ": %s",
-                name, id, pcmk_strerror(rc));
+        rc = pcmk_legacy2rc(rc);
+        exit_code = pcmk_rc2exitc(rc);
+
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Could not remove %s[%ld] from " XML_CIB_TAG_NODES ": %s",
+                    name, id, pcmk_strerror(rc));
     }
     rc = cib->cmds->remove(cib, XML_CIB_TAG_STATUS, node_state, cib_sync_call);
     if (rc != pcmk_ok) {
-        printf("Could not remove %s[%ld] from " XML_CIB_TAG_STATUS ": %s",
-                name, id, pcmk_strerror(rc));
+        rc = pcmk_legacy2rc(rc);
+        exit_code = pcmk_rc2exitc(rc);
+
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Could not remove %s[%ld] from " XML_CIB_TAG_STATUS ": %s",
+                    name, id, pcmk_strerror(rc));
     }
 
     cib__clean_up_connection(&cib);
@@ -381,31 +404,33 @@ controller_remove_node(const char *node_name, long nodeid)
     // Create controller IPC object
     rc = pcmk_new_ipc_api(&controld_api, pcmk_ipc_controld);
     if (rc != pcmk_rc_ok) {
-        fprintf(stderr, "error: Could not connect to controller: %s\n",
-                pcmk_rc_str(rc));
+        g_set_error(&error, PCMK__RC_ERROR, rc,
+                    "Could not connect to controller: %s", pcmk_rc_str(rc));
         return ENOTCONN;
     }
 
     // Connect to controller (without main loop)
     rc = pcmk__connect_ipc(controld_api, pcmk_ipc_dispatch_sync, 5);
     if (rc != pcmk_rc_ok) {
-        fprintf(stderr, "error: Could not connect to %s: %s\n",
-                pcmk_ipc_name(controld_api, true), pcmk_rc_str(rc));
+        g_set_error(&error, PCMK__RC_ERROR, rc,
+                    "Could not connect to %s: %s",
+                    pcmk_ipc_name(controld_api, true), pcmk_rc_str(rc));
         pcmk_free_ipc_api(controld_api);
         return rc;
     }
 
     rc = pcmk_ipc_purge_node(controld_api, node_name, nodeid);
     if (rc != pcmk_rc_ok) {
-        fprintf(stderr,
-                "error: Could not clear node from controller's cache: %s\n",
-                pcmk_rc_str(rc));
+        g_set_error(&error, PCMK__RC_ERROR, rc,
+                    "Could not clear node from controller's cache: %s",
+                    pcmk_rc_str(rc));
     }
 
     pcmk_free_ipc_api(controld_api);
     return pcmk_rc_ok;
 }
 
+/* Returns a standard Pacemaker return code */
 static int
 tools_remove_node_cache(const char *node_name, long nodeid, const char *target)
 {
@@ -415,14 +440,19 @@ tools_remove_node_cache(const char *node_name, long nodeid, const char *target)
 
     conn = crm_ipc_new(target, 0);
     if (!conn) {
-        return -ENOTCONN;
+        exit_code = pcmk_rc2exitc(ENOTCONN);
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Could not connect to controller");
+        return ENOTCONN;
     }
+
     rc = pcmk__connect_generic_ipc(conn);
     if (rc != pcmk_rc_ok) {
-        errno = (rc > 0)? rc : ENOTCONN;
-        crm_perror(LOG_ERR, "Connection to %s failed", target);
+        exit_code = pcmk_rc2exitc(rc);
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Could not connect to controller: %s", pcmk_rc_str(rc));
         crm_ipc_destroy(conn);
-        return -ENOTCONN;
+        return rc;
     }
 
     crm_trace("Removing %s[%ld] from the %s membership cache",
@@ -454,6 +484,12 @@ tools_remove_node_cache(const char *node_name, long nodeid, const char *target)
     if (rc > 0) {
         // @TODO Should this be done just once after all the rest?
         rc = cib_remove_node(nodeid, node_name);
+    } else {
+        rc = -rc;
+        exit_code = pcmk_rc2exitc(rc);
+
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Could not send IPC request: %s", pcmk_rc_str(rc));
     }
 
     if (conn) {
@@ -461,7 +497,7 @@ tools_remove_node_cache(const char *node_name, long nodeid, const char *target)
         crm_ipc_destroy(conn);
     }
     free_xml(cmd);
-    return rc > 0 ? 0 : rc;
+    return rc;
 }
 
 static void
@@ -495,13 +531,11 @@ remove_node(const char *target_uname)
     }
 
     for (d = 0; d < PCMK__NELEM(daemons); d++) {
-        if (tools_remove_node_cache(node_name, nodeid, daemons[d])) {
-            crm_err("Failed to connect to %s to remove node '%s'",
-                    daemons[d], target_uname);
-            exit_code = CRM_EX_ERROR;
+        if (tools_remove_node_cache(node_name, nodeid, daemons[d]) != pcmk_rc_ok) {
             return;
         }
     }
+
     exit_code = CRM_EX_OK;
 }
 
@@ -563,10 +597,11 @@ main(int argc, char **argv)
     }
 
     if (options.dangerous_cmd && options.force_flag == FALSE) {
-        fprintf(stderr, "The supplied command is considered dangerous."
-                "  To prevent accidental destruction of the cluster,"
-                " the --force flag is required in order to proceed.\n");
         exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "The supplied command is considered dangerous."
+                    "  To prevent accidental destruction of the cluster,"
+                    " the --force flag is required in order to proceed.");
         goto done;
     }
 
