@@ -105,7 +105,7 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
     } else if (pcmk__str_eq("-q", option_name, pcmk__str_casei) || pcmk__str_eq("--quorum", option_name, pcmk__str_casei)) {
         options.command = 'q';
     } else {
-        g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_INVALID_PARAM, "Unknown param passed to command_cb: %s\n", option_name);
+        g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_INVALID_PARAM, "Unknown param passed to command_cb: %s", option_name);
         return FALSE;
     }
 
