@@ -274,7 +274,8 @@ pcmk__clip_log_level(int level)
                                                  __LINE__, 0);          \
                 }                                                       \
                 if (crm_is_callsite_active(xml_cs, _level, 0)) {        \
-                    pcmk_log_xml_impl(_level, text, xml);               \
+                    pcmk_log_xml_as(__FILE__, __func__, __LINE__, 0,    \
+                                    _level, text, (xml));               \
                 }                                                       \
                 break;                                                  \
         }                                                               \
