@@ -693,9 +693,12 @@ remove_node(const char *target_uname)
     long nodeid = 0;
     const char *node_name = NULL;
     char *endptr = NULL;
+    const enum pcmk_ipc_server servers[] = {
+        pcmk_ipc_controld,
+        pcmk_ipc_attrd,
+    };
     const char *daemons[] = {
         "stonith-ng",
-        T_ATTRD,
     };
 
     // Check whether node was specified by name or numeric ID
@@ -708,10 +711,12 @@ remove_node(const char *target_uname)
         node_name = target_uname;
     }
 
-    rc = purge_node_from(pcmk_ipc_controld, node_name, nodeid);
-    if (rc != pcmk_rc_ok) {
-        exit_code = pcmk_rc2exitc(rc);
-        return;
+    for (int i = 0; i < PCMK__NELEM(servers); ++i) {
+        rc = purge_node_from(servers[i], node_name, nodeid);
+        if (rc != pcmk_rc_ok) {
+            exit_code = pcmk_rc2exitc(rc);
+            return;
+        }
     }
 
     for (d = 0; d < PCMK__NELEM(daemons); d++) {
