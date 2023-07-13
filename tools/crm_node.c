@@ -586,39 +586,44 @@ done:
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Purge a node from a single server's peer cache
+ *
+ * \param[in] server     IPC server to send request to
+ * \param[in] node_name  Name of node to purge (or NULL to leave unspecified)
+ * \param[in] node_id    Node ID of node to purge (or 0 to leave unspecified)
+ *
+ * \note At least one of node_name and node_id must be specified.
+ * \return Standard Pacemaker return code
+ */
 static int
-controller_remove_node(const char *node_name, long nodeid)
+purge_node_from(enum pcmk_ipc_server server, const char *node_name,
+                long node_id)
 {
-    pcmk_ipc_api_t *controld_api = NULL;
+    pcmk_ipc_api_t *api = NULL;
     int rc;
 
-    // Create controller IPC object
-    rc = pcmk_new_ipc_api(&controld_api, pcmk_ipc_controld);
+    rc = pcmk_new_ipc_api(&api, server);
     if (rc != pcmk_rc_ok) {
-        g_set_error(&error, PCMK__RC_ERROR, rc,
-                    "Could not connect to controller: %s", pcmk_rc_str(rc));
-        return ENOTCONN;
+        goto done;
     }
 
-    // Connect to controller (without main loop)
-    rc = pcmk__connect_ipc(controld_api, pcmk_ipc_dispatch_sync, 5);
+    rc = pcmk__connect_ipc(api, pcmk_ipc_dispatch_sync, 5);
     if (rc != pcmk_rc_ok) {
-        g_set_error(&error, PCMK__RC_ERROR, rc,
-                    "Could not connect to %s: %s",
-                    pcmk_ipc_name(controld_api, true), pcmk_rc_str(rc));
-        pcmk_free_ipc_api(controld_api);
-        return rc;
+        goto done;
     }
 
-    rc = pcmk_ipc_purge_node(controld_api, node_name, nodeid);
-    if (rc != pcmk_rc_ok) {
+    rc = pcmk_ipc_purge_node(api, node_name, node_id);
+done:
+    if (rc != pcmk_rc_ok) { // Debug message already logged on success
         g_set_error(&error, PCMK__RC_ERROR, rc,
-                    "Could not clear node from controller's cache: %s",
+                    "Could not purge node %s from %s: %s",
+                    pcmk__s(node_name, "by ID"), pcmk_ipc_name(api, true),
                     pcmk_rc_str(rc));
     }
-
-    pcmk_free_ipc_api(controld_api);
-    return pcmk_rc_ok;
+    pcmk_free_ipc_api(api);
+    return rc;
 }
 
 /* Returns a standard Pacemaker return code */
@@ -703,7 +708,7 @@ remove_node(const char *target_uname)
         node_name = target_uname;
     }
 
-    rc = controller_remove_node(node_name, nodeid);
+    rc = purge_node_from(pcmk_ipc_controld, node_name, nodeid);
     if (rc != pcmk_rc_ok) {
         exit_code = pcmk_rc2exitc(rc);
         return;
@@ -717,12 +722,7 @@ remove_node(const char *target_uname)
 
     // Lastly, purge the node from the CIB itself
     rc = purge_node_from_cib(node_name, nodeid);
-    if (rc != pcmk_rc_ok) {
-        exit_code = pcmk_rc2exitc(rc);
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Could not purge node %s from CIB " XML_CIB_TAG_STATUS
-                    ": %s", pcmk__s(node_name, "by ID"), pcmk_rc_str(rc));
-    }
+    exit_code = pcmk_rc2exitc(rc);
 }
 
 static GOptionContext *
