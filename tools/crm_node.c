@@ -526,57 +526,62 @@ print_quorum(void)
     exit_code = pcmk_rc2exitc(rc);
 }
 
-/* Returns a standard Pacemaker return code */
+/*!
+ * \internal
+ * \brief Purge a node from CIB
+ *
+ * \param[in] node_name  Name of node to purge (or NULL to leave unspecified)
+ * \param[in] node_id    Node ID of node to purge (or 0 to leave unspecified)
+ *
+ * \note At least one of node_name and node_id must be specified.
+ * \return Standard Pacemaker return code
+ */
 static int
-cib_remove_node(long id, const char *name)
+purge_node_from_cib(const char *node_name, long node_id)
 {
-    int rc;
+    int rc = pcmk_rc_ok;
     cib_t *cib = NULL;
-    xmlNode *node = NULL;
-    xmlNode *node_state = NULL;
+    xmlNode *xml = NULL;
 
-    crm_trace("Removing %s from the CIB", name);
-
-    if (name == NULL && id == 0) {
-        exit_code = pcmk_rc2exitc(ENOTUNIQ);
-
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Neither node ID nor name given");
-        return ENOTUNIQ;
-    }
-
-    node = create_xml_node(NULL, XML_CIB_TAG_NODE);
-    node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
-
-    crm_xml_add(node, XML_ATTR_UNAME, name);
-    crm_xml_add(node_state, XML_ATTR_UNAME, name);
-    if (id > 0) {
-        crm_xml_set_id(node, "%ld", id);
-        crm_xml_add(node_state, XML_ATTR_ID, ID(node));
-    }
-
+    // Connect to CIB
     cib = cib_new();
-    cib->cmds->signon(cib, crm_system_name, cib_command);
-
-    rc = cib->cmds->remove(cib, XML_CIB_TAG_NODES, node, cib_sync_call);
+    if (cib == NULL) {
+        return ENOTCONN;
+    }
+    rc = cib->cmds->signon(cib, crm_system_name, cib_command);
     if (rc != pcmk_ok) {
         rc = pcmk_legacy2rc(rc);
-        exit_code = pcmk_rc2exitc(rc);
-
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Could not remove %s[%ld] from " XML_CIB_TAG_NODES ": %s",
-                    name, id, pcmk_strerror(rc));
+        goto done;
     }
-    rc = cib->cmds->remove(cib, XML_CIB_TAG_STATUS, node_state, cib_sync_call);
+
+    // Remove from configuration section
+    xml = create_xml_node(NULL, XML_CIB_TAG_NODE);
+    crm_xml_add(xml, XML_ATTR_UNAME, node_name);
+    if (node_id > 0) {
+        crm_xml_set_id(xml, "%ld", node_id);
+    }
+    rc = cib->cmds->remove(cib, XML_CIB_TAG_NODES, xml, cib_sync_call);
     if (rc != pcmk_ok) {
         rc = pcmk_legacy2rc(rc);
-        exit_code = pcmk_rc2exitc(rc);
+        goto done;
+    }
+    free_xml(xml);
 
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Could not remove %s[%ld] from " XML_CIB_TAG_STATUS ": %s",
-                    name, id, pcmk_strerror(rc));
+    // Remove from status section
+    xml = create_xml_node(NULL, XML_CIB_TAG_STATE);
+    crm_xml_add(xml, XML_ATTR_UNAME, node_name);
+    if (node_id > 0) {
+        crm_xml_set_id(xml, "%ld", node_id);
+    }
+    rc = cib->cmds->remove(cib, XML_CIB_TAG_STATUS, xml, cib_sync_call);
+    rc = pcmk_legacy2rc(rc);
+    if (rc == pcmk_rc_ok) {
+        crm_debug("Purged node %s (%ld) from CIB",
+                  pcmk__s(node_name, "by ID"), node_id);
     }
 
+done:
+    free_xml(xml);
     cib__clean_up_connection(&cib);
     return rc;
 }
@@ -667,17 +672,6 @@ tools_remove_node_cache(const char *node_name, long nodeid, const char *target)
     crm_debug("%s peer cache cleanup for %s (%ld): %d",
               target, node_name, nodeid, rc);
 
-    if (rc > 0) {
-        // @TODO Should this be done just once after all the rest?
-        rc = cib_remove_node(nodeid, node_name);
-    } else {
-        rc = -rc;
-        exit_code = pcmk_rc2exitc(rc);
-
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Could not send IPC request: %s", pcmk_rc_str(rc));
-    }
-
     if (conn) {
         crm_ipc_close(conn);
         crm_ipc_destroy(conn);
@@ -721,7 +715,14 @@ remove_node(const char *target_uname)
         }
     }
 
-    exit_code = CRM_EX_OK;
+    // Lastly, purge the node from the CIB itself
+    rc = purge_node_from_cib(node_name, nodeid);
+    if (rc != pcmk_rc_ok) {
+        exit_code = pcmk_rc2exitc(rc);
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Could not purge node %s from CIB " XML_CIB_TAG_STATUS
+                    ": %s", pcmk__s(node_name, "by ID"), pcmk_rc_str(rc));
+    }
 }
 
 static GOptionContext *
