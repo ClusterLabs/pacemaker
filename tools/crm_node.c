@@ -42,6 +42,7 @@ gboolean command_cb(const gchar *option_name, const gchar *optarg, gpointer data
 gboolean name_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean remove_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 
+static GError *error = NULL;
 static GMainLoop *mainloop = NULL;
 static crm_exit_t exit_code = CRM_EX_OK;
 
@@ -533,8 +534,6 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup *group) {
 int
 main(int argc, char **argv)
 {
-    GError *error = NULL;
-
     GOptionGroup *output_group = NULL;
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
     gchar **processed_args = pcmk__cmdline_preproc(argv, "NR");
