@@ -124,7 +124,6 @@ unsigned int get_crm_log_level(void);
 void pcmk_log_xml_as(const char *file, const char *function, uint32_t line,
                      uint32_t tags, uint8_t level, const char *text,
                      const xmlNode *xml);
-void pcmk_log_xml_impl(uint8_t level, const char *text, const xmlNode *xml);
 
 /*
  * Throughout the macros below, note the leading, pre-comma, space in the

@@ -1164,23 +1164,6 @@ pcmk_log_xml_as(const char *file, const char *function, uint32_t line,
 }
 
 /*!
- * \brief Log XML line-by-line in a formatted fashion
- *
- * \param[in] level  Priority at which to log the messages
- * \param[in] text   Prefix for each line
- * \param[in] xml    XML to log
- *
- * \note This does nothing when \p level is \p LOG_STDOUT.
- * \note Do not call this function directly. It should be called only from the
- *       \p do_crm_log_xml() macro.
- */
-void
-pcmk_log_xml_impl(uint8_t level, const char *text, const xmlNode *xml)
-{
-    pcmk_log_xml_as(__FILE__, __func__, __LINE__, 0, level, text, xml);
-}
-
-/*!
  * \internal
  * \brief Free the logging library's internal log output object
  */
@@ -1210,6 +1193,12 @@ gboolean
 crm_add_logfile(const char *filename)
 {
     return pcmk__add_logfile(filename) == pcmk_rc_ok;
+}
+
+void
+pcmk_log_xml_impl(uint8_t level, const char *text, const xmlNode *xml)
+{
+    pcmk_log_xml_as(__FILE__, __func__, __LINE__, 0, level, text, xml);
 }
 
 // LCOV_EXCL_STOP
