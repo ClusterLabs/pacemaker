@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,7 +10,10 @@
 #ifndef PCMK__CRM_CRM_COMPAT__H
 #  define PCMK__CRM_CRM_COMPAT__H
 
+#include <strings.h>
 #include <glib.h>
+
+#include <crm/common/actions.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -100,6 +103,9 @@ extern "C" {
 //! \deprecated Use PCMK_ACTION_STOPPED instead
 #define CRMD_ACTION_STOPPED PCMK_ACTION_STOPPED
 
+//! \deprecated Do not use
+#define CRMD_METADATA_CALL_TIMEOUT PCMK_DEFAULT_METADATA_TIMEOUT_MS
+
 //! \deprecated Use PCMK_ACTION_CANCEL instead
 #define RSC_CANCEL PCMK_ACTION_CANCEL
 
@@ -164,6 +170,16 @@ extern "C" {
 
 //! \deprecated Use GList * instead
 typedef GList *GListPtr;
+
+//! \deprecated Do not use
+static inline const char *
+crm_action_str(const char *task, guint interval_ms) {
+    if ((task != NULL) && (interval_ms == 0)
+        && (strcasecmp(task, PCMK_ACTION_MONITOR) == 0)) {
+        return "probe";
+    }
+    return task;
+}
 
 #ifdef __cplusplus
 }

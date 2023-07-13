@@ -14,6 +14,7 @@
  * declared with G_GNUC_INTERNAL for efficiency.
  */
 
+#include <crm/lrmd_events.h>      // lrmd_event_data_t
 #include <crm/pengine/pe_types.h> // pe_action_t, pe_node_t, pe_working_set_t
 #include <crm/pengine/internal.h> // pe__location_t
 

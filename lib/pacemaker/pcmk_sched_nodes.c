@@ -9,7 +9,6 @@
 
 #include <crm_internal.h>
 #include <crm/msg_xml.h>
-#include <crm/lrmd.h>       // lrmd_event_data_t
 #include <crm/common/xml_internal.h>
 #include <pacemaker-internal.h>
 #include <pacemaker.h>

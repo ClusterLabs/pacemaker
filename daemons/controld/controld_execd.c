@@ -1977,8 +1977,9 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
     /* now do the op */
     crm_notice("Requesting local execution of %s operation for %s on %s "
                CRM_XS " transition_key=%s op_key=" PCMK__OP_FMT,
-               crm_action_str(op->op_type, op->interval_ms), rsc->id, lrm_state->node_name,
-               pcmk__s(transition, ""), rsc->id, operation, op->interval_ms);
+               pcmk__readable_action(op->op_type, op->interval_ms), rsc->id,
+               lrm_state->node_name, pcmk__s(transition, ""), rsc->id,
+               operation, op->interval_ms);
 
     nack_reason = should_nack_action(operation);
     if (nack_reason != NULL) {
@@ -2140,7 +2141,8 @@ log_executor_event(const lrmd_event_data_t *op, const char *op_key,
     GString *str = g_string_sized_new(100); // reasonable starting size
 
     pcmk__g_strcat(str,
-                   "Result of ", crm_action_str(op->op_type, op->interval_ms),
+                   "Result of ",
+                   pcmk__readable_action(op->op_type, op->interval_ms),
                    " operation for ", op->rsc_id, NULL);
 
     if (node_name != NULL) {

@@ -38,6 +38,7 @@ header_HEADERS = acl.h \
 				 xml_compat.h
 
 noinst_HEADERS = acl_internal.h 	\
+				 actions_internal.h	\
 				 alerts_internal.h	\
 				 attrd_internal.h	\
 				 cmdline_internal.h	\

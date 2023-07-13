@@ -1976,7 +1976,7 @@ lrmd_api_get_metadata_params(lrmd_t *lrmd, const char *standard,
     }
     action = services__create_resource_action(type, standard, provider, type,
                                               PCMK_ACTION_META_DATA, 0,
-                                              CRMD_METADATA_CALL_TIMEOUT,
+                                              PCMK_DEFAULT_METADATA_TIMEOUT_MS,
                                               params_table, 0);
     lrmd_key_value_freeall(params);
 
@@ -2432,7 +2432,7 @@ lrmd__metadata_async(const lrmd_rsc_info_t *rsc,
 
     if (strcmp(rsc->standard, PCMK_RESOURCE_CLASS_STONITH) == 0) {
         return stonith__metadata_async(rsc->type,
-                                       CRMD_METADATA_CALL_TIMEOUT / 1000,
+                                       PCMK_DEFAULT_METADATA_TIMEOUT_MS / 1000,
                                        callback, user_data);
     }
 
@@ -2440,7 +2440,7 @@ lrmd__metadata_async(const lrmd_rsc_info_t *rsc,
                                               rsc->standard, rsc->provider,
                                               rsc->type,
                                               PCMK_ACTION_META_DATA, 0,
-                                              CRMD_METADATA_CALL_TIMEOUT,
+                                              PCMK_DEFAULT_METADATA_TIMEOUT_MS,
                                               NULL, 0);
     if (action == NULL) {
         pcmk__set_result(&result, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,

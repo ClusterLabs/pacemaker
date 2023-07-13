@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2022 the Pacemaker project contributors
+ * Copyright 2015-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,6 +20,7 @@
 #include <crm/common/util.h>    // crm_strdup_printf()
 #include <crm/common/logging.h>  // do_crm_log_unlikely(), etc.
 #include <crm/common/mainloop.h> // mainloop_io_t, struct ipc_client_callbacks
+#include <crm/common/actions_internal.h>
 #include <crm/common/health_internal.h>
 #include <crm/common/io_internal.h>
 #include <crm/common/iso8601_internal.h>
@@ -162,20 +163,6 @@ int pcmk__read_pidfile(const char *filename, pid_t *pid);
 int pcmk__pidfile_matches(const char *filename, pid_t expected_pid,
                           const char *expected_name, pid_t *pid);
 int pcmk__lock_pidfile(const char *filename, const char *name);
-
-
-/* internal functions related to resource operations (from operations.c) */
-
-// printf-style format to create operation ID from resource, action, interval
-#define PCMK__OP_FMT "%s_%s_%u"
-
-char *pcmk__op_key(const char *rsc_id, const char *op_type, guint interval_ms);
-char *pcmk__notify_key(const char *rsc_id, const char *notify_type,
-                       const char *op_type);
-char *pcmk__transition_key(int transition_id, int action_id, int target_rc,
-                           const char *node);
-void pcmk__filter_op_for_digest(xmlNode *param_set);
-bool pcmk__is_fencing_action(const char *action);
 
 
 // bitwise arithmetic utilities

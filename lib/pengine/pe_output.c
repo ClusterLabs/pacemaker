@@ -1288,8 +1288,8 @@ failed_action_friendly(pcmk__output_t *out, const xmlNode *xml_op,
         pcmk__g_strcat(str, pcmk__readable_interval(interval_ms), "-interval ",
                        NULL);
     }
-    pcmk__g_strcat(str, crm_action_str(task, interval_ms), " on ", node_name,
-                   NULL);
+    pcmk__g_strcat(str, pcmk__readable_action(task, interval_ms), " on ",
+                   node_name, NULL);
 
     if (status == PCMK_EXEC_DONE) {
         pcmk__g_strcat(str, " returned '", services_ocf_exitcode_str(rc), "'",

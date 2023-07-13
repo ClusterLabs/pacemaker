@@ -158,21 +158,10 @@ extern char *crm_system_name;
 #  define CRMD_JOINSTATE_MEMBER         "member"
 #  define CRMD_JOINSTATE_NACK           "banned"
 
-#  define CRMD_METADATA_CALL_TIMEOUT   30000
-
 #  include <crm/common/actions.h>
 #  include <crm/common/cib.h>
 #  include <crm/common/logging.h>
 #  include <crm/common/util.h>
-
-static inline const char *
-crm_action_str(const char *task, guint interval_ms) {
-    if ((task != NULL) && (interval_ms == 0)
-        && (strcasecmp(task, PCMK_ACTION_MONITOR) == 0)) {
-        return "probe";
-    }
-    return task;
-}
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 #include <crm/crm_compat.h>

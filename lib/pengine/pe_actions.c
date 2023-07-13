@@ -514,7 +514,7 @@ unpack_timeout(const char *value)
     int timeout_ms = crm_get_msec(value);
 
     if (timeout_ms < 0) {
-        timeout_ms = crm_get_msec(CRM_DEFAULT_OP_TIMEOUT_S);
+        timeout_ms = PCMK_DEFAULT_ACTION_TIMEOUT_MS;
     }
     return timeout_ms;
 }
@@ -725,7 +725,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
      *   3. default op timeout
      *      a. if probe, then min-interval monitor's timeout
      *      b. else, in XML_CIB_TAG_OPCONFIG
-     *   4. CRM_DEFAULT_OP_TIMEOUT_S
+     *   4. PCMK_DEFAULT_ACTION_TIMEOUT_MS
      *
      * #1 overrides general rule of <op> XML property having highest
      * precedence.
@@ -1262,7 +1262,7 @@ pe_get_configured_timeout(pe_resource_t *rsc, const char *action, pe_working_set
 
     timeout_ms = crm_get_msec(timeout_spec);
     if (timeout_ms < 0) {
-        timeout_ms = crm_get_msec(CRM_DEFAULT_OP_TIMEOUT_S);
+        timeout_ms = PCMK_DEFAULT_ACTION_TIMEOUT_MS;
     }
 
     if (action_meta != NULL) {
