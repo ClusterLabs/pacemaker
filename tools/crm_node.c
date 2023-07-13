@@ -45,6 +45,7 @@ gboolean remove_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 static GError *error = NULL;
 static GMainLoop *mainloop = NULL;
 static crm_exit_t exit_code = CRM_EX_OK;
+static pcmk__output_t *out = NULL;
 
 #define INDENT "                           "
 
@@ -90,6 +91,13 @@ static GOptionEntry addl_entries[] = {
     // @TODO add timeout option for when IPC replies are needed
 
     { NULL }
+};
+
+static pcmk__supported_format_t formats[] = {
+    PCMK__SUPPORTED_FORMAT_NONE,
+    PCMK__SUPPORTED_FORMAT_TEXT,
+    PCMK__SUPPORTED_FORMAT_XML,
+    { NULL, NULL, NULL }
 };
 
 gboolean
@@ -540,7 +548,7 @@ remove_node(const char *target_uname)
 }
 
 static GOptionContext *
-build_arg_context(pcmk__common_args_t *args, GOptionGroup *group) {
+build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
 
     GOptionEntry extra_prog_entries[] = {
@@ -551,7 +559,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup *group) {
         { NULL }
     };
 
-    context = pcmk__build_arg_context(args, NULL, &group, NULL);
+    context = pcmk__build_arg_context(args, "text (default), xml", group, NULL);
 
     /* Add the -q option, which cannot be part of the globally supported options
      * because some tools use that flag for something else.
@@ -568,11 +576,14 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup *group) {
 int
 main(int argc, char **argv)
 {
+    int rc = pcmk_rc_ok;
+
     GOptionGroup *output_group = NULL;
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
     gchar **processed_args = pcmk__cmdline_preproc(argv, "NR");
-    GOptionContext *context = build_arg_context(args, output_group);
+    GOptionContext *context = build_arg_context(args, &output_group);
 
+    pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
         goto done;
@@ -580,17 +591,29 @@ main(int argc, char **argv)
 
     pcmk__cli_init_logging("crm_node", args->verbosity);
 
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    if (rc != pcmk_rc_ok) {
+        exit_code = pcmk_rc2exitc(rc);
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Error creating output format %s: %s", args->output_ty,
+                    pcmk_rc_str(rc));
+        goto done;
+    }
+
+    if (!pcmk__force_args(context, &error, "%s --xml-simple-list", g_get_prgname())) {
+        exit_code = CRM_EX_SOFTWARE;
+        goto done;
+    }
+
     if (args->version) {
-        g_strfreev(processed_args);
-        pcmk__free_arg_context(context);
-        /* FIXME:  When crm_node is converted to use formatted output, this can go. */
-        pcmk__cli_help('v');
+        out->version(out, false);
+        goto done;
     }
 
     if (options.command == 0) {
         char *help = g_option_context_get_help(context, TRUE, NULL);
 
-        fprintf(stderr, "%s", help);
+        out->err(out, "%s", help);
         g_free(help);
         exit_code = CRM_EX_USAGE;
         goto done;
@@ -604,6 +627,8 @@ main(int argc, char **argv)
                     " the --force flag is required in order to proceed.");
         goto done;
     }
+
+    pcmk__register_lib_messages(out);
 
     switch (options.command) {
         case 'n':
@@ -632,6 +657,12 @@ done:
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
 
-    pcmk__output_and_clear_error(&error, NULL);
+    pcmk__output_and_clear_error(&error, out);
+
+    if (out != NULL) {
+        out->finish(out, exit_code, true, NULL);
+        pcmk__output_free(out);
+    }
+    pcmk__unregister_formats();
     return crm_exit(exit_code);
 }
