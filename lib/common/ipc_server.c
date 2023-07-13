@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -819,6 +819,7 @@ pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
     if (ack != NULL) {
         crm_trace("Ack'ing IPC message from client %s as <%s status=%d>",
                   pcmk__client_name(c), tag, status);
+        crm_log_xml_trace(ack, "sent-ack");
         c->request_id = 0;
         rc = pcmk__ipc_send_xml(c, request, ack, flags);
         free_xml(ack);
