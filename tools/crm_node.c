@@ -697,7 +697,6 @@ remove_node(const char *target_uname)
     const char *daemons[] = {
         "stonith-ng",
         T_ATTRD,
-        CRM_SYSTEM_MCP,
     };
 
     // Check whether node was specified by name or numeric ID
