@@ -626,79 +626,76 @@ done:
     return rc;
 }
 
-/* Returns a standard Pacemaker return code */
+/*!
+ * \internal
+ * \brief Purge a node from the fencer's peer cache
+ *
+ * \param[in] node_name  Name of node to purge (or NULL to leave unspecified)
+ * \param[in] node_id    Node ID of node to purge (or 0 to leave unspecified)
+ *
+ * \note At least one of node_name and node_id must be specified.
+ * \return Standard Pacemaker return code
+ */
 static int
-tools_remove_node_cache(const char *node_name, long nodeid, const char *target)
+purge_node_from_fencer(const char *node_name, long node_id)
 {
-    int rc = -1;
+    int rc = pcmk_rc_ok;
     crm_ipc_t *conn = NULL;
     xmlNode *cmd = NULL;
 
-    conn = crm_ipc_new(target, 0);
-    if (!conn) {
-        exit_code = pcmk_rc2exitc(ENOTCONN);
+    conn = crm_ipc_new("stonith-ng", 0);
+    if (conn == NULL) {
+        rc = ENOTCONN;
+        exit_code = pcmk_rc2exitc(rc);
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Could not connect to controller");
-        return ENOTCONN;
+                    "Could not connect to fencer to purge node %s",
+                    pcmk__s(node_name, "by ID"));
+        return rc;
     }
 
     rc = pcmk__connect_generic_ipc(conn);
     if (rc != pcmk_rc_ok) {
         exit_code = pcmk_rc2exitc(rc);
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Could not connect to controller: %s", pcmk_rc_str(rc));
+                    "Could not connect to fencer to purge node %s: %s",
+                    pcmk__s(node_name, "by ID"), pcmk_rc_str(rc));
         crm_ipc_destroy(conn);
         return rc;
     }
 
-    crm_trace("Removing %s[%ld] from the %s membership cache",
-              node_name, nodeid, target);
-
-    if(pcmk__str_eq(target, T_ATTRD, pcmk__str_casei)) {
-        cmd = create_xml_node(NULL, __func__);
-
-        crm_xml_add(cmd, F_TYPE, T_ATTRD);
-        crm_xml_add(cmd, F_ORIG, crm_system_name);
-
-        crm_xml_add(cmd, PCMK__XA_TASK, PCMK__ATTRD_CMD_PEER_REMOVE);
-
-        pcmk__xe_add_node(cmd, node_name, nodeid);
-
-    } else { // Fencer or pacemakerd
-        cmd = create_request(CRM_OP_RM_NODE_CACHE, NULL, NULL, target,
-                             crm_system_name, NULL);
-        if (nodeid > 0) {
-            crm_xml_set_id(cmd, "%ld", nodeid);
-        }
-        crm_xml_add(cmd, XML_ATTR_UNAME, node_name);
+    cmd = create_request(CRM_OP_RM_NODE_CACHE, NULL, NULL, "stonith-ng",
+                         crm_system_name, NULL);
+    if (node_id > 0) {
+        crm_xml_set_id(cmd, "%ld", node_id);
     }
+    crm_xml_add(cmd, XML_ATTR_UNAME, node_name);
 
     rc = crm_ipc_send(conn, cmd, 0, 0, NULL);
-    crm_debug("%s peer cache cleanup for %s (%ld): %d",
-              target, node_name, nodeid, rc);
-
-    if (conn) {
-        crm_ipc_close(conn);
-        crm_ipc_destroy(conn);
+    if (rc >= 0) {
+        rc = pcmk_rc_ok;
+        crm_debug("Purged node %s (%ld) from fencer",
+                  pcmk__s(node_name, "by ID"), node_id);
+    } else {
+        rc = pcmk_legacy2rc(rc);
+        fprintf(stderr, "Could not purge node %s from fencer: %s\n",
+                pcmk__s(node_name, "by ID"), pcmk_rc_str(rc));
     }
     free_xml(cmd);
+    crm_ipc_close(conn);
+    crm_ipc_destroy(conn);
     return rc;
 }
 
 static void
 remove_node(const char *target_uname)
 {
-    int rc;
-    int d = 0;
+    int rc = pcmk_rc_ok;
     long nodeid = 0;
     const char *node_name = NULL;
     char *endptr = NULL;
     const enum pcmk_ipc_server servers[] = {
         pcmk_ipc_controld,
         pcmk_ipc_attrd,
-    };
-    const char *daemons[] = {
-        "stonith-ng",
     };
 
     // Check whether node was specified by name or numeric ID
@@ -719,10 +716,11 @@ remove_node(const char *target_uname)
         }
     }
 
-    for (d = 0; d < PCMK__NELEM(daemons); d++) {
-        if (tools_remove_node_cache(node_name, nodeid, daemons[d]) != pcmk_rc_ok) {
-            return;
-        }
+    // The fencer hasn't been converted to pcmk_ipc_api_t yet
+    rc = purge_node_from_fencer(node_name, nodeid);
+    if (rc != pcmk_rc_ok) {
+        exit_code = pcmk_rc2exitc(rc);
+        return;
     }
 
     // Lastly, purge the node from the CIB itself
