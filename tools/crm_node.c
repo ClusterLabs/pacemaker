@@ -385,7 +385,7 @@ done:
 }
 
 static void
-run_controller_mainloop(uint32_t nodeid, bool list_nodes)
+run_controller_mainloop(void)
 {
     pcmk_ipc_api_t *controld_api = NULL;
     int rc;
@@ -413,11 +413,8 @@ run_controller_mainloop(uint32_t nodeid, bool list_nodes)
         return;
     }
 
-    if (list_nodes) {
-        rc = pcmk_controld_api_list_nodes(controld_api);
-    } else {
-        rc = pcmk_controld_api_node_info(controld_api, nodeid);
-    }
+    rc = pcmk_controld_api_list_nodes(controld_api);
+
     if (rc != pcmk_rc_ok) {
         pcmk_disconnect_ipc(controld_api);
         exit_code = pcmk_rc2exitc(rc);
@@ -835,7 +832,7 @@ main(int argc, char **argv)
 
         case 'l':
         case 'p':
-            run_controller_mainloop(0, true);
+            run_controller_mainloop();
             break;
 
         default:
