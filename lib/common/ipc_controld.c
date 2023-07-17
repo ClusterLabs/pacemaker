@@ -177,18 +177,16 @@ set_nodes_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
 static bool
 reply_expected(pcmk_ipc_api_t *api, xmlNode *request)
 {
-    const char *command = crm_element_value(request, F_CRM_TASK);
-
-    if (command == NULL) {
-        return false;
-    }
-
-    // We only need to handle commands that functions in this file can send
-    return !strcmp(command, CRM_OP_REPROBE)
-           || !strcmp(command, CRM_OP_NODE_INFO)
-           || !strcmp(command, CRM_OP_PING)
-           || !strcmp(command, CRM_OP_LRM_FAIL)
-           || !strcmp(command, CRM_OP_LRM_DELETE);
+    // We only need to handle commands that API functions can send
+    return pcmk__str_any_of(crm_element_value(request, F_CRM_TASK),
+                            PCMK__CONTROLD_CMD_NODES,
+                            CRM_OP_LRM_DELETE,
+                            CRM_OP_LRM_FAIL,
+                            CRM_OP_NODE_INFO,
+                            CRM_OP_PING,
+                            CRM_OP_REPROBE,
+                            CRM_OP_RM_NODE_CACHE,
+                            NULL);
 }
 
 static bool
@@ -202,22 +200,12 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         pcmk_controld_reply_unknown, NULL, NULL,
     };
 
-    /* If we got an ACK, return true so the caller knows to expect more responses
-     * from the IPC server.  We do this before decrementing replies_expected because
-     * ACKs are not going to be included in that value.
-     *
-     * Note that we cannot do the same kind of status checking here that we do in
-     * ipc_pacemakerd.c.  The ACK message we receive does not necessarily contain
-     * a status attribute.  That is, we may receive this:
-     *
-     * <ack function="crmd_remote_proxy_cb" line="556"/>
-     *
-     * Instead of this:
-     *
-     * <ack function="dispatch_controller_ipc" line="391" status="112"/>
-     */
     if (pcmk__xe_is(reply, "ack")) {
-        return true; // More replies needed
+        /* ACKs are trivial responses that do not count toward expected replies,
+         * and do not have all the fields that validation requires, so skip that
+         * processing.
+         */
+        return private->replies_expected > 0;
     }
 
     if (private->replies_expected > 0) {
@@ -344,18 +332,15 @@ static int
 send_controller_request(pcmk_ipc_api_t *api, xmlNode *request,
                         bool reply_is_expected)
 {
-    int rc;
-
     if (crm_element_value(request, XML_ATTR_REFERENCE) == NULL) {
         return EINVAL;
     }
-    rc = pcmk__send_ipc_request(api, request);
-    if ((rc == pcmk_rc_ok) && reply_is_expected) {
+    if (reply_is_expected) {
         struct controld_api_private_s *private = api->api_data;
 
         private->replies_expected++;
     }
-    return rc;
+    return pcmk__send_ipc_request(api, request);
 }
 
 static xmlNode *
