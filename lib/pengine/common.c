@@ -459,26 +459,26 @@ const char *
 role2text(enum rsc_role_e role)
 {
     switch (role) {
-        case RSC_ROLE_UNKNOWN:
+        case pcmk_role_unknown:
             return RSC_ROLE_UNKNOWN_S;
-        case RSC_ROLE_STOPPED:
+        case pcmk_role_stopped:
             return RSC_ROLE_STOPPED_S;
-        case RSC_ROLE_STARTED:
+        case pcmk_role_started:
             return RSC_ROLE_STARTED_S;
-        case RSC_ROLE_UNPROMOTED:
+        case pcmk_role_unpromoted:
 #ifdef PCMK__COMPAT_2_0
             return RSC_ROLE_UNPROMOTED_LEGACY_S;
 #else
             return RSC_ROLE_UNPROMOTED_S;
 #endif
-        case RSC_ROLE_PROMOTED:
+        case pcmk_role_promoted:
 #ifdef PCMK__COMPAT_2_0
             return RSC_ROLE_PROMOTED_LEGACY_S;
 #else
             return RSC_ROLE_PROMOTED_S;
 #endif
     }
-    CRM_CHECK(role >= RSC_ROLE_UNKNOWN, return RSC_ROLE_UNKNOWN_S);
+    CRM_CHECK(role >= pcmk_role_unknown, return RSC_ROLE_UNKNOWN_S);
     CRM_CHECK(role < RSC_ROLE_MAX, return RSC_ROLE_UNKNOWN_S);
     // coverity[dead_error_line]
     return RSC_ROLE_UNKNOWN_S;
@@ -489,20 +489,20 @@ text2role(const char *role)
 {
     CRM_ASSERT(role != NULL);
     if (pcmk__str_eq(role, RSC_ROLE_STOPPED_S, pcmk__str_casei)) {
-        return RSC_ROLE_STOPPED;
+        return pcmk_role_stopped;
     } else if (pcmk__str_eq(role, RSC_ROLE_STARTED_S, pcmk__str_casei)) {
-        return RSC_ROLE_STARTED;
+        return pcmk_role_started;
     } else if (pcmk__strcase_any_of(role, RSC_ROLE_UNPROMOTED_S,
                                     RSC_ROLE_UNPROMOTED_LEGACY_S, NULL)) {
-        return RSC_ROLE_UNPROMOTED;
+        return pcmk_role_unpromoted;
     } else if (pcmk__strcase_any_of(role, RSC_ROLE_PROMOTED_S,
                                     RSC_ROLE_PROMOTED_LEGACY_S, NULL)) {
-        return RSC_ROLE_PROMOTED;
+        return pcmk_role_promoted;
     } else if (pcmk__str_eq(role, RSC_ROLE_UNKNOWN_S, pcmk__str_casei)) {
-        return RSC_ROLE_UNKNOWN;
+        return pcmk_role_unknown;
     }
     crm_err("Unknown role: %s", role);
-    return RSC_ROLE_UNKNOWN;
+    return pcmk_role_unknown;
 }
 
 void

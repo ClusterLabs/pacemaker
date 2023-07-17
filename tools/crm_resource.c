@@ -983,7 +983,7 @@ ban_or_move(pcmk__output_t *out, pe_resource_t *rsc, const char *move_lifetime)
             pe_resource_t *child = (pe_resource_t *)iter->data;
             enum rsc_role_e child_role = child->fns->state(child, TRUE);
 
-            if (child_role == RSC_ROLE_PROMOTED) {
+            if (child_role == pcmk_role_promoted) {
                 count++;
                 current = pe__current_node(child);
             }

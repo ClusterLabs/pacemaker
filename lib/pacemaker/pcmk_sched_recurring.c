@@ -24,7 +24,7 @@ struct op_history {
 
     // Parsed information
     char *key;              // Operation key for action
-    enum rsc_role_e role;   // Action role (or RSC_ROLE_UNKNOWN for default)
+    enum rsc_role_e role;   // Action role (or pcmk_role_unknown for default)
     guint interval_ms;      // Action interval
 };
 
@@ -152,10 +152,10 @@ is_recurring_history(const pe_resource_t *rsc, const xmlNode *xml,
     // Ensure role is valid if specified
     role = crm_element_value(xml, "role");
     if (role == NULL) {
-        op->role = RSC_ROLE_UNKNOWN;
+        op->role = pcmk_role_unknown;
     } else {
         op->role = text2role(role);
-        if (op->role == RSC_ROLE_UNKNOWN) {
+        if (op->role == pcmk_role_unknown) {
             pcmk__config_err("Ignoring %s because %s is not a valid role",
                              op->id, role);
         }
@@ -244,10 +244,10 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
 {
     pe_action_t *mon = NULL;
     bool is_optional = true;
-    const bool is_default_role = (op->role == RSC_ROLE_UNKNOWN);
+    const bool is_default_role = (op->role == pcmk_role_unknown);
 
     // We're only interested in recurring actions for active roles
-    if (op->role == RSC_ROLE_STOPPED) {
+    if (op->role == pcmk_role_stopped) {
         return;
     }
 
@@ -255,7 +255,7 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
                                                       start);
 
     if ((!is_default_role && (rsc->next_role != op->role))
-        || (is_default_role && (rsc->next_role == RSC_ROLE_PROMOTED))) {
+        || (is_default_role && (rsc->next_role == pcmk_role_promoted))) {
         // Configured monitor role doesn't match role resource will have
 
         if (is_optional) { // It's running, so cancel it
@@ -265,17 +265,17 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
                                                              node);
 
             switch (rsc->role) {
-                case RSC_ROLE_UNPROMOTED:
-                case RSC_ROLE_STARTED:
-                    if (rsc->next_role == RSC_ROLE_PROMOTED) {
+                case pcmk_role_unpromoted:
+                case pcmk_role_started:
+                    if (rsc->next_role == pcmk_role_promoted) {
                         after_key = promote_key(rsc);
 
-                    } else if (rsc->next_role == RSC_ROLE_STOPPED) {
+                    } else if (rsc->next_role == pcmk_role_stopped) {
                         after_key = stop_key(rsc);
                     }
 
                     break;
-                case RSC_ROLE_PROMOTED:
+                case pcmk_role_promoted:
                     after_key = demote_key(rsc);
                     break;
                 default:
@@ -292,7 +292,7 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
                    "%s recurring action %s because %s configured for %s role "
                    "(not %s)",
                    (is_optional? "Cancelling" : "Ignoring"), op->key, op->id,
-                   role2text(is_default_role? RSC_ROLE_UNPROMOTED : op->role),
+                   role2text(is_default_role? pcmk_role_unpromoted : op->role),
                    role2text(rsc->next_role));
         return;
     }
@@ -322,7 +322,7 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
                     rsc->id, pe__node_name(node));
     }
 
-    if (rsc->next_role == RSC_ROLE_PROMOTED) {
+    if (rsc->next_role == pcmk_role_promoted) {
         pe__add_action_expected_result(mon, CRM_EX_PROMOTED);
     }
 
@@ -338,13 +338,13 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
                            pe_order_implies_then|pe_order_runnable_left,
                            rsc->cluster);
 
-        if (rsc->next_role == RSC_ROLE_PROMOTED) {
+        if (rsc->next_role == pcmk_role_promoted) {
             pcmk__new_ordering(rsc, promote_key(rsc), NULL,
                                rsc, NULL, mon,
                                pe_order_optional|pe_order_runnable_left,
                                rsc->cluster);
 
-        } else if (rsc->role == RSC_ROLE_PROMOTED) {
+        } else if (rsc->role == pcmk_role_promoted) {
             pcmk__new_ordering(rsc, demote_key(rsc), NULL,
                                rsc, NULL, mon,
                                pe_order_optional|pe_order_runnable_left,
@@ -378,8 +378,8 @@ cancel_if_running(pe_resource_t *rsc, const pe_node_t *node, const char *key,
     cancel_op = pcmk__new_cancel_action(rsc, name, interval_ms, node);
 
     switch (rsc->next_role) {
-        case RSC_ROLE_STARTED:
-        case RSC_ROLE_UNPROMOTED:
+        case pcmk_role_started:
+        case pcmk_role_unpromoted:
             /* Order starts after cancel. If the current role is
              * stopped, this cancels the monitor before the resource
              * starts; if the current role is started, then this cancels
@@ -476,7 +476,7 @@ recurring_op_for_inactive(pe_resource_t *rsc, const pe_node_t *node,
     GList *possible_matches = NULL;
 
     // We're only interested in recurring actions for the inactive role
-    if (op->role != RSC_ROLE_STOPPED) {
+    if (op->role != pcmk_role_stopped) {
         return;
     }
 
@@ -576,7 +576,7 @@ pcmk__create_recurring_actions(pe_resource_t *rsc)
                      "in maintenance mode",
                      rsc->id, pe__node_name(rsc->allocated_to));
 
-    } else if ((rsc->next_role != RSC_ROLE_STOPPED)
+    } else if ((rsc->next_role != pcmk_role_stopped)
         || !pcmk_is_set(rsc->flags, pe_rsc_managed)) {
         // Recurring actions for active roles needed
         start = start_action(rsc, rsc->allocated_to, TRUE);

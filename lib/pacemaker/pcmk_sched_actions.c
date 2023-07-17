@@ -713,13 +713,13 @@ handle_asymmetric_ordering(const pe_action_t *first, pe_action_t *then)
     if (pcmk_is_set(then->flags, pe_action_optional)) {
         enum rsc_role_e then_rsc_role = then->rsc->fns->state(then->rsc, TRUE);
 
-        if ((then_rsc_role == RSC_ROLE_STOPPED)
+        if ((then_rsc_role == pcmk_role_stopped)
             && pcmk__str_eq(then->task, PCMK_ACTION_STOP, pcmk__str_none)) {
             /* If 'then' should stop after 'first' but is already stopped, the
              * ordering is irrelevant.
              */
             return;
-        } else if ((then_rsc_role >= RSC_ROLE_STARTED)
+        } else if ((then_rsc_role >= pcmk_role_started)
             && pcmk__str_eq(then->task, PCMK_ACTION_START, pcmk__str_none)
             && pe__rsc_running_on_only(then->rsc, then->node)) {
             /* Similarly if 'then' should start after 'first' but is already
@@ -857,7 +857,7 @@ pcmk__update_ordered_actions(pe_action_t *first, pe_action_t *then,
     }
 
     if (pcmk_is_set(type, pe_order_promoted_implies_first)
-        && (then->rsc != NULL) && (then->rsc->role == RSC_ROLE_PROMOTED)
+        && (then->rsc != NULL) && (then->rsc->role == pcmk_role_promoted)
         && pcmk_is_set(filter, pe_action_optional)
         && !pcmk_is_set(then->flags, pe_action_optional)) {
 

@@ -294,25 +294,25 @@ anti_colocation_order(pe_resource_t *first_rsc, int first_role,
     const char *then_tasks[] = { NULL, NULL };
 
     /* Actions to make first_rsc lose first_role */
-    if (first_role == RSC_ROLE_PROMOTED) {
+    if (first_role == pcmk_role_promoted) {
         first_tasks[0] = PCMK_ACTION_DEMOTE;
 
     } else {
         first_tasks[0] = PCMK_ACTION_STOP;
 
-        if (first_role == RSC_ROLE_UNPROMOTED) {
+        if (first_role == pcmk_role_unpromoted) {
             first_tasks[1] = PCMK_ACTION_PROMOTE;
         }
     }
 
     /* Actions to make then_rsc gain then_role */
-    if (then_role == RSC_ROLE_PROMOTED) {
+    if (then_role == pcmk_role_promoted) {
         then_tasks[0] = PCMK_ACTION_PROMOTE;
 
     } else {
         then_tasks[0] = PCMK_ACTION_START;
 
-        if (then_role == RSC_ROLE_UNPROMOTED) {
+        if (then_role == pcmk_role_unpromoted) {
             then_tasks[1] = PCMK_ACTION_DEMOTE;
         }
     }
@@ -1107,12 +1107,12 @@ pcmk__block_colocation_dependents(pe_action_t *action)
          * If the primary can't be promoted, the dependent can't reach its
          * colocated role if the primary's colocation role is promoted.
          */
-        if (!is_start && (colocation->primary_role != RSC_ROLE_PROMOTED)) {
+        if (!is_start && (colocation->primary_role != pcmk_role_promoted)) {
             continue;
         }
 
         // Block the dependent from reaching its colocated role
-        if (colocation->dependent_role == RSC_ROLE_PROMOTED) {
+        if (colocation->dependent_role == pcmk_role_promoted) {
             mark_action_blocked(colocation->dependent, PCMK_ACTION_PROMOTE,
                                 action->rsc);
         } else {
@@ -1191,7 +1191,7 @@ pcmk__colocation_affects(const pe_resource_t *dependent,
     dependent_role_rsc = get_resource_for_role(dependent);
     primary_role_rsc = get_resource_for_role(primary);
 
-    if ((colocation->dependent_role >= RSC_ROLE_UNPROMOTED)
+    if ((colocation->dependent_role >= pcmk_role_unpromoted)
         && (dependent_role_rsc->parent != NULL)
         && pcmk_is_set(dependent_role_rsc->parent->flags, pe_rsc_promotable)
         && !pcmk_is_set(dependent_role_rsc->flags, pe_rsc_provisional)) {
@@ -1238,9 +1238,10 @@ pcmk__colocation_affects(const pe_resource_t *dependent,
         return pcmk__coloc_affects_nothing;
     }
 
-    if ((colocation->dependent_role != RSC_ROLE_UNKNOWN)
+    if ((colocation->dependent_role != pcmk_role_unknown)
         && (colocation->dependent_role != dependent_role_rsc->next_role)) {
         crm_trace("Skipping %scolocation '%s': dependent limited to %s role "
+
                   "but %s next role is %s",
                   ((colocation->score < 0)? "anti-" : ""),
                   colocation->id, role2text(colocation->dependent_role),
@@ -1249,7 +1250,7 @@ pcmk__colocation_affects(const pe_resource_t *dependent,
         return pcmk__coloc_affects_nothing;
     }
 
-    if ((colocation->primary_role != RSC_ROLE_UNKNOWN)
+    if ((colocation->primary_role != pcmk_role_unknown)
         && (colocation->primary_role != primary_role_rsc->next_role)) {
         crm_trace("Skipping %scolocation '%s': primary limited to %s role "
                   "but %s next role is %s",
@@ -1402,18 +1403,18 @@ pcmk__apply_coloc_to_priority(pe_resource_t *dependent,
 
     if (!pcmk__str_eq(dependent_value, primary_value, pcmk__str_casei)) {
         if ((colocation->score == INFINITY)
-            && (colocation->dependent_role == RSC_ROLE_PROMOTED)) {
+            && (colocation->dependent_role == pcmk_role_promoted)) {
             dependent->priority = -INFINITY;
         }
         return;
     }
 
-    if ((colocation->primary_role != RSC_ROLE_UNKNOWN)
+    if ((colocation->primary_role != pcmk_role_unknown)
         && (colocation->primary_role != primary_role_rsc->next_role)) {
         return;
     }
 
-    if (colocation->dependent_role == RSC_ROLE_UNPROMOTED) {
+    if (colocation->dependent_role == pcmk_role_unpromoted) {
         score_multiplier = -1;
     }
 

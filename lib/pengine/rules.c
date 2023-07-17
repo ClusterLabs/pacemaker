@@ -41,7 +41,7 @@ pe_evaluate_rules(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now,
 {
     pe_rule_eval_data_t rule_data = {
         .node_hash = node_hash,
-        .role = RSC_ROLE_UNKNOWN,
+        .role = pcmk_role_unknown,
         .now = now,
         .match_data = NULL,
         .rsc_data = NULL,
@@ -533,7 +533,7 @@ pe_unpack_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
 {
     pe_rule_eval_data_t rule_data = {
         .node_hash = node_hash,
-        .role = RSC_ROLE_UNKNOWN,
+        .role = pcmk_role_unknown,
         .now = now,
         .match_data = NULL,
         .rsc_data = NULL,
@@ -1158,7 +1158,7 @@ pe__eval_role_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
     const char *op = NULL;
     const char *value = NULL;
 
-    if (rule_data->role == RSC_ROLE_UNKNOWN) {
+    if (rule_data->role == pcmk_role_unknown) {
         return accept;
     }
 
@@ -1166,13 +1166,13 @@ pe__eval_role_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
     op = crm_element_value(expr, XML_EXPR_ATTR_OPERATION);
 
     if (pcmk__str_eq(op, "defined", pcmk__str_casei)) {
-        if (rule_data->role > RSC_ROLE_STARTED) {
+        if (rule_data->role > pcmk_role_started) {
             accept = TRUE;
         }
 
     } else if (pcmk__str_eq(op, "not_defined", pcmk__str_casei)) {
-        if ((rule_data->role > RSC_ROLE_UNKNOWN)
-            && (rule_data->role < RSC_ROLE_UNPROMOTED)) {
+        if ((rule_data->role > pcmk_role_unknown)
+            && (rule_data->role < pcmk_role_unpromoted)) {
             accept = TRUE;
         }
 
@@ -1183,8 +1183,8 @@ pe__eval_role_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
 
     } else if (pcmk__str_eq(op, "ne", pcmk__str_casei)) {
         // Test "ne" only with promotable clone roles
-        if ((rule_data->role > RSC_ROLE_UNKNOWN)
-            && (rule_data->role < RSC_ROLE_UNPROMOTED)) {
+        if ((rule_data->role > pcmk_role_unknown)
+            && (rule_data->role < pcmk_role_unpromoted)) {
             accept = FALSE;
 
         } else if (text2role(value) != rule_data->role) {
@@ -1298,7 +1298,7 @@ unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj, const char *set_name,
 {
     pe_rule_eval_data_t rule_data = {
         .node_hash = node_hash,
-        .role = RSC_ROLE_UNKNOWN,
+        .role = pcmk_role_unknown,
         .now = now,
         .match_data = NULL,
         .rsc_data = NULL,

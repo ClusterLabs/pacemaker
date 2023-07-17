@@ -661,7 +661,7 @@ log_resource_details(pe_working_set_t *data_set)
 
         // Log all resources except inactive orphans
         if (!pcmk_is_set(rsc->flags, pe_rsc_orphan)
-            || (rsc->role != RSC_ROLE_STOPPED)) {
+            || (rsc->role != pcmk_role_stopped)) {
             out->message(out, crm_map_element_name(rsc->xml), 0, rsc, all, all);
         }
     }

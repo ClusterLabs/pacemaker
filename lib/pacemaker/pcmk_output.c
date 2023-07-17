@@ -25,7 +25,7 @@ colocations_header(pe_resource_t *rsc, pcmk__colocation_t *cons,
                    bool dependents) {
     char *retval = NULL;
 
-    if (cons->primary_role > RSC_ROLE_STARTED) {
+    if (cons->primary_role > pcmk_role_started) {
         retval = crm_strdup_printf("%s (score=%s, %s role=%s, id=%s)",
                                    rsc->id, pcmk_readable_score(cons->score),
                                    (dependents? "needs" : "with"),
@@ -56,12 +56,12 @@ colocations_xml_node(pcmk__output_t *out, pe_resource_t *rsc,
                    (pcmkXmlStr) cons->node_attribute);
     }
 
-    if (cons->dependent_role != RSC_ROLE_UNKNOWN) {
+    if (cons->dependent_role != pcmk_role_unknown) {
         xmlSetProp(node, (pcmkXmlStr) "rsc-role",
                    (pcmkXmlStr) role2text(cons->dependent_role));
     }
 
-    if (cons->primary_role != RSC_ROLE_UNKNOWN) {
+    if (cons->primary_role != pcmk_role_unknown) {
         xmlSetProp(node, (pcmkXmlStr) "with-rsc-role",
                    (pcmkXmlStr) role2text(cons->primary_role));
     }
@@ -138,8 +138,8 @@ rsc_action_item(pcmk__output_t *out, va_list args)
         rsc_width = len + 2;
     }
 
-    if ((rsc->role > RSC_ROLE_STARTED)
-        || (rsc->next_role > RSC_ROLE_UNPROMOTED)) {
+    if ((rsc->role > pcmk_role_started)
+        || (rsc->next_role > pcmk_role_unpromoted)) {
         need_role = true;
     }
 
@@ -257,8 +257,8 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
         source = action;
     }
 
-    if ((rsc->role > RSC_ROLE_STARTED)
-        || (rsc->next_role > RSC_ROLE_UNPROMOTED)) {
+    if ((rsc->role > pcmk_role_started)
+        || (rsc->next_role > pcmk_role_unpromoted)) {
         need_role = true;
     }
 
@@ -1218,7 +1218,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
     }
 
     if ((stop != NULL)
-        && ((rsc->next_role == RSC_ROLE_STOPPED)
+        && ((rsc->next_role == pcmk_role_stopped)
             || ((start != NULL)
                 && !pcmk_is_set(start->flags, pe_action_runnable)))) {
 
@@ -1272,18 +1272,18 @@ rsc_action_default(pcmk__output_t *out, va_list args)
                           next, start, NULL);
         STOP_SANITY_ASSERT(__LINE__);
 
-    } else if (rsc->role == RSC_ROLE_PROMOTED) {
+    } else if (rsc->role == pcmk_role_promoted) {
         CRM_LOG_ASSERT(current != NULL);
         rc = out->message(out, "rsc-action-item", "Demote", rsc, current,
                           next, demote, NULL);
 
-    } else if (rsc->next_role == RSC_ROLE_PROMOTED) {
+    } else if (rsc->next_role == pcmk_role_promoted) {
         CRM_LOG_ASSERT(next);
         rc = out->message(out, "rsc-action-item", "Promote", rsc, current,
                           next, promote, NULL);
 
-    } else if ((rsc->role == RSC_ROLE_STOPPED)
-               && (rsc->next_role > RSC_ROLE_STOPPED)) {
+    } else if ((rsc->role == pcmk_role_stopped)
+               && (rsc->next_role > pcmk_role_stopped)) {
         rc = out->message(out, "rsc-action-item", "Start", rsc, current, next,
                           start, NULL);
     }

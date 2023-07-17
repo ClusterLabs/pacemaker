@@ -512,7 +512,7 @@ configured_role(pe_resource_t * rsc)
     if (target_role) {
         return text2role(target_role);
     }
-    return RSC_ROLE_UNKNOWN;
+    return pcmk_role_unknown;
 }
 
 /*!
@@ -678,7 +678,7 @@ clone_print(pe_resource_t *rsc, const char *pre_text, long options,
                 if (location->details->online == FALSE && location->details->unclean) {
                     print_full = TRUE;
 
-                } else if (a_role > RSC_ROLE_UNPROMOTED) {
+                } else if (a_role > pcmk_role_unpromoted) {
                     promoted_list = g_list_append(promoted_list, location);
 
                 } else {
@@ -735,7 +735,7 @@ clone_print(pe_resource_t *rsc, const char *pre_text, long options,
         if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
             enum rsc_role_e role = configured_role(rsc);
 
-            if (role == RSC_ROLE_UNPROMOTED) {
+            if (role == pcmk_role_unpromoted) {
                 short_print((const char *) list_text->str, child_text,
                             UNPROMOTED_INSTANCES " (target-role)", NULL,
                             options, print_data);
@@ -756,7 +756,7 @@ clone_print(pe_resource_t *rsc, const char *pre_text, long options,
         const char *state = "Stopped";
         enum rsc_role_e role = configured_role(rsc);
 
-        if (role == RSC_ROLE_STOPPED) {
+        if (role == pcmk_role_stopped) {
             state = "Stopped (disabled)";
         }
 
@@ -976,7 +976,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
                 if (location->details->online == FALSE && location->details->unclean) {
                     print_full = TRUE;
 
-                } else if (a_role > RSC_ROLE_UNPROMOTED) {
+                } else if (a_role > pcmk_role_unpromoted) {
                     promoted_list = g_list_append(promoted_list, location);
 
                 } else {
@@ -1055,7 +1055,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
         if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
             enum rsc_role_e role = configured_role(rsc);
 
-            if (role == RSC_ROLE_UNPROMOTED) {
+            if (role == pcmk_role_unpromoted) {
                 out->list_item(out, NULL,
                                UNPROMOTED_INSTANCES " (target-role): [ %s ]",
                                (const char *) list_text->str);
@@ -1104,7 +1104,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
                     xmlNode *probe_op = pe__failed_probe_for_rsc(rsc, node->details->uname);
                     const char *state = "Stopped";
 
-                    if (configured_role(rsc) == RSC_ROLE_STOPPED) {
+                    if (configured_role(rsc) == pcmk_role_stopped) {
                         state = "Stopped (disabled)";
                     }
 
@@ -1202,7 +1202,7 @@ clone_free(pe_resource_t * rsc)
 enum rsc_role_e
 clone_resource_state(const pe_resource_t * rsc, gboolean current)
 {
-    enum rsc_role_e clone_role = RSC_ROLE_UNKNOWN;
+    enum rsc_role_e clone_role = pcmk_role_unknown;
     GList *gIter = rsc->children;
 
     for (; gIter != NULL; gIter = gIter->next) {

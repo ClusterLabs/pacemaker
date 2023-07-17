@@ -31,7 +31,7 @@ build_node_info_list(const pe_resource_t *rsc)
 
             ni->node_name = node->details->uname;
             ni->promoted = pcmk_is_set(rsc->flags, pe_rsc_promotable) &&
-                           child->fns->state(child, TRUE) == RSC_ROLE_PROMOTED;
+                           child->fns->state(child, TRUE) == pcmk_role_promoted;
 
             retval = g_list_prepend(retval, ni);
         }
@@ -64,7 +64,7 @@ cli_resource_search(pe_resource_t *rsc, const char *requested_name,
             pe_node_t *node = (pe_node_t *) iter->data;
             node_info_t *ni = calloc(1, sizeof(node_info_t));
             ni->node_name = node->details->uname;
-            ni->promoted = (rsc->fns->state(rsc, TRUE) == RSC_ROLE_PROMOTED);
+            ni->promoted = (rsc->fns->state(rsc, TRUE) == pcmk_role_promoted);
 
             retval = g_list_prepend(retval, ni);
         }
@@ -933,11 +933,11 @@ check_role(resource_checks_t *checks)
         return;
     }
     switch (text2role(role_s)) {
-        case RSC_ROLE_STOPPED:
+        case pcmk_role_stopped:
             checks->flags |= rsc_remain_stopped;
             break;
 
-        case RSC_ROLE_UNPROMOTED:
+        case pcmk_role_unpromoted:
             if (pcmk_is_set(pe__const_top_resource(checks->rsc, false)->flags,
                             pe_rsc_promotable)) {
                 checks->flags |= rsc_unpromotable;
@@ -2105,7 +2105,7 @@ cli_resource_move(const pe_resource_t *rsc, const char *rsc_id,
             const pe_resource_t *child = (const pe_resource_t *) iter->data;
             enum rsc_role_e child_role = child->fns->state(child, TRUE);
 
-            if (child_role == RSC_ROLE_PROMOTED) {
+            if (child_role == pcmk_role_promoted) {
                 rsc = child;
                 promoted_node = pe__current_node(child);
                 promoted_count++;

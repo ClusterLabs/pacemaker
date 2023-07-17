@@ -373,7 +373,7 @@ match_replica_container(const pe__bundle_replica_t *replica, void *user_data)
     struct match_data *match_data = user_data;
 
     if (pcmk__instance_matches(replica->container, match_data->node,
-                               RSC_ROLE_UNKNOWN, false)) {
+                               pcmk_role_unknown, false)) {
         match_data->container = replica->container;
         return false; // Match found, don't bother searching further replicas
     }
@@ -482,9 +482,9 @@ replica_apply_coloc_score(const pe__bundle_replica_t *replica, void *user_data)
         return true;
     }
 
-    if ((coloc_data->colocation->primary_role >= RSC_ROLE_PROMOTED)
+    if ((coloc_data->colocation->primary_role >= pcmk_role_promoted)
         && ((replica->child == NULL)
-            || (replica->child->next_role < RSC_ROLE_PROMOTED))) {
+            || (replica->child->next_role < pcmk_role_promoted))) {
         return true;
     }
 
@@ -749,8 +749,8 @@ pcmk__bundle_apply_location(pe_resource_t *rsc, pe__location_t *location)
 
     bundled_resource = pe__bundled_resource(rsc);
     if ((bundled_resource != NULL)
-        && ((location->role_filter == RSC_ROLE_UNPROMOTED)
-            || (location->role_filter == RSC_ROLE_PROMOTED))) {
+        && ((location->role_filter == pcmk_role_unpromoted)
+            || (location->role_filter == pcmk_role_promoted))) {
         bundled_resource->cmds->apply_location(bundled_resource, location);
         bundled_resource->rsc_location = g_list_prepend(
             bundled_resource->rsc_location, location);

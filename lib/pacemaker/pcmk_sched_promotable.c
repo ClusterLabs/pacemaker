@@ -132,7 +132,7 @@ apply_promoted_locations(pe_resource_t *child,
         const pe__location_t *location = iter->data;
         const pe_node_t *constraint_node = NULL;
 
-        if (location->role_filter == RSC_ROLE_PROMOTED) {
+        if (location->role_filter == pcmk_role_promoted) {
             constraint_node = pe_find_node_id(location->node_list_rh,
                                               chosen->details->id);
         }
@@ -187,7 +187,7 @@ node_to_be_promoted_on(const pe_resource_t *rsc)
         return NULL;
 
     } else if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-        if (rsc->fns->state(rsc, TRUE) == RSC_ROLE_PROMOTED) {
+        if (rsc->fns->state(rsc, TRUE) == pcmk_role_promoted) {
             crm_notice("Unmanaged instance %s will be left promoted on %s",
                        rsc->id, pe__node_name(node));
         } else {
@@ -253,8 +253,8 @@ cmp_promotable_instance(gconstpointer a, gconstpointer b)
     const pe_resource_t *rsc1 = (const pe_resource_t *) a;
     const pe_resource_t *rsc2 = (const pe_resource_t *) b;
 
-    enum rsc_role_e role1 = RSC_ROLE_UNKNOWN;
-    enum rsc_role_e role2 = RSC_ROLE_UNKNOWN;
+    enum rsc_role_e role1 = pcmk_role_unknown;
+    enum rsc_role_e role2 = pcmk_role_unknown;
 
     CRM_ASSERT((rsc1 != NULL) && (rsc2 != NULL));
 
@@ -351,7 +351,7 @@ apply_coloc_to_dependent(gpointer data, gpointer user_data)
     uint32_t flags = pcmk__coloc_select_default;
     float factor = colocation->score / (float) INFINITY;
 
-    if (colocation->dependent_role != RSC_ROLE_PROMOTED) {
+    if (colocation->dependent_role != pcmk_role_promoted) {
         return;
     }
     if (colocation->score < INFINITY) {
@@ -383,7 +383,7 @@ apply_coloc_to_primary(gpointer data, gpointer user_data)
     const uint32_t flags = pcmk__coloc_select_active
                            |pcmk__coloc_select_nonnegative;
 
-    if ((colocation->primary_role != RSC_ROLE_PROMOTED)
+    if ((colocation->primary_role != pcmk_role_promoted)
          || !pcmk__colocation_has_influence(colocation, NULL)) {
         return;
     }
@@ -413,7 +413,7 @@ set_sort_index_to_node_score(gpointer data, gpointer user_data)
     pe_node_t *chosen = child->fns->location(child, NULL, FALSE);
 
     if (!pcmk_is_set(child->flags, pe_rsc_managed)
-        && (child->next_role == RSC_ROLE_PROMOTED)) {
+        && (child->next_role == pcmk_role_promoted)) {
         child->sort_index = INFINITY;
         pe_rsc_trace(clone,
                      "Final sort index for %s is INFINITY (unmanaged promoted)",
@@ -814,9 +814,9 @@ set_current_role_unpromoted(void *data, void *user_data)
 {
     pe_resource_t *rsc = (pe_resource_t *) data;
 
-    if (rsc->role == RSC_ROLE_STARTED) {
+    if (rsc->role == pcmk_role_started) {
         // Promotable clones should use unpromoted role instead of started
-        rsc->role = RSC_ROLE_UNPROMOTED;
+        rsc->role = pcmk_role_unpromoted;
     }
     g_list_foreach(rsc->children, set_current_role_unpromoted, NULL);
 }
@@ -836,9 +836,9 @@ set_next_role_unpromoted(void *data, void *user_data)
 
     rsc->fns->location(rsc, &assigned, FALSE);
     if (assigned == NULL) {
-        pe__set_next_role(rsc, RSC_ROLE_STOPPED, "stopped instance");
+        pe__set_next_role(rsc, pcmk_role_stopped, "stopped instance");
     } else {
-        pe__set_next_role(rsc, RSC_ROLE_UNPROMOTED, "unpromoted instance");
+        pe__set_next_role(rsc, pcmk_role_unpromoted, "unpromoted instance");
         g_list_free(assigned);
     }
     g_list_foreach(rsc->children, set_next_role_unpromoted, NULL);
@@ -856,8 +856,8 @@ set_next_role_promoted(void *data, gpointer user_data)
 {
     pe_resource_t *rsc = (pe_resource_t *) data;
 
-    if (rsc->next_role == RSC_ROLE_UNKNOWN) {
-        pe__set_next_role(rsc, RSC_ROLE_PROMOTED, "promoted instance");
+    if (rsc->next_role == pcmk_role_unknown) {
+        pe__set_next_role(rsc, pcmk_role_promoted, "promoted instance");
     }
     g_list_foreach(rsc->children, set_next_role_promoted, NULL);
 }
@@ -903,13 +903,13 @@ set_instance_priority(gpointer data, gpointer user_data)
     pe_resource_t *instance = (pe_resource_t *) data;
     const pe_resource_t *clone = (const pe_resource_t *) user_data;
     const pe_node_t *chosen = NULL;
-    enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
+    enum rsc_role_e next_role = pcmk_role_unknown;
     GList *list = NULL;
 
     pe_rsc_trace(clone, "Assigning priority for %s: %s", instance->id,
                  role2text(instance->next_role));
 
-    if (instance->fns->state(instance, TRUE) == RSC_ROLE_STARTED) {
+    if (instance->fns->state(instance, TRUE) == pcmk_role_started) {
         set_current_role_unpromoted(instance, NULL);
     }
 
@@ -926,8 +926,8 @@ set_instance_priority(gpointer data, gpointer user_data)
 
     next_role = instance->fns->state(instance, FALSE);
     switch (next_role) {
-        case RSC_ROLE_STARTED:
-        case RSC_ROLE_UNKNOWN:
+        case pcmk_role_started:
+        case pcmk_role_unknown:
             // Set instance priority to its promotion score (or -1 if none)
             {
                 bool is_default = false;
@@ -947,13 +947,13 @@ set_instance_priority(gpointer data, gpointer user_data)
             }
             break;
 
-        case RSC_ROLE_UNPROMOTED:
-        case RSC_ROLE_STOPPED:
+        case pcmk_role_unpromoted:
+        case pcmk_role_stopped:
             // Instance can't be promoted
             instance->priority = -INFINITY;
             break;
 
-        case RSC_ROLE_PROMOTED:
+        case pcmk_role_promoted:
             // Nothing needed (re-creating actions after scheduling fencing)
             break;
 
@@ -976,7 +976,7 @@ set_instance_priority(gpointer data, gpointer user_data)
     g_list_free(list);
 
     instance->sort_index = instance->priority;
-    if (next_role == RSC_ROLE_PROMOTED) {
+    if (next_role == pcmk_role_promoted) {
         instance->sort_index = INFINITY;
     }
     pe_rsc_trace(clone, "Assigning %s priority = %d",
@@ -1015,7 +1015,7 @@ set_instance_role(gpointer data, gpointer user_data)
         return;
     }
 
-    if ((instance->role < RSC_ROLE_PROMOTED)
+    if ((instance->role < pcmk_role_promoted)
         && !pcmk_is_set(instance->cluster->flags, pe_flag_have_quorum)
         && (instance->cluster->no_quorum_policy == no_quorum_freeze)) {
         crm_notice("Clone instance %s cannot be promoted without quorum",
@@ -1239,8 +1239,8 @@ pcmk__update_dependent_with_promotable(const pe_resource_t *primary,
      * inactive dependent instances can't start (in the unpromoted role).
      */
     if ((colocation->score >= INFINITY)
-        && ((colocation->dependent_role != RSC_ROLE_PROMOTED)
-            || (colocation->primary_role != RSC_ROLE_PROMOTED))) {
+        && ((colocation->dependent_role != pcmk_role_promoted)
+            || (colocation->primary_role != pcmk_role_promoted))) {
 
         pe_rsc_trace(colocation->primary,
                      "Applying %s (mandatory %s with %s) to %s",

@@ -49,7 +49,7 @@ native_priority_to_node(pe_resource_t * rsc, pe_node_t * node, gboolean failed)
         return;
     }
 
-    if (rsc->role == RSC_ROLE_PROMOTED) {
+    if (rsc->role == pcmk_role_promoted) {
         // Promoted instance takes base priority + 1
         priority = rsc->priority + 1;
 
@@ -60,9 +60,9 @@ native_priority_to_node(pe_resource_t * rsc, pe_node_t * node, gboolean failed)
     node->details->priority += priority;
     pe_rsc_trace(rsc, "%s now has priority %d with %s'%s' (priority: %d%s)",
                  pe__node_name(node), node->details->priority,
-                 (rsc->role == RSC_ROLE_PROMOTED)? "promoted " : "",
+                 (rsc->role == pcmk_role_promoted)? "promoted " : "",
                  rsc->id, rsc->priority,
-                 (rsc->role == RSC_ROLE_PROMOTED)? " + 1" : "");
+                 (rsc->role == pcmk_role_promoted)? " + 1" : "");
 
     /* Priority of a resource running on a guest node is added to the cluster
      * node as well. */
@@ -77,9 +77,9 @@ native_priority_to_node(pe_resource_t * rsc, pe_node_t * node, gboolean failed)
             pe_rsc_trace(rsc, "%s now has priority %d with %s'%s' (priority: %d%s) "
                          "from guest node %s",
                          pe__node_name(a_node), a_node->details->priority,
-                         (rsc->role == RSC_ROLE_PROMOTED)? "promoted " : "",
+                         (rsc->role == pcmk_role_promoted)? "promoted " : "",
                          rsc->id, rsc->priority,
-                         (rsc->role == RSC_ROLE_PROMOTED)? " + 1" : "",
+                         (rsc->role == pcmk_role_promoted)? " + 1" : "",
                          pe__node_name(node));
         }
     }
@@ -426,11 +426,11 @@ native_displayable_role(const pe_resource_t *rsc)
 {
     enum rsc_role_e role = rsc->role;
 
-    if ((role == RSC_ROLE_STARTED)
+    if ((role == pcmk_role_started)
         && pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
                        pe_rsc_promotable)) {
 
-        role = RSC_ROLE_UNPROMOTED;
+        role = pcmk_role_unpromoted;
     }
     return role;
 }
@@ -594,7 +594,7 @@ pcmk__native_output_string(const pe_resource_t *rsc, const char *name,
         enum rsc_role_e role = native_displayable_role(rsc);
 
         g_string_append(outstr, " FAILED");
-        if (role > RSC_ROLE_UNPROMOTED) {
+        if (role > pcmk_role_unpromoted) {
             pcmk__add_word(&outstr, 0, role2text(role));
         }
     } else {
@@ -607,7 +607,7 @@ pcmk__native_output_string(const pe_resource_t *rsc, const char *name,
     }
 
     // Failed probe operation
-    if (native_displayable_role(rsc) == RSC_ROLE_STOPPED) {
+    if (native_displayable_role(rsc) == pcmk_role_stopped) {
         xmlNode *probe_op = pe__failed_probe_for_rsc(rsc, node ? node->details->uname : NULL);
         if (probe_op != NULL) {
             int rc;
@@ -639,12 +639,12 @@ pcmk__native_output_string(const pe_resource_t *rsc, const char *name,
          * Started, as it is the default anyways, and doesn't prevent the
          * resource from becoming promoted).
          */
-        if (target_role_e == RSC_ROLE_STOPPED) {
+        if (target_role_e == pcmk_role_stopped) {
             have_flags = add_output_flag(outstr, "disabled", have_flags);
 
         } else if (pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
                                pe_rsc_promotable)
-                   && target_role_e == RSC_ROLE_UNPROMOTED) {
+                   && (target_role_e == pcmk_role_unpromoted)) {
             have_flags = add_output_flag(outstr, "target-role:", have_flags);
             g_string_append(outstr, target_role);
         }

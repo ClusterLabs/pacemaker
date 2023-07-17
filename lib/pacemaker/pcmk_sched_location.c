@@ -82,7 +82,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
 
     crm_trace("Processing rule: %s", rule_id);
 
-    if ((role != NULL) && (text2role(role) == RSC_ROLE_UNKNOWN)) {
+    if ((role != NULL) && (text2role(role) == pcmk_role_unknown)) {
         pe_err("Bad role specified for %s: %s", rule_id, role);
         return NULL;
     }
@@ -118,12 +118,12 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
     if (role != NULL) {
         crm_trace("Setting role filter: %s", role);
         location_rule->role_filter = text2role(role);
-        if (location_rule->role_filter == RSC_ROLE_UNPROMOTED) {
+        if (location_rule->role_filter == pcmk_role_unpromoted) {
             /* Any promotable clone cannot be promoted without being in the
              * unpromoted role first. Ergo, any constraint for the unpromoted
              * role applies to every role.
              */
-            location_rule->role_filter = RSC_ROLE_UNKNOWN;
+            location_rule->role_filter = pcmk_role_unknown;
         }
     }
     if (do_and) {
@@ -144,7 +144,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
             .meta = rsc->meta,
         };
 
-        accept = pe_test_rule(rule_xml, node->details->attrs, RSC_ROLE_UNKNOWN,
+        accept = pe_test_rule(rule_xml, node->details->attrs, pcmk_role_unknown,
                               rsc->cluster->now, next_change, &match_data);
 
         crm_trace("Rule %s %s on %s", ID(rule_xml), accept? "passed" : "failed",
@@ -264,18 +264,18 @@ unpack_rsc_location(xmlNode *xml_obj, pe_resource_t *rsc, const char *role,
     }
 
     if ((location != NULL) && (role != NULL)) {
-        if (text2role(role) == RSC_ROLE_UNKNOWN) {
+        if (text2role(role) == pcmk_role_unknown) {
             pe_err("Invalid constraint %s: Bad role %s", id, role);
             return;
 
         } else {
             enum rsc_role_e r = text2role(role);
             switch (r) {
-                case RSC_ROLE_UNKNOWN:
-                case RSC_ROLE_STARTED:
-                case RSC_ROLE_UNPROMOTED:
+                case pcmk_role_unknown:
+                case pcmk_role_started:
+                case pcmk_role_unpromoted:
                     /* Applies to all */
-                    location->role_filter = RSC_ROLE_UNKNOWN;
+                    location->role_filter = pcmk_role_unknown;
                     break;
                 default:
                     location->role_filter = r;
@@ -554,7 +554,7 @@ pcmk__new_location(const char *id, pe_resource_t *rsc,
         new_con->id = strdup(id);
         new_con->rsc_lh = rsc;
         new_con->node_list_rh = NULL;
-        new_con->role_filter = RSC_ROLE_UNKNOWN;
+        new_con->role_filter = pcmk_role_unknown;
 
         if (pcmk__str_eq(discover_mode, "always",
                          pcmk__str_null_matches|pcmk__str_casei)) {
@@ -622,7 +622,7 @@ pcmk__apply_location(pe_resource_t *rsc, pe__location_t *location)
     CRM_ASSERT((rsc != NULL) && (location != NULL));
 
     // If a role was specified, ensure constraint is applicable
-    need_role = (location->role_filter > RSC_ROLE_UNKNOWN);
+    need_role = (location->role_filter > pcmk_role_unknown);
     if (need_role && (location->role_filter != rsc->next_role)) {
         pe_rsc_trace(rsc,
                      "Not applying %s to %s because role will be %s not %s",

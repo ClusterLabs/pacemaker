@@ -45,7 +45,7 @@ typedef struct {
 static bool
 ticket_role_matches(const pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
 {
-    if ((rsc_ticket->role == RSC_ROLE_UNKNOWN)
+    if ((rsc_ticket->role == pcmk_role_unknown)
         || (rsc_ticket->role == rsc->role)) {
         return true;
     }
@@ -93,7 +93,7 @@ constraints_for_ticket(pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
 
             case loss_ticket_demote:
                 // Promotion score will be set to -INFINITY in promotion_order()
-                if (rsc_ticket->role != RSC_ROLE_PROMOTED) {
+                if (rsc_ticket->role != pcmk_role_promoted) {
                     resource_location(rsc, NULL, -INFINITY,
                                       "__loss_of_ticket__", rsc->cluster);
                 }
@@ -126,7 +126,7 @@ constraints_for_ticket(pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
 
     } else if (!rsc_ticket->ticket->granted) {
 
-        if ((rsc_ticket->role != RSC_ROLE_PROMOTED)
+        if ((rsc_ticket->role != pcmk_role_promoted)
             || (rsc_ticket->loss_policy == loss_ticket_stop)) {
             resource_location(rsc, NULL, -INFINITY, "__no_ticket__",
                               rsc->cluster);
@@ -134,7 +134,7 @@ constraints_for_ticket(pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
 
     } else if (rsc_ticket->ticket->standby) {
 
-        if ((rsc_ticket->role != RSC_ROLE_PROMOTED)
+        if ((rsc_ticket->role != pcmk_role_promoted)
             || (rsc_ticket->loss_policy == loss_ticket_stop)) {
             resource_location(rsc, NULL, -INFINITY, "__ticket_standby__",
                               rsc->cluster);
@@ -204,7 +204,7 @@ rsc_ticket_new(const char *id, pe_resource_t *rsc, pe_ticket_t *ticket,
         new_rsc_ticket->loss_policy = loss_ticket_stop;
 
     } else {
-        if (new_rsc_ticket->role == RSC_ROLE_PROMOTED) {
+        if (new_rsc_ticket->role == pcmk_role_promoted) {
             crm_debug("On loss of ticket '%s': Default to demote %s (%s)",
                       new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
                       role2text(new_rsc_ticket->role));
@@ -521,7 +521,7 @@ pcmk__require_promotion_tickets(pe_resource_t *rsc)
     for (GList *item = rsc->rsc_tickets; item != NULL; item = item->next) {
         rsc_ticket_t *rsc_ticket = (rsc_ticket_t *) item->data;
 
-        if ((rsc_ticket->role == RSC_ROLE_PROMOTED)
+        if ((rsc_ticket->role == pcmk_role_promoted)
             && (!rsc_ticket->ticket->granted || rsc_ticket->ticket->standby)) {
             resource_location(rsc, NULL, -INFINITY,
                               "__stateful_without_ticket__", rsc->cluster);

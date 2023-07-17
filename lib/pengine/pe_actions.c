@@ -238,7 +238,7 @@ unpack_action_node_attributes(pe_action_t *action, pe_working_set_t *data_set)
 
         pe_rule_eval_data_t rule_data = {
             .node_hash = action->node->details->attrs,
-            .role = RSC_ROLE_UNKNOWN,
+            .role = pcmk_role_unknown,
             .now = data_set->now,
             .match_data = NULL,
             .rsc_data = NULL,
@@ -290,10 +290,10 @@ effective_quorum_policy(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     } else if (data_set->no_quorum_policy == no_quorum_demote) {
         switch (rsc->role) {
-            case RSC_ROLE_PROMOTED:
-            case RSC_ROLE_UNPROMOTED:
-                if (rsc->next_role > RSC_ROLE_UNPROMOTED) {
-                    pe__set_next_role(rsc, RSC_ROLE_UNPROMOTED,
+            case pcmk_role_promoted:
+            case pcmk_role_unpromoted:
+                if (rsc->next_role > pcmk_role_unpromoted) {
+                    pe__set_next_role(rsc, pcmk_role_unpromoted,
                                       "no-quorum-policy=demote");
                 }
                 policy = no_quorum_ignore;
@@ -658,7 +658,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
-        .role = RSC_ROLE_UNKNOWN,
+        .role = pcmk_role_unknown,
         .now = data_set->now,
         .match_data = NULL,
         .rsc_data = &rsc_rule_data,
@@ -790,7 +790,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
                              "operation '%s' to 'stop' because 'fence' is not "
                              "valid when fencing is disabled", action->uuid);
             action->on_fail = action_fail_stop;
-            action->fail_role = RSC_ROLE_STOPPED;
+            action->fail_role = pcmk_role_stopped;
             value = "stop resource";
         }
 
@@ -809,7 +809,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
 
     } else if (pcmk__str_eq(value, "stop", pcmk__str_casei)) {
         action->on_fail = action_fail_stop;
-        action->fail_role = RSC_ROLE_STOPPED;
+        action->fail_role = pcmk_role_stopped;
         value = "stop resource";
 
     } else if (pcmk__str_eq(value, "restart", pcmk__str_casei)) {
@@ -856,7 +856,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
 
         if (!pcmk_is_set(action->rsc->flags, pe_rsc_managed)) {
             action->on_fail = action_fail_stop;
-            action->fail_role = RSC_ROLE_STOPPED;
+            action->fail_role = pcmk_role_stopped;
             value = "stop unmanaged remote node (enforcing default)";
 
         } else {
@@ -867,7 +867,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
             }
 
             if (action->rsc->remote_reconnect_ms) {
-                action->fail_role = RSC_ROLE_STOPPED;
+                action->fail_role = pcmk_role_stopped;
             }
             action->on_fail = action_fail_reset_remote;
         }
@@ -900,15 +900,15 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
                         "Support for role_after_failure is deprecated and will be removed in a future release");
         }
     }
-    if (value != NULL && action->fail_role == RSC_ROLE_UNKNOWN) {
+    if (value != NULL && action->fail_role == pcmk_role_unknown) {
         action->fail_role = text2role(value);
     }
     /* defaults */
-    if (action->fail_role == RSC_ROLE_UNKNOWN) {
+    if (action->fail_role == pcmk_role_unknown) {
         if (pcmk__str_eq(action->task, PCMK_ACTION_PROMOTE, pcmk__str_casei)) {
-            action->fail_role = RSC_ROLE_UNPROMOTED;
+            action->fail_role = pcmk_role_unpromoted;
         } else {
-            action->fail_role = RSC_ROLE_STARTED;
+            action->fail_role = pcmk_role_started;
         }
     }
     pe_rsc_trace(action->rsc, "%s failure results in: %s",
@@ -1234,7 +1234,7 @@ pe_get_configured_timeout(pe_resource_t *rsc, const char *action, pe_working_set
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
-        .role = RSC_ROLE_UNKNOWN,
+        .role = pcmk_role_unknown,
         .now = data_set->now,
         .match_data = NULL,
         .rsc_data = NULL,
