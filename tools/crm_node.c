@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -23,6 +24,8 @@
 #include <crm/cib/internal.h>
 #include <crm/common/ipc_controld.h>
 #include <crm/common/attrd_internal.h>
+
+#include <pacemaker-internal.h>
 
 #define SUMMARY "crm_node - Tool for displaying low-level node information"
 
@@ -140,6 +143,40 @@ remove_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError *
     return TRUE;
 }
 
+PCMK__OUTPUT_ARGS("node-name", "uint32_t", "const char *")
+static int
+node_name_default(pcmk__output_t *out, va_list args) {
+    uint32_t node_id G_GNUC_UNUSED = va_arg(args, uint32_t);
+    const char *node_name = va_arg(args, const char *);
+
+    out->info(out, "%s", node_name);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("node-name", "uint32_t", "const char *")
+static int
+node_name_xml(pcmk__output_t *out, va_list args) {
+    uint32_t node_id = va_arg(args, uint32_t);
+    const char *node_name = va_arg(args, const char *);
+
+    char *id_s = crm_strdup_printf("%" PRIu32, node_id);
+
+    pcmk__output_create_xml_node(out, "node-info",
+                                 "nodeid", id_s,
+                                 XML_ATTR_UNAME, node_name,
+                                 NULL);
+
+    free(id_s);
+    return pcmk_rc_ok;
+}
+
+static pcmk__message_entry_t fmt_functions[] = {
+    { "node-name", "default", node_name_default },
+    { "node-name", "xml", node_name_xml },
+
+    { NULL, NULL, NULL }
+};
+
 static gint
 sort_node(gconstpointer a, gconstpointer b)
 {
@@ -200,24 +237,6 @@ controller_event_cb(pcmk_ipc_api_t *controld_api,
             printf("%d\n", reply->data.node_info.id);
             break;
 
-        case 'n':
-        case 'N':
-            if (reply->reply_type != pcmk_controld_reply_info) {
-                exit_code = CRM_EX_PROTOCOL;
-                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                            "Unknown reply type %d from controller",
-                            reply->reply_type);
-                goto done;
-            }
-            if (reply->data.node_info.uname == NULL) {
-                exit_code = CRM_EX_NOHOST;
-                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                            "Node is not known to cluster");
-                goto done;
-            }
-            printf("%s\n", reply->data.node_info.uname);
-            break;
-
         case 'q':
             if (reply->reply_type != pcmk_controld_reply_info) {
                 exit_code = CRM_EX_PROTOCOL;
@@ -265,9 +284,7 @@ controller_event_cb(pcmk_ipc_api_t *controld_api,
             break;
 
         default:
-            exit_code = CRM_EX_SOFTWARE;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Controller reply not expected");
+            /* Any other command is being handled elsewhere and is not an error */
             goto done;
     }
 
@@ -329,23 +346,46 @@ run_controller_mainloop(uint32_t nodeid, bool list_nodes)
 }
 
 static void
-print_node_name(void)
+print_node_name(uint32_t nodeid)
 {
-    // Check environment first (i.e. when called by resource agent)
-    const char *name = getenv("OCF_RESKEY_" CRM_META "_" XML_LRM_ATTR_TARGET);
+    int rc = pcmk_rc_ok;
+    char *node_name = NULL;
 
-    if (name != NULL) {
-        printf("%s\n", name);
-        exit_code = CRM_EX_OK;
-        return;
+    if (nodeid == 0) {
+        // Check environment first (i.e. when called by resource agent)
+        const char *name = getenv("OCF_RESKEY_" CRM_META "_" XML_LRM_ATTR_TARGET);
 
-    } else {
-        /* Otherwise ask the controller.
-         * FIXME: Use pcmk__query_node_name() after conversion to formatted
-         * output.
-         */
-        run_controller_mainloop(0, false);
+        if (name != NULL) {
+            rc = out->message(out, "node-name", 0, name);
+            goto done;
+        }
     }
+
+    // Otherwise ask the controller
+
+    /* pcmk__query_node_name already sets an error message on the output object,
+     * so there's no need to call g_set_error here.  That would just create a
+     * duplicate error message in the output.
+     */
+    rc = pcmk__query_node_name(out, nodeid, &node_name, 0);
+    if (rc != pcmk_rc_ok) {
+        exit_code = pcmk_rc2exitc(rc);
+        return;
+    }
+
+    rc = out->message(out, "node-name", 0, node_name);
+
+done:
+    if (node_name != NULL) {
+        free(node_name);
+    }
+
+    if (rc != pcmk_rc_ok) {
+        g_set_error(&error, PCMK__RC_ERROR, rc, "Could not print node name: %s",
+                    pcmk_rc_str(rc));
+    }
+
+    exit_code = pcmk_rc2exitc(rc);
 }
 
 /* Returns a standard Pacemaker return code */
@@ -629,26 +669,34 @@ main(int argc, char **argv)
     }
 
     pcmk__register_lib_messages(out);
+    pcmk__register_messages(out, fmt_functions);
 
     switch (options.command) {
         case 'n':
-            print_node_name();
+            print_node_name(0);
             break;
+
+        case 'N':
+            print_node_name(options.nodeid);
+            break;
+
         case 'R':
             remove_node(options.target_uname);
             break;
+
         case 'i':
         case 'q':
-        case 'N':
             /* FIXME: Use pcmk__query_node_name() after conversion to formatted
              * output
              */
             run_controller_mainloop(options.nodeid, false);
             break;
+
         case 'l':
         case 'p':
             run_controller_mainloop(0, true);
             break;
+
         default:
             break;
     }
