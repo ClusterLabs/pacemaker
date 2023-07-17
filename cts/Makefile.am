@@ -16,6 +16,7 @@ test_SCRIPTS		= cts-attrd \
 			  cts-cli		\
 			  cts-exec		\
 			  cts-fencing		\
+			  cts-lab 		\
 			  cts-regression	\
 			  cts-scheduler
 dist_test_DATA		= README.md			\
@@ -45,6 +46,15 @@ dist_cli_DATA	= cli/constraints.xml 				\
 		  cli/regression.validity.exp			\
 		  cli/regression.access_render.exp
 
+ctsdir			= $(datadir)/$(PACKAGE)/tests/cts
+cts_SCRIPTS		= cts
+
+# Commands intended to be run only via other commands
+halibdir		= $(CRM_DAEMON_DIR)
+dist_halib_SCRIPTS	= cts-log-watcher
+
+noinst_SCRIPTS		= cluster_test
+
 scheduler-list:
 	@for T in "$(srcdir)"/scheduler/xml/*.xml; do       \
 		echo $$(basename $$T .xml);             \
@@ -55,7 +65,7 @@ CLEANFILES	= $(builddir)/.regression.failed.diff
 clean-local:
 	rm -f scheduler/*/*.pe
 
-SUBDIRS	= benchmark lab scheduler support
+SUBDIRS	= benchmark scheduler support
 
 cts-support-install:
 	$(MAKE) $(AM_MAKEFLAGS) -C support cts-support
@@ -64,3 +74,17 @@ cts-support-install:
 cts-support-uninstall:
 	$(MAKE) $(AM_MAKEFLAGS) -C support cts-support
 	$(builddir)/support/cts-support uninstall
+
+# Everything listed here is a python script, typically generated from a .in file
+# (though that is not a requirement).  We want to run pylint on all of these
+# things after they've been built.
+python_files = cts-attrd \
+			   cts-exec \
+			   cts-fencing \
+			   cts-lab \
+			   cts-log-watcher \
+			   cts-regression \
+			   cts-scheduler
+
+pylint: $(python_files)
+	PYTHONPATH=$(top_builddir)/python pylint --rcfile $(top_srcdir)/python/pylintrc $(python_files)

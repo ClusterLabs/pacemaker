@@ -1982,18 +1982,17 @@ CONFIG_FILES_EXEC([agents/ocf/ClusterMon],
                   [agents/ocf/remote],
                   [agents/stonith/fence_legacy],
                   [agents/stonith/fence_watchdog],
+                  [cts/cluster_test],
+                  [cts/cts],
                   [cts/cts-attrd],
                   [cts/cts-cli],
                   [cts/cts-exec],
                   [cts/cts-fencing],
+                  [cts/cts-lab],
+                  [cts/cts-log-watcher],
                   [cts/cts-regression],
                   [cts/cts-scheduler],
                   [cts/benchmark/clubench],
-                  [cts/lab/CTSlab.py],
-                  [cts/lab/OCFIPraTest.py],
-                  [cts/lab/cluster_test],
-                  [cts/lab/cts],
-                  [cts/lab/cts-log-watcher],
                   [cts/support/LSBDummy],
                   [cts/support/cts-support],
                   [cts/support/fence_dummy],
@@ -2018,7 +2017,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 agents/stonith/Makefile                             \
                 cts/Makefile                                        \
                 cts/benchmark/Makefile                              \
-                cts/lab/Makefile                                    \
                 cts/scheduler/Makefile                              \
                 cts/scheduler/dot/Makefile                          \
                 cts/scheduler/exp/Makefile                          \
