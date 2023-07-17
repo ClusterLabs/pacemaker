@@ -10,6 +10,7 @@
 #ifndef PCMK__CRM_COMMON_LOGGING_COMPAT__H
 #  define PCMK__CRM_COMMON_LOGGING_COMPAT__H
 
+#include <stdint.h>         // uint8_t
 #include <glib.h>
 #include <libxml/tree.h>
 
@@ -77,6 +78,9 @@ gboolean crm_add_logfile(const char *filename);
 void log_data_element(int log_level, const char *file, const char *function,
                       int line, const char *prefix, const xmlNode *data,
                       int depth, int legacy_options);
+
+//! \deprecated Do not use Pacemaker for general-purpose logging
+void pcmk_log_xml_impl(uint8_t level, const char *text, const xmlNode *xml);
 
 #ifdef __cplusplus
 }

@@ -12,6 +12,7 @@
 
 #include <ctype.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -23,7 +24,42 @@ typedef struct private_data_s {
     /* gathered in log_begin_list */
     GQueue/*<char*>*/ *prefixes;
     uint8_t log_level;
+    const char *function;
+    const char *file;
+    uint32_t line;
+    uint32_t tags;
 } private_data_t;
+
+/*!
+ * \internal
+ * \brief Log a message using output object's log level and filters
+ *
+ * \param[in] priv    Output object's private_data_t
+ * \param[in] fmt     printf(3)-style format string
+ * \param[in] args... Format string arguments
+ */
+#define logger(priv, fmt, args...) do {                                     \
+        qb_log_from_external_source(pcmk__s((priv)->function, __func__),    \
+            pcmk__s((priv)->file, __FILE__), fmt, (priv)->log_level,        \
+            (((priv)->line == 0)? __LINE__ : (priv)->line), (priv)->tags,   \
+            ##args);                                                        \
+    } while (0);
+
+/*!
+ * \internal
+ * \brief Log a message using an explicit log level and output object's filters
+ *
+ * \param[in] priv    Output object's private_data_t
+ * \param[in] level   Log level
+ * \param[in] fmt     printf(3)-style format string
+ * \param[in] ap      Variadic arguments
+ */
+#define logger_va(priv, level, fmt, ap) do {                                \
+        qb_log_from_external_source_va(pcmk__s((priv)->function, __func__), \
+            pcmk__s((priv)->file, __FILE__), fmt, level,                    \
+            (((priv)->line == 0)? __LINE__ : (priv)->line), (priv)->tags,   \
+            ap);                                                            \
+    } while (0);
 
 static void
 log_subprocess_output(pcmk__output_t *out, int exit_status,
@@ -94,35 +130,31 @@ log_version(pcmk__output_t *out, bool extended) {
     priv = out->priv;
 
     if (extended) {
-        do_crm_log(priv->log_level, "Pacemaker %s (Build: %s): %s",
-                   PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
+        logger(priv, "Pacemaker %s (Build: %s): %s",
+               PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
     } else {
-        do_crm_log(priv->log_level, "Pacemaker %s", PACEMAKER_VERSION);
-        do_crm_log(priv->log_level, "Written by Andrew Beekhof and"
-                                    "the Pacemaker project contributors");
+        logger(priv, "Pacemaker " PACEMAKER_VERSION);
+        logger(priv, "Written by Andrew Beekhof and "
+                     "the Pacemaker project contributors");
     }
 }
 
 G_GNUC_PRINTF(2, 3)
 static void
-log_err(pcmk__output_t *out, const char *format, ...) {
+log_err(pcmk__output_t *out, const char *format, ...)
+{
     va_list ap;
-    char* buffer = NULL;
-    int len = 0;
+    private_data_t *priv = NULL;
 
-    CRM_ASSERT(out != NULL);
+    CRM_ASSERT((out != NULL) && (out->priv != NULL));
+    priv = out->priv;
 
-    va_start(ap, format);
-    /* Informational output does not get indented, to separate it from other
+    /* Error output does not get indented, to separate it from other
      * potentially indented list output.
      */
-    len = vasprintf(&buffer, format, ap);
-    CRM_ASSERT(len >= 0);
+    va_start(ap, format);
+    logger_va(priv, LOG_ERR, format, ap);
     va_end(ap);
-
-    crm_err("%s", buffer);
-
-    free(buffer);
 }
 
 static void
@@ -195,15 +227,15 @@ log_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
     if (strcmp(buffer, "") != 0) { /* We don't want empty messages */
         if ((name != NULL) && (strcmp(name, "") != 0)) {
             if (strcmp(prefix, "") != 0) {
-                do_crm_log(priv->log_level, "%s: %s: %s", prefix, name, buffer);
+                logger(priv, "%s: %s: %s", prefix, name, buffer);
             } else {
-                do_crm_log(priv->log_level, "%s: %s", name, buffer);
+                logger(priv, "%s: %s", name, buffer);
             }
         } else {
             if (strcmp(prefix, "") != 0) {
-                do_crm_log(priv->log_level, "%s: %s", prefix, buffer);
+                logger(priv, "%s: %s", prefix, buffer);
             } else {
-                do_crm_log(priv->log_level, "%s", buffer);
+                logger(priv, "%s", buffer);
             }
         }
     }
@@ -228,23 +260,21 @@ log_end_list(pcmk__output_t *out) {
 
 G_GNUC_PRINTF(2, 3)
 static int
-log_info(pcmk__output_t *out, const char *format, ...) {
-    private_data_t *priv = NULL;
-    int len = 0;
+log_info(pcmk__output_t *out, const char *format, ...)
+{
     va_list ap;
-    char* buffer = NULL;
+    private_data_t *priv = NULL;
 
     CRM_ASSERT(out != NULL && out->priv != NULL);
     priv = out->priv;
 
+    /* Informational output does not get indented, to separate it from other
+     * potentially indented list output.
+     */
     va_start(ap, format);
-    len = vasprintf(&buffer, format, ap);
-    CRM_ASSERT(len >= 0);
+    logger_va(priv, priv->log_level, format, ap);
     va_end(ap);
 
-    do_crm_log(priv->log_level, "%s", buffer);
-
-    free(buffer);
     return pcmk_rc_ok;
 }
 
@@ -252,22 +282,16 @@ G_GNUC_PRINTF(2, 3)
 static int
 log_transient(pcmk__output_t *out, const char *format, ...)
 {
-    private_data_t *priv = NULL;
-    int len = 0;
     va_list ap;
-    char *buffer = NULL;
+    private_data_t *priv = NULL;
 
     CRM_ASSERT(out != NULL && out->priv != NULL);
     priv = out->priv;
 
     va_start(ap, format);
-    len = vasprintf(&buffer, format, ap);
-    CRM_ASSERT(len >= 0);
+    logger_va(priv, QB_MAX(priv->log_level, LOG_DEBUG), format, ap);
     va_end(ap);
 
-    do_crm_log(QB_MAX(priv->log_level, LOG_DEBUG), "%s", buffer);
-
-    free(buffer);
     return pcmk_rc_ok;
 }
 
@@ -350,4 +374,34 @@ pcmk__output_set_log_level(pcmk__output_t *out, uint8_t log_level) {
 
     priv = out->priv;
     priv->log_level = log_level;
+}
+
+/*!
+ * \internal
+ * \brief Set the file, function, line, and tags used to filter log output
+ *
+ * \param[in,out] out       Logger output object
+ * \param[in]     file      File name to filter with (or NULL for default)
+ * \param[in]     function  Function name to filter with (or NULL for default)
+ * \param[in]     line      Line number to filter with (or 0 for default)
+ * \param[in]     tags      Tags to filter with (or 0 for none)
+ *
+ * \note Custom filters should generally be used only in short areas of a single
+ *       function. When done, callers should call this function again with
+ *       NULL/0 arguments to reset the filters.
+ */
+void
+pcmk__output_set_log_filter(pcmk__output_t *out, const char *file,
+                            const char *function, uint32_t line, uint32_t tags)
+{
+    private_data_t *priv = NULL;
+
+    CRM_ASSERT((out != NULL) && (out->priv != NULL));
+    CRM_CHECK(pcmk__str_eq(out->fmt_name, "log", pcmk__str_none), return);
+
+    priv = out->priv;
+    priv->file = file;
+    priv->function = function;
+    priv->line = line;
+    priv->tags = tags;
 }

@@ -763,6 +763,11 @@ pcmk__output_get_log_level(const pcmk__output_t *out);
 void
 pcmk__output_set_log_level(pcmk__output_t *out, uint8_t log_level);
 
+void pcmk__output_set_log_filter(pcmk__output_t *out, const char *file,
+                                 const char *function, uint32_t line,
+                                 uint32_t tags);
+
+
 /*!
  * \internal
  * \brief Create and return a new XML node with the given name, as a child of the

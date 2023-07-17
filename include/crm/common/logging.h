@@ -11,6 +11,7 @@
 #  define PCMK__CRM_COMMON_LOGGING__H
 
 #  include <stdio.h>
+#  include <stdint.h>           // uint8_t, uint32_t
 #  include <glib.h>
 #  include <qb/qblog.h>
 #  include <libxml/tree.h>
@@ -120,7 +121,9 @@ unsigned int set_crm_log_level(unsigned int level);
 
 unsigned int get_crm_log_level(void);
 
-void pcmk_log_xml_impl(uint8_t level, const char *text, const xmlNode *xml);
+void pcmk_log_xml_as(const char *file, const char *function, uint32_t line,
+                     uint32_t tags, uint8_t level, const char *text,
+                     const xmlNode *xml);
 
 /*
  * Throughout the macros below, note the leading, pre-comma, space in the
@@ -270,7 +273,8 @@ pcmk__clip_log_level(int level)
                                                  __LINE__, 0);          \
                 }                                                       \
                 if (crm_is_callsite_active(xml_cs, _level, 0)) {        \
-                    pcmk_log_xml_impl(_level, text, xml);               \
+                    pcmk_log_xml_as(__FILE__, __func__, __LINE__, 0,    \
+                                    _level, text, (xml));               \
                 }                                                       \
                 break;                                                  \
         }                                                               \
