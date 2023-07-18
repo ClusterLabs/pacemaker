@@ -143,6 +143,30 @@ remove_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError *
     return TRUE;
 }
 
+PCMK__OUTPUT_ARGS("node-id", "uint32_t")
+static int
+node_id_default(pcmk__output_t *out, va_list args) {
+    uint32_t node_id = va_arg(args, uint32_t);
+
+    out->info(out, "%" PRIu32, node_id);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("node-id", "uint32_t")
+static int
+node_id_xml(pcmk__output_t *out, va_list args) {
+    uint32_t node_id = va_arg(args, uint32_t);
+
+    char *id_s = crm_strdup_printf("%" PRIu32, node_id);
+
+    pcmk__output_create_xml_node(out, "node-info",
+                                 "nodeid", id_s,
+                                 NULL);
+
+    free(id_s);
+    return pcmk_rc_ok;
+}
+
 PCMK__OUTPUT_ARGS("node-name", "uint32_t", "const char *")
 static int
 node_name_default(pcmk__output_t *out, va_list args) {
@@ -191,6 +215,8 @@ quorum_xml(pcmk__output_t *out, va_list args) {
 }
 
 static pcmk__message_entry_t fmt_functions[] = {
+    { "node-id", "default", node_id_default },
+    { "node-id", "xml", node_id_xml },
     { "node-name", "default", node_name_default },
     { "node-name", "xml", node_name_xml },
     { "quorum", "default", quorum_default },
@@ -242,23 +268,6 @@ controller_event_cb(pcmk_ipc_api_t *controld_api,
 
     // Parse desired info from reply and display to user
     switch (options.command) {
-        case 'i':
-            if (reply->reply_type != pcmk_controld_reply_info) {
-                exit_code = CRM_EX_PROTOCOL;
-                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                            "Unknown reply type %d from controller",
-                            reply->reply_type);
-                goto done;
-            }
-            if (reply->data.node_info.id == 0) {
-                exit_code = CRM_EX_PROTOCOL;
-                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                            "Controller reply did not contain node ID");
-                goto done;
-            }
-            printf("%d\n", reply->data.node_info.id);
-            break;
-
         case 'l':
         case 'p':
             if (reply->reply_type != pcmk_controld_reply_nodes) {
@@ -350,6 +359,32 @@ run_controller_mainloop(uint32_t nodeid, bool list_nodes)
     g_main_loop_unref(mainloop);
     mainloop = NULL;
     pcmk_free_ipc_api(controld_api);
+}
+
+static void
+print_node_id(void)
+{
+    uint32_t nodeid;
+    int rc = pcmk__query_node_info(out, &nodeid, NULL, NULL, NULL, NULL, NULL,
+                                   false, 0);
+
+    if (rc != pcmk_rc_ok) {
+        /* pcmk__query_node_info already sets an error message on the output object,
+         * so there's no need to call g_set_error here.  That would just create a
+         * duplicate error message in the output.
+         */
+        exit_code = pcmk_rc2exitc(rc);
+        return;
+    }
+
+    rc = out->message(out, "node-id", nodeid);
+
+    if (rc != pcmk_rc_ok) {
+        g_set_error(&error, PCMK__RC_ERROR, rc, "Could not print node ID: %s",
+                    pcmk_rc_str(rc));
+    }
+
+    exit_code = pcmk_rc2exitc(rc);
 }
 
 static void
@@ -705,6 +740,10 @@ main(int argc, char **argv)
     pcmk__register_messages(out, fmt_functions);
 
     switch (options.command) {
+        case 'i':
+            print_node_id();
+            break;
+
         case 'n':
             print_node_name(0);
             break;
@@ -719,13 +758,6 @@ main(int argc, char **argv)
 
         case 'R':
             remove_node(options.target_uname);
-            break;
-
-        case 'i':
-            /* FIXME: Use pcmk__query_node_name() after conversion to formatted
-             * output
-             */
-            run_controller_mainloop(options.nodeid, false);
             break;
 
         case 'l':
