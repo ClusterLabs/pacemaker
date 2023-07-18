@@ -167,6 +167,47 @@ node_id_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("node-list", "GList *")
+static int
+node_list_default(pcmk__output_t *out, va_list args)
+{
+    GList *nodes = va_arg(args, GList *);
+
+    for (GList *node_iter = nodes; node_iter != NULL; node_iter = node_iter->next) {
+        pcmk_controld_api_node_t *node = node_iter->data;
+        out->info(out, "%" PRIu32 " %s %s", node->id, pcmk__s(node->uname, ""),
+                  pcmk__s(node->state, ""));
+    }
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("node-list", "GList *")
+static int
+node_list_xml(pcmk__output_t *out, va_list args)
+{
+    GList *nodes = va_arg(args, GList *);
+
+    out->begin_list(out, NULL, NULL, "nodes");
+
+    for (GList *node_iter = nodes; node_iter != NULL; node_iter = node_iter->next) {
+        pcmk_controld_api_node_t *node = node_iter->data;
+        char *id_s = crm_strdup_printf("%" PRIu32, node->id);
+
+        pcmk__output_create_xml_node(out, "node",
+                                     "id", id_s,
+                                     "name", node->uname,
+                                     "state", node->state,
+                                     NULL);
+
+        free(id_s);
+    }
+
+    out->end_list(out);
+
+    return pcmk_rc_ok;
+}
+
 PCMK__OUTPUT_ARGS("node-name", "uint32_t", "const char *")
 static int
 node_name_default(pcmk__output_t *out, va_list args) {
@@ -194,6 +235,57 @@ node_name_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("partition-list", "GList *")
+static int
+partition_list_default(pcmk__output_t *out, va_list args)
+{
+    GList *nodes = va_arg(args, GList *);
+
+    GString *buffer = NULL;
+
+    for (GList *node_iter = nodes; node_iter != NULL; node_iter = node_iter->next) {
+        pcmk_controld_api_node_t *node = node_iter->data;
+        if (pcmk__str_eq(node->state, "member", pcmk__str_none)) {
+            pcmk__add_separated_word(&buffer, 128, pcmk__s(node->uname, ""), " ");
+        }
+    }
+
+    if (buffer != NULL) {
+        out->info(out, "%s", buffer->str);
+        g_string_free(buffer, TRUE);
+        return pcmk_rc_ok;
+    }
+
+    return pcmk_rc_no_output;
+}
+
+PCMK__OUTPUT_ARGS("partition-list", "GList *")
+static int
+partition_list_xml(pcmk__output_t *out, va_list args)
+{
+    GList *nodes = va_arg(args, GList *);
+
+    out->begin_list(out, NULL, NULL, "nodes");
+
+    for (GList *node_iter = nodes; node_iter != NULL; node_iter = node_iter->next) {
+        pcmk_controld_api_node_t *node = node_iter->data;
+
+        if (pcmk__str_eq(node->state, "member", pcmk__str_none)) {
+            char *id_s = crm_strdup_printf("%" PRIu32, node->id);
+
+            pcmk__output_create_xml_node(out, "node",
+                                         "id", id_s,
+                                         "name", node->uname,
+                                         "state", node->state,
+                                         NULL);
+            free(id_s);
+        }
+    }
+
+    out->end_list(out);
+    return pcmk_rc_ok;
+}
+
 PCMK__OUTPUT_ARGS("quorum", "bool")
 static int
 quorum_default(pcmk__output_t *out, va_list args) {
@@ -217,10 +309,14 @@ quorum_xml(pcmk__output_t *out, va_list args) {
 static pcmk__message_entry_t fmt_functions[] = {
     { "node-id", "default", node_id_default },
     { "node-id", "xml", node_id_xml },
+    { "node-list", "default", node_list_default },
+    { "node-list", "xml", node_list_xml },
     { "node-name", "default", node_name_default },
     { "node-name", "xml", node_name_xml },
     { "quorum", "default", quorum_default },
     { "quorum", "xml", quorum_xml },
+    { "partition-list", "default", partition_list_default },
+    { "partition-list", "xml", partition_list_xml },
 
     { NULL, NULL, NULL }
 };
@@ -266,42 +362,19 @@ controller_event_cb(pcmk_ipc_api_t *controld_api,
         goto done;
     }
 
-    // Parse desired info from reply and display to user
-    switch (options.command) {
-        case 'l':
-        case 'p':
-            if (reply->reply_type != pcmk_controld_reply_nodes) {
-                exit_code = CRM_EX_PROTOCOL;
-                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                            "Unknown reply type %d from controller",
-                            reply->reply_type);
-                goto done;
-            }
-            reply->data.nodes = g_list_sort(reply->data.nodes, sort_node);
-            for (GList *node_iter = reply->data.nodes;
-                 node_iter != NULL; node_iter = node_iter->next) {
+    if (reply->reply_type != pcmk_controld_reply_nodes) {
+        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_INDETERMINATE,
+                    "Unknown reply type %d from controller",
+                    reply->reply_type);
+        goto done;
+    }
 
-                pcmk_controld_api_node_t *node = node_iter->data;
-                const char *uname = (node->uname? node->uname : "");
-                const char *state = (node->state? node->state : "");
+    reply->data.nodes = g_list_sort(reply->data.nodes, sort_node);
 
-                if (options.command == 'l') {
-                    printf("%lu %s %s\n",
-                           (unsigned long) node->id, uname, state);
-
-                // i.e. CRM_NODE_MEMBER, but we don't want to include cluster.h
-                } else if (!strcmp(state, "member")) {
-                    printf("%s ", uname);
-                }
-            }
-            if (options.command == 'p') {
-                printf("\n");
-            }
-            break;
-
-        default:
-            /* Any other command is being handled elsewhere and is not an error */
-            goto done;
+    if (options.command == 'p') {
+        out->message(out, "partition-list", reply->data.nodes);
+    } else if (options.command == 'l') {
+        out->message(out, "node-list", reply->data.nodes);
     }
 
     // Success
