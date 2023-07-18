@@ -170,9 +170,31 @@ node_name_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("quorum", "bool")
+static int
+quorum_default(pcmk__output_t *out, va_list args) {
+    bool have_quorum = va_arg(args, int);
+
+    out->info(out, "%d", have_quorum);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("quorum", "bool")
+static int
+quorum_xml(pcmk__output_t *out, va_list args) {
+    bool have_quorum = va_arg(args, int);
+
+    pcmk__output_create_xml_node(out, "cluster-info",
+                                 "quorum", have_quorum ? "true" : "false",
+                                 NULL);
+    return pcmk_rc_ok;
+}
+
 static pcmk__message_entry_t fmt_functions[] = {
     { "node-name", "default", node_name_default },
     { "node-name", "xml", node_name_xml },
+    { "quorum", "default", quorum_default },
+    { "quorum", "xml", quorum_xml },
 
     { NULL, NULL, NULL }
 };
@@ -235,21 +257,6 @@ controller_event_cb(pcmk_ipc_api_t *controld_api,
                 goto done;
             }
             printf("%d\n", reply->data.node_info.id);
-            break;
-
-        case 'q':
-            if (reply->reply_type != pcmk_controld_reply_info) {
-                exit_code = CRM_EX_PROTOCOL;
-                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                            "Unknown reply type %d from controller",
-                            reply->reply_type);
-                goto done;
-            }
-            printf("%d\n", reply->data.node_info.have_quorum);
-            if (!(reply->data.node_info.have_quorum)) {
-                exit_code = CRM_EX_QUORUM;
-                goto done;
-            }
             break;
 
         case 'l':
@@ -382,6 +389,32 @@ done:
 
     if (rc != pcmk_rc_ok) {
         g_set_error(&error, PCMK__RC_ERROR, rc, "Could not print node name: %s",
+                    pcmk_rc_str(rc));
+    }
+
+    exit_code = pcmk_rc2exitc(rc);
+}
+
+static void
+print_quorum(void)
+{
+    bool quorum;
+    int rc = pcmk__query_node_info(out, NULL, NULL, NULL, NULL, &quorum, NULL,
+                                   false, 0);
+
+    if (rc != pcmk_rc_ok) {
+        /* pcmk__query_node_info already sets an error message on the output object,
+         * so there's no need to call g_set_error here.  That would just create a
+         * duplicate error message in the output.
+         */
+        exit_code = pcmk_rc2exitc(rc);
+        return;
+    }
+
+    rc = out->message(out, "quorum", quorum);
+
+    if (rc != pcmk_rc_ok) {
+        g_set_error(&error, PCMK__RC_ERROR, rc, "Could not print quorum status: %s",
                     pcmk_rc_str(rc));
     }
 
@@ -676,6 +709,10 @@ main(int argc, char **argv)
             print_node_name(0);
             break;
 
+        case 'q':
+            print_quorum();
+            break;
+
         case 'N':
             print_node_name(options.nodeid);
             break;
@@ -685,7 +722,6 @@ main(int argc, char **argv)
             break;
 
         case 'i':
-        case 'q':
             /* FIXME: Use pcmk__query_node_name() after conversion to formatted
              * output
              */
