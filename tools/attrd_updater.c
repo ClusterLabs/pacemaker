@@ -501,7 +501,7 @@ send_attrd_update(char command, const char *attr_node, const char *attr_name,
 
         case 'U':
             rc = pcmk__attrd_api_update(NULL, attr_node, attr_name, attr_value,
-                                        NULL, attr_set, NULL,
+                                        attr_dampen, attr_set, NULL,
                                         attr_options | pcmk__node_attr_value);
             break;
 
