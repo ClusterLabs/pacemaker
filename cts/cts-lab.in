@@ -20,7 +20,7 @@ scenario = None
 LogFactory().add_stderr()
 
 
-def sig_handler(signum, frame) :
+def sig_handler(signum, frame):
     LogFactory().log("Interrupted by signal %d" % signum)
 
     if scenario:
@@ -41,7 +41,6 @@ def plural_s(n):
 
 
 if __name__ == '__main__':
-
     environment = CtsLab(sys.argv[1:])
     iters = environment["iterations"]
     tests = []
@@ -52,9 +51,9 @@ if __name__ == '__main__':
 
     # Create the Cluster Manager object
     cm = None
+
     if environment["Stack"] == "corosync 2+":
         cm = Corosync2()
-
     else:
         LogFactory().log("Unknown stack: %s" % environment["stack"])
         sys.exit(1)
@@ -64,6 +63,7 @@ if __name__ == '__main__':
             LogFactory().log("Ignoring truncate request because no output file specified")
         else:
             LogFactory().log("Truncating %s" % environment["OutputFile"])
+
             with open(environment["OutputFile"], "w") as outputfile:
                 outputfile.truncate(0)
 
@@ -72,8 +72,10 @@ if __name__ == '__main__':
     if environment["Listtests"]:
         tests = test_list(cm, audits)
         LogFactory().log("Total %d tests" % len(tests))
-        for test in tests :
+
+        for test in tests:
             LogFactory().log(test.name)
+
         sys.exit(0)
 
     elif len(environment["tests"]) == 0:
@@ -97,16 +99,13 @@ if __name__ == '__main__':
     # Scenario selection
     if environment["scenario"] == "all-once":
         iters = len(tests)
-        scenario = AllOnce(
-            cm, [ BootCluster(cm, environment) ], audits, tests)
+        scenario = AllOnce(cm, [ BootCluster(cm, environment) ], audits, tests)
     elif environment["scenario"] == "sequence":
-        scenario = Sequence(
-            cm, [ BootCluster(cm, environment) ], audits, tests)
+        scenario = Sequence(cm, [ BootCluster(cm, environment) ], audits, tests)
     elif environment["scenario"] == "boot":
         scenario = Boot(cm, [ LeaveBooted(cm, environment)], audits, [])
     else:
-        scenario = RandomTests(
-            cm, [ BootCluster(cm, environment) ], audits, tests)
+        scenario = RandomTests(cm, [ BootCluster(cm, environment) ], audits, tests)
 
     LogFactory().log(">>>>>>>>>>>>>>>> BEGINNING %r TEST%s" % (iters, plural_s(iters)))
     LogFactory().log("Stack:                  %s (%s)" % (environment["Stack"], environment["Name"]))
@@ -117,8 +116,10 @@ if __name__ == '__main__':
     LogFactory().log("Random Seed:            %s" % environment["RandSeed"])
     LogFactory().log("Syslog variant:         %s" % environment["syslogd"].strip())
     LogFactory().log("System log files:       %s" % environment["LogFileName"])
+
     if "IPBase" in environment:
         LogFactory().log("Base IP for resources:  %s" % environment["IPBase"])
+
     LogFactory().log("Cluster starts at boot: %d" % environment["at-boot"])
 
     environment.dump()
