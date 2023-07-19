@@ -59,7 +59,7 @@ if __name__ == '__main__':
     cm = None
     if Environment["Stack"] == "corosync 2+":
         cm = Corosync2()
-        
+
     else:
         LogFactory().log("Unknown stack: "+Environment["stack"])
         sys.exit(1)
@@ -87,17 +87,17 @@ if __name__ == '__main__':
     else:
         Chosen = Environment["tests"]
         for TestCase in Chosen:
-           match = None
+            match = None
 
-           for test in test_list(cm, Audits):
-               if test.name == TestCase:
-                   match = test
+            for test in test_list(cm, Audits):
+                if test.name == TestCase:
+                    match = test
 
-           if not match:
-               LogFactory().log("--choose: No applicable/valid tests chosen")
-               sys.exit(1)
-           else:
-               Tests.append(match)
+            if not match:
+                LogFactory().log("--choose: No applicable/valid tests chosen")
+                sys.exit(1)
+            else:
+                Tests.append(match)
 
     # Scenario selection
     if Environment["scenario"] == "all-once":
