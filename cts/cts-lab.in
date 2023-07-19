@@ -45,9 +45,9 @@ def plural_s(n, uppercase=False):
 
 if __name__ == '__main__':
 
-    Environment = CtsLab(sys.argv[1:])
-    NumIter = Environment["iterations"]
-    Tests = []
+    environment = CtsLab(sys.argv[1:])
+    iters = environment["iterations"]
+    tests = []
 
     # Set the signal handler
     signal.signal(15, sig_handler)
@@ -55,75 +55,75 @@ if __name__ == '__main__':
 
     # Create the Cluster Manager object
     cm = None
-    if Environment["Stack"] == "corosync 2+":
+    if environment["Stack"] == "corosync 2+":
         cm = Corosync2()
 
     else:
-        LogFactory().log("Unknown stack: "+Environment["stack"])
+        LogFactory().log("Unknown stack: "+environment["stack"])
         sys.exit(1)
 
-    if Environment["TruncateLog"]:
-        if Environment["OutputFile"] is None:
+    if environment["TruncateLog"]:
+        if environment["OutputFile"] is None:
             LogFactory().log("Ignoring truncate request because no output file specified")
         else:
-            LogFactory().log("Truncating %s" % Environment["OutputFile"])
-            with open(Environment["OutputFile"], "w") as outputfile:
+            LogFactory().log("Truncating %s" % environment["OutputFile"])
+            with open(environment["OutputFile"], "w") as outputfile:
                 outputfile.truncate(0)
 
-    Audits = audit_list(cm)
+    audits = audit_list(cm)
 
-    if Environment["ListTests"]:
-        Tests = test_list(cm, Audits)
-        LogFactory().log("Total %d tests"%len(Tests))
-        for test in Tests :
+    if environment["Listtests"]:
+        tests = test_list(cm, audits)
+        LogFactory().log("Total %d tests"%len(tests))
+        for test in tests :
             LogFactory().log(str(test.name))
         sys.exit(0)
 
-    elif len(Environment["tests"]) == 0:
-        Tests = test_list(cm, Audits)
+    elif len(environment["tests"]) == 0:
+        tests = test_list(cm, audits)
 
     else:
-        Chosen = Environment["tests"]
-        for TestCase in Chosen:
+        chosen = environment["tests"]
+        for test_case in chosen:
             match = None
 
-            for test in test_list(cm, Audits):
-                if test.name == TestCase:
+            for test in test_list(cm, audits):
+                if test.name == test_case:
                     match = test
 
             if not match:
                 LogFactory().log("--choose: No applicable/valid tests chosen")
                 sys.exit(1)
             else:
-                Tests.append(match)
+                tests.append(match)
 
     # Scenario selection
-    if Environment["scenario"] == "all-once":
-        NumIter = len(Tests)
+    if environment["scenario"] == "all-once":
+        iters = len(tests)
         scenario = AllOnce(
-            cm, [ BootCluster(cm, Environment) ], Audits, Tests)
-    elif Environment["scenario"] == "sequence":
+            cm, [ BootCluster(cm, environment) ], audits, tests)
+    elif environment["scenario"] == "sequence":
         scenario = Sequence(
-            cm, [ BootCluster(cm, Environment) ], Audits, Tests)
-    elif Environment["scenario"] == "boot":
-        scenario = Boot(cm, [ LeaveBooted(cm, Environment)], Audits, [])
+            cm, [ BootCluster(cm, environment) ], audits, tests)
+    elif environment["scenario"] == "boot":
+        scenario = Boot(cm, [ LeaveBooted(cm, environment)], audits, [])
     else:
         scenario = RandomTests(
-            cm, [ BootCluster(cm, Environment) ], Audits, Tests)
+            cm, [ BootCluster(cm, environment) ], audits, tests)
 
-    LogFactory().log(">>>>>>>>>>>>>>>> BEGINNING " + repr(NumIter) + " TEST" + plural_s(NumIter, True) + " ")
-    LogFactory().log("Stack:                  %s (%s)" % (Environment["Stack"], Environment["Name"]))
-    LogFactory().log("Schema:                 %s" % Environment["Schema"])
+    LogFactory().log(">>>>>>>>>>>>>>>> BEGINNING " + repr(iters) + " TEST" + plural_s(iters, True) + " ")
+    LogFactory().log("Stack:                  %s (%s)" % (environment["Stack"], environment["Name"]))
+    LogFactory().log("Schema:                 %s" % environment["Schema"])
     LogFactory().log("Scenario:               %s" % scenario.__doc__)
-    LogFactory().log("CTS Exerciser:          %s" % Environment["cts-exerciser"])
-    LogFactory().log("CTS Logfile:            %s" % Environment["OutputFile"])
-    LogFactory().log("Random Seed:            %s" % Environment["RandSeed"])
-    LogFactory().log("Syslog variant:         %s" % Environment["syslogd"].strip())
-    LogFactory().log("System log files:       %s" % Environment["LogFileName"])
-    if "IPBase" in Environment:
-        LogFactory().log("Base IP for resources:  %s" % Environment["IPBase"])
-    LogFactory().log("Cluster starts at boot: %d" % Environment["at-boot"])
+    LogFactory().log("CTS Exerciser:          %s" % environment["cts-exerciser"])
+    LogFactory().log("CTS Logfile:            %s" % environment["OutputFile"])
+    LogFactory().log("Random Seed:            %s" % environment["RandSeed"])
+    LogFactory().log("Syslog variant:         %s" % environment["syslogd"].strip())
+    LogFactory().log("System log files:       %s" % environment["LogFileName"])
+    if "IPBase" in environment:
+        LogFactory().log("Base IP for resources:  %s" % environment["IPBase"])
+    LogFactory().log("Cluster starts at boot: %d" % environment["at-boot"])
 
-    Environment.dump()
-    rc = Environment.run(scenario, NumIter)
+    environment.dump()
+    rc = environment.run(scenario, iters)
     sys.exit(rc)
