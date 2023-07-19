@@ -236,7 +236,6 @@ generate_fail_regex(const char *prefix, const char *rsc_name,
  * \brief Compile regular expressions to match failure-related node attributes
  *
  * \param[in]  rsc             Resource being checked for failures
- * \param[in]  data_set        Data set (for CRM feature set version)
  * \param[out] failcount_re    Storage for regular expression for fail count
  * \param[out] lastfailure_re  Storage for regular expression for last failure
  *
@@ -246,13 +245,15 @@ generate_fail_regex(const char *prefix, const char *rsc_name,
  */
 static int
 generate_fail_regexes(const pe_resource_t *rsc,
-                      const pe_working_set_t *data_set,
                       regex_t *failcount_re, regex_t *lastfailure_re)
 {
-    char *rsc_name = rsc_fail_name(rsc);
-    const char *version = crm_element_value(data_set->input, XML_ATTR_CRM_VERSION);
-    gboolean is_legacy = (compare_version(version, "3.0.13") < 0);
     int rc = pcmk_rc_ok;
+    char *rsc_name = rsc_fail_name(rsc);
+    const char *version = crm_element_value(rsc->cluster->input,
+                                            XML_ATTR_CRM_VERSION);
+
+    // @COMPAT Pacemaker <= 1.1.16 used a single fail count per resource
+    gboolean is_legacy = (compare_version(version, "3.0.13") < 0);
 
     if (generate_fail_regex(PCMK__FAIL_COUNT_PREFIX, rsc_name, is_legacy,
                             pcmk_is_set(rsc->flags, pe_rsc_unique),
@@ -282,7 +283,7 @@ pe_get_failcount(const pe_node_t *node, pe_resource_t *rsc,
     time_t last = 0;
     GHashTableIter iter;
 
-    CRM_CHECK(generate_fail_regexes(rsc, rsc->cluster, &failcount_re,
+    CRM_CHECK(generate_fail_regexes(rsc, &failcount_re,
                                     &lastfailure_re) == pcmk_rc_ok,
               return 0);
 
