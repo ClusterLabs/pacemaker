@@ -5,7 +5,8 @@
 __copyright__ = "Copyright 2001-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
-import sys, signal
+import signal
+import sys
 
 from pacemaker._cts.CTS import CtsLab
 from pacemaker._cts.cmcorosync import Corosync2
@@ -21,19 +22,25 @@ LogFactory().add_stderr()
 
 def sig_handler(signum, frame) :
     LogFactory().log("Interrupted by signal %d"%signum)
-    if scenario: scenario.summarize()
-    if signum == 15 :
-        if scenario: scenario.teardown()
+
+    if scenario:
+        scenario.summarize()
+
+    if signum == 15:
+        if scenario:
+            scenario.teardown()
+
         sys.exit(1)
 
 
 def plural_s(n, uppercase=False):
     if n == 1:
         return ""
-    elif uppercase:
+
+    if uppercase:
         return "S"
-    else:
-        return "s"
+
+    return "s"
 
 
 if __name__ == '__main__':
@@ -69,7 +76,7 @@ if __name__ == '__main__':
         Tests = test_list(cm, Audits)
         LogFactory().log("Total %d tests"%len(Tests))
         for test in Tests :
-            LogFactory().log(str(test.name));
+            LogFactory().log(str(test.name))
         sys.exit(0)
 
     elif len(Environment["tests"]) == 0:
