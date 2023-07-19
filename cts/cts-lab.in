@@ -21,7 +21,7 @@ LogFactory().add_stderr()
 
 
 def sig_handler(signum, frame) :
-    LogFactory().log("Interrupted by signal %d"%signum)
+    LogFactory().log("Interrupted by signal %d" % signum)
 
     if scenario:
         scenario.summarize()
@@ -59,7 +59,7 @@ if __name__ == '__main__':
         cm = Corosync2()
 
     else:
-        LogFactory().log("Unknown stack: "+environment["stack"])
+        LogFactory().log("Unknown stack: %s" % environment["stack"])
         sys.exit(1)
 
     if environment["TruncateLog"]:
@@ -74,9 +74,9 @@ if __name__ == '__main__':
 
     if environment["Listtests"]:
         tests = test_list(cm, audits)
-        LogFactory().log("Total %d tests"%len(tests))
+        LogFactory().log("Total %d tests" % len(tests))
         for test in tests :
-            LogFactory().log(str(test.name))
+            LogFactory().log(test.name)
         sys.exit(0)
 
     elif len(environment["tests"]) == 0:
@@ -111,7 +111,7 @@ if __name__ == '__main__':
         scenario = RandomTests(
             cm, [ BootCluster(cm, environment) ], audits, tests)
 
-    LogFactory().log(">>>>>>>>>>>>>>>> BEGINNING " + repr(iters) + " TEST" + plural_s(iters, True) + " ")
+    LogFactory().log(">>>>>>>>>>>>>>>> BEGINNING %r TEST%s" % (iters, plural_s(iters, True)))
     LogFactory().log("Stack:                  %s (%s)" % (environment["Stack"], environment["Name"]))
     LogFactory().log("Schema:                 %s" % environment["Schema"])
     LogFactory().log("Scenario:               %s" % scenario.__doc__)
