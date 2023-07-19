@@ -2,6 +2,11 @@
 """ Command-line interface to Pacemaker's Cluster Test Suite (CTS)
 """
 
+# pylint doesn't like the module name "cts-lab" which is an invalid complaint for this file
+# This also disables various other invalid names - it thinks scenario and match are constants
+# that should have all caps names, and that cm and n are too short.
+# pylint: disable=invalid-name
+
 __copyright__ = "Copyright 2001-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
@@ -20,7 +25,9 @@ scenario = None
 LogFactory().add_stderr()
 
 
-def sig_handler(signum, frame):
+def sig_handler(signum, _frame):
+    """ Handle the given signal number """
+
     LogFactory().log("Interrupted by signal %d" % signum)
 
     if scenario:
@@ -34,6 +41,8 @@ def sig_handler(signum, frame):
 
 
 def plural_s(n):
+    """ Return a string suffix depending on whether or not n is > 1 """
+
     if n == 1:
         return ""
 
@@ -64,7 +73,7 @@ if __name__ == '__main__':
         else:
             LogFactory().log("Truncating %s" % environment["OutputFile"])
 
-            with open(environment["OutputFile"], "w") as outputfile:
+            with open(environment["OutputFile"], "w", encoding="utf-8") as outputfile:
                 outputfile.truncate(0)
 
     audits = audit_list(cm)
