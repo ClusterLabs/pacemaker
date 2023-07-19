@@ -20,8 +20,7 @@ pe__resource_description(const pe_resource_t *rsc, uint32_t show_opts)
 {
     const char * desc = NULL;
     // User-supplied description
-    if (pcmk_any_flags_set(show_opts, pcmk_show_rsc_only|pcmk_show_description)
-        || pcmk__list_of_multiple(rsc->running_on)) {
+    if (pcmk_any_flags_set(show_opts, pcmk_show_rsc_only|pcmk_show_description)) {
         desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
     }
     return desc;
