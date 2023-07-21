@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2022 the Pacemaker project contributors
+# Copyright 2004-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -58,6 +58,7 @@ API_request_base	= command-output	\
 			  crm_attribute 	\
 			  crm_error 	\
 			  crm_mon		\
+			  crm_node 		\
 			  crm_resource		\
 			  crm_rule \
 			  crm_shadow		\

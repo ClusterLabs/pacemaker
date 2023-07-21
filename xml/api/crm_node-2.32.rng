@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <!-- Output of the crm_node command -->
+    <start>
+        <ref name="element-crm-node" />
+    </start>
+
+    <define name="element-crm-node">
+        <choice>
+            <ref name="cluster-info" />
+            <ref name="node-info" />
+            <ref name="node-list" />
+        </choice>
+    </define>
+
+    <define name="cluster-info">
+        <element name="cluster-info">
+            <attribute name="quorum"> <data type="boolean" /> </attribute>
+        </element>
+    </define>
+
+    <define name="node-info">
+        <element name="node-info">
+            <attribute name="nodeid"> <data type="nonNegativeInteger" /> </attribute>
+            <optional>
+                <attribute name="uname"> <text/> </attribute>
+            </optional>
+        </element>
+    </define>
+
+    <define name="node-list">
+        <element name="nodes">
+            <oneOrMore>
+                <ref name="element-node" />
+            </oneOrMore>
+        </element>
+    </define>
+
+    <define name="element-node">
+        <element name="node">
+            <attribute name="id"> <data type="nonNegativeInteger" /> </attribute>
+            <optional>
+                <attribute name="name"> <text/> </attribute>
+            </optional>
+            <optional>
+                <attribute name="state"> <text/> </attribute>
+            </optional>
+        </element>
+    </define>
+
+</grammar>
