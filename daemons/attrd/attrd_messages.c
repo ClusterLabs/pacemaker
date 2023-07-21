@@ -20,6 +20,36 @@ int minimum_protocol_version = -1;
 
 static GHashTable *attrd_handlers = NULL;
 
+static bool
+is_sync_point_attr(xmlAttrPtr attr, void *data)
+{
+    return pcmk__str_eq((const char *) attr->name, PCMK__XA_ATTR_SYNC_POINT, pcmk__str_none);
+}
+
+static int
+remove_sync_point_attribute(xmlNode *xml, void *data)
+{
+    pcmk__xe_remove_matching_attrs(xml, is_sync_point_attr, NULL);
+    pcmk__xe_foreach_child(xml, XML_ATTR_OP, remove_sync_point_attribute, NULL);
+    return pcmk_rc_ok;
+}
+
+/* Sync points on a multi-update IPC message to an attrd too old to support
+ * multi-update messages won't work.  Strip the sync point attribute off here
+ * so we don't pretend to support this situation and instead ACK the client
+ * immediately.
+ */
+static void
+remove_unsupported_sync_points(pcmk__request_t *request)
+{
+    if (request->xml->children != NULL && !ATTRD_SUPPORTS_MULTI_MESSAGE(minimum_protocol_version) &&
+        attrd_request_has_sync_point(request->xml)) {
+        crm_warn("Ignoring sync point in request from %s because not all nodes support it",
+                 pcmk__request_origin(request));
+        remove_sync_point_attribute(request->xml, NULL);
+    }
+}
+
 static xmlNode *
 handle_unknown_request(pcmk__request_t *request)
 {
@@ -42,6 +72,8 @@ handle_clear_failure_request(pcmk__request_t *request)
         pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
         return NULL;
     } else {
+        remove_unsupported_sync_points(request);
+
         if (attrd_request_has_sync_point(request->xml)) {
             /* If this client supplied a sync point it wants to wait for, add it to
              * the wait list.  Clients on this list will not receive an ACK until
@@ -180,6 +212,8 @@ handle_update_request(pcmk__request_t *request)
         return NULL;
 
     } else {
+        remove_unsupported_sync_points(request);
+
         if (attrd_request_has_sync_point(request->xml)) {
             /* If this client supplied a sync point it wants to wait for, add it to
              * the wait list.  Clients on this list will not receive an ACK until
