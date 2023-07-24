@@ -129,6 +129,14 @@ class AttributeTests(Tests):
         test.add_log_pattern(r"Setting AAA\[.*\] in instance_attributes: \(unset\) -> 111 | from .* with 5s write delay",
                              regex=True)
 
+        test = self.new_test("set_attr_4",
+                             "Update an attribute that does not exist with a delay")
+        test.add_cmd("attrd_updater", "--name BBB -U 999 -d 10 --output-as=xml")
+        test.add_cmd_check_stdout("attrd_updater", "--name BBB -Q --output-as=xml",
+                                  "name=\"BBB\" value=\"999\"")
+        test.add_log_pattern(r"Setting BBB\[.*\] in instance_attributes: \(unset\) -> 999 \| from .* with 10s write delay",
+                             regex=True)
+
         test = self.new_test("update_attr_1",
                              "Update an attribute that already exists")
         test.add_cmd("attrd_updater", "--name BBB -U 222 --output-as=xml")
@@ -138,6 +146,13 @@ class AttributeTests(Tests):
         test.add_log_pattern(r"Setting BBB\[.*\] in instance_attributes: \(unset\) -> 222",
                              regex=True)
         test.add_log_pattern(r"Setting BBB\[.*\] in instance_attributes: 222 -> 333",
+                             regex=True)
+
+        test = self.new_test("update_attr_2",
+                             "Update an attribute using a delay other than its default")
+        test.add_cmd("attrd_updater", "--name BBB -U 777 -d 10 --output-as=xml")
+        test.add_cmd("attrd_updater", "--name BBB -U 888 -d 7 --output-as=xml")
+        test.add_log_pattern(r"Setting BBB\[.*\] in instance_attributes: 777 -> 888 \| from .* with 10s write delay",
                              regex=True)
 
         test = self.new_test("update_attr_delay_1",
