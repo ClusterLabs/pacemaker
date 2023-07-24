@@ -126,7 +126,7 @@ class AttributeTests(Tests):
         test.add_cmd("attrd_updater", "--name AAA -B 111 -d 5 --output-as=xml")
         test.add_cmd_check_stdout("attrd_updater", "--name AAA -Q --output-as=xml",
                                   "name=\"AAA\" value=\"111\"")
-        test.add_log_pattern(r"Setting AAA\[.*\] in instance_attributes: \(unset\) -> 111 | from .* with 5s write delay",
+        test.add_log_pattern(r"Setting AAA\[.*\] in instance_attributes: \(unset\) -> 111 \| from .* with 5s write delay",
                              regex=True)
 
         test = self.new_test("set_attr_4",
