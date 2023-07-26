@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2022 the Pacemaker project contributors
+ * Copyright 2008-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1079,13 +1079,16 @@ pcmk__connect_remote(const char *host, int port, int timeout, int *timer_id,
     hints.ai_family = AF_UNSPEC;        /* Allow IPv4 or IPv6 */
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_CANONNAME;
+
     rc = getaddrinfo(server, NULL, &hints, &res);
-    if (rc != 0) {
+    rc = pcmk__gaierror2rc(rc);
+
+    if (rc != pcmk_rc_ok) {
         crm_err("Unable to get IP address info for %s: %s",
-                server, gai_strerror(rc));
-        rc = ENOTCONN;
+                server, pcmk_rc_str(rc));
         goto async_cleanup;
     }
+
     if (!res || !res->ai_addr) {
         crm_err("Unable to get IP address info for %s: no result", server);
         rc = ENOTCONN;
