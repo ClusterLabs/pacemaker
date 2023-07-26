@@ -15,6 +15,7 @@
 
 #include <bzlib.h>
 #include <errno.h>
+#include <netdb.h>
 #include <stdlib.h>
 #include <string.h>
 #include <qb/qbdefs.h>
@@ -846,6 +847,48 @@ pcmk_rc2ocf(int rc)
 
 
 // Other functions
+
+/*!
+ * \brief Map a getaddrinfo() return code to the most similar Pacemaker
+ *        return code
+ *
+ * \param[in] gai  getaddrinfo() return code
+ *
+ * \return Most similar Pacemaker return code
+ */
+int
+pcmk__gaierror2rc(int gai)
+{
+    switch (gai) {
+        case 0:
+            return pcmk_rc_ok;
+
+        case EAI_AGAIN:
+            return EAGAIN;
+
+        case EAI_BADFLAGS:
+        case EAI_SERVICE:
+            return EINVAL;
+
+        case EAI_FAMILY:
+            return EAFNOSUPPORT;
+
+        case EAI_MEMORY:
+            return ENOMEM;
+
+        case EAI_NONAME:
+            return pcmk_rc_node_unknown;
+
+        case EAI_SOCKTYPE:
+            return ESOCKTNOSUPPORT;
+
+        case EAI_SYSTEM:
+            return errno;
+
+        default:
+            return pcmk_rc_ns_resolution;
+    }
+}
 
 const char *
 bz2_strerror(int rc)
