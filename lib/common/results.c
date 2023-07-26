@@ -309,6 +309,10 @@ static const struct pcmk__rc_info {
       "No active transaction found",
       -pcmk_err_generic,
     },
+    { "pcmk_rc_ns_resolution",
+      "Nameserver resolution error",
+      -pcmk_err_generic,
+    },
 };
 
 /*!
@@ -768,6 +772,7 @@ pcmk_rc2exitc(int rc)
             return CRM_EX_NOSUCH;
 
         case pcmk_rc_node_unknown:
+        case pcmk_rc_ns_resolution:
             return CRM_EX_NOHOST;
 
         case ETIME:
