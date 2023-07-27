@@ -446,66 +446,86 @@ validate_on_fail(const pe_resource_t *rsc, const char *action_name,
 {
     const char *name = NULL;
     const char *role = NULL;
-    const char *on_fail = NULL;
     const char *interval_spec = NULL;
     const char *value = g_hash_table_lookup(meta, XML_OP_ATTR_ON_FAIL);
 
-    if (pcmk__str_eq(action_name, PCMK_ACTION_STOP, pcmk__str_casei)
+    // Stop actions can only use certain on-fail values
+    if (pcmk__str_eq(action_name, PCMK_ACTION_STOP, pcmk__str_none)
         && !valid_stop_on_fail(value)) {
 
         pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for %s stop "
                          "action to default value because '%s' is not "
                          "allowed for stop", rsc->id, value);
         return NULL;
+    }
 
-    } else if (pcmk__str_eq(action_name, PCMK_ACTION_DEMOTE, pcmk__str_casei)
-               && (value == NULL)) {
-        // demote on_fail defaults to monitor value for promoted role if present
-        xmlNode *operation = NULL;
+    /* Demote actions default on-fail to the on-fail value for the first
+     * recurring monitor for the promoted role (if any).
+     */
+    if (pcmk__str_eq(action_name, PCMK_ACTION_DEMOTE, pcmk__str_none)
+        && (value == NULL)) {
 
-        CRM_CHECK(rsc != NULL, return NULL);
-
-        for (operation = pcmk__xe_first_child(rsc->ops_xml);
-             (operation != NULL) && (value == NULL);
-             operation = pcmk__xe_next(operation)) {
+        /* @TODO This does not consider promote options set in a meta-attribute
+         * block (which may have rules that need to be evaluated) rather than
+         * XML properties.
+         */
+        for (xmlNode *operation = first_named_child(rsc->ops_xml, XML_ATTR_OP);
+             operation != NULL; operation = crm_next_same_xml(operation)) {
             bool enabled = false;
+            const char *promote_on_fail = NULL;
 
-            if (!pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
+            /* We only care about explicit on-fail (if promote uses default, so
+             * can demote)
+             */
+            promote_on_fail = crm_element_value(operation, XML_OP_ATTR_ON_FAIL);
+            if (promote_on_fail == NULL) {
                 continue;
             }
+
+            // We only care about recurring monitors for the promoted role
             name = crm_element_value(operation, "name");
             role = crm_element_value(operation, "role");
-            on_fail = crm_element_value(operation, XML_OP_ATTR_ON_FAIL);
+            if (!pcmk__str_eq(name, PCMK_ACTION_MONITOR, pcmk__str_none)
+                || !pcmk__strcase_any_of(role, PCMK__ROLE_PROMOTED,
+                                         PCMK__ROLE_PROMOTED_LEGACY, NULL)) {
+                continue;
+            }
             interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
-            if (!on_fail) {
-                continue;
-            } else if (pcmk__xe_get_bool_attr(operation, "enabled", &enabled) == pcmk_rc_ok && !enabled) {
-                continue;
-            } else if (!pcmk__str_eq(name, PCMK_ACTION_MONITOR, pcmk__str_casei)
-                       || !pcmk__strcase_any_of(role, PCMK__ROLE_PROMOTED,
-                                                PCMK__ROLE_PROMOTED_LEGACY,
-                                                NULL)) {
-                continue;
-            } else if (crm_parse_interval_spec(interval_spec) == 0) {
-                continue;
-            } else if (pcmk__str_eq(on_fail, "demote", pcmk__str_casei)) {
+            if (crm_parse_interval_spec(interval_spec) == 0) {
                 continue;
             }
 
-            value = on_fail;
-        }
-    } else if (pcmk__str_eq(action_name, PCMK_ACTION_LRM_DELETE,
-                            pcmk__str_casei)) {
-        value = "ignore";
+            // We only care about enabled monitors
+            if ((pcmk__xe_get_bool_attr(operation, "enabled",
+                                        &enabled) == pcmk_rc_ok) && !enabled) {
+                continue;
+            }
 
-    } else if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
+            // Demote actions can't default to on-fail="demote"
+            if (pcmk__str_eq(promote_on_fail, "demote", pcmk__str_casei)) {
+                continue;
+            }
+
+            // Use value from first applicable promote action found
+            return on_fail;
+        }
+        return NULL;
+    }
+
+    if (pcmk__str_eq(action_name, PCMK_ACTION_LRM_DELETE, pcmk__str_none)
+        && !pcmk__str_eq(value, "ignore", pcmk__str_casei)) {
+        return "ignore";
+    }
+
+    // on-fail="demote" is allowed only for certain actions
+    if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
         name = crm_element_value(action_config, "name");
         role = crm_element_value(action_config, "role");
         interval_spec = crm_element_value(action_config,
                                           XML_LRM_ATTR_INTERVAL);
 
-        if (!pcmk__str_eq(name, PCMK_ACTION_PROMOTE, pcmk__str_casei)
-            && (!pcmk__str_eq(name, PCMK_ACTION_MONITOR, pcmk__str_casei)
+        if (!pcmk__str_eq(name, PCMK_ACTION_PROMOTE, pcmk__str_none)
+            && (!pcmk__str_eq(name, PCMK_ACTION_MONITOR, pcmk__str_none)
                 || !pcmk__strcase_any_of(role, PCMK__ROLE_PROMOTED,
                                          PCMK__ROLE_PROMOTED_LEGACY, NULL)
                 || (crm_parse_interval_spec(interval_spec) == 0))) {
