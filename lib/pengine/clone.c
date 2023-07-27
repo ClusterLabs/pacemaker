@@ -18,13 +18,14 @@
 #include <crm/msg_xml.h>
 #include <crm/common/output.h>
 #include <crm/common/xml_internal.h>
+#include <crm/common/scheduler_internal.h>
 
 #ifdef PCMK__COMPAT_2_0
-#define PROMOTED_INSTANCES   RSC_ROLE_PROMOTED_LEGACY_S "s"
-#define UNPROMOTED_INSTANCES RSC_ROLE_UNPROMOTED_LEGACY_S "s"
+#define PROMOTED_INSTANCES   PCMK__ROLE_PROMOTED_LEGACY "s"
+#define UNPROMOTED_INSTANCES PCMK__ROLE_UNPROMOTED_LEGACY "s"
 #else
-#define PROMOTED_INSTANCES   RSC_ROLE_PROMOTED_S
-#define UNPROMOTED_INSTANCES RSC_ROLE_UNPROMOTED_S
+#define PROMOTED_INSTANCES   PCMK__ROLE_PROMOTED
+#define UNPROMOTED_INSTANCES PCMK__ROLE_UNPROMOTED
 #endif
 
 typedef struct clone_variant_data_s {

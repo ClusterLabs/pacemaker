@@ -82,16 +82,6 @@ enum rsc_start_requirement {
     rsc_req_stonith             /* Enforced by native_start_constraints() */
 };
 
-#  define RSC_ROLE_MAX  (pcmk_role_promoted + 1)
-
-#  define RSC_ROLE_UNKNOWN_S "Unknown"
-#  define RSC_ROLE_STOPPED_S "Stopped"
-#  define RSC_ROLE_STARTED_S "Started"
-#  define RSC_ROLE_UNPROMOTED_S         "Unpromoted"
-#  define RSC_ROLE_PROMOTED_S           "Promoted"
-#  define RSC_ROLE_UNPROMOTED_LEGACY_S  "Slave"
-#  define RSC_ROLE_PROMOTED_LEGACY_S    "Master"
-
 //! Deprecated
 enum pe_print_options {
     pe_print_log            = (1 << 0),

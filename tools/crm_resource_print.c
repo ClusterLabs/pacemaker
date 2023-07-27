@@ -548,9 +548,9 @@ resource_search_list_default(pcmk__output_t *out, va_list args)
 
             if (ni->promoted) {
 #ifdef PCMK__COMPAT_2_0
-                role_text = " " RSC_ROLE_PROMOTED_LEGACY_S;
+                role_text = " " PCMK__ROLE_PROMOTED_LEGACY;
 #else
-                role_text = " " RSC_ROLE_PROMOTED_S;
+                role_text = " " PCMK__ROLE_PROMOTED;
 #endif
             }
             out->list_item(out, "node", "resource %s is running on: %s%s",

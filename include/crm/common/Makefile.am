@@ -55,6 +55,8 @@ noinst_HEADERS = acl_internal.h 	\
 				 output_internal.h	\
 				 remote_internal.h	\
 				 results_internal.h	\
+				 roles_internal.h	\
+				 scheduler_internal.h	\
 				 strings_internal.h	\
 				 unittest_internal.h \
 				 xml_internal.h

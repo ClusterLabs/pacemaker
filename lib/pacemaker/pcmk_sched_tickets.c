@@ -13,6 +13,7 @@
 #include <glib.h>
 
 #include <crm/crm.h>
+#include <crm/common/scheduler_internal.h>
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
 
@@ -159,9 +160,9 @@ rsc_ticket_new(const char *id, pe_resource_t *rsc, pe_ticket_t *ticket,
         return;
     }
 
-    if (pcmk__str_eq(state, RSC_ROLE_STARTED_S,
+    if (pcmk__str_eq(state, PCMK__ROLE_STARTED,
                      pcmk__str_null_matches|pcmk__str_casei)) {
-        state = RSC_ROLE_UNKNOWN_S;
+        state = PCMK__ROLE_UNKNOWN;
     }
 
     new_rsc_ticket->id = id;
