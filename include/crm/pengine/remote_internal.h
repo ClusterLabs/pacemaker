@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the Pacemaker project contributors
+ * Copyright 2013-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,8 +23,7 @@ bool pe__is_remote_node(const pe_node_t *node);
 bool pe__is_guest_node(const pe_node_t *node);
 bool pe__is_guest_or_remote_node(const pe_node_t *node);
 bool pe__is_bundle_node(const pe_node_t *node);
-bool pe__resource_is_remote_conn(const pe_resource_t *rsc,
-                                 const pe_working_set_t *data_set);
+bool pe__resource_is_remote_conn(const pe_resource_t *rsc);
 pe_resource_t *pe__resource_contains_guest_node(const pe_working_set_t *data_set,
                                                 const pe_resource_t *rsc);
 void pe_foreach_guest_node(const pe_working_set_t *data_set, const pe_node_t *host,

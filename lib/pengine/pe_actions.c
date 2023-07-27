@@ -849,7 +849,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
      * exist. The user can set op on-fail=fence if they really want to fence start
      * failures. */
     } else if (((value == NULL) || !pcmk_is_set(action->rsc->flags, pe_rsc_managed))
-               && pe__resource_is_remote_conn(action->rsc, data_set)
+               && pe__resource_is_remote_conn(action->rsc)
                && !(pcmk__str_eq(action->task, PCMK_ACTION_MONITOR,
                                  pcmk__str_casei)
                     && (interval_ms == 0))

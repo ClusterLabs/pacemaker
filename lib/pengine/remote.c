@@ -14,11 +14,10 @@
 #include <glib.h>
 
 bool
-pe__resource_is_remote_conn(const pe_resource_t *rsc,
-                            const pe_working_set_t *data_set)
+pe__resource_is_remote_conn(const pe_resource_t *rsc)
 {
     return (rsc != NULL) && rsc->is_remote_node
-           && pe__is_remote_node(pe_find_node(data_set->nodes, rsc->id));
+           && pe__is_remote_node(pe_find_node(rsc->cluster->nodes, rsc->id));
 }
 
 bool
