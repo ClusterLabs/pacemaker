@@ -895,6 +895,43 @@ pcmk__gaierror2rc(int gai)
     }
 }
 
+/*!
+ * \brief Map a bz2 return code to the most similar Pacemaker return code
+ *
+ * \param[in] bz2  bz2 return code
+ *
+ * \return Most similar Pacemaker return code
+ */
+int
+pcmk__bzlib2rc(int bz2)
+{
+    switch (bz2) {
+        case BZ_OK:
+        case BZ_RUN_OK:
+        case BZ_FLUSH_OK:
+        case BZ_FINISH_OK:
+        case BZ_STREAM_END:
+            return pcmk_rc_ok;
+
+        case BZ_MEM_ERROR:
+            return ENOMEM;
+
+        case BZ_DATA_ERROR:
+        case BZ_DATA_ERROR_MAGIC:
+        case BZ_UNEXPECTED_EOF:
+            return pcmk_rc_bad_input;
+
+        case BZ_IO_ERROR:
+            return EIO;
+
+        case BZ_OUTBUFF_FULL:
+            return EFBIG;
+
+        default:
+            return pcmk_rc_compression;
+    }
+}
+
 const char *
 bz2_strerror(int rc)
 {
