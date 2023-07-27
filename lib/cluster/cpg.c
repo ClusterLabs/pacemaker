@@ -506,14 +506,14 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
         uncompressed = calloc(1, new_size);
         rc = BZ2_bzBuffToBuffDecompress(uncompressed, &new_size, msg->data, msg->compressed_size, 1, 0);
 
-        if (rc != BZ_OK) {
-            crm_err("Decompression failed: %s " CRM_XS " bzerror=%d",
-                    bz2_strerror(rc), rc);
+        rc = pcmk__bzlib2rc(rc);
+
+        if (rc != pcmk_rc_ok) {
+            crm_err("Decompression failed: %s " CRM_XS " rc=%d", pcmk_rc_str(rc), rc);
             free(uncompressed);
             goto badmsg;
         }
 
-        CRM_ASSERT(rc == BZ_OK);
         CRM_ASSERT(new_size == msg->size);
 
         data = uncompressed;

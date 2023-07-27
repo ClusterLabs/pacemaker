@@ -558,16 +558,17 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
         rc = BZ2_bzBuffToBuffDecompress(uncompressed + header->payload_offset, &size_u,
                                         remote->buffer + header->payload_offset,
                                         header->payload_compressed, 1, 0);
+        rc = pcmk__bzlib2rc(rc);
 
-        if (rc != BZ_OK && header->version > REMOTE_MSG_VERSION) {
+        if (rc != pcmk_rc_ok && header->version > REMOTE_MSG_VERSION) {
             crm_warn("Couldn't decompress v%d message, we only understand v%d",
                      header->version, REMOTE_MSG_VERSION);
             free(uncompressed);
             return NULL;
 
-        } else if (rc != BZ_OK) {
-            crm_err("Decompression failed: %s " CRM_XS " bzerror=%d",
-                    bz2_strerror(rc), rc);
+        } else if (rc != pcmk_rc_ok) {
+            crm_err("Decompression failed: %s " CRM_XS " rc=%d",
+                    pcmk_rc_str(rc), rc);
             free(uncompressed);
             return NULL;
         }

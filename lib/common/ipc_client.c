@@ -1129,12 +1129,13 @@ crm_ipc_decompress(crm_ipc_t * client)
 
         rc = BZ2_bzBuffToBuffDecompress(uncompressed + sizeof(pcmk__ipc_header_t), &size_u,
                                         client->buffer + sizeof(pcmk__ipc_header_t), header->size_compressed, 1, 0);
+        rc = pcmk__bzlib2rc(rc);
 
-        if (rc != BZ_OK) {
-            crm_err("Decompression failed: %s " CRM_XS " bzerror=%d",
-                    bz2_strerror(rc), rc);
+        if (rc != pcmk_rc_ok) {
+            crm_err("Decompression failed: %s " CRM_XS " rc=%d",
+                    pcmk_rc_str(rc), rc);
             free(uncompressed);
-            return EILSEQ;
+            return rc;
         }
 
         /*

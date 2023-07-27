@@ -47,15 +47,9 @@ test_for_pcmk_rc2exitc(void **state) {
     assert_int_equal(pcmk_rc2exitc(-7777777), CRM_EX_ERROR);
 }
 
-static void
-test_for_bz2_strerror(void **state) {
-    assert_string_equal(bz2_strerror(BZ_STREAM_END), "Ok");
-}
-
 PCMK__UNIT_TEST(NULL, NULL,
                 cmocka_unit_test(test_for_pcmk_rc_name),
                 cmocka_unit_test(test_for_pcmk_rc_str),
                 cmocka_unit_test(test_for_crm_exit_name),
                 cmocka_unit_test(test_for_crm_exit_str),
-                cmocka_unit_test(test_for_pcmk_rc2exitc),
-                cmocka_unit_test(test_for_bz2_strerror))
+                cmocka_unit_test(test_for_pcmk_rc2exitc))
