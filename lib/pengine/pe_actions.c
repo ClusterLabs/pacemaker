@@ -431,7 +431,7 @@ valid_stop_on_fail(const char *value)
 
 /*!
  * \internal
- * \brief Validate a resource action's on_fail meta-attribute
+ * \brief Validate (and possibly reset) resource action's on_fail meta-attribute
  *
  * \param[in]     rsc            Resource that action is for
  * \param[in]     action_name    Action name
@@ -448,6 +448,8 @@ validate_on_fail(const pe_resource_t *rsc, const char *action_name,
     const char *role = NULL;
     const char *interval_spec = NULL;
     const char *value = g_hash_table_lookup(meta, XML_OP_ATTR_ON_FAIL);
+    char *key = NULL;
+    char *new_value = NULL;
 
     // Stop actions can only use certain on-fail values
     if (pcmk__str_eq(action_name, PCMK_ACTION_STOP, pcmk__str_none)
@@ -456,6 +458,7 @@ validate_on_fail(const pe_resource_t *rsc, const char *action_name,
         pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for %s stop "
                          "action to default value because '%s' is not "
                          "allowed for stop", rsc->id, value);
+        g_hash_table_remove(meta, XML_OP_ATTR_ON_FAIL);
         return NULL;
     }
 
@@ -507,14 +510,22 @@ validate_on_fail(const pe_resource_t *rsc, const char *action_name,
             }
 
             // Use value from first applicable promote action found
-            return on_fail;
+            key = strdup(XML_OP_ATTR_ON_FAIL);
+            new_value = strdup(promote_on_fail);
+            CRM_ASSERT((key != NULL) && (new_value != NULL));
+            g_hash_table_insert(meta, key, new_value);
+            return g_hash_table_lookup(meta, XML_OP_ATTR_ON_FAIL);
         }
         return NULL;
     }
 
     if (pcmk__str_eq(action_name, PCMK_ACTION_LRM_DELETE, pcmk__str_none)
         && !pcmk__str_eq(value, "ignore", pcmk__str_casei)) {
-        return "ignore";
+        key = strdup(XML_OP_ATTR_ON_FAIL);
+        new_value = strdup("ignore");
+        CRM_ASSERT((key != NULL) && (new_value != NULL));
+        g_hash_table_insert(meta, key, new_value);
+        return g_hash_table_lookup(meta, XML_OP_ATTR_ON_FAIL);
     }
 
     // on-fail="demote" is allowed only for certain actions
@@ -532,6 +543,7 @@ validate_on_fail(const pe_resource_t *rsc, const char *action_name,
             pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for %s %s "
                              "action to default value because 'demote' is not "
                              "allowed for it", rsc->id, name);
+            g_hash_table_remove(meta, XML_OP_ATTR_ON_FAIL);
             return NULL;
         }
     }
@@ -811,8 +823,6 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
 
     } else if (pcmk__str_eq(value, "block", pcmk__str_casei)) {
         action->on_fail = pcmk_on_fail_block;
-        g_hash_table_insert(action->meta, strdup(XML_OP_ATTR_ON_FAIL), strdup("block"));
-        value = "block"; // The above could destroy the original string
 
     } else if (pcmk__str_eq(value, "fence", pcmk__str_casei)) {
         action->on_fail = pcmk_on_fail_fence_node;
