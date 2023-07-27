@@ -394,6 +394,10 @@ void pe__show_node_scores_as(const char *file, const char *function,
 
 xmlNode *find_rsc_op_entry(const pe_resource_t *rsc, const char *key);
 
+GHashTable *pcmk__unpack_action_meta(pe_resource_t *rsc, const pe_node_t *node,
+                                     const char *action_name, guint interval_ms,
+                                     const xmlNode *action_config);
+
 pe_action_t *custom_action(pe_resource_t *rsc, char *key, const char *task,
                            const pe_node_t *on_node, gboolean optional,
                            gboolean foo, pe_working_set_t *data_set);

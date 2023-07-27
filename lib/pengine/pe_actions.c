@@ -178,7 +178,6 @@ new_action(char *key, const char *task, pe_resource_t *rsc,
     action->task = strdup(task); CRM_ASSERT(action->task != NULL);
     action->uuid = key;
     action->extra = pcmk__strkey_table(free, free);
-    action->meta = pcmk__strkey_table(free, free);
 
     if (node) {
         action->node = pe__copy_node(node);
@@ -196,7 +195,9 @@ new_action(char *key, const char *task, pe_resource_t *rsc,
         pe__clear_action_flags(action, pe_action_optional);
     }
 
-    if (rsc != NULL) {
+    if (rsc == NULL) {
+        action->meta = pcmk__strkey_table(free, free);
+    } else {
         guint interval_ms = 0;
 
         action->op_entry = find_rsc_op_entry_helper(rsc, key, TRUE);
@@ -437,10 +438,8 @@ valid_stop_on_fail(const char *value)
  * \param[in]     action_name    Action name
  * \param[in]     action_config  Action configuration XML from CIB (if any)
  * \param[in,out] meta           Table of action meta-attributes
- *
- * \return (Possibly new) value of on-fail meta-attribute
  */
-static const char *
+static void
 validate_on_fail(const pe_resource_t *rsc, const char *action_name,
                  const xmlNode *action_config, GHashTable *meta)
 {
@@ -459,7 +458,7 @@ validate_on_fail(const pe_resource_t *rsc, const char *action_name,
                          "action to default value because '%s' is not "
                          "allowed for stop", rsc->id, value);
         g_hash_table_remove(meta, XML_OP_ATTR_ON_FAIL);
-        return NULL;
+        return;
     }
 
     /* Demote actions default on-fail to the on-fail value for the first
@@ -514,9 +513,8 @@ validate_on_fail(const pe_resource_t *rsc, const char *action_name,
             new_value = strdup(promote_on_fail);
             CRM_ASSERT((key != NULL) && (new_value != NULL));
             g_hash_table_insert(meta, key, new_value);
-            return g_hash_table_lookup(meta, XML_OP_ATTR_ON_FAIL);
         }
-        return NULL;
+        return;
     }
 
     if (pcmk__str_eq(action_name, PCMK_ACTION_LRM_DELETE, pcmk__str_none)
@@ -525,7 +523,7 @@ validate_on_fail(const pe_resource_t *rsc, const char *action_name,
         new_value = strdup("ignore");
         CRM_ASSERT((key != NULL) && (new_value != NULL));
         g_hash_table_insert(meta, key, new_value);
-        return g_hash_table_lookup(meta, XML_OP_ATTR_ON_FAIL);
+        return;
     }
 
     // on-fail="demote" is allowed only for certain actions
@@ -544,11 +542,9 @@ validate_on_fail(const pe_resource_t *rsc, const char *action_name,
                              "action to default value because 'demote' is not "
                              "allowed for it", rsc->id, name);
             g_hash_table_remove(meta, XML_OP_ATTR_ON_FAIL);
-            return NULL;
+            return;
         }
     }
-
-    return value;
 }
 
 static int
@@ -668,6 +664,172 @@ find_min_interval_mon(pe_resource_t * rsc, gboolean include_disabled)
 
 /*!
  * \internal
+ * \brief Unpack action meta-attributes
+ *
+ * \param[in,out] rsc            Resource that action is for
+ * \param[in]     node           Node that action is on
+ * \param[in]     action_name    Action name
+ * \param[in]     interval_ms    Action interval (in milliseconds)
+ * \param[in]     action_config  Action XML configuration from CIB (if any)
+ *
+ * Unpack a resource action's meta-attributes (normalizing the interval,
+ * timeout, and start delay values as integer milliseconds) from its CIB XML
+ * configuration (including defaults).
+ *
+ * \return Newly allocated hash table with normalized action meta-attributes
+ */
+GHashTable *
+pcmk__unpack_action_meta(pe_resource_t *rsc, const pe_node_t *node,
+                         const char *action_name, guint interval_ms,
+                         const xmlNode *action_config)
+{
+    GHashTable *meta = NULL;
+    char *name = NULL;
+    char *value = NULL;
+    const char *timeout_spec = NULL;
+    const char *str = NULL;
+
+    pe_rsc_eval_data_t rsc_rule_data = {
+        .standard = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS),
+        .provider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER),
+        .agent = crm_element_value(rsc->xml, XML_EXPR_ATTR_TYPE),
+    };
+
+    pe_op_eval_data_t op_rule_data = {
+        .op_name = action_name,
+        .interval = interval_ms,
+    };
+
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = NULL, // @TODO Use node's attributes
+        .role = pcmk_role_unknown,
+        .now = rsc->cluster->now,
+        .match_data = NULL,
+        .rsc_data = &rsc_rule_data,
+        .op_data = &op_rule_data,
+    };
+
+    meta = pcmk__strkey_table(free, free);
+
+    // Cluster-wide <op_defaults> <meta_attributes>
+    pe__unpack_dataset_nvpairs(rsc->cluster->op_defaults, XML_TAG_META_SETS,
+                               &rule_data, meta, NULL, FALSE, rsc->cluster);
+
+    // Derive default timeout for probes from recurring monitor timeouts
+    if (pcmk_is_probe(action_name, interval_ms)) {
+        xmlNode *min_interval_mon = find_min_interval_mon(rsc, FALSE);
+
+        if (min_interval_mon != NULL) {
+            /* @TODO This does not consider timeouts set in meta_attributes
+             * blocks (which may also have rules that need to be evaluated).
+             */
+            timeout_spec = crm_element_value(min_interval_mon,
+                                             XML_ATTR_TIMEOUT);
+            if (timeout_spec != NULL) {
+                pe_rsc_trace(rsc,
+                             "Setting default timeout for %s probe to "
+                             "most frequent monitor's timeout '%s'",
+                             rsc->id, timeout_spec);
+                name = strdup(XML_ATTR_TIMEOUT);
+                value = strdup(timeout_spec);
+                CRM_ASSERT((name != NULL) && (value != NULL));
+                g_hash_table_insert(meta, name, value);
+            }
+        }
+    }
+
+    if (action_config != NULL) {
+        // <op> <meta_attributes> take precedence over defaults
+        pe__unpack_dataset_nvpairs(action_config, XML_TAG_META_SETS, &rule_data,
+                                   meta, NULL, TRUE, rsc->cluster);
+
+        /* Anything set as an <op> XML property has highest precedence.
+         * This ensures we use the name and interval from the <op> tag.
+         * (See below for the only exception, fence device start/probe timeout.)
+         */
+        for (xmlAttrPtr attr = action_config->properties;
+             attr != NULL; attr = attr->next) {
+            name = strdup((const char *) attr->name);
+            value = strdup(pcmk__xml_attr_value(attr));
+
+            CRM_ASSERT((name != NULL) && (value != NULL));
+            g_hash_table_insert(meta, name, value);
+        }
+    }
+
+    g_hash_table_remove(meta, XML_ATTR_ID);
+
+    // Normalize interval to milliseconds
+    if (interval_ms > 0) {
+        name = strdup(XML_LRM_ATTR_INTERVAL);
+        CRM_ASSERT(name != NULL);
+        value = crm_strdup_printf("%u", interval_ms);
+        g_hash_table_insert(meta, name, value);
+    } else {
+        g_hash_table_remove(meta, XML_LRM_ATTR_INTERVAL);
+    }
+
+    /* Timeout order of precedence (highest to lowest):
+     *   1. pcmk_monitor_timeout resource parameter (only for starts and probes
+     *      when rsc has pcmk_ra_cap_fence_params; this gets used for recurring
+     *      monitors via the executor instead)
+     *   2. timeout configured in <op> (with <op timeout> taking precedence over
+     *      <op> <meta_attributes>)
+     *   3. timeout configured in <op_defaults> <meta_attributes>
+     *   4. PCMK_DEFAULT_ACTION_TIMEOUT_MS
+     */
+
+    // Check for pcmk_monitor_timeout
+    if (pcmk_is_set(pcmk_get_ra_caps(rsc_rule_data.standard),
+                    pcmk_ra_cap_fence_params)
+        && (pcmk__str_eq(action_name, PCMK_ACTION_START, pcmk__str_none)
+            || pcmk_is_probe(action_name, interval_ms))) {
+
+        GHashTable *params = pe_rsc_params(rsc, node, rsc->cluster);
+
+        timeout_spec = g_hash_table_lookup(params, "pcmk_monitor_timeout");
+        if (timeout_spec != NULL) {
+            pe_rsc_trace(rsc,
+                         "Setting timeout for %s %s to "
+                         "pcmk_monitor_timeout (%s)",
+                         rsc->id, action_name, timeout_spec);
+            name = strdup(XML_ATTR_TIMEOUT);
+            value = strdup(timeout_spec);
+            CRM_ASSERT((name != NULL) && (value != NULL));
+            g_hash_table_insert(meta, name, value);
+        }
+    }
+
+    // Normalize timeout to positive milliseconds
+    name = strdup(XML_ATTR_TIMEOUT);
+    CRM_ASSERT(name != NULL);
+    timeout_spec = g_hash_table_lookup(meta, XML_ATTR_TIMEOUT);
+    g_hash_table_insert(meta, name, pcmk__itoa(unpack_timeout(timeout_spec)));
+
+    // Ensure on-fail has a valid value
+    validate_on_fail(rsc, action_name, action_config, meta);
+
+    // Normalize start-delay
+    str = g_hash_table_lookup(meta, XML_OP_ATTR_START_DELAY);
+    if (str != NULL) {
+        unpack_start_delay(str, meta);
+    } else {
+        long long start_delay = 0;
+
+        str = g_hash_table_lookup(meta, XML_OP_ATTR_ORIGIN);
+        if (unpack_interval_origin(str, action_config, interval_ms,
+                                   rsc->cluster->now, &start_delay)) {
+            name = strdup(XML_OP_ATTR_START_DELAY);
+            CRM_ASSERT(name != NULL);
+            g_hash_table_insert(meta, name,
+                                crm_strdup_printf("%lld", start_delay));
+        }
+    }
+    return meta;
+}
+
+/*!
+ * \internal
  * \brief Unpack action configuration
  *
  * Unpack a resource action's meta-attributes (normalizing the interval,
@@ -683,120 +845,10 @@ static void
 unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
                  const pe_resource_t *container, guint interval_ms)
 {
-    int timeout_ms = 0;
     const char *value = NULL;
-    bool is_probe = false;
 
-    pe_rsc_eval_data_t rsc_rule_data = {
-        .standard = crm_element_value(action->rsc->xml, XML_AGENT_ATTR_CLASS),
-        .provider = crm_element_value(action->rsc->xml, XML_AGENT_ATTR_PROVIDER),
-        .agent = crm_element_value(action->rsc->xml, XML_EXPR_ATTR_TYPE)
-    };
-
-    pe_op_eval_data_t op_rule_data = {
-        .op_name = action->task,
-        .interval = interval_ms
-    };
-
-    pe_rule_eval_data_t rule_data = {
-        .node_hash = NULL,
-        .role = pcmk_role_unknown,
-        .now = action->rsc->cluster->now,
-        .match_data = NULL,
-        .rsc_data = &rsc_rule_data,
-        .op_data = &op_rule_data
-    };
-
-    CRM_CHECK(action && action->rsc, return);
-
-    is_probe = pcmk_is_probe(action->task, interval_ms);
-
-    // Cluster-wide <op_defaults> <meta_attributes>
-    pe__unpack_dataset_nvpairs(action->rsc->cluster->op_defaults,
-                               XML_TAG_META_SETS, &rule_data, action->meta,
-                               NULL, FALSE, action->rsc->cluster);
-
-    // Determine probe default timeout differently
-    if (is_probe) {
-        xmlNode *min_interval_mon = find_min_interval_mon(action->rsc, FALSE);
-
-        if (min_interval_mon) {
-            value = crm_element_value(min_interval_mon, XML_ATTR_TIMEOUT);
-            if (value) {
-                crm_trace("\t%s: Setting default timeout to minimum-interval "
-                          "monitor's timeout '%s'", action->uuid, value);
-                g_hash_table_replace(action->meta, strdup(XML_ATTR_TIMEOUT),
-                                     strdup(value));
-            }
-        }
-    }
-
-    if (xml_obj) {
-        xmlAttrPtr xIter = NULL;
-
-        // <op> <meta_attributes> take precedence over defaults
-        pe__unpack_dataset_nvpairs(xml_obj, XML_TAG_META_SETS, &rule_data,
-                                   action->meta, NULL, TRUE,
-                                   action->rsc->cluster);
-
-        /* Anything set as an <op> XML property has highest precedence.
-         * This ensures we use the name and interval from the <op> tag.
-         */
-        for (xIter = xml_obj->properties; xIter; xIter = xIter->next) {
-            const char *prop_name = (const char *)xIter->name;
-            const char *prop_value = pcmk__xml_attr_value(xIter);
-
-            g_hash_table_replace(action->meta, strdup(prop_name), strdup(prop_value));
-        }
-    }
-
-    g_hash_table_remove(action->meta, "id");
-
-    // Normalize interval to milliseconds
-    if (interval_ms > 0) {
-        g_hash_table_replace(action->meta, strdup(XML_LRM_ATTR_INTERVAL),
-                             crm_strdup_printf("%u", interval_ms));
-    } else {
-        g_hash_table_remove(action->meta, XML_LRM_ATTR_INTERVAL);
-    }
-
-    /*
-     * Timeout order of precedence:
-     *   1. pcmk_monitor_timeout (if rsc has pcmk_ra_cap_fence_params
-     *      and task is start or a probe; pcmk_monitor_timeout works
-     *      by default for a recurring monitor)
-     *   2. explicit op timeout on the primitive
-     *   3. default op timeout
-     *      a. if probe, then min-interval monitor's timeout
-     *      b. else, in XML_CIB_TAG_OPCONFIG
-     *   4. PCMK_DEFAULT_ACTION_TIMEOUT_MS
-     *
-     * #1 overrides general rule of <op> XML property having highest
-     * precedence.
-     */
-    if (pcmk_is_set(pcmk_get_ra_caps(rsc_rule_data.standard),
-                    pcmk_ra_cap_fence_params)
-        && (pcmk__str_eq(action->task, PCMK_ACTION_START, pcmk__str_casei)
-            || is_probe)) {
-
-        GHashTable *params = pe_rsc_params(action->rsc, action->node,
-                                           action->rsc->cluster);
-
-        value = g_hash_table_lookup(params, "pcmk_monitor_timeout");
-
-        if (value) {
-            crm_trace("\t%s: Setting timeout to pcmk_monitor_timeout '%s', "
-                      "overriding default", action->uuid, value);
-            g_hash_table_replace(action->meta, strdup(XML_ATTR_TIMEOUT),
-                                 strdup(value));
-        }
-    }
-
-    // Normalize timeout to positive milliseconds
-    value = g_hash_table_lookup(action->meta, XML_ATTR_TIMEOUT);
-    timeout_ms = unpack_timeout(value);
-    g_hash_table_replace(action->meta, strdup(XML_ATTR_TIMEOUT),
-                         pcmk__itoa(timeout_ms));
+    action->meta = pcmk__unpack_action_meta(action->rsc, action->node,
+                                            action->task, interval_ms, xml_obj);
 
     if (!pcmk__strcase_any_of(action->task, PCMK_ACTION_START,
                               PCMK_ACTION_PROMOTE, NULL)) {
@@ -817,8 +869,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
     }
     pe_rsc_trace(action->rsc, "%s requires %s", action->uuid, value);
 
-    value = validate_on_fail(action->rsc, action->task, xml_obj, action->meta);
-
+    value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ON_FAIL);
     if (value == NULL) {
 
     } else if (pcmk__str_eq(value, "block", pcmk__str_casei)) {
@@ -959,20 +1010,6 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
     }
     pe_rsc_trace(action->rsc, "%s failure results in: %s",
                  action->uuid, role2text(action->fail_role));
-
-    value = g_hash_table_lookup(action->meta, XML_OP_ATTR_START_DELAY);
-    if (value) {
-        unpack_start_delay(value, action->meta);
-    } else {
-        long long start_delay = 0;
-
-        value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ORIGIN);
-        if (unpack_interval_origin(value, xml_obj, interval_ms,
-                                   action->rsc->cluster->now, &start_delay)) {
-            g_hash_table_replace(action->meta, strdup(XML_OP_ATTR_START_DELAY),
-                                 crm_strdup_printf("%lld", start_delay));
-        }
-    }
 }
 
 /*!
