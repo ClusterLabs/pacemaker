@@ -429,31 +429,43 @@ valid_stop_on_fail(const char *value)
     return !pcmk__strcase_any_of(value, "standby", "demote", "stop", NULL);
 }
 
+/*!
+ * \internal
+ * \brief Validate a resource action's on_fail meta-attribute
+ *
+ * \param[in]     rsc            Resource that action is for
+ * \param[in]     action_name    Action name
+ * \param[in]     action_config  Action configuration XML from CIB (if any)
+ * \param[in,out] meta           Table of action meta-attributes
+ *
+ * \return (Possibly new) value of on-fail meta-attribute
+ */
 static const char *
-unpack_operation_on_fail(pe_action_t * action)
+validate_on_fail(const pe_resource_t *rsc, const char *action_name,
+                 const xmlNode *action_config, GHashTable *meta)
 {
     const char *name = NULL;
     const char *role = NULL;
     const char *on_fail = NULL;
     const char *interval_spec = NULL;
-    const char *value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ON_FAIL);
+    const char *value = g_hash_table_lookup(meta, XML_OP_ATTR_ON_FAIL);
 
-    if (pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_casei)
+    if (pcmk__str_eq(action_name, PCMK_ACTION_STOP, pcmk__str_casei)
         && !valid_stop_on_fail(value)) {
 
         pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for %s stop "
                          "action to default value because '%s' is not "
-                         "allowed for stop", action->rsc->id, value);
+                         "allowed for stop", rsc->id, value);
         return NULL;
 
-    } else if (pcmk__str_eq(action->task, PCMK_ACTION_DEMOTE, pcmk__str_casei)
+    } else if (pcmk__str_eq(action_name, PCMK_ACTION_DEMOTE, pcmk__str_casei)
                && (value == NULL)) {
         // demote on_fail defaults to monitor value for promoted role if present
         xmlNode *operation = NULL;
 
-        CRM_CHECK(action->rsc != NULL, return NULL);
+        CRM_CHECK(rsc != NULL, return NULL);
 
-        for (operation = pcmk__xe_first_child(action->rsc->ops_xml);
+        for (operation = pcmk__xe_first_child(rsc->ops_xml);
              (operation != NULL) && (value == NULL);
              operation = pcmk__xe_next(operation)) {
             bool enabled = false;
@@ -482,14 +494,14 @@ unpack_operation_on_fail(pe_action_t * action)
 
             value = on_fail;
         }
-    } else if (pcmk__str_eq(action->task, PCMK_ACTION_LRM_DELETE,
+    } else if (pcmk__str_eq(action_name, PCMK_ACTION_LRM_DELETE,
                             pcmk__str_casei)) {
         value = "ignore";
 
     } else if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
-        name = crm_element_value(action->op_entry, "name");
-        role = crm_element_value(action->op_entry, "role");
-        interval_spec = crm_element_value(action->op_entry,
+        name = crm_element_value(action_config, "name");
+        role = crm_element_value(action_config, "role");
+        interval_spec = crm_element_value(action_config,
                                           XML_LRM_ATTR_INTERVAL);
 
         if (!pcmk__str_eq(name, PCMK_ACTION_PROMOTE, pcmk__str_casei)
@@ -499,7 +511,7 @@ unpack_operation_on_fail(pe_action_t * action)
                 || (crm_parse_interval_spec(interval_spec) == 0))) {
             pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for %s %s "
                              "action to default value because 'demote' is not "
-                             "allowed for it", action->rsc->id, name);
+                             "allowed for it", rsc->id, name);
             return NULL;
         }
     }
@@ -773,7 +785,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
     }
     pe_rsc_trace(action->rsc, "%s requires %s", action->uuid, value);
 
-    value = unpack_operation_on_fail(action);
+    value = validate_on_fail(action->rsc, action->task, xml_obj, action->meta);
 
     if (value == NULL) {
 
