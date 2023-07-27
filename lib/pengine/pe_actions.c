@@ -20,8 +20,7 @@
 #include "pe_status_private.h"
 
 static void unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
-                             const pe_resource_t *container,
-                             pe_working_set_t *data_set, guint interval_ms);
+                             const pe_resource_t *container, guint interval_ms);
 
 static void
 add_singleton(pe_working_set_t *data_set, pe_action_t *action)
@@ -202,8 +201,7 @@ new_action(char *key, const char *task, pe_resource_t *rsc,
 
         action->op_entry = find_rsc_op_entry_helper(rsc, key, TRUE);
         parse_op_key(key, NULL, NULL, &interval_ms);
-        unpack_operation(action, action->op_entry, rsc->container, data_set,
-                         interval_ms);
+        unpack_operation(action, action->op_entry, rsc->container, interval_ms);
     }
 
     if (for_graph) {
@@ -625,22 +623,21 @@ find_min_interval_mon(pe_resource_t * rsc, gboolean include_disabled)
 }
 
 /*!
- * \brief Unpack operation XML into an action structure
+ * \internal
+ * \brief Unpack action configuration
  *
- * Unpack an operation's meta-attributes (normalizing the interval, timeout,
- * and start delay values as integer milliseconds), requirements, and
- * failure policy.
+ * Unpack a resource action's meta-attributes (normalizing the interval,
+ * timeout, and start delay values as integer milliseconds), requirements, and
+ * failure policy from its CIB XML configuration (including defaults).
  *
- * \param[in,out] action       Action to unpack into
- * \param[in]     xml_obj      Operation XML (or NULL if all defaults)
+ * \param[in,out] action       Resource action to unpack into
+ * \param[in]     xml_obj      Action configuration XML (NULL for defaults only)
  * \param[in]     container    Resource that contains affected resource, if any
- * \param[in,out] data_set     Cluster state
  * \param[in]     interval_ms  How frequently to perform the operation
  */
 static void
 unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
-                 const pe_resource_t *container,
-                 pe_working_set_t *data_set, guint interval_ms)
+                 const pe_resource_t *container, guint interval_ms)
 {
     int timeout_ms = 0;
     const char *value = NULL;
@@ -660,7 +657,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
         .role = pcmk_role_unknown,
-        .now = data_set->now,
+        .now = action->rsc->cluster->now,
         .match_data = NULL,
         .rsc_data = &rsc_rule_data,
         .op_data = &op_rule_data
@@ -671,8 +668,9 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
     is_probe = pcmk_is_probe(action->task, interval_ms);
 
     // Cluster-wide <op_defaults> <meta_attributes>
-    pe__unpack_dataset_nvpairs(data_set->op_defaults, XML_TAG_META_SETS, &rule_data,
-                               action->meta, NULL, FALSE, data_set);
+    pe__unpack_dataset_nvpairs(action->rsc->cluster->op_defaults,
+                               XML_TAG_META_SETS, &rule_data, action->meta,
+                               NULL, FALSE, action->rsc->cluster);
 
     // Determine probe default timeout differently
     if (is_probe) {
@@ -694,7 +692,8 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
 
         // <op> <meta_attributes> take precedence over defaults
         pe__unpack_dataset_nvpairs(xml_obj, XML_TAG_META_SETS, &rule_data,
-                                   action->meta, NULL, TRUE, data_set);
+                                   action->meta, NULL, TRUE,
+                                   action->rsc->cluster);
 
         /* Anything set as an <op> XML property has highest precedence.
          * This ensures we use the name and interval from the <op> tag.
@@ -736,7 +735,8 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
         && (pcmk__str_eq(action->task, PCMK_ACTION_START, pcmk__str_casei)
             || is_probe)) {
 
-        GHashTable *params = pe_rsc_params(action->rsc, action->node, data_set);
+        GHashTable *params = pe_rsc_params(action->rsc, action->node,
+                                           action->rsc->cluster);
 
         value = g_hash_table_lookup(params, "pcmk_monitor_timeout");
 
@@ -786,7 +786,8 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
         action->on_fail = pcmk_on_fail_fence_node;
         value = "node fencing";
 
-        if (!pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
+        if (!pcmk_is_set(action->rsc->cluster->flags,
+                         pe_flag_stonith_enabled)) {
             pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for "
                              "operation '%s' to 'stop' because 'fence' is not "
                              "valid when fencing is disabled", action->uuid);
@@ -861,7 +862,8 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
             value = "stop unmanaged remote node (enforcing default)";
 
         } else {
-            if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
+            if (pcmk_is_set(action->rsc->cluster->flags,
+                            pe_flag_stonith_enabled)) {
                 value = "fence remote node (default)";
             } else {
                 value = "recover remote node connection (default)";
@@ -876,7 +878,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
     } else if ((value == NULL)
                && pcmk__str_eq(action->task, PCMK_ACTION_STOP,
                                pcmk__str_casei)) {
-        if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
+        if (pcmk_is_set(action->rsc->cluster->flags, pe_flag_stonith_enabled)) {
             action->on_fail = pcmk_on_fail_fence_node;
             value = "resource fence (default)";
 
@@ -922,8 +924,8 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
         long long start_delay = 0;
 
         value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ORIGIN);
-        if (unpack_interval_origin(value, xml_obj, interval_ms, data_set->now,
-                                   &start_delay)) {
+        if (unpack_interval_origin(value, xml_obj, interval_ms,
+                                   action->rsc->cluster->now, &start_delay)) {
             g_hash_table_replace(action->meta, strdup(XML_OP_ATTR_START_DELAY),
                                  crm_strdup_printf("%lld", start_delay));
         }
