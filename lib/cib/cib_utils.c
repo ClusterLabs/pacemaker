@@ -534,24 +534,31 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
 }
 
 xmlNode *
-cib_create_op(int call_id, const char *op, const char *host,
-              const char *section, xmlNode *data, int call_options,
-              const char *user_name)
+cib__create_op(cib_t *cib, const char *op, const char *host,
+               const char *section, xmlNode *data, int call_options,
+               const char *user_name, const char *client_name)
 {
-    xmlNode *op_msg = create_xml_node(NULL, "cib_command");
+    xmlNode *op_msg = NULL;
 
+    CRM_CHECK(cib != NULL, return NULL);
+
+    op_msg = create_xml_node(NULL, "cib_command");
     CRM_CHECK(op_msg != NULL, return NULL);
 
-    crm_xml_add(op_msg, F_XML_TAGNAME, "cib_command");
+    cib->call_id++;
+    if (cib->call_id < 1) {
+        cib->call_id = 1;
+    }
 
+    crm_xml_add(op_msg, F_XML_TAGNAME, "cib_command");
     crm_xml_add(op_msg, F_TYPE, T_CIB);
     crm_xml_add(op_msg, F_CIB_OPERATION, op);
     crm_xml_add(op_msg, F_CIB_HOST, host);
     crm_xml_add(op_msg, F_CIB_SECTION, section);
-    crm_xml_add_int(op_msg, F_CIB_CALLID, call_id);
-    if (user_name) {
-        crm_xml_add(op_msg, F_CIB_USER, user_name);
-    }
+    crm_xml_add(op_msg, F_CIB_USER, user_name);
+    crm_xml_add(op_msg, F_CIB_CLIENTNAME, client_name);
+    crm_xml_add_int(op_msg, F_CIB_CALLID, cib->call_id);
+
     crm_trace("Sending call options: %.8lx, %d", (long)call_options, call_options);
     crm_xml_add_int(op_msg, F_CIB_CALLOPTS, call_options);
 

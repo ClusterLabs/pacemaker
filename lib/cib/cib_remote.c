@@ -55,7 +55,8 @@ typedef struct cib_remote_opaque_s {
 static int
 cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
                       const char *section, xmlNode *data,
-                      xmlNode **output_data, int call_options, const char *name)
+                      xmlNode **output_data, int call_options,
+                      const char *user_name)
 {
     int rc;
     int remaining_time = 0;
@@ -79,13 +80,8 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
         return -EINVAL;
     }
 
-    cib->call_id++;
-    if (cib->call_id < 1) {
-        cib->call_id = 1;
-    }
-
-    op_msg = cib_create_op(cib->call_id, op, host, section, data, call_options,
-                           NULL);
+    op_msg = cib__create_op(cib, op, host, section, data, call_options,
+                            user_name, NULL);
     if (op_msg == NULL) {
         return -EPROTO;
     }
@@ -459,11 +455,18 @@ cib_remote_signon(cib_t *cib, const char *name, enum cib_conn_type type)
     }
 
     if (rc == pcmk_ok) {
-        xmlNode *hello = cib_create_op(0, CRM_OP_REGISTER, NULL, NULL, NULL, 0,
-                                       NULL);
-        crm_xml_add(hello, F_CIB_CLIENTNAME, name);
-        pcmk__remote_send_xml(&private->command, hello);
-        free_xml(hello);
+        xmlNode *hello = cib__create_op(cib, CRM_OP_REGISTER, NULL, NULL, NULL,
+                                        cib_none, NULL, name);
+
+        if (hello == NULL) {
+            // @COMPAT: Use more appropriate return code
+            rc = -EPROTO;
+
+        } else {
+            rc = pcmk__remote_send_xml(&private->command, hello);
+            rc = pcmk_rc2legacy(rc);
+            free_xml(hello);
+        }
     }
 
     if (rc == pcmk_ok) {

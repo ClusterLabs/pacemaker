@@ -69,14 +69,10 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
         pcmk__set_ipc_flags(ipc_flags, "client", crm_ipc_client_response);
     }
 
-    cib->call_id++;
-    if (cib->call_id < 1) {
-        cib->call_id = 1;
-    }
-
-    op_msg = cib_create_op(cib->call_id, op, host, section, data, call_options,
-                           user_name);
+    op_msg = cib__create_op(cib, op, host, section, data, call_options,
+                            user_name, NULL);
     if (op_msg == NULL) {
+        // @COMPAT: Use more appropriate return code
         return -EPROTO;
     }
 
@@ -321,23 +317,24 @@ cib_native_signon_raw(cib_t *cib, const char *name, enum cib_conn_type type,
     }
 
     if (rc == pcmk_ok) {
+        xmlNode *hello = cib__create_op(cib, CRM_OP_REGISTER, NULL, NULL, NULL,
+                                        cib_sync_call, NULL, name);
         xmlNode *reply = NULL;
-        xmlNode *hello = create_xml_node(NULL, "cib_command");
 
-        crm_xml_add(hello, F_TYPE, T_CIB);
-        crm_xml_add(hello, F_CIB_OPERATION, CRM_OP_REGISTER);
-        crm_xml_add(hello, F_CIB_CLIENTNAME, name);
-        crm_xml_add_int(hello, F_CIB_CALLOPTS, cib_sync_call);
+        if (hello == NULL) {
+            // @COMPAT: Use more appropriate return code
+            rc = -EPROTO;
 
-        if (crm_ipc_send(native->ipc, hello, crm_ipc_client_response, -1, &reply) > 0) {
+        } else if (crm_ipc_send(native->ipc, hello, crm_ipc_client_response, -1,
+                                &reply) > 0) {
             const char *msg_type = crm_element_value(reply, F_CIB_OPERATION);
 
-            rc = pcmk_ok;
             crm_log_xml_trace(reply, "reg-reply");
 
             if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
-                crm_info("Reply to CIB registration message has "
-                         "unknown type '%s'", msg_type);
+                crm_info("Reply to CIB registration message has unknown type "
+                         "'%s'",
+                         msg_type);
                 rc = -EPROTO;
 
             } else {
