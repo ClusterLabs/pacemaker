@@ -590,6 +590,78 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
     return pcmk_ok;
 }
 
+/*!
+ * \internal
+ * \brief Check whether a CIB request is supported in a transaction
+ *
+ * \param[in] request  CIB request
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+validate_transaction_request(const xmlNode *request)
+{
+    const char *op = crm_element_value(request, F_CIB_OPERATION);
+    const char *host = crm_element_value(request, F_CIB_HOST);
+    const cib__operation_t *operation = NULL;
+    int rc = cib__get_operation(op, &operation);
+
+    if (rc != pcmk_rc_ok) {
+        // cib__get_operation() logs error
+        return rc;
+    }
+
+    if (!pcmk_is_set(operation->flags, cib__op_attr_transaction)) {
+        crm_err("Operation %s is not supported in CIB transactions", op);
+        return EOPNOTSUPP;
+    }
+
+    if (host != NULL) {
+        crm_err("Operation targeting a specific node (%s) is not supported in "
+                "a CIB transaction",
+                host);
+        return EOPNOTSUPP;
+    }
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Append a CIB request to a CIB transaction
+ *
+ * \param[in,out] cib      CIB client whose transaction to extend
+ * \param[in,out] request  Request to add to transaction
+ *
+ * \return Legacy Pacemaker return code
+ */
+int
+cib__extend_transaction(cib_t *cib, xmlNode *request)
+{
+    int rc = pcmk_rc_ok;
+
+    CRM_ASSERT((cib != NULL) && (request != NULL));
+
+    rc = validate_transaction_request(request);
+
+    if ((rc == pcmk_rc_ok) && (cib->transaction == NULL)) {
+        rc = pcmk_rc_no_transaction;
+    }
+
+    if (rc == pcmk_rc_ok) {
+        add_node_copy(cib->transaction, request);
+
+    } else {
+        const char *op = crm_element_value(request, F_CIB_OPERATION);
+        const char *client_id = NULL;
+
+        cib->cmds->client_id(cib, NULL, &client_id);
+        crm_err("Failed to add '%s' operation to transaction for client %s: %s",
+                op, pcmk__s(client_id, "(unidentified)"), pcmk_rc_str(rc));
+        crm_log_xml_info(request, "failed");
+    }
+    return pcmk_rc2legacy(rc);
+}
+
 void
 cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
 {

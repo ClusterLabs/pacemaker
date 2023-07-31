@@ -86,6 +86,15 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
         return rc;
     }
 
+    if (pcmk_is_set(call_options, cib_transaction)) {
+        // @TODO: Return here when transactions are fully implemented in client
+        rc = cib__extend_transaction(cib, op_msg);
+        if (rc != pcmk_ok) {
+            free_xml(op_msg);
+            return rc;
+        }
+    }
+
     crm_trace("Sending %s message to the CIB manager", op);
     if (!(call_options & cib_sync_call)) {
         pcmk__remote_send_xml(&private->callback, op_msg);
@@ -490,6 +499,7 @@ cib_remote_signoff(cib_t *cib)
     cib_tls_close(cib);
 #endif
 
+    cib->cmds->end_transaction(cib, false, cib_none);
     cib->state = cib_disconnected;
     cib->type = cib_no_connection;
 

@@ -75,9 +75,16 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
         return rc;
     }
 
+    if (pcmk_is_set(call_options, cib_transaction)) {
+        // @TODO: Return here when transactions are fully implemented in client
+        rc = cib__extend_transaction(cib, op_msg);
+        if (rc != pcmk_ok) {
+            goto done;
+        }
+    }
+
     crm_trace("Sending %s message to the CIB manager (timeout=%ds)", op, cib->call_timeout);
     rc = crm_ipc_send(native->ipc, op_msg, ipc_flags, cib->call_timeout * 1000, &op_reply);
-    free_xml(op_msg);
 
     if (rc < 0) {
         crm_err("Couldn't perform %s operation (timeout=%ds): %s (%d)", op,
@@ -163,6 +170,7 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
         cib->state = cib_disconnected;
     }
 
+    free_xml(op_msg);
     free_xml(op_reply);
     return rc;
 }
@@ -250,6 +258,7 @@ cib_native_signoff(cib_t *cib)
         crm_ipc_destroy(ipc);
     }
 
+    cib->cmds->end_transaction(cib, false, cib_none);
     cib->state = cib_disconnected;
     cib->type = cib_no_connection;
 

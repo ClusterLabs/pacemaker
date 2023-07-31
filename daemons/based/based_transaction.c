@@ -336,8 +336,8 @@ based_commit_transaction(const pcmk__client_t *client, xmlNodePtr *result_cib)
 
     rc = process_transaction_requests(transaction, client_name, client_id);
 
-    crm_trace("Transaction commit %s for client %s (%s); discarding queue",
-              ((rc != pcmk_rc_ok)? "succeeded" : "failed"), client_name,
+    crm_trace("Transaction commit %s for client %s (%s)",
+              ((rc == pcmk_rc_ok)? "succeeded" : "failed"), client_name,
               client_id);
 
     // Free the transaction and (if aborted) free any remaining requests

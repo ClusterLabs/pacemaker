@@ -209,6 +209,8 @@ int cib__create_op(cib_t *cib, const char *op, const char *host,
                    const char *user_name, const char *client_name,
                    xmlNode **op_msg);
 
+int cib__extend_transaction(cib_t *cib, xmlNode *request);
+
 void cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc);
 void cib_native_notify(gpointer data, gpointer user_data);
 

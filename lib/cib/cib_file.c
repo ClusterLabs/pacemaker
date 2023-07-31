@@ -272,6 +272,9 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
                         &result_cib, &cib_diff, output);
 
     if (pcmk_is_set(call_options, cib_transaction)) {
+        /* The rest of the logic applies only to the transaction as a whole, not
+         * to individual requests.
+         */
         goto done;
     }
 
@@ -359,8 +362,13 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     crm_xml_add(request, F_CIB_CLIENTID, private->id);
 
     if (pcmk_is_set(call_options, cib_transaction)) {
-        rc = cib_file_extend_transaction(cib, operation, request);
+        // @TODO: Return here when transactions are fully implemented in client
+        rc = cib__extend_transaction(cib, request);
+        if (rc != pcmk_ok) {
+            goto done;
+        }
 
+        rc = cib_file_extend_transaction(cib, operation, request);
         if (rc != pcmk_rc_ok) {
             crm_warn("Could not extend transaction for CIB file client: %s",
                      pcmk_rc_str(rc));
@@ -569,6 +577,7 @@ cib_file_signoff(cib_t *cib)
     cib->type = cib_no_connection;
     unregister_client(cib);
     cib_file_discard_transaction(cib);
+    cib->cmds->end_transaction(cib, false, cib_none);
 
     /* If the in-memory CIB has been changed, write it to disk */
     if (pcmk_is_set(private->flags, cib_file_flag_dirty)) {
@@ -1248,9 +1257,8 @@ cib_file_commit_transaction(cib_t *cib, xmlNode **result_cib)
 
     rc = cib_file_process_transaction_requests(cib);
 
-    crm_trace("Transaction commit %s for CIB file client (%s) on file '%s'; "
-              "discarding queue",
-              ((rc != pcmk_rc_ok)? "succeeded" : "failed"),
+    crm_trace("Transaction commit %s for CIB file client (%s) on file '%s'",
+              ((rc == pcmk_rc_ok)? "succeeded" : "failed"),
               private->id, private->filename);
 
     // Free the transaction and (if aborted) free any remaining requests
