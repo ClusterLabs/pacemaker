@@ -1354,26 +1354,41 @@ max_rsc_stop_timeout(pe_resource_t *rsc)
     return max_delay;
 }
 
+/*!
+ * \internal
+ * \brief Find a reasonable waiting time for stopping any one resource in a list
+ *
+ * \param[in,out] data_set   Cluster working set
+ * \param[in]     resources  List of names of resources that will be stopped
+ *
+ * \return Rough estimate of a reasonable time to wait (in seconds) to stop any
+ *         one resource in \p resources
+ * \note This estimate is very rough, simply the maximum stop timeout of all
+ *       given resources and their children, plus a small fudge factor. It does
+ *       not account for children that must be stopped in sequence, action
+ *       throttling, or any demotions needed. It checks the stop timeout, even
+ *       if the resources in question are actually being started.
+ */
 static int
-max_delay_in(pe_working_set_t * data_set, GList *resources) 
+wait_time_estimate(pe_working_set_t *data_set, const GList *resources)
 {
     int max_delay = 0;
-    GList *item = NULL;
 
-    for (item = resources; item != NULL; item = item->next) {
-        int delay = 0;
-        pe_resource_t *rsc = pe_find_resource(data_set->resources, (const char *)item->data);
+    // Find maximum stop timeout in milliseconds
+    for (const GList *item = resources; item != NULL; item = item->next) {
+        pe_resource_t *rsc = pe_find_resource(data_set->resources,
+                                              (const char *) (item->data));
+        int delay = max_rsc_stop_timeout(rsc);
 
-        delay = max_rsc_stop_timeout(rsc);
-
-        if(delay > max_delay) {
-            double seconds = delay / 1000.0;
-            crm_trace("Calculated new delay of %.1fs due to %s", seconds, rsc->id);
+        if (delay > max_delay) {
+            pe_rsc_trace(rsc,
+                         "Wait time is now %s due to %s",
+                         pcmk__readable_interval(delay), rsc->id);
             max_delay = delay;
         }
     }
 
-    return 5 + (max_delay / 1000);
+    return (max_delay / 1000) + 5;
 }
 
 #define waiting_for_starts(d, r, h) ((d != NULL) || \
@@ -1567,7 +1582,8 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc,
     while (list_delta != NULL) {
         before = g_list_length(list_delta);
         if(timeout_ms == 0) {
-            step_timeout_s = max_delay_in(data_set, list_delta) / sleep_interval;
+            step_timeout_s = wait_time_estimate(data_set, list_delta)
+                             / sleep_interval;
         }
 
         /* We probably don't need the entire step timeout */
@@ -1640,7 +1656,8 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc,
     while (waiting_for_starts(list_delta, rsc, host)) {
         before = g_list_length(list_delta);
         if(timeout_ms == 0) {
-            step_timeout_s = max_delay_in(data_set, list_delta) / sleep_interval;
+            step_timeout_s = wait_time_estimate(data_set, list_delta)
+                             / sleep_interval;
         }
 
         /* We probably don't need the entire step timeout */
