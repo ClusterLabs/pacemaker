@@ -20,6 +20,24 @@ extern "C" {
  * \ingroup core
  */
 
+//! What resource needs before it can be recovered from a failed node
+enum rsc_start_requirement {
+    pcmk_requires_nothing   = 0,    //!< Resource can be recovered immediately
+    pcmk_requires_quorum    = 1,    //!< Resource can be recovered if quorate
+    pcmk_requires_fencing   = 2,    //!< Resource can be recovered after fencing
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated Use pcmk_requires_nothing instead
+    rsc_req_nothing         = pcmk_requires_nothing,
+
+    //! \deprecated Use pcmk_requires_quorum instead
+    rsc_req_quorum          = pcmk_requires_quorum,
+
+    //! \deprecated Use pcmk_requires_fencing instead
+    rsc_req_stonith         = pcmk_requires_fencing,
+#endif
+};
+
 //! How to recover a resource that is incorrectly active on multiple nodes
 enum rsc_recovery_type {
     pcmk_multiply_active_restart    = 0,    //!< Stop on all, start on desired

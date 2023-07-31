@@ -63,15 +63,15 @@ order_start_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
         pe_action_t *action = iter->data;
 
         switch (action->needs) {
-            case rsc_req_nothing:
+            case pcmk_requires_nothing:
                 // Anything other than start or promote requires nothing
                 break;
 
-            case rsc_req_stonith:
+            case pcmk_requires_fencing:
                 order_actions(stonith_op, action, pe_order_optional);
                 break;
 
-            case rsc_req_quorum:
+            case pcmk_requires_quorum:
                 if (pcmk__str_eq(action->task, PCMK_ACTION_START,
                                  pcmk__str_none)
                     && (g_hash_table_lookup(rsc->allowed_nodes,
