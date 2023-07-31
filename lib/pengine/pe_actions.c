@@ -625,43 +625,49 @@ unpack_start_delay(const char *value, GHashTable *meta)
     return start_delay;
 }
 
+/*!
+ * \internal
+ * \brief Find a resource's most frequent recurring monitor
+ *
+ * \param[in] rsc  Resource to check
+ *
+ * \return Operation XML configured for most frequent recurring monitor for
+ *         \p rsc (if any)
+ */
 static xmlNode *
-find_min_interval_mon(pcmk_resource_t * rsc, gboolean include_disabled)
+most_frequent_monitor(const pcmk_resource_t *rsc)
 {
-    guint interval_ms = 0;
     guint min_interval_ms = G_MAXUINT;
-    const char *name = NULL;
-    const char *interval_spec = NULL;
     xmlNode *op = NULL;
-    xmlNode *operation = NULL;
 
-    for (operation = pcmk__xe_first_child(rsc->ops_xml);
-         operation != NULL;
-         operation = pcmk__xe_next(operation)) {
+    for (xmlNode *operation = first_named_child(rsc->ops_xml, XML_ATTR_OP);
+         operation != NULL; operation = crm_next_same_xml(operation)) {
+        bool enabled = false;
+        guint interval_ms = 0;
+        const char *interval_spec = crm_element_value(operation,
+                                                      XML_LRM_ATTR_INTERVAL);
 
-        if (pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
-            bool enabled = false;
+        // We only care about enabled recurring monitors
+        if (!pcmk__str_eq(crm_element_value(operation, "name"),
+                          PCMK_ACTION_MONITOR, pcmk__str_none)) {
+            continue;
+        }
+        interval_ms = crm_parse_interval_spec(interval_spec);
+        if (interval_ms == 0) {
+            continue;
+        }
 
-            name = crm_element_value(operation, "name");
-            interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
-            if (!include_disabled && pcmk__xe_get_bool_attr(operation, "enabled", &enabled) == pcmk_rc_ok &&
-                !enabled) {
-                continue;
-            }
+        // @TODO This does not account for rules, defaults, etc.
+        if ((pcmk__xe_get_bool_attr(operation, "enabled",
+                                    &enabled) == pcmk_rc_ok) && !enabled) {
+            continue;
+        }
 
-            if (!pcmk__str_eq(name, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
-                continue;
-            }
-
-            interval_ms = crm_parse_interval_spec(interval_spec);
-
-            if (interval_ms && (interval_ms < min_interval_ms)) {
-                min_interval_ms = interval_ms;
-                op = operation;
-            }
+        if (interval_ms < min_interval_ms) {
+            min_interval_ms = interval_ms;
+            op = operation;
         }
     }
-
     return op;
 }
 
@@ -720,7 +726,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
 
     // Derive default timeout for probes from recurring monitor timeouts
     if (pcmk_is_probe(action_name, interval_ms)) {
-        xmlNode *min_interval_mon = find_min_interval_mon(rsc, FALSE);
+        xmlNode *min_interval_mon = most_frequent_monitor(rsc);
 
         if (min_interval_mon != NULL) {
             /* @TODO This does not consider timeouts set in meta_attributes
