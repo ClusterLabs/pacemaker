@@ -325,6 +325,8 @@ struct cib_s {
                          xmlNode *output);
 
     cib_api_operations_t *cmds;
+
+    xmlNode *transaction;
 };
 
 #ifdef __cplusplus
