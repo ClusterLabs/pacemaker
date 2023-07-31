@@ -1454,14 +1454,15 @@ pcmk__output_actions(pcmk_scheduler_t *scheduler)
  * \param[in] task         Action's name
  * \param[in] interval_ms  Action's interval (in milliseconds)
  *
- * \return true if action is still in resource configuration, otherwise false
+ * \return true if action is still in resource configuration and enabled,
+ *         otherwise false
  */
 static bool
 action_in_config(const pcmk_resource_t *rsc, const char *task,
                  guint interval_ms)
 {
     char *key = pcmk__op_key(rsc->id, task, interval_ms);
-    bool config = (find_rsc_op_entry(rsc, key) != NULL);
+    bool config = (pcmk__find_action_config(rsc, key, false) != NULL);
 
     free(key);
     return config;

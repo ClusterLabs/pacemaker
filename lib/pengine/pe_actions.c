@@ -143,8 +143,8 @@ find_exact_action_config(const pcmk_resource_t *rsc, const char *key,
  *
  * \return XML configuration of desired action if any, otherwise NULL
  */
-static xmlNode *
-find_rsc_op_entry_helper(const pcmk_resource_t *rsc, const char *key,
+xmlNode *
+pcmk__find_action_config(const pcmk_resource_t *rsc, const char *key,
                          bool include_disabled)
 {
     char *retry_key = NULL;
@@ -183,12 +183,6 @@ find_rsc_op_entry_helper(const pcmk_resource_t *rsc, const char *key,
     }
 
     return NULL;
-}
-
-xmlNode *
-find_rsc_op_entry(const pcmk_resource_t *rsc, const char *key)
-{
-    return find_rsc_op_entry_helper(rsc, key, false);
 }
 
 /*!
@@ -241,7 +235,7 @@ new_action(char *key, const char *task, pcmk_resource_t *rsc,
     } else {
         guint interval_ms = 0;
 
-        action->op_entry = find_rsc_op_entry_helper(rsc, key, true);
+        action->op_entry = pcmk__find_action_config(rsc, key, true);
         parse_op_key(key, NULL, NULL, &interval_ms);
         unpack_operation(action, action->op_entry, rsc->container, interval_ms);
     }

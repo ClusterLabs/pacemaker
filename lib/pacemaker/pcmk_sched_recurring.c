@@ -162,11 +162,13 @@ is_recurring_history(const pcmk_resource_t *rsc, const xmlNode *xml,
         }
     }
 
-    // Disabled resources don't get monitored
+    // Only actions that are still configured and enabled matter
     op->key = pcmk__op_key(rsc->id, op->name, op->interval_ms);
-    if (find_rsc_op_entry(rsc, op->key) == NULL) {
-        crm_trace("Not creating recurring action %s for disabled resource %s",
-                  op->id, rsc->id);
+    if (pcmk__find_action_config(rsc, op->key, false) == NULL) {
+        pe_rsc_trace(rsc,
+                     "Not counting action %s (%s) as recurring because "
+                     "it is disabled or no longer in configuration",
+                     op->id, op->key);
         free(op->key);
         return false;
     }
