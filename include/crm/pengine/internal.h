@@ -348,6 +348,9 @@ GHashTable *pcmk__unpack_action_meta(pcmk_resource_t *rsc,
                                      const pcmk_node_t *node,
                                      const char *action_name, guint interval_ms,
                                      const xmlNode *action_config);
+GHashTable *pcmk__unpack_action_rsc_params(const xmlNode *action_xml,
+                                           GHashTable *node_attrs,
+                                           pcmk_scheduler_t *data_set);
 
 pcmk_action_t *custom_action(pcmk_resource_t *rsc, char *key, const char *task,
                              const pcmk_node_t *on_node, gboolean optional,

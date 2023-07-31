@@ -178,7 +178,6 @@ new_action(char *key, const char *task, pcmk_resource_t *rsc,
     action->rsc = rsc;
     action->task = strdup(task); CRM_ASSERT(action->task != NULL);
     action->uuid = key;
-    action->extra = pcmk__strkey_table(free, free);
 
     if (node) {
         action->node = pe__copy_node(node);
@@ -226,32 +225,34 @@ new_action(char *key, const char *task, pcmk_resource_t *rsc,
 
 /*!
  * \internal
- * \brief Evaluate node attribute values for an action
+ * \brief Unpack a resource's action-specific instance parameters
  *
- * \param[in,out] action     Action to unpack attributes for
- * \param[in,out] scheduler  Scheduler data
+ * \param[in]     action_xml  XML of action's configuration in CIB (if any)
+ * \param[in,out] node_attrs  Table of node attributes (for rule evaluation)
+ * \param[in,out] scheduler   Cluster working set (for rule evaluation)
+ *
+ * \return Newly allocated hash table of action-specific instance parameters
  */
-static void
-unpack_action_node_attributes(pcmk_action_t *action,
-                              pcmk_scheduler_t *scheduler)
+GHashTable *
+pcmk__unpack_action_rsc_params(const xmlNode *action_xml,
+                               GHashTable *node_attrs,
+                               pcmk_scheduler_t *scheduler)
 {
-    if (!pcmk_is_set(action->flags, pcmk_action_attrs_evaluated)
-        && (action->op_entry != NULL)) {
+    GHashTable *params = pcmk__strkey_table(free, free);
 
-        pe_rule_eval_data_t rule_data = {
-            .node_hash = action->node->details->attrs,
-            .role = pcmk_role_unknown,
-            .now = scheduler->now,
-            .match_data = NULL,
-            .rsc_data = NULL,
-            .op_data = NULL
-        };
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = node_attrs,
+        .role = pcmk_role_unknown,
+        .now = scheduler->now,
+        .match_data = NULL,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
 
-        pe__unpack_dataset_nvpairs(action->op_entry, XML_TAG_ATTR_SETS,
-                                   &rule_data, action->extra, NULL,
-                                   FALSE, scheduler);
-        pe__set_action_flags(action, pcmk_action_attrs_evaluated);
-    }
+    pe__unpack_dataset_nvpairs(action_xml, XML_TAG_ATTR_SETS,
+                               &rule_data, params, NULL,
+                               FALSE, scheduler);
+    return params;
 }
 
 /*!
@@ -1063,8 +1064,17 @@ custom_action(pcmk_resource_t *rsc, char *key, const char *task,
     update_action_optional(action, optional);
 
     if (rsc != NULL) {
-        if (action->node != NULL) {
-            unpack_action_node_attributes(action, scheduler);
+        if ((action->node != NULL) && (action->op_entry != NULL)
+            && !pcmk_is_set(action->flags, pcmk_action_attrs_evaluated)) {
+
+            GHashTable *attrs = action->node->details->attrs;
+
+            if (action->extra != NULL) {
+                g_hash_table_destroy(action->extra);
+            }
+            action->extra = pcmk__unpack_action_rsc_params(action->op_entry,
+                                                           attrs, scheduler);
+            pe__set_action_flags(action, pcmk_action_attrs_evaluated);
         }
 
         update_resource_action_runnable(action, save_action, scheduler);
@@ -1072,6 +1082,10 @@ custom_action(pcmk_resource_t *rsc, char *key, const char *task,
         if (save_action) {
             update_resource_flags_for_action(rsc, action);
         }
+    }
+
+    if (action->extra == NULL) {
+        action->extra = pcmk__strkey_table(free, free);
     }
 
     return action;
