@@ -875,6 +875,42 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
 
 /*!
  * \internal
+ * \brief Determine an action's quorum and fencing dependency
+ *
+ * \param[in] rsc          Resource that action is for
+ * \param[in] action_name  Name of action being unpacked
+ *
+ * \return Quorum and fencing dependency appropriate to action
+ */
+enum rsc_start_requirement
+pcmk__action_requires(const pcmk_resource_t *rsc, const char *action_name)
+{
+    const char *value = NULL;
+    enum rsc_start_requirement requires = pcmk_requires_nothing;
+
+    CRM_CHECK((rsc != NULL) && (action_name != NULL), return requires);
+
+    if (!pcmk__strcase_any_of(action_name, PCMK_ACTION_START,
+                              PCMK_ACTION_PROMOTE, NULL)) {
+        value = "nothing (not start or promote)";
+
+    } else if (pcmk_is_set(rsc->flags, pcmk_rsc_needs_fencing)) {
+        requires = pcmk_requires_fencing;
+        value = "fencing";
+
+    } else if (pcmk_is_set(rsc->flags, pcmk_rsc_needs_quorum)) {
+        requires = pcmk_requires_quorum;
+        value = "quorum";
+
+    } else {
+        value = "nothing";
+    }
+    pe_rsc_trace(rsc, "%s of %s requires %s", action_name, rsc->id, value);
+    return requires;
+}
+
+/*!
+ * \internal
  * \brief Unpack action configuration
  *
  * Unpack a resource action's meta-attributes (normalizing the interval,
@@ -894,26 +930,7 @@ unpack_operation(pcmk_action_t *action, const xmlNode *xml_obj,
 
     action->meta = pcmk__unpack_action_meta(action->rsc, action->node,
                                             action->task, interval_ms, xml_obj);
-
-    if (!pcmk__strcase_any_of(action->task, PCMK_ACTION_START,
-                              PCMK_ACTION_PROMOTE, NULL)) {
-        action->needs = pcmk_requires_nothing;
-        value = "nothing (not start or promote)";
-
-    } else if (pcmk_is_set(action->rsc->flags, pcmk_rsc_needs_fencing)) {
-        action->needs = pcmk_requires_fencing;
-        value = "fencing";
-
-    } else if (pcmk_is_set(action->rsc->flags, pcmk_rsc_needs_quorum)) {
-        action->needs = pcmk_requires_quorum;
-        value = "quorum";
-
-    } else {
-        action->needs = pcmk_requires_nothing;
-        value = "nothing";
-    }
-    pe_rsc_trace(action->rsc, "%s requires %s", action->uuid, value);
-
+    action->needs = pcmk__action_requires(action->rsc, action->task);
     value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ON_FAIL);
     if (value == NULL) {
 
