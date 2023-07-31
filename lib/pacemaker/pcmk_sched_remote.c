@@ -188,15 +188,15 @@ apply_remote_ordering(pe_action_t *action)
 
     if (pcmk__strcase_any_of(action->task, PCMK_ACTION_MIGRATE_TO,
                              PCMK_ACTION_MIGRATE_FROM, NULL)) {
-        /* Migration ops map to "no_action", but we need to apply the same
-         * ordering as for stop or demote (see get_router_node()).
+        /* Migration ops map to pcmk_action_unspecified, but we need to apply
+         * the same ordering as for stop or demote (see get_router_node()).
          */
-        task = stop_rsc;
+        task = pcmk_action_stop;
     }
 
     switch (task) {
-        case start_rsc:
-        case action_promote:
+        case pcmk_action_start:
+        case pcmk_action_promote:
             order_opts = pe_order_none;
 
             if (state == remote_state_failed) {
@@ -208,7 +208,7 @@ apply_remote_ordering(pe_action_t *action)
             order_start_then_action(remote_rsc, action, order_opts);
             break;
 
-        case stop_rsc:
+        case pcmk_action_stop:
             if (state == remote_state_alive) {
                 order_action_then_stop(action, remote_rsc,
                                        pe_order_implies_first);
@@ -241,7 +241,7 @@ apply_remote_ordering(pe_action_t *action)
             }
             break;
 
-        case action_demote:
+        case pcmk_action_demote:
             /* Only order this demote relative to the connection start if the
              * connection isn't being torn down. Otherwise, the demote would be
              * blocked because the connection start would not be allowed.
@@ -266,7 +266,7 @@ apply_remote_ordering(pe_action_t *action)
             } else {
                 pe_node_t *cluster_node = pe__current_node(remote_rsc);
 
-                if ((task == monitor_rsc) && (state == remote_state_failed)) {
+                if ((task == pcmk_action_monitor) && (state == remote_state_failed)) {
                     /* We would only be here if we do not know the state of the
                      * resource on the remote node. Since we have no way to find
                      * out, it is necessary to fence the node.
@@ -330,15 +330,15 @@ apply_container_ordering(pe_action_t *action)
 
     if (pcmk__strcase_any_of(action->task, PCMK_ACTION_MIGRATE_TO,
                              PCMK_ACTION_MIGRATE_FROM, NULL)) {
-        /* Migration ops map to "no_action", but we need to apply the same
-         * ordering as for stop or demote (see get_router_node()).
+        /* Migration ops map to pcmk_action_unspecified, but we need to apply
+         * the same ordering as for stop or demote (see get_router_node()).
          */
-        task = stop_rsc;
+        task = pcmk_action_stop;
     }
 
     switch (task) {
-        case start_rsc:
-        case action_promote:
+        case pcmk_action_start:
+        case pcmk_action_promote:
             // Force resource recovery if the container is recovered
             order_start_then_action(container, action, pe_order_implies_then);
 
@@ -346,8 +346,8 @@ apply_container_ordering(pe_action_t *action)
             order_start_then_action(remote_rsc, action, pe_order_none);
             break;
 
-        case stop_rsc:
-        case action_demote:
+        case pcmk_action_stop:
+        case pcmk_action_demote:
             if (pcmk_is_set(container->flags, pe_rsc_failed)) {
                 /* When the container representing a guest node fails, any stop
                  * or demote actions for resources running on the guest node
@@ -375,7 +375,7 @@ apply_container_ordering(pe_action_t *action)
                  * recurring monitors to be restarted, even if just
                  * the connection was re-established
                  */
-                if (task != no_action) {
+                if (task != pcmk_action_unspecified) {
                     order_start_then_action(remote_rsc, action,
                                             pe_order_implies_then);
                 }
@@ -687,24 +687,24 @@ pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pe_action_t *action)
     }
 
     task = text2task(action->task);
-    if ((task == action_notify) || (task == action_notified)) {
+    if ((task == pcmk_action_notify) || (task == pcmk_action_notified)) {
         task = text2task(g_hash_table_lookup(action->meta, "notify_operation"));
     }
 
     switch (task) {
-        case stop_rsc:
-        case stopped_rsc:
-        case action_demote:
-        case action_demoted:
+        case pcmk_action_stop:
+        case pcmk_action_stopped:
+        case pcmk_action_demote:
+        case pcmk_action_demoted:
             // "Down" actions take place on guest's current host
             host = pe__current_node(guest->details->remote_rsc->container);
             break;
 
-        case start_rsc:
-        case started_rsc:
-        case monitor_rsc:
-        case action_promote:
-        case action_promoted:
+        case pcmk_action_start:
+        case pcmk_action_started:
+        case pcmk_action_monitor:
+        case pcmk_action_promote:
+        case pcmk_action_promoted:
             // "Up" actions take place on guest's next host
             host = guest->details->remote_rsc->container->allocated_to;
             break;

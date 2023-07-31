@@ -58,24 +58,6 @@ enum action_fail_response {
     action_fail_demote,
 };
 
-/* the "done" action must be the "pre" action +1 */
-enum action_tasks {
-    no_action,
-    monitor_rsc,
-    stop_rsc,
-    stopped_rsc,
-    start_rsc,
-    started_rsc,
-    action_notify,
-    action_notified,
-    action_promote,
-    action_promoted,
-    action_demote,
-    action_demoted,
-    shutdown_crm,
-    stonith_node
-};
-
 //! Deprecated
 enum pe_print_options {
     pe_print_log            = (1 << 0),

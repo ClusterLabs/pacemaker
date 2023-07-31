@@ -359,48 +359,45 @@ enum action_tasks
 text2task(const char *task)
 {
     if (pcmk__str_eq(task, PCMK_ACTION_STOP, pcmk__str_casei)) {
-        return stop_rsc;
-    } else if (pcmk__str_eq(task, PCMK_ACTION_STOPPED, pcmk__str_casei)) {
-        return stopped_rsc;
-    } else if (pcmk__str_eq(task, PCMK_ACTION_START, pcmk__str_casei)) {
-        return start_rsc;
-    } else if (pcmk__str_eq(task, PCMK_ACTION_RUNNING, pcmk__str_casei)) {
-        return started_rsc;
-    } else if (pcmk__str_eq(task, PCMK_ACTION_DO_SHUTDOWN, pcmk__str_casei)) {
-        return shutdown_crm;
-    } else if (pcmk__str_eq(task, PCMK_ACTION_STONITH, pcmk__str_casei)) {
-        return stonith_node;
-    } else if (pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
-        return monitor_rsc;
-    } else if (pcmk__str_eq(task, PCMK_ACTION_NOTIFY, pcmk__str_casei)) {
-        return action_notify;
-    } else if (pcmk__str_eq(task, PCMK_ACTION_NOTIFIED, pcmk__str_casei)) {
-        return action_notified;
-    } else if (pcmk__str_eq(task, PCMK_ACTION_PROMOTE, pcmk__str_casei)) {
-        return action_promote;
-    } else if (pcmk__str_eq(task, PCMK_ACTION_DEMOTE, pcmk__str_casei)) {
-        return action_demote;
-    } else if (pcmk__str_eq(task, PCMK_ACTION_PROMOTED, pcmk__str_casei)) {
-        return action_promoted;
-    } else if (pcmk__str_eq(task, PCMK_ACTION_DEMOTED, pcmk__str_casei)) {
-        return action_demoted;
-    }
-#if SUPPORT_TRACING
-    if (pcmk__str_eq(task, PCMK_ACTION_CANCEL, pcmk__str_casei)) {
-        return no_action;
-    } else if (pcmk__str_eq(task, PCMK_ACTION_DELETE, pcmk__str_casei)) {
-        return no_action;
-    } else if (pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
-        return no_action;
-    } else if (pcmk__str_eq(task, PCMK_ACTION_MIGRATE_TO, pcmk__str_casei)) {
-        return no_action;
-    } else if (pcmk__str_eq(task, PCMK_ACTION_MIGRATE_FROM, pcmk__str_casei)) {
-        return no_action;
-    }
-    crm_trace("Unsupported action: %s", task);
-#endif
+        return pcmk_action_stop;
 
-    return no_action;
+    } else if (pcmk__str_eq(task, PCMK_ACTION_STOPPED, pcmk__str_casei)) {
+        return pcmk_action_stopped;
+
+    } else if (pcmk__str_eq(task, PCMK_ACTION_START, pcmk__str_casei)) {
+        return pcmk_action_start;
+
+    } else if (pcmk__str_eq(task, PCMK_ACTION_RUNNING, pcmk__str_casei)) {
+        return pcmk_action_started;
+
+    } else if (pcmk__str_eq(task, PCMK_ACTION_DO_SHUTDOWN, pcmk__str_casei)) {
+        return pcmk_action_shutdown;
+
+    } else if (pcmk__str_eq(task, PCMK_ACTION_STONITH, pcmk__str_casei)) {
+        return pcmk_action_fence;
+
+    } else if (pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
+        return pcmk_action_monitor;
+
+    } else if (pcmk__str_eq(task, PCMK_ACTION_NOTIFY, pcmk__str_casei)) {
+        return pcmk_action_notify;
+
+    } else if (pcmk__str_eq(task, PCMK_ACTION_NOTIFIED, pcmk__str_casei)) {
+        return pcmk_action_notified;
+
+    } else if (pcmk__str_eq(task, PCMK_ACTION_PROMOTE, pcmk__str_casei)) {
+        return pcmk_action_promote;
+
+    } else if (pcmk__str_eq(task, PCMK_ACTION_DEMOTE, pcmk__str_casei)) {
+        return pcmk_action_demote;
+
+    } else if (pcmk__str_eq(task, PCMK_ACTION_PROMOTED, pcmk__str_casei)) {
+        return pcmk_action_promoted;
+
+    } else if (pcmk__str_eq(task, PCMK_ACTION_DEMOTED, pcmk__str_casei)) {
+        return pcmk_action_demoted;
+    }
+    return pcmk_action_unspecified;
 }
 
 const char *
@@ -409,46 +406,46 @@ task2text(enum action_tasks task)
     const char *result = "<unknown>";
 
     switch (task) {
-        case no_action:
+        case pcmk_action_unspecified:
             result = "no_action";
             break;
-        case stop_rsc:
+        case pcmk_action_stop:
             result = PCMK_ACTION_STOP;
             break;
-        case stopped_rsc:
+        case pcmk_action_stopped:
             result = PCMK_ACTION_STOPPED;
             break;
-        case start_rsc:
+        case pcmk_action_start:
             result = PCMK_ACTION_START;
             break;
-        case started_rsc:
+        case pcmk_action_started:
             result = PCMK_ACTION_RUNNING;
             break;
-        case shutdown_crm:
+        case pcmk_action_shutdown:
             result = PCMK_ACTION_DO_SHUTDOWN;
             break;
-        case stonith_node:
+        case pcmk_action_fence:
             result = PCMK_ACTION_STONITH;
             break;
-        case monitor_rsc:
+        case pcmk_action_monitor:
             result = PCMK_ACTION_MONITOR;
             break;
-        case action_notify:
+        case pcmk_action_notify:
             result = PCMK_ACTION_NOTIFY;
             break;
-        case action_notified:
+        case pcmk_action_notified:
             result = PCMK_ACTION_NOTIFIED;
             break;
-        case action_promote:
+        case pcmk_action_promote:
             result = PCMK_ACTION_PROMOTE;
             break;
-        case action_promoted:
+        case pcmk_action_promoted:
             result = PCMK_ACTION_PROMOTED;
             break;
-        case action_demote:
+        case pcmk_action_demote:
             result = PCMK_ACTION_DEMOTE;
             break;
-        case action_demoted:
+        case pcmk_action_demoted:
             result = PCMK_ACTION_DEMOTED;
             break;
     }

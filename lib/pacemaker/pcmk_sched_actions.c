@@ -95,8 +95,8 @@ action_uuid_for_ordering(const char *first_uuid, const pe_resource_t *first_rsc)
     char *uuid = NULL;
     char *rid = NULL;
     char *first_task_str = NULL;
-    enum action_tasks first_task = no_action;
-    enum action_tasks remapped_task = no_action;
+    enum action_tasks first_task = pcmk_action_unspecified;
+    enum action_tasks remapped_task = pcmk_action_unspecified;
 
     // Only non-notify actions for collective resources need remapping
     if ((strstr(first_uuid, PCMK_ACTION_NOTIFY) != NULL)
@@ -112,30 +112,30 @@ action_uuid_for_ordering(const char *first_uuid, const pe_resource_t *first_rsc)
 
     first_task = text2task(first_task_str);
     switch (first_task) {
-        case stop_rsc:
-        case start_rsc:
-        case action_notify:
-        case action_promote:
-        case action_demote:
+        case pcmk_action_stop:
+        case pcmk_action_start:
+        case pcmk_action_notify:
+        case pcmk_action_promote:
+        case pcmk_action_demote:
             remapped_task = first_task + 1;
             break;
-        case stopped_rsc:
-        case started_rsc:
-        case action_notified:
-        case action_promoted:
-        case action_demoted:
+        case pcmk_action_stopped:
+        case pcmk_action_started:
+        case pcmk_action_notified:
+        case pcmk_action_promoted:
+        case pcmk_action_demoted:
             remapped_task = first_task;
             break;
-        case monitor_rsc:
-        case shutdown_crm:
-        case stonith_node:
+        case pcmk_action_monitor:
+        case pcmk_action_shutdown:
+        case pcmk_action_fence:
             break;
         default:
             crm_err("Unknown action '%s' in ordering", first_task_str);
             break;
     }
 
-    if (remapped_task != no_action) {
+    if (remapped_task != pcmk_action_unspecified) {
         /* If a (clone) resource has notifications enabled, we want to order
          * relative to when all notifications have been sent for the remapped
          * task. Only outermost resources or those in bundles have
@@ -966,8 +966,8 @@ pcmk__log_action(const char *pre_text, const pe_action_t *action, bool details)
     }
 
     switch (text2task(action->task)) {
-        case stonith_node:
-        case shutdown_crm:
+        case pcmk_action_fence:
+        case pcmk_action_shutdown:
             if (pcmk_is_set(action->flags, pe_action_pseudo)) {
                 desc = "Pseudo ";
             } else if (pcmk_is_set(action->flags, pe_action_optional)) {

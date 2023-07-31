@@ -610,7 +610,7 @@ collect_resource_data(const pe_resource_t *rsc, bool activity,
         if (!pcmk_is_set(op->flags, pe_action_optional) && (op->node != NULL)) {
             enum action_tasks task = text2task(op->task);
 
-            if ((task == stop_rsc) && op->node->details->unclean) {
+            if ((task == pcmk_action_stop) && op->node->details->unclean) {
                 // Create anyway (additional noise if node can't be fenced)
             } else if (!pcmk_is_set(op->flags, pe_action_runnable)) {
                 continue;
@@ -619,16 +619,16 @@ collect_resource_data(const pe_resource_t *rsc, bool activity,
             entry = new_notify_entry(rsc, op->node);
 
             switch (task) {
-                case start_rsc:
+                case pcmk_action_start:
                     n_data->start = g_list_prepend(n_data->start, entry);
                     break;
-                case stop_rsc:
+                case pcmk_action_stop:
                     n_data->stop = g_list_prepend(n_data->stop, entry);
                     break;
-                case action_promote:
+                case pcmk_action_promote:
                     n_data->promote = g_list_prepend(n_data->promote, entry);
                     break;
-                case action_demote:
+                case pcmk_action_demote:
                     n_data->demote = g_list_prepend(n_data->demote, entry);
                     break;
                 default:
@@ -819,10 +819,10 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
 
         if (!pcmk_is_set(op->flags, pe_action_optional) && (op->node != NULL)) {
             switch (text2task(op->task)) {
-                case start_rsc:
-                case stop_rsc:
-                case action_promote:
-                case action_demote:
+                case pcmk_action_start:
+                case pcmk_action_stop:
+                case pcmk_action_promote:
+                case pcmk_action_demote:
                     add_notify_data_to_action_meta(n_data, op);
                     break;
                 default:
@@ -833,7 +833,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
 
     // Skip notify action itself if original action was not needed
     switch (task) {
-        case start_rsc:
+        case pcmk_action_start:
             if (n_data->start == NULL) {
                 pe_rsc_trace(rsc, "No notify action needed for %s %s",
                              rsc->id, n_data->action);
@@ -841,7 +841,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
             }
             break;
 
-        case action_promote:
+        case pcmk_action_promote:
             if (n_data->promote == NULL) {
                 pe_rsc_trace(rsc, "No notify action needed for %s %s",
                              rsc->id, n_data->action);
@@ -849,7 +849,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
             }
             break;
 
-        case action_demote:
+        case pcmk_action_demote:
             if (n_data->demote == NULL) {
                 pe_rsc_trace(rsc, "No notify action needed for %s %s",
                              rsc->id, n_data->action);
@@ -867,7 +867,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
 
     // Create notify actions for stop or demote
     if ((rsc->role != pcmk_role_stopped)
-        && ((task == stop_rsc) || (task == action_demote))) {
+        && ((task == pcmk_action_stop) || (task == pcmk_action_demote))) {
 
         stop = find_first_action(rsc->actions, NULL, PCMK_ACTION_STOP, NULL);
 
@@ -886,7 +886,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
             new_notify_action(rsc, current_node, n_data->pre,
                               n_data->pre_done, n_data);
 
-            if ((task == action_demote) || (stop == NULL)
+            if ((task == pcmk_action_demote) || (stop == NULL)
                 || pcmk_is_set(stop->flags, pe_action_optional)) {
                 new_post_notify_action(rsc, current_node, n_data);
             }
@@ -895,7 +895,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
 
     // Create notify actions for start or promote
     if ((rsc->next_role != pcmk_role_stopped)
-        && ((task == start_rsc) || (task == action_promote))) {
+        && ((task == pcmk_action_start) || (task == pcmk_action_promote))) {
 
         start = find_first_action(rsc->actions, NULL, PCMK_ACTION_START, NULL);
         if (start != NULL) {
@@ -916,7 +916,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
                         role2text(rsc->next_role), rsc->id);
             return;
         }
-        if ((task != start_rsc) || (start == NULL)
+        if ((task != pcmk_action_start) || (start == NULL)
             || pcmk_is_set(start->flags, pe_action_optional)) {
 
             new_notify_action(rsc, rsc->allocated_to, n_data->pre,
