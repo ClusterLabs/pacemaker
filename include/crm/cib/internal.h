@@ -202,9 +202,10 @@ int cib_perform_op(const char *op, int call_options, cib__op_fn_t fn,
                    xmlNode **current_cib, xmlNode **result_cib, xmlNode **diff,
                    xmlNode **output);
 
-xmlNode *cib__create_op(cib_t *cib, const char *op, const char *host,
-                        const char *section, xmlNode *data, int call_options,
-                        const char *user_name, const char *client_name);
+int cib__create_op(cib_t *cib, const char *op, const char *host,
+                   const char *section, xmlNode *data, int call_options,
+                   const char *user_name, const char *client_name,
+                   xmlNode **op_msg);
 
 void cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc);
 void cib_native_notify(gpointer data, gpointer user_data);

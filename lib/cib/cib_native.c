@@ -69,11 +69,10 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
         pcmk__set_ipc_flags(ipc_flags, "client", crm_ipc_client_response);
     }
 
-    op_msg = cib__create_op(cib, op, host, section, data, call_options,
-                            user_name, NULL);
-    if (op_msg == NULL) {
-        // @COMPAT: Use more appropriate return code
-        return -EPROTO;
+    rc = cib__create_op(cib, op, host, section, data, call_options, user_name,
+                        NULL, &op_msg);
+    if (rc != pcmk_ok) {
+        return rc;
     }
 
     crm_trace("Sending %s message to the CIB manager (timeout=%ds)", op, cib->call_timeout);
@@ -264,6 +263,7 @@ cib_native_signon_raw(cib_t *cib, const char *name, enum cib_conn_type type,
     int rc = pcmk_ok;
     const char *channel = NULL;
     cib_native_opaque_t *native = cib->variant_opaque;
+    xmlNode *hello = NULL;
 
     struct ipc_client_callbacks cib_callbacks = {
         .dispatch = cib_native_dispatch_internal,
@@ -317,16 +317,15 @@ cib_native_signon_raw(cib_t *cib, const char *name, enum cib_conn_type type,
     }
 
     if (rc == pcmk_ok) {
-        xmlNode *hello = cib__create_op(cib, CRM_OP_REGISTER, NULL, NULL, NULL,
-                                        cib_sync_call, NULL, name);
+        rc = cib__create_op(cib, CRM_OP_REGISTER, NULL, NULL, NULL,
+                            cib_sync_call, NULL, name, &hello);
+    }
+
+    if (rc == pcmk_ok) {
         xmlNode *reply = NULL;
 
-        if (hello == NULL) {
-            // @COMPAT: Use more appropriate return code
-            rc = -EPROTO;
-
-        } else if (crm_ipc_send(native->ipc, hello, crm_ipc_client_response, -1,
-                                &reply) > 0) {
+        if (crm_ipc_send(native->ipc, hello, crm_ipc_client_response, -1,
+                         &reply) > 0) {
             const char *msg_type = crm_element_value(reply, F_CIB_OPERATION);
 
             crm_log_xml_trace(reply, "reg-reply");
@@ -348,7 +347,6 @@ cib_native_signon_raw(cib_t *cib, const char *name, enum cib_conn_type type,
         } else {
             rc = -ECOMM;
         }
-
         free_xml(hello);
     }
 

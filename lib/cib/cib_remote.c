@@ -80,10 +80,10 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
         return -EINVAL;
     }
 
-    op_msg = cib__create_op(cib, op, host, section, data, call_options,
-                            user_name, NULL);
-    if (op_msg == NULL) {
-        return -EPROTO;
+    rc = cib__create_op(cib, op, host, section, data, call_options, user_name,
+                        NULL, &op_msg);
+    if (rc != pcmk_ok) {
+        return rc;
     }
 
     crm_trace("Sending %s message to the CIB manager", op);
@@ -430,6 +430,7 @@ cib_remote_signon(cib_t *cib, const char *name, enum cib_conn_type type)
 {
     int rc = pcmk_ok;
     cib_remote_opaque_t *private = cib->variant_opaque;
+    xmlNode *hello = NULL;
 
     if (private->passwd == NULL) {
         if (private->out == NULL) {
@@ -455,18 +456,14 @@ cib_remote_signon(cib_t *cib, const char *name, enum cib_conn_type type)
     }
 
     if (rc == pcmk_ok) {
-        xmlNode *hello = cib__create_op(cib, CRM_OP_REGISTER, NULL, NULL, NULL,
-                                        cib_none, NULL, name);
+        rc = cib__create_op(cib, CRM_OP_REGISTER, NULL, NULL, NULL, cib_none,
+                            NULL, name, &hello);
+    }
 
-        if (hello == NULL) {
-            // @COMPAT: Use more appropriate return code
-            rc = -EPROTO;
-
-        } else {
-            rc = pcmk__remote_send_xml(&private->command, hello);
-            rc = pcmk_rc2legacy(rc);
-            free_xml(hello);
-        }
+    if (rc == pcmk_ok) {
+        rc = pcmk__remote_send_xml(&private->command, hello);
+        rc = pcmk_rc2legacy(rc);
+        free_xml(hello);
     }
 
     if (rc == pcmk_ok) {

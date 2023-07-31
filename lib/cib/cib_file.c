@@ -350,11 +350,10 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
 
     cib__set_call_options(call_options, "file operation", cib_no_mtime);
 
-    request = cib__create_op(cib, op, host, section, data, call_options,
-                             user_name, NULL);
-    if (request == NULL) {
-        // @COMPAT Use more appropriate return code
-        return -EPROTO;
+    rc = cib__create_op(cib, op, host, section, data, call_options, user_name,
+                        NULL, &request);
+    if (rc != pcmk_ok) {
+        return rc;
     }
     crm_xml_add(request, XML_ACL_TAG_USER, user_name);
     crm_xml_add(request, F_CIB_CLIENTID, private->id);
