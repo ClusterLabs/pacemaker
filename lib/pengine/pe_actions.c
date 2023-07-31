@@ -74,71 +74,112 @@ find_existing_action(const char *key, const pcmk_resource_t *rsc,
     return action;
 }
 
+/*!
+ * \internal
+ * \brief Find the XML configuration corresponding to a specific action key
+ *
+ * \param[in] rsc               Resource to find action configuration for
+ * \param[in] key               "RSC_ACTION_INTERVAL" of action to find
+ * \param[in] include_disabled  If false, do not return disabled actions
+ *
+ * \return XML configuration of desired action if any, otherwise NULL
+ */
 static xmlNode *
-find_rsc_op_entry_helper(const pcmk_resource_t *rsc, const char *key,
-                         gboolean include_disabled)
+find_exact_action_config(const pcmk_resource_t *rsc, const char *key,
+                         bool include_disabled)
 {
-    guint interval_ms = 0;
-    gboolean do_retry = TRUE;
-    char *local_key = NULL;
-    const char *name = NULL;
-    const char *interval_spec = NULL;
-    char *match_key = NULL;
-    xmlNode *op = NULL;
-    xmlNode *operation = NULL;
+    xmlNode *action_config = NULL;
 
-  retry:
-    for (operation = pcmk__xe_first_child(rsc->ops_xml); operation != NULL;
-         operation = pcmk__xe_next(operation)) {
+    for (xmlNode *operation = first_named_child(rsc->ops_xml, XML_ATTR_OP);
+         operation != NULL; operation = crm_next_same_xml(operation)) {
 
-        if (pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
-            bool enabled = false;
+        bool enabled = false;
+        guint interval_ms = 0;
+        char *match_key = NULL;
+        const char *name = crm_element_value(operation, "name");
+        const char *interval_spec = crm_element_value(operation,
+                                                      XML_LRM_ATTR_INTERVAL);
 
-            name = crm_element_value(operation, "name");
-            interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
-            if (!include_disabled && pcmk__xe_get_bool_attr(operation, "enabled", &enabled) == pcmk_rc_ok &&
-                !enabled) {
-                continue;
-            }
+        // @TODO This does not consider rules, defaults, etc.
+        if (!include_disabled
+            && (pcmk__xe_get_bool_attr(operation, "enabled",
+                                       &enabled) == pcmk_rc_ok) && !enabled) {
+            continue;
+        }
 
-            interval_ms = crm_parse_interval_spec(interval_spec);
-            match_key = pcmk__op_key(rsc->id, name, interval_ms);
-            if (pcmk__str_eq(key, match_key, pcmk__str_casei)) {
-                op = operation;
+        interval_ms = crm_parse_interval_spec(interval_spec);
+
+        // Try first with resource ID
+        match_key = pcmk__op_key(rsc->id, name, interval_ms);
+        if (pcmk__str_eq(key, match_key, pcmk__str_none)) {
+            action_config = operation;
+        }
+        free(match_key);
+
+        // Then again with clone_name in case ID has instance number
+        if (rsc->clone_name != NULL) {
+            match_key = pcmk__op_key(rsc->clone_name, name, interval_ms);
+            if (pcmk__str_eq(key, match_key, pcmk__str_none)) {
+                action_config = operation;
             }
             free(match_key);
+        }
 
-            if (rsc->clone_name) {
-                match_key = pcmk__op_key(rsc->clone_name, name, interval_ms);
-                if (pcmk__str_eq(key, match_key, pcmk__str_casei)) {
-                    op = operation;
-                }
-                free(match_key);
-            }
-
-            if (op != NULL) {
-                free(local_key);
-                return op;
-            }
+        if (action_config != NULL) {
+            break;
         }
     }
 
-    free(local_key);
-    if (do_retry == FALSE) {
-        return NULL;
+    return action_config;
+}
+
+/*!
+ * \internal
+ * \brief Find the XML configuration of a resource action
+ *
+ * \param[in] rsc               Resource to find action configuration for
+ * \param[in] key               "RSC_ACTION_INTERVAL" of action to find
+ * \param[in] include_disabled  If false, do not return disabled actions
+ *
+ * \return XML configuration of desired action if any, otherwise NULL
+ */
+static xmlNode *
+find_rsc_op_entry_helper(const pcmk_resource_t *rsc, const char *key,
+                         bool include_disabled)
+{
+    char *retry_key = NULL;
+    xmlNode *action_config = NULL;
+
+    // Try exact key first
+    action_config = find_exact_action_config(rsc, key, include_disabled);
+    if (action_config != NULL) {
+        return action_config;
     }
 
-    do_retry = FALSE;
+    // For migrate_to and migrate_from actions, retry with "migrate"
+    // @TODO This should be either documented or deprecated
     if ((strstr(key, PCMK_ACTION_MIGRATE_TO) != NULL)
         || (strstr(key, PCMK_ACTION_MIGRATE_FROM) != NULL)) {
-        local_key = pcmk__op_key(rsc->id, "migrate", 0);
-        key = local_key;
-        goto retry;
+        retry_key = pcmk__op_key(rsc->id, "migrate", 0);
+        action_config = find_exact_action_config(rsc, retry_key,
+                                                 include_disabled);
+        free(retry_key);
+        if (action_config != NULL) {
+            return action_config;
+        }
+    }
 
-    } else if (strstr(key, "_notify_")) {
-        local_key = pcmk__op_key(rsc->id, PCMK_ACTION_NOTIFY, 0);
-        key = local_key;
-        goto retry;
+    /* If the given key is for one of the many notification pseudo-actions
+     * (pre_notify_promote, etc.), the actual action name is "notify"
+     */
+    if (strstr(key, "_notify_")) {
+        retry_key = pcmk__op_key(rsc->id, PCMK_ACTION_NOTIFY, 0);
+        action_config = find_exact_action_config(rsc, retry_key,
+                                                 include_disabled);
+        free(retry_key);
+        if (action_config != NULL) {
+            return action_config;
+        }
     }
 
     return NULL;
@@ -147,7 +188,7 @@ find_rsc_op_entry_helper(const pcmk_resource_t *rsc, const char *key,
 xmlNode *
 find_rsc_op_entry(const pcmk_resource_t *rsc, const char *key)
 {
-    return find_rsc_op_entry_helper(rsc, key, FALSE);
+    return find_rsc_op_entry_helper(rsc, key, false);
 }
 
 /*!
@@ -200,7 +241,7 @@ new_action(char *key, const char *task, pcmk_resource_t *rsc,
     } else {
         guint interval_ms = 0;
 
-        action->op_entry = find_rsc_op_entry_helper(rsc, key, TRUE);
+        action->op_entry = find_rsc_op_entry_helper(rsc, key, true);
         parse_op_key(key, NULL, NULL, &interval_ms);
         unpack_operation(action, action->op_entry, rsc->container, interval_ms);
     }
