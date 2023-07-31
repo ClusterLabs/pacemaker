@@ -1303,42 +1303,54 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Find the maximum stop timeout of a resource and its children (if any)
+ *
+ * \param[in,out] rsc  Resource to get timeout for
+ *
+ * \return Maximum stop timeout for \p rsc (in milliseconds)
+ */
 static int
-max_delay_for_resource(pe_working_set_t * data_set, pe_resource_t *rsc) 
+max_rsc_stop_timeout(pe_resource_t *rsc)
 {
-    int delay = 0;
+    pe_action_t *stop = NULL;
+    long long result_ll;
     int max_delay = 0;
 
-    if(rsc && rsc->children) {
-        GList *iter = NULL;
+    if (rsc == NULL) {
+        return 0;
+    }
 
-        for(iter = rsc->children; iter; iter = iter->next) {
-            pe_resource_t *child = (pe_resource_t *)iter->data;
+    // If resource is collective, use maximum of its children's stop timeouts
+    if (rsc->children != NULL) {
+        for (GList *iter = rsc->children; iter; iter = iter->next) {
+            pe_resource_t *child = iter->data;
+            int delay = max_rsc_stop_timeout(child);
 
-            delay = max_delay_for_resource(data_set, child);
-            if(delay > max_delay) {
-                double seconds = delay / 1000.0;
-                crm_trace("Calculated new delay of %.1fs due to %s", seconds, child->id);
+            if (delay > max_delay) {
+                pe_rsc_trace(rsc,
+                             "Maximum stop timeout for %s is now %s due to %s",
+                             rsc->id, pcmk__readable_interval(delay), child->id);
                 max_delay = delay;
             }
         }
-
-    } else if(rsc) {
-        char *key = crm_strdup_printf("%s_%s_0", rsc->id, PCMK_ACTION_STOP);
-        pe_action_t *stop = custom_action(rsc, key, PCMK_ACTION_STOP, NULL,
-                                          TRUE, FALSE, data_set);
-        const char *value = g_hash_table_lookup(stop->meta, XML_ATTR_TIMEOUT);
-        long long result_ll;
-
-        if ((pcmk__scan_ll(value, &result_ll, -1LL) == pcmk_rc_ok)
-            && (result_ll >= 0) && (result_ll <= INT_MAX)) {
-            max_delay = (int) result_ll;
-        } else {
-            max_delay = -1;
-        }
-        pe_free_action(stop);
+        return max_delay;
     }
 
+    /* Create a (transient) instance of the resource's stop action, to fully
+     * evaluate its timeout for rules, defaults, etc.
+     *
+     * @TODO This currently ignores node (which might matter for rules)
+     */
+    stop = custom_action(rsc, stop_key(rsc), PCMK_ACTION_STOP, NULL, TRUE,
+                         FALSE, rsc->cluster);
+    if ((pcmk__scan_ll(g_hash_table_lookup(stop->meta, XML_ATTR_TIMEOUT),
+                       &result_ll, -1LL) == pcmk_rc_ok)
+        && (result_ll >= 0) && (result_ll <= INT_MAX)) {
+        max_delay = (int) result_ll;
+    }
+    pe_free_action(stop);
     return max_delay;
 }
 
@@ -1352,7 +1364,7 @@ max_delay_in(pe_working_set_t * data_set, GList *resources)
         int delay = 0;
         pe_resource_t *rsc = pe_find_resource(data_set->resources, (const char *)item->data);
 
-        delay = max_delay_for_resource(data_set, rsc);
+        delay = max_rsc_stop_timeout(rsc);
 
         if(delay > max_delay) {
             double seconds = delay / 1000.0;
