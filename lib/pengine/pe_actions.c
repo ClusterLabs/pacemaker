@@ -1045,6 +1045,64 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
 
 /*!
  * \internal
+ * \brief Determine a resource's role after failure of an action
+ *
+ * \param[in] rsc          Resource that action is for
+ * \param[in] action_name  Action name
+ * \param[in] on_fail      Failure handling for action
+ * \param[in] meta         Unpacked action meta-attributes
+ *
+ * \return Resource role that results from failure of action
+ */
+enum rsc_role_e
+pcmk__role_after_failure(const pcmk_resource_t *rsc, const char *action_name,
+                         enum action_fail_response on_fail, GHashTable *meta)
+{
+    const char *value = NULL;
+    enum rsc_role_e role = pcmk_role_unknown;
+
+    // Set default for role after failure specially in certain circumstances
+    switch (on_fail) {
+        case pcmk_on_fail_stop:
+            role = pcmk_role_stopped;
+            break;
+
+        case pcmk_on_fail_reset_remote:
+            if (rsc->remote_reconnect_ms != 0) {
+                role = pcmk_role_stopped;
+            }
+            break;
+
+        default:
+            break;
+    }
+
+    // @COMPAT Check for explicitly configured role (deprecated)
+    value = g_hash_table_lookup(meta, "role_after_failure");
+    if (value != NULL) {
+        pe_warn_once(pcmk__wo_role_after,
+                    "Support for role_after_failure is deprecated "
+                    "and will be removed in a future release");
+        if (role == pcmk_role_unknown) {
+            role = text2role(value);
+        }
+    }
+
+    if (role == pcmk_role_unknown) {
+        // Use default
+        if (pcmk__str_eq(action_name, PCMK_ACTION_PROMOTE, pcmk__str_none)) {
+            role = pcmk_role_unpromoted;
+        } else {
+            role = pcmk_role_started;
+        }
+    }
+    pe_rsc_trace(rsc, "Role after %s %s failure is: %s",
+                 rsc->id, action_name, role2text(role));
+    return role;
+}
+
+/*!
+ * \internal
  * \brief Unpack action configuration
  *
  * Unpack a resource action's meta-attributes (normalizing the interval,
@@ -1069,43 +1127,8 @@ unpack_operation(pcmk_action_t *action, const xmlNode *xml_obj,
     action->on_fail = pcmk__parse_on_fail(action->rsc, action->task,
                                           interval_ms, value);
 
-    // Set default for role after failure specially in certain circumstances
-    switch (action->on_fail) {
-        case pcmk_on_fail_stop:
-            action->fail_role = pcmk_role_stopped;
-            break;
-
-        case pcmk_on_fail_reset_remote:
-            if (action->rsc->remote_reconnect_ms != 0) {
-                action->fail_role = pcmk_role_stopped;
-            }
-            break;
-
-        default:
-            break;
-    }
-
-    value = NULL;
-    if (xml_obj != NULL) {
-        value = g_hash_table_lookup(action->meta, "role_after_failure");
-        if (value) {
-            pe_warn_once(pcmk__wo_role_after,
-                        "Support for role_after_failure is deprecated and will be removed in a future release");
-        }
-    }
-    if (value != NULL && action->fail_role == pcmk_role_unknown) {
-        action->fail_role = text2role(value);
-    }
-    /* defaults */
-    if (action->fail_role == pcmk_role_unknown) {
-        if (pcmk__str_eq(action->task, PCMK_ACTION_PROMOTE, pcmk__str_casei)) {
-            action->fail_role = pcmk_role_unpromoted;
-        } else {
-            action->fail_role = pcmk_role_started;
-        }
-    }
-    pe_rsc_trace(action->rsc, "%s failure results in: %s",
-                 action->uuid, role2text(action->fail_role));
+    action->fail_role = pcmk__role_after_failure(action->rsc, action->task,
+                                                 action->on_fail, action->meta);
 }
 
 /*!

@@ -360,6 +360,11 @@ enum action_fail_response pcmk__parse_on_fail(const pcmk_resource_t *rsc,
                                               guint interval_ms,
                                               const char *value);
 
+enum rsc_role_e pcmk__role_after_failure(const pcmk_resource_t *rsc,
+                                         const char *action_name,
+                                         enum action_fail_response on_fail,
+                                         GHashTable *meta);
+
 pcmk_action_t *custom_action(pcmk_resource_t *rsc, char *key, const char *task,
                              const pcmk_node_t *on_node, gboolean optional,
                              gboolean foo, pcmk_scheduler_t *scheduler);
