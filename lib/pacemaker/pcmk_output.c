@@ -1333,12 +1333,12 @@ node_action_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("node-info", "int", "const char *", "const char *",
+PCMK__OUTPUT_ARGS("node-info", "uint32_t", "const char *", "const char *",
                   "const char *", "bool", "bool")
 static int
 node_info_default(pcmk__output_t *out, va_list args)
 {
-    int node_id = va_arg(args, int);
+    uint32_t node_id = va_arg(args, uint32_t);
     const char *node_name = va_arg(args, const char *);
     const char *uuid = va_arg(args, const char *);
     const char *state = va_arg(args, const char *);
@@ -1346,26 +1346,26 @@ node_info_default(pcmk__output_t *out, va_list args)
     bool is_remote = (bool) va_arg(args, int);
 
     return out->info(out,
-                     "Node %d: %s "
+                     "Node %" PRIu32 ": %s "
                      "(uuid=%s, state=%s, have_quorum=%s, is_remote=%s)",
                      node_id, pcmk__s(node_name, "unknown"),
                      pcmk__s(uuid, "unknown"), pcmk__s(state, "unknown"),
                      pcmk__btoa(have_quorum), pcmk__btoa(is_remote));
 }
 
-PCMK__OUTPUT_ARGS("node-info", "int", "const char *", "const char *",
+PCMK__OUTPUT_ARGS("node-info", "uint32_t", "const char *", "const char *",
                   "const char *", "bool", "bool")
 static int
 node_info_xml(pcmk__output_t *out, va_list args)
 {
-    int node_id = va_arg(args, int);
+    uint32_t node_id = va_arg(args, uint32_t);
     const char *node_name = va_arg(args, const char *);
     const char *uuid = va_arg(args, const char *);
     const char *state = va_arg(args, const char *);
     bool have_quorum = (bool) va_arg(args, int);
     bool is_remote = (bool) va_arg(args, int);
 
-    char *id_s = crm_strdup_printf("%d", node_id);
+    char *id_s = crm_strdup_printf("%" PRIu32, node_id);
 
     pcmk__output_create_xml_node(out, "node-info",
                                  "nodeid", id_s,
