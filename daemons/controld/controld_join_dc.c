@@ -673,99 +673,120 @@ finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, voi
     }
 }
 
-/*!
- * \internal
- * \brief Free XML in a CIB client callback
- *
- * \param[in,out] xml  XML to free
- */
-static void
-xml_callback_free_fn(void *xml)
-{
-    free_xml((xmlNode *) xml);
-}
-
 static void
 join_node_state_commit_callback(xmlNode *msg, int call_id, int rc,
                                 xmlNode *output, void *user_data)
 {
+    const char *node = user_data;
+
     controld_forget_cib_replace_call(call_id);
 
     if (rc != pcmk_ok) {
         fsa_data_t *msg_data = NULL;    // for register_fsa_error() macro
 
-        crm_crit("join-%d node history update (via CIB call %d) failed: %s",
-                 current_join_id, call_id, pcmk_strerror(rc));
+        crm_crit("join-%d node history update (via CIB call %d) for node %s "
+                 "failed: %s",
+                 current_join_id, call_id, node, pcmk_strerror(rc));
         crm_log_xml_debug(msg, "failed");
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
 
-    crm_debug("join-%d node history update (via CIB call %d) complete",
-              current_join_id, call_id);
+    crm_debug("join-%d node history update (via CIB call %d) for node %s "
+              "complete",
+              current_join_id, call_id, node);
     check_join_state(controld_globals.fsa_state, __func__);
 }
 
-static void
-join_node_state_update_callback(xmlNode *msg, int call_id, int rc,
-                                xmlNode *output, void *user_data)
+/*	A_DC_JOIN_PROCESS_ACK	*/
+void
+do_dc_join_ack(long long action,
+               enum crmd_fsa_cause cause,
+               enum crmd_fsa_state cur_state,
+               enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    char *join_from = NULL;
-    cib_t *cib = controld_globals.cib_conn;
+    int join_id = -1;
+    ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
 
-    if (rc != pcmk_ok) {
-        fsa_data_t *msg_data = NULL;    // for register_fsa_error() macro
+    const char *op = crm_element_value(join_ack->msg, F_CRM_TASK);
+    char *join_from = crm_element_value_copy(join_ack->msg, F_CRM_HOST_FROM);
+    crm_node_t *peer = NULL;
 
-        crm_crit("join-%d node history update (via CIB call %d) failed: %s",
-                 current_join_id, call_id, pcmk_strerror(rc));
-        crm_log_xml_debug(msg, "failed");
-        register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
-        return;
-    }
-
-    crm_debug("join-%d node history update extend-delete (via CIB call %d) "
-              "succeeded",
-              current_join_id, call_id);
-
-    // Make a copy so that it can be freed when the callback runs
-    pcmk__str_update(&join_from, (const char *) user_data);
-
-    rc = cib->cmds->end_transaction(cib, true, cib_scope_local);
-    fsa_register_cib_callback(rc, join_from, join_node_state_commit_callback);
-    if (rc >= 0) {
-        // Expect a CIB replacement
-        controld_record_cib_replace_call(rc);
-    }
-}
-
-static void
-join_node_state_delete_callback(xmlNode *msg, int call_id, int rc,
-                                xmlNode *output, void *user_data)
-{
-    xmlNode *join_msg = user_data;
-    char *join_from = NULL;
-
-    xmlNode *state = join_msg;
+    enum controld_section_e section = controld_section_lrm;
+    char *xpath = NULL;
+    xmlNode *state = join_ack->xml;
     xmlNode *execd_state = NULL;
 
-    const int call_options = cib_scope_local|cib_can_create|cib_transaction;
+    cib_t *cib = controld_globals.cib_conn;
+    int rc = pcmk_ok;
 
-    if (rc != pcmk_ok) {
-        fsa_data_t *msg_data = NULL;    // for register_fsa_error() macro
-
-        crm_crit("join-%d node history update (via CIB call %d) failed: %s",
-                 current_join_id, call_id, pcmk_strerror(rc));
-        crm_log_xml_debug(msg, "failed");
-        register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
-        return;
+    // Sanity checks
+    if (join_from == NULL) {
+        crm_warn("Ignoring message received without node identification");
+        goto done;
+    }
+    if (op == NULL) {
+        crm_warn("Ignoring message received from %s without task", join_from);
+        goto done;
     }
 
-    crm_debug("join-%d node history update extend-delete (via CIB call %d) "
-              "succeeded",
-              current_join_id, call_id);
+    if (strcmp(op, CRM_OP_JOIN_CONFIRM)) {
+        crm_debug("Ignoring '%s' message from %s while waiting for '%s'",
+                  op, join_from, CRM_OP_JOIN_CONFIRM);
+        goto done;
+    }
 
-    // Make a copy so that it can be freed when the callback runs
-    join_from = crm_element_value_copy(join_msg, F_CRM_HOST_FROM);
+    if (crm_element_value_int(join_ack->msg, F_CRM_JOIN_ID, &join_id) != 0) {
+        crm_warn("Ignoring join confirmation from %s without valid join ID",
+                 join_from);
+        goto done;
+    }
 
+    peer = crm_get_peer(0, join_from);
+    if (peer->join != crm_join_finalized) {
+        crm_info("Ignoring out-of-sequence join-%d confirmation from %s "
+                 "(currently %s not %s)",
+                 join_id, join_from, crm_join_phase_str(peer->join),
+                 crm_join_phase_str(crm_join_finalized));
+        goto done;
+    }
+
+    if (join_id != current_join_id) {
+        crm_err("Rejecting join-%d confirmation from %s "
+                "because currently on join-%d",
+                join_id, join_from, current_join_id);
+        crm_update_peer_join(__func__, peer, crm_join_nack);
+        goto done;
+    }
+
+    crm_update_peer_join(__func__, peer, crm_join_confirmed);
+
+    /* Update CIB with node's current executor state. A new transition will be
+     * triggered later, when the CIB manager notifies us of the change.
+     *
+     * The delete and modify requests are part of an atomic transaction.
+     */
+    rc = cib->cmds->init_transaction(cib, cib_scope_local);
+    if (rc != pcmk_ok) {
+        goto done;
+    }
+
+    // Delete relevant parts of node's current executor state from CIB
+    if (pcmk_is_set(controld_globals.flags, controld_shutdown_lock_enabled)) {
+        section = controld_section_lrm_unlocked;
+    }
+    controld_node_state_deletion_strings(join_from, section, &xpath, NULL);
+
+    rc = cib->cmds->remove(cib, xpath, NULL,
+                           cib_scope_local
+                           |cib_xpath
+                           |cib_multiple
+                           |cib_transaction);
+    free(xpath);
+    if (rc != pcmk_ok) {
+        goto done;
+    }
+
+    // Update CIB with node's latest known executor state
     if (pcmk__str_eq(join_from, controld_globals.our_nodename,
                      pcmk__str_casei)) {
 
@@ -789,123 +810,28 @@ join_node_state_delete_callback(xmlNode *msg, int call_id, int rc,
                   join_from, current_join_id);
     }
 
-    controld_update_cib(XML_CIB_TAG_STATUS, state, call_options,
-                        join_node_state_update_callback, join_from);
+    rc = cib->cmds->modify(cib, XML_CIB_TAG_STATUS, state,
+                           cib_scope_local|cib_can_create|cib_transaction);
     free_xml(execd_state);
-}
 
-static void
-join_node_state_init_callback(xmlNode *msg, int call_id, int rc,
-                              xmlNode *output, void *user_data)
-{
-    xmlNode *join_msg = user_data;
-    const char *join_from = crm_element_value(join_msg, F_CRM_HOST_FROM);
-    enum controld_section_e section = controld_section_lrm;
-    char *xpath = NULL;
-    cib_t *cib = controld_globals.cib_conn;
+    // Commit the transaction
+    rc = cib->cmds->end_transaction(cib, true, cib_scope_local);
+    fsa_register_cib_callback(rc, join_from, join_node_state_commit_callback);
+    if (rc >= 0) {
+        // Expect a CIB replacement
+        controld_record_cib_replace_call(rc);
 
+        // join_from will be freed after callback
+        return;
+    }
+
+done:
     if (rc != pcmk_ok) {
-        fsa_data_t *msg_data = NULL;    // for register_fsa_error() macro
-
-        crm_crit("join-%d node history update (via CIB call %d) failed: %s",
-                 current_join_id, call_id, pcmk_strerror(rc));
-        crm_log_xml_debug(msg, "failed");
+        crm_crit("join-%d node history update for node %s failed: %s",
+                 current_join_id, join_from, pcmk_strerror(rc));
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
-        return;
     }
-
-    crm_debug("join-%d node history update init (via CIB call %d) succeeded ",
-              current_join_id, call_id);
-
-    if (pcmk_is_set(controld_globals.flags, controld_shutdown_lock_enabled)) {
-        section = controld_section_lrm_unlocked;
-    }
-    controld_node_state_deletion_strings(join_from, section, &xpath, NULL);
-
-    rc = cib->cmds->remove(cib, xpath, NULL,
-                           cib_scope_local
-                           |cib_xpath
-                           |cib_multiple
-                           |cib_transaction);
-
-    cib->cmds->register_callback_full(cib, rc, cib_op_timeout(), FALSE,
-                                      copy_xml(join_msg),
-                                      "join_node_state_delete_callback",
-                                      join_node_state_delete_callback,
-                                      xml_callback_free_fn);
-    free(xpath);
-}
-
-/*	A_DC_JOIN_PROCESS_ACK	*/
-void
-do_dc_join_ack(long long action,
-               enum crmd_fsa_cause cause,
-               enum crmd_fsa_state cur_state,
-               enum crmd_fsa_input current_input, fsa_data_t * msg_data)
-{
-    int join_id = -1;
-    ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
-
-    const char *op = crm_element_value(join_ack->msg, F_CRM_TASK);
-    const char *join_from = crm_element_value(join_ack->msg, F_CRM_HOST_FROM);
-    crm_node_t *peer = NULL;
-
-    cib_t *cib = controld_globals.cib_conn;
-    int rc = 0;
-
-    // Sanity checks
-    if (join_from == NULL) {
-        crm_warn("Ignoring message received without node identification");
-        return;
-    }
-    if (op == NULL) {
-        crm_warn("Ignoring message received from %s without task", join_from);
-        return;
-    }
-
-    if (strcmp(op, CRM_OP_JOIN_CONFIRM)) {
-        crm_debug("Ignoring '%s' message from %s while waiting for '%s'",
-                  op, join_from, CRM_OP_JOIN_CONFIRM);
-        return;
-    }
-
-    if (crm_element_value_int(join_ack->msg, F_CRM_JOIN_ID, &join_id) != 0) {
-        crm_warn("Ignoring join confirmation from %s without valid join ID",
-                 join_from);
-        return;
-    }
-
-    peer = crm_get_peer(0, join_from);
-    if (peer->join != crm_join_finalized) {
-        crm_info("Ignoring out-of-sequence join-%d confirmation from %s "
-                 "(currently %s not %s)",
-                 join_id, join_from, crm_join_phase_str(peer->join),
-                 crm_join_phase_str(crm_join_finalized));
-        return;
-    }
-
-    if (join_id != current_join_id) {
-        crm_err("Rejecting join-%d confirmation from %s "
-                "because currently on join-%d",
-                join_id, join_from, current_join_id);
-        crm_update_peer_join(__func__, peer, crm_join_nack);
-        return;
-    }
-
-    crm_update_peer_join(__func__, peer, crm_join_confirmed);
-
-    /* Update CIB with node's current executor state. A new transition will be
-     * triggered later, when the CIB notifies us of the change.
-     *
-     * A chain of callbacks extends and ultimately commits the transaction.
-     */
-    rc = cib->cmds->init_transaction(cib, cib_scope_local);
-
-    cib->cmds->register_callback_full(cib, rc, cib_op_timeout(), FALSE,
-                                      copy_xml(join_ack->msg),
-                                      "join_node_state_init_callback",
-                                      join_node_state_init_callback,
-                                      xml_callback_free_fn);
+    free(join_from);
 }
 
 void

@@ -50,21 +50,7 @@ typedef struct cib_file_opaque_s {
     char *filename;
     uint32_t flags; // Group of enum cib_file_flags
     xmlNode *cib_xml;
-    GQueue *transaction;
 } cib_file_opaque_t;
-
-static int cib_file_extend_transaction(cib_t *cib,
-                                       const cib__operation_t *operation,
-                                       xmlNode *request);
-
-static void cib_file_discard_transaction(cib_t *cib);
-
-static int cib_file_process_init_transaction(const char *op, int options,
-                                             const char *section, xmlNode *req,
-                                             xmlNode *input,
-                                             xmlNode *existing_cib,
-                                             xmlNode **result_cib,
-                                             xmlNode **answer);
 
 static int cib_file_process_commit_transaction(const char *op, int options,
                                                const char *section,
@@ -73,12 +59,6 @@ static int cib_file_process_commit_transaction(const char *op, int options,
                                                xmlNode **result_cib,
                                                xmlNode **answer);
 
-static int cib_file_process_discard_transaction(const char *op, int options,
-                                                const char *section,
-                                                xmlNode *req, xmlNode *input,
-                                                xmlNode *existing_cib,
-                                                xmlNode **result_cib,
-                                                xmlNode **answer);
 /*!
  * \internal
  * \brief Add a CIB file client to client table
@@ -142,6 +122,7 @@ get_client(const char *client_id)
 static const cib__op_fn_t cib_op_functions[] = {
     [cib__op_apply_patch]      = cib_process_diff,
     [cib__op_bump]             = cib_process_bump,
+    [cib__op_commit_transact]  = cib_file_process_commit_transaction,
     [cib__op_create]           = cib_process_create,
     [cib__op_delete]           = cib_process_delete,
     [cib__op_erase]            = cib_process_erase,
@@ -149,9 +130,6 @@ static const cib__op_fn_t cib_op_functions[] = {
     [cib__op_query]            = cib_process_query,
     [cib__op_replace]          = cib_process_replace,
     [cib__op_upgrade]          = cib_process_upgrade,
-    [cib__op_init_transact]    = cib_file_process_init_transaction,
-    [cib__op_commit_transact]  = cib_file_process_commit_transaction,
-    [cib__op_discard_transact] = cib_file_process_discard_transaction,
 };
 
 /* cib_file_backup() and cib_file_write_with_digest() need to chown the
@@ -261,7 +239,7 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
 
     read_only = !pcmk_is_set(operation->flags, cib__op_attr_modifies);
 
-    // Mirror the logic in cib_prepare_common()
+    // Mirror the logic in prepare_input() in pacemaker-based
     if ((section != NULL) && pcmk__xe_is(data, XML_TAG_CIB)) {
 
         data = pcmk_find_cib_element(data, section);
@@ -362,18 +340,7 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     crm_xml_add(request, F_CIB_CLIENTID, private->id);
 
     if (pcmk_is_set(call_options, cib_transaction)) {
-        // @TODO: Return here when transactions are fully implemented in client
         rc = cib__extend_transaction(cib, request);
-        if (rc != pcmk_ok) {
-            goto done;
-        }
-
-        rc = cib_file_extend_transaction(cib, operation, request);
-        if (rc != pcmk_rc_ok) {
-            crm_warn("Could not extend transaction for CIB file client: %s",
-                     pcmk_rc_str(rc));
-        }
-        rc = pcmk_rc2legacy(rc);
         goto done;
     }
 
@@ -576,7 +543,6 @@ cib_file_signoff(cib_t *cib)
     cib->state = cib_disconnected;
     cib->type = cib_no_connection;
     unregister_client(cib);
-    cib_file_discard_transaction(cib);
     cib->cmds->end_transaction(cib, false, cib_none);
 
     /* If the in-memory CIB has been changed, write it to disk */
@@ -1091,103 +1057,22 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
 
 /*!
  * \internal
- * \brief Create a new transaction for a given CIB file client
- *
- * \param[in,out] cib  CIB file client
- *
- * \return Standard Pacemaker return code
- */
-static int
-cib_file_init_transaction(cib_t *cib)
-{
-    cib_file_opaque_t *private = cib->variant_opaque;
-
-    // A client can have at most one transaction at a time
-    if (private->transaction != NULL) {
-        return pcmk_rc_already;
-    }
-
-    crm_trace("Initiating transaction for CIB file client (%s) on file '%s'",
-              private->id, private->filename);
-
-    private->transaction = g_queue_new();
-    return pcmk_rc_ok;
-}
-
-/*!
- * \internal
- * \brief Add a new CIB request to an existing transaction
- *
- * \param[in,out] cib        CIB file client
- * \param[in]     operation  CIB operation
- * \param[in]     request    CIB request
- *
- * \return Standard Pacemaker return code
- */
-static int
-cib_file_extend_transaction(cib_t *cib, const cib__operation_t *operation,
-                            xmlNode *request)
-{
-    cib_file_opaque_t *private = cib->variant_opaque;
-
-    if (private->transaction == NULL) {
-        return pcmk_rc_no_transaction;
-    }
-    if (!pcmk_is_set(operation->flags, cib__op_attr_transaction)) {
-        crm_err("Operation '%s' is not supported in CIB transaction",
-                operation->name);
-        return EOPNOTSUPP;
-    }
-    if (file_get_op_function(operation) == NULL) {
-        crm_err("Operation %s is not supported by CIB file clients",
-                operation->name);
-        return EOPNOTSUPP;
-    }
-    g_queue_push_tail(private->transaction, copy_xml(request));
-    return pcmk_rc_ok;
-}
-
-/*!
- * \internal
- * \brief Free a CIB file client's transaction (if any) and its requests
- *
- * \param[in,out] cib  CIB file client
- */
-static void
-cib_file_discard_transaction(cib_t *cib)
-{
-    bool found = false;
-    cib_file_opaque_t *private = cib->variant_opaque;
-
-    if (private->transaction != NULL) {
-        found = true;
-        g_queue_free_full(private->transaction, (GDestroyNotify) free_xml);
-        private->transaction = NULL;
-    }
-
-    crm_trace("%s for CIB file client (%s) on file '%s'",
-              (found? "Discarded transaction" : "No transaction found"),
-              private->id, private->filename);
-}
-
-/*!
- * \internal
- * \brief Process requests in a CIB file client's transaction
+ * \brief Process requests in a CIB transaction
  *
  * Stop when a request fails or when all requests have been processed.
  *
- * \param[in,out] cib  CIB file client
+ * \param[in,out] cib          CIB client
+ * \param[in,out] transaction  CIB transaction
  *
  * \return Standard Pacemaker return code
  */
 static int
-cib_file_process_transaction_requests(cib_t *cib)
+cib_file_process_transaction_requests(cib_t *cib, xmlNode *transaction)
 {
     cib_file_opaque_t *private = cib->variant_opaque;
-    GQueue *transaction = private->transaction;
 
-    for (xmlNode *request = g_queue_pop_head(transaction); request != NULL;
-         request = g_queue_pop_head(transaction)) {
+    for (xmlNode *request = first_named_child(transaction, T_CIB_COMMAND);
+         request != NULL; request = crm_next_same_xml(request)) {
 
         xmlNode *output = NULL;
         const char *op = crm_element_value(request, F_CIB_OPERATION);
@@ -1200,7 +1085,6 @@ cib_file_process_transaction_requests(cib_t *cib)
                     "'%s' due to failed %s request: %s",
                     private->id, private->filename, op, pcmk_rc_str(rc));
             crm_log_xml_info(request, "Failed request");
-            free_xml(request);
             return rc;
         }
 
@@ -1208,7 +1092,6 @@ cib_file_process_transaction_requests(cib_t *cib)
                   "client (%s) on file '%s'",
                   op, private->id, private->filename);
         crm_log_xml_trace(request, "Successful request");
-        free_xml(request);
     }
 
     return pcmk_rc_ok;
@@ -1218,8 +1101,9 @@ cib_file_process_transaction_requests(cib_t *cib)
  * \internal
  * \brief Commit a given CIB file client's transaction to a working CIB copy
  *
- * \param[in,out] cib         CIB file client
- * \param[in,out] result_cib  Where to store result CIB
+ * \param[in,out] cib          CIB file client
+ * \param[in]     transaction  CIB transaction
+ * \param[in,out] result_cib   Where to store result CIB
  *
  * \return Standard Pacemaker return code
  *
@@ -1228,11 +1112,15 @@ cib_file_process_transaction_requests(cib_t *cib)
  *       \p result_cib using \p free_xml() on failure.
  */
 static int
-cib_file_commit_transaction(cib_t *cib, xmlNode **result_cib)
+cib_file_commit_transaction(cib_t *cib, xmlNode *transaction,
+                            xmlNode **result_cib)
 {
     int rc = pcmk_rc_ok;
     cib_file_opaque_t *private = cib->variant_opaque;
     xmlNode *saved_cib = private->cib_xml;
+
+    CRM_CHECK(pcmk__xe_is(transaction, T_CIB_TRANSACTION),
+              return pcmk_rc_no_transaction);
 
     /* *result_cib should be a copy of private->cib_xml (created by
      * cib_perform_op()). If not, make a copy now. Change tracking isn't
@@ -1244,10 +1132,6 @@ cib_file_commit_transaction(cib_t *cib, xmlNode **result_cib)
     CRM_CHECK((*result_cib != NULL) && (*result_cib != private->cib_xml),
               *result_cib = copy_xml(private->cib_xml));
 
-    if (private->transaction == NULL) {
-        return pcmk_rc_no_transaction;
-    }
-
     crm_trace("Committing transaction for CIB file client (%s) on file '%s' to "
               "working CIB",
               private->id, private->filename);
@@ -1255,14 +1139,11 @@ cib_file_commit_transaction(cib_t *cib, xmlNode **result_cib)
     // Apply all changes to a working copy of the CIB
     private->cib_xml = *result_cib;
 
-    rc = cib_file_process_transaction_requests(cib);
+    rc = cib_file_process_transaction_requests(cib, transaction);
 
     crm_trace("Transaction commit %s for CIB file client (%s) on file '%s'",
               ((rc == pcmk_rc_ok)? "succeeded" : "failed"),
               private->id, private->filename);
-
-    // Free the transaction and (if aborted) free any remaining requests
-    cib_file_discard_transaction(cib);
 
     /* Some request types (for example, erase) may have freed private->cib_xml
      * (the working copy) and pointed it at a new XML object. In that case, it
@@ -1276,33 +1157,6 @@ cib_file_commit_transaction(cib_t *cib, xmlNode **result_cib)
     private->cib_xml = saved_cib;
 
     return rc;
-}
-
-static int
-cib_file_process_init_transaction(const char *op, int options,
-                                  const char *section, xmlNode *req,
-                                  xmlNode *input, xmlNode *existing_cib,
-                                  xmlNode **result_cib, xmlNode **answer)
-{
-    int rc = pcmk_rc_ok;
-    const char *client_id = crm_element_value(req, F_CIB_CLIENTID);
-    cib_t *cib = NULL;
-
-    CRM_CHECK(client_id != NULL, return -EINVAL);
-
-    cib = get_client(client_id);
-    CRM_CHECK(cib != NULL, return -EINVAL);
-
-    rc = cib_file_init_transaction(cib);
-
-    if (rc != pcmk_rc_ok) {
-        cib_file_opaque_t *private = cib->variant_opaque;
-
-        crm_err("Could not initiate transaction for CIB file client (%s) on "
-                "file '%s': %s",
-                private->id, private->filename, pcmk_rc_str(rc));
-    }
-    return pcmk_rc2legacy(rc);
 }
 
 static int
@@ -1320,7 +1174,7 @@ cib_file_process_commit_transaction(const char *op, int options,
     cib = get_client(client_id);
     CRM_CHECK(cib != NULL, return -EINVAL);
 
-    rc = cib_file_commit_transaction(cib, result_cib);
+    rc = cib_file_commit_transaction(cib, input, result_cib);
     if (rc != pcmk_rc_ok) {
         cib_file_opaque_t *private = cib->variant_opaque;
 
@@ -1329,22 +1183,4 @@ cib_file_process_commit_transaction(const char *op, int options,
                 private->id, private->filename, pcmk_rc_str(rc));
     }
     return pcmk_rc2legacy(rc);
-}
-
-static int
-cib_file_process_discard_transaction(const char *op, int options,
-                                     const char *section, xmlNode *req,
-                                     xmlNode *input, xmlNode *existing_cib,
-                                     xmlNode **result_cib, xmlNode **answer)
-{
-    const char *client_id = crm_element_value(req, F_CIB_CLIENTID);
-    cib_t *cib = NULL;
-
-    CRM_CHECK(client_id != NULL, return -EINVAL);
-
-    cib = get_client(client_id);
-    CRM_CHECK(cib != NULL, return -EINVAL);
-
-    cib_file_discard_transaction(cib);
-    return pcmk_ok;
 }

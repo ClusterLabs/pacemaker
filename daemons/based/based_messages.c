@@ -454,50 +454,6 @@ sync_our_cib(xmlNode * request, gboolean all)
 }
 
 int
-cib_process_init_transaction(const char *op, int options, const char *section,
-                             xmlNode *req, xmlNode *input,
-                             xmlNode *existing_cib, xmlNode **result_cib,
-                             xmlNode **answer)
-{
-    const char *client_id = crm_element_value(req, F_CIB_CLIENTID);
-    pcmk__client_t *client = NULL;
-
-    const char *reason = NULL;
-    int rc = pcmk_ok;
-
-    if (client_id == NULL) {
-        reason = "No client ID";
-        rc = -EINVAL;
-        goto done;
-    }
-
-    client = pcmk__find_client_by_id(client_id);
-    if (client == NULL) {
-        reason = "Client not found";
-        rc = -ENXIO;
-        goto done;
-    }
-
-    rc = based_init_transaction(client);
-
-    if (rc != pcmk_rc_ok) {
-        reason = pcmk_rc_str(rc);
-    }
-    rc = pcmk_rc2legacy(rc);
-
-done:
-    if (rc != pcmk_ok) {
-        const char *client_name = crm_element_value(req, F_CIB_CLIENTNAME);
-
-        crm_err("Could not initiate transaction for client %s (%s): %s",
-                pcmk__s(client_name, "unspecified"),
-                pcmk__s(client_id, "unknown"),
-                pcmk__s(reason, "unknown reason (bug?)"));
-    }
-    return rc;
-}
-
-int
 cib_process_commit_transaction(const char *op, int options, const char *section,
                                xmlNode *req, xmlNode *input,
                                xmlNode *existing_cib, xmlNode **result_cib,
@@ -527,7 +483,7 @@ cib_process_commit_transaction(const char *op, int options, const char *section,
         goto done;
     }
 
-    rc = based_commit_transaction(client, result_cib);
+    rc = based_commit_transaction(input, client, result_cib);
     if (rc != pcmk_rc_ok) {
         reason = pcmk_rc_str(rc);
         rc = pcmk_rc2legacy(rc);
@@ -538,45 +494,6 @@ done:
         const char *client_name = crm_element_value(req, F_CIB_CLIENTNAME);
 
         crm_err("Could not commit transaction for client %s (%s): %s",
-                pcmk__s(client_name, "unspecified"),
-                pcmk__s(client_id, "unknown"),
-                pcmk__s(reason, "unknown reason (bug?)"));
-    }
-    return rc;
-}
-
-int
-cib_process_discard_transaction(const char *op, int options,
-                                const char *section, xmlNode *req,
-                                xmlNode *input, xmlNode *existing_cib,
-                                xmlNode **result_cib, xmlNode **answer)
-{
-    const char *client_id = crm_element_value(req, F_CIB_CLIENTID);
-    pcmk__client_t *client = NULL;
-
-    const char *reason = NULL;
-    int rc = pcmk_ok;
-
-    if (client_id == NULL) {
-        reason = "No client ID";
-        rc = -EINVAL;
-        goto done;
-    }
-
-    client = pcmk__find_client_by_id(client_id);
-    if (client == NULL) {
-        reason = "Client not found";
-        rc = -ENXIO;
-        goto done;
-    }
-
-    based_discard_transaction(client);
-
-done:
-    if (rc != pcmk_ok) {
-        const char *client_name = crm_element_value(req, F_CIB_CLIENTNAME);
-
-        crm_err("Could not discard transaction for client %s (%s): %s",
                 pcmk__s(client_name, "unspecified"),
                 pcmk__s(client_id, "unknown"),
                 pcmk__s(reason, "unknown reason (bug?)"));

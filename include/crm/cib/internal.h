@@ -31,9 +31,7 @@
 #define PCMK__CIB_REQUEST_ABS_DELETE    "cib_delete_alt"
 #define PCMK__CIB_REQUEST_NOOP          "noop"
 #define PCMK__CIB_REQUEST_SHUTDOWN      "cib_shutdown_req"
-#define PCMK__CIB_REQUEST_INIT_TRANSACT     "cib_init_transact"
 #define PCMK__CIB_REQUEST_COMMIT_TRANSACT   "cib_commit_transact"
-#define PCMK__CIB_REQUEST_DISCARD_TRANSACT  "cib_discard_transact"
 
 #  define F_CIB_CLIENTID  "cib_clientid"
 #  define F_CIB_CALLOPTS  "cib_callopt"
@@ -110,6 +108,7 @@ enum cib__op_type {
     cib__op_abs_delete,
     cib__op_apply_patch,
     cib__op_bump,
+    cib__op_commit_transact,
     cib__op_create,
     cib__op_delete,
     cib__op_erase,
@@ -125,11 +124,6 @@ enum cib__op_type {
     cib__op_sync_all,
     cib__op_sync_one,
     cib__op_upgrade,
-
-    // @TODO: Refactor transactions and remove these
-    cib__op_init_transact,
-    cib__op_commit_transact,
-    cib__op_discard_transact,
 };
 
 /*!

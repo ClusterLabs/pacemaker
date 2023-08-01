@@ -120,18 +120,10 @@ int cib_process_upgrade_server(const char *op, int options, const char *section,
                                xmlNode *req, xmlNode *input,
                                xmlNode *existing_cib, xmlNode **result_cib,
                                xmlNode **answer);
-int cib_process_init_transaction(const char *op, int options,
-                                 const char *section, xmlNode *req,
-                                 xmlNode *input, xmlNode *existing_cib,
-                                 xmlNode **result_cib, xmlNode **answer);
 int cib_process_commit_transaction(const char *op, int options,
                                    const char *section, xmlNode *req,
                                    xmlNode *input, xmlNode *existing_cib,
                                    xmlNode **result_cib, xmlNode **answer);
-int cib_process_discard_transaction(const char *op, int options,
-                                    const char *section, xmlNode *req,
-                                    xmlNode *input, xmlNode *existing_cib,
-                                    xmlNode **result_cib, xmlNode **answer);
 void send_sync_request(const char *host);
 int sync_our_cib(xmlNode *request, gboolean all);
 

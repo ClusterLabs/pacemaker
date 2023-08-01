@@ -133,7 +133,6 @@ cib_ipc_closed(qb_ipcs_connection_t * c)
         return 0;
     }
     crm_trace("Connection %p", c);
-    based_discard_transaction(client);
     pcmk__free_client(client);
     return 0;
 }
@@ -282,22 +281,10 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
 
     crm_element_value_int(op_request, F_CIB_CALLOPTS, &call_options);
 
+    /* Requests with cib_transaction set should not be sent to based directly
+     * (outside of a commit-transaction request)
+     */
     if (pcmk_is_set(call_options, cib_transaction)) {
-        // Append request to client's transaction
-        const char *call_id = crm_element_value(op_request, F_CIB_CALLID);
-
-        int rc = based_extend_transaction(cib_client, op_request, privileged);
-
-        xmlNode *reply = create_cib_reply(op, call_id, cib_client->id,
-                                          call_options, rc, NULL);
-
-        if (rc != pcmk_rc_ok) {
-            crm_warn("Could not extend transaction for client %s: %s",
-                     pcmk__client_name(cib_client), pcmk_rc_str(rc));
-        }
-
-        do_local_notify(reply, cib_client->id,
-                        pcmk_is_set(call_options, cib_sync_call), false);
         return;
     }
 
@@ -1118,15 +1105,6 @@ cib_process_request(xmlNode *request, gboolean privileged,
         return -EOPNOTSUPP;
     }
 
-    if (pcmk_is_set(call_options, cib_transaction)) {
-        /* We're committing a transaction now, processing each request. If
-         * cib__op_attr_transaction is not set, based_extend_transaction() should
-         * have blocked the request from being added to the transaction.
-         */
-        CRM_CHECK(pcmk_is_set(operation->flags, cib__op_attr_transaction),
-                  return -EOPNOTSUPP);
-    }
-
     if (cib_client != NULL) {
         parse_local_options(cib_client, operation, call_options, host, op,
                             &local_notify, &needs_reply, &process,
@@ -1303,36 +1281,47 @@ static xmlNode *
 prepare_input(const xmlNode *request, enum cib__op_type type,
               const char **section)
 {
-    xmlNode *root = NULL;
+    xmlNode *input = NULL;
 
-    if (type == cib__op_apply_patch) {
-        if (pcmk__xe_attr_is_true(request, F_CIB_GLOBAL_UPDATE)) {
-            root = get_message_xml(request, F_CIB_UPDATE_DIFF);
-        } else {
-            root = get_message_xml(request, F_CIB_CALLDATA);
-        }
-        *section = NULL;
+    *section = NULL;
 
-    } else {
-        root = get_message_xml(request, F_CIB_CALLDATA);
-        *section = crm_element_value(request, F_CIB_SECTION);
+    switch (type) {
+        case cib__op_apply_patch:
+            if (pcmk__xe_attr_is_true(request, F_CIB_GLOBAL_UPDATE)) {
+                input = get_message_xml(request, F_CIB_UPDATE_DIFF);
+            } else {
+                input = get_message_xml(request, F_CIB_CALLDATA);
+            }
+            break;
+
+        case cib__op_commit_transact:
+            // We're not looking for XML_TAG_CIB; we want the raw call data
+            return get_message_xml(request, F_CIB_CALLDATA);
+
+        default:
+            input = get_message_xml(request, F_CIB_CALLDATA);
+            *section = crm_element_value(request, F_CIB_SECTION);
+            break;
     }
 
-    if (root == NULL) {
+    if (input == NULL) {
         return NULL;
     }
 
-    if (pcmk__str_any_of((const char *) root->name, F_CRM_DATA, F_CIB_CALLDATA,
+    /* @TODO: Remove? F_CIB_CALLDATA shouldn't be the child of F_CIB_CALLDATA,
+     * and it probably never was.
+     */
+    if (pcmk__str_any_of((const char *) input->name, F_CRM_DATA, F_CIB_CALLDATA,
                          NULL)) {
-        root = first_named_child(root, XML_TAG_CIB);
+        input = first_named_child(input, XML_TAG_CIB);
     }
 
     // Grab the specified section
-    if ((*section != NULL) && pcmk__xe_is(root, XML_TAG_CIB)) {
-        root = pcmk_find_cib_element(root, *section);
+    if ((*section != NULL) && pcmk__xe_is(input, XML_TAG_CIB)) {
+        input = pcmk_find_cib_element(input, *section);
     }
 
-    return root;
+    return input;
 }
 
 static char *

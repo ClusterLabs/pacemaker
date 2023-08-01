@@ -87,12 +87,9 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
     }
 
     if (pcmk_is_set(call_options, cib_transaction)) {
-        // @TODO: Return here when transactions are fully implemented in client
         rc = cib__extend_transaction(cib, op_msg);
-        if (rc != pcmk_ok) {
-            free_xml(op_msg);
-            return rc;
-        }
+        free_xml(op_msg);
+        return rc;
     }
 
     crm_trace("Sending %s message to the CIB manager", op);

@@ -76,11 +76,8 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     }
 
     if (pcmk_is_set(call_options, cib_transaction)) {
-        // @TODO: Return here when transactions are fully implemented in client
         rc = cib__extend_transaction(cib, op_msg);
-        if (rc != pcmk_ok) {
-            goto done;
-        }
+        goto done;
     }
 
     crm_trace("Sending %s message to the CIB manager (timeout=%ds)", op, cib->call_timeout);
