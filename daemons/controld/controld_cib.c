@@ -861,10 +861,17 @@ cib_rsc_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *use
         case pcmk_ok:
         case -pcmk_err_diff_failed:
         case -pcmk_err_diff_resync:
-            crm_trace("Resource update %d complete: rc=%d", call_id, rc);
+            crm_trace("Resource history update completed (call=%d rc=%d)",
+                      call_id, rc);
             break;
         default:
-            crm_warn("Resource update %d failed: (rc=%d) %s", call_id, rc, pcmk_strerror(rc));
+            if (call_id > 0) {
+                crm_warn("Resource history update %d failed: %s "
+                         CRM_XS " rc=%d", call_id, pcmk_strerror(rc), rc);
+            } else {
+                crm_warn("Resource history update failed: %s " CRM_XS " rc=%d",
+                         pcmk_strerror(rc), rc);
+            }
     }
 
     if (call_id == pending_rsc_update) {
