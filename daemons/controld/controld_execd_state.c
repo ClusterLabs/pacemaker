@@ -132,12 +132,6 @@ lrm_state_create(const char *node_name)
     return state;
 }
 
-void
-lrm_state_destroy(const char *node_name)
-{
-    g_hash_table_remove(lrm_state_table, node_name);
-}
-
 static gboolean
 remote_proxy_remove_by_node(gpointer key, gpointer value, gpointer user_data)
 {
@@ -799,7 +793,7 @@ lrm_state_unregister_rsc(lrm_state_t * lrm_state,
     }
 
     if (is_remote_lrmd_ra(NULL, NULL, rsc_id)) {
-        lrm_state_destroy(rsc_id);
+        g_hash_table_remove(lrm_state_table, rsc_id);
         return pcmk_ok;
     }
 
