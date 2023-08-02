@@ -30,7 +30,7 @@
     <action_set>
       <rsc_op id="3" operation="stop" operation_key="stateful-1:0_stop_0" on_node="dl380g5b" on_node_uuid="888e539a-c6ef-496d-b79a-77cbf0f9e5e4">
         <primitive id="stateful-1:0" class="ocf" provider="heartbeat" type="Stateful"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_fail="stop" CRM_meta_on_node="dl380g5b" CRM_meta_on_node_uuid="888e539a-c6ef-496d-b79a-77cbf0f9e5e4" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="dl380g5b" CRM_meta_on_node_uuid="888e539a-c6ef-496d-b79a-77cbf0f9e5e4" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>

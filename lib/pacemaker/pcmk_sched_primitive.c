@@ -1590,7 +1590,7 @@ pcmk__primitive_shutdown_lock(pe_resource_t *rsc)
 
     // Fence devices and remote connections can't be locked
     if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_null_matches)
-        || pe__resource_is_remote_conn(rsc, rsc->cluster)) {
+        || pe__resource_is_remote_conn(rsc)) {
         return;
     }
 

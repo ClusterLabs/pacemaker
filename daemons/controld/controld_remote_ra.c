@@ -1435,9 +1435,10 @@ remote_ra_process_maintenance_nodes(xmlNode *xml)
         xmlNode *node;
         int cnt = 0, cnt_remote = 0;
 
-        for (node =
-                first_named_child(getXpathResult(search, 0), XML_CIB_TAG_NODE);
-            node != NULL; node = pcmk__xml_next(node)) {
+        for (node = first_named_child(getXpathResult(search, 0),
+                                      XML_CIB_TAG_NODE);
+             node != NULL; node = crm_next_same_xml(node)) {
+
             lrm_state_t *lrm_state = lrm_state_find(ID(node));
 
             cnt++;

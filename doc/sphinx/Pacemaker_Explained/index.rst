@@ -21,6 +21,7 @@ Table of Contents
    options
    nodes
    resources
+   operations
    constraints
    fencing
    alerts

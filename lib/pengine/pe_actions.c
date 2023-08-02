@@ -20,8 +20,7 @@
 #include "pe_status_private.h"
 
 static void unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
-                             const pe_resource_t *container,
-                             pe_working_set_t *data_set, guint interval_ms);
+                             const pe_resource_t *container, guint interval_ms);
 
 static void
 add_singleton(pe_working_set_t *data_set, pe_action_t *action)
@@ -202,8 +201,7 @@ new_action(char *key, const char *task, pe_resource_t *rsc,
 
         action->op_entry = find_rsc_op_entry_helper(rsc, key, TRUE);
         parse_op_key(key, NULL, NULL, &interval_ms);
-        unpack_operation(action, action->op_entry, rsc->container, data_set,
-                         interval_ms);
+        unpack_operation(action, action->op_entry, rsc->container, interval_ms);
     }
 
     if (for_graph) {
@@ -431,77 +429,121 @@ valid_stop_on_fail(const char *value)
     return !pcmk__strcase_any_of(value, "standby", "demote", "stop", NULL);
 }
 
+/*!
+ * \internal
+ * \brief Validate (and possibly reset) resource action's on_fail meta-attribute
+ *
+ * \param[in]     rsc            Resource that action is for
+ * \param[in]     action_name    Action name
+ * \param[in]     action_config  Action configuration XML from CIB (if any)
+ * \param[in,out] meta           Table of action meta-attributes
+ *
+ * \return (Possibly new) value of on-fail meta-attribute
+ */
 static const char *
-unpack_operation_on_fail(pe_action_t * action)
+validate_on_fail(const pe_resource_t *rsc, const char *action_name,
+                 const xmlNode *action_config, GHashTable *meta)
 {
     const char *name = NULL;
     const char *role = NULL;
-    const char *on_fail = NULL;
     const char *interval_spec = NULL;
-    const char *value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ON_FAIL);
+    const char *value = g_hash_table_lookup(meta, XML_OP_ATTR_ON_FAIL);
+    char *key = NULL;
+    char *new_value = NULL;
 
-    if (pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_casei)
+    // Stop actions can only use certain on-fail values
+    if (pcmk__str_eq(action_name, PCMK_ACTION_STOP, pcmk__str_none)
         && !valid_stop_on_fail(value)) {
 
         pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for %s stop "
                          "action to default value because '%s' is not "
-                         "allowed for stop", action->rsc->id, value);
+                         "allowed for stop", rsc->id, value);
+        g_hash_table_remove(meta, XML_OP_ATTR_ON_FAIL);
         return NULL;
+    }
 
-    } else if (pcmk__str_eq(action->task, PCMK_ACTION_DEMOTE, pcmk__str_casei)
-               && (value == NULL)) {
-        // demote on_fail defaults to monitor value for promoted role if present
-        xmlNode *operation = NULL;
+    /* Demote actions default on-fail to the on-fail value for the first
+     * recurring monitor for the promoted role (if any).
+     */
+    if (pcmk__str_eq(action_name, PCMK_ACTION_DEMOTE, pcmk__str_none)
+        && (value == NULL)) {
 
-        CRM_CHECK(action->rsc != NULL, return NULL);
-
-        for (operation = pcmk__xe_first_child(action->rsc->ops_xml);
-             (operation != NULL) && (value == NULL);
-             operation = pcmk__xe_next(operation)) {
+        /* @TODO This does not consider promote options set in a meta-attribute
+         * block (which may have rules that need to be evaluated) rather than
+         * XML properties.
+         */
+        for (xmlNode *operation = first_named_child(rsc->ops_xml, XML_ATTR_OP);
+             operation != NULL; operation = crm_next_same_xml(operation)) {
             bool enabled = false;
+            const char *promote_on_fail = NULL;
 
-            if (!pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
+            /* We only care about explicit on-fail (if promote uses default, so
+             * can demote)
+             */
+            promote_on_fail = crm_element_value(operation, XML_OP_ATTR_ON_FAIL);
+            if (promote_on_fail == NULL) {
                 continue;
             }
+
+            // We only care about recurring monitors for the promoted role
             name = crm_element_value(operation, "name");
             role = crm_element_value(operation, "role");
-            on_fail = crm_element_value(operation, XML_OP_ATTR_ON_FAIL);
+            if (!pcmk__str_eq(name, PCMK_ACTION_MONITOR, pcmk__str_none)
+                || !pcmk__strcase_any_of(role, PCMK__ROLE_PROMOTED,
+                                         PCMK__ROLE_PROMOTED_LEGACY, NULL)) {
+                continue;
+            }
             interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
-            if (!on_fail) {
-                continue;
-            } else if (pcmk__xe_get_bool_attr(operation, "enabled", &enabled) == pcmk_rc_ok && !enabled) {
-                continue;
-            } else if (!pcmk__str_eq(name, PCMK_ACTION_MONITOR, pcmk__str_casei)
-                       || !pcmk__strcase_any_of(role, PCMK__ROLE_PROMOTED,
-                                                PCMK__ROLE_PROMOTED_LEGACY,
-                                                NULL)) {
-                continue;
-            } else if (crm_parse_interval_spec(interval_spec) == 0) {
-                continue;
-            } else if (pcmk__str_eq(on_fail, "demote", pcmk__str_casei)) {
+            if (crm_parse_interval_spec(interval_spec) == 0) {
                 continue;
             }
 
-            value = on_fail;
-        }
-    } else if (pcmk__str_eq(action->task, PCMK_ACTION_LRM_DELETE,
-                            pcmk__str_casei)) {
-        value = "ignore";
+            // We only care about enabled monitors
+            if ((pcmk__xe_get_bool_attr(operation, "enabled",
+                                        &enabled) == pcmk_rc_ok) && !enabled) {
+                continue;
+            }
 
-    } else if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
-        name = crm_element_value(action->op_entry, "name");
-        role = crm_element_value(action->op_entry, "role");
-        interval_spec = crm_element_value(action->op_entry,
+            // Demote actions can't default to on-fail="demote"
+            if (pcmk__str_eq(promote_on_fail, "demote", pcmk__str_casei)) {
+                continue;
+            }
+
+            // Use value from first applicable promote action found
+            key = strdup(XML_OP_ATTR_ON_FAIL);
+            new_value = strdup(promote_on_fail);
+            CRM_ASSERT((key != NULL) && (new_value != NULL));
+            g_hash_table_insert(meta, key, new_value);
+            return g_hash_table_lookup(meta, XML_OP_ATTR_ON_FAIL);
+        }
+        return NULL;
+    }
+
+    if (pcmk__str_eq(action_name, PCMK_ACTION_LRM_DELETE, pcmk__str_none)
+        && !pcmk__str_eq(value, "ignore", pcmk__str_casei)) {
+        key = strdup(XML_OP_ATTR_ON_FAIL);
+        new_value = strdup("ignore");
+        CRM_ASSERT((key != NULL) && (new_value != NULL));
+        g_hash_table_insert(meta, key, new_value);
+        return g_hash_table_lookup(meta, XML_OP_ATTR_ON_FAIL);
+    }
+
+    // on-fail="demote" is allowed only for certain actions
+    if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
+        name = crm_element_value(action_config, "name");
+        role = crm_element_value(action_config, "role");
+        interval_spec = crm_element_value(action_config,
                                           XML_LRM_ATTR_INTERVAL);
 
-        if (!pcmk__str_eq(name, PCMK_ACTION_PROMOTE, pcmk__str_casei)
-            && (!pcmk__str_eq(name, PCMK_ACTION_MONITOR, pcmk__str_casei)
+        if (!pcmk__str_eq(name, PCMK_ACTION_PROMOTE, pcmk__str_none)
+            && (!pcmk__str_eq(name, PCMK_ACTION_MONITOR, pcmk__str_none)
                 || !pcmk__strcase_any_of(role, PCMK__ROLE_PROMOTED,
                                          PCMK__ROLE_PROMOTED_LEGACY, NULL)
                 || (crm_parse_interval_spec(interval_spec) == 0))) {
             pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for %s %s "
                              "action to default value because 'demote' is not "
-                             "allowed for it", action->rsc->id, name);
+                             "allowed for it", rsc->id, name);
+            g_hash_table_remove(meta, XML_OP_ATTR_ON_FAIL);
             return NULL;
         }
     }
@@ -625,22 +667,21 @@ find_min_interval_mon(pe_resource_t * rsc, gboolean include_disabled)
 }
 
 /*!
- * \brief Unpack operation XML into an action structure
+ * \internal
+ * \brief Unpack action configuration
  *
- * Unpack an operation's meta-attributes (normalizing the interval, timeout,
- * and start delay values as integer milliseconds), requirements, and
- * failure policy.
+ * Unpack a resource action's meta-attributes (normalizing the interval,
+ * timeout, and start delay values as integer milliseconds), requirements, and
+ * failure policy from its CIB XML configuration (including defaults).
  *
- * \param[in,out] action       Action to unpack into
- * \param[in]     xml_obj      Operation XML (or NULL if all defaults)
+ * \param[in,out] action       Resource action to unpack into
+ * \param[in]     xml_obj      Action configuration XML (NULL for defaults only)
  * \param[in]     container    Resource that contains affected resource, if any
- * \param[in,out] data_set     Cluster state
  * \param[in]     interval_ms  How frequently to perform the operation
  */
 static void
 unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
-                 const pe_resource_t *container,
-                 pe_working_set_t *data_set, guint interval_ms)
+                 const pe_resource_t *container, guint interval_ms)
 {
     int timeout_ms = 0;
     const char *value = NULL;
@@ -660,7 +701,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
         .role = pcmk_role_unknown,
-        .now = data_set->now,
+        .now = action->rsc->cluster->now,
         .match_data = NULL,
         .rsc_data = &rsc_rule_data,
         .op_data = &op_rule_data
@@ -671,8 +712,9 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
     is_probe = pcmk_is_probe(action->task, interval_ms);
 
     // Cluster-wide <op_defaults> <meta_attributes>
-    pe__unpack_dataset_nvpairs(data_set->op_defaults, XML_TAG_META_SETS, &rule_data,
-                               action->meta, NULL, FALSE, data_set);
+    pe__unpack_dataset_nvpairs(action->rsc->cluster->op_defaults,
+                               XML_TAG_META_SETS, &rule_data, action->meta,
+                               NULL, FALSE, action->rsc->cluster);
 
     // Determine probe default timeout differently
     if (is_probe) {
@@ -694,7 +736,8 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
 
         // <op> <meta_attributes> take precedence over defaults
         pe__unpack_dataset_nvpairs(xml_obj, XML_TAG_META_SETS, &rule_data,
-                                   action->meta, NULL, TRUE, data_set);
+                                   action->meta, NULL, TRUE,
+                                   action->rsc->cluster);
 
         /* Anything set as an <op> XML property has highest precedence.
          * This ensures we use the name and interval from the <op> tag.
@@ -736,7 +779,8 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
         && (pcmk__str_eq(action->task, PCMK_ACTION_START, pcmk__str_casei)
             || is_probe)) {
 
-        GHashTable *params = pe_rsc_params(action->rsc, action->node, data_set);
+        GHashTable *params = pe_rsc_params(action->rsc, action->node,
+                                           action->rsc->cluster);
 
         value = g_hash_table_lookup(params, "pcmk_monitor_timeout");
 
@@ -773,20 +817,19 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
     }
     pe_rsc_trace(action->rsc, "%s requires %s", action->uuid, value);
 
-    value = unpack_operation_on_fail(action);
+    value = validate_on_fail(action->rsc, action->task, xml_obj, action->meta);
 
     if (value == NULL) {
 
     } else if (pcmk__str_eq(value, "block", pcmk__str_casei)) {
         action->on_fail = pcmk_on_fail_block;
-        g_hash_table_insert(action->meta, strdup(XML_OP_ATTR_ON_FAIL), strdup("block"));
-        value = "block"; // The above could destroy the original string
 
     } else if (pcmk__str_eq(value, "fence", pcmk__str_casei)) {
         action->on_fail = pcmk_on_fail_fence_node;
         value = "node fencing";
 
-        if (!pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
+        if (!pcmk_is_set(action->rsc->cluster->flags,
+                         pe_flag_stonith_enabled)) {
             pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for "
                              "operation '%s' to 'stop' because 'fence' is not "
                              "valid when fencing is disabled", action->uuid);
@@ -849,7 +892,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
      * exist. The user can set op on-fail=fence if they really want to fence start
      * failures. */
     } else if (((value == NULL) || !pcmk_is_set(action->rsc->flags, pe_rsc_managed))
-               && pe__resource_is_remote_conn(action->rsc, data_set)
+               && pe__resource_is_remote_conn(action->rsc)
                && !(pcmk__str_eq(action->task, PCMK_ACTION_MONITOR,
                                  pcmk__str_casei)
                     && (interval_ms == 0))
@@ -861,7 +904,8 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
             value = "stop unmanaged remote node (enforcing default)";
 
         } else {
-            if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
+            if (pcmk_is_set(action->rsc->cluster->flags,
+                            pe_flag_stonith_enabled)) {
                 value = "fence remote node (default)";
             } else {
                 value = "recover remote node connection (default)";
@@ -876,7 +920,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
     } else if ((value == NULL)
                && pcmk__str_eq(action->task, PCMK_ACTION_STOP,
                                pcmk__str_casei)) {
-        if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
+        if (pcmk_is_set(action->rsc->cluster->flags, pe_flag_stonith_enabled)) {
             action->on_fail = pcmk_on_fail_fence_node;
             value = "resource fence (default)";
 
@@ -922,8 +966,8 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
         long long start_delay = 0;
 
         value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ORIGIN);
-        if (unpack_interval_origin(value, xml_obj, interval_ms, data_set->now,
-                                   &start_delay)) {
+        if (unpack_interval_origin(value, xml_obj, interval_ms,
+                                   action->rsc->cluster->now, &start_delay)) {
             g_hash_table_replace(action->meta, strdup(XML_OP_ATTR_START_DELAY),
                                  crm_strdup_printf("%lld", start_delay));
         }

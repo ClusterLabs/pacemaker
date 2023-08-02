@@ -236,7 +236,6 @@ generate_fail_regex(const char *prefix, const char *rsc_name,
  * \brief Compile regular expressions to match failure-related node attributes
  *
  * \param[in]  rsc             Resource being checked for failures
- * \param[in]  data_set        Data set (for CRM feature set version)
  * \param[out] failcount_re    Storage for regular expression for fail count
  * \param[out] lastfailure_re  Storage for regular expression for last failure
  *
@@ -246,13 +245,15 @@ generate_fail_regex(const char *prefix, const char *rsc_name,
  */
 static int
 generate_fail_regexes(const pe_resource_t *rsc,
-                      const pe_working_set_t *data_set,
                       regex_t *failcount_re, regex_t *lastfailure_re)
 {
-    char *rsc_name = rsc_fail_name(rsc);
-    const char *version = crm_element_value(data_set->input, XML_ATTR_CRM_VERSION);
-    gboolean is_legacy = (compare_version(version, "3.0.13") < 0);
     int rc = pcmk_rc_ok;
+    char *rsc_name = rsc_fail_name(rsc);
+    const char *version = crm_element_value(rsc->cluster->input,
+                                            XML_ATTR_CRM_VERSION);
+
+    // @COMPAT Pacemaker <= 1.1.16 used a single fail count per resource
+    gboolean is_legacy = (compare_version(version, "3.0.13") < 0);
 
     if (generate_fail_regex(PCMK__FAIL_COUNT_PREFIX, rsc_name, is_legacy,
                             pcmk_is_set(rsc->flags, pe_rsc_unique),
@@ -271,68 +272,137 @@ generate_fail_regexes(const pe_resource_t *rsc,
     return rc;
 }
 
+// Data for fail-count-related iterators
+struct failcount_data {
+    const pe_node_t *node;  // Node to check for fail count
+    pe_resource_t *rsc;     // Resource to check for fail count
+    uint32_t flags;         // Fail count flags
+    const xmlNode *xml_op;  // History entry for expiration purposes (or NULL)
+    regex_t failcount_re;   // Fail count regular expression to match
+    regex_t lastfailure_re; // Last failure regular expression to match
+    int failcount;          // Fail count so far
+    time_t last_failure;    // Time of most recent failure so far
+};
+
+/*!
+ * \internal
+ * \brief Update fail count and last failure appropriately for a node attribute
+ *
+ * \param[in] key        Node attribute name
+ * \param[in] value      Node attribute value
+ * \param[in] user_data  Fail count data to update
+ */
+static void
+update_failcount_for_attr(gpointer key, gpointer value, gpointer user_data)
+{
+    struct failcount_data *fc_data = user_data;
+
+    // If this is a matching fail count attribute, update fail count
+    if (regexec(&(fc_data->failcount_re), (const char *) key, 0, NULL, 0) == 0) {
+        fc_data->failcount = pcmk__add_scores(fc_data->failcount,
+                                              char2score(value));
+        pe_rsc_trace(fc_data->rsc, "Added %s (%s) to %s fail count (now %s)",
+                     (const char *) key, (const char *) value, fc_data->rsc->id,
+                     pcmk_readable_score(fc_data->failcount));
+        return;
+    }
+
+    // If this is a matching last failure attribute, update last failure
+    if (regexec(&(fc_data->lastfailure_re), (const char *) key, 0, NULL,
+                0) == 0) {
+        long long last_ll;
+
+        if (pcmk__scan_ll(value, &last_ll, 0LL) == pcmk_rc_ok) {
+            fc_data->last_failure = (time_t) QB_MAX(fc_data->last_failure,
+                                                    last_ll);
+        }
+    }
+}
+
+/*!
+ * \internal
+ * \brief Update fail count and last failure appropriately for a filler resource
+ *
+ * \param[in] data       Filler resource
+ * \param[in] user_data  Fail count data to update
+ */
+static void
+update_failcount_for_filler(gpointer data, gpointer user_data)
+{
+    pe_resource_t *filler = data;
+    struct failcount_data *fc_data = user_data;
+    time_t filler_last_failure = 0;
+
+    fc_data->failcount += pe_get_failcount(fc_data->node, filler,
+                                           &filler_last_failure, fc_data->flags,
+                                           fc_data->xml_op);
+    fc_data->last_failure = QB_MAX(fc_data->last_failure, filler_last_failure);
+}
+
+/*!
+ * \internal
+ * \brief Get a resource's fail count on a node
+ *
+ * \param[in]     node          Node to check
+ * \param[in,out] rsc           Resource to check
+ * \param[out]    last_failure  If not NULL, where to set time of most recent
+ *                              failure of \p rsc on \p node
+ * \param[in]     flags         Group of enum pe_fc_flags_e flags
+ * \param[in]     xml_op        If not NULL, consider only the action in this
+ *                              history entry when determining whether on-fail
+ *                              is configured as "blocked", otherwise consider
+ *                              all actions configured for \p rsc
+ *
+ * \return Fail count for \p rsc on \p node according to \p flags
+ */
 int
 pe_get_failcount(const pe_node_t *node, pe_resource_t *rsc,
                  time_t *last_failure, uint32_t flags, const xmlNode *xml_op)
 {
-    char *key = NULL;
-    const char *value = NULL;
-    regex_t failcount_re, lastfailure_re;
-    int failcount = 0;
-    time_t last = 0;
-    GHashTableIter iter;
+    struct failcount_data fc_data = {
+        .node = node,
+        .rsc = rsc,
+        .flags = flags,
+        .xml_op = xml_op,
+        .failcount = 0,
+        .last_failure = (time_t) 0,
+    };
 
-    CRM_CHECK(generate_fail_regexes(rsc, rsc->cluster, &failcount_re,
-                                    &lastfailure_re) == pcmk_rc_ok,
+    // Calculate resource failcount as sum of all matching operation failcounts
+    CRM_CHECK(generate_fail_regexes(rsc, &fc_data.failcount_re,
+                                    &fc_data.lastfailure_re) == pcmk_rc_ok,
               return 0);
+    g_hash_table_foreach(node->details->attrs, update_failcount_for_attr,
+                         &fc_data);
+    regfree(&(fc_data.failcount_re));
+    regfree(&(fc_data.lastfailure_re));
 
-    /* Resource fail count is sum of all matching operation fail counts */
-    g_hash_table_iter_init(&iter, node->details->attrs);
-    while (g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value)) {
-        if (regexec(&failcount_re, key, 0, NULL, 0) == 0) {
-            failcount = pcmk__add_scores(failcount, char2score(value));
-            crm_trace("Added %s (%s) to %s fail count (now %s)",
-                      key, value, rsc->id, pcmk_readable_score(failcount));
-        } else if (regexec(&lastfailure_re, key, 0, NULL, 0) == 0) {
-            long long last_ll;
-
-            if (pcmk__scan_ll(value, &last_ll, 0LL) == pcmk_rc_ok) {
-                last = (time_t) QB_MAX(last, last_ll);
-            }
-        }
-    }
-
-    regfree(&failcount_re);
-    regfree(&lastfailure_re);
-
-    if ((failcount > 0) && (last > 0) && (last_failure != NULL)) {
-        *last_failure = last;
-    }
-
-    /* If failure blocks the resource, disregard any failure timeout */
-    if ((failcount > 0) && rsc->failure_timeout
+    // If failure blocks the resource, disregard any failure timeout
+    if ((fc_data.failcount > 0) && (rsc->failure_timeout > 0)
         && block_failure(node, rsc, xml_op)) {
 
-        pe_warn("Ignoring failure timeout %d for %s because it conflicts with on-fail=block",
+        pe_warn("Ignoring failure timeout %d for %s "
+                "because it conflicts with on-fail=block",
                 rsc->failure_timeout, rsc->id);
         rsc->failure_timeout = 0;
     }
 
-    /* If all failures have expired, ignore fail count */
-    if (pcmk_is_set(flags, pe_fc_effective) && (failcount > 0) && (last > 0)
-        && rsc->failure_timeout) {
+    // If all failures have expired, ignore fail count
+    if (pcmk_is_set(flags, pe_fc_effective) && (fc_data.failcount > 0)
+        && (fc_data.last_failure > 0) && (rsc->failure_timeout != 0)) {
 
         time_t now = get_effective_time(rsc->cluster);
 
-        if (now > (last + rsc->failure_timeout)) {
-            crm_debug("Failcount for %s on %s expired after %ds",
-                      rsc->id, pe__node_name(node), rsc->failure_timeout);
-            failcount = 0;
+        if (now > (fc_data.last_failure + rsc->failure_timeout)) {
+            pe_rsc_debug(rsc, "Failcount for %s on %s expired after %ds",
+                         rsc->id, pe__node_name(node), rsc->failure_timeout);
+            fc_data.failcount = 0;
         }
     }
 
-    /* We never want the fail counts of a bundle container's fillers to
-     * count towards the container's fail count.
+    /* Add the fail count of any filler resources, except that we never want the
+     * fail counts of a bundle container's fillers to count towards the
+     * container's fail count.
      *
      * Most importantly, a Pacemaker Remote connection to a bundle container
      * is a filler of the container, but can reside on a different node than the
@@ -340,38 +410,32 @@ pe_get_failcount(const pe_node_t *node, pe_resource_t *rsc,
      * container's fail count on that node could lead to attempting to stop the
      * container on the wrong node.
      */
-
-    if (pcmk_is_set(flags, pe_fc_fillers) && rsc->fillers
+    if (pcmk_is_set(flags, pe_fc_fillers) && (rsc->fillers != NULL)
         && !pe_rsc_is_bundled(rsc)) {
 
-        GList *gIter = NULL;
-
-        for (gIter = rsc->fillers; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *filler = (pe_resource_t *) gIter->data;
-            time_t filler_last_failure = 0;
-
-            failcount += pe_get_failcount(node, filler, &filler_last_failure,
-                                          flags, xml_op);
-
-            if (last_failure && filler_last_failure > *last_failure) {
-                *last_failure = filler_last_failure;
-            }
+        g_list_foreach(rsc->fillers, update_failcount_for_filler, &fc_data);
+        if (fc_data.failcount > 0) {
+            pe_rsc_info(rsc,
+                        "Container %s and the resources within it "
+                        "have failed %s time%s on %s",
+                        rsc->id, pcmk_readable_score(fc_data.failcount),
+                        pcmk__plural_s(fc_data.failcount), pe__node_name(node));
         }
 
-        if (failcount > 0) {
-            crm_info("Container %s and the resources within it "
-                     "have failed %s time%s on %s",
-                     rsc->id, pcmk_readable_score(failcount),
-                     pcmk__plural_s(failcount), pe__node_name(node));
-        }
-
-    } else if (failcount > 0) {
-        crm_info("%s has failed %s time%s on %s",
-                 rsc->id, pcmk_readable_score(failcount),
-                 pcmk__plural_s(failcount), pe__node_name(node));
+    } else if (fc_data.failcount > 0) {
+        pe_rsc_info(rsc, "%s has failed %s time%s on %s",
+                    rsc->id, pcmk_readable_score(fc_data.failcount),
+                    pcmk__plural_s(fc_data.failcount), pe__node_name(node));
     }
 
-    return failcount;
+    if (last_failure != NULL) {
+        if ((fc_data.failcount > 0) && (fc_data.last_failure > 0)) {
+            *last_failure = fc_data.last_failure;
+        } else  {
+            *last_failure = 0;
+        }
+    }
+    return fc_data.failcount;
 }
 
 /*!

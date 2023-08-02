@@ -817,7 +817,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
         (*rsc)->stickiness = char2score(value);
     }
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_FAIL_STICKINESS);
+    value = g_hash_table_lookup((*rsc)->meta, PCMK_META_MIGRATION_THRESHOLD);
     if (value != NULL && !pcmk__str_eq("default", value, pcmk__str_casei)) {
         (*rsc)->migration_threshold = char2score(value);
         if ((*rsc)->migration_threshold < 0) {
@@ -826,7 +826,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
              * instead.
              */
             pe_warn_once(pe_wo_neg_threshold,
-                         XML_RSC_ATTR_FAIL_STICKINESS
+                         PCMK_META_MIGRATION_THRESHOLD
                          " must be non-negative, using 1 instead");
             (*rsc)->migration_threshold = 1;
         }
@@ -841,7 +841,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_REQUIRES);
     unpack_requires(*rsc, value, false);
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_FAIL_TIMEOUT);
+    value = g_hash_table_lookup((*rsc)->meta, PCMK_META_FAILURE_TIMEOUT);
     if (value != NULL) {
         // Stored as seconds
         (*rsc)->failure_timeout = (int) (crm_parse_interval_spec(value) / 1000);

@@ -112,7 +112,6 @@ itself, allowing for more sophistication down the road.
 4. If required, add an XSLT file, and update `xslt\_SCRIPTS` in `xml/Makefile.am`.
 5. Commit.
 6. Run `make -C xml clean; make -C xml` to rebuild the schemas in the local
-6. Run `make -C xml clean; make -C xml` to rebuild the schemas in the local
    source directory.
 7. The CIB validity and upgrade regression tests will break after the schema is
    updated. Run `cts/cts-cli -s` to make the expected outputs reflect the
