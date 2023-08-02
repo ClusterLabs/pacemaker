@@ -22,42 +22,6 @@ extern "C" {
 extern gboolean was_processing_error;
 extern gboolean was_processing_warning;
 
-/* The order is (partially) significant here; the values from action_fail_ignore
- * through action_fail_fence are in order of increasing severity.
- *
- * @COMPAT The values should be ordered and numbered per the "TODO" comments
- *         below, so all values are in order of severity and there is room for
- *         future additions, but that would break API compatibility.
- * @TODO   For now, we just use a function to compare the values specially, but
- *         at the next compatibility break, we should arrange things properly.
- */
-enum action_fail_response {
-    action_fail_ignore,     // @TODO = 10
-    // @TODO action_fail_demote = 20,
-    action_fail_recover,    // @TODO = 30
-    // @TODO action_fail_reset_remote = 40,
-    // @TODO action_fail_restart_container = 50,
-    action_fail_migrate,    // @TODO = 60
-    action_fail_block,      // @TODO = 70
-    action_fail_stop,       // @TODO = 80
-    action_fail_standby,    // @TODO = 90
-    action_fail_fence,      // @TODO = 100
-
-    // @COMPAT Values below here are out of order for API compatibility
-
-    action_fail_restart_container,
-
-    /* This is reserved for internal use for remote node connection resources.
-     * Fence the remote node if stonith is enabled, otherwise attempt to recover
-     * the connection resource. This allows us to specify types of connection
-     * resource failures that should result in fencing the remote node
-     * (for example, recurring monitor failures).
-     */
-    action_fail_reset_remote,
-
-    action_fail_demote,
-};
-
 //! Deprecated
 enum pe_print_options {
     pe_print_log            = (1 << 0),

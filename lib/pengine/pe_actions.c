@@ -778,48 +778,48 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
     if (value == NULL) {
 
     } else if (pcmk__str_eq(value, "block", pcmk__str_casei)) {
-        action->on_fail = action_fail_block;
+        action->on_fail = pcmk_on_fail_block;
         g_hash_table_insert(action->meta, strdup(XML_OP_ATTR_ON_FAIL), strdup("block"));
         value = "block"; // The above could destroy the original string
 
     } else if (pcmk__str_eq(value, "fence", pcmk__str_casei)) {
-        action->on_fail = action_fail_fence;
+        action->on_fail = pcmk_on_fail_fence_node;
         value = "node fencing";
 
         if (!pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
             pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for "
                              "operation '%s' to 'stop' because 'fence' is not "
                              "valid when fencing is disabled", action->uuid);
-            action->on_fail = action_fail_stop;
+            action->on_fail = pcmk_on_fail_stop;
             action->fail_role = pcmk_role_stopped;
             value = "stop resource";
         }
 
     } else if (pcmk__str_eq(value, "standby", pcmk__str_casei)) {
-        action->on_fail = action_fail_standby;
+        action->on_fail = pcmk_on_fail_standby_node;
         value = "node standby";
 
     } else if (pcmk__strcase_any_of(value, "ignore", PCMK__VALUE_NOTHING,
                                     NULL)) {
-        action->on_fail = action_fail_ignore;
+        action->on_fail = pcmk_on_fail_ignore;
         value = "ignore";
 
     } else if (pcmk__str_eq(value, "migrate", pcmk__str_casei)) {
-        action->on_fail = action_fail_migrate;
+        action->on_fail = pcmk_on_fail_ban;
         value = "force migration";
 
     } else if (pcmk__str_eq(value, "stop", pcmk__str_casei)) {
-        action->on_fail = action_fail_stop;
+        action->on_fail = pcmk_on_fail_stop;
         action->fail_role = pcmk_role_stopped;
         value = "stop resource";
 
     } else if (pcmk__str_eq(value, "restart", pcmk__str_casei)) {
-        action->on_fail = action_fail_recover;
+        action->on_fail = pcmk_on_fail_restart;
         value = "restart (and possibly migrate)";
 
     } else if (pcmk__str_eq(value, "restart-container", pcmk__str_casei)) {
         if (container) {
-            action->on_fail = action_fail_restart_container;
+            action->on_fail = pcmk_on_fail_restart_container;
             value = "restart container (and possibly migrate)";
 
         } else {
@@ -827,7 +827,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
         }
 
     } else if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
-        action->on_fail = action_fail_demote;
+        action->on_fail = pcmk_on_fail_demote;
         value = "demote instance";
 
     } else {
@@ -837,7 +837,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
 
     /* defaults */
     if (value == NULL && container) {
-        action->on_fail = action_fail_restart_container;
+        action->on_fail = pcmk_on_fail_restart_container;
         value = "restart container (and possibly migrate) (default)";
 
     /* For remote nodes, ensure that any failure that results in dropping an
@@ -856,7 +856,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
                && !pcmk__str_eq(action->task, PCMK_ACTION_START, pcmk__str_casei)) {
 
         if (!pcmk_is_set(action->rsc->flags, pe_rsc_managed)) {
-            action->on_fail = action_fail_stop;
+            action->on_fail = pcmk_on_fail_stop;
             action->fail_role = pcmk_role_stopped;
             value = "stop unmanaged remote node (enforcing default)";
 
@@ -870,23 +870,23 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
             if (action->rsc->remote_reconnect_ms) {
                 action->fail_role = pcmk_role_stopped;
             }
-            action->on_fail = action_fail_reset_remote;
+            action->on_fail = pcmk_on_fail_reset_remote;
         }
 
     } else if ((value == NULL)
                && pcmk__str_eq(action->task, PCMK_ACTION_STOP,
                                pcmk__str_casei)) {
         if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
-            action->on_fail = action_fail_fence;
+            action->on_fail = pcmk_on_fail_fence_node;
             value = "resource fence (default)";
 
         } else {
-            action->on_fail = action_fail_block;
+            action->on_fail = pcmk_on_fail_block;
             value = "resource block (default)";
         }
 
     } else if (value == NULL) {
-        action->on_fail = action_fail_recover;
+        action->on_fail = pcmk_on_fail_restart;
         value = "restart (and possibly migrate) (default)";
     }
 

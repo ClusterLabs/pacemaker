@@ -2066,7 +2066,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
 {
     pe_node_t *tmpnode = NULL;
     char *reason = NULL;
-    enum action_fail_response save_on_fail = action_fail_ignore;
+    enum action_fail_response save_on_fail = pcmk_on_fail_ignore;
 
     CRM_ASSERT(rsc);
     pe_rsc_trace(rsc, "Resource %s is %s on %s: on_fail=%s",
@@ -2149,20 +2149,20 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
         /* No extra processing needed
          * Also allows resources to be started again after a node is shot
          */
-        on_fail = action_fail_ignore;
+        on_fail = pcmk_on_fail_ignore;
     }
 
     switch (on_fail) {
-        case action_fail_ignore:
+        case pcmk_on_fail_ignore:
             /* nothing to do */
             break;
 
-        case action_fail_demote:
+        case pcmk_on_fail_demote:
             pe__set_resource_flags(rsc, pe_rsc_failed);
             demote_action(rsc, node, FALSE);
             break;
 
-        case action_fail_fence:
+        case pcmk_on_fail_fence_node:
             /* treat it as if it is still running
              * but also mark the node as unclean
              */
@@ -2171,12 +2171,12 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             free(reason);
             break;
 
-        case action_fail_standby:
+        case pcmk_on_fail_standby_node:
             node->details->standby = TRUE;
             node->details->standby_onfail = TRUE;
             break;
 
-        case action_fail_block:
+        case pcmk_on_fail_block:
             /* is_managed == FALSE will prevent any
              * actions being sent for the resource
              */
@@ -2184,7 +2184,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             pe__set_resource_flags(rsc, pe_rsc_block);
             break;
 
-        case action_fail_migrate:
+        case pcmk_on_fail_ban:
             /* make sure it comes up somewhere else
              * or not at all
              */
@@ -2192,11 +2192,11 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
                               rsc->cluster);
             break;
 
-        case action_fail_stop:
+        case pcmk_on_fail_stop:
             pe__set_next_role(rsc, pcmk_role_stopped, "on-fail=stop");
             break;
 
-        case action_fail_recover:
+        case pcmk_on_fail_restart:
             if ((rsc->role != pcmk_role_stopped)
                 && (rsc->role != pcmk_role_unknown)) {
                 pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
@@ -2204,7 +2204,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             }
             break;
 
-        case action_fail_restart_container:
+        case pcmk_on_fail_restart_container:
             pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
             if (rsc->container && pe_rsc_is_bundled(rsc)) {
                 /* A bundle's remote connection can run on a different node than
@@ -2222,7 +2222,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             }
             break;
 
-        case action_fail_reset_remote:
+        case pcmk_on_fail_reset_remote:
             pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
             if (pcmk_is_set(rsc->cluster->flags, pe_flag_stonith_enabled)) {
                 tmpnode = NULL;
@@ -2281,12 +2281,12 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
         }
 
         native_add_running(rsc, node, rsc->cluster,
-                           (save_on_fail != action_fail_ignore));
+                           (save_on_fail != pcmk_on_fail_ignore));
         switch (on_fail) {
-            case action_fail_ignore:
+            case pcmk_on_fail_ignore:
                 break;
-            case action_fail_demote:
-            case action_fail_block:
+            case pcmk_on_fail_demote:
+            case pcmk_on_fail_block:
                 pe__set_resource_flags(rsc, pe_rsc_failed);
                 break;
             default:
@@ -2497,7 +2497,7 @@ unpack_lrm_resource(pe_node_t *node, const xmlNode *lrm_resource,
     xmlNode *rsc_op = NULL;
     xmlNode *last_failure = NULL;
 
-    enum action_fail_response on_fail = action_fail_ignore;
+    enum action_fail_response on_fail = pcmk_on_fail_ignore;
     enum rsc_role_e saved_role = pcmk_role_unknown;
 
     if (rsc_id == NULL) {
@@ -3341,38 +3341,38 @@ static int
 cmp_on_fail(enum action_fail_response first, enum action_fail_response second)
 {
     switch (first) {
-        case action_fail_demote:
+        case pcmk_on_fail_demote:
             switch (second) {
-                case action_fail_ignore:
+                case pcmk_on_fail_ignore:
                     return 1;
-                case action_fail_demote:
+                case pcmk_on_fail_demote:
                     return 0;
                 default:
                     return -1;
             }
             break;
 
-        case action_fail_reset_remote:
+        case pcmk_on_fail_reset_remote:
             switch (second) {
-                case action_fail_ignore:
-                case action_fail_demote:
-                case action_fail_recover:
+                case pcmk_on_fail_ignore:
+                case pcmk_on_fail_demote:
+                case pcmk_on_fail_restart:
                     return 1;
-                case action_fail_reset_remote:
+                case pcmk_on_fail_reset_remote:
                     return 0;
                 default:
                     return -1;
             }
             break;
 
-        case action_fail_restart_container:
+        case pcmk_on_fail_restart_container:
             switch (second) {
-                case action_fail_ignore:
-                case action_fail_demote:
-                case action_fail_recover:
-                case action_fail_reset_remote:
+                case pcmk_on_fail_ignore:
+                case pcmk_on_fail_demote:
+                case pcmk_on_fail_restart:
+                case pcmk_on_fail_reset_remote:
                     return 1;
-                case action_fail_restart_container:
+                case pcmk_on_fail_restart_container:
                     return 0;
                 default:
                     return -1;
@@ -3383,26 +3383,26 @@ cmp_on_fail(enum action_fail_response first, enum action_fail_response second)
             break;
     }
     switch (second) {
-        case action_fail_demote:
-            return (first == action_fail_ignore)? -1 : 1;
+        case pcmk_on_fail_demote:
+            return (first == pcmk_on_fail_ignore)? -1 : 1;
 
-        case action_fail_reset_remote:
+        case pcmk_on_fail_reset_remote:
             switch (first) {
-                case action_fail_ignore:
-                case action_fail_demote:
-                case action_fail_recover:
+                case pcmk_on_fail_ignore:
+                case pcmk_on_fail_demote:
+                case pcmk_on_fail_restart:
                     return -1;
                 default:
                     return 1;
             }
             break;
 
-        case action_fail_restart_container:
+        case pcmk_on_fail_restart_container:
             switch (first) {
-                case action_fail_ignore:
-                case action_fail_demote:
-                case action_fail_recover:
-                case action_fail_reset_remote:
+                case pcmk_on_fail_ignore:
+                case pcmk_on_fail_demote:
+                case pcmk_on_fail_restart:
+                case pcmk_on_fail_reset_remote:
                     return -1;
                 default:
                     return 1;
@@ -3528,7 +3528,7 @@ unpack_rsc_op_failure(struct action_history *history, xmlNode **last_failure,
         history->rsc->role = pcmk_role_promoted;
 
     } else if (strcmp(history->task, PCMK_ACTION_DEMOTE) == 0) {
-        if (action->on_fail == action_fail_block) {
+        if (action->on_fail == pcmk_on_fail_block) {
             history->rsc->role = pcmk_role_promoted;
             pe__set_next_role(history->rsc, pcmk_role_stopped,
                               "demote with on-fail=block");
@@ -3763,7 +3763,7 @@ remap_operation(struct action_history *history,
                  */
                 remap_because(history, &why, PCMK_EXEC_DONE, "exit status");
                 history->rsc->role = pcmk_role_stopped;
-                *on_fail = action_fail_ignore;
+                *on_fail = pcmk_on_fail_ignore;
                 pe__set_next_role(history->rsc, pcmk_role_unknown,
                                   "not running");
             }
@@ -4122,7 +4122,7 @@ pe__target_rc_from_xml(const xmlNode *xml_op)
 static enum action_fail_response
 get_action_on_fail(struct action_history *history)
 {
-    enum action_fail_response result = action_fail_recover;
+    enum action_fail_response result = pcmk_on_fail_restart;
     pe_action_t *action = custom_action(history->rsc, strdup(history->key),
                                         history->task, NULL, TRUE, FALSE,
                                         history->rsc->cluster);
@@ -4182,7 +4182,7 @@ update_resource_state(struct action_history *history, int exit_status,
 
     } else if (pcmk__str_eq(history->task, PCMK_ACTION_DEMOTE,
                             pcmk__str_none)) {
-        if (*on_fail == action_fail_demote) {
+        if (*on_fail == pcmk_on_fail_demote) {
             // Demote clears an error only if on-fail=demote
             clear_past_failure = true;
         }
@@ -4208,26 +4208,26 @@ update_resource_state(struct action_history *history, int exit_status,
     }
 
     switch (*on_fail) {
-        case action_fail_stop:
-        case action_fail_fence:
-        case action_fail_migrate:
-        case action_fail_standby:
+        case pcmk_on_fail_stop:
+        case pcmk_on_fail_ban:
+        case pcmk_on_fail_standby_node:
+        case pcmk_on_fail_fence_node:
             pe_rsc_trace(history->rsc,
                          "%s (%s) is not cleared by a completed %s",
                          history->rsc->id, fail2text(*on_fail), history->task);
             break;
 
-        case action_fail_block:
-        case action_fail_ignore:
-        case action_fail_demote:
-        case action_fail_recover:
-        case action_fail_restart_container:
-            *on_fail = action_fail_ignore;
+        case pcmk_on_fail_block:
+        case pcmk_on_fail_ignore:
+        case pcmk_on_fail_demote:
+        case pcmk_on_fail_restart:
+        case pcmk_on_fail_restart_container:
+            *on_fail = pcmk_on_fail_ignore;
             pe__set_next_role(history->rsc, pcmk_role_unknown,
                               "clear past failures");
             break;
 
-        case action_fail_reset_remote:
+        case pcmk_on_fail_reset_remote:
             if (history->rsc->remote_reconnect_ms == 0) {
                 /* With no reconnect interval, the connection is allowed to
                  * start again after the remote node is fenced and
@@ -4235,7 +4235,7 @@ update_resource_state(struct action_history *history, int exit_status,
                  * for the failure to be cleared entirely before attempting
                  * to reconnect.)
                  */
-                *on_fail = action_fail_ignore;
+                *on_fail = pcmk_on_fail_ignore;
                 pe__set_next_role(history->rsc, pcmk_role_unknown,
                                   "clear past failures and reset remote");
             }
@@ -4536,7 +4536,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     int old_rc = 0;
     bool expired = false;
     pe_resource_t *parent = rsc;
-    enum action_fail_response failure_strategy = action_fail_recover;
+    enum action_fail_response failure_strategy = pcmk_on_fail_restart;
 
     struct action_history history = {
         .rsc = rsc,
@@ -4621,7 +4621,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 
         case PCMK_EXEC_NOT_INSTALLED:
             failure_strategy = get_action_on_fail(&history);
-            if (failure_strategy == action_fail_ignore) {
+            if (failure_strategy == pcmk_on_fail_ignore) {
                 crm_warn("Cannot ignore failed %s of %s on %s: "
                          "Resource agent doesn't exist "
                          CRM_XS " status=%d rc=%d id=%s",
@@ -4629,7 +4629,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                          history.execution_status, history.exit_status,
                          history.id);
                 /* Also for printing it as "FAILED" by marking it as pe_rsc_failed later */
-                *on_fail = action_fail_migrate;
+                *on_fail = pcmk_on_fail_ban;
             }
             resource_location(parent, node, -INFINITY, "hard-error",
                               rsc->cluster);
@@ -4663,8 +4663,8 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     }
 
     failure_strategy = get_action_on_fail(&history);
-    if ((failure_strategy == action_fail_ignore)
-        || (failure_strategy == action_fail_restart_container
+    if ((failure_strategy == pcmk_on_fail_ignore)
+        || ((failure_strategy == pcmk_on_fail_restart_container)
             && (strcmp(history.task, PCMK_ACTION_STOP) == 0))) {
 
         char *last_change_s = last_change_str(xml_op);
@@ -4684,8 +4684,8 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 
         record_failed_op(&history);
 
-        if ((failure_strategy == action_fail_restart_container)
-            && cmp_on_fail(*on_fail, action_fail_recover) <= 0) {
+        if ((failure_strategy == pcmk_on_fail_restart_container)
+            && cmp_on_fail(*on_fail, pcmk_on_fail_restart) <= 0) {
             *on_fail = failure_strategy;
         }
 
