@@ -70,6 +70,7 @@
 /* notify sub-types */
 #  define T_CIB_PRE_NOTIFY	"cib_pre_notify"
 #  define T_CIB_POST_NOTIFY	"cib_post_notify"
+#  define T_CIB_TRANSACTION	"cib_transaction"
 #  define T_CIB_UPDATE_CONFIRM	"cib_update_confirmation"
 #  define T_CIB_REPLACE_NOTIFY	"cib_refresh_notify"
 
