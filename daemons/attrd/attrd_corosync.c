@@ -134,10 +134,10 @@ static void
 attrd_cpg_destroy(gpointer unused)
 {
     if (attrd_shutting_down(false)) {
-        crm_info("Corosync disconnection complete");
+        crm_info("Disconnected from Corosync process group");
 
     } else {
-        crm_crit("Lost connection to cluster layer, shutting down");
+        crm_crit("Lost connection to Corosync process group, shutting down");
         attrd_exit_status = CRM_EX_DISCONNECT;
         attrd_shutdown(0);
     }

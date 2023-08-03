@@ -57,7 +57,6 @@ void attrd_run_mainloop(void);
 void attrd_set_requesting_shutdown(void);
 void attrd_clear_requesting_shutdown(void);
 void attrd_free_waitlist(void);
-bool attrd_requesting_shutdown(void);
 bool attrd_shutting_down(bool if_requested);
 void attrd_shutdown(int nsig);
 void attrd_init_ipc(void);

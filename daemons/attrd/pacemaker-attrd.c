@@ -71,10 +71,10 @@ attrd_cib_destroy_cb(gpointer user_data)
     conn->cmds->signoff(conn);  /* Ensure IPC is cleaned up */
 
     if (attrd_shutting_down(false)) {
-        crm_info("Connection disconnection complete");
+        crm_info("Disconnected from the CIB manager");
 
     } else {
-        /* eventually this should trigger a reconnect, not a shutdown */
+        // @TODO This should trigger a reconnect, not a shutdown
         crm_crit("Lost connection to the CIB manager, shutting down");
         attrd_exit_status = CRM_EX_DISCONNECT;
         attrd_shutdown(0);
