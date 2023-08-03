@@ -541,7 +541,7 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
 {
     CRM_CHECK((cib != NULL) && (op_msg != NULL), return -EPROTO);
 
-    *op_msg = create_xml_node(NULL, "cib_command");
+    *op_msg = create_xml_node(NULL, T_CIB_COMMAND);
     if (*op_msg == NULL) {
         return -EPROTO;
     }
@@ -551,7 +551,7 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
         cib->call_id = 1;
     }
 
-    crm_xml_add(*op_msg, F_XML_TAGNAME, "cib_command");
+    crm_xml_add(*op_msg, F_XML_TAGNAME, T_CIB_COMMAND);
     crm_xml_add(*op_msg, F_TYPE, T_CIB);
     crm_xml_add(*op_msg, F_CIB_OPERATION, op);
     crm_xml_add(*op_msg, F_CIB_HOST, host);

@@ -65,6 +65,7 @@
 #  define F_CIB_CHANGE_SECTION  "cib_change_section"
 
 #  define T_CIB			"cib"
+#  define T_CIB_COMMAND		"cib_command"
 #  define T_CIB_NOTIFY		"cib_notify"
 /* notify sub-types */
 #  define T_CIB_PRE_NOTIFY	"cib_pre_notify"
