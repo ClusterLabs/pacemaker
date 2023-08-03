@@ -1400,7 +1400,9 @@ metadata_complete(int pid, const pcmk__action_result_t *result, void *user_data)
         md = controld_cache_metadata(lrm_state->metadata_cache, data->rsc,
                                      result->action_stdout);
     }
-    do_lrm_rsc_op(lrm_state, data->rsc, data->input_xml, md);
+    if (!pcmk_is_set(controld_globals.fsa_input_register, R_HA_DISCONNECTED)) {
+        do_lrm_rsc_op(lrm_state, data->rsc, data->input_xml, md);
+    }
     free_metadata_cb_data(data);
 }
 
