@@ -49,18 +49,10 @@ static const cib__operation_t cib_ops[] = {
         |cib__op_attr_privileged
         |cib__op_attr_transaction
     },
-
-    /* PCMK__CIB_REQUEST_COMMIT_TRANSACT requests must be processed locally
-     * because they depend on the client table. Requests that manage
-     * transactions on other nodes would likely be problematic in many other
-     * ways as well.
-     */
     {
-        // @TODO: Consider removing local
         PCMK__CIB_REQUEST_COMMIT_TRANSACT, cib__op_commit_transact,
         cib__op_attr_modifies
         |cib__op_attr_privileged
-        |cib__op_attr_local
         |cib__op_attr_replaces
         |cib__op_attr_writes_through
     },

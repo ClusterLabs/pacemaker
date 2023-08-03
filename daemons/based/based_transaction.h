@@ -14,8 +14,11 @@
 
 #include <libxml/tree.h>
 
+char *based_transaction_source_str(const pcmk__client_t *client,
+                                   const char *origin);
+
 int based_commit_transaction(xmlNodePtr transaction,
                              const pcmk__client_t *client,
-                             xmlNodePtr *result_cib);
+                             const char *origin, xmlNodePtr *result_cib);
 
 #endif // BASED_TRANSACTION__H

@@ -668,19 +668,6 @@ parse_local_options(const pcmk__client_t *cib_client,
                     gboolean *needs_reply, gboolean *process,
                     gboolean *needs_forward)
 {
-    if (pcmk_is_set(call_options, cib_transaction)) {
-        /* Process locally and don't notify local client.
-         *
-         * Reaching cib_process_request() with cib_transaction set means we're
-         * committing a transaction (always local and atomic).
-         */
-        *process = TRUE;
-        *needs_reply = FALSE;
-        *local_notify = FALSE;
-        *needs_forward = FALSE;
-        return;
-    }
-
     if(cib_legacy_mode()) {
         parse_local_options_v1(cib_client, operation, call_options, host,
                                op, local_notify, needs_reply, process,
@@ -1113,6 +1100,20 @@ cib_process_request(xmlNode *request, gboolean privileged,
     } else if (!parse_peer_options(operation, request, &local_notify,
                                    &needs_reply, &process)) {
         return rc;
+    }
+
+    if (pcmk_is_set(call_options, cib_transaction)) {
+        /* All requests in a transaction are processed locally against a working
+         * CIB copy, and we don't notify for individual requests because the
+         * entire transaction is atomic.
+         *
+         * We still call the option parser functions above, for the sake of log
+         * messages and checking whether we're the target for peer requests.
+         */
+        process = TRUE;
+        needs_reply = FALSE;
+        local_notify = FALSE;
+        needs_forward = FALSE;
     }
 
     is_update = pcmk_is_set(operation->flags, cib__op_attr_modifies);
@@ -1607,18 +1608,6 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
             // @TODO: Should update argument be result_cib instead of the_cib?
             cib_replace_notify(op, rc, call_id, client_id, client_name, origin,
                                the_cib, *cib_diff, change_sections);
-        }
-
-        /* Commit-transaction is special. We process it and activate the result
-         * only locally, but we still need to sync the updated CIB to all nodes.
-         * However, if we run the sync within cib_process_commit_transaction(),
-         * it will be rejected locally due to an older epoch in the replacement
-         * CIB. cib_perform_op() updates the epoch via xml_create_patchset()
-         * after cib_process_commit_transaction() has already returned.
-         */
-        if (pcmk__str_eq(op, PCMK__CIB_REQUEST_COMMIT_TRANSACT,
-                         pcmk__str_none)) {
-            sync_our_cib(request, TRUE);
         }
 
         mainloop_timer_stop(digest_timer);

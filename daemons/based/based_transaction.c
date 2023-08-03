@@ -16,21 +16,51 @@
 
 /*!
  * \internal
+ * \brief Create a string describing the source of a commit-transaction request
+ *
+ * \param[in] client  CIB client
+ * \param[in] origin  Host where the commit request originated
+ *
+ * \return String describing the request source
+ *
+ * \note The caller is responsible for freeing the return value using \c free().
+ */
+char *
+based_transaction_source_str(const pcmk__client_t *client, const char *origin)
+{
+    char *source = NULL;
+
+    if (client != NULL) {
+        source = crm_strdup_printf("client %s (%s)%s%s",
+                                   pcmk__client_name(client),
+                                   pcmk__s(client->id, "unidentified"),
+                                   ((origin != NULL)? " on " : ""),
+                                   pcmk__s(origin, ""));
+
+    } else {
+        source = strdup((origin != NULL)? origin : "unknown source");
+    }
+
+    CRM_ASSERT(source != NULL);
+    return source;
+}
+
+/*!
+ * \internal
  * \brief Process requests in a transaction
  *
  * Stop when a request fails or when all requests have been processed.
  *
  * \param[in,out] transaction  Transaction to process
  * \param[in]     client       CIB client
+ * \param[in]     source       String describing the commit request source
  *
  * \return Standard Pacemaker return code
  */
 static int
-process_transaction_requests(xmlNodePtr transaction, const pcmk__client_t *client)
+process_transaction_requests(xmlNodePtr transaction,
+                             const pcmk__client_t *client, const char *source)
 {
-    const char *client_name = pcmk__client_name(client);
-    const char *client_id = pcmk__s(client->id, "unidentified");
-
     for (xmlNodePtr request = first_named_child(transaction, T_CIB_COMMAND);
          request != NULL; request = crm_next_same_xml(request)) {
 
@@ -54,16 +84,15 @@ process_transaction_requests(xmlNodePtr transaction, const pcmk__client_t *clien
         }
 
         if (rc != pcmk_rc_ok) {
-            crm_err("Aborting CIB transaction for client %s (%s) due to failed "
-                    "%s request: %s",
-                    client_name, client_id, op, pcmk_rc_str(rc));
+            crm_err("Aborting CIB transaction for %s due to failed %s request: "
+                    "%s",
+                    source, op, pcmk_rc_str(rc));
             crm_log_xml_info(request, "Failed request");
             return rc;
         }
 
-        crm_trace("Applied %s request to transaction working CIB for client %s "
-                  "(%s)",
-                  op, client_name, client_id);
+        crm_trace("Applied %s request to transaction working CIB for %s",
+                  op, source);
         crm_log_xml_trace(request, "Successful request");
     }
 
@@ -76,6 +105,7 @@ process_transaction_requests(xmlNodePtr transaction, const pcmk__client_t *clien
  *
  * \param[in]     transaction  Transaction to commit
  * \param[in]     client       CIB client
+ * \param[in]     origin       Host where the commit request originated
  * \param[in,out] result_cib   Where to store result CIB
  *
  * \return Standard Pacemaker return code
@@ -89,14 +119,13 @@ process_transaction_requests(xmlNodePtr transaction, const pcmk__client_t *clien
  */
 int
 based_commit_transaction(xmlNodePtr transaction, const pcmk__client_t *client,
-                         xmlNodePtr *result_cib)
+                         const char *origin, xmlNodePtr *result_cib)
 {
-    const char *client_name = NULL;
-    const char *client_id = NULL;
     xmlNodePtr saved_cib = the_cib;
     int rc = pcmk_rc_ok;
+    char *source = NULL;
 
-    CRM_ASSERT((client != NULL) && (result_cib != NULL));
+    CRM_ASSERT(result_cib != NULL);
 
     CRM_CHECK(pcmk__xe_is(transaction, T_CIB_TRANSACTION),
               return pcmk_rc_no_transaction);
@@ -111,20 +140,16 @@ based_commit_transaction(xmlNodePtr transaction, const pcmk__client_t *client,
     CRM_CHECK((*result_cib != NULL) && (*result_cib != the_cib),
               *result_cib = copy_xml(the_cib));
 
-    client_name = pcmk__client_name(client);
-    client_id = pcmk__s(client->id, "unidentified");
-
-    crm_trace("Committing transaction for client %s (%s) to working CIB",
-              client_name, client_id);
+    source = based_transaction_source_str(client, origin);
+    crm_trace("Committing transaction for %s to working CIB", source);
 
     // Apply all changes to a working copy of the CIB
     the_cib = *result_cib;
 
-    rc = process_transaction_requests(transaction, client);
+    rc = process_transaction_requests(transaction, client, origin);
 
-    crm_trace("Transaction commit %s for client %s (%s)",
-              ((rc == pcmk_rc_ok)? "succeeded" : "failed"), client_name,
-              client_id);
+    crm_trace("Transaction commit %s for %s",
+              ((rc == pcmk_rc_ok)? "succeeded" : "failed"), source);
 
     /* Some request types (for example, erase) may have freed the_cib (the
      * working copy) and pointed it at a new XML object. In that case, it
@@ -137,5 +162,6 @@ based_commit_transaction(xmlNodePtr transaction, const pcmk__client_t *client,
     // Point the_cib back to the unchanged original copy
     the_cib = saved_cib;
 
+    free(source);
     return rc;
 }

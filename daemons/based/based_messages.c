@@ -463,40 +463,19 @@ cib_process_commit_transaction(const char *op, int options, const char *section,
      * replace notification if appropriate, and sync *result_cib to all nodes.
      * On failure, our caller will free *result_cib.
      */
-
+    int rc = pcmk_rc_ok;
     const char *client_id = crm_element_value(req, F_CIB_CLIENTID);
-    pcmk__client_t *client = NULL;
+    const char *origin = crm_element_value(req, F_ORIG);
+    pcmk__client_t *client = pcmk__find_client_by_id(client_id);
 
-    const char *reason = NULL;
-    int rc = pcmk_ok;
+    rc = based_commit_transaction(input, client, origin, result_cib);
 
-    if (client_id == NULL) {
-        reason = "No client ID";
-        rc = -EINVAL;
-        goto done;
-    }
-
-    client = pcmk__find_client_by_id(client_id);
-    if (client == NULL) {
-        reason = "Client not found";
-        rc = -ENXIO;
-        goto done;
-    }
-
-    rc = based_commit_transaction(input, client, result_cib);
     if (rc != pcmk_rc_ok) {
-        reason = pcmk_rc_str(rc);
-        rc = pcmk_rc2legacy(rc);
-    }
+        char *source = based_transaction_source_str(client, origin);
 
-done:
-    if (rc != pcmk_ok) {
-        const char *client_name = crm_element_value(req, F_CIB_CLIENTNAME);
-
-        crm_err("Could not commit transaction for client %s (%s): %s",
-                pcmk__s(client_name, "unspecified"),
-                pcmk__s(client_id, "unknown"),
-                pcmk__s(reason, "unknown reason (bug?)"));
+        crm_err("Could not commit transaction for %s: %s",
+                source, pcmk_rc_str(rc));
+        free(source);
     }
-    return rc;
+    return pcmk_rc2legacy(rc);
 }
