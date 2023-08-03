@@ -70,7 +70,7 @@ attrd_cib_destroy_cb(gpointer user_data)
 
     conn->cmds->signoff(conn);  /* Ensure IPC is cleaned up */
 
-    if (attrd_shutting_down()) {
+    if (attrd_shutting_down(false)) {
         crm_info("Connection disconnection complete");
 
     } else {

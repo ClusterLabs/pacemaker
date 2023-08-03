@@ -56,26 +56,22 @@ attrd_clear_requesting_shutdown(void)
 
 /*!
  * \internal
- * \brief Check whether we're currently requesting shutdown
+ * \brief Check whether local attribute manager is shutting down
  *
- * \return true if requesting shutdown, false otherwise
+ * \param[in] if_requested  Also consider presence of "shutdown" attribute
+ *
+ * \return \c true if local attribute manager has begun shutdown sequence
+ *         or (if \p if_requested is \c true) whether local node has a nonzero
+ *         "shutdown" attribute set, otherwise \c false
+ * \note Most callers should pass \c false for \p if_requested, because the
+ *       attribute manager needs to continue performing while the controller is
+ *       shutting down, and even needs to be eligible for election in case all
+ *       nodes are shutting down.
  */
 bool
-attrd_requesting_shutdown(void)
+attrd_shutting_down(bool if_requested)
 {
-    return requesting_shutdown;
-}
-
-/*!
- * \internal
- * \brief Check whether we're currently shutting down
- *
- * \return true if shutting down, false otherwise
- */
-bool
-attrd_shutting_down(void)
-{
-    return shutting_down;
+    return shutting_down || (if_requested && requesting_shutdown);
 }
 
 /*!
@@ -151,7 +147,7 @@ attrd_cib_replaced_cb(const char *event, xmlNode * msg)
 {
     int change_section = cib_change_section_nodes | cib_change_section_status | cib_change_section_alerts;
 
-    if (attrd_requesting_shutdown() || attrd_shutting_down()) {
+    if (attrd_shutting_down(true)) {
         return;
     }
 

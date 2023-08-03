@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2022 the Pacemaker project contributors
+ * Copyright 2013-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,7 +22,7 @@ attrd_election_cb(gpointer user_data)
 {
     attrd_declare_winner();
 
-    if (attrd_requesting_shutdown() || attrd_shutting_down()) {
+    if (attrd_shutting_down(true)) {
         /* This node is shutting down or about to, meaning its attributes will
          * be removed (and may have already been removed from the CIB by a
          * controller). Don't sync or write its attributes in this case.
@@ -56,7 +56,7 @@ attrd_start_election_if_needed(void)
 {
     if ((peer_writer == NULL)
         && (election_state(writer) != election_in_progress)
-        && !attrd_shutting_down()) {
+        && !attrd_shutting_down(false)) {
 
         crm_info("Starting an election to determine the writer");
         election_vote(writer);
@@ -78,7 +78,7 @@ attrd_handle_election_op(const crm_node_t *peer, xmlNode *xml)
     crm_xml_add(xml, F_CRM_HOST_FROM, peer->uname);
 
     // Don't become writer if we're shutting down
-    rc = election_count_vote(writer, xml, !attrd_shutting_down());
+    rc = election_count_vote(writer, xml, !attrd_shutting_down(false));
 
     switch(rc) {
         case election_start:

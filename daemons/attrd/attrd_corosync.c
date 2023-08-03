@@ -48,7 +48,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
         return;
     }
 
-    if (attrd_shutting_down()) {
+    if (attrd_shutting_down(false)) {
         /* If we're shutting down, we want to continue responding to election
          * ops as long as we're a cluster member (because our vote may be
          * needed). Ignore all other messages.
@@ -133,7 +133,7 @@ attrd_cpg_dispatch(cpg_handle_t handle,
 static void
 attrd_cpg_destroy(gpointer unused)
 {
-    if (attrd_shutting_down()) {
+    if (attrd_shutting_down(false)) {
         crm_info("Corosync disconnection complete");
 
     } else {
