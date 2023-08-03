@@ -145,8 +145,11 @@ static GOptionEntry required_entries[] = {
 
 static GOptionEntry command_entries[] = {
     { "update", 'U', 0, G_OPTION_ARG_CALLBACK, command_cb,
-      "Update attribute's value in pacemaker-attrd. If this causes the value\n"
-      INDENT "to change, it will also be updated in the cluster configuration.",
+      "Update attribute's value. Required: -n/--name or -P/--pattern.\n"
+      INDENT "Optional: -d/--delay (if specified, the delay will be used if\n"
+      INDENT "the attribute needs to be created, but ignored if the\n"
+      INDENT "attribute already exists), -s/--set, -p/--private, -W/--wait,\n"
+      INDENT "-z/--utilization.",
       "VALUE" },
 
     { "update-both", 'B', 0, G_OPTION_ARG_CALLBACK, command_cb,
