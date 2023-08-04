@@ -1295,26 +1295,10 @@ prepare_input(const xmlNode *request, enum cib__op_type type,
             }
             break;
 
-        case cib__op_commit_transact:
-            // We're not looking for XML_TAG_CIB; we want the raw call data
-            return get_message_xml(request, F_CIB_CALLDATA);
-
         default:
             input = get_message_xml(request, F_CIB_CALLDATA);
             *section = crm_element_value(request, F_CIB_SECTION);
             break;
-    }
-
-    if (input == NULL) {
-        return NULL;
-    }
-
-    /* @TODO: Remove? F_CIB_CALLDATA shouldn't be the child of F_CIB_CALLDATA,
-     * and it probably never was.
-     */
-    if (pcmk__str_any_of((const char *) input->name, F_CRM_DATA, F_CIB_CALLDATA,
-                         NULL)) {
-        input = first_named_child(input, XML_TAG_CIB);
     }
 
     // Grab the specified section
