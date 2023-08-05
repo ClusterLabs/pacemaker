@@ -388,7 +388,7 @@ cib_client_erase(cib_t * cib, xmlNode ** output_data, int call_options)
 }
 
 static int
-cib_client_init_transaction(cib_t *cib, int call_options)
+cib_client_init_transaction(cib_t *cib)
 {
     int rc = pcmk_rc_ok;
 

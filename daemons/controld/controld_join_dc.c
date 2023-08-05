@@ -765,7 +765,7 @@ do_dc_join_ack(long long action,
      *
      * The delete and modify requests are part of an atomic transaction.
      */
-    rc = cib->cmds->init_transaction(cib, cib_scope_local);
+    rc = cib->cmds->init_transaction(cib);
     if (rc != pcmk_ok) {
         goto done;
     }

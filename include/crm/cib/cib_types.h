@@ -277,12 +277,10 @@ typedef struct cib_api_operations_s {
      * An \c init_transaction() call is always synchronous.
      *
      * \param[in,out] cib           CIB connection
-     * \param[in]     call_options  Group of <tt>enum cib_call_options</tt>
-     *                              flags
      *
      * \return Legacy Pacemaker return code
      */
-    int (*init_transaction)(cib_t *cib, int call_options);
+    int (*init_transaction)(cib_t *cib);
 
     /*!
      * \brief End and optionally commit this client's CIB transaction
