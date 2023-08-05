@@ -59,6 +59,8 @@ enum cib_call_options {
     cib_discard_reply   = (1 << 4),
     cib_no_children     = (1 << 5),
     cib_xpath_address   = (1 << 6),
+
+    //! \deprecated This value will be removed in a future release
     cib_mixed_update    = (1 << 7),
 
     /* @COMPAT: cib_scope_local is processed only in the legacy function

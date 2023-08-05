@@ -497,7 +497,8 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
         }
     }
 
-    if(options & cib_mixed_update) {
+    // @COMPAT cib_mixed_update is deprecated as of 2.1.7
+    if (pcmk_is_set(options, cib_mixed_update)) {
         int max = 0, lpc;
         xmlXPathObjectPtr xpathObj = xpath_search(*result_cib, "//@__delete__");
 
