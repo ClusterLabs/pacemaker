@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <errno.h>
+#include <inttypes.h>   // PRIu32
 #include <stdbool.h>
 #include <stdlib.h>
 #include <glib.h>
@@ -121,48 +122,86 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *use
     }
 }
 
-static void
-build_update_element(xmlNode *parent, attribute_t *a, const char *nodeid, const char *value)
+static int
+update_attr(attribute_t *a, const char *set_type, const char *nodeid,
+            const char *value)
 {
-    const char *set = NULL;
-    xmlNode *xml_obj = NULL;
+    char *set_id = NULL;
+    char *attr_id = NULL;
+    int rc = pcmk_ok;
 
-    xml_obj = create_xml_node(parent, XML_CIB_TAG_STATE);
-    crm_xml_add(xml_obj, XML_ATTR_ID, nodeid);
-
-    xml_obj = create_xml_node(xml_obj, XML_TAG_TRANSIENT_NODEATTRS);
-    crm_xml_add(xml_obj, XML_ATTR_ID, nodeid);
-
-    if (pcmk__str_eq(a->set_type, XML_TAG_ATTR_SETS, pcmk__str_null_matches)) {
-        xml_obj = create_xml_node(xml_obj, XML_TAG_ATTR_SETS);
-    } else if (pcmk__str_eq(a->set_type, XML_TAG_UTILIZATION, pcmk__str_none)) {
-        xml_obj = create_xml_node(xml_obj, XML_TAG_UTILIZATION);
+    if (a->set_id != NULL) {
+        pcmk__str_update(&set_id, a->set_id);
     } else {
-        crm_err("Unknown set type attribute: %s", a->set_type);
+        set_id = crm_strdup_printf("%s-%s", XML_CIB_TAG_STATUS, nodeid);
+    }
+    crm_xml_sanitize_id(set_id);
+
+    if (a->uuid != NULL) {
+        pcmk__str_update(&attr_id, a->uuid);
+    } else {
+        attr_id = crm_strdup_printf("%s-%s", set_id, a->id);
+    }
+    crm_xml_sanitize_id(attr_id);
+
+    if (value != NULL) {
+        xmlNode *update = create_xml_node(NULL, XML_CIB_TAG_STATE);
+        xmlNode *child = update;
+
+        rc = -ENOMEM;   // For any failed create_xml_node() call
+        if (child == NULL) {
+            goto done;
+        }
+        crm_xml_add(child, XML_ATTR_ID, nodeid);
+
+        child = create_xml_node(child, XML_TAG_TRANSIENT_NODEATTRS);
+        if (child == NULL) {
+            goto done;
+        }
+        crm_xml_add(child, XML_ATTR_ID, nodeid);
+
+        child = create_xml_node(child, set_type);
+        if (child == NULL) {
+            goto done;
+        }
+        crm_xml_add(child, XML_ATTR_ID, set_id);
+
+        child = create_xml_node(child, XML_CIB_TAG_NVPAIR);
+        if (child == NULL) {
+            goto done;
+        }
+        crm_xml_add(child, XML_ATTR_ID, attr_id);
+        crm_xml_add(child, XML_NVPAIR_ATTR_NAME, a->id);
+        crm_xml_add(child, XML_NVPAIR_ATTR_VALUE, value);
+
+        rc = cib_internal_op(the_cib, PCMK__CIB_REQUEST_MODIFY, NULL,
+                             XML_CIB_TAG_STATUS, update, NULL,
+                             cib_can_create|cib_transaction, a->user);
+        free_xml(update);
+
+    } else {
+#define XPATH_ATTR "/" XML_CIB_TAG_STATUS                           \
+                   "/" XML_CIB_TAG_STATE "[@" XML_ATTR_ID "='%s']"  \
+                   "/" XML_TAG_TRANSIENT_NODEATTRS                  \
+                       "[@" XML_ATTR_ID "='%s']"                    \
+                   "/%s[@" XML_ATTR_ID "='%s']"                     \
+                   "/" XML_CIB_TAG_NVPAIR                           \
+                       "[@" XML_ATTR_ID "='%s' "                    \
+                       "and @" XML_NVPAIR_ATTR_NAME "='%s']"
+
+        char *xpath = crm_strdup_printf(XPATH_ATTR,
+                                        nodeid, nodeid, set_type, set_id,
+                                        attr_id, a->id);
+
+        rc = cib_internal_op(the_cib, PCMK__CIB_REQUEST_DELETE, NULL, xpath,
+                             NULL, NULL, cib_xpath|cib_transaction, a->user);
+        free(xpath);
     }
 
-    if (a->set_id) {
-        crm_xml_set_id(xml_obj, "%s", a->set_id);
-    } else {
-        crm_xml_set_id(xml_obj, "%s-%s", XML_CIB_TAG_STATUS, nodeid);
-    }
-    set = ID(xml_obj);
-
-    xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_NVPAIR);
-    if (a->uuid) {
-        crm_xml_set_id(xml_obj, "%s", a->uuid);
-    } else {
-        crm_xml_set_id(xml_obj, "%s-%s", set, a->id);
-    }
-    crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, a->id);
-
-    if(value) {
-        crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, value);
-
-    } else {
-        crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, "");
-        crm_xml_add(xml_obj, "__delete__", XML_NVPAIR_ATTR_VALUE);
-    }
+done:
+    free(set_id);
+    free(attr_id);
+    return rc;
 }
 
 static void
@@ -206,11 +245,11 @@ void
 attrd_write_attribute(attribute_t *a, bool ignore_delay)
 {
     int private_updates = 0, cib_updates = 0;
-    xmlNode *xml_top = NULL;
+    const char *set_type = NULL;
     attribute_value_t *v = NULL;
     GHashTableIter iter;
-    enum cib_call_options flags = cib_none;
     GHashTable *alert_attribute_value = NULL;
+    int rc = pcmk_ok;
 
     if (a == NULL) {
         return;
@@ -242,8 +281,29 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
             }
         }
 
-        /* Initialize the status update XML */
-        xml_top = create_xml_node(NULL, XML_CIB_TAG_STATUS);
+        // Initiate a transaction for all the peer value updates
+        rc = the_cib->cmds->init_transaction(the_cib);
+        if (rc != pcmk_ok) {
+            crm_err("Failed to write %s (id %s, set %s): Could not initiate "
+                    "CIB transaction",
+                    a->id, pcmk__s(a->uuid, "n/a"), pcmk__s(a->set_id, "n/a"));
+            return;
+        }
+
+        if (pcmk__str_eq(a->set_type, XML_TAG_ATTR_SETS,
+                         pcmk__str_null_matches)) {
+            set_type = XML_TAG_ATTR_SETS;
+
+        } else if (pcmk__str_eq(a->set_type, XML_TAG_UTILIZATION,
+                                pcmk__str_none)) {
+            set_type = XML_TAG_UTILIZATION;
+
+        } else {
+            crm_err("Failed to write %s (id %s, set %s): Unknown set type %s",
+                    a->id, pcmk__s(a->uuid, "n/a"), pcmk__s(a->set_id, "n/a"),
+                    a->set_type);
+            goto done;
+        }
     }
 
     /* Attribute will be written shortly, so clear changed flag */
@@ -291,11 +351,20 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
             continue;
         }
 
-        /* Add this value to status update XML */
-        crm_debug("Updating %s[%s]=%s (peer known as %s, UUID %s, ID %u/%u)",
+        // Update this value as part of the CIB transaction we're building
+        crm_debug("Updating %s[%s]=%s (peer known as %s, UUID %s, ID "
+                  "%" PRIu32 "/%" PRIu32 ")",
                   a->id, v->nodename, v->current,
                   peer->uname, peer->uuid, peer->id, v->nodeid);
-        build_update_element(xml_top, a, peer->uuid, v->current);
+
+        rc = update_attr(a, set_type, peer->uuid, v->current);
+        if (rc != pcmk_ok) {
+            crm_err("Failed to update %s[%s]=%s (peer known as %s, UUID %s, "
+                    "ID %" PRIu32 "/%" PRIu32 "): %s",
+                    a->id, v->nodename, v->current, peer->uname, peer->uuid,
+                    peer->id, v->nodeid, pcmk_strerror(rc));
+            continue;
+        }
         cib_updates++;
 
         /* Preservation of the attribute to transmit alert */
@@ -305,12 +374,6 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
         v->requested = NULL;
         if (v->current) {
             v->requested = strdup(v->current);
-        } else {
-            /* Older attrd versions don't know about the cib_mixed_update
-             * flag so make sure it goes to the local cib which does
-             */
-            cib__set_call_options(flags, crm_system_name,
-                                  cib_mixed_update|cib_scope_local);
         }
     }
 
@@ -319,28 +382,33 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
                  private_updates, pcmk__plural_s(private_updates),
                  a->id, pcmk__s(a->uuid, "n/a"), pcmk__s(a->set_id, "n/a"));
     }
-    if (cib_updates) {
-        crm_log_xml_trace(xml_top, __func__);
+    if (cib_updates > 0) {
+        char *id = NULL;
 
-        a->update = cib_internal_op(the_cib, PCMK__CIB_REQUEST_MODIFY, NULL,
-                                    XML_CIB_TAG_STATUS, xml_top, NULL, flags,
-                                    a->user);
+        // Call cib_internal_op() directly to pass a->user
+        a->update = cib_internal_op(the_cib, PCMK__CIB_REQUEST_COMMIT_TRANSACT,
+                                    NULL, NULL, the_cib->transaction, NULL,
+                                    cib_none, a->user);
 
         crm_info("Sent CIB request %d with %d change%s for %s (id %s, set %s)",
                  a->update, cib_updates, pcmk__plural_s(cib_updates),
                  a->id, pcmk__s(a->uuid, "n/a"), pcmk__s(a->set_id, "n/a"));
 
-        the_cib->cmds->register_callback_full(the_cib, a->update,
-                                              CIB_OP_TIMEOUT_S, FALSE,
-                                              strdup(a->id),
-                                              "attrd_cib_callback",
-                                              attrd_cib_callback, free);
-        /* Transmit alert of the attribute */
-        send_alert_attributes_value(a, alert_attribute_value);
+        pcmk__str_update(&id, a->id);
+        if (the_cib->cmds->register_callback_full(the_cib, a->update,
+                                                  CIB_OP_TIMEOUT_S, FALSE, id,
+                                                  "attrd_cib_callback",
+                                                  attrd_cib_callback, free)) {
+            // Transmit alert of the attribute
+            send_alert_attributes_value(a, alert_attribute_value);
+        }
     }
 
-    g_hash_table_destroy(alert_attribute_value);
-    free_xml(xml_top);
+done:
+    the_cib->cmds->end_transaction(the_cib, false, cib_none);
+    if (alert_attribute_value != NULL) {
+        g_hash_table_destroy(alert_attribute_value);
+    }
 }
 
 void
