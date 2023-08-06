@@ -46,7 +46,6 @@ void hash2smartfield(gpointer key, gpointer value, gpointer user_data);
 GHashTable *xml2list(const xmlNode *parent);
 
 const char *crm_xml_add(xmlNode *node, const char *name, const char *value);
-const char *crm_xml_replace(xmlNode *node, const char *name, const char *value);
 const char *crm_xml_add_int(xmlNode *node, const char *name, int value);
 const char *crm_xml_add_ll(xmlNode *node, const char *name, long long value);
 const char *crm_xml_add_ms(xmlNode *node, const char *name, guint ms);

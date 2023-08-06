@@ -11,6 +11,7 @@
 #  define PCMK__CRM_COMMON_UTIL_COMPAT__H
 
 #  include <glib.h>
+#  include <libxml/tree.h>
 #  include <crm/common/util.h>
 
 #ifdef __cplusplus
@@ -71,6 +72,9 @@ int pcmk_scan_nvpair(const char *input, char **name, char **value);
 //! \deprecated Use a standard printf()-style function instead
 char *pcmk_format_nvpair(const char *name, const char *value,
                          const char *units);
+
+//! \deprecated Use \c crm_xml_add() or \c xml_remove_prop() instead
+const char *crm_xml_replace(xmlNode *node, const char *name, const char *value);
 
 //! \deprecated Use a standard printf()-style function instead
 char *pcmk_format_named_time(const char *name, time_t epoch_time);
