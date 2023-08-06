@@ -127,6 +127,17 @@ AC_CHECK_SIZEOF(long long)
 dnl ===============================================
 dnl Helpers
 dnl ===============================================
+# latest_schema_version $schema_dir
+#
+# Use git if available to list managed RNGs, in case there are leftover schema
+# files from an earlier build of a different version. Otherwise, check all RNGs.
+latest_schema_version() {
+    local files=$(git ls-files "$1"/*.rng 2>/dev/null)
+    AS_IF([test x"$files" = x""], [files=$(ls -1 "$1"/*.rng)])
+    echo "$files" | sed -n -e 's/^.*-\([[0-9]][[0-9.]]*\).rng$/\1/p' dnl
+                  | sort -V | tail -1
+}
+
 cc_supports_flag() {
     local CFLAGS="-Werror $@"
     AC_MSG_CHECKING([whether $CC supports $@])
@@ -355,17 +366,13 @@ VERSION_ARG(VERSION_NUMBER)
 PACKAGE_VERSION=$PACEMAKER_VERSION
 VERSION=$PACEMAKER_VERSION
 
-# Detect highest API schema version (use git if available to list managed RNGs,
-# in case there are leftover schema files from an earlier build of a different
-# version, otherwise check all RNGs)
-API_VERSION=$({ git ls-files xml/api/*.rng 2>/dev/null || ls -1 xml/api/*.rng ; } dnl
-              | sed -n -e 's/^.*-\([[0-9]][[0-9.]]*\).rng$/\1/p' | sort -V | tail -1)
+# Detect highest API schema version
+API_VERSION=$(latest_schema_version "xml/api")
 AC_DEFINE_UNQUOTED([PCMK__API_VERSION], ["$API_VERSION"],
                    [Highest API schema version])
 
 # Detect highest CIB schema version
-CIB_VERSION=$({ git ls-files xml/*.rng 2>/dev/null || ls -1 xml/*.rng ; } dnl
-              | sed -n -e 's/^.*-\([[0-9]][[0-9.]]*\).rng$/\1/p' | sort -V | tail -1)
+CIB_VERSION=$(latest_schema_version "xml")
 AC_SUBST(CIB_VERSION)
 
 # Re-run configure at next make if any RNG changes, to re-detect highest
