@@ -1714,6 +1714,10 @@ pcmk__xml2fd(int fd, xmlNode *cur)
 void
 xml_remove_prop(xmlNode * obj, const char *name)
 {
+    if (crm_element_value(obj, name) == NULL) {
+        return;
+    }
+
     if (pcmk__check_acl(obj, NULL, pcmk__xf_acl_write) == FALSE) {
         crm_trace("Cannot remove %s from %s", name, obj->name);
 

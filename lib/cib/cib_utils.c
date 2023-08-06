@@ -485,13 +485,29 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
 
             /* Does the CIB support the "update-*" attributes... */
             if (current_schema >= minimum_schema) {
+                /* Ensure values of origin, client, and user in scratch match
+                 * the values in req
+                 */
                 const char *origin = crm_element_value(req, F_ORIG);
+                const char *client = crm_element_value(req, F_CIB_CLIENTNAME);
 
-                CRM_LOG_ASSERT(origin != NULL);
-                crm_xml_replace(scratch, XML_ATTR_UPDATE_ORIG, origin);
-                crm_xml_replace(scratch, XML_ATTR_UPDATE_CLIENT,
-                                crm_element_value(req, F_CIB_CLIENTNAME));
-                crm_xml_replace(scratch, XML_ATTR_UPDATE_USER, crm_element_value(req, F_CIB_USER));
+                if (origin != NULL) {
+                    crm_xml_add(scratch, XML_ATTR_UPDATE_ORIG, origin);
+                } else {
+                    xml_remove_prop(scratch, XML_ATTR_UPDATE_ORIG);
+                }
+
+                if (client != NULL) {
+                    crm_xml_add(scratch, XML_ATTR_UPDATE_CLIENT, user);
+                } else {
+                    xml_remove_prop(scratch, XML_ATTR_UPDATE_CLIENT);
+                }
+
+                if (user != NULL) {
+                    crm_xml_add(scratch, XML_ATTR_UPDATE_USER, user);
+                } else {
+                    xml_remove_prop(scratch, XML_ATTR_UPDATE_USER);
+                }
             }
         }
     }
