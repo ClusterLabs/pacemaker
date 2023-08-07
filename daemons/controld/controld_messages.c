@@ -335,15 +335,25 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     bool is_for_crm = false;
     bool is_for_cib = false;
     bool is_local = false;
-    const char *host_to = crm_element_value(msg, F_CRM_HOST_TO);
-    const char *sys_to = crm_element_value(msg, F_CRM_SYS_TO);
-    const char *sys_from = crm_element_value(msg, F_CRM_SYS_FROM);
-    const char *type = crm_element_value(msg, F_TYPE);
-    const char *task = crm_element_value(msg, F_CRM_TASK);
-    const char *ref = crm_element_value(msg, XML_ATTR_REFERENCE);
+    bool broadcast = false;
+    const char *host_to = NULL;
+    const char *sys_to = NULL;
+    const char *sys_from = NULL;
+    const char *type = NULL;
+    const char *task = NULL;
+    const char *ref = NULL;
     crm_node_t *node_to = NULL;
 
     CRM_CHECK(msg != NULL, return TRUE);
+
+    host_to = crm_element_value(msg, F_CRM_HOST_TO);
+    sys_to = crm_element_value(msg, F_CRM_SYS_TO);
+    sys_from = crm_element_value(msg, F_CRM_SYS_FROM);
+    type = crm_element_value(msg, F_TYPE);
+    task = crm_element_value(msg, F_CRM_TASK);
+    ref = crm_element_value(msg, XML_ATTR_REFERENCE);
+
+    broadcast = pcmk__str_empty(host_to);
 
     if (ref == NULL) {
         ref = "without reference ID";
@@ -379,7 +389,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
 
     // Check whether message should be processed locally
     is_local = false;
-    if (pcmk__str_empty(host_to)) {
+    if (broadcast) {
         if (is_for_dc || is_for_te) {
             is_local = false;
 
@@ -403,6 +413,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     } else if (pcmk__str_eq(controld_globals.our_nodename, host_to,
                             pcmk__str_casei)) {
         is_local = true;
+
     } else if (is_for_crm && pcmk__str_eq(task, CRM_OP_LRM_DELETE, pcmk__str_casei)) {
         xmlNode *msg_data = get_message_xml(msg, F_CRM_DATA);
         const char *mode = crm_element_value(msg_data, PCMK__XA_MODE);
@@ -437,7 +448,10 @@ relay_message(xmlNode * msg, gboolean originated_locally)
             crm_trace("Relay message %s to DC (via %s)",
                       ref, pcmk__s(host_to, "broadcast"));
             crm_log_xml_trace(msg, "relayed");
-            send_cluster_message(host_to ? crm_get_peer(0, host_to) : NULL, dest, msg, TRUE);
+            if (!broadcast) {
+                node_to = crm_get_peer(0, host_to);
+            }
+            send_cluster_message(node_to, dest, msg, TRUE);
             return TRUE;
         }
 
@@ -468,7 +482,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         }
     }
 
-    if (host_to != NULL) {
+    if (!broadcast) {
         node_to = pcmk__search_cluster_node_cache(0, host_to, NULL);
         if (node_to == NULL) {
             crm_warn("Ignoring message %s because node %s is unknown",
@@ -481,7 +495,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     crm_trace("Relay message %s to %s",
               ref, pcmk__s(host_to, "all peers"));
     crm_log_xml_trace(msg, "relayed");
-    send_cluster_message((host_to == NULL)? NULL : node_to, dest, msg, TRUE);
+    send_cluster_message(node_to, dest, msg, TRUE);
     return TRUE;
 }
 
