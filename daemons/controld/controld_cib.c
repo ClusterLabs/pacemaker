@@ -153,6 +153,12 @@ do_cib_replaced(const char *event, xmlNode * msg)
         return;
     }
 
+    if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
+        crm_debug("Ignoring CIB replace notification because we're shutting "
+                  "down");
+        return;
+    }
+
     if ((crm_element_value_int(msg, F_CIB_CALLID, &call_id) == 0)
         && pcmk__str_eq(client_id, controld_globals.cib_client_id,
                         pcmk__str_none)
