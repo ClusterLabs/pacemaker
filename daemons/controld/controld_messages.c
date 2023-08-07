@@ -328,7 +328,7 @@ route_message(enum crmd_fsa_cause cause, xmlNode * input)
 gboolean
 relay_message(xmlNode * msg, gboolean originated_locally)
 {
-    int dest = 1;
+    enum crm_ais_msg_types dest = crm_msg_ais;
     bool is_for_dc = false;
     bool is_for_dcib = false;
     bool is_for_te = false;
@@ -379,6 +379,18 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         crm_warn("Ignoring invalid message %s with no " F_CRM_SYS_TO, ref);
         crm_log_xml_trace(msg, "ignored");
         return TRUE;
+    }
+
+    // Get the message type appropriate to the destination subsystem
+    if (is_corosync_cluster()) {
+        dest = text2msg_type(sys_to);
+        if ((dest < crm_msg_ais) || (dest > crm_msg_stonith_ng)) {
+            /* Unrecognized value, use a sane default
+             *
+             * @TODO Maybe we should bail instead
+             */
+            dest = crm_msg_crmd;
+        }
     }
 
     is_for_dc = (strcasecmp(CRM_SYSTEM_DC, sys_to) == 0);
@@ -442,9 +454,6 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         if (originated_locally
             && !pcmk__strcase_any_of(sys_from, CRM_SYSTEM_PENGINE,
                                      CRM_SYSTEM_TENGINE, NULL)) {
-            if (is_corosync_cluster()) {
-                dest = text2msg_type(sys_to);
-            }
             crm_trace("Relay message %s to DC (via %s)",
                       ref, pcmk__s(host_to, "broadcast"));
             crm_log_xml_trace(msg, "relayed");
@@ -472,14 +481,6 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         crm_log_xml_trace(msg, "IPC-relay");
         send_msg_via_ipc(msg, sys_to);
         return TRUE;
-    }
-
-    if (is_corosync_cluster()) {
-        dest = text2msg_type(sys_to);
-
-        if (dest == crm_msg_none || dest > crm_msg_stonith_ng) {
-            dest = crm_msg_crmd;
-        }
     }
 
     if (!broadcast) {
