@@ -1,6 +1,6 @@
 /*
  * Original copyright 2004 International Business Machines
- * Later changes copyright 2008-2021 the Pacemaker project contributors
+ * Later changes copyright 2008-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,6 +14,8 @@
 #include <libxml/tree.h>    // xmlNode
 
 #include <crm/msg_xml.h>
+#include <crm/common/cib.h>
+#include <crm/common/cib_internal.h>
 
 /*
  * Functions to help find particular sections of the CIB
@@ -99,7 +101,7 @@ static struct {
 };
 
 /*!
- * \brief Get the XPath needed to find a specified CIB element name
+ * \brief Get the relative XPath needed to find a specified CIB element name
  *
  * \param[in] element_name  Name of CIB element
  *
@@ -117,6 +119,23 @@ pcmk_cib_xpath_for(const char *element_name)
         }
     }
     return NULL;
+}
+
+/*!
+ * \internal
+ * \brief Get the absolute XPath needed to find a specified CIB element name
+ *
+ * \param[in] element  Name of CIB element
+ *
+ * \return XPath for finding \p element in CIB XML (or \c NULL if unknown)
+ */
+const char *
+pcmk__cib_abs_xpath_for(const char *element)
+{
+    const char *xpath = pcmk_cib_xpath_for(element);
+
+    // XPaths returned by pcmk_cib_xpath_for() are relative (starting with "//")
+    return ((xpath != NULL)? (xpath + 1) : NULL);
 }
 
 /*!
