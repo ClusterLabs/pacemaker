@@ -485,13 +485,29 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
 
             /* Does the CIB support the "update-*" attributes... */
             if (current_schema >= minimum_schema) {
+                /* Ensure values of origin, client, and user in scratch match
+                 * the values in req
+                 */
                 const char *origin = crm_element_value(req, F_ORIG);
+                const char *client = crm_element_value(req, F_CIB_CLIENTNAME);
 
-                CRM_LOG_ASSERT(origin != NULL);
-                crm_xml_replace(scratch, XML_ATTR_UPDATE_ORIG, origin);
-                crm_xml_replace(scratch, XML_ATTR_UPDATE_CLIENT,
-                                crm_element_value(req, F_CIB_CLIENTNAME));
-                crm_xml_replace(scratch, XML_ATTR_UPDATE_USER, crm_element_value(req, F_CIB_USER));
+                if (origin != NULL) {
+                    crm_xml_add(scratch, XML_ATTR_UPDATE_ORIG, origin);
+                } else {
+                    xml_remove_prop(scratch, XML_ATTR_UPDATE_ORIG);
+                }
+
+                if (client != NULL) {
+                    crm_xml_add(scratch, XML_ATTR_UPDATE_CLIENT, user);
+                } else {
+                    xml_remove_prop(scratch, XML_ATTR_UPDATE_CLIENT);
+                }
+
+                if (user != NULL) {
+                    crm_xml_add(scratch, XML_ATTR_UPDATE_USER, user);
+                } else {
+                    xml_remove_prop(scratch, XML_ATTR_UPDATE_USER);
+                }
             }
         }
     }
@@ -533,36 +549,117 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
     return rc;
 }
 
-xmlNode *
-cib_create_op(int call_id, const char *op, const char *host,
-              const char *section, xmlNode *data, int call_options,
-              const char *user_name)
+int
+cib__create_op(cib_t *cib, const char *op, const char *host,
+               const char *section, xmlNode *data, int call_options,
+               const char *user_name, const char *client_name,
+               xmlNode **op_msg)
 {
-    xmlNode *op_msg = create_xml_node(NULL, "cib_command");
+    CRM_CHECK((cib != NULL) && (op_msg != NULL), return -EPROTO);
 
-    CRM_CHECK(op_msg != NULL, return NULL);
-
-    crm_xml_add(op_msg, F_XML_TAGNAME, "cib_command");
-
-    crm_xml_add(op_msg, F_TYPE, T_CIB);
-    crm_xml_add(op_msg, F_CIB_OPERATION, op);
-    crm_xml_add(op_msg, F_CIB_HOST, host);
-    crm_xml_add(op_msg, F_CIB_SECTION, section);
-    crm_xml_add_int(op_msg, F_CIB_CALLID, call_id);
-    if (user_name) {
-        crm_xml_add(op_msg, F_CIB_USER, user_name);
+    *op_msg = create_xml_node(NULL, T_CIB_COMMAND);
+    if (*op_msg == NULL) {
+        return -EPROTO;
     }
+
+    cib->call_id++;
+    if (cib->call_id < 1) {
+        cib->call_id = 1;
+    }
+
+    crm_xml_add(*op_msg, F_XML_TAGNAME, T_CIB_COMMAND);
+    crm_xml_add(*op_msg, F_TYPE, T_CIB);
+    crm_xml_add(*op_msg, F_CIB_OPERATION, op);
+    crm_xml_add(*op_msg, F_CIB_HOST, host);
+    crm_xml_add(*op_msg, F_CIB_SECTION, section);
+    crm_xml_add(*op_msg, F_CIB_USER, user_name);
+    crm_xml_add(*op_msg, F_CIB_CLIENTNAME, client_name);
+    crm_xml_add_int(*op_msg, F_CIB_CALLID, cib->call_id);
+
     crm_trace("Sending call options: %.8lx, %d", (long)call_options, call_options);
-    crm_xml_add_int(op_msg, F_CIB_CALLOPTS, call_options);
+    crm_xml_add_int(*op_msg, F_CIB_CALLOPTS, call_options);
 
     if (data != NULL) {
-        add_message_xml(op_msg, F_CIB_CALLDATA, data);
+        add_message_xml(*op_msg, F_CIB_CALLDATA, data);
     }
 
-    if (call_options & cib_inhibit_bcast) {
-        CRM_CHECK((call_options & cib_scope_local), return NULL);
+    if (pcmk_is_set(call_options, cib_inhibit_bcast)) {
+        CRM_CHECK(pcmk_is_set(call_options, cib_scope_local),
+                  free_xml(*op_msg); return -EPROTO);
     }
-    return op_msg;
+    return pcmk_ok;
+}
+
+/*!
+ * \internal
+ * \brief Check whether a CIB request is supported in a transaction
+ *
+ * \param[in] request  CIB request
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+validate_transaction_request(const xmlNode *request)
+{
+    const char *op = crm_element_value(request, F_CIB_OPERATION);
+    const char *host = crm_element_value(request, F_CIB_HOST);
+    const cib__operation_t *operation = NULL;
+    int rc = cib__get_operation(op, &operation);
+
+    if (rc != pcmk_rc_ok) {
+        // cib__get_operation() logs error
+        return rc;
+    }
+
+    if (!pcmk_is_set(operation->flags, cib__op_attr_transaction)) {
+        crm_err("Operation %s is not supported in CIB transactions", op);
+        return EOPNOTSUPP;
+    }
+
+    if (host != NULL) {
+        crm_err("Operation targeting a specific node (%s) is not supported in "
+                "a CIB transaction",
+                host);
+        return EOPNOTSUPP;
+    }
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Append a CIB request to a CIB transaction
+ *
+ * \param[in,out] cib      CIB client whose transaction to extend
+ * \param[in,out] request  Request to add to transaction
+ *
+ * \return Legacy Pacemaker return code
+ */
+int
+cib__extend_transaction(cib_t *cib, xmlNode *request)
+{
+    int rc = pcmk_rc_ok;
+
+    CRM_ASSERT((cib != NULL) && (request != NULL));
+
+    rc = validate_transaction_request(request);
+
+    if ((rc == pcmk_rc_ok) && (cib->transaction == NULL)) {
+        rc = pcmk_rc_no_transaction;
+    }
+
+    if (rc == pcmk_rc_ok) {
+        add_node_copy(cib->transaction, request);
+
+    } else {
+        const char *op = crm_element_value(request, F_CIB_OPERATION);
+        const char *client_id = NULL;
+
+        cib->cmds->client_id(cib, NULL, &client_id);
+        crm_err("Failed to add '%s' operation to transaction for client %s: %s",
+                op, pcmk__s(client_id, "(unidentified)"), pcmk_rc_str(rc));
+        crm_log_xml_info(request, "failed");
+    }
+    return pcmk_rc2legacy(rc);
 }
 
 void

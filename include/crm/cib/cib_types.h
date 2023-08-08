@@ -88,9 +88,8 @@ enum cib_call_options {
      * it immediately. If the client has no active transaction, or if the
      * request is not supported in transactions, the call will fail.
      *
-     * Any callback is triggered when adding the request to the transaction;
-     * callbacks and notifications are not triggered when processing the
-     * request.
+     * The request is added to the transaction synchronously, and the return
+     * value indicates whether it was added successfully.
      *
      * Refer to \p cib_api_operations_t:init_transaction() and
      * \p cib_api_operations_t:end_transaction() for more details on CIB
@@ -273,21 +272,20 @@ typedef struct cib_api_operations_s {
      * Because the transaction is atomic, individual requests do not trigger
      * callbacks or notifications when they are processed, and they do not
      * receive output XML. The commit request itself can trigger callbacks and
-     * notifications if any are registered. The init and discard requests can
-     * also trigger a callback.
+     * notifications if any are registered.
+     *
+     * An \c init_transaction() call is always synchronous.
      *
      * \param[in,out] cib           CIB connection
-     * \param[in]     call_options  Group of <tt>enum cib_call_options</tt>
-     *                              flags
      *
      * \return Legacy Pacemaker return code
      */
-    int (*init_transaction)(cib_t *cib, int call_options);
+    int (*init_transaction)(cib_t *cib);
 
     /*!
      * \brief End and optionally commit this client's CIB transaction
      *
-     * When a client commits a transaction, all requests in the queue are
+     * When a client commits a transaction, all requests in the transaction are
      * processed in a FIFO manner until either a request fails or all requests
      * have been processed. Changes are applied to a working copy of the CIB.
      * If a request fails, the transaction and working CIB copy are discarded,
@@ -296,6 +294,9 @@ typedef struct cib_api_operations_s {
      *
      * Callbacks and notifications can be triggered by the commit request itself
      * but not by the individual requests in a transaction.
+     *
+     * An \c end_transaction() call with \p commit set to \c false is always
+     * synchronous.
      *
      * \param[in,out] cib           CIB connection
      * \param[in]     commit        If \p true, commit transaction; otherwise,
@@ -325,6 +326,8 @@ struct cib_s {
                          xmlNode *output);
 
     cib_api_operations_t *cmds;
+
+    xmlNode *transaction;
 };
 
 #ifdef __cplusplus

@@ -476,9 +476,7 @@ attrd_peer_clear_failure(pcmk__request_t *request)
     crm_xml_add(xml, PCMK__XA_TASK, PCMK__ATTRD_CMD_UPDATE);
 
     /* Make sure value is not set, so we delete */
-    if (crm_element_value(xml, PCMK__XA_ATTR_VALUE)) {
-        crm_xml_replace(xml, PCMK__XA_ATTR_VALUE, NULL);
-    }
+    xml_remove_prop(xml, PCMK__XA_ATTR_VALUE);
 
     g_hash_table_iter_init(&iter, attributes);
     while (g_hash_table_iter_next(&iter, (gpointer *) &attr, NULL)) {

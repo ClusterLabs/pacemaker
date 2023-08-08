@@ -388,25 +388,66 @@ cib_client_erase(cib_t * cib, xmlNode ** output_data, int call_options)
 }
 
 static int
-cib_client_init_transaction(cib_t *cib, int call_options)
+cib_client_init_transaction(cib_t *cib)
 {
+    int rc = pcmk_rc_ok;
+
     op_common(cib);
-    return cib_internal_op(cib, PCMK__CIB_REQUEST_INIT_TRANSACT, NULL, NULL,
-                           NULL, NULL, call_options, NULL);
+
+    if (cib->transaction != NULL) {
+        // A client can have at most one transaction at a time
+        rc = pcmk_rc_already;
+    }
+
+    if (rc == pcmk_rc_ok) {
+        cib->transaction = create_xml_node(NULL, T_CIB_TRANSACTION);
+        if (cib->transaction == NULL) {
+            rc = ENOMEM;
+        }
+    }
+
+    if (rc != pcmk_rc_ok) {
+        const char *client_id = NULL;
+
+        cib->cmds->client_id(cib, NULL, &client_id);
+        crm_err("Failed to initialize CIB transaction for client %s: %s",
+                client_id, pcmk_rc_str(rc));
+    }
+    return pcmk_rc2legacy(rc);
 }
 
 static int
 cib_client_end_transaction(cib_t *cib, bool commit, int call_options)
 {
+    const char *client_id = NULL;
+    int rc = pcmk_ok;
+
     op_common(cib);
+    cib->cmds->client_id(cib, NULL, &client_id);
+    client_id = pcmk__s(client_id, "(unidentified)");
 
     if (commit) {
-        return cib_internal_op(cib, PCMK__CIB_REQUEST_COMMIT_TRANSACT, NULL,
-                               NULL, NULL, NULL, call_options, NULL);
+        if (cib->transaction == NULL) {
+            rc = pcmk_rc_no_transaction;
+
+            crm_err("Failed to commit transaction for CIB client %s: %s",
+                    client_id, pcmk_rc_str(rc));
+            return pcmk_rc2legacy(rc);
+        }
+        rc = cib_internal_op(cib, PCMK__CIB_REQUEST_COMMIT_TRANSACT, NULL, NULL,
+                             cib->transaction, NULL, call_options, NULL);
+
     } else {
-        return cib_internal_op(cib, PCMK__CIB_REQUEST_DISCARD_TRANSACT, NULL,
-                               NULL, NULL, NULL, call_options, NULL);
+        // Discard always succeeds
+        if (cib->transaction != NULL) {
+            crm_trace("Discarded transaction for CIB client %s", client_id);
+        } else {
+            crm_trace("No transaction found for CIB client %s", client_id);
+        }
     }
+    free_xml(cib->transaction);
+    cib->transaction = NULL;
+    return rc;
 }
 
 static void

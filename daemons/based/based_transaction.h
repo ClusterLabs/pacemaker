@@ -14,12 +14,11 @@
 
 #include <libxml/tree.h>
 
-int based_init_transaction(const pcmk__client_t *client);
-int based_extend_transaction(pcmk__client_t *client, xmlNodePtr request,
-                             bool privileged);
-void based_discard_transaction(const pcmk__client_t *client);
-int based_commit_transaction(const pcmk__client_t *client,
-                             xmlNodePtr *result_cib);
-void based_free_transaction_table(void);
+char *based_transaction_source_str(const pcmk__client_t *client,
+                                   const char *origin);
+
+int based_commit_transaction(xmlNodePtr transaction,
+                             const pcmk__client_t *client,
+                             const char *origin, xmlNodePtr *result_cib);
 
 #endif // BASED_TRANSACTION__H

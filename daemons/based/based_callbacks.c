@@ -133,7 +133,6 @@ cib_ipc_closed(qb_ipcs_connection_t * c)
         return 0;
     }
     crm_trace("Connection %p", c);
-    based_discard_transaction(client);
     pcmk__free_client(client);
     return 0;
 }
@@ -282,22 +281,10 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
 
     crm_element_value_int(op_request, F_CIB_CALLOPTS, &call_options);
 
+    /* Requests with cib_transaction set should not be sent to based directly
+     * (outside of a commit-transaction request)
+     */
     if (pcmk_is_set(call_options, cib_transaction)) {
-        // Append request to client's transaction
-        const char *call_id = crm_element_value(op_request, F_CIB_CALLID);
-
-        int rc = based_extend_transaction(cib_client, op_request, privileged);
-
-        xmlNode *reply = create_cib_reply(op, call_id, cib_client->id,
-                                          call_options, rc, NULL);
-
-        if (rc != pcmk_rc_ok) {
-            crm_warn("Could not extend transaction for client %s: %s",
-                     pcmk__client_name(cib_client), pcmk_rc_str(rc));
-        }
-
-        do_local_notify(reply, cib_client->id,
-                        pcmk_is_set(call_options, cib_sync_call), false);
         return;
     }
 
@@ -681,19 +668,6 @@ parse_local_options(const pcmk__client_t *cib_client,
                     gboolean *needs_reply, gboolean *process,
                     gboolean *needs_forward)
 {
-    if (pcmk_is_set(call_options, cib_transaction)) {
-        /* Process locally and don't notify local client.
-         *
-         * Reaching cib_process_request() with cib_transaction set means we're
-         * committing a transaction (always local and atomic).
-         */
-        *process = TRUE;
-        *needs_reply = FALSE;
-        *local_notify = FALSE;
-        *needs_forward = FALSE;
-        return;
-    }
-
     if(cib_legacy_mode()) {
         parse_local_options_v1(cib_client, operation, call_options, host,
                                op, local_notify, needs_reply, process,
@@ -1118,15 +1092,6 @@ cib_process_request(xmlNode *request, gboolean privileged,
         return -EOPNOTSUPP;
     }
 
-    if (pcmk_is_set(call_options, cib_transaction)) {
-        /* We're committing a transaction now, processing each request. If
-         * cib__op_attr_transaction is not set, based_extend_transaction() should
-         * have blocked the request from being added to the transaction.
-         */
-        CRM_CHECK(pcmk_is_set(operation->flags, cib__op_attr_transaction),
-                  return -EOPNOTSUPP);
-    }
-
     if (cib_client != NULL) {
         parse_local_options(cib_client, operation, call_options, host, op,
                             &local_notify, &needs_reply, &process,
@@ -1135,6 +1100,20 @@ cib_process_request(xmlNode *request, gboolean privileged,
     } else if (!parse_peer_options(operation, request, &local_notify,
                                    &needs_reply, &process)) {
         return rc;
+    }
+
+    if (pcmk_is_set(call_options, cib_transaction)) {
+        /* All requests in a transaction are processed locally against a working
+         * CIB copy, and we don't notify for individual requests because the
+         * entire transaction is atomic.
+         *
+         * We still call the option parser functions above, for the sake of log
+         * messages and checking whether we're the target for peer requests.
+         */
+        process = TRUE;
+        needs_reply = FALSE;
+        local_notify = FALSE;
+        needs_forward = FALSE;
     }
 
     is_update = pcmk_is_set(operation->flags, cib__op_attr_modifies);
@@ -1303,36 +1282,31 @@ static xmlNode *
 prepare_input(const xmlNode *request, enum cib__op_type type,
               const char **section)
 {
-    xmlNode *root = NULL;
+    xmlNode *input = NULL;
 
-    if (type == cib__op_apply_patch) {
-        if (pcmk__xe_attr_is_true(request, F_CIB_GLOBAL_UPDATE)) {
-            root = get_message_xml(request, F_CIB_UPDATE_DIFF);
-        } else {
-            root = get_message_xml(request, F_CIB_CALLDATA);
-        }
-        *section = NULL;
+    *section = NULL;
 
-    } else {
-        root = get_message_xml(request, F_CIB_CALLDATA);
-        *section = crm_element_value(request, F_CIB_SECTION);
-    }
+    switch (type) {
+        case cib__op_apply_patch:
+            if (pcmk__xe_attr_is_true(request, F_CIB_GLOBAL_UPDATE)) {
+                input = get_message_xml(request, F_CIB_UPDATE_DIFF);
+            } else {
+                input = get_message_xml(request, F_CIB_CALLDATA);
+            }
+            break;
 
-    if (root == NULL) {
-        return NULL;
-    }
-
-    if (pcmk__str_any_of((const char *) root->name, F_CRM_DATA, F_CIB_CALLDATA,
-                         NULL)) {
-        root = first_named_child(root, XML_TAG_CIB);
+        default:
+            input = get_message_xml(request, F_CIB_CALLDATA);
+            *section = crm_element_value(request, F_CIB_SECTION);
+            break;
     }
 
     // Grab the specified section
-    if ((*section != NULL) && pcmk__xe_is(root, XML_TAG_CIB)) {
-        root = pcmk_find_cib_element(root, *section);
+    if ((*section != NULL) && pcmk__xe_is(input, XML_TAG_CIB)) {
+        input = pcmk_find_cib_element(input, *section);
     }
 
-    return root;
+    return input;
 }
 
 static char *
@@ -1618,18 +1592,6 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
             // @TODO: Should update argument be result_cib instead of the_cib?
             cib_replace_notify(op, rc, call_id, client_id, client_name, origin,
                                the_cib, *cib_diff, change_sections);
-        }
-
-        /* Commit-transaction is special. We process it and activate the result
-         * only locally, but we still need to sync the updated CIB to all nodes.
-         * However, if we run the sync within cib_process_commit_transaction(),
-         * it will be rejected locally due to an older epoch in the replacement
-         * CIB. cib_perform_op() updates the epoch via xml_create_patchset()
-         * after cib_process_commit_transaction() has already returned.
-         */
-        if (pcmk__str_eq(op, PCMK__CIB_REQUEST_COMMIT_TRANSACT,
-                         pcmk__str_none)) {
-            sync_our_cib(request, TRUE);
         }
 
         mainloop_timer_stop(digest_timer);

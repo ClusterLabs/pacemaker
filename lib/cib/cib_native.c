@@ -69,20 +69,19 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
         pcmk__set_ipc_flags(ipc_flags, "client", crm_ipc_client_response);
     }
 
-    cib->call_id++;
-    if (cib->call_id < 1) {
-        cib->call_id = 1;
+    rc = cib__create_op(cib, op, host, section, data, call_options, user_name,
+                        NULL, &op_msg);
+    if (rc != pcmk_ok) {
+        return rc;
     }
 
-    op_msg = cib_create_op(cib->call_id, op, host, section, data, call_options,
-                           user_name);
-    if (op_msg == NULL) {
-        return -EPROTO;
+    if (pcmk_is_set(call_options, cib_transaction)) {
+        rc = cib__extend_transaction(cib, op_msg);
+        goto done;
     }
 
     crm_trace("Sending %s message to the CIB manager (timeout=%ds)", op, cib->call_timeout);
     rc = crm_ipc_send(native->ipc, op_msg, ipc_flags, cib->call_timeout * 1000, &op_reply);
-    free_xml(op_msg);
 
     if (rc < 0) {
         crm_err("Couldn't perform %s operation (timeout=%ds): %s (%d)", op,
@@ -168,6 +167,7 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
         cib->state = cib_disconnected;
     }
 
+    free_xml(op_msg);
     free_xml(op_reply);
     return rc;
 }
@@ -255,6 +255,7 @@ cib_native_signoff(cib_t *cib)
         crm_ipc_destroy(ipc);
     }
 
+    cib->cmds->end_transaction(cib, false, cib_none);
     cib->state = cib_disconnected;
     cib->type = cib_no_connection;
 
@@ -268,6 +269,7 @@ cib_native_signon_raw(cib_t *cib, const char *name, enum cib_conn_type type,
     int rc = pcmk_ok;
     const char *channel = NULL;
     cib_native_opaque_t *native = cib->variant_opaque;
+    xmlNode *hello = NULL;
 
     struct ipc_client_callbacks cib_callbacks = {
         .dispatch = cib_native_dispatch_internal,
@@ -321,23 +323,23 @@ cib_native_signon_raw(cib_t *cib, const char *name, enum cib_conn_type type,
     }
 
     if (rc == pcmk_ok) {
+        rc = cib__create_op(cib, CRM_OP_REGISTER, NULL, NULL, NULL,
+                            cib_sync_call, NULL, name, &hello);
+    }
+
+    if (rc == pcmk_ok) {
         xmlNode *reply = NULL;
-        xmlNode *hello = create_xml_node(NULL, "cib_command");
 
-        crm_xml_add(hello, F_TYPE, T_CIB);
-        crm_xml_add(hello, F_CIB_OPERATION, CRM_OP_REGISTER);
-        crm_xml_add(hello, F_CIB_CLIENTNAME, name);
-        crm_xml_add_int(hello, F_CIB_CALLOPTS, cib_sync_call);
-
-        if (crm_ipc_send(native->ipc, hello, crm_ipc_client_response, -1, &reply) > 0) {
+        if (crm_ipc_send(native->ipc, hello, crm_ipc_client_response, -1,
+                         &reply) > 0) {
             const char *msg_type = crm_element_value(reply, F_CIB_OPERATION);
 
-            rc = pcmk_ok;
             crm_log_xml_trace(reply, "reg-reply");
 
             if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
-                crm_info("Reply to CIB registration message has "
-                         "unknown type '%s'", msg_type);
+                crm_info("Reply to CIB registration message has unknown type "
+                         "'%s'",
+                         msg_type);
                 rc = -EPROTO;
 
             } else {
@@ -351,7 +353,6 @@ cib_native_signon_raw(cib_t *cib, const char *name, enum cib_conn_type type,
         } else {
             rc = -ECOMM;
         }
-
         free_xml(hello);
     }
 
