@@ -91,6 +91,9 @@ static pcmk__cluster_option_t pe_opts[] = {
             "passed since the shutdown was initiated, even if the node has not "
             "rejoined.")
     },
+    {
+        PCMK_XA_TIME_ZONE, NULL, "string", NULL,
+    },
 
     // Fencing-related options
     {
