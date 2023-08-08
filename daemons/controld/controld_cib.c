@@ -54,6 +54,11 @@ static void
 do_cib_updated(const char *event, xmlNode * msg)
 {
     const xmlNode *patchset = NULL;
+    const char *client_id = NULL;
+    const char *op = NULL;
+    const cib__operation_t *operation = NULL;
+
+    crm_debug("Received CIB diff notification: DC=%s", pcmk__btoa(AM_I_DC));
 
     if (cib__get_notify_patchset(msg, &patchset) != pcmk_rc_ok) {
         return;
@@ -64,40 +69,37 @@ do_cib_updated(const char *event, xmlNode * msg)
 
         controld_trigger_config();
     }
-}
 
-static void
-do_cib_replaced(const char *event, xmlNode * msg)
-{
-    const char *client_id = crm_element_value(msg, F_CIB_CLIENTID);
-    uint32_t change_section = cib_change_section_nodes
-                              |cib_change_section_status;
-    long long value = 0;
-
-    crm_debug("Updating the CIB after a replace: DC=%s", pcmk__btoa(AM_I_DC));
     if (!AM_I_DC) {
+        // We're not in control of the join sequence
         return;
     }
 
+    client_id = crm_element_value(msg, F_CIB_CLIENTID);
     if (pcmk__str_eq(client_id, cib_client_id, pcmk__str_none)) {
-        // We requested this replace op. No need to restart the join.
+        // Don't restart the join sequence due to an update that we requested
         return;
     }
 
-    if ((crm_element_value_ll(msg, F_CIB_CHANGE_SECTION, &value) < 0)
-        || (value < 0) || (value > UINT32_MAX)) {
-
-        crm_trace("Couldn't parse '%s' from message", F_CIB_CHANGE_SECTION);
-    } else {
-        change_section = (uint32_t) value;
+    op = crm_element_value(msg, F_CIB_OPERATION);
+    if (cib__get_operation(op, &operation) != pcmk_rc_ok) {
+        // Invalid operation
+        return;
     }
 
-    if (pcmk_any_flags_set(change_section, cib_change_section_nodes
-                                           |cib_change_section_status)) {
+    if (pcmk_is_set(operation->flags, cib__op_attr_replaces)
+        && (cib__element_in_patchset(patchset, XML_CIB_TAG_NODES)
+            || cib__element_in_patchset(patchset, XML_CIB_TAG_STATUS))) {
 
-        /* start the join process again so we get everyone's LRM status */
+        /* The node list or resource history may be inaccurate, since part of
+         * the nodes or status section was replaced.
+         *
+         * Ensure the node list is up-to-date, and start the join process again
+         * so we get everyone's current resource history.
+         *
+         * @TODO Don't trigger an election if only transient attributes changed.
+         */
         populate_cib_nodes(node_update_quick|node_update_all, __func__);
-
         register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
     }
 }
@@ -113,8 +115,6 @@ controld_disconnect_cib_manager(void)
 
     controld_clear_fsa_input_flags(R_CIB_CONNECTED);
 
-    cib_conn->cmds->del_notify_callback(cib_conn, T_CIB_REPLACE_NOTIFY,
-                                        do_cib_replaced);
     cib_conn->cmds->del_notify_callback(cib_conn, T_CIB_DIFF_NOTIFY,
                                         do_cib_updated);
     cib_free_callbacks(cib_conn);
@@ -138,7 +138,6 @@ do_cib_control(long long action,
     cib_t *cib_conn = controld_globals.cib_conn;
 
     void (*dnotify_fn) (gpointer user_data) = handle_cib_disconnect;
-    void (*replace_cb) (const char *event, xmlNodePtr msg) = do_cib_replaced;
     void (*update_cb) (const char *event, xmlNodePtr msg) = do_cib_updated;
 
     int rc = pcmk_ok;
@@ -183,11 +182,6 @@ do_cib_control(long long action,
     } else if (cib_conn->cmds->set_connection_dnotify(cib_conn,
                                                       dnotify_fn) != pcmk_ok) {
         crm_err("Could not set dnotify callback");
-
-    } else if (cib_conn->cmds->add_notify_callback(cib_conn,
-                                                   T_CIB_REPLACE_NOTIFY,
-                                                   replace_cb) != pcmk_ok) {
-        crm_err("Could not set CIB notification callback (replace)");
 
     } else if (cib_conn->cmds->add_notify_callback(cib_conn,
                                                    T_CIB_DIFF_NOTIFY,
@@ -995,7 +989,6 @@ controld_delete_action_history(const lrmd_event_data_t *op)
     controld_globals.cib_conn->cmds->remove(controld_globals.cib_conn,
                                             XML_CIB_TAG_STATUS, xml_top,
                                             cib_none);
-
     crm_log_xml_trace(xml_top, "op:cancel");
     free_xml(xml_top);
 }
@@ -1035,7 +1028,6 @@ controld_cib_delete_last_failure(const char *rsc_id, const char *node,
 {
     char *xpath = NULL;
     char *last_failure_key = NULL;
-
     CRM_CHECK((rsc_id != NULL) && (node != NULL), return);
 
     // Generate XPath to match desired entry
