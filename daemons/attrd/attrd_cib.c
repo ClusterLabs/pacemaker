@@ -45,47 +45,12 @@ attrd_cib_destroy_cb(gpointer user_data)
 }
 
 static void
-attrd_cib_replaced_cb(const char *event, xmlNode *msg)
-{
-    const char *client_id = crm_element_value(msg, F_CIB_CLIENTID);
-    int change_section = cib_change_section_nodes
-                         |cib_change_section_status
-                         |cib_change_section_alerts;
-
-    if (attrd_shutting_down(true)) {
-        return;
-    }
-
-    crm_element_value_int(msg, F_CIB_CHANGE_SECTION, &change_section);
-
-    if (pcmk_is_set(change_section, cib_change_section_alerts)) {
-        // Check for changes in alerts
-        mainloop_set_trigger(attrd_config_read);
-    }
-
-    if (!attrd_election_won()) {
-        // Don't write attributes if we're not the writer
-        return;
-    }
-
-    if (pcmk__str_eq(client_id, cib_client_id, pcmk__str_none)) {
-        // Don't write attributes due to an update that we requested
-        return;
-    }
-
-    if (pcmk_any_flags_set(change_section,
-                           cib_change_section_nodes
-                           |cib_change_section_status)) {
-
-        crm_notice("Updating all attributes after %s event", event);
-        attrd_write_attributes(attrd_write_all);
-    }
-}
-
-static void
 attrd_cib_updated_cb(const char *event, xmlNode *msg)
 {
     const xmlNode *patchset = NULL;
+    const char *client_id = NULL;
+    const char *op = NULL;
+    const cib__operation_t *operation = NULL;
 
     if (attrd_shutting_down(true)) {
         return;
@@ -97,6 +62,37 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
 
     if (cib__element_in_patchset(patchset, XML_CIB_TAG_ALERTS)) {
         mainloop_set_trigger(attrd_config_read);
+    }
+
+    if (!attrd_election_won()) {
+        // Don't write attributes if we're not the writer
+        return;
+    }
+
+    client_id = crm_element_value(msg, F_CIB_CLIENTID);
+    if (pcmk__str_eq(client_id, cib_client_id, pcmk__str_none)) {
+        // Don't write attributes due to an update that we requested
+        return;
+    }
+
+    op = crm_element_value(msg, F_CIB_OPERATION);
+    if (cib__get_operation(op, &operation) != pcmk_rc_ok) {
+        // Invalid operation
+        return;
+    }
+
+    if (pcmk_is_set(operation->flags, cib__op_attr_replaces)
+        && (cib__element_in_patchset(patchset, XML_CIB_TAG_NODES)
+            || cib__element_in_patchset(patchset, XML_CIB_TAG_STATUS))) {
+
+        /* Transient attributes may be inaccurate, since part of the nodes or
+         * status section was replaced. Trigger a write.
+         *
+         * @TODO Don't write attributes unless nodes or transient attributes
+         * changed.
+         */
+        crm_notice("Updating all attributes after %s event", event);
+        attrd_write_attributes(attrd_write_all);
     }
 }
 
@@ -136,13 +132,6 @@ attrd_cib_connect(int max_retry)
         goto cleanup;
     }
 
-    rc = the_cib->cmds->add_notify_callback(the_cib, T_CIB_REPLACE_NOTIFY,
-                                            attrd_cib_replaced_cb);
-    if (rc != pcmk_ok) {
-        crm_err("Could not set CIB notification callback");
-        goto cleanup;
-    }
-
     rc = the_cib->cmds->add_notify_callback(the_cib, T_CIB_DIFF_NOTIFY,
                                             attrd_cib_updated_cb);
     if (rc != pcmk_ok) {
@@ -162,8 +151,6 @@ void
 attrd_cib_disconnect(void)
 {
     CRM_CHECK(the_cib != NULL, return);
-    the_cib->cmds->del_notify_callback(the_cib, T_CIB_REPLACE_NOTIFY,
-                                       attrd_cib_replaced_cb);
     the_cib->cmds->del_notify_callback(the_cib, T_CIB_DIFF_NOTIFY,
                                        attrd_cib_updated_cb);
     cib__clean_up_connection(&the_cib);
