@@ -12,6 +12,7 @@
 #include <crm/lrmd.h>
 #include <crm/msg_xml.h>
 #include <crm/common/alerts_internal.h>
+#include <crm/common/cib_internal.h>
 #include <crm/common/xml_internal.h>
 #include <crm/cib/internal.h> /* for F_CIB_UPDATE_RESULT */
 
@@ -169,18 +170,71 @@ pcmk__add_alert_key_int(GHashTable *table, enum pcmk__alert_keys_e name,
     }
 }
 
-#define XPATH_PATCHSET1_DIFF "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED
+#define XPATH_DIFF_V1       "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED
+#define XPATH_CRMCONFIG_V1  XPATH_DIFF_V1 "//" XML_CIB_TAG_CRMCONFIG
+#define XPATH_ALERTS_V1     XPATH_DIFF_V1 "//" XML_CIB_TAG_ALERTS
+#define XPATH_EITHER_V1     XPATH_CRMCONFIG_V1 "|" XPATH_ALERTS_V1
 
-#define XPATH_PATCHSET1_CRMCONFIG XPATH_PATCHSET1_DIFF "//" XML_CIB_TAG_CRMCONFIG
-#define XPATH_PATCHSET1_ALERTS    XPATH_PATCHSET1_DIFF "//" XML_CIB_TAG_ALERTS
+/*!
+ * \internal
+ * \brief Check whether a CIB update affects alerts (using v1 diff)
+ *
+ * \param[in] patchset  XML containing CIB update
+ * \param[in] config    Whether to check for crmconfig change as well
+ *
+ * \return \c true if the update affects alerts, or \c false otherwise
+ */
+static bool
+alert_in_patchset_v1(const xmlNode *patchset, bool config)
+{
+    const char *xpath = config? XPATH_EITHER_V1 : XPATH_ALERTS_V1;
+    xmlXPathObject *xpath_obj = xpath_search(patchset, xpath);
 
-#define XPATH_PATCHSET1_EITHER \
-    XPATH_PATCHSET1_CRMCONFIG " | " XPATH_PATCHSET1_ALERTS
+    if (xpath_obj != NULL) {
+        freeXpathObject(xpath_obj);
+        return true;
+    }
+    return false;
+}
 
-#define XPATH_CONFIG "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION
+/*!
+ * \internal
+ * \brief Check whether a CIB update affects alerts (using v2 diff)
+ *
+ * \param[in] patchset  XML containing CIB update
+ * \param[in] config    Whether to check for crmconfig change as well
+ *
+ * \return \c true if the update affects alerts, or \c false otherwise
+ */
+static bool
+alert_in_patchset_v2(const xmlNode *patchset, bool config)
+{
+    const char *xpath_alerts = pcmk__cib_abs_xpath_for(XML_CIB_TAG_ALERTS);
+    const char *xpath_parent = pcmk_cib_parent_name_for(XML_CIB_TAG_ALERTS);
+    const char *xpath_crmconfig =
+        pcmk__cib_abs_xpath_for(XML_CIB_TAG_CRMCONFIG);
 
-#define XPATH_CRMCONFIG XPATH_CONFIG "/" XML_CIB_TAG_CRMCONFIG "/"
-#define XPATH_ALERTS    XPATH_CONFIG "/" XML_CIB_TAG_ALERTS
+    for (const xmlNode *change = first_named_child(patchset, XML_DIFF_CHANGE);
+         change != NULL; change = crm_next_same_xml(change)) {
+
+        const char *xpath = crm_element_value(change, XML_DIFF_PATH);
+
+        if (pcmk__starts_with(xpath, xpath_alerts)
+            || (config && pcmk__starts_with(xpath, xpath_crmconfig))) {
+
+            // Change to an existing alerts or crm_config section
+            return true;
+        }
+
+        if (pcmk__str_eq(xpath, xpath_parent, pcmk__str_none)
+            && pcmk__xe_is(pcmk__xml_first_child(change), XML_CIB_TAG_ALERTS)) {
+
+            // Newly added alerts section in a create operation
+            return true;
+        }
+    }
+    return false;
+}
 
 /*!
  * \internal
@@ -189,63 +243,35 @@ pcmk__add_alert_key_int(GHashTable *table, enum pcmk__alert_keys_e name,
  * \param[in] msg     XML containing CIB update
  * \param[in] config  Whether to check for crmconfig change as well
  *
- * \return TRUE if update affects alerts, FALSE otherwise
+ * \return \c true if the update affects alerts, or \c false otherwise
  */
 bool
-pcmk__alert_in_patchset(xmlNode *msg, bool config)
+pcmk__alert_in_patchset(const xmlNode *msg, bool config)
 {
-    int rc = -1;
-    int format= 1;
-    xmlNode *patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
-    xmlNode *change = NULL;
-    xmlXPathObject *xpathObj = NULL;
+    int rc = pcmk_err_generic;
+    int format = 1;
+    xmlNode *patchset = NULL;
 
-    CRM_CHECK(msg != NULL, return FALSE);
+    CRM_CHECK(msg != NULL, return false);
 
-    crm_element_value_int(msg, F_CIB_RC, &rc);
-    if (rc < pcmk_ok) {
+    if ((crm_element_value_int(msg, F_CIB_RC, &rc) != 0) || (rc != pcmk_ok)) {
         crm_trace("Ignore failed CIB update: %s (%d)", pcmk_strerror(rc), rc);
-        return FALSE;
+        return false;
     }
+
+    patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
+    CRM_CHECK(patchset != NULL, return false);
 
     crm_element_value_int(patchset, "format", &format);
-    if (format == 1) {
-        const char *diff = (config? XPATH_PATCHSET1_EITHER : XPATH_PATCHSET1_ALERTS);
+    switch (format) {
+        case 1:
+            return alert_in_patchset_v1(patchset, config);
 
-        if ((xpathObj = xpath_search(msg, diff)) != NULL) {
-            freeXpathObject(xpathObj);
-            return TRUE;
-        }
-    } else if (format == 2) {
-        for (change = pcmk__xml_first_child(patchset); change != NULL;
-             change = pcmk__xml_next(change)) {
-            const char *xpath = crm_element_value(change, XML_DIFF_PATH);
+        case 2:
+            return alert_in_patchset_v2(patchset, config);
 
-            if (xpath == NULL) {
-                continue;
-            }
-
-            if ((!config || !strstr(xpath, XPATH_CRMCONFIG))
-                && !strstr(xpath, XPATH_ALERTS)) {
-
-                /* this is not a change to an existing section ... */
-
-                xmlNode *section = NULL;
-
-                if ((strcmp(xpath, XPATH_CONFIG) != 0) ||
-                    ((section = pcmk__xml_first_child(change)) == NULL) ||
-                    !pcmk__xe_is(section, XML_CIB_TAG_ALERTS)) {
-
-                    /* ... nor is it a newly added alerts section */
-                    continue;
-                }
-            }
-
-            return TRUE;
-        }
-
-    } else {
-        crm_warn("Unknown patch format: %d", format);
+        default:
+            crm_warn("Unknown patch format: %d", format);
+            return false;
     }
-    return FALSE;
 }

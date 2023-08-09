@@ -76,7 +76,7 @@ void pcmk__add_alert_key(GHashTable *table, enum pcmk__alert_keys_e name,
                          const char *value);
 void pcmk__add_alert_key_int(GHashTable *table, enum pcmk__alert_keys_e name,
                              int value);
-bool pcmk__alert_in_patchset(xmlNode *msg, bool config);
+bool pcmk__alert_in_patchset(const xmlNode *msg, bool config);
 
 static inline const char *
 pcmk__alert_flag2text(enum pcmk__alert_flags flag)
