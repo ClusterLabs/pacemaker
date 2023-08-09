@@ -128,7 +128,33 @@ attrd_read_options(gpointer user_data)
 void
 attrd_cib_updated_cb(const char *event, xmlNode * msg)
 {
-    if (!attrd_shutting_down(false) && pcmk__alert_in_patchset(msg, false)) {
+    int rc = pcmk_err_generic;
+    const xmlNode *patchset = NULL;
+
+    if (attrd_shutting_down(false)) {
+        return;
+    }
+
+    if (msg == NULL) {
+        crm_warn("CIB %s%snotification received with no message XML",
+                 pcmk__s(event, ""), ((event != NULL)? " " : ""));
+        return;
+    }
+
+    if ((crm_element_value_int(msg, F_CIB_RC, &rc) != 0) || (rc != pcmk_ok)) {
+        crm_warn("Ignore failed CIB update: %s (%d)", pcmk_strerror(rc), rc);
+        crm_log_xml_debug(msg, "failed");
+        return;
+    }
+
+    patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
+    if (patchset == NULL) {
+        crm_warn("CIB %s notification received with no patchset XML",
+                 pcmk__s(event, ""), ((event != NULL)? " " : ""));
+        return;
+    }
+
+    if (cib__element_in_patchset(patchset, XML_CIB_TAG_ALERTS)) {
         mainloop_set_trigger(attrd_config_read);
     }
 }
