@@ -701,7 +701,7 @@ pcmk__unpack_action_meta(pe_resource_t *rsc, const pe_node_t *node,
     };
 
     pe_rule_eval_data_t rule_data = {
-        .node_hash = NULL, // @TODO Use node's attributes
+        .node_hash = (node == NULL)? NULL : node->details->attrs,
         .role = pcmk_role_unknown,
         .now = rsc->cluster->now,
         .match_data = NULL,
