@@ -24,6 +24,8 @@
 
 static int last_cib_op_done = 0;
 
+static const char *cib_client_id = NULL;
+
 static void
 attrd_cib_destroy_cb(gpointer user_data)
 {
@@ -45,6 +47,7 @@ attrd_cib_destroy_cb(gpointer user_data)
 static void
 attrd_cib_replaced_cb(const char *event, xmlNode *msg)
 {
+    const char *client_id = crm_element_value(msg, F_CIB_CLIENTID);
     int change_section = cib_change_section_nodes
                          |cib_change_section_status
                          |cib_change_section_alerts;
@@ -55,19 +58,27 @@ attrd_cib_replaced_cb(const char *event, xmlNode *msg)
 
     crm_element_value_int(msg, F_CIB_CHANGE_SECTION, &change_section);
 
-    if (attrd_election_won()) {
-        if (pcmk_any_flags_set(change_section,
-                               cib_change_section_nodes
-                               |cib_change_section_status)) {
-
-            crm_notice("Updating all attributes after %s event", event);
-            attrd_write_attributes(attrd_write_all);
-        }
-    }
-
     if (pcmk_is_set(change_section, cib_change_section_alerts)) {
         // Check for changes in alerts
         mainloop_set_trigger(attrd_config_read);
+    }
+
+    if (!attrd_election_won()) {
+        // Don't write attributes if we're not the writer
+        return;
+    }
+
+    if (pcmk__str_eq(client_id, cib_client_id, pcmk__str_none)) {
+        // Don't write attributes due to an update that we requested
+        return;
+    }
+
+    if (pcmk_any_flags_set(change_section,
+                           cib_change_section_nodes
+                           |cib_change_section_status)) {
+
+        crm_notice("Updating all attributes after %s event", event);
+        attrd_write_attributes(attrd_write_all);
     }
 }
 
@@ -139,6 +150,7 @@ attrd_cib_connect(int max_retry)
         goto cleanup;
     }
 
+    the_cib->cmds->client_id(the_cib, &cib_client_id, NULL);
     return pcmk_ok;
 
 cleanup:
