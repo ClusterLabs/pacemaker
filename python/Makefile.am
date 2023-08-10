@@ -14,7 +14,7 @@ EXTRA_DIST = pylintrc
 SUBDIRS	= pacemaker tests
 
 check-local:
-	$(PYTHON) -m unittest discover -v -s tests
+	PYTHONPATH=$(top_srcdir)/python:$(top_builddir)/python $(PYTHON) -m unittest discover -v -s $(top_srcdir)/python/tests $(top_builddir)/python/tests
 
 pylint:
 	pylint $(SUBDIRS)
