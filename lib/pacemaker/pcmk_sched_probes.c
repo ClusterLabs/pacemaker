@@ -481,7 +481,7 @@ add_start_orderings_for_probe(pe_action_t *probe, pe_action_wrapper_t *after)
      * starting unless the probe is runnable so that we don't risk starting too
      * many instances before we know the state on all nodes.
      */
-    if ((after->action->rsc->variant <= pe_group)
+    if ((after->action->rsc->variant <= pcmk_rsc_variant_group)
         || pcmk_is_set(probe->flags, pe_action_runnable)
         // The order type is already enforced for its parent.
         || pcmk_is_set(after->type, pe_order_runnable_left)
@@ -544,7 +544,7 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
 
     // Validate that this is a resource probe followed by some action
     if ((after == NULL) || (probe == NULL) || (probe->rsc == NULL)
-        || (probe->rsc->variant != pe_native)
+        || (probe->rsc->variant != pcmk_rsc_variant_primitive)
         || !pcmk__str_eq(probe->task, PCMK_ACTION_MONITOR, pcmk__str_none)) {
         return;
     }
@@ -562,7 +562,8 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
     /* Add restart orderings if "then" is for a different primitive.
      * Orderings for collective resources will be added later.
      */
-    if ((after->rsc != NULL) && (after->rsc->variant == pe_native)
+    if ((after->rsc != NULL)
+        && (after->rsc->variant == pcmk_rsc_variant_primitive)
         && (probe->rsc != after->rsc)) {
 
             GList *then_actions = NULL;
@@ -592,7 +593,7 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
      * to add orderings only for the relevant instance.
      */
     if ((after->rsc != NULL)
-        && (after->rsc->variant > pe_group)) {
+        && (after->rsc->variant > pcmk_rsc_variant_group)) {
         const char *interleave_s = g_hash_table_lookup(after->rsc->meta,
                                                        XML_RSC_ATTR_INTERLEAVE);
 
@@ -629,10 +630,10 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
              * its children.
              */
             if ((after->rsc == NULL)
-                || (after->rsc->variant < pe_group)
+                || (after->rsc->variant < pcmk_rsc_variant_group)
                 || (probe->rsc->parent == after->rsc)
                 || (after_wrapper->action->rsc == NULL)
-                || (after_wrapper->action->rsc->variant > pe_group)
+                || (after_wrapper->action->rsc->variant > pcmk_rsc_variant_group)
                 || (after->rsc != after_wrapper->action->rsc->parent)) {
                 continue;
             }
@@ -640,7 +641,7 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
             /* Proceed to the children of a group or a non-interleaved clone.
              * For an interleaved clone, proceed only to the relevant child.
              */
-            if ((after->rsc->variant > pe_group) && interleave
+            if ((after->rsc->variant > pcmk_rsc_variant_group) && interleave
                 && ((compatible_rsc == NULL)
                     || (compatible_rsc != after_wrapper->action->rsc))) {
                 continue;
@@ -688,7 +689,7 @@ add_start_restart_orderings_for_rsc(gpointer data, gpointer user_data)
     GList *probes = NULL;
 
     // For collective resources, order each instance recursively
-    if (rsc->variant != pe_native) {
+    if (rsc->variant != pcmk_rsc_variant_primitive) {
         g_list_foreach(rsc->children, add_start_restart_orderings_for_rsc,
                        NULL);
         return;

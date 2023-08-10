@@ -2003,7 +2003,7 @@ unpack_find_resource(pe_working_set_t *data_set, const pe_node_t *node,
         }
         free(clone0_id);
 
-    } else if (rsc->variant > pe_native) {
+    } else if (rsc->variant > pcmk_rsc_variant_primitive) {
         crm_trace("Resource history for %s is orphaned because it is no longer primitive",
                   rsc_id);
         return NULL;

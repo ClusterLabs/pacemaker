@@ -92,7 +92,7 @@ cmp_colocation_priority(const pcmk__colocation_t *colocation1,
      * clones (probably unnecessary, but avoids having to update regression
      * tests)
      */
-    if (rsc1->variant == pe_clone) {
+    if (rsc1->variant == pcmk_rsc_variant_clone) {
         if (pcmk_is_set(rsc1->flags, pe_rsc_promotable)
             && !pcmk_is_set(rsc2->flags, pe_rsc_promotable)) {
             return -1;
@@ -1798,7 +1798,7 @@ pcmk__add_dependent_scores(gpointer data, gpointer user_data)
     if (!pcmk__colocation_has_influence(colocation, NULL)) {
         return;
     }
-    if (target_rsc->variant == pe_clone) {
+    if (target_rsc->variant == pcmk_rsc_variant_clone) {
         flags |= pcmk__coloc_select_nonnegative;
     }
     pe_rsc_trace(target_rsc,

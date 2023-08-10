@@ -175,7 +175,7 @@ find_matching_attr_resources_recursive(pcmk__output_t *out, GList/* <pe_resource
                                                rsc_id, attr_set, attr_set_type,
                                                attr_id, attr_name, cib, cmd, depth+1);
         /* do it only once for clones */
-        if(pe_clone == rsc->variant) {
+        if (rsc->variant == pcmk_rsc_variant_clone) {
             break;
         }
     }
@@ -212,7 +212,8 @@ find_matching_attr_resources(pcmk__output_t *out, pe_resource_t * rsc,
     if(force == TRUE) {
         return g_list_append(result, rsc);
     }
-    if(rsc->parent && pe_clone == rsc->parent->variant) {
+    if ((rsc->parent != NULL)
+        && (rsc->parent->variant == pcmk_rsc_variant_clone)) {
         int rc = pcmk_rc_ok;
         char *local_attr_id = NULL;
         rc = find_resource_attr(out, cib, XML_ATTR_ID, rsc_id, attr_set_type,
@@ -225,10 +226,12 @@ find_matching_attr_resources(pcmk__output_t *out, pe_resource_t * rsc,
                       cmd, attr_name, rsc->id, rsc_id);
         }
         return g_list_append(result, rsc);
-    } else if(rsc->parent == NULL && rsc->children && pe_clone == rsc->variant) {
+
+    } else if ((rsc->parent == NULL) && (rsc->children != NULL)
+               && (rsc->variant == pcmk_rsc_variant_clone)) {
         pe_resource_t *child = rsc->children->data;
 
-        if(child->variant == pe_native) {
+        if (child->variant == pcmk_rsc_variant_primitive) {
             lookup_id = clone_strip(child->id); /* Could be a cloned group! */
             rc = find_resource_attr(out, cib, XML_ATTR_ID, lookup_id, attr_set_type,
                                     attr_set, attr_id, attr_name, &local_attr_id);
@@ -550,7 +553,7 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
         out->err(out, "Resource %s not found", rsc_id);
         return ENXIO;
 
-    } else if (rsc->variant != pe_native) {
+    } else if (rsc->variant != pcmk_rsc_variant_primitive) {
         out->err(out, "We can only process primitive resources, not %s", rsc_id);
         return EINVAL;
     }
@@ -1138,7 +1141,7 @@ get_active_resources(const char *host, GList *rsc_list)
          * other than the first, we can't otherwise tell which resources are
          * stopping and starting.
          */
-        if (rsc->variant == pe_group) {
+        if (rsc->variant == pcmk_rsc_variant_group) {
             active = g_list_concat(active,
                                    get_active_resources(host, rsc->children));
         } else if (resource_is_running_on(rsc, host)) {
@@ -2064,10 +2067,10 @@ cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
         rsc = rsc->children->data;
     }
 
-    if(rsc->variant == pe_group) {
+    if (rsc->variant == pcmk_rsc_variant_group) {
         out->err(out, "Sorry, the %s option doesn't support group resources", rsc_action);
         return CRM_EX_UNIMPLEMENT_FEATURE;
-    } else if (rsc->variant == pe_container || pe_rsc_is_bundled(rsc)) {
+    } else if (pe_rsc_is_bundled(rsc)) {
         out->err(out, "Sorry, the %s option doesn't support bundled resources", rsc_action);
         return CRM_EX_UNIMPLEMENT_FEATURE;
     }

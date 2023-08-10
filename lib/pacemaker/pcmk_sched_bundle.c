@@ -115,7 +115,7 @@ pcmk__bundle_assign(pe_resource_t *rsc, const pe_node_t *prefer,
     pe_resource_t *bundled_resource = NULL;
     struct assign_data assign_data = { prefer, stop_if_fail };
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container));
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
 
     pe_rsc_trace(rsc, "Assigning bundle %s", rsc->id);
     pe__set_resource_flags(rsc, pe_rsc_allocating);
@@ -190,7 +190,7 @@ pcmk__bundle_create_actions(pe_resource_t *rsc)
     GList *containers = NULL;
     pe_resource_t *bundled_resource = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container));
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
 
     pe__foreach_bundle_replica(rsc, create_replica_actions, NULL);
 
@@ -295,7 +295,7 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
 {
     pe_resource_t *bundled_resource = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container));
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
 
     pe__foreach_bundle_replica(rsc, replica_internal_constraints, rsc);
 
@@ -522,8 +522,10 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
      * Instead, we add its colocation constraints to its containers and bundled
      * primitive and call the apply_coloc_score() method for them as dependents.
      */
-    CRM_ASSERT((primary != NULL) && (primary->variant == pe_container)
-               && (dependent != NULL) && (dependent->variant == pe_native)
+    CRM_ASSERT((primary != NULL)
+               && (primary->variant == pcmk_rsc_variant_bundle)
+               && (dependent != NULL)
+               && (dependent->variant == pcmk_rsc_variant_primitive)
                && (colocation != NULL) && !for_dependent);
 
     if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {
@@ -540,7 +542,7 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
     /* If the constraint dependent is a clone or bundle, "dependent" here is one
      * of its instances. Look for a compatible instance of this bundle.
      */
-    if (colocation->dependent->variant > pe_group) {
+    if (colocation->dependent->variant > pcmk_rsc_variant_group) {
         const pe_resource_t *primary_container = compatible_container(dependent,
                                                                       primary);
 
@@ -581,7 +583,7 @@ pcmk__with_bundle_colocations(const pe_resource_t *rsc,
 {
     const pe_resource_t *bundled_rsc = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container)
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle)
                && (orig_rsc != NULL) && (list != NULL));
 
     // The bundle itself and its containers always get its colocations
@@ -625,7 +627,7 @@ pcmk__bundle_with_colocations(const pe_resource_t *rsc,
 {
     const pe_resource_t *bundled_rsc = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container)
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle)
                && (orig_rsc != NULL) && (list != NULL));
 
     // The bundle itself and its containers always get its colocations
@@ -679,7 +681,7 @@ pcmk__bundle_action_flags(pe_action_t *action, const pe_node_t *node)
     pe_resource_t *bundled_resource = NULL;
 
     CRM_ASSERT((action != NULL) && (action->rsc != NULL)
-               && (action->rsc->variant == pe_container));
+               && (action->rsc->variant == pcmk_rsc_variant_bundle));
 
     bundled_resource = pe__bundled_resource(action->rsc);
     if (bundled_resource != NULL) {
@@ -741,7 +743,7 @@ pcmk__bundle_apply_location(pe_resource_t *rsc, pe__location_t *location)
 {
     pe_resource_t *bundled_resource = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container)
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle)
                && (location != NULL));
 
     pcmk__apply_location(rsc, location);
@@ -839,7 +841,7 @@ pcmk__bundle_add_actions_to_graph(pe_resource_t *rsc)
 {
     pe_resource_t *bundled_resource = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container));
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
 
     bundled_resource = pe__bundled_resource(rsc);
     if (bundled_resource != NULL) {
@@ -971,7 +973,7 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node)
 {
     struct probe_data probe_data = { rsc, node, false };
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container));
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
     pe__foreach_bundle_replica(rsc, create_replica_probes, &probe_data);
     return probe_data.any_created;
 }
@@ -1012,7 +1014,7 @@ output_replica_actions(pe__bundle_replica_t *replica, void *user_data)
 void
 pcmk__output_bundle_actions(pe_resource_t *rsc)
 {
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container));
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
     pe__foreach_bundle_replica(rsc, output_replica_actions, NULL);
 }
 
@@ -1024,7 +1026,7 @@ pcmk__bundle_add_utilization(const pe_resource_t *rsc,
 {
     pe_resource_t *container = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container));
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         return;
@@ -1045,6 +1047,6 @@ pcmk__bundle_add_utilization(const pe_resource_t *rsc,
 void
 pcmk__bundle_shutdown_lock(pe_resource_t *rsc)
 {
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container));
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
     // Bundles currently don't support shutdown locks
 }

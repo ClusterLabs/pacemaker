@@ -20,6 +20,33 @@ extern "C" {
  * \ingroup core
  */
 
+//! Resource variants supported by Pacemaker
+enum pe_obj_types {
+    // Order matters: some code compares greater or lesser than
+    pcmk_rsc_variant_unknown    = -1,   //!< Unknown resource variant
+    pcmk_rsc_variant_primitive  = 0,    //!< Primitive resource
+    pcmk_rsc_variant_group      = 1,    //!< Group resource
+    pcmk_rsc_variant_clone      = 2,    //!< Clone resource
+    pcmk_rsc_variant_bundle     = 3,    //!< Bundle resource
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated Use pcmk_rsc_variant_unknown instead
+    pe_unknown      = pcmk_rsc_variant_unknown,
+
+    //! \deprecated Use pcmk_rsc_variant_primitive instead
+    pe_native       = pcmk_rsc_variant_primitive,
+
+    //! \deprecated Use pcmk_rsc_variant_group instead
+    pe_group        = pcmk_rsc_variant_group,
+
+    //! \deprecated Use pcmk_rsc_variant_clone instead
+    pe_clone        = pcmk_rsc_variant_clone,
+
+    //! \deprecated Use pcmk_rsc_variant_bundle instead
+    pe_container    = pcmk_rsc_variant_bundle,
+#endif
+};
+
 //! What resource needs before it can be recovered from a failed node
 enum rsc_start_requirement {
     pcmk_requires_nothing   = 0,    //!< Resource can be recovered immediately

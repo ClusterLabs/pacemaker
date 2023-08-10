@@ -16,6 +16,7 @@
 #  include <libxml/tree.h>          // xmlNode
 #  include <glib.h>                 // gboolean, guint, GList, GHashTable
 #  include <crm/common/iso8601.h>
+#  include <crm/common/scheduler.h>
 #  include <crm/pengine/common.h>
 
 #ifdef __cplusplus
@@ -32,14 +33,6 @@ typedef struct pe_node_s pe_node_t;
 typedef struct pe_action_s pe_action_t;
 typedef struct pe_resource_s pe_resource_t;
 typedef struct pe_working_set_s pe_working_set_t;
-
-enum pe_obj_types {
-    pe_unknown = -1,
-    pe_native = 0,
-    pe_group = 1,
-    pe_clone = 2,
-    pe_container = 3,
-};
 
 typedef struct resource_object_functions_s {
     gboolean (*unpack) (pe_resource_t*, pe_working_set_t*);

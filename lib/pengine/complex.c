@@ -85,23 +85,23 @@ static enum pe_obj_types
 get_resource_type(const char *name)
 {
     if (pcmk__str_eq(name, XML_CIB_TAG_RESOURCE, pcmk__str_casei)) {
-        return pe_native;
+        return pcmk_rsc_variant_primitive;
 
     } else if (pcmk__str_eq(name, XML_CIB_TAG_GROUP, pcmk__str_casei)) {
-        return pe_group;
+        return pcmk_rsc_variant_group;
 
     } else if (pcmk__str_eq(name, XML_CIB_TAG_INCARNATION, pcmk__str_casei)) {
-        return pe_clone;
+        return pcmk_rsc_variant_clone;
 
     } else if (pcmk__str_eq(name, PCMK_XE_PROMOTABLE_LEGACY, pcmk__str_casei)) {
         // @COMPAT deprecated since 2.0.0
-        return pe_clone;
+        return pcmk_rsc_variant_clone;
 
     } else if (pcmk__str_eq(name, XML_CIB_TAG_CONTAINER, pcmk__str_casei)) {
-        return pe_container;
+        return pcmk_rsc_variant_bundle;
     }
 
-    return pe_unknown;
+    return pcmk_rsc_variant_unknown;
 }
 
 static void
@@ -522,7 +522,7 @@ unpack_requires(pe_resource_t *rsc, const char *value, bool is_default)
         if (pcmk_is_set(rsc->flags, pe_rsc_fence_device)) {
             value = PCMK__VALUE_QUORUM;
 
-        } else if ((rsc->variant == pe_native)
+        } else if ((rsc->variant == pcmk_rsc_variant_primitive)
                    && xml_contains_remote_node(rsc->xml)) {
             value = PCMK__VALUE_QUORUM;
 
@@ -655,7 +655,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     (*rsc)->ops_xml = expand_idref(ops, data_set->input);
 
     (*rsc)->variant = get_resource_type((const char *) (*rsc)->xml->name);
-    if ((*rsc)->variant == pe_unknown) {
+    if ((*rsc)->variant == pcmk_rsc_variant_unknown) {
         pe_err("Ignoring resource '%s' of unknown type '%s'",
                id, (*rsc)->xml->name);
         common_free(*rsc);
@@ -930,7 +930,8 @@ uber_parent(pe_resource_t * rsc)
     if (parent == NULL) {
         return NULL;
     }
-    while (parent->parent != NULL && parent->parent->variant != pe_container) {
+    while ((parent->parent != NULL)
+           && (parent->parent->variant != pcmk_rsc_variant_bundle)) {
         parent = parent->parent;
     }
     return parent;
@@ -956,7 +957,8 @@ pe__const_top_resource(const pe_resource_t *rsc, bool include_bundle)
         return NULL;
     }
     while (parent->parent != NULL) {
-        if (!include_bundle && (parent->parent->variant == pe_container)) {
+        if (!include_bundle
+            && (parent->parent->variant == pcmk_rsc_variant_bundle)) {
             break;
         }
         parent = parent->parent;

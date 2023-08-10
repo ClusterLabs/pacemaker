@@ -895,7 +895,7 @@ check_instance_state(const pe_resource_t *instance, uint32_t *state)
     }
 
     // If instance is a collective (a cloned group), check its children instead
-    if (instance->variant > pe_native) {
+    if (instance->variant > pcmk_rsc_variant_primitive) {
         for (iter = instance->children;
              (iter != NULL) && !pcmk_all_flags_set(*state, instance_all);
              iter = iter->next) {
@@ -1011,7 +1011,7 @@ pcmk__create_instance_actions(pe_resource_t *collective, GList *instances)
         pe__set_action_flags(stop, pe_action_migrate_runnable);
     }
 
-    if (collective->variant == pe_clone) {
+    if (collective->variant == pcmk_rsc_variant_clone) {
         pe__create_clone_notif_pseudo_ops(collective, start, started, stop,
                                           stopped);
     }
@@ -1031,7 +1031,7 @@ pcmk__create_instance_actions(pe_resource_t *collective, GList *instances)
 static inline GList *
 get_instance_list(const pe_resource_t *rsc)
 {
-    if (rsc->variant == pe_container) {
+    if (rsc->variant == pcmk_rsc_variant_bundle) {
         return pe__bundle_containers(rsc);
     } else {
         return rsc->children;
@@ -1450,7 +1450,8 @@ can_interleave_actions(const pe_action_t *first, const pe_action_t *then)
         return false;
     }
 
-    if ((first->rsc->variant < pe_clone) || (then->rsc->variant < pe_clone)) {
+    if ((first->rsc->variant < pcmk_rsc_variant_clone)
+        || (then->rsc->variant < pcmk_rsc_variant_clone)) {
         crm_trace("Not interleaving %s with %s: not clones or bundles",
                   first->uuid, then->uuid);
         return false;
@@ -1622,7 +1623,7 @@ pcmk__collective_action_flags(pe_action_t *action, const GList *instances,
         uint32_t instance_flags;
 
         // Node is relevant only to primitive instances
-        if (instance->variant == pe_native) {
+        if (instance->variant == pcmk_rsc_variant_primitive) {
             instance_node = node;
         }
 

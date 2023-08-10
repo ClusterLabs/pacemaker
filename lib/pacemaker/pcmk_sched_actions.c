@@ -100,7 +100,7 @@ action_uuid_for_ordering(const char *first_uuid, const pe_resource_t *first_rsc)
 
     // Only non-notify actions for collective resources need remapping
     if ((strstr(first_uuid, PCMK_ACTION_NOTIFY) != NULL)
-        || (first_rsc->variant < pe_group)) {
+        || (first_rsc->variant < pcmk_rsc_variant_group)) {
         goto done;
     }
 
@@ -136,15 +136,11 @@ action_uuid_for_ordering(const char *first_uuid, const pe_resource_t *first_rsc)
     }
 
     if (remapped_task != pcmk_action_unspecified) {
-        /* If a (clone) resource has notifications enabled, we want to order
-         * relative to when all notifications have been sent for the remapped
-         * task. Only outermost resources or those in bundles have
-         * notifications.
+        /* If a clone or bundle has notifications enabled, the ordering will be
+         * relative to when notifications have been sent for the remapped task.
          */
         if (pcmk_is_set(first_rsc->flags, pe_rsc_notify)
-            && ((first_rsc->parent == NULL)
-                || (pe_rsc_is_clone(first_rsc)
-                    && (first_rsc->parent->variant == pe_container)))) {
+            && (pe_rsc_is_clone(first_rsc) || pe_rsc_is_bundled(first_rsc))) {
             uuid = pcmk__notify_key(rid, "confirmed-post",
                                     task2text(remapped_task));
         } else {
@@ -187,7 +183,8 @@ action_for_ordering(pe_action_t *action)
     pe_action_t *result = action;
     pe_resource_t *rsc = action->rsc;
 
-    if ((rsc != NULL) && (rsc->variant >= pe_group) && (action->uuid != NULL)) {
+    if ((rsc != NULL) && (rsc->variant >= pcmk_rsc_variant_group)
+        && (action->uuid != NULL)) {
         char *uuid = action_uuid_for_ordering(action->uuid, rsc);
 
         result = find_first_action(rsc->actions, uuid, NULL, NULL);
@@ -533,7 +530,7 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
         pe_node_t *first_node = first->node;
 
         if ((first->rsc != NULL)
-            && (first->rsc->variant == pe_group)
+            && (first->rsc->variant == pcmk_rsc_variant_group)
             && pcmk__str_eq(first->task, PCMK_ACTION_START, pcmk__str_none)) {
 
             first_node = first->rsc->fns->location(first->rsc, NULL, FALSE);
@@ -544,7 +541,7 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
         }
 
         if ((then->rsc != NULL)
-            && (then->rsc->variant == pe_group)
+            && (then->rsc->variant == pcmk_rsc_variant_group)
             && pcmk__str_eq(then->task, PCMK_ACTION_START, pcmk__str_none)) {
 
             then_node = then->rsc->fns->location(then->rsc, NULL, FALSE);
@@ -667,7 +664,8 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
 static inline bool
 is_primitive_action(const pe_action_t *action)
 {
-    return action && action->rsc && (action->rsc->variant == pe_native);
+    return (action != NULL) && (action->rsc != NULL)
+           && (action->rsc->variant == pcmk_rsc_variant_primitive);
 }
 
 /*!
@@ -1552,7 +1550,7 @@ schedule_reload(gpointer data, gpointer user_data)
     pe_action_t *reload = NULL;
 
     // For collective resources, just call recursively for children
-    if (rsc->variant > pe_native) {
+    if (rsc->variant > pcmk_rsc_variant_primitive) {
         g_list_foreach(rsc->children, schedule_reload, user_data);
         return;
     }
@@ -1873,7 +1871,7 @@ process_node_history(pe_node_t *node, const xmlNode *lrm_rscs)
             for (GList *iter = result; iter != NULL; iter = iter->next) {
                 pe_resource_t *rsc = (pe_resource_t *) iter->data;
 
-                if (rsc->variant == pe_native) {
+                if (rsc->variant == pcmk_rsc_variant_primitive) {
                     process_rsc_history(rsc_entry, rsc, node);
                 }
             }

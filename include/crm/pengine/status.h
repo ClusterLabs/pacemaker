@@ -57,7 +57,7 @@ int pe_bundle_replicas(const pe_resource_t *rsc);
 static inline bool
 pe_rsc_is_clone(const pe_resource_t *rsc)
 {
-    return rsc && (rsc->variant == pe_clone);
+    return (rsc != NULL) && (rsc->variant == pcmk_rsc_variant_clone);
 }
 
 /*!
@@ -102,7 +102,7 @@ pe_rsc_is_bundled(const pe_resource_t *rsc)
     while (rsc->parent != NULL) {
         rsc = rsc->parent;
     }
-    return rsc->variant == pe_container;
+    return rsc->variant == pcmk_rsc_variant_bundle;
 }
 
 #ifdef __cplusplus

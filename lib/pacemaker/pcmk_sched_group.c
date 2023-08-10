@@ -41,7 +41,7 @@ pcmk__group_assign(pe_resource_t *rsc, const pe_node_t *prefer,
     pe_node_t *first_assigned_node = NULL;
     pe_resource_t *first_member = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_group));
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_group));
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         return rsc->allocated_to; // Assignment already done
@@ -113,7 +113,7 @@ create_group_pseudo_op(pe_resource_t *group, const char *action)
 void
 pcmk__group_create_actions(pe_resource_t *rsc)
 {
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_group));
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_group));
 
     pe_rsc_trace(rsc, "Creating actions for group %s", rsc->id);
 
@@ -306,7 +306,7 @@ pcmk__group_internal_constraints(pe_resource_t *rsc)
     struct member_data member_data = { false, };
     const pe_resource_t *top = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_group));
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_group));
 
     /* Order group pseudo-actions relative to each other for restarting:
      * stop group -> group is stopped -> start group -> group is started
@@ -466,7 +466,7 @@ pcmk__group_apply_coloc_score(pe_resource_t *dependent,
 
     } else {
         // Method should only be called for primitive dependents
-        CRM_ASSERT(dependent->variant == pe_native);
+        CRM_ASSERT(dependent->variant == pcmk_rsc_variant_primitive);
 
         colocate_with_group(dependent, primary, colocation);
     }
@@ -609,7 +609,7 @@ pcmk__group_apply_location(pe_resource_t *rsc, pe__location_t *location)
     GList *node_list_copy = NULL;
     bool reset_scores = true;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_group)
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_group)
                && (location != NULL));
 
     node_list_orig = location->node_list_rh;
@@ -647,7 +647,7 @@ pcmk__group_colocated_resources(const pe_resource_t *rsc,
 {
     const pe_resource_t *member = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_group));
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_group));
 
     if (orig_rsc == NULL) {
         orig_rsc = rsc;
@@ -685,7 +685,7 @@ pcmk__with_group_colocations(const pe_resource_t *rsc,
                              const pe_resource_t *orig_rsc, GList **list)
 
 {
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_group)
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_group)
                && (orig_rsc != NULL) && (list != NULL));
 
     // Ignore empty groups
@@ -735,7 +735,7 @@ pcmk__group_with_colocations(const pe_resource_t *rsc,
 {
     const pe_resource_t *member = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_group)
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_group)
                && (orig_rsc != NULL) && (list != NULL));
 
     // Ignore empty groups
@@ -845,7 +845,8 @@ pcmk__group_add_colocated_node_scores(pe_resource_t *source_rsc,
 {
     pe_resource_t *member = NULL;
 
-    CRM_ASSERT((source_rsc != NULL) && (source_rsc->variant == pe_group)
+    CRM_ASSERT((source_rsc != NULL)
+               && (source_rsc->variant == pcmk_rsc_variant_group)
                && (nodes != NULL)
                && ((colocation != NULL)
                    || ((target_rsc == NULL) && (*nodes == NULL))));
@@ -897,7 +898,7 @@ pcmk__group_add_utilization(const pe_resource_t *rsc,
 {
     pe_resource_t *member = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_group)
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_group)
                && (orig_rsc != NULL) && (utilization != NULL));
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
@@ -936,7 +937,7 @@ pcmk__group_add_utilization(const pe_resource_t *rsc,
 void
 pcmk__group_shutdown_lock(pe_resource_t *rsc)
 {
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_group));
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_group));
 
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
         pe_resource_t *member = (pe_resource_t *) iter->data;

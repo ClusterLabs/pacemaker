@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -196,41 +196,41 @@ extern "C" {
 /* Clone terminology definitions */
 
 // These can no longer be used in a switch together
-#define pe_master pe_clone
+#define pe_master pcmk_rsc_variant_clone
 
 static inline enum pe_obj_types
 get_resource_type(const char *name)
 {
     if (safe_str_eq(name, XML_CIB_TAG_RESOURCE)) {
-        return pe_native;
+        return pcmk_rsc_variant_primitive;
 
     } else if (safe_str_eq(name, XML_CIB_TAG_GROUP)) {
-        return pe_group;
+        return pcmk_rsc_variant_group;
 
     } else if (safe_str_eq(name, XML_CIB_TAG_INCARNATION)
                 || safe_str_eq(name, PCMK_XE_PROMOTABLE_LEGACY)) {
-        return pe_clone;
+        return pcmk_rsc_variant_clone;
 
     } else if (safe_str_eq(name, XML_CIB_TAG_CONTAINER)) {
-        return pe_container;
+        return pcmk_rsc_variant_bundle;
     }
 
-    return pe_unknown;
+    return pcmk_rsc_variant_unknown;
 }
 
 static inline const char *
 get_resource_typename(enum pe_obj_types type)
 {
     switch (type) {
-        case pe_native:
+        case pcmk_rsc_variant_primitive:
             return XML_CIB_TAG_RESOURCE;
-        case pe_group:
+        case pcmk_rsc_variant_group:
             return XML_CIB_TAG_GROUP;
-        case pe_clone:
+        case pcmk_rsc_variant_clone:
             return XML_CIB_TAG_INCARNATION;
-        case pe_container:
+        case pcmk_rsc_variant_bundle:
             return XML_CIB_TAG_CONTAINER;
-        case pe_unknown:
+        case pcmk_rsc_variant_unknown:
             return "unknown";
     }
     return "<unknown>";
