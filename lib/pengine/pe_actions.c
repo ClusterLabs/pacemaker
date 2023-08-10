@@ -158,8 +158,8 @@ find_rsc_op_entry_helper(const pcmk_resource_t *rsc, const char *key,
 
     // For migrate_to and migrate_from actions, retry with "migrate"
     // @TODO This should be either documented or deprecated
-    if ((strstr(key, PCMK_ACTION_MIGRATE_TO) != NULL)
-        || (strstr(key, PCMK_ACTION_MIGRATE_FROM) != NULL)) {
+    if (pcmk__ends_with(key, "_" PCMK_ACTION_MIGRATE_TO "_0")
+        || pcmk__ends_with(key, "_" PCMK_ACTION_MIGRATE_FROM "_0")) {
         retry_key = pcmk__op_key(rsc->id, "migrate", 0);
         action_config = find_exact_action_config(rsc, retry_key,
                                                  include_disabled);
