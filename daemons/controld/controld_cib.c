@@ -19,6 +19,9 @@
 
 #include <pacemaker-controld.h>
 
+// Async client ID of controld_globals.cib_conn
+static const char *cib_client_id = NULL;
+
 // Call ID of the most recent in-progress CIB resource update (or 0 if none)
 static int pending_rsc_update = 0;
 
@@ -162,8 +165,7 @@ do_cib_replaced(const char *event, xmlNode * msg)
     }
 
     if ((crm_element_value_int(msg, F_CIB_CALLID, &call_id) == 0)
-        && pcmk__str_eq(client_id, controld_globals.cib_client_id,
-                        pcmk__str_none)
+        && pcmk__str_eq(client_id, cib_client_id, pcmk__str_none)
         && controld_forget_cib_replace_call(call_id)) {
         // We requested this replace op. No need to restart the join.
         return;
@@ -282,8 +284,7 @@ do_cib_control(long long action,
     } else {
         controld_set_fsa_input_flags(R_CIB_CONNECTED);
         cib_retries = 0;
-        cib_conn->cmds->client_id(cib_conn, &controld_globals.cib_client_id,
-                                  NULL);
+        cib_conn->cmds->client_id(cib_conn, &cib_client_id, NULL);
     }
 
     if (!pcmk_is_set(controld_globals.fsa_input_register, R_CIB_CONNECTED)) {
