@@ -77,5 +77,6 @@ libpe_status_test_la_CFLAGS = $(libpe_status_la_CFLAGS) -DPCMK__UNIT_TESTING \
 			      -fno-builtin -fno-inline
 libpe_status_test_la_LIBADD = $(top_builddir)/lib/common/libcrmcommon_test.la -lcmocka -lm
 
+.PHONY: clean-generic
 clean-generic:
 	rm -f *.log *.debug *~

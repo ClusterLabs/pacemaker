@@ -24,6 +24,7 @@ SUBDIRS                 =  crm pcmki
 
 GETTEXT_H		?= $(datadir)/gettext/gettext.h
 
+.PHONY: update-gettext
 update-gettext:
 	@if [ ! -e "$(GETTEXT_H)" ]; then				\
 		echo "$(GETTEXT_H) not found";				\

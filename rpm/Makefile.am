@@ -119,6 +119,7 @@ TARFILE		= $(abs_builddir)/../$(top_distdir).tar.gz
 
 # Create a source distribution based on a git archive. (If we aren't in a git
 # checkout, do a make dist instead.)
+.PHONY: export
 export:
 	cd $(abs_srcdir)/..;							\
 	if [ -z "$(CHECKOUT)" ] && [ -f "$(TARFILE)" ]; then			\
@@ -260,6 +261,7 @@ mock-clean:
 	-rm -rf "$(MOCK_DIR)"
 
 # Make debugging makefile issues easier
+.PHONY: vars
 vars:
 	@echo "CHECKOUT=$(CHECKOUT)"
 	@echo "VERSION=$(VERSION)"
@@ -287,5 +289,6 @@ vars:
 	@echo "SPEC_RELEASE_NO=$(SPEC_RELEASE_NO)"
 	@echo "TARFILE=$(TARFILE)"
 
+.PHONY: clean-local
 clean-local: mock-clean rpm-clean
 	-rm -f "$(TARFILE)"

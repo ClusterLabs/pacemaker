@@ -162,15 +162,21 @@ if BUILD_SPHINX_DOCS
 	done
 	@rsync $(RSYNC_OPTS) "$(builddir)/build-$(PACKAGE_SERIES).txt"	\
 		"$(RSYNC_DEST)/$(PACKAGE)/doc"
+endif
 
+.PHONY: all-local
 all-local:
+if BUILD_SPHINX_DOCS
 	@for book in $(BOOKS); do					\
 		$(MAKE) $(AM_MAKEFLAGS) BOOK=$$book			\
 			PAPER="$(PAPER)" SPHINXFLAGS="$(SPHINXFLAGS)"	\
 			BOOK_FORMATS="$(BOOK_FORMATS)" $$book/_build;	\
 	done
+endif
 
+.PHONY: install-data-local
 install-data-local: all-local
+if BUILD_SPHINX_DOCS
 	$(AM_V_at)for book in $(BOOKS); do				\
 		for format in $(BOOK_FORMATS); do			\
 			formatdir="$$book/_build/$$format";		\
@@ -185,13 +191,17 @@ install-data-local: all-local
 			done;						\
 		done;							\
 	done
+endif
 
+.PHONY: uninstall-local
 uninstall-local:
+if BUILD_SPHINX_DOCS
 	$(AM_V_at)for book in $(BOOKS); do		\
 		rm -rf "$(DESTDIR)/$(docdir)/$$book";	\
 	done
 endif
 
+.PHONY: clean-local
 clean-local:
 	$(AM_V_at)-rm -rf				\
 		$(BOOKS:%="$(builddir)/%/_build")	\

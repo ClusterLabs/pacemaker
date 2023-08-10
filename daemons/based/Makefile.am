@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2021 the Pacemaker project contributors
+# Copyright 2004-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -36,14 +36,19 @@ pacemaker_based_SOURCES	= pacemaker-based.c \
 			  based_remote.c \
 			  based_transaction.c
 
+.PHONY: clean-generic
 clean-generic:
 	rm -f *.log *.debug *.xml *~
 
-if BUILD_LEGACY_LINKS
+.PHONY: install-exec-hook
 install-exec-hook:
+if BUILD_LEGACY_LINKS
 	$(MKDIR_P) -- $(DESTDIR)$(CRM_DAEMON_DIR)
 	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f cib && $(LN_S) pacemaker-based cib
+endif
 
+.PHONY: uninstall-hook
 uninstall-hook:
+if BUILD_LEGACY_LINKS
 	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f cib
 endif

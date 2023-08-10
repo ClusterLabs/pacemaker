@@ -121,5 +121,6 @@ libcrmcommon_test_la_LIBADD	= $(libcrmcommon_la_LIBADD) -lcmocka -lm
 
 nodist_libcrmcommon_test_la_SOURCES = $(nodist_libcrmcommon_la_SOURCES)
 
+.PHONY: clean-generic
 clean-generic:
 	rm -f *.log *.debug *.xml *~

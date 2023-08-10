@@ -1,5 +1,5 @@
 #
-# Copyright 2012-2021 the Pacemaker project contributors
+# Copyright 2012-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -59,6 +59,7 @@ CLEANFILES = $(man8_MANS)
 # Always create a symlink for the old pacemaker_remoted name, so that bundle
 # container images using a current Pacemaker will run on cluster nodes running
 # Pacemaker 1 (>=1.1.17).
+.PHONY: install-exec-hook
 install-exec-hook:
 if BUILD_LEGACY_LINKS
 	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f lrmd && $(LN_S) pacemaker-execd lrmd
@@ -67,6 +68,7 @@ if BUILD_REMOTE
 	cd $(DESTDIR)$(sbindir) && rm -f pacemaker_remoted && $(LN_S) pacemaker-remoted pacemaker_remoted
 endif
 
+.PHONY: uninstall-hook
 uninstall-hook:
 if BUILD_LEGACY_LINKS
 	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f lrmd

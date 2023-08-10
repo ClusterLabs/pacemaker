@@ -67,6 +67,7 @@ DAEMON_R_DIRS	= $(CRM_CONFIG_DIR)	\
 DAEMON_RW_DIRS	= $(CRM_BUNDLE_DIR)	\
 		  $(CRM_LOG_DIR)
 
+.PHONY: core
 core:
 	@echo "Building only core components and tests: $(CORE)"
 	@for subdir in $(CORE); do \
@@ -74,6 +75,7 @@ core:
 		$(MAKE) $(AM_MAKEFLAGS) -C $$subdir all || exit 1; \
 	done
 
+.PHONY: core-clean
 core-clean:
 	@echo "Cleaning only core components and tests: $(CORE)"
 	@for subdir in $(CORE); do \
@@ -81,6 +83,7 @@ core-clean:
 		$(MAKE) $(AM_MAKEFLAGS) -C $$subdir clean || exit 1; \
 	done
 
+.PHONY: install-exec-local
 install-exec-local:
 	for DIR in $(ROOT_DIRS) $(DAEMON_R_DIRS); do				\
 		$(INSTALL) -d -m 750 "$(DESTDIR)/$$DIR";			\
@@ -96,18 +99,22 @@ install-exec-local:
 	done
 
 # Remove created directories only if they're empty
+.PHONY: uninstall-hook
 uninstall-hook:
 	-for DIR in $(ROOT_DIRS) $(DAEMON_R_DIRS) $(DAEMON_RW_DIRS); do	\
 		rmdir "$(DESTDIR)/$$DIR";				\
 	done
 
+.PHONY: clean-generic
 clean-generic:
 	-rm -f *.tar.bz2 *.sed
 
 PACKAGE         ?= pacemaker
 
+.PHONY: clean-local
 clean-local:
 	-rm -f $(builddir)/$(PACKAGE)-*.tar.gz
 
+.PHONY: distclean-local
 distclean-local:
 	-rm -rf libltdl autom4te.cache

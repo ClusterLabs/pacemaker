@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2022 the Pacemaker project contributors
+# Copyright 2004-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -36,13 +36,18 @@ pacemaker_attrd_SOURCES	= attrd_alerts.c 	\
 						  attrd_utils.c 	\
 						  pacemaker-attrd.c
 
+.PHONY: clean-generic
 clean-generic:
 	rm -f *.log *.debug *.xml *~
 
-if BUILD_LEGACY_LINKS
+.PHONY: install-exec-hook
 install-exec-hook:
+if BUILD_LEGACY_LINKS
 	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f attrd && $(LN_S) pacemaker-attrd attrd
+endif
 
+.PHONY: uninstall-hook
 uninstall-hook:
+if BUILD_LEGACY_LINKS
 	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f attrd
 endif

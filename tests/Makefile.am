@@ -1,5 +1,5 @@
 #
-# Copyright 2020-2022 the Pacemaker project contributors
+# Copyright 2020-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -12,6 +12,7 @@ EXTRA_DIST = tap-driver.sh \
 	     tap-test \
 	     test-headers.sh
 
+.PHONY: check
 check: check-headers
 
 .PHONY: check-headers

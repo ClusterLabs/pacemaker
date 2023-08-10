@@ -44,9 +44,11 @@ pacemaker_fenced_SOURCES	= pacemaker-fenced.c \
 CLEANFILES = $(man7_MANS) $(man8_MANS)
 
 if BUILD_LEGACY_LINKS
+.PHONY: install-exec-hook
 install-exec-hook:
 	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f stonithd && $(LN_S) pacemaker-fenced stonithd
 
+.PHONY: uninstall-hook
 uninstall-hook:
 	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f stonithd
 endif

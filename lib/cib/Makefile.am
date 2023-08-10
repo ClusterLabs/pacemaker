@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2018 the Pacemaker project contributors
+# Copyright 2004-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -24,5 +24,6 @@ libcib_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 libcib_la_LIBADD	= $(top_builddir)/lib/pengine/libpe_rules.la \
 			  $(top_builddir)/lib/common/libcrmcommon.la
 
+.PHONY: clean-generic
 clean-generic:
 	rm -f *.log *.debug *.xml *~

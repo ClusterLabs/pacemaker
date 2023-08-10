@@ -55,6 +55,7 @@ dist_halib_SCRIPTS	= cts-log-watcher
 
 noinst_SCRIPTS		= cluster_test
 
+.PHONY: scheduler-list
 scheduler-list:
 	@for T in "$(srcdir)"/scheduler/xml/*.xml; do       \
 		echo $$(basename $$T .xml);             \
@@ -62,15 +63,18 @@ scheduler-list:
 
 CLEANFILES	= $(builddir)/.regression.failed.diff
 
+.PHONY: clean-local
 clean-local:
 	rm -f scheduler/*/*.pe
 
 SUBDIRS	= benchmark scheduler support
 
+.PHONY: cts-support-install
 cts-support-install:
 	$(MAKE) $(AM_MAKEFLAGS) -C support cts-support
 	$(builddir)/support/cts-support install
 
+.PHONY: cts-support-uninstall
 cts-support-uninstall:
 	$(MAKE) $(AM_MAKEFLAGS) -C support cts-support
 	$(builddir)/support/cts-support uninstall
@@ -86,5 +90,6 @@ python_files = cts-attrd \
 			   cts-regression \
 			   cts-scheduler
 
+.PHONY: pylint
 pylint: $(python_files)
 	PYTHONPATH=$(top_builddir)/python pylint --rcfile $(top_srcdir)/python/pylintrc $(python_files)

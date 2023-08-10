@@ -79,9 +79,11 @@ endif
 CLEANFILES = $(man7_MANS)
 
 if BUILD_LEGACY_LINKS
+.PHONY: install-exec-hook
 install-exec-hook:
 	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f crmd && $(LN_S) pacemaker-controld crmd
 
+.PHONY: uninstall-hook
 uninstall-hook:
 	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f crmd
 endif

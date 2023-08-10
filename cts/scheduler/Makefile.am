@@ -10,6 +10,7 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 pedir		= $(datadir)/$(PACKAGE)/tests/scheduler
 
+.PHONY: list
 list:
 	@for T in "$(srcdir)"/xml/*.xml; do       \
 		echo $$(basename $$T .xml);             \

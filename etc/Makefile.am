@@ -1,5 +1,5 @@
 #
-# Copyright 2021-2022 the Pacemaker project contributors
+# Copyright 2021-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -23,6 +23,7 @@ logrotate_DATA		= logrotate.d/pacemaker
 EXTRA_DIST		= $(foreach f,$(CONFIGS),sysconfig/$(f))
 
 # Don't overwrite user's existing config files
+.PHONY: install-data-local
 install-data-local:
 	$(AM_V_at)$(MKDIR_P) $(DESTDIR)$(configdir)
 	$(AM_V_at)for f in $(CONFIGS); do				\
@@ -31,6 +32,7 @@ install-data-local:
 		$(INSTALL_DATA) "$(srcdir)/sysconfig/$$f" "$$dest";	\
 	done
 
+.PHONY: uninstall-local
 uninstall-local:
 	$(AM_V_at)for f in $(CONFIGS); do		\
 		dest="$(DESTDIR)$(configdir)/$$f";	\
