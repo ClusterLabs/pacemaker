@@ -60,7 +60,6 @@
 #  define F_CIB_LOCAL_NOTIFY_ID	"cib_local_notify_id"
 #  define F_CIB_PING_ID         "cib_ping_id"
 #  define F_CIB_SCHEMA_MAX      "cib_schema_max"
-#  define F_CIB_CHANGE_SECTION  "cib_change_section"
 
 #  define T_CIB			"cib"
 #  define T_CIB_COMMAND		"cib_command"
@@ -70,19 +69,6 @@
 #  define T_CIB_POST_NOTIFY	"cib_post_notify"
 #  define T_CIB_TRANSACTION	"cib_transaction"
 #  define T_CIB_UPDATE_CONFIRM	"cib_update_confirmation"
-#  define T_CIB_REPLACE_NOTIFY	"cib_refresh_notify"
-
-/*!
- * \internal
- * \enum cib_change_section_info
- * \brief Flags to indicate which sections of the CIB have changed
- */
-enum cib_change_section_info {
-    cib_change_section_none     = 0,        //!< No sections have changed
-    cib_change_section_nodes    = (1 << 0), //!< The nodes section has changed
-    cib_change_section_alerts   = (1 << 1), //!< The alerts section has changed
-    cib_change_section_status   = (1 << 2), //!< The status section has changed
-};
 
 /*!
  * \internal
@@ -125,20 +111,6 @@ enum cib__op_type {
     cib__op_sync_one,
     cib__op_upgrade,
 };
-
-/*!
- * \internal
- * \brief Set given <tt>enum cib_change_section_info</tt> flags
- *
- * \param[in,out] flags_orig    Group of flags to update
- * \param[in]     flags_to_set  Flags to clear from \p flags_orig
- */
-#define pcmk__set_change_section(flags_orig, flags_to_set) do {         \
-        flags_orig = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,  \
-                                        "CIB change section",           \
-                                        "change_section", flags_orig,   \
-                                        flags_to_set, #flags_to_set);   \
-    } while (0)
 
 gboolean cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, int *updates,
                                   int *_admin_epoch, int *_epoch, int *_updates);

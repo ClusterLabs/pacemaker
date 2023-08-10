@@ -44,12 +44,6 @@ typedef struct cib_local_notify_s {
     gboolean sync_reply;
 } cib_local_notify_t;
 
-struct digest_data {
-    char *nodes;
-    char *alerts;
-    char *status;
-};
-
 int next_client_id = 0;
 
 gboolean legacy_mode = FALSE;
@@ -70,24 +64,6 @@ gboolean
 cib_legacy_mode(void)
 {
     return legacy_mode;
-}
-
-/*!
- * \internal
- * \brief Free a <tt>struct digest_data</tt> object's members
- *
- * \param[in,out] digests  Object whose members to free
- *
- * \note This does not free the object itself, which may be stack-allocated.
- */
-static void
-free_digests(struct digest_data *digests)
-{
-    if (digests != NULL) {
-        free(digests->nodes);
-        free(digests->alerts);
-        free(digests->status);
-    }
 }
 
 static int32_t
@@ -323,9 +299,6 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
 
         } else if (pcmk__str_eq(type, T_CIB_DIFF_NOTIFY, pcmk__str_casei)) {
             bit = cib_notify_diff;
-
-        } else if (pcmk__str_eq(type, T_CIB_REPLACE_NOTIFY, pcmk__str_casei)) {
-            bit = cib_notify_replace;
 
         } else {
             status = CRM_EX_INVALID_PARAM;
@@ -1317,119 +1290,6 @@ prepare_input(const xmlNode *request, enum cib__op_type type,
     return input;
 }
 
-static char *
-calculate_section_digest(const char *xpath, xmlNode * xml_obj)
-{
-    xmlNode *xml_section = NULL;
-
-    if (xml_obj == NULL) {
-        return NULL;
-    }
-
-    xml_section = get_xpath_object(xpath, xml_obj, LOG_TRACE);
-    if (xml_section == NULL) {
-        return NULL;
-    }
-    return calculate_xml_versioned_digest(xml_section, FALSE, TRUE, CRM_FEATURE_SET); 
-
-}
-
-#define XPATH_CONFIG    "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION
-#define XPATH_NODES     XPATH_CONFIG "/" XML_CIB_TAG_NODES
-#define XPATH_ALERTS    XPATH_CONFIG "/" XML_CIB_TAG_ALERTS
-#define XPATH_STATUS    "/" XML_TAG_CIB "/" XML_CIB_TAG_STATUS
-
-/*!
- * \internal
- * \brief Calculate digests of CIB sections
- *
- * \param[in]  cib      CIB to get digests from
- * \param[out] digests  Where to store digests
- *
- * \note The caller is responsible for freeing the output argument's members
- *       using \p free_digests().
- */
-static void
-get_digests(xmlNode *cib, struct digest_data *digests)
-{
-    digests->nodes = calculate_section_digest(XPATH_NODES, cib);
-    digests->alerts = calculate_section_digest(XPATH_ALERTS, cib);
-    digests->status = calculate_section_digest(XPATH_STATUS, cib);
-}
-
-/*!
- * \internal
- * \brief Determine which CIB sections were changed by an operation
- *
- * \param[in] before  Digests before the operation
- * \param[in] after   Digests after the operation
- *
- * \return Group of <tt>enum cib_change_section_info</tt> flags indicating which
- *         sections have changed
- */
-static uint32_t
-get_change_sections(const struct digest_data *before,
-                    const struct digest_data *after)
-{
-    uint32_t change_sections = cib_change_section_none;
-
-    if (!pcmk__str_eq(before->nodes, after->nodes, pcmk__str_none)) {
-        pcmk__set_change_section(change_sections, cib_change_section_nodes);
-    }
-    if (!pcmk__str_eq(before->alerts, after->alerts, pcmk__str_none)) {
-        pcmk__set_change_section(change_sections, cib_change_section_alerts);
-    }
-    if (!pcmk__str_eq(before->status, after->status, pcmk__str_none)) {
-        pcmk__set_change_section(change_sections, cib_change_section_status);
-    }
-
-    return change_sections;
-}
-
-/*!
- * \internal
- * \brief Check whether a CIB replace notification should be sent
- *
- * A CIB replace notification should be sent after an operation if the operation
- * is of an appropriate type, notifications are not disabled, and any of certain
- * CIB sections has changed.
- *
- * \param[in]  before_digests   Digests before operation
- * \param[in]  after_cib        Result CIB after operation
- * \param[in]  operation        CIB operation
- * \param[in]  call_options     Group of <tt>enum cib_call_options</tt> flags
- * \param[out] change_sections  Group of <tt>enum cib_change_section_info</tt>
- *                              flags indicating which sections have changed
- *
- * \return \p true if a replace notification should be sent, or \p false
- *         otherwise
- */
-static bool
-should_replace_notify(const struct digest_data *before_digests,
-                      xmlNode *after_cib, const cib__operation_t *operation,
-                      int call_options, uint32_t *change_sections)
-{
-    struct digest_data after_digests = { 0, };
-
-    *change_sections = cib_change_section_none;
-
-    if (!pcmk_is_set(operation->flags, cib__op_attr_replaces)
-        || pcmk_is_set(call_options, cib_inhibit_notify)) {
-        return false;
-    }
-
-    get_digests(after_cib, &after_digests);
-    crm_trace("after-digest %s:%s:%s",
-              pcmk__s(after_digests.nodes, "(null)"),
-              pcmk__s(after_digests.alerts, "(null)"),
-              pcmk__s(after_digests.status, "(null)"));
-
-    *change_sections = get_change_sections(before_digests, &after_digests);
-    free_digests(&after_digests);
-
-    return (*change_sections != cib_change_section_none);
-}
-
 // v1 and v2 patch formats
 #define XPATH_CONFIG_CHANGE             \
     "//" XML_CIB_TAG_CRMCONFIG " | "    \
@@ -1476,8 +1336,6 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     bool manage_counters = true;
 
     static mainloop_timer_t *digest_timer = NULL;
-
-    struct digest_data before_digests = { 0, };
 
     CRM_ASSERT(cib_status == pcmk_ok);
 
@@ -1533,18 +1391,6 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
         manage_counters = false;
     }
 
-    // Calculate the digests of relevant sections before the operation
-    if (pcmk_is_set(operation->flags, cib__op_attr_replaces)
-        && !pcmk_any_flags_set(call_options,
-                               cib_dryrun|cib_inhibit_notify|cib_transaction)) {
-
-        get_digests(the_cib, &before_digests);
-        crm_trace("before-digest %s:%s:%s",
-                  pcmk__s(before_digests.nodes, "(null)"),
-                  pcmk__s(before_digests.alerts, "(null)"),
-                  pcmk__s(before_digests.status, "(null)"));
-    }
-
     // result_cib must not be modified after cib_perform_op() returns
     rc = cib_perform_op(op, call_options, op_function, false, section,
                         request, input, manage_counters, &config_changed,
@@ -1576,9 +1422,11 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     if ((rc == pcmk_ok)
         && !pcmk_any_flags_set(call_options, cib_dryrun|cib_transaction)) {
 
-        uint32_t change_sections = cib_change_section_none;
-
         if (result_cib != the_cib) {
+            if (pcmk_is_set(operation->flags, cib__op_attr_writes_through)) {
+                config_changed = true;
+            }
+
             crm_trace("Activating %s->%s%s",
                       crm_element_value(the_cib, XML_ATTR_NUMUPDATES),
                       crm_element_value(result_cib, XML_ATTR_NUMUPDATES),
@@ -1592,14 +1440,6 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
 
         if ((rc == pcmk_ok) && contains_config_change(*cib_diff)) {
             cib_read_config(config_hash, result_cib);
-        }
-
-        if (should_replace_notify(&before_digests, result_cib, operation,
-                                  call_options, &change_sections)) {
-
-            // @TODO: Should update argument be result_cib instead of the_cib?
-            cib_replace_notify(op, rc, call_id, client_id, client_name, origin,
-                               the_cib, *cib_diff, change_sections);
         }
 
         mainloop_timer_stop(digest_timer);
@@ -1645,7 +1485,6 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     if (output != the_cib) {
         free_xml(output);
     }
-    free_digests(&before_digests);
     crm_trace("done");
     return rc;
 }
