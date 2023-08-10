@@ -125,24 +125,6 @@ attrd_read_options(gpointer user_data)
     return TRUE;
 }
 
-void
-attrd_cib_updated_cb(const char *event, xmlNode * msg)
-{
-    const xmlNode *patchset = NULL;
-
-    if (attrd_shutting_down(true)) {
-        return;
-    }
-
-    if (cib__get_notify_patchset(msg, &patchset) != pcmk_rc_ok) {
-        return;
-    }
-
-    if (cib__element_in_patchset(patchset, XML_CIB_TAG_ALERTS)) {
-        mainloop_set_trigger(attrd_config_read);
-    }
-}
-
 int
 attrd_send_attribute_alert(const char *node, int nodeid,
                            const char *attr, const char *value)

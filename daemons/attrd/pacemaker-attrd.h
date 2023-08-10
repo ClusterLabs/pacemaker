@@ -62,7 +62,9 @@ void attrd_shutdown(int nsig);
 void attrd_init_ipc(void);
 void attrd_ipc_fini(void);
 
+int attrd_cib_connect(int max_retry);
 void attrd_cib_disconnect(void);
+void attrd_cib_init(void);
 
 bool attrd_value_needs_expansion(const char *value);
 int attrd_expand_value(const char *value, const char *old_value);
@@ -91,6 +93,7 @@ int attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
                         guint interval_ms);
 
 extern cib_t *the_cib;
+extern crm_exit_t attrd_exit_status;
 
 /* Alerts */
 
@@ -99,8 +102,6 @@ extern crm_trigger_t *attrd_config_read;
 
 void attrd_lrmd_disconnect(void);
 gboolean attrd_read_options(gpointer user_data);
-void attrd_cib_replaced_cb(const char *event, xmlNode * msg);
-void attrd_cib_updated_cb(const char *event, xmlNode *msg);
 int attrd_send_attribute_alert(const char *node, int nodeid,
                                const char *attr, const char *value);
 
