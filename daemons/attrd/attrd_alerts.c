@@ -14,6 +14,7 @@
 #include <crm/cluster/internal.h>
 #include <crm/cluster/election_internal.h>
 #include <crm/common/alerts_internal.h>
+#include <crm/common/cib_internal.h>
 #include <crm/pengine/rules_internal.h>
 #include <crm/lrmd_internal.h>
 #include "pacemaker-attrd.h"
@@ -104,9 +105,6 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     attrd_alert_list = pe_unpack_alerts(crmalerts);
 }
 
-#define XPATH_ALERTS \
-    "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_ALERTS
-
 gboolean
 attrd_read_options(gpointer user_data)
 {
@@ -114,8 +112,9 @@ attrd_read_options(gpointer user_data)
 
     CRM_CHECK(the_cib != NULL, return TRUE);
 
-    call_id = the_cib->cmds->query(the_cib, XPATH_ALERTS, NULL,
-                                   cib_xpath | cib_scope_local);
+    call_id = the_cib->cmds->query(the_cib,
+                                   pcmk__cib_abs_xpath_for(XML_CIB_TAG_ALERTS),
+                                   NULL, cib_xpath|cib_scope_local);
 
     the_cib->cmds->register_callback_full(the_cib, call_id, 120, FALSE, NULL,
                                           "config_query_callback",
