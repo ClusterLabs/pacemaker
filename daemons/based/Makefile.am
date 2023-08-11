@@ -36,10 +36,6 @@ pacemaker_based_SOURCES	= pacemaker-based.c \
 			  based_remote.c \
 			  based_transaction.c
 
-.PHONY: clean-generic
-clean-generic:
-	rm -f *.log *.debug *.xml *~
-
 .PHONY: install-exec-hook
 install-exec-hook:
 if BUILD_LEGACY_LINKS

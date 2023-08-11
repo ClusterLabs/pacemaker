@@ -24,7 +24,3 @@ libcrmcluster_la_SOURCES = election.c cluster.c membership.c
 if BUILD_CS_SUPPORT
 libcrmcluster_la_SOURCES += cpg.c corosync.c
 endif
-
-.PHONY: clean-generic
-clean-generic:
-	rm -f *.log *.debug *.xml *~
