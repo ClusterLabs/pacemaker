@@ -18,5 +18,5 @@ check: check-headers
 .PHONY: check-headers
 check-headers:
 	CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" CC="$(CC)"		\
-		CXX="$(CXX)" CPPFLAGS="$(CPPFLAGS)" LIBS="$(LIBS)"	\
+		CXX="$(CXX)" CPPFLAGS="$(CPPFLAGS) -I$(top_builddir)/include" LIBS="$(LIBS)"	\
 		SRCDIR="$(top_srcdir)" sh "$(srcdir)/test-headers.sh"
