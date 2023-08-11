@@ -17,7 +17,6 @@ header_HEADERS = acl.h \
 				 agents_compat.h \
 				 cib.h \
 				 ipc.h \
-				 ipc_attrd_internal.h \
 				 ipc_controld.h \
 				 ipc_pacemakerd.h \
 				 ipc_schedulerd.h \
@@ -39,25 +38,4 @@ header_HEADERS = acl.h \
 				 xml.h \
 				 xml_compat.h
 
-noinst_HEADERS = acl_internal.h 	\
-				 actions_internal.h	\
-				 alerts_internal.h	\
-				 attrd_internal.h	\
-				 cmdline_internal.h	\
-				 health_internal.h	\
-				 internal.h		\
-				 io_internal.h		\
-				 ipc_internal.h		\
-				 iso8601_internal.h	\
-				 lists_internal.h	\
-				 logging_internal.h	\
-				 messages_internal.h	\
-				 options_internal.h	\
-				 output_internal.h	\
-				 remote_internal.h	\
-				 results_internal.h	\
-				 roles_internal.h	\
-				 scheduler_internal.h	\
-				 strings_internal.h	\
-				 unittest_internal.h \
-				 xml_internal.h
+noinst_HEADERS = $(wildcard *internal.h)

@@ -23,28 +23,7 @@ dist_test_DATA		= README.md			\
 			  valgrind-pcmk.suppressions
 
 clidir		= $(testdir)/cli
-dist_cli_DATA	= cli/constraints.xml 				\
-		  cli/crmadmin-cluster-remote-guest-nodes.xml	\
-		  cli/crm_diff_new.xml				\
-		  cli/crm_diff_old.xml				\
-		  cli/crm_mon.xml				\
-		  cli/crm_mon-feature_set.xml			\
-		  cli/crm_mon-partial.xml			\
-		  cli/crm_mon-rsc-maint.xml			\
-		  cli/crm_mon-T180.xml				\
-		  cli/crm_mon-unmanaged.xml			\
-		  cli/crm_resource_digests.xml			\
-		  cli/regression.acls.exp			\
-		  cli/regression.crm_mon.exp			\
-		  cli/regression.daemons.exp			\
-		  cli/regression.dates.exp			\
-		  cli/regression.error_codes.exp		\
-		  cli/regression.feature_set.exp		\
-		  cli/regression.rules.exp			\
-		  cli/regression.tools.exp			\
-		  cli/regression.upgrade.exp			\
-		  cli/regression.validity.exp			\
-		  cli/regression.access_render.exp
+dist_cli_DATA	= $(wildcard cli/*.xml cli/*.exp)
 
 ctsdir			= $(datadir)/$(PACKAGE)/tests/cts
 cts_SCRIPTS		= cts

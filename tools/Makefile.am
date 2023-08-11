@@ -27,23 +27,8 @@ noinst_SCRIPTS		= cluster-clean		\
 			  cluster-helper	\
 			  pcmk_simtimes
 
-EXTRA_DIST		= attrd_updater.8.inc \
-			  cibadmin.8.inc \
-				  crm_attribute.8.inc \
-				  crm_diff.8.inc \
-				  crm_error.8.inc \
-			  crm_mon.8.inc			\
-			  crm_node.8.inc \
-			  crm_resource.8.inc \
-			  crm_rule.8.inc \
-			  crm_shadow.8.inc \
-			  crm_simulate.8.inc \
-			  crm_ticket.8.inc \
-			  crm_verify.8.inc \
-			  crmadmin.8.inc \
-			  fix-manpages \
-			  iso8601.8.inc \
-			  stonith_admin.8.inc
+EXTRA_DIST		= $(wildcard *.inc) 	\
+			  fix-manpages
 
 sbin_PROGRAMS		= attrd_updater \
 			  cibadmin \

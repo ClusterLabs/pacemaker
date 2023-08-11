@@ -14,21 +14,7 @@ halibdir	= $(CRM_DAEMON_DIR)
 
 halib_PROGRAMS	= pacemaker-controld
 
-noinst_HEADERS	= controld_alerts.h		\
-		  controld_callbacks.h		\
-		  controld_cib.h		\
-		  controld_fencing.h		\
-		  controld_fsa.h		\
-		  controld_globals.h		\
-		  controld_lrm.h		\
-		  controld_membership.h		\
-		  controld_messages.h		\
-		  controld_metadata.h		\
-		  controld_throttle.h		\
-		  controld_timers.h		\
-		  controld_transition.h		\
-		  controld_utils.h		\
-		  pacemaker-controld.h
+noinst_HEADERS	= $(wildcard *.h)
 
 pacemaker_controld_CFLAGS	= $(CFLAGS_HARDENED_EXE)
 pacemaker_controld_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)

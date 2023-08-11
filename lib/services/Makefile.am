@@ -1,5 +1,5 @@
 #
-# Copyright 2012-2021 the Pacemaker project contributors
+# Copyright 2012-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -12,10 +12,7 @@ MAINTAINERCLEANFILES = Makefile.in
 AM_CPPFLAGS			= -I$(top_srcdir)/include
 
 lib_LTLIBRARIES			= libcrmservice.la
-noinst_HEADERS			= pcmk-dbus.h upstart.h systemd.h \
-				  services_lsb.h services_nagios.h \
-				  services_ocf.h \
-				  services_private.h
+noinst_HEADERS			= $(wildcard *.h)
 
 libcrmservice_la_LDFLAGS	= -version-info 31:2:3
 libcrmservice_la_CFLAGS		=

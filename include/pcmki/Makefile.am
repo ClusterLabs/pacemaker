@@ -9,16 +9,6 @@
 
 MAINTAINERCLEANFILES    = Makefile.in
 
-noinst_HEADERS		= pcmki_acl.h \
-			  pcmki_cluster_queries.h \
-			  pcmki_fence.h \
-			  pcmki_output.h \
-			  pcmki_resource.h \
-			  pcmki_result_code.h \
-			  pcmki_rule.h \
-			  pcmki_scheduler.h \
-			  pcmki_simulate.h \
-			  pcmki_status.h \
-			  pcmki_transition.h
+noinst_HEADERS		= $(wildcard *.h)
 
 .PHONY: $(ARCHIVE_VERSION)

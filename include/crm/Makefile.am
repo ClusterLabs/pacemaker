@@ -24,6 +24,6 @@ header_HEADERS		= cib.h			\
 			  services_compat.h	\
 			  stonith-ng.h
 
-noinst_HEADERS		= lrmd_internal.h services_internal.h
+noinst_HEADERS		= $(wildcard *_internal.h)
 
 SUBDIRS                 = common pengine cib fencing cluster
