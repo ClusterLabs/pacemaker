@@ -23,19 +23,21 @@ man7_MANS	= pacemaker-fenced.7
 endif
 
 cts_fence_helper_SOURCES	= cts-fence-helper.c
-cts_fence_helper_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
-				  $(top_builddir)/lib/fencing/libstonithd.la
+cts_fence_helper_LDADD = $(top_builddir)/lib/fencing/libstonithd.la
+cts_fence_helper_LDADD += $(top_builddir)/lib/common/libcrmcommon.la
 
 pacemaker_fenced_YFLAGS		= -d
 pacemaker_fenced_CFLAGS		= $(CFLAGS_HARDENED_EXE)
 pacemaker_fenced_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
-pacemaker_fenced_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la		\
-				  $(top_builddir)/lib/cib/libcib.la		\
-				  $(top_builddir)/lib/cluster/libcrmcluster.la		\
-				  $(top_builddir)/lib/fencing/libstonithd.la		\
-				  $(top_builddir)/lib/pengine/libpe_status.la		\
-				  $(top_builddir)/lib/pacemaker/libpacemaker.la	\
-				  $(CLUSTERLIBS)
+
+pacemaker_fenced_LDADD = $(top_builddir)/lib/pacemaker/libpacemaker.la
+pacemaker_fenced_LDADD += $(top_builddir)/lib/pengine/libpe_status.la
+pacemaker_fenced_LDADD += $(top_builddir)/lib/cib/libcib.la
+pacemaker_fenced_LDADD += $(top_builddir)/lib/cluster/libcrmcluster.la
+pacemaker_fenced_LDADD += $(top_builddir)/lib/fencing/libstonithd.la
+pacemaker_fenced_LDADD += $(top_builddir)/lib/common/libcrmcommon.la
+pacemaker_fenced_LDADD += $(CLUSTERLIBS)
+
 pacemaker_fenced_SOURCES	= pacemaker-fenced.c \
 				  fenced_commands.c \
 				  fenced_remote.c \

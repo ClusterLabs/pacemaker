@@ -13,9 +13,6 @@ EXTRA_DIST	= cib.pam
 
 halibdir	= $(CRM_DAEMON_DIR)
 
-COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la \
-		$(top_builddir)/lib/cib/libcib.la
-
 halib_PROGRAMS	= pacemaker-based
 
 noinst_HEADERS	= based_transaction.h \
@@ -24,8 +21,10 @@ noinst_HEADERS	= based_transaction.h \
 pacemaker_based_CFLAGS	= $(CFLAGS_HARDENED_EXE)
 pacemaker_based_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
 
-pacemaker_based_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la \
-			  $(COMMONLIBS) $(CLUSTERLIBS)
+pacemaker_based_LDADD = $(top_builddir)/lib/cluster/libcrmcluster.la
+pacemaker_based_LDADD += $(top_builddir)/lib/cib/libcib.la
+pacemaker_based_LDADD += $(top_builddir)/lib/common/libcrmcommon.la
+pacemaker_based_LDADD += $(CLUSTERLIBS)
 
 pacemaker_based_SOURCES	= pacemaker-based.c \
 			  based_callbacks.c \

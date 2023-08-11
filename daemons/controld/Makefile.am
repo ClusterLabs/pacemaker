@@ -19,15 +19,15 @@ noinst_HEADERS	= $(wildcard *.h)
 pacemaker_controld_CFLAGS	= $(CFLAGS_HARDENED_EXE)
 pacemaker_controld_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
 
-pacemaker_controld_LDADD = $(top_builddir)/lib/fencing/libstonithd.la		\
-			   $(top_builddir)/lib/pacemaker/libpacemaker.la \
-			   $(top_builddir)/lib/pengine/libpe_rules.la		\
-			   $(top_builddir)/lib/cib/libcib.la			\
-			   $(top_builddir)/lib/cluster/libcrmcluster.la		\
-			   $(top_builddir)/lib/common/libcrmcommon.la		\
-			   $(top_builddir)/lib/services/libcrmservice.la	\
-			   $(top_builddir)/lib/lrmd/liblrmd.la			\
-			   $(CLUSTERLIBS)
+pacemaker_controld_LDADD = $(top_builddir)/lib/pacemaker/libpacemaker.la
+pacemaker_controld_LDADD += $(top_builddir)/lib/cib/libcib.la
+pacemaker_controld_LDADD += $(top_builddir)/lib/pengine/libpe_rules.la
+pacemaker_controld_LDADD += $(top_builddir)/lib/fencing/libstonithd.la
+pacemaker_controld_LDADD += $(top_builddir)/lib/cluster/libcrmcluster.la
+pacemaker_controld_LDADD += $(top_builddir)/lib/lrmd/liblrmd.la
+pacemaker_controld_LDADD += $(top_builddir)/lib/services/libcrmservice.la
+pacemaker_controld_LDADD += $(top_builddir)/lib/common/libcrmcommon.la
+pacemaker_controld_LDADD += $(CLUSTERLIBS)
 
 pacemaker_controld_SOURCES = pacemaker-controld.c	\
 			     controld_alerts.c		\

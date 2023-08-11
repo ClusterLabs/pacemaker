@@ -26,11 +26,12 @@ endif
 
 noinst_HEADERS 	= pacemaker-schedulerd.h
 
-pacemaker_schedulerd_CFLAGS	= $(CFLAGS_HARDENED_EXE)
+pacemaker_schedulerd_CFLAGS		= $(CFLAGS_HARDENED_EXE)
 pacemaker_schedulerd_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
-pacemaker_schedulerd_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la \
-							  $(top_builddir)/lib/pengine/libpe_status.la \
-							  $(top_builddir)/lib/pacemaker/libpacemaker.la
+pacemaker_schedulerd_LDADD = $(top_builddir)/lib/pacemaker/libpacemaker.la
+pacemaker_schedulerd_LDADD += $(top_builddir)/lib/pengine/libpe_status.la
+pacemaker_schedulerd_LDADD += $(top_builddir)/lib/common/libcrmcommon.la
+
 # libcib for get_object_root()
 pacemaker_schedulerd_SOURCES	= pacemaker-schedulerd.c
 pacemaker_schedulerd_SOURCES	+= schedulerd_messages.c

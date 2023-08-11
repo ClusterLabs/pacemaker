@@ -15,7 +15,7 @@ liblrmd_la_LDFLAGS	= -version-info 29:6:1
 liblrmd_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 liblrmd_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 
-liblrmd_la_LIBADD	= $(top_builddir)/lib/common/libcrmcommon.la	\
-			$(top_builddir)/lib/services/libcrmservice.la	\
-			$(top_builddir)/lib/fencing/libstonithd.la
+liblrmd_la_LIBADD = $(top_builddir)/lib/fencing/libstonithd.la
+liblrmd_la_LIBADD += $(top_builddir)/lib/services/libcrmservice.la
+liblrmd_la_LIBADD += $(top_builddir)/lib/common/libcrmcommon.la
 liblrmd_la_SOURCES	= lrmd_client.c proxy_common.c lrmd_alerts.c lrmd_output.c
