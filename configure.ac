@@ -614,9 +614,6 @@ dnl ===============================================
 AC_DEFINE_UNQUOTED(PACEMAKER_VERSION, "$VERSION",
                    [Version number of this Pacemaker build])
 
-PACKAGE_SERIES=`echo $VERSION | awk -F. '{ print $1"."$2 }'`
-AC_SUBST(PACKAGE_SERIES)
-
 AC_PROG_LN_S
 AC_PROG_MKDIR_P
 
