@@ -8,9 +8,12 @@ dnl
 dnl This source code is licensed under the GNU General Public License version 2
 dnl or later (GPLv2+) WITHOUT ANY WARRANTY.
 
-dnl ===============================================
-dnl Bootstrap
-dnl ===============================================
+
+dnl ==============================================
+dnl Bootstrap autotools
+dnl ==============================================
+
+# Require a minimum version of autoconf itself
 AC_PREREQ(2.64)
 
 dnl AC_CONFIG_MACRO_DIR is deprecated as of autoconf 2.70 (2020-12-08).
@@ -24,24 +27,22 @@ m4_include([m4/version.m4])
 AC_INIT([pacemaker], VERSION_NUMBER, [users@clusterlabs.org], [pacemaker],
         PCMK_URL)
 
-PCMK_FEATURES=""
-
 LT_CONFIG_LTDL_DIR([libltdl])
 AC_CONFIG_AUX_DIR([libltdl/config])
-AC_CANONICAL_HOST
 
 dnl Where #defines that autoconf makes (e.g. HAVE_whatever) go
 dnl
-dnl Internal header: include/config.h
-dnl   - Contains ALL defines
+dnl include/config.h
+dnl   - Internal API
+dnl   - Contains all defines
 dnl   - include/config.h.in is generated automatically by autoheader
-dnl   - NOT to be included in any header files except crm_internal.h
+dnl   - Not to be included in any header files except crm_internal.h
 dnl     (which is also not to be included in any other header files)
 dnl
-dnl External header: include/crm_config.h
-dnl   - Contains a subset of defines checked here
-dnl   - Manually edit include/crm_config.h.in to have configure include
-dnl     new defines
+dnl include/crm_config.h
+dnl   - External API
+dnl   - Contains a subset of defines
+dnl   - include/crm_config.h.in is manually edited to select the subset
 dnl   - Should not include HAVE_* defines
 dnl   - Safe to include anywhere
 AC_CONFIG_HEADERS([include/config.h include/crm_config.h])
@@ -219,6 +220,9 @@ AS_CASE([$libdir],
 dnl ===============================================
 dnl Configure Options
 dnl ===============================================
+
+# Start a list of optional features this build supports
+PCMK_FEATURES=""
 
 dnl Actual library checks come later, but pkg-config can be used here to grab
 dnl external values to use as defaults for configure options
@@ -772,6 +776,10 @@ AS_IF([test -z "${us_auth}"], [
 dnl OS-based decision-making is poor autotools practice; feature-based
 dnl mechanisms are strongly preferred. Keep this section to a bare minimum;
 dnl regard as a "necessary evil".
+
+dnl Set host_os and host_cpu
+AC_CANONICAL_HOST
+
 INIT_EXT=""
 PROCFS=0
 dnl Solaris and some *BSD versions support procfs but not files we need
