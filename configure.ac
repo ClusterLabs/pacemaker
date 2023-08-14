@@ -1045,9 +1045,6 @@ REQUIRE_HEADER([libxslt/xslt.h])
 
 cc_restore_flags
 
-AC_CHECK_FUNCS([uuid_unparse], [],
-               [AC_MSG_FAILURE([Could not find required C function uuid_unparse()])])
-
 AC_CACHE_CHECK([whether __progname and __progname_full are available],
                [pf_cv_var_progname],
                [AC_LINK_IFELSE(
@@ -1116,6 +1113,7 @@ dnl ========================================================================
 REQUIRE_FUNC([getopt])
 REQUIRE_FUNC([setenv])
 REQUIRE_FUNC([unsetenv])
+REQUIRE_FUNC([uuid_unparse])
 REQUIRE_FUNC([vasprintf])
 
 AC_CACHE_CHECK(whether sscanf supports %m,
