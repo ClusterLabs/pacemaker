@@ -60,18 +60,57 @@ AS_IF([test x"${PKG_CONFIG}" != x""], [],
 PKG_INSTALLDIR
 PKG_NOARCH_INSTALLDIR
 
-dnl ========================================================================
-dnl Compiler characteristics
-dnl ========================================================================
+
+dnl ==============================================
+dnl Compiler checks and helpers
+dnl ==============================================
 
 dnl A particular compiler can be forced by setting the CC environment variable
 AC_PROG_CC
 
+dnl C++ is needed only to run maintainer utilities, not to build
+AC_PROG_CXX
+
 dnl Use at least C99 if possible (automatic for autoconf >= 2.70)
 m4_version_prereq([2.70], [:], [AC_PROG_CC_STDC])
 
-dnl C++ is not needed for build, just maintainer utilities
-AC_PROG_CXX
+# cc_supports_flag <compiler-flag>
+#  Return success if the C compiler supports the given flag
+cc_supports_flag() {
+    local CFLAGS="-Werror $@"
+    AC_MSG_CHECKING([whether $CC supports $@])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+                      [RC=0; AC_MSG_RESULT([yes])],
+                      [RC=1; AC_MSG_RESULT([no])])
+    return $RC
+}
+
+# cc_temp_flags <compiler-flags>
+#  Use the given flags for subsequent C compilation. These can be reverted to
+#  what was used previously with cc_restore_flags. This allows certain tests to
+#  use specific flags without affecting anything else.
+cc_temp_flags() {
+    ac_save_CFLAGS="$CFLAGS"
+    CFLAGS="$*"
+}
+
+# cc_restore_flags
+#  Restore C compiler flags to what they were before the last cc_temp_flags
+#  call.
+cc_restore_flags() {
+    CFLAGS=$ac_save_CFLAGS
+}
+
+# Check for fatal warning support
+AS_IF([test $enable_fatal_warnings -ne $DISABLED dnl
+       && test x"$GCC" = x"yes" && cc_supports_flag -Werror],
+      [WERROR="-Werror"],
+      [
+          WERROR=""
+          AS_CASE([$enable_fatal_warnings],
+                  [$REQUIRED], [AC_MSG_ERROR([Compiler does not support fatal warnings])],
+                  [$OPTIONAL], [enable_fatal_warnings=$DISABLED])
+      ])
 
 dnl We use md5.c from gnulib, which has its own m4 macros. Per its docs:
 dnl "The macro gl_EARLY must be called as soon as possible after verifying that
@@ -82,8 +121,13 @@ gl_EARLY
 gl_SET_CRYPTO_CHECK_DEFAULT([no])
 gl_INIT
 
-# --enable-new-dtags: Use RUNPATH instead of RPATH.
-# It is necessary to have this done before libtool does linker detection.
+
+dnl ==============================================
+dnl Linker checks
+dnl ==============================================
+
+# Check whether linker supports --enable-new-dtags to use RUNPATH instead of
+# RPATH. It is necessary to do this before libtool does linker detection.
 # See also: https://github.com/kronosnet/kronosnet/issues/107
 AX_CHECK_LINK_FLAG([-Wl,--enable-new-dtags],
                   [AM_LDFLAGS=-Wl,--enable-new-dtags],
@@ -95,6 +139,7 @@ LDFLAGS="$AM_LDFLAGS $LDFLAGS"
 LT_INIT([dlopen])
 LDFLAGS="$saved_LDFLAGS"
 LTDL_INIT([convenience])
+
 
 dnl ===============================================
 dnl Helpers
@@ -108,26 +153,6 @@ latest_schema_version() {
     AS_IF([test x"$files" = x""], [files=$(ls -1 "$1"/*.rng)])
     echo "$files" | sed -n -e 's/^.*-\([[0-9]][[0-9.]]*\).rng$/\1/p' dnl
                   | sort -V | tail -1
-}
-
-cc_supports_flag() {
-    local CFLAGS="-Werror $@"
-    AC_MSG_CHECKING([whether $CC supports $@])
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-                      [RC=0; AC_MSG_RESULT([yes])],
-                      [RC=1; AC_MSG_RESULT([no])])
-    return $RC
-}
-
-# Some tests need to use their own CFLAGS
-
-cc_temp_flags() {
-    ac_save_CFLAGS="$CFLAGS"
-    CFLAGS="$*"
-}
-
-cc_restore_flags() {
-    CFLAGS=$ac_save_CFLAGS
 }
 
 # expand_path_option $path_variable_name $default
@@ -613,19 +638,6 @@ dnl ===============================================
 
 AC_DEFINE_UNQUOTED(PACEMAKER_VERSION, "$VERSION",
                    [Version number of this Pacemaker build])
-
-# Check for fatal warning support
-AS_IF([test $enable_fatal_warnings -ne $DISABLED && test x"$GCC" = x"yes" && cc_supports_flag -Werror],
-      [WERROR="-Werror"],
-      [
-          WERROR=""
-          AS_CASE([$enable_fatal_warnings],
-                  [$REQUIRED], [AC_MSG_ERROR([Compiler does not support fatal warnings])],
-                  [$OPTIONAL], [
-                      AC_MSG_NOTICE([Compiler does not support fatal warnings])
-                      enable_fatal_warnings=$DISABLED
-                  ])
-      ])
 
 AC_MSG_NOTICE([Sanitizing INITDIR: ${INITDIR}])
 AS_CASE([$INITDIR],
