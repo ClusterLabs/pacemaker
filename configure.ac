@@ -144,17 +144,6 @@ LTDL_INIT([convenience])
 dnl ===============================================
 dnl Helpers
 dnl ===============================================
-# latest_schema_version $schema_dir
-#
-# Use git if available to list managed RNGs, in case there are leftover schema
-# files from an earlier build of a different version. Otherwise, check all RNGs.
-latest_schema_version() {
-    local files=$(git ls-files "$1"/*.rng 2>/dev/null)
-    AS_IF([test x"$files" = x""], [files=$(ls -1 "$1"/*.rng)])
-    echo "$files" | sed -n -e 's/^.*-\([[0-9]][[0-9.]]*\).rng$/\1/p' dnl
-                  | sort -V | tail -1
-}
-
 # expand_path_option $path_variable_name $default
 expand_path_option() {
     # The first argument is the variable *name* (not value)
@@ -365,19 +354,6 @@ VERSION_ARG(VERSION_NUMBER)
 # constants, so we have to be careful to use only PACEMAKER_VERSION in C code.
 PACKAGE_VERSION=$PACEMAKER_VERSION
 VERSION=$PACEMAKER_VERSION
-
-# Detect highest API schema version
-API_VERSION=$(latest_schema_version "xml/api")
-AC_DEFINE_UNQUOTED([PCMK__API_VERSION], ["$API_VERSION"],
-                   [Highest API schema version])
-
-# Detect highest CIB schema version
-CIB_VERSION=$(latest_schema_version "xml")
-AC_SUBST(CIB_VERSION)
-
-# Re-run configure at next make if any RNG changes, to re-detect highest
-AC_SUBST([CONFIG_STATUS_DEPENDENCIES],
-         [$(echo '$(wildcard $(top_srcdir)/xml/api/*.rng)')])
 
 CRM_DAEMON_USER=""
 AC_ARG_WITH([daemon-user],
@@ -630,6 +606,36 @@ AC_ARG_VAR([LDFLAGS_HARDENED_LIB], [extra linker flags for hardened libraries])
 
 AC_ARG_VAR([CFLAGS_HARDENED_EXE], [extra C compiler flags for hardened executables])
 AC_ARG_VAR([LDFLAGS_HARDENED_EXE], [extra linker flags for hardened executables])
+
+
+dnl ==============================================
+dnl API schema versioning
+dnl ==============================================
+
+# latest_schema_version <schema_dir>
+#  Determine highest RNG version in the given schema directory. Use git if
+#  available to list managed RNGs, in case there are leftover schema files from
+#  an earlier build of a different version. Otherwise, check all RNGs.
+latest_schema_version() {
+    local files=$(git ls-files "$1"/*.rng 2>/dev/null)
+    AS_IF([test x"$files" = x""], [files=$(ls -1 "$1"/*.rng)])
+    echo "$files" | sed -n -e 's/^.*-\([[0-9]][[0-9.]]*\).rng$/\1/p' dnl
+                  | sort -V | tail -1
+}
+
+# Detect highest API schema version
+API_VERSION=$(latest_schema_version "xml/api")
+AC_DEFINE_UNQUOTED([PCMK__API_VERSION], ["$API_VERSION"],
+                   [Highest API schema version])
+
+# Detect highest CIB schema version
+CIB_VERSION=$(latest_schema_version "xml")
+AC_SUBST(CIB_VERSION)
+
+# Add the schemas to the files that cause automake to re-run configure at next
+# make, so we re-detect the highest version
+AC_SUBST([CONFIG_STATUS_DEPENDENCIES],
+         [$(echo '$(wildcard $(top_srcdir)/xml/api/*.rng)')])
 
 
 dnl ===============================================
