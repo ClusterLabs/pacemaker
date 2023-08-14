@@ -614,9 +614,6 @@ dnl ===============================================
 AC_DEFINE_UNQUOTED(PACEMAKER_VERSION, "$VERSION",
                    [Version number of this Pacemaker build])
 
-AC_PROG_LN_S
-AC_PROG_MKDIR_P
-
 # Check for fatal warning support
 AS_IF([test $enable_fatal_warnings -ne $DISABLED && test x"$GCC" = x"yes" && cc_supports_flag -Werror],
       [WERROR="-Werror"],
@@ -820,7 +817,11 @@ AS_IF([test x"${PYTHON}" != x""], [AC_PATH_PROG([PYTHON], [$PYTHON])])
 dnl Require a minimum Python version
 AM_PATH_PYTHON([3.4])
 
+AC_PROG_LN_S
+AC_PROG_MKDIR_P
+
 AC_PATH_PROGS([ASCIIDOC_CONV], [asciidoc asciidoctor])
+AC_PATH_PROGS([GIT], [git false])
 AC_PATH_PROG([HELP2MAN], [help2man])
 AC_PATH_PROG([SPHINX], [sphinx-build])
 AC_PATH_PROG([INKSCAPE], [inkscape])
@@ -1353,8 +1354,6 @@ AC_DEFINE_UNQUOTED(PACEMAKER_CONFIG_DIR,"$PACEMAKER_CONFIG_DIR", Where to keep c
 AC_SUBST(PACEMAKER_CONFIG_DIR)
 
 AC_DEFINE_UNQUOTED(SBIN_DIR,"$sbindir",[Location for system binaries])
-
-AC_PATH_PROGS(GIT, git false)
 
 AC_MSG_CHECKING([build version])
 AS_IF([test -x $GIT && test -d .git],
