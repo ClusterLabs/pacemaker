@@ -314,6 +314,10 @@ static const struct pcmk__rc_info {
       "Nameserver resolution error",
       -pcmk_err_generic,
     },
+    { "pcmk_rc_compression",
+      "Compression/decompression error",
+      -pcmk_err_generic,
+    },
 };
 
 /*!
@@ -725,6 +729,7 @@ pcmk_rc2exitc(int rc)
         case ENOSYS:
         case EOVERFLOW:
         case pcmk_rc_underflow:
+        case pcmk_rc_compression:
             return CRM_EX_SOFTWARE;
 
         case EBADMSG:
