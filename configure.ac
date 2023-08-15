@@ -144,34 +144,6 @@ LTDL_INIT([convenience])
 dnl ===============================================
 dnl Helpers
 dnl ===============================================
-# expand_path_option $path_variable_name $default
-expand_path_option() {
-    # The first argument is the variable *name* (not value)
-    ac_path_varname="$1"
-
-    # Get the original value of the variable
-    ac_path_value=$(eval echo "\${${ac_path_varname}}")
-
-    # Expand any literal variable expressions in the value so that we don't
-    # end up with something like '${prefix}' in #defines etc.
-    #
-    # Autoconf deliberately leaves values unexpanded to allow overriding
-    # the configure script choices in make commands (for example,
-    # "make exec_prefix=/foo install"). No longer being able to do this seems
-    # like no great loss.
-    eval ac_path_value=$(eval echo "${ac_path_value}")
-
-    # Use (expanded) default if necessary
-    AS_IF([test x"${ac_path_value}" = x""],
-	  [eval ac_path_value=$(eval echo "$2")])
-
-    # Require a full path
-    AS_CASE(["$ac_path_value"],
-            [/*], [eval ${ac_path_varname}="$ac_path_value"],
-            [*], [AC_MSG_ERROR([$ac_path_varname value "$ac_path_value" is not a full path])]
-    )
-}
-
 check_systemdsystemunitdir() {
     AC_MSG_CHECKING([which system unit file directory to use])
     PKG_CHECK_VAR([systemdsystemunitdir], [systemd], [systemdsystemunitdir])
@@ -669,9 +641,40 @@ AC_DEFINE_UNQUOTED([PCMK__BUG_URL], ["$BUG_URL"],
                    [Where bugs should be reported])
 
 
-dnl ===============================================
-dnl General Processing
-dnl ===============================================
+dnl ==============================================
+dnl Process file paths
+dnl ==============================================
+
+# expand_path_option <path-variable-name> [<default>]
+#  Given the name of a file path variable, expand any variable references
+#  inside it, use the specified default if it is not specified, and ensure it
+#  is a full path.
+expand_path_option() {
+    # The first argument is the variable *name* (not value)
+    ac_path_varname="$1"
+
+    # Get the original value of the variable
+    ac_path_value=$(eval echo "\${${ac_path_varname}}")
+
+    # Expand any literal variable expressions in the value so that we don't
+    # end up with something like '${prefix}' in #defines etc.
+    #
+    # Autoconf deliberately leaves values unexpanded to allow overriding
+    # the configure script choices in make commands (for example,
+    # "make exec_prefix=/foo install"). No longer being able to do this seems
+    # like no great loss.
+    eval ac_path_value=$(eval echo "${ac_path_value}")
+
+    # Use (expanded) default if necessary
+    AS_IF([test x"${ac_path_value}" = x""],
+          [eval ac_path_value=$(eval echo "$2")])
+
+    # Require a full path
+    AS_CASE(["$ac_path_value"],
+            [/*], [eval ${ac_path_varname}="$ac_path_value"],
+            [*], [AC_MSG_ERROR([$ac_path_varname value "$ac_path_value" is not a full path])]
+    )
+}
 
 AC_MSG_NOTICE([Sanitizing INITDIR: ${INITDIR}])
 AS_CASE([$INITDIR],
@@ -710,10 +713,11 @@ expand_path_option mandir
 
 AC_DEFUN([AC_DATAROOTDIR_CHECKED])
 
-dnl Home-grown variables
+dnl Expand values of custom directory options
 
 expand_path_option localedir "${datadir}/locale"
-AC_DEFINE_UNQUOTED([PCMK__LOCALE_DIR],["$localedir"], [Base directory for message catalogs])
+AC_DEFINE_UNQUOTED([PCMK__LOCALE_DIR],["$localedir"],
+                   [Base directory for message catalogs])
 
 AS_IF([test x"${runstatedir}" = x""], [runstatedir="${pcmk_runstatedir}"])
 expand_path_option runstatedir "${localstatedir}/run"
@@ -750,6 +754,7 @@ expand_path_option OCF_RA_PATH
 AC_DEFINE_UNQUOTED([OCF_RA_PATH], ["$OCF_RA_PATH"],
                    [OCF directories to search for resource agents ])
 
+# Warn about any directories that don't exist (which may be OK)
 for j in prefix exec_prefix bindir sbindir libexecdir datadir sysconfdir \
     sharedstatedir localstatedir libdir includedir oldincludedir infodir \
     mandir INITDIR docdir CONFIGDIR localedir
@@ -758,6 +763,10 @@ do
     AS_IF([test ! -d "$dirname"],
           [AC_MSG_WARN([$j directory ($dirname) does not exist (yet)])])
 done
+
+dnl ===============================================
+dnl General Processing
+dnl ===============================================
 
 us_auth=
 AC_CHECK_HEADER([sys/socket.h], [
