@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2022 the Pacemaker project contributors
+ * Copyright 2021-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -29,6 +29,10 @@ void *__wrap_calloc(size_t nmemb, size_t size);
 extern bool pcmk__mock_fopen;
 FILE *__real_fopen(const char *pathname, const char *mode);
 FILE *__wrap_fopen(const char *pathname, const char *mode);
+#ifdef HAVE_FOPEN64
+FILE *__real_fopen64(const char *pathname, const char *mode);
+FILE *__wrap_fopen64(const char *pathname, const char *mode);
+#endif
 
 extern bool pcmk__mock_getenv;
 char *__real_getenv(const char *name);

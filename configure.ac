@@ -121,6 +121,8 @@ gl_EARLY
 gl_SET_CRYPTO_CHECK_DEFAULT([no])
 gl_INIT
 
+AC_CHECK_SIZEOF(long)
+
 
 dnl ==============================================
 dnl Linker checks
@@ -1150,6 +1152,9 @@ REQUIRE_FUNC([setenv])
 REQUIRE_FUNC([unsetenv])
 REQUIRE_FUNC([uuid_unparse])
 REQUIRE_FUNC([vasprintf])
+
+AC_CHECK_FUNCS([fopen64])
+AM_CONDITIONAL([WRAPPABLE_FOPEN64], [test x"$ac_cv_func_fopen64" = x"yes"])
 
 AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <stdio.h>]], [[
     const char *s = "some-command-line-arg";

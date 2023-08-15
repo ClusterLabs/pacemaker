@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -95,9 +95,15 @@ fopen_fails(void **state) {
     pcmk__output_t *out = NULL;
 
     pcmk__mock_fopen = true;
+#if defined(HAVE_FOPEN64) && defined(_FILE_OFFSET_BITS) && (_FILE_OFFSET_BITS == 64) && (SIZEOF_LONG < 8)
+    expect_string(__wrap_fopen64, pathname, "destfile");
+    expect_string(__wrap_fopen64, mode, "w");
+    will_return(__wrap_fopen64, EPERM);
+#else
     expect_string(__wrap_fopen, pathname, "destfile");
     expect_string(__wrap_fopen, mode, "w");
     will_return(__wrap_fopen, EPERM);
+#endif
 
     assert_int_equal(pcmk__output_new(&out, "text", "destfile", NULL), EPERM);
 

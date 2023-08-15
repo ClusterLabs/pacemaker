@@ -1,11 +1,13 @@
 /*
- * Copyright 2021-2022 the Pacemaker project contributors
+ * Copyright 2021-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
+#include <crm_internal.h>
 
 #include <errno.h>
 #include <pwd.h>
@@ -262,6 +264,8 @@ __wrap_endgrent(void) {
  *     will_return(__wrap_fopen, errno_to_set);
  *
  * expect_* functions: https://api.cmocka.org/group__cmocka__param.html
+ *
+ * This has two mocked functions, since fopen() is sometimes actually fopen64().
  */
 
 bool pcmk__mock_fopen = false;
@@ -285,6 +289,26 @@ __wrap_fopen(const char *pathname, const char *mode)
     }
 }
 
+#ifdef HAVE_FOPEN64
+FILE *
+__wrap_fopen64(const char *pathname, const char *mode)
+{
+    if (pcmk__mock_fopen) {
+        check_expected_ptr(pathname);
+        check_expected_ptr(mode);
+        errno = mock_type(int);
+
+        if (errno != 0) {
+            return NULL;
+        } else {
+            return __real_fopen64(pathname, mode);
+        }
+
+    } else {
+        return __real_fopen64(pathname, mode);
+    }
+}
+#endif
 
 /* getpwnam_r()
  *
