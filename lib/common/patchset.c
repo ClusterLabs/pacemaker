@@ -210,7 +210,7 @@ xml_repair_v1_diff(xmlNode *last, xmlNode *next, xmlNode *local_diff,
         }
     }
 
-    tag = "diff-added";
+    tag = XML_TAG_DIFF_ADDED;
     diff_child = find_xml_node(local_diff, tag, FALSE);
     if (diff_child == NULL) {
         diff_child = create_xml_node(local_diff, tag);
@@ -539,7 +539,7 @@ find_patch_xml_node(const xmlNode *patchset, int format, bool added,
 
     switch (format) {
         case 1:
-            label = added? "diff-added" : "diff-removed";
+            label = added? XML_TAG_DIFF_ADDED : "diff-removed";
             *patch_node = find_xml_node(patchset, label, FALSE);
             cib_node = find_xml_node(*patch_node, "cib", FALSE);
             if (cib_node != NULL) {
@@ -693,7 +693,7 @@ apply_v1_patchset(xmlNode *xml, const xmlNode *patchset)
     int root_nodes_seen = 0;
 
     xmlNode *child_diff = NULL;
-    xmlNode *added = find_xml_node(patchset, "diff-added", FALSE);
+    xmlNode *added = find_xml_node(patchset, XML_TAG_DIFF_ADDED, FALSE);
     xmlNode *removed = find_xml_node(patchset, "diff-removed", FALSE);
     xmlNode *old = copy_xml(xml);
 
@@ -1193,7 +1193,7 @@ diff_xml_object(xmlNode *old, xmlNode *new, gboolean suppress)
     xmlNode *tmp1 = NULL;
     xmlNode *diff = create_xml_node(NULL, "diff");
     xmlNode *removed = create_xml_node(diff, "diff-removed");
-    xmlNode *added = create_xml_node(diff, "diff-added");
+    xmlNode *added = create_xml_node(diff, XML_TAG_DIFF_ADDED);
 
     crm_xml_add(diff, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
 
@@ -1426,7 +1426,7 @@ apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
     const char *version = crm_element_value(diff, XML_ATTR_CRM_VERSION);
 
     xmlNode *child_diff = NULL;
-    xmlNode *added = find_xml_node(diff, "diff-added", FALSE);
+    xmlNode *added = find_xml_node(diff, XML_TAG_DIFF_ADDED, FALSE);
     xmlNode *removed = find_xml_node(diff, "diff-removed", FALSE);
 
     CRM_CHECK(new_xml != NULL, return FALSE);
