@@ -141,18 +141,6 @@ LDFLAGS="$saved_LDFLAGS"
 LTDL_INIT([convenience])
 
 
-dnl ===============================================
-dnl Helpers
-dnl ===============================================
-check_systemdsystemunitdir() {
-    AC_MSG_CHECKING([which system unit file directory to use])
-    PKG_CHECK_VAR([systemdsystemunitdir], [systemd], [systemdsystemunitdir])
-    AC_MSG_RESULT([${systemdsystemunitdir}])
-    test x"$systemdsystemunitdir" != x""
-    return $?
-}
-
-
 dnl ==============================================
 dnl Define configure options
 dnl ==============================================
@@ -1434,6 +1422,14 @@ AS_IF([test $HAVE_dbus = 0],
       [PC_NAME_DBUS=""],
       [PC_NAME_DBUS="dbus-1"])
 AC_SUBST(PC_NAME_DBUS)
+
+check_systemdsystemunitdir() {
+    AC_MSG_CHECKING([which system unit file directory to use])
+    PKG_CHECK_VAR([systemdsystemunitdir], [systemd], [systemdsystemunitdir])
+    AC_MSG_RESULT([${systemdsystemunitdir}])
+    test x"$systemdsystemunitdir" != x""
+    return $?
+}
 
 AS_CASE([$enable_systemd],
         [$REQUIRED], [
