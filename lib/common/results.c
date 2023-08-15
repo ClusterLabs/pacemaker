@@ -15,6 +15,7 @@
 
 #include <bzlib.h>
 #include <errno.h>
+#include <netdb.h>
 #include <stdlib.h>
 #include <string.h>
 #include <qb/qbdefs.h>
@@ -307,6 +308,14 @@ static const struct pcmk__rc_info {
     },
     { "pcmk_rc_no_transaction",
       "No active transaction found",
+      -pcmk_err_generic,
+    },
+    { "pcmk_rc_ns_resolution",
+      "Nameserver resolution error",
+      -pcmk_err_generic,
+    },
+    { "pcmk_rc_compression",
+      "Compression/decompression error",
       -pcmk_err_generic,
     },
 };
@@ -720,6 +729,7 @@ pcmk_rc2exitc(int rc)
         case ENOSYS:
         case EOVERFLOW:
         case pcmk_rc_underflow:
+        case pcmk_rc_compression:
             return CRM_EX_SOFTWARE;
 
         case EBADMSG:
@@ -768,6 +778,7 @@ pcmk_rc2exitc(int rc)
             return CRM_EX_NOSUCH;
 
         case pcmk_rc_node_unknown:
+        case pcmk_rc_ns_resolution:
             return CRM_EX_NOHOST;
 
         case ETIME:
@@ -842,37 +853,83 @@ pcmk_rc2ocf(int rc)
 
 // Other functions
 
-const char *
-bz2_strerror(int rc)
+/*!
+ * \brief Map a getaddrinfo() return code to the most similar Pacemaker
+ *        return code
+ *
+ * \param[in] gai  getaddrinfo() return code
+ *
+ * \return Most similar Pacemaker return code
+ */
+int
+pcmk__gaierror2rc(int gai)
 {
-    // See ftp://sources.redhat.com/pub/bzip2/docs/manual_3.html#SEC17
-    switch (rc) {
+    switch (gai) {
+        case 0:
+            return pcmk_rc_ok;
+
+        case EAI_AGAIN:
+            return EAGAIN;
+
+        case EAI_BADFLAGS:
+        case EAI_SERVICE:
+            return EINVAL;
+
+        case EAI_FAMILY:
+            return EAFNOSUPPORT;
+
+        case EAI_MEMORY:
+            return ENOMEM;
+
+        case EAI_NONAME:
+            return pcmk_rc_node_unknown;
+
+        case EAI_SOCKTYPE:
+            return ESOCKTNOSUPPORT;
+
+        case EAI_SYSTEM:
+            return errno;
+
+        default:
+            return pcmk_rc_ns_resolution;
+    }
+}
+
+/*!
+ * \brief Map a bz2 return code to the most similar Pacemaker return code
+ *
+ * \param[in] bz2  bz2 return code
+ *
+ * \return Most similar Pacemaker return code
+ */
+int
+pcmk__bzlib2rc(int bz2)
+{
+    switch (bz2) {
         case BZ_OK:
         case BZ_RUN_OK:
         case BZ_FLUSH_OK:
         case BZ_FINISH_OK:
         case BZ_STREAM_END:
-            return "Ok";
-        case BZ_CONFIG_ERROR:
-            return "libbz2 has been improperly compiled on your platform";
-        case BZ_SEQUENCE_ERROR:
-            return "library functions called in the wrong order";
-        case BZ_PARAM_ERROR:
-            return "parameter is out of range or otherwise incorrect";
+            return pcmk_rc_ok;
+
         case BZ_MEM_ERROR:
-            return "memory allocation failed";
+            return ENOMEM;
+
         case BZ_DATA_ERROR:
-            return "data integrity error is detected during decompression";
         case BZ_DATA_ERROR_MAGIC:
-            return "the compressed stream does not start with the correct magic bytes";
-        case BZ_IO_ERROR:
-            return "error reading or writing in the compressed file";
         case BZ_UNEXPECTED_EOF:
-            return "compressed file finishes before the logical end of stream is detected";
+            return pcmk_rc_bad_input;
+
+        case BZ_IO_ERROR:
+            return EIO;
+
         case BZ_OUTBUFF_FULL:
-            return "output data will not fit into the buffer provided";
+            return EFBIG;
+
+        default:
+            return pcmk_rc_compression;
     }
-    return "Data compression error";
 }
 
 crm_exit_t
@@ -1043,6 +1100,39 @@ pcmk__copy_result(const pcmk__action_result_t *src, pcmk__action_result_t *dst)
 // LCOV_EXCL_START
 
 #include <crm/common/results_compat.h>
+
+const char *
+bz2_strerror(int rc)
+{
+    // See ftp://sources.redhat.com/pub/bzip2/docs/manual_3.html#SEC17
+    switch (rc) {
+        case BZ_OK:
+        case BZ_RUN_OK:
+        case BZ_FLUSH_OK:
+        case BZ_FINISH_OK:
+        case BZ_STREAM_END:
+            return "Ok";
+        case BZ_CONFIG_ERROR:
+            return "libbz2 has been improperly compiled on your platform";
+        case BZ_SEQUENCE_ERROR:
+            return "library functions called in the wrong order";
+        case BZ_PARAM_ERROR:
+            return "parameter is out of range or otherwise incorrect";
+        case BZ_MEM_ERROR:
+            return "memory allocation failed";
+        case BZ_DATA_ERROR:
+            return "data integrity error is detected during decompression";
+        case BZ_DATA_ERROR_MAGIC:
+            return "the compressed stream does not start with the correct magic bytes";
+        case BZ_IO_ERROR:
+            return "error reading or writing in the compressed file";
+        case BZ_UNEXPECTED_EOF:
+            return "compressed file finishes before the logical end of stream is detected";
+        case BZ_OUTBUFF_FULL:
+            return "output data will not fit into the buffer provided";
+    }
+    return "Data compression error";
+}
 
 crm_exit_t
 crm_errno2exit(int rc)

@@ -768,12 +768,15 @@ pcmk__compress(const char *data, unsigned int length, unsigned int max,
     *result_len = max;
     rc = BZ2_bzBuffToBuffCompress(compressed, result_len, uncompressed, length,
                                   CRM_BZ2_BLOCKS, 0, CRM_BZ2_WORK);
+    rc = pcmk__bzlib2rc(rc);
+
     free(uncompressed);
-    if (rc != BZ_OK) {
-        crm_err("Compression of %d bytes failed: %s " CRM_XS " bzerror=%d",
-                length, bz2_strerror(rc), rc);
+
+    if (rc != pcmk_rc_ok) {
+        crm_err("Compression of %d bytes failed: %s " CRM_XS " rc=%d",
+                length, pcmk_rc_str(rc), rc);
         free(compressed);
-        return pcmk_rc_error;
+        return rc;
     }
 
 #ifdef CLOCK_MONOTONIC

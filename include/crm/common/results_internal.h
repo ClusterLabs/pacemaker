@@ -69,6 +69,9 @@ void pcmk__reset_result(pcmk__action_result_t *result);
 void pcmk__copy_result(const pcmk__action_result_t *src,
                        pcmk__action_result_t *dst);
 
+int pcmk__gaierror2rc(int gai);
+int pcmk__bzlib2rc(int bz2);
+
 /*!
  * \internal
  * \brief Check whether a result is OK

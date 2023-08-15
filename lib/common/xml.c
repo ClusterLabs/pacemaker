@@ -912,9 +912,11 @@ decompress_file(const char *filename)
     }
 
     bz_file = BZ2_bzReadOpen(&rc, input, 0, 0, NULL, 0);
-    if (rc != BZ_OK) {
+    rc = pcmk__bzlib2rc(rc);
+
+    if (rc != pcmk_rc_ok) {
         crm_err("Could not prepare to read compressed %s: %s "
-                CRM_XS " bzerror=%d", filename, bz2_strerror(rc), rc);
+                CRM_XS " rc=%d", filename, pcmk_rc_str(rc), rc);
         BZ2_bzReadClose(&rc, bz_file);
         fclose(input);
         return NULL;
@@ -936,9 +938,11 @@ decompress_file(const char *filename)
 
     buffer[length] = '\0';
 
-    if (rc != BZ_STREAM_END) {
-        crm_err("Could not read compressed %s: %s "
-                CRM_XS " bzerror=%d", filename, bz2_strerror(rc), rc);
+    rc = pcmk__bzlib2rc(rc);
+
+    if (rc != pcmk_rc_ok) {
+        crm_err("Could not read compressed %s: %s " CRM_XS " rc=%d",
+                filename, pcmk_rc_str(rc), rc);
         free(buffer);
         buffer = NULL;
     }
@@ -1172,24 +1176,30 @@ write_xml_stream(xmlNode *xml_node, const char *filename, FILE *stream,
 
         rc = BZ_OK;
         bz_file = BZ2_bzWriteOpen(&rc, stream, 5, 0, 30);
-        if (rc != BZ_OK) {
+        rc = pcmk__bzlib2rc(rc);
+
+        if (rc != pcmk_rc_ok) {
             crm_warn("Not compressing %s: could not prepare file stream: %s "
-                     CRM_XS " bzerror=%d", filename, bz2_strerror(rc), rc);
+                     CRM_XS " rc=%d", filename, pcmk_rc_str(rc), rc);
         } else {
             BZ2_bzWrite(&rc, bz_file, buffer, strlen(buffer));
-            if (rc != BZ_OK) {
+            rc = pcmk__bzlib2rc(rc);
+
+            if (rc != pcmk_rc_ok) {
                 crm_warn("Not compressing %s: could not compress data: %s "
-                         CRM_XS " bzerror=%d errno=%d",
-                         filename, bz2_strerror(rc), rc, errno);
+                         CRM_XS " rc=%d errno=%d",
+                         filename, pcmk_rc_str(rc), rc, errno);
             }
         }
 
-        if (rc == BZ_OK) {
+        if (rc == pcmk_rc_ok) {
             BZ2_bzWriteClose(&rc, bz_file, 0, &in, nbytes);
-            if (rc != BZ_OK) {
+            rc = pcmk__bzlib2rc(rc);
+
+            if (rc != pcmk_rc_ok) {
                 crm_warn("Not compressing %s: could not write compressed data: %s "
-                         CRM_XS " bzerror=%d errno=%d",
-                         filename, bz2_strerror(rc), rc, errno);
+                         CRM_XS " rc=%d errno=%d",
+                         filename, pcmk_rc_str(rc), rc, errno);
                 *nbytes = 0; // retry without compression
             } else {
                 crm_trace("Compressed XML for %s from %u bytes to %u",
