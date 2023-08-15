@@ -602,6 +602,22 @@ VERSION=$PACEMAKER_VERSION
 AC_DEFINE_UNQUOTED(PACEMAKER_VERSION, "$VERSION",
                    [Version number of this Pacemaker build])
 
+AC_MSG_CHECKING([build version])
+AS_IF([test "$GIT" != "false" && test -d .git],
+      [
+          BUILD_VERSION=`"$GIT" log --pretty="format:%h" -n 1`
+          AC_MSG_RESULT([$BUILD_VERSION (git hash)])
+      ],
+      [
+          # The current directory name make a reasonable default
+          # Most generated archives will include the hash or tag
+          BASE=`basename $PWD`
+          BUILD_VERSION=`echo $BASE | sed s:.*[[Pp]]acemaker-::`
+          AC_MSG_RESULT([$BUILD_VERSION (directory name)])
+      ])
+AC_DEFINE_UNQUOTED(BUILD_VERSION, "$BUILD_VERSION", Build version)
+AC_SUBST(BUILD_VERSION)
+
 # latest_schema_version <schema_dir>
 #  Determine highest RNG version in the given schema directory. Use git if
 #  available to list managed RNGs, in case there are leftover schema files from
@@ -1405,23 +1421,6 @@ AC_DEFINE_UNQUOTED(PACEMAKER_CONFIG_DIR,"$PACEMAKER_CONFIG_DIR", Where to keep c
 AC_SUBST(PACEMAKER_CONFIG_DIR)
 
 AC_DEFINE_UNQUOTED(SBIN_DIR,"$sbindir",[Location for system binaries])
-
-AC_MSG_CHECKING([build version])
-AS_IF([test "$GIT" != "false" && test -d .git],
-      [
-          BUILD_VERSION=`"$GIT" log --pretty="format:%h" -n 1`
-          AC_MSG_RESULT([$BUILD_VERSION (git hash)])
-      ],
-      [
-          # The current directory name make a reasonable default
-          # Most generated archives will include the hash or tag
-          BASE=`basename $PWD`
-          BUILD_VERSION=`echo $BASE | sed s:.*[[Pp]]acemaker-::`
-          AC_MSG_RESULT([$BUILD_VERSION (directory name)])
-      ])
-
-AC_DEFINE_UNQUOTED(BUILD_VERSION, "$BUILD_VERSION", Build version)
-AC_SUBST(BUILD_VERSION)
 
 HAVE_dbus=1
 PKG_CHECK_MODULES([DBUS], [dbus-1],
