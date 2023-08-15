@@ -172,7 +172,22 @@ expand_path_option() {
     )
 }
 
-# yes_no_try $user_response $default
+check_systemdsystemunitdir() {
+    AC_MSG_CHECKING([which system unit file directory to use])
+    PKG_CHECK_VAR([systemdsystemunitdir], [systemd], [systemdsystemunitdir])
+    AC_MSG_RESULT([${systemdsystemunitdir}])
+    test x"$systemdsystemunitdir" != x""
+    return $?
+}
+
+
+dnl ==============================================
+dnl Define configure options
+dnl ==============================================
+
+# yes_no_try <user-response> <default>
+#  Map a yes/no/try user selection to $REQUIRED for yes, $DISABLED for no, and
+#  $OPTIONAL for try.
 DISABLED=0
 REQUIRED=1
 OPTIONAL=2
@@ -187,17 +202,9 @@ yes_no_try() {
     AC_MSG_ERROR([Invalid option value "$value"])
 }
 
-check_systemdsystemunitdir() {
-    AC_MSG_CHECKING([which system unit file directory to use])
-    PKG_CHECK_VAR([systemdsystemunitdir], [systemd], [systemdsystemunitdir])
-    AC_MSG_RESULT([${systemdsystemunitdir}])
-    test x"$systemdsystemunitdir" != x""
-    return $?
-}
-
 #
-# Fix the defaults of certain built-in variables so they can be used in our
-# custom argument defaults
+# Fix the defaults of certain built-in variables so they can be used in the
+# defaults for our custom arguments
 #
 
 AC_MSG_NOTICE([Sanitizing prefix: ${prefix}])
@@ -231,15 +238,12 @@ AS_CASE([$libdir],
             AC_MSG_RESULT([$libdir])
         ])
 
-dnl ===============================================
-dnl Configure Options
-dnl ===============================================
-
 # Start a list of optional features this build supports
 PCMK_FEATURES=""
 
-dnl Actual library checks come later, but pkg-config can be used here to grab
-dnl external values to use as defaults for configure options
+dnl This section should include only the definition of configure script
+dnl options and determining their values. Processing should be done later when
+dnl possible, other than what's needed to determine values and defaults.
 
 dnl Per the autoconf docs, --enable-*/--disable-* options should control
 dnl features inherent to Pacemaker, while --with-*/--without-* options should
@@ -299,13 +303,6 @@ AC_ARG_ENABLE([compat-2.0],
 )
 yes_no_try "$enable_compat_2_0" "no"
 enable_compat_2_0=$?
-AS_IF([test $enable_compat_2_0 -ne $DISABLED],
-      [
-          AC_DEFINE_UNQUOTED([PCMK__COMPAT_2_0], [1],
-                             [Keep certain output compatible with 2.0 release series])
-          PCMK_FEATURES="$PCMK_FEATURES compat-2.0"
-      ]
-)
 
 # Add an option to create symlinks at the pre-2.0.0 daemon name locations, so
 # that users and tools can continue to invoke those names directly (e.g., for
@@ -316,7 +313,6 @@ AC_ARG_ENABLE([legacy-links],
 )
 yes_no_try "$enable_legacy_links" "no"
 enable_legacy_links=$?
-AM_CONDITIONAL([BUILD_LEGACY_LINKS], [test $enable_legacy_links -ne $DISABLED])
 
 # AM_GNU_GETTEXT calls AM_NLS which defines the nls option, but it defaults
 # to enabled. We override the definition of AM_NLS to flip the default and mark
@@ -330,11 +326,8 @@ AC_DEFUN([AM_NLS],
     AC_MSG_RESULT([$USE_NLS])
     AC_SUBST([USE_NLS])]
 )
-
 AM_GNU_GETTEXT([external])
 AM_GNU_GETTEXT_VERSION([0.18])
-
-AS_IF([test x"$enable_nls" = x"yes"], [PCMK_FEATURES="$PCMK_FEATURES nls"])
 
 dnl --with-* options: external software support, and custom locations
 
@@ -347,13 +340,6 @@ AC_DEFUN([VERSION_ARG],
         [ PACEMAKER_VERSION="$PACKAGE_VERSION" ])]
 )
 VERSION_ARG(VERSION_NUMBER)
-
-# Redefine PACKAGE_VERSION and VERSION according to PACEMAKER_VERSION in case
-# the user used --with-version. Unfortunately, this can only affect the
-# substitution variables and later uses in this file, not the config.h
-# constants, so we have to be careful to use only PACEMAKER_VERSION in C code.
-PACKAGE_VERSION=$PACEMAKER_VERSION
-VERSION=$PACEMAKER_VERSION
 
 CRM_DAEMON_USER=""
 AC_ARG_WITH([daemon-user],
@@ -376,6 +362,8 @@ AC_ARG_WITH([bug-url],
         @<:@https://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker@:>@]))],
     [ BUG_URL="$withval" ]
 )
+AS_IF([test x"${BUG_URL}" = x""],
+      [BUG_URL="https://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker"])
 
 dnl --with-* options: features
 
@@ -410,9 +398,6 @@ AS_CASE([$with_concurrent_fencing_default],
         [true], [PCMK_FEATURES="$PCMK_FEATURES default-concurrent-fencing"],
         [AC_MSG_ERROR([Invalid value "$with_concurrent_fencing_default" for --with-concurrent-fencing-default])]
 )
-AC_DEFINE_UNQUOTED([PCMK__CONCURRENT_FENCING_DEFAULT],
-                   ["$with_concurrent_fencing_default"],
-                   [Default value for concurrent-fencing cluster option])
 
 AC_ARG_WITH([sbd-sync-default],
     [AS_HELP_STRING([--with-sbd-sync-default], m4_normalize([
@@ -425,9 +410,6 @@ AS_CASE([$with_sbd_sync_default],
         [true], [PCMK_FEATURES="$PCMK_FEATURES default-sbd-sync"],
         [AC_MSG_ERROR([Invalid value "$with_sbd_sync_default" for --with-sbd-sync-default])]
 )
-AC_DEFINE_UNQUOTED([PCMK__SBD_SYNC_DEFAULT],
-                   [$with_sbd_sync_default],
-                   [Default value for SBD_SYNC_RESOURCE_STARTUP environment variable])
 
 AC_ARG_WITH([resource-stickiness-default],
     [AS_HELP_STRING([--with-resource-stickiness-default],
@@ -439,9 +421,6 @@ AS_CASE([$with_resource_stickiness_default],
         [*[[!0-9]]*], [AC_MSG_ERROR([$errmsg])],
         [PCMK_FEATURES="$PCMK_FEATURES default-resource-stickiness"]
 )
-AC_DEFINE_UNQUOTED([PCMK__RESOURCE_STICKINESS_DEFAULT],
-                   [$with_resource_stickiness_default],
-                   [Default value for resource-stickiness resource meta-attribute])
 
 AC_ARG_WITH([corosync],
     [AS_HELP_STRING([--with-corosync],
@@ -450,7 +429,7 @@ AC_ARG_WITH([corosync],
 yes_no_try "$with_corosync" "try"
 with_corosync=$?
 
-dnl Get default from corosync if possible.
+dnl Get default from Corosync if possible
 PKG_CHECK_VAR([PCMK__COROSYNC_CONF], [corosync], [corosysconfdir],
               [PCMK__COROSYNC_CONF="$PCMK__COROSYNC_CONF/corosync.conf"],
               [PCMK__COROSYNC_CONF="${sysconfdir}/corosync/corosync.conf"])
@@ -541,10 +520,8 @@ AC_ARG_WITH([ocfdir],
         /usr/lib/ocf@:>@]))],
     [ OCF_ROOT_DIR="$withval" ]
 )
-AC_SUBST(OCF_ROOT_DIR)
-AC_DEFINE_UNQUOTED([OCF_ROOT_DIR], ["$OCF_ROOT_DIR"],
-                   [OCF root directory for resource agents and libraries])
 
+dnl Get default from resource-agents if possible
 PKG_CHECK_VAR([OCF_RA_PATH], [resource-agents], [ocfrapath], [],
               [OCF_RA_PATH="$OCF_ROOT_DIR/resource.d"])
 AC_ARG_WITH([ocfrapath],
@@ -554,7 +531,6 @@ AC_ARG_WITH([ocfrapath],
         OCFDIR/resource.d@:>@]))],
     [ OCF_RA_PATH="$withval" ]
 )
-AC_SUBST(OCF_RA_PATH)
 
 OCF_RA_INSTALL_DIR="$OCF_ROOT_DIR/resource.d"
 AC_ARG_WITH([ocfrainstalldir],
@@ -563,7 +539,6 @@ AC_ARG_WITH([ocfrainstalldir],
         @<:@OCFDIR/resource.d@:>@]))],
     [ OCF_RA_INSTALL_DIR="$withval" ]
 )
-AC_SUBST(OCF_RA_INSTALL_DIR)
 
 dnl Get default from fence-agents if available
 PKG_CHECK_VAR([FA_PREFIX], [fence-agents], [prefix],
@@ -575,7 +550,6 @@ AC_ARG_WITH([fence-bindir],
         package if available otherwise SBINDIR@:>@]))],
     [ PCMK__FENCE_BINDIR="$withval" ]
 )
-AC_SUBST(PCMK__FENCE_BINDIR)
 
 dnl --with-* options: non-production testing
 
@@ -641,6 +615,48 @@ AC_SUBST([CONFIG_STATUS_DEPENDENCIES],
 dnl ===============================================
 dnl General Processing
 dnl ===============================================
+
+# Redefine PACKAGE_VERSION and VERSION according to PACEMAKER_VERSION in case
+# the user used --with-version. Unfortunately, this can only affect the
+# substitution variables and later uses in this file, not the config.h
+# constants, so we have to be careful to use only PACEMAKER_VERSION in C code.
+PACKAGE_VERSION=$PACEMAKER_VERSION
+VERSION=$PACEMAKER_VERSION
+
+AS_IF([test $enable_compat_2_0 -ne $DISABLED],
+      [
+          AC_DEFINE_UNQUOTED([PCMK__COMPAT_2_0], [1],
+                             [Keep certain output compatible with 2.0 release series])
+          PCMK_FEATURES="$PCMK_FEATURES compat-2.0"
+      ]
+)
+
+AM_CONDITIONAL([BUILD_LEGACY_LINKS], [test $enable_legacy_links -ne $DISABLED])
+
+AS_IF([test x"$enable_nls" = x"yes"], [PCMK_FEATURES="$PCMK_FEATURES nls"])
+
+AC_DEFINE_UNQUOTED([PCMK__CONCURRENT_FENCING_DEFAULT],
+                   ["$with_concurrent_fencing_default"],
+                   [Default value for concurrent-fencing cluster option])
+
+AC_DEFINE_UNQUOTED([PCMK__SBD_SYNC_DEFAULT],
+                   [$with_sbd_sync_default],
+                   [Default value for SBD_SYNC_RESOURCE_STARTUP environment variable])
+
+AC_DEFINE_UNQUOTED([PCMK__RESOURCE_STICKINESS_DEFAULT],
+                   [$with_resource_stickiness_default],
+                   [Default value for resource-stickiness resource meta-attribute])
+
+AC_SUBST(OCF_ROOT_DIR)
+AC_DEFINE_UNQUOTED([OCF_ROOT_DIR], ["$OCF_ROOT_DIR"],
+                   [OCF root directory for resource agents and libraries])
+
+AC_SUBST(OCF_RA_PATH)
+
+AC_SUBST(OCF_RA_INSTALL_DIR)
+
+AC_SUBST(PCMK__FENCE_BINDIR)
+
 
 AC_DEFINE_UNQUOTED(PACEMAKER_VERSION, "$VERSION",
                    [Version number of this Pacemaker build])
@@ -728,8 +744,6 @@ AC_DEFINE_UNQUOTED([PCMK_GNUTLS_PRIORITIES], ["$PCMK_GNUTLS_PRIORITIES"],
                    [GnuTLS cipher priorities])
 AC_SUBST(PCMK_GNUTLS_PRIORITIES)
 
-AS_IF([test x"${BUG_URL}" = x""],
-      [BUG_URL="https://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker"])
 AC_SUBST(BUG_URL)
 AC_DEFINE_UNQUOTED([PCMK__BUG_URL], ["$BUG_URL"],
                    [Where bugs should be reported])
