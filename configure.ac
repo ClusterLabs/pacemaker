@@ -622,9 +622,9 @@ AC_SUBST([CONFIG_STATUS_DEPENDENCIES],
          [$(echo '$(wildcard $(top_srcdir)/xml/api/*.rng)')])
 
 
-dnl ===============================================
-dnl General Processing
-dnl ===============================================
+dnl ==============================================
+dnl Process simple options
+dnl ==============================================
 
 AS_IF([test $enable_compat_2_0 -ne $DISABLED],
       [
@@ -655,11 +655,23 @@ AC_DEFINE_UNQUOTED([OCF_ROOT_DIR], ["$OCF_ROOT_DIR"],
                    [OCF root directory for resource agents and libraries])
 
 AC_SUBST(OCF_RA_PATH)
-
 AC_SUBST(OCF_RA_INSTALL_DIR)
-
 AC_SUBST(PCMK__FENCE_BINDIR)
 
+AS_IF([test x"${PCMK_GNUTLS_PRIORITIES}" != x""], [],
+      [AC_MSG_ERROR([--with-gnutls-priorities value must not be empty])])
+AC_DEFINE_UNQUOTED([PCMK_GNUTLS_PRIORITIES], ["$PCMK_GNUTLS_PRIORITIES"],
+                   [GnuTLS cipher priorities])
+AC_SUBST(PCMK_GNUTLS_PRIORITIES)
+
+AC_SUBST(BUG_URL)
+AC_DEFINE_UNQUOTED([PCMK__BUG_URL], ["$BUG_URL"],
+                   [Where bugs should be reported])
+
+
+dnl ===============================================
+dnl General Processing
+dnl ===============================================
 
 AC_MSG_NOTICE([Sanitizing INITDIR: ${INITDIR}])
 AS_CASE([$INITDIR],
@@ -737,16 +749,6 @@ AC_DEFINE_UNQUOTED(PCMK__FENCE_BINDIR,"$PCMK__FENCE_BINDIR",
 expand_path_option OCF_RA_PATH
 AC_DEFINE_UNQUOTED([OCF_RA_PATH], ["$OCF_RA_PATH"],
                    [OCF directories to search for resource agents ])
-
-AS_IF([test x"${PCMK_GNUTLS_PRIORITIES}" != x""], [],
-      [AC_MSG_ERROR([--with-gnutls-priorities value must not be empty])])
-AC_DEFINE_UNQUOTED([PCMK_GNUTLS_PRIORITIES], ["$PCMK_GNUTLS_PRIORITIES"],
-                   [GnuTLS cipher priorities])
-AC_SUBST(PCMK_GNUTLS_PRIORITIES)
-
-AC_SUBST(BUG_URL)
-AC_DEFINE_UNQUOTED([PCMK__BUG_URL], ["$BUG_URL"],
-                   [Where bugs should be reported])
 
 for j in prefix exec_prefix bindir sbindir libexecdir datadir sysconfdir \
     sharedstatedir localstatedir libdir includedir oldincludedir infodir \
