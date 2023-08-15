@@ -1151,20 +1151,16 @@ REQUIRE_FUNC([unsetenv])
 REQUIRE_FUNC([uuid_unparse])
 REQUIRE_FUNC([vasprintf])
 
-AC_CACHE_CHECK(whether sscanf supports %m,
-               pf_cv_var_sscanf,
-               AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#include <stdio.h>
-const char *s = "some-command-line-arg";
-int main(int argc, char **argv) {
-char *name = NULL;
-int n = sscanf(s, "%ms", &name);
-return n == 1 ? 0 : 1;
-}
-]])],
-                                 pf_cv_var_sscanf="yes", pf_cv_var_sscanf="no", pf_cv_var_sscanf="no"))
-
-AS_IF([test x"$pf_cv_var_sscanf" = x"yes"],
+AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <stdio.h>]], [[
+    const char *s = "some-command-line-arg";
+    char *name = NULL;
+    int n = sscanf(s, "%ms", &name);
+    return n != 1;
+                               ]])],
+              [have_sscanf_m="yes"],
+              [have_sscanf_m="no"],
+              [have_sscanf_m="no"])
+AS_IF([test x"$have_sscanf_m" = x"yes"],
       [AC_DEFINE([HAVE_SSCANF_M], [1],
                  [Define to 1 if sscanf %m modifier is available])])
 
