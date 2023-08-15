@@ -555,6 +555,40 @@ AC_ARG_VAR([LDFLAGS_HARDENED_EXE], [extra linker flags for hardened executables]
 
 
 dnl ==============================================
+dnl Locate essential tools
+dnl ==============================================
+
+PATH="$PATH:/sbin:/usr/sbin:/usr/local/sbin:/usr/local/bin"
+export PATH
+
+dnl Pacemaker's executable python scripts will invoke the python specified by
+dnl configure's PYTHON variable. If not specified, AM_PATH_PYTHON will check a
+dnl built-in list with (unversioned) "python" having precedence. To configure
+dnl Pacemaker to use a specific python interpreter version, define PYTHON
+dnl when calling configure, for example: ./configure PYTHON=/usr/bin/python3.6
+
+dnl If PYTHON was specified, ensure it is an absolute path
+AS_IF([test x"${PYTHON}" != x""], [AC_PATH_PROG([PYTHON], [$PYTHON])])
+
+dnl Require a minimum Python version
+AM_PATH_PYTHON([3.4])
+
+AC_PROG_LN_S
+AC_PROG_MKDIR_P
+
+AC_PATH_PROG([GIT], [git], [false])
+
+dnl Bash is needed for building man pages and running regression tests.
+dnl BASH is already an environment variable, so use something else.
+AC_PATH_PROG([BASH_PATH], [bash])
+AS_IF([test x"${BASH_PATH}" != x""], [],
+      [AC_MSG_FAILURE([Could not find required build tool bash])])
+
+AC_PATH_PROGS(VALGRIND_BIN, valgrind, /usr/bin/valgrind)
+AC_DEFINE_UNQUOTED(VALGRIND_BIN, "$VALGRIND_BIN", Valgrind command)
+
+
+dnl ==============================================
 dnl Package and schema versioning
 dnl ==============================================
 
@@ -840,40 +874,6 @@ AS_CASE(["$host_cpu"],
                     [*], [AS_IF([test x"$GCC" = x"yes"], [CFLAGS="$CFLAGS -m64"])
                     ])
         ])
-
-
-dnl ==============================================
-dnl Locate essential tools
-dnl ==============================================
-
-PATH="$PATH:/sbin:/usr/sbin:/usr/local/sbin:/usr/local/bin"
-export PATH
-
-dnl Pacemaker's executable python scripts will invoke the python specified by
-dnl configure's PYTHON variable. If not specified, AM_PATH_PYTHON will check a
-dnl built-in list with (unversioned) "python" having precedence. To configure
-dnl Pacemaker to use a specific python interpreter version, define PYTHON
-dnl when calling configure, for example: ./configure PYTHON=/usr/bin/python3.6
-
-dnl If PYTHON was specified, ensure it is an absolute path
-AS_IF([test x"${PYTHON}" != x""], [AC_PATH_PROG([PYTHON], [$PYTHON])])
-
-dnl Require a minimum Python version
-AM_PATH_PYTHON([3.4])
-
-AC_PROG_LN_S
-AC_PROG_MKDIR_P
-
-AC_PATH_PROG([GIT], [git], [false])
-
-dnl Bash is needed for building man pages and running regression tests.
-dnl BASH is already an environment variable, so use something else.
-AC_PATH_PROG([BASH_PATH], [bash])
-AS_IF([test x"${BASH_PATH}" != x""], [],
-      [AC_MSG_FAILURE([Could not find required build tool bash])])
-
-AC_PATH_PROGS(VALGRIND_BIN, valgrind, /usr/bin/valgrind)
-AC_DEFINE_UNQUOTED(VALGRIND_BIN, "$VALGRIND_BIN", Valgrind command)
 
 
 dnl ==============================================
