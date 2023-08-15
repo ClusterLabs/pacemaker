@@ -1026,6 +1026,18 @@ PKG_CHECK_MODULES(LIBXML2, [libxml-2.0],
 
 REQUIRE_LIB([xslt], [xsltApplyStylesheet])
 
+AC_MSG_CHECKING([whether __progname and __progname_full are available])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[extern char *__progname, *__progname_full;]],
+                                [[__progname = "foo";
+                                  __progname_full = "foo bar";]])],
+               [
+                   have_progname="yes"
+                   AC_DEFINE(HAVE_PROGNAME, 1,
+                             [Define to 1 if processes can change their name])
+               ],
+               [have_progname="no"])
+AC_MSG_RESULT([$have_progname])
+
 dnl ========================================================================
 dnl Headers
 dnl ========================================================================
@@ -1079,18 +1091,6 @@ REQUIRE_HEADER([libxml/xpath.h])
 REQUIRE_HEADER([libxslt/xslt.h])
 
 cc_restore_flags
-
-AC_CACHE_CHECK([whether __progname and __progname_full are available],
-               [pf_cv_var_progname],
-               [AC_LINK_IFELSE(
-                   [AC_LANG_PROGRAM([[extern char *__progname, *__progname_full;]],
-                                    [[__progname = "foo"; __progname_full = "foo bar";]])],
-                   [pf_cv_var_progname="yes"],
-                   [pf_cv_var_progname="no"]
-               )]
-              )
-AS_IF([test x"$pf_cv_var_progname" = x"yes"],
-      [AC_DEFINE(HAVE_PROGNAME,1,[Define to 1 if processes can change their name])])
 
 dnl ========================================================================
 dnl Generic declarations
