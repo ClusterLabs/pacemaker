@@ -1191,7 +1191,7 @@ xmlNode *
 diff_xml_object(xmlNode *old, xmlNode *new, gboolean suppress)
 {
     xmlNode *tmp1 = NULL;
-    xmlNode *diff = create_xml_node(NULL, "diff");
+    xmlNode *diff = create_xml_node(NULL, XML_TAG_DIFF);
     xmlNode *removed = create_xml_node(diff, XML_TAG_DIFF_REMOVED);
     xmlNode *added = create_xml_node(diff, XML_TAG_DIFF_ADDED);
 
