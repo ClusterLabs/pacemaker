@@ -583,8 +583,18 @@ AC_ARG_VAR([LDFLAGS_HARDENED_EXE], [extra linker flags for hardened executables]
 
 
 dnl ==============================================
-dnl API schema versioning
+dnl Package and schema versioning
 dnl ==============================================
+
+# Redefine PACKAGE_VERSION and VERSION according to PACEMAKER_VERSION in case
+# the user used --with-version. Unfortunately, this can only affect the
+# substitution variables and later uses in this file, not the config.h
+# constants, so we have to be careful to use only PACEMAKER_VERSION in C code.
+PACKAGE_VERSION=$PACEMAKER_VERSION
+VERSION=$PACEMAKER_VERSION
+
+AC_DEFINE_UNQUOTED(PACEMAKER_VERSION, "$VERSION",
+                   [Version number of this Pacemaker build])
 
 # latest_schema_version <schema_dir>
 #  Determine highest RNG version in the given schema directory. Use git if
@@ -615,13 +625,6 @@ AC_SUBST([CONFIG_STATUS_DEPENDENCIES],
 dnl ===============================================
 dnl General Processing
 dnl ===============================================
-
-# Redefine PACKAGE_VERSION and VERSION according to PACEMAKER_VERSION in case
-# the user used --with-version. Unfortunately, this can only affect the
-# substitution variables and later uses in this file, not the config.h
-# constants, so we have to be careful to use only PACEMAKER_VERSION in C code.
-PACKAGE_VERSION=$PACEMAKER_VERSION
-VERSION=$PACEMAKER_VERSION
 
 AS_IF([test $enable_compat_2_0 -ne $DISABLED],
       [
@@ -657,9 +660,6 @@ AC_SUBST(OCF_RA_INSTALL_DIR)
 
 AC_SUBST(PCMK__FENCE_BINDIR)
 
-
-AC_DEFINE_UNQUOTED(PACEMAKER_VERSION, "$VERSION",
-                   [Version number of this Pacemaker build])
 
 AC_MSG_NOTICE([Sanitizing INITDIR: ${INITDIR}])
 AS_CASE([$INITDIR],
