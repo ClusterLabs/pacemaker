@@ -841,9 +841,10 @@ AS_CASE(["$host_cpu"],
                     ])
         ])
 
-dnl ===============================================
-dnl Program Paths
-dnl ===============================================
+
+dnl ==============================================
+dnl Locate essential tools
+dnl ==============================================
 
 PATH="$PATH:/sbin:/usr/sbin:/usr/local/sbin:/usr/local/bin"
 export PATH
@@ -854,7 +855,7 @@ dnl built-in list with (unversioned) "python" having precedence. To configure
 dnl Pacemaker to use a specific python interpreter version, define PYTHON
 dnl when calling configure, for example: ./configure PYTHON=/usr/bin/python3.6
 
-dnl Ensure PYTHON is an absolute path
+dnl If PYTHON was specified, ensure it is an absolute path
 AS_IF([test x"${PYTHON}" != x""], [AC_PATH_PROG([PYTHON], [$PYTHON])])
 
 dnl Require a minimum Python version
@@ -863,13 +864,7 @@ AM_PATH_PYTHON([3.4])
 AC_PROG_LN_S
 AC_PROG_MKDIR_P
 
-AC_PATH_PROGS([ASCIIDOC_CONV], [asciidoc asciidoctor])
 AC_PATH_PROGS([GIT], [git false])
-AC_PATH_PROG([HELP2MAN], [help2man])
-AC_PATH_PROG([SPHINX], [sphinx-build])
-AC_PATH_PROG([INKSCAPE], [inkscape])
-AC_PATH_PROG([XSLTPROC], [xsltproc])
-AC_PATH_PROG([XMLCATALOG], [xmlcatalog])
 
 dnl Bash is needed for building man pages and running regression tests.
 dnl BASH is already an environment variable, so use something else.
@@ -879,6 +874,18 @@ AS_IF([test x"${BASH_PATH}" != x""], [],
 
 AC_PATH_PROGS(VALGRIND_BIN, valgrind, /usr/bin/valgrind)
 AC_DEFINE_UNQUOTED(VALGRIND_BIN, "$VALGRIND_BIN", Valgrind command)
+
+
+dnl ==============================================
+dnl Documentation build dependencies and checks
+dnl ==============================================
+
+AC_PATH_PROGS([ASCIIDOC_CONV], [asciidoc asciidoctor])
+AC_PATH_PROG([HELP2MAN], [help2man])
+AC_PATH_PROG([SPHINX], [sphinx-build])
+AC_PATH_PROG([INKSCAPE], [inkscape])
+AC_PATH_PROG([XSLTPROC], [xsltproc])
+AC_PATH_PROG([XMLCATALOG], [xmlcatalog])
 
 AM_CONDITIONAL(BUILD_HELP, test x"${HELP2MAN}" != x"")
 AS_IF([test x"${HELP2MAN}" != x""],
@@ -947,6 +954,7 @@ AS_IF([test -n "$GETOPT_PATH"], [AC_MSG_RESULT([$GETOPT_PATH])],
           AC_MSG_ERROR([Could not find required build tool GNU-compatible getopt])
       ])
 AC_SUBST([GETOPT_PATH])
+
 
 dnl ========================================================================
 dnl checks for library functions to replace them
