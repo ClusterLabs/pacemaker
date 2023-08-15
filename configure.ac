@@ -864,7 +864,7 @@ AM_PATH_PYTHON([3.4])
 AC_PROG_LN_S
 AC_PROG_MKDIR_P
 
-AC_PATH_PROGS([GIT], [git false])
+AC_PATH_PROG([GIT], [git], [false])
 
 dnl Bash is needed for building man pages and running regression tests.
 dnl BASH is already an environment variable, so use something else.
@@ -1407,9 +1407,9 @@ AC_SUBST(PACEMAKER_CONFIG_DIR)
 AC_DEFINE_UNQUOTED(SBIN_DIR,"$sbindir",[Location for system binaries])
 
 AC_MSG_CHECKING([build version])
-AS_IF([test -x $GIT && test -d .git],
+AS_IF([test "$GIT" != "false" && test -d .git],
       [
-          BUILD_VERSION=`$GIT log --pretty="format:%h" -n 1`
+          BUILD_VERSION=`"$GIT" log --pretty="format:%h" -n 1`
           AC_MSG_RESULT([$BUILD_VERSION (git hash)])
       ],
       [
