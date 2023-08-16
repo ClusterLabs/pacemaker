@@ -982,6 +982,10 @@ PKG_CHECK_MODULES(LIBXML2, [libxml-2.0],
 
 REQUIRE_LIB([xslt], [xsltApplyStylesheet])
 
+PKG_CHECK_MODULES(GCRYPT, [libgcrypt],
+                  [CPPFLAGS="${CPPFLAGS} ${GCRYPT_CFLAGS}"
+                   LIBS="${LIBS} ${GCRYPT_LIBS}"])
+
 dnl ========================================================================
 dnl Headers
 dnl ========================================================================

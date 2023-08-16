@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2022 the Pacemaker project contributors
+ * Copyright 2015-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,7 +13,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
-#include <md5.h>
+#include <gcrypt.h>
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
@@ -21,6 +21,8 @@
 #include "crmcommon_private.h"
 
 #define BEST_EFFORT_STATUS 0
+
+static bool gcrypt_initialized = false;
 
 /*!
  * \internal
@@ -252,27 +254,39 @@ pcmk__xa_filterable(const char *name)
 char *
 crm_md5sum(const char *buffer)
 {
-    int lpc = 0, len = 0;
+    unsigned int dlen;
+    unsigned char *raw_digest = NULL;
     char *digest = NULL;
-    unsigned char raw_digest[MD5_DIGEST_SIZE];
 
-    if (buffer == NULL) {
-        buffer = "";
+    if (!gcrypt_initialized) {
+        /* We don't care about a specific version of the library, but we do need
+         * to make sure it gets initialized.
+         */
+        gcry_check_version(NULL);
+
+        /* Disable secure memory */
+        gcry_control(GCRYCTL_DISABLE_SECMEM, 0);
+
+        /* Tell libgcrypt initialization has completed */
+        gcry_control(GCRYCTL_INITIALIZATION_FINISHED, 0);
+
+        gcrypt_initialized = true;
     }
-    len = strlen(buffer);
 
-    crm_trace("Beginning digest of %d bytes", len);
-    digest = malloc(2 * MD5_DIGEST_SIZE + 1);
-    if (digest) {
-        md5_buffer(buffer, len, raw_digest);
-        for (lpc = 0; lpc < MD5_DIGEST_SIZE; lpc++) {
-            sprintf(digest + (2 * lpc), "%02x", raw_digest[lpc]);
-        }
-        digest[(2 * MD5_DIGEST_SIZE)] = 0;
-        crm_trace("Digest %s.", digest);
+    dlen = gcry_md_get_algo_dlen(GCRY_MD_MD5);
+    raw_digest = calloc(dlen, sizeof(unsigned char));
 
-    } else {
-        crm_err("Could not create digest");
+    gcry_md_hash_buffer(GCRY_MD_MD5, raw_digest, buffer, strlen(buffer));
+
+    digest = calloc(2 * dlen, sizeof(char));
+
+    for (int i = 0; i < dlen; i++) {
+        sprintf(digest + (2 * i), "%02x", raw_digest[i]);
     }
+
+    digest[(2 * dlen)] = 0;
+    free(raw_digest);
+
+    crm_trace("Digest %s.", digest);
     return digest;
 }
