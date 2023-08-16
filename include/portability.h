@@ -1,5 +1,5 @@
 /*
- * Copyright 2001-2021 the Pacemaker project contributors
+ * Copyright 2001-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -29,16 +29,6 @@
 
 /* Prototypes for libreplace functions */
 
-#  ifndef HAVE_DAEMON
-  /* We supply a replacement function, but need a prototype */
-int daemon(int nochdir, int noclose);
-#  endif
-
-#  ifndef HAVE_SETENV
-  /* We supply a replacement function, but need a prototype */
-int setenv(const char *name, const char *value, int why);
-#  endif
-
 #  ifndef HAVE_STRERROR
   /* We supply a replacement function, but need a prototype */
 char *strerror(int errnum);
@@ -47,23 +37,6 @@ char *strerror(int errnum);
 #  ifndef HAVE_STRCHRNUL
   /* We supply a replacement function, but need a prototype */
 char *strchrnul(const char *s, int c_in);
-#  endif
-
-#  ifndef HAVE_ALPHASORT
-#    include <dirent.h>
-int alphasort(const void *dirent1, const void *dirent2);
-#  endif
-
-#  ifndef HAVE_STRNLEN
-size_t strnlen(const char *s, size_t maxlen);
-#  else
-#    define USE_GNU
-#  endif
-
-#  ifndef HAVE_STRNDUP
-char *strndup(const char *str, size_t len);
-#  else
-#    define USE_GNU
 #  endif
 
 #  if HAVE_DBUS

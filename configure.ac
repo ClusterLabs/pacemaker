@@ -1061,20 +1061,10 @@ dnl             is a dummy function which no system supplies.  It is here to mak
 dnl             the system compile semi-correctly on OpenBSD which doesn't know
 dnl             how to create an empty archive
 dnl
-dnl     scandir: Only on BSD.
-dnl             System-V systems may have it, but hidden and/or deprecated.
-dnl             A replacement function is supplied for it.
-dnl
 dnl     strerror: returns a string that corresponds to an errno.
 dnl             A replacement function is supplied for it.
-dnl
-dnl     strnlen: is a gnu function similar to strlen, but safer.
-dnl            We wrote a tolerably-fast replacement function for it.
-dnl
-dnl     strndup: is a gnu function similar to strdup, but safer.
-dnl            We wrote a tolerably-fast replacement function for it.
 
-AC_REPLACE_FUNCS(alphasort NoSuchFunctionName scandir strerror strchrnul strnlen strndup)
+AC_REPLACE_FUNCS(NoSuchFunctionName strerror strchrnul)
 
 dnl ===============================================
 dnl Libraries
@@ -1252,8 +1242,12 @@ dnl ========================================================================
 dnl Functions
 dnl ========================================================================
 
+REQUIRE_FUNC([alphasort])
 REQUIRE_FUNC([getopt])
+REQUIRE_FUNC([scandir])
 REQUIRE_FUNC([setenv])
+REQUIRE_FUNC([strndup])
+REQUIRE_FUNC([strnlen])
 REQUIRE_FUNC([unsetenv])
 REQUIRE_FUNC([uuid_unparse])
 REQUIRE_FUNC([vasprintf])
