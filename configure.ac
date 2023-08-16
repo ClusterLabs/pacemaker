@@ -569,10 +569,8 @@ AC_PROG_MKDIR_P
 AC_PATH_PROG([GIT], [git], [false])
 
 dnl Bash is needed for building man pages and running regression tests.
-dnl BASH is already an environment variable, so use something else.
-AC_PATH_PROG([BASH_PATH], [bash])
-AS_IF([test x"${BASH_PATH}" != x""], [],
-      [AC_MSG_FAILURE([Could not find required build tool bash])])
+dnl We set "BASH_PATH" because "BASH" is already an environment variable.
+REQUIRE_PROG([BASH_PATH], [bash])
 
 AC_PATH_PROGS(VALGRIND_BIN, valgrind, /usr/bin/valgrind)
 AC_DEFINE_UNQUOTED(VALGRIND_BIN, "$VALGRIND_BIN", Valgrind command)
