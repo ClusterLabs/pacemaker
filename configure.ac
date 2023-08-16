@@ -22,17 +22,6 @@ m4_ifdef([AC_CONFIG_MACRO_DIRS],
 
 AC_DEFUN([AC_DATAROOTDIR_CHECKED])
 
-dnl Suggested structure:
-dnl     information on the package
-dnl     checks for programs
-dnl     checks for libraries
-dnl     checks for header files
-dnl     checks for types
-dnl     checks for structures
-dnl     checks for compiler characteristics
-dnl     checks for library functions
-dnl     checks for system services
-
 m4_include([m4/version.m4])
 AC_INIT([pacemaker], VERSION_NUMBER, [users@clusterlabs.org], [pacemaker],
         PCMK_URL)
@@ -72,15 +61,6 @@ AS_IF([test x"${PKG_CONFIG}" != x""], [],
 PKG_INSTALLDIR
 PKG_NOARCH_INSTALLDIR
 
-dnl Example 2.4. Silent Custom Rule to Generate a File
-dnl %-bar.pc: %.pc
-dnl	$(AM_V_GEN)$(LN_S) $(notdir $^) $@
-
-CC_IN_CONFIGURE=yes
-export CC_IN_CONFIGURE
-
-LDD=ldd
-
 dnl ========================================================================
 dnl Compiler characteristics
 dnl ========================================================================
@@ -116,13 +96,6 @@ LDFLAGS="$AM_LDFLAGS $LDFLAGS"
 LT_INIT([dlopen])
 LDFLAGS="$saved_LDFLAGS"
 LTDL_INIT([convenience])
-
-AC_TYPE_SIZE_T
-AC_CHECK_SIZEOF(char)
-AC_CHECK_SIZEOF(short)
-AC_CHECK_SIZEOF(int)
-AC_CHECK_SIZEOF(long)
-AC_CHECK_SIZEOF(long long)
 
 dnl ===============================================
 dnl Helpers
@@ -1378,10 +1351,7 @@ AC_DEFINE_UNQUOTED(SBIN_DIR,"$sbindir",[Location for system binaries])
 AC_PATH_PROGS(GIT, git false)
 
 AC_MSG_CHECKING([build version])
-BUILD_VERSION=$Format:%h$
-AS_IF([test $BUILD_VERSION != ":%h$"],
-      [AC_MSG_RESULT([$BUILD_VERSION (archive hash)])],
-      [test -x $GIT && test -d .git],
+AS_IF([test -x $GIT && test -d .git],
       [
           BUILD_VERSION=`$GIT log --pretty="format:%h" -n 1`
           AC_MSG_RESULT([$BUILD_VERSION (git hash)])
