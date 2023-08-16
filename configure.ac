@@ -20,8 +20,6 @@ m4_ifdef([AC_CONFIG_MACRO_DIRS],
          [AC_CONFIG_MACRO_DIRS([m4])],
          [AC_CONFIG_MACRO_DIR([m4])])
 
-AC_DEFUN([AC_DATAROOTDIR_CHECKED])
-
 m4_include([m4/version.m4])
 AC_INIT([pacemaker], VERSION_NUMBER, [users@clusterlabs.org], [pacemaker],
         PCMK_URL)
@@ -655,6 +653,7 @@ expand_path_option exec_prefix
 expand_path_option bindir
 expand_path_option sbindir
 expand_path_option libexecdir
+expand_path_option datarootdir
 expand_path_option datadir
 expand_path_option sysconfdir
 expand_path_option sharedstatedir
@@ -664,6 +663,8 @@ expand_path_option includedir
 expand_path_option oldincludedir
 expand_path_option infodir
 expand_path_option mandir
+
+AC_DEFUN([AC_DATAROOTDIR_CHECKED])
 
 dnl Home-grown variables
 
