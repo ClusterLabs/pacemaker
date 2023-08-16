@@ -29,11 +29,6 @@
 
 /* Prototypes for libreplace functions */
 
-#  ifndef HAVE_STRERROR
-  /* We supply a replacement function, but need a prototype */
-char *strerror(int errnum);
-#  endif
-
 #  ifndef HAVE_STRCHRNUL
   /* We supply a replacement function, but need a prototype */
 char *strchrnul(const char *s, int c_in);

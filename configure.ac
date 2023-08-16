@@ -1060,11 +1060,8 @@ dnl     NoSuchFunctionName:
 dnl             is a dummy function which no system supplies.  It is here to make
 dnl             the system compile semi-correctly on OpenBSD which doesn't know
 dnl             how to create an empty archive
-dnl
-dnl     strerror: returns a string that corresponds to an errno.
-dnl             A replacement function is supplied for it.
 
-AC_REPLACE_FUNCS(NoSuchFunctionName strerror strchrnul)
+AC_REPLACE_FUNCS(NoSuchFunctionName strchrnul)
 
 dnl ===============================================
 dnl Libraries
@@ -1254,6 +1251,17 @@ REQUIRE_FUNC([vasprintf])
 
 AC_CHECK_FUNCS([fopen64])
 AM_CONDITIONAL([WRAPPABLE_FOPEN64], [test x"$ac_cv_func_fopen64" = x"yes"])
+
+AC_MSG_CHECKING([whether strerror always returns non-NULL])
+AC_RUN_IFELSE([AC_LANG_PROGRAM([[
+    #include <stdio.h>
+    #include <string.h>
+                               ]], [[
+    return strerror(-1) == NULL;
+                               ]])],
+              [AC_MSG_RESULT([yes])],
+              [AC_MSG_ERROR([strerror() is not C99-compliant])],
+              [AC_MSG_ERROR([strerror() is not C99-compliant])])
 
 AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <stdio.h>]], [[
     const char *s = "some-command-line-arg";
