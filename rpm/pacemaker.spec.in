@@ -361,12 +361,6 @@ Provides:      pacemaker-ticket-support = 2.0
 Provides:      pcmk-cluster-manager = %{version}-%{release}
 Provides:      pcmk-cluster-manager%{?_isa} = %{version}-%{release}
 
-# Bundled bits
-## Pacemaker uses the crypto/md5-buffer module from gnulib
-%if 0%{?fedora} || 0%{?rhel}
-Provides:      bundled(gnulib) = 20200404
-%endif
-
 %description
 Pacemaker is an advanced, scalable High-Availability cluster resource
 manager.

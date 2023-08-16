@@ -94,15 +94,6 @@ m4_version_prereq([2.70], [:], [AC_PROG_CC_STDC])
 dnl C++ is not needed for build, just maintainer utilities
 AC_PROG_CXX
 
-dnl We use md5.c from gnulib, which has its own m4 macros. Per its docs:
-dnl "The macro gl_EARLY must be called as soon as possible after verifying that
-dnl the C compiler is working. ... The core part of the gnulib checks are done
-dnl by the macro gl_INIT." In addition, prevent gnulib from introducing OpenSSL
-dnl as a dependency.
-gl_EARLY
-gl_SET_CRYPTO_CHECK_DEFAULT([no])
-gl_INIT
-
 # --enable-new-dtags: Use RUNPATH instead of RPATH.
 # It is necessary to have this done before libtool does linker detection.
 # See also: https://github.com/kronosnet/kronosnet/issues/107
@@ -2088,7 +2079,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/common/tests/xml/Makefile                       \
                 lib/common/tests/xpath/Makefile                     \
                 lib/fencing/Makefile                                \
-                lib/gnu/Makefile                                    \
                 lib/libpacemaker.pc                                 \
                 lib/lrmd/Makefile                                   \
                 lib/pacemaker/Makefile                              \

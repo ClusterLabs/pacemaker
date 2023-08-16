@@ -1,5 +1,5 @@
 #
-# Copyright 2003-2021 the Pacemaker project contributors
+# Copyright 2003-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -18,4 +18,4 @@ pkgconfig_DATA		= $(LIBS:%=pacemaker-%.pc)	\
 
 EXTRA_DIST		= $(pkgconfig_DATA:%=%.in)
 
-SUBDIRS	= gnu common pengine cib services fencing lrmd cluster pacemaker
+SUBDIRS	= common pengine cib services fencing lrmd cluster pacemaker

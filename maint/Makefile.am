@@ -72,36 +72,3 @@ changelog: require_last_release
 .PHONY: authors
 authors: require_last_release
 	git log $(LAST_RELEASE)..$(COMMIT) --format='%an' | sort -u
-
-#
-# gnulib updates
-#
-# See https://www.gnu.org/software/gnulib/manual/html_node/
-#
-
-# V3	= scandir unsetenv alphasort xalloc
-# V2	= setenv strerror strchrnul strndup
-GNU_MODS	= crypto/md5-buffer
-# stdint appears to be surrogate only for C99-lacking environments
-GNU_MODS_AVOID	= stdint
-
-.PHONY: gnulib-update
-gnulib-update:
-	@echo 'Newer versions of gnulib require automake 1.14'
-	@echo 'Pacemaker cannot update until minimum supported automake is 1.14'
-	@exit 1
-	if test -e gnulib; then							\
-		cd gnulib && git pull;						\
-	else									\
-		git clone https://git.savannah.gnu.org/git/gnulib.git gnulib	\
-			&& cd gnulib && git config pull.rebase false;		\
-	fi
-	cd $(top_srcdir) && maint/gnulib/gnulib-tool --source-base=lib/gnu 	\
-		--lgpl=2 --no-vc-files --no-conditional-dependencies --libtool	\
-		$(GNU_MODS_AVOID:%=--avoid %) --import $(GNU_MODS)
-	sed -i -e "s/bundled(gnulib).*/bundled(gnulib) = `date +'%Y%m%d'`/"	\
-		../rpm/pacemaker.spec.in
-	sed -i -e "s/_GL_EXTERN_INLINE/_GL_INLINE/" 				\
-		-e "s#left_over -= 64;#left_over \&= 63; /* helps static analysis */#"	\
-		-e "s#&ctx->buffer\[16\]#\&(((char *) ctx->buffer)[64]) /* helps static analysis */#"	\
-		../lib/gnu/md5.c
