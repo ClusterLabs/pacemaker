@@ -610,15 +610,37 @@ AS_IF([test "$GIT" != "false" && test -d .git],
 AC_DEFINE_UNQUOTED(BUILD_VERSION, "$BUILD_VERSION", Build version)
 AC_SUBST(BUILD_VERSION)
 
-# latest_schema_version <schema_dir>
-#  Determine highest RNG version in the given schema directory. Use git if
-#  available to list managed RNGs, in case there are leftover schema files from
-#  an earlier build of a different version. Otherwise, check all RNGs.
+# schema_files <schema-dir>
+#  List all manually edited RNG schemas (as opposed to auto-generated via make)
+#  in the given directory. Use git if available to list managed RNGs, in case
+#  there are leftover schema files from an earlier build of a different
+#  version. Otherwise, check all RNGs.
+schema_files() {
+    local files="$("$GIT" ls-files "$1"/*.rng 2>/dev/null)"
+
+    AS_IF([test x"$files" = x""],
+          [
+              files="$(ls -1 "$1"/*.rng | grep -E -v
+                       '/(pacemaker|api-result|crm_mon|versions)[^/]*\.rng')"
+          ])
+    echo $files
+}
+
+# latest_schema_version <schema-dir>
+#  Determine highest RNG version in the given schema directory.
 latest_schema_version() {
-    local files=$(git ls-files "$1"/*.rng 2>/dev/null)
-    AS_IF([test x"$files" = x""], [files=$(ls -1 "$1"/*.rng)])
-    echo "$files" | sed -n -e 's/^.*-\([[0-9]][[0-9.]]*\).rng$/\1/p' dnl
-                  | sort -V | tail -1
+    schema_files "$1" | sed -n -e 's/^.*-\([[0-9]][[0-9.]]*\).rng$/\1/p' dnl
+                      | sort -V | tail -1
+}
+
+# schemas_for_make <schema-dir>
+#  Like schema_files, but suitable for use in make variables.
+schemas_for_make() {
+    local file
+
+    for file in $(schema_files "$1"); do
+        AS_ECHO_N(["\$(top_srcdir)/$file "])
+    done
 }
 
 # Detect highest API schema version
@@ -630,10 +652,11 @@ AC_DEFINE_UNQUOTED([PCMK__API_VERSION], ["$API_VERSION"],
 CIB_VERSION=$(latest_schema_version "xml")
 AC_SUBST(CIB_VERSION)
 
-# Add the schemas to the files that cause automake to re-run configure at next
-# make, so we re-detect the highest version
-AC_SUBST([CONFIG_STATUS_DEPENDENCIES],
-         [$(echo '$(wildcard $(top_srcdir)/xml/api/*.rng)')])
+# Re-run configure at next make if schema files change, to re-detect versions
+cib_schemas="$(schemas_for_make "xml")"
+api_schemas="$(schemas_for_make "xml/api")"
+CONFIG_STATUS_DEPENDENCIES="$cib_schemas $api_schemas"
+AC_SUBST(CONFIG_STATUS_DEPENDENCIES)
 
 
 dnl ==============================================
