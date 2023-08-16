@@ -2071,6 +2071,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/common/tests/actions/Makefile                   \
                 lib/common/tests/agents/Makefile                    \
                 lib/common/tests/cmdline/Makefile                   \
+                lib/common/tests/digest/Makefile                    \
                 lib/common/tests/flags/Makefile                     \
                 lib/common/tests/health/Makefile                    \
                 lib/common/tests/io/Makefile                        \
