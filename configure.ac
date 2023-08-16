@@ -660,14 +660,6 @@ AC_DEFINE_UNQUOTED([PCMK__RESOURCE_STICKINESS_DEFAULT],
                    [$with_resource_stickiness_default],
                    [Default value for resource-stickiness resource meta-attribute])
 
-AC_SUBST(OCF_ROOT_DIR)
-AC_DEFINE_UNQUOTED([OCF_ROOT_DIR], ["$OCF_ROOT_DIR"],
-                   [OCF root directory for resource agents and libraries])
-
-AC_SUBST(OCF_RA_PATH)
-AC_SUBST(OCF_RA_INSTALL_DIR)
-AC_SUBST(PCMK__FENCE_BINDIR)
-
 AS_IF([test x"${PCMK_GNUTLS_PRIORITIES}" != x""], [],
       [AC_MSG_ERROR([--with-gnutls-priorities value must not be empty])])
 AC_DEFINE_UNQUOTED([PCMK_GNUTLS_PRIORITIES], ["$PCMK_GNUTLS_PRIORITIES"],
@@ -777,20 +769,86 @@ expand_path_option PCMK__COROSYNC_CONF "${sysconfdir}/corosync/corosync.conf"
 AC_SUBST(PCMK__COROSYNC_CONF)
 
 expand_path_option CRM_LOG_DIR "${localstatedir}/log/pacemaker"
-AC_DEFINE_UNQUOTED(CRM_LOG_DIR,"$CRM_LOG_DIR", Location for Pacemaker log file)
+AC_DEFINE_UNQUOTED([CRM_LOG_DIR], ["$CRM_LOG_DIR"],
+                   [Location for Pacemaker log file])
 AC_SUBST(CRM_LOG_DIR)
 
 expand_path_option CRM_BUNDLE_DIR "${localstatedir}/log/pacemaker/bundles"
-AC_DEFINE_UNQUOTED(CRM_BUNDLE_DIR,"$CRM_BUNDLE_DIR", Location for Pacemaker bundle logs)
+AC_DEFINE_UNQUOTED([CRM_BUNDLE_DIR], ["$CRM_BUNDLE_DIR"],
+                   [Location for Pacemaker bundle logs])
 AC_SUBST(CRM_BUNDLE_DIR)
 
 expand_path_option PCMK__FENCE_BINDIR
-AC_DEFINE_UNQUOTED(PCMK__FENCE_BINDIR,"$PCMK__FENCE_BINDIR",
+AC_SUBST(PCMK__FENCE_BINDIR)
+AC_DEFINE_UNQUOTED([PCMK__FENCE_BINDIR], ["$PCMK__FENCE_BINDIR"],
                    [Location for executable fence agents])
 
+expand_path_option OCF_ROOT_DIR
+AC_SUBST(OCF_ROOT_DIR)
+AC_DEFINE_UNQUOTED([OCF_ROOT_DIR], ["$OCF_ROOT_DIR"],
+                   [OCF root directory for resource agents and libraries])
+
 expand_path_option OCF_RA_PATH
+AC_SUBST(OCF_RA_PATH)
 AC_DEFINE_UNQUOTED([OCF_RA_PATH], ["$OCF_RA_PATH"],
                    [OCF directories to search for resource agents ])
+
+expand_path_option OCF_RA_INSTALL_DIR
+AC_SUBST(OCF_RA_INSTALL_DIR)
+
+# Derived paths
+
+CRM_SCHEMA_DIRECTORY="${datadir}/pacemaker"
+AC_DEFINE_UNQUOTED([CRM_SCHEMA_DIRECTORY], ["$CRM_SCHEMA_DIRECTORY"],
+                   [Location for the Pacemaker Relax-NG Schema])
+AC_SUBST(CRM_SCHEMA_DIRECTORY)
+
+CRM_CORE_DIR="${localstatedir}/lib/pacemaker/cores"
+AC_DEFINE_UNQUOTED([CRM_CORE_DIR], ["$CRM_CORE_DIR"],
+                   [Directory Pacemaker daemons should change to (without systemd, core files will go here)])
+AC_SUBST(CRM_CORE_DIR)
+
+CRM_PACEMAKER_DIR="${localstatedir}/lib/pacemaker"
+AC_DEFINE_UNQUOTED([CRM_PACEMAKER_DIR], ["$CRM_PACEMAKER_DIR"],
+                   [Location to store directory produced by Pacemaker daemons])
+AC_SUBST(CRM_PACEMAKER_DIR)
+
+CRM_BLACKBOX_DIR="${localstatedir}/lib/pacemaker/blackbox"
+AC_DEFINE_UNQUOTED([CRM_BLACKBOX_DIR], ["$CRM_BLACKBOX_DIR"],
+                   [Where to keep blackbox dumps])
+AC_SUBST(CRM_BLACKBOX_DIR)
+
+PE_STATE_DIR="${localstatedir}/lib/pacemaker/pengine"
+AC_DEFINE_UNQUOTED([PE_STATE_DIR], ["$PE_STATE_DIR"],
+                   [Where to keep scheduler outputs])
+AC_SUBST(PE_STATE_DIR)
+
+CRM_CONFIG_DIR="${localstatedir}/lib/pacemaker/cib"
+AC_DEFINE_UNQUOTED([CRM_CONFIG_DIR], ["$CRM_CONFIG_DIR"],
+                   [Where to keep configuration files])
+AC_SUBST(CRM_CONFIG_DIR)
+
+CRM_DAEMON_DIR="${libexecdir}/pacemaker"
+AC_DEFINE_UNQUOTED([CRM_DAEMON_DIR], ["$CRM_DAEMON_DIR"],
+                   [Location for Pacemaker daemons])
+AC_SUBST(CRM_DAEMON_DIR)
+
+CRM_STATE_DIR="${runstatedir}/crm"
+AC_DEFINE_UNQUOTED([CRM_STATE_DIR], ["$CRM_STATE_DIR"],
+                   [Where to keep state files and sockets])
+AC_SUBST(CRM_STATE_DIR)
+
+CRM_RSCTMP_DIR="${runstatedir}/resource-agents"
+AC_DEFINE_UNQUOTED([CRM_RSCTMP_DIR], ["$CRM_RSCTMP_DIR"],
+                   [Where resource agents should keep state files])
+AC_SUBST(CRM_RSCTMP_DIR)
+
+PACEMAKER_CONFIG_DIR="${sysconfdir}/pacemaker"
+AC_DEFINE_UNQUOTED([PACEMAKER_CONFIG_DIR], ["$PACEMAKER_CONFIG_DIR"],
+                   [Where to keep configuration files like authkey])
+AC_SUBST(PACEMAKER_CONFIG_DIR)
+
+AC_DEFINE_UNQUOTED([SBIN_DIR], ["$sbindir"], [Location for system binaries])
 
 # Warn about any directories that don't exist (which may be OK)
 for j in prefix exec_prefix bindir sbindir libexecdir datadir sysconfdir \
@@ -1369,15 +1427,6 @@ AM_CONDITIONAL([BUILD_LHA_SUPPORT], [test x"$ac_cv_header_stonith_stonith_h" = x
 dnl ===============================================
 dnl Variables needed for substitution
 dnl ===============================================
-CRM_SCHEMA_DIRECTORY="${datadir}/pacemaker"
-AC_DEFINE_UNQUOTED(CRM_SCHEMA_DIRECTORY,"$CRM_SCHEMA_DIRECTORY", Location for the Pacemaker Relax-NG Schema)
-AC_SUBST(CRM_SCHEMA_DIRECTORY)
-
-CRM_CORE_DIR="${localstatedir}/lib/pacemaker/cores"
-AC_DEFINE_UNQUOTED([CRM_CORE_DIR], ["$CRM_CORE_DIR"],
-		   [Directory Pacemaker daemons should change to (without systemd, core files will go here)])
-AC_SUBST(CRM_CORE_DIR)
-
 AS_IF([test x"${CRM_DAEMON_USER}" = x""],
       [CRM_DAEMON_USER="hacluster"])
 AC_DEFINE_UNQUOTED(CRM_DAEMON_USER,"$CRM_DAEMON_USER", User to run Pacemaker daemons as)
@@ -1387,41 +1436,6 @@ AS_IF([test x"${CRM_DAEMON_GROUP}" = x""],
       [CRM_DAEMON_GROUP="haclient"])
 AC_DEFINE_UNQUOTED(CRM_DAEMON_GROUP,"$CRM_DAEMON_GROUP", Group to run Pacemaker daemons as)
 AC_SUBST(CRM_DAEMON_GROUP)
-
-CRM_PACEMAKER_DIR=${localstatedir}/lib/pacemaker
-AC_DEFINE_UNQUOTED(CRM_PACEMAKER_DIR,"$CRM_PACEMAKER_DIR", Location to store directory produced by Pacemaker daemons)
-AC_SUBST(CRM_PACEMAKER_DIR)
-
-CRM_BLACKBOX_DIR=${localstatedir}/lib/pacemaker/blackbox
-AC_DEFINE_UNQUOTED(CRM_BLACKBOX_DIR,"$CRM_BLACKBOX_DIR", Where to keep blackbox dumps)
-AC_SUBST(CRM_BLACKBOX_DIR)
-
-PE_STATE_DIR="${localstatedir}/lib/pacemaker/pengine"
-AC_DEFINE_UNQUOTED(PE_STATE_DIR,"$PE_STATE_DIR", Where to keep scheduler outputs)
-AC_SUBST(PE_STATE_DIR)
-
-CRM_CONFIG_DIR="${localstatedir}/lib/pacemaker/cib"
-AC_DEFINE_UNQUOTED(CRM_CONFIG_DIR,"$CRM_CONFIG_DIR", Where to keep configuration files)
-AC_SUBST(CRM_CONFIG_DIR)
-
-CRM_DAEMON_DIR="${libexecdir}/pacemaker"
-AC_DEFINE_UNQUOTED(CRM_DAEMON_DIR,"$CRM_DAEMON_DIR", Location for Pacemaker daemons)
-AC_SUBST(CRM_DAEMON_DIR)
-
-CRM_STATE_DIR="${runstatedir}/crm"
-AC_DEFINE_UNQUOTED([CRM_STATE_DIR], ["$CRM_STATE_DIR"],
-                   [Where to keep state files and sockets])
-AC_SUBST(CRM_STATE_DIR)
-
-CRM_RSCTMP_DIR="${runstatedir}/resource-agents"
-AC_DEFINE_UNQUOTED(CRM_RSCTMP_DIR,"$CRM_RSCTMP_DIR", Where resource agents should keep state files)
-AC_SUBST(CRM_RSCTMP_DIR)
-
-PACEMAKER_CONFIG_DIR="${sysconfdir}/pacemaker"
-AC_DEFINE_UNQUOTED(PACEMAKER_CONFIG_DIR,"$PACEMAKER_CONFIG_DIR", Where to keep configuration files like authkey)
-AC_SUBST(PACEMAKER_CONFIG_DIR)
-
-AC_DEFINE_UNQUOTED(SBIN_DIR,"$sbindir",[Location for system binaries])
 
 HAVE_dbus=1
 PKG_CHECK_MODULES([DBUS], [dbus-1],
