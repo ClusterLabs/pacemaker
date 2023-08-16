@@ -22,8 +22,7 @@ pkgconfig_DATA		= $(LIBS:%=pacemaker-%.pc)	\
 
 EXTRA_DIST		= $(pkgconfig_DATA:%=%.in)
 
-SUBDIRS	= gnu 		\
-	  common 	\
+SUBDIRS	= common 	\
 	  pengine 	\
 	  cib 		\
 	  services 	\
