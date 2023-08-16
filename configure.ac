@@ -309,6 +309,8 @@ AC_ARG_WITH([daemon-user],
         [user to run unprivileged Pacemaker daemons as (advanced option: changing this may break other cluster components unless similarly configured) @<:@hacluster@:>@])],
     [ CRM_DAEMON_USER="$withval" ]
 )
+AS_IF([test x"${CRM_DAEMON_USER}" = x""],
+      [CRM_DAEMON_USER="hacluster"])
 
 CRM_DAEMON_GROUP=""
 AC_ARG_WITH([daemon-group],
@@ -316,6 +318,8 @@ AC_ARG_WITH([daemon-group],
         [group to run unprivileged Pacemaker daemons as (advanced option: changing this may break other cluster components unless similarly configured) @<:@haclient@:>@])],
     [ CRM_DAEMON_GROUP="$withval" ]
 )
+AS_IF([test x"${CRM_DAEMON_GROUP}" = x""],
+      [CRM_DAEMON_GROUP="haclient"])
 
 BUG_URL=""
 AC_ARG_WITH([bug-url],
@@ -669,6 +673,14 @@ AC_SUBST(PCMK_GNUTLS_PRIORITIES)
 AC_SUBST(BUG_URL)
 AC_DEFINE_UNQUOTED([PCMK__BUG_URL], ["$BUG_URL"],
                    [Where bugs should be reported])
+
+AC_DEFINE_UNQUOTED([CRM_DAEMON_USER], ["$CRM_DAEMON_USER"],
+                   [User to run Pacemaker daemons as])
+AC_SUBST(CRM_DAEMON_USER)
+
+AC_DEFINE_UNQUOTED([CRM_DAEMON_GROUP], ["$CRM_DAEMON_GROUP"],
+                   [Group to run Pacemaker daemons as])
+AC_SUBST(CRM_DAEMON_GROUP)
 
 
 dnl ==============================================
@@ -1424,18 +1436,10 @@ AC_CHECK_HEADERS([stonith/stonith.h],
                  ])
 AM_CONDITIONAL([BUILD_LHA_SUPPORT], [test x"$ac_cv_header_stonith_stonith_h" = x"yes"])
 
-dnl ===============================================
-dnl Variables needed for substitution
-dnl ===============================================
-AS_IF([test x"${CRM_DAEMON_USER}" = x""],
-      [CRM_DAEMON_USER="hacluster"])
-AC_DEFINE_UNQUOTED(CRM_DAEMON_USER,"$CRM_DAEMON_USER", User to run Pacemaker daemons as)
-AC_SUBST(CRM_DAEMON_USER)
 
-AS_IF([test x"${CRM_DAEMON_GROUP}" = x""],
-      [CRM_DAEMON_GROUP="haclient"])
-AC_DEFINE_UNQUOTED(CRM_DAEMON_GROUP,"$CRM_DAEMON_GROUP", Group to run Pacemaker daemons as)
-AC_SUBST(CRM_DAEMON_GROUP)
+dnl ===============================================
+dnl Detect DBus, systemd, and Upstart support
+dnl ===============================================
 
 HAVE_dbus=1
 PKG_CHECK_MODULES([DBUS], [dbus-1],
@@ -1546,6 +1550,11 @@ AC_DEFINE_UNQUOTED([SUPPORT_UPSTART], [$enable_upstart],
                    [Support Upstart resources])
 AM_CONDITIONAL([BUILD_UPSTART], [test $enable_upstart -eq $REQUIRED])
 AC_SUBST(SUPPORT_UPSTART)
+
+
+dnl ========================================================================
+dnl Detect Nagios support
+dnl ========================================================================
 
 AS_CASE([$with_nagios],
         [$REQUIRED], [
