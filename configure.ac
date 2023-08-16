@@ -1053,16 +1053,6 @@ AS_IF([test -n "$GETOPT_PATH"], [AC_MSG_RESULT([$GETOPT_PATH])],
 AC_SUBST([GETOPT_PATH])
 
 
-dnl ========================================================================
-dnl checks for library functions to replace them
-dnl
-dnl     NoSuchFunctionName:
-dnl             is a dummy function which no system supplies.  It is here to make
-dnl             the system compile semi-correctly on OpenBSD which doesn't know
-dnl             how to create an empty archive
-
-AC_REPLACE_FUNCS(NoSuchFunctionName strchrnul)
-
 dnl ===============================================
 dnl Libraries
 dnl ===============================================
@@ -1248,6 +1238,8 @@ REQUIRE_FUNC([strnlen])
 REQUIRE_FUNC([unsetenv])
 REQUIRE_FUNC([uuid_unparse])
 REQUIRE_FUNC([vasprintf])
+
+AC_CHECK_FUNCS([strchrnul])
 
 AC_CHECK_FUNCS([fopen64])
 AM_CONDITIONAL([WRAPPABLE_FOPEN64], [test x"$ac_cv_func_fopen64" = x"yes"])
@@ -2196,7 +2188,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 python/pacemaker/_cts/tests/Makefile                \
                 python/pacemaker/buildoptions.py                    \
                 python/tests/Makefile                               \
-                replace/Makefile                                    \
                 rpm/Makefile                                        \
                 tests/Makefile                                      \
                 tools/Makefile                                      \

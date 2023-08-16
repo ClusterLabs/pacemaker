@@ -27,13 +27,6 @@
 #    endif
 #  endif
 
-/* Prototypes for libreplace functions */
-
-#  ifndef HAVE_STRCHRNUL
-  /* We supply a replacement function, but need a prototype */
-char *strchrnul(const char *s, int c_in);
-#  endif
-
 #  if HAVE_DBUS
 #    ifndef HAVE_DBUSBASICVALUE
 #      include <stdint.h>

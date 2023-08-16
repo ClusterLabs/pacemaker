@@ -609,6 +609,20 @@ crm_log_filter_source(int source, const char *trace_files, const char *trace_fns
     }
 }
 
+#ifndef HAVE_STRCHRNUL
+/* strchrnul() is a GNU extension. If not present, use our own definition.
+ * The GNU version returns char*, but we only need it to be const char*.
+ */
+static const char *
+strchrnul(const char *s, int c)
+{
+    while ((*s != c) && (*s != '\0')) {
+        ++s;
+    }
+    return s;
+}
+#endif
+
 static void
 crm_log_filter(struct qb_log_callsite *cs)
 {

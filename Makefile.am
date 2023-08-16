@@ -45,7 +45,7 @@ AM_DISTCHECK_CONFIGURE_FLAGS	= --prefix="$$dc_install_base/usr"			\
 				  --with-systemdsystemunitdir="$$dc_install_base$(systemdsystemunitdir)"
 
 # Only these will get built with a plain "make"
-CORE	= replace include lib daemons tools xml po python cts rpm
+CORE	= include lib daemons tools xml po python cts rpm
 
 SUBDIRS	= $(CORE) agents devel doc etc maint tests
 
