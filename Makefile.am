@@ -10,31 +10,31 @@
 # This directory must be same as in configure.ac's AC_CONFIG_MACRO_DIR
 ACLOCAL_AMFLAGS		= -I m4
 
-EXTRA_DIST		= CONTRIBUTING.md	\
-			  GNUmakefile		\
-			  INSTALL.md		\
-			  README.markdown	\
-			  autogen.sh		\
+EXTRA_DIST		= CONTRIBUTING.md		\
+			  GNUmakefile			\
+			  INSTALL.md			\
+			  README.markdown		\
+			  autogen.sh			\
 			  m4/CC_CHECK_LDFLAGS.m4	\
 			  m4/CHECK_ENUM_VALUE.m4	\
-			  m4/gnulib-cache.m4	\
-			  m4/gnulib-tool.m4	\
-			  m4/PKG_CHECK_VAR.m4	\
-			  m4/REQUIRE_HEADER.m4	\
+			  m4/gnulib-cache.m4		\
+			  m4/gnulib-tool.m4		\
+			  m4/PKG_CHECK_VAR.m4		\
+			  m4/REQUIRE_HEADER.m4		\
 			  m4/version.m4
 
 DISTCLEANFILES		= config.status
 
-MAINTAINERCLEANFILES	= Makefile.in		\
-			  aclocal.m4		\
-			  config.guess		\
-			  config.sub		\
-			  configure		\
-			  depcomp		\
-			  install-sh		\
-			  ltmain.sh		\
-			  missing		\
-			  py-compile		\
+MAINTAINERCLEANFILES	= Makefile.in	\
+			  aclocal.m4	\
+			  config.guess	\
+			  config.sub	\
+			  configure	\
+			  depcomp	\
+			  install-sh	\
+			  ltmain.sh	\
+			  missing 	\
+			  py-compile	\
 			  test-driver
 
 # Don't try to install files outside build directory for "make distcheck".
@@ -45,13 +45,28 @@ AM_DISTCHECK_CONFIGURE_FLAGS	= --prefix="$$dc_install_base/usr"			\
 				  --with-systemdsystemunitdir="$$dc_install_base$(systemdsystemunitdir)"
 
 # Only these will get built with a plain "make"
-CORE	= include lib daemons tools xml po python cts rpm
+CORE	= include 	\
+	  lib 		\
+	  daemons 	\
+	  tools 	\
+	  xml 		\
+	  po 		\
+	  python 	\
+	  cts 		\
+	  rpm
 
-SUBDIRS	= $(CORE) agents devel doc etc maint tests
+SUBDIRS	= $(CORE) 	\
+	  agents 	\
+	  devel 	\
+	  doc 		\
+	  etc 		\
+	  maint 	\
+	  tests
 
 AM_CPPFLAGS		= -I$(top_srcdir)/include
 
-doc_DATA = README.markdown COPYING
+doc_DATA = README.markdown \
+	   COPYING
 
 licensedir              = $(docdir)/licenses/
 dist_license_DATA	= $(wildcard licenses/*)

@@ -7,9 +7,9 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
-AM_TESTS_ENVIRONMENT= \
-	G_DEBUG=gc-friendly 			\
-	MALLOC_CHECK_=2 			\
+AM_TESTS_ENVIRONMENT= 					\
+	G_DEBUG=gc-friendly 				\
+	MALLOC_CHECK_=2 				\
 	MALLOC_PERTURB_=$$(($${RANDOM:-256} % 256))
 LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) $(top_srcdir)/tests/tap-driver.sh
 LOG_COMPILER = $(top_srcdir)/tests/tap-test

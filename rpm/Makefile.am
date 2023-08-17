@@ -12,7 +12,7 @@
 # used in this file.
 top_srcdir              ?= ..
 abs_srcdir              ?= $(shell pwd)
-abs_builddir            ?= $(abs_srcdir)
+abs_builddir 	?= $(abs_srcdir)
 MAKE                    ?= make
 PACKAGE                 ?= pacemaker
 AM_V_at                 ?= @
@@ -21,7 +21,7 @@ MKDIR_P                 ?= mkdir -p
 include $(top_srcdir)/mk/common.mk
 include $(top_srcdir)/mk/release.mk
 
-EXTRA_DIST		= pacemaker.spec.in		\
+EXTRA_DIST		= pacemaker.spec.in	\
 			  rpmlintrc
 
 # Extra options to pass to rpmbuild (this can be used to override the location

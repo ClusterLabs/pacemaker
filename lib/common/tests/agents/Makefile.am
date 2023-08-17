@@ -1,5 +1,5 @@
 #
-# Copyright 2020-2022 the Pacemaker project contributors
+# Copyright 2020-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -11,10 +11,10 @@ include $(top_srcdir)/mk/tap.mk
 include $(top_srcdir)/mk/unittest.mk
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
-check_PROGRAMS = crm_generate_ra_key_test \
-				 crm_parse_agent_spec_test \
-				 pcmk__effective_rc_test \
-				 pcmk_get_ra_caps_test \
-				 pcmk_stonith_param_test
+check_PROGRAMS = crm_generate_ra_key_test 	\
+		 crm_parse_agent_spec_test 	\
+		 pcmk__effective_rc_test 	\
+		 pcmk_get_ra_caps_test 		\
+		 pcmk_stonith_param_test
 
 TESTS = $(check_PROGRAMS)

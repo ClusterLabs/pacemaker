@@ -13,12 +13,17 @@ if BUILD_SYSTEMD
 systemdsystemunit_DATA	= crm_mon.service
 endif
 
-noinst_HEADERS		= crm_mon.h crm_resource.h
+noinst_HEADERS		= crm_mon.h 		\
+			  crm_resource.h
 
 pcmkdir			= $(datadir)/$(PACKAGE)
-pcmk_DATA		= report.common report.collector
+pcmk_DATA		= report.common 	\
+			  report.collector
 
-sbin_SCRIPTS		= crm_report crm_standby crm_master crm_failcount
+sbin_SCRIPTS		= crm_report 	\
+			  crm_standby 	\
+			  crm_master 	\
+			  crm_failcount
 if BUILD_CIBSECRETS
 sbin_SCRIPTS		+= cibsecret
 endif
@@ -30,20 +35,20 @@ EXTRA_DIST		= $(wildcard *.inc) 	\
 			  fix-manpages
 
 sbin_PROGRAMS		= attrd_updater \
-			  cibadmin \
-			  crmadmin \
-			  crm_simulate \
+			  cibadmin 	\
+			  crmadmin 	\
+			  crm_simulate 	\
 			  crm_attribute \
-			  crm_diff \
-			  crm_error \
-			  crm_mon \
-			  crm_node \
-			  crm_resource \
-			  crm_rule \
-			  crm_shadow \
-			  crm_verify \
-			  crm_ticket \
-			  iso8601 \
+			  crm_diff 	\
+			  crm_error 	\
+			  crm_mon 	\
+			  crm_node 	\
+			  crm_resource 	\
+			  crm_rule 	\
+			  crm_shadow 	\
+			  crm_verify 	\
+			  crm_ticket 	\
+			  iso8601 	\
 			  stonith_admin
 
 ## SOURCES

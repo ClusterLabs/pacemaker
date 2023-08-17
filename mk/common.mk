@@ -1,5 +1,5 @@
 #
-# Copyright 2014-2021 the Pacemaker project contributors
+# Copyright 2014-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -36,5 +36,7 @@ am__v_BOOK_1 =
 
 MAINTAINERCLEANFILES	= Makefile.in
 
-AM_CPPFLAGS		= -I$(top_builddir)/include -I$(top_srcdir)/include   \
-			  -I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl
+AM_CPPFLAGS		= -I$(top_builddir)/include 	\
+			  -I$(top_srcdir)/include 	\
+			  -I$(top_builddir)/libltdl 	\
+			  -I$(top_srcdir)/libltdl

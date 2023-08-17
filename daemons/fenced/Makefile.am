@@ -14,7 +14,8 @@ include $(top_srcdir)/mk/man.mk
 
 halibdir	= $(CRM_DAEMON_DIR)
 
-halib_PROGRAMS	= pacemaker-fenced cts-fence-helper
+halib_PROGRAMS	= pacemaker-fenced \
+		  cts-fence-helper
 
 noinst_HEADERS	= pacemaker-fenced.h
 

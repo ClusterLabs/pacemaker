@@ -1,5 +1,5 @@
 #
-# Copyright 2018 the Pacemaker project contributors
+# Copyright 2018-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -8,4 +8,10 @@
 #
 
 MAINTAINERCLEANFILES	= Makefile.in
-SUBDIRS			= based schedulerd attrd controld execd fenced pacemakerd
+SUBDIRS			= based 	\
+			  schedulerd 	\
+			  attrd 	\
+			  controld 	\
+			  execd 	\
+			  fenced 	\
+			  pacemakerd

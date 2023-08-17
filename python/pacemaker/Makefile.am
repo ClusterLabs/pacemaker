@@ -9,8 +9,8 @@
 
 MAINTAINERCLEANFILES    = Makefile.in
 
-pkgpython_PYTHON = __init__.py \
-				   exitstatus.py
+pkgpython_PYTHON = __init__.py 		\
+		   exitstatus.py
 
 nodist_pkgpython_PYTHON = buildoptions.py
 

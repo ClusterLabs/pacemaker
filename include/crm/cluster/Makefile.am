@@ -10,5 +10,6 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 headerdir=$(pkgincludedir)/crm/cluster
 
-noinst_HEADERS		= internal.h $(wildcard *_internal.h)
+noinst_HEADERS		= internal.h 			\
+			  $(wildcard *_internal.h)
 header_HEADERS		= compat.h

@@ -35,10 +35,12 @@ COCCI_FILES ?=	coccinelle/string-any-of.cocci			\
 
 
 dist_noinst_SCRIPTS	= coccinelle/test/testrunner.sh
-EXTRA_DIST		= README gdbhelpers $(COCCI_FILES)		\
-			  coccinelle/ref-passed-variables-inited.cocci	\
-			  coccinelle/rename-fn.cocci			\
-			  coccinelle/test/ref-passed-variables-inited.input.c \
+EXTRA_DIST		= README 						\
+			  gdbhelpers 						\
+			  $(COCCI_FILES)					\
+			  coccinelle/ref-passed-variables-inited.cocci		\
+			  coccinelle/rename-fn.cocci				\
+			  coccinelle/test/ref-passed-variables-inited.input.c 	\
 			  coccinelle/test/ref-passed-variables-inited.output
 
 # Any file in this list is allowed to use any of the pcmk__ internal functions.

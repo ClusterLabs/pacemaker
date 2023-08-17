@@ -19,6 +19,6 @@ dist_cts_DATA	=	cts.conf
 if BUILD_UPSTART
 dist_cts_DATA	+=	pacemaker-cts-dummyd.conf
 endif
-cts_SCRIPTS		= fence_dummy		\
-			  LSBDummy		\
-			  pacemaker-cts-dummyd
+cts_SCRIPTS	= fence_dummy		\
+		  LSBDummy		\
+		  pacemaker-cts-dummyd

@@ -26,13 +26,13 @@ pacemaker_based_LDADD += $(top_builddir)/lib/cib/libcib.la
 pacemaker_based_LDADD += $(top_builddir)/lib/common/libcrmcommon.la
 pacemaker_based_LDADD += $(CLUSTERLIBS)
 
-pacemaker_based_SOURCES	= pacemaker-based.c \
-			  based_callbacks.c \
-			  based_io.c \
-			  based_messages.c \
-			  based_notify.c \
-			  based_operation.c \
-			  based_remote.c \
+pacemaker_based_SOURCES	= pacemaker-based.c 	\
+			  based_callbacks.c 	\
+			  based_io.c 		\
+			  based_messages.c 	\
+			  based_notify.c 	\
+			  based_operation.c 	\
+			  based_remote.c 	\
 			  based_transaction.c
 
 .PHONY: install-exec-hook

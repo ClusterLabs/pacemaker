@@ -13,7 +13,10 @@ include $(top_srcdir)/mk/release.mk
 
 # What formats to use for book uploads (i.e. "make www";
 # use BOOK_FORMATS in sphinx subdirectory to change local builds)
-BOOK_FORMATS		?= html singlehtml pdf epub
+BOOK_FORMATS		?= html 	\
+			   singlehtml 	\
+			   pdf 		\
+			   epub
 
 # SNMP MIB
 mibdir		= $(datadir)/snmp/mibs
@@ -25,7 +28,8 @@ DEPRECATED_GENERATED	=
 if BUILD_ASCIIDOC
 DEPRECATED_GENERATED	+= $(DEPRECATED_ORIGINAL:%.txt=%.html)
 endif
-DEPRECATED_ALL		= $(DEPRECATED_ORIGINAL) $(DEPRECATED_GENERATED)
+DEPRECATED_ALL		= $(DEPRECATED_ORIGINAL) \
+			  $(DEPRECATED_GENERATED)
 
 doc_DATA		= $(DEPRECATED_ALL)
 noinst_SCRIPTS		= abi-check

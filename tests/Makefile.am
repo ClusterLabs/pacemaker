@@ -8,8 +8,8 @@
 #
 
 # tap-test is copied from /usr/share/automake-*/tap-driver.sh.
-EXTRA_DIST = tap-driver.sh \
-	     tap-test \
+EXTRA_DIST = tap-driver.sh 	\
+	     tap-test 		\
 	     test-headers.sh
 
 .PHONY: check

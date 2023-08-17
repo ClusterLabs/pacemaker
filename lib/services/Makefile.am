@@ -20,7 +20,8 @@ libcrmservice_la_CFLAGS		=
 libcrmservice_la_CFLAGS		+= $(CFLAGS_HARDENED_LIB)
 libcrmservice_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 
-libcrmservice_la_LIBADD		= $(top_builddir)/lib/common/libcrmcommon.la $(DBUS_LIBS)
+libcrmservice_la_LIBADD		= $(top_builddir)/lib/common/libcrmcommon.la \
+				  $(DBUS_LIBS)
 
 libcrmservice_la_SOURCES	= services.c
 libcrmservice_la_SOURCES	+= services_linux.c

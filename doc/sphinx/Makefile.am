@@ -55,7 +55,8 @@ DOTS =	$(wildcard shared/images/*.dot)
 
 # Vector sources for generated PNGs (including SVG equivalents of DOTS, created
 # manually using dot)
-SVGS =	$(wildcard shared/images/pcmk-*.svg) $(DOTS:%.dot=%.svg)
+SVGS =	$(wildcard shared/images/pcmk-*.svg) \
+	$(DOTS:%.dot=%.svg)
 
 # PNG images generated from SVGS
 #
@@ -71,12 +72,12 @@ PNGS_Pacemaker_Remote      = $(wildcard Pacemaker_Remote/images/*.png)
 
 STATIC_FILES	= $(wildcard _static/*.css)
 
-EXTRA_DIST	= $(wildcard */*.rst) $(DOTS) $(SVGS)		\
-		  $(PNGS_Clusters_from_Scratch)			\
-		  $(PNGS_Pacemaker_Explained)			\
-		  $(PNGS_Pacemaker_Remote)			\
-		  $(wildcard Pacemaker_Python_API/_templates/*rst) \
-		  $(STATIC_FILES)				\
+EXTRA_DIST	= $(wildcard */*.rst) $(DOTS) $(SVGS)			\
+		  $(PNGS_Clusters_from_Scratch)				\
+		  $(PNGS_Pacemaker_Explained)				\
+		  $(PNGS_Pacemaker_Remote)				\
+		  $(wildcard Pacemaker_Python_API/_templates/*rst) 	\
+		  $(STATIC_FILES)					\
 		  conf.py.in
 
 # recursive, preserve symlinks/permissions/times, verbose, compress,
@@ -89,12 +90,15 @@ BOOK_RSYNC_DEST	= $(RSYNC_DEST)/$(PACKAGE)/doc/$(PACKAGE_SERIES)
 
 BOOK		= none
 
-DEPS_intro			= shared/pacemaker-intro.rst $(PNGS_GENERATED)
+DEPS_intro			= shared/pacemaker-intro.rst \
+				  $(PNGS_GENERATED)
 
-DEPS_Clusters_from_Scratch	= $(DEPS_intro) $(PNGS_Clusters_from_Scratch)
+DEPS_Clusters_from_Scratch	= $(DEPS_intro) 		\
+				  $(PNGS_Clusters_from_Scratch)
 DEPS_Pacemaker_Administration	= $(DEPS_intro)
 DEPS_Pacemaker_Development	=
-DEPS_Pacemaker_Explained	= $(DEPS_intro) $(PNGS_Pacemaker_Explained)
+DEPS_Pacemaker_Explained	= $(DEPS_intro) 		\
+				  $(PNGS_Pacemaker_Explained)
 DEPS_Pacemaker_Python_API 	= ../../python
 DEPS_Pacemaker_Remote		= $(PNGS_Pacemaker_Remote)
 

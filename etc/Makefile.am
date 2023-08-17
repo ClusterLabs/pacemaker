@@ -10,7 +10,8 @@
 MAINTAINERCLEANFILES    = Makefile.in
 
 configdir		= @CONFIGDIR@
-CONFIGS			= crm_mon pacemaker
+CONFIGS			= crm_mon 	\
+			  pacemaker
 
 if !BUILD_SYSTEMD
 initdir			= $(INITDIR)

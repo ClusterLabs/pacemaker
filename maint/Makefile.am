@@ -18,7 +18,11 @@ EXTRA_DIST		= README
 #
 
 # Count changes in these directories
-CHANGELOG_DIRS = ../include ../lib ../daemons ../tools ../xml
+CHANGELOG_DIRS = ../include 	\
+		 ../lib 	\
+		 ../daemons 	\
+		 ../tools 	\
+		 ../xml
 
 .PHONY: require_last_release
 require_last_release:

@@ -11,7 +11,8 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 EXTRA_DIST = pylintrc
 
-SUBDIRS	= pacemaker tests
+SUBDIRS	= pacemaker \
+	  tests
 
 .PHONY: check-local
 check-local:

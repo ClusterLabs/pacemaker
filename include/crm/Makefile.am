@@ -26,4 +26,8 @@ header_HEADERS		= cib.h			\
 
 noinst_HEADERS		= $(wildcard *_internal.h)
 
-SUBDIRS                 = common pengine cib fencing cluster
+SUBDIRS                 = common 	\
+			  pengine 	\
+			  cib 		\
+			  fencing 	\
+			  cluster

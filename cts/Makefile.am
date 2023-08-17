@@ -12,7 +12,7 @@ MAINTAINERCLEANFILES    = Makefile.in
 # Test commands and globally applicable test files should be in $(testdir),
 # and command-specific test data should be in a command-specific subdirectory.
 testdir			= $(datadir)/$(PACKAGE)/tests
-test_SCRIPTS		= cts-attrd \
+test_SCRIPTS		= cts-attrd 		\
 			  cts-cli		\
 			  cts-exec		\
 			  cts-fencing		\
@@ -46,7 +46,9 @@ CLEANFILES	= $(builddir)/.regression.failed.diff
 clean-local:
 	rm -f scheduler/*/*.pe
 
-SUBDIRS	= benchmark scheduler support
+SUBDIRS	= benchmark 	\
+	  scheduler 	\
+	  support
 
 .PHONY: cts-support-install
 cts-support-install:
@@ -61,13 +63,13 @@ cts-support-uninstall:
 # Everything listed here is a python script, typically generated from a .in file
 # (though that is not a requirement).  We want to run pylint on all of these
 # things after they've been built.
-python_files = cts-attrd \
-			   cts-exec \
-			   cts-fencing \
-			   cts-lab \
-			   cts-log-watcher \
-			   cts-regression \
-			   cts-scheduler
+python_files = cts-attrd 	\
+	       cts-exec 	\
+	       cts-fencing 	\
+	       cts-lab 		\
+	       cts-log-watcher 	\
+	       cts-regression 	\
+	       cts-scheduler
 
 .PHONY: pylint
 pylint: $(python_files)

@@ -1,5 +1,5 @@
 #
-# Copyright 2022 the Pacemaker project contributors
+# Copyright 2022-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -17,6 +17,6 @@ AM_TESTS_ENVIRONMENT += PCMK_CTS_CLI_DIR=$(top_srcdir)/cts/cli
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
 check_PROGRAMS = native_find_rsc_test \
-				 pe_base_name_eq_test
+		 pe_base_name_eq_test
 
 TESTS = $(check_PROGRAMS)

@@ -10,7 +10,8 @@
 include $(top_srcdir)/mk/common.mk
 include $(top_srcdir)/mk/man.mk
 
-AM_CPPFLAGS	+= -I$(top_builddir) -I$(top_srcdir)
+AM_CPPFLAGS	+= -I$(top_builddir) \
+		   -I$(top_srcdir)
 
 halibdir	= $(CRM_DAEMON_DIR)
 

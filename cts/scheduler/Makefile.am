@@ -16,4 +16,9 @@ list:
 		echo $$(basename $$T .xml);             \
 	done
 
-SUBDIRS	= dot exp scores stderr summary xml
+SUBDIRS	= dot 		\
+	  exp 		\
+	  scores 	\
+	  stderr 	\
+	  summary 	\
+	  xml

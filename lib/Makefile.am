@@ -1,5 +1,5 @@
 #
-# Copyright 2003-2021 the Pacemaker project contributors
+# Copyright 2003-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -8,7 +8,11 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-LIBS			= cib lrmd service fencing cluster
+LIBS			= cib 		\
+			  lrmd 		\
+			  service 	\
+			  fencing 	\
+			  cluster
 
 pkgconfig_DATA		= $(LIBS:%=pacemaker-%.pc)	\
 			  libpacemaker.pc		\
@@ -18,4 +22,12 @@ pkgconfig_DATA		= $(LIBS:%=pacemaker-%.pc)	\
 
 EXTRA_DIST		= $(pkgconfig_DATA:%=%.in)
 
-SUBDIRS	= gnu common pengine cib services fencing lrmd cluster pacemaker
+SUBDIRS	= gnu 		\
+	  common 	\
+	  pengine 	\
+	  cib 		\
+	  services 	\
+	  fencing 	\
+	  lrmd 		\
+	  cluster 	\
+	  pacemaker
