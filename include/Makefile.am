@@ -1,5 +1,5 @@
 #
-# Copyright 2003-2019 the Pacemaker project contributors
+# Copyright 2003-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -29,11 +29,11 @@ update-gettext:
 		echo "$(GETTEXT_H) not found";				\
 	else								\
 		cp "$(GETTEXT_H)" gettext.h;				\
-		git diff --quiet gettext.h 2>/dev/null;			\
+		"$(GIT)" diff --quiet gettext.h 2>/dev/null;		\
 		if [ $$? -eq 0 ]; then					\
 			echo "No update needed";			\
 		else							\
-			git add gettext.h;				\
+			"$(GIT)" add gettext.h;				\
 			echo 'Review changes then run:';		\
 			echo 'git commit -m "Low: NLS: update gettext.h from upstream"'; \
 		fi							\

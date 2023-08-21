@@ -94,7 +94,7 @@ SPEC_COMMIT	?= $(shell						\
 		    Pacemaker-*|DIST$(rparen)				\
 		        echo '$(TAG)' ;;				\
 		    *$(rparen)						\
-		        git log --pretty=format:%h -n 1 '$(TAG)';;	\
+		        "$(GIT)" log --pretty=format:%h -n 1 '$(TAG)';;	\
 		esac)$(DIRTY_EXT)
 SPEC_ABBREV	= $(shell printf %s '$(SPEC_COMMIT)' | wc -c)
 SPEC_RELEASE	= $(shell case "$(WITH)" in 				\
@@ -127,35 +127,40 @@ export:
 	    $(MAKE) $(AM_MAKEFLAGS) dist;					\
 	    echo "`date`: Rebuilt tarball: $(TARFILE)";				\
 	elif [ -n "$(DIRTY_EXT)" ]; then					\
-	    git commit -m "DO-NOT-PUSH" -a;					\
-	    git archive --prefix=$(top_distdir)/ -o "$(TARFILE)" HEAD^{tree};	\
-	    git reset --mixed HEAD^;						\
+	    "$(GIT)" commit -m "DO-NOT-PUSH" -a;				\
+	    "$(GIT)" archive --prefix=$(top_distdir)/ -o "$(TARFILE)"		\
+		HEAD^{tree};							\
+	    "$(GIT)" reset --mixed HEAD^;					\
 	    echo "`date`: Rebuilt $(TARFILE)";					\
 	elif [ -f "$(TARFILE)" ]; then						\
 	    echo "`date`: Using existing tarball: $(TARFILE)";			\
 	else									\
-	    git archive --prefix=$(top_distdir)/ -o "$(TARFILE)" $(TAG)^{tree};	\
+	    "$(GIT)" archive --prefix=$(top_distdir)/ -o "$(TARFILE)"		\
+		$(TAG)^{tree};							\
 	    echo "`date`: Rebuilt $(TARFILE)";					\
 	fi
 
 # Depend on spec-clean so the spec gets rebuilt every time
 $(RPM_SPEC_DIR)/$(PACKAGE).spec: spec-clean pacemaker.spec.in
 	$(AM_V_at)$(MKDIR_P) "$(RPM_SPEC_DIR)"
-	$(AM_V_GEN)if [ x"`git ls-files -m pacemaker.spec.in 2>/dev/null`" != x ]; then	\
-	    cat "$(abs_srcdir)/pacemaker.spec.in";					\
-	elif git cat-file -e $(TAG):rpm/pacemaker.spec.in 2>/dev/null; then		\
-	    git show $(TAG):rpm/pacemaker.spec.in;					\
-	elif git cat-file -e $(TAG):pacemaker.spec.in 2>/dev/null; then			\
-	    git show $(TAG):pacemaker.spec.in;						\
-	else 										\
-	    cat "$(abs_srcdir)/pacemaker.spec.in";					\
-	fi | sed									\
-	    -e 's/^\(%global pcmkversion \).*/\1$(SPEC_RELEASE_NO)/'			\
-	    -e 's/^\(%global specversion \).*/\1$(SPECVERSION)/' 			\
-	    -e 's/^\(%global commit \).*/\1$(SPEC_COMMIT)/'				\
-	    -e 's/^\(%global commit_abbrev \).*/\1$(SPEC_ABBREV)/'			\
-	    -e "s/PACKAGE_DATE/$$(date +'%a %b %d %Y')/"				\
-	    -e 's/PACKAGE_VERSION/$(SPEC_RELEASE_NO)-$(SPECVERSION)/'			\
+	$(AM_V_GEN)if [ x"`"$(GIT)" ls-files				\
+		-m pacemaker.spec.in 2>/dev/null`" != x ]; then		\
+	    cat "$(abs_srcdir)/pacemaker.spec.in";			\
+	elif "$(GIT)" cat-file -e $(TAG):rpm/pacemaker.spec.in		\
+		2>/dev/null; then					\
+	    "$(GIT)" show $(TAG):rpm/pacemaker.spec.in;			\
+	elif "$(GIT)" cat-file -e $(TAG):pacemaker.spec.in 2>/dev/null;	\
+		then							\
+	    "$(GIT)" show $(TAG):pacemaker.spec.in;			\
+	else 								\
+	    cat "$(abs_srcdir)/pacemaker.spec.in";			\
+	fi | sed							\
+	    -e 's/^\(%global pcmkversion \).*/\1$(SPEC_RELEASE_NO)/'	\
+	    -e 's/^\(%global specversion \).*/\1$(SPECVERSION)/' 	\
+	    -e 's/^\(%global commit \).*/\1$(SPEC_COMMIT)/'		\
+	    -e 's/^\(%global commit_abbrev \).*/\1$(SPEC_ABBREV)/'	\
+	    -e "s/PACKAGE_DATE/$$(date +'%a %b %d %Y')/"		\
+	    -e 's/PACKAGE_VERSION/$(SPEC_RELEASE_NO)-$(SPECVERSION)/'	\
 	    > "$@"
 
 .PHONY: spec $(PACKAGE).spec
@@ -204,7 +209,7 @@ rc:
 		echo 'This target must be run from a git checkout';	\
 		exit 1;							\
 	fi
-	$(MAKE) $(AM_MAKEFLAGS) TAG="$$(git tag -l 2>/dev/null		\
+	$(MAKE) $(AM_MAKEFLAGS) TAG="$$("$(GIT)" tag -l 2>/dev/null	\
 		| sed -n -e 's/^\(Pacemaker-[0-9.]*-rc[0-9]*\)$$/\1/p'	\
 		| sort -Vr | head -n 1)" rpm
 

@@ -1,5 +1,5 @@
 #
-# Copyright 2021-2022 the Pacemaker project contributors
+# Copyright 2021-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -28,4 +28,9 @@ WRAPPED = calloc		\
 	  strdup 		\
 	  uname			\
 	  unsetenv
+
+if WRAPPABLE_FOPEN64
+WRAPPED	+= fopen64
+endif
+
 LDFLAGS_WRAP = $(foreach fn,$(WRAPPED),-Wl,--wrap=$(fn))
