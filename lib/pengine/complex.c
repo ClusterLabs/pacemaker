@@ -532,7 +532,7 @@ unpack_requires(pe_resource_t *rsc, const char *value, bool is_default)
         } else if (pcmk_is_set(rsc->cluster->flags, pe_flag_stonith_enabled)) {
             value = PCMK__VALUE_FENCING;
 
-        } else if (rsc->cluster->no_quorum_policy == no_quorum_ignore) {
+        } else if (rsc->cluster->no_quorum_policy == pcmk_no_quorum_ignore) {
             value = PCMK__VALUE_NOTHING;
 
         } else {

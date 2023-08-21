@@ -289,13 +289,13 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     value = pe_pref(data_set->config_hash, "no-quorum-policy");
 
     if (pcmk__str_eq(value, "ignore", pcmk__str_casei)) {
-        data_set->no_quorum_policy = no_quorum_ignore;
+        data_set->no_quorum_policy = pcmk_no_quorum_ignore;
 
     } else if (pcmk__str_eq(value, "freeze", pcmk__str_casei)) {
-        data_set->no_quorum_policy = no_quorum_freeze;
+        data_set->no_quorum_policy = pcmk_no_quorum_freeze;
 
     } else if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
-        data_set->no_quorum_policy = no_quorum_demote;
+        data_set->no_quorum_policy = pcmk_no_quorum_demote;
 
     } else if (pcmk__str_eq(value, "suicide", pcmk__str_casei)) {
         if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
@@ -304,36 +304,36 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
             crm_element_value_int(data_set->input, XML_ATTR_QUORUM_PANIC,
                                   &do_panic);
             if (do_panic || pcmk_is_set(data_set->flags, pe_flag_have_quorum)) {
-                data_set->no_quorum_policy = no_quorum_suicide;
+                data_set->no_quorum_policy = pcmk_no_quorum_fence;
             } else {
                 crm_notice("Resetting no-quorum-policy to 'stop': cluster has never had quorum");
-                data_set->no_quorum_policy = no_quorum_stop;
+                data_set->no_quorum_policy = pcmk_no_quorum_stop;
             }
         } else {
             pcmk__config_err("Resetting no-quorum-policy to 'stop' because "
                              "fencing is disabled");
-            data_set->no_quorum_policy = no_quorum_stop;
+            data_set->no_quorum_policy = pcmk_no_quorum_stop;
         }
 
     } else {
-        data_set->no_quorum_policy = no_quorum_stop;
+        data_set->no_quorum_policy = pcmk_no_quorum_stop;
     }
 
     switch (data_set->no_quorum_policy) {
-        case no_quorum_freeze:
+        case pcmk_no_quorum_freeze:
             crm_debug("On loss of quorum: Freeze resources");
             break;
-        case no_quorum_stop:
+        case pcmk_no_quorum_stop:
             crm_debug("On loss of quorum: Stop ALL resources");
             break;
-        case no_quorum_demote:
+        case pcmk_no_quorum_demote:
             crm_debug("On loss of quorum: "
                       "Demote promotable resources and stop other resources");
             break;
-        case no_quorum_suicide:
+        case pcmk_no_quorum_fence:
             crm_notice("On loss of quorum: Fence all remaining nodes");
             break;
-        case no_quorum_ignore:
+        case pcmk_no_quorum_ignore:
             crm_notice("On loss of quorum: Ignore");
             break;
     }
@@ -1142,7 +1142,7 @@ unpack_node_state(const xmlNode *state, pe_working_set_t *data_set)
 
     if (!pcmk_is_set(data_set->flags, pe_flag_have_quorum)
         && this_node->details->online
-        && (data_set->no_quorum_policy == no_quorum_suicide)) {
+        && (data_set->no_quorum_policy == pcmk_no_quorum_fence)) {
         /* Everything else should flow from this automatically
          * (at least until the scheduler becomes able to migrate off
          * healthy resources)

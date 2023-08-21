@@ -1073,7 +1073,7 @@ pcmk__create_graph(pe_working_set_t *data_set)
              * are being lost.
              */
             if (pcmk_is_set(data_set->flags, pe_flag_have_quorum)
-                || (data_set->no_quorum_policy == no_quorum_ignore)) {
+                || (data_set->no_quorum_policy == pcmk_no_quorum_ignore)) {
                 const bool managed = pcmk_is_set(action->rsc->flags,
                                                  pe_rsc_managed);
                 const bool failed = pcmk_is_set(action->rsc->flags,

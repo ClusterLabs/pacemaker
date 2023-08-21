@@ -285,9 +285,9 @@ effective_quorum_policy(pe_resource_t *rsc, pe_working_set_t *data_set)
     enum pe_quorum_policy policy = data_set->no_quorum_policy;
 
     if (pcmk_is_set(data_set->flags, pe_flag_have_quorum)) {
-        policy = no_quorum_ignore;
+        policy = pcmk_no_quorum_ignore;
 
-    } else if (data_set->no_quorum_policy == no_quorum_demote) {
+    } else if (data_set->no_quorum_policy == pcmk_no_quorum_demote) {
         switch (rsc->role) {
             case pcmk_role_promoted:
             case pcmk_role_unpromoted:
@@ -295,10 +295,10 @@ effective_quorum_policy(pe_resource_t *rsc, pe_working_set_t *data_set)
                     pe__set_next_role(rsc, pcmk_role_unpromoted,
                                       "no-quorum-policy=demote");
                 }
-                policy = no_quorum_ignore;
+                policy = pcmk_no_quorum_ignore;
                 break;
             default:
-                policy = no_quorum_stop;
+                policy = pcmk_no_quorum_stop;
                 break;
         }
     }
@@ -372,14 +372,14 @@ update_resource_action_runnable(pe_action_t *action, bool for_graph,
 
     } else {
         switch (effective_quorum_policy(action->rsc, data_set)) {
-            case no_quorum_stop:
+            case pcmk_no_quorum_stop:
                 pe_rsc_debug(action->rsc, "%s on %s is unrunnable (no quorum)",
                              action->uuid, pe__node_name(action->node));
                 pe__clear_action_flags(action, pe_action_runnable);
                 pe_action_set_reason(action, "no quorum", true);
                 break;
 
-            case no_quorum_freeze:
+            case pcmk_no_quorum_freeze:
                 if (!action->rsc->fns->active(action->rsc, TRUE)
                     || (action->rsc->next_role > action->rsc->role)) {
                     pe_rsc_debug(action->rsc,

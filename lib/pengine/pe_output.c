@@ -964,24 +964,24 @@ cluster_options_html(pcmk__output_t *out, va_list args) {
                    pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster) ? "symmetric" : "asymmetric");
 
     switch (data_set->no_quorum_policy) {
-        case no_quorum_freeze:
+        case pcmk_no_quorum_freeze:
             out->list_item(out, NULL, "No quorum policy: Freeze resources");
             break;
 
-        case no_quorum_stop:
+        case pcmk_no_quorum_stop:
             out->list_item(out, NULL, "No quorum policy: Stop ALL resources");
             break;
 
-        case no_quorum_demote:
+        case pcmk_no_quorum_demote:
             out->list_item(out, NULL, "No quorum policy: Demote promotable "
                            "resources and stop all other resources");
             break;
 
-        case no_quorum_ignore:
+        case pcmk_no_quorum_ignore:
             out->list_item(out, NULL, "No quorum policy: Ignore");
             break;
 
-        case no_quorum_suicide:
+        case pcmk_no_quorum_fence:
             out->list_item(out, NULL, "No quorum policy: Suicide");
             break;
     }
@@ -1033,24 +1033,24 @@ cluster_options_text(pcmk__output_t *out, va_list args) {
                    pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster) ? "symmetric" : "asymmetric");
 
     switch (data_set->no_quorum_policy) {
-        case no_quorum_freeze:
+        case pcmk_no_quorum_freeze:
             out->list_item(out, NULL, "No quorum policy: Freeze resources");
             break;
 
-        case no_quorum_stop:
+        case pcmk_no_quorum_stop:
             out->list_item(out, NULL, "No quorum policy: Stop ALL resources");
             break;
 
-        case no_quorum_demote:
+        case pcmk_no_quorum_demote:
             out->list_item(out, NULL, "No quorum policy: Demote promotable "
                            "resources and stop all other resources");
             break;
 
-        case no_quorum_ignore:
+        case pcmk_no_quorum_ignore:
             out->list_item(out, NULL, "No quorum policy: Ignore");
             break;
 
-        case no_quorum_suicide:
+        case pcmk_no_quorum_fence:
             out->list_item(out, NULL, "No quorum policy: Suicide");
             break;
     }
@@ -1068,23 +1068,23 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
     char *priority_fencing_delay_str = pcmk__itoa(data_set->priority_fencing_delay * 1000);
 
     switch (data_set->no_quorum_policy) {
-        case no_quorum_freeze:
+        case pcmk_no_quorum_freeze:
             no_quorum_policy = "freeze";
             break;
 
-        case no_quorum_stop:
+        case pcmk_no_quorum_stop:
             no_quorum_policy = "stop";
             break;
 
-        case no_quorum_demote:
+        case pcmk_no_quorum_demote:
             no_quorum_policy = "demote";
             break;
 
-        case no_quorum_ignore:
+        case pcmk_no_quorum_ignore:
             no_quorum_policy = "ignore";
             break;
 
-        case no_quorum_suicide:
+        case pcmk_no_quorum_fence:
             no_quorum_policy = "suicide";
             break;
     }
