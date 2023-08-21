@@ -85,18 +85,6 @@ enum pe_quorum_policy {
     no_quorum_demote
 };
 
-enum node_type {
-    node_ping,      //! \deprecated Do not use
-    node_member,
-    node_remote
-};
-
-//! \deprecated will be removed in a future release
-enum pe_restart {
-    pe_restart_restart, //! \deprecated will be removed in a future release
-    pe_restart_ignore   //! \deprecated will be removed in a future release
-};
-
 //! Determine behavior of pe_find_resource_with_flags()
 enum pe_find {
     pe_find_renamed  = 0x001, //!< match resource ID or LRM history ID
@@ -215,18 +203,6 @@ struct pe_working_set_s {
 
     void *priv;
     guint node_pending_timeout; // Node pending timeout
-};
-
-enum pe_check_parameters {
-    /* Clear fail count if parameters changed for un-expired start or monitor
-     * last_failure.
-     */
-    pe_check_last_failure,
-
-    /* Clear fail count if parameters changed for start, monitor, promote, or
-     * migrate_from actions for active resources.
-     */
-    pe_check_active,
 };
 
 struct pe_node_shared_s {

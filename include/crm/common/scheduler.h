@@ -11,6 +11,7 @@
 #  define PCMK__CRM_COMMON_SCHEDULER__H
 
 #include <crm/common/actions.h>
+#include <crm/common/nodes.h>
 #include <crm/common/resources.h>
 #include <crm/common/roles.h>
 

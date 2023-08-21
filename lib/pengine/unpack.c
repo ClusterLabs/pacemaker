@@ -433,10 +433,10 @@ pe_create_node(const char *id, const char *uname, const char *type,
     new_node->details->data_set = data_set;
 
     if (pcmk__str_eq(type, "member", pcmk__str_null_matches | pcmk__str_casei)) {
-        new_node->details->type = node_member;
+        new_node->details->type = pcmk_node_variant_cluster;
 
     } else if (pcmk__str_eq(type, "remote", pcmk__str_casei)) {
-        new_node->details->type = node_remote;
+        new_node->details->type = pcmk_node_variant_remote;
         pe__set_working_set_flags(data_set, pe_flag_have_remote_nodes);
 
     } else {
@@ -534,7 +534,8 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data
 static void
 handle_startup_fencing(pe_working_set_t *data_set, pe_node_t *new_node)
 {
-    if ((new_node->details->type == node_remote) && (new_node->details->remote_rsc == NULL)) {
+    if ((new_node->details->type == pcmk_node_variant_remote)
+        && (new_node->details->remote_rsc == NULL)) {
         /* Ignore fencing for remote nodes that don't have a connection resource
          * associated with them. This happens when remote node entries get left
          * in the nodes section after the connection resource is removed.
@@ -3864,7 +3865,7 @@ should_clear_for_param_change(const xmlNode *xml_op, const char *task,
              * substitute addr parameters for the REMOTE_CONTAINER_HACK.
              * When that's needed, defer the check until later.
              */
-            pe__add_param_check(xml_op, rsc, node, pe_check_last_failure,
+            pe__add_param_check(xml_op, rsc, node, pcmk__check_last_failure,
                                 rsc->cluster);
 
         } else {

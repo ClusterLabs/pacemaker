@@ -14,6 +14,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
+#include <crm/common/scheduler_internal.h>
 
 #include <glib.h>
 
@@ -40,20 +41,20 @@ CRM_TRACE_INIT_DATA(pacemaker);
  */
 static void
 check_params(pe_resource_t *rsc, pe_node_t *node, const xmlNode *rsc_op,
-             enum pe_check_parameters check)
+             enum pcmk__check_parameters check)
 {
     const char *reason = NULL;
     op_digest_cache_t *digest_data = NULL;
 
     switch (check) {
-        case pe_check_active:
+        case pcmk__check_active:
             if (pcmk__check_action_config(rsc, node, rsc_op)
                 && pe_get_failcount(node, rsc, NULL, pe_fc_effective, NULL)) {
                 reason = "action definition changed";
             }
             break;
 
-        case pe_check_last_failure:
+        case pcmk__check_last_failure:
             digest_data = rsc_action_digest_cmp(rsc, rsc_op, node,
                                                 rsc->cluster);
             switch (digest_data->rc) {

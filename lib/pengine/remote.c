@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/common/scheduler_internal.h>
 #include <crm/pengine/internal.h>
 #include <glib.h>
 
@@ -23,7 +24,7 @@ pe__resource_is_remote_conn(const pe_resource_t *rsc)
 bool
 pe__is_remote_node(const pe_node_t *node)
 {
-    return (node != NULL) && (node->details->type == node_remote)
+    return (node != NULL) && (node->details->type == pcmk_node_variant_remote)
            && ((node->details->remote_rsc == NULL)
                || (node->details->remote_rsc->container == NULL));
 }
@@ -31,7 +32,7 @@ pe__is_remote_node(const pe_node_t *node)
 bool
 pe__is_guest_node(const pe_node_t *node)
 {
-    return (node != NULL) && (node->details->type == node_remote)
+    return (node != NULL) && (node->details->type == pcmk_node_variant_remote)
            && (node->details->remote_rsc != NULL)
            && (node->details->remote_rsc->container != NULL);
 }
@@ -39,7 +40,7 @@ pe__is_guest_node(const pe_node_t *node)
 bool
 pe__is_guest_or_remote_node(const pe_node_t *node)
 {
-    return (node != NULL) && (node->details->type == node_remote);
+    return (node != NULL) && (node->details->type == pcmk_node_variant_remote);
 }
 
 bool
@@ -215,12 +216,12 @@ struct check_op {
     const xmlNode *rsc_op; // History entry XML
     pe_resource_t *rsc;    // Known resource corresponding to history entry
     pe_node_t *node; // Known node corresponding to history entry
-    enum pe_check_parameters check_type; // What needs checking
+    enum pcmk__check_parameters check_type; // What needs checking
 };
 
 void
 pe__add_param_check(const xmlNode *rsc_op, pe_resource_t *rsc,
-                    pe_node_t *node, enum pe_check_parameters flag,
+                    pe_node_t *node, enum pcmk__check_parameters flag,
                     pe_working_set_t *data_set)
 {
     struct check_op *check_op = NULL;
@@ -248,7 +249,7 @@ pe__add_param_check(const xmlNode *rsc_op, pe_resource_t *rsc,
 void
 pe__foreach_param_check(pe_working_set_t *data_set,
                        void (*cb)(pe_resource_t*, pe_node_t*, const xmlNode*,
-                                  enum pe_check_parameters))
+                                  enum pcmk__check_parameters))
 {
     CRM_CHECK(data_set && cb, return);
 

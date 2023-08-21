@@ -548,7 +548,8 @@ pe__node_attribute_calculated(const pe_node_t *node, const char *name,
                               bool force_host)
 {
     // @TODO: Use pe__is_guest_node() after merging libpe_{rules,status}
-    bool is_guest = (node != NULL) && (node->details->type == node_remote)
+    bool is_guest = (node != NULL)
+                    && (node->details->type == pcmk_node_variant_remote)
                     && (node->details->remote_rsc != NULL)
                     && (node->details->remote_rsc->container != NULL);
     const char *source = NULL;
