@@ -393,16 +393,6 @@ mainloop_add_signal(int sig, void (*dispatch) (int sig))
         mainloop_destroy_signal_entry(sig);
         return FALSE;
     }
-#if 0
-    /* If we want signals to interrupt mainloop's poll(), instead of waiting for
-     * the timeout, then we should call siginterrupt() below
-     *
-     * For now, just enforce a low timeout
-     */
-    if (siginterrupt(sig, 1) < 0) {
-        crm_perror(LOG_INFO, "Could not enable system call interruptions for signal %d", sig);
-    }
-#endif
 
     return TRUE;
 }
