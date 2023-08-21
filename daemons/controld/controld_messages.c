@@ -1062,11 +1062,6 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
         if (controld_globals.fsa_state == S_HALT) {
             crm_debug("Forcing an election from S_HALT");
             return I_ELECTION;
-#if 0
-        } else if (AM_I_DC) {
-            /* This is the old way of doing things but what is gained? */
-            return I_ELECTION;
-#endif
         }
 
     } else if (strcmp(op, CRM_OP_JOIN_OFFER) == 0) {

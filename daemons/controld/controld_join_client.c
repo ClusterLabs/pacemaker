@@ -112,15 +112,6 @@ do_cl_join_offer_respond(long long action,
 
     CRM_CHECK(input != NULL, return);
 
-#if 0
-    if (we are sick) {
-        log error;
-
-        /* save the request for later? */
-        return;
-    }
-#endif
-
     welcome_from = crm_element_value(input->msg, F_CRM_HOST_FROM);
     join_id = crm_element_value(input->msg, F_CRM_JOIN_ID);
     crm_trace("Accepting cluster join offer from node %s "CRM_XS" join-%s",

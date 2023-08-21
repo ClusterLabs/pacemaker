@@ -432,32 +432,6 @@ crm_schema_init(void)
                NULL, NULL, FALSE, -1);
 }
 
-#if 0
-static void
-relaxng_invalid_stderr(void *userData, xmlErrorPtr error)
-{
-    /*
-       Structure xmlError
-       struct _xmlError {
-       int      domain  : What part of the library raised this er
-       int      code    : The error code, e.g. an xmlParserError
-       char *   message : human-readable informative error messag
-       xmlErrorLevel    level   : how consequent is the error
-       char *   file    : the filename
-       int      line    : the line number if available
-       char *   str1    : extra string information
-       char *   str2    : extra string information
-       char *   str3    : extra string information
-       int      int1    : extra number information
-       int      int2    : column number of the error or 0 if N/A
-       void *   ctxt    : the parser context if available
-       void *   node    : the node in the tree
-       }
-     */
-    crm_err("Structured error: line=%d, level=%d %s", error->line, error->level, error->message);
-}
-#endif
-
 static gboolean
 validate_with_relaxng(xmlDocPtr doc, gboolean to_logs, const char *relaxng_file,
                       relaxng_ctx_cache_t **cached_ctx)
@@ -512,9 +486,6 @@ validate_with_relaxng(xmlDocPtr doc, gboolean to_logs, const char *relaxng_file,
                                      stderr);
         }
     }
-
-    /* xmlRelaxNGSetValidStructuredErrors( */
-    /*  valid, relaxng_invalid_stderr, valid); */
 
     xmlLineNumbersDefault(1);
     rc = xmlRelaxNGValidateDoc(ctx->valid, doc);
