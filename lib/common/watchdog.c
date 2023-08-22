@@ -20,10 +20,6 @@
 #include <dirent.h>
 #include <signal.h>
 
-#ifdef _POSIX_MEMLOCK
-#  include <sys/mman.h>
-#endif
-
 static pid_t sbd_pid = 0;
 
 static void

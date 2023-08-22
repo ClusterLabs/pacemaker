@@ -309,6 +309,8 @@ AC_ARG_WITH([daemon-user],
         [user to run unprivileged Pacemaker daemons as (advanced option: changing this may break other cluster components unless similarly configured) @<:@hacluster@:>@])],
     [ CRM_DAEMON_USER="$withval" ]
 )
+AS_IF([test x"${CRM_DAEMON_USER}" = x""],
+      [CRM_DAEMON_USER="hacluster"])
 
 CRM_DAEMON_GROUP=""
 AC_ARG_WITH([daemon-group],
@@ -316,6 +318,8 @@ AC_ARG_WITH([daemon-group],
         [group to run unprivileged Pacemaker daemons as (advanced option: changing this may break other cluster components unless similarly configured) @<:@haclient@:>@])],
     [ CRM_DAEMON_GROUP="$withval" ]
 )
+AS_IF([test x"${CRM_DAEMON_GROUP}" = x""],
+      [CRM_DAEMON_GROUP="haclient"])
 
 BUG_URL=""
 AC_ARG_WITH([bug-url],
@@ -569,10 +573,8 @@ AC_PROG_MKDIR_P
 AC_PATH_PROG([GIT], [git], [false])
 
 dnl Bash is needed for building man pages and running regression tests.
-dnl BASH is already an environment variable, so use something else.
-AC_PATH_PROG([BASH_PATH], [bash])
-AS_IF([test x"${BASH_PATH}" != x""], [],
-      [AC_MSG_FAILURE([Could not find required build tool bash])])
+dnl We set "BASH_PATH" because "BASH" is already an environment variable.
+REQUIRE_PROG([BASH_PATH], [bash])
 
 AC_PATH_PROGS(VALGRIND_BIN, valgrind, /usr/bin/valgrind)
 AC_DEFINE_UNQUOTED(VALGRIND_BIN, "$VALGRIND_BIN", Valgrind command)
@@ -608,15 +610,37 @@ AS_IF([test "$GIT" != "false" && test -d .git],
 AC_DEFINE_UNQUOTED(BUILD_VERSION, "$BUILD_VERSION", Build version)
 AC_SUBST(BUILD_VERSION)
 
-# latest_schema_version <schema_dir>
-#  Determine highest RNG version in the given schema directory. Use git if
-#  available to list managed RNGs, in case there are leftover schema files from
-#  an earlier build of a different version. Otherwise, check all RNGs.
+# schema_files <schema-dir>
+#  List all manually edited RNG schemas (as opposed to auto-generated via make)
+#  in the given directory. Use git if available to list managed RNGs, in case
+#  there are leftover schema files from an earlier build of a different
+#  version. Otherwise, check all RNGs.
+schema_files() {
+    local files="$("$GIT" ls-files "$1"/*.rng 2>/dev/null)"
+
+    AS_IF([test x"$files" = x""],
+          [
+              files="$(ls -1 "$1"/*.rng | grep -E -v
+                       '/(pacemaker|api-result|crm_mon|versions)[^/]*\.rng')"
+          ])
+    echo $files
+}
+
+# latest_schema_version <schema-dir>
+#  Determine highest RNG version in the given schema directory.
 latest_schema_version() {
-    local files=$(git ls-files "$1"/*.rng 2>/dev/null)
-    AS_IF([test x"$files" = x""], [files=$(ls -1 "$1"/*.rng)])
-    echo "$files" | sed -n -e 's/^.*-\([[0-9]][[0-9.]]*\).rng$/\1/p' dnl
-                  | sort -V | tail -1
+    schema_files "$1" | sed -n -e 's/^.*-\([[0-9]][[0-9.]]*\).rng$/\1/p' dnl
+                      | sort -V | tail -1
+}
+
+# schemas_for_make <schema-dir>
+#  Like schema_files, but suitable for use in make variables.
+schemas_for_make() {
+    local file
+
+    for file in $(schema_files "$1"); do
+        AS_ECHO_N(["\$(top_srcdir)/$file "])
+    done
 }
 
 # Detect highest API schema version
@@ -628,10 +652,11 @@ AC_DEFINE_UNQUOTED([PCMK__API_VERSION], ["$API_VERSION"],
 CIB_VERSION=$(latest_schema_version "xml")
 AC_SUBST(CIB_VERSION)
 
-# Add the schemas to the files that cause automake to re-run configure at next
-# make, so we re-detect the highest version
-AC_SUBST([CONFIG_STATUS_DEPENDENCIES],
-         [$(echo '$(wildcard $(top_srcdir)/xml/api/*.rng)')])
+# Re-run configure at next make if schema files change, to re-detect versions
+cib_schemas="$(schemas_for_make "xml")"
+api_schemas="$(schemas_for_make "xml/api")"
+CONFIG_STATUS_DEPENDENCIES="$cib_schemas $api_schemas"
+AC_SUBST(CONFIG_STATUS_DEPENDENCIES)
 
 
 dnl ==============================================
@@ -662,14 +687,6 @@ AC_DEFINE_UNQUOTED([PCMK__RESOURCE_STICKINESS_DEFAULT],
                    [$with_resource_stickiness_default],
                    [Default value for resource-stickiness resource meta-attribute])
 
-AC_SUBST(OCF_ROOT_DIR)
-AC_DEFINE_UNQUOTED([OCF_ROOT_DIR], ["$OCF_ROOT_DIR"],
-                   [OCF root directory for resource agents and libraries])
-
-AC_SUBST(OCF_RA_PATH)
-AC_SUBST(OCF_RA_INSTALL_DIR)
-AC_SUBST(PCMK__FENCE_BINDIR)
-
 AS_IF([test x"${PCMK_GNUTLS_PRIORITIES}" != x""], [],
       [AC_MSG_ERROR([--with-gnutls-priorities value must not be empty])])
 AC_DEFINE_UNQUOTED([PCMK_GNUTLS_PRIORITIES], ["$PCMK_GNUTLS_PRIORITIES"],
@@ -679,6 +696,14 @@ AC_SUBST(PCMK_GNUTLS_PRIORITIES)
 AC_SUBST(BUG_URL)
 AC_DEFINE_UNQUOTED([PCMK__BUG_URL], ["$BUG_URL"],
                    [Where bugs should be reported])
+
+AC_DEFINE_UNQUOTED([CRM_DAEMON_USER], ["$CRM_DAEMON_USER"],
+                   [User to run Pacemaker daemons as])
+AC_SUBST(CRM_DAEMON_USER)
+
+AC_DEFINE_UNQUOTED([CRM_DAEMON_GROUP], ["$CRM_DAEMON_GROUP"],
+                   [Group to run Pacemaker daemons as])
+AC_SUBST(CRM_DAEMON_GROUP)
 
 
 dnl ==============================================
@@ -779,20 +804,86 @@ expand_path_option PCMK__COROSYNC_CONF "${sysconfdir}/corosync/corosync.conf"
 AC_SUBST(PCMK__COROSYNC_CONF)
 
 expand_path_option CRM_LOG_DIR "${localstatedir}/log/pacemaker"
-AC_DEFINE_UNQUOTED(CRM_LOG_DIR,"$CRM_LOG_DIR", Location for Pacemaker log file)
+AC_DEFINE_UNQUOTED([CRM_LOG_DIR], ["$CRM_LOG_DIR"],
+                   [Location for Pacemaker log file])
 AC_SUBST(CRM_LOG_DIR)
 
 expand_path_option CRM_BUNDLE_DIR "${localstatedir}/log/pacemaker/bundles"
-AC_DEFINE_UNQUOTED(CRM_BUNDLE_DIR,"$CRM_BUNDLE_DIR", Location for Pacemaker bundle logs)
+AC_DEFINE_UNQUOTED([CRM_BUNDLE_DIR], ["$CRM_BUNDLE_DIR"],
+                   [Location for Pacemaker bundle logs])
 AC_SUBST(CRM_BUNDLE_DIR)
 
 expand_path_option PCMK__FENCE_BINDIR
-AC_DEFINE_UNQUOTED(PCMK__FENCE_BINDIR,"$PCMK__FENCE_BINDIR",
+AC_SUBST(PCMK__FENCE_BINDIR)
+AC_DEFINE_UNQUOTED([PCMK__FENCE_BINDIR], ["$PCMK__FENCE_BINDIR"],
                    [Location for executable fence agents])
 
+expand_path_option OCF_ROOT_DIR
+AC_SUBST(OCF_ROOT_DIR)
+AC_DEFINE_UNQUOTED([OCF_ROOT_DIR], ["$OCF_ROOT_DIR"],
+                   [OCF root directory for resource agents and libraries])
+
 expand_path_option OCF_RA_PATH
+AC_SUBST(OCF_RA_PATH)
 AC_DEFINE_UNQUOTED([OCF_RA_PATH], ["$OCF_RA_PATH"],
                    [OCF directories to search for resource agents ])
+
+expand_path_option OCF_RA_INSTALL_DIR
+AC_SUBST(OCF_RA_INSTALL_DIR)
+
+# Derived paths
+
+CRM_SCHEMA_DIRECTORY="${datadir}/pacemaker"
+AC_DEFINE_UNQUOTED([CRM_SCHEMA_DIRECTORY], ["$CRM_SCHEMA_DIRECTORY"],
+                   [Location for the Pacemaker Relax-NG Schema])
+AC_SUBST(CRM_SCHEMA_DIRECTORY)
+
+CRM_CORE_DIR="${localstatedir}/lib/pacemaker/cores"
+AC_DEFINE_UNQUOTED([CRM_CORE_DIR], ["$CRM_CORE_DIR"],
+                   [Directory Pacemaker daemons should change to (without systemd, core files will go here)])
+AC_SUBST(CRM_CORE_DIR)
+
+CRM_PACEMAKER_DIR="${localstatedir}/lib/pacemaker"
+AC_DEFINE_UNQUOTED([CRM_PACEMAKER_DIR], ["$CRM_PACEMAKER_DIR"],
+                   [Location to store directory produced by Pacemaker daemons])
+AC_SUBST(CRM_PACEMAKER_DIR)
+
+CRM_BLACKBOX_DIR="${localstatedir}/lib/pacemaker/blackbox"
+AC_DEFINE_UNQUOTED([CRM_BLACKBOX_DIR], ["$CRM_BLACKBOX_DIR"],
+                   [Where to keep blackbox dumps])
+AC_SUBST(CRM_BLACKBOX_DIR)
+
+PE_STATE_DIR="${localstatedir}/lib/pacemaker/pengine"
+AC_DEFINE_UNQUOTED([PE_STATE_DIR], ["$PE_STATE_DIR"],
+                   [Where to keep scheduler outputs])
+AC_SUBST(PE_STATE_DIR)
+
+CRM_CONFIG_DIR="${localstatedir}/lib/pacemaker/cib"
+AC_DEFINE_UNQUOTED([CRM_CONFIG_DIR], ["$CRM_CONFIG_DIR"],
+                   [Where to keep configuration files])
+AC_SUBST(CRM_CONFIG_DIR)
+
+CRM_DAEMON_DIR="${libexecdir}/pacemaker"
+AC_DEFINE_UNQUOTED([CRM_DAEMON_DIR], ["$CRM_DAEMON_DIR"],
+                   [Location for Pacemaker daemons])
+AC_SUBST(CRM_DAEMON_DIR)
+
+CRM_STATE_DIR="${runstatedir}/crm"
+AC_DEFINE_UNQUOTED([CRM_STATE_DIR], ["$CRM_STATE_DIR"],
+                   [Where to keep state files and sockets])
+AC_SUBST(CRM_STATE_DIR)
+
+CRM_RSCTMP_DIR="${runstatedir}/resource-agents"
+AC_DEFINE_UNQUOTED([CRM_RSCTMP_DIR], ["$CRM_RSCTMP_DIR"],
+                   [Where resource agents should keep state files])
+AC_SUBST(CRM_RSCTMP_DIR)
+
+PACEMAKER_CONFIG_DIR="${sysconfdir}/pacemaker"
+AC_DEFINE_UNQUOTED([PACEMAKER_CONFIG_DIR], ["$PACEMAKER_CONFIG_DIR"],
+                   [Where to keep configuration files like authkey])
+AC_SUBST(PACEMAKER_CONFIG_DIR)
+
+AC_DEFINE_UNQUOTED([SBIN_DIR], ["$sbindir"], [Location for system binaries])
 
 # Warn about any directories that don't exist (which may be OK)
 for j in prefix exec_prefix bindir sbindir libexecdir datadir sysconfdir \
@@ -962,29 +1053,6 @@ AS_IF([test -n "$GETOPT_PATH"], [AC_MSG_RESULT([$GETOPT_PATH])],
 AC_SUBST([GETOPT_PATH])
 
 
-dnl ========================================================================
-dnl checks for library functions to replace them
-dnl
-dnl     NoSuchFunctionName:
-dnl             is a dummy function which no system supplies.  It is here to make
-dnl             the system compile semi-correctly on OpenBSD which doesn't know
-dnl             how to create an empty archive
-dnl
-dnl     scandir: Only on BSD.
-dnl             System-V systems may have it, but hidden and/or deprecated.
-dnl             A replacement function is supplied for it.
-dnl
-dnl     strerror: returns a string that corresponds to an errno.
-dnl             A replacement function is supplied for it.
-dnl
-dnl     strnlen: is a gnu function similar to strlen, but safer.
-dnl            We wrote a tolerably-fast replacement function for it.
-dnl
-dnl     strndup: is a gnu function similar to strdup, but safer.
-dnl            We wrote a tolerably-fast replacement function for it.
-
-AC_REPLACE_FUNCS(alphasort NoSuchFunctionName scandir strerror strchrnul strnlen strndup)
-
 dnl ===============================================
 dnl Libraries
 dnl ===============================================
@@ -1061,18 +1129,30 @@ AC_CHECK_HEADERS([security/pam_appl.h pam/pam_appl.h])
 REQUIRE_HEADER([arpa/inet.h])
 REQUIRE_HEADER([ctype.h])
 REQUIRE_HEADER([dirent.h])
+REQUIRE_HEADER([dlfcn.h])
 REQUIRE_HEADER([errno.h])
+REQUIRE_HEADER([fcntl.h])
+REQUIRE_HEADER([float.h])
 REQUIRE_HEADER([glib.h])
 REQUIRE_HEADER([grp.h])
+REQUIRE_HEADER([inttypes.h])
+REQUIRE_HEADER([libgen.h])
 REQUIRE_HEADER([limits.h])
+REQUIRE_HEADER([locale.h])
 REQUIRE_HEADER([netdb.h])
 REQUIRE_HEADER([netinet/in.h])
 REQUIRE_HEADER([netinet/ip.h], [
     #include <sys/types.h>
     #include <netinet/in.h>
 ])
+REQUIRE_HEADER([netinet/tcp.h])
 REQUIRE_HEADER([pwd.h])
+REQUIRE_HEADER([regex.h])
+REQUIRE_HEADER([sched.h])
 REQUIRE_HEADER([signal.h])
+REQUIRE_HEADER([stdarg.h])
+REQUIRE_HEADER([stdbool.h])
+REQUIRE_HEADER([stdint.h])
 REQUIRE_HEADER([stdio.h])
 REQUIRE_HEADER([stdlib.h])
 REQUIRE_HEADER([string.h])
@@ -1085,8 +1165,10 @@ REQUIRE_HEADER([sys/socket.h])
 REQUIRE_HEADER([sys/stat.h])
 REQUIRE_HEADER([sys/time.h])
 REQUIRE_HEADER([sys/types.h])
+REQUIRE_HEADER([sys/uio.h])
 REQUIRE_HEADER([sys/utsname.h])
 REQUIRE_HEADER([sys/wait.h])
+REQUIRE_HEADER([termios.h])
 REQUIRE_HEADER([time.h])
 REQUIRE_HEADER([unistd.h])
 REQUIRE_HEADER([libxml/xpath.h])
@@ -1147,14 +1229,31 @@ dnl ========================================================================
 dnl Functions
 dnl ========================================================================
 
+REQUIRE_FUNC([alphasort])
 REQUIRE_FUNC([getopt])
+REQUIRE_FUNC([scandir])
 REQUIRE_FUNC([setenv])
+REQUIRE_FUNC([strndup])
+REQUIRE_FUNC([strnlen])
 REQUIRE_FUNC([unsetenv])
 REQUIRE_FUNC([uuid_unparse])
 REQUIRE_FUNC([vasprintf])
 
+AC_CHECK_FUNCS([strchrnul])
+
 AC_CHECK_FUNCS([fopen64])
 AM_CONDITIONAL([WRAPPABLE_FOPEN64], [test x"$ac_cv_func_fopen64" = x"yes"])
+
+AC_MSG_CHECKING([whether strerror always returns non-NULL])
+AC_RUN_IFELSE([AC_LANG_PROGRAM([[
+    #include <stdio.h>
+    #include <string.h>
+                               ]], [[
+    return strerror(-1) == NULL;
+                               ]])],
+              [AC_MSG_RESULT([yes])],
+              [AC_MSG_ERROR([strerror() is not C99-compliant])],
+              [AC_MSG_ERROR([strerror() is not C99-compliant])])
 
 AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <stdio.h>]], [[
     const char *s = "some-command-line-arg";
@@ -1354,62 +1453,10 @@ AC_CHECK_HEADERS([stonith/stonith.h],
                  ])
 AM_CONDITIONAL([BUILD_LHA_SUPPORT], [test x"$ac_cv_header_stonith_stonith_h" = x"yes"])
 
+
 dnl ===============================================
-dnl Variables needed for substitution
+dnl Detect DBus, systemd, and Upstart support
 dnl ===============================================
-CRM_SCHEMA_DIRECTORY="${datadir}/pacemaker"
-AC_DEFINE_UNQUOTED(CRM_SCHEMA_DIRECTORY,"$CRM_SCHEMA_DIRECTORY", Location for the Pacemaker Relax-NG Schema)
-AC_SUBST(CRM_SCHEMA_DIRECTORY)
-
-CRM_CORE_DIR="${localstatedir}/lib/pacemaker/cores"
-AC_DEFINE_UNQUOTED([CRM_CORE_DIR], ["$CRM_CORE_DIR"],
-		   [Directory Pacemaker daemons should change to (without systemd, core files will go here)])
-AC_SUBST(CRM_CORE_DIR)
-
-AS_IF([test x"${CRM_DAEMON_USER}" = x""],
-      [CRM_DAEMON_USER="hacluster"])
-AC_DEFINE_UNQUOTED(CRM_DAEMON_USER,"$CRM_DAEMON_USER", User to run Pacemaker daemons as)
-AC_SUBST(CRM_DAEMON_USER)
-
-AS_IF([test x"${CRM_DAEMON_GROUP}" = x""],
-      [CRM_DAEMON_GROUP="haclient"])
-AC_DEFINE_UNQUOTED(CRM_DAEMON_GROUP,"$CRM_DAEMON_GROUP", Group to run Pacemaker daemons as)
-AC_SUBST(CRM_DAEMON_GROUP)
-
-CRM_PACEMAKER_DIR=${localstatedir}/lib/pacemaker
-AC_DEFINE_UNQUOTED(CRM_PACEMAKER_DIR,"$CRM_PACEMAKER_DIR", Location to store directory produced by Pacemaker daemons)
-AC_SUBST(CRM_PACEMAKER_DIR)
-
-CRM_BLACKBOX_DIR=${localstatedir}/lib/pacemaker/blackbox
-AC_DEFINE_UNQUOTED(CRM_BLACKBOX_DIR,"$CRM_BLACKBOX_DIR", Where to keep blackbox dumps)
-AC_SUBST(CRM_BLACKBOX_DIR)
-
-PE_STATE_DIR="${localstatedir}/lib/pacemaker/pengine"
-AC_DEFINE_UNQUOTED(PE_STATE_DIR,"$PE_STATE_DIR", Where to keep scheduler outputs)
-AC_SUBST(PE_STATE_DIR)
-
-CRM_CONFIG_DIR="${localstatedir}/lib/pacemaker/cib"
-AC_DEFINE_UNQUOTED(CRM_CONFIG_DIR,"$CRM_CONFIG_DIR", Where to keep configuration files)
-AC_SUBST(CRM_CONFIG_DIR)
-
-CRM_DAEMON_DIR="${libexecdir}/pacemaker"
-AC_DEFINE_UNQUOTED(CRM_DAEMON_DIR,"$CRM_DAEMON_DIR", Location for Pacemaker daemons)
-AC_SUBST(CRM_DAEMON_DIR)
-
-CRM_STATE_DIR="${runstatedir}/crm"
-AC_DEFINE_UNQUOTED([CRM_STATE_DIR], ["$CRM_STATE_DIR"],
-                   [Where to keep state files and sockets])
-AC_SUBST(CRM_STATE_DIR)
-
-CRM_RSCTMP_DIR="${runstatedir}/resource-agents"
-AC_DEFINE_UNQUOTED(CRM_RSCTMP_DIR,"$CRM_RSCTMP_DIR", Where resource agents should keep state files)
-AC_SUBST(CRM_RSCTMP_DIR)
-
-PACEMAKER_CONFIG_DIR="${sysconfdir}/pacemaker"
-AC_DEFINE_UNQUOTED(PACEMAKER_CONFIG_DIR,"$PACEMAKER_CONFIG_DIR", Where to keep configuration files like authkey)
-AC_SUBST(PACEMAKER_CONFIG_DIR)
-
-AC_DEFINE_UNQUOTED(SBIN_DIR,"$sbindir",[Location for system binaries])
 
 HAVE_dbus=1
 PKG_CHECK_MODULES([DBUS], [dbus-1],
@@ -1520,6 +1567,11 @@ AC_DEFINE_UNQUOTED([SUPPORT_UPSTART], [$enable_upstart],
                    [Support Upstart resources])
 AM_CONDITIONAL([BUILD_UPSTART], [test $enable_upstart -eq $REQUIRED])
 AC_SUBST(SUPPORT_UPSTART)
+
+
+dnl ========================================================================
+dnl Detect Nagios support
+dnl ========================================================================
 
 AS_CASE([$with_nagios],
         [$REQUIRED], [
@@ -2136,7 +2188,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 python/pacemaker/_cts/tests/Makefile                \
                 python/pacemaker/buildoptions.py                    \
                 python/tests/Makefile                               \
-                replace/Makefile                                    \
                 rpm/Makefile                                        \
                 tests/Makefile                                      \
                 tools/Makefile                                      \
