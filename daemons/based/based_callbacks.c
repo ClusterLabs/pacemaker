@@ -705,7 +705,8 @@ parse_peer_options_v1(const cib__operation_t *operation, xmlNode *request,
     }
 
     op = crm_element_value(request, F_CIB_OPERATION);
-    crm_trace("Processing %s request sent by %s", op, originator);
+    crm_trace("Processing legacy %s request sent by %s", op, originator);
+
     if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SHUTDOWN, pcmk__str_none)) {
         /* Always process these */
         *local_notify = FALSE;
@@ -790,6 +791,10 @@ parse_peer_options_v2(const cib__operation_t *operation, xmlNode *request,
 
     gboolean is_reply = pcmk__str_eq(reply_to, OUR_NODENAME, pcmk__str_casei);
 
+    if (originator == NULL) { // Shouldn't be possible
+        originator = "peer";
+    }
+
     if (pcmk__str_eq(op, PCMK__CIB_REQUEST_REPLACE, pcmk__str_none)) {
         /* sync_our_cib() sets F_CIB_ISREPLY */
         if (reply_to) {
@@ -819,10 +824,10 @@ parse_peer_options_v2(const cib__operation_t *operation, xmlNode *request,
         const char *max = crm_element_value(request, F_CIB_SCHEMA_MAX);
         const char *upgrade_rc = crm_element_value(request, F_CIB_UPGRADE_RC);
 
-        crm_trace("Parsing %s operation%s for %s with max=%s and upgrade_rc=%s",
-                  op, (is_reply? " reply" : ""),
+        crm_trace("Parsing upgrade %s for %s with max=%s and upgrade_rc=%s",
+                  (is_reply? "reply" : "request"),
                   (based_is_primary? "primary" : "secondary"),
-                  (max? max : "none"), (upgrade_rc? upgrade_rc : "none"));
+                  pcmk__s(max, "none"), pcmk__s(upgrade_rc, "none"));
 
         if (upgrade_rc != NULL) {
             // Our upgrade request was rejected by DC, notify clients of result
@@ -837,7 +842,7 @@ parse_peer_options_v2(const cib__operation_t *operation, xmlNode *request,
             goto skip_is_reply;
 
         } else {
-            // Ignore broadcast client requests when we're not DC
+            // Ignore broadcast client requests when we're not primary
             return FALSE;
         }
 
@@ -853,17 +858,19 @@ parse_peer_options_v2(const cib__operation_t *operation, xmlNode *request,
         return FALSE;
 
     } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SHUTDOWN, pcmk__str_none)) {
-        // @COMPAT: Legacy handling
-        crm_debug("Legacy handling of %s message from %s", op, originator);
         *local_notify = FALSE;
         if (reply_to == NULL) {
             *process = TRUE;
+        } else { // Not possible?
+            crm_debug("Ignoring shutdown request from %s because reply_to=%s",
+                      originator, reply_to);
         }
         return *process;
     }
 
-    if(is_reply) {
-        crm_trace("Handling %s reply sent from %s to local clients", op, originator);
+    if (is_reply) {
+        crm_trace("Will notify local clients for %s reply from %s",
+                  op, originator);
         *process = FALSE;
         *needs_reply = FALSE;
         *local_notify = TRUE;
@@ -883,18 +890,19 @@ parse_peer_options_v2(const cib__operation_t *operation, xmlNode *request,
         return TRUE;
 
     } else if (host != NULL) {
-        /* this is for a specific instance and we're not it */
-        crm_trace("Ignoring %s operation for instance on %s", op, host);
+        crm_trace("Ignoring %s request intended for CIB manager on %s",
+                  op, host);
         return FALSE;
 
     } else if(is_reply == FALSE && pcmk__str_eq(op, CRM_OP_PING, pcmk__str_casei)) {
         *needs_reply = TRUE;
     }
 
-    crm_trace("Processing %s request sent to everyone by %s/%s on %s %s", op,
-              crm_element_value(request, F_CIB_CLIENTNAME),
-              crm_element_value(request, F_CIB_CALLID),
-              originator, (*local_notify)?"(notify)":"");
+    crm_trace("Processing %s request broadcast by %s call %s on %s "
+              "(local clients will%s be notified)", op,
+              pcmk__s(crm_element_value(request, F_CIB_CLIENTNAME), "client"),
+              pcmk__s(crm_element_value(request, F_CIB_CALLID), "without ID"),
+              originator, (*local_notify? "" : "not"));
     return TRUE;
 }
 
@@ -1705,12 +1713,12 @@ initiate_exit(void)
     xmlNode *leaving = NULL;
 
     active = crm_active_peers();
-    if (active < 2) {
+    if (active < 2) { // This is the last active node
         terminate_cib(__func__, 0);
         return;
     }
 
-    crm_info("Sending disconnect notification to %d peers...", active);
+    crm_info("Sending shutdown request to %d peers", active);
 
     leaving = create_xml_node(NULL, "exit-notification");
     crm_xml_add(leaving, F_TYPE, "cib");
