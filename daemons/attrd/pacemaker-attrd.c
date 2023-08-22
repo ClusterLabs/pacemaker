@@ -279,7 +279,7 @@ main(int argc, char **argv)
 
         attrd_exit_status = CRM_EX_OK;
         g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status, "%s", msg);
-        crm_err(msg);
+        crm_err("%s", msg);
         goto done;
     }
 
