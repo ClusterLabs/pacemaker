@@ -10,6 +10,7 @@
 # Common conventions for files that should be ignored
 *~
 *.bz2
+*.cflow
 *.diff
 *.orig
 *.patch
