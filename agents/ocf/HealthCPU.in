@@ -67,6 +67,15 @@ the #health-cpu will go red if the %idle of the CPU falls below 10%.
 <content type="string" default="10"/>
 </parameter>
 
+<parameter name="dampening" reloadable="1">
+<longdesc lang="en">
+The time to wait (dampening) in seconds for further changes before writing
+</longdesc>
+<shortdesc lang="en">The time to wait (dampening) in seconds for further changes 
+before writing</shortdesc>
+<content type="string" default="30s"/>
+</parameter>
+
 </parameters>
 
 <actions>
@@ -117,16 +126,16 @@ healthcpu_monitor() {
 
         if [ $IDLE -lt ${OCF_RESKEY_red_limit} ] ; then
             # echo "System state RED!"
-            attrd_updater -n "#health-cpu" -U "red" -d "30s"
+            attrd_updater -n "#health-cpu" -B "red" -d ${OCF_RESKEY_dampening}
             return $OCF_SUCCESS
         fi
 
         if [ $IDLE -lt ${OCF_RESKEY_yellow_limit} ] ; then
             # echo "System state yellow."
-            attrd_updater -n "#health-cpu" -U "yellow" -d "30s"
+            attrd_updater -n "#health-cpu" -B "yellow" -d ${OCF_RESKEY_dampening}
         else
             # echo "System state green."
-            attrd_updater -n "#health-cpu" -U "green" -d "30s"
+            attrd_updater -n "#health-cpu" -B "green" -d ${OCF_RESKEY_dampening}
         fi
 
         return $OCF_SUCCESS
@@ -187,6 +196,9 @@ fi
 
 if [ -z "${OCF_RESKEY_yellow_limit}" ] ; then
     OCF_RESKEY_yellow_limit=50
+fi
+if [ -z "${OCF_RESKEY_dampening}" ]; then
+    OCF_RESKEY_dampening="30s"
 fi
 
 case "$__OCF_ACTION" in
