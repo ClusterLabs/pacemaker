@@ -330,6 +330,11 @@ resources.
 
 A single configuration element can be listed in any number of tags.
 
+.. important::
+
+   If listing nodes in a tag, you must list the node's ``id``, not name.
+
+
 Using Tags in Constraints and Resource Sets
 ___________________________________________
 
