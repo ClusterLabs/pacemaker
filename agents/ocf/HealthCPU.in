@@ -207,7 +207,7 @@ meta-data)      meta_data
                 ;;
 start)          healthcpu_start;;
 stop)           healthcpu_stop;;
-monitor)        healthcpu_monitor;;
+monitor)        healthcpu_validate && healthcpu_monitor;;
 reload-agent)   healthcpu_reload_agent;;
 validate-all)   healthcpu_validate;;
 usage|help)     healthcpu_usage
