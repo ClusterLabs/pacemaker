@@ -87,6 +87,44 @@ enum rsc_recovery_type {
 #endif
 };
 
+//! Search options for resources (exact resource ID always matches)
+enum pe_find {
+    //! Also match clone instance ID from resource history
+    pcmk_rsc_match_history          = (1 << 0),
+
+    //! Also match anonymous clone instances by base name
+    pcmk_rsc_match_anon_basename    = (1 << 1),
+
+    //! Match only clones and their instances, by either clone or instance ID
+    pcmk_rsc_match_clone_only       = (1 << 2),
+
+    //! If matching by node, compare current node instead of assigned node
+    pcmk_rsc_match_current_node     = (1 << 3),
+
+    //! \deprecated Do not use
+    pe_find_inactive                = (1 << 4),
+
+    //! Match clone instances (even unique) by base name as well as exact ID
+    pcmk_rsc_match_basename         = (1 << 5),
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated Use pcmk_rsc_match_history instead
+    pe_find_renamed     = pcmk_rsc_match_history,
+
+    //! \deprecated Use pcmk_rsc_match_anon_basename instead
+    pe_find_anon        = pcmk_rsc_match_anon_basename,
+
+    //! \deprecated Use pcmk_rsc_match_clone_only instead
+    pe_find_clone       = pcmk_rsc_match_clone_only,
+
+    //! \deprecated Use pcmk_rsc_match_current_node instead
+    pe_find_current     = pcmk_rsc_match_current_node,
+
+    //! \deprecated Use pcmk_rsc_match_basename instead
+    pe_find_any         = pcmk_rsc_match_basename,
+#endif
+};
+
 //!@{
 //! \deprecated Do not use
 enum pe_restart {

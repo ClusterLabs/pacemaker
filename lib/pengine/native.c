@@ -244,7 +244,8 @@ rsc_is_on_node(pe_resource_t *rsc, const pe_node_t *node, int flags)
     pe_rsc_trace(rsc, "Checking whether %s is on %s",
                  rsc->id, pe__node_name(node));
 
-    if (pcmk_is_set(flags, pe_find_current) && rsc->running_on) {
+    if (pcmk_is_set(flags, pcmk_rsc_match_current_node)
+        && (rsc->running_on != NULL)) {
 
         for (GList *iter = rsc->running_on; iter; iter = iter->next) {
             pe_node_t *loc = (pe_node_t *) iter->data;
@@ -254,11 +255,12 @@ rsc_is_on_node(pe_resource_t *rsc, const pe_node_t *node, int flags)
             }
         }
 
-    } else if (pcmk_is_set(flags, pe_find_inactive)
+    } else if (pcmk_is_set(flags, pe_find_inactive) // @COMPAT deprecated
                && (rsc->running_on == NULL)) {
         return true;
 
-    } else if (!pcmk_is_set(flags, pe_find_current) && rsc->allocated_to
+    } else if (!pcmk_is_set(flags, pcmk_rsc_match_current_node)
+               && (rsc->allocated_to != NULL)
                && (rsc->allocated_to->details == node->details)) {
         return true;
     }
@@ -274,7 +276,7 @@ native_find_rsc(pe_resource_t * rsc, const char *id, const pe_node_t *on_node,
 
     CRM_CHECK(id && rsc && rsc->id, return NULL);
 
-    if (flags & pe_find_clone) {
+    if (pcmk_is_set(flags, pcmk_rsc_match_clone_only)) {
         const char *rid = ID(rsc->xml);
 
         if (!pe_rsc_is_clone(pe__const_top_resource(rsc, false))) {
@@ -287,12 +289,12 @@ native_find_rsc(pe_resource_t * rsc, const char *id, const pe_node_t *on_node,
     } else if (!strcmp(id, rsc->id)) {
         match = true;
 
-    } else if (pcmk_is_set(flags, pe_find_renamed)
+    } else if (pcmk_is_set(flags, pcmk_rsc_match_history)
                && rsc->clone_name && strcmp(rsc->clone_name, id) == 0) {
         match = true;
 
-    } else if (pcmk_is_set(flags, pe_find_any)
-               || (pcmk_is_set(flags, pe_find_anon)
+    } else if (pcmk_is_set(flags, pcmk_rsc_match_basename)
+               || (pcmk_is_set(flags, pcmk_rsc_match_anon_basename)
                    && !pcmk_is_set(rsc->flags, pe_rsc_unique))) {
         match = pe_base_name_eq(rsc, id);
     }

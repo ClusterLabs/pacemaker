@@ -112,7 +112,7 @@ pcmk__find_constraint_resource(GList *rsc_list, const char *id)
     for (GList *iter = rsc_list; iter != NULL; iter = iter->next) {
         pe_resource_t *parent = iter->data;
         pe_resource_t *match = parent->fns->find_rsc(parent, id, NULL,
-                                                     pe_find_renamed);
+                                                     pcmk_rsc_match_history);
 
         if (match != NULL) {
             if (!pcmk__str_eq(match->id, id, pcmk__str_none)) {

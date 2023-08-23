@@ -690,10 +690,12 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
 
         // No resource specified means all resources match
         if (rsc_id) {
-            pe_resource_t *fail_rsc = pe_find_resource_with_flags(data_set->resources,
-                                                                  failed_id,
-                                                                  pe_find_renamed|pe_find_anon);
+            pe_resource_t *fail_rsc = NULL;
 
+            fail_rsc = pe_find_resource_with_flags(data_set->resources,
+                                                   failed_id,
+                                                   pcmk_rsc_match_history
+                                                   |pcmk_rsc_match_anon_basename);
             if (!fail_rsc || !pcmk__str_eq(rsc_id, fail_rsc->id, pcmk__str_casei)) {
                 continue;
             }
@@ -1466,7 +1468,9 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc,
             lookup_id = clone_strip(rsc->id);
         }
 
-        rsc = parent->fns->find_rsc(parent, lookup_id, node, pe_find_any|pe_find_current);
+        rsc = parent->fns->find_rsc(parent, lookup_id, node,
+                                    pcmk_rsc_match_basename
+                                    |pcmk_rsc_match_current_node);
         free(lookup_id);
         running = resource_is_running_on(rsc, host);
     }

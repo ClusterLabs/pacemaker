@@ -507,7 +507,8 @@ find_active_anon_instance(const pe_resource_t *clone, const char *id,
 
         // Use ->find_rsc() in case this is a cloned group
         active = clone->fns->find_rsc(child, id, node,
-                                      pe_find_clone|pe_find_current);
+                                      pcmk_rsc_match_clone_only
+                                      |pcmk_rsc_match_current_node);
         if (active != NULL) {
             return active;
         }
@@ -535,7 +536,8 @@ anonymous_known_on(const pe_resource_t *clone, const char *id,
         /* Use ->find_rsc() because this might be a cloned group, and knowing
          * that other members of the group are known here implies nothing.
          */
-        child = clone->fns->find_rsc(child, id, NULL, pe_find_clone);
+        child = clone->fns->find_rsc(child, id, NULL,
+                                     pcmk_rsc_match_clone_only);
         CRM_LOG_ASSERT(child != NULL);
         if (child != NULL) {
             if (g_hash_table_lookup(child->known_on, node->details->id)) {
