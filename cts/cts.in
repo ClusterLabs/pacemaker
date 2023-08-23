@@ -154,24 +154,73 @@ case $cluster_name in
     ;;
 esac
 
+# NOTES ABOUT THESE AWESOME REGULAR EXPRESSIONS:
+#
+# * We can't assume GNU sed.  Unfortunately, + and * are GNU extensions.  Thus,
+#   we have to use {1,} for + and {0,} for *.
+# * You don't need to add an extra set of escaped quotes around the sed expression
+#   arguments here - sed_in_place_remotely will do that for you.
+# * Only literal quotes need the triple backslashes.  All other special characters
+#   are fine with just a single one.
+# * sed needs a LOT of characters escaped - \, {, }, (, ), and | at least.
+
 if [ x$cmd != x ]; then
     config="${CONFIG_DIR}/pacemaker"
     case $cmd in
 	trace-ls|tls)
-	    cluster-helper -g $cluster_name -- grep PCMK_trace_functions $config
+	    cluster-helper -g $cluster_name -- grep "^[[:space:]]*PCMK_trace_functions" $config
 	    ;;
 	trace-add|tadd)
 	    echo "Adding $trace to PCMK_trace_functions"
-        sed_in_place_remotely "$config" "s/.*PCMK_trace_functions=/PCMK_trace_functions=$trace,/"
+        # Note that this only works if there's already a PCMK_trace_functions line.
+        # If there isn't one, create it with trace-set first.
+        #
+        # Match optional whitespace; then PCMK_trace_functions; then an equals
+        # surrounded by optional whitespace; then an optional quote; then whatever
+        # else (presumably, this is the list of previously traced functions with
+        # an optional trailing quote).  Replace the entire line with
+        # PCMK_trace_functions=<new_fn>,<previous trailing line contents>
+        sed_in_place_remotely "$config" "s/^[ \t]\{0,\}PCMK_trace_functions[ \t]\{0,\}=[ \t]\{0,\}\(\\\"\{0,1\}\)\(.\{1,\}\)/PCMK_trace_functions=\1$trace,\2/"
 	    ;;
 	trace-rm|trm)
 	    echo "Removing $trace from PCMK_trace_functions"
-        sed_in_place_remotely "$config" "s/.*PCMK_trace_functions=\\\\\\(.*\\\\\\)$trace,\\\\\\(.*\\\\\\)/PCMK_trace_functions=\\\\\\1\\\\\\2/"
-	    ;;
-	trace-set|tset)
-	    echo "Setting PCMK_trace_functions to '$trace'"
-        sed_in_place_remotely "$config" "s/.*PCMK_trace_functions.*/PCMK_trace_functions=$trace/"
-	    ;;
+        # A bunch of simple regexes are easier to follow than one giant one.
+        # Look for $trace in the following places on any line containing
+        # PCMK_trace_functions near the beginning:
+        #
+        # (1) At the start of a list -
+        #     Match one of a leading quote, or an equals followed by optional
+        #     whitespace; then $trace; then a comma.  Replace $trace with whatever
+        #     came before it.
+        # (2) In the middle of a list -
+        #     Match a comma; then $trace; then a comma.  Replace $trace with a
+        #     single comma.
+        # (3) At the end of a list -
+        #     Match a comma; then $trace; then one of a quote, whitespace, or
+        #     the EOL.  Replace $trace with whatever came after it.
+        # (4) All by itself -
+        #     Match one of a leading quote, whitespace, or equals followed by
+        #     optional whitespace; then $trace; then one of a trailing quote,
+        #     whitespace, or the EOL.  Replace $trace with whatever came before
+        #     and after it.
+        sed_in_place_remotely "$config" "/^[ \t]\{0,\}PCMK_trace_functions/ { \
+                                            s/\(\\\"\|=\|[ \t]\{1,\}\)$trace,/\1/ ; \
+                                            s/,$trace,/,/ ; \
+                                            s/,$trace\(\\\"\|[ \t]\{1,\}\|$\)/\1/ ; \
+                                            s/\(\\\"\|[ \t]\{1,\}\|=[ \t]\{0,\}\)$trace\(\\\"\|[ \t]\{1,\}\|$\)/\1\2/ }"
+        ;;
+    trace-set|tset)
+        echo "Setting PCMK_trace_functions to '$trace'"
+        # Do this in two separate sed commands:
+        #
+        # (1) Unconditionally remove any existing PCMK_trace_functions= lines.
+        # (2) Add a new line with $trace after the example line, which therefore
+        #     must exist.  Note that GNU sed would support "a PCMK_trace_functions=$trace",
+        #     but that's an extension.  For all other seds, we have to put the
+        #     command and the text on separate lines.
+        sed_in_place_remotely "$config" "/^[ \t]*PCMK_trace_functions/ d ; /^# Example: PCMK_trace_functions/ a\\\
+PCMK_trace_functions=\\\"$trace\\\""
+        ;;
     esac
     exit 0
 fi
