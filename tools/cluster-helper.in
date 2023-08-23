@@ -72,7 +72,7 @@ while true ; do
 	-I) replace=$2; shift; shift;;
 	--list|list) format=$2; command=list; shift; shift;;
 	--add|add) command=group-add; shift;;
-	--create|create) group="$2", command=group-create; shift; shift;;
+	--create|create) group="$2"; command=group-create; shift; shift;;
 	--run|run) command=run; shift;;
 	--copy|copy) command=copy; shift; break ;;
 	--key|key) command=key; shift; break ;;
