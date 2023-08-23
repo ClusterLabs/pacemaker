@@ -528,6 +528,39 @@ print_quorum(void)
 
 /*!
  * \internal
+ * \brief Extend a transaction by removing a node from a CIB section
+ *
+ * \param[in,out] cib        Active CIB connection
+ * \param[in]     element    CIB element containing node name and/or ID
+ * \param[in]     section    CIB section that \p element is in
+ * \param[in]     node_name  Name of node to purge (NULL to leave unspecified)
+ * \param[in]     node_id    Node ID of node to purge (0 to leave unspecified)
+ *
+ * \note At least one of node_name and node_id must be specified.
+ * \return Standard Pacemaker return code
+ */
+static int
+remove_from_section(cib_t *cib, const char *element, const char *section,
+                    const char *node_name, long node_id)
+{
+    xmlNode *xml = NULL;
+    int rc = pcmk_rc_ok;
+
+    xml = create_xml_node(NULL, element);
+    if (xml == NULL) {
+        return pcmk_rc_error;
+    }
+    crm_xml_add(xml, XML_ATTR_UNAME, node_name);
+    if (node_id > 0) {
+        crm_xml_set_id(xml, "%ld", node_id);
+    }
+    rc = cib->cmds->remove(cib, section, xml, cib_transaction);
+    free_xml(xml);
+    return (rc >= 0)? pcmk_rc_ok : pcmk_legacy2rc(rc);
+}
+
+/*!
+ * \internal
  * \brief Purge a node from CIB
  *
  * \param[in] node_name  Name of node to purge (or NULL to leave unspecified)
@@ -540,49 +573,41 @@ static int
 purge_node_from_cib(const char *node_name, long node_id)
 {
     int rc = pcmk_rc_ok;
+    int commit_rc = pcmk_rc_ok;
     cib_t *cib = NULL;
-    xmlNode *xml = NULL;
 
-    // Connect to CIB
+    // Connect to CIB and start a transaction
     cib = cib_new();
     if (cib == NULL) {
         return ENOTCONN;
     }
     rc = cib->cmds->signon(cib, crm_system_name, cib_command);
+    if (rc == pcmk_ok) {
+        rc = cib->cmds->init_transaction(cib);
+    }
     if (rc != pcmk_ok) {
         rc = pcmk_legacy2rc(rc);
-        goto done;
+        cib__clean_up_connection(&cib);
+        return rc;
     }
 
-    // Remove from configuration section
-    xml = create_xml_node(NULL, XML_CIB_TAG_NODE);
-    crm_xml_add(xml, XML_ATTR_UNAME, node_name);
-    if (node_id > 0) {
-        crm_xml_set_id(xml, "%ld", node_id);
-    }
-    rc = cib->cmds->remove(cib, XML_CIB_TAG_NODES, xml, cib_sync_call);
-    if (rc != pcmk_ok) {
-        rc = pcmk_legacy2rc(rc);
-        goto done;
-    }
-    free_xml(xml);
-
-    // Remove from status section
-    xml = create_xml_node(NULL, XML_CIB_TAG_STATE);
-    crm_xml_add(xml, XML_ATTR_UNAME, node_name);
-    if (node_id > 0) {
-        crm_xml_set_id(xml, "%ld", node_id);
-    }
-    rc = cib->cmds->remove(cib, XML_CIB_TAG_STATUS, xml, cib_sync_call);
-    rc = pcmk_legacy2rc(rc);
+    // Remove from configuration and status
+    rc = remove_from_section(cib, XML_CIB_TAG_NODE, XML_CIB_TAG_NODES,
+                             node_name, node_id);
     if (rc == pcmk_rc_ok) {
+        rc = remove_from_section(cib, XML_CIB_TAG_STATE, XML_CIB_TAG_STATUS,
+                                 node_name, node_id);
+    }
+
+    // Commit the transaction
+    commit_rc = cib->cmds->end_transaction(cib, (rc == pcmk_rc_ok),
+                                           cib_sync_call);
+    cib__clean_up_connection(&cib);
+
+    if ((rc == pcmk_rc_ok) && (commit_rc == pcmk_ok)) {
         crm_debug("Purged node %s (%ld) from CIB",
                   pcmk__s(node_name, "by ID"), node_id);
     }
-
-done:
-    free_xml(xml);
-    cib__clean_up_connection(&cib);
     return rc;
 }
 
