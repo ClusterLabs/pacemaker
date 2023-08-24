@@ -192,6 +192,8 @@ struct timer_rec_s {
 
 cib_t *cib_new_variant(void);
 
+int cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset);
+
 bool cib__element_in_patchset(const xmlNode *patchset, const char *element);
 
 int cib_perform_op(const char *op, int call_options, cib__op_fn_t fn,

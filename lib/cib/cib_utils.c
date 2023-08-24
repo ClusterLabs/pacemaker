@@ -78,6 +78,44 @@ cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, int *upda
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Get the XML patchset from a CIB diff notification
+ *
+ * \param[in]  msg       CIB diff notification
+ * \param[out] patchset  Where to store XML patchset
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
+{
+    int rc = pcmk_err_generic;
+
+    CRM_ASSERT(patchset != NULL);
+    *patchset = NULL;
+
+    if (msg == NULL) {
+        crm_err("CIB diff notification received with no XML");
+        return ENOMSG;
+    }
+
+    if ((crm_element_value_int(msg, F_CIB_RC, &rc) != 0) || (rc != pcmk_ok)) {
+        crm_warn("Ignore failed CIB update: %s " CRM_XS " rc=%d",
+                 pcmk_strerror(rc), rc);
+        crm_log_xml_debug(msg, "failed");
+        return pcmk_legacy2rc(rc);
+    }
+
+    *patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
+
+    if (*patchset == NULL) {
+        crm_err("CIB diff notification received with no patchset");
+        return ENOMSG;
+    }
+    return pcmk_rc_ok;
+}
+
 #define XPATH_DIFF_V1 "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED
 
 /*!

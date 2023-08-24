@@ -134,25 +134,9 @@ handle_cib_disconnect(gpointer user_data)
 static void
 do_cib_updated(const char *event, xmlNode * msg)
 {
-    int rc = pcmk_err_generic;
     const xmlNode *patchset = NULL;
 
-    if (msg == NULL) {
-        crm_warn("CIB %s%snotification received with no message XML",
-                 pcmk__s(event, ""), ((event != NULL)? " " : ""));
-        return;
-    }
-
-    if ((crm_element_value_int(msg, F_CIB_RC, &rc) != 0) || (rc != pcmk_ok)) {
-        crm_warn("Ignore failed CIB update: %s (%d)", pcmk_strerror(rc), rc);
-        crm_log_xml_debug(msg, "failed");
-        return;
-    }
-
-    patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
-    if (patchset == NULL) {
-        crm_warn("CIB %s notification received with no patchset XML",
-                 pcmk__s(event, ""), ((event != NULL)? " " : ""));
+    if (cib__get_notify_patchset(msg, &patchset) != pcmk_rc_ok) {
         return;
     }
 
