@@ -23,7 +23,6 @@ if BUILD_CIBSECRETS
 sbin_SCRIPTS		+= cibsecret
 endif
 noinst_SCRIPTS		= cluster-clean		\
-			  cluster-init		\
 			  cluster-helper	\
 			  pcmk_simtimes
 

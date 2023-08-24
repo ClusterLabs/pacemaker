@@ -25,7 +25,6 @@ clean=0
 kill=0
 run=0
 boot=0
-setup=0
 target=rhel-7
 cmd=""
 trace=""
@@ -35,7 +34,7 @@ patterns="-e CTS:"
 
 
 helpmsg=$(cat <<EOF
-Usage: %s [options] {[setup [TARGET]] | [OTHER-CMDS]}
+Usage: %s [options] {[CMDS]}
 
 [--]help, -h            show help screen and exit
 -x                      turn on debugging
@@ -55,7 +54,6 @@ Usage: %s [options] {[setup [TARGET]] | [OTHER-CMDS]}
 [--]boot, start         request CTS run (with --boot option)
 [--]clean               request cleaning up after CTS run
 [--]install, --inst     request installing packages to get ready to run CTS
-[--]setup               request initialization to get ready to run CTS
 trace-ls, tls           list traced functions
 trace-add, tadd FUNC    add a function to the list of traced ones
 trace-rm, trm FUNC      remove a function from the list of traced ones
@@ -88,7 +86,6 @@ while true; do
 	--boot|boot|start) boot=1; clean=1; shift; break;;
 	--clean|clean) clean=1; shift;;
 	--inst|--install|install) install=1; clean=1; shift;;
-	--setup|setup) setup=1; shift;;
 	trace-ls|tls) cmd=$1; shift;;
 	trace-add|tadd|trace-rm|trm|trace-set|tset) cmd=$1; trace=$2; shift; shift;;
 	f*)
@@ -186,11 +183,7 @@ if [ $install = 1 ]; then
     cluster-helper -g $cluster_name -- yum install -y pacemaker pacemaker-debuginfo pacemaker-cts libqb libqb-debuginfo
 fi
 
-if [ $setup = 1 ]; then
-    cluster-init -g $cluster_name $target -u --test
-    exit 0
-
-elif [ $boot = 1 ]; then
+if [ $boot = 1 ]; then
     $cts_root/cts-lab -r -c -g $cluster_name --boot
     rc=$?
     if [ $rc = 0 ]; then
