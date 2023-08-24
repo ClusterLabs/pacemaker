@@ -33,8 +33,18 @@ attrd_election_cb(gpointer user_data)
     /* Update the peers after an election */
     attrd_peer_sync(NULL, NULL);
 
-    /* Update the CIB after an election */
-    attrd_write_attributes(attrd_write_all);
+    /* After winning an election, update the CIB with the values of all
+     * attributes as the winner knows them.
+     *
+     * However, do not write out any "shutdown" attributes. A node that is
+     * shutting down will have all its transient attributes removed from the CIB
+     * when its controller exits, and from the attribute manager's memory (on
+     * remaining nodes) when its attribute manager exits; if an election is won
+     * between when those two things happen, we don't want to write the shutdown
+     * attribute back out, which would cause the node to immediately shut down
+     * the next time it rejoins.
+     */
+    attrd_write_attributes(attrd_write_all|attrd_write_skip_shutdown);
     return G_SOURCE_REMOVE;
 }
 

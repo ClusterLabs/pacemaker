@@ -180,6 +180,7 @@ enum attrd_write_options {
     attrd_write_changed         = 0,
     attrd_write_all             = (1 << 0),
     attrd_write_no_delay        = (1 << 1),
+    attrd_write_skip_shutdown   = (1 << 2),
 };
 
 void attrd_write_attribute(attribute_t *a, bool ignore_delay);
