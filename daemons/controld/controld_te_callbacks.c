@@ -19,11 +19,6 @@
 
 #include <pacemaker-controld.h>
 
-void te_update_confirm(const char *event, xmlNode * msg);
-
-#define RSC_OP_PREFIX "//" XML_TAG_DIFF_ADDED "//" XML_TAG_CIB \
-                      "//" XML_LRM_TAG_RSC_OP "[@" XML_ATTR_ID "='"
-
 // An explicit shutdown-lock of 0 means the lock has been cleared
 static bool
 shutdown_lock_cleared(xmlNode *lrm_resource)
@@ -33,172 +28,6 @@ shutdown_lock_cleared(xmlNode *lrm_resource)
     return (crm_element_value_epoch(lrm_resource, XML_CONFIG_ATTR_SHUTDOWN_LOCK,
                                     &shutdown_lock) == pcmk_ok)
            && (shutdown_lock == 0);
-}
-
-static void
-te_update_diff_v1(const char *event, xmlNode *diff)
-{
-    int lpc, max;
-    xmlXPathObject *xpathObj = NULL;
-    GString *rsc_op_xpath = NULL;
-
-    CRM_CHECK(diff != NULL, return);
-
-    pcmk__output_set_log_level(controld_globals.logger_out, LOG_TRACE);
-    controld_globals.logger_out->message(controld_globals.logger_out,
-                                         "xml-patchset", diff);
-
-    if (cib__config_changed_v1(NULL, NULL, &diff)) {
-        abort_transition(INFINITY, pcmk__graph_restart, "Non-status change",
-                         diff);
-        goto bail;              /* configuration changed */
-    }
-
-    /* Tickets Attributes - Added/Updated */
-    xpathObj =
-        xpath_search(diff,
-                     "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_CIB_TAG_TICKETS);
-    if (numXpathResults(xpathObj) > 0) {
-        xmlNode *aborted = getXpathResult(xpathObj, 0);
-
-        abort_transition(INFINITY, pcmk__graph_restart,
-                         "Ticket attribute: update", aborted);
-        goto bail;
-
-    }
-    freeXpathObject(xpathObj);
-
-    /* Tickets Attributes - Removed */
-    xpathObj =
-        xpath_search(diff,
-                     "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_REMOVED "//" XML_CIB_TAG_TICKETS);
-    if (numXpathResults(xpathObj) > 0) {
-        xmlNode *aborted = getXpathResult(xpathObj, 0);
-
-        abort_transition(INFINITY, pcmk__graph_restart,
-                         "Ticket attribute: removal", aborted);
-        goto bail;
-    }
-    freeXpathObject(xpathObj);
-
-    /* Transient Attributes - Removed */
-    xpathObj =
-        xpath_search(diff,
-                     "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_REMOVED "//"
-                     XML_TAG_TRANSIENT_NODEATTRS);
-    if (numXpathResults(xpathObj) > 0) {
-        xmlNode *aborted = getXpathResult(xpathObj, 0);
-
-        abort_transition(INFINITY, pcmk__graph_restart,
-                         "Transient attribute: removal", aborted);
-        goto bail;
-
-    }
-    freeXpathObject(xpathObj);
-
-    // Check for lrm_resource entries
-    xpathObj = xpath_search(diff,
-                            "//" F_CIB_UPDATE_RESULT
-                            "//" XML_TAG_DIFF_ADDED
-                            "//" XML_LRM_TAG_RESOURCE);
-    max = numXpathResults(xpathObj);
-
-    /*
-     * Updates by, or in response to, graph actions will never affect more than
-     * one resource at a time, so such updates indicate an LRM refresh. In that
-     * case, start a new transition rather than check each result individually,
-     * which can result in _huge_ speedups in large clusters.
-     *
-     * Unfortunately, we can only do so when there are no pending actions.
-     * Otherwise, we could mistakenly throw away those results here, and
-     * the cluster will stall waiting for them and time out the operation.
-     */
-    if ((controld_globals.transition_graph->pending == 0) && (max > 1)) {
-        crm_debug("Ignoring resource operation updates due to history refresh of %d resources",
-                  max);
-        crm_log_xml_trace(diff, "lrm-refresh");
-        abort_transition(INFINITY, pcmk__graph_restart, "History refresh",
-                         NULL);
-        goto bail;
-    }
-
-    if (max == 1) {
-        xmlNode *lrm_resource = getXpathResult(xpathObj, 0);
-
-        if (shutdown_lock_cleared(lrm_resource)) {
-            // @TODO would be more efficient to abort once after transition done
-            abort_transition(INFINITY, pcmk__graph_restart,
-                             "Shutdown lock cleared", lrm_resource);
-            // Still process results, so we stop timers and update failcounts
-        }
-    }
-    freeXpathObject(xpathObj);
-
-    /* Process operation updates */
-    xpathObj =
-        xpath_search(diff,
-                     "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_LRM_TAG_RSC_OP);
-    max = numXpathResults(xpathObj);
-    if (max > 0) {
-        int lpc = 0;
-
-        for (lpc = 0; lpc < max; lpc++) {
-            xmlNode *rsc_op = getXpathResult(xpathObj, lpc);
-            const char *node = get_node_id(rsc_op);
-
-            process_graph_event(rsc_op, node);
-        }
-    }
-    freeXpathObject(xpathObj);
-
-    /* Detect deleted (as opposed to replaced or added) actions - eg. crm_resource -C */
-    xpathObj = xpath_search(diff, "//" XML_TAG_DIFF_REMOVED "//" XML_LRM_TAG_RSC_OP);
-    max = numXpathResults(xpathObj);
-    for (lpc = 0; lpc < max; lpc++) {
-        const char *op_id = NULL;
-        xmlXPathObject *op_match = NULL;
-        xmlNode *match = getXpathResult(xpathObj, lpc);
-
-        CRM_LOG_ASSERT(match != NULL);
-        if(match == NULL) { continue; };
-
-        op_id = ID(match);
-
-        if (rsc_op_xpath == NULL) {
-            rsc_op_xpath = g_string_new(RSC_OP_PREFIX);
-        } else {
-            g_string_truncate(rsc_op_xpath, sizeof(RSC_OP_PREFIX) - 1);
-        }
-        pcmk__g_strcat(rsc_op_xpath, op_id, "']", NULL);
-
-        op_match = xpath_search(diff, (const char *) rsc_op_xpath->str);
-        if (numXpathResults(op_match) == 0) {
-            /* Prevent false positives by matching cancelations too */
-            const char *node = get_node_id(match);
-            pcmk__graph_action_t *cancelled = get_cancel_action(op_id, node);
-
-            if (cancelled == NULL) {
-                crm_debug("No match for deleted action %s (%s on %s)",
-                          (const char *) rsc_op_xpath->str, op_id, node);
-                abort_transition(INFINITY, pcmk__graph_restart,
-                                 "Resource op removal", match);
-                freeXpathObject(op_match);
-                goto bail;
-
-            } else {
-                crm_debug("Deleted lrm_rsc_op %s on %s was for graph event %d",
-                          op_id, node, cancelled->id);
-            }
-        }
-
-        freeXpathObject(op_match);
-    }
-
-  bail:
-    freeXpathObject(xpathObj);
-    if (rsc_op_xpath != NULL) {
-        g_string_free(rsc_op_xpath, TRUE);
-    }
 }
 
 static void
@@ -398,7 +227,7 @@ process_cib_diff(xmlNode *cib, xmlNode *change, const char *op,
 }
 
 static void
-te_update_diff_v2(xmlNode *diff)
+te_process_update_diff(xmlNode *diff)
 {
     crm_log_xml_trace(diff, "Patch:Raw");
 
@@ -526,7 +355,6 @@ te_update_diff(const char *event, xmlNode * msg)
     xmlNode *diff = NULL;
     const char *op = NULL;
     int rc = -EINVAL;
-    int format = 1;
     int p_add[] = { 0, 0, 0 };
     int p_del[] = { 0, 0, 0 };
 
@@ -558,18 +386,7 @@ te_update_diff(const char *event, xmlNode * msg)
               p_del[0], p_del[1], p_del[2], p_add[0], p_add[1], p_add[2],
               fsa_state2string(controld_globals.fsa_state));
 
-    crm_element_value_int(diff, "format", &format);
-    switch (format) {
-        case 1:
-            te_update_diff_v1(event, diff);
-            break;
-        case 2:
-            te_update_diff_v2(diff);
-            break;
-        default:
-            crm_warn("Ignoring malformed CIB update (unknown patch format %d)",
-                     format);
-    }
+    te_process_update_diff(diff);
     controld_remove_all_outside_events();
 }
 
