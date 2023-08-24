@@ -32,6 +32,10 @@ trace=""
 custom_log=""
 patterns="-e CTS:"
 
+function sed_in_place_remotely() {
+    cluster-helper -g $cluster_name -- cp -p "\"$1\"" "\"$1.sed\"" \&\& sed -e "\"$2\"" "\"$1\"" \> "\"$1.sed\"" \&\& mv "\"$1.sed\"" "\"$1\""
+}
+
 
 helpmsg=$(cat <<EOF
 Usage: %s [options] {[CMDS]}
@@ -153,15 +157,15 @@ if [ x$cmd != x ]; then
 	    ;;
 	trace-add|tadd)
 	    echo "Adding $trace to PCMK_trace_functions"
-	    cluster-helper -g $cluster_name -- sed -i "s/.*PCMK_trace_functions=/PCMK_trace_functions=$trace,/" $config
+        sed_in_place_remotely "$config" "s/.*PCMK_trace_functions=/PCMK_trace_functions=$trace,/"
 	    ;;
 	trace-rm|trm)
 	    echo "Removing $trace from PCMK_trace_functions"
-	    cluster-helper -g $cluster_name -- sed -i "s/.*PCMK_trace_functions=\\\\\\(.*\\\\\\)$trace,\\\\\\(.*\\\\\\)/PCMK_trace_functions=\\\\\\1\\\\\\2/" $config
+        sed_in_place_remotely "$config" "s/.*PCMK_trace_functions=\\\\\\(.*\\\\\\)$trace,\\\\\\(.*\\\\\\)/PCMK_trace_functions=\\\\\\1\\\\\\2/"
 	    ;;
 	trace-set|tset)
 	    echo "Setting PCMK_trace_functions to '$trace'"
-	    cluster-helper -g $cluster_name -- sed -i "s/.*PCMK_trace_functions.*/PCMK_trace_functions=$trace/" $config
+        sed_in_place_remotely "$config" "s/.*PCMK_trace_functions.*/PCMK_trace_functions=$trace/"
 	    ;;
     esac
     exit 0

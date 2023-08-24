@@ -101,9 +101,13 @@ gnulib-update:
 	cd $(top_srcdir) && maint/gnulib/gnulib-tool --source-base=lib/gnu 	\
 		--lgpl=2 --no-vc-files --no-conditional-dependencies --libtool	\
 		$(GNU_MODS_AVOID:%=--avoid %) --import $(GNU_MODS)
-	sed -i -e "s/bundled(gnulib).*/bundled(gnulib) = `date +'%Y%m%d'`/"	\
-		../rpm/pacemaker.spec.in
-	sed -i -e "s/_GL_EXTERN_INLINE/_GL_INLINE/" 				\
+	cp -p ../rpm/pacemaker.spec.in ../rpm/pacemaker.spec.in.$$
+	sed -e "s/bundled(gnulib).*/bundled(gnulib) = `date +'%Y%m%d'`/"	\
+		../rpm/pacemaker.spec.in > ../rpm/pacemaker.spec.in.$$
+	mv ../rpm/pacemaker.spec.in.$$ ../rpm/pacemaker.spec.in
+	cp -p ../lib/gnu/md5.c ../lib/gnu/md5.c.$$
+	sed -e "s/_GL_EXTERN_INLINE/_GL_INLINE/" 				\
 		-e "s#left_over -= 64;#left_over \&= 63; /* helps static analysis */#"	\
 		-e "s#&ctx->buffer\[16\]#\&(((char *) ctx->buffer)[64]) /* helps static analysis */#"	\
-		../lib/gnu/md5.c
+		../lib/gnu/md5.c > ../lib/gnu/md5.c.$$
+	mv ../lib/gnu/md5.c.$$ ../lib/gnu/md5.c
