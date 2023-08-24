@@ -72,6 +72,9 @@ crm_element_name(const xmlNode *xml)
 }
 
 //! \deprecated Do not use (will be removed in a future release)
+xmlNode *diff_xml_object(xmlNode *left, xmlNode *right, gboolean suppress);
+
+//! \deprecated Do not use (will be removed in a future release)
 xmlNode *xml_create_patchset(int format, xmlNode *source, xmlNode *target,
                              bool *config, bool manage_version);
 

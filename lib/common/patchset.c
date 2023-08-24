@@ -1139,34 +1139,6 @@ purge_diff_markers(xmlNode *a_node)
     }
 }
 
-xmlNode *
-diff_xml_object(xmlNode *old, xmlNode *new, gboolean suppress)
-{
-    xmlNode *tmp1 = NULL;
-    xmlNode *diff = create_xml_node(NULL, XML_TAG_DIFF);
-    xmlNode *removed = create_xml_node(diff, XML_TAG_DIFF_REMOVED);
-    xmlNode *added = create_xml_node(diff, XML_TAG_DIFF_ADDED);
-
-    crm_xml_add(diff, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
-
-    tmp1 = subtract_xml_object(removed, old, new, FALSE, NULL, "removed:top");
-    if (suppress && (tmp1 != NULL) && can_prune_leaf(tmp1)) {
-        free_xml(tmp1);
-    }
-
-    tmp1 = subtract_xml_object(added, new, old, TRUE, NULL, "added:top");
-    if (suppress && (tmp1 != NULL) && can_prune_leaf(tmp1)) {
-        free_xml(tmp1);
-    }
-
-    if ((added->children == NULL) && (removed->children == NULL)) {
-        free_xml(diff);
-        diff = NULL;
-    }
-
-    return diff;
-}
-
 static xmlNode *
 subtract_xml_comment(xmlNode *parent, xmlNode *left, xmlNode *right,
                      gboolean *changed)
@@ -1454,6 +1426,34 @@ apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
     }
 
     return result;
+}
+
+xmlNode *
+diff_xml_object(xmlNode *old, xmlNode *new, gboolean suppress)
+{
+    xmlNode *tmp1 = NULL;
+    xmlNode *diff = create_xml_node(NULL, XML_TAG_DIFF);
+    xmlNode *removed = create_xml_node(diff, XML_TAG_DIFF_REMOVED);
+    xmlNode *added = create_xml_node(diff, XML_TAG_DIFF_ADDED);
+
+    crm_xml_add(diff, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+
+    tmp1 = subtract_xml_object(removed, old, new, FALSE, NULL, "removed:top");
+    if (suppress && (tmp1 != NULL) && can_prune_leaf(tmp1)) {
+        free_xml(tmp1);
+    }
+
+    tmp1 = subtract_xml_object(added, new, old, TRUE, NULL, "added:top");
+    if (suppress && (tmp1 != NULL) && can_prune_leaf(tmp1)) {
+        free_xml(tmp1);
+    }
+
+    if ((added->children == NULL) && (removed->children == NULL)) {
+        free_xml(diff);
+        diff = NULL;
+    }
+
+    return diff;
 }
 
 static void
