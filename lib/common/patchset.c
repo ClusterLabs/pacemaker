@@ -253,7 +253,7 @@ xml_create_patchset_v1(xmlNode *source, xmlNode *target, bool config,
 }
 
 static xmlNode *
-xml_create_patchset_v2(xmlNode *source, xmlNode *target)
+xml_create_patchset_v2(const xmlNode *source, xmlNode *target)
 {
     int lpc = 0;
     GList *gIter = NULL;
@@ -277,6 +277,11 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
     docpriv = target->doc->_private;
 
     patchset = create_xml_node(NULL, XML_TAG_DIFF);
+
+    /* Currently, Pacemaker generates only v2 patchsets (unless deprecated code
+     * is used). However, we must continue to include the format number, because
+     * older Pacemaker versions assume "no format attribute" means v1.
+     */
     crm_xml_add_int(patchset, "format", 2);
 
     version = create_xml_node(patchset, XML_DIFF_VERSION);
@@ -316,61 +321,130 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
     return patchset;
 }
 
+/*!
+ * \internal
+ * \brief Update CIB version counters after changes
+ *
+ * \param[in]     source          XML object before changes
+ * \param[in,out] target          XML object with changes applied
+ * \param[in]     config_changed  Whether the configuration changed
+ */
+static void
+update_counters(const xmlNode *source, xmlNode *target, bool config_changed)
+{
+    int source_generation_admin = 0;
+    int source_generation = 0;
+    int source_num_updates = 0;
+
+    int target_generation_admin = 0;
+    int target_generation = 0;
+    int target_num_updates = 0;
+
+    crm_element_value_int(source, XML_ATTR_GENERATION_ADMIN,
+                          &source_generation_admin);
+    crm_element_value_int(source, XML_ATTR_GENERATION, &source_generation);
+    crm_element_value_int(source, XML_ATTR_NUMUPDATES, &source_num_updates);
+
+    crm_element_value_int(target, XML_ATTR_GENERATION_ADMIN,
+                          &target_generation_admin);
+    crm_element_value_int(target, XML_ATTR_GENERATION, &target_generation);
+    crm_element_value_int(target, XML_ATTR_NUMUPDATES, &target_num_updates);
+
+    if (config_changed) {
+        crm_xml_add_int(target, XML_ATTR_GENERATION, ++target_generation);
+
+        target_num_updates = 0;
+        crm_xml_add_int(target, XML_ATTR_NUMUPDATES, target_num_updates);
+
+    } else {
+        crm_xml_add_int(target, XML_ATTR_NUMUPDATES, ++target_num_updates);
+    }
+
+    crm_trace("%s changed (%d.%d.%d -> %d.%d.%d)",
+              (config_changed? "Config" : "Status"),
+              source_generation_admin, source_generation, source_num_updates,
+              target_generation_admin, target_generation, target_num_updates);
+}
+
+/*!
+ * \internal
+ * \brief Create an XML patchset showing CIB changes
+ *
+ * \param[in]     source           XML object before changes
+ * \param[in,out] target           XML object with changes applied
+ * \param[out]    config_changed   Where to store whether the configuration
+ *                                 changed
+ * \param[in]     manage_counters  Whether to update \c XML_ATTR_GENERATION or
+ *                                 \c XML_ATTR_NUMUPDATES counters in \p target
+ *                                 as appropriate
+ *
+ * \note This function always creates a v2 patchset. See the \c diff API schema
+ *       for details on format.
+ * \note If change tracking was not enabled while making changes, this function
+ *       returns \c NULL.
+ */
+xmlNode *
+pcmk__xml_create_patchset(const xmlNode *source, xmlNode *target,
+                          bool *config_changed, bool manage_version)
+{
+    bool config = false;
+
+    CRM_CHECK((source != NULL) && (target != NULL), return NULL);
+
+    xml_acl_disable(target);
+
+    if (!xml_document_dirty(target)) {
+        crm_trace("No change");
+        return NULL;
+    }
+
+    config = is_config_change(target);
+    if (config_changed != NULL) {
+        *config_changed = config;
+    }
+
+    if (manage_version) {
+        update_counters(source, target, config);
+    }
+    return xml_create_patchset_v2(source, target);
+}
+
 xmlNode *
 xml_create_patchset(int format, xmlNode *source, xmlNode *target,
                     bool *config_changed, bool manage_version)
 {
-    int counter = 0;
-    bool config = FALSE;
-    xmlNode *patch = NULL;
-    const char *version = crm_element_value(source, XML_ATTR_CRM_VERSION);
-
-    xml_acl_disable(target);
-    if (!xml_document_dirty(target)) {
-        crm_trace("No change %d", format);
-        return NULL; /* No change */
-    }
-
-    config = is_config_change(target);
-    if (config_changed) {
-        *config_changed = config;
-    }
-
-    if (manage_version && config) {
-        crm_trace("Config changed %d", format);
-        crm_xml_add(target, XML_ATTR_NUMUPDATES, "0");
-
-        crm_element_value_int(target, XML_ATTR_GENERATION, &counter);
-        crm_xml_add_int(target, XML_ATTR_GENERATION, counter+1);
-
-    } else if (manage_version) {
-        crm_element_value_int(target, XML_ATTR_NUMUPDATES, &counter);
-        crm_trace("Status changed %d - %d %s", format, counter,
-                  crm_element_value(source, XML_ATTR_NUMUPDATES));
-        crm_xml_add_int(target, XML_ATTR_NUMUPDATES, (counter + 1));
-    }
-
-    if (format == 0) {
-        if (compare_version("3.0.8", version) < 0) {
-            format = 2;
-        } else {
-            format = 1;
-        }
-        crm_trace("Using patch format %d for version: %s", format, version);
-    }
+    bool config = false;
 
     switch (format) {
-        case 1:
-            patch = xml_create_patchset_v1(source, target, config, FALSE);
-            break;
+        case 0:
         case 2:
-            patch = xml_create_patchset_v2(source, target);
+            return pcmk__xml_create_patchset(source, target, config_changed,
+                                             manage_version);
+        case 1:
             break;
         default:
             crm_err("Unknown patch format: %d", format);
             return NULL;
     }
-    return patch;
+
+    CRM_CHECK((source != NULL) && (target != NULL), return NULL);
+
+    // Create v1 patchset
+    xml_acl_disable(target);
+    if (!xml_document_dirty(target)) {
+        crm_trace("No change %d", format);
+        return NULL;
+    }
+
+    config = is_config_change(target);
+    if (config_changed != NULL) {
+        *config_changed = config;
+    }
+
+    if (manage_version) {
+        update_counters(source, target, config);
+    }
+    return xml_create_patchset_v1(source, target, config, false);
 }
 
 void

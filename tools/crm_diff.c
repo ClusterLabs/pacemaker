@@ -239,7 +239,7 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
     }
     crm_log_xml_debug(object_2, (xml_file_2? xml_file_2: "target"));
 
-    output = xml_create_patchset(0, object_1, object_2, NULL, FALSE);
+    output = pcmk__xml_create_patchset(object_1, object_2, NULL, false);
 
     pcmk__output_set_log_level(logger_out, LOG_INFO);
     out_rc = pcmk__xml_show_changes(logger_out, object_2);

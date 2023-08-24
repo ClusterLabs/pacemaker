@@ -514,16 +514,7 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
     pcmk__strip_xml_text(scratch);
     fix_plus_plus_recursive(scratch);
 
-    if (!make_copy) {
-        /* At this point, patchset_cib is just the "cib" tag and its properties.
-         *
-         * The v1 format would barf on this, but we know the v2 patch
-         * format only needs it for the top-level version fields
-         */
-        local_diff = xml_create_patchset(2, patchset_cib, scratch,
-                                         config_changed, manage_counters);
-
-    } else {
+    if (make_copy) {
         static time_t expires = 0;
         time_t tm_now = time(NULL);
 
@@ -531,10 +522,10 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
             expires = tm_now + 60;  /* Validate clients are correctly applying v2-style diffs at most once a minute */
             with_digest = true;
         }
-
-        local_diff = xml_create_patchset(0, patchset_cib, scratch,
-                                         config_changed, manage_counters);
     }
+
+    local_diff = pcmk__xml_create_patchset(patchset_cib, scratch,
+                                           config_changed, manage_counters);
 
     // Create a log output object only if we're going to use it
     pcmk__if_tracing(
