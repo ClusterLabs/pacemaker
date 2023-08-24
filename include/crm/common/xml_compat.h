@@ -72,6 +72,9 @@ crm_element_name(const xmlNode *xml)
 }
 
 //! \deprecated Do not use (will be removed in a future release)
+gboolean can_prune_leaf(xmlNode *xml_node);
+
+//! \deprecated Do not use (will be removed in a future release)
 xmlNode *subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
                              gboolean full, gboolean *changed,
                              const char *marker);

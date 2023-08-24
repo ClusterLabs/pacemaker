@@ -139,11 +139,6 @@ char *dump_xml_formatted_with_text(const xmlNode *xml);
 char *dump_xml_unformatted(const xmlNode *xml);
 
 /*
- * Diff related Functions
- */
-gboolean can_prune_leaf(xmlNode * xml_node);
-
-/*
  * Searching & Modifying
  */
 xmlNode *find_xml_node(const xmlNode *root, const char *search_path,

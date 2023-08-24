@@ -2084,44 +2084,6 @@ xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
     mark_xml_changes(old_xml, new_xml, FALSE);
 }
 
-gboolean
-can_prune_leaf(xmlNode * xml_node)
-{
-    xmlNode *cIter = NULL;
-    gboolean can_prune = TRUE;
-
-    CRM_CHECK(xml_node != NULL, return FALSE);
-
-    if (pcmk__strcase_any_of((const char *) xml_node->name,
-                             XML_TAG_RESOURCE_REF, XML_CIB_TAG_OBJ_REF,
-                             XML_ACL_TAG_ROLE_REF, XML_ACL_TAG_ROLE_REFv1,
-                             NULL)) {
-        return FALSE;
-    }
-
-    for (xmlAttrPtr a = pcmk__xe_first_attr(xml_node); a != NULL; a = a->next) {
-        const char *p_name = (const char *) a->name;
-
-        if (strcmp(p_name, XML_ATTR_ID) == 0) {
-            continue;
-        }
-        can_prune = FALSE;
-    }
-
-    cIter = pcmk__xml_first_child(xml_node);
-    while (cIter) {
-        xmlNode *child = cIter;
-
-        cIter = pcmk__xml_next(cIter);
-        if (can_prune_leaf(child)) {
-            free_xml(child);
-        } else {
-            can_prune = FALSE;
-        }
-    }
-    return can_prune;
-}
-
 /*!
  * \internal
  * \brief Find a comment with matching content in specified XML
@@ -2735,6 +2697,44 @@ xml_has_children(const xmlNode * xml_root)
         return TRUE;
     }
     return FALSE;
+}
+
+gboolean
+can_prune_leaf(xmlNode *xml_node)
+{
+    xmlNode *cIter = NULL;
+    gboolean can_prune = TRUE;
+
+    CRM_CHECK(xml_node != NULL, return FALSE);
+
+    if (pcmk__strcase_any_of((const char *) xml_node->name,
+                             XML_TAG_RESOURCE_REF, XML_CIB_TAG_OBJ_REF,
+                             XML_ACL_TAG_ROLE_REF, XML_ACL_TAG_ROLE_REFv1,
+                             NULL)) {
+        return FALSE;
+    }
+
+    for (xmlAttrPtr a = pcmk__xe_first_attr(xml_node); a != NULL; a = a->next) {
+        const char *p_name = (const char *) a->name;
+
+        if (strcmp(p_name, XML_ATTR_ID) == 0) {
+            continue;
+        }
+        can_prune = FALSE;
+    }
+
+    cIter = pcmk__xml_first_child(xml_node);
+    while (cIter) {
+        xmlNode *child = cIter;
+
+        cIter = pcmk__xml_next(cIter);
+        if (can_prune_leaf(child)) {
+            free_xml(child);
+        } else {
+            can_prune = FALSE;
+        }
+    }
+    return can_prune;
 }
 
 // LCOV_EXCL_STOP
