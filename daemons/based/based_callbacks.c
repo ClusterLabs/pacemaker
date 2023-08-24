@@ -957,11 +957,9 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
         int diff_del_admin_epoch = 0;
 
         const char *digest = NULL;
-        int format = 1;
 
         CRM_LOG_ASSERT(result_diff != NULL);
         digest = crm_element_value(result_diff, XML_ATTR_DIGEST);
-        crm_element_value_int(result_diff, "format", &format);
 
         cib_diff_version_details(result_diff,
                                  &diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates,
@@ -975,10 +973,6 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
         pcmk__xe_set_bool_attr(msg, F_CIB_GLOBAL_UPDATE, true);
         crm_xml_add(msg, F_CIB_OPERATION, PCMK__CIB_REQUEST_APPLY_PATCH);
         crm_xml_add(msg, F_CIB_USER, CRM_DAEMON_USER);
-
-        if (format == 1) {
-            CRM_ASSERT(digest != NULL);
-        }
 
         add_message_xml(msg, F_CIB_UPDATE_DIFF, result_diff);
         crm_log_xml_explicit(msg, "copy");
@@ -1290,9 +1284,7 @@ prepare_input(const xmlNode *request, enum cib__op_type type,
     return input;
 }
 
-// v1 and v2 patch formats
 #define XPATH_CONFIG_CHANGE             \
-    "//" XML_CIB_TAG_CRMCONFIG " | "    \
     "//" XML_DIFF_CHANGE                \
     "[contains(@" XML_DIFF_PATH ",'/" XML_CIB_TAG_CRMCONFIG "/')]"
 
