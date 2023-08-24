@@ -127,7 +127,7 @@ handle_cib_disconnect(gpointer user_data)
         controld_clear_fsa_input_flags(R_CIB_CONNECTED);
 
     } else { // Expected
-        crm_info("Connection to the CIB manager terminated");
+        crm_info("Disconnected from the CIB manager");
     }
 }
 
@@ -186,7 +186,7 @@ controld_disconnect_cib_manager(void)
 
     CRM_ASSERT(cib_conn != NULL);
 
-    crm_info("Disconnecting from the CIB manager");
+    crm_debug("Disconnecting from the CIB manager");
 
     controld_clear_fsa_input_flags(R_CIB_CONNECTED);
 
@@ -201,8 +201,6 @@ controld_disconnect_cib_manager(void)
                                       cib_scope_local|cib_discard_reply);
         cib_conn->cmds->signoff(cib_conn);
     }
-
-    crm_notice("Disconnected from the CIB manager");
 }
 
 /* A_CIB_STOP, A_CIB_START, O_CIB_RESTART */

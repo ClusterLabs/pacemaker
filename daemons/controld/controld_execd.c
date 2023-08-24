@@ -52,14 +52,10 @@ static void
 lrm_connection_destroy(void)
 {
     if (pcmk_is_set(controld_globals.fsa_input_register, R_LRM_CONNECTED)) {
-        crm_crit("Connection to executor failed");
+        crm_crit("Lost connection to local executor");
         register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
         controld_clear_fsa_input_flags(R_LRM_CONNECTED);
-
-    } else {
-        crm_info("Disconnected from executor");
     }
-
 }
 
 static char *
@@ -378,10 +374,8 @@ do_lrm_control(long long action,
         }
 
         controld_clear_fsa_input_flags(R_LRM_CONNECTED);
-        crm_info("Disconnecting from the executor");
         lrm_state_disconnect(lrm_state);
         lrm_state_reset_tables(lrm_state, FALSE);
-        crm_notice("Disconnected from the executor");
     }
 
     if (action & A_LRM_CONNECT) {
