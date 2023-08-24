@@ -47,7 +47,7 @@ xml_show_patchset_header(pcmk__output_t *out, const xmlNode *patchset)
     xml_patch_versions(patchset, add, del);
 
     if ((add[0] != del[0]) || (add[1] != del[1]) || (add[2] != del[2])) {
-        const char *fmt = crm_element_value(patchset, "format");
+        const char *fmt = crm_element_value(patchset, PCMK_XA_FORMAT);
         const char *digest = crm_element_value(patchset, XML_ATTR_DIGEST);
 
         out->info(out, "Diff: --- %d.%d.%d %s", del[0], del[1], del[2], fmt);
@@ -318,7 +318,7 @@ xml_patchset_default(pcmk__output_t *out, va_list args)
         return pcmk_rc_no_output;
     }
 
-    crm_element_value_int(patchset, "format", &format);
+    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
     switch (format) {
         case 1:
             return xml_show_patchset_v1(out, patchset, pcmk__xml_fmt_pretty);
@@ -375,7 +375,7 @@ xml_patchset_log(pcmk__output_t *out, va_list args)
         return pcmk_rc_no_output;
     }
 
-    crm_element_value_int(patchset, "format", &format);
+    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
     switch (format) {
         case 1:
             if (log_level < LOG_DEBUG) {
@@ -492,7 +492,7 @@ xml_log_patchset(uint8_t log_level, const char *function,
         goto done;
     }
 
-    crm_element_value_int(patchset, "format", &format);
+    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
     switch (format) {
         case 1:
             if (log_level < LOG_DEBUG) {
