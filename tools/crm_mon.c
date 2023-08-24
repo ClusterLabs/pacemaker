@@ -1913,7 +1913,7 @@ handle_op_for_node(xmlNode *xml, void *userdata)
 }
 
 static void
-crm_diff_update_v2(const char *event, xmlNode * msg)
+handle_diff_for_external_agent(const char *event, xmlNode *msg)
 {
     xmlNode *change = NULL;
     xmlNode *diff = get_message_xml(msg, F_CIB_UPDATE_RESULT);
@@ -2000,23 +2000,6 @@ crm_diff_update_v2(const char *event, xmlNode * msg)
 }
 
 static void
-crm_diff_update_v1(const char *event, xmlNode * msg)
-{
-    /* Process operation updates */
-    xmlXPathObject *xpathObj = xpath_search(msg,
-                                            "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED
-                                            "//" XML_LRM_TAG_RSC_OP);
-    int lpc = 0, max = numXpathResults(xpathObj);
-
-    for (lpc = 0; lpc < max; lpc++) {
-        xmlNode *rsc_op = getXpathResult(xpathObj, lpc);
-
-        handle_rsc_op(rsc_op, NULL);
-    }
-    freeXpathObject(xpathObj);
-}
-
-static void
 crm_diff_update(const char *event, xmlNode * msg)
 {
     int rc = -1;
@@ -2050,18 +2033,7 @@ crm_diff_update(const char *event, xmlNode * msg)
     }
 
     if (options.external_agent) {
-        int format = 0;
-        crm_element_value_int(diff, "format", &format);
-        switch(format) {
-            case 1:
-                crm_diff_update_v1(event, msg);
-                break;
-            case 2:
-                crm_diff_update_v2(event, msg);
-                break;
-            default:
-                crm_err("Unknown patch format: %d", format);
-        }
+        handle_diff_for_external_agent(event, msg);
     }
 
     if (current_cib == NULL) {
