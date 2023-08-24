@@ -1371,8 +1371,8 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
      *
      * @TODO: Re-evaluate whether this is all truly legacy. The cib_force_diff
      * portion is. However, F_CIB_GLOBAL_UPDATE may be set by a sync operation
-     * even in non-legacy mode, and manage_counters tells xml_create_patchset()
-     * whether to update version/epoch info.
+     * even in non-legacy mode, and manage_counters tells
+     * pcmk__xml_create_patchset() whether to update version/epoch info.
      */
     if (pcmk__xe_attr_is_true(request, F_CIB_GLOBAL_UPDATE)) {
         manage_counters = false;

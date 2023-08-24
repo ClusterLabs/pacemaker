@@ -949,7 +949,7 @@ show_shadow_diff(pcmk__output_t *out, GError **error)
     }
     xml_track_changes(new_config, NULL, new_config, false);
     xml_calculate_changes(old_config, new_config);
-    diff = xml_create_patchset(0, old_config, new_config, NULL, false);
+    diff = pcmk__xml_create_patchset(old_config, new_config, NULL, false);
 
     rc = pcmk__log_output_new(&logger_out);
     if (rc != pcmk_rc_ok) {
