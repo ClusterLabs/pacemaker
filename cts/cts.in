@@ -69,44 +69,130 @@ EOF
 
 while true; do
     case $1 in
-	-h|--help|help) printf "${helpmsg}\n" "$0"; exit;;
-	-x) set -x; shift;;
-	-a)
-	screen -ls | grep cts
-	exit 0;;
-	-c|-g) cluster_name=$2; shift; shift;;
-	-S) summary=1; saved=1; shift;;
-	-s) summary=1; shift;;
-	-v) verbose=`expr $verbose + 1`; shift;;
-	-p) shift;;
-	-e) patterns="$patterns -e `echo $2 | sed 's/ /\\\W/g'`"; shift; shift;;
-	-l) logfile=1; shift;;
-	-w) watch=1; shift;;
-	-f|-sf) summary=1; custom_log=$2; shift; shift;;
-	-t) tests="$tests $2"; shift; shift;;
-	[0-9]*) tests="$tests $1"; shift;;
-	--kill|kill) kill=1; shift; break;;
-	--run|run) run=1; shift; break;;
-	--boot|boot|start) boot=1; clean=1; shift; break;;
-	--clean|clean) clean=1; shift;;
-	--inst|--install|install) install=1; clean=1; shift;;
-	trace-ls|tls) cmd=$1; shift;;
-	trace-add|tadd|trace-rm|trm|trace-set|tset)
-            cmd=$1; trace=$2; shift; shift
+        -h|--help|help)
+            printf "${helpmsg}\n" "$0"
+            exit
+            ;;
+        -x)
+            set -x
+            shift
+            ;;
+        -a)
+            screen -ls | grep cts
+            exit 0
+            ;;
+        -c|-g)
+            cluster_name=$2
+            shift
+            shift
+            ;;
+        -S)
+            summary=1
+            saved=1
+            shift
+            ;;
+        -s)
+            summary=1
+            shift
+            ;;
+        -v)
+            verbose=`expr $verbose + 1`
+            shift
+            ;;
+        -p)
+            shift
+            ;;
+        -e)
+            patterns="$patterns -e `echo $2 | sed 's/ /\\\W/g'`"
+            shift
+            shift
+            ;;
+        -l)
+            logfile=1
+            shift
+            ;;
+        -w)
+            watch=1
+            shift
+            ;;
+        -f|-sf)
+            summary=1
+            custom_log=$2
+            shift
+            shift
+            ;;
+        -t)
+            tests="$tests $2"
+            shift
+            shift
+            ;;
+        [0-9]*)
+            tests="$tests $1"
+            shift
+            ;;
+        --kill|kill)
+            kill=1
+            shift
+            break
+            ;;
+        --run|run)
+            run=1
+            shift
+            break
+            ;;
+        --boot|boot|start)
+            boot=1
+            clean=1
+            shift
+            break
+            ;;
+        --clean|clean)
+            clean=1
+            shift
+            ;;
+        --inst|--install|install)
+            install=1
+            clean=1
+            shift
+            ;;
+        trace-ls|tls)
+            cmd=$1
+            shift
+            ;;
+        trace-add|tadd|trace-rm|trm|trace-set|tset)
+            cmd=$1
+            trace=$2
+            shift
+            shift
             if [ -z "$trace" ]; then
                 printf "${helpmsg}\n" "$0"
                 exit
-            fi;;
-	f*)
-		target="fedora-`echo $1 | sed -e s/fedora// -e s/-// -e s/f//`"
-		shift;;
-	r|rhel) target="rhel-7"; shift;;
-	r*)
-		target="rhel-`echo $1 | sed -e s/rhel// -e s/-// -e s/r//`"
-		shift;;
-	--) shift; tests="$tests $*"; break;;
-	"") break;;
-	*) echo "Unknown argument: $1"; exit 1;;
+            fi
+            ;;
+        f*)
+            target="fedora-`echo $1 | sed -e s/fedora// -e s/-// -e s/f//`"
+            shift
+            ;;
+        r|rhel)
+            target="rhel-7"
+            shift
+            ;;
+        r*)
+            target="rhel-`echo $1 | sed -e s/rhel// -e s/-// -e s/r//`"
+            shift
+            ;;
+        --)
+            shift
+            tests="$tests $*"
+            break
+            ;;
+        "")
+            break
+            ;;
+        *)
+            echo "Unknown argument: $1"
+            exit 1
+            ;;
     esac
 done
 
@@ -129,7 +215,7 @@ if [ "x$cluster_name" = x ] || [ "x$cluster_name" = xpick ]; then
 
     echo "custom) interactively define a cluster"
     for i in $clusters; do
-	echo "$i) `cluster-helper --list short -g $i`"
+        echo "$i) `cluster-helper --list short -g $i`"
     done
 
     read -p "Choose a cluster [custom]: " cluster_name
@@ -142,16 +228,16 @@ fi
 
 
 case $cluster_name in
-  custom)
-    read -p "Cluster name: " cluster_name
-    read -p "Cluster hosts: " cluster_hosts
-    read -p "Cluster log file: " cluster_log
-    cluster-helper add -g "$cluster_name" -w "$cluster_hosts"
-    ;;
-  *)
-    cluster_hosts=`cluster-helper --list short -g $cluster_name`
-    cluster_log=~/cluster-$cluster_name.log;
-    ;;
+    custom)
+        read -p "Cluster name: " cluster_name
+        read -p "Cluster hosts: " cluster_hosts
+        read -p "Cluster log file: " cluster_log
+        cluster-helper add -g "$cluster_name" -w "$cluster_hosts"
+        ;;
+    *)
+        cluster_hosts=`cluster-helper --list short -g $cluster_name`
+        cluster_log=~/cluster-$cluster_name.log
+        ;;
 esac
 
 # NOTES ABOUT THESE AWESOME REGULAR EXPRESSIONS:
@@ -167,60 +253,60 @@ esac
 if [ x$cmd != x ]; then
     config="${CONFIG_DIR}/pacemaker"
     case $cmd in
-	trace-ls|tls)
-	    cluster-helper -g $cluster_name -- grep "^[[:space:]]*PCMK_trace_functions" $config
-	    ;;
-	trace-add|tadd)
-	    echo "Adding $trace to PCMK_trace_functions"
-        # Note that this only works if there's already a PCMK_trace_functions line.
-        # If there isn't one, create it with trace-set first.
-        #
-        # Match optional whitespace; then PCMK_trace_functions; then an equals
-        # surrounded by optional whitespace; then an optional quote; then whatever
-        # else (presumably, this is the list of previously traced functions with
-        # an optional trailing quote).  Replace the entire line with
-        # PCMK_trace_functions=<new_fn>,<previous trailing line contents>
-        sed_in_place_remotely "$config" "s/^[ \t]\{0,\}PCMK_trace_functions[ \t]\{0,\}=[ \t]\{0,\}\(\\\"\{0,1\}\)\(.\{1,\}\)/PCMK_trace_functions=\1$trace,\2/"
-	    ;;
-	trace-rm|trm)
-	    echo "Removing $trace from PCMK_trace_functions"
-        # A bunch of simple regexes are easier to follow than one giant one.
-        # Look for $trace in the following places on any line containing
-        # PCMK_trace_functions near the beginning:
-        #
-        # (1) At the start of a list -
-        #     Match one of a leading quote, or an equals followed by optional
-        #     whitespace; then $trace; then a comma.  Replace $trace with whatever
-        #     came before it.
-        # (2) In the middle of a list -
-        #     Match a comma; then $trace; then a comma.  Replace $trace with a
-        #     single comma.
-        # (3) At the end of a list -
-        #     Match a comma; then $trace; then one of a quote, whitespace, or
-        #     the EOL.  Replace $trace with whatever came after it.
-        # (4) All by itself -
-        #     Match one of a leading quote, whitespace, or equals followed by
-        #     optional whitespace; then $trace; then one of a trailing quote,
-        #     whitespace, or the EOL.  Replace $trace with whatever came before
-        #     and after it.
-        sed_in_place_remotely "$config" "/^[ \t]\{0,\}PCMK_trace_functions/ { \
-                                            s/\(\\\"\|=\|[ \t]\{1,\}\)$trace,/\1/ ; \
-                                            s/,$trace,/,/ ; \
-                                            s/,$trace\(\\\"\|[ \t]\{1,\}\|$\)/\1/ ; \
-                                            s/\(\\\"\|[ \t]\{1,\}\|=[ \t]\{0,\}\)$trace\(\\\"\|[ \t]\{1,\}\|$\)/\1\2/ }"
-        ;;
-    trace-set|tset)
-        echo "Setting PCMK_trace_functions to '$trace'"
-        # Do this in two separate sed commands:
-        #
-        # (1) Unconditionally remove any existing PCMK_trace_functions= lines.
-        # (2) Add a new line with $trace after the example line, which therefore
-        #     must exist.  Note that GNU sed would support "a PCMK_trace_functions=$trace",
-        #     but that's an extension.  For all other seds, we have to put the
-        #     command and the text on separate lines.
-        sed_in_place_remotely "$config" "/^[ \t]*PCMK_trace_functions/ d ; /^# Example: PCMK_trace_functions/ a\\\
+        trace-ls|tls)
+            cluster-helper -g $cluster_name -- grep "^[[:space:]]*PCMK_trace_functions" $config
+            ;;
+        trace-add|tadd)
+            echo "Adding $trace to PCMK_trace_functions"
+            # Note that this only works if there's already a PCMK_trace_functions line.
+            # If there isn't one, create it with trace-set first.
+            #
+            # Match optional whitespace; then PCMK_trace_functions; then an equals
+            # surrounded by optional whitespace; then an optional quote; then whatever
+            # else (presumably, this is the list of previously traced functions with
+            # an optional trailing quote).  Replace the entire line with
+            # PCMK_trace_functions=<new_fn>,<previous trailing line contents>
+            sed_in_place_remotely "$config" "s/^[ \t]\{0,\}PCMK_trace_functions[ \t]\{0,\}=[ \t]\{0,\}\(\\\"\{0,1\}\)\(.\{1,\}\)/PCMK_trace_functions=\1$trace,\2/"
+            ;;
+        trace-rm|trm)
+            echo "Removing $trace from PCMK_trace_functions"
+            # A bunch of simple regexes are easier to follow than one giant one.
+            # Look for $trace in the following places on any line containing
+            # PCMK_trace_functions near the beginning:
+            #
+            # (1) At the start of a list -
+            #     Match one of a leading quote, or an equals followed by optional
+            #     whitespace; then $trace; then a comma.  Replace $trace with whatever
+            #     came before it.
+            # (2) In the middle of a list -
+            #     Match a comma; then $trace; then a comma.  Replace $trace with a
+            #     single comma.
+            # (3) At the end of a list -
+            #     Match a comma; then $trace; then one of a quote, whitespace, or
+            #     the EOL.  Replace $trace with whatever came after it.
+            # (4) All by itself -
+            #     Match one of a leading quote, whitespace, or equals followed by
+            #     optional whitespace; then $trace; then one of a trailing quote,
+            #     whitespace, or the EOL.  Replace $trace with whatever came before
+            #     and after it.
+            sed_in_place_remotely "$config" "/^[ \t]\{0,\}PCMK_trace_functions/ { \
+                                                s/\(\\\"\|=\|[ \t]\{1,\}\)$trace,/\1/ ; \
+                                                s/,$trace,/,/ ; \
+                                                s/,$trace\(\\\"\|[ \t]\{1,\}\|$\)/\1/ ; \
+                                                s/\(\\\"\|[ \t]\{1,\}\|=[ \t]\{0,\}\)$trace\(\\\"\|[ \t]\{1,\}\|$\)/\1\2/ }"
+            ;;
+        trace-set|tset)
+            echo "Setting PCMK_trace_functions to '$trace'"
+            # Do this in two separate sed commands:
+            #
+            # (1) Unconditionally remove any existing PCMK_trace_functions= lines.
+            # (2) Add a new line with $trace after the example line, which therefore
+            #     must exist.  Note that GNU sed would support "a PCMK_trace_functions=$trace",
+            #     but that's an extension.  For all other seds, we have to put the
+            #     command and the text on separate lines.
+            sed_in_place_remotely "$config" "/^[ \t]*PCMK_trace_functions/ d ; /^# Example: PCMK_trace_functions/ a\\\
 PCMK_trace_functions=\\\"$trace\\\""
-        ;;
+            ;;
     esac
     exit 0
 fi
@@ -231,7 +317,8 @@ if [ $run = 1 ]; then
 fi
 
 if [ $clean = 1 ]; then
-    rm -f $cluster_log; cluster-clean -g $cluster_name --kill
+    rm -f $cluster_log
+    cluster-clean -g $cluster_name --kill
 elif [ $kill = 1 ]; then
     cluster-clean -g $cluster_name --kill-only
     exit 0
@@ -245,7 +332,7 @@ if [ $boot = 1 ]; then
     $cts_root/cts-lab -r -c -g $cluster_name --boot
     rc=$?
     if [ $rc = 0 ]; then
-	echo "The cluster is ready..."
+        echo "The cluster is ready..."
     fi
     exit $rc
 
@@ -266,8 +353,8 @@ fi
 
 if [ "x$tests" != x ] && [ "x$tests" != "x " ]; then
     for t in $tests; do
-	echo "crm_report --cts-log $cluster_log -d -T $t"
-	crm_report --cts-log $cluster_log -d -T $t
+        echo "crm_report --cts-log $cluster_log -d -T $t"
+        crm_report --cts-log $cluster_log -d -T $t
     done
 
 elif [ $logfile = 1 ]; then
@@ -276,29 +363,35 @@ elif [ $logfile = 1 ]; then
 elif [ $summary = 1 ]; then
     files=$cluster_log
     if [ $saved = 1 ]; then
-	files=`ls -1tr ~/CTS-*/cluster-log.txt`
+        files=`ls -1tr ~/CTS-*/cluster-log.txt`
     fi
     for f in $files; do
-	echo $f
-	case $verbose in
-	    0) cat -n $f | grep $patterns | grep -v "CTS: debug:"
-    		;;
-	    1) cat -n $f | grep $patterns | grep -v "CTS:.* cmd:"
-    		;;
-	    *) cat -n $f | grep $patterns
-		;;
-	esac
-	echo ""
+        echo $f
+        case $verbose in
+            0)
+                cat -n $f | grep $patterns | grep -v "CTS: debug:"
+                ;;
+            1)
+                cat -n $f | grep $patterns | grep -v "CTS:.* cmd:"
+                ;;
+            *)
+                cat -n $f | grep $patterns
+                ;;
+        esac
+        echo ""
     done
 
 elif [ $watch = 1 ]; then
     case $verbose in
-	0) tail -F $cluster_log | grep $patterns | grep -v "CTS: debug:"
-    		;;
-	1) tail -F $cluster_log | grep $patterns | grep -v "CTS:.* cmd:"
-    		;;
-	*) tail -F $cluster_log | grep $patterns
-		;;
+        0)
+            tail -F $cluster_log | grep $patterns | grep -v "CTS: debug:"
+            ;;
+        1)
+            tail -F $cluster_log | grep $patterns | grep -v "CTS:.* cmd:"
+            ;;
+        *)
+            tail -F $cluster_log | grep $patterns
+            ;;
     esac
 
 elif [ $active = 0 ]; then
@@ -306,8 +399,6 @@ elif [ $active = 0 ]; then
 
 else
     touch $cluster_log
-
-#    . ~/.bashrc
     export cluster_name cluster_hosts cluster_log
     screen -S cts-$cluster_name bash
 fi
