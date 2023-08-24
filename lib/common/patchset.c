@@ -168,90 +168,6 @@ is_config_change(xmlNode *xml)
     return FALSE;
 }
 
-static void
-xml_repair_v1_diff(xmlNode *last, xmlNode *next, xmlNode *local_diff,
-                   gboolean changed)
-{
-    int lpc = 0;
-    xmlNode *cib = NULL;
-    xmlNode *diff_child = NULL;
-
-    const char *tag = NULL;
-
-    const char *vfields[] = {
-        XML_ATTR_GENERATION_ADMIN,
-        XML_ATTR_GENERATION,
-        XML_ATTR_NUMUPDATES,
-    };
-
-    if (local_diff == NULL) {
-        crm_trace("Nothing to do");
-        return;
-    }
-
-    tag = XML_TAG_DIFF_REMOVED;
-    diff_child = find_xml_node(local_diff, tag, FALSE);
-    if (diff_child == NULL) {
-        diff_child = create_xml_node(local_diff, tag);
-    }
-
-    tag = XML_TAG_CIB;
-    cib = find_xml_node(diff_child, tag, FALSE);
-    if (cib == NULL) {
-        cib = create_xml_node(diff_child, tag);
-    }
-
-    for (lpc = 0; (last != NULL) && (lpc < PCMK__NELEM(vfields)); lpc++) {
-        const char *value = crm_element_value(last, vfields[lpc]);
-
-        crm_xml_add(diff_child, vfields[lpc], value);
-        if (changed || lpc == 2) {
-            crm_xml_add(cib, vfields[lpc], value);
-        }
-    }
-
-    tag = XML_TAG_DIFF_ADDED;
-    diff_child = find_xml_node(local_diff, tag, FALSE);
-    if (diff_child == NULL) {
-        diff_child = create_xml_node(local_diff, tag);
-    }
-
-    tag = XML_TAG_CIB;
-    cib = find_xml_node(diff_child, tag, FALSE);
-    if (cib == NULL) {
-        cib = create_xml_node(diff_child, tag);
-    }
-
-    for (lpc = 0; next && lpc < PCMK__NELEM(vfields); lpc++) {
-        const char *value = crm_element_value(next, vfields[lpc]);
-
-        crm_xml_add(diff_child, vfields[lpc], value);
-    }
-
-    for (xmlAttrPtr a = pcmk__xe_first_attr(next); a != NULL; a = a->next) {
-        
-        const char *p_value = pcmk__xml_attr_value(a);
-
-        xmlSetProp(cib, a->name, (pcmkXmlStr) p_value);
-    }
-
-    crm_log_xml_explicit(local_diff, "Repaired-diff");
-}
-
-static xmlNode *
-xml_create_patchset_v1(xmlNode *source, xmlNode *target, bool config,
-                       bool suppress)
-{
-    xmlNode *patchset = diff_xml_object(source, target, suppress);
-
-    if (patchset) {
-        CRM_LOG_ASSERT(xml_document_dirty(target));
-        xml_repair_v1_diff(source, target, patchset, config);
-        crm_xml_add(patchset, "format", "1");
-    }
-    return patchset;
-}
-
 static xmlNode *
 xml_create_patchset_v2(const xmlNode *source, xmlNode *target)
 {
@@ -407,44 +323,6 @@ pcmk__xml_create_patchset(const xmlNode *source, xmlNode *target,
         update_counters(source, target, config);
     }
     return xml_create_patchset_v2(source, target);
-}
-
-xmlNode *
-xml_create_patchset(int format, xmlNode *source, xmlNode *target,
-                    bool *config_changed, bool manage_version)
-{
-    bool config = false;
-
-    switch (format) {
-        case 0:
-        case 2:
-            return pcmk__xml_create_patchset(source, target, config_changed,
-                                             manage_version);
-        case 1:
-            break;
-        default:
-            crm_err("Unknown patch format: %d", format);
-            return NULL;
-    }
-
-    CRM_CHECK((source != NULL) && (target != NULL), return NULL);
-
-    // Create v1 patchset
-    xml_acl_disable(target);
-    if (!xml_document_dirty(target)) {
-        crm_trace("No change %d", format);
-        return NULL;
-    }
-
-    config = is_config_change(target);
-    if (config_changed != NULL) {
-        *config_changed = config;
-    }
-
-    if (manage_version) {
-        update_counters(source, target, config);
-    }
-    return xml_create_patchset_v1(source, target, config, false);
 }
 
 void
@@ -1576,6 +1454,127 @@ apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
     }
 
     return result;
+}
+
+static void
+xml_repair_v1_diff(xmlNode *last, xmlNode *next, xmlNode *local_diff,
+                   gboolean changed)
+{
+    int lpc = 0;
+    xmlNode *cib = NULL;
+    xmlNode *diff_child = NULL;
+
+    const char *tag = NULL;
+
+    const char *vfields[] = {
+        XML_ATTR_GENERATION_ADMIN,
+        XML_ATTR_GENERATION,
+        XML_ATTR_NUMUPDATES,
+    };
+
+    if (local_diff == NULL) {
+        crm_trace("Nothing to do");
+        return;
+    }
+
+    tag = XML_TAG_DIFF_REMOVED;
+    diff_child = find_xml_node(local_diff, tag, FALSE);
+    if (diff_child == NULL) {
+        diff_child = create_xml_node(local_diff, tag);
+    }
+
+    tag = XML_TAG_CIB;
+    cib = find_xml_node(diff_child, tag, FALSE);
+    if (cib == NULL) {
+        cib = create_xml_node(diff_child, tag);
+    }
+
+    for (lpc = 0; (last != NULL) && (lpc < PCMK__NELEM(vfields)); lpc++) {
+        const char *value = crm_element_value(last, vfields[lpc]);
+
+        crm_xml_add(diff_child, vfields[lpc], value);
+        if (changed || lpc == 2) {
+            crm_xml_add(cib, vfields[lpc], value);
+        }
+    }
+
+    tag = XML_TAG_DIFF_ADDED;
+    diff_child = find_xml_node(local_diff, tag, FALSE);
+    if (diff_child == NULL) {
+        diff_child = create_xml_node(local_diff, tag);
+    }
+
+    tag = XML_TAG_CIB;
+    cib = find_xml_node(diff_child, tag, FALSE);
+    if (cib == NULL) {
+        cib = create_xml_node(diff_child, tag);
+    }
+
+    for (lpc = 0; next && lpc < PCMK__NELEM(vfields); lpc++) {
+        const char *value = crm_element_value(next, vfields[lpc]);
+
+        crm_xml_add(diff_child, vfields[lpc], value);
+    }
+
+    for (xmlAttrPtr a = pcmk__xe_first_attr(next); a != NULL; a = a->next) {
+        const char *p_value = pcmk__xml_attr_value(a);
+
+        xmlSetProp(cib, a->name, (pcmkXmlStr) p_value);
+    }
+
+    crm_log_xml_explicit(local_diff, "Repaired-diff");
+}
+
+static xmlNode *
+xml_create_patchset_v1(xmlNode *source, xmlNode *target, bool config,
+                       bool suppress)
+{
+    xmlNode *patchset = diff_xml_object(source, target, suppress);
+
+    if (patchset) {
+        CRM_LOG_ASSERT(xml_document_dirty(target));
+        xml_repair_v1_diff(source, target, patchset, config);
+        crm_xml_add(patchset, "format", "1");
+    }
+    return patchset;
+}
+
+xmlNode *
+xml_create_patchset(int format, xmlNode *source, xmlNode *target,
+                    bool *config_changed, bool manage_version)
+{
+    bool config = false;
+
+    switch (format) {
+        case 0:
+        case 2:
+            return pcmk__xml_create_patchset(source, target, config_changed,
+                                             manage_version);
+        case 1:
+            break;
+        default:
+            crm_err("Unknown patch format: %d", format);
+            return NULL;
+    }
+
+    CRM_CHECK((source != NULL) && (target != NULL), return NULL);
+
+    // Create v1 patchset
+    xml_acl_disable(target);
+    if (!xml_document_dirty(target)) {
+        crm_trace("No change %d", format);
+        return NULL;
+    }
+
+    config = is_config_change(target);
+    if (config_changed != NULL) {
+        *config_changed = config;
+    }
+
+    if (manage_version) {
+        update_counters(source, target, config);
+    }
+    return xml_create_patchset_v1(source, target, config, false);
 }
 
 // LCOV_EXCL_STOP

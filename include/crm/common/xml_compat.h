@@ -71,6 +71,10 @@ crm_element_name(const xmlNode *xml)
     return (xml == NULL)? NULL : (const char *) xml->name;
 }
 
+//! \deprecated Do not use (will be removed in a future release)
+xmlNode *xml_create_patchset(int format, xmlNode *source, xmlNode *target,
+                             bool *config, bool manage_version);
+
 #ifdef __cplusplus
 }
 #endif
