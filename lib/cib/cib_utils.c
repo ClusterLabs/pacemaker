@@ -517,10 +517,8 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
             {
                 // Validate the calculated patch set
                 int test_rc = pcmk_ok;
-                int format = 1;
                 xmlNode *cib_copy = copy_xml(patchset_cib);
 
-                crm_element_value_int(local_diff, "format", &format);
                 test_rc = xml_apply_patchset(cib_copy, local_diff,
                                              manage_counters);
 
@@ -529,10 +527,9 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
                     save_xml_to_file(patchset_cib, "PatchApply:input", NULL);
                     save_xml_to_file(scratch, "PatchApply:actual", NULL);
                     save_xml_to_file(local_diff, "PatchApply:diff", NULL);
-                    crm_err("v%d patchset error, patch failed to apply: %s "
-                            "(%d)",
-                            format, pcmk_rc_str(pcmk_legacy2rc(test_rc)),
-                            test_rc);
+                    crm_err("Patchset error, patch failed to apply: %s "
+                            CRM_XS " rc=%d",
+                            pcmk_rc_str(pcmk_legacy2rc(test_rc)), test_rc);
                 }
                 free_xml(cib_copy);
             },
