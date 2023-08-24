@@ -1160,6 +1160,11 @@ subtract_xml_comment(xmlNode *parent, xmlNode *left, xmlNode *right,
     return NULL;
 }
 
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/xml_compat.h>
+
 xmlNode *
 subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
                     gboolean full, gboolean *changed, const char *marker)
@@ -1335,11 +1340,6 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
   done:
     return diff;
 }
-
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-#include <crm/common/xml_compat.h>
 
 gboolean
 apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
