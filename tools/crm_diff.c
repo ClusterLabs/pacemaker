@@ -145,58 +145,14 @@ log_patch_cib_versions(xmlNode *patch)
     int add[] = { 0, 0, 0 };
     int del[] = { 0, 0, 0 };
 
-    const char *fmt = NULL;
     const char *digest = NULL;
 
     xml_patch_versions(patch, add, del);
-    fmt = crm_element_value(patch, "format");
     digest = crm_element_value(patch, XML_ATTR_DIGEST);
 
     if (add[2] != del[2] || add[1] != del[1] || add[0] != del[0]) {
-        crm_info("Patch: --- %d.%d.%d %s", del[0], del[1], del[2], fmt);
+        crm_info("Patch: --- %d.%d.%d", del[0], del[1], del[2]);
         crm_info("Patch: +++ %d.%d.%d %s", add[0], add[1], add[2], digest);
-    }
-}
-
-static void
-strip_patch_cib_version(xmlNode *patch, const char **vfields, size_t nvfields)
-{
-    int format = 1;
-
-    crm_element_value_int(patch, "format", &format);
-    if (format == 2) {
-        xmlNode *version_xml = find_xml_node(patch, "version", FALSE);
-
-        if (version_xml) {
-            free_xml(version_xml);
-        }
-
-    } else {
-        int i = 0;
-
-        const char *tags[] = {
-            XML_TAG_DIFF_REMOVED,
-            XML_TAG_DIFF_ADDED,
-        };
-
-        for (i = 0; i < PCMK__NELEM(tags); i++) {
-            xmlNode *tmp = NULL;
-            int lpc;
-
-            tmp = find_xml_node(patch, tags[i], FALSE);
-            if (tmp) {
-                for (lpc = 0; lpc < nvfields; lpc++) {
-                    xml_remove_prop(tmp, vfields[lpc]);
-                }
-
-                tmp = find_xml_node(tmp, XML_TAG_CIB, FALSE);
-                if (tmp) {
-                    for (lpc = 0; lpc < nvfields; lpc++) {
-                        xml_remove_prop(tmp, vfields[lpc]);
-                    }
-                }
-            }
-        }
     }
 }
 
@@ -262,7 +218,7 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
         log_patch_cib_versions(output);
 
     } else if (no_version) {
-        strip_patch_cib_version(output, vfields, PCMK__NELEM(vfields));
+        free_xml(find_xml_node(output, "version", FALSE));
     }
 
     pcmk__output_set_log_level(logger_out, LOG_NOTICE);
