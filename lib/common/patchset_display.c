@@ -127,6 +127,8 @@ xml_show_patchset_v1_recursive(pcmk__output_t *out, const char *prefix,
  * \return Standard Pacemaker return code
  *
  * \note This function produces output only for text-like formats.
+ * \deprecated This function can be removed when \c xml_create_patchset() is
+ *             removed.
  */
 static int
 xml_show_patchset_v1(pcmk__output_t *out, const xmlNode *patchset,
