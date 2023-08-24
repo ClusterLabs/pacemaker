@@ -34,7 +34,7 @@ attrd_election_cb(gpointer user_data)
     attrd_peer_sync(NULL, NULL);
 
     /* Update the CIB after an election */
-    attrd_write_attributes(true, false);
+    attrd_write_attributes(attrd_write_all);
     return G_SOURCE_REMOVE;
 }
 

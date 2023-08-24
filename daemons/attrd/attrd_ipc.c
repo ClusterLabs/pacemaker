@@ -232,7 +232,7 @@ attrd_client_refresh(pcmk__request_t *request)
     crm_info("Updating all attributes");
 
     attrd_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags);
-    attrd_write_attributes(true, true);
+    attrd_write_attributes(attrd_write_all|attrd_write_no_delay);
 
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     return NULL;
