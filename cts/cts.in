@@ -91,7 +91,12 @@ while true; do
 	--clean|clean) clean=1; shift;;
 	--inst|--install|install) install=1; clean=1; shift;;
 	trace-ls|tls) cmd=$1; shift;;
-	trace-add|tadd|trace-rm|trm|trace-set|tset) cmd=$1; trace=$2; shift; shift;;
+	trace-add|tadd|trace-rm|trm|trace-set|tset)
+            cmd=$1; trace=$2; shift; shift
+            if [ -z "$trace" ]; then
+                printf "${helpmsg}\n" "$0"
+                exit
+            fi;;
 	f*)
 		target="fedora-`echo $1 | sed -e s/fedora// -e s/-// -e s/f//`"
 		shift;;
