@@ -131,7 +131,7 @@ attrd_cib_updated_cb(const char *event, xmlNode * msg)
     int rc = pcmk_err_generic;
     const xmlNode *patchset = NULL;
 
-    if (attrd_shutting_down(false)) {
+    if (attrd_shutting_down(true)) {
         return;
     }
 
