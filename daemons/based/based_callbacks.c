@@ -1396,20 +1396,6 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
                         request, input, manage_counters, &config_changed,
                         &the_cib, &result_cib, cib_diff, &output);
 
-    // @COMPAT: Legacy code
-    if (!manage_counters) {
-        int format = 1;
-
-        // If the diff is NULL at this point, it's because nothing changed
-        if (*cib_diff != NULL) {
-            crm_element_value_int(*cib_diff, "format", &format);
-        }
-
-        if (format == 1) {
-            config_changed = cib__config_changed_v1(NULL, NULL, cib_diff);
-        }
-    }
-
     /* Always write to disk for successful ops with the flag set. This also
      * negates the need to detect ordering changes.
      */
