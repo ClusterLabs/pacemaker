@@ -446,9 +446,6 @@ log_data_element(int log_level, const char *file, const char *function,
     if (pcmk_is_set(legacy_options, xml_log_option_formatted)) {
         options |= pcmk__xml_fmt_pretty;
     }
-    if (pcmk_is_set(legacy_options, xml_log_option_full_fledged)) {
-        options |= pcmk__xml_fmt_full;
-    }
     if (pcmk_is_set(legacy_options, xml_log_option_open)) {
         options |= pcmk__xml_fmt_open;
     }
