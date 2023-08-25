@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2022 the Pacemaker project contributors
+ * Copyright 2015-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -89,7 +89,7 @@ calculate_xml_digest_v1(xmlNode *input, gboolean sort, gboolean ignored)
  * \return Newly allocated string containing digest
  */
 static char *
-calculate_xml_digest_v2(xmlNode *source, gboolean do_filter)
+calculate_xml_digest_v2(const xmlNode *source, gboolean do_filter)
 {
     char *digest = NULL;
     GString *buffer = g_string_sized_new(1024);
