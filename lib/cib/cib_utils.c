@@ -490,8 +490,8 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
                 int test_rc = pcmk_ok;
                 xmlNode *cib_copy = copy_xml(patchset_cib);
 
-                test_rc = xml_apply_patchset(cib_copy, local_diff,
-                                             manage_counters);
+                test_rc = pcmk__xml_apply_patchset(cib_copy, local_diff,
+                                                   manage_counters);
 
                 if (test_rc != pcmk_ok) {
                     save_xml_to_file(cib_copy, "PatchApply:calculated", NULL);

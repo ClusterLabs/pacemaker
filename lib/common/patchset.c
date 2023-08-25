@@ -1039,8 +1039,20 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Apply an XML patchset
+ *
+ * \param[in,out] xml            XML to modify
+ * \param[in]     patchset       Patchset to apply
+ * \param[in]     check_version  If \c true, treat \p xml as a CIB and verify
+ *                               that the patchset can be applied to it
+ *
+ * \return Standard Pacemaker return code
+ */
 int
-xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
+pcmk__xml_apply_patchset(xmlNode *xml, const xmlNode *patchset,
+                         bool check_version)
 {
     int format = 1;
     int rc = pcmk_ok;
@@ -1080,17 +1092,18 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
             default:
                 crm_err("Unknown patch format: %d", format);
                 rc = -EINVAL;
+                break;
         }
     }
 
     if ((rc == pcmk_ok) && (digest != NULL)) {
-        char *new_digest = NULL;
-        char *version = crm_element_value_copy(xml, XML_ATTR_CRM_VERSION);
+        const char *version = crm_element_value_copy(xml, XML_ATTR_CRM_VERSION);
+        char *calculated = calculate_xml_versioned_digest(xml, FALSE, TRUE,
+                                                          version);
 
-        new_digest = calculate_xml_versioned_digest(xml, FALSE, TRUE, version);
-        if (!pcmk__str_eq(new_digest, digest, pcmk__str_casei)) {
-            crm_info("v%d digest mis-match: expected %s, calculated %s",
-                     format, digest, new_digest);
+        if (!pcmk__str_eq(digest, calculated, pcmk__str_none)) {
+            crm_info("v%d digest mismatch: expected %s, calculated %s",
+                     format, digest, calculated);
             rc = -pcmk_err_diff_failed;
             pcmk__if_tracing(
                 {
@@ -1103,13 +1116,18 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
 
         } else {
             crm_trace("v%d digest matched: expected %s, calculated %s",
-                      format, digest, new_digest);
+                      format, digest, calculated);
         }
-        free(new_digest);
-        free(version);
+        free(calculated);
     }
     free_xml(old);
     return rc;
+}
+
+int
+xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
+{
+    return pcmk__xml_apply_patchset(xml, patchset, check_version);
 }
 
 void

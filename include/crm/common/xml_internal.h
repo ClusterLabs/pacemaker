@@ -444,4 +444,7 @@ pcmk__xml_attr_value(const xmlAttr *attr)
 xmlNode *pcmk__xml_create_patchset(const xmlNode *before, xmlNode *after,
                                    bool *config_changed, bool manage_version);
 
+int pcmk__xml_apply_patchset(xmlNode *xml, const xmlNode *patchset,
+                             bool check_version);
+
 #endif // PCMK__XML_INTERNAL__H

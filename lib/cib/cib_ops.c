@@ -789,7 +789,7 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
     }
     *result_cib = copy_xml(existing_cib);
 
-    return xml_apply_patchset(*result_cib, input, TRUE);
+    return pcmk__xml_apply_patchset(*result_cib, input, true);
 }
 
 int

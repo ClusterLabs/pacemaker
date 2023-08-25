@@ -115,7 +115,7 @@ static int
 apply_patch(xmlNode *input, xmlNode *patch, gboolean as_cib)
 {
     xmlNode *output = copy_xml(input);
-    int rc = xml_apply_patchset(output, patch, as_cib);
+    int rc = pcmk__xml_apply_patchset(output, patch, as_cib);
 
     rc = pcmk_legacy2rc(rc);
     if (rc != pcmk_rc_ok) {
