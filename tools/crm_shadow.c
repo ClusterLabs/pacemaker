@@ -512,13 +512,13 @@ read_xml(const char *filename, xmlNode **output, GError **error)
  * \internal
  * \brief Write the shadow XML to a file
  *
- * \param[in,out] xml       Shadow XML
- * \param[in]     filename  Name of destination file
- * \param[in]     reset     Whether the write is a reset (for logging only)
- * \param[out]    error     Where to store error
+ * \param[in]  xml       Shadow XML
+ * \param[in]  filename  Name of destination file
+ * \param[in]  reset     Whether the write is a reset (for logging only)
+ * \param[out] error     Where to store error
  */
 static int
-write_shadow_file(xmlNode *xml, const char *filename, bool reset,
+write_shadow_file(const xmlNode *xml, const char *filename, bool reset,
                   GError **error)
 {
     int rc = write_xml_file(xml, filename, FALSE);
