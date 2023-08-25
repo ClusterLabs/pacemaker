@@ -48,7 +48,7 @@ void xml_log_changes(uint8_t level, const char *function, const xmlNode *xml);
 //! \deprecated This function will be removed in a future release
 void xml_log_patchset(uint8_t level, const char *function, const xmlNode *xml);
 
-//!  \deprecated Use xml_apply_patchset() instead
+//! \deprecated Do not use (will be removed in a future release)
 gboolean apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml);
 
 //! \deprecated Do not use (will be removed in a future release)
@@ -85,6 +85,10 @@ xmlNode *diff_xml_object(xmlNode *left, xmlNode *right, gboolean suppress);
 //! \deprecated Do not use (will be removed in a future release)
 xmlNode *xml_create_patchset(int format, xmlNode *source, xmlNode *target,
                              bool *config, bool manage_version);
+
+//! \deprecated Do not use (will be removed in a future release)
+int xml_apply_patchset(xmlNode *xml, const xmlNode *patchset,
+                       bool check_version);
 
 #ifdef __cplusplus
 }

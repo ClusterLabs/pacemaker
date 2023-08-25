@@ -356,14 +356,20 @@ patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
     return;
 }
 
-// Return true if attribute name is not "id"
+/* Return true if attribute name is not "id"
+ *
+ * @COMPAT Drop when xml_create_patchset() is dropped
+ */
 static bool
 not_id(xmlAttrPtr attr, void *user_data)
 {
     return strcmp((const char *) attr->name, XML_ATTR_ID) != 0;
 }
 
-// Apply the removals section of an v1 patchset to an XML node
+/* Apply the removals section of an v1 patchset to an XML node
+ *
+ * @COMPAT Drop when xml_create_patchset() is dropped
+ */
 static void
 process_v1_removals(xmlNode *target, xmlNode *patch)
 {
@@ -412,7 +418,10 @@ process_v1_removals(xmlNode *target, xmlNode *patch)
     free(id);
 }
 
-// Apply the additions section of an v1 patchset to an XML node
+/* Apply the additions section of an v1 patchset to an XML node
+ *
+ * @COMPAT Drop when xml_create_patchset() is dropped
+ */
 static void
 process_v1_additions(xmlNode *parent, xmlNode *target, xmlNode *patch)
 {
@@ -637,6 +646,7 @@ xml_patch_version_check(const xmlNode *xml, const xmlNode *patchset)
  *
  * \return Standard Pacemaker return code
  */
+// @COMPAT Drop when xml_create_patchset() is dropped
 static int
 apply_v1_patchset(xmlNode *xml, const xmlNode *patchset)
 {
@@ -1084,6 +1094,15 @@ pcmk__xml_apply_patchset(xmlNode *xml, const xmlNode *patchset,
         crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
         switch (format) {
             case 1:
+                /* @COMPAT Drop when xml_create_patchset() is dropped. We might
+                 * receive a v1 patchset if a user creates a v1 patchset with
+                 * xml_create_patchset(1, ...) and then applies it via
+                 * xml_apply_patchset() or PCMK__CIB_REQUEST_APPLY_PATCH.
+                 *
+                 * Otherwise, there's no reason we should ever encounter a v1
+                 * patchset. Pacemaker has generated v2 patchsets internally
+                 * since 1.1.4.
+                 */
                 rc = pcmk_rc2legacy(apply_v1_patchset(xml, patchset));
                 break;
             case 2:
@@ -1124,12 +1143,6 @@ pcmk__xml_apply_patchset(xmlNode *xml, const xmlNode *patchset,
     return rc;
 }
 
-int
-xml_apply_patchset(xmlNode *xml, const xmlNode *patchset, bool check_version)
-{
-    return pcmk__xml_apply_patchset(xml, patchset, check_version);
-}
-
 void
 purge_diff_markers(xmlNode *a_node)
 {
@@ -1144,6 +1157,7 @@ purge_diff_markers(xmlNode *a_node)
     }
 }
 
+// @COMPAT Drop when xml_create_patchset() is dropped
 static xmlNode *
 subtract_xml_comment(xmlNode *parent, xmlNode *left, xmlNode *right,
                      gboolean *changed)
@@ -1580,6 +1594,12 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target,
         update_counters(source, target, config);
     }
     return xml_create_patchset_v1(source, target, config, false);
+}
+
+int
+xml_apply_patchset(xmlNode *xml, const xmlNode *patchset, bool check_version)
+{
+    return pcmk__xml_apply_patchset(xml, patchset, check_version);
 }
 
 // LCOV_EXCL_STOP
