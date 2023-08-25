@@ -1441,9 +1441,9 @@ dump_xml_element(const xmlNode *data, uint32_t options, GString *buffer,
     }
 
     if (data->children) {
-        xmlNode *xChild = NULL;
-        for(xChild = data->children; xChild != NULL; xChild = xChild->next) {
-            pcmk__xml2text(xChild, options, buffer, depth + 1);
+        for (const xmlNode *child = data->children; child != NULL;
+             child = child->next) {
+            pcmk__xml2text(child, options, buffer, depth + 1);
         }
 
         for (int lpc = 0; lpc < spaces; lpc++) {
@@ -1645,12 +1645,12 @@ dump_xml_formatted_with_text(const xmlNode *xml)
 }
 
 char *
-dump_xml_formatted(xmlNode * an_xml_node)
+dump_xml_formatted(const xmlNode *xml)
 {
     char *buffer = NULL;
     GString *g_buffer = g_string_sized_new(1024);
 
-    pcmk__xml2text(an_xml_node, pcmk__xml_fmt_pretty, g_buffer, 0);
+    pcmk__xml2text(xml, pcmk__xml_fmt_pretty, g_buffer, 0);
 
     pcmk__str_update(&buffer, g_buffer->str);
     g_string_free(g_buffer, TRUE);
