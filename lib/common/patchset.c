@@ -1099,22 +1099,7 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
         return rc;
     }
 
-    pcmk__if_tracing(
-        {
-            pcmk__output_t *logger_out = NULL;
-
-            rc = pcmk_rc2legacy(pcmk__log_output_new(&logger_out));
-            CRM_CHECK(rc == pcmk_ok, return rc);
-
-            pcmk__output_set_log_level(logger_out, LOG_TRACE);
-            rc = logger_out->message(logger_out, "xml-patchset", patchset);
-            logger_out->finish(logger_out, pcmk_rc2exitc(rc), true,
-                               NULL);
-            pcmk__output_free(logger_out);
-            rc = pcmk_ok;
-        },
-        {}
-    );
+    pcmk__log_xml_patchset(LOG_TRACE, patchset);
 
     if (check_version) {
         rc = pcmk_rc2legacy(xml_patch_version_check(xml, patchset));

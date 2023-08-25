@@ -550,18 +550,8 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
     xml_accept_changes(scratch);
 
     if(local_diff) {
-        int temp_rc = pcmk_rc_no_output;
-
         patchset_process_digest(local_diff, patchset_cib, scratch, with_digest);
-
-        if (out == NULL) {
-            rc = pcmk_rc2legacy(pcmk__log_output_new(&out));
-            CRM_CHECK(rc == pcmk_ok, goto done);
-        }
-        pcmk__output_set_log_level(out, LOG_INFO);
-        temp_rc = out->message(out, "xml-patchset", local_diff);
-        out_rc = pcmk__output_select_rc(rc, temp_rc);
-
+        pcmk__log_xml_patchset(LOG_INFO, local_diff);
         crm_log_xml_trace(local_diff, "raw patch");
     }
 
@@ -1016,16 +1006,7 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
     }
 
     if (level > LOG_CRIT) {
-        pcmk__output_t *out = NULL;
-
-        rc = pcmk_rc2legacy(pcmk__log_output_new(&out));
-        CRM_CHECK(rc == pcmk_ok, return rc);
-
-        pcmk__output_set_log_level(out, level);
-        rc = out->message(out, "xml-patchset", diff);
-        out->finish(out, pcmk_rc2exitc(rc), true, NULL);
-        pcmk__output_free(out);
-        rc = pcmk_ok;
+        pcmk__log_xml_patchset(level, diff);
     }
 
     if (input != NULL) {
