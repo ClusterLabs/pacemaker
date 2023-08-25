@@ -147,7 +147,6 @@ enum pcmk__xml_fmt_options {
     //! Include the closing tag of an XML element
     pcmk__xml_fmt_close      = (1 << 5),
 
-    // @COMPAT Remove when log_data_element() is removed
     //! Include XML text nodes
     pcmk__xml_fmt_text       = (1 << 6),
 

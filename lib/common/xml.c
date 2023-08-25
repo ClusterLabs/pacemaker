@@ -1583,8 +1583,6 @@ xml_element_type2str(xmlElementType type)
     return element_type_names[type];
 }
 
-#define PCMK__XMLDUMP_STATS 0
-
 /*!
  * \internal
  * \brief Create a text representation of an XML object
@@ -1595,7 +1593,8 @@ xml_element_type2str(xmlElementType type)
  * \param[in]     depth    Current indentation level
  */
 void
-pcmk__xml2text(xmlNodePtr data, uint32_t options, GString *buffer, int depth)
+pcmk__xml2text(const xmlNode *data, uint32_t options, GString *buffer,
+               int depth)
 {
     if (data == NULL) {
         crm_trace("Nothing to dump");
@@ -1605,54 +1604,6 @@ pcmk__xml2text(xmlNodePtr data, uint32_t options, GString *buffer, int depth)
     CRM_ASSERT(buffer != NULL);
     CRM_CHECK(depth >= 0, depth = 0);
 
-    if (pcmk_is_set(options, pcmk__xml_fmt_full)) {
-        /* libxml's serialization reuse is a good idea, sadly we cannot
-           apply it for the filtered cases (preceding filtering pass
-           would preclude further reuse of such in-situ modified XML
-           in generic context and is likely not a win performance-wise),
-           and there's also a historically unstable throughput argument
-           (likely stemming from memory allocation overhead, eventhough
-           that shall be minimized with defaults preset in crm_xml_init) */
-#if (PCMK__XMLDUMP_STATS - 0)
-        time_t next, new = time(NULL);
-#endif
-        xmlOutputBuffer *xml_buffer = xmlAllocOutputBuffer(NULL);
-
-        CRM_ASSERT(xml_buffer != NULL);
-
-        /* XXX we could setup custom allocation scheme for the particular
-               buffer, but it's subsumed with crm_xml_init that needs to
-               be invoked prior to entering this function as such, since
-               its other branch vitally depends on it -- what can be done
-               about this all is to have a facade parsing functions that
-               would 100% mark entering libxml code for us, since we don't
-               do anything as crazy as swapping out the binary form of the
-               parsed tree (but those would need to be strictly used as
-               opposed to libxml's raw functions) */
-
-        xmlNodeDumpOutput(xml_buffer, data->doc, data, 0,
-                          pcmk_is_set(options, pcmk__xml_fmt_pretty), NULL);
-        /* attempt adding final NL - failing shouldn't be fatal here */
-        (void) xmlOutputBufferWrite(xml_buffer, sizeof("\n") - 1, "\n");
-        if (xml_buffer->buffer != NULL) {
-            g_string_append(buffer,
-                            (const gchar *) xmlBufContent(xml_buffer->buffer));
-        }
-
-#if (PCMK__XMLDUMP_STATS - 0)
-        next = time(NULL);
-        if ((now + 1) < next) {
-            crm_log_xml_trace(data, "Long time");
-            crm_err("xmlNodeDumpOutput() -> %lld bytes took %ds",
-                    (long long) buffer->len, next - now);
-        }
-#endif
-
-        /* asserted allocation before so there should be something to remove */
-        (void) xmlOutputBufferClose(xml_buffer);
-        return;
-    }
-
     switch(data->type) {
         case XML_ELEMENT_NODE:
             /* Handle below */
@@ -1660,11 +1611,6 @@ pcmk__xml2text(xmlNodePtr data, uint32_t options, GString *buffer, int depth)
             break;
         case XML_TEXT_NODE:
             if (pcmk_is_set(options, pcmk__xml_fmt_text)) {
-                /* @COMPAT: Remove when log_data_element() is removed. There are
-                 * no other internal code paths that set pcmk__xml_fmt_text.
-                 * Keep an empty case handler so that we don't log an unhandled
-                 * type warning.
-                 */
                 dump_xml_text(data, options, buffer, depth);
             }
             break;
@@ -1684,10 +1630,14 @@ pcmk__xml2text(xmlNodePtr data, uint32_t options, GString *buffer, int depth)
 char *
 dump_xml_formatted_with_text(xmlNode * an_xml_node)
 {
+    /* libxml's xmlNodeDumpOutput() would work here since we're not specifically
+     * filtering out any nodes. However, use pcmk__xml2text() for consistency,
+     * to escape attribute values, and to allow a const argument.
+     */
     char *buffer = NULL;
     GString *g_buffer = g_string_sized_new(1024);
 
-    pcmk__xml2text(an_xml_node, pcmk__xml_fmt_pretty|pcmk__xml_fmt_full,
+    pcmk__xml2text(an_xml_node, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text,
                    g_buffer, 0);
 
     pcmk__str_update(&buffer, g_buffer->str);
