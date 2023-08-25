@@ -357,22 +357,6 @@ pcmk__add_digest_to_patchset(const xmlNode *source, xmlNode *target,
     free(digest);
 }
 
-void
-patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
-                        bool with_digest)
-{
-    int format = 1;
-
-    if (patch == NULL) {
-        return;
-    }
-
-    crm_element_value_int(patch, PCMK_XA_FORMAT, &format);
-    if ((format <= 1) || with_digest) {
-        pcmk__add_digest_to_patchset(source, target, patch);
-    }
-}
-
 /* Return true if attribute name is not "id"
  *
  * @COMPAT Drop when xml_create_patchset() is dropped
@@ -1617,6 +1601,22 @@ int
 xml_apply_patchset(xmlNode *xml, const xmlNode *patchset, bool check_version)
 {
     return pcmk__xml_apply_patchset(xml, patchset, check_version);
+}
+
+void
+patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
+                        bool with_digest)
+{
+    int format = 1;
+
+    if (patch == NULL) {
+        return;
+    }
+
+    crm_element_value_int(patch, PCMK_XA_FORMAT, &format);
+    if ((format <= 1) || with_digest) {
+        pcmk__add_digest_to_patchset(source, target, patch);
+    }
 }
 
 // LCOV_EXCL_STOP

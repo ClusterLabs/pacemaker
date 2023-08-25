@@ -90,6 +90,10 @@ xmlNode *xml_create_patchset(int format, xmlNode *source, xmlNode *target,
 int xml_apply_patchset(xmlNode *xml, const xmlNode *patchset,
                        bool check_version);
 
+//! \deprecated Do not use (will be removed in a future release)
+void patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
+                             bool with_digest);
+
 #ifdef __cplusplus
 }
 #endif
