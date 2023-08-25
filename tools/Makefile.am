@@ -74,34 +74,40 @@ crmadmin_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la	\
 			  $(top_builddir)/lib/cib/libcib.la		\
 			  $(top_builddir)/lib/common/libcrmcommon.la	\
 			  $(top_builddir)/lib/pacemaker/libpacemaker.la
+crmadmin_CFLOW_INPUT = $(crmadmin_SOURCES) $(foreach f,$(crmadmin_LDADD),$(dir $(f))*[ch])
 
 crm_error_SOURCES	= crm_error.c
 crm_error_LDADD		= $(top_builddir)/lib/pacemaker/libpacemaker.la	\
 			  $(top_builddir)/lib/common/libcrmcommon.la
+crm_error_CFLOW_INPUT = $(crm_error_SOURCES) $(foreach f,$(crm_error_LDADD),$(dir $(f))*[ch])
 
 cibadmin_SOURCES	= cibadmin.c
 cibadmin_LDADD		= $(top_builddir)/lib/pacemaker/libpacemaker.la		\
 			  	$(top_builddir)/lib/cib/libcib.la		\
 				$(top_builddir)/lib/common/libcrmcommon.la
+cibadmin_CFLOW_INPUT = $(cibadmin_SOURCES) $(foreach f,$(cibadmin_LDADD),$(dir $(f))*[ch])
 
 crm_shadow_SOURCES	= crm_shadow.c
 crm_shadow_LDADD	= $(top_builddir)/lib/cib/libcib.la		\
 			  $(top_builddir)/lib/common/libcrmcommon.la
+crm_shadow_CFLOW_INPUT = $(crm_shadow_SOURCES) $(foreach f,$(crm_shadow_LDADD),$(dir $(f))*[ch])
 
 crm_node_SOURCES	= crm_node.c
 crm_node_LDADD	= $(top_builddir)/lib/pacemaker/libpacemaker.la	\
 			  $(top_builddir)/lib/cib/libcib.la		\
 			  $(top_builddir)/lib/common/libcrmcommon.la
+crm_node_CFLOW_INPUT = $(crm_node_SOURCES) $(foreach f,$(crm_node_LDADD),$(dir $(f))*[ch])
 
 crm_simulate_SOURCES	= crm_simulate.c
-
 crm_simulate_LDADD	= $(top_builddir)/lib/pengine/libpe_status.la	\
 			  $(top_builddir)/lib/pacemaker/libpacemaker.la	\
 			  $(top_builddir)/lib/cib/libcib.la		\
 			  $(top_builddir)/lib/common/libcrmcommon.la
+crm_simulate_CFLOW_INPUT = $(crm_simulate_SOURCES) $(foreach f,$(crm_simulate_LDADD),$(dir $(f))*[ch])
 
 crm_diff_SOURCES	= crm_diff.c
 crm_diff_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la
+crm_diff_CFLOW_INPUT = $(crm_diff_SOURCES) $(foreach f,$(crm_diff_LDADD),$(dir $(f))*[ch])
 
 crm_mon_SOURCES		= crm_mon.c crm_mon_curses.c
 crm_mon_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la	\
@@ -110,17 +116,20 @@ crm_mon_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la	\
 			  $(top_builddir)/lib/cib/libcib.la		\
 			  $(top_builddir)/lib/common/libcrmcommon.la	\
 			  $(CURSESLIBS)
+crm_mon_CFLOW_INPUT = $(crm_mon_SOURCES) $(foreach f,$(crm_mon_LDADD),$(dir $(f))*[ch])
 
 crm_verify_SOURCES	= crm_verify.c
 crm_verify_LDADD	= $(top_builddir)/lib/pengine/libpe_status.la 	\
 			  $(top_builddir)/lib/pacemaker/libpacemaker.la	\
 			  $(top_builddir)/lib/cib/libcib.la		\
 			  $(top_builddir)/lib/common/libcrmcommon.la
+crm_verify_CFLOW_INPUT = $(crm_verify_SOURCES) $(foreach f,$(crm_verify_LDADD),$(dir $(f))*[ch])
 
 crm_attribute_SOURCES	= crm_attribute.c
 crm_attribute_LDADD	= $(top_builddir)/lib/pacemaker/libpacemaker.la	\
 			  $(top_builddir)/lib/cib/libcib.la		\
 			  $(top_builddir)/lib/common/libcrmcommon.la
+crm_attribute_CFLOW_INPUT = $(crm_attribute_SOURCES) $(foreach f,$(crm_attribute_LDADD),$(dir $(f))*[ch])
 
 crm_resource_SOURCES	= crm_resource.c		\
 			  crm_resource_ban.c		\
@@ -134,6 +143,7 @@ crm_resource_LDADD	= $(top_builddir)/lib/pengine/libpe_rules.la  	\
 			  $(top_builddir)/lib/pacemaker/libpacemaker.la	\
 			  $(top_builddir)/lib/cib/libcib.la		\
 			  $(top_builddir)/lib/common/libcrmcommon.la
+crm_resource_CFLOW_INPUT = $(crm_resource_SOURCES) $(foreach f,$(crm_resource_LDADD),$(dir $(f))*[ch])
 
 crm_rule_SOURCES 	= crm_rule.c
 crm_rule_LDADD		= $(top_builddir)/lib/pacemaker/libpacemaker.la \
@@ -141,13 +151,16 @@ crm_rule_LDADD		= $(top_builddir)/lib/pacemaker/libpacemaker.la \
 			  $(top_builddir)/lib/pengine/libpe_rules.la   \
 			  $(top_builddir)/lib/pengine/libpe_status.la   \
 			  $(top_builddir)/lib/common/libcrmcommon.la
+crm_rule_CFLOW_INPUT = $(crm_rule_SOURCES) $(foreach f,$(crm_rule_LDADD),$(dir $(f))*[ch])
 
 iso8601_SOURCES		= iso8601.c
 iso8601_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la
+iso8601_CFLOW_INPUT = $(iso8601_SOURCES) $(foreach f,$(iso8601_LDADD),$(dir $(f))*[ch])
 
 attrd_updater_SOURCES	= attrd_updater.c
 attrd_updater_LDADD	= $(top_builddir)/lib/pacemaker/libpacemaker.la	\
 			  $(top_builddir)/lib/common/libcrmcommon.la
+attrd_updater_CFLOW_INPUT = $(attrd_updater_SOURCES) $(foreach f,$(attrd_updater_LDADD),$(dir $(f))*[ch])
 
 crm_ticket_SOURCES	= crm_ticket.c
 crm_ticket_LDADD	= $(top_builddir)/lib/pengine/libpe_rules.la	\
@@ -155,6 +168,7 @@ crm_ticket_LDADD	= $(top_builddir)/lib/pengine/libpe_rules.la	\
 			  $(top_builddir)/lib/pacemaker/libpacemaker.la	\
 			  $(top_builddir)/lib/cib/libcib.la		\
 			  $(top_builddir)/lib/common/libcrmcommon.la
+crm_ticket_CFLOW_INPUT = $(crm_ticket_SOURCES) $(foreach f,$(crm_ticket_LDADD),$(dir $(f))*[ch])
 
 stonith_admin_SOURCES	= stonith_admin.c
 stonith_admin_LDADD	= $(top_builddir)/lib/pacemaker/libpacemaker.la	\
@@ -162,5 +176,14 @@ stonith_admin_LDADD	= $(top_builddir)/lib/pacemaker/libpacemaker.la	\
 			  $(top_builddir)/lib/pengine/libpe_status.la	\
 			  $(top_builddir)/lib/fencing/libstonithd.la \
 			  $(top_builddir)/lib/common/libcrmcommon.la
+stonith_admin_CFLOW_INPUT = $(stonith_admin_SOURCES) $(foreach f,$(stonith_admin_LDADD),$(dir $(f))*[ch])
 
-CLEANFILES = $(man8_MANS)
+CFLOW_FILES = $(foreach f,$(sbin_PROGRAMS),$(f).cflow)
+
+.SECONDEXPANSION:
+%.cflow: $$($$(basename $$@)_CFLOW_INPUT)
+	cflow -o$@ -T --omit-symbol-names --omit-arguments $(CFLOW_FLAGS) $^
+
+cflow: $(CFLOW_FILES)
+
+CLEANFILES = $(man8_MANS) $(CFLOW_FILES)
