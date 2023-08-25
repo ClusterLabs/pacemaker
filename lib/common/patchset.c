@@ -1093,7 +1093,7 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
     int format = 1;
     int rc = pcmk_ok;
     xmlNode *old = NULL;
-    const char *digest = crm_element_value(patchset, XML_ATTR_DIGEST);
+    const char *digest = NULL;
 
     if (patchset == NULL) {
         return rc;
@@ -1123,9 +1123,12 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
         }
     }
 
-    if (digest) {
-        // Make it available for logging if result doesn't have expected digest
-        old = copy_xml(xml);
+    digest = crm_element_value(patchset, XML_ATTR_DIGEST);
+    if (digest != NULL) {
+        /* Make original XML available for logging in case result doesn't have
+         * expected digest
+         */
+        pcmk__if_tracing(old = copy_xml(xml), {});
     }
 
     if (rc == pcmk_ok) {
