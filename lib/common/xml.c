@@ -1543,6 +1543,46 @@ dump_xml_comment(const xmlNode *data, uint32_t options, GString *buffer,
     }
 }
 
+/*!
+ * \internal
+ * \brief Get a string representation of an XML element type
+ *
+ * \param[in] type  XML element type
+ *
+ * \return String representation of \p type
+ */
+static const char *
+xml_element_type2str(xmlElementType type)
+{
+    static const char *const element_type_names[] = {
+        [XML_ELEMENT_NODE]       = "element",
+        [XML_ATTRIBUTE_NODE]     = "attribute",
+        [XML_TEXT_NODE]          = "text",
+        [XML_CDATA_SECTION_NODE] = "CDATA section",
+        [XML_ENTITY_REF_NODE]    = "entity reference",
+        [XML_ENTITY_NODE]        = "entity",
+        [XML_PI_NODE]            = "PI",
+        [XML_COMMENT_NODE]       = "comment",
+        [XML_DOCUMENT_NODE]      = "document",
+        [XML_DOCUMENT_TYPE_NODE] = "document type",
+        [XML_DOCUMENT_FRAG_NODE] = "document fragment",
+        [XML_NOTATION_NODE]      = "notation",
+        [XML_HTML_DOCUMENT_NODE] = "HTML document",
+        [XML_DTD_NODE]           = "DTD",
+        [XML_ELEMENT_DECL]       = "element declaration",
+        [XML_ATTRIBUTE_DECL]     = "attribute declaration",
+        [XML_ENTITY_DECL]        = "entity declaration",
+        [XML_NAMESPACE_DECL]     = "namespace declaration",
+        [XML_XINCLUDE_START]     = "XInclude start",
+        [XML_XINCLUDE_END]       = "XInclude end",
+    };
+
+    if ((type < 0) || (type >= PCMK__NELEM(element_type_names))) {
+        return "unrecognized type";
+    }
+    return element_type_names[type];
+}
+
 #define PCMK__XMLDUMP_STATS 0
 
 /*!
@@ -1635,28 +1675,9 @@ pcmk__xml2text(xmlNodePtr data, uint32_t options, GString *buffer, int depth)
             dump_xml_cdata(data, options, buffer, depth);
             break;
         default:
-            crm_warn("Unhandled type: %d", data->type);
+            crm_warn("Cannot convert XML %s node to text " CRM_XS " type=%d",
+                     xml_element_type2str(data->type), data->type);
             break;
-
-            /*
-            XML_ATTRIBUTE_NODE = 2
-            XML_ENTITY_REF_NODE = 5
-            XML_ENTITY_NODE = 6
-            XML_PI_NODE = 7
-            XML_DOCUMENT_NODE = 9
-            XML_DOCUMENT_TYPE_NODE = 10
-            XML_DOCUMENT_FRAG_NODE = 11
-            XML_NOTATION_NODE = 12
-            XML_HTML_DOCUMENT_NODE = 13
-            XML_DTD_NODE = 14
-            XML_ELEMENT_DECL = 15
-            XML_ATTRIBUTE_DECL = 16
-            XML_ENTITY_DECL = 17
-            XML_NAMESPACE_DECL = 18
-            XML_XINCLUDE_START = 19
-            XML_XINCLUDE_END = 20
-            XML_DOCB_DOCUMENT_NODE = 21
-            */
     }
 }
 
