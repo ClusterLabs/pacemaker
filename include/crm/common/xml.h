@@ -103,10 +103,8 @@ xmlNode *pcmk_create_xml_text_node(xmlNode * parent, const char *name, const cha
 xmlNode *pcmk_create_html_node(xmlNode * parent, const char *element_name, const char *id,
                                const char *class_name, const char *text);
 
-/*
- *
- */
-void purge_diff_markers(xmlNode * a_node);
+//! \deprecated Do not use (will be removed in a future release)
+void purge_diff_markers(xmlNode *a_node);
 
 /*
  * Returns a deep copy of src_node
