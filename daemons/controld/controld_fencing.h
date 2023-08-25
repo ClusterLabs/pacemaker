@@ -19,7 +19,7 @@ void controld_configure_fencing(GHashTable *options);
 void st_fail_count_reset(const char * target);
 
 // stonith API client
-void controld_trigger_fencer_connect(void);
+gboolean controld_timer_fencer_connect(gpointer user_data);
 void controld_disconnect_fencer(bool destroy);
 int controld_execute_fence_action(pcmk__graph_t *graph,
                                   pcmk__graph_action_t *action);

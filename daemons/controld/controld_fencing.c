@@ -394,7 +394,7 @@ execute_stonith_cleanup(void)
  */
 
 static stonith_t *stonith_api = NULL;
-static crm_trigger_t *stonith_reconnect = NULL;
+static mainloop_timer_t *controld_fencer_connect_timer = NULL;
 static char *te_client_id = NULL;
 
 static gboolean
@@ -451,8 +451,9 @@ tengine_stonith_connection_destroy(stonith_t *st, stonith_event_t *e)
 
     if (pcmk_is_set(controld_globals.fsa_input_register, R_ST_REQUIRED)) {
         crm_err("Lost fencer connection (will attempt to reconnect)");
-        mainloop_set_trigger(stonith_reconnect);
-
+        if (!mainloop_timer_running(controld_fencer_connect_timer)) {
+            mainloop_timer_start(controld_fencer_connect_timer);
+        }
     } else {
         crm_info("Disconnected from fencer");
     }
@@ -650,14 +651,14 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
 /*!
  * \brief Connect to fencer
  *
- * \param[in] user_data  If NULL, retry failures now, otherwise retry in main loop
+ * \param[in] user_data  If NULL, retry failures now, otherwise retry in mainloop timer
  *
- * \return TRUE
+ * \return G_SOURCE_REMOVE on success, G_SOURCE_CONTINUE to retry
  * \note If user_data is NULL, this will wait 2s between attempts, for up to
  *       30 attempts, meaning the controller could be blocked as long as 58s.
  */
-static gboolean
-te_connect_stonith(gpointer user_data)
+gboolean
+controld_timer_fencer_connect(gpointer user_data)
 {
     int rc = pcmk_ok;
 
@@ -665,13 +666,13 @@ te_connect_stonith(gpointer user_data)
         stonith_api = stonith_api_new();
         if (stonith_api == NULL) {
             crm_err("Could not connect to fencer: API memory allocation failed");
-            return TRUE;
+            return G_SOURCE_REMOVE;
         }
     }
 
     if (stonith_api->state != stonith_disconnected) {
         crm_trace("Already connected to fencer, no need to retry");
-        return TRUE;
+        return G_SOURCE_REMOVE;
     }
 
     if (user_data == NULL) {
@@ -684,17 +685,30 @@ te_connect_stonith(gpointer user_data)
     } else {
         // Non-blocking (retry failures later in main loop)
         rc = stonith_api->cmds->connect(stonith_api, crm_system_name, NULL);
+
+        if (controld_fencer_connect_timer == NULL) {
+            controld_fencer_connect_timer =
+                mainloop_timer_add("controld_fencer_connect", 1000,
+                                   TRUE, controld_timer_fencer_connect,
+                                   GINT_TO_POINTER(TRUE));
+        }
+
         if (rc != pcmk_ok) {
             if (pcmk_is_set(controld_globals.fsa_input_register,
                             R_ST_REQUIRED)) {
                 crm_notice("Fencer connection failed (will retry): %s "
                            CRM_XS " rc=%d", pcmk_strerror(rc), rc);
-                mainloop_set_trigger(stonith_reconnect);
+
+                if (!mainloop_timer_running(controld_fencer_connect_timer)) {
+                    mainloop_timer_start(controld_fencer_connect_timer);
+                }
+
+                return G_SOURCE_CONTINUE;
             } else {
                 crm_info("Fencer connection failed (ignoring because no longer required): %s "
                          CRM_XS " rc=%d", pcmk_strerror(rc), rc);
             }
-            return TRUE;
+            return G_SOURCE_REMOVE;
         }
     }
 
@@ -712,23 +726,7 @@ te_connect_stonith(gpointer user_data)
         crm_notice("Fencer successfully connected");
     }
 
-    return TRUE;
-}
-
-/*!
-    \internal
-    \brief Schedule fencer connection attempt in main loop
-*/
-void
-controld_trigger_fencer_connect(void)
-{
-    if (stonith_reconnect == NULL) {
-        stonith_reconnect = mainloop_add_trigger(G_PRIORITY_LOW,
-                                                 te_connect_stonith,
-                                                 GINT_TO_POINTER(TRUE));
-    }
-    controld_set_fsa_input_flags(R_ST_REQUIRED);
-    mainloop_set_trigger(stonith_reconnect);
+    return G_SOURCE_REMOVE;
 }
 
 void
@@ -748,9 +746,9 @@ controld_disconnect_fencer(bool destroy)
             stonith_api->cmds->free(stonith_api);
             stonith_api = NULL;
         }
-        if (stonith_reconnect) {
-            mainloop_destroy_trigger(stonith_reconnect);
-            stonith_reconnect = NULL;
+        if (controld_fencer_connect_timer) {
+            mainloop_timer_del(controld_fencer_connect_timer);
+            controld_fencer_connect_timer = NULL;
         }
         if (te_client_id) {
             free(te_client_id);
@@ -984,7 +982,7 @@ controld_execute_fence_action(pcmk__graph_t *graph,
                priority_delay ? priority_delay : "");
 
     /* Passing NULL means block until we can connect... */
-    te_connect_stonith(NULL);
+    controld_timer_fencer_connect(NULL);
 
     pcmk__scan_min_int(priority_delay, &delay_i, 0);
     rc = fence_with_delay(target, type, delay_i);

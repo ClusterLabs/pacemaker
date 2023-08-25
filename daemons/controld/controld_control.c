@@ -497,7 +497,8 @@ do_started(long long action,
     } else {
         crm_notice("Pacemaker controller successfully started and accepting connections");
     }
-    controld_trigger_fencer_connect();
+    controld_set_fsa_input_flags(R_ST_REQUIRED);
+    controld_timer_fencer_connect(GINT_TO_POINTER(TRUE));
 
     controld_clear_fsa_input_flags(R_STARTING);
     register_fsa_input(msg_data->fsa_cause, I_PENDING, NULL);
