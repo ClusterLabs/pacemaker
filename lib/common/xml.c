@@ -1720,7 +1720,7 @@ xml_remove_prop(xmlNode * obj, const char *name)
 }
 
 void
-save_xml_to_file(xmlNode * xml, const char *desc, const char *filename)
+save_xml_to_file(const xmlNode *xml, const char *desc, const char *filename)
 {
     char *f = NULL;
 

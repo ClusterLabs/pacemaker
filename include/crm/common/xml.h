@@ -280,7 +280,8 @@ int xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version);
 
 void patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target, bool with_digest);
 
-void save_xml_to_file(xmlNode * xml, const char *desc, const char *filename);
+void save_xml_to_file(const xmlNode *xml, const char *desc,
+                      const char *filename);
 
 char * crm_xml_escape(const char *text);
 void crm_xml_sanitize_id(char *id);
