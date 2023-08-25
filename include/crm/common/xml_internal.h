@@ -135,9 +135,6 @@ enum pcmk__xml_fmt_options {
     //! Include indentation and newlines
     pcmk__xml_fmt_pretty     = (1 << 1),
 
-    //! Include full XML subtree (with any text), using libxml serialization
-    pcmk__xml_fmt_full       = (1 << 2),
-
     //! Include the opening tag of an XML element, and include XML comments
     pcmk__xml_fmt_open       = (1 << 3),
 
