@@ -166,9 +166,8 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
 
     pcmk__output_t *logger_out = NULL;
     int out_rc = pcmk_rc_no_output;
-    int temp_rc = pcmk_rc_no_output;
 
-    const char *vfields[] = {
+    static const char *const vfields[] = {
         XML_ATTR_GENERATION_ADMIN,
         XML_ATTR_GENERATION,
         XML_ATTR_NUMUPDATES,
@@ -221,10 +220,7 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
         free_xml(find_xml_node(output, "version", FALSE));
     }
 
-    pcmk__output_set_log_level(logger_out, LOG_NOTICE);
-    temp_rc = logger_out->message(logger_out, "xml-patchset", output);
-    out_rc = pcmk__output_select_rc(out_rc, temp_rc);
-
+    pcmk__log_xml_patchset(LOG_NOTICE, output);
     print_patch(output);
     free_xml(output);
 
