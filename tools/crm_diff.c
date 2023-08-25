@@ -196,9 +196,8 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
         return pcmk_rc_ok;  // No changes
     }
 
-    patchset_process_digest(output, object_1, object_2, as_cib);
-
     if (as_cib) {
+        pcmk__add_digest_to_patchset(object_1, object_2, output);
         log_patch_cib_versions(output);
 
     } else if (no_version) {

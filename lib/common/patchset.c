@@ -325,35 +325,52 @@ pcmk__xml_create_patchset(const xmlNode *source, xmlNode *target,
     return xml_create_patchset_v2(source, target);
 }
 
+/*!
+ * \internal
+ * \brief Calculate a digest from changed XML and add it to the patchset
+ *
+ * \param[in]     source    XML before applying patchset
+ * \param[in,out] target    XML with changes applied
+ * \param[in,out] patchset  XML patchset
+ */
+void
+pcmk__add_digest_to_patchset(const xmlNode *source, xmlNode *target,
+                             xmlNode *patchset)
+{
+    const char *version = NULL;
+    char *digest = NULL;
+
+    if ((source == NULL) || (target == NULL) || (patchset == NULL)) {
+        return;
+    }
+
+    /* We should always call xml_accept_changes() before calculating a digest.
+     * Otherwise, with a dirty target with tracking enabled, we could get an
+     * incorrect digest.
+     */
+    CRM_LOG_ASSERT(!xml_document_dirty(target));
+
+    version = crm_element_value(source, XML_ATTR_CRM_VERSION);
+    digest = calculate_xml_versioned_digest(target, FALSE, TRUE, version);
+
+    crm_xml_add(patchset, XML_ATTR_DIGEST, digest);
+    free(digest);
+}
+
 void
 patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
                         bool with_digest)
 {
     int format = 1;
-    const char *version = NULL;
-    char *digest = NULL;
 
-    if ((patch == NULL) || (source == NULL) || (target == NULL)) {
+    if (patch == NULL) {
         return;
     }
-
-    /* We should always call xml_accept_changes() before calculating a digest.
-     * Otherwise, with an on-tracking dirty target, we could get a wrong digest.
-     */
-    CRM_LOG_ASSERT(!xml_document_dirty(target));
 
     crm_element_value_int(patch, PCMK_XA_FORMAT, &format);
-    if ((format > 1) && !with_digest) {
-        return;
+    if ((format <= 1) || with_digest) {
+        pcmk__add_digest_to_patchset(source, target, patch);
     }
-
-    version = crm_element_value(source, XML_ATTR_CRM_VERSION);
-    digest = calculate_xml_versioned_digest(target, FALSE, TRUE, version);
-
-    crm_xml_add(patch, XML_ATTR_DIGEST, digest);
-    free(digest);
-
-    return;
 }
 
 /* Return true if attribute name is not "id"
