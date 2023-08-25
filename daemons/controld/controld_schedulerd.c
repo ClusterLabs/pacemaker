@@ -45,11 +45,11 @@ controld_shutdown_schedulerd_ipc(void)
  * \internal
  * \brief Save CIB query result to file, raising FSA error
  *
- * \param[in]     msg        Ignored
- * \param[in]     call_id    Call ID of CIB query
- * \param[in]     rc         Return code of CIB query
- * \param[in,out] output     Result of CIB query
- * \param[in]     user_data  Unique identifier for filename
+ * \param[in] msg        Ignored
+ * \param[in] call_id    Call ID of CIB query
+ * \param[in] rc         Return code of CIB query
+ * \param[in] output     Result of CIB query
+ * \param[in] user_data  Unique identifier for filename
  *
  * \note This is intended to be called after a scheduler connection fails.
  */
