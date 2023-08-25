@@ -233,7 +233,8 @@ main(int argc, char **argv)
     data_set = pe_new_working_set();
     if (data_set == NULL) {
         rc = errno;
-        crm_perror(LOG_CRIT, "Unable to allocate working set");
+        g_set_error(&error, PCMK__RC_ERROR, rc,
+                    "Could not allocate working set: %s", pcmk_rc_str(rc));
         goto done;
     }
     data_set->priv = out;

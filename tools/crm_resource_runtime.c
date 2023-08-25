@@ -1527,8 +1527,8 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc,
 
     data_set = pe_new_working_set();
     if (data_set == NULL) {
-        crm_perror(LOG_ERR, "Could not allocate working set");
-        rc = ENOMEM;
+        rc = errno;
+        out->err(out, "Could not allocate working set: %s", pcmk_rc_str(rc));
         goto done;
     }
 
