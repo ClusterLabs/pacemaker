@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -644,7 +644,7 @@ dump_file(const char *filename)
 }
 
 gboolean
-validate_xml_verbose(xmlNode *xml_blob)
+validate_xml_verbose(const xmlNode *xml_blob)
 {
     int fd = 0;
     xmlDoc *doc = NULL;
