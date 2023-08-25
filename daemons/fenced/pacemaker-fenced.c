@@ -1007,7 +1007,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
         }
 
         patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
-        rc = xml_apply_patchset(local_cib, patchset, TRUE);
+        rc = pcmk__xml_apply_patchset(local_cib, patchset, true);
         switch (rc) {
             case pcmk_ok:
             case -pcmk_err_old_data:

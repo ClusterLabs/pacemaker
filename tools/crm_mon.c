@@ -2010,7 +2010,7 @@ crm_diff_update(const char *event, xmlNode * msg)
     out->progress(out, false);
 
     if (current_cib != NULL) {
-        rc = xml_apply_patchset(current_cib, diff, TRUE);
+        rc = pcmk__xml_apply_patchset(current_cib, diff, true);
 
         switch (rc) {
             case -pcmk_err_diff_resync:
