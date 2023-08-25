@@ -359,7 +359,7 @@ cib__get_node_attrs(pcmk__output_t *out, cib_t *cib, const char *section,
         crm_trace("Query failed for attribute %s (section=%s node=%s set=%s): %s",
                   pcmk__s(attr_name, "with unspecified name"),
                   section, pcmk__s(set_name, "<null>"),
-                  pcmk__s(node_uuid, "<null>"), pcmk_strerror(rc));
+                  pcmk__s(node_uuid, "<null>"), pcmk_rc_str(rc));
     }
 
     return rc;

@@ -467,7 +467,7 @@ send_attrd_query(pcmk__output_t *out, const char *attr_name,
 
     if (rc != pcmk_rc_ok) {
         g_set_error(&error, PCMK__RC_ERROR, rc, "Could not query value of %s: %s (%d)",
-                    attr_name, pcmk_strerror(rc), rc);
+                    attr_name, pcmk_rc_str(rc), rc);
     } else if (!printed_values) {
         rc = pcmk_rc_schema_validation;
         g_set_error(&error, PCMK__RC_ERROR, rc,

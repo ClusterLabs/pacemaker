@@ -1178,7 +1178,7 @@ services__execute_file(svc_action_t *op)
     if (stat(op->opaque->exec, &st) != 0) {
         rc = errno;
         crm_info("Cannot execute '%s': %s " CRM_XS " stat rc=%d",
-                 op->opaque->exec, pcmk_strerror(rc), rc);
+                 op->opaque->exec, pcmk_rc_str(rc), rc);
         services__handle_exec_error(op, rc);
         goto done;
     }
@@ -1186,7 +1186,7 @@ services__execute_file(svc_action_t *op)
     if (pipe(stdout_fd) < 0) {
         rc = errno;
         crm_info("Cannot execute '%s': %s " CRM_XS " pipe(stdout) rc=%d",
-                 op->opaque->exec, pcmk_strerror(rc), rc);
+                 op->opaque->exec, pcmk_rc_str(rc), rc);
         services__handle_exec_error(op, rc);
         goto done;
     }
@@ -1197,7 +1197,7 @@ services__execute_file(svc_action_t *op)
         close_pipe(stdout_fd);
 
         crm_info("Cannot execute '%s': %s " CRM_XS " pipe(stderr) rc=%d",
-                 op->opaque->exec, pcmk_strerror(rc), rc);
+                 op->opaque->exec, pcmk_rc_str(rc), rc);
         services__handle_exec_error(op, rc);
         goto done;
     }
@@ -1210,7 +1210,7 @@ services__execute_file(svc_action_t *op)
             close_pipe(stderr_fd);
 
             crm_info("Cannot execute '%s': %s " CRM_XS " pipe(stdin) rc=%d",
-                     op->opaque->exec, pcmk_strerror(rc), rc);
+                     op->opaque->exec, pcmk_rc_str(rc), rc);
             services__handle_exec_error(op, rc);
             goto done;
         }
@@ -1235,7 +1235,7 @@ services__execute_file(svc_action_t *op)
             close_pipe(stderr_fd);
 
             crm_info("Cannot execute '%s': %s " CRM_XS " fork rc=%d",
-                     op->opaque->exec, pcmk_strerror(rc), rc);
+                     op->opaque->exec, pcmk_rc_str(rc), rc);
             services__handle_exec_error(op, rc);
             if (op->synchronous) {
                 sigchld_cleanup(&data);

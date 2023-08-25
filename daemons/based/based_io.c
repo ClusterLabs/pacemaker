@@ -110,7 +110,7 @@ static int cib_archive_filter(const struct dirent * a)
 
     if(stat(a_path, &s) != 0) {
         rc = errno;
-        crm_trace("%s - stat failed: %s (%d)", a->d_name, pcmk_strerror(rc), rc);
+        crm_trace("%s - stat failed: %s (%d)", a->d_name, pcmk_rc_str(rc), rc);
         rc = 0;
 
     } else if ((s.st_mode & S_IFREG) != S_IFREG) {

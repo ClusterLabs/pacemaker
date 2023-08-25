@@ -861,7 +861,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
     }
     if (rc != pcmk_rc_ok) {
         out->err(out, "Cleaned %s failures on %s, but unable to clean history: %s",
-                 rsc->id, host_uname, pcmk_strerror(rc));
+                 rsc->id, host_uname, pcmk_rc_str(rc));
     } else {
         out->info(out, "Cleaned up %s on %s", rsc->id, host_uname);
     }
@@ -910,7 +910,7 @@ cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
                                 operation, interval_spec, data_set);
         if (rc != pcmk_rc_ok) {
             out->err(out, "Cleaned all resource failures on %s, but unable to clean history: %s",
-                     node_name, pcmk_strerror(rc));
+                     node_name, pcmk_rc_str(rc));
             return rc;
         }
     } else {
@@ -921,7 +921,7 @@ cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
                                     operation, interval_spec, data_set);
             if (rc != pcmk_rc_ok) {
                 out->err(out, "Cleaned all resource failures on all nodes, but unable to clean history: %s",
-                         pcmk_strerror(rc));
+                         pcmk_rc_str(rc));
                 return rc;
             }
         }
@@ -1225,7 +1225,7 @@ update_working_set_from_cib(pcmk__output_t *out, pe_working_set_t * data_set,
     rc = pcmk_legacy2rc(rc);
 
     if (rc != pcmk_rc_ok) {
-        out->err(out, "Could not obtain the current CIB: %s (%d)", pcmk_strerror(rc), rc);
+        out->err(out, "Could not obtain the current CIB: %s (%d)", pcmk_rc_str(rc), rc);
         return rc;
     }
     rc = update_working_set_xml(data_set, &cib_xml_copy);
@@ -1281,7 +1281,7 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
         rc = pcmk_legacy2rc(rc);
 
         if (rc != pcmk_rc_ok) {
-            out->err(out, "Could not connect to shadow cib: %s (%d)", pcmk_strerror(rc), rc);
+            out->err(out, "Could not connect to shadow cib: %s (%d)", pcmk_rc_str(rc), rc);
             goto done;
         }
 
@@ -1536,7 +1536,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc,
     rc = update_dataset(cib, data_set, false);
 
     if(rc != pcmk_rc_ok) {
-        out->err(out, "Could not get new resource list: %s (%d)", pcmk_strerror(rc), rc);
+        out->err(out, "Could not get new resource list: %s (%d)", pcmk_rc_str(rc), rc);
         goto done;
     }
 
@@ -1565,7 +1565,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc,
                                            cib_options, force);
     }
     if(rc != pcmk_rc_ok) {
-        out->err(out, "Could not set target-role for %s: %s (%d)", rsc_id, pcmk_strerror(rc), rc);
+        out->err(out, "Could not set target-role for %s: %s (%d)", rsc_id, pcmk_rc_str(rc), rc);
         if (current_active != NULL) {
             g_list_free_full(current_active, free);
             current_active = NULL;
@@ -1651,7 +1651,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc,
     }
 
     if(rc != pcmk_rc_ok) {
-        out->err(out, "Could not unset target-role for %s: %s (%d)", rsc_id, pcmk_strerror(rc), rc);
+        out->err(out, "Could not unset target-role for %s: %s (%d)", rsc_id, pcmk_rc_str(rc), rc);
         goto done;
     }
 
