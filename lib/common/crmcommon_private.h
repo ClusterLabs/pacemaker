@@ -63,7 +63,7 @@ typedef struct xml_doc_private_s {
     } while (0)
 
 G_GNUC_INTERNAL
-void pcmk__xml2text(xmlNodePtr data, uint32_t options, GString *buffer,
+void pcmk__xml2text(const xmlNode *data, uint32_t options, GString *buffer,
                     int depth);
 
 G_GNUC_INTERNAL
