@@ -1143,20 +1143,6 @@ pcmk__xml_apply_patchset(xmlNode *xml, const xmlNode *patchset,
     return rc;
 }
 
-void
-purge_diff_markers(xmlNode *a_node)
-{
-    xmlNode *child = NULL;
-
-    CRM_CHECK(a_node != NULL, return);
-
-    xml_remove_prop(a_node, XML_DIFF_MARKER);
-    for (child = pcmk__xml_first_child(a_node); child != NULL;
-         child = pcmk__xml_next(child)) {
-        purge_diff_markers(child);
-    }
-}
-
 // @COMPAT Drop when xml_create_patchset() is dropped
 static xmlNode *
 subtract_xml_comment(xmlNode *parent, xmlNode *left, xmlNode *right,
@@ -1358,6 +1344,20 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
     }
   done:
     return diff;
+}
+
+void
+purge_diff_markers(xmlNode *a_node)
+{
+    xmlNode *child = NULL;
+
+    CRM_CHECK(a_node != NULL, return);
+
+    xml_remove_prop(a_node, XML_DIFF_MARKER);
+    for (child = pcmk__xml_first_child(a_node); child != NULL;
+         child = pcmk__xml_next(child)) {
+        purge_diff_markers(child);
+    }
 }
 
 gboolean
