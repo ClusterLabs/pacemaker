@@ -606,12 +606,11 @@ xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
  *
  * \param[in] xml       Root of current CIB
  * \param[in] patchset  Patchset to check
- * \param[in] format    Patchset version
  *
  * \return Standard Pacemaker return code
  */
 static int
-xml_patch_version_check(const xmlNode *xml, const xmlNode *patchset, int format)
+xml_patch_version_check(const xmlNode *xml, const xmlNode *patchset)
 {
     int lpc = 0;
     bool changed = FALSE;
@@ -1117,9 +1116,8 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
         {}
     );
 
-    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
     if (check_version) {
-        rc = pcmk_rc2legacy(xml_patch_version_check(xml, patchset, format));
+        rc = pcmk_rc2legacy(xml_patch_version_check(xml, patchset));
         if (rc != pcmk_ok) {
             return rc;
         }
@@ -1131,6 +1129,7 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
     }
 
     if (rc == pcmk_ok) {
+        crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
         switch (format) {
             case 1:
                 rc = pcmk_rc2legacy(apply_v1_patchset(xml, patchset));
