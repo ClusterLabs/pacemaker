@@ -187,7 +187,7 @@ char *calculate_xml_versioned_digest(xmlNode * input, gboolean sort, gboolean do
 
 /* schema-related functions (from schemas.c) */
 gboolean validate_xml(xmlNode * xml_blob, const char *validation, gboolean to_logs);
-gboolean validate_xml_verbose(xmlNode * xml_blob);
+gboolean validate_xml_verbose(const xmlNode *xml_blob);
 
 /*!
  * \brief Update CIB XML to most recent schema version
