@@ -743,7 +743,7 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
 }
 
 int
-pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, xmlNode *message,
+pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, const xmlNode *message,
                    uint32_t flags)
 {
     struct iovec *iov = NULL;
