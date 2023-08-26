@@ -175,11 +175,11 @@ typedef struct pcmk__ipc_methods_s {
      * \brief Check whether an IPC request results in a reply
      *
      * \param[in,out] api      IPC API connection
-     * \param[in,out] request  IPC request XML
+     * \param[in]     request  IPC request XML
      *
      * \return true if request would result in an IPC reply, false otherwise
      */
-    bool (*reply_expected)(pcmk_ipc_api_t *api, xmlNode *request);
+    bool (*reply_expected)(pcmk_ipc_api_t *api, const xmlNode *request);
 
     /*!
      * \internal

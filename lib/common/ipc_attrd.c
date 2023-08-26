@@ -44,7 +44,7 @@ set_pairs_data(pcmk__attrd_api_reply_t *data, xmlNode *msg_data)
 }
 
 static bool
-reply_expected(pcmk_ipc_api_t *api, xmlNode *request)
+reply_expected(pcmk_ipc_api_t *api, const xmlNode *request)
 {
     const char *command = crm_element_value(request, PCMK__XA_TASK);
 
