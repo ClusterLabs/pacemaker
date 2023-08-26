@@ -224,7 +224,7 @@ typedef struct pcmk__ipc_header_s {
 } pcmk__ipc_header_t;
 
 G_GNUC_INTERNAL
-int pcmk__send_ipc_request(pcmk_ipc_api_t *api, xmlNode *request);
+int pcmk__send_ipc_request(pcmk_ipc_api_t *api, const xmlNode *request);
 
 G_GNUC_INTERNAL
 void pcmk__call_ipc_callback(pcmk_ipc_api_t *api,

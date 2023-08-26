@@ -169,7 +169,7 @@ destroy_api(pcmk_ipc_api_t *api)
 }
 
 static int
-connect_and_send_attrd_request(pcmk_ipc_api_t *api, xmlNode *request)
+connect_and_send_attrd_request(pcmk_ipc_api_t *api, const xmlNode *request)
 {
     int rc = pcmk_rc_ok;
 
@@ -191,7 +191,7 @@ connect_and_send_attrd_request(pcmk_ipc_api_t *api, xmlNode *request)
 }
 
 static int
-send_attrd_request(pcmk_ipc_api_t *api, xmlNode *request)
+send_attrd_request(pcmk_ipc_api_t *api, const xmlNode *request)
 {
     return pcmk__send_ipc_request(api, request);
 }
