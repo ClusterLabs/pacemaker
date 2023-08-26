@@ -253,8 +253,8 @@ int pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
 int pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
                           uint32_t max_send_size,
                           struct iovec **result, ssize_t *bytes);
-int pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, xmlNode *message,
-                       uint32_t flags);
+int pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request,
+                       const xmlNode *message, uint32_t flags);
 int pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags);
 xmlNode *pcmk__client_data2xml(pcmk__client_t *c, void *data,
                                uint32_t *id, uint32_t *flags);
