@@ -68,8 +68,6 @@ struct device_search_s {
 static gboolean stonith_device_dispatch(gpointer user_data);
 static void st_child_done(int pid, const pcmk__action_result_t *result,
                           void *user_data);
-static void stonith_send_reply(xmlNode * reply, int call_options, const char *remote_peer,
-                               pcmk__client_t *client);
 
 static void search_devices_record_result(struct device_search_s *search, const char *device,
                                          gboolean can_fence);
@@ -2385,6 +2383,30 @@ add_action_reply(xmlNode *xml, const char *action,
     add_disallowed(child, action, device, target, allow_suicide);
 }
 
+/*!
+ * \internal
+ * \brief Send a reply to a CPG peer or IPC client
+ *
+ * \param[in]     reply         XML reply to send
+ * \param[in]     call_options  Send synchronously if st_opt_sync_call is set
+ * \param[in]     remote_peer   If not NULL, name of peer node to send CPG reply
+ * \param[in,out] client        If not NULL, client to send IPC reply
+ */
+static void
+stonith_send_reply(const xmlNode *reply, int call_options,
+                   const char *remote_peer, pcmk__client_t *client)
+{
+    CRM_CHECK((reply != NULL) && ((remote_peer != NULL) || (client != NULL)),
+              return);
+
+    if (remote_peer == NULL) {
+        do_local_reply(reply, client, call_options);
+    } else {
+        send_cluster_message(crm_get_peer(0, remote_peer), crm_msg_stonith_ng,
+                             reply, FALSE);
+    }
+}
+
 static void
 stonith_query_capable_device_cb(GList * devices, void *user_data)
 {
@@ -3054,30 +3076,6 @@ check_alternate_host(const char *target)
         crm_warn("Will handle own fencing because no peer can");
     }
     return NULL;
-}
-
-/*!
- * \internal
- * \brief Send a reply to a CPG peer or IPC client
- *
- * \param[in]     reply         XML reply to send
- * \param[in]     call_options  Send synchronously if st_opt_sync_call is set
- * \param[in]     remote_peer   If not NULL, name of peer node to send CPG reply
- * \param[in,out] client        If not NULL, client to send IPC reply
- */
-static void
-stonith_send_reply(xmlNode *reply, int call_options, const char *remote_peer,
-                   pcmk__client_t *client)
-{
-    CRM_CHECK((reply != NULL) && ((remote_peer != NULL) || (client != NULL)),
-              return);
-
-    if (remote_peer == NULL) {
-        do_local_reply(reply, client, call_options);
-    } else {
-        send_cluster_message(crm_get_peer(0, remote_peer), crm_msg_stonith_ng,
-                             reply, FALSE);
-    }
 }
 
 static void 
