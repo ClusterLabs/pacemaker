@@ -303,11 +303,11 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
  *
  * \note \p args should contain only the XML patchset
  */
-PCMK__OUTPUT_ARGS("xml-patchset", "xmlNodePtr")
+PCMK__OUTPUT_ARGS("xml-patchset", "const xmlNode *")
 static int
 xml_patchset_default(pcmk__output_t *out, va_list args)
 {
-    xmlNodePtr patchset = va_arg(args, xmlNodePtr);
+    const xmlNode *patchset = va_arg(args, const xmlNode *);
 
     int format = 1;
 
@@ -342,13 +342,13 @@ xml_patchset_default(pcmk__output_t *out, va_list args)
  *
  * \note \p args should contain only the XML patchset
  */
-PCMK__OUTPUT_ARGS("xml-patchset", "xmlNodePtr")
+PCMK__OUTPUT_ARGS("xml-patchset", "const xmlNode *")
 static int
 xml_patchset_log(pcmk__output_t *out, va_list args)
 {
     static struct qb_log_callsite *patchset_cs = NULL;
 
-    xmlNodePtr patchset = va_arg(args, xmlNodePtr);
+    const xmlNode *patchset = va_arg(args, const xmlNode *);
 
     uint8_t log_level = pcmk__output_get_log_level(out);
     int format = 1;
@@ -404,11 +404,11 @@ xml_patchset_log(pcmk__output_t *out, va_list args)
  *
  * \note \p args should contain only the XML patchset
  */
-PCMK__OUTPUT_ARGS("xml-patchset", "xmlNodePtr")
+PCMK__OUTPUT_ARGS("xml-patchset", "const xmlNode *")
 static int
 xml_patchset_xml(pcmk__output_t *out, va_list args)
 {
-    xmlNodePtr patchset = va_arg(args, xmlNodePtr);
+    const xmlNode *patchset = va_arg(args, const xmlNode *);
 
     if (patchset != NULL) {
         char *buf = dump_xml_formatted_with_text(patchset);
