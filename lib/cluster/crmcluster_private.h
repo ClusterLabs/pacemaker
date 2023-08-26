@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 the Pacemaker project contributors
+ * Copyright 2020-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -41,7 +41,7 @@ G_GNUC_INTERNAL
 void pcmk__corosync_disconnect(crm_cluster_t *cluster);
 
 G_GNUC_INTERNAL
-gboolean pcmk__cpg_send_xml(xmlNode *msg, const crm_node_t *node,
-                            enum crm_ais_msg_types dest);
+bool pcmk__cpg_send_xml(const xmlNode *msg, const crm_node_t *node,
+                        enum crm_ais_msg_types dest);
 
 #endif  // PCMK__CRMCLUSTER_PRIVATE__H
