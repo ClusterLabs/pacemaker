@@ -7048,7 +7048,7 @@ Diff: +++ 1.4.1 (null)
       <cib epoch="4" num_updates="1" admin_epoch="1"/>
     </change-result>
   </change>
-  <change operation="modify" path="/cib/configuration/resources/primitive[@id='dummy']">
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id=&apos;dummy&apos;]">
     <change-list>
       <change-attr name="description" operation="set" value="desc"/>
     </change-list>
@@ -7679,26 +7679,26 @@ Diff: +++ 0.1.0 (null)
     <source admin_epoch="1" epoch="1" num_updates="173"/>
     <target admin_epoch="0" epoch="1" num_updates="0"/>
   </version>
-  <change operation="delete" path="/cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']"/>
-  <change operation="delete" path="/cib/configuration/nodes/node[@id='1']"/>
-  <change operation="delete" path="/cib/configuration/nodes/node[@id='2']"/>
-  <change operation="delete" path="/cib/configuration/resources/clone[@id='ping-clone']"/>
-  <change operation="delete" path="/cib/configuration/resources/primitive[@id='Fencing']"/>
-  <change operation="delete" path="/cib/configuration/resources/primitive[@id='dummy']"/>
-  <change operation="delete" path="/cib/configuration/resources/clone[@id='inactive-clone']"/>
-  <change operation="delete" path="/cib/configuration/resources/group[@id='inactive-group']"/>
-  <change operation="delete" path="/cib/configuration/resources/bundle[@id='httpd-bundle']"/>
-  <change operation="delete" path="/cib/configuration/resources/group[@id='exim-group']"/>
-  <change operation="delete" path="/cib/configuration/resources/clone[@id='mysql-clone-group']"/>
-  <change operation="delete" path="/cib/configuration/resources/clone[@id='promotable-clone']"/>
-  <change operation="delete" path="/cib/configuration/constraints/rsc_location[@id='not-on-cluster1']"/>
-  <change operation="delete" path="/cib/configuration/constraints/rsc_location[@id='loc-promotable-clone']"/>
+  <change operation="delete" path="/cib/configuration/crm_config/cluster_property_set[@id=&apos;cib-bootstrap-options&apos;]"/>
+  <change operation="delete" path="/cib/configuration/nodes/node[@id=&apos;1&apos;]"/>
+  <change operation="delete" path="/cib/configuration/nodes/node[@id=&apos;2&apos;]"/>
+  <change operation="delete" path="/cib/configuration/resources/clone[@id=&apos;ping-clone&apos;]"/>
+  <change operation="delete" path="/cib/configuration/resources/primitive[@id=&apos;Fencing&apos;]"/>
+  <change operation="delete" path="/cib/configuration/resources/primitive[@id=&apos;dummy&apos;]"/>
+  <change operation="delete" path="/cib/configuration/resources/clone[@id=&apos;inactive-clone&apos;]"/>
+  <change operation="delete" path="/cib/configuration/resources/group[@id=&apos;inactive-group&apos;]"/>
+  <change operation="delete" path="/cib/configuration/resources/bundle[@id=&apos;httpd-bundle&apos;]"/>
+  <change operation="delete" path="/cib/configuration/resources/group[@id=&apos;exim-group&apos;]"/>
+  <change operation="delete" path="/cib/configuration/resources/clone[@id=&apos;mysql-clone-group&apos;]"/>
+  <change operation="delete" path="/cib/configuration/resources/clone[@id=&apos;promotable-clone&apos;]"/>
+  <change operation="delete" path="/cib/configuration/constraints/rsc_location[@id=&apos;not-on-cluster1&apos;]"/>
+  <change operation="delete" path="/cib/configuration/constraints/rsc_location[@id=&apos;loc-promotable-clone&apos;]"/>
   <change operation="delete" path="/cib/configuration/tags"/>
   <change operation="delete" path="/cib/configuration/op_defaults"/>
-  <change operation="delete" path="/cib/status/node_state[@id='2']"/>
-  <change operation="delete" path="/cib/status/node_state[@id='1']"/>
-  <change operation="delete" path="/cib/status/node_state[@id='httpd-bundle-0']"/>
-  <change operation="delete" path="/cib/status/node_state[@id='httpd-bundle-1']"/>
+  <change operation="delete" path="/cib/status/node_state[@id=&apos;2&apos;]"/>
+  <change operation="delete" path="/cib/status/node_state[@id=&apos;1&apos;]"/>
+  <change operation="delete" path="/cib/status/node_state[@id=&apos;httpd-bundle-0&apos;]"/>
+  <change operation="delete" path="/cib/status/node_state[@id=&apos;httpd-bundle-1&apos;]"/>
   <change operation="modify" path="/cib">
     <change-list>
       <change-attr name="crm_feature_set" operation="set" value="3.18.1"/>
