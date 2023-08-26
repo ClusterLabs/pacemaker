@@ -1274,25 +1274,25 @@ write_xml_fd(const xmlNode *xml, const char *filename, int fd,
 /*!
  * \brief Write XML to a file
  *
- * \param[in] xml_node  XML to write
+ * \param[in] xml       XML to write
  * \param[in] filename  Name of file to write
  * \param[in] compress  Whether to compress XML before writing
  *
  * \return Number of bytes written on success, -errno otherwise
  */
 int
-write_xml_file(xmlNode * xml_node, const char *filename, gboolean compress)
+write_xml_file(const xmlNode *xml, const char *filename, gboolean compress)
 {
     FILE *stream = NULL;
     unsigned int nbytes = 0;
     int rc = pcmk_rc_ok;
 
-    CRM_CHECK(xml_node && filename, return -EINVAL);
+    CRM_CHECK((xml != NULL) && (filename != NULL), return -EINVAL);
     stream = fopen(filename, "w");
     if (stream == NULL) {
         return -errno;
     }
-    rc = write_xml_stream(xml_node, filename, stream, compress, &nbytes);
+    rc = write_xml_stream(xml, filename, stream, compress, &nbytes);
     if (rc != pcmk_rc_ok) {
         return pcmk_rc2legacy(rc);
     }
