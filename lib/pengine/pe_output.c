@@ -363,7 +363,7 @@ is_mixed_version(pe_working_set_t *data_set) {
 }
 
 static char *
-formatted_xml_buf(pe_resource_t *rsc, bool raw)
+formatted_xml_buf(const pe_resource_t *rsc, bool raw)
 {
     if (raw) {
         return dump_xml_formatted(rsc->orig_xml ? rsc->orig_xml : rsc->xml);
@@ -2641,10 +2641,10 @@ promotion_score_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("resource-config", "pe_resource_t *", "bool")
+PCMK__OUTPUT_ARGS("resource-config", "const pe_resource_t *", "bool")
 static int
 resource_config(pcmk__output_t *out, va_list args) {
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    const pe_resource_t *rsc = va_arg(args, const pe_resource_t *);
     bool raw = va_arg(args, int);
 
     char *rsc_xml = formatted_xml_buf(rsc, raw);
@@ -2655,10 +2655,10 @@ resource_config(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("resource-config", "pe_resource_t *", "bool")
+PCMK__OUTPUT_ARGS("resource-config", "const pe_resource_t *", "bool")
 static int
 resource_config_text(pcmk__output_t *out, va_list args) {
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    const pe_resource_t *rsc = va_arg(args, const pe_resource_t *);
     bool raw = va_arg(args, int);
 
     char *rsc_xml = formatted_xml_buf(rsc, raw);
