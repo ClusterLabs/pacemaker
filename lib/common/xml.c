@@ -1664,12 +1664,12 @@ dump_xml_formatted(const xmlNode *xml)
 }
 
 char *
-dump_xml_unformatted(xmlNode * an_xml_node)
+dump_xml_unformatted(const xmlNode *xml)
 {
     char *buffer = NULL;
     GString *g_buffer = g_string_sized_new(1024);
 
-    pcmk__xml2text(an_xml_node, 0, g_buffer, 0);
+    pcmk__xml2text(xml, 0, g_buffer, 0);
 
     pcmk__str_update(&buffer, g_buffer->str);
     g_string_free(g_buffer, TRUE);
