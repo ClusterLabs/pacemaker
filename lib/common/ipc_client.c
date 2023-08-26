@@ -1294,7 +1294,7 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
  * \brief Send an IPC XML message
  *
  * \param[in,out] client      Connection to IPC server
- * \param[in,out] message     XML message to send
+ * \param[in]     message     XML message to send
  * \param[in]     flags       Bitmask of crm_ipc_flags
  * \param[in]     ms_timeout  Give up if not sent within this much time
  *                            (5 seconds if 0, or no timeout if negative)
@@ -1304,8 +1304,8 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
  *         if reply was needed, otherwise number of bytes sent
  */
 int
-crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, int32_t ms_timeout,
-             xmlNode ** reply)
+crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
+             enum crm_ipc_flags flags, int32_t ms_timeout, xmlNode **reply)
 {
     int rc = 0;
     ssize_t qb_rc = 0;
