@@ -657,7 +657,7 @@ pcmk_register_ipc_callback(pcmk_ipc_api_t *api, pcmk_ipc_callback_t cb,
  * \brief Send an XML request across an IPC API connection
  *
  * \param[in,out] api      IPC API connection
- * \param[in,out] request  XML request to send
+ * \param[in]     request  XML request to send
  *
  * \return Standard Pacemaker return code
  *
@@ -665,7 +665,7 @@ pcmk_register_ipc_callback(pcmk_ipc_api_t *api, pcmk_ipc_callback_t cb,
  *       requests, because it handles different dispatch types appropriately.
  */
 int
-pcmk__send_ipc_request(pcmk_ipc_api_t *api, xmlNode *request)
+pcmk__send_ipc_request(pcmk_ipc_api_t *api, const xmlNode *request)
 {
     int rc;
     xmlNode *reply = NULL;

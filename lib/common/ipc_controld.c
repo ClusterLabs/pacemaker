@@ -329,7 +329,7 @@ create_controller_request(const pcmk_ipc_api_t *api, const char *op,
 
 // \return Standard Pacemaker return code
 static int
-send_controller_request(pcmk_ipc_api_t *api, xmlNode *request,
+send_controller_request(pcmk_ipc_api_t *api, const xmlNode *request,
                         bool reply_is_expected)
 {
     if (crm_element_value(request, XML_ATTR_REFERENCE) == NULL) {
