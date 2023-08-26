@@ -132,7 +132,7 @@ xmlNode *string2xml(const char *input);
 
 int write_xml_fd(const xmlNode *xml, const char *filename, int fd,
                  gboolean compress);
-int write_xml_file(xmlNode * xml_node, const char *filename, gboolean compress);
+int write_xml_file(const xmlNode *xml, const char *filename, gboolean compress);
 
 char *dump_xml_formatted(const xmlNode *xml);
 char *dump_xml_formatted_with_text(const xmlNode *xml);
