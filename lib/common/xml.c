@@ -1633,7 +1633,7 @@ pcmk__xml2text(const xmlNode *data, uint32_t options, GString *buffer,
 }
 
 char *
-dump_xml_formatted_with_text(xmlNode * an_xml_node)
+dump_xml_formatted_with_text(const xmlNode *xml)
 {
     /* libxml's xmlNodeDumpOutput() would work here since we're not specifically
      * filtering out any nodes. However, use pcmk__xml2text() for consistency,
@@ -1642,8 +1642,7 @@ dump_xml_formatted_with_text(xmlNode * an_xml_node)
     char *buffer = NULL;
     GString *g_buffer = g_string_sized_new(1024);
 
-    pcmk__xml2text(an_xml_node, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text,
-                   g_buffer, 0);
+    pcmk__xml2text(xml, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text, g_buffer, 0);
 
     pcmk__str_update(&buffer, g_buffer->str);
     g_string_free(g_buffer, TRUE);
