@@ -1146,7 +1146,7 @@ crm_xml_set_id(xmlNode *xml, const char *format, ...)
  * \internal
  * \brief Write XML to a file stream
  *
- * \param[in]     xml_node  XML to write
+ * \param[in]     xml       XML to write
  * \param[in]     filename  Name of file being written (for logging only)
  * \param[in,out] stream    Open file stream corresponding to filename
  * \param[in]     compress  Whether to compress XML before writing
@@ -1155,18 +1155,18 @@ crm_xml_set_id(xmlNode *xml, const char *format, ...)
  * \return Standard Pacemaker return code
  */
 static int
-write_xml_stream(xmlNode *xml_node, const char *filename, FILE *stream,
+write_xml_stream(const xmlNode *xml, const char *filename, FILE *stream,
                  bool compress, unsigned int *nbytes)
 {
     int rc = pcmk_rc_ok;
     char *buffer = NULL;
 
     *nbytes = 0;
-    crm_log_xml_trace(xml_node, "writing");
+    crm_log_xml_trace(xml, "writing");
 
-    buffer = dump_xml_formatted(xml_node);
+    buffer = dump_xml_formatted(xml);
     CRM_CHECK(buffer && strlen(buffer),
-              crm_log_xml_warn(xml_node, "formatting failed");
+              crm_log_xml_warn(xml, "formatting failed");
               rc = pcmk_rc_error;
               goto bail);
 
@@ -1244,7 +1244,7 @@ write_xml_stream(xmlNode *xml_node, const char *filename, FILE *stream,
 /*!
  * \brief Write XML to a file descriptor
  *
- * \param[in] xml_node  XML to write
+ * \param[in] xml       XML to write
  * \param[in] filename  Name of file being written (for logging only)
  * \param[in] fd        Open file descriptor corresponding to filename
  * \param[in] compress  Whether to compress XML before writing
@@ -1252,18 +1252,19 @@ write_xml_stream(xmlNode *xml_node, const char *filename, FILE *stream,
  * \return Number of bytes written on success, -errno otherwise
  */
 int
-write_xml_fd(xmlNode * xml_node, const char *filename, int fd, gboolean compress)
+write_xml_fd(const xmlNode *xml, const char *filename, int fd,
+             gboolean compress)
 {
     FILE *stream = NULL;
     unsigned int nbytes = 0;
     int rc = pcmk_rc_ok;
 
-    CRM_CHECK(xml_node && (fd > 0), return -EINVAL);
+    CRM_CHECK((xml != NULL) && (fd > 0), return -EINVAL);
     stream = fdopen(fd, "w");
     if (stream == NULL) {
         return -errno;
     }
-    rc = write_xml_stream(xml_node, filename, stream, compress, &nbytes);
+    rc = write_xml_stream(xml, filename, stream, compress, &nbytes);
     if (rc != pcmk_rc_ok) {
         return pcmk_rc2legacy(rc);
     }
