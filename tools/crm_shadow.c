@@ -147,15 +147,15 @@ instruction_xml(pcmk__output_t *out, va_list args)
  *       -# Patchset containing the changes in the shadow CIB (can be \p NULL)
  *       -# Group of \p shadow_disp_flags indicating which fields to display
  */
-PCMK__OUTPUT_ARGS("shadow", "const char *", "const char *", "xmlNodePtr",
-                  "xmlNodePtr", "enum shadow_disp_flags")
+PCMK__OUTPUT_ARGS("shadow", "const char *", "const char *", "const xmlNode *",
+                  "const xmlNode *", "enum shadow_disp_flags")
 static int
 shadow_default(pcmk__output_t *out, va_list args)
 {
     const char *instance = va_arg(args, const char *);
     const char *filename = va_arg(args, const char *);
-    xmlNodePtr content = va_arg(args, xmlNodePtr);
-    xmlNodePtr diff = va_arg(args, xmlNodePtr);
+    const xmlNode *content = va_arg(args, const xmlNode *);
+    const xmlNode *diff = va_arg(args, const xmlNode *);
     enum shadow_disp_flags flags = (enum shadow_disp_flags) va_arg(args, int);
 
     int rc = pcmk_rc_no_output;
@@ -210,8 +210,8 @@ shadow_default(pcmk__output_t *out, va_list args)
  *       -# Patchset containing the changes in the shadow CIB (can be \p NULL)
  *       -# Group of \p shadow_disp_flags indicating which fields to display
  */
-PCMK__OUTPUT_ARGS("shadow", "const char *", "const char *", "xmlNodePtr",
-                  "xmlNodePtr", "enum shadow_disp_flags")
+PCMK__OUTPUT_ARGS("shadow", "const char *", "const char *", "const xmlNode *",
+                  "const xmlNode *", "enum shadow_disp_flags")
 static int
 shadow_text(pcmk__output_t *out, va_list args)
 {
@@ -221,8 +221,8 @@ shadow_text(pcmk__output_t *out, va_list args)
     } else {
         const char *instance = va_arg(args, const char *);
         const char *filename = va_arg(args, const char *);
-        xmlNodePtr content = va_arg(args, xmlNodePtr);
-        xmlNodePtr diff = va_arg(args, xmlNodePtr);
+        const xmlNode *content = va_arg(args, const xmlNode *);
+        const xmlNode *diff = va_arg(args, const xmlNode *);
         enum shadow_disp_flags flags = (enum shadow_disp_flags) va_arg(args, int);
 
         int rc = pcmk_rc_no_output;
@@ -271,15 +271,15 @@ shadow_text(pcmk__output_t *out, va_list args)
  *       -# Group of \p shadow_disp_flags indicating which fields to display
  *          (ignored)
  */
-PCMK__OUTPUT_ARGS("shadow", "const char *", "const char *", "xmlNodePtr",
-                  "xmlNodePtr", "enum shadow_disp_flags")
+PCMK__OUTPUT_ARGS("shadow", "const char *", "const char *", "const xmlNode *",
+                  "const xmlNode *", "enum shadow_disp_flags")
 static int
 shadow_xml(pcmk__output_t *out, va_list args)
 {
     const char *instance = va_arg(args, const char *);
     const char *filename = va_arg(args, const char *);
-    xmlNodePtr content = va_arg(args, xmlNodePtr);
-    xmlNodePtr diff = va_arg(args, xmlNodePtr);
+    const xmlNode *content = va_arg(args, const xmlNode *);
+    const xmlNode *diff = va_arg(args, const xmlNode *);
     enum shadow_disp_flags flags G_GNUC_UNUSED =
         (enum shadow_disp_flags) va_arg(args, int);
 
