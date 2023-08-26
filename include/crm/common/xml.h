@@ -136,7 +136,7 @@ int write_xml_file(const xmlNode *xml, const char *filename, gboolean compress);
 
 char *dump_xml_formatted(const xmlNode *xml);
 char *dump_xml_formatted_with_text(const xmlNode *xml);
-char *dump_xml_unformatted(xmlNode * msg);
+char *dump_xml_unformatted(const xmlNode *xml);
 
 /*
  * Diff related Functions
