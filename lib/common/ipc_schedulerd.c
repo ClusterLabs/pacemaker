@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2022 the Pacemaker project contributors
+ * Copyright 2021-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -62,7 +62,7 @@ post_connect(pcmk_ipc_api_t *api)
 }
 
 static bool
-reply_expected(pcmk_ipc_api_t *api, xmlNode *request)
+reply_expected(pcmk_ipc_api_t *api, const xmlNode *request)
 {
     const char *command = crm_element_value(request, F_CRM_TASK);
 

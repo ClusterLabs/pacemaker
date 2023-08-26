@@ -175,7 +175,7 @@ set_nodes_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
 }
 
 static bool
-reply_expected(pcmk_ipc_api_t *api, xmlNode *request)
+reply_expected(pcmk_ipc_api_t *api, const xmlNode *request)
 {
     // We only need to handle commands that API functions can send
     return pcmk__str_any_of(crm_element_value(request, F_CRM_TASK),
