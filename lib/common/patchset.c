@@ -1125,7 +1125,7 @@ pcmk__xml_apply_patchset(xmlNode *xml, const xmlNode *patchset,
 }
 
 int
-xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
+xml_apply_patchset(xmlNode *xml, const xmlNode *patchset, bool check_version)
 {
     return pcmk__xml_apply_patchset(xml, patchset, check_version);
 }

@@ -264,7 +264,8 @@ void xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml);
 void xml_accept_changes(xmlNode * xml);
 bool xml_patch_versions(const xmlNode *patchset, int add[3], int del[3]);
 
-int xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version);
+int xml_apply_patchset(xmlNode *xml, const xmlNode *patchset,
+                       bool check_version);
 
 void patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target, bool with_digest);
 
