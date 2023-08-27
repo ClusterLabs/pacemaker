@@ -161,20 +161,13 @@ static int
 generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
                gboolean as_cib, gboolean no_version)
 {
-    xmlNode *output = NULL;
-    int rc = pcmk_rc_ok;
-
-    pcmk__output_t *logger_out = NULL;
-    int out_rc = pcmk_rc_no_output;
-
     static const char *const vfields[] = {
         XML_ATTR_GENERATION_ADMIN,
         XML_ATTR_GENERATION,
         XML_ATTR_NUMUPDATES,
     };
 
-    rc = pcmk__log_output_new(&logger_out);
-    CRM_CHECK(rc == pcmk_rc_ok, return rc);
+    xmlNode *output = NULL;
 
     /* If we're ignoring the version, make the version information
      * identical, so it isn't detected as a change. */
@@ -196,20 +189,12 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
 
     output = pcmk__xml_create_patchset(object_1, object_2, NULL, false);
 
-    pcmk__output_set_log_level(logger_out, LOG_INFO);
-    out_rc = pcmk__xml_show_changes(logger_out, object_2);
-
+    pcmk__log_xml_changes(LOG_INFO, object_2);
     xml_accept_changes(object_2);
 
     if (output == NULL) {
-        goto done;  // rc == pcmk_rc_ok
+        return pcmk_rc_ok;  // No changes
     }
-
-    /* pcmk_rc_error means there's non-empty diff.
-     * @COMPAT: Choose a more descriptive return code, like one that maps to
-     * CRM_EX_DIGEST?
-     */
-    rc = pcmk_rc_error;
 
     patchset_process_digest(output, object_1, object_2, as_cib);
 
@@ -224,11 +209,11 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
     print_patch(output);
     free_xml(output);
 
-done:
-    logger_out->finish(logger_out, pcmk_rc2exitc(out_rc), true, NULL);
-    pcmk__output_free(logger_out);
-
-    return rc;
+    /* pcmk_rc_error means there's a non-empty diff.
+     * @COMPAT Choose a more descriptive return code, like one that maps to
+     * CRM_EX_DIGEST?
+     */
+    return pcmk_rc_error;
 }
 
 static GOptionContext *

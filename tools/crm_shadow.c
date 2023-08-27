@@ -927,9 +927,7 @@ show_shadow_diff(pcmk__output_t *out, GError **error)
     xmlNodePtr old_config = NULL;
     xmlNodePtr new_config = NULL;
     xmlNodePtr diff = NULL;
-    pcmk__output_t *logger_out = NULL;
     bool quiet_orig = out->quiet;
-    int rc = pcmk_rc_ok;
 
     if (get_instance_from_env(error) != pcmk_rc_ok) {
         return;
@@ -951,18 +949,7 @@ show_shadow_diff(pcmk__output_t *out, GError **error)
     xml_calculate_changes(old_config, new_config);
     diff = pcmk__xml_create_patchset(old_config, new_config, NULL, false);
 
-    rc = pcmk__log_output_new(&logger_out);
-    if (rc != pcmk_rc_ok) {
-        exit_code = pcmk_rc2exitc(rc);
-        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
-                    "Could not create logger object: %s", pcmk_rc_str(rc));
-        goto done;
-    }
-    pcmk__output_set_log_level(logger_out, LOG_INFO);
-    rc = pcmk__xml_show_changes(logger_out, new_config);
-    logger_out->finish(logger_out, pcmk_rc2exitc(rc), true, NULL);
-    pcmk__output_free(logger_out);
-
+    pcmk__log_xml_changes(LOG_INFO, new_config);
     xml_accept_changes(new_config);
 
     out->quiet = true;

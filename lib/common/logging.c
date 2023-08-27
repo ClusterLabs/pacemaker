@@ -1179,6 +1179,37 @@ pcmk_log_xml_as(const char *file, const char *function, uint32_t line,
 
 /*!
  * \internal
+ * \brief Log XML changes line-by-line in a formatted fashion
+ *
+ * \param[in] file      File name to use for log filtering
+ * \param[in] function  Function name to use for log filtering
+ * \param[in] line      Line number to use for log filtering
+ * \param[in] tags      Logging tags to use for log filtering
+ * \param[in] level     Priority at which to log the messages
+ * \param[in] xml       XML whose changes to log
+ *
+ * \note This does nothing when \p level is \c LOG_STDOUT.
+ */
+void
+pcmk__log_xml_changes_as(const char *file, const char *function, uint32_t line,
+                         uint32_t tags, uint8_t level, const xmlNode *xml)
+{
+    if (xml == NULL) {
+        do_crm_log(level, "No XML to dump");
+        return;
+    }
+
+    if (logger_out == NULL) {
+        CRM_CHECK(pcmk__log_output_new(&logger_out) == pcmk_rc_ok, return);
+    }
+    pcmk__output_set_log_level(logger_out, level);
+    pcmk__output_set_log_filter(logger_out, file, function, line, tags);
+    pcmk__xml_show_changes(logger_out, xml);
+    pcmk__output_set_log_filter(logger_out, NULL, NULL, 0U, 0U);
+}
+
+/*!
+ * \internal
  * \brief Log an XML patchset line-by-line in a formatted fashion
  *
  * \param[in] file      File name to use for log filtering
