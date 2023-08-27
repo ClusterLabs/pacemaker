@@ -306,9 +306,6 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
     const char *user = crm_element_value(req, F_CIB_USER);
     bool with_digest = false;
 
-    pcmk__output_t *out = NULL;
-    int out_rc = pcmk_rc_no_output;
-
     crm_trace("Begin %s%s%s op",
               (pcmk_is_set(call_options, cib_dryrun)? "dry run of " : ""),
               (is_query? "read-only " : ""), op);
@@ -476,29 +473,13 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
     local_diff = pcmk__xml_create_patchset(patchset_cib, scratch,
                                            config_changed, manage_counters);
 
-    // Create a log output object only if we're going to use it
-    pcmk__if_tracing(
-        {
-            rc = pcmk_rc2legacy(pcmk__log_output_new(&out));
-            CRM_CHECK(rc == pcmk_ok, goto done);
-
-            pcmk__output_set_log_level(out, LOG_TRACE);
-            out_rc = pcmk__xml_show_changes(out, scratch);
-        },
-        {}
-    );
+    pcmk__log_xml_changes(LOG_TRACE, scratch);
     xml_accept_changes(scratch);
 
     if(local_diff) {
         patchset_process_digest(local_diff, patchset_cib, scratch, with_digest);
         pcmk__log_xml_patchset(LOG_INFO, local_diff);
         crm_log_xml_trace(local_diff, "raw patch");
-    }
-
-    if (out != NULL) {
-        out->finish(out, pcmk_rc2exitc(out_rc), true, NULL);
-        pcmk__output_free(out);
-        out = NULL;
     }
 
     if (make_copy && (local_diff != NULL)) {
