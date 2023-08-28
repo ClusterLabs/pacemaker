@@ -450,4 +450,7 @@ int pcmk__xml_apply_patchset(xmlNode *xml, const xmlNode *patchset,
 void pcmk__add_digest_to_patchset(const xmlNode *source, xmlNode *target,
                                   xmlNode *patchset);
 
+int pcmk__xml_patch_versions(const xmlNode *patchset, int source[3],
+                             int target[3]);
+
 #endif // PCMK__XML_INTERNAL__H

@@ -483,83 +483,123 @@ process_v1_additions(xmlNode *parent, xmlNode *target, xmlNode *patch)
 
 /*!
  * \internal
- * \brief Find additions or removals in a patch set
+ * \brief Get CIB versions used for patchset additions or removals
  *
- * \param[in]     patchset   XML of patch
- * \param[in]     format     Patch version
- * \param[in]     added      TRUE if looking for additions, FALSE if removals
- * \param[in,out] patch_node Will be set to node if found
- *
- * \return TRUE if format is valid, FALSE if invalid
+ * \param[in]  patchset      CIB XML patchset
+ * \param[in]  added         If \c true, get versions used for additions;
+ *                           otherwise, get versions used for removals
+ * \param[out] version_node  Where to store XML node containing version details
  */
-static bool
-find_patch_xml_node(const xmlNode *patchset, int format, bool added,
-                    xmlNode **patch_node)
+static void
+find_patchset_version_node_v1(const xmlNode *patchset, bool added,
+                              const xmlNode **version_node)
 {
-    xmlNode *cib_node;
-    const char *label;
+    xmlNode *cib_node = NULL;
+    const char *label = added? XML_TAG_DIFF_ADDED : XML_TAG_DIFF_REMOVED;
 
-    switch (format) {
-        case 1:
-            label = added? XML_TAG_DIFF_ADDED : XML_TAG_DIFF_REMOVED;
-            *patch_node = find_xml_node(patchset, label, FALSE);
-            cib_node = find_xml_node(*patch_node, "cib", FALSE);
-            if (cib_node != NULL) {
-                *patch_node = cib_node;
-            }
-            break;
-        case 2:
-            label = added? "target" : "source";
-            *patch_node = find_xml_node(patchset, "version", FALSE);
-            *patch_node = find_xml_node(*patch_node, label, FALSE);
-            break;
-        default:
-            crm_warn("Unknown patch format: %d", format);
-            *patch_node = NULL;
-            return FALSE;
+    *version_node = find_xml_node(patchset, label, FALSE);
+    cib_node = find_xml_node(*version_node, XML_TAG_CIB, FALSE);
+    if (cib_node != NULL) {
+        *version_node = cib_node;
     }
-    return TRUE;
 }
 
-// Get CIB versions used for additions and deletions in a patchset
-bool
-xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
+/*!
+ * \internal
+ * \brief Get CIB versions from patchset target or source
+ *
+ * \param[in]  patchset      CIB XML patchset
+ * \param[in]  for_target    If \c true, get versions from target; otherwise,
+ *                           get versions from source
+ * \param[out] version_node  Where to store XML node containing version details
+ */
+static void
+find_patchset_version_node_v2(const xmlNode *patchset, bool for_target,
+                              const xmlNode **version_node)
 {
-    int lpc = 0;
-    int format = 1;
-    xmlNode *tmp = NULL;
+    const char *label = for_target? XML_DIFF_VTARGET : XML_DIFF_VSOURCE;
 
-    const char *vfields[] = {
+    *version_node = find_xml_node(patchset, XML_DIFF_VERSION, FALSE);
+    *version_node = find_xml_node(*version_node, label, FALSE);
+}
+
+/*!
+ * \internal
+ * \brief Get CIB versions from patchset source and target
+ *
+ * For v1 patchsets, source and target correspond to removed and added,
+ * respectively.
+ *
+ * \param[in]  patchset  CIB XML patchset
+ * \param[out] source    Where to store source versions (can be \c NULL)
+ * \param[out] target    Where to store target versions (can be \c NULL)
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note This function does not error-check getting versions, as long as the
+ *       patchset has a valid format number. However, the versions should always
+ *       be present and valid if Pacemaker generated the patchset.
+ */
+int
+pcmk__xml_patch_versions(const xmlNode *patchset, int source[3], int target[3])
+{
+    static const char *const vfields[] = {
         XML_ATTR_GENERATION_ADMIN,
         XML_ATTR_GENERATION,
         XML_ATTR_NUMUPDATES,
     };
 
+    int format = 1;
+    void (*find_fn)(const xmlNode *, bool, const xmlNode **) = NULL;
+    const xmlNode *version_node = NULL;
+
+    CRM_CHECK(patchset != NULL, return EINVAL);
 
     crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
-
-    /* Process removals */
-    if (!find_patch_xml_node(patchset, format, FALSE, &tmp)) {
-        return -EINVAL;
+    switch (format) {
+        case 1:
+            find_fn = find_patchset_version_node_v1;
+            break;
+        case 2:
+            find_fn = find_patchset_version_node_v2;
+            break;
+        default:
+            crm_err("Unknown patch format: %d", format);
+            return EINVAL;
     }
-    if (tmp != NULL) {
-        for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-            crm_element_value_int(tmp, vfields[lpc], &(del[lpc]));
-            crm_trace("Got %d for del[%s]", del[lpc], vfields[lpc]);
+
+    // Get source versions
+    if (source != NULL) {
+        find_fn(patchset, false, &version_node);
+        if (version_node != NULL) {
+            for (int lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
+                crm_element_value_int(version_node, vfields[lpc],
+                                      &(source[lpc]));
+                crm_trace("Got %d for source[%s]", source[lpc], vfields[lpc]);
+            }
         }
     }
 
-    /* Process additions */
-    if (!find_patch_xml_node(patchset, format, TRUE, &tmp)) {
-        return -EINVAL;
-    }
-    if (tmp != NULL) {
-        for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-            crm_element_value_int(tmp, vfields[lpc], &(add[lpc]));
-            crm_trace("Got %d for add[%s]", add[lpc], vfields[lpc]);
+    // Get target versions
+    if (target != NULL) {
+        find_fn(patchset, true, &version_node);
+        if (version_node != NULL) {
+            for (int lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
+                crm_element_value_int(version_node, vfields[lpc], &(target[lpc]));
+                crm_trace("Got %d for target[%s]", target[lpc], vfields[lpc]);
+            }
         }
     }
-    return pcmk_ok;
+    return pcmk_rc_ok;
+}
+
+bool
+xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
+{
+    /* @COMPAT The return type has always been wrong (pcmk_ok == 0 -> false).
+     * Preserve it for backward compatibility.
+     */
+    return pcmk_rc2legacy(pcmk__xml_patch_versions(patchset, del, add));
 }
 
 /*!
