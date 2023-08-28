@@ -623,7 +623,7 @@ schema_files() {
               files="$(ls -1 "$1"/*.rng | grep -E -v
                        '/(pacemaker|api-result|crm_mon|versions)[^/]*\.rng')"
           ])
-    echo $files
+    echo "$files"
 }
 
 # latest_schema_version <schema-dir>
