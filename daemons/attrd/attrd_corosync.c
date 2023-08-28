@@ -285,7 +285,7 @@ record_peer_nodeid(attribute_value_t *v, const char *host)
 
     crm_trace("Learned %s has node id %s", known_peer->uname, known_peer->uuid);
     if (attrd_election_won()) {
-        attrd_write_attributes(false, false);
+        attrd_write_attributes(attrd_write_changed);
     }
 }
 

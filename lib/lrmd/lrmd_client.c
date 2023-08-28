@@ -544,7 +544,20 @@ lrmd_ipc_connection_destroy(gpointer userdata)
     lrmd_t *lrmd = userdata;
     lrmd_private_t *native = lrmd->lrmd_private;
 
-    crm_info("IPC connection destroyed");
+    switch (native->type) {
+        case pcmk__client_ipc:
+            crm_info("Disconnected from local executor");
+            break;
+#ifdef HAVE_GNUTLS_GNUTLS_H
+        case pcmk__client_tls:
+            crm_info("Disconnected from remote executor on %s",
+                     native->remote_nodename);
+            break;
+#endif
+        default:
+            crm_err("Unsupported executor connection type %d (bug?)",
+                    native->type);
+    }
 
     /* Prevent these from being cleaned up in lrmd_api_disconnect() */
     native->ipc = NULL;
@@ -1668,15 +1681,15 @@ lrmd_api_disconnect(lrmd_t * lrmd)
     lrmd_private_t *native = lrmd->lrmd_private;
     int rc = pcmk_ok;
 
-    crm_info("Disconnecting %s %s executor connection",
-             pcmk__client_type_str(native->type),
-             (native->remote_nodename? native->remote_nodename : "local"));
     switch (native->type) {
         case pcmk__client_ipc:
+            crm_debug("Disconnecting from local executor");
             lrmd_ipc_disconnect(lrmd);
             break;
 #ifdef HAVE_GNUTLS_GNUTLS_H
         case pcmk__client_tls:
+            crm_debug("Disconnecting from remote executor on %s",
+                      native->remote_nodename);
             lrmd_tls_disconnect(lrmd);
             break;
 #endif

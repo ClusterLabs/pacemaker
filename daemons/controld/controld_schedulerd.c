@@ -90,8 +90,9 @@ handle_disconnect(void)
         int rc = pcmk_ok;
         char *uuid_str = crm_generate_uuid();
 
-        crm_crit("Connection to the scheduler failed "
-                 CRM_XS " uuid=%s", uuid_str);
+        crm_crit("Lost connection to the scheduler "
+                 CRM_XS " CIB will be saved to " PE_STATE_DIR "/pe-core-%s.bz2",
+                 uuid_str);
 
         /*
          * The scheduler died...
@@ -107,9 +108,6 @@ handle_disconnect(void)
                                                     NULL, NULL,
                                                     cib_scope_local);
         fsa_register_cib_callback(rc, uuid_str, save_cib_contents);
-
-    } else {
-        crm_info("Connection to the scheduler released");
     }
 
     controld_clear_fsa_input_flags(R_PE_CONNECTED);

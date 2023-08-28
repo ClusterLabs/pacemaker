@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -81,9 +81,6 @@ crmd_cs_destroy(gpointer user_data)
     if (!pcmk_is_set(controld_globals.fsa_input_register, R_HA_DISCONNECTED)) {
         crm_crit("Lost connection to cluster layer, shutting down");
         crmd_exit(CRM_EX_DISCONNECT);
-
-    } else {
-        crm_info("Corosync connection closed");
     }
 }
 

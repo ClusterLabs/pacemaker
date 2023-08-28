@@ -176,8 +176,15 @@ void attrd_free_attribute(gpointer data);
 void attrd_free_attribute_value(gpointer data);
 attribute_t *attrd_populate_attribute(xmlNode *xml, const char *attr);
 
+enum attrd_write_options {
+    attrd_write_changed         = 0,
+    attrd_write_all             = (1 << 0),
+    attrd_write_no_delay        = (1 << 1),
+    attrd_write_skip_shutdown   = (1 << 2),
+};
+
 void attrd_write_attribute(attribute_t *a, bool ignore_delay);
-void attrd_write_attributes(bool all, bool ignore_delay);
+void attrd_write_attributes(uint32_t options);
 void attrd_write_or_elect_attribute(attribute_t *a);
 
 extern int minimum_protocol_version;

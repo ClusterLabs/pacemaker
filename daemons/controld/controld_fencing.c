@@ -450,11 +450,11 @@ tengine_stonith_connection_destroy(stonith_t *st, stonith_event_t *e)
     te_cleanup_stonith_history_sync(st, FALSE);
 
     if (pcmk_is_set(controld_globals.fsa_input_register, R_ST_REQUIRED)) {
-        crm_crit("Fencing daemon connection failed");
+        crm_err("Lost fencer connection (will attempt to reconnect)");
         mainloop_set_trigger(stonith_reconnect);
 
     } else {
-        crm_info("Fencing daemon disconnected");
+        crm_info("Disconnected from fencer");
     }
 
     if (stonith_api) {

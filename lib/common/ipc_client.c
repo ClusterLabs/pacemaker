@@ -168,7 +168,7 @@ ipc_post_disconnect(gpointer user_data)
 {
     pcmk_ipc_api_t *api = user_data;
 
-    crm_info("Disconnected from %s IPC API", pcmk_ipc_name(api, true));
+    crm_info("Disconnected from %s", pcmk_ipc_name(api, true));
 
     // Perform any daemon-specific handling needed
     if ((api->cmds != NULL) && (api->cmds->post_disconnect != NULL)) {

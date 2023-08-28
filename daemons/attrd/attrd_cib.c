@@ -343,16 +343,28 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
     free_xml(xml_top);
 }
 
+/*!
+ * \internal
+ * \brief Write out attributes
+ *
+ * \param[in] options  Group of enum attrd_write_options
+ */
 void
-attrd_write_attributes(bool all, bool ignore_delay)
+attrd_write_attributes(uint32_t options)
 {
     GHashTableIter iter;
     attribute_t *a = NULL;
 
-    crm_debug("Writing out %s attributes", all? "all" : "changed");
+    crm_debug("Writing out %s attributes",
+              pcmk_is_set(options, attrd_write_all)? "all" : "changed");
     g_hash_table_iter_init(&iter, attributes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & a)) {
-        if (!all && a->unknown_peer_uuids) {
+        if (pcmk_is_set(options, attrd_write_skip_shutdown)
+            && pcmk__str_eq(a->id, XML_CIB_ATTR_SHUTDOWN, pcmk__str_none)) {
+            continue;
+        }
+
+        if (!pcmk_is_set(options, attrd_write_all) && a->unknown_peer_uuids) {
             // Try writing this attribute again, in case peer ID was learned
             a->changed = true;
         } else if (a->force_write) {
@@ -360,9 +372,14 @@ attrd_write_attributes(bool all, bool ignore_delay)
             a->changed = true;
         }
 
-        if(all || a->changed) {
-            /* When forced write flag is set, ignore delay. */
-            attrd_write_attribute(a, (a->force_write ? true : ignore_delay));
+        if (pcmk_is_set(options, attrd_write_all) || a->changed) {
+            bool ignore_delay = pcmk_is_set(options, attrd_write_no_delay);
+
+            if (a->force_write) {
+                // Always ignore delay when forced write flag is set
+                ignore_delay = true;
+            }
+            attrd_write_attribute(a, ignore_delay);
         } else {
             crm_trace("Skipping unchanged attribute %s", a->id);
         }
