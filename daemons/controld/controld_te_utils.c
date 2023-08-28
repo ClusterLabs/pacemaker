@@ -342,8 +342,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
                        const char *abort_text, const xmlNode *reason,
                        const char *fn, int line)
 {
-    int add[] = { 0, 0, 0 };
-    int del[] = { 0, 0, 0 };
+    int target[] = { 0, 0, 0 };
     int level = LOG_INFO;
     const xmlNode *diff = NULL;
     const xmlNode *change = NULL;
@@ -387,7 +386,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
         }
 
         if(diff) {
-            xml_patch_versions(diff, add, del);
+            pcmk__xml_patch_versions(diff, NULL, target);
             for(search = reason; search; search = search->parent) {
                 if (pcmk__xe_is(search, XML_DIFF_CHANGE)) {
                     change = search;
@@ -411,8 +410,8 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
         do_crm_log(level, "Transition %d aborted by %s.%s: %s "
                    CRM_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",
                    controld_globals.transition_graph->id, reason->name,
-                   ID(reason), abort_text, add[0], add[1], add[2], fn, line,
-                   (const char *) local_path->str,
+                   ID(reason), abort_text, target[0], target[1], target[2], fn,
+                   line, (const char *) local_path->str,
                    pcmk__btoa(controld_globals.transition_graph->complete));
         g_string_free(local_path, TRUE);
 
@@ -440,7 +439,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
                        CRM_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",
                        controld_globals.transition_graph->id,
                        (shortpath? (shortpath + 1) : path), abort_text,
-                       add[0], add[1], add[2], fn, line, path,
+                       target[0], target[1], target[2], fn, line, path,
                        pcmk__btoa(controld_globals.transition_graph->complete));
 
         } else if (pcmk__xe_is(reason, XML_CIB_TAG_NVPAIR)) {
@@ -450,7 +449,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
                        crm_element_value(reason, XML_ATTR_ID), op,
                        crm_element_value(reason, XML_NVPAIR_ATTR_NAME),
                        crm_element_value(reason, XML_NVPAIR_ATTR_VALUE),
-                       abort_text, add[0], add[1], add[2], fn, line, path,
+                       abort_text, target[0], target[1], target[2], fn, line, path,
                        pcmk__btoa(controld_globals.transition_graph->complete));
 
         } else if (pcmk__xe_is(reason, XML_LRM_TAG_RSC_OP)) {
@@ -461,7 +460,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
                        controld_globals.transition_graph->id,
                        crm_element_value(reason, XML_LRM_ATTR_TASK_KEY), op,
                        crm_element_value(reason, XML_LRM_ATTR_TARGET), abort_text,
-                       magic, add[0], add[1], add[2], fn, line,
+                       magic, target[0], target[1], target[2], fn, line,
                        pcmk__btoa(controld_globals.transition_graph->complete));
 
         } else if (pcmk__str_any_of((const char *) reason->name,
@@ -472,7 +471,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
                        CRM_XS " cib=%d.%d.%d source=%s:%d complete=%s",
                        controld_globals.transition_graph->id,
                        reason->name, op, pcmk__s(uname, ID(reason)),
-                       abort_text, add[0], add[1], add[2], fn, line,
+                       abort_text, target[0], target[1], target[2], fn, line,
                        pcmk__btoa(controld_globals.transition_graph->complete));
 
         } else {
@@ -482,7 +481,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
                        CRM_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",
                        controld_globals.transition_graph->id,
                        reason->name, pcmk__s(id, ""), pcmk__s(op, "change"),
-                       abort_text, add[0], add[1], add[2], fn, line, path,
+                       abort_text, target[0], target[1], target[2], fn, line, path,
                        pcmk__btoa(controld_globals.transition_graph->complete));
         }
     }

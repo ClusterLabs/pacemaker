@@ -62,18 +62,18 @@ gboolean
 cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, int *updates,
                          int *_admin_epoch, int *_epoch, int *_updates)
 {
-    int add[] = { 0, 0, 0 };
-    int del[] = { 0, 0, 0 };
+    int source[] = { 0, 0, 0 };
+    int target[] = { 0, 0, 0 };
 
-    xml_patch_versions(diff, add, del);
+    pcmk__xml_patch_versions(diff, source, target);
 
-    *admin_epoch = add[0];
-    *epoch = add[1];
-    *updates = add[2];
+    *admin_epoch = target[0];
+    *epoch = target[1];
+    *updates = target[2];
 
-    *_admin_epoch = del[0];
-    *_epoch = del[1];
-    *_updates = del[2];
+    *_admin_epoch = source[0];
+    *_epoch = source[1];
+    *_updates = source[2];
 
     return TRUE;
 }

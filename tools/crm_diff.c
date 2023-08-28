@@ -142,17 +142,21 @@ apply_patch(xmlNode *input, xmlNode *patch, gboolean as_cib)
 static void
 log_patch_cib_versions(xmlNode *patch)
 {
-    int add[] = { 0, 0, 0 };
-    int del[] = { 0, 0, 0 };
+    int source[] = { 0, 0, 0 };
+    int target[] = { 0, 0, 0 };
 
     const char *digest = NULL;
 
-    xml_patch_versions(patch, add, del);
+    pcmk__xml_patch_versions(patch, source, target);
     digest = crm_element_value(patch, XML_ATTR_DIGEST);
 
-    if (add[2] != del[2] || add[1] != del[1] || add[0] != del[0]) {
-        crm_info("Patch: --- %d.%d.%d", del[0], del[1], del[2]);
-        crm_info("Patch: +++ %d.%d.%d %s", add[0], add[1], add[2], digest);
+    if ((target[0] != source[0])
+        || (target[1] != source[1])
+        || (target[2] != source[2])) {
+
+        crm_info("Patch: --- %d.%d.%d", source[0], source[1], source[2]);
+        crm_info("Patch: +++ %d.%d.%d %s",
+                 target[0], target[1], target[2], digest);
     }
 }
 

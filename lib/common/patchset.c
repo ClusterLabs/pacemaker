@@ -618,8 +618,10 @@ xml_patch_version_check(const xmlNode *xml, const xmlNode *patchset)
     bool changed = FALSE;
 
     int this[] = { 0, 0, 0 };
-    int add[] = { 0, 0, 0 };
-    int del[] = { 0, 0, 0 };
+    int source[] = { 0, 0, 0 };
+    int target[] = { 0, 0, 0 };
+
+    int rc = pcmk_rc_ok;
 
     const char *vfields[] = {
         XML_ATTR_GENERATION_ADMIN,
@@ -636,45 +638,50 @@ xml_patch_version_check(const xmlNode *xml, const xmlNode *patchset)
     }
 
     /* Set some defaults in case nothing is present */
-    add[0] = this[0];
-    add[1] = this[1];
-    add[2] = this[2] + 1;
+    target[0] = this[0];
+    target[1] = this[1];
+    target[2] = this[2] + 1;
     for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-        del[lpc] = this[lpc];
+        source[lpc] = this[lpc];
     }
 
-    xml_patch_versions(patchset, add, del);
+    rc = pcmk__xml_patch_versions(patchset, source, target);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
 
     for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-        if (this[lpc] < del[lpc]) {
+        if (this[lpc] < source[lpc]) {
             crm_debug("Current %s is too low (%d.%d.%d < %d.%d.%d --> %d.%d.%d)",
                       vfields[lpc], this[0], this[1], this[2],
-                      del[0], del[1], del[2], add[0], add[1], add[2]);
+                      source[0], source[1], source[2],
+                      target[0], target[1], target[2]);
             return pcmk_rc_diff_resync;
 
-        } else if (this[lpc] > del[lpc]) {
+        } else if (this[lpc] > source[lpc]) {
             crm_info("Current %s is too high (%d.%d.%d > %d.%d.%d --> %d.%d.%d) %p",
                      vfields[lpc], this[0], this[1], this[2],
-                     del[0], del[1], del[2], add[0], add[1], add[2], patchset);
+                     source[0], source[1], source[2],
+                     target[0], target[1], target[2], patchset);
             crm_log_xml_info(patchset, "OldPatch");
             return pcmk_rc_old_data;
         }
     }
 
     for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-        if (add[lpc] > del[lpc]) {
+        if (target[lpc] > source[lpc]) {
             changed = TRUE;
         }
     }
 
     if (!changed) {
         crm_notice("Versions did not change in patch %d.%d.%d",
-                   add[0], add[1], add[2]);
+                   target[0], target[1], target[2]);
         return pcmk_rc_old_data;
     }
 
     crm_debug("Can apply patch %d.%d.%d to %d.%d.%d",
-              add[0], add[1], add[2], this[0], this[1], this[2]);
+              target[0], target[1], target[2], this[0], this[1], this[2]);
     return pcmk_rc_ok;
 }
 
