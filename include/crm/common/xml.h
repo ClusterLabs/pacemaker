@@ -260,7 +260,6 @@ void xml_track_changes(xmlNode * xml, const char *user, xmlNode *acl_source, boo
 void xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml);
 void xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml);
 void xml_accept_changes(xmlNode * xml);
-bool xml_patch_versions(const xmlNode *patchset, int add[3], int del[3]);
 
 void save_xml_to_file(const xmlNode *xml, const char *desc,
                       const char *filename);

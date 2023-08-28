@@ -94,6 +94,9 @@ int xml_apply_patchset(xmlNode *xml, const xmlNode *patchset,
 void patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
                              bool with_digest);
 
+//! \deprecated Do not use (will be removed in a future release)
+bool xml_patch_versions(const xmlNode *patchset, int add[3], int del[3]);
+
 #ifdef __cplusplus
 }
 #endif
