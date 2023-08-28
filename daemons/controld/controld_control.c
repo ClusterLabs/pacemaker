@@ -324,20 +324,12 @@ do_exit(long long action,
         enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     crm_exit_t exit_code = CRM_EX_OK;
-    int log_level = LOG_INFO;
-    const char *exit_type = "gracefully";
 
-    if (action & A_EXIT_1) {
-        log_level = LOG_ERR;
-        exit_type = "forcefully";
+    if (pcmk_is_set(action, A_EXIT_1)) {
         exit_code = CRM_EX_ERROR;
+        crm_err("Exiting now due to errors");
     }
-
     verify_stopped(cur_state, LOG_ERR);
-    do_crm_log(log_level, "Performing %s - %s exiting the controller",
-               fsa_action2string(action), exit_type);
-
-    crm_info("[%s] stopped (%d)", crm_system_name, exit_code);
     crmd_exit(exit_code);
 }
 

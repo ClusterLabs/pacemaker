@@ -220,7 +220,7 @@ class Corosync2Patterns(BasePatterns):
             r"pending LRM operations at shutdown",
             r"Lost connection to the CIB manager",
             r"pacemaker-controld.*:\s*Action A_RECOVER .* not supported",
-            r"pacemaker-controld.*:\s*Performing A_EXIT_1 - forcefully exiting ",
+            r"pacemaker-controld.*:\s*Exiting now due to errors",
             r".*:\s*Requesting fencing \([^)]+\) targeting node ",
             r"(Blackbox dump requested|Problem detected)",
         ]
@@ -238,7 +238,7 @@ class Corosync2Patterns(BasePatterns):
             r"error:.*Connection to cib_(shm|rw).* (failed|closed)",
             r"error:.*cib_(shm|rw) IPC provider disconnected while waiting",
             r"error:.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
-            r"crit: Fencing daemon connection failed",
+            r"error: Lost fencer connection",
             # This is overbroad, but we don't have a way to say that only
             # certain transition errors are acceptable (if the fencer respawns,
             # fence devices may appear multiply active). We have to rely on
@@ -253,7 +253,7 @@ class Corosync2Patterns(BasePatterns):
             # it's possible for another daemon to lose that connection and
             # exit before losing the cluster connection.
             r"pacemakerd.*:\s*warning:.*Lost connection to cluster layer",
-            r"pacemaker-attrd.*:\s*(crit|error):.*Lost connection to (cluster layer|the CIB manager)",
+            r"pacemaker-attrd.*:\s*(crit|error):.*Lost connection to (Corosync process group|the CIB manager)",
             r"pacemaker-based.*:\s*(crit|error):.*Lost connection to cluster layer",
             r"pacemaker-controld.*:\s*(crit|error):.*Lost connection to (cluster layer|the CIB manager)",
             r"pacemaker-fenced.*:\s*(crit|error):.*Lost connection to (cluster layer|the CIB manager)",
@@ -290,7 +290,7 @@ class Corosync2Patterns(BasePatterns):
         ]
 
         self._components["pacemaker-execd"] = [
-            r"pacemaker-controld.*Connection to executor failed",
+            r"pacemaker-controld.*Lost connection to local executor",
             r"pacemaker-controld.*I_ERROR.*lrm_connection_destroy",
             r"pacemaker-controld.*State transition .* S_RECOVERY",
             r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
@@ -317,7 +317,7 @@ class Corosync2Patterns(BasePatterns):
             r"State transition .* S_RECOVERY",
             r"pacemakerd.* Respawning pacemaker-controld subdaemon after unexpected exit",
             r"pacemaker-controld\[[0-9]+\] exited with status 1 \(",
-            r"Connection to the scheduler failed",
+            r"pacemaker-controld.*Lost connection to the scheduler",
             r"pacemaker-controld.*I_ERROR.*save_cib_contents",
             r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
             r"pacemaker-controld.*Could not recover from internal error",
@@ -329,13 +329,13 @@ class Corosync2Patterns(BasePatterns):
 
         self._components["pacemaker-fenced"] = [
             r"error:.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
-            r"Fencing daemon connection failed",
+            r"Lost fencer connection",
             r"pacemaker-controld.*Fencer successfully connected",
         ]
 
         self._components["pacemaker-fenced-ignore"] = [
             r"(error|warning):.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
-            r"crit:.*Fencing daemon connection failed",
+            r"error:.*Lost fencer connection",
             r"error:.*Fencer connection failed \(will retry\)",
             r"pacemaker-controld.*:\s+Result of .* operation for Fencing.*Error \(Lost connection to fencer\)",
             # This is overbroad, but we don't have a way to say that only
