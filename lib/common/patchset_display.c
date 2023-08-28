@@ -41,22 +41,26 @@ static int
 xml_show_patchset_header(pcmk__output_t *out, const xmlNode *patchset)
 {
     int rc = pcmk_rc_no_output;
-    int add[] = { 0, 0, 0 };
-    int del[] = { 0, 0, 0 };
+    int source[] = { 0, 0, 0 };
+    int target[] = { 0, 0, 0 };
 
-    xml_patch_versions(patchset, add, del);
+    pcmk__xml_patch_versions(patchset, source, target);
 
-    if ((add[0] != del[0]) || (add[1] != del[1]) || (add[2] != del[2])) {
+    if ((source[0] != target[0])
+        || (source[1] != target[1])
+        || (source[2] != target[2])) {
+
         const char *fmt = crm_element_value(patchset, PCMK_XA_FORMAT);
         const char *digest = crm_element_value(patchset, XML_ATTR_DIGEST);
 
-        out->info(out, "Diff: --- %d.%d.%d %s", del[0], del[1], del[2], fmt);
+        out->info(out, "Diff: --- %d.%d.%d %s",
+                  source[0], source[1], source[2], fmt);
         rc = out->info(out, "Diff: +++ %d.%d.%d %s",
-                       add[0], add[1], add[2], digest);
+                       target[0], target[1], target[2], digest);
 
-    } else if ((add[0] != 0) || (add[1] != 0) || (add[2] != 0)) {
+    } else if ((target[0] != 0) || (target[1] != 0) || (target[2] != 0)) {
         rc = out->info(out, "Local-only Change: %d.%d.%d",
-                       add[0], add[1], add[2]);
+                       target[0], target[1], target[2]);
     }
 
     return rc;

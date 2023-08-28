@@ -895,13 +895,11 @@ static void
 update_fencing_topology(const char *event, xmlNode * msg)
 {
     xmlNode *patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
-
-    int add[] = { 0, 0, 0 };
-    int del[] = { 0, 0, 0 };
+    int target[] = { 0, 0, 0 };
 
     CRM_ASSERT(patchset != NULL);
 
-    xml_patch_versions(patchset, add, del);
+    pcmk__xml_patch_versions(patchset, NULL, target);
 
     for (xmlNode *change = pcmk__xml_first_child(patchset); change != NULL;
          change = pcmk__xml_next(change)) {
@@ -916,7 +914,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
         if (strstr(xpath, "/" XML_TAG_FENCING_LEVEL) != NULL) {
             // Change to a specific entry
             crm_trace("Handling %s operation %d.%d.%d for %s",
-                      op, add[0], add[1], add[2], xpath);
+                      op, target[0], target[1], target[2], xpath);
 
             if (strcmp(op, "move") == 0) {
                 continue;
@@ -939,7 +937,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
                  */
                 crm_info("Re-initializing fencing topology after %s operation "
                          "%d.%d.%d for %s",
-                         op, add[0], add[1], add[2], xpath);
+                         op, target[0], target[1], target[2], xpath);
                 fencing_topology_init();
                 return;
             }
@@ -948,7 +946,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
             // Change to the topology in general
             crm_info("Re-initializing fencing topology after top-level %s "
                      "operation %d.%d.%d for %s",
-                     op, add[0], add[1], add[2], xpath);
+                     op, target[0], target[1], target[2], xpath);
             fencing_topology_init();
             return;
 
@@ -957,21 +955,21 @@ update_fencing_topology(const char *event, xmlNode * msg)
              * topology as a whole */
             if (first_named_child(change, XML_TAG_FENCING_TOPOLOGY) == NULL) {
                 crm_trace("Nothing for us in %s operation %d.%d.%d for %s",
-                          op, add[0], add[1], add[2], xpath);
+                          op, target[0], target[1], target[2], xpath);
 
             } else if ((strcmp(op, "delete") == 0)
                        || (strcmp(op, "create") == 0)) {
 
                 crm_info("Re-initializing fencing topology after top-level %s "
                          "operation %d.%d.%d for %s.",
-                         op, add[0], add[1], add[2], xpath);
+                         op, target[0], target[1], target[2], xpath);
                 fencing_topology_init();
                 return;
             }
 
         } else {
             crm_trace("Nothing for us in %s operation %d.%d.%d for %s",
-                      op, add[0], add[1], add[2], xpath);
+                      op, target[0], target[1], target[2], xpath);
         }
     }
 }

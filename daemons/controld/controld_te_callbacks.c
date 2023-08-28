@@ -355,8 +355,8 @@ te_update_diff(const char *event, xmlNode * msg)
     xmlNode *diff = NULL;
     const char *op = NULL;
     int rc = -EINVAL;
-    int p_add[] = { 0, 0, 0 };
-    int p_del[] = { 0, 0, 0 };
+    int source[] = { 0, 0, 0 };
+    int target[] = { 0, 0, 0 };
 
     CRM_CHECK(msg != NULL, return);
     crm_element_value_int(msg, F_CIB_RC, &rc);
@@ -381,9 +381,9 @@ te_update_diff(const char *event, xmlNode * msg)
     op = crm_element_value(msg, F_CIB_OPERATION);
     diff = get_message_xml(msg, F_CIB_UPDATE_RESULT);
 
-    xml_patch_versions(diff, p_add, p_del);
+    pcmk__xml_patch_versions(diff, source, target);
     crm_debug("Processing (%s) diff: %d.%d.%d -> %d.%d.%d (%s)", op,
-              p_del[0], p_del[1], p_del[2], p_add[0], p_add[1], p_add[2],
+              source[0], source[1], source[2], target[0], target[1], target[2],
               fsa_state2string(controld_globals.fsa_state));
 
     te_process_update_diff(diff);
