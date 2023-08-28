@@ -490,6 +490,7 @@ process_v1_additions(xmlNode *parent, xmlNode *target, xmlNode *patch)
  *                           otherwise, get versions used for removals
  * \param[out] version_node  Where to store XML node containing version details
  */
+// @COMPAT Drop when xml_create_patchset() is dropped
 static void
 find_patchset_version_node_v1(const xmlNode *patchset, bool added,
                               const xmlNode **version_node)
@@ -558,6 +559,15 @@ pcmk__xml_patch_versions(const xmlNode *patchset, int source[3], int target[3])
     crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
     switch (format) {
         case 1:
+            /* @COMPAT Drop when xml_create_patchset() is dropped. We might
+             * receive a v1 patchset if a user creates a v1 patchset with
+             * xml_create_patchset(1, ...) and then applies it via
+             * xml_apply_patchset() or PCMK__CIB_REQUEST_APPLY_PATCH.
+             *
+             * Otherwise, there's no reason we should ever encounter a v1
+             * patchset. Pacemaker has generated v2 patchsets internally since
+             * 1.1.4.
+             */
             find_fn = find_patchset_version_node_v1;
             break;
         case 2:
@@ -591,15 +601,6 @@ pcmk__xml_patch_versions(const xmlNode *patchset, int source[3], int target[3])
         }
     }
     return pcmk_rc_ok;
-}
-
-bool
-xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
-{
-    /* @COMPAT The return type has always been wrong (pcmk_ok == 0 -> false).
-     * Preserve it for backward compatibility.
-     */
-    return pcmk_rc2legacy(pcmk__xml_patch_versions(patchset, del, add));
 }
 
 /*!
@@ -1664,6 +1665,15 @@ patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
     if ((format <= 1) || with_digest) {
         pcmk__add_digest_to_patchset(source, target, patch);
     }
+}
+
+bool
+xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
+{
+    /* @COMPAT The return type has always been wrong (pcmk_ok == 0 -> false).
+     * Preserve it for backward compatibility.
+     */
+    return pcmk_rc2legacy(pcmk__xml_patch_versions(patchset, del, add));
 }
 
 // LCOV_EXCL_STOP
