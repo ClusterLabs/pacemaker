@@ -62,7 +62,8 @@ pcmk__group_assign(pe_resource_t *rsc, const pe_node_t *prefer,
     first_member = (pe_resource_t *) rsc->children->data;
     rsc->role = first_member->role;
 
-    pe__show_node_scores(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
+    pe__show_node_scores(!pcmk_is_set(rsc->cluster->flags,
+                                      pcmk_sched_output_scores),
                          rsc, __func__, rsc->allowed_nodes, rsc->cluster);
 
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {

@@ -284,7 +284,7 @@ effective_quorum_policy(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
     enum pe_quorum_policy policy = data_set->no_quorum_policy;
 
-    if (pcmk_is_set(data_set->flags, pe_flag_have_quorum)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_quorate)) {
         policy = pcmk_no_quorum_ignore;
 
     } else if (data_set->no_quorum_policy == pcmk_no_quorum_demote) {
@@ -829,7 +829,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
         value = "node fencing";
 
         if (!pcmk_is_set(action->rsc->cluster->flags,
-                         pe_flag_stonith_enabled)) {
+                         pcmk_sched_fencing_enabled)) {
             pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for "
                              "operation '%s' to 'stop' because 'fence' is not "
                              "valid when fencing is disabled", action->uuid);
@@ -905,7 +905,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
 
         } else {
             if (pcmk_is_set(action->rsc->cluster->flags,
-                            pe_flag_stonith_enabled)) {
+                            pcmk_sched_fencing_enabled)) {
                 value = "fence remote node (default)";
             } else {
                 value = "recover remote node connection (default)";
@@ -920,7 +920,8 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
     } else if ((value == NULL)
                && pcmk__str_eq(action->task, PCMK_ACTION_STOP,
                                pcmk__str_casei)) {
-        if (pcmk_is_set(action->rsc->cluster->flags, pe_flag_stonith_enabled)) {
+        if (pcmk_is_set(action->rsc->cluster->flags,
+                        pcmk_sched_fencing_enabled)) {
             action->on_fail = pcmk_on_fail_fence_node;
             value = "resource fence (default)";
 
@@ -1156,7 +1157,7 @@ pe_fence_op(pe_node_t *node, const char *op, bool optional,
         add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET_UUID, node->details->id);
         add_hash_param(stonith_op->meta, "stonith_action", op);
 
-        if (pcmk_is_set(data_set->flags, pe_flag_enable_unfencing)) {
+        if (pcmk_is_set(data_set->flags, pcmk_sched_enable_unfencing)) {
             /* Extra work to detect device changes
              */
             GString *digests_all = g_string_sized_new(1024);

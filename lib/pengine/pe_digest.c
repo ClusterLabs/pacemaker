@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -397,7 +397,7 @@ rsc_action_digest_cmp(pe_resource_t *rsc, const xmlNode *xml_op,
 
     crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
     data = rsc_action_digest(rsc, task, interval_ms, node, xml_op,
-                             pcmk_is_set(data_set->flags, pe_flag_sanitized),
+                             pcmk_is_set(data_set->flags, pcmk_sched_sanitized),
                              data_set);
 
     if (digest_restart && data->digest_restart_calc && strcmp(data->digest_restart_calc, digest_restart) != 0) {
@@ -569,7 +569,9 @@ pe__compare_fencing_digest(pe_resource_t *rsc, const char *agent,
 
     // Parameters don't match
     data->rc = RSC_DIGEST_ALL;
-    if (pcmk_is_set(data_set->flags, pe_flag_sanitized) && data->digest_secure_calc) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_sanitized)
+        && (data->digest_secure_calc != NULL)) {
+
         if (data_set->priv != NULL) {
             pcmk__output_t *out = data_set->priv;
             char *digest = create_unfencing_summary(rsc->id, agent,

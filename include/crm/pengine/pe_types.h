@@ -77,56 +77,6 @@ typedef struct resource_object_functions_s {
 
 typedef struct resource_alloc_functions_s resource_alloc_functions_t;
 
-// @TODO Make these an enum
-
-#  define pe_flag_have_quorum           0x00000001ULL
-#  define pe_flag_symmetric_cluster     0x00000002ULL
-#  define pe_flag_maintenance_mode      0x00000008ULL
-
-#  define pe_flag_stonith_enabled       0x00000010ULL
-#  define pe_flag_have_stonith_resource 0x00000020ULL
-#  define pe_flag_enable_unfencing      0x00000040ULL
-#  define pe_flag_concurrent_fencing    0x00000080ULL
-
-#  define pe_flag_stop_rsc_orphans      0x00000100ULL
-#  define pe_flag_stop_action_orphans   0x00000200ULL
-#  define pe_flag_stop_everything       0x00000400ULL
-
-#  define pe_flag_start_failure_fatal   0x00001000ULL
-
-//! \deprecated
-#  define pe_flag_remove_after_stop     0x00002000ULL
-
-#  define pe_flag_startup_fencing       0x00004000ULL
-#  define pe_flag_shutdown_lock         0x00008000ULL
-
-#  define pe_flag_startup_probes        0x00010000ULL
-#  define pe_flag_have_status           0x00020000ULL
-#  define pe_flag_have_remote_nodes     0x00040000ULL
-
-#  define pe_flag_quick_location        0x00100000ULL
-#  define pe_flag_sanitized             0x00200000ULL
-
-//! \deprecated
-#  define pe_flag_stdout                0x00400000ULL
-
-//! Don't count total, disabled and blocked resource instances
-#  define pe_flag_no_counts             0x00800000ULL
-
-/*! Skip deprecated code that is kept solely for backward API compatibility.
- * (Internal code should always set this.)
- */
-#  define pe_flag_no_compat             0x01000000ULL
-
-#  define pe_flag_show_scores           0x02000000ULL
-#  define pe_flag_show_utilization      0x04000000ULL
-
-/*!
- * When scheduling, only unpack the CIB (including constraints), calculate
- * as much cluster status as possible, and apply node health.
- */
-#  define pe_flag_check_config          0x08000000ULL
-
 struct pe_working_set_s {
     xmlNode *input;
     crm_time_t *now;

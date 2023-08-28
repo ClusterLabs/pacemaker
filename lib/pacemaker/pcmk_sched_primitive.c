@@ -475,7 +475,7 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer,
                           rsc->cluster);
 
     } else if ((rsc->next_role > rsc->role)
-               && !pcmk_is_set(rsc->cluster->flags, pe_flag_have_quorum)
+               && !pcmk_is_set(rsc->cluster->flags, pcmk_sched_quorate)
                && (rsc->cluster->no_quorum_policy == pcmk_no_quorum_freeze)) {
         crm_notice("Resource %s cannot be elevated from %s to %s due to "
                    "no-quorum-policy=freeze",
@@ -483,12 +483,13 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer,
         pe__set_next_role(rsc, rsc->role, "no-quorum-policy=freeze");
     }
 
-    pe__show_node_scores(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
+    pe__show_node_scores(!pcmk_is_set(rsc->cluster->flags,
+                                      pcmk_sched_output_scores),
                          rsc, __func__, rsc->allowed_nodes, rsc->cluster);
 
     // Unmanage resource if fencing is enabled but no device is configured
-    if (pcmk_is_set(rsc->cluster->flags, pe_flag_stonith_enabled)
-        && !pcmk_is_set(rsc->cluster->flags, pe_flag_have_stonith_resource)) {
+    if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)
+        && !pcmk_is_set(rsc->cluster->flags, pcmk_sched_have_fencing)) {
         pe__clear_resource_flags(rsc, pe_rsc_managed);
     }
 
@@ -512,7 +513,7 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer,
                     (assign_to? assign_to->details->uname : "no node"), reason);
         pcmk__assign_resource(rsc, assign_to, true, stop_if_fail);
 
-    } else if (pcmk_is_set(rsc->cluster->flags, pe_flag_stop_everything)) {
+    } else if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_stop_all)) {
         // Must stop at some point, but be consistent with stop_if_fail
         if (stop_if_fail) {
             pe_rsc_debug(rsc, "Forcing %s to stop: stop-all-resources",
@@ -909,7 +910,7 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
     // Whether resource requires unfencing
     check_unfencing = !pcmk_is_set(rsc->flags, pe_rsc_fence_device)
                       && pcmk_is_set(rsc->cluster->flags,
-                                     pe_flag_enable_unfencing)
+                                     pcmk_sched_enable_unfencing)
                       && pcmk_is_set(rsc->flags, pe_rsc_needs_unfencing);
 
     // Whether a non-default placement strategy is used
@@ -1268,7 +1269,7 @@ stop_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
             pe__clear_action_flags(stop, pe_action_runnable);
         }
 
-        if (pcmk_is_set(rsc->cluster->flags, pe_flag_remove_after_stop)) {
+        if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_remove_after_stop)) {
             pcmk__schedule_cleanup(rsc, current, optional);
         }
 

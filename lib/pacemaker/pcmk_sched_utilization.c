@@ -453,7 +453,7 @@ pcmk__create_utilization_constraints(pe_resource_t *rsc,
 void
 pcmk__show_node_capacities(const char *desc, pe_working_set_t *data_set)
 {
-    if (!pcmk_is_set(data_set->flags, pe_flag_show_utilization)) {
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_show_utilization)) {
         return;
     }
     for (const GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {

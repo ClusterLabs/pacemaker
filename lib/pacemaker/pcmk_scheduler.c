@@ -205,7 +205,7 @@ apply_stickiness(gpointer data, gpointer user_data)
      * allowed on the node, so we don't keep the resource somewhere it is no
      * longer explicitly enabled.
      */
-    if (!pcmk_is_set(rsc->cluster->flags, pe_flag_symmetric_cluster)
+    if (!pcmk_is_set(rsc->cluster->flags, pcmk_sched_symmetric_cluster)
         && (g_hash_table_lookup(rsc->allowed_nodes,
                                 node->details->id) == NULL)) {
         pe_rsc_debug(rsc,
@@ -229,7 +229,7 @@ apply_stickiness(gpointer data, gpointer user_data)
 static void
 apply_shutdown_locks(pe_working_set_t *data_set)
 {
-    if (!pcmk_is_set(data_set->flags, pe_flag_shutdown_lock)) {
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_shutdown_lock)) {
         return;
     }
     for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
@@ -248,7 +248,7 @@ apply_shutdown_locks(pe_working_set_t *data_set)
 static void
 count_available_nodes(pe_working_set_t *data_set)
 {
-    if (pcmk_is_set(data_set->flags, pe_flag_no_compat)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_no_compat)) {
         return;
     }
 
@@ -310,7 +310,7 @@ assign_resources(pe_working_set_t *data_set)
     }
     pcmk__show_node_capacities("Original", data_set);
 
-    if (pcmk_is_set(data_set->flags, pe_flag_have_remote_nodes)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_have_remote_nodes)) {
         /* Assign remote connection resources first (which will also assign any
          * colocation dependencies). If the connection is migrating, always
          * prefer the partial migration target.
@@ -396,12 +396,12 @@ schedule_resource_actions(pe_working_set_t *data_set)
     pe__foreach_param_check(data_set, check_params);
     pe__free_param_checks(data_set);
 
-    if (pcmk_is_set(data_set->flags, pe_flag_startup_probes)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_probe_resources)) {
         crm_trace("Scheduling probes");
         pcmk__schedule_probes(data_set);
     }
 
-    if (pcmk_is_set(data_set->flags, pe_flag_stop_rsc_orphans)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_stop_removed_resources)) {
         g_list_foreach(data_set->resources, clear_failcounts_if_orphaned, NULL);
     }
 
@@ -505,7 +505,7 @@ static GList *
 add_nondc_fencing(GList *list, pe_action_t *action,
                   const pe_working_set_t *data_set)
 {
-    if (!pcmk_is_set(data_set->flags, pe_flag_concurrent_fencing)
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_concurrent_fencing)
         && (list != NULL)) {
         /* Concurrent fencing is disabled, so order each non-DC
          * fencing in a chain. If there is any DC fencing or
@@ -600,12 +600,12 @@ schedule_fencing_and_shutdowns(pe_working_set_t *data_set)
     }
 
     if (integrity_lost) {
-        if (!pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
+        if (!pcmk_is_set(data_set->flags, pcmk_sched_fencing_enabled)) {
             pe_warn("Resource functionality and data integrity cannot be "
                     "guaranteed (configure, enable, and test fencing to "
                     "correct this)");
 
-        } else if (!pcmk_is_set(data_set->flags, pe_flag_have_quorum)) {
+        } else if (!pcmk_is_set(data_set->flags, pcmk_sched_quorate)) {
             crm_notice("Unclean nodes will not be fenced until quorum is "
                        "attained or no-quorum-policy is set to ignore");
         }
@@ -626,7 +626,7 @@ schedule_fencing_and_shutdowns(pe_working_set_t *data_set)
 
         // Order any non-DC fencing before any DC fencing or shutdown
 
-        if (pcmk_is_set(data_set->flags, pe_flag_concurrent_fencing)) {
+        if (pcmk_is_set(data_set->flags, pcmk_sched_concurrent_fencing)) {
             /* With concurrent fencing, order each non-DC fencing action
              * separately before any DC fencing or shutdown.
              */
@@ -735,7 +735,7 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pe_working_set_t *data_set)
 {
     const char* localhost_save = NULL;
 
-    if (pcmk_is_set(data_set->flags, pe_flag_have_status)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_have_status)) {
         crm_trace("Reusing previously calculated cluster status");
         pe__set_working_set_flags(data_set, flags);
         return;
@@ -750,7 +750,7 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pe_working_set_t *data_set)
 
     /* This will zero the entire struct without freeing anything first, so
      * callers should never call pcmk__schedule_actions() with a populated data
-     * set unless pe_flag_have_status is set (i.e. cluster_status() was
+     * set unless pcmk_sched_have_status is set (i.e. cluster_status() was
      * previously called, whether directly or via pcmk__schedule_actions()).
      */
     set_working_set_defaults(data_set);
@@ -761,7 +761,7 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pe_working_set_t *data_set)
 
     pe__set_working_set_flags(data_set, flags);
     data_set->input = cib;
-    cluster_status(data_set); // Sets pe_flag_have_status
+    cluster_status(data_set); // Sets pcmk_sched_have_status
 }
 
 /*!
@@ -780,18 +780,18 @@ pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
     pcmk__set_assignment_methods(data_set);
     pcmk__apply_node_health(data_set);
     pcmk__unpack_constraints(data_set);
-    if (pcmk_is_set(data_set->flags, pe_flag_check_config)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_validate_only)) {
         return;
     }
 
-    if (!pcmk_is_set(data_set->flags, pe_flag_quick_location) &&
-         pcmk__is_daemon) {
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_location_only)
+        && pcmk__is_daemon) {
         log_resource_details(data_set);
     }
 
     apply_node_criteria(data_set);
 
-    if (pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_location_only)) {
         return;
     }
 

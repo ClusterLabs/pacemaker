@@ -875,7 +875,7 @@ show_promotion_score(pe_resource_t *instance)
 {
     pe_node_t *chosen = instance->fns->location(instance, NULL, FALSE);
 
-    if (pcmk_is_set(instance->cluster->flags, pe_flag_show_scores)
+    if (pcmk_is_set(instance->cluster->flags, pcmk_sched_output_scores)
         && !pcmk__is_daemon && (instance->cluster->priv != NULL)) {
 
         pcmk__output_t *out = instance->cluster->priv;
@@ -1018,7 +1018,7 @@ set_instance_role(gpointer data, gpointer user_data)
     }
 
     if ((instance->role < pcmk_role_promoted)
-        && !pcmk_is_set(instance->cluster->flags, pe_flag_have_quorum)
+        && !pcmk_is_set(instance->cluster->flags, pcmk_sched_quorate)
         && (instance->cluster->no_quorum_policy == pcmk_no_quorum_freeze)) {
         crm_notice("Clone instance %s cannot be promoted without quorum",
                    instance->id);

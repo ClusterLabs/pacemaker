@@ -500,7 +500,7 @@ pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force,
     node->count++;
     pcmk__consume_node_capacity(node->details->utilization, rsc);
 
-    if (pcmk_is_set(rsc->cluster->flags, pe_flag_show_utilization)) {
+    if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_show_utilization)) {
         pcmk__output_t *out = rsc->cluster->priv;
 
         out->message(out, "resource-util", rsc, node, __func__);

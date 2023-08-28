@@ -244,11 +244,11 @@ main(int argc, char **argv)
      * example, action configuration), so we aren't necessarily checking those.
      */
     if (cib_object != NULL) {
-        unsigned long long flags = pe_flag_no_counts|pe_flag_no_compat;
+        unsigned long long flags = pcmk_sched_no_counts|pcmk_sched_no_compat;
 
         if ((status == NULL) && !options.use_live_cib) {
             // No status available, so do minimal checks
-            flags |= pe_flag_check_config;
+            flags |= pcmk_sched_validate_only;
         }
         pcmk__schedule_actions(cib_object, flags, data_set);
     }

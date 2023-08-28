@@ -939,11 +939,11 @@ static int
 cluster_maint_mode_text(pcmk__output_t *out, va_list args) {
     unsigned long long flags = va_arg(args, unsigned long long);
 
-    if (pcmk_is_set(flags, pe_flag_maintenance_mode)) {
+    if (pcmk_is_set(flags, pcmk_sched_in_maintenance)) {
         pcmk__formatted_printf(out, "\n              *** Resource management is DISABLED ***\n");
         pcmk__formatted_printf(out, "  The cluster will not attempt to start, stop or recover services\n");
         return pcmk_rc_ok;
-    } else if (pcmk_is_set(flags, pe_flag_stop_everything)) {
+    } else if (pcmk_is_set(flags, pcmk_sched_stop_all)) {
         pcmk__formatted_printf(out, "\n    *** Resource management is DISABLED ***\n");
         pcmk__formatted_printf(out, "  The cluster will keep all resources stopped\n");
         return pcmk_rc_ok;
@@ -957,11 +957,17 @@ static int
 cluster_options_html(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
 
-    out->list_item(out, NULL, "STONITH of failed nodes %s",
-                   pcmk_is_set(data_set->flags, pe_flag_stonith_enabled) ? "enabled" : "disabled");
+    if (pcmk_is_set(data_set->flags, pcmk_sched_fencing_enabled)) {
+        out->list_item(out, NULL, "STONITH of failed nodes enabled");
+    } else {
+        out->list_item(out, NULL, "STONITH of failed nodes disabled");
+    }
 
-    out->list_item(out, NULL, "Cluster is %s",
-                   pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster) ? "symmetric" : "asymmetric");
+    if (pcmk_is_set(data_set->flags, pcmk_sched_symmetric_cluster)) {
+        out->list_item(out, NULL, "Cluster is symmetric");
+    } else {
+        out->list_item(out, NULL, "Cluster is asymmetric");
+    }
 
     switch (data_set->no_quorum_policy) {
         case pcmk_no_quorum_freeze:
@@ -986,14 +992,14 @@ cluster_options_html(pcmk__output_t *out, va_list args) {
             break;
     }
 
-    if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_in_maintenance)) {
         xmlNodePtr node = pcmk__output_create_xml_node(out, "li", NULL);
 
         pcmk_create_html_node(node, "span", NULL, NULL, "Resource management: ");
         pcmk_create_html_node(node, "span", NULL, "bold", "DISABLED");
         pcmk_create_html_node(node, "span", NULL, NULL,
                               " (the cluster will not attempt to start, stop, or recover services)");
-    } else if (pcmk_is_set(data_set->flags, pe_flag_stop_everything)) {
+    } else if (pcmk_is_set(data_set->flags, pcmk_sched_stop_all)) {
         xmlNodePtr node = pcmk__output_create_xml_node(out, "li", NULL);
 
         pcmk_create_html_node(node, "span", NULL, NULL, "Resource management: ");
@@ -1012,9 +1018,9 @@ static int
 cluster_options_log(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
 
-    if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_in_maintenance)) {
         return out->info(out, "Resource management is DISABLED.  The cluster will not attempt to start, stop or recover services.");
-    } else if (pcmk_is_set(data_set->flags, pe_flag_stop_everything)) {
+    } else if (pcmk_is_set(data_set->flags, pcmk_sched_stop_all)) {
         return out->info(out, "Resource management is DISABLED.  The cluster has stopped all resources.");
     } else {
         return pcmk_rc_no_output;
@@ -1026,11 +1032,17 @@ static int
 cluster_options_text(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
 
-    out->list_item(out, NULL, "STONITH of failed nodes %s",
-                   pcmk_is_set(data_set->flags, pe_flag_stonith_enabled) ? "enabled" : "disabled");
+    if (pcmk_is_set(data_set->flags, pcmk_sched_fencing_enabled)) {
+        out->list_item(out, NULL, "STONITH of failed nodes enabled");
+    } else {
+        out->list_item(out, NULL, "STONITH of failed nodes disabled");
+    }
 
-    out->list_item(out, NULL, "Cluster is %s",
-                   pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster) ? "symmetric" : "asymmetric");
+    if (pcmk_is_set(data_set->flags, pcmk_sched_symmetric_cluster)) {
+        out->list_item(out, NULL, "Cluster is symmetric");
+    } else {
+        out->list_item(out, NULL, "Cluster is asymmetric");
+    }
 
     switch (data_set->no_quorum_policy) {
         case pcmk_no_quorum_freeze:
@@ -1057,6 +1069,8 @@ cluster_options_text(pcmk__output_t *out, va_list args) {
 
     return pcmk_rc_ok;
 }
+
+#define bv(flag) pcmk__btoa(pcmk_is_set(data_set->flags, (flag)))
 
 PCMK__OUTPUT_ARGS("cluster-options", "pe_working_set_t *")
 static int
@@ -1090,11 +1104,14 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
     }
 
     pcmk__output_create_xml_node(out, "cluster_options",
-                                 "stonith-enabled", pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)),
-                                 "symmetric-cluster", pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster)),
+                                 "stonith-enabled",
+                                 bv(pcmk_sched_fencing_enabled),
+                                 "symmetric-cluster",
+                                 bv(pcmk_sched_symmetric_cluster),
                                  "no-quorum-policy", no_quorum_policy,
-                                 "maintenance-mode", pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)),
-                                 "stop-all-resources", pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_stop_everything)),
+                                 "maintenance-mode",
+                                 bv(pcmk_sched_in_maintenance),
+                                 "stop-all-resources", bv(pcmk_sched_stop_all),
                                  "stonith-timeout-ms", stonith_timeout_str,
                                  "priority-fencing-delay-ms", priority_fencing_delay_str,
                                  NULL);

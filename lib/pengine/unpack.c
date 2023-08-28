@@ -232,8 +232,9 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
 
     verify_pe_options(data_set->config_hash);
 
-    set_config_flag(data_set, "enable-startup-probes", pe_flag_startup_probes);
-    if (!pcmk_is_set(data_set->flags, pe_flag_startup_probes)) {
+    set_config_flag(data_set, "enable-startup-probes",
+                    pcmk_sched_probe_resources);
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_probe_resources)) {
         crm_info("Startup probes: disabled (dangerous)");
     }
 
@@ -241,21 +242,24 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     if (value && crm_is_true(value)) {
         crm_info("Watchdog-based self-fencing will be performed via SBD if "
                  "fencing is required and stonith-watchdog-timeout is nonzero");
-        pe__set_working_set_flags(data_set, pe_flag_have_stonith_resource);
+        pe__set_working_set_flags(data_set, pcmk_sched_have_fencing);
     }
 
     /* Set certain flags via xpath here, so they can be used before the relevant
      * configuration sections are unpacked.
      */
-    set_if_xpath(pe_flag_enable_unfencing, XPATH_ENABLE_UNFENCING, data_set);
+    set_if_xpath(pcmk_sched_enable_unfencing, XPATH_ENABLE_UNFENCING, data_set);
 
     value = pe_pref(data_set->config_hash, "stonith-timeout");
     data_set->stonith_timeout = (int) crm_parse_interval_spec(value);
     crm_debug("STONITH timeout: %d", data_set->stonith_timeout);
 
-    set_config_flag(data_set, "stonith-enabled", pe_flag_stonith_enabled);
-    crm_debug("STONITH of failed nodes is %s",
-              pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)? "enabled" : "disabled");
+    set_config_flag(data_set, "stonith-enabled", pcmk_sched_fencing_enabled);
+    if (pcmk_is_set(data_set->flags, pcmk_sched_fencing_enabled)) {
+        crm_debug("STONITH of failed nodes is enabled");
+    } else {
+        crm_debug("STONITH of failed nodes is disabled");
+    }
 
     data_set->stonith_action = pe_pref(data_set->config_hash, "stonith-action");
     if (!strcmp(data_set->stonith_action, "poweroff")) {
@@ -266,9 +270,13 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     }
     crm_trace("STONITH will %s nodes", data_set->stonith_action);
 
-    set_config_flag(data_set, "concurrent-fencing", pe_flag_concurrent_fencing);
-    crm_debug("Concurrent fencing is %s",
-              pcmk_is_set(data_set->flags, pe_flag_concurrent_fencing)? "enabled" : "disabled");
+    set_config_flag(data_set, "concurrent-fencing",
+                    pcmk_sched_concurrent_fencing);
+    if (pcmk_is_set(data_set->flags, pcmk_sched_concurrent_fencing)) {
+        crm_debug("Concurrent fencing is enabled");
+    } else {
+        crm_debug("Concurrent fencing is disabled");
+    }
 
     value = pe_pref(data_set->config_hash,
                     XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY);
@@ -277,12 +285,13 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
         crm_trace("Priority fencing delay is %ds", data_set->priority_fencing_delay);
     }
 
-    set_config_flag(data_set, "stop-all-resources", pe_flag_stop_everything);
+    set_config_flag(data_set, "stop-all-resources", pcmk_sched_stop_all);
     crm_debug("Stop all active resources: %s",
-              pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_stop_everything)));
+              pcmk__btoa(pcmk_is_set(data_set->flags, pcmk_sched_stop_all)));
 
-    set_config_flag(data_set, "symmetric-cluster", pe_flag_symmetric_cluster);
-    if (pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster)) {
+    set_config_flag(data_set, "symmetric-cluster",
+                    pcmk_sched_symmetric_cluster);
+    if (pcmk_is_set(data_set->flags, pcmk_sched_symmetric_cluster)) {
         crm_debug("Cluster is symmetric" " - resources can run anywhere by default");
     }
 
@@ -298,12 +307,12 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
         data_set->no_quorum_policy = pcmk_no_quorum_demote;
 
     } else if (pcmk__str_eq(value, "suicide", pcmk__str_casei)) {
-        if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
+        if (pcmk_is_set(data_set->flags, pcmk_sched_fencing_enabled)) {
             int do_panic = 0;
 
             crm_element_value_int(data_set->input, XML_ATTR_QUORUM_PANIC,
                                   &do_panic);
-            if (do_panic || pcmk_is_set(data_set->flags, pe_flag_have_quorum)) {
+            if (do_panic || pcmk_is_set(data_set->flags, pcmk_sched_quorate)) {
                 data_set->no_quorum_policy = pcmk_no_quorum_fence;
             } else {
                 crm_notice("Resetting no-quorum-policy to 'stop': cluster has never had quorum");
@@ -338,40 +347,54 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
             break;
     }
 
-    set_config_flag(data_set, "stop-orphan-resources", pe_flag_stop_rsc_orphans);
-    crm_trace("Orphan resources are %s",
-              pcmk_is_set(data_set->flags, pe_flag_stop_rsc_orphans)? "stopped" : "ignored");
+    set_config_flag(data_set, "stop-orphan-resources",
+                    pcmk_sched_stop_removed_resources);
+    if (pcmk_is_set(data_set->flags, pcmk_sched_stop_removed_resources)) {
+        crm_trace("Orphan resources are stopped");
+    } else {
+        crm_trace("Orphan resources are ignored");
+    }
 
-    set_config_flag(data_set, "stop-orphan-actions", pe_flag_stop_action_orphans);
-    crm_trace("Orphan resource actions are %s",
-              pcmk_is_set(data_set->flags, pe_flag_stop_action_orphans)? "stopped" : "ignored");
+    set_config_flag(data_set, "stop-orphan-actions",
+                    pcmk_sched_cancel_removed_actions);
+    if (pcmk_is_set(data_set->flags, pcmk_sched_cancel_removed_actions)) {
+        crm_trace("Orphan resource actions are stopped");
+    } else {
+        crm_trace("Orphan resource actions are ignored");
+    }
 
     value = pe_pref(data_set->config_hash, "remove-after-stop");
     if (value != NULL) {
         if (crm_is_true(value)) {
-            pe__set_working_set_flags(data_set, pe_flag_remove_after_stop);
+            pe__set_working_set_flags(data_set, pcmk_sched_remove_after_stop);
 #ifndef PCMK__COMPAT_2_0
             pe_warn_once(pe_wo_remove_after,
                          "Support for the remove-after-stop cluster property is"
                          " deprecated and will be removed in a future release");
 #endif
         } else {
-            pe__clear_working_set_flags(data_set, pe_flag_remove_after_stop);
+            pe__clear_working_set_flags(data_set, pcmk_sched_remove_after_stop);
         }
     }
 
-    set_config_flag(data_set, "maintenance-mode", pe_flag_maintenance_mode);
+    set_config_flag(data_set, "maintenance-mode", pcmk_sched_in_maintenance);
     crm_trace("Maintenance mode: %s",
-              pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)));
+              pcmk__btoa(pcmk_is_set(data_set->flags,
+                                     pcmk_sched_in_maintenance)));
 
-    set_config_flag(data_set, "start-failure-is-fatal", pe_flag_start_failure_fatal);
-    crm_trace("Start failures are %s",
-              pcmk_is_set(data_set->flags, pe_flag_start_failure_fatal)? "always fatal" : "handled by failcount");
-
-    if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
-        set_config_flag(data_set, "startup-fencing", pe_flag_startup_fencing);
+    set_config_flag(data_set, "start-failure-is-fatal",
+                    pcmk_sched_start_failure_fatal);
+    if (pcmk_is_set(data_set->flags, pcmk_sched_start_failure_fatal)) {
+        crm_trace("Start failures are always fatal");
+    } else {
+        crm_trace("Start failures are handled by failcount");
     }
-    if (pcmk_is_set(data_set->flags, pe_flag_startup_fencing)) {
+
+    if (pcmk_is_set(data_set->flags, pcmk_sched_fencing_enabled)) {
+        set_config_flag(data_set, "startup-fencing",
+                        pcmk_sched_startup_fencing);
+    }
+    if (pcmk_is_set(data_set->flags, pcmk_sched_startup_fencing)) {
         crm_trace("Unseen nodes will be fenced");
     } else {
         pe_warn_once(pe_wo_blind, "Blind faith: not fencing unseen nodes");
@@ -382,14 +405,17 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     data_set->placement_strategy = pe_pref(data_set->config_hash, "placement-strategy");
     crm_trace("Placement strategy: %s", data_set->placement_strategy);
 
-    set_config_flag(data_set, "shutdown-lock", pe_flag_shutdown_lock);
-    crm_trace("Resources will%s be locked to cleanly shut down nodes",
-              (pcmk_is_set(data_set->flags, pe_flag_shutdown_lock)? "" : " not"));
-    if (pcmk_is_set(data_set->flags, pe_flag_shutdown_lock)) {
+    set_config_flag(data_set, "shutdown-lock", pcmk_sched_shutdown_lock);
+    if (pcmk_is_set(data_set->flags, pcmk_sched_shutdown_lock)) {
         value = pe_pref(data_set->config_hash,
                         XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT);
         data_set->shutdown_lock = crm_parse_interval_spec(value) / 1000;
-        crm_trace("Shutdown locks expire after %us", data_set->shutdown_lock);
+        crm_trace("Resources will be locked to nodes that were cleanly "
+                  "shut down (locks expire after %s)",
+                  pcmk__readable_interval(data_set->shutdown_lock));
+    } else {
+        crm_trace("Resources will not be locked to nodes that were cleanly "
+                  "shut down");
     }
 
     value = pe_pref(data_set->config_hash,
@@ -437,7 +463,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
 
     } else if (pcmk__str_eq(type, "remote", pcmk__str_casei)) {
         new_node->details->type = pcmk_node_variant_remote;
-        pe__set_working_set_flags(data_set, pe_flag_have_remote_nodes);
+        pe__set_working_set_flags(data_set, pcmk_sched_have_remote_nodes);
 
     } else {
         /* @COMPAT 'ping' is the default for backward compatibility, but it
@@ -543,7 +569,7 @@ handle_startup_fencing(pe_working_set_t *data_set, pe_node_t *new_node)
         return;
     }
 
-    if (pcmk_is_set(data_set->flags, pe_flag_startup_fencing)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_startup_fencing)) {
         // All nodes are unclean until we've seen their status entry
         new_node->details->unclean = TRUE;
 
@@ -718,7 +744,7 @@ link_rsc2remotenode(pe_working_set_t *data_set, pe_resource_t *new_rsc)
         return;
     }
 
-    if (pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_location_only)) {
         /* remote_nodes and remote_resources are not linked in quick location calculations */
         return;
     }
@@ -822,11 +848,11 @@ unpack_resources(const xmlNode *xml_resources, pe_working_set_t * data_set)
 
     data_set->resources = g_list_sort(data_set->resources,
                                       pe__cmp_rsc_priority);
-    if (pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_location_only)) {
         /* Ignore */
 
-    } else if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)
-               && !pcmk_is_set(data_set->flags, pe_flag_have_stonith_resource)) {
+    } else if (pcmk_is_set(data_set->flags, pcmk_sched_fencing_enabled)
+               && !pcmk_is_set(data_set->flags, pcmk_sched_have_fencing)) {
 
         pcmk__config_err("Resource start-up disabled since no STONITH resources have been defined");
         pcmk__config_err("Either configure some or disable STONITH with the stonith-enabled option");
@@ -1017,7 +1043,7 @@ unpack_handle_remote_attrs(pe_node_t *this_node, const xmlNode *state,
     resource_discovery_enabled = pe_node_attribute_raw(this_node, XML_NODE_ATTR_RSC_DISCOVERY);
     if (resource_discovery_enabled && !crm_is_true(resource_discovery_enabled)) {
         if (pe__is_remote_node(this_node)
-            && !pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
+            && !pcmk_is_set(data_set->flags, pcmk_sched_fencing_enabled)) {
             crm_warn("Ignoring " XML_NODE_ATTR_RSC_DISCOVERY
                      " attribute on Pacemaker Remote node %s"
                      " because fencing is disabled",
@@ -1140,7 +1166,7 @@ unpack_node_state(const xmlNode *state, pe_working_set_t *data_set)
               pe__node_name(this_node), id);
     determine_online_status(state, this_node, data_set);
 
-    if (!pcmk_is_set(data_set->flags, pe_flag_have_quorum)
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_quorate)
         && this_node->details->online
         && (data_set->no_quorum_policy == pcmk_no_quorum_fence)) {
         /* Everything else should flow from this automatically
@@ -1231,7 +1257,7 @@ unpack_node_history(const xmlNode *status, bool fence,
             pe_resource_t *rsc = this_node->details->remote_rsc;
 
             if ((rsc == NULL)
-                || (!pcmk_is_set(data_set->flags, pe_flag_shutdown_lock)
+                || (!pcmk_is_set(data_set->flags, pcmk_sched_shutdown_lock)
                     && (rsc->role != pcmk_role_started))) {
                 crm_trace("Not unpacking resource history for remote node %s "
                           "because connection is not known to be up", id);
@@ -1243,8 +1269,9 @@ unpack_node_history(const xmlNode *status, bool fence,
          * nodes have been unpacked. This allows us to number active clone
          * instances first.
          */
-        } else if (!pcmk_any_flags_set(data_set->flags, pe_flag_stonith_enabled
-                                                        |pe_flag_shutdown_lock)
+        } else if (!pcmk_any_flags_set(data_set->flags,
+                                       pcmk_sched_fencing_enabled
+                                       |pcmk_sched_shutdown_lock)
                    && !this_node->details->online) {
             crm_trace("Not unpacking resource history for offline "
                       "cluster node %s", id);
@@ -1298,7 +1325,8 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
 
     // Now catch any nodes we didn't see
     unpack_node_history(status,
-                        pcmk_is_set(data_set->flags, pe_flag_stonith_enabled),
+                        pcmk_is_set(data_set->flags,
+                                    pcmk_sched_fencing_enabled),
                         data_set);
 
     /* Now that we know where resources are, we can schedule stops of containers
@@ -1646,7 +1674,7 @@ determine_online_status(const xmlNode *node_state, pe_node_t *this_node,
                                  * Anyone caught abusing this logic will be shot
                                  */
 
-    } else if (!pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
+    } else if (!pcmk_is_set(data_set->flags, pcmk_sched_fencing_enabled)) {
         online = determine_online_status_no_fencing(data_set, node_state, this_node);
 
     } else {
@@ -2052,7 +2080,7 @@ process_orphan_resource(const xmlNode *rsc_entry, const pe_node_t *node,
         return NULL;
     }
 
-    if (!pcmk_is_set(data_set->flags, pe_flag_stop_rsc_orphans)) {
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_stop_removed_resources)) {
         pe__clear_resource_flags(rsc, pe_rsc_managed);
 
     } else {
@@ -2117,7 +2145,8 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
             should_fence = TRUE;
 
-        } else if (pcmk_is_set(rsc->cluster->flags, pe_flag_stonith_enabled)) {
+        } else if (pcmk_is_set(rsc->cluster->flags,
+                               pcmk_sched_fencing_enabled)) {
             if (pe__is_remote_node(node) && node->details->remote_rsc
                 && !pcmk_is_set(node->details->remote_rsc->flags, pe_rsc_failed)) {
 
@@ -2227,7 +2256,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
 
         case pcmk_on_fail_reset_remote:
             pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
-            if (pcmk_is_set(rsc->cluster->flags, pe_flag_stonith_enabled)) {
+            if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)) {
                 tmpnode = NULL;
                 if (rsc->is_remote_node) {
                     tmpnode = pe_find_node(rsc->cluster->nodes, rsc->id);
@@ -2518,7 +2547,7 @@ unpack_lrm_resource(pe_node_t *node, const xmlNode *lrm_resource,
         op_list = g_list_prepend(op_list, rsc_op);
     }
 
-    if (!pcmk_is_set(data_set->flags, pe_flag_shutdown_lock)) {
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_shutdown_lock)) {
         if (op_list == NULL) {
             // If there are no operations, there is nothing to do
             return NULL;
@@ -2538,7 +2567,7 @@ unpack_lrm_resource(pe_node_t *node, const xmlNode *lrm_resource,
     CRM_ASSERT(rsc != NULL);
 
     // Check whether the resource is "shutdown-locked" to this node
-    if (pcmk_is_set(data_set->flags, pe_flag_shutdown_lock)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_shutdown_lock)) {
         unpack_shutdown_lock(lrm_resource, rsc, node, data_set);
     }
 
@@ -3471,7 +3500,7 @@ unpack_rsc_op_failure(struct action_history *history, xmlNode **last_failure,
     is_probe = pcmk_xe_is_probe(history->xml);
     last_change_s = last_change_str(history->xml);
 
-    if (!pcmk_is_set(history->rsc->cluster->flags, pe_flag_symmetric_cluster)
+    if (!pcmk_is_set(history->rsc->cluster->flags, pcmk_sched_symmetric_cluster)
         && (history->exit_status == PCMK_OCF_NOT_INSTALLED)) {
         crm_trace("Unexpected result (%s%s%s) was recorded for "
                   "%s of %s on %s at %s " CRM_XS " exit-status=%d id=%s",
@@ -3932,7 +3961,7 @@ should_ignore_failure_timeout(const pe_resource_t *rsc, const char *task,
      * if the remote node hasn't been fenced.
      */
     if (rsc->remote_reconnect_ms
-        && pcmk_is_set(rsc->cluster->flags, pe_flag_stonith_enabled)
+        && pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)
         && (interval_ms != 0)
         && pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
 
@@ -4062,7 +4091,8 @@ check_operation_expiry(struct action_history *history)
                                                     clear_reason,
                                                     history->rsc->cluster);
 
-        if (pcmk_is_set(history->rsc->cluster->flags, pe_flag_stonith_enabled)
+        if (pcmk_is_set(history->rsc->cluster->flags,
+                        pcmk_sched_fencing_enabled)
             && (history->rsc->remote_reconnect_ms != 0)) {
             /* If we're clearing a remote connection due to a reconnect
              * interval, we want to wait until any scheduled fencing
@@ -4889,7 +4919,7 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
             }
 
             if (this_node->details->online
-                || pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
+                || pcmk_is_set(data_set->flags, pcmk_sched_fencing_enabled)) {
                 /* offline nodes run no resources...
                  * unless stonith is enabled in which case we need to
                  *   make sure rsc start events happen after the stonith

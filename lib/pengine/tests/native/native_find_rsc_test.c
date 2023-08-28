@@ -42,7 +42,8 @@ setup(void **state) {
         return 1;
     }
 
-    pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
+    pe__set_working_set_flags(data_set,
+                              pcmk_sched_no_counts|pcmk_sched_no_compat);
     data_set->input = input;
 
     cluster_status(data_set);

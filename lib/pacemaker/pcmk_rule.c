@@ -70,7 +70,7 @@ init_rule_check(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
     }
 
     pe__set_working_set_flags(new_data_set,
-                              pe_flag_no_counts|pe_flag_no_compat);
+                              pcmk_sched_no_counts|pcmk_sched_no_compat);
 
     // Populate the working set instance
 
