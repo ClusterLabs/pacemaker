@@ -15,8 +15,10 @@ include $(top_srcdir)/mk/common.mk
 SUBDIRS = . tests
 
 ## libraries
-lib_LTLIBRARIES		= libpe_rules.la libpe_status.la
-check_LTLIBRARIES 	= libpe_rules_test.la libpe_status_test.la
+lib_LTLIBRARIES		= libpe_rules.la 	\
+			  libpe_status.la
+check_LTLIBRARIES 	= libpe_rules_test.la 	\
+			  libpe_status_test.la
 
 ## SOURCES
 noinst_HEADERS		= pe_status_private.h
@@ -27,7 +29,9 @@ libpe_rules_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpe_rules_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 
 libpe_rules_la_LIBADD	= $(top_builddir)/lib/common/libcrmcommon.la
-libpe_rules_la_SOURCES	= rules.c rules_alerts.c common.c
+libpe_rules_la_SOURCES	= rules.c 		\
+			  rules_alerts.c 	\
+			  common.c
 
 libpe_status_la_LDFLAGS	= -version-info 34:0:6
 
@@ -64,18 +68,26 @@ libpe_status_la_SOURCES	+= utils.c
 include $(top_srcdir)/mk/tap.mk
 
 libpe_rules_test_la_SOURCES = $(libpe_rules_la_SOURCES)
-libpe_rules_test_la_LDFLAGS = $(libpe_rules_la_LDFLAGS) -rpath $(libdir) $(LDFLAGS_WRAP)
+libpe_rules_test_la_LDFLAGS = $(libpe_rules_la_LDFLAGS)	\
+			      -rpath $(libdir) 		\
+			      $(LDFLAGS_WRAP)
 # See comments on libcrmcommon_test_la in lib/common/Makefile.am regarding these flags.
-libpe_rules_test_la_CFLAGS = $(libpe_rules_la_CFLAGS) -DPCMK__UNIT_TESTING \
+libpe_rules_test_la_CFLAGS = $(libpe_rules_la_CFLAGS) 	\
+			     -DPCMK__UNIT_TESTING 	\
 			     -fno-builtin -fno-inline
-libpe_rules_test_la_LIBADD = $(top_builddir)/lib/common/libcrmcommon_test.la -lcmocka -lm
+libpe_rules_test_la_LIBADD = $(top_builddir)/lib/common/libcrmcommon_test.la 	\
+			     -lcmocka 						\
+			     -lm
 
 libpe_status_test_la_SOURCES = $(libpe_status_la_SOURCES)
-libpe_status_test_la_LDFLAGS = $(libpe_status_la_LDFLAGS) -rpath $(libdir) $(LDFLAGS_WRAP)
+libpe_status_test_la_LDFLAGS = $(libpe_status_la_LDFLAGS) 	\
+			       -rpath $(libdir) 		\
+			       $(LDFLAGS_WRAP)
 # See comments on libcrmcommon_test_la in lib/common/Makefile.am regarding these flags.
-libpe_status_test_la_CFLAGS = $(libpe_status_la_CFLAGS) -DPCMK__UNIT_TESTING \
-			      -fno-builtin -fno-inline
-libpe_status_test_la_LIBADD = $(top_builddir)/lib/common/libcrmcommon_test.la -lcmocka -lm
-
-clean-generic:
-	rm -f *.log *.debug *~
+libpe_status_test_la_CFLAGS = $(libpe_status_la_CFLAGS) \
+			      -DPCMK__UNIT_TESTING 	\
+			      -fno-builtin 		\
+			      -fno-inline
+libpe_status_test_la_LIBADD = $(top_builddir)/lib/common/libcrmcommon_test.la 	\
+			      -lcmocka 						\
+			      -lm

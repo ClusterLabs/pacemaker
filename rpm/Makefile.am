@@ -12,7 +12,7 @@
 # used in this file.
 top_srcdir              ?= ..
 abs_srcdir              ?= $(shell pwd)
-abs_builddir            ?= $(abs_srcdir)
+abs_builddir 	?= $(abs_srcdir)
 MAKE                    ?= make
 PACKAGE                 ?= pacemaker
 AM_V_at                 ?= @
@@ -21,7 +21,7 @@ MKDIR_P                 ?= mkdir -p
 include $(top_srcdir)/mk/common.mk
 include $(top_srcdir)/mk/release.mk
 
-EXTRA_DIST		= pacemaker.spec.in		\
+EXTRA_DIST		= pacemaker.spec.in	\
 			  rpmlintrc
 
 # Extra options to pass to rpmbuild (this can be used to override the location
@@ -119,6 +119,7 @@ TARFILE		= $(abs_builddir)/../$(top_distdir).tar.gz
 
 # Create a source distribution based on a git archive. (If we aren't in a git
 # checkout, do a make dist instead.)
+.PHONY: export
 export:
 	cd $(abs_srcdir)/..;							\
 	if [ -z "$(CHECKOUT)" ] && [ -f "$(TARFILE)" ]; then			\
@@ -260,6 +261,7 @@ mock-clean:
 	-rm -rf "$(MOCK_DIR)"
 
 # Make debugging makefile issues easier
+.PHONY: vars
 vars:
 	@echo "CHECKOUT=$(CHECKOUT)"
 	@echo "VERSION=$(VERSION)"
@@ -287,5 +289,6 @@ vars:
 	@echo "SPEC_RELEASE_NO=$(SPEC_RELEASE_NO)"
 	@echo "TARFILE=$(TARFILE)"
 
+.PHONY: clean-local
 clean-local: mock-clean rpm-clean
 	-rm -f "$(TARFILE)"

@@ -10,31 +10,31 @@
 # This directory must be same as in configure.ac's AC_CONFIG_MACRO_DIR
 ACLOCAL_AMFLAGS		= -I m4
 
-EXTRA_DIST		= CONTRIBUTING.md	\
-			  GNUmakefile		\
-			  INSTALL.md		\
-			  README.markdown	\
-			  autogen.sh		\
+EXTRA_DIST		= CONTRIBUTING.md		\
+			  GNUmakefile			\
+			  INSTALL.md			\
+			  README.markdown		\
+			  autogen.sh			\
 			  m4/CC_CHECK_LDFLAGS.m4	\
 			  m4/CHECK_ENUM_VALUE.m4	\
-			  m4/gnulib-cache.m4	\
-			  m4/gnulib-tool.m4	\
-			  m4/PKG_CHECK_VAR.m4	\
-			  m4/REQUIRE_HEADER.m4	\
+			  m4/gnulib-cache.m4		\
+			  m4/gnulib-tool.m4		\
+			  m4/PKG_CHECK_VAR.m4		\
+			  m4/REQUIRE_HEADER.m4		\
 			  m4/version.m4
 
 DISTCLEANFILES		= config.status
 
-MAINTAINERCLEANFILES	= Makefile.in		\
-			  aclocal.m4		\
-			  config.guess		\
-			  config.sub		\
-			  configure		\
-			  depcomp		\
-			  install-sh		\
-			  ltmain.sh		\
-			  missing		\
-			  py-compile		\
+MAINTAINERCLEANFILES	= Makefile.in	\
+			  aclocal.m4	\
+			  config.guess	\
+			  config.sub	\
+			  configure	\
+			  depcomp	\
+			  install-sh	\
+			  ltmain.sh	\
+			  missing 	\
+			  py-compile	\
 			  test-driver
 
 # Don't try to install files outside build directory for "make distcheck".
@@ -45,13 +45,28 @@ AM_DISTCHECK_CONFIGURE_FLAGS	= --prefix="$$dc_install_base/usr"			\
 				  --with-systemdsystemunitdir="$$dc_install_base$(systemdsystemunitdir)"
 
 # Only these will get built with a plain "make"
-CORE	= include lib daemons tools xml po python cts rpm
+CORE	= include 	\
+	  lib 		\
+	  daemons 	\
+	  tools 	\
+	  xml 		\
+	  po 		\
+	  python 	\
+	  cts 		\
+	  rpm
 
-SUBDIRS	= $(CORE) agents devel doc etc maint tests
+SUBDIRS	= $(CORE) 	\
+	  agents 	\
+	  devel 	\
+	  doc 		\
+	  etc 		\
+	  maint 	\
+	  tests
 
 AM_CPPFLAGS		= -I$(top_srcdir)/include
 
-doc_DATA = README.markdown COPYING
+doc_DATA = README.markdown \
+	   COPYING
 
 licensedir              = $(docdir)/licenses/
 dist_license_DATA	= $(wildcard licenses/*)
@@ -67,6 +82,7 @@ DAEMON_R_DIRS	= $(CRM_CONFIG_DIR)	\
 DAEMON_RW_DIRS	= $(CRM_BUNDLE_DIR)	\
 		  $(CRM_LOG_DIR)
 
+.PHONY: core
 core:
 	@echo "Building only core components and tests: $(CORE)"
 	@for subdir in $(CORE); do \
@@ -74,6 +90,7 @@ core:
 		$(MAKE) $(AM_MAKEFLAGS) -C $$subdir all || exit 1; \
 	done
 
+.PHONY: core-clean
 core-clean:
 	@echo "Cleaning only core components and tests: $(CORE)"
 	@for subdir in $(CORE); do \
@@ -81,6 +98,7 @@ core-clean:
 		$(MAKE) $(AM_MAKEFLAGS) -C $$subdir clean || exit 1; \
 	done
 
+.PHONY: install-exec-local
 install-exec-local:
 	for DIR in $(ROOT_DIRS) $(DAEMON_R_DIRS); do				\
 		$(INSTALL) -d -m 750 "$(DESTDIR)/$$DIR";			\
@@ -96,18 +114,22 @@ install-exec-local:
 	done
 
 # Remove created directories only if they're empty
+.PHONY: uninstall-hook
 uninstall-hook:
 	-for DIR in $(ROOT_DIRS) $(DAEMON_R_DIRS) $(DAEMON_RW_DIRS); do	\
 		rmdir "$(DESTDIR)/$$DIR";				\
 	done
 
+.PHONY: clean-generic
 clean-generic:
 	-rm -f *.tar.bz2 *.sed
 
 PACKAGE         ?= pacemaker
 
+.PHONY: clean-local
 clean-local:
 	-rm -f $(builddir)/$(PACKAGE)-*.tar.gz
 
+.PHONY: distclean-local
 distclean-local:
 	-rm -rf libltdl autom4te.cache

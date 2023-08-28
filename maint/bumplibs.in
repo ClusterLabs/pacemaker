@@ -37,6 +37,12 @@ prompt_to_continue() {
     yesno "Continue?" || exit 0
 }
 
+sed_in_place() {
+    cp -p "$1" "$1.$$"
+    sed -e "$2" "$1" > "$1.$$"
+    mv "$1.$$" "$1"
+}
+
 find_last_release() {
     if [ -n "$1" ]; then
         echo "$1"
@@ -233,7 +239,7 @@ process_lib() {
             # Some headers define constants for shared library names,
             # update them if the name changed
             for H in $HEADERS_HEAD; do
-                sed -i -e "s/$(shared_lib_name "$LIB" "$VER_NOW")/$(shared_lib_name "$LIB" "$VER_1:0:0")/" "$H"
+                sed_in_place "$H" "s/$(shared_lib_name "$LIB" "$VER_NOW")/$(shared_lib_name "$LIB" "$VER_1:0:0")/"
             done
             ;;
         c|C)
@@ -258,7 +264,7 @@ process_lib() {
         if [ "$VER_NEW" != "$VER_NOW" ]; then
             echo "Updating lib$LIB version from $VER_NOW to $VER_NEW"
             prompt_to_continue
-            sed -i "s/version-info\s*$VER_NOW/version-info $VER_NEW/" "$AMFILE"
+            sed_in_place "$AMFILE" "s/version-info\s*$VER_NOW/version-info $VER_NEW/"
         else
             echo "No version change needed for lib$LIB"
             prompt_to_continue

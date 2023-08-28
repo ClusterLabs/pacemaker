@@ -1,6 +1,6 @@
 #!@BASH_PATH@
 #
-# Copyright 2011-2022 the Pacemaker project contributors
+# Copyright 2011-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -27,6 +27,12 @@ tag() {
     else
         echo "$1"
     fi
+}
+
+sed_in_place() {
+    cp -p "$1" "$1.$$"
+    sed -e "$2" "$1" > "$1.$$"
+    mv "$1.$$" "$1"
 }
 
 # Strip anything up to and including a dash from the argument
@@ -103,7 +109,7 @@ extract_one() {
 
     # Remove "doc" from SUBDIRS in Makefile (but why?)
     BUILD_ROOT="$(pwd)/$BUILD_ROOT"
-    sed -i.sed 's: doc::' "$BUILD_ROOT/Makefile.am"
+    sed_in_place "$BUILD_ROOT/Makefile.am" 's: doc::'
 
     # Run ABI dump
     abi_config "$PACKAGE" "$VERSION" "$BUILD_ROOT" "$DESC"

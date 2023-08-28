@@ -11,25 +11,6 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 pkgpythondir = $(pythondir)/$(PACKAGE)/_cts
 
-pkgpython_PYTHON = CTS.py \
-				   __init__.py \
-				   audits.py \
-				   cib.py \
-				   cibxml.py \
-				   clustermanager.py \
-				   cmcorosync.py \
-				   corosync.py \
-				   environment.py \
-				   errors.py \
-				   input.py \
-				   logging.py \
-				   network.py \
-				   patterns.py \
-				   process.py \
-				   remote.py \
-				   scenarios.py \
-				   test.py \
-				   timer.py \
-				   watcher.py
+pkgpython_PYTHON = $(wildcard *.py)
 
 SUBDIRS = tests

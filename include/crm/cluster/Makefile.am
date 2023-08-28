@@ -1,5 +1,5 @@
 #
-# Copyright 2012-2021 the Pacemaker project contributors
+# Copyright 2012-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -10,5 +10,6 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 headerdir=$(pkgincludedir)/crm/cluster
 
-noinst_HEADERS		= internal.h election_internal.h
+noinst_HEADERS		= internal.h 			\
+			  $(wildcard *_internal.h)
 header_HEADERS		= compat.h

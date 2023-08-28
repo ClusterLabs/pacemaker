@@ -10,6 +10,4 @@
 include $(top_srcdir)/mk/common.mk
 
 samplesdir		= $(datadir)/$(PACKAGE)/alerts/
-dist_samples_DATA	= alert_file.sh.sample	\
-			  alert_smtp.sh.sample	\
-			  alert_snmp.sh.sample
+dist_samples_DATA	= $(wildcard *.sample)

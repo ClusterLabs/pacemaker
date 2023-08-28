@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2018 the Pacemaker project contributors
+# Copyright 2004-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -18,12 +18,14 @@ libcrmcluster_la_LDFLAGS = -version-info 30:0:1
 libcrmcluster_la_CFLAGS  = $(CFLAGS_HARDENED_LIB)
 libcrmcluster_la_LDFLAGS += $(LDFLAGS_HARDENED_LIB)
 
-libcrmcluster_la_LIBADD  = $(top_builddir)/lib/common/libcrmcommon.la $(top_builddir)/lib/fencing/libstonithd.la $(CLUSTERLIBS)
+libcrmcluster_la_LIBADD = $(top_builddir)/lib/fencing/libstonithd.la
+libcrmcluster_la_LIBADD += $(top_builddir)/lib/common/libcrmcommon.la
+libcrmcluster_la_LIBADD += $(CLUSTERLIBS)
 
-libcrmcluster_la_SOURCES = election.c cluster.c membership.c
+libcrmcluster_la_SOURCES = election.c 	\
+			   cluster.c 	\
+			   membership.c
 if BUILD_CS_SUPPORT
-libcrmcluster_la_SOURCES += cpg.c corosync.c
+libcrmcluster_la_SOURCES += cpg.c 	\
+			    corosync.c
 endif
-
-clean-generic:
-	rm -f *.log *.debug *.xml *~

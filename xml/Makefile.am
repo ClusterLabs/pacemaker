@@ -56,11 +56,11 @@ version_pairs_last = $(wordlist \
 # Names of API schemas that form the choices for pacemaker-result content
 API_request_base	= command-output	\
 			  crm_attribute 	\
-			  crm_error 	\
-			  crm_mon		\
+			  crm_error 		\
+			  crm_mon 		\
 			  crm_node 		\
 			  crm_resource		\
-			  crm_rule \
+			  crm_rule 		\
 			  crm_shadow		\
 			  crm_simulate		\
 			  crmadmin		\
@@ -70,7 +70,14 @@ API_request_base	= command-output	\
 			  version
 
 # Names of CIB schemas that form the choices for cib/configuration content
-CIB_cfg_base		= options nodes resources constraints fencing acls tags alerts
+CIB_cfg_base		= options 	\
+			  nodes 	\
+			  resources 	\
+			  constraints 	\
+			  fencing 	\
+			  acls 		\
+			  tags 		\
+			  alerts
 
 # Names of all schemas (including top level and those included by others)
 API_base		= $(API_request_base)	\
@@ -87,7 +94,13 @@ API_base		= $(API_request_base)	\
 			  resources		\
 			  status		\
 			  subprocess-output
-CIB_base		= cib $(CIB_cfg_base) status score rule nvset
+
+CIB_base		= cib 			\
+			  $(CIB_cfg_base) 	\
+			  status 		\
+			  score 		\
+			  rule 			\
+			  nvset
 
 # Static schema files and transforms (only CIB has transforms)
 # 
@@ -104,7 +117,7 @@ MON_abs_files 		= $(abs_srcdir)/crm_mon.rng
 API_files		= $(foreach base,$(API_base),$(wildcard $(srcdir)/api/$(base)-*.rng))
 CIB_files		= $(foreach base,$(CIB_base),$(wildcard $(srcdir)/$(base).rng $(srcdir)/$(base)-*.rng))
 CIB_xsl			= $(srcdir)/upgrade-1.3.xsl			\
-			  $(srcdir)/upgrade-2.10.xsl		\
+			  $(srcdir)/upgrade-2.10.xsl			\
 			  $(wildcard $(srcdir)/upgrade-*enter.xsl)	\
 			  $(wildcard $(srcdir)/upgrade-*leave.xsl)
 MON_files 		= $(srcdir)/crm_mon.rng
@@ -131,7 +144,9 @@ MON_build_copies 	= $(foreach f,$(MON_abs_files),$(subst $(abs_srcdir),$(abs_bui
 
 # Dynamically generated schema files
 API_generated		= api/api-result.rng $(foreach base,$(API_versions),api/api-result-$(base).rng)
-CIB_generated		= pacemaker.rng $(foreach base,$(CIB_versions),pacemaker-$(base).rng) versions.rng
+CIB_generated		= pacemaker.rng 					\
+			  $(foreach base,$(CIB_versions),pacemaker-$(base).rng) \
+			  versions.rng
 MON_generated 		= crm_mon.rng
 
 CIB_version_pairs	= $(call version_pairs,${CIB_numeric_versions})
@@ -139,7 +154,8 @@ CIB_version_pairs_cnt	= $(words ${CIB_version_pairs})
 CIB_version_pairs_last  = $(call version_pairs_last,${CIB_version_pairs_cnt},${CIB_version_pairs})
 
 dist_API_DATA		= $(API_files)
-dist_CIB_DATA		= $(CIB_files) $(CIB_xsl)
+dist_CIB_DATA		= $(CIB_files) \
+			  $(CIB_xsl)
 
 nodist_API_DATA		= $(API_generated)
 nodist_CIB_DATA		= $(CIB_generated)
@@ -160,10 +176,12 @@ EXTRA_DIST		= README.md			\
 			  test-2-leave			\
 			  test-2-roundtrip
 
+.PHONY: cib-versions
 cib-versions:
 	@echo "Max: $(CIB_max)"
 	@echo "Available: $(CIB_versions)"
 
+.PHONY: api-versions
 api-versions:
 	@echo "Max: $(API_max)"
 	@echo "Available: $(API_versions)"
@@ -254,56 +272,24 @@ versions.rng: pacemaker-$(CIB_max).rng Makefile.am
 	$(AM_V_at)echo '  </start>' >> $@
 	$(AM_V_SCHEMA)echo '</grammar>' >> $@
 
-# diff fails with ec=2 if no predecessor is found;
-# this uses '=' GNU extension to sed, if that's not available,
-# one can use: hline=`echo "$${p}" | grep -Fn "$${hunk}" | cut -d: -f1`;
-# XXX: use line information from hunk to avoid "not detected" for ambiguity
-version_diff = \
-	@for p in $(1); do \
-	  set `echo "$${p}" | tr '-' ' '`; \
-	  echo "\#\#\# *-$$2.rng vs. predecessor"; \
-	  for v in *-$$2.rng; do \
-	    echo "\#\#\#\# $${v} vs. predecessor"; b=`echo "$${v}" | cut -d- -f1`; \
-	    old=`./best-match.sh $${b} $$1`; \
-	    p=`diff -u "$${old}" "$${v}" 2>/dev/null`; \
-	    case $$? in \
-	    1) echo "$${p}" | sed -n -e '/^@@ /!d;=;p' \
-	       -e ':l;n;/^\([- ]\|+.*<[^ />]\+\([^/>]\+="ID\|>$$\)\)/bl;s/^[+ ]\(.*\)/\1/p' \
-	       | while read hline; do \
-	           read h && read i || break; \
-	           iline=`grep -Fn "$${i}" "$${v}" | cut -d: -f1`; \
-	           ctxt="(not detected)"; \
-	           if test `echo "$${iline}" | wc -l` -eq 1; then \
-	             ctxt=`{ sed -n -e "1,$$(($${iline}-1))p" "$${v}"; \
-	                     echo "<inject id=\"GOAL\"/>$${i}"; \
-	                     sed -n -e "$$(($${iline}+1)),$$ p" "$${v}"; \
-	                   } | $(XSLTPROC) --param skip 1 context-of.xsl -`; \
-	           fi; \
-	           echo "$${p}" | sed -n -e "$$(($${hline}-2)),$${hline}!d" \
-	             -e '/^\(+++\|---\)/p'; \
-	           echo "$${h} context: $${ctxt}"; \
-	           echo "$${p}" | sed -n -e "1,$${hline}d" \
-	             -e '/^\(---\|@@ \)/be;p;d;:e;n;be'; \
-	           done; \
-	       ;; \
-	    2) echo "\#\#\#\#\# $${v} has no predecessor";; \
-	    esac; \
-	  done; \
-	done
-
+.PHONY: diff
 diff: best-match.sh
 	@echo "#  Comparing changes in + since $(CIB_max)"
-	$(call version_diff,${CIB_version_pairs_last})
+	@./version-diff.sh ${CIB_version_pairs_last}
 
+.PHONY: fulldiff
 fulldiff: best-match.sh
 	@echo "#  Comparing all changes across all the subsequent increments"
-	$(call version_diff,${CIB_version_pairs})
+	@./version-diff.sh ${CIB_version_pairs}
 
-CLEANFILES = $(API_generated) $(CIB_generated) $(MON_generated)
+CLEANFILES = $(API_generated) \
+	     $(CIB_generated) \
+	     $(MON_generated)
 
 # Remove pacemaker schema files generated by *any* source version. This allows
 # "make -C xml clean" to have the desired effect when checking out an earlier
 # revision in a source tree.
+.PHONY: clean-local
 clean-local:
 	if [ "x$(srcdir)" != "x$(builddir)" ]; then					\
 		rm -f $(API_build_copies) $(CIB_build_copies) $(MON_build_copies);	\

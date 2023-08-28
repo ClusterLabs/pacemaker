@@ -35,10 +35,12 @@ COCCI_FILES ?=	coccinelle/string-any-of.cocci			\
 
 
 dist_noinst_SCRIPTS	= coccinelle/test/testrunner.sh
-EXTRA_DIST		= README gdbhelpers $(COCCI_FILES)		\
-			  coccinelle/ref-passed-variables-inited.cocci	\
-			  coccinelle/rename-fn.cocci			\
-			  coccinelle/test/ref-passed-variables-inited.input.c \
+EXTRA_DIST		= README 						\
+			  gdbhelpers 						\
+			  $(COCCI_FILES)					\
+			  coccinelle/ref-passed-variables-inited.cocci		\
+			  coccinelle/rename-fn.cocci				\
+			  coccinelle/test/ref-passed-variables-inited.input.c 	\
 			  coccinelle/test/ref-passed-variables-inited.output
 
 # Any file in this list is allowed to use any of the pcmk__ internal functions.
@@ -51,6 +53,7 @@ MAY_USE_INTERNAL_FILES = $(shell find .. -path "../lib/*.c" -o -path "../lib/*pr
 # may be applied.
 OTHER_FILES = $(shell find ../include -name '*h' -a \! -name '*internal.h' -a \! -path '../include/pcmki/*')
 
+.PHONY: cocci
 cocci:
 	-for cf in $(COCCI_FILES); do \
 		for f in $(MAY_USE_INTERNAL_FILES); do \
@@ -61,9 +64,11 @@ cocci:
 		done ; \
 	done
 
+.PHONY: cocci-inplace
 cocci-inplace:
 	$(MAKE) $(AM_MAKEFLAGS) _SPATCH_FLAGS=--in-place cocci
 
+.PHONY: cocci-test
 cocci-test:
 	for f in coccinelle/test/*.c; do \
 		coccinelle/test/testrunner.sh $$f; \
@@ -78,6 +83,7 @@ cocci-test:
 # See scan-build(1) for possible checkers (leave empty to use default set)
 CLANG_checkers ?=
 
+.PHONY: clang
 clang:
 	OUT=$$(cd $(top_builddir)					\
 		&& scan-build $(CLANG_checkers:%=-enable-checker %)	\
@@ -167,6 +173,7 @@ CPPCHECK_ARGS ?=
 CPPCHECK_DIRS = replace lib daemons tools
 CPPCHECK_OUT = $(abs_top_builddir)/cppcheck.out
 
+.PHONY: cppcheck
 cppcheck:
 	cppcheck $(CPPCHECK_ARGS) -I $(top_srcdir)/include	\
 		--output-file=$(CPPCHECK_OUT)			\
@@ -282,6 +289,7 @@ INDENT_PACEMAKER_STYLE	= --blank-lines-after-declarations		\
 			  --swallow-optional-blank-lines		\
 			  --tab-size8
 
+.PHONY: indent
 indent:
 	VERSION_CONTROL=none					\
 		find $(INDENT_DIRS) -type f -name "*.[ch]"	\
@@ -296,5 +304,6 @@ EXTRA_PROGRAMS		= scratch
 nodist_scratch_SOURCES	= scratch.c
 scratch_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la
 
+.PHONY: clean-local
 clean-local: coverage-clean coverity-clean cppcheck-clean
 	-rm -f $(EXTRA_PROGRAMS)

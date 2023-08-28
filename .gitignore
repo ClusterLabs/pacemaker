@@ -161,6 +161,7 @@ configure
 /tools/pcmk_simtimes
 /tools/report.collector
 /tools/report.common
+/xml/version-diff.sh
 
 # Compiled targets and intermediary files
 *.o
@@ -347,6 +348,7 @@ pacemaker_*.info
 /pengine
 /py-compile
 /scratch
+/tools/cluster-init
 /test-driver
 /xml/crm.dtd
 ylwrap

@@ -7,14 +7,15 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
-MAINTAINERCLEANFILES    = Makefile.in config.h.in
+MAINTAINERCLEANFILES    = Makefile.in \
+			  config.h.in
 
-noinst_HEADERS	        = config.h 			\
-			  crm_internal.h		\
-			  doxygen.h			\
-			  pacemaker.h \
-			  pacemaker-internal.h		\
-			  portability.h                 \
+noinst_HEADERS	        = config.h 		\
+			  crm_internal.h	\
+			  doxygen.h		\
+			  pacemaker.h 		\
+			  pacemaker-internal.h	\
+			  portability.h 	\
 			  gettext.h
 pkginclude_HEADERS	= crm_config.h
 
@@ -24,6 +25,7 @@ SUBDIRS                 =  crm pcmki
 
 GETTEXT_H		?= $(datadir)/gettext/gettext.h
 
+.PHONY: update-gettext
 update-gettext:
 	@if [ ! -e "$(GETTEXT_H)" ]; then				\
 		echo "$(GETTEXT_H) not found";				\
