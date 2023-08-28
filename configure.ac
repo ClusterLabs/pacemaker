@@ -620,7 +620,7 @@ schema_files() {
 
     AS_IF([test x"$files" = x""],
           [
-              files="$(ls -1 "$1"/*.rng | grep -E -v
+              files="$(ls -1 "$1"/*.rng | grep -E -v    \
                        '/(pacemaker|api-result|crm_mon|versions)[^/]*\.rng')"
           ])
     echo "$files"
