@@ -199,7 +199,6 @@ extern "C" {
 #  define XML_CIB_TAG_STATUS       	"status"
 #  define XML_CIB_TAG_RESOURCES		"resources"
 #  define XML_CIB_TAG_NODES         	"nodes"
-#  define XML_CIB_TAG_DOMAINS         	"domains"
 #  define XML_CIB_TAG_CONSTRAINTS   	"constraints"
 #  define XML_CIB_TAG_CRMCONFIG   	"crm_config"
 #  define XML_CIB_TAG_OPCONFIG		"op_defaults"
