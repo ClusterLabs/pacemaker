@@ -24,8 +24,6 @@
 
 static int last_cib_op_done = 0;
 
-static const char *cib_client_id = NULL;
-
 static void
 attrd_cib_destroy_cb(gpointer user_data)
 {
@@ -48,9 +46,7 @@ static void
 attrd_cib_updated_cb(const char *event, xmlNode *msg)
 {
     const xmlNode *patchset = NULL;
-    const char *client_id = NULL;
-    const char *op = NULL;
-    const cib__operation_t *operation = NULL;
+    const char *client_name = NULL;
 
     if (attrd_shutting_down(true)) {
         return;
@@ -69,29 +65,24 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
         return;
     }
 
-    client_id = crm_element_value(msg, F_CIB_CLIENTID);
-    if (pcmk__str_eq(client_id, cib_client_id, pcmk__str_none)) {
-        // Don't write attributes due to an update that we requested
+    client_name = crm_element_value(msg, F_CIB_CLIENTNAME);
+    if (!cib__client_triggers_refresh(client_name)) {
+        // The CIB is still accurate
         return;
     }
 
-    op = crm_element_value(msg, F_CIB_OPERATION);
-    if (cib__get_operation(op, &operation) != pcmk_rc_ok) {
-        // Invalid operation
-        return;
-    }
+    if (cib__element_in_patchset(patchset, XML_CIB_TAG_NODES)
+        || cib__element_in_patchset(patchset, XML_CIB_TAG_STATUS)) {
 
-    if (pcmk_is_set(operation->flags, cib__op_attr_replaces)
-        && (cib__element_in_patchset(patchset, XML_CIB_TAG_NODES)
-            || cib__element_in_patchset(patchset, XML_CIB_TAG_STATUS))) {
-
-        /* Transient attributes may be inaccurate, since part of the nodes or
-         * status section was replaced. Trigger a write.
-         *
-         * @TODO Don't write attributes unless nodes or transient attributes
-         * changed.
+        /* An unsafe client modified the nodes or status section. Write
+         * transient attributes to ensure they're up-to-date in the CIB.
          */
-        crm_notice("Updating all attributes after %s event", event);
+        if (client_name == NULL) {
+            client_name = crm_element_value(msg, F_CIB_CLIENTID);
+        }
+        crm_notice("Updating all attributes after %s event triggered by %s",
+                   event, pcmk__s(client_name, "(unidentified client)"));
+
         attrd_write_attributes(attrd_write_all);
     }
 }
@@ -139,7 +130,6 @@ attrd_cib_connect(int max_retry)
         goto cleanup;
     }
 
-    the_cib->cmds->client_id(the_cib, &cib_client_id, NULL);
     return pcmk_ok;
 
 cleanup:
