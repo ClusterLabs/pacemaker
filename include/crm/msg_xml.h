@@ -283,10 +283,7 @@ extern "C" {
 //! \deprecated Do not use (will be removed in a future release)
 #  define XML_CIB_ATTR_REPLACE       	"replace"
 
-#  define XML_CIB_ATTR_SOURCE       	"source"
-
 #  define XML_CIB_ATTR_PRIORITY     	"priority"
-#  define XML_CIB_ATTR_SOURCE       	"source"
 
 #  define XML_NODE_JOIN_STATE    	"join"
 #  define XML_NODE_EXPECTED     	"expected"
