@@ -217,6 +217,7 @@ cib_diff_notify(const char *op, int result, const char *call_id,
     }
     add_message_xml(update_msg, F_CIB_UPDATE_RESULT, diff);
 
+    crm_log_xml_trace(update_msg, "diff-notify");
     cib_notify_send(update_msg);
     free_xml(update_msg);
 }
