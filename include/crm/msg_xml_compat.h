@@ -76,6 +76,9 @@ extern "C" {
 //! \deprecated Do not use (will be removed in a future release)
 #define XML_CIB_ATTR_SOURCE "source"
 
+//! \deprecated Do not use (will be removed in a future release)
+#define XML_RSC_OP_LAST_RUN "last-run"
+
 //! \deprecated Use name member directly
 #define TYPE(x) (((x) == NULL)? NULL : (const char *) ((x)->name))
 
