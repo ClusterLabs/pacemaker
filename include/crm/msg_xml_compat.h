@@ -85,6 +85,9 @@ extern "C" {
 //! \deprecated Do not use (will be removed in a future release)
 #define XML_ATTR_VERBOSE "verbose"
 
+//! \deprecated Do not use (will be removed in a future release)
+#define XML_CIB_TAG_DOMAINS "domains"
+
 //! \deprecated Use name member directly
 #define TYPE(x) (((x) == NULL)? NULL : (const char *) ((x)->name))
 
