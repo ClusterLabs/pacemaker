@@ -153,7 +153,6 @@ extern "C" {
 #  define XML_ATTR_IDREF			"id-ref"
 #  define XML_ATTR_ID_LONG		"long-id"
 #  define XML_ATTR_TYPE			"type"
-#  define XML_ATTR_VERBOSE		"verbose"
 #  define XML_ATTR_OP			"op"
 #  define XML_ATTR_DC_UUID		"dc-uuid"
 #  define XML_ATTR_UPDATE_ORIG		"update-origin"

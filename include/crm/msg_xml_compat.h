@@ -67,6 +67,9 @@ extern "C" {
 //! \deprecated Use \p XML_ATTR_ID instead
 #define XML_ATTR_UUID "id"
 
+//! \deprecated Do not use (will be removed in a future release)
+#define XML_ATTR_VERBOSE "verbose"
+
 //! \deprecated Use name member directly
 #define TYPE(x) (((x) == NULL)? NULL : (const char *) ((x)->name))
 
