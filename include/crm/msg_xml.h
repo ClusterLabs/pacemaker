@@ -328,7 +328,6 @@ extern "C" {
 #  define XML_LRM_ATTR_EXIT_REASON	"exit-reason"
 
 #  define XML_RSC_OP_LAST_CHANGE        "last-rc-change"
-#  define XML_RSC_OP_LAST_RUN           "last-run"  // deprecated since 2.0.3
 #  define XML_RSC_OP_T_EXEC             "exec-time"
 #  define XML_RSC_OP_T_QUEUE            "queue-time"
 
