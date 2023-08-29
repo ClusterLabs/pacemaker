@@ -432,6 +432,7 @@ extern "C" {
 //! \deprecated Do not use (will be removed in a future release)
 #  define XML_TAG_DIFF_ADDED		"diff-added"
 
+//! \deprecated Do not use (will be removed in a future release)
 #  define XML_TAG_DIFF_REMOVED		"diff-removed"
 
 #  define XML_ACL_TAG_USER		"acl_target"
