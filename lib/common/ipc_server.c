@@ -1008,6 +1008,7 @@ crm_is_daemon_name(const char *name)
                             CRM_SYSTEM_PENGINE,
                             CRM_SYSTEM_STONITHD,
                             CRM_SYSTEM_TENGINE,
+                            "pacemaker-remoted",
                             "stonith-ng",
                             NULL);
 }
