@@ -43,10 +43,10 @@ pcmk__group_assign(pe_resource_t *rsc, const pe_node_t *prefer,
 
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_group));
 
-    if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_unassigned)) {
         return rsc->allocated_to; // Assignment already done
     }
-    if (pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_assigning)) {
         pe_rsc_debug(rsc, "Assignment dependency loop detected involving %s",
                      rsc->id);
         return NULL;
@@ -54,11 +54,11 @@ pcmk__group_assign(pe_resource_t *rsc, const pe_node_t *prefer,
 
     if (rsc->children == NULL) {
         // No members to assign
-        pe__clear_resource_flags(rsc, pe_rsc_provisional);
+        pe__clear_resource_flags(rsc, pcmk_rsc_unassigned);
         return NULL;
     }
 
-    pe__set_resource_flags(rsc, pe_rsc_allocating);
+    pe__set_resource_flags(rsc, pcmk_rsc_assigning);
     first_member = (pe_resource_t *) rsc->children->data;
     rsc->role = first_member->role;
 
@@ -79,7 +79,7 @@ pcmk__group_assign(pe_resource_t *rsc, const pe_node_t *prefer,
     }
 
     pe__set_next_role(rsc, first_member->next_role, "first group member");
-    pe__clear_resource_flags(rsc, pe_rsc_allocating|pe_rsc_provisional);
+    pe__clear_resource_flags(rsc, pcmk_rsc_assigning|pcmk_rsc_unassigned);
 
     if (!pe__group_flag_is_set(rsc, pe__group_colocated)) {
         return NULL;
@@ -181,7 +181,7 @@ member_internal_constraints(gpointer data, gpointer user_data)
     } else if (member_data->colocated) {
         uint32_t flags = pcmk__coloc_none;
 
-        if (pcmk_is_set(member->flags, pe_rsc_critical)) {
+        if (pcmk_is_set(member->flags, pcmk_rsc_critical)) {
             flags |= pcmk__coloc_influence;
         }
 
@@ -326,7 +326,7 @@ pcmk__group_internal_constraints(pe_resource_t *rsc)
 
     member_data.ordered = pe__group_flag_is_set(rsc, pe__group_ordered);
     member_data.colocated = pe__group_flag_is_set(rsc, pe__group_colocated);
-    member_data.promotable = pcmk_is_set(top->flags, pe_rsc_promotable);
+    member_data.promotable = pcmk_is_set(top->flags, pcmk_rsc_promotable);
     g_list_foreach(rsc->children, member_internal_constraints, &member_data);
 }
 
@@ -398,7 +398,7 @@ colocate_with_group(pe_resource_t *dependent, const pe_resource_t *primary,
                  "Processing colocation %s (%s with group %s) for primary",
                  colocation->id, dependent->id, primary->id);
 
-    if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {
+    if (pcmk_is_set(primary->flags, pcmk_rsc_unassigned)) {
         return;
     }
 
@@ -788,7 +788,7 @@ pcmk__group_with_colocations(const pe_resource_t *rsc,
             break; // We've seen all earlier members, and none are unmanaged
         }
 
-        if (!pcmk_is_set(member->flags, pe_rsc_managed)) {
+        if (!pcmk_is_set(member->flags, pcmk_rsc_managed)) {
             crm_trace("Adding mandatory '%s with' colocations to list for "
                       "member %s because earlier member %s is unmanaged",
                       rsc->id, orig_rsc->id, member->id);
@@ -857,12 +857,12 @@ pcmk__group_add_colocated_node_scores(pe_resource_t *source_rsc,
     }
 
     // Avoid infinite recursion
-    if (pcmk_is_set(source_rsc->flags, pe_rsc_merging)) {
+    if (pcmk_is_set(source_rsc->flags, pcmk_rsc_updating_nodes)) {
         pe_rsc_info(source_rsc, "%s: Breaking dependency loop at %s",
                     log_id, source_rsc->id);
         return;
     }
-    pe__set_resource_flags(source_rsc, pe_rsc_merging);
+    pe__set_resource_flags(source_rsc, pcmk_rsc_updating_nodes);
 
     // Ignore empty groups (only possible with schema validation disabled)
     if (source_rsc->children == NULL) {
@@ -888,7 +888,7 @@ pcmk__group_add_colocated_node_scores(pe_resource_t *source_rsc,
                  "(at %.6f)", log_id, source_rsc->id, member->id, factor);
     member->cmds->add_colocated_node_scores(member, target_rsc, log_id, nodes,
                                             colocation, factor, flags);
-    pe__clear_resource_flags(source_rsc, pe_rsc_merging);
+    pe__clear_resource_flags(source_rsc, pcmk_rsc_updating_nodes);
 }
 
 // Group implementation of resource_alloc_functions_t:add_utilization()
@@ -902,7 +902,7 @@ pcmk__group_add_utilization(const pe_resource_t *rsc,
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_group)
                && (orig_rsc != NULL) && (utilization != NULL));
 
-    if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_unassigned)) {
         return;
     }
 
@@ -914,7 +914,7 @@ pcmk__group_add_utilization(const pe_resource_t *rsc,
         for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
             member = (pe_resource_t *) iter->data;
 
-            if (pcmk_is_set(member->flags, pe_rsc_provisional)
+            if (pcmk_is_set(member->flags, pcmk_rsc_unassigned)
                 && (g_list_find(all_rscs, member) == NULL)) {
                 member->cmds->add_utilization(member, orig_rsc, all_rscs,
                                               utilization);
@@ -925,7 +925,7 @@ pcmk__group_add_utilization(const pe_resource_t *rsc,
         // Just add first member's utilization
         member = (pe_resource_t *) rsc->children->data;
         if ((member != NULL)
-            && pcmk_is_set(member->flags, pe_rsc_provisional)
+            && pcmk_is_set(member->flags, pcmk_rsc_unassigned)
             && (g_list_find(all_rscs, member) == NULL)) {
 
             member->cmds->add_utilization(member, orig_rsc, all_rscs,

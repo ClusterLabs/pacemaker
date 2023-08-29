@@ -246,7 +246,7 @@ write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
             color = "green";
 
         } else if ((action->rsc != NULL)
-                   && !pcmk_is_set(action->rsc->flags, pe_rsc_managed)) {
+                   && !pcmk_is_set(action->rsc->flags, pcmk_rsc_managed)) {
             color = "red";
             font = "purple";
             if (!all_actions) {

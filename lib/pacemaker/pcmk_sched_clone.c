@@ -41,19 +41,19 @@ pcmk__clone_assign(pe_resource_t *rsc, const pe_node_t *prefer,
 
     CRM_ASSERT(pe_rsc_is_clone(rsc));
 
-    if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_unassigned)) {
         return NULL; // Assignment has already been done
     }
 
     // Detect assignment loops
-    if (pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_assigning)) {
         pe_rsc_debug(rsc, "Breaking assignment loop involving %s", rsc->id);
         return NULL;
     }
-    pe__set_resource_flags(rsc, pe_rsc_allocating);
+    pe__set_resource_flags(rsc, pcmk_rsc_assigning);
 
     // If this clone is promotable, consider nodes' promotion scores
-    if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
         pcmk__add_promotion_scores(rsc);
     }
 
@@ -82,11 +82,11 @@ pcmk__clone_assign(pe_resource_t *rsc, const pe_node_t *prefer,
     pcmk__assign_instances(rsc, rsc->children, pe__clone_max(rsc),
                            pe__clone_node_max(rsc));
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
         pcmk__set_instance_roles(rsc);
     }
 
-    pe__clear_resource_flags(rsc, pe_rsc_provisional|pe_rsc_allocating);
+    pe__clear_resource_flags(rsc, pcmk_rsc_unassigned|pcmk_rsc_assigning);
     pe_rsc_trace(rsc, "Assigned clone %s", rsc->id);
     return NULL;
 }
@@ -104,7 +104,7 @@ pcmk__clone_create_actions(pe_resource_t *rsc)
 
     pe_rsc_trace(rsc, "Creating actions for clone %s", rsc->id);
     pcmk__create_instance_actions(rsc, rsc->children);
-    if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
         pcmk__create_promotable_actions(rsc);
     }
 }
@@ -136,7 +136,7 @@ pcmk__clone_internal_constraints(pe_resource_t *rsc)
                                  pe_order_runnable_left);
 
     // Demoted -> stop and started -> promote
-    if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
         pcmk__order_resource_actions(rsc, PCMK_ACTION_DEMOTED,
                                      rsc, PCMK_ACTION_STOP,
                                      pe_order_optional);
@@ -185,7 +185,7 @@ pcmk__clone_internal_constraints(pe_resource_t *rsc)
             }
         }
     }
-    if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
         pcmk__order_promotable_instances(rsc);
     }
 }
@@ -259,7 +259,7 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
                && (dependent != NULL)
                && (dependent->variant == pcmk_rsc_variant_primitive));
 
-    if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {
+    if (pcmk_is_set(primary->flags, pcmk_rsc_unassigned)) {
         pe_rsc_trace(primary,
                      "Delaying processing colocation %s "
                      "because cloned primary %s is still provisional",
@@ -272,10 +272,10 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
                  pcmk_readable_score(colocation->score));
 
     // Apply role-specific colocations
-    if (pcmk_is_set(primary->flags, pe_rsc_promotable)
+    if (pcmk_is_set(primary->flags, pcmk_rsc_promotable)
         && (colocation->primary_role != pcmk_role_unknown)) {
 
-        if (pcmk_is_set(dependent->flags, pe_rsc_provisional)) {
+        if (pcmk_is_set(dependent->flags, pcmk_rsc_unassigned)) {
             // We're assigning the dependent to a node
             pcmk__update_dependent_with_promotable(primary, dependent,
                                                    colocation);
@@ -328,7 +328,7 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
             pe_node_t *chosen = instance->fns->location(instance, NULL, 0);
 
             if ((chosen != NULL)
-                && !is_set_recursive(instance, pe_rsc_block, TRUE)) {
+                && !is_set_recursive(instance, pcmk_rsc_blocked, TRUE)) {
                 pe_rsc_trace(primary, "Allowing %s: %s %d",
                              colocation->id, pe__node_name(chosen),
                              chosen->weight);
@@ -589,7 +589,7 @@ pcmk__clone_create_probe(pe_resource_t *rsc, pe_node_t *node)
     }
 
     rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance_number);
-    if (pcmk_is_set(rsc->flags, pe_rsc_unique)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
         return pcmk__probe_resource_list(rsc->children, node);
     } else {
         return probe_anonymous_clone(rsc, node);
@@ -613,11 +613,11 @@ pcmk__clone_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml)
     CRM_ASSERT(pe_rsc_is_clone(rsc) && (xml != NULL));
 
     name = crm_meta_name(XML_RSC_ATTR_UNIQUE);
-    crm_xml_add(xml, name, pe__rsc_bool_str(rsc, pe_rsc_unique));
+    crm_xml_add(xml, name, pe__rsc_bool_str(rsc, pcmk_rsc_unique));
     free(name);
 
     name = crm_meta_name(XML_RSC_ATTR_NOTIFY);
-    crm_xml_add(xml, name, pe__rsc_bool_str(rsc, pe_rsc_notify));
+    crm_xml_add(xml, name, pe__rsc_bool_str(rsc, pcmk_rsc_notify));
     free(name);
 
     name = crm_meta_name(XML_RSC_ATTR_INCARNATION_MAX);
@@ -628,7 +628,7 @@ pcmk__clone_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml)
     crm_xml_add_int(xml, name, pe__clone_node_max(rsc));
     free(name);
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
         int promoted_max = pe__clone_promoted_max(rsc);
         int promoted_node_max = pe__clone_promoted_node_max(rsc);
 
@@ -665,7 +665,7 @@ pcmk__clone_add_utilization(const pe_resource_t *rsc,
     CRM_ASSERT(pe_rsc_is_clone(rsc) && (orig_rsc != NULL)
                && (utilization != NULL));
 
-    if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_unassigned)) {
         return;
     }
 

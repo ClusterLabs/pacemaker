@@ -487,17 +487,17 @@ unpack_requires(pe_resource_t *rsc, const char *value, bool is_default)
     if (pcmk__str_eq(value, PCMK__VALUE_NOTHING, pcmk__str_casei)) {
 
     } else if (pcmk__str_eq(value, PCMK__VALUE_QUORUM, pcmk__str_casei)) {
-        pe__set_resource_flags(rsc, pe_rsc_needs_quorum);
+        pe__set_resource_flags(rsc, pcmk_rsc_needs_quorum);
 
     } else if (pcmk__str_eq(value, PCMK__VALUE_FENCING, pcmk__str_casei)) {
-        pe__set_resource_flags(rsc, pe_rsc_needs_fencing);
+        pe__set_resource_flags(rsc, pcmk_rsc_needs_fencing);
         if (!pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)) {
             pcmk__config_warn("%s requires fencing but fencing is disabled",
                               rsc->id);
         }
 
     } else if (pcmk__str_eq(value, PCMK__VALUE_UNFENCING, pcmk__str_casei)) {
-        if (pcmk_is_set(rsc->flags, pe_rsc_fence_device)) {
+        if (pcmk_is_set(rsc->flags, pcmk_rsc_fence_device)) {
             pcmk__config_warn("Resetting \"" XML_RSC_ATTR_REQUIRES "\" for %s "
                               "to \"" PCMK__VALUE_QUORUM "\" because fencing "
                               "devices cannot require unfencing", rsc->id);
@@ -513,14 +513,14 @@ unpack_requires(pe_resource_t *rsc, const char *value, bool is_default)
             return;
 
         } else {
-            pe__set_resource_flags(rsc,
-                                   pe_rsc_needs_fencing|pe_rsc_needs_unfencing);
+            pe__set_resource_flags(rsc, pcmk_rsc_needs_fencing
+                                        |pcmk_rsc_needs_unfencing);
         }
 
     } else {
         const char *orig_value = value;
 
-        if (pcmk_is_set(rsc->flags, pe_rsc_fence_device)) {
+        if (pcmk_is_set(rsc->flags, pcmk_rsc_fence_device)) {
             value = PCMK__VALUE_QUORUM;
 
         } else if ((rsc->variant == pcmk_rsc_variant_primitive)
@@ -689,10 +689,10 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     (*rsc)->parameters = pe_rsc_params(*rsc, NULL, data_set); // \deprecated
 
     (*rsc)->flags = 0;
-    pe__set_resource_flags(*rsc, pe_rsc_runnable|pe_rsc_provisional);
+    pe__set_resource_flags(*rsc, pcmk_rsc_runnable|pcmk_rsc_unassigned);
 
     if (!pcmk_is_set(data_set->flags, pcmk_sched_in_maintenance)) {
-        pe__set_resource_flags(*rsc, pe_rsc_managed);
+        pe__set_resource_flags(*rsc, pcmk_rsc_managed);
     }
 
     (*rsc)->rsc_cons = NULL;
@@ -711,12 +711,12 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_CRITICAL);
     if ((value == NULL) || crm_is_true(value)) {
-        pe__set_resource_flags(*rsc, pe_rsc_critical);
+        pe__set_resource_flags(*rsc, pcmk_rsc_critical);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_NOTIFY);
     if (crm_is_true(value)) {
-        pe__set_resource_flags(*rsc, pe_rsc_notify);
+        pe__set_resource_flags(*rsc, pcmk_rsc_notify);
     }
 
     if (xml_contains_remote_node((*rsc)->xml)) {
@@ -730,7 +730,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
 
     value = g_hash_table_lookup((*rsc)->meta, XML_OP_ATTR_ALLOW_MIGRATE);
     if (crm_is_true(value)) {
-        pe__set_resource_flags(*rsc, pe_rsc_allow_migrate);
+        pe__set_resource_flags(*rsc, pcmk_rsc_migratable);
     } else if ((value == NULL) && remote_node) {
         /* By default, we want remote nodes to be able
          * to float around the cluster without having to stop all the
@@ -739,38 +739,38 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
          * problems, migration support can be explicitly turned off with
          * allow-migrate=false.
          */
-        pe__set_resource_flags(*rsc, pe_rsc_allow_migrate);
+        pe__set_resource_flags(*rsc, pcmk_rsc_migratable);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MANAGED);
     if (value != NULL && !pcmk__str_eq("default", value, pcmk__str_casei)) {
         if (crm_is_true(value)) {
-            pe__set_resource_flags(*rsc, pe_rsc_managed);
+            pe__set_resource_flags(*rsc, pcmk_rsc_managed);
         } else {
-            pe__clear_resource_flags(*rsc, pe_rsc_managed);
+            pe__clear_resource_flags(*rsc, pcmk_rsc_managed);
         }
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MAINTENANCE);
     if (crm_is_true(value)) {
-        pe__clear_resource_flags(*rsc, pe_rsc_managed);
-        pe__set_resource_flags(*rsc, pe_rsc_maintenance);
+        pe__clear_resource_flags(*rsc, pcmk_rsc_managed);
+        pe__set_resource_flags(*rsc, pcmk_rsc_maintenance);
     }
     if (pcmk_is_set(data_set->flags, pcmk_sched_in_maintenance)) {
-        pe__clear_resource_flags(*rsc, pe_rsc_managed);
-        pe__set_resource_flags(*rsc, pe_rsc_maintenance);
+        pe__clear_resource_flags(*rsc, pcmk_rsc_managed);
+        pe__set_resource_flags(*rsc, pcmk_rsc_maintenance);
     }
 
     if (pe_rsc_is_clone(pe__const_top_resource(*rsc, false))) {
         value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_UNIQUE);
         if (crm_is_true(value)) {
-            pe__set_resource_flags(*rsc, pe_rsc_unique);
+            pe__set_resource_flags(*rsc, pcmk_rsc_unique);
         }
         if (detect_promotable(*rsc)) {
-            pe__set_resource_flags(*rsc, pe_rsc_promotable);
+            pe__set_resource_flags(*rsc, pcmk_rsc_promotable);
         }
     } else {
-        pe__set_resource_flags(*rsc, pe_rsc_unique);
+        pe__set_resource_flags(*rsc, pcmk_rsc_unique);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_RESTART);
@@ -838,7 +838,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     if (pcmk__str_eq(crm_element_value((*rsc)->xml, XML_AGENT_ATTR_CLASS),
                      PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         pe__set_working_set_flags(data_set, pcmk_sched_have_fencing);
-        pe__set_resource_flags(*rsc, pe_rsc_fence_device);
+        pe__set_resource_flags(*rsc, pcmk_rsc_fence_device);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_REQUIRES);
@@ -891,7 +891,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     }
 
     pe_rsc_trace((*rsc), "%s action notification: %s", (*rsc)->id,
-                 pcmk_is_set((*rsc)->flags, pe_rsc_notify)? "required" : "not required");
+                 pcmk_is_set((*rsc)->flags, pcmk_rsc_notify)? "required" : "not required");
 
     (*rsc)->utilization = pcmk__strkey_table(free, free);
 
@@ -993,7 +993,9 @@ common_free(pe_resource_t * rsc)
         g_hash_table_destroy(rsc->utilization);
     }
 
-    if ((rsc->parent == NULL) && pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
+    if ((rsc->parent == NULL)
+        && pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
+
         free_xml(rsc->xml);
         rsc->xml = NULL;
         free_xml(rsc->orig_xml);
@@ -1074,7 +1076,7 @@ pe__count_active_node(const pe_resource_t *rsc, pe_node_t *node,
         } else {
             keep_looking = true;
         }
-    } else if (!pcmk_is_set(rsc->flags, pe_rsc_needs_fencing)) {
+    } else if (!pcmk_is_set(rsc->flags, pcmk_rsc_needs_fencing)) {
         if (is_happy && ((*active == NULL) || !(*active)->details->online
                          || (*active)->details->unclean)) {
             *active = node; // This is the first clean node
@@ -1135,7 +1137,7 @@ pe__find_active_requires(const pe_resource_t *rsc, unsigned int *count)
         }
         return NULL;
 
-    } else if (pcmk_is_set(rsc->flags, pe_rsc_needs_fencing)) {
+    } else if (pcmk_is_set(rsc->flags, pcmk_rsc_needs_fencing)) {
         return rsc->fns->active_node(rsc, count, NULL);
 
     } else {
@@ -1151,13 +1153,13 @@ pe__count_common(pe_resource_t *rsc)
             ((pe_resource_t *) item->data)->fns->count(item->data);
         }
 
-    } else if (!pcmk_is_set(rsc->flags, pe_rsc_orphan)
+    } else if (!pcmk_is_set(rsc->flags, pcmk_rsc_removed)
                || (rsc->role > pcmk_role_stopped)) {
         rsc->cluster->ninstances++;
         if (pe__resource_is_disabled(rsc)) {
             rsc->cluster->disabled_resources++;
         }
-        if (pcmk_is_set(rsc->flags, pe_rsc_block)) {
+        if (pcmk_is_set(rsc->flags, pcmk_rsc_blocked)) {
             rsc->cluster->blocked_resources++;
         }
     }

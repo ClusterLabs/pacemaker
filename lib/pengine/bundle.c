@@ -349,7 +349,8 @@ valid_network(pe__bundle_variant_data_t *data)
         if(data->nreplicas_per_host > 1) {
             pe_err("Specifying the 'control-port' for %s requires 'replicas-per-host=1'", data->prefix);
             data->nreplicas_per_host = 1;
-            // @TODO to be sure: pe__clear_resource_flags(rsc, pe_rsc_unique);
+            // @TODO to be sure:
+            // pe__clear_resource_flags(rsc, pcmk_rsc_unique);
         }
         return TRUE;
     }
@@ -648,7 +649,7 @@ create_container_resource(pe_resource_t *parent,
                             parent->cluster) != pcmk_rc_ok) {
         return pcmk_rc_unpack_error;
     }
-    pe__set_resource_flags(replica->container, pe_rsc_replica_container);
+    pe__set_resource_flags(replica->container, pcmk_rsc_replica_container);
     parent->children = g_list_append(parent->children, replica->container);
 
     return pcmk_rc_ok;
@@ -850,7 +851,8 @@ create_replica_resources(pe_resource_t *parent, pe__bundle_variant_data_t *data,
          * containers with pacemaker-remoted inside in order to start
          * services inside those containers.
          */
-        pe__set_resource_flags(replica->remote, pe_rsc_allow_remote_remotes);
+        pe__set_resource_flags(replica->remote,
+                               pcmk_rsc_remote_nesting_allowed);
     }
     return rc;
 }
@@ -1034,7 +1036,7 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
     value = crm_element_value(xml_obj, "replicas-per-host");
     pcmk__scan_min_int(value, &bundle_data->nreplicas_per_host, 1);
     if (bundle_data->nreplicas_per_host == 1) {
-        pe__clear_resource_flags(rsc, pe_rsc_unique);
+        pe__clear_resource_flags(rsc, pcmk_rsc_unique);
     }
 
     bundle_data->container_command = crm_element_value_copy(xml_obj, "run-command");
@@ -1225,8 +1227,8 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
             replica->offset = lpc++;
 
             // Ensure the child's notify gets set based on the underlying primitive's value
-            if (pcmk_is_set(replica->child->flags, pe_rsc_notify)) {
-                pe__set_resource_flags(bundle_data->child, pe_rsc_notify);
+            if (pcmk_is_set(replica->child->flags, pcmk_rsc_notify)) {
+                pe__set_resource_flags(bundle_data->child, pcmk_rsc_notify);
             }
 
             allocate_ip(bundle_data, replica, buffer);
@@ -1424,9 +1426,10 @@ bundle_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
     status_print(XML_ATTR_ID "=\"%s\" ", rsc->id);
     status_print("type=\"%s\" ", container_agent_str(bundle_data->agent_type));
     status_print("image=\"%s\" ", bundle_data->image);
-    status_print("unique=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_unique));
-    status_print("managed=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_managed));
-    status_print("failed=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_failed));
+    status_print("unique=\"%s\" ", pe__rsc_bool_str(rsc, pcmk_rsc_unique));
+    status_print("managed=\"%s\" ",
+                 pe__rsc_bool_str(rsc, pcmk_rsc_managed));
+    status_print("failed=\"%s\" ", pe__rsc_bool_str(rsc, pcmk_rsc_failed));
     status_print(">\n");
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
@@ -1505,10 +1508,11 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
                      "id", rsc->id,
                      "type", container_agent_str(bundle_data->agent_type),
                      "image", bundle_data->image,
-                     "unique", pe__rsc_bool_str(rsc, pe_rsc_unique),
-                     "maintenance", pe__rsc_bool_str(rsc, pe_rsc_maintenance),
-                     "managed", pe__rsc_bool_str(rsc, pe_rsc_managed),
-                     "failed", pe__rsc_bool_str(rsc, pe_rsc_failed),
+                     "unique", pe__rsc_bool_str(rsc, pcmk_rsc_unique),
+                     "maintenance",
+                     pe__rsc_bool_str(rsc, pcmk_rsc_maintenance),
+                     "managed", pe__rsc_bool_str(rsc, pcmk_rsc_managed),
+                     "failed", pe__rsc_bool_str(rsc, pcmk_rsc_failed),
                      "description", desc);
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
@@ -1588,10 +1592,10 @@ pe__bundle_replica_output_html(pcmk__output_t *out, pe__bundle_replica_t *replic
 static const char *
 get_unmanaged_str(const pe_resource_t *rsc)
 {
-    if (pcmk_is_set(rsc->flags, pe_rsc_maintenance)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_maintenance)) {
         return " (maintenance)";
     }
-    if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
         return " (unmanaged)";
     }
     return "";
@@ -1652,7 +1656,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
             PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s%s%s%s",
                                      (bundle_data->nreplicas > 1)? " set" : "",
                                      rsc->id, bundle_data->image,
-                                     pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
+                                     pcmk_is_set(rsc->flags, pcmk_rsc_unique)? " (unique)" : "",
                                      desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
                                      get_unmanaged_str(rsc));
 
@@ -1689,7 +1693,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
             PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s%s%s%s",
                                      (bundle_data->nreplicas > 1)? " set" : "",
                                      rsc->id, bundle_data->image,
-                                     pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
+                                     pcmk_is_set(rsc->flags, pcmk_rsc_unique)? " (unique)" : "",
                                      desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
                                      get_unmanaged_str(rsc));
 
@@ -1785,7 +1789,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
             PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s%s%s%s",
                                      (bundle_data->nreplicas > 1)? " set" : "",
                                      rsc->id, bundle_data->image,
-                                     pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
+                                     pcmk_is_set(rsc->flags, pcmk_rsc_unique)? " (unique)" : "",
                                      desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
                                      get_unmanaged_str(rsc));
 
@@ -1822,7 +1826,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
             PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s%s%s%s",
                                      (bundle_data->nreplicas > 1)? " set" : "",
                                      rsc->id, bundle_data->image,
-                                     pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
+                                     pcmk_is_set(rsc->flags, pcmk_rsc_unique)? " (unique)" : "",
                                      desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
                                      get_unmanaged_str(rsc));
 
@@ -1895,8 +1899,8 @@ pe__print_bundle(pe_resource_t *rsc, const char *pre_text, long options,
     status_print("%sContainer bundle%s: %s [%s]%s%s\n",
                  pre_text, ((bundle_data->nreplicas > 1)? " set" : ""),
                  rsc->id, bundle_data->image,
-                 pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
-                 pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
+                 pcmk_is_set(rsc->flags, pcmk_rsc_unique)? " (unique)" : "",
+                 pcmk_is_set(rsc->flags, pcmk_rsc_managed)? "" : " (unmanaged)");
     if (options & pe_print_html) {
         status_print("<br />\n<ul>\n");
     }

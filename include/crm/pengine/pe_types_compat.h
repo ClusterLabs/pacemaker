@@ -25,6 +25,99 @@ extern "C" {
  *             release.
  */
 
+//! \deprecated Use pcmk_rsc_removed instead
+#define pe_rsc_orphan                   pcmk_rsc_removed
+
+//! \deprecated Use pcmk_rsc_managed instead
+#define pe_rsc_managed                  pcmk_rsc_managed
+
+//! \deprecated Use pcmk_rsc_blocked instead
+#define pe_rsc_block                    pcmk_rsc_blocked
+
+//! \deprecated Use pcmk_rsc_removed_filler instead
+#define pe_rsc_orphan_container_filler  pcmk_rsc_removed_filler
+
+//! \deprecated Use pcmk_rsc_notify instead
+#define pe_rsc_notify                   pcmk_rsc_notify
+
+//! \deprecated Use pcmk_rsc_unique instead
+#define pe_rsc_unique                   pcmk_rsc_unique
+
+//! \deprecated Use pcmk_rsc_fence_device instead
+#define pe_rsc_fence_device             pcmk_rsc_fence_device
+
+//! \deprecated Use pcmk_rsc_promotable instead
+#define pe_rsc_promotable               pcmk_rsc_promotable
+
+//! \deprecated Use pcmk_rsc_unassigned instead
+#define pe_rsc_provisional              pcmk_rsc_unassigned
+
+//! \deprecated Use pcmk_rsc_assigning instead
+#define pe_rsc_allocating               pcmk_rsc_assigning
+
+//! \deprecated Use pcmk_rsc_updating_nodes instead
+#define pe_rsc_merging                  pcmk_rsc_updating_nodes
+
+//! \deprecated Use pcmk_rsc_restarting instead
+#define pe_rsc_restarting               pcmk_rsc_restarting
+
+//! \deprecated Use pcmk_rsc_stop_if_failed instead
+#define pe_rsc_stop                     pcmk_rsc_stop_if_failed
+
+//! \deprecated Use pcmk_rsc_reload instead
+#define pe_rsc_reload                   pcmk_rsc_reload
+
+//! \deprecated Use pcmk_rsc_remote_nesting_allowed instead
+#define pe_rsc_allow_remote_remotes     pcmk_rsc_remote_nesting_allowed
+
+//! \deprecated Use pcmk_rsc_critical instead
+#define pe_rsc_critical                 pcmk_rsc_critical
+
+//! \deprecated Use pcmk_rsc_failed instead
+#define pe_rsc_failed                   pcmk_rsc_failed
+
+//! \deprecated Use pcmk_rsc_detect_loop instead
+#define pe_rsc_detect_loop              pcmk_rsc_detect_loop
+
+//! \deprecated Do not use
+#define pe_rsc_runnable                 pcmk_rsc_runnable
+
+//! \deprecated Use pcmk_rsc_start_pending instead
+#define pe_rsc_start_pending            pcmk_rsc_start_pending
+
+//!< \deprecated Do not use
+#define pe_rsc_starting                 pcmk_rsc_starting
+
+//!< \deprecated Do not use
+#define pe_rsc_stopping                 pcmk_rsc_stopping
+
+//! \deprecated Use pcmk_rsc_stop_unexpected instead
+#define pe_rsc_stop_unexpected          pcmk_rsc_stop_unexpected
+
+//! \deprecated Use pcmk_rsc_migratable instead
+#define pe_rsc_allow_migrate            pcmk_rsc_migratable
+
+//! \deprecated Use pcmk_rsc_ignore_failure instead
+#define pe_rsc_failure_ignored          pcmk_rsc_ignore_failure
+
+//! \deprecated Use pcmk_rsc_replica_container instead
+#define pe_rsc_replica_container        pcmk_rsc_replica_container
+
+//! \deprecated Use pcmk_rsc_maintenance instead
+#define pe_rsc_maintenance              pcmk_rsc_maintenance
+
+//! \deprecated Do not use
+#define pe_rsc_is_container             pcmk_rsc_has_filler
+
+//! \deprecated Use pcmk_rsc_needs_quorum instead
+#define pe_rsc_needs_quorum             pcmk_rsc_needs_quorum
+
+//! \deprecated Use pcmk_rsc_needs_fencing instead
+#define pe_rsc_needs_fencing            pcmk_rsc_needs_fencing
+
+//! \deprecated Use pcmk_rsc_needs_unfencing instead
+#define pe_rsc_needs_unfencing          pcmk_rsc_needs_unfencing
+
 //! \deprecated Use pcmk_sched_quorate instead
 #define pe_flag_have_quorum             pcmk_sched_quorate
 

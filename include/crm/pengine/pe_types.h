@@ -179,49 +179,6 @@ struct pe_node_s {
     int rsc_discover_mode;
 };
 
-#  define pe_rsc_orphan                     0x00000001ULL
-#  define pe_rsc_managed                    0x00000002ULL
-#  define pe_rsc_block                      0x00000004ULL
-#  define pe_rsc_orphan_container_filler    0x00000008ULL
-
-#  define pe_rsc_notify                     0x00000010ULL
-#  define pe_rsc_unique                     0x00000020ULL
-#  define pe_rsc_fence_device               0x00000040ULL
-#  define pe_rsc_promotable                 0x00000080ULL
-
-#  define pe_rsc_provisional                0x00000100ULL
-#  define pe_rsc_allocating                 0x00000200ULL
-#  define pe_rsc_merging                    0x00000400ULL
-#  define pe_rsc_restarting                 0x00000800ULL
-
-#  define pe_rsc_stop                       0x00001000ULL
-#  define pe_rsc_reload                     0x00002000ULL
-#  define pe_rsc_allow_remote_remotes       0x00004000ULL
-#  define pe_rsc_critical                   0x00008000ULL
-
-#  define pe_rsc_failed                     0x00010000ULL
-#  define pe_rsc_detect_loop                0x00020000ULL
-#  define pe_rsc_runnable                   0x00040000ULL
-#  define pe_rsc_start_pending              0x00080000ULL
-
-//!< \deprecated Do not use
-#  define pe_rsc_starting                   0x00100000ULL
-
-//!< \deprecated Do not use
-#  define pe_rsc_stopping                   0x00200000ULL
-
-#  define pe_rsc_stop_unexpected            0x00400000ULL
-#  define pe_rsc_allow_migrate              0x00800000ULL
-
-#  define pe_rsc_failure_ignored            0x01000000ULL
-#  define pe_rsc_replica_container          0x02000000ULL
-#  define pe_rsc_maintenance                0x04000000ULL
-#  define pe_rsc_is_container               0x08000000ULL
-
-#  define pe_rsc_needs_quorum               0x10000000ULL
-#  define pe_rsc_needs_fencing              0x20000000ULL
-#  define pe_rsc_needs_unfencing            0x40000000ULL
-
 /* *INDENT-OFF* */
 enum pe_action_flags {
     pe_action_pseudo = 0x00001,

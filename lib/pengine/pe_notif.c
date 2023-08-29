@@ -435,7 +435,7 @@ pe__action_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
 {
     notify_data_t *n_data = NULL;
 
-    if (!pcmk_is_set(rsc->flags, pe_rsc_notify)) {
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_notify)) {
         return NULL;
     }
 

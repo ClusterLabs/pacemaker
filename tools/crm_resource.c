@@ -980,7 +980,7 @@ ban_or_move(pcmk__output_t *out, pe_resource_t *rsc, const char *move_lifetime)
         rc = cli_resource_ban(out, options.rsc_id, current->details->uname, move_lifetime, NULL,
                               cib_conn, options.cib_options, options.promoted_role_only);
 
-    } else if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
+    } else if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
         int count = 0;
         GList *iter = NULL;
 

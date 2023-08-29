@@ -30,7 +30,7 @@ build_node_info_list(const pe_resource_t *rsc)
             node_info_t *ni = calloc(1, sizeof(node_info_t));
 
             ni->node_name = node->details->uname;
-            ni->promoted = pcmk_is_set(rsc->flags, pe_rsc_promotable) &&
+            ni->promoted = pcmk_is_set(rsc->flags, pcmk_rsc_promotable) &&
                            child->fns->state(child, TRUE) == pcmk_role_promoted;
 
             retval = g_list_prepend(retval, ni);
@@ -52,7 +52,7 @@ cli_resource_search(pe_resource_t *rsc, const char *requested_name,
 
     /* The anonymous clone children's common ID is supplied */
     } else if (pe_rsc_is_clone(parent)
-               && !pcmk_is_set(rsc->flags, pe_rsc_unique)
+               && !pcmk_is_set(rsc->flags, pcmk_rsc_unique)
                && rsc->clone_name
                && pcmk__str_eq(requested_name, rsc->clone_name, pcmk__str_casei)
                && !pcmk__str_eq(requested_name, rsc->id, pcmk__str_casei)) {
@@ -411,19 +411,19 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
                 need_init = false;
                 pcmk__unpack_constraints(rsc->cluster);
                 pe__clear_resource_flags_on_all(rsc->cluster,
-                                                pe_rsc_detect_loop);
+                                                pcmk_rsc_detect_loop);
             }
 
             /* We want to set the attribute only on resources explicitly
              * colocated with this one, so we use rsc->rsc_cons_lhs directly
              * rather than the with_this_colocations() method.
              */
-            pe__set_resource_flags(rsc, pe_rsc_detect_loop);
+            pe__set_resource_flags(rsc, pcmk_rsc_detect_loop);
             for (lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
                 pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
 
                 crm_debug("Checking %s %d", cons->id, cons->score);
-                if (!pcmk_is_set(cons->dependent->flags, pe_rsc_detect_loop)
+                if (!pcmk_is_set(cons->dependent->flags, pcmk_rsc_detect_loop)
                     && (cons->score > 0)) {
                     crm_debug("Setting %s=%s for dependent resource %s",
                               attr_name, attr_value, cons->dependent->id);
@@ -624,7 +624,10 @@ rsc_fail_name(const pe_resource_t *rsc)
 {
     const char *name = (rsc->clone_name? rsc->clone_name : rsc->id);
 
-    return pcmk_is_set(rsc->flags, pe_rsc_unique)? strdup(name) : clone_strip(name);
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
+        return strdup(name);
+    }
+    return clone_strip(name);
 }
 
 // \return Standard Pacemaker return code
@@ -944,7 +947,7 @@ check_role(resource_checks_t *checks)
 
         case pcmk_role_unpromoted:
             if (pcmk_is_set(pe__const_top_resource(checks->rsc, false)->flags,
-                            pe_rsc_promotable)) {
+                            pcmk_rsc_promotable)) {
                 checks->flags |= rsc_unpromotable;
             }
             break;
@@ -2119,10 +2122,12 @@ cli_resource_move(const pe_resource_t *rsc, const char *rsc_id,
         return pcmk_rc_node_unknown;
     }
 
-    if (promoted_role_only && !pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
+    if (promoted_role_only
+        && !pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
+
         const pe_resource_t *p = pe__const_top_resource(rsc, false);
 
-        if (pcmk_is_set(p->flags, pe_rsc_promotable)) {
+        if (pcmk_is_set(p->flags, pcmk_rsc_promotable)) {
             out->info(out, "Using parent '%s' for move instead of '%s'.", rsc->id, rsc_id);
             rsc_id = p->id;
             rsc = p;
@@ -2136,7 +2141,7 @@ cli_resource_move(const pe_resource_t *rsc, const char *rsc_id,
 
     current = pe__find_active_requires(rsc, &count);
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
         unsigned int promoted_count = 0;
         pe_node_t *promoted_node = NULL;
 

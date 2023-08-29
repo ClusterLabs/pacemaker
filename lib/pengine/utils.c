@@ -251,7 +251,7 @@ pe__show_node_scores_as(const char *file, const char *function, int line,
                         const char *comment, GHashTable *nodes,
                         pe_working_set_t *data_set)
 {
-    if (rsc != NULL && pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
+    if ((rsc != NULL) && pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
         // Don't show allocation scores for orphans
         return;
     }
@@ -426,7 +426,7 @@ get_target_role(const pe_resource_t *rsc, enum rsc_role_e *role)
 
     } else if (local_role > pcmk_role_started) {
         if (pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
-                        pe_rsc_promotable)) {
+                        pcmk_rsc_promotable)) {
             if (local_role > pcmk_role_unpromoted) {
                 /* This is what we'd do anyway, just leave the default to avoid messing up the placement algorithm */
                 return FALSE;
@@ -542,7 +542,7 @@ ticket_new(const char *ticket_id, pe_working_set_t * data_set)
 const char *
 rsc_printable_id(const pe_resource_t *rsc)
 {
-    return pcmk_is_set(rsc->flags, pe_rsc_unique)? rsc->id : ID(rsc->xml);
+    return pcmk_is_set(rsc->flags, pcmk_rsc_unique)? rsc->id : ID(rsc->xml);
 }
 
 void
@@ -581,7 +581,7 @@ trigger_unfencing(pe_resource_t *rsc, pe_node_t *node, const char *reason,
         return;
 
     } else if ((rsc != NULL)
-               && !pcmk_is_set(rsc->flags, pe_rsc_fence_device)) {
+               && !pcmk_is_set(rsc->flags, pcmk_rsc_fence_device)) {
         /* Wasn't a stonith device */
         return;
 
@@ -725,7 +725,7 @@ pe__resource_is_disabled(const pe_resource_t *rsc)
         if ((target_role_e == pcmk_role_stopped)
             || ((target_role_e == pcmk_role_unpromoted)
                 && pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
-                               pe_rsc_promotable))) {
+                               pcmk_rsc_promotable))) {
             return true;
         }
     }

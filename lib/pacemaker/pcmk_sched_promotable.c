@@ -186,7 +186,7 @@ node_to_be_promoted_on(const pe_resource_t *rsc)
                      rsc->id);
         return NULL;
 
-    } else if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+    } else if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
         if (rsc->fns->state(rsc, TRUE) == pcmk_role_promoted) {
             crm_notice("Unmanaged instance %s will be left promoted on %s",
                        rsc->id, pe__node_name(node));
@@ -217,7 +217,7 @@ node_to_be_promoted_on(const pe_resource_t *rsc)
          * instance to a node where its parent is not allowed, but it's good to
          * have a fail-safe.
          */
-        if (pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+        if (pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
             crm_warn("%s can't be promoted because %s is not allowed on %s "
                      "(scheduler bug?)",
                      rsc->id, parent->id, pe__node_name(node));
@@ -225,7 +225,7 @@ node_to_be_promoted_on(const pe_resource_t *rsc)
         return NULL;
 
     } else if ((local_node->count >= pe__clone_promoted_node_max(parent))
-               && pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+               && pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
         pe_rsc_trace(rsc,
                      "%s can't be promoted because %s has "
                      "maximum promoted instances already",
@@ -412,7 +412,7 @@ set_sort_index_to_node_score(gpointer data, gpointer user_data)
 
     pe_node_t *chosen = child->fns->location(child, NULL, FALSE);
 
-    if (!pcmk_is_set(child->flags, pe_rsc_managed)
+    if (!pcmk_is_set(child->flags, pcmk_rsc_managed)
         && (child->next_role == pcmk_role_promoted)) {
         child->sort_index = INFINITY;
         pe_rsc_trace(clone,
@@ -451,7 +451,7 @@ sort_promotable_instances(pe_resource_t *clone)
             == pcmk_rc_already) {
         return;
     }
-    pe__set_resource_flags(clone, pe_rsc_merging);
+    pe__set_resource_flags(clone, pcmk_rsc_updating_nodes);
 
     for (GList *iter = clone->children; iter != NULL; iter = iter->next) {
         pe_resource_t *child = (pe_resource_t *) iter->data;
@@ -484,7 +484,7 @@ sort_promotable_instances(pe_resource_t *clone)
 
     // Finally, sort instances in descending order of promotion priority
     clone->children = g_list_sort(clone->children, cmp_promotable_instance);
-    pe__clear_resource_flags(clone, pe_rsc_merging);
+    pe__clear_resource_flags(clone, pcmk_rsc_updating_nodes);
 }
 
 /*!
@@ -584,7 +584,7 @@ promotion_score_applies(const pe_resource_t *rsc, const pe_node_t *node)
     const char *reason = "allowed";
 
     // Some checks apply only to anonymous clone instances
-    if (!pcmk_is_set(rsc->flags, pe_rsc_unique)) {
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
 
         // If instance is active on the node, its score definitely applies
         active = find_active_anon_instance(parent, id, node);
@@ -657,7 +657,7 @@ promotion_attr_value(const pe_resource_t *rsc, const pe_node_t *node,
     const char *attr_value = NULL;
     enum pe__rsc_node node_type = pe__rsc_node_assigned;
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_unassigned)) {
         // Not assigned yet
         node_type = pe__rsc_node_current;
     }
@@ -726,7 +726,7 @@ promotion_score(const pe_resource_t *rsc, const pe_node_t *node,
     if (attr_value != NULL) {
         pe_rsc_trace(rsc, "Promotion score for %s on %s = %s",
                      name, pe__node_name(node), pcmk__s(attr_value, "(unset)"));
-    } else if (!pcmk_is_set(rsc->flags, pe_rsc_unique)) {
+    } else if (!pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
         /* If we don't have any resource history yet, we won't have clone_name.
          * In that case, for anonymous clones, try the resource name without
          * any instance number.
@@ -1008,7 +1008,7 @@ set_instance_role(gpointer data, gpointer user_data)
                      instance->id);
 
     } else if ((*count < pe__clone_promoted_max(instance))
-               || !pcmk_is_set(clone->flags, pe_rsc_managed)) {
+               || !pcmk_is_set(clone->flags, pcmk_rsc_managed)) {
         chosen = node_to_be_promoted_on(instance);
     }
 

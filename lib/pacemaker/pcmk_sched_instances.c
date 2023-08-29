@@ -32,7 +32,7 @@ can_run_instance(const pe_resource_t *instance, const pe_node_t *node,
 {
     pe_node_t *allowed_node = NULL;
 
-    if (pcmk_is_set(instance->flags, pe_rsc_orphan)) {
+    if (pcmk_is_set(instance->flags, pcmk_rsc_removed)) {
         pe_rsc_trace(instance, "%s cannot run on %s: orphaned",
                      instance->id, pe__node_name(node));
         return false;
@@ -245,7 +245,7 @@ cmp_instance_by_colocation(const pe_resource_t *instance1,
 static bool
 did_fail(const pe_resource_t *rsc)
 {
-    if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
         return true;
     }
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
@@ -531,7 +531,7 @@ increment_parent_count(pe_resource_t *instance, const pe_node_t *assigned_to)
          * shouldn't be possible if the resource is managed, and we won't be
          * able to limit the number of instances assigned to the node.
          */
-        CRM_LOG_ASSERT(!pcmk_is_set(instance->flags, pe_rsc_managed));
+        CRM_LOG_ASSERT(!pcmk_is_set(instance->flags, pcmk_rsc_managed));
 
     } else {
         allowed->count++;
@@ -559,7 +559,7 @@ assign_instance(pe_resource_t *instance, const pe_node_t *prefer,
     pe_rsc_trace(instance, "Assigning %s (preferring %s)", instance->id,
                  ((prefer == NULL)? "no node" : prefer->details->uname));
 
-    if (pcmk_is_set(instance->flags, pe_rsc_allocating)) {
+    if (pcmk_is_set(instance->flags, pcmk_rsc_assigning)) {
         pe_rsc_debug(instance,
                      "Assignment loop detected involving %s colocations",
                      instance->id);
@@ -650,7 +650,7 @@ assign_instance_early(const pe_resource_t *rsc, pe_resource_t *instance,
             pe_rsc_info(instance,
                         "Not assigning %s to current node %s: unavailable",
                         instance->id, pe__node_name(current));
-            pe__set_resource_flags(instance, pe_rsc_provisional);
+            pe__set_resource_flags(instance, pcmk_rsc_unassigned);
             break;
         }
 
@@ -738,8 +738,8 @@ preferred_node(const pe_resource_t *instance, int optimal_per_node)
 
     // Check whether instance is active, healthy, and not yet assigned
     if ((instance->running_on == NULL)
-        || !pcmk_is_set(instance->flags, pe_rsc_provisional)
-        || pcmk_is_set(instance->flags, pe_rsc_failed)) {
+        || !pcmk_is_set(instance->flags, pcmk_rsc_unassigned)
+        || pcmk_is_set(instance->flags, pcmk_rsc_failed)) {
         return NULL;
     }
 
@@ -806,7 +806,7 @@ pcmk__assign_instances(pe_resource_t *collective, GList *instances,
         int available = max_total - assigned;
 
         instance = iter->data;
-        if (!pcmk_is_set(instance->flags, pe_rsc_provisional)) {
+        if (!pcmk_is_set(instance->flags, pcmk_rsc_unassigned)) {
             continue;   // Already assigned
         }
 
@@ -824,7 +824,7 @@ pcmk__assign_instances(pe_resource_t *collective, GList *instances,
     for (iter = instances; iter != NULL; iter = iter->next) {
         instance = (pe_resource_t *) iter->data;
 
-        if (!pcmk_is_set(instance->flags, pe_rsc_provisional)) {
+        if (!pcmk_is_set(instance->flags, pcmk_rsc_unassigned)) {
             continue; // Already assigned
         }
 
@@ -833,7 +833,7 @@ pcmk__assign_instances(pe_resource_t *collective, GList *instances,
             if (pcmk__top_allowed_node(instance, current) == NULL) {
                 const char *unmanaged = "";
 
-                if (!pcmk_is_set(instance->flags, pe_rsc_managed)) {
+                if (!pcmk_is_set(instance->flags, pcmk_rsc_managed)) {
                     unmanaged = "Unmanaged resource ";
                 }
                 crm_notice("%s%s is running on %s which is no longer allowed",
@@ -1082,7 +1082,7 @@ pcmk__instance_matches(const pe_resource_t *instance, const pe_node_t *node,
         return false;
     }
 
-    if (!is_set_recursive(instance, pe_rsc_block, true)) {
+    if (!is_set_recursive(instance, pcmk_rsc_blocked, true)) {
         // We only want instances that haven't failed
         instance_node = instance->fns->location(instance, NULL, current);
     }
@@ -1290,12 +1290,12 @@ find_instance_action(const pe_action_t *action, const pe_resource_t *instance,
         return matching_action;
     }
 
-    if (pcmk_is_set(instance->flags, pe_rsc_orphan)
+    if (pcmk_is_set(instance->flags, pcmk_rsc_removed)
         || pcmk__str_any_of(action_name, PCMK_ACTION_STOP, PCMK_ACTION_DEMOTE,
                             NULL)) {
         crm_trace("No %s action found for %s%s",
                   action_name,
-                  pcmk_is_set(instance->flags, pe_rsc_orphan)? "orphan " : "",
+                  pcmk_is_set(instance->flags, pcmk_rsc_removed)? "orphan " : "",
                   instance->id);
     } else {
         crm_err("No %s action found for %s to interleave (bug?)",
