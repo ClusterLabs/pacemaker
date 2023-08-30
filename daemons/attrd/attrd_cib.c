@@ -413,18 +413,23 @@ send_alert_attributes_value(attribute_t *a, GHashTable *t)
     }
 }
 
+/*!
+ * \internal
+ * \brief Record an attribute value to use when sending alerts
+ *
+ * \param[in,out] table       Table of attribute values
+ * \param[in]     attr_value  Attribute value to record
+ */
 static void
-set_alert_attribute_value(GHashTable *t, attribute_value_t *v)
+record_alert_attribute_value(GHashTable *table,
+                             const attribute_value_t *attr_value)
 {
-    attribute_value_t *a_v = NULL;
-    a_v = calloc(1, sizeof(attribute_value_t));
-    CRM_ASSERT(a_v != NULL);
+    attribute_value_t *copy = attrd_copy_attribute_value(attr_value);
 
-    a_v->nodeid = v->nodeid;
-    a_v->nodename = strdup(v->nodename);
-    pcmk__str_update(&a_v->current, v->current);
-
-    g_hash_table_replace(t, a_v->nodename, a_v);
+    if (copy == NULL) {
+        return;
+    }
+    g_hash_table_insert(table, copy->nodename, copy);
 }
 
 mainloop_timer_t *
@@ -560,7 +565,7 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
         cib_updates++;
 
         /* Preservation of the attribute to transmit alert */
-        set_alert_attribute_value(alert_attribute_value, v);
+        record_alert_attribute_value(alert_attribute_value, v);
 
         free(v->requested);
         v->requested = NULL;

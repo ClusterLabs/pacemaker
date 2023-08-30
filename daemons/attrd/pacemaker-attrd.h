@@ -173,6 +173,7 @@ gboolean attrd_send_message(crm_node_t *node, xmlNode *data, bool confirm);
 xmlNode *attrd_add_value_xml(xmlNode *parent, const attribute_t *a,
                              const attribute_value_t *v, bool force_write);
 void attrd_clear_value_seen(void);
+attribute_value_t *attrd_copy_attribute_value(const attribute_value_t *source);
 void attrd_free_attribute(gpointer data);
 void attrd_free_attribute_value(gpointer data);
 attribute_t *attrd_populate_attribute(xmlNode *xml, const char *attr);

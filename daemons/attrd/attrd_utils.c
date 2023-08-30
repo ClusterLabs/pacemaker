@@ -219,6 +219,31 @@ attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
     return (rc == 0)? pcmk_ok : -EINVAL;
 }
 
+/*!
+ * \internal
+ * \brief Make a deep copy of an \c attribute_value_t object
+ *
+ * \param[in] source  Object to copy
+ *
+ * \return Deep copy of \p source
+ */
+attribute_value_t *
+attrd_copy_attribute_value(const attribute_value_t *source)
+{
+    attribute_value_t *copy = calloc(1, sizeof(attribute_value_t));
+
+    if (copy == NULL) {
+        return NULL;
+    }
+    copy->nodeid = source->nodeid;
+    copy->is_remote = source->is_remote;
+    copy->seen = source->seen;
+    pcmk__str_update(&(copy->nodename), source->nodename);
+    pcmk__str_update(&(copy->current), source->current);
+    pcmk__str_update(&(copy->requested), source->requested);
+    return copy;
+}
+
 void
 attrd_free_attribute_value(gpointer data)
 {
