@@ -182,7 +182,7 @@ find_matching_attr_resources_recursive(pcmk__output_t *out, GList/* <pe_resource
 
     rc = find_resource_attr(out, cib, XML_ATTR_ID, lookup_id, attr_set_type,
                             attr_set, attr_id, attr_name, &local_attr_id);
-    /* Post-order traversal. 
+    /* Post-order traversal.
      * The root is always on the list and it is the last item. */
     if((0 == depth) || (pcmk_rc_ok == rc)) {
         /* push the head */
@@ -1156,7 +1156,7 @@ get_active_resources(const char *host, GList *rsc_list)
     return active;
 }
 
-static void dump_list(GList *items, const char *tag) 
+static void dump_list(GList *items, const char *tag)
 {
     int lpc = 0;
     GList *item = NULL;
@@ -1487,6 +1487,11 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc,
             out->err(out, "%s is not running anywhere and so cannot be restarted", id);
         }
         return ENXIO;
+    }
+
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
+        out->err(out, "Unmanaged resources cannot be restarted.");
+        return EAGAIN;
     }
 
     rsc_id = strdup(rsc->id);
