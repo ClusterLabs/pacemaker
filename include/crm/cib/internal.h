@@ -164,6 +164,38 @@ struct timer_rec_s {
 
 cib_t *cib_new_variant(void);
 
+/*!
+ * \internal
+ * \brief Check whether a given name represents a safe CIB client
+ *
+ * If a Pacemaker daemon or one of certain Pacemaker CLI tools modifies the CIB,
+ * we can assume that the CIB hasn't diverged from the true cluster state. A
+ * "safe" CLI tool requests that all relevant daemons update their state before
+ * the tool requests any CIB modifications directly.
+ *
+ * In contrast, other "unsafe" tools (for example, \c cibadmin) may request
+ * arbitrary CIB changes.
+ *
+ * A Pacemaker daemons can write its true state to the CIB when it's notified of
+ * an update from an unsafe client.
+ *
+ * \param[in] name  CIB client name
+ *
+ * \return \c true if the CIB client name is safe, or \c false otherwise
+ */
+static inline bool
+cib__client_name_is_safe(const char *name)
+{
+    return crm_is_daemon_name(name)
+           || pcmk__str_any_of(name,
+                               "attrd_updater",
+                               "crm_attribute",
+                               "crm_node",
+                               "crm_resource",
+                               "crm_ticket",
+                               NULL);
+}
+
 int cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset);
 
 bool cib__element_in_patchset(const xmlNode *patchset, const char *element);
