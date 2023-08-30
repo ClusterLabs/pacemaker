@@ -19,92 +19,11 @@
 
 #include <pacemaker-controld.h>
 
+// Async client ID of controld_globals.cib_conn
+static const char *cib_client_id = NULL;
+
 // Call ID of the most recent in-progress CIB resource update (or 0 if none)
 static int pending_rsc_update = 0;
-
-// Call IDs of requested CIB replacements that won't trigger a new election
-// (used as a set of gint values)
-static GHashTable *cib_replacements = NULL;
-
-/*!
- * \internal
- * \brief Store the call ID of a CIB replacement that the controller requested
- *
- * The \p do_cib_replaced() callback function will avoid triggering a new
- * election when we're notified of one of these expected replacements.
- *
- * \param[in] call_id  CIB call ID (or 0 for a synchronous call)
- *
- * \note This function should be called after making any asynchronous CIB
- *       request (or before making any synchronous CIB request) that may replace
- *       part of the nodes or status section. This may include CIB sync calls.
- */
-void
-controld_record_cib_replace_call(int call_id)
-{
-    CRM_CHECK(call_id >= 0, return);
-
-    if (cib_replacements == NULL) {
-        cib_replacements = g_hash_table_new(NULL, NULL);
-    }
-
-    /* If the call ID is already present in the table, then it's old. We may not
-     * be removing them properly, and we could improperly ignore replacement
-     * notifications if cib_t:call_id wraps around.
-     */
-    CRM_LOG_ASSERT(g_hash_table_add(cib_replacements,
-                                    GINT_TO_POINTER((gint) call_id)));
-}
-
-/*!
- * \internal
- * \brief Remove the call ID of a CIB replacement from the replacements table
- *
- * \param[in] call_id  CIB call ID (or 0 for a synchronous call)
- *
- * \return \p true if \p call_id was found in the table, or \p false otherwise
- *
- * \note CIB notifications run before CIB callbacks. If this function is called
- *       from within a callback, \p do_cib_replaced() will have removed
- *       \p call_id from the table first if relevant changes triggered a
- *       notification.
- */
-bool
-controld_forget_cib_replace_call(int call_id)
-{
-    CRM_CHECK(call_id >= 0, return false);
-
-    if (cib_replacements == NULL) {
-        return false;
-    }
-    return g_hash_table_remove(cib_replacements,
-                               GINT_TO_POINTER((gint) call_id));
-}
-
-/*!
- * \internal
- * \brief Empty the hash table containing call IDs of CIB replacement requests
- */
-void
-controld_forget_all_cib_replace_calls(void)
-{
-    if (cib_replacements != NULL) {
-        g_hash_table_remove_all(cib_replacements);
-    }
-}
-
-/*!
- * \internal
- * \brief Free the hash table containing call IDs of CIB replacement requests
- */
-void
-controld_destroy_cib_replacements_table(void)
-{
-    if (cib_replacements != NULL) {
-        g_hash_table_destroy(cib_replacements);
-        cib_replacements = NULL;
-    }
-}
 
 /*!
  * \internal
@@ -134,47 +53,53 @@ handle_cib_disconnect(gpointer user_data)
 static void
 do_cib_updated(const char *event, xmlNode * msg)
 {
-    if (pcmk__alert_in_patchset(msg, TRUE)) {
+    const xmlNode *patchset = NULL;
+    const char *client_id = NULL;
+    const char *op = NULL;
+    const cib__operation_t *operation = NULL;
+
+    crm_debug("Received CIB diff notification: DC=%s", pcmk__btoa(AM_I_DC));
+
+    if (cib__get_notify_patchset(msg, &patchset) != pcmk_rc_ok) {
+        return;
+    }
+
+    if (cib__element_in_patchset(patchset, XML_CIB_TAG_ALERTS)
+        || cib__element_in_patchset(patchset, XML_CIB_TAG_CRMCONFIG)) {
+
         controld_trigger_config();
     }
-}
 
-static void
-do_cib_replaced(const char *event, xmlNode * msg)
-{
-    int call_id = 0;
-    const char *client_id = crm_element_value(msg, F_CIB_CLIENTID);
-    uint32_t change_section = cib_change_section_nodes
-                              |cib_change_section_status;
-    long long value = 0;
-
-    crm_debug("Updating the CIB after a replace: DC=%s", pcmk__btoa(AM_I_DC));
     if (!AM_I_DC) {
+        // We're not in control of the join sequence
         return;
     }
 
-    if ((crm_element_value_int(msg, F_CIB_CALLID, &call_id) == 0)
-        && pcmk__str_eq(client_id, controld_globals.cib_client_id,
-                        pcmk__str_none)
-        && controld_forget_cib_replace_call(call_id)) {
-        // We requested this replace op. No need to restart the join.
+    client_id = crm_element_value(msg, F_CIB_CLIENTID);
+    if (pcmk__str_eq(client_id, cib_client_id, pcmk__str_none)) {
+        // Don't restart the join sequence due to an update that we requested
         return;
     }
 
-    if ((crm_element_value_ll(msg, F_CIB_CHANGE_SECTION, &value) < 0)
-        || (value < 0) || (value > UINT32_MAX)) {
-
-        crm_trace("Couldn't parse '%s' from message", F_CIB_CHANGE_SECTION);
-    } else {
-        change_section = (uint32_t) value;
+    op = crm_element_value(msg, F_CIB_OPERATION);
+    if (cib__get_operation(op, &operation) != pcmk_rc_ok) {
+        // Invalid operation
+        return;
     }
 
-    if (pcmk_any_flags_set(change_section, cib_change_section_nodes
-                                           |cib_change_section_status)) {
+    if (pcmk_is_set(operation->flags, cib__op_attr_replaces)
+        && (cib__element_in_patchset(patchset, XML_CIB_TAG_NODES)
+            || cib__element_in_patchset(patchset, XML_CIB_TAG_STATUS))) {
 
-        /* start the join process again so we get everyone's LRM status */
+        /* The node list or resource history may be inaccurate, since part of
+         * the nodes or status section was replaced.
+         *
+         * Ensure the node list is up-to-date, and start the join process again
+         * so we get everyone's current resource history.
+         *
+         * @TODO Don't trigger an election if only transient attributes changed.
+         */
         populate_cib_nodes(node_update_quick|node_update_all, __func__);
-
         register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
     }
 }
@@ -190,8 +115,6 @@ controld_disconnect_cib_manager(void)
 
     controld_clear_fsa_input_flags(R_CIB_CONNECTED);
 
-    cib_conn->cmds->del_notify_callback(cib_conn, T_CIB_REPLACE_NOTIFY,
-                                        do_cib_replaced);
     cib_conn->cmds->del_notify_callback(cib_conn, T_CIB_DIFF_NOTIFY,
                                         do_cib_updated);
     cib_free_callbacks(cib_conn);
@@ -215,7 +138,6 @@ do_cib_control(long long action,
     cib_t *cib_conn = controld_globals.cib_conn;
 
     void (*dnotify_fn) (gpointer user_data) = handle_cib_disconnect;
-    void (*replace_cb) (const char *event, xmlNodePtr msg) = do_cib_replaced;
     void (*update_cb) (const char *event, xmlNodePtr msg) = do_cib_updated;
 
     int rc = pcmk_ok;
@@ -262,11 +184,6 @@ do_cib_control(long long action,
         crm_err("Could not set dnotify callback");
 
     } else if (cib_conn->cmds->add_notify_callback(cib_conn,
-                                                   T_CIB_REPLACE_NOTIFY,
-                                                   replace_cb) != pcmk_ok) {
-        crm_err("Could not set CIB notification callback (replace)");
-
-    } else if (cib_conn->cmds->add_notify_callback(cib_conn,
                                                    T_CIB_DIFF_NOTIFY,
                                                    update_cb) != pcmk_ok) {
         crm_err("Could not set CIB notification callback (update)");
@@ -274,8 +191,7 @@ do_cib_control(long long action,
     } else {
         controld_set_fsa_input_flags(R_CIB_CONNECTED);
         cib_retries = 0;
-        cib_conn->cmds->client_id(cib_conn, &controld_globals.cib_client_id,
-                                  NULL);
+        cib_conn->cmds->client_id(cib_conn, &cib_client_id, NULL);
     }
 
     if (!pcmk_is_set(controld_globals.fsa_input_register, R_CIB_CONNECTED)) {
@@ -1073,7 +989,6 @@ controld_delete_action_history(const lrmd_event_data_t *op)
     controld_globals.cib_conn->cmds->remove(controld_globals.cib_conn,
                                             XML_CIB_TAG_STATUS, xml_top,
                                             cib_none);
-
     crm_log_xml_trace(xml_top, "op:cancel");
     free_xml(xml_top);
 }
@@ -1113,7 +1028,6 @@ controld_cib_delete_last_failure(const char *rsc_id, const char *node,
 {
     char *xpath = NULL;
     char *last_failure_key = NULL;
-
     CRM_CHECK((rsc_id != NULL) && (node != NULL), return);
 
     // Generate XPath to match desired entry

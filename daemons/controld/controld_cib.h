@@ -43,11 +43,6 @@ fsa_cib_anon_update_discard_reply(const char *section, xmlNode *data) {
     }
 }
 
-void controld_record_cib_replace_call(int call_id);
-bool controld_forget_cib_replace_call(int call_id);
-void controld_forget_all_cib_replace_calls(void);
-void controld_destroy_cib_replacements_table(void);
-
 int controld_update_cib(const char *section, xmlNode *data, int options,
                         void (*callback)(xmlNode *, int, int, xmlNode *,
                                          void *));

@@ -133,39 +133,6 @@ attrd_run_mainloop(void)
     g_main_loop_run(mloop);
 }
 
-void
-attrd_cib_disconnect(void)
-{
-    CRM_CHECK(the_cib != NULL, return);
-    the_cib->cmds->del_notify_callback(the_cib, T_CIB_REPLACE_NOTIFY, attrd_cib_replaced_cb);
-    the_cib->cmds->del_notify_callback(the_cib, T_CIB_DIFF_NOTIFY, attrd_cib_updated_cb);
-    cib__clean_up_connection(&the_cib);
-}
-
-void
-attrd_cib_replaced_cb(const char *event, xmlNode * msg)
-{
-    int change_section = cib_change_section_nodes | cib_change_section_status | cib_change_section_alerts;
-
-    if (attrd_shutting_down(true)) {
-        return;
-    }
-
-    crm_element_value_int(msg, F_CIB_CHANGE_SECTION, &change_section);
-
-    if (attrd_election_won()) {
-        if (change_section & (cib_change_section_nodes | cib_change_section_status)) {
-            crm_notice("Updating all attributes after %s event", event);
-            attrd_write_attributes(attrd_write_all);
-        }
-    }
-
-    if (change_section & cib_change_section_alerts) {
-        // Check for changes in alerts
-        mainloop_set_trigger(attrd_config_read);
-    }
-}
-
 /* strlen("value") */
 #define plus_plus_len (5)
 

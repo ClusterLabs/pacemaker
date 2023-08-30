@@ -20,6 +20,7 @@
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
 #include <crm/msg_xml.h>
+#include <crm/common/cib_internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include <crm/pengine/rules.h>
@@ -75,6 +76,154 @@ cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, int *upda
     *_updates = del[2];
 
     return TRUE;
+}
+
+/*!
+ * \internal
+ * \brief Get the XML patchset from a CIB diff notification
+ *
+ * \param[in]  msg       CIB diff notification
+ * \param[out] patchset  Where to store XML patchset
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
+{
+    int rc = pcmk_err_generic;
+
+    CRM_ASSERT(patchset != NULL);
+    *patchset = NULL;
+
+    if (msg == NULL) {
+        crm_err("CIB diff notification received with no XML");
+        return ENOMSG;
+    }
+
+    if ((crm_element_value_int(msg, F_CIB_RC, &rc) != 0) || (rc != pcmk_ok)) {
+        crm_warn("Ignore failed CIB update: %s " CRM_XS " rc=%d",
+                 pcmk_strerror(rc), rc);
+        crm_log_xml_debug(msg, "failed");
+        return pcmk_legacy2rc(rc);
+    }
+
+    *patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
+
+    if (*patchset == NULL) {
+        crm_err("CIB diff notification received with no patchset");
+        return ENOMSG;
+    }
+    return pcmk_rc_ok;
+}
+
+#define XPATH_DIFF_V1 "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED
+
+/*!
+ * \internal
+ * \brief Check whether a given CIB element was modified in a CIB patchset (v1)
+ *
+ * \param[in] patchset  CIB XML patchset
+ * \param[in] element   XML tag of CIB element to check (\c NULL is equivalent
+ *                      to \c XML_TAG_CIB)
+ *
+ * \return \c true if \p element was modified, or \c false otherwise
+ */
+static bool
+element_in_patchset_v1(const xmlNode *patchset, const char *element)
+{
+    char *xpath = crm_strdup_printf(XPATH_DIFF_V1 "//%s",
+                                    pcmk__s(element, XML_TAG_CIB));
+    xmlXPathObject *xpath_obj = xpath_search(patchset, xpath);
+
+    free(xpath);
+
+    if (xpath_obj == NULL) {
+        return false;
+    }
+    freeXpathObject(xpath_obj);
+    return true;
+}
+
+/*!
+ * \internal
+ * \brief Check whether a given CIB element was modified in a CIB patchset (v2)
+ *
+ * \param[in] patchset  CIB XML patchset
+ * \param[in] element   XML tag of CIB element to check (\c NULL is equivalent
+ *                      to \c XML_TAG_CIB). Supported values include any CIB
+ *                      element supported by \c pcmk__cib_abs_xpath_for().
+ *
+ * \return \c true if \p element was modified, or \c false otherwise
+ */
+static bool
+element_in_patchset_v2(const xmlNode *patchset, const char *element)
+{
+    const char *element_xpath = pcmk__cib_abs_xpath_for(element);
+    const char *parent_xpath = pcmk_cib_parent_name_for(element);
+    char *element_regex = NULL;
+    bool rc = false;
+
+    CRM_CHECK(element_xpath != NULL, return false); // Unsupported element
+
+    // Matches if and only if element_xpath is part of a changed path
+    element_regex = crm_strdup_printf("^%s(/|$)", element_xpath);
+
+    for (const xmlNode *change = first_named_child(patchset, XML_DIFF_CHANGE);
+         change != NULL; change = crm_next_same_xml(change)) {
+
+        const char *op = crm_element_value(change, F_CIB_OPERATION);
+        const char *diff_xpath = crm_element_value(change, XML_DIFF_PATH);
+
+        if (pcmk__str_eq(diff_xpath, element_regex, pcmk__str_regex)) {
+            // Change to an existing element
+            rc = true;
+            break;
+        }
+
+        if (pcmk__str_eq(op, "create", pcmk__str_none)
+            && pcmk__str_eq(diff_xpath, parent_xpath, pcmk__str_none)
+            && pcmk__xe_is(pcmk__xml_first_child(change), element)) {
+
+            // Newly added element
+            rc = true;
+            break;
+        }
+    }
+
+    free(element_regex);
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Check whether a given CIB element was modified in a CIB patchset
+ *
+ * \param[in] patchset  CIB XML patchset
+ * \param[in] element   XML tag of CIB element to check (\c NULL is equivalent
+ *                      to \c XML_TAG_CIB). Supported values include any CIB
+ *                      element supported by \c pcmk__cib_abs_xpath_for().
+ *
+ * \return \c true if \p element was modified, or \c false otherwise
+ */
+bool
+cib__element_in_patchset(const xmlNode *patchset, const char *element)
+{
+    int format = 1;
+
+    CRM_ASSERT(patchset != NULL);
+
+    crm_element_value_int(patchset, "format", &format);
+    switch (format) {
+        case 1:
+            return element_in_patchset_v1(patchset, element);
+
+        case 2:
+            return element_in_patchset_v2(patchset, element);
+
+        default:
+            crm_warn("Unknown patch format: %d", format);
+            return false;
+    }
 }
 
 /*!

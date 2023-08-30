@@ -23,8 +23,6 @@
 
 #include "pacemaker-attrd.h"
 
-extern crm_exit_t attrd_exit_status;
-
 static xmlNode *
 attrd_confirmation(int callid)
 {

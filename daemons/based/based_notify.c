@@ -61,10 +61,6 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
 
         do_send = TRUE;
 
-    } else if (pcmk_is_set(client->flags, cib_notify_replace)
-               && pcmk__str_eq(type, T_CIB_REPLACE_NOTIFY, pcmk__str_casei)) {
-        do_send = TRUE;
-
     } else if (pcmk_is_set(client->flags, cib_notify_confirm)
                && pcmk__str_eq(type, T_CIB_UPDATE_CONFIRM, pcmk__str_casei)) {
         do_send = TRUE;
@@ -223,86 +219,4 @@ cib_diff_notify(const char *op, int result, const char *call_id,
 
     cib_notify_send(update_msg);
     free_xml(update_msg);
-}
-
-void
-cib_replace_notify(const char *op, int result, const char *call_id,
-                   const char *client_id, const char *client_name,
-                   const char *origin, xmlNode *update, xmlNode *diff,
-                   uint32_t change_section)
-{
-    xmlNode *replace_msg = NULL;
-
-    int add_updates = 0;
-    int add_epoch = 0;
-    int add_admin_epoch = 0;
-
-    int del_updates = 0;
-    int del_epoch = 0;
-    int del_admin_epoch = 0;
-
-    uint8_t log_level = LOG_INFO;
-
-    if (diff == NULL) {
-        return;
-    }
-
-    if (result != pcmk_ok) {
-        log_level = LOG_WARNING;
-    }
-
-    cib_diff_version_details(diff, &add_admin_epoch, &add_epoch, &add_updates,
-                             &del_admin_epoch, &del_epoch, &del_updates);
-
-    if (del_updates < 0) {
-        crm_log_xml_debug(diff, "Bad replace diff");
-    }
-
-    if ((add_admin_epoch != del_admin_epoch)
-        || (add_epoch != del_epoch)
-        || (add_updates != del_updates)) {
-
-        do_crm_log(log_level,
-                   "Replaced CIB generation %d.%d.%d with %d.%d.%d from client "
-                   "%s%s%s (%s) (%s)",
-                   del_admin_epoch, del_epoch, del_updates,
-                   add_admin_epoch, add_epoch, add_updates,
-                   client_name,
-                   ((call_id != NULL)? " call " : ""), pcmk__s(call_id, ""),
-                   pcmk__s(origin, "unspecified peer"), pcmk_strerror(result));
-
-    } else if ((add_admin_epoch != 0)
-               || (add_epoch != 0)
-               || (add_updates != 0)) {
-
-        do_crm_log(log_level,
-                   "Local-only replace of CIB generation %d.%d.%d from client "
-                   "%s%s%s (%s) (%s)",
-                   add_admin_epoch, add_epoch, add_updates,
-                   client_name,
-                   ((call_id != NULL)? " call " : ""), pcmk__s(call_id, ""),
-                   pcmk__s(origin, "unspecified peer"), pcmk_strerror(result));
-    }
-
-    replace_msg = create_xml_node(NULL, "notify-replace");
-
-    crm_xml_add(replace_msg, F_TYPE, T_CIB_NOTIFY);
-    crm_xml_add(replace_msg, F_SUBTYPE, T_CIB_REPLACE_NOTIFY);
-    crm_xml_add(replace_msg, F_CIB_OPERATION, op);
-    crm_xml_add(replace_msg, F_CIB_CLIENTID, client_id);
-    crm_xml_add(replace_msg, F_CIB_CALLID, call_id);
-    crm_xml_add(replace_msg, F_ORIG, origin);
-    crm_xml_add_int(replace_msg, F_CIB_RC, result);
-    crm_xml_add_ll(replace_msg, F_CIB_CHANGE_SECTION,
-                   (long long) change_section);
-    attach_cib_generation(replace_msg, "cib-replace-generation", update);
-
-    /* We can include update and diff if a replace callback needs them. Until
-     * then, avoid the overhead.
-     */
-
-    crm_log_xml_trace(replace_msg, "CIB replaced");
-
-    cib_notify_send(replace_msg);
-    free_xml(replace_msg);
 }

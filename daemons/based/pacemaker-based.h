@@ -42,7 +42,6 @@ enum cib_client_flags {
     // Notifications
     cib_notify_pre     = (UINT64_C(1) << 0),
     cib_notify_post    = (UINT64_C(1) << 1),
-    cib_notify_replace = (UINT64_C(1) << 2),
     cib_notify_confirm = (UINT64_C(1) << 3),
     cib_notify_diff    = (UINT64_C(1) << 4),
 
@@ -131,10 +130,6 @@ cib__op_fn_t based_get_op_function(const cib__operation_t *operation);
 void cib_diff_notify(const char *op, int result, const char *call_id,
                      const char *client_id, const char *client_name,
                      const char *origin, xmlNode *update, xmlNode *diff);
-void cib_replace_notify(const char *op, int result, const char *call_id,
-                        const char *client_id, const char *client_name,
-                        const char *origin, xmlNode *update, xmlNode *diff,
-                        uint32_t change_section);
 
 static inline const char *
 cib_config_lookup(const char *opt)

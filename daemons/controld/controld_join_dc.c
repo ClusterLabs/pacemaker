@@ -172,7 +172,6 @@ start_join_round(void)
         max_generation_xml = NULL;
     }
     controld_clear_fsa_input_flags(R_HAVE_CIB);
-    controld_forget_all_cib_replace_calls();
 }
 
 /*!
@@ -607,10 +606,6 @@ do_dc_join_finalize(long long action,
 
     rc = controld_globals.cib_conn->cmds->sync_from(controld_globals.cib_conn,
                                                     sync_from, NULL, cib_none);
-
-    if (pcmk_is_set(controld_globals.fsa_input_register, R_HAVE_CIB)) {
-        controld_record_cib_replace_call(rc);
-    }
     fsa_register_cib_callback(rc, sync_from, finalize_sync_callback);
 }
 
@@ -628,8 +623,6 @@ void
 finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
     CRM_LOG_ASSERT(-EPERM != rc);
-
-    controld_forget_cib_replace_call(call_id);
 
     if (rc != pcmk_ok) {
         const char *sync_from = (const char *) user_data;
@@ -678,8 +671,6 @@ join_node_state_commit_callback(xmlNode *msg, int call_id, int rc,
                                 xmlNode *output, void *user_data)
 {
     const char *node = user_data;
-
-    controld_forget_cib_replace_call(call_id);
 
     if (rc != pcmk_ok) {
         fsa_data_t *msg_data = NULL;    // for register_fsa_error() macro
@@ -781,7 +772,6 @@ do_dc_join_ack(long long action,
                            |cib_xpath
                            |cib_multiple
                            |cib_transaction);
-    free(xpath);
     if (rc != pcmk_ok) {
         goto done;
     }
@@ -817,12 +807,11 @@ do_dc_join_ack(long long action,
     // Commit the transaction
     rc = cib->cmds->end_transaction(cib, true, cib_scope_local);
     fsa_register_cib_callback(rc, join_from, join_node_state_commit_callback);
-    if (rc >= 0) {
-        // Expect a CIB replacement
-        controld_record_cib_replace_call(rc);
 
+    if (rc > 0) {
         // join_from will be freed after callback
-        return;
+        join_from = NULL;
+        rc = pcmk_ok;
     }
 
 done:
@@ -832,6 +821,7 @@ done:
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
     free(join_from);
+    free(xpath);
 }
 
 void
