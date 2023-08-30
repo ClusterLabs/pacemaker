@@ -1,14 +1,11 @@
-Advanced Configuration
-----------------------
+Moving Resources
+----------------
 
 .. index::
    single: resource; move
 
-Moving Resources
-################
-
 Moving Resources Manually
-_________________________
+#########################
 
 There are primarily two occasions when you would want to move a resource from
 its current location: when the whole node is under maintenance, and when a
@@ -19,7 +16,7 @@ single resource needs to be moved.
    single: node; standby mode
 
 Standby Mode
-~~~~~~~~~~~~
+____________
 
 Since everything eventually comes down to a score, you could create constraints
 for every resource to prevent them from running on one node. While Pacemaker
@@ -58,7 +55,7 @@ A cluster node in standby mode will not run resources, but still contributes to
 quorum, and may fence or be fenced by nodes.
 
 Moving One Resource
-~~~~~~~~~~~~~~~~~~~
+___________________
 
 When only one resource is required to move, we could do this by creating
 location constraints.  However, once again we provide a user-friendly shortcut
@@ -124,9 +121,10 @@ constraint will prevent the resource from running on that node until
 cluster node is no longer available!
 
 In some cases, such as when ``resource-stickiness`` is set to ``INFINITY``, it
-is possible that you will end up with the problem described in
-:ref:`node-score-equal`. The tool can detect some of these cases and deals with
-them by creating both positive and negative constraints. For example:
+is possible that you will end up with nodes with the same score, forcing the
+cluster to choose one (which may not be the one you want). The tool can detect
+some of these cases and deals with them by creating both positive and negative
+constraints. For example:
 
 .. code-block:: xml
 
@@ -136,7 +134,7 @@ them by creating both positive and negative constraints. For example:
 which has the same long-term consequences as discussed earlier.
 
 Moving Resources Due to Connectivity Changes
-____________________________________________
+############################################
 
 You can configure the cluster to move resources when external connectivity is
 lost in two steps.
@@ -146,7 +144,7 @@ lost in two steps.
    single: ping resource
 
 Tell Pacemaker to Monitor Connectivity
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+______________________________________
 
 First, add an ``ocf:pacemaker:ping`` resource to the cluster. The ``ping``
 resource uses the system utility of the same name to a test whether a list of
@@ -215,12 +213,12 @@ with a description of the most interesting parameters.
    deal with the connectivity status that ``ocf:pacemaker:ping`` is recording.
 
 Tell Pacemaker How to Interpret the Connectivity Data
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+_____________________________________________________
 
 .. important::
 
-   Before attempting the following, make sure you understand
-   :ref:`rules`.
+   Before attempting the following, make sure you understand rules. See the
+   "Rules" chapter of the *Pacemaker Explained* document for details.
 
 There are a number of ways to use the connectivity data.
 

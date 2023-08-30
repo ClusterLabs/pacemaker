@@ -23,6 +23,7 @@ Table of Contents
    configuring
    tools
    administrative
+   moving
    troubleshooting
    upgrading
    alerts

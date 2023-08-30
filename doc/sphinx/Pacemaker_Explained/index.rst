@@ -26,7 +26,6 @@ Table of Contents
    fencing
    alerts
    rules
-   advanced-options
    collective
    reusing-configuration
    utilization
