@@ -277,9 +277,10 @@ values, by running the ``man pacemaker-schedulerd`` and
    |                           |         |                                                    |
    |                           |         | Whether resources that have been deleted from      |
    |                           |         | the configuration should be stopped. This value    |
-   |                           |         | takes precedence over ``is-managed`` (that is,     |
-   |                           |         | even unmanaged resources will be stopped when      |
-   |                           |         | orphaned if this value is ``true``                 |
+   |                           |         | takes precedence over                              |
+   |                           |         | :ref:`is-managed <is_managed>` (that is, even      |
+   |                           |         | unmanaged resources will be stopped when orphaned  |
+   |                           |         | if this value is ``true``).                        |
    +---------------------------+---------+----------------------------------------------------+
    | stop-orphan-actions       | true    | .. index::                                         |
    |                           |         |    pair: cluster option; stop-orphan-actions       |
@@ -305,18 +306,28 @@ values, by running the ``man pacemaker-schedulerd`` and
    |                           |         | pre-existing state of resources when the cluster   |
    |                           |         | starts                                             |
    +---------------------------+---------+----------------------------------------------------+
-   | maintenance-mode          | false   | .. index::                                         |
+   | maintenance-mode          | false   | .. _maintenance_mode:                              |
+   |                           |         |                                                    |
+   |                           |         | .. index::                                         |
    |                           |         |    pair: cluster option; maintenance-mode          |
    |                           |         |                                                    |
-   |                           |         | Whether the cluster should refrain from            |
-   |                           |         | monitoring, starting and stopping resources        |
+   |                           |         | If true, the cluster will not start or stop any    |
+   |                           |         | resource in the cluster, and any recurring         |
+   |                           |         | operations (expect those specifying ``role`` as    |
+   |                           |         | ``Stopped``) will be paused. If true, this         |
+   |                           |         | overrides the                                      |
+   |                           |         | :ref:`maintenance <node_maintenance>` node         |
+   |                           |         | attribute, :ref:`is-managed <is_managed>` and      |
+   |                           |         | :ref:`maintenance <rsc_maintenance>` resource      |
+   |                           |         | meta-attributes, and :ref:`enabled <op_enabled>`   |
+   |                           |         | operation meta-attribute.                          |
    +---------------------------+---------+----------------------------------------------------+
    | stonith-enabled           | true    | .. index::                                         |
    |                           |         |    pair: cluster option; stonith-enabled           |
    |                           |         |                                                    |
    |                           |         | Whether the cluster is allowed to fence nodes      |
    |                           |         | (for example, failed nodes and nodes with          |
-   |                           |         | resources that can't be stopped.                   |
+   |                           |         | resources that can't be stopped).                  |
    |                           |         |                                                    |
    |                           |         | If true, at least one fence device must be         |
    |                           |         | configured before resources are allowed to run.    |

@@ -106,19 +106,21 @@ XML attributes take precedence over ``nvpair`` elements if both are specified.
    |                |                                   | * ``standby:`` Move *all* resources away from the   |
    |                |                                   |   node on which the resource failed.                |
    +----------------+-----------------------------------+-----------------------------------------------------+
-   | enabled        | TRUE                              | .. index::                                          |
+   | enabled        | TRUE                              | .. _op_enabled:                                     |
+   |                |                                   |                                                     |
+   |                |                                   | .. index::                                          |
    |                |                                   |    single: enabled; action property                 |
    |                |                                   |    single: action; property, enabled                |
    |                |                                   |                                                     |
    |                |                                   | If ``false``, ignore this operation definition.     |
-   |                |                                   | This is typically used to pause a particular        |
-   |                |                                   | recurring ``monitor`` operation; for instance, it   |
-   |                |                                   | can complement the respective resource being        |
-   |                |                                   | unmanaged (``is-managed=false``), as this alone     |
-   |                |                                   | will :ref:`not block any configured monitoring      |
-   |                |                                   | <s-monitoring-unmanaged>`.  Disabling the operation |
-   |                |                                   | does not suppress all actions of the given type.    |
-   |                |                                   | Allowed values: ``true``, ``false``.                |
+   |                |                                   | This does not suppress all actions of this type,    |
+   |                |                                   | but is typically used to pause a recurring monitor. |
+   |                |                                   | This can complement the resource being unmanaged    |
+   |                |                                   | (:ref:`is-managed <is_managed>` set to ``false``),  |
+   |                |                                   | which does not stop recurring operations.           |
+   |                |                                   | Maintenance mode, which does stop configured this   |
+   |                |                                   | monitors, overrides this setting. Allowed values:   |
+   |                |                                   | ``true``, ``false``.                                |
    +----------------+-----------------------------------+-----------------------------------------------------+
    | record-pending | TRUE                              | .. index::                                          |
    |                |                                   |    single: record-pending; action property          |
@@ -220,51 +222,6 @@ who want to know when an administrator manually starts a service by mistake).
    Currently, monitors with ``role=Stopped`` are not implemented for
    :ref:`clone <s-resource-clone>` resources.
 
-.. _s-monitoring-unmanaged:
-
-Monitoring Resources When Administration is Disabled
-####################################################
-
-Recurring ``monitor`` operations behave differently under various administrative
-settings:
-
-* When a resource is unmanaged (by setting ``is-managed=false``): No monitors
-  will be stopped.
-
-  If the unmanaged resource is stopped on a node where the cluster thinks it
-  should be running, the cluster will detect and report that it is not, but it
-  will not consider the monitor failed, and will not try to start the resource
-  until it is managed again.
-
-  Starting the unmanaged resource on a different node is strongly discouraged
-  and will at least cause the cluster to consider the resource failed, and
-  may require the resource's ``target-role`` to be set to ``Stopped`` then
-  ``Started`` to be recovered.
-
-* When a resource is put into maintenance mode (by setting
-  ``maintenance=true``): The resource will be marked as unmanaged. (This
-  overrides ``is-managed=true``.)
-
-  Additionally, all monitor operations will be stopped, except those specifying
-  ``role`` as ``Stopped`` (which will be newly initiated if appropriate). As
-  with unmanaged resources in general, starting a resource on a node other than
-  where the cluster expects it to be will cause problems.
-
-* When a node is put into standby: All resources will be moved away from the
-  node, and all ``monitor`` operations will be stopped on the node, except those
-  specifying ``role`` as ``Stopped`` (which will be newly initiated if
-  appropriate).
-
-* When a node is put into maintenance mode: All resources that are active on the
-  node will be marked as in maintenance mode. See above for more details.
-
-* When the cluster is put into maintenance mode: All resources in the cluster
-  will be marked as in maintenance mode. See above for more details.
-
-A resource is in maintenance mode if the cluster, the node where the resource
-is active, or the resource itself is configured to be in maintenance mode. If a
-resource is in maintenance mode, then it is also unmanaged. However, if a
-resource is unmanaged, it is not necessarily in maintenance mode.
 
 .. _s-operation-defaults:
 
