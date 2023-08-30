@@ -95,6 +95,38 @@ int attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
 extern cib_t *the_cib;
 extern crm_exit_t attrd_exit_status;
 
+typedef struct attribute_s {
+    char *uuid;                  // TODO: Remove if at all possible
+    char *id;
+    char *set_id;
+    char *set_type;
+    GHashTable *values;
+    int update;
+    int timeout_ms;
+
+    // @TODO Refactor these three as a bitmask
+    // Whether attribute value has changed since last write
+    bool changed;
+
+    bool unknown_peer_uuids;    // Whether we know we're missing a peer uuid
+    gboolean is_private;        // Whether to keep this attribute out of the CIB
+
+    mainloop_timer_t *timer;
+
+    char *user;
+
+    gboolean force_write;       // Flag for updating attribute by ignoring delay
+} attribute_t;
+
+typedef struct attribute_value_s {
+        uint32_t nodeid;
+        gboolean is_remote;
+        char *nodename;
+        char *current;
+        char *requested;
+        gboolean seen;
+} attribute_value_t;
+
 /* Alerts */
 
 extern lrmd_t *the_lrmd;
@@ -102,8 +134,9 @@ extern crm_trigger_t *attrd_config_read;
 
 void attrd_lrmd_disconnect(void);
 gboolean attrd_read_options(gpointer user_data);
-int attrd_send_attribute_alert(const char *node, int nodeid,
-                               const char *attr, const char *value);
+void attrd_record_alert_attribute_value(const attribute_value_t *attr_value);
+void attrd_send_attribute_alerts_all(const attribute_t *attr);
+void attrd_free_alert_attribute_value_table(void);
 
 // Elections
 void attrd_election_init(void);
@@ -115,37 +148,6 @@ bool attrd_check_for_new_writer(const crm_node_t *peer, const xmlNode *xml);
 void attrd_declare_winner(void);
 void attrd_remove_voter(const crm_node_t *peer);
 void attrd_xml_add_writer(xmlNode *xml);
-
-typedef struct attribute_s {
-    char *uuid; /* TODO: Remove if at all possible */
-    char *id;
-    char *set_id;
-    char *set_type;
-    GHashTable *values;
-    int update;
-    int timeout_ms;
-
-    /* TODO: refactor these three as a bitmask */
-    bool changed; /* whether attribute value has changed since last write */
-    bool unknown_peer_uuids; /* whether we know we're missing a peer uuid */
-    gboolean is_private; /* whether to keep this attribute out of the CIB */
-
-    mainloop_timer_t *timer;
-
-    char *user;
-
-    gboolean force_write; /* Flag for updating attribute by ignoring delay */
-
-} attribute_t;
-
-typedef struct attribute_value_s {
-        uint32_t nodeid;
-        gboolean is_remote;
-        char *nodename;
-        char *current;
-        char *requested;
-        gboolean seen;
-} attribute_value_t;
 
 extern crm_cluster_t *attrd_cluster;
 extern GHashTable *attributes;

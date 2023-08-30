@@ -239,6 +239,8 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *use
         case pcmk_ok:
             level = LOG_INFO;
             last_cib_op_done = call_id;
+            attrd_send_attribute_alerts_all(a);
+
             if (a->timer && !a->timeout_ms) {
                 // Remove temporary dampening for failed writes
                 mainloop_timer_del(a->timer);
@@ -396,42 +398,6 @@ done:
     return rc;
 }
 
-static void
-send_alert_attributes_value(attribute_t *a, GHashTable *t)
-{
-    int rc = 0;
-    attribute_value_t *at = NULL;
-    GHashTableIter vIter;
-
-    g_hash_table_iter_init(&vIter, t);
-
-    while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & at)) {
-        rc = attrd_send_attribute_alert(at->nodename, at->nodeid,
-                                        a->id, at->current);
-        crm_trace("Sent alerts for %s[%s]=%s: nodeid=%d rc=%d",
-                  a->id, at->nodename, at->current, at->nodeid, rc);
-    }
-}
-
-/*!
- * \internal
- * \brief Record an attribute value to use when sending alerts
- *
- * \param[in,out] table       Table of attribute values
- * \param[in]     attr_value  Attribute value to record
- */
-static void
-record_alert_attribute_value(GHashTable *table,
-                             const attribute_value_t *attr_value)
-{
-    attribute_value_t *copy = attrd_copy_attribute_value(attr_value);
-
-    if (copy == NULL) {
-        return;
-    }
-    g_hash_table_insert(table, copy->nodename, copy);
-}
-
 mainloop_timer_t *
 attrd_add_timer(const char *id, int timeout_ms, attribute_t *attr)
 {
@@ -445,7 +411,6 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
     const char *set_type = NULL;
     attribute_value_t *v = NULL;
     GHashTableIter iter;
-    GHashTable *alert_attribute_value = NULL;
     int rc = pcmk_ok;
 
     if (a == NULL) {
@@ -512,9 +477,6 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
     /* Attribute will be written shortly, so clear forced write flag */
     a->force_write = FALSE;
 
-    /* Make the table for the attribute trap */
-    alert_attribute_value = pcmk__strikey_table(NULL, attrd_free_attribute_value);
-
     /* Iterate over each peer value of this attribute */
     g_hash_table_iter_init(&iter, a->values);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & v)) {
@@ -564,14 +526,10 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
                   peer->uname, peer->uuid, peer->id, v->nodeid);
         cib_updates++;
 
-        /* Preservation of the attribute to transmit alert */
-        record_alert_attribute_value(alert_attribute_value, v);
+        // Save the attribute value for use when sending alerts
+        attrd_record_alert_attribute_value(v);
 
-        free(v->requested);
-        v->requested = NULL;
-        if (v->current) {
-            v->requested = strdup(v->current);
-        }
+        pcmk__str_update(&(v->requested), v->current);
     }
 
     if (private_updates) {
@@ -592,20 +550,14 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
                  a->id, pcmk__s(a->uuid, "n/a"), pcmk__s(a->set_id, "n/a"));
 
         pcmk__str_update(&id, a->id);
-        if (the_cib->cmds->register_callback_full(the_cib, a->update,
-                                                  CIB_OP_TIMEOUT_S, FALSE, id,
-                                                  "attrd_cib_callback",
-                                                  attrd_cib_callback, free)) {
-            // Transmit alert of the attribute
-            send_alert_attributes_value(a, alert_attribute_value);
-        }
+        the_cib->cmds->register_callback_full(the_cib, a->update,
+                                              CIB_OP_TIMEOUT_S, FALSE, id,
+                                              "attrd_cib_callback",
+                                              attrd_cib_callback, free);
     }
 
 done:
     the_cib->cmds->end_transaction(the_cib, false, cib_none);
-    if (alert_attribute_value != NULL) {
-        g_hash_table_destroy(alert_attribute_value);
-    }
 }
 
 /*!

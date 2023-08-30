@@ -20,6 +20,7 @@
 #include "pacemaker-attrd.h"
 
 static GList *attrd_alert_list = NULL;
+static GHashTable *alert_attribute_value_table = NULL;
 
 static void
 attrd_lrmd_callback(lrmd_event_data_t * op)
@@ -124,13 +125,96 @@ attrd_read_options(gpointer user_data)
     return TRUE;
 }
 
-int
-attrd_send_attribute_alert(const char *node, int nodeid,
-                           const char *attr, const char *value)
+/*!
+ * \internal
+ * \brief Record an attribute value to use when sending alerts
+ *
+ * \param[in] attr_value  Attribute value to record
+ *
+ * \note The table stores attribute values for at most one attribute at a time.
+ */
+void
+attrd_record_alert_attribute_value(const attribute_value_t *attr_value)
+{
+    attribute_value_t *copy = attrd_copy_attribute_value(attr_value);
+
+    if (copy == NULL) {
+        return;
+    }
+
+    if (alert_attribute_value_table == NULL) {
+        alert_attribute_value_table =
+            pcmk__strikey_table(NULL, attrd_free_attribute_value);
+    }
+    g_hash_table_insert(alert_attribute_value_table, copy->nodename, copy);
+}
+
+/*!
+ * \internal
+ * \brief Send alerts for attribute value change on one node
+ *
+ * \param[in] node_name  Name of node with attribute change
+ * \param[in] nodeid     Node ID of node with attribute change
+ * \param[in] attr       Name of attribute that changed
+ * \param[in] value      New value of attribute that changed
+ *
+ * \retval \c pcmk_ok on success
+ * \retval -1 if some alert agents failed
+ * \retval -2 if all alert agents failed
+ *
+ * \todo Use legacy or standard Pacemaker return codes
+ */
+static int
+send_attribute_alerts_one(const char *node_name, int nodeid, const char *attr,
+                          const char *value)
 {
     if (attrd_alert_list == NULL) {
         return pcmk_ok;
     }
     return lrmd_send_attribute_alert(attrd_lrmd_connect(), attrd_alert_list,
-                                     node, nodeid, attr, value);
+                                     node_name, nodeid, attr, value);
+}
+
+/*!
+ * \internal
+ * \brief Send all alerts for an attribute value change
+ *
+ * \param[in] attr  Attribute that changed
+ */
+void
+attrd_send_attribute_alerts_all(const attribute_t *attr)
+{
+    GHashTableIter iter;
+    attribute_value_t *attr_value = NULL;
+
+    if (alert_attribute_value_table == NULL) {
+        return;
+    }
+
+    g_hash_table_iter_init(&iter, alert_attribute_value_table);
+
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &attr_value)) {
+        int rc = send_attribute_alerts_one(attr_value->nodename,
+                                           attr_value->nodeid, attr->id,
+                                           attr_value->current);
+
+        crm_trace("%s alert for %s[%s]=%s " CRM_XS " nodeid=%d rc=%d",
+                  ((rc == pcmk_ok)? "Sent" : "Failed to send"), attr->id,
+                  attr_value->nodename, attr_value->current, attr_value->nodeid,
+                  rc);
+    }
+    g_hash_table_remove_all(alert_attribute_value_table);
+}
+
+/*!
+ * \internal
+ * \brief Free the table of attribute values saved for use when sending alerts
+ */
+void
+attrd_free_alert_attribute_value_table(void)
+{
+    if (alert_attribute_value_table != NULL) {
+        g_hash_table_destroy(alert_attribute_value_table);
+        alert_attribute_value_table = NULL;
+    }
 }

@@ -206,6 +206,7 @@ main(int argc, char **argv)
         }
 
         attrd_free_waitlist();
+        attrd_free_alert_attribute_value_table();
         pcmk_cluster_free(attrd_cluster);
         g_hash_table_destroy(attributes);
     }
