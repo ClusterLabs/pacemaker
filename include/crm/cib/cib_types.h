@@ -307,6 +307,18 @@ typedef struct cib_api_operations_s {
      * \return Legacy Pacemaker return code
      */
     int (*end_transaction)(cib_t *cib, bool commit, int call_options);
+
+    /*!
+     * \brief Set the user as whom all CIB requests via methods will be executed
+     *
+     * By default, the value of the \c CIB_user environment variable is used if
+     * set. Otherwise, \c root is used.
+     *
+     * \param[in,out] cib   CIB connection
+     * \param[in]     user  Name of user whose permissions to use when
+     *                      processing requests
+     */
+    void (*set_user)(cib_t *cib, const char *user);
 } cib_api_operations_t;
 
 struct cib_s {
