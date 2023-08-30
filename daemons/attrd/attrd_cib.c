@@ -377,9 +377,8 @@ add_attr_update(const attribute_t *attr, const char *set_type,
         crm_xml_add(child, XML_NVPAIR_ATTR_NAME, attr->id);
         crm_xml_add(child, XML_NVPAIR_ATTR_VALUE, value);
 
-        rc = cib_internal_op(the_cib, PCMK__CIB_REQUEST_MODIFY, NULL,
-                             XML_CIB_TAG_STATUS, update, NULL,
-                             cib_can_create|cib_transaction, attr->user);
+        rc = the_cib->cmds->modify(the_cib, XML_CIB_TAG_STATUS, update,
+                                   cib_can_create|cib_transaction);
         free_xml(update);
 
     } else {
@@ -387,8 +386,8 @@ add_attr_update(const attribute_t *attr, const char *set_type,
                                         nodeid, nodeid, set_type, set_id,
                                         attr_id, attr->id);
 
-        rc = cib_internal_op(the_cib, PCMK__CIB_REQUEST_DELETE, NULL, xpath,
-                             NULL, NULL, cib_xpath|cib_transaction, attr->user);
+        rc = the_cib->cmds->remove(the_cib, xpath, NULL,
+                                   cib_xpath|cib_transaction);
         free(xpath);
     }
 
@@ -444,6 +443,7 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
         }
 
         // Initiate a transaction for all the peer value updates
+        the_cib->cmds->set_user(the_cib, a->user);
         rc = the_cib->cmds->init_transaction(the_cib);
         if (rc != pcmk_ok) {
             crm_err("Failed to write %s (id %s, set %s): Could not initiate "
@@ -540,10 +540,7 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
     if (cib_updates > 0) {
         char *id = NULL;
 
-        // Call cib_internal_op() directly to pass a->user
-        a->update = cib_internal_op(the_cib, PCMK__CIB_REQUEST_COMMIT_TRANSACT,
-                                    NULL, NULL, the_cib->transaction, NULL,
-                                    cib_none, a->user);
+        a->update = the_cib->cmds->end_transaction(the_cib, true, cib_none);
 
         crm_info("Sent CIB request %d with %d change%s for %s (id %s, set %s)",
                  a->update, cib_updates, pcmk__plural_s(cib_updates),
@@ -557,7 +554,9 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
     }
 
 done:
+    // Discard transaction (a no-op if we already committed)
     the_cib->cmds->end_transaction(the_cib, false, cib_none);
+    the_cib->cmds->set_user(the_cib, NULL);
 }
 
 /*!
