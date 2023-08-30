@@ -7,49 +7,6 @@
 Resource Constraints
 --------------------
 
-.. index::
-   single: resource; score
-   single: node; score
-
-Scores
-######
-
-Scores of all kinds are integral to how the cluster works.
-Practically everything from moving a resource to deciding which
-resource to stop in a degraded cluster is achieved by manipulating
-scores in some way.
-
-Scores are calculated per resource and node. Any node with a
-negative score for a resource can't run that resource. The cluster
-places a resource on the node with the highest score for it.
-
-Infinity Math
-_____________
-
-Pacemaker implements **INFINITY** (or equivalently, **+INFINITY**) internally as a
-score of 1,000,000. Addition and subtraction with it follow these three basic
-rules:
-
-* Any value + **INFINITY** = **INFINITY**
-
-* Any value - **INFINITY** = -**INFINITY**
-
-* **INFINITY** - **INFINITY** = **-INFINITY**
-
-.. note::
-
-   What if you want to use a score higher than 1,000,000? Typically this possibility
-   arises when someone wants to base the score on some external metric that might
-   go above 1,000,000.
-
-   The short answer is you can't.
-
-   The long answer is it is sometimes possible work around this limitation
-   creatively. You may be able to set the score to some computed value based on
-   the external metric rather than use the metric directly. For nodes, you can
-   store the metric as a node attribute, and query the attribute when computing
-   the score (possibly as part of a custom resource agent).
-
 .. _location-constraint:
 
 .. index::
