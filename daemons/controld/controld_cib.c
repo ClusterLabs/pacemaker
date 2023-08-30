@@ -425,11 +425,12 @@ controld_delete_resource_history(const char *rsc_id, const char *node,
     char *desc = NULL;
     char *xpath = NULL;
     int rc = pcmk_rc_ok;
+    cib_t *cib = controld_globals.cib_conn;
 
     CRM_CHECK((rsc_id != NULL) && (node != NULL), return EINVAL);
 
     desc = crm_strdup_printf("resource history for %s on %s", rsc_id, node);
-    if (controld_globals.cib_conn == NULL) {
+    if (cib == NULL) {
         crm_err("Unable to clear %s: no CIB connection", desc);
         free(desc);
         return ENOTCONN;
@@ -437,9 +438,10 @@ controld_delete_resource_history(const char *rsc_id, const char *node,
 
     // Ask CIB to delete the entry
     xpath = crm_strdup_printf(XPATH_RESOURCE_HISTORY, node, rsc_id);
-    rc = cib_internal_op(controld_globals.cib_conn, PCMK__CIB_REQUEST_DELETE,
-                         NULL, xpath, NULL, NULL, call_options|cib_xpath,
-                         user_name);
+
+    cib->cmds->set_user(cib, user_name);
+    rc = cib->cmds->remove(cib, xpath, NULL, call_options|cib_xpath);
+    cib->cmds->set_user(cib, NULL);
 
     if (rc < 0) {
         rc = pcmk_legacy2rc(rc);
@@ -832,14 +834,13 @@ int
 controld_update_cib(const char *section, xmlNode *data, int options,
                     void (*callback)(xmlNode *, int, int, xmlNode *, void *))
 {
+    cib_t *cib = controld_globals.cib_conn;
     int cib_rc = -ENOTCONN;
 
     CRM_ASSERT(data != NULL);
 
-    if (controld_globals.cib_conn != NULL) {
-        cib_rc = cib_internal_op(controld_globals.cib_conn,
-                                 PCMK__CIB_REQUEST_MODIFY, NULL, section,
-                                 data, NULL, options, NULL);
+    if (cib != NULL) {
+        cib_rc = cib->cmds->modify(cib, section, data, options);
         if (cib_rc >= 0) {
             crm_debug("Submitted CIB update %d for %s section",
                       cib_rc, section);
