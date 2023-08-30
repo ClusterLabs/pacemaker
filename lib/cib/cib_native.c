@@ -388,6 +388,7 @@ cib_native_free(cib_t *cib)
         free(native->token);
         free(cib->variant_opaque);
         free(cib->cmds);
+        free(cib->user);
         free(cib);
     }
 
