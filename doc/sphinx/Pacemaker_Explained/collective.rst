@@ -1,5 +1,13 @@
-Advanced Resource Types
------------------------
+.. index:
+   single: collective resource
+   single: resource; collective
+
+Collective Resources
+--------------------
+
+Pacemaker supports several types of *collective* resources, which consist of
+multiple, related resource instances.
+
 
 .. index:
    single: group resource

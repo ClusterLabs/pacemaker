@@ -27,7 +27,7 @@ Table of Contents
    alerts
    rules
    advanced-options
-   advanced-resources
+   collective
    reusing-configuration
    utilization
    acls
