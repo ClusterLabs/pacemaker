@@ -273,39 +273,44 @@ bind_and_listen(struct addrinfo *addr)
 
     fd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
     if (fd < 0) {
-        crm_perror(LOG_ERR, "Listener socket creation failed");
-        return -1;
+        rc = errno;
+        crm_err("Listener socket creation failed: %", pcmk_rc_str(rc));
+        return -rc;
     }
 
     /* reuse address */
     optval = 1;
     rc = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
     if (rc < 0) {
-        crm_perror(LOG_ERR, "Local address reuse not allowed on %s", buffer);
+        rc = errno;
+        crm_err("Local address reuse not allowed on %s: %s", buffer, pcmk_rc_str(rc));
         close(fd);
-        return -1;
+        return -rc;
     }
 
     if (addr->ai_family == AF_INET6) {
         optval = 0;
         rc = setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &optval, sizeof(optval));
         if (rc < 0) {
-            crm_perror(LOG_INFO, "Couldn't disable IPV6-only on %s", buffer);
+            rc = errno;
+            crm_err("Couldn't disable IPV6-only on %s: %s", buffer, pcmk_rc_str(rc));
             close(fd);
-            return -1;
+            return -rc;
         }
     }
 
     if (bind(fd, addr->ai_addr, addr->ai_addrlen) != 0) {
-        crm_perror(LOG_ERR, "Cannot bind to %s", buffer);
+        rc = errno;
+        crm_err("Cannot bind to %s: %s", buffer, pcmk_rc_str(rc));
         close(fd);
-        return -1;
+        return -rc;
     }
 
     if (listen(fd, 10) == -1) {
-        crm_perror(LOG_ERR, "Cannot listen on %s", buffer);
+        rc = errno;
+        crm_err("Cannot listen on %s: %s", buffer, pcmk_rc_str(rc));
         close(fd);
-        return -1;
+        return -rc;
     }
     return fd;
 }
@@ -394,7 +399,7 @@ lrmd_init_remote_tls_server(void)
         if (iter->ai_family == filter) {
             ssock = bind_and_listen(iter);
         }
-        if (ssock != -1) {
+        if (ssock >= 0) {
             break;
         }
 
