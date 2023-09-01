@@ -337,6 +337,16 @@ int pcmk_show_result_code(xmlNodePtr *xml, int code, enum pcmk_result_type type,
 int pcmk_list_result_codes(xmlNodePtr *xml, enum pcmk_result_type type,
                            uint32_t flags);
 
+/*!
+ * \brief List all agents available for the named standard and/or provider
+ *
+ * \param[in,out] xml        The destination for the result, as an XML tree
+ * \param[in]     agent_spec STD[:PROV]
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_list_agents(xmlNodePtr *xml, char *agent_spec);
+
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
 
 /*!

@@ -1137,47 +1137,6 @@ delete(void)
 }
 
 static int
-list_agents(pcmk__output_t *out, const char *agent_spec)
-{
-    int rc = pcmk_rc_ok;
-    char *provider = strchr(agent_spec, ':');
-    lrmd_t *lrmd_conn = NULL;
-    lrmd_list_t *list = NULL;
-
-    rc = lrmd__new(&lrmd_conn, NULL, NULL, 0);
-    if (rc != pcmk_rc_ok) {
-        goto error;
-    }
-
-    if (provider) {
-        *provider++ = 0;
-    }
-
-    rc = lrmd_conn->cmds->list_agents(lrmd_conn, &list, agent_spec, provider);
-
-    if (rc > 0) {
-        rc = out->message(out, "agents-list", list, agent_spec, provider);
-    } else {
-        rc = pcmk_rc_error;
-    }
-
-error:
-    if (rc != pcmk_rc_ok) {
-        if (provider == NULL) {
-            g_set_error(&error, PCMK__RC_ERROR, rc,
-                        _("No agents found for standard '%s'"), agent_spec);
-        } else {
-            g_set_error(&error, PCMK__RC_ERROR, rc,
-                        _("No agents found for standard '%s' and provider '%s'"),
-                        agent_spec, provider);
-        }
-    }
-
-    lrmd_api_delete(lrmd_conn);
-    return rc;
-}
-
-static int
 list_providers(pcmk__output_t *out, const char *agent_spec)
 {
     int rc;
@@ -1860,7 +1819,7 @@ main(int argc, char **argv)
             break;
 
         case cmd_list_agents:
-            rc = list_agents(out, options.agent_spec);
+            rc = pcmk__list_agents(out, options.agent_spec);
             break;
 
         case cmd_metadata:
