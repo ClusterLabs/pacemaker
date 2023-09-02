@@ -350,7 +350,7 @@ fi
 case "$__OCF_ACTION" in
     start)        HealthSMART_start;;
     stop)         HealthSMART_stop;;
-    monitor)      HealthSMART_monitor;;
+    monitor)      HealthSMART_validate && HealthSMART_monitor;;
     validate-all) HealthSMART_validate;;
     reload-agent) HealthSMART_reload_agent;;
     meta-data)
