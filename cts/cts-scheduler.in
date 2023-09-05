@@ -209,6 +209,7 @@ TESTS = [
         [ "rule-int-parse-fail-default-str-no-match",
           "Integer rule values fail to parse, default to string "
 	          "comparison: no match" ],
+        [ "timeout-by-node", "Start timeout varies by node" ],
     ],
     [
         [ "order1", "Order start 1" ],

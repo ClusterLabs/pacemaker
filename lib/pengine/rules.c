@@ -318,6 +318,7 @@ typedef struct sorted_set_s {
     const char *name;           // This block's ID
     const char *special_name;   // ID that should sort first
     xmlNode *attr_set;          // This block
+    gboolean overwrite;         // Whether existing values will be overwritten
 } sorted_set_t;
 
 static gint
@@ -341,10 +342,14 @@ sort_pairs(gconstpointer a, gconstpointer b)
         return 1;
     }
 
+    /* If we're overwriting values, we want lowest score first, so the highest
+     * score is processed last; if we're not overwriting values, we want highest
+     * score first, so nothing else overwrites it.
+     */
     if (pair_a->score < pair_b->score) {
-        return 1;
+        return pair_a->overwrite? -1 : 1;
     } else if (pair_a->score > pair_b->score) {
-        return -1;
+        return pair_a->overwrite? 1 : -1;
     }
     return 0;
 }
@@ -443,7 +448,7 @@ unpack_attr_set(gpointer data, gpointer user_data)
  */
 static GList *
 make_pairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
-           const char *always_first)
+           const char *always_first, gboolean overwrite)
 {
     GList *unsorted = NULL;
 
@@ -468,6 +473,7 @@ make_pairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
             pair->name = ID(expanded_attr_set);
             pair->special_name = always_first;
             pair->attr_set = expanded_attr_set;
+            pair->overwrite = overwrite;
 
             score = crm_element_value(expanded_attr_set, XML_RULE_ATTR_SCORE);
             pair->score = char2score(score);
@@ -496,7 +502,7 @@ pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
                 const char *always_first, gboolean overwrite,
                 crm_time_t *next_change)
 {
-    GList *pairs = make_pairs(top, xml_obj, set_name, always_first);
+    GList *pairs = make_pairs(top, xml_obj, set_name, always_first, overwrite);
 
     if (pairs) {
         unpack_data_t data = {
