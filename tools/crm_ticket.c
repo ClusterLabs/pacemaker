@@ -746,8 +746,10 @@ main(int argc, char **argv)
 
     data_set = pe_new_working_set();
     if (data_set == NULL) {
-        crm_perror(LOG_CRIT, "Could not allocate working set");
-        exit_code = CRM_EX_OSERR;
+        rc = errno;
+        exit_code = pcmk_rc2exitc(rc);
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Could not allocate working set: %s", pcmk_rc_str(rc));
         goto done;
     }
     pe__set_working_set_flags(data_set,

@@ -852,7 +852,7 @@ main(int argc, char **argv)
     } else if (rc != pcmk_rc_ok) {
         exit_code = pcmk_rc2exitc(rc);
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Error performing operation: %s", pcmk_strerror(rc));
+                    "Error performing operation: %s", pcmk_rc_str(rc));
     }
 
 done:

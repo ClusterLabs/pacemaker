@@ -1088,7 +1088,7 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
 
         if (rc != pcmk_rc_ok) {
             g_set_error(&error, PCMK__RC_ERROR, rc,
-                        _("Could not get modified CIB: %s\n"), pcmk_strerror(rc));
+                        _("Could not get modified CIB: %s\n"), pcmk_rc_str(rc));
             g_list_free(before);
             free_xml(*cib_xml_copy);
             *cib_xml_copy = NULL;

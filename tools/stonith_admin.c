@@ -546,7 +546,7 @@ main(int argc, char **argv)
         case 'I':
             rc = pcmk__fence_installed(out, st, options.timeout*1000);
             if (rc != pcmk_rc_ok) {
-                out->err(out, "Failed to list installed devices: %s", pcmk_strerror(rc));
+                out->err(out, "Failed to list installed devices: %s", pcmk_rc_str(rc));
             }
 
             break;
@@ -554,7 +554,7 @@ main(int argc, char **argv)
         case 'L':
             rc = pcmk__fence_registered(out, st, target, options.timeout*1000);
             if (rc != pcmk_rc_ok) {
-                out->err(out, "Failed to list registered devices: %s", pcmk_strerror(rc));
+                out->err(out, "Failed to list registered devices: %s", pcmk_rc_str(rc));
             }
 
             break;
@@ -570,7 +570,7 @@ main(int argc, char **argv)
         case 's':
             rc = pcmk__fence_list_targets(out, st, device, options.timeout*1000);
             if (rc != pcmk_rc_ok) {
-                out->err(out, "Couldn't list targets: %s", pcmk_strerror(rc));
+                out->err(out, "Couldn't list targets: %s", pcmk_rc_str(rc));
             }
 
             break;

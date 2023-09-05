@@ -48,12 +48,15 @@ cib_rename(const char *old)
 
     umask(S_IWGRP | S_IWOTH | S_IROTH);
     new_fd = mkstemp(new);
-    crm_err("Archiving unusable file %s as %s", old, new);
+
     if ((new_fd < 0) || (rename(old, new) < 0)) {
-        crm_perror(LOG_ERR, "Couldn't rename %s as %s", old, new);
-        crm_err("Disabling disk writes and continuing");
+        crm_err("Couldn't archive unusable file %s (disabling disk writes and continuing)",
+                old);
         cib_writes_enabled = FALSE;
+    } else {
+        crm_err("Archived unusable file %s as %s", old, new);
     }
+
     if (new_fd > 0) {
         close(new_fd);
     }
@@ -110,7 +113,7 @@ static int cib_archive_filter(const struct dirent * a)
 
     if(stat(a_path, &s) != 0) {
         rc = errno;
-        crm_trace("%s - stat failed: %s (%d)", a->d_name, pcmk_strerror(rc), rc);
+        crm_trace("%s - stat failed: %s (%d)", a->d_name, pcmk_rc_str(rc), rc);
         rc = 0;
 
     } else if ((s.st_mode & S_IFREG) != S_IFREG) {
@@ -217,7 +220,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
         crm_warn("Primary configuration corrupt or unusable, trying backups in %s", cib_root);
         lpc = scandir(cib_root, &namelist, cib_archive_filter, cib_archive_sort);
         if (lpc < 0) {
-            crm_perror(LOG_NOTICE, "scandir(%s) failed", cib_root);
+            crm_err("scandir(%s) failed: %s", cib_root, pcmk_rc_str(errno));
         }
     }
 
@@ -421,7 +424,7 @@ write_cib_contents(gpointer p)
 
         pid = fork();
         if (pid < 0) {
-            crm_perror(LOG_ERR, "Disabling disk writes after fork failure");
+            crm_err("Disabling disk writes after fork failure: %s", pcmk_rc_str(errno));
             cib_writes_enabled = FALSE;
             return FALSE;
         }

@@ -242,7 +242,7 @@ remoted_spawn_pidone(int argc, char **argv, char **envp)
             // Child remains as pacemaker-remoted
             return;
         case -1:
-            perror("fork");
+            crm_err("fork failed: %s", pcmk_rc_str(errno));
     }
 
     /* Parent becomes the reaper of zombie processes */
