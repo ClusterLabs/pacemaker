@@ -338,6 +338,16 @@ int pcmk_list_result_codes(xmlNodePtr *xml, enum pcmk_result_type type,
                            uint32_t flags);
 
 /*!
+ * \brief List available providers for the given OCF agent
+ *
+ * \param[in,out] xml        The destination for the result, as an XML tree
+ * \param[in]     agent_spec Resource agent name
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_list_alternatives(xmlNodePtr *xml, const char *agent_spec);
+
+/*!
  * \brief List all agents available for the named standard and/or provider
  *
  * \param[in,out] xml        The destination for the result, as an XML tree
@@ -346,6 +356,25 @@ int pcmk_list_result_codes(xmlNodePtr *xml, enum pcmk_result_type type,
  * \return Standard Pacemaker return code
  */
 int pcmk_list_agents(xmlNodePtr *xml, char *agent_spec);
+
+/*!
+ * \brief List all available OCF providers for the given agent
+ *
+ * \param[in,out] xml        The destination for the result, as an XML tree
+ * \param[in]     agent_spec Resource agent name
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_list_providers(xmlNodePtr *xml, const char *agent_spec);
+
+/*!
+ * \brief List all available resource agent standards
+ *
+ * \param[in,out] xml        The destination for the result, as an XML tree
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_list_standards(xmlNodePtr *xml);
 
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
 

@@ -11,6 +11,9 @@
 
 #include <crm/common/output_internal.h>
 
+int pcmk__list_alternatives(pcmk__output_t *out, const char *agent_spec);
 int pcmk__list_agents(pcmk__output_t *out, char *agent_spec);
+int pcmk__list_providers(pcmk__output_t *out, const char *agent_spec);
+int pcmk__list_standards(pcmk__output_t *out);
 
 #endif /* PCMK__PCMKI_PCMKI_AGENTS__H */
