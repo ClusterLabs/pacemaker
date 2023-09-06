@@ -635,7 +635,7 @@ create_pending_start(pe_resource_t *rsc)
                  "Creating action for %s to represent already pending start",
                  rsc->id);
     start = start_action(rsc, rsc->allocated_to, TRUE);
-    pe__set_action_flags(start, pe_action_print_always);
+    pe__set_action_flags(start, pcmk_action_always_in_graph);
 }
 
 /*!
@@ -816,7 +816,7 @@ pcmk__primitive_create_actions(pe_resource_t *rsc)
         pe_rsc_trace(rsc, "Creating start action for promoted resource %s",
                      rsc->id);
         start = start_action(rsc, rsc->allocated_to, TRUE);
-        if (!pcmk_is_set(start->flags, pe_action_optional)) {
+        if (!pcmk_is_set(start->flags, pcmk_action_optional)) {
             // Recovery of a promoted resource
             pe_rsc_trace(rsc, "%s restart is required for recovery", rsc->id);
             need_stop = true;
@@ -1267,7 +1267,7 @@ stop_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
         }
 
         if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
-            pe__clear_action_flags(stop, pe_action_runnable);
+            pe__clear_action_flags(stop, pcmk_action_runnable);
         }
 
         if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_remove_after_stop)) {
@@ -1309,8 +1309,8 @@ start_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
 
     pcmk__order_vs_unfence(rsc, node, start, pe_order_implies_then);
 
-    if (pcmk_is_set(start->flags, pe_action_runnable) && !optional) {
-        pe__clear_action_flags(start, pe_action_optional);
+    if (pcmk_is_set(start->flags, pcmk_action_runnable) && !optional) {
+        pe__clear_action_flags(start, pcmk_action_optional);
     }
 
     if (is_expected_node(rsc, node)) {
@@ -1321,7 +1321,7 @@ start_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
                      "Start of multiply active resouce %s "
                      "on expected node %s will be a pseudo-action",
                      rsc->id, pe__node_name(node));
-        pe__set_action_flags(start, pe_action_pseudo);
+        pe__set_action_flags(start, pcmk_action_pseudo);
     }
 }
 
@@ -1347,7 +1347,7 @@ promote_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
     for (iter = action_list; iter != NULL; iter = iter->next) {
         pe_action_t *start = (pe_action_t *) iter->data;
 
-        if (!pcmk_is_set(start->flags, pe_action_runnable)) {
+        if (!pcmk_is_set(start->flags, pcmk_action_runnable)) {
             runnable = false;
         }
     }
@@ -1368,7 +1368,7 @@ promote_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
                          "Promotion of multiply active resouce %s "
                          "on expected node %s will be a pseudo-action",
                          rsc->id, pe__node_name(node));
-            pe__set_action_flags(promote, pe_action_pseudo);
+            pe__set_action_flags(promote, pcmk_action_pseudo);
         }
     } else {
         pe_rsc_trace(rsc, "Not promoting %s on %s: start unrunnable",
@@ -1378,7 +1378,7 @@ promote_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
         for (iter = action_list; iter != NULL; iter = iter->next) {
             pe_action_t *promote = (pe_action_t *) iter->data;
 
-            pe__clear_action_flags(promote, pe_action_runnable);
+            pe__clear_action_flags(promote, pcmk_action_runnable);
         }
         g_list_free(action_list);
     }

@@ -142,11 +142,9 @@ order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
         pe_action_t *action = iter->data;
 
         // The stop would never complete, so convert it into a pseudo-action.
-        pe__set_action_flags(action, pe_action_pseudo|pe_action_runnable);
+        pe__set_action_flags(action, pcmk_action_pseudo|pcmk_action_runnable);
 
         if (order_implicit) {
-            pe__set_action_flags(action, pe_action_implied_by_stonith);
-
             /* Order the stonith before the parent stop (if any).
              *
              * Also order the stonith before the resource stop, unless the
@@ -230,7 +228,8 @@ order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
             /* The demote would never complete and is now implied by the
              * fencing, so convert it into a pseudo-action.
              */
-            pe__set_action_flags(action, pe_action_pseudo|pe_action_runnable);
+            pe__set_action_flags(action,
+                                 pcmk_action_pseudo|pcmk_action_runnable);
 
             if (pe_rsc_is_bundled(rsc)) {
                 // Recovery will be ordered as usual after parent's implied stop
@@ -380,13 +379,13 @@ pcmk__fence_guest(pe_node_t *node)
      */
     stonith_op = pe_fence_op(node, fence_action, FALSE, "guest is unclean",
                              FALSE, node->details->data_set);
-    pe__set_action_flags(stonith_op, pe_action_pseudo|pe_action_runnable);
+    pe__set_action_flags(stonith_op, pcmk_action_pseudo|pcmk_action_runnable);
 
     /* We want to imply stops/demotes after the guest is stopped, not wait until
      * it is restarted, so we always order pseudo-fencing after stop, not start
      * (even though start might be closer to what is done for a real reboot).
      */
-    if ((stop != NULL) && pcmk_is_set(stop->flags, pe_action_pseudo)) {
+    if ((stop != NULL) && pcmk_is_set(stop->flags, pcmk_action_pseudo)) {
         pe_action_t *parent_stonith_op = pe_fence_op(stop->node, NULL, FALSE,
                                                      NULL, FALSE,
                                                      node->details->data_set);

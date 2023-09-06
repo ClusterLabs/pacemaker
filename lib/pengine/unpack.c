@@ -2348,7 +2348,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
         for (; gIter != NULL; gIter = gIter->next) {
             pe_action_t *stop = (pe_action_t *) gIter->data;
 
-            pe__set_action_flags(stop, pe_action_optional);
+            pe__set_action_flags(stop, pcmk_action_optional);
         }
 
         g_list_free(possible_matches);

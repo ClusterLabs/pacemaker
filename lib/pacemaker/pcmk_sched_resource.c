@@ -462,11 +462,11 @@ pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force,
                          op->uuid, rsc->id);
 
             if (pcmk__str_eq(op->task, PCMK_ACTION_STOP, pcmk__str_none)) {
-                pe__clear_action_flags(op, pe_action_optional);
+                pe__clear_action_flags(op, pcmk_action_optional);
 
             } else if (pcmk__str_eq(op->task, PCMK_ACTION_START,
                                     pcmk__str_none)) {
-                pe__clear_action_flags(op, pe_action_runnable);
+                pe__clear_action_flags(op, pcmk_action_runnable);
 
             } else {
                 // Cancel recurring actions, unless for stopped state
@@ -484,7 +484,7 @@ pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force,
                 if (!pcmk__str_eq(interval_ms_s, "0", pcmk__str_null_matches)
                     && !pcmk__str_eq(rc_stopped, target_rc_s, pcmk__str_none)) {
 
-                    pe__clear_action_flags(op, pe_action_runnable);
+                    pe__clear_action_flags(op, pcmk_action_runnable);
                 }
             }
         }

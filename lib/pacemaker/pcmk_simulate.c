@@ -51,7 +51,7 @@ create_action_name(const pe_action_t *action, bool verbose)
 
     if (action->node != NULL) {
         action_host = action->node->details->uname;
-    } else if (!pcmk_is_set(action->flags, pe_action_pseudo)) {
+    } else if (!pcmk_is_set(action->flags, pcmk_action_pseudo)) {
         action_host = "<none>";
     }
 
@@ -237,11 +237,11 @@ write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
         const char *color = "black";
         char *action_name = create_action_name(action, verbose);
 
-        if (pcmk_is_set(action->flags, pe_action_pseudo)) {
+        if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
             font = "orange";
         }
 
-        if (pcmk_is_set(action->flags, pe_action_dumped)) {
+        if (pcmk_is_set(action->flags, pcmk_action_added_to_graph)) {
             style = "bold";
             color = "green";
 
@@ -253,7 +253,7 @@ write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
                 goto do_not_write;
             }
 
-        } else if (pcmk_is_set(action->flags, pe_action_optional)) {
+        } else if (pcmk_is_set(action->flags, pcmk_action_optional)) {
             color = "blue";
             if (!all_actions) {
                 goto do_not_write;
@@ -261,10 +261,10 @@ write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
 
         } else {
             color = "red";
-            CRM_LOG_ASSERT(!pcmk_is_set(action->flags, pe_action_runnable));
+            CRM_LOG_ASSERT(!pcmk_is_set(action->flags, pcmk_action_runnable));
         }
 
-        pe__set_action_flags(action, pe_action_dumped);
+        pe__set_action_flags(action, pcmk_action_added_to_graph);
         fprintf(dot_strm, "\"%s\" [ style=%s color=\"%s\" fontcolor=\"%s\"]\n",
                 action_name, style, color, font);
   do_not_write:
@@ -289,8 +289,9 @@ write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
                 style = "bold";
             } else if (before->type == pe_order_none) {
                 continue;
-            } else if (pcmk_is_set(before->action->flags, pe_action_dumped)
-                       && pcmk_is_set(action->flags, pe_action_dumped)
+            } else if (pcmk_is_set(before->action->flags,
+                                   pcmk_action_added_to_graph)
+                       && pcmk_is_set(action->flags, pcmk_action_added_to_graph)
                        && before->type != pe_order_load) {
                 optional = false;
             }

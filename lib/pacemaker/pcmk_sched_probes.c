@@ -135,7 +135,7 @@ probe_action(pe_resource_t *rsc, pe_node_t *node)
 
     probe = custom_action(rsc, key, PCMK_ACTION_MONITOR, node, FALSE, TRUE,
                           rsc->cluster);
-    pe__clear_action_flags(probe, pe_action_optional);
+    pe__clear_action_flags(probe, pcmk_action_optional);
 
     pcmk__order_vs_unfence(rsc, node, probe, pe_order_optional);
     add_expected_result(probe, rsc, node);
@@ -269,7 +269,7 @@ pcmk__probe_rsc_on_node(pe_resource_t *rsc, pe_node_t *node)
     /* Prevent a start if the resource can't be probed, but don't cause the
      * resource or entire clone to stop if already active.
      */
-    if (!pcmk_is_set(probe->flags, pe_action_runnable)
+    if (!pcmk_is_set(probe->flags, pcmk_action_runnable)
         && (top->running_on == NULL)) {
         pe__set_order_flags(flags, pe_order_runnable_left);
     }
@@ -482,7 +482,7 @@ add_start_orderings_for_probe(pe_action_t *probe, pe_action_wrapper_t *after)
      * many instances before we know the state on all nodes.
      */
     if ((after->action->rsc->variant <= pcmk_rsc_variant_group)
-        || pcmk_is_set(probe->flags, pe_action_runnable)
+        || pcmk_is_set(probe->flags, pcmk_action_runnable)
         // The order type is already enforced for its parent.
         || pcmk_is_set(after->type, pe_order_runnable_left)
         || (pe__const_top_resource(probe->rsc, false) != after->action->rsc)
@@ -550,10 +550,10 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
     }
 
     // Avoid running into any possible loop
-    if (pcmk_is_set(after->flags, pe_action_tracking)) {
+    if (pcmk_is_set(after->flags, pcmk_action_detect_loop)) {
         return;
     }
-    pe__set_action_flags(after, pe_action_tracking);
+    pe__set_action_flags(after, pcmk_action_detect_loop);
 
     crm_trace("Adding probe restart orderings for '%s@%s then %s@%s'",
               probe->uuid, pe__node_name(probe->node),
@@ -582,7 +582,7 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
                 pe_action_t *then = (pe_action_t *) iter->data;
 
                 // Skip pseudo-actions (for example, those implied by fencing)
-                if (!pcmk_is_set(then->flags, pe_action_pseudo)) {
+                if (!pcmk_is_set(then->flags, pcmk_action_pseudo)) {
                     order_actions(probe, then, pe_order_optional);
                 }
             }
@@ -671,7 +671,7 @@ clear_actions_tracking_flag(pe_working_set_t *data_set)
     for (GList *iter = data_set->actions; iter != NULL; iter = iter->next) {
         pe_action_t *action = iter->data;
 
-        pe__clear_action_flags(action, pe_action_tracking);
+        pe__clear_action_flags(action, pcmk_action_detect_loop);
     }
 }
 

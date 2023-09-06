@@ -344,7 +344,7 @@ clone_min_ordering(const char *id,
      * considered runnable before allowing the pseudo-action to be runnable.
      */
     clone_min_met->required_runnable_before = clone_min;
-    pe__set_action_flags(clone_min_met, pe_action_requires_any);
+    pe__set_action_flags(clone_min_met, pcmk_action_min_runnable);
 
     // Order the actions for each clone instance before the pseudo-action
     for (GList *iter = rsc_first->children; iter != NULL; iter = iter->next) {
@@ -755,7 +755,7 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
         pe_action_t *unordered_action = get_pseudo_op(task, data_set);
 
         free(task);
-        pe__set_action_flags(unordered_action, pe_action_requires_any);
+        pe__set_action_flags(unordered_action, pcmk_action_min_runnable);
 
         for (xml_rsc = first_named_child(set1, XML_TAG_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
@@ -1163,7 +1163,7 @@ pcmk__order_stops_before_shutdown(pe_node_t *node, pe_action_t *shutdown_op)
 
         pe_rsc_trace(action->rsc, "Ordering %s before shutdown of %s",
                      action->uuid, pe__node_name(node));
-        pe__clear_action_flags(action, pe_action_optional);
+        pe__clear_action_flags(action, pcmk_action_optional);
         pcmk__new_ordering(action->rsc, NULL, action, NULL,
                            strdup(PCMK_ACTION_DO_SHUTDOWN), shutdown_op,
                            pe_order_optional|pe_order_runnable_left,
@@ -1240,7 +1240,7 @@ order_resource_actions_after(pe_action_t *first_action,
     }
 
     if ((first_action != NULL) && (first_action->rsc == rsc)
-        && pcmk_is_set(first_action->flags, pe_action_dangle)) {
+        && pcmk_is_set(first_action->flags, pcmk_action_migration_abort)) {
 
         pe_rsc_trace(rsc,
                      "Detected dangling migration ordering (%s then %s %s)",
@@ -1262,7 +1262,7 @@ order_resource_actions_after(pe_action_t *first_action,
         if (first_action != NULL) {
             order_actions(first_action, then_action_iter, flags);
         } else {
-            pe__clear_action_flags(then_action_iter, pe_action_runnable);
+            pe__clear_action_flags(then_action_iter, pcmk_action_runnable);
             crm_warn("%s of %s is unrunnable because there is no %s of %s "
                      "to order it after", then_action_iter->task, rsc->id,
                      order->lh_action_task, order->lh_rsc->id);

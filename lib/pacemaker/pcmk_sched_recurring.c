@@ -199,7 +199,7 @@ active_recurring_should_be_optional(const pe_resource_t *rsc,
     }
 
     if (!pcmk_is_set(rsc->cmds->action_flags(start, NULL),
-                     pe_action_optional)) {
+                     pcmk_action_optional)) {
         pe_rsc_trace(rsc, "%s will be mandatory because %s is",
                      key, start->uuid);
         return false;
@@ -217,7 +217,7 @@ active_recurring_should_be_optional(const pe_resource_t *rsc,
 
         const pe_action_t *op = (const pe_action_t *) iter->data;
 
-        if (pcmk_is_set(op->flags, pe_action_reschedule)) {
+        if (pcmk_is_set(op->flags, pcmk_action_reschedule)) {
             pe_rsc_trace(rsc,
                          "%s will be mandatory because "
                          "it needs to be rescheduled", key);
@@ -307,17 +307,17 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
     mon = custom_action(rsc, strdup(op->key), op->name, node, is_optional, TRUE,
                         rsc->cluster);
 
-    if (!pcmk_is_set(start->flags, pe_action_runnable)) {
+    if (!pcmk_is_set(start->flags, pcmk_action_runnable)) {
         pe_rsc_trace(rsc, "%s is unrunnable because start is", mon->uuid);
-        pe__clear_action_flags(mon, pe_action_runnable);
+        pe__clear_action_flags(mon, pcmk_action_runnable);
 
     } else if ((node == NULL) || !node->details->online
                || node->details->unclean) {
         pe_rsc_trace(rsc, "%s is unrunnable because no node is available",
                      mon->uuid);
-        pe__clear_action_flags(mon, pe_action_runnable);
+        pe__clear_action_flags(mon, pcmk_action_runnable);
 
-    } else if (!pcmk_is_set(mon->flags, pe_action_optional)) {
+    } else if (!pcmk_is_set(mon->flags, pcmk_action_optional)) {
         pe_rsc_info(rsc, "Start %s-interval %s for %s on %s",
                     pcmk__readable_interval(op->interval_ms), mon->task,
                     rsc->id, pe__node_name(node));
@@ -438,18 +438,18 @@ order_after_stops(pe_resource_t *rsc, const pe_node_t *node,
     for (GList *iter = stop_ops; iter != NULL; iter = iter->next) {
         pe_action_t *stop = (pe_action_t *) iter->data;
 
-        if (!pcmk_is_set(stop->flags, pe_action_optional)
-            && !pcmk_is_set(action->flags, pe_action_optional)
+        if (!pcmk_is_set(stop->flags, pcmk_action_optional)
+            && !pcmk_is_set(action->flags, pcmk_action_optional)
             && !pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
             pe_rsc_trace(rsc, "%s optional on %s: unmanaged",
                          action->uuid, pe__node_name(node));
-            pe__set_action_flags(action, pe_action_optional);
+            pe__set_action_flags(action, pcmk_action_optional);
         }
 
-        if (!pcmk_is_set(stop->flags, pe_action_runnable)) {
+        if (!pcmk_is_set(stop->flags, pcmk_action_runnable)) {
             crm_debug("%s unrunnable on %s: stop is unrunnable",
                       action->uuid, pe__node_name(node));
-            pe__clear_action_flags(action, pe_action_runnable);
+            pe__clear_action_flags(action, pcmk_action_runnable);
         }
 
         if (pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
@@ -532,11 +532,11 @@ recurring_op_for_inactive(pe_resource_t *rsc, const pe_node_t *node,
         if (!stop_node->details->online || stop_node->details->unclean) {
             pe_rsc_debug(rsc, "%s unrunnable on %s: node unavailable)",
                          stopped_mon->uuid, pe__node_name(stop_node));
-            pe__clear_action_flags(stopped_mon, pe_action_runnable);
+            pe__clear_action_flags(stopped_mon, pcmk_action_runnable);
         }
 
-        if (pcmk_is_set(stopped_mon->flags, pe_action_runnable)
-            && !pcmk_is_set(stopped_mon->flags, pe_action_optional)) {
+        if (pcmk_is_set(stopped_mon->flags, pcmk_action_runnable)
+            && !pcmk_is_set(stopped_mon->flags, pcmk_action_optional)) {
             crm_notice("Start recurring %s-interval %s for "
                        PCMK__ROLE_STOPPED " %s on %s",
                        pcmk__readable_interval(op->interval_ms),
@@ -676,7 +676,7 @@ pcmk__schedule_cancel(pe_resource_t *rsc, const char *call_id, const char *task,
 
 /*!
  * \internal
- * \brief Reschedule a recurring action
+ * \brief Create a recurring action marked as needing rescheduling if active
  *
  * \param[in,out] rsc          Resource that action is for
  * \param[in]     task         Name of action being rescheduled
@@ -693,7 +693,7 @@ pcmk__reschedule_recurring(pe_resource_t *rsc, const char *task,
                       NULL, rsc->cluster);
     op = custom_action(rsc, pcmk__op_key(rsc->id, task, interval_ms),
                        task, node, TRUE, TRUE, rsc->cluster);
-    pe__set_action_flags(op, pe_action_reschedule);
+    pe__set_action_flags(op, pcmk_action_reschedule);
 }
 
 /*!

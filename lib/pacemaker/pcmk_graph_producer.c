@@ -24,13 +24,13 @@
 // Convenience macros for logging action properties
 
 #define action_type_str(flags) \
-    (pcmk_is_set((flags), pe_action_pseudo)? "pseudo-action" : "action")
+    (pcmk_is_set((flags), pcmk_action_pseudo)? "pseudo-action" : "action")
 
 #define action_optional_str(flags) \
-    (pcmk_is_set((flags), pe_action_optional)? "optional" : "required")
+    (pcmk_is_set((flags), pcmk_action_optional)? "optional" : "required")
 
 #define action_runnable_str(flags) \
-    (pcmk_is_set((flags), pe_action_runnable)? "runnable" : "unrunnable")
+    (pcmk_is_set((flags), pcmk_action_runnable)? "runnable" : "unrunnable")
 
 #define action_node_str(a) \
     (((a)->node == NULL)? "no node" : (a)->node->details->uname)
@@ -118,7 +118,7 @@ add_maintenance_update(pe_working_set_t *data_set)
 
     if (add_maintenance_nodes(NULL, data_set) != 0) {
         action = get_pseudo_op(PCMK_ACTION_MAINTENANCE_NODES, data_set);
-        pe__set_action_flags(action, pe_action_print_always);
+        pe__set_action_flags(action, pcmk_action_always_in_graph);
     }
 }
 
@@ -406,7 +406,7 @@ create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
 
     if (pcmk__str_eq(action->task, PCMK_ACTION_STONITH, pcmk__str_none)) {
         /* All fences need node info; guest node fences are pseudo-events */
-        if (pcmk_is_set(action->flags, pe_action_pseudo)) {
+        if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
             action_xml = create_xml_node(parent, XML_GRAPH_TAG_PSEUDO_EVENT);
         } else {
             action_xml = create_xml_node(parent, XML_GRAPH_TAG_CRM_EVENT);
@@ -423,7 +423,7 @@ create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
         action_xml = create_xml_node(parent, XML_GRAPH_TAG_CRM_EVENT);
         crm_xml_add(action_xml, PCMK__XA_MODE, XML_TAG_CIB);
 
-    } else if (pcmk_is_set(action->flags, pe_action_pseudo)) {
+    } else if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
         if (pcmk__str_eq(action->task, PCMK_ACTION_MAINTENANCE_NODES,
                          pcmk__str_none)) {
             needs_maintenance_info = true;
@@ -468,7 +468,7 @@ create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
     }
 
     if ((action->rsc != NULL)
-        && !pcmk_is_set(action->flags, pe_action_pseudo)) {
+        && !pcmk_is_set(action->flags, pcmk_action_pseudo)) {
 
         // This is a real resource action, so add resource details
         add_resource_details(action, action_xml);
@@ -498,14 +498,14 @@ create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
 static bool
 should_add_action_to_graph(const pe_action_t *action)
 {
-    if (!pcmk_is_set(action->flags, pe_action_runnable)) {
+    if (!pcmk_is_set(action->flags, pcmk_action_runnable)) {
         crm_trace("Ignoring action %s (%d): unrunnable",
                   action->uuid, action->id);
         return false;
     }
 
-    if (pcmk_is_set(action->flags, pe_action_optional)
-        && !pcmk_is_set(action->flags, pe_action_print_always)) {
+    if (pcmk_is_set(action->flags, pcmk_action_optional)
+        && !pcmk_is_set(action->flags, pcmk_action_always_in_graph)) {
         crm_trace("Ignoring action %s (%d): optional",
                   action->uuid, action->id);
         return false;
@@ -537,7 +537,7 @@ should_add_action_to_graph(const pe_action_t *action)
     /* Always add pseudo-actions, fence actions, and shutdown actions (already
      * determined to be required and runnable by this point)
      */
-    if (pcmk_is_set(action->flags, pe_action_pseudo)
+    if (pcmk_is_set(action->flags, pcmk_action_pseudo)
         || pcmk__strcase_any_of(action->task, PCMK_ACTION_STONITH,
                                 PCMK_ACTION_DO_SHUTDOWN, NULL)) {
         return true;
@@ -551,7 +551,7 @@ should_add_action_to_graph(const pe_action_t *action)
         return false;
     }
 
-    if (pcmk_is_set(action->flags, pe_action_dc)) {
+    if (pcmk_is_set(action->flags, pcmk_action_on_dc)) {
         crm_trace("Action %s (%d) should be dumped: "
                   "can run on DC instead of %s",
                   action->uuid, action->id, pe__node_name(action->node));
@@ -620,7 +620,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
                   input->action->uuid, input->action->id);
         return false;
 
-    } else if (!pcmk_is_set(input->action->flags, pe_action_runnable)
+    } else if (!pcmk_is_set(input->action->flags, pcmk_action_runnable)
                && !ordering_can_change_actions(input)) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
                   "optional and input unrunnable",
@@ -628,7 +628,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
                   input->action->uuid, input->action->id);
         return false;
 
-    } else if (!pcmk_is_set(input->action->flags, pe_action_runnable)
+    } else if (!pcmk_is_set(input->action->flags, pcmk_action_runnable)
                && pcmk_is_set(input->type, pe_order_one_or_more)) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
                   "one-or-more and input unrunnable",
@@ -637,7 +637,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
         return false;
 
     } else if (pcmk_is_set(input->type, pe_order_implies_first_migratable)
-               && !pcmk_is_set(input->action->flags, pe_action_runnable)) {
+               && !pcmk_is_set(input->action->flags, pcmk_action_runnable)) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
                   "implies input migratable but input unrunnable",
                   action->uuid, action->id,
@@ -645,8 +645,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
         return false;
 
     } else if (pcmk_is_set(input->type, pe_order_apply_first_non_migratable)
-               && pcmk_is_set(input->action->flags,
-                              pe_action_migrate_runnable)) {
+               && pcmk_is_set(input->action->flags, pcmk_action_migratable)) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
                   "only if input unmigratable but input unrunnable",
                   action->uuid, action->id,
@@ -654,7 +653,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
         return false;
 
     } else if ((input->type == pe_order_optional)
-               && pcmk_is_set(input->action->flags, pe_action_migrate_runnable)
+               && pcmk_is_set(input->action->flags, pcmk_action_migratable)
                && pcmk__ends_with(input->action->uuid, "_stop_0")) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
                   "optional but stop in migration",
@@ -697,7 +696,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
             input->type = pe_order_none;
             return false;
 
-        } else if (pcmk_is_set(input->action->flags, pe_action_optional)) {
+        } else if (pcmk_is_set(input->action->flags, pcmk_action_optional)) {
             crm_trace("Ignoring %s (%d) input %s (%d): "
                       "load ordering input optional",
                       action->uuid, action->id,
@@ -718,7 +717,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
             input->type = pe_order_none;
             return false;
 
-        } else if (pcmk_is_set(input->action->flags, pe_action_optional)) {
+        } else if (pcmk_is_set(input->action->flags, pcmk_action_optional)) {
             crm_trace("Ignoring %s (%d) input %s (%d): "
                       "anti-colocation input optional",
                       action->uuid, action->id,
@@ -738,9 +737,10 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
                  input->action->uuid, action->uuid);
         return false;
 
-    } else if (pcmk_is_set(input->action->flags, pe_action_optional)
+    } else if (pcmk_is_set(input->action->flags, pcmk_action_optional)
                && !pcmk_any_flags_set(input->action->flags,
-                                      pe_action_print_always|pe_action_dumped)
+                                      pcmk_action_always_in_graph
+                                      |pcmk_action_added_to_graph)
                && !should_add_action_to_graph(input->action)) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
                   "input optional",
@@ -776,7 +776,7 @@ pcmk__graph_has_loop(const pe_action_t *init_action, const pe_action_t *action,
 {
     bool has_loop = false;
 
-    if (pcmk_is_set(input->action->flags, pe_action_tracking)) {
+    if (pcmk_is_set(input->action->flags, pcmk_action_detect_loop)) {
         crm_trace("Breaking tracking loop: %s@%s -> %s@%s (%#.6x)",
                   input->action->uuid,
                   input->action->node? input->action->node->details->uname : "",
@@ -800,7 +800,7 @@ pcmk__graph_has_loop(const pe_action_t *init_action, const pe_action_t *action,
         return true;
     }
 
-    pe__set_action_flags(input->action, pe_action_tracking);
+    pe__set_action_flags(input->action, pcmk_action_detect_loop);
 
     crm_trace("Checking inputs of action %s@%s input %s@%s (%#.6x)"
               "for graph loop with %s@%s ",
@@ -824,7 +824,7 @@ pcmk__graph_has_loop(const pe_action_t *init_action, const pe_action_t *action,
         }
     }
 
-    pe__clear_action_flags(input->action, pe_action_tracking);
+    pe__clear_action_flags(input->action, pcmk_action_detect_loop);
 
     if (!has_loop) {
         crm_trace("No input loop found in %s@%s -> %s@%s (%#.6x)",
@@ -897,16 +897,16 @@ add_action_to_graph(gpointer data, gpointer user_data)
      * the action to the graph, so that crm_simulate's dot graphs don't have
      * duplicates).
      */
-    if (!pcmk_is_set(action->flags, pe_action_dedup)) {
+    if (!pcmk_is_set(action->flags, pcmk_action_inputs_deduplicated)) {
         pcmk__deduplicate_action_inputs(action);
-        pe__set_action_flags(action, pe_action_dedup);
+        pe__set_action_flags(action, pcmk_action_inputs_deduplicated);
     }
 
-    if (pcmk_is_set(action->flags, pe_action_dumped)    // Already added, or
-        || !should_add_action_to_graph(action)) {       // shouldn't be added
-        return;
+    if (pcmk_is_set(action->flags, pcmk_action_added_to_graph)
+        || !should_add_action_to_graph(action)) {
+        return; // Already added, or shouldn't be
     }
-    pe__set_action_flags(action, pe_action_dumped);
+    pe__set_action_flags(action, pcmk_action_added_to_graph);
 
     crm_trace("Adding action %d (%s%s%s) to graph",
               action->id, action->uuid,
@@ -1067,7 +1067,7 @@ pcmk__create_graph(pe_working_set_t *data_set)
             && action->node->details->shutdown
             && !pcmk_is_set(action->rsc->flags, pcmk_rsc_maintenance)
             && !pcmk_any_flags_set(action->flags,
-                                   pe_action_optional|pe_action_runnable)
+                                   pcmk_action_optional|pcmk_action_runnable)
             && pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_none)) {
             /* Eventually we should just ignore the 'fence' case, but for now
              * it's the best way to detect (in CTS) when CIB resource updates
