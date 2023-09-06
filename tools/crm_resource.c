@@ -1137,118 +1137,6 @@ delete(void)
 }
 
 static int
-list_agents(pcmk__output_t *out, const char *agent_spec)
-{
-    int rc = pcmk_rc_ok;
-    char *provider = strchr(agent_spec, ':');
-    lrmd_t *lrmd_conn = NULL;
-    lrmd_list_t *list = NULL;
-
-    rc = lrmd__new(&lrmd_conn, NULL, NULL, 0);
-    if (rc != pcmk_rc_ok) {
-        goto error;
-    }
-
-    if (provider) {
-        *provider++ = 0;
-    }
-
-    rc = lrmd_conn->cmds->list_agents(lrmd_conn, &list, agent_spec, provider);
-
-    if (rc > 0) {
-        rc = out->message(out, "agents-list", list, agent_spec, provider);
-    } else {
-        rc = pcmk_rc_error;
-    }
-
-error:
-    if (rc != pcmk_rc_ok) {
-        if (provider == NULL) {
-            g_set_error(&error, PCMK__RC_ERROR, rc,
-                        _("No agents found for standard '%s'"), agent_spec);
-        } else {
-            g_set_error(&error, PCMK__RC_ERROR, rc,
-                        _("No agents found for standard '%s' and provider '%s'"),
-                        agent_spec, provider);
-        }
-    }
-
-    lrmd_api_delete(lrmd_conn);
-    return rc;
-}
-
-static int
-list_providers(pcmk__output_t *out, const char *agent_spec)
-{
-    int rc;
-    const char *text = NULL;
-    lrmd_t *lrmd_conn = NULL;
-    lrmd_list_t *list = NULL;
-
-    rc = lrmd__new(&lrmd_conn, NULL, NULL, 0);
-    if (rc != pcmk_rc_ok) {
-        goto error;
-    }
-
-    switch (options.rsc_cmd) {
-        case cmd_list_alternatives:
-            rc = lrmd_conn->cmds->list_ocf_providers(lrmd_conn, agent_spec, &list);
-
-            if (rc > 0) {
-                rc = out->message(out, "alternatives-list", list, agent_spec);
-            } else {
-                rc = pcmk_rc_error;
-            }
-
-            text = "OCF providers";
-            break;
-        case cmd_list_standards:
-            rc = lrmd_conn->cmds->list_standards(lrmd_conn, &list);
-
-            if (rc > 0) {
-                rc = out->message(out, "standards-list", list);
-            } else {
-                rc = pcmk_rc_error;
-            }
-
-            text = "standards";
-            break;
-        case cmd_list_providers:
-            rc = lrmd_conn->cmds->list_ocf_providers(lrmd_conn, agent_spec, &list);
-
-            if (rc > 0) {
-                rc = out->message(out, "providers-list", list, agent_spec);
-            } else {
-                rc = pcmk_rc_error;
-            }
-
-            text = "OCF providers";
-            break;
-        default:
-            g_set_error(&error, PCMK__RC_ERROR, pcmk_rc_error, "Bug");
-            lrmd_api_delete(lrmd_conn);
-            return pcmk_rc_error;
-    }
-
-error:
-    if (rc != pcmk_rc_ok) {
-        if (agent_spec != NULL) {
-            rc = ENXIO;
-            g_set_error(&error, PCMK__RC_ERROR, rc,
-                        _("No %s found for %s"), text, agent_spec);
-
-        } else {
-            rc = ENXIO;
-            g_set_error(&error, PCMK__RC_ERROR, rc,
-                        _("No %s found"), text);
-        }
-    }
-
-    lrmd_api_delete(lrmd_conn);
-    return rc;
-}
-
-static int
 populate_working_set(xmlNodePtr *cib_xml_copy)
 {
     int rc = pcmk_rc_ok;
@@ -1853,14 +1741,20 @@ main(int argc, char **argv)
 
             break;
 
-        case cmd_list_standards:
-        case cmd_list_providers:
         case cmd_list_alternatives:
-            rc = list_providers(out, options.agent_spec);
+            rc = pcmk__list_alternatives(out, options.agent_spec);
             break;
 
         case cmd_list_agents:
-            rc = list_agents(out, options.agent_spec);
+            rc = pcmk__list_agents(out, options.agent_spec);
+            break;
+
+        case cmd_list_standards:
+            rc = pcmk__list_standards(out);
+            break;
+
+        case cmd_list_providers:
+            rc = pcmk__list_providers(out, options.agent_spec);
             break;
 
         case cmd_metadata:
