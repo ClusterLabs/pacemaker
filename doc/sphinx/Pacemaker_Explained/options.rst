@@ -68,85 +68,84 @@ Configuration Value Types
 Throughout this document, configuration values will be designated as having one
 of the following types:
 
-.. table:: **Configuration Value Types**
+.. list-table:: **Configuration Value Types**
    :class: longtable
    :widths: 1 3
+   :header-rows: 1
 
-   +-------------------+-------------------------------------------------------+
-   | Type              | Description                                           |
-   +===================+=======================================================+
-   | boolean           | .. _boolean:                                          |
-   |                   |                                                       |
-   |                   | .. index::                                            |
-   |                   |    pair: type; boolean                                |
-   |                   |                                                       |
-   |                   | Case-insensitive true/false value where "1", "yes",   |
-   |                   | "y", "on", and "true" evaluate as true and "0", "no", |
-   |                   | "n", "off", "false", and unset evaluate as false      |
-   +-------------------+-------------------------------------------------------+
-   | date/time         | .. _date_time:                                        |
-   |                   |                                                       |
-   |                   | .. index::                                            |
-   |                   |    pair: type; date/time                              |
-   |                   |                                                       |
-   |                   | Textual timestamp like "Sat Dec 21 11:47:45 2013"     |
-   +-------------------+-------------------------------------------------------+
-   | enumeration       | .. _enumeration:                                      |
-   |                   |                                                       |
-   |                   | .. index::                                            |
-   |                   |    pair: type; enumeration                            |
-   |                   |                                                       |
-   |                   | Text that must be one of a set of defined values      |
-   |                   | (which will be listed in the description)             |
-   +-------------------+-------------------------------------------------------+
-   | integer           | .. _integer:                                          |
-   |                   |                                                       |
-   |                   | .. index::                                            |
-   |                   |    pair: type; integer                                |
-   |                   |                                                       |
-   |                   | 32-bit signed integer value (-2,147,483,648 to        |
-   |                   | 2,147,483,647)                                        |
-   +-------------------+-------------------------------------------------------+
-   | nonnegative       | .. _nonnegative_integer:                              |
-   | integer           |                                                       |
-   |                   | .. index::                                            |
-   |                   |    pair: type; nonnegative integer                    |
-   |                   |                                                       |
-   |                   | 32-bit nonnegative integer value (0 to 2,147,483,647) |
-   +-------------------+-------------------------------------------------------+
-   | port              | .. _port:                                             |
-   |                   |                                                       |
-   |                   | .. index::                                            |
-   |                   |    pair: type; port                                   |
-   |                   |                                                       |
-   |                   | Integer TCP port number (0 to 65535)                  |
-   +-------------------+-------------------------------------------------------+
-   | score             | .. _score:                                            |
-   |                   |                                                       |
-   |                   | .. index::                                            |
-   |                   |    pair: type; score                                  |
-   |                   |                                                       |
-   |                   | A Pacemaker score can be an integer between           |
-   |                   | -1,000,000 and 1,000,000, or a string alias:          |
-   |                   | ``INFINITY`` or ``+INFINITY`` is equivalent to        |
-   |                   | 1,000,000, ``-INFINITY`` is equivalent to -1,000,000, |
-   |                   | and ``red``, ``yellow``, and ``green`` are equivalent |
-   |                   | to integers as described in :ref:`node-health`.       |
-   +-------------------+-------------------------------------------------------+
-   | text              | .. _text:                                             |
-   |                   |                                                       |
-   |                   | .. index::                                            |
-   |                   |    pair: type; text                                   |
-   |                   |                                                       |
-   |                   | A text string                                         |
-   +-------------------+-------------------------------------------------------+
-   | version           | .. _version:                                          |
-   |                   |                                                       |
-   |                   | .. index::                                            |
-   |                   |    pair: type; version                                |
-   |                   |                                                       |
-   |                   | Version number (three integers separated by dots)     |
-   +-------------------+-------------------------------------------------------+
+   * - Type
+     - Description
+   * - .. _boolean:
+       
+       .. index::
+          pair: type; boolean
+       
+       boolean
+     - Case-insensitive text value where ``1``, ``yes``, ``y``, ``on``,
+       and ``true`` evaluate as true and ``0``, ``no``, ``n``, ``off``,
+       ``false``, and unset evaluate as false
+   * - .. _date_time:
+       
+       .. index::
+          pair: type; date/time
+       
+       date/time
+     - Textual timestamp like ``Sat Dec 21 11:47:45 2013``
+   * - .. _enumeration:
+       
+       .. index::
+          pair: type; enumeration
+       
+       enumeration
+     - Text that must be one of a set of defined values (which will be listed
+       in the description)
+   * - .. _integer:
+       
+       .. index::
+          pair: type; integer
+       
+       integer
+     - 32-bit signed integer value (-2,147,483,648 to 2,147,483,647)
+   * - .. _nonnegative_integer:
+       
+       .. index::
+          pair: type; nonnegative integer
+       
+       nonnegative integer
+     - 32-bit nonnegative integer value (0 to 2,147,483,647)
+   * - .. _port:
+       
+       .. index::
+          pair: type; port
+       
+       port
+     - Integer TCP port number (0 to 65535)
+   * - .. _score:
+       
+       .. index::
+          pair: type; score
+       
+       score
+     - A Pacemaker score can be an integer between -1,000,000 and 1,000,000, or
+       a string alias: ``INFINITY`` or ``+INFINITY`` is equivalent to
+       1,000,000, ``-INFINITY`` is equivalent to -1,000,000, and ``red``,
+       ``yellow``, and ``green`` are equivalent to integers as described in
+       :ref:`node-health`.
+   * - .. _text:
+       
+       .. index::
+          pair: type; text
+       
+       text
+     - A text string
+   * - .. _version:
+       
+       .. index::
+          pair: type; version
+       
+       version
+     - Version number (three integers separated by dots)
+
 
 Scores
 ______
