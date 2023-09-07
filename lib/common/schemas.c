@@ -195,7 +195,20 @@ schema_filter(const struct dirent *a)
 }
 
 static int
-schema_sort(const struct dirent **a, const struct dirent **b)
+schema_cmp(pcmk__schema_version_t a_version, pcmk__schema_version_t b_version)
+{
+    for (int i = 0; i < 2; ++i) {
+        if (a_version.v[i] < b_version.v[i]) {
+            return -1;
+        } else if (a_version.v[i] > b_version.v[i]) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int
+schema_cmp_directory(const struct dirent **a, const struct dirent **b)
 {
     pcmk__schema_version_t a_version = SCHEMA_ZERO;
     pcmk__schema_version_t b_version = SCHEMA_ZERO;
@@ -206,14 +219,7 @@ schema_sort(const struct dirent **a, const struct dirent **b)
         return 0;
     }
 
-    for (int i = 0; i < 2; ++i) {
-        if (a_version.v[i] < b_version.v[i]) {
-            return -1;
-        } else if (a_version.v[i] > b_version.v[i]) {
-            return 1;
-        }
-    }
-    return 0;
+    return schema_cmp(a_version, b_version);
 }
 
 /*!
@@ -413,7 +419,7 @@ crm_schema_init(void)
 
     wrap_libxslt(false);
 
-    max = scandir(base, &namelist, schema_filter, schema_sort);
+    max = scandir(base, &namelist, schema_filter, schema_cmp_directory);
     if (max < 0) {
         crm_notice("scandir(%s) failed: %s (%d)", base, strerror(errno), errno);
         free(base);
