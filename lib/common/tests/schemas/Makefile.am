@@ -13,7 +13,8 @@ include $(top_srcdir)/mk/unittest.mk
 CFLAGS += -DPCMK__TEST_SCHEMA_DIR='"$(abs_builddir)/schemas"'
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
-check_PROGRAMS = pcmk__schema_files_later_than_test \
+check_PROGRAMS = pcmk__build_schema_xml_node_test 	\
+		 pcmk__schema_files_later_than_test 	\
 		 pcmk__xml_find_x_0_schema_index_test
 
 TESTS = $(check_PROGRAMS)

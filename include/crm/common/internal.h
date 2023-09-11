@@ -135,6 +135,9 @@ void crm_schema_init(void);
 void crm_schema_cleanup(void);
 
 GList *pcmk__schema_files_later_than(const char *name);
+void pcmk__build_schema_xml_node(xmlNode *parent, const char *name,
+                                 GList **already_included);
+
 
 /* internal functions related to process IDs (from pid.c) */
 

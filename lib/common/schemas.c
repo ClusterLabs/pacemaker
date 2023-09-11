@@ -1351,6 +1351,150 @@ pcmk__schema_files_later_than(const char *name)
     return lst;
 }
 
+static void
+append_href(xmlNode *xml, void *user_data)
+{
+    GList **list = user_data;
+    const char *href = crm_element_value(xml, "href");
+    char *s = NULL;
+
+    if (href == NULL) {
+        return;
+    }
+
+    s = strdup(href);
+    CRM_ASSERT(s != NULL);
+    *list = g_list_prepend(*list, s);
+}
+
+static void
+external_refs_in_schema(GList **list, const char *contents)
+{
+    /* local-name()= is needed to ignore the xmlns= setting at the top of
+     * the XML file.  Otherwise, the xpath query will always return nothing.
+     */
+    const char *search = "//*[local-name()='externalRef'] | //*[local-name()='include']";
+    xmlNode *xml = string2xml(contents);
+
+    crm_foreach_xpath_result(xml, search, append_href, list);
+    free_xml(xml);
+}
+
+static int
+read_file_contents(const char *file, char **contents)
+{
+    int rc = pcmk_rc_ok;
+    char *path = NULL;
+
+    if (pcmk__ends_with(file, ".rng")) {
+        path = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_rng, file);
+    } else {
+        path = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_xslt, file);
+    }
+
+    rc = pcmk__file_contents(path, contents);
+
+    free(path);
+    return rc;
+}
+
+static void
+add_schema_file_to_xml(xmlNode *parent, const char *file, GList **already_included)
+{
+    char *contents = NULL;
+    char *path = NULL;
+    xmlNode *file_node = NULL;
+    GList *includes = NULL;
+    int rc = pcmk_rc_ok;
+
+    /* If we already included this file, don't do so again. */
+    if (g_list_find_custom(*already_included, file, (GCompareFunc) strcmp) != NULL) {
+        return;
+    }
+
+    /* Ensure whatever file we were given has a suffix we know about.  If not,
+     * just assume it's an RNG file.
+     */
+    if (!pcmk__ends_with(file, ".rng") && !pcmk__ends_with(file, ".xsl")) {
+        path = crm_strdup_printf("%s.rng", file);
+    } else {
+        path = strdup(file);
+        CRM_ASSERT(path != NULL);
+    }
+
+    rc = read_file_contents(path, &contents);
+    if (rc != pcmk_rc_ok || contents == NULL) {
+        crm_warn("Could not read schema file %s: %s", file, pcmk_rc_str(rc));
+        free(path);
+        return;
+    }
+
+    /* Create a new <file path="..."> node with the contents of the file
+     * as a CDATA block underneath it.
+     */
+    file_node = create_xml_node(parent, PCMK__XA_FILE);
+    if (file_node == NULL) {
+        free(contents);
+        free(path);
+        return;
+    }
+
+    crm_xml_add(file_node, PCMK__XA_PATH, path);
+    *already_included = g_list_prepend(*already_included, path);
+
+    xmlAddChild(file_node, xmlNewCDataBlock(parent->doc, (pcmkXmlStr) contents,
+                                            strlen(contents)));
+
+    /* Scan the file for any <externalRef> or <include> nodes and build up
+     * a list of the files they reference.
+     */
+    external_refs_in_schema(&includes, contents);
+
+    /* For each referenced file, recurse to add it (and potentially anything it
+     * references, ...) to the XML.
+     */
+    for (GList *iter = includes; iter != NULL; iter = iter->next) {
+        add_schema_file_to_xml(parent, iter->data, already_included);
+    }
+
+    free(contents);
+    g_list_free_full(includes, free);
+}
+
+/*!
+ * \internal
+ * \brief Add an XML schema file and all the files it references as children
+ *        of a given XML node
+ *
+ * \param[in,out] parent            The parent XML node
+ * \param[in] name                  The schema version to compare against
+ *                                  (for example, "pacemaker-3.1" or "pacemaker-3.1.rng")
+ * \param[in,out] already_included  A list of names that have already been added
+ *                                  to the parent node.
+ *
+ * \note The caller is responsible for freeing both the returned list and
+ *       the elements of the list
+ */
+void
+pcmk__build_schema_xml_node(xmlNode *parent, const char *name, GList **already_included)
+{
+    /* First, create an unattached node to add all the schema files to as children. */
+    xmlNode *schema_node = create_xml_node(NULL, PCMK__XA_SCHEMA);
+
+    crm_xml_add(schema_node, XML_ATTR_VERSION, name);
+    add_schema_file_to_xml(schema_node, name, already_included);
+
+    /* Then, if we actually added any children, attach the node to parent.  If
+     * we did not add any children (for instance, name was invalid), this prevents
+     * us from returning a document with additional empty children.
+     */
+    if (schema_node->children != NULL) {
+        xmlAddChild(parent, schema_node);
+    } else {
+        free_xml(schema_node);
+    }
+}
+
 /*!
  * \internal
  * \brief Return the directory containing any extra schema files that a
