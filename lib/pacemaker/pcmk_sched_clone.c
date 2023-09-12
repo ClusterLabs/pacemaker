@@ -574,7 +574,7 @@ pcmk__clone_create_probe(pe_resource_t *rsc, pe_node_t *node)
                                                  node->details->id);
 
         if ((allowed == NULL)
-            || (allowed->rsc_discover_mode != pe_discover_exclusive)) {
+            || (allowed->rsc_discover_mode != pcmk_probe_exclusive)) {
             /* This node is not marked for resource discovery. Remove it from
              * allowed_nodes so that notifications contain only nodes that the
              * clone can possibly run on.

@@ -321,6 +321,22 @@ enum pe_action_flags {
 #endif
 };
 
+/* enum pe_link_state is currently needed for pe_action_wrapper_t (which is
+ * public) but should be removed when that is refactored to no longer need it at
+ * the next API compatibility break
+ */
+
+//!@{
+//! \deprecated Do not use
+enum pe_link_state {
+    pe_link_not_dumped  = 0,
+    pe_link_dumped      = 1,
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    pe_link_dup         = 2,
+#endif
+};
+//!@}
+
 // For parsing various action-related string specifications
 gboolean parse_op_key(const char *key, char **rsc_id, char **op_type,
                       guint *interval_ms);

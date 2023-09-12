@@ -324,7 +324,8 @@ resource_node_score(pe_resource_t *rsc, const pe_node_t *node, int score,
 {
     pe_node_t *match = NULL;
 
-    if ((rsc->exclusive_discover || (node->rsc_discover_mode == pe_discover_never))
+    if ((rsc->exclusive_discover
+         || (node->rsc_discover_mode == pcmk_probe_never))
         && pcmk__str_eq(tag, "symmetric_default", pcmk__str_casei)) {
         /* This string comparision may be fragile, but exclusive resources and
          * exclusive nodes should not have the symmetric_default constraint

@@ -668,7 +668,7 @@ disallow_node(pe_resource_t *rsc, const char *uname)
 
     if (match) {
         ((pe_node_t *) match)->weight = -INFINITY;
-        ((pe_node_t *) match)->rsc_discover_mode = pe_discover_never;
+        ((pe_node_t *) match)->rsc_discover_mode = pcmk_probe_never;
     }
     if (rsc->children) {
         g_list_foreach(rsc->children, (GFunc) disallow_node, (gpointer) uname);
@@ -738,7 +738,7 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         } else {
             node->weight = -INFINITY;
         }
-        node->rsc_discover_mode = pe_discover_never;
+        node->rsc_discover_mode = pcmk_probe_never;
 
         /* unpack_remote_nodes() ensures that each remote node and guest node
          * has a pe_node_t entry. Ideally, it would do the same for bundle nodes.
@@ -762,7 +762,7 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
 
         replica->node = pe__copy_node(node);
         replica->node->weight = 500;
-        replica->node->rsc_discover_mode = pe_discover_exclusive;
+        replica->node->rsc_discover_mode = pcmk_probe_exclusive;
 
         /* Ensure the node shows up as allowed and with the correct discovery set */
         if (replica->child->allowed_nodes != NULL) {

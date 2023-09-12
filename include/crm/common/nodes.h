@@ -35,6 +35,24 @@ enum node_type {
 #endif
 };
 
+//! When to probe a resource on a node (as specified in location constraints)
+enum pe_discover_e {
+    pcmk_probe_always       = 0,    //! Always probe resource on node
+    pcmk_probe_never        = 1,    //! Never probe resource on node
+    pcmk_probe_exclusive    = 2,    //! Probe only on designated nodes
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated Use pcmk_probe_always instead
+    pe_discover_always      = pcmk_probe_always,
+
+    //! \deprecated Use pcmk_probe_never instead
+    pe_discover_never       = pcmk_probe_never,
+
+    //! \deprecated Use pcmk_probe_exclusive instead
+    pe_discover_exclusive   = pcmk_probe_exclusive,
+#endif
+};
+
 #ifdef __cplusplus
 }
 #endif
