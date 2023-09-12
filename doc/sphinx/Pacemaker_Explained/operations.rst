@@ -106,19 +106,21 @@ XML attributes take precedence over ``nvpair`` elements if both are specified.
    |                |                                   | * ``standby:`` Move *all* resources away from the   |
    |                |                                   |   node on which the resource failed.                |
    +----------------+-----------------------------------+-----------------------------------------------------+
-   | enabled        | TRUE                              | .. index::                                          |
+   | enabled        | TRUE                              | .. _op_enabled:                                     |
+   |                |                                   |                                                     |
+   |                |                                   | .. index::                                          |
    |                |                                   |    single: enabled; action property                 |
    |                |                                   |    single: action; property, enabled                |
    |                |                                   |                                                     |
    |                |                                   | If ``false``, ignore this operation definition.     |
-   |                |                                   | This is typically used to pause a particular        |
-   |                |                                   | recurring ``monitor`` operation; for instance, it   |
-   |                |                                   | can complement the respective resource being        |
-   |                |                                   | unmanaged (``is-managed=false``), as this alone     |
-   |                |                                   | will :ref:`not block any configured monitoring      |
-   |                |                                   | <s-monitoring-unmanaged>`.  Disabling the operation |
-   |                |                                   | does not suppress all actions of the given type.    |
-   |                |                                   | Allowed values: ``true``, ``false``.                |
+   |                |                                   | This does not suppress all actions of this type,    |
+   |                |                                   | but is typically used to pause a recurring monitor. |
+   |                |                                   | This can complement the resource being unmanaged    |
+   |                |                                   | (:ref:`is-managed <is_managed>` set to ``false``),  |
+   |                |                                   | which does not stop recurring operations.           |
+   |                |                                   | Maintenance mode, which does stop configured this   |
+   |                |                                   | monitors, overrides this setting. Allowed values:   |
+   |                |                                   | ``true``, ``false``.                                |
    +----------------+-----------------------------------+-----------------------------------------------------+
    | record-pending | TRUE                              | .. index::                                          |
    |                |                                   |    single: record-pending; action property          |
@@ -220,51 +222,6 @@ who want to know when an administrator manually starts a service by mistake).
    Currently, monitors with ``role=Stopped`` are not implemented for
    :ref:`clone <s-resource-clone>` resources.
 
-.. _s-monitoring-unmanaged:
-
-Monitoring Resources When Administration is Disabled
-####################################################
-
-Recurring ``monitor`` operations behave differently under various administrative
-settings:
-
-* When a resource is unmanaged (by setting ``is-managed=false``): No monitors
-  will be stopped.
-
-  If the unmanaged resource is stopped on a node where the cluster thinks it
-  should be running, the cluster will detect and report that it is not, but it
-  will not consider the monitor failed, and will not try to start the resource
-  until it is managed again.
-
-  Starting the unmanaged resource on a different node is strongly discouraged
-  and will at least cause the cluster to consider the resource failed, and
-  may require the resource's ``target-role`` to be set to ``Stopped`` then
-  ``Started`` to be recovered.
-
-* When a resource is put into maintenance mode (by setting
-  ``maintenance=true``): The resource will be marked as unmanaged. (This
-  overrides ``is-managed=true``.)
-
-  Additionally, all monitor operations will be stopped, except those specifying
-  ``role`` as ``Stopped`` (which will be newly initiated if appropriate). As
-  with unmanaged resources in general, starting a resource on a node other than
-  where the cluster expects it to be will cause problems.
-
-* When a node is put into standby: All resources will be moved away from the
-  node, and all ``monitor`` operations will be stopped on the node, except those
-  specifying ``role`` as ``Stopped`` (which will be newly initiated if
-  appropriate).
-
-* When a node is put into maintenance mode: All resources that are active on the
-  node will be marked as in maintenance mode. See above for more details.
-
-* When the cluster is put into maintenance mode: All resources in the cluster
-  will be marked as in maintenance mode. See above for more details.
-
-A resource is in maintenance mode if the cluster, the node where the resource
-is active, or the resource itself is configured to be in maintenance mode. If a
-resource is in maintenance mode, then it is also unmanaged. However, if a
-resource is unmanaged, it is not necessarily in maintenance mode.
 
 .. _s-operation-defaults:
 
@@ -381,5 +338,286 @@ Once you've done whatever you needed to do, you can then re-enable it with
 
    # cibadmin --modify --xml-text '<op id="public-ip-check" enabled="true"/>'
 
+
+.. index::
+   single: start-delay; operation attribute
+   single: interval-origin; operation attribute
+   single: interval; interval-origin
+   single: operation; interval-origin
+   single: operation; start-delay
+
+Specifying When Recurring Actions are Performed
+###############################################
+
+By default, recurring actions are scheduled relative to when the resource
+started. In some cases, you might prefer that a recurring action start relative
+to a specific date and time. For example, you might schedule an in-depth
+monitor to run once every 24 hours, and want it to run outside business hours.
+
+To do this, set the operation's ``interval-origin``. The cluster uses this point
+to calculate the correct ``start-delay`` such that the operation will occur
+at ``interval-origin`` plus a multiple of the operation interval.
+
+For example, if the recurring operation's interval is 24h, its
+``interval-origin`` is set to 02:00, and it is currently 14:32, then the
+cluster would initiate the operation after 11 hours and 28 minutes.
+
+The value specified for ``interval`` and ``interval-origin`` can be any
+date/time conforming to the
+`ISO8601 standard <https://en.wikipedia.org/wiki/ISO_8601>`_. By way of
+example, to specify an operation that would run on the first Monday of
+2021 and every Monday after that, you would add:
+
+.. topic:: Example recurring action that runs relative to base date/time
+
+   .. code-block:: xml
+
+      <op id="intensive-monitor" name="monitor" interval="P7D" interval-origin="2021-W01-1"/>
+
+
+.. index::
+   single: resource; failure recovery
+   single: operation; failure recovery
+
+.. _failure-handling:
+
+Handling Resource Failure
+#########################
+
+By default, Pacemaker will attempt to recover failed resources by restarting
+them. However, failure recovery is highly configurable.
+
+.. index::
+   single: resource; failure count
+   single: operation; failure count
+
+Failure Counts
+______________
+
+Pacemaker tracks resource failures for each combination of node, resource, and
+operation (start, stop, monitor, etc.).
+
+You can query the fail count for a particular node, resource, and/or operation
+using the ``crm_failcount`` command. For example, to see how many times the
+10-second monitor for ``myrsc`` has failed on ``node1``, run:
+
+.. code-block:: none
+
+   # crm_failcount --query -r myrsc -N node1 -n monitor -I 10s
+
+If you omit the node, ``crm_failcount`` will use the local node. If you omit
+the operation and interval, ``crm_failcount`` will display the sum of the fail
+counts for all operations on the resource.
+
+You can use ``crm_resource --cleanup`` or ``crm_failcount --delete`` to clear
+fail counts. For example, to clear the above monitor failures, run:
+
+.. code-block:: none
+
+   # crm_resource --cleanup -r myrsc -N node1 -n monitor -I 10s
+
+If you omit the resource, ``crm_resource --cleanup`` will clear failures for
+all resources. If you omit the node, it will clear failures on all nodes. If
+you omit the operation and interval, it will clear the failures for all
+operations on the resource.
+
+.. note::
+
+   Even when cleaning up only a single operation, all failed operations will
+   disappear from the status display. This allows us to trigger a re-check of
+   the resource's current status.
+
+Higher-level tools may provide other commands for querying and clearing
+fail counts.
+
+The ``crm_mon`` tool shows the current cluster status, including any failed
+operations. To see the current fail counts for any failed resources, call
+``crm_mon`` with the ``--failcounts`` option. This shows the fail counts per
+resource (that is, the sum of any operation fail counts for the resource).
+
+.. index::
+   single: migration-threshold; resource meta-attribute
+   single: resource; migration-threshold
+
+Failure Response
+________________
+
+Normally, if a running resource fails, pacemaker will try to stop it and start
+it again. Pacemaker will choose the best location to start it each time, which
+may be the same node that it failed on.
+
+However, if a resource fails repeatedly, it is possible that there is an
+underlying problem on that node, and you might desire trying a different node
+in such a case. Pacemaker allows you to set your preference via the
+``migration-threshold`` resource meta-attribute. [#]_
+
+If you define ``migration-threshold`` to *N* for a resource, it will be banned
+from the original node after *N* failures there.
+
+.. note::
+
+   The ``migration-threshold`` is per *resource*, even though fail counts are
+   tracked per *operation*. The operation fail counts are added together
+   to compare against the ``migration-threshold``.
+
+By default, fail counts remain until manually cleared by an administrator
+using ``crm_resource --cleanup`` or ``crm_failcount --delete`` (hopefully after
+first fixing the failure's cause). It is possible to have fail counts expire
+automatically by setting the ``failure-timeout`` resource meta-attribute.
+
+.. important::
+
+   A successful operation does not clear past failures. If a recurring monitor
+   operation fails once, succeeds many times, then fails again days later, its
+   fail count is 2. Fail counts are cleared only by manual intervention or
+   failure timeout.
+
+For example, setting ``migration-threshold`` to 2 and ``failure-timeout`` to
+``60s`` would cause the resource to move to a new node after 2 failures, and
+allow it to move back (depending on stickiness and constraint scores) after one
+minute.
+
+.. note::
+
+   ``failure-timeout`` is measured since the most recent failure. That is, older
+   failures do not individually time out and lower the fail count. Instead, all
+   failures are timed out simultaneously (and the fail count is reset to 0) if
+   there is no new failure for the timeout period.
+
+There are two exceptions to the migration threshold: when a resource either
+fails to start or fails to stop.
+
+If the cluster property ``start-failure-is-fatal`` is set to ``true`` (which is
+the default), start failures cause the fail count to be set to ``INFINITY`` and
+thus always cause the resource to move immediately.
+
+Stop failures are slightly different and crucial.  If a resource fails to stop
+and fencing is enabled, then the cluster will fence the node in order to be
+able to start the resource elsewhere.  If fencing is disabled, then the cluster
+has no way to continue and will not try to start the resource elsewhere, but
+will try to stop it again after any failure timeout or clearing.
+
+
+.. index::
+   single: reload
+   single: reload-agent
+
+Reloading an Agent After a Definition Change
+############################################
+
+The cluster automatically detects changes to the configuration of active
+resources. The cluster's normal response is to stop the service (using the old
+definition) and start it again (with the new definition). This works, but some
+resource agents are smarter and can be told to use a new set of options without
+restarting.
+
+To take advantage of this capability, the resource agent must:
+
+* Implement the ``reload-agent`` action. What it should do depends completely
+  on your application!
+
+  .. note::
+
+     Resource agents may also implement a ``reload`` action to make the managed
+     service reload its own *native* configuration. This is different from
+     ``reload-agent``, which makes effective changes in the resource's
+     *Pacemaker* configuration (specifically, the values of the agent's
+     reloadable parameters).
+
+* Advertise the ``reload-agent`` operation in the ``actions`` section of its
+  meta-data.
+
+* Set the ``reloadable`` attribute to 1 in the ``parameters`` section of
+  its meta-data for any parameters eligible to be reloaded after a change.
+
+Once these requirements are satisfied, the cluster will automatically know to
+reload the resource (instead of restarting) when a reloadable parameter
+changes.
+
+.. note::
+
+   Metadata will not be re-read unless the resource needs to be started. If you
+   edit the agent of an already active resource to set a parameter reloadable,
+   the resource may restart the first time the parameter value changes.
+
+.. note::
+
+   If both a reloadable and non-reloadable parameter are changed
+   simultaneously, the resource will be restarted.
+
+
+
+.. _live-migration:
+
+Migrating Resources
+###################
+
+Normally, when the cluster needs to move a resource, it fully restarts the
+resource (that is, it stops the resource on the current node and starts it on
+the new node).
+
+However, some types of resources, such as many virtual machines, are able to
+move to another location without loss of state (often referred to as live
+migration or hot migration). In pacemaker, this is called live migration.
+Pacemaker can be configured to migrate a resource when moving it, rather than
+restarting it.
+
+Not all resources are able to migrate; see the
+:ref:`migration checklist <migration_checklist>` below. Even those that can,
+won't do so in all situations. Conceptually, there are two requirements from
+which the other prerequisites follow:
+
+* The resource must be active and healthy at the old location; and
+* everything required for the resource to run must be available on both the old
+  and new locations.
+
+The cluster is able to accommodate both *push* and *pull* migration models by
+requiring the resource agent to support two special actions: ``migrate_to``
+(performed on the current location) and ``migrate_from`` (performed on the
+destination).
+
+In push migration, the process on the current location transfers the resource
+to the new location where is it later activated. In this scenario, most of the
+work would be done in the ``migrate_to`` action and, if anything, the
+activation would occur during ``migrate_from``.
+
+Conversely for pull, the ``migrate_to`` action is practically empty and
+``migrate_from`` does most of the work, extracting the relevant resource state
+from the old location and activating it.
+
+There is no wrong or right way for a resource agent to implement migration, as
+long as it works.
+
+.. _migration_checklist:
+
+.. topic:: Migration Checklist
+
+   * The resource may not be a clone.
+   * The resource agent standard must be OCF.
+   * The resource must not be in a failed or degraded state.
+   * The resource agent must support ``migrate_to`` and ``migrate_from``
+     actions, and advertise them in its meta-data.
+   * The resource must have the ``allow-migrate`` meta-attribute set to
+     ``true`` (which is not the default).
+
+If an otherwise migratable resource depends on another resource via an ordering
+constraint, there are special situations in which it will be restarted rather
+than migrated.
+
+For example, if the resource depends on a clone, and at the time the resource
+needs to be moved, the clone has instances that are stopping and instances that
+are starting, then the resource will be restarted. The scheduler is not yet
+able to model this situation correctly and so takes the safer (if less optimal)
+path.
+
+Also, if a migratable resource depends on a non-migratable resource, and both
+need to be moved, the migratable resource will be restarted.
+.. rubric:: Footnotes
+
 .. [#] Currently, anyway. Automatic monitoring operations may be added in a future
        version of Pacemaker.
+
+.. [#] The naming of this option was perhaps unfortunate as it is easily
+       confused with live migration, the process of moving a resource from one
+       node to another without stopping it.  Xen virtual guests are the most
+       common example of resources that can be migrated in this manner.

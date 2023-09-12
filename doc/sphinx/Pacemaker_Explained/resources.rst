@@ -362,8 +362,8 @@ behave and can be easily set using the ``--meta`` option of the
    |                            |                                  | all :ref:`colocation constraints                     |
    |                            |                                  | <s-resource-colocation>` involving this resource,    |
    |                            |                                  | as well as the implicit colocation constraints       |
-   |                            |                                  | created if this resource is in a :ref:`group         |
-   |                            |                                  | <group-resources>`. For details, see                 |
+   |                            |                                  | created if this resource is in a                     |
+   |                            |                                  | :ref:`group <group-resources>`. For details, see     |
    |                            |                                  | :ref:`s-coloc-influence`. *(since 2.1.0)*            |
    +----------------------------+----------------------------------+------------------------------------------------------+
    | target-role                | Started                          | .. index::                                           |
@@ -375,31 +375,39 @@ behave and can be easily set using the ``--meta`` option of the
    |                            |                                  |                                                      |
    |                            |                                  | * ``Stopped:`` Force the resource to be stopped      |
    |                            |                                  | * ``Started:`` Allow the resource to be started      |
-   |                            |                                  |   (and in the case of :ref:`promotable clone         |
-   |                            |                                  |   resources <s-resource-promotable>`, promoted       |
-   |                            |                                  |   if appropriate)                                    |
+   |                            |                                  |   (and in the case of                                |
+   |                            |                                  |   :ref:`promotable <s-resource-promotable>` clone    |
+   |                            |                                  |   resources, promoted if appropriate)                |
    |                            |                                  | * ``Unpromoted:`` Allow the resource to be started,  |
    |                            |                                  |   but only in the unpromoted role if the resource is |
    |                            |                                  |   :ref:`promotable <s-resource-promotable>`          |
    |                            |                                  | * ``Promoted:`` Equivalent to ``Started``            |
    +----------------------------+----------------------------------+------------------------------------------------------+
-   | is-managed                 | TRUE                             | .. index::                                           |
+   | is-managed                 | TRUE                             | .. _is_managed:                                      |
+   |                            |                                  |                                                      |
+   |                            |                                  | .. index::                                           |
    |                            |                                  |    single: is-managed; resource option               |
    |                            |                                  |    single: resource; option, is-managed              |
    |                            |                                  |                                                      |
-   |                            |                                  | Is the cluster allowed to start and stop             |
-   |                            |                                  | the resource?  Allowed values: ``true``, ``false``   |
+   |                            |                                  | If false, the cluster will not start or stop the     |
+   |                            |                                  | resource on any node. Recurring actions for the      |
+   |                            |                                  | resource are unaffected. Maintenance mode overrides  |
+   |                            |                                  | this setting. Allowed values: ``true``, ``false``    |
    +----------------------------+----------------------------------+------------------------------------------------------+
-   | maintenance                | FALSE                            | .. index::                                           |
+   | maintenance                | FALSE                            | .. _rsc_maintenance:                                 |
+   |                            |                                  |                                                      |
+   |                            |                                  | .. index::                                           |
    |                            |                                  |    single: maintenance; resource option              |
    |                            |                                  |    single: resource; option, maintenance             |
    |                            |                                  |                                                      |
-   |                            |                                  | Similar to the ``maintenance-mode``                  |
-   |                            |                                  | :ref:`cluster option <cluster_options>`, but for     |
-   |                            |                                  | a single resource. If true, the resource will not    |
-   |                            |                                  | be started, stopped, or monitored on any node. This  |
-   |                            |                                  | differs from ``is-managed`` in that monitors will    |
-   |                            |                                  | not be run. Allowed values: ``true``, ``false``      |
+   |                            |                                  | If true, the cluster will not start or stop the      |
+   |                            |                                  | resource on any node, and will pause any recurring   |
+   |                            |                                  | monitors (except those specifying ``role`` as        |
+   |                            |                                  | ``Stopped``). If true, the                           |
+   |                            |                                  | :ref:`maintenance-mode <maintenance_mode>` cluster   |
+   |                            |                                  | option or :ref:`maintenance <node_maintenance>`      |
+   |                            |                                  | node attribute override this. Allowed values:        |
+   |                            |                                  | ``true``, ``false``                                  |
    +----------------------------+----------------------------------+------------------------------------------------------+
    | resource-stickiness        | 1 for individual clone           | .. _resource-stickiness:                             |
    |                            | instances, 0 for all             |                                                      |

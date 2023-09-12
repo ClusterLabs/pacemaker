@@ -62,6 +62,123 @@ Normally, you will use command-line tools that abstract the XML, so the
 distinction will be unimportant; both properties and options are cluster
 settings you can tweak.
 
+Configuration Value Types
+#########################
+
+Throughout this document, configuration values will be designated as having one
+of the following types:
+
+.. table:: **Configuration Value Types**
+   :class: longtable
+   :widths: 1 3
+
+   +-------------------+-------------------------------------------------------+
+   | Type              | Description                                           |
+   +===================+=======================================================+
+   | boolean           | .. _boolean:                                          |
+   |                   |                                                       |
+   |                   | .. index::                                            |
+   |                   |    pair: type; boolean                                |
+   |                   |                                                       |
+   |                   | Case-insensitive true/false value where "1", "yes",   |
+   |                   | "y", "on", and "true" evaluate as true and "0", "no", |
+   |                   | "n", "off", "false", and unset evaluate as false      |
+   +-------------------+-------------------------------------------------------+
+   | date/time         | .. _date_time:                                        |
+   |                   |                                                       |
+   |                   | .. index::                                            |
+   |                   |    pair: type; date/time                              |
+   |                   |                                                       |
+   |                   | Textual timestamp like "Sat Dec 21 11:47:45 2013"     |
+   +-------------------+-------------------------------------------------------+
+   | enumeration       | .. _enumeration:                                      |
+   |                   |                                                       |
+   |                   | .. index::                                            |
+   |                   |    pair: type; enumeration                            |
+   |                   |                                                       |
+   |                   | Text that must be one of a set of defined values      |
+   |                   | (which will be listed in the description)             |
+   +-------------------+-------------------------------------------------------+
+   | integer           | .. _integer:                                          |
+   |                   |                                                       |
+   |                   | .. index::                                            |
+   |                   |    pair: type; integer                                |
+   |                   |                                                       |
+   |                   | 32-bit signed integer value (-2,147,483,648 to        |
+   |                   | 2,147,483,647)                                        |
+   +-------------------+-------------------------------------------------------+
+   | nonnegative       | .. _nonnegative_integer:                              |
+   | integer           |                                                       |
+   |                   | .. index::                                            |
+   |                   |    pair: type; nonnegative integer                    |
+   |                   |                                                       |
+   |                   | 32-bit nonnegative integer value (0 to 2,147,483,647) |
+   +-------------------+-------------------------------------------------------+
+   | port              | .. _port:                                             |
+   |                   |                                                       |
+   |                   | .. index::                                            |
+   |                   |    pair: type; port                                   |
+   |                   |                                                       |
+   |                   | Integer TCP port number (0 to 65535)                  |
+   +-------------------+-------------------------------------------------------+
+   | score             | .. _score:                                            |
+   |                   |                                                       |
+   |                   | .. index::                                            |
+   |                   |    pair: type; score                                  |
+   |                   |                                                       |
+   |                   | A Pacemaker score can be an integer between           |
+   |                   | -1,000,000 and 1,000,000, or a string alias:          |
+   |                   | ``INFINITY`` or ``+INFINITY`` is equivalent to        |
+   |                   | 1,000,000, ``-INFINITY`` is equivalent to -1,000,000, |
+   |                   | and ``red``, ``yellow``, and ``green`` are equivalent |
+   |                   | to integers as described in :ref:`node-health`.       |
+   +-------------------+-------------------------------------------------------+
+   | text              | .. _text:                                             |
+   |                   |                                                       |
+   |                   | .. index::                                            |
+   |                   |    pair: type; text                                   |
+   |                   |                                                       |
+   |                   | A text string                                         |
+   +-------------------+-------------------------------------------------------+
+   | version           | .. _version:                                          |
+   |                   |                                                       |
+   |                   | .. index::                                            |
+   |                   |    pair: type; version                                |
+   |                   |                                                       |
+   |                   | Version number (three integers separated by dots)     |
+   +-------------------+-------------------------------------------------------+
+
+Scores
+______
+
+Scores are integral to how Pacemaker works. Practically everything from moving
+a resource to deciding which resource to stop in a degraded cluster is achieved
+by manipulating scores in some way.
+
+Scores are calculated per resource and node. Any node with a negative score for
+a resource can't run that resource. The cluster places a resource on the node
+with the highest score for it.
+
+Score addition and subtraction follow these rules:
+
+* Any value (including ``INFINITY``) - ``INFINITY`` = ``-INFINITY``
+* ``INFINITY`` + any value other than ``-INFINITY`` = ``INFINITY``
+
+.. note::
+
+   What if you want to use a score higher than 1,000,000? Typically this possibility
+   arises when someone wants to base the score on some external metric that might
+   go above 1,000,000.
+
+   The short answer is you can't.
+
+   The long answer is it is sometimes possible work around this limitation
+   creatively. You may be able to set the score to some computed value based on
+   the external metric rather than use the metric directly. For nodes, you can
+   store the metric as a node attribute, and query the attribute when computing
+   the score (possibly as part of a custom resource agent).
+
+
 CIB Properties
 ##############
 
@@ -73,93 +190,117 @@ The reason is simply a matter of parsing. These options are used by the
 configuration database which is, by design, mostly ignorant of the content it
 holds. So the decision was made to place them in an easy-to-find location.
 
-.. table:: **CIB Properties**
+.. list-table:: **CIB Properties**
    :class: longtable
-   :widths: 1 3
+   :widths: 2 2 2 5
+   :header-rows: 1
 
-   +-------------------+-----------------------------------------------------------+
-   | Attribute         | Description                                               |
-   +===================+===========================================================+
-   | admin_epoch       | .. index::                                                |
-   |                   |    pair: admin_epoch; cib                                 |
-   |                   |                                                           |
-   |                   | When a node joins the cluster, the cluster performs a     |
-   |                   | check to see which node has the best configuration. It    |
-   |                   | asks the node with the highest (``admin_epoch``,          |
-   |                   | ``epoch``, ``num_updates``) tuple to replace the          |
-   |                   | configuration on all the nodes -- which makes setting     |
-   |                   | them, and setting them correctly, very important.         |
-   |                   | ``admin_epoch`` is never modified by the cluster; you can |
-   |                   | use this to make the configurations on any inactive nodes |
-   |                   | obsolete.                                                 |
-   |                   |                                                           |
-   |                   | **Warning:** Never set this value to zero. In such cases, |
-   |                   | the cluster cannot tell the difference between your       |
-   |                   | configuration and the "empty" one used when nothing is    |
-   |                   | found on disk.                                            |
-   +-------------------+-----------------------------------------------------------+
-   | epoch             | .. index::                                                |
-   |                   |    pair: epoch; cib                                       |
-   |                   |                                                           |
-   |                   | The cluster increments this every time the configuration  |
-   |                   | is updated (usually by the administrator).                |
-   +-------------------+-----------------------------------------------------------+
-   | num_updates       | .. index::                                                |
-   |                   |    pair: num_updates; cib                                 |
-   |                   |                                                           |
-   |                   | The cluster increments this every time the configuration  |
-   |                   | or status is updated (usually by the cluster) and resets  |
-   |                   | it to 0 when epoch changes.                               |
-   +-------------------+-----------------------------------------------------------+
-   | validate-with     | .. index::                                                |
-   |                   |    pair: validate-with; cib                               |
-   |                   |                                                           |
-   |                   | Determines the type of XML validation that will be done   |
-   |                   | on the configuration.  If set to ``none``, the cluster    |
-   |                   | will not verify that updates conform to the DTD (nor      |
-   |                   | reject ones that don't).                                  |
-   +-------------------+-----------------------------------------------------------+
-   | remote-tls-port   | .. index::                                                |
-   |                   |    pair: remote-tls-port; cib                             |
-   |                   |                                                           |
-   |                   | If set to a TCP port number, the CIB manager will listen  |
-   |                   | for anonymously encrypted remote connections on this      |
-   |                   | port, to allow for CIB administration from hosts not in   |
-   |                   | the cluster. No key is used, so this should be used only  |
-   |                   | on a protected network where man-in-the-middle attacks    |
-   |                   | can be avoided.                                           |
-   +-------------------+-----------------------------------------------------------+
-   | remote-clear-port | .. index::                                                |
-   |                   |    pair: remote-clear-port; cib                           |
-   |                   |                                                           |
-   |                   | If set to a TCP port number, the CIB manager will listen  |
-   |                   | for remote connections on this port, to allow for CIB     |
-   |                   | administration from hosts not in the cluster. No          |
-   |                   | encryption is used, so this should be used only on a      |
-   |                   | protected network.                                        |
-   +-------------------+-----------------------------------------------------------+
-   | cib-last-written  | .. index::                                                |
-   |                   |    pair: cib-last-written; cib                            |
-   |                   |                                                           |
-   |                   | Indicates when the configuration was last written to      |
-   |                   | disk. Maintained by the cluster; for informational        |
-   |                   | purposes only.                                            |
-   +-------------------+-----------------------------------------------------------+
-   | have-quorum       | .. index::                                                |
-   |                   |    pair: have-quorum; cib                                 |
-   |                   |                                                           |
-   |                   | Indicates if the cluster has quorum. If false, this may   |
-   |                   | mean that the cluster cannot start resources or fence     |
-   |                   | other nodes (see ``no-quorum-policy`` below). Maintained  |
-   |                   | by the cluster.                                           |
-   +-------------------+-----------------------------------------------------------+
-   | dc-uuid           | .. index::                                                |
-   |                   |    pair: dc-uuid; cib                                     |
-   |                   |                                                           |
-   |                   | Indicates which cluster node is the current leader. Used  |
-   |                   | by the cluster when placing resources and determining the |
-   |                   | order of some events. Maintained by the cluster.          |
-   +-------------------+-----------------------------------------------------------+
+   * - Attribute
+     - Type
+     - Default
+     - Description
+   * - .. _admin_epoch:
+       
+       .. index::
+          pair: admin_epoch; cib
+       
+       admin_epoch
+     - :ref:`nonnegative integer <nonnegative_integer>`
+     - 0
+     - When a node joins the cluster, the cluster asks the node with the
+       highest (``admin_epoch``, ``epoch``, ``num_updates``) tuple to replace
+       the configuration on all the nodes -- which makes setting them correctly
+       very important. ``admin_epoch`` is never modified by the cluster; you
+       can use this to make the configurations on any inactive nodes obsolete.
+   * - .. _epoch:
+       
+       .. index::
+          pair: epoch; cib
+       
+       epoch
+     - :ref:`nonnegative integer <nonnegative_integer>`
+     - 0
+     - The cluster increments this every time the CIB's configuration section
+       is updated.
+   * - .. _num_updates:
+       
+       .. index::
+          pair: num_updates; cib
+       
+       num_updates
+     - :ref:`nonnegative integer <nonnegative_integer>`
+     - 0
+     - The cluster increments this every time the CIB's configuration or status
+       sections are updated, and resets it to 0 when epoch changes.
+   * - .. _validate_with:
+       
+       .. index::
+          pair: validate-with; cib
+       
+       validate-with
+     - :ref:`enumeration <enumeration>`
+     -
+     - Determines the type of XML validation that will be done on the
+       configuration. Allowed values are ``none`` (in which case the cluster
+       will not require that updates conform to expected syntax) and the base
+       names of schema files installed on the local machine (for example,
+       "pacemaker-3.9")
+   * - .. _remote_tls_port:
+       
+       .. index::
+          pair: remote-tls-port; cib
+       
+       remote-tls-port
+     - :ref:`port <port>`
+     -
+     - If set, the CIB manager will listen for anonymously encrypted remote
+       connections on this port, to allow CIB administration from hosts not in
+       the cluster. No key is used, so this should be used only on a protected
+       network where man-in-the-middle attacks can be avoided.
+   * - .. _remote_clear_port:
+       
+       .. index::
+          pair: remote-clear-port; cib
+       
+       remote-clear-port
+     - :ref:`port <port>`
+     -
+     - If set to a TCP port number, the CIB manager will listen for remote
+       connections on this port, to allow for CIB administration from hosts not
+       in the cluster. No encryption is used, so this should be used only on a
+       protected network.
+   * - .. _cib_last_written:
+       
+       .. index::
+          pair: cib-last-written; cib
+       
+       cib-last-written
+     - :ref:`date/time <date_time>`
+     -
+     - Indicates when the configuration was last written to disk. Maintained by
+       the cluster; for informational purposes only.
+   * - .. _have_quorum:
+       
+       .. index::
+          pair: have-quorum; cib
+       
+       have-quorum
+     - :ref:`boolean <boolean>`
+     -
+     - Indicates whether the cluster has quorum. If false, the cluster's
+       response is determined by ``no-quorum-policy`` (see below). Maintained
+       by the cluster.
+   * - .. _dc_uuid:
+       
+       .. index::
+          pair: dc-uuid; cib
+       
+       dc-uuid
+     - :ref:`text <text>`
+     -
+     - Node ID of the cluster's current designated controller (DC). Used and
+       maintained by the cluster.
+
 
 .. _cluster_options:
 
@@ -277,9 +418,10 @@ values, by running the ``man pacemaker-schedulerd`` and
    |                           |         |                                                    |
    |                           |         | Whether resources that have been deleted from      |
    |                           |         | the configuration should be stopped. This value    |
-   |                           |         | takes precedence over ``is-managed`` (that is,     |
-   |                           |         | even unmanaged resources will be stopped when      |
-   |                           |         | orphaned if this value is ``true``                 |
+   |                           |         | takes precedence over                              |
+   |                           |         | :ref:`is-managed <is_managed>` (that is, even      |
+   |                           |         | unmanaged resources will be stopped when orphaned  |
+   |                           |         | if this value is ``true``).                        |
    +---------------------------+---------+----------------------------------------------------+
    | stop-orphan-actions       | true    | .. index::                                         |
    |                           |         |    pair: cluster option; stop-orphan-actions       |
@@ -305,18 +447,28 @@ values, by running the ``man pacemaker-schedulerd`` and
    |                           |         | pre-existing state of resources when the cluster   |
    |                           |         | starts                                             |
    +---------------------------+---------+----------------------------------------------------+
-   | maintenance-mode          | false   | .. index::                                         |
+   | maintenance-mode          | false   | .. _maintenance_mode:                              |
+   |                           |         |                                                    |
+   |                           |         | .. index::                                         |
    |                           |         |    pair: cluster option; maintenance-mode          |
    |                           |         |                                                    |
-   |                           |         | Whether the cluster should refrain from            |
-   |                           |         | monitoring, starting and stopping resources        |
+   |                           |         | If true, the cluster will not start or stop any    |
+   |                           |         | resource in the cluster, and any recurring         |
+   |                           |         | operations (expect those specifying ``role`` as    |
+   |                           |         | ``Stopped``) will be paused. If true, this         |
+   |                           |         | overrides the                                      |
+   |                           |         | :ref:`maintenance <node_maintenance>` node         |
+   |                           |         | attribute, :ref:`is-managed <is_managed>` and      |
+   |                           |         | :ref:`maintenance <rsc_maintenance>` resource      |
+   |                           |         | meta-attributes, and :ref:`enabled <op_enabled>`   |
+   |                           |         | operation meta-attribute.                          |
    +---------------------------+---------+----------------------------------------------------+
    | stonith-enabled           | true    | .. index::                                         |
    |                           |         |    pair: cluster option; stonith-enabled           |
    |                           |         |                                                    |
    |                           |         | Whether the cluster is allowed to fence nodes      |
    |                           |         | (for example, failed nodes and nodes with          |
-   |                           |         | resources that can't be stopped.                   |
+   |                           |         | resources that can't be stopped).                  |
    |                           |         |                                                    |
    |                           |         | If true, at least one fence device must be         |
    |                           |         | configured before resources are allowed to run.    |
