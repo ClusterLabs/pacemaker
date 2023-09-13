@@ -97,6 +97,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_NODE_IS_PEER "crmd"
 
+//! \deprecated Do not use
+#define XML_NODE_JOIN_STATE "join"
+
 //! \deprecated Do not use (will be removed in a future release)
 #define XML_RSC_OP_LAST_RUN "last-run"
 

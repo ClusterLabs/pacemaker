@@ -182,7 +182,7 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
             } else {
                 value = CRMD_JOINSTATE_MEMBER;
             }
-            crm_xml_add(node_state, XML_NODE_JOIN_STATE, value);
+            crm_xml_add(node_state, PCMK__XA_JOIN, value);
         }
 
         if (flags & node_update_expected) {

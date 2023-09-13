@@ -322,14 +322,14 @@ pcmk__inject_node_state_change(cib_t *cib_conn, const char *node, bool up)
         pcmk__xe_set_props(cib_node,
                            PCMK__XA_IN_CCM, XML_BOOLEAN_YES,
                            PCMK__XA_CRMD, ONLINESTATUS,
-                           XML_NODE_JOIN_STATE, CRMD_JOINSTATE_MEMBER,
+                           PCMK__XA_JOIN, CRMD_JOINSTATE_MEMBER,
                            XML_NODE_EXPECTED, CRMD_JOINSTATE_MEMBER,
                            NULL);
     } else {
         pcmk__xe_set_props(cib_node,
                            PCMK__XA_IN_CCM, XML_BOOLEAN_NO,
                            PCMK__XA_CRMD, OFFLINESTATUS,
-                           XML_NODE_JOIN_STATE, CRMD_JOINSTATE_DOWN,
+                           PCMK__XA_JOIN, CRMD_JOINSTATE_DOWN,
                            XML_NODE_EXPECTED, CRMD_JOINSTATE_DOWN,
                            NULL);
     }
