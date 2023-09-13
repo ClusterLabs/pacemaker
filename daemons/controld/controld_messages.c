@@ -764,7 +764,7 @@ handle_remote_state(const xmlNode *msg)
     bool remote_is_up = false;
     int rc = pcmk_rc_ok;
 
-    rc = pcmk__xe_get_bool_attr(msg, XML_NODE_IN_CLUSTER, &remote_is_up);
+    rc = pcmk__xe_get_bool_attr(msg, PCMK__XA_IN_CCM, &remote_is_up);
 
     CRM_CHECK(remote_uname && rc == pcmk_rc_ok, return I_NULL);
 
@@ -850,7 +850,7 @@ handle_node_list(const xmlNode *request)
 
         crm_xml_add_ll(xml, XML_ATTR_ID, (long long) node->id); // uint32_t
         crm_xml_add(xml, XML_ATTR_UNAME, node->uname);
-        crm_xml_add(xml, XML_NODE_IN_CLUSTER, node->state);
+        crm_xml_add(xml, PCMK__XA_IN_CCM, node->state);
     }
 
     // Create and send reply
@@ -1324,7 +1324,7 @@ broadcast_remote_state_message(const char *node_name, bool node_up)
              node_name, node_up? "coming up" : "going down");
 
     crm_xml_add(msg, XML_ATTR_ID, node_name);
-    pcmk__xe_set_bool_attr(msg, XML_NODE_IN_CLUSTER, node_up);
+    pcmk__xe_set_bool_attr(msg, PCMK__XA_IN_CCM, node_up);
 
     if (node_up) {
         crm_xml_add(msg, PCMK__XA_CONN_HOST, controld_globals.our_nodename);

@@ -1377,7 +1377,7 @@ determine_online_status_no_fencing(pe_working_set_t *data_set,
     gboolean online = FALSE;
     const char *join = crm_element_value(node_state, XML_NODE_JOIN_STATE);
     const char *is_peer = crm_element_value(node_state, PCMK__XA_CRMD);
-    const char *in_cluster = crm_element_value(node_state, XML_NODE_IN_CLUSTER);
+    const char *in_cluster = crm_element_value(node_state, PCMK__XA_IN_CCM);
     const char *exp_state = crm_element_value(node_state, XML_NODE_EXPECTED);
     int member = false;
     bool crmd_online = false;
@@ -1437,7 +1437,7 @@ determine_online_status_fencing(pe_working_set_t *data_set,
     bool crmd_online = FALSE;
     const char *join = crm_element_value(node_state, XML_NODE_JOIN_STATE);
     const char *is_peer = crm_element_value(node_state, PCMK__XA_CRMD);
-    const char *in_cluster = crm_element_value(node_state, XML_NODE_IN_CLUSTER);
+    const char *in_cluster = crm_element_value(node_state, PCMK__XA_IN_CCM);
     const char *exp_state = crm_element_value(node_state, XML_NODE_EXPECTED);
     const char *terminate = pe_node_attribute_raw(this_node, "terminate");
     int member = false;
@@ -1449,11 +1449,11 @@ determine_online_status_fencing(pe_working_set_t *data_set,
   - XML_NODE_EXPECTED      ::= member|down
 
   @COMPAT with entries recorded for DCs < 2.1.7
-  - XML_NODE_IN_CLUSTER    ::= true|false
+  - PCMK__XA_IN_CCM        ::= true|false
   - PCMK__XA_CRMD          ::= online|offline
 
   Since crm_feature_set 3.18.0 (pacemaker-2.1.7):
-  - XML_NODE_IN_CLUSTER    ::= <timestamp>|0
+  - PCMK__XA_IN_CCM        ::= <timestamp>|0
   Since when node has been a cluster member. A value 0 of means the node is not
   a cluster member.
 
@@ -1479,9 +1479,7 @@ determine_online_status_fencing(pe_working_set_t *data_set,
               pcmk__s(is_peer, "<null>"), pcmk__s(join, "<null>"),
               pcmk__s(exp_state, "<null>"), do_terminate);
 
-    /* @COMPAT with boolean values of XML_NODE_IN_CLUSTER recorded for
-     * DCs < 2.1.7
-     */
+    // @COMPAT with boolean values of PCMK__XA_IN_CCM recorded for DCs < 2.1.7
     if (crm_str_to_boolean(in_cluster, &member) != 1) {
         pcmk__scan_ll(in_cluster, &when_member, 0LL);
         member = (when_member > 0) ? true : false;

@@ -151,10 +151,10 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
     if ((flags & node_update_cluster) && node->state) {
         if (compare_version(controld_globals.dc_version, "3.18.0") >= 0) {
             // A value 0 means the node is not a cluster member.
-            crm_xml_add_ll(node_state, XML_NODE_IN_CLUSTER, node->when_member);
+            crm_xml_add_ll(node_state, PCMK__XA_IN_CCM, node->when_member);
 
         } else {
-            pcmk__xe_set_bool_attr(node_state, XML_NODE_IN_CLUSTER,
+            pcmk__xe_set_bool_attr(node_state, PCMK__XA_IN_CCM,
                                    pcmk__str_eq(node->state, CRM_NODE_MEMBER,
                                                 pcmk__str_casei));
         }

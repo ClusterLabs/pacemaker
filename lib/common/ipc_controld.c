@@ -169,7 +169,7 @@ set_nodes_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
             node_info->id = id_ll;
         }
         node_info->uname = crm_element_value(node, XML_ATTR_UNAME);
-        node_info->state = crm_element_value(node, XML_NODE_IN_CLUSTER);
+        node_info->state = crm_element_value(node, PCMK__XA_IN_CCM);
         data->data.nodes = g_list_prepend(data->data.nodes, node_info);
     }
 }
