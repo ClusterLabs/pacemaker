@@ -80,6 +80,7 @@ xml_show_patchset_header(pcmk__output_t *out, const xmlNode *patchset)
  *
  * \note This function produces output only for text-like formats.
  */
+// @COMPAT Drop when xml_create_patchset() is dropped
 static int
 xml_show_patchset_v1_recursive(pcmk__output_t *out, const char *prefix,
                                const xmlNode *data, int depth, uint32_t options)
@@ -134,6 +135,7 @@ xml_show_patchset_v1_recursive(pcmk__output_t *out, const char *prefix,
  * \deprecated This function can be removed when \c xml_create_patchset() is
  *             removed.
  */
+// @COMPAT Drop when xml_create_patchset() is dropped
 static int
 xml_show_patchset_v1(pcmk__output_t *out, const xmlNode *patchset,
                      uint32_t options)
@@ -325,6 +327,15 @@ xml_patchset_default(pcmk__output_t *out, va_list args)
     crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
     switch (format) {
         case 1:
+            /* @COMPAT Drop when xml_create_patchset() is dropped. We might
+             * receive a v1 patchset if a user creates a v1 patchset with
+             * xml_create_patchset(1, ...) and then applies it via
+             * xml_apply_patchset() or PCMK__CIB_REQUEST_APPLY_PATCH.
+             *
+             * Otherwise, there's no reason we should ever encounter a v1
+             * patchset. Pacemaker has generated v2 patchsets internally since
+             * 1.1.4.
+             */
             return xml_show_patchset_v1(out, patchset, pcmk__xml_fmt_pretty);
         case 2:
             return xml_show_patchset_v2(out, patchset);
@@ -382,6 +393,15 @@ xml_patchset_log(pcmk__output_t *out, va_list args)
     crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
     switch (format) {
         case 1:
+            /* @COMPAT Drop when xml_create_patchset() is dropped. We might
+             * receive a v1 patchset if a user creates a v1 patchset with
+             * xml_create_patchset(1, ...) and then applies it via
+             * xml_apply_patchset() or PCMK__CIB_REQUEST_APPLY_PATCH.
+             *
+             * Otherwise, there's no reason we should ever encounter a v1
+             * patchset. Pacemaker has generated v2 patchsets internally since
+             * 1.1.4.
+             */
             if (log_level < LOG_DEBUG) {
                 return xml_show_patchset_v1(out, patchset,
                                             pcmk__xml_fmt_pretty
@@ -499,6 +519,15 @@ xml_log_patchset(uint8_t log_level, const char *function,
     crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
     switch (format) {
         case 1:
+            /* @COMPAT Drop when xml_create_patchset() is dropped. We might
+             * receive a v1 patchset if a user creates a v1 patchset with
+             * xml_create_patchset(1, ...) and then applies it via
+             * xml_apply_patchset() or PCMK__CIB_REQUEST_APPLY_PATCH.
+             *
+             * Otherwise, there's no reason we should ever encounter a v1
+             * patchset. Pacemaker has generated v2 patchsets internally since
+             * 1.1.4.
+             */
             if (log_level < LOG_DEBUG) {
                 rc = xml_show_patchset_v1(out, patchset,
                                           pcmk__xml_fmt_pretty
