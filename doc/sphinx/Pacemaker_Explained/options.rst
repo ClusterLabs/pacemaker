@@ -578,7 +578,7 @@ values, by running the ``man pacemaker-schedulerd`` and
    |                           |         | greater than (safely twice) the maximum delay from |
    |                           |         | those parameters. *(since 2.0.4)*                  |
    +---------------------------+---------+----------------------------------------------------+
-   | node-pending-timeout      | 10min   | .. index::                                         |
+   | node-pending-timeout      | 2h      | .. index::                                         |
    |                           |         |    pair: cluster option; node-pending-timeout      |
    |                           |         |                                                    |
    |                           |         | Fence nodes that do not join the controller        |
