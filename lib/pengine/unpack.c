@@ -1378,7 +1378,7 @@ determine_online_status_no_fencing(pe_working_set_t *data_set,
     const char *join = crm_element_value(node_state, PCMK__XA_JOIN);
     const char *is_peer = crm_element_value(node_state, PCMK__XA_CRMD);
     const char *in_cluster = crm_element_value(node_state, PCMK__XA_IN_CCM);
-    const char *exp_state = crm_element_value(node_state, XML_NODE_EXPECTED);
+    const char *exp_state = crm_element_value(node_state, PCMK__XA_EXPECTED);
     int member = false;
     bool crmd_online = false;
     long long when_member = 0;
@@ -1438,7 +1438,7 @@ determine_online_status_fencing(pe_working_set_t *data_set,
     const char *join = crm_element_value(node_state, PCMK__XA_JOIN);
     const char *is_peer = crm_element_value(node_state, PCMK__XA_CRMD);
     const char *in_cluster = crm_element_value(node_state, PCMK__XA_IN_CCM);
-    const char *exp_state = crm_element_value(node_state, XML_NODE_EXPECTED);
+    const char *exp_state = crm_element_value(node_state, PCMK__XA_EXPECTED);
     const char *terminate = pe_node_attribute_raw(this_node, "terminate");
     int member = false;
     long long when_member = 0;
@@ -1446,7 +1446,7 @@ determine_online_status_fencing(pe_working_set_t *data_set,
 
 /*
   - PCMK__XA_JOIN          ::= member|down|pending|banned
-  - XML_NODE_EXPECTED      ::= member|down
+  - PCMK__XA_EXPECTED      ::= member|down
 
   @COMPAT with entries recorded for DCs < 2.1.7
   - PCMK__XA_IN_CCM        ::= true|false
@@ -1652,7 +1652,7 @@ determine_online_status(const xmlNode *node_state, pe_node_t *this_node,
                         pe_working_set_t *data_set)
 {
     gboolean online = FALSE;
-    const char *exp_state = crm_element_value(node_state, XML_NODE_EXPECTED);
+    const char *exp_state = crm_element_value(node_state, PCMK__XA_EXPECTED);
 
     CRM_CHECK(this_node != NULL, return);
 

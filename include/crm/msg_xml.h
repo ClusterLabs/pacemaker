@@ -285,7 +285,6 @@ extern "C" {
 
 #  define XML_CIB_ATTR_PRIORITY     	"priority"
 
-#  define XML_NODE_EXPECTED     	"expected"
 #  define XML_NODE_IS_REMOTE    	"remote_node"
 #  define XML_NODE_IS_FENCED		"node_fenced"
 #  define XML_NODE_IS_MAINTENANCE   "node_in_maintenance"

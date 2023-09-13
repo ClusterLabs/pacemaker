@@ -92,6 +92,9 @@ extern "C" {
 #define XML_CIB_ATTR_SOURCE "source"
 
 //! \deprecated Do not use
+#define XML_NODE_EXPECTED "expected"
+
+//! \deprecated Do not use
 #define XML_NODE_IN_CLUSTER "in_ccm"
 
 //! \deprecated Do not use
