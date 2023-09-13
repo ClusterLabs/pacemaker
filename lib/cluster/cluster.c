@@ -294,19 +294,6 @@ crm_peer_uname(const char *uuid)
 }
 
 /*!
- * \brief Add a node's UUID as an XML attribute
- *
- * \param[in,out] xml   XML element to add UUID to
- * \param[in]     attr  XML attribute name to set
- * \param[in,out] node  Node whose UUID should be used as attribute value
- */
-void
-set_uuid(xmlNode *xml, const char *attr, crm_node_t *node)
-{
-    crm_xml_add(xml, attr, crm_peer_uuid(node));
-}
-
-/*!
  * \brief  Get a log-friendly string equivalent of a cluster type
  *
  * \param[in] type  Cluster type
@@ -403,3 +390,17 @@ is_corosync_cluster(void)
 {
     return get_cluster_type() == pcmk_cluster_corosync;
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/cluster/compat.h>
+
+void
+set_uuid(xmlNode *xml, const char *attr, crm_node_t *node)
+{
+    crm_xml_add(xml, attr, crm_peer_uuid(node));
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

@@ -138,10 +138,8 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
         pcmk__xe_set_bool_attr(node_state, XML_NODE_IS_REMOTE, true);
     }
 
-    set_uuid(node_state, XML_ATTR_ID, node);
-
-    if (crm_element_value(node_state, XML_ATTR_ID) == NULL) {
-        crm_info("Node update for %s cancelled: no id", node->uname);
+    if (crm_xml_add(node_state, XML_ATTR_ID, crm_peer_uuid(node)) == NULL) {
+        crm_info("Node update for %s cancelled: no ID", node->uname);
         free_xml(node_state);
         return NULL;
     }
