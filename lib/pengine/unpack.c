@@ -1377,6 +1377,47 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
 
 /*!
  * \internal
+ * \brief Unpack node's time when it became a member at the cluster layer
+ *
+ * \param[in]     node_state  Node's node_state entry
+ * \param[in,out] data_set    Cluster working set
+ *
+ * \return Epoch time when node became a cluster member
+ *         (or 1 for legacy entries) if a member, 0 if not a member,
+ *         or -1 if no valid information available
+ */
+static long long
+unpack_node_member(const xmlNode *node_state, pe_working_set_t *data_set)
+{
+    const char *member_time = crm_element_value(node_state, PCMK__XA_IN_CCM);
+    int member = 0;
+
+    if (member_time == NULL) {
+        return -1LL;
+
+    // @COMPAT Entries recorded for DCs < 2.1.7 are boolean
+    } else if (crm_str_to_boolean(member_time, &member) == 1) {
+        /* What's important when member is true is that effective time minus
+         * this value is less than the pending node timeout (we can't time out
+         * pending nodes that use boolean values)
+         */
+        return member? (long long) get_effective_time(data_set) : 0LL;
+
+    } else {
+        long long when_member = 0LL;
+
+        if ((pcmk__scan_ll(member_time, &when_member,
+                           0LL) != pcmk_rc_ok) || (when_member < 0LL)) {
+            crm_warn("Unrecognized value '%s' for " PCMK__XA_IN_CCM
+                     " in " XML_CIB_TAG_STATE " entry", member_time);
+            return -1LL;
+        }
+        return when_member;
+    }
+}
+
+/*!
+ * \internal
  * \brief Unpack node's time when it became online in process group
  *
  * \param[in] node_state  Node's node_state entry
@@ -1417,21 +1458,13 @@ determine_online_status_no_fencing(pe_working_set_t *data_set,
 {
     gboolean online = FALSE;
     const char *join = crm_element_value(node_state, PCMK__XA_JOIN);
-    const char *in_cluster = crm_element_value(node_state, PCMK__XA_IN_CCM);
     const char *exp_state = crm_element_value(node_state, PCMK__XA_EXPECTED);
-    int member = false;
-    long long when_member = 0;
+    long long when_member = unpack_node_member(node_state, data_set);
     long long when_online = unpack_node_online(node_state);
 
-    // @COMPAT DCs < 2.1.7 use boolean instead of time for cluster membership
-    if (crm_str_to_boolean(in_cluster, &member) != 1) {
-        pcmk__scan_ll(in_cluster, &when_member, 0LL);
-        member = (when_member > 0) ? true : false;
-    }
-
-    if (!member) {
-        crm_trace("Node is down: in_cluster=%s",
-                  pcmk__s(in_cluster, "<null>"));
+    if (when_member <= 0) {
+        crm_trace("Node %s is %sdown", pe__node_name(this_node),
+                  ((when_member < 0)? "presumed " : ""));
 
     } else if (when_online > 0) {
         if (pcmk__str_eq(join, CRMD_JOINSTATE_MEMBER, pcmk__str_casei)) {
@@ -1443,17 +1476,15 @@ determine_online_status_no_fencing(pe_working_set_t *data_set,
 
     } else if (this_node->details->expected_up == FALSE) {
         crm_trace("Node %s controller is down: "
-                  "in_cluster=%s online@%lld join=%s expected=%s",
-                  pe__node_name(this_node), pcmk__s(in_cluster, "<null>"),
-                  when_online,
+                  "member@%lld online@%lld join=%s expected=%s",
+                  pe__node_name(this_node), when_member, when_online,
                   pcmk__s(join, "<null>"), pcmk__s(exp_state, "<null>"));
 
     } else {
         /* mark it unclean */
         pe_fence_node(data_set, this_node, "peer is unexpectedly down", FALSE);
-        crm_info("Node %s in_cluster=%s online@%lld join=%s expected=%s",
-                 pe__node_name(this_node), pcmk__s(in_cluster, "<null>"),
-                 when_online,
+        crm_info("Node %s member@%lld online@%lld join=%s expected=%s",
+                 pe__node_name(this_node), when_member, when_online,
                  pcmk__s(join, "<null>"), pcmk__s(exp_state, "<null>"));
     }
     return online;
@@ -1466,11 +1497,9 @@ determine_online_status_fencing(pe_working_set_t *data_set,
     gboolean online = FALSE;
     gboolean do_terminate = FALSE;
     const char *join = crm_element_value(node_state, PCMK__XA_JOIN);
-    const char *in_cluster = crm_element_value(node_state, PCMK__XA_IN_CCM);
     const char *exp_state = crm_element_value(node_state, PCMK__XA_EXPECTED);
     const char *terminate = pe_node_attribute_raw(this_node, "terminate");
-    int member = false;
-    long long when_member = 0;
+    long long when_member = unpack_node_member(node_state, data_set);
     long long when_online = unpack_node_online(node_state);
 
 /*
@@ -1503,18 +1532,12 @@ determine_online_status_fencing(pe_working_set_t *data_set,
         }
     }
 
-    crm_trace("Node %s in_cluster=%s online@%lld join=%s expected=%s term=%d",
-              pe__node_name(this_node), pcmk__s(in_cluster, "<null>"),
-              when_online, pcmk__s(join, "<null>"),
-              pcmk__s(exp_state, "<null>"), do_terminate);
+    crm_trace("Node %s member@%lld online@%lld join=%s expected=%s term=%d",
+              pe__node_name(this_node), when_member, when_online,
+              pcmk__s(join, "<null>"), pcmk__s(exp_state, "<null>"),
+              do_terminate);
 
-    // @COMPAT with boolean values of PCMK__XA_IN_CCM recorded for DCs < 2.1.7
-    if (crm_str_to_boolean(in_cluster, &member) != 1) {
-        pcmk__scan_ll(in_cluster, &when_member, 0LL);
-        member = (when_member > 0) ? true : false;
-    }
-
-    online = member;
+    online = (when_member > 0);
 
     if (exp_state == NULL) {
         exp_state = CRMD_JOINSTATE_DOWN;
@@ -1526,7 +1549,7 @@ determine_online_status_fencing(pe_working_set_t *data_set,
         /* Slightly different criteria since we can't shut down a dead peer */
         online = (when_online > 0);
 
-    } else if (in_cluster == NULL) {
+    } else if (when_member < 0) {
         pe_fence_node(data_set, this_node, "peer has not been seen by the cluster", FALSE);
 
     } else if (pcmk__str_eq(join, CRMD_JOINSTATE_NACK, pcmk__str_casei)) {
@@ -1543,7 +1566,7 @@ determine_online_status_fencing(pe_working_set_t *data_set,
                           "peer pending timed out on joining the process group",
                           FALSE);
 
-        } else if (member || (when_online > 0)) {
+        } else if ((when_member > 0) || (when_online > 0)) {
             crm_info("- %s is not ready to run resources",
                      pe__node_name(this_node));
             this_node->details->standby = TRUE;
@@ -1555,11 +1578,11 @@ determine_online_status_fencing(pe_working_set_t *data_set,
         }
 
     } else if (do_terminate && pcmk__str_eq(join, CRMD_JOINSTATE_DOWN, pcmk__str_casei)
-               && !member && (when_online == 0)) {
+               && (when_member == 0) && (when_online == 0)) {
         crm_info("%s was just shot", pe__node_name(this_node));
         online = FALSE;
 
-    } else if (!member) {
+    } else if (when_member == 0) {
         // Consider `priority-fencing-delay` for lost nodes
         pe_fence_node(data_set, this_node, "peer is no longer part of the cluster", TRUE);
 
@@ -1580,12 +1603,11 @@ determine_online_status_fencing(pe_working_set_t *data_set,
 
     } else {
         pe_fence_node(data_set, this_node, "peer was in an unknown state", FALSE);
-        crm_warn("Node %s: in-cluster=%s online@%lld join=%s expected=%s "
+        crm_warn("Node %s: member@%lld online@%lld join=%s expected=%s "
                  "term=%d shutdown=%d",
-                 pe__node_name(this_node), pcmk__s(in_cluster, "<null>"),
-                 when_online, pcmk__s(join, "<null>"),
-                 pcmk__s(exp_state, "<null>"), do_terminate,
-                 this_node->details->shutdown);
+                 pe__node_name(this_node), when_member, when_online,
+                 pcmk__s(join, "<null>"), pcmk__s(exp_state, "<null>"),
+                 do_terminate, this_node->details->shutdown);
     }
 
     return online;
