@@ -196,7 +196,9 @@ node_pending_timer_popped(gpointer key)
              "group",
              (const char *) key, controld_globals.node_pending_timeout);
 
-    abort_timer_popped(node_pending_timer);
+    if (controld_globals.node_pending_timeout > 0) {
+        abort_timer_popped(node_pending_timer);
+    }
 
     g_hash_table_remove(node_pending_timers, key);
 
@@ -261,13 +263,16 @@ controld_node_pending_timer(const crm_node_t *node)
 {
     long long remaining_timeout = 0;
 
-    /* Node is either not even a cluster member or it's as well online in CPG.
-     * Free any node pending timer of it.
+    /* If the node is not an active cluster node, or is already part of CPG, or
+     * node-pending-timeout is disabled, free any node pending timer for it.
      */
-    if (node->when_member <= 0 || node->when_online != 0) {
+    if (pcmk_is_set(node->flags, crm_remote_node)
+        || (node->when_member <= 0) || (node->when_online != 0)
+        || (controld_globals.node_pending_timeout == 0)) {
         remove_node_pending_timer(node->uuid);
         return;
     }
+
     // Node is a cluster member but offline in CPG
 
     remaining_timeout = node->when_member - time(NULL)

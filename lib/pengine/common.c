@@ -164,9 +164,10 @@ static pcmk__cluster_option_t pe_opts[] = {
         "10min", pcmk__valid_interval_spec,
         N_("How long to wait for a node that has joined the cluster to join "
            "the process group"),
-        N_("A node that has joined the cluster can be pending on joining the "
-           "process group. We wait up to this much time for it. If it times "
-           "out, fencing targeting the node will be issued if enabled.")
+        N_("Fence nodes that do not join the controller process group within "
+           "this much time after joining the cluster, to allow the cluster "
+           "to continue managing resources. A value of 0 means never fence "
+           "pending nodes.")
     },
     {
         "cluster-delay", NULL, "time", NULL,
