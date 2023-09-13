@@ -907,7 +907,7 @@ handle_node_info_request(const xmlNode *msg)
     if (node) {
         crm_xml_add(reply_data, XML_ATTR_ID, node->uuid);
         crm_xml_add(reply_data, XML_ATTR_UNAME, node->uname);
-        crm_xml_add(reply_data, XML_NODE_IS_PEER, node->state);
+        crm_xml_add(reply_data, PCMK__XA_CRMD, node->state);
         pcmk__xe_set_bool_attr(reply_data, XML_NODE_IS_REMOTE,
                                pcmk_is_set(node->flags, crm_remote_node));
     }

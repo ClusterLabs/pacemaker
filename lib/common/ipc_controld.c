@@ -135,7 +135,7 @@ set_node_info_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
 
     data->data.node_info.uuid = crm_element_value(msg_data, XML_ATTR_ID);
     data->data.node_info.uname = crm_element_value(msg_data, XML_ATTR_UNAME);
-    data->data.node_info.state = crm_element_value(msg_data, XML_NODE_IS_PEER);
+    data->data.node_info.state = crm_element_value(msg_data, PCMK__XA_CRMD);
 }
 
 static void

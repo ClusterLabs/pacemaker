@@ -1376,7 +1376,7 @@ determine_online_status_no_fencing(pe_working_set_t *data_set,
 {
     gboolean online = FALSE;
     const char *join = crm_element_value(node_state, XML_NODE_JOIN_STATE);
-    const char *is_peer = crm_element_value(node_state, XML_NODE_IS_PEER);
+    const char *is_peer = crm_element_value(node_state, PCMK__XA_CRMD);
     const char *in_cluster = crm_element_value(node_state, XML_NODE_IN_CLUSTER);
     const char *exp_state = crm_element_value(node_state, XML_NODE_EXPECTED);
     int member = false;
@@ -1436,7 +1436,7 @@ determine_online_status_fencing(pe_working_set_t *data_set,
     gboolean do_terminate = FALSE;
     bool crmd_online = FALSE;
     const char *join = crm_element_value(node_state, XML_NODE_JOIN_STATE);
-    const char *is_peer = crm_element_value(node_state, XML_NODE_IS_PEER);
+    const char *is_peer = crm_element_value(node_state, PCMK__XA_CRMD);
     const char *in_cluster = crm_element_value(node_state, XML_NODE_IN_CLUSTER);
     const char *exp_state = crm_element_value(node_state, XML_NODE_EXPECTED);
     const char *terminate = pe_node_attribute_raw(this_node, "terminate");
@@ -1450,14 +1450,14 @@ determine_online_status_fencing(pe_working_set_t *data_set,
 
   @COMPAT with entries recorded for DCs < 2.1.7
   - XML_NODE_IN_CLUSTER    ::= true|false
-  - XML_NODE_IS_PEER       ::= online|offline
+  - PCMK__XA_CRMD          ::= online|offline
 
   Since crm_feature_set 3.18.0 (pacemaker-2.1.7):
   - XML_NODE_IN_CLUSTER    ::= <timestamp>|0
   Since when node has been a cluster member. A value 0 of means the node is not
   a cluster member.
 
-  - XML_NODE_IS_PEER       ::= <timestamp>|0
+  - PCMK__XA_CRMD          ::= <timestamp>|0
   Since when peer has been online in CPG. A value 0 means the peer is offline
   in CPG.
 */
@@ -1489,7 +1489,7 @@ determine_online_status_fencing(pe_working_set_t *data_set,
 
     online = member;
 
-    /* @COMPAT with "online"/"offline" values of XML_NODE_IS_PEER recorded for
+    /* @COMPAT with "online"/"offline" values of PCMK__XA_CRMD recorded for
      * DCs < 2.1.7
      */
     if (pcmk__str_eq(is_peer, ONLINESTATUS, pcmk__str_casei)) {

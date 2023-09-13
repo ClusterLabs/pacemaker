@@ -81,6 +81,7 @@
 #define PCMK__XA_CONFIG_ERRORS          "config-errors"
 #define PCMK__XA_CONFIG_WARNINGS        "config-warnings"
 #define PCMK__XA_CONFIRM                "confirm"
+#define PCMK__XA_CRMD                   "crmd"
 #define PCMK__XA_GRAPH_ERRORS           "graph-errors"
 #define PCMK__XA_GRAPH_WARNINGS         "graph-warnings"
 #define PCMK__XA_MODE                   "mode"
