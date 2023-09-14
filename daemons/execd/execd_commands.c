@@ -1493,9 +1493,15 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
         if ((client->remote != NULL)
             && pcmk_is_set(client->flags,
                            pcmk__client_tls_handshake_complete)) {
+            const char *op = crm_element_value(request, F_LRMD_OPERATION);
 
             // This is a remote connection from a cluster node's controller
             ipc_proxy_add_provider(client);
+
+            /* If this was a register operation, also ask for new schema files. */
+            if (pcmk__str_eq(op, CRM_OP_REGISTER, pcmk__str_none)) {
+                remoted_request_cib_schema_files();
+            }
         } else {
             rc = -EACCES;
         }
