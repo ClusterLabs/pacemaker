@@ -324,6 +324,9 @@ typedef struct cib_api_operations_s {
      *                      processing requests
      */
     void (*set_user)(cib_t *cib, const char *user);
+
+    int (*fetch_schemas)(cib_t *cib, xmlNode **output_data, const char *after_ver,
+                         int call_options);
 } cib_api_operations_t;
 
 struct cib_s {

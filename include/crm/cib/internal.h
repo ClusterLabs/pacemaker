@@ -32,6 +32,7 @@
 #define PCMK__CIB_REQUEST_NOOP          "noop"
 #define PCMK__CIB_REQUEST_SHUTDOWN      "cib_shutdown_req"
 #define PCMK__CIB_REQUEST_COMMIT_TRANSACT   "cib_commit_transact"
+#define PCMK__CIB_REQUEST_SCHEMAS       "cib_schemas"
 
 #  define F_CIB_CLIENTID  "cib_clientid"
 #  define F_CIB_CALLOPTS  "cib_callopt"
@@ -110,6 +111,7 @@ enum cib__op_type {
     cib__op_sync_all,
     cib__op_sync_one,
     cib__op_upgrade,
+    cib__op_schemas,
 };
 
 gboolean cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, int *updates,

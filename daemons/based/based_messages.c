@@ -478,3 +478,46 @@ cib_process_commit_transaction(const char *op, int options, const char *section,
     }
     return pcmk_rc2legacy(rc);
 }
+
+int
+cib_process_schemas(const char *op, int options, const char *section, xmlNode *req,
+                    xmlNode *input, xmlNode *existing_cib, xmlNode **result_cib,
+                    xmlNode **answer)
+{
+    xmlNode *data = NULL;
+    const char *after_ver = NULL;
+    GList *schemas = NULL;
+    GList *already_included = NULL;
+
+    *answer = create_xml_node(NULL, PCMK__XA_SCHEMAS);
+
+    data = get_message_xml(req, F_CIB_CALLDATA);
+    if (data == NULL) {
+        crm_warn("No data specified in request");
+        return -EPROTO;
+    }
+
+    after_ver = crm_element_value(data, XML_ATTR_VERSION);
+    if (after_ver == NULL) {
+        crm_warn("No version specified in request");
+        return -EPROTO;
+    }
+
+    /* The client requested all schemas after the latest one we know about, which
+     * means the client is fully up-to-date.  Return a properly formatted reply
+     * with no schemas.
+     */
+    if (pcmk__str_eq(after_ver, xml_latest_schema(), pcmk__str_none)) {
+        return pcmk_ok;
+    }
+
+    schemas = pcmk__schema_files_later_than(after_ver);
+
+    for (GList *iter = schemas; iter != NULL; iter = iter->next) {
+        pcmk__build_schema_xml_node(*answer, iter->data, &already_included);
+    }
+
+    g_list_free_full(schemas, free);
+    g_list_free_full(already_included, free);
+    return pcmk_ok;
+}

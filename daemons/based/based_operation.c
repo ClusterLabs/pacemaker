@@ -35,6 +35,7 @@ static const cib__op_fn_t cib_op_functions[] = {
     [cib__op_sync_all]         = cib_process_sync,
     [cib__op_sync_one]         = cib_process_sync_one,
     [cib__op_upgrade]          = cib_process_upgrade_server,
+    [cib__op_schemas]          = cib_process_schemas,
 };
 
 /*!
