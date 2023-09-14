@@ -1024,7 +1024,8 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
  * \param[in]     save_action  Whether action should be recorded in transition graph
  * \param[in,out] data_set     Cluster working set
  *
- * \return Action object corresponding to arguments
+ * \return Action object corresponding to arguments (guaranteed not to be
+ *         \c NULL)
  * \note This function takes ownership of (and might free) \p key. If
  *       \p save_action is true, \p data_set will own the returned action,
  *       otherwise it is the caller's responsibility to free the return value
