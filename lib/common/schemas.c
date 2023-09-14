@@ -406,6 +406,49 @@ wrap_libxslt(bool finalize)
     }
 }
 
+void
+pcmk__load_schemas_from_dir(const char *dir)
+{
+    int lpc, max;
+    struct dirent **namelist = NULL;
+
+    max = scandir(dir, &namelist, schema_filter, schema_cmp_directory);
+    if (max < 0) {
+        crm_warn("Could not load schemas from %s: %s", dir, strerror(errno));
+        return;
+    }
+
+    for (lpc = 0; lpc < max; lpc++) {
+        bool transform_expected = false;
+        pcmk__schema_version_t version = SCHEMA_ZERO;
+
+        if (!version_from_filename(namelist[lpc]->d_name, &version)) {
+            // Shouldn't be possible, but makes static analysis happy
+            crm_warn("Skipping schema '%s': could not parse version",
+                     namelist[lpc]->d_name);
+            continue;
+        }
+        if ((lpc + 1) < max) {
+            pcmk__schema_version_t next_version = SCHEMA_ZERO;
+
+            if (version_from_filename(namelist[lpc+1]->d_name, &next_version)
+                    && (version.v[0] < next_version.v[0])) {
+                transform_expected = true;
+            }
+        }
+
+        if (add_schema_by_version(&version, transform_expected) != pcmk_rc_ok) {
+            break;
+        }
+    }
+
+    for (lpc = 0; lpc < max; lpc++) {
+        free(namelist[lpc]);
+    }
+
+    free(namelist);
+}
+
 /*!
  * \internal
  * \brief Load pacemaker schemas into cache
@@ -416,50 +459,12 @@ wrap_libxslt(bool finalize)
 void
 crm_schema_init(void)
 {
-    int lpc, max;
     char *base = pcmk__xml_artefact_root(pcmk__xml_artefact_ns_legacy_rng);
-    struct dirent **namelist = NULL;
     const pcmk__schema_version_t zero = SCHEMA_ZERO;
 
     wrap_libxslt(false);
 
-    max = scandir(base, &namelist, schema_filter, schema_cmp_directory);
-    if (max < 0) {
-        crm_notice("scandir(%s) failed: %s (%d)", base, strerror(errno), errno);
-        free(base);
-
-    } else {
-        free(base);
-        for (lpc = 0; lpc < max; lpc++) {
-            bool transform_expected = FALSE;
-            pcmk__schema_version_t version = SCHEMA_ZERO;
-
-            if (!version_from_filename(namelist[lpc]->d_name, &version)) {
-                // Shouldn't be possible, but makes static analysis happy
-                crm_err("Skipping schema '%s': could not parse version",
-                        namelist[lpc]->d_name);
-                continue;
-            }
-            if ((lpc + 1) < max) {
-                pcmk__schema_version_t next_version = SCHEMA_ZERO;
-
-                if (version_from_filename(namelist[lpc+1]->d_name, &next_version)
-                        && (version.v[0] < next_version.v[0])) {
-                    transform_expected = TRUE;
-                }
-            }
-
-            if (add_schema_by_version(&version, transform_expected)
-                    == ENOENT) {
-                break;
-            }
-        }
-
-        for (lpc = 0; lpc < max; lpc++) {
-            free(namelist[lpc]);
-        }
-        free(namelist);
-    }
+    pcmk__load_schemas_from_dir(base);
 
     // @COMPAT: Deprecated since 2.1.5
     add_schema(pcmk__schema_validator_rng, &zero, "pacemaker-next",
