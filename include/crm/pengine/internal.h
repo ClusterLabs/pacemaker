@@ -642,9 +642,7 @@ void pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
                                 gboolean overwrite, pe_working_set_t *data_set);
 
 bool pe__resource_is_disabled(const pe_resource_t *rsc);
-pe_action_t *pe__clear_resource_history(pe_resource_t *rsc,
-                                        const pe_node_t *node,
-                                        pe_working_set_t *data_set);
+void pe__clear_resource_history(pe_resource_t *rsc, const pe_node_t *node);
 
 GList *pe__rscs_with_tag(pe_working_set_t *data_set, const char *tag_name);
 GList *pe__unames_with_tag(pe_working_set_t *data_set, const char *tag_name);

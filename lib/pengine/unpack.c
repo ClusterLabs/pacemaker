@@ -2495,7 +2495,7 @@ unpack_shutdown_lock(const xmlNode *rsc_entry, pe_resource_t *rsc,
                 > (lock_time + data_set->shutdown_lock))) {
             pe_rsc_info(rsc, "Shutdown lock for %s on %s expired",
                         rsc->id, pe__node_name(node));
-            pe__clear_resource_history(rsc, node, data_set);
+            pe__clear_resource_history(rsc, node);
         } else {
             /* @COMPAT I don't like breaking const signatures, but
              * rsc->lock_node should really be const -- we just can't change it

@@ -1610,7 +1610,7 @@ pcmk__primitive_shutdown_lock(pe_resource_t *rsc)
             pe_rsc_info(rsc,
                         "Cancelling shutdown lock because %s is already active",
                         rsc->id);
-            pe__clear_resource_history(rsc, rsc->lock_node, rsc->cluster);
+            pe__clear_resource_history(rsc, rsc->lock_node);
             rsc->lock_node = NULL;
             rsc->lock_time = 0;
         }
