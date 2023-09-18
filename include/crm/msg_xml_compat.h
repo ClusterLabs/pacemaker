@@ -25,6 +25,9 @@ extern "C" {
  *             release.
  */
 
+//! \deprecated Use PCMK_META_CLONE_MAX instead
+#define XML_RSC_ATTR_INCARNATION_MAX PCMK_META_CLONE_MAX
+
 //! \deprecated Use PCMK_STONITH_PROVIDES instead
 #define XML_RSC_ATTR_PROVIDES PCMK_STONITH_PROVIDES
 
