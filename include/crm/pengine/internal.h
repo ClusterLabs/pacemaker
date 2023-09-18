@@ -407,11 +407,6 @@ pe_action_t *custom_action(pe_resource_t *rsc, char *key, const char *task,
 		rsc, delete_key(rsc), PCMK_ACTION_DELETE, node, \
 		optional, TRUE, rsc->cluster);
 
-#  define stopped_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_STOPPED, 0)
-#  define stopped_action(rsc, node, optional) custom_action(		\
-		rsc, stopped_key(rsc), PCMK_ACTION_STOPPED, node,	\
-		optional, TRUE, rsc->cluster);
-
 #  define stop_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_STOP, 0)
 #  define stop_action(rsc, node, optional) custom_action(			\
 		rsc, stop_key(rsc), PCMK_ACTION_STOP, node,		\
@@ -423,29 +418,14 @@ pe_action_t *custom_action(pe_resource_t *rsc, char *key, const char *task,
 		rsc, start_key(rsc), PCMK_ACTION_START, node,           \
 		optional, TRUE, rsc->cluster)
 
-#  define started_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_RUNNING, 0)
-#  define started_action(rsc, node, optional) custom_action(		\
-		rsc, started_key(rsc), PCMK_ACTION_RUNNING, node,	\
-		optional, TRUE, rsc->cluster)
-
 #  define promote_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_PROMOTE, 0)
 #  define promote_action(rsc, node, optional) custom_action(		\
 		rsc, promote_key(rsc), PCMK_ACTION_PROMOTE, node,	\
 		optional, TRUE, rsc->cluster)
 
-#  define promoted_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_PROMOTED, 0)
-#  define promoted_action(rsc, node, optional) custom_action(		\
-		rsc, promoted_key(rsc), PCMK_ACTION_PROMOTED, node,	\
-		optional, TRUE, rsc->cluster)
-
 #  define demote_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_DEMOTE, 0)
 #  define demote_action(rsc, node, optional) custom_action(		\
 		rsc, demote_key(rsc), PCMK_ACTION_DEMOTE, node, \
-		optional, TRUE, rsc->cluster)
-
-#  define demoted_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_DEMOTED, 0)
-#  define demoted_action(rsc, node, optional) custom_action(		\
-		rsc, demoted_key(rsc), PCMK_ACTION_DEMOTED, node,	\
 		optional, TRUE, rsc->cluster)
 
 extern int pe_get_configured_timeout(pe_resource_t *rsc, const char *action,
@@ -642,9 +622,7 @@ void pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
                                 gboolean overwrite, pe_working_set_t *data_set);
 
 bool pe__resource_is_disabled(const pe_resource_t *rsc);
-pe_action_t *pe__clear_resource_history(pe_resource_t *rsc,
-                                        const pe_node_t *node,
-                                        pe_working_set_t *data_set);
+void pe__clear_resource_history(pe_resource_t *rsc, const pe_node_t *node);
 
 GList *pe__rscs_with_tag(pe_working_set_t *data_set, const char *tag_name);
 GList *pe__unames_with_tag(pe_working_set_t *data_set, const char *tag_name);

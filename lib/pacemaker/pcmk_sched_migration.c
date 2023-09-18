@@ -69,68 +69,58 @@ pcmk__create_migration_actions(pe_resource_t *rsc, const pe_node_t *current)
                                  TRUE, TRUE,
                                  rsc->cluster);
 
-    if ((migrate_from != NULL)
-        && ((migrate_to != NULL) || (rsc->partial_migration_target != NULL))) {
+    pe__set_action_flags(start, pcmk_action_migratable);
+    pe__set_action_flags(stop, pcmk_action_migratable);
 
-        pe__set_action_flags(start, pcmk_action_migratable);
-        pe__set_action_flags(stop, pcmk_action_migratable);
+    // This is easier than trying to delete it from the graph
+    pe__set_action_flags(start, pcmk_action_pseudo);
 
-        // This is easier than trying to delete it from the graph
-        pe__set_action_flags(start, pcmk_action_pseudo);
+    if (rsc->partial_migration_target == NULL) {
+        pe__set_action_flags(migrate_from, pcmk_action_migratable);
+        pe__set_action_flags(migrate_to, pcmk_action_migratable);
+        migrate_to->needs = start->needs;
 
-        if (rsc->partial_migration_target == NULL) {
-            pe__set_action_flags(migrate_from, pcmk_action_migratable);
-
-            if (migrate_to != NULL) {
-                pe__set_action_flags(migrate_to, pcmk_action_migratable);
-                migrate_to->needs = start->needs;
-            }
-
-            // Probe -> migrate_to -> migrate_from
-            pcmk__new_ordering(rsc,
-                               pcmk__op_key(rsc->id, PCMK_ACTION_MONITOR, 0),
-                               NULL, rsc,
-                               pcmk__op_key(rsc->id, PCMK_ACTION_MIGRATE_TO, 0),
-                               NULL, pe_order_optional, rsc->cluster);
-            pcmk__new_ordering(rsc,
-                               pcmk__op_key(rsc->id, PCMK_ACTION_MIGRATE_TO, 0),
-                               NULL, rsc,
-                               pcmk__op_key(rsc->id,
-                                            PCMK_ACTION_MIGRATE_FROM, 0),
-                               NULL,
-                               pe_order_optional
-                               |pe_order_implies_first_migratable,
-                               rsc->cluster);
-        } else {
-            pe__set_action_flags(migrate_from, pcmk_action_migratable);
-            migrate_from->needs = start->needs;
-
-            // Probe -> migrate_from (migrate_to already completed)
-            pcmk__new_ordering(rsc,
-                               pcmk__op_key(rsc->id, PCMK_ACTION_MONITOR, 0),
-                               NULL, rsc,
-                               pcmk__op_key(rsc->id,
-                                            PCMK_ACTION_MIGRATE_FROM, 0),
-                               NULL, pe_order_optional, rsc->cluster);
-        }
-
-        // migrate_from before stop or start
-        pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_MIGRATE_FROM,
-                                             0),
+        // Probe -> migrate_to -> migrate_from
+        pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_MONITOR, 0),
                            NULL,
-                           rsc, pcmk__op_key(rsc->id, PCMK_ACTION_STOP, 0),
+                           rsc,
+                           pcmk__op_key(rsc->id, PCMK_ACTION_MIGRATE_TO, 0),
+                           NULL, pe_order_optional, rsc->cluster);
+        pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_MIGRATE_TO, 0),
                            NULL,
-                           pe_order_optional|pe_order_implies_first_migratable,
+                           rsc,
+                           pcmk__op_key(rsc->id, PCMK_ACTION_MIGRATE_FROM, 0),
+                           NULL,
+                           pe_order_optional
+                           |pe_order_implies_first_migratable,
                            rsc->cluster);
-        pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_MIGRATE_FROM,
-                                             0),
+    } else {
+        pe__set_action_flags(migrate_from, pcmk_action_migratable);
+        migrate_from->needs = start->needs;
+
+        // Probe -> migrate_from (migrate_to already completed)
+        pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_MONITOR, 0),
                            NULL,
-                           rsc, pcmk__op_key(rsc->id, PCMK_ACTION_START, 0),
-                           NULL, pe_order_optional
-                                 |pe_order_implies_first_migratable
-                                 |pe_order_pseudo_left,
-                           rsc->cluster);
+                           rsc,
+                           pcmk__op_key(rsc->id, PCMK_ACTION_MIGRATE_FROM, 0),
+                           NULL, pe_order_optional, rsc->cluster);
     }
+
+    // migrate_from before stop or start
+    pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_MIGRATE_FROM, 0),
+                       NULL,
+                       rsc, pcmk__op_key(rsc->id, PCMK_ACTION_STOP, 0),
+                       NULL,
+                       pe_order_optional|pe_order_implies_first_migratable,
+                       rsc->cluster);
+    pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_MIGRATE_FROM, 0),
+                       NULL,
+                       rsc, pcmk__op_key(rsc->id, PCMK_ACTION_START, 0),
+                       NULL,
+                       pe_order_optional
+                       |pe_order_implies_first_migratable
+                       |pe_order_pseudo_left,
+                       rsc->cluster);
 
     if (migrate_to != NULL) {
         add_migration_meta(migrate_to, current, rsc->allocated_to);
@@ -151,9 +141,7 @@ pcmk__create_migration_actions(pe_resource_t *rsc, const pe_node_t *current)
         }
     }
 
-    if (migrate_from != NULL) {
-        add_migration_meta(migrate_from, current, rsc->allocated_to);
-    }
+    add_migration_meta(migrate_from, current, rsc->allocated_to);
 }
 
 /*!
