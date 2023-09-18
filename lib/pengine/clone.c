@@ -314,8 +314,7 @@ clone_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
         const char *promoted_max = NULL;
         const char *promoted_node_max = NULL;
 
-        promoted_max = g_hash_table_lookup(rsc->meta,
-                                           XML_RSC_ATTR_PROMOTED_MAX);
+        promoted_max = g_hash_table_lookup(rsc->meta, PCMK_META_PROMOTED_MAX);
         if (promoted_max == NULL) {
             // @COMPAT deprecated since 2.0.0
             promoted_max = g_hash_table_lookup(rsc->meta,
@@ -377,7 +376,7 @@ clone_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_unique)
         && (clone_data->clone_node_max > 1)) {
 
-        pcmk__config_err("Ignoring " XML_RSC_ATTR_PROMOTED_MAX " for %s "
+        pcmk__config_err("Ignoring " PCMK_META_PROMOTED_MAX " for %s "
                          "because anonymous clones support only one instance "
                          "per node", rsc->id);
         clone_data->clone_node_max = 1;

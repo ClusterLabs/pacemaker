@@ -65,6 +65,7 @@ extern "C" {
 #define PCMK_META_ENABLED                   "enabled"
 #define PCMK_META_FAILURE_TIMEOUT           "failure-timeout"
 #define PCMK_META_MIGRATION_THRESHOLD       "migration-threshold"
+#define PCMK_META_PROMOTED_MAX              "promoted-max"
 
 
 /*
@@ -243,7 +244,7 @@ extern "C" {
 #  define XML_RSC_ATTR_INTERLEAVE	"interleave"
 #  define XML_RSC_ATTR_INCARNATION	"clone"
 #  define XML_RSC_ATTR_PROMOTABLE       "promotable"
-#  define XML_RSC_ATTR_PROMOTED_MAX     "promoted-max"
+#  define XML_RSC_ATTR_PROMOTED_MAX     PCMK_META_PROMOTED_MAX
 #  define XML_RSC_ATTR_PROMOTED_NODEMAX "promoted-node-max"
 #  define XML_RSC_ATTR_MANAGED		"is-managed"
 #  define XML_RSC_ATTR_TARGET_ROLE	"target-role"
