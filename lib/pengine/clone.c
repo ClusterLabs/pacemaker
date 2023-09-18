@@ -302,7 +302,8 @@ clone_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
 
     const char *max_clones = g_hash_table_lookup(rsc->meta,
                                                  PCMK_META_CLONE_MAX);
-    const char *max_clones_node = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INCARNATION_NODEMAX);
+    const char *max_clones_node = g_hash_table_lookup(rsc->meta,
+                                                      PCMK_META_CLONE_NODE_MAX);
 
     pe_rsc_trace(rsc, "Processing resource %s...", rsc->id);
 
@@ -1516,8 +1517,7 @@ pe__clone_max_per_node(const pe_resource_t *rsc)
     int max_instances = 1;
 
     CRM_ASSERT(pe_rsc_is_clone(rsc));
-    max_clones_node = g_hash_table_lookup(rsc->meta,
-                                          XML_RSC_ATTR_INCARNATION_NODEMAX);
+    max_clones_node = g_hash_table_lookup(rsc->meta, PCMK_META_CLONE_NODE_MAX);
     if (max_clones_node != NULL) {
         pcmk__scan_min_int(max_clones_node, &max_instances, 0);
     }
