@@ -322,7 +322,7 @@ clone_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
         }
 
         promoted_node_max = g_hash_table_lookup(rsc->meta,
-                                                XML_RSC_ATTR_PROMOTED_NODEMAX);
+                                                PCMK_META_PROMOTED_NODE_MAX);
         if (promoted_node_max == NULL) {
             // @COMPAT deprecated since 2.0.0
             promoted_node_max =
