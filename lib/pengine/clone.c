@@ -372,9 +372,9 @@ clone_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_unique)
         && (clone_data->clone_node_max > 1)) {
 
-        pcmk__config_err("Ignoring " PCMK_META_PROMOTED_MAX " for %s "
+        pcmk__config_err("Ignoring " PCMK_META_CLONE_NODE_MAX " of %d for %s "
                          "because anonymous clones support only one instance "
-                         "per node", rsc->id);
+                         "per node", clone_data->clone_node_max, rsc->id);
         clone_data->clone_node_max = 1;
     }
 
