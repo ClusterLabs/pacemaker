@@ -838,6 +838,11 @@ AC_DEFINE_UNQUOTED([CRM_SCHEMA_DIRECTORY], ["$CRM_SCHEMA_DIRECTORY"],
                    [Location for the Pacemaker Relax-NG Schema])
 AC_SUBST(CRM_SCHEMA_DIRECTORY)
 
+PCMK__REMOTE_SCHEMA_DIR="${localstatedir}/lib/pacemaker/schemas"
+AC_DEFINE_UNQUOTED([PCMK__REMOTE_SCHEMA_DIR], ["$PCMK__REMOTE_SCHEMA_DIR"],
+                   [Location to store Relax-NG Schema files on remote nodes])
+AC_SUBST(PCMK__REMOTE_SCHEMA_DIR)
+
 CRM_CORE_DIR="${localstatedir}/lib/pacemaker/cores"
 AC_DEFINE_UNQUOTED([CRM_CORE_DIR], ["$CRM_CORE_DIR"],
                    [Directory Pacemaker daemons should change to (without systemd, core files will go here)])

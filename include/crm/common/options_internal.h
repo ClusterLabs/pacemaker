@@ -95,6 +95,7 @@ bool pcmk__valid_sbd_timeout(const char *value);
 #define PCMK__ENV_PANIC_ACTION              "panic_action"
 #define PCMK__ENV_PHYSICAL_HOST             "physical_host"
 #define PCMK__ENV_REMOTE_ADDRESS            "remote_address"
+#define PCMK__ENV_REMOTE_SCHEMA_DIR         "remote_schema_directory"
 #define PCMK__ENV_REMOTE_PID1               "remote_pid1"
 #define PCMK__ENV_REMOTE_PORT               "remote_port"
 #define PCMK__ENV_RESPAWNED                 "respawned"
