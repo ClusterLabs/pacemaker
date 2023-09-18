@@ -63,7 +63,7 @@ typedef struct xml_doc_private_s {
     } while (0)
 
 G_GNUC_INTERNAL
-void pcmk__xml2text(xmlNodePtr data, uint32_t options, GString *buffer,
+void pcmk__xml2text(const xmlNode *data, uint32_t options, GString *buffer,
                     int depth);
 
 G_GNUC_INTERNAL
@@ -175,11 +175,11 @@ typedef struct pcmk__ipc_methods_s {
      * \brief Check whether an IPC request results in a reply
      *
      * \param[in,out] api      IPC API connection
-     * \param[in,out] request  IPC request XML
+     * \param[in]     request  IPC request XML
      *
      * \return true if request would result in an IPC reply, false otherwise
      */
-    bool (*reply_expected)(pcmk_ipc_api_t *api, xmlNode *request);
+    bool (*reply_expected)(pcmk_ipc_api_t *api, const xmlNode *request);
 
     /*!
      * \internal
@@ -224,7 +224,7 @@ typedef struct pcmk__ipc_header_s {
 } pcmk__ipc_header_t;
 
 G_GNUC_INTERNAL
-int pcmk__send_ipc_request(pcmk_ipc_api_t *api, xmlNode *request);
+int pcmk__send_ipc_request(pcmk_ipc_api_t *api, const xmlNode *request);
 
 G_GNUC_INTERNAL
 void pcmk__call_ipc_callback(pcmk_ipc_api_t *api,

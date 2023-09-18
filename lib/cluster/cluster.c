@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -160,7 +160,7 @@ pcmk_cluster_free(crm_cluster_t *cluster)
  */
 gboolean
 send_cluster_message(const crm_node_t *node, enum crm_ais_msg_types service,
-                     xmlNode *data, gboolean ordered)
+                     const xmlNode *data, gboolean ordered)
 {
     switch (get_cluster_type()) {
         case pcmk_cluster_corosync:

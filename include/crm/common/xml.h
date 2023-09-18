@@ -130,12 +130,13 @@ xmlNode *stdin2xml(void);
 
 xmlNode *string2xml(const char *input);
 
-int write_xml_fd(xmlNode * xml_node, const char *filename, int fd, gboolean compress);
-int write_xml_file(xmlNode * xml_node, const char *filename, gboolean compress);
+int write_xml_fd(const xmlNode *xml, const char *filename, int fd,
+                 gboolean compress);
+int write_xml_file(const xmlNode *xml, const char *filename, gboolean compress);
 
-char *dump_xml_formatted(xmlNode * msg);
-char *dump_xml_formatted_with_text(xmlNode * msg);
-char *dump_xml_unformatted(xmlNode * msg);
+char *dump_xml_formatted(const xmlNode *xml);
+char *dump_xml_formatted_with_text(const xmlNode *xml);
+char *dump_xml_unformatted(const xmlNode *xml);
 
 /*
  * Diff related Functions
@@ -186,7 +187,7 @@ char *calculate_xml_versioned_digest(xmlNode * input, gboolean sort, gboolean do
 
 /* schema-related functions (from schemas.c) */
 gboolean validate_xml(xmlNode * xml_blob, const char *validation, gboolean to_logs);
-gboolean validate_xml_verbose(xmlNode * xml_blob);
+gboolean validate_xml_verbose(const xmlNode *xml_blob);
 
 /*!
  * \brief Update CIB XML to most recent schema version
@@ -279,7 +280,8 @@ int xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version);
 
 void patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target, bool with_digest);
 
-void save_xml_to_file(xmlNode * xml, const char *desc, const char *filename);
+void save_xml_to_file(const xmlNode *xml, const char *desc,
+                      const char *filename);
 
 char * crm_xml_escape(const char *text);
 void crm_xml_sanitize_id(char *id);

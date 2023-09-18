@@ -570,16 +570,16 @@ crm_ipcs_flush_events(pcmk__client_t *c)
  * \internal
  * \brief Create an I/O vector for sending an IPC XML message
  *
- * \param[in]     request        Identifier for libqb response header
- * \param[in,out] message        XML message to send
- * \param[in]     max_send_size  If 0, default IPC buffer size is used
- * \param[out]    result         Where to store prepared I/O vector
- * \param[out]    bytes          Size of prepared data in bytes
+ * \param[in]  request        Identifier for libqb response header
+ * \param[in]  message        XML message to send
+ * \param[in]  max_send_size  If 0, default IPC buffer size is used
+ * \param[out] result         Where to store prepared I/O vector
+ * \param[out] bytes          Size of prepared data in bytes
  *
  * \return Standard Pacemaker return code
  */
 int
-pcmk__ipc_prepare_iov(uint32_t request, xmlNode *message,
+pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
                       uint32_t max_send_size, struct iovec **result,
                       ssize_t *bytes)
 {
@@ -743,7 +743,7 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
 }
 
 int
-pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, xmlNode *message,
+pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, const xmlNode *message,
                    uint32_t flags)
 {
     struct iovec *iov = NULL;

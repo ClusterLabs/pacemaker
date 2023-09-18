@@ -180,8 +180,8 @@ create_cib_reply(const char *op, const char *call_id, const char *client_id,
 }
 
 static void
-do_local_notify(xmlNode *notify_src, const char *client_id, bool sync_reply,
-                bool from_peer)
+do_local_notify(const xmlNode *notify_src, const char *client_id,
+                bool sync_reply, bool from_peer)
 {
     int rid = 0;
     int call_id = 0;
@@ -496,7 +496,7 @@ local_notify_destroy_callback(gpointer data)
 static void
 check_local_notify(int bcast_id)
 {
-    cib_local_notify_t *notify = NULL;
+    const cib_local_notify_t *notify = NULL;
 
     if (!local_notify_queue) {
         return;

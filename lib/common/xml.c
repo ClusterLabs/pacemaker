@@ -1146,7 +1146,7 @@ crm_xml_set_id(xmlNode *xml, const char *format, ...)
  * \internal
  * \brief Write XML to a file stream
  *
- * \param[in]     xml_node  XML to write
+ * \param[in]     xml       XML to write
  * \param[in]     filename  Name of file being written (for logging only)
  * \param[in,out] stream    Open file stream corresponding to filename
  * \param[in]     compress  Whether to compress XML before writing
@@ -1155,18 +1155,18 @@ crm_xml_set_id(xmlNode *xml, const char *format, ...)
  * \return Standard Pacemaker return code
  */
 static int
-write_xml_stream(xmlNode *xml_node, const char *filename, FILE *stream,
+write_xml_stream(const xmlNode *xml, const char *filename, FILE *stream,
                  bool compress, unsigned int *nbytes)
 {
     int rc = pcmk_rc_ok;
     char *buffer = NULL;
 
     *nbytes = 0;
-    crm_log_xml_trace(xml_node, "writing");
+    crm_log_xml_trace(xml, "writing");
 
-    buffer = dump_xml_formatted(xml_node);
+    buffer = dump_xml_formatted(xml);
     CRM_CHECK(buffer && strlen(buffer),
-              crm_log_xml_warn(xml_node, "formatting failed");
+              crm_log_xml_warn(xml, "formatting failed");
               rc = pcmk_rc_error;
               goto bail);
 
@@ -1244,7 +1244,7 @@ write_xml_stream(xmlNode *xml_node, const char *filename, FILE *stream,
 /*!
  * \brief Write XML to a file descriptor
  *
- * \param[in] xml_node  XML to write
+ * \param[in] xml       XML to write
  * \param[in] filename  Name of file being written (for logging only)
  * \param[in] fd        Open file descriptor corresponding to filename
  * \param[in] compress  Whether to compress XML before writing
@@ -1252,18 +1252,19 @@ write_xml_stream(xmlNode *xml_node, const char *filename, FILE *stream,
  * \return Number of bytes written on success, -errno otherwise
  */
 int
-write_xml_fd(xmlNode * xml_node, const char *filename, int fd, gboolean compress)
+write_xml_fd(const xmlNode *xml, const char *filename, int fd,
+             gboolean compress)
 {
     FILE *stream = NULL;
     unsigned int nbytes = 0;
     int rc = pcmk_rc_ok;
 
-    CRM_CHECK(xml_node && (fd > 0), return -EINVAL);
+    CRM_CHECK((xml != NULL) && (fd > 0), return -EINVAL);
     stream = fdopen(fd, "w");
     if (stream == NULL) {
         return -errno;
     }
-    rc = write_xml_stream(xml_node, filename, stream, compress, &nbytes);
+    rc = write_xml_stream(xml, filename, stream, compress, &nbytes);
     if (rc != pcmk_rc_ok) {
         return pcmk_rc2legacy(rc);
     }
@@ -1273,25 +1274,25 @@ write_xml_fd(xmlNode * xml_node, const char *filename, int fd, gboolean compress
 /*!
  * \brief Write XML to a file
  *
- * \param[in] xml_node  XML to write
+ * \param[in] xml       XML to write
  * \param[in] filename  Name of file to write
  * \param[in] compress  Whether to compress XML before writing
  *
  * \return Number of bytes written on success, -errno otherwise
  */
 int
-write_xml_file(xmlNode * xml_node, const char *filename, gboolean compress)
+write_xml_file(const xmlNode *xml, const char *filename, gboolean compress)
 {
     FILE *stream = NULL;
     unsigned int nbytes = 0;
     int rc = pcmk_rc_ok;
 
-    CRM_CHECK(xml_node && filename, return -EINVAL);
+    CRM_CHECK((xml != NULL) && (filename != NULL), return -EINVAL);
     stream = fopen(filename, "w");
     if (stream == NULL) {
         return -errno;
     }
-    rc = write_xml_stream(xml_node, filename, stream, compress, &nbytes);
+    rc = write_xml_stream(xml, filename, stream, compress, &nbytes);
     if (rc != pcmk_rc_ok) {
         return pcmk_rc2legacy(rc);
     }
@@ -1441,9 +1442,9 @@ dump_xml_element(const xmlNode *data, uint32_t options, GString *buffer,
     }
 
     if (data->children) {
-        xmlNode *xChild = NULL;
-        for(xChild = data->children; xChild != NULL; xChild = xChild->next) {
-            pcmk__xml2text(xChild, options, buffer, depth + 1);
+        for (const xmlNode *child = data->children; child != NULL;
+             child = child->next) {
+            pcmk__xml2text(child, options, buffer, depth + 1);
         }
 
         for (int lpc = 0; lpc < spaces; lpc++) {
@@ -1543,7 +1544,45 @@ dump_xml_comment(const xmlNode *data, uint32_t options, GString *buffer,
     }
 }
 
-#define PCMK__XMLDUMP_STATS 0
+/*!
+ * \internal
+ * \brief Get a string representation of an XML element type
+ *
+ * \param[in] type  XML element type
+ *
+ * \return String representation of \p type
+ */
+static const char *
+xml_element_type2str(xmlElementType type)
+{
+    static const char *const element_type_names[] = {
+        [XML_ELEMENT_NODE]       = "element",
+        [XML_ATTRIBUTE_NODE]     = "attribute",
+        [XML_TEXT_NODE]          = "text",
+        [XML_CDATA_SECTION_NODE] = "CDATA section",
+        [XML_ENTITY_REF_NODE]    = "entity reference",
+        [XML_ENTITY_NODE]        = "entity",
+        [XML_PI_NODE]            = "PI",
+        [XML_COMMENT_NODE]       = "comment",
+        [XML_DOCUMENT_NODE]      = "document",
+        [XML_DOCUMENT_TYPE_NODE] = "document type",
+        [XML_DOCUMENT_FRAG_NODE] = "document fragment",
+        [XML_NOTATION_NODE]      = "notation",
+        [XML_HTML_DOCUMENT_NODE] = "HTML document",
+        [XML_DTD_NODE]           = "DTD",
+        [XML_ELEMENT_DECL]       = "element declaration",
+        [XML_ATTRIBUTE_DECL]     = "attribute declaration",
+        [XML_ENTITY_DECL]        = "entity declaration",
+        [XML_NAMESPACE_DECL]     = "namespace declaration",
+        [XML_XINCLUDE_START]     = "XInclude start",
+        [XML_XINCLUDE_END]       = "XInclude end",
+    };
+
+    if ((type < 0) || (type >= PCMK__NELEM(element_type_names))) {
+        return "unrecognized type";
+    }
+    return element_type_names[type];
+}
 
 /*!
  * \internal
@@ -1555,7 +1594,8 @@ dump_xml_comment(const xmlNode *data, uint32_t options, GString *buffer,
  * \param[in]     depth    Current indentation level
  */
 void
-pcmk__xml2text(xmlNodePtr data, uint32_t options, GString *buffer, int depth)
+pcmk__xml2text(const xmlNode *data, uint32_t options, GString *buffer,
+               int depth)
 {
     if (data == NULL) {
         crm_trace("Nothing to dump");
@@ -1565,54 +1605,6 @@ pcmk__xml2text(xmlNodePtr data, uint32_t options, GString *buffer, int depth)
     CRM_ASSERT(buffer != NULL);
     CRM_CHECK(depth >= 0, depth = 0);
 
-    if (pcmk_is_set(options, pcmk__xml_fmt_full)) {
-        /* libxml's serialization reuse is a good idea, sadly we cannot
-           apply it for the filtered cases (preceding filtering pass
-           would preclude further reuse of such in-situ modified XML
-           in generic context and is likely not a win performance-wise),
-           and there's also a historically unstable throughput argument
-           (likely stemming from memory allocation overhead, eventhough
-           that shall be minimized with defaults preset in crm_xml_init) */
-#if (PCMK__XMLDUMP_STATS - 0)
-        time_t next, new = time(NULL);
-#endif
-        xmlOutputBuffer *xml_buffer = xmlAllocOutputBuffer(NULL);
-
-        CRM_ASSERT(xml_buffer != NULL);
-
-        /* XXX we could setup custom allocation scheme for the particular
-               buffer, but it's subsumed with crm_xml_init that needs to
-               be invoked prior to entering this function as such, since
-               its other branch vitally depends on it -- what can be done
-               about this all is to have a facade parsing functions that
-               would 100% mark entering libxml code for us, since we don't
-               do anything as crazy as swapping out the binary form of the
-               parsed tree (but those would need to be strictly used as
-               opposed to libxml's raw functions) */
-
-        xmlNodeDumpOutput(xml_buffer, data->doc, data, 0,
-                          pcmk_is_set(options, pcmk__xml_fmt_pretty), NULL);
-        /* attempt adding final NL - failing shouldn't be fatal here */
-        (void) xmlOutputBufferWrite(xml_buffer, sizeof("\n") - 1, "\n");
-        if (xml_buffer->buffer != NULL) {
-            g_string_append(buffer,
-                            (const gchar *) xmlBufContent(xml_buffer->buffer));
-        }
-
-#if (PCMK__XMLDUMP_STATS - 0)
-        next = time(NULL);
-        if ((now + 1) < next) {
-            crm_log_xml_trace(data, "Long time");
-            crm_err("xmlNodeDumpOutput() -> %lld bytes took %ds",
-                    (long long) buffer->len, next - now);
-        }
-#endif
-
-        /* asserted allocation before so there should be something to remove */
-        (void) xmlOutputBufferClose(xml_buffer);
-        return;
-    }
-
     switch(data->type) {
         case XML_ELEMENT_NODE:
             /* Handle below */
@@ -1620,11 +1612,6 @@ pcmk__xml2text(xmlNodePtr data, uint32_t options, GString *buffer, int depth)
             break;
         case XML_TEXT_NODE:
             if (pcmk_is_set(options, pcmk__xml_fmt_text)) {
-                /* @COMPAT: Remove when log_data_element() is removed. There are
-                 * no other internal code paths that set pcmk__xml_fmt_text.
-                 * Keep an empty case handler so that we don't log an unhandled
-                 * type warning.
-                 */
                 dump_xml_text(data, options, buffer, depth);
             }
             break;
@@ -1635,39 +1622,23 @@ pcmk__xml2text(xmlNodePtr data, uint32_t options, GString *buffer, int depth)
             dump_xml_cdata(data, options, buffer, depth);
             break;
         default:
-            crm_warn("Unhandled type: %d", data->type);
+            crm_warn("Cannot convert XML %s node to text " CRM_XS " type=%d",
+                     xml_element_type2str(data->type), data->type);
             break;
-
-            /*
-            XML_ATTRIBUTE_NODE = 2
-            XML_ENTITY_REF_NODE = 5
-            XML_ENTITY_NODE = 6
-            XML_PI_NODE = 7
-            XML_DOCUMENT_NODE = 9
-            XML_DOCUMENT_TYPE_NODE = 10
-            XML_DOCUMENT_FRAG_NODE = 11
-            XML_NOTATION_NODE = 12
-            XML_HTML_DOCUMENT_NODE = 13
-            XML_DTD_NODE = 14
-            XML_ELEMENT_DECL = 15
-            XML_ATTRIBUTE_DECL = 16
-            XML_ENTITY_DECL = 17
-            XML_NAMESPACE_DECL = 18
-            XML_XINCLUDE_START = 19
-            XML_XINCLUDE_END = 20
-            XML_DOCB_DOCUMENT_NODE = 21
-            */
     }
 }
 
 char *
-dump_xml_formatted_with_text(xmlNode * an_xml_node)
+dump_xml_formatted_with_text(const xmlNode *xml)
 {
+    /* libxml's xmlNodeDumpOutput() would work here since we're not specifically
+     * filtering out any nodes. However, use pcmk__xml2text() for consistency,
+     * to escape attribute values, and to allow a const argument.
+     */
     char *buffer = NULL;
     GString *g_buffer = g_string_sized_new(1024);
 
-    pcmk__xml2text(an_xml_node, pcmk__xml_fmt_pretty|pcmk__xml_fmt_full,
-                   g_buffer, 0);
+    pcmk__xml2text(xml, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text, g_buffer, 0);
 
     pcmk__str_update(&buffer, g_buffer->str);
     g_string_free(g_buffer, TRUE);
@@ -1675,12 +1646,12 @@ dump_xml_formatted_with_text(xmlNode * an_xml_node)
 }
 
 char *
-dump_xml_formatted(xmlNode * an_xml_node)
+dump_xml_formatted(const xmlNode *xml)
 {
     char *buffer = NULL;
     GString *g_buffer = g_string_sized_new(1024);
 
-    pcmk__xml2text(an_xml_node, pcmk__xml_fmt_pretty, g_buffer, 0);
+    pcmk__xml2text(xml, pcmk__xml_fmt_pretty, g_buffer, 0);
 
     pcmk__str_update(&buffer, g_buffer->str);
     g_string_free(g_buffer, TRUE);
@@ -1688,12 +1659,12 @@ dump_xml_formatted(xmlNode * an_xml_node)
 }
 
 char *
-dump_xml_unformatted(xmlNode * an_xml_node)
+dump_xml_unformatted(const xmlNode *xml)
 {
     char *buffer = NULL;
     GString *g_buffer = g_string_sized_new(1024);
 
-    pcmk__xml2text(an_xml_node, 0, g_buffer, 0);
+    pcmk__xml2text(xml, 0, g_buffer, 0);
 
     pcmk__str_update(&buffer, g_buffer->str);
     g_string_free(g_buffer, TRUE);
@@ -1744,7 +1715,7 @@ xml_remove_prop(xmlNode * obj, const char *name)
 }
 
 void
-save_xml_to_file(xmlNode * xml, const char *desc, const char *filename)
+save_xml_to_file(const xmlNode *xml, const char *desc, const char *filename)
 {
     char *f = NULL;
 

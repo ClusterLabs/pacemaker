@@ -135,9 +135,6 @@ enum pcmk__xml_fmt_options {
     //! Include indentation and newlines
     pcmk__xml_fmt_pretty     = (1 << 1),
 
-    //! Include full XML subtree (with any text), using libxml serialization
-    pcmk__xml_fmt_full       = (1 << 2),
-
     //! Include the opening tag of an XML element, and include XML comments
     pcmk__xml_fmt_open       = (1 << 3),
 
@@ -147,7 +144,6 @@ enum pcmk__xml_fmt_options {
     //! Include the closing tag of an XML element
     pcmk__xml_fmt_close      = (1 << 5),
 
-    // @COMPAT Remove when log_data_element() is removed
     //! Include XML text nodes
     pcmk__xml_fmt_text       = (1 << 6),
 

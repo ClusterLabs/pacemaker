@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -888,11 +888,11 @@ cluster_connect_cpg(crm_cluster_t *cluster)
  *
  * \return TRUE on success, otherwise FALSE
  */
-gboolean
-pcmk__cpg_send_xml(xmlNode *msg, const crm_node_t *node,
+bool
+pcmk__cpg_send_xml(const xmlNode *msg, const crm_node_t *node,
                    enum crm_ais_msg_types dest)
 {
-    gboolean rc = TRUE;
+    bool rc = true;
     char *data = NULL;
 
     data = dump_xml_unformatted(msg);

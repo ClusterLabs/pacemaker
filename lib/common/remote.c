@@ -485,7 +485,7 @@ remote_send_iovs(pcmk__remote_t *remote, struct iovec *iov, int iovs)
  * \return Standard Pacemaker return code
  */
 int
-pcmk__remote_send_xml(pcmk__remote_t *remote, xmlNode *msg)
+pcmk__remote_send_xml(pcmk__remote_t *remote, const xmlNode *msg)
 {
     int rc = pcmk_rc_ok;
     static uint64_t id = 0;

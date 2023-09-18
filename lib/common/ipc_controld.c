@@ -175,7 +175,7 @@ set_nodes_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
 }
 
 static bool
-reply_expected(pcmk_ipc_api_t *api, xmlNode *request)
+reply_expected(pcmk_ipc_api_t *api, const xmlNode *request)
 {
     // We only need to handle commands that API functions can send
     return pcmk__str_any_of(crm_element_value(request, F_CRM_TASK),
@@ -329,7 +329,7 @@ create_controller_request(const pcmk_ipc_api_t *api, const char *op,
 
 // \return Standard Pacemaker return code
 static int
-send_controller_request(pcmk_ipc_api_t *api, xmlNode *request,
+send_controller_request(pcmk_ipc_api_t *api, const xmlNode *request,
                         bool reply_is_expected)
 {
     if (crm_element_value(request, XML_ATTR_REFERENCE) == NULL) {

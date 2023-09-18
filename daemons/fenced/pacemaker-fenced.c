@@ -242,7 +242,8 @@ stonith_peer_cs_destroy(gpointer user_data)
 #endif
 
 void
-do_local_reply(xmlNode *notify_src, pcmk__client_t *client, int call_options)
+do_local_reply(const xmlNode *notify_src, pcmk__client_t *client,
+               int call_options)
 {
     /* send callback to originating child */
     int local_rc = pcmk_rc_ok;
@@ -293,7 +294,7 @@ static void
 stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
 {
 
-    xmlNode *update_msg = user_data;
+    const xmlNode *update_msg = user_data;
     pcmk__client_t *client = value;
     const char *type = NULL;
 

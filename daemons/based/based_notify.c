@@ -33,7 +33,7 @@
 #include <pacemaker-based.h>
 
 struct cib_notification_s {
-    xmlNode *msg;
+    const xmlNode *msg;
     struct iovec *iov;
     int32_t iov_size;
 };
@@ -103,7 +103,7 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
 }
 
 static void
-cib_notify_send(xmlNode * xml)
+cib_notify_send(const xmlNode *xml)
 {
     struct iovec *iov;
     struct cib_notification_s update;
