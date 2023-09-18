@@ -282,7 +282,7 @@ pe__create_clone_child(pe_resource_t *rsc, pe_working_set_t *data_set)
         pe__set_resource_flags_recursive(child_rsc, pcmk_rsc_removed);
     }
 
-    add_hash_param(child_rsc->meta, XML_RSC_ATTR_INCARNATION_MAX, inc_max);
+    add_hash_param(child_rsc->meta, PCMK_META_CLONE_MAX, inc_max);
     pe_rsc_trace(rsc, "Added %s instance %s", rsc->id, child_rsc->id);
 
   bail:
@@ -300,7 +300,8 @@ clone_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
     xmlNode *xml_obj = rsc->xml;
     clone_variant_data_t *clone_data = NULL;
 
-    const char *max_clones = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INCARNATION_MAX);
+    const char *max_clones = g_hash_table_lookup(rsc->meta,
+                                                 PCMK_META_CLONE_MAX);
     const char *max_clones_node = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INCARNATION_NODEMAX);
 
     pe_rsc_trace(rsc, "Processing resource %s...", rsc->id);

@@ -59,6 +59,7 @@ extern "C" {
  * Meta attributes
  */
 
+#define PCMK_META_CLONE_MAX                 "clone-max"
 #define PCMK_META_ENABLED                   "enabled"
 #define PCMK_META_FAILURE_TIMEOUT           "failure-timeout"
 #define PCMK_META_MIGRATION_THRESHOLD       "migration-threshold"
@@ -239,7 +240,7 @@ extern "C" {
 #  define XML_RSC_ATTR_ORDERED		"ordered"
 #  define XML_RSC_ATTR_INTERLEAVE	"interleave"
 #  define XML_RSC_ATTR_INCARNATION	"clone"
-#  define XML_RSC_ATTR_INCARNATION_MAX	"clone-max"
+#  define XML_RSC_ATTR_INCARNATION_MAX	PCMK_META_CLONE_MAX
 #  define XML_RSC_ATTR_INCARNATION_MIN	"clone-min"
 #  define XML_RSC_ATTR_INCARNATION_NODEMAX	"clone-node-max"
 #  define XML_RSC_ATTR_PROMOTABLE       "promotable"
