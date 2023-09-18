@@ -241,7 +241,6 @@ extern "C" {
 #  define XML_RSC_ATTR_ORDERED		"ordered"
 #  define XML_RSC_ATTR_INTERLEAVE	"interleave"
 #  define XML_RSC_ATTR_INCARNATION	"clone"
-#  define XML_RSC_ATTR_INCARNATION_MIN	PCMK_META_CLONE_MIN
 #  define XML_RSC_ATTR_INCARNATION_NODEMAX	"clone-node-max"
 #  define XML_RSC_ATTR_PROMOTABLE       "promotable"
 #  define XML_RSC_ATTR_PROMOTED_MAX     "promoted-max"
