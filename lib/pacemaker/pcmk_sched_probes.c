@@ -395,9 +395,8 @@ add_probe_orderings_for_stops(pe_working_set_t *data_set)
         }
 
         // Preserve certain order options for future filtering
-        if (pcmk_is_set(order->flags, pe_order_apply_first_non_migratable)) {
-            pe__set_order_flags(order_flags,
-                                pe_order_apply_first_non_migratable);
+        if (pcmk_is_set(order->flags, pcmk__ar_if_first_unmigratable)) {
+            pe__set_order_flags(order_flags, pcmk__ar_if_first_unmigratable);
         }
         if (pcmk_is_set(order->flags, pe_order_same_node)) {
             pe__set_order_flags(order_flags, pe_order_same_node);

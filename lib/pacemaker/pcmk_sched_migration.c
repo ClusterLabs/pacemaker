@@ -308,7 +308,7 @@ pcmk__order_migration_equivalents(pe__ordering_t *order)
 
         if (then_migratable) {
             if (first_migratable) {
-                pe__set_order_flags(flags, pe_order_apply_first_non_migratable);
+                pe__set_order_flags(flags, pcmk__ar_if_first_unmigratable);
             }
 
             /* A start then B start
@@ -331,7 +331,7 @@ pcmk__order_migration_equivalents(pe__ordering_t *order)
         uint32_t flags = pcmk__ar_ordered;
 
         if (first_migratable) {
-            pe__set_order_flags(flags, pe_order_apply_first_non_migratable);
+            pe__set_order_flags(flags, pcmk__ar_if_first_unmigratable);
         }
 
         /* For an ordering "stop A then stop B", if A is moving via restart, and

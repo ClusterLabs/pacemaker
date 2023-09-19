@@ -644,7 +644,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
                   input->action->uuid, input->action->id);
         return false;
 
-    } else if (pcmk_is_set(input->type, pe_order_apply_first_non_migratable)
+    } else if (pcmk_is_set(input->type, pcmk__ar_if_first_unmigratable)
                && pcmk_is_set(input->action->flags, pcmk_action_migratable)) {
         crm_trace("Ignoring %s (%d) input %s (%d): ordering applies "
                   "only if input is unmigratable, but it is migratable",

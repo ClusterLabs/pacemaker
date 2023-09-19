@@ -22,6 +22,9 @@ enum pcmk__action_relation_flags {
 
     //! Actions are ordered (optionally, if no other flags are set)
     pcmk__ar_ordered                        = (1U << 0),
+
+    //! Relation applies only if 'first' cannot be part of a live migration
+    pcmk__ar_if_first_unmigratable          = (1U << 1),
 };
 
 #endif      // PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H
