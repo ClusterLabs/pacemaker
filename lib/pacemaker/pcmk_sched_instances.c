@@ -1223,7 +1223,7 @@ unassign_if_mandatory(const pe_action_t *first, const pe_action_t *then,
      * instance, the "then" instance must not be allowed to come up.
      */
     } else if (pcmk_any_flags_set(type, pe_order_runnable_left
-                                        |pe_order_implies_then)) {
+                                        |pcmk__ar_first_implies_then)) {
         pe_rsc_info(then->rsc,
                     "Inhibiting %s from being active "
                     "because there is no %s instance to interleave",

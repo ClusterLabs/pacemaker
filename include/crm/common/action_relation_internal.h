@@ -32,6 +32,12 @@ enum pcmk__action_relation_flags {
      * becomes unrunnable
      */
     pcmk__ar_then_implies_first             = (1U << 4),
+
+    /*!
+     * If 'first' is required, 'then' becomes required; if 'first' is a stop of
+     * a blocked resource, 'then' becomes unrunnable
+     */
+    pcmk__ar_first_implies_then             = (1U << 5),
 };
 
 #endif      // PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H

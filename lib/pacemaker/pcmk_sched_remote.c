@@ -201,7 +201,7 @@ apply_remote_ordering(pe_action_t *action)
 
             if (state == remote_state_failed) {
                 /* Force recovery, by making this action required */
-                pe__set_order_flags(order_opts, pe_order_implies_then);
+                pe__set_order_flags(order_opts, pcmk__ar_first_implies_then);
             }
 
             /* Ensure connection is up before running this action */
@@ -261,7 +261,7 @@ apply_remote_ordering(pe_action_t *action)
                  * the connection was re-established
                  */
                 order_start_then_action(remote_rsc, action,
-                                        pe_order_implies_then);
+                                        pcmk__ar_first_implies_then);
 
             } else {
                 pe_node_t *cluster_node = pe__current_node(remote_rsc);
@@ -340,7 +340,8 @@ apply_container_ordering(pe_action_t *action)
         case pcmk_action_start:
         case pcmk_action_promote:
             // Force resource recovery if the container is recovered
-            order_start_then_action(container, action, pe_order_implies_then);
+            order_start_then_action(container, action,
+                                    pcmk__ar_first_implies_then);
 
             // Wait for the connection resource to be up, too
             order_start_then_action(remote_rsc, action, pcmk__ar_none);
@@ -377,7 +378,7 @@ apply_container_ordering(pe_action_t *action)
                  */
                 if (task != pcmk_action_unspecified) {
                     order_start_then_action(remote_rsc, action,
-                                            pe_order_implies_then);
+                                            pcmk__ar_first_implies_then);
                 }
             } else {
                 order_start_then_action(remote_rsc, action, pcmk__ar_none);

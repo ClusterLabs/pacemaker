@@ -197,7 +197,7 @@ ordering_flags_for_kind(enum pe_order_kind kind, const char *first,
                     break;
 
                 case ordering_symmetric:
-                    pe__set_order_flags(flags, pe_order_implies_then);
+                    pe__set_order_flags(flags, pcmk__ar_first_implies_then);
                     if (pcmk__strcase_any_of(first, PCMK_ACTION_START,
                                              PCMK_ACTION_PROMOTE, NULL)) {
                         pe__set_order_flags(flags, pe_order_runnable_left);
@@ -464,7 +464,7 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
     symmetry = get_ordering_symmetry(xml_obj, kind, NULL);
     flags = ordering_flags_for_kind(kind, action_first, symmetry);
 
-    handle_restart_type(rsc_then, kind, pe_order_implies_then, flags);
+    handle_restart_type(rsc_then, kind, pcmk__ar_first_implies_then, flags);
 
     /* If there is a minimum number of instances that must be runnable before
      * the 'then' action is runnable, we use a pseudo-action for convenience:
@@ -1244,10 +1244,12 @@ order_resource_actions_after(pe_action_t *first_action,
         pe_rsc_trace(rsc,
                      "Detected dangling migration ordering (%s then %s %s)",
                      first_action->uuid, order->rh_action_task, rsc->id);
-        pe__clear_order_flags(flags, pe_order_implies_then);
+        pe__clear_order_flags(flags, pcmk__ar_first_implies_then);
     }
 
-    if ((first_action == NULL) && !pcmk_is_set(flags, pe_order_implies_then)) {
+    if ((first_action == NULL)
+        && !pcmk_is_set(flags, pcmk__ar_first_implies_then)) {
+
         pe_rsc_debug(rsc,
                      "Ignoring ordering %d for %s: No first action found",
                      order->id, rsc->id);

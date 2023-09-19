@@ -331,12 +331,12 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
     if ((node == NULL) || pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
         pcmk__new_ordering(rsc, start_key(rsc), NULL,
                            NULL, strdup(mon->uuid), mon,
-                           pe_order_implies_then|pe_order_runnable_left,
+                           pcmk__ar_first_implies_then|pe_order_runnable_left,
                            rsc->cluster);
 
         pcmk__new_ordering(rsc, reload_key(rsc), NULL,
                            NULL, strdup(mon->uuid), mon,
-                           pe_order_implies_then|pe_order_runnable_left,
+                           pcmk__ar_first_implies_then|pe_order_runnable_left,
                            rsc->cluster);
 
         if (rsc->next_role == pcmk_role_promoted) {
@@ -455,7 +455,8 @@ order_after_stops(pe_resource_t *rsc, const pe_node_t *node,
         if (pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
             pcmk__new_ordering(rsc, stop_key(rsc), stop,
                                NULL, NULL, action,
-                               pe_order_implies_then|pe_order_runnable_left,
+                               pcmk__ar_first_implies_then
+                               |pe_order_runnable_left,
                                rsc->cluster);
         }
     }

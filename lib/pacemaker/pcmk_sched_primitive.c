@@ -921,7 +921,9 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
     // Order stops before starts (i.e. restart)
     pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_STOP, 0), NULL,
                        rsc, pcmk__op_key(rsc->id, PCMK_ACTION_START, 0), NULL,
-                       pcmk__ar_ordered|pe_order_implies_then|pe_order_restart,
+                       pcmk__ar_ordered
+                       |pcmk__ar_first_implies_then
+                       |pe_order_restart,
                        rsc->cluster);
 
     // Promotable ordering: demote before stop, start before promote
@@ -1027,7 +1029,8 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
                                NULL, rsc,
                                pcmk__op_key(rsc->id, PCMK_ACTION_START, 0),
                                NULL,
-                               pe_order_implies_then|pe_order_runnable_left,
+                               pcmk__ar_first_implies_then
+                               |pe_order_runnable_left,
                                rsc->cluster);
 
             pcmk__new_ordering(rsc,
@@ -1307,7 +1310,7 @@ start_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
                  pe__node_name(node), node->weight);
     start = start_action(rsc, node, TRUE);
 
-    pcmk__order_vs_unfence(rsc, node, start, pe_order_implies_then);
+    pcmk__order_vs_unfence(rsc, node, start, pcmk__ar_first_implies_then);
 
     if (pcmk_is_set(start->flags, pcmk_action_runnable) && !optional) {
         pe__clear_action_flags(start, pcmk_action_optional);
@@ -1439,7 +1442,7 @@ pcmk__schedule_cleanup(pe_resource_t *rsc, const pe_node_t *node, bool optional)
      * optional, the orderings make the then action required if the first action
      * becomes required.
      */
-    uint32_t flag = optional? pe_order_implies_then : pcmk__ar_ordered;
+    uint32_t flag = optional? pcmk__ar_first_implies_then : pcmk__ar_ordered;
 
     CRM_CHECK((rsc != NULL) && (node != NULL), return);
 

@@ -175,7 +175,7 @@ member_internal_constraints(gpointer data, gpointer user_data)
         // This is first member
         if (member_data->ordered) {
             pe__set_order_flags(down_flags, pcmk__ar_ordered);
-            post_down_flags = pe_order_implies_then;
+            post_down_flags = pcmk__ar_first_implies_then;
         }
 
     } else if (member_data->colocated) {
@@ -202,7 +202,7 @@ member_internal_constraints(gpointer data, gpointer user_data)
         pcmk__order_resource_actions(member, PCMK_ACTION_PROMOTE,
                                      member->parent, PCMK_ACTION_PROMOTED,
                                      pe_order_runnable_left
-                                     |pe_order_implies_then
+                                     |pcmk__ar_first_implies_then
                                      |pe_order_implies_then_printed);
         pcmk__order_resource_actions(member->parent, PCMK_ACTION_PROMOTE,
                                      member, PCMK_ACTION_PROMOTE,
@@ -220,18 +220,18 @@ member_internal_constraints(gpointer data, gpointer user_data)
     pcmk__order_resource_actions(member, PCMK_ACTION_START,
                                  member->parent, PCMK_ACTION_RUNNING,
                                  pe_order_runnable_left
-                                 |pe_order_implies_then
+                                 |pcmk__ar_first_implies_then
                                  |pe_order_implies_then_printed);
 
     if (!member_data->ordered) {
         pcmk__order_starts(member->parent, member,
-                           pe_order_implies_then
+                           pcmk__ar_first_implies_then
                            |pe_order_runnable_left
                            |pe_order_implies_first_printed);
         if (member_data->promotable) {
             pcmk__order_resource_actions(member->parent, PCMK_ACTION_PROMOTE,
                                          member, PCMK_ACTION_PROMOTE,
-                                         pe_order_implies_then
+                                         pcmk__ar_first_implies_then
                                          |pe_order_runnable_left
                                          |pe_order_implies_first_printed);
         }
@@ -248,7 +248,8 @@ member_internal_constraints(gpointer data, gpointer user_data)
         // Order this member relative to the previous one
 
         pcmk__order_starts(member_data->previous_member, member,
-                           pe_order_implies_then|pe_order_runnable_left);
+                           pcmk__ar_first_implies_then
+                           |pe_order_runnable_left);
         pcmk__order_stops(member, member_data->previous_member,
                           pcmk__ar_ordered|pe_order_restart);
 
@@ -271,7 +272,7 @@ member_internal_constraints(gpointer data, gpointer user_data)
             pcmk__order_resource_actions(member_data->previous_member,
                                          PCMK_ACTION_PROMOTE, member,
                                          PCMK_ACTION_PROMOTE,
-                                         pe_order_implies_then
+                                         pcmk__ar_first_implies_then
                                          |pe_order_runnable_left);
             pcmk__order_resource_actions(member, PCMK_ACTION_DEMOTE,
                                          member_data->previous_member,

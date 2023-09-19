@@ -612,7 +612,7 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
     for (iter = after->actions_after; iter != NULL; iter = iter->next) {
         pe_action_wrapper_t *after_wrapper = (pe_action_wrapper_t *) iter->data;
 
-        /* pe_order_implies_then is the reason why a required A.start
+        /* pcmk__ar_first_implies_then is the reason why a required A.start
          * implies/enforces B.start to be required too, which is the cause of
          * B.restart/re-promote.
          *
@@ -620,7 +620,7 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
          * used for unfencing case, which tends to introduce transition
          * loops...
          */
-        if (!pcmk_is_set(after_wrapper->type, pe_order_implies_then)) {
+        if (!pcmk_is_set(after_wrapper->type, pcmk__ar_first_implies_then)) {
             /* The order type between a group/clone and its child such as
              * B.start-> B_child.start is:
              * pe_order_implies_first_printed | pe_order_runnable_left

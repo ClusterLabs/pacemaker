@@ -3939,7 +3939,7 @@ order_after_remote_fencing(pe_action_t *action, pe_resource_t *remote_conn,
         pe_action_t *fence = pe_fence_op(remote_node, NULL, TRUE, NULL,
                                          FALSE, data_set);
 
-        order_actions(fence, action, pe_order_implies_then);
+        order_actions(fence, action, pcmk__ar_first_implies_then);
     }
 }
 

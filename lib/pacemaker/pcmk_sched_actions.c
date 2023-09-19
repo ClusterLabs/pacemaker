@@ -258,29 +258,30 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
         /* For unfencing, only instances of 'then' on the same node as 'first'
          * (the unfencing operation) should restart, so reset node to
          * first->node, at which point this case is handled like a normal
-         * pe_order_implies_then.
+         * pcmk__ar_first_implies_then.
          */
         pe__clear_order_flags(order->type, pe_order_implies_then_on_node);
-        pe__set_order_flags(order->type, pe_order_implies_then);
+        pe__set_order_flags(order->type, pcmk__ar_first_implies_then);
         node = first->node;
         pe_rsc_trace(then->rsc,
                      "%s then %s: mapped pe_order_implies_then_on_node to "
-                     "pe_order_implies_then on %s",
+                     "pcmk__ar_first_implies_then on %s",
                      first->uuid, then->uuid, pe__node_name(node));
     }
 
-    if (pcmk_is_set(order->type, pe_order_implies_then)) {
+    if (pcmk_is_set(order->type, pcmk__ar_first_implies_then)) {
         if (then->rsc != NULL) {
             changed |= update(then->rsc, first, then, node,
                               first_flags & pcmk_action_optional,
-                              pcmk_action_optional, pe_order_implies_then,
+                              pcmk_action_optional, pcmk__ar_first_implies_then,
                               data_set);
         } else if (!pcmk_is_set(first_flags, pcmk_action_optional)
                    && pcmk_is_set(then->flags, pcmk_action_optional)) {
             pe__clear_action_flags(then, pcmk_action_optional);
             pcmk__set_updated_flags(changed, first, pcmk__updated_then);
         }
-        pe_rsc_trace(then->rsc, "%s then %s: %s after pe_order_implies_then",
+        pe_rsc_trace(then->rsc,
+                     "%s then %s: %s after pcmk__ar_first_implies_then",
                      first->uuid, then->uuid,
                      (changed? "changed" : "unchanged"));
     }
@@ -448,7 +449,7 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
         // Don't bother marking 'first' as changed just for this
     }
 
-    if (pcmk_any_flags_set(order->type, pe_order_implies_then
+    if (pcmk_any_flags_set(order->type, pcmk__ar_first_implies_then
                                         |pcmk__ar_then_implies_first
                                         |pe_order_restart)
         && (first->rsc != NULL)
@@ -900,7 +901,7 @@ pcmk__update_ordered_actions(pe_action_t *first, pe_action_t *then,
         clear_action_flag_because(then, pcmk_action_migratable, first);
     }
 
-    if (pcmk_is_set(type, pe_order_implies_then)
+    if (pcmk_is_set(type, pcmk__ar_first_implies_then)
         && pcmk_is_set(filter, pcmk_action_optional)
         && pcmk_is_set(then->flags, pcmk_action_optional)
         && !pcmk_is_set(flags, pcmk_action_optional)

@@ -496,8 +496,9 @@ pe__action_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
                        "notify_operation", n_data->action);
 
         // Order original action complete -> "post-" -> "post-" complete
-        order_actions(complete, n_data->post, pe_order_implies_then);
-        order_actions(n_data->post, n_data->post_done, pe_order_implies_then);
+        order_actions(complete, n_data->post, pcmk__ar_first_implies_then);
+        order_actions(n_data->post, n_data->post_done,
+                      pcmk__ar_first_implies_then);
     }
 
     // If we created both, order "pre-" complete -> "post-"
