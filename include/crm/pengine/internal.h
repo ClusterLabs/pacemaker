@@ -381,7 +381,8 @@ pe__current_node(const pe_resource_t *rsc)
 GHashTable *pe__node_list2table(const GList *list);
 
 extern pe_action_t *get_pseudo_op(const char *name, pe_working_set_t * data_set);
-extern gboolean order_actions(pe_action_t * lh_action, pe_action_t * rh_action, enum pe_ordering order);
+gboolean order_actions(pe_action_t *lh_action, pe_action_t *rh_action,
+                       uint32_t flags);
 
 void pe__show_node_scores_as(const char *file, const char *function,
                              int line, bool to_log, const pe_resource_t *rsc,
