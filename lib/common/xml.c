@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <stdio.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <time.h>
@@ -2610,32 +2611,49 @@ pcmk__xml_artefact_root(enum pcmk__xml_artefact_ns ns)
     return ret;
 }
 
-char *
-pcmk__xml_artefact_path(enum pcmk__xml_artefact_ns ns, const char *filespec)
+static char *
+find_artefact(enum pcmk__xml_artefact_ns ns, const char *path, const char *filespec)
 {
-    char *base = pcmk__xml_artefact_root(ns), *ret = NULL;
+    char *ret = NULL;
 
     switch (ns) {
         case pcmk__xml_artefact_ns_legacy_rng:
         case pcmk__xml_artefact_ns_base_rng:
             if (pcmk__ends_with(filespec, ".rng")) {
-                ret = crm_strdup_printf("%s/%s", base, filespec);
+                ret = crm_strdup_printf("%s/%s", path, filespec);
             } else {
-                ret = crm_strdup_printf("%s/%s.rng", base, filespec);
+                ret = crm_strdup_printf("%s/%s.rng", path, filespec);
             }
             break;
         case pcmk__xml_artefact_ns_legacy_xslt:
         case pcmk__xml_artefact_ns_base_xslt:
             if (pcmk__ends_with(filespec, ".xsl")) {
-                ret = crm_strdup_printf("%s/%s", base, filespec);
+                ret = crm_strdup_printf("%s/%s", path, filespec);
             } else {
-                ret = crm_strdup_printf("%s/%s.xsl", base, filespec);
+                ret = crm_strdup_printf("%s/%s.xsl", path, filespec);
             }
             break;
         default:
             crm_err("XML artefact family specified as %u not recognized", ns);
     }
+
+    return ret;
+}
+
+char *
+pcmk__xml_artefact_path(enum pcmk__xml_artefact_ns ns, const char *filespec)
+{
+    struct stat sb;
+    char *base = pcmk__xml_artefact_root(ns);
+    char *ret = NULL;
+
+    ret = find_artefact(ns, base, filespec);
     free(base);
+
+    if (stat(ret, &sb) != 0 || !S_ISREG(sb.st_mode)) {
+        const char *remote_schema_dir = pcmk__remote_schema_dir();
+        ret = find_artefact(ns, remote_schema_dir, filespec);
+    }
 
     return ret;
 }
