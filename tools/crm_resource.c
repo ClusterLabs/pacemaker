@@ -977,8 +977,9 @@ ban_or_move(pcmk__output_t *out, pe_resource_t *rsc, const char *move_lifetime)
     current = pe__find_active_requires(rsc, &nactive);
 
     if (nactive == 1) {
-        rc = cli_resource_ban(out, options.rsc_id, current->details->uname, move_lifetime, NULL,
-                              cib_conn, options.cib_options, options.promoted_role_only);
+        rc = cli_resource_ban(out, options.rsc_id, current->details->uname, move_lifetime,
+                              cib_conn, options.cib_options, options.promoted_role_only,
+                              PCMK__ROLE_PROMOTED);
 
     } else if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
         int count = 0;
@@ -996,8 +997,9 @@ ban_or_move(pcmk__output_t *out, pe_resource_t *rsc, const char *move_lifetime)
         }
 
         if(count == 1 && current) {
-            rc = cli_resource_ban(out, options.rsc_id, current->details->uname, move_lifetime, NULL,
-                                  cib_conn, options.cib_options, options.promoted_role_only);
+            rc = cli_resource_ban(out, options.rsc_id, current->details->uname, move_lifetime,
+                                  cib_conn, options.cib_options, options.promoted_role_only,
+                                  PCMK__ROLE_PROMOTED);
 
         } else {
             rc = EINVAL;
@@ -1886,9 +1888,10 @@ main(int argc, char **argv)
                 rc = pcmk_rc_node_unknown;
             } else {
                 rc = cli_resource_ban(out, options.rsc_id, node->details->uname,
-                                      options.move_lifetime, NULL, cib_conn,
+                                      options.move_lifetime, cib_conn,
                                       options.cib_options,
-                                      options.promoted_role_only);
+                                      options.promoted_role_only,
+                                      PCMK__ROLE_PROMOTED);
             }
 
             if (rc == EINVAL) {

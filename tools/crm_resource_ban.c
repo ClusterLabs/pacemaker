@@ -56,41 +56,16 @@ parse_cli_lifetime(pcmk__output_t *out, const char *move_lifetime)
     return later_s;
 }
 
-static const char *
-promoted_role_name(void)
-{
-    /* This is a judgment call for what string to use. @TODO Ideally we'd
-     * use the legacy string if the DC only supports that, and the new one
-     * otherwise. Basing it on --enable-compat-2.0 is a decent guess.
-     */
-#ifdef PCMK__COMPAT_2_0
-        return PCMK__ROLE_PROMOTED_LEGACY;
-#else
-        return PCMK__ROLE_PROMOTED;
-#endif
-}
-
 // \return Standard Pacemaker return code
 int
 cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
-                 const char *move_lifetime, GList *allnodes, cib_t * cib_conn,
-                 int cib_options, gboolean promoted_role_only)
+                 const char *move_lifetime, cib_t * cib_conn, int cib_options,
+                 gboolean promoted_role_only, const char *promoted_role)
 {
     char *later_s = NULL;
     int rc = pcmk_rc_ok;
     xmlNode *fragment = NULL;
     xmlNode *location = NULL;
-
-    if(host == NULL) {
-        GList *n = allnodes;
-        for(; n && rc == pcmk_rc_ok; n = n->next) {
-            pe_node_t *target = n->data;
-
-            rc = cli_resource_ban(out, rsc_id, target->details->uname, move_lifetime,
-                                  NULL, cib_conn, cib_options, promoted_role_only);
-        }
-        return rc;
-    }
 
     later_s = parse_cli_lifetime(out, move_lifetime);
     if(move_lifetime && later_s == NULL) {
@@ -114,7 +89,7 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
 
     crm_xml_add(location, XML_LOC_ATTR_SOURCE, rsc_id);
     if(promoted_role_only) {
-        crm_xml_add(location, XML_RULE_ATTR_ROLE, promoted_role_name());
+        crm_xml_add(location, XML_RULE_ATTR_ROLE, promoted_role);
     } else {
         crm_xml_add(location, XML_RULE_ATTR_ROLE, PCMK__ROLE_STARTED);
     }
@@ -151,14 +126,24 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
 
     free_xml(fragment);
     free(later_s);
+
+    if (rc != pcmk_rc_ok && promoted_role_only && strcmp(promoted_role, PCMK__ROLE_PROMOTED) == 0) {
+        int banrc = cli_resource_ban(out, rsc_id, host, move_lifetime,
+                              cib_conn, cib_options, promoted_role_only,
+                              PCMK__ROLE_PROMOTED_LEGACY);
+        if (banrc == pcmk_rc_ok) {
+            rc = banrc;
+        }
+    }
+
     return rc;
 }
 
 // \return Standard Pacemaker return code
 int
 cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
-                    const char *move_lifetime, cib_t * cib_conn, int cib_options,
-                    gboolean promoted_role_only)
+                    const char *move_lifetime, cib_t *cib_conn, int cib_options,
+                    gboolean promoted_role_only, const char *promoted_role)
 {
     char *later_s = parse_cli_lifetime(out, move_lifetime);
     int rc = pcmk_rc_ok;
@@ -181,7 +166,7 @@ cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
 
     crm_xml_add(location, XML_LOC_ATTR_SOURCE, rsc_id);
     if(promoted_role_only) {
-        crm_xml_add(location, XML_RULE_ATTR_ROLE, promoted_role_name());
+        crm_xml_add(location, XML_RULE_ATTR_ROLE, promoted_role);
     } else {
         crm_xml_add(location, XML_RULE_ATTR_ROLE, PCMK__ROLE_STARTED);
     }
@@ -218,6 +203,16 @@ cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
 
     free_xml(fragment);
     free(later_s);
+
+    if (rc != pcmk_rc_ok && promoted_role_only && strcmp(promoted_role, PCMK__ROLE_PROMOTED) == 0) {
+        int preferrc = cli_resource_prefer(out, rsc_id, host, move_lifetime,
+                                 cib_conn, cib_options, promoted_role_only,
+                                 PCMK__ROLE_PROMOTED_LEGACY);
+        if (preferrc == pcmk_rc_ok) {
+            rc = preferrc;
+        }
+    }
+
     return rc;
 }
 
@@ -358,6 +353,9 @@ build_clear_xpath_string(GString *buf, const xmlNode *constraint_node,
     const char *cons_rsc = crm_element_value(constraint_node,
                                              XML_LOC_ATTR_SOURCE);
     GString *rsc_role_substr = NULL;
+    const char *promoted_role_rule = "@" XML_RULE_ATTR_ROLE "='" PCMK__ROLE_PROMOTED
+                                     "' or @" XML_RULE_ATTR_ROLE "='"
+                                     PCMK__ROLE_PROMOTED_LEGACY "'";
 
     CRM_ASSERT(buf != NULL);
     g_string_truncate(buf, 0);
@@ -384,8 +382,7 @@ build_clear_xpath_string(GString *buf, const xmlNode *constraint_node,
             rsc_role_substr = g_string_sized_new(64);
             pcmk__g_strcat(rsc_role_substr,
                            "@" XML_LOC_ATTR_SOURCE "='", rsc, "' "
-                           "and @" XML_RULE_ATTR_ROLE "='",
-                           promoted_role_name(), "'", NULL);
+                           "and (" , promoted_role_rule, ")", NULL);
 
         } else if (rsc != NULL) {
             rsc_role_substr = g_string_sized_new(64);
@@ -394,9 +391,7 @@ build_clear_xpath_string(GString *buf, const xmlNode *constraint_node,
 
         } else if (promoted_role_only) {
             rsc_role_substr = g_string_sized_new(64);
-            pcmk__g_strcat(rsc_role_substr,
-                           "@" XML_RULE_ATTR_ROLE "='", promoted_role_name(),
-                           "'", NULL);
+            g_string_append(rsc_role_substr, promoted_role_rule);
         }
 
         if (rsc_role_substr != NULL) {
