@@ -211,7 +211,7 @@ apply_remote_ordering(pe_action_t *action)
         case pcmk_action_stop:
             if (state == remote_state_alive) {
                 order_action_then_stop(action, remote_rsc,
-                                       pe_order_implies_first);
+                                       pcmk__ar_then_implies_first);
 
             } else if (state == remote_state_failed) {
                 /* The resource is active on the node, but since we don't have a
@@ -231,7 +231,7 @@ apply_remote_ordering(pe_action_t *action)
                  * transition, stop this resource first.
                  */
                 order_action_then_stop(action, remote_rsc,
-                                       pe_order_implies_first);
+                                       pcmk__ar_then_implies_first);
 
             } else {
                 /* The connection is going to be started somewhere else, so

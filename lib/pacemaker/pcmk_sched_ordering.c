@@ -205,7 +205,7 @@ ordering_flags_for_kind(enum pe_order_kind kind, const char *first,
                     break;
 
                 case ordering_symmetric_inverse:
-                    pe__set_order_flags(flags, pe_order_implies_first);
+                    pe__set_order_flags(flags, pcmk__ar_then_implies_first);
                     break;
             }
             break;
@@ -406,7 +406,7 @@ inverse_ordering(const char *id, enum pe_order_kind kind,
         uint32_t flags = ordering_flags_for_kind(kind, action_first,
                                                  ordering_symmetric_inverse);
 
-        handle_restart_type(rsc_then, kind, pe_order_implies_first, flags);
+        handle_restart_type(rsc_then, kind, pcmk__ar_then_implies_first, flags);
         pcmk__order_resource_actions(rsc_then, action_then, rsc_first,
                                      action_first, flags);
     }

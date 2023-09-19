@@ -25,6 +25,13 @@ enum pcmk__action_relation_flags {
 
     //! Relation applies only if 'first' cannot be part of a live migration
     pcmk__ar_if_first_unmigratable          = (1U << 1),
+
+    /*!
+     * If 'then' is required, 'first' becomes required (and becomes unmigratable
+     * if 'then' is); also, if 'first' is a stop of a blocked resource, 'then'
+     * becomes unrunnable
+     */
+    pcmk__ar_then_implies_first             = (1U << 4),
 };
 
 #endif      // PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H

@@ -1036,7 +1036,7 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
                                rsc->container,
                                pcmk__op_key(rsc->container->id,
                                             PCMK_ACTION_STOP, 0),
-                               NULL, pe_order_implies_first, rsc->cluster);
+                               NULL, pcmk__ar_then_implies_first, rsc->cluster);
 
             if (pcmk_is_set(rsc->flags, pcmk_rsc_remote_nesting_allowed)) {
                 score = 10000;    /* Highly preferred but not essential */
@@ -1278,7 +1278,7 @@ stop_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
             pe_action_t *unfence = pe_fence_op(current, PCMK_ACTION_ON, true,
                                                NULL, false, rsc->cluster);
 
-            order_actions(stop, unfence, pe_order_implies_first);
+            order_actions(stop, unfence, pcmk__ar_then_implies_first);
             if (!pcmk__node_unfenced(current)) {
                 pe_proc_err("Stopping %s until %s can be unfenced",
                             rsc->id, pe__node_name(current));

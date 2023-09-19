@@ -262,7 +262,7 @@ replica_internal_constraints(pe__bundle_replica_t *replica, void *user_data)
         pcmk__order_starts(replica->ip, replica->container,
                            pe_order_runnable_left|pe_order_preserve);
         pcmk__order_stops(replica->container, replica->ip,
-                          pe_order_implies_first|pe_order_preserve);
+                          pcmk__ar_then_implies_first|pe_order_preserve);
 
         pcmk__new_colocation("#ip-with-container", NULL, INFINITY, replica->ip,
                              replica->container, NULL, NULL,

@@ -296,17 +296,18 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
                      (changed? "changed" : "unchanged"));
     }
 
-    if (pcmk_is_set(order->type, pe_order_implies_first)) {
+    if (pcmk_is_set(order->type, pcmk__ar_then_implies_first)) {
         if (first->rsc != NULL) {
             changed |= update(first->rsc, first, then, node, first_flags,
-                              pcmk_action_optional, pe_order_implies_first,
+                              pcmk_action_optional, pcmk__ar_then_implies_first,
                               data_set);
         } else if (!pcmk_is_set(first_flags, pcmk_action_optional)
                    && pcmk_is_set(first->flags, pcmk_action_runnable)) {
             pe__clear_action_flags(first, pcmk_action_runnable);
             pcmk__set_updated_flags(changed, first, pcmk__updated_first);
         }
-        pe_rsc_trace(then->rsc, "%s then %s: %s after pe_order_implies_first",
+        pe_rsc_trace(then->rsc,
+                     "%s then %s: %s after pcmk__ar_then_implies_first",
                      first->uuid, then->uuid,
                      (changed? "changed" : "unchanged"));
     }
@@ -448,7 +449,7 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
     }
 
     if (pcmk_any_flags_set(order->type, pe_order_implies_then
-                                        |pe_order_implies_first
+                                        |pcmk__ar_then_implies_first
                                         |pe_order_restart)
         && (first->rsc != NULL)
         && !pcmk_is_set(first->rsc->flags, pcmk_rsc_managed)
@@ -840,7 +841,7 @@ pcmk__update_ordered_actions(pe_action_t *first, pe_action_t *then,
         handle_asymmetric_ordering(first, then);
     }
 
-    if (pcmk_is_set(type, pe_order_implies_first)
+    if (pcmk_is_set(type, pcmk__ar_then_implies_first)
         && !pcmk_is_set(then_flags, pcmk_action_optional)) {
         // Then is required, and implies first should be, too
 

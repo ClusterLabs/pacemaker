@@ -263,7 +263,7 @@ member_internal_constraints(gpointer data, gpointer user_data)
             pcmk__order_resource_actions(member, PCMK_ACTION_STOP,
                                          member_data->previous_member,
                                          PCMK_ACTION_START,
-                                         pe_order_implies_first
+                                         pcmk__ar_then_implies_first
                                          |pe_order_runnable_left);
         }
 
