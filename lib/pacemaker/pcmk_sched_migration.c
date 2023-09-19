@@ -85,14 +85,13 @@ pcmk__create_migration_actions(pe_resource_t *rsc, const pe_node_t *current)
                            NULL,
                            rsc,
                            pcmk__op_key(rsc->id, PCMK_ACTION_MIGRATE_TO, 0),
-                           NULL, pe_order_optional, rsc->cluster);
+                           NULL, pcmk__ar_ordered, rsc->cluster);
         pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_MIGRATE_TO, 0),
                            NULL,
                            rsc,
                            pcmk__op_key(rsc->id, PCMK_ACTION_MIGRATE_FROM, 0),
                            NULL,
-                           pe_order_optional
-                           |pe_order_implies_first_migratable,
+                           pcmk__ar_ordered|pe_order_implies_first_migratable,
                            rsc->cluster);
     } else {
         pe__set_action_flags(migrate_from, pcmk_action_migratable);
@@ -103,7 +102,7 @@ pcmk__create_migration_actions(pe_resource_t *rsc, const pe_node_t *current)
                            NULL,
                            rsc,
                            pcmk__op_key(rsc->id, PCMK_ACTION_MIGRATE_FROM, 0),
-                           NULL, pe_order_optional, rsc->cluster);
+                           NULL, pcmk__ar_ordered, rsc->cluster);
     }
 
     // migrate_from before stop or start
@@ -111,13 +110,13 @@ pcmk__create_migration_actions(pe_resource_t *rsc, const pe_node_t *current)
                        NULL,
                        rsc, pcmk__op_key(rsc->id, PCMK_ACTION_STOP, 0),
                        NULL,
-                       pe_order_optional|pe_order_implies_first_migratable,
+                       pcmk__ar_ordered|pe_order_implies_first_migratable,
                        rsc->cluster);
     pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_MIGRATE_FROM, 0),
                        NULL,
                        rsc, pcmk__op_key(rsc->id, PCMK_ACTION_START, 0),
                        NULL,
-                       pe_order_optional
+                       pcmk__ar_ordered
                        |pe_order_implies_first_migratable
                        |pe_order_pseudo_left,
                        rsc->cluster);
@@ -293,7 +292,7 @@ pcmk__order_migration_equivalents(pe__ordering_t *order)
     if (pcmk__str_eq(first_task, PCMK_ACTION_START, pcmk__str_none)
         && pcmk__str_eq(then_task, PCMK_ACTION_START, pcmk__str_none)) {
 
-        uint32_t flags = pe_order_optional;
+        uint32_t flags = pcmk__ar_ordered;
 
         if (first_migratable && then_migratable) {
             /* A start then B start
@@ -329,7 +328,7 @@ pcmk__order_migration_equivalents(pe__ordering_t *order)
                && pcmk__str_eq(first_task, PCMK_ACTION_STOP, pcmk__str_none)
                && pcmk__str_eq(then_task, PCMK_ACTION_STOP, pcmk__str_none)) {
 
-        uint32_t flags = pe_order_optional;
+        uint32_t flags = pcmk__ar_ordered;
 
         if (first_migratable) {
             pe__set_order_flags(flags, pe_order_apply_first_non_migratable);
@@ -360,7 +359,7 @@ pcmk__order_migration_equivalents(pe__ordering_t *order)
     } else if (pcmk__str_eq(first_task, PCMK_ACTION_PROMOTE, pcmk__str_none)
                && pcmk__str_eq(then_task, PCMK_ACTION_START, pcmk__str_none)) {
 
-        uint32_t flags = pe_order_optional;
+        uint32_t flags = pcmk__ar_ordered;
 
         if (then_migratable) {
             /* A promote then B start
@@ -377,7 +376,7 @@ pcmk__order_migration_equivalents(pe__ordering_t *order)
     } else if (pcmk__str_eq(first_task, PCMK_ACTION_DEMOTE, pcmk__str_none)
                && pcmk__str_eq(then_task, PCMK_ACTION_STOP, pcmk__str_none)) {
 
-        uint32_t flags = pe_order_optional;
+        uint32_t flags = pcmk__ar_ordered;
 
         if (then_migratable) {
             /* A demote then B stop

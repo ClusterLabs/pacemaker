@@ -592,7 +592,7 @@ ordering_can_change_actions(const pe_action_wrapper_t *ordering)
 {
     return pcmk_any_flags_set(ordering->type, ~(pe_order_implies_first_printed
                                                 |pe_order_implies_then_printed
-                                                |pe_order_optional));
+                                                |pcmk__ar_ordered));
 }
 
 /*!
@@ -652,7 +652,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
                   input->action->uuid, input->action->id);
         return false;
 
-    } else if ((input->type == pe_order_optional)
+    } else if (((uint32_t) input->type == pcmk__ar_ordered)
                && pcmk_is_set(input->action->flags, pcmk_action_migratable)
                && pcmk__ends_with(input->action->uuid, "_stop_0")) {
         crm_trace("Ignoring %s (%d) input %s (%d): "

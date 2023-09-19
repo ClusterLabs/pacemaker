@@ -421,7 +421,7 @@ pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
             pcmk__new_ordering(action->rsc, NULL, action, action->rsc,
                                pcmk__op_key(action->rsc->id, PCMK_ACTION_START,
                                             0),
-                               NULL, pe_order_optional, data_set);
+                               NULL, pcmk__ar_ordered, data_set);
 
             continue;
         }
@@ -466,7 +466,7 @@ pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
                                     pcmk__str_none)) {
                     pcmk__new_ordering(remote, start_key(remote), NULL,
                                        action->rsc, NULL, rsc_action,
-                                       pe_order_optional, data_set);
+                                       pcmk__ar_ordered, data_set);
                 }
             }
         }

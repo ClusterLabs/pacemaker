@@ -342,13 +342,13 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
         if (rsc->next_role == pcmk_role_promoted) {
             pcmk__new_ordering(rsc, promote_key(rsc), NULL,
                                rsc, NULL, mon,
-                               pe_order_optional|pe_order_runnable_left,
+                               pcmk__ar_ordered|pe_order_runnable_left,
                                rsc->cluster);
 
         } else if (rsc->role == pcmk_role_promoted) {
             pcmk__new_ordering(rsc, demote_key(rsc), NULL,
                                rsc, NULL, mon,
-                               pe_order_optional|pe_order_runnable_left,
+                               pcmk__ar_ordered|pe_order_runnable_left,
                                rsc->cluster);
         }
     }
@@ -671,7 +671,7 @@ pcmk__schedule_cancel(pe_resource_t *rsc, const char *call_id, const char *task,
 
     // Cancellations happen after stops
     pcmk__new_ordering(rsc, stop_key(rsc), NULL, rsc, NULL, cancel,
-                       pe_order_optional, rsc->cluster);
+                       pcmk__ar_ordered, rsc->cluster);
 }
 
 /*!

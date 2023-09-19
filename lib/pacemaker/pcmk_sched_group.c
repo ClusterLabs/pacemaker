@@ -174,7 +174,7 @@ member_internal_constraints(gpointer data, gpointer user_data)
     if (member_data->previous_member == NULL) {
         // This is first member
         if (member_data->ordered) {
-            pe__set_order_flags(down_flags, pe_order_optional);
+            pe__set_order_flags(down_flags, pcmk__ar_ordered);
             post_down_flags = pe_order_implies_then;
         }
 
@@ -250,7 +250,7 @@ member_internal_constraints(gpointer data, gpointer user_data)
         pcmk__order_starts(member_data->previous_member, member,
                            pe_order_implies_then|pe_order_runnable_left);
         pcmk__order_stops(member, member_data->previous_member,
-                          pe_order_optional|pe_order_restart);
+                          pcmk__ar_ordered|pe_order_restart);
 
         /* In unusual circumstances (such as adding a new member to the middle
          * of a group with unmanaged later members), this member may be active
@@ -275,8 +275,7 @@ member_internal_constraints(gpointer data, gpointer user_data)
                                          |pe_order_runnable_left);
             pcmk__order_resource_actions(member, PCMK_ACTION_DEMOTE,
                                          member_data->previous_member,
-                                         PCMK_ACTION_DEMOTE,
-                                         pe_order_optional);
+                                         PCMK_ACTION_DEMOTE, pcmk__ar_ordered);
         }
     }
 
@@ -287,7 +286,7 @@ member_internal_constraints(gpointer data, gpointer user_data)
             && (member_data->last_active != NULL)
             && (member_data->last_active->running_on != NULL)) {
             pcmk__order_stops(member, member_data->last_active,
-                              pe_order_optional);
+                              pcmk__ar_ordered);
         }
         member_data->last_active = member;
     }
@@ -317,7 +316,7 @@ pcmk__group_internal_constraints(pe_resource_t *rsc)
                                  pe_order_runnable_left);
     pcmk__order_resource_actions(rsc, PCMK_ACTION_STOPPED,
                                  rsc, PCMK_ACTION_START,
-                                 pe_order_optional);
+                                 pcmk__ar_ordered);
     pcmk__order_resource_actions(rsc, PCMK_ACTION_START,
                                  rsc, PCMK_ACTION_RUNNING,
                                  pe_order_runnable_left);

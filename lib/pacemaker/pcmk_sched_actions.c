@@ -407,12 +407,12 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
                      (changed? "changed" : "unchanged"));
     }
 
-    if (pcmk_is_set(order->type, pe_order_optional)) {
+    if (pcmk_is_set(order->type, pcmk__ar_ordered)) {
         if (then->rsc != NULL) {
             changed |= update(then->rsc, first, then, node, first_flags,
-                              pcmk_action_runnable, pe_order_optional, data_set);
+                              pcmk_action_runnable, pcmk__ar_ordered, data_set);
         }
-        pe_rsc_trace(then->rsc, "%s then %s: %s after pe_order_optional",
+        pe_rsc_trace(then->rsc, "%s then %s: %s after pcmk__ar_ordered",
                      first->uuid, then->uuid,
                      (changed? "changed" : "unchanged"));
     }
@@ -1583,10 +1583,10 @@ schedule_reload(gpointer data, gpointer user_data)
 
     // Set orderings so that a required stop or demote cancels the reload
     pcmk__new_ordering(NULL, NULL, reload, rsc, stop_key(rsc), NULL,
-                       pe_order_optional|pe_order_then_cancels_first,
+                       pcmk__ar_ordered|pe_order_then_cancels_first,
                        rsc->cluster);
     pcmk__new_ordering(NULL, NULL, reload, rsc, demote_key(rsc), NULL,
-                       pe_order_optional|pe_order_then_cancels_first,
+                       pcmk__ar_ordered|pe_order_then_cancels_first,
                        rsc->cluster);
 }
 

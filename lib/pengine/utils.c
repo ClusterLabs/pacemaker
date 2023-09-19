@@ -594,7 +594,7 @@ trigger_unfencing(pe_resource_t *rsc, pe_node_t *node, const char *reason,
                                            FALSE, data_set);
 
         if(dependency) {
-            order_actions(unfence, dependency, pe_order_optional);
+            order_actions(unfence, dependency, pcmk__ar_ordered);
         }
 
     } else if(rsc) {

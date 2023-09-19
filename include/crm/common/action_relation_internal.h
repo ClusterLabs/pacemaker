@@ -19,6 +19,9 @@
 enum pcmk__action_relation_flags {
     //! No relation (compare with equality rather than bit set)
     pcmk__ar_none                           = 0U,
+
+    //! Actions are ordered (optionally, if no other flags are set)
+    pcmk__ar_ordered                        = (1U << 0),
 };
 
 #endif      // PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H

@@ -180,7 +180,7 @@ ordering_flags_for_kind(enum pe_order_kind kind, const char *first,
 {
     uint32_t flags = pcmk__ar_none; // so we trace-log all flags set
 
-    pe__set_order_flags(flags, pe_order_optional);
+    pe__set_order_flags(flags, pcmk__ar_ordered);
 
     switch (kind) {
         case pe_order_kind_optional:
@@ -594,7 +594,7 @@ unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
 
     int local_kind = parent_kind;
     bool sequential = false;
-    uint32_t flags = pe_order_optional;
+    uint32_t flags = pcmk__ar_ordered;
     enum ordering_symmetry symmetry;
 
     char *key = NULL;
@@ -1165,7 +1165,7 @@ pcmk__order_stops_before_shutdown(pe_node_t *node, pe_action_t *shutdown_op)
         pe__clear_action_flags(action, pcmk_action_optional);
         pcmk__new_ordering(action->rsc, NULL, action, NULL,
                            strdup(PCMK_ACTION_DO_SHUTDOWN), shutdown_op,
-                           pe_order_optional|pe_order_runnable_left,
+                           pcmk__ar_ordered|pe_order_runnable_left,
                            node->details->data_set);
     }
 }
@@ -1444,7 +1444,7 @@ pcmk__order_after_each(pe_action_t *after, GList *list)
         crm_debug("Ordering %s on %s before %s on %s",
                   before_desc, pe__node_name(before->node),
                   after_desc, pe__node_name(after->node));
-        order_actions(before, after, pe_order_optional);
+        order_actions(before, after, pcmk__ar_ordered);
     }
 }
 
@@ -1460,29 +1460,29 @@ pcmk__promotable_restart_ordering(pe_resource_t *rsc)
     // Order start and promote after all instances are stopped
     pcmk__order_resource_actions(rsc, PCMK_ACTION_STOPPED,
                                  rsc, PCMK_ACTION_START,
-                                 pe_order_optional);
+                                 pcmk__ar_ordered);
     pcmk__order_resource_actions(rsc, PCMK_ACTION_STOPPED,
                                  rsc, PCMK_ACTION_PROMOTE,
-                                 pe_order_optional);
+                                 pcmk__ar_ordered);
 
     // Order stop, start, and promote after all instances are demoted
     pcmk__order_resource_actions(rsc, PCMK_ACTION_DEMOTED,
                                  rsc, PCMK_ACTION_STOP,
-                                 pe_order_optional);
+                                 pcmk__ar_ordered);
     pcmk__order_resource_actions(rsc, PCMK_ACTION_DEMOTED,
                                  rsc, PCMK_ACTION_START,
-                                 pe_order_optional);
+                                 pcmk__ar_ordered);
     pcmk__order_resource_actions(rsc, PCMK_ACTION_DEMOTED,
                                  rsc, PCMK_ACTION_PROMOTE,
-                                 pe_order_optional);
+                                 pcmk__ar_ordered);
 
     // Order promote after all instances are started
     pcmk__order_resource_actions(rsc, PCMK_ACTION_RUNNING,
                                  rsc, PCMK_ACTION_PROMOTE,
-                                 pe_order_optional);
+                                 pcmk__ar_ordered);
 
     // Order demote after all instances are demoted
     pcmk__order_resource_actions(rsc, PCMK_ACTION_DEMOTE,
                                  rsc, PCMK_ACTION_DEMOTED,
-                                 pe_order_optional);
+                                 pcmk__ar_ordered);
 }

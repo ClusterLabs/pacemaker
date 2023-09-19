@@ -352,8 +352,8 @@ new_notify_action(pe_resource_t *rsc, const pe_node_t *node, pe_action_t *op,
     add_notify_data_to_action_meta(n_data, notify_action);
 
     // Order notify after original action and before parent notification
-    order_actions(op, notify_action, pe_order_optional);
-    order_actions(notify_action, notify_done, pe_order_optional);
+    order_actions(op, notify_action, pcmk__ar_ordered);
+    order_actions(notify_action, notify_done, pcmk__ar_ordered);
     return notify_action;
 }
 
@@ -394,7 +394,7 @@ new_post_notify_action(pe_resource_t *rsc, const pe_node_t *node,
             || pcmk__str_eq(mon->task, PCMK_ACTION_CANCEL, pcmk__str_none)) {
             continue; // Not a recurring monitor
         }
-        order_actions(n_data->post_done, mon, pe_order_optional);
+        order_actions(n_data->post_done, mon, pcmk__ar_ordered);
     }
 }
 
@@ -463,8 +463,8 @@ pe__action_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
                        "notify_operation", n_data->action);
 
         // Order "pre-" -> "pre-" complete -> original action
-        order_actions(n_data->pre, n_data->pre_done, pe_order_optional);
-        order_actions(n_data->pre_done, action, pe_order_optional);
+        order_actions(n_data->pre, n_data->pre_done, pcmk__ar_ordered);
+        order_actions(n_data->pre_done, action, pcmk__ar_ordered);
     }
 
     if (complete != NULL) { // Need "post-" pseudo-actions
@@ -502,7 +502,7 @@ pe__action_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
 
     // If we created both, order "pre-" complete -> "post-"
     if ((action != NULL) && (complete != NULL)) {
-        order_actions(n_data->pre_done, n_data->post, pe_order_optional);
+        order_actions(n_data->pre_done, n_data->post, pcmk__ar_ordered);
     }
     return n_data;
 }

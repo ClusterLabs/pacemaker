@@ -127,7 +127,7 @@ pcmk__clone_internal_constraints(pe_resource_t *rsc)
     // Restart ordering: Stop -> stopped -> start -> started
     pcmk__order_resource_actions(rsc, PCMK_ACTION_STOPPED,
                                  rsc, PCMK_ACTION_START,
-                                 pe_order_optional);
+                                 pcmk__ar_ordered);
     pcmk__order_resource_actions(rsc, PCMK_ACTION_START,
                                  rsc, PCMK_ACTION_RUNNING,
                                  pe_order_runnable_left);
@@ -139,7 +139,7 @@ pcmk__clone_internal_constraints(pe_resource_t *rsc)
     if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
         pcmk__order_resource_actions(rsc, PCMK_ACTION_DEMOTED,
                                      rsc, PCMK_ACTION_STOP,
-                                     pe_order_optional);
+                                     pcmk__ar_ordered);
         pcmk__order_resource_actions(rsc, PCMK_ACTION_RUNNING,
                                      rsc, PCMK_ACTION_PROMOTE,
                                      pe_order_runnable_left);
@@ -179,9 +179,9 @@ pcmk__clone_internal_constraints(pe_resource_t *rsc)
             for (GList *later = iter->next;
                  later != NULL; later = later->next) {
                 pcmk__order_starts(instance, (pe_resource_t *) later->data,
-                                   pe_order_optional);
+                                   pcmk__ar_ordered);
                 pcmk__order_stops((pe_resource_t *) later->data, instance,
-                                  pe_order_optional);
+                                  pcmk__ar_ordered);
             }
         }
     }

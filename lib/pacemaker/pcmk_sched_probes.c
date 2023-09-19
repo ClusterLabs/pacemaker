@@ -83,7 +83,7 @@ probe_then_start(pe_resource_t *rsc1, pe_resource_t *rsc2)
                            NULL,
                            rsc2, pcmk__op_key(rsc2->id, PCMK_ACTION_START, 0),
                            NULL,
-                           pe_order_optional, rsc1->cluster);
+                           pcmk__ar_ordered, rsc1->cluster);
     }
 }
 
@@ -137,7 +137,7 @@ probe_action(pe_resource_t *rsc, pe_node_t *node)
                           rsc->cluster);
     pe__clear_action_flags(probe, pcmk_action_optional);
 
-    pcmk__order_vs_unfence(rsc, node, probe, pe_order_optional);
+    pcmk__order_vs_unfence(rsc, node, probe, pcmk__ar_ordered);
     add_expected_result(probe, rsc, node);
     return probe;
 }
@@ -156,7 +156,7 @@ probe_action(pe_resource_t *rsc, pe_node_t *node)
 bool
 pcmk__probe_rsc_on_node(pe_resource_t *rsc, pe_node_t *node)
 {
-    uint32_t flags = pe_order_optional;
+    uint32_t flags = pcmk__ar_ordered;
     pe_action_t *probe = NULL;
     pe_node_t *allowed = NULL;
     pe_resource_t *top = uber_parent(rsc);
@@ -249,7 +249,7 @@ pcmk__probe_rsc_on_node(pe_resource_t *rsc, pe_node_t *node)
                                pcmk__op_key(guest->id, PCMK_ACTION_STOP, 0),
                                NULL, top,
                                pcmk__op_key(top->id, PCMK_ACTION_START, 0),
-                               NULL, pe_order_optional, rsc->cluster);
+                               NULL, pcmk__ar_ordered, rsc->cluster);
             goto no_probe;
         }
     }
@@ -279,7 +279,7 @@ pcmk__probe_rsc_on_node(pe_resource_t *rsc, pe_node_t *node)
                        top, pcmk__op_key(top->id, PCMK_ACTION_START, 0), NULL,
                        flags, rsc->cluster);
     pcmk__new_ordering(rsc, NULL, probe, top, reload_key(rsc), NULL,
-                       pe_order_optional, rsc->cluster);
+                       pcmk__ar_ordered, rsc->cluster);
 
     return true;
 
@@ -343,7 +343,7 @@ add_probe_orderings_for_stops(pe_working_set_t *data_set)
          iter = iter->next) {
 
         pe__ordering_t *order = iter->data;
-        uint32_t order_flags = pe_order_optional;
+        uint32_t order_flags = pcmk__ar_ordered;
         GList *probes = NULL;
         GList *then_actions = NULL;
         pe_action_t *first = NULL;
@@ -469,7 +469,7 @@ add_probe_orderings_for_stops(pe_working_set_t *data_set)
 static void
 add_start_orderings_for_probe(pe_action_t *probe, pe_action_wrapper_t *after)
 {
-    uint32_t flags = pe_order_optional|pe_order_runnable_left;
+    uint32_t flags = pcmk__ar_ordered|pe_order_runnable_left;
 
     /* Although the ordering between the probe of the clone instance and the
      * start of its parent has been added in pcmk__probe_rsc_on_node(), we
@@ -583,7 +583,7 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
 
                 // Skip pseudo-actions (for example, those implied by fencing)
                 if (!pcmk_is_set(then->flags, pcmk_action_pseudo)) {
-                    order_actions(probe, then, pe_order_optional);
+                    order_actions(probe, then, pcmk__ar_ordered);
                 }
             }
             g_list_free(then_actions);
@@ -829,7 +829,7 @@ order_then_probes(pe_working_set_t *data_set)
                 pe_action_t *probe = (pe_action_t *) probe_iter->data;
 
                 crm_err("Ordering %s before %s", first->uuid, probe->uuid);
-                order_actions(first, probe, pe_order_optional);
+                order_actions(first, probe, pcmk__ar_ordered);
             }
         }
     }

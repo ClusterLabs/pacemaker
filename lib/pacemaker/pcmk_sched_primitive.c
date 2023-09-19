@@ -921,7 +921,7 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
     // Order stops before starts (i.e. restart)
     pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_STOP, 0), NULL,
                        rsc, pcmk__op_key(rsc->id, PCMK_ACTION_START, 0), NULL,
-                       pe_order_optional|pe_order_implies_then|pe_order_restart,
+                       pcmk__ar_ordered|pe_order_implies_then|pe_order_restart,
                        rsc->cluster);
 
     // Promotable ordering: demote before stop, start before promote
@@ -983,7 +983,7 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
              */
             pcmk__order_resource_actions(rsc->container, PCMK_ACTION_MONITOR,
                                          rsc, PCMK_ACTION_STOP,
-                                         pe_order_optional);
+                                         pcmk__ar_ordered);
 
         /* A user can specify that a resource must start on a Pacemaker Remote
          * node by explicitly configuring it with the container=NODENAME
@@ -1439,7 +1439,7 @@ pcmk__schedule_cleanup(pe_resource_t *rsc, const pe_node_t *node, bool optional)
      * optional, the orderings make the then action required if the first action
      * becomes required.
      */
-    uint32_t flag = optional? pe_order_implies_then : pe_order_optional;
+    uint32_t flag = optional? pe_order_implies_then : pcmk__ar_ordered;
 
     CRM_CHECK((rsc != NULL) && (node != NULL), return);
 

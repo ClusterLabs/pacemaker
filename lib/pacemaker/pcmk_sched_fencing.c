@@ -68,7 +68,7 @@ order_start_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
                 break;
 
             case pcmk_requires_fencing:
-                order_actions(stonith_op, action, pe_order_optional);
+                order_actions(stonith_op, action, pcmk__ar_ordered);
                 break;
 
             case pcmk_requires_quorum:
@@ -90,7 +90,7 @@ order_start_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
                     pe_rsc_debug(rsc, "Ordering %s after %s recovery",
                                  action->uuid, pe__node_name(target));
                     order_actions(stonith_op, action,
-                                  pe_order_optional | pe_order_runnable_left);
+                                  pcmk__ar_ordered|pe_order_runnable_left);
                 }
                 break;
         }
@@ -200,7 +200,7 @@ order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
                   rsc->id, pe__node_name(node));
          pcmk__new_ordering(rsc, stop_key(rsc), NULL, NULL,
                             strdup(PCMK_ACTION_STONITH), stonith_op,
-                            pe_order_optional, rsc->cluster);
+                            pcmk__ar_ordered, rsc->cluster);
 #endif
     }
 
@@ -236,7 +236,7 @@ order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
 
             } else if (order_implicit) {
                 order_actions(stonith_op, action,
-                              pe_order_preserve|pe_order_optional);
+                              pe_order_preserve|pcmk__ar_ordered);
             }
         }
     }
@@ -416,7 +416,7 @@ pcmk__fence_guest(pe_node_t *node)
                                  PCMK_ACTION_STOP, NULL);
 
         if (stop) {
-            order_actions(stop, stonith_op, pe_order_optional);
+            order_actions(stop, stonith_op, pcmk__ar_ordered);
             crm_info("Implying guest %s is down (action %d) "
                      "after connection is stopped (action %d)",
                      pe__node_name(node), stonith_op->id, stop->id);
@@ -486,7 +486,7 @@ pcmk__order_restart_vs_unfence(gpointer data, gpointer user_data)
      */
     pcmk__new_ordering(rsc, stop_key(rsc), NULL,
                        NULL, strdup(unfence->uuid), unfence,
-                       pe_order_optional|pe_order_same_node,
+                       pcmk__ar_ordered|pe_order_same_node,
                        rsc->cluster);
 
     pcmk__new_ordering(NULL, strdup(unfence->uuid), unfence,

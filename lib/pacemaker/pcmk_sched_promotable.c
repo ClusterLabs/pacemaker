@@ -29,16 +29,16 @@ order_instance_promotion(pe_resource_t *clone, pe_resource_t *child,
     // "Promote clone" -> promote instance -> "clone promoted"
     pcmk__order_resource_actions(clone, PCMK_ACTION_PROMOTE,
                                  child, PCMK_ACTION_PROMOTE,
-                                 pe_order_optional);
+                                 pcmk__ar_ordered);
     pcmk__order_resource_actions(child, PCMK_ACTION_PROMOTE,
                                  clone, PCMK_ACTION_PROMOTED,
-                                 pe_order_optional);
+                                 pcmk__ar_ordered);
 
     // If clone is ordered, order this instance relative to last
     if ((last != NULL) && pe__clone_is_ordered(clone)) {
         pcmk__order_resource_actions(last, PCMK_ACTION_PROMOTE,
                                      child, PCMK_ACTION_PROMOTE,
-                                     pe_order_optional);
+                                     pcmk__ar_ordered);
     }
 }
 
@@ -65,7 +65,7 @@ order_instance_demotion(pe_resource_t *clone, pe_resource_t *child,
     // If clone is ordered, order this instance relative to last
     if ((last != NULL) && pe__clone_is_ordered(clone)) {
         pcmk__order_resource_actions(child, PCMK_ACTION_DEMOTE, last,
-                                     PCMK_ACTION_DEMOTE, pe_order_optional);
+                                     PCMK_ACTION_DEMOTE, pcmk__ar_ordered);
     }
 }
 
@@ -1145,7 +1145,7 @@ pcmk__order_promotable_instances(pe_resource_t *clone)
         // Demote before promote
         pcmk__order_resource_actions(instance, PCMK_ACTION_DEMOTE,
                                      instance, PCMK_ACTION_PROMOTE,
-                                     pe_order_optional);
+                                     pcmk__ar_ordered);
 
         order_instance_promotion(clone, instance, previous);
         order_instance_demotion(clone, instance, previous);
