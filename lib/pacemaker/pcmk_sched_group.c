@@ -237,11 +237,11 @@ member_internal_constraints(gpointer data, gpointer user_data)
         }
 
     } else if (member_data->previous_member == NULL) {
-        pcmk__order_starts(member->parent, member, pe_order_none);
+        pcmk__order_starts(member->parent, member, pcmk__ar_none);
         if (member_data->promotable) {
             pcmk__order_resource_actions(member->parent, PCMK_ACTION_PROMOTE,
                                          member, PCMK_ACTION_PROMOTE,
-                                         pe_order_none);
+                                         pcmk__ar_none);
         }
 
     } else {

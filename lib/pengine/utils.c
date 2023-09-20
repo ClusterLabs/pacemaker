@@ -452,7 +452,7 @@ order_actions(pe_action_t *lh_action, pe_action_t *rh_action, uint32_t flags)
     pe_action_wrapper_t *wrapper = NULL;
     GList *list = NULL;
 
-    if (flags == pe_order_none) {
+    if (flags == pcmk__ar_none) {
         return FALSE;
     }
 

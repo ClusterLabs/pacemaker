@@ -178,7 +178,7 @@ static uint32_t
 ordering_flags_for_kind(enum pe_order_kind kind, const char *first,
                         enum ordering_symmetry symmetry)
 {
-    uint32_t flags = pe_order_none; // so we trace-log all flags set
+    uint32_t flags = pcmk__ar_none; // so we trace-log all flags set
 
     pe__set_order_flags(flags, pe_order_optional);
 
@@ -419,7 +419,7 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
     pe_resource_t *rsc_first = NULL;
     int min_required_before = 0;
     enum pe_order_kind kind = pe_order_kind_mandatory;
-    uint32_t flags = pe_order_none;
+    uint32_t flags = pcmk__ar_none;
     enum ordering_symmetry symmetry;
 
     const char *action_then = NULL;
@@ -715,7 +715,7 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
     const char *action_1 = crm_element_value(set1, "action");
     const char *action_2 = crm_element_value(set2, "action");
 
-    uint32_t flags = pe_order_none;
+    uint32_t flags = pcmk__ar_none;
 
     bool require_all = true;
 
@@ -1103,7 +1103,7 @@ pcmk__disable_invalid_orderings(pe_working_set_t *data_set)
 
             input = (pe_action_wrapper_t *) input_iter->data;
             if (ordering_is_invalid(action, input)) {
-                input->type = pe_order_none;
+                input->type = pcmk__ar_none;
             }
         }
     }
@@ -1217,7 +1217,7 @@ order_resource_actions_after(pe_action_t *first_action,
                              const pe_resource_t *rsc, pe__ordering_t *order)
 {
     GList *then_actions = NULL;
-    uint32_t flags = pe_order_none;
+    uint32_t flags = pcmk__ar_none;
 
     CRM_CHECK((rsc != NULL) && (order != NULL), return);
 

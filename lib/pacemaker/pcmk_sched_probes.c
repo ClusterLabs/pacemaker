@@ -350,7 +350,7 @@ add_probe_orderings_for_stops(pe_working_set_t *data_set)
         pe_action_t *then = NULL;
 
         // Skip disabled orderings
-        if (order->flags == pe_order_none) {
+        if (order->flags == pcmk__ar_none) {
             continue;
         }
 

@@ -17,6 +17,8 @@
  * the deprecated enum pe_ordering is dropped from the public API.
  */
 enum pcmk__action_relation_flags {
+    //! No relation (compare with equality rather than bit set)
+    pcmk__ar_none                           = 0U,
 };
 
 #endif      // PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H

@@ -287,7 +287,7 @@ write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
             if (before->state == pe_link_dumped) {
                 optional = false;
                 style = "bold";
-            } else if (before->type == pe_order_none) {
+            } else if ((uint32_t) before->type == pcmk__ar_none) {
                 continue;
             } else if (pcmk_is_set(before->action->flags,
                                    pcmk_action_added_to_graph)
