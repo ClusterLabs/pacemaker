@@ -662,10 +662,8 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
                   input->action->uuid, input->action->id);
         return false;
 
-    } else if (input->type == pe_order_load) {
+    } else if ((uint32_t) input->type == pcmk__ar_if_on_same_node_or_target) {
         pe_node_t *input_node = input->action->node;
-
-        // load orderings are relevant only if actions are for same node
 
         if ((action->rsc != NULL)
             && pcmk__str_eq(action->task, PCMK_ACTION_MIGRATE_TO,
@@ -673,12 +671,13 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
 
             pe_node_t *assigned = action->rsc->allocated_to;
 
-            /* For load_stopped -> migrate_to orderings, we care about where it
-             * has been assigned to, not where it will be executed.
+            /* For load_stopped -> migrate_to orderings, we care about where
+             * the resource has been assigned, not where migrate_to will be
+             * executed.
              */
             if (!pe__same_node(input_node, assigned)) {
                 crm_trace("Ignoring %s (%d) input %s (%d): "
-                          "load ordering node mismatch %s vs %s",
+                          "migration target %s is not same as input node %s",
                           action->uuid, action->id,
                           input->action->uuid, input->action->id,
                           (assigned? assigned->details->uname : "<none>"),
@@ -689,7 +688,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
 
         } else if (!pe__same_node(input_node, action->node)) {
             crm_trace("Ignoring %s (%d) input %s (%d): "
-                      "load ordering node mismatch %s vs %s",
+                      "not on same node (%s vs %s)",
                       action->uuid, action->id,
                       input->action->uuid, input->action->id,
                       (action->node? action->node->details->uname : "<none>"),
@@ -699,7 +698,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
 
         } else if (pcmk_is_set(input->action->flags, pcmk_action_optional)) {
             crm_trace("Ignoring %s (%d) input %s (%d): "
-                      "load ordering input optional",
+                      "ordering optional",
                       action->uuid, action->id,
                       input->action->uuid, input->action->id);
             input->type = pcmk__ar_none;

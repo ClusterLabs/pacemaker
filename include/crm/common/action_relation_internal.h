@@ -110,6 +110,9 @@ enum pcmk__action_relation_flags {
 
     //! User-configured asymmetric ordering
     pcmk__ar_asymmetric                     = (1U << 20),
+
+    //! Actions are ordered if on same node (or migration target for migrate_to)
+    pcmk__ar_if_on_same_node_or_target      = (1U << 21),
 };
 
 #endif      // PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H

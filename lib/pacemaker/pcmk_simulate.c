@@ -292,7 +292,7 @@ write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
             } else if (pcmk_is_set(before->action->flags,
                                    pcmk_action_added_to_graph)
                        && pcmk_is_set(action->flags, pcmk_action_added_to_graph)
-                       && before->type != pe_order_load) {
+                       && (uint32_t) before->type != pcmk__ar_if_on_same_node_or_target) {
                 optional = false;
             }
 

@@ -1090,7 +1090,8 @@ ordering_is_invalid(pe_action_t *action, pe_action_wrapper_t *input)
      * migrated from node2 to node1. If there would be a graph loop,
      * break the order "load_stopped_node2" -> "rscA_migrate_to node1".
      */
-    if ((input->type == pe_order_load) && action->rsc
+    if (((uint32_t) input->type == pcmk__ar_if_on_same_node_or_target)
+        && (action->rsc != NULL)
         && pcmk__str_eq(action->task, PCMK_ACTION_MIGRATE_TO, pcmk__str_none)
         && pcmk__graph_has_loop(action, action, input)) {
         return true;
