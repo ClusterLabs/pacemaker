@@ -923,7 +923,7 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
                        rsc, pcmk__op_key(rsc->id, PCMK_ACTION_START, 0), NULL,
                        pcmk__ar_ordered
                        |pcmk__ar_first_implies_then
-                       |pe_order_restart,
+                       |pcmk__ar_intermediate_stop,
                        rsc->cluster);
 
     // Promotable ordering: demote before stop, start before promote

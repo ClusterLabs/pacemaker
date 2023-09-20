@@ -287,13 +287,15 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
                      (changed? "changed" : "unchanged"));
     }
 
-    if (pcmk_is_set(order->type, pe_order_restart) && (then->rsc != NULL)) {
+    if (pcmk_is_set(order->type, pcmk__ar_intermediate_stop)
+        && (then->rsc != NULL)) {
         enum pe_action_flags restart = pcmk_action_optional
                                        |pcmk_action_runnable;
 
         changed |= update(then->rsc, first, then, node, first_flags, restart,
-                          pe_order_restart, data_set);
-        pe_rsc_trace(then->rsc, "%s then %s: %s after pe_order_restart",
+                          pcmk__ar_intermediate_stop, data_set);
+        pe_rsc_trace(then->rsc,
+                     "%s then %s: %s after pcmk__ar_intermediate_stop",
                      first->uuid, then->uuid,
                      (changed? "changed" : "unchanged"));
     }
@@ -456,7 +458,7 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
 
     if (pcmk_any_flags_set(order->type, pcmk__ar_first_implies_then
                                         |pcmk__ar_then_implies_first
-                                        |pe_order_restart)
+                                        |pcmk__ar_intermediate_stop)
         && (first->rsc != NULL)
         && !pcmk_is_set(first->rsc->flags, pcmk_rsc_managed)
         && pcmk_is_set(first->rsc->flags, pcmk_rsc_blocked)
@@ -915,7 +917,7 @@ pcmk__update_ordered_actions(pe_action_t *first, pe_action_t *then,
         clear_action_flag_because(then, pcmk_action_optional, first);
     }
 
-    if (pcmk_is_set(type, pe_order_restart)) {
+    if (pcmk_is_set(type, pcmk__ar_intermediate_stop)) {
         handle_restart_ordering(first, then, filter);
     }
 

@@ -251,7 +251,7 @@ member_internal_constraints(gpointer data, gpointer user_data)
                            pcmk__ar_first_implies_then
                            |pcmk__ar_unrunnable_first_blocks);
         pcmk__order_stops(member, member_data->previous_member,
-                          pcmk__ar_ordered|pe_order_restart);
+                          pcmk__ar_ordered|pcmk__ar_intermediate_stop);
 
         /* In unusual circumstances (such as adding a new member to the middle
          * of a group with unmanaged later members), this member may be active

@@ -70,6 +70,22 @@ enum pcmk__action_relation_flags {
      * container is running.
      */
     pcmk__ar_nested_remote_probe            = (1U << 11),
+
+    /*!
+     * If 'first' is for a blocked resource, make 'then' unrunnable.
+     *
+     * If 'then' is required, make 'first' required, make 'first' unmigratable
+     * if 'then' is unmigratable, and make 'then' unrunnable if 'first' is
+     * unrunnable.
+     *
+     * If 'then' is unrunnable and for the same resource as 'first', make
+     * 'first' required if it is runnable, and make 'first' unmigratable if
+     * 'then' is unmigratable.
+     *
+     * This is used for "stop then start primitive" (restarts) and
+     * "stop group member then stop previous member".
+     */
+    pcmk__ar_intermediate_stop              = (1U << 12),
 };
 
 #endif      // PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H
