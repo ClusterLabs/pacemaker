@@ -579,7 +579,7 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
         pcmk__clear_updated_flags(changed, then, pcmk__updated_first);
 
         if ((first->rsc != NULL)
-            && pcmk_is_set(other->type, pe_order_then_cancels_first)
+            && pcmk_is_set(other->type, pcmk__ar_then_cancels_first)
             && !pcmk_is_set(then->flags, pcmk_action_optional)) {
 
             /* 'then' is required, so we must abandon 'first'
@@ -1593,10 +1593,10 @@ schedule_reload(gpointer data, gpointer user_data)
 
     // Set orderings so that a required stop or demote cancels the reload
     pcmk__new_ordering(NULL, NULL, reload, rsc, stop_key(rsc), NULL,
-                       pcmk__ar_ordered|pe_order_then_cancels_first,
+                       pcmk__ar_ordered|pcmk__ar_then_cancels_first,
                        rsc->cluster);
     pcmk__new_ordering(NULL, NULL, reload, rsc, demote_key(rsc), NULL,
-                       pcmk__ar_ordered|pe_order_then_cancels_first,
+                       pcmk__ar_ordered|pcmk__ar_then_cancels_first,
                        rsc->cluster);
 }
 

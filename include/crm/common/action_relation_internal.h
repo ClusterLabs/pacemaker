@@ -122,6 +122,9 @@ enum pcmk__action_relation_flags {
 
     //! Ordering applies even if 'first' runs on guest node created by 'then'
     pcmk__ar_guest_allowed                  = (1U << 24),
+
+    //! If 'then' action becomes required, 'first' becomes optional
+    pcmk__ar_then_cancels_first             = (1U << 25),
 };
 
 #endif      // PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H

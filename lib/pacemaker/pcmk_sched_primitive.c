@@ -949,7 +949,7 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
                        NULL, rsc,
                        pcmk__op_key(rsc->id, PCMK_ACTION_MONITOR, 0),
                        NULL,
-                       pcmk__ar_if_on_same_node|pe_order_then_cancels_first,
+                       pcmk__ar_if_on_same_node|pcmk__ar_then_cancels_first,
                        rsc->cluster);
 
     // Certain checks need allowed nodes
