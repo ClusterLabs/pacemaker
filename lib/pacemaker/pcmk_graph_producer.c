@@ -636,10 +636,10 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
                   input->action->uuid, input->action->id);
         return false;
 
-    } else if (pcmk_is_set(input->type, pe_order_implies_first_migratable)
+    } else if (pcmk_is_set(input->type, pcmk__ar_unmigratable_then_blocks)
                && !pcmk_is_set(input->action->flags, pcmk_action_runnable)) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
-                  "implies input migratable but input unrunnable",
+                  "input blocked if 'then' unmigratable",
                   action->uuid, action->id,
                   input->action->uuid, input->action->id);
         return false;

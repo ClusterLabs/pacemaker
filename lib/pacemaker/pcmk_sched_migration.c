@@ -91,7 +91,7 @@ pcmk__create_migration_actions(pe_resource_t *rsc, const pe_node_t *current)
                            rsc,
                            pcmk__op_key(rsc->id, PCMK_ACTION_MIGRATE_FROM, 0),
                            NULL,
-                           pcmk__ar_ordered|pe_order_implies_first_migratable,
+                           pcmk__ar_ordered|pcmk__ar_unmigratable_then_blocks,
                            rsc->cluster);
     } else {
         pe__set_action_flags(migrate_from, pcmk_action_migratable);
@@ -110,14 +110,14 @@ pcmk__create_migration_actions(pe_resource_t *rsc, const pe_node_t *current)
                        NULL,
                        rsc, pcmk__op_key(rsc->id, PCMK_ACTION_STOP, 0),
                        NULL,
-                       pcmk__ar_ordered|pe_order_implies_first_migratable,
+                       pcmk__ar_ordered|pcmk__ar_unmigratable_then_blocks,
                        rsc->cluster);
     pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_MIGRATE_FROM, 0),
                        NULL,
                        rsc, pcmk__op_key(rsc->id, PCMK_ACTION_START, 0),
                        NULL,
                        pcmk__ar_ordered
-                       |pe_order_implies_first_migratable
+                       |pcmk__ar_unmigratable_then_blocks
                        |pe_order_pseudo_left,
                        rsc->cluster);
 
