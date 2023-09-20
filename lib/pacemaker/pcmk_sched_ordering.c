@@ -1074,7 +1074,7 @@ ordering_is_invalid(pe_action_t *action, pe_action_wrapper_t *input)
     /* Prevent user-defined ordering constraints between resources
      * running in a guest node and the resource that defines that node.
      */
-    if (!pcmk_is_set(input->type, pe_order_preserve)
+    if (!pcmk_is_set(input->type, pcmk__ar_guest_allowed)
         && (input->action->rsc != NULL)
         && pcmk__rsc_corresponds_to_guest(action->rsc, input->action->node)) {
 

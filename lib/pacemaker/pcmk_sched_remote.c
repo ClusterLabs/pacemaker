@@ -50,9 +50,9 @@ state2text(enum remote_connection_state state)
     return "impossible";
 }
 
-/* We always use pe_order_preserve with these convenience functions to exempt
- * internally generated constraints from the prohibition of user constraints
- * involving remote connection resources.
+/* We always use pcmk__ar_guest_allowed with these convenience functions to
+ * exempt internally generated constraints from the prohibition of user
+ * constraints involving remote connection resources.
  *
  * The start ordering additionally uses pcmk__ar_unrunnable_first_blocks so that
  * the specified action is not runnable if the start is not runnable.
@@ -65,7 +65,7 @@ order_start_then_action(pe_resource_t *first_rsc, pe_action_t *then_action,
     if ((first_rsc != NULL) && (then_action != NULL)) {
         pcmk__new_ordering(first_rsc, start_key(first_rsc), NULL,
                            then_action->rsc, NULL, then_action,
-                           pe_order_preserve
+                           pcmk__ar_guest_allowed
                            |pcmk__ar_unrunnable_first_blocks
                            |extra,
                            first_rsc->cluster);
@@ -79,7 +79,7 @@ order_action_then_stop(pe_action_t *first_action, pe_resource_t *then_rsc,
     if ((first_action != NULL) && (then_rsc != NULL)) {
         pcmk__new_ordering(first_action->rsc, NULL, first_action,
                            then_rsc, stop_key(then_rsc), NULL,
-                           pe_order_preserve|extra, then_rsc->cluster);
+                           pcmk__ar_guest_allowed|extra, then_rsc->cluster);
     }
 }
 

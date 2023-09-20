@@ -376,7 +376,7 @@ clear_failcounts_if_orphaned(gpointer data, gpointer user_data)
                                        rsc->cluster);
 
         /* We can't use order_action_then_stop() here because its
-         * pe_order_preserve breaks things
+         * pcmk__ar_guest_allowed breaks things
          */
         pcmk__new_ordering(clear_op->rsc, NULL, clear_op, rsc, stop_key(rsc),
                            NULL, pcmk__ar_ordered, rsc->cluster);

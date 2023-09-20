@@ -261,9 +261,10 @@ replica_internal_constraints(pe__bundle_replica_t *replica, void *user_data)
 
         // Replica IP address -> replica container (symmetric)
         pcmk__order_starts(replica->ip, replica->container,
-                           pcmk__ar_unrunnable_first_blocks|pe_order_preserve);
+                           pcmk__ar_unrunnable_first_blocks
+                           |pcmk__ar_guest_allowed);
         pcmk__order_stops(replica->container, replica->ip,
-                          pcmk__ar_then_implies_first|pe_order_preserve);
+                          pcmk__ar_then_implies_first|pcmk__ar_guest_allowed);
 
         pcmk__new_colocation("#ip-with-container", NULL, INFINITY, replica->ip,
                              replica->container, NULL, NULL,

@@ -119,6 +119,9 @@ enum pcmk__action_relation_flags {
 
     //! Ordering applies only if 'first' is required and on same node as 'then'
     pcmk__ar_if_required_on_same_node       = (1U << 23),
+
+    //! Ordering applies even if 'first' runs on guest node created by 'then'
+    pcmk__ar_guest_allowed                  = (1U << 24),
 };
 
 #endif      // PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H
