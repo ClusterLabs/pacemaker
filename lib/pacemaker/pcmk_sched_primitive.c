@@ -935,7 +935,7 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
                            NULL,
                            rsc, pcmk__op_key(rsc->id, PCMK_ACTION_STOP, 0),
                            NULL,
-                           pe_order_promoted_implies_first, rsc->cluster);
+                           pcmk__ar_promoted_then_implies_first, rsc->cluster);
 
         pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_START, 0),
                            NULL,
