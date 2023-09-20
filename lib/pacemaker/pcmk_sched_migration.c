@@ -118,7 +118,7 @@ pcmk__create_migration_actions(pe_resource_t *rsc, const pe_node_t *current)
                        NULL,
                        pcmk__ar_ordered
                        |pcmk__ar_unmigratable_then_blocks
-                       |pe_order_pseudo_left,
+                       |pcmk__ar_first_else_then,
                        rsc->cluster);
 
     if (migrate_to != NULL) {

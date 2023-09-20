@@ -399,13 +399,13 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
                      (changed? "changed" : "unchanged"));
     }
 
-    if (pcmk_is_set(order->type, pe_order_pseudo_left)) {
+    if (pcmk_is_set(order->type, pcmk__ar_first_else_then)) {
         if (then->rsc != NULL) {
             changed |= update(then->rsc, first, then, node, first_flags,
-                              pcmk_action_optional, pe_order_pseudo_left,
+                              pcmk_action_optional, pcmk__ar_first_else_then,
                               data_set);
         }
-        pe_rsc_trace(then->rsc, "%s then %s: %s after pe_order_pseudo_left",
+        pe_rsc_trace(then->rsc, "%s then %s: %s after pcmk__ar_first_else_then",
                      first->uuid, then->uuid,
                      (changed? "changed" : "unchanged"));
     }
@@ -885,7 +885,7 @@ pcmk__update_ordered_actions(pe_action_t *first, pe_action_t *then,
         }
     }
 
-    if (pcmk_is_set(type, pe_order_pseudo_left)
+    if (pcmk_is_set(type, pcmk__ar_first_else_then)
         && pcmk_is_set(filter, pcmk_action_optional)
         && !pcmk_is_set(first->flags, pcmk_action_runnable)) {
 
