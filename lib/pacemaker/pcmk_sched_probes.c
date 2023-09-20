@@ -623,7 +623,8 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
         if (!pcmk_is_set(after_wrapper->type, pcmk__ar_first_implies_then)) {
             /* The order type between a group/clone and its child such as
              * B.start-> B_child.start is:
-             * pe_order_implies_first_printed|pcmk__ar_unrunnable_first_blocks
+             * pcmk__ar_then_implies_first_graphed
+             * |pcmk__ar_unrunnable_first_blocks
              *
              * Proceed through the ordering chain and build dependencies with
              * its children.

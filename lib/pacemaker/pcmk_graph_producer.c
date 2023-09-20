@@ -590,9 +590,10 @@ should_add_action_to_graph(const pe_action_t *action)
 static bool
 ordering_can_change_actions(const pe_action_wrapper_t *ordering)
 {
-    return pcmk_any_flags_set(ordering->type, ~(pe_order_implies_first_printed
-                                                |pe_order_implies_then_printed
-                                                |pcmk__ar_ordered));
+    return pcmk_any_flags_set(ordering->type,
+                              ~(pcmk__ar_then_implies_first_graphed
+                                |pe_order_implies_then_printed
+                                |pcmk__ar_ordered));
 }
 
 /*!

@@ -236,15 +236,15 @@ replica_internal_constraints(pe__bundle_replica_t *replica, void *user_data)
     // Start bundle -> start replica container
     pcmk__order_starts(bundle, replica->container,
                        pcmk__ar_unrunnable_first_blocks
-                       |pe_order_implies_first_printed);
+                       |pcmk__ar_then_implies_first_graphed);
 
     // Stop bundle -> stop replica child and container
     if (replica->child != NULL) {
         pcmk__order_stops(bundle, replica->child,
-                          pe_order_implies_first_printed);
+                          pcmk__ar_then_implies_first_graphed);
     }
     pcmk__order_stops(bundle, replica->container,
-                      pe_order_implies_first_printed);
+                      pcmk__ar_then_implies_first_graphed);
 
     // Start replica container -> bundle is started
     pcmk__order_resource_actions(replica->container, PCMK_ACTION_START, bundle,
@@ -309,7 +309,7 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
     // Start bundle -> start bundled clone
     pcmk__order_resource_actions(rsc, PCMK_ACTION_START, bundled_resource,
                                  PCMK_ACTION_START,
-                                 pe_order_implies_first_printed);
+                                 pcmk__ar_then_implies_first_graphed);
 
     // Bundled clone is started -> bundle is started
     pcmk__order_resource_actions(bundled_resource, PCMK_ACTION_RUNNING,
@@ -319,7 +319,7 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
     // Stop bundle -> stop bundled clone
     pcmk__order_resource_actions(rsc, PCMK_ACTION_STOP, bundled_resource,
                                  PCMK_ACTION_STOP,
-                                 pe_order_implies_first_printed);
+                                 pcmk__ar_then_implies_first_graphed);
 
     // Bundled clone is stopped -> bundle is stopped
     pcmk__order_resource_actions(bundled_resource, PCMK_ACTION_STOPPED,
@@ -336,7 +336,7 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
     // Demote bundle -> demote bundled clone
     pcmk__order_resource_actions(rsc, PCMK_ACTION_DEMOTE, bundled_resource,
                                  PCMK_ACTION_DEMOTE,
-                                 pe_order_implies_first_printed);
+                                 pcmk__ar_then_implies_first_graphed);
 
     // Bundled clone is demoted -> bundle is demoted
     pcmk__order_resource_actions(bundled_resource, PCMK_ACTION_DEMOTED,
@@ -346,7 +346,7 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
     // Promote bundle -> promote bundled clone
     pcmk__order_resource_actions(rsc, PCMK_ACTION_PROMOTE,
                                  bundled_resource, PCMK_ACTION_PROMOTE,
-                                 pe_order_implies_first_printed);
+                                 pcmk__ar_then_implies_first_graphed);
 
     // Bundled clone is promoted -> bundle is promoted
     pcmk__order_resource_actions(bundled_resource, PCMK_ACTION_PROMOTED,

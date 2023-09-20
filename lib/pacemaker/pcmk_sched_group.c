@@ -163,7 +163,7 @@ member_internal_constraints(gpointer data, gpointer user_data)
     struct member_data *member_data = (struct member_data *) user_data;
 
     // For ordering demote vs demote or stop vs stop
-    uint32_t down_flags = pe_order_implies_first_printed;
+    uint32_t down_flags = pcmk__ar_then_implies_first_graphed;
 
     // For ordering demote vs demoted or stop vs stopped
     uint32_t post_down_flags = pe_order_implies_then_printed;
@@ -206,7 +206,7 @@ member_internal_constraints(gpointer data, gpointer user_data)
                                      |pe_order_implies_then_printed);
         pcmk__order_resource_actions(member->parent, PCMK_ACTION_PROMOTE,
                                      member, PCMK_ACTION_PROMOTE,
-                                     pe_order_implies_first_printed);
+                                     pcmk__ar_then_implies_first_graphed);
     }
 
     // Stop group -> stop member -> group is stopped
@@ -216,7 +216,8 @@ member_internal_constraints(gpointer data, gpointer user_data)
                                  post_down_flags);
 
     // Start group -> start member -> group is started
-    pcmk__order_starts(member->parent, member, pe_order_implies_first_printed);
+    pcmk__order_starts(member->parent, member,
+                       pcmk__ar_then_implies_first_graphed);
     pcmk__order_resource_actions(member, PCMK_ACTION_START,
                                  member->parent, PCMK_ACTION_RUNNING,
                                  pcmk__ar_unrunnable_first_blocks
@@ -227,13 +228,13 @@ member_internal_constraints(gpointer data, gpointer user_data)
         pcmk__order_starts(member->parent, member,
                            pcmk__ar_first_implies_then
                            |pcmk__ar_unrunnable_first_blocks
-                           |pe_order_implies_first_printed);
+                           |pcmk__ar_then_implies_first_graphed);
         if (member_data->promotable) {
             pcmk__order_resource_actions(member->parent, PCMK_ACTION_PROMOTE,
                                          member, PCMK_ACTION_PROMOTE,
                                          pcmk__ar_first_implies_then
                                          |pcmk__ar_unrunnable_first_blocks
-                                         |pe_order_implies_first_printed);
+                                         |pcmk__ar_then_implies_first_graphed);
         }
 
     } else if (member_data->previous_member == NULL) {

@@ -101,6 +101,9 @@ enum pcmk__action_relation_flags {
 
     //! Relation applies only if actions are on same node
     pcmk__ar_if_on_same_node                = (1U << 15),
+
+    //! If 'then' is required, 'first' must be added to the transition graph
+    pcmk__ar_then_implies_first_graphed     = (1U << 16),
 };
 
 #endif      // PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H

@@ -57,7 +57,7 @@ order_instance_demotion(pe_resource_t *clone, pe_resource_t *child,
     // "Demote clone" -> demote instance -> "clone demoted"
     pcmk__order_resource_actions(clone, PCMK_ACTION_DEMOTE, child,
                                  PCMK_ACTION_DEMOTE,
-                                 pe_order_implies_first_printed);
+                                 pcmk__ar_then_implies_first_graphed);
     pcmk__order_resource_actions(child, PCMK_ACTION_DEMOTE,
                                  clone, PCMK_ACTION_DEMOTED,
                                  pe_order_implies_then_printed);
