@@ -592,7 +592,7 @@ ordering_can_change_actions(const pe_action_wrapper_t *ordering)
 {
     return pcmk_any_flags_set(ordering->type,
                               ~(pcmk__ar_then_implies_first_graphed
-                                |pe_order_implies_then_printed
+                                |pcmk__ar_first_implies_then_graphed
                                 |pcmk__ar_ordered));
 }
 

@@ -60,7 +60,7 @@ order_instance_demotion(pe_resource_t *clone, pe_resource_t *child,
                                  pcmk__ar_then_implies_first_graphed);
     pcmk__order_resource_actions(child, PCMK_ACTION_DEMOTE,
                                  clone, PCMK_ACTION_DEMOTED,
-                                 pe_order_implies_then_printed);
+                                 pcmk__ar_first_implies_then_graphed);
 
     // If clone is ordered, order this instance relative to last
     if ((last != NULL) && pe__clone_is_ordered(clone)) {

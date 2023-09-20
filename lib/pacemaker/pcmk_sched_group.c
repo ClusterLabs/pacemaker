@@ -166,7 +166,7 @@ member_internal_constraints(gpointer data, gpointer user_data)
     uint32_t down_flags = pcmk__ar_then_implies_first_graphed;
 
     // For ordering demote vs demoted or stop vs stopped
-    uint32_t post_down_flags = pe_order_implies_then_printed;
+    uint32_t post_down_flags = pcmk__ar_first_implies_then_graphed;
 
     // Create the individual member's implicit constraints
     member->cmds->internal_constraints(member);
@@ -203,7 +203,7 @@ member_internal_constraints(gpointer data, gpointer user_data)
                                      member->parent, PCMK_ACTION_PROMOTED,
                                      pcmk__ar_unrunnable_first_blocks
                                      |pcmk__ar_first_implies_then
-                                     |pe_order_implies_then_printed);
+                                     |pcmk__ar_first_implies_then_graphed);
         pcmk__order_resource_actions(member->parent, PCMK_ACTION_PROMOTE,
                                      member, PCMK_ACTION_PROMOTE,
                                      pcmk__ar_then_implies_first_graphed);
@@ -222,7 +222,7 @@ member_internal_constraints(gpointer data, gpointer user_data)
                                  member->parent, PCMK_ACTION_RUNNING,
                                  pcmk__ar_unrunnable_first_blocks
                                  |pcmk__ar_first_implies_then
-                                 |pe_order_implies_then_printed);
+                                 |pcmk__ar_first_implies_then_graphed);
 
     if (!member_data->ordered) {
         pcmk__order_starts(member->parent, member,

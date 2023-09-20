@@ -104,6 +104,9 @@ enum pcmk__action_relation_flags {
 
     //! If 'then' is required, 'first' must be added to the transition graph
     pcmk__ar_then_implies_first_graphed     = (1U << 16),
+
+    //! If 'first' is required and runnable, 'then' must be in graph
+    pcmk__ar_first_implies_then_graphed     = (1U << 17),
 };
 
 #endif      // PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H

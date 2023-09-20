@@ -438,7 +438,7 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
     }
 
     if (pcmk_is_set(first->flags, pcmk_action_runnable)
-        && pcmk_is_set(order->type, pe_order_implies_then_printed)
+        && pcmk_is_set(order->type, pcmk__ar_first_implies_then_graphed)
         && !pcmk_is_set(first_flags, pcmk_action_optional)) {
 
         pe_rsc_trace(then->rsc, "%s will be in graph because %s is required",

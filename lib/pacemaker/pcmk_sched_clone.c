@@ -163,13 +163,13 @@ pcmk__clone_internal_constraints(pe_resource_t *rsc)
                                           |pcmk__ar_then_implies_first_graphed);
         pcmk__order_resource_actions(instance, PCMK_ACTION_START,
                                      rsc, PCMK_ACTION_RUNNING,
-                                     pe_order_implies_then_printed);
+                                     pcmk__ar_first_implies_then_graphed);
 
         // Stop clone -> stop instance -> clone stopped
         pcmk__order_stops(rsc, instance, pcmk__ar_then_implies_first_graphed);
         pcmk__order_resource_actions(instance, PCMK_ACTION_STOP,
                                      rsc, PCMK_ACTION_STOPPED,
-                                     pe_order_implies_then_printed);
+                                     pcmk__ar_first_implies_then_graphed);
 
         /* Instances of ordered clones must be started and stopped by instance
          * number. Since only some instances may be starting or stopping, order
