@@ -426,13 +426,13 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
                      (changed? "changed" : "unchanged"));
     }
 
-    if (pcmk_is_set(order->type, pe_order_asymmetrical)) {
+    if (pcmk_is_set(order->type, pcmk__ar_asymmetric)) {
         if (then->rsc != NULL) {
             changed |= update(then->rsc, first, then, node, first_flags,
-                              pcmk_action_runnable, pe_order_asymmetrical,
+                              pcmk_action_runnable, pcmk__ar_asymmetric,
                               data_set);
         }
-        pe_rsc_trace(then->rsc, "%s then %s: %s after pe_order_asymmetrical",
+        pe_rsc_trace(then->rsc, "%s then %s: %s after pcmk__ar_asymmetric",
                      first->uuid, then->uuid,
                      (changed? "changed" : "unchanged"));
     }
@@ -845,7 +845,7 @@ pcmk__update_ordered_actions(pe_action_t *first, pe_action_t *then,
 
     then_flags = then->flags;
     first_flags = first->flags;
-    if (pcmk_is_set(type, pe_order_asymmetrical)) {
+    if (pcmk_is_set(type, pcmk__ar_asymmetric)) {
         handle_asymmetric_ordering(first, then);
     }
 

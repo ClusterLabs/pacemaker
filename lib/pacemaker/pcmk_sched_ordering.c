@@ -197,7 +197,7 @@ ordering_flags_for_kind(enum pe_order_kind kind, const char *first,
             pe__set_order_flags(flags, pcmk__ar_ordered);
             switch (symmetry) {
                 case ordering_asymmetric:
-                    pe__set_order_flags(flags, pe_order_asymmetrical);
+                    pe__set_order_flags(flags, pcmk__ar_asymmetric);
                     break;
 
                 case ordering_symmetric:

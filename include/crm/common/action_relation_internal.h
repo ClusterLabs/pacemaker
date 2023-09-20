@@ -107,6 +107,9 @@ enum pcmk__action_relation_flags {
 
     //! If 'first' is required and runnable, 'then' must be in graph
     pcmk__ar_first_implies_then_graphed     = (1U << 17),
+
+    //! User-configured asymmetric ordering
+    pcmk__ar_asymmetric                     = (1U << 20),
 };
 
 #endif      // PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H
