@@ -202,7 +202,7 @@ typedef struct pe__location_constraint_s {
 
 typedef struct pe__order_constraint_s {
     int id;
-    uint32_t flags; // Group of enum pe_ordering flags
+    uint32_t flags; // Group of enum pcmk__action_relation_flags
 
     void *lh_opaque;
     pe_resource_t *lh_rsc;

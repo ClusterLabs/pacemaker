@@ -303,7 +303,8 @@ pcmk__order_vs_fence(pe_action_t *stonith_op, pe_working_set_t *data_set)
  */
 void
 pcmk__order_vs_unfence(const pe_resource_t *rsc, pe_node_t *node,
-                       pe_action_t *action, enum pe_ordering order)
+                       pe_action_t *action,
+                       enum pcmk__action_relation_flags order)
 {
     /* When unfencing is in use, we order unfence actions before any probe or
      * start of resources that require unfencing, and also of fence devices.

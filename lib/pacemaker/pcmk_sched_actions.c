@@ -212,7 +212,7 @@ action_for_ordering(pe_action_t *action)
  *                          (may include pcmk_action_optional to affect only
  *                          mandatory actions, and pe_action_runnable to
  *                          affect only runnable actions)
- * \param[in]     type      Group of enum pe_ordering flags to apply
+ * \param[in]     type      Group of enum pcmk__action_relation_flags to apply
  * \param[in,out] data_set  Cluster working set
  *
  * \return Group of enum pcmk__updated flags indicating what was updated
@@ -817,7 +817,7 @@ handle_restart_ordering(pe_action_t *first, pe_action_t *then, uint32_t filter)
  *                          include pcmk_action_optional to affect only
  *                          mandatory actions, and pcmk_action_runnable to
  *                          affect only runnable actions)
- * \param[in]     type      Group of enum pe_ordering flags to apply
+ * \param[in]     type      Group of enum pcmk__action_relation_flags to apply
  * \param[in,out] data_set  Cluster working set
  *
  * \return Group of enum pcmk__updated flags indicating what was updated

@@ -273,7 +273,7 @@ struct resource_alloc_functions_s {
      *                          (may include pcmk_action_optional to affect
      *                          only mandatory actions, and pcmk_action_runnable
      *                          to affect only runnable actions)
-     * \param[in]     type      Group of enum pe_ordering flags to apply
+     * \param[in]     type      Group of enum pcmk__action_relation_flags
      * \param[in,out] data_set  Cluster working set
      *
      * \return Group of enum pcmk__updated flags indicating what was updated
@@ -418,7 +418,8 @@ void pcmk__order_vs_fence(pe_action_t *stonith_op, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
 void pcmk__order_vs_unfence(const pe_resource_t *rsc, pe_node_t *node,
-                            pe_action_t *action, enum pe_ordering order);
+                            pe_action_t *action,
+                            enum pcmk__action_relation_flags order);
 
 G_GNUC_INTERNAL
 void pcmk__fence_guest(pe_node_t *node);
@@ -661,7 +662,7 @@ void pcmk__order_after_each(pe_action_t *after, GList *list);
  * \param[in,out] first_task  Action key for 'first' action
  * \param[in]     then_rsc    Resource for 'then' action
  * \param[in,out] then_task   Action key for 'then' action
- * \param[in]     flags       Bitmask of enum pe_ordering flags
+ * \param[in]     flags       Group of enum pcmk__action_relation_flags
  */
 #define pcmk__order_resource_actions(first_rsc, first_task,                 \
                                      then_rsc, then_task, flags)            \

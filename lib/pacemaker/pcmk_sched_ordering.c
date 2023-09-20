@@ -508,7 +508,7 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
  * \param[in]     then_action        'then' action (if NULL, \p then_rsc and
  *                                   \p then_action_task must be set)
  *
- * \param[in]     flags              Flag set of enum pe_ordering
+ * \param[in]     flags              Group of enum pcmk__action_relation_flags
  * \param[in,out] sched              Cluster working set to add ordering to
  *
  * \note This function takes ownership of first_action_task and
