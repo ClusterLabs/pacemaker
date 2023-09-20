@@ -86,6 +86,18 @@ enum pcmk__action_relation_flags {
      * "stop group member then stop previous member".
      */
     pcmk__ar_intermediate_stop              = (1U << 12),
+
+    /*!
+     * The actions must be serialized if in the same transition but can be in
+     * either order. (In practice, we always arrange them as 'first' then
+     * 'then', so they end up being essentially the same as optional orderings.)
+     *
+     * @TODO Handle more intelligently -- for example, we could schedule the
+     * action with the fewest inputs first, so we're more likely to execute at
+     * least one if there is a failure during the transition. Or, we could
+     * prefer certain action types over others, or base it on resource priority.
+     */
+    pcmk__ar_serialize                      = (1U << 14),
 };
 
 #endif      // PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H

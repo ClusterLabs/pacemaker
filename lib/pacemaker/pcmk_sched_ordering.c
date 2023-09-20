@@ -187,7 +187,11 @@ ordering_flags_for_kind(enum pe_order_kind kind, const char *first,
             break;
 
         case pe_order_kind_serialize:
-            pe__set_order_flags(flags, pe_order_serialize_only);
+            /* This flag is not used anywhere directly but means the relation
+             * will not match an equality comparison against pcmk__ar_none or
+             * pcmk__ar_ordered.
+             */
+            pe__set_order_flags(flags, pcmk__ar_serialize);
             break;
 
         case pe_order_kind_mandatory:
