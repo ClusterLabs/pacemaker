@@ -282,7 +282,7 @@ pe__create_clone_child(pe_resource_t *rsc, pe_working_set_t *data_set)
         pe__set_resource_flags_recursive(child_rsc, pcmk_rsc_removed);
     }
 
-    add_hash_param(child_rsc->meta, XML_RSC_ATTR_INCARNATION_MAX, inc_max);
+    add_hash_param(child_rsc->meta, PCMK_META_CLONE_MAX, inc_max);
     pe_rsc_trace(rsc, "Added %s instance %s", rsc->id, child_rsc->id);
 
   bail:
@@ -290,6 +290,35 @@ pe__create_clone_child(pe_resource_t *rsc, pe_working_set_t *data_set)
     free(inc_max);
 
     return child_rsc;
+}
+
+/*!
+ * \internal
+ * \brief Unpack a nonnegative integer value from a resource meta-attribute
+ *
+ * \param[in]  rsc              Resource with meta-attribute
+ * \param[in]  meta_name        Name of meta-attribute to unpack
+ * \param[in]  deprecated_name  If not NULL, try unpacking this
+ *                              if \p meta_name is unset
+ * \param[in]  default_value    Value to use if unset
+ *
+ * \return Integer parsed from resource's specified meta-attribute if a valid
+ *         nonnegative integer, \p default_value if unset, or 0 if invalid
+ */
+static int
+unpack_meta_int(const pe_resource_t *rsc, const char *meta_name,
+                const char *deprecated_name, int default_value)
+{
+    int integer = default_value;
+    const char *value = g_hash_table_lookup(rsc->meta, meta_name);
+
+    if ((value == NULL) && (deprecated_name != NULL)) {
+        value = g_hash_table_lookup(rsc->meta, deprecated_name);
+    }
+    if (value != NULL) {
+        pcmk__scan_min_int(value, &integer, 0);
+    }
+    return integer;
 }
 
 gboolean
@@ -300,69 +329,37 @@ clone_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
     xmlNode *xml_obj = rsc->xml;
     clone_variant_data_t *clone_data = NULL;
 
-    const char *max_clones = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INCARNATION_MAX);
-    const char *max_clones_node = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INCARNATION_NODEMAX);
-
     pe_rsc_trace(rsc, "Processing resource %s...", rsc->id);
 
     clone_data = calloc(1, sizeof(clone_variant_data_t));
     rsc->variant_opaque = clone_data;
 
     if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
-        const char *promoted_max = NULL;
-        const char *promoted_node_max = NULL;
-
-        promoted_max = g_hash_table_lookup(rsc->meta,
-                                           XML_RSC_ATTR_PROMOTED_MAX);
-        if (promoted_max == NULL) {
-            // @COMPAT deprecated since 2.0.0
-            promoted_max = g_hash_table_lookup(rsc->meta,
-                                               PCMK_XA_PROMOTED_MAX_LEGACY);
-        }
-
-        promoted_node_max = g_hash_table_lookup(rsc->meta,
-                                                XML_RSC_ATTR_PROMOTED_NODEMAX);
-        if (promoted_node_max == NULL) {
-            // @COMPAT deprecated since 2.0.0
-            promoted_node_max =
-                g_hash_table_lookup(rsc->meta,
-                                    PCMK_XA_PROMOTED_NODE_MAX_LEGACY);
-        }
+        // Use 1 as default but 0 for minimum and invalid
+        // @COMPAT PCMK_XA_PROMOTED_MAX_LEGACY deprecated since 2.0.0
+        clone_data->promoted_max = unpack_meta_int(rsc, PCMK_META_PROMOTED_MAX,
+                                                   PCMK_XA_PROMOTED_MAX_LEGACY,
+                                                   1);
 
         // Use 1 as default but 0 for minimum and invalid
-        if (promoted_max == NULL) {
-            clone_data->promoted_max = 1;
-        } else {
-            pcmk__scan_min_int(promoted_max, &(clone_data->promoted_max), 0);
-        }
-
-        // Use 1 as default but 0 for minimum and invalid
-        if (promoted_node_max == NULL) {
-            clone_data->promoted_node_max = 1;
-        } else {
-            pcmk__scan_min_int(promoted_node_max,
-                               &(clone_data->promoted_node_max), 0);
-        }
+        // @COMPAT PCMK_XA_PROMOTED_NODE_MAX_LEGACY deprecated since 2.0.0
+        clone_data->promoted_node_max =
+            unpack_meta_int(rsc, PCMK_META_PROMOTED_NODE_MAX,
+                            PCMK_XA_PROMOTED_NODE_MAX_LEGACY, 1);
     }
 
     // Implied by calloc()
     /* clone_data->xml_obj_child = NULL; */
 
     // Use 1 as default but 0 for minimum and invalid
-    if (max_clones_node == NULL) {
-        clone_data->clone_node_max = 1;
-    } else {
-        pcmk__scan_min_int(max_clones_node, &(clone_data->clone_node_max), 0);
-    }
+    clone_data->clone_node_max = unpack_meta_int(rsc, PCMK_META_CLONE_NODE_MAX,
+                                                 NULL, 1);
 
     /* Use number of nodes (but always at least 1, which is handy for crm_verify
      * for a CIB without nodes) as default, but 0 for minimum and invalid
      */
-    if (max_clones == NULL) {
-        clone_data->clone_max = QB_MAX(1, g_list_length(data_set->nodes));
-    } else {
-        pcmk__scan_min_int(max_clones, &(clone_data->clone_max), 0);
-    }
+    clone_data->clone_max = unpack_meta_int(rsc, PCMK_META_CLONE_MAX, NULL,
+                                            QB_MAX(1, g_list_length(data_set->nodes)));
 
     if (crm_is_true(g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_ORDERED))) {
         clone_data->flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,
@@ -375,9 +372,9 @@ clone_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_unique)
         && (clone_data->clone_node_max > 1)) {
 
-        pcmk__config_err("Ignoring " XML_RSC_ATTR_PROMOTED_MAX " for %s "
+        pcmk__config_err("Ignoring " PCMK_META_CLONE_NODE_MAX " of %d for %s "
                          "because anonymous clones support only one instance "
-                         "per node", rsc->id);
+                         "per node", clone_data->clone_node_max, rsc->id);
         clone_data->clone_node_max = 1;
     }
 
@@ -1511,14 +1508,8 @@ pe__create_clone_notif_pseudo_ops(pe_resource_t *clone,
 unsigned int
 pe__clone_max_per_node(const pe_resource_t *rsc)
 {
-    const char *max_clones_node = NULL;
-    int max_instances = 1;
+    const clone_variant_data_t *clone_data = NULL;
 
-    CRM_ASSERT(pe_rsc_is_clone(rsc));
-    max_clones_node = g_hash_table_lookup(rsc->meta,
-                                          XML_RSC_ATTR_INCARNATION_NODEMAX);
-    if (max_clones_node != NULL) {
-        pcmk__scan_min_int(max_clones_node, &max_instances, 0);
-    }
-    return (unsigned int) max_instances;
+    get_clone_variant_data(clone_data, rsc);
+    return clone_data->clone_node_max;
 }

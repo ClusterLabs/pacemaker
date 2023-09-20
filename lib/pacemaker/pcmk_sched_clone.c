@@ -620,11 +620,11 @@ pcmk__clone_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml)
     crm_xml_add(xml, name, pe__rsc_bool_str(rsc, pcmk_rsc_notify));
     free(name);
 
-    name = crm_meta_name(XML_RSC_ATTR_INCARNATION_MAX);
+    name = crm_meta_name(PCMK_META_CLONE_MAX);
     crm_xml_add_int(xml, name, pe__clone_max(rsc));
     free(name);
 
-    name = crm_meta_name(XML_RSC_ATTR_INCARNATION_NODEMAX);
+    name = crm_meta_name(PCMK_META_CLONE_NODE_MAX);
     crm_xml_add_int(xml, name, pe__clone_node_max(rsc));
     free(name);
 
@@ -632,11 +632,11 @@ pcmk__clone_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml)
         int promoted_max = pe__clone_promoted_max(rsc);
         int promoted_node_max = pe__clone_promoted_node_max(rsc);
 
-        name = crm_meta_name(XML_RSC_ATTR_PROMOTED_MAX);
+        name = crm_meta_name(PCMK_META_PROMOTED_MAX);
         crm_xml_add_int(xml, name, promoted_max);
         free(name);
 
-        name = crm_meta_name(XML_RSC_ATTR_PROMOTED_NODEMAX);
+        name = crm_meta_name(PCMK_META_PROMOTED_NODE_MAX);
         crm_xml_add_int(xml, name, promoted_node_max);
         free(name);
 
