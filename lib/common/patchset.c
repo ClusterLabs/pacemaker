@@ -168,92 +168,8 @@ is_config_change(xmlNode *xml)
     return FALSE;
 }
 
-static void
-xml_repair_v1_diff(xmlNode *last, xmlNode *next, xmlNode *local_diff,
-                   gboolean changed)
-{
-    int lpc = 0;
-    xmlNode *cib = NULL;
-    xmlNode *diff_child = NULL;
-
-    const char *tag = NULL;
-
-    const char *vfields[] = {
-        XML_ATTR_GENERATION_ADMIN,
-        XML_ATTR_GENERATION,
-        XML_ATTR_NUMUPDATES,
-    };
-
-    if (local_diff == NULL) {
-        crm_trace("Nothing to do");
-        return;
-    }
-
-    tag = XML_TAG_DIFF_REMOVED;
-    diff_child = find_xml_node(local_diff, tag, FALSE);
-    if (diff_child == NULL) {
-        diff_child = create_xml_node(local_diff, tag);
-    }
-
-    tag = XML_TAG_CIB;
-    cib = find_xml_node(diff_child, tag, FALSE);
-    if (cib == NULL) {
-        cib = create_xml_node(diff_child, tag);
-    }
-
-    for (lpc = 0; (last != NULL) && (lpc < PCMK__NELEM(vfields)); lpc++) {
-        const char *value = crm_element_value(last, vfields[lpc]);
-
-        crm_xml_add(diff_child, vfields[lpc], value);
-        if (changed || lpc == 2) {
-            crm_xml_add(cib, vfields[lpc], value);
-        }
-    }
-
-    tag = XML_TAG_DIFF_ADDED;
-    diff_child = find_xml_node(local_diff, tag, FALSE);
-    if (diff_child == NULL) {
-        diff_child = create_xml_node(local_diff, tag);
-    }
-
-    tag = XML_TAG_CIB;
-    cib = find_xml_node(diff_child, tag, FALSE);
-    if (cib == NULL) {
-        cib = create_xml_node(diff_child, tag);
-    }
-
-    for (lpc = 0; next && lpc < PCMK__NELEM(vfields); lpc++) {
-        const char *value = crm_element_value(next, vfields[lpc]);
-
-        crm_xml_add(diff_child, vfields[lpc], value);
-    }
-
-    for (xmlAttrPtr a = pcmk__xe_first_attr(next); a != NULL; a = a->next) {
-        
-        const char *p_value = pcmk__xml_attr_value(a);
-
-        xmlSetProp(cib, a->name, (pcmkXmlStr) p_value);
-    }
-
-    crm_log_xml_explicit(local_diff, "Repaired-diff");
-}
-
 static xmlNode *
-xml_create_patchset_v1(xmlNode *source, xmlNode *target, bool config,
-                       bool suppress)
-{
-    xmlNode *patchset = diff_xml_object(source, target, suppress);
-
-    if (patchset) {
-        CRM_LOG_ASSERT(xml_document_dirty(target));
-        xml_repair_v1_diff(source, target, patchset, config);
-        crm_xml_add(patchset, "format", "1");
-    }
-    return patchset;
-}
-
-static xmlNode *
-xml_create_patchset_v2(xmlNode *source, xmlNode *target)
+xml_create_patchset_v2(const xmlNode *source, xmlNode *target)
 {
     int lpc = 0;
     GList *gIter = NULL;
@@ -277,7 +193,12 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
     docpriv = target->doc->_private;
 
     patchset = create_xml_node(NULL, XML_TAG_DIFF);
-    crm_xml_add_int(patchset, "format", 2);
+
+    /* Currently, Pacemaker generates only v2 patchsets (unless deprecated code
+     * is used). However, we must continue to include the format number, because
+     * older Pacemaker versions assume "no format attribute" means v1.
+     */
+    crm_xml_add_int(patchset, PCMK_XA_FORMAT, 2);
 
     version = create_xml_node(patchset, XML_DIFF_VERSION);
 
@@ -316,102 +237,140 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
     return patchset;
 }
 
-xmlNode *
-xml_create_patchset(int format, xmlNode *source, xmlNode *target,
-                    bool *config_changed, bool manage_version)
+/*!
+ * \internal
+ * \brief Update CIB version counters after changes
+ *
+ * \param[in]     source          XML object before changes
+ * \param[in,out] target          XML object with changes applied
+ * \param[in]     config_changed  Whether the configuration changed
+ */
+static void
+update_counters(const xmlNode *source, xmlNode *target, bool config_changed)
 {
-    int counter = 0;
-    bool config = FALSE;
-    xmlNode *patch = NULL;
-    const char *version = crm_element_value(source, XML_ATTR_CRM_VERSION);
+    int source_generation_admin = 0;
+    int source_generation = 0;
+    int source_num_updates = 0;
+
+    int target_generation_admin = 0;
+    int target_generation = 0;
+    int target_num_updates = 0;
+
+    crm_element_value_int(source, XML_ATTR_GENERATION_ADMIN,
+                          &source_generation_admin);
+    crm_element_value_int(source, XML_ATTR_GENERATION, &source_generation);
+    crm_element_value_int(source, XML_ATTR_NUMUPDATES, &source_num_updates);
+
+    crm_element_value_int(target, XML_ATTR_GENERATION_ADMIN,
+                          &target_generation_admin);
+    crm_element_value_int(target, XML_ATTR_GENERATION, &target_generation);
+    crm_element_value_int(target, XML_ATTR_NUMUPDATES, &target_num_updates);
+
+    if (config_changed) {
+        crm_xml_add_int(target, XML_ATTR_GENERATION, ++target_generation);
+
+        target_num_updates = 0;
+        crm_xml_add_int(target, XML_ATTR_NUMUPDATES, target_num_updates);
+
+    } else {
+        crm_xml_add_int(target, XML_ATTR_NUMUPDATES, ++target_num_updates);
+    }
+
+    crm_trace("%s changed (%d.%d.%d -> %d.%d.%d)",
+              (config_changed? "Config" : "Status"),
+              source_generation_admin, source_generation, source_num_updates,
+              target_generation_admin, target_generation, target_num_updates);
+}
+
+/*!
+ * \internal
+ * \brief Create an XML patchset showing CIB changes
+ *
+ * \param[in]     source           XML object before changes
+ * \param[in,out] target           XML object with changes applied
+ * \param[out]    config_changed   Where to store whether the configuration
+ *                                 changed
+ * \param[in]     manage_counters  Whether to update \c XML_ATTR_GENERATION or
+ *                                 \c XML_ATTR_NUMUPDATES counters in \p target
+ *                                 as appropriate
+ *
+ * \note This function always creates a v2 patchset. See the \c diff API schema
+ *       for details on format.
+ * \note If change tracking was not enabled while making changes, this function
+ *       returns \c NULL.
+ */
+xmlNode *
+pcmk__xml_create_patchset(const xmlNode *source, xmlNode *target,
+                          bool *config_changed, bool manage_version)
+{
+    bool config = false;
+
+    CRM_CHECK((source != NULL) && (target != NULL), return NULL);
 
     xml_acl_disable(target);
+
     if (!xml_document_dirty(target)) {
-        crm_trace("No change %d", format);
-        return NULL; /* No change */
+        crm_trace("No change");
+        return NULL;
     }
 
     config = is_config_change(target);
-    if (config_changed) {
+    if (config_changed != NULL) {
         *config_changed = config;
     }
 
-    if (manage_version && config) {
-        crm_trace("Config changed %d", format);
-        crm_xml_add(target, XML_ATTR_NUMUPDATES, "0");
-
-        crm_element_value_int(target, XML_ATTR_GENERATION, &counter);
-        crm_xml_add_int(target, XML_ATTR_GENERATION, counter+1);
-
-    } else if (manage_version) {
-        crm_element_value_int(target, XML_ATTR_NUMUPDATES, &counter);
-        crm_trace("Status changed %d - %d %s", format, counter,
-                  crm_element_value(source, XML_ATTR_NUMUPDATES));
-        crm_xml_add_int(target, XML_ATTR_NUMUPDATES, (counter + 1));
+    if (manage_version) {
+        update_counters(source, target, config);
     }
-
-    if (format == 0) {
-        if (compare_version("3.0.8", version) < 0) {
-            format = 2;
-        } else {
-            format = 1;
-        }
-        crm_trace("Using patch format %d for version: %s", format, version);
-    }
-
-    switch (format) {
-        case 1:
-            patch = xml_create_patchset_v1(source, target, config, FALSE);
-            break;
-        case 2:
-            patch = xml_create_patchset_v2(source, target);
-            break;
-        default:
-            crm_err("Unknown patch format: %d", format);
-            return NULL;
-    }
-    return patch;
+    return xml_create_patchset_v2(source, target);
 }
 
+/*!
+ * \internal
+ * \brief Calculate a digest from changed XML and add it to the patchset
+ *
+ * \param[in]     source    XML before applying patchset
+ * \param[in,out] target    XML with changes applied
+ * \param[in,out] patchset  XML patchset
+ */
 void
-patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
-                        bool with_digest)
+pcmk__add_digest_to_patchset(const xmlNode *source, xmlNode *target,
+                             xmlNode *patchset)
 {
-    int format = 1;
     const char *version = NULL;
     char *digest = NULL;
 
-    if ((patch == NULL) || (source == NULL) || (target == NULL)) {
+    if ((source == NULL) || (target == NULL) || (patchset == NULL)) {
         return;
     }
 
     /* We should always call xml_accept_changes() before calculating a digest.
-     * Otherwise, with an on-tracking dirty target, we could get a wrong digest.
+     * Otherwise, with a dirty target with tracking enabled, we could get an
+     * incorrect digest.
      */
     CRM_LOG_ASSERT(!xml_document_dirty(target));
-
-    crm_element_value_int(patch, "format", &format);
-    if ((format > 1) && !with_digest) {
-        return;
-    }
 
     version = crm_element_value(source, XML_ATTR_CRM_VERSION);
     digest = calculate_xml_versioned_digest(target, FALSE, TRUE, version);
 
-    crm_xml_add(patch, XML_ATTR_DIGEST, digest);
+    crm_xml_add(patchset, XML_ATTR_DIGEST, digest);
     free(digest);
-
-    return;
 }
 
-// Return true if attribute name is not "id"
+/* Return true if attribute name is not "id"
+ *
+ * @COMPAT Drop when xml_create_patchset() is dropped
+ */
 static bool
 not_id(xmlAttrPtr attr, void *user_data)
 {
     return strcmp((const char *) attr->name, XML_ATTR_ID) != 0;
 }
 
-// Apply the removals section of an v1 patchset to an XML node
+/* Apply the removals section of an v1 patchset to an XML node
+ *
+ * @COMPAT Drop when xml_create_patchset() is dropped
+ */
 static void
 process_v1_removals(xmlNode *target, xmlNode *patch)
 {
@@ -460,7 +419,10 @@ process_v1_removals(xmlNode *target, xmlNode *patch)
     free(id);
 }
 
-// Apply the additions section of an v1 patchset to an XML node
+/* Apply the additions section of an v1 patchset to an XML node
+ *
+ * @COMPAT Drop when xml_create_patchset() is dropped
+ */
 static void
 process_v1_additions(xmlNode *parent, xmlNode *target, xmlNode *patch)
 {
@@ -521,83 +483,124 @@ process_v1_additions(xmlNode *parent, xmlNode *target, xmlNode *patch)
 
 /*!
  * \internal
- * \brief Find additions or removals in a patch set
+ * \brief Get CIB versions used for patchset additions or removals
  *
- * \param[in]     patchset   XML of patch
- * \param[in]     format     Patch version
- * \param[in]     added      TRUE if looking for additions, FALSE if removals
- * \param[in,out] patch_node Will be set to node if found
- *
- * \return TRUE if format is valid, FALSE if invalid
+ * \param[in]  patchset      CIB XML patchset
+ * \param[in]  added         If \c true, get versions used for additions;
+ *                           otherwise, get versions used for removals
+ * \param[out] version_node  Where to store XML node containing version details
  */
-static bool
-find_patch_xml_node(const xmlNode *patchset, int format, bool added,
-                    xmlNode **patch_node)
+// @COMPAT Drop when xml_create_patchset() is dropped
+static void
+find_patchset_version_node_v1(const xmlNode *patchset, bool added,
+                              const xmlNode **version_node)
 {
-    xmlNode *cib_node;
-    const char *label;
+    xmlNode *cib_node = NULL;
+    const char *label = added? XML_TAG_DIFF_ADDED : XML_TAG_DIFF_REMOVED;
 
-    switch (format) {
-        case 1:
-            label = added? XML_TAG_DIFF_ADDED : XML_TAG_DIFF_REMOVED;
-            *patch_node = find_xml_node(patchset, label, FALSE);
-            cib_node = find_xml_node(*patch_node, "cib", FALSE);
-            if (cib_node != NULL) {
-                *patch_node = cib_node;
-            }
-            break;
-        case 2:
-            label = added? "target" : "source";
-            *patch_node = find_xml_node(patchset, "version", FALSE);
-            *patch_node = find_xml_node(*patch_node, label, FALSE);
-            break;
-        default:
-            crm_warn("Unknown patch format: %d", format);
-            *patch_node = NULL;
-            return FALSE;
+    *version_node = find_xml_node(patchset, label, FALSE);
+    cib_node = find_xml_node(*version_node, XML_TAG_CIB, FALSE);
+    if (cib_node != NULL) {
+        *version_node = cib_node;
     }
-    return TRUE;
 }
 
-// Get CIB versions used for additions and deletions in a patchset
-bool
-xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
+/*!
+ * \internal
+ * \brief Get CIB versions from patchset target or source
+ *
+ * \param[in]  patchset      CIB XML patchset
+ * \param[in]  for_target    If \c true, get versions from target; otherwise,
+ *                           get versions from source
+ * \param[out] version_node  Where to store XML node containing version details
+ */
+static void
+find_patchset_version_node_v2(const xmlNode *patchset, bool for_target,
+                              const xmlNode **version_node)
 {
-    int lpc = 0;
-    int format = 1;
-    xmlNode *tmp = NULL;
+    const char *label = for_target? XML_DIFF_VTARGET : XML_DIFF_VSOURCE;
 
-    const char *vfields[] = {
+    *version_node = find_xml_node(patchset, XML_DIFF_VERSION, FALSE);
+    *version_node = find_xml_node(*version_node, label, FALSE);
+}
+
+/*!
+ * \internal
+ * \brief Get CIB versions from patchset source and target
+ *
+ * For v1 patchsets, source and target correspond to removed and added,
+ * respectively.
+ *
+ * \param[in]  patchset  CIB XML patchset
+ * \param[out] source    Where to store source versions (can be \c NULL)
+ * \param[out] target    Where to store target versions (can be \c NULL)
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note This function does not error-check getting versions, as long as the
+ *       patchset has a valid format number. However, the versions should always
+ *       be present and valid if Pacemaker generated the patchset.
+ */
+int
+pcmk__xml_patch_versions(const xmlNode *patchset, int source[3], int target[3])
+{
+    static const char *const vfields[] = {
         XML_ATTR_GENERATION_ADMIN,
         XML_ATTR_GENERATION,
         XML_ATTR_NUMUPDATES,
     };
 
+    int format = 1;
+    void (*find_fn)(const xmlNode *, bool, const xmlNode **) = NULL;
+    const xmlNode *version_node = NULL;
 
-    crm_element_value_int(patchset, "format", &format);
+    CRM_CHECK(patchset != NULL, return EINVAL);
 
-    /* Process removals */
-    if (!find_patch_xml_node(patchset, format, FALSE, &tmp)) {
-        return -EINVAL;
+    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
+    switch (format) {
+        case 1:
+            /* @COMPAT Drop when xml_create_patchset() is dropped. We might
+             * receive a v1 patchset if a user creates a v1 patchset with
+             * xml_create_patchset(1, ...) and then applies it via
+             * xml_apply_patchset() or PCMK__CIB_REQUEST_APPLY_PATCH.
+             *
+             * Otherwise, there's no reason we should ever encounter a v1
+             * patchset. Pacemaker has generated v2 patchsets internally since
+             * 1.1.4.
+             */
+            find_fn = find_patchset_version_node_v1;
+            break;
+        case 2:
+            find_fn = find_patchset_version_node_v2;
+            break;
+        default:
+            crm_err("Unknown patch format: %d", format);
+            return EINVAL;
     }
-    if (tmp != NULL) {
-        for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-            crm_element_value_int(tmp, vfields[lpc], &(del[lpc]));
-            crm_trace("Got %d for del[%s]", del[lpc], vfields[lpc]);
+
+    // Get source versions
+    if (source != NULL) {
+        find_fn(patchset, false, &version_node);
+        if (version_node != NULL) {
+            for (int lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
+                crm_element_value_int(version_node, vfields[lpc],
+                                      &(source[lpc]));
+                crm_trace("Got %d for source[%s]", source[lpc], vfields[lpc]);
+            }
         }
     }
 
-    /* Process additions */
-    if (!find_patch_xml_node(patchset, format, TRUE, &tmp)) {
-        return -EINVAL;
-    }
-    if (tmp != NULL) {
-        for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-            crm_element_value_int(tmp, vfields[lpc], &(add[lpc]));
-            crm_trace("Got %d for add[%s]", add[lpc], vfields[lpc]);
+    // Get target versions
+    if (target != NULL) {
+        find_fn(patchset, true, &version_node);
+        if (version_node != NULL) {
+            for (int lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
+                crm_element_value_int(version_node, vfields[lpc], &(target[lpc]));
+                crm_trace("Got %d for target[%s]", target[lpc], vfields[lpc]);
+            }
         }
     }
-    return pcmk_ok;
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -606,19 +609,20 @@ xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
  *
  * \param[in] xml       Root of current CIB
  * \param[in] patchset  Patchset to check
- * \param[in] format    Patchset version
  *
  * \return Standard Pacemaker return code
  */
 static int
-xml_patch_version_check(const xmlNode *xml, const xmlNode *patchset, int format)
+xml_patch_version_check(const xmlNode *xml, const xmlNode *patchset)
 {
     int lpc = 0;
     bool changed = FALSE;
 
     int this[] = { 0, 0, 0 };
-    int add[] = { 0, 0, 0 };
-    int del[] = { 0, 0, 0 };
+    int source[] = { 0, 0, 0 };
+    int target[] = { 0, 0, 0 };
+
+    int rc = pcmk_rc_ok;
 
     const char *vfields[] = {
         XML_ATTR_GENERATION_ADMIN,
@@ -635,45 +639,50 @@ xml_patch_version_check(const xmlNode *xml, const xmlNode *patchset, int format)
     }
 
     /* Set some defaults in case nothing is present */
-    add[0] = this[0];
-    add[1] = this[1];
-    add[2] = this[2] + 1;
+    target[0] = this[0];
+    target[1] = this[1];
+    target[2] = this[2] + 1;
     for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-        del[lpc] = this[lpc];
+        source[lpc] = this[lpc];
     }
 
-    xml_patch_versions(patchset, add, del);
+    rc = pcmk__xml_patch_versions(patchset, source, target);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
 
     for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-        if (this[lpc] < del[lpc]) {
+        if (this[lpc] < source[lpc]) {
             crm_debug("Current %s is too low (%d.%d.%d < %d.%d.%d --> %d.%d.%d)",
                       vfields[lpc], this[0], this[1], this[2],
-                      del[0], del[1], del[2], add[0], add[1], add[2]);
+                      source[0], source[1], source[2],
+                      target[0], target[1], target[2]);
             return pcmk_rc_diff_resync;
 
-        } else if (this[lpc] > del[lpc]) {
+        } else if (this[lpc] > source[lpc]) {
             crm_info("Current %s is too high (%d.%d.%d > %d.%d.%d --> %d.%d.%d) %p",
                      vfields[lpc], this[0], this[1], this[2],
-                     del[0], del[1], del[2], add[0], add[1], add[2], patchset);
+                     source[0], source[1], source[2],
+                     target[0], target[1], target[2], patchset);
             crm_log_xml_info(patchset, "OldPatch");
             return pcmk_rc_old_data;
         }
     }
 
     for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-        if (add[lpc] > del[lpc]) {
+        if (target[lpc] > source[lpc]) {
             changed = TRUE;
         }
     }
 
     if (!changed) {
         crm_notice("Versions did not change in patch %d.%d.%d",
-                   add[0], add[1], add[2]);
+                   target[0], target[1], target[2]);
         return pcmk_rc_old_data;
     }
 
     crm_debug("Can apply patch %d.%d.%d to %d.%d.%d",
-              add[0], add[1], add[2], this[0], this[1], this[2]);
+              target[0], target[1], target[2], this[0], this[1], this[2]);
     return pcmk_rc_ok;
 }
 
@@ -686,6 +695,7 @@ xml_patch_version_check(const xmlNode *xml, const xmlNode *patchset, int format)
  *
  * \return Standard Pacemaker return code
  */
+// @COMPAT Drop when xml_create_patchset() is dropped
 static int
 apply_v1_patchset(xmlNode *xml, const xmlNode *patchset)
 {
@@ -1088,51 +1098,60 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Apply an XML patchset
+ *
+ * \param[in,out] xml            XML to modify
+ * \param[in]     patchset       Patchset to apply
+ * \param[in]     check_version  If \c true, treat \p xml as a CIB and verify
+ *                               that the patchset can be applied to it
+ *
+ * \return Standard Pacemaker return code
+ */
 int
-xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
+pcmk__xml_apply_patchset(xmlNode *xml, const xmlNode *patchset,
+                         bool check_version)
 {
     int format = 1;
     int rc = pcmk_ok;
     xmlNode *old = NULL;
-    const char *digest = crm_element_value(patchset, XML_ATTR_DIGEST);
+    const char *digest = NULL;
 
     if (patchset == NULL) {
         return rc;
     }
 
-    pcmk__if_tracing(
-        {
-            pcmk__output_t *logger_out = NULL;
+    pcmk__log_xml_patchset(LOG_TRACE, patchset);
 
-            rc = pcmk_rc2legacy(pcmk__log_output_new(&logger_out));
-            CRM_CHECK(rc == pcmk_ok, return rc);
-
-            pcmk__output_set_log_level(logger_out, LOG_TRACE);
-            rc = logger_out->message(logger_out, "xml-patchset", patchset);
-            logger_out->finish(logger_out, pcmk_rc2exitc(rc), true,
-                               NULL);
-            pcmk__output_free(logger_out);
-            rc = pcmk_ok;
-        },
-        {}
-    );
-
-    crm_element_value_int(patchset, "format", &format);
     if (check_version) {
-        rc = pcmk_rc2legacy(xml_patch_version_check(xml, patchset, format));
+        rc = pcmk_rc2legacy(xml_patch_version_check(xml, patchset));
         if (rc != pcmk_ok) {
             return rc;
         }
     }
 
-    if (digest) {
-        // Make it available for logging if result doesn't have expected digest
-        old = copy_xml(xml);
+    digest = crm_element_value(patchset, XML_ATTR_DIGEST);
+    if (digest != NULL) {
+        /* Make original XML available for logging in case result doesn't have
+         * expected digest
+         */
+        pcmk__if_tracing(old = copy_xml(xml), {});
     }
 
     if (rc == pcmk_ok) {
+        crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
         switch (format) {
             case 1:
+                /* @COMPAT Drop when xml_create_patchset() is dropped. We might
+                 * receive a v1 patchset if a user creates a v1 patchset with
+                 * xml_create_patchset(1, ...) and then applies it via
+                 * xml_apply_patchset() or PCMK__CIB_REQUEST_APPLY_PATCH.
+                 *
+                 * Otherwise, there's no reason we should ever encounter a v1
+                 * patchset. Pacemaker has generated v2 patchsets internally
+                 * since 1.1.4.
+                 */
                 rc = pcmk_rc2legacy(apply_v1_patchset(xml, patchset));
                 break;
             case 2:
@@ -1141,17 +1160,18 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
             default:
                 crm_err("Unknown patch format: %d", format);
                 rc = -EINVAL;
+                break;
         }
     }
 
     if ((rc == pcmk_ok) && (digest != NULL)) {
-        char *new_digest = NULL;
-        char *version = crm_element_value_copy(xml, XML_ATTR_CRM_VERSION);
+        const char *version = crm_element_value_copy(xml, XML_ATTR_CRM_VERSION);
+        char *calculated = calculate_xml_versioned_digest(xml, FALSE, TRUE,
+                                                          version);
 
-        new_digest = calculate_xml_versioned_digest(xml, FALSE, TRUE, version);
-        if (!pcmk__str_eq(new_digest, digest, pcmk__str_casei)) {
-            crm_info("v%d digest mis-match: expected %s, calculated %s",
-                     format, digest, new_digest);
+        if (!pcmk__str_eq(digest, calculated, pcmk__str_none)) {
+            crm_info("v%d digest mismatch: expected %s, calculated %s",
+                     format, digest, calculated);
             rc = -pcmk_err_diff_failed;
             pcmk__if_tracing(
                 {
@@ -1164,57 +1184,15 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
 
         } else {
             crm_trace("v%d digest matched: expected %s, calculated %s",
-                      format, digest, new_digest);
+                      format, digest, calculated);
         }
-        free(new_digest);
-        free(version);
+        free(calculated);
     }
     free_xml(old);
     return rc;
 }
 
-void
-purge_diff_markers(xmlNode *a_node)
-{
-    xmlNode *child = NULL;
-
-    CRM_CHECK(a_node != NULL, return);
-
-    xml_remove_prop(a_node, XML_DIFF_MARKER);
-    for (child = pcmk__xml_first_child(a_node); child != NULL;
-         child = pcmk__xml_next(child)) {
-        purge_diff_markers(child);
-    }
-}
-
-xmlNode *
-diff_xml_object(xmlNode *old, xmlNode *new, gboolean suppress)
-{
-    xmlNode *tmp1 = NULL;
-    xmlNode *diff = create_xml_node(NULL, XML_TAG_DIFF);
-    xmlNode *removed = create_xml_node(diff, XML_TAG_DIFF_REMOVED);
-    xmlNode *added = create_xml_node(diff, XML_TAG_DIFF_ADDED);
-
-    crm_xml_add(diff, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
-
-    tmp1 = subtract_xml_object(removed, old, new, FALSE, NULL, "removed:top");
-    if (suppress && (tmp1 != NULL) && can_prune_leaf(tmp1)) {
-        free_xml(tmp1);
-    }
-
-    tmp1 = subtract_xml_object(added, new, old, TRUE, NULL, "added:top");
-    if (suppress && (tmp1 != NULL) && can_prune_leaf(tmp1)) {
-        free_xml(tmp1);
-    }
-
-    if ((added->children == NULL) && (removed->children == NULL)) {
-        free_xml(diff);
-        diff = NULL;
-    }
-
-    return diff;
-}
-
+// @COMPAT Drop when xml_create_patchset() is dropped
 static xmlNode *
 subtract_xml_comment(xmlNode *parent, xmlNode *left, xmlNode *right,
                      gboolean *changed)
@@ -1235,6 +1213,11 @@ subtract_xml_comment(xmlNode *parent, xmlNode *left, xmlNode *right,
 
     return NULL;
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/xml_compat.h>
 
 xmlNode *
 subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
@@ -1412,10 +1395,19 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
     return diff;
 }
 
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
+void
+purge_diff_markers(xmlNode *a_node)
+{
+    xmlNode *child = NULL;
 
-#include <crm/common/xml_compat.h>
+    CRM_CHECK(a_node != NULL, return);
+
+    xml_remove_prop(a_node, XML_DIFF_MARKER);
+    for (child = pcmk__xml_first_child(a_node); child != NULL;
+         child = pcmk__xml_next(child)) {
+        purge_diff_markers(child);
+    }
+}
 
 gboolean
 apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
@@ -1502,6 +1494,186 @@ apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
     }
 
     return result;
+}
+
+xmlNode *
+diff_xml_object(xmlNode *old, xmlNode *new, gboolean suppress)
+{
+    xmlNode *tmp1 = NULL;
+    xmlNode *diff = create_xml_node(NULL, XML_TAG_DIFF);
+    xmlNode *removed = create_xml_node(diff, XML_TAG_DIFF_REMOVED);
+    xmlNode *added = create_xml_node(diff, XML_TAG_DIFF_ADDED);
+
+    crm_xml_add(diff, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+
+    tmp1 = subtract_xml_object(removed, old, new, FALSE, NULL, "removed:top");
+    if (suppress && (tmp1 != NULL) && can_prune_leaf(tmp1)) {
+        free_xml(tmp1);
+    }
+
+    tmp1 = subtract_xml_object(added, new, old, TRUE, NULL, "added:top");
+    if (suppress && (tmp1 != NULL) && can_prune_leaf(tmp1)) {
+        free_xml(tmp1);
+    }
+
+    if ((added->children == NULL) && (removed->children == NULL)) {
+        free_xml(diff);
+        diff = NULL;
+    }
+
+    return diff;
+}
+
+static void
+xml_repair_v1_diff(xmlNode *last, xmlNode *next, xmlNode *local_diff,
+                   gboolean changed)
+{
+    int lpc = 0;
+    xmlNode *cib = NULL;
+    xmlNode *diff_child = NULL;
+
+    const char *tag = NULL;
+
+    const char *vfields[] = {
+        XML_ATTR_GENERATION_ADMIN,
+        XML_ATTR_GENERATION,
+        XML_ATTR_NUMUPDATES,
+    };
+
+    if (local_diff == NULL) {
+        crm_trace("Nothing to do");
+        return;
+    }
+
+    tag = XML_TAG_DIFF_REMOVED;
+    diff_child = find_xml_node(local_diff, tag, FALSE);
+    if (diff_child == NULL) {
+        diff_child = create_xml_node(local_diff, tag);
+    }
+
+    tag = XML_TAG_CIB;
+    cib = find_xml_node(diff_child, tag, FALSE);
+    if (cib == NULL) {
+        cib = create_xml_node(diff_child, tag);
+    }
+
+    for (lpc = 0; (last != NULL) && (lpc < PCMK__NELEM(vfields)); lpc++) {
+        const char *value = crm_element_value(last, vfields[lpc]);
+
+        crm_xml_add(diff_child, vfields[lpc], value);
+        if (changed || lpc == 2) {
+            crm_xml_add(cib, vfields[lpc], value);
+        }
+    }
+
+    tag = XML_TAG_DIFF_ADDED;
+    diff_child = find_xml_node(local_diff, tag, FALSE);
+    if (diff_child == NULL) {
+        diff_child = create_xml_node(local_diff, tag);
+    }
+
+    tag = XML_TAG_CIB;
+    cib = find_xml_node(diff_child, tag, FALSE);
+    if (cib == NULL) {
+        cib = create_xml_node(diff_child, tag);
+    }
+
+    for (lpc = 0; next && lpc < PCMK__NELEM(vfields); lpc++) {
+        const char *value = crm_element_value(next, vfields[lpc]);
+
+        crm_xml_add(diff_child, vfields[lpc], value);
+    }
+
+    for (xmlAttrPtr a = pcmk__xe_first_attr(next); a != NULL; a = a->next) {
+        const char *p_value = pcmk__xml_attr_value(a);
+
+        xmlSetProp(cib, a->name, (pcmkXmlStr) p_value);
+    }
+
+    crm_log_xml_explicit(local_diff, "Repaired-diff");
+}
+
+static xmlNode *
+xml_create_patchset_v1(xmlNode *source, xmlNode *target, bool config,
+                       bool suppress)
+{
+    xmlNode *patchset = diff_xml_object(source, target, suppress);
+
+    if (patchset) {
+        CRM_LOG_ASSERT(xml_document_dirty(target));
+        xml_repair_v1_diff(source, target, patchset, config);
+        crm_xml_add(patchset, PCMK_XA_FORMAT, "1");
+    }
+    return patchset;
+}
+
+xmlNode *
+xml_create_patchset(int format, xmlNode *source, xmlNode *target,
+                    bool *config_changed, bool manage_version)
+{
+    bool config = false;
+
+    switch (format) {
+        case 0:
+        case 2:
+            return pcmk__xml_create_patchset(source, target, config_changed,
+                                             manage_version);
+        case 1:
+            break;
+        default:
+            crm_err("Unknown patch format: %d", format);
+            return NULL;
+    }
+
+    CRM_CHECK((source != NULL) && (target != NULL), return NULL);
+
+    // Create v1 patchset
+    xml_acl_disable(target);
+    if (!xml_document_dirty(target)) {
+        crm_trace("No change %d", format);
+        return NULL;
+    }
+
+    config = is_config_change(target);
+    if (config_changed != NULL) {
+        *config_changed = config;
+    }
+
+    if (manage_version) {
+        update_counters(source, target, config);
+    }
+    return xml_create_patchset_v1(source, target, config, false);
+}
+
+int
+xml_apply_patchset(xmlNode *xml, const xmlNode *patchset, bool check_version)
+{
+    return pcmk__xml_apply_patchset(xml, patchset, check_version);
+}
+
+void
+patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
+                        bool with_digest)
+{
+    int format = 1;
+
+    if (patch == NULL) {
+        return;
+    }
+
+    crm_element_value_int(patch, PCMK_XA_FORMAT, &format);
+    if ((format <= 1) || with_digest) {
+        pcmk__add_digest_to_patchset(source, target, patch);
+    }
+}
+
+bool
+xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
+{
+    /* @COMPAT The return type has always been wrong (pcmk_ok == 0 -> false).
+     * Preserve it for backward compatibility.
+     */
+    return pcmk_rc2legacy(pcmk__xml_patch_versions(patchset, del, add));
 }
 
 // LCOV_EXCL_STOP

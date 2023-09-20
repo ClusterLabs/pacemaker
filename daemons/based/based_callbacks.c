@@ -957,11 +957,9 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
         int diff_del_admin_epoch = 0;
 
         const char *digest = NULL;
-        int format = 1;
 
         CRM_LOG_ASSERT(result_diff != NULL);
         digest = crm_element_value(result_diff, XML_ATTR_DIGEST);
-        crm_element_value_int(result_diff, "format", &format);
 
         cib_diff_version_details(result_diff,
                                  &diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates,
@@ -975,10 +973,6 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
         pcmk__xe_set_bool_attr(msg, F_CIB_GLOBAL_UPDATE, true);
         crm_xml_add(msg, F_CIB_OPERATION, PCMK__CIB_REQUEST_APPLY_PATCH);
         crm_xml_add(msg, F_CIB_USER, CRM_DAEMON_USER);
-
-        if (format == 1) {
-            CRM_ASSERT(digest != NULL);
-        }
 
         add_message_xml(msg, F_CIB_UPDATE_DIFF, result_diff);
         crm_log_xml_explicit(msg, "copy");
@@ -1290,28 +1284,6 @@ prepare_input(const xmlNode *request, enum cib__op_type type,
     return input;
 }
 
-// v1 and v2 patch formats
-#define XPATH_CONFIG_CHANGE             \
-    "//" XML_CIB_TAG_CRMCONFIG " | "    \
-    "//" XML_DIFF_CHANGE                \
-    "[contains(@" XML_DIFF_PATH ",'/" XML_CIB_TAG_CRMCONFIG "/')]"
-
-static bool
-contains_config_change(xmlNode *diff)
-{
-    bool changed = false;
-
-    if (diff) {
-        xmlXPathObject *xpathObj = xpath_search(diff, XPATH_CONFIG_CHANGE);
-
-        if (numXpathResults(xpathObj) > 0) {
-            changed = true;
-        }
-        freeXpathObject(xpathObj);
-    }
-    return changed;
-}
-
 static int
 cib_process_command(xmlNode *request, const cib__operation_t *operation,
                     cib__op_fn_t op_function, xmlNode **reply,
@@ -1371,8 +1343,8 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
      *
      * @TODO: Re-evaluate whether this is all truly legacy. The cib_force_diff
      * portion is. However, F_CIB_GLOBAL_UPDATE may be set by a sync operation
-     * even in non-legacy mode, and manage_counters tells xml_create_patchset()
-     * whether to update version/epoch info.
+     * even in non-legacy mode, and manage_counters tells
+     * pcmk__xml_create_patchset() whether to update version/epoch info.
      */
     if (pcmk__xe_attr_is_true(request, F_CIB_GLOBAL_UPDATE)) {
         manage_counters = false;
@@ -1395,20 +1367,6 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     rc = cib_perform_op(op, call_options, op_function, false, section,
                         request, input, manage_counters, &config_changed,
                         &the_cib, &result_cib, cib_diff, &output);
-
-    // @COMPAT: Legacy code
-    if (!manage_counters) {
-        int format = 1;
-
-        // If the diff is NULL at this point, it's because nothing changed
-        if (*cib_diff != NULL) {
-            crm_element_value_int(*cib_diff, "format", &format);
-        }
-
-        if (format == 1) {
-            config_changed = cib__config_changed_v1(NULL, NULL, cib_diff);
-        }
-    }
 
     /* Always write to disk for successful ops with the flag set. This also
      * negates the need to detect ordering changes.
@@ -1438,7 +1396,9 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
             }
         }
 
-        if ((rc == pcmk_ok) && contains_config_change(*cib_diff)) {
+        if ((rc == pcmk_ok) && (*cib_diff != NULL)
+            && cib__element_in_patchset(*cib_diff, XML_CIB_TAG_CRMCONFIG)) {
+
             cib_read_config(config_hash, result_cib);
         }
 

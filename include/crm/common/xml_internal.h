@@ -440,4 +440,17 @@ pcmk__xml_attr_value(const xmlAttr *attr)
            : (const char *) attr->children->content;
 }
 
+
+xmlNode *pcmk__xml_create_patchset(const xmlNode *before, xmlNode *after,
+                                   bool *config_changed, bool manage_version);
+
+int pcmk__xml_apply_patchset(xmlNode *xml, const xmlNode *patchset,
+                             bool check_version);
+
+void pcmk__add_digest_to_patchset(const xmlNode *source, xmlNode *target,
+                                  xmlNode *patchset);
+
+int pcmk__xml_patch_versions(const xmlNode *patchset, int source[3],
+                             int target[3]);
+
 #endif // PCMK__XML_INTERNAL__H

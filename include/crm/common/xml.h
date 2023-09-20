@@ -103,10 +103,8 @@ xmlNode *pcmk_create_xml_text_node(xmlNode * parent, const char *name, const cha
 xmlNode *pcmk_create_html_node(xmlNode * parent, const char *element_name, const char *id,
                                const char *class_name, const char *text);
 
-/*
- *
- */
-void purge_diff_markers(xmlNode * a_node);
+//! \deprecated Do not use (will be removed in a future release)
+void purge_diff_markers(xmlNode *a_node);
 
 /*
  * Returns a deep copy of src_node
@@ -137,16 +135,6 @@ int write_xml_file(const xmlNode *xml, const char *filename, gboolean compress);
 char *dump_xml_formatted(const xmlNode *xml);
 char *dump_xml_formatted_with_text(const xmlNode *xml);
 char *dump_xml_unformatted(const xmlNode *xml);
-
-/*
- * Diff related Functions
- */
-xmlNode *diff_xml_object(xmlNode * left, xmlNode * right, gboolean suppress);
-
-xmlNode *subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
-                             gboolean full, gboolean * changed, const char *marker);
-
-gboolean can_prune_leaf(xmlNode * xml_node);
 
 /*
  * Searching & Modifying
@@ -272,13 +260,6 @@ void xml_track_changes(xmlNode * xml, const char *user, xmlNode *acl_source, boo
 void xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml);
 void xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml);
 void xml_accept_changes(xmlNode * xml);
-bool xml_patch_versions(const xmlNode *patchset, int add[3], int del[3]);
-
-xmlNode *xml_create_patchset(
-    int format, xmlNode *source, xmlNode *target, bool *config, bool manage_version);
-int xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version);
-
-void patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target, bool with_digest);
 
 void save_xml_to_file(const xmlNode *xml, const char *desc,
                       const char *filename);

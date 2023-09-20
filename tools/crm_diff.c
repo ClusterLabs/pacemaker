@@ -115,7 +115,7 @@ static int
 apply_patch(xmlNode *input, xmlNode *patch, gboolean as_cib)
 {
     xmlNode *output = copy_xml(input);
-    int rc = xml_apply_patchset(output, patch, as_cib);
+    int rc = pcmk__xml_apply_patchset(output, patch, as_cib);
 
     rc = pcmk_legacy2rc(rc);
     if (rc != pcmk_rc_ok) {
@@ -142,61 +142,21 @@ apply_patch(xmlNode *input, xmlNode *patch, gboolean as_cib)
 static void
 log_patch_cib_versions(xmlNode *patch)
 {
-    int add[] = { 0, 0, 0 };
-    int del[] = { 0, 0, 0 };
+    int source[] = { 0, 0, 0 };
+    int target[] = { 0, 0, 0 };
 
-    const char *fmt = NULL;
     const char *digest = NULL;
 
-    xml_patch_versions(patch, add, del);
-    fmt = crm_element_value(patch, "format");
+    pcmk__xml_patch_versions(patch, source, target);
     digest = crm_element_value(patch, XML_ATTR_DIGEST);
 
-    if (add[2] != del[2] || add[1] != del[1] || add[0] != del[0]) {
-        crm_info("Patch: --- %d.%d.%d %s", del[0], del[1], del[2], fmt);
-        crm_info("Patch: +++ %d.%d.%d %s", add[0], add[1], add[2], digest);
-    }
-}
+    if ((target[0] != source[0])
+        || (target[1] != source[1])
+        || (target[2] != source[2])) {
 
-static void
-strip_patch_cib_version(xmlNode *patch, const char **vfields, size_t nvfields)
-{
-    int format = 1;
-
-    crm_element_value_int(patch, "format", &format);
-    if (format == 2) {
-        xmlNode *version_xml = find_xml_node(patch, "version", FALSE);
-
-        if (version_xml) {
-            free_xml(version_xml);
-        }
-
-    } else {
-        int i = 0;
-
-        const char *tags[] = {
-            XML_TAG_DIFF_REMOVED,
-            XML_TAG_DIFF_ADDED,
-        };
-
-        for (i = 0; i < PCMK__NELEM(tags); i++) {
-            xmlNode *tmp = NULL;
-            int lpc;
-
-            tmp = find_xml_node(patch, tags[i], FALSE);
-            if (tmp) {
-                for (lpc = 0; lpc < nvfields; lpc++) {
-                    xml_remove_prop(tmp, vfields[lpc]);
-                }
-
-                tmp = find_xml_node(tmp, XML_TAG_CIB, FALSE);
-                if (tmp) {
-                    for (lpc = 0; lpc < nvfields; lpc++) {
-                        xml_remove_prop(tmp, vfields[lpc]);
-                    }
-                }
-            }
-        }
+        crm_info("Patch: --- %d.%d.%d", source[0], source[1], source[2]);
+        crm_info("Patch: +++ %d.%d.%d %s",
+                 target[0], target[1], target[2], digest);
     }
 }
 
@@ -205,21 +165,13 @@ static int
 generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
                gboolean as_cib, gboolean no_version)
 {
-    xmlNode *output = NULL;
-    int rc = pcmk_rc_ok;
-
-    pcmk__output_t *logger_out = NULL;
-    int out_rc = pcmk_rc_no_output;
-    int temp_rc = pcmk_rc_no_output;
-
-    const char *vfields[] = {
+    static const char *const vfields[] = {
         XML_ATTR_GENERATION_ADMIN,
         XML_ATTR_GENERATION,
         XML_ATTR_NUMUPDATES,
     };
 
-    rc = pcmk__log_output_new(&logger_out);
-    CRM_CHECK(rc == pcmk_rc_ok, return rc);
+    xmlNode *output = NULL;
 
     /* If we're ignoring the version, make the version information
      * identical, so it isn't detected as a change. */
@@ -239,44 +191,32 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
     }
     crm_log_xml_debug(object_2, (xml_file_2? xml_file_2: "target"));
 
-    output = xml_create_patchset(0, object_1, object_2, NULL, FALSE);
+    output = pcmk__xml_create_patchset(object_1, object_2, NULL, false);
 
-    pcmk__output_set_log_level(logger_out, LOG_INFO);
-    out_rc = pcmk__xml_show_changes(logger_out, object_2);
-
+    pcmk__log_xml_changes(LOG_INFO, object_2);
     xml_accept_changes(object_2);
 
     if (output == NULL) {
-        goto done;  // rc == pcmk_rc_ok
+        return pcmk_rc_ok;  // No changes
     }
 
-    /* pcmk_rc_error means there's non-empty diff.
-     * @COMPAT: Choose a more descriptive return code, like one that maps to
-     * CRM_EX_DIGEST?
-     */
-    rc = pcmk_rc_error;
-
-    patchset_process_digest(output, object_1, object_2, as_cib);
-
     if (as_cib) {
+        pcmk__add_digest_to_patchset(object_1, object_2, output);
         log_patch_cib_versions(output);
 
     } else if (no_version) {
-        strip_patch_cib_version(output, vfields, PCMK__NELEM(vfields));
+        free_xml(find_xml_node(output, "version", FALSE));
     }
 
-    pcmk__output_set_log_level(logger_out, LOG_NOTICE);
-    temp_rc = logger_out->message(logger_out, "xml-patchset", output);
-    out_rc = pcmk__output_select_rc(out_rc, temp_rc);
-
+    pcmk__log_xml_patchset(LOG_NOTICE, output);
     print_patch(output);
     free_xml(output);
 
-done:
-    logger_out->finish(logger_out, pcmk_rc2exitc(out_rc), true, NULL);
-    pcmk__output_free(logger_out);
-
-    return rc;
+    /* pcmk_rc_error means there's a non-empty diff.
+     * @COMPAT Choose a more descriptive return code, like one that maps to
+     * CRM_EX_DIGEST?
+     */
+    return pcmk_rc_error;
 }
 
 static GOptionContext *

@@ -41,22 +41,26 @@ static int
 xml_show_patchset_header(pcmk__output_t *out, const xmlNode *patchset)
 {
     int rc = pcmk_rc_no_output;
-    int add[] = { 0, 0, 0 };
-    int del[] = { 0, 0, 0 };
+    int source[] = { 0, 0, 0 };
+    int target[] = { 0, 0, 0 };
 
-    xml_patch_versions(patchset, add, del);
+    pcmk__xml_patch_versions(patchset, source, target);
 
-    if ((add[0] != del[0]) || (add[1] != del[1]) || (add[2] != del[2])) {
-        const char *fmt = crm_element_value(patchset, "format");
+    if ((source[0] != target[0])
+        || (source[1] != target[1])
+        || (source[2] != target[2])) {
+
+        const char *fmt = crm_element_value(patchset, PCMK_XA_FORMAT);
         const char *digest = crm_element_value(patchset, XML_ATTR_DIGEST);
 
-        out->info(out, "Diff: --- %d.%d.%d %s", del[0], del[1], del[2], fmt);
+        out->info(out, "Diff: --- %d.%d.%d %s",
+                  source[0], source[1], source[2], fmt);
         rc = out->info(out, "Diff: +++ %d.%d.%d %s",
-                       add[0], add[1], add[2], digest);
+                       target[0], target[1], target[2], digest);
 
-    } else if ((add[0] != 0) || (add[1] != 0) || (add[2] != 0)) {
+    } else if ((target[0] != 0) || (target[1] != 0) || (target[2] != 0)) {
         rc = out->info(out, "Local-only Change: %d.%d.%d",
-                       add[0], add[1], add[2]);
+                       target[0], target[1], target[2]);
     }
 
     return rc;
@@ -76,6 +80,7 @@ xml_show_patchset_header(pcmk__output_t *out, const xmlNode *patchset)
  *
  * \note This function produces output only for text-like formats.
  */
+// @COMPAT Drop when xml_create_patchset() is dropped
 static int
 xml_show_patchset_v1_recursive(pcmk__output_t *out, const char *prefix,
                                const xmlNode *data, int depth, uint32_t options)
@@ -127,7 +132,10 @@ xml_show_patchset_v1_recursive(pcmk__output_t *out, const char *prefix,
  * \return Standard Pacemaker return code
  *
  * \note This function produces output only for text-like formats.
+ * \deprecated This function can be removed when \c xml_create_patchset() is
+ *             removed.
  */
+// @COMPAT Drop when xml_create_patchset() is dropped
 static int
 xml_show_patchset_v1(pcmk__output_t *out, const xmlNode *patchset,
                      uint32_t options)
@@ -316,9 +324,18 @@ xml_patchset_default(pcmk__output_t *out, va_list args)
         return pcmk_rc_no_output;
     }
 
-    crm_element_value_int(patchset, "format", &format);
+    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
     switch (format) {
         case 1:
+            /* @COMPAT Drop when xml_create_patchset() is dropped. We might
+             * receive a v1 patchset if a user creates a v1 patchset with
+             * xml_create_patchset(1, ...) and then applies it via
+             * xml_apply_patchset() or PCMK__CIB_REQUEST_APPLY_PATCH.
+             *
+             * Otherwise, there's no reason we should ever encounter a v1
+             * patchset. Pacemaker has generated v2 patchsets internally since
+             * 1.1.4.
+             */
             return xml_show_patchset_v1(out, patchset, pcmk__xml_fmt_pretty);
         case 2:
             return xml_show_patchset_v2(out, patchset);
@@ -373,9 +390,18 @@ xml_patchset_log(pcmk__output_t *out, va_list args)
         return pcmk_rc_no_output;
     }
 
-    crm_element_value_int(patchset, "format", &format);
+    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
     switch (format) {
         case 1:
+            /* @COMPAT Drop when xml_create_patchset() is dropped. We might
+             * receive a v1 patchset if a user creates a v1 patchset with
+             * xml_create_patchset(1, ...) and then applies it via
+             * xml_apply_patchset() or PCMK__CIB_REQUEST_APPLY_PATCH.
+             *
+             * Otherwise, there's no reason we should ever encounter a v1
+             * patchset. Pacemaker has generated v2 patchsets internally since
+             * 1.1.4.
+             */
             if (log_level < LOG_DEBUG) {
                 return xml_show_patchset_v1(out, patchset,
                                             pcmk__xml_fmt_pretty
@@ -490,7 +516,7 @@ xml_log_patchset(uint8_t log_level, const char *function,
         goto done;
     }
 
-    crm_element_value_int(patchset, "format", &format);
+    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
     switch (format) {
         case 1:
             if (log_level < LOG_DEBUG) {

@@ -248,8 +248,6 @@ int cib_process_xpath(const char *op, int options, const char *section,
                       const xmlNode *req, xmlNode *input, xmlNode *existing_cib,
                       xmlNode **result_cib, xmlNode ** answer);
 
-bool cib__config_changed_v1(xmlNode *last, xmlNode *next, xmlNode **diff);
-
 int cib_internal_op(cib_t * cib, const char *op, const char *host,
                     const char *section, xmlNode * data,
                     xmlNode ** output_data, int call_options, const char *user_name);

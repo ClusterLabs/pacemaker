@@ -464,31 +464,6 @@ topology_remove_helper(const char *node, int level)
 }
 
 static void
-remove_cib_device(xmlXPathObjectPtr xpathObj)
-{
-    int max = numXpathResults(xpathObj), lpc = 0;
-
-    for (lpc = 0; lpc < max; lpc++) {
-        const char *rsc_id = NULL;
-        const char *standard = NULL;
-        xmlNode *match = getXpathResult(xpathObj, lpc);
-
-        CRM_LOG_ASSERT(match != NULL);
-        if(match != NULL) {
-            standard = crm_element_value(match, XML_AGENT_ATTR_CLASS);
-        }
-
-        if (!pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
-            continue;
-        }
-
-        rsc_id = crm_element_value(match, XML_ATTR_ID);
-
-        stonith_device_remove(rsc_id, true);
-    }
-}
-
-static void
 remove_topology_level(xmlNode *match)
 {
     int index = 0;
@@ -517,35 +492,6 @@ add_topology_level(xmlNode *match)
 }
 
 static void
-remove_fencing_topology(xmlXPathObjectPtr xpathObj)
-{
-    int max = numXpathResults(xpathObj), lpc = 0;
-
-    for (lpc = 0; lpc < max; lpc++) {
-        xmlNode *match = getXpathResult(xpathObj, lpc);
-
-        CRM_LOG_ASSERT(match != NULL);
-        if (match && crm_element_value(match, XML_DIFF_MARKER)) {
-            /* Deletion */
-            int index = 0;
-            char *target = stonith_level_key(match, fenced_target_by_unknown);
-
-            crm_element_value_int(match, XML_ATTR_STONITH_INDEX, &index);
-            if (target == NULL) {
-                crm_err("Invalid fencing target in element %s", ID(match));
-
-            } else if (index <= 0) {
-                crm_err("Invalid level for %s in element %s", target, ID(match));
-
-            } else {
-                topology_remove_helper(target, index);
-            }
-            /* } else { Deal with modifications during the 'addition' stage */
-        }
-    }
-}
-
-static void
 register_fencing_topology(xmlXPathObjectPtr xpathObj)
 {
     int max = numXpathResults(xpathObj), lpc = 0;
@@ -557,25 +503,6 @@ register_fencing_topology(xmlXPathObjectPtr xpathObj)
         add_topology_level(match);
     }
 }
-
-/* Fencing
-<diff crm_feature_set="3.0.6">
-  <diff-removed>
-    <fencing-topology>
-      <fencing-level id="f-p1.1" target="pcmk-1" index="1" devices="poison-pill" __crm_diff_marker__="removed:top"/>
-      <fencing-level id="f-p1.2" target="pcmk-1" index="2" devices="power" __crm_diff_marker__="removed:top"/>
-      <fencing-level devices="disk,network" id="f-p2.1"/>
-    </fencing-topology>
-  </diff-removed>
-  <diff-added>
-    <fencing-topology>
-      <fencing-level id="f-p.1" target="pcmk-1" index="1" devices="poison-pill" __crm_diff_marker__="added:top"/>
-      <fencing-level id="f-p2.1" target="pcmk-2" index="1" devices="disk,something"/>
-      <fencing-level id="f-p3.1" target="pcmk-2" index="2" devices="power" __crm_diff_marker__="added:top"/>
-    </fencing-topology>
-  </diff-added>
-</diff>
-*/
 
 static void
 fencing_topology_init(void)
@@ -844,7 +771,7 @@ cib_devices_update(void)
 }
 
 static void
-update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
+update_cib_stonith_devices(const char *event, xmlNode *msg)
 {
     xmlNode *change = NULL;
     char *reason = NULL;
@@ -908,88 +835,6 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
     free(reason);
 }
 
-
-static void
-update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
-{
-    const char *reason = "none";
-    gboolean needs_update = FALSE;
-    xmlXPathObjectPtr xpath_obj = NULL;
-
-    /* process new constraints */
-    xpath_obj = xpath_search(msg, "//" F_CIB_UPDATE_RESULT "//" XML_CONS_TAG_RSC_LOCATION);
-    if (numXpathResults(xpath_obj) > 0) {
-        int max = numXpathResults(xpath_obj), lpc = 0;
-
-        /* Safest and simplest to always recompute */
-        needs_update = TRUE;
-        reason = "new location constraint";
-
-        for (lpc = 0; lpc < max; lpc++) {
-            xmlNode *match = getXpathResult(xpath_obj, lpc);
-
-            crm_log_xml_trace(match, "new constraint");
-        }
-    }
-    freeXpathObject(xpath_obj);
-
-    /* process deletions */
-    xpath_obj = xpath_search(msg, "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_REMOVED "//" XML_CIB_TAG_RESOURCE);
-    if (numXpathResults(xpath_obj) > 0) {
-        remove_cib_device(xpath_obj);
-    }
-    freeXpathObject(xpath_obj);
-
-    /* process additions */
-    xpath_obj = xpath_search(msg, "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_CIB_TAG_RESOURCE);
-    if (numXpathResults(xpath_obj) > 0) {
-        int max = numXpathResults(xpath_obj), lpc = 0;
-
-        for (lpc = 0; lpc < max; lpc++) {
-            const char *rsc_id = NULL;
-            const char *standard = NULL;
-            xmlNode *match = getXpathResult(xpath_obj, lpc);
-
-            rsc_id = crm_element_value(match, XML_ATTR_ID);
-            standard = crm_element_value(match, XML_AGENT_ATTR_CLASS);
-
-            if (!pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
-                continue;
-            }
-
-            crm_trace("Fencing resource %s was added or modified", rsc_id);
-            reason = "new resource";
-            needs_update = TRUE;
-        }
-    }
-    freeXpathObject(xpath_obj);
-
-    if(needs_update) {
-        crm_info("Updating device list from CIB: %s", reason);
-        cib_devices_update();
-    }
-}
-
-static void
-update_cib_stonith_devices(const char *event, xmlNode * msg)
-{
-    int format = 1;
-    xmlNode *patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
-
-    CRM_ASSERT(patchset);
-    crm_element_value_int(patchset, "format", &format);
-    switch(format) {
-        case 1:
-            update_cib_stonith_devices_v1(event, msg);
-            break;
-        case 2:
-            update_cib_stonith_devices_v2(event, msg);
-            break;
-        default:
-            crm_warn("Unknown patch format: %d", format);
-    }
-}
-
 /*!
  * \internal
  * \brief Check whether a node has a specific attribute name/value
@@ -1049,100 +894,86 @@ node_does_watchdog_fencing(const char *node)
 static void
 update_fencing_topology(const char *event, xmlNode * msg)
 {
-    int format = 1;
-    const char *xpath;
-    xmlXPathObjectPtr xpathObj = NULL;
     xmlNode *patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
+    int target[] = { 0, 0, 0 };
 
-    CRM_ASSERT(patchset);
-    crm_element_value_int(patchset, "format", &format);
+    CRM_ASSERT(patchset != NULL);
 
-    if(format == 1) {
-        /* Process deletions (only) */
-        xpath = "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_REMOVED "//" XML_TAG_FENCING_LEVEL;
-        xpathObj = xpath_search(msg, xpath);
+    pcmk__xml_patch_versions(patchset, NULL, target);
 
-        remove_fencing_topology(xpathObj);
-        freeXpathObject(xpathObj);
+    for (xmlNode *change = pcmk__xml_first_child(patchset); change != NULL;
+         change = pcmk__xml_next(change)) {
 
-        /* Process additions and changes */
-        xpath = "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_TAG_FENCING_LEVEL;
-        xpathObj = xpath_search(msg, xpath);
+        const char *op = crm_element_value(change, XML_DIFF_OP);
+        const char *xpath = crm_element_value(change, XML_DIFF_PATH);
 
-        register_fencing_topology(xpathObj);
-        freeXpathObject(xpathObj);
-
-    } else if(format == 2) {
-        xmlNode *change = NULL;
-        int add[] = { 0, 0, 0 };
-        int del[] = { 0, 0, 0 };
-
-        xml_patch_versions(patchset, add, del);
-
-        for (change = pcmk__xml_first_child(patchset); change != NULL;
-             change = pcmk__xml_next(change)) {
-            const char *op = crm_element_value(change, XML_DIFF_OP);
-            const char *xpath = crm_element_value(change, XML_DIFF_PATH);
-
-            if(op == NULL) {
-                continue;
-
-            } else if(strstr(xpath, "/" XML_TAG_FENCING_LEVEL) != NULL) {
-                /* Change to a specific entry */
-
-                crm_trace("Handling %s operation %d.%d.%d for %s", op, add[0], add[1], add[2], xpath);
-                if(strcmp(op, "move") == 0) {
-                    continue;
-
-                } else if(strcmp(op, "create") == 0) {
-                    add_topology_level(change->children);
-
-                } else if(strcmp(op, "modify") == 0) {
-                    xmlNode *match = first_named_child(change, XML_DIFF_RESULT);
-
-                    if(match) {
-                        remove_topology_level(match->children);
-                        add_topology_level(match->children);
-                    }
-
-                } else if(strcmp(op, "delete") == 0) {
-                    /* Nuclear option, all we have is the path and an id... not enough to remove a specific entry */
-                    crm_info("Re-initializing fencing topology after %s operation %d.%d.%d for %s",
-                             op, add[0], add[1], add[2], xpath);
-                    fencing_topology_init();
-                    return;
-                }
-
-            } else if (strstr(xpath, "/" XML_TAG_FENCING_TOPOLOGY) != NULL) {
-                /* Change to the topology in general */
-                crm_info("Re-initializing fencing topology after top-level %s operation  %d.%d.%d for %s",
-                         op, add[0], add[1], add[2], xpath);
-                fencing_topology_init();
-                return;
-
-            } else if (strstr(xpath, "/" XML_CIB_TAG_CONFIGURATION)) {
-                /* Changes to the whole config section, possibly including the topology as a whild */
-                if(first_named_child(change, XML_TAG_FENCING_TOPOLOGY) == NULL) {
-                    crm_trace("Nothing for us in %s operation %d.%d.%d for %s.",
-                              op, add[0], add[1], add[2], xpath);
-
-                } else if(strcmp(op, "delete") == 0 || strcmp(op, "create") == 0) {
-                    crm_info("Re-initializing fencing topology after top-level %s operation %d.%d.%d for %s.",
-                             op, add[0], add[1], add[2], xpath);
-                    fencing_topology_init();
-                    return;
-                }
-
-            } else {
-                crm_trace("Nothing for us in %s operation %d.%d.%d for %s",
-                          op, add[0], add[1], add[2], xpath);
-            }
+        if (op == NULL) {
+            continue;
         }
 
-    } else {
-        crm_warn("Unknown patch format: %d", format);
+        if (strstr(xpath, "/" XML_TAG_FENCING_LEVEL) != NULL) {
+            // Change to a specific entry
+            crm_trace("Handling %s operation %d.%d.%d for %s",
+                      op, target[0], target[1], target[2], xpath);
+
+            if (strcmp(op, "move") == 0) {
+                continue;
+            }
+
+            if (strcmp(op, "create") == 0) {
+                add_topology_level(change->children);
+
+            } else if (strcmp(op, "modify") == 0) {
+                xmlNode *match = first_named_child(change, XML_DIFF_RESULT);
+
+                if (match != NULL) {
+                    remove_topology_level(match->children);
+                    add_topology_level(match->children);
+                }
+
+            } else if (strcmp(op, "delete") == 0) {
+                /* Nuclear option. All we have is the path and an ID. Not enough
+                 * to remove a specific entry.
+                 */
+                crm_info("Re-initializing fencing topology after %s operation "
+                         "%d.%d.%d for %s",
+                         op, target[0], target[1], target[2], xpath);
+                fencing_topology_init();
+                return;
+            }
+
+        } else if (strstr(xpath, "/" XML_TAG_FENCING_TOPOLOGY) != NULL) {
+            // Change to the topology in general
+            crm_info("Re-initializing fencing topology after top-level %s "
+                     "operation %d.%d.%d for %s",
+                     op, target[0], target[1], target[2], xpath);
+            fencing_topology_init();
+            return;
+
+        } else if (strstr(xpath, "/" XML_CIB_TAG_CONFIGURATION) != NULL) {
+            /* Changes to the whole config section, possibly including the
+             * topology as a whole */
+            if (first_named_child(change, XML_TAG_FENCING_TOPOLOGY) == NULL) {
+                crm_trace("Nothing for us in %s operation %d.%d.%d for %s",
+                          op, target[0], target[1], target[2], xpath);
+
+            } else if ((strcmp(op, "delete") == 0)
+                       || (strcmp(op, "create") == 0)) {
+
+                crm_info("Re-initializing fencing topology after top-level %s "
+                         "operation %d.%d.%d for %s.",
+                         op, target[0], target[1], target[2], xpath);
+                fencing_topology_init();
+                return;
+            }
+
+        } else {
+            crm_trace("Nothing for us in %s operation %d.%d.%d for %s",
+                      op, target[0], target[1], target[2], xpath);
+        }
     }
 }
+
 static bool have_cib_devices = FALSE;
 
 static void
@@ -1174,9 +1005,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
         }
 
         patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
-        pcmk__output_set_log_level(logger_out, LOG_TRACE);
-        out->message(out, "xml-patchset", patchset);
-        rc = xml_apply_patchset(local_cib, patchset, TRUE);
+        rc = pcmk__xml_apply_patchset(local_cib, patchset, true);
         switch (rc) {
             case pcmk_ok:
             case -pcmk_err_old_data:
@@ -1678,22 +1507,6 @@ main(int argc, char **argv)
 
     cluster = pcmk_cluster_new();
 
-    /* Initialize the logger prior to setup_cib(). update_cib_cache_cb() may
-     * call the "xml-patchset" message function, which needs the logger, after
-     * setup_cib() has run.
-     */
-    rc = pcmk__log_output_new(&logger_out) != pcmk_rc_ok;
-    if (rc != pcmk_rc_ok) {
-        exit_code = CRM_EX_FATAL;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Error creating output format log: %s", pcmk_rc_str(rc));
-        goto done;
-    }
-    pe__register_messages(logger_out);
-    pcmk__register_lib_messages(logger_out);
-    pcmk__output_set_log_level(logger_out, LOG_TRACE);
-    fenced_data_set->priv = logger_out;
-
     if (!stand_alone) {
 #if SUPPORT_COROSYNC
         if (is_corosync_cluster()) {
@@ -1726,6 +1539,18 @@ main(int argc, char **argv)
     init_topology_list();
 
     pcmk__serve_fenced_ipc(&ipcs, &ipc_callbacks);
+
+    rc = pcmk__log_output_new(&logger_out);
+    if (rc != pcmk_rc_ok) {
+        exit_code = CRM_EX_FATAL;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Error creating output format log: %s", pcmk_rc_str(rc));
+        goto done;
+    }
+    pe__register_messages(logger_out);
+    pcmk__register_lib_messages(logger_out);
+    pcmk__output_set_log_level(logger_out, LOG_TRACE);
+    fenced_data_set->priv = logger_out;
 
     // Create the mainloop and run it...
     mainloop = g_main_loop_new(NULL, FALSE);

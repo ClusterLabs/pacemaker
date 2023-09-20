@@ -48,7 +48,7 @@ void xml_log_changes(uint8_t level, const char *function, const xmlNode *xml);
 //! \deprecated This function will be removed in a future release
 void xml_log_patchset(uint8_t level, const char *function, const xmlNode *xml);
 
-//!  \deprecated Use xml_apply_patchset() instead
+//! \deprecated Do not use (will be removed in a future release)
 gboolean apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml);
 
 //! \deprecated Do not use (will be removed in a future release)
@@ -70,6 +70,32 @@ crm_element_name(const xmlNode *xml)
 {
     return (xml == NULL)? NULL : (const char *) xml->name;
 }
+
+//! \deprecated Do not use (will be removed in a future release)
+gboolean can_prune_leaf(xmlNode *xml_node);
+
+//! \deprecated Do not use (will be removed in a future release)
+xmlNode *subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
+                             gboolean full, gboolean *changed,
+                             const char *marker);
+
+//! \deprecated Do not use (will be removed in a future release)
+xmlNode *diff_xml_object(xmlNode *left, xmlNode *right, gboolean suppress);
+
+//! \deprecated Do not use (will be removed in a future release)
+xmlNode *xml_create_patchset(int format, xmlNode *source, xmlNode *target,
+                             bool *config, bool manage_version);
+
+//! \deprecated Do not use (will be removed in a future release)
+int xml_apply_patchset(xmlNode *xml, const xmlNode *patchset,
+                       bool check_version);
+
+//! \deprecated Do not use (will be removed in a future release)
+void patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
+                             bool with_digest);
+
+//! \deprecated Do not use (will be removed in a future release)
+bool xml_patch_versions(const xmlNode *patchset, int add[3], int del[3]);
 
 #ifdef __cplusplus
 }
