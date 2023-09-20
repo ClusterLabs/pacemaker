@@ -285,7 +285,8 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
 
             if (after_key) {
                 pcmk__new_ordering(rsc, NULL, cancel_op, rsc, after_key, NULL,
-                                   pe_order_runnable_left, rsc->cluster);
+                                   pcmk__ar_unrunnable_first_blocks,
+                                   rsc->cluster);
             }
         }
 
@@ -331,24 +332,28 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
     if ((node == NULL) || pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
         pcmk__new_ordering(rsc, start_key(rsc), NULL,
                            NULL, strdup(mon->uuid), mon,
-                           pcmk__ar_first_implies_then|pe_order_runnable_left,
+                           pcmk__ar_first_implies_then
+                           |pcmk__ar_unrunnable_first_blocks,
                            rsc->cluster);
 
         pcmk__new_ordering(rsc, reload_key(rsc), NULL,
                            NULL, strdup(mon->uuid), mon,
-                           pcmk__ar_first_implies_then|pe_order_runnable_left,
+                           pcmk__ar_first_implies_then
+                           |pcmk__ar_unrunnable_first_blocks,
                            rsc->cluster);
 
         if (rsc->next_role == pcmk_role_promoted) {
             pcmk__new_ordering(rsc, promote_key(rsc), NULL,
                                rsc, NULL, mon,
-                               pcmk__ar_ordered|pe_order_runnable_left,
+                               pcmk__ar_ordered
+                               |pcmk__ar_unrunnable_first_blocks,
                                rsc->cluster);
 
         } else if (rsc->role == pcmk_role_promoted) {
             pcmk__new_ordering(rsc, demote_key(rsc), NULL,
                                rsc, NULL, mon,
-                               pcmk__ar_ordered|pe_order_runnable_left,
+                               pcmk__ar_ordered
+                               |pcmk__ar_unrunnable_first_blocks,
                                rsc->cluster);
         }
     }
@@ -388,7 +393,7 @@ cancel_if_running(pe_resource_t *rsc, const pe_node_t *node, const char *key,
              */
             pcmk__new_ordering(rsc, NULL, cancel_op,
                                rsc, start_key(rsc), NULL,
-                               pe_order_runnable_left, rsc->cluster);
+                               pcmk__ar_unrunnable_first_blocks, rsc->cluster);
             break;
         default:
             break;
@@ -416,7 +421,7 @@ order_after_probes(pe_resource_t *rsc, const pe_node_t *node,
 
     for (GList *iter = probes; iter != NULL; iter = iter->next) {
         order_actions((pe_action_t *) iter->data, action,
-                      pe_order_runnable_left);
+                      pcmk__ar_unrunnable_first_blocks);
     }
     g_list_free(probes);
 }
@@ -456,7 +461,7 @@ order_after_stops(pe_resource_t *rsc, const pe_node_t *node,
             pcmk__new_ordering(rsc, stop_key(rsc), stop,
                                NULL, NULL, action,
                                pcmk__ar_first_implies_then
-                               |pe_order_runnable_left,
+                               |pcmk__ar_unrunnable_first_blocks,
                                rsc->cluster);
         }
     }

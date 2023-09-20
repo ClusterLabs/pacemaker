@@ -130,10 +130,10 @@ pcmk__clone_internal_constraints(pe_resource_t *rsc)
                                  pcmk__ar_ordered);
     pcmk__order_resource_actions(rsc, PCMK_ACTION_START,
                                  rsc, PCMK_ACTION_RUNNING,
-                                 pe_order_runnable_left);
+                                 pcmk__ar_unrunnable_first_blocks);
     pcmk__order_resource_actions(rsc, PCMK_ACTION_STOP,
                                  rsc, PCMK_ACTION_STOPPED,
-                                 pe_order_runnable_left);
+                                 pcmk__ar_unrunnable_first_blocks);
 
     // Demoted -> stop and started -> promote
     if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
@@ -142,7 +142,7 @@ pcmk__clone_internal_constraints(pe_resource_t *rsc)
                                      pcmk__ar_ordered);
         pcmk__order_resource_actions(rsc, PCMK_ACTION_RUNNING,
                                      rsc, PCMK_ACTION_PROMOTE,
-                                     pe_order_runnable_left);
+                                     pcmk__ar_unrunnable_first_blocks);
     }
 
     ordered = pe__clone_is_ordered(rsc);
@@ -159,7 +159,7 @@ pcmk__clone_internal_constraints(pe_resource_t *rsc)
         instance->cmds->internal_constraints(instance);
 
         // Start clone -> start instance -> clone started
-        pcmk__order_starts(rsc, instance, pe_order_runnable_left
+        pcmk__order_starts(rsc, instance, pcmk__ar_unrunnable_first_blocks
                                           |pe_order_implies_first_printed);
         pcmk__order_resource_actions(instance, PCMK_ACTION_START,
                                      rsc, PCMK_ACTION_RUNNING,

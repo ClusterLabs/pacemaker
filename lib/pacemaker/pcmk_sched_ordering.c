@@ -200,7 +200,8 @@ ordering_flags_for_kind(enum pe_order_kind kind, const char *first,
                     pe__set_order_flags(flags, pcmk__ar_first_implies_then);
                     if (pcmk__strcase_any_of(first, PCMK_ACTION_START,
                                              PCMK_ACTION_PROMOTE, NULL)) {
-                        pe__set_order_flags(flags, pe_order_runnable_left);
+                        pe__set_order_flags(flags,
+                                            pcmk__ar_unrunnable_first_blocks);
                     }
                     break;
 
@@ -358,7 +359,8 @@ clone_min_ordering(const char *id,
     // Order "then" action after the pseudo-action (if runnable)
     pcmk__new_ordering(NULL, NULL, clone_min_met, rsc_then,
                        pcmk__op_key(rsc_then->id, action_then, 0),
-                       NULL, flags|pe_order_runnable_left, rsc_first->cluster);
+                       NULL, flags|pcmk__ar_unrunnable_first_blocks,
+                       rsc_first->cluster);
 }
 
 /*!
@@ -782,7 +784,8 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
              */
             pcmk__new_ordering(NULL, NULL, unordered_action,
                                rsc_2, pcmk__op_key(rsc_2->id, action_2, 0),
-                               NULL, flags|pe_order_runnable_left, data_set);
+                               NULL, flags|pcmk__ar_unrunnable_first_blocks,
+                               data_set);
         }
 
         return pcmk_rc_ok;
@@ -1165,7 +1168,7 @@ pcmk__order_stops_before_shutdown(pe_node_t *node, pe_action_t *shutdown_op)
         pe__clear_action_flags(action, pcmk_action_optional);
         pcmk__new_ordering(action->rsc, NULL, action, NULL,
                            strdup(PCMK_ACTION_DO_SHUTDOWN), shutdown_op,
-                           pcmk__ar_ordered|pe_order_runnable_left,
+                           pcmk__ar_ordered|pcmk__ar_unrunnable_first_blocks,
                            node->details->data_set);
     }
 }

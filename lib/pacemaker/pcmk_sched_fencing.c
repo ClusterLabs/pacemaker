@@ -90,7 +90,8 @@ order_start_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
                     pe_rsc_debug(rsc, "Ordering %s after %s recovery",
                                  action->uuid, pe__node_name(target));
                     order_actions(stonith_op, action,
-                                  pcmk__ar_ordered|pe_order_runnable_left);
+                                  pcmk__ar_ordered
+                                  |pcmk__ar_unrunnable_first_blocks);
                 }
                 break;
         }
@@ -395,11 +396,13 @@ pcmk__fence_guest(pe_node_t *node)
                  pe__node_name(node), stonith_op->id,
                  pe__node_name(stop->node));
         order_actions(parent_stonith_op, stonith_op,
-                      pe_order_runnable_left|pcmk__ar_first_implies_then);
+                      pcmk__ar_unrunnable_first_blocks
+                      |pcmk__ar_first_implies_then);
 
     } else if (stop) {
         order_actions(stop, stonith_op,
-                      pe_order_runnable_left|pcmk__ar_first_implies_then);
+                      pcmk__ar_unrunnable_first_blocks
+                      |pcmk__ar_first_implies_then);
         crm_info("Implying guest %s is down (action %d) "
                  "after container %s is stopped (action %d)",
                  pe__node_name(node), stonith_op->id,

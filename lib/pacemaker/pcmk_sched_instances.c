@@ -1222,7 +1222,7 @@ unassign_if_mandatory(const pe_action_t *first, const pe_action_t *then,
     /* If the "first" action must be runnable, but there is no "first"
      * instance, the "then" instance must not be allowed to come up.
      */
-    } else if (pcmk_any_flags_set(type, pe_order_runnable_left
+    } else if (pcmk_any_flags_set(type, pcmk__ar_unrunnable_first_blocks
                                         |pcmk__ar_first_implies_then)) {
         pe_rsc_info(then->rsc,
                     "Inhibiting %s from being active "

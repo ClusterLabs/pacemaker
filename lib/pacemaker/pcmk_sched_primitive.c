@@ -941,7 +941,7 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
                            NULL,
                            rsc, pcmk__op_key(rsc->id, PCMK_ACTION_PROMOTE, 0),
                            NULL,
-                           pe_order_runnable_left, rsc->cluster);
+                           pcmk__ar_unrunnable_first_blocks, rsc->cluster);
     }
 
     // Don't clear resource history if probing on same node
@@ -1030,7 +1030,7 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
                                pcmk__op_key(rsc->id, PCMK_ACTION_START, 0),
                                NULL,
                                pcmk__ar_first_implies_then
-                               |pe_order_runnable_left,
+                               |pcmk__ar_unrunnable_first_blocks,
                                rsc->cluster);
 
             pcmk__new_ordering(rsc,

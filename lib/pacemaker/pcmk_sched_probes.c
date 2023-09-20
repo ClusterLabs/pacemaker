@@ -271,7 +271,7 @@ pcmk__probe_rsc_on_node(pe_resource_t *rsc, pe_node_t *node)
      */
     if (!pcmk_is_set(probe->flags, pcmk_action_runnable)
         && (top->running_on == NULL)) {
-        pe__set_order_flags(flags, pe_order_runnable_left);
+        pe__set_order_flags(flags, pcmk__ar_unrunnable_first_blocks);
     }
 
     // Start or reload after probing the resource
@@ -468,13 +468,13 @@ add_probe_orderings_for_stops(pe_working_set_t *data_set)
 static void
 add_start_orderings_for_probe(pe_action_t *probe, pe_action_wrapper_t *after)
 {
-    uint32_t flags = pcmk__ar_ordered|pe_order_runnable_left;
+    uint32_t flags = pcmk__ar_ordered|pcmk__ar_unrunnable_first_blocks;
 
     /* Although the ordering between the probe of the clone instance and the
      * start of its parent has been added in pcmk__probe_rsc_on_node(), we
-     * avoided enforcing `pe_order_runnable_left` order type for that as long as
-     * any of the clone instances are running to prevent them from being
-     * unexpectedly stopped.
+     * avoided enforcing `pcmk__ar_unrunnable_first_blocks` order type for that
+     * as long as any of the clone instances are running to prevent them from
+     * being unexpectedly stopped.
      *
      * On the other hand, we still need to prevent any inactive instances from
      * starting unless the probe is runnable so that we don't risk starting too
@@ -483,7 +483,7 @@ add_start_orderings_for_probe(pe_action_t *probe, pe_action_wrapper_t *after)
     if ((after->action->rsc->variant <= pcmk_rsc_variant_group)
         || pcmk_is_set(probe->flags, pcmk_action_runnable)
         // The order type is already enforced for its parent.
-        || pcmk_is_set(after->type, pe_order_runnable_left)
+        || pcmk_is_set(after->type, pcmk__ar_unrunnable_first_blocks)
         || (pe__const_top_resource(probe->rsc, false) != after->action->rsc)
         || !pcmk__str_eq(after->action->task, PCMK_ACTION_START,
                          pcmk__str_none)) {
@@ -623,7 +623,7 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
         if (!pcmk_is_set(after_wrapper->type, pcmk__ar_first_implies_then)) {
             /* The order type between a group/clone and its child such as
              * B.start-> B_child.start is:
-             * pe_order_implies_first_printed | pe_order_runnable_left
+             * pe_order_implies_first_printed|pcmk__ar_unrunnable_first_blocks
              *
              * Proceed through the ordering chain and build dependencies with
              * its children.

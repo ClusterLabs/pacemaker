@@ -361,19 +361,19 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
             order->type = pcmk__ar_none;
         } else {
             changed |= update(then->rsc, first, then, node, first_flags,
-                              pcmk_action_runnable, pe_order_runnable_left,
-                              data_set);
+                              pcmk_action_runnable,
+                              pcmk__ar_unrunnable_first_blocks, data_set);
         }
         pe_rsc_trace(then->rsc, "%s then %s: %s after pe_order_probe",
                      first->uuid, then->uuid,
                      (changed? "changed" : "unchanged"));
     }
 
-    if (pcmk_is_set(order->type, pe_order_runnable_left)) {
+    if (pcmk_is_set(order->type, pcmk__ar_unrunnable_first_blocks)) {
         if (then->rsc != NULL) {
             changed |= update(then->rsc, first, then, node, first_flags,
-                              pcmk_action_runnable, pe_order_runnable_left,
-                              data_set);
+                              pcmk_action_runnable,
+                              pcmk__ar_unrunnable_first_blocks, data_set);
 
         } else if (!pcmk_is_set(first_flags, pcmk_action_runnable)
                    && pcmk_is_set(then->flags, pcmk_action_runnable)) {
@@ -381,7 +381,8 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
             pe__clear_action_flags(then, pcmk_action_runnable);
             pcmk__set_updated_flags(changed, first, pcmk__updated_then);
         }
-        pe_rsc_trace(then->rsc, "%s then %s: %s after pe_order_runnable_left",
+        pe_rsc_trace(then->rsc,
+                     "%s then %s: %s after pcmk__ar_unrunnable_first_blocks",
                      first->uuid, then->uuid,
                      (changed? "changed" : "unchanged"));
     }
@@ -892,7 +893,7 @@ pcmk__update_ordered_actions(pe_action_t *first, pe_action_t *then,
         pe__clear_action_flags(then, pcmk_action_pseudo);
     }
 
-    if (pcmk_is_set(type, pe_order_runnable_left)
+    if (pcmk_is_set(type, pcmk__ar_unrunnable_first_blocks)
         && pcmk_is_set(filter, pcmk_action_runnable)
         && pcmk_is_set(then->flags, pcmk_action_runnable)
         && !pcmk_is_set(flags, pcmk_action_runnable)) {

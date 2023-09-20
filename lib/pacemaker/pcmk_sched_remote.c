@@ -54,8 +54,8 @@ state2text(enum remote_connection_state state)
  * internally generated constraints from the prohibition of user constraints
  * involving remote connection resources.
  *
- * The start ordering additionally uses pe_order_runnable_left so that the
- * specified action is not runnable if the start is not runnable.
+ * The start ordering additionally uses pcmk__ar_unrunnable_first_blocks so that
+ * the specified action is not runnable if the start is not runnable.
  */
 
 static inline void
@@ -65,7 +65,9 @@ order_start_then_action(pe_resource_t *first_rsc, pe_action_t *then_action,
     if ((first_rsc != NULL) && (then_action != NULL)) {
         pcmk__new_ordering(first_rsc, start_key(first_rsc), NULL,
                            then_action->rsc, NULL, then_action,
-                           pe_order_preserve|pe_order_runnable_left|extra,
+                           pe_order_preserve
+                           |pcmk__ar_unrunnable_first_blocks
+                           |extra,
                            first_rsc->cluster);
     }
 }
@@ -282,7 +284,7 @@ apply_remote_ordering(pe_action_t *action)
                      * stopped _before_ we let the connection get closed.
                      */
                     order_action_then_stop(action, remote_rsc,
-                                           pe_order_runnable_left);
+                                           pcmk__ar_unrunnable_first_blocks);
 
                 } else {
                     order_start_then_action(remote_rsc, action, pcmk__ar_none);
