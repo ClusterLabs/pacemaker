@@ -352,7 +352,9 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
                      (changed? "changed" : "unchanged"));
     }
 
-    if (pcmk_is_set(order->type, pe_order_probe) && (then->rsc != NULL)) {
+    if (pcmk_is_set(order->type, pcmk__ar_nested_remote_probe)
+        && (then->rsc != NULL)) {
+
         if (!pcmk_is_set(first_flags, pcmk_action_runnable)
             && (first->rsc->running_on != NULL)) {
 
@@ -365,7 +367,8 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
                               pcmk_action_runnable,
                               pcmk__ar_unrunnable_first_blocks, data_set);
         }
-        pe_rsc_trace(then->rsc, "%s then %s: %s after pe_order_probe",
+        pe_rsc_trace(then->rsc,
+                     "%s then %s: %s after pcmk__ar_nested_remote_probe",
                      first->uuid, then->uuid,
                      (changed? "changed" : "unchanged"));
     }

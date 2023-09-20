@@ -59,6 +59,17 @@ enum pcmk__action_relation_flags {
 
     //! If 'first' is required, 'then' action for instance on same node is
     pcmk__ar_first_implies_same_node_then   = (1U << 10),
+
+    /*!
+     * Disable relation if 'first' is unrunnable and for an active resource,
+     * otherwise order actions and make 'then' unrunnable if 'first' is.
+     *
+     * This is used to order a bundle replica's start of its container before a
+     * probe of its remote connection resource, in case the connection uses the
+     * REMOTE_CONTAINER_HACK to replace the connection address with where the
+     * container is running.
+     */
+    pcmk__ar_nested_remote_probe            = (1U << 11),
 };
 
 #endif      // PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H

@@ -954,7 +954,8 @@ create_replica_probes(pe__bundle_replica_t *replica, void *user_data)
                                pcmk__op_key(replica->container->id,
                                             PCMK_ACTION_START, 0),
                                NULL, replica->remote, NULL, probe,
-                               pe_order_probe, probe_data->bundle->cluster);
+                               pcmk__ar_nested_remote_probe,
+                               probe_data->bundle->cluster);
         }
     }
     return true;
