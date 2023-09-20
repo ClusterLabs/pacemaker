@@ -180,10 +180,9 @@ ordering_flags_for_kind(enum pe_order_kind kind, const char *first,
 {
     uint32_t flags = pcmk__ar_none; // so we trace-log all flags set
 
-    pe__set_order_flags(flags, pcmk__ar_ordered);
-
     switch (kind) {
         case pe_order_kind_optional:
+            pe__set_order_flags(flags, pcmk__ar_ordered);
             break;
 
         case pe_order_kind_serialize:
@@ -195,6 +194,7 @@ ordering_flags_for_kind(enum pe_order_kind kind, const char *first,
             break;
 
         case pe_order_kind_mandatory:
+            pe__set_order_flags(flags, pcmk__ar_ordered);
             switch (symmetry) {
                 case ordering_asymmetric:
                     pe__set_order_flags(flags, pe_order_asymmetrical);
