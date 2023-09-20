@@ -247,7 +247,7 @@ xml_create_patchset_v1(xmlNode *source, xmlNode *target, bool config,
     if (patchset) {
         CRM_LOG_ASSERT(xml_document_dirty(target));
         xml_repair_v1_diff(source, target, patchset, config);
-        crm_xml_add(patchset, "format", "1");
+        crm_xml_add(patchset, PCMK_XA_FORMAT, "1");
     }
     return patchset;
 }
@@ -277,7 +277,7 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
     docpriv = target->doc->_private;
 
     patchset = create_xml_node(NULL, XML_TAG_DIFF);
-    crm_xml_add_int(patchset, "format", 2);
+    crm_xml_add_int(patchset, PCMK_XA_FORMAT, 2);
 
     version = create_xml_node(patchset, XML_DIFF_VERSION);
 
@@ -390,7 +390,7 @@ patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
      */
     CRM_LOG_ASSERT(!xml_document_dirty(target));
 
-    crm_element_value_int(patch, "format", &format);
+    crm_element_value_int(patch, PCMK_XA_FORMAT, &format);
     if ((format > 1) && !with_digest) {
         return;
     }
@@ -574,7 +574,7 @@ xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
     };
 
 
-    crm_element_value_int(patchset, "format", &format);
+    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
 
     /* Process removals */
     if (!find_patch_xml_node(patchset, format, FALSE, &tmp)) {
@@ -1117,7 +1117,7 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
         {}
     );
 
-    crm_element_value_int(patchset, "format", &format);
+    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
     if (check_version) {
         rc = pcmk_rc2legacy(xml_patch_version_check(xml, patchset, format));
         if (rc != pcmk_ok) {

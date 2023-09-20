@@ -212,7 +212,7 @@ cib__element_in_patchset(const xmlNode *patchset, const char *element)
 
     CRM_ASSERT(patchset != NULL);
 
-    crm_element_value_int(patchset, "format", &format);
+    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
     switch (format) {
         case 1:
             return element_in_patchset_v1(patchset, element);
@@ -580,7 +580,7 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
                 int format = 1;
                 xmlNode *cib_copy = copy_xml(patchset_cib);
 
-                crm_element_value_int(local_diff, "format", &format);
+                crm_element_value_int(local_diff, PCMK_XA_FORMAT, &format);
                 test_rc = xml_apply_patchset(cib_copy, local_diff,
                                              manage_counters);
 

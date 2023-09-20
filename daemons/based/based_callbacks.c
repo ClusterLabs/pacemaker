@@ -961,7 +961,7 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
 
         CRM_LOG_ASSERT(result_diff != NULL);
         digest = crm_element_value(result_diff, XML_ATTR_DIGEST);
-        crm_element_value_int(result_diff, "format", &format);
+        crm_element_value_int(result_diff, PCMK_XA_FORMAT, &format);
 
         cib_diff_version_details(result_diff,
                                  &diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates,
@@ -1402,7 +1402,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
 
         // If the diff is NULL at this point, it's because nothing changed
         if (*cib_diff != NULL) {
-            crm_element_value_int(*cib_diff, "format", &format);
+            crm_element_value_int(*cib_diff, PCMK_XA_FORMAT, &format);
         }
 
         if (format == 1) {

@@ -558,7 +558,7 @@ te_update_diff(const char *event, xmlNode * msg)
               p_del[0], p_del[1], p_del[2], p_add[0], p_add[1], p_add[2],
               fsa_state2string(controld_globals.fsa_state));
 
-    crm_element_value_int(diff, "format", &format);
+    crm_element_value_int(diff, PCMK_XA_FORMAT, &format);
     switch (format) {
         case 1:
             te_update_diff_v1(event, diff);

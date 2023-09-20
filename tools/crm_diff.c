@@ -149,7 +149,7 @@ log_patch_cib_versions(xmlNode *patch)
     const char *digest = NULL;
 
     xml_patch_versions(patch, add, del);
-    fmt = crm_element_value(patch, "format");
+    fmt = crm_element_value(patch, PCMK_XA_FORMAT);
     digest = crm_element_value(patch, XML_ATTR_DIGEST);
 
     if (add[2] != del[2] || add[1] != del[1] || add[0] != del[0]) {
@@ -163,7 +163,7 @@ strip_patch_cib_version(xmlNode *patch, const char **vfields, size_t nvfields)
 {
     int format = 1;
 
-    crm_element_value_int(patch, "format", &format);
+    crm_element_value_int(patch, PCMK_XA_FORMAT, &format);
     if (format == 2) {
         xmlNode *version_xml = find_xml_node(patch, "version", FALSE);
 

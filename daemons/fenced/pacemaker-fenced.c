@@ -976,7 +976,7 @@ update_cib_stonith_devices(const char *event, xmlNode * msg)
     xmlNode *patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
 
     CRM_ASSERT(patchset);
-    crm_element_value_int(patchset, "format", &format);
+    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
     switch(format) {
         case 1:
             update_cib_stonith_devices_v1(event, msg);
@@ -1054,7 +1054,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
     xmlNode *patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
 
     CRM_ASSERT(patchset);
-    crm_element_value_int(patchset, "format", &format);
+    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
 
     if(format == 1) {
         /* Process deletions (only) */
