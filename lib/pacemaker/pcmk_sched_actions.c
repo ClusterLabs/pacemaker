@@ -562,7 +562,7 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
         }
 
         // Disable constraint if it only applies when on same node, but isn't
-        if (pcmk_is_set(other->type, pe_order_same_node)
+        if (pcmk_is_set(other->type, pcmk__ar_if_on_same_node)
             && (first_node != NULL) && (then_node != NULL)
             && !pe__same_node(first_node, then_node)) {
 

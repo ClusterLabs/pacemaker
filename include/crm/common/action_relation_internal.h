@@ -98,6 +98,9 @@ enum pcmk__action_relation_flags {
      * prefer certain action types over others, or base it on resource priority.
      */
     pcmk__ar_serialize                      = (1U << 14),
+
+    //! Relation applies only if actions are on same node
+    pcmk__ar_if_on_same_node                = (1U << 15),
 };
 
 #endif      // PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H

@@ -489,11 +489,12 @@ pcmk__order_restart_vs_unfence(gpointer data, gpointer user_data)
      */
     pcmk__new_ordering(rsc, stop_key(rsc), NULL,
                        NULL, strdup(unfence->uuid), unfence,
-                       pcmk__ar_ordered|pe_order_same_node,
+                       pcmk__ar_ordered|pcmk__ar_if_on_same_node,
                        rsc->cluster);
 
     pcmk__new_ordering(NULL, strdup(unfence->uuid), unfence,
                        rsc, start_key(rsc), NULL,
-                       pcmk__ar_first_implies_same_node_then|pe_order_same_node,
+                       pcmk__ar_first_implies_same_node_then
+                       |pcmk__ar_if_on_same_node,
                        rsc->cluster);
 }

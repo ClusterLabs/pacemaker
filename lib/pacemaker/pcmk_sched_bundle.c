@@ -881,7 +881,7 @@ order_replica_start_after(pe__bundle_replica_t *replica, void *user_data)
                        NULL, replica->container,
                        pcmk__op_key(replica->container->id, PCMK_ACTION_START,
                                     0),
-                       NULL, pcmk__ar_ordered|pe_order_same_node,
+                       NULL, pcmk__ar_ordered|pcmk__ar_if_on_same_node,
                        replica->container->cluster);
     return true;
 }

@@ -398,8 +398,8 @@ add_probe_orderings_for_stops(pe_working_set_t *data_set)
         if (pcmk_is_set(order->flags, pcmk__ar_if_first_unmigratable)) {
             pe__set_order_flags(order_flags, pcmk__ar_if_first_unmigratable);
         }
-        if (pcmk_is_set(order->flags, pe_order_same_node)) {
-            pe__set_order_flags(order_flags, pe_order_same_node);
+        if (pcmk_is_set(order->flags, pcmk__ar_if_on_same_node)) {
+            pe__set_order_flags(order_flags, pcmk__ar_if_on_same_node);
         }
 
         // Preserve certain order types for future filtering
