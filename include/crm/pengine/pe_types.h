@@ -325,9 +325,11 @@ typedef struct pe_tag_s {
     GList *refs;
 } pe_tag_t;
 
-/* *INDENT-OFF* */
+//!@{
+//! \deprecated Do not use
 enum pe_ordering {
     pe_order_none                  = 0x0,       /* deleted */
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     pe_order_optional              = 0x1,       /* pure ordering, nothing implied */
     pe_order_apply_first_non_migratable = 0x2,  /* Only apply this constraint's ordering if first is not migratable. */
 
@@ -351,7 +353,7 @@ enum pe_ordering {
                                                  */
 
     pe_order_restart               = 0x1000,    /* 'then' is runnable if 'first' is optional or runnable */
-    pe_order_stonith_stop          = 0x2000,    //<! \deprecated Will be removed in future release
+    pe_order_stonith_stop          = 0x2000,
     pe_order_serialize_only        = 0x4000,    /* serialize */
     pe_order_same_node             = 0x8000,    /* applies only if 'first' and 'then' are on same node */
 
@@ -367,12 +369,10 @@ enum pe_ordering {
     pe_order_then_cancels_first    = 0x2000000, // if 'then' becomes required, 'first' becomes optional
     pe_order_trace                 = 0x4000000, /* test marker */
 
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    // \deprecated Use pe_order_promoted_implies_first instead
     pe_order_implies_first_master  = pe_order_promoted_implies_first,
 #endif
 };
-/* *INDENT-ON* */
+//!@}
 
 typedef struct pe_action_wrapper_s {
     enum pe_ordering type;
