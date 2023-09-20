@@ -56,6 +56,9 @@ enum pcmk__action_relation_flags {
 
     //! If 'first' is unrunnable, 'then' becomes a real, unmigratable action
     pcmk__ar_first_else_then                = (1U << 9),
+
+    //! If 'first' is required, 'then' action for instance on same node is
+    pcmk__ar_first_implies_same_node_then   = (1U << 10),
 };
 
 #endif      // PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H

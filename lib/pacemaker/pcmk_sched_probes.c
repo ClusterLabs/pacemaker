@@ -616,8 +616,8 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
          * implies/enforces B.start to be required too, which is the cause of
          * B.restart/re-promote.
          *
-         * Not sure about pe_order_implies_then_on_node though. It's now only
-         * used for unfencing case, which tends to introduce transition
+         * Not sure about pcmk__ar_first_implies_same_node_then though. It's now
+         * only used for unfencing case, which tends to introduce transition
          * loops...
          */
         if (!pcmk_is_set(after_wrapper->type, pcmk__ar_first_implies_then)) {

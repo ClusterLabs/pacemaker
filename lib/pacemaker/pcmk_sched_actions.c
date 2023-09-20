@@ -254,18 +254,19 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
      */
     pe_node_t *node = then->node;
 
-    if (pcmk_is_set(order->type, pe_order_implies_then_on_node)) {
+    if (pcmk_is_set(order->type, pcmk__ar_first_implies_same_node_then)) {
         /* For unfencing, only instances of 'then' on the same node as 'first'
          * (the unfencing operation) should restart, so reset node to
          * first->node, at which point this case is handled like a normal
          * pcmk__ar_first_implies_then.
          */
-        pe__clear_order_flags(order->type, pe_order_implies_then_on_node);
+        pe__clear_order_flags(order->type,
+                              pcmk__ar_first_implies_same_node_then);
         pe__set_order_flags(order->type, pcmk__ar_first_implies_then);
         node = first->node;
         pe_rsc_trace(then->rsc,
-                     "%s then %s: mapped pe_order_implies_then_on_node to "
-                     "pcmk__ar_first_implies_then on %s",
+                     "%s then %s: mapped pcmk__ar_first_implies_same_node_then "
+                     "to pcmk__ar_first_implies_then on %s",
                      first->uuid, then->uuid, pe__node_name(node));
     }
 
