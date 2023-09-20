@@ -403,7 +403,7 @@ add_probe_orderings_for_stops(pe_working_set_t *data_set)
         }
 
         // Preserve certain order types for future filtering
-        if ((order->flags == pe_order_anti_colocation)
+        if ((order->flags == pcmk__ar_if_required_on_same_node)
             || (order->flags == pcmk__ar_if_on_same_node_or_target)) {
             order_flags = order->flags;
         }

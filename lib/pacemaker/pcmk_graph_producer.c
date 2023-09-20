@@ -705,11 +705,11 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
             return false;
         }
 
-    } else if (input->type == pe_order_anti_colocation) {
+    } else if ((uint32_t) input->type == pcmk__ar_if_required_on_same_node) {
         if (input->action->node && action->node
             && !pe__same_node(input->action->node, action->node)) {
             crm_trace("Ignoring %s (%d) input %s (%d): "
-                      "anti-colocation node mismatch %s vs %s",
+                      "not on same node (%s vs %s)",
                       action->uuid, action->id,
                       input->action->uuid, input->action->id,
                       pe__node_name(action->node),
@@ -718,8 +718,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
             return false;
 
         } else if (pcmk_is_set(input->action->flags, pcmk_action_optional)) {
-            crm_trace("Ignoring %s (%d) input %s (%d): "
-                      "anti-colocation input optional",
+            crm_trace("Ignoring %s (%d) input %s (%d): optional",
                       action->uuid, action->id,
                       input->action->uuid, input->action->id);
             input->type = pcmk__ar_none;

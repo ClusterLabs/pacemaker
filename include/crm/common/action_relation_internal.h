@@ -116,6 +116,9 @@ enum pcmk__action_relation_flags {
 
     //! 'then' action is runnable if certain number of 'first' instances are
     pcmk__ar_min_runnable                   = (1U << 22),
+
+    //! Ordering applies only if 'first' is required and on same node as 'then'
+    pcmk__ar_if_required_on_same_node       = (1U << 23),
 };
 
 #endif      // PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H
