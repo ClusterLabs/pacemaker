@@ -113,6 +113,9 @@ enum pcmk__action_relation_flags {
 
     //! Actions are ordered if on same node (or migration target for migrate_to)
     pcmk__ar_if_on_same_node_or_target      = (1U << 21),
+
+    //! 'then' action is runnable if certain number of 'first' instances are
+    pcmk__ar_min_runnable                   = (1U << 22),
 };
 
 #endif      // PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H

@@ -630,9 +630,9 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
         return false;
 
     } else if (!pcmk_is_set(input->action->flags, pcmk_action_runnable)
-               && pcmk_is_set(input->type, pe_order_one_or_more)) {
+               && pcmk_is_set(input->type, pcmk__ar_min_runnable)) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
-                  "one-or-more and input unrunnable",
+                  "minimum number of instances required but input unrunnable",
                   action->uuid, action->id,
                   input->action->uuid, input->action->id);
         return false;

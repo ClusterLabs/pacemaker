@@ -356,7 +356,7 @@ clone_min_ordering(const char *id,
 
         pcmk__new_ordering(child, pcmk__op_key(child->id, action_first, 0),
                            NULL, NULL, NULL, clone_min_met,
-                           pe_order_one_or_more
+                           pcmk__ar_min_runnable
                            |pcmk__ar_first_implies_then_graphed,
                            rsc_first->cluster);
     }
@@ -774,7 +774,7 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
              */
             pcmk__new_ordering(rsc_1, pcmk__op_key(rsc_1->id, action_1, 0),
                                NULL, NULL, NULL, unordered_action,
-                               pe_order_one_or_more
+                               pcmk__ar_min_runnable
                                |pcmk__ar_first_implies_then_graphed,
                                data_set);
         }

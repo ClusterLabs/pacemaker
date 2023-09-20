@@ -329,10 +329,10 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
                      (changed? "changed" : "unchanged"));
     }
 
-    if (pcmk_is_set(order->type, pe_order_one_or_more)) {
+    if (pcmk_is_set(order->type, pcmk__ar_min_runnable)) {
         if (then->rsc != NULL) {
             changed |= update(then->rsc, first, then, node, first_flags,
-                              pcmk_action_runnable, pe_order_one_or_more,
+                              pcmk_action_runnable, pcmk__ar_min_runnable,
                               data_set);
 
         } else if (pcmk_is_set(first_flags, pcmk_action_runnable)) {
@@ -349,7 +349,7 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
                 pcmk__set_updated_flags(changed, first, pcmk__updated_then);
             }
         }
-        pe_rsc_trace(then->rsc, "%s then %s: %s after pe_order_one_or_more",
+        pe_rsc_trace(then->rsc, "%s then %s: %s after pcmk__ar_min_runnable",
                      first->uuid, then->uuid,
                      (changed? "changed" : "unchanged"));
     }
@@ -526,8 +526,9 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
             then->required_runnable_before = 1;
         }
 
-        /* The pe_order_one_or_more clause of update_action_for_ordering_flags()
-         * (called below) will reset runnable if appropriate.
+        /* The pcmk__ar_min_runnable clause of
+         * update_action_for_ordering_flags() (called below)
+         * will reset runnable if appropriate.
          */
         pe__clear_action_flags(then, pcmk_action_runnable);
     }
