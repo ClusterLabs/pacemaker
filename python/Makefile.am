@@ -16,7 +16,10 @@ SUBDIRS	= pacemaker \
 
 .PHONY: check-local
 check-local:
-	PYTHONPATH=$(top_srcdir)/python:$(top_builddir)/python $(PYTHON) -m unittest discover -v -s $(top_srcdir)/python/tests $(top_builddir)/python/tests
+	if [ "x$(top_srcdir)" != "x$(top_builddir)" ]; then \
+		cp -r $(top_srcdir)/python/* $(abs_top_builddir)/python/; \
+	fi
+	PYTHONPATH=$(top_builddir)/python $(PYTHON) -m unittest discover -v -s $(top_builddir)/python/tests
 
 .PHONY: pylint
 pylint:

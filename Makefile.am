@@ -129,6 +129,9 @@ PACKAGE         ?= pacemaker
 .PHONY: clean-local
 clean-local:
 	-rm -f $(builddir)/$(PACKAGE)-*.tar.gz
+	-if [ "x$(top_srcdir)" != "x$(top_builddir)" ]; then \
+		rm -rf $(top_builddir)/python; \
+	fi
 
 .PHONY: distclean-local
 distclean-local:
