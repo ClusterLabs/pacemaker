@@ -2051,7 +2051,7 @@ crm_diff_update(const char *event, xmlNode * msg)
 
     if (options.external_agent) {
         int format = 0;
-        crm_element_value_int(diff, "format", &format);
+        crm_element_value_int(diff, PCMK_XA_FORMAT, &format);
         switch(format) {
             case 1:
                 crm_diff_update_v1(event, msg);

@@ -48,6 +48,8 @@ extern "C" {
  * XML attributes
  */
 
+#define PCMK_XA_FORMAT                      "format"
+
 /* These have been deprecated as CIB <clone> element attributes (aliases for
  * "promoted-max" and "promoted-node-max") since 2.0.0.
  */

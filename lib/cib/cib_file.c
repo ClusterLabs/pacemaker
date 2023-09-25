@@ -260,16 +260,7 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
         validate_xml_verbose(result_cib);
 
     } else if ((rc == pcmk_ok) && !read_only) {
-        pcmk__output_t *out = NULL;
-
-        rc = pcmk_rc2legacy(pcmk__log_output_new(&out));
-        CRM_CHECK(rc == pcmk_ok, goto done);
-
-        pcmk__output_set_log_level(out, LOG_DEBUG);
-        rc = out->message(out, "xml-patchset", cib_diff);
-        out->finish(out, pcmk_rc2exitc(rc), true, NULL);
-        pcmk__output_free(out);
-        rc = pcmk_ok;
+        pcmk__log_xml_patchset(LOG_DEBUG, cib_diff);
 
         if (result_cib != private->cib_xml) {
             free_xml(private->cib_xml);

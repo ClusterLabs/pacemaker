@@ -74,6 +74,76 @@ extern "C" {
 
 /*!
  * \internal
+ * \brief Log XML changes line-by-line in a formatted fashion
+ *
+ * \param[in] level  Priority at which to log the messages
+ * \param[in] xml    XML to log
+ *
+ * \note This does nothing when \p level is \c LOG_STDOUT.
+ */
+#define pcmk__log_xml_changes(level, xml) do {                              \
+        uint8_t _level = pcmk__clip_log_level(level);                       \
+        static struct qb_log_callsite *xml_cs = NULL;                       \
+                                                                            \
+        switch (_level) {                                                   \
+            case LOG_STDOUT:                                                \
+            case LOG_NEVER:                                                 \
+                break;                                                      \
+            default:                                                        \
+                if (xml_cs == NULL) {                                       \
+                    xml_cs = qb_log_callsite_get(__func__, __FILE__,        \
+                                                 "xml-changes", _level,     \
+                                                 __LINE__, 0);              \
+                }                                                           \
+                if (crm_is_callsite_active(xml_cs, _level, 0)) {            \
+                    pcmk__log_xml_changes_as(__FILE__, __func__, __LINE__,  \
+                                             0, _level, xml);               \
+                }                                                           \
+                break;                                                      \
+        }                                                                   \
+    } while(0)
+
+/*!
+ * \internal
+ * \brief Log an XML patchset line-by-line in a formatted fashion
+ *
+ * \param[in] level     Priority at which to log the messages
+ * \param[in] patchset  XML patchset to log
+ *
+ * \note This does nothing when \p level is \c LOG_STDOUT.
+ */
+#define pcmk__log_xml_patchset(level, patchset) do {                        \
+        uint8_t _level = pcmk__clip_log_level(level);                       \
+        static struct qb_log_callsite *xml_cs = NULL;                       \
+                                                                            \
+        switch (_level) {                                                   \
+            case LOG_STDOUT:                                                \
+            case LOG_NEVER:                                                 \
+                break;                                                      \
+            default:                                                        \
+                if (xml_cs == NULL) {                                       \
+                    xml_cs = qb_log_callsite_get(__func__, __FILE__,        \
+                                                 "xml-patchset", _level,    \
+                                                 __LINE__, 0);              \
+                }                                                           \
+                if (crm_is_callsite_active(xml_cs, _level, 0)) {            \
+                    pcmk__log_xml_patchset_as(__FILE__, __func__, __LINE__, \
+                                              0, _level, patchset);         \
+                }                                                           \
+                break;                                                      \
+        }                                                                   \
+    } while(0)
+
+void pcmk__log_xml_changes_as(const char *file, const char *function,
+                              uint32_t line, uint32_t tags, uint8_t level,
+                              const xmlNode *xml);
+
+void pcmk__log_xml_patchset_as(const char *file, const char *function,
+                               uint32_t line, uint32_t tags, uint8_t level,
+                               const xmlNode *patchset);
+
+/*!
+ * \internal
  * \brief Initialize logging for command line tools
  *
  * \param[in] name      The name of the program

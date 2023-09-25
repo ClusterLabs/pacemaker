@@ -247,7 +247,7 @@ xml_create_patchset_v1(xmlNode *source, xmlNode *target, bool config,
     if (patchset) {
         CRM_LOG_ASSERT(xml_document_dirty(target));
         xml_repair_v1_diff(source, target, patchset, config);
-        crm_xml_add(patchset, "format", "1");
+        crm_xml_add(patchset, PCMK_XA_FORMAT, "1");
     }
     return patchset;
 }
@@ -277,7 +277,7 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
     docpriv = target->doc->_private;
 
     patchset = create_xml_node(NULL, XML_TAG_DIFF);
-    crm_xml_add_int(patchset, "format", 2);
+    crm_xml_add_int(patchset, PCMK_XA_FORMAT, 2);
 
     version = create_xml_node(patchset, XML_DIFF_VERSION);
 
@@ -390,7 +390,7 @@ patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
      */
     CRM_LOG_ASSERT(!xml_document_dirty(target));
 
-    crm_element_value_int(patch, "format", &format);
+    crm_element_value_int(patch, PCMK_XA_FORMAT, &format);
     if ((format > 1) && !with_digest) {
         return;
     }
@@ -574,7 +574,7 @@ xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
     };
 
 
-    crm_element_value_int(patchset, "format", &format);
+    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
 
     /* Process removals */
     if (!find_patch_xml_node(patchset, format, FALSE, &tmp)) {
@@ -606,12 +606,11 @@ xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
  *
  * \param[in] xml       Root of current CIB
  * \param[in] patchset  Patchset to check
- * \param[in] format    Patchset version
  *
  * \return Standard Pacemaker return code
  */
 static int
-xml_patch_version_check(const xmlNode *xml, const xmlNode *patchset, int format)
+xml_patch_version_check(const xmlNode *xml, const xmlNode *patchset)
 {
     int lpc = 0;
     bool changed = FALSE;
@@ -1094,43 +1093,31 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
     int format = 1;
     int rc = pcmk_ok;
     xmlNode *old = NULL;
-    const char *digest = crm_element_value(patchset, XML_ATTR_DIGEST);
+    const char *digest = NULL;
 
     if (patchset == NULL) {
         return rc;
     }
 
-    pcmk__if_tracing(
-        {
-            pcmk__output_t *logger_out = NULL;
+    pcmk__log_xml_patchset(LOG_TRACE, patchset);
 
-            rc = pcmk_rc2legacy(pcmk__log_output_new(&logger_out));
-            CRM_CHECK(rc == pcmk_ok, return rc);
-
-            pcmk__output_set_log_level(logger_out, LOG_TRACE);
-            rc = logger_out->message(logger_out, "xml-patchset", patchset);
-            logger_out->finish(logger_out, pcmk_rc2exitc(rc), true,
-                               NULL);
-            pcmk__output_free(logger_out);
-            rc = pcmk_ok;
-        },
-        {}
-    );
-
-    crm_element_value_int(patchset, "format", &format);
     if (check_version) {
-        rc = pcmk_rc2legacy(xml_patch_version_check(xml, patchset, format));
+        rc = pcmk_rc2legacy(xml_patch_version_check(xml, patchset));
         if (rc != pcmk_ok) {
             return rc;
         }
     }
 
-    if (digest) {
-        // Make it available for logging if result doesn't have expected digest
-        old = copy_xml(xml);
+    digest = crm_element_value(patchset, XML_ATTR_DIGEST);
+    if (digest != NULL) {
+        /* Make original XML available for logging in case result doesn't have
+         * expected digest
+         */
+        pcmk__if_tracing(old = copy_xml(xml), {});
     }
 
     if (rc == pcmk_ok) {
+        crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
         switch (format) {
             case 1:
                 rc = pcmk_rc2legacy(apply_v1_patchset(xml, patchset));

@@ -811,7 +811,7 @@ cib__config_changed_v1(xmlNode *last, xmlNode *next, xmlNode **diff)
         goto done;
     }
 
-    crm_element_value_int(*diff, "format", &format);
+    crm_element_value_int(*diff, PCMK_XA_FORMAT, &format);
     CRM_LOG_ASSERT(format == 1);
 
     xpathObj = xpath_search(*diff, "//" XML_CIB_TAG_CONFIGURATION);
