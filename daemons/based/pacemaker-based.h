@@ -63,7 +63,6 @@ extern gboolean stand_alone;
 extern gboolean cib_shutdown_flag;
 extern gchar *cib_root;
 extern int cib_status;
-extern pcmk__output_t *logger_out;
 
 extern struct qb_ipcs_service_handlers ipc_ro_callbacks;
 extern struct qb_ipcs_service_handlers ipc_rw_callbacks;
