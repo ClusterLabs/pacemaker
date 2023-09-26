@@ -235,34 +235,36 @@ replica_internal_constraints(pe__bundle_replica_t *replica, void *user_data)
 
     // Start bundle -> start replica container
     pcmk__order_starts(bundle, replica->container,
-                       pe_order_runnable_left|pe_order_implies_first_printed);
+                       pcmk__ar_unrunnable_first_blocks
+                       |pcmk__ar_then_implies_first_graphed);
 
     // Stop bundle -> stop replica child and container
     if (replica->child != NULL) {
         pcmk__order_stops(bundle, replica->child,
-                          pe_order_implies_first_printed);
+                          pcmk__ar_then_implies_first_graphed);
     }
     pcmk__order_stops(bundle, replica->container,
-                      pe_order_implies_first_printed);
+                      pcmk__ar_then_implies_first_graphed);
 
     // Start replica container -> bundle is started
     pcmk__order_resource_actions(replica->container, PCMK_ACTION_START, bundle,
                                  PCMK_ACTION_RUNNING,
-                                 pe_order_implies_then_printed);
+                                 pcmk__ar_first_implies_then_graphed);
 
     // Stop replica container -> bundle is stopped
     pcmk__order_resource_actions(replica->container, PCMK_ACTION_STOP, bundle,
                                  PCMK_ACTION_STOPPED,
-                                 pe_order_implies_then_printed);
+                                 pcmk__ar_first_implies_then_graphed);
 
     if (replica->ip != NULL) {
         replica->ip->cmds->internal_constraints(replica->ip);
 
         // Replica IP address -> replica container (symmetric)
         pcmk__order_starts(replica->ip, replica->container,
-                           pe_order_runnable_left|pe_order_preserve);
+                           pcmk__ar_unrunnable_first_blocks
+                           |pcmk__ar_guest_allowed);
         pcmk__order_stops(replica->container, replica->ip,
-                          pe_order_implies_first|pe_order_preserve);
+                          pcmk__ar_then_implies_first|pcmk__ar_guest_allowed);
 
         pcmk__new_colocation("#ip-with-container", NULL, INFINITY, replica->ip,
                              replica->container, NULL, NULL,
@@ -308,22 +310,22 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
     // Start bundle -> start bundled clone
     pcmk__order_resource_actions(rsc, PCMK_ACTION_START, bundled_resource,
                                  PCMK_ACTION_START,
-                                 pe_order_implies_first_printed);
+                                 pcmk__ar_then_implies_first_graphed);
 
     // Bundled clone is started -> bundle is started
     pcmk__order_resource_actions(bundled_resource, PCMK_ACTION_RUNNING,
                                  rsc, PCMK_ACTION_RUNNING,
-                                 pe_order_implies_then_printed);
+                                 pcmk__ar_first_implies_then_graphed);
 
     // Stop bundle -> stop bundled clone
     pcmk__order_resource_actions(rsc, PCMK_ACTION_STOP, bundled_resource,
                                  PCMK_ACTION_STOP,
-                                 pe_order_implies_first_printed);
+                                 pcmk__ar_then_implies_first_graphed);
 
     // Bundled clone is stopped -> bundle is stopped
     pcmk__order_resource_actions(bundled_resource, PCMK_ACTION_STOPPED,
                                  rsc, PCMK_ACTION_STOPPED,
-                                 pe_order_implies_then_printed);
+                                 pcmk__ar_first_implies_then_graphed);
 
     bundled_resource->cmds->internal_constraints(bundled_resource);
 
@@ -335,22 +337,22 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
     // Demote bundle -> demote bundled clone
     pcmk__order_resource_actions(rsc, PCMK_ACTION_DEMOTE, bundled_resource,
                                  PCMK_ACTION_DEMOTE,
-                                 pe_order_implies_first_printed);
+                                 pcmk__ar_then_implies_first_graphed);
 
     // Bundled clone is demoted -> bundle is demoted
     pcmk__order_resource_actions(bundled_resource, PCMK_ACTION_DEMOTED,
                                  rsc, PCMK_ACTION_DEMOTED,
-                                 pe_order_implies_then_printed);
+                                 pcmk__ar_first_implies_then_graphed);
 
     // Promote bundle -> promote bundled clone
     pcmk__order_resource_actions(rsc, PCMK_ACTION_PROMOTE,
                                  bundled_resource, PCMK_ACTION_PROMOTE,
-                                 pe_order_implies_first_printed);
+                                 pcmk__ar_then_implies_first_graphed);
 
     // Bundled clone is promoted -> bundle is promoted
     pcmk__order_resource_actions(bundled_resource, PCMK_ACTION_PROMOTED,
                                  rsc, PCMK_ACTION_PROMOTED,
-                                 pe_order_implies_then_printed);
+                                 pcmk__ar_first_implies_then_graphed);
 }
 
 struct match_data {
@@ -880,7 +882,7 @@ order_replica_start_after(pe__bundle_replica_t *replica, void *user_data)
                        NULL, replica->container,
                        pcmk__op_key(replica->container->id, PCMK_ACTION_START,
                                     0),
-                       NULL, pe_order_optional|pe_order_same_node,
+                       NULL, pcmk__ar_ordered|pcmk__ar_if_on_same_node,
                        replica->container->cluster);
     return true;
 }
@@ -953,7 +955,8 @@ create_replica_probes(pe__bundle_replica_t *replica, void *user_data)
                                pcmk__op_key(replica->container->id,
                                             PCMK_ACTION_START, 0),
                                NULL, replica->remote, NULL, probe,
-                               pe_order_probe, probe_data->bundle->cluster);
+                               pcmk__ar_nested_remote_probe,
+                               probe_data->bundle->cluster);
         }
     }
     return true;

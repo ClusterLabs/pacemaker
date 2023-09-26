@@ -921,7 +921,9 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
     // Order stops before starts (i.e. restart)
     pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_STOP, 0), NULL,
                        rsc, pcmk__op_key(rsc->id, PCMK_ACTION_START, 0), NULL,
-                       pe_order_optional|pe_order_implies_then|pe_order_restart,
+                       pcmk__ar_ordered
+                       |pcmk__ar_first_implies_then
+                       |pcmk__ar_intermediate_stop,
                        rsc->cluster);
 
     // Promotable ordering: demote before stop, start before promote
@@ -933,20 +935,21 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
                            NULL,
                            rsc, pcmk__op_key(rsc->id, PCMK_ACTION_STOP, 0),
                            NULL,
-                           pe_order_promoted_implies_first, rsc->cluster);
+                           pcmk__ar_promoted_then_implies_first, rsc->cluster);
 
         pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_START, 0),
                            NULL,
                            rsc, pcmk__op_key(rsc->id, PCMK_ACTION_PROMOTE, 0),
                            NULL,
-                           pe_order_runnable_left, rsc->cluster);
+                           pcmk__ar_unrunnable_first_blocks, rsc->cluster);
     }
 
     // Don't clear resource history if probing on same node
     pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_LRM_DELETE, 0),
                        NULL, rsc,
                        pcmk__op_key(rsc->id, PCMK_ACTION_MONITOR, 0),
-                       NULL, pe_order_same_node|pe_order_then_cancels_first,
+                       NULL,
+                       pcmk__ar_if_on_same_node|pcmk__ar_then_cancels_first,
                        rsc->cluster);
 
     // Certain checks need allowed nodes
@@ -983,7 +986,7 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
              */
             pcmk__order_resource_actions(rsc->container, PCMK_ACTION_MONITOR,
                                          rsc, PCMK_ACTION_STOP,
-                                         pe_order_optional);
+                                         pcmk__ar_ordered);
 
         /* A user can specify that a resource must start on a Pacemaker Remote
          * node by explicitly configuring it with the container=NODENAME
@@ -1027,7 +1030,8 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
                                NULL, rsc,
                                pcmk__op_key(rsc->id, PCMK_ACTION_START, 0),
                                NULL,
-                               pe_order_implies_then|pe_order_runnable_left,
+                               pcmk__ar_first_implies_then
+                               |pcmk__ar_unrunnable_first_blocks,
                                rsc->cluster);
 
             pcmk__new_ordering(rsc,
@@ -1036,7 +1040,7 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
                                rsc->container,
                                pcmk__op_key(rsc->container->id,
                                             PCMK_ACTION_STOP, 0),
-                               NULL, pe_order_implies_first, rsc->cluster);
+                               NULL, pcmk__ar_then_implies_first, rsc->cluster);
 
             if (pcmk_is_set(rsc->flags, pcmk_rsc_remote_nesting_allowed)) {
                 score = 10000;    /* Highly preferred but not essential */
@@ -1278,7 +1282,7 @@ stop_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
             pe_action_t *unfence = pe_fence_op(current, PCMK_ACTION_ON, true,
                                                NULL, false, rsc->cluster);
 
-            order_actions(stop, unfence, pe_order_implies_first);
+            order_actions(stop, unfence, pcmk__ar_then_implies_first);
             if (!pcmk__node_unfenced(current)) {
                 pe_proc_err("Stopping %s until %s can be unfenced",
                             rsc->id, pe__node_name(current));
@@ -1307,7 +1311,7 @@ start_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
                  pe__node_name(node), node->weight);
     start = start_action(rsc, node, TRUE);
 
-    pcmk__order_vs_unfence(rsc, node, start, pe_order_implies_then);
+    pcmk__order_vs_unfence(rsc, node, start, pcmk__ar_first_implies_then);
 
     if (pcmk_is_set(start->flags, pcmk_action_runnable) && !optional) {
         pe__clear_action_flags(start, pcmk_action_optional);
@@ -1439,7 +1443,7 @@ pcmk__schedule_cleanup(pe_resource_t *rsc, const pe_node_t *node, bool optional)
      * optional, the orderings make the then action required if the first action
      * becomes required.
      */
-    uint32_t flag = optional? pe_order_implies_then : pe_order_optional;
+    uint32_t flag = optional? pcmk__ar_first_implies_then : pcmk__ar_ordered;
 
     CRM_CHECK((rsc != NULL) && (node != NULL), return);
 

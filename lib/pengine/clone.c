@@ -1397,20 +1397,15 @@ pe__create_promotable_pseudo_ops(pe_resource_t *clone, bool any_promoting,
 
         if (clone_data->promote_notify != NULL) {
             order_actions(clone_data->stop_notify->post_done,
-                          clone_data->promote_notify->pre,
-                          pe_order_optional);
+                          clone_data->promote_notify->pre, pcmk__ar_ordered);
             order_actions(clone_data->start_notify->post_done,
-                          clone_data->promote_notify->pre,
-                          pe_order_optional);
+                          clone_data->promote_notify->pre, pcmk__ar_ordered);
             order_actions(clone_data->demote_notify->post_done,
-                          clone_data->promote_notify->pre,
-                          pe_order_optional);
+                          clone_data->promote_notify->pre, pcmk__ar_ordered);
             order_actions(clone_data->demote_notify->post_done,
-                          clone_data->start_notify->pre,
-                          pe_order_optional);
+                          clone_data->start_notify->pre, pcmk__ar_ordered);
             order_actions(clone_data->demote_notify->post_done,
-                          clone_data->stop_notify->pre,
-                          pe_order_optional);
+                          clone_data->stop_notify->pre, pcmk__ar_ordered);
         }
     }
 }
@@ -1492,7 +1487,7 @@ pe__create_clone_notif_pseudo_ops(pe_resource_t *clone,
         if ((clone_data->start_notify != NULL)
             && (clone_data->stop_notify != NULL)) {
             order_actions(clone_data->stop_notify->post_done,
-                          clone_data->start_notify->pre, pe_order_optional);
+                          clone_data->start_notify->pre, pcmk__ar_ordered);
         }
     }
 }

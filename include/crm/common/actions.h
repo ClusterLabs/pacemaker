@@ -242,7 +242,7 @@ enum pe_action_flags {
     //! Whether operation-specific instance attributes have been unpacked yet
     pcmk_action_attrs_evaluated     = (1 << 4),
 
-    //! Whether action can be related to a live migration
+    //! Whether action is allowed to be part of a live migration
     pcmk_action_migratable           = (1 << 7),
 
     //! Whether action has been added to transition graph

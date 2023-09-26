@@ -1203,7 +1203,7 @@ pcmk__find_compatible_instance(const pe_resource_t *match_rsc,
  * \param[in]     first          'First' action in an ordering
  * \param[in]     then           'Then' action in an ordering
  * \param[in,out] then_instance  'Then' instance that has no interleave match
- * \param[in]     type           Group of enum pe_ordering flags to apply
+ * \param[in]     type           Group of enum pcmk__action_relation_flags
  * \param[in]     current        If true, "then" action is stopped or demoted
  *
  * \return true if \p then_instance was unassigned, otherwise false
@@ -1222,8 +1222,8 @@ unassign_if_mandatory(const pe_action_t *first, const pe_action_t *then,
     /* If the "first" action must be runnable, but there is no "first"
      * instance, the "then" instance must not be allowed to come up.
      */
-    } else if (pcmk_any_flags_set(type, pe_order_runnable_left
-                                        |pe_order_implies_then)) {
+    } else if (pcmk_any_flags_set(type, pcmk__ar_unrunnable_first_blocks
+                                        |pcmk__ar_first_implies_then)) {
         pe_rsc_info(then->rsc,
                     "Inhibiting %s from being active "
                     "because there is no %s instance to interleave",
@@ -1358,7 +1358,7 @@ orig_action_name(const pe_action_t *action)
  *                          include pcmk_action_optional to affect only
  *                          mandatory actions, and pcmk_action_runnable to
  *                          affect only runnable actions)
- * \param[in]     type      Group of enum pe_ordering flags to apply
+ * \param[in]     type      Group of enum pcmk__action_relation_flags to apply
  *
  * \return Group of enum pcmk__updated flags indicating what was updated
  */
@@ -1491,7 +1491,7 @@ can_interleave_actions(const pe_action_t *first, const pe_action_t *then)
  *                          include pcmk_action_optional to affect only
  *                          mandatory actions, and pcmk_action_runnable to
  *                          affect only runnable actions)
- * \param[in]     type      Group of enum pe_ordering flags to apply
+ * \param[in]     type      Group of enum pcmk__action_relation_flags to apply
  *
  * \return Group of enum pcmk__updated flags indicating what was updated
  */
@@ -1553,7 +1553,7 @@ update_noninterleaved_actions(pe_resource_t *instance, pe_action_t *first,
  *                          include pcmk_action_optional to affect only
  *                          mandatory actions, and pcmk_action_runnable to
  *                          affect only runnable actions)
- * \param[in]     type      Group of enum pe_ordering flags to apply
+ * \param[in]     type      Group of enum pcmk__action_relation_flags to apply
  * \param[in,out] data_set  Cluster working set
  *
  * \return Group of enum pcmk__updated flags indicating what was updated

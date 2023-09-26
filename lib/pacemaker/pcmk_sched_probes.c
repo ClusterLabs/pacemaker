@@ -83,7 +83,7 @@ probe_then_start(pe_resource_t *rsc1, pe_resource_t *rsc2)
                            NULL,
                            rsc2, pcmk__op_key(rsc2->id, PCMK_ACTION_START, 0),
                            NULL,
-                           pe_order_optional, rsc1->cluster);
+                           pcmk__ar_ordered, rsc1->cluster);
     }
 }
 
@@ -137,7 +137,7 @@ probe_action(pe_resource_t *rsc, pe_node_t *node)
                           rsc->cluster);
     pe__clear_action_flags(probe, pcmk_action_optional);
 
-    pcmk__order_vs_unfence(rsc, node, probe, pe_order_optional);
+    pcmk__order_vs_unfence(rsc, node, probe, pcmk__ar_ordered);
     add_expected_result(probe, rsc, node);
     return probe;
 }
@@ -156,7 +156,7 @@ probe_action(pe_resource_t *rsc, pe_node_t *node)
 bool
 pcmk__probe_rsc_on_node(pe_resource_t *rsc, pe_node_t *node)
 {
-    uint32_t flags = pe_order_optional;
+    uint32_t flags = pcmk__ar_ordered;
     pe_action_t *probe = NULL;
     pe_node_t *allowed = NULL;
     pe_resource_t *top = uber_parent(rsc);
@@ -249,7 +249,7 @@ pcmk__probe_rsc_on_node(pe_resource_t *rsc, pe_node_t *node)
                                pcmk__op_key(guest->id, PCMK_ACTION_STOP, 0),
                                NULL, top,
                                pcmk__op_key(top->id, PCMK_ACTION_START, 0),
-                               NULL, pe_order_optional, rsc->cluster);
+                               NULL, pcmk__ar_ordered, rsc->cluster);
             goto no_probe;
         }
     }
@@ -271,7 +271,7 @@ pcmk__probe_rsc_on_node(pe_resource_t *rsc, pe_node_t *node)
      */
     if (!pcmk_is_set(probe->flags, pcmk_action_runnable)
         && (top->running_on == NULL)) {
-        pe__set_order_flags(flags, pe_order_runnable_left);
+        pe__set_order_flags(flags, pcmk__ar_unrunnable_first_blocks);
     }
 
     // Start or reload after probing the resource
@@ -279,7 +279,7 @@ pcmk__probe_rsc_on_node(pe_resource_t *rsc, pe_node_t *node)
                        top, pcmk__op_key(top->id, PCMK_ACTION_START, 0), NULL,
                        flags, rsc->cluster);
     pcmk__new_ordering(rsc, NULL, probe, top, reload_key(rsc), NULL,
-                       pe_order_optional, rsc->cluster);
+                       pcmk__ar_ordered, rsc->cluster);
 
     return true;
 
@@ -343,14 +343,14 @@ add_probe_orderings_for_stops(pe_working_set_t *data_set)
          iter = iter->next) {
 
         pe__ordering_t *order = iter->data;
-        uint32_t order_flags = pe_order_optional;
+        uint32_t order_flags = pcmk__ar_ordered;
         GList *probes = NULL;
         GList *then_actions = NULL;
         pe_action_t *first = NULL;
         pe_action_t *then = NULL;
 
         // Skip disabled orderings
-        if (order->flags == pe_order_none) {
+        if (order->flags == pcmk__ar_none) {
             continue;
         }
 
@@ -395,17 +395,16 @@ add_probe_orderings_for_stops(pe_working_set_t *data_set)
         }
 
         // Preserve certain order options for future filtering
-        if (pcmk_is_set(order->flags, pe_order_apply_first_non_migratable)) {
-            pe__set_order_flags(order_flags,
-                                pe_order_apply_first_non_migratable);
+        if (pcmk_is_set(order->flags, pcmk__ar_if_first_unmigratable)) {
+            pe__set_order_flags(order_flags, pcmk__ar_if_first_unmigratable);
         }
-        if (pcmk_is_set(order->flags, pe_order_same_node)) {
-            pe__set_order_flags(order_flags, pe_order_same_node);
+        if (pcmk_is_set(order->flags, pcmk__ar_if_on_same_node)) {
+            pe__set_order_flags(order_flags, pcmk__ar_if_on_same_node);
         }
 
         // Preserve certain order types for future filtering
-        if ((order->flags == pe_order_anti_colocation)
-            || (order->flags == pe_order_load)) {
+        if ((order->flags == pcmk__ar_if_required_on_same_node)
+            || (order->flags == pcmk__ar_if_on_same_node_or_target)) {
             order_flags = order->flags;
         }
 
@@ -469,13 +468,13 @@ add_probe_orderings_for_stops(pe_working_set_t *data_set)
 static void
 add_start_orderings_for_probe(pe_action_t *probe, pe_action_wrapper_t *after)
 {
-    uint32_t flags = pe_order_optional|pe_order_runnable_left;
+    uint32_t flags = pcmk__ar_ordered|pcmk__ar_unrunnable_first_blocks;
 
     /* Although the ordering between the probe of the clone instance and the
      * start of its parent has been added in pcmk__probe_rsc_on_node(), we
-     * avoided enforcing `pe_order_runnable_left` order type for that as long as
-     * any of the clone instances are running to prevent them from being
-     * unexpectedly stopped.
+     * avoided enforcing `pcmk__ar_unrunnable_first_blocks` order type for that
+     * as long as any of the clone instances are running to prevent them from
+     * being unexpectedly stopped.
      *
      * On the other hand, we still need to prevent any inactive instances from
      * starting unless the probe is runnable so that we don't risk starting too
@@ -484,7 +483,7 @@ add_start_orderings_for_probe(pe_action_t *probe, pe_action_wrapper_t *after)
     if ((after->action->rsc->variant <= pcmk_rsc_variant_group)
         || pcmk_is_set(probe->flags, pcmk_action_runnable)
         // The order type is already enforced for its parent.
-        || pcmk_is_set(after->type, pe_order_runnable_left)
+        || pcmk_is_set(after->type, pcmk__ar_unrunnable_first_blocks)
         || (pe__const_top_resource(probe->rsc, false) != after->action->rsc)
         || !pcmk__str_eq(after->action->task, PCMK_ACTION_START,
                          pcmk__str_none)) {
@@ -583,7 +582,7 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
 
                 // Skip pseudo-actions (for example, those implied by fencing)
                 if (!pcmk_is_set(then->flags, pcmk_action_pseudo)) {
-                    order_actions(probe, then, pe_order_optional);
+                    order_actions(probe, then, pcmk__ar_ordered);
                 }
             }
             g_list_free(then_actions);
@@ -613,18 +612,19 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
     for (iter = after->actions_after; iter != NULL; iter = iter->next) {
         pe_action_wrapper_t *after_wrapper = (pe_action_wrapper_t *) iter->data;
 
-        /* pe_order_implies_then is the reason why a required A.start
+        /* pcmk__ar_first_implies_then is the reason why a required A.start
          * implies/enforces B.start to be required too, which is the cause of
          * B.restart/re-promote.
          *
-         * Not sure about pe_order_implies_then_on_node though. It's now only
-         * used for unfencing case, which tends to introduce transition
+         * Not sure about pcmk__ar_first_implies_same_node_then though. It's now
+         * only used for unfencing case, which tends to introduce transition
          * loops...
          */
-        if (!pcmk_is_set(after_wrapper->type, pe_order_implies_then)) {
+        if (!pcmk_is_set(after_wrapper->type, pcmk__ar_first_implies_then)) {
             /* The order type between a group/clone and its child such as
              * B.start-> B_child.start is:
-             * pe_order_implies_first_printed | pe_order_runnable_left
+             * pcmk__ar_then_implies_first_graphed
+             * |pcmk__ar_unrunnable_first_blocks
              *
              * Proceed through the ordering chain and build dependencies with
              * its children.
@@ -829,7 +829,7 @@ order_then_probes(pe_working_set_t *data_set)
                 pe_action_t *probe = (pe_action_t *) probe_iter->data;
 
                 crm_err("Ordering %s before %s", first->uuid, probe->uuid);
-                order_actions(first, probe, pe_order_optional);
+                order_actions(first, probe, pcmk__ar_ordered);
             }
         }
     }

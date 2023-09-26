@@ -376,10 +376,10 @@ clear_failcounts_if_orphaned(gpointer data, gpointer user_data)
                                        rsc->cluster);
 
         /* We can't use order_action_then_stop() here because its
-         * pe_order_preserve breaks things
+         * pcmk__ar_guest_allowed breaks things
          */
         pcmk__new_ordering(clear_op->rsc, NULL, clear_op, rsc, stop_key(rsc),
-                           NULL, pe_order_optional, rsc->cluster);
+                           NULL, pcmk__ar_ordered, rsc->cluster);
     }
 }
 
@@ -512,7 +512,7 @@ add_nondc_fencing(GList *list, pe_action_t *action,
          * shutdown, it will be ordered after the last action in the
          * chain later.
          */
-        order_actions((pe_action_t *) list->data, action, pe_order_optional);
+        order_actions((pe_action_t *) list->data, action, pcmk__ar_ordered);
     }
     return g_list_prepend(list, action);
 }
@@ -638,7 +638,7 @@ schedule_fencing_and_shutdowns(pe_working_set_t *data_set)
              * first item in the list).
              */
             order_actions((pe_action_t *) fencing_ops->data, dc_down,
-                          pe_order_optional);
+                          pcmk__ar_ordered);
         }
     }
     g_list_free(fencing_ops);

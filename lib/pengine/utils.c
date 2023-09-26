@@ -446,13 +446,13 @@ get_target_role(const pe_resource_t *rsc, enum rsc_role_e *role)
 }
 
 gboolean
-order_actions(pe_action_t * lh_action, pe_action_t * rh_action, enum pe_ordering order)
+order_actions(pe_action_t *lh_action, pe_action_t *rh_action, uint32_t flags)
 {
     GList *gIter = NULL;
     pe_action_wrapper_t *wrapper = NULL;
     GList *list = NULL;
 
-    if (order == pe_order_none) {
+    if (flags == pcmk__ar_none) {
         return FALSE;
     }
 
@@ -471,21 +471,21 @@ order_actions(pe_action_t * lh_action, pe_action_t * rh_action, enum pe_ordering
     for (; gIter != NULL; gIter = gIter->next) {
         pe_action_wrapper_t *after = (pe_action_wrapper_t *) gIter->data;
 
-        if (after->action == rh_action && (after->type & order)) {
+        if (after->action == rh_action && (after->type & flags)) {
             return FALSE;
         }
     }
 
     wrapper = calloc(1, sizeof(pe_action_wrapper_t));
     wrapper->action = rh_action;
-    wrapper->type = order;
+    wrapper->type = flags;
     list = lh_action->actions_after;
     list = g_list_prepend(list, wrapper);
     lh_action->actions_after = list;
 
     wrapper = calloc(1, sizeof(pe_action_wrapper_t));
     wrapper->action = lh_action;
-    wrapper->type = order;
+    wrapper->type = flags;
     list = rh_action->actions_before;
     list = g_list_prepend(list, wrapper);
     rh_action->actions_before = list;
@@ -594,7 +594,7 @@ trigger_unfencing(pe_resource_t *rsc, pe_node_t *node, const char *reason,
                                            FALSE, data_set);
 
         if(dependency) {
-            order_actions(unfence, dependency, pe_order_optional);
+            order_actions(unfence, dependency, pcmk__ar_ordered);
         }
 
     } else if(rsc) {

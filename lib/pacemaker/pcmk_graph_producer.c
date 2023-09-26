@@ -590,9 +590,10 @@ should_add_action_to_graph(const pe_action_t *action)
 static bool
 ordering_can_change_actions(const pe_action_wrapper_t *ordering)
 {
-    return pcmk_any_flags_set(ordering->type, ~(pe_order_implies_first_printed
-                                                |pe_order_implies_then_printed
-                                                |pe_order_optional));
+    return pcmk_any_flags_set(ordering->type,
+                              ~(pcmk__ar_then_implies_first_graphed
+                                |pcmk__ar_first_implies_then_graphed
+                                |pcmk__ar_ordered));
 }
 
 /*!
@@ -613,7 +614,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
         return true;
     }
 
-    if (input->type == pe_order_none) {
+    if ((uint32_t) input->type == pcmk__ar_none) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
                   "ordering disabled",
                   action->uuid, action->id,
@@ -629,22 +630,22 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
         return false;
 
     } else if (!pcmk_is_set(input->action->flags, pcmk_action_runnable)
-               && pcmk_is_set(input->type, pe_order_one_or_more)) {
+               && pcmk_is_set(input->type, pcmk__ar_min_runnable)) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
-                  "one-or-more and input unrunnable",
+                  "minimum number of instances required but input unrunnable",
                   action->uuid, action->id,
                   input->action->uuid, input->action->id);
         return false;
 
-    } else if (pcmk_is_set(input->type, pe_order_implies_first_migratable)
+    } else if (pcmk_is_set(input->type, pcmk__ar_unmigratable_then_blocks)
                && !pcmk_is_set(input->action->flags, pcmk_action_runnable)) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
-                  "implies input migratable but input unrunnable",
+                  "input blocked if 'then' unmigratable",
                   action->uuid, action->id,
                   input->action->uuid, input->action->id);
         return false;
 
-    } else if (pcmk_is_set(input->type, pe_order_apply_first_non_migratable)
+    } else if (pcmk_is_set(input->type, pcmk__ar_if_first_unmigratable)
                && pcmk_is_set(input->action->flags, pcmk_action_migratable)) {
         crm_trace("Ignoring %s (%d) input %s (%d): ordering applies "
                   "only if input is unmigratable, but it is migratable",
@@ -652,7 +653,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
                   input->action->uuid, input->action->id);
         return false;
 
-    } else if ((input->type == pe_order_optional)
+    } else if (((uint32_t) input->type == pcmk__ar_ordered)
                && pcmk_is_set(input->action->flags, pcmk_action_migratable)
                && pcmk__ends_with(input->action->uuid, "_stop_0")) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
@@ -661,10 +662,8 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
                   input->action->uuid, input->action->id);
         return false;
 
-    } else if (input->type == pe_order_load) {
+    } else if ((uint32_t) input->type == pcmk__ar_if_on_same_node_or_target) {
         pe_node_t *input_node = input->action->node;
-
-        // load orderings are relevant only if actions are for same node
 
         if ((action->rsc != NULL)
             && pcmk__str_eq(action->task, PCMK_ACTION_MIGRATE_TO,
@@ -672,57 +671,57 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
 
             pe_node_t *assigned = action->rsc->allocated_to;
 
-            /* For load_stopped -> migrate_to orderings, we care about where it
-             * has been assigned to, not where it will be executed.
+            /* For load_stopped -> migrate_to orderings, we care about where
+             * the resource has been assigned, not where migrate_to will be
+             * executed.
              */
             if (!pe__same_node(input_node, assigned)) {
                 crm_trace("Ignoring %s (%d) input %s (%d): "
-                          "load ordering node mismatch %s vs %s",
+                          "migration target %s is not same as input node %s",
                           action->uuid, action->id,
                           input->action->uuid, input->action->id,
                           (assigned? assigned->details->uname : "<none>"),
                           (input_node? input_node->details->uname : "<none>"));
-                input->type = pe_order_none;
+                input->type = pcmk__ar_none;
                 return false;
             }
 
         } else if (!pe__same_node(input_node, action->node)) {
             crm_trace("Ignoring %s (%d) input %s (%d): "
-                      "load ordering node mismatch %s vs %s",
+                      "not on same node (%s vs %s)",
                       action->uuid, action->id,
                       input->action->uuid, input->action->id,
                       (action->node? action->node->details->uname : "<none>"),
                       (input_node? input_node->details->uname : "<none>"));
-            input->type = pe_order_none;
+            input->type = pcmk__ar_none;
             return false;
 
         } else if (pcmk_is_set(input->action->flags, pcmk_action_optional)) {
             crm_trace("Ignoring %s (%d) input %s (%d): "
-                      "load ordering input optional",
+                      "ordering optional",
                       action->uuid, action->id,
                       input->action->uuid, input->action->id);
-            input->type = pe_order_none;
+            input->type = pcmk__ar_none;
             return false;
         }
 
-    } else if (input->type == pe_order_anti_colocation) {
+    } else if ((uint32_t) input->type == pcmk__ar_if_required_on_same_node) {
         if (input->action->node && action->node
             && !pe__same_node(input->action->node, action->node)) {
             crm_trace("Ignoring %s (%d) input %s (%d): "
-                      "anti-colocation node mismatch %s vs %s",
+                      "not on same node (%s vs %s)",
                       action->uuid, action->id,
                       input->action->uuid, input->action->id,
                       pe__node_name(action->node),
                       pe__node_name(input->action->node));
-            input->type = pe_order_none;
+            input->type = pcmk__ar_none;
             return false;
 
         } else if (pcmk_is_set(input->action->flags, pcmk_action_optional)) {
-            crm_trace("Ignoring %s (%d) input %s (%d): "
-                      "anti-colocation input optional",
+            crm_trace("Ignoring %s (%d) input %s (%d): optional",
                       action->uuid, action->id,
                       input->action->uuid, input->action->id);
-            input->type = pe_order_none;
+            input->type = pcmk__ar_none;
             return false;
         }
 

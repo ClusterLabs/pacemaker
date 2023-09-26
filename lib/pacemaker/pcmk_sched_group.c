@@ -163,10 +163,10 @@ member_internal_constraints(gpointer data, gpointer user_data)
     struct member_data *member_data = (struct member_data *) user_data;
 
     // For ordering demote vs demote or stop vs stop
-    uint32_t down_flags = pe_order_implies_first_printed;
+    uint32_t down_flags = pcmk__ar_then_implies_first_graphed;
 
     // For ordering demote vs demoted or stop vs stopped
-    uint32_t post_down_flags = pe_order_implies_then_printed;
+    uint32_t post_down_flags = pcmk__ar_first_implies_then_graphed;
 
     // Create the individual member's implicit constraints
     member->cmds->internal_constraints(member);
@@ -174,8 +174,8 @@ member_internal_constraints(gpointer data, gpointer user_data)
     if (member_data->previous_member == NULL) {
         // This is first member
         if (member_data->ordered) {
-            pe__set_order_flags(down_flags, pe_order_optional);
-            post_down_flags = pe_order_implies_then;
+            pe__set_order_flags(down_flags, pcmk__ar_ordered);
+            post_down_flags = pcmk__ar_first_implies_then;
         }
 
     } else if (member_data->colocated) {
@@ -201,12 +201,12 @@ member_internal_constraints(gpointer data, gpointer user_data)
         // Promote group -> promote member -> group is promoted
         pcmk__order_resource_actions(member, PCMK_ACTION_PROMOTE,
                                      member->parent, PCMK_ACTION_PROMOTED,
-                                     pe_order_runnable_left
-                                     |pe_order_implies_then
-                                     |pe_order_implies_then_printed);
+                                     pcmk__ar_unrunnable_first_blocks
+                                     |pcmk__ar_first_implies_then
+                                     |pcmk__ar_first_implies_then_graphed);
         pcmk__order_resource_actions(member->parent, PCMK_ACTION_PROMOTE,
                                      member, PCMK_ACTION_PROMOTE,
-                                     pe_order_implies_first_printed);
+                                     pcmk__ar_then_implies_first_graphed);
     }
 
     // Stop group -> stop member -> group is stopped
@@ -216,41 +216,43 @@ member_internal_constraints(gpointer data, gpointer user_data)
                                  post_down_flags);
 
     // Start group -> start member -> group is started
-    pcmk__order_starts(member->parent, member, pe_order_implies_first_printed);
+    pcmk__order_starts(member->parent, member,
+                       pcmk__ar_then_implies_first_graphed);
     pcmk__order_resource_actions(member, PCMK_ACTION_START,
                                  member->parent, PCMK_ACTION_RUNNING,
-                                 pe_order_runnable_left
-                                 |pe_order_implies_then
-                                 |pe_order_implies_then_printed);
+                                 pcmk__ar_unrunnable_first_blocks
+                                 |pcmk__ar_first_implies_then
+                                 |pcmk__ar_first_implies_then_graphed);
 
     if (!member_data->ordered) {
         pcmk__order_starts(member->parent, member,
-                           pe_order_implies_then
-                           |pe_order_runnable_left
-                           |pe_order_implies_first_printed);
+                           pcmk__ar_first_implies_then
+                           |pcmk__ar_unrunnable_first_blocks
+                           |pcmk__ar_then_implies_first_graphed);
         if (member_data->promotable) {
             pcmk__order_resource_actions(member->parent, PCMK_ACTION_PROMOTE,
                                          member, PCMK_ACTION_PROMOTE,
-                                         pe_order_implies_then
-                                         |pe_order_runnable_left
-                                         |pe_order_implies_first_printed);
+                                         pcmk__ar_first_implies_then
+                                         |pcmk__ar_unrunnable_first_blocks
+                                         |pcmk__ar_then_implies_first_graphed);
         }
 
     } else if (member_data->previous_member == NULL) {
-        pcmk__order_starts(member->parent, member, pe_order_none);
+        pcmk__order_starts(member->parent, member, pcmk__ar_none);
         if (member_data->promotable) {
             pcmk__order_resource_actions(member->parent, PCMK_ACTION_PROMOTE,
                                          member, PCMK_ACTION_PROMOTE,
-                                         pe_order_none);
+                                         pcmk__ar_none);
         }
 
     } else {
         // Order this member relative to the previous one
 
         pcmk__order_starts(member_data->previous_member, member,
-                           pe_order_implies_then|pe_order_runnable_left);
+                           pcmk__ar_first_implies_then
+                           |pcmk__ar_unrunnable_first_blocks);
         pcmk__order_stops(member, member_data->previous_member,
-                          pe_order_optional|pe_order_restart);
+                          pcmk__ar_ordered|pcmk__ar_intermediate_stop);
 
         /* In unusual circumstances (such as adding a new member to the middle
          * of a group with unmanaged later members), this member may be active
@@ -263,20 +265,19 @@ member_internal_constraints(gpointer data, gpointer user_data)
             pcmk__order_resource_actions(member, PCMK_ACTION_STOP,
                                          member_data->previous_member,
                                          PCMK_ACTION_START,
-                                         pe_order_implies_first
-                                         |pe_order_runnable_left);
+                                         pcmk__ar_then_implies_first
+                                         |pcmk__ar_unrunnable_first_blocks);
         }
 
         if (member_data->promotable) {
             pcmk__order_resource_actions(member_data->previous_member,
                                          PCMK_ACTION_PROMOTE, member,
                                          PCMK_ACTION_PROMOTE,
-                                         pe_order_implies_then
-                                         |pe_order_runnable_left);
+                                         pcmk__ar_first_implies_then
+                                         |pcmk__ar_unrunnable_first_blocks);
             pcmk__order_resource_actions(member, PCMK_ACTION_DEMOTE,
                                          member_data->previous_member,
-                                         PCMK_ACTION_DEMOTE,
-                                         pe_order_optional);
+                                         PCMK_ACTION_DEMOTE, pcmk__ar_ordered);
         }
     }
 
@@ -287,7 +288,7 @@ member_internal_constraints(gpointer data, gpointer user_data)
             && (member_data->last_active != NULL)
             && (member_data->last_active->running_on != NULL)) {
             pcmk__order_stops(member, member_data->last_active,
-                              pe_order_optional);
+                              pcmk__ar_ordered);
         }
         member_data->last_active = member;
     }
@@ -314,13 +315,13 @@ pcmk__group_internal_constraints(pe_resource_t *rsc)
      */
     pcmk__order_resource_actions(rsc, PCMK_ACTION_STOP,
                                  rsc, PCMK_ACTION_STOPPED,
-                                 pe_order_runnable_left);
+                                 pcmk__ar_unrunnable_first_blocks);
     pcmk__order_resource_actions(rsc, PCMK_ACTION_STOPPED,
                                  rsc, PCMK_ACTION_START,
-                                 pe_order_optional);
+                                 pcmk__ar_ordered);
     pcmk__order_resource_actions(rsc, PCMK_ACTION_START,
                                  rsc, PCMK_ACTION_RUNNING,
-                                 pe_order_runnable_left);
+                                 pcmk__ar_unrunnable_first_blocks);
 
     top = pe__const_top_resource(rsc, false);
 
@@ -560,7 +561,7 @@ pcmk__group_action_flags(pe_action_t *action, const pe_node_t *node)
  *                          include pcmk_action_optional to affect only
  *                          mandatory actions, and pcmk_action_runnable to
  *                          affect only runnable actions)
- * \param[in]     type      Group of enum pe_ordering flags to apply
+ * \param[in]     type      Group of enum pcmk__action_relation_flags to apply
  * \param[in,out] data_set  Cluster working set
  *
  * \return Group of enum pcmk__updated flags indicating what was updated

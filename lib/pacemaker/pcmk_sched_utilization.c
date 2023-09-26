@@ -427,19 +427,19 @@ pcmk__create_utilization_constraints(pe_resource_t *rsc,
     for (iter = rsc->running_on; iter != NULL; iter = iter->next) {
         load_stopped = new_load_stopped_op(iter->data);
         pcmk__new_ordering(rsc, stop_key(rsc), NULL, NULL, NULL, load_stopped,
-                           pe_order_load, rsc->cluster);
+                           pcmk__ar_if_on_same_node_or_target, rsc->cluster);
     }
 
     // "load_stopped then start/migrate_to rsc" constraints for allowed nodes
     for (iter = allowed_nodes; iter; iter = iter->next) {
         load_stopped = new_load_stopped_op(iter->data);
         pcmk__new_ordering(NULL, NULL, load_stopped, rsc, start_key(rsc), NULL,
-                           pe_order_load, rsc->cluster);
+                           pcmk__ar_if_on_same_node_or_target, rsc->cluster);
         pcmk__new_ordering(NULL, NULL, load_stopped,
                            rsc,
                            pcmk__op_key(rsc->id, PCMK_ACTION_MIGRATE_TO, 0),
                            NULL,
-                           pe_order_load, rsc->cluster);
+                           pcmk__ar_if_on_same_node_or_target, rsc->cluster);
     }
 }
 
