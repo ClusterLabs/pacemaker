@@ -4036,7 +4036,8 @@ check_operation_expiry(struct action_history *history)
 
         // Does the resource as a whole have an unexpired fail count?
         unexpired_fail_count = pe_get_failcount(history->node, history->rsc,
-                                                &last_failure, pe_fc_effective,
+                                                &last_failure,
+                                                pcmk__fc_effective,
                                                 history->xml);
 
         // Update scheduler recheck time according to *last* failure
@@ -4052,8 +4053,8 @@ check_operation_expiry(struct action_history *history)
     }
 
     if (expired) {
-        if (pe_get_failcount(history->node, history->rsc, NULL, pe_fc_default,
-                             history->xml)) {
+        if (pe_get_failcount(history->node, history->rsc, NULL,
+                             pcmk__fc_default, history->xml)) {
             // There is a fail count ignoring timeout
 
             if (unexpired_fail_count == 0) {

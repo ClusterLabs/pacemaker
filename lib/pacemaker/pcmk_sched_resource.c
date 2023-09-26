@@ -584,7 +584,7 @@ pcmk__threshold_reached(pe_resource_t *rsc, const pe_node_t *node,
 
     // If there are no failures, there's no need to force away
     fail_count = pe_get_failcount(node, rsc, NULL,
-                                  pe_fc_effective|pe_fc_fillers, NULL);
+                                  pcmk__fc_effective|pcmk__fc_fillers, NULL);
     if (fail_count <= 0) {
         return false;
     }

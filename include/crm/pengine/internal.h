@@ -308,13 +308,6 @@ extern time_t get_effective_time(pe_working_set_t * data_set);
 
 /* Failure handling utilities (from failcounts.c) */
 
-// bit flags for fail count handling options
-enum pe_fc_flags_e {
-    pe_fc_default   = (1 << 0),
-    pe_fc_effective = (1 << 1), // don't count expired failures
-    pe_fc_fillers   = (1 << 2), // if container, include filler failures in count
-};
-
 int pe_get_failcount(const pe_node_t *node, pe_resource_t *rsc,
                      time_t *last_failure, uint32_t flags,
                      const xmlNode *xml_op);

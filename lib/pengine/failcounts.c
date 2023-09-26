@@ -347,7 +347,7 @@ update_failcount_for_filler(gpointer data, gpointer user_data)
  * \param[in,out] rsc           Resource to check
  * \param[out]    last_failure  If not NULL, where to set time of most recent
  *                              failure of \p rsc on \p node
- * \param[in]     flags         Group of enum pe_fc_flags_e flags
+ * \param[in]     flags         Group of enum pcmk__fc_flags
  * \param[in]     xml_op        If not NULL, consider only the action in this
  *                              history entry when determining whether on-fail
  *                              is configured as "blocked", otherwise consider
@@ -388,7 +388,7 @@ pe_get_failcount(const pe_node_t *node, pe_resource_t *rsc,
     }
 
     // If all failures have expired, ignore fail count
-    if (pcmk_is_set(flags, pe_fc_effective) && (fc_data.failcount > 0)
+    if (pcmk_is_set(flags, pcmk__fc_effective) && (fc_data.failcount > 0)
         && (fc_data.last_failure > 0) && (rsc->failure_timeout != 0)) {
 
         time_t now = get_effective_time(rsc->cluster);
@@ -410,7 +410,7 @@ pe_get_failcount(const pe_node_t *node, pe_resource_t *rsc,
      * container's fail count on that node could lead to attempting to stop the
      * container on the wrong node.
      */
-    if (pcmk_is_set(flags, pe_fc_fillers) && (rsc->fillers != NULL)
+    if (pcmk_is_set(flags, pcmk__fc_fillers) && (rsc->fillers != NULL)
         && !pe_rsc_is_bundled(rsc)) {
 
         g_list_foreach(rsc->fillers, update_failcount_for_filler, &fc_data);

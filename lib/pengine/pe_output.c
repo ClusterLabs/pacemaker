@@ -2253,8 +2253,8 @@ node_history_list(pcmk__output_t *out, va_list args) {
 
         if (!pcmk_is_set(section_opts, pcmk_section_operations)) {
             time_t last_failure = 0;
-            int failcount = pe_get_failcount(node, rsc, &last_failure, pe_fc_default,
-                                             NULL);
+            int failcount = pe_get_failcount(node, rsc, &last_failure,
+                                             pcmk__fc_default, NULL);
 
             if (failcount <= 0) {
                 continue;
@@ -2894,8 +2894,8 @@ resource_operation_list(pcmk__output_t *out, va_list args)
         /* If this is the first printed operation, print heading for resource */
         if (rc == pcmk_rc_no_output) {
             time_t last_failure = 0;
-            int failcount = pe_get_failcount(node, rsc, &last_failure, pe_fc_default,
-                                             NULL);
+            int failcount = pe_get_failcount(node, rsc, &last_failure,
+                                             pcmk__fc_default, NULL);
 
             out->message(out, "resource-history", rsc, rsc_printable_id(rsc), true,
                          failcount, last_failure, true);
