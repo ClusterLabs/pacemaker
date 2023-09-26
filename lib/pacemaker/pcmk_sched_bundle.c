@@ -608,7 +608,8 @@ pcmk__with_bundle_colocations(const pe_resource_t *rsc,
     }
 
     if (orig_rsc == bundled_rsc) {
-        if (pe__clone_flag_is_set(orig_rsc, pe__clone_promotion_constrained)) {
+        if (pe__clone_flag_is_set(orig_rsc,
+                                  pcmk__clone_promotion_constrained)) {
             /* orig_rsc is the clone and we're setting roles (or have already
              * done so)
              */
@@ -652,7 +653,8 @@ pcmk__bundle_with_colocations(const pe_resource_t *rsc,
     }
 
     if (orig_rsc == bundled_rsc) {
-        if (pe__clone_flag_is_set(orig_rsc, pe__clone_promotion_constrained)) {
+        if (pe__clone_flag_is_set(orig_rsc,
+                                  pcmk__clone_promotion_constrained)) {
             /* orig_rsc is the clone and we're setting roles (or have already
              * done so)
              */

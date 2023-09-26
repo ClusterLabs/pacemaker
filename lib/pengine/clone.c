@@ -37,7 +37,7 @@ typedef struct clone_variant_data_s {
 
     int total_clones;
 
-    uint32_t flags; // Group of enum pe__clone_flags
+    uint32_t flags; // Group of enum pcmk__clone_flags
 
     notify_data_t *stop_notify;
     notify_data_t *start_notify;
@@ -365,8 +365,8 @@ clone_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
         clone_data->flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,
                                                "Clone", rsc->id,
                                                clone_data->flags,
-                                               pe__clone_ordered,
-                                               "pe__clone_ordered");
+                                               pcmk__clone_ordered,
+                                               "pcmk__clone_ordered");
     }
 
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_unique)
@@ -1296,7 +1296,7 @@ pe__clone_is_ordered(const pe_resource_t *clone)
     clone_variant_data_t *clone_data = NULL;
 
     get_clone_variant_data(clone_data, clone);
-    return pcmk_is_set(clone_data->flags, pe__clone_ordered);
+    return pcmk_is_set(clone_data->flags, pcmk__clone_ordered);
 }
 
 /*!
@@ -1310,7 +1310,7 @@ pe__clone_is_ordered(const pe_resource_t *clone)
  *         already set or pcmk_rc_already if it was)
  */
 int
-pe__set_clone_flag(pe_resource_t *clone, enum pe__clone_flags flag)
+pe__set_clone_flag(pe_resource_t *clone, enum pcmk__clone_flags flag)
 {
     clone_variant_data_t *clone_data = NULL;
 

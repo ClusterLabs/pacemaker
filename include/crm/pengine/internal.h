@@ -23,19 +23,8 @@
 
 const char *pe__resource_description(const pe_resource_t *rsc, uint32_t show_opts);
 
-enum pe__clone_flags {
-    // Whether instances should be started sequentially
-    pe__clone_ordered               = (1 << 0),
-
-    // Whether promotion scores have been added
-    pe__clone_promotion_added       = (1 << 1),
-
-    // Whether promotion constraints have been added
-    pe__clone_promotion_constrained = (1 << 2),
-};
-
 bool pe__clone_is_ordered(const pe_resource_t *clone);
-int pe__set_clone_flag(pe_resource_t *clone, enum pe__clone_flags flag);
+int pe__set_clone_flag(pe_resource_t *clone, enum pcmk__clone_flags flag);
 bool pe__clone_flag_is_set(const pe_resource_t *clone, uint32_t flags);
 
 

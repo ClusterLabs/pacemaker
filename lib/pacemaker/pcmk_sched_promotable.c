@@ -447,7 +447,7 @@ sort_promotable_instances(pe_resource_t *clone)
 {
     GList *colocations = NULL;
 
-    if (pe__set_clone_flag(clone, pe__clone_promotion_constrained)
+    if (pe__set_clone_flag(clone, pcmk__clone_promotion_constrained)
             == pcmk_rc_already) {
         return;
     }
@@ -760,7 +760,8 @@ promotion_score(const pe_resource_t *rsc, const pe_node_t *node,
 void
 pcmk__add_promotion_scores(pe_resource_t *rsc)
 {
-    if (pe__set_clone_flag(rsc, pe__clone_promotion_added) == pcmk_rc_already) {
+    if (pe__set_clone_flag(rsc,
+                           pcmk__clone_promotion_added) == pcmk_rc_already) {
         return;
     }
 
