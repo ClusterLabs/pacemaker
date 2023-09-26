@@ -1498,7 +1498,8 @@ determine_online_status_fencing(pe_working_set_t *data_set,
     gboolean do_terminate = FALSE;
     const char *join = crm_element_value(node_state, PCMK__XA_JOIN);
     const char *exp_state = crm_element_value(node_state, PCMK__XA_EXPECTED);
-    const char *terminate = pe_node_attribute_raw(this_node, "terminate");
+    const char *terminate = pe_node_attribute_raw(this_node,
+                                                  PCMK_NODE_ATTR_TERMINATE);
     long long when_member = unpack_node_member(node_state, data_set);
     long long when_online = unpack_node_online(node_state);
 
