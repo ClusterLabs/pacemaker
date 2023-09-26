@@ -363,7 +363,7 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
             pe_rsc_trace(then->rsc,
                          "%s then %s: ignoring because first is stopping",
                          first->uuid, then->uuid);
-            order->type = pcmk__ar_none;
+            order->type = (enum pe_ordering) pcmk__ar_none;
         } else {
             changed |= update(then->rsc, first, then, node, first_flags,
                               pcmk_action_runnable,
@@ -572,7 +572,7 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
                          "not same node",
                          other->action->uuid, pe__node_name(first_node),
                          then->uuid, pe__node_name(then_node));
-            other->type = pcmk__ar_none;
+            other->type = (enum pe_ordering) pcmk__ar_none;
             continue;
         }
 
@@ -631,7 +631,7 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
                          "Disabled ordering %s then %s in favor of %s then %s",
                          other->action->uuid, then->uuid, first->uuid,
                          then->uuid);
-            other->type = pcmk__ar_none;
+            other->type = (enum pe_ordering) pcmk__ar_none;
         }
 
 

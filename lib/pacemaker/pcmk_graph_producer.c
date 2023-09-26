@@ -682,7 +682,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
                           input->action->uuid, input->action->id,
                           (assigned? assigned->details->uname : "<none>"),
                           (input_node? input_node->details->uname : "<none>"));
-                input->type = pcmk__ar_none;
+                input->type = (enum pe_ordering) pcmk__ar_none;
                 return false;
             }
 
@@ -693,7 +693,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
                       input->action->uuid, input->action->id,
                       (action->node? action->node->details->uname : "<none>"),
                       (input_node? input_node->details->uname : "<none>"));
-            input->type = pcmk__ar_none;
+            input->type = (enum pe_ordering) pcmk__ar_none;
             return false;
 
         } else if (pcmk_is_set(input->action->flags, pcmk_action_optional)) {
@@ -701,7 +701,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
                       "ordering optional",
                       action->uuid, action->id,
                       input->action->uuid, input->action->id);
-            input->type = pcmk__ar_none;
+            input->type = (enum pe_ordering) pcmk__ar_none;
             return false;
         }
 
@@ -714,14 +714,14 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
                       input->action->uuid, input->action->id,
                       pe__node_name(action->node),
                       pe__node_name(input->action->node));
-            input->type = pcmk__ar_none;
+            input->type = (enum pe_ordering) pcmk__ar_none;
             return false;
 
         } else if (pcmk_is_set(input->action->flags, pcmk_action_optional)) {
             crm_trace("Ignoring %s (%d) input %s (%d): optional",
                       action->uuid, action->id,
                       input->action->uuid, input->action->id);
-            input->type = pcmk__ar_none;
+            input->type = (enum pe_ordering) pcmk__ar_none;
             return false;
         }
 

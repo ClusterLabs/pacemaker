@@ -1112,7 +1112,7 @@ pcmk__disable_invalid_orderings(pe_working_set_t *data_set)
 
             input = (pe_action_wrapper_t *) input_iter->data;
             if (ordering_is_invalid(action, input)) {
-                input->type = pcmk__ar_none;
+                input->type = (enum pe_ordering) pcmk__ar_none;
             }
         }
     }
