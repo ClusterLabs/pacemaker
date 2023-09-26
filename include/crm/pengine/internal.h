@@ -27,12 +27,6 @@ bool pe__clone_is_ordered(const pe_resource_t *clone);
 int pe__set_clone_flag(pe_resource_t *clone, enum pcmk__clone_flags flag);
 bool pe__clone_flag_is_set(const pe_resource_t *clone, uint32_t flags);
 
-
-enum pe__group_flags {
-    pe__group_ordered       = (1 << 0), // Members start sequentially
-    pe__group_colocated     = (1 << 1), // Members must be on same node
-};
-
 bool pe__group_flag_is_set(const pe_resource_t *group, uint32_t flags);
 pe_resource_t *pe__last_group_member(const pe_resource_t *group);
 

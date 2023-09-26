@@ -22,7 +22,7 @@
 
 typedef struct group_variant_data_s {
     pe_resource_t *last_child;  // Last group member
-    uint32_t flags;             // Group of enum pe__group_flags
+    uint32_t flags;             // Group of enum pcmk__group_flags
 } group_variant_data_t;
 
 /*!
@@ -191,9 +191,9 @@ group_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
     rsc->variant_opaque = group_data;
 
     // @COMPAT These are deprecated since 2.1.5
-    set_group_flag(rsc, XML_RSC_ATTR_ORDERED, pe__group_ordered,
+    set_group_flag(rsc, XML_RSC_ATTR_ORDERED, pcmk__group_ordered,
                    pe_wo_group_order);
-    set_group_flag(rsc, "collocated", pe__group_colocated, pe_wo_group_coloc);
+    set_group_flag(rsc, "collocated", pcmk__group_colocated, pe_wo_group_coloc);
 
     clone_id = crm_element_value(rsc->xml, XML_RSC_ATTR_INCARNATION);
 

@@ -12,6 +12,7 @@
 
 #include <crm/common/action_relation_internal.h>
 #include <crm/common/clone_internal.h>
+#include <crm/common/group_internal.h>
 #include <crm/common/roles_internal.h>
 
 #ifdef __cplusplus
