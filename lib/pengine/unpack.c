@@ -1451,6 +1451,34 @@ unpack_node_online(const xmlNode *node_state)
     }
 }
 
+/*!
+ * \internal
+ * \brief Unpack node attribute for user-requested fencing
+ *
+ * \param[in] node        Node to check
+ * \param[in] node_state  Node's node_state entry in CIB status
+ *
+ * \return \c true if fencing has been requested for \p node, otherwise \c false
+ */
+static bool
+unpack_node_terminate(const pe_node_t *node, const xmlNode *node_state)
+{
+    long long value = 0LL;
+    int value_i = 0;
+    const char *value_s = pe_node_attribute_raw(node, PCMK_NODE_ATTR_TERMINATE);
+
+    // Value may be boolean or an epoch time
+    if (crm_str_to_boolean(value_s, &value_i) == 1) {
+        return (value_i != 0);
+    }
+    if (pcmk__scan_ll(value_s, &value, 0LL) == pcmk_rc_ok) {
+        return (value > 0);
+    }
+    crm_warn("Ignoring unrecognized value '%s' for " PCMK_NODE_ATTR_TERMINATE
+             "node attribute for %s", value_s, pe__node_name(node));
+    return false;
+}
+
 static gboolean
 determine_online_status_no_fencing(pe_working_set_t *data_set,
                                    const xmlNode *node_state,
@@ -1495,11 +1523,9 @@ determine_online_status_fencing(pe_working_set_t *data_set,
                                 const xmlNode *node_state, pe_node_t *this_node)
 {
     gboolean online = FALSE;
-    gboolean do_terminate = FALSE;
+    bool termination_requested = unpack_node_terminate(this_node, node_state);
     const char *join = crm_element_value(node_state, PCMK__XA_JOIN);
     const char *exp_state = crm_element_value(node_state, PCMK__XA_EXPECTED);
-    const char *terminate = pe_node_attribute_raw(this_node,
-                                                  PCMK_NODE_ATTR_TERMINATE);
     long long when_member = unpack_node_member(node_state, data_set);
     long long when_online = unpack_node_online(node_state);
 
@@ -1521,22 +1547,10 @@ determine_online_status_fencing(pe_working_set_t *data_set,
   in CPG.
 */
 
-    if (crm_is_true(terminate)) {
-        do_terminate = TRUE;
-
-    } else if (terminate != NULL && strlen(terminate) > 0) {
-        /* could be a time() value */
-        char t = terminate[0];
-
-        if (t != '0' && isdigit(t)) {
-            do_terminate = TRUE;
-        }
-    }
-
-    crm_trace("Node %s member@%lld online@%lld join=%s expected=%s term=%d",
+    crm_trace("Node %s member@%lld online@%lld join=%s expected=%s%s",
               pe__node_name(this_node), when_member, when_online,
               pcmk__s(join, "<null>"), pcmk__s(exp_state, "<null>"),
-              do_terminate);
+              (termination_requested? " (termination requested)" : ""));
 
     online = (when_member > 0);
 
@@ -1557,7 +1571,16 @@ determine_online_status_fencing(pe_working_set_t *data_set,
         pe_fence_node(data_set, this_node,
                       "peer failed Pacemaker membership criteria", FALSE);
 
-    } else if (do_terminate == FALSE && pcmk__str_eq(exp_state, CRMD_JOINSTATE_DOWN, pcmk__str_casei)) {
+    } else if (termination_requested) {
+        if ((when_member == 0) && (when_online == 0)
+            && pcmk__str_eq(join, CRMD_JOINSTATE_DOWN, pcmk__str_none)) {
+            crm_info("%s was fenced as requested", pe__node_name(this_node));
+            online = FALSE;
+        } else {
+            pe_fence_node(data_set, this_node, "fencing was requested", false);
+        }
+
+    } else if (pcmk__str_eq(exp_state, CRMD_JOINSTATE_DOWN, pcmk__str_none)) {
 
         if ((data_set->node_pending_timeout > 0)
             && (when_member > 0) && (when_online == 0)
@@ -1578,11 +1601,6 @@ determine_online_status_fencing(pe_working_set_t *data_set,
                       pe__node_name(this_node));
         }
 
-    } else if (do_terminate && pcmk__str_eq(join, CRMD_JOINSTATE_DOWN, pcmk__str_casei)
-               && (when_member == 0) && (when_online == 0)) {
-        crm_info("%s was just shot", pe__node_name(this_node));
-        online = FALSE;
-
     } else if (when_member == 0) {
         // Consider `priority-fencing-delay` for lost nodes
         pe_fence_node(data_set, this_node, "peer is no longer part of the cluster", TRUE);
@@ -1591,8 +1609,6 @@ determine_online_status_fencing(pe_working_set_t *data_set,
         pe_fence_node(data_set, this_node, "peer process is no longer available", FALSE);
 
         /* Everything is running at this point, now check join state */
-    } else if (do_terminate) {
-        pe_fence_node(data_set, this_node, "termination was requested", FALSE);
 
     } else if (pcmk__str_eq(join, CRMD_JOINSTATE_MEMBER, pcmk__str_casei)) {
         crm_info("%s is active", pe__node_name(this_node));
@@ -1604,11 +1620,6 @@ determine_online_status_fencing(pe_working_set_t *data_set,
 
     } else {
         pe_fence_node(data_set, this_node, "peer was in an unknown state", FALSE);
-        crm_warn("Node %s: member@%lld online@%lld join=%s expected=%s "
-                 "term=%d shutdown=%d",
-                 pe__node_name(this_node), when_member, when_online,
-                 pcmk__s(join, "<null>"), pcmk__s(exp_state, "<null>"),
-                 do_terminate, this_node->details->shutdown);
     }
 
     return online;
