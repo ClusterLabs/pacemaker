@@ -334,8 +334,7 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
         crm_warn("Requesting full CIB refresh because update failed: %s"
                  CRM_XS " rc=%d", pcmk_strerror(rc), rc);
 
-        pcmk__output_set_log_level(logger_out, LOG_INFO);
-        logger_out->message(logger_out, "xml-patchset", input);
+        pcmk__log_xml_patchset(LOG_INFO, input);
         free_xml(*result_cib);
         *result_cib = NULL;
         send_sync_request(NULL);

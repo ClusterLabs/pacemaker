@@ -471,9 +471,7 @@ process_ping_reply(xmlNode *reply)
             if(remote_cib && remote_cib->children) {
                 // Additional debug
                 xml_calculate_changes(the_cib, remote_cib);
-
-                pcmk__output_set_log_level(logger_out, LOG_INFO);
-                pcmk__xml_show_changes(logger_out, remote_cib);
+                pcmk__log_xml_changes(LOG_INFO, remote_cib);
                 crm_trace("End of differences");
             }
 
@@ -1473,8 +1471,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
                         *cib_diff);
     }
 
-    pcmk__output_set_log_level(logger_out, LOG_TRACE);
-    logger_out->message(logger_out, "xml-patchset", *cib_diff);
+    pcmk__log_xml_patchset(LOG_TRACE, *cib_diff);
 
   done:
     if (!pcmk_is_set(call_options, cib_discard_reply) || cib_legacy_mode()) {
@@ -1661,12 +1658,6 @@ terminate_cib(const char *caller, int fast)
     }
 
     uninitializeCib();
-
-    if (logger_out != NULL) {
-        logger_out->finish(logger_out, CRM_EX_OK, true, NULL);
-        pcmk__output_free(logger_out);
-        logger_out = NULL;
-    }
 
     if (fast > 0) {
         /* Quit fast on error */
