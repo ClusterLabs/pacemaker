@@ -1554,10 +1554,6 @@ determine_online_status_fencing(pe_working_set_t *data_set,
 
     online = (when_member > 0);
 
-    if (exp_state == NULL) {
-        exp_state = CRMD_JOINSTATE_DOWN;
-    }
-
     if (this_node->details->shutdown) {
         crm_debug("%s is shutting down", pe__node_name(this_node));
 
@@ -1567,7 +1563,7 @@ determine_online_status_fencing(pe_working_set_t *data_set,
     } else if (when_member < 0) {
         pe_fence_node(data_set, this_node, "peer has not been seen by the cluster", FALSE);
 
-    } else if (pcmk__str_eq(join, CRMD_JOINSTATE_NACK, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(join, CRMD_JOINSTATE_NACK, pcmk__str_none)) {
         pe_fence_node(data_set, this_node,
                       "peer failed Pacemaker membership criteria", FALSE);
 
@@ -1580,7 +1576,8 @@ determine_online_status_fencing(pe_working_set_t *data_set,
             pe_fence_node(data_set, this_node, "fencing was requested", false);
         }
 
-    } else if (pcmk__str_eq(exp_state, CRMD_JOINSTATE_DOWN, pcmk__str_none)) {
+    } else if (pcmk__str_eq(exp_state, CRMD_JOINSTATE_DOWN,
+                            pcmk__str_null_matches)) {
 
         if ((data_set->node_pending_timeout > 0)
             && (when_member > 0) && (when_online == 0)
@@ -1610,10 +1607,11 @@ determine_online_status_fencing(pe_working_set_t *data_set,
 
         /* Everything is running at this point, now check join state */
 
-    } else if (pcmk__str_eq(join, CRMD_JOINSTATE_MEMBER, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(join, CRMD_JOINSTATE_MEMBER, pcmk__str_none)) {
         crm_info("%s is active", pe__node_name(this_node));
 
-    } else if (pcmk__strcase_any_of(join, CRMD_JOINSTATE_PENDING, CRMD_JOINSTATE_DOWN, NULL)) {
+    } else if (pcmk__str_any_of(join, CRMD_JOINSTATE_PENDING,
+                                CRMD_JOINSTATE_DOWN, NULL)) {
         crm_info("%s is not ready to run resources", pe__node_name(this_node));
         this_node->details->standby = TRUE;
         this_node->details->pending = TRUE;
