@@ -263,11 +263,12 @@ controld_node_pending_timer(const crm_node_t *node)
 {
     long long remaining_timeout = 0;
 
-    /* If the node is not an active cluster node, or is already part of CPG, or
-     * node-pending-timeout is disabled, free any node pending timer for it.
+    /* If the node is not an active cluster node, is leaving the cluster, or is
+     * already part of CPG, or node-pending-timeout is disabled, free any
+     * node pending timer for it.
      */
     if (pcmk_is_set(node->flags, crm_remote_node)
-        || (node->when_member <= 0) || (node->when_online > 0)
+        || (node->when_member <= 1) || (node->when_online > 0)
         || (controld_globals.node_pending_timeout == 0)) {
         remove_node_pending_timer(node->uuid);
         return;

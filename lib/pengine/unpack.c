@@ -1395,11 +1395,15 @@ unpack_node_member(const xmlNode *node_state, pe_working_set_t *data_set)
     if (member_time == NULL) {
         return -1LL;
 
-    // @COMPAT Entries recorded for DCs < 2.1.7 are boolean
     } else if (crm_str_to_boolean(member_time, &member) == 1) {
-        /* What's important when member is true is that effective time minus
-         * this value is less than the pending node timeout (we can't time out
-         * pending nodes that use boolean values)
+        /* If in_ccm=0, we'll return 0 here. If in_ccm=1, either the entry was
+         * recorded as a boolean for a DC < 2.1.7, or the node is pending
+         * shutdown and has left the CPG, in which case it was set to 1 to avoid
+         * fencing for node-pending-timeout.
+         *
+         * We return the effective time for in_ccm=1 because what's important to
+         * avoid fencing is that effective time minus this value is less than
+         * the pending node timeout.
          */
         return member? (long long) get_effective_time(data_set) : 0LL;
 
