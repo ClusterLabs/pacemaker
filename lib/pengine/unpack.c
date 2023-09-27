@@ -1518,11 +1518,10 @@ determine_online_status_no_fencing(pe_working_set_t *data_set,
     return online;
 }
 
-static gboolean
+static bool
 determine_online_status_fencing(pe_working_set_t *data_set,
                                 const xmlNode *node_state, pe_node_t *this_node)
 {
-    gboolean online = FALSE;
     bool termination_requested = unpack_node_terminate(this_node, node_state);
     const char *join = crm_element_value(node_state, PCMK__XA_JOIN);
     const char *exp_state = crm_element_value(node_state, PCMK__XA_EXPECTED);
@@ -1552,18 +1551,19 @@ determine_online_status_fencing(pe_working_set_t *data_set,
               pcmk__s(join, "<null>"), pcmk__s(exp_state, "<null>"),
               (termination_requested? " (termination requested)" : ""));
 
-    online = (when_member > 0);
-
     if (this_node->details->shutdown) {
         crm_debug("%s is shutting down", pe__node_name(this_node));
 
         /* Slightly different criteria since we can't shut down a dead peer */
-        online = (when_online > 0);
+        return (when_online > 0);
+    }
 
-    } else if (when_member < 0) {
+    if (when_member < 0) {
         pe_fence_node(data_set, this_node, "peer has not been seen by the cluster", FALSE);
+        return false;
+    }
 
-    } else if (pcmk__str_eq(join, CRMD_JOINSTATE_NACK, pcmk__str_none)) {
+    if (pcmk__str_eq(join, CRMD_JOINSTATE_NACK, pcmk__str_none)) {
         pe_fence_node(data_set, this_node,
                       "peer failed Pacemaker membership criteria", FALSE);
 
@@ -1571,10 +1571,9 @@ determine_online_status_fencing(pe_working_set_t *data_set,
         if ((when_member == 0) && (when_online == 0)
             && pcmk__str_eq(join, CRMD_JOINSTATE_DOWN, pcmk__str_none)) {
             crm_info("%s was fenced as requested", pe__node_name(this_node));
-            online = FALSE;
-        } else {
-            pe_fence_node(data_set, this_node, "fencing was requested", false);
+            return false;
         }
+        pe_fence_node(data_set, this_node, "fencing was requested", false);
 
     } else if (pcmk__str_eq(exp_state, CRMD_JOINSTATE_DOWN,
                             pcmk__str_null_matches)) {
@@ -1620,7 +1619,7 @@ determine_online_status_fencing(pe_working_set_t *data_set,
         pe_fence_node(data_set, this_node, "peer was in an unknown state", FALSE);
     }
 
-    return online;
+    return (when_member > 0);
 }
 
 static void
