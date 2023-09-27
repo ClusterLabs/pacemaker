@@ -23,7 +23,7 @@ Current cluster status:
       * Unpromoted: [ pcmk-1 pcmk-2 pcmk-3 ]
 
 Transition Summary:
-  * Fence (reboot) pcmk-4 'termination was requested'
+  * Fence (reboot) pcmk-4 'fencing was requested'
   * Stop       FencingChild:0     (                        pcmk-4 )  due to node availability
   * Move       r192.168.101.181   (              pcmk-4 -> pcmk-1 )
   * Move       r192.168.101.182   (              pcmk-4 -> pcmk-1 )
