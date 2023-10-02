@@ -53,8 +53,8 @@ struct compare_data {
  * \internal
  * \brief Compare a single utilization attribute for two nodes
  *
- * Compare one utilization attribute for two nodes, incrementing the result if
- * the first node has greater capacity, and decrementing it if the second node
+ * Compare one utilization attribute for two nodes, decrementing the result if
+ * the first node has greater capacity, and incrementing it if the second node
  * has greater capacity.
  *
  * \param[in]     key        Utilization attribute name to compare
