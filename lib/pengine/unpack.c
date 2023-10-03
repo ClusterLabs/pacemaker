@@ -1383,8 +1383,8 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
  * \param[in,out] data_set    Cluster working set
  *
  * \return Epoch time when node became a cluster member
- *         (or 1 for legacy entries) if a member, 0 if not a member,
- *         or -1 if no valid information available
+ *         (or working set effective time for legacy entries) if a member,
+ *         0 if not a member, or -1 if no valid information available
  */
 static long long
 unpack_node_member(const xmlNode *node_state, pe_working_set_t *data_set)

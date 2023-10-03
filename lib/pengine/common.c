@@ -163,7 +163,7 @@ static pcmk__cluster_option_t pe_opts[] = {
         XML_CONFIG_ATTR_NODE_PENDING_TIMEOUT, NULL, "time", NULL,
         "2h", pcmk__valid_interval_spec,
         N_("How long to wait for a node that has joined the cluster to join "
-           "the process group"),
+           "the controller process group"),
         N_("Fence nodes that do not join the controller process group within "
            "this much time after joining the cluster, to allow the cluster "
            "to continue managing resources. A value of 0 means never fence "
