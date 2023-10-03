@@ -23,6 +23,9 @@ extern "C" {
 //! Node object (including information that may vary depending on resource)
 typedef struct pe_node_s pcmk_node_t;
 
+//! Resource object
+typedef struct pe_resource_s pcmk_resource_t;
+
 #ifdef __cplusplus
 }
 #endif
