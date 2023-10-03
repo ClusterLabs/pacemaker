@@ -158,7 +158,6 @@ extern "C" {
 #  define XML_ATTR_IDREF			"id-ref"
 #  define XML_ATTR_ID_LONG		"long-id"
 #  define XML_ATTR_TYPE			"type"
-#  define XML_ATTR_VERBOSE		"verbose"
 #  define XML_ATTR_OP			"op"
 #  define XML_ATTR_DC_UUID		"dc-uuid"
 #  define XML_ATTR_UPDATE_ORIG		"update-origin"
@@ -205,7 +204,6 @@ extern "C" {
 #  define XML_CIB_TAG_STATUS       	"status"
 #  define XML_CIB_TAG_RESOURCES		"resources"
 #  define XML_CIB_TAG_NODES         	"nodes"
-#  define XML_CIB_TAG_DOMAINS         	"domains"
 #  define XML_CIB_TAG_CONSTRAINTS   	"constraints"
 #  define XML_CIB_TAG_CRMCONFIG   	"crm_config"
 #  define XML_CIB_TAG_OPCONFIG		"op_defaults"
@@ -285,10 +283,7 @@ extern "C" {
 //! \deprecated Do not use (will be removed in a future release)
 #  define XML_CIB_ATTR_REPLACE       	"replace"
 
-#  define XML_CIB_ATTR_SOURCE       	"source"
-
 #  define XML_CIB_ATTR_PRIORITY     	"priority"
-#  define XML_CIB_ATTR_SOURCE       	"source"
 
 #  define XML_NODE_JOIN_STATE    	"join"
 #  define XML_NODE_EXPECTED     	"expected"
@@ -333,7 +328,6 @@ extern "C" {
 #  define XML_LRM_ATTR_EXIT_REASON	"exit-reason"
 
 #  define XML_RSC_OP_LAST_CHANGE        "last-rc-change"
-#  define XML_RSC_OP_LAST_RUN           "last-run"  // deprecated since 2.0.3
 #  define XML_RSC_OP_T_EXEC             "exec-time"
 #  define XML_RSC_OP_T_QUEUE            "queue-time"
 
@@ -429,7 +423,10 @@ extern "C" {
 #  define XML_ATTR_TE_TARGET_RC		"op_target_rc"
 #  define XML_TAG_TRANSIENT_NODEATTRS	"transient_attributes"
 
+//! \deprecated Do not use (will be removed in a future release)
 #  define XML_TAG_DIFF_ADDED		"diff-added"
+
+//! \deprecated Do not use (will be removed in a future release)
 #  define XML_TAG_DIFF_REMOVED		"diff-removed"
 
 #  define XML_ACL_TAG_USER		"acl_target"
