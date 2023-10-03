@@ -138,10 +138,8 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
         pcmk__xe_set_bool_attr(node_state, XML_NODE_IS_REMOTE, true);
     }
 
-    set_uuid(node_state, XML_ATTR_ID, node);
-
-    if (crm_element_value(node_state, XML_ATTR_ID) == NULL) {
-        crm_info("Node update for %s cancelled: no id", node->uname);
+    if (crm_xml_add(node_state, XML_ATTR_ID, crm_peer_uuid(node)) == NULL) {
+        crm_info("Node update for %s cancelled: no ID", node->uname);
         free_xml(node_state);
         return NULL;
     }
@@ -151,10 +149,10 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
     if ((flags & node_update_cluster) && node->state) {
         if (compare_version(controld_globals.dc_version, "3.18.0") >= 0) {
             // A value 0 means the node is not a cluster member.
-            crm_xml_add_ll(node_state, XML_NODE_IN_CLUSTER, node->when_member);
+            crm_xml_add_ll(node_state, PCMK__XA_IN_CCM, node->when_member);
 
         } else {
-            pcmk__xe_set_bool_attr(node_state, XML_NODE_IN_CLUSTER,
+            pcmk__xe_set_bool_attr(node_state, PCMK__XA_IN_CCM,
                                    pcmk__str_eq(node->state, CRM_NODE_MEMBER,
                                                 pcmk__str_casei));
         }
@@ -164,15 +162,15 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
         if (flags & node_update_peer) {
             if (compare_version(controld_globals.dc_version, "3.18.0") >= 0) {
                 // A value 0 means the peer is offline in CPG.
-                crm_xml_add_ll(node_state, XML_NODE_IS_PEER,
-                               node->when_online);
+                crm_xml_add_ll(node_state, PCMK__XA_CRMD, node->when_online);
 
             } else {
+                // @COMPAT DCs < 2.1.7 use online/offline rather than timestamp
                 value = OFFLINESTATUS;
                 if (pcmk_is_set(node->processes, crm_get_cluster_proc())) {
                     value = ONLINESTATUS;
                 }
-                crm_xml_add(node_state, XML_NODE_IS_PEER, value);
+                crm_xml_add(node_state, PCMK__XA_CRMD, value);
             }
         }
 
@@ -182,11 +180,11 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
             } else {
                 value = CRMD_JOINSTATE_MEMBER;
             }
-            crm_xml_add(node_state, XML_NODE_JOIN_STATE, value);
+            crm_xml_add(node_state, PCMK__XA_JOIN, value);
         }
 
         if (flags & node_update_expected) {
-            crm_xml_add(node_state, XML_NODE_EXPECTED, node->expected);
+            crm_xml_add(node_state, PCMK__XA_EXPECTED, node->expected);
         }
     }
 

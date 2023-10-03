@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -90,6 +90,18 @@ extern "C" {
 
 //! \deprecated Do not use (will be removed in a future release)
 #define XML_CIB_ATTR_SOURCE "source"
+
+//! \deprecated Do not use
+#define XML_NODE_EXPECTED "expected"
+
+//! \deprecated Do not use
+#define XML_NODE_IN_CLUSTER "in_ccm"
+
+//! \deprecated Do not use
+#define XML_NODE_IS_PEER "crmd"
+
+//! \deprecated Do not use
+#define XML_NODE_JOIN_STATE "join"
 
 //! \deprecated Do not use (will be removed in a future release)
 #define XML_RSC_OP_LAST_RUN "last-run"

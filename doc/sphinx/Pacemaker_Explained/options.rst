@@ -578,14 +578,14 @@ values, by running the ``man pacemaker-schedulerd`` and
    |                           |         | greater than (safely twice) the maximum delay from |
    |                           |         | those parameters. *(since 2.0.4)*                  |
    +---------------------------+---------+----------------------------------------------------+
-   | node-pending-timeout      | 10min   | .. index::                                         |
+   | node-pending-timeout      | 2h      | .. index::                                         |
    |                           |         |    pair: cluster option; node-pending-timeout      |
    |                           |         |                                                    |
-   |                           |         | A node that has joined the cluster can be pending  |
-   |                           |         | on joining the process group. We wait up to this   |
-   |                           |         | much time for it. If it times out, fencing         |
-   |                           |         | targeting the node will be issued if enabled.      |
-   |                           |         | *(since 2.1.7)*                                    |
+   |                           |         | Fence nodes that do not join the controller        |
+   |                           |         | process group within this much time after joining  |
+   |                           |         | the cluster, to allow the cluster to continue      |
+   |                           |         | managing resources. A value of 0 means never fence |
+   |                           |         | pending nodes. *(since 2.1.7)*                     |
    +---------------------------+---------+----------------------------------------------------+
    | cluster-delay             | 60s     | .. index::                                         |
    |                           |         |    pair: cluster option; cluster-delay             |

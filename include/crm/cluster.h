@@ -177,7 +177,6 @@ char *pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid,
 
 const char *crm_peer_uuid(crm_node_t *node);
 const char *crm_peer_uname(const char *uuid);
-void set_uuid(xmlNode *xml, const char *attr, crm_node_t *node);
 
 enum crm_status_type {
     crm_status_uname,

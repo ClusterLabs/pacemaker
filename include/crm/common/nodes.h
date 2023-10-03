@@ -20,6 +20,11 @@ extern "C" {
  * \ingroup core
  */
 
+// Special node attributes
+
+#define PCMK_NODE_ATTR_TERMINATE    "terminate"
+
+
 //! Possible node types
 enum node_type {
     pcmk_node_variant_cluster  = 1,     //!< Cluster layer node

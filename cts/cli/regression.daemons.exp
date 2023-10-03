@@ -350,8 +350,8 @@
       <content type="time" default=""/>
     </parameter>
     <parameter name="node-pending-timeout">
-      <longdesc lang="en">A node that has joined the cluster can be pending on joining the process group. We wait up to this much time for it. If it times out, fencing targeting the node will be issued if enabled.</longdesc>
-      <shortdesc lang="en">How long to wait for a node that has joined the cluster to join the process group</shortdesc>
+      <longdesc lang="en">Fence nodes that do not join the controller process group within this much time after joining the cluster, to allow the cluster to continue managing resources. A value of 0 means never fence pending nodes.</longdesc>
+      <shortdesc lang="en">How long to wait for a node that has joined the cluster to join the controller process group</shortdesc>
       <content type="time" default=""/>
     </parameter>
     <parameter name="cluster-delay">

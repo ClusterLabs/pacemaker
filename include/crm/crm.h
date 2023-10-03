@@ -108,6 +108,7 @@ extern char *crm_system_name;
 #  define CRM_SYSTEM_MCP	"pacemakerd"
 
 // Names of internally generated node attributes
+// @TODO Replace these with PCMK_NODE_ATTR_*
 #  define CRM_ATTR_UNAME            "#uname"
 #  define CRM_ATTR_ID               "#id"
 #  define CRM_ATTR_KIND             "#kind"
