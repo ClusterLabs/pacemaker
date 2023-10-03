@@ -1568,7 +1568,7 @@ determine_online_status_fencing(pe_working_set_t *data_set,
                       "peer failed Pacemaker membership criteria", FALSE);
 
     } else if (termination_requested) {
-        if ((when_member == 0) && (when_online == 0)
+        if ((when_member <= 0) && (when_online <= 0)
             && pcmk__str_eq(join, CRMD_JOINSTATE_DOWN, pcmk__str_none)) {
             crm_info("%s was fenced as requested", pe__node_name(this_node));
             return false;
@@ -1579,7 +1579,7 @@ determine_online_status_fencing(pe_working_set_t *data_set,
                             pcmk__str_null_matches)) {
 
         if ((data_set->node_pending_timeout > 0)
-            && (when_member > 0) && (when_online == 0)
+            && (when_member > 0) && (when_online <= 0)
             && (get_effective_time(data_set) - when_member
                 >= data_set->node_pending_timeout)) {
             pe_fence_node(data_set, this_node,
@@ -1597,11 +1597,11 @@ determine_online_status_fencing(pe_working_set_t *data_set,
                       pe__node_name(this_node));
         }
 
-    } else if (when_member == 0) {
+    } else if (when_member <= 0) {
         // Consider `priority-fencing-delay` for lost nodes
         pe_fence_node(data_set, this_node, "peer is no longer part of the cluster", TRUE);
 
-    } else if (when_online == 0) {
+    } else if (when_online <= 0) {
         pe_fence_node(data_set, this_node, "peer process is no longer available", FALSE);
 
         /* Everything is running at this point, now check join state */
