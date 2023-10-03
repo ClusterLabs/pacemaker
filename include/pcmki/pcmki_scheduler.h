@@ -15,13 +15,13 @@
 #include <libxml/tree.h>        // xmlNode
 
 #include <crm/lrmd_events.h>    // lrmd_event_data_t
-#include <crm/pengine/status.h> // pe_resource_t, pe_working_set_t
+#include <crm/pengine/status.h> // pcmk_resource_t, pe_working_set_t
 
 typedef struct {
     const char *id;
     const char *node_attribute;
-    pe_resource_t *dependent;   // The resource being colocated
-    pe_resource_t *primary;     // The resource the dependent is colocated with
+    pcmk_resource_t *dependent; // The resource being colocated
+    pcmk_resource_t *primary;   // The resource the dependent is colocated with
 
     int dependent_role; // Colocation applies only if dependent has this role
     int primary_role;   // Colocation applies only if primary has this role

@@ -35,20 +35,20 @@ typedef struct pe_resource_s pe_resource_t;
 typedef struct pe_working_set_s pe_working_set_t;
 
 typedef struct resource_object_functions_s {
-    gboolean (*unpack) (pe_resource_t*, pe_working_set_t*);
-    pe_resource_t *(*find_rsc) (pe_resource_t *parent, const char *search,
-                                const pcmk_node_t *node, int flags);
+    gboolean (*unpack)(pcmk_resource_t*, pe_working_set_t*);
+    pcmk_resource_t *(*find_rsc)(pcmk_resource_t *parent, const char *search,
+                                 const pcmk_node_t *node, int flags);
     /* parameter result must be free'd */
-    char *(*parameter)(pe_resource_t*, pcmk_node_t*, gboolean, const char*,
+    char *(*parameter)(pcmk_resource_t*, pcmk_node_t*, gboolean, const char*,
                        pe_working_set_t*);
     //! \deprecated will be removed in a future release
-    void (*print) (pe_resource_t*, const char*, long, void*);
-    gboolean (*active) (pe_resource_t*, gboolean);
-    enum rsc_role_e (*state) (const pe_resource_t*, gboolean);
-    pcmk_node_t *(*location)(const pe_resource_t*, GList**, int);
-    void (*free) (pe_resource_t*);
-    void (*count) (pe_resource_t*);
-    gboolean (*is_filtered) (const pe_resource_t*, GList *, gboolean);
+    void (*print)(pcmk_resource_t*, const char*, long, void*);
+    gboolean (*active)(pcmk_resource_t*, gboolean);
+    enum rsc_role_e (*state)(const pcmk_resource_t*, gboolean);
+    pcmk_node_t *(*location)(const pcmk_resource_t*, GList**, int);
+    void (*free)(pcmk_resource_t*);
+    void (*count)(pcmk_resource_t*);
+    gboolean (*is_filtered)(const pcmk_resource_t*, GList *, gboolean);
 
     /*!
      * \brief Find a node (and optionally count all) where resource is active
@@ -62,7 +62,7 @@ typedef struct resource_object_functions_s {
      *         online node if the resource's "requires" is "quorum" or
      *         "nothing", or NULL if the resource is inactive.
      */
-    pcmk_node_t *(*active_node)(const pe_resource_t *rsc,
+    pcmk_node_t *(*active_node)(const pcmk_resource_t *rsc,
                                 unsigned int *count_all,
                                 unsigned int *count_clean);
 
@@ -73,7 +73,7 @@ typedef struct resource_object_functions_s {
      *
      * \return Maximum number of \p rsc instances that can be active on one node
      */
-    unsigned int (*max_per_node)(const pe_resource_t *rsc);
+    unsigned int (*max_per_node)(const pcmk_resource_t *rsc);
 } resource_object_functions_t;
 
 typedef struct resource_alloc_functions_s resource_alloc_functions_t;
@@ -161,9 +161,9 @@ struct pe_node_shared_s {
     gboolean unpacked;
 
     int num_resources;
-    pe_resource_t *remote_rsc;
-    GList *running_rsc;       /* pe_resource_t* */
-    GList *allocated_rsc;     /* pe_resource_t* */
+    pcmk_resource_t *remote_rsc;
+    GList *running_rsc;         // pcmk_resource_t*
+    GList *allocated_rsc;       // pcmk_resource_t*
 
     GHashTable *attrs;          /* char* => char* */
     GHashTable *utilization;
@@ -188,7 +188,7 @@ struct pe_resource_s {
     xmlNode *ops_xml;
 
     pe_working_set_t *cluster;
-    pe_resource_t *parent;
+    pcmk_resource_t *parent;
 
     enum pe_obj_types variant;
     void *variant_opaque;
@@ -243,10 +243,10 @@ struct pe_resource_s {
     GHashTable *parameters; //! \deprecated Use pe_rsc_params() instead
     GHashTable *utilization;
 
-    GList *children;          /* pe_resource_t*   */
+    GList *children;            // pcmk_resource_t*
     GList *dangling_migrations; // pcmk_node_t*
 
-    pe_resource_t *container;
+    pcmk_resource_t *container;
     GList *fillers;
 
     // @COMPAT These should be made const at next API compatibility break
@@ -267,7 +267,7 @@ struct pe_action_s {
     int id;
     int priority;
 
-    pe_resource_t *rsc;
+    pcmk_resource_t *rsc;
     pcmk_node_t *node;
     xmlNode *op_entry;
 

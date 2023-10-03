@@ -165,7 +165,7 @@ update_utilization_value(gpointer key, gpointer value, gpointer user_data)
  */
 void
 pcmk__consume_node_capacity(GHashTable *current_utilization,
-                            const pe_resource_t *rsc)
+                            const pcmk_resource_t *rsc)
 {
     struct calculate_data data = {
         .current_utilization = current_utilization,
@@ -184,7 +184,7 @@ pcmk__consume_node_capacity(GHashTable *current_utilization,
  */
 void
 pcmk__release_node_capacity(GHashTable *current_utilization,
-                            const pe_resource_t *rsc)
+                            const pcmk_resource_t *rsc)
 {
     struct calculate_data data = {
         .current_utilization = current_utilization,
@@ -271,12 +271,12 @@ have_enough_capacity(const pcmk_node_t *node, const char *rsc_id,
  *       g_hash_table_destroy().
  */
 static GHashTable *
-sum_resource_utilization(const pe_resource_t *orig_rsc, GList *rscs)
+sum_resource_utilization(const pcmk_resource_t *orig_rsc, GList *rscs)
 {
     GHashTable *utilization = pcmk__strkey_table(free, free);
 
     for (GList *iter = rscs; iter != NULL; iter = iter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+        pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         rsc->cmds->add_utilization(rsc, orig_rsc, rscs, utilization);
     }
@@ -293,7 +293,7 @@ sum_resource_utilization(const pe_resource_t *orig_rsc, GList *rscs)
  *         nodes with enough capacity for \p rsc and all its colocated resources
  */
 const pcmk_node_t *
-pcmk__ban_insufficient_capacity(pe_resource_t *rsc)
+pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
 {
     bool any_capable = false;
     char *rscs_id = NULL;
@@ -415,7 +415,7 @@ new_load_stopped_op(pcmk_node_t *node)
  * \param[in]     allowed_nodes  List of allowed next nodes for \p rsc
  */
 void
-pcmk__create_utilization_constraints(pe_resource_t *rsc,
+pcmk__create_utilization_constraints(pcmk_resource_t *rsc,
                                      const GList *allowed_nodes)
 {
     const GList *iter = NULL;

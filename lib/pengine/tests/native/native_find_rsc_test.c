@@ -19,8 +19,9 @@ xmlNode *input = NULL;
 pe_working_set_t *data_set = NULL;
 
 pcmk_node_t *cluster01, *cluster02, *httpd_bundle_0;
-pe_resource_t *exim_group, *inactive_group, *promotable_clone, *inactive_clone;
-pe_resource_t *httpd_bundle, *mysql_clone_group;
+pcmk_resource_t *exim_group, *inactive_group;
+pcmk_resource_t *promotable_clone, *inactive_clone;
+pcmk_resource_t *httpd_bundle, *mysql_clone_group;
 
 static int
 setup(void **state) {
@@ -55,7 +56,7 @@ setup(void **state) {
 
     /* Get references to several resources we use frequently. */
     for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+        pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         if (strcmp(rsc->id, "exim-group") == 0) {
             exim_group = rsc;
@@ -84,7 +85,7 @@ teardown(void **state) {
 
 static void
 bad_args(void **state) {
-    pe_resource_t *rsc = (pe_resource_t *) g_list_first(data_set->resources)->data;
+    pcmk_resource_t *rsc = g_list_first(data_set->resources)->data;
     char *id = rsc->id;
     char *name = NULL;
 
@@ -114,11 +115,11 @@ bad_args(void **state) {
 
 static void
 primitive_rsc(void **state) {
-    pe_resource_t *dummy = NULL;
+    pcmk_resource_t *dummy = NULL;
 
     /* Find the "dummy" resource, which is the only one with that ID in the set. */
     for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+        pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         if (strcmp(rsc->id, "dummy") == 0) {
             dummy = rsc;
@@ -207,11 +208,11 @@ inactive_group_rsc(void **state) {
 
 static void
 group_member_rsc(void **state) {
-    pe_resource_t *public_ip = NULL;
+    pcmk_resource_t *public_ip = NULL;
 
     /* Find the "Public-IP" resource, a member of "exim-group". */
     for (GList *iter = exim_group->children; iter != NULL; iter = iter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+        pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         if (strcmp(rsc->id, "Public-IP") == 0) {
             public_ip = rsc;
@@ -248,11 +249,11 @@ group_member_rsc(void **state) {
 
 static void
 inactive_group_member_rsc(void **state) {
-    pe_resource_t *inactive_dummy_1 = NULL;
+    pcmk_resource_t *inactive_dummy_1 = NULL;
 
     /* Find the "inactive-dummy-1" resource, a member of "inactive-group". */
     for (GList *iter = inactive_group->children; iter != NULL; iter = iter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+        pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         if (strcmp(rsc->id, "inactive-dummy-1") == 0) {
             inactive_dummy_1 = rsc;
@@ -347,12 +348,12 @@ inactive_clone_rsc(void **state) {
 
 static void
 clone_instance_rsc(void **state) {
-    pe_resource_t *promotable_0 = NULL;
-    pe_resource_t *promotable_1 = NULL;
+    pcmk_resource_t *promotable_0 = NULL;
+    pcmk_resource_t *promotable_1 = NULL;
 
     /* Find the "promotable-rsc:0" and "promotable-rsc:1" resources, members of "promotable-clone". */
     for (GList *iter = promotable_clone->children; iter != NULL; iter = iter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+        pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         if (strcmp(rsc->id, "promotable-rsc:0") == 0) {
             promotable_0 = rsc;
@@ -486,12 +487,12 @@ clone_instance_rsc(void **state) {
 
 static void
 renamed_rsc(void **state) {
-    pe_resource_t *promotable_0 = NULL;
-    pe_resource_t *promotable_1 = NULL;
+    pcmk_resource_t *promotable_0 = NULL;
+    pcmk_resource_t *promotable_1 = NULL;
 
     /* Find the "promotable-rsc:0" and "promotable-rsc:1" resources, members of "promotable-clone". */
     for (GList *iter = promotable_clone->children; iter != NULL; iter = iter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+        pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         if (strcmp(rsc->id, "promotable-rsc:0") == 0) {
             promotable_0 = rsc;
@@ -540,10 +541,10 @@ bundle_rsc(void **state) {
 static bool
 bundle_first_replica(pe__bundle_replica_t *replica, void *user_data)
 {
-    pe_resource_t *ip_0 = replica->ip;
-    pe_resource_t *child_0 = replica->child;
-    pe_resource_t *container_0 = replica->container;
-    pe_resource_t *remote_0 = replica->remote;
+    pcmk_resource_t *ip_0 = replica->ip;
+    pcmk_resource_t *child_0 = replica->child;
+    pcmk_resource_t *container_0 = replica->container;
+    pcmk_resource_t *remote_0 = replica->remote;
 
     assert_non_null(ip_0);
     assert_non_null(child_0);
@@ -705,12 +706,12 @@ clone_group_rsc(void **rsc) {
 
 static void
 clone_group_instance_rsc(void **rsc) {
-    pe_resource_t *mysql_group_0 = NULL;
-    pe_resource_t *mysql_group_1 = NULL;
+    pcmk_resource_t *mysql_group_0 = NULL;
+    pcmk_resource_t *mysql_group_1 = NULL;
 
     /* Find the "mysql-group:0" and "mysql-group:1" resources, members of "mysql-clone-group". */
     for (GList *iter = mysql_clone_group->children; iter != NULL; iter = iter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+        pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         if (strcmp(rsc->id, "mysql-group:0") == 0) {
             mysql_group_0 = rsc;
@@ -844,15 +845,15 @@ clone_group_instance_rsc(void **rsc) {
 
 static void
 clone_group_member_rsc(void **state) {
-    pe_resource_t *mysql_proxy = NULL;
+    pcmk_resource_t *mysql_proxy = NULL;
 
     /* Find the "mysql-proxy" resource, a member of "mysql-group". */
     for (GList *iter = mysql_clone_group->children; iter != NULL; iter = iter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+        pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         if (strcmp(rsc->id, "mysql-group:0") == 0) {
             for (GList *iter2 = rsc->children; iter2 != NULL; iter2 = iter2->next) {
-                pe_resource_t *child = (pe_resource_t *) iter2->data;
+                pcmk_resource_t *child = (pcmk_resource_t *) iter2->data;
 
                 if (strcmp(child->id, "mysql-proxy:0") == 0) {
                     mysql_proxy = child;

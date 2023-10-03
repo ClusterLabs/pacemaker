@@ -574,7 +574,7 @@ inject_action(pcmk__output_t *out, const char *spec, cib_t *cib,
     xmlNode *cib_op = NULL;
     xmlNode *cib_node = NULL;
     xmlNode *cib_resource = NULL;
-    const pe_resource_t *rsc = NULL;
+    const pcmk_resource_t *rsc = NULL;
     lrmd_event_data_t *op = NULL;
 
     out->message(out, "inject-spec", spec);

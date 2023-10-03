@@ -89,7 +89,8 @@ action_flags_for_ordering(pe_action_t *action, const pcmk_node_t *node)
  * \note It is the caller's responsibility to free the return value.
  */
 static char *
-action_uuid_for_ordering(const char *first_uuid, const pe_resource_t *first_rsc)
+action_uuid_for_ordering(const char *first_uuid,
+                         const pcmk_resource_t *first_rsc)
 {
     guint interval_ms = 0;
     char *uuid = NULL;
@@ -181,7 +182,7 @@ static pe_action_t *
 action_for_ordering(pe_action_t *action)
 {
     pe_action_t *result = action;
-    pe_resource_t *rsc = action->rsc;
+    pcmk_resource_t *rsc = action->rsc;
 
     if ((rsc != NULL) && (rsc->variant >= pcmk_rsc_variant_group)
         && (action->uuid != NULL)) {
@@ -218,7 +219,7 @@ action_for_ordering(pe_action_t *action)
  * \return Group of enum pcmk__updated flags indicating what was updated
  */
 static inline uint32_t
-update(pe_resource_t *rsc, pe_action_t *first, pe_action_t *then,
+update(pcmk_resource_t *rsc, pe_action_t *first, pe_action_t *then,
        const pcmk_node_t *node, uint32_t flags, uint32_t filter, uint32_t type,
        pe_working_set_t *data_set)
 {
@@ -1418,7 +1419,7 @@ pcmk__output_actions(pe_working_set_t *data_set)
         }
 
         if (pe__is_guest_node(action->node)) {
-            const pe_resource_t *remote = action->node->details->remote_rsc;
+            const pcmk_resource_t *remote = action->node->details->remote_rsc;
 
             node_name = crm_strdup_printf("%s (resource: %s)",
                                           pe__node_name(action->node),
@@ -1435,7 +1436,7 @@ pcmk__output_actions(pe_working_set_t *data_set)
 
     // Output resource actions
     for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+        pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         rsc->cmds->output_actions(rsc);
     }
@@ -1452,7 +1453,8 @@ pcmk__output_actions(pe_working_set_t *data_set)
  * \return true if action is still in resource configuration, otherwise false
  */
 static bool
-action_in_config(const pe_resource_t *rsc, const char *task, guint interval_ms)
+action_in_config(const pcmk_resource_t *rsc, const char *task,
+                 guint interval_ms)
 {
     char *key = pcmk__op_key(rsc->id, task, interval_ms);
     bool config = (find_rsc_op_entry(rsc, key) != NULL);
@@ -1530,7 +1532,7 @@ only_sanitized_changed(const xmlNode *xml_op,
  * \param[in,out] node         Node where resource should be restarted
  */
 static void
-force_restart(pe_resource_t *rsc, const char *task, guint interval_ms,
+force_restart(pcmk_resource_t *rsc, const char *task, guint interval_ms,
               pcmk_node_t *node)
 {
     char *key = pcmk__op_key(rsc->id, task, interval_ms);
@@ -1552,7 +1554,7 @@ force_restart(pe_resource_t *rsc, const char *task, guint interval_ms,
 static void
 schedule_reload(gpointer data, gpointer user_data)
 {
-    pe_resource_t *rsc = data;
+    pcmk_resource_t *rsc = data;
     const pcmk_node_t *node = user_data;
     pe_action_t *reload = NULL;
 
@@ -1615,7 +1617,7 @@ schedule_reload(gpointer data, gpointer user_data)
  * \return true if action configuration changed, otherwise false
  */
 bool
-pcmk__check_action_config(pe_resource_t *rsc, pcmk_node_t *node,
+pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
                           const xmlNode *xml_op)
 {
     guint interval_ms = 0;
@@ -1751,7 +1753,7 @@ rsc_history_as_list(const xmlNode *rsc_entry, int *start_index, int *stop_index)
  * \param[in,out] node       Node whose history is being processed
  */
 static void
-process_rsc_history(const xmlNode *rsc_entry, pe_resource_t *rsc,
+process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
                     pcmk_node_t *node)
 {
     int offset = -1;
@@ -1876,7 +1878,7 @@ process_node_history(pcmk_node_t *node, const xmlNode *lrm_rscs)
                                                    node->details->data_set);
 
             for (GList *iter = result; iter != NULL; iter = iter->next) {
-                pe_resource_t *rsc = (pe_resource_t *) iter->data;
+                pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
                 if (rsc->variant == pcmk_rsc_variant_primitive) {
                     process_rsc_history(rsc_entry, rsc, node);

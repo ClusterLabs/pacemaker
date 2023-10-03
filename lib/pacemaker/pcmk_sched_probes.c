@@ -25,7 +25,7 @@
  * \param[in]     node   Node that probe will run on
  */
 static void
-add_expected_result(pe_action_t *probe, const pe_resource_t *rsc,
+add_expected_result(pe_action_t *probe, const pcmk_resource_t *rsc,
                     const pcmk_node_t *node)
 {
     // Check whether resource is currently active on node
@@ -55,7 +55,7 @@ pcmk__probe_resource_list(GList *rscs, pcmk_node_t *node)
     bool any_created = false;
 
     for (GList *iter = rscs; iter != NULL; iter = iter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+        pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         if (rsc->cmds->create_probe(rsc, node)) {
             any_created = true;
@@ -72,7 +72,7 @@ pcmk__probe_resource_list(GList *rscs, pcmk_node_t *node)
  * \param[in]     rsc2  Resource that might be started
  */
 static void
-probe_then_start(pe_resource_t *rsc1, pe_resource_t *rsc2)
+probe_then_start(pcmk_resource_t *rsc1, pcmk_resource_t *rsc2)
 {
     if ((rsc1->allocated_to != NULL)
         && (g_hash_table_lookup(rsc1->known_on,
@@ -98,7 +98,7 @@ probe_then_start(pe_resource_t *rsc1, pe_resource_t *rsc2)
 static bool
 guest_resource_will_stop(const pcmk_node_t *node)
 {
-    const pe_resource_t *guest_rsc = node->details->remote_rsc->container;
+    const pcmk_resource_t *guest_rsc = node->details->remote_rsc->container;
 
     /* Ideally, we'd check whether the guest has a required stop, but that
      * information doesn't exist yet, so approximate it ...
@@ -125,7 +125,7 @@ guest_resource_will_stop(const pcmk_node_t *node)
  * \return Newly created probe action
  */
 static pe_action_t *
-probe_action(pe_resource_t *rsc, pcmk_node_t *node)
+probe_action(pcmk_resource_t *rsc, pcmk_node_t *node)
 {
     pe_action_t *probe = NULL;
     char *key = pcmk__op_key(rsc->id, PCMK_ACTION_MONITOR, 0);
@@ -154,12 +154,12 @@ probe_action(pe_resource_t *rsc, pcmk_node_t *node)
  * \return true if any probe was created, otherwise false
  */
 bool
-pcmk__probe_rsc_on_node(pe_resource_t *rsc, pcmk_node_t *node)
+pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
 {
     uint32_t flags = pcmk__ar_ordered;
     pe_action_t *probe = NULL;
     pcmk_node_t *allowed = NULL;
-    pe_resource_t *top = uber_parent(rsc);
+    pcmk_resource_t *top = uber_parent(rsc);
     const char *reason = NULL;
 
     CRM_ASSERT((rsc != NULL) && (node != NULL));
@@ -233,7 +233,7 @@ pcmk__probe_rsc_on_node(pe_resource_t *rsc, pcmk_node_t *node)
     }
 
     if (pe__is_guest_node(node)) {
-        pe_resource_t *guest = node->details->remote_rsc->container;
+        pcmk_resource_t *guest = node->details->remote_rsc->container;
 
         if (guest->role == pcmk_role_stopped) {
             // The guest is stopped, so we know no resource is active there
@@ -539,7 +539,7 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
 {
     GList *iter = NULL;
     bool interleave = false;
-    pe_resource_t *compatible_rsc = NULL;
+    pcmk_resource_t *compatible_rsc = NULL;
 
     // Validate that this is a resource probe followed by some action
     if ((after == NULL) || (probe == NULL) || (probe->rsc == NULL)
@@ -685,7 +685,7 @@ clear_actions_tracking_flag(pe_working_set_t *data_set)
 static void
 add_start_restart_orderings_for_rsc(gpointer data, gpointer user_data)
 {
-    pe_resource_t *rsc = data;
+    pcmk_resource_t *rsc = data;
     GList *probes = NULL;
 
     // For collective resources, order each instance recursively
@@ -758,7 +758,7 @@ order_then_probes(pe_working_set_t *data_set)
      * someone gets smarter.
      */
     for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+        pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         pe_action_t *start = NULL;
         GList *actions = NULL;
@@ -784,7 +784,7 @@ order_then_probes(pe_working_set_t *data_set)
             pe_action_wrapper_t *before = (pe_action_wrapper_t *) actions->data;
 
             pe_action_t *first = before->action;
-            pe_resource_t *first_rsc = first->rsc;
+            pcmk_resource_t *first_rsc = first->rsc;
 
             if (first->required_runnable_before) {
                 for (GList *clone_actions = first->actions_before;

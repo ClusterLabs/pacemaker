@@ -137,7 +137,7 @@ cluster_status(pe_working_set_t * data_set)
     if (!pcmk_is_set(data_set->flags, pcmk_sched_no_counts)) {
         for (GList *item = data_set->resources; item != NULL;
              item = item->next) {
-            ((pe_resource_t *) (item->data))->fns->count(item->data);
+            ((pcmk_resource_t *) (item->data))->fns->count(item->data);
         }
         crm_trace("Cluster resource count: %d (%d disabled, %d blocked)",
                   data_set->ninstances, data_set->disabled_resources,
@@ -150,7 +150,7 @@ cluster_status(pe_working_set_t * data_set)
 
 /*!
  * \internal
- * \brief Free a list of pe_resource_t
+ * \brief Free a list of pcmk_resource_t
  *
  * \param[in,out] resources  List to free
  *
@@ -162,11 +162,11 @@ cluster_status(pe_working_set_t * data_set)
 static void
 pe_free_resources(GList *resources)
 {
-    pe_resource_t *rsc = NULL;
+    pcmk_resource_t *rsc = NULL;
     GList *iterator = resources;
 
     while (iterator != NULL) {
-        rsc = (pe_resource_t *) iterator->data;
+        rsc = (pcmk_resource_t *) iterator->data;
         iterator = iterator->next;
         rsc->fns->free(rsc);
     }
@@ -387,21 +387,21 @@ set_working_set_defaults(pe_working_set_t * data_set)
     }
 }
 
-pe_resource_t *
+pcmk_resource_t *
 pe_find_resource(GList *rsc_list, const char *id)
 {
     return pe_find_resource_with_flags(rsc_list, id, pcmk_rsc_match_history);
 }
 
-pe_resource_t *
+pcmk_resource_t *
 pe_find_resource_with_flags(GList *rsc_list, const char *id, enum pe_find flags)
 {
     GList *rIter = NULL;
 
     for (rIter = rsc_list; id && rIter; rIter = rIter->next) {
-        pe_resource_t *parent = rIter->data;
+        pcmk_resource_t *parent = rIter->data;
 
-        pe_resource_t *match =
+        pcmk_resource_t *match =
             parent->fns->find_rsc(parent, id, NULL, flags);
         if (match != NULL) {
             return match;

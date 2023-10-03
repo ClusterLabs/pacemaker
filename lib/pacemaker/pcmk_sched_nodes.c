@@ -42,7 +42,7 @@ pcmk__node_available(const pcmk_node_t *node, bool consider_score,
 
     // @TODO Go through all callers to see which should set consider_guest
     if (consider_guest && pe__is_guest_node(node)) {
-        pe_resource_t *guest = node->details->remote_rsc->container;
+        pcmk_resource_t *guest = node->details->remote_rsc->container;
 
         if (guest->fns->location(guest, NULL, FALSE) == NULL) {
             return false;
@@ -111,7 +111,7 @@ destroy_node_tables(gpointer data)
  *       \c g_hash_table_destroy().
  */
 void
-pcmk__copy_node_tables(const pe_resource_t *rsc, GHashTable **copy)
+pcmk__copy_node_tables(const pcmk_resource_t *rsc, GHashTable **copy)
 {
     CRM_ASSERT((rsc != NULL) && (copy != NULL));
 
@@ -123,7 +123,7 @@ pcmk__copy_node_tables(const pe_resource_t *rsc, GHashTable **copy)
                         pcmk__copy_node_table(rsc->allowed_nodes));
 
     for (const GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-        pcmk__copy_node_tables((const pe_resource_t *) iter->data, copy);
+        pcmk__copy_node_tables((const pcmk_resource_t *) iter->data, copy);
     }
 }
 
@@ -142,7 +142,7 @@ pcmk__copy_node_tables(const pe_resource_t *rsc, GHashTable **copy)
  * \note This function frees the resources' current node tables.
  */
 void
-pcmk__restore_node_tables(pe_resource_t *rsc, GHashTable *backup)
+pcmk__restore_node_tables(pcmk_resource_t *rsc, GHashTable *backup)
 {
     CRM_ASSERT((rsc != NULL) && (backup != NULL));
 
@@ -153,7 +153,7 @@ pcmk__restore_node_tables(pe_resource_t *rsc, GHashTable *backup)
     rsc->allowed_nodes = pcmk__copy_node_table(rsc->allowed_nodes);
 
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-        pcmk__restore_node_tables((pe_resource_t *) iter->data, backup);
+        pcmk__restore_node_tables((pcmk_resource_t *) iter->data, backup);
     }
 }
 
@@ -382,7 +382,7 @@ pcmk__apply_node_health(pe_working_set_t *data_set)
 
         // Use node health as a location score for each resource on the node
         for (GList *r = data_set->resources; r != NULL; r = r->next) {
-            pe_resource_t *rsc = (pe_resource_t *) r->data;
+            pcmk_resource_t *rsc = (pcmk_resource_t *) r->data;
 
             bool constrain = true;
 
@@ -414,7 +414,7 @@ pcmk__apply_node_health(pe_working_set_t *data_set)
  *         otherwise NULL
  */
 pcmk_node_t *
-pcmk__top_allowed_node(const pe_resource_t *rsc, const pcmk_node_t *node)
+pcmk__top_allowed_node(const pcmk_resource_t *rsc, const pcmk_node_t *node)
 {
     GHashTable *allowed_nodes = NULL;
 

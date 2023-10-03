@@ -14,8 +14,8 @@
 
 #include "pe_status_private.h"
 
-pe_resource_t rsc1;
-pe_resource_t rsc2;
+pcmk_resource_t rsc1;
+pcmk_resource_t rsc2;
 
 static void
 rscs_equal(void **state)

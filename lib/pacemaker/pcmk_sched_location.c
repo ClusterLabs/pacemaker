@@ -21,7 +21,7 @@
 
 static int
 get_node_score(const char *rule, const char *score, bool raw,
-               pcmk_node_t *node, pe_resource_t *rsc)
+               pcmk_node_t *node, pcmk_resource_t *rsc)
 {
     int score_f = 0;
 
@@ -53,7 +53,7 @@ get_node_score(const char *rule, const char *score, bool raw,
 }
 
 static pe__location_t *
-generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
+generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
                        const char *discovery, crm_time_t *next_change,
                        pe_re_match_data_t *re_match_data)
 {
@@ -198,7 +198,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
 }
 
 static void
-unpack_rsc_location(xmlNode *xml_obj, pe_resource_t *rsc, const char *role,
+unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc, const char *role,
                     const char *score, pe_re_match_data_t *re_match_data)
 {
     pe__location_t *location = NULL;
@@ -293,7 +293,7 @@ unpack_simple_location(xmlNode *xml_obj, pe_working_set_t *data_set)
     const char *value = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
 
     if (value) {
-        pe_resource_t *rsc;
+        pcmk_resource_t *rsc;
 
         rsc = pcmk__find_constraint_resource(data_set->resources, value);
         unpack_rsc_location(xml_obj, rsc, NULL, NULL, NULL);
@@ -320,7 +320,7 @@ unpack_simple_location(xmlNode *xml_obj, pe_working_set_t *data_set)
         for (GList *iter = data_set->resources; iter != NULL;
              iter = iter->next) {
 
-            pe_resource_t *r = iter->data;
+            pcmk_resource_t *r = iter->data;
             int nregs = 0;
             regmatch_t *pmatch = NULL;
             int status;
@@ -369,7 +369,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     const char *id = NULL;
     const char *rsc_id = NULL;
     const char *state = NULL;
-    pe_resource_t *rsc = NULL;
+    pcmk_resource_t *rsc = NULL;
     pe_tag_t *tag = NULL;
     xmlNode *rsc_set = NULL;
 
@@ -440,7 +440,7 @@ static int
 unpack_location_set(xmlNode *location, xmlNode *set, pe_working_set_t *data_set)
 {
     xmlNode *xml_rsc = NULL;
-    pe_resource_t *resource = NULL;
+    pcmk_resource_t *resource = NULL;
     const char *set_id;
     const char *role;
     const char *local_score;
@@ -533,7 +533,7 @@ pcmk__unpack_location(xmlNode *xml_obj, pe_working_set_t *data_set)
  *       freed separately.
  */
 pe__location_t *
-pcmk__new_location(const char *id, pe_resource_t *rsc,
+pcmk__new_location(const char *id, pcmk_resource_t *rsc,
                    int node_score, const char *discover_mode, pcmk_node_t *node)
 {
     pe__location_t *new_con = NULL;
@@ -616,7 +616,7 @@ pcmk__apply_locations(pe_working_set_t *data_set)
  *       apply_location() method should be used instead in most cases.
  */
 void
-pcmk__apply_location(pe_resource_t *rsc, pe__location_t *location)
+pcmk__apply_location(pcmk_resource_t *rsc, pe__location_t *location)
 {
     bool need_role = false;
 

@@ -544,7 +544,7 @@ add_hash_param(GHashTable * hash, const char *name, const char *value)
  */
 const char *
 pe__node_attribute_calculated(const pcmk_node_t *node, const char *name,
-                              const pe_resource_t *rsc,
+                              const pcmk_resource_t *rsc,
                               enum pcmk__rsc_node node_type,
                               bool force_host)
 {
@@ -557,7 +557,7 @@ pe__node_attribute_calculated(const pcmk_node_t *node, const char *name,
     const char *node_type_s = NULL;
     const char *reason = NULL;
 
-    const pe_resource_t *container = NULL;
+    const pcmk_resource_t *container = NULL;
     const pcmk_node_t *host = NULL;
 
     CRM_ASSERT((node != NULL) && (name != NULL) && (rsc != NULL)

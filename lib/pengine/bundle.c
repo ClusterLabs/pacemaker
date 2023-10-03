@@ -69,7 +69,7 @@ typedef struct pe__bundle_variant_data_s {
         char *launcher_options;
         const char *attribute_target;
 
-        pe_resource_t *child;
+        pcmk_resource_t *child;
 
         GList *replicas;    // pe__bundle_replica_t *
         GList *ports;       // pe__bundle_port_t *
@@ -93,7 +93,7 @@ typedef struct pe__bundle_variant_data_s {
  * \return Maximum replicas for bundle corresponding to \p rsc
  */
 int
-pe__bundle_max(const pe_resource_t *rsc)
+pe__bundle_max(const pcmk_resource_t *rsc)
 {
     const pe__bundle_variant_data_t *bundle_data = NULL;
 
@@ -109,8 +109,8 @@ pe__bundle_max(const pe_resource_t *rsc)
  *
  * \return Resource inside \p bundle if any, otherwise NULL
  */
-pe_resource_t *
-pe__bundled_resource(const pe_resource_t *rsc)
+pcmk_resource_t *
+pe__bundled_resource(const pcmk_resource_t *rsc)
 {
     const pe__bundle_variant_data_t *bundle_data = NULL;
 
@@ -127,11 +127,11 @@ pe__bundled_resource(const pe_resource_t *rsc)
  * \return Bundled resource instance inside \p instance if it is a bundle
  *         container instance, otherwise NULL
  */
-const pe_resource_t *
-pe__get_rsc_in_container(const pe_resource_t *instance)
+const pcmk_resource_t *
+pe__get_rsc_in_container(const pcmk_resource_t *instance)
 {
     const pe__bundle_variant_data_t *data = NULL;
-    const pe_resource_t *top = pe__const_top_resource(instance, true);
+    const pcmk_resource_t *top = pe__const_top_resource(instance, true);
 
     if ((top == NULL) || (top->variant != pcmk_rsc_variant_bundle)) {
         return NULL;
@@ -158,7 +158,7 @@ pe__get_rsc_in_container(const pe_resource_t *instance)
  * \return true if \p node is an instance of \p bundle, otherwise false
  */
 bool
-pe__node_is_bundle_instance(const pe_resource_t *bundle,
+pe__node_is_bundle_instance(const pcmk_resource_t *bundle,
                             const pcmk_node_t *node)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
@@ -183,8 +183,8 @@ pe__node_is_bundle_instance(const pe_resource_t *bundle,
  * \return Container resource from first replica of \p bundle if any,
  *         otherwise NULL
  */
-pe_resource_t *
-pe__first_container(const pe_resource_t *bundle)
+pcmk_resource_t *
+pe__first_container(const pcmk_resource_t *bundle)
 {
     const pe__bundle_variant_data_t *bundle_data = NULL;
     const pe__bundle_replica_t *replica = NULL;
@@ -207,7 +207,7 @@ pe__first_container(const pe_resource_t *bundle)
  * \param[in,out] user_data  Pointer to pass to \p fn
  */
 void
-pe__foreach_bundle_replica(pe_resource_t *bundle,
+pe__foreach_bundle_replica(pcmk_resource_t *bundle,
                            bool (*fn)(pe__bundle_replica_t *, void *),
                            void *user_data)
 {
@@ -231,7 +231,7 @@ pe__foreach_bundle_replica(pe_resource_t *bundle,
  * \param[in,out] user_data  Pointer to pass to \p fn
  */
 void
-pe__foreach_const_bundle_replica(const pe_resource_t *bundle,
+pe__foreach_const_bundle_replica(const pcmk_resource_t *bundle,
                                  bool (*fn)(const pe__bundle_replica_t *,
                                             void *),
                                  void *user_data)
@@ -359,7 +359,7 @@ valid_network(pe__bundle_variant_data_t *data)
 }
 
 static int
-create_ip_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
+create_ip_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
                    pe__bundle_replica_t *replica)
 {
     if(data->ip_range_start) {
@@ -419,7 +419,7 @@ container_agent_str(enum pe__container_agent t)
 }
 
 static int
-create_container_resource(pe_resource_t *parent,
+create_container_resource(pcmk_resource_t *parent,
                           const pe__bundle_variant_data_t *data,
                           pe__bundle_replica_t *replica)
 {
@@ -663,7 +663,7 @@ create_container_resource(pe_resource_t *parent,
  * \param[in]     uname  Name of node to ban
  */
 static void
-disallow_node(pe_resource_t *rsc, const char *uname)
+disallow_node(pcmk_resource_t *rsc, const char *uname)
 {
     gpointer match = g_hash_table_lookup(rsc->allowed_nodes, uname);
 
@@ -677,7 +677,7 @@ disallow_node(pe_resource_t *rsc, const char *uname)
 }
 
 static int
-create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
+create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
                        pe__bundle_replica_t *replica)
 {
     if (replica->child && valid_network(data)) {
@@ -819,7 +819,7 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
 }
 
 static int
-create_replica_resources(pe_resource_t *parent, pe__bundle_variant_data_t *data,
+create_replica_resources(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
                          pe__bundle_replica_t *replica)
 {
     int rc = pcmk_rc_ok;
@@ -890,9 +890,9 @@ port_free(pe__bundle_port_t *port)
 }
 
 static pe__bundle_replica_t *
-replica_for_remote(pe_resource_t *remote)
+replica_for_remote(pcmk_resource_t *remote)
 {
-    pe_resource_t *top = remote;
+    pcmk_resource_t *top = remote;
     pe__bundle_variant_data_t *bundle_data = NULL;
 
     if (top == NULL) {
@@ -917,7 +917,7 @@ replica_for_remote(pe_resource_t *remote)
 }
 
 bool
-pe__bundle_needs_remote_name(pe_resource_t *rsc)
+pe__bundle_needs_remote_name(pcmk_resource_t *rsc)
 {
     const char *value;
     GHashTable *params = NULL;
@@ -935,7 +935,7 @@ pe__bundle_needs_remote_name(pe_resource_t *rsc)
 }
 
 const char *
-pe__add_bundle_remote_name(pe_resource_t *rsc, pe_working_set_t *data_set,
+pe__add_bundle_remote_name(pcmk_resource_t *rsc, pe_working_set_t *data_set,
                            xmlNode *xml, const char *field)
 {
     // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
@@ -981,7 +981,7 @@ pe__add_bundle_remote_name(pe_resource_t *rsc, pe_working_set_t *data_set,
     } while (0)
 
 gboolean
-pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
+pe__unpack_bundle(pcmk_resource_t *rsc, pe_working_set_t *data_set)
 {
     const char *value = NULL;
     xmlNode *xml_obj = NULL;
@@ -1301,7 +1301,7 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
 }
 
 static int
-replica_resource_active(pe_resource_t *rsc, gboolean all)
+replica_resource_active(pcmk_resource_t *rsc, gboolean all)
 {
     if (rsc) {
         gboolean child_active = rsc->fns->active(rsc, all);
@@ -1316,7 +1316,7 @@ replica_resource_active(pe_resource_t *rsc, gboolean all)
 }
 
 gboolean
-pe__bundle_active(pe_resource_t *rsc, gboolean all)
+pe__bundle_active(pcmk_resource_t *rsc, gboolean all)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
     GList *iter = NULL;
@@ -1363,8 +1363,8 @@ pe__bundle_active(pe_resource_t *rsc, gboolean all)
  *
  * \return Bundle replica if found, NULL otherwise
  */
-pe_resource_t *
-pe__find_bundle_replica(const pe_resource_t *bundle, const pcmk_node_t *node)
+pcmk_resource_t *
+pe__find_bundle_replica(const pcmk_resource_t *bundle, const pcmk_node_t *node)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
     CRM_ASSERT(bundle && node);
@@ -1387,7 +1387,7 @@ pe__find_bundle_replica(const pe_resource_t *bundle, const pcmk_node_t *node)
  * \deprecated This function will be removed in a future release
  */
 static void
-print_rsc_in_list(pe_resource_t *rsc, const char *pre_text, long options,
+print_rsc_in_list(pcmk_resource_t *rsc, const char *pre_text, long options,
                   void *print_data)
 {
     if (rsc != NULL) {
@@ -1406,7 +1406,7 @@ print_rsc_in_list(pe_resource_t *rsc, const char *pre_text, long options,
  * \deprecated This function will be removed in a future release
  */
 static void
-bundle_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
+bundle_print_xml(pcmk_resource_t *rsc, const char *pre_text, long options,
                  void *print_data)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
@@ -1447,12 +1447,13 @@ bundle_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
     free(child_text);
 }
 
-PCMK__OUTPUT_ARGS("bundle", "uint32_t", "pe_resource_t *", "GList *", "GList *")
+PCMK__OUTPUT_ARGS("bundle", "uint32_t", "pcmk_resource_t *", "GList *",
+                  "GList *")
 int
 pe__bundle_xml(pcmk__output_t *out, va_list args)
 {
     uint32_t show_opts = va_arg(args, uint32_t);
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
@@ -1554,7 +1555,7 @@ static void
 pe__bundle_replica_output_html(pcmk__output_t *out, pe__bundle_replica_t *replica,
                                pcmk_node_t *node, uint32_t show_opts)
 {
-    pe_resource_t *rsc = replica->child;
+    pcmk_resource_t *rsc = replica->child;
 
     int offset = 0;
     char buffer[LINE_MAX];
@@ -1588,7 +1589,7 @@ pe__bundle_replica_output_html(pcmk__output_t *out, pe__bundle_replica_t *replic
  *         otherwise unmanaged, or an empty string otherwise
  */
 static const char *
-get_unmanaged_str(const pe_resource_t *rsc)
+get_unmanaged_str(const pcmk_resource_t *rsc)
 {
     if (pcmk_is_set(rsc->flags, pcmk_rsc_maintenance)) {
         return " (maintenance)";
@@ -1599,12 +1600,13 @@ get_unmanaged_str(const pe_resource_t *rsc)
     return "";
 }
 
-PCMK__OUTPUT_ARGS("bundle", "uint32_t", "pe_resource_t *", "GList *", "GList *")
+PCMK__OUTPUT_ARGS("bundle", "uint32_t", "pcmk_resource_t *", "GList *",
+                  "GList *")
 int
 pe__bundle_html(pcmk__output_t *out, va_list args)
 {
     uint32_t show_opts = va_arg(args, uint32_t);
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
@@ -1708,7 +1710,7 @@ static void
 pe__bundle_replica_output_text(pcmk__output_t *out, pe__bundle_replica_t *replica,
                                pcmk_node_t *node, uint32_t show_opts)
 {
-    const pe_resource_t *rsc = replica->child;
+    const pcmk_resource_t *rsc = replica->child;
 
     int offset = 0;
     char buffer[LINE_MAX];
@@ -1732,12 +1734,13 @@ pe__bundle_replica_output_text(pcmk__output_t *out, pe__bundle_replica_t *replic
     pe__common_output_text(out, rsc, buffer, node, show_opts);
 }
 
-PCMK__OUTPUT_ARGS("bundle", "uint32_t", "pe_resource_t *", "GList *", "GList *")
+PCMK__OUTPUT_ARGS("bundle", "uint32_t", "pcmk_resource_t *", "GList *",
+                  "GList *")
 int
 pe__bundle_text(pcmk__output_t *out, va_list args)
 {
     uint32_t show_opts = va_arg(args, uint32_t);
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
@@ -1846,7 +1849,7 @@ print_bundle_replica(pe__bundle_replica_t *replica, const char *pre_text,
                      long options, void *print_data)
 {
     pcmk_node_t *node = NULL;
-    pe_resource_t *rsc = replica->child;
+    pcmk_resource_t *rsc = replica->child;
 
     int offset = 0;
     char buffer[LINE_MAX];
@@ -1876,7 +1879,7 @@ print_bundle_replica(pe__bundle_replica_t *replica, const char *pre_text,
  * \deprecated This function will be removed in a future release
  */
 void
-pe__print_bundle(pe_resource_t *rsc, const char *pre_text, long options,
+pe__print_bundle(pcmk_resource_t *rsc, const char *pre_text, long options,
                  void *print_data)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
@@ -1978,7 +1981,7 @@ free_bundle_replica(pe__bundle_replica_t *replica)
 }
 
 void
-pe__free_bundle(pe_resource_t *rsc)
+pe__free_bundle(pcmk_resource_t *rsc)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
     CRM_CHECK(rsc != NULL, return);
@@ -2012,7 +2015,7 @@ pe__free_bundle(pe_resource_t *rsc)
 }
 
 enum rsc_role_e
-pe__bundle_resource_state(const pe_resource_t *rsc, gboolean current)
+pe__bundle_resource_state(const pcmk_resource_t *rsc, gboolean current)
 {
     enum rsc_role_e container_role = pcmk_role_unknown;
     return container_role;
@@ -2026,7 +2029,7 @@ pe__bundle_resource_state(const pe_resource_t *rsc, gboolean current)
  * \return Number of configured replicas, or 0 on error
  */
 int
-pe_bundle_replicas(const pe_resource_t *rsc)
+pe_bundle_replicas(const pcmk_resource_t *rsc)
 {
     if ((rsc == NULL) || (rsc->variant != pcmk_rsc_variant_bundle)) {
         return 0;
@@ -2039,7 +2042,7 @@ pe_bundle_replicas(const pe_resource_t *rsc)
 }
 
 void
-pe__count_bundle(pe_resource_t *rsc)
+pe__count_bundle(pcmk_resource_t *rsc)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
 
@@ -2063,7 +2066,7 @@ pe__count_bundle(pe_resource_t *rsc)
 }
 
 gboolean
-pe__bundle_is_filtered(const pe_resource_t *rsc, GList *only_rsc,
+pe__bundle_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
                        gboolean check_parent)
 {
     gboolean passes = FALSE;
@@ -2107,7 +2110,7 @@ pe__bundle_is_filtered(const pe_resource_t *rsc, GList *only_rsc,
  *       g_list_free().
  */
 GList *
-pe__bundle_containers(const pe_resource_t *bundle)
+pe__bundle_containers(const pcmk_resource_t *bundle)
 {
     GList *containers = NULL;
     const pe__bundle_variant_data_t *data = NULL;
@@ -2123,12 +2126,12 @@ pe__bundle_containers(const pe_resource_t *bundle)
 
 // Bundle implementation of resource_object_functions_t:active_node()
 pcmk_node_t *
-pe__bundle_active_node(const pe_resource_t *rsc, unsigned int *count_all,
+pe__bundle_active_node(const pcmk_resource_t *rsc, unsigned int *count_all,
                        unsigned int *count_clean)
 {
     pcmk_node_t *active = NULL;
     pcmk_node_t *node = NULL;
-    pe_resource_t *container = NULL;
+    pcmk_resource_t *container = NULL;
     GList *containers = NULL;
     GList *iter = NULL;
     GHashTable *nodes = NULL;
@@ -2206,7 +2209,7 @@ done:
  * \return Maximum number of \p rsc instances that can be active on one node
  */
 unsigned int
-pe__bundle_max_per_node(const pe_resource_t *rsc)
+pe__bundle_max_per_node(const pcmk_resource_t *rsc)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
 

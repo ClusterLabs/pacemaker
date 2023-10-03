@@ -605,7 +605,7 @@ fencing_topology_init(void)
  * \return Pointer to node object if found, NULL otherwise
  */
 static pcmk_node_t *
-our_node_allowed_for(const pe_resource_t *rsc)
+our_node_allowed_for(const pcmk_resource_t *rsc)
 {
     GHashTableIter iter;
     pcmk_node_t *node = NULL;
@@ -692,7 +692,7 @@ update_stonith_watchdog_timeout_ms(xmlNode *cib)
  * \param[in,out] data_set  Cluster working set with device information
  */
 static void
-cib_device_update(pe_resource_t *rsc, pe_working_set_t *data_set)
+cib_device_update(pcmk_resource_t *rsc, pe_working_set_t *data_set)
 {
     pcmk_node_t *node = NULL;
     const char *value = NULL;

@@ -34,7 +34,7 @@
  *       roles or actions.
  */
 pcmk_node_t *
-pcmk__clone_assign(pe_resource_t *rsc, const pcmk_node_t *prefer,
+pcmk__clone_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
                    bool stop_if_fail)
 {
     GList *colocations = NULL;
@@ -98,7 +98,7 @@ pcmk__clone_assign(pe_resource_t *rsc, const pcmk_node_t *prefer,
  * \param[in,out] rsc  Clone resource to create actions for
  */
 void
-pcmk__clone_create_actions(pe_resource_t *rsc)
+pcmk__clone_create_actions(pcmk_resource_t *rsc)
 {
     CRM_ASSERT(pe_rsc_is_clone(rsc));
 
@@ -116,7 +116,7 @@ pcmk__clone_create_actions(pe_resource_t *rsc)
  * \param[in,out] rsc  Clone resource to create implicit constraints for
  */
 void
-pcmk__clone_internal_constraints(pe_resource_t *rsc)
+pcmk__clone_internal_constraints(pcmk_resource_t *rsc)
 {
     bool ordered = false;
 
@@ -154,7 +154,7 @@ pcmk__clone_internal_constraints(pe_resource_t *rsc)
         rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance_number);
     }
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-        pe_resource_t *instance = (pe_resource_t *) iter->data;
+        pcmk_resource_t *instance = (pcmk_resource_t *) iter->data;
 
         instance->cmds->internal_constraints(instance);
 
@@ -178,9 +178,9 @@ pcmk__clone_internal_constraints(pe_resource_t *rsc)
         if (ordered) {
             for (GList *later = iter->next;
                  later != NULL; later = later->next) {
-                pcmk__order_starts(instance, (pe_resource_t *) later->data,
+                pcmk__order_starts(instance, (pcmk_resource_t *) later->data,
                                    pcmk__ar_ordered);
-                pcmk__order_stops((pe_resource_t *) later->data, instance,
+                pcmk__order_stops((pcmk_resource_t *) later->data, instance,
                                   pcmk__ar_ordered);
             }
         }
@@ -201,7 +201,7 @@ pcmk__clone_internal_constraints(pe_resource_t *rsc)
 static bool
 can_interleave(const pcmk__colocation_t *colocation)
 {
-    const pe_resource_t *dependent = colocation->dependent;
+    const pcmk_resource_t *dependent = colocation->dependent;
 
     // Only colocations between clone or bundle resources use interleaving
     if (dependent->variant <= pcmk_rsc_variant_group) {
@@ -242,8 +242,8 @@ can_interleave(const pcmk__colocation_t *colocation)
  * \param[in]     for_dependent  true if called on behalf of dependent
  */
 void
-pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
-                              const pe_resource_t *primary,
+pcmk__clone_apply_coloc_score(pcmk_resource_t *dependent,
+                              const pcmk_resource_t *primary,
                               const pcmk__colocation_t *colocation,
                               bool for_dependent)
 {
@@ -292,7 +292,7 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
 
     // Apply interleaved colocations
     if (can_interleave(colocation)) {
-        const pe_resource_t *primary_instance = NULL;
+        const pcmk_resource_t *primary_instance = NULL;
 
         primary_instance = pcmk__find_compatible_instance(dependent, primary,
                                                           pcmk_role_unknown,
@@ -324,7 +324,7 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
 
         // Dependent can run only where primary will have unblocked instances
         for (iter = primary->children; iter != NULL; iter = iter->next) {
-            const pe_resource_t *instance = iter->data;
+            const pcmk_resource_t *instance = iter->data;
             pcmk_node_t *chosen = instance->fns->location(instance, NULL, 0);
 
             if ((chosen != NULL)
@@ -343,7 +343,7 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
 
     // Apply optional colocations
     for (iter = primary->children; iter != NULL; iter = iter->next) {
-        const pe_resource_t *instance = iter->data;
+        const pcmk_resource_t *instance = iter->data;
 
         instance->cmds->apply_coloc_score(dependent, instance, colocation,
                                           false);
@@ -352,8 +352,8 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
 
 // Clone implementation of resource_alloc_functions_t:with_this_colocations()
 void
-pcmk__with_clone_colocations(const pe_resource_t *rsc,
-                             const pe_resource_t *orig_rsc, GList **list)
+pcmk__with_clone_colocations(const pcmk_resource_t *rsc,
+                             const pcmk_resource_t *orig_rsc, GList **list)
 {
     CRM_CHECK((rsc != NULL) && (orig_rsc != NULL) && (list != NULL), return);
 
@@ -366,8 +366,8 @@ pcmk__with_clone_colocations(const pe_resource_t *rsc,
 
 // Clone implementation of resource_alloc_functions_t:this_with_colocations()
 void
-pcmk__clone_with_colocations(const pe_resource_t *rsc,
-                             const pe_resource_t *orig_rsc, GList **list)
+pcmk__clone_with_colocations(const pcmk_resource_t *rsc,
+                             const pcmk_resource_t *orig_rsc, GList **list)
 {
     CRM_CHECK((rsc != NULL) && (orig_rsc != NULL) && (list != NULL), return);
 
@@ -403,14 +403,14 @@ pcmk__clone_action_flags(pe_action_t *action, const pcmk_node_t *node)
  * \param[in,out] location  Location constraint to apply
  */
 void
-pcmk__clone_apply_location(pe_resource_t *rsc, pe__location_t *location)
+pcmk__clone_apply_location(pcmk_resource_t *rsc, pe__location_t *location)
 {
     CRM_CHECK((location != NULL) && pe_rsc_is_clone(rsc), return);
 
     pcmk__apply_location(rsc, location);
 
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-        pe_resource_t *instance = (pe_resource_t *) iter->data;
+        pcmk_resource_t *instance = (pcmk_resource_t *) iter->data;
 
         instance->cmds->apply_location(instance, location);
     }
@@ -420,7 +420,7 @@ pcmk__clone_apply_location(pe_resource_t *rsc, pe__location_t *location)
 static void
 call_action_flags(gpointer data, gpointer user_data)
 {
-    pe_resource_t *rsc = user_data;
+    pcmk_resource_t *rsc = user_data;
 
     rsc->cmds->action_flags((pe_action_t *) data, NULL);
 }
@@ -432,7 +432,7 @@ call_action_flags(gpointer data, gpointer user_data)
  * \param[in,out] rsc  Resource whose actions should be added
  */
 void
-pcmk__clone_add_actions_to_graph(pe_resource_t *rsc)
+pcmk__clone_add_actions_to_graph(pcmk_resource_t *rsc)
 {
     CRM_ASSERT(pe_rsc_is_clone(rsc));
 
@@ -440,7 +440,7 @@ pcmk__clone_add_actions_to_graph(pe_resource_t *rsc)
     pe__create_clone_notifications(rsc);
 
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) iter->data;
+        pcmk_resource_t *child_rsc = (pcmk_resource_t *) iter->data;
 
         child_rsc->cmds->add_actions_to_graph(child_rsc);
     }
@@ -460,13 +460,13 @@ pcmk__clone_add_actions_to_graph(pe_resource_t *rsc)
  *         children, otherwise false
  */
 static bool
-rsc_probed_on(const pe_resource_t *rsc, const pcmk_node_t *node)
+rsc_probed_on(const pcmk_resource_t *rsc, const pcmk_node_t *node)
 {
     if (rsc->children != NULL) {
         for (GList *child_iter = rsc->children; child_iter != NULL;
              child_iter = child_iter->next) {
 
-            pe_resource_t *child = (pe_resource_t *) child_iter->data;
+            pcmk_resource_t *child = (pcmk_resource_t *) child_iter->data;
 
             if (rsc_probed_on(child, node)) {
                 return true;
@@ -499,11 +499,11 @@ rsc_probed_on(const pe_resource_t *rsc, const pcmk_node_t *node)
  * \return Instance of \p clone that has been probed on \p node if any,
  *         otherwise NULL
  */
-static pe_resource_t *
-find_probed_instance_on(const pe_resource_t *clone, const pcmk_node_t *node)
+static pcmk_resource_t *
+find_probed_instance_on(const pcmk_resource_t *clone, const pcmk_node_t *node)
 {
     for (GList *iter = clone->children; iter != NULL; iter = iter->next) {
-        pe_resource_t *instance = (pe_resource_t *) iter->data;
+        pcmk_resource_t *instance = (pcmk_resource_t *) iter->data;
 
         if (rsc_probed_on(instance, node)) {
             return instance;
@@ -520,15 +520,15 @@ find_probed_instance_on(const pe_resource_t *clone, const pcmk_node_t *node)
  * \param[in,out] node   Node to probe \p clone on
  */
 static bool
-probe_anonymous_clone(pe_resource_t *clone, pcmk_node_t *node)
+probe_anonymous_clone(pcmk_resource_t *clone, pcmk_node_t *node)
 {
     // Check whether we already probed an instance on this node
-    pe_resource_t *child = find_probed_instance_on(clone, node);
+    pcmk_resource_t *child = find_probed_instance_on(clone, node);
 
     // Otherwise, check if we plan to start an instance on this node
     for (GList *iter = clone->children; (iter != NULL) && (child == NULL);
          iter = iter->next) {
-        pe_resource_t *instance = (pe_resource_t *) iter->data;
+        pcmk_resource_t *instance = (pcmk_resource_t *) iter->data;
         const pcmk_node_t *instance_node = NULL;
 
         instance_node = instance->fns->location(instance, NULL, 0);
@@ -556,7 +556,7 @@ probe_anonymous_clone(pe_resource_t *clone, pcmk_node_t *node)
  * \return true if any probe was created, otherwise false
  */
 bool
-pcmk__clone_create_probe(pe_resource_t *rsc, pcmk_node_t *node)
+pcmk__clone_create_probe(pcmk_resource_t *rsc, pcmk_node_t *node)
 {
     CRM_ASSERT((node != NULL) && pe_rsc_is_clone(rsc));
 
@@ -606,7 +606,7 @@ pcmk__clone_create_probe(pe_resource_t *rsc, pcmk_node_t *node)
  * \param[in,out] xml  Transition graph action attributes XML to add to
  */
 void
-pcmk__clone_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml)
+pcmk__clone_add_graph_meta(const pcmk_resource_t *rsc, xmlNode *xml)
 {
     char *name = NULL;
 
@@ -655,12 +655,12 @@ pcmk__clone_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml)
 
 // Clone implementation of resource_alloc_functions_t:add_utilization()
 void
-pcmk__clone_add_utilization(const pe_resource_t *rsc,
-                            const pe_resource_t *orig_rsc, GList *all_rscs,
+pcmk__clone_add_utilization(const pcmk_resource_t *rsc,
+                            const pcmk_resource_t *orig_rsc, GList *all_rscs,
                             GHashTable *utilization)
 {
     bool existing = false;
-    pe_resource_t *child = NULL;
+    pcmk_resource_t *child = NULL;
 
     CRM_ASSERT(pe_rsc_is_clone(rsc) && (orig_rsc != NULL)
                && (utilization != NULL));
@@ -671,7 +671,7 @@ pcmk__clone_add_utilization(const pe_resource_t *rsc,
 
     // Look for any child already existing in the list
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-        child = (pe_resource_t *) iter->data;
+        child = (pcmk_resource_t *) iter->data;
         if (g_list_find(all_rscs, child)) {
             existing = true; // Keep checking remaining children
         } else {
@@ -679,7 +679,7 @@ pcmk__clone_add_utilization(const pe_resource_t *rsc,
             for (GList *member_iter = child->children; member_iter != NULL;
                  member_iter = member_iter->next) {
 
-                pe_resource_t *member = (pe_resource_t *) member_iter->data;
+                pcmk_resource_t *member = (pcmk_resource_t *) member_iter->data;
 
                 if (g_list_find(all_rscs, member) != NULL) {
                     // Add *child's* utilization, not group member's
@@ -694,7 +694,7 @@ pcmk__clone_add_utilization(const pe_resource_t *rsc,
 
     if (!existing && (rsc->children != NULL)) {
         // If nothing was found, still add first child's utilization
-        child = (pe_resource_t *) rsc->children->data;
+        child = (pcmk_resource_t *) rsc->children->data;
 
         child->cmds->add_utilization(child, orig_rsc, all_rscs, utilization);
     }
@@ -702,7 +702,7 @@ pcmk__clone_add_utilization(const pe_resource_t *rsc,
 
 // Clone implementation of resource_alloc_functions_t:shutdown_lock()
 void
-pcmk__clone_shutdown_lock(pe_resource_t *rsc)
+pcmk__clone_shutdown_lock(pcmk_resource_t *rsc)
 {
     CRM_ASSERT(pe_rsc_is_clone(rsc));
     return; // Clones currently don't support shutdown locks

@@ -231,13 +231,13 @@ ordering_flags_for_kind(enum pe_order_kind kind, const char *first,
  *
  * \return Resource corresponding to \p id, or NULL if none
  */
-static pe_resource_t *
+static pcmk_resource_t *
 get_ordering_resource(const xmlNode *xml, const char *resource_attr,
                       const char *instance_attr,
                       const pe_working_set_t *data_set)
 {
     // @COMPAT: instance_attr and instance_id variables deprecated since 2.1.5
-    pe_resource_t *rsc = NULL;
+    pcmk_resource_t *rsc = NULL;
     const char *rsc_id = crm_element_value(xml, resource_attr);
     const char *instance_id = crm_element_value(xml, instance_attr);
 
@@ -287,7 +287,7 @@ get_ordering_resource(const xmlNode *xml, const char *resource_attr,
  * \return Minimum 'first' instances required (or 0 if not applicable)
  */
 static int
-get_minimum_first_instances(const pe_resource_t *rsc, const xmlNode *xml)
+get_minimum_first_instances(const pcmk_resource_t *rsc, const xmlNode *xml)
 {
     const char *clone_min = NULL;
     bool require_all = false;
@@ -334,8 +334,8 @@ get_minimum_first_instances(const pe_resource_t *rsc, const xmlNode *xml)
  */
 static void
 clone_min_ordering(const char *id,
-                   pe_resource_t *rsc_first, const char *action_first,
-                   pe_resource_t *rsc_then, const char *action_then,
+                   pcmk_resource_t *rsc_first, const char *action_first,
+                   pcmk_resource_t *rsc_then, const char *action_then,
                    uint32_t flags, int clone_min)
 {
     // Create a pseudo-action for when the minimum instances are active
@@ -352,7 +352,7 @@ clone_min_ordering(const char *id,
 
     // Order the actions for each clone instance before the pseudo-action
     for (GList *iter = rsc_first->children; iter != NULL; iter = iter->next) {
-        pe_resource_t *child = iter->data;
+        pcmk_resource_t *child = iter->data;
 
         pcmk__new_ordering(child, pcmk__op_key(child->id, action_first, 0),
                            NULL, NULL, NULL, clone_min_met,
@@ -401,8 +401,8 @@ clone_min_ordering(const char *id,
  */
 static void
 inverse_ordering(const char *id, enum pe_order_kind kind,
-                 pe_resource_t *rsc_first, const char *action_first,
-                 pe_resource_t *rsc_then, const char *action_then)
+                 pcmk_resource_t *rsc_first, const char *action_first,
+                 pcmk_resource_t *rsc_then, const char *action_then)
 {
     action_then = invert_action(action_then);
     action_first = invert_action(action_first);
@@ -422,8 +422,8 @@ inverse_ordering(const char *id, enum pe_order_kind kind,
 static void
 unpack_simple_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
 {
-    pe_resource_t *rsc_then = NULL;
-    pe_resource_t *rsc_first = NULL;
+    pcmk_resource_t *rsc_then = NULL;
+    pcmk_resource_t *rsc_first = NULL;
     int min_required_before = 0;
     enum pe_order_kind kind = pe_order_kind_mandatory;
     uint32_t flags = pcmk__ar_none;
@@ -522,8 +522,8 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
  *       then_action_task, which do not need to be freed by the caller.
  */
 void
-pcmk__new_ordering(pe_resource_t *first_rsc, char *first_action_task,
-                   pe_action_t *first_action, pe_resource_t *then_rsc,
+pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
+                   pe_action_t *first_action, pcmk_resource_t *then_rsc,
                    char *then_action_task, pe_action_t *then_action,
                    uint32_t flags, pe_working_set_t *sched)
 {
@@ -596,8 +596,8 @@ unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
     GList *set_iter = NULL;
     GList *resources = NULL;
 
-    pe_resource_t *last = NULL;
-    pe_resource_t *resource = NULL;
+    pcmk_resource_t *last = NULL;
+    pcmk_resource_t *resource = NULL;
 
     int local_kind = parent_kind;
     bool sequential = false;
@@ -640,7 +640,7 @@ unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
 
     set_iter = resources;
     while (set_iter != NULL) {
-        resource = (pe_resource_t *) set_iter->data;
+        resource = (pcmk_resource_t *) set_iter->data;
         set_iter = set_iter->next;
 
         key = pcmk__op_key(resource->id, action, 0);
@@ -649,7 +649,7 @@ unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
             /* Serialize before everything that comes after */
 
             for (GList *iter = set_iter; iter != NULL; iter = iter->next) {
-                pe_resource_t *then_rsc = iter->data;
+                pcmk_resource_t *then_rsc = iter->data;
                 char *then_key = pcmk__op_key(then_rsc->id, action, 0);
 
                 pcmk__new_ordering(resource, strdup(key), NULL, then_rsc,
@@ -678,7 +678,7 @@ unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
 
     set_iter = resources;
     while (set_iter != NULL) {
-        resource = (pe_resource_t *) set_iter->data;
+        resource = (pcmk_resource_t *) set_iter->data;
         set_iter = set_iter->next;
 
         if (sequential) {
@@ -716,8 +716,8 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
     const xmlNode *xml_rsc = NULL;
     const xmlNode *xml_rsc_2 = NULL;
 
-    pe_resource_t *rsc_1 = NULL;
-    pe_resource_t *rsc_2 = NULL;
+    pcmk_resource_t *rsc_1 = NULL;
+    pcmk_resource_t *rsc_2 = NULL;
 
     const char *action_1 = crm_element_value(set1, "action");
     const char *action_2 = crm_element_value(set2, "action");
@@ -899,8 +899,8 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     const char *action_first = NULL;
     const char *action_then = NULL;
 
-    pe_resource_t *rsc_first = NULL;
-    pe_resource_t *rsc_then = NULL;
+    pcmk_resource_t *rsc_first = NULL;
+    pcmk_resource_t *rsc_then = NULL;
     pe_tag_t *tag_first = NULL;
     pe_tag_t *tag_then = NULL;
 
@@ -1190,7 +1190,7 @@ pcmk__order_stops_before_shutdown(pcmk_node_t *node, pe_action_t *shutdown_op)
  * \note It is the caller's responsibility to free the result with g_list_free()
  */
 static GList *
-find_actions_by_task(const pe_resource_t *rsc, const char *original_key)
+find_actions_by_task(const pcmk_resource_t *rsc, const char *original_key)
 {
     // Search under given task key directly
     GList *list = find_actions(rsc->actions, original_key, NULL);
@@ -1223,7 +1223,7 @@ find_actions_by_task(const pe_resource_t *rsc, const char *original_key)
  */
 static void
 order_resource_actions_after(pe_action_t *first_action,
-                             const pe_resource_t *rsc, pe__ordering_t *order)
+                             const pcmk_resource_t *rsc, pe__ordering_t *order)
 {
     GList *then_actions = NULL;
     uint32_t flags = pcmk__ar_none;
@@ -1283,11 +1283,11 @@ order_resource_actions_after(pe_action_t *first_action,
 }
 
 static void
-rsc_order_first(pe_resource_t *first_rsc, pe__ordering_t *order)
+rsc_order_first(pcmk_resource_t *first_rsc, pe__ordering_t *order)
 {
     GList *first_actions = NULL;
     pe_action_t *first_action = order->lh_action;
-    pe_resource_t *then_rsc = order->rh_rsc;
+    pcmk_resource_t *then_rsc = order->rh_rsc;
 
     CRM_ASSERT(first_rsc != NULL);
     pe_rsc_trace(first_rsc, "Applying ordering constraint %d (first: %s)",
@@ -1407,7 +1407,7 @@ pcmk__apply_orderings(pe_working_set_t *sched)
          iter != NULL; iter = iter->next) {
 
         pe__ordering_t *order = iter->data;
-        pe_resource_t *rsc = order->lh_rsc;
+        pcmk_resource_t *rsc = order->lh_rsc;
 
         if (rsc != NULL) {
             rsc_order_first(rsc, order);
@@ -1466,7 +1466,7 @@ pcmk__order_after_each(pe_action_t *after, GList *list)
  * \param[in,out] rsc  Clone or bundle to order
  */
 void
-pcmk__promotable_restart_ordering(pe_resource_t *rsc)
+pcmk__promotable_restart_ordering(pcmk_resource_t *rsc)
 {
     // Order start and promote after all instances are stopped
     pcmk__order_resource_actions(rsc, PCMK_ACTION_STOPPED,

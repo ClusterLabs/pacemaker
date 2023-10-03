@@ -15,7 +15,7 @@
 #include <glib.h>
 
 bool
-pe__resource_is_remote_conn(const pe_resource_t *rsc)
+pe__resource_is_remote_conn(const pcmk_resource_t *rsc)
 {
     return (rsc != NULL) && rsc->is_remote_node
            && pe__is_remote_node(pe_find_node(rsc->cluster->nodes, rsc->id));
@@ -62,15 +62,15 @@ pe__is_bundle_node(const pcmk_node_t *node)
  *
  * \return Filler resource with remote connection, or NULL if none found
  */
-pe_resource_t *
+pcmk_resource_t *
 pe__resource_contains_guest_node(const pe_working_set_t *data_set,
-                                 const pe_resource_t *rsc)
+                                 const pcmk_resource_t *rsc)
 {
     if ((rsc != NULL) && (data_set != NULL)
         && pcmk_is_set(data_set->flags, pcmk_sched_have_remote_nodes)) {
 
         for (GList *gIter = rsc->fillers; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *filler = gIter->data;
+            pcmk_resource_t *filler = gIter->data;
 
             if (filler->is_remote_node) {
                 return filler;
@@ -128,7 +128,7 @@ pe_foreach_guest_node(const pe_working_set_t *data_set, const pcmk_node_t *host,
         return;
     }
     for (iter = host->details->running_rsc; iter != NULL; iter = iter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+        pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         if (rsc->is_remote_node && (rsc->container != NULL)) {
             pcmk_node_t *guest_node = pe_find_node(data_set->nodes, rsc->id);
@@ -214,14 +214,14 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
 
 // History entry to be checked for fail count clearing
 struct check_op {
-    const xmlNode *rsc_op; // History entry XML
-    pe_resource_t *rsc;    // Known resource corresponding to history entry
-    pcmk_node_t *node; // Known node corresponding to history entry
+    const xmlNode *rsc_op;  // History entry XML
+    pcmk_resource_t *rsc;   // Known resource corresponding to history entry
+    pcmk_node_t *node;      // Known node corresponding to history entry
     enum pcmk__check_parameters check_type; // What needs checking
 };
 
 void
-pe__add_param_check(const xmlNode *rsc_op, pe_resource_t *rsc,
+pe__add_param_check(const xmlNode *rsc_op, pcmk_resource_t *rsc,
                     pcmk_node_t *node, enum pcmk__check_parameters flag,
                     pe_working_set_t *data_set)
 {
@@ -249,8 +249,8 @@ pe__add_param_check(const xmlNode *rsc_op, pe_resource_t *rsc,
  */
 void
 pe__foreach_param_check(pe_working_set_t *data_set,
-                       void (*cb)(pe_resource_t*, pcmk_node_t*, const xmlNode*,
-                                  enum pcmk__check_parameters))
+                       void (*cb)(pcmk_resource_t*, pcmk_node_t*,
+                                  const xmlNode*, enum pcmk__check_parameters))
 {
     CRM_CHECK(data_set && cb, return);
 

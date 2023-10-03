@@ -966,7 +966,8 @@ why_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **er
 }
 
 static int
-ban_or_move(pcmk__output_t *out, pe_resource_t *rsc, const char *move_lifetime)
+ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc,
+            const char *move_lifetime)
 {
     int rc = pcmk_rc_ok;
     pcmk_node_t *current = NULL;
@@ -987,7 +988,7 @@ ban_or_move(pcmk__output_t *out, pe_resource_t *rsc, const char *move_lifetime)
 
         current = NULL;
         for(iter = rsc->children; iter; iter = iter->next) {
-            pe_resource_t *child = (pe_resource_t *)iter->data;
+            pcmk_resource_t *child = (pcmk_resource_t *)iter->data;
             enum rsc_role_e child_role = child->fns->state(child, TRUE);
 
             if (child_role == pcmk_role_promoted) {
@@ -1025,7 +1026,7 @@ ban_or_move(pcmk__output_t *out, pe_resource_t *rsc, const char *move_lifetime)
 }
 
 static void
-cleanup(pcmk__output_t *out, pe_resource_t *rsc, pcmk_node_t *node)
+cleanup(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
 {
     int rc = pcmk_rc_ok;
 
@@ -1221,7 +1222,7 @@ refresh(pcmk__output_t *out)
 }
 
 static void
-refresh_resource(pcmk__output_t *out, pe_resource_t *rsc, pcmk_node_t *node)
+refresh_resource(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
 {
     int rc = pcmk_rc_ok;
 
@@ -1444,7 +1445,7 @@ int
 main(int argc, char **argv)
 {
     xmlNode *cib_xml_copy = NULL;
-    pe_resource_t *rsc = NULL;
+    pcmk_resource_t *rsc = NULL;
     pcmk_node_t *node = NULL;
     int rc = pcmk_rc_ok;
 

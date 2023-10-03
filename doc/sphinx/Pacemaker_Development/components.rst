@@ -358,13 +358,13 @@ raw CIB XML and parsed into more usable data structures, plus the resulting
 transition graph XML. The variable name is usually ``data_set``.
 
 .. index::
-   single: pe_resource_t
+   single: pcmk_resource_t
 
 Resources
 _________
 
-``pe_resource_t`` is the data object representing cluster resources. A resource
-has a variant: primitive (a.k.a. native), group, clone, or bundle.
+``pcmk_resource_t`` is the data object representing cluster resources. A
+resource has a variant: primitive (a.k.a. native), group, clone, or bundle.
 
 The resource object has members for two sets of methods,
 ``resource_object_functions_t`` from the ``libpe_status`` public API, and
@@ -391,7 +391,7 @@ generate the scores, then the actual assignment is straightforward.
 
 Node lists are frequently used. For example, ``pe_working_set_t`` has a
 ``nodes`` member which is a list of all nodes in the cluster, and
-``pe_resource_t`` has a ``running_on`` member which is a list of all nodes on
+``pcmk_resource_t`` has a ``running_on`` member which is a list of all nodes on
 which the resource is (or might be) active. These are lists of ``pcmk_node_t``
 objects.
 

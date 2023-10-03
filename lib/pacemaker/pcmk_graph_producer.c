@@ -356,7 +356,7 @@ add_action_attributes(pe_action_t *action, xmlNode *action_xml)
 
     g_hash_table_foreach(action->meta, hash2metafield, args_xml);
     if (action->rsc != NULL) {
-        pe_resource_t *parent = action->rsc;
+        pcmk_resource_t *parent = action->rsc;
 
         while (parent != NULL) {
             parent->cmds->add_graph_meta(parent, args_xml);
@@ -972,7 +972,7 @@ pcmk__log_transition_summary(const char *filename)
  * \param[in,out] rsc  Resource whose actions should be added
  */
 void
-pcmk__add_rsc_actions_to_graph(pe_resource_t *rsc)
+pcmk__add_rsc_actions_to_graph(pcmk_resource_t *rsc)
 {
     GList *iter = NULL;
 
@@ -984,7 +984,7 @@ pcmk__add_rsc_actions_to_graph(pe_resource_t *rsc)
 
     // Then recursively add its children's actions (appropriate to variant)
     for (iter = rsc->children; iter != NULL; iter = iter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) iter->data;
+        pcmk_resource_t *child_rsc = (pcmk_resource_t *) iter->data;
 
         child_rsc->cmds->add_actions_to_graph(child_rsc);
     }
@@ -1048,7 +1048,7 @@ pcmk__create_graph(pe_working_set_t *data_set)
 
     // Add resource actions to graph
     for (iter = data_set->resources; iter != NULL; iter = iter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+        pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         pe_rsc_trace(rsc, "Processing actions for %s", rsc->id);
         rsc->cmds->add_actions_to_graph(rsc);

@@ -20,7 +20,8 @@
 #include "pe_status_private.h"
 
 static void unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
-                             const pe_resource_t *container, guint interval_ms);
+                             const pcmk_resource_t *container,
+                             guint interval_ms);
 
 static void
 add_singleton(pe_working_set_t *data_set, pe_action_t *action)
@@ -52,7 +53,7 @@ lookup_singleton(pe_working_set_t *data_set, const char *action_uuid)
  * \return Existing action that matches arguments (or NULL if none)
  */
 static pe_action_t *
-find_existing_action(const char *key, const pe_resource_t *rsc,
+find_existing_action(const char *key, const pcmk_resource_t *rsc,
                      const pcmk_node_t *node, const pe_working_set_t *data_set)
 {
     GList *matches = NULL;
@@ -74,7 +75,7 @@ find_existing_action(const char *key, const pe_resource_t *rsc,
 }
 
 static xmlNode *
-find_rsc_op_entry_helper(const pe_resource_t *rsc, const char *key,
+find_rsc_op_entry_helper(const pcmk_resource_t *rsc, const char *key,
                          gboolean include_disabled)
 {
     guint interval_ms = 0;
@@ -144,7 +145,7 @@ find_rsc_op_entry_helper(const pe_resource_t *rsc, const char *key,
 }
 
 xmlNode *
-find_rsc_op_entry(const pe_resource_t *rsc, const char *key)
+find_rsc_op_entry(const pcmk_resource_t *rsc, const char *key)
 {
     return find_rsc_op_entry_helper(rsc, key, FALSE);
 }
@@ -166,7 +167,7 @@ find_rsc_op_entry(const pe_resource_t *rsc, const char *key)
  *       responsibility to free the return value with pe_free_action().
  */
 static pe_action_t *
-new_action(char *key, const char *task, pe_resource_t *rsc,
+new_action(char *key, const char *task, pcmk_resource_t *rsc,
            const pcmk_node_t *node, bool optional, bool for_graph,
            pe_working_set_t *data_set)
 {
@@ -281,7 +282,7 @@ update_action_optional(pe_action_t *action, gboolean optional)
 }
 
 static enum pe_quorum_policy
-effective_quorum_policy(pe_resource_t *rsc, pe_working_set_t *data_set)
+effective_quorum_policy(pcmk_resource_t *rsc, pe_working_set_t *data_set)
 {
     enum pe_quorum_policy policy = data_set->no_quorum_policy;
 
@@ -407,7 +408,8 @@ update_resource_action_runnable(pe_action_t *action, bool for_graph,
  * \param[in]     action  New action
  */
 static void
-update_resource_flags_for_action(pe_resource_t *rsc, const pe_action_t *action)
+update_resource_flags_for_action(pcmk_resource_t *rsc,
+                                 const pe_action_t *action)
 {
     /* @COMPAT pcmk_rsc_starting and pcmk_rsc_stopping are deprecated and unused
      * within Pacemaker, and will eventually be removed
@@ -440,7 +442,7 @@ valid_stop_on_fail(const char *value)
  * \param[in,out] meta           Table of action meta-attributes
  */
 static void
-validate_on_fail(const pe_resource_t *rsc, const char *action_name,
+validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
                  const xmlNode *action_config, GHashTable *meta)
 {
     const char *name = NULL;
@@ -623,7 +625,7 @@ unpack_start_delay(const char *value, GHashTable *meta)
 }
 
 static xmlNode *
-find_min_interval_mon(pe_resource_t * rsc, gboolean include_disabled)
+find_min_interval_mon(pcmk_resource_t * rsc, gboolean include_disabled)
 {
     guint interval_ms = 0;
     guint min_interval_ms = G_MAXUINT;
@@ -679,7 +681,7 @@ find_min_interval_mon(pe_resource_t * rsc, gboolean include_disabled)
  * \return Newly allocated hash table with normalized action meta-attributes
  */
 GHashTable *
-pcmk__unpack_action_meta(pe_resource_t *rsc, const pcmk_node_t *node,
+pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
                          const char *action_name, guint interval_ms,
                          const xmlNode *action_config)
 {
@@ -843,7 +845,7 @@ pcmk__unpack_action_meta(pe_resource_t *rsc, const pcmk_node_t *node,
  */
 static void
 unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
-                 const pe_resource_t *container, guint interval_ms)
+                 const pcmk_resource_t *container, guint interval_ms)
 {
     const char *value = NULL;
 
@@ -1032,7 +1034,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
  *       with pe_free_action().
  */
 pe_action_t *
-custom_action(pe_resource_t *rsc, char *key, const char *task,
+custom_action(pcmk_resource_t *rsc, char *key, const char *task,
               const pcmk_node_t *on_node, gboolean optional,
               gboolean save_action, pe_working_set_t *data_set)
 {
@@ -1084,7 +1086,7 @@ static GList *
 find_unfencing_devices(GList *candidates, GList *matches) 
 {
     for (GList *gIter = candidates; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *candidate = gIter->data;
+        pcmk_resource_t *candidate = gIter->data;
 
         if (candidate->children != NULL) {
             matches = find_unfencing_devices(candidate->children, matches);
@@ -1208,7 +1210,7 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
             char *value = NULL;
 
             for (GList *gIter = matches; gIter != NULL; gIter = gIter->next) {
-                pe_resource_t *match = gIter->data;
+                pcmk_resource_t *match = gIter->data;
                 const char *agent = g_hash_table_lookup(match->meta,
                                                         XML_ATTR_TYPE);
                 op_digest_cache_t *data = NULL;
@@ -1310,7 +1312,8 @@ pe_free_action(pe_action_t * action)
 }
 
 int
-pe_get_configured_timeout(pe_resource_t *rsc, const char *action, pe_working_set_t *data_set)
+pe_get_configured_timeout(pcmk_resource_t *rsc, const char *action,
+                          pe_working_set_t *data_set)
 {
     xmlNode *child = NULL;
     GHashTable *action_meta = NULL;
@@ -1357,7 +1360,7 @@ pe_get_configured_timeout(pe_resource_t *rsc, const char *action, pe_working_set
 }
 
 enum action_tasks
-get_complex_task(const pe_resource_t *rsc, const char *name)
+get_complex_task(const pcmk_resource_t *rsc, const char *name)
 {
     enum action_tasks task = text2task(name);
 
@@ -1492,7 +1495,7 @@ find_actions_exact(GList *input, const char *key, const pcmk_node_t *on_node)
  *       without a node will be assigned to node.
  */
 GList *
-pe__resource_actions(const pe_resource_t *rsc, const pcmk_node_t *node,
+pe__resource_actions(const pcmk_resource_t *rsc, const pcmk_node_t *node,
                      const char *task, bool require_node)
 {
     GList *result = NULL;
@@ -1567,7 +1570,7 @@ void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrit
  * \param[in]     node      Node to clear history on
  */
 void
-pe__clear_resource_history(pe_resource_t *rsc, const pcmk_node_t *node)
+pe__clear_resource_history(pcmk_resource_t *rsc, const pcmk_node_t *node)
 {
     CRM_ASSERT((rsc != NULL) && (node != NULL));
 
@@ -1738,7 +1741,7 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
  * \return New action object corresponding to arguments
  */
 pe_action_t *
-pe__new_rsc_pseudo_action(pe_resource_t *rsc, const char *task, bool optional,
+pe__new_rsc_pseudo_action(pcmk_resource_t *rsc, const char *task, bool optional,
                           bool runnable)
 {
     pe_action_t *action = NULL;

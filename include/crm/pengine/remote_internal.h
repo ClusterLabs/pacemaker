@@ -23,9 +23,9 @@ bool pe__is_remote_node(const pcmk_node_t *node);
 bool pe__is_guest_node(const pcmk_node_t *node);
 bool pe__is_guest_or_remote_node(const pcmk_node_t *node);
 bool pe__is_bundle_node(const pcmk_node_t *node);
-bool pe__resource_is_remote_conn(const pe_resource_t *rsc);
-pe_resource_t *pe__resource_contains_guest_node(const pe_working_set_t *data_set,
-                                                const pe_resource_t *rsc);
+bool pe__resource_is_remote_conn(const pcmk_resource_t *rsc);
+pcmk_resource_t *pe__resource_contains_guest_node(const pe_working_set_t *data_set,
+                                                  const pcmk_resource_t *rsc);
 void pe_foreach_guest_node(const pe_working_set_t *data_set,
                            const pcmk_node_t *host,
                            void (*helper)(const pcmk_node_t*, void*),

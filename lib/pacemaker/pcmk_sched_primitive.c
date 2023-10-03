@@ -17,14 +17,15 @@
 
 #include "libpacemaker_private.h"
 
-static void stop_resource(pe_resource_t *rsc, pcmk_node_t *node, bool optional);
-static void start_resource(pe_resource_t *rsc, pcmk_node_t *node,
+static void stop_resource(pcmk_resource_t *rsc, pcmk_node_t *node,
+                          bool optional);
+static void start_resource(pcmk_resource_t *rsc, pcmk_node_t *node,
                            bool optional);
-static void demote_resource(pe_resource_t *rsc, pcmk_node_t *node,
+static void demote_resource(pcmk_resource_t *rsc, pcmk_node_t *node,
                             bool optional);
-static void promote_resource(pe_resource_t *rsc, pcmk_node_t *node,
+static void promote_resource(pcmk_resource_t *rsc, pcmk_node_t *node,
                              bool optional);
-static void assert_role_error(pe_resource_t *rsc, pcmk_node_t *node,
+static void assert_role_error(pcmk_resource_t *rsc, pcmk_node_t *node,
                               bool optional);
 
 #define RSC_ROLE_MAX    (pcmk_role_promoted + 1)
@@ -79,7 +80,7 @@ static enum rsc_role_e rsc_state_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
  * \param[in,out] node      Node where resource will be in its next role
  * \param[in]     optional  Whether scheduled actions should be optional
  */
-typedef void (*rsc_transition_fn)(pe_resource_t *rsc, pcmk_node_t *node,
+typedef void (*rsc_transition_fn)(pcmk_resource_t *rsc, pcmk_node_t *node,
                                   bool optional);
 
 static rsc_transition_fn rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
@@ -130,7 +131,7 @@ static rsc_transition_fn rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
  * \return List of allowed nodes sorted by node score
  */
 static GList *
-sorted_allowed_nodes(const pe_resource_t *rsc)
+sorted_allowed_nodes(const pcmk_resource_t *rsc)
 {
     if (rsc->allowed_nodes != NULL) {
         GList *nodes = g_hash_table_get_values(rsc->allowed_nodes);
@@ -162,7 +163,7 @@ sorted_allowed_nodes(const pe_resource_t *rsc)
  *       roles or actions.
  */
 static bool
-assign_best_node(pe_resource_t *rsc, const pcmk_node_t *prefer,
+assign_best_node(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
                  bool stop_if_fail)
 {
     GList *nodes = NULL;
@@ -295,10 +296,10 @@ assign_best_node(pe_resource_t *rsc, const pcmk_node_t *prefer,
  * \param[in,out] rsc         Resource being assigned
  */
 static void
-apply_this_with(pcmk__colocation_t *colocation, pe_resource_t *rsc)
+apply_this_with(pcmk__colocation_t *colocation, pcmk_resource_t *rsc)
 {
     GHashTable *archive = NULL;
-    pe_resource_t *other = colocation->primary;
+    pcmk_resource_t *other = colocation->primary;
 
     // In certain cases, we will need to revert the node scores
     if ((colocation->dependent_role >= pcmk_role_promoted)
@@ -339,7 +340,7 @@ apply_this_with(pcmk__colocation_t *colocation, pe_resource_t *rsc)
  * \param[in] connection  Connection resource that has been assigned
  */
 static void
-remote_connection_assigned(const pe_resource_t *connection)
+remote_connection_assigned(const pcmk_resource_t *connection)
 {
     pcmk_node_t *remote_node = pe_find_node(connection->cluster->nodes,
                                             connection->id);
@@ -386,7 +387,7 @@ remote_connection_assigned(const pe_resource_t *connection)
  *       roles or actions.
  */
 pcmk_node_t *
-pcmk__primitive_assign(pe_resource_t *rsc, const pcmk_node_t *prefer,
+pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
                        bool stop_if_fail)
 {
     GList *this_with_colocations = NULL;
@@ -554,7 +555,7 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pcmk_node_t *prefer,
  * \return Role that resource would have after scheduled actions are taken
  */
 static void
-schedule_restart_actions(pe_resource_t *rsc, pcmk_node_t *current,
+schedule_restart_actions(pcmk_resource_t *rsc, pcmk_node_t *current,
                          bool need_stop, bool need_promote)
 {
     enum rsc_role_e role = rsc->role;
@@ -609,7 +610,7 @@ schedule_restart_actions(pe_resource_t *rsc, pcmk_node_t *current,
  * \return "explicit" if next role was explicitly set, otherwise "implicit"
  */
 static const char *
-set_default_next_role(pe_resource_t *rsc)
+set_default_next_role(pcmk_resource_t *rsc)
 {
     if (rsc->next_role != pcmk_role_unknown) {
         return "explicit";
@@ -630,7 +631,7 @@ set_default_next_role(pe_resource_t *rsc)
  * \param[in,out] rsc  Resource to create start action for
  */
 static void
-create_pending_start(pe_resource_t *rsc)
+create_pending_start(pcmk_resource_t *rsc)
 {
     pe_action_t *start = NULL;
 
@@ -648,7 +649,7 @@ create_pending_start(pe_resource_t *rsc)
  * \param[in,out] rsc  Resource to schedule actions for
  */
 static void
-schedule_role_transition_actions(pe_resource_t *rsc)
+schedule_role_transition_actions(pcmk_resource_t *rsc)
 {
     enum rsc_role_e role = rsc->role;
 
@@ -676,7 +677,7 @@ schedule_role_transition_actions(pe_resource_t *rsc)
  * \param[in,out] rsc  Primitive resource to create actions for
  */
 void
-pcmk__primitive_create_actions(pe_resource_t *rsc)
+pcmk__primitive_create_actions(pcmk_resource_t *rsc)
 {
     bool need_stop = false;
     bool need_promote = false;
@@ -846,7 +847,7 @@ pcmk__primitive_create_actions(pe_resource_t *rsc)
  * \param[in] rsc  Resource to check
  */
 static void
-rsc_avoids_remote_nodes(const pe_resource_t *rsc)
+rsc_avoids_remote_nodes(const pcmk_resource_t *rsc)
 {
     GHashTableIter iter;
     pcmk_node_t *node = NULL;
@@ -873,7 +874,7 @@ rsc_avoids_remote_nodes(const pe_resource_t *rsc)
  * \note Callers should take care not to rely on the list being sorted.
  */
 static GList *
-allowed_nodes_as_list(const pe_resource_t *rsc)
+allowed_nodes_as_list(const pcmk_resource_t *rsc)
 {
     GList *allowed_nodes = NULL;
 
@@ -895,7 +896,7 @@ allowed_nodes_as_list(const pe_resource_t *rsc)
  * \param[in,out] rsc  Primitive resource to create implicit constraints for
  */
 void
-pcmk__primitive_internal_constraints(pe_resource_t *rsc)
+pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
 {
     GList *allowed_nodes = NULL;
     bool check_unfencing = false;
@@ -969,7 +970,7 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
     }
 
     if (rsc->container != NULL) {
-        pe_resource_t *remote_rsc = NULL;
+        pcmk_resource_t *remote_rsc = NULL;
 
         if (rsc->is_remote_node) {
             // rsc is the implicit remote connection for a guest or bundle node
@@ -1080,8 +1081,8 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
  * \param[in]     for_dependent  true if called on behalf of dependent
  */
 void
-pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
-                                  const pe_resource_t *primary,
+pcmk__primitive_apply_coloc_score(pcmk_resource_t *dependent,
+                                  const pcmk_resource_t *primary,
                                   const pcmk__colocation_t *colocation,
                                   bool for_dependent)
 {
@@ -1119,8 +1120,8 @@ pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
  * resource_alloc_functions_t:with_this_colocations()
  */
 void
-pcmk__with_primitive_colocations(const pe_resource_t *rsc,
-                                 const pe_resource_t *orig_rsc, GList **list)
+pcmk__with_primitive_colocations(const pcmk_resource_t *rsc,
+                                 const pcmk_resource_t *orig_rsc, GList **list)
 {
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_primitive)
                && (list != NULL));
@@ -1149,8 +1150,8 @@ pcmk__with_primitive_colocations(const pe_resource_t *rsc,
  * resource_alloc_functions_t:this_with_colocations()
  */
 void
-pcmk__primitive_with_colocations(const pe_resource_t *rsc,
-                                 const pe_resource_t *orig_rsc, GList **list)
+pcmk__primitive_with_colocations(const pcmk_resource_t *rsc,
+                                 const pcmk_resource_t *orig_rsc, GList **list)
 {
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_primitive)
                && (list != NULL));
@@ -1205,7 +1206,7 @@ pcmk__primitive_action_flags(pe_action_t *action, const pcmk_node_t *node)
  *       been unpacked and resources have been assigned to nodes.
  */
 static bool
-is_expected_node(const pe_resource_t *rsc, const pcmk_node_t *node)
+is_expected_node(const pcmk_resource_t *rsc, const pcmk_node_t *node)
 {
     return pcmk_all_flags_set(rsc->flags,
                               pcmk_rsc_stop_unexpected|pcmk_rsc_restarting)
@@ -1222,7 +1223,7 @@ is_expected_node(const pe_resource_t *rsc, const pcmk_node_t *node)
  * \param[in]     optional  Whether actions should be optional
  */
 static void
-stop_resource(pe_resource_t *rsc, pcmk_node_t *node, bool optional)
+stop_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
 {
     for (GList *iter = rsc->running_on; iter != NULL; iter = iter->next) {
         pcmk_node_t *current = (pcmk_node_t *) iter->data;
@@ -1303,7 +1304,7 @@ stop_resource(pe_resource_t *rsc, pcmk_node_t *node, bool optional)
  * \param[in]     optional  Whether actions should be optional
  */
 static void
-start_resource(pe_resource_t *rsc, pcmk_node_t *node, bool optional)
+start_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
 {
     pe_action_t *start = NULL;
 
@@ -1341,7 +1342,7 @@ start_resource(pe_resource_t *rsc, pcmk_node_t *node, bool optional)
  * \param[in]     optional  Whether actions should be optional
  */
 static void
-promote_resource(pe_resource_t *rsc, pcmk_node_t *node, bool optional)
+promote_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
 {
     GList *iter = NULL;
     GList *action_list = NULL;
@@ -1400,7 +1401,7 @@ promote_resource(pe_resource_t *rsc, pcmk_node_t *node, bool optional)
  * \param[in]     optional  Whether actions should be optional
  */
 static void
-demote_resource(pe_resource_t *rsc, pcmk_node_t *node, bool optional)
+demote_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
 {
     /* Since this will only be called for a primitive (possibly as an instance
      * of a collective resource), the resource is multiply active if it is
@@ -1425,7 +1426,7 @@ demote_resource(pe_resource_t *rsc, pcmk_node_t *node, bool optional)
 }
 
 static void
-assert_role_error(pe_resource_t *rsc, pcmk_node_t *node, bool optional)
+assert_role_error(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
 {
     CRM_ASSERT(false);
 }
@@ -1439,7 +1440,7 @@ assert_role_error(pe_resource_t *rsc, pcmk_node_t *node, bool optional)
  * \param[in]     optional  Whether clean-up should be optional
  */
 void
-pcmk__schedule_cleanup(pe_resource_t *rsc, const pcmk_node_t *node,
+pcmk__schedule_cleanup(pcmk_resource_t *rsc, const pcmk_node_t *node,
                        bool optional)
 {
     /* If the cleanup is required, its orderings are optional, because they're
@@ -1481,11 +1482,11 @@ pcmk__schedule_cleanup(pe_resource_t *rsc, const pcmk_node_t *node,
  * \param[in,out] xml  Transition graph action attributes XML to add to
  */
 void
-pcmk__primitive_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml)
+pcmk__primitive_add_graph_meta(const pcmk_resource_t *rsc, xmlNode *xml)
 {
     char *name = NULL;
     char *value = NULL;
-    const pe_resource_t *parent = NULL;
+    const pcmk_resource_t *parent = NULL;
 
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_primitive)
                && (xml != NULL));
@@ -1532,9 +1533,9 @@ pcmk__primitive_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml)
 
 // Primitive implementation of resource_alloc_functions_t:add_utilization()
 void
-pcmk__primitive_add_utilization(const pe_resource_t *rsc,
-                                const pe_resource_t *orig_rsc, GList *all_rscs,
-                                GHashTable *utilization)
+pcmk__primitive_add_utilization(const pcmk_resource_t *rsc,
+                                const pcmk_resource_t *orig_rsc,
+                                GList *all_rscs, GHashTable *utilization)
 {
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_primitive)
                && (orig_rsc != NULL) && (utilization != NULL));
@@ -1583,7 +1584,7 @@ static void
 ban_if_not_locked(gpointer data, gpointer user_data)
 {
     const pcmk_node_t *node = (const pcmk_node_t *) data;
-    pe_resource_t *rsc = (pe_resource_t *) user_data;
+    pcmk_resource_t *rsc = (pcmk_resource_t *) user_data;
 
     if (strcmp(node->details->uname, rsc->lock_node->details->uname) != 0) {
         resource_location(rsc, node, -CRM_SCORE_INFINITY,
@@ -1593,7 +1594,7 @@ ban_if_not_locked(gpointer data, gpointer user_data)
 
 // Primitive implementation of resource_alloc_functions_t:shutdown_lock()
 void
-pcmk__primitive_shutdown_lock(pe_resource_t *rsc)
+pcmk__primitive_shutdown_lock(pcmk_resource_t *rsc)
 {
     const char *class = NULL;
 

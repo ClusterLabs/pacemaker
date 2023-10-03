@@ -40,7 +40,7 @@ CRM_TRACE_INIT_DATA(pacemaker);
  * \param[in]     check   Type of deferred check to do
  */
 static void
-check_params(pe_resource_t *rsc, pcmk_node_t *node, const xmlNode *rsc_op,
+check_params(pcmk_resource_t *rsc, pcmk_node_t *node, const xmlNode *rsc_op,
              enum pcmk__check_parameters check)
 {
     const char *reason = NULL;
@@ -88,7 +88,8 @@ check_params(pe_resource_t *rsc, pcmk_node_t *node, const xmlNode *rsc_op,
  *         otherwise false
  */
 static bool
-failcount_clear_action_exists(const pcmk_node_t *node, const pe_resource_t *rsc)
+failcount_clear_action_exists(const pcmk_node_t *node,
+                              const pcmk_resource_t *rsc)
 {
     GList *list = pe__resource_actions(rsc, node, PCMK_ACTION_CLEAR_FAILCOUNT,
                                        TRUE);
@@ -110,7 +111,7 @@ failcount_clear_action_exists(const pcmk_node_t *node, const pe_resource_t *rsc)
 static void
 check_failure_threshold(gpointer data, gpointer user_data)
 {
-    pe_resource_t *rsc = data;
+    pcmk_resource_t *rsc = data;
     const pcmk_node_t *node = user_data;
 
     // If this is a collective resource, apply recursively to children instead
@@ -130,7 +131,7 @@ check_failure_threshold(gpointer data, gpointer user_data)
          * threshold when we shouldn't. Worst case, we stop or move the
          * resource, then move it back in the next transition.
          */
-        pe_resource_t *failed = NULL;
+        pcmk_resource_t *failed = NULL;
 
         if (pcmk__threshold_reached(rsc, node, &failed)) {
             resource_location(failed, node, -INFINITY, "__fail_limit__",
@@ -154,7 +155,7 @@ check_failure_threshold(gpointer data, gpointer user_data)
 static void
 apply_exclusive_discovery(gpointer data, gpointer user_data)
 {
-    pe_resource_t *rsc = data;
+    pcmk_resource_t *rsc = data;
     const pcmk_node_t *node = user_data;
 
     if (rsc->exclusive_discover
@@ -182,7 +183,7 @@ apply_exclusive_discovery(gpointer data, gpointer user_data)
 static void
 apply_stickiness(gpointer data, gpointer user_data)
 {
-    pe_resource_t *rsc = data;
+    pcmk_resource_t *rsc = data;
     pcmk_node_t *node = NULL;
 
     // If this is a collective resource, apply recursively to children instead
@@ -234,7 +235,7 @@ apply_shutdown_locks(pe_working_set_t *data_set)
         return;
     }
     for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+        pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         rsc->cmds->shutdown_lock(rsc);
     }
@@ -317,7 +318,7 @@ assign_resources(pe_working_set_t *data_set)
          * prefer the partial migration target.
          */
         for (iter = data_set->resources; iter != NULL; iter = iter->next) {
-            pe_resource_t *rsc = (pe_resource_t *) iter->data;
+            pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
             if (rsc->is_remote_node) {
                 pe_rsc_trace(rsc, "Assigning remote connection resource '%s'",
@@ -329,7 +330,7 @@ assign_resources(pe_working_set_t *data_set)
 
     /* now do the rest of the resources */
     for (iter = data_set->resources; iter != NULL; iter = iter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+        pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         if (!rsc->is_remote_node) {
             pe_rsc_trace(rsc, "Assigning %s resource '%s'",
@@ -351,7 +352,7 @@ assign_resources(pe_working_set_t *data_set)
 static void
 clear_failcounts_if_orphaned(gpointer data, gpointer user_data)
 {
-    pe_resource_t *rsc = data;
+    pcmk_resource_t *rsc = data;
 
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
         return;
@@ -408,7 +409,7 @@ schedule_resource_actions(pe_working_set_t *data_set)
 
     crm_trace("Scheduling resource actions");
     for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+        pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         rsc->cmds->create_actions(rsc);
     }
@@ -423,13 +424,13 @@ schedule_resource_actions(pe_working_set_t *data_set)
  * \return true if resource or any descendant is managed, otherwise false
  */
 static bool
-is_managed(const pe_resource_t *rsc)
+is_managed(const pcmk_resource_t *rsc)
 {
     if (pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
         return true;
     }
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-        if (is_managed((pe_resource_t *) iter->data)) {
+        if (is_managed((pcmk_resource_t *) iter->data)) {
             return true;
         }
     }
@@ -449,7 +450,7 @@ any_managed_resources(const pe_working_set_t *data_set)
 {
     for (const GList *iter = data_set->resources;
          iter != NULL; iter = iter->next) {
-        if (is_managed((const pe_resource_t *) iter->data)) {
+        if (is_managed((const pcmk_resource_t *) iter->data)) {
             return true;
         }
     }
@@ -659,7 +660,7 @@ log_resource_details(pe_working_set_t *data_set)
     all = g_list_prepend(all, (gpointer) "*");
 
     for (GList *item = data_set->resources; item != NULL; item = item->next) {
-        pe_resource_t *rsc = (pe_resource_t *) item->data;
+        pcmk_resource_t *rsc = (pcmk_resource_t *) item->data;
 
         // Log all resources except inactive orphans
         if (!pcmk_is_set(rsc->flags, pcmk_rsc_removed)

@@ -43,7 +43,7 @@ add_migration_meta(pe_action_t *action, const pcmk_node_t *source,
  * \param[in]     current  Node that resource is originally active on
  */
 void
-pcmk__create_migration_actions(pe_resource_t *rsc, const pcmk_node_t *current)
+pcmk__create_migration_actions(pcmk_resource_t *rsc, const pcmk_node_t *current)
 {
     pe_action_t *migrate_to = NULL;
     pe_action_t *migrate_from = NULL;
@@ -154,7 +154,7 @@ void
 pcmk__abort_dangling_migration(void *data, void *user_data)
 {
     const pcmk_node_t *dangling_source = (const pcmk_node_t *) data;
-    pe_resource_t *rsc = (pe_resource_t *) user_data;
+    pcmk_resource_t *rsc = (pcmk_resource_t *) user_data;
 
     pe_action_t *stop = NULL;
     bool cleanup = pcmk_is_set(rsc->cluster->flags,
@@ -181,7 +181,7 @@ pcmk__abort_dangling_migration(void *data, void *user_data)
  * \return true if \p rsc can migrate, otherwise false
  */
 bool
-pcmk__rsc_can_migrate(const pe_resource_t *rsc, const pcmk_node_t *current)
+pcmk__rsc_can_migrate(const pcmk_resource_t *rsc, const pcmk_node_t *current)
 {
     CRM_CHECK(rsc != NULL, return false);
 

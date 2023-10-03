@@ -223,7 +223,7 @@ typedef struct pe_node_s node_t;
 //!< \deprecated Use enum pe_quorum_policy instead
 typedef enum pe_quorum_policy no_quorum_policy_t;
 
-//!< \deprecated use pe_resource_t instead
+//!< \deprecated use pcmk_resource_t instead
 typedef struct pe_resource_s resource_t;
 
 //!< \deprecated Use pe_tag_t instead

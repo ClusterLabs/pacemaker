@@ -30,7 +30,7 @@
  * \brief Check whether a resource is active on multiple nodes
  */
 static bool
-is_multiply_active(const pe_resource_t *rsc)
+is_multiply_active(const pcmk_resource_t *rsc)
 {
     unsigned int count = 0;
 
@@ -41,7 +41,8 @@ is_multiply_active(const pe_resource_t *rsc)
 }
 
 static void
-native_priority_to_node(pe_resource_t *rsc, pcmk_node_t *node, gboolean failed)
+native_priority_to_node(pcmk_resource_t *rsc, pcmk_node_t *node,
+                        gboolean failed)
 {
     int priority = 0;
 
@@ -86,7 +87,7 @@ native_priority_to_node(pe_resource_t *rsc, pcmk_node_t *node, gboolean failed)
 }
 
 void
-native_add_running(pe_resource_t *rsc, pcmk_node_t *node,
+native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                    pe_working_set_t *data_set, gboolean failed)
 {
     GList *gIter = rsc->running_on;
@@ -118,7 +119,7 @@ native_add_running(pe_resource_t *rsc, pcmk_node_t *node,
     }
 
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
-        pe_resource_t *p = rsc->parent;
+        pcmk_resource_t *p = rsc->parent;
 
         pe_rsc_info(rsc, "resource %s isn't managed", rsc->id);
         resource_location(rsc, node, INFINITY, "not_managed_default", data_set);
@@ -163,7 +164,7 @@ native_add_running(pe_resource_t *rsc, pcmk_node_t *node,
                     GList *gIter = rsc->parent->children;
 
                     for (; gIter != NULL; gIter = gIter->next) {
-                        pe_resource_t *child = (pe_resource_t *) gIter->data;
+                        pcmk_resource_t *child = gIter->data;
 
                         pe__clear_resource_flags(child, pcmk_rsc_managed);
                         pe__set_resource_flags(child, pcmk_rsc_blocked);
@@ -193,7 +194,7 @@ native_add_running(pe_resource_t *rsc, pcmk_node_t *node,
 }
 
 static void
-recursive_clear_unique(pe_resource_t *rsc, gpointer user_data)
+recursive_clear_unique(pcmk_resource_t *rsc, gpointer user_data)
 {
     pe__clear_resource_flags(rsc, pcmk_rsc_unique);
     add_hash_param(rsc->meta, XML_RSC_ATTR_UNIQUE, XML_BOOLEAN_FALSE);
@@ -201,9 +202,9 @@ recursive_clear_unique(pe_resource_t *rsc, gpointer user_data)
 }
 
 gboolean
-native_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
+native_unpack(pcmk_resource_t * rsc, pe_working_set_t * data_set)
 {
-    pe_resource_t *parent = uber_parent(rsc);
+    pcmk_resource_t *parent = uber_parent(rsc);
     const char *standard = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     uint32_t ra_caps = pcmk_get_ra_caps(standard);
 
@@ -241,7 +242,7 @@ native_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
 }
 
 static bool
-rsc_is_on_node(pe_resource_t *rsc, const pcmk_node_t *node, int flags)
+rsc_is_on_node(pcmk_resource_t *rsc, const pcmk_node_t *node, int flags)
 {
     pe_rsc_trace(rsc, "Checking whether %s is on %s",
                  rsc->id, pe__node_name(node));
@@ -269,12 +270,12 @@ rsc_is_on_node(pe_resource_t *rsc, const pcmk_node_t *node, int flags)
     return false;
 }
 
-pe_resource_t *
-native_find_rsc(pe_resource_t *rsc, const char *id, const pcmk_node_t *on_node,
-                int flags)
+pcmk_resource_t *
+native_find_rsc(pcmk_resource_t *rsc, const char *id,
+                const pcmk_node_t *on_node, int flags)
 {
     bool match = false;
-    pe_resource_t *result = NULL;
+    pcmk_resource_t *result = NULL;
 
     CRM_CHECK(id && rsc && rsc->id, return NULL);
 
@@ -312,7 +313,7 @@ native_find_rsc(pe_resource_t *rsc, const char *id, const pcmk_node_t *on_node,
     }
 
     for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child = (pe_resource_t *) gIter->data;
+        pcmk_resource_t *child = (pcmk_resource_t *) gIter->data;
 
         result = rsc->fns->find_rsc(child, id, on_node, flags);
         if (result) {
@@ -324,7 +325,7 @@ native_find_rsc(pe_resource_t *rsc, const char *id, const pcmk_node_t *on_node,
 
 // create is ignored
 char *
-native_parameter(pe_resource_t *rsc, pcmk_node_t *node, gboolean create,
+native_parameter(pcmk_resource_t *rsc, pcmk_node_t *node, gboolean create,
                  const char *name, pe_working_set_t *data_set)
 {
     char *value_copy = NULL;
@@ -346,7 +347,7 @@ native_parameter(pe_resource_t *rsc, pcmk_node_t *node, gboolean create,
 }
 
 gboolean
-native_active(pe_resource_t * rsc, gboolean all)
+native_active(pcmk_resource_t * rsc, gboolean all)
 {
     for (GList *gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
         pcmk_node_t *a_node = (pcmk_node_t *) gIter->data;
@@ -374,7 +375,7 @@ struct print_data_s {
 };
 
 static const char *
-native_pending_state(const pe_resource_t *rsc)
+native_pending_state(const pcmk_resource_t *rsc)
 {
     const char *pending_state = NULL;
 
@@ -407,7 +408,7 @@ native_pending_state(const pe_resource_t *rsc)
 }
 
 static const char *
-native_pending_task(const pe_resource_t *rsc)
+native_pending_task(const pcmk_resource_t *rsc)
 {
     const char *pending_task = NULL;
 
@@ -429,7 +430,7 @@ native_pending_task(const pe_resource_t *rsc)
 }
 
 static enum rsc_role_e
-native_displayable_role(const pe_resource_t *rsc)
+native_displayable_role(const pcmk_resource_t *rsc)
 {
     enum rsc_role_e role = rsc->role;
 
@@ -443,7 +444,7 @@ native_displayable_role(const pe_resource_t *rsc)
 }
 
 static const char *
-native_displayable_state(const pe_resource_t *rsc, bool print_pending)
+native_displayable_state(const pcmk_resource_t *rsc, bool print_pending)
 {
     const char *rsc_state = NULL;
 
@@ -461,7 +462,7 @@ native_displayable_state(const pe_resource_t *rsc, bool print_pending)
  * \deprecated This function will be removed in a future release
  */
 static void
-native_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
+native_print_xml(pcmk_resource_t *rsc, const char *pre_text, long options,
                  void *print_data)
 {
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
@@ -558,7 +559,7 @@ add_output_node(GString *s, const char *node, bool have_nodes)
  * \note Caller must free the result with g_free().
  */
 gchar *
-pcmk__native_output_string(const pe_resource_t *rsc, const char *name,
+pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
                            const pcmk_node_t *node, uint32_t show_opts,
                            const char *target_role, bool show_nodes)
 {
@@ -712,7 +713,7 @@ pcmk__native_output_string(const pe_resource_t *rsc, const char *name,
 }
 
 int
-pe__common_output_html(pcmk__output_t *out, const pe_resource_t *rsc,
+pe__common_output_html(pcmk__output_t *out, const pcmk_resource_t *rsc,
                        const char *name, const pcmk_node_t *node,
                        uint32_t show_opts)
 {
@@ -770,7 +771,7 @@ pe__common_output_html(pcmk__output_t *out, const pe_resource_t *rsc,
 }
 
 int
-pe__common_output_text(pcmk__output_t *out, const pe_resource_t *rsc,
+pe__common_output_text(pcmk__output_t *out, const pcmk_resource_t *rsc,
                        const char *name, const pcmk_node_t *node,
                        uint32_t show_opts)
 {
@@ -806,7 +807,7 @@ pe__common_output_text(pcmk__output_t *out, const pe_resource_t *rsc,
  * \deprecated This function will be removed in a future release
  */
 void
-common_print(pe_resource_t *rsc, const char *pre_text, const char *name,
+common_print(pcmk_resource_t *rsc, const char *pre_text, const char *name,
              const pcmk_node_t *node, long options, void *print_data)
 {
     const char *target_role = NULL;
@@ -926,7 +927,7 @@ common_print(pe_resource_t *rsc, const char *pre_text, const char *name,
  * \deprecated This function will be removed in a future release
  */
 void
-native_print(pe_resource_t *rsc, const char *pre_text, long options,
+native_print(pcmk_resource_t *rsc, const char *pre_text, long options,
              void *print_data)
 {
     const pcmk_node_t *node = NULL;
@@ -947,12 +948,13 @@ native_print(pe_resource_t *rsc, const char *pre_text, long options,
     common_print(rsc, pre_text, rsc_printable_id(rsc), node, options, print_data);
 }
 
-PCMK__OUTPUT_ARGS("primitive", "uint32_t", "pe_resource_t *", "GList *", "GList *")
+PCMK__OUTPUT_ARGS("primitive", "uint32_t", "pcmk_resource_t *", "GList *",
+                  "GList *")
 int
 pe__resource_xml(pcmk__output_t *out, va_list args)
 {
     uint32_t show_opts = va_arg(args, uint32_t);
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     GList *only_node G_GNUC_UNUSED = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
@@ -1029,12 +1031,13 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("primitive", "uint32_t", "pe_resource_t *", "GList *", "GList *")
+PCMK__OUTPUT_ARGS("primitive", "uint32_t", "pcmk_resource_t *", "GList *",
+                  "GList *")
 int
 pe__resource_html(pcmk__output_t *out, va_list args)
 {
     uint32_t show_opts = va_arg(args, uint32_t);
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     GList *only_node G_GNUC_UNUSED = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
@@ -1053,12 +1056,13 @@ pe__resource_html(pcmk__output_t *out, va_list args)
     return pe__common_output_html(out, rsc, rsc_printable_id(rsc), node, show_opts);
 }
 
-PCMK__OUTPUT_ARGS("primitive", "uint32_t", "pe_resource_t *", "GList *", "GList *")
+PCMK__OUTPUT_ARGS("primitive", "uint32_t", "pcmk_resource_t *", "GList *",
+                  "GList *")
 int
 pe__resource_text(pcmk__output_t *out, va_list args)
 {
     uint32_t show_opts = va_arg(args, uint32_t);
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     GList *only_node G_GNUC_UNUSED = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
@@ -1078,14 +1082,14 @@ pe__resource_text(pcmk__output_t *out, va_list args)
 }
 
 void
-native_free(pe_resource_t * rsc)
+native_free(pcmk_resource_t * rsc)
 {
     pe_rsc_trace(rsc, "Freeing resource action list (not the data)");
     common_free(rsc);
 }
 
 enum rsc_role_e
-native_resource_state(const pe_resource_t * rsc, gboolean current)
+native_resource_state(const pcmk_resource_t * rsc, gboolean current)
 {
     enum rsc_role_e role = rsc->next_role;
 
@@ -1108,7 +1112,7 @@ native_resource_state(const pe_resource_t * rsc, gboolean current)
  * \return If list contains only one node, that node, or NULL otherwise
  */
 pcmk_node_t *
-native_location(const pe_resource_t *rsc, GList **list, int current)
+native_location(const pcmk_resource_t *rsc, GList **list, int current)
 {
     // @COMPAT: Accept a pcmk__rsc_node argument instead of int current
     pcmk_node_t *one = NULL;
@@ -1118,7 +1122,7 @@ native_location(const pe_resource_t *rsc, GList **list, int current)
         GList *gIter = rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child = (pe_resource_t *) gIter->data;
+            pcmk_resource_t *child = (pcmk_resource_t *) gIter->data;
 
             child->fns->location(child, &result, current);
         }
@@ -1163,7 +1167,7 @@ get_rscs_brief(GList *rsc_list, GHashTable * rsc_table, GHashTable * active_tabl
     GList *gIter = rsc_list;
 
     for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
+        pcmk_resource_t *rsc = (pcmk_resource_t *) gIter->data;
 
         const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
         const char *kind = crm_element_value(rsc->xml, XML_ATTR_TYPE);
@@ -1417,14 +1421,14 @@ pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, uint32_t show_opts)
 }
 
 gboolean
-pe__native_is_filtered(const pe_resource_t *rsc, GList *only_rsc,
+pe__native_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
                        gboolean check_parent)
 {
     if (pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches) ||
         pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches)) {
         return FALSE;
     } else if (check_parent && rsc->parent) {
-        const pe_resource_t *up = pe__const_top_resource(rsc, true);
+        const pcmk_resource_t *up = pe__const_top_resource(rsc, true);
 
         return up->fns->is_filtered(up, only_rsc, FALSE);
     }
@@ -1441,7 +1445,7 @@ pe__native_is_filtered(const pe_resource_t *rsc, GList *only_rsc,
  * \return Maximum number of \p rsc instances that can be active on one node
  */
 unsigned int
-pe__primitive_max_per_node(const pe_resource_t *rsc)
+pe__primitive_max_per_node(const pcmk_resource_t *rsc)
 {
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_primitive));
     return 1U;

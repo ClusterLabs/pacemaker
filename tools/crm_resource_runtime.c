@@ -16,12 +16,12 @@
 #include <crm/services_internal.h>
 
 static GList *
-build_node_info_list(const pe_resource_t *rsc)
+build_node_info_list(const pcmk_resource_t *rsc)
 {
     GList *retval = NULL;
 
     for (const GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-        const pe_resource_t *child = (const pe_resource_t *) iter->data;
+        const pcmk_resource_t *child = (const pcmk_resource_t *) iter->data;
 
         for (const GList *iter2 = child->running_on;
              iter2 != NULL; iter2 = iter2->next) {
@@ -41,11 +41,11 @@ build_node_info_list(const pe_resource_t *rsc)
 }
 
 GList *
-cli_resource_search(pe_resource_t *rsc, const char *requested_name,
+cli_resource_search(pcmk_resource_t *rsc, const char *requested_name,
                     pe_working_set_t *data_set)
 {
     GList *retval = NULL;
-    const pe_resource_t *parent = pe__const_top_resource(rsc, false);
+    const pcmk_resource_t *parent = pe__const_top_resource(rsc, false);
 
     if (pe_rsc_is_clone(rsc)) {
         retval = build_node_info_list(rsc);
@@ -159,8 +159,9 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
 
 /* PRIVATE. Use the find_matching_attr_resources instead. */
 static void
-find_matching_attr_resources_recursive(pcmk__output_t *out, GList/* <pe_resource_t*> */ ** result,
-                                       pe_resource_t * rsc, const char * rsc_id,
+find_matching_attr_resources_recursive(pcmk__output_t *out,
+                                       GList /* <pcmk_resource_t*> */ **result,
+                                       pcmk_resource_t *rsc, const char *rsc_id,
                                        const char * attr_set, const char * attr_set_type,
                                        const char * attr_id, const char * attr_name,
                                        cib_t * cib, const char * cmd, int depth)
@@ -171,7 +172,8 @@ find_matching_attr_resources_recursive(pcmk__output_t *out, GList/* <pe_resource
 
     /* visit the children */
     for(GList *gIter = rsc->children; gIter; gIter = gIter->next) {
-        find_matching_attr_resources_recursive(out, result, (pe_resource_t*)gIter->data,
+        find_matching_attr_resources_recursive(out, result,
+                                               (pcmk_resource_t *) gIter->data,
                                                rsc_id, attr_set, attr_set_type,
                                                attr_id, attr_name, cib, cmd, depth+1);
         /* do it only once for clones */
@@ -195,8 +197,8 @@ find_matching_attr_resources_recursive(pcmk__output_t *out, GList/* <pe_resource
 
 
 /* The result is a linearized pre-ordered tree of resources. */
-static GList/*<pe_resource_t*>*/ *
-find_matching_attr_resources(pcmk__output_t *out, pe_resource_t * rsc,
+static GList/*<pcmk_resource_t*>*/ *
+find_matching_attr_resources(pcmk__output_t *out, pcmk_resource_t *rsc,
                              const char * rsc_id, const char * attr_set,
                              const char * attr_set_type, const char * attr_id,
                              const char * attr_name, cib_t * cib, const char * cmd,
@@ -229,7 +231,7 @@ find_matching_attr_resources(pcmk__output_t *out, pe_resource_t * rsc,
 
     } else if ((rsc->parent == NULL) && (rsc->children != NULL)
                && (rsc->variant == pcmk_rsc_variant_clone)) {
-        pe_resource_t *child = rsc->children->data;
+        pcmk_resource_t *child = rsc->children->data;
 
         if (child->variant == pcmk_rsc_variant_primitive) {
             lookup_id = clone_strip(child->id); /* Could be a cloned group! */
@@ -256,7 +258,7 @@ find_matching_attr_resources(pcmk__output_t *out, pe_resource_t * rsc,
 
 // \return Standard Pacemaker return code
 int
-cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
+cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                               const char *attr_set, const char *attr_set_type,
                               const char *attr_id, const char *attr_name,
                               const char *attr_value, gboolean recursive,
@@ -267,7 +269,7 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
 
     char *found_attr_id = NULL;
 
-    GList/*<pe_resource_t*>*/ *resources = NULL;
+    GList/*<pcmk_resource_t*>*/ *resources = NULL;
     const char *top_id = pe__const_top_resource(rsc, false)->id;
 
     if ((attr_id == NULL) && !force) {
@@ -336,7 +338,7 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
         xmlNode *xml_obj = NULL;
         found_attr_id = NULL;
 
-        rsc = (pe_resource_t *) iter->data;
+        rsc = (pcmk_resource_t *) iter->data;
 
         lookup_id = clone_strip(rsc->id); /* Could be a cloned group! */
         rc = find_resource_attr(out, cib, XML_ATTR_ID, lookup_id, attr_set_type,
@@ -443,14 +445,14 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
 
 // \return Standard Pacemaker return code
 int
-cli_resource_delete_attribute(pe_resource_t *rsc, const char *requested_name,
+cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
                               const char *attr_set, const char *attr_set_type,
                               const char *attr_id, const char *attr_name,
                               cib_t *cib, int cib_options, gboolean force)
 {
     pcmk__output_t *out = rsc->cluster->priv;
     int rc = pcmk_rc_ok;
-    GList/*<pe_resource_t*>*/ *resources = NULL;
+    GList/*<pcmk_resource_t*>*/ *resources = NULL;
 
     if ((attr_id == NULL) && !force) {
         find_resource_attr(out, cib, XML_ATTR_ID,
@@ -485,7 +487,7 @@ cli_resource_delete_attribute(pe_resource_t *rsc, const char *requested_name,
         char *found_attr_id = NULL;
         const char *rsc_attr_id = attr_id;
 
-        rsc = (pe_resource_t *) iter->data;
+        rsc = (pcmk_resource_t *) iter->data;
 
         lookup_id = clone_strip(rsc->id);
         rc = find_resource_attr(out, cib, XML_ATTR_ID, lookup_id, attr_set_type,
@@ -547,7 +549,7 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
     const char *rsc_provider = NULL;
     const char *rsc_type = NULL;
     bool cib_only = false;
-    pe_resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
+    pcmk_resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
     if (rsc == NULL) {
         out->err(out, "Resource %s not found", rsc_id);
@@ -620,7 +622,7 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
  * \note The caller is responsible for freeing the result.
  */
 static inline char *
-rsc_fail_name(const pe_resource_t *rsc)
+rsc_fail_name(const pcmk_resource_t *rsc)
 {
     const char *name = (rsc->clone_name? rsc->clone_name : rsc->id);
 
@@ -693,7 +695,7 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
 
         // No resource specified means all resources match
         if (rsc_id) {
-            pe_resource_t *fail_rsc = NULL;
+            pcmk_resource_t *fail_rsc = NULL;
 
             fail_rsc = pe_find_resource_with_flags(data_set->resources,
                                                    failed_id,
@@ -741,7 +743,7 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
 
 // \return Standard Pacemaker return code
 static int
-clear_rsc_fail_attrs(const pe_resource_t *rsc, const char *operation,
+clear_rsc_fail_attrs(const pcmk_resource_t *rsc, const char *operation,
                      const char *interval_spec, const pcmk_node_t *node)
 {
     int rc = pcmk_rc_ok;
@@ -762,7 +764,7 @@ clear_rsc_fail_attrs(const pe_resource_t *rsc, const char *operation,
 // \return Standard Pacemaker return code
 int
 cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
-                    const pe_resource_t *rsc, const char *operation,
+                    const pcmk_resource_t *rsc, const char *operation,
                     const char *interval_spec, bool just_failures,
                     pe_working_set_t *data_set, gboolean force)
 {
@@ -776,7 +778,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
     } else if (rsc->children) {
 
         for (const GList *lpc = rsc->children; lpc != NULL; lpc = lpc->next) {
-            const pe_resource_t *child = (const pe_resource_t *) lpc->data;
+            const pcmk_resource_t *child = (const pcmk_resource_t *) lpc->data;
 
             rc = cli_resource_delete(controld_api, host_uname, child, operation,
                                      interval_spec, just_failures, data_set, force);
@@ -1033,7 +1035,7 @@ check_node_health(resource_checks_t *checks, pcmk_node_t *node)
 }
 
 int
-cli_resource_check(pcmk__output_t *out, pe_resource_t *rsc, pcmk_node_t *node)
+cli_resource_check(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
 {
     resource_checks_t checks = { .rsc = rsc };
 
@@ -1055,7 +1057,7 @@ cli_resource_fail(pcmk_ipc_api_t *controld_api, const char *host_uname,
 }
 
 static GHashTable *
-generate_resource_params(pe_resource_t *rsc, pcmk_node_t *node,
+generate_resource_params(pcmk_resource_t *rsc, pcmk_node_t *node,
                          pe_working_set_t *data_set)
 {
     GHashTable *params = NULL;
@@ -1090,7 +1092,7 @@ generate_resource_params(pe_resource_t *rsc, pcmk_node_t *node,
     return combined;
 }
 
-bool resource_is_running_on(pe_resource_t *rsc, const char *host)
+bool resource_is_running_on(pcmk_resource_t *rsc, const char *host)
 {
     bool found = true;
     GList *hIter = NULL;
@@ -1140,7 +1142,7 @@ get_active_resources(const char *host, GList *rsc_list)
     GList *active = NULL;
 
     for (rIter = rsc_list; rIter != NULL; rIter = rIter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) rIter->data;
+        pcmk_resource_t *rsc = (pcmk_resource_t *) rIter->data;
 
         /* Expand groups to their members, because if we're restarting a member
          * other than the first, we can't otherwise tell which resources are
@@ -1322,7 +1324,7 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
  * \return Maximum stop timeout for \p rsc (in milliseconds)
  */
 static int
-max_rsc_stop_timeout(pe_resource_t *rsc)
+max_rsc_stop_timeout(pcmk_resource_t *rsc)
 {
     pe_action_t *stop = NULL;
     long long result_ll;
@@ -1335,7 +1337,7 @@ max_rsc_stop_timeout(pe_resource_t *rsc)
     // If resource is collective, use maximum of its children's stop timeouts
     if (rsc->children != NULL) {
         for (GList *iter = rsc->children; iter; iter = iter->next) {
-            pe_resource_t *child = iter->data;
+            pcmk_resource_t *child = iter->data;
             int delay = max_rsc_stop_timeout(child);
 
             if (delay > max_delay) {
@@ -1386,8 +1388,8 @@ wait_time_estimate(pe_working_set_t *data_set, const GList *resources)
 
     // Find maximum stop timeout in milliseconds
     for (const GList *item = resources; item != NULL; item = item->next) {
-        pe_resource_t *rsc = pe_find_resource(data_set->resources,
-                                              (const char *) (item->data));
+        pcmk_resource_t *rsc = pe_find_resource(data_set->resources,
+                                                (const char *) item->data);
         int delay = max_rsc_stop_timeout(rsc);
 
         if (delay > max_delay) {
@@ -1428,7 +1430,7 @@ wait_time_estimate(pe_working_set_t *data_set, const GList *resources)
  * \return Standard Pacemaker return code (exits on certain failures)
  */
 int
-cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc,
+cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                      const pcmk_node_t *node, const char *move_lifetime,
                      int timeout_ms, cib_t *cib, int cib_options,
                      gboolean promoted_role_only, gboolean force)
@@ -1451,7 +1453,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc,
     GList *restart_target_active = NULL;
 
     pe_working_set_t *data_set = NULL;
-    pe_resource_t *parent = uber_parent(rsc);
+    pcmk_resource_t *parent = uber_parent(rsc);
 
     bool running = false;
     const char *id = rsc->clone_name ? rsc->clone_name : rsc->id;
@@ -2049,7 +2051,7 @@ done:
 }
 
 crm_exit_t
-cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
+cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
                      const char *rsc_action, GHashTable *override_hash,
                      int timeout_ms, cib_t * cib, pe_working_set_t *data_set,
                      int resource_verbose, gboolean force, int check_level)
@@ -2112,7 +2114,7 @@ cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
 
 // \return Standard Pacemaker return code
 int
-cli_resource_move(const pe_resource_t *rsc, const char *rsc_id,
+cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
                   const char *host_name, const char *move_lifetime, cib_t *cib,
                   int cib_options, pe_working_set_t *data_set,
                   gboolean promoted_role_only, gboolean force)
@@ -2131,7 +2133,7 @@ cli_resource_move(const pe_resource_t *rsc, const char *rsc_id,
     if (promoted_role_only
         && !pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
 
-        const pe_resource_t *p = pe__const_top_resource(rsc, false);
+        const pcmk_resource_t *p = pe__const_top_resource(rsc, false);
 
         if (pcmk_is_set(p->flags, pcmk_rsc_promotable)) {
             out->info(out, "Using parent '%s' for move instead of '%s'.", rsc->id, rsc_id);
@@ -2152,7 +2154,7 @@ cli_resource_move(const pe_resource_t *rsc, const char *rsc_id,
         pcmk_node_t *promoted_node = NULL;
 
         for (const GList *iter = rsc->children; iter; iter = iter->next) {
-            const pe_resource_t *child = (const pe_resource_t *) iter->data;
+            const pcmk_resource_t *child = (const pcmk_resource_t *) iter->data;
             enum rsc_role_e child_role = child->fns->state(child, TRUE);
 
             if (child_role == pcmk_role_promoted) {

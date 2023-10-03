@@ -19,7 +19,7 @@
 #include <crm/pengine/internal.h>
 
 const char *
-pe__resource_description(const pe_resource_t *rsc, uint32_t show_opts)
+pe__resource_description(const pcmk_resource_t *rsc, uint32_t show_opts)
 {
     const char * desc = NULL;
     // User-supplied description
@@ -67,7 +67,7 @@ add_extra_info(const pcmk_node_t *node, GList *rsc_list,
     GList *gIter = NULL;
 
     for (gIter = rsc_list; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
+        pcmk_resource_t *rsc = (pcmk_resource_t *) gIter->data;
         const char *type = g_hash_table_lookup(rsc->meta, "type");
         const char *name = NULL;
         GHashTable *params = NULL;
@@ -296,7 +296,7 @@ op_history_string(xmlNode *xml_op, const char *task, const char *interval_ms_s,
 }
 
 static char *
-resource_history_string(pe_resource_t *rsc, const char *rsc_id, bool all,
+resource_history_string(pcmk_resource_t *rsc, const char *rsc_id, bool all,
                         int failcount, time_t last_failure) {
     char *buf = NULL;
 
@@ -366,7 +366,7 @@ is_mixed_version(pe_working_set_t *data_set) {
 }
 
 static char *
-formatted_xml_buf(const pe_resource_t *rsc, bool raw)
+formatted_xml_buf(const pcmk_resource_t *rsc, bool raw)
 {
     if (raw) {
         return dump_xml_formatted(rsc->orig_xml ? rsc->orig_xml : rsc->xml);
@@ -530,7 +530,7 @@ pe__node_display_name(pcmk_node_t *node, bool print_detail)
 
     /* Host is displayed only if this is a guest node and detail is requested */
     if (print_detail && pe__is_guest_node(node)) {
-        const pe_resource_t *container = node->details->remote_rsc->container;
+        const pcmk_resource_t *container = node->details->remote_rsc->container;
         const pcmk_node_t *host_node = pe__current_node(container);
 
         if (host_node && host_node->details) {
@@ -695,7 +695,7 @@ ban_list(pcmk__output_t *out, va_list args) {
     /* Print each ban */
     for (gIter = data_set->placement_constraints; gIter != NULL; gIter = gIter->next) {
         pe__location_t *location = gIter->data;
-        const pe_resource_t *rsc = location->rsc_lh;
+        const pcmk_resource_t *rsc = location->rsc_lh;
 
         if (prefix != NULL && !g_str_has_prefix(location->id, prefix)) {
             continue;
@@ -1663,7 +1663,7 @@ node_html(pcmk__output_t *out, va_list args) {
             status_node(node, item_node, show_opts);
 
             for (lpc2 = node->details->running_rsc; lpc2 != NULL; lpc2 = lpc2->next) {
-                pe_resource_t *rsc = (pe_resource_t *) lpc2->data;
+                pcmk_resource_t *rsc = (pcmk_resource_t *) lpc2->data;
                 PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Resources");
 
                 show_opts |= pcmk_show_rsc_only;
@@ -1807,7 +1807,7 @@ node_text(pcmk__output_t *out, va_list args) {
                 out->begin_list(out, NULL, NULL, "Resources");
 
                 for (gIter2 = node->details->running_rsc; gIter2 != NULL; gIter2 = gIter2->next) {
-                    pe_resource_t *rsc = (pe_resource_t *) gIter2->data;
+                    pcmk_resource_t *rsc = (pcmk_resource_t *) gIter2->data;
 
                     show_opts |= pcmk_show_rsc_only;
                     out->message(out, crm_map_element_name(rsc->xml), show_opts,
@@ -1897,7 +1897,7 @@ node_xml(pcmk__output_t *out, va_list args) {
             GList *lpc = NULL;
 
             for (lpc = node->details->running_rsc; lpc != NULL; lpc = lpc->next) {
-                pe_resource_t *rsc = (pe_resource_t *) lpc->data;
+                pcmk_resource_t *rsc = (pcmk_resource_t *) lpc->data;
 
                 show_opts |= pcmk_show_rsc_only;
                 out->message(out, crm_map_element_name(rsc->xml), show_opts,
@@ -1989,7 +1989,7 @@ node_and_op(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
     xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
 
-    pe_resource_t *rsc = NULL;
+    pcmk_resource_t *rsc = NULL;
     gchar *node_str = NULL;
     char *last_change_str = NULL;
 
@@ -2044,7 +2044,7 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
     xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
 
-    pe_resource_t *rsc = NULL;
+    pcmk_resource_t *rsc = NULL;
     const char *op_rsc = crm_element_value(xml_op, "resource");
     int status;
     time_t last_change = 0;
@@ -2232,8 +2232,8 @@ node_history_list(pcmk__output_t *out, va_list args) {
     for (rsc_entry = first_named_child(lrm_rsc, XML_LRM_TAG_RESOURCE);
          rsc_entry != NULL; rsc_entry = crm_next_same_xml(rsc_entry)) {
         const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
-        pe_resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
-        const pe_resource_t *parent = pe__const_top_resource(rsc, false);
+        pcmk_resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
+        const pcmk_resource_t *parent = pe__const_top_resource(rsc, false);
 
         /* We can't use is_filtered here to filter group resources.  For is_filtered,
          * we have to decide whether to check the parent or not.  If we check the
@@ -2275,7 +2275,7 @@ node_history_list(pcmk__output_t *out, va_list args) {
                          failcount, last_failure, false);
         } else {
             GList *op_list = get_operation_list(rsc_entry);
-            pe_resource_t *rsc = pe_find_resource(data_set->resources,
+            pcmk_resource_t *rsc = pe_find_resource(data_set->resources,
                                                   crm_element_value(rsc_entry, XML_ATTR_ID));
 
             if (op_list == NULL) {
@@ -2498,12 +2498,12 @@ node_summary(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("node-weight", "const pe_resource_t *", "const char *",
+PCMK__OUTPUT_ARGS("node-weight", "const pcmk_resource_t *", "const char *",
                   "const char *", "const char *")
 static int
 node_weight(pcmk__output_t *out, va_list args)
 {
-    const pe_resource_t *rsc = va_arg(args, const pe_resource_t *);
+    const pcmk_resource_t *rsc = va_arg(args, const pcmk_resource_t *);
     const char *prefix = va_arg(args, const char *);
     const char *uname = va_arg(args, const char *);
     const char *score = va_arg(args, const char *);
@@ -2518,12 +2518,12 @@ node_weight(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("node-weight", "const pe_resource_t *", "const char *",
+PCMK__OUTPUT_ARGS("node-weight", "const pcmk_resource_t *", "const char *",
                   "const char *", "const char *")
 static int
 node_weight_xml(pcmk__output_t *out, va_list args)
 {
-    const pe_resource_t *rsc = va_arg(args, const pe_resource_t *);
+    const pcmk_resource_t *rsc = va_arg(args, const pcmk_resource_t *);
     const char *prefix = va_arg(args, const char *);
     const char *uname = va_arg(args, const char *);
     const char *score = va_arg(args, const char *);
@@ -2611,12 +2611,12 @@ op_history_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("promotion-score", "pe_resource_t *", "pcmk_node_t *",
+PCMK__OUTPUT_ARGS("promotion-score", "pcmk_resource_t *", "pcmk_node_t *",
                   "const char *")
 static int
 promotion_score(pcmk__output_t *out, va_list args)
 {
-    pe_resource_t *child_rsc = va_arg(args, pe_resource_t *);
+    pcmk_resource_t *child_rsc = va_arg(args, pcmk_resource_t *);
     pcmk_node_t *chosen = va_arg(args, pcmk_node_t *);
     const char *score = va_arg(args, const char *);
 
@@ -2627,12 +2627,12 @@ promotion_score(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("promotion-score", "pe_resource_t *", "pcmk_node_t *",
+PCMK__OUTPUT_ARGS("promotion-score", "pcmk_resource_t *", "pcmk_node_t *",
                   "const char *")
 static int
 promotion_score_xml(pcmk__output_t *out, va_list args)
 {
-    pe_resource_t *child_rsc = va_arg(args, pe_resource_t *);
+    pcmk_resource_t *child_rsc = va_arg(args, pcmk_resource_t *);
     pcmk_node_t *chosen = va_arg(args, pcmk_node_t *);
     const char *score = va_arg(args, const char *);
 
@@ -2648,10 +2648,10 @@ promotion_score_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("resource-config", "const pe_resource_t *", "bool")
+PCMK__OUTPUT_ARGS("resource-config", "const pcmk_resource_t *", "bool")
 static int
 resource_config(pcmk__output_t *out, va_list args) {
-    const pe_resource_t *rsc = va_arg(args, const pe_resource_t *);
+    const pcmk_resource_t *rsc = va_arg(args, const pcmk_resource_t *);
     bool raw = va_arg(args, int);
 
     char *rsc_xml = formatted_xml_buf(rsc, raw);
@@ -2662,10 +2662,10 @@ resource_config(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("resource-config", "const pe_resource_t *", "bool")
+PCMK__OUTPUT_ARGS("resource-config", "const pcmk_resource_t *", "bool")
 static int
 resource_config_text(pcmk__output_t *out, va_list args) {
-    const pe_resource_t *rsc = va_arg(args, const pe_resource_t *);
+    const pcmk_resource_t *rsc = va_arg(args, const pcmk_resource_t *);
     bool raw = va_arg(args, int);
 
     char *rsc_xml = formatted_xml_buf(rsc, raw);
@@ -2677,10 +2677,11 @@ resource_config_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("resource-history", "pe_resource_t *", "const char *", "bool", "int", "time_t", "bool")
+PCMK__OUTPUT_ARGS("resource-history", "pcmk_resource_t *", "const char *",
+                  "bool", "int", "time_t", "bool")
 static int
 resource_history_text(pcmk__output_t *out, va_list args) {
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     const char *rsc_id = va_arg(args, const char *);
     bool all = va_arg(args, int);
     int failcount = va_arg(args, int);
@@ -2699,10 +2700,11 @@ resource_history_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("resource-history", "pe_resource_t *", "const char *", "bool", "int", "time_t", "bool")
+PCMK__OUTPUT_ARGS("resource-history", "pcmk_resource_t *", "const char *",
+                  "bool", "int", "time_t", "bool")
 static int
 resource_history_xml(pcmk__output_t *out, va_list args) {
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     const char *rsc_id = va_arg(args, const char *);
     bool all = va_arg(args, int);
     int failcount = va_arg(args, int);
@@ -2798,7 +2800,7 @@ resource_list(pcmk__output_t *out, va_list args)
 
     /* For each resource, display it if appropriate */
     for (rsc_iter = data_set->resources; rsc_iter != NULL; rsc_iter = rsc_iter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) rsc_iter->data;
+        pcmk_resource_t *rsc = (pcmk_resource_t *) rsc_iter->data;
         int x;
 
         /* Complex resources may have some sub-resources active and some inactive */
@@ -2867,13 +2869,13 @@ resource_list(pcmk__output_t *out, va_list args)
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("resource-operation-list", "pe_working_set_t *", "pe_resource_t *",
-                  "pcmk_node_t *", "GList *", "uint32_t")
+PCMK__OUTPUT_ARGS("resource-operation-list", "pe_working_set_t *",
+                  "pcmk_resource_t *", "pcmk_node_t *", "GList *", "uint32_t")
 static int
 resource_operation_list(pcmk__output_t *out, va_list args)
 {
     pe_working_set_t *data_set G_GNUC_UNUSED = va_arg(args, pe_working_set_t *);
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     pcmk_node_t *node = va_arg(args, pcmk_node_t *);
     GList *op_list = va_arg(args, GList *);
     uint32_t show_opts = va_arg(args, uint32_t);
@@ -2921,12 +2923,12 @@ resource_operation_list(pcmk__output_t *out, va_list args)
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("resource-util", "pe_resource_t *", "pcmk_node_t *",
+PCMK__OUTPUT_ARGS("resource-util", "pcmk_resource_t *", "pcmk_node_t *",
                   "const char *")
 static int
 resource_util(pcmk__output_t *out, va_list args)
 {
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     pcmk_node_t *node = va_arg(args, pcmk_node_t *);
     const char *fn = va_arg(args, const char *);
 
@@ -2940,12 +2942,12 @@ resource_util(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("resource-util", "pe_resource_t *", "pcmk_node_t *",
+PCMK__OUTPUT_ARGS("resource-util", "pcmk_resource_t *", "pcmk_node_t *",
                   "const char *")
 static int
 resource_util_xml(pcmk__output_t *out, va_list args)
 {
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     pcmk_node_t *node = va_arg(args, pcmk_node_t *);
     const char *fn = va_arg(args, const char *);
 

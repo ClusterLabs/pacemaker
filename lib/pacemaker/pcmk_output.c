@@ -21,7 +21,7 @@
 #include <stdint.h>
 
 static char *
-colocations_header(pe_resource_t *rsc, pcmk__colocation_t *cons,
+colocations_header(pcmk_resource_t *rsc, pcmk__colocation_t *cons,
                    bool dependents) {
     char *retval = NULL;
 
@@ -39,7 +39,7 @@ colocations_header(pe_resource_t *rsc, pcmk__colocation_t *cons,
 }
 
 static void
-colocations_xml_node(pcmk__output_t *out, pe_resource_t *rsc,
+colocations_xml_node(pcmk__output_t *out, pcmk_resource_t *rsc,
                      pcmk__colocation_t *cons) {
     xmlNodePtr node = NULL;
 
@@ -68,7 +68,8 @@ colocations_xml_node(pcmk__output_t *out, pe_resource_t *rsc,
 }
 
 static int
-do_locations_list_xml(pcmk__output_t *out, pe_resource_t *rsc, bool add_header)
+do_locations_list_xml(pcmk__output_t *out, pcmk_resource_t *rsc,
+                      bool add_header)
 {
     GList *lpc = NULL;
     GList *list = rsc->rsc_location;
@@ -103,14 +104,14 @@ do_locations_list_xml(pcmk__output_t *out, pe_resource_t *rsc, bool add_header)
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("rsc-action-item", "const char *", "pe_resource_t *",
+PCMK__OUTPUT_ARGS("rsc-action-item", "const char *", "pcmk_resource_t *",
                   "pcmk_node_t *", "pcmk_node_t *", "pe_action_t *",
                   "pe_action_t *")
 static int
 rsc_action_item(pcmk__output_t *out, va_list args)
 {
     const char *change = va_arg(args, const char *);
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     pcmk_node_t *origin = va_arg(args, pcmk_node_t *);
     pcmk_node_t *destination = va_arg(args, pcmk_node_t *);
     pe_action_t *action = va_arg(args, pe_action_t *);
@@ -230,14 +231,14 @@ rsc_action_item(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("rsc-action-item", "const char *", "pe_resource_t *",
+PCMK__OUTPUT_ARGS("rsc-action-item", "const char *", "pcmk_resource_t *",
                   "pcmk_node_t *", "pcmk_node_t *", "pe_action_t *",
                   "pe_action_t *")
 static int
 rsc_action_item_xml(pcmk__output_t *out, va_list args)
 {
     const char *change = va_arg(args, const char *);
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     pcmk_node_t *origin = va_arg(args, pcmk_node_t *);
     pcmk_node_t *destination = va_arg(args, pcmk_node_t *);
     pe_action_t *action = va_arg(args, pe_action_t *);
@@ -362,10 +363,10 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("rsc-is-colocated-with-list", "pe_resource_t *", "bool")
+PCMK__OUTPUT_ARGS("rsc-is-colocated-with-list", "pcmk_resource_t *", "bool")
 static int
 rsc_is_colocated_with_list(pcmk__output_t *out, va_list args) {
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     bool recursive = va_arg(args, int);
 
     int rc = pcmk_rc_no_output;
@@ -411,10 +412,10 @@ rsc_is_colocated_with_list(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("rsc-is-colocated-with-list", "pe_resource_t *", "bool")
+PCMK__OUTPUT_ARGS("rsc-is-colocated-with-list", "pcmk_resource_t *", "bool")
 static int
 rsc_is_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     bool recursive = va_arg(args, int);
 
     int rc = pcmk_rc_no_output;
@@ -447,10 +448,10 @@ rsc_is_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("rscs-colocated-with-list", "pe_resource_t *", "bool")
+PCMK__OUTPUT_ARGS("rscs-colocated-with-list", "pcmk_resource_t *", "bool")
 static int
 rscs_colocated_with_list(pcmk__output_t *out, va_list args) {
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     bool recursive = va_arg(args, int);
 
     int rc = pcmk_rc_no_output;
@@ -497,10 +498,10 @@ rscs_colocated_with_list(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("rscs-colocated-with-list", "pe_resource_t *", "bool")
+PCMK__OUTPUT_ARGS("rscs-colocated-with-list", "pcmk_resource_t *", "bool")
 static int
 rscs_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     bool recursive = va_arg(args, int);
 
     int rc = pcmk_rc_no_output;
@@ -534,10 +535,10 @@ rscs_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("locations-list", "pe_resource_t *")
+PCMK__OUTPUT_ARGS("locations-list", "pcmk_resource_t *")
 static int
 locations_list(pcmk__output_t *out, va_list args) {
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
 
     GList *lpc = NULL;
     GList *list = rsc->rsc_location;
@@ -563,19 +564,19 @@ locations_list(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("locations-list", "pe_resource_t *")
+PCMK__OUTPUT_ARGS("locations-list", "pcmk_resource_t *")
 static int
 locations_list_xml(pcmk__output_t *out, va_list args) {
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     return do_locations_list_xml(out, rsc, true);
 }
 
-PCMK__OUTPUT_ARGS("locations-and-colocations", "pe_resource_t *",
+PCMK__OUTPUT_ARGS("locations-and-colocations", "pcmk_resource_t *",
                   "bool", "bool")
 static int
 locations_and_colocations(pcmk__output_t *out, va_list args)
 {
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     bool recursive = va_arg(args, int);
     bool force = va_arg(args, int);
 
@@ -596,12 +597,12 @@ locations_and_colocations(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("locations-and-colocations", "pe_resource_t *",
+PCMK__OUTPUT_ARGS("locations-and-colocations", "pcmk_resource_t *",
                   "bool", "bool")
 static int
 locations_and_colocations_xml(pcmk__output_t *out, va_list args)
 {
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     bool recursive = va_arg(args, int);
     bool force = va_arg(args, int);
 
@@ -954,12 +955,12 @@ crmadmin_node_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("digests", "const pe_resource_t *", "const pcmk_node_t *",
+PCMK__OUTPUT_ARGS("digests", "const pcmk_resource_t *", "const pcmk_node_t *",
                   "const char *", "guint", "const op_digest_cache_t *")
 static int
 digests_text(pcmk__output_t *out, va_list args)
 {
-    const pe_resource_t *rsc = va_arg(args, const pe_resource_t *);
+    const pcmk_resource_t *rsc = va_arg(args, const pcmk_resource_t *);
     const pcmk_node_t *node = va_arg(args, const pcmk_node_t *);
     const char *task = va_arg(args, const char *);
     guint interval_ms = va_arg(args, guint);
@@ -1024,12 +1025,12 @@ add_digest_xml(xmlNode *parent, const char *type, const char *digest,
     }
 }
 
-PCMK__OUTPUT_ARGS("digests", "const pe_resource_t *", "const pcmk_node_t *",
+PCMK__OUTPUT_ARGS("digests", "const pcmk_resource_t *", "const pcmk_node_t *",
                   "const char *", "guint", "const op_digest_cache_t *")
 static int
 digests_xml(pcmk__output_t *out, va_list args)
 {
-    const pe_resource_t *rsc = va_arg(args, const pe_resource_t *);
+    const pcmk_resource_t *rsc = va_arg(args, const pcmk_resource_t *);
     const pcmk_node_t *node = va_arg(args, const pcmk_node_t *);
     const char *task = va_arg(args, const char *);
     guint interval_ms = va_arg(args, guint);
@@ -1071,12 +1072,12 @@ digests_xml(pcmk__output_t *out, va_list args)
         }                                                               \
     } while (0)
 
-PCMK__OUTPUT_ARGS("rsc-action", "pe_resource_t *", "pcmk_node_t *",
+PCMK__OUTPUT_ARGS("rsc-action", "pcmk_resource_t *", "pcmk_node_t *",
                   "pcmk_node_t *")
 static int
 rsc_action_default(pcmk__output_t *out, va_list args)
 {
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     pcmk_node_t *current = va_arg(args, pcmk_node_t *);
     pcmk_node_t *next = va_arg(args, pcmk_node_t *);
 

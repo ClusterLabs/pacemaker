@@ -19,7 +19,7 @@
 
 void populate_hash(xmlNode * nvpair_list, GHashTable * hash, const char **attrs, int attrs_length);
 
-static pcmk_node_t *active_node(const pe_resource_t *rsc,
+static pcmk_node_t *active_node(const pcmk_resource_t *rsc,
                                 unsigned int *count_all,
                                 unsigned int *count_clean);
 
@@ -112,10 +112,12 @@ dup_attr(gpointer key, gpointer value, gpointer user_data)
 }
 
 static void
-expand_parents_fixed_nvpairs(pe_resource_t * rsc, pe_rule_eval_data_t * rule_data, GHashTable * meta_hash, pe_working_set_t * data_set)
+expand_parents_fixed_nvpairs(pcmk_resource_t *rsc,
+                             pe_rule_eval_data_t *rule_data,
+                             GHashTable *meta_hash, pe_working_set_t *data_set)
 {
     GHashTable *parent_orig_meta = pcmk__strkey_table(free, free);
-    pe_resource_t *p = rsc->parent;
+    pcmk_resource_t *p = rsc->parent;
 
     if (p == NULL) {
         return ;
@@ -152,7 +154,7 @@ expand_parents_fixed_nvpairs(pe_resource_t * rsc, pe_rule_eval_data_t * rule_dat
 
 }
 void
-get_meta_attributes(GHashTable * meta_hash, pe_resource_t * rsc,
+get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
                     pcmk_node_t *node, pe_working_set_t *data_set)
 {
     pe_rsc_eval_data_t rsc_rule_data = {
@@ -202,7 +204,7 @@ get_meta_attributes(GHashTable * meta_hash, pe_resource_t * rsc,
 }
 
 void
-get_rsc_attributes(GHashTable *meta_hash, const pe_resource_t *rsc,
+get_rsc_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
                    const pcmk_node_t *node, pe_working_set_t *data_set)
 {
     pe_rule_eval_data_t rule_data = {
@@ -398,7 +400,7 @@ add_template_rsc(xmlNode * xml_obj, pe_working_set_t * data_set)
 }
 
 static bool
-detect_promotable(pe_resource_t *rsc)
+detect_promotable(pcmk_resource_t *rsc)
 {
     const char *promotable = g_hash_table_lookup(rsc->meta,
                                                  XML_RSC_ATTR_PROMOTABLE);
@@ -438,7 +440,7 @@ free_params_table(gpointer data)
  *       callers should not destroy it.
  */
 GHashTable *
-pe_rsc_params(pe_resource_t *rsc, const pcmk_node_t *node,
+pe_rsc_params(pcmk_resource_t *rsc, const pcmk_node_t *node,
               pe_working_set_t *data_set)
 {
     GHashTable *params_on_node = NULL;
@@ -483,7 +485,7 @@ pe_rsc_params(pe_resource_t *rsc, const pcmk_node_t *node,
  * \param[in]     is_default  Whether \p value was selected by default
  */
 static void
-unpack_requires(pe_resource_t *rsc, const char *value, bool is_default)
+unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
 {
     if (pcmk__str_eq(value, PCMK__VALUE_NOTHING, pcmk__str_casei)) {
 
@@ -558,7 +560,7 @@ unpack_requires(pe_resource_t *rsc, const char *value, bool is_default)
 
 #ifndef PCMK__COMPAT_2_0
 static void
-warn_about_deprecated_classes(pe_resource_t *rsc)
+warn_about_deprecated_classes(pcmk_resource_t *rsc)
 {
     const char *std = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
@@ -582,7 +584,7 @@ warn_about_deprecated_classes(pe_resource_t *rsc)
  * \brief Unpack configuration XML for a given resource
  *
  * Unpack the XML object containing a resource's configuration into a new
- * \c pe_resource_t object.
+ * \c pcmk_resource_t object.
  *
  * \param[in]     xml_obj   XML node containing the resource's configuration
  * \param[out]    rsc       Where to store the unpacked resource information
@@ -595,8 +597,8 @@ warn_about_deprecated_classes(pe_resource_t *rsc)
  *       free() method. Otherwise, \p *rsc is guaranteed to be NULL.
  */
 int
-pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
-                    pe_resource_t *parent, pe_working_set_t *data_set)
+pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
+                    pcmk_resource_t *parent, pe_working_set_t *data_set)
 {
     xmlNode *expanded_xml = NULL;
     xmlNode *ops = NULL;
@@ -634,7 +636,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
         return pcmk_rc_unpack_error;
     }
 
-    *rsc = calloc(1, sizeof(pe_resource_t));
+    *rsc = calloc(1, sizeof(pcmk_resource_t));
     if (*rsc == NULL) {
         crm_crit("Unable to allocate memory for resource '%s'", id);
         return ENOMEM;
@@ -910,9 +912,9 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
 }
 
 gboolean
-is_parent(pe_resource_t *child, pe_resource_t *rsc)
+is_parent(pcmk_resource_t *child, pcmk_resource_t *rsc)
 {
-    pe_resource_t *parent = child;
+    pcmk_resource_t *parent = child;
 
     if (parent == NULL || rsc == NULL) {
         return FALSE;
@@ -926,10 +928,10 @@ is_parent(pe_resource_t *child, pe_resource_t *rsc)
     return FALSE;
 }
 
-pe_resource_t *
-uber_parent(pe_resource_t * rsc)
+pcmk_resource_t *
+uber_parent(pcmk_resource_t *rsc)
 {
-    pe_resource_t *parent = rsc;
+    pcmk_resource_t *parent = rsc;
 
     if (parent == NULL) {
         return NULL;
@@ -952,10 +954,10 @@ uber_parent(pe_resource_t * rsc)
  *         the bundle if \p rsc is bundled and \p include_bundle is true,
  *         otherwise the topmost parent of \p rsc up to a clone
  */
-const pe_resource_t *
-pe__const_top_resource(const pe_resource_t *rsc, bool include_bundle)
+const pcmk_resource_t *
+pe__const_top_resource(const pcmk_resource_t *rsc, bool include_bundle)
 {
-    const pe_resource_t *parent = rsc;
+    const pcmk_resource_t *parent = rsc;
 
     if (parent == NULL) {
         return NULL;
@@ -971,7 +973,7 @@ pe__const_top_resource(const pe_resource_t *rsc, bool include_bundle)
 }
 
 void
-common_free(pe_resource_t * rsc)
+common_free(pcmk_resource_t * rsc)
 {
     if (rsc == NULL) {
         return;
@@ -1049,7 +1051,7 @@ common_free(pe_resource_t * rsc)
  * \return true if the count should continue, or false if sufficiently known
  */
 bool
-pe__count_active_node(const pe_resource_t *rsc, pcmk_node_t *node,
+pe__count_active_node(const pcmk_resource_t *rsc, pcmk_node_t *node,
                       pcmk_node_t **active, unsigned int *count_all,
                       unsigned int *count_clean)
 {
@@ -1093,7 +1095,7 @@ pe__count_active_node(const pe_resource_t *rsc, pcmk_node_t *node,
 
 // Shared implementation of resource_object_functions_t:active_node()
 static pcmk_node_t *
-active_node(const pe_resource_t *rsc, unsigned int *count_all,
+active_node(const pcmk_resource_t *rsc, unsigned int *count_all,
             unsigned int *count_clean)
 {
     pcmk_node_t *active = NULL;
@@ -1130,7 +1132,7 @@ active_node(const pe_resource_t *rsc, unsigned int *count_all,
  *       "requires" meta-attribute.
  */
 pcmk_node_t *
-pe__find_active_requires(const pe_resource_t *rsc, unsigned int *count)
+pe__find_active_requires(const pcmk_resource_t *rsc, unsigned int *count)
 {
     if (rsc == NULL) {
         if (count != NULL) {
@@ -1147,11 +1149,11 @@ pe__find_active_requires(const pe_resource_t *rsc, unsigned int *count)
 }
 
 void
-pe__count_common(pe_resource_t *rsc)
+pe__count_common(pcmk_resource_t *rsc)
 {
     if (rsc->children != NULL) {
         for (GList *item = rsc->children; item != NULL; item = item->next) {
-            ((pe_resource_t *) item->data)->fns->count(item->data);
+            ((pcmk_resource_t *) item->data)->fns->count(item->data);
         }
 
     } else if (!pcmk_is_set(rsc->flags, pcmk_rsc_removed)
@@ -1175,7 +1177,7 @@ pe__count_common(pe_resource_t *rsc)
  * \param[in]     why   Human-friendly reason why role is changing (for logs)
  */
 void
-pe__set_next_role(pe_resource_t *rsc, enum rsc_role_e role, const char *why)
+pe__set_next_role(pcmk_resource_t *rsc, enum rsc_role_e role, const char *why)
 {
     CRM_ASSERT((rsc != NULL) && (why != NULL));
     if (rsc->next_role != role) {
