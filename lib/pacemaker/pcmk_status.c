@@ -319,7 +319,7 @@ pcmk__output_simple_status(pcmk__output_t *out,
     }
 
     for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
-        pe_node_t *node = (pe_node_t *) iter->data;
+        pcmk_node_t *node = (pcmk_node_t *) iter->data;
 
         if (node->details->standby && node->details->online) {
             nodes_standby++;

@@ -37,15 +37,15 @@ typedef struct pe_working_set_s pe_working_set_t;
 typedef struct resource_object_functions_s {
     gboolean (*unpack) (pe_resource_t*, pe_working_set_t*);
     pe_resource_t *(*find_rsc) (pe_resource_t *parent, const char *search,
-                                const pe_node_t *node, int flags);
+                                const pcmk_node_t *node, int flags);
     /* parameter result must be free'd */
-    char *(*parameter) (pe_resource_t*, pe_node_t*, gboolean, const char*,
-                        pe_working_set_t*);
+    char *(*parameter)(pe_resource_t*, pcmk_node_t*, gboolean, const char*,
+                       pe_working_set_t*);
     //! \deprecated will be removed in a future release
     void (*print) (pe_resource_t*, const char*, long, void*);
     gboolean (*active) (pe_resource_t*, gboolean);
     enum rsc_role_e (*state) (const pe_resource_t*, gboolean);
-    pe_node_t *(*location) (const pe_resource_t*, GList**, int);
+    pcmk_node_t *(*location)(const pe_resource_t*, GList**, int);
     void (*free) (pe_resource_t*);
     void (*count) (pe_resource_t*);
     gboolean (*is_filtered) (const pe_resource_t*, GList *, gboolean);
@@ -62,8 +62,9 @@ typedef struct resource_object_functions_s {
      *         online node if the resource's "requires" is "quorum" or
      *         "nothing", or NULL if the resource is inactive.
      */
-    pe_node_t *(*active_node)(const pe_resource_t *rsc, unsigned int *count_all,
-                              unsigned int *count_clean);
+    pcmk_node_t *(*active_node)(const pe_resource_t *rsc,
+                                unsigned int *count_all,
+                                unsigned int *count_clean);
 
     /*!
      * \brief Get maximum resource instances per node
@@ -83,7 +84,7 @@ struct pe_working_set_s {
 
     /* options extracted from the input */
     char *dc_uuid;
-    pe_node_t *dc_node;
+    pcmk_node_t *dc_node;
     const char *stonith_action;
     const char *placement_strategy;
 
@@ -228,12 +229,12 @@ struct pe_resource_s {
     GList *rsc_tickets;       // List of rsc_ticket*
     //!@}
 
-    pe_node_t *allocated_to;
-    pe_node_t *partial_migration_target;
-    pe_node_t *partial_migration_source;
-    GList *running_on;        /* pe_node_t*   */
-    GHashTable *known_on;       /* pe_node_t*   */
-    GHashTable *allowed_nodes;  /* pe_node_t*   */
+    pcmk_node_t *allocated_to;
+    pcmk_node_t *partial_migration_target;
+    pcmk_node_t *partial_migration_source;
+    GList *running_on;          // pcmk_node_t*
+    GHashTable *known_on;       // pcmk_node_t*
+    GHashTable *allowed_nodes;  // pcmk_node_t*
 
     enum rsc_role_e role;
     enum rsc_role_e next_role;
@@ -243,14 +244,14 @@ struct pe_resource_s {
     GHashTable *utilization;
 
     GList *children;          /* pe_resource_t*   */
-    GList *dangling_migrations;       /* pe_node_t*       */
+    GList *dangling_migrations; // pcmk_node_t*
 
     pe_resource_t *container;
     GList *fillers;
 
     // @COMPAT These should be made const at next API compatibility break
-    pe_node_t *pending_node;    // Node on which pending_task is happening
-    pe_node_t *lock_node;       // Resource is shutdown-locked to this node
+    pcmk_node_t *pending_node;  // Node on which pending_task is happening
+    pcmk_node_t *lock_node;     // Resource is shutdown-locked to this node
 
     time_t lock_time;           // When shutdown lock started
 
@@ -267,7 +268,7 @@ struct pe_action_s {
     int priority;
 
     pe_resource_t *rsc;
-    pe_node_t *node;
+    pcmk_node_t *node;
     xmlNode *op_entry;
 
     char *task;

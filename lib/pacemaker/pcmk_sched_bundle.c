@@ -17,7 +17,7 @@
 #include "libpacemaker_private.h"
 
 struct assign_data {
-    const pe_node_t *prefer;
+    const pcmk_node_t *prefer;
     bool stop_if_fail;
 };
 
@@ -33,10 +33,10 @@ struct assign_data {
 static bool
 assign_replica(pe__bundle_replica_t *replica, void *user_data)
 {
-    pe_node_t *container_host = NULL;
+    pcmk_node_t *container_host = NULL;
 
     struct assign_data *assign_data = user_data;
-    const pe_node_t *prefer = assign_data->prefer;
+    const pcmk_node_t *prefer = assign_data->prefer;
     bool stop_if_fail = assign_data->stop_if_fail;
 
     const pe_resource_t *bundle = pe__const_top_resource(replica->container,
@@ -66,7 +66,7 @@ assign_replica(pe__bundle_replica_t *replica, void *user_data)
     }
 
     if (replica->child != NULL) {
-        pe_node_t *node = NULL;
+        pcmk_node_t *node = NULL;
         GHashTableIter iter;
 
         g_hash_table_iter_init(&iter, replica->child->allowed_nodes);
@@ -107,8 +107,8 @@ assign_replica(pe__bundle_replica_t *replica, void *user_data)
  *       as calling pcmk__unassign_resource(); there are no side effects on
  *       roles or actions.
  */
-pe_node_t *
-pcmk__bundle_assign(pe_resource_t *rsc, const pe_node_t *prefer,
+pcmk_node_t *
+pcmk__bundle_assign(pe_resource_t *rsc, const pcmk_node_t *prefer,
                     bool stop_if_fail)
 {
     GList *containers = NULL;
@@ -136,7 +136,7 @@ pcmk__bundle_assign(pe_resource_t *rsc, const pe_node_t *prefer,
     // Finally, assign the bundled resources to each bundle node
     bundled_resource = pe__bundled_resource(rsc);
     if (bundled_resource != NULL) {
-        pe_node_t *node = NULL;
+        pcmk_node_t *node = NULL;
         GHashTableIter iter;
 
         g_hash_table_iter_init(&iter, bundled_resource->allowed_nodes);
@@ -356,7 +356,7 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
 }
 
 struct match_data {
-    const pe_node_t *node;     // Node to compare against replica
+    const pcmk_node_t *node;   // Node to compare against replica
     pe_resource_t *container;  // Replica container corresponding to node
 };
 
@@ -392,8 +392,8 @@ match_replica_container(const pe__bundle_replica_t *replica, void *user_data)
  * \return Node to which the container for \p node is assigned if \p node is a
  *         bundle node, otherwise \p node itself
  */
-static const pe_node_t *
-get_bundle_node_host(const pe_node_t *node)
+static const pcmk_node_t *
+get_bundle_node_host(const pcmk_node_t *node)
 {
     if (pe__is_bundle_node(node)) {
         const pe_resource_t *container = node->details->remote_rsc->container;
@@ -469,7 +469,7 @@ static bool
 replica_apply_coloc_score(const pe__bundle_replica_t *replica, void *user_data)
 {
     struct coloc_data *coloc_data = user_data;
-    pe_node_t *chosen = NULL;
+    pcmk_node_t *chosen = NULL;
 
     if (coloc_data->colocation->score < INFINITY) {
         replica->container->cmds->apply_coloc_score(coloc_data->dependent,
@@ -679,7 +679,7 @@ pcmk__bundle_with_colocations(const pe_resource_t *rsc,
  * \return Flags appropriate to \p action on \p node
  */
 uint32_t
-pcmk__bundle_action_flags(pe_action_t *action, const pe_node_t *node)
+pcmk__bundle_action_flags(pe_action_t *action, const pcmk_node_t *node)
 {
     GList *containers = NULL;
     uint32_t flags = 0;
@@ -857,7 +857,7 @@ pcmk__bundle_add_actions_to_graph(pe_resource_t *rsc)
 
 struct probe_data {
     pe_resource_t *bundle;  // Bundle being probed
-    pe_node_t *node;        // Node to create probes on
+    pcmk_node_t *node;      // Node to create probes on
     bool any_created;       // Whether any probes have been created
 };
 
@@ -975,7 +975,7 @@ create_replica_probes(pe__bundle_replica_t *replica, void *user_data)
  * \return true if any probe was created, otherwise false
  */
 bool
-pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node)
+pcmk__bundle_create_probe(pe_resource_t *rsc, pcmk_node_t *node)
 {
     struct probe_data probe_data = { rsc, node, false };
 

@@ -40,7 +40,7 @@ CRM_TRACE_INIT_DATA(pacemaker);
  * \param[in]     check   Type of deferred check to do
  */
 static void
-check_params(pe_resource_t *rsc, pe_node_t *node, const xmlNode *rsc_op,
+check_params(pe_resource_t *rsc, pcmk_node_t *node, const xmlNode *rsc_op,
              enum pcmk__check_parameters check)
 {
     const char *reason = NULL;
@@ -88,7 +88,7 @@ check_params(pe_resource_t *rsc, pe_node_t *node, const xmlNode *rsc_op,
  *         otherwise false
  */
 static bool
-failcount_clear_action_exists(const pe_node_t *node, const pe_resource_t *rsc)
+failcount_clear_action_exists(const pcmk_node_t *node, const pe_resource_t *rsc)
 {
     GList *list = pe__resource_actions(rsc, node, PCMK_ACTION_CLEAR_FAILCOUNT,
                                        TRUE);
@@ -111,7 +111,7 @@ static void
 check_failure_threshold(gpointer data, gpointer user_data)
 {
     pe_resource_t *rsc = data;
-    const pe_node_t *node = user_data;
+    const pcmk_node_t *node = user_data;
 
     // If this is a collective resource, apply recursively to children instead
     if (rsc->children != NULL) {
@@ -155,11 +155,11 @@ static void
 apply_exclusive_discovery(gpointer data, gpointer user_data)
 {
     pe_resource_t *rsc = data;
-    const pe_node_t *node = user_data;
+    const pcmk_node_t *node = user_data;
 
     if (rsc->exclusive_discover
         || pe__const_top_resource(rsc, false)->exclusive_discover) {
-        pe_node_t *match = NULL;
+        pcmk_node_t *match = NULL;
 
         // If this is a collective resource, apply recursively to children
         g_list_foreach(rsc->children, apply_exclusive_discovery, user_data);
@@ -183,7 +183,7 @@ static void
 apply_stickiness(gpointer data, gpointer user_data)
 {
     pe_resource_t *rsc = data;
-    pe_node_t *node = NULL;
+    pcmk_node_t *node = NULL;
 
     // If this is a collective resource, apply recursively to children instead
     if (rsc->children != NULL) {
@@ -255,7 +255,7 @@ count_available_nodes(pe_working_set_t *data_set)
 
     // @COMPAT for API backward compatibility only (cluster does not use value)
     for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
-        pe_node_t *node = (pe_node_t *) iter->data;
+        pcmk_node_t *node = (pcmk_node_t *) iter->data;
 
         if ((node != NULL) && (node->weight >= 0) && node->details->online
             && (node->details->type != node_ping)) {
@@ -363,7 +363,7 @@ clear_failcounts_if_orphaned(gpointer data, gpointer user_data)
      */
 
     for (GList *iter = rsc->cluster->nodes; iter != NULL; iter = iter->next) {
-        pe_node_t *node = (pe_node_t *) iter->data;
+        pcmk_node_t *node = (pcmk_node_t *) iter->data;
         pe_action_t *clear_op = NULL;
 
         if (!node->details->online) {
@@ -466,7 +466,7 @@ any_managed_resources(const pe_working_set_t *data_set)
  * \return true if \p node should be fenced, otherwise false
  */
 static bool
-needs_fencing(const pe_node_t *node, bool have_managed)
+needs_fencing(const pcmk_node_t *node, bool have_managed)
 {
     return have_managed && node->details->unclean
            && pe_can_fence(node->details->data_set, node);
@@ -481,7 +481,7 @@ needs_fencing(const pe_node_t *node, bool have_managed)
  * \return true if \p node should be shut down, otherwise false
  */
 static bool
-needs_shutdown(const pe_node_t *node)
+needs_shutdown(const pcmk_node_t *node)
 {
     if (pe__is_guest_or_remote_node(node)) {
        /* Do not send shutdown actions for Pacemaker Remote nodes.
@@ -525,7 +525,7 @@ add_nondc_fencing(GList *list, pe_action_t *action,
  * \param[in,out] node      Node that requires fencing
  */
 static pe_action_t *
-schedule_fencing(pe_node_t *node)
+schedule_fencing(pcmk_node_t *node)
 {
     pe_action_t *fencing = pe_fence_op(node, NULL, FALSE, "node is unclean",
                                        FALSE, node->details->data_set);
@@ -558,7 +558,7 @@ schedule_fencing_and_shutdowns(pe_working_set_t *data_set)
 
     // Check each node for whether it needs fencing or shutdown
     for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
-        pe_node_t *node = (pe_node_t *) iter->data;
+        pcmk_node_t *node = (pcmk_node_t *) iter->data;
         pe_action_t *fencing = NULL;
 
         /* Guest nodes are "fenced" by recovering their container resource,

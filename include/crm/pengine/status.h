@@ -15,7 +15,7 @@
 #  include <crm/common/util.h>      // pcmk_is_set()
 #  include <crm/common/iso8601.h>
 #  include <crm/pengine/common.h>
-#  include <crm/pengine/pe_types.h> // pe_node_t, pe_resource_t, etc.
+#  include <crm/pengine/pe_types.h> // pcmk_node_t, pe_resource_t, etc.
 #  include <crm/pengine/complex.h>
 
 #ifdef __cplusplus
@@ -37,9 +37,9 @@ void cleanup_calculations(pe_working_set_t * data_set);
 void pe_reset_working_set(pe_working_set_t *data_set);
 pe_resource_t *pe_find_resource(GList *rsc_list, const char *id_rh);
 pe_resource_t *pe_find_resource_with_flags(GList *rsc_list, const char *id, enum pe_find flags);
-pe_node_t *pe_find_node(const GList *node_list, const char *node_name);
-pe_node_t *pe_find_node_id(const GList *node_list, const char *id);
-pe_node_t *pe_find_node_any(const GList *node_list, const char *id,
+pcmk_node_t *pe_find_node(const GList *node_list, const char *node_name);
+pcmk_node_t *pe_find_node_id(const GList *node_list, const char *id);
+pcmk_node_t *pe_find_node_any(const GList *node_list, const char *id,
                             const char *node_name);
 GList *find_operations(const char *rsc, const char *node, gboolean active_filter,
                          pe_working_set_t * data_set);

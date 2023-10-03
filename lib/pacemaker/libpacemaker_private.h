@@ -15,7 +15,7 @@
  */
 
 #include <crm/lrmd_events.h>      // lrmd_event_data_t
-#include <crm/pengine/pe_types.h> // pe_action_t, pe_node_t, pe_working_set_t
+#include <crm/pengine/pe_types.h> // pe_action_t, pcmk_node_t, pe_working_set_t
 #include <crm/pengine/internal.h> // pe__location_t
 
 // Colocation flags
@@ -87,8 +87,8 @@ struct resource_alloc_functions_s {
      *       same effect as calling pcmk__unassign_resource(); there are no side
      *       effects on roles or actions.
      */
-    pe_node_t *(*assign)(pe_resource_t *rsc, const pe_node_t *prefer,
-                         bool stop_if_fail);
+    pcmk_node_t *(*assign)(pe_resource_t *rsc, const pcmk_node_t *prefer,
+                           bool stop_if_fail);
 
     /*!
      * \internal
@@ -107,7 +107,7 @@ struct resource_alloc_functions_s {
      *
      * \return true if any probe was created, otherwise false
      */
-    bool (*create_probe)(pe_resource_t *rsc, pe_node_t *node);
+    bool (*create_probe)(pe_resource_t *rsc, pcmk_node_t *node);
 
     /*!
      * \internal
@@ -253,7 +253,7 @@ struct resource_alloc_functions_s {
      *       of node. For collective resources, the flags can differ due to
      *       multiple instances possibly being involved.
      */
-    uint32_t (*action_flags)(pe_action_t *action, const pe_node_t *node);
+    uint32_t (*action_flags)(pe_action_t *action, const pcmk_node_t *node);
 
     /*!
      * \internal
@@ -279,7 +279,7 @@ struct resource_alloc_functions_s {
      * \return Group of enum pcmk__updated flags indicating what was updated
      */
     uint32_t (*update_ordered_actions)(pe_action_t *first, pe_action_t *then,
-                                       const pe_node_t *node, uint32_t flags,
+                                       const pcmk_node_t *node, uint32_t flags,
                                        uint32_t filter, uint32_t type,
                                        pe_working_set_t *data_set);
 
@@ -347,7 +347,7 @@ void pcmk__update_action_for_orderings(pe_action_t *action,
 
 G_GNUC_INTERNAL
 uint32_t pcmk__update_ordered_actions(pe_action_t *first, pe_action_t *then,
-                                      const pe_node_t *node, uint32_t flags,
+                                      const pcmk_node_t *node, uint32_t flags,
                                       uint32_t filter, uint32_t type,
                                       pe_working_set_t *data_set);
 
@@ -357,10 +357,11 @@ void pcmk__log_action(const char *pre_text, const pe_action_t *action,
 
 G_GNUC_INTERNAL
 pe_action_t *pcmk__new_cancel_action(pe_resource_t *rsc, const char *name,
-                                     guint interval_ms, const pe_node_t *node);
+                                     guint interval_ms,
+                                     const pcmk_node_t *node);
 
 G_GNUC_INTERNAL
-pe_action_t *pcmk__new_shutdown_action(pe_node_t *node);
+pe_action_t *pcmk__new_shutdown_action(pcmk_node_t *node);
 
 G_GNUC_INTERNAL
 bool pcmk__action_locks_rsc_to_node(const pe_action_t *action);
@@ -372,7 +373,7 @@ G_GNUC_INTERNAL
 void pcmk__output_actions(pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-bool pcmk__check_action_config(pe_resource_t *rsc, pe_node_t *node,
+bool pcmk__check_action_config(pe_resource_t *rsc, pcmk_node_t *node,
                                const xmlNode *xml_op);
 
 G_GNUC_INTERNAL
@@ -387,11 +388,11 @@ void pcmk__create_recurring_actions(pe_resource_t *rsc);
 G_GNUC_INTERNAL
 void pcmk__schedule_cancel(pe_resource_t *rsc, const char *call_id,
                            const char *task, guint interval_ms,
-                           const pe_node_t *node, const char *reason);
+                           const pcmk_node_t *node, const char *reason);
 
 G_GNUC_INTERNAL
 void pcmk__reschedule_recurring(pe_resource_t *rsc, const char *task,
-                                guint interval_ms, pe_node_t *node);
+                                guint interval_ms, pcmk_node_t *node);
 
 G_GNUC_INTERNAL
 bool pcmk__action_is_recurring(const pe_action_t *action);
@@ -417,15 +418,15 @@ G_GNUC_INTERNAL
 void pcmk__order_vs_fence(pe_action_t *stonith_op, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-void pcmk__order_vs_unfence(const pe_resource_t *rsc, pe_node_t *node,
+void pcmk__order_vs_unfence(const pe_resource_t *rsc, pcmk_node_t *node,
                             pe_action_t *action,
                             enum pcmk__action_relation_flags order);
 
 G_GNUC_INTERNAL
-void pcmk__fence_guest(pe_node_t *node);
+void pcmk__fence_guest(pcmk_node_t *node);
 
 G_GNUC_INTERNAL
-bool pcmk__node_unfenced(const pe_node_t *node);
+bool pcmk__node_unfenced(const pcmk_node_t *node);
 
 G_GNUC_INTERNAL
 void pcmk__order_restart_vs_unfence(gpointer data, gpointer user_data);
@@ -467,7 +468,7 @@ void pcmk__unpack_location(xmlNode *xml_obj, pe_working_set_t *data_set);
 G_GNUC_INTERNAL
 pe__location_t *pcmk__new_location(const char *id, pe_resource_t *rsc,
                                    int node_score, const char *discover_mode,
-                                   pe_node_t *foo_node);
+                                   pcmk_node_t *foo_node);
 
 G_GNUC_INTERNAL
 void pcmk__apply_locations(pe_working_set_t *data_set);
@@ -501,7 +502,7 @@ enum pcmk__coloc_affects {
  * \return Value of \p attr on \p node or on the host of \p node, as appropriate
  */
 static inline const char *
-pcmk__colocation_node_attr(const pe_node_t *node, const char *attr,
+pcmk__colocation_node_attr(const pcmk_node_t *node, const char *attr,
                            const pe_resource_t *rsc)
 {
     const pe_resource_t *top = pe__const_top_resource(rsc, false);
@@ -644,7 +645,7 @@ G_GNUC_INTERNAL
 void pcmk__disable_invalid_orderings(pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-void pcmk__order_stops_before_shutdown(pe_node_t *node,
+void pcmk__order_stops_before_shutdown(pcmk_node_t *node,
                                        pe_action_t *shutdown_op);
 
 G_GNUC_INTERNAL
@@ -724,17 +725,17 @@ void pcmk__update_promotable_dependent_priority(const pe_resource_t *primary,
 // Pacemaker Remote nodes (pcmk_sched_remote.c)
 
 G_GNUC_INTERNAL
-bool pcmk__is_failed_remote_node(const pe_node_t *node);
+bool pcmk__is_failed_remote_node(const pcmk_node_t *node);
 
 G_GNUC_INTERNAL
 void pcmk__order_remote_connection_actions(pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
 bool pcmk__rsc_corresponds_to_guest(const pe_resource_t *rsc,
-                                    const pe_node_t *node);
+                                    const pcmk_node_t *node);
 
 G_GNUC_INTERNAL
-pe_node_t *pcmk__connection_host_for_action(const pe_action_t *action);
+pcmk_node_t *pcmk__connection_host_for_action(const pe_action_t *action);
 
 G_GNUC_INTERNAL
 void pcmk__substitute_remote_addr(pe_resource_t *rsc, GHashTable *params);
@@ -746,8 +747,9 @@ void pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pe_action_t *action);
 // Primitives (pcmk_sched_primitive.c)
 
 G_GNUC_INTERNAL
-pe_node_t *pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer,
-                                  bool stop_if_fail);
+pcmk_node_t *pcmk__primitive_assign(pe_resource_t *rsc,
+                                    const pcmk_node_t *prefer,
+                                    bool stop_if_fail);
 
 G_GNUC_INTERNAL
 void pcmk__primitive_create_actions(pe_resource_t *rsc);
@@ -757,7 +759,7 @@ void pcmk__primitive_internal_constraints(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
 uint32_t pcmk__primitive_action_flags(pe_action_t *action,
-                                      const pe_node_t *node);
+                                      const pcmk_node_t *node);
 
 G_GNUC_INTERNAL
 void pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
@@ -776,7 +778,7 @@ void pcmk__primitive_with_colocations(const pe_resource_t *rsc,
                                       GList **list);
 
 G_GNUC_INTERNAL
-void pcmk__schedule_cleanup(pe_resource_t *rsc, const pe_node_t *node,
+void pcmk__schedule_cleanup(pe_resource_t *rsc, const pcmk_node_t *node,
                             bool optional);
 
 G_GNUC_INTERNAL
@@ -794,8 +796,8 @@ void pcmk__primitive_shutdown_lock(pe_resource_t *rsc);
 // Groups (pcmk_sched_group.c)
 
 G_GNUC_INTERNAL
-pe_node_t *pcmk__group_assign(pe_resource_t *rsc, const pe_node_t *prefer,
-                              bool stop_if_fail);
+pcmk_node_t *pcmk__group_assign(pe_resource_t *rsc, const pcmk_node_t *prefer,
+                                bool stop_if_fail);
 
 G_GNUC_INTERNAL
 void pcmk__group_create_actions(pe_resource_t *rsc);
@@ -829,12 +831,12 @@ G_GNUC_INTERNAL
 void pcmk__group_apply_location(pe_resource_t *rsc, pe__location_t *location);
 
 G_GNUC_INTERNAL
-uint32_t pcmk__group_action_flags(pe_action_t *action, const pe_node_t *node);
+uint32_t pcmk__group_action_flags(pe_action_t *action, const pcmk_node_t *node);
 
 G_GNUC_INTERNAL
 uint32_t pcmk__group_update_ordered_actions(pe_action_t *first,
                                             pe_action_t *then,
-                                            const pe_node_t *node,
+                                            const pcmk_node_t *node,
                                             uint32_t flags, uint32_t filter,
                                             uint32_t type,
                                             pe_working_set_t *data_set);
@@ -856,14 +858,14 @@ void pcmk__group_shutdown_lock(pe_resource_t *rsc);
 // Clones (pcmk_sched_clone.c)
 
 G_GNUC_INTERNAL
-pe_node_t *pcmk__clone_assign(pe_resource_t *rsc, const pe_node_t *prefer,
-                              bool stop_if_fail);
+pcmk_node_t *pcmk__clone_assign(pe_resource_t *rsc, const pcmk_node_t *prefer,
+                                bool stop_if_fail);
 
 G_GNUC_INTERNAL
 void pcmk__clone_create_actions(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
-bool pcmk__clone_create_probe(pe_resource_t *rsc, pe_node_t *node);
+bool pcmk__clone_create_probe(pe_resource_t *rsc, pcmk_node_t *node);
 
 G_GNUC_INTERNAL
 void pcmk__clone_internal_constraints(pe_resource_t *rsc);
@@ -886,7 +888,7 @@ G_GNUC_INTERNAL
 void pcmk__clone_apply_location(pe_resource_t *rsc, pe__location_t *constraint);
 
 G_GNUC_INTERNAL
-uint32_t pcmk__clone_action_flags(pe_action_t *action, const pe_node_t *node);
+uint32_t pcmk__clone_action_flags(pe_action_t *action, const pcmk_node_t *node);
 
 G_GNUC_INTERNAL
 void pcmk__clone_add_actions_to_graph(pe_resource_t *rsc);
@@ -905,14 +907,14 @@ void pcmk__clone_shutdown_lock(pe_resource_t *rsc);
 // Bundles (pcmk_sched_bundle.c)
 
 G_GNUC_INTERNAL
-pe_node_t *pcmk__bundle_assign(pe_resource_t *rsc, const pe_node_t *prefer,
-                               bool stop_if_fail);
+pcmk_node_t *pcmk__bundle_assign(pe_resource_t *rsc, const pcmk_node_t *prefer,
+                                 bool stop_if_fail);
 
 G_GNUC_INTERNAL
 void pcmk__bundle_create_actions(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
-bool pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node);
+bool pcmk__bundle_create_probe(pe_resource_t *rsc, pcmk_node_t *node);
 
 G_GNUC_INTERNAL
 void pcmk__bundle_internal_constraints(pe_resource_t *rsc);
@@ -936,7 +938,8 @@ void pcmk__bundle_apply_location(pe_resource_t *rsc,
                                  pe__location_t *constraint);
 
 G_GNUC_INTERNAL
-uint32_t pcmk__bundle_action_flags(pe_action_t *action, const pe_node_t *node);
+uint32_t pcmk__bundle_action_flags(pe_action_t *action,
+                                   const pcmk_node_t *node);
 
 G_GNUC_INTERNAL
 void pcmk__output_bundle_actions(pe_resource_t *rsc);
@@ -964,7 +967,7 @@ void pcmk__create_instance_actions(pe_resource_t *rsc, GList *instances);
 
 G_GNUC_INTERNAL
 bool pcmk__instance_matches(const pe_resource_t *instance,
-                            const pe_node_t *node, enum rsc_role_e role,
+                            const pcmk_node_t *node, enum rsc_role_e role,
                             bool current);
 
 G_GNUC_INTERNAL
@@ -976,7 +979,7 @@ pe_resource_t *pcmk__find_compatible_instance(const pe_resource_t *match_rsc,
 G_GNUC_INTERNAL
 uint32_t pcmk__instance_update_ordered_actions(pe_action_t *first,
                                                pe_action_t *then,
-                                               const pe_node_t *node,
+                                               const pcmk_node_t *node,
                                                uint32_t flags, uint32_t filter,
                                                uint32_t type,
                                                pe_working_set_t *data_set);
@@ -984,7 +987,7 @@ uint32_t pcmk__instance_update_ordered_actions(pe_action_t *first,
 G_GNUC_INTERNAL
 uint32_t pcmk__collective_action_flags(pe_action_t *action,
                                        const GList *instances,
-                                       const pe_node_t *node);
+                                       const pcmk_node_t *node);
 
 
 // Injections (pcmk_injections.c)
@@ -1017,7 +1020,7 @@ xmlNode *pcmk__inject_action_result(xmlNode *cib_resource,
 // Nodes (pcmk_sched_nodes.c)
 
 G_GNUC_INTERNAL
-bool pcmk__node_available(const pe_node_t *node, bool consider_score,
+bool pcmk__node_available(const pcmk_node_t *node, bool consider_score,
                           bool consider_guest);
 
 G_GNUC_INTERNAL
@@ -1033,14 +1036,14 @@ G_GNUC_INTERNAL
 void pcmk__restore_node_tables(pe_resource_t *rsc, GHashTable *backup);
 
 G_GNUC_INTERNAL
-GList *pcmk__sort_nodes(GList *nodes, pe_node_t *active_node);
+GList *pcmk__sort_nodes(GList *nodes, pcmk_node_t *active_node);
 
 G_GNUC_INTERNAL
 void pcmk__apply_node_health(pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-pe_node_t *pcmk__top_allowed_node(const pe_resource_t *rsc,
-                                  const pe_node_t *node);
+pcmk_node_t *pcmk__top_allowed_node(const pe_resource_t *rsc,
+                                    const pcmk_node_t *node);
 
 
 // Functions applying to more than one variant (pcmk_sched_resource.c)
@@ -1049,7 +1052,7 @@ G_GNUC_INTERNAL
 void pcmk__set_assignment_methods(pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-bool pcmk__rsc_agent_changed(pe_resource_t *rsc, pe_node_t *node,
+bool pcmk__rsc_agent_changed(pe_resource_t *rsc, pcmk_node_t *node,
                              const xmlNode *rsc_entry, bool active_on_node);
 
 G_GNUC_INTERNAL
@@ -1067,14 +1070,14 @@ G_GNUC_INTERNAL
 void pcmk__output_resource_actions(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
-bool pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force,
+bool pcmk__assign_resource(pe_resource_t *rsc, pcmk_node_t *node, bool force,
                            bool stop_if_fail);
 
 G_GNUC_INTERNAL
 void pcmk__unassign_resource(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
-bool pcmk__threshold_reached(pe_resource_t *rsc, const pe_node_t *node,
+bool pcmk__threshold_reached(pe_resource_t *rsc, const pcmk_node_t *node,
                              pe_resource_t **failed);
 
 G_GNUC_INTERNAL
@@ -1090,13 +1093,13 @@ gint pcmk__cmp_instance_number(gconstpointer a, gconstpointer b);
 // Functions related to probes (pcmk_sched_probes.c)
 
 G_GNUC_INTERNAL
-bool pcmk__probe_rsc_on_node(pe_resource_t *rsc, pe_node_t *node);
+bool pcmk__probe_rsc_on_node(pe_resource_t *rsc, pcmk_node_t *node);
 
 G_GNUC_INTERNAL
 void pcmk__order_probes(pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-bool pcmk__probe_resource_list(GList *rscs, pe_node_t *node);
+bool pcmk__probe_resource_list(GList *rscs, pcmk_node_t *node);
 
 G_GNUC_INTERNAL
 void pcmk__schedule_probes(pe_working_set_t *data_set);
@@ -1105,11 +1108,12 @@ void pcmk__schedule_probes(pe_working_set_t *data_set);
 // Functions related to live migration (pcmk_sched_migration.c)
 
 void pcmk__create_migration_actions(pe_resource_t *rsc,
-                                    const pe_node_t *current);
+                                    const pcmk_node_t *current);
 
 void pcmk__abort_dangling_migration(void *data, void *user_data);
 
-bool pcmk__rsc_can_migrate(const pe_resource_t *rsc, const pe_node_t *current);
+bool pcmk__rsc_can_migrate(const pe_resource_t *rsc,
+                           const pcmk_node_t *current);
 
 void pcmk__order_migration_equivalents(pe__ordering_t *order);
 
@@ -1117,8 +1121,8 @@ void pcmk__order_migration_equivalents(pe__ordering_t *order);
 // Functions related to node utilization (pcmk_sched_utilization.c)
 
 G_GNUC_INTERNAL
-int pcmk__compare_node_capacities(const pe_node_t *node1,
-                                  const pe_node_t *node2);
+int pcmk__compare_node_capacities(const pcmk_node_t *node1,
+                                  const pcmk_node_t *node2);
 
 G_GNUC_INTERNAL
 void pcmk__consume_node_capacity(GHashTable *current_utilization,
@@ -1129,7 +1133,7 @@ void pcmk__release_node_capacity(GHashTable *current_utilization,
                                  const pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
-const pe_node_t *pcmk__ban_insufficient_capacity(pe_resource_t *rsc);
+const pcmk_node_t *pcmk__ban_insufficient_capacity(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
 void pcmk__create_utilization_constraints(pe_resource_t *rsc,

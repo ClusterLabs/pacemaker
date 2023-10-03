@@ -43,8 +43,8 @@ utilization_value(const char *s)
  */
 
 struct compare_data {
-    const pe_node_t *node1;
-    const pe_node_t *node2;
+    const pcmk_node_t *node1;
+    const pcmk_node_t *node2;
     bool node2_only;
     int result;
 };
@@ -99,7 +99,8 @@ compare_utilization_value(gpointer key, gpointer value, gpointer user_data)
  *         if node2 has more free capacity
  */
 int
-pcmk__compare_node_capacities(const pe_node_t *node1, const pe_node_t *node2)
+pcmk__compare_node_capacities(const pcmk_node_t *node1,
+                              const pcmk_node_t *node2)
 {
     struct compare_data data = {
         .node1      = node1,
@@ -199,7 +200,7 @@ pcmk__release_node_capacity(GHashTable *current_utilization,
  */
 
 struct capacity_data {
-    const pe_node_t *node;
+    const pcmk_node_t *node;
     const char *rsc_id;
     bool is_enough;
 };
@@ -245,7 +246,7 @@ check_capacity(gpointer key, gpointer value, gpointer user_data)
  * \return true if node has sufficient capacity for resource, otherwise false
  */
 static bool
-have_enough_capacity(const pe_node_t *node, const char *rsc_id,
+have_enough_capacity(const pcmk_node_t *node, const char *rsc_id,
                      GHashTable *utilization)
 {
     struct capacity_data data = {
@@ -291,13 +292,13 @@ sum_resource_utilization(const pe_resource_t *orig_rsc, GList *rscs)
  * \return Allowed node for \p rsc with most spare capacity, if there are no
  *         nodes with enough capacity for \p rsc and all its colocated resources
  */
-const pe_node_t *
+const pcmk_node_t *
 pcmk__ban_insufficient_capacity(pe_resource_t *rsc)
 {
     bool any_capable = false;
     char *rscs_id = NULL;
-    pe_node_t *node = NULL;
-    const pe_node_t *most_capable_node = NULL;
+    pcmk_node_t *node = NULL;
+    const pcmk_node_t *most_capable_node = NULL;
     GList *colocated_rscs = NULL;
     GHashTable *unassigned_utilization = NULL;
     GHashTableIter iter;
@@ -391,7 +392,7 @@ pcmk__ban_insufficient_capacity(pe_resource_t *rsc)
  * \return Newly created load_stopped op
  */
 static pe_action_t *
-new_load_stopped_op(pe_node_t *node)
+new_load_stopped_op(pcmk_node_t *node)
 {
     char *load_stopped_task = crm_strdup_printf(PCMK_ACTION_LOAD_STOPPED "_%s",
                                                 node->details->uname);
@@ -457,7 +458,7 @@ pcmk__show_node_capacities(const char *desc, pe_working_set_t *data_set)
         return;
     }
     for (const GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
-        const pe_node_t *node = (const pe_node_t *) iter->data;
+        const pcmk_node_t *node = (const pcmk_node_t *) iter->data;
         pcmk__output_t *out = data_set->priv;
 
         out->message(out, "node-capacity", node, desc);

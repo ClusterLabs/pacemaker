@@ -17,7 +17,7 @@
 
 typedef struct notify_entry_s {
     const pe_resource_t *rsc;
-    const pe_node_t *node;
+    const pcmk_node_t *node;
 } notify_entry_t;
 
 /*!
@@ -107,7 +107,7 @@ dup_notify_entry(const notify_entry_t *entry)
  * \internal
  * \brief Given a list of nodes, create strings with node names
  *
- * \param[in]  list             List of nodes (as pe_node_t *)
+ * \param[in]  list             List of nodes (as pcmk_node_t *)
  * \param[out] all_node_names   If not NULL, will be set to space-separated list
  *                              of the names of all nodes in \p list
  * \param[out] host_node_names  Same as \p all_node_names, except active
@@ -128,7 +128,7 @@ get_node_names(const GList *list, GString **all_node_names,
     }
 
     for (const GList *iter = list; iter != NULL; iter = iter->next) {
-        const pe_node_t *node = (const pe_node_t *) iter->data;
+        const pcmk_node_t *node = (const pcmk_node_t *) iter->data;
 
         if (node->details->uname == NULL) {
             continue;
@@ -308,7 +308,7 @@ new_notify_pseudo_action(pe_resource_t *rsc, const pe_action_t *action,
  * \return Newly created notify action
  */
 static pe_action_t *
-new_notify_action(pe_resource_t *rsc, const pe_node_t *node, pe_action_t *op,
+new_notify_action(pe_resource_t *rsc, const pcmk_node_t *node, pe_action_t *op,
                   pe_action_t *notify_done, const notify_data_t *n_data)
 {
     char *key = NULL;
@@ -366,7 +366,7 @@ new_notify_action(pe_resource_t *rsc, const pe_node_t *node, pe_action_t *op,
  * \param[in,out] n_data  Notification values to add to action meta-data
  */
 static void
-new_post_notify_action(pe_resource_t *rsc, const pe_node_t *node,
+new_post_notify_action(pe_resource_t *rsc, const pcmk_node_t *node,
                        notify_data_t *n_data)
 {
     pe_action_t *notify = NULL;
@@ -519,7 +519,7 @@ pe__action_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
  * \note The caller is responsible for freeing the return value.
  */
 static notify_entry_t *
-new_notify_entry(const pe_resource_t *rsc, const pe_node_t *node)
+new_notify_entry(const pe_resource_t *rsc, const pcmk_node_t *node)
 {
     notify_entry_t *entry = calloc(1, sizeof(notify_entry_t));
 
@@ -543,7 +543,7 @@ collect_resource_data(const pe_resource_t *rsc, bool activity,
 {
     const GList *iter = NULL;
     notify_entry_t *entry = NULL;
-    const pe_node_t *node = NULL;
+    const pcmk_node_t *node = NULL;
 
     if (n_data == NULL) {
         return;
@@ -875,7 +875,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
         stop = find_first_action(rsc->actions, NULL, PCMK_ACTION_STOP, NULL);
 
         for (iter = rsc->running_on; iter != NULL; iter = iter->next) {
-            pe_node_t *current_node = (pe_node_t *) iter->data;
+            pcmk_node_t *current_node = (pcmk_node_t *) iter->data;
 
             /* If a stop is a pseudo-action implied by fencing, don't try to
              * notify the node getting fenced.

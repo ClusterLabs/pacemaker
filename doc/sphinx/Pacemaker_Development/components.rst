@@ -380,7 +380,7 @@ such as processing location and ordering constraints. For example,
 ``internal_constraints()`` method for each top-level resource in the cluster.
 
 .. index::
-   single: pe_node_t
+   single: pcmk_node_t
 
 Nodes
 _____
@@ -392,18 +392,18 @@ generate the scores, then the actual assignment is straightforward.
 Node lists are frequently used. For example, ``pe_working_set_t`` has a
 ``nodes`` member which is a list of all nodes in the cluster, and
 ``pe_resource_t`` has a ``running_on`` member which is a list of all nodes on
-which the resource is (or might be) active. These are lists of ``pe_node_t``
+which the resource is (or might be) active. These are lists of ``pcmk_node_t``
 objects.
 
-The ``pe_node_t`` object contains a ``struct pe_node_shared_s *details`` member
-with all node information that is independent of resource assignment (the node
-name, etc.).
+The ``pcmk_node_t`` object contains a ``struct pe_node_shared_s *details``
+member with all node information that is independent of resource assignment
+(the node name, etc.).
 
 The working set's ``nodes`` member contains the original of this information.
-All other node lists contain copies of ``pe_node_t`` where only the ``details``
-member points to the originals in the working set's ``nodes`` list. In this
-way, the other members of ``pe_node_t`` (such as ``weight``, which is the node
-score) may vary by node list, while the common details are shared.
+All other node lists contain copies of ``pcmk_node_t`` where only the
+``details`` member points to the originals in the working set's ``nodes`` list.
+In this way, the other members of ``pcmk_node_t`` (such as ``weight``, which is
+the node score) may vary by node list, while the common details are shared.
 
 .. index::
    single: pe_action_t

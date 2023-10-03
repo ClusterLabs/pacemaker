@@ -68,7 +68,7 @@ pe__unames_with_tag(pe_working_set_t *data_set, const char *tag_name)
     for (GList *refs = ((pe_tag_t *) value)->refs; refs; refs = refs->next) {
         /* Find the node that has this ID. */
         const char *id = (const char *) refs->data;
-        pe_node_t *node = pe_find_node_id(data_set->nodes, id);
+        pcmk_node_t *node = pe_find_node_id(data_set->nodes, id);
 
         if (!node) {
             continue;

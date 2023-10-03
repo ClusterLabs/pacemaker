@@ -158,7 +158,8 @@ pe__get_rsc_in_container(const pe_resource_t *instance)
  * \return true if \p node is an instance of \p bundle, otherwise false
  */
 bool
-pe__node_is_bundle_instance(const pe_resource_t *bundle, const pe_node_t *node)
+pe__node_is_bundle_instance(const pe_resource_t *bundle,
+                            const pcmk_node_t *node)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
 
@@ -667,8 +668,8 @@ disallow_node(pe_resource_t *rsc, const char *uname)
     gpointer match = g_hash_table_lookup(rsc->allowed_nodes, uname);
 
     if (match) {
-        ((pe_node_t *) match)->weight = -INFINITY;
-        ((pe_node_t *) match)->rsc_discover_mode = pcmk_probe_never;
+        ((pcmk_node_t *) match)->weight = -INFINITY;
+        ((pcmk_node_t *) match)->rsc_discover_mode = pcmk_probe_never;
     }
     if (rsc->children) {
         g_list_foreach(rsc->children, (GFunc) disallow_node, (gpointer) uname);
@@ -681,7 +682,7 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
 {
     if (replica->child && valid_network(data)) {
         GHashTableIter gIter;
-        pe_node_t *node = NULL;
+        pcmk_node_t *node = NULL;
         xmlNode *xml_remote = NULL;
         char *id = crm_strdup_printf("%s-%d", data->prefix, replica->offset);
         char *port_s = NULL;
@@ -741,9 +742,9 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         node->rsc_discover_mode = pcmk_probe_never;
 
         /* unpack_remote_nodes() ensures that each remote node and guest node
-         * has a pe_node_t entry. Ideally, it would do the same for bundle nodes.
-         * Unfortunately, a bundle has to be mostly unpacked before it's obvious
-         * what nodes will be needed, so we do it just above.
+         * has a pcmk_node_t entry. Ideally, it would do the same for bundle
+         * nodes. Unfortunately, a bundle has to be mostly unpacked before it's
+         * obvious what nodes will be needed, so we do it just above.
          *
          * Worse, that means that the node may have been utilized while
          * unpacking other resources, without our weight correction. The most
@@ -774,7 +775,7 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
                             pe__copy_node(replica->node));
 
         {
-            pe_node_t *copy = pe__copy_node(replica->node);
+            pcmk_node_t *copy = pe__copy_node(replica->node);
             copy->weight = -INFINITY;
             g_hash_table_insert(replica->child->parent->allowed_nodes,
                                 (gpointer) replica->node->details->id, copy);
@@ -939,7 +940,7 @@ pe__add_bundle_remote_name(pe_resource_t *rsc, pe_working_set_t *data_set,
 {
     // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
 
-    pe_node_t *node = NULL;
+    pcmk_node_t *node = NULL;
     pe__bundle_replica_t *replica = NULL;
 
     if (!pe__bundle_needs_remote_name(rsc)) {
@@ -1363,7 +1364,7 @@ pe__bundle_active(pe_resource_t *rsc, gboolean all)
  * \return Bundle replica if found, NULL otherwise
  */
 pe_resource_t *
-pe__find_bundle_replica(const pe_resource_t *bundle, const pe_node_t *node)
+pe__find_bundle_replica(const pe_resource_t *bundle, const pcmk_node_t *node)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
     CRM_ASSERT(bundle && node);
@@ -1551,7 +1552,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
 
 static void
 pe__bundle_replica_output_html(pcmk__output_t *out, pe__bundle_replica_t *replica,
-                               pe_node_t *node, uint32_t show_opts)
+                               pcmk_node_t *node, uint32_t show_opts)
 {
     pe_resource_t *rsc = replica->child;
 
@@ -1705,7 +1706,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
 
 static void
 pe__bundle_replica_output_text(pcmk__output_t *out, pe__bundle_replica_t *replica,
-                               pe_node_t *node, uint32_t show_opts)
+                               pcmk_node_t *node, uint32_t show_opts)
 {
     const pe_resource_t *rsc = replica->child;
 
@@ -1844,7 +1845,7 @@ static void
 print_bundle_replica(pe__bundle_replica_t *replica, const char *pre_text,
                      long options, void *print_data)
 {
-    pe_node_t *node = NULL;
+    pcmk_node_t *node = NULL;
     pe_resource_t *rsc = replica->child;
 
     int offset = 0;
@@ -2121,12 +2122,12 @@ pe__bundle_containers(const pe_resource_t *bundle)
 }
 
 // Bundle implementation of resource_object_functions_t:active_node()
-pe_node_t *
+pcmk_node_t *
 pe__bundle_active_node(const pe_resource_t *rsc, unsigned int *count_all,
                        unsigned int *count_clean)
 {
-    pe_node_t *active = NULL;
-    pe_node_t *node = NULL;
+    pcmk_node_t *active = NULL;
+    pcmk_node_t *node = NULL;
     pe_resource_t *container = NULL;
     GList *containers = NULL;
     GList *iter = NULL;

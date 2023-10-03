@@ -61,7 +61,7 @@ add_node_to_xml_by_id(const char *id, xmlNode *xml)
  * \param[in,out] xml   XML to add node to
  */
 static void
-add_node_to_xml(const pe_node_t *node, void *xml)
+add_node_to_xml(const pcmk_node_t *node, void *xml)
 {
     add_node_to_xml_by_id(node->details->id, (xmlNode *) xml);
 }
@@ -86,7 +86,7 @@ add_maintenance_nodes(xmlNode *xml, const pe_working_set_t *data_set)
         maintenance = create_xml_node(xml, XML_GRAPH_TAG_MAINTENANCE);
     }
     for (const GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
-        const pe_node_t *node = iter->data;
+        const pcmk_node_t *node = iter->data;
 
         if (pe__is_guest_or_remote_node(node) &&
             (node->details->maintenance != node->details->remote_maintenance)) {
@@ -224,7 +224,7 @@ clone_op_key(const pe_action_t *action, guint interval_ms)
 static void
 add_node_details(const pe_action_t *action, xmlNode *xml)
 {
-    pe_node_t *router_node = pcmk__connection_host_for_action(action);
+    pcmk_node_t *router_node = pcmk__connection_host_for_action(action);
 
     crm_xml_add(xml, XML_LRM_ATTR_TARGET, action->node->details->uname);
     crm_xml_add(xml, XML_LRM_ATTR_TARGET_UUID, action->node->details->id);
@@ -663,13 +663,13 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
         return false;
 
     } else if ((uint32_t) input->type == pcmk__ar_if_on_same_node_or_target) {
-        pe_node_t *input_node = input->action->node;
+        pcmk_node_t *input_node = input->action->node;
 
         if ((action->rsc != NULL)
             && pcmk__str_eq(action->task, PCMK_ACTION_MIGRATE_TO,
                             pcmk__str_none)) {
 
-            pe_node_t *assigned = action->rsc->allocated_to;
+            pcmk_node_t *assigned = action->rsc->allocated_to;
 
             /* For load_stopped -> migrate_to orderings, we care about where
              * the resource has been assigned, not where migrate_to will be

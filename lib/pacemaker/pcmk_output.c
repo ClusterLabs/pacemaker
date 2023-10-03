@@ -80,7 +80,7 @@ do_locations_list_xml(pcmk__output_t *out, pe_resource_t *rsc, bool add_header)
         GList *lpc2 = NULL;
 
         for (lpc2 = cons->node_list_rh; lpc2 != NULL; lpc2 = lpc2->next) {
-            pe_node_t *node = (pe_node_t *) lpc2->data;
+            pcmk_node_t *node = (pcmk_node_t *) lpc2->data;
 
             if (add_header) {
                 PCMK__OUTPUT_LIST_HEADER(out, false, rc, "locations");
@@ -104,15 +104,15 @@ do_locations_list_xml(pcmk__output_t *out, pe_resource_t *rsc, bool add_header)
 }
 
 PCMK__OUTPUT_ARGS("rsc-action-item", "const char *", "pe_resource_t *",
-                  "pe_node_t *", "pe_node_t *", "pe_action_t *",
+                  "pcmk_node_t *", "pcmk_node_t *", "pe_action_t *",
                   "pe_action_t *")
 static int
 rsc_action_item(pcmk__output_t *out, va_list args)
 {
     const char *change = va_arg(args, const char *);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    pe_node_t *origin = va_arg(args, pe_node_t *);
-    pe_node_t *destination = va_arg(args, pe_node_t *);
+    pcmk_node_t *origin = va_arg(args, pcmk_node_t *);
+    pcmk_node_t *destination = va_arg(args, pcmk_node_t *);
     pe_action_t *action = va_arg(args, pe_action_t *);
     pe_action_t *source = va_arg(args, pe_action_t *);
 
@@ -231,15 +231,15 @@ rsc_action_item(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("rsc-action-item", "const char *", "pe_resource_t *",
-                  "pe_node_t *", "pe_node_t *", "pe_action_t *",
+                  "pcmk_node_t *", "pcmk_node_t *", "pe_action_t *",
                   "pe_action_t *")
 static int
 rsc_action_item_xml(pcmk__output_t *out, va_list args)
 {
     const char *change = va_arg(args, const char *);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    pe_node_t *origin = va_arg(args, pe_node_t *);
-    pe_node_t *destination = va_arg(args, pe_node_t *);
+    pcmk_node_t *origin = va_arg(args, pcmk_node_t *);
+    pcmk_node_t *destination = va_arg(args, pcmk_node_t *);
     pe_action_t *action = va_arg(args, pe_action_t *);
     pe_action_t *source = va_arg(args, pe_action_t *);
 
@@ -549,7 +549,7 @@ locations_list(pcmk__output_t *out, va_list args) {
         GList *lpc2 = NULL;
 
         for (lpc2 = cons->node_list_rh; lpc2 != NULL; lpc2 = lpc2->next) {
-            pe_node_t *node = (pe_node_t *) lpc2->data;
+            pcmk_node_t *node = (pcmk_node_t *) lpc2->data;
 
             PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Locations");
             out->list_item(out, NULL, "Node %s (score=%s, id=%s, rsc=%s)",
@@ -954,13 +954,13 @@ crmadmin_node_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("digests", "const pe_resource_t *", "const pe_node_t *",
+PCMK__OUTPUT_ARGS("digests", "const pe_resource_t *", "const pcmk_node_t *",
                   "const char *", "guint", "const op_digest_cache_t *")
 static int
 digests_text(pcmk__output_t *out, va_list args)
 {
     const pe_resource_t *rsc = va_arg(args, const pe_resource_t *);
-    const pe_node_t *node = va_arg(args, const pe_node_t *);
+    const pcmk_node_t *node = va_arg(args, const pcmk_node_t *);
     const char *task = va_arg(args, const char *);
     guint interval_ms = va_arg(args, guint);
     const op_digest_cache_t *digests = va_arg(args, const op_digest_cache_t *);
@@ -1024,13 +1024,13 @@ add_digest_xml(xmlNode *parent, const char *type, const char *digest,
     }
 }
 
-PCMK__OUTPUT_ARGS("digests", "const pe_resource_t *", "const pe_node_t *",
+PCMK__OUTPUT_ARGS("digests", "const pe_resource_t *", "const pcmk_node_t *",
                   "const char *", "guint", "const op_digest_cache_t *")
 static int
 digests_xml(pcmk__output_t *out, va_list args)
 {
     const pe_resource_t *rsc = va_arg(args, const pe_resource_t *);
-    const pe_node_t *node = va_arg(args, const pe_node_t *);
+    const pcmk_node_t *node = va_arg(args, const pcmk_node_t *);
     const char *task = va_arg(args, const char *);
     guint interval_ms = va_arg(args, guint);
     const op_digest_cache_t *digests = va_arg(args, const op_digest_cache_t *);
@@ -1071,20 +1071,21 @@ digests_xml(pcmk__output_t *out, va_list args)
         }                                                               \
     } while (0)
 
-PCMK__OUTPUT_ARGS("rsc-action", "pe_resource_t *", "pe_node_t *", "pe_node_t *")
+PCMK__OUTPUT_ARGS("rsc-action", "pe_resource_t *", "pcmk_node_t *",
+                  "pcmk_node_t *")
 static int
 rsc_action_default(pcmk__output_t *out, va_list args)
 {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    pe_node_t *current = va_arg(args, pe_node_t *);
-    pe_node_t *next = va_arg(args, pe_node_t *);
+    pcmk_node_t *current = va_arg(args, pcmk_node_t *);
+    pcmk_node_t *next = va_arg(args, pcmk_node_t *);
 
     GList *possible_matches = NULL;
     char *key = NULL;
     int rc = pcmk_rc_no_output;
     bool moving = false;
 
-    pe_node_t *start_node = NULL;
+    pcmk_node_t *start_node = NULL;
     pe_action_t *start = NULL;
     pe_action_t *stop = NULL;
     pe_action_t *promote = NULL;
@@ -1226,7 +1227,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
 
         key = stop_key(rsc);
         for (GList *iter = rsc->running_on; iter != NULL; iter = iter->next) {
-            pe_node_t *node = iter->data;
+            pcmk_node_t *node = iter->data;
             pe_action_t *stop_op = NULL;
 
             reason_op = start;

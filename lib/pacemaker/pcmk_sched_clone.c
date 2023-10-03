@@ -33,8 +33,8 @@
  *       as calling pcmk__unassign_resource(); there are no side effects on
  *       roles or actions.
  */
-pe_node_t *
-pcmk__clone_assign(pe_resource_t *rsc, const pe_node_t *prefer,
+pcmk_node_t *
+pcmk__clone_assign(pe_resource_t *rsc, const pcmk_node_t *prefer,
                    bool stop_if_fail)
 {
     GList *colocations = NULL;
@@ -325,7 +325,7 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
         // Dependent can run only where primary will have unblocked instances
         for (iter = primary->children; iter != NULL; iter = iter->next) {
             const pe_resource_t *instance = iter->data;
-            pe_node_t *chosen = instance->fns->location(instance, NULL, 0);
+            pcmk_node_t *chosen = instance->fns->location(instance, NULL, 0);
 
             if ((chosen != NULL)
                 && !is_set_recursive(instance, pcmk_rsc_blocked, TRUE)) {
@@ -388,7 +388,7 @@ pcmk__clone_with_colocations(const pe_resource_t *rsc,
  * \return Flags appropriate to \p action on \p node
  */
 uint32_t
-pcmk__clone_action_flags(pe_action_t *action, const pe_node_t *node)
+pcmk__clone_action_flags(pe_action_t *action, const pcmk_node_t *node)
 {
     CRM_ASSERT((action != NULL) && pe_rsc_is_clone(action->rsc));
 
@@ -460,7 +460,7 @@ pcmk__clone_add_actions_to_graph(pe_resource_t *rsc)
  *         children, otherwise false
  */
 static bool
-rsc_probed_on(const pe_resource_t *rsc, const pe_node_t *node)
+rsc_probed_on(const pe_resource_t *rsc, const pcmk_node_t *node)
 {
     if (rsc->children != NULL) {
         for (GList *child_iter = rsc->children; child_iter != NULL;
@@ -477,7 +477,7 @@ rsc_probed_on(const pe_resource_t *rsc, const pe_node_t *node)
 
     if (rsc->known_on != NULL) {
         GHashTableIter iter;
-        pe_node_t *known_node = NULL;
+        pcmk_node_t *known_node = NULL;
 
         g_hash_table_iter_init(&iter, rsc->known_on);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &known_node)) {
@@ -500,7 +500,7 @@ rsc_probed_on(const pe_resource_t *rsc, const pe_node_t *node)
  *         otherwise NULL
  */
 static pe_resource_t *
-find_probed_instance_on(const pe_resource_t *clone, const pe_node_t *node)
+find_probed_instance_on(const pe_resource_t *clone, const pcmk_node_t *node)
 {
     for (GList *iter = clone->children; iter != NULL; iter = iter->next) {
         pe_resource_t *instance = (pe_resource_t *) iter->data;
@@ -520,7 +520,7 @@ find_probed_instance_on(const pe_resource_t *clone, const pe_node_t *node)
  * \param[in,out] node   Node to probe \p clone on
  */
 static bool
-probe_anonymous_clone(pe_resource_t *clone, pe_node_t *node)
+probe_anonymous_clone(pe_resource_t *clone, pcmk_node_t *node)
 {
     // Check whether we already probed an instance on this node
     pe_resource_t *child = find_probed_instance_on(clone, node);
@@ -529,7 +529,7 @@ probe_anonymous_clone(pe_resource_t *clone, pe_node_t *node)
     for (GList *iter = clone->children; (iter != NULL) && (child == NULL);
          iter = iter->next) {
         pe_resource_t *instance = (pe_resource_t *) iter->data;
-        const pe_node_t *instance_node = NULL;
+        const pcmk_node_t *instance_node = NULL;
 
         instance_node = instance->fns->location(instance, NULL, 0);
         if (pe__same_node(instance_node, node)) {
@@ -556,7 +556,7 @@ probe_anonymous_clone(pe_resource_t *clone, pe_node_t *node)
  * \return true if any probe was created, otherwise false
  */
 bool
-pcmk__clone_create_probe(pe_resource_t *rsc, pe_node_t *node)
+pcmk__clone_create_probe(pe_resource_t *rsc, pcmk_node_t *node)
 {
     CRM_ASSERT((node != NULL) && pe_rsc_is_clone(rsc));
 
@@ -570,8 +570,8 @@ pcmk__clone_create_probe(pe_resource_t *rsc, pe_node_t *node)
          * instances), and affects the CRM_meta_notify_available_uname variable
          * passed with notify actions.
          */
-        pe_node_t *allowed = g_hash_table_lookup(rsc->allowed_nodes,
-                                                 node->details->id);
+        pcmk_node_t *allowed = g_hash_table_lookup(rsc->allowed_nodes,
+                                                   node->details->id);
 
         if ((allowed == NULL)
             || (allowed->rsc_discover_mode != pcmk_probe_exclusive)) {

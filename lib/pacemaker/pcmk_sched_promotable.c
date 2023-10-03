@@ -126,11 +126,11 @@ check_for_role_change(const pe_resource_t *rsc, bool *demoting, bool *promoting)
 static void
 apply_promoted_locations(pe_resource_t *child,
                          const GList *location_constraints,
-                         const pe_node_t *chosen)
+                         const pcmk_node_t *chosen)
 {
     for (const GList *iter = location_constraints; iter; iter = iter->next) {
         const pe__location_t *location = iter->data;
-        const pe_node_t *constraint_node = NULL;
+        const pcmk_node_t *constraint_node = NULL;
 
         if (location->role_filter == pcmk_role_promoted) {
             constraint_node = pe_find_node_id(location->node_list_rh,
@@ -161,11 +161,11 @@ apply_promoted_locations(pe_resource_t *child,
  *
  * \return Node that \p rsc will be promoted on, or NULL if none
  */
-static pe_node_t *
+static pcmk_node_t *
 node_to_be_promoted_on(const pe_resource_t *rsc)
 {
-    pe_node_t *node = NULL;
-    pe_node_t *local_node = NULL;
+    pcmk_node_t *node = NULL;
+    pcmk_node_t *local_node = NULL;
     const pe_resource_t *parent = NULL;
 
     // If this is a cloned group, bail if any group member can't be promoted
@@ -311,8 +311,8 @@ add_sort_index_to_node_score(gpointer data, gpointer user_data)
     const pe_resource_t *child = (const pe_resource_t *) data;
     pe_resource_t *clone = (pe_resource_t *) user_data;
 
-    pe_node_t *node = NULL;
-    const pe_node_t *chosen = NULL;
+    pcmk_node_t *node = NULL;
+    const pcmk_node_t *chosen = NULL;
 
     if (child->sort_index < 0) {
         pe_rsc_trace(clone, "Not adding sort index of %s: negative", child->id);
@@ -410,7 +410,7 @@ set_sort_index_to_node_score(gpointer data, gpointer user_data)
     pe_resource_t *child = (pe_resource_t *) data;
     const pe_resource_t *clone = (const pe_resource_t *) user_data;
 
-    pe_node_t *chosen = child->fns->location(child, NULL, FALSE);
+    pcmk_node_t *chosen = child->fns->location(child, NULL, FALSE);
 
     if (!pcmk_is_set(child->flags, pcmk_rsc_managed)
         && (child->next_role == pcmk_role_promoted)) {
@@ -425,8 +425,8 @@ set_sort_index_to_node_score(gpointer data, gpointer user_data)
                      child->id, child->sort_index);
 
     } else {
-        const pe_node_t *node = g_hash_table_lookup(clone->allowed_nodes,
-                                                    chosen->details->id);
+        const pcmk_node_t *node = g_hash_table_lookup(clone->allowed_nodes,
+                                                      chosen->details->id);
 
         CRM_ASSERT(node != NULL);
         child->sort_index = node->weight;
@@ -499,7 +499,7 @@ sort_promotable_instances(pe_resource_t *clone)
  */
 static pe_resource_t *
 find_active_anon_instance(const pe_resource_t *clone, const char *id,
-                          const pe_node_t *node)
+                          const pcmk_node_t *node)
 {
     for (GList *iter = clone->children; iter; iter = iter->next) {
         pe_resource_t *child = iter->data;
@@ -528,7 +528,7 @@ find_active_anon_instance(const pe_resource_t *clone, const char *id,
  */
 static bool
 anonymous_known_on(const pe_resource_t *clone, const char *id,
-                   const pe_node_t *node)
+                   const pcmk_node_t *node)
 {
     for (GList *iter = clone->children; iter; iter = iter->next) {
         pe_resource_t *child = iter->data;
@@ -558,10 +558,10 @@ anonymous_known_on(const pe_resource_t *clone, const char *id,
  * \return true if \p node is allowed to run \p rsc, otherwise false
  */
 static bool
-is_allowed(const pe_resource_t *rsc, const pe_node_t *node)
+is_allowed(const pe_resource_t *rsc, const pcmk_node_t *node)
 {
-    pe_node_t *allowed = g_hash_table_lookup(rsc->allowed_nodes,
-                                             node->details->id);
+    pcmk_node_t *allowed = g_hash_table_lookup(rsc->allowed_nodes,
+                                               node->details->id);
 
     return (allowed != NULL) && (allowed->weight >= 0);
 }
@@ -576,7 +576,7 @@ is_allowed(const pe_resource_t *rsc, const pe_node_t *node)
  *         otherwise false
  */
 static bool
-promotion_score_applies(const pe_resource_t *rsc, const pe_node_t *node)
+promotion_score_applies(const pe_resource_t *rsc, const pcmk_node_t *node)
 {
     char *id = clone_strip(rsc->id);
     const pe_resource_t *parent = pe__const_top_resource(rsc, false);
@@ -650,7 +650,7 @@ check_allowed:
  * \return Value of promotion score node attribute for \p rsc on \p node
  */
 static const char *
-promotion_attr_value(const pe_resource_t *rsc, const pe_node_t *node,
+promotion_attr_value(const pe_resource_t *rsc, const pcmk_node_t *node,
                      const char *name)
 {
     char *attr_name = NULL;
@@ -679,7 +679,7 @@ promotion_attr_value(const pe_resource_t *rsc, const pe_node_t *node,
  * \return Promotion score for \p rsc on \p node (or 0 if none)
  */
 static int
-promotion_score(const pe_resource_t *rsc, const pe_node_t *node,
+promotion_score(const pe_resource_t *rsc, const pcmk_node_t *node,
                 bool *is_default)
 {
     char *name = NULL;
@@ -769,7 +769,7 @@ pcmk__add_promotion_scores(pe_resource_t *rsc)
         pe_resource_t *child_rsc = (pe_resource_t *) iter->data;
 
         GHashTableIter iter;
-        pe_node_t *node = NULL;
+        pcmk_node_t *node = NULL;
         int score, new_score;
 
         g_hash_table_iter_init(&iter, child_rsc->allowed_nodes);
@@ -874,7 +874,7 @@ set_next_role_promoted(void *data, gpointer user_data)
 static void
 show_promotion_score(pe_resource_t *instance)
 {
-    pe_node_t *chosen = instance->fns->location(instance, NULL, FALSE);
+    pcmk_node_t *chosen = instance->fns->location(instance, NULL, FALSE);
 
     if (pcmk_is_set(instance->cluster->flags, pcmk_sched_output_scores)
         && !pcmk__is_daemon && (instance->cluster->priv != NULL)) {
@@ -905,7 +905,7 @@ set_instance_priority(gpointer data, gpointer user_data)
 {
     pe_resource_t *instance = (pe_resource_t *) data;
     const pe_resource_t *clone = (const pe_resource_t *) user_data;
-    const pe_node_t *chosen = NULL;
+    const pcmk_node_t *chosen = NULL;
     enum rsc_role_e next_role = pcmk_role_unknown;
     GList *list = NULL;
 
@@ -1000,7 +1000,7 @@ set_instance_role(gpointer data, gpointer user_data)
     int *count = (int *) user_data;
 
     const pe_resource_t *clone = pe__const_top_resource(instance, false);
-    pe_node_t *chosen = NULL;
+    pcmk_node_t *chosen = NULL;
 
     show_promotion_score(instance);
 
@@ -1046,7 +1046,7 @@ pcmk__set_instance_roles(pe_resource_t *rsc)
 {
     int promoted = 0;
     GHashTableIter iter;
-    pe_node_t *node = NULL;
+    pcmk_node_t *node = NULL;
 
     // Repurpose count to track the number of promoted instances assigned
     g_hash_table_iter_init(&iter, rsc->allowed_nodes);
@@ -1166,11 +1166,11 @@ pcmk__order_promotable_instances(pe_resource_t *clone)
 static void
 update_dependent_allowed_nodes(pe_resource_t *dependent,
                                const pe_resource_t *primary,
-                               const pe_node_t *primary_node,
+                               const pcmk_node_t *primary_node,
                                const pcmk__colocation_t *colocation)
 {
     GHashTableIter iter;
-    pe_node_t *node = NULL;
+    pcmk_node_t *node = NULL;
     const char *primary_value = NULL;
     const char *attr = colocation->node_attribute;
 
@@ -1222,7 +1222,7 @@ pcmk__update_dependent_with_promotable(const pe_resource_t *primary,
      */
     for (GList *iter = primary->children; iter != NULL; iter = iter->next) {
         pe_resource_t *instance = (pe_resource_t *) iter->data;
-        pe_node_t *node = instance->fns->location(instance, NULL, FALSE);
+        pcmk_node_t *node = instance->fns->location(instance, NULL, FALSE);
 
         if (node == NULL) {
             continue;

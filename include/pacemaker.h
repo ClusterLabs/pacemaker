@@ -207,7 +207,7 @@ int pcmk_pacemakerd_status(xmlNodePtr *xml, const char *ipc_name,
  * \return Standard Pacemaker return code
  */
 int pcmk_resource_digests(xmlNodePtr *xml, pe_resource_t *rsc,
-                          const pe_node_t *node, GHashTable *overrides,
+                          const pcmk_node_t *node, GHashTable *overrides,
                           pe_working_set_t *data_set);
 
 /*!

@@ -26,7 +26,7 @@ build_node_info_list(const pe_resource_t *rsc)
         for (const GList *iter2 = child->running_on;
              iter2 != NULL; iter2 = iter2->next) {
 
-            const pe_node_t *node = (const pe_node_t *) iter2->data;
+            const pcmk_node_t *node = (const pcmk_node_t *) iter2->data;
             node_info_t *ni = calloc(1, sizeof(node_info_t));
 
             ni->node_name = node->details->uname;
@@ -61,7 +61,7 @@ cli_resource_search(pe_resource_t *rsc, const char *requested_name,
 
     } else if (rsc->running_on != NULL) {
         for (GList *iter = rsc->running_on; iter != NULL; iter = iter->next) {
-            pe_node_t *node = (pe_node_t *) iter->data;
+            pcmk_node_t *node = (pcmk_node_t *) iter->data;
             node_info_t *ni = calloc(1, sizeof(node_info_t));
             ni->node_name = node->details->uname;
             ni->promoted = (rsc->fns->state(rsc, TRUE) == pcmk_role_promoted);
@@ -567,7 +567,7 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
     }
 
     {
-        pe_node_t *node = pe_find_node(data_set->nodes, host_uname);
+        pcmk_node_t *node = pe_find_node(data_set->nodes, host_uname);
 
         if (node == NULL) {
             out->err(out, "Node %s not found", host_uname);
@@ -742,7 +742,7 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
 // \return Standard Pacemaker return code
 static int
 clear_rsc_fail_attrs(const pe_resource_t *rsc, const char *operation,
-                     const char *interval_spec, const pe_node_t *node)
+                     const char *interval_spec, const pcmk_node_t *node)
 {
     int rc = pcmk_rc_ok;
     int attr_options = pcmk__node_attr_none;
@@ -768,7 +768,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
 {
     pcmk__output_t *out = data_set->priv;
     int rc = pcmk_rc_ok;
-    pe_node_t *node = NULL;
+    pcmk_node_t *node = NULL;
 
     if (rsc == NULL) {
         return ENXIO;
@@ -795,7 +795,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
 
         } else if(nodes == NULL && rsc->exclusive_discover) {
             GHashTableIter iter;
-            pe_node_t *node = NULL;
+            pcmk_node_t *node = NULL;
 
             g_hash_table_iter_init(&iter, rsc->allowed_nodes);
             while (g_hash_table_iter_next(&iter, NULL, (void**)&node)) {
@@ -809,7 +809,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
         }
 
         for (lpc = nodes; lpc != NULL; lpc = lpc->next) {
-            node = (pe_node_t *) lpc->data;
+            node = (pcmk_node_t *) lpc->data;
 
             if (node->details->online) {
                 rc = cli_resource_delete(controld_api, node->details->uname, rsc,
@@ -886,7 +886,7 @@ cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
     }
 
     if (node_name) {
-        pe_node_t *node = pe_find_node(data_set->nodes, node_name);
+        pcmk_node_t *node = pe_find_node(data_set->nodes, node_name);
 
         if (node == NULL) {
             out->err(out, "Unknown node: %s", node_name);
@@ -915,7 +915,7 @@ cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
         }
     } else {
         for (GList *iter = data_set->nodes; iter; iter = iter->next) {
-            pe_node_t *node = (pe_node_t *) iter->data;
+            pcmk_node_t *node = (pcmk_node_t *) iter->data;
 
             rc = clear_rsc_failures(out, controld_api, node->details->uname, NULL,
                                     operation, interval_spec, data_set);
@@ -978,7 +978,7 @@ check_locked(resource_checks_t *checks)
 }
 
 static bool
-node_is_unhealthy(pe_node_t *node)
+node_is_unhealthy(pcmk_node_t *node)
 {
     switch (pe__health_strategy(node->details->data_set)) {
         case pcmk__health_strategy_none:
@@ -1008,7 +1008,7 @@ node_is_unhealthy(pe_node_t *node)
 }
 
 static void
-check_node_health(resource_checks_t *checks, pe_node_t *node)
+check_node_health(resource_checks_t *checks, pcmk_node_t *node)
 {
     if (node == NULL) {
         GHashTableIter iter;
@@ -1033,7 +1033,7 @@ check_node_health(resource_checks_t *checks, pe_node_t *node)
 }
 
 int
-cli_resource_check(pcmk__output_t *out, pe_resource_t *rsc, pe_node_t *node)
+cli_resource_check(pcmk__output_t *out, pe_resource_t *rsc, pcmk_node_t *node)
 {
     resource_checks_t checks = { .rsc = rsc };
 
@@ -1055,7 +1055,7 @@ cli_resource_fail(pcmk_ipc_api_t *controld_api, const char *host_uname,
 }
 
 static GHashTable *
-generate_resource_params(pe_resource_t *rsc, pe_node_t *node,
+generate_resource_params(pe_resource_t *rsc, pcmk_node_t *node,
                          pe_working_set_t *data_set)
 {
     GHashTable *params = NULL;
@@ -1102,7 +1102,7 @@ bool resource_is_running_on(pe_resource_t *rsc, const char *host)
 
     rsc->fns->location(rsc, &hosts, TRUE);
     for (hIter = hosts; host != NULL && hIter != NULL; hIter = hIter->next) {
-        pe_node_t *node = (pe_node_t *) hIter->data;
+        pcmk_node_t *node = (pcmk_node_t *) hIter->data;
 
         if (pcmk__strcase_any_of(host, node->details->uname, node->details->id, NULL)) {
             crm_trace("Resource %s is running on %s\n", rsc->id, host);
@@ -1429,7 +1429,7 @@ wait_time_estimate(pe_working_set_t *data_set, const GList *resources)
  */
 int
 cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc,
-                     const pe_node_t *node, const char *move_lifetime,
+                     const pcmk_node_t *node, const char *move_lifetime,
                      int timeout_ms, cib_t *cib, int cib_options,
                      gboolean promoted_role_only, gboolean force)
 {
@@ -2120,8 +2120,8 @@ cli_resource_move(const pe_resource_t *rsc, const char *rsc_id,
     pcmk__output_t *out = data_set->priv;
     int rc = pcmk_rc_ok;
     unsigned int count = 0;
-    pe_node_t *current = NULL;
-    pe_node_t *dest = pe_find_node(data_set->nodes, host_name);
+    pcmk_node_t *current = NULL;
+    pcmk_node_t *dest = pe_find_node(data_set->nodes, host_name);
     bool cur_is_dest = false;
 
     if (dest == NULL) {
@@ -2149,7 +2149,7 @@ cli_resource_move(const pe_resource_t *rsc, const char *rsc_id,
 
     if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
         unsigned int promoted_count = 0;
-        pe_node_t *promoted_node = NULL;
+        pcmk_node_t *promoted_node = NULL;
 
         for (const GList *iter = rsc->children; iter; iter = iter->next) {
             const pe_resource_t *child = (const pe_resource_t *) iter->data;

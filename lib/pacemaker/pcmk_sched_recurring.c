@@ -187,7 +187,7 @@ is_recurring_history(const pe_resource_t *rsc, const xmlNode *xml,
  */
 static bool
 active_recurring_should_be_optional(const pe_resource_t *rsc,
-                                    const pe_node_t *node, const char *key,
+                                    const pcmk_node_t *node, const char *key,
                                     pe_action_t *start)
 {
     GList *possible_matches = NULL;
@@ -241,7 +241,7 @@ active_recurring_should_be_optional(const pe_resource_t *rsc,
  */
 static void
 recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
-                        const pe_node_t *node, const struct op_history *op)
+                        const pcmk_node_t *node, const struct op_history *op)
 {
     pe_action_t *mon = NULL;
     bool is_optional = true;
@@ -370,7 +370,7 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
  * \param[in]     interval_ms  Action interval (in milliseconds)
  */
 static void
-cancel_if_running(pe_resource_t *rsc, const pe_node_t *node, const char *key,
+cancel_if_running(pe_resource_t *rsc, const pcmk_node_t *node, const char *key,
                   const char *name, guint interval_ms)
 {
     GList *possible_matches = find_actions_exact(rsc->actions, key, node);
@@ -414,7 +414,7 @@ cancel_if_running(pe_resource_t *rsc, const pe_node_t *node, const char *key,
  * \param[in,out] action  Action to order after probes of \p rsc on \p node
  */
 static void
-order_after_probes(pe_resource_t *rsc, const pe_node_t *node,
+order_after_probes(pe_resource_t *rsc, const pcmk_node_t *node,
                    pe_action_t *action)
 {
     GList *probes = pe__resource_actions(rsc, node, PCMK_ACTION_MONITOR, FALSE);
@@ -435,7 +435,7 @@ order_after_probes(pe_resource_t *rsc, const pe_node_t *node,
  * \param[in,out] action  Action to order after stops of \p rsc on \p node
  */
 static void
-order_after_stops(pe_resource_t *rsc, const pe_node_t *node,
+order_after_stops(pe_resource_t *rsc, const pcmk_node_t *node,
                   pe_action_t *action)
 {
     GList *stop_ops = pe__resource_actions(rsc, node, PCMK_ACTION_STOP, TRUE);
@@ -477,7 +477,7 @@ order_after_stops(pe_resource_t *rsc, const pe_node_t *node,
  * \param[in]     op     Resource history entry
  */
 static void
-recurring_op_for_inactive(pe_resource_t *rsc, const pe_node_t *node,
+recurring_op_for_inactive(pe_resource_t *rsc, const pcmk_node_t *node,
                           const struct op_history *op)
 {
     GList *possible_matches = NULL;
@@ -497,7 +497,7 @@ recurring_op_for_inactive(pe_resource_t *rsc, const pe_node_t *node,
                       "where it should not be running", op->id, rsc->id);
 
     for (GList *iter = rsc->cluster->nodes; iter != NULL; iter = iter->next) {
-        pe_node_t *stop_node = (pe_node_t *) iter->data;
+        pcmk_node_t *stop_node = (pcmk_node_t *) iter->data;
 
         bool is_optional = true;
         pe_action_t *stopped_mon = NULL;
@@ -622,7 +622,7 @@ pcmk__create_recurring_actions(pe_resource_t *rsc)
  */
 pe_action_t *
 pcmk__new_cancel_action(pe_resource_t *rsc, const char *task, guint interval_ms,
-                        const pe_node_t *node)
+                        const pcmk_node_t *node)
 {
     pe_action_t *cancel_op = NULL;
     char *key = NULL;
@@ -660,7 +660,7 @@ pcmk__new_cancel_action(pe_resource_t *rsc, const char *task, guint interval_ms,
  */
 void
 pcmk__schedule_cancel(pe_resource_t *rsc, const char *call_id, const char *task,
-                      guint interval_ms, const pe_node_t *node,
+                      guint interval_ms, const pcmk_node_t *node,
                       const char *reason)
 {
     pe_action_t *cancel = NULL;
@@ -691,7 +691,7 @@ pcmk__schedule_cancel(pe_resource_t *rsc, const char *call_id, const char *task,
  */
 void
 pcmk__reschedule_recurring(pe_resource_t *rsc, const char *task,
-                           guint interval_ms, pe_node_t *node)
+                           guint interval_ms, pcmk_node_t *node)
 {
     pe_action_t *op = NULL;
 

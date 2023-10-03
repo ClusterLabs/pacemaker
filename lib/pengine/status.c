@@ -157,7 +157,7 @@ cluster_status(pe_working_set_t * data_set)
  * \note When a working set's resource list is freed, that includes the original
  *       storage for the uname and id of any Pacemaker Remote nodes in the
  *       working set's node list, so take care not to use those afterward.
- * \todo Refactor pe_node_t to strdup() the node name.
+ * \todo Refactor pcmk_node_t to strdup() the node name.
  */
 static void
 pe_free_resources(GList *resources)
@@ -193,7 +193,7 @@ static void
 pe_free_nodes(GList *nodes)
 {
     for (GList *iterator = nodes; iterator != NULL; iterator = iterator->next) {
-        pe_node_t *node = (pe_node_t *) iterator->data;
+        pcmk_node_t *node = (pcmk_node_t *) iterator->data;
 
         // Shouldn't be possible, but to be safe ...
         if (node == NULL) {
@@ -414,7 +414,7 @@ pe_find_resource_with_flags(GList *rsc_list, const char *id, enum pe_find flags)
 /*!
  * \brief Find a node by name or ID in a list of nodes
  *
- * \param[in] nodes      List of nodes (as pe_node_t*)
+ * \param[in] nodes      List of nodes (as pcmk_node_t*)
  * \param[in] id         If not NULL, ID of node to find
  * \param[in] node_name  If not NULL, name of node to find
  *
@@ -422,10 +422,10 @@ pe_find_resource_with_flags(GList *rsc_list, const char *id, enum pe_find flags)
  *         otherwise node from \p nodes that matches \p uname if any,
  *         otherwise NULL
  */
-pe_node_t *
+pcmk_node_t *
 pe_find_node_any(const GList *nodes, const char *id, const char *uname)
 {
-    pe_node_t *match = NULL;
+    pcmk_node_t *match = NULL;
 
     if (id != NULL) {
         match = pe_find_node_id(nodes, id);
@@ -439,16 +439,16 @@ pe_find_node_any(const GList *nodes, const char *id, const char *uname)
 /*!
  * \brief Find a node by ID in a list of nodes
  *
- * \param[in] nodes  List of nodes (as pe_node_t*)
+ * \param[in] nodes  List of nodes (as pcmk_node_t*)
  * \param[in] id     ID of node to find
  *
  * \return Node from \p nodes that matches \p id if any, otherwise NULL
  */
-pe_node_t *
+pcmk_node_t *
 pe_find_node_id(const GList *nodes, const char *id)
 {
     for (const GList *iter = nodes; iter != NULL; iter = iter->next) {
-        pe_node_t *node = (pe_node_t *) iter->data;
+        pcmk_node_t *node = (pcmk_node_t *) iter->data;
 
         /* @TODO Whether node IDs should be considered case-sensitive should
          * probably depend on the node type, so functionizing the comparison
@@ -464,16 +464,16 @@ pe_find_node_id(const GList *nodes, const char *id)
 /*!
  * \brief Find a node by name in a list of nodes
  *
- * \param[in] nodes      List of nodes (as pe_node_t*)
+ * \param[in] nodes      List of nodes (as pcmk_node_t*)
  * \param[in] node_name  Name of node to find
  *
  * \return Node from \p nodes that matches \p node_name if any, otherwise NULL
  */
-pe_node_t *
+pcmk_node_t *
 pe_find_node(const GList *nodes, const char *node_name)
 {
     for (const GList *iter = nodes; iter != NULL; iter = iter->next) {
-        pe_node_t *node = (pe_node_t *) iter->data;
+        pcmk_node_t *node = (pcmk_node_t *) iter->data;
 
         if (pcmk__str_eq(node->details->uname, node_name, pcmk__str_casei)) {
             return node;

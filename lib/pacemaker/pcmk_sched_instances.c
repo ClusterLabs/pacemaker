@@ -27,10 +27,10 @@
  * \return true if \p node is allowed to run \p instance, otherwise false
  */
 static bool
-can_run_instance(const pe_resource_t *instance, const pe_node_t *node,
+can_run_instance(const pe_resource_t *instance, const pcmk_node_t *node,
                  int max_per_node)
 {
-    pe_node_t *allowed_node = NULL;
+    pcmk_node_t *allowed_node = NULL;
 
     if (pcmk_is_set(instance->flags, pcmk_rsc_removed)) {
         pe_rsc_trace(instance, "%s cannot run on %s: orphaned",
@@ -84,7 +84,7 @@ ban_unavailable_allowed_nodes(pe_resource_t *instance, int max_per_node)
 {
     if (instance->allowed_nodes != NULL) {
         GHashTableIter iter;
-        pe_node_t *node = NULL;
+        pcmk_node_t *node = NULL;
 
         g_hash_table_iter_init(&iter, instance->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
@@ -95,7 +95,7 @@ ban_unavailable_allowed_nodes(pe_resource_t *instance, int max_per_node)
                 for (GList *child_iter = instance->children;
                      child_iter != NULL; child_iter = child_iter->next) {
                     pe_resource_t *child = (pe_resource_t *) child_iter->data;
-                    pe_node_t *child_node = NULL;
+                    pcmk_node_t *child_node = NULL;
 
                     child_node = g_hash_table_lookup(child->allowed_nodes,
                                                      node->details->id);
@@ -124,7 +124,7 @@ ban_unavailable_allowed_nodes(pe_resource_t *instance, int max_per_node)
  *       g_hash_table_destroy().
  */
 static GHashTable *
-new_node_table(pe_node_t *node)
+new_node_table(pcmk_node_t *node)
 {
     GHashTable *table = pcmk__strkey_table(NULL, free);
 
@@ -192,10 +192,10 @@ cmp_instance_by_colocation(const pe_resource_t *instance1,
                            const pe_resource_t *instance2)
 {
     int rc = 0;
-    pe_node_t *node1 = NULL;
-    pe_node_t *node2 = NULL;
-    pe_node_t *current_node1 = pe__current_node(instance1);
-    pe_node_t *current_node2 = pe__current_node(instance2);
+    pcmk_node_t *node1 = NULL;
+    pcmk_node_t *node2 = NULL;
+    pcmk_node_t *current_node1 = pe__current_node(instance1);
+    pcmk_node_t *current_node2 = pe__current_node(instance2);
     GHashTable *colocated_scores1 = NULL;
     GHashTable *colocated_scores2 = NULL;
 
@@ -266,11 +266,11 @@ did_fail(const pe_resource_t *rsc)
  * \return true if *node is either NULL or allowed for \p rsc, otherwise false
  */
 static bool
-node_is_allowed(const pe_resource_t *rsc, pe_node_t **node)
+node_is_allowed(const pe_resource_t *rsc, pcmk_node_t **node)
 {
     if (*node != NULL) {
-        pe_node_t *allowed = g_hash_table_lookup(rsc->allowed_nodes,
-                                                 (*node)->details->id);
+        pcmk_node_t *allowed = g_hash_table_lookup(rsc->allowed_nodes,
+                                                   (*node)->details->id);
 
         if ((allowed == NULL) || (allowed->weight < 0)) {
             pe_rsc_trace(rsc, "%s: current location (%s) is unavailable",
@@ -346,8 +346,8 @@ gint
 pcmk__cmp_instance(gconstpointer a, gconstpointer b)
 {
     int rc = 0;
-    pe_node_t *node1 = NULL;
-    pe_node_t *node2 = NULL;
+    pcmk_node_t *node1 = NULL;
+    pcmk_node_t *node2 = NULL;
     unsigned int nnodes1 = 0;
     unsigned int nnodes2 = 0;
 
@@ -510,16 +510,16 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
  * \brief Increment the parent's instance count after assigning an instance
  *
  * An instance's parent tracks how many instances have been assigned to each
- * node via its pe_node_t:count member. After assigning an instance to a node,
+ * node via its pcmk_node_t:count member. After assigning an instance to a node,
  * find the corresponding node in the parent's allowed table and increment it.
  *
  * \param[in,out] instance     Instance whose parent to update
  * \param[in]     assigned_to  Node to which the instance was assigned
  */
 static void
-increment_parent_count(pe_resource_t *instance, const pe_node_t *assigned_to)
+increment_parent_count(pe_resource_t *instance, const pcmk_node_t *assigned_to)
 {
-    pe_node_t *allowed = NULL;
+    pcmk_node_t *allowed = NULL;
 
     if (assigned_to == NULL) {
         return;
@@ -550,11 +550,11 @@ increment_parent_count(pe_resource_t *instance, const pe_node_t *assigned_to)
  *
  * \return Node to which \p instance is assigned
  */
-static const pe_node_t *
-assign_instance(pe_resource_t *instance, const pe_node_t *prefer,
+static const pcmk_node_t *
+assign_instance(pe_resource_t *instance, const pcmk_node_t *prefer,
                 int max_per_node)
 {
-    pe_node_t *chosen = NULL;
+    pcmk_node_t *chosen = NULL;
 
     pe_rsc_trace(instance, "Assigning %s (preferring %s)", instance->id,
                  ((prefer == NULL)? "no node" : prefer->details->uname));
@@ -588,21 +588,22 @@ assign_instance(pe_resource_t *instance, const pe_node_t *prefer,
  */
 static bool
 assign_instance_early(const pe_resource_t *rsc, pe_resource_t *instance,
-                      const pe_node_t *current, int max_per_node, int available)
+                      const pcmk_node_t *current, int max_per_node,
+                      int available)
 {
-    const pe_node_t *chosen = NULL;
+    const pcmk_node_t *chosen = NULL;
     int reserved = 0;
 
     pe_resource_t *parent = instance->parent;
     GHashTable *allowed_orig = NULL;
     GHashTable *allowed_orig_parent = parent->allowed_nodes;
-
-    const pe_node_t *allowed_node = g_hash_table_lookup(instance->allowed_nodes,
-                                                        current->details->id);
+    const pcmk_node_t *allowed_node = NULL;
 
     pe_rsc_trace(instance, "Trying to assign %s to its current node %s",
                  instance->id, pe__node_name(current));
 
+    allowed_node = g_hash_table_lookup(instance->allowed_nodes,
+                                       current->details->id);
     if (!pcmk__node_available(allowed_node, true, false)) {
         pe_rsc_info(instance,
                     "Not assigning %s to current node %s: unavailable",
@@ -708,7 +709,7 @@ static unsigned int
 reset_allowed_node_counts(pe_resource_t *rsc)
 {
     unsigned int available_nodes = 0;
-    pe_node_t *node = NULL;
+    pcmk_node_t *node = NULL;
     GHashTableIter iter;
 
     g_hash_table_iter_init(&iter, rsc->allowed_nodes);
@@ -730,11 +731,11 @@ reset_allowed_node_counts(pe_resource_t *rsc)
  *
  * \return Instance's current node if still available, otherwise NULL
  */
-static const pe_node_t *
+static const pcmk_node_t *
 preferred_node(const pe_resource_t *instance, int optimal_per_node)
 {
-    const pe_node_t *node = NULL;
-    const pe_node_t *parent_node = NULL;
+    const pcmk_node_t *node = NULL;
+    const pcmk_node_t *parent_node = NULL;
 
     // Check whether instance is active, healthy, and not yet assigned
     if ((instance->running_on == NULL)
@@ -784,7 +785,7 @@ pcmk__assign_instances(pe_resource_t *collective, GList *instances,
     int assigned = 0;
     GList *iter = NULL;
     pe_resource_t *instance = NULL;
-    const pe_node_t *current = NULL;
+    const pcmk_node_t *current = NULL;
 
     if (available_nodes > 0) {
         optimal_per_node = max_total / available_nodes;
@@ -1069,10 +1070,10 @@ free_instance_list(const pe_resource_t *rsc, GList *list)
  *         otherwise false
  */
 bool
-pcmk__instance_matches(const pe_resource_t *instance, const pe_node_t *node,
+pcmk__instance_matches(const pe_resource_t *instance, const pcmk_node_t *node,
                        enum rsc_role_e role, bool current)
 {
-    pe_node_t *instance_node = NULL;
+    pcmk_node_t *instance_node = NULL;
 
     CRM_CHECK((instance != NULL) && (node != NULL), return false);
 
@@ -1123,7 +1124,7 @@ pcmk__instance_matches(const pe_resource_t *instance, const pe_node_t *node,
 static pe_resource_t *
 find_compatible_instance_on_node(const pe_resource_t *match_rsc,
                                  const pe_resource_t *rsc,
-                                 const pe_node_t *node, enum rsc_role_e role,
+                                 const pcmk_node_t *node, enum rsc_role_e role,
                                  bool current)
 {
     GList *instances = NULL;
@@ -1170,9 +1171,10 @@ pcmk__find_compatible_instance(const pe_resource_t *match_rsc,
 {
     pe_resource_t *instance = NULL;
     GList *nodes = NULL;
-    const pe_node_t *node = match_rsc->fns->location(match_rsc, NULL, current);
+    const pcmk_node_t *node = NULL;
 
     // If match_rsc has a node, check only that node
+    node = match_rsc->fns->location(match_rsc, NULL, current);
     if (node != NULL) {
         return find_compatible_instance_on_node(match_rsc, rsc, node, role,
                                                 current);
@@ -1184,7 +1186,7 @@ pcmk__find_compatible_instance(const pe_resource_t *match_rsc,
     for (GList *iter = nodes; (iter != NULL) && (instance == NULL);
          iter = iter->next) {
         instance = find_compatible_instance_on_node(match_rsc, rsc,
-                                                    (pe_node_t *) iter->data,
+                                                    (pcmk_node_t *) iter->data,
                                                     role, current);
     }
 
@@ -1250,7 +1252,7 @@ unassign_if_mandatory(const pe_action_t *first, const pe_action_t *then,
  */
 static pe_action_t *
 find_instance_action(const pe_action_t *action, const pe_resource_t *instance,
-                     const char *action_name, const pe_node_t *node,
+                     const char *action_name, const pcmk_node_t *node,
                      bool for_first)
 {
     const pe_resource_t *rsc = NULL;
@@ -1364,7 +1366,7 @@ orig_action_name(const pe_action_t *action)
  */
 static uint32_t
 update_interleaved_actions(pe_action_t *first, pe_action_t *then,
-                           const pe_node_t *node, uint32_t filter,
+                           const pcmk_node_t *node, uint32_t filter,
                            uint32_t type)
 {
     GList *instances = NULL;
@@ -1497,7 +1499,7 @@ can_interleave_actions(const pe_action_t *first, const pe_action_t *then)
  */
 static uint32_t
 update_noninterleaved_actions(pe_resource_t *instance, pe_action_t *first,
-                              const pe_action_t *then, const pe_node_t *node,
+                              const pe_action_t *then, const pcmk_node_t *node,
                               uint32_t flags, uint32_t filter, uint32_t type)
 {
     pe_action_t *instance_action = NULL;
@@ -1560,7 +1562,7 @@ update_noninterleaved_actions(pe_resource_t *instance, pe_action_t *first,
  */
 uint32_t
 pcmk__instance_update_ordered_actions(pe_action_t *first, pe_action_t *then,
-                                      const pe_node_t *node, uint32_t flags,
+                                      const pcmk_node_t *node, uint32_t flags,
                                       uint32_t filter, uint32_t type,
                                       pe_working_set_t *data_set)
 {
@@ -1610,7 +1612,7 @@ pcmk__instance_update_ordered_actions(pe_action_t *first, pe_action_t *then,
  */
 uint32_t
 pcmk__collective_action_flags(pe_action_t *action, const GList *instances,
-                              const pe_node_t *node)
+                              const pcmk_node_t *node)
 {
     bool any_runnable = false;
     const char *action_name = orig_action_name(action);
@@ -1622,7 +1624,7 @@ pcmk__collective_action_flags(pe_action_t *action, const GList *instances,
 
     for (const GList *iter = instances; iter != NULL; iter = iter->next) {
         const pe_resource_t *instance = iter->data;
-        const pe_node_t *instance_node = NULL;
+        const pcmk_node_t *instance_node = NULL;
         pe_action_t *instance_action = NULL;
         uint32_t instance_flags;
 

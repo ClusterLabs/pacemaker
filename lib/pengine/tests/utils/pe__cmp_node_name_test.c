@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,8 +15,8 @@
 struct pe_node_shared_s node1_details;
 struct pe_node_shared_s node2_details;
 
-pe_node_t node1 = {.details = &node1_details};
-pe_node_t node2 = {.details = &node2_details};
+pcmk_node_t node1 = { .details = &node1_details };
+pcmk_node_t node2 = { .details = &node2_details };
 
 static void
 nodes_equal(void **state)

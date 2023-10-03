@@ -969,7 +969,7 @@ static int
 ban_or_move(pcmk__output_t *out, pe_resource_t *rsc, const char *move_lifetime)
 {
     int rc = pcmk_rc_ok;
-    pe_node_t *current = NULL;
+    pcmk_node_t *current = NULL;
     unsigned int nactive = 0;
 
     CRM_CHECK(rsc != NULL, return EINVAL);
@@ -1025,7 +1025,7 @@ ban_or_move(pcmk__output_t *out, pe_resource_t *rsc, const char *move_lifetime)
 }
 
 static void
-cleanup(pcmk__output_t *out, pe_resource_t *rsc, pe_node_t *node)
+cleanup(pcmk__output_t *out, pe_resource_t *rsc, pcmk_node_t *node)
 {
     int rc = pcmk_rc_ok;
 
@@ -1055,7 +1055,7 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
     GList *after = NULL;
     GList *remaining = NULL;
     GList *ele = NULL;
-    pe_node_t *dest = NULL;
+    pcmk_node_t *dest = NULL;
     int rc = pcmk_rc_ok;
 
     if (!out->is_quiet(out)) {
@@ -1184,7 +1184,7 @@ refresh(pcmk__output_t *out)
     int attr_options = pcmk__node_attr_none;
 
     if (options.host_uname) {
-        pe_node_t *node = pe_find_node(data_set->nodes, options.host_uname);
+        pcmk_node_t *node = pe_find_node(data_set->nodes, options.host_uname);
 
         if (pe__is_guest_or_remote_node(node)) {
             node = pe__current_node(node->details->remote_rsc);
@@ -1221,7 +1221,7 @@ refresh(pcmk__output_t *out)
 }
 
 static void
-refresh_resource(pcmk__output_t *out, pe_resource_t *rsc, pe_node_t *node)
+refresh_resource(pcmk__output_t *out, pe_resource_t *rsc, pcmk_node_t *node)
 {
     int rc = pcmk_rc_ok;
 
@@ -1445,7 +1445,7 @@ main(int argc, char **argv)
 {
     xmlNode *cib_xml_copy = NULL;
     pe_resource_t *rsc = NULL;
-    pe_node_t *node = NULL;
+    pcmk_node_t *node = NULL;
     int rc = pcmk_rc_ok;
 
     GOptionGroup *output_group = NULL;
@@ -1916,7 +1916,7 @@ main(int argc, char **argv)
         case cmd_get_param: {
             unsigned int count = 0;
             GHashTable *params = NULL;
-            pe_node_t *current = rsc->fns->active_node(rsc, &count, NULL);
+            pcmk_node_t *current = rsc->fns->active_node(rsc, &count, NULL);
             bool free_params = true;
             const char* value = NULL;
 

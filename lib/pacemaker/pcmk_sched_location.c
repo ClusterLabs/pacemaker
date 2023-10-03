@@ -21,7 +21,7 @@
 
 static int
 get_node_score(const char *rule, const char *score, bool raw,
-               pe_node_t *node, pe_resource_t *rsc)
+               pcmk_node_t *node, pe_resource_t *rsc)
 {
     int score_f = 0;
 
@@ -130,7 +130,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
     if (do_and) {
         nodes = pcmk__copy_node_list(rsc->cluster->nodes, true);
         for (iter = nodes; iter != NULL; iter = iter->next) {
-            pe_node_t *node = iter->data;
+            pcmk_node_t *node = iter->data;
 
             node->weight = get_node_score(rule_id, score, raw_score, node, rsc);
         }
@@ -138,7 +138,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
 
     for (iter = rsc->cluster->nodes; iter != NULL; iter = iter->next) {
         int score_f = 0;
-        pe_node_t *node = iter->data;
+        pcmk_node_t *node = iter->data;
         pe_match_data_t match_data = {
             .re = re_match_data,
             .params = pe_rsc_params(rsc, node, rsc->cluster),
@@ -154,7 +154,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
         score_f = get_node_score(rule_id, score, raw_score, node, rsc);
 
         if (accept) {
-            pe_node_t *local = pe_find_node_id(nodes, node->details->id);
+            pcmk_node_t *local = pe_find_node_id(nodes, node->details->id);
 
             if ((local == NULL) && do_and) {
                 continue;
@@ -172,7 +172,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
 
         } else if (do_and && !accept) {
             // Remove it
-            pe_node_t *delete = pe_find_node_id(nodes, node->details->id);
+            pcmk_node_t *delete = pe_find_node_id(nodes, node->details->id);
 
             if (delete != NULL) {
                 nodes = g_list_remove(nodes, delete);
@@ -220,7 +220,7 @@ unpack_rsc_location(xmlNode *xml_obj, pe_resource_t *rsc, const char *role,
 
     if ((node != NULL) && (score != NULL)) {
         int score_i = char2score(score);
-        pe_node_t *match = pe_find_node(rsc->cluster->nodes, node);
+        pcmk_node_t *match = pe_find_node(rsc->cluster->nodes, node);
 
         if (!match) {
             return;
@@ -534,7 +534,7 @@ pcmk__unpack_location(xmlNode *xml_obj, pe_working_set_t *data_set)
  */
 pe__location_t *
 pcmk__new_location(const char *id, pe_resource_t *rsc,
-                   int node_score, const char *discover_mode, pe_node_t *node)
+                   int node_score, const char *discover_mode, pcmk_node_t *node)
 {
     pe__location_t *new_con = NULL;
 
@@ -574,7 +574,7 @@ pcmk__new_location(const char *id, pe_resource_t *rsc,
         }
 
         if (node != NULL) {
-            pe_node_t *copy = pe__copy_node(node);
+            pcmk_node_t *copy = pe__copy_node(node);
 
             copy->weight = node_score;
             new_con->node_list_rh = g_list_prepend(NULL, copy);
@@ -645,9 +645,9 @@ pcmk__apply_location(pe_resource_t *rsc, pe__location_t *location)
     for (GList *iter = location->node_list_rh;
          iter != NULL; iter = iter->next) {
 
-        pe_node_t *node = iter->data;
-        pe_node_t *allowed_node = g_hash_table_lookup(rsc->allowed_nodes,
-                                                      node->details->id);
+        pcmk_node_t *node = iter->data;
+        pcmk_node_t *allowed_node = g_hash_table_lookup(rsc->allowed_nodes,
+                                                        node->details->id);
 
         if (allowed_node == NULL) {
             pe_rsc_trace(rsc, "* = %d on %s",

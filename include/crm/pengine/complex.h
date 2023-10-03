@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,7 +12,7 @@
 
 #include <glib.h>                   // gboolean, GHashTable
 #include <libxml/tree.h>            // xmlNode
-#include <crm/pengine/pe_types.h>   // pe_node_t, pe_resource_t, etc.
+#include <crm/pengine/pe_types.h>   // pcmk_node_t, pe_resource_t, etc.
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,12 +20,12 @@ extern "C" {
 
 extern resource_object_functions_t resource_class_functions[];
 
-GHashTable *pe_rsc_params(pe_resource_t *rsc, const pe_node_t *node,
+GHashTable *pe_rsc_params(pe_resource_t *rsc, const pcmk_node_t *node,
                           pe_working_set_t *data_set);
 void get_meta_attributes(GHashTable * meta_hash, pe_resource_t *rsc,
-                         pe_node_t *node, pe_working_set_t *data_set);
+                         pcmk_node_t *node, pe_working_set_t *data_set);
 void get_rsc_attributes(GHashTable *meta_hash, const pe_resource_t *rsc,
-                        const pe_node_t *node, pe_working_set_t *data_set);
+                        const pcmk_node_t *node, pe_working_set_t *data_set);
 
 gboolean is_parent(pe_resource_t *child, pe_resource_t *rsc);
 pe_resource_t *uber_parent(pe_resource_t *rsc);

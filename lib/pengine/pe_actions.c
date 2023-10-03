@@ -53,7 +53,7 @@ lookup_singleton(pe_working_set_t *data_set, const char *action_uuid)
  */
 static pe_action_t *
 find_existing_action(const char *key, const pe_resource_t *rsc,
-                     const pe_node_t *node, const pe_working_set_t *data_set)
+                     const pcmk_node_t *node, const pe_working_set_t *data_set)
 {
     GList *matches = NULL;
     pe_action_t *action = NULL;
@@ -167,7 +167,7 @@ find_rsc_op_entry(const pe_resource_t *rsc, const char *key)
  */
 static pe_action_t *
 new_action(char *key, const char *task, pe_resource_t *rsc,
-           const pe_node_t *node, bool optional, bool for_graph,
+           const pcmk_node_t *node, bool optional, bool for_graph,
            pe_working_set_t *data_set)
 {
     pe_action_t *action = calloc(1, sizeof(pe_action_t));
@@ -679,7 +679,7 @@ find_min_interval_mon(pe_resource_t * rsc, gboolean include_disabled)
  * \return Newly allocated hash table with normalized action meta-attributes
  */
 GHashTable *
-pcmk__unpack_action_meta(pe_resource_t *rsc, const pe_node_t *node,
+pcmk__unpack_action_meta(pe_resource_t *rsc, const pcmk_node_t *node,
                          const char *action_name, guint interval_ms,
                          const xmlNode *action_config)
 {
@@ -1033,8 +1033,8 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
  */
 pe_action_t *
 custom_action(pe_resource_t *rsc, char *key, const char *task,
-              const pe_node_t *on_node, gboolean optional, gboolean save_action,
-              pe_working_set_t *data_set)
+              const pcmk_node_t *on_node, gboolean optional,
+              gboolean save_action, pe_working_set_t *data_set)
 {
     pe_action_t *action = NULL;
 
@@ -1106,7 +1106,7 @@ find_unfencing_devices(GList *candidates, GList *matches)
 }
 
 static int
-node_priority_fencing_delay(const pe_node_t *node,
+node_priority_fencing_delay(const pcmk_node_t *node,
                             const pe_working_set_t *data_set)
 {
     int member_count = 0;
@@ -1132,7 +1132,7 @@ node_priority_fencing_delay(const pe_node_t *node,
     }
 
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *n =  gIter->data;
+        pcmk_node_t *n = gIter->data;
 
         if (n->details->type != pcmk_node_variant_cluster) {
             continue;
@@ -1174,7 +1174,7 @@ node_priority_fencing_delay(const pe_node_t *node,
 }
 
 pe_action_t *
-pe_fence_op(pe_node_t *node, const char *op, bool optional,
+pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
             const char *reason, bool priority_delay, pe_working_set_t *data_set)
 {
     char *op_key = NULL;
@@ -1391,7 +1391,7 @@ get_complex_task(const pe_resource_t *rsc, const char *name)
  */
 pe_action_t *
 find_first_action(const GList *input, const char *uuid, const char *task,
-                  const pe_node_t *on_node)
+                  const pcmk_node_t *on_node)
 {
     CRM_CHECK(uuid || task, return NULL);
 
@@ -1419,7 +1419,7 @@ find_first_action(const GList *input, const char *uuid, const char *task,
 }
 
 GList *
-find_actions(GList *input, const char *key, const pe_node_t *on_node)
+find_actions(GList *input, const char *key, const pcmk_node_t *on_node)
 {
     GList *gIter = input;
     GList *result = NULL;
@@ -1453,7 +1453,7 @@ find_actions(GList *input, const char *key, const pe_node_t *on_node)
 }
 
 GList *
-find_actions_exact(GList *input, const char *key, const pe_node_t *on_node)
+find_actions_exact(GList *input, const char *key, const pcmk_node_t *on_node)
 {
     GList *result = NULL;
 
@@ -1492,7 +1492,7 @@ find_actions_exact(GList *input, const char *key, const pe_node_t *on_node)
  *       without a node will be assigned to node.
  */
 GList *
-pe__resource_actions(const pe_resource_t *rsc, const pe_node_t *node,
+pe__resource_actions(const pe_resource_t *rsc, const pcmk_node_t *node,
                      const char *task, bool require_node)
 {
     GList *result = NULL;
@@ -1567,7 +1567,7 @@ void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrit
  * \param[in]     node      Node to clear history on
  */
 void
-pe__clear_resource_history(pe_resource_t *rsc, const pe_node_t *node)
+pe__clear_resource_history(pe_resource_t *rsc, const pcmk_node_t *node)
 {
     CRM_ASSERT((rsc != NULL) && (node != NULL));
 

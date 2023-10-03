@@ -27,7 +27,7 @@
  *         or maintenance mode, otherwise false
  */
 bool
-pcmk__node_available(const pe_node_t *node, bool consider_score,
+pcmk__node_available(const pcmk_node_t *node, bool consider_score,
                      bool consider_guest)
 {
     if ((node == NULL) || (node->details == NULL) || !node->details->online
@@ -65,7 +65,7 @@ pcmk__copy_node_table(GHashTable *nodes)
 {
     GHashTable *new_table = NULL;
     GHashTableIter iter;
-    pe_node_t *node = NULL;
+    pcmk_node_t *node = NULL;
 
     if (nodes == NULL) {
         return NULL;
@@ -73,7 +73,7 @@ pcmk__copy_node_table(GHashTable *nodes)
     new_table = pcmk__strkey_table(NULL, free);
     g_hash_table_iter_init(&iter, nodes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-        pe_node_t *new_node = pe__copy_node(node);
+        pcmk_node_t *new_node = pe__copy_node(node);
 
         g_hash_table_insert(new_table, (gpointer) new_node->details->id,
                             new_node);
@@ -172,8 +172,8 @@ pcmk__copy_node_list(const GList *list, bool reset)
     GList *result = NULL;
 
     for (const GList *iter = list; iter != NULL; iter = iter->next) {
-        pe_node_t *new_node = NULL;
-        pe_node_t *this_node = iter->data;
+        pcmk_node_t *new_node = NULL;
+        pcmk_node_t *this_node = iter->data;
 
         new_node = pe__copy_node(this_node);
         if (reset) {
@@ -201,9 +201,9 @@ pcmk__copy_node_list(const GList *list, bool reset)
 static gint
 compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
 {
-    const pe_node_t *node1 = (const pe_node_t *) a;
-    const pe_node_t *node2 = (const pe_node_t *) b;
-    const pe_node_t *active = (const pe_node_t *) data;
+    const pcmk_node_t *node1 = (const pcmk_node_t *) a;
+    const pcmk_node_t *node2 = (const pcmk_node_t *) b;
+    const pcmk_node_t *active = (const pcmk_node_t *) data;
 
     int node1_score = -INFINITY;
     int node2_score = -INFINITY;
@@ -312,7 +312,7 @@ equal:
  * \return New head of sorted list
  */
 GList *
-pcmk__sort_nodes(GList *nodes, pe_node_t *active_node)
+pcmk__sort_nodes(GList *nodes, pcmk_node_t *active_node)
 {
     return g_list_sort_with_data(nodes, compare_nodes, active_node);
 }
@@ -330,7 +330,7 @@ bool
 pcmk__any_node_available(GHashTable *nodes)
 {
     GHashTableIter iter;
-    const pe_node_t *node = NULL;
+    const pcmk_node_t *node = NULL;
 
     if (nodes == NULL) {
         return false;
@@ -370,7 +370,7 @@ pcmk__apply_node_health(pe_working_set_t *data_set)
     }
 
     for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
-        pe_node_t *node = (pe_node_t *) iter->data;
+        pcmk_node_t *node = (pcmk_node_t *) iter->data;
         int health = pe__sum_node_health_scores(node, base_health);
 
         // An overall health score of 0 has no effect
@@ -413,8 +413,8 @@ pcmk__apply_node_health(pe_working_set_t *data_set)
  * \return Equivalent of \p node from \p rsc's parent's allowed nodes if any,
  *         otherwise NULL
  */
-pe_node_t *
-pcmk__top_allowed_node(const pe_resource_t *rsc, const pe_node_t *node)
+pcmk_node_t *
+pcmk__top_allowed_node(const pe_resource_t *rsc, const pcmk_node_t *node)
 {
     GHashTable *allowed_nodes = NULL;
 

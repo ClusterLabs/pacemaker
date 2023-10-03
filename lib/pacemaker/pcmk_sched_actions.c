@@ -29,7 +29,7 @@
  * \return Action flags that should be used for orderings
  */
 static uint32_t
-action_flags_for_ordering(pe_action_t *action, const pe_node_t *node)
+action_flags_for_ordering(pe_action_t *action, const pcmk_node_t *node)
 {
     bool runnable = false;
     uint32_t flags;
@@ -219,7 +219,7 @@ action_for_ordering(pe_action_t *action)
  */
 static inline uint32_t
 update(pe_resource_t *rsc, pe_action_t *first, pe_action_t *then,
-       const pe_node_t *node, uint32_t flags, uint32_t filter, uint32_t type,
+       const pcmk_node_t *node, uint32_t flags, uint32_t filter, uint32_t type,
        pe_working_set_t *data_set)
 {
     return rsc->cmds->update_ordered_actions(first, then, node, flags, filter,
@@ -252,7 +252,7 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
      * whole 'then' clone should restart if 'first' is restarted, so then->node
      * is needed.
      */
-    pe_node_t *node = then->node;
+    pcmk_node_t *node = then->node;
 
     if (pcmk_is_set(order->type, pcmk__ar_first_implies_same_node_then)) {
         /* For unfencing, only instances of 'then' on the same node as 'first'
@@ -537,8 +537,8 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
         pe_action_wrapper_t *other = (pe_action_wrapper_t *) lpc->data;
         pe_action_t *first = other->action;
 
-        pe_node_t *then_node = then->node;
-        pe_node_t *first_node = first->node;
+        pcmk_node_t *then_node = then->node;
+        pcmk_node_t *first_node = first->node;
 
         if ((first->rsc != NULL)
             && (first->rsc->variant == pcmk_rsc_variant_group)
@@ -834,7 +834,7 @@ handle_restart_ordering(pe_action_t *first, pe_action_t *then, uint32_t filter)
  */
 uint32_t
 pcmk__update_ordered_actions(pe_action_t *first, pe_action_t *then,
-                             const pe_node_t *node, uint32_t flags,
+                             const pcmk_node_t *node, uint32_t flags,
                              uint32_t filter, uint32_t type,
                              pe_working_set_t *data_set)
 {
@@ -1047,7 +1047,7 @@ pcmk__log_action(const char *pre_text, const pe_action_t *action, bool details)
  * \return Newly created shutdown action for \p node
  */
 pe_action_t *
-pcmk__new_shutdown_action(pe_node_t *node)
+pcmk__new_shutdown_action(pcmk_node_t *node)
 {
     char *shutdown_id = NULL;
     pe_action_t *shutdown_op = NULL;
@@ -1531,7 +1531,7 @@ only_sanitized_changed(const xmlNode *xml_op,
  */
 static void
 force_restart(pe_resource_t *rsc, const char *task, guint interval_ms,
-              pe_node_t *node)
+              pcmk_node_t *node)
 {
     char *key = pcmk__op_key(rsc->id, task, interval_ms);
     pe_action_t *required = custom_action(rsc, key, task, NULL, FALSE, TRUE,
@@ -1553,7 +1553,7 @@ static void
 schedule_reload(gpointer data, gpointer user_data)
 {
     pe_resource_t *rsc = data;
-    const pe_node_t *node = user_data;
+    const pcmk_node_t *node = user_data;
     pe_action_t *reload = NULL;
 
     // For collective resources, just call recursively for children
@@ -1615,7 +1615,7 @@ schedule_reload(gpointer data, gpointer user_data)
  * \return true if action configuration changed, otherwise false
  */
 bool
-pcmk__check_action_config(pe_resource_t *rsc, pe_node_t *node,
+pcmk__check_action_config(pe_resource_t *rsc, pcmk_node_t *node,
                           const xmlNode *xml_op)
 {
     guint interval_ms = 0;
@@ -1752,7 +1752,7 @@ rsc_history_as_list(const xmlNode *rsc_entry, int *start_index, int *stop_index)
  */
 static void
 process_rsc_history(const xmlNode *rsc_entry, pe_resource_t *rsc,
-                    pe_node_t *node)
+                    pcmk_node_t *node)
 {
     int offset = -1;
     int stop_index = 0;
@@ -1864,7 +1864,7 @@ process_rsc_history(const xmlNode *rsc_entry, pe_resource_t *rsc,
  * \param[in]     lrm_rscs  Node's <lrm_resources> from CIB status XML
  */
 static void
-process_node_history(pe_node_t *node, const xmlNode *lrm_rscs)
+process_node_history(pcmk_node_t *node, const xmlNode *lrm_rscs)
 {
     crm_trace("Processing node history for %s", pe__node_name(node));
     for (const xmlNode *rsc_entry = first_named_child(lrm_rscs,
@@ -1914,7 +1914,7 @@ pcmk__handle_rsc_config_changes(pe_working_set_t *data_set)
      * orphaned nodes and lets us eliminate some cases before searching the XML.
      */
     for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
-        pe_node_t *node = (pe_node_t *) iter->data;
+        pcmk_node_t *node = (pcmk_node_t *) iter->data;
 
         /* Don't bother checking actions for a node that can't run actions ...
          * unless it's in maintenance mode, in which case we still need to

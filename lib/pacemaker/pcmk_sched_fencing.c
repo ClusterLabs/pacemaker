@@ -26,7 +26,7 @@
  * \return TRUE if resource (or parent if an anonymous clone) is known
  */
 static bool
-rsc_is_known_on(const pe_resource_t *rsc, const pe_node_t *node)
+rsc_is_known_on(const pe_resource_t *rsc, const pcmk_node_t *node)
 {
    if (g_hash_table_lookup(rsc->known_on, node->details->id) != NULL) {
        return TRUE;
@@ -54,7 +54,7 @@ rsc_is_known_on(const pe_resource_t *rsc, const pe_node_t *node)
 static void
 order_start_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
 {
-    pe_node_t *target;
+    pcmk_node_t *target;
 
     CRM_CHECK(stonith_op && stonith_op->node, return);
     target = stonith_op->node;
@@ -114,7 +114,7 @@ order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
 
     pe_resource_t *top = uber_parent(rsc);
     pe_action_t *parent_stop = NULL;
-    pe_node_t *target;
+    pcmk_node_t *target;
 
     CRM_CHECK(stonith_op && stonith_op->node, return);
     target = stonith_op->node;
@@ -303,7 +303,7 @@ pcmk__order_vs_fence(pe_action_t *stonith_op, pe_working_set_t *data_set)
  * \param[in]     order     Ordering flags
  */
 void
-pcmk__order_vs_unfence(const pe_resource_t *rsc, pe_node_t *node,
+pcmk__order_vs_unfence(const pe_resource_t *rsc, pcmk_node_t *node,
                        pe_action_t *action,
                        enum pcmk__action_relation_flags order)
 {
@@ -346,7 +346,7 @@ pcmk__order_vs_unfence(const pe_resource_t *rsc, pe_node_t *node,
  * \param[in,out] node  Guest node to fence
  */
 void
-pcmk__fence_guest(pe_node_t *node)
+pcmk__fence_guest(pcmk_node_t *node)
 {
     pe_resource_t *container = NULL;
     pe_action_t *stop = NULL;
@@ -446,7 +446,7 @@ pcmk__fence_guest(pe_node_t *node)
  *         otherwise false
  */
 bool
-pcmk__node_unfenced(const pe_node_t *node)
+pcmk__node_unfenced(const pcmk_node_t *node)
 {
     const char *unfenced = pe_node_attribute_raw(node, CRM_ATTR_UNFENCED);
 
@@ -463,7 +463,7 @@ pcmk__node_unfenced(const pe_node_t *node)
 void
 pcmk__order_restart_vs_unfence(gpointer data, gpointer user_data)
 {
-    pe_node_t *node = (pe_node_t *) data;
+    pcmk_node_t *node = (pcmk_node_t *) data;
     pe_resource_t *rsc = (pe_resource_t *) user_data;
 
     pe_action_t *unfence = pe_fence_op(node, PCMK_ACTION_ON, true, NULL, false,

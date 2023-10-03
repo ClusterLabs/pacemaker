@@ -17,12 +17,14 @@
 
 #include "libpacemaker_private.h"
 
-static void stop_resource(pe_resource_t *rsc, pe_node_t *node, bool optional);
-static void start_resource(pe_resource_t *rsc, pe_node_t *node, bool optional);
-static void demote_resource(pe_resource_t *rsc, pe_node_t *node, bool optional);
-static void promote_resource(pe_resource_t *rsc, pe_node_t *node,
+static void stop_resource(pe_resource_t *rsc, pcmk_node_t *node, bool optional);
+static void start_resource(pe_resource_t *rsc, pcmk_node_t *node,
+                           bool optional);
+static void demote_resource(pe_resource_t *rsc, pcmk_node_t *node,
+                            bool optional);
+static void promote_resource(pe_resource_t *rsc, pcmk_node_t *node,
                              bool optional);
-static void assert_role_error(pe_resource_t *rsc, pe_node_t *node,
+static void assert_role_error(pe_resource_t *rsc, pcmk_node_t *node,
                               bool optional);
 
 #define RSC_ROLE_MAX    (pcmk_role_promoted + 1)
@@ -77,7 +79,7 @@ static enum rsc_role_e rsc_state_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
  * \param[in,out] node      Node where resource will be in its next role
  * \param[in]     optional  Whether scheduled actions should be optional
  */
-typedef void (*rsc_transition_fn)(pe_resource_t *rsc, pe_node_t *node,
+typedef void (*rsc_transition_fn)(pe_resource_t *rsc, pcmk_node_t *node,
                                   bool optional);
 
 static rsc_transition_fn rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
@@ -160,12 +162,13 @@ sorted_allowed_nodes(const pe_resource_t *rsc)
  *       roles or actions.
  */
 static bool
-assign_best_node(pe_resource_t *rsc, const pe_node_t *prefer, bool stop_if_fail)
+assign_best_node(pe_resource_t *rsc, const pcmk_node_t *prefer,
+                 bool stop_if_fail)
 {
     GList *nodes = NULL;
-    pe_node_t *chosen = NULL;
-    pe_node_t *best = NULL;
-    const pe_node_t *most_free_node = pcmk__ban_insufficient_capacity(rsc);
+    pcmk_node_t *chosen = NULL;
+    pcmk_node_t *best = NULL;
+    const pcmk_node_t *most_free_node = pcmk__ban_insufficient_capacity(rsc);
 
     if (prefer == NULL) {
         prefer = most_free_node;
@@ -179,7 +182,7 @@ assign_best_node(pe_resource_t *rsc, const pe_node_t *prefer, bool stop_if_fail)
     // Sort allowed nodes by score
     nodes = sorted_allowed_nodes(rsc);
     if (nodes != NULL) {
-        best = (pe_node_t *) nodes->data; // First node has best score
+        best = (pcmk_node_t *) nodes->data; // First node has best score
     }
 
     if ((prefer != NULL) && (nodes != NULL)) {
@@ -233,7 +236,7 @@ assign_best_node(pe_resource_t *rsc, const pe_node_t *prefer, bool stop_if_fail)
              * remaining unassigned instances to prefer a node that's already
              * running another instance.
              */
-            pe_node_t *running = pe__current_node(rsc);
+            pcmk_node_t *running = pe__current_node(rsc);
 
             if (running == NULL) {
                 // Nothing to do
@@ -247,7 +250,7 @@ assign_best_node(pe_resource_t *rsc, const pe_node_t *prefer, bool stop_if_fail)
                 int nodes_with_best_score = 1;
 
                 for (GList *iter = nodes->next; iter; iter = iter->next) {
-                    pe_node_t *allowed = (pe_node_t *) iter->data;
+                    pcmk_node_t *allowed = (pcmk_node_t *) iter->data;
 
                     if (allowed->weight != chosen->weight) {
                         // The nodes are sorted by score, so no more are equal
@@ -338,8 +341,8 @@ apply_this_with(pcmk__colocation_t *colocation, pe_resource_t *rsc)
 static void
 remote_connection_assigned(const pe_resource_t *connection)
 {
-    pe_node_t *remote_node = pe_find_node(connection->cluster->nodes,
-                                          connection->id);
+    pcmk_node_t *remote_node = pe_find_node(connection->cluster->nodes,
+                                            connection->id);
 
     CRM_CHECK(remote_node != NULL, return);
 
@@ -382,8 +385,8 @@ remote_connection_assigned(const pe_resource_t *connection)
  *       as calling pcmk__unassign_resource(); there are no side effects on
  *       roles or actions.
  */
-pe_node_t *
-pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer,
+pcmk_node_t *
+pcmk__primitive_assign(pe_resource_t *rsc, const pcmk_node_t *prefer,
                        bool stop_if_fail)
 {
     GList *this_with_colocations = NULL;
@@ -496,7 +499,7 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer,
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
         // Unmanaged resources stay on their current node
         const char *reason = NULL;
-        pe_node_t *assign_to = NULL;
+        pcmk_node_t *assign_to = NULL;
 
         pe__set_next_role(rsc, rsc->role, "unmanaged");
         assign_to = pe__current_node(rsc);
@@ -551,7 +554,7 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer,
  * \return Role that resource would have after scheduled actions are taken
  */
 static void
-schedule_restart_actions(pe_resource_t *rsc, pe_node_t *current,
+schedule_restart_actions(pe_resource_t *rsc, pcmk_node_t *current,
                          bool need_stop, bool need_promote)
 {
     enum rsc_role_e role = rsc->role;
@@ -681,7 +684,7 @@ pcmk__primitive_create_actions(pe_resource_t *rsc)
     bool allow_migrate = false;
     bool multiply_active = false;
 
-    pe_node_t *current = NULL;
+    pcmk_node_t *current = NULL;
     unsigned int num_all_active = 0;
     unsigned int num_clean_active = 0;
     const char *next_role_source = NULL;
@@ -846,7 +849,7 @@ static void
 rsc_avoids_remote_nodes(const pe_resource_t *rsc)
 {
     GHashTableIter iter;
-    pe_node_t *node = NULL;
+    pcmk_node_t *node = NULL;
 
     g_hash_table_iter_init(&iter, rsc->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
@@ -1007,7 +1010,7 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
              * colocating the resource with the container resource.
              */
             for (GList *item = allowed_nodes; item; item = item->next) {
-                pe_node_t *node = item->data;
+                pcmk_node_t *node = item->data;
 
                 if (node->details->remote_rsc != remote_rsc) {
                     node->weight = -INFINITY;
@@ -1182,7 +1185,7 @@ pcmk__primitive_with_colocations(const pe_resource_t *rsc,
  * \return Flags appropriate to \p action on \p node
  */
 uint32_t
-pcmk__primitive_action_flags(pe_action_t *action, const pe_node_t *node)
+pcmk__primitive_action_flags(pe_action_t *action, const pcmk_node_t *node)
 {
     CRM_ASSERT(action != NULL);
     return (uint32_t) action->flags;
@@ -1202,7 +1205,7 @@ pcmk__primitive_action_flags(pe_action_t *action, const pe_node_t *node)
  *       been unpacked and resources have been assigned to nodes.
  */
 static bool
-is_expected_node(const pe_resource_t *rsc, const pe_node_t *node)
+is_expected_node(const pe_resource_t *rsc, const pcmk_node_t *node)
 {
     return pcmk_all_flags_set(rsc->flags,
                               pcmk_rsc_stop_unexpected|pcmk_rsc_restarting)
@@ -1219,10 +1222,10 @@ is_expected_node(const pe_resource_t *rsc, const pe_node_t *node)
  * \param[in]     optional  Whether actions should be optional
  */
 static void
-stop_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
+stop_resource(pe_resource_t *rsc, pcmk_node_t *node, bool optional)
 {
     for (GList *iter = rsc->running_on; iter != NULL; iter = iter->next) {
-        pe_node_t *current = (pe_node_t *) iter->data;
+        pcmk_node_t *current = (pcmk_node_t *) iter->data;
         pe_action_t *stop = NULL;
 
         if (is_expected_node(rsc, current)) {
@@ -1300,7 +1303,7 @@ stop_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
  * \param[in]     optional  Whether actions should be optional
  */
 static void
-start_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
+start_resource(pe_resource_t *rsc, pcmk_node_t *node, bool optional)
 {
     pe_action_t *start = NULL;
 
@@ -1338,7 +1341,7 @@ start_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
  * \param[in]     optional  Whether actions should be optional
  */
 static void
-promote_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
+promote_resource(pe_resource_t *rsc, pcmk_node_t *node, bool optional)
 {
     GList *iter = NULL;
     GList *action_list = NULL;
@@ -1397,7 +1400,7 @@ promote_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
  * \param[in]     optional  Whether actions should be optional
  */
 static void
-demote_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
+demote_resource(pe_resource_t *rsc, pcmk_node_t *node, bool optional)
 {
     /* Since this will only be called for a primitive (possibly as an instance
      * of a collective resource), the resource is multiply active if it is
@@ -1405,7 +1408,7 @@ demote_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
      * part of recovery, regardless of which one is the desired node.
      */
     for (GList *iter = rsc->running_on; iter != NULL; iter = iter->next) {
-        pe_node_t *current = (pe_node_t *) iter->data;
+        pcmk_node_t *current = (pcmk_node_t *) iter->data;
 
         if (is_expected_node(rsc, current)) {
             pe_rsc_trace(rsc,
@@ -1422,7 +1425,7 @@ demote_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
 }
 
 static void
-assert_role_error(pe_resource_t *rsc, pe_node_t *node, bool optional)
+assert_role_error(pe_resource_t *rsc, pcmk_node_t *node, bool optional)
 {
     CRM_ASSERT(false);
 }
@@ -1436,7 +1439,8 @@ assert_role_error(pe_resource_t *rsc, pe_node_t *node, bool optional)
  * \param[in]     optional  Whether clean-up should be optional
  */
 void
-pcmk__schedule_cleanup(pe_resource_t *rsc, const pe_node_t *node, bool optional)
+pcmk__schedule_cleanup(pe_resource_t *rsc, const pcmk_node_t *node,
+                       bool optional)
 {
     /* If the cleanup is required, its orderings are optional, because they're
      * relevant only if both actions are required. Conversely, if the cleanup is
@@ -1553,7 +1557,7 @@ pcmk__primitive_add_utilization(const pe_resource_t *rsc,
  * \return Epoch time corresponding to shutdown attribute if set or now if not
  */
 static time_t
-shutdown_time(pe_node_t *node)
+shutdown_time(pcmk_node_t *node)
 {
     const char *shutdown = pe_node_attribute_raw(node, XML_CIB_ATTR_SHUTDOWN);
     time_t result = 0;
@@ -1578,7 +1582,7 @@ shutdown_time(pe_node_t *node)
 static void
 ban_if_not_locked(gpointer data, gpointer user_data)
 {
-    const pe_node_t *node = (const pe_node_t *) data;
+    const pcmk_node_t *node = (const pcmk_node_t *) data;
     pe_resource_t *rsc = (pe_resource_t *) user_data;
 
     if (strcmp(node->details->uname, rsc->lock_node->details->uname) != 0) {
@@ -1621,7 +1625,7 @@ pcmk__primitive_shutdown_lock(pe_resource_t *rsc)
 
     // Only a resource active on exactly one node can be locked
     } else if (pcmk__list_of_1(rsc->running_on)) {
-        pe_node_t *node = rsc->running_on->data;
+        pcmk_node_t *node = rsc->running_on->data;
 
         if (node->details->shutdown) {
             if (node->details->unclean) {

@@ -109,7 +109,7 @@ constraints_for_ticket(pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
                                   rsc->cluster);
 
                 for (iter = rsc->running_on; iter != NULL; iter = iter->next) {
-                    pe_fence_node(rsc->cluster, (pe_node_t *) iter->data,
+                    pe_fence_node(rsc->cluster, (pcmk_node_t *) iter->data,
                                   "deadman ticket was lost", FALSE);
                 }
                 break;

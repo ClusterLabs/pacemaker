@@ -108,7 +108,7 @@ static resource_alloc_functions_t assignment_methods[] = {
  * \return true if agent for \p rsc changed, otherwise false
  */
 bool
-pcmk__rsc_agent_changed(pe_resource_t *rsc, pe_node_t *node,
+pcmk__rsc_agent_changed(pe_resource_t *rsc, pcmk_node_t *node,
                         const xmlNode *rsc_entry, bool active_on_node)
 {
     bool changed = false;
@@ -314,8 +314,8 @@ pcmk__noop_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml)
 void
 pcmk__output_resource_actions(pe_resource_t *rsc)
 {
-    pe_node_t *next = NULL;
-    pe_node_t *current = NULL;
+    pcmk_node_t *next = NULL;
+    pcmk_node_t *current = NULL;
     pcmk__output_t *out = NULL;
 
     CRM_ASSERT(rsc != NULL);
@@ -357,7 +357,7 @@ pcmk__output_resource_actions(pe_resource_t *rsc)
  * \param[in]     rsc   Resource to add
  */
 static inline void
-add_assigned_resource(pe_node_t *node, pe_resource_t *rsc)
+add_assigned_resource(pcmk_node_t *node, pe_resource_t *rsc)
 {
     node->details->allocated_rsc = g_list_prepend(node->details->allocated_rsc,
                                                   rsc);
@@ -399,7 +399,7 @@ add_assigned_resource(pe_node_t *node, pe_resource_t *rsc)
  *       roles or actions.
  */
 bool
-pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force,
+pcmk__assign_resource(pe_resource_t *rsc, pcmk_node_t *node, bool force,
                       bool stop_if_fail)
 {
     bool changed = false;
@@ -522,7 +522,7 @@ pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force,
 void
 pcmk__unassign_resource(pe_resource_t *rsc)
 {
-    pe_node_t *old = rsc->allocated_to;
+    pcmk_node_t *old = rsc->allocated_to;
 
     if (old == NULL) {
         crm_info("Unassigning %s", rsc->id);
@@ -538,7 +538,7 @@ pcmk__unassign_resource(pe_resource_t *rsc)
         }
         rsc->allocated_to = NULL;
 
-        /* We're going to free the pe_node_t, but its details member is shared
+        /* We're going to free the pcmk_node_t, but its details member is shared
          * and will remain, so update that appropriately first.
          */
         old->details->allocated_rsc = g_list_remove(old->details->allocated_rsc,
@@ -566,7 +566,7 @@ pcmk__unassign_resource(pe_resource_t *rsc)
  * \return true if the migration threshold has been reached, false otherwise
  */
 bool
-pcmk__threshold_reached(pe_resource_t *rsc, const pe_node_t *node,
+pcmk__threshold_reached(pe_resource_t *rsc, const pcmk_node_t *node,
                         pe_resource_t **failed)
 {
     int fail_count, remaining_tries;
@@ -626,9 +626,9 @@ pcmk__threshold_reached(pe_resource_t *rsc, const pe_node_t *node,
  * \return Node's score, or -INFINITY if not found
  */
 static int
-get_node_score(const pe_node_t *node, GHashTable *nodes)
+get_node_score(const pcmk_node_t *node, GHashTable *nodes)
 {
-    pe_node_t *found_node = NULL;
+    pcmk_node_t *found_node = NULL;
 
     if ((node != NULL) && (nodes != NULL)) {
         found_node = g_hash_table_lookup(nodes, node->details->id);
@@ -661,8 +661,8 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
     int rc = 0;
     int r1_score = -INFINITY;
     int r2_score = -INFINITY;
-    pe_node_t *r1_node = NULL;
-    pe_node_t *r2_node = NULL;
+    pcmk_node_t *r1_node = NULL;
+    pcmk_node_t *r2_node = NULL;
     GHashTable *r1_nodes = NULL;
     GHashTable *r2_nodes = NULL;
     const char *reason = NULL;
@@ -720,7 +720,7 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
     // Otherwise a higher score on any node will do
     reason = "score";
     for (const GList *iter = nodes; iter != NULL; iter = iter->next) {
-        const pe_node_t *node = (const pe_node_t *) iter->data;
+        const pcmk_node_t *node = (const pcmk_node_t *) iter->data;
 
         r1_score = get_node_score(node, r1_nodes);
         r2_score = get_node_score(node, r2_nodes);

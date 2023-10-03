@@ -18,7 +18,7 @@
 xmlNode *input = NULL;
 pe_working_set_t *data_set = NULL;
 
-pe_node_t *cluster01, *cluster02, *httpd_bundle_0;
+pcmk_node_t *cluster01, *cluster02, *httpd_bundle_0;
 pe_resource_t *exim_group, *inactive_group, *promotable_clone, *inactive_clone;
 pe_resource_t *httpd_bundle, *mysql_clone_group;
 

@@ -1126,7 +1126,7 @@ pcmk__disable_invalid_orderings(pe_working_set_t *data_set)
  * \param[in]     shutdown_op  Shutdown action for node
  */
 void
-pcmk__order_stops_before_shutdown(pe_node_t *node, pe_action_t *shutdown_op)
+pcmk__order_stops_before_shutdown(pcmk_node_t *node, pe_action_t *shutdown_op)
 {
     for (GList *iter = node->details->data_set->actions;
          iter != NULL; iter = iter->next) {

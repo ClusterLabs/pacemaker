@@ -34,11 +34,11 @@
  *       as calling pcmk__unassign_resource(); there are no side effects on
  *       roles or actions.
  */
-pe_node_t *
-pcmk__group_assign(pe_resource_t *rsc, const pe_node_t *prefer,
+pcmk_node_t *
+pcmk__group_assign(pe_resource_t *rsc, const pcmk_node_t *prefer,
                    bool stop_if_fail)
 {
-    pe_node_t *first_assigned_node = NULL;
+    pcmk_node_t *first_assigned_node = NULL;
     pe_resource_t *first_member = NULL;
 
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_group));
@@ -68,7 +68,7 @@ pcmk__group_assign(pe_resource_t *rsc, const pe_node_t *prefer,
 
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
         pe_resource_t *member = (pe_resource_t *) iter->data;
-        pe_node_t *node = NULL;
+        pcmk_node_t *node = NULL;
 
         pe_rsc_trace(rsc, "Assigning group %s member %s",
                      rsc->id, member->id);
@@ -484,7 +484,7 @@ pcmk__group_apply_coloc_score(pe_resource_t *dependent,
  * \return Flags appropriate to \p action on \p node
  */
 uint32_t
-pcmk__group_action_flags(pe_action_t *action, const pe_node_t *node)
+pcmk__group_action_flags(pe_action_t *action, const pcmk_node_t *node)
 {
     // Default flags for a group action
     uint32_t flags = pcmk_action_optional
@@ -568,7 +568,7 @@ pcmk__group_action_flags(pe_action_t *action, const pe_node_t *node)
  */
 uint32_t
 pcmk__group_update_ordered_actions(pe_action_t *first, pe_action_t *then,
-                                   const pe_node_t *node, uint32_t flags,
+                                   const pcmk_node_t *node, uint32_t flags,
                                    uint32_t filter, uint32_t type,
                                    pe_working_set_t *data_set)
 {

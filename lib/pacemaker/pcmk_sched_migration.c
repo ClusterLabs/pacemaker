@@ -25,8 +25,8 @@
  * \param[in]     target  Node to add as migration target
  */
 static void
-add_migration_meta(pe_action_t *action, const pe_node_t *source,
-                   const pe_node_t *target)
+add_migration_meta(pe_action_t *action, const pcmk_node_t *source,
+                   const pcmk_node_t *target)
 {
     add_hash_param(action->meta, XML_LRM_ATTR_MIGRATE_SOURCE,
                    source->details->uname);
@@ -43,7 +43,7 @@ add_migration_meta(pe_action_t *action, const pe_node_t *source,
  * \param[in]     current  Node that resource is originally active on
  */
 void
-pcmk__create_migration_actions(pe_resource_t *rsc, const pe_node_t *current)
+pcmk__create_migration_actions(pe_resource_t *rsc, const pcmk_node_t *current)
 {
     pe_action_t *migrate_to = NULL;
     pe_action_t *migrate_from = NULL;
@@ -153,7 +153,7 @@ pcmk__create_migration_actions(pe_resource_t *rsc, const pe_node_t *current)
 void
 pcmk__abort_dangling_migration(void *data, void *user_data)
 {
-    const pe_node_t *dangling_source = (const pe_node_t *) data;
+    const pcmk_node_t *dangling_source = (const pcmk_node_t *) data;
     pe_resource_t *rsc = (pe_resource_t *) user_data;
 
     pe_action_t *stop = NULL;
@@ -181,7 +181,7 @@ pcmk__abort_dangling_migration(void *data, void *user_data)
  * \return true if \p rsc can migrate, otherwise false
  */
 bool
-pcmk__rsc_can_migrate(const pe_resource_t *rsc, const pe_node_t *current)
+pcmk__rsc_can_migrate(const pe_resource_t *rsc, const pcmk_node_t *current)
 {
     CRM_CHECK(rsc != NULL, return false);
 

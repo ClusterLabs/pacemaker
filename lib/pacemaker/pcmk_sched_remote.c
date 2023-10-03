@@ -84,10 +84,10 @@ order_action_then_stop(pe_action_t *first_action, pe_resource_t *then_rsc,
 }
 
 static enum remote_connection_state
-get_remote_node_state(const pe_node_t *node)
+get_remote_node_state(const pcmk_node_t *node)
 {
     const pe_resource_t *remote_rsc = NULL;
-    const pe_node_t *cluster_node = NULL;
+    const pcmk_node_t *cluster_node = NULL;
 
     CRM_ASSERT(node != NULL);
 
@@ -266,7 +266,7 @@ apply_remote_ordering(pe_action_t *action)
                                         pcmk__ar_first_implies_then);
 
             } else {
-                pe_node_t *cluster_node = pe__current_node(remote_rsc);
+                pcmk_node_t *cluster_node = pe__current_node(remote_rsc);
 
                 if ((task == pcmk_action_monitor) && (state == remote_state_failed)) {
                     /* We would only be here if we do not know the state of the
@@ -503,7 +503,7 @@ pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
  * \return true if \p node is a failed remote node, false otherwise
  */
 bool
-pcmk__is_failed_remote_node(const pe_node_t *node)
+pcmk__is_failed_remote_node(const pcmk_node_t *node)
 {
     return pe__is_remote_node(node) && (node->details->remote_rsc != NULL)
            && (get_remote_node_state(node) == remote_state_failed);
@@ -520,7 +520,8 @@ pcmk__is_failed_remote_node(const pe_node_t *node)
  *         resource, otherwise false
  */
 bool
-pcmk__rsc_corresponds_to_guest(const pe_resource_t *rsc, const pe_node_t *node)
+pcmk__rsc_corresponds_to_guest(const pe_resource_t *rsc,
+                               const pcmk_node_t *node)
 {
     return (rsc != NULL) && (rsc->fillers != NULL) && (node != NULL)
             && (node->details->remote_rsc != NULL)
@@ -541,11 +542,11 @@ pcmk__rsc_corresponds_to_guest(const pe_resource_t *rsc, const pe_node_t *node)
  * \return Connection host that action should be routed through if remote,
  *         otherwise NULL
  */
-pe_node_t *
+pcmk_node_t *
 pcmk__connection_host_for_action(const pe_action_t *action)
 {
-    pe_node_t *began_on = NULL;
-    pe_node_t *ended_on = NULL;
+    pcmk_node_t *began_on = NULL;
+    pcmk_node_t *ended_on = NULL;
     bool partial_migration = false;
     const char *task = action->task;
 
@@ -681,8 +682,8 @@ pcmk__substitute_remote_addr(pe_resource_t *rsc, GHashTable *params)
 void
 pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pe_action_t *action)
 {
-    const pe_node_t *guest = action->node;
-    const pe_node_t *host = NULL;
+    const pcmk_node_t *guest = action->node;
+    const pcmk_node_t *host = NULL;
     enum action_tasks task;
 
     if (!pe__is_guest_node(guest)) {

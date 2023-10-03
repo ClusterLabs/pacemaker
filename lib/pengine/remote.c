@@ -22,7 +22,7 @@ pe__resource_is_remote_conn(const pe_resource_t *rsc)
 }
 
 bool
-pe__is_remote_node(const pe_node_t *node)
+pe__is_remote_node(const pcmk_node_t *node)
 {
     return (node != NULL) && (node->details->type == pcmk_node_variant_remote)
            && ((node->details->remote_rsc == NULL)
@@ -30,7 +30,7 @@ pe__is_remote_node(const pe_node_t *node)
 }
 
 bool
-pe__is_guest_node(const pe_node_t *node)
+pe__is_guest_node(const pcmk_node_t *node)
 {
     return (node != NULL) && (node->details->type == pcmk_node_variant_remote)
            && (node->details->remote_rsc != NULL)
@@ -38,13 +38,13 @@ pe__is_guest_node(const pe_node_t *node)
 }
 
 bool
-pe__is_guest_or_remote_node(const pe_node_t *node)
+pe__is_guest_or_remote_node(const pcmk_node_t *node)
 {
     return (node != NULL) && (node->details->type == pcmk_node_variant_remote);
 }
 
 bool
-pe__is_bundle_node(const pe_node_t *node)
+pe__is_bundle_node(const pcmk_node_t *node)
 {
     return pe__is_guest_node(node)
            && pe_rsc_is_bundled(node->details->remote_rsc);
@@ -117,8 +117,9 @@ xml_contains_remote_node(xmlNode *xml)
  * \param[in,out] user_data  Pointer to pass to helper function
  */
 void
-pe_foreach_guest_node(const pe_working_set_t *data_set, const pe_node_t *host,
-                      void (*helper)(const pe_node_t*, void*), void *user_data)
+pe_foreach_guest_node(const pe_working_set_t *data_set, const pcmk_node_t *host,
+                      void (*helper)(const pcmk_node_t*, void*),
+                      void *user_data)
 {
     GList *iter;
 
@@ -130,7 +131,7 @@ pe_foreach_guest_node(const pe_working_set_t *data_set, const pe_node_t *host,
         pe_resource_t *rsc = (pe_resource_t *) iter->data;
 
         if (rsc->is_remote_node && (rsc->container != NULL)) {
-            pe_node_t *guest_node = pe_find_node(data_set->nodes, rsc->id);
+            pcmk_node_t *guest_node = pe_find_node(data_set->nodes, rsc->id);
 
             if (guest_node) {
                 (*helper)(guest_node, user_data);
@@ -215,13 +216,13 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
 struct check_op {
     const xmlNode *rsc_op; // History entry XML
     pe_resource_t *rsc;    // Known resource corresponding to history entry
-    pe_node_t *node; // Known node corresponding to history entry
+    pcmk_node_t *node; // Known node corresponding to history entry
     enum pcmk__check_parameters check_type; // What needs checking
 };
 
 void
 pe__add_param_check(const xmlNode *rsc_op, pe_resource_t *rsc,
-                    pe_node_t *node, enum pcmk__check_parameters flag,
+                    pcmk_node_t *node, enum pcmk__check_parameters flag,
                     pe_working_set_t *data_set)
 {
     struct check_op *check_op = NULL;
@@ -248,7 +249,7 @@ pe__add_param_check(const xmlNode *rsc_op, pe_resource_t *rsc,
  */
 void
 pe__foreach_param_check(pe_working_set_t *data_set,
-                       void (*cb)(pe_resource_t*, pe_node_t*, const xmlNode*,
+                       void (*cb)(pe_resource_t*, pcmk_node_t*, const xmlNode*,
                                   enum pcmk__check_parameters))
 {
     CRM_CHECK(data_set && cb, return);

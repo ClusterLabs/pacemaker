@@ -26,10 +26,10 @@
  */
 static void
 add_expected_result(pe_action_t *probe, const pe_resource_t *rsc,
-                    const pe_node_t *node)
+                    const pcmk_node_t *node)
 {
     // Check whether resource is currently active on node
-    pe_node_t *running = pe_find_node_id(rsc->running_on, node->details->id);
+    pcmk_node_t *running = pe_find_node_id(rsc->running_on, node->details->id);
 
     // The expected result is what we think the resource's current state is
     if (running == NULL) {
@@ -50,7 +50,7 @@ add_expected_result(pe_action_t *probe, const pe_resource_t *rsc,
  * \return true if any probe was created, otherwise false
  */
 bool
-pcmk__probe_resource_list(GList *rscs, pe_node_t *node)
+pcmk__probe_resource_list(GList *rscs, pcmk_node_t *node)
 {
     bool any_created = false;
 
@@ -96,7 +96,7 @@ probe_then_start(pe_resource_t *rsc1, pe_resource_t *rsc2)
  * \return true if guest resource will likely stop, otherwise false
  */
 static bool
-guest_resource_will_stop(const pe_node_t *node)
+guest_resource_will_stop(const pcmk_node_t *node)
 {
     const pe_resource_t *guest_rsc = node->details->remote_rsc->container;
 
@@ -125,7 +125,7 @@ guest_resource_will_stop(const pe_node_t *node)
  * \return Newly created probe action
  */
 static pe_action_t *
-probe_action(pe_resource_t *rsc, pe_node_t *node)
+probe_action(pe_resource_t *rsc, pcmk_node_t *node)
 {
     pe_action_t *probe = NULL;
     char *key = pcmk__op_key(rsc->id, PCMK_ACTION_MONITOR, 0);
@@ -154,11 +154,11 @@ probe_action(pe_resource_t *rsc, pe_node_t *node)
  * \return true if any probe was created, otherwise false
  */
 bool
-pcmk__probe_rsc_on_node(pe_resource_t *rsc, pe_node_t *node)
+pcmk__probe_rsc_on_node(pe_resource_t *rsc, pcmk_node_t *node)
 {
     uint32_t flags = pcmk__ar_ordered;
     pe_action_t *probe = NULL;
-    pe_node_t *allowed = NULL;
+    pcmk_node_t *allowed = NULL;
     pe_resource_t *top = uber_parent(rsc);
     const char *reason = NULL;
 
@@ -860,7 +860,7 @@ pcmk__schedule_probes(pe_working_set_t *data_set)
 {
     // Schedule probes on each node in the cluster as needed
     for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
-        pe_node_t *node = (pe_node_t *) iter->data;
+        pcmk_node_t *node = (pcmk_node_t *) iter->data;
         const char *probed = NULL;
 
         if (!node->details->online) { // Don't probe offline nodes

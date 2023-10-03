@@ -66,7 +66,7 @@ cli_resource_print_cts(pe_resource_t * rsc, pcmk__output_t *out)
     const char *rtype = crm_element_value(rsc->xml, XML_ATTR_TYPE);
     const char *rprov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
     const char *rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-    pe_node_t *node = pe__current_node(rsc);
+    pcmk_node_t *node = pe__current_node(rsc);
 
     if (pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         needs_quorum = FALSE;
@@ -589,13 +589,13 @@ resource_search_list_xml(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("resource-reasons-list", "GList *", "pe_resource_t *",
-                  "pe_node_t *")
+                  "pcmk_node_t *")
 static int
 resource_reasons_list_default(pcmk__output_t *out, va_list args)
 {
     GList *resources = va_arg(args, GList *);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    pe_node_t *node = va_arg(args, pe_node_t *);
+    pcmk_node_t *node = va_arg(args, pcmk_node_t *);
 
     const char *host_uname = (node == NULL)? NULL : node->details->uname;
 
@@ -671,13 +671,13 @@ resource_reasons_list_default(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("resource-reasons-list", "GList *", "pe_resource_t *",
-                  "pe_node_t *")
+                  "pcmk_node_t *")
 static int
 resource_reasons_list_xml(pcmk__output_t *out, va_list args)
 {
     GList *resources = va_arg(args, GList *);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    pe_node_t *node = va_arg(args, pe_node_t *);
+    pcmk_node_t *node = va_arg(args, pcmk_node_t *);
 
     const char *host_uname = (node == NULL)? NULL : node->details->uname;
 

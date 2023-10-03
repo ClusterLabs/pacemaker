@@ -1210,7 +1210,7 @@ pcmk__colocation_affects(const pe_resource_t *dependent,
          * colocation constraint has been violated.
          */
 
-        const pe_node_t *primary_node = primary->allocated_to;
+        const pcmk_node_t *primary_node = primary->allocated_to;
 
         if (dependent->allocated_to == NULL) {
             crm_trace("Skipping colocation '%s': %s will not run anywhere",
@@ -1284,7 +1284,7 @@ pcmk__apply_coloc_to_scores(pe_resource_t *dependent,
     const char *value = NULL;
     GHashTable *work = NULL;
     GHashTableIter iter;
-    pe_node_t *node = NULL;
+    pcmk_node_t *node = NULL;
 
     if (primary->allocated_to != NULL) {
         value = pcmk__colocation_node_attr(primary->allocated_to, attr,
@@ -1442,7 +1442,7 @@ best_node_score_matching_attr(const pe_resource_t *rsc, const char *attr,
                               const char *value)
 {
     GHashTableIter iter;
-    pe_node_t *node = NULL;
+    pcmk_node_t *node = NULL;
     int best_score = -INFINITY;
     const char *best_node = NULL;
 
@@ -1485,7 +1485,7 @@ static bool
 allowed_on_one(const pe_resource_t *rsc)
 {
     GHashTableIter iter;
-    pe_node_t *allowed_node = NULL;
+    pcmk_node_t *allowed_node = NULL;
     int allowed_nodes = 0;
 
     g_hash_table_iter_init(&iter, rsc->allowed_nodes);
@@ -1526,7 +1526,7 @@ add_node_scores_matching_attr(GHashTable *nodes,
                               float factor, bool only_positive)
 {
     GHashTableIter iter;
-    pe_node_t *node = NULL;
+    pcmk_node_t *node = NULL;
     const char *attr = colocation->node_attribute;
 
     // Iterate through each node
@@ -1759,7 +1759,7 @@ pcmk__add_colocated_node_scores(pe_resource_t *source_rsc,
 
 
     if (pcmk_is_set(flags, pcmk__coloc_select_nonnegative)) {
-        pe_node_t *node = NULL;
+        pcmk_node_t *node = NULL;
         GHashTableIter iter;
 
         g_hash_table_iter_init(&iter, work);
@@ -1835,14 +1835,14 @@ pcmk__colocation_intersect_nodes(pe_resource_t *dependent,
                                  const GList *primary_nodes, bool merge_scores)
 {
     GHashTableIter iter;
-    pe_node_t *dependent_node = NULL;
+    pcmk_node_t *dependent_node = NULL;
 
     CRM_ASSERT((dependent != NULL) && (primary != NULL)
                && (colocation != NULL));
 
     g_hash_table_iter_init(&iter, dependent->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &dependent_node)) {
-        const pe_node_t *primary_node = NULL;
+        const pcmk_node_t *primary_node = NULL;
 
         primary_node = pe_find_node_id(primary_nodes,
                                        dependent_node->details->id);

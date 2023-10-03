@@ -217,7 +217,7 @@ typedef struct pe_action_s action_t;
 //!< \deprecated Use pe_action_wrapper_t instead
 typedef struct pe_action_wrapper_s action_wrapper_t;
 
-//!< \deprecated Use pe_node_t instead
+//!< \deprecated Use pcmk_node_t instead
 typedef struct pe_node_s node_t;
 
 //!< \deprecated Use enum pe_quorum_policy instead
