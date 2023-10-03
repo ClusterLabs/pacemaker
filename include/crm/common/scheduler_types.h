@@ -29,6 +29,9 @@ typedef struct pe_resource_s pcmk_resource_t;
 //! Action object
 typedef struct pe_action_s pcmk_action_t;
 
+//! Scheduler object
+typedef struct pe_working_set_s pcmk_scheduler_t;
+
 #ifdef __cplusplus
 }
 #endif
