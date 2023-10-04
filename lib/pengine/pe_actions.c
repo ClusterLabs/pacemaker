@@ -945,7 +945,6 @@ unpack_operation(pcmk_action_t *action, const xmlNode *xml_obj,
                              "operation '%s' to 'stop' because 'fence' is not "
                              "valid when fencing is disabled", action->uuid);
             action->on_fail = pcmk_on_fail_stop;
-            action->fail_role = pcmk_role_stopped;
             value = "stop resource";
         }
 
@@ -964,7 +963,6 @@ unpack_operation(pcmk_action_t *action, const xmlNode *xml_obj,
 
     } else if (pcmk__str_eq(value, "stop", pcmk__str_casei)) {
         action->on_fail = pcmk_on_fail_stop;
-        action->fail_role = pcmk_role_stopped;
         value = "stop resource";
 
     } else if (pcmk__str_eq(value, "restart", pcmk__str_casei)) {
@@ -1012,7 +1010,6 @@ unpack_operation(pcmk_action_t *action, const xmlNode *xml_obj,
 
         if (!pcmk_is_set(action->rsc->flags, pcmk_rsc_managed)) {
             action->on_fail = pcmk_on_fail_stop;
-            action->fail_role = pcmk_role_stopped;
             value = "stop unmanaged remote node (enforcing default)";
 
         } else {
@@ -1021,10 +1018,6 @@ unpack_operation(pcmk_action_t *action, const xmlNode *xml_obj,
                 value = "fence remote node (default)";
             } else {
                 value = "recover remote node connection (default)";
-            }
-
-            if (action->rsc->remote_reconnect_ms) {
-                action->fail_role = pcmk_role_stopped;
             }
             action->on_fail = pcmk_on_fail_reset_remote;
         }
@@ -1049,6 +1042,22 @@ unpack_operation(pcmk_action_t *action, const xmlNode *xml_obj,
 
     pe_rsc_trace(action->rsc, "%s failure handling: %s",
                  action->uuid, value);
+
+    // Set default for role after failure specially in certain circumstances
+    switch (action->on_fail) {
+        case pcmk_on_fail_stop:
+            action->fail_role = pcmk_role_stopped;
+            break;
+
+        case pcmk_on_fail_reset_remote:
+            if (action->rsc->remote_reconnect_ms != 0) {
+                action->fail_role = pcmk_role_stopped;
+            }
+            break;
+
+        default:
+            break;
+    }
 
     value = NULL;
     if (xml_obj != NULL) {
