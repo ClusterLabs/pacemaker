@@ -355,6 +355,11 @@ xmlNode *pcmk__find_action_config(const pcmk_resource_t *rsc, const char *key,
 enum rsc_start_requirement pcmk__action_requires(const pcmk_resource_t *rsc,
                                                  const char *action_name);
 
+enum action_fail_response pcmk__parse_on_fail(const pcmk_resource_t *rsc,
+                                              const char *action_name,
+                                              guint interval_ms,
+                                              const char *value);
+
 pcmk_action_t *custom_action(pcmk_resource_t *rsc, char *key, const char *task,
                              const pcmk_node_t *on_node, gboolean optional,
                              gboolean foo, pcmk_scheduler_t *scheduler);

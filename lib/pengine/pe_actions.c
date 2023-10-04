@@ -910,6 +910,141 @@ pcmk__action_requires(const pcmk_resource_t *rsc, const char *action_name)
 
 /*!
  * \internal
+ * \brief Parse action failure response from a user-provided string
+ *
+ * \param[in] rsc          Resource that action is for
+ * \param[in] action_name  Name of action
+ * \param[in] interval_ms  Action interval (in milliseconds)
+ * \param[in] value        User-provided configuration value for on-fail
+ *
+ * \return Action failure response parsed from \p text
+ */
+enum action_fail_response
+pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
+                    guint interval_ms, const char *value)
+{
+    const char *desc = NULL;
+    bool needs_remote_reset = false;
+    enum action_fail_response on_fail = pcmk_on_fail_ignore;
+
+    if (value == NULL) {
+        // Use default
+
+    } else if (pcmk__str_eq(value, "block", pcmk__str_casei)) {
+        on_fail = pcmk_on_fail_block;
+        desc = "block";
+
+    } else if (pcmk__str_eq(value, "fence", pcmk__str_casei)) {
+        if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)) {
+            on_fail = pcmk_on_fail_fence_node;
+            desc = "node fencing";
+        } else {
+            pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for "
+                             "%s of %s to 'stop' because 'fence' is not "
+                             "valid when fencing is disabled",
+                             action_name, rsc->id);
+            on_fail = pcmk_on_fail_stop;
+            desc = "stop resource";
+        }
+
+    } else if (pcmk__str_eq(value, "standby", pcmk__str_casei)) {
+        on_fail = pcmk_on_fail_standby_node;
+        desc = "node standby";
+
+    } else if (pcmk__strcase_any_of(value, "ignore", PCMK__VALUE_NOTHING,
+                                    NULL)) {
+        desc = "ignore";
+
+    } else if (pcmk__str_eq(value, "migrate", pcmk__str_casei)) {
+        on_fail = pcmk_on_fail_ban;
+        desc = "force migration";
+
+    } else if (pcmk__str_eq(value, "stop", pcmk__str_casei)) {
+        on_fail = pcmk_on_fail_stop;
+        desc = "stop resource";
+
+    } else if (pcmk__str_eq(value, "restart", pcmk__str_casei)) {
+        on_fail = pcmk_on_fail_restart;
+        desc = "restart (and possibly migrate)";
+
+    } else if (pcmk__str_eq(value, "restart-container", pcmk__str_casei)) {
+        if (rsc->container == NULL) {
+            pe_rsc_debug(rsc,
+                         "Using default " XML_OP_ATTR_ON_FAIL
+                         " for %s of %s because it does not have a container",
+                         action_name, rsc->id);
+        } else {
+            on_fail = pcmk_on_fail_restart_container;
+            desc = "restart container (and possibly migrate)";
+        }
+
+    } else if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
+        on_fail = pcmk_on_fail_demote;
+        desc = "demote instance";
+
+    } else {
+        pcmk__config_err("Using default '" XML_OP_ATTR_ON_FAIL "' for "
+                         "%s of %s because '%s' is not valid",
+                         action_name, rsc->id, value);
+    }
+
+    /* Remote node connections are handled specially. Failures that result
+     * in dropping an active connection must result in fencing. The only
+     * failures that don't are probes and starts. The user can explicitly set
+     * on-fail="fence" to fence after start failures.
+     */
+    if (pe__resource_is_remote_conn(rsc)
+        && !pcmk_is_probe(action_name, interval_ms)
+        && !pcmk__str_eq(action_name, PCMK_ACTION_START, pcmk__str_none)) {
+        needs_remote_reset = true;
+        if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
+            desc = NULL; // Force default for unmanaged connections
+        }
+    }
+
+    if (desc != NULL) {
+        // Explicit value used, default not needed
+
+    } else if (rsc->container != NULL) {
+        on_fail = pcmk_on_fail_restart_container;
+        desc = "restart container (and possibly migrate) (default)";
+
+    } else if (needs_remote_reset) {
+        if (pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
+            if (pcmk_is_set(rsc->cluster->flags,
+                            pcmk_sched_fencing_enabled)) {
+                desc = "fence remote node (default)";
+            } else {
+                desc = "recover remote node connection (default)";
+            }
+            on_fail = pcmk_on_fail_reset_remote;
+        } else {
+            on_fail = pcmk_on_fail_stop;
+            desc = "stop unmanaged remote node (enforcing default)";
+        }
+
+    } else if (pcmk__str_eq(action_name, PCMK_ACTION_STOP, pcmk__str_none)) {
+        if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)) {
+            on_fail = pcmk_on_fail_fence_node;
+            desc = "resource fence (default)";
+        } else {
+            on_fail = pcmk_on_fail_block;
+            desc = "resource block (default)";
+        }
+
+    } else {
+        on_fail = pcmk_on_fail_restart;
+        desc = "restart (and possibly migrate) (default)";
+    }
+
+    pe_rsc_trace(rsc, "Failure handling for %s-interval %s of %s: %s",
+                 pcmk__readable_interval(interval_ms), action_name,
+                 rsc->id, desc);
+    return on_fail;
+}
+
+/*!
+ * \internal
  * \brief Unpack action configuration
  *
  * Unpack a resource action's meta-attributes (normalizing the interval,
@@ -929,119 +1064,10 @@ unpack_operation(pcmk_action_t *action, const xmlNode *xml_obj,
     action->meta = pcmk__unpack_action_meta(action->rsc, action->node,
                                             action->task, interval_ms, xml_obj);
     action->needs = pcmk__action_requires(action->rsc, action->task);
+
     value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ON_FAIL);
-    if (value == NULL) {
-
-    } else if (pcmk__str_eq(value, "block", pcmk__str_casei)) {
-        action->on_fail = pcmk_on_fail_block;
-
-    } else if (pcmk__str_eq(value, "fence", pcmk__str_casei)) {
-        action->on_fail = pcmk_on_fail_fence_node;
-        value = "node fencing";
-
-        if (!pcmk_is_set(action->rsc->cluster->flags,
-                         pcmk_sched_fencing_enabled)) {
-            pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for "
-                             "operation '%s' to 'stop' because 'fence' is not "
-                             "valid when fencing is disabled", action->uuid);
-            action->on_fail = pcmk_on_fail_stop;
-            value = "stop resource";
-        }
-
-    } else if (pcmk__str_eq(value, "standby", pcmk__str_casei)) {
-        action->on_fail = pcmk_on_fail_standby_node;
-        value = "node standby";
-
-    } else if (pcmk__strcase_any_of(value, "ignore", PCMK__VALUE_NOTHING,
-                                    NULL)) {
-        action->on_fail = pcmk_on_fail_ignore;
-        value = "ignore";
-
-    } else if (pcmk__str_eq(value, "migrate", pcmk__str_casei)) {
-        action->on_fail = pcmk_on_fail_ban;
-        value = "force migration";
-
-    } else if (pcmk__str_eq(value, "stop", pcmk__str_casei)) {
-        action->on_fail = pcmk_on_fail_stop;
-        value = "stop resource";
-
-    } else if (pcmk__str_eq(value, "restart", pcmk__str_casei)) {
-        action->on_fail = pcmk_on_fail_restart;
-        value = "restart (and possibly migrate)";
-
-    } else if (pcmk__str_eq(value, "restart-container", pcmk__str_casei)) {
-        if (action->rsc->container != NULL) {
-            action->on_fail = pcmk_on_fail_restart_container;
-            value = "restart container (and possibly migrate)";
-
-        } else {
-            value = NULL;
-        }
-
-    } else if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
-        action->on_fail = pcmk_on_fail_demote;
-        value = "demote instance";
-
-    } else {
-        pe_err("Resource %s: Unknown failure type (%s)", action->rsc->id, value);
-        value = NULL;
-    }
-
-    /* defaults */
-    if ((value == NULL) && (action->rsc->container != NULL)) {
-        action->on_fail = pcmk_on_fail_restart_container;
-        value = "restart container (and possibly migrate) (default)";
-
-    /* For remote nodes, ensure that any failure that results in dropping an
-     * active connection to the node results in fencing of the node.
-     *
-     * There are only two action failures that don't result in fencing.
-     * 1. probes - probe failures are expected.
-     * 2. start - a start failure indicates that an active connection does not already
-     * exist. The user can set op on-fail=fence if they really want to fence start
-     * failures. */
-    } else if (((value == NULL)
-                || !pcmk_is_set(action->rsc->flags, pcmk_rsc_managed))
-               && pe__resource_is_remote_conn(action->rsc)
-               && !(pcmk__str_eq(action->task, PCMK_ACTION_MONITOR,
-                                 pcmk__str_casei)
-                    && (interval_ms == 0))
-               && !pcmk__str_eq(action->task, PCMK_ACTION_START, pcmk__str_casei)) {
-
-        if (!pcmk_is_set(action->rsc->flags, pcmk_rsc_managed)) {
-            action->on_fail = pcmk_on_fail_stop;
-            value = "stop unmanaged remote node (enforcing default)";
-
-        } else {
-            if (pcmk_is_set(action->rsc->cluster->flags,
-                            pcmk_sched_fencing_enabled)) {
-                value = "fence remote node (default)";
-            } else {
-                value = "recover remote node connection (default)";
-            }
-            action->on_fail = pcmk_on_fail_reset_remote;
-        }
-
-    } else if ((value == NULL)
-               && pcmk__str_eq(action->task, PCMK_ACTION_STOP,
-                               pcmk__str_casei)) {
-        if (pcmk_is_set(action->rsc->cluster->flags,
-                        pcmk_sched_fencing_enabled)) {
-            action->on_fail = pcmk_on_fail_fence_node;
-            value = "resource fence (default)";
-
-        } else {
-            action->on_fail = pcmk_on_fail_block;
-            value = "resource block (default)";
-        }
-
-    } else if (value == NULL) {
-        action->on_fail = pcmk_on_fail_restart;
-        value = "restart (and possibly migrate) (default)";
-    }
-
-    pe_rsc_trace(action->rsc, "%s failure handling: %s",
-                 action->uuid, value);
+    action->on_fail = pcmk__parse_on_fail(action->rsc, action->task,
+                                          interval_ms, value);
 
     // Set default for role after failure specially in certain circumstances
     switch (action->on_fail) {
