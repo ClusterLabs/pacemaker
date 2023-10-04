@@ -234,7 +234,7 @@ ordering_flags_for_kind(enum pe_order_kind kind, const char *first,
 static pcmk_resource_t *
 get_ordering_resource(const xmlNode *xml, const char *resource_attr,
                       const char *instance_attr,
-                      const pe_working_set_t *data_set)
+                      const pcmk_scheduler_t *data_set)
 {
     // @COMPAT: instance_attr and instance_id variables deprecated since 2.1.5
     pcmk_resource_t *rsc = NULL;
@@ -420,7 +420,7 @@ inverse_ordering(const char *id, enum pe_order_kind kind,
 }
 
 static void
-unpack_simple_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
+unpack_simple_rsc_order(xmlNode *xml_obj, pcmk_scheduler_t *data_set)
 {
     pcmk_resource_t *rsc_then = NULL;
     pcmk_resource_t *rsc_first = NULL;
@@ -525,7 +525,7 @@ void
 pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
                    pcmk_action_t *first_action, pcmk_resource_t *then_rsc,
                    char *then_action_task, pcmk_action_t *then_action,
-                   uint32_t flags, pe_working_set_t *sched)
+                   uint32_t flags, pcmk_scheduler_t *sched)
 {
     pe__ordering_t *order = NULL;
 
@@ -591,7 +591,7 @@ pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
  */
 static int
 unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
-                 const char *parent_symmetrical_s, pe_working_set_t *data_set)
+                 const char *parent_symmetrical_s, pcmk_scheduler_t *data_set)
 {
     GList *set_iter = NULL;
     GList *resources = NULL;
@@ -709,7 +709,7 @@ unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
  */
 static int
 order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
-               enum pe_order_kind kind, pe_working_set_t *data_set,
+               enum pe_order_kind kind, pcmk_scheduler_t *data_set,
                enum ordering_symmetry symmetry)
 {
 
@@ -892,7 +892,7 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
  */
 static int
 unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
-                  const pe_working_set_t *data_set)
+                  const pcmk_scheduler_t *data_set)
 {
     const char *id_first = NULL;
     const char *id_then = NULL;
@@ -996,7 +996,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
  * \param[in,out] data_set  Cluster working set
  */
 void
-pcmk__unpack_ordering(xmlNode *xml_obj, pe_working_set_t *data_set)
+pcmk__unpack_ordering(xmlNode *xml_obj, pcmk_scheduler_t *data_set)
 {
     xmlNode *set = NULL;
     xmlNode *last = NULL;
@@ -1101,7 +1101,7 @@ ordering_is_invalid(pcmk_action_t *action, pe_action_wrapper_t *input)
 }
 
 void
-pcmk__disable_invalid_orderings(pe_working_set_t *data_set)
+pcmk__disable_invalid_orderings(pcmk_scheduler_t *data_set)
 {
     for (GList *iter = data_set->actions; iter != NULL; iter = iter->next) {
         pcmk_action_t *action = (pcmk_action_t *) iter->data;
@@ -1375,7 +1375,7 @@ static void
 update_action_for_orderings(gpointer data, gpointer user_data)
 {
     pcmk__update_action_for_orderings((pcmk_action_t *) data,
-                                      (pe_working_set_t *) user_data);
+                                      (pcmk_scheduler_t *) user_data);
 }
 
 /*!
@@ -1385,7 +1385,7 @@ update_action_for_orderings(gpointer data, gpointer user_data)
  * \param[in,out] sched  Cluster working set
  */
 void
-pcmk__apply_orderings(pe_working_set_t *sched)
+pcmk__apply_orderings(pcmk_scheduler_t *sched)
 {
     crm_trace("Applying ordering constraints");
 

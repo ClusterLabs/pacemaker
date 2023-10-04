@@ -396,7 +396,7 @@ apply_container_ordering(pcmk_action_t *action)
  * \param[in,out] data_set  Cluster working set
  */
 void
-pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
+pcmk__order_remote_connection_actions(pcmk_scheduler_t *data_set)
 {
     if (!pcmk_is_set(data_set->flags, pcmk_sched_have_remote_nodes)) {
         return;

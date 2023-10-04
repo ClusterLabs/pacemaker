@@ -180,7 +180,7 @@ add_rsc_if_matching(GList *result, pcmk_resource_t *rsc, const char *id)
  *       g_list_free().
  */
 GList *
-pcmk__rscs_matching_id(const char *id, const pe_working_set_t *data_set)
+pcmk__rscs_matching_id(const char *id, const pcmk_scheduler_t *data_set)
 {
     GList *result = NULL;
 
@@ -215,7 +215,7 @@ set_assignment_methods_for_rsc(gpointer data, gpointer user_data)
  * \param[in,out] data_set  Cluster working set
  */
 void
-pcmk__set_assignment_methods(pe_working_set_t *data_set)
+pcmk__set_assignment_methods(pcmk_scheduler_t *data_set)
 {
     g_list_foreach(data_set->resources, set_assignment_methods_for_rsc, NULL);
 }
@@ -762,7 +762,7 @@ done:
  * \param[in,out] data_set  Cluster working set
  */
 void
-pcmk__sort_resources(pe_working_set_t *data_set)
+pcmk__sort_resources(pcmk_scheduler_t *data_set)
 {
     GList *nodes = g_list_copy(data_set->nodes);
 

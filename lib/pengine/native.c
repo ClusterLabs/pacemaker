@@ -88,7 +88,7 @@ native_priority_to_node(pcmk_resource_t *rsc, pcmk_node_t *node,
 
 void
 native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
-                   pe_working_set_t *data_set, gboolean failed)
+                   pcmk_scheduler_t *data_set, gboolean failed)
 {
     GList *gIter = rsc->running_on;
 
@@ -202,7 +202,7 @@ recursive_clear_unique(pcmk_resource_t *rsc, gpointer user_data)
 }
 
 gboolean
-native_unpack(pcmk_resource_t * rsc, pe_working_set_t * data_set)
+native_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *data_set)
 {
     pcmk_resource_t *parent = uber_parent(rsc);
     const char *standard = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
@@ -326,7 +326,7 @@ native_find_rsc(pcmk_resource_t *rsc, const char *id,
 // create is ignored
 char *
 native_parameter(pcmk_resource_t *rsc, pcmk_node_t *node, gboolean create,
-                 const char *name, pe_working_set_t *data_set)
+                 const char *name, pcmk_scheduler_t *data_set)
 {
     char *value_copy = NULL;
     const char *value = NULL;

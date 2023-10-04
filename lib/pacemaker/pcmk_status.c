@@ -80,7 +80,7 @@ pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith, cib_t *cib,
     xmlNode *cib_copy = copy_xml(current_cib);
     stonith_history_t *stonith_history = NULL;
     int history_rc = 0;
-    pe_working_set_t *data_set = NULL;
+    pcmk_scheduler_t *data_set = NULL;
     GList *unames = NULL;
     GList *resources = NULL;
 
@@ -303,7 +303,7 @@ done:
  */
 int
 pcmk__output_simple_status(pcmk__output_t *out,
-                           const pe_working_set_t *data_set)
+                           const pcmk_scheduler_t *data_set)
 {
     int nodes_online = 0;
     int nodes_standby = 0;

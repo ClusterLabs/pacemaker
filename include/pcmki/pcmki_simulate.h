@@ -32,7 +32,7 @@
  * \param[in,out] data_set Working set for the cluster
  * \param[in]     use_date The date to set the cluster's time to (may be NULL)
  */
-void pcmk__profile_dir(const char *dir, long long repeat, pe_working_set_t *data_set,
+void pcmk__profile_dir(const char *dir, long long repeat, pcmk_scheduler_t *data_set,
                        const char *use_date);
 
 /*!
@@ -45,7 +45,7 @@ void pcmk__profile_dir(const char *dir, long long repeat, pe_working_set_t *data
  *
  * \return Transition status after simulated execution
  */
-enum pcmk__graph_status pcmk__simulate_transition(pe_working_set_t *data_set,
+enum pcmk__graph_status pcmk__simulate_transition(pcmk_scheduler_t *data_set,
                                                   cib_t *cib,
                                                   const GList *op_fail_list);
 
@@ -80,7 +80,7 @@ enum pcmk__graph_status pcmk__simulate_transition(pe_working_set_t *data_set,
  *
  * \return Standard Pacemaker return code
  */
-int pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
+int pcmk__simulate(pcmk_scheduler_t *data_set, pcmk__output_t *out,
                    const pcmk_injections_t *injections, unsigned int flags,
                    uint32_t section_opts, const char *use_date,
                    const char *input_file, const char *graph_file,

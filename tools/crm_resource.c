@@ -183,7 +183,7 @@ static GError *error = NULL;
 static GMainLoop *mainloop = NULL;
 static cib_t *cib_conn = NULL;
 static pcmk_ipc_api_t *controld_api = NULL;
-static pe_working_set_t *data_set = NULL;
+static pcmk_scheduler_t *data_set = NULL;
 
 #define MESSAGE_TIMEOUT_S 60
 

@@ -235,7 +235,7 @@ rsc_ticket_new(const char *id, pcmk_resource_t *rsc, pe_ticket_t *ticket,
 // \return Standard Pacemaker return code
 static int
 unpack_rsc_ticket_set(xmlNode *set, pe_ticket_t *ticket,
-                      const char *loss_policy, pe_working_set_t *data_set)
+                      const char *loss_policy, pcmk_scheduler_t *data_set)
 {
     const char *set_id = NULL;
     const char *role = NULL;
@@ -273,7 +273,7 @@ unpack_rsc_ticket_set(xmlNode *set, pe_ticket_t *ticket,
 }
 
 static void
-unpack_simple_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
+unpack_simple_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *data_set)
 {
     const char *id = NULL;
     const char *ticket_str = crm_element_value(xml_obj, XML_TICKET_ATTR_TICKET);
@@ -356,7 +356,7 @@ unpack_simple_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
 // \return Standard Pacemaker return code
 static int
 unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
-                       pe_working_set_t *data_set)
+                       pcmk_scheduler_t *data_set)
 {
     const char *id = NULL;
     const char *rsc_id = NULL;
@@ -428,7 +428,7 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 }
 
 void
-pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
+pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *data_set)
 {
     xmlNode *set = NULL;
     bool any_sets = false;

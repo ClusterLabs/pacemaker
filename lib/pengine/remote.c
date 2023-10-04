@@ -63,7 +63,7 @@ pe__is_bundle_node(const pcmk_node_t *node)
  * \return Filler resource with remote connection, or NULL if none found
  */
 pcmk_resource_t *
-pe__resource_contains_guest_node(const pe_working_set_t *data_set,
+pe__resource_contains_guest_node(const pcmk_scheduler_t *data_set,
                                  const pcmk_resource_t *rsc)
 {
     if ((rsc != NULL) && (data_set != NULL)
@@ -117,7 +117,7 @@ xml_contains_remote_node(xmlNode *xml)
  * \param[in,out] user_data  Pointer to pass to helper function
  */
 void
-pe_foreach_guest_node(const pe_working_set_t *data_set, const pcmk_node_t *host,
+pe_foreach_guest_node(const pcmk_scheduler_t *data_set, const pcmk_node_t *host,
                       void (*helper)(const pcmk_node_t*, void*),
                       void *user_data)
 {
@@ -223,7 +223,7 @@ struct check_op {
 void
 pe__add_param_check(const xmlNode *rsc_op, pcmk_resource_t *rsc,
                     pcmk_node_t *node, enum pcmk__check_parameters flag,
-                    pe_working_set_t *data_set)
+                    pcmk_scheduler_t *data_set)
 {
     struct check_op *check_op = NULL;
 
@@ -248,7 +248,7 @@ pe__add_param_check(const xmlNode *rsc_op, pcmk_resource_t *rsc,
  * \param[in]     cb        Function to be called
  */
 void
-pe__foreach_param_check(pe_working_set_t *data_set,
+pe__foreach_param_check(pcmk_scheduler_t *data_set,
                        void (*cb)(pcmk_resource_t*, pcmk_node_t*,
                                   const xmlNode*, enum pcmk__check_parameters))
 {
@@ -263,7 +263,7 @@ pe__foreach_param_check(pe_working_set_t *data_set,
 }
 
 void
-pe__free_param_checks(pe_working_set_t *data_set)
+pe__free_param_checks(pcmk_scheduler_t *data_set)
 {
     if (data_set && data_set->param_check) {
         g_list_free_full(data_set->param_check, free);

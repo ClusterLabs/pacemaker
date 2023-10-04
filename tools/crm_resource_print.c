@@ -20,7 +20,7 @@
 static int
 print_constraint(xmlNode *xml_obj, void *userdata)
 {
-    pe_working_set_t *data_set = (pe_working_set_t *) userdata;
+    pcmk_scheduler_t *data_set = (pcmk_scheduler_t *) userdata;
     pcmk__output_t *out = data_set->priv;
     xmlNode *lifetime = NULL;
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
@@ -52,7 +52,7 @@ print_constraint(xmlNode *xml_obj, void *userdata)
 }
 
 void
-cli_resource_print_cts_constraints(pe_working_set_t * data_set)
+cli_resource_print_cts_constraints(pcmk_scheduler_t *data_set)
 {
     pcmk__xe_foreach_child(pcmk_find_cib_element(data_set->input, XML_CIB_TAG_CONSTRAINTS),
                            NULL, print_constraint, data_set);
@@ -90,7 +90,7 @@ cli_resource_print_cts(pcmk_resource_t *rsc, pcmk__output_t *out)
 // \return Standard Pacemaker return code
 int
 cli_resource_print_operations(const char *rsc_id, const char *host_uname,
-                              bool active, pe_working_set_t * data_set)
+                              bool active, pcmk_scheduler_t *data_set)
 {
     pcmk__output_t *out = data_set->priv;
     int rc = pcmk_rc_no_output;
@@ -114,7 +114,7 @@ cli_resource_print_operations(const char *rsc_id, const char *host_uname,
 
 // \return Standard Pacemaker return code
 int
-cli_resource_print(pcmk_resource_t *rsc, pe_working_set_t *data_set,
+cli_resource_print(pcmk_resource_t *rsc, pcmk_scheduler_t *data_set,
                    bool expanded)
 {
     pcmk__output_t *out = data_set->priv;

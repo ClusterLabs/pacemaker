@@ -1568,7 +1568,7 @@ uint32_t
 pcmk__instance_update_ordered_actions(pcmk_action_t *first, pcmk_action_t *then,
                                       const pcmk_node_t *node, uint32_t flags,
                                       uint32_t filter, uint32_t type,
-                                      pe_working_set_t *data_set)
+                                      pcmk_scheduler_t *data_set)
 {
     CRM_ASSERT((first != NULL) && (then != NULL) && (data_set != NULL));
 

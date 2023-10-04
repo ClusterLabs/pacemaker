@@ -118,7 +118,7 @@ main(int argc, char **argv)
     xmlNode *cib_object = NULL;
     xmlNode *status = NULL;
 
-    pe_working_set_t *data_set = NULL;
+    pcmk_scheduler_t *data_set = NULL;
 
     int rc = pcmk_rc_ok;
     crm_exit_t exit_code = CRM_EX_OK;

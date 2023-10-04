@@ -100,7 +100,7 @@ calculate_main_digest(op_digest_cache_t *data, pcmk_resource_t *rsc,
                       const pcmk_node_t *node, GHashTable *params,
                       const char *task, guint *interval_ms,
                       const xmlNode *xml_op, const char *op_version,
-                      GHashTable *overrides, pe_working_set_t *data_set)
+                      GHashTable *overrides, pcmk_scheduler_t *data_set)
 {
     pcmk_action_t *action = NULL;
 
@@ -298,7 +298,7 @@ op_digest_cache_t *
 pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
                       guint *interval_ms, const pcmk_node_t *node,
                       const xmlNode *xml_op, GHashTable *overrides,
-                      bool calc_secure, pe_working_set_t *data_set)
+                      bool calc_secure, pcmk_scheduler_t *data_set)
 {
     op_digest_cache_t *data = calloc(1, sizeof(op_digest_cache_t));
     const char *op_version = NULL;
@@ -350,7 +350,7 @@ pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
 static op_digest_cache_t *
 rsc_action_digest(pcmk_resource_t *rsc, const char *task, guint interval_ms,
                   pcmk_node_t *node, const xmlNode *xml_op,
-                  bool calc_secure, pe_working_set_t *data_set)
+                  bool calc_secure, pcmk_scheduler_t *data_set)
 {
     op_digest_cache_t *data = NULL;
     char *key = pcmk__op_key(rsc->id, task, interval_ms);
@@ -379,7 +379,7 @@ rsc_action_digest(pcmk_resource_t *rsc, const char *task, guint interval_ms,
  */
 op_digest_cache_t *
 rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
-                      pcmk_node_t *node, pe_working_set_t *data_set)
+                      pcmk_node_t *node, pcmk_scheduler_t *data_set)
 {
     op_digest_cache_t *data = NULL;
     guint interval_ms = 0;
@@ -530,7 +530,7 @@ unfencing_digest_matches(const char *rsc_id, const char *agent,
  */
 op_digest_cache_t *
 pe__compare_fencing_digest(pcmk_resource_t *rsc, const char *agent,
-                           pcmk_node_t *node, pe_working_set_t *data_set)
+                           pcmk_node_t *node, pcmk_scheduler_t *data_set)
 {
     const char *node_summary = NULL;
 

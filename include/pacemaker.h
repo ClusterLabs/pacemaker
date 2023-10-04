@@ -208,7 +208,7 @@ int pcmk_pacemakerd_status(xmlNodePtr *xml, const char *ipc_name,
  */
 int pcmk_resource_digests(xmlNodePtr *xml, pcmk_resource_t *rsc,
                           const pcmk_node_t *node, GHashTable *overrides,
-                          pe_working_set_t *data_set);
+                          pcmk_scheduler_t *data_set);
 
 /*!
  * \brief Simulate a cluster's response to events
@@ -238,7 +238,7 @@ int pcmk_resource_digests(xmlNodePtr *xml, pcmk_resource_t *rsc,
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_simulate(xmlNodePtr *xml, pe_working_set_t *data_set,
+int pcmk_simulate(xmlNodePtr *xml, pcmk_scheduler_t *data_set,
                   const pcmk_injections_t *injections, unsigned int flags,
                   unsigned int section_opts, const char *use_date,
                   const char *input_file, const char *graph_file,

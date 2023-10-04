@@ -19,7 +19,7 @@
 static void
 check_defaults(void **state) {
     uint32_t flags;
-    pe_working_set_t *data_set = calloc(1, sizeof(pe_working_set_t));
+    pcmk_scheduler_t *data_set = calloc(1, sizeof(pcmk_scheduler_t));
 
     set_working_set_defaults(data_set);
 

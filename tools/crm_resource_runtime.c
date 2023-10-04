@@ -42,7 +42,7 @@ build_node_info_list(const pcmk_resource_t *rsc)
 
 GList *
 cli_resource_search(pcmk_resource_t *rsc, const char *requested_name,
-                    pe_working_set_t *data_set)
+                    pcmk_scheduler_t *data_set)
 {
     GList *retval = NULL;
     const pcmk_resource_t *parent = pe__const_top_resource(rsc, false);
@@ -539,7 +539,8 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
 // \return Standard Pacemaker return code
 static int
 send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
-                const char *host_uname, const char *rsc_id, pe_working_set_t *data_set)
+                const char *host_uname, const char *rsc_id,
+                pcmk_scheduler_t *data_set)
 {
     pcmk__output_t *out = data_set->priv;
     const char *router_node = host_uname;
@@ -635,7 +636,7 @@ rsc_fail_name(const pcmk_resource_t *rsc)
 // \return Standard Pacemaker return code
 static int
 clear_rsc_history(pcmk_ipc_api_t *controld_api, const char *host_uname,
-                  const char *rsc_id, pe_working_set_t *data_set)
+                  const char *rsc_id, pcmk_scheduler_t *data_set)
 {
     int rc = pcmk_rc_ok;
 
@@ -662,7 +663,7 @@ clear_rsc_history(pcmk_ipc_api_t *controld_api, const char *host_uname,
 static int
 clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
                    const char *node_name, const char *rsc_id, const char *operation,
-                   const char *interval_spec, pe_working_set_t *data_set)
+                   const char *interval_spec, pcmk_scheduler_t *data_set)
 {
     int rc = pcmk_rc_ok;
     const char *failed_value = NULL;
@@ -766,7 +767,7 @@ int
 cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
                     const pcmk_resource_t *rsc, const char *operation,
                     const char *interval_spec, bool just_failures,
-                    pe_working_set_t *data_set, gboolean force)
+                    pcmk_scheduler_t *data_set, gboolean force)
 {
     pcmk__output_t *out = data_set->priv;
     int rc = pcmk_rc_ok;
@@ -874,7 +875,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
 int
 cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
                 const char *operation, const char *interval_spec,
-                pe_working_set_t *data_set)
+                pcmk_scheduler_t *data_set)
 {
     pcmk__output_t *out = data_set->priv;
     int rc = pcmk_rc_ok;
@@ -1050,7 +1051,7 @@ cli_resource_check(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
 // \return Standard Pacemaker return code
 int
 cli_resource_fail(pcmk_ipc_api_t *controld_api, const char *host_uname,
-                  const char *rsc_id, pe_working_set_t *data_set)
+                  const char *rsc_id, pcmk_scheduler_t *data_set)
 {
     crm_notice("Failing %s on %s", rsc_id, host_uname);
     return send_lrm_rsc_op(controld_api, true, host_uname, rsc_id, data_set);
@@ -1058,7 +1059,7 @@ cli_resource_fail(pcmk_ipc_api_t *controld_api, const char *host_uname,
 
 static GHashTable *
 generate_resource_params(pcmk_resource_t *rsc, pcmk_node_t *node,
-                         pe_working_set_t *data_set)
+                         pcmk_scheduler_t *data_set)
 {
     GHashTable *params = NULL;
     GHashTable *meta = NULL;
@@ -1195,7 +1196,7 @@ static void display_list(pcmk__output_t *out, GList *items, const char *tag)
  *       but perhaps pcmk_rc_schema_validation would be better in that case.
  */
 int
-update_working_set_xml(pe_working_set_t *data_set, xmlNode **xml)
+update_working_set_xml(pcmk_scheduler_t *data_set, xmlNode **xml)
 {
     if (cli_config_update(xml, NULL, FALSE) == FALSE) {
         return ENOKEY;
@@ -1217,7 +1218,7 @@ update_working_set_xml(pe_working_set_t *data_set, xmlNode **xml)
  *       data_set->input and data_set->now.
  */
 static int
-update_working_set_from_cib(pcmk__output_t *out, pe_working_set_t * data_set,
+update_working_set_from_cib(pcmk__output_t *out, pcmk_scheduler_t *data_set,
                             cib_t *cib)
 {
     xmlNode *cib_xml_copy = NULL;
@@ -1242,7 +1243,7 @@ update_working_set_from_cib(pcmk__output_t *out, pe_working_set_t * data_set,
 
 // \return Standard Pacemaker return code
 static int
-update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
+update_dataset(cib_t *cib, pcmk_scheduler_t *data_set, bool simulate)
 {
     char *pid = NULL;
     char *shadow_file = NULL;
@@ -1382,7 +1383,7 @@ max_rsc_stop_timeout(pcmk_resource_t *rsc)
  *       if the resources in question are actually being started.
  */
 static int
-wait_time_estimate(pe_working_set_t *data_set, const GList *resources)
+wait_time_estimate(pcmk_scheduler_t *data_set, const GList *resources)
 {
     int max_delay = 0;
 
@@ -1452,7 +1453,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
     GList *current_active = NULL;
     GList *restart_target_active = NULL;
 
-    pe_working_set_t *data_set = NULL;
+    pcmk_scheduler_t *data_set = NULL;
     pcmk_resource_t *parent = uber_parent(rsc);
 
     bool running = false;
@@ -1836,7 +1837,7 @@ print_pending_actions(pcmk__output_t *out, GList *actions)
 int
 wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
 {
-    pe_working_set_t *data_set = NULL;
+    pcmk_scheduler_t *data_set = NULL;
     int rc = pcmk_rc_ok;
     int timeout_s = timeout_ms? ((timeout_ms + 999) / 1000) : WAIT_DEFAULT_TIMEOUT_S;
     time_t expire_time = time(NULL) + timeout_s;
@@ -2053,7 +2054,7 @@ done:
 crm_exit_t
 cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
                      const char *rsc_action, GHashTable *override_hash,
-                     int timeout_ms, cib_t * cib, pe_working_set_t *data_set,
+                     int timeout_ms, cib_t *cib, pcmk_scheduler_t *data_set,
                      int resource_verbose, gboolean force, int check_level)
 {
     pcmk__output_t *out = data_set->priv;
@@ -2116,7 +2117,7 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
 int
 cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
                   const char *host_name, const char *move_lifetime, cib_t *cib,
-                  int cib_options, pe_working_set_t *data_set,
+                  int cib_options, pcmk_scheduler_t *data_set,
                   gboolean promoted_role_only, gboolean force)
 {
     pcmk__output_t *out = data_set->priv;

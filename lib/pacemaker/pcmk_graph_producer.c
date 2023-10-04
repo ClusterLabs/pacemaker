@@ -77,7 +77,7 @@ add_node_to_xml(const pcmk_node_t *node, void *xml)
  * \note Only Pacemaker Remote nodes are considered currently
  */
 static int
-add_maintenance_nodes(xmlNode *xml, const pe_working_set_t *data_set)
+add_maintenance_nodes(xmlNode *xml, const pcmk_scheduler_t *data_set)
 {
     xmlNode *maintenance = NULL;
     int count = 0;
@@ -112,7 +112,7 @@ add_maintenance_nodes(xmlNode *xml, const pe_working_set_t *data_set)
  * \param[in,out] data_set  Working set for cluster
  */
 static void
-add_maintenance_update(pe_working_set_t *data_set)
+add_maintenance_update(pcmk_scheduler_t *data_set)
 {
     pcmk_action_t *action = NULL;
 
@@ -392,7 +392,7 @@ add_action_attributes(pcmk_action_t *action, xmlNode *action_xml)
  */
 static void
 create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
-                    const pe_working_set_t *data_set)
+                    const pcmk_scheduler_t *data_set)
 {
     bool needs_node_info = true;
     bool needs_maintenance_info = false;
@@ -847,7 +847,7 @@ pcmk__graph_has_loop(const pcmk_action_t *init_action,
  * \return Newly added XML element for new graph synapse
  */
 static xmlNode *
-create_graph_synapse(const pcmk_action_t *action, pe_working_set_t *data_set)
+create_graph_synapse(const pcmk_action_t *action, pcmk_scheduler_t *data_set)
 {
     int synapse_priority = 0;
     xmlNode *syn = create_xml_node(data_set->graph, "synapse");
@@ -887,7 +887,7 @@ static void
 add_action_to_graph(gpointer data, gpointer user_data)
 {
     pcmk_action_t *action = (pcmk_action_t *) data;
-    pe_working_set_t *data_set = (pe_working_set_t *) user_data;
+    pcmk_scheduler_t *data_set = (pcmk_scheduler_t *) user_data;
 
     xmlNode *syn = NULL;
     xmlNode *set = NULL;
@@ -998,7 +998,7 @@ pcmk__add_rsc_actions_to_graph(pcmk_resource_t *rsc)
  * \param[in,out] data_set  Cluster working set
  */
 void
-pcmk__create_graph(pe_working_set_t *data_set)
+pcmk__create_graph(pcmk_scheduler_t *data_set)
 {
     GList *iter = NULL;
     const char *value = NULL;

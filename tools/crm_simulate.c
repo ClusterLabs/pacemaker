@@ -451,7 +451,7 @@ int
 main(int argc, char **argv)
 {
     int rc = pcmk_rc_ok;
-    pe_working_set_t *data_set = NULL;
+    pcmk_scheduler_t *data_set = NULL;
     pcmk__output_t *out = NULL;
 
     GError *error = NULL;

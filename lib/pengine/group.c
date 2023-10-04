@@ -177,7 +177,7 @@ skip_child_rsc(pcmk_resource_t *rsc, pcmk_resource_t *child,
 }
 
 gboolean
-group_unpack(pcmk_resource_t *rsc, pe_working_set_t *data_set)
+group_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *data_set)
 {
     xmlNode *xml_obj = rsc->xml;
     xmlNode *xml_native_rsc = NULL;

@@ -69,16 +69,16 @@ struct action_history {
 static void unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node,
                           xmlNode *xml_op, xmlNode **last_failure,
                           enum action_fail_response *failed);
-static void determine_remote_online_status(pe_working_set_t *data_set,
+static void determine_remote_online_status(pcmk_scheduler_t *data_set,
                                            pcmk_node_t *this_node);
 static void add_node_attrs(const xmlNode *xml_obj, pcmk_node_t *node,
-                           bool overwrite, pe_working_set_t *data_set);
+                           bool overwrite, pcmk_scheduler_t *data_set);
 static void determine_online_status(const xmlNode *node_state,
                                     pcmk_node_t *this_node,
-                                    pe_working_set_t *data_set);
+                                    pcmk_scheduler_t *data_set);
 
 static void unpack_node_lrm(pcmk_node_t *node, const xmlNode *xml,
-                            pe_working_set_t *data_set);
+                            pcmk_scheduler_t *data_set);
 
 
 static gboolean
@@ -107,7 +107,7 @@ is_dangling_guest_node(pcmk_node_t *node)
  * \param[in]     priority_delay  Whether to consider `priority-fencing-delay`
  */
 void
-pe_fence_node(pe_working_set_t *data_set, pcmk_node_t *node,
+pe_fence_node(pcmk_scheduler_t *data_set, pcmk_node_t *node,
               const char *reason, bool priority_delay)
 {
     CRM_CHECK(node, return);
@@ -195,7 +195,7 @@ pe_fence_node(pe_working_set_t *data_set, pcmk_node_t *node,
     "/" XML_TAG_META_SETS "/" XPATH_UNFENCING_NVPAIR
 
 static void
-set_if_xpath(uint64_t flag, const char *xpath, pe_working_set_t *data_set)
+set_if_xpath(uint64_t flag, const char *xpath, pcmk_scheduler_t *data_set)
 {
     xmlXPathObjectPtr result = NULL;
 
@@ -209,7 +209,7 @@ set_if_xpath(uint64_t flag, const char *xpath, pe_working_set_t *data_set)
 }
 
 gboolean
-unpack_config(xmlNode * config, pe_working_set_t * data_set)
+unpack_config(xmlNode *config, pcmk_scheduler_t *data_set)
 {
     const char *value = NULL;
     GHashTable *config_hash = pcmk__strkey_table(free, free);
@@ -432,7 +432,7 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
 
 pcmk_node_t *
 pe_create_node(const char *id, const char *uname, const char *type,
-               const char *score, pe_working_set_t * data_set)
+               const char *score, pcmk_scheduler_t *data_set)
 {
     pcmk_node_t *new_node = NULL;
 
@@ -505,7 +505,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
 }
 
 static const char *
-expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data)
+expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pcmk_scheduler_t *data)
 {
     xmlNode *attr_set = NULL;
     xmlNode *attr = NULL;
@@ -562,7 +562,7 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data
 }
 
 static void
-handle_startup_fencing(pe_working_set_t *data_set, pcmk_node_t *new_node)
+handle_startup_fencing(pcmk_scheduler_t *data_set, pcmk_node_t *new_node)
 {
     if ((new_node->details->type == pcmk_node_variant_remote)
         && (new_node->details->remote_rsc == NULL)) {
@@ -588,7 +588,7 @@ handle_startup_fencing(pe_working_set_t *data_set, pcmk_node_t *new_node)
 }
 
 gboolean
-unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
+unpack_nodes(xmlNode *xml_nodes, pcmk_scheduler_t *data_set)
 {
     xmlNode *xml_obj = NULL;
     pcmk_node_t *new_node = NULL;
@@ -638,7 +638,7 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
 }
 
 static void
-setup_container(pcmk_resource_t * rsc, pe_working_set_t * data_set)
+setup_container(pcmk_resource_t *rsc, pcmk_scheduler_t *data_set)
 {
     const char *container_id = NULL;
 
@@ -664,7 +664,7 @@ setup_container(pcmk_resource_t * rsc, pe_working_set_t * data_set)
 }
 
 gboolean
-unpack_remote_nodes(xmlNode * xml_resources, pe_working_set_t * data_set)
+unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *data_set)
 {
     xmlNode *xml_obj = NULL;
 
@@ -741,7 +741,7 @@ unpack_remote_nodes(xmlNode * xml_resources, pe_working_set_t * data_set)
  * easy access to the connection resource during the scheduler calculations.
  */
 static void
-link_rsc2remotenode(pe_working_set_t *data_set, pcmk_resource_t *new_rsc)
+link_rsc2remotenode(pcmk_scheduler_t *data_set, pcmk_resource_t *new_rsc)
 {
     pcmk_node_t *remote_node = NULL;
 
@@ -801,7 +801,7 @@ destroy_tag(gpointer data)
  *       be used when pe__unpack_resource() calls resource_location()
  */
 gboolean
-unpack_resources(const xmlNode *xml_resources, pe_working_set_t * data_set)
+unpack_resources(const xmlNode *xml_resources, pcmk_scheduler_t *data_set)
 {
     xmlNode *xml_obj = NULL;
     GList *gIter = NULL;
@@ -868,7 +868,7 @@ unpack_resources(const xmlNode *xml_resources, pe_working_set_t * data_set)
 }
 
 gboolean
-unpack_tags(xmlNode * xml_tags, pe_working_set_t * data_set)
+unpack_tags(xmlNode *xml_tags, pcmk_scheduler_t *data_set)
 {
     xmlNode *xml_tag = NULL;
 
@@ -917,7 +917,7 @@ unpack_tags(xmlNode * xml_tags, pe_working_set_t * data_set)
 /* The ticket state section:
  * "/cib/status/tickets/ticket_state" */
 static gboolean
-unpack_ticket_state(xmlNode * xml_ticket, pe_working_set_t * data_set)
+unpack_ticket_state(xmlNode *xml_ticket, pcmk_scheduler_t *data_set)
 {
     const char *ticket_id = NULL;
     const char *granted = NULL;
@@ -985,7 +985,7 @@ unpack_ticket_state(xmlNode * xml_ticket, pe_working_set_t * data_set)
 }
 
 static gboolean
-unpack_tickets_state(xmlNode * xml_tickets, pe_working_set_t * data_set)
+unpack_tickets_state(xmlNode *xml_tickets, pcmk_scheduler_t *data_set)
 {
     xmlNode *xml_obj = NULL;
 
@@ -1003,7 +1003,7 @@ unpack_tickets_state(xmlNode * xml_tickets, pe_working_set_t * data_set)
 
 static void
 unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
-                           pe_working_set_t *data_set)
+                           pcmk_scheduler_t *data_set)
 {
     const char *resource_discovery_enabled = NULL;
     const xmlNode *attrs = NULL;
@@ -1076,7 +1076,7 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
  */
 static void
 unpack_transient_attributes(const xmlNode *state, pcmk_node_t *node,
-                            pe_working_set_t *data_set)
+                            pcmk_scheduler_t *data_set)
 {
     const char *discovery = NULL;
     const xmlNode *attrs = find_xml_node(state, XML_TAG_TRANSIENT_NODEATTRS,
@@ -1115,7 +1115,7 @@ unpack_transient_attributes(const xmlNode *state, pcmk_node_t *node,
  * \param[in,out] data_set  Cluster working set
  */
 static void
-unpack_node_state(const xmlNode *state, pe_working_set_t *data_set)
+unpack_node_state(const xmlNode *state, pcmk_scheduler_t *data_set)
 {
     const char *id = NULL;
     const char *uname = NULL;
@@ -1202,7 +1202,7 @@ unpack_node_state(const xmlNode *state, pe_working_set_t *data_set)
  */
 static int
 unpack_node_history(const xmlNode *status, bool fence,
-                    pe_working_set_t *data_set)
+                    pcmk_scheduler_t *data_set)
 {
     int rc = pcmk_rc_ok;
 
@@ -1303,7 +1303,7 @@ unpack_node_history(const xmlNode *status, bool fence,
 /* create positive rsc_to_node constraints between resources and the nodes they are running on */
 /* anything else? */
 gboolean
-unpack_status(xmlNode * status, pe_working_set_t * data_set)
+unpack_status(xmlNode *status, pcmk_scheduler_t *data_set)
 {
     xmlNode *state = NULL;
 
@@ -1385,7 +1385,7 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
  *         0 if not a member, or -1 if no valid information available
  */
 static long long
-unpack_node_member(const xmlNode *node_state, pe_working_set_t *data_set)
+unpack_node_member(const xmlNode *node_state, pcmk_scheduler_t *data_set)
 {
     const char *member_time = crm_element_value(node_state, PCMK__XA_IN_CCM);
     int member = 0;
@@ -1478,7 +1478,7 @@ unpack_node_terminate(const pcmk_node_t *node, const xmlNode *node_state)
 }
 
 static gboolean
-determine_online_status_no_fencing(pe_working_set_t *data_set,
+determine_online_status_no_fencing(pcmk_scheduler_t *data_set,
                                    const xmlNode *node_state,
                                    pcmk_node_t *this_node)
 {
@@ -1517,7 +1517,7 @@ determine_online_status_no_fencing(pe_working_set_t *data_set,
 }
 
 static bool
-determine_online_status_fencing(pe_working_set_t *data_set,
+determine_online_status_fencing(pcmk_scheduler_t *data_set,
                                 const xmlNode *node_state,
                                 pcmk_node_t *this_node)
 {
@@ -1622,7 +1622,7 @@ determine_online_status_fencing(pe_working_set_t *data_set,
 }
 
 static void
-determine_remote_online_status(pe_working_set_t *data_set,
+determine_remote_online_status(pcmk_scheduler_t *data_set,
                                pcmk_node_t *this_node)
 {
     pcmk_resource_t *rsc = this_node->details->remote_rsc;
@@ -1696,7 +1696,7 @@ remote_online_done:
 
 static void
 determine_online_status(const xmlNode *node_state, pcmk_node_t *this_node,
-                        pe_working_set_t *data_set)
+                        pcmk_scheduler_t *data_set)
 {
     gboolean online = FALSE;
     const char *exp_state = crm_element_value(node_state, PCMK__XA_EXPECTED);
@@ -1848,7 +1848,7 @@ clone_zero(const char *last_rsc_id)
 
 static pcmk_resource_t *
 create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
-                     pe_working_set_t *data_set)
+                     pcmk_scheduler_t *data_set)
 {
     pcmk_resource_t *rsc = NULL;
     xmlNode *xml_rsc = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
@@ -1900,7 +1900,7 @@ create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
  */
 static pcmk_resource_t *
 create_anonymous_orphan(pcmk_resource_t *parent, const char *rsc_id,
-                        const pcmk_node_t *node, pe_working_set_t *data_set)
+                        const pcmk_node_t *node, pcmk_scheduler_t *data_set)
 {
     pcmk_resource_t *top = pe__create_clone_child(parent, data_set);
 
@@ -1928,7 +1928,7 @@ create_anonymous_orphan(pcmk_resource_t *parent, const char *rsc_id,
  * \param[in]     rsc_id    Name of cloned resource in history (without instance)
  */
 static pcmk_resource_t *
-find_anonymous_clone(pe_working_set_t *data_set, const pcmk_node_t *node,
+find_anonymous_clone(pcmk_scheduler_t *data_set, const pcmk_node_t *node,
                      pcmk_resource_t *parent, const char *rsc_id)
 {
     GList *rIter = NULL;
@@ -2053,7 +2053,7 @@ find_anonymous_clone(pe_working_set_t *data_set, const pcmk_node_t *node,
 }
 
 static pcmk_resource_t *
-unpack_find_resource(pe_working_set_t *data_set, const pcmk_node_t *node,
+unpack_find_resource(pcmk_scheduler_t *data_set, const pcmk_node_t *node,
                      const char *rsc_id)
 {
     pcmk_resource_t *rsc = NULL;
@@ -2116,7 +2116,7 @@ unpack_find_resource(pe_working_set_t *data_set, const pcmk_node_t *node,
 
 static pcmk_resource_t *
 process_orphan_resource(const xmlNode *rsc_entry, const pcmk_node_t *node,
-                        pe_working_set_t *data_set)
+                        pcmk_scheduler_t *data_set)
 {
     pcmk_resource_t *rsc = NULL;
     const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
@@ -2417,7 +2417,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
 static void
 process_recurring(pcmk_node_t *node, pcmk_resource_t *rsc,
                   int start_index, int stop_index,
-                  GList *sorted_op_list, pe_working_set_t * data_set)
+                  GList *sorted_op_list, pcmk_scheduler_t * data_set)
 {
     int counter = -1;
     const char *task = NULL;
@@ -2529,7 +2529,7 @@ calculate_active_ops(const GList *sorted_op_list, int *start_index,
 // If resource history entry has shutdown lock, remember lock node and time
 static void
 unpack_shutdown_lock(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
-                     const pcmk_node_t *node, pe_working_set_t *data_set)
+                     const pcmk_node_t *node, pcmk_scheduler_t *data_set)
 {
     time_t lock_time = 0;   // When lock started (i.e. node shutdown time)
 
@@ -2565,7 +2565,7 @@ unpack_shutdown_lock(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
  */
 static pcmk_resource_t *
 unpack_lrm_resource(pcmk_node_t *node, const xmlNode *lrm_resource,
-                    pe_working_set_t *data_set)
+                    pcmk_scheduler_t *data_set)
 {
     GList *gIter = NULL;
     int stop_index = -1;
@@ -2665,7 +2665,7 @@ unpack_lrm_resource(pcmk_node_t *node, const xmlNode *lrm_resource,
 
 static void
 handle_orphaned_container_fillers(const xmlNode *lrm_rsc_list,
-                                  pe_working_set_t *data_set)
+                                  pcmk_scheduler_t *data_set)
 {
     for (const xmlNode *rsc_entry = pcmk__xe_first_child(lrm_rsc_list);
          rsc_entry != NULL; rsc_entry = pcmk__xe_next(rsc_entry)) {
@@ -2713,7 +2713,7 @@ handle_orphaned_container_fillers(const xmlNode *lrm_rsc_list,
  */
 static void
 unpack_node_lrm(pcmk_node_t *node, const xmlNode *xml,
-                pe_working_set_t *data_set)
+                pcmk_scheduler_t *data_set)
 {
     bool found_orphaned_container_filler = false;
 
@@ -2777,7 +2777,7 @@ set_node_score(gpointer key, gpointer value, gpointer user_data)
 
 static xmlNode *
 find_lrm_op(const char *resource, const char *op, const char *node, const char *source,
-            int target_rc, pe_working_set_t *data_set)
+            int target_rc, pcmk_scheduler_t *data_set)
 {
     GString *xpath = NULL;
     xmlNode *xml = NULL;
@@ -2826,7 +2826,7 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
 
 static xmlNode *
 find_lrm_resource(const char *rsc_id, const char *node_name,
-                  pe_working_set_t *data_set)
+                  pcmk_scheduler_t *data_set)
 {
     GString *xpath = NULL;
     xmlNode *xml = NULL;
@@ -2889,7 +2889,7 @@ unknown_on_node(pcmk_resource_t *rsc, const char *node_name)
 static bool
 monitor_not_running_after(const char *rsc_id, const char *node_name,
                           const xmlNode *xml_op, bool same_node,
-                          pe_working_set_t *data_set)
+                          pcmk_scheduler_t *data_set)
 {
     /* Any probe/monitor operation on the node indicating it was not running
      * there
@@ -2915,7 +2915,7 @@ monitor_not_running_after(const char *rsc_id, const char *node_name,
 static bool
 non_monitor_after(const char *rsc_id, const char *node_name,
                   const xmlNode *xml_op, bool same_node,
-                  pe_working_set_t *data_set)
+                  pcmk_scheduler_t *data_set)
 {
     xmlNode *lrm_resource = NULL;
 
@@ -2961,7 +2961,7 @@ static bool
 newer_state_after_migrate(const char *rsc_id, const char *node_name,
                           const xmlNode *migrate_to,
                           const xmlNode *migrate_from,
-                          pe_working_set_t *data_set)
+                          pcmk_scheduler_t *data_set)
 {
     const xmlNode *xml_op = migrate_to;
     const char *source = NULL;
@@ -3978,7 +3978,7 @@ should_clear_for_param_change(const xmlNode *xml_op, const char *task,
 // Order action after fencing of remote node, given connection rsc
 static void
 order_after_remote_fencing(pcmk_action_t *action, pcmk_resource_t *remote_conn,
-                           pe_working_set_t *data_set)
+                           pcmk_scheduler_t *data_set)
 {
     pcmk_node_t *remote_node = pe_find_node(data_set->nodes, remote_conn->id);
 
@@ -4819,7 +4819,7 @@ done:
 
 static void
 add_node_attrs(const xmlNode *xml_obj, pcmk_node_t *node, bool overwrite,
-               pe_working_set_t *data_set)
+               pcmk_scheduler_t *data_set)
 {
     const char *cluster_name = NULL;
 
@@ -4943,7 +4943,7 @@ extract_operations(const char *node, const char *rsc, xmlNode * rsc_entry, gbool
 
 GList *
 find_operations(const char *rsc, const char *node, gboolean active_filter,
-                pe_working_set_t * data_set)
+                pcmk_scheduler_t * data_set)
 {
     GList *output = NULL;
     GList *intermediate = NULL;

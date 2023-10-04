@@ -208,7 +208,7 @@ clone_header(pcmk__output_t *out, int *rc, const pcmk_resource_t *rsc,
 
 void
 pe__force_anon(const char *standard, pcmk_resource_t *rsc, const char *rid,
-               pe_working_set_t *data_set)
+               pcmk_scheduler_t *data_set)
 {
     if (pe_rsc_is_clone(rsc)) {
         clone_variant_data_t *clone_data = rsc->variant_opaque;
@@ -242,7 +242,7 @@ find_clone_instance(const pcmk_resource_t *rsc, const char *sub_id)
 }
 
 pcmk_resource_t *
-pe__create_clone_child(pcmk_resource_t *rsc, pe_working_set_t *data_set)
+pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *data_set)
 {
     gboolean as_orphan = FALSE;
     char *inc_num = NULL;
@@ -322,7 +322,7 @@ unpack_meta_int(const pcmk_resource_t *rsc, const char *meta_name,
 }
 
 gboolean
-clone_unpack(pcmk_resource_t * rsc, pe_working_set_t * data_set)
+clone_unpack(pcmk_resource_t * rsc, pcmk_scheduler_t * data_set)
 {
     int lpc = 0;
     xmlNode *a_child = NULL;
@@ -1238,7 +1238,7 @@ clone_resource_state(const pcmk_resource_t * rsc, gboolean current)
  */
 bool
 pe__is_universal_clone(const pcmk_resource_t *rsc,
-                       const pe_working_set_t *data_set)
+                       const pcmk_scheduler_t *data_set)
 {
     if (pe_rsc_is_clone(rsc)) {
         clone_variant_data_t *clone_data = rsc->variant_opaque;

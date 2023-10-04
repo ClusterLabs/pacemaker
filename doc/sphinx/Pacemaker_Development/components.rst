@@ -335,7 +335,7 @@ Working with the scheduler is difficult. Challenges include:
 * It produces an insane amount of log messages at debug and trace levels.
   You can put resource ID(s) in the ``PCMK_trace_tags`` environment variable to
   enable trace-level messages only when related to specific resources.
-* Different parts of the main ``pe_working_set_t`` structure are finalized at
+* Different parts of the main ``pcmk_scheduler_t`` structure are finalized at
   different points in the scheduling process, so you have to keep in mind
   whether information you're using at one point of the code can possibly change
   later. For example, data unpacked from the CIB can safely be used anytime
@@ -347,12 +347,12 @@ Working with the scheduler is difficult. Challenges include:
 
 
 .. index::
-   single: pe_working_set_t
+   single: pcmk_scheduler_t
 
 Cluster Working Set
 ___________________
 
-The main data object for the scheduler is ``pe_working_set_t``, which contains
+The main data object for the scheduler is ``pcmk_scheduler_t``, which contains
 all information needed about nodes, resources, constraints, etc., both as the
 raw CIB XML and parsed into more usable data structures, plus the resulting
 transition graph XML. The variable name is usually ``data_set``.
@@ -389,7 +389,7 @@ Assignment of resources to nodes is done by choosing the node with the highest
 score for a given resource. The scheduler does a bunch of processing to
 generate the scores, then the actual assignment is straightforward.
 
-Node lists are frequently used. For example, ``pe_working_set_t`` has a
+Node lists are frequently used. For example, ``pcmk_scheduler_t`` has a
 ``nodes`` member which is a list of all nodes in the cluster, and
 ``pcmk_resource_t`` has a ``running_on`` member which is a list of all nodes on
 which the resource is (or might be) active. These are lists of ``pcmk_node_t``

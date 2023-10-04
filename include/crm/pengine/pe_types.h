@@ -35,12 +35,12 @@ typedef struct pe_resource_s pe_resource_t;
 typedef struct pe_working_set_s pe_working_set_t;
 
 typedef struct resource_object_functions_s {
-    gboolean (*unpack)(pcmk_resource_t*, pe_working_set_t*);
+    gboolean (*unpack)(pcmk_resource_t*, pcmk_scheduler_t*);
     pcmk_resource_t *(*find_rsc)(pcmk_resource_t *parent, const char *search,
                                  const pcmk_node_t *node, int flags);
     /* parameter result must be free'd */
     char *(*parameter)(pcmk_resource_t*, pcmk_node_t*, gboolean, const char*,
-                       pe_working_set_t*);
+                       pcmk_scheduler_t*);
     //! \deprecated will be removed in a future release
     void (*print)(pcmk_resource_t*, const char*, long, void*);
     gboolean (*active)(pcmk_resource_t*, gboolean);
@@ -169,7 +169,7 @@ struct pe_node_shared_s {
     GHashTable *utilization;
     GHashTable *digest_cache;   //!< cache of calculated resource digests
     int priority; // calculated based on the priority of resources running on the node
-    pe_working_set_t *data_set; //!< Cluster that this node is part of
+    pcmk_scheduler_t *data_set; //!< Cluster that this node is part of
 };
 
 struct pe_node_s {
@@ -187,7 +187,7 @@ struct pe_resource_s {
     xmlNode *orig_xml;
     xmlNode *ops_xml;
 
-    pe_working_set_t *cluster;
+    pcmk_scheduler_t *cluster;
     pcmk_resource_t *parent;
 
     enum pe_obj_types variant;

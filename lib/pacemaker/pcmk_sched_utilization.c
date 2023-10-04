@@ -452,7 +452,7 @@ pcmk__create_utilization_constraints(pcmk_resource_t *rsc,
  * \param[in,out] data_set  Cluster working set
  */
 void
-pcmk__show_node_capacities(const char *desc, pe_working_set_t *data_set)
+pcmk__show_node_capacities(const char *desc, pcmk_scheduler_t *data_set)
 {
     if (!pcmk_is_set(data_set->flags, pcmk_sched_show_utilization)) {
         return;

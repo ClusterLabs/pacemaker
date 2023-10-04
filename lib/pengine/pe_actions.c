@@ -24,7 +24,7 @@ static void unpack_operation(pcmk_action_t *action, const xmlNode *xml_obj,
                              guint interval_ms);
 
 static void
-add_singleton(pe_working_set_t *data_set, pcmk_action_t *action)
+add_singleton(pcmk_scheduler_t *data_set, pcmk_action_t *action)
 {
     if (data_set->singletons == NULL) {
         data_set->singletons = pcmk__strkey_table(NULL, NULL);
@@ -33,7 +33,7 @@ add_singleton(pe_working_set_t *data_set, pcmk_action_t *action)
 }
 
 static pcmk_action_t *
-lookup_singleton(pe_working_set_t *data_set, const char *action_uuid)
+lookup_singleton(pcmk_scheduler_t *data_set, const char *action_uuid)
 {
     if (data_set->singletons == NULL) {
         return NULL;
@@ -54,7 +54,7 @@ lookup_singleton(pe_working_set_t *data_set, const char *action_uuid)
  */
 static pcmk_action_t *
 find_existing_action(const char *key, const pcmk_resource_t *rsc,
-                     const pcmk_node_t *node, const pe_working_set_t *data_set)
+                     const pcmk_node_t *node, const pcmk_scheduler_t *data_set)
 {
     GList *matches = NULL;
     pcmk_action_t *action = NULL;
@@ -169,7 +169,7 @@ find_rsc_op_entry(const pcmk_resource_t *rsc, const char *key)
 static pcmk_action_t *
 new_action(char *key, const char *task, pcmk_resource_t *rsc,
            const pcmk_node_t *node, bool optional, bool for_graph,
-           pe_working_set_t *data_set)
+           pcmk_scheduler_t *data_set)
 {
     pcmk_action_t *action = calloc(1, sizeof(pcmk_action_t));
 
@@ -232,7 +232,7 @@ new_action(char *key, const char *task, pcmk_resource_t *rsc,
  * \param[in,out] data_set  Cluster working set
  */
 static void
-unpack_action_node_attributes(pcmk_action_t *action, pe_working_set_t *data_set)
+unpack_action_node_attributes(pcmk_action_t *action, pcmk_scheduler_t *data_set)
 {
     if (!pcmk_is_set(action->flags, pcmk_action_attrs_evaluated)
         && (action->op_entry != NULL)) {
@@ -282,7 +282,7 @@ update_action_optional(pcmk_action_t *action, gboolean optional)
 }
 
 static enum pe_quorum_policy
-effective_quorum_policy(pcmk_resource_t *rsc, pe_working_set_t *data_set)
+effective_quorum_policy(pcmk_resource_t *rsc, pcmk_scheduler_t *data_set)
 {
     enum pe_quorum_policy policy = data_set->no_quorum_policy;
 
@@ -319,7 +319,7 @@ effective_quorum_policy(pcmk_resource_t *rsc, pe_working_set_t *data_set)
  */
 static void
 update_resource_action_runnable(pcmk_action_t *action, bool for_graph,
-                                pe_working_set_t *data_set)
+                                pcmk_scheduler_t *data_set)
 {
     if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
         return;
@@ -1036,7 +1036,7 @@ unpack_operation(pcmk_action_t *action, const xmlNode *xml_obj,
 pcmk_action_t *
 custom_action(pcmk_resource_t *rsc, char *key, const char *task,
               const pcmk_node_t *on_node, gboolean optional,
-              gboolean save_action, pe_working_set_t *data_set)
+              gboolean save_action, pcmk_scheduler_t *data_set)
 {
     pcmk_action_t *action = NULL;
 
@@ -1071,7 +1071,7 @@ custom_action(pcmk_resource_t *rsc, char *key, const char *task,
 }
 
 pcmk_action_t *
-get_pseudo_op(const char *name, pe_working_set_t * data_set)
+get_pseudo_op(const char *name, pcmk_scheduler_t * data_set)
 {
     pcmk_action_t *op = lookup_singleton(data_set, name);
 
@@ -1109,7 +1109,7 @@ find_unfencing_devices(GList *candidates, GList *matches)
 
 static int
 node_priority_fencing_delay(const pcmk_node_t *node,
-                            const pe_working_set_t *data_set)
+                            const pcmk_scheduler_t *data_set)
 {
     int member_count = 0;
     int online_count = 0;
@@ -1177,7 +1177,7 @@ node_priority_fencing_delay(const pcmk_node_t *node,
 
 pcmk_action_t *
 pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
-            const char *reason, bool priority_delay, pe_working_set_t *data_set)
+            const char *reason, bool priority_delay, pcmk_scheduler_t *data_set)
 {
     char *op_key = NULL;
     pcmk_action_t *stonith_op = NULL;
@@ -1313,7 +1313,7 @@ pe_free_action(pcmk_action_t *action)
 
 int
 pe_get_configured_timeout(pcmk_resource_t *rsc, const char *action,
-                          pe_working_set_t *data_set)
+                          pcmk_scheduler_t *data_set)
 {
     xmlNode *child = NULL;
     GHashTable *action_meta = NULL;

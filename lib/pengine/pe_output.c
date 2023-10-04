@@ -61,7 +61,7 @@ compare_attribute(gconstpointer a, gconstpointer b)
  */
 static bool
 add_extra_info(const pcmk_node_t *node, GList *rsc_list,
-               pe_working_set_t *data_set, const char *attrname,
+               pcmk_scheduler_t *data_set, const char *attrname,
                int *expected_score)
 {
     GList *gIter = NULL;
@@ -194,7 +194,7 @@ append_dump_text(gpointer key, gpointer value, gpointer user_data)
 }
 
 static const char *
-get_cluster_stack(pe_working_set_t *data_set)
+get_cluster_stack(pcmk_scheduler_t *data_set)
 {
     xmlNode *stack = get_xpath_object("//nvpair[@name='cluster-infrastructure']",
                                       data_set->input, LOG_DEBUG);
@@ -349,7 +349,8 @@ get_node_feature_set(pcmk_node_t *node)
 }
 
 static bool
-is_mixed_version(pe_working_set_t *data_set) {
+is_mixed_version(pcmk_scheduler_t *data_set)
+{
     const char *feature_set = NULL;
     for (GList *gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         pcmk_node_t *node = gIter->data;
@@ -375,11 +376,11 @@ formatted_xml_buf(const pcmk_resource_t *rsc, bool raw)
     }
 }
 
-PCMK__OUTPUT_ARGS("cluster-summary", "pe_working_set_t *",
+PCMK__OUTPUT_ARGS("cluster-summary", "pcmk_scheduler_t *",
                   "enum pcmk_pacemakerd_state", "uint32_t", "uint32_t")
 static int
 cluster_summary(pcmk__output_t *out, va_list args) {
-    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    pcmk_scheduler_t *data_set = va_arg(args, pcmk_scheduler_t *);
     enum pcmk_pacemakerd_state pcmkd_state =
         (enum pcmk_pacemakerd_state) va_arg(args, int);
     uint32_t section_opts = va_arg(args, uint32_t);
@@ -443,11 +444,11 @@ cluster_summary(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("cluster-summary", "pe_working_set_t *",
+PCMK__OUTPUT_ARGS("cluster-summary", "pcmk_scheduler_t *",
                   "enum pcmk_pacemakerd_state", "uint32_t", "uint32_t")
 static int
 cluster_summary_html(pcmk__output_t *out, va_list args) {
-    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    pcmk_scheduler_t *data_set = va_arg(args, pcmk_scheduler_t *);
     enum pcmk_pacemakerd_state pcmkd_state =
         (enum pcmk_pacemakerd_state) va_arg(args, int);
     uint32_t section_opts = va_arg(args, uint32_t);
@@ -679,11 +680,11 @@ ban_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("ban-list", "pe_working_set_t *", "const char *", "GList *",
+PCMK__OUTPUT_ARGS("ban-list", "pcmk_scheduler_t *", "const char *", "GList *",
                   "uint32_t", "bool")
 static int
 ban_list(pcmk__output_t *out, va_list args) {
-    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    pcmk_scheduler_t *data_set = va_arg(args, pcmk_scheduler_t *);
     const char *prefix = va_arg(args, const char *);
     GList *only_rsc = va_arg(args, GList *);
     uint32_t show_opts = va_arg(args, uint32_t);
@@ -955,10 +956,10 @@ cluster_maint_mode_text(pcmk__output_t *out, va_list args) {
     }
 }
 
-PCMK__OUTPUT_ARGS("cluster-options", "pe_working_set_t *")
+PCMK__OUTPUT_ARGS("cluster-options", "pcmk_scheduler_t *")
 static int
 cluster_options_html(pcmk__output_t *out, va_list args) {
-    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    pcmk_scheduler_t *data_set = va_arg(args, pcmk_scheduler_t *);
 
     if (pcmk_is_set(data_set->flags, pcmk_sched_fencing_enabled)) {
         out->list_item(out, NULL, "STONITH of failed nodes enabled");
@@ -1016,10 +1017,10 @@ cluster_options_html(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("cluster-options", "pe_working_set_t *")
+PCMK__OUTPUT_ARGS("cluster-options", "pcmk_scheduler_t *")
 static int
 cluster_options_log(pcmk__output_t *out, va_list args) {
-    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    pcmk_scheduler_t *data_set = va_arg(args, pcmk_scheduler_t *);
 
     if (pcmk_is_set(data_set->flags, pcmk_sched_in_maintenance)) {
         return out->info(out, "Resource management is DISABLED.  The cluster will not attempt to start, stop or recover services.");
@@ -1030,10 +1031,10 @@ cluster_options_log(pcmk__output_t *out, va_list args) {
     }
 }
 
-PCMK__OUTPUT_ARGS("cluster-options", "pe_working_set_t *")
+PCMK__OUTPUT_ARGS("cluster-options", "pcmk_scheduler_t *")
 static int
 cluster_options_text(pcmk__output_t *out, va_list args) {
-    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    pcmk_scheduler_t *data_set = va_arg(args, pcmk_scheduler_t *);
 
     if (pcmk_is_set(data_set->flags, pcmk_sched_fencing_enabled)) {
         out->list_item(out, NULL, "STONITH of failed nodes enabled");
@@ -1075,10 +1076,10 @@ cluster_options_text(pcmk__output_t *out, va_list args) {
 
 #define bv(flag) pcmk__btoa(pcmk_is_set(data_set->flags, (flag)))
 
-PCMK__OUTPUT_ARGS("cluster-options", "pe_working_set_t *")
+PCMK__OUTPUT_ARGS("cluster-options", "pcmk_scheduler_t *")
 static int
 cluster_options_xml(pcmk__output_t *out, va_list args) {
-    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    pcmk_scheduler_t *data_set = va_arg(args, pcmk_scheduler_t *);
 
     const char *no_quorum_policy = NULL;
     char *stonith_timeout_str = pcmk__itoa(data_set->stonith_timeout);
@@ -1518,11 +1519,11 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("failed-action-list", "pe_working_set_t *", "GList *",
+PCMK__OUTPUT_ARGS("failed-action-list", "pcmk_scheduler_t *", "GList *",
                   "GList *", "uint32_t", "bool")
 static int
 failed_action_list(pcmk__output_t *out, va_list args) {
-    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    pcmk_scheduler_t *data_set = va_arg(args, pcmk_scheduler_t *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
     uint32_t show_opts = va_arg(args, uint32_t);
@@ -1983,10 +1984,10 @@ node_attribute_html(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("node-and-op", "pe_working_set_t *", "xmlNodePtr")
+PCMK__OUTPUT_ARGS("node-and-op", "pcmk_scheduler_t *", "xmlNodePtr")
 static int
 node_and_op(pcmk__output_t *out, va_list args) {
-    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    pcmk_scheduler_t *data_set = va_arg(args, pcmk_scheduler_t *);
     xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
 
     pcmk_resource_t *rsc = NULL;
@@ -2038,10 +2039,10 @@ node_and_op(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("node-and-op", "pe_working_set_t *", "xmlNodePtr")
+PCMK__OUTPUT_ARGS("node-and-op", "pcmk_scheduler_t *", "xmlNodePtr")
 static int
 node_and_op_xml(pcmk__output_t *out, va_list args) {
-    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    pcmk_scheduler_t *data_set = va_arg(args, pcmk_scheduler_t *);
     xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
 
     pcmk_resource_t *rsc = NULL;
@@ -2110,11 +2111,11 @@ node_attribute_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("node-attribute-list", "pe_working_set_t *", "uint32_t",
+PCMK__OUTPUT_ARGS("node-attribute-list", "pcmk_scheduler_t *", "uint32_t",
                   "bool", "GList *", "GList *")
 static int
 node_attribute_list(pcmk__output_t *out, va_list args) {
-    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    pcmk_scheduler_t *data_set = va_arg(args, pcmk_scheduler_t *);
     uint32_t show_opts = va_arg(args, uint32_t);
     bool print_spacer = va_arg(args, int);
     GList *only_node = va_arg(args, GList *);
@@ -2209,11 +2210,11 @@ node_capacity_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("node-history-list", "pe_working_set_t *", "pcmk_node_t *",
+PCMK__OUTPUT_ARGS("node-history-list", "pcmk_scheduler_t *", "pcmk_node_t *",
                   "xmlNodePtr", "GList *", "GList *", "uint32_t", "uint32_t")
 static int
 node_history_list(pcmk__output_t *out, va_list args) {
-    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    pcmk_scheduler_t *data_set = va_arg(args, pcmk_scheduler_t *);
     pcmk_node_t *node = va_arg(args, pcmk_node_t *);
     xmlNode *node_state = va_arg(args, xmlNode *);
     GList *only_node = va_arg(args, GList *);
@@ -2454,11 +2455,11 @@ node_list_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("node-summary", "pe_working_set_t *", "GList *", "GList *",
+PCMK__OUTPUT_ARGS("node-summary", "pcmk_scheduler_t *", "GList *", "GList *",
                   "uint32_t", "uint32_t", "bool")
 static int
 node_summary(pcmk__output_t *out, va_list args) {
-    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    pcmk_scheduler_t *data_set = va_arg(args, pcmk_scheduler_t *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
     uint32_t section_opts = va_arg(args, uint32_t);
@@ -2761,12 +2762,12 @@ print_resource_header(pcmk__output_t *out, uint32_t show_opts)
 }
 
 
-PCMK__OUTPUT_ARGS("resource-list", "pe_working_set_t *", "uint32_t", "bool",
+PCMK__OUTPUT_ARGS("resource-list", "pcmk_scheduler_t *", "uint32_t", "bool",
                   "GList *", "GList *", "bool")
 static int
 resource_list(pcmk__output_t *out, va_list args)
 {
-    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    pcmk_scheduler_t *data_set = va_arg(args, pcmk_scheduler_t *);
     uint32_t show_opts = va_arg(args, uint32_t);
     bool print_summary = va_arg(args, int);
     GList *only_node = va_arg(args, GList *);
@@ -2869,12 +2870,12 @@ resource_list(pcmk__output_t *out, va_list args)
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("resource-operation-list", "pe_working_set_t *",
+PCMK__OUTPUT_ARGS("resource-operation-list", "pcmk_scheduler_t *",
                   "pcmk_resource_t *", "pcmk_node_t *", "GList *", "uint32_t")
 static int
 resource_operation_list(pcmk__output_t *out, va_list args)
 {
-    pe_working_set_t *data_set G_GNUC_UNUSED = va_arg(args, pe_working_set_t *);
+    pcmk_scheduler_t *data_set G_GNUC_UNUSED = va_arg(args, pcmk_scheduler_t *);
     pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     pcmk_node_t *node = va_arg(args, pcmk_node_t *);
     GList *op_list = va_arg(args, GList *);
@@ -3028,10 +3029,10 @@ ticket_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("ticket-list", "pe_working_set_t *", "bool")
+PCMK__OUTPUT_ARGS("ticket-list", "pcmk_scheduler_t *", "bool")
 static int
 ticket_list(pcmk__output_t *out, va_list args) {
-    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    pcmk_scheduler_t *data_set = va_arg(args, pcmk_scheduler_t *);
     bool print_spacer = va_arg(args, int);
 
     GHashTableIter iter;

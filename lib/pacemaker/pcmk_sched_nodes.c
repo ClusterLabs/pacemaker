@@ -351,7 +351,7 @@ pcmk__any_node_available(GHashTable *nodes)
  * \param[in,out] data_set  Cluster working set
  */
 void
-pcmk__apply_node_health(pe_working_set_t *data_set)
+pcmk__apply_node_health(pcmk_scheduler_t *data_set)
 {
     int base_health = 0;
     enum pcmk__health_strategy strategy;

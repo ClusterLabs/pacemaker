@@ -255,7 +255,7 @@ static GOptionEntry deprecated_entries[] = {
 };
 
 static pe_ticket_t *
-find_ticket(gchar *ticket_id, pe_working_set_t * data_set)
+find_ticket(gchar *ticket_id, pcmk_scheduler_t *data_set)
 {
     return g_hash_table_lookup(data_set->tickets, ticket_id);
 }
@@ -326,7 +326,7 @@ print_ticket(pe_ticket_t * ticket, bool raw, bool details)
 }
 
 static void
-print_ticket_list(pe_working_set_t * data_set, bool raw, bool details)
+print_ticket_list(pcmk_scheduler_t *data_set, bool raw, bool details)
 {
     GHashTableIter iter;
     pe_ticket_t *ticket = NULL;
@@ -464,7 +464,7 @@ dump_constraints(cib_t * the_cib, gchar *ticket_id)
 
 static int
 get_ticket_state_attr(gchar *ticket_id, const char *attr_name, const char **attr_value,
-                      pe_working_set_t * data_set)
+                      pcmk_scheduler_t *data_set)
 {
     pe_ticket_t *ticket = NULL;
 
@@ -557,7 +557,7 @@ allow_modification(gchar *ticket_id)
 }
 
 static int
-modify_ticket_state(gchar * ticket_id, cib_t * cib, pe_working_set_t * data_set)
+modify_ticket_state(gchar *ticket_id, cib_t *cib, pcmk_scheduler_t *data_set)
 {
     int rc = pcmk_rc_ok;
     xmlNode *xml_top = NULL;
@@ -712,7 +712,7 @@ build_arg_context(pcmk__common_args_t *args) {
 int
 main(int argc, char **argv)
 {
-    pe_working_set_t *data_set = NULL;
+    pcmk_scheduler_t *data_set = NULL;
     xmlNode *cib_xml_copy = NULL;
 
     cib_t *cib_conn = NULL;

@@ -1779,14 +1779,14 @@ inject_rsc_action_xml(pcmk__output_t *out, va_list args)
         retcode = pcmk_rc_ok;       \
     }
 
-PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *",
+PCMK__OUTPUT_ARGS("cluster-status", "pcmk_scheduler_t *",
                   "enum pcmk_pacemakerd_state", "crm_exit_t",
                   "stonith_history_t *", "enum pcmk__fence_history", "uint32_t",
                   "uint32_t", "const char *", "GList *", "GList *")
 int
 pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
 {
-    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    pcmk_scheduler_t *data_set = va_arg(args, pcmk_scheduler_t *);
     enum pcmk_pacemakerd_state pcmkd_state =
         (enum pcmk_pacemakerd_state) va_arg(args, int);
     crm_exit_t history_rc = va_arg(args, crm_exit_t);
@@ -1916,14 +1916,14 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *",
+PCMK__OUTPUT_ARGS("cluster-status", "pcmk_scheduler_t *",
                   "enum pcmk_pacemakerd_state", "crm_exit_t",
                   "stonith_history_t *", "enum pcmk__fence_history", "uint32_t",
                   "uint32_t", "const char *", "GList *", "GList *")
 static int
 cluster_status_xml(pcmk__output_t *out, va_list args)
 {
-    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    pcmk_scheduler_t *data_set = va_arg(args, pcmk_scheduler_t *);
     enum pcmk_pacemakerd_state pcmkd_state =
         (enum pcmk_pacemakerd_state) va_arg(args, int);
     crm_exit_t history_rc = va_arg(args, crm_exit_t);
@@ -1997,14 +1997,14 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *",
+PCMK__OUTPUT_ARGS("cluster-status", "pcmk_scheduler_t *",
                   "enum pcmk_pacemakerd_state", "crm_exit_t",
                   "stonith_history_t *", "enum pcmk__fence_history", "uint32_t",
                   "uint32_t", "const char *", "GList *", "GList *")
 static int
 cluster_status_html(pcmk__output_t *out, va_list args)
 {
-    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    pcmk_scheduler_t *data_set = va_arg(args, pcmk_scheduler_t *);
     enum pcmk_pacemakerd_state pcmkd_state =
         (enum pcmk_pacemakerd_state) va_arg(args, int);
     crm_exit_t history_rc = va_arg(args, crm_exit_t);

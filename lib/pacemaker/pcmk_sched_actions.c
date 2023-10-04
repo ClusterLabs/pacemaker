@@ -221,7 +221,7 @@ action_for_ordering(pcmk_action_t *action)
 static inline uint32_t
 update(pcmk_resource_t *rsc, pcmk_action_t *first, pcmk_action_t *then,
        const pcmk_node_t *node, uint32_t flags, uint32_t filter, uint32_t type,
-       pe_working_set_t *data_set)
+       pcmk_scheduler_t *data_set)
 {
     return rsc->cmds->update_ordered_actions(first, then, node, flags, filter,
                                              type, data_set);
@@ -244,7 +244,7 @@ static uint32_t
 update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                                  uint32_t first_flags, uint32_t then_flags,
                                  pe_action_wrapper_t *order,
-                                 pe_working_set_t *data_set)
+                                 pcmk_scheduler_t *data_set)
 {
     uint32_t changed = pcmk__updated_none;
 
@@ -502,7 +502,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
  */
 void
 pcmk__update_action_for_orderings(pcmk_action_t *then,
-                                  pe_working_set_t *data_set)
+                                  pcmk_scheduler_t *data_set)
 {
     GList *lpc = NULL;
     uint32_t changed = pcmk__updated_none;
@@ -839,7 +839,7 @@ uint32_t
 pcmk__update_ordered_actions(pcmk_action_t *first, pcmk_action_t *then,
                              const pcmk_node_t *node, uint32_t flags,
                              uint32_t filter, uint32_t type,
-                             pe_working_set_t *data_set)
+                             pcmk_scheduler_t *data_set)
 {
     uint32_t changed = pcmk__updated_none;
     uint32_t then_flags = 0U;
@@ -1389,7 +1389,7 @@ pcmk__deduplicate_action_inputs(pcmk_action_t *action)
  * \param[in,out] data_set  Cluster working set
  */
 void
-pcmk__output_actions(pe_working_set_t *data_set)
+pcmk__output_actions(pcmk_scheduler_t *data_set)
 {
     pcmk__output_t *out = data_set->priv;
 
@@ -1509,7 +1509,7 @@ task_for_digest(const char *task, guint interval_ms)
 static bool
 only_sanitized_changed(const xmlNode *xml_op,
                        const op_digest_cache_t *digest_data,
-                       const pe_working_set_t *data_set)
+                       const pcmk_scheduler_t *data_set)
 {
     const char *digest_secure = NULL;
 
@@ -1910,7 +1910,7 @@ process_node_history(pcmk_node_t *node, const xmlNode *lrm_rscs)
  * \param[in,out] data_set  Cluster working set
  */
 void
-pcmk__handle_rsc_config_changes(pe_working_set_t *data_set)
+pcmk__handle_rsc_config_changes(pcmk_scheduler_t *data_set)
 {
     crm_trace("Check resource and action configuration for changes");
 

@@ -157,7 +157,7 @@ pcmk__resource_digests(pcmk__output_t *out, pcmk_resource_t *rsc,
 int
 pcmk_resource_digests(xmlNodePtr *xml, pcmk_resource_t *rsc,
                       const pcmk_node_t *node, GHashTable *overrides,
-                      pe_working_set_t *data_set)
+                      pcmk_scheduler_t *data_set)
 {
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;

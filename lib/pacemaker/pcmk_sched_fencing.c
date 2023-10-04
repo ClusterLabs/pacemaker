@@ -285,7 +285,7 @@ rsc_stonith_ordering(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
  * \param[in,out] data_set    Working set of cluster
  */
 void
-pcmk__order_vs_fence(pcmk_action_t *stonith_op, pe_working_set_t *data_set)
+pcmk__order_vs_fence(pcmk_action_t *stonith_op, pcmk_scheduler_t *data_set)
 {
     CRM_CHECK(stonith_op && data_set, return);
     for (GList *r = data_set->resources; r != NULL; r = r->next) {

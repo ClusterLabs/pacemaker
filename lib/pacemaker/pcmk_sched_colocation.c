@@ -438,7 +438,7 @@ unpack_influence(const char *coloc_id, const pcmk_resource_t *rsc,
 
 static void
 unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
-                      const char *influence_s, pe_working_set_t *data_set)
+                      const char *influence_s, pcmk_scheduler_t *data_set)
 {
     xmlNode *xml_rsc = NULL;
     pcmk_resource_t *other = NULL;
@@ -564,7 +564,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
 static void
 colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
                   int score, const char *influence_s,
-                  pe_working_set_t *data_set)
+                  pcmk_scheduler_t *data_set)
 {
     xmlNode *xml_rsc = NULL;
     pcmk_resource_t *rsc_1 = NULL;
@@ -707,7 +707,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
 
 static void
 unpack_simple_colocation(xmlNode *xml_obj, const char *id,
-                         const char *influence_s, pe_working_set_t *data_set)
+                         const char *influence_s, pcmk_scheduler_t *data_set)
 {
     int score_i = 0;
     uint32_t flags = pcmk__coloc_none;
@@ -808,7 +808,7 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
 // \return Standard Pacemaker return code
 static int
 unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
-                       pe_working_set_t *data_set)
+                       pcmk_scheduler_t *data_set)
 {
     const char *id = NULL;
     const char *dependent_id = NULL;
@@ -933,7 +933,7 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
  * \param[in,out] data_set  Cluster working set to add constraint to
  */
 void
-pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
+pcmk__unpack_colocation(xmlNode *xml_obj, pcmk_scheduler_t *data_set)
 {
     int score_i = 0;
     xmlNode *set = NULL;

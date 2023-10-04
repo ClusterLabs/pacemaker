@@ -451,7 +451,7 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
  */
 pcmk_action_t *
 pe__clear_failcount(pcmk_resource_t *rsc, const pcmk_node_t *node,
-                    const char *reason, pe_working_set_t *data_set)
+                    const char *reason, pcmk_scheduler_t *data_set)
 {
     char *key = NULL;
     pcmk_action_t *clear = NULL;

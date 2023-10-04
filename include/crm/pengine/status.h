@@ -29,12 +29,12 @@ extern "C" {
  */
 
 const char *rsc_printable_id(const pcmk_resource_t *rsc);
-gboolean cluster_status(pe_working_set_t * data_set);
-pe_working_set_t *pe_new_working_set(void);
-void pe_free_working_set(pe_working_set_t *data_set);
-void set_working_set_defaults(pe_working_set_t * data_set);
-void cleanup_calculations(pe_working_set_t * data_set);
-void pe_reset_working_set(pe_working_set_t *data_set);
+gboolean cluster_status(pcmk_scheduler_t *data_set);
+pcmk_scheduler_t *pe_new_working_set(void);
+void pe_free_working_set(pcmk_scheduler_t *data_set);
+void set_working_set_defaults(pcmk_scheduler_t *data_set);
+void cleanup_calculations(pcmk_scheduler_t *data_set);
+void pe_reset_working_set(pcmk_scheduler_t *data_set);
 pcmk_resource_t *pe_find_resource(GList *rsc_list, const char *id_rh);
 pcmk_resource_t *pe_find_resource_with_flags(GList *rsc_list, const char *id,
                                              enum pe_find flags);
@@ -43,7 +43,7 @@ pcmk_node_t *pe_find_node_id(const GList *node_list, const char *id);
 pcmk_node_t *pe_find_node_any(const GList *node_list, const char *id,
                             const char *node_name);
 GList *find_operations(const char *rsc, const char *node, gboolean active_filter,
-                         pe_working_set_t * data_set);
+                         pcmk_scheduler_t *data_set);
 void calculate_active_ops(const GList *sorted_op_list, int *start_index,
                           int *stop_index);
 int pe_bundle_replicas(const pcmk_resource_t *rsc);

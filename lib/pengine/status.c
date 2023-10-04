@@ -24,16 +24,16 @@
  * \brief Create a new working set
  *
  * \return New, initialized working set on success, else NULL (and set errno)
- * \note Only pe_working_set_t objects created with this function (as opposed
+ * \note Only pcmk_scheduler_t objects created with this function (as opposed
  *       to statically declared or directly allocated) should be used with the
  *       functions in this library, to allow for future extensions to the
  *       data type. The caller is responsible for freeing the memory with
  *       pe_free_working_set() when the instance is no longer needed.
  */
-pe_working_set_t *
+pcmk_scheduler_t *
 pe_new_working_set(void)
 {
-    pe_working_set_t *data_set = calloc(1, sizeof(pe_working_set_t));
+    pcmk_scheduler_t *data_set = calloc(1, sizeof(pcmk_scheduler_t));
 
     if (data_set != NULL) {
         set_working_set_defaults(data_set);
@@ -47,7 +47,7 @@ pe_new_working_set(void)
  * \param[in,out] data_set  Working set to free
  */
 void
-pe_free_working_set(pe_working_set_t *data_set)
+pe_free_working_set(pcmk_scheduler_t *data_set)
 {
     if (data_set != NULL) {
         pe_reset_working_set(data_set);
@@ -68,7 +68,7 @@ pe_free_working_set(pe_working_set_t *data_set)
  *  - A list of the possible stop/start actions (without dependencies)
  */
 gboolean
-cluster_status(pe_working_set_t * data_set)
+cluster_status(pcmk_scheduler_t * data_set)
 {
     xmlNode *section = NULL;
 
@@ -276,7 +276,7 @@ pe__free_location(GList *constraints)
  *             pe_reset_working_set() should be used instead.
  */
 void
-cleanup_calculations(pe_working_set_t * data_set)
+cleanup_calculations(pcmk_scheduler_t * data_set)
 {
     if (data_set == NULL) {
         return;
@@ -335,7 +335,7 @@ cleanup_calculations(pe_working_set_t * data_set)
  * \param[in,out] data_set  Working set to reset
  */
 void
-pe_reset_working_set(pe_working_set_t *data_set)
+pe_reset_working_set(pcmk_scheduler_t *data_set)
 {
     if (data_set == NULL) {
         return;
@@ -365,11 +365,11 @@ pe_reset_working_set(pe_working_set_t *data_set)
 }
 
 void
-set_working_set_defaults(pe_working_set_t * data_set)
+set_working_set_defaults(pcmk_scheduler_t * data_set)
 {
     void *priv = data_set->priv;
 
-    memset(data_set, 0, sizeof(pe_working_set_t));
+    memset(data_set, 0, sizeof(pcmk_scheduler_t));
 
     data_set->priv = priv;
     data_set->order_id = 1;

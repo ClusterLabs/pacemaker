@@ -18,7 +18,7 @@ extern "C" {
  * \internal
  * \brief Possible node health strategies
  *
- * \note It would be nice to use this in pe_working_set_t but that will have to
+ * \note It would be nice to use this in pcmk_scheduler_t but that will have to
  *       wait for an API backward compatibility break.
  */
 enum pcmk__health_strategy {

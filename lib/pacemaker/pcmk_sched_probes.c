@@ -338,7 +338,7 @@ probe_needed_before_action(const pcmk_action_t *probe,
  * \param[in,out] data_set  Cluster working set
  */
 static void
-add_probe_orderings_for_stops(pe_working_set_t *data_set)
+add_probe_orderings_for_stops(pcmk_scheduler_t *data_set)
 {
     for (GList *iter = data_set->ordering_constraints; iter != NULL;
          iter = iter->next) {
@@ -667,7 +667,7 @@ add_restart_orderings_for_probe(pcmk_action_t *probe, pcmk_action_t *after)
  * \param[in,out] data_set  Cluster working set
  */
 static void
-clear_actions_tracking_flag(pe_working_set_t *data_set)
+clear_actions_tracking_flag(pcmk_scheduler_t *data_set)
 {
     for (GList *iter = data_set->actions; iter != NULL; iter = iter->next) {
         pcmk_action_t *action = iter->data;
@@ -726,7 +726,7 @@ add_start_restart_orderings_for_rsc(gpointer data, gpointer user_data)
  * \note This function is currently disabled (see next comment).
  */
 static void
-order_then_probes(pe_working_set_t *data_set)
+order_then_probes(pcmk_scheduler_t *data_set)
 {
 #if 0
     /* Given an ordering "A then B", we would prefer to wait for A to be started
@@ -838,7 +838,7 @@ order_then_probes(pe_working_set_t *data_set)
 }
 
 void
-pcmk__order_probes(pe_working_set_t *data_set)
+pcmk__order_probes(pcmk_scheduler_t *data_set)
 {
     // Add orderings for "probe then X"
     g_list_foreach(data_set->resources, add_start_restart_orderings_for_rsc,
@@ -857,7 +857,7 @@ pcmk__order_probes(pe_working_set_t *data_set)
  * \note This may also schedule fencing of failed remote nodes.
  */
 void
-pcmk__schedule_probes(pe_working_set_t *data_set)
+pcmk__schedule_probes(pcmk_scheduler_t *data_set)
 {
     // Schedule probes on each node in the cluster as needed
     for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {

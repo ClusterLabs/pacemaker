@@ -16,7 +16,7 @@
 #include <crm/pengine/pe_types.h>
 
 xmlNode *input = NULL;
-pe_working_set_t *data_set = NULL;
+pcmk_scheduler_t *data_set = NULL;
 
 pcmk_node_t *cluster01, *cluster02, *httpd_bundle_0;
 pcmk_resource_t *exim_group, *inactive_group;

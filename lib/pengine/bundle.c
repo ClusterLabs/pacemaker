@@ -935,7 +935,7 @@ pe__bundle_needs_remote_name(pcmk_resource_t *rsc)
 }
 
 const char *
-pe__add_bundle_remote_name(pcmk_resource_t *rsc, pe_working_set_t *data_set,
+pe__add_bundle_remote_name(pcmk_resource_t *rsc, pcmk_scheduler_t *data_set,
                            xmlNode *xml, const char *field)
 {
     // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
@@ -981,7 +981,7 @@ pe__add_bundle_remote_name(pcmk_resource_t *rsc, pe_working_set_t *data_set,
     } while (0)
 
 gboolean
-pe__unpack_bundle(pcmk_resource_t *rsc, pe_working_set_t *data_set)
+pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *data_set)
 {
     const char *value = NULL;
     xmlNode *xml_obj = NULL;

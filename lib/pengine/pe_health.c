@@ -20,7 +20,7 @@
  * \param[in,out] data_set  Cluster working set
  */
 void
-pe__unpack_node_health_scores(pe_working_set_t *data_set)
+pe__unpack_node_health_scores(pcmk_scheduler_t *data_set)
 {
     switch (pe__health_strategy(data_set)) {
         case pcmk__health_strategy_none:

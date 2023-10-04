@@ -33,7 +33,7 @@ gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
  * \return true if node can be fenced, false otherwise
  */
 bool
-pe_can_fence(const pe_working_set_t *data_set, const pcmk_node_t *node)
+pe_can_fence(const pcmk_scheduler_t *data_set, const pcmk_node_t *node)
 {
     if (pe__is_guest_node(node)) {
         /* Guest nodes are fenced by stopping their container resource. We can
@@ -175,7 +175,7 @@ pe__cmp_node_name(gconstpointer a, gconstpointer b)
  */
 static void
 pe__output_node_weights(const pcmk_resource_t *rsc, const char *comment,
-                        GHashTable *nodes, pe_working_set_t *data_set)
+                        GHashTable *nodes, pcmk_scheduler_t *data_set)
 {
     pcmk__output_t *out = data_set->priv;
 
@@ -250,7 +250,7 @@ void
 pe__show_node_scores_as(const char *file, const char *function, int line,
                         bool to_log, const pcmk_resource_t *rsc,
                         const char *comment, GHashTable *nodes,
-                        pe_working_set_t *data_set)
+                        pcmk_scheduler_t *data_set)
 {
     if ((rsc != NULL) && pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
         // Don't show allocation scores for orphans
@@ -358,7 +358,7 @@ resource_node_score(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
 
 void
 resource_location(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
-                  const char *tag, pe_working_set_t *data_set)
+                  const char *tag, pcmk_scheduler_t *data_set)
 {
     if (node != NULL) {
         resource_node_score(rsc, node, score, tag);
@@ -393,7 +393,7 @@ resource_location(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
 }
 
 time_t
-get_effective_time(pe_working_set_t * data_set)
+get_effective_time(pcmk_scheduler_t *data_set)
 {
     if(data_set) {
         if (data_set->now == NULL) {
@@ -507,7 +507,7 @@ destroy_ticket(gpointer data)
 }
 
 pe_ticket_t *
-ticket_new(const char *ticket_id, pe_working_set_t * data_set)
+ticket_new(const char *ticket_id, pcmk_scheduler_t *data_set)
 {
     pe_ticket_t *ticket = NULL;
 
@@ -559,7 +559,7 @@ pe__clear_resource_flags_recursive(pcmk_resource_t *rsc, uint64_t flags)
 }
 
 void
-pe__clear_resource_flags_on_all(pe_working_set_t *data_set, uint64_t flag)
+pe__clear_resource_flags_on_all(pcmk_scheduler_t *data_set, uint64_t flag)
 {
     for (GList *lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
         pcmk_resource_t *r = (pcmk_resource_t *) lpc->data;
@@ -579,7 +579,7 @@ pe__set_resource_flags_recursive(pcmk_resource_t *rsc, uint64_t flags)
 
 void
 trigger_unfencing(pcmk_resource_t *rsc, pcmk_node_t *node, const char *reason,
-                  pcmk_action_t *dependency, pe_working_set_t *data_set)
+                  pcmk_action_t *dependency, pcmk_scheduler_t *data_set)
 {
     if (!pcmk_is_set(data_set->flags, pcmk_sched_enable_unfencing)) {
         /* No resources require it */
@@ -678,7 +678,7 @@ pe__shutdown_requested(const pcmk_node_t *node)
  * \param[in,out] data_set  Current working set
  */
 void
-pe__update_recheck_time(time_t recheck, pe_working_set_t *data_set)
+pe__update_recheck_time(time_t recheck, pcmk_scheduler_t *data_set)
 {
     if ((recheck > get_effective_time(data_set))
         && ((data_set->recheck_by == 0)
@@ -703,7 +703,7 @@ void
 pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
                            const pe_rule_eval_data_t *rule_data,
                            GHashTable *hash, const char *always_first,
-                           gboolean overwrite, pe_working_set_t *data_set)
+                           gboolean overwrite, pcmk_scheduler_t *data_set)
 {
     crm_time_t *next_change = crm_time_new_undefined();
 
@@ -794,7 +794,8 @@ pe__filter_rsc_list(GList *rscs, GList *filter)
 }
 
 GList *
-pe__build_node_name_list(pe_working_set_t *data_set, const char *s) {
+pe__build_node_name_list(pcmk_scheduler_t *data_set, const char *s)
+{
     GList *nodes = NULL;
 
     if (pcmk__str_eq(s, "*", pcmk__str_null_matches)) {
@@ -826,7 +827,8 @@ pe__build_node_name_list(pe_working_set_t *data_set, const char *s) {
 }
 
 GList *
-pe__build_rsc_list(pe_working_set_t *data_set, const char *s) {
+pe__build_rsc_list(pcmk_scheduler_t *data_set, const char *s)
+{
     GList *resources = NULL;
 
     if (pcmk__str_eq(s, "*", pcmk__str_null_matches)) {

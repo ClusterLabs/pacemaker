@@ -114,7 +114,7 @@ dup_attr(gpointer key, gpointer value, gpointer user_data)
 static void
 expand_parents_fixed_nvpairs(pcmk_resource_t *rsc,
                              pe_rule_eval_data_t *rule_data,
-                             GHashTable *meta_hash, pe_working_set_t *data_set)
+                             GHashTable *meta_hash, pcmk_scheduler_t *data_set)
 {
     GHashTable *parent_orig_meta = pcmk__strkey_table(free, free);
     pcmk_resource_t *p = rsc->parent;
@@ -155,7 +155,7 @@ expand_parents_fixed_nvpairs(pcmk_resource_t *rsc,
 }
 void
 get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
-                    pcmk_node_t *node, pe_working_set_t *data_set)
+                    pcmk_node_t *node, pcmk_scheduler_t *data_set)
 {
     pe_rsc_eval_data_t rsc_rule_data = {
         .standard = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS),
@@ -205,7 +205,7 @@ get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
 
 void
 get_rsc_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
-                   const pcmk_node_t *node, pe_working_set_t *data_set)
+                   const pcmk_node_t *node, pcmk_scheduler_t *data_set)
 {
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
@@ -252,7 +252,8 @@ template_op_key(xmlNode * op)
 }
 
 static gboolean
-unpack_template(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t * data_set)
+unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
+                pcmk_scheduler_t *data_set)
 {
     xmlNode *cib_resources = NULL;
     xmlNode *template = NULL;
@@ -366,7 +367,7 @@ unpack_template(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t * d
 }
 
 static gboolean
-add_template_rsc(xmlNode * xml_obj, pe_working_set_t * data_set)
+add_template_rsc(xmlNode *xml_obj, pcmk_scheduler_t *data_set)
 {
     const char *template_ref = NULL;
     const char *id = NULL;
@@ -441,7 +442,7 @@ free_params_table(gpointer data)
  */
 GHashTable *
 pe_rsc_params(pcmk_resource_t *rsc, const pcmk_node_t *node,
-              pe_working_set_t *data_set)
+              pcmk_scheduler_t *data_set)
 {
     GHashTable *params_on_node = NULL;
 
@@ -598,7 +599,7 @@ warn_about_deprecated_classes(pcmk_resource_t *rsc)
  */
 int
 pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
-                    pcmk_resource_t *parent, pe_working_set_t *data_set)
+                    pcmk_resource_t *parent, pcmk_scheduler_t *data_set)
 {
     xmlNode *expanded_xml = NULL;
     xmlNode *ops = NULL;

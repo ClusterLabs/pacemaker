@@ -287,7 +287,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc, const char *role,
 }
 
 static void
-unpack_simple_location(xmlNode *xml_obj, pe_working_set_t *data_set)
+unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *data_set)
 {
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
     const char *value = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
@@ -364,7 +364,7 @@ unpack_simple_location(xmlNode *xml_obj, pe_working_set_t *data_set)
 // \return Standard Pacemaker return code
 static int
 unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
-                     pe_working_set_t *data_set)
+                     pcmk_scheduler_t *data_set)
 {
     const char *id = NULL;
     const char *rsc_id = NULL;
@@ -437,7 +437,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
 // \return Standard Pacemaker return code
 static int
-unpack_location_set(xmlNode *location, xmlNode *set, pe_working_set_t *data_set)
+unpack_location_set(xmlNode *location, xmlNode *set, pcmk_scheduler_t *data_set)
 {
     xmlNode *xml_rsc = NULL;
     pcmk_resource_t *resource = NULL;
@@ -476,7 +476,7 @@ unpack_location_set(xmlNode *location, xmlNode *set, pe_working_set_t *data_set)
 }
 
 void
-pcmk__unpack_location(xmlNode *xml_obj, pe_working_set_t *data_set)
+pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *data_set)
 {
     xmlNode *set = NULL;
     bool any_sets = false;
@@ -595,7 +595,7 @@ pcmk__new_location(const char *id, pcmk_resource_t *rsc,
  * \param[in,out] data_set       Cluster working set
  */
 void
-pcmk__apply_locations(pe_working_set_t *data_set)
+pcmk__apply_locations(pcmk_scheduler_t *data_set)
 {
     for (GList *iter = data_set->placement_constraints;
          iter != NULL; iter = iter->next) {
