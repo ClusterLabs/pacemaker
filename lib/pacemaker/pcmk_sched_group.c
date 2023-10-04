@@ -81,7 +81,7 @@ pcmk__group_assign(pe_resource_t *rsc, const pe_node_t *prefer,
     pe__set_next_role(rsc, first_member->next_role, "first group member");
     pe__clear_resource_flags(rsc, pcmk_rsc_assigning|pcmk_rsc_unassigned);
 
-    if (!pe__group_flag_is_set(rsc, pe__group_colocated)) {
+    if (!pe__group_flag_is_set(rsc, pcmk__group_colocated)) {
         return NULL;
     }
     return first_assigned_node;
@@ -325,8 +325,8 @@ pcmk__group_internal_constraints(pe_resource_t *rsc)
 
     top = pe__const_top_resource(rsc, false);
 
-    member_data.ordered = pe__group_flag_is_set(rsc, pe__group_ordered);
-    member_data.colocated = pe__group_flag_is_set(rsc, pe__group_colocated);
+    member_data.ordered = pe__group_flag_is_set(rsc, pcmk__group_ordered);
+    member_data.colocated = pe__group_flag_is_set(rsc, pcmk__group_colocated);
     member_data.promotable = pcmk_is_set(top->flags, pcmk_rsc_promotable);
     g_list_foreach(rsc->children, member_internal_constraints, &member_data);
 }
@@ -356,7 +356,7 @@ colocate_group_with(pe_resource_t *dependent, const pe_resource_t *primary,
     pe_rsc_trace(primary, "Processing %s (group %s with %s) for dependent",
                  colocation->id, dependent->id, primary->id);
 
-    if (pe__group_flag_is_set(dependent, pe__group_colocated)) {
+    if (pe__group_flag_is_set(dependent, pcmk__group_colocated)) {
         // Colocate first member (internal colocations will handle the rest)
         member = (pe_resource_t *) dependent->children->data;
         member->cmds->apply_coloc_score(member, primary, colocation, true);
@@ -403,7 +403,7 @@ colocate_with_group(pe_resource_t *dependent, const pe_resource_t *primary,
         return;
     }
 
-    if (pe__group_flag_is_set(primary, pe__group_colocated)) {
+    if (pe__group_flag_is_set(primary, pcmk__group_colocated)) {
 
         if (colocation->score >= INFINITY) {
             /* For mandatory colocations, the entire group must be assignable
@@ -618,7 +618,7 @@ pcmk__group_apply_location(pe_resource_t *rsc, pe__location_t *location)
 
     node_list_orig = location->node_list_rh;
     node_list_copy = pcmk__copy_node_list(node_list_orig, true);
-    reset_scores = pe__group_flag_is_set(rsc, pe__group_colocated);
+    reset_scores = pe__group_flag_is_set(rsc, pcmk__group_colocated);
 
     // Apply the constraint for the group itself (updates node scores)
     pcmk__apply_location(rsc, location);
@@ -657,7 +657,7 @@ pcmk__group_colocated_resources(const pe_resource_t *rsc,
         orig_rsc = rsc;
     }
 
-    if (pe__group_flag_is_set(rsc, pe__group_colocated)
+    if (pe__group_flag_is_set(rsc, pcmk__group_colocated)
         || pe_rsc_is_clone(rsc->parent)) {
         /* This group has colocated members and/or is cloned -- either way,
          * add every child's colocated resources to the list. The first and last
@@ -717,7 +717,7 @@ pcmk__with_group_colocations(const pe_resource_t *rsc,
                                                  list);
     }
 
-    if (!pe__group_flag_is_set(rsc, pe__group_colocated)) {
+    if (!pe__group_flag_is_set(rsc, pcmk__group_colocated)) {
         // @COMPAT Non-colocated groups are deprecated
         return;
     }
@@ -764,7 +764,7 @@ pcmk__group_with_colocations(const pe_resource_t *rsc,
                                                      list);
         }
 
-        if (!pe__group_flag_is_set(rsc, pe__group_colocated)) {
+        if (!pe__group_flag_is_set(rsc, pcmk__group_colocated)) {
             // @COMPAT Non-colocated groups are deprecated
             return;
         }
@@ -911,7 +911,7 @@ pcmk__group_add_utilization(const pe_resource_t *rsc,
 
     pe_rsc_trace(orig_rsc, "%s: Adding group %s as colocated utilization",
                  orig_rsc->id, rsc->id);
-    if (pe__group_flag_is_set(rsc, pe__group_colocated)
+    if (pe__group_flag_is_set(rsc, pcmk__group_colocated)
         || pe_rsc_is_clone(rsc->parent)) {
         // Every group member will be on same node, so sum all members
         for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {

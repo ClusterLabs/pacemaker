@@ -81,9 +81,6 @@ static void unpack_node_lrm(pe_node_t *node, const xmlNode *xml,
                             pe_working_set_t *data_set);
 
 
-// Bitmask for warnings we only want to print once
-uint32_t pe_wo = 0;
-
 static gboolean
 is_dangling_guest_node(pe_node_t *node)
 {
@@ -264,7 +261,7 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
 
     data_set->stonith_action = pe_pref(data_set->config_hash, "stonith-action");
     if (!strcmp(data_set->stonith_action, "poweroff")) {
-        pe_warn_once(pe_wo_poweroff,
+        pe_warn_once(pcmk__wo_poweroff,
                      "Support for stonith-action of 'poweroff' is deprecated "
                      "and will be removed in a future release (use 'off' instead)");
         data_set->stonith_action = PCMK_ACTION_OFF;
@@ -369,7 +366,7 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
         if (crm_is_true(value)) {
             pe__set_working_set_flags(data_set, pcmk_sched_remove_after_stop);
 #ifndef PCMK__COMPAT_2_0
-            pe_warn_once(pe_wo_remove_after,
+            pe_warn_once(pcmk__wo_remove_after,
                          "Support for the remove-after-stop cluster property is"
                          " deprecated and will be removed in a future release");
 #endif
@@ -398,7 +395,7 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     if (pcmk_is_set(data_set->flags, pcmk_sched_startup_fencing)) {
         crm_trace("Unseen nodes will be fenced");
     } else {
-        pe_warn_once(pe_wo_blind, "Blind faith: not fencing unseen nodes");
+        pe_warn_once(pcmk__wo_blind, "Blind faith: not fencing unseen nodes");
     }
 
     pe__unpack_node_health_scores(data_set);
@@ -481,7 +478,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
                               "assuming 'ping'", pcmk__s(uname, "without name"),
                               type);
         }
-        pe_warn_once(pe_wo_ping_node,
+        pe_warn_once(pcmk__wo_ping_node,
                      "Support for nodes of type 'ping' (such as %s) is "
                      "deprecated and will be removed in a future release",
                      pcmk__s(uname, "unnamed node"));
@@ -3957,13 +3954,13 @@ should_clear_for_param_change(const xmlNode *xml_op, const char *task,
             digest_data = rsc_action_digest_cmp(rsc, xml_op, node,
                                                 rsc->cluster);
             switch (digest_data->rc) {
-                case RSC_DIGEST_UNKNOWN:
+                case pcmk__digest_unknown:
                     crm_trace("Resource %s history entry %s on %s"
                               " has no digest to compare",
                               rsc->id, pe__xe_history_key(xml_op),
                               node->details->id);
                     break;
-                case RSC_DIGEST_MATCH:
+                case pcmk__digest_match:
                     break;
                 default:
                     return TRUE;
@@ -4084,7 +4081,8 @@ check_operation_expiry(struct action_history *history)
 
         // Does the resource as a whole have an unexpired fail count?
         unexpired_fail_count = pe_get_failcount(history->node, history->rsc,
-                                                &last_failure, pe_fc_effective,
+                                                &last_failure,
+                                                pcmk__fc_effective,
                                                 history->xml);
 
         // Update scheduler recheck time according to *last* failure
@@ -4100,8 +4098,8 @@ check_operation_expiry(struct action_history *history)
     }
 
     if (expired) {
-        if (pe_get_failcount(history->node, history->rsc, NULL, pe_fc_default,
-                             history->xml)) {
+        if (pe_get_failcount(history->node, history->rsc, NULL,
+                             pcmk__fc_default, history->xml)) {
             // There is a fail count ignoring timeout
 
             if (unexpired_fail_count == 0) {

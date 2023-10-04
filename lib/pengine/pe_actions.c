@@ -994,7 +994,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
     if (xml_obj != NULL) {
         value = g_hash_table_lookup(action->meta, "role_after_failure");
         if (value) {
-            pe_warn_once(pe_wo_role_after,
+            pe_warn_once(pcmk__wo_role_after,
                         "Support for role_after_failure is deprecated and will be removed in a future release");
         }
     }
@@ -1214,7 +1214,7 @@ pe_fence_op(pe_node_t *node, const char *op, bool optional,
                 op_digest_cache_t *data = NULL;
 
                 data = pe__compare_fencing_digest(match, agent, node, data_set);
-                if(data->rc == RSC_DIGEST_ALL) {
+                if (data->rc == pcmk__digest_mismatch) {
                     optional = FALSE;
                     crm_notice("Unfencing node %s because the definition of "
                                "%s changed", pe__node_name(node), match->id);

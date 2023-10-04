@@ -49,7 +49,8 @@ check_params(pe_resource_t *rsc, pe_node_t *node, const xmlNode *rsc_op,
     switch (check) {
         case pcmk__check_active:
             if (pcmk__check_action_config(rsc, node, rsc_op)
-                && pe_get_failcount(node, rsc, NULL, pe_fc_effective, NULL)) {
+                && pe_get_failcount(node, rsc, NULL, pcmk__fc_effective,
+                                    NULL)) {
                 reason = "action definition changed";
             }
             break;
@@ -58,12 +59,12 @@ check_params(pe_resource_t *rsc, pe_node_t *node, const xmlNode *rsc_op,
             digest_data = rsc_action_digest_cmp(rsc, rsc_op, node,
                                                 rsc->cluster);
             switch (digest_data->rc) {
-                case RSC_DIGEST_UNKNOWN:
+                case pcmk__digest_unknown:
                     crm_trace("Resource %s history entry %s on %s has "
                               "no digest to compare",
                               rsc->id, ID(rsc_op), node->details->id);
                     break;
-                case RSC_DIGEST_MATCH:
+                case pcmk__digest_match:
                     break;
                 default:
                     reason = "resource parameters have changed";
@@ -368,7 +369,7 @@ clear_failcounts_if_orphaned(gpointer data, gpointer user_data)
         if (!node->details->online) {
             continue;
         }
-        if (pe_get_failcount(node, rsc, NULL, pe_fc_effective, NULL) == 0) {
+        if (pe_get_failcount(node, rsc, NULL, pcmk__fc_effective, NULL) == 0) {
             continue;
         }
 

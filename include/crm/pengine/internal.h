@@ -23,26 +23,9 @@
 
 const char *pe__resource_description(const pe_resource_t *rsc, uint32_t show_opts);
 
-enum pe__clone_flags {
-    // Whether instances should be started sequentially
-    pe__clone_ordered               = (1 << 0),
-
-    // Whether promotion scores have been added
-    pe__clone_promotion_added       = (1 << 1),
-
-    // Whether promotion constraints have been added
-    pe__clone_promotion_constrained = (1 << 2),
-};
-
 bool pe__clone_is_ordered(const pe_resource_t *clone);
-int pe__set_clone_flag(pe_resource_t *clone, enum pe__clone_flags flag);
+int pe__set_clone_flag(pe_resource_t *clone, enum pcmk__clone_flags flag);
 bool pe__clone_flag_is_set(const pe_resource_t *clone, uint32_t flags);
-
-
-enum pe__group_flags {
-    pe__group_ordered       = (1 << 0), // Members start sequentially
-    pe__group_colocated     = (1 << 1), // Members must be on same node
-};
 
 bool pe__group_flag_is_set(const pe_resource_t *group, uint32_t flags);
 pe_resource_t *pe__last_group_member(const pe_resource_t *group);
@@ -155,40 +138,19 @@ pe_resource_t *pe__last_group_member(const pe_resource_t *group);
                                            #flags_to_clear);                  \
     } while (0)
 
-// Some warnings we don't want to print every transition
-
-enum pe_warn_once_e {
-    pe_wo_blind         = (1 << 0),
-    pe_wo_restart_type  = (1 << 1),
-    pe_wo_role_after    = (1 << 2),
-    pe_wo_poweroff      = (1 << 3),
-    pe_wo_require_all   = (1 << 4),
-    pe_wo_order_score   = (1 << 5),
-    pe_wo_neg_threshold = (1 << 6),
-    pe_wo_remove_after  = (1 << 7),
-    pe_wo_ping_node     = (1 << 8),
-    pe_wo_order_inst    = (1 << 9),
-    pe_wo_coloc_inst    = (1 << 10),
-    pe_wo_group_order   = (1 << 11),
-    pe_wo_group_coloc   = (1 << 12),
-    pe_wo_upstart       = (1 << 13),
-    pe_wo_nagios        = (1 << 14),
-    pe_wo_set_ordering  = (1 << 15),
-};
-
-extern uint32_t pe_wo;
-
 #define pe_warn_once(pe_wo_bit, fmt...) do {    \
-        if (!pcmk_is_set(pe_wo, pe_wo_bit)) {  \
-            if (pe_wo_bit == pe_wo_blind) {     \
+        if (!pcmk_is_set(pcmk__warnings, pe_wo_bit)) {  \
+            if (pe_wo_bit == pcmk__wo_blind) {  \
                 crm_warn(fmt);                  \
             } else {                            \
                 pe_warn(fmt);                   \
             }                                   \
-            pe_wo = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,       \
-                                      "Warn-once", "logging", pe_wo,        \
-                                      (pe_wo_bit), #pe_wo_bit);             \
-        }                                       \
+            pcmk__warnings = pcmk__set_flags_as(__func__, __LINE__,         \
+                                               LOG_TRACE,                   \
+                                               "Warn-once", "logging",      \
+                                               pcmk__warnings,              \
+                                               (pe_wo_bit), #pe_wo_bit);    \
+        }                                                                   \
     } while (0);
 
 
@@ -238,19 +200,6 @@ void pe__create_promotable_pseudo_ops(pe_resource_t *clone, bool any_promoting,
 bool pe_can_fence(const pe_working_set_t *data_set, const pe_node_t *node);
 
 void add_hash_param(GHashTable * hash, const char *name, const char *value);
-
-/*!
- * \internal
- * \enum pe__rsc_node
- * \brief Type of resource location lookup to perform
- */
-enum pe__rsc_node {
-    pe__rsc_node_assigned = 0,  //!< Where resource is assigned
-    pe__rsc_node_current  = 1,  //!< Where resource is running
-
-    // @COMPAT: Use in native_location() at a compatibility break
-    pe__rsc_node_pending  = 2,  //!< Where resource is pending
-};
 
 char *native_parameter(pe_resource_t * rsc, pe_node_t * node, gboolean create, const char *name,
                        pe_working_set_t * data_set);
@@ -345,13 +294,6 @@ pe_node_t *pe__copy_node(const pe_node_t *this_node);
 extern time_t get_effective_time(pe_working_set_t * data_set);
 
 /* Failure handling utilities (from failcounts.c) */
-
-// bit flags for fail count handling options
-enum pe_fc_flags_e {
-    pe_fc_default   = (1 << 0),
-    pe_fc_effective = (1 << 1), // don't count expired failures
-    pe_fc_fillers   = (1 << 2), // if container, include filler failures in count
-};
 
 int pe_get_failcount(const pe_node_t *node, pe_resource_t *rsc,
                      time_t *last_failure, uint32_t flags,
@@ -483,20 +425,8 @@ int pe__target_rc_from_xml(const xmlNode *xml_op);
 gint pe__cmp_node_name(gconstpointer a, gconstpointer b);
 bool is_set_recursive(const pe_resource_t *rsc, long long flag, bool any);
 
-enum rsc_digest_cmp_val {
-    /*! Digests are the same */
-    RSC_DIGEST_MATCH = 0,
-    /*! Params that require a restart changed */
-    RSC_DIGEST_RESTART,
-    /*! Some parameter changed.  */
-    RSC_DIGEST_ALL,
-    /*! rsc op didn't have a digest associated with it, so
-     *  it is unknown if parameters changed or not. */
-    RSC_DIGEST_UNKNOWN,
-};
-
 typedef struct op_digest_cache_s {
-    enum rsc_digest_cmp_val rc;
+    enum pcmk__digest_result rc;
     xmlNode *params_all;
     xmlNode *params_secure;
     xmlNode *params_restart;
@@ -592,7 +522,7 @@ const char *pe__add_bundle_remote_name(pe_resource_t *rsc,
 const char *pe__node_attribute_calculated(const pe_node_t *node,
                                           const char *name,
                                           const pe_resource_t *rsc,
-                                          enum pe__rsc_node node_type,
+                                          enum pcmk__rsc_node node_type,
                                           bool force_host);
 const char *pe_node_attribute_raw(const pe_node_t *node, const char *name);
 bool pe__is_universal_clone(const pe_resource_t *rsc,

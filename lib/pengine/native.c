@@ -1109,7 +1109,7 @@ native_resource_state(const pe_resource_t * rsc, gboolean current)
 pe_node_t *
 native_location(const pe_resource_t *rsc, GList **list, int current)
 {
-    // @COMPAT: Accept a pe__rsc_node argument instead of int current
+    // @COMPAT: Accept a pcmk__rsc_node argument instead of int current
     pe_node_t *one = NULL;
     GList *result = NULL;
 

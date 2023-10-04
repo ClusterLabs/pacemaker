@@ -35,7 +35,8 @@ get_node_score(const char *rule, const char *score, bool raw,
         const char *attr_score = NULL;
 
         attr_score = pe__node_attribute_calculated(node, score, rsc,
-                                                   pe__rsc_node_current, false);
+                                                   pcmk__rsc_node_current,
+                                                   false);
 
         if (attr_score == NULL) {
             crm_debug("Rule %s: %s did not have a value for %s",

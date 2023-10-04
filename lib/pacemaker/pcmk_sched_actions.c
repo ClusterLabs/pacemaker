@@ -1515,7 +1515,7 @@ only_sanitized_changed(const xmlNode *xml_op,
 
     digest_secure = crm_element_value(xml_op, XML_LRM_ATTR_SECURE_DIGEST);
 
-    return (digest_data->rc != RSC_DIGEST_MATCH) && (digest_secure != NULL)
+    return (digest_data->rc != pcmk__digest_match) && (digest_secure != NULL)
            && (digest_data->digest_secure_calc != NULL)
            && (strcmp(digest_data->digest_secure_calc, digest_secure) == 0);
 }
@@ -1672,13 +1672,13 @@ pcmk__check_action_config(pe_resource_t *rsc, pe_node_t *node,
     }
 
     switch (digest_data->rc) {
-        case RSC_DIGEST_RESTART:
+        case pcmk__digest_restart:
             crm_log_xml_debug(digest_data->params_restart, "params:restart");
             force_restart(rsc, task, interval_ms, node);
             return true;
 
-        case RSC_DIGEST_ALL:
-        case RSC_DIGEST_UNKNOWN:
+        case pcmk__digest_unknown:
+        case pcmk__digest_mismatch:
             // Changes that can potentially be handled by an agent reload
 
             if (interval_ms > 0) {
@@ -1840,7 +1840,7 @@ process_rsc_history(const xmlNode *rsc_entry, pe_resource_t *rsc,
                                     rsc->cluster);
 
             } else if (pcmk__check_action_config(rsc, node, rsc_op)
-                       && (pe_get_failcount(node, rsc, NULL, pe_fc_effective,
+                       && (pe_get_failcount(node, rsc, NULL, pcmk__fc_effective,
                                             NULL) != 0)) {
                 pe__clear_failcount(rsc, node, "action definition changed",
                                     rsc->cluster);

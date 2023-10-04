@@ -144,12 +144,12 @@ calculate_main_digest(op_digest_cache_t *data, pe_resource_t *rsc,
      * So that it ensures any changes of the extra parameters get applied
      * for this specific operation, and the digests calculated for the
      * resulting lrm_rsc_op will be correct.
-     * Mark the implied rc RSC_DIGEST_RESTART for the case that the main
+     * Mark the implied rc pcmk__digest_restart for the case that the main
      * digest doesn't match.
      */
     if (*interval_ms == 0
         && g_hash_table_size(action->extra) > 0) {
-        data->rc = RSC_DIGEST_RESTART;
+        data->rc = pcmk__digest_restart;
     }
 
     pe_free_action(action);
@@ -308,7 +308,7 @@ pe__calculate_digests(pe_resource_t *rsc, const char *task, guint *interval_ms,
         return NULL;
     }
 
-    data->rc = RSC_DIGEST_MATCH;
+    data->rc = pcmk__digest_match;
 
     if (xml_op != NULL) {
         op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
@@ -408,11 +408,11 @@ rsc_action_digest_cmp(pe_resource_t *rsc, const xmlNode *xml_op,
                     data->digest_restart_calc,
                     op_version,
                     crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
-        data->rc = RSC_DIGEST_RESTART;
+        data->rc = pcmk__digest_restart;
 
     } else if (digest_all == NULL) {
         /* it is unknown what the previous op digest was */
-        data->rc = RSC_DIGEST_UNKNOWN;
+        data->rc = pcmk__digest_unknown;
 
     } else if (strcmp(digest_all, data->digest_all_calc) != 0) {
         /* Given a non-recurring operation with extra parameters configured,
@@ -421,11 +421,10 @@ rsc_action_digest_cmp(pe_resource_t *rsc, const xmlNode *xml_op,
          * So that it ensures any changes of the extra parameters get applied
          * for this specific operation, and the digests calculated for the
          * resulting lrm_rsc_op will be correct.
-         * Preserve the implied rc RSC_DIGEST_RESTART for the case that the main
-         * digest doesn't match.
+         * Preserve the implied rc pcmk__digest_restart for the case that the
+         * main digest doesn't match.
          */
-        if (interval_ms == 0
-            && data->rc == RSC_DIGEST_RESTART) {
+        if ((interval_ms == 0) && (data->rc == pcmk__digest_restart)) {
             pe_rsc_info(rsc, "Parameters containing extra ones to %ums-interval"
                              " %s action for %s on %s "
                              "changed: hash was %s vs. now %s (restart:%s) %s",
@@ -442,11 +441,11 @@ rsc_action_digest_cmp(pe_resource_t *rsc, const xmlNode *xml_op,
                         (interval_ms > 0)? "reschedule" : "reload",
                         op_version,
                         crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
-            data->rc = RSC_DIGEST_ALL;
+            data->rc = pcmk__digest_mismatch;
         }
 
     } else {
-        data->rc = RSC_DIGEST_MATCH;
+        data->rc = pcmk__digest_match;
     }
     return data;
 }
@@ -542,14 +541,14 @@ pe__compare_fencing_digest(pe_resource_t *rsc, const char *agent,
     // Check whether node has special unfencing summary node attribute
     node_summary = pe_node_attribute_raw(node, CRM_ATTR_DIGESTS_ALL);
     if (node_summary == NULL) {
-        data->rc = RSC_DIGEST_UNKNOWN;
+        data->rc = pcmk__digest_unknown;
         return data;
     }
 
     // Check whether full parameter digest matches
     if (unfencing_digest_matches(rsc->id, agent, data->digest_all_calc,
                                  node_summary)) {
-        data->rc = RSC_DIGEST_MATCH;
+        data->rc = pcmk__digest_match;
         return data;
     }
 
@@ -557,7 +556,7 @@ pe__compare_fencing_digest(pe_resource_t *rsc, const char *agent,
     node_summary = pe_node_attribute_raw(node, CRM_ATTR_DIGESTS_SECURE);
     if (unfencing_digest_matches(rsc->id, agent, data->digest_secure_calc,
                                  node_summary)) {
-        data->rc = RSC_DIGEST_MATCH;
+        data->rc = pcmk__digest_match;
         if (!pcmk__is_daemon && data_set->priv != NULL) {
             pcmk__output_t *out = data_set->priv;
             out->info(out, "Only 'private' parameters to %s "
@@ -568,7 +567,7 @@ pe__compare_fencing_digest(pe_resource_t *rsc, const char *agent,
     }
 
     // Parameters don't match
-    data->rc = RSC_DIGEST_ALL;
+    data->rc = pcmk__digest_mismatch;
     if (pcmk_is_set(data_set->flags, pcmk_sched_sanitized)
         && (data->digest_secure_calc != NULL)) {
 
