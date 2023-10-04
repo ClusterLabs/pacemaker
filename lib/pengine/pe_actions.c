@@ -20,7 +20,6 @@
 #include "pe_status_private.h"
 
 static void unpack_operation(pcmk_action_t *action, const xmlNode *xml_obj,
-                             const pcmk_resource_t *container,
                              guint interval_ms);
 
 static void
@@ -237,7 +236,7 @@ new_action(char *key, const char *task, pcmk_resource_t *rsc,
 
         action->op_entry = pcmk__find_action_config(rsc, key, true);
         parse_op_key(key, NULL, NULL, &interval_ms);
-        unpack_operation(action, action->op_entry, rsc->container, interval_ms);
+        unpack_operation(action, action->op_entry, interval_ms);
     }
 
     if (for_graph) {
@@ -919,12 +918,11 @@ pcmk__action_requires(const pcmk_resource_t *rsc, const char *action_name)
  *
  * \param[in,out] action       Resource action to unpack into
  * \param[in]     xml_obj      Action configuration XML (NULL for defaults only)
- * \param[in]     container    Resource that contains affected resource, if any
  * \param[in]     interval_ms  How frequently to perform the operation
  */
 static void
 unpack_operation(pcmk_action_t *action, const xmlNode *xml_obj,
-                 const pcmk_resource_t *container, guint interval_ms)
+                 guint interval_ms)
 {
     const char *value = NULL;
 
@@ -974,7 +972,7 @@ unpack_operation(pcmk_action_t *action, const xmlNode *xml_obj,
         value = "restart (and possibly migrate)";
 
     } else if (pcmk__str_eq(value, "restart-container", pcmk__str_casei)) {
-        if (container) {
+        if (action->rsc->container != NULL) {
             action->on_fail = pcmk_on_fail_restart_container;
             value = "restart container (and possibly migrate)";
 
@@ -992,7 +990,7 @@ unpack_operation(pcmk_action_t *action, const xmlNode *xml_obj,
     }
 
     /* defaults */
-    if (value == NULL && container) {
+    if ((value == NULL) && (action->rsc->container != NULL)) {
         action->on_fail = pcmk_on_fail_restart_container;
         value = "restart container (and possibly migrate) (default)";
 
