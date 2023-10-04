@@ -187,7 +187,7 @@ create_replica_actions(pe__bundle_replica_t *replica, void *user_data)
 void
 pcmk__bundle_create_actions(pcmk_resource_t *rsc)
 {
-    pe_action_t *action = NULL;
+    pcmk_action_t *action = NULL;
     GList *containers = NULL;
     pcmk_resource_t *bundled_resource = NULL;
 
@@ -679,7 +679,7 @@ pcmk__bundle_with_colocations(const pcmk_resource_t *rsc,
  * \return Flags appropriate to \p action on \p node
  */
 uint32_t
-pcmk__bundle_action_flags(pe_action_t *action, const pcmk_node_t *node)
+pcmk__bundle_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
 {
     GList *containers = NULL;
     uint32_t flags = 0;
@@ -944,9 +944,9 @@ create_replica_probes(pe__bundle_replica_t *replica, void *user_data)
          */
         char *probe_uuid = pcmk__op_key(replica->remote->id,
                                         PCMK_ACTION_MONITOR, 0);
-        pe_action_t *probe = find_first_action(replica->remote->actions,
-                                               probe_uuid, NULL,
-                                               probe_data->node);
+        pcmk_action_t *probe = find_first_action(replica->remote->actions,
+                                                 probe_uuid, NULL,
+                                                 probe_data->node);
 
         free(probe_uuid);
         if (probe != NULL) {

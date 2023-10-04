@@ -340,7 +340,7 @@ clone_min_ordering(const char *id,
 {
     // Create a pseudo-action for when the minimum instances are active
     char *task = crm_strdup_printf(PCMK_ACTION_CLONE_ONE_OR_MORE ":%s", id);
-    pe_action_t *clone_min_met = get_pseudo_op(task, rsc_first->cluster);
+    pcmk_action_t *clone_min_met = get_pseudo_op(task, rsc_first->cluster);
 
     free(task);
 
@@ -523,8 +523,8 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
  */
 void
 pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
-                   pe_action_t *first_action, pcmk_resource_t *then_rsc,
-                   char *then_action_task, pe_action_t *then_action,
+                   pcmk_action_t *first_action, pcmk_resource_t *then_rsc,
+                   char *then_action_task, pcmk_action_t *then_action,
                    uint32_t flags, pe_working_set_t *sched)
 {
     pe__ordering_t *order = NULL;
@@ -758,7 +758,7 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
      */
     if (!require_all) {
         char *task = crm_strdup_printf(PCMK_ACTION_ONE_OR_MORE ":%s", ID(set1));
-        pe_action_t *unordered_action = get_pseudo_op(task, data_set);
+        pcmk_action_t *unordered_action = get_pseudo_op(task, data_set);
 
         free(task);
         pe__set_action_flags(unordered_action, pcmk_action_min_runnable);
@@ -1069,7 +1069,7 @@ pcmk__unpack_ordering(xmlNode *xml_obj, pe_working_set_t *data_set)
 }
 
 static bool
-ordering_is_invalid(pe_action_t *action, pe_action_wrapper_t *input)
+ordering_is_invalid(pcmk_action_t *action, pe_action_wrapper_t *input)
 {
     /* Prevent user-defined ordering constraints between resources
      * running in a guest node and the resource that defines that node.
@@ -1104,7 +1104,7 @@ void
 pcmk__disable_invalid_orderings(pe_working_set_t *data_set)
 {
     for (GList *iter = data_set->actions; iter != NULL; iter = iter->next) {
-        pe_action_t *action = (pe_action_t *) iter->data;
+        pcmk_action_t *action = (pcmk_action_t *) iter->data;
         pe_action_wrapper_t *input = NULL;
 
         for (GList *input_iter = action->actions_before;
@@ -1126,12 +1126,12 @@ pcmk__disable_invalid_orderings(pe_working_set_t *data_set)
  * \param[in]     shutdown_op  Shutdown action for node
  */
 void
-pcmk__order_stops_before_shutdown(pcmk_node_t *node, pe_action_t *shutdown_op)
+pcmk__order_stops_before_shutdown(pcmk_node_t *node, pcmk_action_t *shutdown_op)
 {
     for (GList *iter = node->details->data_set->actions;
          iter != NULL; iter = iter->next) {
 
-        pe_action_t *action = (pe_action_t *) iter->data;
+        pcmk_action_t *action = (pcmk_action_t *) iter->data;
 
         // Only stops on the node shutting down are relevant
         if (!pe__same_node(action->node, node)
@@ -1222,7 +1222,7 @@ find_actions_by_task(const pcmk_resource_t *rsc, const char *original_key)
  * \param[in,out] order         Ordering constraint being applied
  */
 static void
-order_resource_actions_after(pe_action_t *first_action,
+order_resource_actions_after(pcmk_action_t *first_action,
                              const pcmk_resource_t *rsc, pe__ordering_t *order)
 {
     GList *then_actions = NULL;
@@ -1267,7 +1267,7 @@ order_resource_actions_after(pe_action_t *first_action,
     }
 
     for (GList *iter = then_actions; iter != NULL; iter = iter->next) {
-        pe_action_t *then_action_iter = (pe_action_t *) iter->data;
+        pcmk_action_t *then_action_iter = (pcmk_action_t *) iter->data;
 
         if (first_action != NULL) {
             order_actions(first_action, then_action_iter, flags);
@@ -1286,7 +1286,7 @@ static void
 rsc_order_first(pcmk_resource_t *first_rsc, pe__ordering_t *order)
 {
     GList *first_actions = NULL;
-    pe_action_t *first_action = order->lh_action;
+    pcmk_action_t *first_action = order->lh_action;
     pcmk_resource_t *then_rsc = order->rh_rsc;
 
     CRM_ASSERT(first_rsc != NULL);
@@ -1374,7 +1374,7 @@ block_colocation_dependents(gpointer data, gpointer user_data)
 static void
 update_action_for_orderings(gpointer data, gpointer user_data)
 {
-    pcmk__update_action_for_orderings((pe_action_t *) data,
+    pcmk__update_action_for_orderings((pcmk_action_t *) data,
                                       (pe_working_set_t *) user_data);
 }
 
@@ -1444,12 +1444,12 @@ pcmk__apply_orderings(pe_working_set_t *sched)
  * \param[in,out] list   List of "before" actions
  */
 void
-pcmk__order_after_each(pe_action_t *after, GList *list)
+pcmk__order_after_each(pcmk_action_t *after, GList *list)
 {
     const char *after_desc = (after->task == NULL)? after->uuid : after->task;
 
     for (GList *iter = list; iter != NULL; iter = iter->next) {
-        pe_action_t *before = (pe_action_t *) iter->data;
+        pcmk_action_t *before = (pcmk_action_t *) iter->data;
         const char *before_desc = before->task? before->task : before->uuid;
 
         crm_debug("Ordering %s on %s before %s on %s",

@@ -25,7 +25,7 @@
  * \param[in]     target  Node to add as migration target
  */
 static void
-add_migration_meta(pe_action_t *action, const pcmk_node_t *source,
+add_migration_meta(pcmk_action_t *action, const pcmk_node_t *source,
                    const pcmk_node_t *target)
 {
     add_hash_param(action->meta, XML_LRM_ATTR_MIGRATE_SOURCE,
@@ -45,10 +45,10 @@ add_migration_meta(pe_action_t *action, const pcmk_node_t *source,
 void
 pcmk__create_migration_actions(pcmk_resource_t *rsc, const pcmk_node_t *current)
 {
-    pe_action_t *migrate_to = NULL;
-    pe_action_t *migrate_from = NULL;
-    pe_action_t *start = NULL;
-    pe_action_t *stop = NULL;
+    pcmk_action_t *migrate_to = NULL;
+    pcmk_action_t *migrate_from = NULL;
+    pcmk_action_t *start = NULL;
+    pcmk_action_t *stop = NULL;
 
     pe_rsc_trace(rsc, "Creating actions to %smigrate %s from %s to %s",
                  ((rsc->partial_migration_target == NULL)? "" : "partially "),
@@ -156,7 +156,7 @@ pcmk__abort_dangling_migration(void *data, void *user_data)
     const pcmk_node_t *dangling_source = (const pcmk_node_t *) data;
     pcmk_resource_t *rsc = (pcmk_resource_t *) user_data;
 
-    pe_action_t *stop = NULL;
+    pcmk_action_t *stop = NULL;
     bool cleanup = pcmk_is_set(rsc->cluster->flags,
                                pcmk_sched_remove_after_stop);
 
@@ -237,7 +237,7 @@ pcmk__rsc_can_migrate(const pcmk_resource_t *rsc, const pcmk_node_t *current)
  * \return Newly allocated copy of action name (or NULL if none available)
  */
 static char *
-task_from_action_or_key(const pe_action_t *action, const char *key)
+task_from_action_or_key(const pcmk_action_t *action, const char *key)
 {
     char *res = NULL;
 

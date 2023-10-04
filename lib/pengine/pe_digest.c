@@ -102,7 +102,7 @@ calculate_main_digest(op_digest_cache_t *data, pcmk_resource_t *rsc,
                       const xmlNode *xml_op, const char *op_version,
                       GHashTable *overrides, pe_working_set_t *data_set)
 {
-    pe_action_t *action = NULL;
+    pcmk_action_t *action = NULL;
 
     data->params_all = create_xml_node(NULL, XML_TAG_PARAMS);
 

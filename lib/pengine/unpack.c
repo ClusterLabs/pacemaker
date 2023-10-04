@@ -2392,7 +2392,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
         GList *gIter = possible_matches;
 
         for (; gIter != NULL; gIter = gIter->next) {
-            pe_action_t *stop = (pe_action_t *) gIter->data;
+            pcmk_action_t *stop = (pcmk_action_t *) gIter->data;
 
             pe__set_action_flags(stop, pcmk_action_optional);
         }
@@ -3546,7 +3546,7 @@ unpack_rsc_op_failure(struct action_history *history, xmlNode **last_failure,
                       enum action_fail_response *on_fail)
 {
     bool is_probe = false;
-    pe_action_t *action = NULL;
+    pcmk_action_t *action = NULL;
     char *last_change_s = NULL;
 
     *last_failure = history->xml;
@@ -3977,14 +3977,14 @@ should_clear_for_param_change(const xmlNode *xml_op, const char *task,
 
 // Order action after fencing of remote node, given connection rsc
 static void
-order_after_remote_fencing(pe_action_t *action, pcmk_resource_t *remote_conn,
+order_after_remote_fencing(pcmk_action_t *action, pcmk_resource_t *remote_conn,
                            pe_working_set_t *data_set)
 {
     pcmk_node_t *remote_node = pe_find_node(data_set->nodes, remote_conn->id);
 
     if (remote_node) {
-        pe_action_t *fence = pe_fence_op(remote_node, NULL, TRUE, NULL,
-                                         FALSE, data_set);
+        pcmk_action_t *fence = pe_fence_op(remote_node, NULL, TRUE, NULL,
+                                           FALSE, data_set);
 
         order_actions(fence, action, pcmk__ar_first_implies_then);
     }
@@ -4141,10 +4141,11 @@ check_operation_expiry(struct action_history *history)
     }
 
     if (clear_reason != NULL) {
+        pcmk_action_t *clear_op = NULL;
+
         // Schedule clearing of the fail count
-        pe_action_t *clear_op = pe__clear_failcount(history->rsc, history->node,
-                                                    clear_reason,
-                                                    history->rsc->cluster);
+        clear_op = pe__clear_failcount(history->rsc, history->node,
+                                       clear_reason, history->rsc->cluster);
 
         if (pcmk_is_set(history->rsc->cluster->flags,
                         pcmk_sched_fencing_enabled)
@@ -4211,9 +4212,9 @@ static enum action_fail_response
 get_action_on_fail(struct action_history *history)
 {
     enum action_fail_response result = pcmk_on_fail_restart;
-    pe_action_t *action = custom_action(history->rsc, strdup(history->key),
-                                        history->task, NULL, TRUE, FALSE,
-                                        history->rsc->cluster);
+    pcmk_action_t *action = custom_action(history->rsc, strdup(history->key),
+                                          history->task, NULL, TRUE, FALSE,
+                                          history->rsc->cluster);
 
     result = action->on_fail;
     pe_free_action(action);

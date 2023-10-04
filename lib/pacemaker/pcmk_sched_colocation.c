@@ -1017,7 +1017,7 @@ mark_action_blocked(pcmk_resource_t *rsc, const char *task,
     char *reason_text = crm_strdup_printf("colocation with %s", reason->id);
 
     for (iter = rsc->actions; iter != NULL; iter = iter->next) {
-        pe_action_t *action = iter->data;
+        pcmk_action_t *action = iter->data;
 
         if (pcmk_is_set(action->flags, pcmk_action_runnable)
             && pcmk__str_eq(action->task, task, pcmk__str_none)) {
@@ -1047,7 +1047,7 @@ mark_action_blocked(pcmk_resource_t *rsc, const char *task,
  * \param[in,out] action  Action to check
  */
 void
-pcmk__block_colocation_dependents(pe_action_t *action)
+pcmk__block_colocation_dependents(pcmk_action_t *action)
 {
     GList *iter = NULL;
     GList *colocations = NULL;
@@ -1078,8 +1078,8 @@ pcmk__block_colocation_dependents(pe_action_t *action)
     // Colocation fails only if entire primary can't reach desired role
     for (iter = rsc->children; iter != NULL; iter = iter->next) {
         pcmk_resource_t *child = iter->data;
-        pe_action_t *child_action = find_first_action(child->actions, NULL,
-                                                      action->task, NULL);
+        pcmk_action_t *child_action = find_first_action(child->actions, NULL,
+                                                        action->task, NULL);
 
         if ((child_action == NULL)
             || pcmk_is_set(child_action->flags, pcmk_action_runnable)) {

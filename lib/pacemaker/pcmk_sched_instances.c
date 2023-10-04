@@ -919,7 +919,7 @@ check_instance_state(const pcmk_resource_t *instance, uint32_t *state)
                                                |instance_stopping);
          iter = iter->next) {
 
-        const pe_action_t *action = (const pe_action_t *) iter->data;
+        const pcmk_action_t *action = (const pcmk_action_t *) iter->data;
         const bool optional = pcmk_is_set(action->flags, pcmk_action_optional);
 
         if (pcmk__str_eq(PCMK_ACTION_START, action->task, pcmk__str_none)) {
@@ -974,11 +974,11 @@ pcmk__create_instance_actions(pcmk_resource_t *collective, GList *instances)
 {
     uint32_t state = 0;
 
-    pe_action_t *stop = NULL;
-    pe_action_t *stopped = NULL;
+    pcmk_action_t *stop = NULL;
+    pcmk_action_t *stopped = NULL;
 
-    pe_action_t *start = NULL;
-    pe_action_t *started = NULL;
+    pcmk_action_t *start = NULL;
+    pcmk_action_t *started = NULL;
 
     pe_rsc_trace(collective, "Creating collective instance actions for %s",
                  collective->id);
@@ -1212,7 +1212,7 @@ pcmk__find_compatible_instance(const pcmk_resource_t *match_rsc,
  * \return true if \p then_instance was unassigned, otherwise false
  */
 static bool
-unassign_if_mandatory(const pe_action_t *first, const pe_action_t *then,
+unassign_if_mandatory(const pcmk_action_t *first, const pcmk_action_t *then,
                       pcmk_resource_t *then_instance, uint32_t type,
                       bool current)
 {
@@ -1252,13 +1252,13 @@ unassign_if_mandatory(const pe_action_t *first, const pe_action_t *then,
  *         bundle container, its containerized resource) that matches
  *         \p action_name and \p node if any, otherwise NULL
  */
-static pe_action_t *
-find_instance_action(const pe_action_t *action, const pcmk_resource_t *instance,
+static pcmk_action_t *
+find_instance_action(const pcmk_action_t *action, const pcmk_resource_t *instance,
                      const char *action_name, const pcmk_node_t *node,
                      bool for_first)
 {
     const pcmk_resource_t *rsc = NULL;
-    pe_action_t *matching_action = NULL;
+    pcmk_action_t *matching_action = NULL;
 
     /* If instance is a bundle container, sometimes we should interleave the
      * action for the container itself, and sometimes for the containerized
@@ -1324,7 +1324,7 @@ find_instance_action(const pe_action_t *action, const pcmk_resource_t *instance,
  * \return Original action name for \p action
  */
 static const char *
-orig_action_name(const pe_action_t *action)
+orig_action_name(const pcmk_action_t *action)
 {
     // Any instance will do
     const pcmk_resource_t *instance = action->rsc->children->data;
@@ -1369,7 +1369,7 @@ orig_action_name(const pe_action_t *action)
  * \return Group of enum pcmk__updated flags indicating what was updated
  */
 static uint32_t
-update_interleaved_actions(pe_action_t *first, pe_action_t *then,
+update_interleaved_actions(pcmk_action_t *first, pcmk_action_t *then,
                            const pcmk_node_t *node, uint32_t filter,
                            uint32_t type)
 {
@@ -1388,8 +1388,8 @@ update_interleaved_actions(pe_action_t *first, pe_action_t *then,
         pcmk_resource_t *first_instance = NULL;
         pcmk_resource_t *then_instance = iter->data;
 
-        pe_action_t *first_action = NULL;
-        pe_action_t *then_action = NULL;
+        pcmk_action_t *first_action = NULL;
+        pcmk_action_t *then_action = NULL;
 
         // Find a "first" instance to interleave with this "then" instance
         first_instance = pcmk__find_compatible_instance(then_instance,
@@ -1441,7 +1441,7 @@ update_interleaved_actions(pe_action_t *first, pe_action_t *then,
  * \return true if \p first and \p then can be interleaved, otherwise false
  */
 static bool
-can_interleave_actions(const pe_action_t *first, const pe_action_t *then)
+can_interleave_actions(const pcmk_action_t *first, const pcmk_action_t *then)
 {
     bool interleave = false;
     pcmk_resource_t *rsc = NULL;
@@ -1502,11 +1502,11 @@ can_interleave_actions(const pe_action_t *first, const pe_action_t *then)
  * \return Group of enum pcmk__updated flags indicating what was updated
  */
 static uint32_t
-update_noninterleaved_actions(pcmk_resource_t *instance, pe_action_t *first,
-                              const pe_action_t *then, const pcmk_node_t *node,
+update_noninterleaved_actions(pcmk_resource_t *instance, pcmk_action_t *first,
+                              const pcmk_action_t *then, const pcmk_node_t *node,
                               uint32_t flags, uint32_t filter, uint32_t type)
 {
-    pe_action_t *instance_action = NULL;
+    pcmk_action_t *instance_action = NULL;
     uint32_t instance_flags = 0;
     uint32_t changed = pcmk__updated_none;
 
@@ -1565,7 +1565,7 @@ update_noninterleaved_actions(pcmk_resource_t *instance, pe_action_t *first,
  * \return Group of enum pcmk__updated flags indicating what was updated
  */
 uint32_t
-pcmk__instance_update_ordered_actions(pe_action_t *first, pe_action_t *then,
+pcmk__instance_update_ordered_actions(pcmk_action_t *first, pcmk_action_t *then,
                                       const pcmk_node_t *node, uint32_t flags,
                                       uint32_t filter, uint32_t type,
                                       pe_working_set_t *data_set)
@@ -1615,7 +1615,7 @@ pcmk__instance_update_ordered_actions(pe_action_t *first, pe_action_t *then,
  * \return Flags appropriate to \p action on \p node
  */
 uint32_t
-pcmk__collective_action_flags(pe_action_t *action, const GList *instances,
+pcmk__collective_action_flags(pcmk_action_t *action, const GList *instances,
                               const pcmk_node_t *node)
 {
     bool any_runnable = false;
@@ -1629,7 +1629,7 @@ pcmk__collective_action_flags(pe_action_t *action, const GList *instances,
     for (const GList *iter = instances; iter != NULL; iter = iter->next) {
         const pcmk_resource_t *instance = iter->data;
         const pcmk_node_t *instance_node = NULL;
-        pe_action_t *instance_action = NULL;
+        pcmk_action_t *instance_action = NULL;
         uint32_t instance_flags;
 
         // Node is relevant only to primitive instances

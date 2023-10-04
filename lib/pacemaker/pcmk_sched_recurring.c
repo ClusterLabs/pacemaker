@@ -188,7 +188,7 @@ is_recurring_history(const pcmk_resource_t *rsc, const xmlNode *xml,
 static bool
 active_recurring_should_be_optional(const pcmk_resource_t *rsc,
                                     const pcmk_node_t *node, const char *key,
-                                    pe_action_t *start)
+                                    pcmk_action_t *start)
 {
     GList *possible_matches = NULL;
 
@@ -215,7 +215,7 @@ active_recurring_should_be_optional(const pcmk_resource_t *rsc,
     for (const GList *iter = possible_matches;
          iter != NULL; iter = iter->next) {
 
-        const pe_action_t *op = (const pe_action_t *) iter->data;
+        const pcmk_action_t *op = (const pcmk_action_t *) iter->data;
 
         if (pcmk_is_set(op->flags, pcmk_action_reschedule)) {
             pe_rsc_trace(rsc,
@@ -240,10 +240,10 @@ active_recurring_should_be_optional(const pcmk_resource_t *rsc,
  * \param[in]     op     Resource history entry
  */
 static void
-recurring_op_for_active(pcmk_resource_t *rsc, pe_action_t *start,
+recurring_op_for_active(pcmk_resource_t *rsc, pcmk_action_t *start,
                         const pcmk_node_t *node, const struct op_history *op)
 {
-    pe_action_t *mon = NULL;
+    pcmk_action_t *mon = NULL;
     bool is_optional = true;
     const bool is_default_role = (op->role == pcmk_role_unknown);
 
@@ -261,9 +261,9 @@ recurring_op_for_active(pcmk_resource_t *rsc, pe_action_t *start,
 
         if (is_optional) { // It's running, so cancel it
             char *after_key = NULL;
-            pe_action_t *cancel_op = pcmk__new_cancel_action(rsc, op->name,
-                                                             op->interval_ms,
-                                                             node);
+            pcmk_action_t *cancel_op = pcmk__new_cancel_action(rsc, op->name,
+                                                               op->interval_ms,
+                                                               node);
 
             switch (rsc->role) {
                 case pcmk_role_unpromoted:
@@ -374,7 +374,7 @@ cancel_if_running(pcmk_resource_t *rsc, const pcmk_node_t *node,
                   const char *key, const char *name, guint interval_ms)
 {
     GList *possible_matches = find_actions_exact(rsc->actions, key, node);
-    pe_action_t *cancel_op = NULL;
+    pcmk_action_t *cancel_op = NULL;
 
     if (possible_matches == NULL) {
         return; // Recurring action isn't running on this node
@@ -415,12 +415,12 @@ cancel_if_running(pcmk_resource_t *rsc, const pcmk_node_t *node,
  */
 static void
 order_after_probes(pcmk_resource_t *rsc, const pcmk_node_t *node,
-                   pe_action_t *action)
+                   pcmk_action_t *action)
 {
     GList *probes = pe__resource_actions(rsc, node, PCMK_ACTION_MONITOR, FALSE);
 
     for (GList *iter = probes; iter != NULL; iter = iter->next) {
-        order_actions((pe_action_t *) iter->data, action,
+        order_actions((pcmk_action_t *) iter->data, action,
                       pcmk__ar_unrunnable_first_blocks);
     }
     g_list_free(probes);
@@ -436,12 +436,12 @@ order_after_probes(pcmk_resource_t *rsc, const pcmk_node_t *node,
  */
 static void
 order_after_stops(pcmk_resource_t *rsc, const pcmk_node_t *node,
-                  pe_action_t *action)
+                  pcmk_action_t *action)
 {
     GList *stop_ops = pe__resource_actions(rsc, node, PCMK_ACTION_STOP, TRUE);
 
     for (GList *iter = stop_ops; iter != NULL; iter = iter->next) {
-        pe_action_t *stop = (pe_action_t *) iter->data;
+        pcmk_action_t *stop = (pcmk_action_t *) iter->data;
 
         if (!pcmk_is_set(stop->flags, pcmk_action_optional)
             && !pcmk_is_set(action->flags, pcmk_action_optional)
@@ -500,7 +500,7 @@ recurring_op_for_inactive(pcmk_resource_t *rsc, const pcmk_node_t *node,
         pcmk_node_t *stop_node = (pcmk_node_t *) iter->data;
 
         bool is_optional = true;
-        pe_action_t *stopped_mon = NULL;
+        pcmk_action_t *stopped_mon = NULL;
 
         // Cancel action on node where resource will be active
         if ((node != NULL)
@@ -560,7 +560,7 @@ recurring_op_for_inactive(pcmk_resource_t *rsc, const pcmk_node_t *node,
 void
 pcmk__create_recurring_actions(pcmk_resource_t *rsc)
 {
-    pe_action_t *start = NULL;
+    pcmk_action_t *start = NULL;
 
     if (pcmk_is_set(rsc->flags, pcmk_rsc_blocked)) {
         pe_rsc_trace(rsc, "Skipping recurring actions for blocked resource %s",
@@ -620,11 +620,11 @@ pcmk__create_recurring_actions(pcmk_resource_t *rsc)
  *
  * \return Created op
  */
-pe_action_t *
+pcmk_action_t *
 pcmk__new_cancel_action(pcmk_resource_t *rsc, const char *task,
                         guint interval_ms, const pcmk_node_t *node)
 {
-    pe_action_t *cancel_op = NULL;
+    pcmk_action_t *cancel_op = NULL;
     char *key = NULL;
     char *interval_ms_s = NULL;
 
@@ -663,7 +663,7 @@ pcmk__schedule_cancel(pcmk_resource_t *rsc, const char *call_id,
                       const char *task, guint interval_ms,
                       const pcmk_node_t *node, const char *reason)
 {
-    pe_action_t *cancel = NULL;
+    pcmk_action_t *cancel = NULL;
 
     CRM_CHECK((rsc != NULL) && (task != NULL)
               && (node != NULL) && (reason != NULL),
@@ -693,7 +693,7 @@ void
 pcmk__reschedule_recurring(pcmk_resource_t *rsc, const char *task,
                            guint interval_ms, pcmk_node_t *node)
 {
-    pe_action_t *op = NULL;
+    pcmk_action_t *op = NULL;
 
     trigger_unfencing(rsc, node, "Device parameters changed (reschedule)",
                       NULL, rsc->cluster);
@@ -711,7 +711,7 @@ pcmk__reschedule_recurring(pcmk_resource_t *rsc, const char *task,
  * \return true if \p action has a nonzero interval, otherwise false
  */
 bool
-pcmk__action_is_recurring(const pe_action_t *action)
+pcmk__action_is_recurring(const pcmk_action_t *action)
 {
     guint interval_ms = 0;
 

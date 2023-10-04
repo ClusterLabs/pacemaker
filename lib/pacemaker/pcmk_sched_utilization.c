@@ -391,12 +391,12 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
  *
  * \return Newly created load_stopped op
  */
-static pe_action_t *
+static pcmk_action_t *
 new_load_stopped_op(pcmk_node_t *node)
 {
     char *load_stopped_task = crm_strdup_printf(PCMK_ACTION_LOAD_STOPPED "_%s",
                                                 node->details->uname);
-    pe_action_t *load_stopped = get_pseudo_op(load_stopped_task,
+    pcmk_action_t *load_stopped = get_pseudo_op(load_stopped_task,
                                               node->details->data_set);
 
     if (load_stopped->node == NULL) {
@@ -419,7 +419,7 @@ pcmk__create_utilization_constraints(pcmk_resource_t *rsc,
                                      const GList *allowed_nodes)
 {
     const GList *iter = NULL;
-    pe_action_t *load_stopped = NULL;
+    pcmk_action_t *load_stopped = NULL;
 
     pe_rsc_trace(rsc, "Creating utilization constraints for %s - strategy: %s",
                  rsc->id, rsc->cluster->placement_strategy);

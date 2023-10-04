@@ -447,7 +447,8 @@ get_target_role(const pcmk_resource_t *rsc, enum rsc_role_e *role)
 }
 
 gboolean
-order_actions(pe_action_t *lh_action, pe_action_t *rh_action, uint32_t flags)
+order_actions(pcmk_action_t *lh_action, pcmk_action_t *rh_action,
+              uint32_t flags)
 {
     GList *gIter = NULL;
     pe_action_wrapper_t *wrapper = NULL;
@@ -578,7 +579,7 @@ pe__set_resource_flags_recursive(pcmk_resource_t *rsc, uint64_t flags)
 
 void
 trigger_unfencing(pcmk_resource_t *rsc, pcmk_node_t *node, const char *reason,
-                  pe_action_t *dependency, pe_working_set_t *data_set)
+                  pcmk_action_t *dependency, pe_working_set_t *data_set)
 {
     if (!pcmk_is_set(data_set->flags, pcmk_sched_enable_unfencing)) {
         /* No resources require it */
@@ -593,8 +594,8 @@ trigger_unfencing(pcmk_resource_t *rsc, pcmk_node_t *node, const char *reason,
               && node->details->online
               && node->details->unclean == FALSE
               && node->details->shutdown == FALSE) {
-        pe_action_t *unfence = pe_fence_op(node, PCMK_ACTION_ON, FALSE, reason,
-                                           FALSE, data_set);
+        pcmk_action_t *unfence = pe_fence_op(node, PCMK_ACTION_ON, FALSE,
+                                             reason, FALSE, data_set);
 
         if(dependency) {
             order_actions(unfence, dependency, pcmk__ar_ordered);

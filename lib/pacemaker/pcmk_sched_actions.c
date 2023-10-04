@@ -29,7 +29,7 @@
  * \return Action flags that should be used for orderings
  */
 static uint32_t
-action_flags_for_ordering(pe_action_t *action, const pcmk_node_t *node)
+action_flags_for_ordering(pcmk_action_t *action, const pcmk_node_t *node)
 {
     bool runnable = false;
     uint32_t flags;
@@ -178,10 +178,10 @@ done:
  *
  * \return Actual action that should be used for the ordering
  */
-static pe_action_t *
-action_for_ordering(pe_action_t *action)
+static pcmk_action_t *
+action_for_ordering(pcmk_action_t *action)
 {
-    pe_action_t *result = action;
+    pcmk_action_t *result = action;
     pcmk_resource_t *rsc = action->rsc;
 
     if ((rsc != NULL) && (rsc->variant >= pcmk_rsc_variant_group)
@@ -219,7 +219,7 @@ action_for_ordering(pe_action_t *action)
  * \return Group of enum pcmk__updated flags indicating what was updated
  */
 static inline uint32_t
-update(pcmk_resource_t *rsc, pe_action_t *first, pe_action_t *then,
+update(pcmk_resource_t *rsc, pcmk_action_t *first, pcmk_action_t *then,
        const pcmk_node_t *node, uint32_t flags, uint32_t filter, uint32_t type,
        pe_working_set_t *data_set)
 {
@@ -241,7 +241,7 @@ update(pcmk_resource_t *rsc, pe_action_t *first, pe_action_t *then,
  * \return Group of enum pcmk__updated flags
  */
 static uint32_t
-update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
+update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                                  uint32_t first_flags, uint32_t then_flags,
                                  pe_action_wrapper_t *order,
                                  pe_working_set_t *data_set)
@@ -501,7 +501,8 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
  * \param[in,out] data_set  Cluster working set
  */
 void
-pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
+pcmk__update_action_for_orderings(pcmk_action_t *then,
+                                  pe_working_set_t *data_set)
 {
     GList *lpc = NULL;
     uint32_t changed = pcmk__updated_none;
@@ -536,7 +537,7 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
 
     for (lpc = then->actions_before; lpc != NULL; lpc = lpc->next) {
         pe_action_wrapper_t *other = (pe_action_wrapper_t *) lpc->data;
-        pe_action_t *first = other->action;
+        pcmk_action_t *first = other->action;
 
         pcmk_node_t *then_node = then->node;
         pcmk_node_t *first_node = first->node;
@@ -674,7 +675,7 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
 }
 
 static inline bool
-is_primitive_action(const pe_action_t *action)
+is_primitive_action(const pcmk_action_t *action)
 {
     return (action != NULL) && (action->rsc != NULL)
            && (action->rsc->variant == pcmk_rsc_variant_primitive);
@@ -710,7 +711,7 @@ is_primitive_action(const pe_action_t *action)
  * \param[in,out] then   'Then' action in an asymmetric ordering
  */
 static void
-handle_asymmetric_ordering(const pe_action_t *first, pe_action_t *then)
+handle_asymmetric_ordering(const pcmk_action_t *first, pcmk_action_t *then)
 {
     /* Only resource actions after an unrunnable 'first' action need updates for
      * asymmetric ordering.
@@ -757,7 +758,8 @@ handle_asymmetric_ordering(const pe_action_t *first, pe_action_t *then)
  *       "stop later group member before stopping earlier group member"
  */
 static void
-handle_restart_ordering(pe_action_t *first, pe_action_t *then, uint32_t filter)
+handle_restart_ordering(pcmk_action_t *first, pcmk_action_t *then,
+                        uint32_t filter)
 {
     const char *reason = NULL;
 
@@ -834,7 +836,7 @@ handle_restart_ordering(pe_action_t *first, pe_action_t *then, uint32_t filter)
  * \return Group of enum pcmk__updated flags indicating what was updated
  */
 uint32_t
-pcmk__update_ordered_actions(pe_action_t *first, pe_action_t *then,
+pcmk__update_ordered_actions(pcmk_action_t *first, pcmk_action_t *then,
                              const pcmk_node_t *node, uint32_t flags,
                              uint32_t filter, uint32_t type,
                              pe_working_set_t *data_set)
@@ -958,7 +960,8 @@ pcmk__update_ordered_actions(pe_action_t *first, pe_action_t *then,
  * \param[in] details   If true, recursively log dependent actions
  */
 void
-pcmk__log_action(const char *pre_text, const pe_action_t *action, bool details)
+pcmk__log_action(const char *pre_text, const pcmk_action_t *action,
+                 bool details)
 {
     const char *node_uname = NULL;
     const char *node_uuid = NULL;
@@ -1047,11 +1050,11 @@ pcmk__log_action(const char *pre_text, const pe_action_t *action, bool details)
  *
  * \return Newly created shutdown action for \p node
  */
-pe_action_t *
+pcmk_action_t *
 pcmk__new_shutdown_action(pcmk_node_t *node)
 {
     char *shutdown_id = NULL;
-    pe_action_t *shutdown_op = NULL;
+    pcmk_action_t *shutdown_op = NULL;
 
     CRM_ASSERT(node != NULL);
 
@@ -1294,7 +1297,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
  *         otherwise false
  */
 bool
-pcmk__action_locks_rsc_to_node(const pe_action_t *action)
+pcmk__action_locks_rsc_to_node(const pcmk_action_t *action)
 {
     // Only resource actions taking place on resource's lock node are locked
     if ((action == NULL) || (action->rsc == NULL)
@@ -1342,7 +1345,7 @@ sort_action_id(gconstpointer a, gconstpointer b)
  * \param[in,out] action  Action whose inputs should be checked
  */
 void
-pcmk__deduplicate_action_inputs(pe_action_t *action)
+pcmk__deduplicate_action_inputs(pcmk_action_t *action)
 {
     GList *item = NULL;
     GList *next = NULL;
@@ -1394,7 +1397,7 @@ pcmk__output_actions(pe_working_set_t *data_set)
     for (GList *iter = data_set->actions; iter != NULL; iter = iter->next) {
         char *node_name = NULL;
         char *task = NULL;
-        pe_action_t *action = (pe_action_t *) iter->data;
+        pcmk_action_t *action = (pcmk_action_t *) iter->data;
 
         if (action->rsc != NULL) {
             continue; // Resource actions will be output later
@@ -1536,8 +1539,8 @@ force_restart(pcmk_resource_t *rsc, const char *task, guint interval_ms,
               pcmk_node_t *node)
 {
     char *key = pcmk__op_key(rsc->id, task, interval_ms);
-    pe_action_t *required = custom_action(rsc, key, task, NULL, FALSE, TRUE,
-                                          rsc->cluster);
+    pcmk_action_t *required = custom_action(rsc, key, task, NULL, FALSE, TRUE,
+                                            rsc->cluster);
 
     pe_action_set_reason(required, "resource definition change", true);
     trigger_unfencing(rsc, node, "Device parameters changed", NULL,
@@ -1556,7 +1559,7 @@ schedule_reload(gpointer data, gpointer user_data)
 {
     pcmk_resource_t *rsc = data;
     const pcmk_node_t *node = user_data;
-    pe_action_t *reload = NULL;
+    pcmk_action_t *reload = NULL;
 
     // For collective resources, just call recursively for children
     if (rsc->variant > pcmk_rsc_variant_primitive) {

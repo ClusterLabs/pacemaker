@@ -22,7 +22,7 @@
 #include <glib.h>                 // GSList, GList, GHashTable
 #include <libxml/tree.h>          // xmlNode
 
-#include <crm/pengine/status.h>   // pe_action_t, pcmk_resource_t, etc.
+#include <crm/pengine/status.h>   // pcmk_action_t, pcmk_resource_t, etc.
 
 /*!
  * \internal
@@ -48,10 +48,10 @@ typedef struct notify_data_s {
 
     const char *action;
 
-    pe_action_t *pre;
-    pe_action_t *post;
-    pe_action_t *pre_done;
-    pe_action_t *post_done;
+    pcmk_action_t *pre;
+    pcmk_action_t *post;
+    pcmk_action_t *pre_done;
+    pcmk_action_t *post_done;
 
     GList *active;            /* notify_entry_t*  */
     GList *inactive;          /* notify_entry_t*  */
@@ -78,8 +78,8 @@ void pe__free_action_notification_data(notify_data_t *n_data);
 G_GNUC_INTERNAL
 notify_data_t *pe__action_notif_pseudo_ops(pcmk_resource_t *rsc,
                                            const char *task,
-                                           pe_action_t *action,
-                                           pe_action_t *complete);
+                                           pcmk_action_t *action,
+                                           pcmk_action_t *complete);
 
 G_GNUC_INTERNAL
 void pe__force_anon(const char *standard, pcmk_resource_t *rsc, const char *rid,

@@ -449,12 +449,12 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
  *
  * \return Scheduled action
  */
-pe_action_t *
+pcmk_action_t *
 pe__clear_failcount(pcmk_resource_t *rsc, const pcmk_node_t *node,
                     const char *reason, pe_working_set_t *data_set)
 {
     char *key = NULL;
-    pe_action_t *clear = NULL;
+    pcmk_action_t *clear = NULL;
 
     CRM_CHECK(rsc && node && reason && data_set, return NULL);
 

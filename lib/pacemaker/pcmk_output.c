@@ -105,8 +105,8 @@ do_locations_list_xml(pcmk__output_t *out, pcmk_resource_t *rsc,
 }
 
 PCMK__OUTPUT_ARGS("rsc-action-item", "const char *", "pcmk_resource_t *",
-                  "pcmk_node_t *", "pcmk_node_t *", "pe_action_t *",
-                  "pe_action_t *")
+                  "pcmk_node_t *", "pcmk_node_t *", "pcmk_action_t *",
+                  "pcmk_action_t *")
 static int
 rsc_action_item(pcmk__output_t *out, va_list args)
 {
@@ -114,8 +114,8 @@ rsc_action_item(pcmk__output_t *out, va_list args)
     pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     pcmk_node_t *origin = va_arg(args, pcmk_node_t *);
     pcmk_node_t *destination = va_arg(args, pcmk_node_t *);
-    pe_action_t *action = va_arg(args, pe_action_t *);
-    pe_action_t *source = va_arg(args, pe_action_t *);
+    pcmk_action_t *action = va_arg(args, pcmk_action_t *);
+    pcmk_action_t *source = va_arg(args, pcmk_action_t *);
 
     int len = 0;
     char *reason = NULL;
@@ -232,8 +232,8 @@ rsc_action_item(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("rsc-action-item", "const char *", "pcmk_resource_t *",
-                  "pcmk_node_t *", "pcmk_node_t *", "pe_action_t *",
-                  "pe_action_t *")
+                  "pcmk_node_t *", "pcmk_node_t *", "pcmk_action_t *",
+                  "pcmk_action_t *")
 static int
 rsc_action_item_xml(pcmk__output_t *out, va_list args)
 {
@@ -241,8 +241,8 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
     pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     pcmk_node_t *origin = va_arg(args, pcmk_node_t *);
     pcmk_node_t *destination = va_arg(args, pcmk_node_t *);
-    pe_action_t *action = va_arg(args, pe_action_t *);
-    pe_action_t *source = va_arg(args, pe_action_t *);
+    pcmk_action_t *action = va_arg(args, pcmk_action_t *);
+    pcmk_action_t *source = va_arg(args, pcmk_action_t *);
 
     char *change_str = NULL;
 
@@ -1087,11 +1087,11 @@ rsc_action_default(pcmk__output_t *out, va_list args)
     bool moving = false;
 
     pcmk_node_t *start_node = NULL;
-    pe_action_t *start = NULL;
-    pe_action_t *stop = NULL;
-    pe_action_t *promote = NULL;
-    pe_action_t *demote = NULL;
-    pe_action_t *reason_op = NULL;
+    pcmk_action_t *start = NULL;
+    pcmk_action_t *stop = NULL;
+    pcmk_action_t *promote = NULL;
+    pcmk_action_t *demote = NULL;
+    pcmk_action_t *reason_op = NULL;
 
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)
         || (current == NULL && next == NULL)) {
@@ -1152,7 +1152,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
     }
 
     if (rsc->role == rsc->next_role) {
-        pe_action_t *migrate_op = NULL;
+        pcmk_action_t *migrate_op = NULL;
 
         CRM_CHECK(next != NULL, return rc);
 
@@ -1229,7 +1229,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
         key = stop_key(rsc);
         for (GList *iter = rsc->running_on; iter != NULL; iter = iter->next) {
             pcmk_node_t *node = iter->data;
-            pe_action_t *stop_op = NULL;
+            pcmk_action_t *stop_op = NULL;
 
             reason_op = start;
             possible_matches = find_actions(rsc->actions, key, node);

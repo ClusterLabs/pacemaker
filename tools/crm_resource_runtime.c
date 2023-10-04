@@ -1326,7 +1326,7 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
 static int
 max_rsc_stop_timeout(pcmk_resource_t *rsc)
 {
-    pe_action_t *stop = NULL;
+    pcmk_action_t *stop = NULL;
     long long result_ll;
     int max_delay = 0;
 
@@ -1756,7 +1756,7 @@ done:
 }
 
 static inline bool
-action_is_pending(const pe_action_t *action)
+action_is_pending(const pcmk_action_t *action)
 {
     if (pcmk_any_flags_set(action->flags,
                            pcmk_action_optional|pcmk_action_pseudo)
@@ -1779,7 +1779,7 @@ static bool
 actions_are_pending(const GList *actions)
 {
     for (const GList *action = actions; action != NULL; action = action->next) {
-        const pe_action_t *a = (const pe_action_t *) action->data;
+        const pcmk_action_t *a = (const pcmk_action_t *) action->data;
 
         if (action_is_pending(a)) {
             crm_notice("Waiting for %s (flags=%#.8x)", a->uuid, a->flags);
@@ -1796,7 +1796,7 @@ print_pending_actions(pcmk__output_t *out, GList *actions)
 
     out->info(out, "Pending actions:");
     for (action = actions; action != NULL; action = action->next) {
-        pe_action_t *a = (pe_action_t *) action->data;
+        pcmk_action_t *a = (pcmk_action_t *) action->data;
 
         if (!action_is_pending(a)) {
             continue;

@@ -458,7 +458,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
         pe__set_next_role(rsc, pcmk_role_stopped, "unable to assign");
 
         for (GList *iter = rsc->actions; iter != NULL; iter = iter->next) {
-            pe_action_t *op = (pe_action_t *) iter->data;
+            pcmk_action_t *op = (pcmk_action_t *) iter->data;
 
             pe_rsc_debug(rsc, "Updating %s for %s assignment failure",
                          op->uuid, rsc->id);

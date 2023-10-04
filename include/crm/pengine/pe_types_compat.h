@@ -211,7 +211,7 @@ enum pe_check_parameters {
 };
 //!@}
 
-//!< \deprecated Use pe_action_t instead
+//!< \deprecated Use pcmk_action_t instead
 typedef struct pe_action_s action_t;
 
 //!< \deprecated Use pe_action_wrapper_t instead

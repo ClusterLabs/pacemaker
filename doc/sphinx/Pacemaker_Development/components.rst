@@ -406,13 +406,13 @@ In this way, the other members of ``pcmk_node_t`` (such as ``weight``, which is
 the node score) may vary by node list, while the common details are shared.
 
 .. index::
-   single: pe_action_t
+   single: pcmk_action_t
    single: pe_action_flags
 
 Actions
 _______
 
-``pe_action_t`` is the data object representing actions that might need to be
+``pcmk_action_t`` is the data object representing actions that might need to be
 taken. These could be resource actions, cluster-wide actions such as fencing a
 node, or "pseudo-actions" which are abstractions used as convenient points for
 ordering other actions against.

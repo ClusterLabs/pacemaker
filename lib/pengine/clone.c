@@ -1362,8 +1362,8 @@ void
 pe__create_promotable_pseudo_ops(pcmk_resource_t *clone, bool any_promoting,
                                  bool any_demoting)
 {
-    pe_action_t *action = NULL;
-    pe_action_t *action_complete = NULL;
+    pcmk_action_t *action = NULL;
+    pcmk_action_t *action_complete = NULL;
     clone_variant_data_t *clone_data = NULL;
 
     get_clone_variant_data(clone_data, clone);
@@ -1473,8 +1473,8 @@ pe__free_clone_notification_data(pcmk_resource_t *clone)
  */
 void
 pe__create_clone_notif_pseudo_ops(pcmk_resource_t *clone,
-                                  pe_action_t *start, pe_action_t *started,
-                                  pe_action_t *stop, pe_action_t *stopped)
+                                  pcmk_action_t *start, pcmk_action_t *started,
+                                  pcmk_action_t *stop, pcmk_action_t *stopped)
 {
     clone_variant_data_t *clone_data = NULL;
 

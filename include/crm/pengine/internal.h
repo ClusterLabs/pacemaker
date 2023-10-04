@@ -169,12 +169,12 @@ typedef struct pe__order_constraint_s {
 
     void *lh_opaque;
     pcmk_resource_t *lh_rsc;
-    pe_action_t *lh_action;
+    pcmk_action_t *lh_action;
     char *lh_action_task;
 
     void *rh_opaque;
     pcmk_resource_t *rh_rsc;
-    pe_action_t *rh_action;
+    pcmk_action_t *rh_action;
     char *rh_action_task;
 } pe__ordering_t;
 
@@ -188,12 +188,13 @@ int pe__clone_promoted_node_max(const pcmk_resource_t *clone);
 void pe__create_clone_notifications(pcmk_resource_t *clone);
 void pe__free_clone_notification_data(pcmk_resource_t *clone);
 void pe__create_clone_notif_pseudo_ops(pcmk_resource_t *clone,
-                                       pe_action_t *start, pe_action_t *started,
-                                       pe_action_t *stop, pe_action_t *stopped);
+                                       pcmk_action_t *start,
+                                       pcmk_action_t *started,
+                                       pcmk_action_t *stop,
+                                       pcmk_action_t *stopped);
 
-
-pe_action_t *pe__new_rsc_pseudo_action(pcmk_resource_t *rsc, const char *task,
-                                       bool optional, bool runnable);
+pcmk_action_t *pe__new_rsc_pseudo_action(pcmk_resource_t *rsc, const char *task,
+                                         bool optional, bool runnable);
 
 void pe__create_promotable_pseudo_ops(pcmk_resource_t *clone,
                                       bool any_promoting, bool any_demoting);
@@ -252,9 +253,9 @@ char *pe__node_display_name(pcmk_node_t *node, bool print_detail);
 
 
 // Clone notifications (pe_notif.c)
-void pe__order_notifs_after_fencing(const pe_action_t *action,
+void pe__order_notifs_after_fencing(const pcmk_action_t *action,
                                     pcmk_resource_t *rsc,
-                                    pe_action_t *stonith_op);
+                                    pcmk_action_t *stonith_op);
 
 
 static inline const char *
@@ -305,9 +306,9 @@ int pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
                      time_t *last_failure, uint32_t flags,
                      const xmlNode *xml_op);
 
-pe_action_t *pe__clear_failcount(pcmk_resource_t *rsc, const pcmk_node_t *node,
-                                 const char *reason,
-                                 pe_working_set_t *data_set);
+pcmk_action_t *pe__clear_failcount(pcmk_resource_t *rsc,
+                                   const pcmk_node_t *node, const char *reason,
+                                   pe_working_set_t *data_set);
 
 /* Functions for finding/counting a resource's active nodes */
 
@@ -328,8 +329,8 @@ pe__current_node(const pcmk_resource_t *rsc)
 /* Binary like operators for lists of nodes */
 GHashTable *pe__node_list2table(const GList *list);
 
-extern pe_action_t *get_pseudo_op(const char *name, pe_working_set_t * data_set);
-gboolean order_actions(pe_action_t *lh_action, pe_action_t *rh_action,
+pcmk_action_t *get_pseudo_op(const char *name, pe_working_set_t *data_set);
+gboolean order_actions(pcmk_action_t *lh_action, pcmk_action_t *rh_action,
                        uint32_t flags);
 
 void pe__show_node_scores_as(const char *file, const char *function,
@@ -348,9 +349,9 @@ GHashTable *pcmk__unpack_action_meta(pcmk_resource_t *rsc,
                                      const char *action_name, guint interval_ms,
                                      const xmlNode *action_config);
 
-pe_action_t *custom_action(pcmk_resource_t *rsc, char *key, const char *task,
-                           const pcmk_node_t *on_node, gboolean optional,
-                           gboolean foo, pe_working_set_t *data_set);
+pcmk_action_t *custom_action(pcmk_resource_t *rsc, char *key, const char *task,
+                             const pcmk_node_t *on_node, gboolean optional,
+                             gboolean foo, pe_working_set_t *data_set);
 
 #  define delete_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_DELETE, 0)
 #  define delete_action(rsc, node, optional) custom_action(		\
@@ -381,8 +382,8 @@ pe_action_t *custom_action(pcmk_resource_t *rsc, char *key, const char *task,
 extern int pe_get_configured_timeout(pcmk_resource_t *rsc, const char *action,
                                      pe_working_set_t *data_set);
 
-pe_action_t *find_first_action(const GList *input, const char *uuid,
-                               const char *task, const pcmk_node_t *on_node);
+pcmk_action_t *find_first_action(const GList *input, const char *uuid,
+                                 const char *task, const pcmk_node_t *on_node);
 
 enum action_tasks get_complex_task(const pcmk_resource_t *rsc,
                                    const char *name);
@@ -393,7 +394,7 @@ GList *find_actions_exact(GList *input, const char *key,
 GList *pe__resource_actions(const pcmk_resource_t *rsc, const pcmk_node_t *node,
                             const char *task, bool require_node);
 
-extern void pe_free_action(pe_action_t * action);
+extern void pe_free_action(pcmk_action_t *action);
 
 void resource_location(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
                        const char *tag, pe_working_set_t *data_set);
@@ -458,16 +459,17 @@ op_digest_cache_t *rsc_action_digest_cmp(pcmk_resource_t *rsc,
                                          pcmk_node_t *node,
                                          pe_working_set_t *data_set);
 
-pe_action_t *pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
-                         const char *reason, bool priority_delay,
-                         pe_working_set_t *data_set);
+pcmk_action_t *pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
+                           const char *reason, bool priority_delay,
+                           pe_working_set_t *data_set);
 void trigger_unfencing(pcmk_resource_t *rsc, pcmk_node_t *node,
-                       const char *reason, pe_action_t *dependency,
+                       const char *reason, pcmk_action_t *dependency,
                        pe_working_set_t *data_set);
 
-char *pe__action2reason(const pe_action_t *action, enum pe_action_flags flag);
-void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrite);
-void pe__add_action_expected_result(pe_action_t *action, int expected_result);
+char *pe__action2reason(const pcmk_action_t *action, enum pe_action_flags flag);
+void pe_action_set_reason(pcmk_action_t *action, const char *reason,
+                          bool overwrite);
+void pe__add_action_expected_result(pcmk_action_t *action, int expected_result);
 
 void pe__set_resource_flags_recursive(pcmk_resource_t *rsc, uint64_t flags);
 void pe__clear_resource_flags_recursive(pcmk_resource_t *rsc, uint64_t flags);

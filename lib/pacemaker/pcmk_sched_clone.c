@@ -388,7 +388,7 @@ pcmk__clone_with_colocations(const pcmk_resource_t *rsc,
  * \return Flags appropriate to \p action on \p node
  */
 uint32_t
-pcmk__clone_action_flags(pe_action_t *action, const pcmk_node_t *node)
+pcmk__clone_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
 {
     CRM_ASSERT((action != NULL) && pe_rsc_is_clone(action->rsc));
 
@@ -422,7 +422,7 @@ call_action_flags(gpointer data, gpointer user_data)
 {
     pcmk_resource_t *rsc = user_data;
 
-    rsc->cmds->action_flags((pe_action_t *) data, NULL);
+    rsc->cmds->action_flags((pcmk_action_t *) data, NULL);
 }
 
 /*!

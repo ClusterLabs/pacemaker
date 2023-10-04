@@ -225,7 +225,7 @@ struct pe_resource_s {
     GList *rsc_cons_lhs;      // List of pcmk__colocation_t*
     GList *rsc_cons;          // List of pcmk__colocation_t*
     GList *rsc_location;      // List of pe__location_t*
-    GList *actions;           // List of pe_action_t*
+    GList *actions;           // List of pcmk_action_t*
     GList *rsc_tickets;       // List of rsc_ticket*
     //!@}
 
@@ -378,7 +378,7 @@ enum pe_ordering {
 typedef struct pe_action_wrapper_s {
     enum pe_ordering type;
     enum pe_link_state state;
-    pe_action_t *action;
+    pcmk_action_t *action;
 } pe_action_wrapper_t;
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)

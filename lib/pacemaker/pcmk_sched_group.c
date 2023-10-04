@@ -96,11 +96,11 @@ pcmk__group_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
  *
  * \return Newly created pseudo-operation
  */
-static pe_action_t *
+static pcmk_action_t *
 create_group_pseudo_op(pcmk_resource_t *group, const char *action)
 {
-    pe_action_t *op = custom_action(group, pcmk__op_key(group->id, action, 0),
-                                    action, NULL, TRUE, TRUE, group->cluster);
+    pcmk_action_t *op = custom_action(group, pcmk__op_key(group->id, action, 0),
+                                      action, NULL, TRUE, TRUE, group->cluster);
     pe__set_action_flags(op, pcmk_action_pseudo|pcmk_action_runnable);
     return op;
 }
@@ -484,7 +484,7 @@ pcmk__group_apply_coloc_score(pcmk_resource_t *dependent,
  * \return Flags appropriate to \p action on \p node
  */
 uint32_t
-pcmk__group_action_flags(pe_action_t *action, const pcmk_node_t *node)
+pcmk__group_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
 {
     // Default flags for a group action
     uint32_t flags = pcmk_action_optional
@@ -500,8 +500,8 @@ pcmk__group_action_flags(pe_action_t *action, const pcmk_node_t *node)
         // Check whether member has the same action
         enum action_tasks task = get_complex_task(member, action->task);
         const char *task_s = task2text(task);
-        pe_action_t *member_action = find_first_action(member->actions, NULL,
-                                                       task_s, node);
+        pcmk_action_t *member_action = find_first_action(member->actions, NULL,
+                                                         task_s, node);
 
         if (member_action != NULL) {
             uint32_t member_flags = member->cmds->action_flags(member_action,
@@ -567,7 +567,7 @@ pcmk__group_action_flags(pe_action_t *action, const pcmk_node_t *node)
  * \return Group of enum pcmk__updated flags indicating what was updated
  */
 uint32_t
-pcmk__group_update_ordered_actions(pe_action_t *first, pe_action_t *then,
+pcmk__group_update_ordered_actions(pcmk_action_t *first, pcmk_action_t *then,
                                    const pcmk_node_t *node, uint32_t flags,
                                    uint32_t filter, uint32_t type,
                                    pe_working_set_t *data_set)
@@ -586,8 +586,8 @@ pcmk__group_update_ordered_actions(pe_action_t *first, pe_action_t *then,
     for (GList *iter = then->rsc->children; iter != NULL; iter = iter->next) {
         pcmk_resource_t *member = (pcmk_resource_t *) iter->data;
 
-        pe_action_t *member_action = find_first_action(member->actions, NULL,
-                                                       then->task, node);
+        pcmk_action_t *member_action = find_first_action(member->actions, NULL,
+                                                         then->task, node);
 
         if (member_action != NULL) {
             changed |= member->cmds->update_ordered_actions(first,

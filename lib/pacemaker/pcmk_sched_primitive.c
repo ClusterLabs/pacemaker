@@ -633,7 +633,7 @@ set_default_next_role(pcmk_resource_t *rsc)
 static void
 create_pending_start(pcmk_resource_t *rsc)
 {
-    pe_action_t *start = NULL;
+    pcmk_action_t *start = NULL;
 
     pe_rsc_trace(rsc,
                  "Creating action for %s to represent already pending start",
@@ -815,7 +815,7 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
 
     } else if ((rsc->role > pcmk_role_started) && (current != NULL)
                && (rsc->allocated_to != NULL)) {
-        pe_action_t *start = NULL;
+        pcmk_action_t *start = NULL;
 
         pe_rsc_trace(rsc, "Creating start action for promoted resource %s",
                      rsc->id);
@@ -1186,7 +1186,7 @@ pcmk__primitive_with_colocations(const pcmk_resource_t *rsc,
  * \return Flags appropriate to \p action on \p node
  */
 uint32_t
-pcmk__primitive_action_flags(pe_action_t *action, const pcmk_node_t *node)
+pcmk__primitive_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
 {
     CRM_ASSERT(action != NULL);
     return (uint32_t) action->flags;
@@ -1227,7 +1227,7 @@ stop_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
 {
     for (GList *iter = rsc->running_on; iter != NULL; iter = iter->next) {
         pcmk_node_t *current = (pcmk_node_t *) iter->data;
-        pe_action_t *stop = NULL;
+        pcmk_action_t *stop = NULL;
 
         if (is_expected_node(rsc, current)) {
             /* We are scheduling restart actions for a multiply active resource
@@ -1283,8 +1283,8 @@ stop_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
         }
 
         if (pcmk_is_set(rsc->flags, pcmk_rsc_needs_unfencing)) {
-            pe_action_t *unfence = pe_fence_op(current, PCMK_ACTION_ON, true,
-                                               NULL, false, rsc->cluster);
+            pcmk_action_t *unfence = pe_fence_op(current, PCMK_ACTION_ON, true,
+                                                 NULL, false, rsc->cluster);
 
             order_actions(stop, unfence, pcmk__ar_then_implies_first);
             if (!pcmk__node_unfenced(current)) {
@@ -1306,7 +1306,7 @@ stop_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
 static void
 start_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
 {
-    pe_action_t *start = NULL;
+    pcmk_action_t *start = NULL;
 
     CRM_ASSERT(node != NULL);
 
@@ -1353,7 +1353,7 @@ promote_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
     // Any start must be runnable for promotion to be runnable
     action_list = pe__resource_actions(rsc, node, PCMK_ACTION_START, true);
     for (iter = action_list; iter != NULL; iter = iter->next) {
-        pe_action_t *start = (pe_action_t *) iter->data;
+        pcmk_action_t *start = (pcmk_action_t *) iter->data;
 
         if (!pcmk_is_set(start->flags, pcmk_action_runnable)) {
             runnable = false;
@@ -1362,7 +1362,7 @@ promote_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
     g_list_free(action_list);
 
     if (runnable) {
-        pe_action_t *promote = promote_action(rsc, node, optional);
+        pcmk_action_t *promote = promote_action(rsc, node, optional);
 
         pe_rsc_trace(rsc, "Scheduling %s promotion of %s on %s",
                      (optional? "optional" : "required"), rsc->id,
@@ -1384,7 +1384,7 @@ promote_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
         action_list = pe__resource_actions(rsc, node, PCMK_ACTION_PROMOTE,
                                            true);
         for (iter = action_list; iter != NULL; iter = iter->next) {
-            pe_action_t *promote = (pe_action_t *) iter->data;
+            pcmk_action_t *promote = (pcmk_action_t *) iter->data;
 
             pe__clear_action_flags(promote, pcmk_action_runnable);
         }

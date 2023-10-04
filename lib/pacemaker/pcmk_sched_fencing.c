@@ -52,7 +52,7 @@ rsc_is_known_on(const pcmk_resource_t *rsc, const pcmk_node_t *node)
  * \param[in,out] stonith_op  Fence action
  */
 static void
-order_start_vs_fencing(pcmk_resource_t *rsc, pe_action_t *stonith_op)
+order_start_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
 {
     pcmk_node_t *target;
 
@@ -60,7 +60,7 @@ order_start_vs_fencing(pcmk_resource_t *rsc, pe_action_t *stonith_op)
     target = stonith_op->node;
 
     for (GList *iter = rsc->actions; iter != NULL; iter = iter->next) {
-        pe_action_t *action = iter->data;
+        pcmk_action_t *action = iter->data;
 
         switch (action->needs) {
             case pcmk_requires_nothing:
@@ -106,14 +106,14 @@ order_start_vs_fencing(pcmk_resource_t *rsc, pe_action_t *stonith_op)
  * \param[in,out] stonith_op  Fence action
  */
 static void
-order_stop_vs_fencing(pcmk_resource_t *rsc, pe_action_t *stonith_op)
+order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
 {
     GList *iter = NULL;
     GList *action_list = NULL;
     bool order_implicit = false;
 
     pcmk_resource_t *top = uber_parent(rsc);
-    pe_action_t *parent_stop = NULL;
+    pcmk_action_t *parent_stop = NULL;
     pcmk_node_t *target;
 
     CRM_CHECK(stonith_op && stonith_op->node, return);
@@ -140,7 +140,7 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pe_action_t *stonith_op)
     }
 
     for (iter = action_list; iter != NULL; iter = iter->next) {
-        pe_action_t *action = iter->data;
+        pcmk_action_t *action = iter->data;
 
         // The stop would never complete, so convert it into a pseudo-action.
         pe__set_action_flags(action, pcmk_action_pseudo|pcmk_action_runnable);
@@ -211,7 +211,7 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pe_action_t *stonith_op)
     action_list = pe__resource_actions(rsc, target, PCMK_ACTION_DEMOTE, FALSE);
 
     for (iter = action_list; iter != NULL; iter = iter->next) {
-        pe_action_t *action = iter->data;
+        pcmk_action_t *action = iter->data;
 
         if (!(action->node->details->online) || action->node->details->unclean
             || pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
@@ -253,7 +253,7 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pe_action_t *stonith_op)
  * \param[in,out] stonith_op  Fencing operation to be ordered against
  */
 static void
-rsc_stonith_ordering(pcmk_resource_t *rsc, pe_action_t *stonith_op)
+rsc_stonith_ordering(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
 {
     if (rsc->children) {
         for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
@@ -285,7 +285,7 @@ rsc_stonith_ordering(pcmk_resource_t *rsc, pe_action_t *stonith_op)
  * \param[in,out] data_set    Working set of cluster
  */
 void
-pcmk__order_vs_fence(pe_action_t *stonith_op, pe_working_set_t *data_set)
+pcmk__order_vs_fence(pcmk_action_t *stonith_op, pe_working_set_t *data_set)
 {
     CRM_CHECK(stonith_op && data_set, return);
     for (GList *r = data_set->resources; r != NULL; r = r->next) {
@@ -304,7 +304,7 @@ pcmk__order_vs_fence(pe_action_t *stonith_op, pe_working_set_t *data_set)
  */
 void
 pcmk__order_vs_unfence(const pcmk_resource_t *rsc, pcmk_node_t *node,
-                       pe_action_t *action,
+                       pcmk_action_t *action,
                        enum pcmk__action_relation_flags order)
 {
     /* When unfencing is in use, we order unfence actions before any probe or
@@ -322,7 +322,7 @@ pcmk__order_vs_unfence(const pcmk_resource_t *rsc, pcmk_node_t *node,
          * the node being unfenced, and all its resources being stopped,
          * whenever a new resource is added -- which would be highly suboptimal.
          */
-        pe_action_t *unfence = pe_fence_op(node, PCMK_ACTION_ON, TRUE, NULL,
+        pcmk_action_t *unfence = pe_fence_op(node, PCMK_ACTION_ON, TRUE, NULL,
                                            FALSE, node->details->data_set);
 
         order_actions(unfence, action, order);
@@ -349,8 +349,8 @@ void
 pcmk__fence_guest(pcmk_node_t *node)
 {
     pcmk_resource_t *container = NULL;
-    pe_action_t *stop = NULL;
-    pe_action_t *stonith_op = NULL;
+    pcmk_action_t *stop = NULL;
+    pcmk_action_t *stonith_op = NULL;
 
     /* The fence action is just a label; we don't do anything differently for
      * off vs. reboot. We specify it explicitly, rather than let it default to
@@ -388,7 +388,7 @@ pcmk__fence_guest(pcmk_node_t *node)
      * (even though start might be closer to what is done for a real reboot).
      */
     if ((stop != NULL) && pcmk_is_set(stop->flags, pcmk_action_pseudo)) {
-        pe_action_t *parent_stonith_op = pe_fence_op(stop->node, NULL, FALSE,
+        pcmk_action_t *parent_stonith_op = pe_fence_op(stop->node, NULL, FALSE,
                                                      NULL, FALSE,
                                                      node->details->data_set);
 
@@ -466,8 +466,8 @@ pcmk__order_restart_vs_unfence(gpointer data, gpointer user_data)
     pcmk_node_t *node = (pcmk_node_t *) data;
     pcmk_resource_t *rsc = (pcmk_resource_t *) user_data;
 
-    pe_action_t *unfence = pe_fence_op(node, PCMK_ACTION_ON, true, NULL, false,
-                                       rsc->cluster);
+    pcmk_action_t *unfence = pe_fence_op(node, PCMK_ACTION_ON, true, NULL,
+                                         false, rsc->cluster);
 
     crm_debug("Ordering any stops of %s before %s, and any starts after",
               rsc->id, unfence->uuid);

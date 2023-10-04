@@ -365,7 +365,7 @@ clear_failcounts_if_orphaned(gpointer data, gpointer user_data)
 
     for (GList *iter = rsc->cluster->nodes; iter != NULL; iter = iter->next) {
         pcmk_node_t *node = (pcmk_node_t *) iter->data;
-        pe_action_t *clear_op = NULL;
+        pcmk_action_t *clear_op = NULL;
 
         if (!node->details->online) {
             continue;
@@ -504,7 +504,7 @@ needs_shutdown(const pcmk_node_t *node)
  * \return (Possibly new) head of \p list
  */
 static GList *
-add_nondc_fencing(GList *list, pe_action_t *action,
+add_nondc_fencing(GList *list, pcmk_action_t *action,
                   const pe_working_set_t *data_set)
 {
     if (!pcmk_is_set(data_set->flags, pcmk_sched_concurrent_fencing)
@@ -514,7 +514,7 @@ add_nondc_fencing(GList *list, pe_action_t *action,
          * shutdown, it will be ordered after the last action in the
          * chain later.
          */
-        order_actions((pe_action_t *) list->data, action, pcmk__ar_ordered);
+        order_actions((pcmk_action_t *) list->data, action, pcmk__ar_ordered);
     }
     return g_list_prepend(list, action);
 }
@@ -525,10 +525,10 @@ add_nondc_fencing(GList *list, pe_action_t *action,
  *
  * \param[in,out] node      Node that requires fencing
  */
-static pe_action_t *
+static pcmk_action_t *
 schedule_fencing(pcmk_node_t *node)
 {
-    pe_action_t *fencing = pe_fence_op(node, NULL, FALSE, "node is unclean",
+    pcmk_action_t *fencing = pe_fence_op(node, NULL, FALSE, "node is unclean",
                                        FALSE, node->details->data_set);
 
     pe_warn("Scheduling node %s for fencing", pe__node_name(node));
@@ -545,7 +545,7 @@ schedule_fencing(pcmk_node_t *node)
 static void
 schedule_fencing_and_shutdowns(pe_working_set_t *data_set)
 {
-    pe_action_t *dc_down = NULL;
+    pcmk_action_t *dc_down = NULL;
     bool integrity_lost = false;
     bool have_managed = any_managed_resources(data_set);
     GList *fencing_ops = NULL;
@@ -560,7 +560,7 @@ schedule_fencing_and_shutdowns(pe_working_set_t *data_set)
     // Check each node for whether it needs fencing or shutdown
     for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
         pcmk_node_t *node = (pcmk_node_t *) iter->data;
-        pe_action_t *fencing = NULL;
+        pcmk_action_t *fencing = NULL;
 
         /* Guest nodes are "fenced" by recovering their container resource,
          * so handle them separately.
@@ -584,7 +584,7 @@ schedule_fencing_and_shutdowns(pe_working_set_t *data_set)
             }
 
         } else if (needs_shutdown(node)) {
-            pe_action_t *down_op = pcmk__new_shutdown_action(node);
+            pcmk_action_t *down_op = pcmk__new_shutdown_action(node);
 
             // Track DC and non-DC shutdown actions separately
             if (node->details->is_dc) {
@@ -639,7 +639,7 @@ schedule_fencing_and_shutdowns(pe_working_set_t *data_set)
              * the DC fencing after the last action in the chain (which is the
              * first item in the list).
              */
-            order_actions((pe_action_t *) fencing_ops->data, dc_down,
+            order_actions((pcmk_action_t *) fencing_ops->data, dc_down,
                           pcmk__ar_ordered);
         }
     }
@@ -716,7 +716,7 @@ log_unrunnable_actions(const pe_working_set_t *data_set)
     for (const GList *iter = data_set->actions;
          iter != NULL; iter = iter->next) {
 
-        const pe_action_t *action = (const pe_action_t *) iter->data;
+        const pcmk_action_t *action = (const pcmk_action_t *) iter->data;
 
         if (!pcmk_any_flags_set(action->flags, flags)) {
             pcmk__log_action("\t", action, true);

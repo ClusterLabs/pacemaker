@@ -41,7 +41,7 @@ static void set_effective_date(pe_working_set_t *data_set, bool print_original,
  * \note It is the caller's responsibility to free the result.
  */
 static char *
-create_action_name(const pe_action_t *action, bool verbose)
+create_action_name(const pcmk_action_t *action, bool verbose)
 {
     char *action_name = NULL;
     const char *prefix = "";
@@ -231,7 +231,7 @@ write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
 
     fprintf(dot_strm, " digraph \"g\" {\n");
     for (iter = data_set->actions; iter != NULL; iter = iter->next) {
-        pe_action_t *action = (pe_action_t *) iter->data;
+        pcmk_action_t *action = (pcmk_action_t *) iter->data;
         const char *style = "dashed";
         const char *font = "black";
         const char *color = "black";
@@ -272,7 +272,7 @@ write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
     }
 
     for (iter = data_set->actions; iter != NULL; iter = iter->next) {
-        pe_action_t *action = (pe_action_t *) iter->data;
+        pcmk_action_t *action = (pcmk_action_t *) iter->data;
 
         for (GList *before_iter = action->actions_before;
              before_iter != NULL; before_iter = before_iter->next) {
