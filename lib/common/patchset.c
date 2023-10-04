@@ -41,6 +41,14 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
     xml_node_private_t *nodepriv = xml->_private;
     const char *value = NULL;
 
+    if (nodepriv == NULL) {
+        /* Elements that shouldn't occur in a CIB don't have _private set. They
+         * should be stripped out, ignored, or have an error thrown by any code
+         * that processes their parent, so we ignore any changes to them.
+         */
+        return;
+    }
+
     // If this XML node is new, just report that
     if (patchset && pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
         GString *xpath = pcmk__element_xpath(xml->parent);
