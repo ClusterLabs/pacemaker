@@ -392,6 +392,8 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
     enum cib_call_options flags = cib_none;
     GHashTable *alert_attribute_value = NULL;
 
+    CRM_CHECK(the_cib != NULL, return);
+
     if (a == NULL) {
         return;
     }
@@ -400,7 +402,6 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
     if (!stand_alone && !a->is_private) {
 
         /* Defer the write if now's not a good time */
-        CRM_CHECK(the_cib != NULL, return);
         if (a->update && (a->update < last_cib_op_done)) {
             crm_info("Write out of '%s' continuing: update %d considered lost", a->id, a->update);
             a->update = 0; // Don't log this message again
