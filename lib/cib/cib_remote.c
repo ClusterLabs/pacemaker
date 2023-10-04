@@ -518,6 +518,7 @@ cib_remote_free(cib_t *cib)
             free(private->user);
             free(private->passwd);
             free(cib->cmds);
+            free(cib->user);
             free(private);
             free(cib);
         }

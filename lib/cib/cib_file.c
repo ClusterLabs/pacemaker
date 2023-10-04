@@ -585,6 +585,7 @@ cib_file_free(cib_t *cib)
         free(private->filename);
         free(private);
         free(cib->cmds);
+        free(cib->user);
         free(cib);
 
     } else {
