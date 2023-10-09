@@ -7,6 +7,9 @@
 
 #include <stdint.h>                 // uint32_t, uint64_t
 #include <crm/common/mainloop.h>
+#include <crm/cluster.h>
+#include <crm/stonith-ng.h>
+#include <crm/fencing/internal.h>
 
 /*!
  * \internal
@@ -208,6 +211,8 @@ typedef struct stonith_topology_s {
 
 } stonith_topology_t;
 
+void stonith_shutdown(int nsig);
+
 void init_device_list(void);
 void free_device_list(void);
 void init_topology_list(void);
@@ -283,6 +288,10 @@ gboolean node_has_attr(const char *node, const char *name, const char *value);
 
 gboolean node_does_watchdog_fencing(const char *node);
 
+void fencing_topology_init(void);
+void setup_cib(void);
+void fenced_cib_cleanup(void);
+
 static inline void
 fenced_set_protocol_error(pcmk__action_result_t *result)
 {
@@ -314,5 +323,6 @@ extern GHashTable *device_list;
 extern GHashTable *topology;
 extern long stonith_watchdog_timeout_ms;
 extern GList *stonith_watchdog_targets;
-
 extern GHashTable *stonith_remote_op_list;
+extern crm_exit_t exit_code;
+extern gboolean stonith_shutdown_flag;

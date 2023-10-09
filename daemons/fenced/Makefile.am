@@ -39,9 +39,10 @@ pacemaker_fenced_LDADD += $(top_builddir)/lib/fencing/libstonithd.la
 pacemaker_fenced_LDADD += $(top_builddir)/lib/common/libcrmcommon.la
 pacemaker_fenced_LDADD += $(CLUSTERLIBS)
 
-pacemaker_fenced_SOURCES	= pacemaker-fenced.c \
-				  fenced_commands.c \
-				  fenced_remote.c \
+pacemaker_fenced_SOURCES	= pacemaker-fenced.c	\
+				  fenced_cib.c		\
+				  fenced_commands.c	\
+				  fenced_remote.c	\
 				  fenced_history.c
 
 CLEANFILES = $(man7_MANS) $(man8_MANS)
