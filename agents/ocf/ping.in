@@ -322,7 +322,7 @@ ping_update() {
     if [ "$__OCF_ACTION" = "start" ] ; then
         attrd_updater -n "$OCF_RESKEY_name" -B "$score" -d "$OCF_RESKEY_dampen"
     else
-        attrd_updater -n "$OCF_RESKEY_name" -v "$score" -d "$OCF_RESKEY_dampen"
+        attrd_updater -n "$OCF_RESKEY_name" -U "$score" -d "$OCF_RESKEY_dampen"
     fi
     rc=$?
     case $rc in

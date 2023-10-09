@@ -15,7 +15,6 @@
 
 // Request types for CIB manager IPC/CPG
 #define PCMK__CIB_REQUEST_SECONDARY     "cib_slave"
-#define PCMK__CIB_REQUEST_ALL_SECONDARY "cib_slave_all"
 #define PCMK__CIB_REQUEST_PRIMARY       "cib_master"
 #define PCMK__CIB_REQUEST_SYNC_TO_ALL   "cib_sync"
 #define PCMK__CIB_REQUEST_SYNC_TO_ONE   "cib_sync_one"
@@ -32,6 +31,7 @@
 #define PCMK__CIB_REQUEST_ABS_DELETE    "cib_delete_alt"
 #define PCMK__CIB_REQUEST_NOOP          "noop"
 #define PCMK__CIB_REQUEST_SHUTDOWN      "cib_shutdown_req"
+#define PCMK__CIB_REQUEST_COMMIT_TRANSACT   "cib_commit_transact"
 
 #  define F_CIB_CLIENTID  "cib_clientid"
 #  define F_CIB_CALLOPTS  "cib_callopt"
@@ -60,33 +60,71 @@
 #  define F_CIB_LOCAL_NOTIFY_ID	"cib_local_notify_id"
 #  define F_CIB_PING_ID         "cib_ping_id"
 #  define F_CIB_SCHEMA_MAX      "cib_schema_max"
-#  define F_CIB_CHANGE_SECTION  "cib_change_section"
 
 #  define T_CIB			"cib"
+#  define T_CIB_COMMAND		"cib_command"
 #  define T_CIB_NOTIFY		"cib_notify"
 /* notify sub-types */
 #  define T_CIB_PRE_NOTIFY	"cib_pre_notify"
 #  define T_CIB_POST_NOTIFY	"cib_post_notify"
+#  define T_CIB_TRANSACTION	"cib_transaction"
 #  define T_CIB_UPDATE_CONFIRM	"cib_update_confirmation"
-#  define T_CIB_REPLACE_NOTIFY	"cib_refresh_notify"
 
 /*!
  * \internal
- * \enum cib_change_section_info
- * \brief Flags to indicate which sections of the CIB have changed
+ * \enum cib__op_attr
+ * \brief Flags for CIB operation attributes
  */
-enum cib_change_section_info {
-    cib_change_section_none     = 0,        //!< No sections have changed
-    cib_change_section_nodes    = (1 << 0), //!< The nodes section has changed
-    cib_change_section_alerts   = (1 << 1), //!< The alerts section has changed
-    cib_change_section_status   = (1 << 2), //!< The status section has changed
+enum cib__op_attr {
+    cib__op_attr_none           = 0,        //!< No special attributes
+    cib__op_attr_modifies       = (1 << 1), //!< Modifies CIB
+    cib__op_attr_privileged     = (1 << 2), //!< Requires privileges
+    cib__op_attr_local          = (1 << 3), //!< Must only be processed locally
+    cib__op_attr_replaces       = (1 << 4), //!< Replaces CIB
+    cib__op_attr_writes_through = (1 << 5), //!< Writes to disk on success
+    cib__op_attr_transaction    = (1 << 6), //!< Supported in a transaction
 };
 
+/*!
+ * \internal
+ * \enum cib__op_type
+ * \brief Types of CIB operations
+ */
+enum cib__op_type {
+    cib__op_abs_delete,
+    cib__op_apply_patch,
+    cib__op_bump,
+    cib__op_commit_transact,
+    cib__op_create,
+    cib__op_delete,
+    cib__op_erase,
+    cib__op_is_primary,
+    cib__op_modify,
+    cib__op_noop,
+    cib__op_ping,
+    cib__op_primary,
+    cib__op_query,
+    cib__op_replace,
+    cib__op_secondary,
+    cib__op_shutdown,
+    cib__op_sync_all,
+    cib__op_sync_one,
+    cib__op_upgrade,
+};
 
 gboolean cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, int *updates,
                                   int *_admin_epoch, int *_epoch, int *_updates);
 
 gboolean cib_read_config(GHashTable * options, xmlNode * current_cib);
+
+typedef int (*cib__op_fn_t)(const char *, int, const char *, xmlNode *,
+                            xmlNode *, xmlNode *, xmlNode **, xmlNode **);
+
+typedef struct cib__operation_s {
+    const char *name;
+    enum cib__op_type type;
+    uint32_t flags; //!< Group of <tt>enum cib__op_attr</tt> flags
+} cib__operation_t;
 
 typedef struct cib_notify_client_s {
     const char *event;
@@ -124,23 +162,29 @@ struct timer_rec_s {
             (flags_to_clear), #flags_to_clear);                                \
     } while (0)
 
-typedef int (*cib_op_t) (const char *, int, const char *, xmlNode *,
-                         xmlNode *, xmlNode *, xmlNode **, xmlNode **);
-
 cib_t *cib_new_variant(void);
 
-int cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_query,
-                   const char *section, xmlNode * req, xmlNode * input,
-                   gboolean manage_counters, gboolean * config_changed,
-                   xmlNode * current_cib, xmlNode ** result_cib, xmlNode ** diff,
-                   xmlNode ** output);
+int cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset);
 
-xmlNode *cib_create_op(int call_id, const char *op, const char *host,
-                       const char *section, xmlNode * data, int call_options,
-                       const char *user_name);
+bool cib__element_in_patchset(const xmlNode *patchset, const char *element);
+
+int cib_perform_op(const char *op, int call_options, cib__op_fn_t fn,
+                   bool is_query, const char *section, xmlNode *req,
+                   xmlNode *input, bool manage_counters, bool *config_changed,
+                   xmlNode **current_cib, xmlNode **result_cib, xmlNode **diff,
+                   xmlNode **output);
+
+int cib__create_op(cib_t *cib, const char *op, const char *host,
+                   const char *section, xmlNode *data, int call_options,
+                   const char *user_name, const char *client_name,
+                   xmlNode **op_msg);
+
+int cib__extend_transaction(cib_t *cib, xmlNode *request);
 
 void cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc);
 void cib_native_notify(gpointer data, gpointer user_data);
+
+int cib__get_operation(const char *op, const cib__operation_t **operation);
 
 int cib_process_query(const char *op, int options, const char *section, xmlNode * req,
                       xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,

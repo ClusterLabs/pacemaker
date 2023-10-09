@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -160,7 +160,7 @@ pcmk_cluster_free(crm_cluster_t *cluster)
  */
 gboolean
 send_cluster_message(const crm_node_t *node, enum crm_ais_msg_types service,
-                     xmlNode *data, gboolean ordered)
+                     const xmlNode *data, gboolean ordered)
 {
     switch (get_cluster_type()) {
         case pcmk_cluster_corosync:
@@ -280,7 +280,7 @@ crm_peer_uname(const char *uuid)
             return NULL;
         }
 
-        node = pcmk__search_cluster_node_cache((uint32_t) id, NULL);
+        node = pcmk__search_cluster_node_cache((uint32_t) id, NULL, NULL);
         if (node != NULL) {
             crm_info("Setting uuid for node %s[%u] to %s",
                      node->uname, node->id, uuid);
@@ -291,19 +291,6 @@ crm_peer_uname(const char *uuid)
     }
 
     return NULL;
-}
-
-/*!
- * \brief Add a node's UUID as an XML attribute
- *
- * \param[in,out] xml   XML element to add UUID to
- * \param[in]     attr  XML attribute name to set
- * \param[in,out] node  Node whose UUID should be used as attribute value
- */
-void
-set_uuid(xmlNode *xml, const char *attr, crm_node_t *node)
-{
-    crm_xml_add(xml, attr, crm_peer_uuid(node));
 }
 
 /*!
@@ -403,3 +390,17 @@ is_corosync_cluster(void)
 {
     return get_cluster_type() == pcmk_cluster_corosync;
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/cluster/compat.h>
+
+void
+set_uuid(xmlNode *xml, const char *attr, crm_node_t *node)
+{
+    crm_xml_add(xml, attr, crm_peer_uuid(node));
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 the Pacemaker project contributors
+ * Copyright 2019-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,6 +13,10 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <crm/crm.h>
+#include <crm/common/output.h>
+#include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>  /* pcmk__xml2fd */
 #include <glib.h>
 
 #include <crm/common/cmdline_internal.h>
@@ -43,8 +47,8 @@ typedef struct subst_s {
 
 static subst_t substitutions[] = {
     { "Active Resources",                               "resources" },
-    { "Allocation Scores",                              "allocations" },
-    { "Allocation Scores and Utilization Information",  "allocations_utilizations" },
+    { "Assignment Scores",                              "allocations" },
+    { "Assignment Scores and Utilization Information",  "allocations_utilizations" },
     { "Cluster Summary",                                "summary" },
     { "Current cluster status",                         "cluster_status" },
     { "Executing Cluster Transition",                   "transition" },
@@ -190,10 +194,7 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
     }
 
     if (print) {
-        char *buf = dump_xml_formatted_with_text(priv->root);
-        fprintf(out->dest, "%s", buf);
-        fflush(out->dest);
-        free(buf);
+        pcmk__xml2fd(fileno(out->dest), priv->root);
     }
 
     if (copy_dest != NULL) {
@@ -286,7 +287,10 @@ xml_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
     CRM_ASSERT(out != NULL);
 
     parent = pcmk__output_create_xml_node(out, name, NULL);
-    cdata_node = xmlNewCDataBlock(getDocPtr(parent), (pcmkXmlStr) buf, strlen(buf));
+    if (parent == NULL) {
+        return;
+    }
+    cdata_node = xmlNewCDataBlock(parent->doc, (pcmkXmlStr) buf, strlen(buf));
     xmlAddChild(parent, cdata_node);
 }
 

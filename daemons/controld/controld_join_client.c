@@ -112,15 +112,6 @@ do_cl_join_offer_respond(long long action,
 
     CRM_CHECK(input != NULL, return);
 
-#if 0
-    if (we are sick) {
-        log error;
-
-        /* save the request for later? */
-        return;
-    }
-#endif
-
     welcome_from = crm_element_value(input->msg, F_CRM_HOST_FROM);
     join_id = crm_element_value(input->msg, F_CRM_JOIN_ID);
     crm_trace("Accepting cluster join offer from node %s "CRM_XS" join-%s",
@@ -195,32 +186,34 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
     free_xml(generation);
 }
 
-static void
-set_join_state(const char * start_state)
+void
+set_join_state(const char *start_state, const char *node_name, const char *node_uuid,
+               bool remote)
 {
     if (pcmk__str_eq(start_state, "standby", pcmk__str_casei)) {
         crm_notice("Forcing node %s to join in %s state per configured "
-                   "environment", controld_globals.our_nodename, start_state);
+                   "environment", node_name, start_state);
         cib__update_node_attr(controld_globals.logger_out,
                               controld_globals.cib_conn, cib_sync_call,
-                              XML_CIB_TAG_NODES, controld_globals.our_uuid,
-                              NULL, NULL, NULL, "standby", "on", NULL, NULL);
+                              XML_CIB_TAG_NODES, node_uuid,
+                              NULL, NULL, NULL, "standby", "on", NULL,
+                              remote ? "remote" : NULL);
 
     } else if (pcmk__str_eq(start_state, "online", pcmk__str_casei)) {
         crm_notice("Forcing node %s to join in %s state per configured "
-                   "environment", controld_globals.our_nodename, start_state);
+                   "environment", node_name, start_state);
         cib__update_node_attr(controld_globals.logger_out,
                               controld_globals.cib_conn, cib_sync_call,
-                              XML_CIB_TAG_NODES, controld_globals.our_uuid,
-                              NULL, NULL, NULL, "standby", "off", NULL, NULL);
+                              XML_CIB_TAG_NODES, node_uuid,
+                              NULL, NULL, NULL, "standby", "off", NULL,
+                              remote ? "remote" : NULL);
 
     } else if (pcmk__str_eq(start_state, "default", pcmk__str_casei)) {
-        crm_debug("Not forcing a starting state on node %s",
-                  controld_globals.our_nodename);
+        crm_debug("Not forcing a starting state on node %s", node_name);
 
     } else {
         crm_warn("Unrecognized start state '%s', using 'default' (%s)",
-                 start_state, controld_globals.our_nodename);
+                 start_state, node_name);
     }
 }
 
@@ -335,7 +328,8 @@ do_cl_join_finalize_respond(long long action,
 
             first_join = FALSE;
             if (start_state) {
-                set_join_state(start_state);
+                set_join_state(start_state, controld_globals.our_nodename,
+                               controld_globals.our_uuid, false);
             }
         }
 

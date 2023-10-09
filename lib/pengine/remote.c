@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2022 the Pacemaker project contributors
+ * Copyright 2013-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,21 +10,21 @@
 #include <crm_internal.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/common/scheduler_internal.h>
 #include <crm/pengine/internal.h>
 #include <glib.h>
 
 bool
-pe__resource_is_remote_conn(const pe_resource_t *rsc,
-                            const pe_working_set_t *data_set)
+pe__resource_is_remote_conn(const pe_resource_t *rsc)
 {
     return (rsc != NULL) && rsc->is_remote_node
-           && pe__is_remote_node(pe_find_node(data_set->nodes, rsc->id));
+           && pe__is_remote_node(pe_find_node(rsc->cluster->nodes, rsc->id));
 }
 
 bool
 pe__is_remote_node(const pe_node_t *node)
 {
-    return (node != NULL) && (node->details->type == node_remote)
+    return (node != NULL) && (node->details->type == pcmk_node_variant_remote)
            && ((node->details->remote_rsc == NULL)
                || (node->details->remote_rsc->container == NULL));
 }
@@ -32,7 +32,7 @@ pe__is_remote_node(const pe_node_t *node)
 bool
 pe__is_guest_node(const pe_node_t *node)
 {
-    return (node != NULL) && (node->details->type == node_remote)
+    return (node != NULL) && (node->details->type == pcmk_node_variant_remote)
            && (node->details->remote_rsc != NULL)
            && (node->details->remote_rsc->container != NULL);
 }
@@ -40,7 +40,7 @@ pe__is_guest_node(const pe_node_t *node)
 bool
 pe__is_guest_or_remote_node(const pe_node_t *node)
 {
-    return (node != NULL) && (node->details->type == node_remote);
+    return (node != NULL) && (node->details->type == pcmk_node_variant_remote);
 }
 
 bool
@@ -67,7 +67,7 @@ pe__resource_contains_guest_node(const pe_working_set_t *data_set,
                                  const pe_resource_t *rsc)
 {
     if ((rsc != NULL) && (data_set != NULL)
-        && pcmk_is_set(data_set->flags, pe_flag_have_remote_nodes)) {
+        && pcmk_is_set(data_set->flags, pcmk_sched_have_remote_nodes)) {
 
         for (GList *gIter = rsc->fillers; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *filler = gIter->data;
@@ -123,7 +123,7 @@ pe_foreach_guest_node(const pe_working_set_t *data_set, const pe_node_t *host,
     GList *iter;
 
     CRM_CHECK(data_set && host && host->details && helper, return);
-    if (!pcmk_is_set(data_set->flags, pe_flag_have_remote_nodes)) {
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_have_remote_nodes)) {
         return;
     }
     for (iter = host->details->running_rsc; iter != NULL; iter = iter->next) {
@@ -203,9 +203,10 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
 
     // Add operations
     xml_sub = create_xml_node(remote, "operations");
-    crm_create_op_xml(xml_sub, uname, "monitor", "30s", "30s");
+    crm_create_op_xml(xml_sub, uname, PCMK_ACTION_MONITOR, "30s", "30s");
     if (start_timeout) {
-        crm_create_op_xml(xml_sub, uname, "start", "0", start_timeout);
+        crm_create_op_xml(xml_sub, uname, PCMK_ACTION_START, "0",
+                          start_timeout);
     }
     return remote;
 }
@@ -215,12 +216,12 @@ struct check_op {
     const xmlNode *rsc_op; // History entry XML
     pe_resource_t *rsc;    // Known resource corresponding to history entry
     pe_node_t *node; // Known node corresponding to history entry
-    enum pe_check_parameters check_type; // What needs checking
+    enum pcmk__check_parameters check_type; // What needs checking
 };
 
 void
 pe__add_param_check(const xmlNode *rsc_op, pe_resource_t *rsc,
-                    pe_node_t *node, enum pe_check_parameters flag,
+                    pe_node_t *node, enum pcmk__check_parameters flag,
                     pe_working_set_t *data_set)
 {
     struct check_op *check_op = NULL;
@@ -248,7 +249,7 @@ pe__add_param_check(const xmlNode *rsc_op, pe_resource_t *rsc,
 void
 pe__foreach_param_check(pe_working_set_t *data_set,
                        void (*cb)(pe_resource_t*, pe_node_t*, const xmlNode*,
-                                  enum pe_check_parameters))
+                                  enum pcmk__check_parameters))
 {
     CRM_CHECK(data_set && cb, return);
 

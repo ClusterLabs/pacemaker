@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,6 +11,7 @@
 #  define PCMK__CRM_COMMON_UTIL_COMPAT__H
 
 #  include <glib.h>
+#  include <libxml/tree.h>
 #  include <crm/common/util.h>
 
 #ifdef __cplusplus
@@ -28,6 +29,9 @@ extern "C" {
 
 //! \deprecated Use crm_parse_interval_spec() instead
 #define crm_get_interval crm_parse_interval_spec
+
+//! \deprecated Do not use
+#define CRM_DEFAULT_OP_TIMEOUT_S "20s"
 
 //! \deprecated Use !pcmk_is_set() or !pcmk_all_flags_set() instead
 static inline gboolean
@@ -68,6 +72,9 @@ int pcmk_scan_nvpair(const char *input, char **name, char **value);
 //! \deprecated Use a standard printf()-style function instead
 char *pcmk_format_nvpair(const char *name, const char *value,
                          const char *units);
+
+//! \deprecated Use \c crm_xml_add() or \c xml_remove_prop() instead
+const char *crm_xml_replace(xmlNode *node, const char *name, const char *value);
 
 //! \deprecated Use a standard printf()-style function instead
 char *pcmk_format_named_time(const char *name, time_t epoch_time);

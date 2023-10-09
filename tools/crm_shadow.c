@@ -147,15 +147,15 @@ instruction_xml(pcmk__output_t *out, va_list args)
  *       -# Patchset containing the changes in the shadow CIB (can be \p NULL)
  *       -# Group of \p shadow_disp_flags indicating which fields to display
  */
-PCMK__OUTPUT_ARGS("shadow", "const char *", "const char *", "xmlNodePtr",
-                  "xmlNodePtr", "enum shadow_disp_flags")
+PCMK__OUTPUT_ARGS("shadow", "const char *", "const char *", "const xmlNode *",
+                  "const xmlNode *", "enum shadow_disp_flags")
 static int
 shadow_default(pcmk__output_t *out, va_list args)
 {
     const char *instance = va_arg(args, const char *);
     const char *filename = va_arg(args, const char *);
-    xmlNodePtr content = va_arg(args, xmlNodePtr);
-    xmlNodePtr diff = va_arg(args, xmlNodePtr);
+    const xmlNode *content = va_arg(args, const xmlNode *);
+    const xmlNode *diff = va_arg(args, const xmlNode *);
     enum shadow_disp_flags flags = (enum shadow_disp_flags) va_arg(args, int);
 
     int rc = pcmk_rc_no_output;
@@ -210,8 +210,8 @@ shadow_default(pcmk__output_t *out, va_list args)
  *       -# Patchset containing the changes in the shadow CIB (can be \p NULL)
  *       -# Group of \p shadow_disp_flags indicating which fields to display
  */
-PCMK__OUTPUT_ARGS("shadow", "const char *", "const char *", "xmlNodePtr",
-                  "xmlNodePtr", "enum shadow_disp_flags")
+PCMK__OUTPUT_ARGS("shadow", "const char *", "const char *", "const xmlNode *",
+                  "const xmlNode *", "enum shadow_disp_flags")
 static int
 shadow_text(pcmk__output_t *out, va_list args)
 {
@@ -221,8 +221,8 @@ shadow_text(pcmk__output_t *out, va_list args)
     } else {
         const char *instance = va_arg(args, const char *);
         const char *filename = va_arg(args, const char *);
-        xmlNodePtr content = va_arg(args, xmlNodePtr);
-        xmlNodePtr diff = va_arg(args, xmlNodePtr);
+        const xmlNode *content = va_arg(args, const xmlNode *);
+        const xmlNode *diff = va_arg(args, const xmlNode *);
         enum shadow_disp_flags flags = (enum shadow_disp_flags) va_arg(args, int);
 
         int rc = pcmk_rc_no_output;
@@ -271,15 +271,15 @@ shadow_text(pcmk__output_t *out, va_list args)
  *       -# Group of \p shadow_disp_flags indicating which fields to display
  *          (ignored)
  */
-PCMK__OUTPUT_ARGS("shadow", "const char *", "const char *", "xmlNodePtr",
-                  "xmlNodePtr", "enum shadow_disp_flags")
+PCMK__OUTPUT_ARGS("shadow", "const char *", "const char *", "const xmlNode *",
+                  "const xmlNode *", "enum shadow_disp_flags")
 static int
 shadow_xml(pcmk__output_t *out, va_list args)
 {
     const char *instance = va_arg(args, const char *);
     const char *filename = va_arg(args, const char *);
-    xmlNodePtr content = va_arg(args, xmlNodePtr);
-    xmlNodePtr diff = va_arg(args, xmlNodePtr);
+    const xmlNode *content = va_arg(args, const xmlNode *);
+    const xmlNode *diff = va_arg(args, const xmlNode *);
     enum shadow_disp_flags flags G_GNUC_UNUSED =
         (enum shadow_disp_flags) va_arg(args, int);
 
@@ -512,13 +512,13 @@ read_xml(const char *filename, xmlNode **output, GError **error)
  * \internal
  * \brief Write the shadow XML to a file
  *
- * \param[in,out] xml       Shadow XML
- * \param[in]     filename  Name of destination file
- * \param[in]     reset     Whether the write is a reset (for logging only)
- * \param[out]    error     Where to store error
+ * \param[in]  xml       Shadow XML
+ * \param[in]  filename  Name of destination file
+ * \param[in]  reset     Whether the write is a reset (for logging only)
+ * \param[out] error     Where to store error
  */
 static int
-write_shadow_file(xmlNode *xml, const char *filename, bool reset,
+write_shadow_file(const xmlNode *xml, const char *filename, bool reset,
                   GError **error)
 {
     int rc = write_xml_file(xml, filename, FALSE);
@@ -927,9 +927,7 @@ show_shadow_diff(pcmk__output_t *out, GError **error)
     xmlNodePtr old_config = NULL;
     xmlNodePtr new_config = NULL;
     xmlNodePtr diff = NULL;
-    pcmk__output_t *logger_out = NULL;
     bool quiet_orig = out->quiet;
-    int rc = pcmk_rc_ok;
 
     if (get_instance_from_env(error) != pcmk_rc_ok) {
         return;
@@ -951,18 +949,7 @@ show_shadow_diff(pcmk__output_t *out, GError **error)
     xml_calculate_changes(old_config, new_config);
     diff = xml_create_patchset(0, old_config, new_config, NULL, false);
 
-    rc = pcmk__log_output_new(&logger_out);
-    if (rc != pcmk_rc_ok) {
-        exit_code = pcmk_rc2exitc(rc);
-        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
-                    "Could not create logger object: %s", pcmk_rc_str(rc));
-        goto done;
-    }
-    pcmk__output_set_log_level(logger_out, LOG_INFO);
-    rc = pcmk__xml_show_changes(logger_out, new_config);
-    logger_out->finish(logger_out, pcmk_rc2exitc(rc), true, NULL);
-    pcmk__output_free(logger_out);
-
+    pcmk__log_xml_changes(LOG_INFO, new_config);
     xml_accept_changes(new_config);
 
     out->quiet = true;

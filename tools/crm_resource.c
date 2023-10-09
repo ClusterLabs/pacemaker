@@ -702,7 +702,7 @@ cleanup_refresh_cb(const gchar *option_name, const gchar *optarg, gpointer data,
     if (getenv("CIB_file") == NULL) {
         options.require_crmd = TRUE;
     }
-    options.find_flags = pe_find_renamed|pe_find_anon;
+    options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_anon_basename;
     return TRUE;
 }
 
@@ -710,7 +710,7 @@ gboolean
 delete_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     SET_COMMAND(cmd_delete);
     options.require_dataset = FALSE;
-    options.find_flags = pe_find_renamed|pe_find_any;
+    options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
     return TRUE;
 }
 
@@ -806,30 +806,36 @@ gboolean
 flag_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     if (pcmk__str_any_of(option_name, "-U", "--clear", NULL)) {
         SET_COMMAND(cmd_clear);
-        options.find_flags = pe_find_renamed|pe_find_anon;
+        options.find_flags = pcmk_rsc_match_history
+                             |pcmk_rsc_match_anon_basename;
     } else if (pcmk__str_any_of(option_name, "-B", "--ban", NULL)) {
         SET_COMMAND(cmd_ban);
-        options.find_flags = pe_find_renamed|pe_find_anon;
+        options.find_flags = pcmk_rsc_match_history
+                             |pcmk_rsc_match_anon_basename;
     } else if (pcmk__str_any_of(option_name, "-M", "--move", NULL)) {
         SET_COMMAND(cmd_move);
-        options.find_flags = pe_find_renamed|pe_find_anon;
+        options.find_flags = pcmk_rsc_match_history
+                             |pcmk_rsc_match_anon_basename;
     } else if (pcmk__str_any_of(option_name, "-q", "--query-xml", NULL)) {
         SET_COMMAND(cmd_query_xml);
-        options.find_flags = pe_find_renamed|pe_find_any;
+        options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
     } else if (pcmk__str_any_of(option_name, "-w", "--query-xml-raw", NULL)) {
         SET_COMMAND(cmd_query_raw_xml);
-        options.find_flags = pe_find_renamed|pe_find_any;
+        options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
     } else if (pcmk__str_any_of(option_name, "-W", "--locate", NULL)) {
         SET_COMMAND(cmd_locate);
-        options.find_flags = pe_find_renamed|pe_find_anon;
+        options.find_flags = pcmk_rsc_match_history
+                             |pcmk_rsc_match_anon_basename;
 
     } else if (pcmk__str_any_of(option_name, "-a", "--constraints", NULL)) {
         SET_COMMAND(cmd_colocations);
-        options.find_flags = pe_find_renamed|pe_find_anon;
+        options.find_flags = pcmk_rsc_match_history
+                             |pcmk_rsc_match_anon_basename;
 
     } else if (pcmk__str_any_of(option_name, "-A", "--stack", NULL)) {
         SET_COMMAND(cmd_colocations);
-        options.find_flags = pe_find_renamed|pe_find_anon;
+        options.find_flags = pcmk_rsc_match_history
+                             |pcmk_rsc_match_anon_basename;
         options.recursive = TRUE;
     }
 
@@ -845,7 +851,7 @@ get_param_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, 
     }
 
     pcmk__str_update(&options.prop_name, optarg);
-    options.find_flags = pe_find_renamed|pe_find_any;
+    options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
     return TRUE;
 }
 
@@ -876,7 +882,7 @@ set_delete_param_cb(const gchar *option_name, const gchar *optarg, gpointer data
     }
 
     pcmk__str_update(&options.prop_name, optarg);
-    options.find_flags = pe_find_renamed|pe_find_any;
+    options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
     return TRUE;
 }
 
@@ -885,7 +891,7 @@ set_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError
     SET_COMMAND(cmd_set_property);
     options.require_dataset = FALSE;
     pcmk__str_update(&options.prop_name, optarg);
-    options.find_flags = pe_find_renamed|pe_find_any;
+    options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
     return TRUE;
 }
 
@@ -904,7 +910,7 @@ validate_or_force_cb(const gchar *option_name, const gchar *optarg,
         g_free(options.operation);
     }
     options.operation = g_strdup(option_name + 2); // skip "--"
-    options.find_flags = pe_find_renamed|pe_find_anon;
+    options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_anon_basename;
     if (options.override_params == NULL) {
         options.override_params = pcmk__strkey_table(free, free);
     }
@@ -925,7 +931,7 @@ restart_cb(const gchar *option_name, const gchar *optarg, gpointer data,
            GError **error)
 {
     SET_COMMAND(cmd_restart);
-    options.find_flags = pe_find_renamed|pe_find_anon;
+    options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_anon_basename;
     return TRUE;
 }
 
@@ -934,7 +940,7 @@ digests_cb(const gchar *option_name, const gchar *optarg, gpointer data,
            GError **error)
 {
     SET_COMMAND(cmd_digests);
-    options.find_flags = pe_find_renamed|pe_find_anon;
+    options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_anon_basename;
     if (options.override_params == NULL) {
         options.override_params = pcmk__strkey_table(free, free);
     }
@@ -955,7 +961,7 @@ gboolean
 why_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     SET_COMMAND(cmd_why);
     options.require_resource = FALSE;
-    options.find_flags = pe_find_renamed|pe_find_anon;
+    options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_anon_basename;
     return TRUE;
 }
 
@@ -971,10 +977,11 @@ ban_or_move(pcmk__output_t *out, pe_resource_t *rsc, const char *move_lifetime)
     current = pe__find_active_requires(rsc, &nactive);
 
     if (nactive == 1) {
-        rc = cli_resource_ban(out, options.rsc_id, current->details->uname, move_lifetime, NULL,
-                              cib_conn, options.cib_options, options.promoted_role_only);
+        rc = cli_resource_ban(out, options.rsc_id, current->details->uname, move_lifetime,
+                              cib_conn, options.cib_options, options.promoted_role_only,
+                              PCMK__ROLE_PROMOTED);
 
-    } else if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
+    } else if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
         int count = 0;
         GList *iter = NULL;
 
@@ -983,15 +990,16 @@ ban_or_move(pcmk__output_t *out, pe_resource_t *rsc, const char *move_lifetime)
             pe_resource_t *child = (pe_resource_t *)iter->data;
             enum rsc_role_e child_role = child->fns->state(child, TRUE);
 
-            if (child_role == RSC_ROLE_PROMOTED) {
+            if (child_role == pcmk_role_promoted) {
                 count++;
                 current = pe__current_node(child);
             }
         }
 
         if(count == 1 && current) {
-            rc = cli_resource_ban(out, options.rsc_id, current->details->uname, move_lifetime, NULL,
-                                  cib_conn, options.cib_options, options.promoted_role_only);
+            rc = cli_resource_ban(out, options.rsc_id, current->details->uname, move_lifetime,
+                                  cib_conn, options.cib_options, options.promoted_role_only,
+                                  PCMK__ROLE_PROMOTED);
 
         } else {
             rc = EINVAL;
@@ -1082,7 +1090,7 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
 
         if (rc != pcmk_rc_ok) {
             g_set_error(&error, PCMK__RC_ERROR, rc,
-                        _("Could not get modified CIB: %s\n"), pcmk_strerror(rc));
+                        _("Could not get modified CIB: %s\n"), pcmk_rc_str(rc));
             g_list_free(before);
             free_xml(*cib_xml_copy);
             *cib_xml_copy = NULL;
@@ -1131,118 +1139,6 @@ delete(void)
 }
 
 static int
-list_agents(pcmk__output_t *out, const char *agent_spec)
-{
-    int rc = pcmk_rc_ok;
-    char *provider = strchr(agent_spec, ':');
-    lrmd_t *lrmd_conn = NULL;
-    lrmd_list_t *list = NULL;
-
-    rc = lrmd__new(&lrmd_conn, NULL, NULL, 0);
-    if (rc != pcmk_rc_ok) {
-        goto error;
-    }
-
-    if (provider) {
-        *provider++ = 0;
-    }
-
-    rc = lrmd_conn->cmds->list_agents(lrmd_conn, &list, agent_spec, provider);
-
-    if (rc > 0) {
-        rc = out->message(out, "agents-list", list, agent_spec, provider);
-    } else {
-        rc = pcmk_rc_error;
-    }
-
-error:
-    if (rc != pcmk_rc_ok) {
-        if (provider == NULL) {
-            g_set_error(&error, PCMK__RC_ERROR, rc,
-                        _("No agents found for standard '%s'"), agent_spec);
-        } else {
-            g_set_error(&error, PCMK__RC_ERROR, rc,
-                        _("No agents found for standard '%s' and provider '%s'"),
-                        agent_spec, provider);
-        }
-    }
-
-    lrmd_api_delete(lrmd_conn);
-    return rc;
-}
-
-static int
-list_providers(pcmk__output_t *out, const char *agent_spec)
-{
-    int rc;
-    const char *text = NULL;
-    lrmd_t *lrmd_conn = NULL;
-    lrmd_list_t *list = NULL;
-
-    rc = lrmd__new(&lrmd_conn, NULL, NULL, 0);
-    if (rc != pcmk_rc_ok) {
-        goto error;
-    }
-
-    switch (options.rsc_cmd) {
-        case cmd_list_alternatives:
-            rc = lrmd_conn->cmds->list_ocf_providers(lrmd_conn, agent_spec, &list);
-
-            if (rc > 0) {
-                rc = out->message(out, "alternatives-list", list, agent_spec);
-            } else {
-                rc = pcmk_rc_error;
-            }
-
-            text = "OCF providers";
-            break;
-        case cmd_list_standards:
-            rc = lrmd_conn->cmds->list_standards(lrmd_conn, &list);
-
-            if (rc > 0) {
-                rc = out->message(out, "standards-list", list);
-            } else {
-                rc = pcmk_rc_error;
-            }
-
-            text = "standards";
-            break;
-        case cmd_list_providers:
-            rc = lrmd_conn->cmds->list_ocf_providers(lrmd_conn, agent_spec, &list);
-
-            if (rc > 0) {
-                rc = out->message(out, "providers-list", list, agent_spec);
-            } else {
-                rc = pcmk_rc_error;
-            }
-
-            text = "OCF providers";
-            break;
-        default:
-            g_set_error(&error, PCMK__RC_ERROR, pcmk_rc_error, "Bug");
-            lrmd_api_delete(lrmd_conn);
-            return pcmk_rc_error;
-    }
-
-error:
-    if (rc != pcmk_rc_ok) {
-        if (agent_spec != NULL) {
-            rc = ENXIO;
-            g_set_error(&error, PCMK__RC_ERROR, rc,
-                        _("No %s found for %s"), text, agent_spec);
-
-        } else {
-            rc = ENXIO;
-            g_set_error(&error, PCMK__RC_ERROR, rc,
-                        _("No %s found"), text);
-        }
-    }
-
-    lrmd_api_delete(lrmd_conn);
-    return rc;
-}
-
-static int
 populate_working_set(xmlNodePtr *cib_xml_copy)
 {
     int rc = pcmk_rc_ok;
@@ -1263,7 +1159,8 @@ populate_working_set(xmlNodePtr *cib_xml_copy)
             rc = ENOMEM;
         } else {
             pe__set_working_set_flags(data_set,
-                                      pe_flag_no_counts|pe_flag_no_compat);
+                                      pcmk_sched_no_counts
+                                      |pcmk_sched_no_compat);
             data_set->priv = out;
             rc = update_working_set_xml(data_set, cib_xml_copy);
         }
@@ -1808,11 +1705,12 @@ main(int argc, char **argv)
         }
         pcmk_register_ipc_callback(controld_api, controller_event_callback,
                                    NULL);
-        rc = pcmk_connect_ipc(controld_api, pcmk_ipc_dispatch_main);
+        rc = pcmk__connect_ipc(controld_api, pcmk_ipc_dispatch_main, 5);
         if (rc != pcmk_rc_ok) {
             exit_code = pcmk_rc2exitc(rc);
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        _("Error connecting to the controller: %s"), pcmk_rc_str(rc));
+                        _("Error connecting to %s: %s"),
+                        pcmk_ipc_name(controld_api, true), pcmk_rc_str(rc));
             goto done;
         }
     }
@@ -1845,14 +1743,20 @@ main(int argc, char **argv)
 
             break;
 
-        case cmd_list_standards:
-        case cmd_list_providers:
         case cmd_list_alternatives:
-            rc = list_providers(out, options.agent_spec);
+            rc = pcmk__list_alternatives(out, options.agent_spec);
             break;
 
         case cmd_list_agents:
-            rc = list_agents(out, options.agent_spec);
+            rc = pcmk__list_agents(out, options.agent_spec);
+            break;
+
+        case cmd_list_standards:
+            rc = pcmk__list_standards(out);
+            break;
+
+        case cmd_list_providers:
+            rc = pcmk__list_providers(out, options.agent_spec);
             break;
 
         case cmd_metadata:
@@ -1901,7 +1805,7 @@ main(int argc, char **argv)
             break;
 
         case cmd_colocations:
-            rc = out->message(out, "locations-and-colocations", rsc, data_set,
+            rc = out->message(out, "locations-and-colocations", rsc,
                               options.recursive, (bool) options.force);
             break;
 
@@ -1984,9 +1888,10 @@ main(int argc, char **argv)
                 rc = pcmk_rc_node_unknown;
             } else {
                 rc = cli_resource_ban(out, options.rsc_id, node->details->uname,
-                                      options.move_lifetime, NULL, cib_conn,
+                                      options.move_lifetime, cib_conn,
                                       options.cib_options,
-                                      options.promoted_role_only);
+                                      options.promoted_role_only,
+                                      PCMK__ROLE_PROMOTED);
             }
 
             if (rc == EINVAL) {

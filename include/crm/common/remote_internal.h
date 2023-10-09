@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2022 the Pacemaker project contributors
+ * Copyright 2008-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,7 +14,7 @@
 
 typedef struct pcmk__remote_s pcmk__remote_t;
 
-int pcmk__remote_send_xml(pcmk__remote_t *remote, xmlNode *msg);
+int pcmk__remote_send_xml(pcmk__remote_t *remote, const xmlNode *msg);
 int pcmk__remote_ready(const pcmk__remote_t *remote, int timeout_ms);
 int pcmk__read_remote_message(pcmk__remote_t *remote, int timeout_ms);
 xmlNode *pcmk__remote_message_xml(pcmk__remote_t *remote);

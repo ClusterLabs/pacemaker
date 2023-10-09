@@ -21,6 +21,9 @@
 
 #include <time.h>
 
+#include <glib.h>
+#include <libxml/tree.h>
+
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
 #include <crm/msg_xml.h>
@@ -30,7 +33,7 @@
 #include <pacemaker-based.h>
 
 struct cib_notification_s {
-    xmlNode *msg;
+    const xmlNode *msg;
     struct iovec *iov;
     int32_t iov_size;
 };
@@ -56,10 +59,6 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
     if (pcmk_is_set(client->flags, cib_notify_diff)
         && pcmk__str_eq(type, T_CIB_DIFF_NOTIFY, pcmk__str_casei)) {
 
-        do_send = TRUE;
-
-    } else if (pcmk_is_set(client->flags, cib_notify_replace)
-               && pcmk__str_eq(type, T_CIB_REPLACE_NOTIFY, pcmk__str_casei)) {
         do_send = TRUE;
 
     } else if (pcmk_is_set(client->flags, cib_notify_confirm)
@@ -104,7 +103,7 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
 }
 
 static void
-cib_notify_send(xmlNode * xml)
+cib_notify_send(const xmlNode *xml)
 {
     struct iovec *iov;
     struct cib_notification_s update;
@@ -203,10 +202,10 @@ cib_diff_notify(const char *op, int result, const char *call_id,
     crm_xml_add_int(update_msg, F_CIB_RC, result);
 
     if (update != NULL) {
-        type = crm_element_name(update);
+        type = (const char *) update->name;
         crm_trace("Setting type to update->name: %s", type);
     } else {
-        type = crm_element_name(diff);
+        type = (const char *) diff->name;
         crm_trace("Setting type to new_obj->name: %s", type);
     }
     crm_xml_add(update_msg, F_CIB_OBJID, ID(diff));
@@ -220,86 +219,4 @@ cib_diff_notify(const char *op, int result, const char *call_id,
 
     cib_notify_send(update_msg);
     free_xml(update_msg);
-}
-
-void
-cib_replace_notify(const char *op, int result, const char *call_id,
-                   const char *client_id, const char *client_name,
-                   const char *origin, xmlNode *update, xmlNode *diff,
-                   uint32_t change_section)
-{
-    xmlNode *replace_msg = NULL;
-
-    int add_updates = 0;
-    int add_epoch = 0;
-    int add_admin_epoch = 0;
-
-    int del_updates = 0;
-    int del_epoch = 0;
-    int del_admin_epoch = 0;
-
-    uint8_t log_level = LOG_INFO;
-
-    if (diff == NULL) {
-        return;
-    }
-
-    if (result != pcmk_ok) {
-        log_level = LOG_WARNING;
-    }
-
-    cib_diff_version_details(diff, &add_admin_epoch, &add_epoch, &add_updates,
-                             &del_admin_epoch, &del_epoch, &del_updates);
-
-    if (del_updates < 0) {
-        crm_log_xml_debug(diff, "Bad replace diff");
-    }
-
-    if ((add_admin_epoch != del_admin_epoch)
-        || (add_epoch != del_epoch)
-        || (add_updates != del_updates)) {
-
-        do_crm_log(log_level,
-                   "Replaced CIB generation %d.%d.%d with %d.%d.%d from client "
-                   "%s%s%s (%s) (%s)",
-                   del_admin_epoch, del_epoch, del_updates,
-                   add_admin_epoch, add_epoch, add_updates,
-                   client_name,
-                   ((call_id != NULL)? " call " : ""), pcmk__s(call_id, ""),
-                   pcmk__s(origin, "unspecified peer"), pcmk_strerror(result));
-
-    } else if ((add_admin_epoch != 0)
-               || (add_epoch != 0)
-               || (add_updates != 0)) {
-
-        do_crm_log(log_level,
-                   "Local-only replace of CIB generation %d.%d.%d from client "
-                   "%s%s%s (%s) (%s)",
-                   add_admin_epoch, add_epoch, add_updates,
-                   client_name,
-                   ((call_id != NULL)? " call " : ""), pcmk__s(call_id, ""),
-                   pcmk__s(origin, "unspecified peer"), pcmk_strerror(result));
-    }
-
-    replace_msg = create_xml_node(NULL, "notify-replace");
-
-    crm_xml_add(replace_msg, F_TYPE, T_CIB_NOTIFY);
-    crm_xml_add(replace_msg, F_SUBTYPE, T_CIB_REPLACE_NOTIFY);
-    crm_xml_add(replace_msg, F_CIB_OPERATION, op);
-    crm_xml_add(replace_msg, F_CIB_CLIENTID, client_id);
-    crm_xml_add(replace_msg, F_CIB_CALLID, call_id);
-    crm_xml_add(replace_msg, F_ORIG, origin);
-    crm_xml_add_int(replace_msg, F_CIB_RC, result);
-    crm_xml_add_ll(replace_msg, F_CIB_CHANGE_SECTION,
-                   (long long) change_section);
-    attach_cib_generation(replace_msg, "cib-replace-generation", update);
-
-    /* We can include update and diff if a replace callback needs them. Until
-     * then, avoid the overhead.
-     */
-
-    crm_log_xml_trace(replace_msg, "CIB replaced");
-
-    cib_notify_send(replace_msg);
-    free_xml(replace_msg);
 }

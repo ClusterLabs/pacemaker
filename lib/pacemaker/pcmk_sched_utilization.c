@@ -13,9 +13,6 @@
 
 #include "libpacemaker_private.h"
 
-// Name for a pseudo-op to use in ordering constraints for utilization
-#define LOAD_STOPPED "load_stopped"
-
 /*!
  * \internal
  * \brief Get integer utilization from a string
@@ -265,7 +262,7 @@ have_enough_capacity(const pe_node_t *node, const char *rsc_id,
  * \internal
  * \brief Sum the utilization requirements of a list of resources
  *
- * \param[in] orig_rsc  Resource being allocated (for logging purposes)
+ * \param[in] orig_rsc  Resource being assigned (for logging purposes)
  * \param[in] rscs      Resources whose utilization should be summed
  *
  * \return Newly allocated hash table with sum of all utilization values
@@ -302,7 +299,7 @@ pcmk__ban_insufficient_capacity(pe_resource_t *rsc)
     pe_node_t *node = NULL;
     const pe_node_t *most_capable_node = NULL;
     GList *colocated_rscs = NULL;
-    GHashTable *unallocated_utilization = NULL;
+    GHashTable *unassigned_utilization = NULL;
     GHashTableIter iter;
 
     CRM_CHECK(rsc != NULL, return NULL);
@@ -326,8 +323,8 @@ pcmk__ban_insufficient_capacity(pe_resource_t *rsc)
         colocated_rscs = g_list_append(colocated_rscs, rsc);
     }
 
-    // Sum utilization of colocated resources that haven't been allocated yet
-    unallocated_utilization = sum_resource_utilization(rsc, colocated_rscs);
+    // Sum utilization of colocated resources that haven't been assigned yet
+    unassigned_utilization = sum_resource_utilization(rsc, colocated_rscs);
 
     // Check whether any node has enough capacity for all the resources
     g_hash_table_iter_init(&iter, rsc->allowed_nodes);
@@ -336,7 +333,7 @@ pcmk__ban_insufficient_capacity(pe_resource_t *rsc)
             continue;
         }
 
-        if (have_enough_capacity(node, rscs_id, unallocated_utilization)) {
+        if (have_enough_capacity(node, rscs_id, unassigned_utilization)) {
             any_capable = true;
         }
 
@@ -353,7 +350,7 @@ pcmk__ban_insufficient_capacity(pe_resource_t *rsc)
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             if (pcmk__node_available(node, true, false)
                 && !have_enough_capacity(node, rscs_id,
-                                         unallocated_utilization)) {
+                                         unassigned_utilization)) {
                 pe_rsc_debug(rsc, "%s does not have enough capacity for %s",
                              pe__node_name(node), rscs_id);
                 resource_location(rsc, node, -INFINITY, "__limit_utilization__",
@@ -376,12 +373,12 @@ pcmk__ban_insufficient_capacity(pe_resource_t *rsc)
         }
     }
 
-    g_hash_table_destroy(unallocated_utilization);
+    g_hash_table_destroy(unassigned_utilization);
     g_list_free(colocated_rscs);
     free(rscs_id);
 
-    pe__show_node_weights(true, rsc, "Post-utilization",
-                          rsc->allowed_nodes, rsc->cluster);
+    pe__show_node_scores(true, rsc, "Post-utilization", rsc->allowed_nodes,
+                         rsc->cluster);
     return most_capable_node;
 }
 
@@ -389,21 +386,21 @@ pcmk__ban_insufficient_capacity(pe_resource_t *rsc)
  * \internal
  * \brief Create a new load_stopped pseudo-op for a node
  *
- * \param[in]     node      Node to create op for
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] node  Node to create op for
  *
  * \return Newly created load_stopped op
  */
 static pe_action_t *
-new_load_stopped_op(const pe_node_t *node, pe_working_set_t *data_set)
+new_load_stopped_op(pe_node_t *node)
 {
-    char *load_stopped_task = crm_strdup_printf(LOAD_STOPPED "_%s",
+    char *load_stopped_task = crm_strdup_printf(PCMK_ACTION_LOAD_STOPPED "_%s",
                                                 node->details->uname);
-    pe_action_t *load_stopped = get_pseudo_op(load_stopped_task, data_set);
+    pe_action_t *load_stopped = get_pseudo_op(load_stopped_task,
+                                              node->details->data_set);
 
     if (load_stopped->node == NULL) {
         load_stopped->node = pe__copy_node(node);
-        pe__clear_action_flags(load_stopped, pe_action_optional);
+        pe__clear_action_flags(load_stopped, pcmk_action_optional);
     }
     free(load_stopped_task);
     return load_stopped;
@@ -421,7 +418,6 @@ pcmk__create_utilization_constraints(pe_resource_t *rsc,
                                      const GList *allowed_nodes)
 {
     const GList *iter = NULL;
-    const pe_node_t *node = NULL;
     pe_action_t *load_stopped = NULL;
 
     pe_rsc_trace(rsc, "Creating utilization constraints for %s - strategy: %s",
@@ -429,21 +425,21 @@ pcmk__create_utilization_constraints(pe_resource_t *rsc,
 
     // "stop rsc then load_stopped" constraints for current nodes
     for (iter = rsc->running_on; iter != NULL; iter = iter->next) {
-        node = (const pe_node_t *) iter->data;
-        load_stopped = new_load_stopped_op(node, rsc->cluster);
+        load_stopped = new_load_stopped_op(iter->data);
         pcmk__new_ordering(rsc, stop_key(rsc), NULL, NULL, NULL, load_stopped,
-                           pe_order_load, rsc->cluster);
+                           pcmk__ar_if_on_same_node_or_target, rsc->cluster);
     }
 
     // "load_stopped then start/migrate_to rsc" constraints for allowed nodes
     for (iter = allowed_nodes; iter; iter = iter->next) {
-        node = (const pe_node_t *) iter->data;
-        load_stopped = new_load_stopped_op(node, rsc->cluster);
+        load_stopped = new_load_stopped_op(iter->data);
         pcmk__new_ordering(NULL, NULL, load_stopped, rsc, start_key(rsc), NULL,
-                           pe_order_load, rsc->cluster);
+                           pcmk__ar_if_on_same_node_or_target, rsc->cluster);
         pcmk__new_ordering(NULL, NULL, load_stopped,
-                           rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0), NULL,
-                           pe_order_load, rsc->cluster);
+                           rsc,
+                           pcmk__op_key(rsc->id, PCMK_ACTION_MIGRATE_TO, 0),
+                           NULL,
+                           pcmk__ar_if_on_same_node_or_target, rsc->cluster);
     }
 }
 
@@ -457,7 +453,7 @@ pcmk__create_utilization_constraints(pe_resource_t *rsc,
 void
 pcmk__show_node_capacities(const char *desc, pe_working_set_t *data_set)
 {
-    if (!pcmk_is_set(data_set->flags, pe_flag_show_utilization)) {
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_show_utilization)) {
         return;
     }
     for (const GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2022 the Pacemaker project contributors
+ * Copyright 2010-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -233,8 +233,8 @@ copy_action_arguments(svc_action_t *op, uint32_t ra_caps, const char *name,
     }
 
     if (pcmk_is_set(ra_caps, pcmk_ra_cap_status)
-        && pcmk__str_eq(action, "monitor", pcmk__str_casei)) {
-        action = "status";
+        && pcmk__str_eq(action, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
+        action = PCMK_ACTION_STATUS;
     }
     op->action = strdup(action);
     if (op->action == NULL) {
@@ -1028,7 +1028,7 @@ services_action_sync(svc_action_t * op)
 
     op->synchronous = true;
 
-    if (pcmk__str_eq(op->action, "meta-data", pcmk__str_casei)) {
+    if (pcmk__str_eq(op->action, PCMK_ACTION_META_DATA, pcmk__str_casei)) {
         /* Synchronous meta-data operations are handled specially. Since most
          * resource classes don't provide any meta-data, it has to be
          * synthesized from available information about the agent.

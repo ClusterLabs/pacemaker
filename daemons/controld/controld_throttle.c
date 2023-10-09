@@ -154,7 +154,7 @@ throttle_cib_load(float *load)
     if(stream == NULL) {
         int rc = errno;
 
-        crm_warn("Couldn't read %s: %s (%d)", loadfile, pcmk_strerror(rc), rc);
+        crm_warn("Couldn't read %s: %s (%d)", loadfile, pcmk_rc_str(rc), rc);
         free(loadfile); loadfile = NULL;
         return FALSE;
     }
@@ -220,7 +220,7 @@ throttle_load_avg(float *load)
     stream = fopen(loadfile, "r");
     if(stream == NULL) {
         int rc = errno;
-        crm_warn("Couldn't read %s: %s (%d)", loadfile, pcmk_strerror(rc), rc);
+        crm_warn("Couldn't read %s: %s (%d)", loadfile, pcmk_rc_str(rc), rc);
         return FALSE;
     }
 

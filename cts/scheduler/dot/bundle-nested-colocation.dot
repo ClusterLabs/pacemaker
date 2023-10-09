@@ -139,6 +139,7 @@
 "rabbitmq:0_start_0 rabbitmq-bundle-0" -> "rabbitmq-bundle-clone_running_0" [ style = bold]
 "rabbitmq:0_start_0 rabbitmq-bundle-0" -> "rabbitmq:0_monitor_10000 rabbitmq-bundle-0" [ style = bold]
 "rabbitmq:0_start_0 rabbitmq-bundle-0" -> "rabbitmq:1_start_0 rabbitmq-bundle-1" [ style = bold]
+"rabbitmq:0_start_0 rabbitmq-bundle-0" -> "rabbitmq:2_start_0 rabbitmq-bundle-2" [ style = bold]
 "rabbitmq:0_start_0 rabbitmq-bundle-0" [ style=bold color="green" fontcolor="black"]
 "rabbitmq:1_monitor_0 rabbitmq-bundle-1" -> "rabbitmq-bundle-clone_start_0" [ style = bold]
 "rabbitmq:1_monitor_0 rabbitmq-bundle-1" [ style=bold color="green" fontcolor="black"]

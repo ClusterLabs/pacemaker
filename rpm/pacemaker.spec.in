@@ -336,7 +336,7 @@ BuildRequires: pam-devel
 BuildRequires: %{pkgname_gettext} >= 0.18
 
 # Required for "make check"
-BuildRequires: libcmocka-devel
+BuildRequires: libcmocka-devel >= 1.1.0
 
 %if %{systemd_native}
 BuildRequires: pkgconfig(systemd)
@@ -633,14 +633,6 @@ mkdir -p ${RPM_BUILD_ROOT}%{_localstatedir}/lib/rpm-state/%{name}
 # Don't package libtool archives
 find %{buildroot} -name '*.la' -type f -print0 | xargs -0 rm -f
 
-# Byte-compile Python sources where suitable and the distro procedures known
-%if %{defined py_byte_compile}
-%{py_byte_compile %{python_path} %{buildroot}%{_datadir}/pacemaker/tests}
-%if !%{defined _python_bytecompile_extra}
-%{py_byte_compile %{python_path} %{buildroot}%{python_site}/cts}
-%endif
-%endif
-
 %post
 %if %{defined _unitdir}
 %systemd_post pacemaker.service
@@ -772,7 +764,6 @@ exit 0
 %exclude %{_sbindir}/pacemaker_remoted
 %{_libexecdir}/pacemaker/*
 
-%{_sbindir}/crm_master
 %if %{with stonithd}
 %{_sbindir}/fence_legacy
 %endif
@@ -784,7 +775,6 @@ exit 0
 %doc %{_mandir}/man7/ocf_pacemaker_controld.*
 %doc %{_mandir}/man7/ocf_pacemaker_o2cb.*
 %doc %{_mandir}/man7/ocf_pacemaker_remote.*
-%doc %{_mandir}/man8/crm_master.*
 %if %{with stonithd}
 %doc %{_mandir}/man8/fence_legacy.*
 %endif
@@ -830,6 +820,7 @@ exit 0
 %{_sbindir}/crm_diff
 %{_sbindir}/crm_error
 %{_sbindir}/crm_failcount
+%{_sbindir}/crm_master
 %{_sbindir}/crm_mon
 %{_sbindir}/crm_node
 %{_sbindir}/crm_resource
@@ -865,7 +856,6 @@ exit 0
 %exclude %{_mandir}/man7/ocf_pacemaker_o2cb.*
 %exclude %{_mandir}/man7/ocf_pacemaker_remote.*
 %doc %{_mandir}/man8/crm*.8.gz
-%exclude %{_mandir}/man8/crm_master.*
 %doc %{_mandir}/man8/attrd_updater.*
 %doc %{_mandir}/man8/cibadmin.*
 %if %{with cibsecrets}
@@ -935,7 +925,6 @@ exit 0
 %license licenses/CC-BY-SA-4.0
 
 %files cts
-%{python_site}/cts
 %{python3_sitelib}/pacemaker/_cts/
 %{_datadir}/pacemaker/tests
 

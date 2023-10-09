@@ -20,6 +20,7 @@
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
 #include <crm/msg_xml.h>
+#include <crm/common/cib_internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include <crm/pengine/rules.h>
@@ -75,6 +76,154 @@ cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, int *upda
     *_updates = del[2];
 
     return TRUE;
+}
+
+/*!
+ * \internal
+ * \brief Get the XML patchset from a CIB diff notification
+ *
+ * \param[in]  msg       CIB diff notification
+ * \param[out] patchset  Where to store XML patchset
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
+{
+    int rc = pcmk_err_generic;
+
+    CRM_ASSERT(patchset != NULL);
+    *patchset = NULL;
+
+    if (msg == NULL) {
+        crm_err("CIB diff notification received with no XML");
+        return ENOMSG;
+    }
+
+    if ((crm_element_value_int(msg, F_CIB_RC, &rc) != 0) || (rc != pcmk_ok)) {
+        crm_warn("Ignore failed CIB update: %s " CRM_XS " rc=%d",
+                 pcmk_strerror(rc), rc);
+        crm_log_xml_debug(msg, "failed");
+        return pcmk_legacy2rc(rc);
+    }
+
+    *patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
+
+    if (*patchset == NULL) {
+        crm_err("CIB diff notification received with no patchset");
+        return ENOMSG;
+    }
+    return pcmk_rc_ok;
+}
+
+#define XPATH_DIFF_V1 "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED
+
+/*!
+ * \internal
+ * \brief Check whether a given CIB element was modified in a CIB patchset (v1)
+ *
+ * \param[in] patchset  CIB XML patchset
+ * \param[in] element   XML tag of CIB element to check (\c NULL is equivalent
+ *                      to \c XML_TAG_CIB)
+ *
+ * \return \c true if \p element was modified, or \c false otherwise
+ */
+static bool
+element_in_patchset_v1(const xmlNode *patchset, const char *element)
+{
+    char *xpath = crm_strdup_printf(XPATH_DIFF_V1 "//%s",
+                                    pcmk__s(element, XML_TAG_CIB));
+    xmlXPathObject *xpath_obj = xpath_search(patchset, xpath);
+
+    free(xpath);
+
+    if (xpath_obj == NULL) {
+        return false;
+    }
+    freeXpathObject(xpath_obj);
+    return true;
+}
+
+/*!
+ * \internal
+ * \brief Check whether a given CIB element was modified in a CIB patchset (v2)
+ *
+ * \param[in] patchset  CIB XML patchset
+ * \param[in] element   XML tag of CIB element to check (\c NULL is equivalent
+ *                      to \c XML_TAG_CIB). Supported values include any CIB
+ *                      element supported by \c pcmk__cib_abs_xpath_for().
+ *
+ * \return \c true if \p element was modified, or \c false otherwise
+ */
+static bool
+element_in_patchset_v2(const xmlNode *patchset, const char *element)
+{
+    const char *element_xpath = pcmk__cib_abs_xpath_for(element);
+    const char *parent_xpath = pcmk_cib_parent_name_for(element);
+    char *element_regex = NULL;
+    bool rc = false;
+
+    CRM_CHECK(element_xpath != NULL, return false); // Unsupported element
+
+    // Matches if and only if element_xpath is part of a changed path
+    element_regex = crm_strdup_printf("^%s(/|$)", element_xpath);
+
+    for (const xmlNode *change = first_named_child(patchset, XML_DIFF_CHANGE);
+         change != NULL; change = crm_next_same_xml(change)) {
+
+        const char *op = crm_element_value(change, F_CIB_OPERATION);
+        const char *diff_xpath = crm_element_value(change, XML_DIFF_PATH);
+
+        if (pcmk__str_eq(diff_xpath, element_regex, pcmk__str_regex)) {
+            // Change to an existing element
+            rc = true;
+            break;
+        }
+
+        if (pcmk__str_eq(op, "create", pcmk__str_none)
+            && pcmk__str_eq(diff_xpath, parent_xpath, pcmk__str_none)
+            && pcmk__xe_is(pcmk__xml_first_child(change), element)) {
+
+            // Newly added element
+            rc = true;
+            break;
+        }
+    }
+
+    free(element_regex);
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Check whether a given CIB element was modified in a CIB patchset
+ *
+ * \param[in] patchset  CIB XML patchset
+ * \param[in] element   XML tag of CIB element to check (\c NULL is equivalent
+ *                      to \c XML_TAG_CIB). Supported values include any CIB
+ *                      element supported by \c pcmk__cib_abs_xpath_for().
+ *
+ * \return \c true if \p element was modified, or \c false otherwise
+ */
+bool
+cib__element_in_patchset(const xmlNode *patchset, const char *element)
+{
+    int format = 1;
+
+    CRM_ASSERT(patchset != NULL);
+
+    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
+    switch (format) {
+        case 1:
+            return element_in_patchset_v1(patchset, element);
+
+        case 2:
+            return element_in_patchset_v2(patchset, element);
+
+        default:
+            crm_warn("Unknown patch format: %d", format);
+            return false;
+    }
 }
 
 /*!
@@ -141,30 +290,79 @@ cib_acl_enabled(xmlNode *xml, const char *user)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Determine whether to perform operations on a scratch copy of the CIB
+ *
+ * \param[in] op            CIB operation
+ * \param[in] section       CIB section
+ * \param[in] call_options  CIB call options
+ *
+ * \return \p true if we should make a copy of the CIB, or \p false otherwise
+ */
+static bool
+should_copy_cib(const char *op, const char *section, int call_options)
+{
+    if (pcmk_is_set(call_options, cib_dryrun)) {
+        // cib_dryrun implies a scratch copy by definition; no side effects
+        return true;
+    }
+
+    if (pcmk__str_eq(op, PCMK__CIB_REQUEST_COMMIT_TRANSACT, pcmk__str_none)) {
+        /* Commit-transaction must make a copy for atomicity. We must revert to
+         * the original CIB if the entire transaction cannot be applied
+         * successfully.
+         */
+        return true;
+    }
+
+    if (pcmk_is_set(call_options, cib_transaction)) {
+        /* If cib_transaction is set, then we're in the process of committing a
+         * transaction. The commit-transaction request already made a scratch
+         * copy, and we're accumulating changes in that copy.
+         */
+        return false;
+    }
+
+    if (pcmk__str_eq(section, XML_CIB_TAG_STATUS, pcmk__str_none)) {
+        /* Copying large CIBs accounts for a huge percentage of our CIB usage,
+         * and this avoids some of it.
+         *
+         * @TODO: Is this safe? See discussion at
+         * https://github.com/ClusterLabs/pacemaker/pull/3094#discussion_r1211400690.
+         */
+        return false;
+    }
+
+    // Default behavior is to operate on a scratch copy
+    return true;
+}
+
 int
-cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_query,
-               const char *section, xmlNode * req, xmlNode * input,
-               gboolean manage_counters, gboolean * config_changed,
-               xmlNode * current_cib, xmlNode ** result_cib, xmlNode ** diff, xmlNode ** output)
+cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
+               const char *section, xmlNode *req, xmlNode *input,
+               bool manage_counters, bool *config_changed,
+               xmlNode **current_cib, xmlNode **result_cib, xmlNode **diff,
+               xmlNode **output)
 {
     int rc = pcmk_ok;
-    gboolean check_schema = TRUE;
+    bool check_schema = true;
+    bool make_copy = true;
     xmlNode *top = NULL;
     xmlNode *scratch = NULL;
+    xmlNode *patchset_cib = NULL;
     xmlNode *local_diff = NULL;
 
     const char *new_version = NULL;
     const char *user = crm_element_value(req, F_CIB_USER);
-    bool with_digest = FALSE;
-
-    pcmk__output_t *out = NULL;
-    int out_rc = pcmk_rc_no_output;
+    bool with_digest = false;
 
     crm_trace("Begin %s%s%s op",
               (pcmk_is_set(call_options, cib_dryrun)? "dry run of " : ""),
               (is_query? "read-only " : ""), op);
 
     CRM_CHECK(output != NULL, return -ENOMSG);
+    CRM_CHECK(current_cib != NULL, return -ENOMSG);
     CRM_CHECK(result_cib != NULL, return -ENOMSG);
     CRM_CHECK(config_changed != NULL, return -ENOMSG);
 
@@ -173,25 +371,26 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     }
 
     *result_cib = NULL;
-    *config_changed = FALSE;
+    *config_changed = false;
 
     if (fn == NULL) {
         return -EINVAL;
     }
 
     if (is_query) {
-        xmlNode *cib_ro = current_cib;
+        xmlNode *cib_ro = *current_cib;
         xmlNode *cib_filtered = NULL;
 
-        if(cib_acl_enabled(cib_ro, user)) {
-            if(xml_acl_filtered_copy(user, current_cib, current_cib, &cib_filtered)) {
-                if (cib_filtered == NULL) {
-                    crm_debug("Pre-filtered the entire cib");
-                    return -EACCES;
-                }
-                cib_ro = cib_filtered;
-                crm_log_xml_trace(cib_ro, "filtered");
+        if (cib_acl_enabled(cib_ro, user)
+            && xml_acl_filtered_copy(user, *current_cib, *current_cib,
+                                     &cib_filtered)) {
+
+            if (cib_filtered == NULL) {
+                crm_debug("Pre-filtered the entire cib");
+                return -EACCES;
             }
+            cib_ro = cib_filtered;
+            crm_log_xml_trace(cib_ro, "filtered");
         }
 
         rc = (*fn) (op, call_options, section, req, input, cib_ro, result_cib, output);
@@ -202,14 +401,14 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         } else if(cib_filtered == *output) {
             cib_filtered = NULL; /* Let them have this copy */
 
-        } else if(*output == current_cib) {
+        } else if (*output == *current_cib) {
             /* They already know not to free it */
 
         } else if(cib_filtered && (*output)->doc == cib_filtered->doc) {
             /* We're about to free the document of which *output is a part */
             *output = copy_xml(*output);
 
-        } else if((*output)->doc == current_cib->doc) {
+        } else if ((*output)->doc == (*current_cib)->doc) {
             /* Give them a copy they can free */
             *output = copy_xml(*output);
         }
@@ -218,31 +417,41 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         return rc;
     }
 
+    make_copy = should_copy_cib(op, section, call_options);
 
-    if (pcmk_is_set(call_options, cib_zero_copy)) {
+    if (!make_copy) {
         /* Conditional on v2 patch style */
 
-        scratch = current_cib;
+        scratch = *current_cib;
 
-        /* Create a shallow copy of current_cib for the version details */
-        current_cib = create_xml_node(NULL, (const char *)scratch->name);
-        copy_in_properties(current_cib, scratch);
-        top = current_cib;
+        // Make a copy of the top-level element to store version details
+        top = create_xml_node(NULL, (const char *) scratch->name);
+        copy_in_properties(top, scratch);
+        patchset_cib = top;
 
         xml_track_changes(scratch, user, NULL, cib_acl_enabled(scratch, user));
         rc = (*fn) (op, call_options, section, req, input, scratch, &scratch, output);
 
-    } else {
-        scratch = copy_xml(current_cib);
-        xml_track_changes(scratch, user, NULL, cib_acl_enabled(scratch, user));
-        rc = (*fn) (op, call_options, section, req, input, current_cib, &scratch, output);
+        /* If scratch points to a new object now (for example, after an erase
+         * operation), then *current_cib should point to the same object.
+         */
+        *current_cib = scratch;
 
-        if(scratch && xml_tracking_changes(scratch) == FALSE) {
+    } else {
+        scratch = copy_xml(*current_cib);
+        patchset_cib = *current_cib;
+
+        xml_track_changes(scratch, user, NULL, cib_acl_enabled(scratch, user));
+        rc = (*fn) (op, call_options, section, req, input, *current_cib,
+                    &scratch, output);
+
+        if ((scratch != NULL) && !xml_tracking_changes(scratch)) {
             crm_trace("Inferring changes after %s op", op);
-            xml_track_changes(scratch, user, current_cib, cib_acl_enabled(current_cib, user));
-            xml_calculate_changes(current_cib, scratch);
+            xml_track_changes(scratch, user, *current_cib,
+                              cib_acl_enabled(*current_cib, user));
+            xml_calculate_changes(*current_cib, scratch);
         }
-        CRM_CHECK(current_cib != scratch, return -EINVAL);
+        CRM_CHECK(*current_cib != scratch, return -EINVAL);
     }
 
     xml_acl_disable(scratch); /* Allow the system to make any additional changes */
@@ -271,12 +480,12 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         }
     }
 
-    if (current_cib) {
+    if (patchset_cib != NULL) {
         int old = 0;
         int new = 0;
 
         crm_element_value_int(scratch, XML_ATTR_GENERATION_ADMIN, &new);
-        crm_element_value_int(current_cib, XML_ATTR_GENERATION_ADMIN, &old);
+        crm_element_value_int(patchset_cib, XML_ATTR_GENERATION_ADMIN, &old);
 
         if (old > new) {
             crm_err("%s went backwards: %d -> %d (Opts: %#x)",
@@ -287,7 +496,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
 
         } else if (old == new) {
             crm_element_value_int(scratch, XML_ATTR_GENERATION, &new);
-            crm_element_value_int(current_cib, XML_ATTR_GENERATION, &old);
+            crm_element_value_int(patchset_cib, XML_ATTR_GENERATION, &old);
             if (old > new) {
                 crm_err("%s went backwards: %d -> %d (Opts: %#x)",
                         XML_ATTR_GENERATION, old, new, call_options);
@@ -302,13 +511,14 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     pcmk__strip_xml_text(scratch);
     fix_plus_plus_recursive(scratch);
 
-    if (pcmk_is_set(call_options, cib_zero_copy)) {
-        /* At this point, current_cib is just the 'cib' tag and its properties,
+    if (!make_copy) {
+        /* At this point, patchset_cib is just the "cib" tag and its properties.
          *
          * The v1 format would barf on this, but we know the v2 patch
          * format only needs it for the top-level version fields
          */
-        local_diff = xml_create_patchset(2, current_cib, scratch, (bool*)config_changed, manage_counters);
+        local_diff = xml_create_patchset(2, patchset_cib, scratch,
+                                         config_changed, manage_counters);
 
     } else {
         static time_t expires = 0;
@@ -316,63 +526,38 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
 
         if (expires < tm_now) {
             expires = tm_now + 60;  /* Validate clients are correctly applying v2-style diffs at most once a minute */
-            with_digest = TRUE;
+            with_digest = true;
         }
 
-        local_diff = xml_create_patchset(0, current_cib, scratch, (bool*)config_changed, manage_counters);
+        local_diff = xml_create_patchset(0, patchset_cib, scratch,
+                                         config_changed, manage_counters);
     }
 
-    // Create a log output object only if we're going to use it
-    pcmk__if_tracing(
-        {
-            rc = pcmk_rc2legacy(pcmk__log_output_new(&out));
-            CRM_CHECK(rc == pcmk_ok, goto done);
-
-            pcmk__output_set_log_level(out, LOG_TRACE);
-            out_rc = pcmk__xml_show_changes(out, scratch);
-        },
-        {}
-    );
+    pcmk__log_xml_changes(LOG_TRACE, scratch);
     xml_accept_changes(scratch);
 
     if(local_diff) {
-        int temp_rc = pcmk_rc_no_output;
-
-        patchset_process_digest(local_diff, current_cib, scratch, with_digest);
-
-        if (out == NULL) {
-            rc = pcmk_rc2legacy(pcmk__log_output_new(&out));
-            CRM_CHECK(rc == pcmk_ok, goto done);
-        }
-        pcmk__output_set_log_level(out, LOG_INFO);
-        temp_rc = out->message(out, "xml-patchset", local_diff);
-        out_rc = pcmk__output_select_rc(rc, temp_rc);
-
+        patchset_process_digest(local_diff, patchset_cib, scratch, with_digest);
+        pcmk__log_xml_patchset(LOG_INFO, local_diff);
         crm_log_xml_trace(local_diff, "raw patch");
     }
 
-    if (out != NULL) {
-        out->finish(out, pcmk_rc2exitc(out_rc), true, NULL);
-        pcmk__output_free(out);
-        out = NULL;
-    }
-
-    if (!pcmk_is_set(call_options, cib_zero_copy) && (local_diff != NULL)) {
+    if (make_copy && (local_diff != NULL)) {
         // Original to compare against doesn't exist
         pcmk__if_tracing(
             {
                 // Validate the calculated patch set
                 int test_rc = pcmk_ok;
                 int format = 1;
-                xmlNode *cib_copy = copy_xml(current_cib);
+                xmlNode *cib_copy = copy_xml(patchset_cib);
 
-                crm_element_value_int(local_diff, "format", &format);
+                crm_element_value_int(local_diff, PCMK_XA_FORMAT, &format);
                 test_rc = xml_apply_patchset(cib_copy, local_diff,
                                              manage_counters);
 
                 if (test_rc != pcmk_ok) {
                     save_xml_to_file(cib_copy, "PatchApply:calculated", NULL);
-                    save_xml_to_file(current_cib, "PatchApply:input", NULL);
+                    save_xml_to_file(patchset_cib, "PatchApply:input", NULL);
                     save_xml_to_file(scratch, "PatchApply:actual", NULL);
                     save_xml_to_file(local_diff, "PatchApply:diff", NULL);
                     crm_err("v%d patchset error, patch failed to apply: %s "
@@ -391,7 +576,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
          * a) we don't really care whats in the status section
          * b) we don't validate any of its contents at the moment anyway
          */
-        check_schema = FALSE;
+        check_schema = false;
     }
 
     /* === scratch must not be modified after this point ===
@@ -420,19 +605,35 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
 
             /* Does the CIB support the "update-*" attributes... */
             if (current_schema >= minimum_schema) {
+                /* Ensure values of origin, client, and user in scratch match
+                 * the values in req
+                 */
                 const char *origin = crm_element_value(req, F_ORIG);
+                const char *client = crm_element_value(req, F_CIB_CLIENTNAME);
 
-                CRM_LOG_ASSERT(origin != NULL);
-                crm_xml_replace(scratch, XML_ATTR_UPDATE_ORIG, origin);
-                crm_xml_replace(scratch, XML_ATTR_UPDATE_CLIENT,
-                                crm_element_value(req, F_CIB_CLIENTNAME));
-                crm_xml_replace(scratch, XML_ATTR_UPDATE_USER, crm_element_value(req, F_CIB_USER));
+                if (origin != NULL) {
+                    crm_xml_add(scratch, XML_ATTR_UPDATE_ORIG, origin);
+                } else {
+                    xml_remove_prop(scratch, XML_ATTR_UPDATE_ORIG);
+                }
+
+                if (client != NULL) {
+                    crm_xml_add(scratch, XML_ATTR_UPDATE_CLIENT, user);
+                } else {
+                    xml_remove_prop(scratch, XML_ATTR_UPDATE_CLIENT);
+                }
+
+                if (user != NULL) {
+                    crm_xml_add(scratch, XML_ATTR_UPDATE_USER, user);
+                } else {
+                    xml_remove_prop(scratch, XML_ATTR_UPDATE_USER);
+                }
             }
         }
     }
 
     crm_trace("Perform validation: %s", pcmk__btoa(check_schema));
-    if ((rc == pcmk_ok) && check_schema && !validate_xml(scratch, NULL, TRUE)) {
+    if ((rc == pcmk_ok) && check_schema && !validate_xml(scratch, NULL, true)) {
         const char *current_schema = crm_element_value(scratch,
                                                        XML_ATTR_VALIDATION);
 
@@ -444,13 +645,17 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
   done:
 
     *result_cib = scratch;
-    if(rc != pcmk_ok && cib_acl_enabled(current_cib, user)) {
-        if(xml_acl_filtered_copy(user, current_cib, scratch, result_cib)) {
-            if (*result_cib == NULL) {
-                crm_debug("Pre-filtered the entire cib result");
-            }
-            free_xml(scratch);
+
+    /* @TODO: This may not work correctly with !make_copy, since we don't
+     * keep the original CIB.
+     */
+    if ((rc != pcmk_ok) && cib_acl_enabled(patchset_cib, user)
+        && xml_acl_filtered_copy(user, patchset_cib, scratch, result_cib)) {
+
+        if (*result_cib == NULL) {
+            crm_debug("Pre-filtered the entire cib result");
         }
+        free_xml(scratch);
     }
 
     if(diff) {
@@ -464,36 +669,117 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     return rc;
 }
 
-xmlNode *
-cib_create_op(int call_id, const char *op, const char *host,
-              const char *section, xmlNode *data, int call_options,
-              const char *user_name)
+int
+cib__create_op(cib_t *cib, const char *op, const char *host,
+               const char *section, xmlNode *data, int call_options,
+               const char *user_name, const char *client_name,
+               xmlNode **op_msg)
 {
-    xmlNode *op_msg = create_xml_node(NULL, "cib_command");
+    CRM_CHECK((cib != NULL) && (op_msg != NULL), return -EPROTO);
 
-    CRM_CHECK(op_msg != NULL, return NULL);
-
-    crm_xml_add(op_msg, F_XML_TAGNAME, "cib_command");
-
-    crm_xml_add(op_msg, F_TYPE, T_CIB);
-    crm_xml_add(op_msg, F_CIB_OPERATION, op);
-    crm_xml_add(op_msg, F_CIB_HOST, host);
-    crm_xml_add(op_msg, F_CIB_SECTION, section);
-    crm_xml_add_int(op_msg, F_CIB_CALLID, call_id);
-    if (user_name) {
-        crm_xml_add(op_msg, F_CIB_USER, user_name);
+    *op_msg = create_xml_node(NULL, T_CIB_COMMAND);
+    if (*op_msg == NULL) {
+        return -EPROTO;
     }
+
+    cib->call_id++;
+    if (cib->call_id < 1) {
+        cib->call_id = 1;
+    }
+
+    crm_xml_add(*op_msg, F_XML_TAGNAME, T_CIB_COMMAND);
+    crm_xml_add(*op_msg, F_TYPE, T_CIB);
+    crm_xml_add(*op_msg, F_CIB_OPERATION, op);
+    crm_xml_add(*op_msg, F_CIB_HOST, host);
+    crm_xml_add(*op_msg, F_CIB_SECTION, section);
+    crm_xml_add(*op_msg, F_CIB_USER, user_name);
+    crm_xml_add(*op_msg, F_CIB_CLIENTNAME, client_name);
+    crm_xml_add_int(*op_msg, F_CIB_CALLID, cib->call_id);
+
     crm_trace("Sending call options: %.8lx, %d", (long)call_options, call_options);
-    crm_xml_add_int(op_msg, F_CIB_CALLOPTS, call_options);
+    crm_xml_add_int(*op_msg, F_CIB_CALLOPTS, call_options);
 
     if (data != NULL) {
-        add_message_xml(op_msg, F_CIB_CALLDATA, data);
+        add_message_xml(*op_msg, F_CIB_CALLDATA, data);
     }
 
-    if (call_options & cib_inhibit_bcast) {
-        CRM_CHECK((call_options & cib_scope_local), return NULL);
+    if (pcmk_is_set(call_options, cib_inhibit_bcast)) {
+        CRM_CHECK(pcmk_is_set(call_options, cib_scope_local),
+                  free_xml(*op_msg); return -EPROTO);
     }
-    return op_msg;
+    return pcmk_ok;
+}
+
+/*!
+ * \internal
+ * \brief Check whether a CIB request is supported in a transaction
+ *
+ * \param[in] request  CIB request
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+validate_transaction_request(const xmlNode *request)
+{
+    const char *op = crm_element_value(request, F_CIB_OPERATION);
+    const char *host = crm_element_value(request, F_CIB_HOST);
+    const cib__operation_t *operation = NULL;
+    int rc = cib__get_operation(op, &operation);
+
+    if (rc != pcmk_rc_ok) {
+        // cib__get_operation() logs error
+        return rc;
+    }
+
+    if (!pcmk_is_set(operation->flags, cib__op_attr_transaction)) {
+        crm_err("Operation %s is not supported in CIB transactions", op);
+        return EOPNOTSUPP;
+    }
+
+    if (host != NULL) {
+        crm_err("Operation targeting a specific node (%s) is not supported in "
+                "a CIB transaction",
+                host);
+        return EOPNOTSUPP;
+    }
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Append a CIB request to a CIB transaction
+ *
+ * \param[in,out] cib      CIB client whose transaction to extend
+ * \param[in,out] request  Request to add to transaction
+ *
+ * \return Legacy Pacemaker return code
+ */
+int
+cib__extend_transaction(cib_t *cib, xmlNode *request)
+{
+    int rc = pcmk_rc_ok;
+
+    CRM_ASSERT((cib != NULL) && (request != NULL));
+
+    rc = validate_transaction_request(request);
+
+    if ((rc == pcmk_rc_ok) && (cib->transaction == NULL)) {
+        rc = pcmk_rc_no_transaction;
+    }
+
+    if (rc == pcmk_rc_ok) {
+        add_node_copy(cib->transaction, request);
+
+    } else {
+        const char *op = crm_element_value(request, F_CIB_OPERATION);
+        const char *client_id = NULL;
+
+        cib->cmds->client_id(cib, NULL, &client_id);
+        crm_err("Failed to add '%s' operation to transaction for client %s: %s",
+                op, pcmk__s(client_id, "(unidentified)"), pcmk_rc_str(rc));
+        crm_log_xml_info(request, "failed");
+    }
+    return pcmk_rc2legacy(rc);
 }
 
 void
@@ -701,16 +987,7 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
     }
 
     if (level > LOG_CRIT) {
-        pcmk__output_t *out = NULL;
-
-        rc = pcmk_rc2legacy(pcmk__log_output_new(&out));
-        CRM_CHECK(rc == pcmk_ok, return rc);
-
-        pcmk__output_set_log_level(out, level);
-        rc = out->message(out, "xml-patchset", diff);
-        out->finish(out, pcmk_rc2exitc(rc), true, NULL);
-        pcmk__output_free(out);
-        rc = pcmk_ok;
+        pcmk__log_xml_patchset(level, diff);
     }
 
     if (input != NULL) {

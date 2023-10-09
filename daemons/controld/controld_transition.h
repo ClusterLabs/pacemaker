@@ -48,6 +48,8 @@ void controld_destroy_transition_trigger(void);
 void controld_trigger_graph_as(const char *fn, int line);
 void abort_after_delay(int abort_priority, enum pcmk__graph_next abort_action,
                        const char *abort_text, guint delay_ms);
+void controld_node_pending_timer(const crm_node_t *node);
+void controld_free_node_pending_timers(void);
 void abort_transition_graph(int abort_priority,
                             enum pcmk__graph_next abort_action,
                             const char *abort_text, const xmlNode *reason,

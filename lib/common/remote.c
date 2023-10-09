@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2022 the Pacemaker project contributors
+ * Copyright 2008-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -485,7 +485,7 @@ remote_send_iovs(pcmk__remote_t *remote, struct iovec *iov, int iovs)
  * \return Standard Pacemaker return code
  */
 int
-pcmk__remote_send_xml(pcmk__remote_t *remote, xmlNode *msg)
+pcmk__remote_send_xml(pcmk__remote_t *remote, const xmlNode *msg)
 {
     int rc = pcmk_rc_ok;
     static uint64_t id = 0;
@@ -558,16 +558,17 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
         rc = BZ2_bzBuffToBuffDecompress(uncompressed + header->payload_offset, &size_u,
                                         remote->buffer + header->payload_offset,
                                         header->payload_compressed, 1, 0);
+        rc = pcmk__bzlib2rc(rc);
 
-        if (rc != BZ_OK && header->version > REMOTE_MSG_VERSION) {
+        if (rc != pcmk_rc_ok && header->version > REMOTE_MSG_VERSION) {
             crm_warn("Couldn't decompress v%d message, we only understand v%d",
                      header->version, REMOTE_MSG_VERSION);
             free(uncompressed);
             return NULL;
 
-        } else if (rc != BZ_OK) {
-            crm_err("Decompression failed: %s " CRM_XS " bzerror=%d",
-                    bz2_strerror(rc), rc);
+        } else if (rc != pcmk_rc_ok) {
+            crm_err("Decompression failed: %s " CRM_XS " rc=%d",
+                    pcmk_rc_str(rc), rc);
             free(uncompressed);
             return NULL;
         }
@@ -1079,13 +1080,16 @@ pcmk__connect_remote(const char *host, int port, int timeout, int *timer_id,
     hints.ai_family = AF_UNSPEC;        /* Allow IPv4 or IPv6 */
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_CANONNAME;
+
     rc = getaddrinfo(server, NULL, &hints, &res);
-    if (rc != 0) {
+    rc = pcmk__gaierror2rc(rc);
+
+    if (rc != pcmk_rc_ok) {
         crm_err("Unable to get IP address info for %s: %s",
-                server, gai_strerror(rc));
-        rc = ENOTCONN;
+                server, pcmk_rc_str(rc));
         goto async_cleanup;
     }
+
     if (!res || !res->ai_addr) {
         crm_err("Unable to get IP address info for %s: no result", server);
         rc = ENOTCONN;

@@ -68,8 +68,6 @@ struct device_search_s {
 static gboolean stonith_device_dispatch(gpointer user_data);
 static void st_child_done(int pid, const pcmk__action_result_t *result,
                           void *user_data);
-static void stonith_send_reply(xmlNode * reply, int call_options, const char *remote_peer,
-                               pcmk__client_t *client);
 
 static void search_devices_record_result(struct device_search_s *search, const char *device,
                                          gboolean can_fence);
@@ -124,7 +122,7 @@ static gboolean
 is_action_required(const char *action, const stonith_device_t *device)
 {
     return (device != NULL) && device->automatic_unfencing
-           && pcmk__str_eq(action, "on", pcmk__str_none);
+           && pcmk__str_eq(action, PCMK_ACTION_ON, pcmk__str_none);
 }
 
 static int
@@ -223,11 +221,11 @@ get_action_timeout(const stonith_device_t *device, const char *action,
         /* If "reboot" was requested but the device does not support it,
          * we will remap to "off", so check timeout for "off" instead
          */
-        if (pcmk__str_eq(action, "reboot", pcmk__str_none)
+        if (pcmk__str_eq(action, PCMK_ACTION_REBOOT, pcmk__str_none)
             && !pcmk_is_set(device->flags, st_device_supports_reboot)) {
             crm_trace("%s doesn't support reboot, using timeout for off instead",
                       device->id);
-            action = "off";
+            action = PCMK_ACTION_OFF;
         }
 
         /* If the device config specified an action-specific timeout, use it */
@@ -277,7 +275,7 @@ fenced_device_reboot_action(const char *device_id)
             action = g_hash_table_lookup(device->params, "pcmk_reboot_action");
         }
     }
-    return pcmk__s(action, "reboot");
+    return pcmk__s(action, PCMK_ACTION_REBOOT);
 }
 
 /*!
@@ -554,7 +552,7 @@ stonith_device_execute(stonith_device_t * device)
 #if SUPPORT_CIBSECRETS
     exec_rc = pcmk__substitute_secrets(device->id, device->params);
     if (exec_rc != pcmk_rc_ok) {
-        if (pcmk__str_eq(cmd->action, "stop", pcmk__str_none)) {
+        if (pcmk__str_eq(cmd->action, PCMK_ACTION_STOP, pcmk__str_none)) {
             crm_info("Proceeding with stop operation for %s "
                      "despite being unable to load CIB secrets (%s)",
                      device->id, pcmk_rc_str(exec_rc));
@@ -570,14 +568,14 @@ stonith_device_execute(stonith_device_t * device)
 #endif
 
     action_str = cmd->action;
-    if (pcmk__str_eq(cmd->action, "reboot", pcmk__str_none)
+    if (pcmk__str_eq(cmd->action, PCMK_ACTION_REBOOT, pcmk__str_none)
         && !pcmk_is_set(device->flags, st_device_supports_reboot)) {
 
         crm_notice("Remapping 'reboot' action%s%s using %s to 'off' "
                    "because agent '%s' does not support reboot",
                    ((cmd->target == NULL)? "" : " targeting "),
                    pcmk__s(cmd->target, ""), device->id, device->agent);
-        action_str = "off";
+        action_str = PCMK_ACTION_OFF;
     }
 
     if (pcmk_is_set(device->flags, st_device_supports_parameter_port)) {
@@ -948,16 +946,16 @@ read_action_metadata(stonith_device_t *device)
 
         action = crm_element_value(match, "name");
 
-        if (pcmk__str_eq(action, "list", pcmk__str_none)) {
+        if (pcmk__str_eq(action, PCMK_ACTION_LIST, pcmk__str_none)) {
             stonith__set_device_flags(device->flags, device->id,
                                       st_device_supports_list);
-        } else if (pcmk__str_eq(action, "status", pcmk__str_none)) {
+        } else if (pcmk__str_eq(action, PCMK_ACTION_STATUS, pcmk__str_none)) {
             stonith__set_device_flags(device->flags, device->id,
                                       st_device_supports_status);
-        } else if (pcmk__str_eq(action, "reboot", pcmk__str_none)) {
+        } else if (pcmk__str_eq(action, PCMK_ACTION_REBOOT, pcmk__str_none)) {
             stonith__set_device_flags(device->flags, device->id,
                                       st_device_supports_reboot);
-        } else if (pcmk__str_eq(action, "on", pcmk__str_none)) {
+        } else if (pcmk__str_eq(action, PCMK_ACTION_ON, pcmk__str_none)) {
             /* "automatic" means the cluster will unfence node when it joins */
             /* "required" is a deprecated synonym for "automatic" */
             if (pcmk__xe_attr_is_true(match, "automatic") || pcmk__xe_attr_is_true(match, "required")) {
@@ -1024,16 +1022,16 @@ xml2device_params(const char *name, const xmlNode *dev)
         if (*value == '\0') {
             crm_warn("Ignoring empty '%s' parameter", STONITH_ATTR_ACTION_OP);
 
-        } else if (strcmp(value, "reboot") == 0) {
+        } else if (strcmp(value, PCMK_ACTION_REBOOT) == 0) {
             crm_warn("Ignoring %s='reboot' (see stonith-action cluster property instead)",
                      STONITH_ATTR_ACTION_OP);
 
-        } else if (strcmp(value, "off") == 0) {
-            map_action(params, "reboot", value);
+        } else if (strcmp(value, PCMK_ACTION_OFF) == 0) {
+            map_action(params, PCMK_ACTION_REBOOT, value);
 
         } else {
-            map_action(params, "off", value);
-            map_action(params, "reboot", value);
+            map_action(params, PCMK_ACTION_OFF, value);
+            map_action(params, PCMK_ACTION_REBOOT, value);
         }
 
         g_hash_table_remove(params, STONITH_ATTR_ACTION_OP);
@@ -1132,7 +1130,7 @@ build_device_from_xml(xmlNode *dev)
         device->automatic_unfencing = TRUE;
     }
 
-    if (is_action_required("on", device)) {
+    if (is_action_required(PCMK_ACTION_ON, device)) {
         crm_info("Fencing device '%s' requires unfencing", device->id);
     }
 
@@ -1672,8 +1670,7 @@ unpack_level_request(xmlNode *xml, enum fenced_target_by *mode, char **target,
      * search by xpath, because it might give multiple hits if the XML is the
      * CIB.
      */
-    if ((xml != NULL)
-        && !pcmk__str_eq(TYPE(xml), XML_TAG_FENCING_LEVEL, pcmk__str_none)) {
+    if ((xml != NULL) && !pcmk__xe_is(xml, XML_TAG_FENCING_LEVEL)) {
         xml = get_xpath_object("//" XML_TAG_FENCING_LEVEL, xml, LOG_WARNING);
     }
 
@@ -1972,7 +1969,7 @@ execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
                              "Watchdog fence device not configured");
             return;
 
-        } else if (pcmk__str_eq(action, "list", pcmk__str_none)) {
+        } else if (pcmk__str_eq(action, PCMK_ACTION_LIST, pcmk__str_none)) {
             pcmk__set_result(result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
             pcmk__set_result_output(result,
                                     list_to_string(stonith_watchdog_targets,
@@ -1980,7 +1977,7 @@ execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
                                     NULL);
             return;
 
-        } else if (pcmk__str_eq(action, "monitor", pcmk__str_none)) {
+        } else if (pcmk__str_eq(action, PCMK_ACTION_MONITOR, pcmk__str_none)) {
             pcmk__set_result(result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
             return;
         }
@@ -1994,7 +1991,8 @@ execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
                             "'%s' not found", id);
         return;
 
-    } else if (!device->api_registered && !strcmp(action, "monitor")) {
+    } else if (!device->api_registered
+               && (strcmp(action, PCMK_ACTION_MONITOR) == 0)) {
         // Monitors may run only on "started" (API-registered) devices
         crm_info("Ignoring API '%s' action request because device %s not active",
                  action, id);
@@ -2104,14 +2102,14 @@ localhost_is_eligible_with_remap(const stonith_device_t *device,
 
     // Check potential remaps
 
-    if (pcmk__str_eq(action, "reboot", pcmk__str_none)) {
+    if (pcmk__str_eq(action, PCMK_ACTION_REBOOT, pcmk__str_none)) {
         /* "reboot" might get remapped to "off" then "on", so even if reboot is
          * disallowed, return true if either of those is allowed. We'll report
          * the disallowed actions with the results. We never allow self-fencing
          * for remapped "on" actions because the target is off at that point.
          */
-        if (localhost_is_eligible(device, "off", target, allow_self)
-            || localhost_is_eligible(device, "on", target, FALSE)) {
+        if (localhost_is_eligible(device, PCMK_ACTION_OFF, target, allow_self)
+            || localhost_is_eligible(device, PCMK_ACTION_ON, target, FALSE)) {
             return true;
         }
     }
@@ -2146,7 +2144,7 @@ can_fence_host_with_device(stonith_device_t *dev,
     /* Answer immediately if the device does not support the action
      * or the local node is not allowed to perform it
      */
-    if (pcmk__str_eq(action, "on", pcmk__str_none)
+    if (pcmk__str_eq(action, PCMK_ACTION_ON, pcmk__str_none)
         && !pcmk_is_set(dev->flags, st_device_supports_on)) {
         check_type = "Agent does not support 'on'";
         goto search_report_results;
@@ -2175,7 +2173,8 @@ can_fence_host_with_device(stonith_device_t *dev,
         time_t now = time(NULL);
 
         if (dev->targets == NULL || dev->targets_age + 60 < now) {
-            int device_timeout = get_action_timeout(dev, "list", search->per_device_timeout);
+            int device_timeout = get_action_timeout(dev, PCMK_ACTION_LIST,
+                                                    search->per_device_timeout);
 
             if (device_timeout > search->per_device_timeout) {
                 crm_notice("Since the pcmk_list_timeout(%ds) parameter of %s is larger than stonith-timeout(%ds), timeout may occur",
@@ -2185,7 +2184,7 @@ can_fence_host_with_device(stonith_device_t *dev,
             crm_trace("Running '%s' to check whether %s is eligible to fence %s (%s)",
                       check_type, dev_id, target, action);
 
-            schedule_internal_command(__func__, dev, "list", NULL,
+            schedule_internal_command(__func__, dev, PCMK_ACTION_LIST, NULL,
                                       search->per_device_timeout, search, dynamic_list_search_cb);
 
             /* we'll respond to this search request async in the cb */
@@ -2207,7 +2206,7 @@ can_fence_host_with_device(stonith_device_t *dev,
 
         crm_trace("Running '%s' to check whether %s is eligible to fence %s (%s)",
                   check_type, dev_id, target, action);
-        schedule_internal_command(__func__, dev, "status", target,
+        schedule_internal_command(__func__, dev, PCMK_ACTION_STATUS, target,
                                   search->per_device_timeout, search, status_search_cb);
         /* we'll respond to this search request async in the cb */
         return;
@@ -2384,6 +2383,30 @@ add_action_reply(xmlNode *xml, const char *action,
     add_disallowed(child, action, device, target, allow_suicide);
 }
 
+/*!
+ * \internal
+ * \brief Send a reply to a CPG peer or IPC client
+ *
+ * \param[in]     reply         XML reply to send
+ * \param[in]     call_options  Send synchronously if st_opt_sync_call is set
+ * \param[in]     remote_peer   If not NULL, name of peer node to send CPG reply
+ * \param[in,out] client        If not NULL, client to send IPC reply
+ */
+static void
+stonith_send_reply(const xmlNode *reply, int call_options,
+                   const char *remote_peer, pcmk__client_t *client)
+{
+    CRM_CHECK((reply != NULL) && ((remote_peer != NULL) || (client != NULL)),
+              return);
+
+    if (remote_peer == NULL) {
+        do_local_reply(reply, client, call_options);
+    } else {
+        send_cluster_message(crm_get_peer(0, remote_peer), crm_msg_stonith_ng,
+                             reply, FALSE);
+    }
+}
+
 static void
 stonith_query_capable_device_cb(GList * devices, void *user_data)
 {
@@ -2429,15 +2452,16 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
          * capable device that doesn't support "reboot", remap to "off" instead.
          */
         if (!pcmk_is_set(device->flags, st_device_supports_reboot)
-            && pcmk__str_eq(query->action, "reboot", pcmk__str_none)) {
+            && pcmk__str_eq(query->action, PCMK_ACTION_REBOOT,
+                            pcmk__str_none)) {
             crm_trace("%s doesn't support reboot, using values for off instead",
                       device->id);
-            action = "off";
+            action = PCMK_ACTION_OFF;
         }
 
         /* Add action-specific values if available */
         add_action_specific_attributes(dev, action, device, query->target);
-        if (pcmk__str_eq(query->action, "reboot", pcmk__str_none)) {
+        if (pcmk__str_eq(query->action, PCMK_ACTION_REBOOT, pcmk__str_none)) {
             /* A "reboot" *might* get remapped to "off" then "on", so after
              * sending the "reboot"-specific values in the main element, we add
              * sub-elements for "off" and "on" values.
@@ -2451,9 +2475,9 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
              */
             add_disallowed(dev, action, device, query->target,
                            pcmk_is_set(query->call_options, st_opt_allow_suicide));
-            add_action_reply(dev, "off", device, query->target,
+            add_action_reply(dev, PCMK_ACTION_OFF, device, query->target,
                              pcmk_is_set(query->call_options, st_opt_allow_suicide));
-            add_action_reply(dev, "on", device, query->target, FALSE);
+            add_action_reply(dev, PCMK_ACTION_ON, device, query->target, FALSE);
         }
 
         /* A query without a target wants device parameters */
@@ -2765,8 +2789,10 @@ st_child_done(int pid, const pcmk__action_result_t *result, void *user_data)
 
     /* The device is ready to do something else now */
     if (device) {
-        if (!device->verified && pcmk__result_ok(result) &&
-            (pcmk__strcase_any_of(cmd->action, "list", "monitor", "status", NULL))) {
+        if (!device->verified && pcmk__result_ok(result)
+            && pcmk__strcase_any_of(cmd->action, PCMK_ACTION_LIST,
+                                    PCMK_ACTION_MONITOR, PCMK_ACTION_STATUS,
+                                    NULL)) {
 
             device->verified = TRUE;
         }
@@ -3050,30 +3076,6 @@ check_alternate_host(const char *target)
         crm_warn("Will handle own fencing because no peer can");
     }
     return NULL;
-}
-
-/*!
- * \internal
- * \brief Send a reply to a CPG peer or IPC client
- *
- * \param[in]     reply         XML reply to send
- * \param[in]     call_options  Send synchronously if st_opt_sync_call is set
- * \param[in]     remote_peer   If not NULL, name of peer node to send CPG reply
- * \param[in,out] client        If not NULL, client to send IPC reply
- */
-static void
-stonith_send_reply(xmlNode *reply, int call_options, const char *remote_peer,
-                   pcmk__client_t *client)
-{
-    CRM_CHECK((reply != NULL) && ((remote_peer != NULL) || (client != NULL)),
-              return);
-
-    if (remote_peer == NULL) {
-        do_local_reply(reply, client, call_options);
-    } else {
-        send_cluster_message(crm_get_peer(0, remote_peer), crm_msg_stonith_ng,
-                             reply, FALSE);
-    }
 }
 
 static void 

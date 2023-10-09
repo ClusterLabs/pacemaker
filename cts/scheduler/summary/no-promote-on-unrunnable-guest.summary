@@ -37,9 +37,9 @@ Executing Cluster Transition:
   * Resource action: ovndb_servers   cancel=30000 on ovn-dbs-bundle-1
   * Pseudo action:   ovn-dbs-bundle-master_pre_notify_stop_0
   * Pseudo action:   ovn-dbs-bundle_stop_0
-  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-0
   * Resource action: ovndb_servers   notify on ovn-dbs-bundle-1
   * Resource action: ovndb_servers   notify on ovn-dbs-bundle-2
+  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-0
   * Pseudo action:   ovn-dbs-bundle-master_confirmed-pre_notify_stop_0
   * Pseudo action:   ovn-dbs-bundle-master_stop_0
   * Resource action: ovndb_servers   stop on ovn-dbs-bundle-0

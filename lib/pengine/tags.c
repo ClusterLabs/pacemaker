@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 the Pacemaker project contributors
+ * Copyright 2020-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -34,8 +34,9 @@ pe__rscs_with_tag(pe_working_set_t *data_set, const char *tag_name)
 
     for (GList *refs = ((pe_tag_t *) value)->refs; refs; refs = refs->next) {
         const char *id = (const char *) refs->data;
-        pe_resource_t *rsc = pe_find_resource_with_flags(data_set->resources, id,
-                                                         pe_find_renamed|pe_find_any);
+        const uint32_t flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
+        pe_resource_t *rsc = pe_find_resource_with_flags(data_set->resources,
+                                                         id, flags);
 
         if (!rsc) {
             continue;

@@ -33,7 +33,7 @@ max_too_small(void **state)
     char *result = calloc(1024, sizeof(char));
     unsigned int len;
 
-    assert_int_equal(pcmk__compress(SIMPLE_DATA, 40, 10, &result, &len), pcmk_rc_error);
+    assert_int_equal(pcmk__compress(SIMPLE_DATA, 40, 10, &result, &len), EFBIG);
 }
 
 static void

@@ -18,44 +18,6 @@
 
 /*!
  * \internal
- * \brief Check whether a clone or bundle has instances for all available nodes
- *
- * \param[in] collective  Clone or bundle to check
- *
- * \return true if \p collective has enough instances for all of its available
- *         allowed nodes, otherwise false
- */
-static bool
-can_run_everywhere(const pe_resource_t *collective)
-{
-    GHashTableIter iter;
-    pe_node_t *node = NULL;
-    int available_nodes = 0;
-    int max_instances = 0;
-
-    switch (collective->variant) {
-        case pe_clone:
-            max_instances = pe__clone_max(collective);
-            break;
-        case pe_container:
-            max_instances = pe__bundle_max(collective);
-            break;
-        default:
-            return false; // Not actually possible
-    }
-
-    g_hash_table_iter_init(&iter, collective->allowed_nodes);
-    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-        if (pcmk__node_available(node, false, false)
-            && (max_instances < ++available_nodes)) {
-            return false;
-        }
-    }
-    return true;
-}
-
-/*!
- * \internal
  * \brief Check whether a node is allowed to run an instance
  *
  * \param[in] instance      Clone instance or bundle container to check
@@ -70,7 +32,7 @@ can_run_instance(const pe_resource_t *instance, const pe_node_t *node,
 {
     pe_node_t *allowed_node = NULL;
 
-    if (pcmk_is_set(instance->flags, pe_rsc_orphan)) {
+    if (pcmk_is_set(instance->flags, pcmk_rsc_removed)) {
         pe_rsc_trace(instance, "%s cannot run on %s: orphaned",
                      instance->id, pe__node_name(node));
         return false;
@@ -135,8 +97,8 @@ ban_unavailable_allowed_nodes(pe_resource_t *instance, int max_per_node)
                     pe_resource_t *child = (pe_resource_t *) child_iter->data;
                     pe_node_t *child_node = NULL;
 
-                    child_node = pe_hash_table_lookup(child->allowed_nodes,
-                                                      node->details->id);
+                    child_node = g_hash_table_lookup(child->allowed_nodes,
+                                                     node->details->id);
                     if (child_node != NULL) {
                         pe_rsc_trace(instance,
                                      "Banning %s child %s "
@@ -181,36 +143,33 @@ new_node_table(pe_node_t *node)
 static void
 apply_parent_colocations(const pe_resource_t *rsc, GHashTable **nodes)
 {
-    GList *iter = NULL;
-    pcmk__colocation_t *colocation = NULL;
-    pe_resource_t *other = NULL;
-    float factor = 0.0;
+    GList *colocations = pcmk__this_with_colocations(rsc);
 
-    /* Because the this_with_colocations() and with_this_colocations() methods
-     * boil down to copies of rsc_cons and rsc_cons_lhs for clones and bundles,
-     * we can use those here directly for efficiency.
-     */
-    for (iter = rsc->parent->rsc_cons; iter != NULL; iter = iter->next) {
-        colocation = (pcmk__colocation_t *) iter->data;
-        other = colocation->primary;
-        factor = colocation->score / (float) INFINITY,
-        other->cmds->add_colocated_node_scores(other, rsc->id, nodes,
-                                               colocation->node_attribute,
-                                               factor,
+    for (const GList *iter = colocations; iter != NULL; iter = iter->next) {
+        const pcmk__colocation_t *colocation = iter->data;
+        pe_resource_t *other = colocation->primary;
+        float factor = colocation->score / (float) INFINITY;
+
+        other->cmds->add_colocated_node_scores(other, rsc, rsc->id, nodes,
+                                               colocation, factor,
                                                pcmk__coloc_select_default);
     }
-    for (iter = rsc->parent->rsc_cons_lhs; iter != NULL; iter = iter->next) {
-        colocation = (pcmk__colocation_t *) iter->data;
+    g_list_free(colocations);
+    colocations = pcmk__with_this_colocations(rsc);
+
+    for (const GList *iter = colocations; iter != NULL; iter = iter->next) {
+        const pcmk__colocation_t *colocation = iter->data;
+        pe_resource_t *other = colocation->dependent;
+        float factor = colocation->score / (float) INFINITY;
+
         if (!pcmk__colocation_has_influence(colocation, rsc)) {
             continue;
         }
-        other = colocation->dependent;
-        factor = colocation->score / (float) INFINITY,
-        other->cmds->add_colocated_node_scores(other, rsc->id, nodes,
-                                               colocation->node_attribute,
-                                               factor,
+        other->cmds->add_colocated_node_scores(other, rsc, rsc->id, nodes,
+                                               colocation, factor,
                                                pcmk__coloc_select_nonnegative);
     }
+    g_list_free(colocations);
 }
 
 /*!
@@ -286,7 +245,7 @@ cmp_instance_by_colocation(const pe_resource_t *instance1,
 static bool
 did_fail(const pe_resource_t *rsc)
 {
-    if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
         return true;
     }
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
@@ -310,8 +269,9 @@ static bool
 node_is_allowed(const pe_resource_t *rsc, pe_node_t **node)
 {
     if (*node != NULL) {
-        pe_node_t *allowed = pe_hash_table_lookup(rsc->allowed_nodes,
-                                                  (*node)->details->id);
+        pe_node_t *allowed = g_hash_table_lookup(rsc->allowed_nodes,
+                                                 (*node)->details->id);
+
         if ((allowed == NULL) || (allowed->weight < 0)) {
             pe_rsc_trace(rsc, "%s: current location (%s) is unavailable",
                          rsc->id, pe__node_name(*node));
@@ -547,7 +507,40 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
 
 /*!
  * \internal
- * \brief Choose a node for an instance
+ * \brief Increment the parent's instance count after assigning an instance
+ *
+ * An instance's parent tracks how many instances have been assigned to each
+ * node via its pe_node_t:count member. After assigning an instance to a node,
+ * find the corresponding node in the parent's allowed table and increment it.
+ *
+ * \param[in,out] instance     Instance whose parent to update
+ * \param[in]     assigned_to  Node to which the instance was assigned
+ */
+static void
+increment_parent_count(pe_resource_t *instance, const pe_node_t *assigned_to)
+{
+    pe_node_t *allowed = NULL;
+
+    if (assigned_to == NULL) {
+        return;
+    }
+    allowed = pcmk__top_allowed_node(instance, assigned_to);
+
+    if (allowed == NULL) {
+        /* The instance is allowed on the node, but its parent isn't. This
+         * shouldn't be possible if the resource is managed, and we won't be
+         * able to limit the number of instances assigned to the node.
+         */
+        CRM_LOG_ASSERT(!pcmk_is_set(instance->flags, pcmk_rsc_managed));
+
+    } else {
+        allowed->count++;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Assign an instance to a node
  *
  * \param[in,out] instance      Clone instance or bundle replica container
  * \param[in]     prefer        If not NULL, attempt early assignment to this
@@ -555,84 +548,152 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
  *                              perform final assignment
  * \param[in]     max_per_node  Assign at most this many instances to one node
  *
- * \return true if \p instance could be assigned to a node, otherwise false
+ * \return Node to which \p instance is assigned
  */
-static bool
+static const pe_node_t *
 assign_instance(pe_resource_t *instance, const pe_node_t *prefer,
                 int max_per_node)
 {
     pe_node_t *chosen = NULL;
-    pe_node_t *allowed = NULL;
 
-    CRM_ASSERT(instance != NULL);
     pe_rsc_trace(instance, "Assigning %s (preferring %s)", instance->id,
                  ((prefer == NULL)? "no node" : prefer->details->uname));
 
-    if (!pcmk_is_set(instance->flags, pe_rsc_provisional)) {
-        // Instance is already assigned
-        return instance->fns->location(instance, NULL, FALSE) != NULL;
-    }
-
-    if (pcmk_is_set(instance->flags, pe_rsc_allocating)) {
+    if (pcmk_is_set(instance->flags, pcmk_rsc_assigning)) {
         pe_rsc_debug(instance,
                      "Assignment loop detected involving %s colocations",
                      instance->id);
+        return NULL;
+    }
+    ban_unavailable_allowed_nodes(instance, max_per_node);
+
+    // Failed early assignments are reversible (stop_if_fail=false)
+    chosen = instance->cmds->assign(instance, prefer, (prefer == NULL));
+    increment_parent_count(instance, chosen);
+    return chosen;
+}
+
+/*!
+ * \internal
+ * \brief Try to assign an instance to its current node early
+ *
+ * \param[in] rsc           Clone or bundle being assigned (for logs only)
+ * \param[in] instance      Clone instance or bundle replica container
+ * \param[in] current       Instance's current node
+ * \param[in] max_per_node  Maximum number of instances per node
+ * \param[in] available     Number of instances still available for assignment
+ *
+ * \return \c true if \p instance was successfully assigned to its current node,
+ *         or \c false otherwise
+ */
+static bool
+assign_instance_early(const pe_resource_t *rsc, pe_resource_t *instance,
+                      const pe_node_t *current, int max_per_node, int available)
+{
+    const pe_node_t *chosen = NULL;
+    int reserved = 0;
+
+    pe_resource_t *parent = instance->parent;
+    GHashTable *allowed_orig = NULL;
+    GHashTable *allowed_orig_parent = parent->allowed_nodes;
+
+    const pe_node_t *allowed_node = g_hash_table_lookup(instance->allowed_nodes,
+                                                        current->details->id);
+
+    pe_rsc_trace(instance, "Trying to assign %s to its current node %s",
+                 instance->id, pe__node_name(current));
+
+    if (!pcmk__node_available(allowed_node, true, false)) {
+        pe_rsc_info(instance,
+                    "Not assigning %s to current node %s: unavailable",
+                    instance->id, pe__node_name(current));
         return false;
     }
 
-    if (prefer != NULL) { // Possible early assignment to preferred node
+    /* On each iteration, if instance gets assigned to a node other than its
+     * current one, we reserve one instance for the chosen node, unassign
+     * instance, restore instance's original node tables, and try again. This
+     * way, instances are proportionally assigned to nodes based on preferences,
+     * but shuffling of specific instances is minimized. If a node will be
+     * assigned instances at all, it preferentially receives instances that are
+     * currently active there.
+     *
+     * parent->allowed_nodes tracks the number of instances assigned to each
+     * node. If a node already has max_per_node instances assigned,
+     * ban_unavailable_allowed_nodes() marks it as unavailable.
+     *
+     * In the end, we restore the original parent->allowed_nodes to undo the
+     * changes to counts during tentative assignments. If we successfully
+     * assigned instance to its current node, we increment that node's counter.
+     */
 
-        // Get preferred node with instance's scores
-        allowed = g_hash_table_lookup(instance->allowed_nodes,
-                                      prefer->details->id);
+    // Back up the allowed node tables of instance and its children recursively
+    pcmk__copy_node_tables(instance, &allowed_orig);
 
-        if ((allowed == NULL) || (allowed->weight < 0)) {
-            pe_rsc_trace(instance,
-                         "Not assigning %s to preferred node %s: unavailable",
-                         instance->id, pe__node_name(prefer));
-            return false;
+    // Update instances-per-node counts in a scratch table
+    parent->allowed_nodes = pcmk__copy_node_table(parent->allowed_nodes);
+
+    while (reserved < available) {
+        chosen = assign_instance(instance, current, max_per_node);
+
+        if (pe__same_node(chosen, current)) {
+            // Successfully assigned to current node
+            break;
         }
-    }
 
-    ban_unavailable_allowed_nodes(instance, max_per_node);
+        // Assignment updates scores, so restore to original state
+        pe_rsc_debug(instance, "Rolling back node scores for %s", instance->id);
+        pcmk__restore_node_tables(instance, allowed_orig);
 
-    if (prefer == NULL) { // Final assignment
-        chosen = instance->cmds->assign(instance, NULL);
+        if (chosen == NULL) {
+            // Assignment failed, so give up
+            pe_rsc_info(instance,
+                        "Not assigning %s to current node %s: unavailable",
+                        instance->id, pe__node_name(current));
+            pe__set_resource_flags(instance, pcmk_rsc_unassigned);
+            break;
+        }
 
-    } else { // Possible early assignment to preferred node
-        GHashTable *backup = pcmk__copy_node_table(instance->allowed_nodes);
-
-        chosen = instance->cmds->assign(instance, prefer);
-
-        // Revert nodes if preferred node won't be assigned
-        if ((chosen != NULL) && (chosen->details != prefer->details)) {
-            crm_info("Not assigning %s to preferred node %s: %s is better",
-                     instance->id, pe__node_name(prefer),
+        // We prefer more strongly to assign an instance to the chosen node
+        pe_rsc_debug(instance,
+                     "Not assigning %s to current node %s: %s is better",
+                     instance->id, pe__node_name(current),
                      pe__node_name(chosen));
-            g_hash_table_destroy(instance->allowed_nodes);
-            instance->allowed_nodes = backup;
-            pcmk__unassign_resource(instance);
-            chosen = NULL;
-        } else if (backup != NULL) {
-            g_hash_table_destroy(backup);
-        }
-    }
 
-    // The parent tracks how many instances have been assigned to each node
-    if (chosen != NULL) {
-        allowed = pcmk__top_allowed_node(instance, chosen);
-        if (allowed == NULL) {
-            /* The instance is allowed on the node, but its parent isn't. This
-             * shouldn't be possible if the resource is managed, and we won't be
-             * able to limit the number of instances assigned to the node.
-             */
-            CRM_LOG_ASSERT(!pcmk_is_set(instance->flags, pe_rsc_managed));
+        // Reserve one instance for the chosen node and try again
+        if (++reserved >= available) {
+            pe_rsc_info(instance,
+                        "Not assigning %s to current node %s: "
+                        "other assignments are more important",
+                        instance->id, pe__node_name(current));
 
         } else {
-            allowed->count++;
+            pe_rsc_debug(instance,
+                         "Reserved an instance of %s for %s. Retrying "
+                         "assignment of %s to %s",
+                         rsc->id, pe__node_name(chosen), instance->id,
+                         pe__node_name(current));
         }
+
+        // Clear this assignment (frees chosen); leave instance counts in parent
+        pcmk__unassign_resource(instance);
+        chosen = NULL;
     }
-    return chosen != NULL;
+
+    g_hash_table_destroy(allowed_orig);
+
+    // Restore original instances-per-node counts
+    g_hash_table_destroy(parent->allowed_nodes);
+    parent->allowed_nodes = allowed_orig_parent;
+
+    if (chosen == NULL) {
+        // Couldn't assign instance to current node
+        return false;
+    }
+    pe_rsc_trace(instance, "Assigned %s to current node %s",
+                 instance->id, pe__node_name(current));
+    increment_parent_count(instance, chosen);
+    return true;
 }
 
 /*!
@@ -664,30 +725,28 @@ reset_allowed_node_counts(pe_resource_t *rsc)
  * \internal
  * \brief Check whether an instance has a preferred node
  *
- * \param[in] rsc               Clone or bundle being assigned (for logs only)
  * \param[in] instance          Clone instance or bundle replica container
  * \param[in] optimal_per_node  Optimal number of instances per node
  *
  * \return Instance's current node if still available, otherwise NULL
  */
 static const pe_node_t *
-preferred_node(const pe_resource_t *rsc, const pe_resource_t *instance,
-               int optimal_per_node)
+preferred_node(const pe_resource_t *instance, int optimal_per_node)
 {
     const pe_node_t *node = NULL;
     const pe_node_t *parent_node = NULL;
 
     // Check whether instance is active, healthy, and not yet assigned
     if ((instance->running_on == NULL)
-        || !pcmk_is_set(instance->flags, pe_rsc_provisional)
-        || pcmk_is_set(instance->flags, pe_rsc_failed)) {
+        || !pcmk_is_set(instance->flags, pcmk_rsc_unassigned)
+        || pcmk_is_set(instance->flags, pcmk_rsc_failed)) {
         return NULL;
     }
 
     // Check whether instance's current node can run resources
     node = pe__current_node(instance);
     if (!pcmk__node_available(node, true, false)) {
-        pe_rsc_trace(rsc, "Not assigning %s to %s early (unavailable)",
+        pe_rsc_trace(instance, "Not assigning %s to %s early (unavailable)",
                      instance->id, pe__node_name(node));
         return NULL;
     }
@@ -695,7 +754,7 @@ preferred_node(const pe_resource_t *rsc, const pe_resource_t *instance,
     // Check whether node already has optimal number of instances assigned
     parent_node = pcmk__top_allowed_node(instance, node);
     if ((parent_node != NULL) && (parent_node->count >= optimal_per_node)) {
-        pe_rsc_trace(rsc,
+        pe_rsc_trace(instance,
                      "Not assigning %s to %s early "
                      "(optimal instances already assigned)",
                      instance->id, pe__node_name(node));
@@ -744,13 +803,17 @@ pcmk__assign_instances(pe_resource_t *collective, GList *instances,
     // Assign as many instances as possible to their current location
     for (iter = instances; (iter != NULL) && (assigned < max_total);
          iter = iter->next) {
-        instance = (pe_resource_t *) iter->data;
+        int available = max_total - assigned;
 
-        current = preferred_node(collective, instance, optimal_per_node);
+        instance = iter->data;
+        if (!pcmk_is_set(instance->flags, pcmk_rsc_unassigned)) {
+            continue;   // Already assigned
+        }
+
+        current = preferred_node(instance, optimal_per_node);
         if ((current != NULL)
-            && assign_instance(instance, current, max_per_node)) {
-            pe_rsc_trace(collective, "Assigned %s to current node %s",
-                         instance->id, pe__node_name(current));
+            && assign_instance_early(collective, instance, current,
+                                     max_per_node, available)) {
             assigned++;
         }
     }
@@ -761,7 +824,7 @@ pcmk__assign_instances(pe_resource_t *collective, GList *instances,
     for (iter = instances; iter != NULL; iter = iter->next) {
         instance = (pe_resource_t *) iter->data;
 
-        if (!pcmk_is_set(instance->flags, pe_rsc_provisional)) {
+        if (!pcmk_is_set(instance->flags, pcmk_rsc_unassigned)) {
             continue; // Already assigned
         }
 
@@ -770,7 +833,7 @@ pcmk__assign_instances(pe_resource_t *collective, GList *instances,
             if (pcmk__top_allowed_node(instance, current) == NULL) {
                 const char *unmanaged = "";
 
-                if (!pcmk_is_set(instance->flags, pe_rsc_managed)) {
+                if (!pcmk_is_set(instance->flags, pcmk_rsc_managed)) {
                     unmanaged = "Unmanaged resource ";
                 }
                 crm_notice("%s%s is running on %s which is no longer allowed",
@@ -786,7 +849,7 @@ pcmk__assign_instances(pe_resource_t *collective, GList *instances,
             resource_location(instance, NULL, -INFINITY,
                               "collective_limit_reached", collective->cluster);
 
-        } else if (assign_instance(instance, NULL, max_per_node)) {
+        } else if (assign_instance(instance, NULL, max_per_node) != NULL) {
             assigned++;
         }
     }
@@ -832,7 +895,7 @@ check_instance_state(const pe_resource_t *instance, uint32_t *state)
     }
 
     // If instance is a collective (a cloned group), check its children instead
-    if (instance->variant > pe_native) {
+    if (instance->variant > pcmk_rsc_variant_primitive) {
         for (iter = instance->children;
              (iter != NULL) && !pcmk_all_flags_set(*state, instance_all);
              iter = iter->next) {
@@ -855,10 +918,12 @@ check_instance_state(const pe_resource_t *instance, uint32_t *state)
          iter = iter->next) {
 
         const pe_action_t *action = (const pe_action_t *) iter->data;
-        const bool optional = pcmk_is_set(action->flags, pe_action_optional);
+        const bool optional = pcmk_is_set(action->flags, pcmk_action_optional);
 
-        if (pcmk__str_eq(RSC_START, action->task, pcmk__str_none)) {
-            if (!optional && pcmk_is_set(action->flags, pe_action_runnable)) {
+        if (pcmk__str_eq(PCMK_ACTION_START, action->task, pcmk__str_none)) {
+            if (!optional
+                && pcmk_is_set(action->flags, pcmk_action_runnable)) {
+
                 pe_rsc_trace(instance, "Instance is starting due to %s",
                              action->uuid);
                 instance_state |= instance_starting;
@@ -868,14 +933,15 @@ check_instance_state(const pe_resource_t *instance, uint32_t *state)
                              (optional? "optional" : "unrunnable"));
             }
 
-        } else if (pcmk__str_eq(RSC_STOP, action->task, pcmk__str_none)) {
+        } else if (pcmk__str_eq(PCMK_ACTION_STOP, action->task,
+                                pcmk__str_none)) {
             /* Only stop actions can be pseudo-actions for primitives. That
              * indicates that the node they are on is being fenced, so the stop
              * is implied rather than actually executed.
              */
             if (!optional
-                && pcmk_any_flags_set(action->flags,
-                                      pe_action_pseudo|pe_action_runnable)) {
+                && pcmk_any_flags_set(action->flags, pcmk_action_pseudo
+                                                     |pcmk_action_runnable)) {
                 pe_rsc_trace(instance, "Instance is stopping due to %s",
                              action->uuid);
                 instance_state |= instance_stopping;
@@ -924,30 +990,30 @@ pcmk__create_instance_actions(pe_resource_t *collective, GList *instances)
     }
 
     // Create pseudo-actions for rsc start and started
-    start = pe__new_rsc_pseudo_action(collective, RSC_START,
+    start = pe__new_rsc_pseudo_action(collective, PCMK_ACTION_START,
                                       !pcmk_is_set(state, instance_starting),
                                       true);
-    started = pe__new_rsc_pseudo_action(collective, RSC_STARTED,
+    started = pe__new_rsc_pseudo_action(collective, PCMK_ACTION_RUNNING,
                                         !pcmk_is_set(state, instance_starting),
                                         false);
     started->priority = INFINITY;
     if (pcmk_any_flags_set(state, instance_active|instance_starting)) {
-        pe__set_action_flags(started, pe_action_runnable);
+        pe__set_action_flags(started, pcmk_action_runnable);
     }
 
     // Create pseudo-actions for rsc stop and stopped
-    stop = pe__new_rsc_pseudo_action(collective, RSC_STOP,
+    stop = pe__new_rsc_pseudo_action(collective, PCMK_ACTION_STOP,
                                      !pcmk_is_set(state, instance_stopping),
                                      true);
-    stopped = pe__new_rsc_pseudo_action(collective, RSC_STOPPED,
+    stopped = pe__new_rsc_pseudo_action(collective, PCMK_ACTION_STOPPED,
                                         !pcmk_is_set(state, instance_stopping),
                                         true);
     stopped->priority = INFINITY;
     if (!pcmk_is_set(state, instance_restarting)) {
-        pe__set_action_flags(stop, pe_action_migrate_runnable);
+        pe__set_action_flags(stop, pcmk_action_migratable);
     }
 
-    if (collective->variant == pe_clone) {
+    if (collective->variant == pcmk_rsc_variant_clone) {
         pe__create_clone_notif_pseudo_ops(collective, start, started, stop,
                                           stopped);
     }
@@ -967,7 +1033,7 @@ pcmk__create_instance_actions(pe_resource_t *collective, GList *instances)
 static inline GList *
 get_instance_list(const pe_resource_t *rsc)
 {
-    if (rsc->variant == pe_container) {
+    if (rsc->variant == pcmk_rsc_variant_bundle) {
         return pe__bundle_containers(rsc);
     } else {
         return rsc->children;
@@ -995,7 +1061,7 @@ free_instance_list(const pe_resource_t *rsc, GList *list)
  *
  * \param[in] instance  Clone instance or bundle replica container
  * \param[in] node      Instance must match this node
- * \param[in] role      If not RSC_ROLE_UNKNOWN, instance must match this role
+ * \param[in] role      If not pcmk_role_unknown, instance must match this role
  * \param[in] current   If true, compare instance's original node and role,
  *                      otherwise compare assigned next node and role
  *
@@ -1010,7 +1076,7 @@ pcmk__instance_matches(const pe_resource_t *instance, const pe_node_t *node,
 
     CRM_CHECK((instance != NULL) && (node != NULL), return false);
 
-    if ((role != RSC_ROLE_UNKNOWN)
+    if ((role != pcmk_role_unknown)
         && (role != instance->fns->state(instance, current))) {
         pe_rsc_trace(instance,
                      "%s is not a compatible instance (role is not %s)",
@@ -1018,7 +1084,7 @@ pcmk__instance_matches(const pe_resource_t *instance, const pe_node_t *node,
         return false;
     }
 
-    if (!is_set_recursive(instance, pe_rsc_block, true)) {
+    if (!is_set_recursive(instance, pcmk_rsc_blocked, true)) {
         // We only want instances that haven't failed
         instance_node = instance->fns->location(instance, NULL, current);
     }
@@ -1030,7 +1096,7 @@ pcmk__instance_matches(const pe_resource_t *instance, const pe_node_t *node,
         return false;
     }
 
-    if (instance_node->details != node->details) {
+    if (!pe__same_node(instance_node, node)) {
         pe_rsc_trace(instance,
                      "%s is not a compatible instance (assigned to %s not %s)",
                      instance->id, pe__node_name(instance_node),
@@ -1048,7 +1114,7 @@ pcmk__instance_matches(const pe_resource_t *instance, const pe_node_t *node,
  * \param[in] match_rsc  Resource that instance must match (for logging only)
  * \param[in] rsc        Clone or bundle resource to check for matching instance
  * \param[in] node       Instance must match this node
- * \param[in] role       If not RSC_ROLE_UNKNOWN, instance must match this role
+ * \param[in] role       If not pcmk_role_unknown, instance must match this role
  * \param[in] current    If true, compare instance's original node and role,
  *                       otherwise compare assigned next node and role
  *
@@ -1067,8 +1133,9 @@ find_compatible_instance_on_node(const pe_resource_t *match_rsc,
         pe_resource_t *instance = (pe_resource_t *) iter->data;
 
         if (pcmk__instance_matches(instance, node, role, current)) {
-            pe_rsc_trace(match_rsc, "Found %s %s instance %s compatible with %s on %s",
-                         role == RSC_ROLE_UNKNOWN? "matching" : role2text(role),
+            pe_rsc_trace(match_rsc,
+                         "Found %s %s instance %s compatible with %s on %s",
+                         role == pcmk_role_unknown? "matching" : role2text(role),
                          rsc->id, instance->id, match_rsc->id,
                          pe__node_name(node));
             free_instance_list(rsc, instances); // Only frees list, not contents
@@ -1078,7 +1145,7 @@ find_compatible_instance_on_node(const pe_resource_t *match_rsc,
     free_instance_list(rsc, instances);
 
     pe_rsc_trace(match_rsc, "No %s %s instance found compatible with %s on %s",
-                 ((role == RSC_ROLE_UNKNOWN)? "matching" : role2text(role)),
+                 ((role == pcmk_role_unknown)? "matching" : role2text(role)),
                  rsc->id, match_rsc->id, pe__node_name(node));
     return NULL;
 }
@@ -1089,7 +1156,7 @@ find_compatible_instance_on_node(const pe_resource_t *match_rsc,
  *
  * \param[in] match_rsc  Resource that instance must match
  * \param[in] rsc        Clone or bundle resource to check for matching instance
- * \param[in] role       If not RSC_ROLE_UNKNOWN, instance must match this role
+ * \param[in] role       If not pcmk_role_unknown, instance must match this role
  * \param[in] current    If true, compare instance's original node and role,
  *                       otherwise compare assigned next node and role
  *
@@ -1136,7 +1203,7 @@ pcmk__find_compatible_instance(const pe_resource_t *match_rsc,
  * \param[in]     first          'First' action in an ordering
  * \param[in]     then           'Then' action in an ordering
  * \param[in,out] then_instance  'Then' instance that has no interleave match
- * \param[in]     type           Group of enum pe_ordering flags to apply
+ * \param[in]     type           Group of enum pcmk__action_relation_flags
  * \param[in]     current        If true, "then" action is stopped or demoted
  *
  * \return true if \p then_instance was unassigned, otherwise false
@@ -1155,13 +1222,13 @@ unassign_if_mandatory(const pe_action_t *first, const pe_action_t *then,
     /* If the "first" action must be runnable, but there is no "first"
      * instance, the "then" instance must not be allowed to come up.
      */
-    } else if (pcmk_any_flags_set(type, pe_order_runnable_left
-                                        |pe_order_implies_then)) {
+    } else if (pcmk_any_flags_set(type, pcmk__ar_unrunnable_first_blocks
+                                        |pcmk__ar_first_implies_then)) {
         pe_rsc_info(then->rsc,
                     "Inhibiting %s from being active "
                     "because there is no %s instance to interleave",
                     then_instance->id, first->rsc->id);
-        return pcmk__assign_resource(then_instance, NULL, true);
+        return pcmk__assign_resource(then_instance, NULL, true, true);
     }
     return false;
 }
@@ -1204,15 +1271,15 @@ find_instance_action(const pe_action_t *action, const pe_resource_t *instance,
      * everything except promote and demote (which can only be performed on the
      * containerized resource).
      */
-    if ((for_first && !pcmk__str_any_of(action->task, CRMD_ACTION_STOP,
-                                        CRMD_ACTION_STOPPED, NULL))
+    if ((for_first && !pcmk__str_any_of(action->task, PCMK_ACTION_STOP,
+                                        PCMK_ACTION_STOPPED, NULL))
 
-        || (!for_first && pcmk__str_any_of(action->task, CRMD_ACTION_PROMOTE,
-                                           CRMD_ACTION_PROMOTED,
-                                           CRMD_ACTION_DEMOTE,
-                                           CRMD_ACTION_DEMOTED, NULL))) {
+        || (!for_first && pcmk__str_any_of(action->task, PCMK_ACTION_PROMOTE,
+                                           PCMK_ACTION_PROMOTED,
+                                           PCMK_ACTION_DEMOTE,
+                                           PCMK_ACTION_DEMOTED, NULL))) {
 
-        rsc = pcmk__get_rsc_in_container(instance);
+        rsc = pe__get_rsc_in_container(instance);
     }
     if (rsc == NULL) {
         rsc = instance; // No containerized resource, use instance itself
@@ -1225,11 +1292,12 @@ find_instance_action(const pe_action_t *action, const pe_resource_t *instance,
         return matching_action;
     }
 
-    if (pcmk_is_set(instance->flags, pe_rsc_orphan)
-        || pcmk__str_any_of(action_name, RSC_STOP, RSC_DEMOTE, NULL)) {
+    if (pcmk_is_set(instance->flags, pcmk_rsc_removed)
+        || pcmk__str_any_of(action_name, PCMK_ACTION_STOP, PCMK_ACTION_DEMOTE,
+                            NULL)) {
         crm_trace("No %s action found for %s%s",
                   action_name,
-                  pcmk_is_set(instance->flags, pe_rsc_orphan)? "orphan " : "",
+                  pcmk_is_set(instance->flags, pcmk_rsc_removed)? "orphan " : "",
                   instance->id);
     } else {
         crm_err("No %s action found for %s to interleave (bug?)",
@@ -1257,15 +1325,16 @@ orig_action_name(const pe_action_t *action)
     const pe_resource_t *instance = action->rsc->children->data; // Any instance
     char *action_type = NULL;
     const char *action_name = action->task;
-    enum action_tasks orig_task = no_action;
+    enum action_tasks orig_task = pcmk_action_unspecified;
 
-    if (pcmk__strcase_any_of(action->task, CRMD_ACTION_NOTIFY,
-                             CRMD_ACTION_NOTIFIED, NULL)) {
+    if (pcmk__strcase_any_of(action->task, PCMK_ACTION_NOTIFY,
+                             PCMK_ACTION_NOTIFIED, NULL)) {
         // action->uuid is RSC_(confirmed-){pre,post}_notify_ACTION_INTERVAL
         CRM_CHECK(parse_op_key(action->uuid, NULL, &action_type, NULL),
-                  return task2text(no_action));
+                  return task2text(pcmk_action_unspecified));
         action_name = strstr(action_type, "_notify_");
-        CRM_CHECK(action_name != NULL, return task2text(no_action));
+        CRM_CHECK(action_name != NULL,
+                  return task2text(pcmk_action_unspecified));
         action_name += strlen("_notify_");
     }
     orig_task = get_complex_task(instance, action_name);
@@ -1286,10 +1355,10 @@ orig_action_name(const pe_action_t *action)
  * \param[in,out] then      'Then' action in an ordering
  * \param[in]     node      If not NULL, limit scope of ordering to this node
  * \param[in]     filter    Action flags to limit scope of certain updates (may
- *                          include pe_action_optional to affect only mandatory
- *                          actions, and pe_action_runnable to affect only
- *                          runnable actions)
- * \param[in]     type      Group of enum pe_ordering flags to apply
+ *                          include pcmk_action_optional to affect only
+ *                          mandatory actions, and pcmk_action_runnable to
+ *                          affect only runnable actions)
+ * \param[in]     type      Group of enum pcmk__action_relation_flags to apply
  *
  * \return Group of enum pcmk__updated flags indicating what was updated
  */
@@ -1303,9 +1372,9 @@ update_interleaved_actions(pe_action_t *first, pe_action_t *then,
     const char *orig_first_task = orig_action_name(first);
 
     // Stops and demotes must be interleaved with instance on current node
-    bool current = pcmk__ends_with(first->uuid, "_" CRMD_ACTION_STOPPED "_0")
+    bool current = pcmk__ends_with(first->uuid, "_" PCMK_ACTION_STOPPED "_0")
                    || pcmk__ends_with(first->uuid,
-                                      "_" CRMD_ACTION_DEMOTED "_0");
+                                      "_" PCMK_ACTION_DEMOTED "_0");
 
     // Update the specified actions for each "then" instance individually
     instances = get_instance_list(then->rsc);
@@ -1319,7 +1388,7 @@ update_interleaved_actions(pe_action_t *first, pe_action_t *then,
         // Find a "first" instance to interleave with this "then" instance
         first_instance = pcmk__find_compatible_instance(then_instance,
                                                         first->rsc,
-                                                        RSC_ROLE_UNKNOWN,
+                                                        pcmk_role_unknown,
                                                         current);
 
         if (first_instance == NULL) { // No instance can be interleaved
@@ -1383,7 +1452,8 @@ can_interleave_actions(const pe_action_t *first, const pe_action_t *then)
         return false;
     }
 
-    if ((first->rsc->variant < pe_clone) || (then->rsc->variant < pe_clone)) {
+    if ((first->rsc->variant < pcmk_rsc_variant_clone)
+        || (then->rsc->variant < pcmk_rsc_variant_clone)) {
         crm_trace("Not interleaving %s with %s: not clones or bundles",
                   first->uuid, then->uuid);
         return false;
@@ -1418,10 +1488,10 @@ can_interleave_actions(const pe_action_t *first, const pe_action_t *then)
  * \param[in]     node      If not NULL, limit scope of ordering to this node
  * \param[in]     flags     Action flags for \p first for ordering purposes
  * \param[in]     filter    Action flags to limit scope of certain updates (may
- *                          include pe_action_optional to affect only mandatory
- *                          actions, and pe_action_runnable to affect only
- *                          runnable actions)
- * \param[in]     type      Group of enum pe_ordering flags to apply
+ *                          include pcmk_action_optional to affect only
+ *                          mandatory actions, and pcmk_action_runnable to
+ *                          affect only runnable actions)
+ * \param[in]     type      Group of enum pcmk__action_relation_flags to apply
  *
  * \return Group of enum pcmk__updated flags indicating what was updated
  */
@@ -1443,7 +1513,7 @@ update_noninterleaved_actions(pe_resource_t *instance, pe_action_t *first,
 
     // Check whether action is runnable
     instance_flags = instance->cmds->action_flags(instance_action, node);
-    if (!pcmk_is_set(instance_flags, pe_action_runnable)) {
+    if (!pcmk_is_set(instance_flags, pcmk_action_runnable)) {
         return changed;
     }
 
@@ -1480,10 +1550,10 @@ update_noninterleaved_actions(pe_resource_t *instance, pe_action_t *first,
  *                          (only used when interleaving instances)
  * \param[in]     flags     Action flags for \p first for ordering purposes
  * \param[in]     filter    Action flags to limit scope of certain updates (may
- *                          include pe_action_optional to affect only mandatory
- *                          actions, and pe_action_runnable to affect only
- *                          runnable actions)
- * \param[in]     type      Group of enum pe_ordering flags to apply
+ *                          include pcmk_action_optional to affect only
+ *                          mandatory actions, and pcmk_action_runnable to
+ *                          affect only runnable actions)
+ * \param[in]     type      Group of enum pcmk__action_relation_flags to apply
  * \param[in,out] data_set  Cluster working set
  *
  * \return Group of enum pcmk__updated flags indicating what was updated
@@ -1494,6 +1564,8 @@ pcmk__instance_update_ordered_actions(pe_action_t *first, pe_action_t *then,
                                       uint32_t filter, uint32_t type,
                                       pe_working_set_t *data_set)
 {
+    CRM_ASSERT((first != NULL) && (then != NULL) && (data_set != NULL));
+
     if (then->rsc == NULL) {
         return pcmk__updated_none;
 
@@ -1536,25 +1608,26 @@ pcmk__instance_update_ordered_actions(pe_action_t *first, pe_action_t *then,
  *
  * \return Flags appropriate to \p action on \p node
  */
-enum pe_action_flags
+uint32_t
 pcmk__collective_action_flags(pe_action_t *action, const GList *instances,
                               const pe_node_t *node)
 {
     bool any_runnable = false;
-    enum pe_action_flags flags;
     const char *action_name = orig_action_name(action);
 
     // Set original assumptions (optional and runnable may be cleared below)
-    flags = pe_action_optional|pe_action_runnable|pe_action_pseudo;
+    uint32_t flags = pcmk_action_optional
+                     |pcmk_action_runnable
+                     |pcmk_action_pseudo;
 
     for (const GList *iter = instances; iter != NULL; iter = iter->next) {
         const pe_resource_t *instance = iter->data;
         const pe_node_t *instance_node = NULL;
         pe_action_t *instance_action = NULL;
-        enum pe_action_flags instance_flags;
+        uint32_t instance_flags;
 
         // Node is relevant only to primitive instances
-        if (instance->variant == pe_native) {
+        if (instance->variant == pcmk_rsc_variant_primitive) {
             instance_node = node;
         }
 
@@ -1573,16 +1646,17 @@ pcmk__collective_action_flags(pe_action_t *action, const GList *instances,
         instance_flags = instance->cmds->action_flags(instance_action, node);
 
         // If any instance action is mandatory, so is the collective action
-        if (pcmk_is_set(flags, pe_action_optional)
-            && !pcmk_is_set(instance_flags, pe_action_optional)) {
+        if (pcmk_is_set(flags, pcmk_action_optional)
+            && !pcmk_is_set(instance_flags, pcmk_action_optional)) {
             pe_rsc_trace(instance, "%s is mandatory because %s is",
                          action->uuid, instance_action->uuid);
-            pe__clear_action_summary_flags(flags, action, pe_action_optional);
-            pe__clear_action_flags(action, pe_action_optional);
+            pe__clear_action_summary_flags(flags, action,
+                                           pcmk_action_optional);
+            pe__clear_action_flags(action, pcmk_action_optional);
         }
 
         // If any instance action is runnable, so is the collective action
-        if (pcmk_is_set(instance_flags, pe_action_runnable)) {
+        if (pcmk_is_set(instance_flags, pcmk_action_runnable)) {
             any_runnable = true;
         }
     }
@@ -1591,69 +1665,11 @@ pcmk__collective_action_flags(pe_action_t *action, const GList *instances,
         pe_rsc_trace(action->rsc,
                      "%s is not runnable because no instance can run %s",
                      action->uuid, action_name);
-        pe__clear_action_summary_flags(flags, action, pe_action_runnable);
+        pe__clear_action_summary_flags(flags, action, pcmk_action_runnable);
         if (node == NULL) {
-            pe__clear_action_flags(action, pe_action_runnable);
+            pe__clear_action_flags(action, pcmk_action_runnable);
         }
     }
 
     return flags;
-}
-
-/*!
- * \internal
- * \brief Add a collective resource's colocations to a list for an instance
- *
- * \param[in,out] list        Colocation list to add to
- * \param[in]     instance    Clone or bundle instance or instance group member
- * \param[in]     collective  Clone or bundle resource with colocations to add
- * \param[in]     with_this   If true, add collective's "with this" colocations,
- *                            otherwise add its "this with" colocations
- */
-void
-pcmk__add_collective_constraints(GList **list, const pe_resource_t *instance,
-                                 const pe_resource_t *collective,
-                                 bool with_this)
-{
-    const GList *colocations = NULL;
-    bool everywhere = false;
-
-    CRM_CHECK((list != NULL) && (instance != NULL), return);
-
-    if (collective == NULL) {
-        return;
-    }
-    switch (collective->variant) {
-        case pe_clone:
-        case pe_container:
-            break;
-        default:
-            return;
-    }
-
-    everywhere = can_run_everywhere(collective);
-
-    if (with_this) {
-        colocations = collective->rsc_cons_lhs;
-    } else {
-        colocations = collective->rsc_cons;
-    }
-
-    for (const GList *iter = colocations; iter != NULL; iter = iter->next) {
-        const pcmk__colocation_t *colocation = iter->data;
-
-        if (with_this
-            && !pcmk__colocation_has_influence(colocation, instance)) {
-           continue;
-        }
-        if (!everywhere || (colocation->score < 0)
-            || (!with_this && (colocation->score == INFINITY))) {
-
-            if (with_this) {
-                pcmk__add_with_this(list, colocation);
-            } else {
-                pcmk__add_this_with(list, colocation);
-            }
-        }
-    }
 }

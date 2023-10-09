@@ -122,8 +122,12 @@ pcmk__primitive_assign: mysql-fs allocation score on rhos4-node4: -INFINITY
 pcmk__primitive_assign: mysql-vip allocation score on rhos4-node3: 300
 pcmk__primitive_assign: mysql-vip allocation score on rhos4-node4: -INFINITY
 pcmk__primitive_assign: qpidd:0 allocation score on rhos4-node3: -INFINITY
+pcmk__primitive_assign: qpidd:0 allocation score on rhos4-node3: -INFINITY
+pcmk__primitive_assign: qpidd:0 allocation score on rhos4-node4: -INFINITY
 pcmk__primitive_assign: qpidd:0 allocation score on rhos4-node4: -INFINITY
 pcmk__primitive_assign: qpidd:1 allocation score on rhos4-node3: -INFINITY
+pcmk__primitive_assign: qpidd:1 allocation score on rhos4-node3: -INFINITY
+pcmk__primitive_assign: qpidd:1 allocation score on rhos4-node4: -INFINITY
 pcmk__primitive_assign: qpidd:1 allocation score on rhos4-node4: -INFINITY
 pcmk__primitive_assign: virt-fencing allocation score on rhos4-node3: 100
 pcmk__primitive_assign: virt-fencing allocation score on rhos4-node4: 0

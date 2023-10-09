@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,9 @@
 
 #ifndef PCMK__CRM_CLUSTER_COMPAT__H
 #  define PCMK__CRM_CLUSTER_COMPAT__H
+
+#include <libxml/tree.h>    // xmlNode
+#include <crm/cluster.h>    // crm_node_t
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,6 +32,9 @@ int crm_terminate_member(int nodeid, const char *uname, void *unused);
 // \deprecated Use stonith_api_kick() from libstonithd instead
 int crm_terminate_member_no_mainloop(int nodeid, const char *uname,
                                      int *connection);
+
+// \deprecated Use crm_xml_add(xml, attr, crm_peer_uuid(node)) instead
+void set_uuid(xmlNode *xml, const char *attr, crm_node_t *node);
 
 #ifdef __cplusplus
 }

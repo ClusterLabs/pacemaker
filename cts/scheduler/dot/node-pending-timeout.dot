@@ -1,0 +1,7 @@
+ digraph "g" {
+"st-sbd_monitor_0 node-1" -> "st-sbd_start_0 node-1" [ style = bold]
+"st-sbd_monitor_0 node-1" [ style=bold color="green" fontcolor="black"]
+"st-sbd_start_0 node-1" [ style=bold color="green" fontcolor="black"]
+"stonith 'reboot' node-2" -> "st-sbd_start_0 node-1" [ style = bold]
+"stonith 'reboot' node-2" [ style=bold color="green" fontcolor="black"]
+}

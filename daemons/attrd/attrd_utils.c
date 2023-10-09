@@ -56,26 +56,22 @@ attrd_clear_requesting_shutdown(void)
 
 /*!
  * \internal
- * \brief Check whether we're currently requesting shutdown
+ * \brief Check whether local attribute manager is shutting down
  *
- * \return true if requesting shutdown, false otherwise
+ * \param[in] if_requested  Also consider presence of "shutdown" attribute
+ *
+ * \return \c true if local attribute manager has begun shutdown sequence
+ *         or (if \p if_requested is \c true) whether local node has a nonzero
+ *         "shutdown" attribute set, otherwise \c false
+ * \note Most callers should pass \c false for \p if_requested, because the
+ *       attribute manager needs to continue performing while the controller is
+ *       shutting down, and even needs to be eligible for election in case all
+ *       nodes are shutting down.
  */
 bool
-attrd_requesting_shutdown(void)
+attrd_shutting_down(bool if_requested)
 {
-    return requesting_shutdown;
-}
-
-/*!
- * \internal
- * \brief Check whether we're currently shutting down
- *
- * \return true if shutting down, false otherwise
- */
-bool
-attrd_shutting_down(void)
-{
-    return shutting_down;
+    return shutting_down || (if_requested && requesting_shutdown);
 }
 
 /*!
@@ -135,39 +131,6 @@ void
 attrd_run_mainloop(void)
 {
     g_main_loop_run(mloop);
-}
-
-void
-attrd_cib_disconnect(void)
-{
-    CRM_CHECK(the_cib != NULL, return);
-    the_cib->cmds->del_notify_callback(the_cib, T_CIB_REPLACE_NOTIFY, attrd_cib_replaced_cb);
-    the_cib->cmds->del_notify_callback(the_cib, T_CIB_DIFF_NOTIFY, attrd_cib_updated_cb);
-    cib__clean_up_connection(&the_cib);
-}
-
-void
-attrd_cib_replaced_cb(const char *event, xmlNode * msg)
-{
-    int change_section = cib_change_section_nodes | cib_change_section_status | cib_change_section_alerts;
-
-    if (attrd_requesting_shutdown() || attrd_shutting_down()) {
-        return;
-    }
-
-    crm_element_value_int(msg, F_CIB_CHANGE_SECTION, &change_section);
-
-    if (attrd_election_won()) {
-        if (change_section & (cib_change_section_nodes | cib_change_section_status)) {
-            crm_notice("Updating all attributes after %s event", event);
-            attrd_write_attributes(true, false);
-        }
-    }
-
-    if (change_section & cib_change_section_alerts) {
-        // Check for changes in alerts
-        mainloop_set_trigger(attrd_config_read);
-    }
 }
 
 /* strlen("value") */

@@ -66,7 +66,7 @@ extern "C" {
  * >=3.0.13: Fail counts include operation name and interval
  * >=3.2.0:  DC supports PCMK_EXEC_INVALID and PCMK_EXEC_NOT_CONNECTED
  */
-#  define CRM_FEATURE_SET		"3.17.4"
+#  define CRM_FEATURE_SET		"3.18.1"
 
 /* Pacemaker's CPG protocols use fixed-width binary fields for the sender and
  * recipient of a CPG message. This imposes an arbitrary limit on cluster node
@@ -78,8 +78,6 @@ extern "C" {
 #  define CRM_META			"CRM_meta"
 
 extern char *crm_system_name;
-
-/* *INDENT-OFF* */
 
 // How we represent "infinite" scores
 #  define CRM_SCORE_INFINITY    1000000
@@ -110,6 +108,7 @@ extern char *crm_system_name;
 #  define CRM_SYSTEM_MCP	"pacemakerd"
 
 // Names of internally generated node attributes
+// @TODO Replace these with PCMK_NODE_ATTR_*
 #  define CRM_ATTR_UNAME            "#uname"
 #  define CRM_ATTR_ID               "#id"
 #  define CRM_ATTR_KIND             "#kind"
@@ -140,22 +139,19 @@ extern char *crm_system_name;
 #  define CRM_OP_QUIT		"quit"
 #  define CRM_OP_LOCAL_SHUTDOWN 	"start_shutdown"
 #  define CRM_OP_SHUTDOWN_REQ	"req_shutdown"
-#  define CRM_OP_SHUTDOWN 	"do_shutdown"
-#  define CRM_OP_FENCE	 	"stonith"
+#  define CRM_OP_SHUTDOWN   PCMK_ACTION_DO_SHUTDOWN
 #  define CRM_OP_REGISTER		"register"
 #  define CRM_OP_IPC_FWD		"ipc_fwd"
 #  define CRM_OP_INVOKE_LRM	"lrm_invoke"
 #  define CRM_OP_LRM_REFRESH "lrm_refresh" //!< Deprecated since 1.1.10
-#  define CRM_OP_LRM_DELETE	"lrm_delete"
+#  define CRM_OP_LRM_DELETE         PCMK_ACTION_LRM_DELETE
 #  define CRM_OP_LRM_FAIL		"lrm_fail"
 #  define CRM_OP_PROBED		"probe_complete"
 #  define CRM_OP_REPROBE		"probe_again"
-#  define CRM_OP_CLEAR_FAILCOUNT  "clear_failcount"
+#  define CRM_OP_CLEAR_FAILCOUNT    PCMK_ACTION_CLEAR_FAILCOUNT
 #  define CRM_OP_REMOTE_STATE     "remote_state"
-#  define CRM_OP_RELAXED_SET  "one-or-more"
-#  define CRM_OP_RELAXED_CLONE  "clone-one-or-more"
 #  define CRM_OP_RM_NODE_CACHE "rm_node_cache"
-#  define CRM_OP_MAINTENANCE_NODES "maintenance_nodes"
+#  define CRM_OP_MAINTENANCE_NODES  PCMK_ACTION_MAINTENANCE_NODES
 
 /* Possible cluster membership states */
 #  define CRMD_JOINSTATE_DOWN           "down"
@@ -163,69 +159,10 @@ extern char *crm_system_name;
 #  define CRMD_JOINSTATE_MEMBER         "member"
 #  define CRMD_JOINSTATE_NACK           "banned"
 
-#  define CRMD_ACTION_DELETE		"delete"
-#  define CRMD_ACTION_CANCEL		"cancel"
-
-#  define CRMD_ACTION_RELOAD		"reload"
-#  define CRMD_ACTION_RELOAD_AGENT	"reload-agent"
-#  define CRMD_ACTION_MIGRATE		"migrate_to"
-#  define CRMD_ACTION_MIGRATED		"migrate_from"
-
-#  define CRMD_ACTION_START		"start"
-#  define CRMD_ACTION_STARTED		"running"
-
-#  define CRMD_ACTION_STOP		"stop"
-#  define CRMD_ACTION_STOPPED		"stopped"
-
-#  define CRMD_ACTION_PROMOTE		"promote"
-#  define CRMD_ACTION_PROMOTED		"promoted"
-#  define CRMD_ACTION_DEMOTE		"demote"
-#  define CRMD_ACTION_DEMOTED		"demoted"
-
-#  define CRMD_ACTION_NOTIFY		"notify"
-#  define CRMD_ACTION_NOTIFIED		"notified"
-
-#  define CRMD_ACTION_STATUS		"monitor"
-#  define CRMD_ACTION_METADATA		"meta-data"
-#  define CRMD_METADATA_CALL_TIMEOUT   30000
-
-/* short names */
-#  define RSC_DELETE	CRMD_ACTION_DELETE
-#  define RSC_CANCEL	CRMD_ACTION_CANCEL
-
-#  define RSC_MIGRATE	CRMD_ACTION_MIGRATE
-#  define RSC_MIGRATED	CRMD_ACTION_MIGRATED
-
-#  define RSC_START	CRMD_ACTION_START
-#  define RSC_STARTED	CRMD_ACTION_STARTED
-
-#  define RSC_STOP	CRMD_ACTION_STOP
-#  define RSC_STOPPED	CRMD_ACTION_STOPPED
-
-#  define RSC_PROMOTE	CRMD_ACTION_PROMOTE
-#  define RSC_PROMOTED	CRMD_ACTION_PROMOTED
-#  define RSC_DEMOTE	CRMD_ACTION_DEMOTE
-#  define RSC_DEMOTED	CRMD_ACTION_DEMOTED
-
-#  define RSC_NOTIFY	CRMD_ACTION_NOTIFY
-#  define RSC_NOTIFIED	CRMD_ACTION_NOTIFIED
-
-#  define RSC_STATUS	CRMD_ACTION_STATUS
-#  define RSC_METADATA	CRMD_ACTION_METADATA
-/* *INDENT-ON* */
-
+#  include <crm/common/actions.h>
 #  include <crm/common/cib.h>
 #  include <crm/common/logging.h>
 #  include <crm/common/util.h>
-
-static inline const char *
-crm_action_str(const char *task, guint interval_ms) {
-    if ((task != NULL) && (interval_ms == 0)
-        && (strcasecmp(task, RSC_STATUS) == 0)) {
-        return "probe";
-    }
-    return task;
-}
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 #include <crm/crm_compat.h>

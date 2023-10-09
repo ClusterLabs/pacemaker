@@ -9,7 +9,6 @@
 
 #include <crm_internal.h>
 #include <crm/msg_xml.h>
-#include <crm/lrmd.h>       // lrmd_event_data_t
 #include <crm/common/xml_internal.h>
 #include <pacemaker-internal.h>
 #include <pacemaker.h>
@@ -84,6 +83,82 @@ pcmk__copy_node_table(GHashTable *nodes)
 
 /*!
  * \internal
+ * \brief Free a table of node tables
+ *
+ * \param[in,out] data  Table to free
+ *
+ * \note This is a \c GDestroyNotify wrapper for \c g_hash_table_destroy().
+ */
+static void
+destroy_node_tables(gpointer data)
+{
+    g_hash_table_destroy((GHashTable *) data);
+}
+
+/*!
+ * \internal
+ * \brief Recursively copy the node tables of a resource
+ *
+ * Build a hash table containing copies of the allowed nodes tables of \p rsc
+ * and its entire tree of descendants. The key is the resource ID, and the value
+ * is a copy of the resource's node table.
+ *
+ * \param[in]     rsc   Resource whose node table to copy
+ * \param[in,out] copy  Where to store the copied node tables
+ *
+ * \note \p *copy should be \c NULL for the top-level call.
+ * \note The caller is responsible for freeing \p copy using
+ *       \c g_hash_table_destroy().
+ */
+void
+pcmk__copy_node_tables(const pe_resource_t *rsc, GHashTable **copy)
+{
+    CRM_ASSERT((rsc != NULL) && (copy != NULL));
+
+    if (*copy == NULL) {
+        *copy = pcmk__strkey_table(NULL, destroy_node_tables);
+    }
+
+    g_hash_table_insert(*copy, rsc->id,
+                        pcmk__copy_node_table(rsc->allowed_nodes));
+
+    for (const GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        pcmk__copy_node_tables((const pe_resource_t *) iter->data, copy);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Recursively restore the node tables of a resource from backup
+ *
+ * Given a hash table containing backup copies of the allowed nodes tables of
+ * \p rsc and its entire tree of descendants, replace the resources' current
+ * node tables with the backed-up copies.
+ *
+ * \param[in,out] rsc     Resource whose node tables to restore
+ * \param[in]     backup  Table of backup node tables (created by
+ *                        \c pcmk__copy_node_tables())
+ *
+ * \note This function frees the resources' current node tables.
+ */
+void
+pcmk__restore_node_tables(pe_resource_t *rsc, GHashTable *backup)
+{
+    CRM_ASSERT((rsc != NULL) && (backup != NULL));
+
+    g_hash_table_destroy(rsc->allowed_nodes);
+
+    // Copy to avoid danger with multiple restores
+    rsc->allowed_nodes = g_hash_table_lookup(backup, rsc->id);
+    rsc->allowed_nodes = pcmk__copy_node_table(rsc->allowed_nodes);
+
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        pcmk__restore_node_tables((pe_resource_t *) iter->data, backup);
+    }
+}
+
+/*!
+ * \internal
  * \brief Copy a list of node objects
  *
  * \param[in] list   List to copy
@@ -96,9 +171,9 @@ pcmk__copy_node_list(const GList *list, bool reset)
 {
     GList *result = NULL;
 
-    for (const GList *gIter = list; gIter != NULL; gIter = gIter->next) {
+    for (const GList *iter = list; iter != NULL; iter = iter->next) {
         pe_node_t *new_node = NULL;
-        pe_node_t *this_node = (pe_node_t *) gIter->data;
+        pe_node_t *this_node = iter->data;
 
         new_node = pe__copy_node(this_node);
         if (reset) {
@@ -111,10 +186,10 @@ pcmk__copy_node_list(const GList *list, bool reset)
 
 /*!
  * \internal
- * \brief Compare two nodes for allocation desirability
+ * \brief Compare two nodes for assignment preference
  *
- * Given two nodes, check which one is more preferred by allocation criteria
- * such as node weight and utilization.
+ * Given two nodes, check which one is more preferred by assignment criteria
+ * such as node score and utilization.
  *
  * \param[in] a     First node to compare
  * \param[in] b     Second node to compare
@@ -130,8 +205,8 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
     const pe_node_t *node2 = (const pe_node_t *) b;
     const pe_node_t *active = (const pe_node_t *) data;
 
-    int node1_weight = 0;
-    int node2_weight = 0;
+    int node1_score = -INFINITY;
+    int node2_score = -INFINITY;
 
     int result = 0;
 
@@ -142,28 +217,32 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
         return -1;
     }
 
-    // Compare node weights
+    // Compare node scores
 
-    node1_weight = pcmk__node_available(node1, false, false)? node1->weight : -INFINITY;
-    node2_weight = pcmk__node_available(node2, false, false)? node2->weight : -INFINITY;
+    if (pcmk__node_available(node1, false, false)) {
+        node1_score = node1->weight;
+    }
+    if (pcmk__node_available(node2, false, false)) {
+        node2_score = node2->weight;
+    }
 
-    if (node1_weight > node2_weight) {
-        crm_trace("%s (%d) > %s (%d) : weight",
-                  pe__node_name(node1), node1_weight, pe__node_name(node2),
-                  node2_weight);
+    if (node1_score > node2_score) {
+        crm_trace("%s (%d) > %s (%d) : score",
+                  pe__node_name(node1), node1_score, pe__node_name(node2),
+                  node2_score);
         return -1;
     }
 
-    if (node1_weight < node2_weight) {
-        crm_trace("%s (%d) < %s (%d) : weight",
-                  pe__node_name(node1), node1_weight, pe__node_name(node2),
-                  node2_weight);
+    if (node1_score < node2_score) {
+        crm_trace("%s (%d) < %s (%d) : score",
+                  pe__node_name(node1), node1_score, pe__node_name(node2),
+                  node2_score);
         return 1;
     }
 
-    crm_trace("%s (%d) == %s (%d) : weight",
-              pe__node_name(node1), node1_weight, pe__node_name(node2),
-              node2_weight);
+    crm_trace("%s (%d) == %s (%d) : score",
+              pe__node_name(node1), node1_score, pe__node_name(node2),
+              node2_score);
 
     // If appropriate, compare node utilization
 
@@ -186,7 +265,7 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
         }
     }
 
-    // Compare number of allocated resources
+    // Compare number of resources already assigned to node
 
     if (node1->details->num_resources < node2->details->num_resources) {
         crm_trace("%s (%d) > %s (%d) : resources",
@@ -204,12 +283,12 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
     // Check whether one node is already running desired resource
 
     if (active != NULL) {
-        if (active->details == node1->details) {
+        if (pe__same_node(active, node1)) {
             crm_trace("%s (%d) > %s (%d) : active",
                       pe__node_name(node1), node1->details->num_resources,
                       pe__node_name(node2), node2->details->num_resources);
             return -1;
-        } else if (active->details == node2->details) {
+        } else if (pe__same_node(active, node2)) {
             crm_trace("%s (%d) < %s (%d) : active",
                       pe__node_name(node1), node1->details->num_resources,
                       pe__node_name(node2), node2->details->num_resources);
@@ -225,7 +304,7 @@ equal:
 
 /*!
  * \internal
- * \brief Sort a list of nodes by allocation desirability
+ * \brief Sort a list of nodes by assigment preference
  *
  * \param[in,out] nodes        Node list to sort
  * \param[in]     active_node  Node where resource being assigned is active
@@ -315,8 +394,7 @@ pcmk__apply_node_health(pe_working_set_t *data_set)
                                          PCMK__META_ALLOW_UNHEALTHY_NODES));
             }
             if (constrain) {
-                pcmk__new_location(strategy_str, rsc, health, NULL, node,
-                                   data_set);
+                pcmk__new_location(strategy_str, rsc, health, NULL, node);
             } else {
                 pe_rsc_trace(rsc, "%s is immune from health ban on %s",
                              rsc->id, pe__node_name(node));
@@ -347,5 +425,5 @@ pcmk__top_allowed_node(const pe_resource_t *rsc, const pe_node_t *node)
     } else {
         allowed_nodes = rsc->parent->allowed_nodes;
     }
-    return pe_hash_table_lookup(allowed_nodes, node->details->id);
+    return g_hash_table_lookup(allowed_nodes, node->details->id);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,6 +16,8 @@
 
 //! Triggers transition graph processing
 static crm_trigger_t *transition_trigger = NULL;
+
+static GHashTable *node_pending_timers = NULL;
 
 gboolean
 stop_te_timer(pcmk__graph_action_t *action)
@@ -132,11 +134,13 @@ static struct abort_timer_s {
 static gboolean
 abort_timer_popped(gpointer data)
 {
-    if (AM_I_DC && (abort_timer.aborted == FALSE)) {
-        abort_transition(abort_timer.priority, abort_timer.action,
-                         abort_timer.text, NULL);
+    struct abort_timer_s *abort_timer = (struct abort_timer_s *) data;
+
+    if (AM_I_DC && (abort_timer->aborted == FALSE)) {
+        abort_transition(abort_timer->priority, abort_timer->action,
+                         abort_timer->text, NULL);
     }
-    abort_timer.id = 0;
+    abort_timer->id = 0;
     return FALSE; // do not immediately reschedule timer
 }
 
@@ -158,7 +162,142 @@ abort_after_delay(int abort_priority, enum pcmk__graph_next abort_action,
     abort_timer.priority = abort_priority;
     abort_timer.action = abort_action;
     abort_timer.text = abort_text;
-    abort_timer.id = g_timeout_add(delay_ms, abort_timer_popped, NULL);
+    abort_timer.id = g_timeout_add(delay_ms, abort_timer_popped, &abort_timer);
+}
+
+static void
+free_node_pending_timer(gpointer data)
+{
+    struct abort_timer_s *node_pending_timer = (struct abort_timer_s *) data;
+
+    if (node_pending_timer->id != 0) {
+        g_source_remove(node_pending_timer->id);
+        node_pending_timer->id = 0;
+    }
+
+    free(node_pending_timer);
+}
+
+static gboolean
+node_pending_timer_popped(gpointer key)
+{
+    struct abort_timer_s *node_pending_timer = NULL;
+
+    if (node_pending_timers == NULL) {
+        return FALSE;
+    }
+
+    node_pending_timer = g_hash_table_lookup(node_pending_timers, key);
+    if (node_pending_timer == NULL) {
+        return FALSE;
+    }
+
+    crm_warn("Node with id '%s' pending timed out (%us) on joining the process "
+             "group",
+             (const char *) key, controld_globals.node_pending_timeout);
+
+    if (controld_globals.node_pending_timeout > 0) {
+        abort_timer_popped(node_pending_timer);
+    }
+
+    g_hash_table_remove(node_pending_timers, key);
+
+    return FALSE; // do not reschedule timer
+}
+
+static void
+init_node_pending_timer(const crm_node_t *node, guint timeout)
+{
+    struct abort_timer_s *node_pending_timer = NULL;
+    char *key = NULL;
+
+    if (node->uuid == NULL) {
+        return;
+    }
+
+    if (node_pending_timers == NULL) {
+        node_pending_timers = pcmk__strikey_table(free,
+                                                  free_node_pending_timer);
+
+    // The timer is somehow already existing
+    } else if (g_hash_table_lookup(node_pending_timers, node->uuid) != NULL) {
+        return;
+    }
+
+    crm_notice("Waiting for pending %s with id '%s' to join the process "
+               "group (timeout=%us)",
+               node->uname ? node->uname : "node", node->uuid,
+               controld_globals.node_pending_timeout);
+
+    node_pending_timer = calloc(1, sizeof(struct abort_timer_s));
+    CRM_ASSERT(node_pending_timer != NULL);
+
+    node_pending_timer->aborted = FALSE;
+    node_pending_timer->priority = INFINITY;
+    node_pending_timer->action = pcmk__graph_restart;
+    node_pending_timer->text = "Node pending timed out";
+
+    key = strdup(node->uuid);
+    CRM_ASSERT(key != NULL);
+
+    g_hash_table_replace(node_pending_timers, key, node_pending_timer);
+
+    node_pending_timer->id = g_timeout_add_seconds(timeout,
+                                                   node_pending_timer_popped,
+                                                   key);
+    CRM_ASSERT(node_pending_timer->id != 0);
+}
+
+static void
+remove_node_pending_timer(const char *node_uuid)
+{
+    if (node_pending_timers == NULL) {
+        return;
+    }
+
+    g_hash_table_remove(node_pending_timers, node_uuid);
+}
+
+void
+controld_node_pending_timer(const crm_node_t *node)
+{
+    long long remaining_timeout = 0;
+
+    /* If the node is not an active cluster node, or is already part of CPG, or
+     * node-pending-timeout is disabled, free any node pending timer for it.
+     */
+    if (pcmk_is_set(node->flags, crm_remote_node)
+        || (node->when_member <= 0) || (node->when_online > 0)
+        || (controld_globals.node_pending_timeout == 0)) {
+        remove_node_pending_timer(node->uuid);
+        return;
+    }
+
+    // Node is a cluster member but offline in CPG
+
+    remaining_timeout = node->when_member - time(NULL)
+                        + controld_globals.node_pending_timeout;
+
+    /* It already passed node pending timeout somehow.
+     * Free any node pending timer of it.
+     */
+    if (remaining_timeout <= 0) {
+        remove_node_pending_timer(node->uuid);
+        return;
+    }
+
+    init_node_pending_timer(node, remaining_timeout);
+}
+
+void
+controld_free_node_pending_timers(void)
+{
+    if (node_pending_timers == NULL) {
+        return;
+    }
+
+    g_hash_table_destroy(node_pending_timers);
+    node_pending_timers = NULL;
 }
 
 static const char *
@@ -246,7 +385,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
         const xmlNode *search = NULL;
 
         for(search = reason; search; search = search->parent) {
-            if (pcmk__str_eq(XML_TAG_DIFF, TYPE(search), pcmk__str_casei)) {
+            if (pcmk__xe_is(search, XML_TAG_DIFF)) {
                 diff = search;
                 break;
             }
@@ -255,7 +394,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
         if(diff) {
             xml_patch_versions(diff, add, del);
             for(search = reason; search; search = search->parent) {
-                if (pcmk__str_eq(XML_DIFF_CHANGE, TYPE(search), pcmk__str_casei)) {
+                if (pcmk__xe_is(search, XML_DIFF_CHANGE)) {
                     change = search;
                     break;
                 }
@@ -276,14 +415,13 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
 
         do_crm_log(level, "Transition %d aborted by %s.%s: %s "
                    CRM_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",
-                   controld_globals.transition_graph->id, TYPE(reason),
+                   controld_globals.transition_graph->id, reason->name,
                    ID(reason), abort_text, add[0], add[1], add[2], fn, line,
                    (const char *) local_path->str,
                    pcmk__btoa(controld_globals.transition_graph->complete));
         g_string_free(local_path, TRUE);
 
     } else {
-        const char *kind = NULL;
         const char *op = crm_element_value(change, XML_DIFF_OP);
         const char *path = crm_element_value(change, XML_DIFF_PATH);
 
@@ -297,9 +435,9 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
                     reason = reason->children;
                 }
             }
+            CRM_CHECK(reason != NULL, goto done);
         }
 
-        kind = TYPE(reason);
         if(strcmp(op, "delete") == 0) {
             const char *shortpath = strrchr(path, '/');
 
@@ -310,7 +448,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
                        add[0], add[1], add[2], fn, line, path,
                        pcmk__btoa(controld_globals.transition_graph->complete));
 
-        } else if (pcmk__str_eq(XML_CIB_TAG_NVPAIR, kind, pcmk__str_none)) {
+        } else if (pcmk__xe_is(reason, XML_CIB_TAG_NVPAIR)) {
             do_crm_log(level, "Transition %d aborted by %s doing %s %s=%s: %s "
                        CRM_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",
                        controld_globals.transition_graph->id,
@@ -320,7 +458,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
                        abort_text, add[0], add[1], add[2], fn, line, path,
                        pcmk__btoa(controld_globals.transition_graph->complete));
 
-        } else if (pcmk__str_eq(XML_LRM_TAG_RSC_OP, kind, pcmk__str_none)) {
+        } else if (pcmk__xe_is(reason, XML_LRM_TAG_RSC_OP)) {
             const char *magic = crm_element_value(reason, XML_ATTR_TRANSITION_MAGIC);
 
             do_crm_log(level, "Transition %d aborted by operation %s '%s' on %s: %s "
@@ -331,14 +469,15 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
                        magic, add[0], add[1], add[2], fn, line,
                        pcmk__btoa(controld_globals.transition_graph->complete));
 
-        } else if (pcmk__str_any_of(kind, XML_CIB_TAG_STATE, XML_CIB_TAG_NODE, NULL)) {
+        } else if (pcmk__str_any_of((const char *) reason->name,
+                   XML_CIB_TAG_STATE, XML_CIB_TAG_NODE, NULL)) {
             const char *uname = crm_peer_uname(ID(reason));
 
             do_crm_log(level, "Transition %d aborted by %s '%s' on %s: %s "
                        CRM_XS " cib=%d.%d.%d source=%s:%d complete=%s",
                        controld_globals.transition_graph->id,
-                       kind, op, (uname? uname : ID(reason)), abort_text,
-                       add[0], add[1], add[2], fn, line,
+                       reason->name, op, pcmk__s(uname, ID(reason)),
+                       abort_text, add[0], add[1], add[2], fn, line,
                        pcmk__btoa(controld_globals.transition_graph->complete));
 
         } else {
@@ -347,12 +486,13 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
             do_crm_log(level, "Transition %d aborted by %s.%s '%s': %s "
                        CRM_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",
                        controld_globals.transition_graph->id,
-                       TYPE(reason), (id? id : ""), (op? op : "change"),
+                       reason->name, pcmk__s(id, ""), pcmk__s(op, "change"),
                        abort_text, add[0], add[1], add[2], fn, line, path,
                        pcmk__btoa(controld_globals.transition_graph->complete));
         }
     }
 
+done:
     if (controld_globals.transition_graph->complete) {
         if (controld_get_period_transition_timer() > 0) {
             controld_stop_transition_timer();

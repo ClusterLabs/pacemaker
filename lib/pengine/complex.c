@@ -13,6 +13,7 @@
 #include <crm/pengine/internal.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml_internal.h>
+#include <crm/common/scheduler_internal.h>
 
 #include "pe_status_private.h"
 
@@ -34,6 +35,7 @@ resource_object_functions_t resource_class_functions[] = {
          pe__count_common,
          pe__native_is_filtered,
          active_node,
+         pe__primitive_max_per_node,
     },
     {
          group_unpack,
@@ -47,6 +49,7 @@ resource_object_functions_t resource_class_functions[] = {
          pe__count_common,
          pe__group_is_filtered,
          active_node,
+         pe__group_max_per_node,
     },
     {
          clone_unpack,
@@ -60,6 +63,7 @@ resource_object_functions_t resource_class_functions[] = {
          pe__count_common,
          pe__clone_is_filtered,
          active_node,
+         pe__clone_max_per_node,
     },
     {
          pe__unpack_bundle,
@@ -73,6 +77,7 @@ resource_object_functions_t resource_class_functions[] = {
          pe__count_bundle,
          pe__bundle_is_filtered,
          pe__bundle_active_node,
+         pe__bundle_max_per_node,
     }
 };
 
@@ -80,23 +85,23 @@ static enum pe_obj_types
 get_resource_type(const char *name)
 {
     if (pcmk__str_eq(name, XML_CIB_TAG_RESOURCE, pcmk__str_casei)) {
-        return pe_native;
+        return pcmk_rsc_variant_primitive;
 
     } else if (pcmk__str_eq(name, XML_CIB_TAG_GROUP, pcmk__str_casei)) {
-        return pe_group;
+        return pcmk_rsc_variant_group;
 
     } else if (pcmk__str_eq(name, XML_CIB_TAG_INCARNATION, pcmk__str_casei)) {
-        return pe_clone;
+        return pcmk_rsc_variant_clone;
 
     } else if (pcmk__str_eq(name, PCMK_XE_PROMOTABLE_LEGACY, pcmk__str_casei)) {
         // @COMPAT deprecated since 2.0.0
-        return pe_clone;
+        return pcmk_rsc_variant_clone;
 
     } else if (pcmk__str_eq(name, XML_CIB_TAG_CONTAINER, pcmk__str_casei)) {
-        return pe_container;
+        return pcmk_rsc_variant_bundle;
     }
 
-    return pe_unknown;
+    return pcmk_rsc_variant_unknown;
 }
 
 static void
@@ -157,7 +162,7 @@ get_meta_attributes(GHashTable * meta_hash, pe_resource_t * rsc,
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
-        .role = RSC_ROLE_UNKNOWN,
+        .role = pcmk_role_unknown,
         .now = data_set->now,
         .match_data = NULL,
         .rsc_data = &rsc_rule_data,
@@ -170,7 +175,7 @@ get_meta_attributes(GHashTable * meta_hash, pe_resource_t * rsc,
 
     for (xmlAttrPtr a = pcmk__xe_first_attr(rsc->xml); a != NULL; a = a->next) {
         const char *prop_name = (const char *) a->name;
-        const char *prop_value = crm_element_value(rsc->xml, prop_name);
+        const char *prop_value = pcmk__xml_attr_value(a);
 
         add_hash_param(meta_hash, prop_name, prop_value);
     }
@@ -201,7 +206,7 @@ get_rsc_attributes(GHashTable *meta_hash, const pe_resource_t *rsc,
 {
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
-        .role = RSC_ROLE_UNKNOWN,
+        .role = pcmk_role_unknown,
         .now = data_set->now,
         .match_data = NULL,
         .rsc_data = NULL,
@@ -234,9 +239,9 @@ template_op_key(xmlNode * op)
     char *key = NULL;
 
     if ((role == NULL)
-        || pcmk__strcase_any_of(role, RSC_ROLE_STARTED_S, RSC_ROLE_UNPROMOTED_S,
-                                RSC_ROLE_UNPROMOTED_LEGACY_S, NULL)) {
-        role = RSC_ROLE_UNKNOWN_S;
+        || pcmk__strcase_any_of(role, PCMK__ROLE_STARTED, PCMK__ROLE_UNPROMOTED,
+                                PCMK__ROLE_UNPROMOTED_LEGACY, NULL)) {
+        role = PCMK__ROLE_UNKNOWN;
     }
 
     key = crm_strdup_printf("%s-%s", name, role);
@@ -268,7 +273,7 @@ unpack_template(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t * d
 
     id = ID(xml_obj);
     if (id == NULL) {
-        pe_err("'%s' object must have a id", crm_element_name(xml_obj));
+        pe_err("'%s' object must have a id", xml_obj->name);
         return FALSE;
     }
 
@@ -292,7 +297,7 @@ unpack_template(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t * d
 
     new_xml = copy_xml(template);
     xmlNodeSetName(new_xml, xml_obj->name);
-    crm_xml_replace(new_xml, XML_ATTR_ID, id);
+    crm_xml_add(new_xml, XML_ATTR_ID, id);
 
     clone = crm_element_value(xml_obj, XML_RSC_ATTR_INCARNATION);
     if(clone) {
@@ -375,7 +380,7 @@ add_template_rsc(xmlNode * xml_obj, pe_working_set_t * data_set)
 
     id = ID(xml_obj);
     if (id == NULL) {
-        pe_err("'%s' object must have a id", crm_element_name(xml_obj));
+        pe_err("'%s' object must have a id", xml_obj->name);
         return FALSE;
     }
 
@@ -402,8 +407,7 @@ detect_promotable(pe_resource_t *rsc)
     }
 
     // @COMPAT deprecated since 2.0.0
-    if (pcmk__str_eq(crm_element_name(rsc->xml), PCMK_XE_PROMOTABLE_LEGACY,
-                     pcmk__str_casei)) {
+    if (pcmk__xe_is(rsc->xml, PCMK_XE_PROMOTABLE_LEGACY)) {
         /* @TODO in some future version, pe_warn_once() here,
          *       then drop support in even later version
          */
@@ -483,24 +487,25 @@ unpack_requires(pe_resource_t *rsc, const char *value, bool is_default)
     if (pcmk__str_eq(value, PCMK__VALUE_NOTHING, pcmk__str_casei)) {
 
     } else if (pcmk__str_eq(value, PCMK__VALUE_QUORUM, pcmk__str_casei)) {
-        pe__set_resource_flags(rsc, pe_rsc_needs_quorum);
+        pe__set_resource_flags(rsc, pcmk_rsc_needs_quorum);
 
     } else if (pcmk__str_eq(value, PCMK__VALUE_FENCING, pcmk__str_casei)) {
-        pe__set_resource_flags(rsc, pe_rsc_needs_fencing);
-        if (!pcmk_is_set(rsc->cluster->flags, pe_flag_stonith_enabled)) {
+        pe__set_resource_flags(rsc, pcmk_rsc_needs_fencing);
+        if (!pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)) {
             pcmk__config_warn("%s requires fencing but fencing is disabled",
                               rsc->id);
         }
 
     } else if (pcmk__str_eq(value, PCMK__VALUE_UNFENCING, pcmk__str_casei)) {
-        if (pcmk_is_set(rsc->flags, pe_rsc_fence_device)) {
+        if (pcmk_is_set(rsc->flags, pcmk_rsc_fence_device)) {
             pcmk__config_warn("Resetting \"" XML_RSC_ATTR_REQUIRES "\" for %s "
                               "to \"" PCMK__VALUE_QUORUM "\" because fencing "
                               "devices cannot require unfencing", rsc->id);
             unpack_requires(rsc, PCMK__VALUE_QUORUM, true);
             return;
 
-        } else if (!pcmk_is_set(rsc->cluster->flags, pe_flag_stonith_enabled)) {
+        } else if (!pcmk_is_set(rsc->cluster->flags,
+                                pcmk_sched_fencing_enabled)) {
             pcmk__config_warn("Resetting \"" XML_RSC_ATTR_REQUIRES "\" for %s "
                               "to \"" PCMK__VALUE_QUORUM "\" because fencing "
                               "is disabled", rsc->id);
@@ -508,27 +513,29 @@ unpack_requires(pe_resource_t *rsc, const char *value, bool is_default)
             return;
 
         } else {
-            pe__set_resource_flags(rsc,
-                                   pe_rsc_needs_fencing|pe_rsc_needs_unfencing);
+            pe__set_resource_flags(rsc, pcmk_rsc_needs_fencing
+                                        |pcmk_rsc_needs_unfencing);
         }
 
     } else {
         const char *orig_value = value;
 
-        if (pcmk_is_set(rsc->flags, pe_rsc_fence_device)) {
+        if (pcmk_is_set(rsc->flags, pcmk_rsc_fence_device)) {
             value = PCMK__VALUE_QUORUM;
 
-        } else if ((rsc->variant == pe_native)
+        } else if ((rsc->variant == pcmk_rsc_variant_primitive)
                    && xml_contains_remote_node(rsc->xml)) {
             value = PCMK__VALUE_QUORUM;
 
-        } else if (pcmk_is_set(rsc->cluster->flags, pe_flag_enable_unfencing)) {
+        } else if (pcmk_is_set(rsc->cluster->flags,
+                               pcmk_sched_enable_unfencing)) {
             value = PCMK__VALUE_UNFENCING;
 
-        } else if (pcmk_is_set(rsc->cluster->flags, pe_flag_stonith_enabled)) {
+        } else if (pcmk_is_set(rsc->cluster->flags,
+                               pcmk_sched_fencing_enabled)) {
             value = PCMK__VALUE_FENCING;
 
-        } else if (rsc->cluster->no_quorum_policy == no_quorum_ignore) {
+        } else if (rsc->cluster->no_quorum_policy == pcmk_no_quorum_ignore) {
             value = PCMK__VALUE_NOTHING;
 
         } else {
@@ -555,13 +562,13 @@ warn_about_deprecated_classes(pe_resource_t *rsc)
     const char *std = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
     if (pcmk__str_eq(std, PCMK_RESOURCE_CLASS_UPSTART, pcmk__str_none)) {
-        pe_warn_once(pe_wo_upstart,
+        pe_warn_once(pcmk__wo_upstart,
                      "Support for Upstart resources (such as %s) is deprecated "
                      "and will be removed in a future release of Pacemaker",
                      rsc->id);
 
     } else if (pcmk__str_eq(std, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_none)) {
-        pe_warn_once(pe_wo_nagios,
+        pe_warn_once(pcmk__wo_nagios,
                      "Support for Nagios resources (such as %s) is deprecated "
                      "and will be removed in a future release of Pacemaker",
                      rsc->id);
@@ -599,7 +606,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
-        .role = RSC_ROLE_UNKNOWN,
+        .role = pcmk_role_unknown,
         .now = NULL,
         .match_data = NULL,
         .rsc_data = NULL,
@@ -618,7 +625,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     id = crm_element_value(xml_obj, XML_ATTR_ID);
     if (id == NULL) {
         pe_err("Ignoring <%s> configuration without " XML_ATTR_ID,
-               crm_element_name(xml_obj));
+               xml_obj->name);
         return pcmk_rc_unpack_error;
     }
 
@@ -650,10 +657,10 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     ops = find_xml_node((*rsc)->xml, "operations", FALSE);
     (*rsc)->ops_xml = expand_idref(ops, data_set->input);
 
-    (*rsc)->variant = get_resource_type(crm_element_name((*rsc)->xml));
-    if ((*rsc)->variant == pe_unknown) {
+    (*rsc)->variant = get_resource_type((const char *) (*rsc)->xml->name);
+    if ((*rsc)->variant == pcmk_rsc_variant_unknown) {
         pe_err("Ignoring resource '%s' of unknown type '%s'",
-               id, crm_element_name((*rsc)->xml));
+               id, (*rsc)->xml->name);
         common_free(*rsc);
         *rsc = NULL;
         return pcmk_rc_unpack_error;
@@ -682,19 +689,19 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     (*rsc)->parameters = pe_rsc_params(*rsc, NULL, data_set); // \deprecated
 
     (*rsc)->flags = 0;
-    pe__set_resource_flags(*rsc, pe_rsc_runnable|pe_rsc_provisional);
+    pe__set_resource_flags(*rsc, pcmk_rsc_runnable|pcmk_rsc_unassigned);
 
-    if (!pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
-        pe__set_resource_flags(*rsc, pe_rsc_managed);
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_in_maintenance)) {
+        pe__set_resource_flags(*rsc, pcmk_rsc_managed);
     }
 
     (*rsc)->rsc_cons = NULL;
     (*rsc)->rsc_tickets = NULL;
     (*rsc)->actions = NULL;
-    (*rsc)->role = RSC_ROLE_STOPPED;
-    (*rsc)->next_role = RSC_ROLE_UNKNOWN;
+    (*rsc)->role = pcmk_role_stopped;
+    (*rsc)->next_role = pcmk_role_unknown;
 
-    (*rsc)->recovery_type = recovery_stop_start;
+    (*rsc)->recovery_type = pcmk_multiply_active_restart;
     (*rsc)->stickiness = 0;
     (*rsc)->migration_threshold = INFINITY;
     (*rsc)->failure_timeout = 0;
@@ -704,12 +711,12 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_CRITICAL);
     if ((value == NULL) || crm_is_true(value)) {
-        pe__set_resource_flags(*rsc, pe_rsc_critical);
+        pe__set_resource_flags(*rsc, pcmk_rsc_critical);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_NOTIFY);
     if (crm_is_true(value)) {
-        pe__set_resource_flags(*rsc, pe_rsc_notify);
+        pe__set_resource_flags(*rsc, pcmk_rsc_notify);
     }
 
     if (xml_contains_remote_node((*rsc)->xml)) {
@@ -723,7 +730,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
 
     value = g_hash_table_lookup((*rsc)->meta, XML_OP_ATTR_ALLOW_MIGRATE);
     if (crm_is_true(value)) {
-        pe__set_resource_flags(*rsc, pe_rsc_allow_migrate);
+        pe__set_resource_flags(*rsc, pcmk_rsc_migratable);
     } else if ((value == NULL) && remote_node) {
         /* By default, we want remote nodes to be able
          * to float around the cluster without having to stop all the
@@ -732,38 +739,38 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
          * problems, migration support can be explicitly turned off with
          * allow-migrate=false.
          */
-        pe__set_resource_flags(*rsc, pe_rsc_allow_migrate);
+        pe__set_resource_flags(*rsc, pcmk_rsc_migratable);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MANAGED);
     if (value != NULL && !pcmk__str_eq("default", value, pcmk__str_casei)) {
         if (crm_is_true(value)) {
-            pe__set_resource_flags(*rsc, pe_rsc_managed);
+            pe__set_resource_flags(*rsc, pcmk_rsc_managed);
         } else {
-            pe__clear_resource_flags(*rsc, pe_rsc_managed);
+            pe__clear_resource_flags(*rsc, pcmk_rsc_managed);
         }
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MAINTENANCE);
     if (crm_is_true(value)) {
-        pe__clear_resource_flags(*rsc, pe_rsc_managed);
-        pe__set_resource_flags(*rsc, pe_rsc_maintenance);
+        pe__clear_resource_flags(*rsc, pcmk_rsc_managed);
+        pe__set_resource_flags(*rsc, pcmk_rsc_maintenance);
     }
-    if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
-        pe__clear_resource_flags(*rsc, pe_rsc_managed);
-        pe__set_resource_flags(*rsc, pe_rsc_maintenance);
+    if (pcmk_is_set(data_set->flags, pcmk_sched_in_maintenance)) {
+        pe__clear_resource_flags(*rsc, pcmk_rsc_managed);
+        pe__set_resource_flags(*rsc, pcmk_rsc_maintenance);
     }
 
     if (pe_rsc_is_clone(pe__const_top_resource(*rsc, false))) {
         value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_UNIQUE);
         if (crm_is_true(value)) {
-            pe__set_resource_flags(*rsc, pe_rsc_unique);
+            pe__set_resource_flags(*rsc, pcmk_rsc_unique);
         }
         if (detect_promotable(*rsc)) {
-            pe__set_resource_flags(*rsc, pe_rsc_promotable);
+            pe__set_resource_flags(*rsc, pcmk_rsc_promotable);
         }
     } else {
-        pe__set_resource_flags(*rsc, pe_rsc_unique);
+        pe__set_resource_flags(*rsc, pcmk_rsc_unique);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_RESTART);
@@ -771,7 +778,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
         (*rsc)->restart_type = pe_restart_restart;
         pe_rsc_trace((*rsc), "%s dependency restart handling: restart",
                      (*rsc)->id);
-        pe_warn_once(pe_wo_restart_type,
+        pe_warn_once(pcmk__wo_restart_type,
                      "Support for restart-type is deprecated and will be removed in a future release");
 
     } else {
@@ -782,17 +789,17 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MULTIPLE);
     if (pcmk__str_eq(value, "stop_only", pcmk__str_casei)) {
-        (*rsc)->recovery_type = recovery_stop_only;
+        (*rsc)->recovery_type = pcmk_multiply_active_stop;
         pe_rsc_trace((*rsc), "%s multiple running resource recovery: stop only",
                      (*rsc)->id);
 
     } else if (pcmk__str_eq(value, "block", pcmk__str_casei)) {
-        (*rsc)->recovery_type = recovery_block;
+        (*rsc)->recovery_type = pcmk_multiply_active_block;
         pe_rsc_trace((*rsc), "%s multiple running resource recovery: block",
                      (*rsc)->id);
 
     } else if (pcmk__str_eq(value, "stop_unexpected", pcmk__str_casei)) {
-        (*rsc)->recovery_type = recovery_stop_unexpected;
+        (*rsc)->recovery_type = pcmk_multiply_active_unexpected;
         pe_rsc_trace((*rsc), "%s multiple running resource recovery: "
                              "stop unexpected instances",
                      (*rsc)->id);
@@ -803,7 +810,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
             pe_warn("%s is not a valid value for " XML_RSC_ATTR_MULTIPLE
                     ", using default of \"stop_start\"", value);
         }
-        (*rsc)->recovery_type = recovery_stop_start;
+        (*rsc)->recovery_type = pcmk_multiply_active_restart;
         pe_rsc_trace((*rsc), "%s multiple running resource recovery: "
                              "stop/start", (*rsc)->id);
     }
@@ -813,7 +820,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
         (*rsc)->stickiness = char2score(value);
     }
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_FAIL_STICKINESS);
+    value = g_hash_table_lookup((*rsc)->meta, PCMK_META_MIGRATION_THRESHOLD);
     if (value != NULL && !pcmk__str_eq("default", value, pcmk__str_casei)) {
         (*rsc)->migration_threshold = char2score(value);
         if ((*rsc)->migration_threshold < 0) {
@@ -821,8 +828,8 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
              * should probably use the default (INFINITY) or 0 (to disable)
              * instead.
              */
-            pe_warn_once(pe_wo_neg_threshold,
-                         XML_RSC_ATTR_FAIL_STICKINESS
+            pe_warn_once(pcmk__wo_neg_threshold,
+                         PCMK_META_MIGRATION_THRESHOLD
                          " must be non-negative, using 1 instead");
             (*rsc)->migration_threshold = 1;
         }
@@ -830,14 +837,14 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
 
     if (pcmk__str_eq(crm_element_value((*rsc)->xml, XML_AGENT_ATTR_CLASS),
                      PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
-        pe__set_working_set_flags(data_set, pe_flag_have_stonith_resource);
-        pe__set_resource_flags(*rsc, pe_rsc_fence_device);
+        pe__set_working_set_flags(data_set, pcmk_sched_have_fencing);
+        pe__set_resource_flags(*rsc, pcmk_rsc_fence_device);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_REQUIRES);
     unpack_requires(*rsc, value, false);
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_FAIL_TIMEOUT);
+    value = g_hash_table_lookup((*rsc)->meta, PCMK_META_FAILURE_TIMEOUT);
     if (value != NULL) {
         // Stored as seconds
         (*rsc)->failure_timeout = (int) (crm_parse_interval_spec(value) / 1000);
@@ -865,7 +872,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
 
     get_target_role(*rsc, &((*rsc)->next_role));
     pe_rsc_trace((*rsc), "%s desired next state: %s", (*rsc)->id,
-                 (*rsc)->next_role != RSC_ROLE_UNKNOWN ? role2text((*rsc)->next_role) : "default");
+                 (*rsc)->next_role != pcmk_role_unknown? role2text((*rsc)->next_role) : "default");
 
     if ((*rsc)->fns->unpack(*rsc, data_set) == FALSE) {
         (*rsc)->fns->free(*rsc);
@@ -873,7 +880,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
         return pcmk_rc_unpack_error;
     }
 
-    if (pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_symmetric_cluster)) {
         // This tag must stay exactly the same because it is tested elsewhere
         resource_location(*rsc, NULL, 0, "symmetric_default", data_set);
     } else if (guest_node) {
@@ -884,7 +891,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     }
 
     pe_rsc_trace((*rsc), "%s action notification: %s", (*rsc)->id,
-                 pcmk_is_set((*rsc)->flags, pe_rsc_notify)? "required" : "not required");
+                 pcmk_is_set((*rsc)->flags, pcmk_rsc_notify)? "required" : "not required");
 
     (*rsc)->utilization = pcmk__strkey_table(free, free);
 
@@ -926,7 +933,8 @@ uber_parent(pe_resource_t * rsc)
     if (parent == NULL) {
         return NULL;
     }
-    while (parent->parent != NULL && parent->parent->variant != pe_container) {
+    while ((parent->parent != NULL)
+           && (parent->parent->variant != pcmk_rsc_variant_bundle)) {
         parent = parent->parent;
     }
     return parent;
@@ -952,7 +960,8 @@ pe__const_top_resource(const pe_resource_t *rsc, bool include_bundle)
         return NULL;
     }
     while (parent->parent != NULL) {
-        if (!include_bundle && (parent->parent->variant == pe_container)) {
+        if (!include_bundle
+            && (parent->parent->variant == pcmk_rsc_variant_bundle)) {
             break;
         }
         parent = parent->parent;
@@ -984,7 +993,9 @@ common_free(pe_resource_t * rsc)
         g_hash_table_destroy(rsc->utilization);
     }
 
-    if ((rsc->parent == NULL) && pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
+    if ((rsc->parent == NULL)
+        && pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
+
         free_xml(rsc->xml);
         rsc->xml = NULL;
         free_xml(rsc->orig_xml);
@@ -1065,7 +1076,7 @@ pe__count_active_node(const pe_resource_t *rsc, pe_node_t *node,
         } else {
             keep_looking = true;
         }
-    } else if (!pcmk_is_set(rsc->flags, pe_rsc_needs_fencing)) {
+    } else if (!pcmk_is_set(rsc->flags, pcmk_rsc_needs_fencing)) {
         if (is_happy && ((*active == NULL) || !(*active)->details->online
                          || (*active)->details->unclean)) {
             *active = node; // This is the first clean node
@@ -1126,7 +1137,7 @@ pe__find_active_requires(const pe_resource_t *rsc, unsigned int *count)
         }
         return NULL;
 
-    } else if (pcmk_is_set(rsc->flags, pe_rsc_needs_fencing)) {
+    } else if (pcmk_is_set(rsc->flags, pcmk_rsc_needs_fencing)) {
         return rsc->fns->active_node(rsc, count, NULL);
 
     } else {
@@ -1142,13 +1153,13 @@ pe__count_common(pe_resource_t *rsc)
             ((pe_resource_t *) item->data)->fns->count(item->data);
         }
 
-    } else if (!pcmk_is_set(rsc->flags, pe_rsc_orphan)
-               || (rsc->role > RSC_ROLE_STOPPED)) {
+    } else if (!pcmk_is_set(rsc->flags, pcmk_rsc_removed)
+               || (rsc->role > pcmk_role_stopped)) {
         rsc->cluster->ninstances++;
         if (pe__resource_is_disabled(rsc)) {
             rsc->cluster->disabled_resources++;
         }
-        if (pcmk_is_set(rsc->flags, pe_rsc_block)) {
+        if (pcmk_is_set(rsc->flags, pcmk_rsc_blocked)) {
             rsc->cluster->blocked_resources++;
         }
     }

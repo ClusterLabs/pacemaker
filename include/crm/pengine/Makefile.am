@@ -1,5 +1,5 @@
 #
-# Copyright 2006-2021 the Pacemaker project contributors
+# Copyright 2006-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -10,8 +10,13 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 headerdir=$(pkgincludedir)/crm/pengine
 
-noinst_HEADERS		= internal.h remote_internal.h rules_internal.h
-header_HEADERS		= common.h complex.h pe_types.h rules.h status.h \
+noinst_HEADERS		= internal.h 			\
+			  $(wildcard *_internal.h)
+header_HEADERS		= common.h 		\
+			  complex.h 		\
+			  pe_types.h 		\
+			  rules.h 		\
+			  status.h 		\
 			  common_compat.h	\
 			  pe_types_compat.h	\
 			  rules_compat.h

@@ -132,12 +132,6 @@ lrm_state_create(const char *node_name)
     return state;
 }
 
-void
-lrm_state_destroy(const char *node_name)
-{
-    g_hash_table_remove(lrm_state_table, node_name);
-}
-
 static gboolean
 remote_proxy_remove_by_node(gpointer key, gpointer value, gpointer user_data)
 {
@@ -307,7 +301,7 @@ lrm_state_destroy_all(void)
 lrm_state_t *
 lrm_state_find(const char *node_name)
 {
-    if (!node_name) {
+    if ((node_name == NULL) || (lrm_state_table == NULL)) {
         return NULL;
     }
     return g_hash_table_lookup(lrm_state_table, node_name);
@@ -317,6 +311,8 @@ lrm_state_t *
 lrm_state_find_or_create(const char *node_name)
 {
     lrm_state_t *lrm_state;
+
+    CRM_CHECK(lrm_state_table != NULL, return NULL);
 
     lrm_state = g_hash_table_lookup(lrm_state_table, node_name);
     if (!lrm_state) {
@@ -329,6 +325,9 @@ lrm_state_find_or_create(const char *node_name)
 GList *
 lrm_state_get_list(void)
 {
+    if (lrm_state_table == NULL) {
+        return NULL;
+    }
     return g_hash_table_get_values(lrm_state_table);
 }
 
@@ -799,7 +798,7 @@ lrm_state_unregister_rsc(lrm_state_t * lrm_state,
     }
 
     if (is_remote_lrmd_ra(NULL, NULL, rsc_id)) {
-        lrm_state_destroy(rsc_id);
+        g_hash_table_remove(lrm_state_table, rsc_id);
         return pcmk_ok;
     }
 

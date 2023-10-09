@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -24,6 +24,9 @@ extern "C" {
  *             header, and the header itself, will be removed in a future
  *             release.
  */
+
+//! \deprecated Do not use
+const char *bz2_strerror(int rc);
 
 //! \deprecated Use pcmk_rc2exitc(pcmk_legacy2rc(rc)) instead
 crm_exit_t crm_errno2exit(int rc);

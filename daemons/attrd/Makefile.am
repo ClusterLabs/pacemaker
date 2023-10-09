@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2022 the Pacemaker project contributors
+# Copyright 2004-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -18,31 +18,32 @@ noinst_HEADERS  = pacemaker-attrd.h
 pacemaker_attrd_CFLAGS	= $(CFLAGS_HARDENED_EXE)
 pacemaker_attrd_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
 
-pacemaker_attrd_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la	\
-			  $(top_builddir)/lib/pengine/libpe_rules.la	\
-			  $(top_builddir)/lib/common/libcrmcommon.la	\
-			  $(top_builddir)/lib/cib/libcib.la		\
-			  $(top_builddir)/lib/lrmd/liblrmd.la		\
-			  $(CLUSTERLIBS)
+pacemaker_attrd_LDADD = $(top_builddir)/lib/cluster/libcrmcluster.la
+pacemaker_attrd_LDADD += $(top_builddir)/lib/cib/libcib.la
+pacemaker_attrd_LDADD += $(top_builddir)/lib/pengine/libpe_rules.la
+pacemaker_attrd_LDADD += $(top_builddir)/lib/lrmd/liblrmd.la
+pacemaker_attrd_LDADD += $(top_builddir)/lib/common/libcrmcommon.la
+pacemaker_attrd_LDADD += $(CLUSTERLIBS)
 
 pacemaker_attrd_SOURCES	= attrd_alerts.c 	\
-						  attrd_attributes.c \
-						  attrd_cib.c 		\
-						  attrd_corosync.c 	\
-						  attrd_elections.c \
-						  attrd_ipc.c 		\
-						  attrd_messages.c 		\
-						  attrd_sync.c 		\
-						  attrd_utils.c 	\
-						  pacemaker-attrd.c
+			  attrd_attributes.c 	\
+			  attrd_cib.c 		\
+			  attrd_corosync.c 	\
+			  attrd_elections.c 	\
+			  attrd_ipc.c 		\
+			  attrd_messages.c 	\
+			  attrd_sync.c 		\
+			  attrd_utils.c 	\
+			  pacemaker-attrd.c
 
-clean-generic:
-	rm -f *.log *.debug *.xml *~
-
-if BUILD_LEGACY_LINKS
+.PHONY: install-exec-hook
 install-exec-hook:
+if BUILD_LEGACY_LINKS
 	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f attrd && $(LN_S) pacemaker-attrd attrd
+endif
 
+.PHONY: uninstall-hook
 uninstall-hook:
+if BUILD_LEGACY_LINKS
 	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f attrd
 endif

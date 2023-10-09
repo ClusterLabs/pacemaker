@@ -22,7 +22,7 @@
 
 typedef struct group_variant_data_s {
     pe_resource_t *last_child;  // Last group member
-    uint32_t flags;             // Group of enum pe__group_flags
+    uint32_t flags;             // Group of enum pcmk__group_flags
 } group_variant_data_t;
 
 /*!
@@ -37,7 +37,7 @@ pe_resource_t *
 pe__last_group_member(const pe_resource_t *group)
 {
     if (group != NULL) {
-        CRM_CHECK((group->variant == pe_group)
+        CRM_CHECK((group->variant == pcmk_rsc_variant_group)
                   && (group->variant_opaque != NULL), return NULL);
         return ((group_variant_data_t *) group->variant_opaque)->last_child;
     }
@@ -58,7 +58,7 @@ pe__group_flag_is_set(const pe_resource_t *group, uint32_t flags)
 {
     group_variant_data_t *group_data = NULL;
 
-    CRM_CHECK((group != NULL) && (group->variant == pe_group)
+    CRM_CHECK((group != NULL) && (group->variant == pcmk_rsc_variant_group)
               && (group->variant_opaque != NULL), return false);
     group_data = (group_variant_data_t *) group->variant_opaque;
     return pcmk_all_flags_set(group_data->flags, flags);
@@ -128,10 +128,10 @@ group_header(pcmk__output_t *out, int *rc, const pe_resource_t *rsc,
         pcmk__add_separated_word(&attrs, 64, "disabled", ", ");
     }
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_maintenance)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_maintenance)) {
         pcmk__add_separated_word(&attrs, 64, "maintenance", ", ");
 
-    } else if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+    } else if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
         pcmk__add_separated_word(&attrs, 64, "unmanaged", ", ");
     }
 
@@ -191,9 +191,10 @@ group_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
     rsc->variant_opaque = group_data;
 
     // @COMPAT These are deprecated since 2.1.5
-    set_group_flag(rsc, XML_RSC_ATTR_ORDERED, pe__group_ordered,
-                   pe_wo_group_order);
-    set_group_flag(rsc, "collocated", pe__group_colocated, pe_wo_group_coloc);
+    set_group_flag(rsc, XML_RSC_ATTR_ORDERED, pcmk__group_ordered,
+                   pcmk__wo_group_order);
+    set_group_flag(rsc, "collocated", pcmk__group_colocated,
+                   pcmk__wo_group_coloc);
 
     clone_id = crm_element_value(rsc->xml, XML_RSC_ATTR_INCARNATION);
 
@@ -367,8 +368,8 @@ pe__group_xml(pcmk__output_t *out, va_list args)
 
         if (rc == pcmk_rc_no_output) {
             char *count = pcmk__itoa(g_list_length(gIter));
-            const char *maint_s = pe__rsc_bool_str(rsc, pe_rsc_maintenance);
-            const char *managed_s = pe__rsc_bool_str(rsc, pe_rsc_managed);
+            const char *maint_s = pe__rsc_bool_str(rsc, pcmk_rsc_maintenance);
+            const char *managed_s = pe__rsc_bool_str(rsc, pcmk_rsc_managed);
             const char *disabled_s = pcmk__btoa(pe__resource_is_disabled(rsc));
 
             rc = pe__name_and_nvpairs_xml(out, true, "group", 5,
@@ -473,7 +474,7 @@ group_free(pe_resource_t * rsc)
 enum rsc_role_e
 group_resource_state(const pe_resource_t * rsc, gboolean current)
 {
-    enum rsc_role_e group_role = RSC_ROLE_UNKNOWN;
+    enum rsc_role_e group_role = pcmk_role_unknown;
     GList *gIter = rsc->children;
 
     for (; gIter != NULL; gIter = gIter->next) {
@@ -518,4 +519,19 @@ pe__group_is_filtered(const pe_resource_t *rsc, GList *only_rsc,
     }
 
     return !passes;
+}
+
+/*!
+ * \internal
+ * \brief Get maximum group resource instances per node
+ *
+ * \param[in] rsc  Group resource to check
+ *
+ * \return Maximum number of \p rsc instances that can be active on one node
+ */
+unsigned int
+pe__group_max_per_node(const pe_resource_t *rsc)
+{
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_group));
+    return 1U;
 }

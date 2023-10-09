@@ -27,8 +27,11 @@ ocf_SCRIPTS		= ClusterMon	\
 
 if BUILD_XML_HELP
 
-man7_MANS = $(ocf_SCRIPTS:%=ocf_pacemaker_%.7) $(dist_ocf_SCRIPTS:%=ocf_pacemaker_%.7)
-DBOOK_OPTS = --stringparam command.prefix ocf_pacemaker_ --stringparam variable.prefix OCF_RESKEY_ --param man.vol 7
+man7_MANS = $(ocf_SCRIPTS:%=ocf_pacemaker_%.7) 		\
+	    $(dist_ocf_SCRIPTS:%=ocf_pacemaker_%.7)
+DBOOK_OPTS = --stringparam command.prefix ocf_pacemaker_ 	\
+	     --stringparam variable.prefix OCF_RESKEY_ 		\
+	     --param man.vol 7
 
 ocf_pacemaker_%.xml:  %
 	$(AM_V_GEN)OCF_FUNCTIONS=/dev/null OCF_ROOT=$(OCF_ROOT_DIR) $(abs_builddir)/$< meta-data > $@
@@ -50,4 +53,6 @@ validate: all
 			| xmllint --noout --relaxng $(RNG) - || break;	\
 	done
 
-CLEANFILES = $(man7_MANS) $(ocf_SCRIPTS:%=%.xml) $(dist_ocf_SCRIPTS:%=%.xml)
+CLEANFILES = $(man7_MANS) 			\
+	     $(ocf_SCRIPTS:%=%.xml) 		\
+	     $(dist_ocf_SCRIPTS:%=%.xml)

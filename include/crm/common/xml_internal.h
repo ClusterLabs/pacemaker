@@ -135,9 +135,6 @@ enum pcmk__xml_fmt_options {
     //! Include indentation and newlines
     pcmk__xml_fmt_pretty     = (1 << 1),
 
-    //! Include full XML subtree (with any text), using libxml serialization
-    pcmk__xml_fmt_full       = (1 << 2),
-
     //! Include the opening tag of an XML element, and include XML comments
     pcmk__xml_fmt_open       = (1 << 3),
 
@@ -147,7 +144,6 @@ enum pcmk__xml_fmt_options {
     //! Include the closing tag of an XML element
     pcmk__xml_fmt_close      = (1 << 5),
 
-    // @COMPAT Remove when log_data_element() is removed
     //! Include XML text nodes
     pcmk__xml_fmt_text       = (1 << 6),
 
@@ -190,6 +186,16 @@ int pcmk__xml_show_changes(pcmk__output_t *out, const xmlNode *xml);
 #define PCMK__XP_REMOTE_NODE_STATUS \
     "//" XML_TAG_CIB "//" XML_CIB_TAG_STATUS "//" XML_CIB_TAG_STATE \
     "[@" XML_NODE_IS_REMOTE "='true']"
+/*!
+ * \internal
+ * \brief Serialize XML (using libxml) into provided descriptor
+ *
+ * \param[in] fd  File descriptor to (piece-wise) write to
+ * \param[in] cur XML subtree to proceed
+ * 
+ * \return a standard Pacemaker return code
+ */
+int pcmk__xml2fd(int fd, xmlNode *cur);
 
 enum pcmk__xml_artefact_ns {
     pcmk__xml_artefact_ns_legacy_rng = 1,
@@ -232,6 +238,22 @@ pcmk__xml_artefact_root(enum pcmk__xml_artefact_ns ns);
  */
 char *pcmk__xml_artefact_path(enum pcmk__xml_artefact_ns ns,
                               const char *filespec);
+
+/*!
+ * \internal
+ * \brief Check whether an XML element is of a particular type
+ *
+ * \param[in] xml   XML element to compare
+ * \param[in] name  XML element name to compare
+ *
+ * \return \c true if \p xml is of type \p name, otherwise \c false
+ */
+static inline bool
+pcmk__xe_is(const xmlNode *xml, const char *name)
+{
+    return (xml != NULL) && (xml->name != NULL) && (name != NULL)
+           && (strcmp((const char *) xml->name, name) == 0);
+}
 
 /*!
  * \internal
@@ -410,5 +432,12 @@ int
 pcmk__xe_foreach_child(xmlNode *xml, const char *child_element_name,
                        int (*handler)(xmlNode *xml, void *userdata),
                        void *userdata);
+
+static inline const char *
+pcmk__xml_attr_value(const xmlAttr *attr)
+{
+    return ((attr == NULL) || (attr->children == NULL))? NULL
+           : (const char *) attr->children->content;
+}
 
 #endif // PCMK__XML_INTERNAL__H

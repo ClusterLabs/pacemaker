@@ -263,13 +263,6 @@ do_dc_release(long long action,
 
     } else if (action & A_DC_RELEASED) {
         crm_info("DC role released");
-#if 0
-        if (are there errors) {
-            /* we can't stay up if not healthy */
-            /* or perhaps I_ERROR and go to S_RECOVER? */
-            result = I_SHUTDOWN;
-        }
-#endif
         if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
             xmlNode *update = NULL;
             crm_node_t *node = crm_get_peer(0, controld_globals.our_nodename);

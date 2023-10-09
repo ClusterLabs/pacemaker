@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -421,9 +421,11 @@ pcmk__client_data2xml(pcmk__client_t *c, void *data, uint32_t *id,
         rc = BZ2_bzBuffToBuffDecompress(uncompressed, &size_u, text, header->size_compressed, 1, 0);
         text = uncompressed;
 
-        if (rc != BZ_OK) {
-            crm_err("Decompression failed: %s " CRM_XS " bzerror=%d",
-                    bz2_strerror(rc), rc);
+        rc = pcmk__bzlib2rc(rc);
+
+        if (rc != pcmk_rc_ok) {
+            crm_err("Decompression failed: %s " CRM_XS " rc=%d",
+                    pcmk_rc_str(rc), rc);
             free(uncompressed);
             return NULL;
         }
@@ -568,16 +570,16 @@ crm_ipcs_flush_events(pcmk__client_t *c)
  * \internal
  * \brief Create an I/O vector for sending an IPC XML message
  *
- * \param[in]     request        Identifier for libqb response header
- * \param[in,out] message        XML message to send
- * \param[in]     max_send_size  If 0, default IPC buffer size is used
- * \param[out]    result         Where to store prepared I/O vector
- * \param[out]    bytes          Size of prepared data in bytes
+ * \param[in]  request        Identifier for libqb response header
+ * \param[in]  message        XML message to send
+ * \param[in]  max_send_size  If 0, default IPC buffer size is used
+ * \param[out] result         Where to store prepared I/O vector
+ * \param[out] bytes          Size of prepared data in bytes
  *
  * \return Standard Pacemaker return code
  */
 int
-pcmk__ipc_prepare_iov(uint32_t request, xmlNode *message,
+pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
                       uint32_t max_send_size, struct iovec **result,
                       ssize_t *bytes)
 {
@@ -741,7 +743,7 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
 }
 
 int
-pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, xmlNode *message,
+pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, const xmlNode *message,
                    uint32_t flags)
 {
     struct iovec *iov = NULL;
@@ -819,6 +821,7 @@ pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
     if (ack != NULL) {
         crm_trace("Ack'ing IPC message from client %s as <%s status=%d>",
                   pcmk__client_name(c), tag, status);
+        crm_log_xml_trace(ack, "sent-ack");
         c->request_id = 0;
         rc = pcmk__ipc_send_xml(c, request, ack, flags);
         free_xml(ack);

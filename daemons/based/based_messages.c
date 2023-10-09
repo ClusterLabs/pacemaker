@@ -19,6 +19,9 @@
 #include <sys/param.h>
 #include <sys/types.h>
 
+#include <glib.h>
+#include <libxml/tree.h>
+
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
 #include <crm/msg_xml.h>
@@ -61,25 +64,15 @@ cib_process_shutdown_req(const char *op, int options, const char *section, xmlNo
     return pcmk_ok;
 }
 
+// @COMPAT: Remove when PCMK__CIB_REQUEST_NOOP is removed
 int
-cib_process_default(const char *op, int options, const char *section, xmlNode * req,
-                    xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                    xmlNode ** answer)
+cib_process_noop(const char *op, int options, const char *section, xmlNode *req,
+                 xmlNode *input, xmlNode *existing_cib, xmlNode **result_cib,
+                 xmlNode **answer)
 {
-    int result = pcmk_ok;
-
     crm_trace("Processing \"%s\" event", op);
     *answer = NULL;
-
-    if (op == NULL) {
-        result = -EINVAL;
-        crm_err("No operation specified");
-
-    } else if (strcmp(PCMK__CIB_REQUEST_NOOP, op) != 0) {
-        result = -EPROTONOSUPPORT;
-        crm_err("Action [%s] is not supported by the CIB manager", op);
-    }
-    return result;
+    return pcmk_ok;
 }
 
 int
@@ -158,10 +151,10 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
             // Append additional detail so the receiver can log the differences
             add_message_xml(*answer, F_CIB_CALLDATA, the_cib);
         },
-        {
+        if (the_cib != NULL) {
             // Always include at least the version details
-            const char *tag = TYPE(the_cib);
-            xmlNode *shallow = create_xml_node(NULL, tag);
+            xmlNode *shallow = create_xml_node(NULL,
+                                               (const char *) the_cib->name);
 
             copy_in_properties(shallow, the_cib);
             add_message_xml(*answer, F_CIB_CALLDATA, shallow);
@@ -250,7 +243,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
 
         if (rc != pcmk_ok) {
             // Notify originating peer so it can notify its local clients
-            crm_node_t *origin = pcmk__search_cluster_node_cache(0, host);
+            crm_node_t *origin = pcmk__search_cluster_node_cache(0, host, NULL);
 
             crm_info("Rejecting upgrade request from %s: %s "
                      CRM_XS " rc=%d peer=%s", host, pcmk_strerror(rc), rc,
@@ -341,8 +334,7 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
         crm_warn("Requesting full CIB refresh because update failed: %s"
                  CRM_XS " rc=%d", pcmk_strerror(rc), rc);
 
-        pcmk__output_set_log_level(logger_out, LOG_INFO);
-        logger_out->message(logger_out, "xml-patchset", input);
+        pcmk__log_xml_patchset(LOG_INFO, input);
         free_xml(*result_cib);
         *result_cib = NULL;
         send_sync_request(NULL);
@@ -356,21 +348,65 @@ cib_process_replace_svr(const char *op, int options, const char *section, xmlNod
                         xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                         xmlNode ** answer)
 {
-    const char *tag = crm_element_name(input);
     int rc =
         cib_process_replace(op, options, section, req, input, existing_cib, result_cib, answer);
-    if (rc == pcmk_ok && pcmk__str_eq(tag, XML_TAG_CIB, pcmk__str_casei)) {
+
+    if ((rc == pcmk_ok) && pcmk__xe_is(input, XML_TAG_CIB)) {
         sync_in_progress = 0;
     }
     return rc;
 }
 
+// @COMPAT: Remove when PCMK__CIB_REQUEST_ABS_DELETE is removed
 int
 cib_process_delete_absolute(const char *op, int options, const char *section, xmlNode * req,
                             xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                             xmlNode ** answer)
 {
     return -EINVAL;
+}
+
+static xmlNode *
+cib_msg_copy(xmlNode *msg)
+{
+    static const char *field_list[] = {
+        F_XML_TAGNAME,
+        F_TYPE,
+        F_CIB_CLIENTID,
+        F_CIB_CALLOPTS,
+        F_CIB_CALLID,
+        F_CIB_OPERATION,
+        F_CIB_ISREPLY,
+        F_CIB_SECTION,
+        F_CIB_HOST,
+        F_CIB_RC,
+        F_CIB_DELEGATED,
+        F_CIB_OBJID,
+        F_CIB_OBJTYPE,
+        F_CIB_EXISTING,
+        F_CIB_SEENCOUNT,
+        F_CIB_TIMEOUT,
+        F_CIB_GLOBAL_UPDATE,
+        F_CIB_CLIENTNAME,
+        F_CIB_USER,
+        F_CIB_NOTIFY_TYPE,
+        F_CIB_NOTIFY_ACTIVATE
+    };
+
+    xmlNode *copy = create_xml_node(NULL, "copy");
+
+    CRM_ASSERT(copy != NULL);
+
+    for (int lpc = 0; lpc < PCMK__NELEM(field_list); lpc++) {
+        const char *field = field_list[lpc];
+        const char *value = crm_element_value(msg, field);
+
+        if (value != NULL) {
+            crm_xml_add(copy, field, value);
+        }
+    }
+
+    return copy;
 }
 
 int
@@ -384,22 +420,12 @@ sync_our_cib(xmlNode * request, gboolean all)
     xmlNode *replace_request = NULL;
 
     CRM_CHECK(the_cib != NULL, return -EINVAL);
-
-    replace_request = cib_msg_copy(request, FALSE);
-    CRM_CHECK(replace_request != NULL, return -EINVAL);
+    CRM_CHECK(all || (host != NULL), return -EINVAL);
 
     crm_debug("Syncing CIB to %s", all ? "all peers" : host);
-    if (all == FALSE && host == NULL) {
-        crm_log_xml_err(request, "bad sync");
-    }
 
-    /* remove the "all == FALSE" condition
-     *
-     * sync_from was failing, the local client wasn't being notified
-     *    because it didn't know it was a reply
-     * setting this does not prevent the other nodes from applying it
-     *    if all == TRUE
-     */
+    replace_request = cib_msg_copy(request);
+
     if (host != NULL) {
         crm_xml_add(replace_request, F_CIB_ISREPLY, host);
     }
@@ -424,4 +450,31 @@ sync_our_cib(xmlNode * request, gboolean all)
     free_xml(replace_request);
     free(digest);
     return result;
+}
+
+int
+cib_process_commit_transaction(const char *op, int options, const char *section,
+                               xmlNode *req, xmlNode *input,
+                               xmlNode *existing_cib, xmlNode **result_cib,
+                               xmlNode **answer)
+{
+    /* On success, our caller will activate *result_cib locally, trigger a
+     * replace notification if appropriate, and sync *result_cib to all nodes.
+     * On failure, our caller will free *result_cib.
+     */
+    int rc = pcmk_rc_ok;
+    const char *client_id = crm_element_value(req, F_CIB_CLIENTID);
+    const char *origin = crm_element_value(req, F_ORIG);
+    pcmk__client_t *client = pcmk__find_client_by_id(client_id);
+
+    rc = based_commit_transaction(input, client, origin, result_cib);
+
+    if (rc != pcmk_rc_ok) {
+        char *source = based_transaction_source_str(client, origin);
+
+        crm_err("Could not commit transaction for %s: %s",
+                source, pcmk_rc_str(rc));
+        free(source);
+    }
+    return pcmk_rc2legacy(rc);
 }

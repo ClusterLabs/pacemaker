@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -432,32 +432,6 @@ crm_schema_init(void)
                NULL, NULL, FALSE, -1);
 }
 
-#if 0
-static void
-relaxng_invalid_stderr(void *userData, xmlErrorPtr error)
-{
-    /*
-       Structure xmlError
-       struct _xmlError {
-       int      domain  : What part of the library raised this er
-       int      code    : The error code, e.g. an xmlParserError
-       char *   message : human-readable informative error messag
-       xmlErrorLevel    level   : how consequent is the error
-       char *   file    : the filename
-       int      line    : the line number if available
-       char *   str1    : extra string information
-       char *   str2    : extra string information
-       char *   str3    : extra string information
-       int      int1    : extra number information
-       int      int2    : column number of the error or 0 if N/A
-       void *   ctxt    : the parser context if available
-       void *   node    : the node in the tree
-       }
-     */
-    crm_err("Structured error: line=%d, level=%d %s", error->line, error->level, error->message);
-}
-#endif
-
 static gboolean
 validate_with_relaxng(xmlDocPtr doc, gboolean to_logs, const char *relaxng_file,
                       relaxng_ctx_cache_t **cached_ctx)
@@ -512,9 +486,6 @@ validate_with_relaxng(xmlDocPtr doc, gboolean to_logs, const char *relaxng_file,
                                      stderr);
         }
     }
-
-    /* xmlRelaxNGSetValidStructuredErrors( */
-    /*  valid, relaxng_invalid_stderr, valid); */
 
     xmlLineNumbersDefault(1);
     rc = xmlRelaxNGValidateDoc(ctx->valid, doc);
@@ -592,37 +563,34 @@ crm_schema_cleanup(void)
 static gboolean
 validate_with(xmlNode *xml, int method, gboolean to_logs)
 {
-    xmlDocPtr doc = NULL;
     gboolean valid = FALSE;
     char *file = NULL;
+    struct schema_s *schema = NULL;
+    relaxng_ctx_cache_t **cache = NULL;
 
     if (method < 0) {
         return FALSE;
     }
 
-    if (known_schemas[method].validator == schema_validator_none) {
+    schema = &(known_schemas[method]);
+    if (schema->validator == schema_validator_none) {
         return TRUE;
     }
 
-    CRM_CHECK(xml != NULL, return FALSE);
-
-    if (pcmk__str_eq(known_schemas[method].name, "pacemaker-next",
-                     pcmk__str_none)) {
+    if (pcmk__str_eq(schema->name, "pacemaker-next", pcmk__str_none)) {
         crm_warn("The pacemaker-next schema is deprecated and will be removed "
                  "in a future release.");
     }
 
-    doc = getDocPtr(xml);
     file = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_rng,
-                                   known_schemas[method].name);
+                                   schema->name);
 
     crm_trace("Validating with %s (type=%d)",
-              pcmk__s(file, "missing schema"), known_schemas[method].validator);
-    switch (known_schemas[method].validator) {
+              pcmk__s(file, "missing schema"), schema->validator);
+    switch (schema->validator) {
         case schema_validator_rng:
-            valid =
-                validate_with_relaxng(doc, to_logs, file,
-                                      (relaxng_ctx_cache_t **) & (known_schemas[method].cache));
+            cache = (relaxng_ctx_cache_t **) &(schema->cache);
+            valid = validate_with_relaxng(xml->doc, to_logs, file, cache);
             break;
         default:
             crm_err("Unknown validator type: %d",
@@ -676,7 +644,7 @@ dump_file(const char *filename)
 }
 
 gboolean
-validate_xml_verbose(xmlNode *xml_blob)
+validate_xml_verbose(const xmlNode *xml_blob)
 {
     int fd = 0;
     xmlDoc *doc = NULL;
@@ -707,6 +675,8 @@ gboolean
 validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs)
 {
     int version = 0;
+
+    CRM_CHECK((xml_blob != NULL) && (xml_blob->doc != NULL), return FALSE);
 
     if (validation == NULL) {
         validation = crm_element_value(xml_blob, XML_ATTR_VALIDATION);
@@ -884,41 +854,14 @@ cib_upgrade_err(void *ctx, const char *fmt, ...)
     va_end(ap);
 }
 
-
-/* Denotes temporary emergency fix for "xmldiff'ing not text-node-ready";
-   proper fix is most likely to teach __xml_diff_object and friends to
-   deal with XML_TEXT_NODE (and more?), i.e., those nodes currently
-   missing "_private" field (implicitly as NULL) which clashes with
-   unchecked accesses (e.g. in __xml_offset) -- the outcome may be that
-   those unexpected XML nodes will simply be ignored for the purpose of
-   diff'ing, or it may be made more robust, or per the user's preference
-   (which then may be exposed as crm_diff switch).
-
-   Said XML_TEXT_NODE may appear unexpectedly due to how upgrade-2.10.xsl
-   is arranged.
-
-   The emergency fix is simple: reparse XSLT output with blank-ignoring
-   parser. */
-#ifndef PCMK_SCHEMAS_EMERGENCY_XSLT
-#define PCMK_SCHEMAS_EMERGENCY_XSLT 1
-#endif
-
 static xmlNode *
 apply_transformation(xmlNode *xml, const char *transform, gboolean to_logs)
 {
     char *xform = NULL;
     xmlNode *out = NULL;
     xmlDocPtr res = NULL;
-    xmlDocPtr doc = NULL;
     xsltStylesheet *xslt = NULL;
-#if PCMK_SCHEMAS_EMERGENCY_XSLT != 0
-    xmlChar *emergency_result;
-    int emergency_txt_len;
-    int emergency_res;
-#endif
 
-    CRM_CHECK(xml != NULL, return FALSE);
-    doc = getDocPtr(xml);
     xform = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_xslt,
                                     transform);
 
@@ -935,22 +878,12 @@ apply_transformation(xmlNode *xml, const char *transform, gboolean to_logs)
     xslt = xsltParseStylesheetFile((pcmkXmlStr) xform);
     CRM_CHECK(xslt != NULL, goto cleanup);
 
-    res = xsltApplyStylesheet(xslt, doc, NULL);
+    res = xsltApplyStylesheet(xslt, xml->doc, NULL);
     CRM_CHECK(res != NULL, goto cleanup);
 
     xsltSetGenericErrorFunc(NULL, NULL);  /* restore default one */
 
-
-#if PCMK_SCHEMAS_EMERGENCY_XSLT != 0
-    emergency_res = xsltSaveResultToString(&emergency_result,
-                                           &emergency_txt_len, res, xslt);
-    xmlFreeDoc(res);
-    CRM_CHECK(emergency_res == 0, goto cleanup);
-    out = string2xml((const char *) emergency_result);
-    free(emergency_result);
-#else
     out = xmlDocGetRootElement(res);
-#endif
 
   cleanup:
     if (xslt) {
@@ -1059,8 +992,9 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
     CRM_CHECK(best != NULL, return -EINVAL);
     *best = 0;
 
-    CRM_CHECK(xml_blob != NULL, return -EINVAL);
-    CRM_CHECK(*xml_blob != NULL, return -EINVAL);
+    CRM_CHECK((xml_blob != NULL) && (*xml_blob != NULL)
+              && ((*xml_blob)->doc != NULL),
+              return -EINVAL);
 
     xml = *xml_blob;
     value = crm_element_value_copy(xml, XML_ATTR_VALIDATION);

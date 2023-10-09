@@ -620,11 +620,6 @@ do_state_transition(enum crmd_fsa_state cur_state,
     if (next_state != S_ELECTION && cur_state != S_RELEASE_DC) {
         controld_stop_current_election_timeout();
     }
-#if 0
-    if ((controld_globals.fsa_input_register & R_SHUTDOWN)) {
-        controld_set_fsa_action_flags(A_DC_TIMER_STOP);
-    }
-#endif
     if (next_state == S_INTEGRATION) {
         controld_set_fsa_action_flags(A_INTEGRATE_TIMER_START);
     } else {

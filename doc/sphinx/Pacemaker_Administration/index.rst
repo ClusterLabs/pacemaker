@@ -22,6 +22,8 @@ Table of Contents
    cluster
    configuring
    tools
+   administrative
+   moving
    troubleshooting
    upgrading
    alerts

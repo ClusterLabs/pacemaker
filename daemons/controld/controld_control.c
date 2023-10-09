@@ -221,6 +221,7 @@ crmd_exit(crm_exit_t exit_code)
     g_list_free(controld_globals.fsa_message_queue);
     controld_globals.fsa_message_queue = NULL;
 
+    controld_free_node_pending_timers();
     controld_election_fini();
 
     /* Tear down the CIB manager connection, but don't free it yet -- it could
@@ -265,7 +266,6 @@ crmd_exit(crm_exit_t exit_code)
     controld_globals.te_uuid = NULL;
 
     free_max_generation();
-    controld_destroy_cib_replacements_table();
     controld_destroy_failed_sync_table();
     controld_destroy_outside_events_table();
 
@@ -323,20 +323,12 @@ do_exit(long long action,
         enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     crm_exit_t exit_code = CRM_EX_OK;
-    int log_level = LOG_INFO;
-    const char *exit_type = "gracefully";
 
-    if (action & A_EXIT_1) {
-        log_level = LOG_ERR;
-        exit_type = "forcefully";
+    if (pcmk_is_set(action, A_EXIT_1)) {
         exit_code = CRM_EX_ERROR;
+        crm_err("Exiting now due to errors");
     }
-
     verify_stopped(cur_state, LOG_ERR);
-    do_crm_log(log_level, "Performing %s - %s exiting the controller",
-               fsa_action2string(action), exit_type);
-
-    crm_info("[%s] stopped (%d)", crm_system_name, exit_code);
     crmd_exit(exit_code);
 }
 
@@ -504,7 +496,8 @@ do_started(long long action,
     } else {
         crm_notice("Pacemaker controller successfully started and accepting connections");
     }
-    controld_trigger_fencer_connect();
+    controld_set_fsa_input_flags(R_ST_REQUIRED);
+    controld_timer_fencer_connect(GINT_TO_POINTER(TRUE));
 
     controld_clear_fsa_input_flags(R_STARTING);
     register_fsa_input(msg_data->fsa_cause, I_PENDING, NULL);
@@ -722,9 +715,8 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     }
 
     crmconfig = output;
-    if ((crmconfig) &&
-        (crm_element_name(crmconfig)) &&
-        (strcmp(crm_element_name(crmconfig), XML_CIB_TAG_CRMCONFIG) != 0)) {
+    if ((crmconfig != NULL)
+        && !pcmk__xe_is(crmconfig, XML_CIB_TAG_CRMCONFIG)) {
         crmconfig = first_named_child(crmconfig, XML_CIB_TAG_CRMCONFIG);
     }
     if (!crmconfig) {
@@ -760,6 +752,10 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
                                 XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT);
     controld_globals.shutdown_lock_limit = crm_parse_interval_spec(value)
                                            / 1000;
+
+    value = g_hash_table_lookup(config_hash,
+                                XML_CONFIG_ATTR_NODE_PENDING_TIMEOUT);
+    controld_globals.node_pending_timeout = crm_parse_interval_spec(value) / 1000;
 
     value = g_hash_table_lookup(config_hash, "cluster-name");
     pcmk__str_update(&(controld_globals.cluster_name), value);

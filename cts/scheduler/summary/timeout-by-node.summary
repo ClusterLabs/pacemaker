@@ -1,0 +1,43 @@
+Current cluster status:
+  * Node List:
+    * Online: [ node1 node2 node3 node4 node5 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started node1
+    * Clone Set: rsc1-clone [rsc1]:
+      * Stopped: [ node1 node2 node3 node4 node5 ]
+
+Transition Summary:
+  * Start      rsc1:0     ( node2 )
+  * Start      rsc1:1     ( node3 )
+  * Start      rsc1:2     ( node4 )
+  * Start      rsc1:3     ( node5 )
+  * Start      rsc1:4     ( node1 )
+
+Executing Cluster Transition:
+  * Resource action: rsc1:0          monitor on node2
+  * Resource action: rsc1:1          monitor on node3
+  * Resource action: rsc1:2          monitor on node4
+  * Resource action: rsc1:3          monitor on node5
+  * Resource action: rsc1:4          monitor on node1
+  * Pseudo action:   rsc1-clone_start_0
+  * Resource action: rsc1:0          start on node2
+  * Resource action: rsc1:1          start on node3
+  * Resource action: rsc1:2          start on node4
+  * Resource action: rsc1:3          start on node5
+  * Resource action: rsc1:4          start on node1
+  * Pseudo action:   rsc1-clone_running_0
+  * Resource action: rsc1:0          monitor=10000 on node2
+  * Resource action: rsc1:1          monitor=10000 on node3
+  * Resource action: rsc1:2          monitor=10000 on node4
+  * Resource action: rsc1:3          monitor=10000 on node5
+  * Resource action: rsc1:4          monitor=10000 on node1
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 node2 node3 node4 node5 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started node1
+    * Clone Set: rsc1-clone [rsc1]:
+      * Started: [ node1 node2 node3 node4 node5 ]

@@ -71,7 +71,7 @@ class AsyncCmd(Thread):
         self._proc.wait()
 
         if self._delegate:
-            self._logger.debug("cmd: pid %d returned %d to %s" % (self._proc.pid, self._proc.returncode, repr(self._delegate)))
+            self._logger.debug("cmd: pid %d returned %d to %r" % (self._proc.pid, self._proc.returncode, self._delegate))
         else:
             self._logger.debug("cmd: pid %d returned %d" % (self._proc.pid, self._proc.returncode))
 
@@ -126,7 +126,7 @@ class RemoteExec:
         sysname = args[0]
         command = args[1]
 
-        if sysname is None or sysname.lower() == self._our_node or sysname == "localhost":
+        if sysname is None or sysname.lower() in [self._our_node, "localhost"]:
             ret = command
         else:
             ret = "%s %s '%s'" % (self._command, sysname, self._fixcmd(command))

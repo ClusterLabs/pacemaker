@@ -9,7 +9,7 @@ pcmk__clone_assign: ms-drbd0 allocation score on xen-1: 100
 pcmk__clone_assign: ms-drbd0 allocation score on xen-2: 0
 pcmk__primitive_assign: drbd0:0 allocation score on xen-1: -INFINITY
 pcmk__primitive_assign: drbd0:0 allocation score on xen-2: 110
-pcmk__primitive_assign: drbd0:1 allocation score on xen-1: 110
+pcmk__primitive_assign: drbd0:1 allocation score on xen-1: 210
 pcmk__primitive_assign: drbd0:1 allocation score on xen-2: 0
-pcmk__primitive_assign: fs_1 allocation score on xen-1: 210
+pcmk__primitive_assign: fs_1 allocation score on xen-1: 310
 pcmk__primitive_assign: fs_1 allocation score on xen-2: -INFINITY

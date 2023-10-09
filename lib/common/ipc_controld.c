@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 the Pacemaker project contributors
+ * Copyright 2020-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -135,7 +135,7 @@ set_node_info_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
 
     data->data.node_info.uuid = crm_element_value(msg_data, XML_ATTR_ID);
     data->data.node_info.uname = crm_element_value(msg_data, XML_ATTR_UNAME);
-    data->data.node_info.state = crm_element_value(msg_data, XML_NODE_IS_PEER);
+    data->data.node_info.state = crm_element_value(msg_data, PCMK__XA_CRMD);
 }
 
 static void
@@ -169,26 +169,24 @@ set_nodes_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
             node_info->id = id_ll;
         }
         node_info->uname = crm_element_value(node, XML_ATTR_UNAME);
-        node_info->state = crm_element_value(node, XML_NODE_IN_CLUSTER);
+        node_info->state = crm_element_value(node, PCMK__XA_IN_CCM);
         data->data.nodes = g_list_prepend(data->data.nodes, node_info);
     }
 }
 
 static bool
-reply_expected(pcmk_ipc_api_t *api, xmlNode *request)
+reply_expected(pcmk_ipc_api_t *api, const xmlNode *request)
 {
-    const char *command = crm_element_value(request, F_CRM_TASK);
-
-    if (command == NULL) {
-        return false;
-    }
-
-    // We only need to handle commands that functions in this file can send
-    return !strcmp(command, CRM_OP_REPROBE)
-           || !strcmp(command, CRM_OP_NODE_INFO)
-           || !strcmp(command, CRM_OP_PING)
-           || !strcmp(command, CRM_OP_LRM_FAIL)
-           || !strcmp(command, CRM_OP_LRM_DELETE);
+    // We only need to handle commands that API functions can send
+    return pcmk__str_any_of(crm_element_value(request, F_CRM_TASK),
+                            PCMK__CONTROLD_CMD_NODES,
+                            CRM_OP_LRM_DELETE,
+                            CRM_OP_LRM_FAIL,
+                            CRM_OP_NODE_INFO,
+                            CRM_OP_PING,
+                            CRM_OP_REPROBE,
+                            CRM_OP_RM_NODE_CACHE,
+                            NULL);
 }
 
 static bool
@@ -202,22 +200,12 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         pcmk_controld_reply_unknown, NULL, NULL,
     };
 
-    /* If we got an ACK, return true so the caller knows to expect more responses
-     * from the IPC server.  We do this before decrementing replies_expected because
-     * ACKs are not going to be included in that value.
-     *
-     * Note that we cannot do the same kind of status checking here that we do in
-     * ipc_pacemakerd.c.  The ACK message we receive does not necessarily contain
-     * a status attribute.  That is, we may receive this:
-     *
-     * <ack function="crmd_remote_proxy_cb" line="556"/>
-     *
-     * Instead of this:
-     *
-     * <ack function="dispatch_controller_ipc" line="391" status="112"/>
-     */
-    if (pcmk__str_eq(crm_element_name(reply), "ack", pcmk__str_none)) {
-        return true; // More replies needed
+    if (pcmk__xe_is(reply, "ack")) {
+        /* ACKs are trivial responses that do not count toward expected replies,
+         * and do not have all the fields that validation requires, so skip that
+         * processing.
+         */
+        return private->replies_expected > 0;
     }
 
     if (private->replies_expected > 0) {
@@ -341,21 +329,18 @@ create_controller_request(const pcmk_ipc_api_t *api, const char *op,
 
 // \return Standard Pacemaker return code
 static int
-send_controller_request(pcmk_ipc_api_t *api, xmlNode *request,
+send_controller_request(pcmk_ipc_api_t *api, const xmlNode *request,
                         bool reply_is_expected)
 {
-    int rc;
-
     if (crm_element_value(request, XML_ATTR_REFERENCE) == NULL) {
         return EINVAL;
     }
-    rc = pcmk__send_ipc_request(api, request);
-    if ((rc == pcmk_rc_ok) && reply_is_expected) {
+    if (reply_is_expected) {
         struct controld_api_private_s *private = api->api_data;
 
         private->replies_expected++;
     }
-    return rc;
+    return pcmk__send_ipc_request(api, request);
 }
 
 static xmlNode *

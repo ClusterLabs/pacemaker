@@ -8,7 +8,8 @@
 #
 include $(top_srcdir)/mk/common.mk
 
-AM_CPPFLAGS		+= -I$(top_builddir)/lib/gnu -I$(top_srcdir)/lib/gnu
+AM_CPPFLAGS += -I$(top_builddir)/lib/gnu \
+	       -I$(top_srcdir)/lib/gnu
 
 ## libraries
 lib_LTLIBRARIES	= libcrmcommon.la
@@ -29,14 +30,16 @@ CFLAGS		= $(CFLAGS_COPY:-Wcast-qual=) -fPIC
 # changes the order so the subdirectories are processed afterwards.
 SUBDIRS = . tests
 
-noinst_HEADERS		= crmcommon_private.h mock_private.h
+noinst_HEADERS		= crmcommon_private.h \
+			  mock_private.h
 
 libcrmcommon_la_LDFLAGS	= -version-info 45:0:11
 
 libcrmcommon_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libcrmcommon_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 
-libcrmcommon_la_LIBADD	= @LIBADD_DL@ $(top_builddir)/lib/gnu/libgnu.la
+libcrmcommon_la_LIBADD	= @LIBADD_DL@ 				\
+			  $(top_builddir)/lib/gnu/libgnu.la
 
 # If configured with --with-profiling or --with-coverage, BUILD_PROFILING will
 # be set and -fno-builtin will be added to the CFLAGS.  However, libcrmcommon
@@ -50,6 +53,7 @@ endif
 # Use += rather than backlashed continuation lines for parsing by bumplibs
 libcrmcommon_la_SOURCES	=
 libcrmcommon_la_SOURCES	+= acl.c
+libcrmcommon_la_SOURCES	+= actions.c
 libcrmcommon_la_SOURCES	+= agents.c
 libcrmcommon_la_SOURCES	+= alerts.c
 libcrmcommon_la_SOURCES	+= attrs.c
@@ -75,7 +79,6 @@ libcrmcommon_la_SOURCES	+= mainloop.c
 libcrmcommon_la_SOURCES	+= messages.c
 libcrmcommon_la_SOURCES	+= nodes.c
 libcrmcommon_la_SOURCES	+= nvpair.c
-libcrmcommon_la_SOURCES	+= operations.c
 libcrmcommon_la_SOURCES	+= options.c
 libcrmcommon_la_SOURCES	+= output.c
 libcrmcommon_la_SOURCES	+= output_html.c
@@ -89,12 +92,14 @@ libcrmcommon_la_SOURCES	+= pid.c
 libcrmcommon_la_SOURCES	+= procfs.c
 libcrmcommon_la_SOURCES	+= remote.c
 libcrmcommon_la_SOURCES	+= results.c
+libcrmcommon_la_SOURCES	+= scheduler.c
 libcrmcommon_la_SOURCES	+= schemas.c
 libcrmcommon_la_SOURCES	+= scores.c
 libcrmcommon_la_SOURCES	+= strings.c
 libcrmcommon_la_SOURCES	+= utils.c
 libcrmcommon_la_SOURCES	+= watchdog.c
 libcrmcommon_la_SOURCES	+= xml.c
+libcrmcommon_la_SOURCES	+= xml_attr.c
 libcrmcommon_la_SOURCES	+= xml_display.c
 libcrmcommon_la_SOURCES	+= xpath.c
 
@@ -107,18 +112,22 @@ include $(top_srcdir)/mk/tap.mk
 
 libcrmcommon_test_la_SOURCES	= $(libcrmcommon_la_SOURCES)
 libcrmcommon_test_la_SOURCES	+= mock.c
-libcrmcommon_test_la_LDFLAGS	= $(libcrmcommon_la_LDFLAGS) -rpath $(libdir) $(LDFLAGS_WRAP)
+libcrmcommon_test_la_LDFLAGS	= $(libcrmcommon_la_LDFLAGS) 	\
+				  -rpath $(libdir) 		\
+				  $(LDFLAGS_WRAP)
 # If GCC emits a builtin function in place of something we've mocked up, that will
 # get used instead of the mocked version which leads to unexpected test results.  So
 # disable all builtins.  Older versions of GCC (at least, on RHEL7) will still emit
 # replacement code for strdup (and possibly other functions) unless -fno-inline is
 # also added.
-libcrmcommon_test_la_CFLAGS	= $(libcrmcommon_la_CFLAGS) -DPCMK__UNIT_TESTING -fno-builtin -fno-inline
+libcrmcommon_test_la_CFLAGS	= $(libcrmcommon_la_CFLAGS) 	\
+				  -DPCMK__UNIT_TESTING 		\
+				  -fno-builtin 			\
+				  -fno-inline
 # If -fno-builtin is used, -lm also needs to be added.  See the comment at
 # BUILD_PROFILING above.
-libcrmcommon_test_la_LIBADD	= $(libcrmcommon_la_LIBADD) -lcmocka -lm
+libcrmcommon_test_la_LIBADD	= $(libcrmcommon_la_LIBADD) 	\
+				  -lcmocka 			\
+				  -lm
 
 nodist_libcrmcommon_test_la_SOURCES = $(nodist_libcrmcommon_la_SOURCES)
-
-clean-generic:
-	rm -f *.log *.debug *.xml *~

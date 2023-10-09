@@ -565,7 +565,7 @@ command_query(pcmk__output_t *out, cib_t *cib)
     } else if (rc != pcmk_rc_ok) {
         // Don't do anything.
 
-    } else if (xml_has_children(result)) {
+    } else if (result->children != NULL) {
         struct output_data_s od = { out, use_pattern, false };
 
         pcmk__xe_foreach_child(result, NULL, output_one_attribute, &od);
@@ -852,7 +852,7 @@ main(int argc, char **argv)
     } else if (rc != pcmk_rc_ok) {
         exit_code = pcmk_rc2exitc(rc);
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Error performing operation: %s", pcmk_strerror(rc));
+                    "Error performing operation: %s", pcmk_rc_str(rc));
     }
 
 done:

@@ -21,7 +21,7 @@ class Logger:
         self._logfile = filename
 
         if tag:
-            self._source = tag + ": "
+            self._source = "%s: " % tag
         else:
             self._source = ""
 

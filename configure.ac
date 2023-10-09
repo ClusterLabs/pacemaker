@@ -8,9 +8,12 @@ dnl
 dnl This source code is licensed under the GNU General Public License version 2
 dnl or later (GPLv2+) WITHOUT ANY WARRANTY.
 
-dnl ===============================================
-dnl Bootstrap
-dnl ===============================================
+
+dnl ==============================================
+dnl Bootstrap autotools
+dnl ==============================================
+
+# Require a minimum version of autoconf itself
 AC_PREREQ(2.64)
 
 dnl AC_CONFIG_MACRO_DIR is deprecated as of autoconf 2.70 (2020-12-08).
@@ -20,41 +23,26 @@ m4_ifdef([AC_CONFIG_MACRO_DIRS],
          [AC_CONFIG_MACRO_DIRS([m4])],
          [AC_CONFIG_MACRO_DIR([m4])])
 
-AC_DEFUN([AC_DATAROOTDIR_CHECKED])
-
-dnl Suggested structure:
-dnl     information on the package
-dnl     checks for programs
-dnl     checks for libraries
-dnl     checks for header files
-dnl     checks for types
-dnl     checks for structures
-dnl     checks for compiler characteristics
-dnl     checks for library functions
-dnl     checks for system services
-
 m4_include([m4/version.m4])
 AC_INIT([pacemaker], VERSION_NUMBER, [users@clusterlabs.org], [pacemaker],
         PCMK_URL)
 
-PCMK_FEATURES=""
-
 LT_CONFIG_LTDL_DIR([libltdl])
 AC_CONFIG_AUX_DIR([libltdl/config])
-AC_CANONICAL_HOST
 
 dnl Where #defines that autoconf makes (e.g. HAVE_whatever) go
 dnl
-dnl Internal header: include/config.h
-dnl   - Contains ALL defines
+dnl include/config.h
+dnl   - Internal API
+dnl   - Contains all defines
 dnl   - include/config.h.in is generated automatically by autoheader
-dnl   - NOT to be included in any header files except crm_internal.h
+dnl   - Not to be included in any header files except crm_internal.h
 dnl     (which is also not to be included in any other header files)
 dnl
-dnl External header: include/crm_config.h
-dnl   - Contains a subset of defines checked here
-dnl   - Manually edit include/crm_config.h.in to have configure include
-dnl     new defines
+dnl include/crm_config.h
+dnl   - External API
+dnl   - Contains a subset of defines
+dnl   - include/crm_config.h.in is manually edited to select the subset
 dnl   - Should not include HAVE_* defines
 dnl   - Safe to include anywhere
 AC_CONFIG_HEADERS([include/config.h include/crm_config.h])
@@ -72,27 +60,57 @@ AS_IF([test x"${PKG_CONFIG}" != x""], [],
 PKG_INSTALLDIR
 PKG_NOARCH_INSTALLDIR
 
-dnl Example 2.4. Silent Custom Rule to Generate a File
-dnl %-bar.pc: %.pc
-dnl	$(AM_V_GEN)$(LN_S) $(notdir $^) $@
 
-CC_IN_CONFIGURE=yes
-export CC_IN_CONFIGURE
-
-LDD=ldd
-
-dnl ========================================================================
-dnl Compiler characteristics
-dnl ========================================================================
+dnl ==============================================
+dnl Compiler checks and helpers
+dnl ==============================================
 
 dnl A particular compiler can be forced by setting the CC environment variable
 AC_PROG_CC
 
+dnl C++ is needed only to run maintainer utilities, not to build
+AC_PROG_CXX
+
 dnl Use at least C99 if possible (automatic for autoconf >= 2.70)
 m4_version_prereq([2.70], [:], [AC_PROG_CC_STDC])
 
-dnl C++ is not needed for build, just maintainer utilities
-AC_PROG_CXX
+# cc_supports_flag <compiler-flag>
+#  Return success if the C compiler supports the given flag
+cc_supports_flag() {
+    local CFLAGS="-Werror $@"
+    AC_MSG_CHECKING([whether $CC supports $@])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+                      [RC=0; AC_MSG_RESULT([yes])],
+                      [RC=1; AC_MSG_RESULT([no])])
+    return $RC
+}
+
+# cc_temp_flags <compiler-flags>
+#  Use the given flags for subsequent C compilation. These can be reverted to
+#  what was used previously with cc_restore_flags. This allows certain tests to
+#  use specific flags without affecting anything else.
+cc_temp_flags() {
+    ac_save_CFLAGS="$CFLAGS"
+    CFLAGS="$*"
+}
+
+# cc_restore_flags
+#  Restore C compiler flags to what they were before the last cc_temp_flags
+#  call.
+cc_restore_flags() {
+    CFLAGS=$ac_save_CFLAGS
+}
+
+# Check for fatal warning support
+AS_IF([test $enable_fatal_warnings -ne $DISABLED dnl
+       && test x"$GCC" = x"yes" && cc_supports_flag -Werror],
+      [WERROR="-Werror"],
+      [
+          WERROR=""
+          AS_CASE([$enable_fatal_warnings],
+                  [$REQUIRED], [AC_MSG_ERROR([Compiler does not support fatal warnings])],
+                  [$OPTIONAL], [enable_fatal_warnings=$DISABLED])
+      ])
 
 dnl We use md5.c from gnulib, which has its own m4 macros. Per its docs:
 dnl "The macro gl_EARLY must be called as soon as possible after verifying that
@@ -103,8 +121,15 @@ gl_EARLY
 gl_SET_CRYPTO_CHECK_DEFAULT([no])
 gl_INIT
 
-# --enable-new-dtags: Use RUNPATH instead of RPATH.
-# It is necessary to have this done before libtool does linker detection.
+AC_CHECK_SIZEOF(long)
+
+
+dnl ==============================================
+dnl Linker checks
+dnl ==============================================
+
+# Check whether linker supports --enable-new-dtags to use RUNPATH instead of
+# RPATH. It is necessary to do this before libtool does linker detection.
 # See also: https://github.com/kronosnet/kronosnet/issues/107
 AX_CHECK_LINK_FLAG([-Wl,--enable-new-dtags],
                   [AM_LDFLAGS=-Wl,--enable-new-dtags],
@@ -117,65 +142,14 @@ LT_INIT([dlopen])
 LDFLAGS="$saved_LDFLAGS"
 LTDL_INIT([convenience])
 
-AC_TYPE_SIZE_T
-AC_CHECK_SIZEOF(char)
-AC_CHECK_SIZEOF(short)
-AC_CHECK_SIZEOF(int)
-AC_CHECK_SIZEOF(long)
-AC_CHECK_SIZEOF(long long)
 
-dnl ===============================================
-dnl Helpers
-dnl ===============================================
-cc_supports_flag() {
-    local CFLAGS="-Werror $@"
-    AC_MSG_CHECKING([whether $CC supports $@])
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-                      [RC=0; AC_MSG_RESULT([yes])],
-                      [RC=1; AC_MSG_RESULT([no])])
-    return $RC
-}
+dnl ==============================================
+dnl Define configure options
+dnl ==============================================
 
-# Some tests need to use their own CFLAGS
-
-cc_temp_flags() {
-    ac_save_CFLAGS="$CFLAGS"
-    CFLAGS="$*"
-}
-
-cc_restore_flags() {
-    CFLAGS=$ac_save_CFLAGS
-}
-
-# expand_path_option $path_variable_name $default
-expand_path_option() {
-    # The first argument is the variable *name* (not value)
-    ac_path_varname="$1"
-
-    # Get the original value of the variable
-    ac_path_value=$(eval echo "\${${ac_path_varname}}")
-
-    # Expand any literal variable expressions in the value so that we don't
-    # end up with something like '${prefix}' in #defines etc.
-    #
-    # Autoconf deliberately leaves values unexpanded to allow overriding
-    # the configure script choices in make commands (for example,
-    # "make exec_prefix=/foo install"). No longer being able to do this seems
-    # like no great loss.
-    eval ac_path_value=$(eval echo "${ac_path_value}")
-
-    # Use (expanded) default if necessary
-    AS_IF([test x"${ac_path_value}" = x""],
-	  [eval ac_path_value=$(eval echo "$2")])
-
-    # Require a full path
-    AS_CASE(["$ac_path_value"],
-            [/*], [eval ${ac_path_varname}="$ac_path_value"],
-            [*], [AC_MSG_ERROR([$ac_path_varname value "$ac_path_value" is not a full path])]
-    )
-}
-
-# yes_no_try $user_response $default
+# yes_no_try <user-response> <default>
+#  Map a yes/no/try user selection to $REQUIRED for yes, $DISABLED for no, and
+#  $OPTIONAL for try.
 DISABLED=0
 REQUIRED=1
 OPTIONAL=2
@@ -190,17 +164,9 @@ yes_no_try() {
     AC_MSG_ERROR([Invalid option value "$value"])
 }
 
-check_systemdsystemunitdir() {
-    AC_MSG_CHECKING([which system unit file directory to use])
-    PKG_CHECK_VAR([systemdsystemunitdir], [systemd], [systemdsystemunitdir])
-    AC_MSG_RESULT([${systemdsystemunitdir}])
-    test x"$systemdsystemunitdir" != x""
-    return $?
-}
-
 #
-# Fix the defaults of certain built-in variables so they can be used in our
-# custom argument defaults
+# Fix the defaults of certain built-in variables so they can be used in the
+# defaults for our custom arguments
 #
 
 AC_MSG_NOTICE([Sanitizing prefix: ${prefix}])
@@ -234,12 +200,12 @@ AS_CASE([$libdir],
             AC_MSG_RESULT([$libdir])
         ])
 
-dnl ===============================================
-dnl Configure Options
-dnl ===============================================
+# Start a list of optional features this build supports
+PCMK_FEATURES=""
 
-dnl Actual library checks come later, but pkg-config can be used here to grab
-dnl external values to use as defaults for configure options
+dnl This section should include only the definition of configure script
+dnl options and determining their values. Processing should be done later when
+dnl possible, other than what's needed to determine values and defaults.
 
 dnl Per the autoconf docs, --enable-*/--disable-* options should control
 dnl features inherent to Pacemaker, while --with-*/--without-* options should
@@ -299,13 +265,6 @@ AC_ARG_ENABLE([compat-2.0],
 )
 yes_no_try "$enable_compat_2_0" "no"
 enable_compat_2_0=$?
-AS_IF([test $enable_compat_2_0 -ne $DISABLED],
-      [
-          AC_DEFINE_UNQUOTED([PCMK__COMPAT_2_0], [1],
-                             [Keep certain output compatible with 2.0 release series])
-          PCMK_FEATURES="$PCMK_FEATURES compat-2.0"
-      ]
-)
 
 # Add an option to create symlinks at the pre-2.0.0 daemon name locations, so
 # that users and tools can continue to invoke those names directly (e.g., for
@@ -316,7 +275,6 @@ AC_ARG_ENABLE([legacy-links],
 )
 yes_no_try "$enable_legacy_links" "no"
 enable_legacy_links=$?
-AM_CONDITIONAL([BUILD_LEGACY_LINKS], [test $enable_legacy_links -ne $DISABLED])
 
 # AM_GNU_GETTEXT calls AM_NLS which defines the nls option, but it defaults
 # to enabled. We override the definition of AM_NLS to flip the default and mark
@@ -330,11 +288,8 @@ AC_DEFUN([AM_NLS],
     AC_MSG_RESULT([$USE_NLS])
     AC_SUBST([USE_NLS])]
 )
-
 AM_GNU_GETTEXT([external])
 AM_GNU_GETTEXT_VERSION([0.18])
-
-AS_IF([test x"$enable_nls" = x"yes"], [PCMK_FEATURES="$PCMK_FEATURES nls"])
 
 dnl --with-* options: external software support, and custom locations
 
@@ -348,31 +303,14 @@ AC_DEFUN([VERSION_ARG],
 )
 VERSION_ARG(VERSION_NUMBER)
 
-# Redefine PACKAGE_VERSION and VERSION according to PACEMAKER_VERSION in case
-# the user used --with-version. Unfortunately, this can only affect the
-# substitution variables and later uses in this file, not the config.h
-# constants, so we have to be careful to use only PACEMAKER_VERSION in C code.
-PACKAGE_VERSION=$PACEMAKER_VERSION
-VERSION=$PACEMAKER_VERSION
-
-# Detect highest API schema version (use git if available to list managed RNGs,
-# in case there are leftover schema files from an earlier build of a different
-# version, otherwise check all RNGs)
-API_VERSION=$({ git ls-files xml/api/*.rng 2>/dev/null || ls -1 xml/api/*.rng ; } dnl
-              | sed -n -e 's/^.*-\([[0-9]][[0-9.]]*\).rng$/\1/p' | sort -V | tail -1)
-AC_DEFINE_UNQUOTED([PCMK__API_VERSION], ["$API_VERSION"],
-                   [Highest API schema version])
-
-# Re-run configure at next make if any RNG changes, to re-detect highest
-AC_SUBST([CONFIG_STATUS_DEPENDENCIES],
-         [$(echo '$(wildcard $(top_srcdir)/xml/api/*.rng)')])
-
 CRM_DAEMON_USER=""
 AC_ARG_WITH([daemon-user],
     [AS_HELP_STRING([--with-daemon-user=USER],
         [user to run unprivileged Pacemaker daemons as (advanced option: changing this may break other cluster components unless similarly configured) @<:@hacluster@:>@])],
     [ CRM_DAEMON_USER="$withval" ]
 )
+AS_IF([test x"${CRM_DAEMON_USER}" = x""],
+      [CRM_DAEMON_USER="hacluster"])
 
 CRM_DAEMON_GROUP=""
 AC_ARG_WITH([daemon-group],
@@ -380,6 +318,8 @@ AC_ARG_WITH([daemon-group],
         [group to run unprivileged Pacemaker daemons as (advanced option: changing this may break other cluster components unless similarly configured) @<:@haclient@:>@])],
     [ CRM_DAEMON_GROUP="$withval" ]
 )
+AS_IF([test x"${CRM_DAEMON_GROUP}" = x""],
+      [CRM_DAEMON_GROUP="haclient"])
 
 BUG_URL=""
 AC_ARG_WITH([bug-url],
@@ -388,6 +328,8 @@ AC_ARG_WITH([bug-url],
         @<:@https://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker@:>@]))],
     [ BUG_URL="$withval" ]
 )
+AS_IF([test x"${BUG_URL}" = x""],
+      [BUG_URL="https://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker"])
 
 dnl --with-* options: features
 
@@ -422,9 +364,6 @@ AS_CASE([$with_concurrent_fencing_default],
         [true], [PCMK_FEATURES="$PCMK_FEATURES default-concurrent-fencing"],
         [AC_MSG_ERROR([Invalid value "$with_concurrent_fencing_default" for --with-concurrent-fencing-default])]
 )
-AC_DEFINE_UNQUOTED([PCMK__CONCURRENT_FENCING_DEFAULT],
-                   ["$with_concurrent_fencing_default"],
-                   [Default value for concurrent-fencing cluster option])
 
 AC_ARG_WITH([sbd-sync-default],
     [AS_HELP_STRING([--with-sbd-sync-default], m4_normalize([
@@ -437,9 +376,6 @@ AS_CASE([$with_sbd_sync_default],
         [true], [PCMK_FEATURES="$PCMK_FEATURES default-sbd-sync"],
         [AC_MSG_ERROR([Invalid value "$with_sbd_sync_default" for --with-sbd-sync-default])]
 )
-AC_DEFINE_UNQUOTED([PCMK__SBD_SYNC_DEFAULT],
-                   [$with_sbd_sync_default],
-                   [Default value for SBD_SYNC_RESOURCE_STARTUP environment variable])
 
 AC_ARG_WITH([resource-stickiness-default],
     [AS_HELP_STRING([--with-resource-stickiness-default],
@@ -451,9 +387,6 @@ AS_CASE([$with_resource_stickiness_default],
         [*[[!0-9]]*], [AC_MSG_ERROR([$errmsg])],
         [PCMK_FEATURES="$PCMK_FEATURES default-resource-stickiness"]
 )
-AC_DEFINE_UNQUOTED([PCMK__RESOURCE_STICKINESS_DEFAULT],
-                   [$with_resource_stickiness_default],
-                   [Default value for resource-stickiness resource meta-attribute])
 
 AC_ARG_WITH([corosync],
     [AS_HELP_STRING([--with-corosync],
@@ -462,7 +395,7 @@ AC_ARG_WITH([corosync],
 yes_no_try "$with_corosync" "try"
 with_corosync=$?
 
-dnl Get default from corosync if possible.
+dnl Get default from Corosync if possible
 PKG_CHECK_VAR([PCMK__COROSYNC_CONF], [corosync], [corosysconfdir],
               [PCMK__COROSYNC_CONF="$PCMK__COROSYNC_CONF/corosync.conf"],
               [PCMK__COROSYNC_CONF="${sysconfdir}/corosync/corosync.conf"])
@@ -553,10 +486,8 @@ AC_ARG_WITH([ocfdir],
         /usr/lib/ocf@:>@]))],
     [ OCF_ROOT_DIR="$withval" ]
 )
-AC_SUBST(OCF_ROOT_DIR)
-AC_DEFINE_UNQUOTED([OCF_ROOT_DIR], ["$OCF_ROOT_DIR"],
-                   [OCF root directory for resource agents and libraries])
 
+dnl Get default from resource-agents if possible
 PKG_CHECK_VAR([OCF_RA_PATH], [resource-agents], [ocfrapath], [],
               [OCF_RA_PATH="$OCF_ROOT_DIR/resource.d"])
 AC_ARG_WITH([ocfrapath],
@@ -566,7 +497,6 @@ AC_ARG_WITH([ocfrapath],
         OCFDIR/resource.d@:>@]))],
     [ OCF_RA_PATH="$withval" ]
 )
-AC_SUBST(OCF_RA_PATH)
 
 OCF_RA_INSTALL_DIR="$OCF_ROOT_DIR/resource.d"
 AC_ARG_WITH([ocfrainstalldir],
@@ -575,7 +505,6 @@ AC_ARG_WITH([ocfrainstalldir],
         @<:@OCFDIR/resource.d@:>@]))],
     [ OCF_RA_INSTALL_DIR="$withval" ]
 )
-AC_SUBST(OCF_RA_INSTALL_DIR)
 
 dnl Get default from fence-agents if available
 PKG_CHECK_VAR([FA_PREFIX], [fence-agents], [prefix],
@@ -587,7 +516,6 @@ AC_ARG_WITH([fence-bindir],
         package if available otherwise SBINDIR@:>@]))],
     [ PCMK__FENCE_BINDIR="$withval" ]
 )
-AC_SUBST(PCMK__FENCE_BINDIR)
 
 dnl --with-* options: non-production testing
 
@@ -620,31 +548,198 @@ AC_ARG_VAR([CFLAGS_HARDENED_EXE], [extra C compiler flags for hardened executabl
 AC_ARG_VAR([LDFLAGS_HARDENED_EXE], [extra linker flags for hardened executables])
 
 
-dnl ===============================================
-dnl General Processing
-dnl ===============================================
+dnl ==============================================
+dnl Locate essential tools
+dnl ==============================================
 
-AC_DEFINE_UNQUOTED(PACEMAKER_VERSION, "$VERSION",
-                   [Version number of this Pacemaker build])
+PATH="$PATH:/sbin:/usr/sbin:/usr/local/sbin:/usr/local/bin"
+export PATH
 
-PACKAGE_SERIES=`echo $VERSION | awk -F. '{ print $1"."$2 }'`
-AC_SUBST(PACKAGE_SERIES)
+dnl Pacemaker's executable python scripts will invoke the python specified by
+dnl configure's PYTHON variable. If not specified, AM_PATH_PYTHON will check a
+dnl built-in list with (unversioned) "python" having precedence. To configure
+dnl Pacemaker to use a specific python interpreter version, define PYTHON
+dnl when calling configure, for example: ./configure PYTHON=/usr/bin/python3.6
+
+dnl If PYTHON was specified, ensure it is an absolute path
+AS_IF([test x"${PYTHON}" != x""], [AC_PATH_PROG([PYTHON], [$PYTHON])])
+
+dnl Require a minimum Python version
+AM_PATH_PYTHON([3.4])
 
 AC_PROG_LN_S
 AC_PROG_MKDIR_P
 
-# Check for fatal warning support
-AS_IF([test $enable_fatal_warnings -ne $DISABLED && test x"$GCC" = x"yes" && cc_supports_flag -Werror],
-      [WERROR="-Werror"],
+AC_PATH_PROG([GIT], [git], [false])
+
+dnl Bash is needed for building man pages and running regression tests.
+dnl We set "BASH_PATH" because "BASH" is already an environment variable.
+REQUIRE_PROG([BASH_PATH], [bash])
+
+AC_PATH_PROGS(VALGRIND_BIN, valgrind, /usr/bin/valgrind)
+AC_DEFINE_UNQUOTED(VALGRIND_BIN, "$VALGRIND_BIN", Valgrind command)
+
+
+dnl ==============================================
+dnl Package and schema versioning
+dnl ==============================================
+
+# Redefine PACKAGE_VERSION and VERSION according to PACEMAKER_VERSION in case
+# the user used --with-version. Unfortunately, this can only affect the
+# substitution variables and later uses in this file, not the config.h
+# constants, so we have to be careful to use only PACEMAKER_VERSION in C code.
+PACKAGE_VERSION=$PACEMAKER_VERSION
+VERSION=$PACEMAKER_VERSION
+
+AC_DEFINE_UNQUOTED(PACEMAKER_VERSION, "$VERSION",
+                   [Version number of this Pacemaker build])
+
+AC_MSG_CHECKING([build version])
+AS_IF([test "$GIT" != "false" && test -d .git],
       [
-          WERROR=""
-          AS_CASE([$enable_fatal_warnings],
-                  [$REQUIRED], [AC_MSG_ERROR([Compiler does not support fatal warnings])],
-                  [$OPTIONAL], [
-                      AC_MSG_NOTICE([Compiler does not support fatal warnings])
-                      enable_fatal_warnings=$DISABLED
-                  ])
+          BUILD_VERSION=`"$GIT" log --pretty="format:%h" -n 1`
+          AC_MSG_RESULT([$BUILD_VERSION (git hash)])
+      ],
+      [
+          # The current directory name make a reasonable default
+          # Most generated archives will include the hash or tag
+          BASE=`basename $PWD`
+          BUILD_VERSION=`echo $BASE | sed s:.*[[Pp]]acemaker-::`
+          AC_MSG_RESULT([$BUILD_VERSION (directory name)])
       ])
+AC_DEFINE_UNQUOTED(BUILD_VERSION, "$BUILD_VERSION", Build version)
+AC_SUBST(BUILD_VERSION)
+
+# schema_files <schema-dir>
+#  List all manually edited RNG schemas (as opposed to auto-generated via make)
+#  in the given directory. Use git if available to list managed RNGs, in case
+#  there are leftover schema files from an earlier build of a different
+#  version. Otherwise, check all RNGs.
+schema_files() {
+    local files="$("$GIT" ls-files "$1"/*.rng 2>/dev/null)"
+
+    AS_IF([test x"$files" = x""],
+          [
+              files="$(ls -1 "$1"/*.rng | grep -E -v    \
+                       '/(pacemaker|api-result|crm_mon|versions)[^/]*\.rng')"
+          ])
+    echo "$files"
+}
+
+# latest_schema_version <schema-dir>
+#  Determine highest RNG version in the given schema directory.
+latest_schema_version() {
+    schema_files "$1" | sed -n -e 's/^.*-\([[0-9]][[0-9.]]*\).rng$/\1/p' dnl
+                      | sort -V | tail -1
+}
+
+# schemas_for_make <schema-dir>
+#  Like schema_files, but suitable for use in make variables.
+schemas_for_make() {
+    local file
+
+    for file in $(schema_files "$1"); do
+        AS_ECHO_N(["\$(top_srcdir)/$file "])
+    done
+}
+
+# Detect highest API schema version
+API_VERSION=$(latest_schema_version "xml/api")
+AC_DEFINE_UNQUOTED([PCMK__API_VERSION], ["$API_VERSION"],
+                   [Highest API schema version])
+
+# Detect highest CIB schema version
+CIB_VERSION=$(latest_schema_version "xml")
+AC_SUBST(CIB_VERSION)
+
+# Re-run configure at next make if schema files change, to re-detect versions
+cib_schemas="$(schemas_for_make "xml")"
+api_schemas="$(schemas_for_make "xml/api")"
+CONFIG_STATUS_DEPENDENCIES="$cib_schemas $api_schemas"
+AC_SUBST(CONFIG_STATUS_DEPENDENCIES)
+
+
+dnl ==============================================
+dnl Process simple options
+dnl ==============================================
+
+AS_IF([test $enable_compat_2_0 -ne $DISABLED],
+      [
+          AC_DEFINE_UNQUOTED([PCMK__COMPAT_2_0], [1],
+                             [Keep certain output compatible with 2.0 release series])
+          PCMK_FEATURES="$PCMK_FEATURES compat-2.0"
+      ]
+)
+
+AM_CONDITIONAL([BUILD_LEGACY_LINKS], [test $enable_legacy_links -ne $DISABLED])
+
+AS_IF([test x"$enable_nls" = x"yes"], [PCMK_FEATURES="$PCMK_FEATURES nls"])
+
+AC_DEFINE_UNQUOTED([PCMK__CONCURRENT_FENCING_DEFAULT],
+                   ["$with_concurrent_fencing_default"],
+                   [Default value for concurrent-fencing cluster option])
+
+AC_DEFINE_UNQUOTED([PCMK__SBD_SYNC_DEFAULT],
+                   [$with_sbd_sync_default],
+                   [Default value for SBD_SYNC_RESOURCE_STARTUP environment variable])
+
+AC_DEFINE_UNQUOTED([PCMK__RESOURCE_STICKINESS_DEFAULT],
+                   [$with_resource_stickiness_default],
+                   [Default value for resource-stickiness resource meta-attribute])
+
+AS_IF([test x"${PCMK_GNUTLS_PRIORITIES}" != x""], [],
+      [AC_MSG_ERROR([--with-gnutls-priorities value must not be empty])])
+AC_DEFINE_UNQUOTED([PCMK_GNUTLS_PRIORITIES], ["$PCMK_GNUTLS_PRIORITIES"],
+                   [GnuTLS cipher priorities])
+AC_SUBST(PCMK_GNUTLS_PRIORITIES)
+
+AC_SUBST(BUG_URL)
+AC_DEFINE_UNQUOTED([PCMK__BUG_URL], ["$BUG_URL"],
+                   [Where bugs should be reported])
+
+AC_DEFINE_UNQUOTED([CRM_DAEMON_USER], ["$CRM_DAEMON_USER"],
+                   [User to run Pacemaker daemons as])
+AC_SUBST(CRM_DAEMON_USER)
+
+AC_DEFINE_UNQUOTED([CRM_DAEMON_GROUP], ["$CRM_DAEMON_GROUP"],
+                   [Group to run Pacemaker daemons as])
+AC_SUBST(CRM_DAEMON_GROUP)
+
+
+dnl ==============================================
+dnl Process file paths
+dnl ==============================================
+
+# expand_path_option <path-variable-name> [<default>]
+#  Given the name of a file path variable, expand any variable references
+#  inside it, use the specified default if it is not specified, and ensure it
+#  is a full path.
+expand_path_option() {
+    # The first argument is the variable *name* (not value)
+    ac_path_varname="$1"
+
+    # Get the original value of the variable
+    ac_path_value=$(eval echo "\${${ac_path_varname}}")
+
+    # Expand any literal variable expressions in the value so that we don't
+    # end up with something like '${prefix}' in #defines etc.
+    #
+    # Autoconf deliberately leaves values unexpanded to allow overriding
+    # the configure script choices in make commands (for example,
+    # "make exec_prefix=/foo install"). No longer being able to do this seems
+    # like no great loss.
+    eval ac_path_value=$(eval echo "${ac_path_value}")
+
+    # Use (expanded) default if necessary
+    AS_IF([test x"${ac_path_value}" = x""],
+          [eval ac_path_value=$(eval echo "$2")])
+
+    # Require a full path
+    AS_CASE(["$ac_path_value"],
+            [/*], [eval ${ac_path_varname}="$ac_path_value"],
+            [*], [AC_MSG_ERROR([$ac_path_varname value "$ac_path_value" is not a full path])]
+    )
+}
 
 AC_MSG_NOTICE([Sanitizing INITDIR: ${INITDIR}])
 AS_CASE([$INITDIR],
@@ -670,6 +765,7 @@ expand_path_option exec_prefix
 expand_path_option bindir
 expand_path_option sbindir
 expand_path_option libexecdir
+expand_path_option datarootdir
 expand_path_option datadir
 expand_path_option sysconfdir
 expand_path_option sharedstatedir
@@ -680,10 +776,13 @@ expand_path_option oldincludedir
 expand_path_option infodir
 expand_path_option mandir
 
-dnl Home-grown variables
+AC_DEFUN([AC_DATAROOTDIR_CHECKED])
+
+dnl Expand values of custom directory options
 
 expand_path_option localedir "${datadir}/locale"
-AC_DEFINE_UNQUOTED([PCMK__LOCALE_DIR],["$localedir"], [Base directory for message catalogs])
+AC_DEFINE_UNQUOTED([PCMK__LOCALE_DIR],["$localedir"],
+                   [Base directory for message catalogs])
 
 AS_IF([test x"${runstatedir}" = x""], [runstatedir="${pcmk_runstatedir}"])
 expand_path_option runstatedir "${localstatedir}/run"
@@ -705,33 +804,88 @@ expand_path_option PCMK__COROSYNC_CONF "${sysconfdir}/corosync/corosync.conf"
 AC_SUBST(PCMK__COROSYNC_CONF)
 
 expand_path_option CRM_LOG_DIR "${localstatedir}/log/pacemaker"
-AC_DEFINE_UNQUOTED(CRM_LOG_DIR,"$CRM_LOG_DIR", Location for Pacemaker log file)
+AC_DEFINE_UNQUOTED([CRM_LOG_DIR], ["$CRM_LOG_DIR"],
+                   [Location for Pacemaker log file])
 AC_SUBST(CRM_LOG_DIR)
 
 expand_path_option CRM_BUNDLE_DIR "${localstatedir}/log/pacemaker/bundles"
-AC_DEFINE_UNQUOTED(CRM_BUNDLE_DIR,"$CRM_BUNDLE_DIR", Location for Pacemaker bundle logs)
+AC_DEFINE_UNQUOTED([CRM_BUNDLE_DIR], ["$CRM_BUNDLE_DIR"],
+                   [Location for Pacemaker bundle logs])
 AC_SUBST(CRM_BUNDLE_DIR)
 
 expand_path_option PCMK__FENCE_BINDIR
-AC_DEFINE_UNQUOTED(PCMK__FENCE_BINDIR,"$PCMK__FENCE_BINDIR",
+AC_SUBST(PCMK__FENCE_BINDIR)
+AC_DEFINE_UNQUOTED([PCMK__FENCE_BINDIR], ["$PCMK__FENCE_BINDIR"],
                    [Location for executable fence agents])
 
+expand_path_option OCF_ROOT_DIR
+AC_SUBST(OCF_ROOT_DIR)
+AC_DEFINE_UNQUOTED([OCF_ROOT_DIR], ["$OCF_ROOT_DIR"],
+                   [OCF root directory for resource agents and libraries])
+
 expand_path_option OCF_RA_PATH
+AC_SUBST(OCF_RA_PATH)
 AC_DEFINE_UNQUOTED([OCF_RA_PATH], ["$OCF_RA_PATH"],
                    [OCF directories to search for resource agents ])
 
-AS_IF([test x"${PCMK_GNUTLS_PRIORITIES}" != x""], [],
-      [AC_MSG_ERROR([--with-gnutls-priorities value must not be empty])])
-AC_DEFINE_UNQUOTED([PCMK_GNUTLS_PRIORITIES], ["$PCMK_GNUTLS_PRIORITIES"],
-                   [GnuTLS cipher priorities])
-AC_SUBST(PCMK_GNUTLS_PRIORITIES)
+expand_path_option OCF_RA_INSTALL_DIR
+AC_SUBST(OCF_RA_INSTALL_DIR)
 
-AS_IF([test x"${BUG_URL}" = x""],
-      [BUG_URL="https://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker"])
-AC_SUBST(BUG_URL)
-AC_DEFINE_UNQUOTED([PCMK__BUG_URL], ["$BUG_URL"],
-                   [Where bugs should be reported])
+# Derived paths
 
+CRM_SCHEMA_DIRECTORY="${datadir}/pacemaker"
+AC_DEFINE_UNQUOTED([CRM_SCHEMA_DIRECTORY], ["$CRM_SCHEMA_DIRECTORY"],
+                   [Location for the Pacemaker Relax-NG Schema])
+AC_SUBST(CRM_SCHEMA_DIRECTORY)
+
+CRM_CORE_DIR="${localstatedir}/lib/pacemaker/cores"
+AC_DEFINE_UNQUOTED([CRM_CORE_DIR], ["$CRM_CORE_DIR"],
+                   [Directory Pacemaker daemons should change to (without systemd, core files will go here)])
+AC_SUBST(CRM_CORE_DIR)
+
+CRM_PACEMAKER_DIR="${localstatedir}/lib/pacemaker"
+AC_DEFINE_UNQUOTED([CRM_PACEMAKER_DIR], ["$CRM_PACEMAKER_DIR"],
+                   [Location to store directory produced by Pacemaker daemons])
+AC_SUBST(CRM_PACEMAKER_DIR)
+
+CRM_BLACKBOX_DIR="${localstatedir}/lib/pacemaker/blackbox"
+AC_DEFINE_UNQUOTED([CRM_BLACKBOX_DIR], ["$CRM_BLACKBOX_DIR"],
+                   [Where to keep blackbox dumps])
+AC_SUBST(CRM_BLACKBOX_DIR)
+
+PE_STATE_DIR="${localstatedir}/lib/pacemaker/pengine"
+AC_DEFINE_UNQUOTED([PE_STATE_DIR], ["$PE_STATE_DIR"],
+                   [Where to keep scheduler outputs])
+AC_SUBST(PE_STATE_DIR)
+
+CRM_CONFIG_DIR="${localstatedir}/lib/pacemaker/cib"
+AC_DEFINE_UNQUOTED([CRM_CONFIG_DIR], ["$CRM_CONFIG_DIR"],
+                   [Where to keep configuration files])
+AC_SUBST(CRM_CONFIG_DIR)
+
+CRM_DAEMON_DIR="${libexecdir}/pacemaker"
+AC_DEFINE_UNQUOTED([CRM_DAEMON_DIR], ["$CRM_DAEMON_DIR"],
+                   [Location for Pacemaker daemons])
+AC_SUBST(CRM_DAEMON_DIR)
+
+CRM_STATE_DIR="${runstatedir}/crm"
+AC_DEFINE_UNQUOTED([CRM_STATE_DIR], ["$CRM_STATE_DIR"],
+                   [Where to keep state files and sockets])
+AC_SUBST(CRM_STATE_DIR)
+
+CRM_RSCTMP_DIR="${runstatedir}/resource-agents"
+AC_DEFINE_UNQUOTED([CRM_RSCTMP_DIR], ["$CRM_RSCTMP_DIR"],
+                   [Where resource agents should keep state files])
+AC_SUBST(CRM_RSCTMP_DIR)
+
+PACEMAKER_CONFIG_DIR="${sysconfdir}/pacemaker"
+AC_DEFINE_UNQUOTED([PACEMAKER_CONFIG_DIR], ["$PACEMAKER_CONFIG_DIR"],
+                   [Where to keep configuration files like authkey])
+AC_SUBST(PACEMAKER_CONFIG_DIR)
+
+AC_DEFINE_UNQUOTED([SBIN_DIR], ["$sbindir"], [Location for system binaries])
+
+# Warn about any directories that don't exist (which may be OK)
 for j in prefix exec_prefix bindir sbindir libexecdir datadir sysconfdir \
     sharedstatedir localstatedir libdir includedir oldincludedir infodir \
     mandir INITDIR docdir CONFIGDIR localedir
@@ -740,6 +894,10 @@ do
     AS_IF([test ! -d "$dirname"],
           [AC_MSG_WARN([$j directory ($dirname) does not exist (yet)])])
 done
+
+dnl ===============================================
+dnl General Processing
+dnl ===============================================
 
 us_auth=
 AC_CHECK_HEADER([sys/socket.h], [
@@ -786,6 +944,10 @@ AS_IF([test -z "${us_auth}"], [
 dnl OS-based decision-making is poor autotools practice; feature-based
 dnl mechanisms are strongly preferred. Keep this section to a bare minimum;
 dnl regard as a "necessary evil".
+
+dnl Set host_os and host_cpu
+AC_CANONICAL_HOST
+
 INIT_EXT=""
 PROCFS=0
 dnl Solaris and some *BSD versions support procfs but not files we need
@@ -810,24 +972,10 @@ AS_CASE(["$host_cpu"],
                     ])
         ])
 
-dnl ===============================================
-dnl Program Paths
-dnl ===============================================
 
-PATH="$PATH:/sbin:/usr/sbin:/usr/local/sbin:/usr/local/bin"
-export PATH
-
-dnl Pacemaker's executable python scripts will invoke the python specified by
-dnl configure's PYTHON variable. If not specified, AM_PATH_PYTHON will check a
-dnl built-in list with (unversioned) "python" having precedence. To configure
-dnl Pacemaker to use a specific python interpreter version, define PYTHON
-dnl when calling configure, for example: ./configure PYTHON=/usr/bin/python3.6
-
-dnl Ensure PYTHON is an absolute path
-AS_IF([test x"${PYTHON}" != x""], [AC_PATH_PROG([PYTHON], [$PYTHON])])
-
-dnl Require a minimum Python version
-AM_PATH_PYTHON([3.4])
+dnl ==============================================
+dnl Documentation build dependencies and checks
+dnl ==============================================
 
 AC_PATH_PROGS([ASCIIDOC_CONV], [asciidoc asciidoctor])
 AC_PATH_PROG([HELP2MAN], [help2man])
@@ -835,15 +983,6 @@ AC_PATH_PROG([SPHINX], [sphinx-build])
 AC_PATH_PROG([INKSCAPE], [inkscape])
 AC_PATH_PROG([XSLTPROC], [xsltproc])
 AC_PATH_PROG([XMLCATALOG], [xmlcatalog])
-
-dnl Bash is needed for building man pages and running regression tests.
-dnl BASH is already an environment variable, so use something else.
-AC_PATH_PROG([BASH_PATH], [bash])
-AS_IF([test x"${BASH_PATH}" != x""], [],
-      [AC_MSG_FAILURE([Could not find required build tool bash])])
-
-AC_PATH_PROGS(VALGRIND_BIN, valgrind, /usr/bin/valgrind)
-AC_DEFINE_UNQUOTED(VALGRIND_BIN, "$VALGRIND_BIN", Valgrind command)
 
 AM_CONDITIONAL(BUILD_HELP, test x"${HELP2MAN}" != x"")
 AS_IF([test x"${HELP2MAN}" != x""],
@@ -913,28 +1052,6 @@ AS_IF([test -n "$GETOPT_PATH"], [AC_MSG_RESULT([$GETOPT_PATH])],
       ])
 AC_SUBST([GETOPT_PATH])
 
-dnl ========================================================================
-dnl checks for library functions to replace them
-dnl
-dnl     NoSuchFunctionName:
-dnl             is a dummy function which no system supplies.  It is here to make
-dnl             the system compile semi-correctly on OpenBSD which doesn't know
-dnl             how to create an empty archive
-dnl
-dnl     scandir: Only on BSD.
-dnl             System-V systems may have it, but hidden and/or deprecated.
-dnl             A replacement function is supplied for it.
-dnl
-dnl     strerror: returns a string that corresponds to an errno.
-dnl             A replacement function is supplied for it.
-dnl
-dnl     strnlen: is a gnu function similar to strlen, but safer.
-dnl            We wrote a tolerably-fast replacement function for it.
-dnl
-dnl     strndup: is a gnu function similar to strdup, but safer.
-dnl            We wrote a tolerably-fast replacement function for it.
-
-AC_REPLACE_FUNCS(alphasort NoSuchFunctionName scandir strerror strchrnul strnlen strndup)
 
 dnl ===============================================
 dnl Libraries
@@ -979,6 +1096,18 @@ PKG_CHECK_MODULES(LIBXML2, [libxml-2.0],
 
 REQUIRE_LIB([xslt], [xsltApplyStylesheet])
 
+AC_MSG_CHECKING([whether __progname and __progname_full are available])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[extern char *__progname, *__progname_full;]],
+                                [[__progname = "foo";
+                                  __progname_full = "foo bar";]])],
+               [
+                   have_progname="yes"
+                   AC_DEFINE(HAVE_PROGNAME, 1,
+                             [Define to 1 if processes can change their name])
+               ],
+               [have_progname="no"])
+AC_MSG_RESULT([$have_progname])
+
 dnl ========================================================================
 dnl Headers
 dnl ========================================================================
@@ -1000,18 +1129,30 @@ AC_CHECK_HEADERS([security/pam_appl.h pam/pam_appl.h])
 REQUIRE_HEADER([arpa/inet.h])
 REQUIRE_HEADER([ctype.h])
 REQUIRE_HEADER([dirent.h])
+REQUIRE_HEADER([dlfcn.h])
 REQUIRE_HEADER([errno.h])
+REQUIRE_HEADER([fcntl.h])
+REQUIRE_HEADER([float.h])
 REQUIRE_HEADER([glib.h])
 REQUIRE_HEADER([grp.h])
+REQUIRE_HEADER([inttypes.h])
+REQUIRE_HEADER([libgen.h])
 REQUIRE_HEADER([limits.h])
+REQUIRE_HEADER([locale.h])
 REQUIRE_HEADER([netdb.h])
 REQUIRE_HEADER([netinet/in.h])
 REQUIRE_HEADER([netinet/ip.h], [
     #include <sys/types.h>
     #include <netinet/in.h>
 ])
+REQUIRE_HEADER([netinet/tcp.h])
 REQUIRE_HEADER([pwd.h])
+REQUIRE_HEADER([regex.h])
+REQUIRE_HEADER([sched.h])
 REQUIRE_HEADER([signal.h])
+REQUIRE_HEADER([stdarg.h])
+REQUIRE_HEADER([stdbool.h])
+REQUIRE_HEADER([stdint.h])
 REQUIRE_HEADER([stdio.h])
 REQUIRE_HEADER([stdlib.h])
 REQUIRE_HEADER([string.h])
@@ -1024,29 +1165,16 @@ REQUIRE_HEADER([sys/socket.h])
 REQUIRE_HEADER([sys/stat.h])
 REQUIRE_HEADER([sys/time.h])
 REQUIRE_HEADER([sys/types.h])
+REQUIRE_HEADER([sys/uio.h])
 REQUIRE_HEADER([sys/utsname.h])
 REQUIRE_HEADER([sys/wait.h])
+REQUIRE_HEADER([termios.h])
 REQUIRE_HEADER([time.h])
 REQUIRE_HEADER([unistd.h])
 REQUIRE_HEADER([libxml/xpath.h])
 REQUIRE_HEADER([libxslt/xslt.h])
 
 cc_restore_flags
-
-AC_CHECK_FUNCS([uuid_unparse], [],
-               [AC_MSG_FAILURE([Could not find required C function uuid_unparse()])])
-
-AC_CACHE_CHECK([whether __progname and __progname_full are available],
-               [pf_cv_var_progname],
-               [AC_LINK_IFELSE(
-                   [AC_LANG_PROGRAM([[extern char *__progname, *__progname_full;]],
-                                    [[__progname = "foo"; __progname_full = "foo bar";]])],
-                   [pf_cv_var_progname="yes"],
-                   [pf_cv_var_progname="no"]
-               )]
-              )
-AS_IF([test x"$pf_cv_var_progname" = x"yes"],
-      [AC_DEFINE(HAVE_PROGNAME,1,[Define to 1 if processes can change their name])])
 
 dnl ========================================================================
 dnl Generic declarations
@@ -1101,25 +1229,42 @@ dnl ========================================================================
 dnl Functions
 dnl ========================================================================
 
+REQUIRE_FUNC([alphasort])
 REQUIRE_FUNC([getopt])
+REQUIRE_FUNC([scandir])
 REQUIRE_FUNC([setenv])
+REQUIRE_FUNC([strndup])
+REQUIRE_FUNC([strnlen])
 REQUIRE_FUNC([unsetenv])
+REQUIRE_FUNC([uuid_unparse])
 REQUIRE_FUNC([vasprintf])
 
-AC_CACHE_CHECK(whether sscanf supports %m,
-               pf_cv_var_sscanf,
-               AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#include <stdio.h>
-const char *s = "some-command-line-arg";
-int main(int argc, char **argv) {
-char *name = NULL;
-int n = sscanf(s, "%ms", &name);
-return n == 1 ? 0 : 1;
-}
-]])],
-                                 pf_cv_var_sscanf="yes", pf_cv_var_sscanf="no", pf_cv_var_sscanf="no"))
+AC_CHECK_FUNCS([strchrnul])
 
-AS_IF([test x"$pf_cv_var_sscanf" = x"yes"],
+AC_CHECK_FUNCS([fopen64])
+AM_CONDITIONAL([WRAPPABLE_FOPEN64], [test x"$ac_cv_func_fopen64" = x"yes"])
+
+AC_MSG_CHECKING([whether strerror always returns non-NULL])
+AC_RUN_IFELSE([AC_LANG_PROGRAM([[
+    #include <stdio.h>
+    #include <string.h>
+                               ]], [[
+    return strerror(-1) == NULL;
+                               ]])],
+              [AC_MSG_RESULT([yes])],
+              [AC_MSG_ERROR([strerror() is not C99-compliant])],
+              [AC_MSG_ERROR([strerror() is not C99-compliant])])
+
+AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <stdio.h>]], [[
+    const char *s = "some-command-line-arg";
+    char *name = NULL;
+    int n = sscanf(s, "%ms", &name);
+    return n != 1;
+                               ]])],
+              [have_sscanf_m="yes"],
+              [have_sscanf_m="no"],
+              [have_sscanf_m="no"])
+AS_IF([test x"$have_sscanf_m" = x"yes"],
       [AC_DEFINE([HAVE_SSCANF_M], [1],
                  [Define to 1 if sscanf %m modifier is available])])
 
@@ -1308,84 +1453,10 @@ AC_CHECK_HEADERS([stonith/stonith.h],
                  ])
 AM_CONDITIONAL([BUILD_LHA_SUPPORT], [test x"$ac_cv_header_stonith_stonith_h" = x"yes"])
 
+
 dnl ===============================================
-dnl Variables needed for substitution
+dnl Detect DBus, systemd, and Upstart support
 dnl ===============================================
-CRM_SCHEMA_DIRECTORY="${datadir}/pacemaker"
-AC_DEFINE_UNQUOTED(CRM_SCHEMA_DIRECTORY,"$CRM_SCHEMA_DIRECTORY", Location for the Pacemaker Relax-NG Schema)
-AC_SUBST(CRM_SCHEMA_DIRECTORY)
-
-CRM_CORE_DIR="${localstatedir}/lib/pacemaker/cores"
-AC_DEFINE_UNQUOTED([CRM_CORE_DIR], ["$CRM_CORE_DIR"],
-		   [Directory Pacemaker daemons should change to (without systemd, core files will go here)])
-AC_SUBST(CRM_CORE_DIR)
-
-AS_IF([test x"${CRM_DAEMON_USER}" = x""],
-      [CRM_DAEMON_USER="hacluster"])
-AC_DEFINE_UNQUOTED(CRM_DAEMON_USER,"$CRM_DAEMON_USER", User to run Pacemaker daemons as)
-AC_SUBST(CRM_DAEMON_USER)
-
-AS_IF([test x"${CRM_DAEMON_GROUP}" = x""],
-      [CRM_DAEMON_GROUP="haclient"])
-AC_DEFINE_UNQUOTED(CRM_DAEMON_GROUP,"$CRM_DAEMON_GROUP", Group to run Pacemaker daemons as)
-AC_SUBST(CRM_DAEMON_GROUP)
-
-CRM_PACEMAKER_DIR=${localstatedir}/lib/pacemaker
-AC_DEFINE_UNQUOTED(CRM_PACEMAKER_DIR,"$CRM_PACEMAKER_DIR", Location to store directory produced by Pacemaker daemons)
-AC_SUBST(CRM_PACEMAKER_DIR)
-
-CRM_BLACKBOX_DIR=${localstatedir}/lib/pacemaker/blackbox
-AC_DEFINE_UNQUOTED(CRM_BLACKBOX_DIR,"$CRM_BLACKBOX_DIR", Where to keep blackbox dumps)
-AC_SUBST(CRM_BLACKBOX_DIR)
-
-PE_STATE_DIR="${localstatedir}/lib/pacemaker/pengine"
-AC_DEFINE_UNQUOTED(PE_STATE_DIR,"$PE_STATE_DIR", Where to keep scheduler outputs)
-AC_SUBST(PE_STATE_DIR)
-
-CRM_CONFIG_DIR="${localstatedir}/lib/pacemaker/cib"
-AC_DEFINE_UNQUOTED(CRM_CONFIG_DIR,"$CRM_CONFIG_DIR", Where to keep configuration files)
-AC_SUBST(CRM_CONFIG_DIR)
-
-CRM_DAEMON_DIR="${libexecdir}/pacemaker"
-AC_DEFINE_UNQUOTED(CRM_DAEMON_DIR,"$CRM_DAEMON_DIR", Location for Pacemaker daemons)
-AC_SUBST(CRM_DAEMON_DIR)
-
-CRM_STATE_DIR="${runstatedir}/crm"
-AC_DEFINE_UNQUOTED([CRM_STATE_DIR], ["$CRM_STATE_DIR"],
-                   [Where to keep state files and sockets])
-AC_SUBST(CRM_STATE_DIR)
-
-CRM_RSCTMP_DIR="${runstatedir}/resource-agents"
-AC_DEFINE_UNQUOTED(CRM_RSCTMP_DIR,"$CRM_RSCTMP_DIR", Where resource agents should keep state files)
-AC_SUBST(CRM_RSCTMP_DIR)
-
-PACEMAKER_CONFIG_DIR="${sysconfdir}/pacemaker"
-AC_DEFINE_UNQUOTED(PACEMAKER_CONFIG_DIR,"$PACEMAKER_CONFIG_DIR", Where to keep configuration files like authkey)
-AC_SUBST(PACEMAKER_CONFIG_DIR)
-
-AC_DEFINE_UNQUOTED(SBIN_DIR,"$sbindir",[Location for system binaries])
-
-AC_PATH_PROGS(GIT, git false)
-
-AC_MSG_CHECKING([build version])
-BUILD_VERSION=$Format:%h$
-AS_IF([test $BUILD_VERSION != ":%h$"],
-      [AC_MSG_RESULT([$BUILD_VERSION (archive hash)])],
-      [test -x $GIT && test -d .git],
-      [
-          BUILD_VERSION=`$GIT log --pretty="format:%h" -n 1`
-          AC_MSG_RESULT([$BUILD_VERSION (git hash)])
-      ],
-      [
-          # The current directory name make a reasonable default
-          # Most generated archives will include the hash or tag
-          BASE=`basename $PWD`
-          BUILD_VERSION=`echo $BASE | sed s:.*[[Pp]]acemaker-::`
-          AC_MSG_RESULT([$BUILD_VERSION (directory name)])
-      ])
-
-AC_DEFINE_UNQUOTED(BUILD_VERSION, "$BUILD_VERSION", Build version)
-AC_SUBST(BUILD_VERSION)
 
 HAVE_dbus=1
 PKG_CHECK_MODULES([DBUS], [dbus-1],
@@ -1399,6 +1470,14 @@ AS_IF([test $HAVE_dbus = 0],
       [PC_NAME_DBUS=""],
       [PC_NAME_DBUS="dbus-1"])
 AC_SUBST(PC_NAME_DBUS)
+
+check_systemdsystemunitdir() {
+    AC_MSG_CHECKING([which system unit file directory to use])
+    PKG_CHECK_VAR([systemdsystemunitdir], [systemd], [systemdsystemunitdir])
+    AC_MSG_RESULT([${systemdsystemunitdir}])
+    test x"$systemdsystemunitdir" != x""
+    return $?
+}
 
 AS_CASE([$enable_systemd],
         [$REQUIRED], [
@@ -1488,6 +1567,11 @@ AC_DEFINE_UNQUOTED([SUPPORT_UPSTART], [$enable_upstart],
                    [Support Upstart resources])
 AM_CONDITIONAL([BUILD_UPSTART], [test $enable_upstart -eq $REQUIRED])
 AC_SUBST(SUPPORT_UPSTART)
+
+
+dnl ========================================================================
+dnl Detect Nagios support
+dnl ========================================================================
 
 AS_CASE([$with_nagios],
         [$REQUIRED], [
@@ -1977,19 +2061,17 @@ CONFIG_FILES_EXEC([agents/ocf/ClusterMon],
                   [agents/ocf/remote],
                   [agents/stonith/fence_legacy],
                   [agents/stonith/fence_watchdog],
+                  [cts/cluster_test],
+                  [cts/cts],
                   [cts/cts-attrd],
                   [cts/cts-cli],
                   [cts/cts-exec],
                   [cts/cts-fencing],
+                  [cts/cts-lab],
+                  [cts/cts-log-watcher],
                   [cts/cts-regression],
                   [cts/cts-scheduler],
-                  [cts/lxc_autogen.sh],
                   [cts/benchmark/clubench],
-                  [cts/lab/CTSlab.py],
-                  [cts/lab/OCFIPraTest.py],
-                  [cts/lab/cluster_test],
-                  [cts/lab/cts],
-                  [cts/lab/cts-log-watcher],
                   [cts/support/LSBDummy],
                   [cts/support/cts-support],
                   [cts/support/fence_dummy],
@@ -1998,13 +2080,13 @@ CONFIG_FILES_EXEC([agents/ocf/ClusterMon],
                   [maint/bumplibs],
                   [tools/cluster-clean],
                   [tools/cluster-helper],
-                  [tools/cluster-init],
                   [tools/crm_failcount],
                   [tools/crm_master],
                   [tools/crm_report],
                   [tools/crm_standby],
                   [tools/cibsecret],
-                  [tools/pcmk_simtimes])
+                  [tools/pcmk_simtimes],
+                  [xml/version-diff.sh])
 
 dnl Other files we output
 AC_CONFIG_FILES(Makefile                                            \
@@ -2014,7 +2096,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 agents/stonith/Makefile                             \
                 cts/Makefile                                        \
                 cts/benchmark/Makefile                              \
-                cts/lab/Makefile                                    \
                 cts/scheduler/Makefile                              \
                 cts/scheduler/dot/Makefile                          \
                 cts/scheduler/exp/Makefile                          \
@@ -2059,6 +2140,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/common/Makefile                                 \
                 lib/common/tests/Makefile                           \
                 lib/common/tests/acl/Makefile                       \
+                lib/common/tests/actions/Makefile                   \
                 lib/common/tests/agents/Makefile                    \
                 lib/common/tests/cmdline/Makefile                   \
                 lib/common/tests/flags/Makefile                     \
@@ -2067,7 +2149,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/common/tests/iso8601/Makefile                   \
                 lib/common/tests/lists/Makefile                     \
                 lib/common/tests/nvpair/Makefile                    \
-                lib/common/tests/operations/Makefile                \
                 lib/common/tests/options/Makefile                   \
                 lib/common/tests/output/Makefile                    \
                 lib/common/tests/procfs/Makefile                    \
@@ -2104,9 +2185,9 @@ AC_CONFIG_FILES(Makefile                                            \
                 python/setup.py                                     \
                 python/pacemaker/Makefile                           \
                 python/pacemaker/_cts/Makefile                      \
+                python/pacemaker/_cts/tests/Makefile                \
                 python/pacemaker/buildoptions.py                    \
                 python/tests/Makefile                               \
-                replace/Makefile                                    \
                 rpm/Makefile                                        \
                 tests/Makefile                                      \
                 tools/Makefile                                      \

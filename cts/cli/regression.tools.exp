@@ -4609,8 +4609,8 @@ Removing constraint: cli-prefer-dummy
   <change operation="delete" path="/cib/configuration/comment" position="0"/>
   <change operation="delete" path="/cib/configuration/comment" position="1"/>
   <change operation="delete" path="/cib/configuration/resources/comment" position="0"/>
-  <change operation="delete" path="/cib/configuration/resources/primitive[@id=&apos;Fencing&apos;]/operations/op[@id=&apos;Fencing-start-0&apos;]"/>
-  <change operation="modify" path="/cib/configuration/crm_config/cluster_property_set[@id=&apos;cib-bootstrap-options&apos;]/nvpair[@id=&apos;cib-bootstrap-options-cluster-name&apos;]">
+  <change operation="delete" path="/cib/configuration/resources/primitive[@id='Fencing']/operations/op[@id='Fencing-start-0']"/>
+  <change operation="modify" path="/cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-cluster-name']">
     <change-list>
       <change-attr name="value" operation="set" value="mycluster"/>
       <change-attr name="name" operation="set" value="cluster-name"/>
@@ -4628,7 +4628,7 @@ Removing constraint: cli-prefer-dummy
   <change operation="create" path="/cib/configuration/resources" position="0">
     <!-- test: modify this comment to say something different -->
   </change>
-  <change operation="modify" path="/cib/configuration/resources/primitive[@id=&apos;Fencing&apos;]/instance_attributes[@id=&apos;Fencing-params&apos;]/nvpair[@id=&apos;Fencing-pcmk_host_list&apos;]">
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='Fencing']/instance_attributes[@id='Fencing-params']/nvpair[@id='Fencing-pcmk_host_list']">
     <change-list>
       <change-attr name="value" operation="set" value="node1 node2 node3 node4"/>
     </change-list>
@@ -4636,7 +4636,7 @@ Removing constraint: cli-prefer-dummy
       <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="node1 node2 node3 node4"/>
     </change-result>
   </change>
-  <change operation="modify" path="/cib/configuration/resources/primitive[@id=&apos;Fencing&apos;]/operations/op[@id=&apos;Fencing-monitor-120s&apos;]">
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='Fencing']/operations/op[@id='Fencing-monitor-120s']">
     <change-list>
       <change-attr name="timeout" operation="set" value="120s"/>
       <change-attr name="name" operation="set" value="monitor"/>
@@ -4645,9 +4645,9 @@ Removing constraint: cli-prefer-dummy
       <op id="Fencing-monitor-120s" interval="120s" timeout="120s" name="monitor"/>
     </change-result>
   </change>
-  <change operation="move" path="/cib/configuration/resources/primitive[@id=&apos;dummy&apos;]/instance_attributes[@id=&apos;dummy-params&apos;]/nvpair[@id=&apos;dummy-op_sleep&apos;]" position="1"/>
-  <change operation="move" path="/cib/configuration/resources/primitive[@id=&apos;dummy&apos;]/instance_attributes[@id=&apos;dummy-params&apos;]/nvpair[@id=&apos;dummy-fake&apos;]" position="2"/>
-  <change operation="modify" path="/cib/configuration/resources/primitive[@id=&apos;dummy&apos;]/operations/op[@id=&apos;dummy-monitor-5s&apos;]">
+  <change operation="move" path="/cib/configuration/resources/primitive[@id='dummy']/instance_attributes[@id='dummy-params']/nvpair[@id='dummy-op_sleep']" position="1"/>
+  <change operation="move" path="/cib/configuration/resources/primitive[@id='dummy']/instance_attributes[@id='dummy-params']/nvpair[@id='dummy-fake']" position="2"/>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='dummy']/operations/op[@id='dummy-monitor-5s']">
     <change-list>
       <change-attr name="name" operation="set" value="monitor"/>
       <change-attr name="timeout" operation="unset"/>
@@ -4706,7 +4706,7 @@ Resources prim2 is colocated with:
 <pacemaker-result api-version="X" request="crm_resource -a -r prim2 --output-as=xml">
   <constraints>
     <rsc_location node="cluster01" rsc="prim2" id="prim2-on-cluster1" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim2-prim3-INFINITY" rsc="prim2" with-rsc="prim3" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim2-prim3-INFINITY" rsc="prim2" with-rsc="prim3" score="INFINITY" node-attribute="#uname"/>
   </constraints>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -4716,10 +4716,10 @@ Resources prim2 is colocated with:
 <pacemaker-result api-version="X" request="crm_resource -A -r prim2 --output-as=xml">
   <constraints>
     <rsc_location node="cluster01" rsc="prim2" id="prim2-on-cluster1" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim2-prim3-INFINITY" rsc="prim2" with-rsc="prim3" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim3-prim4-INFINITY" rsc="prim3" with-rsc="prim4" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim2-prim3-INFINITY" rsc="prim2" with-rsc="prim3" score="INFINITY" node-attribute="#uname"/>
+    <rsc_colocation id="colocation-prim3-prim4-INFINITY" rsc="prim3" with-rsc="prim4" score="INFINITY" node-attribute="#uname"/>
     <rsc_location node="cluster02" rsc="prim4" id="prim4-on-cluster2" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim4-prim5-INFINITY" rsc="prim4" with-rsc="prim5" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim4-prim5-INFINITY" rsc="prim4" with-rsc="prim5" score="INFINITY" node-attribute="#uname"/>
   </constraints>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -4752,9 +4752,9 @@ Resources prim3 is colocated with:
 =#=#=#= Begin test: Check locations and constraints for prim3 in XML =#=#=#=
 <pacemaker-result api-version="X" request="crm_resource -a -r prim3 --output-as=xml">
   <constraints>
-    <rsc_colocation id="colocation-prim2-prim3-INFINITY" rsc="prim2" with-rsc="prim3" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim2-prim3-INFINITY" rsc="prim2" with-rsc="prim3" score="INFINITY" node-attribute="#uname"/>
     <rsc_location node="cluster01" rsc="prim2" id="prim2-on-cluster1" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim3-prim4-INFINITY" rsc="prim3" with-rsc="prim4" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim3-prim4-INFINITY" rsc="prim3" with-rsc="prim4" score="INFINITY" node-attribute="#uname"/>
     <rsc_location node="cluster02" rsc="prim4" id="prim4-on-cluster2" score="INFINITY"/>
   </constraints>
   <status code="0" message="OK"/>
@@ -4764,11 +4764,11 @@ Resources prim3 is colocated with:
 =#=#=#= Begin test: Recursively check locations and constraints for prim3 in XML =#=#=#=
 <pacemaker-result api-version="X" request="crm_resource -A -r prim3 --output-as=xml">
   <constraints>
-    <rsc_colocation id="colocation-prim2-prim3-INFINITY" rsc="prim2" with-rsc="prim3" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim2-prim3-INFINITY" rsc="prim2" with-rsc="prim3" score="INFINITY" node-attribute="#uname"/>
     <rsc_location node="cluster01" rsc="prim2" id="prim2-on-cluster1" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim3-prim4-INFINITY" rsc="prim3" with-rsc="prim4" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim3-prim4-INFINITY" rsc="prim3" with-rsc="prim4" score="INFINITY" node-attribute="#uname"/>
     <rsc_location node="cluster02" rsc="prim4" id="prim4-on-cluster2" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim4-prim5-INFINITY" rsc="prim4" with-rsc="prim5" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim4-prim5-INFINITY" rsc="prim4" with-rsc="prim5" score="INFINITY" node-attribute="#uname"/>
   </constraints>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -4802,9 +4802,9 @@ Resources prim4 is colocated with:
 <pacemaker-result api-version="X" request="crm_resource -a -r prim4 --output-as=xml">
   <constraints>
     <rsc_location node="cluster02" rsc="prim4" id="prim4-on-cluster2" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim10-prim4-INFINITY" rsc="prim10" with-rsc="prim4" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim3-prim4-INFINITY" rsc="prim3" with-rsc="prim4" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim4-prim5-INFINITY" rsc="prim4" with-rsc="prim5" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim10-prim4-INFINITY" rsc="prim10" with-rsc="prim4" score="INFINITY" node-attribute="#uname"/>
+    <rsc_colocation id="colocation-prim3-prim4-INFINITY" rsc="prim3" with-rsc="prim4" score="INFINITY" node-attribute="#uname"/>
+    <rsc_colocation id="colocation-prim4-prim5-INFINITY" rsc="prim4" with-rsc="prim5" score="INFINITY" node-attribute="#uname"/>
   </constraints>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -4814,11 +4814,11 @@ Resources prim4 is colocated with:
 <pacemaker-result api-version="X" request="crm_resource -A -r prim4 --output-as=xml">
   <constraints>
     <rsc_location node="cluster02" rsc="prim4" id="prim4-on-cluster2" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim10-prim4-INFINITY" rsc="prim10" with-rsc="prim4" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim3-prim4-INFINITY" rsc="prim3" with-rsc="prim4" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim2-prim3-INFINITY" rsc="prim2" with-rsc="prim3" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim10-prim4-INFINITY" rsc="prim10" with-rsc="prim4" score="INFINITY" node-attribute="#uname"/>
+    <rsc_colocation id="colocation-prim3-prim4-INFINITY" rsc="prim3" with-rsc="prim4" score="INFINITY" node-attribute="#uname"/>
+    <rsc_colocation id="colocation-prim2-prim3-INFINITY" rsc="prim2" with-rsc="prim3" score="INFINITY" node-attribute="#uname"/>
     <rsc_location node="cluster01" rsc="prim2" id="prim2-on-cluster1" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim4-prim5-INFINITY" rsc="prim4" with-rsc="prim5" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim4-prim5-INFINITY" rsc="prim4" with-rsc="prim5" score="INFINITY" node-attribute="#uname"/>
   </constraints>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -4848,7 +4848,7 @@ Resources colocated with prim5:
 =#=#=#= Begin test: Check locations and constraints for prim5 in XML =#=#=#=
 <pacemaker-result api-version="X" request="crm_resource -a -r prim5 --output-as=xml">
   <constraints>
-    <rsc_colocation id="colocation-prim4-prim5-INFINITY" rsc="prim4" with-rsc="prim5" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim4-prim5-INFINITY" rsc="prim4" with-rsc="prim5" score="INFINITY" node-attribute="#uname"/>
     <rsc_location node="cluster02" rsc="prim4" id="prim4-on-cluster2" score="INFINITY"/>
   </constraints>
   <status code="0" message="OK"/>
@@ -4858,11 +4858,11 @@ Resources colocated with prim5:
 =#=#=#= Begin test: Recursively check locations and constraints for prim5 in XML =#=#=#=
 <pacemaker-result api-version="X" request="crm_resource -A -r prim5 --output-as=xml">
   <constraints>
-    <rsc_colocation id="colocation-prim4-prim5-INFINITY" rsc="prim4" with-rsc="prim5" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim4-prim5-INFINITY" rsc="prim4" with-rsc="prim5" score="INFINITY" node-attribute="#uname"/>
     <rsc_location node="cluster02" rsc="prim4" id="prim4-on-cluster2" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim10-prim4-INFINITY" rsc="prim10" with-rsc="prim4" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim3-prim4-INFINITY" rsc="prim3" with-rsc="prim4" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim2-prim3-INFINITY" rsc="prim2" with-rsc="prim3" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim10-prim4-INFINITY" rsc="prim10" with-rsc="prim4" score="INFINITY" node-attribute="#uname"/>
+    <rsc_colocation id="colocation-prim3-prim4-INFINITY" rsc="prim3" with-rsc="prim4" score="INFINITY" node-attribute="#uname"/>
+    <rsc_colocation id="colocation-prim2-prim3-INFINITY" rsc="prim2" with-rsc="prim3" score="INFINITY" node-attribute="#uname"/>
     <rsc_location node="cluster01" rsc="prim2" id="prim2-on-cluster1" score="INFINITY"/>
   </constraints>
   <status code="0" message="OK"/>
@@ -4910,7 +4910,7 @@ Resources prim7 is colocated with:
 =#=#=#= Begin test: Check locations and constraints for prim7 in XML =#=#=#=
 <pacemaker-result api-version="X" request="crm_resource -a -r prim7 --output-as=xml">
   <constraints>
-    <rsc_colocation id="colocation-prim7-group-INFINITY" rsc="prim7" with-rsc="group" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim7-group-INFINITY" rsc="prim7" with-rsc="group" score="INFINITY" node-attribute="#uname"/>
   </constraints>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -4919,7 +4919,7 @@ Resources prim7 is colocated with:
 =#=#=#= Begin test: Recursively check locations and constraints for prim7 in XML =#=#=#=
 <pacemaker-result api-version="X" request="crm_resource -A -r prim7 --output-as=xml">
   <constraints>
-    <rsc_colocation id="colocation-prim7-group-INFINITY" rsc="prim7" with-rsc="group" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim7-group-INFINITY" rsc="prim7" with-rsc="group" score="INFINITY" node-attribute="#uname"/>
   </constraints>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -4938,7 +4938,7 @@ Resources prim8 is colocated with:
 =#=#=#= Begin test: Check locations and constraints for prim8 in XML =#=#=#=
 <pacemaker-result api-version="X" request="crm_resource -a -r prim8 --output-as=xml">
   <constraints>
-    <rsc_colocation id="colocation-prim8-gr2-INFINITY" rsc="prim8" with-rsc="gr2" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim8-gr2-INFINITY" rsc="prim8" with-rsc="gr2" score="INFINITY" node-attribute="#uname"/>
   </constraints>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -4947,7 +4947,7 @@ Resources prim8 is colocated with:
 =#=#=#= Begin test: Recursively check locations and constraints for prim8 in XML =#=#=#=
 <pacemaker-result api-version="X" request="crm_resource -A -r prim8 --output-as=xml">
   <constraints>
-    <rsc_colocation id="colocation-prim8-gr2-INFINITY" rsc="prim8" with-rsc="gr2" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim8-gr2-INFINITY" rsc="prim8" with-rsc="gr2" score="INFINITY" node-attribute="#uname"/>
   </constraints>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -4966,7 +4966,7 @@ Resources prim9 is colocated with:
 =#=#=#= Begin test: Check locations and constraints for prim9 in XML =#=#=#=
 <pacemaker-result api-version="X" request="crm_resource -a -r prim9 --output-as=xml">
   <constraints>
-    <rsc_colocation id="colocation-prim9-clone-INFINITY" rsc="prim9" with-rsc="clone" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim9-clone-INFINITY" rsc="prim9" with-rsc="clone" score="INFINITY" node-attribute="#uname"/>
   </constraints>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -4975,7 +4975,7 @@ Resources prim9 is colocated with:
 =#=#=#= Begin test: Recursively check locations and constraints for prim9 in XML =#=#=#=
 <pacemaker-result api-version="X" request="crm_resource -A -r prim9 --output-as=xml">
   <constraints>
-    <rsc_colocation id="colocation-prim9-clone-INFINITY" rsc="prim9" with-rsc="clone" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim9-clone-INFINITY" rsc="prim9" with-rsc="clone" score="INFINITY" node-attribute="#uname"/>
   </constraints>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -5000,7 +5000,7 @@ Resources prim10 is colocated with:
 =#=#=#= Begin test: Check locations and constraints for prim10 in XML =#=#=#=
 <pacemaker-result api-version="X" request="crm_resource -a -r prim10 --output-as=xml">
   <constraints>
-    <rsc_colocation id="colocation-prim10-prim4-INFINITY" rsc="prim10" with-rsc="prim4" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim10-prim4-INFINITY" rsc="prim10" with-rsc="prim4" score="INFINITY" node-attribute="#uname"/>
     <rsc_location node="cluster02" rsc="prim4" id="prim4-on-cluster2" score="INFINITY"/>
   </constraints>
   <status code="0" message="OK"/>
@@ -5010,9 +5010,9 @@ Resources prim10 is colocated with:
 =#=#=#= Begin test: Recursively check locations and constraints for prim10 in XML =#=#=#=
 <pacemaker-result api-version="X" request="crm_resource -A -r prim10 --output-as=xml">
   <constraints>
-    <rsc_colocation id="colocation-prim10-prim4-INFINITY" rsc="prim10" with-rsc="prim4" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim10-prim4-INFINITY" rsc="prim10" with-rsc="prim4" score="INFINITY" node-attribute="#uname"/>
     <rsc_location node="cluster02" rsc="prim4" id="prim4-on-cluster2" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim4-prim5-INFINITY" rsc="prim4" with-rsc="prim5" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim4-prim5-INFINITY" rsc="prim4" with-rsc="prim5" score="INFINITY" node-attribute="#uname"/>
   </constraints>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -5043,8 +5043,8 @@ Resources prim11 is colocated with:
 =#=#=#= Begin test: Check locations and constraints for prim11 in XML =#=#=#=
 <pacemaker-result api-version="X" request="crm_resource -a -r prim11 --output-as=xml">
   <constraints>
-    <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY" node-attribute="#uname"/>
+    <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY" node-attribute="#uname"/>
   </constraints>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -5053,12 +5053,12 @@ Resources prim11 is colocated with:
 =#=#=#= Begin test: Recursively check locations and constraints for prim11 in XML =#=#=#=
 <pacemaker-result api-version="X" request="crm_resource -A -r prim11 --output-as=xml">
   <constraints>
-    <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY" node-attribute="#uname"/>
+    <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY" node-attribute="#uname"/>
+    <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY" node-attribute="#uname"/>
+    <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY" node-attribute="#uname"/>
+    <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY" node-attribute="#uname"/>
+    <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY" node-attribute="#uname"/>
   </constraints>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -5089,8 +5089,8 @@ Resources prim12 is colocated with:
 =#=#=#= Begin test: Check locations and constraints for prim12 in XML =#=#=#=
 <pacemaker-result api-version="X" request="crm_resource -a -r prim12 --output-as=xml">
   <constraints>
-    <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY" node-attribute="#uname"/>
+    <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY" node-attribute="#uname"/>
   </constraints>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -5099,12 +5099,12 @@ Resources prim12 is colocated with:
 =#=#=#= Begin test: Recursively check locations and constraints for prim12 in XML =#=#=#=
 <pacemaker-result api-version="X" request="crm_resource -A -r prim12 --output-as=xml">
   <constraints>
-    <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY" node-attribute="#uname"/>
+    <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY" node-attribute="#uname"/>
+    <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY" node-attribute="#uname"/>
+    <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY" node-attribute="#uname"/>
+    <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY" node-attribute="#uname"/>
+    <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY" node-attribute="#uname"/>
   </constraints>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -5135,8 +5135,8 @@ Resources prim13 is colocated with:
 =#=#=#= Begin test: Check locations and constraints for prim13 in XML =#=#=#=
 <pacemaker-result api-version="X" request="crm_resource -a -r prim13 --output-as=xml">
   <constraints>
-    <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY" node-attribute="#uname"/>
+    <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY" node-attribute="#uname"/>
   </constraints>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -5145,12 +5145,12 @@ Resources prim13 is colocated with:
 =#=#=#= Begin test: Recursively check locations and constraints for prim13 in XML =#=#=#=
 <pacemaker-result api-version="X" request="crm_resource -A -r prim13 --output-as=xml">
   <constraints>
-    <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY"/>
-    <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY" node-attribute="#uname"/>
+    <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY" node-attribute="#uname"/>
+    <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY" node-attribute="#uname"/>
+    <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY" node-attribute="#uname"/>
+    <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY" node-attribute="#uname"/>
+    <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY" node-attribute="#uname"/>
   </constraints>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -5169,7 +5169,7 @@ Resources colocated with group:
 =#=#=#= Begin test: Check locations and constraints for group in XML =#=#=#=
 <pacemaker-result api-version="X" request="crm_resource -a -r group --output-as=xml">
   <constraints>
-    <rsc_colocation id="colocation-prim7-group-INFINITY" rsc="prim7" with-rsc="group" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim7-group-INFINITY" rsc="prim7" with-rsc="group" score="INFINITY" node-attribute="#uname"/>
   </constraints>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -5178,7 +5178,7 @@ Resources colocated with group:
 =#=#=#= Begin test: Recursively check locations and constraints for group in XML =#=#=#=
 <pacemaker-result api-version="X" request="crm_resource -A -r group --output-as=xml">
   <constraints>
-    <rsc_colocation id="colocation-prim7-group-INFINITY" rsc="prim7" with-rsc="group" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim7-group-INFINITY" rsc="prim7" with-rsc="group" score="INFINITY" node-attribute="#uname"/>
   </constraints>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -5197,7 +5197,7 @@ Resources colocated with clone:
 =#=#=#= Begin test: Check locations and constraints for clone in XML =#=#=#=
 <pacemaker-result api-version="X" request="crm_resource -a -r clone --output-as=xml">
   <constraints>
-    <rsc_colocation id="colocation-prim9-clone-INFINITY" rsc="prim9" with-rsc="clone" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim9-clone-INFINITY" rsc="prim9" with-rsc="clone" score="INFINITY" node-attribute="#uname"/>
   </constraints>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -5206,7 +5206,7 @@ Resources colocated with clone:
 =#=#=#= Begin test: Recursively check locations and constraints for clone in XML =#=#=#=
 <pacemaker-result api-version="X" request="crm_resource -A -r clone --output-as=xml">
   <constraints>
-    <rsc_colocation id="colocation-prim9-clone-INFINITY" rsc="prim9" with-rsc="clone" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim9-clone-INFINITY" rsc="prim9" with-rsc="clone" score="INFINITY" node-attribute="#uname"/>
   </constraints>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -5529,34 +5529,34 @@ export overcloud-rabbit-2=overcloud-rabbit-2
     <node_weight function="pcmk__primitive_assign" node="httpd-bundle-0" score="-INFINITY" id="inactive-dummy-2"/>
     <node_weight function="pcmk__primitive_assign" node="httpd-bundle-1" score="-INFINITY" id="inactive-dummy-2"/>
     <node_weight function="pcmk__primitive_assign" node="httpd-bundle-2" score="-INFINITY" id="inactive-dummy-2"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle-docker-0"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle-docker-0"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle-ip-192.168.122.131"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle-ip-192.168.122.131"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle-0"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle-0"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle-docker-1"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle-docker-1"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle-ip-192.168.122.132"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle-ip-192.168.122.132"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle-1"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle-1"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle-docker-2"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle-docker-2"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle-ip-192.168.122.133"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle-ip-192.168.122.133"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle-2"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle-2"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle-clone"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle-clone"/>
-    <node_weight function="pcmk__bundle_allocate" node="httpd-bundle-0" score="-INFINITY" id="httpd-bundle-clone"/>
-    <node_weight function="pcmk__bundle_allocate" node="httpd-bundle-1" score="-INFINITY" id="httpd-bundle-clone"/>
-    <node_weight function="pcmk__bundle_allocate" node="httpd-bundle-2" score="-INFINITY" id="httpd-bundle-clone"/>
-    <node_weight function="pcmk__bundle_allocate" node="httpd-bundle-0" score="501" id="httpd:0"/>
-    <node_weight function="pcmk__bundle_allocate" node="httpd-bundle-1" score="501" id="httpd:1"/>
-    <node_weight function="pcmk__bundle_allocate" node="httpd-bundle-2" score="500" id="httpd:2"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-docker-0"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-docker-0"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-ip-192.168.122.131"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-ip-192.168.122.131"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-0"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-0"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-docker-1"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-docker-1"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-ip-192.168.122.132"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-ip-192.168.122.132"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-1"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-1"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-docker-2"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-docker-2"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-ip-192.168.122.133"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-ip-192.168.122.133"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-2"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-2"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-clone"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-clone"/>
+    <node_weight function="pcmk__bundle_assign" node="httpd-bundle-0" score="-INFINITY" id="httpd-bundle-clone"/>
+    <node_weight function="pcmk__bundle_assign" node="httpd-bundle-1" score="-INFINITY" id="httpd-bundle-clone"/>
+    <node_weight function="pcmk__bundle_assign" node="httpd-bundle-2" score="-INFINITY" id="httpd-bundle-clone"/>
+    <node_weight function="pcmk__bundle_assign" node="httpd-bundle-0" score="501" id="httpd:0"/>
+    <node_weight function="pcmk__bundle_assign" node="httpd-bundle-1" score="501" id="httpd:1"/>
+    <node_weight function="pcmk__bundle_assign" node="httpd-bundle-2" score="500" id="httpd:2"/>
     <node_weight function="pcmk__primitive_assign" node="cluster01" score="0" id="httpd-bundle-docker-0"/>
     <node_weight function="pcmk__primitive_assign" node="cluster02" score="0" id="httpd-bundle-docker-0"/>
     <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="httpd-bundle-docker-1"/>
@@ -5711,26 +5711,26 @@ Original: cluster02 capacity:
 Original: httpd-bundle-0 capacity:
 Original: httpd-bundle-1 capacity:
 Original: httpd-bundle-2 capacity:
-pcmk__finalize_assignment: ping:0 utilization on cluster02:
-pcmk__finalize_assignment: ping:1 utilization on cluster01:
-pcmk__finalize_assignment: Fencing utilization on cluster01:
-pcmk__finalize_assignment: dummy utilization on cluster02:
-pcmk__finalize_assignment: httpd-bundle-docker-0 utilization on cluster01:
-pcmk__finalize_assignment: httpd-bundle-docker-1 utilization on cluster02:
-pcmk__finalize_assignment: httpd-bundle-ip-192.168.122.131 utilization on cluster01:
-pcmk__finalize_assignment: httpd-bundle-0 utilization on cluster01:
-pcmk__finalize_assignment: httpd:0 utilization on httpd-bundle-0:
-pcmk__finalize_assignment: httpd-bundle-ip-192.168.122.132 utilization on cluster02:
-pcmk__finalize_assignment: httpd-bundle-1 utilization on cluster02:
-pcmk__finalize_assignment: httpd:1 utilization on httpd-bundle-1:
-pcmk__finalize_assignment: httpd-bundle-2 utilization on cluster01:
-pcmk__finalize_assignment: httpd:2 utilization on httpd-bundle-2:
-pcmk__finalize_assignment: Public-IP utilization on cluster02:
-pcmk__finalize_assignment: Email utilization on cluster02:
-pcmk__finalize_assignment: mysql-proxy:0 utilization on cluster02:
-pcmk__finalize_assignment: mysql-proxy:1 utilization on cluster01:
-pcmk__finalize_assignment: promotable-rsc:0 utilization on cluster02:
-pcmk__finalize_assignment: promotable-rsc:1 utilization on cluster01:
+pcmk__assign_resource: ping:0 utilization on cluster02:
+pcmk__assign_resource: ping:1 utilization on cluster01:
+pcmk__assign_resource: Fencing utilization on cluster01:
+pcmk__assign_resource: dummy utilization on cluster02:
+pcmk__assign_resource: httpd-bundle-docker-0 utilization on cluster01:
+pcmk__assign_resource: httpd-bundle-docker-1 utilization on cluster02:
+pcmk__assign_resource: httpd-bundle-ip-192.168.122.131 utilization on cluster01:
+pcmk__assign_resource: httpd-bundle-0 utilization on cluster01:
+pcmk__assign_resource: httpd:0 utilization on httpd-bundle-0:
+pcmk__assign_resource: httpd-bundle-ip-192.168.122.132 utilization on cluster02:
+pcmk__assign_resource: httpd-bundle-1 utilization on cluster02:
+pcmk__assign_resource: httpd:1 utilization on httpd-bundle-1:
+pcmk__assign_resource: httpd-bundle-2 utilization on cluster01:
+pcmk__assign_resource: httpd:2 utilization on httpd-bundle-2:
+pcmk__assign_resource: Public-IP utilization on cluster02:
+pcmk__assign_resource: Email utilization on cluster02:
+pcmk__assign_resource: mysql-proxy:0 utilization on cluster02:
+pcmk__assign_resource: mysql-proxy:1 utilization on cluster01:
+pcmk__assign_resource: promotable-rsc:0 utilization on cluster02:
+pcmk__assign_resource: promotable-rsc:1 utilization on cluster01:
 Remaining: cluster01 capacity:
 Remaining: cluster02 capacity:
 Remaining: httpd-bundle-0 capacity:
@@ -5961,7 +5961,7 @@ Transition Summary:
   * Move       Public-IP                           ( cluster02 -> cluster01 )
   * Move       Email                               ( cluster02 -> cluster01 )
   * Stop       mysql-proxy:0                       (              cluster02 )  due to node availability
-  * Stop       promotable-rsc:0                    (       Promoted cluster02 )  due to node availability
+  * Stop       promotable-rsc:0                    (     Promoted cluster02 )  due to node availability
 
 Executing Cluster Transition:
   * Pseudo action:   httpd-bundle-1_stop_0
@@ -7048,7 +7048,7 @@ Diff: +++ 1.4.1 (null)
       <cib epoch="4" num_updates="1" admin_epoch="1"/>
     </change-result>
   </change>
-  <change operation="modify" path="/cib/configuration/resources/primitive[@id='dummy']">
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id=&apos;dummy&apos;]">
     <change-list>
       <change-attr name="description" operation="set" value="desc"/>
     </change-list>
@@ -7667,7 +7667,7 @@ Diff: +++ 0.1.0 (null)
 -- /cib/status/node_state[@id='1']
 -- /cib/status/node_state[@id='httpd-bundle-0']
 -- /cib/status/node_state[@id='httpd-bundle-1']
-+  /cib:  @crm_feature_set=3.17.4, @num_updates=0, @admin_epoch=0
++  /cib:  @crm_feature_set=3.18.1, @num_updates=0, @admin_epoch=0
 -- /cib:  @cib-last-written, @update-origin, @update-client, @update-user, @have-quorum, @dc-uuid
 =#=#=#= End test: Get active shadow instance's diff (empty CIB) - Error occurred (1) =#=#=#=
 * Passed: crm_shadow     - Get active shadow instance's diff (empty CIB)
@@ -7679,29 +7679,29 @@ Diff: +++ 0.1.0 (null)
     <source admin_epoch="1" epoch="1" num_updates="173"/>
     <target admin_epoch="0" epoch="1" num_updates="0"/>
   </version>
-  <change operation="delete" path="/cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']"/>
-  <change operation="delete" path="/cib/configuration/nodes/node[@id='1']"/>
-  <change operation="delete" path="/cib/configuration/nodes/node[@id='2']"/>
-  <change operation="delete" path="/cib/configuration/resources/clone[@id='ping-clone']"/>
-  <change operation="delete" path="/cib/configuration/resources/primitive[@id='Fencing']"/>
-  <change operation="delete" path="/cib/configuration/resources/primitive[@id='dummy']"/>
-  <change operation="delete" path="/cib/configuration/resources/clone[@id='inactive-clone']"/>
-  <change operation="delete" path="/cib/configuration/resources/group[@id='inactive-group']"/>
-  <change operation="delete" path="/cib/configuration/resources/bundle[@id='httpd-bundle']"/>
-  <change operation="delete" path="/cib/configuration/resources/group[@id='exim-group']"/>
-  <change operation="delete" path="/cib/configuration/resources/clone[@id='mysql-clone-group']"/>
-  <change operation="delete" path="/cib/configuration/resources/clone[@id='promotable-clone']"/>
-  <change operation="delete" path="/cib/configuration/constraints/rsc_location[@id='not-on-cluster1']"/>
-  <change operation="delete" path="/cib/configuration/constraints/rsc_location[@id='loc-promotable-clone']"/>
+  <change operation="delete" path="/cib/configuration/crm_config/cluster_property_set[@id=&apos;cib-bootstrap-options&apos;]"/>
+  <change operation="delete" path="/cib/configuration/nodes/node[@id=&apos;1&apos;]"/>
+  <change operation="delete" path="/cib/configuration/nodes/node[@id=&apos;2&apos;]"/>
+  <change operation="delete" path="/cib/configuration/resources/clone[@id=&apos;ping-clone&apos;]"/>
+  <change operation="delete" path="/cib/configuration/resources/primitive[@id=&apos;Fencing&apos;]"/>
+  <change operation="delete" path="/cib/configuration/resources/primitive[@id=&apos;dummy&apos;]"/>
+  <change operation="delete" path="/cib/configuration/resources/clone[@id=&apos;inactive-clone&apos;]"/>
+  <change operation="delete" path="/cib/configuration/resources/group[@id=&apos;inactive-group&apos;]"/>
+  <change operation="delete" path="/cib/configuration/resources/bundle[@id=&apos;httpd-bundle&apos;]"/>
+  <change operation="delete" path="/cib/configuration/resources/group[@id=&apos;exim-group&apos;]"/>
+  <change operation="delete" path="/cib/configuration/resources/clone[@id=&apos;mysql-clone-group&apos;]"/>
+  <change operation="delete" path="/cib/configuration/resources/clone[@id=&apos;promotable-clone&apos;]"/>
+  <change operation="delete" path="/cib/configuration/constraints/rsc_location[@id=&apos;not-on-cluster1&apos;]"/>
+  <change operation="delete" path="/cib/configuration/constraints/rsc_location[@id=&apos;loc-promotable-clone&apos;]"/>
   <change operation="delete" path="/cib/configuration/tags"/>
   <change operation="delete" path="/cib/configuration/op_defaults"/>
-  <change operation="delete" path="/cib/status/node_state[@id='2']"/>
-  <change operation="delete" path="/cib/status/node_state[@id='1']"/>
-  <change operation="delete" path="/cib/status/node_state[@id='httpd-bundle-0']"/>
-  <change operation="delete" path="/cib/status/node_state[@id='httpd-bundle-1']"/>
+  <change operation="delete" path="/cib/status/node_state[@id=&apos;2&apos;]"/>
+  <change operation="delete" path="/cib/status/node_state[@id=&apos;1&apos;]"/>
+  <change operation="delete" path="/cib/status/node_state[@id=&apos;httpd-bundle-0&apos;]"/>
+  <change operation="delete" path="/cib/status/node_state[@id=&apos;httpd-bundle-1&apos;]"/>
   <change operation="modify" path="/cib">
     <change-list>
-      <change-attr name="crm_feature_set" operation="set" value="3.17.4"/>
+      <change-attr name="crm_feature_set" operation="set" value="3.18.1"/>
       <change-attr name="num_updates" operation="set" value="0"/>
       <change-attr name="admin_epoch" operation="set" value="0"/>
       <change-attr name="cib-last-written" operation="unset"/>

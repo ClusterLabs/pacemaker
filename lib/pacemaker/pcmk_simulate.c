@@ -51,11 +51,11 @@ create_action_name(const pe_action_t *action, bool verbose)
 
     if (action->node != NULL) {
         action_host = action->node->details->uname;
-    } else if (!pcmk_is_set(action->flags, pe_action_pseudo)) {
+    } else if (!pcmk_is_set(action->flags, pcmk_action_pseudo)) {
         action_host = "<none>";
     }
 
-    if (pcmk__str_eq(action->task, RSC_CANCEL, pcmk__str_none)) {
+    if (pcmk__str_eq(action->task, PCMK_ACTION_CANCEL, pcmk__str_none)) {
         prefix = "Cancel ";
         task = action->cancel_task;
     }
@@ -74,8 +74,8 @@ create_action_name(const pe_action_t *action, bool verbose)
             interval_ms = 0;
         }
 
-        if (pcmk__strcase_any_of(action->task, RSC_NOTIFY, RSC_NOTIFIED,
-                                 NULL)) {
+        if (pcmk__strcase_any_of(action->task, PCMK_ACTION_NOTIFY,
+                                 PCMK_ACTION_NOTIFIED, NULL)) {
             const char *n_type = g_hash_table_lookup(action->meta,
                                                      "notify_key_type");
             const char *n_task = g_hash_table_lookup(action->meta,
@@ -96,7 +96,8 @@ create_action_name(const pe_action_t *action, bool verbose)
         }
         free(key);
 
-    } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(action->task, PCMK_ACTION_STONITH,
+                            pcmk__str_none)) {
         const char *op = g_hash_table_lookup(action->meta, "stonith_action");
 
         action_name = crm_strdup_printf("%s%s '%s' %s",
@@ -135,7 +136,8 @@ create_action_name(const pe_action_t *action, bool verbose)
  */
 static void
 print_cluster_status(pe_working_set_t *data_set, uint32_t show_opts,
-                     uint32_t section_opts, const char *title, bool print_spacer)
+                     uint32_t section_opts, const char *title,
+                     bool print_spacer)
 {
     pcmk__output_t *out = data_set->priv;
     GList *all = NULL;
@@ -183,7 +185,7 @@ print_transition_summary(pe_working_set_t *data_set, bool print_spacer)
  * \param[in]     input     What to set as cluster input
  * \param[in]     out       What to set as cluster output object
  * \param[in]     use_date  What to set as cluster's current timestamp
- * \param[in]     flags     Cluster flags to add (pe_flag_*)
+ * \param[in]     flags     Group of enum pcmk_scheduler_flags to set
  */
 static void
 reset(pe_working_set_t *data_set, xmlNodePtr input, pcmk__output_t *out,
@@ -193,13 +195,13 @@ reset(pe_working_set_t *data_set, xmlNodePtr input, pcmk__output_t *out,
     data_set->priv = out;
     set_effective_date(data_set, true, use_date);
     if (pcmk_is_set(flags, pcmk_sim_sanitized)) {
-        pe__set_working_set_flags(data_set, pe_flag_sanitized);
+        pe__set_working_set_flags(data_set, pcmk_sched_sanitized);
     }
     if (pcmk_is_set(flags, pcmk_sim_show_scores)) {
-        pe__set_working_set_flags(data_set, pe_flag_show_scores);
+        pe__set_working_set_flags(data_set, pcmk_sched_output_scores);
     }
     if (pcmk_is_set(flags, pcmk_sim_show_utilization)) {
-        pe__set_working_set_flags(data_set, pe_flag_show_utilization);
+        pe__set_working_set_flags(data_set, pcmk_sched_show_utilization);
     }
 }
 
@@ -220,7 +222,7 @@ static int
 write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
                   bool all_actions, bool verbose)
 {
-    GList *gIter = NULL;
+    GList *iter = NULL;
     FILE *dot_strm = fopen(dot_file, "w");
 
     if (dot_strm == NULL) {
@@ -228,30 +230,30 @@ write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
     }
 
     fprintf(dot_strm, " digraph \"g\" {\n");
-    for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
+    for (iter = data_set->actions; iter != NULL; iter = iter->next) {
+        pe_action_t *action = (pe_action_t *) iter->data;
         const char *style = "dashed";
         const char *font = "black";
         const char *color = "black";
         char *action_name = create_action_name(action, verbose);
 
-        if (pcmk_is_set(action->flags, pe_action_pseudo)) {
+        if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
             font = "orange";
         }
 
-        if (pcmk_is_set(action->flags, pe_action_dumped)) {
+        if (pcmk_is_set(action->flags, pcmk_action_added_to_graph)) {
             style = "bold";
             color = "green";
 
         } else if ((action->rsc != NULL)
-                   && !pcmk_is_set(action->rsc->flags, pe_rsc_managed)) {
+                   && !pcmk_is_set(action->rsc->flags, pcmk_rsc_managed)) {
             color = "red";
             font = "purple";
             if (!all_actions) {
                 goto do_not_write;
             }
 
-        } else if (pcmk_is_set(action->flags, pe_action_optional)) {
+        } else if (pcmk_is_set(action->flags, pcmk_action_optional)) {
             color = "blue";
             if (!all_actions) {
                 goto do_not_write;
@@ -259,23 +261,23 @@ write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
 
         } else {
             color = "red";
-            CRM_LOG_ASSERT(!pcmk_is_set(action->flags, pe_action_runnable));
+            CRM_LOG_ASSERT(!pcmk_is_set(action->flags, pcmk_action_runnable));
         }
 
-        pe__set_action_flags(action, pe_action_dumped);
+        pe__set_action_flags(action, pcmk_action_added_to_graph);
         fprintf(dot_strm, "\"%s\" [ style=%s color=\"%s\" fontcolor=\"%s\"]\n",
                 action_name, style, color, font);
   do_not_write:
         free(action_name);
     }
 
-    for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
+    for (iter = data_set->actions; iter != NULL; iter = iter->next) {
+        pe_action_t *action = (pe_action_t *) iter->data;
 
-        GList *gIter2 = NULL;
+        for (GList *before_iter = action->actions_before;
+             before_iter != NULL; before_iter = before_iter->next) {
 
-        for (gIter2 = action->actions_before; gIter2 != NULL; gIter2 = gIter2->next) {
-            pe_action_wrapper_t *before = (pe_action_wrapper_t *) gIter2->data;
+            pe_action_wrapper_t *before = before_iter->data;
 
             char *before_name = NULL;
             char *after_name = NULL;
@@ -285,11 +287,12 @@ write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
             if (before->state == pe_link_dumped) {
                 optional = false;
                 style = "bold";
-            } else if (before->type == pe_order_none) {
+            } else if ((uint32_t) before->type == pcmk__ar_none) {
                 continue;
-            } else if (pcmk_is_set(before->action->flags, pe_action_dumped)
-                       && pcmk_is_set(action->flags, pe_action_dumped)
-                       && before->type != pe_order_load) {
+            } else if (pcmk_is_set(before->action->flags,
+                                   pcmk_action_added_to_graph)
+                       && pcmk_is_set(action->flags, pcmk_action_added_to_graph)
+                       && (uint32_t) before->type != pcmk__ar_if_on_same_node_or_target) {
                 optional = false;
             }
 
@@ -330,7 +333,7 @@ profile_file(const char *xml_file, long long repeat, pe_working_set_t *data_set,
     xmlNode *cib_object = NULL;
     clock_t start = 0;
     clock_t end;
-    unsigned long long data_set_flags = pe_flag_no_compat;
+    unsigned long long data_set_flags = pcmk_sched_no_compat;
 
     CRM_ASSERT(out != NULL);
 
@@ -351,11 +354,11 @@ profile_file(const char *xml_file, long long repeat, pe_working_set_t *data_set,
         return;
     }
 
-    if (pcmk_is_set(data_set->flags, pe_flag_show_scores)) {
-        data_set_flags |= pe_flag_show_scores;
+    if (pcmk_is_set(data_set->flags, pcmk_sched_output_scores)) {
+        data_set_flags |= pcmk_sched_output_scores;
     }
-    if (pcmk_is_set(data_set->flags, pe_flag_show_utilization)) {
-        data_set_flags |= pe_flag_show_utilization;
+    if (pcmk_is_set(data_set->flags, pcmk_sched_show_utilization)) {
+        data_set_flags |= pcmk_sched_show_utilization;
     }
 
     for (int i = 0; i < repeat; ++i) {
@@ -398,7 +401,8 @@ pcmk__profile_dir(const char *dir, long long repeat, pe_working_set_t *data_set,
                 free(namelist[file_num]);
                 continue;
             }
-            snprintf(buffer, sizeof(buffer), "%s/%s", dir, namelist[file_num]->d_name);
+            snprintf(buffer, sizeof(buffer), "%s/%s",
+                     dir, namelist[file_num]->d_name);
             if (stat(buffer, &prop) == 0 && S_ISREG(prop.st_mode)) {
                 profile_file(buffer, repeat, data_set, use_date);
             }
@@ -543,7 +547,8 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     }
 
     // Certain actions need to be displayed but don't need history entries
-    if (pcmk__strcase_any_of(operation, "delete", RSC_METADATA, NULL)) {
+    if (pcmk__strcase_any_of(operation, PCMK_ACTION_DELETE,
+                             PCMK_ACTION_META_DATA, NULL)) {
         out->message(out, "inject-rsc-action", resource, operation, node,
                      (guint) 0);
         goto done; // Confirm action and update graph
@@ -684,7 +689,7 @@ simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
     out->message(out, "inject-fencing-action", target, op);
 
-    if (!pcmk__str_eq(op, "on", pcmk__str_casei)) {
+    if (!pcmk__str_eq(op, PCMK_ACTION_ON, pcmk__str_casei)) {
         int rc = pcmk_ok;
         GString *xpath = g_string_sized_new(512);
 
@@ -809,7 +814,9 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
     }
 
     if (!out->is_quiet(out)) {
-        if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
+        const bool show_pending = pcmk_is_set(flags, pcmk_sim_show_pending);
+
+        if (pcmk_is_set(data_set->flags, pcmk_sched_in_maintenance)) {
             printed = out->message(out, "maint-mode", data_set->flags);
         }
 
@@ -826,8 +833,7 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
         /* Most formatted output headers use caps for each word, but this one
          * only has the first word capitalized for compatibility with pcs.
          */
-        print_cluster_status(data_set,
-                             pcmk_is_set(flags, pcmk_sim_show_pending)? pcmk_show_pending : 0,
+        print_cluster_status(data_set, (show_pending? pcmk_show_pending : 0),
                              section_opts, "Current cluster status",
                              (printed == pcmk_rc_ok));
         printed = pcmk_rc_ok;
@@ -869,28 +875,29 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
 
     if (pcmk_any_flags_set(flags, pcmk_sim_process | pcmk_sim_simulate)) {
         pcmk__output_t *logger_out = NULL;
-        unsigned long long data_set_flags = pe_flag_no_compat;
+        unsigned long long data_set_flags = pcmk_sched_no_compat;
 
-        if (pcmk_is_set(data_set->flags, pe_flag_show_scores)) {
-            data_set_flags |= pe_flag_show_scores;
+        if (pcmk_is_set(data_set->flags, pcmk_sched_output_scores)) {
+            data_set_flags |= pcmk_sched_output_scores;
         }
-        if (pcmk_is_set(data_set->flags, pe_flag_show_utilization)) {
-            data_set_flags |= pe_flag_show_utilization;
+        if (pcmk_is_set(data_set->flags, pcmk_sched_show_utilization)) {
+            data_set_flags |= pcmk_sched_show_utilization;
         }
 
         if (pcmk_all_flags_set(data_set->flags,
-                               pe_flag_show_scores|pe_flag_show_utilization)) {
+                               pcmk_sched_output_scores
+                               |pcmk_sched_show_utilization)) {
             PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
             out->begin_list(out, NULL, NULL,
-                            "Allocation Scores and Utilization Information");
+                            "Assignment Scores and Utilization Information");
             printed = pcmk_rc_ok;
 
-        } else if (pcmk_is_set(data_set->flags, pe_flag_show_scores)) {
+        } else if (pcmk_is_set(data_set->flags, pcmk_sched_output_scores)) {
             PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
-            out->begin_list(out, NULL, NULL, "Allocation Scores");
+            out->begin_list(out, NULL, NULL, "Assignment Scores");
             printed = pcmk_rc_ok;
 
-        } else if (pcmk_is_set(data_set->flags, pe_flag_show_utilization)) {
+        } else if (pcmk_is_set(data_set->flags, pcmk_sched_show_utilization)) {
             PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
             out->begin_list(out, NULL, NULL, "Utilization Information");
             printed = pcmk_rc_ok;
@@ -947,8 +954,8 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
     }
 
     PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
-    if (pcmk__simulate_transition(data_set, cib,
-                                  injections->op_fail) != pcmk__graph_complete) {
+    if (pcmk__simulate_transition(data_set, cib, injections->op_fail)
+            != pcmk__graph_complete) {
         rc = pcmk_rc_invalid_transition;
     }
 
@@ -959,10 +966,10 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
     set_effective_date(data_set, true, use_date);
 
     if (pcmk_is_set(flags, pcmk_sim_show_scores)) {
-        pe__set_working_set_flags(data_set, pe_flag_show_scores);
+        pe__set_working_set_flags(data_set, pcmk_sched_output_scores);
     }
     if (pcmk_is_set(flags, pcmk_sim_show_utilization)) {
-        pe__set_working_set_flags(data_set, pe_flag_show_utilization);
+        pe__set_working_set_flags(data_set, pcmk_sched_show_utilization);
     }
 
     cluster_status(data_set);

@@ -292,7 +292,7 @@ init_stonith_remote_op_hash_table(GHashTable **table)
 static const char *
 op_requested_action(const remote_fencing_op_t *op)
 {
-    return ((op->phase > st_phase_requested)? "reboot" : op->action);
+    return ((op->phase > st_phase_requested)? PCMK_ACTION_REBOOT : op->action);
 }
 
 /*!
@@ -311,7 +311,7 @@ op_phase_off(remote_fencing_op_t *op)
     /* Happily, "off" and "on" are shorter than "reboot", so we can reuse the
      * memory allocation at each phase.
      */
-    strcpy(op->action, "off");
+    strcpy(op->action, PCMK_ACTION_OFF);
 }
 
 /*!
@@ -329,7 +329,7 @@ op_phase_on(remote_fencing_op_t *op)
              "remapping to 'on' for %s " CRM_XS " id=%.8s",
              op->target, op->client_name, op->id);
     op->phase = st_phase_on;
-    strcpy(op->action, "on");
+    strcpy(op->action, PCMK_ACTION_ON);
 
     /* Skip devices with automatic unfencing, because the cluster will handle it
      * when the node rejoins.
@@ -362,7 +362,7 @@ undo_op_remap(remote_fencing_op_t *op)
         crm_info("Undoing remap of reboot targeting %s for %s "
                  CRM_XS " id=%.8s", op->target, op->client_name, op->id);
         op->phase = st_phase_requested;
-        strcpy(op->action, "reboot");
+        strcpy(op->action, PCMK_ACTION_REBOOT);
     }
 }
 
@@ -673,8 +673,8 @@ remote_op_timeout_one(gpointer userdata)
                      "Peer did not return fence result within timeout");
 
     // The requested delay has been applied for the first device
-    if (op->delay > 0) {
-        op->delay = 0;
+    if (op->client_delay > 0) {
+        op->client_delay = 0;
         crm_trace("Try another device for '%s' action targeting %s "
                   "for client %s without delay " CRM_XS " id=%.8s",
                   op->action, op->target, op->client_name, op->id);
@@ -961,12 +961,12 @@ advance_topology_level(remote_fencing_op_t *op, bool empty_ok)
         set_op_device_list(op, tp->levels[op->level]);
 
         // The requested delay has been applied for the first fencing level
-        if (op->level > 1 && op->delay > 0) {
-            op->delay = 0;
+        if ((op->level > 1) && (op->client_delay > 0)) {
+            op->client_delay = 0;
         }
 
         if ((g_list_next(op->devices_list) != NULL)
-            && pcmk__str_eq(op->action, "reboot", pcmk__str_none)) {
+            && pcmk__str_eq(op->action, PCMK_ACTION_REBOOT, pcmk__str_none)) {
             /* A reboot has been requested for a topology level with multiple
              * devices. Instead of rebooting the devices sequentially, we will
              * turn them all off, then turn them all on again. (Think about
@@ -1163,7 +1163,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
 
     crm_element_value_int(request, F_STONITH_TIMEOUT, &(op->base_timeout));
     // Value -1 means disable any static/random fencing delays
-    crm_element_value_int(request, F_STONITH_DELAY, &(op->delay));
+    crm_element_value_int(request, F_STONITH_DELAY, &(op->client_delay));
 
     if (peer && dev) {
         op->id = crm_element_value_copy(dev, F_STONITH_REMOTE_OP_ID);
@@ -1474,8 +1474,8 @@ get_device_timeout(const remote_fencing_op_t *op,
         return op->base_timeout;
     }
 
-    // op->delay < 0 means disable any static/random fencing delays
-    if (with_delay && op->delay >= 0) {
+    // op->client_delay < 0 means disable any static/random fencing delays
+    if (with_delay && (op->client_delay >= 0)) {
         // delay_base is eventually limited by delay_max
         delay = (props->delay_max[op->phase] > 0 ?
                  props->delay_max[op->phase] : props->delay_base[op->phase]);
@@ -1541,7 +1541,7 @@ get_op_total_timeout(const remote_fencing_op_t *op,
         GList *iter = NULL;
         GList *auto_list = NULL;
 
-        if (pcmk__str_eq(op->action, "on", pcmk__str_none)
+        if (pcmk__str_eq(op->action, PCMK_ACTION_ON, pcmk__str_none)
             && (op->automatic_list != NULL)) {
             auto_list = g_list_copy(op->automatic_list);
         }
@@ -1620,7 +1620,7 @@ get_op_total_timeout(const remote_fencing_op_t *op,
      * up the total timeout.
      */
     return ((total_timeout ? total_timeout : op->base_timeout)
-            + (op->delay > 0 ? op->delay : 0));
+            + ((op->client_delay > 0)? op->client_delay : 0));
 }
 
 static void
@@ -1695,7 +1695,7 @@ advance_topology_device_in_level(remote_fencing_op_t *op, const char *device,
 
     /* Handle automatic unfencing if an "on" action was requested */
     if ((op->phase == st_phase_requested)
-        && pcmk__str_eq(op->action, "on", pcmk__str_none)) {
+        && pcmk__str_eq(op->action, PCMK_ACTION_ON, pcmk__str_none)) {
         /* If the device we just executed was required, it's not anymore */
         remove_required_device(op, device);
 
@@ -1724,8 +1724,8 @@ advance_topology_device_in_level(remote_fencing_op_t *op, const char *device,
                   op->target, op->client_name, op->originator);
 
         // The requested delay has been applied for the first device
-        if (op->delay > 0) {
-            op->delay = 0;
+        if (op->client_delay > 0) {
+            op->client_delay = 0;
         }
 
         request_peer_fencing(op, NULL);
@@ -1794,7 +1794,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
          * node back on when we should.
          */
         device = op->devices->data;
-        if (pcmk__str_eq(fenced_device_reboot_action(device), "off",
+        if (pcmk__str_eq(fenced_device_reboot_action(device), PCMK_ACTION_OFF,
                          pcmk__str_none)) {
             crm_info("Not turning %s back on using %s because the device is "
                      "configured to stay off (pcmk_reboot_action='off')",
@@ -1844,12 +1844,15 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
     }
 
     if (peer) {
-       /* Take any requested fencing delay into account to prevent it from eating
-        * up the timeout.
-        */
-        int timeout_one = (op->delay > 0 ?
-                           TIMEOUT_MULTIPLY_FACTOR * op->delay : 0);
+        int timeout_one = 0;
         xmlNode *remote_op = stonith_create_op(op->client_callid, op->id, STONITH_OP_FENCE, NULL, 0);
+
+        if (op->client_delay > 0) {
+           /* Take requested fencing delay into account to prevent it from
+            * eating up the timeout.
+            */
+            timeout_one = TIMEOUT_MULTIPLY_FACTOR * op->client_delay;
+        }
 
         crm_xml_add(remote_op, F_STONITH_REMOTE_OP_ID, op->id);
         crm_xml_add(remote_op, F_STONITH_TARGET, op->target);
@@ -1859,7 +1862,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
         crm_xml_add(remote_op, F_STONITH_CLIENTNAME, op->client_name);
         crm_xml_add_int(remote_op, F_STONITH_TIMEOUT, timeout);
         crm_xml_add_int(remote_op, F_STONITH_CALLOPTS, op->call_options);
-        crm_xml_add_int(remote_op, F_STONITH_DELAY, op->delay);
+        crm_xml_add_int(remote_op, F_STONITH_DELAY, op->client_delay);
 
         if (device) {
             timeout_one += TIMEOUT_MULTIPLY_FACTOR *
@@ -2097,7 +2100,7 @@ parse_action_specific(const xmlNode *xml, const char *peer, const char *device,
     }
 
     /* Handle devices with automatic unfencing */
-    if (pcmk__str_eq(action, "on", pcmk__str_none)) {
+    if (pcmk__str_eq(action, PCMK_ACTION_ON, pcmk__str_none)) {
         int required = 0;
 
         crm_element_value_int(xml, F_STONITH_DEVICE_REQUIRED, &required);
@@ -2160,11 +2163,11 @@ add_device_properties(const xmlNode *xml, remote_fencing_op_t *op,
          * values for "off" and "on" in child elements, just in case the reboot
          * winds up getting remapped.
          */
-        if (pcmk__str_eq(ID(child), "off", pcmk__str_none)) {
-            parse_action_specific(child, peer->host, device, "off",
+        if (pcmk__str_eq(ID(child), PCMK_ACTION_OFF, pcmk__str_none)) {
+            parse_action_specific(child, peer->host, device, PCMK_ACTION_OFF,
                                   op, st_phase_off, props);
-        } else if (pcmk__str_eq(ID(child), "on", pcmk__str_none)) {
-            parse_action_specific(child, peer->host, device, "on",
+        } else if (pcmk__str_eq(ID(child), PCMK_ACTION_ON, pcmk__str_none)) {
+            parse_action_specific(child, peer->host, device, PCMK_ACTION_ON,
                                   op, st_phase_on, props);
         }
     }

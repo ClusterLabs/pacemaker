@@ -1,5 +1,5 @@
 #
-# Copyright 2021-2022 the Pacemaker project contributors
+# Copyright 2021-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -7,9 +7,9 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
-AM_TESTS_ENVIRONMENT= \
-	G_DEBUG=gc-friendly 			\
-	MALLOC_CHECK_=2 			\
+AM_TESTS_ENVIRONMENT= 					\
+	G_DEBUG=gc-friendly 				\
+	MALLOC_CHECK_=2 				\
 	MALLOC_PERTURB_=$$(($${RANDOM:-256} % 256))
 LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) $(top_srcdir)/tests/tap-driver.sh
 LOG_COMPILER = $(top_srcdir)/tests/tap-test
@@ -28,4 +28,9 @@ WRAPPED = calloc		\
 	  strdup 		\
 	  uname			\
 	  unsetenv
+
+if WRAPPABLE_FOPEN64
+WRAPPED	+= fopen64
+endif
+
 LDFLAGS_WRAP = $(foreach fn,$(WRAPPED),-Wl,--wrap=$(fn))

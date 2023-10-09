@@ -21,12 +21,12 @@ Table of Contents
    options
    nodes
    resources
+   operations
    constraints
    fencing
    alerts
    rules
-   advanced-options
-   advanced-resources
+   collective
    reusing-configuration
    utilization
    acls

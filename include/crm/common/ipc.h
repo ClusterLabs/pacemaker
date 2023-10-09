@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -170,8 +170,8 @@ void crm_ipc_close(crm_ipc_t * client);
 void crm_ipc_destroy(crm_ipc_t * client);
 void pcmk_free_ipc_event(struct iovec *event);
 
-int crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags,
-                 int32_t ms_timeout, xmlNode ** reply);
+int crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
+                 enum crm_ipc_flags flags, int32_t ms_timeout, xmlNode **reply);
 
 int crm_ipc_get_fd(crm_ipc_t * client);
 bool crm_ipc_connected(crm_ipc_t * client);

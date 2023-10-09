@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -41,10 +41,10 @@ static const char META_TEMPLATE[] =
     "  <shortdesc lang=\"en\">%s</shortdesc>\n"
     "%s\n"
     "  <actions>\n"
-    "    <action name=\"start\"   timeout=\"20\" />\n"
+    "    <action name=\"start\"   timeout=\"%s\" />\n"
     "    <action name=\"stop\"    timeout=\"15\" />\n"
-    "    <action name=\"status\"  timeout=\"20\" />\n"
-    "    <action name=\"monitor\" timeout=\"20\" interval=\"3600\"/>\n"
+    "    <action name=\"status\"  timeout=\"%s\" />\n"
+    "    <action name=\"monitor\" timeout=\"%s\" interval=\"3600\"/>\n"
     "    <action name=\"meta-data\"  timeout=\"15\" />\n"
     "  </actions>\n"
     "  <special tag=\"heartbeat\">\n"
@@ -200,6 +200,7 @@ stonith__lha_metadata(const char *agent, int timeout, char **output)
         char *meta_param = NULL;
         char *meta_longdesc = NULL;
         char *meta_shortdesc = NULL;
+        const char *timeout_str = NULL;
 
         stonith_obj = (*st_new_fn) (agent);
         if (stonith_obj) {
@@ -236,8 +237,10 @@ stonith__lha_metadata(const char *agent, int timeout, char **output)
         xml_meta_shortdesc =
             (char *)xmlEncodeEntitiesReentrant(NULL, (const unsigned char *)meta_shortdesc);
 
+        timeout_str = pcmk__readable_interval(PCMK_DEFAULT_ACTION_TIMEOUT_MS);
         buffer = crm_strdup_printf(META_TEMPLATE, agent, xml_meta_longdesc,
-                                   xml_meta_shortdesc, meta_param);
+                                   xml_meta_shortdesc, meta_param,
+                                   timeout_str, timeout_str, timeout_str);
 
         xmlFree(xml_meta_longdesc);
         xmlFree(xml_meta_shortdesc);

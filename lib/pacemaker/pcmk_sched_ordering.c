@@ -29,40 +29,41 @@ enum ordering_symmetry {
     ordering_symmetric_inverse, // the inverse relation in a symmetric ordering
 };
 
-#define EXPAND_CONSTRAINT_IDREF(__set, __rsc, __name) do {                      \
-        __rsc = pcmk__find_constraint_resource(data_set->resources, __name);    \
-        if (__rsc == NULL) {                                                    \
-            pcmk__config_err("%s: No resource found for %s", __set, __name);    \
-            return pcmk_rc_unpack_error;                                        \
-        }                                                                       \
+#define EXPAND_CONSTRAINT_IDREF(__set, __rsc, __name) do {                  \
+        __rsc = pcmk__find_constraint_resource(data_set->resources,         \
+                                               __name);                     \
+        if (__rsc == NULL) {                                                \
+            pcmk__config_err("%s: No resource found for %s", __set, __name);\
+            return pcmk_rc_unpack_error;                                    \
+        }                                                                   \
     } while (0)
 
 static const char *
 invert_action(const char *action)
 {
-    if (pcmk__str_eq(action, RSC_START, pcmk__str_casei)) {
-        return RSC_STOP;
+    if (pcmk__str_eq(action, PCMK_ACTION_START, pcmk__str_none)) {
+        return PCMK_ACTION_STOP;
 
-    } else if (pcmk__str_eq(action, RSC_STOP, pcmk__str_casei)) {
-        return RSC_START;
+    } else if (pcmk__str_eq(action, PCMK_ACTION_STOP, pcmk__str_none)) {
+        return PCMK_ACTION_START;
 
-    } else if (pcmk__str_eq(action, RSC_PROMOTE, pcmk__str_casei)) {
-        return RSC_DEMOTE;
+    } else if (pcmk__str_eq(action, PCMK_ACTION_PROMOTE, pcmk__str_none)) {
+        return PCMK_ACTION_DEMOTE;
 
-    } else if (pcmk__str_eq(action, RSC_DEMOTE, pcmk__str_casei)) {
-        return RSC_PROMOTE;
+    } else if (pcmk__str_eq(action, PCMK_ACTION_DEMOTE, pcmk__str_none)) {
+        return PCMK_ACTION_PROMOTE;
 
-    } else if (pcmk__str_eq(action, RSC_PROMOTED, pcmk__str_casei)) {
-        return RSC_DEMOTED;
+    } else if (pcmk__str_eq(action, PCMK_ACTION_PROMOTED, pcmk__str_none)) {
+        return PCMK_ACTION_DEMOTED;
 
-    } else if (pcmk__str_eq(action, RSC_DEMOTED, pcmk__str_casei)) {
-        return RSC_PROMOTED;
+    } else if (pcmk__str_eq(action, PCMK_ACTION_DEMOTED, pcmk__str_none)) {
+        return PCMK_ACTION_PROMOTED;
 
-    } else if (pcmk__str_eq(action, RSC_STARTED, pcmk__str_casei)) {
-        return RSC_STOPPED;
+    } else if (pcmk__str_eq(action, PCMK_ACTION_RUNNING, pcmk__str_none)) {
+        return PCMK_ACTION_STOPPED;
 
-    } else if (pcmk__str_eq(action, RSC_STOPPED, pcmk__str_casei)) {
-        return RSC_STARTED;
+    } else if (pcmk__str_eq(action, PCMK_ACTION_STOPPED, pcmk__str_none)) {
+        return PCMK_ACTION_RUNNING;
     }
     crm_warn("Unknown action '%s' specified in order constraint", action);
     return NULL;
@@ -86,19 +87,19 @@ get_ordering_type(const xmlNode *xml_obj)
             if (score_i == 0) {
                 kind_e = pe_order_kind_optional;
             }
-            pe_warn_once(pe_wo_order_score,
+            pe_warn_once(pcmk__wo_order_score,
                          "Support for 'score' in rsc_order is deprecated "
                          "and will be removed in a future release "
                          "(use 'kind' instead)");
         }
 
-    } else if (pcmk__str_eq(kind, "Mandatory", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(kind, "Mandatory", pcmk__str_none)) {
         kind_e = pe_order_kind_mandatory;
 
-    } else if (pcmk__str_eq(kind, "Optional", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(kind, "Optional", pcmk__str_none)) {
         kind_e = pe_order_kind_optional;
 
-    } else if (pcmk__str_eq(kind, "Serialize", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(kind, "Serialize", pcmk__str_none)) {
         kind_e = pe_order_kind_serialize;
 
     } else {
@@ -177,34 +178,39 @@ static uint32_t
 ordering_flags_for_kind(enum pe_order_kind kind, const char *first,
                         enum ordering_symmetry symmetry)
 {
-    uint32_t flags = pe_order_none; // so we trace-log all flags set
-
-    pe__set_order_flags(flags, pe_order_optional);
+    uint32_t flags = pcmk__ar_none; // so we trace-log all flags set
 
     switch (kind) {
         case pe_order_kind_optional:
+            pe__set_order_flags(flags, pcmk__ar_ordered);
             break;
 
         case pe_order_kind_serialize:
-            pe__set_order_flags(flags, pe_order_serialize_only);
+            /* This flag is not used anywhere directly but means the relation
+             * will not match an equality comparison against pcmk__ar_none or
+             * pcmk__ar_ordered.
+             */
+            pe__set_order_flags(flags, pcmk__ar_serialize);
             break;
 
         case pe_order_kind_mandatory:
+            pe__set_order_flags(flags, pcmk__ar_ordered);
             switch (symmetry) {
                 case ordering_asymmetric:
-                    pe__set_order_flags(flags, pe_order_asymmetrical);
+                    pe__set_order_flags(flags, pcmk__ar_asymmetric);
                     break;
 
                 case ordering_symmetric:
-                    pe__set_order_flags(flags, pe_order_implies_then);
-                    if (pcmk__strcase_any_of(first, RSC_START, RSC_PROMOTE,
-                                             NULL)) {
-                        pe__set_order_flags(flags, pe_order_runnable_left);
+                    pe__set_order_flags(flags, pcmk__ar_first_implies_then);
+                    if (pcmk__strcase_any_of(first, PCMK_ACTION_START,
+                                             PCMK_ACTION_PROMOTE, NULL)) {
+                        pe__set_order_flags(flags,
+                                            pcmk__ar_unrunnable_first_blocks);
                     }
                     break;
 
                 case ordering_symmetric_inverse:
-                    pe__set_order_flags(flags, pe_order_implies_first);
+                    pe__set_order_flags(flags, pcmk__ar_then_implies_first);
                     break;
             }
             break;
@@ -249,7 +255,7 @@ get_ordering_resource(const xmlNode *xml, const char *resource_attr,
     }
 
     if (instance_id != NULL) {
-        pe_warn_once(pe_wo_order_inst,
+        pe_warn_once(pcmk__wo_order_inst,
                      "Support for " XML_ORDER_ATTR_FIRST_INSTANCE " and "
                      XML_ORDER_ATTR_THEN_INSTANCE " is deprecated and will be "
                      "removed in a future release.");
@@ -290,8 +296,7 @@ get_minimum_first_instances(const pe_resource_t *rsc, const xmlNode *xml)
         return 0;
     }
 
-    clone_min = g_hash_table_lookup(rsc->meta,
-                                    XML_RSC_ATTR_INCARNATION_MIN);
+    clone_min = g_hash_table_lookup(rsc->meta, PCMK_META_CLONE_MIN);
     if (clone_min != NULL) {
         int clone_min_int = 0;
 
@@ -303,7 +308,7 @@ get_minimum_first_instances(const pe_resource_t *rsc, const xmlNode *xml)
      * require-all=false is deprecated equivalent of clone-min=1
      */
     if (pcmk__xe_get_bool_attr(xml, "require-all", &require_all) != ENODATA) {
-        pe_warn_once(pe_wo_require_all,
+        pe_warn_once(pcmk__wo_require_all,
                      "Support for require-all in ordering constraints "
                      "is deprecated and will be removed in a future release"
                      " (use clone-min clone meta-attribute instead)");
@@ -326,17 +331,16 @@ get_minimum_first_instances(const pe_resource_t *rsc, const xmlNode *xml)
  * \param[in]     action_then   'Then' action in ordering
  * \param[in]     flags         Ordering flags
  * \param[in]     clone_min     Minimum required instances of 'first'
- * \param[in,out] data_set      Cluster working set
  */
 static void
 clone_min_ordering(const char *id,
                    pe_resource_t *rsc_first, const char *action_first,
                    pe_resource_t *rsc_then, const char *action_then,
-                   uint32_t flags, int clone_min, pe_working_set_t *data_set)
+                   uint32_t flags, int clone_min)
 {
     // Create a pseudo-action for when the minimum instances are active
-    char *task = crm_strdup_printf(CRM_OP_RELAXED_CLONE ":%s", id);
-    pe_action_t *clone_min_met = get_pseudo_op(task, data_set);
+    char *task = crm_strdup_printf(PCMK_ACTION_CLONE_ONE_OR_MORE ":%s", id);
+    pe_action_t *clone_min_met = get_pseudo_op(task, rsc_first->cluster);
 
     free(task);
 
@@ -344,24 +348,24 @@ clone_min_ordering(const char *id,
      * considered runnable before allowing the pseudo-action to be runnable.
      */
     clone_min_met->required_runnable_before = clone_min;
-    pe__set_action_flags(clone_min_met, pe_action_requires_any);
+    pe__set_action_flags(clone_min_met, pcmk_action_min_runnable);
 
     // Order the actions for each clone instance before the pseudo-action
-    for (GList *rIter = rsc_first->children; rIter != NULL;
-         rIter = rIter->next) {
-
-        pe_resource_t *child = rIter->data;
+    for (GList *iter = rsc_first->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *child = iter->data;
 
         pcmk__new_ordering(child, pcmk__op_key(child->id, action_first, 0),
                            NULL, NULL, NULL, clone_min_met,
-                           pe_order_one_or_more|pe_order_implies_then_printed,
-                           data_set);
+                           pcmk__ar_min_runnable
+                           |pcmk__ar_first_implies_then_graphed,
+                           rsc_first->cluster);
     }
 
     // Order "then" action after the pseudo-action (if runnable)
     pcmk__new_ordering(NULL, NULL, clone_min_met, rsc_then,
                        pcmk__op_key(rsc_then->id, action_then, 0),
-                       NULL, flags|pe_order_runnable_left, data_set);
+                       NULL, flags|pcmk__ar_unrunnable_first_blocks,
+                       rsc_first->cluster);
 }
 
 /*!
@@ -409,7 +413,7 @@ inverse_ordering(const char *id, enum pe_order_kind kind,
         uint32_t flags = ordering_flags_for_kind(kind, action_first,
                                                  ordering_symmetric_inverse);
 
-        handle_restart_type(rsc_then, kind, pe_order_implies_first, flags);
+        handle_restart_type(rsc_then, kind, pcmk__ar_then_implies_first, flags);
         pcmk__order_resource_actions(rsc_then, action_then, rsc_first,
                                      action_first, flags);
     }
@@ -422,7 +426,7 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
     pe_resource_t *rsc_first = NULL;
     int min_required_before = 0;
     enum pe_order_kind kind = pe_order_kind_mandatory;
-    uint32_t cons_weight = pe_order_none;
+    uint32_t flags = pcmk__ar_none;
     enum ordering_symmetry symmetry;
 
     const char *action_then = NULL;
@@ -434,7 +438,7 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
     id = crm_element_value(xml_obj, XML_ATTR_ID);
     if (id == NULL) {
         pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
-                         crm_element_name(xml_obj));
+                         xml_obj->name);
         return;
     }
 
@@ -454,7 +458,7 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
 
     action_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST_ACTION);
     if (action_first == NULL) {
-        action_first = RSC_START;
+        action_first = PCMK_ACTION_START;
     }
 
     action_then = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN_ACTION);
@@ -465,9 +469,9 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
     kind = get_ordering_type(xml_obj);
 
     symmetry = get_ordering_symmetry(xml_obj, kind, NULL);
-    cons_weight = ordering_flags_for_kind(kind, action_first, symmetry);
+    flags = ordering_flags_for_kind(kind, action_first, symmetry);
 
-    handle_restart_type(rsc_then, kind, pe_order_implies_then, cons_weight);
+    handle_restart_type(rsc_then, kind, pcmk__ar_first_implies_then, flags);
 
     /* If there is a minimum number of instances that must be runnable before
      * the 'then' action is runnable, we use a pseudo-action for convenience:
@@ -477,10 +481,10 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
     min_required_before = get_minimum_first_instances(rsc_first, xml_obj);
     if (min_required_before > 0) {
         clone_min_ordering(id, rsc_first, action_first, rsc_then, action_then,
-                           cons_weight, min_required_before, data_set);
+                           flags, min_required_before);
     } else {
         pcmk__order_resource_actions(rsc_first, action_first, rsc_then,
-                                     action_then, cons_weight);
+                                     action_then, flags);
     }
 
     if (symmetry == ordering_symmetric) {
@@ -511,8 +515,8 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
  * \param[in]     then_action        'then' action (if NULL, \p then_rsc and
  *                                   \p then_action_task must be set)
  *
- * \param[in]     flags              Flag set of enum pe_ordering
- * \param[in,out] data_set           Cluster working set to add ordering to
+ * \param[in]     flags              Group of enum pcmk__action_relation_flags
+ * \param[in,out] sched              Cluster working set to add ordering to
  *
  * \note This function takes ownership of first_action_task and
  *       then_action_task, which do not need to be freed by the caller.
@@ -521,7 +525,7 @@ void
 pcmk__new_ordering(pe_resource_t *first_rsc, char *first_action_task,
                    pe_action_t *first_action, pe_resource_t *then_rsc,
                    char *then_action_task, pe_action_t *then_action,
-                   uint32_t flags, pe_working_set_t *data_set)
+                   uint32_t flags, pe_working_set_t *sched)
 {
     pe__ordering_t *order = NULL;
 
@@ -540,7 +544,7 @@ pcmk__new_ordering(pe_resource_t *first_rsc, char *first_action_task,
     order = calloc(1, sizeof(pe__ordering_t));
     CRM_ASSERT(order != NULL);
 
-    order->id = data_set->order_id++;
+    order->id = sched->order_id++;
     order->flags = flags;
     order->lh_rsc = first_rsc;
     order->rh_rsc = then_rsc;
@@ -566,12 +570,12 @@ pcmk__new_ordering(pe_resource_t *first_rsc, char *first_action_task,
     }
 
     pe_rsc_trace(first_rsc, "Created ordering %d for %s then %s",
-                 (data_set->order_id - 1),
+                 (sched->order_id - 1),
                  pcmk__s(order->lh_action_task, "an underspecified action"),
                  pcmk__s(order->rh_action_task, "an underspecified action"));
 
-    data_set->ordering_constraints = g_list_prepend(data_set->ordering_constraints,
-                                                    order);
+    sched->ordering_constraints = g_list_prepend(sched->ordering_constraints,
+                                                 order);
     pcmk__order_migration_equivalents(order);
 }
 
@@ -597,7 +601,7 @@ unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
 
     int local_kind = parent_kind;
     bool sequential = false;
-    uint32_t flags = pe_order_optional;
+    uint32_t flags = pcmk__ar_ordered;
     enum ordering_symmetry symmetry;
 
     char *key = NULL;
@@ -607,7 +611,7 @@ unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
     const char *kind_s = crm_element_value(set, XML_ORDER_ATTR_KIND);
 
     if (action == NULL) {
-        action = RSC_START;
+        action = PCMK_ACTION_START;
     }
 
     if (kind_s) {
@@ -644,8 +648,8 @@ unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
         if (local_kind == pe_order_kind_serialize) {
             /* Serialize before everything that comes after */
 
-            for (GList *gIter = set_iter; gIter != NULL; gIter = gIter->next) {
-                pe_resource_t *then_rsc = (pe_resource_t *) gIter->data;
+            for (GList *iter = set_iter; iter != NULL; iter = iter->next) {
+                pe_resource_t *then_rsc = iter->data;
                 char *then_key = pcmk__op_key(then_rsc->id, action, 0);
 
                 pcmk__new_ordering(resource, strdup(key), NULL, then_rsc,
@@ -718,18 +722,18 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
     const char *action_1 = crm_element_value(set1, "action");
     const char *action_2 = crm_element_value(set2, "action");
 
-    uint32_t flags = pe_order_none;
+    uint32_t flags = pcmk__ar_none;
 
     bool require_all = true;
 
     (void) pcmk__xe_get_bool_attr(set1, "require-all", &require_all);
 
     if (action_1 == NULL) {
-        action_1 = RSC_START;
+        action_1 = PCMK_ACTION_START;
     }
 
     if (action_2 == NULL) {
-        action_2 = RSC_START;
+        action_2 = PCMK_ACTION_START;
     }
 
     if (symmetry == ordering_symmetric_inverse) {
@@ -737,8 +741,8 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
         action_2 = invert_action(action_2);
     }
 
-    if (pcmk__str_eq(RSC_STOP, action_1, pcmk__str_casei)
-        || pcmk__str_eq(RSC_DEMOTE, action_1, pcmk__str_casei)) {
+    if (pcmk__str_eq(PCMK_ACTION_STOP, action_1, pcmk__str_none)
+        || pcmk__str_eq(PCMK_ACTION_DEMOTE, action_1, pcmk__str_none)) {
         /* Assuming: A -> ( B || C) -> D
          * The one-or-more logic only applies during the start/promote phase.
          * During shutdown neither B nor can shutdown until D is down, so simply
@@ -753,11 +757,11 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
      * irrelevant in regards to set2.
      */
     if (!require_all) {
-        char *task = crm_strdup_printf(CRM_OP_RELAXED_SET ":%s", ID(set1));
+        char *task = crm_strdup_printf(PCMK_ACTION_ONE_OR_MORE ":%s", ID(set1));
         pe_action_t *unordered_action = get_pseudo_op(task, data_set);
 
         free(task);
-        pe__set_action_flags(unordered_action, pe_action_requires_any);
+        pe__set_action_flags(unordered_action, pcmk_action_min_runnable);
 
         for (xml_rsc = first_named_child(set1, XML_TAG_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
@@ -770,7 +774,8 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
              */
             pcmk__new_ordering(rsc_1, pcmk__op_key(rsc_1->id, action_1, 0),
                                NULL, NULL, NULL, unordered_action,
-                               pe_order_one_or_more|pe_order_implies_then_printed,
+                               pcmk__ar_min_runnable
+                               |pcmk__ar_first_implies_then_graphed,
                                data_set);
         }
         for (xml_rsc_2 = first_named_child(set2, XML_TAG_RESOURCE_REF);
@@ -784,7 +789,8 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
              */
             pcmk__new_ordering(NULL, NULL, unordered_action,
                                rsc_2, pcmk__op_key(rsc_2->id, action_2, 0),
-                               NULL, flags|pe_order_runnable_left, data_set);
+                               NULL, flags|pcmk__ar_unrunnable_first_blocks,
+                               data_set);
         }
 
         return pcmk_rc_ok;
@@ -859,7 +865,8 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
 
             EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
 
-            for (xmlNode *xml_rsc_2 = first_named_child(set2, XML_TAG_RESOURCE_REF);
+            for (xmlNode *xml_rsc_2 = first_named_child(set2,
+                                                        XML_TAG_RESOURCE_REF);
                  xml_rsc_2 != NULL; xml_rsc_2 = crm_next_same_xml(xml_rsc_2)) {
 
                 EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc_2));
@@ -937,7 +944,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     *expanded_xml = copy_xml(xml_obj);
 
-    // Convert template/tag reference in "first" into resource_set under constraint
+    // Convert template/tag reference in "first" into constraint resource_set
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set_first, XML_ORDER_ATTR_FIRST,
                           true, data_set)) {
         free_xml(*expanded_xml);
@@ -954,7 +961,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         any_sets = true;
     }
 
-    // Convert template/tag reference in "then" into resource_set under constraint
+    // Convert template/tag reference in "then" into constraint resource_set
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set_then, XML_ORDER_ATTR_THEN,
                           true, data_set)) {
         free_xml(*expanded_xml);
@@ -1067,7 +1074,7 @@ ordering_is_invalid(pe_action_t *action, pe_action_wrapper_t *input)
     /* Prevent user-defined ordering constraints between resources
      * running in a guest node and the resource that defines that node.
      */
-    if (!pcmk_is_set(input->type, pe_order_preserve)
+    if (!pcmk_is_set(input->type, pcmk__ar_guest_allowed)
         && (input->action->rsc != NULL)
         && pcmk__rsc_corresponds_to_guest(action->rsc, input->action->node)) {
 
@@ -1083,8 +1090,9 @@ ordering_is_invalid(pe_action_t *action, pe_action_wrapper_t *input)
      * migrated from node2 to node1. If there would be a graph loop,
      * break the order "load_stopped_node2" -> "rscA_migrate_to node1".
      */
-    if ((input->type == pe_order_load) && action->rsc
-        && pcmk__str_eq(action->task, RSC_MIGRATE, pcmk__str_casei)
+    if (((uint32_t) input->type == pcmk__ar_if_on_same_node_or_target)
+        && (action->rsc != NULL)
+        && pcmk__str_eq(action->task, PCMK_ACTION_MIGRATE_TO, pcmk__str_none)
         && pcmk__graph_has_loop(action, action, input)) {
         return true;
     }
@@ -1104,7 +1112,7 @@ pcmk__disable_invalid_orderings(pe_working_set_t *data_set)
 
             input = (pe_action_wrapper_t *) input_iter->data;
             if (ordering_is_invalid(action, input)) {
-                input->type = pe_order_none;
+                input->type = (enum pe_ordering) pcmk__ar_none;
             }
         }
     }
@@ -1126,15 +1134,14 @@ pcmk__order_stops_before_shutdown(pe_node_t *node, pe_action_t *shutdown_op)
         pe_action_t *action = (pe_action_t *) iter->data;
 
         // Only stops on the node shutting down are relevant
-        if ((action->rsc == NULL) || (action->node == NULL)
-            || (action->node->details != node->details)
-            || !pcmk__str_eq(action->task, RSC_STOP, pcmk__str_casei)) {
+        if (!pe__same_node(action->node, node)
+            || !pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_none)) {
             continue;
         }
 
         // Resources and nodes in maintenance mode won't be touched
 
-        if (pcmk_is_set(action->rsc->flags, pe_rsc_maintenance)) {
+        if (pcmk_is_set(action->rsc->flags, pcmk_rsc_maintenance)) {
             pe_rsc_trace(action->rsc,
                          "Not ordering %s before shutdown of %s because "
                          "resource in maintenance mode",
@@ -1154,7 +1161,7 @@ pcmk__order_stops_before_shutdown(pe_node_t *node, pe_action_t *shutdown_op)
          * we may still end up blocking)
          */
         if (!pcmk_any_flags_set(action->rsc->flags,
-                                pe_rsc_managed|pe_rsc_block)) {
+                                pcmk_rsc_managed|pcmk_rsc_blocked)) {
             pe_rsc_trace(action->rsc,
                          "Not ordering %s before shutdown of %s because "
                          "resource is unmanaged or blocked",
@@ -1164,10 +1171,10 @@ pcmk__order_stops_before_shutdown(pe_node_t *node, pe_action_t *shutdown_op)
 
         pe_rsc_trace(action->rsc, "Ordering %s before shutdown of %s",
                      action->uuid, pe__node_name(node));
-        pe__clear_action_flags(action, pe_action_optional);
+        pe__clear_action_flags(action, pcmk_action_optional);
         pcmk__new_ordering(action->rsc, NULL, action, NULL,
-                           strdup(CRM_OP_SHUTDOWN), shutdown_op,
-                           pe_order_optional|pe_order_runnable_left,
+                           strdup(PCMK_ACTION_DO_SHUTDOWN), shutdown_op,
+                           pcmk__ar_ordered|pcmk__ar_unrunnable_first_blocks,
                            node->details->data_set);
     }
 }
@@ -1219,7 +1226,7 @@ order_resource_actions_after(pe_action_t *first_action,
                              const pe_resource_t *rsc, pe__ordering_t *order)
 {
     GList *then_actions = NULL;
-    uint32_t flags = pe_order_none;
+    uint32_t flags = pcmk__ar_none;
 
     CRM_CHECK((rsc != NULL) && (order != NULL), return);
 
@@ -1241,15 +1248,17 @@ order_resource_actions_after(pe_action_t *first_action,
     }
 
     if ((first_action != NULL) && (first_action->rsc == rsc)
-        && pcmk_is_set(first_action->flags, pe_action_dangle)) {
+        && pcmk_is_set(first_action->flags, pcmk_action_migration_abort)) {
 
         pe_rsc_trace(rsc,
                      "Detected dangling migration ordering (%s then %s %s)",
                      first_action->uuid, order->rh_action_task, rsc->id);
-        pe__clear_order_flags(flags, pe_order_implies_then);
+        pe__clear_order_flags(flags, pcmk__ar_first_implies_then);
     }
 
-    if ((first_action == NULL) && !pcmk_is_set(flags, pe_order_implies_then)) {
+    if ((first_action == NULL)
+        && !pcmk_is_set(flags, pcmk__ar_first_implies_then)) {
+
         pe_rsc_debug(rsc,
                      "Ignoring ordering %d for %s: No first action found",
                      order->id, rsc->id);
@@ -1263,7 +1272,7 @@ order_resource_actions_after(pe_action_t *first_action,
         if (first_action != NULL) {
             order_actions(first_action, then_action_iter, flags);
         } else {
-            pe__clear_action_flags(then_action_iter, pe_action_runnable);
+            pe__clear_action_flags(then_action_iter, pcmk_action_runnable);
             crm_warn("%s of %s is unrunnable because there is no %s of %s "
                      "to order it after", then_action_iter->task, rsc->id,
                      order->lh_action_task, order->lh_rsc->id);
@@ -1274,8 +1283,7 @@ order_resource_actions_after(pe_action_t *first_action,
 }
 
 static void
-rsc_order_first(pe_resource_t *first_rsc, pe__ordering_t *order,
-                pe_working_set_t *data_set)
+rsc_order_first(pe_resource_t *first_rsc, pe__ordering_t *order)
 {
     GList *first_actions = NULL;
     pe_action_t *first_action = order->lh_action;
@@ -1305,15 +1313,17 @@ rsc_order_first(pe_resource_t *first_rsc, pe__ordering_t *order,
         parse_op_key(order->lh_action_task, NULL, &op_type, &interval_ms);
         key = pcmk__op_key(first_rsc->id, op_type, interval_ms);
 
-        if ((first_rsc->fns->state(first_rsc, TRUE) == RSC_ROLE_STOPPED)
-            && pcmk__str_eq(op_type, RSC_STOP, pcmk__str_casei)) {
+        if ((first_rsc->fns->state(first_rsc, TRUE) == pcmk_role_stopped)
+            && pcmk__str_eq(op_type, PCMK_ACTION_STOP, pcmk__str_none)) {
             free(key);
             pe_rsc_trace(first_rsc,
                          "Ignoring constraint %d: first (%s for %s) not found",
                          order->id, order->lh_action_task, first_rsc->id);
 
-        } else if ((first_rsc->fns->state(first_rsc, TRUE) == RSC_ROLE_UNPROMOTED)
-                   && pcmk__str_eq(op_type, RSC_DEMOTE, pcmk__str_casei)) {
+        } else if ((first_rsc->fns->state(first_rsc,
+                                          TRUE) == pcmk_role_unpromoted)
+                   && pcmk__str_eq(op_type, PCMK_ACTION_DEMOTE,
+                                   pcmk__str_none)) {
             free(key);
             pe_rsc_trace(first_rsc,
                          "Ignoring constraint %d: first (%s for %s) not found",
@@ -1324,7 +1334,7 @@ rsc_order_first(pe_resource_t *first_rsc, pe__ordering_t *order,
                          "Creating first (%s for %s) for constraint %d ",
                          order->lh_action_task, first_rsc->id, order->id);
             first_action = custom_action(first_rsc, key, op_type, NULL, TRUE,
-                                         TRUE, data_set);
+                                         TRUE, first_rsc->cluster);
             first_actions = g_list_prepend(NULL, first_action);
         }
 
@@ -1339,8 +1349,8 @@ rsc_order_first(pe_resource_t *first_rsc, pe__ordering_t *order,
         }
         then_rsc = order->rh_action->rsc;
     }
-    for (GList *gIter = first_actions; gIter != NULL; gIter = gIter->next) {
-        first_action = (pe_action_t *) gIter->data;
+    for (GList *iter = first_actions; iter != NULL; iter = iter->next) {
+        first_action = iter->data;
 
         if (then_rsc == NULL) {
             order_actions(first_action, order->rh_action, order->flags);
@@ -1353,8 +1363,29 @@ rsc_order_first(pe_resource_t *first_rsc, pe__ordering_t *order,
     g_list_free(first_actions);
 }
 
+// GFunc to call pcmk__block_colocation_dependents()
+static void
+block_colocation_dependents(gpointer data, gpointer user_data)
+{
+    pcmk__block_colocation_dependents(data);
+}
+
+// GFunc to call pcmk__update_action_for_orderings()
+static void
+update_action_for_orderings(gpointer data, gpointer user_data)
+{
+    pcmk__update_action_for_orderings((pe_action_t *) data,
+                                      (pe_working_set_t *) user_data);
+}
+
+/*!
+ * \internal
+ * \brief Apply all ordering constraints
+ *
+ * \param[in,out] sched  Cluster working set
+ */
 void
-pcmk__apply_orderings(pe_working_set_t *data_set)
+pcmk__apply_orderings(pe_working_set_t *sched)
 {
     crm_trace("Applying ordering constraints");
 
@@ -1370,16 +1401,16 @@ pcmk__apply_orderings(pe_working_set_t *data_set)
      * @TODO This is brittle and should be carefully redesigned so that the
      * order of creation doesn't matter, and the reverse becomes unneeded.
      */
-    data_set->ordering_constraints = g_list_reverse(data_set->ordering_constraints);
+    sched->ordering_constraints = g_list_reverse(sched->ordering_constraints);
 
-    for (GList *gIter = data_set->ordering_constraints;
-         gIter != NULL; gIter = gIter->next) {
+    for (GList *iter = sched->ordering_constraints;
+         iter != NULL; iter = iter->next) {
 
-        pe__ordering_t *order = gIter->data;
+        pe__ordering_t *order = iter->data;
         pe_resource_t *rsc = order->lh_rsc;
 
         if (rsc != NULL) {
-            rsc_order_first(rsc, order, data_set);
+            rsc_order_first(rsc, order);
             continue;
         }
 
@@ -1394,17 +1425,15 @@ pcmk__apply_orderings(pe_working_set_t *data_set)
         }
     }
 
-    g_list_foreach(data_set->actions, (GFunc) pcmk__block_colocation_dependents,
-                   data_set);
+    g_list_foreach(sched->actions, block_colocation_dependents, NULL);
 
     crm_trace("Ordering probes");
-    pcmk__order_probes(data_set);
+    pcmk__order_probes(sched);
 
-    crm_trace("Updating %d actions", g_list_length(data_set->actions));
-    g_list_foreach(data_set->actions,
-                   (GFunc) pcmk__update_action_for_orderings, data_set);
+    crm_trace("Updating %d actions", g_list_length(sched->actions));
+    g_list_foreach(sched->actions, update_action_for_orderings, sched);
 
-    pcmk__disable_invalid_orderings(data_set);
+    pcmk__disable_invalid_orderings(sched);
 }
 
 /*!
@@ -1426,7 +1455,7 @@ pcmk__order_after_each(pe_action_t *after, GList *list)
         crm_debug("Ordering %s on %s before %s on %s",
                   before_desc, pe__node_name(before->node),
                   after_desc, pe__node_name(after->node));
-        order_actions(before, after, pe_order_optional);
+        order_actions(before, after, pcmk__ar_ordered);
     }
 }
 
@@ -1440,24 +1469,31 @@ void
 pcmk__promotable_restart_ordering(pe_resource_t *rsc)
 {
     // Order start and promote after all instances are stopped
-    pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_START,
-                                 pe_order_optional);
-    pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_PROMOTE,
-                                 pe_order_optional);
+    pcmk__order_resource_actions(rsc, PCMK_ACTION_STOPPED,
+                                 rsc, PCMK_ACTION_START,
+                                 pcmk__ar_ordered);
+    pcmk__order_resource_actions(rsc, PCMK_ACTION_STOPPED,
+                                 rsc, PCMK_ACTION_PROMOTE,
+                                 pcmk__ar_ordered);
 
     // Order stop, start, and promote after all instances are demoted
-    pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_STOP,
-                                 pe_order_optional);
-    pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_START,
-                                 pe_order_optional);
-    pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_PROMOTE,
-                                 pe_order_optional);
+    pcmk__order_resource_actions(rsc, PCMK_ACTION_DEMOTED,
+                                 rsc, PCMK_ACTION_STOP,
+                                 pcmk__ar_ordered);
+    pcmk__order_resource_actions(rsc, PCMK_ACTION_DEMOTED,
+                                 rsc, PCMK_ACTION_START,
+                                 pcmk__ar_ordered);
+    pcmk__order_resource_actions(rsc, PCMK_ACTION_DEMOTED,
+                                 rsc, PCMK_ACTION_PROMOTE,
+                                 pcmk__ar_ordered);
 
     // Order promote after all instances are started
-    pcmk__order_resource_actions(rsc, RSC_STARTED, rsc, RSC_PROMOTE,
-                                 pe_order_optional);
+    pcmk__order_resource_actions(rsc, PCMK_ACTION_RUNNING,
+                                 rsc, PCMK_ACTION_PROMOTE,
+                                 pcmk__ar_ordered);
 
     // Order demote after all instances are demoted
-    pcmk__order_resource_actions(rsc, RSC_DEMOTE, rsc, RSC_DEMOTED,
-                                 pe_order_optional);
+    pcmk__order_resource_actions(rsc, PCMK_ACTION_DEMOTE,
+                                 rsc, PCMK_ACTION_DEMOTED,
+                                 pcmk__ar_ordered);
 }

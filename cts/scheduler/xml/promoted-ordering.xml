@@ -61,7 +61,7 @@
         </primitive>
         <meta_attributes id="group-group_main.meta"/>
       </group>
-      <primitive id="intip_1_master" class="ocf" type="IPaddr2" provider="heartbeat">
+      <primitive id="intip_1_active" class="ocf" type="IPaddr2" provider="heartbeat">
         <operations>
           <op name="monitor" interval="30s" id="intip_1_mon" timeout="30s"/>
         </operations>
@@ -75,7 +75,7 @@
           <nvpair id="nvpair.meta.auto-131" name="target-role" value="started"/>
         </meta_attributes>
       </primitive>
-      <primitive id="intip_2_slave" class="ocf" type="IPaddr2" provider="heartbeat">
+      <primitive id="intip_2_passive" class="ocf" type="IPaddr2" provider="heartbeat">
         <operations>
           <op name="monitor" interval="30s" id="intip_2_mon" timeout="30s"/>
         </operations>
@@ -85,7 +85,7 @@
           <nvpair id="nvpair.id22294" name="nic" value="eth1"/>
           <nvpair id="nvpair.id22303" name="target_role" value="started"/>
         </instance_attributes>
-        <meta_attributes id="primitive-intip_2_unpromoted.meta">
+        <meta_attributes id="primitive-intip_2_passive.meta">
           <nvpair id="nvpair.meta.auto-153" name="target-role" value="started"/>
         </meta_attributes>
       </primitive>
@@ -242,24 +242,24 @@
           <expression attribute="#uname" operation="eq" value="webcluster01" id="expression.id23076"/>
         </rule>
       </rsc_location>
-      <rsc_location id="run_intip_1_promoted" rsc="intip_1_master">
+      <rsc_location id="run_intip_1_promoted" rsc="intip_1_active">
         <rule id="pref_run_intip_1" score="200">
           <expression attribute="#uname" operation="eq" value="webcluster01" id="expression.id23101"/>
         </rule>
       </rsc_location>
-      <rsc_location id="run_intip_2_unpromoted" rsc="intip_2_slave">
+      <rsc_location id="run_intip_2_passive" rsc="intip_2_passive">
         <rule id="pref_run_intip_2_wc2" score="100">
           <expression attribute="#uname" operation="eq" value="webcluster02" id="expression.id23125"/>
         </rule>
       </rsc_location>
-      <rsc_order id="order_drbd_mysql_ip0" first-action="start" first="intip_1_master" then="ms_drbd_mysql"/>
-      <rsc_order id="order_drbd_mysql_ip1" first-action="start" first="intip_2_slave" then="ms_drbd_mysql"/>
-      <rsc_order id="order_drbd_www_ip0" first-action="start" first="intip_1_master" then="ms_drbd_www"/>
-      <rsc_order id="order_drbd_www_ip1" first-action="start" first="intip_2_slave" then="ms_drbd_www"/>
-      <rsc_colocation id="colo_drbd_mysql_ip0" rsc="drbd_mysql" with-rsc="intip_1_master" rsc-role="Promoted"/>
-      <rsc_colocation id="colo_drbd_mysql_ip1" rsc="drbd_mysql" with-rsc="intip_2_slave" rsc-role="Unpromoted" score="100"/>
-      <rsc_colocation id="colo_drbd_www_ip0" rsc="drbd_www" with-rsc="intip_1_master" rsc-role="Promoted" score="100"/>
-      <rsc_colocation id="colo_drbd_www_ip1" rsc="drbd_www" with-rsc="intip_2_slave" rsc-role="Unpromoted" score="100"/>
+      <rsc_order id="order_drbd_mysql_ip0" first-action="start" first="intip_1_active" then="ms_drbd_mysql"/>
+      <rsc_order id="order_drbd_mysql_ip1" first-action="start" first="intip_2_passive" then="ms_drbd_mysql"/>
+      <rsc_order id="order_drbd_www_ip0" first-action="start" first="intip_1_active" then="ms_drbd_www"/>
+      <rsc_order id="order_drbd_www_ip1" first-action="start" first="intip_2_passive" then="ms_drbd_www"/>
+      <rsc_colocation id="colo_drbd_mysql_ip0" rsc="drbd_mysql" with-rsc="intip_1_active" rsc-role="Promoted"/>
+      <rsc_colocation id="colo_drbd_mysql_ip1" rsc="drbd_mysql" with-rsc="intip_2_passive" rsc-role="Unpromoted" score="100"/>
+      <rsc_colocation id="colo_drbd_www_ip0" rsc="drbd_www" with-rsc="intip_1_active" rsc-role="Promoted" score="100"/>
+      <rsc_colocation id="colo_drbd_www_ip1" rsc="drbd_www" with-rsc="intip_2_passive" rsc-role="Unpromoted" score="100"/>
       <rsc_order id="drbd_before_fs_mysql" first="ms_drbd_mysql" then="fs_mysql" then-action="start" first-action="promote"/>
       <rsc_colocation id="colo_drbd_fs_mysql" rsc="fs_mysql" with-rsc="ms_drbd_mysql" with-rsc-role="Promoted" score="INFINITY"/>
       <rsc_order id="drbd_before_ocfs2_www" first="ms_drbd_www" then="clone_ocfs2_www" then-action="start" first-action="promote"/>

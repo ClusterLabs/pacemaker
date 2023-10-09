@@ -18,10 +18,8 @@
 #  include <signal.h>
 #  include <glib.h>
 
-#  include <libxml/tree.h>
-
-#  include <crm/lrmd.h>
 #  include <crm/common/acl.h>
+#  include <crm/common/actions.h>
 #  include <crm/common/agents.h>
 #  include <crm/common/results.h>
 
@@ -58,26 +56,6 @@ char * crm_strip_trailing_newline(char *str);
 char *crm_strdup_printf(char const *format, ...) G_GNUC_PRINTF(1, 2);
 
 guint crm_parse_interval_spec(const char *input);
-
-/* public operation functions (from operations.c) */
-gboolean parse_op_key(const char *key, char **rsc_id, char **op_type,
-                      guint *interval_ms);
-gboolean decode_transition_key(const char *key, char **uuid, int *transition_id,
-                               int *action_id, int *target_rc);
-gboolean decode_transition_magic(const char *magic, char **uuid,
-                                 int *transition_id, int *action_id,
-                                 int *op_status, int *op_rc, int *target_rc);
-int rsc_op_expected_rc(const lrmd_event_data_t *event);
-gboolean did_rsc_op_fail(lrmd_event_data_t *event, int target_rc);
-bool crm_op_needs_metadata(const char *rsc_class, const char *op);
-xmlNode *crm_create_op_xml(xmlNode *parent, const char *prefix,
-                           const char *task, const char *interval_spec,
-                           const char *timeout);
-#define CRM_DEFAULT_OP_TIMEOUT_S "20s"
-
-bool pcmk_is_probe(const char *task, guint interval);
-bool pcmk_xe_is_probe(const xmlNode *xml_op);
-bool pcmk_xe_mask_probe_failure(const xmlNode *xml_op);
 
 int compare_version(const char *version1, const char *version2);
 

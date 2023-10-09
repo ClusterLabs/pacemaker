@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -93,9 +93,9 @@ cluster_status(pe_working_set_t * data_set)
     }
 
     if (pcmk__xe_attr_is_true(data_set->input, XML_ATTR_HAVE_QUORUM)) {
-        pe__set_working_set_flags(data_set, pe_flag_have_quorum);
+        pe__set_working_set_flags(data_set, pcmk_sched_quorate);
     } else {
-        pe__clear_working_set_flags(data_set, pe_flag_have_quorum);
+        pe__clear_working_set_flags(data_set, pcmk_sched_quorate);
     }
 
     data_set->op_defaults = get_xpath_object("//" XML_CIB_TAG_OPCONFIG,
@@ -108,8 +108,8 @@ cluster_status(pe_working_set_t * data_set)
     unpack_config(section, data_set);
 
    if (!pcmk_any_flags_set(data_set->flags,
-                           pe_flag_quick_location|pe_flag_have_quorum)
-       && (data_set->no_quorum_policy != no_quorum_ignore)) {
+                           pcmk_sched_location_only|pcmk_sched_quorate)
+       && (data_set->no_quorum_policy != pcmk_no_quorum_ignore)) {
         crm_warn("Fencing and resource management disabled due to lack of quorum");
     }
 
@@ -119,7 +119,7 @@ cluster_status(pe_working_set_t * data_set)
 
     section = get_xpath_object("//" XML_CIB_TAG_RESOURCES, data_set->input,
                                LOG_TRACE);
-    if (!pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_location_only)) {
         unpack_remote_nodes(section, data_set);
     }
     unpack_resources(section, data_set);
@@ -128,13 +128,13 @@ cluster_status(pe_working_set_t * data_set)
                                LOG_NEVER);
     unpack_tags(section, data_set);
 
-    if (!pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_location_only)) {
         section = get_xpath_object("//"XML_CIB_TAG_STATUS, data_set->input,
                                    LOG_TRACE);
         unpack_status(section, data_set);
     }
 
-    if (!pcmk_is_set(data_set->flags, pe_flag_no_counts)) {
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_no_counts)) {
         for (GList *item = data_set->resources; item != NULL;
              item = item->next) {
             ((pe_resource_t *) (item->data))->fns->count(item->data);
@@ -144,7 +144,7 @@ cluster_status(pe_working_set_t * data_set)
                   data_set->blocked_resources);
     }
 
-    pe__set_working_set_flags(data_set, pe_flag_have_status);
+    pe__set_working_set_flags(data_set, pcmk_sched_have_status);
     return TRUE;
 }
 
@@ -282,7 +282,7 @@ cleanup_calculations(pe_working_set_t * data_set)
         return;
     }
 
-    pe__clear_working_set_flags(data_set, pe_flag_have_status);
+    pe__clear_working_set_flags(data_set, pcmk_sched_have_status);
     if (data_set->config_hash != NULL) {
         g_hash_table_destroy(data_set->config_hash);
     }
@@ -374,23 +374,23 @@ set_working_set_defaults(pe_working_set_t * data_set)
     data_set->priv = priv;
     data_set->order_id = 1;
     data_set->action_id = 1;
-    data_set->no_quorum_policy = no_quorum_stop;
+    data_set->no_quorum_policy = pcmk_no_quorum_stop;
 
     data_set->flags = 0x0ULL;
 
     pe__set_working_set_flags(data_set,
-                              pe_flag_stop_rsc_orphans
-                              |pe_flag_symmetric_cluster
-                              |pe_flag_stop_action_orphans);
+                              pcmk_sched_symmetric_cluster
+                              |pcmk_sched_stop_removed_resources
+                              |pcmk_sched_cancel_removed_actions);
     if (!strcmp(PCMK__CONCURRENT_FENCING_DEFAULT, "true")) {
-        pe__set_working_set_flags(data_set, pe_flag_concurrent_fencing);
+        pe__set_working_set_flags(data_set, pcmk_sched_concurrent_fencing);
     }
 }
 
 pe_resource_t *
 pe_find_resource(GList *rsc_list, const char *id)
 {
-    return pe_find_resource_with_flags(rsc_list, id, pe_find_renamed);
+    return pe_find_resource_with_flags(rsc_list, id, pcmk_rsc_match_history);
 }
 
 pe_resource_t *

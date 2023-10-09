@@ -59,11 +59,15 @@ conversion_errors(void **state)
 
     g_hash_table_insert(tbl, strdup("negative"), strdup("-3"));
     g_hash_table_insert(tbl, strdup("toobig"), strdup("20000000000000000"));
+    g_hash_table_insert(tbl, strdup("baddata"), strdup("asdf"));
 
     assert_int_equal(pcmk__guint_from_hash(tbl, "negative", 456, &result), ERANGE);
     assert_int_equal(result, 456);
 
     assert_int_equal(pcmk__guint_from_hash(tbl, "toobig", 456, &result), ERANGE);
+    assert_int_equal(result, 456);
+
+    assert_int_equal(pcmk__guint_from_hash(tbl, "baddata", 456, &result), EINVAL);
     assert_int_equal(result, 456);
 
     g_hash_table_destroy(tbl);

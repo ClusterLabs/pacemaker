@@ -8,9 +8,12 @@
  */
 
 #include <crm_internal.h>
+
 #include <stdint.h>
+
 #include <crm/common/xml_internal.h>
 #include <crm/common/output.h>
+#include <crm/common/scheduler_internal.h>
 #include <crm/cib/util.h>
 #include <crm/msg_xml.h>
 #include <crm/pengine/internal.h>
@@ -20,16 +23,16 @@ pe__resource_description(const pe_resource_t *rsc, uint32_t show_opts)
 {
     const char * desc = NULL;
     // User-supplied description
-    if (pcmk_any_flags_set(show_opts, pcmk_show_rsc_only|pcmk_show_description)
-        || pcmk__list_of_multiple(rsc->running_on)) {
+    if (pcmk_any_flags_set(show_opts, pcmk_show_rsc_only|pcmk_show_description)) {
         desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
     }
     return desc;
 }
 
 /* Never display node attributes whose name starts with one of these prefixes */
-#define FILTER_STR { PCMK__FAIL_COUNT_PREFIX, PCMK__LAST_FAILURE_PREFIX,   \
-                     "shutdown", "terminate", "standby", "#", NULL }
+#define FILTER_STR { PCMK__FAIL_COUNT_PREFIX, PCMK__LAST_FAILURE_PREFIX,    \
+                     "shutdown", PCMK_NODE_ATTR_TERMINATE, "standby", "#",  \
+                     NULL }
 
 static int
 compare_attribute(gconstpointer a, gconstpointer b)
@@ -150,13 +153,15 @@ get_operation_list(xmlNode *rsc_entry) {
         pcmk__scan_min_int(op_rc, &op_rc_i, 0);
 
         /* Display 0-interval monitors as "probe" */
-        if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)
+        if (pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_casei)
             && pcmk__str_eq(interval_ms_s, "0", pcmk__str_null_matches | pcmk__str_casei)) {
             task = "probe";
         }
 
         /* Ignore notifies and some probes */
-        if (pcmk__str_eq(task, CRMD_ACTION_NOTIFY, pcmk__str_casei) || (pcmk__str_eq(task, "probe", pcmk__str_casei) && (op_rc_i == 7))) {
+        if (pcmk__str_eq(task, PCMK_ACTION_NOTIFY, pcmk__str_none)
+            || (pcmk__str_eq(task, "probe", pcmk__str_none)
+                && (op_rc_i == CRM_EX_NOT_RUNNING))) {
             continue;
         }
 
@@ -359,7 +364,7 @@ is_mixed_version(pe_working_set_t *data_set) {
 }
 
 static char *
-formatted_xml_buf(pe_resource_t *rsc, bool raw)
+formatted_xml_buf(const pe_resource_t *rsc, bool raw)
 {
     if (raw) {
         return dump_xml_formatted(rsc->orig_xml ? rsc->orig_xml : rsc->xml);
@@ -575,9 +580,7 @@ pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name
 
     xml_node = pcmk__output_xml_peek_parent(out);
     CRM_ASSERT(xml_node != NULL);
-    xml_node = is_list
-        ? create_xml_node(xml_node, tag_name)
-        : xmlNewChild(xml_node, NULL, (pcmkXmlStr) tag_name, NULL);
+    xml_node = create_xml_node(xml_node, tag_name);
 
     va_start(args, pairs_count);
     while(pairs_count--) {
@@ -598,11 +601,11 @@ pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name
 static const char *
 role_desc(enum rsc_role_e role)
 {
-    if (role == RSC_ROLE_PROMOTED) {
+    if (role == pcmk_role_promoted) {
 #ifdef PCMK__COMPAT_2_0
-        return "as " RSC_ROLE_PROMOTED_LEGACY_S " ";
+        return "as " PCMK__ROLE_PROMOTED_LEGACY " ";
 #else
-        return "in " RSC_ROLE_PROMOTED_S " role ";
+        return "in " PCMK__ROLE_PROMOTED " role ";
 #endif
     }
     return "";
@@ -652,7 +655,7 @@ ban_xml(pcmk__output_t *out, va_list args) {
     pe__location_t *location = va_arg(args, pe__location_t *);
     uint32_t show_opts G_GNUC_UNUSED = va_arg(args, uint32_t);
 
-    const char *promoted_only = pcmk__btoa(location->role_filter == RSC_ROLE_PROMOTED);
+    const char *promoted_only = pcmk__btoa(location->role_filter == pcmk_role_promoted);
     char *weight_s = pcmk__itoa(pe_node->weight);
 
     pcmk__output_create_xml_node(out, "ban",
@@ -937,11 +940,11 @@ static int
 cluster_maint_mode_text(pcmk__output_t *out, va_list args) {
     unsigned long long flags = va_arg(args, unsigned long long);
 
-    if (pcmk_is_set(flags, pe_flag_maintenance_mode)) {
+    if (pcmk_is_set(flags, pcmk_sched_in_maintenance)) {
         pcmk__formatted_printf(out, "\n              *** Resource management is DISABLED ***\n");
         pcmk__formatted_printf(out, "  The cluster will not attempt to start, stop or recover services\n");
         return pcmk_rc_ok;
-    } else if (pcmk_is_set(flags, pe_flag_stop_everything)) {
+    } else if (pcmk_is_set(flags, pcmk_sched_stop_all)) {
         pcmk__formatted_printf(out, "\n    *** Resource management is DISABLED ***\n");
         pcmk__formatted_printf(out, "  The cluster will keep all resources stopped\n");
         return pcmk_rc_ok;
@@ -955,43 +958,49 @@ static int
 cluster_options_html(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
 
-    out->list_item(out, NULL, "STONITH of failed nodes %s",
-                   pcmk_is_set(data_set->flags, pe_flag_stonith_enabled) ? "enabled" : "disabled");
+    if (pcmk_is_set(data_set->flags, pcmk_sched_fencing_enabled)) {
+        out->list_item(out, NULL, "STONITH of failed nodes enabled");
+    } else {
+        out->list_item(out, NULL, "STONITH of failed nodes disabled");
+    }
 
-    out->list_item(out, NULL, "Cluster is %s",
-                   pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster) ? "symmetric" : "asymmetric");
+    if (pcmk_is_set(data_set->flags, pcmk_sched_symmetric_cluster)) {
+        out->list_item(out, NULL, "Cluster is symmetric");
+    } else {
+        out->list_item(out, NULL, "Cluster is asymmetric");
+    }
 
     switch (data_set->no_quorum_policy) {
-        case no_quorum_freeze:
+        case pcmk_no_quorum_freeze:
             out->list_item(out, NULL, "No quorum policy: Freeze resources");
             break;
 
-        case no_quorum_stop:
+        case pcmk_no_quorum_stop:
             out->list_item(out, NULL, "No quorum policy: Stop ALL resources");
             break;
 
-        case no_quorum_demote:
+        case pcmk_no_quorum_demote:
             out->list_item(out, NULL, "No quorum policy: Demote promotable "
                            "resources and stop all other resources");
             break;
 
-        case no_quorum_ignore:
+        case pcmk_no_quorum_ignore:
             out->list_item(out, NULL, "No quorum policy: Ignore");
             break;
 
-        case no_quorum_suicide:
+        case pcmk_no_quorum_fence:
             out->list_item(out, NULL, "No quorum policy: Suicide");
             break;
     }
 
-    if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_in_maintenance)) {
         xmlNodePtr node = pcmk__output_create_xml_node(out, "li", NULL);
 
         pcmk_create_html_node(node, "span", NULL, NULL, "Resource management: ");
         pcmk_create_html_node(node, "span", NULL, "bold", "DISABLED");
         pcmk_create_html_node(node, "span", NULL, NULL,
                               " (the cluster will not attempt to start, stop, or recover services)");
-    } else if (pcmk_is_set(data_set->flags, pe_flag_stop_everything)) {
+    } else if (pcmk_is_set(data_set->flags, pcmk_sched_stop_all)) {
         xmlNodePtr node = pcmk__output_create_xml_node(out, "li", NULL);
 
         pcmk_create_html_node(node, "span", NULL, NULL, "Resource management: ");
@@ -1010,9 +1019,9 @@ static int
 cluster_options_log(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
 
-    if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_in_maintenance)) {
         return out->info(out, "Resource management is DISABLED.  The cluster will not attempt to start, stop or recover services.");
-    } else if (pcmk_is_set(data_set->flags, pe_flag_stop_everything)) {
+    } else if (pcmk_is_set(data_set->flags, pcmk_sched_stop_all)) {
         return out->info(out, "Resource management is DISABLED.  The cluster has stopped all resources.");
     } else {
         return pcmk_rc_no_output;
@@ -1024,37 +1033,45 @@ static int
 cluster_options_text(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
 
-    out->list_item(out, NULL, "STONITH of failed nodes %s",
-                   pcmk_is_set(data_set->flags, pe_flag_stonith_enabled) ? "enabled" : "disabled");
+    if (pcmk_is_set(data_set->flags, pcmk_sched_fencing_enabled)) {
+        out->list_item(out, NULL, "STONITH of failed nodes enabled");
+    } else {
+        out->list_item(out, NULL, "STONITH of failed nodes disabled");
+    }
 
-    out->list_item(out, NULL, "Cluster is %s",
-                   pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster) ? "symmetric" : "asymmetric");
+    if (pcmk_is_set(data_set->flags, pcmk_sched_symmetric_cluster)) {
+        out->list_item(out, NULL, "Cluster is symmetric");
+    } else {
+        out->list_item(out, NULL, "Cluster is asymmetric");
+    }
 
     switch (data_set->no_quorum_policy) {
-        case no_quorum_freeze:
+        case pcmk_no_quorum_freeze:
             out->list_item(out, NULL, "No quorum policy: Freeze resources");
             break;
 
-        case no_quorum_stop:
+        case pcmk_no_quorum_stop:
             out->list_item(out, NULL, "No quorum policy: Stop ALL resources");
             break;
 
-        case no_quorum_demote:
+        case pcmk_no_quorum_demote:
             out->list_item(out, NULL, "No quorum policy: Demote promotable "
                            "resources and stop all other resources");
             break;
 
-        case no_quorum_ignore:
+        case pcmk_no_quorum_ignore:
             out->list_item(out, NULL, "No quorum policy: Ignore");
             break;
 
-        case no_quorum_suicide:
+        case pcmk_no_quorum_fence:
             out->list_item(out, NULL, "No quorum policy: Suicide");
             break;
     }
 
     return pcmk_rc_ok;
 }
+
+#define bv(flag) pcmk__btoa(pcmk_is_set(data_set->flags, (flag)))
 
 PCMK__OUTPUT_ARGS("cluster-options", "pe_working_set_t *")
 static int
@@ -1066,33 +1083,36 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
     char *priority_fencing_delay_str = pcmk__itoa(data_set->priority_fencing_delay * 1000);
 
     switch (data_set->no_quorum_policy) {
-        case no_quorum_freeze:
+        case pcmk_no_quorum_freeze:
             no_quorum_policy = "freeze";
             break;
 
-        case no_quorum_stop:
+        case pcmk_no_quorum_stop:
             no_quorum_policy = "stop";
             break;
 
-        case no_quorum_demote:
+        case pcmk_no_quorum_demote:
             no_quorum_policy = "demote";
             break;
 
-        case no_quorum_ignore:
+        case pcmk_no_quorum_ignore:
             no_quorum_policy = "ignore";
             break;
 
-        case no_quorum_suicide:
+        case pcmk_no_quorum_fence:
             no_quorum_policy = "suicide";
             break;
     }
 
     pcmk__output_create_xml_node(out, "cluster_options",
-                                 "stonith-enabled", pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)),
-                                 "symmetric-cluster", pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster)),
+                                 "stonith-enabled",
+                                 bv(pcmk_sched_fencing_enabled),
+                                 "symmetric-cluster",
+                                 bv(pcmk_sched_symmetric_cluster),
                                  "no-quorum-policy", no_quorum_policy,
-                                 "maintenance-mode", pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)),
-                                 "stop-all-resources", pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_stop_everything)),
+                                 "maintenance-mode",
+                                 bv(pcmk_sched_in_maintenance),
+                                 "stop-all-resources", bv(pcmk_sched_stop_all),
                                  "stonith-timeout-ms", stonith_timeout_str,
                                  "priority-fencing-delay-ms", priority_fencing_delay_str,
                                  NULL);
@@ -1288,8 +1308,8 @@ failed_action_friendly(pcmk__output_t *out, const xmlNode *xml_op,
         pcmk__g_strcat(str, pcmk__readable_interval(interval_ms), "-interval ",
                        NULL);
     }
-    pcmk__g_strcat(str, crm_action_str(task, interval_ms), " on ", node_name,
-                   NULL);
+    pcmk__g_strcat(str, pcmk__readable_action(task, interval_ms), " on ",
+                   node_name, NULL);
 
     if (status == PCMK_EXEC_DONE) {
         pcmk__g_strcat(str, " returned '", services_ocf_exitcode_str(rc), "'",
@@ -1826,10 +1846,10 @@ node_xml(pcmk__output_t *out, va_list args) {
         const char *feature_set;
 
         switch (node->details->type) {
-            case node_member:
+            case pcmk_node_variant_cluster:
                 node_type = "member";
                 break;
-            case node_remote:
+            case pcmk_node_variant_remote:
                 node_type = "remote";
                 break;
             case node_ping:
@@ -2219,7 +2239,7 @@ node_history_list(pcmk__output_t *out, va_list args) {
          *
          * For other resource types, is_filtered is okay.
          */
-        if (parent->variant == pe_group) {
+        if (parent->variant == pcmk_rsc_variant_group) {
             if (!pcmk__str_in_list(rsc_printable_id(rsc), only_rsc,
                                    pcmk__str_star_matches)
                 && !pcmk__str_in_list(rsc_printable_id(parent), only_rsc,
@@ -2234,8 +2254,8 @@ node_history_list(pcmk__output_t *out, va_list args) {
 
         if (!pcmk_is_set(section_opts, pcmk_section_operations)) {
             time_t last_failure = 0;
-            int failcount = pe_get_failcount(node, rsc, &last_failure, pe_fc_default,
-                                             NULL);
+            int failcount = pe_get_failcount(node, rsc, &last_failure,
+                                             pcmk__fc_default, NULL);
 
             if (failcount <= 0) {
                 continue;
@@ -2622,10 +2642,10 @@ promotion_score_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("resource-config", "pe_resource_t *", "bool")
+PCMK__OUTPUT_ARGS("resource-config", "const pe_resource_t *", "bool")
 static int
 resource_config(pcmk__output_t *out, va_list args) {
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    const pe_resource_t *rsc = va_arg(args, const pe_resource_t *);
     bool raw = va_arg(args, int);
 
     char *rsc_xml = formatted_xml_buf(rsc, raw);
@@ -2636,10 +2656,10 @@ resource_config(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("resource-config", "pe_resource_t *", "bool")
+PCMK__OUTPUT_ARGS("resource-config", "const pe_resource_t *", "bool")
 static int
 resource_config_text(pcmk__output_t *out, va_list args) {
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    const pe_resource_t *rsc = va_arg(args, const pe_resource_t *);
     bool raw = va_arg(args, int);
 
     char *rsc_xml = formatted_xml_buf(rsc, raw);
@@ -2780,7 +2800,7 @@ resource_list(pcmk__output_t *out, va_list args)
         gboolean partially_active = rsc->fns->active(rsc, FALSE);
 
         /* Skip inactive orphans (deleted but still in CIB) */
-        if (pcmk_is_set(rsc->flags, pe_rsc_orphan) && !is_active) {
+        if (pcmk_is_set(rsc->flags, pcmk_rsc_removed) && !is_active) {
             continue;
 
         /* Skip active resources if we already displayed them by node */
@@ -2790,7 +2810,8 @@ resource_list(pcmk__output_t *out, va_list args)
             }
 
         /* Skip primitives already counted in a brief summary */
-        } else if (pcmk_is_set(show_opts, pcmk_show_brief) && (rsc->variant == pe_native)) {
+        } else if (pcmk_is_set(show_opts, pcmk_show_brief)
+                   && (rsc->variant == pcmk_rsc_variant_primitive)) {
             continue;
 
         /* Skip resources that aren't at least partially active,
@@ -2866,7 +2887,7 @@ resource_operation_list(pcmk__output_t *out, va_list args)
         pcmk__scan_min_int(op_rc, &op_rc_i, 0);
 
         /* Display 0-interval monitors as "probe" */
-        if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)
+        if (pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_casei)
             && pcmk__str_eq(interval_ms_s, "0", pcmk__str_null_matches | pcmk__str_casei)) {
             task = "probe";
         }
@@ -2874,8 +2895,8 @@ resource_operation_list(pcmk__output_t *out, va_list args)
         /* If this is the first printed operation, print heading for resource */
         if (rc == pcmk_rc_no_output) {
             time_t last_failure = 0;
-            int failcount = pe_get_failcount(node, rsc, &last_failure, pe_fc_default,
-                                             NULL);
+            int failcount = pe_get_failcount(node, rsc, &last_failure,
+                                             pcmk__fc_default, NULL);
 
             out->message(out, "resource-history", rsc, rsc_printable_id(rsc), true,
                          failcount, last_failure, true);

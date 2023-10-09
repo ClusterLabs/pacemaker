@@ -20,8 +20,69 @@
 #include <crm/common/xml_internal.h>
 #include <pe_status_private.h>
 
-#define PE__VARIANT_BUNDLE 1
-#include "./variant.h"
+enum pe__bundle_mount_flags {
+    pe__bundle_mount_none       = 0x00,
+
+    // mount instance-specific subdirectory rather than source directly
+    pe__bundle_mount_subdir     = 0x01
+};
+
+typedef struct {
+    char *source;
+    char *target;
+    char *options;
+    uint32_t flags; // bitmask of pe__bundle_mount_flags
+} pe__bundle_mount_t;
+
+typedef struct {
+    char *source;
+    char *target;
+} pe__bundle_port_t;
+
+enum pe__container_agent {
+    PE__CONTAINER_AGENT_UNKNOWN,
+    PE__CONTAINER_AGENT_DOCKER,
+    PE__CONTAINER_AGENT_RKT,
+    PE__CONTAINER_AGENT_PODMAN,
+};
+
+#define PE__CONTAINER_AGENT_UNKNOWN_S "unknown"
+#define PE__CONTAINER_AGENT_DOCKER_S  "docker"
+#define PE__CONTAINER_AGENT_RKT_S     "rkt"
+#define PE__CONTAINER_AGENT_PODMAN_S  "podman"
+
+typedef struct pe__bundle_variant_data_s {
+        int promoted_max;
+        int nreplicas;
+        int nreplicas_per_host;
+        char *prefix;
+        char *image;
+        const char *ip_last;
+        char *host_network;
+        char *host_netmask;
+        char *control_port;
+        char *container_network;
+        char *ip_range_start;
+        gboolean add_host;
+        gchar *container_host_options;
+        char *container_command;
+        char *launcher_options;
+        const char *attribute_target;
+
+        pe_resource_t *child;
+
+        GList *replicas;    // pe__bundle_replica_t *
+        GList *ports;       // pe__bundle_port_t *
+        GList *mounts;      // pe__bundle_mount_t *
+
+        enum pe__container_agent agent_type;
+} pe__bundle_variant_data_t;
+
+#define get_bundle_variant_data(data, rsc)                      \
+    CRM_ASSERT(rsc != NULL);                                    \
+    CRM_ASSERT(rsc->variant == pcmk_rsc_variant_bundle);        \
+    CRM_ASSERT(rsc->variant_opaque != NULL);                    \
+    data = (pe__bundle_variant_data_t *) rsc->variant_opaque;
 
 /*!
  * \internal
@@ -42,19 +103,148 @@ pe__bundle_max(const pe_resource_t *rsc)
 
 /*!
  * \internal
- * \brief Get maximum number of bundle replicas allowed to run on one node
+ * \brief Get the resource inside a bundle
  *
- * \param[in] rsc  Bundle or bundled resource to check
+ * \param[in] bundle  Bundle to check
  *
- * \return Maximum replicas per node for bundle corresponding to \p rsc
+ * \return Resource inside \p bundle if any, otherwise NULL
  */
-int
-pe__bundle_max_per_node(const pe_resource_t *rsc)
+pe_resource_t *
+pe__bundled_resource(const pe_resource_t *rsc)
 {
     const pe__bundle_variant_data_t *bundle_data = NULL;
 
     get_bundle_variant_data(bundle_data, pe__const_top_resource(rsc, true));
-    return bundle_data->nreplicas_per_host;
+    return bundle_data->child;
+}
+
+/*!
+ * \internal
+ * \brief Get containerized resource corresponding to a given bundle container
+ *
+ * \param[in] instance  Collective instance that might be a bundle container
+ *
+ * \return Bundled resource instance inside \p instance if it is a bundle
+ *         container instance, otherwise NULL
+ */
+const pe_resource_t *
+pe__get_rsc_in_container(const pe_resource_t *instance)
+{
+    const pe__bundle_variant_data_t *data = NULL;
+    const pe_resource_t *top = pe__const_top_resource(instance, true);
+
+    if ((top == NULL) || (top->variant != pcmk_rsc_variant_bundle)) {
+        return NULL;
+    }
+    get_bundle_variant_data(data, top);
+
+    for (const GList *iter = data->replicas; iter != NULL; iter = iter->next) {
+        const pe__bundle_replica_t *replica = iter->data;
+
+        if (instance == replica->container) {
+            return replica->child;
+        }
+    }
+    return NULL;
+}
+
+/*!
+ * \internal
+ * \brief Check whether a given node is created by a bundle
+ *
+ * \param[in] bundle  Bundle resource to check
+ * \param[in] node    Node to check
+ *
+ * \return true if \p node is an instance of \p bundle, otherwise false
+ */
+bool
+pe__node_is_bundle_instance(const pe_resource_t *bundle, const pe_node_t *node)
+{
+    pe__bundle_variant_data_t *bundle_data = NULL;
+
+    get_bundle_variant_data(bundle_data, bundle);
+    for (GList *iter = bundle_data->replicas; iter != NULL; iter = iter->next) {
+        pe__bundle_replica_t *replica = iter->data;
+
+        if (pe__same_node(node, replica->node)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/*!
+ * \internal
+ * \brief Get the container of a bundle's first replica
+ *
+ * \param[in] bundle  Bundle resource to get container for
+ *
+ * \return Container resource from first replica of \p bundle if any,
+ *         otherwise NULL
+ */
+pe_resource_t *
+pe__first_container(const pe_resource_t *bundle)
+{
+    const pe__bundle_variant_data_t *bundle_data = NULL;
+    const pe__bundle_replica_t *replica = NULL;
+
+    get_bundle_variant_data(bundle_data, bundle);
+    if (bundle_data->replicas == NULL) {
+        return NULL;
+    }
+    replica = bundle_data->replicas->data;
+    return replica->container;
+}
+
+/*!
+ * \internal
+ * \brief Iterate over bundle replicas
+ *
+ * \param[in,out] bundle     Bundle to iterate over
+ * \param[in]     fn         Function to call for each replica (its return value
+ *                           indicates whether to continue iterating)
+ * \param[in,out] user_data  Pointer to pass to \p fn
+ */
+void
+pe__foreach_bundle_replica(pe_resource_t *bundle,
+                           bool (*fn)(pe__bundle_replica_t *, void *),
+                           void *user_data)
+{
+    const pe__bundle_variant_data_t *bundle_data = NULL;
+
+    get_bundle_variant_data(bundle_data, bundle);
+    for (GList *iter = bundle_data->replicas; iter != NULL; iter = iter->next) {
+        if (!fn((pe__bundle_replica_t *) iter->data, user_data)) {
+            break;
+        }
+    }
+}
+
+/*!
+ * \internal
+ * \brief Iterate over const bundle replicas
+ *
+ * \param[in]     bundle     Bundle to iterate over
+ * \param[in]     fn         Function to call for each replica (its return value
+ *                           indicates whether to continue iterating)
+ * \param[in,out] user_data  Pointer to pass to \p fn
+ */
+void
+pe__foreach_const_bundle_replica(const pe_resource_t *bundle,
+                                 bool (*fn)(const pe__bundle_replica_t *,
+                                            void *),
+                                 void *user_data)
+{
+    const pe__bundle_variant_data_t *bundle_data = NULL;
+
+    get_bundle_variant_data(bundle_data, bundle);
+    for (const GList *iter = bundle_data->replicas; iter != NULL;
+         iter = iter->next) {
+
+        if (!fn((const pe__bundle_replica_t *) iter->data, user_data)) {
+            break;
+        }
+    }
 }
 
 static char *
@@ -159,7 +349,8 @@ valid_network(pe__bundle_variant_data_t *data)
         if(data->nreplicas_per_host > 1) {
             pe_err("Specifying the 'control-port' for %s requires 'replicas-per-host=1'", data->prefix);
             data->nreplicas_per_host = 1;
-            // @TODO to be sure: pe__clear_resource_flags(rsc, pe_rsc_unique);
+            // @TODO to be sure:
+            // pe__clear_resource_flags(rsc, pcmk_rsc_unique);
         }
         return TRUE;
     }
@@ -198,7 +389,8 @@ create_ip_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         }
 
         xml_obj = create_xml_node(xml_ip, "operations");
-        crm_create_op_xml(xml_obj, ID(xml_ip), "monitor", "60s", NULL);
+        crm_create_op_xml(xml_obj, ID(xml_ip), PCMK_ACTION_MONITOR, "60s",
+                          NULL);
 
         // TODO: Other ops? Timeouts and intervals from underlying resource?
 
@@ -449,14 +641,15 @@ create_container_resource(pe_resource_t *parent,
     }
 
     xml_obj = create_xml_node(xml_container, "operations");
-    crm_create_op_xml(xml_obj, ID(xml_container), "monitor", "60s", NULL);
+    crm_create_op_xml(xml_obj, ID(xml_container), PCMK_ACTION_MONITOR, "60s",
+                      NULL);
 
     // TODO: Other ops? Timeouts and intervals from underlying resource?
     if (pe__unpack_resource(xml_container, &replica->container, parent,
                             parent->cluster) != pcmk_rc_ok) {
         return pcmk_rc_unpack_error;
     }
-    pe__set_resource_flags(replica->container, pe_rsc_replica_container);
+    pe__set_resource_flags(replica->container, pcmk_rsc_replica_container);
     parent->children = g_list_append(parent->children, replica->container);
 
     return pcmk_rc_ok;
@@ -475,7 +668,7 @@ disallow_node(pe_resource_t *rsc, const char *uname)
 
     if (match) {
         ((pe_node_t *) match)->weight = -INFINITY;
-        ((pe_node_t *) match)->rsc_discover_mode = pe_discover_never;
+        ((pe_node_t *) match)->rsc_discover_mode = pcmk_probe_never;
     }
     if (rsc->children) {
         g_list_foreach(rsc->children, (GFunc) disallow_node, (gpointer) uname);
@@ -545,7 +738,7 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         } else {
             node->weight = -INFINITY;
         }
-        node->rsc_discover_mode = pe_discover_never;
+        node->rsc_discover_mode = pcmk_probe_never;
 
         /* unpack_remote_nodes() ensures that each remote node and guest node
          * has a pe_node_t entry. Ideally, it would do the same for bundle nodes.
@@ -569,7 +762,7 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
 
         replica->node = pe__copy_node(node);
         replica->node->weight = 500;
-        replica->node->rsc_discover_mode = pe_discover_exclusive;
+        replica->node->rsc_discover_mode = pcmk_probe_exclusive;
 
         /* Ensure the node shows up as allowed and with the correct discovery set */
         if (replica->child->allowed_nodes != NULL) {
@@ -658,7 +851,8 @@ create_replica_resources(pe_resource_t *parent, pe__bundle_variant_data_t *data,
          * containers with pacemaker-remoted inside in order to start
          * services inside those containers.
          */
-        pe__set_resource_flags(replica->remote, pe_rsc_allow_remote_remotes);
+        pe__set_resource_flags(replica->remote,
+                               pcmk_rsc_remote_nesting_allowed);
     }
     return rc;
 }
@@ -819,7 +1013,7 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
     }
 
     // Use 0 for default, minimum, and invalid promoted-max
-    value = crm_element_value(xml_obj, XML_RSC_ATTR_PROMOTED_MAX);
+    value = crm_element_value(xml_obj, PCMK_META_PROMOTED_MAX);
     if (value == NULL) {
         // @COMPAT deprecated since 2.0.0
         value = crm_element_value(xml_obj, "masters");
@@ -842,7 +1036,7 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
     value = crm_element_value(xml_obj, "replicas-per-host");
     pcmk__scan_min_int(value, &bundle_data->nreplicas_per_host, 1);
     if (bundle_data->nreplicas_per_host == 1) {
-        pe__clear_resource_flags(rsc, pe_rsc_unique);
+        pe__clear_resource_flags(rsc, pcmk_rsc_unique);
     }
 
     bundle_data->container_command = crm_element_value_copy(xml_obj, "run-command");
@@ -934,13 +1128,11 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
                               XML_RSC_ATTR_ORDERED, XML_BOOLEAN_TRUE);
 
         value = pcmk__itoa(bundle_data->nreplicas);
-        crm_create_nvpair_xml(xml_set, NULL,
-                              XML_RSC_ATTR_INCARNATION_MAX, value);
+        crm_create_nvpair_xml(xml_set, NULL, PCMK_META_CLONE_MAX, value);
         free(value);
 
         value = pcmk__itoa(bundle_data->nreplicas_per_host);
-        crm_create_nvpair_xml(xml_set, NULL,
-                              XML_RSC_ATTR_INCARNATION_NODEMAX, value);
+        crm_create_nvpair_xml(xml_set, NULL, PCMK_META_CLONE_NODE_MAX, value);
         free(value);
 
         crm_create_nvpair_xml(xml_set, NULL, XML_RSC_ATTR_UNIQUE,
@@ -951,8 +1143,7 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
                                   XML_RSC_ATTR_PROMOTABLE, XML_BOOLEAN_TRUE);
 
             value = pcmk__itoa(bundle_data->promoted_max);
-            crm_create_nvpair_xml(xml_set, NULL,
-                                  XML_RSC_ATTR_PROMOTED_MAX, value);
+            crm_create_nvpair_xml(xml_set, NULL, PCMK_META_PROMOTED_MAX, value);
             free(value);
         }
 
@@ -1033,8 +1224,8 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
             replica->offset = lpc++;
 
             // Ensure the child's notify gets set based on the underlying primitive's value
-            if (pcmk_is_set(replica->child->flags, pe_rsc_notify)) {
-                pe__set_resource_flags(bundle_data->child, pe_rsc_notify);
+            if (pcmk_is_set(replica->child->flags, pcmk_rsc_notify)) {
+                pe__set_resource_flags(bundle_data->child, pcmk_rsc_notify);
             }
 
             allocate_ip(bundle_data, replica, buffer);
@@ -1232,9 +1423,10 @@ bundle_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
     status_print(XML_ATTR_ID "=\"%s\" ", rsc->id);
     status_print("type=\"%s\" ", container_agent_str(bundle_data->agent_type));
     status_print("image=\"%s\" ", bundle_data->image);
-    status_print("unique=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_unique));
-    status_print("managed=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_managed));
-    status_print("failed=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_failed));
+    status_print("unique=\"%s\" ", pe__rsc_bool_str(rsc, pcmk_rsc_unique));
+    status_print("managed=\"%s\" ",
+                 pe__rsc_bool_str(rsc, pcmk_rsc_managed));
+    status_print("failed=\"%s\" ", pe__rsc_bool_str(rsc, pcmk_rsc_failed));
     status_print(">\n");
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
@@ -1313,10 +1505,11 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
                      "id", rsc->id,
                      "type", container_agent_str(bundle_data->agent_type),
                      "image", bundle_data->image,
-                     "unique", pe__rsc_bool_str(rsc, pe_rsc_unique),
-                     "maintenance", pe__rsc_bool_str(rsc, pe_rsc_maintenance),
-                     "managed", pe__rsc_bool_str(rsc, pe_rsc_managed),
-                     "failed", pe__rsc_bool_str(rsc, pe_rsc_failed),
+                     "unique", pe__rsc_bool_str(rsc, pcmk_rsc_unique),
+                     "maintenance",
+                     pe__rsc_bool_str(rsc, pcmk_rsc_maintenance),
+                     "managed", pe__rsc_bool_str(rsc, pcmk_rsc_managed),
+                     "failed", pe__rsc_bool_str(rsc, pcmk_rsc_failed),
                      "description", desc);
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
@@ -1396,10 +1589,10 @@ pe__bundle_replica_output_html(pcmk__output_t *out, pe__bundle_replica_t *replic
 static const char *
 get_unmanaged_str(const pe_resource_t *rsc)
 {
-    if (pcmk_is_set(rsc->flags, pe_rsc_maintenance)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_maintenance)) {
         return " (maintenance)";
     }
-    if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
         return " (unmanaged)";
     }
     return "";
@@ -1460,7 +1653,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
             PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s%s%s%s",
                                      (bundle_data->nreplicas > 1)? " set" : "",
                                      rsc->id, bundle_data->image,
-                                     pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
+                                     pcmk_is_set(rsc->flags, pcmk_rsc_unique)? " (unique)" : "",
                                      desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
                                      get_unmanaged_str(rsc));
 
@@ -1497,7 +1690,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
             PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s%s%s%s",
                                      (bundle_data->nreplicas > 1)? " set" : "",
                                      rsc->id, bundle_data->image,
-                                     pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
+                                     pcmk_is_set(rsc->flags, pcmk_rsc_unique)? " (unique)" : "",
                                      desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
                                      get_unmanaged_str(rsc));
 
@@ -1593,7 +1786,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
             PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s%s%s%s",
                                      (bundle_data->nreplicas > 1)? " set" : "",
                                      rsc->id, bundle_data->image,
-                                     pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
+                                     pcmk_is_set(rsc->flags, pcmk_rsc_unique)? " (unique)" : "",
                                      desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
                                      get_unmanaged_str(rsc));
 
@@ -1630,7 +1823,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
             PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s%s%s%s",
                                      (bundle_data->nreplicas > 1)? " set" : "",
                                      rsc->id, bundle_data->image,
-                                     pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
+                                     pcmk_is_set(rsc->flags, pcmk_rsc_unique)? " (unique)" : "",
                                      desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
                                      get_unmanaged_str(rsc));
 
@@ -1703,8 +1896,8 @@ pe__print_bundle(pe_resource_t *rsc, const char *pre_text, long options,
     status_print("%sContainer bundle%s: %s [%s]%s%s\n",
                  pre_text, ((bundle_data->nreplicas > 1)? " set" : ""),
                  rsc->id, bundle_data->image,
-                 pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
-                 pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
+                 pcmk_is_set(rsc->flags, pcmk_rsc_unique)? " (unique)" : "",
+                 pcmk_is_set(rsc->flags, pcmk_rsc_managed)? "" : " (unmanaged)");
     if (options & pe_print_html) {
         status_print("<br />\n<ul>\n");
     }
@@ -1820,7 +2013,7 @@ pe__free_bundle(pe_resource_t *rsc)
 enum rsc_role_e
 pe__bundle_resource_state(const pe_resource_t *rsc, gboolean current)
 {
-    enum rsc_role_e container_role = RSC_ROLE_UNKNOWN;
+    enum rsc_role_e container_role = pcmk_role_unknown;
     return container_role;
 }
 
@@ -1834,7 +2027,7 @@ pe__bundle_resource_state(const pe_resource_t *rsc, gboolean current)
 int
 pe_bundle_replicas(const pe_resource_t *rsc)
 {
-    if ((rsc == NULL) || (rsc->variant != pe_container)) {
+    if ((rsc == NULL) || (rsc->variant != pcmk_rsc_variant_bundle)) {
         return 0;
     } else {
         pe__bundle_variant_data_t *bundle_data = NULL;
@@ -2001,4 +2194,22 @@ done:
     g_list_free(containers);
     g_hash_table_destroy(nodes);
     return active;
+}
+
+/*!
+ * \internal
+ * \brief Get maximum bundle resource instances per node
+ *
+ * \param[in] rsc  Bundle resource to check
+ *
+ * \return Maximum number of \p rsc instances that can be active on one node
+ */
+unsigned int
+pe__bundle_max_per_node(const pe_resource_t *rsc)
+{
+    pe__bundle_variant_data_t *bundle_data = NULL;
+
+    get_bundle_variant_data(bundle_data, rsc);
+    CRM_ASSERT(bundle_data->nreplicas_per_host >= 0);
+    return (unsigned int) bundle_data->nreplicas_per_host;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2022 the Pacemaker project contributors
+ * Copyright 2010-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -49,7 +49,7 @@ services__nagios_prepare(svc_action_t *op)
         return ENOMEM;
     }
 
-    if (pcmk__str_eq(op->action, "monitor", pcmk__str_casei)
+    if (pcmk__str_eq(op->action, PCMK_ACTION_MONITOR, pcmk__str_casei)
         && (op->interval_ms == 0)) {
 
         // Invoke --version for a nagios probe

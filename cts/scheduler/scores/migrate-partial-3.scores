@@ -11,8 +11,11 @@ pcmk__clone_assign: dlm:1 allocation score on hex-15: 0
 pcmk__clone_assign: dlm:2 allocation score on hex-13: 0
 pcmk__clone_assign: dlm:2 allocation score on hex-14: 0
 pcmk__clone_assign: dlm:2 allocation score on hex-15: 0
+pcmk__primitive_assign: dlm:0 allocation score on hex-13: -INFINITY
 pcmk__primitive_assign: dlm:0 allocation score on hex-13: 0
+pcmk__primitive_assign: dlm:0 allocation score on hex-14: -INFINITY
 pcmk__primitive_assign: dlm:0 allocation score on hex-14: 1
+pcmk__primitive_assign: dlm:0 allocation score on hex-15: -INFINITY
 pcmk__primitive_assign: dlm:0 allocation score on hex-15: -INFINITY
 pcmk__primitive_assign: dlm:1 allocation score on hex-13: 1
 pcmk__primitive_assign: dlm:1 allocation score on hex-14: -INFINITY

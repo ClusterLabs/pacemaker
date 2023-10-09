@@ -11,10 +11,16 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 EXTRA_DIST = pylintrc
 
-SUBDIRS	= pacemaker tests
+SUBDIRS	= pacemaker \
+	  tests
 
+.PHONY: check-local
 check-local:
-	$(PYTHON) -m unittest discover -v -s tests
+	if [ "x$(top_srcdir)" != "x$(top_builddir)" ]; then \
+		cp -r $(top_srcdir)/python/* $(abs_top_builddir)/python/; \
+	fi
+	PYTHONPATH=$(top_builddir)/python $(PYTHON) -m unittest discover -v -s $(top_builddir)/python/tests
 
+.PHONY: pylint
 pylint:
 	pylint $(SUBDIRS)

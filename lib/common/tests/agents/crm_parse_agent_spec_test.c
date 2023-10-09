@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,14 +22,22 @@ all_params_null(void **state) {
 
 static void
 no_prov_or_type(void **state) {
-    assert_int_equal(crm_parse_agent_spec("ocf", NULL, NULL, NULL), -EINVAL);
-    assert_int_equal(crm_parse_agent_spec("ocf:", NULL, NULL, NULL), -EINVAL);
-    assert_int_equal(crm_parse_agent_spec("ocf::", NULL, NULL, NULL), -EINVAL);
+    char *std = NULL;
+    char *prov = NULL;
+    char *ty = NULL;
+
+    assert_int_equal(crm_parse_agent_spec("ocf", &std, &prov, &ty), -EINVAL);
+    assert_int_equal(crm_parse_agent_spec("ocf:", &std, &prov, &ty), -EINVAL);
+    assert_int_equal(crm_parse_agent_spec("ocf::", &std, &prov, &ty), -EINVAL);
 }
 
 static void
 no_type(void **state) {
-    assert_int_equal(crm_parse_agent_spec("ocf:pacemaker:", NULL, NULL, NULL), -EINVAL);
+    char *std = NULL;
+    char *prov = NULL;
+    char *ty = NULL;
+
+    assert_int_equal(crm_parse_agent_spec("ocf:pacemaker:", &std, &prov, &ty), -EINVAL);
 }
 
 static void

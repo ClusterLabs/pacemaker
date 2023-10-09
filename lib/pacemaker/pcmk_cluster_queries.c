@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 the Pacemaker project contributors
+ * Copyright 2020-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,7 +9,6 @@
 
 #include <crm_internal.h>
 
-#include <glib.h>               // gboolean, GMainLoop, etc.
 #include <libxml/tree.h>        // xmlNode
 
 #include <pacemaker.h>
@@ -362,8 +361,7 @@ ipc_connect(data_t *data, enum pcmk_ipc_server server, pcmk_ipc_callback_t cb,
         pcmk_register_ipc_callback(api, cb, data);
     }
 
-    rc = pcmk_connect_ipc(api, dispatch_type);
-
+    rc = pcmk__connect_ipc(api, dispatch_type, 5);
     if (rc != pcmk_rc_ok) {
         if (rc == EREMOTEIO) {
             data->pcmkd_state = pcmk_pacemakerd_state_remote;
@@ -371,6 +369,9 @@ ipc_connect(data_t *data, enum pcmk_ipc_server server, pcmk_ipc_callback_t cb,
                 /* EREMOTEIO may be expected and acceptable for some callers
                  * on a Pacemaker Remote node
                  */
+                crm_debug("Ignoring %s connection failure: No "
+                          "Pacemaker Remote connection",
+                          pcmk_ipc_name(api, true));
                 rc = pcmk_rc_ok;
             } else {
                 out->err(out, "error: Could not connect to %s: %s",
@@ -806,7 +807,7 @@ struct node_data {
     int found;
     const char *field;  /* XML attribute to check for node name */
     const char *type;
-    gboolean bash_export;
+    bool bash_export;
 };
 
 static void
@@ -819,16 +820,13 @@ remote_node_print_helper(xmlNode *result, void *user_data)
 
     // node name and node id are the same for remote/guest nodes
     out->message(out, "crmadmin-node", data->type,
-                 name ? name : id,
-                 id,
-                 data->bash_export);
+                 pcmk__s(name, id), id, data->bash_export);
     data->found++;
 }
 
 // \return Standard Pacemaker return code
 int
-pcmk__list_nodes(pcmk__output_t *out, const char *node_types,
-                 gboolean bash_export)
+pcmk__list_nodes(pcmk__output_t *out, const char *node_types, bool bash_export)
 {
     xmlNode *xml_node = NULL;
     int rc;
@@ -862,7 +860,8 @@ pcmk__list_nodes(pcmk__output_t *out, const char *node_types,
                                      remote_node_print_helper, &data);
         }
 
-        if (pcmk__str_empty(node_types) || !pcmk__strcmp(node_types, ",|^remote", pcmk__str_regex)) {
+        if (pcmk__str_empty(node_types)
+            || pcmk__str_eq(node_types, ",|^remote", pcmk__str_regex)) {
             data.field = "id";
             data.type = "remote";
             crm_foreach_xpath_result(xml_node, PCMK__XP_REMOTE_NODE_CONFIG,

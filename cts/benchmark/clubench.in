@@ -126,7 +126,7 @@ mkreports() {
 runcts() {
 	RC_ODIR="$1"
 	msg "Running CTS"
-	python "$CTSDIR/CTSlab.py" $CTSOPTS --nodes "$nodes" > "$RC_ODIR/ctsrun.out" 2>&1 &
+	python "$CTSDIR/cts-lab" $CTSOPTS --nodes "$nodes" > "$RC_ODIR/ctsrun.out" 2>&1 &
 	ctspid=$!
 	tail -f "$RC_ODIR/ctsrun.out" &
 	tailpid=$!

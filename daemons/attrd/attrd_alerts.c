@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2021 the Pacemaker project contributors
+ * Copyright 2015-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,6 +14,7 @@
 #include <crm/cluster/internal.h>
 #include <crm/cluster/election_internal.h>
 #include <crm/common/alerts_internal.h>
+#include <crm/common/cib_internal.h>
 #include <crm/pengine/rules_internal.h>
 #include <crm/lrmd_internal.h>
 #include "pacemaker-attrd.h"
@@ -92,7 +93,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     }
 
     crmalerts = output;
-    if (crmalerts && !pcmk__str_eq(crm_element_name(crmalerts), XML_CIB_TAG_ALERTS, pcmk__str_none)) {
+    if ((crmalerts != NULL) && !pcmk__xe_is(crmalerts, XML_CIB_TAG_ALERTS)) {
         crmalerts = first_named_child(crmalerts, XML_CIB_TAG_ALERTS);
     }
     if (!crmalerts) {
@@ -104,9 +105,6 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     attrd_alert_list = pe_unpack_alerts(crmalerts);
 }
 
-#define XPATH_ALERTS \
-    "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_ALERTS
-
 gboolean
 attrd_read_options(gpointer user_data)
 {
@@ -114,8 +112,9 @@ attrd_read_options(gpointer user_data)
 
     CRM_CHECK(the_cib != NULL, return TRUE);
 
-    call_id = the_cib->cmds->query(the_cib, XPATH_ALERTS, NULL,
-                                   cib_xpath | cib_scope_local);
+    call_id = the_cib->cmds->query(the_cib,
+                                   pcmk__cib_abs_xpath_for(XML_CIB_TAG_ALERTS),
+                                   NULL, cib_xpath|cib_scope_local);
 
     the_cib->cmds->register_callback_full(the_cib, call_id, 120, FALSE, NULL,
                                           "config_query_callback",
@@ -123,14 +122,6 @@ attrd_read_options(gpointer user_data)
 
     crm_trace("Querying the CIB... call %d", call_id);
     return TRUE;
-}
-
-void
-attrd_cib_updated_cb(const char *event, xmlNode * msg)
-{
-    if (!attrd_shutting_down() && pcmk__alert_in_patchset(msg, false)) {
-        mainloop_set_trigger(attrd_config_read);
-    }
 }
 
 int

@@ -108,6 +108,9 @@ enum pcmk_rc_e {
     /* When adding new values, use consecutively lower numbers, update the array
      * in lib/common/results.c, and test with crm_error.
      */
+    pcmk_rc_compression         = -1039,
+    pcmk_rc_ns_resolution       = -1038,
+    pcmk_rc_no_transaction      = -1037,
     pcmk_rc_bad_xml_patch       = -1036,
     pcmk_rc_bad_input           = -1035,
     pcmk_rc_disabled            = -1034,
@@ -360,7 +363,6 @@ int pcmk_rc2legacy(int rc);
 int pcmk_legacy2rc(int legacy_rc);
 const char *pcmk_strerror(int rc);
 const char *pcmk_errorname(int rc);
-const char *bz2_strerror(int rc);
 const char *crm_exit_name(crm_exit_t exit_code);
 const char *crm_exit_str(crm_exit_t exit_code);
 _Noreturn crm_exit_t crm_exit(crm_exit_t rc);

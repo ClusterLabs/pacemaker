@@ -1,6 +1,6 @@
 #!@BASH_PATH@
 #
-# Copyright 2008-2022 the Pacemaker project contributors
+# Copyright 2008-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -3382,6 +3382,11 @@ function print_or_remove_file() {
     rm -f "$TMPFILE"
   else
     echo "    $TMPFILE"
+    if [ $verbose -ne 0 ]; then
+      echo "======================================================"
+      cat "$TMPFILE"
+      echo "======================================================"
+    fi
   fi
 }
 

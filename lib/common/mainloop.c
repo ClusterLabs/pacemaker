@@ -393,16 +393,6 @@ mainloop_add_signal(int sig, void (*dispatch) (int sig))
         mainloop_destroy_signal_entry(sig);
         return FALSE;
     }
-#if 0
-    /* If we want signals to interrupt mainloop's poll(), instead of waiting for
-     * the timeout, then we should call siginterrupt() below
-     *
-     * For now, just enforce a low timeout
-     */
-    if (siginterrupt(sig, 1) < 0) {
-        crm_perror(LOG_INFO, "Could not enable system call interruptions for signal %d", sig);
-    }
-#endif
 
     return TRUE;
 }
@@ -668,7 +658,8 @@ mainloop_add_ipc_server_with_prio(const char *name, enum qb_ipc_type type,
     server = qb_ipcs_create(name, 0, pick_ipc_type(type), callbacks);
 
     if (server == NULL) {
-        crm_err("Could not create %s IPC server: %s (%d)", name, pcmk_strerror(rc), rc);
+        rc = errno;
+        crm_err("Could not create %s IPC server: %s (%d)", name, pcmk_rc_str(errno), errno);
         return NULL;
     }
 
@@ -874,21 +865,34 @@ pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
                        const struct ipc_client_callbacks *callbacks,
                        mainloop_io_t **source)
 {
+    int rc = pcmk_rc_ok;
+    int fd = -1;
+    const char *ipc_name = NULL;
+
     CRM_CHECK((ipc != NULL) && (callbacks != NULL), return EINVAL);
 
-    if (!crm_ipc_connect(ipc)) {
-        int rc = errno;
-        crm_debug("Connection to %s failed: %d", crm_ipc_name(ipc), errno);
+    ipc_name = pcmk__s(crm_ipc_name(ipc), "Pacemaker");
+    rc = pcmk__connect_generic_ipc(ipc);
+    if (rc != pcmk_rc_ok) {
+        crm_debug("Connection to %s failed: %s", ipc_name, pcmk_rc_str(rc));
         return rc;
     }
-    *source = mainloop_add_fd(crm_ipc_name(ipc), priority, crm_ipc_get_fd(ipc),
-                              userdata, NULL);
-    if (*source == NULL) {
-        int rc = errno;
 
+    rc = pcmk__ipc_fd(ipc, &fd);
+    if (rc != pcmk_rc_ok) {
+        crm_debug("Could not obtain file descriptor for %s IPC: %s",
+                  ipc_name, pcmk_rc_str(rc));
         crm_ipc_close(ipc);
         return rc;
     }
+
+    *source = mainloop_add_fd(ipc_name, priority, fd, userdata, NULL);
+    if (*source == NULL) {
+        rc = errno;
+        crm_ipc_close(ipc);
+        return rc;
+    }
+
     (*source)->ipc = ipc;
     (*source)->destroy_fn = callbacks->destroy;
     (*source)->dispatch_fn_ipc = callbacks->dispatch;

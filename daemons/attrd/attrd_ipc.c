@@ -140,12 +140,8 @@ attrd_client_clear_failure(pcmk__request_t *request)
     }
 
     /* Make sure attribute and value are not set, so we delete via regex */
-    if (crm_element_value(xml, PCMK__XA_ATTR_NAME)) {
-        crm_xml_replace(xml, PCMK__XA_ATTR_NAME, NULL);
-    }
-    if (crm_element_value(xml, PCMK__XA_ATTR_VALUE)) {
-        crm_xml_replace(xml, PCMK__XA_ATTR_VALUE, NULL);
-    }
+    xml_remove_prop(xml, PCMK__XA_ATTR_NAME);
+    xml_remove_prop(xml, PCMK__XA_ATTR_VALUE);
 
     return attrd_client_update(request);
 }
@@ -166,7 +162,8 @@ attrd_client_peer_remove(pcmk__request_t *request)
 
         crm_element_value_int(xml, PCMK__XA_ATTR_NODE_ID, &nodeid);
         if (nodeid > 0) {
-            crm_node_t *node = pcmk__search_cluster_node_cache(nodeid, NULL);
+            crm_node_t *node = pcmk__search_cluster_node_cache(nodeid, NULL,
+                                                               NULL);
             char *host_alloc = NULL;
 
             if (node && node->uname) {
@@ -235,7 +232,7 @@ attrd_client_refresh(pcmk__request_t *request)
     crm_info("Updating all attributes");
 
     attrd_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags);
-    attrd_write_attributes(true, true);
+    attrd_write_attributes(attrd_write_all|attrd_write_no_delay);
 
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     return NULL;
@@ -282,7 +279,7 @@ expand_regexes(xmlNode *xml, const char *attr, const char *value, const char *re
                  * regex and replace it with the name.
                  */
                 attrd_copy_xml_attributes(xml, child);
-                crm_xml_replace(child, PCMK__XA_ATTR_PATTERN, NULL);
+                xml_remove_prop(child, PCMK__XA_ATTR_PATTERN);
                 crm_xml_add(child, PCMK__XA_ATTR_NAME, attr);
             }
         }
@@ -401,14 +398,18 @@ send_child_update(xmlNode *child, void *data)
 xmlNode *
 attrd_client_update(pcmk__request_t *request)
 {
-    xmlNode *xml = request->xml;
+    xmlNode *xml = NULL;
     const char *attr, *value, *regex;
+
+    CRM_CHECK((request != NULL) && (request->xml != NULL), return NULL);
+
+    xml = request->xml;
 
     /* If the message has children, that means it is a message from a newer
      * client that supports sending multiple operations at a time.  There are
      * two ways we can handle that.
      */
-    if (xml_has_children(xml)) {
+    if (xml->children != NULL) {
         if (ATTRD_SUPPORTS_MULTI_MESSAGE(minimum_protocol_version)) {
             /* First, if all peers support a certain protocol version, we can
              * just broadcast the big message and they'll handle it.  However,
@@ -494,7 +495,7 @@ static int32_t
 attrd_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
     crm_trace("New client connection %p", c);
-    if (attrd_shutting_down()) {
+    if (attrd_shutting_down(false)) {
         crm_info("Ignoring new connection from pid %d during shutdown",
                  pcmk__client_pid(c));
         return -EPERM;

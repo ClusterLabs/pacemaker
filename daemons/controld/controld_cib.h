@@ -43,11 +43,6 @@ fsa_cib_anon_update_discard_reply(const char *section, xmlNode *data) {
     }
 }
 
-void controld_record_cib_replace_call(int call_id);
-bool controld_forget_cib_replace_call(int call_id);
-void controld_forget_all_cib_replace_calls(void);
-void controld_destroy_cib_replacements_table(void);
-
 int controld_update_cib(const char *section, xmlNode *data, int options,
                         void (*callback)(xmlNode *, int, int, xmlNode *,
                                          void *));
@@ -62,6 +57,9 @@ enum controld_section_e {
     controld_section_all_unlocked
 };
 
+void controld_node_state_deletion_strings(const char *uname,
+                                          enum controld_section_e section,
+                                          char **xpath, char **desc);
 void controld_delete_node_state(const char *uname,
                                 enum controld_section_e section, int options);
 int controld_delete_resource_history(const char *rsc_id, const char *node,
@@ -118,8 +116,8 @@ int crmd_cib_smart_opt(void);
 static inline bool
 controld_action_is_recordable(const char *action)
 {
-    return !pcmk__str_any_of(action, CRMD_ACTION_CANCEL, CRMD_ACTION_DELETE,
-                             CRMD_ACTION_NOTIFY, CRMD_ACTION_METADATA, NULL);
+    return !pcmk__str_any_of(action, PCMK_ACTION_CANCEL, PCMK_ACTION_DELETE,
+                             PCMK_ACTION_NOTIFY, PCMK_ACTION_META_DATA, NULL);
 }
 
 #endif // PCMK__CONTROLD_CIB__H

@@ -55,7 +55,8 @@ typedef struct cib_remote_opaque_s {
 static int
 cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
                       const char *section, xmlNode *data,
-                      xmlNode **output_data, int call_options, const char *name)
+                      xmlNode **output_data, int call_options,
+                      const char *user_name)
 {
     int rc;
     int remaining_time = 0;
@@ -79,15 +80,16 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
         return -EINVAL;
     }
 
-    cib->call_id++;
-    if (cib->call_id < 1) {
-        cib->call_id = 1;
+    rc = cib__create_op(cib, op, host, section, data, call_options, user_name,
+                        NULL, &op_msg);
+    if (rc != pcmk_ok) {
+        return rc;
     }
 
-    op_msg = cib_create_op(cib->call_id, op, host, section, data, call_options,
-                           NULL);
-    if (op_msg == NULL) {
-        return -EPROTO;
+    if (pcmk_is_set(call_options, cib_transaction)) {
+        rc = cib__extend_transaction(cib, op_msg);
+        free_xml(op_msg);
+        return rc;
     }
 
     crm_trace("Sending %s message to the CIB manager", op);
@@ -378,7 +380,7 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
     }
 
     /* login to server */
-    login = create_xml_node(NULL, "cib_command");
+    login = create_xml_node(NULL, T_CIB_COMMAND);
     crm_xml_add(login, "op", "authenticate");
     crm_xml_add(login, "user", private->user);
     crm_xml_add(login, "password", private->passwd);
@@ -434,6 +436,7 @@ cib_remote_signon(cib_t *cib, const char *name, enum cib_conn_type type)
 {
     int rc = pcmk_ok;
     cib_remote_opaque_t *private = cib->variant_opaque;
+    xmlNode *hello = NULL;
 
     if (private->passwd == NULL) {
         if (private->out == NULL) {
@@ -459,10 +462,13 @@ cib_remote_signon(cib_t *cib, const char *name, enum cib_conn_type type)
     }
 
     if (rc == pcmk_ok) {
-        xmlNode *hello = cib_create_op(0, CRM_OP_REGISTER, NULL, NULL, NULL, 0,
-                                       NULL);
-        crm_xml_add(hello, F_CIB_CLIENTNAME, name);
-        pcmk__remote_send_xml(&private->command, hello);
+        rc = cib__create_op(cib, CRM_OP_REGISTER, NULL, NULL, NULL, cib_none,
+                            NULL, name, &hello);
+    }
+
+    if (rc == pcmk_ok) {
+        rc = pcmk__remote_send_xml(&private->command, hello);
+        rc = pcmk_rc2legacy(rc);
         free_xml(hello);
     }
 
@@ -490,6 +496,7 @@ cib_remote_signoff(cib_t *cib)
     cib_tls_close(cib);
 #endif
 
+    cib->cmds->end_transaction(cib, false, cib_none);
     cib->state = cib_disconnected;
     cib->type = cib_no_connection;
 
@@ -511,6 +518,7 @@ cib_remote_free(cib_t *cib)
             free(private->user);
             free(private->passwd);
             free(cib->cmds);
+            free(cib->user);
             free(private);
             free(cib);
         }
@@ -530,7 +538,7 @@ cib_remote_inputfd(cib_t * cib)
 static int
 cib_remote_register_notification(cib_t * cib, const char *callback, int enabled)
 {
-    xmlNode *notify_msg = create_xml_node(NULL, "cib_command");
+    xmlNode *notify_msg = create_xml_node(NULL, T_CIB_COMMAND);
     cib_remote_opaque_t *private = cib->variant_opaque;
 
     crm_xml_add(notify_msg, F_CIB_OPERATION, T_CIB_NOTIFY);
@@ -614,7 +622,7 @@ cib_remote_new(const char *server, const char *user, const char *passwd, int por
     cib->cmds->signon = cib_remote_signon;
     cib->cmds->signoff = cib_remote_signoff;
     cib->cmds->free = cib_remote_free;
-    cib->cmds->inputfd = cib_remote_inputfd;
+    cib->cmds->inputfd = cib_remote_inputfd; // Deprecated method
 
     cib->cmds->register_notification = cib_remote_register_notification;
     cib->cmds->set_connection_dnotify = cib_remote_set_connection_dnotify;

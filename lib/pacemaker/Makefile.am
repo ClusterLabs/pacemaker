@@ -23,17 +23,18 @@ libpacemaker_la_LDFLAGS	= -version-info 7:0:6
 libpacemaker_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpacemaker_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 
-libpacemaker_la_LIBADD	= $(top_builddir)/lib/pengine/libpe_status.la \
-			$(top_builddir)/lib/cib/libcib.la \
-			$(top_builddir)/lib/lrmd/liblrmd.la \
-			$(top_builddir)/lib/fencing/libstonithd.la \
-			$(top_builddir)/lib/services/libcrmservice.la \
-			$(top_builddir)/lib/common/libcrmcommon.la
+libpacemaker_la_LIBADD = $(top_builddir)/lib/pengine/libpe_status.la
+libpacemaker_la_LIBADD += $(top_builddir)/lib/cib/libcib.la
+libpacemaker_la_LIBADD += $(top_builddir)/lib/lrmd/liblrmd.la
+libpacemaker_la_LIBADD += $(top_builddir)/lib/fencing/libstonithd.la
+libpacemaker_la_LIBADD += $(top_builddir)/lib/services/libcrmservice.la
+libpacemaker_la_LIBADD += $(top_builddir)/lib/common/libcrmcommon.la
 
 # -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version
 # Use += rather than backlashed continuation lines for parsing by bumplibs
 libpacemaker_la_SOURCES	=
 libpacemaker_la_SOURCES += pcmk_acl.c
+libpacemaker_la_SOURCES += pcmk_agents.c
 libpacemaker_la_SOURCES += pcmk_cluster_queries.c
 libpacemaker_la_SOURCES += pcmk_fence.c
 libpacemaker_la_SOURCES += pcmk_graph_consumer.c

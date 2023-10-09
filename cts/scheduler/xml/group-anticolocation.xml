@@ -1,15 +1,17 @@
 <cib crm_feature_set="3.16.1" validate-with="pacemaker-3.7" epoch="265" num_updates="16" admin_epoch="0" cib-last-written="Tue Oct 25 14:29:45 2022" update-origin="node2" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="4">
   <configuration>
     <!-- The essential elements of this test are:
-	 * A group (group2) is optionally anti-colocated (at score -5000) with
+         * A group (group2) is optionally anti-colocated (at score -5000) with
            another group (group1)
-	 * There are two nodes, and the groups are active on different ones
-	 * The dependent group's last member (member2b) is failed and has
+         * There are two nodes, and the groups are active on different ones
+         * The dependent group's last member (member2b) is failed and has
            reached its migration-threshold
+         * Stickiness is zero
+         * The anti-colocation has influence
+         * The dependent has nowhere to run other than the primary's node
 
-	 In this situation, the goal of keeping as many resources active as
-	 possible should override the optional anti-colocation, and the
-         dependent group should move to the primary group's node.
+         In this situation, the goal of keeping as many resources active as
+         possible and the lack of stickiness mean the groups should swap nodes.
       -->
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">

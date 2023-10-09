@@ -41,7 +41,7 @@ pe_evaluate_rules(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now,
 {
     pe_rule_eval_data_t rule_data = {
         .node_hash = node_hash,
-        .role = RSC_ROLE_UNKNOWN,
+        .role = pcmk_role_unknown,
         .now = now,
         .match_data = NULL,
         .rsc_data = NULL,
@@ -104,25 +104,23 @@ pe_test_expression(xmlNode *expr, GHashTable *node_hash, enum rsc_role_e role,
 enum expression_type
 find_expression_type(xmlNode * expr)
 {
-    const char *tag = NULL;
     const char *attr = NULL;
 
     attr = crm_element_value(expr, XML_EXPR_ATTR_ATTRIBUTE);
-    tag = crm_element_name(expr);
 
-    if (pcmk__str_eq(tag, PCMK_XE_DATE_EXPRESSION, pcmk__str_none)) {
+    if (pcmk__xe_is(expr, PCMK_XE_DATE_EXPRESSION)) {
         return time_expr;
 
-    } else if (pcmk__str_eq(tag, PCMK_XE_RSC_EXPRESSION, pcmk__str_none)) {
+    } else if (pcmk__xe_is(expr, PCMK_XE_RSC_EXPRESSION)) {
         return rsc_expr;
 
-    } else if (pcmk__str_eq(tag, PCMK_XE_OP_EXPRESSION, pcmk__str_none)) {
+    } else if (pcmk__xe_is(expr, PCMK_XE_OP_EXPRESSION)) {
         return op_expr;
 
-    } else if (pcmk__str_eq(tag, XML_TAG_RULE, pcmk__str_none)) {
+    } else if (pcmk__xe_is(expr, XML_TAG_RULE)) {
         return nested_rule;
 
-    } else if (!pcmk__str_eq(tag, XML_TAG_EXPRESSION, pcmk__str_none)) {
+    } else if (!pcmk__xe_is(expr, XML_TAG_EXPRESSION)) {
         return not_expr;
 
     } else if (pcmk__str_any_of(attr, CRM_ATTR_UNAME, CRM_ATTR_KIND, CRM_ATTR_ID, NULL)) {
@@ -320,6 +318,7 @@ typedef struct sorted_set_s {
     const char *name;           // This block's ID
     const char *special_name;   // ID that should sort first
     xmlNode *attr_set;          // This block
+    gboolean overwrite;         // Whether existing values will be overwritten
 } sorted_set_t;
 
 static gint
@@ -343,10 +342,14 @@ sort_pairs(gconstpointer a, gconstpointer b)
         return 1;
     }
 
+    /* If we're overwriting values, we want lowest score first, so the highest
+     * score is processed last; if we're not overwriting values, we want highest
+     * score first, so nothing else overwrites it.
+     */
     if (pair_a->score < pair_b->score) {
-        return 1;
+        return pair_a->overwrite? -1 : 1;
     } else if (pair_a->score > pair_b->score) {
-        return -1;
+        return pair_a->overwrite? 1 : -1;
     }
     return 0;
 }
@@ -360,8 +363,7 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
     xmlNode *list = nvpair_list;
     xmlNode *an_attr = NULL;
 
-    name = crm_element_name(list->children);
-    if (pcmk__str_eq(XML_TAG_ATTRS, name, pcmk__str_casei)) {
+    if (pcmk__xe_is(list->children, XML_TAG_ATTRS)) {
         list = list->children;
     }
 
@@ -446,7 +448,7 @@ unpack_attr_set(gpointer data, gpointer user_data)
  */
 static GList *
 make_pairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
-           const char *always_first)
+           const char *always_first, gboolean overwrite)
 {
     GList *unsorted = NULL;
 
@@ -471,6 +473,7 @@ make_pairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
             pair->name = ID(expanded_attr_set);
             pair->special_name = always_first;
             pair->attr_set = expanded_attr_set;
+            pair->overwrite = overwrite;
 
             score = crm_element_value(expanded_attr_set, XML_RULE_ATTR_SCORE);
             pair->score = char2score(score);
@@ -499,7 +502,7 @@ pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
                 const char *always_first, gboolean overwrite,
                 crm_time_t *next_change)
 {
-    GList *pairs = make_pairs(top, xml_obj, set_name, always_first);
+    GList *pairs = make_pairs(top, xml_obj, set_name, always_first, overwrite);
 
     if (pairs) {
         unpack_data_t data = {
@@ -536,7 +539,7 @@ pe_unpack_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
 {
     pe_rule_eval_data_t rule_data = {
         .node_hash = node_hash,
-        .role = RSC_ROLE_UNKNOWN,
+        .role = pcmk_role_unknown,
         .now = now,
         .match_data = NULL,
         .rsc_data = NULL,
@@ -1161,7 +1164,7 @@ pe__eval_role_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
     const char *op = NULL;
     const char *value = NULL;
 
-    if (rule_data->role == RSC_ROLE_UNKNOWN) {
+    if (rule_data->role == pcmk_role_unknown) {
         return accept;
     }
 
@@ -1169,13 +1172,13 @@ pe__eval_role_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
     op = crm_element_value(expr, XML_EXPR_ATTR_OPERATION);
 
     if (pcmk__str_eq(op, "defined", pcmk__str_casei)) {
-        if (rule_data->role > RSC_ROLE_STARTED) {
+        if (rule_data->role > pcmk_role_started) {
             accept = TRUE;
         }
 
     } else if (pcmk__str_eq(op, "not_defined", pcmk__str_casei)) {
-        if ((rule_data->role > RSC_ROLE_UNKNOWN)
-            && (rule_data->role < RSC_ROLE_UNPROMOTED)) {
+        if ((rule_data->role > pcmk_role_unknown)
+            && (rule_data->role < pcmk_role_unpromoted)) {
             accept = TRUE;
         }
 
@@ -1186,8 +1189,8 @@ pe__eval_role_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
 
     } else if (pcmk__str_eq(op, "ne", pcmk__str_casei)) {
         // Test "ne" only with promotable clone roles
-        if ((rule_data->role > RSC_ROLE_UNKNOWN)
-            && (rule_data->role < RSC_ROLE_UNPROMOTED)) {
+        if ((rule_data->role > pcmk_role_unknown)
+            && (rule_data->role < pcmk_role_unpromoted)) {
             accept = FALSE;
 
         } else if (text2role(value) != rule_data->role) {
@@ -1301,7 +1304,7 @@ unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj, const char *set_name,
 {
     pe_rule_eval_data_t rule_data = {
         .node_hash = node_hash,
-        .role = RSC_ROLE_UNKNOWN,
+        .role = pcmk_role_unknown,
         .now = now,
         .match_data = NULL,
         .rsc_data = NULL,

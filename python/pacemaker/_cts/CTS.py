@@ -10,6 +10,7 @@ import traceback
 
 from pacemaker.exitstatus import ExitStatus
 from pacemaker._cts.environment import EnvFactory
+from pacemaker._cts.input import should_continue
 from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.remote import RemoteFactory
 
@@ -32,7 +33,7 @@ class CtsLab:
     def __init__(self, args=None):
         """ Create a new CtsLab instance.  This class can be treated kind
             of like a dictionary due to the presence of typical dict functions
-            like has_key, __getitem__, and __setitem__.  However, it is not a
+            like __contains__, __getitem__, and __setitem__.  However, it is not a
             dictionary so do not rely on standard dictionary behavior.
 
             Arguments:
@@ -48,10 +49,12 @@ class CtsLab:
 
         self._env.dump()
 
-    def has_key(self, key):
+    def __contains__(self, key):
         """ Does the given environment key exist? """
 
-        return key in list(self._env.keys())
+        # pylint gets confused because of EnvFactory here.
+        # pylint: disable=unsupported-membership-test
+        return key in self._env
 
     def __getitem__(self, key):
         """ Return the given environment key, or raise KeyError if it does
@@ -90,7 +93,7 @@ class CtsLab:
         for node in self._env["nodes"]:
             self._logger.log("    * %s" % (node))
 
-        if not scenario.SetUp():
+        if not scenario.setup():
             return ExitStatus.ERROR
 
         # We want to alert on any exceptions caused by running a scenario, so
@@ -103,16 +106,16 @@ class CtsLab:
             self._logger.traceback(traceback)
 
             scenario.summarize()
-            scenario.TearDown()
+            scenario.teardown()
             return ExitStatus.ERROR
 
-        scenario.TearDown()
+        scenario.teardown()
         scenario.summarize()
 
-        if scenario.Stats["failure"] > 0:
+        if scenario.stats["failure"] > 0:
             return ExitStatus.ERROR
 
-        if scenario.Stats["success"] != iterations:
+        if scenario.stats["success"] != iterations:
             self._logger.log("No failure count but success != requested iterations")
             return ExitStatus.ERROR
 
@@ -177,15 +180,7 @@ class NodeStatus:
             timeout -= 1
 
         LogFactory().log("%s did not come up within %d tries" % (node, initial_timeout))
-        if self._env["continue"]:
-            answer = "Y"
-        else:
-            try:
-                answer = input('Continue? [nY]')
-            except EOFError:
-                answer = "n"
-
-        if answer and answer == "n":
+        if not should_continue(self._env["continue"]):
             raise ValueError("%s did not come up within %d tries" % (node, initial_timeout))
 
         return False

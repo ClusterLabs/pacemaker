@@ -16,8 +16,8 @@
 
 #include "libpacemaker_private.h"
 
-// Resource allocation methods that vary by resource variant
-static resource_alloc_functions_t allocation_methods[] = {
+// Resource assignment methods by resource variant
+static resource_alloc_functions_t assignment_methods[] = {
     {
         pcmk__primitive_assign,
         pcmk__primitive_create_actions,
@@ -58,25 +58,25 @@ static resource_alloc_functions_t allocation_methods[] = {
     },
     {
         pcmk__clone_assign,
-        clone_create_actions,
-        clone_create_probe,
-        clone_internal_constraints,
+        pcmk__clone_create_actions,
+        pcmk__clone_create_probe,
+        pcmk__clone_internal_constraints,
         pcmk__clone_apply_coloc_score,
         pcmk__colocated_resources,
         pcmk__with_clone_colocations,
         pcmk__clone_with_colocations,
         pcmk__add_colocated_node_scores,
-        clone_rsc_location,
-        clone_action_flags,
+        pcmk__clone_apply_location,
+        pcmk__clone_action_flags,
         pcmk__instance_update_ordered_actions,
         pcmk__output_resource_actions,
-        clone_expand,
-        clone_append_meta,
+        pcmk__clone_add_actions_to_graph,
+        pcmk__clone_add_graph_meta,
         pcmk__clone_add_utilization,
         pcmk__clone_shutdown_lock,
     },
     {
-        pcmk__bundle_allocate,
+        pcmk__bundle_assign,
         pcmk__bundle_create_actions,
         pcmk__bundle_create_probe,
         pcmk__bundle_internal_constraints,
@@ -85,11 +85,11 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__with_bundle_colocations,
         pcmk__bundle_with_colocations,
         pcmk__add_colocated_node_scores,
-        pcmk__bundle_rsc_location,
+        pcmk__bundle_apply_location,
         pcmk__bundle_action_flags,
         pcmk__instance_update_ordered_actions,
         pcmk__output_bundle_actions,
-        pcmk__bundle_expand,
+        pcmk__bundle_add_actions_to_graph,
         pcmk__noop_add_graph_meta,
         pcmk__bundle_add_utilization,
         pcmk__bundle_shutdown_lock,
@@ -136,9 +136,9 @@ pcmk__rsc_agent_changed(pe_resource_t *rsc, pe_node_t *node,
     }
     if (changed && active_on_node) {
         // Make sure the resource is restarted
-        custom_action(rsc, stop_key(rsc), CRMD_ACTION_STOP, node, FALSE, TRUE,
+        custom_action(rsc, stop_key(rsc), PCMK_ACTION_STOP, node, FALSE, TRUE,
                       rsc->cluster);
-        pe__set_resource_flags(rsc, pe_rsc_start_pending);
+        pe__set_resource_flags(rsc, pcmk_rsc_start_pending);
     }
     return changed;
 }
@@ -193,35 +193,53 @@ pcmk__rscs_matching_id(const char *id, const pe_working_set_t *data_set)
 
 /*!
  * \internal
- * \brief Set the variant-appropriate allocation methods for a resource
+ * \brief Set the variant-appropriate assignment methods for a resource
  *
- * \param[in,out] rsc      Resource to set allocation methods for
- * \param[in]     ignored  Here so function can be used with g_list_foreach()
+ * \param[in,out] data       Resource to set assignment methods for
+ * \param[in]     user_data  Ignored
  */
 static void
-set_allocation_methods_for_rsc(pe_resource_t *rsc, void *ignored)
+set_assignment_methods_for_rsc(gpointer data, gpointer user_data)
 {
-    rsc->cmds = &allocation_methods[rsc->variant];
-    g_list_foreach(rsc->children, (GFunc) set_allocation_methods_for_rsc, NULL);
+    pe_resource_t *rsc = data;
+
+    rsc->cmds = &assignment_methods[rsc->variant];
+    g_list_foreach(rsc->children, set_assignment_methods_for_rsc, NULL);
 }
 
 /*!
  * \internal
- * \brief Set the variant-appropriate allocation methods for all resources
+ * \brief Set the variant-appropriate assignment methods for all resources
  *
  * \param[in,out] data_set  Cluster working set
  */
 void
-pcmk__set_allocation_methods(pe_working_set_t *data_set)
+pcmk__set_assignment_methods(pe_working_set_t *data_set)
 {
-    g_list_foreach(data_set->resources, (GFunc) set_allocation_methods_for_rsc,
-                   NULL);
+    g_list_foreach(data_set->resources, set_assignment_methods_for_rsc, NULL);
+}
+
+/*!
+ * \internal
+ * \brief Wrapper for colocated_resources() method for readability
+ *
+ * \param[in]      rsc       Resource to add to colocated list
+ * \param[in]      orig_rsc  Resource originally requested
+ * \param[in,out]  list      Pointer to list to add to
+ *
+ * \return (Possibly new) head of list
+ */
+static inline void
+add_colocated_resources(const pe_resource_t *rsc, const pe_resource_t *orig_rsc,
+                        GList **list)
+{
+    *list = rsc->cmds->colocated_resources(rsc, orig_rsc, *list);
 }
 
 // Shared implementation of resource_alloc_functions_t:colocated_resources()
 GList *
-pcmk__colocated_resources(const pe_resource_t *rsc, const pe_resource_t *orig_rsc,
-                          GList *colocated_rscs)
+pcmk__colocated_resources(const pe_resource_t *rsc,
+                          const pe_resource_t *orig_rsc, GList *colocated_rscs)
 {
     const GList *iter = NULL;
     GList *colocations = NULL;
@@ -251,10 +269,7 @@ pcmk__colocated_resources(const pe_resource_t *rsc, const pe_resource_t *orig_rs
         if ((constraint->score == INFINITY) &&
             (pcmk__colocation_affects(rsc, primary, constraint,
                                       true) == pcmk__coloc_affects_location)) {
-
-            colocated_rscs = primary->cmds->colocated_resources(primary,
-                                                                orig_rsc,
-                                                                colocated_rscs);
+            add_colocated_resources(primary, orig_rsc, &colocated_rscs);
         }
     }
     g_list_free(colocations);
@@ -276,10 +291,7 @@ pcmk__colocated_resources(const pe_resource_t *rsc, const pe_resource_t *orig_rs
         if ((constraint->score == INFINITY) &&
             (pcmk__colocation_affects(dependent, rsc, constraint,
                                       true) == pcmk__coloc_affects_location)) {
-
-            colocated_rscs = dependent->cmds->colocated_resources(dependent,
-                                                                  orig_rsc,
-                                                                  colocated_rscs);
+            add_colocated_resources(dependent, orig_rsc, &colocated_rscs);
         }
     }
     g_list_free(colocations);
@@ -293,14 +305,22 @@ pcmk__noop_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml)
 {
 }
 
+/*!
+ * \internal
+ * \brief Output a summary of scheduled actions for a resource
+ *
+ * \param[in,out] rsc  Resource to output actions for
+ */
 void
 pcmk__output_resource_actions(pe_resource_t *rsc)
 {
-    pcmk__output_t *out = rsc->cluster->priv;
-
     pe_node_t *next = NULL;
     pe_node_t *current = NULL;
+    pcmk__output_t *out = NULL;
 
+    CRM_ASSERT(rsc != NULL);
+
+    out = rsc->cluster->priv;
     if (rsc->children != NULL) {
         for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
             pe_resource_t *child = (pe_resource_t *) iter->data;
@@ -313,15 +333,15 @@ pcmk__output_resource_actions(pe_resource_t *rsc)
     next = rsc->allocated_to;
     if (rsc->running_on) {
         current = pe__current_node(rsc);
-        if (rsc->role == RSC_ROLE_STOPPED) {
+        if (rsc->role == pcmk_role_stopped) {
             /* This can occur when resources are being recovered because
              * the current role can change in pcmk__primitive_create_actions()
              */
-            rsc->role = RSC_ROLE_STARTED;
+            rsc->role = pcmk_role_started;
         }
     }
 
-    if ((current == NULL) && pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
+    if ((current == NULL) && pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
         /* Don't log stopped orphans */
         return;
     }
@@ -331,101 +351,16 @@ pcmk__output_resource_actions(pe_resource_t *rsc)
 
 /*!
  * \internal
- * \brief Assign a specified primitive resource to a node
+ * \brief Add a resource to a node's list of assigned resources
  *
- * Assign a specified primitive resource to a specified node, if the node can
- * run the resource (or unconditionally, if \p force is true). Mark the resource
- * as no longer provisional. If the primitive can't be assigned (or \p chosen is
- * NULL), unassign any previous assignment for it, set its next role to stopped,
- * and update any existing actions scheduled for it. This is not done
- * recursively for children, so it should be called only for primitives.
- *
- * \param[in,out] rsc     Resource to assign
- * \param[in,out] chosen  Node to assign \p rsc to
- * \param[in]     force   If true, assign to \p chosen even if unavailable
- *
- * \return true if \p rsc could be assigned, otherwise false
- *
- * \note Assigning a resource to the NULL node using this function is different
- *       from calling pcmk__unassign_resource(), in that it will also update any
- *       actions created for the resource.
+ * \param[in,out] node  Node to add resource to
+ * \param[in]     rsc   Resource to add
  */
-bool
-pcmk__finalize_assignment(pe_resource_t *rsc, pe_node_t *chosen, bool force)
+static inline void
+add_assigned_resource(pe_node_t *node, pe_resource_t *rsc)
 {
-    pcmk__output_t *out = rsc->cluster->priv;
-
-    CRM_ASSERT(rsc->variant == pe_native);
-
-    if (!force && (chosen != NULL)) {
-        if ((chosen->weight < 0)
-            // Allow the graph to assume that guest node connections will come up
-            || (!pcmk__node_available(chosen, true, false)
-                && !pe__is_guest_node(chosen))) {
-
-            crm_debug("All nodes for resource %s are unavailable, unclean or "
-                      "shutting down (%s can%s run resources, with weight %d)",
-                      rsc->id, pe__node_name(chosen),
-                      (pcmk__node_available(chosen, true, false)? "" : "not"),
-                      chosen->weight);
-            pe__set_next_role(rsc, RSC_ROLE_STOPPED, "node availability");
-            chosen = NULL;
-        }
-    }
-
-    pcmk__unassign_resource(rsc);
-    pe__clear_resource_flags(rsc, pe_rsc_provisional);
-
-    if (chosen == NULL) {
-        crm_debug("Could not allocate a node for %s", rsc->id);
-        pe__set_next_role(rsc, RSC_ROLE_STOPPED, "unable to allocate");
-
-        for (GList *iter = rsc->actions; iter != NULL; iter = iter->next) {
-            pe_action_t *op = (pe_action_t *) iter->data;
-
-            crm_debug("Updating %s for allocation failure", op->uuid);
-
-            if (pcmk__str_eq(op->task, RSC_STOP, pcmk__str_casei)) {
-                pe__clear_action_flags(op, pe_action_optional);
-
-            } else if (pcmk__str_eq(op->task, RSC_START, pcmk__str_casei)) {
-                pe__clear_action_flags(op, pe_action_runnable);
-                //pe__set_resource_flags(rsc, pe_rsc_block);
-
-            } else {
-                // Cancel recurring actions, unless for stopped state
-                const char *interval_ms_s = NULL;
-                const char *target_rc_s = NULL;
-                char *rc_stopped = pcmk__itoa(PCMK_OCF_NOT_RUNNING);
-
-                interval_ms_s = g_hash_table_lookup(op->meta,
-                                                    XML_LRM_ATTR_INTERVAL_MS);
-                target_rc_s = g_hash_table_lookup(op->meta,
-                                                  XML_ATTR_TE_TARGET_RC);
-                if ((interval_ms_s != NULL)
-                    && !pcmk__str_eq(interval_ms_s, "0", pcmk__str_none)
-                    && !pcmk__str_eq(rc_stopped, target_rc_s, pcmk__str_none)) {
-                    pe__clear_action_flags(op, pe_action_runnable);
-                }
-                free(rc_stopped);
-            }
-        }
-        return false;
-    }
-
-    crm_debug("Assigning %s to %s", rsc->id, pe__node_name(chosen));
-    rsc->allocated_to = pe__copy_node(chosen);
-
-    chosen->details->allocated_rsc = g_list_prepend(chosen->details->allocated_rsc,
-                                                    rsc);
-    chosen->details->num_resources++;
-    chosen->count++;
-    pcmk__consume_node_capacity(chosen->details->utilization, rsc);
-
-    if (pcmk_is_set(rsc->cluster->flags, pe_flag_show_utilization)) {
-        out->message(out, "resource-util", rsc, chosen, __func__);
-    }
-    return true;
+    node->details->allocated_rsc = g_list_prepend(node->details->allocated_rsc,
+                                                  rsc);
 }
 
 /*!
@@ -434,50 +369,155 @@ pcmk__finalize_assignment(pe_resource_t *rsc, pe_node_t *chosen, bool force)
  *
  * Assign a specified resource and its children (if any) to a specified node, if
  * the node can run the resource (or unconditionally, if \p force is true). Mark
- * the resources as no longer provisional. If the resources can't be assigned
- * (or \p chosen is NULL), unassign any previous assignments, set next role to
- * stopped, and update any existing actions scheduled for them.
+ * the resources as no longer provisional.
  *
- * \param[in,out] rsc     Resource to assign
- * \param[in,out] chosen  Node to assign \p rsc to
- * \param[in]     force   If true, assign to \p chosen even if unavailable
+ * If a resource can't be assigned (or \p node is \c NULL), unassign any
+ * previous assignment. If \p stop_if_fail is \c true, set next role to stopped
+ * and update any existing actions scheduled for the resource.
  *
- * \return true if \p rsc could be assigned, otherwise false
+ * \param[in,out] rsc           Resource to assign
+ * \param[in,out] node          Node to assign \p rsc to
+ * \param[in]     force         If true, assign to \p node even if unavailable
+ * \param[in]     stop_if_fail  If \c true and either \p rsc can't be assigned
+ *                              or \p chosen is \c NULL, set next role to
+ *                              stopped and update existing actions (if \p rsc
+ *                              is not a primitive, this applies to its
+ *                              primitive descendants instead)
+ *
+ * \return \c true if the assignment of \p rsc changed, or \c false otherwise
  *
  * \note Assigning a resource to the NULL node using this function is different
- *       from calling pcmk__unassign_resource(), in that it will also update any
+ *       from calling pcmk__unassign_resource(), in that it may also update any
  *       actions created for the resource.
+ * \note The \c resource_alloc_functions_t:assign() method is preferred, unless
+ *       a resource should be assigned to the \c NULL node or every resource in
+ *       a tree should be assigned to the same node.
+ * \note If \p stop_if_fail is \c false, then \c pcmk__unassign_resource() can
+ *       completely undo the assignment. A successful assignment can be either
+ *       undone or left alone as final. A failed assignment has the same effect
+ *       as calling pcmk__unassign_resource(); there are no side effects on
+ *       roles or actions.
  */
 bool
-pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force)
+pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force,
+                      bool stop_if_fail)
 {
     bool changed = false;
 
-    if (rsc->children == NULL) {
-        if (rsc->allocated_to != NULL) {
-            changed = true;
-        }
-        pcmk__finalize_assignment(rsc, node, force);
+    CRM_ASSERT(rsc != NULL);
 
-    } else {
+    if (rsc->children != NULL) {
         for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-            pe_resource_t *child_rsc = (pe_resource_t *) iter->data;
+            pe_resource_t *child_rsc = iter->data;
 
-            changed |= pcmk__assign_resource(child_rsc, node, force);
+            changed |= pcmk__assign_resource(child_rsc, node, force,
+                                             stop_if_fail);
         }
+        return changed;
+    }
+
+    // Assigning a primitive
+
+    if (!force && (node != NULL)
+        && ((node->weight < 0)
+            // Allow graph to assume that guest node connections will come up
+            || (!pcmk__node_available(node, true, false)
+                && !pe__is_guest_node(node)))) {
+
+        pe_rsc_debug(rsc,
+                     "All nodes for resource %s are unavailable, unclean or "
+                     "shutting down (%s can%s run resources, with score %s)",
+                     rsc->id, pe__node_name(node),
+                     (pcmk__node_available(node, true, false)? "" : "not"),
+                     pcmk_readable_score(node->weight));
+
+        if (stop_if_fail) {
+            pe__set_next_role(rsc, pcmk_role_stopped, "node availability");
+        }
+        node = NULL;
+    }
+
+    if (rsc->allocated_to != NULL) {
+        changed = !pe__same_node(rsc->allocated_to, node);
+    } else {
+        changed = (node != NULL);
+    }
+    pcmk__unassign_resource(rsc);
+    pe__clear_resource_flags(rsc, pcmk_rsc_unassigned);
+
+    if (node == NULL) {
+        char *rc_stopped = NULL;
+
+        pe_rsc_debug(rsc, "Could not assign %s to a node", rsc->id);
+
+        if (!stop_if_fail) {
+            return changed;
+        }
+        pe__set_next_role(rsc, pcmk_role_stopped, "unable to assign");
+
+        for (GList *iter = rsc->actions; iter != NULL; iter = iter->next) {
+            pe_action_t *op = (pe_action_t *) iter->data;
+
+            pe_rsc_debug(rsc, "Updating %s for %s assignment failure",
+                         op->uuid, rsc->id);
+
+            if (pcmk__str_eq(op->task, PCMK_ACTION_STOP, pcmk__str_none)) {
+                pe__clear_action_flags(op, pcmk_action_optional);
+
+            } else if (pcmk__str_eq(op->task, PCMK_ACTION_START,
+                                    pcmk__str_none)) {
+                pe__clear_action_flags(op, pcmk_action_runnable);
+
+            } else {
+                // Cancel recurring actions, unless for stopped state
+                const char *interval_ms_s = NULL;
+                const char *target_rc_s = NULL;
+
+                interval_ms_s = g_hash_table_lookup(op->meta,
+                                                    XML_LRM_ATTR_INTERVAL_MS);
+                target_rc_s = g_hash_table_lookup(op->meta,
+                                                  XML_ATTR_TE_TARGET_RC);
+                if (rc_stopped == NULL) {
+                    rc_stopped = pcmk__itoa(PCMK_OCF_NOT_RUNNING);
+                }
+
+                if (!pcmk__str_eq(interval_ms_s, "0", pcmk__str_null_matches)
+                    && !pcmk__str_eq(rc_stopped, target_rc_s, pcmk__str_none)) {
+
+                    pe__clear_action_flags(op, pcmk_action_runnable);
+                }
+            }
+        }
+        free(rc_stopped);
+        return changed;
+    }
+
+    pe_rsc_debug(rsc, "Assigning %s to %s", rsc->id, pe__node_name(node));
+    rsc->allocated_to = pe__copy_node(node);
+
+    add_assigned_resource(node, rsc);
+    node->details->num_resources++;
+    node->count++;
+    pcmk__consume_node_capacity(node->details->utilization, rsc);
+
+    if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_show_utilization)) {
+        pcmk__output_t *out = rsc->cluster->priv;
+
+        out->message(out, "resource-util", rsc, node, __func__);
     }
     return changed;
 }
 
 /*!
  * \internal
- * \brief Remove any assignment of a specified resource to a node
+ * \brief Remove any node assignment from a specified resource and its children
  *
  * If a specified resource has been assigned to a node, remove that assignment
- * and mark the resource as provisional again. This is not done recursively for
- * children, so it should be called only for primitives.
+ * and mark the resource as provisional again.
  *
  * \param[in,out] rsc  Resource to unassign
+ *
+ * \note This function is called recursively on \p rsc and its children.
  */
 void
 pcmk__unassign_resource(pe_resource_t *rsc)
@@ -485,21 +525,33 @@ pcmk__unassign_resource(pe_resource_t *rsc)
     pe_node_t *old = rsc->allocated_to;
 
     if (old == NULL) {
+        crm_info("Unassigning %s", rsc->id);
+    } else {
+        crm_info("Unassigning %s from %s", rsc->id, pe__node_name(old));
+    }
+
+    pe__set_resource_flags(rsc, pcmk_rsc_unassigned);
+
+    if (rsc->children == NULL) {
+        if (old == NULL) {
+            return;
+        }
+        rsc->allocated_to = NULL;
+
+        /* We're going to free the pe_node_t, but its details member is shared
+         * and will remain, so update that appropriately first.
+         */
+        old->details->allocated_rsc = g_list_remove(old->details->allocated_rsc,
+                                                    rsc);
+        old->details->num_resources--;
+        pcmk__release_node_capacity(old->details->utilization, rsc);
+        free(old);
         return;
     }
 
-    crm_info("Unassigning %s from %s", rsc->id, pe__node_name(old));
-    pe__set_resource_flags(rsc, pe_rsc_provisional);
-    rsc->allocated_to = NULL;
-
-    /* We're going to free the pe_node_t, but its details member is shared and
-     * will remain, so update that appropriately first.
-     */
-    old->details->allocated_rsc = g_list_remove(old->details->allocated_rsc,
-                                                rsc);
-    old->details->num_resources--;
-    pcmk__release_node_capacity(old->details->utilization, rsc);
-    free(old);
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        pcmk__unassign_resource((pe_resource_t *) iter->data);
+    }
 }
 
 /*!
@@ -526,19 +578,19 @@ pcmk__threshold_reached(pe_resource_t *rsc, const pe_node_t *node,
     }
 
     // If we're ignoring failures, also ignore the migration threshold
-    if (pcmk_is_set(rsc->flags, pe_rsc_failure_ignored)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_ignore_failure)) {
         return false;
     }
 
     // If there are no failures, there's no need to force away
     fail_count = pe_get_failcount(node, rsc, NULL,
-                                  pe_fc_effective|pe_fc_fillers, NULL);
+                                  pcmk__fc_effective|pcmk__fc_fillers, NULL);
     if (fail_count <= 0) {
         return false;
     }
 
     // If failed resource is anonymous clone instance, we'll force clone away
-    if (!pcmk_is_set(rsc->flags, pe_rsc_unique)) {
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
         rsc_to_ban = uber_parent(rsc);
     }
 
@@ -564,69 +616,66 @@ pcmk__threshold_reached(pe_resource_t *rsc, const pe_node_t *node,
     return false;
 }
 
-static void *
-convert_const_pointer(const void *ptr)
-{
-    /* Worst function ever */
-    return (void *)ptr;
-}
-
 /*!
  * \internal
- * \brief Get a node's weight
+ * \brief Get a node's score
  *
- * \param[in] node     Unweighted node to check (for node ID)
- * \param[in] nodes    List of weighted nodes to look for \p node in
+ * \param[in] node     Node with ID to check
+ * \param[in] nodes    List of nodes to look for \p node score in
  *
- * \return Node's weight, or -INFINITY if not found
+ * \return Node's score, or -INFINITY if not found
  */
 static int
-get_node_weight(const pe_node_t *node, GHashTable *nodes)
+get_node_score(const pe_node_t *node, GHashTable *nodes)
 {
-    pe_node_t *weighted_node = NULL;
+    pe_node_t *found_node = NULL;
 
     if ((node != NULL) && (nodes != NULL)) {
-        weighted_node = g_hash_table_lookup(nodes, node->details->id);
+        found_node = g_hash_table_lookup(nodes, node->details->id);
     }
-    return (weighted_node == NULL)? -INFINITY : weighted_node->weight;
+    return (found_node == NULL)? -INFINITY : found_node->weight;
 }
 
 /*!
  * \internal
- * \brief Compare two resources according to which should be allocated first
+ * \brief Compare two resources according to which should be assigned first
  *
  * \param[in] a     First resource to compare
  * \param[in] b     Second resource to compare
  * \param[in] data  Sorted list of all nodes in cluster
  *
- * \return -1 if \p a should be allocated before \b, 0 if they are equal,
- *         or +1 if \p a should be allocated after \b
+ * \return -1 if \p a should be assigned before \b, 0 if they are equal,
+ *         or +1 if \p a should be assigned after \b
  */
 static gint
 cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
 {
-    const pe_resource_t *resource1 = a;
-    const pe_resource_t *resource2 = b;
-    const GList *nodes = (const GList *) data;
+    /* GLib insists that this function require gconstpointer arguments, but we
+     * make a small, temporary change to each argument (setting the
+     * pe_rsc_merging flag) during comparison
+     */
+    pe_resource_t *resource1 = (pe_resource_t *) a;
+    pe_resource_t *resource2 = (pe_resource_t *) b;
+    const GList *nodes = data;
 
     int rc = 0;
-    int r1_weight = -INFINITY;
-    int r2_weight = -INFINITY;
+    int r1_score = -INFINITY;
+    int r2_score = -INFINITY;
     pe_node_t *r1_node = NULL;
     pe_node_t *r2_node = NULL;
     GHashTable *r1_nodes = NULL;
     GHashTable *r2_nodes = NULL;
     const char *reason = NULL;
 
-    // Resources with highest priority should be allocated first
+    // Resources with highest priority should be assigned first
     reason = "priority";
-    r1_weight = resource1->priority;
-    r2_weight = resource2->priority;
-    if (r1_weight > r2_weight) {
+    r1_score = resource1->priority;
+    r2_score = resource2->priority;
+    if (r1_score > r2_score) {
         rc = -1;
         goto done;
     }
-    if (r1_weight < r2_weight) {
+    if (r1_score < r2_score) {
         rc = 1;
         goto done;
     }
@@ -637,17 +686,17 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
         goto done;
     }
 
-    // Calculate and log node weights
-    resource1->cmds->add_colocated_node_scores(convert_const_pointer(resource1),
-                                               resource1->id, &r1_nodes, NULL,
-                                               1, pcmk__coloc_select_this_with);
-    resource2->cmds->add_colocated_node_scores(convert_const_pointer(resource2),
-                                               resource2->id, &r2_nodes, NULL,
-                                               1, pcmk__coloc_select_this_with);
-    pe__show_node_weights(true, NULL, resource1->id, r1_nodes,
-                          resource1->cluster);
-    pe__show_node_weights(true, NULL, resource2->id, r2_nodes,
-                          resource2->cluster);
+    // Calculate and log node scores
+    resource1->cmds->add_colocated_node_scores(resource1, NULL, resource1->id,
+                                               &r1_nodes, NULL, 1,
+                                               pcmk__coloc_select_this_with);
+    resource2->cmds->add_colocated_node_scores(resource2, NULL, resource2->id,
+                                               &r2_nodes, NULL, 1,
+                                               pcmk__coloc_select_this_with);
+    pe__show_node_scores(true, NULL, resource1->id, r1_nodes,
+                         resource1->cluster);
+    pe__show_node_scores(true, NULL, resource2->id, r2_nodes,
+                         resource2->cluster);
 
     // The resource with highest score on its current node goes first
     reason = "current location";
@@ -657,29 +706,29 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
     if (resource2->running_on != NULL) {
         r2_node = pe__current_node(resource2);
     }
-    r1_weight = get_node_weight(r1_node, r1_nodes);
-    r2_weight = get_node_weight(r2_node, r2_nodes);
-    if (r1_weight > r2_weight) {
+    r1_score = get_node_score(r1_node, r1_nodes);
+    r2_score = get_node_score(r2_node, r2_nodes);
+    if (r1_score > r2_score) {
         rc = -1;
         goto done;
     }
-    if (r1_weight < r2_weight) {
+    if (r1_score < r2_score) {
         rc = 1;
         goto done;
     }
 
-    // Otherwise a higher weight on any node will do
+    // Otherwise a higher score on any node will do
     reason = "score";
     for (const GList *iter = nodes; iter != NULL; iter = iter->next) {
         const pe_node_t *node = (const pe_node_t *) iter->data;
 
-        r1_weight = get_node_weight(node, r1_nodes);
-        r2_weight = get_node_weight(node, r2_nodes);
-        if (r1_weight > r2_weight) {
+        r1_score = get_node_score(node, r1_nodes);
+        r2_score = get_node_score(node, r2_nodes);
+        if (r1_score > r2_score) {
             rc = -1;
             goto done;
         }
-        if (r1_weight < r2_weight) {
+        if (r1_score < r2_score) {
             rc = 1;
             goto done;
         }
@@ -687,11 +736,11 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
 
 done:
     crm_trace("%s (%d)%s%s %c %s (%d)%s%s: %s",
-              resource1->id, r1_weight,
+              resource1->id, r1_score,
               ((r1_node == NULL)? "" : " on "),
               ((r1_node == NULL)? "" : r1_node->details->id),
               ((rc < 0)? '>' : ((rc > 0)? '<' : '=')),
-              resource2->id, r2_weight,
+              resource2->id, r2_score,
               ((r2_node == NULL)? "" : " on "),
               ((r2_node == NULL)? "" : r2_node->details->id),
               reason);
@@ -706,7 +755,7 @@ done:
 
 /*!
  * \internal
- * \brief Sort resources in the order they should be allocated to nodes
+ * \brief Sort resources in the order they should be assigned to nodes
  *
  * \param[in,out] data_set  Cluster working set
  */

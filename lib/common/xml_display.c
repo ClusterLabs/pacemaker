@@ -92,7 +92,6 @@ static int
 show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
                  const xmlNode *data, int depth, uint32_t options)
 {
-    const char *name = crm_element_name(data);
     int spaces = pcmk_is_set(options, pcmk__xml_fmt_pretty)? (2 * depth) : 0;
     int rc = pcmk_rc_no_output;
 
@@ -104,7 +103,7 @@ show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
         for (int lpc = 0; lpc < spaces; lpc++) {
             g_string_append_c(buffer, ' ');
         }
-        pcmk__g_strcat(buffer, "<", name, NULL);
+        pcmk__g_strcat(buffer, "<", data->name, NULL);
 
         for (const xmlAttr *attr = pcmk__xe_first_attr(data); attr != NULL;
              attr = attr->next) {
@@ -138,7 +137,7 @@ show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
             free(p_copy);
         }
 
-        if (xml_has_children(data)
+        if ((data->children != NULL)
             && pcmk_is_set(options, pcmk__xml_fmt_children)) {
             g_string_append_c(buffer, '>');
 
@@ -151,7 +150,7 @@ show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
                        buffer->str);
     }
 
-    if (!xml_has_children(data)) {
+    if (data->children == NULL) {
         return rc;
     }
 
@@ -171,7 +170,7 @@ show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
         int temp_rc = out->info(out, "%s%s%*s</%s>",
                                 pcmk__s(prefix, ""),
                                 pcmk__str_empty(prefix)? "" : " ",
-                                spaces, "", name);
+                                spaces, "", data->name);
         rc = pcmk__output_select_rc(rc, temp_rc);
     }
 
@@ -304,14 +303,14 @@ show_xml_changes_recursive(pcmk__output_t *out, const xmlNode *data, int depth,
             nodepriv = attr->_private;
 
             if (pcmk_is_set(nodepriv->flags, pcmk__xf_deleted)) {
-                const char *value = crm_element_value(data, name);
+                const char *value = pcmk__xml_attr_value(attr);
 
                 temp_rc = out->info(out, "%s %*s @%s=%s",
                                     PCMK__XML_PREFIX_DELETED, spaces, "", name,
                                     value);
 
             } else if (pcmk_is_set(nodepriv->flags, pcmk__xf_dirty)) {
-                const char *value = crm_element_value(data, name);
+                const char *value = pcmk__xml_attr_value(attr);
 
                 if (pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
                     prefix = PCMK__XML_PREFIX_CREATED;
@@ -447,9 +446,6 @@ log_data_element(int log_level, const char *file, const char *function,
     if (pcmk_is_set(legacy_options, xml_log_option_formatted)) {
         options |= pcmk__xml_fmt_pretty;
     }
-    if (pcmk_is_set(legacy_options, xml_log_option_full_fledged)) {
-        options |= pcmk__xml_fmt_full;
-    }
     if (pcmk_is_set(legacy_options, xml_log_option_open)) {
         options |= pcmk__xml_fmt_open;
     }
@@ -480,7 +476,7 @@ log_data_element(int log_level, const char *file, const char *function,
     }
 
     if (pcmk_is_set(options, pcmk__xml_fmt_pretty)
-        && (!xml_has_children(data)
+        && ((data->children == NULL)
             || (crm_element_value(data, XML_DIFF_MARKER) != NULL))) {
 
         if (pcmk_is_set(options, pcmk__xml_fmt_diff_plus)) {

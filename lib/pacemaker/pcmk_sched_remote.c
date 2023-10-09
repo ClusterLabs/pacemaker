@@ -50,34 +50,36 @@ state2text(enum remote_connection_state state)
     return "impossible";
 }
 
-/* We always use pe_order_preserve with these convenience functions to exempt
- * internally generated constraints from the prohibition of user constraints
- * involving remote connection resources.
+/* We always use pcmk__ar_guest_allowed with these convenience functions to
+ * exempt internally generated constraints from the prohibition of user
+ * constraints involving remote connection resources.
  *
- * The start ordering additionally uses pe_order_runnable_left so that the
- * specified action is not runnable if the start is not runnable.
+ * The start ordering additionally uses pcmk__ar_unrunnable_first_blocks so that
+ * the specified action is not runnable if the start is not runnable.
  */
 
 static inline void
 order_start_then_action(pe_resource_t *first_rsc, pe_action_t *then_action,
-                        uint32_t extra, pe_working_set_t *data_set)
+                        uint32_t extra)
 {
-    if ((first_rsc != NULL) && (then_action != NULL) && (data_set != NULL)) {
+    if ((first_rsc != NULL) && (then_action != NULL)) {
         pcmk__new_ordering(first_rsc, start_key(first_rsc), NULL,
                            then_action->rsc, NULL, then_action,
-                           pe_order_preserve|pe_order_runnable_left|extra,
-                           data_set);
+                           pcmk__ar_guest_allowed
+                           |pcmk__ar_unrunnable_first_blocks
+                           |extra,
+                           first_rsc->cluster);
     }
 }
 
 static inline void
 order_action_then_stop(pe_action_t *first_action, pe_resource_t *then_rsc,
-                       uint32_t extra, pe_working_set_t *data_set)
+                       uint32_t extra)
 {
-    if ((first_action != NULL) && (then_rsc != NULL) && (data_set != NULL)) {
+    if ((first_action != NULL) && (then_rsc != NULL)) {
         pcmk__new_ordering(first_action->rsc, NULL, first_action,
                            then_rsc, stop_key(then_rsc), NULL,
-                           pe_order_preserve|extra, data_set);
+                           pcmk__ar_guest_allowed|extra, then_rsc->cluster);
     }
 }
 
@@ -98,7 +100,7 @@ get_remote_node_state(const pe_node_t *node)
      * is unclean or went offline, we can't process any operations
      * on that remote node until after it starts elsewhere.
      */
-    if ((remote_rsc->next_role == RSC_ROLE_STOPPED)
+    if ((remote_rsc->next_role == pcmk_role_stopped)
         || (remote_rsc->allocated_to == NULL)) {
 
         // The connection resource is not going to run anywhere
@@ -110,14 +112,14 @@ get_remote_node_state(const pe_node_t *node)
             return remote_state_failed;
         }
 
-        if (!pcmk_is_set(remote_rsc->flags, pe_rsc_failed)) {
+        if (!pcmk_is_set(remote_rsc->flags, pcmk_rsc_failed)) {
             /* Connection resource is cleanly stopped */
             return remote_state_stopped;
         }
 
         /* Connection resource is failed */
 
-        if ((remote_rsc->next_role == RSC_ROLE_STOPPED)
+        if ((remote_rsc->next_role == pcmk_role_stopped)
             && remote_rsc->remote_reconnect_ms
             && node->details->remote_was_fenced
             && !pe__shutdown_requested(node)) {
@@ -170,7 +172,7 @@ apply_remote_ordering(pe_action_t *action)
     enum action_tasks task = text2task(action->task);
     enum remote_connection_state state = get_remote_node_state(action->node);
 
-    uint32_t order_opts = pe_order_none;
+    uint32_t order_opts = pcmk__ar_none;
 
     if (action->rsc == NULL) {
         return;
@@ -183,37 +185,35 @@ apply_remote_ordering(pe_action_t *action)
 
     crm_trace("Order %s action %s relative to %s%s (state: %s)",
               action->task, action->uuid,
-              pcmk_is_set(remote_rsc->flags, pe_rsc_failed)? "failed " : "",
+              pcmk_is_set(remote_rsc->flags, pcmk_rsc_failed)? "failed " : "",
               remote_rsc->id, state2text(state));
 
-    if (pcmk__strcase_any_of(action->task, CRMD_ACTION_MIGRATE,
-                             CRMD_ACTION_MIGRATED, NULL)) {
-        /* Migration ops map to "no_action", but we need to apply the same
-         * ordering as for stop or demote (see get_router_node()).
+    if (pcmk__strcase_any_of(action->task, PCMK_ACTION_MIGRATE_TO,
+                             PCMK_ACTION_MIGRATE_FROM, NULL)) {
+        /* Migration ops map to pcmk_action_unspecified, but we need to apply
+         * the same ordering as for stop or demote (see get_router_node()).
          */
-        task = stop_rsc;
+        task = pcmk_action_stop;
     }
 
     switch (task) {
-        case start_rsc:
-        case action_promote:
-            order_opts = pe_order_none;
+        case pcmk_action_start:
+        case pcmk_action_promote:
+            order_opts = pcmk__ar_none;
 
             if (state == remote_state_failed) {
                 /* Force recovery, by making this action required */
-                pe__set_order_flags(order_opts, pe_order_implies_then);
+                pe__set_order_flags(order_opts, pcmk__ar_first_implies_then);
             }
 
             /* Ensure connection is up before running this action */
-            order_start_then_action(remote_rsc, action, order_opts,
-                                    remote_rsc->cluster);
+            order_start_then_action(remote_rsc, action, order_opts);
             break;
 
-        case stop_rsc:
+        case pcmk_action_stop:
             if (state == remote_state_alive) {
                 order_action_then_stop(action, remote_rsc,
-                                       pe_order_implies_first,
-                                       remote_rsc->cluster);
+                                       pcmk__ar_then_implies_first);
 
             } else if (state == remote_state_failed) {
                 /* The resource is active on the node, but since we don't have a
@@ -223,28 +223,27 @@ apply_remote_ordering(pe_action_t *action)
                  * by the fencing.
                  */
                 pe_fence_node(remote_rsc->cluster, action->node,
-                              "resources are active but connection is unrecoverable",
+                              "resources are active but "
+                              "connection is unrecoverable",
                               FALSE);
 
-            } else if (remote_rsc->next_role == RSC_ROLE_STOPPED) {
+            } else if (remote_rsc->next_role == pcmk_role_stopped) {
                 /* State must be remote_state_unknown or remote_state_stopped.
                  * Since the connection is not coming back up in this
                  * transition, stop this resource first.
                  */
                 order_action_then_stop(action, remote_rsc,
-                                       pe_order_implies_first,
-                                       remote_rsc->cluster);
+                                       pcmk__ar_then_implies_first);
 
             } else {
                 /* The connection is going to be started somewhere else, so
                  * stop this resource after that completes.
                  */
-                order_start_then_action(remote_rsc, action, pe_order_none,
-                                        remote_rsc->cluster);
+                order_start_then_action(remote_rsc, action, pcmk__ar_none);
             }
             break;
 
-        case action_demote:
+        case pcmk_action_demote:
             /* Only order this demote relative to the connection start if the
              * connection isn't being torn down. Otherwise, the demote would be
              * blocked because the connection start would not be allowed.
@@ -252,8 +251,7 @@ apply_remote_ordering(pe_action_t *action)
             if ((state == remote_state_resting)
                 || (state == remote_state_unknown)) {
 
-                order_start_then_action(remote_rsc, action, pe_order_none,
-                                        remote_rsc->cluster);
+                order_start_then_action(remote_rsc, action, pcmk__ar_none);
             } /* Otherwise we can rely on the stop ordering */
             break;
 
@@ -265,13 +263,12 @@ apply_remote_ordering(pe_action_t *action)
                  * the connection was re-established
                  */
                 order_start_then_action(remote_rsc, action,
-                                        pe_order_implies_then,
-                                        remote_rsc->cluster);
+                                        pcmk__ar_first_implies_then);
 
             } else {
                 pe_node_t *cluster_node = pe__current_node(remote_rsc);
 
-                if ((task == monitor_rsc) && (state == remote_state_failed)) {
+                if ((task == pcmk_action_monitor) && (state == remote_state_failed)) {
                     /* We would only be here if we do not know the state of the
                      * resource on the remote node. Since we have no way to find
                      * out, it is necessary to fence the node.
@@ -287,12 +284,10 @@ apply_remote_ordering(pe_action_t *action)
                      * stopped _before_ we let the connection get closed.
                      */
                     order_action_then_stop(action, remote_rsc,
-                                           pe_order_runnable_left,
-                                           remote_rsc->cluster);
+                                           pcmk__ar_unrunnable_first_blocks);
 
                 } else {
-                    order_start_then_action(remote_rsc, action, pe_order_none,
-                                            remote_rsc->cluster);
+                    order_start_then_action(remote_rsc, action, pcmk__ar_none);
                 }
             }
             break;
@@ -300,7 +295,7 @@ apply_remote_ordering(pe_action_t *action)
 }
 
 static void
-apply_container_ordering(pe_action_t *action, pe_working_set_t *data_set)
+apply_container_ordering(pe_action_t *action)
 {
     /* VMs are also classified as containers for these purposes... in
      * that they both involve a 'thing' running on a real or remote
@@ -323,40 +318,40 @@ apply_container_ordering(pe_action_t *action, pe_working_set_t *data_set)
     container = remote_rsc->container;
     CRM_ASSERT(container != NULL);
 
-    if (pcmk_is_set(container->flags, pe_rsc_failed)) {
-        pe_fence_node(data_set, action->node, "container failed", FALSE);
+    if (pcmk_is_set(container->flags, pcmk_rsc_failed)) {
+        pe_fence_node(action->rsc->cluster, action->node, "container failed",
+                      FALSE);
     }
 
     crm_trace("Order %s action %s relative to %s%s for %s%s",
               action->task, action->uuid,
-              pcmk_is_set(remote_rsc->flags, pe_rsc_failed)? "failed " : "",
+              pcmk_is_set(remote_rsc->flags, pcmk_rsc_failed)? "failed " : "",
               remote_rsc->id,
-              pcmk_is_set(container->flags, pe_rsc_failed)? "failed " : "",
+              pcmk_is_set(container->flags, pcmk_rsc_failed)? "failed " : "",
               container->id);
 
-    if (pcmk__strcase_any_of(action->task, CRMD_ACTION_MIGRATE,
-                             CRMD_ACTION_MIGRATED, NULL)) {
-        /* Migration ops map to "no_action", but we need to apply the same
-         * ordering as for stop or demote (see get_router_node()).
+    if (pcmk__strcase_any_of(action->task, PCMK_ACTION_MIGRATE_TO,
+                             PCMK_ACTION_MIGRATE_FROM, NULL)) {
+        /* Migration ops map to pcmk_action_unspecified, but we need to apply
+         * the same ordering as for stop or demote (see get_router_node()).
          */
-        task = stop_rsc;
+        task = pcmk_action_stop;
     }
 
     switch (task) {
-        case start_rsc:
-        case action_promote:
+        case pcmk_action_start:
+        case pcmk_action_promote:
             // Force resource recovery if the container is recovered
-            order_start_then_action(container, action, pe_order_implies_then,
-                                    data_set);
+            order_start_then_action(container, action,
+                                    pcmk__ar_first_implies_then);
 
             // Wait for the connection resource to be up, too
-            order_start_then_action(remote_rsc, action, pe_order_none,
-                                    data_set);
+            order_start_then_action(remote_rsc, action, pcmk__ar_none);
             break;
 
-        case stop_rsc:
-        case action_demote:
-            if (pcmk_is_set(container->flags, pe_rsc_failed)) {
+        case pcmk_action_stop:
+        case pcmk_action_demote:
+            if (pcmk_is_set(container->flags, pcmk_rsc_failed)) {
                 /* When the container representing a guest node fails, any stop
                  * or demote actions for resources running on the guest node
                  * are implied by the container stopping. This is similar to
@@ -372,8 +367,7 @@ apply_container_ordering(pe_action_t *action, pe_working_set_t *data_set)
                  * stopped (otherwise we re-introduce an ordering loop when the
                  * connection is restarting).
                  */
-                order_action_then_stop(action, remote_rsc, pe_order_none,
-                                       data_set);
+                order_action_then_stop(action, remote_rsc, pcmk__ar_none);
             }
             break;
 
@@ -384,13 +378,12 @@ apply_container_ordering(pe_action_t *action, pe_working_set_t *data_set)
                  * recurring monitors to be restarted, even if just
                  * the connection was re-established
                  */
-                if(task != no_action) {
+                if (task != pcmk_action_unspecified) {
                     order_start_then_action(remote_rsc, action,
-                                            pe_order_implies_then, data_set);
+                                            pcmk__ar_first_implies_then);
                 }
             } else {
-                order_start_then_action(remote_rsc, action, pe_order_none,
-                                        data_set);
+                order_start_then_action(remote_rsc, action, pcmk__ar_none);
             }
             break;
     }
@@ -405,14 +398,14 @@ apply_container_ordering(pe_action_t *action, pe_working_set_t *data_set)
 void
 pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
 {
-    if (!pcmk_is_set(data_set->flags, pe_flag_have_remote_nodes)) {
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_have_remote_nodes)) {
         return;
     }
 
     crm_trace("Creating remote connection orderings");
 
-    for (GList *gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
+    for (GList *iter = data_set->actions; iter != NULL; iter = iter->next) {
+        pe_action_t *action = iter->data;
         pe_resource_t *remote = NULL;
 
         // We are only interested in resource actions
@@ -425,16 +418,18 @@ pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
          * any start of the resource in this transition.
          */
         if (action->rsc->is_remote_node &&
-            pcmk__str_eq(action->task, CRM_OP_CLEAR_FAILCOUNT, pcmk__str_casei)) {
+            pcmk__str_eq(action->task, PCMK_ACTION_CLEAR_FAILCOUNT,
+                         pcmk__str_none)) {
 
             pcmk__new_ordering(action->rsc, NULL, action, action->rsc,
-                               pcmk__op_key(action->rsc->id, RSC_START, 0),
-                               NULL, pe_order_optional, data_set);
+                               pcmk__op_key(action->rsc->id, PCMK_ACTION_START,
+                                            0),
+                               NULL, pcmk__ar_ordered, data_set);
 
             continue;
         }
 
-        // We are only interested in actions allocated to a node
+        // We are only interested in actions assigned to a node
         if (action->node == NULL) {
             continue;
         }
@@ -449,7 +444,7 @@ pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
          * real actions and vice versa later in update_actions() at the end of
          * pcmk__apply_orderings().
          */
-        if (pcmk_is_set(action->flags, pe_action_pseudo)) {
+        if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
             continue;
         }
 
@@ -464,16 +459,17 @@ pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
          * remote connection. This ensures that if the connection fails to
          * start, we leave the resource running on the original node.
          */
-        if (pcmk__str_eq(action->task, RSC_START, pcmk__str_casei)) {
+        if (pcmk__str_eq(action->task, PCMK_ACTION_START, pcmk__str_none)) {
             for (GList *item = action->rsc->actions; item != NULL;
                  item = item->next) {
                 pe_action_t *rsc_action = item->data;
 
-                if ((rsc_action->node->details != action->node->details)
-                    && pcmk__str_eq(rsc_action->task, RSC_STOP, pcmk__str_casei)) {
+                if (!pe__same_node(rsc_action->node, action->node)
+                    && pcmk__str_eq(rsc_action->task, PCMK_ACTION_STOP,
+                                    pcmk__str_none)) {
                     pcmk__new_ordering(remote, start_key(remote), NULL,
                                        action->rsc, NULL, rsc_action,
-                                       pe_order_optional, data_set);
+                                       pcmk__ar_ordered, data_set);
                 }
             }
         }
@@ -489,7 +485,7 @@ pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
          */
         if (remote->container) {
             crm_trace("Container ordering for %s", action->uuid);
-            apply_container_ordering(action, data_set);
+            apply_container_ordering(action);
 
         } else {
             crm_trace("Remote ordering for %s", action->uuid);
@@ -553,7 +549,7 @@ pcmk__connection_host_for_action(const pe_action_t *action)
     bool partial_migration = false;
     const char *task = action->task;
 
-    if (pcmk__str_eq(task, CRM_OP_FENCE, pcmk__str_casei)
+    if (pcmk__str_eq(task, PCMK_ACTION_STONITH, pcmk__str_none)
         || !pe__is_guest_or_remote_node(action->node)) {
         return NULL;
     }
@@ -586,7 +582,7 @@ pcmk__connection_host_for_action(const pe_action_t *action)
         return began_on;
     }
 
-    if (began_on->details == ended_on->details) {
+    if (pe__same_node(began_on, ended_on)) {
         crm_trace("Routing %s for %s through remote connection's "
                   "current node %s (not moving)%s",
                   action->task, (action->rsc? action->rsc->id : "no resource"),
@@ -602,7 +598,7 @@ pcmk__connection_host_for_action(const pe_action_t *action)
      * on.
      */
 
-    if (pcmk__str_eq(task, "notify", pcmk__str_casei)) {
+    if (pcmk__str_eq(task, PCMK_ACTION_NOTIFY, pcmk__str_none)) {
         task = g_hash_table_lookup(action->meta, "notify_operation");
     }
 
@@ -618,8 +614,10 @@ pcmk__connection_host_for_action(const pe_action_t *action)
      * the connection's pseudo-start on the migration target, so the target is
      * the router node.
      */
-    if (pcmk__strcase_any_of(task, "cancel", "stop", "demote", "migrate_from",
-                             "migrate_to", NULL) && !partial_migration) {
+    if (pcmk__strcase_any_of(task, PCMK_ACTION_CANCEL, PCMK_ACTION_STOP,
+                             PCMK_ACTION_DEMOTE, PCMK_ACTION_MIGRATE_FROM,
+                             PCMK_ACTION_MIGRATE_TO, NULL)
+        && !partial_migration) {
         crm_trace("Routing %s for %s through remote connection's "
                   "current node %s (moving)%s",
                   action->task, (action->rsc? action->rsc->id : "no resource"),
@@ -683,34 +681,35 @@ pcmk__substitute_remote_addr(pe_resource_t *rsc, GHashTable *params)
 void
 pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pe_action_t *action)
 {
+    const pe_node_t *guest = action->node;
     const pe_node_t *host = NULL;
     enum action_tasks task;
 
-    if (!pe__is_guest_node(action->node)) {
+    if (!pe__is_guest_node(guest)) {
         return;
     }
 
     task = text2task(action->task);
-    if ((task == action_notify) || (task == action_notified)) {
+    if ((task == pcmk_action_notify) || (task == pcmk_action_notified)) {
         task = text2task(g_hash_table_lookup(action->meta, "notify_operation"));
     }
 
     switch (task) {
-        case stop_rsc:
-        case stopped_rsc:
-        case action_demote:
-        case action_demoted:
+        case pcmk_action_stop:
+        case pcmk_action_stopped:
+        case pcmk_action_demote:
+        case pcmk_action_demoted:
             // "Down" actions take place on guest's current host
-            host = pe__current_node(action->node->details->remote_rsc->container);
+            host = pe__current_node(guest->details->remote_rsc->container);
             break;
 
-        case start_rsc:
-        case started_rsc:
-        case monitor_rsc:
-        case action_promote:
-        case action_promoted:
+        case pcmk_action_start:
+        case pcmk_action_started:
+        case pcmk_action_monitor:
+        case pcmk_action_promote:
+        case pcmk_action_promoted:
             // "Up" actions take place on guest's next host
-            host = action->node->details->remote_rsc->container->allocated_to;
+            host = guest->details->remote_rsc->container->allocated_to;
             break;
 
         default:

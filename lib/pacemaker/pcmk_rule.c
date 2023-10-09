@@ -13,6 +13,7 @@
 #include <crm/common/cib.h>
 #include <crm/common/iso8601.h>
 #include <crm/msg_xml.h>
+#include <crm/pengine/internal.h>
 #include <crm/pengine/rules_internal.h>
 #include <pacemaker-internal.h>
 
@@ -30,7 +31,7 @@ eval_date_expression(const xmlNode *expr, crm_time_t *now)
 {
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
-        .role = RSC_ROLE_UNKNOWN,
+        .role = pcmk_role_unknown,
         .now = now,
         .match_data = NULL,
         .rsc_data = NULL,
@@ -69,7 +70,7 @@ init_rule_check(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
     }
 
     pe__set_working_set_flags(new_data_set,
-                              pe_flag_no_counts|pe_flag_no_compat);
+                              pcmk_sched_no_counts|pcmk_sched_no_compat);
 
     // Populate the working set instance
 

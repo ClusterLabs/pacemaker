@@ -9,4 +9,6 @@
 
 include $(top_srcdir)/mk/common.mk
 
-SUBDIRS			= alerts ocf stonith
+SUBDIRS	= alerts 	\
+	  ocf 		\
+	  stonith

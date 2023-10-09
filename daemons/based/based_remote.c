@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,7 +23,9 @@
 
 #include <stdlib.h>
 #include <errno.h>
+
 #include <glib.h>
+#include <libxml/tree.h>
 
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
@@ -126,13 +128,13 @@ init_remote_listener(int port, gboolean encrypted)
     /* create server socket */
     ssock = malloc(sizeof(int));
     if(ssock == NULL) {
-        crm_perror(LOG_ERR, "Listener socket allocation failed");
+        crm_err("Listener socket allocation failed: %s", pcmk_rc_str(errno));
         return -1;
     }
 
     *ssock = socket(AF_INET, SOCK_STREAM, 0);
     if (*ssock == -1) {
-        crm_perror(LOG_ERR, "Listener socket creation failed");
+        crm_err("Listener socket creation failed: %s", pcmk_rc_str(errno));
         free(ssock);
         return -1;
     }
@@ -141,8 +143,8 @@ init_remote_listener(int port, gboolean encrypted)
     optval = 1;
     rc = setsockopt(*ssock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
     if (rc < 0) {
-        crm_perror(LOG_WARNING,
-                   "Local address reuse not allowed on listener socket");
+        crm_err("Local address reuse not allowed on listener socket: %s",
+                pcmk_rc_str(errno));
     }
 
     /* bind server socket */
@@ -151,13 +153,13 @@ init_remote_listener(int port, gboolean encrypted)
     saddr.sin_addr.s_addr = INADDR_ANY;
     saddr.sin_port = htons(port);
     if (bind(*ssock, (struct sockaddr *)&saddr, sizeof(saddr)) == -1) {
-        crm_perror(LOG_ERR, "Cannot bind to listener socket");
+        crm_err("Cannot bind to listener socket: %s", pcmk_rc_str(errno));
         close(*ssock);
         free(ssock);
         return -2;
     }
     if (listen(*ssock, 10) == -1) {
-        crm_perror(LOG_ERR, "Cannot listen on socket");
+        crm_err("Cannot listen on socket: %s", pcmk_rc_str(errno));
         close(*ssock);
         free(ssock);
         return -3;
@@ -222,9 +224,9 @@ cib_remote_auth(xmlNode * login)
         return FALSE;
     }
 
-    tmp = crm_element_name(login);
-    if (!pcmk__str_eq(tmp, "cib_command", pcmk__str_casei)) {
-        crm_err("Wrong tag: %s", tmp);
+    if (!pcmk__xe_is(login, T_CIB_COMMAND)) {
+        crm_err("Unrecognizable message from remote client");
+        crm_log_xml_info(login, "bad");
         return FALSE;
     }
 
@@ -296,7 +298,7 @@ cib_remote_listen(gpointer data)
     memset(&addr, 0, sizeof(addr));
     csock = accept(ssock, (struct sockaddr *)&addr, &laddr);
     if (csock == -1) {
-        crm_perror(LOG_ERR, "Could not accept socket connection");
+        crm_err("Could not accept socket connection: %s", pcmk_rc_str(errno));
         return TRUE;
     }
 
@@ -411,9 +413,8 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
 {
     const char *value = NULL;
 
-    value = crm_element_name(command);
-    if (!pcmk__str_eq(value, "cib_command", pcmk__str_casei)) {
-        crm_log_xml_trace(command, "Bad command: ");
+    if (!pcmk__xe_is(command, T_CIB_COMMAND)) {
+        crm_log_xml_trace(command, "bad");
         return;
     }
 

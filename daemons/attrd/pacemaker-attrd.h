@@ -57,13 +57,14 @@ void attrd_run_mainloop(void);
 void attrd_set_requesting_shutdown(void);
 void attrd_clear_requesting_shutdown(void);
 void attrd_free_waitlist(void);
-bool attrd_requesting_shutdown(void);
-bool attrd_shutting_down(void);
+bool attrd_shutting_down(bool if_requested);
 void attrd_shutdown(int nsig);
 void attrd_init_ipc(void);
 void attrd_ipc_fini(void);
 
+int attrd_cib_connect(int max_retry);
 void attrd_cib_disconnect(void);
+void attrd_cib_init(void);
 
 bool attrd_value_needs_expansion(const char *value);
 int attrd_expand_value(const char *value, const char *old_value);
@@ -92,6 +93,7 @@ int attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
                         guint interval_ms);
 
 extern cib_t *the_cib;
+extern crm_exit_t attrd_exit_status;
 
 /* Alerts */
 
@@ -100,8 +102,6 @@ extern crm_trigger_t *attrd_config_read;
 
 void attrd_lrmd_disconnect(void);
 gboolean attrd_read_options(gpointer user_data);
-void attrd_cib_replaced_cb(const char *event, xmlNode * msg);
-void attrd_cib_updated_cb(const char *event, xmlNode *msg);
 int attrd_send_attribute_alert(const char *node, int nodeid,
                                const char *attr, const char *value);
 
@@ -177,8 +177,15 @@ void attrd_free_attribute(gpointer data);
 void attrd_free_attribute_value(gpointer data);
 attribute_t *attrd_populate_attribute(xmlNode *xml, const char *attr);
 
+enum attrd_write_options {
+    attrd_write_changed         = 0,
+    attrd_write_all             = (1 << 0),
+    attrd_write_no_delay        = (1 << 1),
+    attrd_write_skip_shutdown   = (1 << 2),
+};
+
 void attrd_write_attribute(attribute_t *a, bool ignore_delay);
-void attrd_write_attributes(bool all, bool ignore_delay);
+void attrd_write_attributes(uint32_t options);
 void attrd_write_or_elect_attribute(attribute_t *a);
 
 extern int minimum_protocol_version;

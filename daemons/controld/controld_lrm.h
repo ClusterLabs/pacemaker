@@ -109,11 +109,6 @@ gboolean lrm_state_init_local(void);
 void lrm_state_destroy_all(void);
 
 /*!
- * \brief Destroy executor connection by node name
- */
-void lrm_state_destroy(const char *node_name);
-
-/*!
  * \brief Find lrm_state data by node name
  */
 lrm_state_t *lrm_state_find(const char *node_name);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 the Pacemaker project contributors
+ * Copyright 2012-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -308,7 +308,7 @@ set_result_from_method_error(svc_action_t *op, const DBusError *error)
         || strstr(error->name, "org.freedesktop.systemd1.LoadFailed")
         || strstr(error->name, "org.freedesktop.systemd1.NoSuchUnit")) {
 
-        if (pcmk__str_eq(op->action, "stop", pcmk__str_casei)) {
+        if (pcmk__str_eq(op->action, PCMK_ACTION_STOP, pcmk__str_casei)) {
             crm_trace("Masking systemd stop failure (%s) for %s "
                       "because unknown service can be considered stopped",
                       error->name, pcmk__s(op->rsc, "unknown resource"));
@@ -459,7 +459,11 @@ invoke_unit_by_name(const char *arg_name, svc_action_t *op, char **path)
     CRM_ASSERT(msg != NULL);
 
     // Add the (expanded) unit name as the argument
-    name = systemd_service_name(arg_name, op == NULL || pcmk__str_eq(op->action, "meta-data", pcmk__str_none));
+    name = systemd_service_name(arg_name,
+                                (op == NULL)
+                                || pcmk__str_eq(op->action,
+                                                PCMK_ACTION_META_DATA,
+                                                pcmk__str_none));
     CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &name,
                                             DBUS_TYPE_INVALID));
     free(name);
@@ -717,6 +721,8 @@ process_unit_method_reply(DBusMessage *reply, svc_action_t *op)
 {
     DBusError error;
 
+    dbus_error_init(&error);
+
     /* The first use of error here is not used other than as a non-NULL flag to
      * indicate that a request was indeed sent
      */
@@ -932,7 +938,8 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
     DBusMessage *msg = NULL;
     DBusMessage *reply = NULL;
 
-    if (pcmk__str_any_of(op->action, "monitor", "status", NULL)) {
+    if (pcmk__str_any_of(op->action, PCMK_ACTION_MONITOR, PCMK_ACTION_STATUS,
+                         NULL)) {
         DBusPendingCall *pending = NULL;
         char *state;
 
@@ -955,11 +962,11 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
         }
         return;
 
-    } else if (pcmk__str_eq(op->action, "start", pcmk__str_none)) {
+    } else if (pcmk__str_eq(op->action, PCMK_ACTION_START, pcmk__str_none)) {
         method = "StartUnit";
         systemd_create_override(op->agent, op->timeout);
 
-    } else if (pcmk__str_eq(op->action, "stop", pcmk__str_none)) {
+    } else if (pcmk__str_eq(op->action, PCMK_ACTION_STOP, pcmk__str_none)) {
         method = "StopUnit";
         systemd_remove_override(op->agent, op->timeout);
 
@@ -988,7 +995,10 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
     /* (ss) */
     {
         const char *replace_s = "replace";
-        char *name = systemd_service_name(op->agent, pcmk__str_eq(op->action, "meta-data", pcmk__str_none));
+        char *name = systemd_service_name(op->agent,
+                                          pcmk__str_eq(op->action,
+                                                       PCMK_ACTION_META_DATA,
+                                                       pcmk__str_none));
 
         CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &name, DBUS_TYPE_INVALID));
         CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &replace_s, DBUS_TYPE_INVALID));
@@ -1072,7 +1082,7 @@ services__execute_systemd(svc_action_t *op)
               (op->synchronous? "" : "a"), op->action, op->agent,
               ((op->rsc == NULL)? "" : " for resource "), pcmk__s(op->rsc, ""));
 
-    if (pcmk__str_eq(op->action, "meta-data", pcmk__str_casei)) {
+    if (pcmk__str_eq(op->action, PCMK_ACTION_META_DATA, pcmk__str_casei)) {
         op->stdout_data = systemd_unit_metadata(op->agent, op->timeout);
         services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
         goto done;

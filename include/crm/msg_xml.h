@@ -48,6 +48,8 @@ extern "C" {
  * XML attributes
  */
 
+#define PCMK_XA_FORMAT                      "format"
+
 /* These have been deprecated as CIB <clone> element attributes (aliases for
  * "promoted-max" and "promoted-node-max") since 2.0.0.
  */
@@ -59,7 +61,14 @@ extern "C" {
  * Meta attributes
  */
 
+#define PCMK_META_CLONE_MAX                 "clone-max"
+#define PCMK_META_CLONE_MIN                 "clone-min"
+#define PCMK_META_CLONE_NODE_MAX            "clone-node-max"
 #define PCMK_META_ENABLED                   "enabled"
+#define PCMK_META_FAILURE_TIMEOUT           "failure-timeout"
+#define PCMK_META_MIGRATION_THRESHOLD       "migration-threshold"
+#define PCMK_META_PROMOTED_MAX              "promoted-max"
+#define PCMK_META_PROMOTED_NODE_MAX         "promoted-node-max"
 
 
 /*
@@ -149,7 +158,6 @@ extern "C" {
 #  define XML_ATTR_IDREF			"id-ref"
 #  define XML_ATTR_ID_LONG		"long-id"
 #  define XML_ATTR_TYPE			"type"
-#  define XML_ATTR_VERBOSE		"verbose"
 #  define XML_ATTR_OP			"op"
 #  define XML_ATTR_DC_UUID		"dc-uuid"
 #  define XML_ATTR_UPDATE_ORIG		"update-origin"
@@ -183,8 +191,6 @@ extern "C" {
 #  define XML_PING_ATTR_PACEMAKERDSTATE_SHUTDOWNCOMPLETE "shutdown_complete"
 #  define XML_PING_ATTR_PACEMAKERDSTATE_REMOTE "remote"
 
-#  define XML_TAG_FRAGMENT		"cib_fragment"
-
 #  define XML_FAIL_TAG_CIB		"failed_update"
 
 #  define XML_FAILCIB_ATTR_ID		"id"
@@ -198,7 +204,6 @@ extern "C" {
 #  define XML_CIB_TAG_STATUS       	"status"
 #  define XML_CIB_TAG_RESOURCES		"resources"
 #  define XML_CIB_TAG_NODES         	"nodes"
-#  define XML_CIB_TAG_DOMAINS         	"domains"
 #  define XML_CIB_TAG_CONSTRAINTS   	"constraints"
 #  define XML_CIB_TAG_CRMCONFIG   	"crm_config"
 #  define XML_CIB_TAG_OPCONFIG		"op_defaults"
@@ -239,19 +244,12 @@ extern "C" {
 #  define XML_RSC_ATTR_ORDERED		"ordered"
 #  define XML_RSC_ATTR_INTERLEAVE	"interleave"
 #  define XML_RSC_ATTR_INCARNATION	"clone"
-#  define XML_RSC_ATTR_INCARNATION_MAX	"clone-max"
-#  define XML_RSC_ATTR_INCARNATION_MIN	"clone-min"
-#  define XML_RSC_ATTR_INCARNATION_NODEMAX	"clone-node-max"
 #  define XML_RSC_ATTR_PROMOTABLE       "promotable"
-#  define XML_RSC_ATTR_PROMOTED_MAX     "promoted-max"
-#  define XML_RSC_ATTR_PROMOTED_NODEMAX "promoted-node-max"
 #  define XML_RSC_ATTR_MANAGED		"is-managed"
 #  define XML_RSC_ATTR_TARGET_ROLE	"target-role"
 #  define XML_RSC_ATTR_UNIQUE		"globally-unique"
 #  define XML_RSC_ATTR_NOTIFY		"notify"
 #  define XML_RSC_ATTR_STICKINESS	"resource-stickiness"
-#  define XML_RSC_ATTR_FAIL_STICKINESS	"migration-threshold"
-#  define XML_RSC_ATTR_FAIL_TIMEOUT	"failure-timeout"
 #  define XML_RSC_ATTR_MULTIPLE		"multiple-active"
 #  define XML_RSC_ATTR_REQUIRES		"requires"
 #  define XML_RSC_ATTR_CONTAINER	"container"
@@ -285,15 +283,8 @@ extern "C" {
 //! \deprecated Do not use (will be removed in a future release)
 #  define XML_CIB_ATTR_REPLACE       	"replace"
 
-#  define XML_CIB_ATTR_SOURCE       	"source"
-
 #  define XML_CIB_ATTR_PRIORITY     	"priority"
-#  define XML_CIB_ATTR_SOURCE       	"source"
 
-#  define XML_NODE_JOIN_STATE    	"join"
-#  define XML_NODE_EXPECTED     	"expected"
-#  define XML_NODE_IN_CLUSTER        	"in_ccm"
-#  define XML_NODE_IS_PEER    	"crmd"
 #  define XML_NODE_IS_REMOTE    	"remote_node"
 #  define XML_NODE_IS_FENCED		"node_fenced"
 #  define XML_NODE_IS_MAINTENANCE   "node_in_maintenance"
@@ -333,7 +324,6 @@ extern "C" {
 #  define XML_LRM_ATTR_EXIT_REASON	"exit-reason"
 
 #  define XML_RSC_OP_LAST_CHANGE        "last-rc-change"
-#  define XML_RSC_OP_LAST_RUN           "last-run"  // deprecated since 2.0.3
 #  define XML_RSC_OP_T_EXEC             "exec-time"
 #  define XML_RSC_OP_T_QUEUE            "queue-time"
 
@@ -413,6 +403,7 @@ extern "C" {
 #  define XML_CONFIG_ATTR_SHUTDOWN_LOCK         "shutdown-lock"
 #  define XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT   "shutdown-lock-limit"
 #  define XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY "priority-fencing-delay"
+#  define XML_CONFIG_ATTR_NODE_PENDING_TIMEOUT "node-pending-timeout"
 
 #  define XML_ALERT_ATTR_PATH		"path"
 #  define XML_ALERT_ATTR_TIMEOUT	"timeout"
@@ -428,7 +419,10 @@ extern "C" {
 #  define XML_ATTR_TE_TARGET_RC		"op_target_rc"
 #  define XML_TAG_TRANSIENT_NODEATTRS	"transient_attributes"
 
+//! \deprecated Do not use (will be removed in a future release)
 #  define XML_TAG_DIFF_ADDED		"diff-added"
+
+//! \deprecated Do not use (will be removed in a future release)
 #  define XML_TAG_DIFF_REMOVED		"diff-removed"
 
 #  define XML_ACL_TAG_USER		"acl_target"
@@ -478,7 +472,6 @@ extern "C" {
 #  define XML_DIFF_POSITION             "position"
 
 #  define ID(x) crm_element_value(x, XML_ATTR_ID)
-#  define TYPE(x) crm_element_name(x)
 
 #ifdef __cplusplus
 }

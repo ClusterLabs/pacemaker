@@ -85,10 +85,23 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
                               "Check the consistency of the configuration in the running cluster:\n\n"
                               "\tcrm_verify --live-check\n\n"
                               "Check the consistency of the configuration in a given file and "
+                              "produce quiet output:\n\n"
+                              "\tcrm_verify --xml-file file.xml --quiet\n\n"
+                              "Check the consistency of the configuration in a given file and "
                               "produce verbose output:\n\n"
                               "\tcrm_verify --xml-file file.xml --verbose\n\n";
 
+    GOptionEntry extra_prog_entries[] = {
+        { "quiet", 'q', 0, G_OPTION_ARG_NONE, &(args->quiet),
+          "Don't print verify information",
+          NULL },
+        { NULL }
+    };
+
     context = pcmk__build_arg_context(args, "text (default), xml", group, NULL);
+
+    pcmk__add_main_args(context, extra_prog_entries);
+
     g_option_context_set_description(context, description);
 
     pcmk__add_arg_group(context, "data", "Data sources:",
@@ -106,7 +119,6 @@ main(int argc, char **argv)
     xmlNode *status = NULL;
 
     pe_working_set_t *data_set = NULL;
-    const char *xml_tag = NULL;
 
     int rc = pcmk_rc_ok;
     crm_exit_t exit_code = CRM_EX_OK;
@@ -124,6 +136,10 @@ main(int argc, char **argv)
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
         goto done;
+    }
+
+    if (args->verbosity > 0) {
+        args->verbosity -= args->quiet;
     }
 
     pcmk__cli_init_logging("crm_verify", args->verbosity);
@@ -184,8 +200,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    xml_tag = crm_element_name(cib_object);
-    if (!pcmk__str_eq(xml_tag, XML_TAG_CIB, pcmk__str_casei)) {
+    if (!pcmk__xe_is(cib_object, XML_TAG_CIB)) {
         rc = EBADMSG;
         g_set_error(&error, PCMK__RC_ERROR, rc,
                     "This tool can only check complete configurations (i.e. those starting with <cib>).");
@@ -218,7 +233,8 @@ main(int argc, char **argv)
     data_set = pe_new_working_set();
     if (data_set == NULL) {
         rc = errno;
-        crm_perror(LOG_CRIT, "Unable to allocate working set");
+        g_set_error(&error, PCMK__RC_ERROR, rc,
+                    "Could not allocate working set: %s", pcmk_rc_str(rc));
         goto done;
     }
     data_set->priv = out;
@@ -229,11 +245,11 @@ main(int argc, char **argv)
      * example, action configuration), so we aren't necessarily checking those.
      */
     if (cib_object != NULL) {
-        unsigned long long flags = pe_flag_no_counts|pe_flag_no_compat;
+        unsigned long long flags = pcmk_sched_no_counts|pcmk_sched_no_compat;
 
         if ((status == NULL) && !options.use_live_cib) {
             // No status available, so do minimal checks
-            flags |= pe_flag_check_config;
+            flags |= pcmk_sched_validate_only;
         }
         pcmk__schedule_actions(cib_object, flags, data_set);
     }

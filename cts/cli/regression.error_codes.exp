@@ -145,6 +145,9 @@ pcmk_rc_node_unknown - Node not found
 =#=#=#= End test: Get negative Pacemaker return code (with name) (XML) - OK (0) =#=#=#=
 * Passed: crm_error      - Get negative Pacemaker return code (with name) (XML)
 =#=#=#= Begin test: List Pacemaker return codes (non-positive) =#=#=#=
+-1039: Compression/decompression error
+-1038: Nameserver resolution error
+-1037: No active transaction found
 -1036: Bad XML patch format
 -1035: Bad input value provided
 -1034: Disabled
@@ -186,6 +189,9 @@ pcmk_rc_node_unknown - Node not found
 * Passed: crm_error      - List Pacemaker return codes (non-positive)
 =#=#=#= Begin test: List Pacemaker return codes (non-positive) (XML) =#=#=#=
 <pacemaker-result api-version="X" request="crm_error -l -r --output-as=xml">
+  <result-code code="-1039" description="Compression/decompression error"/>
+  <result-code code="-1038" description="Nameserver resolution error"/>
+  <result-code code="-1037" description="No active transaction found"/>
   <result-code code="-1036" description="Bad XML patch format"/>
   <result-code code="-1035" description="Bad input value provided"/>
   <result-code code="-1034" description="Disabled"/>
@@ -227,6 +233,9 @@ pcmk_rc_node_unknown - Node not found
 =#=#=#= End test: List Pacemaker return codes (non-positive) (XML) - OK (0) =#=#=#=
 * Passed: crm_error      - List Pacemaker return codes (non-positive) (XML)
 =#=#=#= Begin test: List Pacemaker return codes (non-positive) (with names) =#=#=#=
+-1039: pcmk_rc_compression         Compression/decompression error
+-1038: pcmk_rc_ns_resolution       Nameserver resolution error
+-1037: pcmk_rc_no_transaction      No active transaction found
 -1036: pcmk_rc_bad_xml_patch       Bad XML patch format
 -1035: pcmk_rc_bad_input           Bad input value provided
 -1034: pcmk_rc_disabled            Disabled
@@ -268,6 +277,9 @@ pcmk_rc_node_unknown - Node not found
 * Passed: crm_error      - List Pacemaker return codes (non-positive) (with names)
 =#=#=#= Begin test: List Pacemaker return codes (non-positive) (with names) (XML) =#=#=#=
 <pacemaker-result api-version="X" request="crm_error -n -l -r --output-as=xml">
+  <result-code code="-1039" name="pcmk_rc_compression" description="Compression/decompression error"/>
+  <result-code code="-1038" name="pcmk_rc_ns_resolution" description="Nameserver resolution error"/>
+  <result-code code="-1037" name="pcmk_rc_no_transaction" description="No active transaction found"/>
   <result-code code="-1036" name="pcmk_rc_bad_xml_patch" description="Bad XML patch format"/>
   <result-code code="-1035" name="pcmk_rc_bad_input" description="Bad input value provided"/>
   <result-code code="-1034" name="pcmk_rc_disabled" description="Disabled"/>

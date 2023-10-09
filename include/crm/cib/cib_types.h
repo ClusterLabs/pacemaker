@@ -60,11 +60,51 @@ enum cib_call_options {
     cib_no_children     = (1 << 5),
     cib_xpath_address   = (1 << 6),
     cib_mixed_update    = (1 << 7),
+
+    /* @COMPAT: cib_scope_local is processed only in the legacy function
+     * parse_local_options_v1().
+     *
+     * If (host == NULL):
+     * * In legacy mode, the CIB manager forwards a request to the primary
+     *   instance unless cib_scope_local is set or the local node is primary.
+     * * Outside of legacy mode:
+     *   * If a request modifies the CIB, the CIB manager forwards it to all
+     *     nodes.
+     *   * Otherwise, the CIB manager processes the request locally.
+     *
+     * There is no current use case for this implementing this flag in
+     * non-legacy mode.
+     */
+
+    //! \deprecated This value will be removed in a future release
     cib_scope_local     = (1 << 8),
+
     cib_dryrun          = (1 << 9),
+
+    /*!
+     * \brief Process request when the client commits the active transaction
+     *
+     * Add the request to the client's active transaction instead of processing
+     * it immediately. If the client has no active transaction, or if the
+     * request is not supported in transactions, the call will fail.
+     *
+     * The request is added to the transaction synchronously, and the return
+     * value indicates whether it was added successfully.
+     *
+     * Refer to \p cib_api_operations_t:init_transaction() and
+     * \p cib_api_operations_t:end_transaction() for more details on CIB
+     * transactions.
+     */
+    cib_transaction     = (1 << 10),
+
     cib_sync_call       = (1 << 12),
     cib_no_mtime        = (1 << 13),
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated This value will be removed in a future release
     cib_zero_copy       = (1 << 14),
+#endif // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+
     cib_inhibit_notify  = (1 << 16),
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
@@ -82,13 +122,19 @@ typedef struct cib_s cib_t;
 
 typedef struct cib_api_operations_s {
     int (*signon) (cib_t *cib, const char *name, enum cib_conn_type type);
+
+    //! \deprecated This method will be removed and should not be used
     int (*signon_raw) (cib_t *cib, const char *name, enum cib_conn_type type,
                        int *event_fd);
+
     int (*signoff) (cib_t *cib);
     int (*free) (cib_t *cib);
+
+    //! \deprecated This method will be removed and should not be used
     int (*set_op_callback) (cib_t *cib, void (*callback) (const xmlNode *msg,
                                                           int callid, int rc,
                                                           xmlNode *output));
+
     int (*add_notify_callback) (cib_t *cib, const char *event,
                                 void (*callback) (const char *event,
                                                   xmlNode *msg));
@@ -97,8 +143,13 @@ typedef struct cib_api_operations_s {
                                                   xmlNode *msg));
     int (*set_connection_dnotify) (cib_t *cib,
                                    void (*dnotify) (gpointer user_data));
+
+    //! \deprecated This method will be removed and should not be used
     int (*inputfd) (cib_t *cib);
+
+    //! \deprecated This method will be removed and should not be used
     int (*noop) (cib_t *cib, int call_options);
+
     int (*ping) (cib_t *cib, xmlNode **output_data, int call_options);
     int (*query) (cib_t *cib, const char *section, xmlNode **output_data,
                   int call_options);
@@ -141,7 +192,9 @@ typedef struct cib_api_operations_s {
     int (*delete_absolute) (cib_t *cib, const char *section, xmlNode *data,
                             int call_options);
 
+    //! \deprecated This method is not implemented and should not be used
     int (*quit) (cib_t *cib, int call_options);
+
     int (*register_notification) (cib_t *cib, const char *callback,
                                   int enabled);
     gboolean (*register_callback) (cib_t *cib, int call_id, int timeout,
@@ -190,14 +243,85 @@ typedef struct cib_api_operations_s {
      *
      * \return Legacy Pacemaker return code
      *
-     * \note The client IDs are assigned by \p pacemaker-based when the client
-     *       connects. \p cib_t variants that don't connect to
-     *       \p pacemaker-based may never be assigned a client ID.
      * \note Some variants may have only one client for both asynchronous and
      *       synchronous requests.
      */
     int (*client_id)(const cib_t *cib, const char **async_id,
                      const char **sync_id);
+
+    /*!
+     * \brief Initiate an atomic CIB transaction for this client
+     *
+     * If the client has initiated a transaction and a new request's call
+     * options contain \p cib_transaction, the new request is appended to the
+     * transaction for later processing.
+     *
+     * Supported requests are those that meet the following conditions:
+     * * can be processed synchronously (with any changes applied to a working
+     *   CIB copy)
+     * * are not queries
+     * * do not involve other nodes
+     * * do not affect the state of pacemaker-based itself
+     *
+     * Currently supported CIB API functions include:
+     * * \p bump_epoch()
+     * * \p create()
+     * * \p erase()
+     * * \p modify()
+     * * \p remove()
+     * * \p replace()
+     * * \p upgrade()
+     *
+     * Because the transaction is atomic, individual requests do not trigger
+     * callbacks or notifications when they are processed, and they do not
+     * receive output XML. The commit request itself can trigger callbacks and
+     * notifications if any are registered.
+     *
+     * An \c init_transaction() call is always synchronous.
+     *
+     * \param[in,out] cib           CIB connection
+     *
+     * \return Legacy Pacemaker return code
+     */
+    int (*init_transaction)(cib_t *cib);
+
+    /*!
+     * \brief End and optionally commit this client's CIB transaction
+     *
+     * When a client commits a transaction, all requests in the transaction are
+     * processed in a FIFO manner until either a request fails or all requests
+     * have been processed. Changes are applied to a working copy of the CIB.
+     * If a request fails, the transaction and working CIB copy are discarded,
+     * and an error is returned. If all requests succeed, the working CIB copy
+     * replaces the initial CIB copy.
+     *
+     * Callbacks and notifications can be triggered by the commit request itself
+     * but not by the individual requests in a transaction.
+     *
+     * An \c end_transaction() call with \p commit set to \c false is always
+     * synchronous.
+     *
+     * \param[in,out] cib           CIB connection
+     * \param[in]     commit        If \p true, commit transaction; otherwise,
+     *                              discard it
+     * \param[in]     call_options  Group of <tt>enum cib_call_options</tt>
+     *                              flags
+     *
+     * \return Legacy Pacemaker return code
+     */
+    int (*end_transaction)(cib_t *cib, bool commit, int call_options);
+
+    /*!
+     * \brief Set the user as whom all CIB requests via methods will be executed
+     *
+     * By default, the value of the \c CIB_user environment variable is used if
+     * set. Otherwise, \c root is used.
+     *
+     * \param[in,out] cib   CIB connection
+     * \param[in]     user  Name of user whose permissions to use when
+     *                      processing requests
+     */
+    void (*set_user)(cib_t *cib, const char *user);
 } cib_api_operations_t;
 
 struct cib_s {
@@ -211,9 +335,16 @@ struct cib_s {
     void *delegate_fn;
 
     GList *notify_list;
+
+    //! \deprecated This method will be removed in a future release
     void (*op_callback) (const xmlNode *msg, int call_id, int rc,
                          xmlNode *output);
+
     cib_api_operations_t *cmds;
+
+    xmlNode *transaction;
+
+    char *user;
 };
 
 #ifdef __cplusplus

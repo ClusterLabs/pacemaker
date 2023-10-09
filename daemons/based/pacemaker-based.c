@@ -16,7 +16,8 @@
 #include <bzlib.h>
 #include <sys/types.h>
 
-#include <libxml/parser.h>
+#include <glib.h>
+#include <libxml/tree.h>
 
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
@@ -42,14 +43,13 @@ gchar *cib_root = NULL;
 static gboolean preserve_status = FALSE;
 
 gboolean cib_writes_enabled = TRUE;
+gboolean stand_alone = FALSE;
 
 int remote_fd = 0;
 int remote_tls_fd = 0;
 
 GHashTable *config_hash = NULL;
 GHashTable *local_notify_queue = NULL;
-
-pcmk__output_t *logger_out = NULL;
 
 static void cib_init(void);
 void cib_shutdown(int nsig);
@@ -197,15 +197,6 @@ main(int argc, char **argv)
         goto done;
     }
 
-    rc = pcmk__log_output_new(&logger_out);
-    if (rc != pcmk_rc_ok) {
-        exit_code = CRM_EX_ERROR;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Error creating output format log: %s", pcmk_rc_str(rc));
-        goto done;
-    }
-    pcmk__output_set_log_level(logger_out, LOG_TRACE);
-
     mainloop_add_signal(SIGTERM, cib_shutdown);
     mainloop_add_signal(SIGPIPE, cib_enable_writes);
 
@@ -230,7 +221,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (crm_ipc_connect(old_instance)) {
+    if (pcmk__connect_generic_ipc(old_instance) == pcmk_rc_ok) {
         /* IPC end-point already up */
         crm_ipc_close(old_instance);
         crm_ipc_destroy(old_instance);

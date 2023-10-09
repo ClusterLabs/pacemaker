@@ -349,6 +349,11 @@
       <shortdesc lang="en">Apply fencing delay targeting the lost nodes with the highest total resource priority</shortdesc>
       <content type="time" default=""/>
     </parameter>
+    <parameter name="node-pending-timeout">
+      <longdesc lang="en">Fence nodes that do not join the controller process group within this much time after joining the cluster, to allow the cluster to continue managing resources. A value of 0 means never fence pending nodes.</longdesc>
+      <shortdesc lang="en">How long to wait for a node that has joined the cluster to join the controller process group</shortdesc>
+      <content type="time" default=""/>
+    </parameter>
     <parameter name="cluster-delay">
       <longdesc lang="en">The node elected Designated Controller (DC) will consider an action failed if it does not get a response from the node executing the action within this time (after considering the action&apos;s own timeout). The &quot;correct&quot; value will depend on the speed and load of your network and cluster nodes.</longdesc>
       <shortdesc lang="en">Maximum time for node-to-node communication</shortdesc>

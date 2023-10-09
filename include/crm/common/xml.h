@@ -52,8 +52,6 @@ typedef const xmlChar *pcmkXmlStr;
 gboolean add_message_xml(xmlNode * msg, const char *field, xmlNode * xml);
 xmlNode *get_message_xml(const xmlNode *msg, const char *field);
 
-xmlDoc *getDocPtr(xmlNode * node);
-
 /*
  * \brief xmlCopyPropList ACLs-sensitive replacement expading i++ notation
  *
@@ -132,12 +130,13 @@ xmlNode *stdin2xml(void);
 
 xmlNode *string2xml(const char *input);
 
-int write_xml_fd(xmlNode * xml_node, const char *filename, int fd, gboolean compress);
-int write_xml_file(xmlNode * xml_node, const char *filename, gboolean compress);
+int write_xml_fd(const xmlNode *xml, const char *filename, int fd,
+                 gboolean compress);
+int write_xml_file(const xmlNode *xml, const char *filename, gboolean compress);
 
-char *dump_xml_formatted(xmlNode * msg);
-char *dump_xml_formatted_with_text(xmlNode * msg);
-char *dump_xml_unformatted(xmlNode * msg);
+char *dump_xml_formatted(const xmlNode *xml);
+char *dump_xml_formatted_with_text(const xmlNode *xml);
+char *dump_xml_unformatted(const xmlNode *xml);
 
 /*
  * Diff related Functions
@@ -170,24 +169,16 @@ xmlNode *get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
 xmlNode *get_xpath_object_relative(const char *xpath, xmlNode * xml_obj, int error_level);
 
 static inline const char *
-crm_element_name(const xmlNode *xml)
-{
-    return xml? (const char *)(xml->name) : NULL;
-}
-
-static inline const char *
 crm_map_element_name(const xmlNode *xml)
 {
-    const char *name = crm_element_name(xml);
-
-    if (strcmp(name, "master") == 0) {
+    if (xml == NULL) {
+        return NULL;
+    } else if (strcmp((const char *) xml->name, "master") == 0) {
         return "clone";
     } else {
-        return name;
+        return (const char *) xml->name;
     }
 }
-
-gboolean xml_has_children(const xmlNode * root);
 
 char *calculate_on_disk_digest(xmlNode * local_cib);
 char *calculate_operation_digest(xmlNode * local_cib, const char *version);
@@ -196,7 +187,7 @@ char *calculate_xml_versioned_digest(xmlNode * input, gboolean sort, gboolean do
 
 /* schema-related functions (from schemas.c) */
 gboolean validate_xml(xmlNode * xml_blob, const char *validation, gboolean to_logs);
-gboolean validate_xml_verbose(xmlNode * xml_blob);
+gboolean validate_xml_verbose(const xmlNode *xml_blob);
 
 /*!
  * \brief Update CIB XML to most recent schema version
@@ -258,7 +249,7 @@ xmlNode *first_named_child(const xmlNode *parent, const char *name);
 xmlNode *crm_next_same_xml(const xmlNode *sibling);
 
 xmlNode *sorted_xml(xmlNode * input, xmlNode * parent, gboolean recursive);
-xmlXPathObjectPtr xpath_search(xmlNode * xml_top, const char *path);
+xmlXPathObjectPtr xpath_search(const xmlNode *xml_top, const char *path);
 void crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
                               void (*helper)(xmlNode*, void*), void *user_data);
 xmlNode *expand_idref(xmlNode * input, xmlNode * top);
@@ -289,7 +280,8 @@ int xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version);
 
 void patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target, bool with_digest);
 
-void save_xml_to_file(xmlNode * xml, const char *desc, const char *filename);
+void save_xml_to_file(const xmlNode *xml, const char *desc,
+                      const char *filename);
 
 char * crm_xml_escape(const char *text);
 void crm_xml_sanitize_id(char *id);

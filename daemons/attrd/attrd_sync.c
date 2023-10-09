@@ -313,7 +313,9 @@ attrd_cluster_sync_point_update(xmlNode *xml)
 const char *
 attrd_request_sync_point(xmlNode *xml)
 {
-    if (xml_has_children(xml)) {
+    CRM_CHECK(xml != NULL, return NULL);
+
+    if (xml->children != NULL) {
         xmlNode *child = pcmk__xe_match(xml, XML_ATTR_OP, PCMK__XA_ATTR_SYNC_POINT, NULL);
 
         if (child) {

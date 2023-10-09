@@ -14,6 +14,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
+#include <crm/common/scheduler_internal.h>
 
 #include <glib.h>
 
@@ -25,7 +26,7 @@ CRM_TRACE_INIT_DATA(pacemaker);
 
 /*!
  * \internal
- * \brief Do deferred action checks after allocation
+ * \brief Do deferred action checks after assignment
  *
  * When unpacking the resource history, the scheduler checks for resource
  * configurations that have changed since an action was run. However, at that
@@ -40,29 +41,30 @@ CRM_TRACE_INIT_DATA(pacemaker);
  */
 static void
 check_params(pe_resource_t *rsc, pe_node_t *node, const xmlNode *rsc_op,
-             enum pe_check_parameters check)
+             enum pcmk__check_parameters check)
 {
     const char *reason = NULL;
     op_digest_cache_t *digest_data = NULL;
 
     switch (check) {
-        case pe_check_active:
+        case pcmk__check_active:
             if (pcmk__check_action_config(rsc, node, rsc_op)
-                && pe_get_failcount(node, rsc, NULL, pe_fc_effective, NULL)) {
+                && pe_get_failcount(node, rsc, NULL, pcmk__fc_effective,
+                                    NULL)) {
                 reason = "action definition changed";
             }
             break;
 
-        case pe_check_last_failure:
+        case pcmk__check_last_failure:
             digest_data = rsc_action_digest_cmp(rsc, rsc_op, node,
                                                 rsc->cluster);
             switch (digest_data->rc) {
-                case RSC_DIGEST_UNKNOWN:
+                case pcmk__digest_unknown:
                     crm_trace("Resource %s history entry %s on %s has "
                               "no digest to compare",
                               rsc->id, ID(rsc_op), node->details->id);
                     break;
-                case RSC_DIGEST_MATCH:
+                case pcmk__digest_match:
                     break;
                 default:
                     reason = "resource parameters have changed";
@@ -88,7 +90,8 @@ check_params(pe_resource_t *rsc, pe_node_t *node, const xmlNode *rsc_op,
 static bool
 failcount_clear_action_exists(const pe_node_t *node, const pe_resource_t *rsc)
 {
-    GList *list = pe__resource_actions(rsc, node, CRM_OP_CLEAR_FAILCOUNT, TRUE);
+    GList *list = pe__resource_actions(rsc, node, PCMK_ACTION_CLEAR_FAILCOUNT,
+                                       TRUE);
 
     if (list != NULL) {
         g_list_free(list);
@@ -101,19 +104,22 @@ failcount_clear_action_exists(const pe_node_t *node, const pe_resource_t *rsc)
  * \internal
  * \brief Ban a resource from a node if it reached its failure threshold there
  *
- * \param[in,out] rsc   Resource to check failure threshold for
- * \param[in]     node  Node to check \p rsc on
+ * \param[in,out] data       Resource to check failure threshold for
+ * \param[in]     user_data  Node to check resource on
  */
 static void
-check_failure_threshold(pe_resource_t *rsc, const pe_node_t *node)
+check_failure_threshold(gpointer data, gpointer user_data)
 {
+    pe_resource_t *rsc = data;
+    const pe_node_t *node = user_data;
+
     // If this is a collective resource, apply recursively to children instead
     if (rsc->children != NULL) {
-        g_list_foreach(rsc->children, (GFunc) check_failure_threshold,
-                       (gpointer) node);
+        g_list_foreach(rsc->children, check_failure_threshold, user_data);
         return;
+    }
 
-    } else if (failcount_clear_action_exists(node, rsc)) {
+    if (!failcount_clear_action_exists(node, rsc)) {
         /* Don't force the resource away from this node due to a failcount
          * that's going to be cleared.
          *
@@ -124,9 +130,6 @@ check_failure_threshold(pe_resource_t *rsc, const pe_node_t *node)
          * threshold when we shouldn't. Worst case, we stop or move the
          * resource, then move it back in the next transition.
          */
-        return;
-
-    } else {
         pe_resource_t *failed = NULL;
 
         if (pcmk__threshold_reached(rsc, node, &failed)) {
@@ -145,23 +148,25 @@ check_failure_threshold(pe_resource_t *rsc, const pe_node_t *node)
  * exclusive, probes will only be done on nodes listed in exclusive constraints.
  * This function bans the resource from the node if the node is not listed.
  *
- * \param[in,out] rsc   Resource to check
- * \param[in]     node  Node to check \p rsc on
+ * \param[in,out] data       Resource to check
+ * \param[in]     user_data  Node to check resource on
  */
 static void
-apply_exclusive_discovery(pe_resource_t *rsc, const pe_node_t *node)
+apply_exclusive_discovery(gpointer data, gpointer user_data)
 {
+    pe_resource_t *rsc = data;
+    const pe_node_t *node = user_data;
+
     if (rsc->exclusive_discover
         || pe__const_top_resource(rsc, false)->exclusive_discover) {
         pe_node_t *match = NULL;
 
         // If this is a collective resource, apply recursively to children
-        g_list_foreach(rsc->children, (GFunc) apply_exclusive_discovery,
-                       (gpointer) node);
+        g_list_foreach(rsc->children, apply_exclusive_discovery, user_data);
 
         match = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
         if ((match != NULL)
-            && (match->rsc_discover_mode != pe_discover_exclusive)) {
+            && (match->rsc_discover_mode != pcmk_probe_exclusive)) {
             match->weight = -INFINITY;
         }
     }
@@ -171,24 +176,25 @@ apply_exclusive_discovery(pe_resource_t *rsc, const pe_node_t *node)
  * \internal
  * \brief Apply stickiness to a resource if appropriate
  *
- * \param[in,out] rsc       Resource to check for stickiness
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] data       Resource to check for stickiness
+ * \param[in]     user_data  Ignored
  */
 static void
-apply_stickiness(pe_resource_t *rsc, pe_working_set_t *data_set)
+apply_stickiness(gpointer data, gpointer user_data)
 {
+    pe_resource_t *rsc = data;
     pe_node_t *node = NULL;
 
     // If this is a collective resource, apply recursively to children instead
     if (rsc->children != NULL) {
-        g_list_foreach(rsc->children, (GFunc) apply_stickiness, data_set);
+        g_list_foreach(rsc->children, apply_stickiness, NULL);
         return;
     }
 
     /* A resource is sticky if it is managed, has stickiness configured, and is
      * active on a single node.
      */
-    if (!pcmk_is_set(rsc->flags, pe_rsc_managed)
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)
         || (rsc->stickiness < 1) || !pcmk__list_of_1(rsc->running_on)) {
         return;
     }
@@ -200,9 +206,9 @@ apply_stickiness(pe_resource_t *rsc, pe_working_set_t *data_set)
      * allowed on the node, so we don't keep the resource somewhere it is no
      * longer explicitly enabled.
      */
-    if (!pcmk_is_set(rsc->cluster->flags, pe_flag_symmetric_cluster)
-        && (pe_hash_table_lookup(rsc->allowed_nodes,
-                                 node->details->id) == NULL)) {
+    if (!pcmk_is_set(rsc->cluster->flags, pcmk_sched_symmetric_cluster)
+        && (g_hash_table_lookup(rsc->allowed_nodes,
+                                node->details->id) == NULL)) {
         pe_rsc_debug(rsc,
                      "Ignoring %s stickiness because the cluster is "
                      "asymmetric and %s is not explicitly allowed",
@@ -212,7 +218,7 @@ apply_stickiness(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     pe_rsc_debug(rsc, "Resource %s has %d stickiness on %s",
                  rsc->id, rsc->stickiness, pe__node_name(node));
-    resource_location(rsc, node, rsc->stickiness, "stickiness", data_set);
+    resource_location(rsc, node, rsc->stickiness, "stickiness", rsc->cluster);
 }
 
 /*!
@@ -224,7 +230,7 @@ apply_stickiness(pe_resource_t *rsc, pe_working_set_t *data_set)
 static void
 apply_shutdown_locks(pe_working_set_t *data_set)
 {
-    if (!pcmk_is_set(data_set->flags, pe_flag_shutdown_lock)) {
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_shutdown_lock)) {
         return;
     }
     for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
@@ -243,7 +249,7 @@ apply_shutdown_locks(pe_working_set_t *data_set)
 static void
 count_available_nodes(pe_working_set_t *data_set)
 {
-    if (pcmk_is_set(data_set->flags, pe_flag_no_compat)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_no_compat)) {
         return;
     }
 
@@ -274,51 +280,49 @@ apply_node_criteria(pe_working_set_t *data_set)
     apply_shutdown_locks(data_set);
     count_available_nodes(data_set);
     pcmk__apply_locations(data_set);
-    g_list_foreach(data_set->resources, (GFunc) apply_stickiness, data_set);
+    g_list_foreach(data_set->resources, apply_stickiness, NULL);
 
     for (GList *node_iter = data_set->nodes; node_iter != NULL;
          node_iter = node_iter->next) {
         for (GList *rsc_iter = data_set->resources; rsc_iter != NULL;
              rsc_iter = rsc_iter->next) {
-            pe_node_t *node = (pe_node_t *) node_iter->data;
-            pe_resource_t *rsc = (pe_resource_t *) rsc_iter->data;
-
-            check_failure_threshold(rsc, node);
-            apply_exclusive_discovery(rsc, node);
+            check_failure_threshold(rsc_iter->data, node_iter->data);
+            apply_exclusive_discovery(rsc_iter->data, node_iter->data);
         }
     }
 }
 
 /*!
  * \internal
- * \brief Allocate resources to nodes
+ * \brief Assign resources to nodes
  *
  * \param[in,out] data_set  Cluster working set
  */
 static void
-allocate_resources(pe_working_set_t *data_set)
+assign_resources(pe_working_set_t *data_set)
 {
     GList *iter = NULL;
 
-    crm_trace("Allocating resources to nodes");
+    crm_trace("Assigning resources to nodes");
 
-    if (!pcmk__str_eq(data_set->placement_strategy, "default", pcmk__str_casei)) {
+    if (!pcmk__str_eq(data_set->placement_strategy, "default",
+                      pcmk__str_casei)) {
         pcmk__sort_resources(data_set);
     }
     pcmk__show_node_capacities("Original", data_set);
 
-    if (pcmk_is_set(data_set->flags, pe_flag_have_remote_nodes)) {
-        /* Allocate remote connection resources first (which will also allocate
-         * any colocation dependencies). If the connection is migrating, always
+    if (pcmk_is_set(data_set->flags, pcmk_sched_have_remote_nodes)) {
+        /* Assign remote connection resources first (which will also assign any
+         * colocation dependencies). If the connection is migrating, always
          * prefer the partial migration target.
          */
         for (iter = data_set->resources; iter != NULL; iter = iter->next) {
             pe_resource_t *rsc = (pe_resource_t *) iter->data;
 
             if (rsc->is_remote_node) {
-                pe_rsc_trace(rsc, "Allocating remote connection resource '%s'",
+                pe_rsc_trace(rsc, "Assigning remote connection resource '%s'",
                              rsc->id);
-                rsc->cmds->assign(rsc, rsc->partial_migration_target);
+                rsc->cmds->assign(rsc, rsc->partial_migration_target, true);
             }
         }
     }
@@ -328,9 +332,9 @@ allocate_resources(pe_working_set_t *data_set)
         pe_resource_t *rsc = (pe_resource_t *) iter->data;
 
         if (!rsc->is_remote_node) {
-            pe_rsc_trace(rsc, "Allocating %s resource '%s'",
-                         crm_element_name(rsc->xml), rsc->id);
-            rsc->cmds->assign(rsc, NULL);
+            pe_rsc_trace(rsc, "Assigning %s resource '%s'",
+                         rsc->xml->name, rsc->id);
+            rsc->cmds->assign(rsc, NULL, true);
         }
     }
 
@@ -341,39 +345,42 @@ allocate_resources(pe_working_set_t *data_set)
  * \internal
  * \brief Schedule fail count clearing on online nodes if resource is orphaned
  *
- * \param[in,out] rsc       Resource to check
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] data       Resource to check
+ * \param[in]     user_data  Ignored
  */
 static void
-clear_failcounts_if_orphaned(pe_resource_t *rsc, pe_working_set_t *data_set)
+clear_failcounts_if_orphaned(gpointer data, gpointer user_data)
 {
-    if (!pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
+    pe_resource_t *rsc = data;
+
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
         return;
     }
     crm_trace("Clear fail counts for orphaned resource %s", rsc->id);
 
     /* There's no need to recurse into rsc->children because those
-     * should just be unallocated clone instances.
+     * should just be unassigned clone instances.
      */
 
-    for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
+    for (GList *iter = rsc->cluster->nodes; iter != NULL; iter = iter->next) {
         pe_node_t *node = (pe_node_t *) iter->data;
         pe_action_t *clear_op = NULL;
 
         if (!node->details->online) {
             continue;
         }
-        if (pe_get_failcount(node, rsc, NULL, pe_fc_effective, NULL) == 0) {
+        if (pe_get_failcount(node, rsc, NULL, pcmk__fc_effective, NULL) == 0) {
             continue;
         }
 
-        clear_op = pe__clear_failcount(rsc, node, "it is orphaned", data_set);
+        clear_op = pe__clear_failcount(rsc, node, "it is orphaned",
+                                       rsc->cluster);
 
         /* We can't use order_action_then_stop() here because its
-         * pe_order_preserve breaks things
+         * pcmk__ar_guest_allowed breaks things
          */
         pcmk__new_ordering(clear_op->rsc, NULL, clear_op, rsc, stop_key(rsc),
-                           NULL, pe_order_optional, data_set);
+                           NULL, pcmk__ar_ordered, rsc->cluster);
     }
 }
 
@@ -390,14 +397,13 @@ schedule_resource_actions(pe_working_set_t *data_set)
     pe__foreach_param_check(data_set, check_params);
     pe__free_param_checks(data_set);
 
-    if (pcmk_is_set(data_set->flags, pe_flag_startup_probes)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_probe_resources)) {
         crm_trace("Scheduling probes");
         pcmk__schedule_probes(data_set);
     }
 
-    if (pcmk_is_set(data_set->flags, pe_flag_stop_rsc_orphans)) {
-        g_list_foreach(data_set->resources,
-                       (GFunc) clear_failcounts_if_orphaned, data_set);
+    if (pcmk_is_set(data_set->flags, pcmk_sched_stop_removed_resources)) {
+        g_list_foreach(data_set->resources, clear_failcounts_if_orphaned, NULL);
     }
 
     crm_trace("Scheduling resource actions");
@@ -419,7 +425,7 @@ schedule_resource_actions(pe_working_set_t *data_set)
 static bool
 is_managed(const pe_resource_t *rsc)
 {
-    if (pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
         return true;
     }
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
@@ -456,16 +462,14 @@ any_managed_resources(const pe_working_set_t *data_set)
  *
  * \param[in] node          Node to check
  * \param[in] have_managed  Whether any resource in cluster is managed
- * \param[in] data_set      Cluster working set
  *
  * \return true if \p node should be fenced, otherwise false
  */
 static bool
-needs_fencing(const pe_node_t *node, bool have_managed,
-              const pe_working_set_t *data_set)
+needs_fencing(const pe_node_t *node, bool have_managed)
 {
     return have_managed && node->details->unclean
-           && pe_can_fence(data_set, node);
+           && pe_can_fence(node->details->data_set, node);
 }
 
 /*!
@@ -502,14 +506,14 @@ static GList *
 add_nondc_fencing(GList *list, pe_action_t *action,
                   const pe_working_set_t *data_set)
 {
-    if (!pcmk_is_set(data_set->flags, pe_flag_concurrent_fencing)
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_concurrent_fencing)
         && (list != NULL)) {
         /* Concurrent fencing is disabled, so order each non-DC
          * fencing in a chain. If there is any DC fencing or
          * shutdown, it will be ordered after the last action in the
          * chain later.
          */
-        order_actions((pe_action_t *) list->data, action, pe_order_optional);
+        order_actions((pe_action_t *) list->data, action, pcmk__ar_ordered);
     }
     return g_list_prepend(list, action);
 }
@@ -519,16 +523,15 @@ add_nondc_fencing(GList *list, pe_action_t *action,
  * \brief Schedule a node for fencing
  *
  * \param[in,out] node      Node that requires fencing
- * \param[in,out] data_set  Cluster working set
  */
 static pe_action_t *
-schedule_fencing(pe_node_t *node, pe_working_set_t *data_set)
+schedule_fencing(pe_node_t *node)
 {
     pe_action_t *fencing = pe_fence_op(node, NULL, FALSE, "node is unclean",
-                                       FALSE, data_set);
+                                       FALSE, node->details->data_set);
 
     pe_warn("Scheduling node %s for fencing", pe__node_name(node));
-    pcmk__order_vs_fence(fencing, data_set);
+    pcmk__order_vs_fence(fencing, node->details->data_set);
     return fencing;
 }
 
@@ -549,7 +552,8 @@ schedule_fencing_and_shutdowns(pe_working_set_t *data_set)
 
     crm_trace("Scheduling fencing and shutdowns as needed");
     if (!have_managed) {
-        crm_notice("No fencing will be done until there are resources to manage");
+        crm_notice("No fencing will be done until there are resources "
+                   "to manage");
     }
 
     // Check each node for whether it needs fencing or shutdown
@@ -568,8 +572,8 @@ schedule_fencing_and_shutdowns(pe_working_set_t *data_set)
             continue;
         }
 
-        if (needs_fencing(node, have_managed, data_set)) {
-            fencing = schedule_fencing(node, data_set);
+        if (needs_fencing(node, have_managed)) {
+            fencing = schedule_fencing(node);
 
             // Track DC and non-DC fence actions separately
             if (node->details->is_dc) {
@@ -597,12 +601,12 @@ schedule_fencing_and_shutdowns(pe_working_set_t *data_set)
     }
 
     if (integrity_lost) {
-        if (!pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
+        if (!pcmk_is_set(data_set->flags, pcmk_sched_fencing_enabled)) {
             pe_warn("Resource functionality and data integrity cannot be "
                     "guaranteed (configure, enable, and test fencing to "
                     "correct this)");
 
-        } else if (!pcmk_is_set(data_set->flags, pe_flag_have_quorum)) {
+        } else if (!pcmk_is_set(data_set->flags, pcmk_sched_quorate)) {
             crm_notice("Unclean nodes will not be fenced until quorum is "
                        "attained or no-quorum-policy is set to ignore");
         }
@@ -616,13 +620,14 @@ schedule_fencing_and_shutdowns(pe_working_set_t *data_set)
          * clone stop that's also ordered before the shutdowns, thus leading to
          * a graph loop.
          */
-        if (pcmk__str_eq(dc_down->task, CRM_OP_SHUTDOWN, pcmk__str_none)) {
+        if (pcmk__str_eq(dc_down->task, PCMK_ACTION_DO_SHUTDOWN,
+                         pcmk__str_none)) {
             pcmk__order_after_each(dc_down, shutdown_ops);
         }
 
         // Order any non-DC fencing before any DC fencing or shutdown
 
-        if (pcmk_is_set(data_set->flags, pe_flag_concurrent_fencing)) {
+        if (pcmk_is_set(data_set->flags, pcmk_sched_concurrent_fencing)) {
             /* With concurrent fencing, order each non-DC fencing action
              * separately before any DC fencing or shutdown.
              */
@@ -634,7 +639,7 @@ schedule_fencing_and_shutdowns(pe_working_set_t *data_set)
              * first item in the list).
              */
             order_actions((pe_action_t *) fencing_ops->data, dc_down,
-                          pe_order_optional);
+                          pcmk__ar_ordered);
         }
     }
     g_list_free(fencing_ops);
@@ -647,10 +652,9 @@ log_resource_details(pe_working_set_t *data_set)
     pcmk__output_t *out = data_set->priv;
     GList *all = NULL;
 
-    /* We need a list of nodes that we are allowed to output information for.
-     * This is necessary because out->message for all the resource-related
-     * messages expects such a list, due to the `crm_mon --node=` feature.  Here,
-     * we just make it a list of all the nodes.
+    /* Due to the `crm_mon --node=` feature, out->message() for all the
+     * resource-related messages expects a list of nodes that we are allowed to
+     * output information for. Here, we create a wildcard to match all nodes.
      */
     all = g_list_prepend(all, (gpointer) "*");
 
@@ -658,8 +662,8 @@ log_resource_details(pe_working_set_t *data_set)
         pe_resource_t *rsc = (pe_resource_t *) item->data;
 
         // Log all resources except inactive orphans
-        if (!pcmk_is_set(rsc->flags, pe_rsc_orphan)
-            || (rsc->role != RSC_ROLE_STOPPED)) {
+        if (!pcmk_is_set(rsc->flags, pcmk_rsc_removed)
+            || (rsc->role != pcmk_role_stopped)) {
             out->message(out, crm_map_element_name(rsc->xml), 0, rsc, all, all);
         }
     }
@@ -703,7 +707,9 @@ log_all_actions(pe_working_set_t *data_set)
 static void
 log_unrunnable_actions(const pe_working_set_t *data_set)
 {
-    const uint64_t flags = pe_action_optional|pe_action_runnable|pe_action_pseudo;
+    const uint64_t flags = pcmk_action_optional
+                           |pcmk_action_runnable
+                           |pcmk_action_pseudo;
 
     crm_trace("Required but unrunnable actions:");
     for (const GList *iter = data_set->actions;
@@ -730,7 +736,7 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pe_working_set_t *data_set)
 {
     const char* localhost_save = NULL;
 
-    if (pcmk_is_set(data_set->flags, pe_flag_have_status)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_have_status)) {
         crm_trace("Reusing previously calculated cluster status");
         pe__set_working_set_flags(data_set, flags);
         return;
@@ -745,7 +751,7 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pe_working_set_t *data_set)
 
     /* This will zero the entire struct without freeing anything first, so
      * callers should never call pcmk__schedule_actions() with a populated data
-     * set unless pe_flag_have_status is set (i.e. cluster_status() was
+     * set unless pcmk_sched_have_status is set (i.e. cluster_status() was
      * previously called, whether directly or via pcmk__schedule_actions()).
      */
     set_working_set_defaults(data_set);
@@ -756,7 +762,7 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pe_working_set_t *data_set)
 
     pe__set_working_set_flags(data_set, flags);
     data_set->input = cib;
-    cluster_status(data_set); // Sets pe_flag_have_status
+    cluster_status(data_set); // Sets pcmk_sched_have_status
 }
 
 /*!
@@ -772,27 +778,27 @@ pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
                        pe_working_set_t *data_set)
 {
     unpack_cib(cib, flags, data_set);
-    pcmk__set_allocation_methods(data_set);
+    pcmk__set_assignment_methods(data_set);
     pcmk__apply_node_health(data_set);
     pcmk__unpack_constraints(data_set);
-    if (pcmk_is_set(data_set->flags, pe_flag_check_config)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_validate_only)) {
         return;
     }
 
-    if (!pcmk_is_set(data_set->flags, pe_flag_quick_location) &&
-         pcmk__is_daemon) {
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_location_only)
+        && pcmk__is_daemon) {
         log_resource_details(data_set);
     }
 
     apply_node_criteria(data_set);
 
-    if (pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_location_only)) {
         return;
     }
 
     pcmk__create_internal_constraints(data_set);
     pcmk__handle_rsc_config_changes(data_set);
-    allocate_resources(data_set);
+    assign_resources(data_set);
     schedule_resource_actions(data_set);
 
     /* Remote ordering constraints need to happen prior to calculating fencing

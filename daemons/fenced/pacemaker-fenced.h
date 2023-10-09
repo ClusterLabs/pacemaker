@@ -104,9 +104,12 @@ typedef struct remote_fencing_op_s {
      * values associated with the devices this fencing operation may call */
     gint total_timeout;
 
-    /*! Requested fencing delay.
-     * Value -1 means disable any static/random fencing delays. */
-    int delay;
+    /*!
+     * Fencing delay (in seconds) requested by API client (used by controller to
+     * implement priority-fencing-delay). A value of -1 means disable all
+     * configured delays.
+     */
+    int client_delay;
 
     /*! Delegate is the node being asked to perform a fencing action
      * on behalf of the node that owns the remote operation. Some operations
@@ -231,7 +234,7 @@ void fenced_unregister_level(xmlNode *msg, char **desc,
 
 stonith_topology_t *find_topology_for_host(const char *host);
 
-void do_local_reply(xmlNode *notify_src, pcmk__client_t *client,
+void do_local_reply(const xmlNode *notify_src, pcmk__client_t *client,
                     int call_options);
 
 xmlNode *fenced_construct_reply(const xmlNode *request, xmlNode *data,
@@ -299,7 +302,7 @@ fenced_set_protocol_error(pcmk__action_result_t *result)
 static inline uint32_t
 fenced_support_flag(const char *action)
 {
-    if (pcmk__str_eq(action, "on", pcmk__str_none)) {
+    if (pcmk__str_eq(action, PCMK_ACTION_ON, pcmk__str_none)) {
         return st_device_supports_on;
     }
     return st_device_supports_none;

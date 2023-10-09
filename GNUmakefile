@@ -40,8 +40,7 @@ USE_FILE = $(shell test -e rpm/Makefile || echo "-f Makefile.am")
 $(PACKAGE).spec chroot dirty export mock rc release rpm rpmlint srpm:
 	$(MAKE) $(AM_MAKEFLAGS) -C rpm $(USE_FILE) "$@"
 
-.PHONY: mock-% rpm-% spec-% srpm-%
-mock-% rpm-% spec-% srpm-%:
+mock-% rpm-% spec-% srpm-%: FORCE
 	$(MAKE) $(AM_MAKEFLAGS) -C rpm $(USE_FILE) "$@"
 
 ## Development-related targets
@@ -59,3 +58,6 @@ clang $(COVERAGE_TARGETS) $(COVERITY_TARGETS) cppcheck indent:
 		COVLEVEL=$(COVLEVEL)			\
 		CPPCHECK_ARGS=$(CPPCHECK_ARGS)		\
 		-C devel "$@"
+
+.PHONY: FORCE
+FORCE:

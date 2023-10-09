@@ -408,6 +408,9 @@
         <rsc_op id="77" operation="start" operation_key="galera-bundle-2_start_0" on_node="metal-3" on_node_uuid="3"/>
       </trigger>
       <trigger>
+        <rsc_op id="83" operation="start" operation_key="galera:0_start_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="metal-1"/>
+      </trigger>
+      <trigger>
         <rsc_op id="86" operation="start" operation_key="galera:1_start_0" on_node="galera-bundle-1" on_node_uuid="galera-bundle-1" router_node="metal-2"/>
       </trigger>
       <trigger>
@@ -1423,6 +1426,9 @@
       </trigger>
       <trigger>
         <rsc_op id="124" operation="start" operation_key="redis-bundle-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="130" operation="start" operation_key="redis:0_start_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-1"/>
       </trigger>
       <trigger>
         <rsc_op id="133" operation="start" operation_key="redis:1_start_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="metal-2"/>

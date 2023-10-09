@@ -594,6 +594,8 @@ handle_query_result(DBusMessage *reply, struct property_query *data)
     DBusMessageIter variant_iter;
     DBusBasicValue value;
 
+    dbus_error_init(&error);
+
     // First, check if the reply contains an error
     if (pcmk_dbus_find_error((void*)&error, reply, &error)) {
         crm_err("DBus query for %s property '%s' failed: %s",

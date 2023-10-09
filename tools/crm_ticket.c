@@ -31,6 +31,7 @@
 #include <crm/cib/internal.h>
 #include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
+#include <crm/pengine/internal.h>
 
 #include <pacemaker-internal.h>
 
@@ -369,7 +370,7 @@ find_ticket_state(cib_t * the_cib, gchar *ticket_id, xmlNode ** ticket_state_xml
     }
 
     crm_log_xml_debug(xml_search, "Match");
-    if (xml_has_children(xml_search)) {
+    if (xml_search->children != NULL) {
         if (ticket_id) {
             fprintf(stdout, "Multiple ticket_states match ticket_id=%s\n", ticket_id);
         }
@@ -436,12 +437,8 @@ dump_ticket_xml(cib_t * the_cib, gchar *ticket_id)
 
     fprintf(stdout, "State XML:\n");
     if (state_xml) {
-        char *state_xml_str = NULL;
-
-        state_xml_str = dump_xml_formatted(state_xml);
-        fprintf(stdout, "\n%s", pcmk__s(state_xml_str, "<null>\n"));
-        free_xml(state_xml);
-        free(state_xml_str);
+        fprintf(stdout, "\n");
+        pcmk__xml2fd(STDOUT_FILENO, state_xml);
     }
 
     return rc;
@@ -452,7 +449,6 @@ dump_constraints(cib_t * the_cib, gchar *ticket_id)
 {
     int rc = pcmk_rc_ok;
     xmlNode *cons_xml = NULL;
-    char *cons_xml_str = NULL;
 
     rc = find_ticket_constraints(the_cib, ticket_id, &cons_xml);
 
@@ -460,11 +456,8 @@ dump_constraints(cib_t * the_cib, gchar *ticket_id)
         return rc;
     }
 
-    cons_xml_str = dump_xml_formatted(cons_xml);
-    fprintf(stdout, "Constraints XML:\n\n%s",
-            pcmk__s(cons_xml_str, "<null>\n"));
-    free_xml(cons_xml);
-    free(cons_xml_str);
+    fprintf(stdout, "Constraints XML:\n\n");
+    pcmk__xml2fd(STDOUT_FILENO, cons_xml);
 
     return rc;
 }
@@ -753,11 +746,14 @@ main(int argc, char **argv)
 
     data_set = pe_new_working_set();
     if (data_set == NULL) {
-        crm_perror(LOG_CRIT, "Could not allocate working set");
-        exit_code = CRM_EX_OSERR;
+        rc = errno;
+        exit_code = pcmk_rc2exitc(rc);
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Could not allocate working set: %s", pcmk_rc_str(rc));
         goto done;
     }
-    pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
+    pe__set_working_set_flags(data_set,
+                              pcmk_sched_no_counts|pcmk_sched_no_compat);
 
     cib_conn = cib_new();
     if (cib_conn == NULL) {

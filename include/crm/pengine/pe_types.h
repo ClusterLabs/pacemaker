@@ -16,6 +16,7 @@
 #  include <libxml/tree.h>          // xmlNode
 #  include <glib.h>                 // gboolean, guint, GList, GHashTable
 #  include <crm/common/iso8601.h>
+#  include <crm/common/scheduler.h>
 #  include <crm/pengine/common.h>
 
 #ifdef __cplusplus
@@ -32,14 +33,6 @@ typedef struct pe_node_s pe_node_t;
 typedef struct pe_action_s pe_action_t;
 typedef struct pe_resource_s pe_resource_t;
 typedef struct pe_working_set_s pe_working_set_t;
-
-enum pe_obj_types {
-    pe_unknown = -1,
-    pe_native = 0,
-    pe_group = 1,
-    pe_clone = 2,
-    pe_container = 3,
-};
 
 typedef struct resource_object_functions_s {
     gboolean (*unpack) (pe_resource_t*, pe_working_set_t*);
@@ -58,8 +51,7 @@ typedef struct resource_object_functions_s {
     gboolean (*is_filtered) (const pe_resource_t*, GList *, gboolean);
 
     /*!
-     * \brief
-     * \internal Find a node (and optionally count all) where resource is active
+     * \brief Find a node (and optionally count all) where resource is active
      *
      * \param[in]  rsc          Resource to check
      * \param[out] count_all    If not NULL, set this to count of active nodes
@@ -72,89 +64,18 @@ typedef struct resource_object_functions_s {
      */
     pe_node_t *(*active_node)(const pe_resource_t *rsc, unsigned int *count_all,
                               unsigned int *count_clean);
+
+    /*!
+     * \brief Get maximum resource instances per node
+     *
+     * \param[in] rsc  Resource to check
+     *
+     * \return Maximum number of \p rsc instances that can be active on one node
+     */
+    unsigned int (*max_per_node)(const pe_resource_t *rsc);
 } resource_object_functions_t;
 
 typedef struct resource_alloc_functions_s resource_alloc_functions_t;
-
-enum pe_quorum_policy {
-    no_quorum_freeze,
-    no_quorum_stop,
-    no_quorum_ignore,
-    no_quorum_suicide,
-    no_quorum_demote
-};
-
-enum node_type {
-    node_ping,      //! \deprecated Do not use
-    node_member,
-    node_remote
-};
-
-//! \deprecated will be removed in a future release
-enum pe_restart {
-    pe_restart_restart, //! \deprecated will be removed in a future release
-    pe_restart_ignore   //! \deprecated will be removed in a future release
-};
-
-//! Determine behavior of pe_find_resource_with_flags()
-enum pe_find {
-    pe_find_renamed  = 0x001, //!< match resource ID or LRM history ID
-    pe_find_anon     = 0x002, //!< match base name of anonymous clone instances
-    pe_find_clone    = 0x004, //!< match only clone instances
-    pe_find_current  = 0x008, //!< match resource active on specified node
-    pe_find_inactive = 0x010, //!< match resource not running anywhere
-    pe_find_any      = 0x020, //!< match base name of any clone instance
-};
-
-// @TODO Make these an enum
-
-#  define pe_flag_have_quorum           0x00000001ULL
-#  define pe_flag_symmetric_cluster     0x00000002ULL
-#  define pe_flag_maintenance_mode      0x00000008ULL
-
-#  define pe_flag_stonith_enabled       0x00000010ULL
-#  define pe_flag_have_stonith_resource 0x00000020ULL
-#  define pe_flag_enable_unfencing      0x00000040ULL
-#  define pe_flag_concurrent_fencing    0x00000080ULL
-
-#  define pe_flag_stop_rsc_orphans      0x00000100ULL
-#  define pe_flag_stop_action_orphans   0x00000200ULL
-#  define pe_flag_stop_everything       0x00000400ULL
-
-#  define pe_flag_start_failure_fatal   0x00001000ULL
-
-//! \deprecated
-#  define pe_flag_remove_after_stop     0x00002000ULL
-
-#  define pe_flag_startup_fencing       0x00004000ULL
-#  define pe_flag_shutdown_lock         0x00008000ULL
-
-#  define pe_flag_startup_probes        0x00010000ULL
-#  define pe_flag_have_status           0x00020000ULL
-#  define pe_flag_have_remote_nodes     0x00040000ULL
-
-#  define pe_flag_quick_location        0x00100000ULL
-#  define pe_flag_sanitized             0x00200000ULL
-
-//! \deprecated
-#  define pe_flag_stdout                0x00400000ULL
-
-//! Don't count total, disabled and blocked resource instances
-#  define pe_flag_no_counts             0x00800000ULL
-
-/*! Skip deprecated code that is kept solely for backward API compatibility.
- * (Internal code should always set this.)
- */
-#  define pe_flag_no_compat             0x01000000ULL
-
-#  define pe_flag_show_scores           0x02000000ULL
-#  define pe_flag_show_utilization      0x04000000ULL
-
-/*!
- * When scheduling, only unpack the CIB (including constraints), calculate
- * as much cluster status as possible, and apply node health.
- */
-#  define pe_flag_check_config          0x08000000ULL
 
 struct pe_working_set_s {
     xmlNode *input;
@@ -213,18 +134,7 @@ struct pe_working_set_s {
     int priority_fencing_delay; // Priority fencing delay
 
     void *priv;
-};
-
-enum pe_check_parameters {
-    /* Clear fail count if parameters changed for un-expired start or monitor
-     * last_failure.
-     */
-    pe_check_last_failure,
-
-    /* Clear fail count if parameters changed for start, monitor, promote, or
-     * migrate_from actions for active resources.
-     */
-    pe_check_active,
+    guint node_pending_timeout; // Node pending timeout
 };
 
 struct pe_node_shared_s {
@@ -268,80 +178,6 @@ struct pe_node_s {
     struct pe_node_shared_s *details;
     int rsc_discover_mode;
 };
-
-#  define pe_rsc_orphan                     0x00000001ULL
-#  define pe_rsc_managed                    0x00000002ULL
-#  define pe_rsc_block                      0x00000004ULL
-#  define pe_rsc_orphan_container_filler    0x00000008ULL
-
-#  define pe_rsc_notify                     0x00000010ULL
-#  define pe_rsc_unique                     0x00000020ULL
-#  define pe_rsc_fence_device               0x00000040ULL
-#  define pe_rsc_promotable                 0x00000080ULL
-
-#  define pe_rsc_provisional                0x00000100ULL
-#  define pe_rsc_allocating                 0x00000200ULL
-#  define pe_rsc_merging                    0x00000400ULL
-#  define pe_rsc_restarting                 0x00000800ULL
-
-#  define pe_rsc_stop                       0x00001000ULL
-#  define pe_rsc_reload                     0x00002000ULL
-#  define pe_rsc_allow_remote_remotes       0x00004000ULL
-#  define pe_rsc_critical                   0x00008000ULL
-
-#  define pe_rsc_failed                     0x00010000ULL
-#  define pe_rsc_detect_loop                0x00020000ULL
-#  define pe_rsc_runnable                   0x00040000ULL
-#  define pe_rsc_start_pending              0x00080000ULL
-
-//!< \deprecated Do not use
-#  define pe_rsc_starting                   0x00100000ULL
-
-//!< \deprecated Do not use
-#  define pe_rsc_stopping                   0x00200000ULL
-
-#  define pe_rsc_stop_unexpected            0x00400000ULL
-#  define pe_rsc_allow_migrate              0x00800000ULL
-
-#  define pe_rsc_failure_ignored            0x01000000ULL
-#  define pe_rsc_replica_container          0x02000000ULL
-#  define pe_rsc_maintenance                0x04000000ULL
-#  define pe_rsc_is_container               0x08000000ULL
-
-#  define pe_rsc_needs_quorum               0x10000000ULL
-#  define pe_rsc_needs_fencing              0x20000000ULL
-#  define pe_rsc_needs_unfencing            0x40000000ULL
-
-/* *INDENT-OFF* */
-enum pe_action_flags {
-    pe_action_pseudo = 0x00001,
-    pe_action_runnable = 0x00002,
-    pe_action_optional = 0x00004,
-    pe_action_print_always = 0x00008,
-
-    pe_action_have_node_attrs = 0x00010,
-    pe_action_implied_by_stonith = 0x00040,
-    pe_action_migrate_runnable =   0x00080,
-
-    pe_action_dumped = 0x00100,
-    pe_action_processed = 0x00200,
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    pe_action_clear = 0x00400, //! \deprecated Unused
-#endif
-    pe_action_dangle = 0x00800,
-
-    /* This action requires one or more of its dependencies to be runnable.
-     * We use this to clear the runnable flag before checking dependencies.
-     */
-    pe_action_requires_any = 0x01000,
-
-    pe_action_reschedule = 0x02000,
-    pe_action_tracking = 0x04000,
-    pe_action_dedup = 0x08000, //! Internal state tracking when creating graph
-
-    pe_action_dc = 0x10000,         //! Action may run on DC instead of target
-};
-/* *INDENT-ON* */
 
 struct pe_resource_s {
     char *id;
@@ -489,22 +325,11 @@ typedef struct pe_tag_s {
     GList *refs;
 } pe_tag_t;
 
-//! Internal tracking for transition graph creation
-enum pe_link_state {
-    pe_link_not_dumped, //! Internal tracking for transition graph creation
-    pe_link_dumped,     //! Internal tracking for transition graph creation
-    pe_link_dup,        //! \deprecated No longer used by Pacemaker
-};
-
-enum pe_discover_e {
-    pe_discover_always = 0,
-    pe_discover_never,
-    pe_discover_exclusive,
-};
-
-/* *INDENT-OFF* */
+//!@{
+//! \deprecated Do not use
 enum pe_ordering {
     pe_order_none                  = 0x0,       /* deleted */
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     pe_order_optional              = 0x1,       /* pure ordering, nothing implied */
     pe_order_apply_first_non_migratable = 0x2,  /* Only apply this constraint's ordering if first is not migratable. */
 
@@ -528,7 +353,7 @@ enum pe_ordering {
                                                  */
 
     pe_order_restart               = 0x1000,    /* 'then' is runnable if 'first' is optional or runnable */
-    pe_order_stonith_stop          = 0x2000,    //<! \deprecated Will be removed in future release
+    pe_order_stonith_stop          = 0x2000,
     pe_order_serialize_only        = 0x4000,    /* serialize */
     pe_order_same_node             = 0x8000,    /* applies only if 'first' and 'then' are on same node */
 
@@ -544,12 +369,10 @@ enum pe_ordering {
     pe_order_then_cancels_first    = 0x2000000, // if 'then' becomes required, 'first' becomes optional
     pe_order_trace                 = 0x4000000, /* test marker */
 
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    // \deprecated Use pe_order_promoted_implies_first instead
     pe_order_implies_first_master  = pe_order_promoted_implies_first,
 #endif
 };
-/* *INDENT-ON* */
+//!@}
 
 typedef struct pe_action_wrapper_s {
     enum pe_ordering type;

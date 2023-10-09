@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -515,7 +515,7 @@ stonith_api_device_metadata(stonith_t *stonith, int call_options,
     enum stonith_namespace ns = stonith_get_namespace(agent, namespace);
 
     if (timeout_sec <= 0) {
-        timeout_sec = CRMD_METADATA_CALL_TIMEOUT;
+        timeout_sec = PCMK_DEFAULT_METADATA_TIMEOUT_MS;
     }
 
     crm_trace("Looking up metadata for %s agent %s",
@@ -553,7 +553,7 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
     data = create_xml_node(NULL, F_STONITH_DEVICE);
     crm_xml_add(data, F_STONITH_ORIGIN, __func__);
     crm_xml_add(data, F_STONITH_TARGET, target);
-    crm_xml_add(data, F_STONITH_ACTION, "off");
+    crm_xml_add(data, F_STONITH_ACTION, PCMK_ACTION_OFF);
     rc = stonith_send_command(stonith, STONITH_OP_QUERY, data, &output, call_options, timeout);
 
     if (rc < 0) {
@@ -625,7 +625,8 @@ stonith_api_list(stonith_t * stonith, int call_options, const char *id, char **l
     int rc;
     xmlNode *output = NULL;
 
-    rc = stonith_api_call(stonith, call_options, id, "list", NULL, timeout, &output);
+    rc = stonith_api_call(stonith, call_options, id, PCMK_ACTION_LIST, NULL,
+                          timeout, &output);
 
     if (output && list_info) {
         const char *list_str;
@@ -647,14 +648,16 @@ stonith_api_list(stonith_t * stonith, int call_options, const char *id, char **l
 static int
 stonith_api_monitor(stonith_t * stonith, int call_options, const char *id, int timeout)
 {
-    return stonith_api_call(stonith, call_options, id, "monitor", NULL, timeout, NULL);
+    return stonith_api_call(stonith, call_options, id, PCMK_ACTION_MONITOR,
+                            NULL, timeout, NULL);
 }
 
 static int
 stonith_api_status(stonith_t * stonith, int call_options, const char *id, const char *port,
                    int timeout)
 {
-    return stonith_api_call(stonith, call_options, id, "status", port, timeout, NULL);
+    return stonith_api_call(stonith, call_options, id, PCMK_ACTION_STATUS, port,
+                            timeout, NULL);
 }
 
 static int
@@ -689,7 +692,8 @@ static int
 stonith_api_confirm(stonith_t * stonith, int call_options, const char *target)
 {
     stonith__set_call_options(call_options, target, st_opt_manual_ack);
-    return stonith_api_fence(stonith, call_options, target, "off", 0, 0);
+    return stonith_api_fence(stonith, call_options, target, PCMK_ACTION_OFF, 0,
+                             0);
 }
 
 static int
@@ -1105,13 +1109,20 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
     if (stonith_fd) {
         /* No mainloop */
         native->ipc = crm_ipc_new("stonith-ng", 0);
-
-        if (native->ipc && crm_ipc_connect(native->ipc)) {
-            *stonith_fd = crm_ipc_get_fd(native->ipc);
-        } else if (native->ipc) {
-            crm_ipc_close(native->ipc);
-            crm_ipc_destroy(native->ipc);
-            native->ipc = NULL;
+        if (native->ipc != NULL) {
+            rc = pcmk__connect_generic_ipc(native->ipc);
+            if (rc == pcmk_rc_ok) {
+                rc = pcmk__ipc_fd(native->ipc, stonith_fd);
+                if (rc != pcmk_rc_ok) {
+                    crm_debug("Couldn't get file descriptor for IPC: %s",
+                              pcmk_rc_str(rc));
+                }
+            }
+            if (rc != pcmk_rc_ok) {
+                crm_ipc_close(native->ipc);
+                crm_ipc_destroy(native->ipc);
+                native->ipc = NULL;
+            }
         }
 
     } else {
@@ -1765,7 +1776,7 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
     }
 
     if (timeout_sec <= 0) {
-        timeout_sec = CRMD_METADATA_CALL_TIMEOUT; // Questionable
+        timeout_sec = PCMK_DEFAULT_METADATA_TIMEOUT_MS; // Questionable
     }
 
     switch (stonith_get_namespace(agent, namespace_s)) {
@@ -1961,7 +1972,7 @@ stonith_api_kick(uint32_t nodeid, const char *uname, int timeout, bool off)
 {
     int rc = pcmk_ok;
     stonith_t *st = stonith_api_new();
-    const char *action = off? "off" : "reboot";
+    const char *action = off? PCMK_ACTION_OFF : PCMK_ACTION_REBOOT;
 
     api_log_open();
     if (st == NULL) {
@@ -2098,9 +2109,9 @@ stonith_action_str(const char *action)
 {
     if (action == NULL) {
         return "fencing";
-    } else if (!strcmp(action, "on")) {
+    } else if (strcmp(action, PCMK_ACTION_ON) == 0) {
         return "unfencing";
-    } else if (!strcmp(action, "off")) {
+    } else if (strcmp(action, PCMK_ACTION_OFF) == 0) {
         return "turning off";
     } else {
         return action;
@@ -2160,7 +2171,8 @@ parse_list_line(const char *line, int len, GList **output)
                          line + entry_start, entry_start, i);
                 free(entry);
 
-            } else if (pcmk__strcase_any_of(entry, "on", "off", NULL)) {
+            } else if (pcmk__strcase_any_of(entry, PCMK_ACTION_ON,
+                                            PCMK_ACTION_OFF, NULL)) {
                 /* Some agents print the target status in the list output,
                  * though none are known now (the separate list-status command
                  * is used for this, but it can also print "UNKNOWN"). To handle

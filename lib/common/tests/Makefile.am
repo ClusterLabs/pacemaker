@@ -1,5 +1,5 @@
 #
-# Copyright 2020-2022 the Pacemaker project contributors
+# Copyright 2020-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -9,6 +9,7 @@
 
 SUBDIRS = \
 	acl		\
+	actions		\
 	agents		\
 	cmdline		\
 	flags		\
@@ -17,7 +18,6 @@ SUBDIRS = \
 	iso8601		\
 	lists		\
 	nvpair 		\
-	operations	\
 	options		\
 	output 		\
 	results		\

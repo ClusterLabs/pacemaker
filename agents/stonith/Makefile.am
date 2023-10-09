@@ -16,4 +16,5 @@ if BUILD_LHA_SUPPORT
 sbin_SCRIPTS 	+= fence_legacy
 endif
 
-CLEANFILES = $(man7_MANS) $(man8_MANS)
+CLEANFILES = $(man7_MANS) \
+	     $(man8_MANS)

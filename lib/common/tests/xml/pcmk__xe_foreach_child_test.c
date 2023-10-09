@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,7 +14,7 @@
 
 static int compare_name_handler(xmlNode *xml, void *userdata) {
     function_called();
-    assert_string_equal((char *) userdata, crm_element_name(xml));
+    assert_string_equal((char *) userdata, (const char *) xml->name);
     return pcmk_rc_ok;
 }
 
@@ -140,7 +140,8 @@ const char *str3 =
 
 static int any_of_handler(xmlNode *xml, void *userdata) {
     function_called();
-    assert_true(pcmk__str_any_of(crm_element_name(xml), "node1", "node2", "node3", NULL));
+    assert_true(pcmk__str_any_of((const char *) xml->name,
+                                 "node1", "node2", "node3", NULL));
     return pcmk_rc_ok;
 }
 
@@ -160,7 +161,7 @@ any_of_test(void **state) {
 static int stops_on_first_handler(xmlNode *xml, void *userdata) {
     function_called();
 
-    if (pcmk__str_eq(crm_element_name(xml), "node1", pcmk__str_none)) {
+    if (pcmk__xe_is(xml, "node1")) {
         return pcmk_rc_error;
     } else {
         return pcmk_rc_ok;
@@ -170,7 +171,7 @@ static int stops_on_first_handler(xmlNode *xml, void *userdata) {
 static int stops_on_second_handler(xmlNode *xml, void *userdata) {
     function_called();
 
-    if (pcmk__str_eq(crm_element_name(xml), "node2", pcmk__str_none)) {
+    if (pcmk__xe_is(xml, "node2")) {
         return pcmk_rc_error;
     } else {
         return pcmk_rc_ok;
@@ -180,7 +181,7 @@ static int stops_on_second_handler(xmlNode *xml, void *userdata) {
 static int stops_on_third_handler(xmlNode *xml, void *userdata) {
     function_called();
 
-    if (pcmk__str_eq(crm_element_name(xml), "node3", pcmk__str_none)) {
+    if (pcmk__xe_is(xml, "node3")) {
         return pcmk_rc_error;
     } else {
         return pcmk_rc_ok;

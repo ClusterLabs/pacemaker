@@ -460,11 +460,17 @@ pcmk__file_contents(const char *filename, char **contents)
             goto bail;
         }
         rewind(fp);
-        read_len = fread(*contents, 1, length, fp); /* Coverity: False positive */
+
+        read_len = fread(*contents, 1, length, fp);
         if (read_len != length) {
             free(*contents);
             *contents = NULL;
             rc = EIO;
+        } else {
+            /* Coverity thinks *contents isn't null-terminated. It doesn't
+             * understand calloc().
+             */
+            (*contents)[length] = '\0';
         }
     }
 

@@ -89,34 +89,34 @@
   </synapse>
   <synapse id="8">
     <action_set>
-      <rsc_op id="23" operation="monitor" operation_key="intip_1_master_monitor_30000" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
-        <primitive id="intip_1_master" class="ocf" provider="heartbeat" type="IPaddr2"/>
+      <rsc_op id="23" operation="monitor" operation_key="intip_1_active_monitor_30000" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
+        <primitive id="intip_1_active" class="ocf" provider="heartbeat" type="IPaddr2"/>
         <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="webcluster01" CRM_meta_on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298" CRM_meta_timeout="30000"  ip="192.168.100.201" netmask="24" nic="eth1" target_role="started"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="22" operation="start" operation_key="intip_1_master_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
+        <rsc_op id="22" operation="start" operation_key="intip_1_active_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="9">
     <action_set>
-      <rsc_op id="22" operation="start" operation_key="intip_1_master_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
-        <primitive id="intip_1_master" class="ocf" provider="heartbeat" type="IPaddr2"/>
+      <rsc_op id="22" operation="start" operation_key="intip_1_active_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
+        <primitive id="intip_1_active" class="ocf" provider="heartbeat" type="IPaddr2"/>
         <attributes CRM_meta_on_node="webcluster01" CRM_meta_on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298" CRM_meta_timeout="20000"  ip="192.168.100.201" netmask="24" nic="eth1" target_role="started"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="5" operation="monitor" operation_key="intip_1_master_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
+        <rsc_op id="5" operation="monitor" operation_key="intip_1_active_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="10">
     <action_set>
-      <rsc_op id="5" operation="monitor" operation_key="intip_1_master_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
-        <primitive id="intip_1_master" class="ocf" provider="heartbeat" type="IPaddr2"/>
+      <rsc_op id="5" operation="monitor" operation_key="intip_1_active_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
+        <primitive id="intip_1_active" class="ocf" provider="heartbeat" type="IPaddr2"/>
         <attributes CRM_meta_on_node="webcluster01" CRM_meta_on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000"  ip="192.168.100.201" netmask="24" nic="eth1" target_role="started"/>
       </rsc_op>
     </action_set>
@@ -124,34 +124,34 @@
   </synapse>
   <synapse id="11">
     <action_set>
-      <rsc_op id="25" operation="monitor" operation_key="intip_2_slave_monitor_30000" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
-        <primitive id="intip_2_slave" class="ocf" provider="heartbeat" type="IPaddr2"/>
+      <rsc_op id="25" operation="monitor" operation_key="intip_2_passive_monitor_30000" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
+        <primitive id="intip_2_passive" class="ocf" provider="heartbeat" type="IPaddr2"/>
         <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="webcluster01" CRM_meta_on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298" CRM_meta_timeout="30000"  ip="192.168.100.202" netmask="24" nic="eth1" target_role="started"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="24" operation="start" operation_key="intip_2_slave_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
+        <rsc_op id="24" operation="start" operation_key="intip_2_passive_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="12">
     <action_set>
-      <rsc_op id="24" operation="start" operation_key="intip_2_slave_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
-        <primitive id="intip_2_slave" class="ocf" provider="heartbeat" type="IPaddr2"/>
+      <rsc_op id="24" operation="start" operation_key="intip_2_passive_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
+        <primitive id="intip_2_passive" class="ocf" provider="heartbeat" type="IPaddr2"/>
         <attributes CRM_meta_on_node="webcluster01" CRM_meta_on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298" CRM_meta_timeout="20000"  ip="192.168.100.202" netmask="24" nic="eth1" target_role="started"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="6" operation="monitor" operation_key="intip_2_slave_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
+        <rsc_op id="6" operation="monitor" operation_key="intip_2_passive_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="13">
     <action_set>
-      <rsc_op id="6" operation="monitor" operation_key="intip_2_slave_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
-        <primitive id="intip_2_slave" class="ocf" provider="heartbeat" type="IPaddr2"/>
+      <rsc_op id="6" operation="monitor" operation_key="intip_2_passive_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
+        <primitive id="intip_2_passive" class="ocf" provider="heartbeat" type="IPaddr2"/>
         <attributes CRM_meta_on_node="webcluster01" CRM_meta_on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000"  ip="192.168.100.202" netmask="24" nic="eth1" target_role="started"/>
       </rsc_op>
     </action_set>
@@ -268,10 +268,10 @@
         <rsc_op id="7" operation="monitor" operation_key="drbd_www:0_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
       </trigger>
       <trigger>
-        <rsc_op id="22" operation="start" operation_key="intip_1_master_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
+        <rsc_op id="22" operation="start" operation_key="intip_1_active_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
       </trigger>
       <trigger>
-        <rsc_op id="24" operation="start" operation_key="intip_2_slave_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
+        <rsc_op id="24" operation="start" operation_key="intip_2_passive_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
       </trigger>
       <trigger>
         <pseudo_event id="32" operation="notified" operation_key="ms_drbd_www_confirmed-pre_notify_start_0"/>
@@ -425,10 +425,10 @@
         <rsc_op id="12" operation="monitor" operation_key="drbd_mysql:0_monitor_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
       </trigger>
       <trigger>
-        <rsc_op id="22" operation="start" operation_key="intip_1_master_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
+        <rsc_op id="22" operation="start" operation_key="intip_1_active_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
       </trigger>
       <trigger>
-        <rsc_op id="24" operation="start" operation_key="intip_2_slave_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
+        <rsc_op id="24" operation="start" operation_key="intip_2_passive_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
       </trigger>
       <trigger>
         <pseudo_event id="73" operation="notified" operation_key="ms_drbd_mysql_confirmed-pre_notify_start_0"/>

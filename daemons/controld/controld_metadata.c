@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2022 the Pacemaker project contributors
+ * Copyright 2017-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -172,7 +172,7 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
 
         const char *action_name = crm_element_value(match, "name");
 
-        if (pcmk__str_eq(action_name, CRMD_ACTION_RELOAD_AGENT,
+        if (pcmk__str_eq(action_name, PCMK_ACTION_RELOAD_AGENT,
                          pcmk__str_none)) {
             if (ocf1_1) {
                 controld_set_ra_flags(md, key, ra_supports_reload_agent);
@@ -181,7 +181,7 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
                            "because it does not support OCF 1.1 or later", key);
             }
 
-        } else if (!ocf1_1 && pcmk__str_eq(action_name, CRMD_ACTION_RELOAD,
+        } else if (!ocf1_1 && pcmk__str_eq(action_name, PCMK_ACTION_RELOAD,
                                            pcmk__str_casei)) {
             controld_set_ra_flags(md, key, ra_supports_legacy_reload);
         }

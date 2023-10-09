@@ -51,16 +51,16 @@ pe_can_fence(const pe_working_set_t *data_set, const pe_node_t *node)
         }
         return true;
 
-    } else if (!pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
+    } else if (!pcmk_is_set(data_set->flags, pcmk_sched_fencing_enabled)) {
         return false; /* Turned off */
 
-    } else if (!pcmk_is_set(data_set->flags, pe_flag_have_stonith_resource)) {
+    } else if (!pcmk_is_set(data_set->flags, pcmk_sched_have_fencing)) {
         return false; /* No devices */
 
-    } else if (pcmk_is_set(data_set->flags, pe_flag_have_quorum)) {
+    } else if (pcmk_is_set(data_set->flags, pcmk_sched_quorate)) {
         return true;
 
-    } else if (data_set->no_quorum_policy == no_quorum_ignore) {
+    } else if (data_set->no_quorum_policy == pcmk_no_quorum_ignore) {
         return true;
 
     } else if(node == NULL) {
@@ -98,50 +98,10 @@ pe__copy_node(const pe_node_t *this_node)
     new_node->rsc_discover_mode = this_node->rsc_discover_mode;
     new_node->weight = this_node->weight;
     new_node->fixed = this_node->fixed; // @COMPAT deprecated and unused
+    new_node->count = this_node->count;
     new_node->details = this_node->details;
 
     return new_node;
-}
-
-/* any node in list1 or list2 and not in the other gets a score of -INFINITY */
-void
-node_list_exclude(GHashTable * hash, GList *list, gboolean merge_scores)
-{
-    GHashTable *result = hash;
-    pe_node_t *other_node = NULL;
-    GList *gIter = list;
-
-    GHashTableIter iter;
-    pe_node_t *node = NULL;
-
-    g_hash_table_iter_init(&iter, hash);
-    while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-
-        other_node = pe_find_node_id(list, node->details->id);
-        if (other_node == NULL) {
-            node->weight = -INFINITY;
-            crm_trace("Banning dependent from %s (no primary instance)",
-                      pe__node_name(node));
-        } else if (merge_scores) {
-            node->weight = pcmk__add_scores(node->weight, other_node->weight);
-            crm_trace("Added primary's score %s to dependent's score for %s "
-                      "(now %s)", pcmk_readable_score(other_node->weight),
-                      pe__node_name(node), pcmk_readable_score(node->weight));
-        }
-    }
-
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *node = (pe_node_t *) gIter->data;
-
-        other_node = pe_hash_table_lookup(result, node->details->id);
-
-        if (other_node == NULL) {
-            pe_node_t *new_node = pe__copy_node(node);
-
-            new_node->weight = -INFINITY;
-            g_hash_table_insert(result, (gpointer) new_node->details->id, new_node);
-        }
-    }
 }
 
 /*!
@@ -286,12 +246,12 @@ pe__log_node_weights(const char *file, const char *function, int line,
  * \param[in,out] data_set  Cluster working set
  */
 void
-pe__show_node_weights_as(const char *file, const char *function, int line,
-                         bool to_log, const pe_resource_t *rsc,
-                         const char *comment, GHashTable *nodes,
-                         pe_working_set_t *data_set)
+pe__show_node_scores_as(const char *file, const char *function, int line,
+                        bool to_log, const pe_resource_t *rsc,
+                        const char *comment, GHashTable *nodes,
+                        pe_working_set_t *data_set)
 {
-    if (rsc != NULL && pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
+    if ((rsc != NULL) && pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
         // Don't show allocation scores for orphans
         return;
     }
@@ -311,8 +271,8 @@ pe__show_node_weights_as(const char *file, const char *function, int line,
         for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child = (pe_resource_t *) gIter->data;
 
-            pe__show_node_weights_as(file, function, line, to_log, child,
-                                     comment, child->allowed_nodes, data_set);
+            pe__show_node_scores_as(file, function, line, to_log, child,
+                                    comment, child->allowed_nodes, data_set);
         }
     }
 }
@@ -364,7 +324,8 @@ resource_node_score(pe_resource_t *rsc, const pe_node_t *node, int score,
 {
     pe_node_t *match = NULL;
 
-    if ((rsc->exclusive_discover || (node->rsc_discover_mode == pe_discover_never))
+    if ((rsc->exclusive_discover
+         || (node->rsc_discover_mode == pcmk_probe_never))
         && pcmk__str_eq(tag, "symmetric_default", pcmk__str_casei)) {
         /* This string comparision may be fragile, but exclusive resources and
          * exclusive nodes should not have the symmetric_default constraint
@@ -382,7 +343,7 @@ resource_node_score(pe_resource_t *rsc, const pe_node_t *node, int score,
         }
     }
 
-    match = pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
+    match = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
     if (match == NULL) {
         match = pe__copy_node(node);
         g_hash_table_insert(rsc->allowed_nodes, (gpointer) match->details->id, match);
@@ -448,7 +409,7 @@ get_effective_time(pe_working_set_t * data_set)
 gboolean
 get_target_role(const pe_resource_t *rsc, enum rsc_role_e *role)
 {
-    enum rsc_role_e local_role = RSC_ROLE_UNKNOWN;
+    enum rsc_role_e local_role = pcmk_role_unknown;
     const char *value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
 
     CRM_CHECK(role != NULL, return FALSE);
@@ -459,15 +420,15 @@ get_target_role(const pe_resource_t *rsc, enum rsc_role_e *role)
     }
 
     local_role = text2role(value);
-    if (local_role == RSC_ROLE_UNKNOWN) {
+    if (local_role == pcmk_role_unknown) {
         pcmk__config_err("Ignoring '" XML_RSC_ATTR_TARGET_ROLE "' for %s "
                          "because '%s' is not valid", rsc->id, value);
         return FALSE;
 
-    } else if (local_role > RSC_ROLE_STARTED) {
+    } else if (local_role > pcmk_role_started) {
         if (pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
-                        pe_rsc_promotable)) {
-            if (local_role > RSC_ROLE_UNPROMOTED) {
+                        pcmk_rsc_promotable)) {
+            if (local_role > pcmk_role_unpromoted) {
                 /* This is what we'd do anyway, just leave the default to avoid messing up the placement algorithm */
                 return FALSE;
             }
@@ -485,13 +446,13 @@ get_target_role(const pe_resource_t *rsc, enum rsc_role_e *role)
 }
 
 gboolean
-order_actions(pe_action_t * lh_action, pe_action_t * rh_action, enum pe_ordering order)
+order_actions(pe_action_t *lh_action, pe_action_t *rh_action, uint32_t flags)
 {
     GList *gIter = NULL;
     pe_action_wrapper_t *wrapper = NULL;
     GList *list = NULL;
 
-    if (order == pe_order_none) {
+    if (flags == pcmk__ar_none) {
         return FALSE;
     }
 
@@ -510,21 +471,21 @@ order_actions(pe_action_t * lh_action, pe_action_t * rh_action, enum pe_ordering
     for (; gIter != NULL; gIter = gIter->next) {
         pe_action_wrapper_t *after = (pe_action_wrapper_t *) gIter->data;
 
-        if (after->action == rh_action && (after->type & order)) {
+        if (after->action == rh_action && (after->type & flags)) {
             return FALSE;
         }
     }
 
     wrapper = calloc(1, sizeof(pe_action_wrapper_t));
     wrapper->action = rh_action;
-    wrapper->type = order;
+    wrapper->type = flags;
     list = lh_action->actions_after;
     list = g_list_prepend(list, wrapper);
     lh_action->actions_after = list;
 
     wrapper = calloc(1, sizeof(pe_action_wrapper_t));
     wrapper->action = lh_action;
-    wrapper->type = order;
+    wrapper->type = flags;
     list = rh_action->actions_before;
     list = g_list_prepend(list, wrapper);
     rh_action->actions_before = list;
@@ -582,7 +543,7 @@ ticket_new(const char *ticket_id, pe_working_set_t * data_set)
 const char *
 rsc_printable_id(const pe_resource_t *rsc)
 {
-    return pcmk_is_set(rsc->flags, pe_rsc_unique)? rsc->id : ID(rsc->xml);
+    return pcmk_is_set(rsc->flags, pcmk_rsc_unique)? rsc->id : ID(rsc->xml);
 }
 
 void
@@ -616,12 +577,12 @@ void
 trigger_unfencing(pe_resource_t *rsc, pe_node_t *node, const char *reason,
                   pe_action_t *dependency, pe_working_set_t *data_set)
 {
-    if (!pcmk_is_set(data_set->flags, pe_flag_enable_unfencing)) {
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_enable_unfencing)) {
         /* No resources require it */
         return;
 
     } else if ((rsc != NULL)
-               && !pcmk_is_set(rsc->flags, pe_rsc_fence_device)) {
+               && !pcmk_is_set(rsc->flags, pcmk_rsc_fence_device)) {
         /* Wasn't a stonith device */
         return;
 
@@ -629,10 +590,11 @@ trigger_unfencing(pe_resource_t *rsc, pe_node_t *node, const char *reason,
               && node->details->online
               && node->details->unclean == FALSE
               && node->details->shutdown == FALSE) {
-        pe_action_t *unfence = pe_fence_op(node, "on", FALSE, reason, FALSE, data_set);
+        pe_action_t *unfence = pe_fence_op(node, PCMK_ACTION_ON, FALSE, reason,
+                                           FALSE, data_set);
 
         if(dependency) {
-            order_actions(unfence, dependency, pe_order_optional);
+            order_actions(unfence, dependency, pcmk__ar_ordered);
         }
 
     } else if(rsc) {
@@ -761,10 +723,10 @@ pe__resource_is_disabled(const pe_resource_t *rsc)
     if (target_role) {
         enum rsc_role_e target_role_e = text2role(target_role);
 
-        if ((target_role_e == RSC_ROLE_STOPPED)
-            || ((target_role_e == RSC_ROLE_UNPROMOTED)
+        if ((target_role_e == pcmk_role_stopped)
+            || ((target_role_e == pcmk_role_unpromoted)
                 && pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
-                               pe_rsc_promotable))) {
+                               pcmk_rsc_promotable))) {
             return true;
         }
     }
@@ -866,8 +828,9 @@ pe__build_rsc_list(pe_working_set_t *data_set, const char *s) {
     if (pcmk__str_eq(s, "*", pcmk__str_null_matches)) {
         resources = g_list_prepend(resources, strdup("*"));
     } else {
+        const uint32_t flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
         pe_resource_t *rsc = pe_find_resource_with_flags(data_set->resources, s,
-                                                         pe_find_renamed|pe_find_any);
+                                                         flags);
 
         if (rsc) {
             /* A colon in the name we were given means we're being asked to filter
@@ -898,7 +861,7 @@ pe__failed_probe_for_rsc(const pe_resource_t *rsc, const char *name)
     const pe_resource_t *parent = pe__const_top_resource(rsc, false);
     const char *rsc_id = rsc->id;
 
-    if (parent->variant == pe_clone) {
+    if (parent->variant == pcmk_rsc_variant_clone) {
         rsc_id = pe__clone_child_id(parent);
     }
 

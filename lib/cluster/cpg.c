@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -506,14 +506,14 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
         uncompressed = calloc(1, new_size);
         rc = BZ2_bzBuffToBuffDecompress(uncompressed, &new_size, msg->data, msg->compressed_size, 1, 0);
 
-        if (rc != BZ_OK) {
-            crm_err("Decompression failed: %s " CRM_XS " bzerror=%d",
-                    bz2_strerror(rc), rc);
+        rc = pcmk__bzlib2rc(rc);
+
+        if (rc != pcmk_rc_ok) {
+            crm_err("Decompression failed: %s " CRM_XS " rc=%d", pcmk_rc_str(rc), rc);
             free(uncompressed);
             goto badmsg;
         }
 
-        CRM_ASSERT(rc == BZ_OK);
         CRM_ASSERT(new_size == msg->size);
 
         data = uncompressed;
@@ -628,7 +628,7 @@ node_left(const char *cpg_group_name, int event_counter,
           size_t member_list_entries)
 {
     crm_node_t *peer = pcmk__search_cluster_node_cache(cpg_peer->nodeid,
-                                                       NULL);
+                                                       NULL, NULL);
     const struct cpg_address **rival = NULL;
 
     /* Most CPG-related Pacemaker code assumes that only one process on a node
@@ -888,11 +888,11 @@ cluster_connect_cpg(crm_cluster_t *cluster)
  *
  * \return TRUE on success, otherwise FALSE
  */
-gboolean
-pcmk__cpg_send_xml(xmlNode *msg, const crm_node_t *node,
+bool
+pcmk__cpg_send_xml(const xmlNode *msg, const crm_node_t *node,
                    enum crm_ais_msg_types dest)
 {
-    gboolean rc = TRUE;
+    bool rc = true;
     char *data = NULL;
 
     data = dump_xml_unformatted(msg);

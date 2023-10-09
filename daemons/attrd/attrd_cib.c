@@ -24,6 +24,196 @@
 
 static int last_cib_op_done = 0;
 
+static const char *cib_client_id = NULL;
+
+static void
+attrd_cib_destroy_cb(gpointer user_data)
+{
+    cib_t *cib = user_data;
+
+    cib->cmds->signoff(cib);
+
+    if (attrd_shutting_down(false)) {
+        crm_info("Disconnected from the CIB manager");
+
+    } else {
+        // @TODO This should trigger a reconnect, not a shutdown
+        crm_crit("Lost connection to the CIB manager, shutting down");
+        attrd_exit_status = CRM_EX_DISCONNECT;
+        attrd_shutdown(0);
+    }
+}
+
+static void
+attrd_cib_updated_cb(const char *event, xmlNode *msg)
+{
+    const xmlNode *patchset = NULL;
+    const char *client_id = NULL;
+    const char *op = NULL;
+    const cib__operation_t *operation = NULL;
+
+    if (attrd_shutting_down(true)) {
+        return;
+    }
+
+    if (cib__get_notify_patchset(msg, &patchset) != pcmk_rc_ok) {
+        return;
+    }
+
+    if (cib__element_in_patchset(patchset, XML_CIB_TAG_ALERTS)) {
+        mainloop_set_trigger(attrd_config_read);
+    }
+
+    if (!attrd_election_won()) {
+        // Don't write attributes if we're not the writer
+        return;
+    }
+
+    client_id = crm_element_value(msg, F_CIB_CLIENTID);
+    if (pcmk__str_eq(client_id, cib_client_id, pcmk__str_none)) {
+        // Don't write attributes due to an update that we requested
+        return;
+    }
+
+    op = crm_element_value(msg, F_CIB_OPERATION);
+    if (cib__get_operation(op, &operation) != pcmk_rc_ok) {
+        // Invalid operation
+        return;
+    }
+
+    if (pcmk_is_set(operation->flags, cib__op_attr_replaces)
+        && (cib__element_in_patchset(patchset, XML_CIB_TAG_NODES)
+            || cib__element_in_patchset(patchset, XML_CIB_TAG_STATUS))) {
+
+        /* Transient attributes may be inaccurate, since part of the nodes or
+         * status section was replaced. Trigger a write.
+         *
+         * @TODO Don't write attributes unless nodes or transient attributes
+         * changed.
+         */
+        crm_notice("Updating all attributes after %s event", event);
+        attrd_write_attributes(attrd_write_all);
+    }
+}
+
+int
+attrd_cib_connect(int max_retry)
+{
+    static int attempts = 0;
+
+    int rc = -ENOTCONN;
+
+    the_cib = cib_new();
+    if (the_cib == NULL) {
+        return -ENOTCONN;
+    }
+
+    do {
+        if (attempts > 0) {
+            sleep(attempts);
+        }
+        attempts++;
+        crm_debug("Connection attempt %d to the CIB manager", attempts);
+        rc = the_cib->cmds->signon(the_cib, T_ATTRD, cib_command);
+
+    } while ((rc != pcmk_ok) && (attempts < max_retry));
+
+    if (rc != pcmk_ok) {
+        crm_err("Connection to the CIB manager failed: %s " CRM_XS " rc=%d",
+                pcmk_strerror(rc), rc);
+        goto cleanup;
+    }
+
+    crm_debug("Connected to the CIB manager after %d attempts", attempts);
+
+    rc = the_cib->cmds->set_connection_dnotify(the_cib, attrd_cib_destroy_cb);
+    if (rc != pcmk_ok) {
+        crm_err("Could not set disconnection callback");
+        goto cleanup;
+    }
+
+    rc = the_cib->cmds->add_notify_callback(the_cib, T_CIB_DIFF_NOTIFY,
+                                            attrd_cib_updated_cb);
+    if (rc != pcmk_ok) {
+        crm_err("Could not set CIB notification callback");
+        goto cleanup;
+    }
+
+    the_cib->cmds->client_id(the_cib, &cib_client_id, NULL);
+    return pcmk_ok;
+
+cleanup:
+    cib__clean_up_connection(&the_cib);
+    return -ENOTCONN;
+}
+
+void
+attrd_cib_disconnect(void)
+{
+    CRM_CHECK(the_cib != NULL, return);
+    the_cib->cmds->del_notify_callback(the_cib, T_CIB_DIFF_NOTIFY,
+                                       attrd_cib_updated_cb);
+    cib__clean_up_connection(&the_cib);
+}
+
+static void
+attrd_erase_cb(xmlNode *msg, int call_id, int rc, xmlNode *output,
+               void *user_data)
+{
+    do_crm_log_unlikely(((rc != pcmk_ok)? LOG_NOTICE : LOG_DEBUG),
+                        "Cleared transient attributes: %s "
+                        CRM_XS " xpath=%s rc=%d",
+                        pcmk_strerror(rc), (char *) user_data, rc);
+}
+
+#define XPATH_TRANSIENT "//node_state[@uname='%s']/" XML_TAG_TRANSIENT_NODEATTRS
+
+/*!
+ * \internal
+ * \brief Wipe all transient attributes for this node from the CIB
+ *
+ * Clear any previous transient node attributes from the CIB. This is
+ * normally done by the DC's controller when this node leaves the cluster, but
+ * this handles the case where the node restarted so quickly that the
+ * cluster layer didn't notice.
+ *
+ * \todo If pacemaker-attrd respawns after crashing (see PCMK_respawned),
+ *       ideally we'd skip this and sync our attributes from the writer.
+ *       However, currently we reject any values for us that the writer has, in
+ *       attrd_peer_update().
+ */
+static void
+attrd_erase_attrs(void)
+{
+    int call_id = 0;
+    char *xpath = crm_strdup_printf(XPATH_TRANSIENT, attrd_cluster->uname);
+
+    crm_info("Clearing transient attributes from CIB " CRM_XS " xpath=%s",
+             xpath);
+
+    call_id = the_cib->cmds->remove(the_cib, xpath, NULL, cib_xpath);
+    the_cib->cmds->register_callback_full(the_cib, call_id, 120, FALSE, xpath,
+                                          "attrd_erase_cb", attrd_erase_cb,
+                                          free);
+}
+
+/*!
+ * \internal
+ * \brief Prepare the CIB after cluster is connected
+ */
+void
+attrd_cib_init(void)
+{
+    // We have no attribute values in memory, wipe the CIB to match
+    attrd_erase_attrs();
+
+    // Set a trigger for reading the CIB (for the alerts section)
+    attrd_config_read = mainloop_add_trigger(G_PRIORITY_HIGH, attrd_read_options, NULL);
+
+    // Always read the CIB at start-up
+    mainloop_set_trigger(attrd_config_read);
+}
+
 static gboolean
 attribute_timer_cb(gpointer data)
 {
@@ -343,16 +533,28 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
     free_xml(xml_top);
 }
 
+/*!
+ * \internal
+ * \brief Write out attributes
+ *
+ * \param[in] options  Group of enum attrd_write_options
+ */
 void
-attrd_write_attributes(bool all, bool ignore_delay)
+attrd_write_attributes(uint32_t options)
 {
     GHashTableIter iter;
     attribute_t *a = NULL;
 
-    crm_debug("Writing out %s attributes", all? "all" : "changed");
+    crm_debug("Writing out %s attributes",
+              pcmk_is_set(options, attrd_write_all)? "all" : "changed");
     g_hash_table_iter_init(&iter, attributes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & a)) {
-        if (!all && a->unknown_peer_uuids) {
+        if (pcmk_is_set(options, attrd_write_skip_shutdown)
+            && pcmk__str_eq(a->id, XML_CIB_ATTR_SHUTDOWN, pcmk__str_none)) {
+            continue;
+        }
+
+        if (!pcmk_is_set(options, attrd_write_all) && a->unknown_peer_uuids) {
             // Try writing this attribute again, in case peer ID was learned
             a->changed = true;
         } else if (a->force_write) {
@@ -360,9 +562,14 @@ attrd_write_attributes(bool all, bool ignore_delay)
             a->changed = true;
         }
 
-        if(all || a->changed) {
-            /* When forced write flag is set, ignore delay. */
-            attrd_write_attribute(a, (a->force_write ? true : ignore_delay));
+        if (pcmk_is_set(options, attrd_write_all) || a->changed) {
+            bool ignore_delay = pcmk_is_set(options, attrd_write_no_delay);
+
+            if (a->force_write) {
+                // Always ignore delay when forced write flag is set
+                ignore_delay = true;
+            }
+            attrd_write_attribute(a, ignore_delay);
         } else {
             crm_trace("Skipping unchanged attribute %s", a->id);
         }

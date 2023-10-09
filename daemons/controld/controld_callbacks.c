@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -106,6 +106,8 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
     uint32_t old = 0;
     bool appeared = FALSE;
     bool is_remote = pcmk_is_set(node->flags, crm_remote_node);
+
+    controld_node_pending_timer(node);
 
     /* The controller waits to receive some information from the membership
      * layer before declaring itself operational. If this is being called for a
@@ -274,13 +276,14 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
         if (down) {
             const char *task = crm_element_value(down->xml, XML_LRM_ATTR_TASK);
 
-            if (pcmk__str_eq(task, CRM_OP_FENCE, pcmk__str_casei)) {
+            if (pcmk__str_eq(task, PCMK_ACTION_STONITH, pcmk__str_casei)) {
 
                 /* tengine_stonith_callback() confirms fence actions */
                 crm_trace("Updating CIB %s fencer reported fencing of %s complete",
                           (pcmk_is_set(down->flags, pcmk__graph_action_confirmed)? "after" : "before"), node->uname);
 
-            } else if (!appeared && pcmk__str_eq(task, CRM_OP_SHUTDOWN, pcmk__str_casei)) {
+            } else if (!appeared && pcmk__str_eq(task, PCMK_ACTION_DO_SHUTDOWN,
+                                                 pcmk__str_casei)) {
 
                 // Shutdown actions are immediately confirmed (i.e. no_wait)
                 if (!is_remote) {

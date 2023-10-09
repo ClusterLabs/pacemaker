@@ -1780,7 +1780,7 @@ send_custom_trap(const char *node, const char *rsc, const char *task, int target
 
     pid = fork();
     if (pid == -1) {
-        crm_perror(LOG_ERR, "notification fork() failed.");
+        out->err(out, "notification fork() failed: %s", strerror(errno));
     }
     if (pid == 0) {
         /* crm_debug("notification: I am the child. Executing the nofitication program."); */
@@ -1840,7 +1840,7 @@ handle_rsc_op(xmlNode *xml, void *userdata)
 
     node = crm_element_value(rsc_op, XML_LRM_ATTR_TARGET);
 
-    while (n != NULL && !pcmk__str_eq(XML_CIB_TAG_STATE, TYPE(n), pcmk__str_casei)) {
+    while ((n != NULL) && !pcmk__xe_is(n, XML_CIB_TAG_STATE)) {
         n = n->parent;
     }
 
@@ -2051,7 +2051,7 @@ crm_diff_update(const char *event, xmlNode * msg)
 
     if (options.external_agent) {
         int format = 0;
-        crm_element_value_int(diff, "format", &format);
+        crm_element_value_int(diff, PCMK_XA_FORMAT, &format);
         switch(format) {
             case 1:
                 crm_diff_update_v1(event, msg);

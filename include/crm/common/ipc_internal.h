@@ -96,6 +96,10 @@ extern "C" {
 int pcmk__ipc_is_authentic_process_active(const char *name, uid_t refuid,
                                           gid_t refgid, pid_t *gotpid);
 
+int pcmk__connect_generic_ipc(crm_ipc_t *ipc);
+int pcmk__ipc_fd(crm_ipc_t *ipc, int *fd);
+int pcmk__connect_ipc(pcmk_ipc_api_t *api, enum pcmk_ipc_dispatch dispatch_type,
+                      int attempts);
 
 /*
  * Server-related
@@ -112,6 +116,7 @@ struct pcmk__remote_s {
     int tcp_socket;
     mainloop_io_t *source;
     time_t uptime;
+    char *start_state;
 
     /* CIB-only */
     char *token;
@@ -245,11 +250,11 @@ int pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
 #define pcmk__ipc_send_ack(c, req, flags, tag, ver, st) \
     pcmk__ipc_send_ack_as(__func__, __LINE__, (c), (req), (flags), (tag), (ver), (st))
 
-int pcmk__ipc_prepare_iov(uint32_t request, xmlNode *message,
+int pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
                           uint32_t max_send_size,
                           struct iovec **result, ssize_t *bytes);
-int pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, xmlNode *message,
-                       uint32_t flags);
+int pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request,
+                       const xmlNode *message, uint32_t flags);
 int pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags);
 xmlNode *pcmk__client_data2xml(pcmk__client_t *c, void *data,
                                uint32_t *id, uint32_t *flags);

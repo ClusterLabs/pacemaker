@@ -609,6 +609,20 @@ crm_log_filter_source(int source, const char *trace_files, const char *trace_fns
     }
 }
 
+#ifndef HAVE_STRCHRNUL
+/* strchrnul() is a GNU extension. If not present, use our own definition.
+ * The GNU version returns char*, but we only need it to be const char*.
+ */
+static const char *
+strchrnul(const char *s, int c)
+{
+    while ((*s != c) && (*s != '\0')) {
+        ++s;
+    }
+    return s;
+}
+#endif
+
 static void
 crm_log_filter(struct qb_log_callsite *cs)
 {
@@ -1127,16 +1141,21 @@ pcmk__cli_init_logging(const char *name, unsigned int verbosity)
 /*!
  * \brief Log XML line-by-line in a formatted fashion
  *
- * \param[in] level  Priority at which to log the messages
- * \param[in] text   Prefix for each line
- * \param[in] xml    XML to log
+ * \param[in] file      File name to use for log filtering
+ * \param[in] function  Function name to use for log filtering
+ * \param[in] line      Line number to use for log filtering
+ * \param[in] tags      Logging tags to use for log filtering
+ * \param[in] level     Priority at which to log the messages
+ * \param[in] text      Prefix for each line
+ * \param[in] xml       XML to log
  *
  * \note This does nothing when \p level is \p LOG_STDOUT.
  * \note Do not call this function directly. It should be called only from the
  *       \p do_crm_log_xml() macro.
  */
 void
-pcmk_log_xml_impl(uint8_t level, const char *text, const xmlNode *xml)
+pcmk_log_xml_as(const char *file, const char *function, uint32_t line,
+                uint32_t tags, uint8_t level, const char *text, const xmlNode *xml)
 {
     if (xml == NULL) {
         do_crm_log(level, "%s%sNo data to dump as XML",
@@ -1148,12 +1167,76 @@ pcmk_log_xml_impl(uint8_t level, const char *text, const xmlNode *xml)
         }
 
         pcmk__output_set_log_level(logger_out, level);
+        pcmk__output_set_log_filter(logger_out, file, function, line, tags);
         pcmk__xml_show(logger_out, text, xml, 1,
                        pcmk__xml_fmt_pretty
                        |pcmk__xml_fmt_open
                        |pcmk__xml_fmt_children
                        |pcmk__xml_fmt_close);
+        pcmk__output_set_log_filter(logger_out, NULL, NULL, 0U, 0U);
     }
+}
+
+/*!
+ * \internal
+ * \brief Log XML changes line-by-line in a formatted fashion
+ *
+ * \param[in] file      File name to use for log filtering
+ * \param[in] function  Function name to use for log filtering
+ * \param[in] line      Line number to use for log filtering
+ * \param[in] tags      Logging tags to use for log filtering
+ * \param[in] level     Priority at which to log the messages
+ * \param[in] xml       XML whose changes to log
+ *
+ * \note This does nothing when \p level is \c LOG_STDOUT.
+ */
+void
+pcmk__log_xml_changes_as(const char *file, const char *function, uint32_t line,
+                         uint32_t tags, uint8_t level, const xmlNode *xml)
+{
+    if (xml == NULL) {
+        do_crm_log(level, "No XML to dump");
+        return;
+    }
+
+    if (logger_out == NULL) {
+        CRM_CHECK(pcmk__log_output_new(&logger_out) == pcmk_rc_ok, return);
+    }
+    pcmk__output_set_log_level(logger_out, level);
+    pcmk__output_set_log_filter(logger_out, file, function, line, tags);
+    pcmk__xml_show_changes(logger_out, xml);
+    pcmk__output_set_log_filter(logger_out, NULL, NULL, 0U, 0U);
+}
+
+/*!
+ * \internal
+ * \brief Log an XML patchset line-by-line in a formatted fashion
+ *
+ * \param[in] file      File name to use for log filtering
+ * \param[in] function  Function name to use for log filtering
+ * \param[in] line      Line number to use for log filtering
+ * \param[in] tags      Logging tags to use for log filtering
+ * \param[in] level     Priority at which to log the messages
+ * \param[in] patchset  XML patchset to log
+ *
+ * \note This does nothing when \p level is \c LOG_STDOUT.
+ */
+void
+pcmk__log_xml_patchset_as(const char *file, const char *function, uint32_t line,
+                          uint32_t tags, uint8_t level, const xmlNode *patchset)
+{
+    if (patchset == NULL) {
+        do_crm_log(level, "No patchset to dump");
+        return;
+    }
+
+    if (logger_out == NULL) {
+        CRM_CHECK(pcmk__log_output_new(&logger_out) == pcmk_rc_ok, return);
+    }
+    pcmk__output_set_log_level(logger_out, level);
+    pcmk__output_set_log_filter(logger_out, file, function, line, tags);
+    logger_out->message(logger_out, "xml-patchset", patchset);
+    pcmk__output_set_log_filter(logger_out, NULL, NULL, 0U, 0U);
 }
 
 /*!
@@ -1186,6 +1269,12 @@ gboolean
 crm_add_logfile(const char *filename)
 {
     return pcmk__add_logfile(filename) == pcmk_rc_ok;
+}
+
+void
+pcmk_log_xml_impl(uint8_t level, const char *text, const xmlNode *xml)
+{
+    pcmk_log_xml_as(__FILE__, __func__, __LINE__, 0, level, text, xml);
 }
 
 // LCOV_EXCL_STOP

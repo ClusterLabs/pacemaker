@@ -476,7 +476,7 @@ pcmk__primitive_assign: galera:1 allocation score on overcloud-controller-2: 0
 pcmk__primitive_assign: galera:2 allocation score on overcloud-controller-0: -INFINITY
 pcmk__primitive_assign: galera:2 allocation score on overcloud-controller-1: -INFINITY
 pcmk__primitive_assign: galera:2 allocation score on overcloud-controller-2: INFINITY
-pcmk__primitive_assign: haproxy:0 allocation score on overcloud-controller-0: 0
+pcmk__primitive_assign: haproxy:0 allocation score on overcloud-controller-0: INFINITY
 pcmk__primitive_assign: haproxy:0 allocation score on overcloud-controller-1: INFINITY
 pcmk__primitive_assign: haproxy:0 allocation score on overcloud-controller-2: 0
 pcmk__primitive_assign: haproxy:1 allocation score on overcloud-controller-0: INFINITY

@@ -47,7 +47,7 @@ execute_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *pseudo)
     const char *task = crm_element_value(pseudo->xml, XML_LRM_ATTR_TASK);
 
     /* send to peers as well? */
-    if (pcmk__str_eq(task, CRM_OP_MAINTENANCE_NODES, pcmk__str_casei)) {
+    if (pcmk__str_eq(task, PCMK_ACTION_MAINTENANCE_NODES, pcmk__str_casei)) {
         GHashTableIter iter;
         crm_node_t *node = NULL;
 
@@ -125,7 +125,7 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     router_node = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
     if (router_node == NULL) {
         router_node = on_node;
-        if (pcmk__str_eq(task, CRM_OP_LRM_DELETE, pcmk__str_none)) {
+        if (pcmk__str_eq(task, PCMK_ACTION_LRM_DELETE, pcmk__str_none)) {
             const char *mode = crm_element_value(action->xml, PCMK__XA_MODE);
 
             if (pcmk__str_eq(mode, XML_TAG_CIB, pcmk__str_none)) {
@@ -148,7 +148,8 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
              id, task, on_node, (is_local? " locally" : ""),
              (no_wait? " without waiting" : ""));
 
-    if (is_local && pcmk__str_eq(task, CRM_OP_SHUTDOWN, pcmk__str_none)) {
+    if (is_local
+        && pcmk__str_eq(task, PCMK_ACTION_DO_SHUTDOWN, pcmk__str_none)) {
         /* defer until everything else completes */
         crm_info("Controller request '%s' is a local shutdown", id);
         graph->completion_action = pcmk__graph_shutdown;
@@ -156,7 +157,7 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         te_action_confirmed(action, graph);
         return pcmk_rc_ok;
 
-    } else if (pcmk__str_eq(task, CRM_OP_SHUTDOWN, pcmk__str_none)) {
+    } else if (pcmk__str_eq(task, PCMK_ACTION_DO_SHUTDOWN, pcmk__str_none)) {
         crm_node_t *peer = crm_get_peer(0, router_node);
 
         pcmk__update_peer_expected(__func__, peer, CRMD_JOINSTATE_DOWN);
@@ -318,7 +319,7 @@ controld_record_action_timeout(pcmk__graph_action_t *action)
     int target_rc = get_target_rc(action);
 
     crm_warn("%s %d: %s on %s timed out",
-             crm_element_name(action->xml), action->id, task_uuid, target);
+             action->xml->name, action->id, task_uuid, target);
 
     op = synthesize_timeout_event(action, target_rc);
     controld_record_action_event(action, op);
@@ -528,9 +529,9 @@ te_update_job_count(pcmk__graph_action_t *action, int offset)
      * the connection resources */
     target = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
 
-    if ((target == NULL) && pcmk__strcase_any_of(task, CRMD_ACTION_MIGRATE,
-                                                 CRMD_ACTION_MIGRATED, NULL)) {
-
+    if ((target == NULL)
+        && pcmk__strcase_any_of(task, PCMK_ACTION_MIGRATE_TO,
+                                PCMK_ACTION_MIGRATE_FROM, NULL)) {
         const char *t1 = crm_meta_value(action->params, XML_LRM_ATTR_MIGRATE_SOURCE);
         const char *t2 = crm_meta_value(action->params, XML_LRM_ATTR_MIGRATE_TARGET);
 
@@ -586,7 +587,8 @@ allowed_on_node(const pcmk__graph_t *graph, const pcmk__graph_action_t *action,
         return false;
 
     } else if(graph->migration_limit > 0 && r->migrate_jobs >= graph->migration_limit) {
-        if (pcmk__strcase_any_of(task, CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED, NULL)) {
+        if (pcmk__strcase_any_of(task, PCMK_ACTION_MIGRATE_TO,
+                                 PCMK_ACTION_MIGRATE_FROM, NULL)) {
             crm_trace("Peer %s is over their migration job limit of %d (%d): deferring %s",
                       target, graph->migration_limit, r->migrate_jobs, id);
             return false;
@@ -624,8 +626,9 @@ graph_action_allowed(pcmk__graph_t *graph, pcmk__graph_action_t *action)
      * the connection resources */
     target = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
 
-    if ((target == NULL) && pcmk__strcase_any_of(task, CRMD_ACTION_MIGRATE,
-                                                 CRMD_ACTION_MIGRATED, NULL)) {
+    if ((target == NULL)
+        && pcmk__strcase_any_of(task, PCMK_ACTION_MIGRATE_TO,
+                                PCMK_ACTION_MIGRATE_FROM, NULL)) {
         target = crm_meta_value(action->params, XML_LRM_ATTR_MIGRATE_SOURCE);
         if (!allowed_on_node(graph, action, target)) {
             return false;

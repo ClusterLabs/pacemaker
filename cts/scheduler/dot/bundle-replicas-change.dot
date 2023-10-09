@@ -89,6 +89,7 @@
 "httpd:0_start_0 httpd-bundle-0" -> "httpd-bundle-clone_running_0" [ style = bold]
 "httpd:0_start_0 httpd-bundle-0" -> "httpd:0_monitor_10000 httpd-bundle-0" [ style = bold]
 "httpd:0_start_0 httpd-bundle-0" -> "httpd:1_start_0 httpd-bundle-1" [ style = bold]
+"httpd:0_start_0 httpd-bundle-0" -> "httpd:2_start_0 httpd-bundle-2" [ style = bold]
 "httpd:0_start_0 httpd-bundle-0" [ style=bold color="green" fontcolor="black"]
 "httpd:1_monitor_10000 httpd-bundle-1" [ style=bold color="green" fontcolor="black"]
 "httpd:1_start_0 httpd-bundle-1" -> "httpd-bundle-clone_running_0" [ style = bold]

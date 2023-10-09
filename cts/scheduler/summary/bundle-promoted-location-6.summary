@@ -1,0 +1,40 @@
+Current cluster status:
+  * Node List:
+    * Online: [ node1 node2 node3 ]
+    * GuestOnline: [ base-bundle-0 base-bundle-1 base-bundle-2 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started node2
+    * Container bundle set: base-bundle [localhost/pcmktest]:
+      * base-bundle-0	(ocf:pacemaker:Stateful):	 Promoted node3
+      * base-bundle-1	(ocf:pacemaker:Stateful):	 Unpromoted node2
+      * base-bundle-2	(ocf:pacemaker:Stateful):	 Unpromoted node1
+
+Transition Summary:
+  * Stop       base-bundle-podman-1     (                    node2 )  due to node availability
+  * Stop       base-bundle-1            (                    node2 )  due to unrunnable base-bundle-podman-1 start
+  * Stop       base:1                   ( Unpromoted base-bundle-1 )  due to unrunnable base-bundle-podman-1 start
+
+Executing Cluster Transition:
+  * Pseudo action:   base-bundle_stop_0
+  * Pseudo action:   base-bundle-clone_stop_0
+  * Resource action: base            stop on base-bundle-1
+  * Pseudo action:   base-bundle-clone_stopped_0
+  * Pseudo action:   base-bundle-clone_start_0
+  * Resource action: base-bundle-1   stop on node2
+  * Pseudo action:   base-bundle-clone_running_0
+  * Resource action: base-bundle-podman-1 stop on node2
+  * Pseudo action:   base-bundle_stopped_0
+  * Pseudo action:   base-bundle_running_0
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 node2 node3 ]
+    * GuestOnline: [ base-bundle-0 base-bundle-2 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started node2
+    * Container bundle set: base-bundle [localhost/pcmktest]:
+      * base-bundle-0	(ocf:pacemaker:Stateful):	 Promoted node3
+      * base-bundle-1	(ocf:pacemaker:Stateful):	 Stopped
+      * base-bundle-2	(ocf:pacemaker:Stateful):	 Unpromoted node1

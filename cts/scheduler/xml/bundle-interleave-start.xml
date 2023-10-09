@@ -6,7 +6,8 @@
        and its promoted role is colocated with base's. App's starts and
        promotes are ordered after base's.
 
-       In this test, all are stopped and must be started.
+       In this test, all are stopped and must be started. One replica of each
+       bundle must be promoted.
     -->
   <configuration>
     <crm_config>

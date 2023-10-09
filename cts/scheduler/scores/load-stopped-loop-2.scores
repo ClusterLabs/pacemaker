@@ -42,7 +42,7 @@ pcmk__clone_assign: p_glusterd:3 allocation score on xfc3: 0
 pcmk__primitive_assign: p_bl_glusterfs:0 allocation score on xfc0: -INFINITY
 pcmk__primitive_assign: p_bl_glusterfs:0 allocation score on xfc1: -INFINITY
 pcmk__primitive_assign: p_bl_glusterfs:0 allocation score on xfc2: -INFINITY
-pcmk__primitive_assign: p_bl_glusterfs:0 allocation score on xfc3: 1
+pcmk__primitive_assign: p_bl_glusterfs:0 allocation score on xfc3: INFINITY
 pcmk__primitive_assign: p_bl_glusterfs:1 allocation score on xfc0: 1
 pcmk__primitive_assign: p_bl_glusterfs:1 allocation score on xfc1: -INFINITY
 pcmk__primitive_assign: p_bl_glusterfs:1 allocation score on xfc2: -INFINITY
@@ -58,7 +58,7 @@ pcmk__primitive_assign: p_bl_glusterfs:3 allocation score on xfc3: -INFINITY
 pcmk__primitive_assign: p_glusterd:0 allocation score on xfc0: 0
 pcmk__primitive_assign: p_glusterd:0 allocation score on xfc1: 0
 pcmk__primitive_assign: p_glusterd:0 allocation score on xfc2: 0
-pcmk__primitive_assign: p_glusterd:0 allocation score on xfc3: 1
+pcmk__primitive_assign: p_glusterd:0 allocation score on xfc3: INFINITY
 pcmk__primitive_assign: p_glusterd:1 allocation score on xfc0: 1
 pcmk__primitive_assign: p_glusterd:1 allocation score on xfc1: 0
 pcmk__primitive_assign: p_glusterd:1 allocation score on xfc2: 0

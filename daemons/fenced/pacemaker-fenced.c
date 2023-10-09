@@ -38,6 +38,7 @@
 
 #include <crm/cib/internal.h>
 #include <crm/pengine/status.h>
+#include <crm/pengine/internal.h>
 #include <pacemaker-internal.h>
 
 #include <pacemaker-fenced.h>
@@ -56,9 +57,9 @@ static gboolean stonith_shutdown_flag = FALSE;
 static qb_ipcs_service_t *ipcs = NULL;
 static xmlNode *local_cib = NULL;
 static pe_working_set_t *fenced_data_set = NULL;
-static const unsigned long long data_set_flags = pe_flag_quick_location
-                                                 | pe_flag_no_compat
-                                                 | pe_flag_no_counts;
+static const unsigned long long data_set_flags = pcmk_sched_location_only
+                                                 |pcmk_sched_no_compat
+                                                 |pcmk_sched_no_counts;
 
 static cib_t *cib_api = NULL;
 
@@ -241,7 +242,8 @@ stonith_peer_cs_destroy(gpointer user_data)
 #endif
 
 void
-do_local_reply(xmlNode *notify_src, pcmk__client_t *client, int call_options)
+do_local_reply(const xmlNode *notify_src, pcmk__client_t *client,
+               int call_options)
 {
     /* send callback to originating child */
     int local_rc = pcmk_rc_ok;
@@ -292,7 +294,7 @@ static void
 stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
 {
 
-    xmlNode *update_msg = user_data;
+    const xmlNode *update_msg = user_data;
     pcmk__client_t *client = value;
     const char *type = NULL;
 
@@ -734,7 +736,7 @@ cib_device_update(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     /* Check whether our node is allowed for this resource (and its parent if in a group) */
     node = our_node_allowed_for(rsc);
-    if (rsc->parent && (rsc->parent->variant == pe_group)) {
+    if (rsc->parent && (rsc->parent->variant == pcmk_rsc_variant_group)) {
         parent = our_node_allowed_for(rsc->parent);
     }
 
@@ -975,7 +977,7 @@ update_cib_stonith_devices(const char *event, xmlNode * msg)
     xmlNode *patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
 
     CRM_ASSERT(patchset);
-    crm_element_value_int(patchset, "format", &format);
+    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
     switch(format) {
         case 1:
             update_cib_stonith_devices_v1(event, msg);
@@ -1053,7 +1055,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
     xmlNode *patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
 
     CRM_ASSERT(patchset);
-    crm_element_value_int(patchset, "format", &format);
+    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
 
     if(format == 1) {
         /* Process deletions (only) */
@@ -1172,8 +1174,6 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
         }
 
         patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
-        pcmk__output_set_log_level(logger_out, LOG_TRACE);
-        out->message(out, "xml-patchset", patchset);
         rc = xml_apply_patchset(local_cib, patchset, TRUE);
         switch (rc) {
             case pcmk_ok:
@@ -1435,10 +1435,11 @@ static pcmk__cluster_option_t fencer_options[] = {
              "Then use this to specify the maximum number of actions can be performed in parallel on this device. -1 is unlimited.")
     },
     {
-	"pcmk_reboot_action",NULL, "string", NULL, "reboot", NULL,
-	N_("Advanced use only: An alternate command to run instead of 'reboot'"),
+        "pcmk_reboot_action", NULL, "string", NULL,
+        PCMK_ACTION_REBOOT, NULL,
+        N_("Advanced use only: An alternate command to run instead of 'reboot'"),
         N_("Some devices do not support the standard commands or may provide additional ones.\n"
-                 "Use this to specify an alternate, device-specific, command that implements the \'reboot\' action.")
+           "Use this to specify an alternate, device-specific, command that implements the \'reboot\' action.")
     },
     {
 	"pcmk_reboot_timeout",NULL, "time", NULL, "60s", NULL,
@@ -1454,10 +1455,11 @@ static pcmk__cluster_option_t fencer_options[] = {
            " Use this option to alter the number of times Pacemaker retries \'reboot\' actions before giving up.")
     },
     {
-	"pcmk_off_action",NULL, "string", NULL, "off", NULL,
-	N_("Advanced use only: An alternate command to run instead of \'off\'"),
+        "pcmk_off_action", NULL, "string", NULL,
+        PCMK_ACTION_OFF, NULL,
+        N_("Advanced use only: An alternate command to run instead of \'off\'"),
         N_("Some devices do not support the standard commands or may provide additional ones."
-                 "Use this to specify an alternate, device-specific, command that implements the \'off\' action.")
+           "Use this to specify an alternate, device-specific, command that implements the \'off\' action.")
     },
     {
 	"pcmk_off_timeout",NULL, "time", NULL, "60s", NULL,
@@ -1473,10 +1475,11 @@ static pcmk__cluster_option_t fencer_options[] = {
            " Use this option to alter the number of times Pacemaker retries \'off\' actions before giving up.")
     },
     {
-	"pcmk_on_action",NULL, "string", NULL, "on", NULL,
-	N_("Advanced use only: An alternate command to run instead of 'on'"),
+        "pcmk_on_action", NULL, "string", NULL,
+        PCMK_ACTION_ON, NULL,
+        N_("Advanced use only: An alternate command to run instead of 'on'"),
         N_("Some devices do not support the standard commands or may provide additional ones."
-                 "Use this to specify an alternate, device-specific, command that implements the \'on\' action.")
+           "Use this to specify an alternate, device-specific, command that implements the \'on\' action.")
     },
     {
 	"pcmk_on_timeout",NULL, "time", NULL, "60s", NULL,
@@ -1492,10 +1495,11 @@ static pcmk__cluster_option_t fencer_options[] = {
            " Use this option to alter the number of times Pacemaker retries \'on\' actions before giving up.")
     },
     {
-	"pcmk_list_action",NULL, "string", NULL, "list", NULL,
-	N_("Advanced use only: An alternate command to run instead of \'list\'"),
+        "pcmk_list_action",NULL, "string", NULL,
+        PCMK_ACTION_LIST, NULL,
+        N_("Advanced use only: An alternate command to run instead of \'list\'"),
         N_("Some devices do not support the standard commands or may provide additional ones."
-                 "Use this to specify an alternate, device-specific, command that implements the \'list\' action.")
+           "Use this to specify an alternate, device-specific, command that implements the \'list\' action.")
     },
     {
 	"pcmk_list_timeout",NULL, "time", NULL, "60s", NULL,
@@ -1511,7 +1515,8 @@ static pcmk__cluster_option_t fencer_options[] = {
            " Use this option to alter the number of times Pacemaker retries \'list\' actions before giving up.")
     },
     {
-	"pcmk_monitor_action",NULL, "string", NULL, "monitor", NULL,
+        "pcmk_monitor_action", NULL, "string", NULL,
+        PCMK_ACTION_MONITOR, NULL,
 	N_("Advanced use only: An alternate command to run instead of \'monitor\'"),
         N_("Some devices do not support the standard commands or may provide additional ones."
                  "Use this to specify an alternate, device-specific, command that implements the \'monitor\' action.")
@@ -1530,10 +1535,11 @@ static pcmk__cluster_option_t fencer_options[] = {
            " Use this option to alter the number of times Pacemaker retries \'monitor\' actions before giving up.")
     },
     {
-	"pcmk_status_action",NULL, "string", NULL, "status", NULL,
-	N_("Advanced use only: An alternate command to run instead of \'status\'"),
+        "pcmk_status_action", NULL, "string", NULL,
+        PCMK_ACTION_STATUS, NULL,
+        N_("Advanced use only: An alternate command to run instead of \'status\'"),
         N_("Some devices do not support the standard commands or may provide additional ones."
-                 "Use this to specify an alternate, device-specific, command that implements the \'status\' action.")
+           "Use this to specify an alternate, device-specific, command that implements the \'status\' action.")
     },
     {
 	"pcmk_status_timeout",NULL, "time", NULL, "60s", NULL,
@@ -1568,13 +1574,13 @@ fencer_metadata(void)
 
 static GOptionEntry entries[] = {
     { "stand-alone", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &stand_alone,
-      "Deprecated (will be removed in a future release)", NULL },
+      N_("Deprecated (will be removed in a future release)"), NULL },
 
     { "stand-alone-w-cpg", 'c', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
-      stand_alone_cpg_cb, "Intended for use in regression testing only", NULL },
+      stand_alone_cpg_cb, N_("Intended for use in regression testing only"), NULL },
 
     { "logfile", 'l', G_OPTION_FLAG_NONE, G_OPTION_ARG_FILENAME_ARRAY,
-      &options.log_files, "Send logs to the additional named logfile", NULL },
+      &options.log_files, N_("Send logs to the additional named logfile"), NULL },
 
     { NULL }
 };
@@ -1649,7 +1655,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (crm_ipc_connect(old_instance)) {
+    if (pcmk__connect_generic_ipc(old_instance) == pcmk_rc_ok) {
         // IPC endpoint already up
         crm_ipc_close(old_instance);
         crm_ipc_destroy(old_instance);
@@ -1669,22 +1675,6 @@ main(int argc, char **argv)
     CRM_ASSERT(fenced_data_set != NULL);
 
     cluster = pcmk_cluster_new();
-
-    /* Initialize the logger prior to setup_cib(). update_cib_cache_cb() may
-     * call the "xml-patchset" message function, which needs the logger, after
-     * setup_cib() has run.
-     */
-    rc = pcmk__log_output_new(&logger_out) != pcmk_rc_ok;
-    if (rc != pcmk_rc_ok) {
-        exit_code = CRM_EX_FATAL;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Error creating output format log: %s", pcmk_rc_str(rc));
-        goto done;
-    }
-    pe__register_messages(logger_out);
-    pcmk__register_lib_messages(logger_out);
-    pcmk__output_set_log_level(logger_out, LOG_TRACE);
-    fenced_data_set->priv = logger_out;
 
     if (!stand_alone) {
 #if SUPPORT_COROSYNC
@@ -1718,6 +1708,18 @@ main(int argc, char **argv)
     init_topology_list();
 
     pcmk__serve_fenced_ipc(&ipcs, &ipc_callbacks);
+
+    rc = pcmk__log_output_new(&logger_out);
+    if (rc != pcmk_rc_ok) {
+        exit_code = CRM_EX_FATAL;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Error creating output format log: %s", pcmk_rc_str(rc));
+        goto done;
+    }
+    pe__register_messages(logger_out);
+    pcmk__register_lib_messages(logger_out);
+    pcmk__output_set_log_level(logger_out, LOG_TRACE);
+    fenced_data_set->priv = logger_out;
 
     // Create the mainloop and run it...
     mainloop = g_main_loop_new(NULL, FALSE);

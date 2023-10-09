@@ -145,8 +145,11 @@ static GOptionEntry required_entries[] = {
 
 static GOptionEntry command_entries[] = {
     { "update", 'U', 0, G_OPTION_ARG_CALLBACK, command_cb,
-      "Update attribute's value in pacemaker-attrd. If this causes the value\n"
-      INDENT "to change, it will also be updated in the cluster configuration.",
+      "Update attribute's value. Required: -n/--name or -P/--pattern.\n"
+      INDENT "Optional: -d/--delay (if specified, the delay will be used if\n"
+      INDENT "the attribute needs to be created, but ignored if the\n"
+      INDENT "attribute already exists), -s/--set, -p/--private, -W/--wait,\n"
+      INDENT "-z/--utilization.",
       "VALUE" },
 
     { "update-both", 'B', 0, G_OPTION_ARG_CALLBACK, command_cb,
@@ -446,10 +449,11 @@ send_attrd_query(pcmk__output_t *out, const char *attr_name,
     pcmk_register_ipc_callback(attrd_api, attrd_event_cb, out);
 
     // Connect to attrd (without main loop)
-    rc = pcmk_connect_ipc(attrd_api, pcmk_ipc_dispatch_sync);
+    rc = pcmk__connect_ipc(attrd_api, pcmk_ipc_dispatch_sync, 5);
     if (rc != pcmk_rc_ok) {
         g_set_error(&error, PCMK__RC_ERROR, rc,
-                    "Could not connect to attrd: %s", pcmk_rc_str(rc));
+                    "Could not connect to %s: %s",
+                    pcmk_ipc_name(attrd_api, true), pcmk_rc_str(rc));
         pcmk_free_ipc_api(attrd_api);
         return rc;
     }
@@ -463,7 +467,7 @@ send_attrd_query(pcmk__output_t *out, const char *attr_name,
 
     if (rc != pcmk_rc_ok) {
         g_set_error(&error, PCMK__RC_ERROR, rc, "Could not query value of %s: %s (%d)",
-                    attr_name, pcmk_strerror(rc), rc);
+                    attr_name, pcmk_rc_str(rc), rc);
     } else if (!printed_values) {
         rc = pcmk_rc_schema_validation;
         g_set_error(&error, PCMK__RC_ERROR, rc,
@@ -500,7 +504,7 @@ send_attrd_update(char command, const char *attr_node, const char *attr_name,
 
         case 'U':
             rc = pcmk__attrd_api_update(NULL, attr_node, attr_name, attr_value,
-                                        NULL, attr_set, NULL,
+                                        attr_dampen, attr_set, NULL,
                                         attr_options | pcmk__node_attr_value);
             break;
 

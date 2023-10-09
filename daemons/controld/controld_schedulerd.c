@@ -45,11 +45,11 @@ controld_shutdown_schedulerd_ipc(void)
  * \internal
  * \brief Save CIB query result to file, raising FSA error
  *
- * \param[in]     msg        Ignored
- * \param[in]     call_id    Call ID of CIB query
- * \param[in]     rc         Return code of CIB query
- * \param[in,out] output     Result of CIB query
- * \param[in]     user_data  Unique identifier for filename
+ * \param[in] msg        Ignored
+ * \param[in] call_id    Call ID of CIB query
+ * \param[in] rc         Return code of CIB query
+ * \param[in] output     Result of CIB query
+ * \param[in] user_data  Unique identifier for filename
  *
  * \note This is intended to be called after a scheduler connection fails.
  */
@@ -90,8 +90,9 @@ handle_disconnect(void)
         int rc = pcmk_ok;
         char *uuid_str = crm_generate_uuid();
 
-        crm_crit("Connection to the scheduler failed "
-                 CRM_XS " uuid=%s", uuid_str);
+        crm_crit("Lost connection to the scheduler "
+                 CRM_XS " CIB will be saved to " PE_STATE_DIR "/pe-core-%s.bz2",
+                 uuid_str);
 
         /*
          * The scheduler died...
@@ -107,9 +108,6 @@ handle_disconnect(void)
                                                     NULL, NULL,
                                                     cib_scope_local);
         fsa_register_cib_callback(rc, uuid_str, save_cib_contents);
-
-    } else {
-        crm_info("Connection to the scheduler released");
     }
 
     controld_clear_fsa_input_flags(R_PE_CONNECTED);
@@ -199,9 +197,10 @@ new_schedulerd_ipc_connection(void)
 
     pcmk_register_ipc_callback(schedulerd_api, scheduler_event_callback, NULL);
 
-    rc = pcmk_connect_ipc(schedulerd_api, pcmk_ipc_dispatch_main);
+    rc = pcmk__connect_ipc(schedulerd_api, pcmk_ipc_dispatch_main, 3);
     if (rc != pcmk_rc_ok) {
-        crm_err("Error connecting to the scheduler: %s", pcmk_rc_str(rc));
+        crm_err("Error connecting to %s: %s",
+                pcmk_ipc_name(schedulerd_api, true), pcmk_rc_str(rc));
         return false;
     }
 

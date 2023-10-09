@@ -9,4 +9,5 @@
 
 MAINTAINERCLEANFILES    = Makefile.in
 
-EXTRA_DIST = $(wildcard test_*)
+EXTRA_DIST = $(wildcard test_*) \
+	     __init__.py

@@ -11,6 +11,7 @@ import socket
 import sys
 import time
 
+from pacemaker.buildoptions import BuildOptions
 from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.remote import RemoteFactory
 from pacemaker._cts.watcher import LogKind
@@ -31,7 +32,7 @@ class Environment:
     def __init__(self, args):
         """ Create a new Environment instance.  This class can be treated kind
             of like a dictionary due to the presence of typical dict functions
-            like has_key, __getitem__, and __setitem__.  However, it is not a
+            like __contains__, __getitem__, and __setitem__.  However, it is not a
             dictionary so do not rely on standard dictionary behavior.
 
             Arguments:
@@ -100,7 +101,7 @@ class Environment:
 
         return list(self.data.keys())
 
-    def has_key(self, key):
+    def __contains__(self, key):
         """ Does the given environment key exist? """
 
         if key == "nodes":
@@ -120,10 +121,7 @@ class Environment:
         if key == "Name":
             return self._get_stack_short()
 
-        if key in self.data:
-            return self.data[key]
-
-        return None
+        return self.data.get(key)
 
     def __setitem__(self, key, value):
         """ Set the given environment key to the given value, overriding any
@@ -160,6 +158,14 @@ class Environment:
         """ Choose a random node from the cluster """
 
         return self.random_gen.choice(self["nodes"])
+
+    def get(self, key, default=None):
+        """ Return the value for key if key is in the environment, else default """
+
+        if key == "nodes":
+            return self._nodes
+
+        return self.data.get(key, default)
 
     def _set_stack(self, name):
         """ Normalize the given cluster stack name """
@@ -398,15 +404,9 @@ class Environment:
         grp4.add_argument("--boot",
                           action="store_true",
                           help="")
-        grp4.add_argument("--bsc",
-                          action="store_true",
-                          help="")
         grp4.add_argument("--cib-filename",
                           metavar="PATH",
                           help="Install the given CIB file to the cluster")
-        grp4.add_argument("--container-tests",
-                          action="store_true",
-                          help="Include pacemaker_remote tests that run in lxc container resources")
         grp4.add_argument("--experimental-tests",
                           action="store_true",
                           help="Include experimental tests")
@@ -438,7 +438,7 @@ class Environment:
                           help="Use QARSH to access nodes instead of SSH")
         grp4.add_argument("--schema",
                           metavar="SCHEMA",
-                          default="pacemaker-3.0",
+                          default="pacemaker-%s" % BuildOptions.CIB_SCHEMA_VERSION,
                           help="Create a CIB conforming to the given schema")
         grp4.add_argument("--seed",
                           metavar="SEED",
@@ -491,7 +491,6 @@ class Environment:
         self["at-boot"] = args.at_boot in ["1", "yes"]
         self["benchmark"] = args.benchmark
         self["continue"] = args.always_continue
-        self["container-tests"] = args.container_tests
         self["experimental-tests"] = args.experimental_tests
         self["iterations"] = args.iterations
         self["loop-minutes"] = args.loop_minutes
@@ -541,10 +540,6 @@ class Environment:
         # alphabetically.
         if args.boot:
             self["scenario"] = "boot"
-
-        if args.bsc:
-            self["DoBSC"] = True
-            self["scenario"] = "basic-sanity"
 
         if args.cib_filename:
             self["CIBfilename"] = args.cib_filename

@@ -138,10 +138,8 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
         pcmk__xe_set_bool_attr(node_state, XML_NODE_IS_REMOTE, true);
     }
 
-    set_uuid(node_state, XML_ATTR_ID, node);
-
-    if (crm_element_value(node_state, XML_ATTR_ID) == NULL) {
-        crm_info("Node update for %s cancelled: no id", node->uname);
+    if (crm_xml_add(node_state, XML_ATTR_ID, crm_peer_uuid(node)) == NULL) {
+        crm_info("Node update for %s cancelled: no ID", node->uname);
         free_xml(node_state);
         return NULL;
     }
@@ -149,17 +147,31 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
     crm_xml_add(node_state, XML_ATTR_UNAME, node->uname);
 
     if ((flags & node_update_cluster) && node->state) {
-        pcmk__xe_set_bool_attr(node_state, XML_NODE_IN_CLUSTER,
-                               pcmk__str_eq(node->state, CRM_NODE_MEMBER, pcmk__str_casei));
+        if (compare_version(controld_globals.dc_version, "3.18.0") >= 0) {
+            // A value 0 means the node is not a cluster member.
+            crm_xml_add_ll(node_state, PCMK__XA_IN_CCM, node->when_member);
+
+        } else {
+            pcmk__xe_set_bool_attr(node_state, PCMK__XA_IN_CCM,
+                                   pcmk__str_eq(node->state, CRM_NODE_MEMBER,
+                                                pcmk__str_casei));
+        }
     }
 
     if (!pcmk_is_set(node->flags, crm_remote_node)) {
         if (flags & node_update_peer) {
-            value = OFFLINESTATUS;
-            if (pcmk_is_set(node->processes, crm_get_cluster_proc())) {
-                value = ONLINESTATUS;
+            if (compare_version(controld_globals.dc_version, "3.18.0") >= 0) {
+                // A value 0 means the peer is offline in CPG.
+                crm_xml_add_ll(node_state, PCMK__XA_CRMD, node->when_online);
+
+            } else {
+                // @COMPAT DCs < 2.1.7 use online/offline rather than timestamp
+                value = OFFLINESTATUS;
+                if (pcmk_is_set(node->processes, crm_get_cluster_proc())) {
+                    value = ONLINESTATUS;
+                }
+                crm_xml_add(node_state, PCMK__XA_CRMD, value);
             }
-            crm_xml_add(node_state, XML_NODE_IS_PEER, value);
         }
 
         if (flags & node_update_join) {
@@ -168,11 +180,11 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
             } else {
                 value = CRMD_JOINSTATE_MEMBER;
             }
-            crm_xml_add(node_state, XML_NODE_JOIN_STATE, value);
+            crm_xml_add(node_state, PCMK__XA_JOIN, value);
         }
 
         if (flags & node_update_expected) {
-            crm_xml_add(node_state, XML_NODE_EXPECTED, node->expected);
+            crm_xml_add(node_state, PCMK__XA_EXPECTED, node->expected);
         }
     }
 
@@ -210,7 +222,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
         return;
     }
 
-    if (pcmk__str_eq(crm_element_name(output), XML_CIB_TAG_NODE, pcmk__str_casei)) {
+    if (pcmk__xe_is(output, XML_CIB_TAG_NODE)) {
         node_xml = output;
 
     } else {
@@ -224,7 +236,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
         crm_node_t *node = NULL;
         gboolean known = FALSE;
 
-        if (!pcmk__str_eq(crm_element_name(node_xml), XML_CIB_TAG_NODE, pcmk__str_casei)) {
+        if (!pcmk__xe_is(node_xml, XML_CIB_TAG_NODE)) {
             continue;
         }
 

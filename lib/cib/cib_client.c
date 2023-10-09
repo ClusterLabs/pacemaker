@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -253,14 +253,15 @@ cib_client_noop(cib_t * cib, int call_options)
 {
     op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_NOOP, NULL, NULL, NULL, NULL,
-                           call_options, NULL);
+                           call_options, cib->user);
 }
 
 static int
 cib_client_ping(cib_t * cib, xmlNode ** output_data, int call_options)
 {
     op_common(cib);
-    return cib_internal_op(cib, CRM_OP_PING, NULL, NULL, NULL, output_data, call_options, NULL);
+    return cib_internal_op(cib, CRM_OP_PING, NULL, NULL, NULL, output_data,
+                           call_options, cib->user);
 }
 
 static int
@@ -275,7 +276,7 @@ cib_client_query_from(cib_t * cib, const char *host, const char *section,
 {
     op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_QUERY, host, section, NULL,
-                           output_data, call_options, NULL);
+                           output_data, call_options, cib->user);
 }
 
 static int
@@ -283,7 +284,7 @@ is_primary(cib_t *cib)
 {
     op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_IS_PRIMARY, NULL, NULL, NULL,
-                           NULL, cib_scope_local|cib_sync_call, NULL);
+                           NULL, cib_scope_local|cib_sync_call, cib->user);
 }
 
 static int
@@ -291,7 +292,7 @@ set_secondary(cib_t *cib, int call_options)
 {
     op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_SECONDARY, NULL, NULL, NULL,
-                           NULL, call_options, NULL);
+                           NULL, call_options, cib->user);
 }
 
 static int
@@ -306,7 +307,7 @@ set_primary(cib_t *cib, int call_options)
     op_common(cib);
     crm_trace("Adding cib_scope_local to options");
     return cib_internal_op(cib, PCMK__CIB_REQUEST_PRIMARY, NULL, NULL, NULL,
-                           NULL, call_options|cib_scope_local, NULL);
+                           NULL, call_options|cib_scope_local, cib->user);
 }
 
 static int
@@ -314,7 +315,7 @@ cib_client_bump_epoch(cib_t * cib, int call_options)
 {
     op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_BUMP, NULL, NULL, NULL, NULL,
-                           call_options, NULL);
+                           call_options, cib->user);
 }
 
 static int
@@ -322,7 +323,7 @@ cib_client_upgrade(cib_t * cib, int call_options)
 {
     op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_UPGRADE, NULL, NULL, NULL,
-                           NULL, call_options, NULL);
+                           NULL, call_options, cib->user);
 }
 
 static int
@@ -336,7 +337,7 @@ cib_client_sync_from(cib_t * cib, const char *host, const char *section, int cal
 {
     op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_SYNC_TO_ALL, host, section,
-                           NULL, NULL, call_options, NULL);
+                           NULL, NULL, call_options, cib->user);
 }
 
 static int
@@ -344,7 +345,7 @@ cib_client_create(cib_t * cib, const char *section, xmlNode * data, int call_opt
 {
     op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_CREATE, NULL, section, data,
-                           NULL, call_options, NULL);
+                           NULL, call_options, cib->user);
 }
 
 static int
@@ -352,7 +353,7 @@ cib_client_modify(cib_t * cib, const char *section, xmlNode * data, int call_opt
 {
     op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_MODIFY, NULL, section, data,
-                           NULL, call_options, NULL);
+                           NULL, call_options, cib->user);
 }
 
 static int
@@ -360,7 +361,7 @@ cib_client_replace(cib_t * cib, const char *section, xmlNode * data, int call_op
 {
     op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_REPLACE, NULL, section, data,
-                           NULL, call_options, NULL);
+                           NULL, call_options, cib->user);
 }
 
 static int
@@ -368,7 +369,7 @@ cib_client_delete(cib_t * cib, const char *section, xmlNode * data, int call_opt
 {
     op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_DELETE, NULL, section, data,
-                           NULL, call_options, NULL);
+                           NULL, call_options, cib->user);
 }
 
 static int
@@ -376,7 +377,7 @@ cib_client_delete_absolute(cib_t * cib, const char *section, xmlNode * data, int
 {
     op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_ABS_DELETE, NULL, section,
-                           data, NULL, call_options, NULL);
+                           data, NULL, call_options, cib->user);
 }
 
 static int
@@ -384,7 +385,76 @@ cib_client_erase(cib_t * cib, xmlNode ** output_data, int call_options)
 {
     op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_ERASE, NULL, NULL, NULL,
-                           output_data, call_options, NULL);
+                           output_data, call_options, cib->user);
+}
+
+static int
+cib_client_init_transaction(cib_t *cib)
+{
+    int rc = pcmk_rc_ok;
+
+    op_common(cib);
+
+    if (cib->transaction != NULL) {
+        // A client can have at most one transaction at a time
+        rc = pcmk_rc_already;
+    }
+
+    if (rc == pcmk_rc_ok) {
+        cib->transaction = create_xml_node(NULL, T_CIB_TRANSACTION);
+        if (cib->transaction == NULL) {
+            rc = ENOMEM;
+        }
+    }
+
+    if (rc != pcmk_rc_ok) {
+        const char *client_id = NULL;
+
+        cib->cmds->client_id(cib, NULL, &client_id);
+        crm_err("Failed to initialize CIB transaction for client %s: %s",
+                client_id, pcmk_rc_str(rc));
+    }
+    return pcmk_rc2legacy(rc);
+}
+
+static int
+cib_client_end_transaction(cib_t *cib, bool commit, int call_options)
+{
+    const char *client_id = NULL;
+    int rc = pcmk_ok;
+
+    op_common(cib);
+    cib->cmds->client_id(cib, NULL, &client_id);
+    client_id = pcmk__s(client_id, "(unidentified)");
+
+    if (commit) {
+        if (cib->transaction == NULL) {
+            rc = pcmk_rc_no_transaction;
+
+            crm_err("Failed to commit transaction for CIB client %s: %s",
+                    client_id, pcmk_rc_str(rc));
+            return pcmk_rc2legacy(rc);
+        }
+        rc = cib_internal_op(cib, PCMK__CIB_REQUEST_COMMIT_TRANSACT, NULL, NULL,
+                             cib->transaction, NULL, call_options, cib->user);
+
+    } else {
+        // Discard always succeeds
+        if (cib->transaction != NULL) {
+            crm_trace("Discarded transaction for CIB client %s", client_id);
+        } else {
+            crm_trace("No transaction found for CIB client %s", client_id);
+        }
+    }
+    free_xml(cib->transaction);
+    cib->transaction = NULL;
+    return rc;
+}
+
+static void
+cib_client_set_user(cib_t *cib, const char *user)
+{
+    pcmk__str_update(&(cib->user), user);
 }
 
 static void
@@ -622,13 +692,15 @@ cib_new_variant(void)
         return NULL;
     }
 
+    // Deprecated method
     new_cib->cmds->set_op_callback = cib_client_set_op_callback;
+
     new_cib->cmds->add_notify_callback = cib_client_add_notify_callback;
     new_cib->cmds->del_notify_callback = cib_client_del_notify_callback;
     new_cib->cmds->register_callback = cib_client_register_callback;
     new_cib->cmds->register_callback_full = cib_client_register_callback_full;
 
-    new_cib->cmds->noop = cib_client_noop;
+    new_cib->cmds->noop = cib_client_noop; // Deprecated method
     new_cib->cmds->ping = cib_client_ping;
     new_cib->cmds->query = cib_client_query;
     new_cib->cmds->sync = cib_client_sync;
@@ -656,7 +728,13 @@ cib_new_variant(void)
     new_cib->cmds->remove = cib_client_delete;
     new_cib->cmds->erase = cib_client_erase;
 
+    // Deprecated method
     new_cib->cmds->delete_absolute = cib_client_delete_absolute;
+
+    new_cib->cmds->init_transaction = cib_client_init_transaction;
+    new_cib->cmds->end_transaction = cib_client_end_transaction;
+
+    new_cib->cmds->set_user = cib_client_set_user;
 
     return new_cib;
 }

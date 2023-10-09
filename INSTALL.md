@@ -55,16 +55,12 @@ Also:
 | documentation (PDF)                             |                | latexmk texlive texlive-capt-of texlive-collection-xetex texlive-fncychap texlive-framed texlive-multirow texlive-needspace texlive-tabulary texlive-titlesec texlive-threeparttable texlive-upquote texlive-wrapfig texlive-xetex | texlive texlive-latex  | texlive texlive-latex-extra |
 | annotated source code as HTML via "make global" |                | global                  | global                  | global                  |
 | RPM packages via "make rpm"                     | 4.11 or later  | rpm                     | rpm                     | (n/a)                   |
-| unit tests                                      |                | libcmocka-devel         | libcmocka-devel         | libcmocka-dev           |
+| unit tests                                      | 1.1.0 or later | libcmocka-devel         | libcmocka-devel         | libcmocka-dev           |
 
 ## Optional testing dependencies
 * procps and psmisc (if running cts-exec, cts-fencing, or CTS)
 * valgrind (if running CTS valgrind tests)
 * python3-systemd (if using CTS on cluster nodes running systemd)
-* rsync (if running CTS container tests)
-* libvirt-daemon-driver-lxc (if running CTS container tests)
-* libvirt-daemon-lxc (if running CTS container tests)
-* libvirt-login-shell (if running CTS container tests)
 * nmap (if not specifying an IP address base)
 * oprofile (if running CTS profiling tests)
 * dlm (to log DLM debugging info after CTS tests)

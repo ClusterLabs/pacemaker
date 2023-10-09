@@ -47,7 +47,7 @@ xml_show_patchset_header(pcmk__output_t *out, const xmlNode *patchset)
     xml_patch_versions(patchset, add, del);
 
     if ((add[0] != del[0]) || (add[1] != del[1]) || (add[2] != del[2])) {
-        const char *fmt = crm_element_value(patchset, "format");
+        const char *fmt = crm_element_value(patchset, PCMK_XA_FORMAT);
         const char *digest = crm_element_value(patchset, XML_ATTR_DIGEST);
 
         out->info(out, "Diff: --- %d.%d.%d %s", del[0], del[1], del[2], fmt);
@@ -80,7 +80,7 @@ static int
 xml_show_patchset_v1_recursive(pcmk__output_t *out, const char *prefix,
                                const xmlNode *data, int depth, uint32_t options)
 {
-    if (!xml_has_children(data)
+    if ((data->children == NULL)
         || (crm_element_value(data, XML_DIFF_MARKER) != NULL)) {
 
         // Found a change; clear the pcmk__xml_fmt_diff_short option if set
@@ -143,7 +143,7 @@ xml_show_patchset_v1(pcmk__output_t *out, const xmlNode *patchset,
      * However, v1 patchsets can only exist during rolling upgrades from
      * Pacemaker 1.1.11, so not worth worrying about.
      */
-    removed = find_xml_node(patchset, "diff-removed", FALSE);
+    removed = find_xml_node(patchset, XML_TAG_DIFF_REMOVED, FALSE);
     for (child = pcmk__xml_first_child(removed); child != NULL;
          child = pcmk__xml_next(child)) {
         int temp_rc = xml_show_patchset_v1_recursive(out, "- ", child, 0,
@@ -159,7 +159,7 @@ xml_show_patchset_v1(pcmk__output_t *out, const xmlNode *patchset,
     }
 
     is_first = true;
-    added = find_xml_node(patchset, "diff-added", FALSE);
+    added = find_xml_node(patchset, XML_TAG_DIFF_ADDED, FALSE);
     for (child = pcmk__xml_first_child(added); child != NULL;
          child = pcmk__xml_next(child)) {
         int temp_rc = xml_show_patchset_v1_recursive(out, "+ ", child, 0,
@@ -303,11 +303,11 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
  *
  * \note \p args should contain only the XML patchset
  */
-PCMK__OUTPUT_ARGS("xml-patchset", "xmlNodePtr")
+PCMK__OUTPUT_ARGS("xml-patchset", "const xmlNode *")
 static int
 xml_patchset_default(pcmk__output_t *out, va_list args)
 {
-    xmlNodePtr patchset = va_arg(args, xmlNodePtr);
+    const xmlNode *patchset = va_arg(args, const xmlNode *);
 
     int format = 1;
 
@@ -316,7 +316,7 @@ xml_patchset_default(pcmk__output_t *out, va_list args)
         return pcmk_rc_no_output;
     }
 
-    crm_element_value_int(patchset, "format", &format);
+    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
     switch (format) {
         case 1:
             return xml_show_patchset_v1(out, patchset, pcmk__xml_fmt_pretty);
@@ -342,13 +342,13 @@ xml_patchset_default(pcmk__output_t *out, va_list args)
  *
  * \note \p args should contain only the XML patchset
  */
-PCMK__OUTPUT_ARGS("xml-patchset", "xmlNodePtr")
+PCMK__OUTPUT_ARGS("xml-patchset", "const xmlNode *")
 static int
 xml_patchset_log(pcmk__output_t *out, va_list args)
 {
     static struct qb_log_callsite *patchset_cs = NULL;
 
-    xmlNodePtr patchset = va_arg(args, xmlNodePtr);
+    const xmlNode *patchset = va_arg(args, const xmlNode *);
 
     uint8_t log_level = pcmk__output_get_log_level(out);
     int format = 1;
@@ -373,7 +373,7 @@ xml_patchset_log(pcmk__output_t *out, va_list args)
         return pcmk_rc_no_output;
     }
 
-    crm_element_value_int(patchset, "format", &format);
+    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
     switch (format) {
         case 1:
             if (log_level < LOG_DEBUG) {
@@ -404,11 +404,11 @@ xml_patchset_log(pcmk__output_t *out, va_list args)
  *
  * \note \p args should contain only the XML patchset
  */
-PCMK__OUTPUT_ARGS("xml-patchset", "xmlNodePtr")
+PCMK__OUTPUT_ARGS("xml-patchset", "const xmlNode *")
 static int
 xml_patchset_xml(pcmk__output_t *out, va_list args)
 {
-    xmlNodePtr patchset = va_arg(args, xmlNodePtr);
+    const xmlNode *patchset = va_arg(args, const xmlNode *);
 
     if (patchset != NULL) {
         char *buf = dump_xml_formatted_with_text(patchset);
@@ -490,7 +490,7 @@ xml_log_patchset(uint8_t log_level, const char *function,
         goto done;
     }
 
-    crm_element_value_int(patchset, "format", &format);
+    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
     switch (format) {
         case 1:
             if (log_level < LOG_DEBUG) {

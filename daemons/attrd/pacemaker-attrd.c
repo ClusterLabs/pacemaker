@@ -63,140 +63,6 @@ crm_cluster_t *attrd_cluster = NULL;
 crm_trigger_t *attrd_config_read = NULL;
 crm_exit_t attrd_exit_status = CRM_EX_OK;
 
-static void
-attrd_cib_destroy_cb(gpointer user_data)
-{
-    cib_t *conn = user_data;
-
-    conn->cmds->signoff(conn);  /* Ensure IPC is cleaned up */
-
-    if (attrd_shutting_down()) {
-        crm_info("Connection disconnection complete");
-
-    } else {
-        /* eventually this should trigger a reconnect, not a shutdown */
-        crm_crit("Lost connection to the CIB manager, shutting down");
-        attrd_exit_status = CRM_EX_DISCONNECT;
-        attrd_shutdown(0);
-    }
-
-    return;
-}
-
-static void
-attrd_erase_cb(xmlNode *msg, int call_id, int rc, xmlNode *output,
-               void *user_data)
-{
-    do_crm_log_unlikely((rc? LOG_NOTICE : LOG_DEBUG),
-                        "Cleared transient attributes: %s "
-                        CRM_XS " xpath=%s rc=%d",
-                        pcmk_strerror(rc), (char *) user_data, rc);
-}
-
-#define XPATH_TRANSIENT "//node_state[@uname='%s']/" XML_TAG_TRANSIENT_NODEATTRS
-
-/*!
- * \internal
- * \brief Wipe all transient attributes for this node from the CIB
- *
- * Clear any previous transient node attributes from the CIB. This is
- * normally done by the DC's controller when this node leaves the cluster, but
- * this handles the case where the node restarted so quickly that the
- * cluster layer didn't notice.
- *
- * \todo If pacemaker-attrd respawns after crashing (see PCMK_respawned),
- *       ideally we'd skip this and sync our attributes from the writer.
- *       However, currently we reject any values for us that the writer has, in
- *       attrd_peer_update().
- */
-static void
-attrd_erase_attrs(void)
-{
-    int call_id;
-    char *xpath = crm_strdup_printf(XPATH_TRANSIENT, attrd_cluster->uname);
-
-    crm_info("Clearing transient attributes from CIB " CRM_XS " xpath=%s",
-             xpath);
-
-    call_id = the_cib->cmds->remove(the_cib, xpath, NULL, cib_xpath);
-    the_cib->cmds->register_callback_full(the_cib, call_id, 120, FALSE, xpath,
-                                          "attrd_erase_cb", attrd_erase_cb,
-                                          free);
-}
-
-static int
-attrd_cib_connect(int max_retry)
-{
-    static int attempts = 0;
-
-    int rc = -ENOTCONN;
-
-    the_cib = cib_new();
-    if (the_cib == NULL) {
-        return -ENOTCONN;
-    }
-
-    do {
-        if(attempts > 0) {
-            sleep(attempts);
-        }
-
-        attempts++;
-        crm_debug("Connection attempt %d to the CIB manager", attempts);
-        rc = the_cib->cmds->signon(the_cib, T_ATTRD, cib_command);
-
-    } while(rc != pcmk_ok && attempts < max_retry);
-
-    if (rc != pcmk_ok) {
-        crm_err("Connection to the CIB manager failed: %s " CRM_XS " rc=%d",
-                pcmk_strerror(rc), rc);
-        goto cleanup;
-    }
-
-    crm_debug("Connected to the CIB manager after %d attempts", attempts);
-
-    rc = the_cib->cmds->set_connection_dnotify(the_cib, attrd_cib_destroy_cb);
-    if (rc != pcmk_ok) {
-        crm_err("Could not set disconnection callback");
-        goto cleanup;
-    }
-
-    rc = the_cib->cmds->add_notify_callback(the_cib, T_CIB_REPLACE_NOTIFY, attrd_cib_replaced_cb);
-    if(rc != pcmk_ok) {
-        crm_err("Could not set CIB notification callback");
-        goto cleanup;
-    }
-
-    rc = the_cib->cmds->add_notify_callback(the_cib, T_CIB_DIFF_NOTIFY, attrd_cib_updated_cb);
-    if (rc != pcmk_ok) {
-        crm_err("Could not set CIB notification callback (update)");
-        goto cleanup;
-    }
-
-    return pcmk_ok;
-
-  cleanup:
-    cib__clean_up_connection(&the_cib);
-    return -ENOTCONN;
-}
-
-/*!
- * \internal
- * \brief Prepare the CIB after cluster is connected
- */
-static void
-attrd_cib_init(void)
-{
-    // We have no attribute values in memory, wipe the CIB to match
-    attrd_erase_attrs();
-
-    // Set a trigger for reading the CIB (for the alerts section)
-    attrd_config_read = mainloop_add_trigger(G_PRIORITY_HIGH, attrd_read_options, NULL);
-
-    // Always read the CIB at start-up
-    mainloop_set_trigger(attrd_config_read);
-}
-
 static bool
 ipc_already_running(void)
 {
@@ -208,8 +74,10 @@ ipc_already_running(void)
         return false;
     }
 
-    rc = pcmk_connect_ipc(old_instance, pcmk_ipc_dispatch_sync);
+    rc = pcmk__connect_ipc(old_instance, pcmk_ipc_dispatch_sync, 2);
     if (rc != pcmk_rc_ok) {
+        crm_debug("No existing %s manager instance found: %s",
+                  pcmk_ipc_name(old_instance, true), pcmk_rc_str(rc));
         pcmk_free_ipc_api(old_instance);
         return false;
     }
@@ -277,7 +145,7 @@ main(int argc, char **argv)
 
         attrd_exit_status = CRM_EX_OK;
         g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status, "%s", msg);
-        crm_err(msg);
+        crm_err("%s", msg);
         goto done;
     }
 

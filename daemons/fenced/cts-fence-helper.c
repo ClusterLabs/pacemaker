@@ -212,10 +212,12 @@ run_fence_failure_test(void)
                 cmds->register_device(st, st_opts, "test-id1", "stonith-ng", "fence_dummy", params),
                 "Register device1 for failure test", 1, 0);
 
-    single_test(st->cmds->fence(st, st_opts, "false_1_node2", "off", 3, 0),
+    single_test(st->cmds->fence(st, st_opts, "false_1_node2", PCMK_ACTION_OFF,
+                                3, 0),
                 "Fence failure results off", 1, -ENODATA);
 
-    single_test(st->cmds->fence(st, st_opts, "false_1_node2", "reboot", 3, 0),
+    single_test(st->cmds->fence(st, st_opts, "false_1_node2",
+                                PCMK_ACTION_REBOOT, 3, 0),
                 "Fence failure results reboot", 1, -ENODATA);
 
     single_test(st->cmds->remove_device(st, st_opts, "test-id1"),
@@ -246,11 +248,13 @@ run_fence_failure_rollover_test(void)
                 cmds->register_device(st, st_opts, "test-id2", "stonith-ng", "fence_dummy", params),
                 "Register device2 for rollover test", 1, 0);
 
-    single_test(st->cmds->fence(st, st_opts, "false_1_node2", "off", 3, 0),
+    single_test(st->cmds->fence(st, st_opts, "false_1_node2", PCMK_ACTION_OFF,
+                                3, 0),
                 "Fence rollover results off", 1, 0);
 
     /* Expect -ENODEV because fence_dummy requires 'on' to be executed on target */
-    single_test(st->cmds->fence(st, st_opts, "false_1_node2", "on", 3, 0),
+    single_test(st->cmds->fence(st, st_opts, "false_1_node2", PCMK_ACTION_ON, 3,
+                                0),
                 "Fence rollover results on", 1, -ENODEV);
 
     single_test(st->cmds->remove_device(st, st_opts, "test-id1"),
@@ -278,7 +282,8 @@ run_standard_test(void)
     stonith_key_value_freeall(params, 1, 1);
     params = NULL;
 
-    single_test(st->cmds->list(st, st_opts, "test-id", NULL, 1), "list", 1, 0);
+    single_test(st->cmds->list(st, st_opts, "test-id", NULL, 1),
+                PCMK_ACTION_LIST, 1, 0);
 
     single_test(st->cmds->monitor(st, st_opts, "test-id", 1), "Monitor", 1, 0);
 
@@ -288,14 +293,17 @@ run_standard_test(void)
     single_test(st->cmds->status(st, st_opts, "test-id", "false_1_node1", 1),
                 "Status false_1_node1", 1, 0);
 
-    single_test(st->cmds->fence(st, st_opts, "unknown-host", "off", 1, 0),
+    single_test(st->cmds->fence(st, st_opts, "unknown-host", PCMK_ACTION_OFF,
+                                1, 0),
                 "Fence unknown-host (expected failure)", 0, -ENODEV);
 
-    single_test(st->cmds->fence(st, st_opts, "false_1_node1", "off", 1, 0),
+    single_test(st->cmds->fence(st, st_opts, "false_1_node1", PCMK_ACTION_OFF,
+                                1, 0),
                 "Fence false_1_node1", 1, 0);
 
     /* Expect -ENODEV because fence_dummy requires 'on' to be executed on target */
-    single_test(st->cmds->fence(st, st_opts, "false_1_node1", "on", 1, 0),
+    single_test(st->cmds->fence(st, st_opts, "false_1_node1", PCMK_ACTION_ON, 1,
+                                0),
                 "Unfence false_1_node1", 1, -ENODEV);
 
     /* Confirm that an invalid level index is rejected */
@@ -362,31 +370,31 @@ standard_dev_test(void)
     rc = st->cmds->status(st, st_opts, "test-id", "false_1_node1", 10);
     crm_debug("Status false_1_node1: %d", rc);
 
-    rc = st->cmds->fence(st, st_opts, "unknown-host", "off", 60, 0);
+    rc = st->cmds->fence(st, st_opts, "unknown-host", PCMK_ACTION_OFF, 60, 0);
     crm_debug("Fence unknown-host: %d", rc);
 
     rc = st->cmds->status(st, st_opts, "test-id", "false_1_node1", 10);
     crm_debug("Status false_1_node1: %d", rc);
 
-    rc = st->cmds->fence(st, st_opts, "false_1_node1", "off", 60, 0);
+    rc = st->cmds->fence(st, st_opts, "false_1_node1", PCMK_ACTION_OFF, 60, 0);
     crm_debug("Fence false_1_node1: %d", rc);
 
     rc = st->cmds->status(st, st_opts, "test-id", "false_1_node1", 10);
     crm_debug("Status false_1_node1: %d", rc);
 
-    rc = st->cmds->fence(st, st_opts, "false_1_node1", "on", 10, 0);
+    rc = st->cmds->fence(st, st_opts, "false_1_node1", PCMK_ACTION_ON, 10, 0);
     crm_debug("Unfence false_1_node1: %d", rc);
 
     rc = st->cmds->status(st, st_opts, "test-id", "false_1_node1", 10);
     crm_debug("Status false_1_node1: %d", rc);
 
-    rc = st->cmds->fence(st, st_opts, "some-host", "off", 10, 0);
+    rc = st->cmds->fence(st, st_opts, "some-host", PCMK_ACTION_OFF, 10, 0);
     crm_debug("Fence alias: %d", rc);
 
     rc = st->cmds->status(st, st_opts, "test-id", "some-host", 10);
     crm_debug("Status alias: %d", rc);
 
-    rc = st->cmds->fence(st, st_opts, "false_1_node1", "on", 10, 0);
+    rc = st->cmds->fence(st, st_opts, "false_1_node1", PCMK_ACTION_ON, 10, 0);
     crm_debug("Unfence false_1_node1: %d", rc);
 
     rc = st->cmds->remove_device(st, st_opts, "test-id");
@@ -426,7 +434,8 @@ test_async_fence_pass(int check_event)
         return;
     }
 
-    rc = st->cmds->fence(st, 0, "true_1_node1", "off", MAINLOOP_DEFAULT_TIMEOUT, 0);
+    rc = st->cmds->fence(st, 0, "true_1_node1", PCMK_ACTION_OFF,
+                         MAINLOOP_DEFAULT_TIMEOUT, 0);
     if (rc < 0) {
         crm_err("fence failed with rc %d", rc);
         mainloop_test_done(__func__, false);
@@ -459,7 +468,8 @@ test_async_fence_custom_timeout(int check_event)
     }
     begin = time(NULL);
 
-    rc = st->cmds->fence(st, 0, "custom_timeout_node1", "off", MAINLOOP_DEFAULT_TIMEOUT, 0);
+    rc = st->cmds->fence(st, 0, "custom_timeout_node1", PCMK_ACTION_OFF,
+                         MAINLOOP_DEFAULT_TIMEOUT, 0);
     if (rc < 0) {
         crm_err("fence failed with rc %d", rc);
         mainloop_test_done(__func__, false);
@@ -479,7 +489,8 @@ test_async_fence_timeout(int check_event)
         return;
     }
 
-    rc = st->cmds->fence(st, 0, "false_1_node2", "off", MAINLOOP_DEFAULT_TIMEOUT, 0);
+    rc = st->cmds->fence(st, 0, "false_1_node2", PCMK_ACTION_OFF,
+                         MAINLOOP_DEFAULT_TIMEOUT, 0);
     if (rc < 0) {
         crm_err("fence failed with rc %d", rc);
         mainloop_test_done(__func__, false);

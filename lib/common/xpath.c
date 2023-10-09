@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -136,9 +136,8 @@ dedupXpathResults(xmlXPathObjectPtr xpathObj)
 
 /* the caller needs to check if the result contains a xmlDocPtr or xmlNodePtr */
 xmlXPathObjectPtr
-xpath_search(xmlNode * xml_top, const char *path)
+xpath_search(const xmlNode *xml_top, const char *path)
 {
-    xmlDocPtr doc = NULL;
     xmlXPathObjectPtr xpathObj = NULL;
     xmlXPathContextPtr xpathCtx = NULL;
     const xmlChar *xpathExpr = (pcmkXmlStr) path;
@@ -147,9 +146,7 @@ xpath_search(xmlNode * xml_top, const char *path)
     CRM_CHECK(xml_top != NULL, return NULL);
     CRM_CHECK(strlen(path) > 0, return NULL);
 
-    doc = getDocPtr(xml_top);
-
-    xpathCtx = xmlXPathNewContext(doc);
+    xpathCtx = xmlXPathNewContext(xml_top->doc);
     CRM_ASSERT(xpathCtx != NULL);
 
     xpathObj = xmlXPathEvalExpression(xpathExpr, xpathCtx);
@@ -298,9 +295,9 @@ pcmk__element_xpath(const xmlNode *xml)
     if (parent == NULL) {
         g_string_append_c(xpath, '/');
     } else if (parent->parent == NULL) {
-        g_string_append(xpath, TYPE(xml));
+        g_string_append(xpath, (const gchar *) xml->name);
     } else {
-        pcmk__g_strcat(xpath, "/", TYPE(xml), NULL);
+        pcmk__g_strcat(xpath, "/", (const char *) xml->name, NULL);
     }
 
     id = ID(xml);

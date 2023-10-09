@@ -745,9 +745,19 @@ readability and logging consistency.
 Functions
 #########
 
+Function Naming
+_______________
+
 Function names should be unique across the entire project, to allow for
 individual tracing via ``PCMK_trace_functions``, and make it easier to search
 code and follow detail logs.
+
+A common function signature is a comparison function that returns 0 if its
+arguments are equal for sorting purposes, -1 if the first argument should sort
+first, and 1 is the second argument should sort first. Such a function should
+have ``cmp`` in its name, to parallel ``strcmp()``; ``sort`` should only be
+used in the names of functions that sort an entire list (typically using a
+``cmp`` function).
 
 
 Function Definitions

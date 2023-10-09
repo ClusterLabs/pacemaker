@@ -137,7 +137,7 @@ pcmk__primitive_assign: mysql-proxy:1 allocation score on wc01: -INFINITY
 pcmk__primitive_assign: mysql-proxy:1 allocation score on wc02: -INFINITY
 pcmk__primitive_assign: mysql-server allocation score on wc01: 0
 pcmk__primitive_assign: mysql-server allocation score on wc02: -INFINITY
-pcmk__primitive_assign: nfs-common:0 allocation score on wc01: 1
+pcmk__primitive_assign: nfs-common:0 allocation score on wc01: 77
 pcmk__primitive_assign: nfs-common:0 allocation score on wc02: -INFINITY
 pcmk__primitive_assign: nfs-common:1 allocation score on wc01: -INFINITY
 pcmk__primitive_assign: nfs-common:1 allocation score on wc02: -INFINITY

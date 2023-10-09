@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 2\n"
 "Report-Msgid-Bugs-To: developers@clusterlabs.org\n"
-"POT-Creation-Date: 2023-04-05 16:20-0500\n"
+"POT-Creation-Date: 2023-06-01 15:09+0800\n"
 "PO-Revision-Date: 2021-11-08 11:04+0800\n"
 "Last-Translator: Vivi <developers@clusterlabs.org>\n"
 "Language-Team: CHINESE <wangluwei@uniontech.org>\n"
@@ -609,6 +609,18 @@ msgid ""
 msgstr ""
 " 可用于所有stonith类资源的实例属性，并由Pacemaker的fence守护程序使用（以前称"
 "为stonithd)"
+
+#: daemons/fenced/pacemaker-fenced.c:1571
+msgid "Deprecated (will be removed in a future release)"
+msgstr "已弃用(将在未来版本中删除)"
+
+#: daemons/fenced/pacemaker-fenced.c:1574
+msgid "Intended for use in regression testing only"
+msgstr "仅适用于回归测试"
+
+#: daemons/fenced/pacemaker-fenced.c:1577
+msgid "Send logs to the additional named logfile"
+msgstr "将日志发送到其他命名日志文件"
 
 #: lib/cib/cib_utils.c:589
 msgid "Enable Access Control Lists (ACLs) for the CIB"

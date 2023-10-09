@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,6 +15,7 @@
 
 #include <glib.h>
 
+#include <crm/common/scheduler_internal.h>
 #include <crm/pengine/internal.h>
 
 gboolean was_processing_error = FALSE;
@@ -104,7 +105,7 @@ static pcmk__cluster_option_t pe_opts[] = {
     },
     {
         "stonith-action", NULL, "select", "reboot, off, poweroff",
-        "reboot", pcmk__is_fencing_action,
+        PCMK_ACTION_REBOOT, pcmk__is_fencing_action,
         N_("Action to send to fence device when a node needs to be fenced "
             "(\"poweroff\" is a deprecated alias for \"off\")"),
         NULL
@@ -158,6 +159,16 @@ static pcmk__cluster_option_t pe_opts[] = {
             "fencing delay is disabled.")
     },
 
+    {
+        XML_CONFIG_ATTR_NODE_PENDING_TIMEOUT, NULL, "time", NULL,
+        "2h", pcmk__valid_interval_spec,
+        N_("How long to wait for a node that has joined the cluster to join "
+           "the controller process group"),
+        N_("Fence nodes that do not join the controller process group within "
+           "this much time after joining the cluster, to allow the cluster "
+           "to continue managing resources. A value of 0 means never fence "
+           "pending nodes.")
+    },
     {
         "cluster-delay", NULL, "time", NULL,
         "60s", pcmk__valid_interval_spec,
@@ -311,34 +322,34 @@ fail2text(enum action_fail_response fail)
     const char *result = "<unknown>";
 
     switch (fail) {
-        case action_fail_ignore:
+        case pcmk_on_fail_ignore:
             result = "ignore";
             break;
-        case action_fail_demote:
+        case pcmk_on_fail_demote:
             result = "demote";
             break;
-        case action_fail_block:
+        case pcmk_on_fail_block:
             result = "block";
             break;
-        case action_fail_recover:
+        case pcmk_on_fail_restart:
             result = "recover";
             break;
-        case action_fail_migrate:
+        case pcmk_on_fail_ban:
             result = "migrate";
             break;
-        case action_fail_stop:
+        case pcmk_on_fail_stop:
             result = "stop";
             break;
-        case action_fail_fence:
+        case pcmk_on_fail_fence_node:
             result = "fence";
             break;
-        case action_fail_standby:
+        case pcmk_on_fail_standby_node:
             result = "standby";
             break;
-        case action_fail_restart_container:
+        case pcmk_on_fail_restart_container:
             result = "restart-container";
             break;
-        case action_fail_reset_remote:
+        case pcmk_on_fail_reset_remote:
             result = "reset-remote";
             break;
     }
@@ -348,49 +359,46 @@ fail2text(enum action_fail_response fail)
 enum action_tasks
 text2task(const char *task)
 {
-    if (pcmk__str_eq(task, CRMD_ACTION_STOP, pcmk__str_casei)) {
-        return stop_rsc;
-    } else if (pcmk__str_eq(task, CRMD_ACTION_STOPPED, pcmk__str_casei)) {
-        return stopped_rsc;
-    } else if (pcmk__str_eq(task, CRMD_ACTION_START, pcmk__str_casei)) {
-        return start_rsc;
-    } else if (pcmk__str_eq(task, CRMD_ACTION_STARTED, pcmk__str_casei)) {
-        return started_rsc;
-    } else if (pcmk__str_eq(task, CRM_OP_SHUTDOWN, pcmk__str_casei)) {
-        return shutdown_crm;
-    } else if (pcmk__str_eq(task, CRM_OP_FENCE, pcmk__str_casei)) {
-        return stonith_node;
-    } else if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
-        return monitor_rsc;
-    } else if (pcmk__str_eq(task, CRMD_ACTION_NOTIFY, pcmk__str_casei)) {
-        return action_notify;
-    } else if (pcmk__str_eq(task, CRMD_ACTION_NOTIFIED, pcmk__str_casei)) {
-        return action_notified;
-    } else if (pcmk__str_eq(task, CRMD_ACTION_PROMOTE, pcmk__str_casei)) {
-        return action_promote;
-    } else if (pcmk__str_eq(task, CRMD_ACTION_DEMOTE, pcmk__str_casei)) {
-        return action_demote;
-    } else if (pcmk__str_eq(task, CRMD_ACTION_PROMOTED, pcmk__str_casei)) {
-        return action_promoted;
-    } else if (pcmk__str_eq(task, CRMD_ACTION_DEMOTED, pcmk__str_casei)) {
-        return action_demoted;
-    }
-#if SUPPORT_TRACING
-    if (pcmk__str_eq(task, CRMD_ACTION_CANCEL, pcmk__str_casei)) {
-        return no_action;
-    } else if (pcmk__str_eq(task, CRMD_ACTION_DELETE, pcmk__str_casei)) {
-        return no_action;
-    } else if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
-        return no_action;
-    } else if (pcmk__str_eq(task, CRMD_ACTION_MIGRATE, pcmk__str_casei)) {
-        return no_action;
-    } else if (pcmk__str_eq(task, CRMD_ACTION_MIGRATED, pcmk__str_casei)) {
-        return no_action;
-    }
-    crm_trace("Unsupported action: %s", task);
-#endif
+    if (pcmk__str_eq(task, PCMK_ACTION_STOP, pcmk__str_casei)) {
+        return pcmk_action_stop;
 
-    return no_action;
+    } else if (pcmk__str_eq(task, PCMK_ACTION_STOPPED, pcmk__str_casei)) {
+        return pcmk_action_stopped;
+
+    } else if (pcmk__str_eq(task, PCMK_ACTION_START, pcmk__str_casei)) {
+        return pcmk_action_start;
+
+    } else if (pcmk__str_eq(task, PCMK_ACTION_RUNNING, pcmk__str_casei)) {
+        return pcmk_action_started;
+
+    } else if (pcmk__str_eq(task, PCMK_ACTION_DO_SHUTDOWN, pcmk__str_casei)) {
+        return pcmk_action_shutdown;
+
+    } else if (pcmk__str_eq(task, PCMK_ACTION_STONITH, pcmk__str_casei)) {
+        return pcmk_action_fence;
+
+    } else if (pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
+        return pcmk_action_monitor;
+
+    } else if (pcmk__str_eq(task, PCMK_ACTION_NOTIFY, pcmk__str_casei)) {
+        return pcmk_action_notify;
+
+    } else if (pcmk__str_eq(task, PCMK_ACTION_NOTIFIED, pcmk__str_casei)) {
+        return pcmk_action_notified;
+
+    } else if (pcmk__str_eq(task, PCMK_ACTION_PROMOTE, pcmk__str_casei)) {
+        return pcmk_action_promote;
+
+    } else if (pcmk__str_eq(task, PCMK_ACTION_DEMOTE, pcmk__str_casei)) {
+        return pcmk_action_demote;
+
+    } else if (pcmk__str_eq(task, PCMK_ACTION_PROMOTED, pcmk__str_casei)) {
+        return pcmk_action_promoted;
+
+    } else if (pcmk__str_eq(task, PCMK_ACTION_DEMOTED, pcmk__str_casei)) {
+        return pcmk_action_demoted;
+    }
+    return pcmk_action_unspecified;
 }
 
 const char *
@@ -399,47 +407,47 @@ task2text(enum action_tasks task)
     const char *result = "<unknown>";
 
     switch (task) {
-        case no_action:
+        case pcmk_action_unspecified:
             result = "no_action";
             break;
-        case stop_rsc:
-            result = CRMD_ACTION_STOP;
+        case pcmk_action_stop:
+            result = PCMK_ACTION_STOP;
             break;
-        case stopped_rsc:
-            result = CRMD_ACTION_STOPPED;
+        case pcmk_action_stopped:
+            result = PCMK_ACTION_STOPPED;
             break;
-        case start_rsc:
-            result = CRMD_ACTION_START;
+        case pcmk_action_start:
+            result = PCMK_ACTION_START;
             break;
-        case started_rsc:
-            result = CRMD_ACTION_STARTED;
+        case pcmk_action_started:
+            result = PCMK_ACTION_RUNNING;
             break;
-        case shutdown_crm:
-            result = CRM_OP_SHUTDOWN;
+        case pcmk_action_shutdown:
+            result = PCMK_ACTION_DO_SHUTDOWN;
             break;
-        case stonith_node:
-            result = CRM_OP_FENCE;
+        case pcmk_action_fence:
+            result = PCMK_ACTION_STONITH;
             break;
-        case monitor_rsc:
-            result = CRMD_ACTION_STATUS;
+        case pcmk_action_monitor:
+            result = PCMK_ACTION_MONITOR;
             break;
-        case action_notify:
-            result = CRMD_ACTION_NOTIFY;
+        case pcmk_action_notify:
+            result = PCMK_ACTION_NOTIFY;
             break;
-        case action_notified:
-            result = CRMD_ACTION_NOTIFIED;
+        case pcmk_action_notified:
+            result = PCMK_ACTION_NOTIFIED;
             break;
-        case action_promote:
-            result = CRMD_ACTION_PROMOTE;
+        case pcmk_action_promote:
+            result = PCMK_ACTION_PROMOTE;
             break;
-        case action_promoted:
-            result = CRMD_ACTION_PROMOTED;
+        case pcmk_action_promoted:
+            result = PCMK_ACTION_PROMOTED;
             break;
-        case action_demote:
-            result = CRMD_ACTION_DEMOTE;
+        case pcmk_action_demote:
+            result = PCMK_ACTION_DEMOTE;
             break;
-        case action_demoted:
-            result = CRMD_ACTION_DEMOTED;
+        case pcmk_action_demoted:
+            result = PCMK_ACTION_DEMOTED;
             break;
     }
 
@@ -450,50 +458,50 @@ const char *
 role2text(enum rsc_role_e role)
 {
     switch (role) {
-        case RSC_ROLE_UNKNOWN:
-            return RSC_ROLE_UNKNOWN_S;
-        case RSC_ROLE_STOPPED:
-            return RSC_ROLE_STOPPED_S;
-        case RSC_ROLE_STARTED:
-            return RSC_ROLE_STARTED_S;
-        case RSC_ROLE_UNPROMOTED:
+        case pcmk_role_stopped:
+            return PCMK__ROLE_STOPPED;
+
+        case pcmk_role_started:
+            return PCMK__ROLE_STARTED;
+
+        case pcmk_role_unpromoted:
 #ifdef PCMK__COMPAT_2_0
-            return RSC_ROLE_UNPROMOTED_LEGACY_S;
+            return PCMK__ROLE_UNPROMOTED_LEGACY;
 #else
-            return RSC_ROLE_UNPROMOTED_S;
+            return PCMK__ROLE_UNPROMOTED;
 #endif
-        case RSC_ROLE_PROMOTED:
+
+        case pcmk_role_promoted:
 #ifdef PCMK__COMPAT_2_0
-            return RSC_ROLE_PROMOTED_LEGACY_S;
+            return PCMK__ROLE_PROMOTED_LEGACY;
 #else
-            return RSC_ROLE_PROMOTED_S;
+            return PCMK__ROLE_PROMOTED;
 #endif
+
+        default: // pcmk_role_unknown
+            return PCMK__ROLE_UNKNOWN;
     }
-    CRM_CHECK(role >= RSC_ROLE_UNKNOWN, return RSC_ROLE_UNKNOWN_S);
-    CRM_CHECK(role < RSC_ROLE_MAX, return RSC_ROLE_UNKNOWN_S);
-    // coverity[dead_error_line]
-    return RSC_ROLE_UNKNOWN_S;
 }
 
 enum rsc_role_e
 text2role(const char *role)
 {
     CRM_ASSERT(role != NULL);
-    if (pcmk__str_eq(role, RSC_ROLE_STOPPED_S, pcmk__str_casei)) {
-        return RSC_ROLE_STOPPED;
-    } else if (pcmk__str_eq(role, RSC_ROLE_STARTED_S, pcmk__str_casei)) {
-        return RSC_ROLE_STARTED;
-    } else if (pcmk__strcase_any_of(role, RSC_ROLE_UNPROMOTED_S,
-                                    RSC_ROLE_UNPROMOTED_LEGACY_S, NULL)) {
-        return RSC_ROLE_UNPROMOTED;
-    } else if (pcmk__strcase_any_of(role, RSC_ROLE_PROMOTED_S,
-                                    RSC_ROLE_PROMOTED_LEGACY_S, NULL)) {
-        return RSC_ROLE_PROMOTED;
-    } else if (pcmk__str_eq(role, RSC_ROLE_UNKNOWN_S, pcmk__str_casei)) {
-        return RSC_ROLE_UNKNOWN;
+    if (pcmk__str_eq(role, PCMK__ROLE_STOPPED, pcmk__str_casei)) {
+        return pcmk_role_stopped;
+    } else if (pcmk__str_eq(role, PCMK__ROLE_STARTED, pcmk__str_casei)) {
+        return pcmk_role_started;
+    } else if (pcmk__strcase_any_of(role, PCMK__ROLE_UNPROMOTED,
+                                    PCMK__ROLE_UNPROMOTED_LEGACY, NULL)) {
+        return pcmk_role_unpromoted;
+    } else if (pcmk__strcase_any_of(role, PCMK__ROLE_PROMOTED,
+                                    PCMK__ROLE_PROMOTED_LEGACY, NULL)) {
+        return pcmk_role_promoted;
+    } else if (pcmk__str_eq(role, PCMK__ROLE_UNKNOWN, pcmk__str_casei)) {
+        return pcmk_role_unknown;
     }
     crm_err("Unknown role: %s", role);
-    return RSC_ROLE_UNKNOWN;
+    return pcmk_role_unknown;
 }
 
 void
@@ -514,43 +522,98 @@ add_hash_param(GHashTable * hash, const char *name, const char *value)
     }
 }
 
+/*!
+ * \internal
+ * \brief Look up an attribute value on the appropriate node
+ *
+ * If \p node is a guest node and either the \c XML_RSC_ATTR_TARGET meta
+ * attribute is set to "host" for \p rsc or \p force_host is \c true, query the
+ * attribute on the node's host. Otherwise, query the attribute on \p node
+ * itself.
+ *
+ * \param[in] node        Node to query attribute value on by default
+ * \param[in] name        Name of attribute to query
+ * \param[in] rsc         Resource on whose behalf we're querying
+ * \param[in] node_type   Type of resource location lookup
+ * \param[in] force_host  Force a lookup on the guest node's host, regardless of
+ *                        the \c XML_RSC_ATTR_TARGET value
+ *
+ * \return Value of the attribute on \p node or on the host of \p node
+ *
+ * \note If \p force_host is \c true, \p node \e must be a guest node.
+ */
 const char *
-pe_node_attribute_calculated(const pe_node_t *node, const char *name,
-                             const pe_resource_t *rsc)
+pe__node_attribute_calculated(const pe_node_t *node, const char *name,
+                              const pe_resource_t *rsc,
+                              enum pcmk__rsc_node node_type,
+                              bool force_host)
 {
-    const char *source;
+    // @TODO: Use pe__is_guest_node() after merging libpe_{rules,status}
+    bool is_guest = (node != NULL)
+                    && (node->details->type == pcmk_node_variant_remote)
+                    && (node->details->remote_rsc != NULL)
+                    && (node->details->remote_rsc->container != NULL);
+    const char *source = NULL;
+    const char *node_type_s = NULL;
+    const char *reason = NULL;
 
-    if(node == NULL) {
-        return NULL;
+    const pe_resource_t *container = NULL;
+    const pe_node_t *host = NULL;
 
-    } else if(rsc == NULL) {
-        return g_hash_table_lookup(node->details->attrs, name);
-    }
+    CRM_ASSERT((node != NULL) && (name != NULL) && (rsc != NULL)
+               && (!force_host || is_guest));
 
-    source = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET);
-    if(source == NULL || !pcmk__str_eq("host", source, pcmk__str_casei)) {
-        return g_hash_table_lookup(node->details->attrs, name);
-    }
-
-    /* Use attributes set for the containers location
-     * instead of for the container itself
-     *
-     * Useful when the container is using the host's local
-     * storage
+    /* Ignore XML_RSC_ATTR_TARGET if node is not a guest node. This represents a
+     * user configuration error.
      */
+    source = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET);
+    if (!force_host
+        && (!is_guest || !pcmk__str_eq(source, "host", pcmk__str_casei))) {
 
-    CRM_ASSERT(node->details->remote_rsc);
-    CRM_ASSERT(node->details->remote_rsc->container);
-
-    if(node->details->remote_rsc->container->running_on) {
-        pe_node_t *host = node->details->remote_rsc->container->running_on->data;
-        pe_rsc_trace(rsc, "%s: Looking for %s on the container host %s",
-                     rsc->id, name, pe__node_name(host));
-        return g_hash_table_lookup(host->details->attrs, name);
+        return g_hash_table_lookup(node->details->attrs, name);
     }
 
-    pe_rsc_trace(rsc, "%s: Not looking for %s on the container host: %s is inactive",
-                 rsc->id, name, node->details->remote_rsc->container->id);
+    container = node->details->remote_rsc->container;
+
+    switch (node_type) {
+        case pcmk__rsc_node_assigned:
+            node_type_s = "assigned";
+            host = container->allocated_to;
+            if (host == NULL) {
+                reason = "not assigned";
+            }
+            break;
+
+        case pcmk__rsc_node_current:
+            node_type_s = "current";
+
+            if (container->running_on != NULL) {
+                host = container->running_on->data;
+            }
+            if (host == NULL) {
+                reason = "inactive";
+            }
+            break;
+
+        default:
+            // Add support for other enum pcmk__rsc_node values if needed
+            CRM_ASSERT(false);
+            break;
+    }
+
+    if (host != NULL) {
+        const char *value = g_hash_table_lookup(host->details->attrs, name);
+
+        pe_rsc_trace(rsc,
+                     "%s: Value lookup for %s on %s container host %s %s%s",
+                     rsc->id, name, node_type_s, pe__node_name(host),
+                     ((value != NULL)? "succeeded: " : "failed"),
+                     pcmk__s(value, ""));
+        return value;
+    }
+    pe_rsc_trace(rsc,
+                 "%s: Not looking for %s on %s container host: %s is %s",
+                 rsc->id, name, node_type_s, container->id, reason);
     return NULL;
 }
 

@@ -23,8 +23,6 @@
 
 #include "pacemaker-attrd.h"
 
-extern crm_exit_t attrd_exit_status;
-
 static xmlNode *
 attrd_confirmation(int callid)
 {
@@ -48,7 +46,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
         return;
     }
 
-    if (attrd_shutting_down()) {
+    if (attrd_shutting_down(false)) {
         /* If we're shutting down, we want to continue responding to election
          * ops as long as we're a cluster member (because our vote may be
          * needed). Ignore all other messages.
@@ -133,11 +131,11 @@ attrd_cpg_dispatch(cpg_handle_t handle,
 static void
 attrd_cpg_destroy(gpointer unused)
 {
-    if (attrd_shutting_down()) {
-        crm_info("Corosync disconnection complete");
+    if (attrd_shutting_down(false)) {
+        crm_info("Disconnected from Corosync process group");
 
     } else {
-        crm_crit("Lost connection to cluster layer, shutting down");
+        crm_crit("Lost connection to Corosync process group, shutting down");
         attrd_exit_status = CRM_EX_DISCONNECT;
         attrd_shutdown(0);
     }
@@ -180,7 +178,7 @@ cache_remote_node(const char *node_name)
     /* If we previously assumed this node was an unseen cluster node,
      * remove its entry from the cluster peer cache.
      */
-    crm_node_t *dup = pcmk__search_cluster_node_cache(0, node_name);
+    crm_node_t *dup = pcmk__search_cluster_node_cache(0, node_name, NULL);
 
     if (dup && (dup->uuid == NULL)) {
         reap_crm_member(0, node_name);
@@ -285,7 +283,7 @@ record_peer_nodeid(attribute_value_t *v, const char *host)
 
     crm_trace("Learned %s has node id %s", known_peer->uname, known_peer->uuid);
     if (attrd_election_won()) {
-        attrd_write_attributes(false, false);
+        attrd_write_attributes(attrd_write_changed);
     }
 }
 
@@ -476,9 +474,7 @@ attrd_peer_clear_failure(pcmk__request_t *request)
     crm_xml_add(xml, PCMK__XA_TASK, PCMK__ATTRD_CMD_UPDATE);
 
     /* Make sure value is not set, so we delete */
-    if (crm_element_value(xml, PCMK__XA_ATTR_VALUE)) {
-        crm_xml_replace(xml, PCMK__XA_ATTR_VALUE, NULL);
-    }
+    xml_remove_prop(xml, PCMK__XA_ATTR_VALUE);
 
     g_hash_table_iter_init(&iter, attributes);
     while (g_hash_table_iter_next(&iter, (gpointer *) &attr, NULL)) {
@@ -591,7 +587,8 @@ attrd_peer_update(const crm_node_t *peer, xmlNode *xml, const char *host,
 {
     bool handle_sync_point = false;
 
-    if (xml_has_children(xml)) {
+    CRM_CHECK((peer != NULL) && (xml != NULL), return);
+    if (xml->children != NULL) {
         for (xmlNode *child = first_named_child(xml, XML_ATTR_OP); child != NULL;
              child = crm_next_same_xml(child)) {
             attrd_copy_xml_attributes(xml, child);

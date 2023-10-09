@@ -105,6 +105,9 @@ To read back the value that was just set:
 The ``--type nodes`` indicates that this is a permanent node attribute;
 ``--type status`` would indicate a transient node attribute.
 
+
+.. _special_node_attributes:
+
 Special node attributes
 #######################
 
@@ -154,35 +157,26 @@ unset to be false, and anything else to be an error.
    |                            | ``crm_resource --cleanup`` commands rather          |
    |                            | than directly.                                      |
    +----------------------------+-----------------------------------------------------+
-   | maintenance                | .. index::                                          |
+   | maintenance                | .. _node_maintenance:                               |
+   |                            |                                                     |
+   |                            | .. index::                                          |
    |                            |    pair: node attribute; maintenance                |
    |                            |                                                     |
-   |                            | Similar to the ``maintenance-mode``                 |
-   |                            | :ref:`cluster option <cluster_options>`, but        |
-   |                            | for a single node. If true, resources will          |
-   |                            | not be started or stopped on the node,              |
-   |                            | resources and individual clone instances            |
-   |                            | running on the node will become unmanaged,          |
-   |                            | and any recurring operations for those will         |
-   |                            | be cancelled.                                       |
-   |                            |                                                     |
-   |                            | **Warning:** Restarting pacemaker on a node that is |
-   |                            | in single-node maintenance mode will likely         |
-   |                            | lead to undesirable effects. If                     |
-   |                            | ``maintenance`` is set as a transient               |
-   |                            | attribute, it will be erased when                   |
-   |                            | Pacemaker is stopped, which will                    |
-   |                            | immediately take the node out of                    |
-   |                            | maintenance mode and likely get it                  |
-   |                            | fenced. Even if permanent, if Pacemaker             |
-   |                            | is restarted, any resources active on the           |
-   |                            | node will have their local history erased           |
-   |                            | when the node rejoins, so the cluster               |
-   |                            | will no longer consider them running on             |
-   |                            | the node and thus will consider them                |
-   |                            | managed again, leading them to be started           |
-   |                            | elsewhere. This behavior might be                   |
-   |                            | improved in a future release.                       |
+   |                            | If true, the cluster will not start or stop any     |
+   |                            | resources on this node. Any resources active on the |
+   |                            | node become unmanaged, and any recurring operations |
+   |                            | for those resources (except those specifying        |
+   |                            | ``role`` as ``Stopped``) will be paused. The        |
+   |                            | :ref:`maintenance-mode <maintenance_mode>` cluster  |
+   |                            | option, if true, overrides this. If this attribute  |
+   |                            | is true, it overrides the                           |
+   |                            | :ref:`is-managed <is_managed>` and                  |
+   |                            | :ref:`maintenance <rsc_maintenance>`                |
+   |                            | meta-attributes of affected resources and           |
+   |                            | :ref:`enabled <op_enabled>` meta-attribute for      |
+   |                            | affected recurring actions. Pacemaker should not be |
+   |                            | restarted on a node that is in single-node          |
+   |                            | maintenance mode.                                   |
    +----------------------------+-----------------------------------------------------+
    | probe_complete             | .. index::                                          |
    |                            |    pair: node attribute; probe_complete             |

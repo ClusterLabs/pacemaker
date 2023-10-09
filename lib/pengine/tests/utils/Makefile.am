@@ -1,5 +1,5 @@
 #
-# Copyright 2022 the Pacemaker project contributors
+# Copyright 2022-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -14,8 +14,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/lib/pengine
 LDADD += $(top_builddir)/lib/pengine/libpe_status_test.la
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
-check_PROGRAMS = \
-		 pe__cmp_node_name_test \
+check_PROGRAMS = pe__cmp_node_name_test 	\
 		 pe__cmp_rsc_priority_test
 
 TESTS = $(check_PROGRAMS)

@@ -78,6 +78,9 @@ typedef struct crm_peer_node_s {
 
     time_t peer_lost;
     char *conn_host;
+
+    time_t when_member;         // Since when node has been a cluster member
+    time_t when_online;         // Since when peer has been online in CPG
 } crm_node_t;
 
 void crm_peer_init(void);
@@ -133,8 +136,8 @@ enum crm_get_peer_flags {
 };
 
 gboolean send_cluster_message(const crm_node_t *node,
-                              enum crm_ais_msg_types service, xmlNode *data,
-                              gboolean ordered);
+                              enum crm_ais_msg_types service,
+                              const xmlNode *data, gboolean ordered);
 
 int crm_remote_peer_cache_size(void);
 
@@ -174,7 +177,6 @@ char *pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid,
 
 const char *crm_peer_uuid(crm_node_t *node);
 const char *crm_peer_uname(const char *uuid);
-void set_uuid(xmlNode *xml, const char *attr, crm_node_t *node);
 
 enum crm_status_type {
     crm_status_uname,

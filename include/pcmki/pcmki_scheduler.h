@@ -8,16 +8,14 @@
  */
 
 #ifndef PCMK__PCMKI_PCMKI_SCHEDULER__H
-#  define PCMK__PCMKI_PCMKI_SCHEDULER__H
+#define PCMK__PCMKI_PCMKI_SCHEDULER__H
 
-#  include <glib.h>
-#  include <crm/crm.h>
-#  include <crm/common/iso8601.h>
-#  include <crm/pengine/rules.h>
-#  include <crm/pengine/common.h>
-#  include <crm/pengine/status.h>
+#include <glib.h>               // GList
+#include <stdbool.h>            // bool
+#include <libxml/tree.h>        // xmlNode
 
-#  include <crm/pengine/complex.h>
+#include <crm/lrmd_events.h>    // lrmd_event_data_t
+#include <crm/pengine/status.h> // pe_resource_t, pe_working_set_t
 
 typedef struct {
     const char *id;
@@ -29,7 +27,7 @@ typedef struct {
     int primary_role;   // Colocation applies only if primary has this role
 
     int score;
-    bool influence; // Whether dependent influences active primary placement
+    uint32_t flags;     // Group of enum pcmk__coloc_flags
 } pcmk__colocation_t;
 
 void pcmk__unpack_constraints(pe_working_set_t *data_set);
@@ -37,7 +35,10 @@ void pcmk__unpack_constraints(pe_working_set_t *data_set);
 void pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
                             pe_working_set_t *data_set);
 
-GList *pcmk__with_this_colocations(const pe_resource_t *rsc);
-GList *pcmk__this_with_colocations(const pe_resource_t *rsc);
+GList *pcmk__copy_node_list(const GList *list, bool reset);
+
+xmlNode *pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *event,
+                                  const char *caller_version, int target_rc,
+                                  const char *node, const char *origin);
 
 #endif

@@ -225,12 +225,12 @@ process_resource_updates(const char *node, xmlNode *xml, xmlNode *change,
         return;
     }
 
-    if (strcmp(TYPE(xml), XML_CIB_TAG_LRM) == 0) {
+    if (pcmk__xe_is(xml, XML_CIB_TAG_LRM)) {
         xml = first_named_child(xml, XML_LRM_TAG_RESOURCES);
         CRM_CHECK(xml != NULL, return);
     }
 
-    CRM_CHECK(strcmp(TYPE(xml), XML_LRM_TAG_RESOURCES) == 0, return);
+    CRM_CHECK(pcmk__xe_is(xml, XML_LRM_TAG_RESOURCES), return);
 
     /*
      * Updates by, or in response to, TE actions will never contain updates
@@ -558,7 +558,7 @@ te_update_diff(const char *event, xmlNode * msg)
               p_del[0], p_del[1], p_del[2], p_add[0], p_add[1], p_add[2],
               fsa_state2string(controld_globals.fsa_state));
 
-    crm_element_value_int(diff, "format", &format);
+    crm_element_value_int(diff, PCMK_XA_FORMAT, &format);
     switch (format) {
         case 1:
             te_update_diff_v1(event, diff);

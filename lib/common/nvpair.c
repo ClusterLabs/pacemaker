@@ -334,55 +334,6 @@ crm_xml_add(xmlNode *node, const char *name, const char *value)
 }
 
 /*!
- * \brief Replace an XML attribute with specified name and (possibly NULL) value
- *
- * \param[in,out] node   XML node to modify
- * \param[in]     name   Attribute name to set
- * \param[in]     value  Attribute value to set
- *
- * \return New value on success, \c NULL otherwise
- * \note This does nothing if node or name is \c NULL or empty.
- */
-const char *
-crm_xml_replace(xmlNode *node, const char *name, const char *value)
-{
-    bool dirty = FALSE;
-    xmlAttr *attr = NULL;
-    const char *old_value = NULL;
-
-    CRM_CHECK(node != NULL, return NULL);
-    CRM_CHECK(name != NULL && name[0] != 0, return NULL);
-
-    old_value = crm_element_value(node, name);
-
-    /* Could be re-setting the same value */
-    CRM_CHECK(old_value != value, return value);
-
-    if (pcmk__check_acl(node, name, pcmk__xf_acl_write) == FALSE) {
-        /* Create a fake object linked to doc->_private instead? */
-        crm_trace("Cannot replace %s=%s to %s", name, value, node->name);
-        return NULL;
-
-    } else if (old_value && !value) {
-        xml_remove_prop(node, name);
-        return NULL;
-    }
-
-    if (pcmk__tracking_xml_changes(node, FALSE)) {
-        if (!old_value || !value || !strcmp(old_value, value)) {
-            dirty = TRUE;
-        }
-    }
-
-    attr = xmlSetProp(node, (pcmkXmlStr) name, (pcmkXmlStr) value);
-    if (dirty) {
-        pcmk__mark_xml_attr_dirty(attr);
-    }
-    CRM_CHECK(attr && attr->children && attr->children->content, return NULL);
-    return (char *) attr->children->content;
-}
-
-/*!
  * \brief Create an XML attribute with specified name and integer value
  *
  * This is like \c crm_xml_add() but taking an integer value.
@@ -503,7 +454,7 @@ crm_element_value(const xmlNode *data, const char *name)
         return NULL;
 
     } else if (name == NULL) {
-        crm_err("Couldn't find NULL in %s", crm_element_name(data));
+        crm_err("Couldn't find NULL in %s", data->name);
         return NULL;
     }
 
@@ -883,7 +834,7 @@ xml2list(const xmlNode *parent)
 
     nvpair_list = find_xml_node(parent, XML_TAG_ATTRS, FALSE);
     if (nvpair_list == NULL) {
-        crm_trace("No attributes in %s", crm_element_name(parent));
+        crm_trace("No attributes in %s", parent->name);
         crm_log_xml_trace(parent, "No attributes for resource op");
     }
 
@@ -986,6 +937,45 @@ pcmk_format_named_time(const char *name, time_t epoch_time)
 
     free(now_s);
     return result;
+}
+
+const char *
+crm_xml_replace(xmlNode *node, const char *name, const char *value)
+{
+    bool dirty = FALSE;
+    xmlAttr *attr = NULL;
+    const char *old_value = NULL;
+
+    CRM_CHECK(node != NULL, return NULL);
+    CRM_CHECK(name != NULL && name[0] != 0, return NULL);
+
+    old_value = crm_element_value(node, name);
+
+    /* Could be re-setting the same value */
+    CRM_CHECK(old_value != value, return value);
+
+    if (pcmk__check_acl(node, name, pcmk__xf_acl_write) == FALSE) {
+        /* Create a fake object linked to doc->_private instead? */
+        crm_trace("Cannot replace %s=%s to %s", name, value, node->name);
+        return NULL;
+
+    } else if (old_value && !value) {
+        xml_remove_prop(node, name);
+        return NULL;
+    }
+
+    if (pcmk__tracking_xml_changes(node, FALSE)) {
+        if (!old_value || !value || !strcmp(old_value, value)) {
+            dirty = TRUE;
+        }
+    }
+
+    attr = xmlSetProp(node, (pcmkXmlStr) name, (pcmkXmlStr) value);
+    if (dirty) {
+        pcmk__mark_xml_attr_dirty(attr);
+    }
+    CRM_CHECK(attr && attr->children && attr->children->content, return NULL);
+    return (char *) attr->children->content;
 }
 
 // LCOV_EXCL_STOP

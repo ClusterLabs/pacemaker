@@ -7,49 +7,6 @@
 Resource Constraints
 --------------------
 
-.. index::
-   single: resource; score
-   single: node; score
-
-Scores
-######
-
-Scores of all kinds are integral to how the cluster works.
-Practically everything from moving a resource to deciding which
-resource to stop in a degraded cluster is achieved by manipulating
-scores in some way.
-
-Scores are calculated per resource and node. Any node with a
-negative score for a resource can't run that resource. The cluster
-places a resource on the node with the highest score for it.
-
-Infinity Math
-_____________
-
-Pacemaker implements **INFINITY** (or equivalently, **+INFINITY**) internally as a
-score of 1,000,000. Addition and subtraction with it follow these three basic
-rules:
-
-* Any value + **INFINITY** = **INFINITY**
-
-* Any value - **INFINITY** = -**INFINITY**
-
-* **INFINITY** - **INFINITY** = **-INFINITY**
-
-.. note::
-
-   What if you want to use a score higher than 1,000,000? Typically this possibility
-   arises when someone wants to base the score on some external metric that might
-   go above 1,000,000.
-
-   The short answer is you can't.
-
-   The long answer is it is sometimes possible work around this limitation
-   creatively. You may be able to set the score to some computed value based on
-   the external metric rather than use the metric directly. For nodes, you can
-   store the metric as a node attribute, and query the attribute when computing
-   the score (possibly as part of a custom resource agent).
-
 .. _location-constraint:
 
 .. index::
@@ -434,6 +391,20 @@ Because the above example lets ``symmetrical`` default to TRUE, **Webserver**
 must be stopped before **Database** can be stopped, and **Webserver** should be
 stopped before **IP** if they both need to be stopped.
 
+Symmetric and asymmetric ordering
+_________________________________
+
+A mandatory symmetric ordering of "start A then start B" implies not only that
+the start actions must be ordered, but that B is not allowed to be active
+unless A is active. For example, if the ordering is added to the configuration
+when A is stopped (due to target-role, failure, etc.) and B is already active,
+then B will be stopped.
+
+By contrast, asymmetric ordering of "start A then start B" means the stops can
+occur in either order, which implies that B *can* remain active in the same
+situation.
+
+
 .. index::
    single: colocation
    single: constraint; colocation
@@ -535,8 +506,8 @@ _____________________
    |                |                | If ``rsc`` and ``with-rsc`` are specified, and ``rsc`` |
    |                |                | is a :ref:`promotable clone <s-resource-promotable>`,  |
    |                |                | the constraint applies only to ``rsc`` instances in    |
-   |                |                | this role. Allowed values: ``Started``, ``Promoted``,  |
-   |                |                | ``Unpromoted``. For details, see                       |
+   |                |                | this role. Allowed values: ``Started``, ``Stopped``,   |
+   |                |                | ``Promoted``, ``Unpromoted``. For details, see         |
    |                |                | :ref:`promotable-clone-constraints`.                   |
    +----------------+----------------+--------------------------------------------------------+
    | with-rsc-role  | Started        | .. index::                                             |
@@ -548,8 +519,8 @@ _____________________
    |                |                | ``with-rsc`` is a                                      |
    |                |                | :ref:`promotable clone <s-resource-promotable>`, the   |
    |                |                | constraint applies only to ``with-rsc`` instances in   |
-   |                |                | this role. Allowed values: ``Started``, ``Promoted``,  |
-   |                |                | ``Unpromoted``. For details, see                       |
+   |                |                | this role. Allowed values: ``Started``, ``Stopped``,   |
+   |                |                | ``Promoted``, ``Unpromoted``. For details, see         |
    |                |                | :ref:`promotable-clone-constraints`.                   |
    +----------------+----------------+--------------------------------------------------------+
    | influence      | value of       | .. index::                                             |

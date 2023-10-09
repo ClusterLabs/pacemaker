@@ -16,7 +16,7 @@
     </nodes>
     <resources>
       <primitive class="stonith" id="Fencing" type="fence_imaginary"/>
-      <!-- clone1 tests a pending start on node4 with node1-2 slave, node3 master, and node5-11 stopped -->
+      <!-- clone1 tests a pending start on node4 with node1-2 unpromoted, node3 promoted, and node5-11 stopped -->
       <clone id="clone1">
         <primitive id="clone1rsc" class="ocf" provider="pacemaker" type="Stateful">
           <operations>

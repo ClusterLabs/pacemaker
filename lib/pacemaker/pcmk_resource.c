@@ -28,8 +28,7 @@
                          "/" XML_LRM_TAG_RESOURCE "[@" XML_ATTR_ID "='%s']"
 
 static xmlNode *
-best_op(const pe_resource_t *rsc, const pe_node_t *node,
-        pe_working_set_t *data_set)
+best_op(const pe_resource_t *rsc, const pe_node_t *node)
 {
     char *xpath = NULL;
     xmlNode *history = NULL;
@@ -41,7 +40,7 @@ best_op(const pe_resource_t *rsc, const pe_node_t *node,
 
     // Find node's resource history
     xpath = crm_strdup_printf(XPATH_OP_HISTORY, node->details->uname, rsc->id);
-    history = get_xpath_object(xpath, data_set->input, LOG_NEVER);
+    history = get_xpath_object(xpath, rsc->cluster->input, LOG_NEVER);
     free(xpath);
 
     // Examine each history entry
@@ -58,9 +57,10 @@ best_op(const pe_resource_t *rsc, const pe_node_t *node,
 
         crm_element_value_ms(lrm_rsc_op, XML_LRM_ATTR_INTERVAL, &interval_ms);
         effective_op = interval_ms == 0
-                       && pcmk__strcase_any_of(task, RSC_STATUS,
-                                               RSC_START, RSC_PROMOTE,
-                                               RSC_MIGRATED, NULL);
+                       && pcmk__strcase_any_of(task, PCMK_ACTION_MONITOR,
+                                               PCMK_ACTION_START,
+                                               PCMK_ACTION_PROMOTE,
+                                               PCMK_ACTION_MIGRATE_FROM, NULL);
 
         if (best == NULL) {
             goto is_best;
@@ -71,7 +71,7 @@ best_op(const pe_resource_t *rsc, const pe_node_t *node,
             if (!effective_op) {
                 continue;
             }
-        // Do not use an ineffective non-recurring op if there's a recurring one.
+        // Do not use an ineffective non-recurring op if there's a recurring one
         } else if (best_interval != 0
                    && !effective_op
                    && interval_ms == 0) {
@@ -127,13 +127,13 @@ pcmk__resource_digests(pcmk__output_t *out, pe_resource_t *rsc,
     if ((out == NULL) || (rsc == NULL) || (node == NULL)) {
         return EINVAL;
     }
-    if (rsc->variant != pe_native) {
+    if (rsc->variant != pcmk_rsc_variant_primitive) {
         // Only primitives get operation digests
         return EOPNOTSUPP;
     }
 
     // Find XML of operation history to use
-    xml_op = best_op(rsc, node, rsc->cluster);
+    xml_op = best_op(rsc, node);
 
     // Generate an operation key
     if (xml_op != NULL) {
@@ -141,7 +141,7 @@ pcmk__resource_digests(pcmk__output_t *out, pe_resource_t *rsc,
         crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
     }
     if (task == NULL) { // Assume start if no history is available
-        task = RSC_START;
+        task = PCMK_ACTION_START;
         interval_ms = 0;
     }
 

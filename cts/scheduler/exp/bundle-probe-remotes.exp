@@ -280,6 +280,9 @@
         <rsc_op id="80" operation="start" operation_key="scale1-bundle-2_start_0" on_node="c09-h07-r630" on_node_uuid="3"/>
       </trigger>
       <trigger>
+        <rsc_op id="98" operation="start" operation_key="dummy1:0_start_0" on_node="scale1-bundle-0" on_node_uuid="scale1-bundle-0" router_node="c09-h05-r630"/>
+      </trigger>
+      <trigger>
         <rsc_op id="100" operation="start" operation_key="dummy1:1_start_0" on_node="scale1-bundle-1" on_node_uuid="scale1-bundle-1" router_node="c09-h06-r630"/>
       </trigger>
       <trigger>
@@ -316,6 +319,12 @@
       </trigger>
       <trigger>
         <rsc_op id="84" operation="start" operation_key="scale1-bundle-3_start_0" on_node="c09-h05-r630" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="98" operation="start" operation_key="dummy1:0_start_0" on_node="scale1-bundle-0" on_node_uuid="scale1-bundle-0" router_node="c09-h05-r630"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="100" operation="start" operation_key="dummy1:1_start_0" on_node="scale1-bundle-1" on_node_uuid="scale1-bundle-1" router_node="c09-h06-r630"/>
       </trigger>
       <trigger>
         <rsc_op id="102" operation="start" operation_key="dummy1:2_start_0" on_node="scale1-bundle-2" on_node_uuid="scale1-bundle-2" router_node="c09-h07-r630"/>
@@ -356,6 +365,15 @@
         <rsc_op id="88" operation="start" operation_key="scale1-bundle-4_start_0" on_node="c09-h06-r630" on_node_uuid="2"/>
       </trigger>
       <trigger>
+        <rsc_op id="98" operation="start" operation_key="dummy1:0_start_0" on_node="scale1-bundle-0" on_node_uuid="scale1-bundle-0" router_node="c09-h05-r630"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="100" operation="start" operation_key="dummy1:1_start_0" on_node="scale1-bundle-1" on_node_uuid="scale1-bundle-1" router_node="c09-h06-r630"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="102" operation="start" operation_key="dummy1:2_start_0" on_node="scale1-bundle-2" on_node_uuid="scale1-bundle-2" router_node="c09-h07-r630"/>
+      </trigger>
+      <trigger>
         <rsc_op id="104" operation="start" operation_key="dummy1:3_start_0" on_node="scale1-bundle-3" on_node_uuid="scale1-bundle-3" router_node="c09-h05-r630"/>
       </trigger>
       <trigger>
@@ -392,6 +410,18 @@
       </trigger>
       <trigger>
         <rsc_op id="92" operation="start" operation_key="scale1-bundle-5_start_0" on_node="c09-h07-r630" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="98" operation="start" operation_key="dummy1:0_start_0" on_node="scale1-bundle-0" on_node_uuid="scale1-bundle-0" router_node="c09-h05-r630"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="100" operation="start" operation_key="dummy1:1_start_0" on_node="scale1-bundle-1" on_node_uuid="scale1-bundle-1" router_node="c09-h06-r630"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="102" operation="start" operation_key="dummy1:2_start_0" on_node="scale1-bundle-2" on_node_uuid="scale1-bundle-2" router_node="c09-h07-r630"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="104" operation="start" operation_key="dummy1:3_start_0" on_node="scale1-bundle-3" on_node_uuid="scale1-bundle-3" router_node="c09-h05-r630"/>
       </trigger>
       <trigger>
         <rsc_op id="106" operation="start" operation_key="dummy1:4_start_0" on_node="scale1-bundle-4" on_node_uuid="scale1-bundle-4" router_node="c09-h06-r630"/>
