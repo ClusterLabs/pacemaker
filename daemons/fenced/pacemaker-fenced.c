@@ -1145,6 +1145,30 @@ update_fencing_topology(const char *event, xmlNode * msg)
 }
 static bool have_cib_devices = FALSE;
 
+/*!
+ * \internal
+ * \brief Query the full CIB
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+fenced_query_cib(void)
+{
+    int rc = pcmk_ok;
+
+    crm_trace("Re-requesting full CIB");
+    rc = cib_api->cmds->query(cib_api, NULL, &local_cib,
+                              cib_scope_local|cib_sync_call);
+    rc = pcmk_legacy2rc(rc);
+    if (rc == pcmk_rc_ok) {
+        CRM_ASSERT(local_cib != NULL);
+    } else {
+        crm_err("Couldn't retrieve the CIB: %s " CRM_XS " rc=%d",
+                pcmk_rc_str(rc), rc);
+    }
+    return rc;
+}
+
 static void
 update_cib_cache_cb(const char *event, xmlNode * msg)
 {
@@ -1193,13 +1217,9 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
     }
 
     if (local_cib == NULL) {
-        crm_trace("Re-requesting full CIB");
-        rc = cib_api->cmds->query(cib_api, NULL, &local_cib, cib_scope_local | cib_sync_call);
-        if(rc != pcmk_ok) {
-            crm_err("Couldn't retrieve the CIB: %s (%d)", pcmk_strerror(rc), rc);
+        if (fenced_query_cib() != pcmk_rc_ok) {
             return;
         }
-        CRM_ASSERT(local_cib != NULL);
         need_full_refresh = true;
     }
 
