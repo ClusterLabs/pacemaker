@@ -1282,14 +1282,26 @@ cib_connection_destroy(gpointer user_data)
     stonith_shutdown(0);
 }
 
+/*!
+ * \internal
+ * \brief Disconnect from CIB manager
+ */
+static void
+fenced_cib_cleanup(void)
+{
+    if (cib_api != NULL) {
+        cib_api->cmds->del_notify_callback(cib_api, T_CIB_DIFF_NOTIFY,
+                                           update_cib_cache_cb);
+        cib__clean_up_connection(&cib_api);
+    }
+    free_xml(local_cib);
+    local_cib = NULL;
+}
+
 static void
 stonith_cleanup(void)
 {
-    if (cib_api) {
-        cib_api->cmds->del_notify_callback(cib_api, T_CIB_DIFF_NOTIFY, update_cib_cache_cb);
-        cib_api->cmds->signoff(cib_api);
-    }
-
+    fenced_cib_cleanup();
     if (ipcs) {
         qb_ipcs_destroy(ipcs);
     }
@@ -1304,9 +1316,6 @@ stonith_cleanup(void)
 
     free(stonith_our_uname);
     stonith_our_uname = NULL;
-
-    free_xml(local_cib);
-    local_cib = NULL;
 }
 
 static gboolean
