@@ -345,6 +345,17 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             }
         }
 
+        if (!appeared && (type == crm_status_processes)
+            && (node->when_member > 1)) {
+            /* The node left CPG but is still a cluster member. Set its
+             * membership time to 1 to record it in the cluster state as a
+             * boolean, so we don't fence it due to node-pending-timeout.
+             */
+            node->when_member = 1;
+            flags |= node_update_cluster;
+            controld_node_pending_timer(node);
+        }
+
         /* Update the CIB node state */
         update = create_node_state_update(node, flags, NULL, __func__);
         if (update == NULL) {
