@@ -36,14 +36,10 @@
 #include <crm/common/mainloop.h>
 
 #include <crm/cib/internal.h>
-#include <crm/pengine/internal.h>
-#include <pacemaker-internal.h>
 
 #include <pacemaker-fenced.h>
 
 #define SUMMARY "daemon for executing fencing devices in a Pacemaker cluster"
-
-extern pcmk_scheduler_t *fenced_data_set;
 
 char *stonith_our_uname = NULL;
 long stonith_watchdog_timeout_ms = 0;
@@ -55,7 +51,6 @@ gboolean stand_alone = FALSE;
 gboolean stonith_shutdown_flag = FALSE;
 
 static qb_ipcs_service_t *ipcs = NULL;
-static pcmk__output_t *logger_out = NULL;
 static pcmk__output_t *out = NULL;
 
 pcmk__supported_format_t formats[] = {
@@ -833,8 +828,13 @@ main(int argc, char **argv)
 
     crm_peer_init();
 
-    fenced_data_set = pe_new_working_set();
-    CRM_ASSERT(fenced_data_set != NULL);
+    rc = fenced_scheduler_init();
+    if (rc != pcmk_rc_ok) {
+        exit_code = CRM_EX_FATAL;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Error initializing scheduler data: %s", pcmk_rc_str(rc));
+        goto done;
+    }
 
     cluster = pcmk_cluster_new();
 
@@ -871,18 +871,6 @@ main(int argc, char **argv)
 
     pcmk__serve_fenced_ipc(&ipcs, &ipc_callbacks);
 
-    rc = pcmk__log_output_new(&logger_out);
-    if (rc != pcmk_rc_ok) {
-        exit_code = CRM_EX_FATAL;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Error creating output format log: %s", pcmk_rc_str(rc));
-        goto done;
-    }
-    pe__register_messages(logger_out);
-    pcmk__register_lib_messages(logger_out);
-    pcmk__output_set_log_level(logger_out, LOG_TRACE);
-    fenced_data_set->priv = logger_out;
-
     // Create the mainloop and run it...
     mainloop = g_main_loop_new(NULL, FALSE);
     crm_notice("Pacemaker fencer successfully started and accepting connections");
@@ -896,14 +884,9 @@ done:
 
     stonith_cleanup();
     pcmk_cluster_free(cluster);
-    pe_free_working_set(fenced_data_set);
+    fenced_scheduler_cleanup();
 
     pcmk__output_and_clear_error(&error, out);
-
-    if (logger_out != NULL) {
-        logger_out->finish(logger_out, exit_code, true, NULL);
-        pcmk__output_free(logger_out);
-    }
 
     if (out != NULL) {
         out->finish(out, exit_code, true, NULL);

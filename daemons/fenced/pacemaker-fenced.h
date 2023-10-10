@@ -292,6 +292,9 @@ void fencing_topology_init(void);
 void setup_cib(void);
 void fenced_cib_cleanup(void);
 
+int fenced_scheduler_init(void);
+void fenced_scheduler_cleanup(void);
+
 static inline void
 fenced_set_protocol_error(pcmk__action_result_t *result)
 {
