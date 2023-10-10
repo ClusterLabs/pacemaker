@@ -31,7 +31,7 @@
 
 #define rsc_name(x) x->clone_name?x->clone_name:x->id
 
-pcmk_scheduler_t *fenced_data_set = NULL;
+extern pcmk_scheduler_t *fenced_data_set;
 
 static xmlNode *local_cib = NULL;
 static cib_t *cib_api = NULL;
