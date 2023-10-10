@@ -73,28 +73,28 @@ fenced_scheduler_cleanup(void)
 
 /*!
  * \internal
- * \brief Check whether our uname is in a resource's allowed node list
+ * \brief Check whether the local node is in a resource's allowed node list
  *
  * \param[in] rsc  Resource to check
  *
- * \return Pointer to node object if found, NULL otherwise
+ * \return Pointer to node if found, otherwise NULL
  */
 static pcmk_node_t *
-our_node_allowed_for(const pcmk_resource_t *rsc)
+local_node_allowed_for(const pcmk_resource_t *rsc)
 {
-    GHashTableIter iter;
-    pcmk_node_t *node = NULL;
+    if ((rsc != NULL) && (stonith_our_uname != NULL)) {
+        GHashTableIter iter;
+        pcmk_node_t *node = NULL;
 
-    if (rsc && stonith_our_uname) {
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
-        while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-            if (node && strcmp(node->details->uname, stonith_our_uname) == 0) {
-                break;
+        while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
+            if (pcmk__str_eq(node->details->uname, stonith_our_uname,
+                             pcmk__str_casei)) {
+                return node;
             }
-            node = NULL;
         }
     }
-    return node;
+    return NULL;
 }
 
 #define rsc_name(x) x->clone_name?x->clone_name:x->id
@@ -151,9 +151,9 @@ cib_device_update(pcmk_resource_t *rsc, pcmk_scheduler_t *data_set)
     }
 
     /* Check whether our node is allowed for this resource (and its parent if in a group) */
-    node = our_node_allowed_for(rsc);
+    node = local_node_allowed_for(rsc);
     if (rsc->parent && (rsc->parent->variant == pcmk_rsc_variant_group)) {
-        parent = our_node_allowed_for(rsc->parent);
+        parent = local_node_allowed_for(rsc->parent);
     }
 
     if(node == NULL) {
