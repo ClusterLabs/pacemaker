@@ -76,7 +76,7 @@ struct {
     gboolean require_cib;         // Whether command requires CIB IPC
     int cib_options;              // Options to use with CIB IPC calls
     gboolean require_crmd;        // Whether command requires controller IPC
-    gboolean require_dataset;     // Whether command requires scheduler data
+    gboolean require_scheduler;   // Whether command requires scheduler data
     gboolean require_resource;    // Whether command requires resource specified
     gboolean require_node;        // Whether command requires node specified
     int find_flags;               // Flags to use when searching for resource
@@ -117,7 +117,7 @@ struct {
     .check_level = -1,
     .cib_options = cib_sync_call,
     .require_cib = TRUE,
-    .require_dataset = TRUE,
+    .require_scheduler = TRUE,
     .require_resource = TRUE,
 };
 
@@ -650,7 +650,7 @@ reset_options(void) {
     options.require_node = FALSE;
 
     options.require_cib = TRUE;
-    options.require_dataset = TRUE;
+    options.require_scheduler = TRUE;
     options.require_resource = TRUE;
 
     options.find_flags = 0;
@@ -709,7 +709,7 @@ cleanup_refresh_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 gboolean
 delete_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     SET_COMMAND(cmd_delete);
-    options.require_dataset = FALSE;
+    options.require_scheduler = FALSE;
     options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
     return TRUE;
 }
@@ -725,7 +725,7 @@ static void
 get_agent_spec(const gchar *optarg)
 {
     options.require_cib = FALSE;
-    options.require_dataset = FALSE;
+    options.require_scheduler = FALSE;
     options.require_resource = FALSE;
     pcmk__str_update(&options.agent_spec, optarg);
 }
@@ -754,7 +754,7 @@ list_standards_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 {
     SET_COMMAND(cmd_list_standards);
     options.require_cib = FALSE;
-    options.require_dataset = FALSE;
+    options.require_scheduler = FALSE;
     options.require_resource = FALSE;
     return TRUE;
 }
@@ -889,7 +889,7 @@ set_delete_param_cb(const gchar *option_name, const gchar *optarg, gpointer data
 gboolean
 set_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     SET_COMMAND(cmd_set_property);
-    options.require_dataset = FALSE;
+    options.require_scheduler = FALSE;
     pcmk__str_update(&options.prop_name, optarg);
     options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
     return TRUE;
@@ -945,7 +945,7 @@ digests_cb(const gchar *option_name, const gchar *optarg, gpointer data,
         options.override_params = pcmk__strkey_table(free, free);
     }
     options.require_node = TRUE;
-    options.require_dataset = TRUE;
+    options.require_scheduler = TRUE;
     return TRUE;
 }
 
@@ -953,7 +953,7 @@ gboolean
 wait_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     SET_COMMAND(cmd_wait);
     options.require_resource = FALSE;
-    options.require_dataset = FALSE;
+    options.require_scheduler = FALSE;
     return TRUE;
 }
 
@@ -1374,7 +1374,7 @@ validate_cmdline_config(void)
         options.cmdline_params = pcmk__strkey_table(free, free);
     }
     options.require_resource = FALSE;
-    options.require_dataset = FALSE;
+    options.require_scheduler = FALSE;
     options.require_cib = FALSE;
 }
 
@@ -1630,7 +1630,7 @@ main(int argc, char **argv)
      */
 
     if (options.find_flags && options.rsc_id) {
-        options.require_dataset = TRUE;
+        options.require_scheduler = TRUE;
     }
 
     // Establish a connection to the CIB if needed
@@ -1653,7 +1653,7 @@ main(int argc, char **argv)
     }
 
     // Populate scheduler data from XML file if specified or CIB query otherwise
-    if (options.require_dataset) {
+    if (options.require_scheduler) {
         rc = populate_working_set(&cib_xml_copy);
         if (rc != pcmk_rc_ok) {
             exit_code = pcmk_rc2exitc(rc);
