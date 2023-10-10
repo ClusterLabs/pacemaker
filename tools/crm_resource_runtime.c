@@ -1197,7 +1197,7 @@ static void display_list(pcmk__output_t *out, GList *items, const char *tag)
  *       but perhaps pcmk_rc_schema_validation would be better in that case.
  */
 int
-update_working_set_xml(pcmk_scheduler_t *scheduler, xmlNode **xml)
+update_scheduler_input(pcmk_scheduler_t *scheduler, xmlNode **xml)
 {
     if (cli_config_update(xml, NULL, FALSE) == FALSE) {
         return ENOKEY;
@@ -1232,7 +1232,7 @@ update_working_set_from_cib(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
         out->err(out, "Could not obtain the current CIB: %s (%d)", pcmk_rc_str(rc), rc);
         return rc;
     }
-    rc = update_working_set_xml(scheduler, &cib_xml_copy);
+    rc = update_scheduler_input(scheduler, &cib_xml_copy);
     if (rc != pcmk_rc_ok) {
         out->err(out, "Could not upgrade the current CIB XML");
         free_xml(cib_xml_copy);

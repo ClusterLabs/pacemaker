@@ -120,7 +120,7 @@ int cli_resource_delete_attribute(pcmk_resource_t *rsc,
                                   const char *attr_id, const char *attr_name,
                                   cib_t *cib, int cib_options, gboolean force);
 
-int update_working_set_xml(pcmk_scheduler_t *scheduler, xmlNode **xml);
+int update_scheduler_input(pcmk_scheduler_t *scheduler, xmlNode **xml);
 int wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib);
 
 bool resource_is_running_on(pcmk_resource_t *rsc, const char *host);

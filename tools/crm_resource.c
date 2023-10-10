@@ -1165,7 +1165,7 @@ initialize_scheduler_data(xmlNodePtr *cib_xml_copy)
                                       pcmk_sched_no_counts
                                       |pcmk_sched_no_compat);
             scheduler->priv = out;
-            rc = update_working_set_xml(scheduler, cib_xml_copy);
+            rc = update_scheduler_input(scheduler, cib_xml_copy);
         }
     }
 
