@@ -1219,8 +1219,8 @@ update_scheduler_input(pcmk_scheduler_t *scheduler, xmlNode **xml)
  *       scheduler->input and scheduler->now.
  */
 static int
-update_working_set_from_cib(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
-                            cib_t *cib)
+update_scheduler_input_to_cib(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
+                              cib_t *cib)
 {
     xmlNode *cib_xml_copy = NULL;
     int rc = pcmk_rc_ok;
@@ -1256,7 +1256,7 @@ update_dataset(cib_t *cib, pcmk_scheduler_t *scheduler, bool simulate)
     pe_reset_working_set(scheduler);
     pe__set_working_set_flags(scheduler,
                               pcmk_sched_no_counts|pcmk_sched_no_compat);
-    rc = update_working_set_from_cib(out, scheduler, cib);
+    rc = update_scheduler_input_to_cib(out, scheduler, cib);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
@@ -1867,7 +1867,7 @@ wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
 
         /* Get latest transition graph */
         pe_reset_working_set(scheduler);
-        rc = update_working_set_from_cib(out, scheduler, cib);
+        rc = update_scheduler_input_to_cib(out, scheduler, cib);
         if (rc != pcmk_rc_ok) {
             pe_free_working_set(scheduler);
             return rc;
