@@ -348,7 +348,7 @@ pcmk__any_node_available(GHashTable *nodes)
  * \internal
  * \brief Apply node health values for all nodes in cluster
  *
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 void
 pcmk__apply_node_health(pcmk_scheduler_t *scheduler)

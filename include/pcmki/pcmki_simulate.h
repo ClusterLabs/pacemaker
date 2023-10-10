@@ -29,7 +29,7 @@
  *
  * \param[in]     dir        A directory full of CIB files to be profiled
  * \param[in]     repeat     Number of times to run on each input file
- * \param[in,out] scheduler  Working set for the cluster
+ * \param[in,out] scheduler  Scheduler data
  * \param[in]     use_date   The date to set the cluster's time to (may be NULL)
  */
 void pcmk__profile_dir(const char *dir, long long repeat,
@@ -39,7 +39,7 @@ void pcmk__profile_dir(const char *dir, long long repeat,
  * \internal
  * \brief Simulate executing a transition
  *
- * \param[in,out] scheduler     Cluster working set
+ * \param[in,out] scheduler     Scheduler data
  * \param[in,out] cib           CIB object for scheduler input
  * \param[in]     op_fail_list  List of actions to simulate as failing
  *
@@ -58,7 +58,7 @@ enum pcmk__graph_status pcmk__simulate_transition(pcmk_scheduler_t *scheduler,
  * optionally writes out a variety of artifacts to show the results of the
  * simulation.  Output can be modified with various flags.
  *
- * \param[in,out] scheduler    Working set for the cluster
+ * \param[in,out] scheduler    Scheduler data
  * \param[in,out] out          The output functions structure
  * \param[in]     injections   A structure containing cluster events
  *                             (node up/down, tickets, injected operations)

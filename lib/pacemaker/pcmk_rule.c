@@ -43,7 +43,7 @@ eval_date_expression(const xmlNode *expr, crm_time_t *now)
 
 /*!
  * \internal
- * \brief Initialize the cluster working set for checking rules
+ * \brief Initialize scheduler data for checking rules
  *
  * Make our own copies of the CIB XML and date/time object, if they're not
  * \c NULL. This way we don't have to take ownership of the objects passed via
@@ -53,7 +53,7 @@ eval_date_expression(const xmlNode *expr, crm_time_t *now)
  * \param[in]     input      The CIB XML to check (if \c NULL, use current CIB)
  * \param[in]     date       Check whether the rule is in effect at this date
  *                           and time (if \c NULL, use current date and time)
- * \param[out]    scheduler  Where to store the cluster working set
+ * \param[out]    scheduler  Where to store initialized scheduler data
  *
  * \return Standard Pacemaker return code
  */
@@ -72,7 +72,7 @@ init_rule_check(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
     pe__set_working_set_flags(new_scheduler,
                               pcmk_sched_no_counts|pcmk_sched_no_compat);
 
-    // Populate the working set instance
+    // Populate the scheduler data
 
     // Make our own copy of the given input or fetch the CIB and use that
     if (input != NULL) {
@@ -112,7 +112,7 @@ init_rule_check(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
  * \internal
  * \brief Check whether a given rule is in effect
  *
- * \param[in]     scheduler  Cluster working set
+ * \param[in]     scheduler  Scheduler data
  * \param[in]     rule_id    The ID of the rule to check
  * \param[out]    error      Where to store a rule evaluation error message
  *

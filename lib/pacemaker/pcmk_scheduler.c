@@ -226,7 +226,7 @@ apply_stickiness(gpointer data, gpointer user_data)
  * \internal
  * \brief Apply shutdown locks for all resources as appropriate
  *
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 static void
 apply_shutdown_locks(pcmk_scheduler_t *scheduler)
@@ -245,7 +245,7 @@ apply_shutdown_locks(pcmk_scheduler_t *scheduler)
  * \internal
  * \brief Calculate the number of available nodes in the cluster
  *
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 static void
 count_available_nodes(pcmk_scheduler_t *scheduler)
@@ -297,7 +297,7 @@ apply_node_criteria(pcmk_scheduler_t *scheduler)
  * \internal
  * \brief Assign resources to nodes
  *
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 static void
 assign_resources(pcmk_scheduler_t *scheduler)
@@ -389,7 +389,7 @@ clear_failcounts_if_orphaned(gpointer data, gpointer user_data)
  * \internal
  * \brief Schedule any resource actions needed
  *
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 static void
 schedule_resource_actions(pcmk_scheduler_t *scheduler)
@@ -442,7 +442,7 @@ is_managed(const pcmk_resource_t *rsc)
  * \internal
  * \brief Check whether any resources in the cluster are managed
  *
- * \param[in] scheduler  Cluster working set
+ * \param[in] scheduler  Scheduler data
  *
  * \return true if any resource is managed, otherwise false
  */
@@ -500,7 +500,7 @@ needs_shutdown(const pcmk_node_t *node)
  *
  * \param[in,out] list       List of existing non-DC fencing actions
  * \param[in,out] action     Fencing action to prepend to \p list
- * \param[in]     scheduler  Cluster working set
+ * \param[in]     scheduler  Scheduler data
  *
  * \return (Possibly new) head of \p list
  */
@@ -541,7 +541,7 @@ schedule_fencing(pcmk_node_t *node)
  * \internal
  * \brief Create and order node fencing and shutdown actions
  *
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 static void
 schedule_fencing_and_shutdowns(pcmk_scheduler_t *scheduler)
@@ -705,7 +705,7 @@ log_all_actions(pcmk_scheduler_t *scheduler)
  * \internal
  * \brief Log all required but unrunnable actions at trace level
  *
- * \param[in] scheduler  Cluster working set
+ * \param[in] scheduler  Scheduler data
  */
 static void
 log_unrunnable_actions(const pcmk_scheduler_t *scheduler)
@@ -731,8 +731,8 @@ log_unrunnable_actions(const pcmk_scheduler_t *scheduler)
  * \brief Unpack the CIB for scheduling
  *
  * \param[in,out] cib        CIB XML to unpack (may be NULL if already unpacked)
- * \param[in]     flags      Working set flags to set in addition to defaults
- * \param[in,out] scheduler  Cluster working set
+ * \param[in]     flags      Scheduler flags to set in addition to defaults
+ * \param[in,out] scheduler  Scheduler data
  */
 static void
 unpack_cib(xmlNode *cib, unsigned long long flags, pcmk_scheduler_t *scheduler)
@@ -773,8 +773,8 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pcmk_scheduler_t *scheduler)
  * \brief Run the scheduler for a given CIB
  *
  * \param[in,out] cib        CIB XML to use as scheduler input
- * \param[in]     flags      Working set flags to set in addition to defaults
- * \param[in,out] scheduler  Cluster working set
+ * \param[in]     flags      Scheduler flags to set in addition to defaults
+ * \param[in,out] scheduler  Scheduler data
  */
 void
 pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,

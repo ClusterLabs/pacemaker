@@ -27,7 +27,7 @@ extern "C" {
  * \brief Print one-line status suitable for use with monitoring software
  *
  * \param[in,out] out        Output object
- * \param[in]     scheduler  Cluster working set
+ * \param[in]     scheduler  Scheduler data
  *
  * \return Standard Pacemaker return code
  *

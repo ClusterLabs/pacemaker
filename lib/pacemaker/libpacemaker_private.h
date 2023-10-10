@@ -276,7 +276,7 @@ struct resource_alloc_functions_s {
      *                           only mandatory actions and pcmk_action_runnable
      *                           to affect only runnable actions)
      * \param[in]     type       Group of enum pcmk__action_relation_flags
-     * \param[in,out] scheduler  Cluster working set
+     * \param[in,out] scheduler  Scheduler data
      *
      * \return Group of enum pcmk__updated flags indicating what was updated
      */

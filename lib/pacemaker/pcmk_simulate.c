@@ -128,7 +128,7 @@ create_action_name(const pcmk_action_t *action, bool verbose)
  * \internal
  * \brief Display the status of a cluster
  *
- * \param[in,out] scheduler     Cluster working set
+ * \param[in,out] scheduler     Scheduler data
  * \param[in]     show_opts     How to modify display (as pcmk_show_opt_e flags)
  * \param[in]     section_opts  Sections to display (as pcmk_section_e flags)
  * \param[in]     title         What to use as list title
@@ -163,7 +163,7 @@ print_cluster_status(pcmk_scheduler_t *scheduler, uint32_t show_opts,
  * \internal
  * \brief Display a summary of all actions scheduled in a transition
  *
- * \param[in,out] scheduler     Cluster working set (fully scheduled)
+ * \param[in,out] scheduler     Scheduler data (fully scheduled)
  * \param[in]     print_spacer  Whether to display a spacer first
  */
 static void
@@ -179,9 +179,9 @@ print_transition_summary(pcmk_scheduler_t *scheduler, bool print_spacer)
 
 /*!
  * \internal
- * \brief Reset a cluster working set's input, output, date, and flags
+ * \brief Reset scheduler input, output, date, and flags
  *
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  * \param[in]     input      What to set as cluster input
  * \param[in]     out        What to set as cluster output object
  * \param[in]     use_date   What to set as cluster's current timestamp
@@ -209,7 +209,7 @@ reset(pcmk_scheduler_t *scheduler, xmlNodePtr input, pcmk__output_t *out,
  * \brief Write out a file in dot(1) format describing the actions that will
  *        be taken by the scheduler in response to an input CIB file.
  *
- * \param[in,out] scheduler    Working set for the cluster
+ * \param[in,out] scheduler    Scheduler data
  * \param[in]     dot_file     The filename to write
  * \param[in]     all_actions  Write all actions, even those that are optional
  *                             or are on unmanaged resources
@@ -322,7 +322,7 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
  *
  * \param[in]     xml_file   The CIB file to profile
  * \param[in]     repeat     Number of times to run
- * \param[in,out] scheduler  Working set for the cluster
+ * \param[in,out] scheduler  Scheduler data
  * \param[in]     use_date   The date to set the cluster's time to (may be NULL)
  */
 static void
@@ -421,7 +421,7 @@ pcmk__profile_dir(const char *dir, long long repeat,
  * \note \p scheduler->priv must have been set to a valid \p pcmk__output_t
  *       object before this function is called.
  *
- * \param[in,out] scheduler       Working set for the cluster
+ * \param[in,out] scheduler       Scheduler data
  * \param[in]     print_original  If \p true, the "execution-date" should
  *                                also be printed
  * \param[in]     use_date        The date to set the cluster's time to

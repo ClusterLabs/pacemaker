@@ -562,7 +562,7 @@ pcmk__group_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
  *                           mandatory actions, and pcmk_action_runnable to
  *                           affect only runnable actions)
  * \param[in]     type       Group of enum pcmk__action_relation_flags to apply
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  *
  * \return Group of enum pcmk__updated flags indicating what was updated
  */

@@ -552,7 +552,7 @@ set_ticket_state_attr(pcmk__output_t *out, const char *ticket_id,
  * \param[in,out] out       Output object for displaying error messages
  * \param[in]     spec      Action specification to inject
  * \param[in,out] cib       CIB object for scheduler input
- * \param[in]     scheduler  Cluster working set
+ * \param[in]     scheduler  Scheduler data
  */
 static void
 inject_action(pcmk__output_t *out, const char *spec, cib_t *cib,
@@ -631,7 +631,7 @@ done:
  * \internal
  * \brief Inject fictitious scheduler inputs
  *
- * \param[in,out] scheduler   Cluster working set
+ * \param[in,out] scheduler   Scheduler data
  * \param[in,out] cib         CIB object for scheduler input to modify
  * \param[in]     injections  Injections to apply
  */

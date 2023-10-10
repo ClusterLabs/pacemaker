@@ -21,9 +21,9 @@
 #include <pe_status_private.h>
 
 /*!
- * \brief Create a new working set
+ * \brief Create a new object to hold scheduler data
  *
- * \return New, initialized working set on success, else NULL (and set errno)
+ * \return New, initialized scheduler data on success, else NULL (and set errno)
  * \note Only pcmk_scheduler_t objects created with this function (as opposed
  *       to statically declared or directly allocated) should be used with the
  *       functions in this library, to allow for future extensions to the
@@ -42,9 +42,9 @@ pe_new_working_set(void)
 }
 
 /*!
- * \brief Free a working set
+ * \brief Free scheduler data
  *
- * \param[in,out] scheduler  Working set to free
+ * \param[in,out] scheduler  Scheduler data to free
  */
 void
 pe_free_working_set(pcmk_scheduler_t *scheduler)
@@ -154,9 +154,9 @@ cluster_status(pcmk_scheduler_t * scheduler)
  *
  * \param[in,out] resources  List to free
  *
- * \note When a working set's resource list is freed, that includes the original
+ * \note When the scheduler's resource list is freed, that includes the original
  *       storage for the uname and id of any Pacemaker Remote nodes in the
- *       working set's node list, so take care not to use those afterward.
+ *       scheduler's node list, so take care not to use those afterward.
  * \todo Refactor pcmk_node_t to strdup() the node name.
  */
 static void
@@ -268,9 +268,9 @@ pe__free_location(GList *constraints)
 }
 
 /*!
- * \brief Reset working set to default state without freeing it or constraints
+ * \brief Reset scheduler data to defaults without freeing it or constraints
  *
- * \param[in,out] scheduler  Working set to reset
+ * \param[in,out] scheduler  Scheduler data to reset
  *
  * \deprecated This function is deprecated as part of the API;
  *             pe_reset_working_set() should be used instead.
@@ -330,9 +330,9 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
 }
 
 /*!
- * \brief Reset a working set to default state without freeing it
+ * \brief Reset scheduler data to default state without freeing it
  *
- * \param[in,out] scheduler  Working set to reset
+ * \param[in,out] scheduler  Scheduler data to reset
  */
 void
 pe_reset_working_set(pcmk_scheduler_t *scheduler)

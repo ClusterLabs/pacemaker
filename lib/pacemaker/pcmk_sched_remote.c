@@ -393,7 +393,7 @@ apply_container_ordering(pcmk_action_t *action)
  * \internal
  * \brief Order all relevant actions relative to remote connection actions
  *
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 void
 pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)

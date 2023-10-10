@@ -17,7 +17,7 @@
  * \internal
  * \brief Set the node health values to use for "red", "yellow", and "green"
  *
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 void
 pe__unpack_node_health_scores(pcmk_scheduler_t *scheduler)

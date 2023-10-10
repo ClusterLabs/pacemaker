@@ -50,7 +50,7 @@ compare_attribute(gconstpointer a, gconstpointer b)
  *
  * \param[in]     node            Node that ran this resource
  * \param[in,out] rsc_list        List of resources for this node
- * \param[in,out] scheduler       Cluster working set
+ * \param[in,out] scheduler       Scheduler data
  * \param[in]     attrname        Attribute to find
  * \param[out]    expected_score  Expected value for this attribute
  *

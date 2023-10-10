@@ -282,7 +282,7 @@ rsc_stonith_ordering(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
  * pseudo-actions, etc.
  *
  * \param[in,out] stonith_op  Fencing operation
- * \param[in,out] scheduler   Working set of cluster
+ * \param[in,out] scheduler   Scheduler data
  */
 void
 pcmk__order_vs_fence(pcmk_action_t *stonith_op, pcmk_scheduler_t *scheduler)

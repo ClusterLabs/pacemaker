@@ -521,7 +521,7 @@ pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 
 /*!
  * \internal
- * \brief Add a new location constraint to a cluster working set
+ * \brief Add a new location constraint to scheduler data
  *
  * \param[in]     id             XML ID of location constraint
  * \param[in,out] rsc            Resource in location constraint
@@ -593,7 +593,7 @@ pcmk__new_location(const char *id, pcmk_resource_t *rsc,
  * \internal
  * \brief Apply all location constraints
  *
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 void
 pcmk__apply_locations(pcmk_scheduler_t *scheduler)

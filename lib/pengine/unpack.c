@@ -101,7 +101,7 @@ is_dangling_guest_node(pcmk_node_t *node)
 /*!
  * \brief Schedule a fence action for a node
  *
- * \param[in,out] scheduler       Current working set of cluster
+ * \param[in,out] scheduler       Scheduler data
  * \param[in,out] node            Node to fence
  * \param[in]     reason          Text description of why fencing is needed
  * \param[in]     priority_delay  Whether to consider `priority-fencing-delay`
@@ -805,7 +805,7 @@ destroy_tag(gpointer data)
  * \brief Parse configuration XML for resource information
  *
  * \param[in]     xml_resources  Top of resource configuration XML
- * \param[in,out] scheduler      Where to put resource information
+ * \param[in,out] scheduler      Scheduler data
  *
  * \return TRUE
  *
@@ -1085,7 +1085,7 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
  *
  * \param[in]     state      CIB node state XML
  * \param[in,out] node       Cluster node whose attributes are being unpacked
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 static void
 unpack_transient_attributes(const xmlNode *state, pcmk_node_t *node,
@@ -1125,7 +1125,7 @@ unpack_transient_attributes(const xmlNode *state, pcmk_node_t *node,
  * fully unpack everything.
  *
  * \param[in]     state      CIB node state XML
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 static void
 unpack_node_state(const xmlNode *state, pcmk_scheduler_t *scheduler)
@@ -1208,7 +1208,7 @@ unpack_node_state(const xmlNode *state, pcmk_scheduler_t *scheduler)
  *
  * \param[in]     status     CIB XML status section
  * \param[in]     fence      If true, treat any not-yet-unpacked nodes as unseen
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  *
  * \return Standard Pacemaker return code (specifically pcmk_rc_ok if done,
  *         or EAGAIN if more unpacking remains to be done)
@@ -1391,10 +1391,10 @@ unpack_status(xmlNode *status, pcmk_scheduler_t *scheduler)
  * \brief Unpack node's time when it became a member at the cluster layer
  *
  * \param[in]     node_state  Node's node_state entry
- * \param[in,out] scheduler   Cluster working set
+ * \param[in,out] scheduler   Scheduler data
  *
  * \return Epoch time when node became a cluster member
- *         (or working set effective time for legacy entries) if a member,
+ *         (or scheduler effective time for legacy entries) if a member,
  *         0 if not a member, or -1 if no valid information available
  */
 static long long
@@ -1917,7 +1917,7 @@ create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
  * \param[in,out] parent     Clone resource that orphan will be added to
  * \param[in]     rsc_id     Orphan's resource ID
  * \param[in]     node       Where orphan is active (for logging only)
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  *
  * \return Newly added orphaned instance of \p parent
  */
@@ -1945,7 +1945,7 @@ create_anonymous_orphan(pcmk_resource_t *parent, const char *rsc_id,
  * (2) an inactive instance (i.e. within the total of clone-max instances);
  * (3) a newly created orphan (i.e. clone-max instances are already active).
  *
- * \param[in,out] scheduler  Cluster information
+ * \param[in,out] scheduler  Scheduler data
  * \param[in]     node       Node on which to check for instance
  * \param[in,out] parent     Clone to check
  * \param[in]     rsc_id     Name of cloned resource in history (no instance)
@@ -1982,8 +1982,8 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
          * (2) when we've already unpacked the history of another numbered
          *     instance on the same node (which can happen if globally-unique
          *     was flipped from true to false); and
-         * (3) when we re-run calculations on the same data set as part of a
-         *     simulation.
+         * (3) when we re-run calculations on the same scheduler data as part of
+         *     a simulation.
          */
         child->fns->location(child, &locations, 2);
         if (locations) {
@@ -2583,7 +2583,7 @@ unpack_shutdown_lock(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
  *
  * \param[in,out] node       Node whose status is being unpacked
  * \param[in]     rsc_entry  lrm_resource XML being unpacked
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  *
  * \return Resource corresponding to the entry, or NULL if no operation history
  */
@@ -2734,7 +2734,7 @@ handle_orphaned_container_fillers(const xmlNode *lrm_rsc_list,
  *
  * \param[in,out] node       Node whose status is being unpacked
  * \param[in]     xml        CIB node state XML
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 static void
 unpack_node_lrm(pcmk_node_t *node, const xmlNode *xml,
@@ -2907,7 +2907,7 @@ unknown_on_node(pcmk_resource_t *rsc, const char *node_name)
  * \param[in]     node_name  Node being checked
  * \param[in]     xml_op     Event that monitor is being compared to
  * \param[in]     same_node  Whether the operations are on the same node
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  *
  * \return true if such a monitor happened after event, false otherwise
  */
@@ -2933,7 +2933,7 @@ monitor_not_running_after(const char *rsc_id, const char *node_name,
  * \param[in]     node_name  Node being checked
  * \param[in]     xml_op     Event that non-monitor is being compared to
  * \param[in]     same_node  Whether the operations are on the same node
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  *
  * \return true if such a operation happened after event, false otherwise
  */
@@ -2978,7 +2978,7 @@ non_monitor_after(const char *rsc_id, const char *node_name,
  * \param[in]     node_name     Node being checked
  * \param[in]     migrate_to    Any migrate_to event that is being compared to
  * \param[in]     migrate_from  Any migrate_from event that is being compared to
- * \param[in,out] scheduler     Cluster working set
+ * \param[in,out] scheduler     Scheduler data
  *
  * \return true if such a operation happened after event, false otherwise
  */
@@ -3758,8 +3758,8 @@ remap_because(struct action_history *history, const char **why, int value,
  * \param[in]     expired  Whether result is expired
  *
  * \note If the result is remapped and the node is not shutting down or failed,
- *       the operation will be recorded in the data set's list of failed operations
- *       to highlight it for the user.
+ *       the operation will be recorded in the scheduler data's list of failed
+ *       operations to highlight it for the user.
  *
  * \note This may update the resource's current and next role.
  */

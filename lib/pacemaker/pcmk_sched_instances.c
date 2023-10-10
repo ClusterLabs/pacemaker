@@ -1560,7 +1560,7 @@ update_noninterleaved_actions(pcmk_resource_t *instance, pcmk_action_t *first,
  *                           mandatory actions, and pcmk_action_runnable to
  *                           affect only runnable actions)
  * \param[in]     type       Group of enum pcmk__action_relation_flags to apply
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  *
  * \return Group of enum pcmk__updated flags indicating what was updated
  */

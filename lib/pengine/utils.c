@@ -27,7 +27,7 @@ gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
  * \internal
  * \brief Check whether we can fence a particular node
  *
- * \param[in] scheduler  Working set for cluster
+ * \param[in] scheduler  Scheduler data
  * \param[in] node       Name of node to check
  *
  * \return true if node can be fenced, false otherwise
@@ -171,7 +171,7 @@ pe__cmp_node_name(gconstpointer a, gconstpointer b)
  * \param[in]     rsc        Use allowed nodes for this resource
  * \param[in]     comment    Text description to prefix lines with
  * \param[in]     nodes      If rsc is not specified, use these nodes
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 static void
 pe__output_node_weights(const pcmk_resource_t *rsc, const char *comment,
@@ -244,7 +244,7 @@ pe__log_node_weights(const char *file, const char *function, int line,
  *                           and show scores recursively for any children
  * \param[in]     comment    Text description to prefix lines with
  * \param[in]     nodes      Nodes whose scores should be shown
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 void
 pe__show_node_scores_as(const char *file, const char *function, int line,
@@ -672,10 +672,10 @@ pe__shutdown_requested(const pcmk_node_t *node)
 
 /*!
  * \internal
- * \brief Update a data set's "recheck by" time
+ * \brief Update "recheck by" time in scheduler data
  *
  * \param[in]     recheck    Epoch time when recheck should happen
- * \param[in,out] scheduler  Current working set
+ * \param[in,out] scheduler  Scheduler data
  */
 void
 pe__update_recheck_time(time_t recheck, pcmk_scheduler_t *scheduler)
@@ -697,7 +697,7 @@ pe__update_recheck_time(time_t recheck, pcmk_scheduler_t *scheduler)
  * \param[out]    hash          Where to store extracted name/value pairs
  * \param[in]     always_first  If not NULL, process block with this ID first
  * \param[in]     overwrite     Whether to replace existing values with same name
- * \param[in,out] scheduler     Cluster working set containing \p xml_obj
+ * \param[in,out] scheduler     Scheduler data containing \p xml_obj
  */
 void
 pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,

@@ -333,7 +333,7 @@ anti_colocation_order(pcmk_resource_t *first_rsc, int first_role,
 
 /*!
  * \internal
- * \brief Add a new colocation constraint to a cluster working set
+ * \brief Add a new colocation constraint to scheduler data
  *
  * \param[in]     id              XML ID for this constraint
  * \param[in]     node_attr       Colocate by this attribute (NULL for #uname)
@@ -559,7 +559,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
  * \param[in]     set2         Primary set
  * \param[in]     score        Colocation score
  * \param[in]     influence_s  Value of colocation's "influence" attribute
- * \param[in,out] scheduler    Cluster working set
+ * \param[in,out] scheduler    Scheduler data
  */
 static void
 colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
@@ -928,10 +928,10 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
 /*!
  * \internal
- * \brief Parse a colocation constraint from XML into a cluster working set
+ * \brief Parse a colocation constraint from XML into scheduler data
  *
  * \param[in,out] xml_obj    Colocation constraint XML to unpack
- * \param[in,out] scheduler  Cluster working set to add constraint to
+ * \param[in,out] scheduler  Scheduler data to add constraint to
  */
 void
 pcmk__unpack_colocation(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)

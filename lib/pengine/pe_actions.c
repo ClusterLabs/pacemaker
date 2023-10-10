@@ -48,7 +48,7 @@ lookup_singleton(pcmk_scheduler_t *scheduler, const char *action_uuid)
  * \param[in] key        Action key to match
  * \param[in] rsc        Resource to match (if any)
  * \param[in] node       Node to match (if any)
- * \param[in] scheduler  Cluster working set
+ * \param[in] scheduler  Scheduler data
  *
  * \return Existing action that matches arguments (or NULL if none)
  */
@@ -160,7 +160,7 @@ find_rsc_op_entry(const pcmk_resource_t *rsc, const char *key)
  * \param[in]     node       Node that action is on (if any)
  * \param[in]     optional   Whether action should be considered optional
  * \param[in]     for_graph  Whether action should be recorded in transition graph
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  *
  * \return Newly allocated action
  * \note This function takes ownership of \p key. It is the caller's
@@ -229,7 +229,7 @@ new_action(char *key, const char *task, pcmk_resource_t *rsc,
  * \brief Evaluate node attribute values for an action
  *
  * \param[in,out] action     Action to unpack attributes for
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 static void
 unpack_action_node_attributes(pcmk_action_t *action,
@@ -314,7 +314,7 @@ effective_quorum_policy(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
  *
  * \param[in,out] action     Action to update
  * \param[in]     for_graph  Whether action should be recorded in transition graph
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  *
  * \note This may also schedule fencing if a stop is unrunnable.
  */
@@ -1025,7 +1025,7 @@ unpack_operation(pcmk_action_t *action, const xmlNode *xml_obj,
  * \param[in]     on_node      Node that action is on (if any)
  * \param[in]     optional     Whether action should be considered optional
  * \param[in]     save_action  Whether action should be recorded in transition graph
- * \param[in,out] scheduler    Cluster working set
+ * \param[in,out] scheduler    Scheduler data
  *
  * \return Action object corresponding to arguments (guaranteed not to be
  *         \c NULL)

@@ -57,7 +57,7 @@ pe__is_bundle_node(const pcmk_node_t *node)
  * If a given resource contains a filler resource that is a remote connection,
  * return that filler resource (or NULL if none is found).
  *
- * \param[in] scheduler  Working set of cluster
+ * \param[in] scheduler  Scheduler data
  * \param[in] rsc        Resource to check
  *
  * \return Filler resource with remote connection, or NULL if none found
@@ -111,7 +111,7 @@ xml_contains_remote_node(xmlNode *xml)
  * \internal
  * \brief Execute a supplied function for each guest node running on a host
  *
- * \param[in]     scheduler  Working set for cluster
+ * \param[in]     scheduler  Scheduler data
  * \param[in]     host       Host node to check
  * \param[in]     helper     Function to call for each guest node
  * \param[in,out] user_data  Pointer to pass to helper function
@@ -245,7 +245,7 @@ pe__add_param_check(const xmlNode *rsc_op, pcmk_resource_t *rsc,
  * \internal
  * \brief Call a function for each action to be checked for addr substitution
  *
- * \param[in,out] scheduler  Working set for cluster
+ * \param[in,out] scheduler  Scheduler data
  * \param[in]     cb         Function to be called
  */
 void

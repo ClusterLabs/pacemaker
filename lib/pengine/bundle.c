@@ -721,8 +721,8 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         free(port_s);
 
         /* Abandon our created ID, and pull the copy from the XML, because we
-         * need something that will get freed during data set cleanup to use as
-         * the node ID and uname.
+         * need something that will get freed during scheduler data cleanup to
+         * use as the node ID and uname.
          */
         free(id);
         id = NULL;

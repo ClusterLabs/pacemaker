@@ -173,7 +173,7 @@ add_rsc_if_matching(GList *result, pcmk_resource_t *rsc, const char *id)
  * \brief Find all resources matching a given ID by either ID or clone name
  *
  * \param[in] id         Resource ID to check
- * \param[in] scheduler  Cluster working set
+ * \param[in] scheduler  Scheduler data
  *
  * \return List of all resources that match \p id
  * \note The caller is responsible for freeing the return value with
@@ -212,7 +212,7 @@ set_assignment_methods_for_rsc(gpointer data, gpointer user_data)
  * \internal
  * \brief Set the variant-appropriate assignment methods for all resources
  *
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 void
 pcmk__set_assignment_methods(pcmk_scheduler_t *scheduler)
@@ -759,7 +759,7 @@ done:
  * \internal
  * \brief Sort resources in the order they should be assigned to nodes
  *
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 void
 pcmk__sort_resources(pcmk_scheduler_t *scheduler)

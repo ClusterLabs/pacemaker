@@ -1182,11 +1182,11 @@ static void display_list(pcmk__output_t *out, GList *items, const char *tag)
 
 /*!
  * \internal
- * \brief Upgrade XML to latest schema version and use it as working set input
+ * \brief Upgrade XML to latest schema version and use it as scheduler input
  *
- * This also updates the working set timestamp to the current time.
+ * This also updates the scheduler timestamp to the current time.
  *
- * \param[in,out] scheduler  Working set instance to update
+ * \param[in,out] scheduler  Scheduler data to update
  * \param[in,out] xml        XML to use as input
  *
  * \return Standard Pacemaker return code
@@ -1209,9 +1209,9 @@ update_working_set_xml(pcmk_scheduler_t *scheduler, xmlNode **xml)
 
 /*!
  * \internal
- * \brief Update a working set's XML input based on a CIB query
+ * \brief Update scheduler XML input based on a CIB query
  *
- * \param[in] scheduler  Data set instance to initialize
+ * \param[in] scheduler  Scheduler data to initialize
  * \param[in] cib        Connection to the CIB manager
  *
  * \return Standard Pacemaker return code
@@ -1372,7 +1372,7 @@ max_rsc_stop_timeout(pcmk_resource_t *rsc)
  * \internal
  * \brief Find a reasonable waiting time for stopping any one resource in a list
  *
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  * \param[in]     resources  List of names of resources that will be stopped
  *
  * \return Rough estimate of a reasonable time to wait (in seconds) to stop any

@@ -295,7 +295,7 @@ done:
  * \brief Output cluster status in Nagios Plugin format
  *
  * \param[in,out] out        Output object
- * \param[in]     scheduler  Cluster working set
+ * \param[in]     scheduler  Scheduler data
  *
  * \return Standard Pacemaker return code
  * \note This is for a deprecated crm_mon option and should be called only for

@@ -435,7 +435,7 @@ free_params_table(gpointer data)
  *
  * \param[in,out] rsc        Resource to query
  * \param[in]     node       Node for evaluating rules (NULL for defaults)
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  *
  * \return Hash table containing resource parameter names and values
  *         (or NULL if \p rsc or \p scheduler is NULL)
@@ -592,7 +592,7 @@ warn_about_deprecated_classes(pcmk_resource_t *rsc)
  * \param[in]     xml_obj    XML node containing the resource's configuration
  * \param[out]    rsc        Where to store the unpacked resource information
  * \param[in]     parent     Resource's parent, if any
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  *
  * \return Standard Pacemaker return code
  * \note If pcmk_rc_ok is returned, \p *rsc is guaranteed to be non-NULL, and

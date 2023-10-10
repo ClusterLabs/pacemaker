@@ -47,10 +47,10 @@ evaluate_lifetime(xmlNode *lifetime, pcmk_scheduler_t *scheduler)
  * \internal
  * \brief Unpack constraints from XML
  *
- * Given a cluster working set, unpack all constraints from its input XML into
+ * Given scheduler data, unpack all constraints from its input XML into
  * data structures.
  *
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 void
 pcmk__unpack_constraints(pcmk_scheduler_t *scheduler)
@@ -131,7 +131,7 @@ pcmk__find_constraint_resource(GList *rsc_list, const char *id)
  * \internal
  * \brief Check whether an ID references a resource tag
  *
- * \param[in]  scheduler  Cluster working set
+ * \param[in]  scheduler  Scheduler data
  * \param[in]  id         Tag ID to search for
  * \param[out] tag        Where to store tag, if found
  *
@@ -172,7 +172,7 @@ find_constraint_tag(const pcmk_scheduler_t *scheduler, const char *id,
  * \brief
  * \internal Check whether an ID refers to a valid resource or tag
  *
- * \param[in]  scheduler  Cluster working set
+ * \param[in]  scheduler  Scheduler data
  * \param[in]  id         ID to search for
  * \param[out] rsc        Where to store resource, if found
  *                        (or NULL to skip searching resources)
@@ -208,7 +208,7 @@ pcmk__valid_resource_or_tag(const pcmk_scheduler_t *scheduler, const char *id,
  * resource_ref entries for the corresponding resource IDs.
  *
  * \param[in,out] xml_obj    Constraint XML
- * \param[in]     scheduler  Cluster working set
+ * \param[in]     scheduler  Scheduler data
  *
  * \return Equivalent XML with resource tags replaced (or NULL if none)
  * \note It is the caller's responsibility to free the result with free_xml().
@@ -329,7 +329,7 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *scheduler)
  * \param[in]     attr         Name of XML attribute with resource or tag ID
  * \param[in]     convert_rsc  If true, convert to set even if \p attr
  *                             references a resource
- * \param[in]     scheduler    Cluster working set
+ * \param[in]     scheduler    Scheduler data
  */
 bool
 pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
@@ -410,7 +410,7 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
  * \internal
  * \brief Create constraints inherent to resource types
  *
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 void
 pcmk__create_internal_constraints(pcmk_scheduler_t *scheduler)

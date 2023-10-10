@@ -1234,7 +1234,7 @@ clone_resource_state(const pcmk_resource_t * rsc, gboolean current)
  * \brief Check whether a clone has an instance for every node
  *
  * \param[in] rsc        Clone to check
- * \param[in] scheduler  Cluster state
+ * \param[in] scheduler  Scheduler data
  */
 bool
 pe__is_universal_clone(const pcmk_resource_t *rsc,

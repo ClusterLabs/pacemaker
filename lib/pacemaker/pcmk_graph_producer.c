@@ -71,7 +71,7 @@ add_node_to_xml(const pcmk_node_t *node, void *xml)
  * \brief Count (optionally add to XML) nodes needing maintenance state update
  *
  * \param[in,out] xml        Parent XML tag to add to, if any
- * \param[in]     scheduler  Working set for cluster
+ * \param[in]     scheduler  Scheduler data
  *
  * \return Count of nodes added
  * \note Only Pacemaker Remote nodes are considered currently
@@ -110,7 +110,7 @@ add_maintenance_nodes(xmlNode *xml, const pcmk_scheduler_t *scheduler)
  * \internal
  * \brief Add pseudo action with nodes needing maintenance state update
  *
- * \param[in,out] scheduler  Working set for cluster
+ * \param[in,out] scheduler  Scheduler data
  */
 static void
 add_maintenance_update(pcmk_scheduler_t *scheduler)
@@ -389,7 +389,7 @@ add_action_attributes(pcmk_action_t *action, xmlNode *action_xml)
  * \param[in,out] parent        Parent XML element to add action to
  * \param[in,out] action        Scheduled action
  * \param[in]     skip_details  If false, add action details as sub-elements
- * \param[in]     scheduler     Cluster working set
+ * \param[in]     scheduler     Scheduler data
  */
 static void
 create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
@@ -843,7 +843,7 @@ pcmk__graph_has_loop(const pcmk_action_t *init_action,
  * \brief Create a synapse XML element for a transition graph
  *
  * \param[in]     action     Action that synapse is for
- * \param[in,out] scheduler  Cluster working set containing graph
+ * \param[in,out] scheduler  Scheduler data containing graph
  *
  * \return Newly added XML element for new graph synapse
  */
@@ -873,7 +873,7 @@ create_graph_synapse(const pcmk_action_t *action, pcmk_scheduler_t *scheduler)
  * \brief Add an action to the transition graph XML if appropriate
  *
  * \param[in,out] data       Action to possibly add
- * \param[in,out] user_data  Cluster working set
+ * \param[in,out] user_data  Scheduler data
  *
  * \note This will de-duplicate the action inputs, meaning that the
  *       pe_action_wrapper_t:type flags can no longer be relied on to retain
@@ -996,7 +996,7 @@ pcmk__add_rsc_actions_to_graph(pcmk_resource_t *rsc)
  * \internal
  * \brief Create a transition graph with all cluster actions needed
  *
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 void
 pcmk__create_graph(pcmk_scheduler_t *scheduler)

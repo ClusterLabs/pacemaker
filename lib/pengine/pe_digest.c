@@ -93,7 +93,7 @@ attr_in_string(xmlAttrPtr a, void *user_data)
  * \param[in]     xml_op       Unused
  * \param[in]     op_version   CRM feature set to use for digest calculation
  * \param[in]     overrides    Key/value table to override resource parameters
- * \param[in,out] scheduler    Cluster working set
+ * \param[in,out] scheduler    Scheduler data
  */
 static void
 calculate_main_digest(op_digest_cache_t *data, pcmk_resource_t *rsc,
@@ -288,7 +288,7 @@ calculate_restart_digest(op_digest_cache_t *data, const xmlNode *xml_op,
  * \param[in]     xml_op       XML of operation in CIB status (if available)
  * \param[in]     overrides    Key/value table to override resource parameters
  * \param[in]     calc_secure  Whether to calculate secure digest
- * \param[in,out] scheduler    Cluster working set
+ * \param[in,out] scheduler    Scheduler data
  *
  * \return Pointer to new digest cache entry (or NULL on memory error)
  * \note It is the caller's responsibility to free the result using
@@ -343,7 +343,7 @@ pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
  * \param[in,out] node         Node action was performed on
  * \param[in]     xml_op       XML of operation in CIB status (if available)
  * \param[in]     calc_secure  Whether to calculate secure digest
- * \param[in,out] scheduler    Cluster working set
+ * \param[in,out] scheduler    Scheduler data
  *
  * \return Pointer to node's digest cache entry
  */
@@ -373,7 +373,7 @@ rsc_action_digest(pcmk_resource_t *rsc, const char *task, guint interval_ms,
  * \param[in,out] rsc        Resource to check
  * \param[in]     xml_op     Resource history XML
  * \param[in,out] node       Node to use for digest calculation
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  *
  * \return Pointer to node's digest cache entry, with comparison result set
  */
@@ -525,7 +525,7 @@ unfencing_digest_matches(const char *rsc_id, const char *agent,
  * \param[in,out] rsc        Fence device resource
  * \param[in]     agent      Fence device's agent type
  * \param[in,out] node       Node with digest cache to use
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  *
  * \return Node's digest cache entry
  */

@@ -227,7 +227,7 @@ ordering_flags_for_kind(enum pe_order_kind kind, const char *first,
  * \param[in] instance_attr  XML attribute name for instance number.
  *                           This option is deprecated and will be removed in a
  *                           future release.
- * \param[in] scheduler      Cluster working set
+ * \param[in] scheduler      Scheduler data
  *
  * \return Resource corresponding to \p id, or NULL if none
  */
@@ -516,7 +516,7 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
  *                                   \p then_action_task must be set)
  *
  * \param[in]     flags              Group of enum pcmk__action_relation_flags
- * \param[in,out] sched              Cluster working set to add ordering to
+ * \param[in,out] sched              Scheduler data to add ordering to
  *
  * \note This function takes ownership of first_action_task and
  *       then_action_task, which do not need to be freed by the caller.
@@ -585,7 +585,7 @@ pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
  * \param[in]     set                   Set XML to unpack
  * \param[in]     parent_kind           rsc_order XML "kind" attribute
  * \param[in]     parent_symmetrical_s  rsc_order XML "symmetrical" attribute
- * \param[in,out] scheduler             Cluster working set
+ * \param[in,out] scheduler             Scheduler data
  *
  * \return Standard Pacemaker return code
  */
@@ -702,7 +702,7 @@ unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
  * \param[in]     set1       First listed set
  * \param[in]     set2       Second listed set
  * \param[in]     kind       Ordering kind
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  * \param[in]     symmetry   Which ordering symmetry applies to this relation
  *
  * \return Standard Pacemaker return code
@@ -885,7 +885,7 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
  *
  * \param[in,out] xml_obj       Ordering constraint XML
  * \param[out]    expanded_xml  Equivalent XML with tags expanded
- * \param[in]     scheduler     Cluster working set
+ * \param[in]     scheduler     Scheduler data
  *
  * \return Standard Pacemaker return code (specifically, pcmk_rc_ok on success,
  *         and pcmk_rc_unpack_error on invalid configuration)
@@ -994,7 +994,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
  * \brief Unpack ordering constraint XML
  *
  * \param[in,out] xml_obj    Ordering constraint XML to unpack
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 void
 pcmk__unpack_ordering(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
@@ -1383,7 +1383,7 @@ update_action_for_orderings(gpointer data, gpointer user_data)
  * \internal
  * \brief Apply all ordering constraints
  *
- * \param[in,out] sched  Cluster working set
+ * \param[in,out] sched  Scheduler data
  */
 void
 pcmk__apply_orderings(pcmk_scheduler_t *sched)

@@ -335,7 +335,7 @@ probe_needed_before_action(const pcmk_action_t *probe,
  * resource", add implicit "probe this resource then do something" equivalents
  * so the relation is upheld until we know whether a stop is needed.
  *
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 static void
 add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
@@ -664,7 +664,7 @@ add_restart_orderings_for_probe(pcmk_action_t *probe, pcmk_action_t *after)
  * \internal
  * \brief Clear the tracking flag on all scheduled actions
  *
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 static void
 clear_actions_tracking_flag(pcmk_scheduler_t *scheduler)
@@ -721,7 +721,7 @@ add_start_restart_orderings_for_rsc(gpointer data, gpointer user_data)
  * \internal
  * \brief Add "A then probe B" orderings for "A then B" orderings
  *
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  *
  * \note This function is currently disabled (see next comment).
  */
@@ -852,7 +852,7 @@ pcmk__order_probes(pcmk_scheduler_t *scheduler)
  * \internal
  * \brief Schedule any probes needed
  *
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  *
  * \note This may also schedule fencing of failed remote nodes.
  */

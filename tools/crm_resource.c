@@ -76,7 +76,7 @@ struct {
     gboolean require_cib;         // Whether command requires CIB IPC
     int cib_options;              // Options to use with CIB IPC calls
     gboolean require_crmd;        // Whether command requires controller IPC
-    gboolean require_dataset;     // Whether command requires populated data set
+    gboolean require_dataset;     // Whether command requires scheduler data
     gboolean require_resource;    // Whether command requires resource specified
     gboolean require_node;        // Whether command requires node specified
     int find_flags;               // Flags to use when searching for resource
@@ -1652,7 +1652,7 @@ main(int argc, char **argv)
         }
     }
 
-    /* Populate working set from XML file if specified or CIB query otherwise */
+    // Populate scheduler data from XML file if specified or CIB query otherwise
     if (options.require_dataset) {
         rc = populate_working_set(&cib_xml_copy);
         if (rc != pcmk_rc_ok) {
@@ -1769,8 +1769,8 @@ main(int argc, char **argv)
         case cmd_restart:
             /* We don't pass scheduler because rsc needs to stay valid for the
              * entire lifetime of cli_resource_restart(), but it will reset and
-             * update the working set multiple times, so it needs to use its own
-             * copy.
+             * update the scheduler data multiple times, so it needs to use its
+             * own copy.
              */
             rc = cli_resource_restart(out, rsc, node, options.move_lifetime,
                                       options.timeout_ms, cib_conn,

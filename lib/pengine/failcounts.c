@@ -445,7 +445,7 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
  * \param[in,out] rsc        Resource with failure
  * \param[in]     node       Node failure occurred on
  * \param[in]     reason     Readable description why needed (for logging)
- * \param[in,out] scheduler  Working set for cluster
+ * \param[in,out] scheduler  Scheduler data cluster
  *
  * \return Scheduled action
  */

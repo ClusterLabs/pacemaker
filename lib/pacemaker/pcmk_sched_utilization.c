@@ -449,7 +449,7 @@ pcmk__create_utilization_constraints(pcmk_resource_t *rsc,
  * \brief Output node capacities if enabled
  *
  * \param[in]     desc       Prefix for output
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 void
 pcmk__show_node_capacities(const char *desc, pcmk_scheduler_t *scheduler)

@@ -214,7 +214,7 @@ action_for_ordering(pcmk_action_t *action)
  *                           mandatory actions, and pe_action_runnable to
  *                           affect only runnable actions)
  * \param[in]     type       Group of enum pcmk__action_relation_flags to apply
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  *
  * \return Group of enum pcmk__updated flags indicating what was updated
  */
@@ -236,7 +236,7 @@ update(pcmk_resource_t *rsc, pcmk_action_t *first, pcmk_action_t *then,
  * \param[in]     first_flags  Action flags for \p first for ordering purposes
  * \param[in]     then_flags   Action flags for \p then for ordering purposes
  * \param[in,out] order        Action wrapper for \p first in ordering
- * \param[in,out] scheduler    Cluster working set
+ * \param[in,out] scheduler    Scheduler data
  *
  * \return Group of enum pcmk__updated flags
  */
@@ -499,7 +499,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
  * \brief Update an action's flags for all orderings where it is "then"
  *
  * \param[in,out] then       Action to update
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 void
 pcmk__update_action_for_orderings(pcmk_action_t *then,
@@ -832,7 +832,7 @@ handle_restart_ordering(pcmk_action_t *first, pcmk_action_t *then,
  *                           mandatory actions, and pcmk_action_runnable to
  *                           affect only runnable actions)
  * \param[in]     type       Group of enum pcmk__action_relation_flags to apply
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  *
  * \return Group of enum pcmk__updated flags indicating what was updated
  */
@@ -1387,7 +1387,7 @@ pcmk__deduplicate_action_inputs(pcmk_action_t *action)
  * \internal
  * \brief Output all scheduled actions
  *
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 void
 pcmk__output_actions(pcmk_scheduler_t *scheduler)
@@ -1503,7 +1503,7 @@ task_for_digest(const char *task, guint interval_ms)
  *
  * \param[in] xml_op       Resource history entry with secure digest
  * \param[in] digest_data  Operation digest information being compared
- * \param[in] scheduler    Cluster working set
+ * \param[in] scheduler    Scheduler data
  *
  * \return true if only sanitized parameters changed, otherwise false
  */
@@ -1908,7 +1908,7 @@ process_node_history(pcmk_node_t *node, const xmlNode *lrm_rscs)
  * (This also cancels recurring actions for maintenance mode, which is not
  * entirely related but convenient to do here.)
  *
- * \param[in,out] scheduler  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 void
 pcmk__handle_rsc_config_changes(pcmk_scheduler_t *scheduler)
