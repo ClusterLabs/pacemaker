@@ -49,16 +49,16 @@ pcmk_resource_t *pe__last_group_member(const pcmk_resource_t *group);
 #  define pe_proc_err(fmt...) { was_processing_error = TRUE; crm_err(fmt); }
 #  define pe_proc_warn(fmt...) { was_processing_warning = TRUE; crm_warn(fmt); }
 
-#define pe__set_working_set_flags(working_set, flags_to_set) do {           \
-        (working_set)->flags = pcmk__set_flags_as(__func__, __LINE__,       \
+#define pe__set_working_set_flags(scheduler, flags_to_set) do {             \
+        (scheduler)->flags = pcmk__set_flags_as(__func__, __LINE__,         \
             LOG_TRACE, "Scheduler", crm_system_name,                        \
-            (working_set)->flags, (flags_to_set), #flags_to_set);           \
+            (scheduler)->flags, (flags_to_set), #flags_to_set);             \
     } while (0)
 
-#define pe__clear_working_set_flags(working_set, flags_to_clear) do {       \
-        (working_set)->flags = pcmk__clear_flags_as(__func__, __LINE__,     \
+#define pe__clear_working_set_flags(scheduler, flags_to_clear) do {         \
+        (scheduler)->flags = pcmk__clear_flags_as(__func__, __LINE__,       \
             LOG_TRACE, "Scheduler", crm_system_name,                        \
-            (working_set)->flags, (flags_to_clear), #flags_to_clear);       \
+            (scheduler)->flags, (flags_to_clear), #flags_to_clear);         \
     } while (0)
 
 #define pe__set_resource_flags(resource, flags_to_set) do {                 \
