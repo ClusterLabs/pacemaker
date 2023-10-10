@@ -1142,7 +1142,7 @@ delete(void)
 }
 
 static int
-populate_working_set(xmlNodePtr *cib_xml_copy)
+initialize_scheduler_data(xmlNodePtr *cib_xml_copy)
 {
     int rc = pcmk_rc_ok;
 
@@ -1654,7 +1654,7 @@ main(int argc, char **argv)
 
     // Populate scheduler data from XML file if specified or CIB query otherwise
     if (options.require_scheduler) {
-        rc = populate_working_set(&cib_xml_copy);
+        rc = initialize_scheduler_data(&cib_xml_copy);
         if (rc != pcmk_rc_ok) {
             exit_code = pcmk_rc2exitc(rc);
             goto done;
