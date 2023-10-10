@@ -1326,7 +1326,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     const char *call_id = crm_element_value(request, F_CIB_CALLID);
     const char *client_id = crm_element_value(request, F_CIB_CLIENTID);
     const char *client_name = crm_element_value(request, F_CIB_CLIENTNAME);
-    const char *origin = crm_element_value(request, F_ORIG);
+    const char *originator = crm_element_value(request, F_ORIG);
 
     int rc = pcmk_ok;
 
@@ -1440,6 +1440,23 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
             cib_read_config(config_hash, result_cib);
         }
 
+        /* @COMPAT Nodes older than feature set 3.19.0 don't support
+         * transactions. In a mixed-version cluster with nodes <3.19.0, we must
+         * sync the updated CIB, so that the older nodes receive the changes.
+         * Any node that has already applied the transaction will ignore the
+         * synced CIB.
+         *
+         * To ensure the updated CIB is synced from only one node, we sync it
+         * from the originator.
+         */
+        if ((operation->type == cib__op_commit_transact)
+            && pcmk__str_eq(originator, OUR_NODENAME, pcmk__str_casei)
+            && compare_version(crm_element_value(the_cib, XML_ATTR_CRM_VERSION),
+                               "3.19.0") < 0) {
+
+            sync_our_cib(request, TRUE);
+        }
+
         mainloop_timer_stop(digest_timer);
         mainloop_timer_start(digest_timer);
 
@@ -1467,8 +1484,8 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
                             cib_dryrun|cib_inhibit_notify|cib_transaction)) {
         crm_trace("Sending notifications %d",
                   pcmk_is_set(call_options, cib_dryrun));
-        cib_diff_notify(op, rc, call_id, client_id, client_name, origin, input,
-                        *cib_diff);
+        cib_diff_notify(op, rc, call_id, client_id, client_name, originator,
+                        input, *cib_diff);
     }
 
     pcmk__log_xml_patchset(LOG_TRACE, *cib_diff);
