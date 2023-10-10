@@ -6,6 +6,8 @@
  */
 
 #include <stdint.h>                 // uint32_t, uint64_t
+#include <libxml/tree.h>            // xmlNode
+
 #include <crm/common/mainloop.h>
 #include <crm/cluster.h>
 #include <crm/stonith-ng.h>
@@ -294,6 +296,7 @@ void fenced_cib_cleanup(void);
 
 int fenced_scheduler_init(void);
 void fenced_scheduler_cleanup(void);
+void fenced_scheduler_run(xmlNode *cib);
 
 static inline void
 fenced_set_protocol_error(pcmk__action_result_t *result)

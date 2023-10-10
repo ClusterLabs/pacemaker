@@ -69,3 +69,24 @@ fenced_scheduler_cleanup(void)
         fenced_data_set = NULL;
     }
 }
+
+/*!
+ * \internal
+ * \brief Run the scheduler for fencer purposes
+ *
+ * \param[in] cib  Cluster's current CIB
+ */
+void
+fenced_scheduler_run(xmlNode *cib)
+{
+    CRM_CHECK((cib != NULL) && (fenced_data_set != NULL), return);
+
+    if (fenced_data_set->now != NULL) {
+        crm_time_free(fenced_data_set->now);
+        fenced_data_set->now = NULL;
+    }
+    fenced_data_set->localhost = stonith_our_uname;
+    pcmk__schedule_actions(cib, pcmk_sched_location_only
+                                |pcmk_sched_no_compat
+                                |pcmk_sched_no_counts, fenced_data_set);
+}

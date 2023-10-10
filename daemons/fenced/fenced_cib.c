@@ -36,9 +36,6 @@ extern pcmk_scheduler_t *fenced_data_set;
 static xmlNode *local_cib = NULL;
 static cib_t *cib_api = NULL;
 static bool have_cib_devices = FALSE;
-static const unsigned long long data_set_flags = pcmk_sched_location_only
-                                                 |pcmk_sched_no_compat
-                                                 |pcmk_sched_no_counts;
 
 /*!
  * \internal
@@ -375,12 +372,7 @@ cib_devices_update(void)
              crm_element_value(local_cib, XML_ATTR_GENERATION),
              crm_element_value(local_cib, XML_ATTR_NUMUPDATES));
 
-    if (fenced_data_set->now != NULL) {
-        crm_time_free(fenced_data_set->now);
-        fenced_data_set->now = NULL;
-    }
-    fenced_data_set->localhost = stonith_our_uname;
-    pcmk__schedule_actions(local_cib, data_set_flags, fenced_data_set);
+    fenced_scheduler_run(local_cib);
 
     g_hash_table_iter_init(&iter, device_list);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&device)) {
