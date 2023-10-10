@@ -19,9 +19,6 @@
 
 #include <pacemaker-controld.h>
 
-// Async client ID of controld_globals.cib_conn
-static const char *cib_client_id = NULL;
-
 // Call ID of the most recent in-progress CIB resource update (or 0 if none)
 static int pending_rsc_update = 0;
 
@@ -54,9 +51,7 @@ static void
 do_cib_updated(const char *event, xmlNode * msg)
 {
     const xmlNode *patchset = NULL;
-    const char *client_id = NULL;
-    const char *op = NULL;
-    const cib__operation_t *operation = NULL;
+    const char *client_name = NULL;
 
     crm_debug("Received CIB diff notification: DC=%s", pcmk__btoa(AM_I_DC));
 
@@ -75,30 +70,26 @@ do_cib_updated(const char *event, xmlNode * msg)
         return;
     }
 
-    client_id = crm_element_value(msg, F_CIB_CLIENTID);
-    if (pcmk__str_eq(client_id, cib_client_id, pcmk__str_none)) {
-        // Don't restart the join sequence due to an update that we requested
+    client_name = crm_element_value(msg, F_CIB_CLIENTNAME);
+    if (!cib__client_triggers_refresh(client_name)) {
+        // The CIB is still accurate
         return;
     }
 
-    op = crm_element_value(msg, F_CIB_OPERATION);
-    if (cib__get_operation(op, &operation) != pcmk_rc_ok) {
-        // Invalid operation
-        return;
-    }
+    if (cib__element_in_patchset(patchset, XML_CIB_TAG_NODES)
+        || cib__element_in_patchset(patchset, XML_CIB_TAG_STATUS)) {
 
-    if (pcmk_is_set(operation->flags, cib__op_attr_replaces)
-        && (cib__element_in_patchset(patchset, XML_CIB_TAG_NODES)
-            || cib__element_in_patchset(patchset, XML_CIB_TAG_STATUS))) {
-
-        /* The node list or resource history may be inaccurate, since part of
-         * the nodes or status section was replaced.
-         *
-         * Ensure the node list is up-to-date, and start the join process again
-         * so we get everyone's current resource history.
-         *
-         * @TODO Don't trigger an election if only transient attributes changed.
+        /* An unsafe client modified the nodes or status section. Ensure the
+         * node list is up-to-date, and start the join process again so we get
+         * everyone's current resource history.
          */
+        if (client_name == NULL) {
+            client_name = crm_element_value(msg, F_CIB_CLIENTID);
+        }
+        crm_notice("Populating nodes and starting an election after %s event "
+                   "triggered by %s",
+                   event, pcmk__s(client_name, "(unidentified client)"));
+
         populate_cib_nodes(node_update_quick|node_update_all, __func__);
         register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
     }
@@ -191,7 +182,6 @@ do_cib_control(long long action,
     } else {
         controld_set_fsa_input_flags(R_CIB_CONNECTED);
         cib_retries = 0;
-        cib_conn->cmds->client_id(cib_conn, &cib_client_id, NULL);
     }
 
     if (!pcmk_is_set(controld_globals.fsa_input_register, R_CIB_CONNECTED)) {
