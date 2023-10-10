@@ -552,17 +552,17 @@ pcmk__group_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
  * (and runnable_before members if appropriate) as appropriate for the ordering.
  * Effects may cascade to other orderings involving the actions as well.
  *
- * \param[in,out] first     'First' action in an ordering
- * \param[in,out] then      'Then' action in an ordering
- * \param[in]     node      If not NULL, limit scope of ordering to this node
- *                          (only used when interleaving instances)
- * \param[in]     flags     Action flags for \p first for ordering purposes
- * \param[in]     filter    Action flags to limit scope of certain updates (may
- *                          include pcmk_action_optional to affect only
- *                          mandatory actions, and pcmk_action_runnable to
- *                          affect only runnable actions)
- * \param[in]     type      Group of enum pcmk__action_relation_flags to apply
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] first      'First' action in an ordering
+ * \param[in,out] then       'Then' action in an ordering
+ * \param[in]     node       If not NULL, limit scope of ordering to this node
+ *                           (only used when interleaving instances)
+ * \param[in]     flags      Action flags for \p first for ordering purposes
+ * \param[in]     filter     Action flags to limit scope of certain updates (may
+ *                           include pcmk_action_optional to affect only
+ *                           mandatory actions, and pcmk_action_runnable to
+ *                           affect only runnable actions)
+ * \param[in]     type       Group of enum pcmk__action_relation_flags to apply
+ * \param[in,out] scheduler  Cluster working set
  *
  * \return Group of enum pcmk__updated flags indicating what was updated
  */
@@ -570,17 +570,17 @@ uint32_t
 pcmk__group_update_ordered_actions(pcmk_action_t *first, pcmk_action_t *then,
                                    const pcmk_node_t *node, uint32_t flags,
                                    uint32_t filter, uint32_t type,
-                                   pcmk_scheduler_t *data_set)
+                                   pcmk_scheduler_t *scheduler)
 {
     uint32_t changed = pcmk__updated_none;
 
     // Group method can be called only on behalf of "then" action
     CRM_ASSERT((first != NULL) && (then != NULL) && (then->rsc != NULL)
-               && (data_set != NULL));
+               && (scheduler != NULL));
 
     // Update the actions for the group itself
     changed |= pcmk__update_ordered_actions(first, then, node, flags, filter,
-                                            type, data_set);
+                                            type, scheduler);
 
     // Update the actions for each group member
     for (GList *iter = then->rsc->children; iter != NULL; iter = iter->next) {
@@ -593,7 +593,7 @@ pcmk__group_update_ordered_actions(pcmk_action_t *first, pcmk_action_t *then,
             changed |= member->cmds->update_ordered_actions(first,
                                                             member_action, node,
                                                             flags, filter, type,
-                                                            data_set);
+                                                            scheduler);
         }
     }
     return changed;

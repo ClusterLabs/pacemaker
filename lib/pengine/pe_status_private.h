@@ -66,7 +66,7 @@ typedef struct notify_data_s {
 
 G_GNUC_INTERNAL
 pcmk_resource_t *pe__create_clone_child(pcmk_resource_t *rsc,
-                                      pcmk_scheduler_t *data_set);
+                                      pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
 void pe__create_action_notifications(pcmk_resource_t *rsc,
@@ -83,7 +83,7 @@ notify_data_t *pe__action_notif_pseudo_ops(pcmk_resource_t *rsc,
 
 G_GNUC_INTERNAL
 void pe__force_anon(const char *standard, pcmk_resource_t *rsc, const char *rid,
-                    pcmk_scheduler_t *data_set);
+                    pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
 gint pe__cmp_rsc_priority(gconstpointer a, gconstpointer b);
@@ -91,35 +91,36 @@ gint pe__cmp_rsc_priority(gconstpointer a, gconstpointer b);
 G_GNUC_INTERNAL
 gboolean pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                              pcmk_resource_t *parent,
-                             pcmk_scheduler_t *data_set);
+                             pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
-gboolean unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *data_set);
+gboolean unpack_remote_nodes(xmlNode *xml_resources,
+                             pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
 gboolean unpack_resources(const xmlNode *xml_resources,
-                          pcmk_scheduler_t *data_set);
+                          pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
-gboolean unpack_config(xmlNode *config, pcmk_scheduler_t *data_set);
+gboolean unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
-gboolean unpack_nodes(xmlNode *xml_nodes, pcmk_scheduler_t *data_set);
+gboolean unpack_nodes(xmlNode *xml_nodes, pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
-gboolean unpack_tags(xmlNode *xml_tags, pcmk_scheduler_t *data_set);
+gboolean unpack_tags(xmlNode *xml_tags, pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
-gboolean unpack_status(xmlNode *status, pcmk_scheduler_t *data_set);
+gboolean unpack_status(xmlNode *status, pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
 op_digest_cache_t *pe__compare_fencing_digest(pcmk_resource_t *rsc,
                                               const char *agent,
                                               pcmk_node_t *node,
-                                              pcmk_scheduler_t *data_set);
+                                              pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
-void pe__unpack_node_health_scores(pcmk_scheduler_t *data_set);
+void pe__unpack_node_health_scores(pcmk_scheduler_t *scheduler);
 
 // Primitive resource methods
 

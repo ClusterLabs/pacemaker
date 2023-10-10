@@ -21,11 +21,11 @@ extern "C" {
 extern resource_object_functions_t resource_class_functions[];
 
 GHashTable *pe_rsc_params(pcmk_resource_t *rsc, const pcmk_node_t *node,
-                          pcmk_scheduler_t *data_set);
+                          pcmk_scheduler_t *scheduler);
 void get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t *rsc,
-                         pcmk_node_t *node, pcmk_scheduler_t *data_set);
+                         pcmk_node_t *node, pcmk_scheduler_t *scheduler);
 void get_rsc_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
-                        const pcmk_node_t *node, pcmk_scheduler_t *data_set);
+                        const pcmk_node_t *node, pcmk_scheduler_t *scheduler);
 
 gboolean is_parent(pcmk_resource_t *child, pcmk_resource_t *rsc);
 pcmk_resource_t *uber_parent(pcmk_resource_t *rsc);

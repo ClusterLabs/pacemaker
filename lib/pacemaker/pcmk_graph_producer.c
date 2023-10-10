@@ -70,14 +70,14 @@ add_node_to_xml(const pcmk_node_t *node, void *xml)
  * \internal
  * \brief Count (optionally add to XML) nodes needing maintenance state update
  *
- * \param[in,out] xml       Parent XML tag to add to, if any
- * \param[in]     data_set  Working set for cluster
+ * \param[in,out] xml        Parent XML tag to add to, if any
+ * \param[in]     scheduler  Working set for cluster
  *
  * \return Count of nodes added
  * \note Only Pacemaker Remote nodes are considered currently
  */
 static int
-add_maintenance_nodes(xmlNode *xml, const pcmk_scheduler_t *data_set)
+add_maintenance_nodes(xmlNode *xml, const pcmk_scheduler_t *scheduler)
 {
     xmlNode *maintenance = NULL;
     int count = 0;
@@ -85,7 +85,8 @@ add_maintenance_nodes(xmlNode *xml, const pcmk_scheduler_t *data_set)
     if (xml != NULL) {
         maintenance = create_xml_node(xml, XML_GRAPH_TAG_MAINTENANCE);
     }
-    for (const GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
+    for (const GList *iter = scheduler->nodes;
+         iter != NULL; iter = iter->next) {
         const pcmk_node_t *node = iter->data;
 
         if (pe__is_guest_or_remote_node(node) &&
@@ -109,15 +110,15 @@ add_maintenance_nodes(xmlNode *xml, const pcmk_scheduler_t *data_set)
  * \internal
  * \brief Add pseudo action with nodes needing maintenance state update
  *
- * \param[in,out] data_set  Working set for cluster
+ * \param[in,out] scheduler  Working set for cluster
  */
 static void
-add_maintenance_update(pcmk_scheduler_t *data_set)
+add_maintenance_update(pcmk_scheduler_t *scheduler)
 {
     pcmk_action_t *action = NULL;
 
-    if (add_maintenance_nodes(NULL, data_set) != 0) {
-        action = get_pseudo_op(PCMK_ACTION_MAINTENANCE_NODES, data_set);
+    if (add_maintenance_nodes(NULL, scheduler) != 0) {
+        action = get_pseudo_op(PCMK_ACTION_MAINTENANCE_NODES, scheduler);
         pe__set_action_flags(action, pcmk_action_always_in_graph);
     }
 }
@@ -154,8 +155,8 @@ add_downed_nodes(xmlNode *xml, const pcmk_action_t *action)
         if (pcmk__is_fencing_action(fence)) {
             xmlNode *downed = create_xml_node(xml, XML_GRAPH_TAG_DOWNED);
             add_node_to_xml_by_id(action->node->details->id, downed);
-            pe_foreach_guest_node(action->node->details->data_set, action->node,
-                                  add_node_to_xml, downed);
+            pe_foreach_guest_node(action->node->details->data_set,
+                                  action->node, add_node_to_xml, downed);
         }
 
     } else if (action->rsc && action->rsc->is_remote_node
@@ -388,17 +389,17 @@ add_action_attributes(pcmk_action_t *action, xmlNode *action_xml)
  * \param[in,out] parent        Parent XML element to add action to
  * \param[in,out] action        Scheduled action
  * \param[in]     skip_details  If false, add action details as sub-elements
- * \param[in]     data_set      Cluster working set
+ * \param[in]     scheduler     Cluster working set
  */
 static void
 create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
-                    const pcmk_scheduler_t *data_set)
+                    const pcmk_scheduler_t *scheduler)
 {
     bool needs_node_info = true;
     bool needs_maintenance_info = false;
     xmlNode *action_xml = NULL;
 
-    if ((action == NULL) || (data_set == NULL)) {
+    if ((action == NULL) || (scheduler == NULL)) {
         return;
     }
 
@@ -483,7 +484,7 @@ create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
     }
 
     if (needs_maintenance_info) {
-        add_maintenance_nodes(action_xml, data_set);
+        add_maintenance_nodes(action_xml, scheduler);
     }
 }
 
@@ -841,19 +842,19 @@ pcmk__graph_has_loop(const pcmk_action_t *init_action,
  * \internal
  * \brief Create a synapse XML element for a transition graph
  *
- * \param[in]     action    Action that synapse is for
- * \param[in,out] data_set  Cluster working set containing graph
+ * \param[in]     action     Action that synapse is for
+ * \param[in,out] scheduler  Cluster working set containing graph
  *
  * \return Newly added XML element for new graph synapse
  */
 static xmlNode *
-create_graph_synapse(const pcmk_action_t *action, pcmk_scheduler_t *data_set)
+create_graph_synapse(const pcmk_action_t *action, pcmk_scheduler_t *scheduler)
 {
     int synapse_priority = 0;
-    xmlNode *syn = create_xml_node(data_set->graph, "synapse");
+    xmlNode *syn = create_xml_node(scheduler->graph, "synapse");
 
-    crm_xml_add_int(syn, XML_ATTR_ID, data_set->num_synapse);
-    data_set->num_synapse++;
+    crm_xml_add_int(syn, XML_ATTR_ID, scheduler->num_synapse);
+    scheduler->num_synapse++;
 
     if (action->rsc != NULL) {
         synapse_priority = action->rsc->priority;
@@ -887,7 +888,7 @@ static void
 add_action_to_graph(gpointer data, gpointer user_data)
 {
     pcmk_action_t *action = (pcmk_action_t *) data;
-    pcmk_scheduler_t *data_set = (pcmk_scheduler_t *) user_data;
+    pcmk_scheduler_t *scheduler = (pcmk_scheduler_t *) user_data;
 
     xmlNode *syn = NULL;
     xmlNode *set = NULL;
@@ -913,11 +914,11 @@ add_action_to_graph(gpointer data, gpointer user_data)
               ((action->node == NULL)? "" : " on "),
               ((action->node == NULL)? "" : action->node->details->uname));
 
-    syn = create_graph_synapse(action, data_set);
+    syn = create_graph_synapse(action, scheduler);
     set = create_xml_node(syn, "action_set");
     in = create_xml_node(syn, "inputs");
 
-    create_graph_action(set, action, false, data_set);
+    create_graph_action(set, action, false, scheduler);
 
     for (GList *lpc = action->actions_before; lpc != NULL; lpc = lpc->next) {
         pe_action_wrapper_t *input = (pe_action_wrapper_t *) lpc->data;
@@ -926,7 +927,7 @@ add_action_to_graph(gpointer data, gpointer user_data)
             xmlNode *input_xml = create_xml_node(in, "trigger");
 
             input->state = pe_link_dumped;
-            create_graph_action(input_xml, input->action, true, data_set);
+            create_graph_action(input_xml, input->action, true, scheduler);
         }
     }
 }
@@ -995,10 +996,10 @@ pcmk__add_rsc_actions_to_graph(pcmk_resource_t *rsc)
  * \internal
  * \brief Create a transition graph with all cluster actions needed
  *
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] scheduler  Cluster working set
  */
 void
-pcmk__create_graph(pcmk_scheduler_t *data_set)
+pcmk__create_graph(pcmk_scheduler_t *scheduler)
 {
     GList *iter = NULL;
     const char *value = NULL;
@@ -1007,38 +1008,38 @@ pcmk__create_graph(pcmk_scheduler_t *data_set)
     transition_id++;
     crm_trace("Creating transition graph %d", transition_id);
 
-    data_set->graph = create_xml_node(NULL, XML_TAG_GRAPH);
+    scheduler->graph = create_xml_node(NULL, XML_TAG_GRAPH);
 
-    value = pe_pref(data_set->config_hash, "cluster-delay");
-    crm_xml_add(data_set->graph, "cluster-delay", value);
+    value = pe_pref(scheduler->config_hash, "cluster-delay");
+    crm_xml_add(scheduler->graph, "cluster-delay", value);
 
-    value = pe_pref(data_set->config_hash, "stonith-timeout");
-    crm_xml_add(data_set->graph, "stonith-timeout", value);
+    value = pe_pref(scheduler->config_hash, "stonith-timeout");
+    crm_xml_add(scheduler->graph, "stonith-timeout", value);
 
-    crm_xml_add(data_set->graph, "failed-stop-offset", "INFINITY");
+    crm_xml_add(scheduler->graph, "failed-stop-offset", "INFINITY");
 
-    if (pcmk_is_set(data_set->flags, pcmk_sched_start_failure_fatal)) {
-        crm_xml_add(data_set->graph, "failed-start-offset", "INFINITY");
+    if (pcmk_is_set(scheduler->flags, pcmk_sched_start_failure_fatal)) {
+        crm_xml_add(scheduler->graph, "failed-start-offset", "INFINITY");
     } else {
-        crm_xml_add(data_set->graph, "failed-start-offset", "1");
+        crm_xml_add(scheduler->graph, "failed-start-offset", "1");
     }
 
-    value = pe_pref(data_set->config_hash, "batch-limit");
-    crm_xml_add(data_set->graph, "batch-limit", value);
+    value = pe_pref(scheduler->config_hash, "batch-limit");
+    crm_xml_add(scheduler->graph, "batch-limit", value);
 
-    crm_xml_add_int(data_set->graph, "transition_id", transition_id);
+    crm_xml_add_int(scheduler->graph, "transition_id", transition_id);
 
-    value = pe_pref(data_set->config_hash, "migration-limit");
+    value = pe_pref(scheduler->config_hash, "migration-limit");
     if ((pcmk__scan_ll(value, &limit, 0LL) == pcmk_rc_ok) && (limit > 0)) {
-        crm_xml_add(data_set->graph, "migration-limit", value);
+        crm_xml_add(scheduler->graph, "migration-limit", value);
     }
 
-    if (data_set->recheck_by > 0) {
+    if (scheduler->recheck_by > 0) {
         char *recheck_epoch = NULL;
 
         recheck_epoch = crm_strdup_printf("%llu",
-                                          (long long) data_set->recheck_by);
-        crm_xml_add(data_set->graph, "recheck-by", recheck_epoch);
+                                          (long long) scheduler->recheck_by);
+        crm_xml_add(scheduler->graph, "recheck-by", recheck_epoch);
         free(recheck_epoch);
     }
 
@@ -1048,7 +1049,7 @@ pcmk__create_graph(pcmk_scheduler_t *data_set)
      */
 
     // Add resource actions to graph
-    for (iter = data_set->resources; iter != NULL; iter = iter->next) {
+    for (iter = scheduler->resources; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         pe_rsc_trace(rsc, "Processing actions for %s", rsc->id);
@@ -1056,10 +1057,10 @@ pcmk__create_graph(pcmk_scheduler_t *data_set)
     }
 
     // Add pseudo-action for list of nodes with maintenance state update
-    add_maintenance_update(data_set);
+    add_maintenance_update(scheduler);
 
     // Add non-resource (node) actions
-    for (iter = data_set->actions; iter != NULL; iter = iter->next) {
+    for (iter = scheduler->actions; iter != NULL; iter = iter->next) {
         pcmk_action_t *action = (pcmk_action_t *) iter->data;
 
         if ((action->rsc != NULL)
@@ -1073,8 +1074,8 @@ pcmk__create_graph(pcmk_scheduler_t *data_set)
              * it's the best way to detect (in CTS) when CIB resource updates
              * are being lost.
              */
-            if (pcmk_is_set(data_set->flags, pcmk_sched_quorate)
-                || (data_set->no_quorum_policy == pcmk_no_quorum_ignore)) {
+            if (pcmk_is_set(scheduler->flags, pcmk_sched_quorate)
+                || (scheduler->no_quorum_policy == pcmk_no_quorum_ignore)) {
                 const bool managed = pcmk_is_set(action->rsc->flags,
                                                  pcmk_rsc_managed);
                 const bool failed = pcmk_is_set(action->rsc->flags,
@@ -1088,8 +1089,8 @@ pcmk__create_graph(pcmk_scheduler_t *data_set)
             }
         }
 
-        add_action_to_graph((gpointer) action, (gpointer) data_set);
+        add_action_to_graph((gpointer) action, (gpointer) scheduler);
     }
 
-    crm_log_xml_trace(data_set->graph, "graph");
+    crm_log_xml_trace(scheduler->graph, "graph");
 }

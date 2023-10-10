@@ -448,18 +448,19 @@ pcmk__create_utilization_constraints(pcmk_resource_t *rsc,
  * \internal
  * \brief Output node capacities if enabled
  *
- * \param[in]     desc      Prefix for output
- * \param[in,out] data_set  Cluster working set
+ * \param[in]     desc       Prefix for output
+ * \param[in,out] scheduler  Cluster working set
  */
 void
-pcmk__show_node_capacities(const char *desc, pcmk_scheduler_t *data_set)
+pcmk__show_node_capacities(const char *desc, pcmk_scheduler_t *scheduler)
 {
-    if (!pcmk_is_set(data_set->flags, pcmk_sched_show_utilization)) {
+    if (!pcmk_is_set(scheduler->flags, pcmk_sched_show_utilization)) {
         return;
     }
-    for (const GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
+    for (const GList *iter = scheduler->nodes;
+         iter != NULL; iter = iter->next) {
         const pcmk_node_t *node = (const pcmk_node_t *) iter->data;
-        pcmk__output_t *out = data_set->priv;
+        pcmk__output_t *out = scheduler->priv;
 
         out->message(out, "node-capacity", node, desc);
     }

@@ -255,9 +255,9 @@ static GOptionEntry deprecated_entries[] = {
 };
 
 static pe_ticket_t *
-find_ticket(gchar *ticket_id, pcmk_scheduler_t *data_set)
+find_ticket(gchar *ticket_id, pcmk_scheduler_t *scheduler)
 {
-    return g_hash_table_lookup(data_set->tickets, ticket_id);
+    return g_hash_table_lookup(scheduler->tickets, ticket_id);
 }
 
 static void
@@ -326,12 +326,12 @@ print_ticket(pe_ticket_t * ticket, bool raw, bool details)
 }
 
 static void
-print_ticket_list(pcmk_scheduler_t *data_set, bool raw, bool details)
+print_ticket_list(pcmk_scheduler_t *scheduler, bool raw, bool details)
 {
     GHashTableIter iter;
     pe_ticket_t *ticket = NULL;
 
-    g_hash_table_iter_init(&iter, data_set->tickets);
+    g_hash_table_iter_init(&iter, scheduler->tickets);
 
     while (g_hash_table_iter_next(&iter, NULL, (void **)&ticket)) {
         print_ticket(ticket, raw, details);
@@ -464,14 +464,14 @@ dump_constraints(cib_t * the_cib, gchar *ticket_id)
 
 static int
 get_ticket_state_attr(gchar *ticket_id, const char *attr_name, const char **attr_value,
-                      pcmk_scheduler_t *data_set)
+                      pcmk_scheduler_t *scheduler)
 {
     pe_ticket_t *ticket = NULL;
 
     CRM_ASSERT(attr_value != NULL);
     *attr_value = NULL;
 
-    ticket = g_hash_table_lookup(data_set->tickets, ticket_id);
+    ticket = g_hash_table_lookup(scheduler->tickets, ticket_id);
     if (ticket == NULL) {
         return ENXIO;
     }
@@ -557,7 +557,7 @@ allow_modification(gchar *ticket_id)
 }
 
 static int
-modify_ticket_state(gchar *ticket_id, cib_t *cib, pcmk_scheduler_t *data_set)
+modify_ticket_state(gchar *ticket_id, cib_t *cib, pcmk_scheduler_t *scheduler)
 {
     int rc = pcmk_rc_ok;
     xmlNode *xml_top = NULL;
@@ -598,7 +598,7 @@ modify_ticket_state(gchar *ticket_id, cib_t *cib, pcmk_scheduler_t *data_set)
         xml_remove_prop(ticket_state_xml, key);
     }
 
-    ticket = find_ticket(ticket_id, data_set);
+    ticket = find_ticket(ticket_id, scheduler);
 
     g_hash_table_iter_init(&hash_iter, attr_set);
     while (g_hash_table_iter_next(&hash_iter, (gpointer *) & key, (gpointer *) & value)) {
@@ -712,7 +712,7 @@ build_arg_context(pcmk__common_args_t *args) {
 int
 main(int argc, char **argv)
 {
-    pcmk_scheduler_t *data_set = NULL;
+    pcmk_scheduler_t *scheduler = NULL;
     xmlNode *cib_xml_copy = NULL;
 
     cib_t *cib_conn = NULL;
@@ -744,15 +744,15 @@ main(int argc, char **argv)
         pcmk__cli_help('v');
     }
 
-    data_set = pe_new_working_set();
-    if (data_set == NULL) {
+    scheduler = pe_new_working_set();
+    if (scheduler == NULL) {
         rc = errno;
         exit_code = pcmk_rc2exitc(rc);
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Could not allocate working set: %s", pcmk_rc_str(rc));
         goto done;
     }
-    pe__set_working_set_flags(data_set,
+    pe__set_working_set_flags(scheduler,
                               pcmk_sched_no_counts|pcmk_sched_no_compat);
 
     cib_conn = cib_new();
@@ -794,14 +794,14 @@ main(int argc, char **argv)
         goto done;
     }
 
-    data_set->input = cib_xml_copy;
-    data_set->now = crm_time_new(NULL);
+    scheduler->input = cib_xml_copy;
+    scheduler->now = crm_time_new(NULL);
 
-    cluster_status(data_set);
+    cluster_status(scheduler);
 
     /* For recording the tickets that are referenced in rsc_ticket constraints
      * but have never been granted yet. */
-    pcmk__unpack_constraints(data_set);
+    pcmk__unpack_constraints(scheduler);
 
     if (options.ticket_cmd == 'l' || options.ticket_cmd == 'L' || options.ticket_cmd == 'w') {
         bool raw = false;
@@ -814,7 +814,7 @@ main(int argc, char **argv)
         }
 
         if (options.ticket_id) {
-            pe_ticket_t *ticket = find_ticket(options.ticket_id, data_set);
+            pe_ticket_t *ticket = find_ticket(options.ticket_id, scheduler);
 
             if (ticket == NULL) {
                 exit_code = CRM_EX_NOSUCH;
@@ -825,7 +825,7 @@ main(int argc, char **argv)
             print_ticket(ticket, raw, details);
 
         } else {
-            print_ticket_list(data_set, raw, details);
+            print_ticket_list(scheduler, raw, details);
         }
 
     } else if (options.ticket_cmd == 'q') {
@@ -856,7 +856,8 @@ main(int argc, char **argv)
             goto done;
         }
 
-        rc = get_ticket_state_attr(options.ticket_id, options.get_attr_name, &value, data_set);
+        rc = get_ticket_state_attr(options.ticket_id, options.get_attr_name,
+                                   &value, scheduler);
         if (rc == pcmk_rc_ok) {
             fprintf(stdout, "%s\n", value);
         } else if (rc == ENXIO && options.attr_default) {
@@ -876,7 +877,7 @@ main(int argc, char **argv)
         if (options.force == FALSE) {
             pe_ticket_t *ticket = NULL;
 
-            ticket = find_ticket(options.ticket_id, data_set);
+            ticket = find_ticket(options.ticket_id, scheduler);
             if (ticket == NULL) {
                 exit_code = CRM_EX_NOSUCH;
                 g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
@@ -930,7 +931,7 @@ main(int argc, char **argv)
             goto done;
         }
 
-        rc = modify_ticket_state(options.ticket_id, cib_conn, data_set);
+        rc = modify_ticket_state(options.ticket_id, cib_conn, scheduler);
         exit_code = pcmk_rc2exitc(rc);
 
         if (rc != pcmk_rc_ok) {
@@ -981,8 +982,8 @@ main(int argc, char **argv)
     }
     attr_delete = NULL;
 
-    pe_free_working_set(data_set);
-    data_set = NULL;
+    pe_free_working_set(scheduler);
+    scheduler = NULL;
 
     cib__clean_up_connection(&cib_conn);
 

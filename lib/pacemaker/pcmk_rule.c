@@ -49,45 +49,45 @@ eval_date_expression(const xmlNode *expr, crm_time_t *now)
  * \c NULL. This way we don't have to take ownership of the objects passed via
  * the API.
  *
- * \param[in,out] out       Output object
- * \param[in]     input     The CIB XML to check (if \c NULL, use current CIB)
- * \param[in]     date      Check whether the rule is in effect at this date
- *                          and time (if \c NULL, use current date and time)
- * \param[out]    data_set  Where to store the cluster working set
+ * \param[in,out] out        Output object
+ * \param[in]     input      The CIB XML to check (if \c NULL, use current CIB)
+ * \param[in]     date       Check whether the rule is in effect at this date
+ *                           and time (if \c NULL, use current date and time)
+ * \param[out]    scheduler  Where to store the cluster working set
  *
  * \return Standard Pacemaker return code
  */
 static int
 init_rule_check(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
-                pcmk_scheduler_t **data_set)
+                pcmk_scheduler_t **scheduler)
 {
-    // Allows for cleaner syntax than dereferencing the data_set argument
-    pcmk_scheduler_t *new_data_set = NULL;
+    // Allows for cleaner syntax than dereferencing the scheduler argument
+    pcmk_scheduler_t *new_scheduler = NULL;
 
-    new_data_set = pe_new_working_set();
-    if (new_data_set == NULL) {
+    new_scheduler = pe_new_working_set();
+    if (new_scheduler == NULL) {
         return ENOMEM;
     }
 
-    pe__set_working_set_flags(new_data_set,
+    pe__set_working_set_flags(new_scheduler,
                               pcmk_sched_no_counts|pcmk_sched_no_compat);
 
     // Populate the working set instance
 
     // Make our own copy of the given input or fetch the CIB and use that
     if (input != NULL) {
-        new_data_set->input = copy_xml(input);
-        if (new_data_set->input == NULL) {
+        new_scheduler->input = copy_xml(input);
+        if (new_scheduler->input == NULL) {
             out->err(out, "Failed to copy input XML");
-            pe_free_working_set(new_data_set);
+            pe_free_working_set(new_scheduler);
             return ENOMEM;
         }
 
     } else {
-        int rc = cib__signon_query(out, NULL, &(new_data_set->input));
+        int rc = cib__signon_query(out, NULL, &(new_scheduler->input));
 
         if (rc != pcmk_rc_ok) {
-            pe_free_working_set(new_data_set);
+            pe_free_working_set(new_scheduler);
             return rc;
         }
     }
@@ -96,12 +96,12 @@ init_rule_check(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
     // cluster_status() populates with the current time
     if (date != NULL) {
         // pcmk_copy_time() guarantees non-NULL
-        new_data_set->now = pcmk_copy_time(date);
+        new_scheduler->now = pcmk_copy_time(date);
     }
 
     // Unpack everything
-    cluster_status(new_data_set);
-    *data_set = new_data_set;
+    cluster_status(new_scheduler);
+    *scheduler = new_scheduler;
 
     return pcmk_rc_ok;
 }
@@ -112,14 +112,14 @@ init_rule_check(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
  * \internal
  * \brief Check whether a given rule is in effect
  *
- * \param[in]     data_set  Cluster working set
- * \param[in]     rule_id   The ID of the rule to check
- * \param[out]    error     Where to store a rule evaluation error message
+ * \param[in]     scheduler  Cluster working set
+ * \param[in]     rule_id    The ID of the rule to check
+ * \param[out]    error      Where to store a rule evaluation error message
  *
  * \return Standard Pacemaker return code
  */
 static int
-eval_rule(pcmk_scheduler_t *data_set, const char *rule_id, const char **error)
+eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
 {
     xmlNodePtr cib_constraints = NULL;
     xmlNodePtr match = NULL;
@@ -131,7 +131,7 @@ eval_rule(pcmk_scheduler_t *data_set, const char *rule_id, const char **error)
     *error = NULL;
 
     /* Rules are under the constraints node in the XML, so first find that. */
-    cib_constraints = pcmk_find_cib_element(data_set->input,
+    cib_constraints = pcmk_find_cib_element(scheduler->input,
                                             XML_CIB_TAG_CONSTRAINTS);
 
     /* Get all rules matching the given ID that are also simple enough for us
@@ -216,7 +216,7 @@ eval_rule(pcmk_scheduler_t *data_set, const char *rule_id, const char **error)
     CRM_ASSERT(match != NULL);
     CRM_ASSERT(find_expression_type(match) == time_expr);
 
-    rc = eval_date_expression(match, data_set->now);
+    rc = eval_date_expression(match, scheduler->now);
     if (rc == pcmk_rc_undetermined) {
         /* pe__eval_date_expr() should return this only if something is
          * malformed or missing
@@ -245,7 +245,7 @@ int
 pcmk__check_rules(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
                   const char **rule_ids)
 {
-    pcmk_scheduler_t *data_set = NULL;
+    pcmk_scheduler_t *scheduler = NULL;
     int rc = pcmk_rc_ok;
 
     CRM_ASSERT(out != NULL);
@@ -255,14 +255,14 @@ pcmk__check_rules(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
         return pcmk_rc_ok;
     }
 
-    rc = init_rule_check(out, input, date, &data_set);
+    rc = init_rule_check(out, input, date, &scheduler);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
 
     for (const char **rule_id = rule_ids; *rule_id != NULL; rule_id++) {
         const char *error = NULL;
-        int last_rc = eval_rule(data_set, *rule_id, &error);
+        int last_rc = eval_rule(scheduler, *rule_id, &error);
 
         out->message(out, "rule-check", *rule_id, last_rc, error);
 
@@ -271,7 +271,7 @@ pcmk__check_rules(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
         }
     }
 
-    pe_free_working_set(data_set);
+    pe_free_working_set(scheduler);
     return rc;
 }
 

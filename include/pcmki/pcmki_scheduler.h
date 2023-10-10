@@ -30,10 +30,10 @@ typedef struct {
     uint32_t flags;     // Group of enum pcmk__coloc_flags
 } pcmk__colocation_t;
 
-void pcmk__unpack_constraints(pcmk_scheduler_t *data_set);
+void pcmk__unpack_constraints(pcmk_scheduler_t *scheduler);
 
 void pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
-                            pcmk_scheduler_t *data_set);
+                            pcmk_scheduler_t *scheduler);
 
 GList *pcmk__copy_node_list(const GList *list, bool reset);
 

@@ -20,8 +20,8 @@
 static int
 print_constraint(xmlNode *xml_obj, void *userdata)
 {
-    pcmk_scheduler_t *data_set = (pcmk_scheduler_t *) userdata;
-    pcmk__output_t *out = data_set->priv;
+    pcmk_scheduler_t *scheduler = (pcmk_scheduler_t *) userdata;
+    pcmk__output_t *out = scheduler->priv;
     xmlNode *lifetime = NULL;
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
 
@@ -31,7 +31,7 @@ print_constraint(xmlNode *xml_obj, void *userdata)
 
     // @COMPAT lifetime is deprecated
     lifetime = first_named_child(xml_obj, "lifetime");
-    if (pe_evaluate_rules(lifetime, NULL, data_set->now, NULL) == FALSE) {
+    if (pe_evaluate_rules(lifetime, NULL, scheduler->now, NULL) == FALSE) {
         return pcmk_rc_ok;
     }
 
@@ -52,10 +52,11 @@ print_constraint(xmlNode *xml_obj, void *userdata)
 }
 
 void
-cli_resource_print_cts_constraints(pcmk_scheduler_t *data_set)
+cli_resource_print_cts_constraints(pcmk_scheduler_t *scheduler)
 {
-    pcmk__xe_foreach_child(pcmk_find_cib_element(data_set->input, XML_CIB_TAG_CONSTRAINTS),
-                           NULL, print_constraint, data_set);
+    pcmk__xe_foreach_child(pcmk_find_cib_element(scheduler->input,
+                                                 XML_CIB_TAG_CONSTRAINTS),
+                           NULL, print_constraint, scheduler);
 }
 
 void
@@ -90,11 +91,11 @@ cli_resource_print_cts(pcmk_resource_t *rsc, pcmk__output_t *out)
 // \return Standard Pacemaker return code
 int
 cli_resource_print_operations(const char *rsc_id, const char *host_uname,
-                              bool active, pcmk_scheduler_t *data_set)
+                              bool active, pcmk_scheduler_t *scheduler)
 {
-    pcmk__output_t *out = data_set->priv;
+    pcmk__output_t *out = scheduler->priv;
     int rc = pcmk_rc_no_output;
-    GList *ops = find_operations(rsc_id, host_uname, active, data_set);
+    GList *ops = find_operations(rsc_id, host_uname, active, scheduler);
 
     if (!ops) {
         return rc;
@@ -105,7 +106,7 @@ cli_resource_print_operations(const char *rsc_id, const char *host_uname,
 
     for (GList *lpc = ops; lpc != NULL; lpc = lpc->next) {
         xmlNode *xml_op = (xmlNode *) lpc->data;
-        out->message(out, "node-and-op", data_set, xml_op);
+        out->message(out, "node-and-op", scheduler, xml_op);
     }
 
     out->end_list(out);
@@ -114,10 +115,10 @@ cli_resource_print_operations(const char *rsc_id, const char *host_uname,
 
 // \return Standard Pacemaker return code
 int
-cli_resource_print(pcmk_resource_t *rsc, pcmk_scheduler_t *data_set,
+cli_resource_print(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler,
                    bool expanded)
 {
-    pcmk__output_t *out = data_set->priv;
+    pcmk__output_t *out = scheduler->priv;
     uint32_t show_opts = pcmk_show_pending;
     GList *all = NULL;
 

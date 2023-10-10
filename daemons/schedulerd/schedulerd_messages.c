@@ -25,9 +25,9 @@ static GHashTable *schedulerd_handlers = NULL;
 static pcmk_scheduler_t *
 init_working_set(void)
 {
-    pcmk_scheduler_t *data_set = pe_new_working_set();
+    pcmk_scheduler_t *scheduler = pe_new_working_set();
 
-    CRM_ASSERT(data_set != NULL);
+    CRM_ASSERT(scheduler != NULL);
 
     crm_config_error = FALSE;
     crm_config_warning = FALSE;
@@ -35,8 +35,8 @@ init_working_set(void)
     was_processing_error = FALSE;
     was_processing_warning = FALSE;
 
-    data_set->priv = logger_out;
-    return data_set;
+    scheduler->priv = logger_out;
+    return scheduler;
 }
 
 static xmlNode *
@@ -72,7 +72,7 @@ handle_pecalc_request(pcmk__request_t *request)
     xmlNode *reply = NULL;
     bool is_repoke = false;
     bool process = true;
-    pcmk_scheduler_t *data_set = init_working_set();
+    pcmk_scheduler_t *scheduler = init_working_set();
 
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
                        "ack", NULL, CRM_EX_INDETERMINATE);
@@ -81,9 +81,9 @@ handle_pecalc_request(pcmk__request_t *request)
                                             CRM_FEATURE_SET);
     converted = copy_xml(xml_data);
     if (!cli_config_update(&converted, NULL, TRUE)) {
-        data_set->graph = create_xml_node(NULL, XML_TAG_GRAPH);
-        crm_xml_add_int(data_set->graph, "transition_id", 0);
-        crm_xml_add_int(data_set->graph, "cluster-delay", 0);
+        scheduler->graph = create_xml_node(NULL, XML_TAG_GRAPH);
+        crm_xml_add_int(scheduler->graph, "transition_id", 0);
+        crm_xml_add_int(scheduler->graph, "cluster-delay", 0);
         process = false;
         free(digest);
 
@@ -100,7 +100,7 @@ handle_pecalc_request(pcmk__request_t *request)
         pcmk__schedule_actions(converted,
                                pcmk_sched_no_counts
                                |pcmk_sched_no_compat
-                               |pcmk_sched_show_utilization, data_set);
+                               |pcmk_sched_show_utilization, scheduler);
     }
 
     // Get appropriate index into series[] array
@@ -112,7 +112,7 @@ handle_pecalc_request(pcmk__request_t *request)
         series_id = 2;
     }
 
-    value = pe_pref(data_set->config_hash, series[series_id].param);
+    value = pe_pref(scheduler->config_hash, series[series_id].param);
     if ((value == NULL)
         || (pcmk__scan_min_int(value, &series_wrap, -1) != pcmk_rc_ok)) {
         series_wrap = series[series_id].wrap;
@@ -126,8 +126,8 @@ handle_pecalc_request(pcmk__request_t *request)
     crm_trace("Series %s: wrap=%d, seq=%u, pref=%s",
               series[series_id].name, series_wrap, seq, value);
 
-    data_set->input = NULL;
-    reply = create_reply(msg, data_set->graph);
+    scheduler->input = NULL;
+    reply = create_reply(msg, scheduler->graph);
 
     if (reply == NULL) {
         pcmk__format_result(&request->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
@@ -172,7 +172,7 @@ handle_pecalc_request(pcmk__request_t *request)
 
 done:
     free_xml(converted);
-    pe_free_working_set(data_set);
+    pe_free_working_set(scheduler);
 
     return reply;
 }

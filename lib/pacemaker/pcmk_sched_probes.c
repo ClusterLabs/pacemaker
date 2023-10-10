@@ -335,12 +335,12 @@ probe_needed_before_action(const pcmk_action_t *probe,
  * resource", add implicit "probe this resource then do something" equivalents
  * so the relation is upheld until we know whether a stop is needed.
  *
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] scheduler  Cluster working set
  */
 static void
-add_probe_orderings_for_stops(pcmk_scheduler_t *data_set)
+add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
 {
-    for (GList *iter = data_set->ordering_constraints; iter != NULL;
+    for (GList *iter = scheduler->ordering_constraints; iter != NULL;
          iter = iter->next) {
 
         pe__ordering_t *order = iter->data;
@@ -664,12 +664,12 @@ add_restart_orderings_for_probe(pcmk_action_t *probe, pcmk_action_t *after)
  * \internal
  * \brief Clear the tracking flag on all scheduled actions
  *
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] scheduler  Cluster working set
  */
 static void
-clear_actions_tracking_flag(pcmk_scheduler_t *data_set)
+clear_actions_tracking_flag(pcmk_scheduler_t *scheduler)
 {
-    for (GList *iter = data_set->actions; iter != NULL; iter = iter->next) {
+    for (GList *iter = scheduler->actions; iter != NULL; iter = iter->next) {
         pcmk_action_t *action = iter->data;
 
         pe__clear_action_flags(action, pcmk_action_detect_loop);
@@ -721,12 +721,12 @@ add_start_restart_orderings_for_rsc(gpointer data, gpointer user_data)
  * \internal
  * \brief Add "A then probe B" orderings for "A then B" orderings
  *
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] scheduler  Cluster working set
  *
  * \note This function is currently disabled (see next comment).
  */
 static void
-order_then_probes(pcmk_scheduler_t *data_set)
+order_then_probes(pcmk_scheduler_t *scheduler)
 {
 #if 0
     /* Given an ordering "A then B", we would prefer to wait for A to be started
@@ -758,7 +758,7 @@ order_then_probes(pcmk_scheduler_t *data_set)
      * narrowing use case suggests that this code should remain disabled until
      * someone gets smarter.
      */
-    for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
+    for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         pcmk_action_t *start = NULL;
@@ -838,35 +838,35 @@ order_then_probes(pcmk_scheduler_t *data_set)
 }
 
 void
-pcmk__order_probes(pcmk_scheduler_t *data_set)
+pcmk__order_probes(pcmk_scheduler_t *scheduler)
 {
     // Add orderings for "probe then X"
-    g_list_foreach(data_set->resources, add_start_restart_orderings_for_rsc,
+    g_list_foreach(scheduler->resources, add_start_restart_orderings_for_rsc,
                    NULL);
-    add_probe_orderings_for_stops(data_set);
+    add_probe_orderings_for_stops(scheduler);
 
-    order_then_probes(data_set);
+    order_then_probes(scheduler);
 }
 
 /*!
  * \internal
  * \brief Schedule any probes needed
  *
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] scheduler  Cluster working set
  *
  * \note This may also schedule fencing of failed remote nodes.
  */
 void
-pcmk__schedule_probes(pcmk_scheduler_t *data_set)
+pcmk__schedule_probes(pcmk_scheduler_t *scheduler)
 {
     // Schedule probes on each node in the cluster as needed
-    for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
+    for (GList *iter = scheduler->nodes; iter != NULL; iter = iter->next) {
         pcmk_node_t *node = (pcmk_node_t *) iter->data;
         const char *probed = NULL;
 
         if (!node->details->online) { // Don't probe offline nodes
             if (pcmk__is_failed_remote_node(node)) {
-                pe_fence_node(data_set, node,
+                pe_fence_node(scheduler, node,
                               "the connection is unrecoverable", FALSE);
             }
             continue;
@@ -892,13 +892,13 @@ pcmk__schedule_probes(pcmk_scheduler_t *data_set)
                                      crm_strdup_printf("%s-%s", CRM_OP_REPROBE,
                                                        node->details->uname),
                                      CRM_OP_REPROBE, node, FALSE, TRUE,
-                                     data_set);
+                                     scheduler);
             add_hash_param(probe_op->meta, XML_ATTR_TE_NOWAIT,
                            XML_BOOLEAN_TRUE);
             continue;
         }
 
         // Probe each resource in the cluster on this node, as needed
-        pcmk__probe_resource_list(data_set->resources, node);
+        pcmk__probe_resource_list(scheduler->resources, node);
     }
 }

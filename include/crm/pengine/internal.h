@@ -199,12 +199,12 @@ pcmk_action_t *pe__new_rsc_pseudo_action(pcmk_resource_t *rsc, const char *task,
 void pe__create_promotable_pseudo_ops(pcmk_resource_t *clone,
                                       bool any_promoting, bool any_demoting);
 
-bool pe_can_fence(const pcmk_scheduler_t *data_set, const pcmk_node_t *node);
+bool pe_can_fence(const pcmk_scheduler_t *scheduler, const pcmk_node_t *node);
 
 void add_hash_param(GHashTable * hash, const char *name, const char *value);
 
 char *native_parameter(pcmk_resource_t *rsc, pcmk_node_t *node, gboolean create,
-                       const char *name, pcmk_scheduler_t *data_set);
+                       const char *name, pcmk_scheduler_t *scheduler);
 pcmk_node_t *native_location(const pcmk_resource_t *rsc, GList **list,
                              int current);
 
@@ -212,12 +212,12 @@ void pe_metadata(pcmk__output_t *out);
 void verify_pe_options(GHashTable * options);
 
 void native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
-                        pcmk_scheduler_t *data_set, gboolean failed);
+                        pcmk_scheduler_t *scheduler, gboolean failed);
 
-gboolean native_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *data_set);
-gboolean group_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *data_set);
-gboolean clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *data_set);
-gboolean pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *data_set);
+gboolean native_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler);
+gboolean group_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler);
+gboolean clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler);
+gboolean pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler);
 
 pcmk_resource_t *native_find_rsc(pcmk_resource_t *rsc, const char *id,
                                  const pcmk_node_t *node, int flags);
@@ -298,7 +298,7 @@ void pe__count_bundle(pcmk_resource_t *rsc);
 void common_free(pcmk_resource_t *rsc);
 
 pcmk_node_t *pe__copy_node(const pcmk_node_t *this_node);
-time_t get_effective_time(pcmk_scheduler_t *data_set);
+time_t get_effective_time(pcmk_scheduler_t *scheduler);
 
 /* Failure handling utilities (from failcounts.c) */
 
@@ -308,7 +308,7 @@ int pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
 
 pcmk_action_t *pe__clear_failcount(pcmk_resource_t *rsc,
                                    const pcmk_node_t *node, const char *reason,
-                                   pcmk_scheduler_t *data_set);
+                                   pcmk_scheduler_t *scheduler);
 
 /* Functions for finding/counting a resource's active nodes */
 
@@ -329,18 +329,18 @@ pe__current_node(const pcmk_resource_t *rsc)
 /* Binary like operators for lists of nodes */
 GHashTable *pe__node_list2table(const GList *list);
 
-pcmk_action_t *get_pseudo_op(const char *name, pcmk_scheduler_t *data_set);
+pcmk_action_t *get_pseudo_op(const char *name, pcmk_scheduler_t *scheduler);
 gboolean order_actions(pcmk_action_t *lh_action, pcmk_action_t *rh_action,
                        uint32_t flags);
 
 void pe__show_node_scores_as(const char *file, const char *function,
                              int line, bool to_log, const pcmk_resource_t *rsc,
                              const char *comment, GHashTable *nodes,
-                             pcmk_scheduler_t *data_set);
+                             pcmk_scheduler_t *scheduler);
 
-#define pe__show_node_scores(level, rsc, text, nodes, data_set)    \
+#define pe__show_node_scores(level, rsc, text, nodes, scheduler)    \
         pe__show_node_scores_as(__FILE__, __func__, __LINE__,      \
-                                (level), (rsc), (text), (nodes), (data_set))
+                                (level), (rsc), (text), (nodes), (scheduler))
 
 xmlNode *find_rsc_op_entry(const pcmk_resource_t *rsc, const char *key);
 
@@ -351,7 +351,7 @@ GHashTable *pcmk__unpack_action_meta(pcmk_resource_t *rsc,
 
 pcmk_action_t *custom_action(pcmk_resource_t *rsc, char *key, const char *task,
                              const pcmk_node_t *on_node, gboolean optional,
-                             gboolean foo, pcmk_scheduler_t *data_set);
+                             gboolean foo, pcmk_scheduler_t *scheduler);
 
 #  define delete_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_DELETE, 0)
 #  define delete_action(rsc, node, optional) custom_action(		\
@@ -380,7 +380,7 @@ pcmk_action_t *custom_action(pcmk_resource_t *rsc, char *key, const char *task,
 		optional, TRUE, rsc->cluster)
 
 extern int pe_get_configured_timeout(pcmk_resource_t *rsc, const char *action,
-                                     pcmk_scheduler_t *data_set);
+                                     pcmk_scheduler_t *scheduler);
 
 pcmk_action_t *find_first_action(const GList *input, const char *uuid,
                                  const char *task, const pcmk_node_t *on_node);
@@ -397,7 +397,7 @@ GList *pe__resource_actions(const pcmk_resource_t *rsc, const pcmk_node_t *node,
 extern void pe_free_action(pcmk_action_t *action);
 
 void resource_location(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
-                       const char *tag, pcmk_scheduler_t *data_set);
+                       const char *tag, pcmk_scheduler_t *scheduler);
 
 extern int pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b,
                            bool same_node_default);
@@ -410,7 +410,7 @@ pcmk_resource_t *find_clone_instance(const pcmk_resource_t *rsc,
                                      const char *sub_id);
 
 extern void destroy_ticket(gpointer data);
-extern pe_ticket_t *ticket_new(const char *ticket_id, pcmk_scheduler_t * data_set);
+pe_ticket_t *ticket_new(const char *ticket_id, pcmk_scheduler_t *scheduler);
 
 // Resources for manipulating resource names
 const char *pe_base_name_end(const char *id);
@@ -450,21 +450,21 @@ op_digest_cache_t *pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
                                          const xmlNode *xml_op,
                                          GHashTable *overrides,
                                          bool calc_secure,
-                                         pcmk_scheduler_t *data_set);
+                                         pcmk_scheduler_t *scheduler);
 
 void pe__free_digests(gpointer ptr);
 
 op_digest_cache_t *rsc_action_digest_cmp(pcmk_resource_t *rsc,
                                          const xmlNode *xml_op,
                                          pcmk_node_t *node,
-                                         pcmk_scheduler_t *data_set);
+                                         pcmk_scheduler_t *scheduler);
 
 pcmk_action_t *pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
                            const char *reason, bool priority_delay,
-                           pcmk_scheduler_t *data_set);
+                           pcmk_scheduler_t *scheduler);
 void trigger_unfencing(pcmk_resource_t *rsc, pcmk_node_t *node,
                        const char *reason, pcmk_action_t *dependency,
-                       pcmk_scheduler_t *data_set);
+                       pcmk_scheduler_t *scheduler);
 
 char *pe__action2reason(const pcmk_action_t *action, enum pe_action_flags flag);
 void pe_action_set_reason(pcmk_action_t *action, const char *reason,
@@ -473,7 +473,8 @@ void pe__add_action_expected_result(pcmk_action_t *action, int expected_result);
 
 void pe__set_resource_flags_recursive(pcmk_resource_t *rsc, uint64_t flags);
 void pe__clear_resource_flags_recursive(pcmk_resource_t *rsc, uint64_t flags);
-void pe__clear_resource_flags_on_all(pcmk_scheduler_t *data_set, uint64_t flag);
+void pe__clear_resource_flags_on_all(pcmk_scheduler_t *scheduler,
+                                     uint64_t flag);
 
 gboolean add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref);
 
@@ -481,11 +482,11 @@ gboolean add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj
 void print_rscs_brief(GList *rsc_list, const char * pre_text, long options,
                       void * print_data, gboolean print_all);
 int pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, unsigned int options);
-void pe_fence_node(pcmk_scheduler_t *data_set, pcmk_node_t *node,
+void pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
                    const char *reason, bool priority_delay);
 
 pcmk_node_t *pe_create_node(const char *id, const char *uname, const char *type,
-                            const char *score, pcmk_scheduler_t *data_set);
+                            const char *score, pcmk_scheduler_t *scheduler);
 
 //! \deprecated This function will be removed in a future release
 void common_print(pcmk_resource_t *rsc, const char *pre_text, const char *name,
@@ -527,7 +528,7 @@ pcmk_resource_t *pe__find_bundle_replica(const pcmk_resource_t *bundle,
                                          const pcmk_node_t *node);
 bool pe__bundle_needs_remote_name(pcmk_resource_t *rsc);
 const char *pe__add_bundle_remote_name(pcmk_resource_t *rsc,
-                                       pcmk_scheduler_t *data_set,
+                                       pcmk_scheduler_t *scheduler,
                                        xmlNode *xml, const char *field);
 
 const char *pe__node_attribute_calculated(const pcmk_node_t *node,
@@ -537,18 +538,18 @@ const char *pe__node_attribute_calculated(const pcmk_node_t *node,
                                           bool force_host);
 const char *pe_node_attribute_raw(const pcmk_node_t *node, const char *name);
 bool pe__is_universal_clone(const pcmk_resource_t *rsc,
-                            const pcmk_scheduler_t *data_set);
+                            const pcmk_scheduler_t *scheduler);
 void pe__add_param_check(const xmlNode *rsc_op, pcmk_resource_t *rsc,
                          pcmk_node_t *node, enum pcmk__check_parameters,
-                         pcmk_scheduler_t *data_set);
-void pe__foreach_param_check(pcmk_scheduler_t *data_set,
+                         pcmk_scheduler_t *scheduler);
+void pe__foreach_param_check(pcmk_scheduler_t *scheduler,
                              void (*cb)(pcmk_resource_t*, pcmk_node_t*,
                                         const xmlNode*,
                                         enum pcmk__check_parameters));
-void pe__free_param_checks(pcmk_scheduler_t *data_set);
+void pe__free_param_checks(pcmk_scheduler_t *scheduler);
 
 bool pe__shutdown_requested(const pcmk_node_t *node);
-void pe__update_recheck_time(time_t recheck, pcmk_scheduler_t *data_set);
+void pe__update_recheck_time(time_t recheck, pcmk_scheduler_t *scheduler);
 
 /*!
  * \internal
@@ -561,24 +562,25 @@ void pe__register_messages(pcmk__output_t *out);
 void pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
                                 const pe_rule_eval_data_t *rule_data,
                                 GHashTable *hash, const char *always_first,
-                                gboolean overwrite, pcmk_scheduler_t *data_set);
+                                gboolean overwrite,
+                                pcmk_scheduler_t *scheduler);
 
 bool pe__resource_is_disabled(const pcmk_resource_t *rsc);
 void pe__clear_resource_history(pcmk_resource_t *rsc, const pcmk_node_t *node);
 
-GList *pe__rscs_with_tag(pcmk_scheduler_t *data_set, const char *tag_name);
-GList *pe__unames_with_tag(pcmk_scheduler_t *data_set, const char *tag_name);
-bool pe__rsc_has_tag(pcmk_scheduler_t *data_set, const char *rsc,
+GList *pe__rscs_with_tag(pcmk_scheduler_t *scheduler, const char *tag_name);
+GList *pe__unames_with_tag(pcmk_scheduler_t *scheduler, const char *tag_name);
+bool pe__rsc_has_tag(pcmk_scheduler_t *scheduler, const char *rsc,
                      const char *tag);
-bool pe__uname_has_tag(pcmk_scheduler_t *data_set, const char *node,
+bool pe__uname_has_tag(pcmk_scheduler_t *scheduler, const char *node,
                        const char *tag);
 
 bool pe__rsc_running_on_only(const pcmk_resource_t *rsc,
                              const pcmk_node_t *node);
 bool pe__rsc_running_on_any(pcmk_resource_t *rsc, GList *node_list);
 GList *pe__filter_rsc_list(GList *rscs, GList *filter);
-GList * pe__build_node_name_list(pcmk_scheduler_t *data_set, const char *s);
-GList * pe__build_rsc_list(pcmk_scheduler_t *data_set, const char *s);
+GList * pe__build_node_name_list(pcmk_scheduler_t *scheduler, const char *s);
+GList * pe__build_rsc_list(pcmk_scheduler_t *scheduler, const char *s);
 
 bool pcmk__rsc_filtered_by_node(pcmk_resource_t *rsc, GList *only_node);
 
@@ -599,16 +601,16 @@ int pe__sum_node_health_scores(const pcmk_node_t *node, int base_health);
 int pe__node_health(pcmk_node_t *node);
 
 static inline enum pcmk__health_strategy
-pe__health_strategy(pcmk_scheduler_t *data_set)
+pe__health_strategy(pcmk_scheduler_t *scheduler)
 {
-    return pcmk__parse_health_strategy(pe_pref(data_set->config_hash,
+    return pcmk__parse_health_strategy(pe_pref(scheduler->config_hash,
                                                PCMK__OPT_NODE_HEALTH_STRATEGY));
 }
 
 static inline int
-pe__health_score(const char *option, pcmk_scheduler_t *data_set)
+pe__health_score(const char *option, pcmk_scheduler_t *scheduler)
 {
-    return char2score(pe_pref(data_set->config_hash, option));
+    return char2score(pe_pref(scheduler->config_hash, option));
 }
 
 /*!

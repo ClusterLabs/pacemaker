@@ -282,13 +282,13 @@ rsc_stonith_ordering(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
  * pseudo-actions, etc.
  *
  * \param[in,out] stonith_op  Fencing operation
- * \param[in,out] data_set    Working set of cluster
+ * \param[in,out] scheduler   Working set of cluster
  */
 void
-pcmk__order_vs_fence(pcmk_action_t *stonith_op, pcmk_scheduler_t *data_set)
+pcmk__order_vs_fence(pcmk_action_t *stonith_op, pcmk_scheduler_t *scheduler)
 {
-    CRM_CHECK(stonith_op && data_set, return);
-    for (GList *r = data_set->resources; r != NULL; r = r->next) {
+    CRM_CHECK(stonith_op && scheduler, return);
+    for (GList *r = scheduler->resources; r != NULL; r = r->next) {
         rsc_stonith_ordering((pcmk_resource_t *) r->data, stonith_op);
     }
 }

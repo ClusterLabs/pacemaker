@@ -80,7 +80,7 @@ pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith, cib_t *cib,
     xmlNode *cib_copy = copy_xml(current_cib);
     stonith_history_t *stonith_history = NULL;
     int history_rc = 0;
-    pcmk_scheduler_t *data_set = NULL;
+    pcmk_scheduler_t *scheduler = NULL;
     GList *unames = NULL;
     GList *resources = NULL;
 
@@ -100,20 +100,20 @@ pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith, cib_t *cib,
                                                fence_history);
     }
 
-    data_set = pe_new_working_set();
-    CRM_ASSERT(data_set != NULL);
-    pe__set_working_set_flags(data_set, pcmk_sched_no_compat);
+    scheduler = pe_new_working_set();
+    CRM_ASSERT(scheduler != NULL);
+    pe__set_working_set_flags(scheduler, pcmk_sched_no_compat);
 
-    data_set->input = cib_copy;
-    data_set->priv = out;
-    cluster_status(data_set);
+    scheduler->input = cib_copy;
+    scheduler->priv = out;
+    cluster_status(scheduler);
 
     if ((cib->variant == cib_native) && pcmk_is_set(show, pcmk_section_times)) {
         if (pcmk__our_nodename == NULL) {
             // Currently used only in the times section
             pcmk__query_node_name(out, 0, &pcmk__our_nodename, 0);
         }
-        data_set->localhost = pcmk__our_nodename;
+        scheduler->localhost = pcmk__our_nodename;
     }
 
     /* Unpack constraints if any section will need them
@@ -121,22 +121,22 @@ pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith, cib_t *cib,
      * and bans need negative location constraints) */
     if (pcmk_is_set(show, pcmk_section_bans)
         || pcmk_is_set(show, pcmk_section_tickets)) {
-        pcmk__unpack_constraints(data_set);
+        pcmk__unpack_constraints(scheduler);
     }
 
-    unames = pe__build_node_name_list(data_set, only_node);
-    resources = pe__build_rsc_list(data_set, only_rsc);
+    unames = pe__build_node_name_list(scheduler, only_node);
+    resources = pe__build_rsc_list(scheduler, only_rsc);
 
     /* Always print DC if NULL. */
-    if (data_set->dc_node == NULL) {
+    if (scheduler->dc_node == NULL) {
         show |= pcmk_section_dc;
     }
 
     if (simple_output) {
-        rc = pcmk__output_simple_status(out, data_set);
+        rc = pcmk__output_simple_status(out, scheduler);
     } else {
         out->message(out, "cluster-status",
-                     data_set, pcmkd_state, pcmk_rc2exitc(history_rc),
+                     scheduler, pcmkd_state, pcmk_rc2exitc(history_rc),
                      stonith_history, fence_history, show, show_opts,
                      neg_location_prefix, unames, resources);
     }
@@ -146,7 +146,7 @@ pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith, cib_t *cib,
 
     stonith_history_free(stonith_history);
     stonith_history = NULL;
-    pe_free_working_set(data_set);
+    pe_free_working_set(scheduler);
     return rc;
 }
 
@@ -294,8 +294,8 @@ done:
  * \internal
  * \brief Output cluster status in Nagios Plugin format
  *
- * \param[in,out] out       Output object
- * \param[in]     data_set  Cluster working set
+ * \param[in,out] out        Output object
+ * \param[in]     scheduler  Cluster working set
  *
  * \return Standard Pacemaker return code
  * \note This is for a deprecated crm_mon option and should be called only for
@@ -303,7 +303,7 @@ done:
  */
 int
 pcmk__output_simple_status(pcmk__output_t *out,
-                           const pcmk_scheduler_t *data_set)
+                           const pcmk_scheduler_t *scheduler)
 {
     int nodes_online = 0;
     int nodes_standby = 0;
@@ -313,12 +313,12 @@ pcmk__output_simple_status(pcmk__output_t *out,
     bool offline = false;
     bool has_warnings = false;
 
-    if (data_set->dc_node == NULL) {
+    if (scheduler->dc_node == NULL) {
         has_warnings = true;
         no_dc = true;
     }
 
-    for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
+    for (GList *iter = scheduler->nodes; iter != NULL; iter = iter->next) {
         pcmk_node_t *node = (pcmk_node_t *) iter->data;
 
         if (node->details->standby && node->details->online) {
@@ -366,7 +366,7 @@ pcmk__output_simple_status(pcmk__output_t *out,
                   nodes_online, pcmk__plural_s(nodes_online),
                   nodes_standby_s != NULL ? nodes_standby_s : "",
                   nodes_maint_s != NULL ? nodes_maint_s : "",
-                  data_set->ninstances, pcmk__plural_s(data_set->ninstances));
+                  scheduler->ninstances, pcmk__plural_s(scheduler->ninstances));
 
         free(nodes_standby_s);
         free(nodes_maint_s);

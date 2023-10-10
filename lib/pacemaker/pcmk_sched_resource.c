@@ -172,20 +172,20 @@ add_rsc_if_matching(GList *result, pcmk_resource_t *rsc, const char *id)
  * \internal
  * \brief Find all resources matching a given ID by either ID or clone name
  *
- * \param[in] id        Resource ID to check
- * \param[in] data_set  Cluster working set
+ * \param[in] id         Resource ID to check
+ * \param[in] scheduler  Cluster working set
  *
  * \return List of all resources that match \p id
  * \note The caller is responsible for freeing the return value with
  *       g_list_free().
  */
 GList *
-pcmk__rscs_matching_id(const char *id, const pcmk_scheduler_t *data_set)
+pcmk__rscs_matching_id(const char *id, const pcmk_scheduler_t *scheduler)
 {
     GList *result = NULL;
 
-    CRM_CHECK((id != NULL) && (data_set != NULL), return NULL);
-    for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
+    CRM_CHECK((id != NULL) && (scheduler != NULL), return NULL);
+    for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
         result = add_rsc_if_matching(result, (pcmk_resource_t *) iter->data,
                                      id);
     }
@@ -212,12 +212,12 @@ set_assignment_methods_for_rsc(gpointer data, gpointer user_data)
  * \internal
  * \brief Set the variant-appropriate assignment methods for all resources
  *
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] scheduler  Cluster working set
  */
 void
-pcmk__set_assignment_methods(pcmk_scheduler_t *data_set)
+pcmk__set_assignment_methods(pcmk_scheduler_t *scheduler)
 {
-    g_list_foreach(data_set->resources, set_assignment_methods_for_rsc, NULL);
+    g_list_foreach(scheduler->resources, set_assignment_methods_for_rsc, NULL);
 }
 
 /*!
@@ -759,15 +759,15 @@ done:
  * \internal
  * \brief Sort resources in the order they should be assigned to nodes
  *
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] scheduler  Cluster working set
  */
 void
-pcmk__sort_resources(pcmk_scheduler_t *data_set)
+pcmk__sort_resources(pcmk_scheduler_t *scheduler)
 {
-    GList *nodes = g_list_copy(data_set->nodes);
+    GList *nodes = g_list_copy(scheduler->nodes);
 
     nodes = pcmk__sort_nodes(nodes, NULL);
-    data_set->resources = g_list_sort_with_data(data_set->resources,
-                                                cmp_resources, nodes);
+    scheduler->resources = g_list_sort_with_data(scheduler->resources,
+                                                 cmp_resources, nodes);
     g_list_free(nodes);
 }

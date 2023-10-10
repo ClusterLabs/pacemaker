@@ -177,7 +177,7 @@ skip_child_rsc(pcmk_resource_t *rsc, pcmk_resource_t *child,
 }
 
 gboolean
-group_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *data_set)
+group_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 {
     xmlNode *xml_obj = rsc->xml;
     xmlNode *xml_native_rsc = NULL;
@@ -207,7 +207,7 @@ group_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *data_set)
 
             crm_xml_add(xml_native_rsc, XML_RSC_ATTR_INCARNATION, clone_id);
             if (pe__unpack_resource(xml_native_rsc, &new_rsc, rsc,
-                                    data_set) != pcmk_rc_ok) {
+                                    scheduler) != pcmk_rc_ok) {
                 continue;
             }
 
