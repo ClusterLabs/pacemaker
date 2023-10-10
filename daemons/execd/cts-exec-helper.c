@@ -469,7 +469,7 @@ generate_params(void)
     // Calculate cluster status
     scheduler = pe_new_working_set();
     if (scheduler == NULL) {
-        crm_crit("Could not allocate working set");
+        crm_crit("Could not allocate scheduler data");
         return ENOMEM;
     }
     pe__set_working_set_flags(scheduler,

@@ -749,7 +749,7 @@ main(int argc, char **argv)
         rc = errno;
         exit_code = pcmk_rc2exitc(rc);
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Could not allocate working set: %s", pcmk_rc_str(rc));
+                    "Could not allocate scheduler data: %s", pcmk_rc_str(rc));
         goto done;
     }
     pe__set_working_set_flags(scheduler,

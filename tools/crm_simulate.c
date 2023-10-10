@@ -517,7 +517,8 @@ main(int argc, char **argv)
     scheduler = pe_new_working_set();
     if (scheduler == NULL) {
         rc = ENOMEM;
-        g_set_error(&error, PCMK__RC_ERROR, rc, "Could not allocate working set");
+        g_set_error(&error, PCMK__RC_ERROR, rc,
+                    "Could not allocate scheduler data");
         goto done;
     }
 

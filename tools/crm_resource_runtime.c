@@ -1537,7 +1537,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
     scheduler = pe_new_working_set();
     if (scheduler == NULL) {
         rc = errno;
-        out->err(out, "Could not allocate working set: %s", pcmk_rc_str(rc));
+        out->err(out, "Could not allocate scheduler data: %s", pcmk_rc_str(rc));
         goto done;
     }
 
