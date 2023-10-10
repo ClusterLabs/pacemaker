@@ -306,20 +306,17 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *use
  * \internal
  * \brief Add a set-attribute update request to the current CIB transaction
  *
- * \param[in] attr_id    ID of attribute to update
- * \param[in] attr_name  Name of attribute to update
- * \param[in] value      New value for attribute
- * \param[in] node_id    ID of node for which to update attribute value
- * \param[in] set_type   Type of attribute set block (\c XML_TAG_ATTR_SETS or
- *                       \c XML_TAG_UTILIZATION)
- * \param[in] set_id     ID of attribute set
+ * \param[in] attr     Attribute to update
+ * \param[in] attr_id  ID of attribute to update
+ * \param[in] node_id  ID of node for which to update attribute value
+ * \param[in] set_id   ID of attribute set
+ * \param[in] value    New value for attribute
  *
  * \return Standard Pacemaker return code
  */
 static int
-add_set_attr_update(const char *attr_id, const char *attr_name,
-                    const char *value, const char *node_id,
-                    const char *set_type, const char *set_id)
+add_set_attr_update(const attribute_t *attr, const char *attr_id,
+                    const char *node_id, const char *set_id, const char *value)
 {
     xmlNode *update = create_xml_node(NULL, XML_CIB_TAG_STATE);
     xmlNode *child = update;
@@ -336,7 +333,7 @@ add_set_attr_update(const char *attr_id, const char *attr_name,
     }
     crm_xml_add(child, XML_ATTR_ID, node_id);
 
-    child = create_xml_node(child, set_type);
+    child = create_xml_node(child, attr->set_type);
     if (child == NULL) {
         goto done;
     }
@@ -347,7 +344,7 @@ add_set_attr_update(const char *attr_id, const char *attr_name,
         goto done;
     }
     crm_xml_add(child, XML_ATTR_ID, attr_id);
-    crm_xml_add(child, XML_NVPAIR_ATTR_NAME, attr_name);
+    crm_xml_add(child, XML_NVPAIR_ATTR_NAME, attr->id);
     crm_xml_add(child, XML_NVPAIR_ATTR_VALUE, value);
 
     rc = the_cib->cmds->modify(the_cib, XML_CIB_TAG_STATUS, update,
@@ -363,19 +360,16 @@ done:
  * \internal
  * \brief Add an unset-attribute update request to the current CIB transaction
  *
- * \param[in] attr_id    ID of attribute to update
- * \param[in] attr_name  Name of attribute to update
- * \param[in] node_id    ID of node for which to update attribute value
- * \param[in] set_type   Type of attribute set block (\c XML_TAG_ATTR_SETS or
- *                       \c XML_TAG_UTILIZATION)
- * \param[in] set_id     ID of attribute set
+ * \param[in] attr     Attribute to update
+ * \param[in] attr_id  ID of attribute to update
+ * \param[in] node_id  ID of node for which to update attribute value
+ * \param[in] set_id   ID of attribute set
  *
  * \return Standard Pacemaker return code
  */
 static int
-add_unset_attr_update(const char *attr_id, const char *attr_name,
-                      const char *node_id, const char *set_type,
-                      const char *set_id)
+add_unset_attr_update(const attribute_t *attr, const char *attr_id,
+                      const char *node_id, const char *set_id)
 {
     char *xpath = crm_strdup_printf("/" XML_CIB_TAG_STATUS
                                     "/" XML_CIB_TAG_STATE
@@ -386,8 +380,8 @@ add_unset_attr_update(const char *attr_id, const char *attr_name,
                                     "/" XML_CIB_TAG_NVPAIR
                                         "[@" XML_ATTR_ID "='%s' "
                                          "and @" XML_NVPAIR_ATTR_NAME "='%s']",
-                                    node_id, node_id, set_type, set_id, attr_id,
-                                    attr_name);
+                                    node_id, node_id, attr->set_type, set_id,
+                                    attr_id, attr->id);
 
     int rc = the_cib->cmds->remove(the_cib, xpath, NULL,
                                    cib_xpath|cib_transaction);
@@ -403,14 +397,11 @@ add_unset_attr_update(const char *attr_id, const char *attr_name,
  * \param[in] attr      Attribute to update
  * \param[in] value     New value for attribute
  * \param[in] node_id   ID of node for which to update attribute value
- * \param[in] set_type  Type of attribute set block (\c XML_TAG_ATTR_SETS or
- *                      \c XML_TAG_UTILIZATION)
  *
  * \return Standard Pacemaker return code
  */
 static int
-add_attr_update(const attribute_t *attr, const char *value,
-                const char *node_id, const char *set_type)
+add_attr_update(const attribute_t *attr, const char *value, const char *node_id)
 {
     char *set_id = NULL;
     char *attr_id = NULL;
@@ -431,11 +422,9 @@ add_attr_update(const attribute_t *attr, const char *value,
     crm_xml_sanitize_id(attr_id);
 
     if (value != NULL) {
-        rc = add_set_attr_update(attr_id, attr->id, value, node_id, set_type,
-                                 set_id);
+        rc = add_set_attr_update(attr, attr_id, node_id, set_id, value);
     } else {
-        rc = add_unset_attr_update(attr_id, attr->id, node_id, set_type,
-                                   set_id);
+        rc = add_unset_attr_update(attr, attr_id, node_id, set_id);
     }
     free(set_id);
     free(attr_id);
@@ -483,7 +472,6 @@ void
 attrd_write_attribute(attribute_t *a, bool ignore_delay)
 {
     int private_updates = 0, cib_updates = 0;
-    const char *set_type = NULL;
     attribute_value_t *v = NULL;
     GHashTableIter iter;
     GHashTable *alert_attribute_value = NULL;
@@ -528,21 +516,6 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
             crm_err("Failed to write %s (id %s, set %s): Could not initiate "
                     "CIB transaction",
                     a->id, pcmk__s(a->uuid, "n/a"), pcmk__s(a->set_id, "n/a"));
-            goto done;
-        }
-
-        if (pcmk__str_eq(a->set_type, XML_TAG_ATTR_SETS,
-                         pcmk__str_null_matches)) {
-            set_type = XML_TAG_ATTR_SETS;
-
-        } else if (pcmk__str_eq(a->set_type, XML_TAG_UTILIZATION,
-                                pcmk__str_none)) {
-            set_type = XML_TAG_UTILIZATION;
-
-        } else {
-            crm_err("Failed to write %s (id %s, set %s): Unknown set type %s",
-                    a->id, pcmk__s(a->uuid, "n/a"), pcmk__s(a->set_id, "n/a"),
-                    a->set_type);
             goto done;
         }
     }
@@ -593,7 +566,7 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
         }
 
         // Update this value as part of the CIB transaction we're building
-        rc = add_attr_update(a, v->current, peer->uuid, set_type);
+        rc = add_attr_update(a, v->current, peer->uuid);
         if (rc != pcmk_rc_ok) {
             crm_err("Failed to update %s[%s]=%s (peer known as %s, UUID %s, "
                     "ID %" PRIu32 "/%" PRIu32 "): %s",
