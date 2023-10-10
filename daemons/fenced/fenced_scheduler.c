@@ -19,7 +19,7 @@
 #include <pacemaker-internal.h>
 #include <pacemaker-fenced.h>
 
-static pcmk_scheduler_t *fenced_data_set = NULL;
+static pcmk_scheduler_t *scheduler = NULL;
 
 /*!
  * \internal
@@ -37,8 +37,8 @@ fenced_scheduler_init(void)
         return rc;
     }
 
-    fenced_data_set = pe_new_working_set();
-    if (fenced_data_set == NULL) {
+    scheduler = pe_new_working_set();
+    if (scheduler == NULL) {
         pcmk__output_free(logger);
         return ENOMEM;
     }
@@ -46,7 +46,7 @@ fenced_scheduler_init(void)
     pe__register_messages(logger);
     pcmk__register_lib_messages(logger);
     pcmk__output_set_log_level(logger, LOG_TRACE);
-    fenced_data_set->priv = logger;
+    scheduler->priv = logger;
 
     return pcmk_rc_ok;
 }
@@ -58,16 +58,16 @@ fenced_scheduler_init(void)
 void
 fenced_scheduler_cleanup(void)
 {
-    if (fenced_data_set != NULL) {
-        pcmk__output_t *logger = fenced_data_set->priv;
+    if (scheduler != NULL) {
+        pcmk__output_t *logger = scheduler->priv;
 
         if (logger != NULL) {
             logger->finish(logger, CRM_EX_OK, true, NULL);
             pcmk__output_free(logger);
-            fenced_data_set->priv = NULL;
+            scheduler->priv = NULL;
         }
-        pe_free_working_set(fenced_data_set);
-        fenced_data_set = NULL;
+        pe_free_working_set(scheduler);
+        scheduler = NULL;
     }
 }
 
@@ -179,11 +179,10 @@ register_if_fencing_device(gpointer data, gpointer user_data)
 
     agent = crm_element_value(rsc->xml, XML_EXPR_ATTR_TYPE);
 
-    get_meta_attributes(rsc->meta, rsc, node, fenced_data_set);
+    get_meta_attributes(rsc->meta, rsc, node, scheduler);
     rsc_provides = g_hash_table_lookup(rsc->meta, PCMK_STONITH_PROVIDES);
 
-    g_hash_table_iter_init(&hash_iter,
-                           pe_rsc_params(rsc, node, fenced_data_set));
+    g_hash_table_iter_init(&hash_iter, pe_rsc_params(rsc, node, scheduler));
     while (g_hash_table_iter_next(&hash_iter, (gpointer *) &name,
                                   (gpointer *) &value)) {
         if ((name == NULL) || (value == NULL)) {
@@ -209,19 +208,18 @@ register_if_fencing_device(gpointer data, gpointer user_data)
 void
 fenced_scheduler_run(xmlNode *cib)
 {
-    CRM_CHECK((cib != NULL) && (fenced_data_set != NULL), return);
+    CRM_CHECK((cib != NULL) && (scheduler != NULL), return);
 
-    if (fenced_data_set->now != NULL) {
-        crm_time_free(fenced_data_set->now);
-        fenced_data_set->now = NULL;
+    if (scheduler->now != NULL) {
+        crm_time_free(scheduler->now);
+        scheduler->now = NULL;
     }
-    fenced_data_set->localhost = stonith_our_uname;
+    scheduler->localhost = stonith_our_uname;
     pcmk__schedule_actions(cib, pcmk_sched_location_only
                                 |pcmk_sched_no_compat
-                                |pcmk_sched_no_counts, fenced_data_set);
-    g_list_foreach(fenced_data_set->resources, register_if_fencing_device,
-                   NULL);
+                                |pcmk_sched_no_counts, scheduler);
+    g_list_foreach(scheduler->resources, register_if_fencing_device, NULL);
 
-    fenced_data_set->input = NULL; // Wasn't a copy, so don't let API free it
-    pe_reset_working_set(fenced_data_set);
+    scheduler->input = NULL; // Wasn't a copy, so don't let API free it
+    pe_reset_working_set(scheduler);
 }
