@@ -183,7 +183,7 @@ static GError *error = NULL;
 static GMainLoop *mainloop = NULL;
 static cib_t *cib_conn = NULL;
 static pcmk_ipc_api_t *controld_api = NULL;
-static pe_working_set_t *data_set = NULL;
+static pcmk_scheduler_t *data_set = NULL;
 
 #define MESSAGE_TIMEOUT_S 60
 
@@ -966,10 +966,11 @@ why_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **er
 }
 
 static int
-ban_or_move(pcmk__output_t *out, pe_resource_t *rsc, const char *move_lifetime)
+ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc,
+            const char *move_lifetime)
 {
     int rc = pcmk_rc_ok;
-    pe_node_t *current = NULL;
+    pcmk_node_t *current = NULL;
     unsigned int nactive = 0;
 
     CRM_CHECK(rsc != NULL, return EINVAL);
@@ -987,7 +988,7 @@ ban_or_move(pcmk__output_t *out, pe_resource_t *rsc, const char *move_lifetime)
 
         current = NULL;
         for(iter = rsc->children; iter; iter = iter->next) {
-            pe_resource_t *child = (pe_resource_t *)iter->data;
+            pcmk_resource_t *child = (pcmk_resource_t *)iter->data;
             enum rsc_role_e child_role = child->fns->state(child, TRUE);
 
             if (child_role == pcmk_role_promoted) {
@@ -1025,7 +1026,7 @@ ban_or_move(pcmk__output_t *out, pe_resource_t *rsc, const char *move_lifetime)
 }
 
 static void
-cleanup(pcmk__output_t *out, pe_resource_t *rsc, pe_node_t *node)
+cleanup(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
 {
     int rc = pcmk_rc_ok;
 
@@ -1055,7 +1056,7 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
     GList *after = NULL;
     GList *remaining = NULL;
     GList *ele = NULL;
-    pe_node_t *dest = NULL;
+    pcmk_node_t *dest = NULL;
     int rc = pcmk_rc_ok;
 
     if (!out->is_quiet(out)) {
@@ -1184,7 +1185,7 @@ refresh(pcmk__output_t *out)
     int attr_options = pcmk__node_attr_none;
 
     if (options.host_uname) {
-        pe_node_t *node = pe_find_node(data_set->nodes, options.host_uname);
+        pcmk_node_t *node = pe_find_node(data_set->nodes, options.host_uname);
 
         if (pe__is_guest_or_remote_node(node)) {
             node = pe__current_node(node->details->remote_rsc);
@@ -1221,7 +1222,7 @@ refresh(pcmk__output_t *out)
 }
 
 static void
-refresh_resource(pcmk__output_t *out, pe_resource_t *rsc, pe_node_t *node)
+refresh_resource(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
 {
     int rc = pcmk_rc_ok;
 
@@ -1444,8 +1445,8 @@ int
 main(int argc, char **argv)
 {
     xmlNode *cib_xml_copy = NULL;
-    pe_resource_t *rsc = NULL;
-    pe_node_t *node = NULL;
+    pcmk_resource_t *rsc = NULL;
+    pcmk_node_t *node = NULL;
     int rc = pcmk_rc_ok;
 
     GOptionGroup *output_group = NULL;
@@ -1916,7 +1917,7 @@ main(int argc, char **argv)
         case cmd_get_param: {
             unsigned int count = 0;
             GHashTable *params = NULL;
-            pe_node_t *current = rsc->fns->active_node(rsc, &count, NULL);
+            pcmk_node_t *current = rsc->fns->active_node(rsc, &count, NULL);
             bool free_params = true;
             const char* value = NULL;
 

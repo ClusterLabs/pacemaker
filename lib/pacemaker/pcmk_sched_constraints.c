@@ -28,7 +28,7 @@
 #include "libpacemaker_private.h"
 
 static bool
-evaluate_lifetime(xmlNode *lifetime, pe_working_set_t *data_set)
+evaluate_lifetime(xmlNode *lifetime, pcmk_scheduler_t *data_set)
 {
     bool result = FALSE;
     crm_time_t *next_change = crm_time_new_undefined();
@@ -53,7 +53,7 @@ evaluate_lifetime(xmlNode *lifetime, pe_working_set_t *data_set)
  * \param[in,out] data_set  Cluster working set
  */
 void
-pcmk__unpack_constraints(pe_working_set_t *data_set)
+pcmk__unpack_constraints(pcmk_scheduler_t *data_set)
 {
     xmlNode *xml_constraints = pcmk_find_cib_element(data_set->input,
                                                      XML_CIB_TAG_CONSTRAINTS);
@@ -103,16 +103,16 @@ pcmk__unpack_constraints(pe_working_set_t *data_set)
     }
 }
 
-pe_resource_t *
+pcmk_resource_t *
 pcmk__find_constraint_resource(GList *rsc_list, const char *id)
 {
     if (id == NULL) {
         return NULL;
     }
     for (GList *iter = rsc_list; iter != NULL; iter = iter->next) {
-        pe_resource_t *parent = iter->data;
-        pe_resource_t *match = parent->fns->find_rsc(parent, id, NULL,
-                                                     pcmk_rsc_match_history);
+        pcmk_resource_t *parent = iter->data;
+        pcmk_resource_t *match = parent->fns->find_rsc(parent, id, NULL,
+                                                       pcmk_rsc_match_history);
 
         if (match != NULL) {
             if (!pcmk__str_eq(match->id, id, pcmk__str_none)) {
@@ -139,7 +139,7 @@ pcmk__find_constraint_resource(GList *rsc_list, const char *id)
  *         otherwise false
  */
 static bool
-find_constraint_tag(const pe_working_set_t *data_set, const char *id,
+find_constraint_tag(const pcmk_scheduler_t *data_set, const char *id,
                     pe_tag_t **tag)
 {
     *tag = NULL;
@@ -182,8 +182,8 @@ find_constraint_tag(const pe_working_set_t *data_set, const char *id,
  * \return true if id refers to a resource (possibly indirectly via a tag)
  */
 bool
-pcmk__valid_resource_or_tag(const pe_working_set_t *data_set, const char *id,
-                            pe_resource_t **rsc, pe_tag_t **tag)
+pcmk__valid_resource_or_tag(const pcmk_scheduler_t *data_set, const char *id,
+                            pcmk_resource_t **rsc, pe_tag_t **tag)
 {
     if (rsc != NULL) {
         *rsc = pcmk__find_constraint_resource(data_set->resources, id);
@@ -214,7 +214,7 @@ pcmk__valid_resource_or_tag(const pe_working_set_t *data_set, const char *id,
  * \note It is the caller's responsibility to free the result with free_xml().
  */
 xmlNode *
-pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pe_working_set_t *data_set)
+pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *data_set)
 {
     xmlNode *new_xml = NULL;
     bool any_refs = false;
@@ -235,7 +235,7 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pe_working_set_t *data_set)
         for (xmlNode *xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
-            pe_resource_t *rsc = NULL;
+            pcmk_resource_t *rsc = NULL;
             pe_tag_t *tag = NULL;
 
             if (!pcmk__valid_resource_or_tag(data_set, ID(xml_rsc), &rsc,
@@ -333,12 +333,12 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pe_working_set_t *data_set)
  */
 bool
 pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
-                 bool convert_rsc, const pe_working_set_t *data_set)
+                 bool convert_rsc, const pcmk_scheduler_t *data_set)
 {
     const char *cons_id = NULL;
     const char *id = NULL;
 
-    pe_resource_t *rsc = NULL;
+    pcmk_resource_t *rsc = NULL;
     pe_tag_t *tag = NULL;
 
     *rsc_set = NULL;
@@ -413,11 +413,11 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
  * \param[in,out] data_set  Cluster working set
  */
 void
-pcmk__create_internal_constraints(pe_working_set_t *data_set)
+pcmk__create_internal_constraints(pcmk_scheduler_t *data_set)
 {
     crm_trace("Create internal constraints");
     for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+        pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         rsc->cmds->internal_constraints(rsc);
     }

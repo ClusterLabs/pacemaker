@@ -24,16 +24,16 @@
  * \brief Create a new working set
  *
  * \return New, initialized working set on success, else NULL (and set errno)
- * \note Only pe_working_set_t objects created with this function (as opposed
+ * \note Only pcmk_scheduler_t objects created with this function (as opposed
  *       to statically declared or directly allocated) should be used with the
  *       functions in this library, to allow for future extensions to the
  *       data type. The caller is responsible for freeing the memory with
  *       pe_free_working_set() when the instance is no longer needed.
  */
-pe_working_set_t *
+pcmk_scheduler_t *
 pe_new_working_set(void)
 {
-    pe_working_set_t *data_set = calloc(1, sizeof(pe_working_set_t));
+    pcmk_scheduler_t *data_set = calloc(1, sizeof(pcmk_scheduler_t));
 
     if (data_set != NULL) {
         set_working_set_defaults(data_set);
@@ -47,7 +47,7 @@ pe_new_working_set(void)
  * \param[in,out] data_set  Working set to free
  */
 void
-pe_free_working_set(pe_working_set_t *data_set)
+pe_free_working_set(pcmk_scheduler_t *data_set)
 {
     if (data_set != NULL) {
         pe_reset_working_set(data_set);
@@ -68,7 +68,7 @@ pe_free_working_set(pe_working_set_t *data_set)
  *  - A list of the possible stop/start actions (without dependencies)
  */
 gboolean
-cluster_status(pe_working_set_t * data_set)
+cluster_status(pcmk_scheduler_t * data_set)
 {
     xmlNode *section = NULL;
 
@@ -137,7 +137,7 @@ cluster_status(pe_working_set_t * data_set)
     if (!pcmk_is_set(data_set->flags, pcmk_sched_no_counts)) {
         for (GList *item = data_set->resources; item != NULL;
              item = item->next) {
-            ((pe_resource_t *) (item->data))->fns->count(item->data);
+            ((pcmk_resource_t *) (item->data))->fns->count(item->data);
         }
         crm_trace("Cluster resource count: %d (%d disabled, %d blocked)",
                   data_set->ninstances, data_set->disabled_resources,
@@ -150,23 +150,23 @@ cluster_status(pe_working_set_t * data_set)
 
 /*!
  * \internal
- * \brief Free a list of pe_resource_t
+ * \brief Free a list of pcmk_resource_t
  *
  * \param[in,out] resources  List to free
  *
  * \note When a working set's resource list is freed, that includes the original
  *       storage for the uname and id of any Pacemaker Remote nodes in the
  *       working set's node list, so take care not to use those afterward.
- * \todo Refactor pe_node_t to strdup() the node name.
+ * \todo Refactor pcmk_node_t to strdup() the node name.
  */
 static void
 pe_free_resources(GList *resources)
 {
-    pe_resource_t *rsc = NULL;
+    pcmk_resource_t *rsc = NULL;
     GList *iterator = resources;
 
     while (iterator != NULL) {
-        rsc = (pe_resource_t *) iterator->data;
+        rsc = (pcmk_resource_t *) iterator->data;
         iterator = iterator->next;
         rsc->fns->free(rsc);
     }
@@ -193,7 +193,7 @@ static void
 pe_free_nodes(GList *nodes)
 {
     for (GList *iterator = nodes; iterator != NULL; iterator = iterator->next) {
-        pe_node_t *node = (pe_node_t *) iterator->data;
+        pcmk_node_t *node = (pcmk_node_t *) iterator->data;
 
         // Shouldn't be possible, but to be safe ...
         if (node == NULL) {
@@ -276,7 +276,7 @@ pe__free_location(GList *constraints)
  *             pe_reset_working_set() should be used instead.
  */
 void
-cleanup_calculations(pe_working_set_t * data_set)
+cleanup_calculations(pcmk_scheduler_t * data_set)
 {
     if (data_set == NULL) {
         return;
@@ -335,7 +335,7 @@ cleanup_calculations(pe_working_set_t * data_set)
  * \param[in,out] data_set  Working set to reset
  */
 void
-pe_reset_working_set(pe_working_set_t *data_set)
+pe_reset_working_set(pcmk_scheduler_t *data_set)
 {
     if (data_set == NULL) {
         return;
@@ -365,11 +365,11 @@ pe_reset_working_set(pe_working_set_t *data_set)
 }
 
 void
-set_working_set_defaults(pe_working_set_t * data_set)
+set_working_set_defaults(pcmk_scheduler_t * data_set)
 {
     void *priv = data_set->priv;
 
-    memset(data_set, 0, sizeof(pe_working_set_t));
+    memset(data_set, 0, sizeof(pcmk_scheduler_t));
 
     data_set->priv = priv;
     data_set->order_id = 1;
@@ -387,21 +387,21 @@ set_working_set_defaults(pe_working_set_t * data_set)
     }
 }
 
-pe_resource_t *
+pcmk_resource_t *
 pe_find_resource(GList *rsc_list, const char *id)
 {
     return pe_find_resource_with_flags(rsc_list, id, pcmk_rsc_match_history);
 }
 
-pe_resource_t *
+pcmk_resource_t *
 pe_find_resource_with_flags(GList *rsc_list, const char *id, enum pe_find flags)
 {
     GList *rIter = NULL;
 
     for (rIter = rsc_list; id && rIter; rIter = rIter->next) {
-        pe_resource_t *parent = rIter->data;
+        pcmk_resource_t *parent = rIter->data;
 
-        pe_resource_t *match =
+        pcmk_resource_t *match =
             parent->fns->find_rsc(parent, id, NULL, flags);
         if (match != NULL) {
             return match;
@@ -414,7 +414,7 @@ pe_find_resource_with_flags(GList *rsc_list, const char *id, enum pe_find flags)
 /*!
  * \brief Find a node by name or ID in a list of nodes
  *
- * \param[in] nodes      List of nodes (as pe_node_t*)
+ * \param[in] nodes      List of nodes (as pcmk_node_t*)
  * \param[in] id         If not NULL, ID of node to find
  * \param[in] node_name  If not NULL, name of node to find
  *
@@ -422,10 +422,10 @@ pe_find_resource_with_flags(GList *rsc_list, const char *id, enum pe_find flags)
  *         otherwise node from \p nodes that matches \p uname if any,
  *         otherwise NULL
  */
-pe_node_t *
+pcmk_node_t *
 pe_find_node_any(const GList *nodes, const char *id, const char *uname)
 {
-    pe_node_t *match = NULL;
+    pcmk_node_t *match = NULL;
 
     if (id != NULL) {
         match = pe_find_node_id(nodes, id);
@@ -439,16 +439,16 @@ pe_find_node_any(const GList *nodes, const char *id, const char *uname)
 /*!
  * \brief Find a node by ID in a list of nodes
  *
- * \param[in] nodes  List of nodes (as pe_node_t*)
+ * \param[in] nodes  List of nodes (as pcmk_node_t*)
  * \param[in] id     ID of node to find
  *
  * \return Node from \p nodes that matches \p id if any, otherwise NULL
  */
-pe_node_t *
+pcmk_node_t *
 pe_find_node_id(const GList *nodes, const char *id)
 {
     for (const GList *iter = nodes; iter != NULL; iter = iter->next) {
-        pe_node_t *node = (pe_node_t *) iter->data;
+        pcmk_node_t *node = (pcmk_node_t *) iter->data;
 
         /* @TODO Whether node IDs should be considered case-sensitive should
          * probably depend on the node type, so functionizing the comparison
@@ -464,16 +464,16 @@ pe_find_node_id(const GList *nodes, const char *id)
 /*!
  * \brief Find a node by name in a list of nodes
  *
- * \param[in] nodes      List of nodes (as pe_node_t*)
+ * \param[in] nodes      List of nodes (as pcmk_node_t*)
  * \param[in] node_name  Name of node to find
  *
  * \return Node from \p nodes that matches \p node_name if any, otherwise NULL
  */
-pe_node_t *
+pcmk_node_t *
 pe_find_node(const GList *nodes, const char *node_name)
 {
     for (const GList *iter = nodes; iter != NULL; iter = iter->next) {
-        pe_node_t *node = (pe_node_t *) iter->data;
+        pcmk_node_t *node = (pcmk_node_t *) iter->data;
 
         if (pcmk__str_eq(node->details->uname, node_name, pcmk__str_casei)) {
             return node;

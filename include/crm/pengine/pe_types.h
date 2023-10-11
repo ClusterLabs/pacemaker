@@ -29,26 +29,21 @@ extern "C" {
  * \ingroup pengine
  */
 
-typedef struct pe_node_s pe_node_t;
-typedef struct pe_action_s pe_action_t;
-typedef struct pe_resource_s pe_resource_t;
-typedef struct pe_working_set_s pe_working_set_t;
-
 typedef struct resource_object_functions_s {
-    gboolean (*unpack) (pe_resource_t*, pe_working_set_t*);
-    pe_resource_t *(*find_rsc) (pe_resource_t *parent, const char *search,
-                                const pe_node_t *node, int flags);
+    gboolean (*unpack)(pcmk_resource_t*, pcmk_scheduler_t*);
+    pcmk_resource_t *(*find_rsc)(pcmk_resource_t *parent, const char *search,
+                                 const pcmk_node_t *node, int flags);
     /* parameter result must be free'd */
-    char *(*parameter) (pe_resource_t*, pe_node_t*, gboolean, const char*,
-                        pe_working_set_t*);
+    char *(*parameter)(pcmk_resource_t*, pcmk_node_t*, gboolean, const char*,
+                       pcmk_scheduler_t*);
     //! \deprecated will be removed in a future release
-    void (*print) (pe_resource_t*, const char*, long, void*);
-    gboolean (*active) (pe_resource_t*, gboolean);
-    enum rsc_role_e (*state) (const pe_resource_t*, gboolean);
-    pe_node_t *(*location) (const pe_resource_t*, GList**, int);
-    void (*free) (pe_resource_t*);
-    void (*count) (pe_resource_t*);
-    gboolean (*is_filtered) (const pe_resource_t*, GList *, gboolean);
+    void (*print)(pcmk_resource_t*, const char*, long, void*);
+    gboolean (*active)(pcmk_resource_t*, gboolean);
+    enum rsc_role_e (*state)(const pcmk_resource_t*, gboolean);
+    pcmk_node_t *(*location)(const pcmk_resource_t*, GList**, int);
+    void (*free)(pcmk_resource_t*);
+    void (*count)(pcmk_resource_t*);
+    gboolean (*is_filtered)(const pcmk_resource_t*, GList *, gboolean);
 
     /*!
      * \brief Find a node (and optionally count all) where resource is active
@@ -62,8 +57,9 @@ typedef struct resource_object_functions_s {
      *         online node if the resource's "requires" is "quorum" or
      *         "nothing", or NULL if the resource is inactive.
      */
-    pe_node_t *(*active_node)(const pe_resource_t *rsc, unsigned int *count_all,
-                              unsigned int *count_clean);
+    pcmk_node_t *(*active_node)(const pcmk_resource_t *rsc,
+                                unsigned int *count_all,
+                                unsigned int *count_clean);
 
     /*!
      * \brief Get maximum resource instances per node
@@ -72,7 +68,7 @@ typedef struct resource_object_functions_s {
      *
      * \return Maximum number of \p rsc instances that can be active on one node
      */
-    unsigned int (*max_per_node)(const pe_resource_t *rsc);
+    unsigned int (*max_per_node)(const pcmk_resource_t *rsc);
 } resource_object_functions_t;
 
 typedef struct resource_alloc_functions_s resource_alloc_functions_t;
@@ -83,7 +79,7 @@ struct pe_working_set_s {
 
     /* options extracted from the input */
     char *dc_uuid;
-    pe_node_t *dc_node;
+    pcmk_node_t *dc_node;
     const char *stonith_action;
     const char *placement_strategy;
 
@@ -160,15 +156,15 @@ struct pe_node_shared_s {
     gboolean unpacked;
 
     int num_resources;
-    pe_resource_t *remote_rsc;
-    GList *running_rsc;       /* pe_resource_t* */
-    GList *allocated_rsc;     /* pe_resource_t* */
+    pcmk_resource_t *remote_rsc;
+    GList *running_rsc;         // pcmk_resource_t*
+    GList *allocated_rsc;       // pcmk_resource_t*
 
     GHashTable *attrs;          /* char* => char* */
     GHashTable *utilization;
     GHashTable *digest_cache;   //!< cache of calculated resource digests
     int priority; // calculated based on the priority of resources running on the node
-    pe_working_set_t *data_set; //!< Cluster that this node is part of
+    pcmk_scheduler_t *data_set; //!< Cluster that this node is part of
 };
 
 struct pe_node_s {
@@ -186,8 +182,8 @@ struct pe_resource_s {
     xmlNode *orig_xml;
     xmlNode *ops_xml;
 
-    pe_working_set_t *cluster;
-    pe_resource_t *parent;
+    pcmk_scheduler_t *cluster;
+    pcmk_resource_t *parent;
 
     enum pe_obj_types variant;
     void *variant_opaque;
@@ -224,16 +220,16 @@ struct pe_resource_s {
     GList *rsc_cons_lhs;      // List of pcmk__colocation_t*
     GList *rsc_cons;          // List of pcmk__colocation_t*
     GList *rsc_location;      // List of pe__location_t*
-    GList *actions;           // List of pe_action_t*
+    GList *actions;           // List of pcmk_action_t*
     GList *rsc_tickets;       // List of rsc_ticket*
     //!@}
 
-    pe_node_t *allocated_to;
-    pe_node_t *partial_migration_target;
-    pe_node_t *partial_migration_source;
-    GList *running_on;        /* pe_node_t*   */
-    GHashTable *known_on;       /* pe_node_t*   */
-    GHashTable *allowed_nodes;  /* pe_node_t*   */
+    pcmk_node_t *allocated_to;
+    pcmk_node_t *partial_migration_target;
+    pcmk_node_t *partial_migration_source;
+    GList *running_on;          // pcmk_node_t*
+    GHashTable *known_on;       // pcmk_node_t*
+    GHashTable *allowed_nodes;  // pcmk_node_t*
 
     enum rsc_role_e role;
     enum rsc_role_e next_role;
@@ -242,15 +238,15 @@ struct pe_resource_s {
     GHashTable *parameters; //! \deprecated Use pe_rsc_params() instead
     GHashTable *utilization;
 
-    GList *children;          /* pe_resource_t*   */
-    GList *dangling_migrations;       /* pe_node_t*       */
+    GList *children;            // pcmk_resource_t*
+    GList *dangling_migrations; // pcmk_node_t*
 
-    pe_resource_t *container;
+    pcmk_resource_t *container;
     GList *fillers;
 
     // @COMPAT These should be made const at next API compatibility break
-    pe_node_t *pending_node;    // Node on which pending_task is happening
-    pe_node_t *lock_node;       // Resource is shutdown-locked to this node
+    pcmk_node_t *pending_node;  // Node on which pending_task is happening
+    pcmk_node_t *lock_node;     // Resource is shutdown-locked to this node
 
     time_t lock_time;           // When shutdown lock started
 
@@ -266,8 +262,8 @@ struct pe_action_s {
     int id;
     int priority;
 
-    pe_resource_t *rsc;
-    pe_node_t *node;
+    pcmk_resource_t *rsc;
+    pcmk_node_t *node;
     xmlNode *op_entry;
 
     char *task;
@@ -377,7 +373,7 @@ enum pe_ordering {
 typedef struct pe_action_wrapper_s {
     enum pe_ordering type;
     enum pe_link_state state;
-    pe_action_t *action;
+    pcmk_action_t *action;
 } pe_action_wrapper_t;
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)

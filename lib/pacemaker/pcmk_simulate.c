@@ -27,7 +27,7 @@ static cib_t *fake_cib = NULL;
 static GList *fake_resource_list = NULL;
 static const GList *fake_op_fail_list = NULL;
 
-static void set_effective_date(pe_working_set_t *data_set, bool print_original,
+static void set_effective_date(pcmk_scheduler_t *data_set, bool print_original,
                                const char *use_date);
 
 /*!
@@ -41,7 +41,7 @@ static void set_effective_date(pe_working_set_t *data_set, bool print_original,
  * \note It is the caller's responsibility to free the result.
  */
 static char *
-create_action_name(const pe_action_t *action, bool verbose)
+create_action_name(const pcmk_action_t *action, bool verbose)
 {
     char *action_name = NULL;
     const char *prefix = "";
@@ -135,7 +135,7 @@ create_action_name(const pe_action_t *action, bool verbose)
  * \param[in]     print_spacer  Whether to display a spacer first
  */
 static void
-print_cluster_status(pe_working_set_t *data_set, uint32_t show_opts,
+print_cluster_status(pcmk_scheduler_t *data_set, uint32_t show_opts,
                      uint32_t section_opts, const char *title,
                      bool print_spacer)
 {
@@ -167,7 +167,7 @@ print_cluster_status(pe_working_set_t *data_set, uint32_t show_opts,
  * \param[in]     print_spacer  Whether to display a spacer first
  */
 static void
-print_transition_summary(pe_working_set_t *data_set, bool print_spacer)
+print_transition_summary(pcmk_scheduler_t *data_set, bool print_spacer)
 {
     pcmk__output_t *out = data_set->priv;
 
@@ -188,7 +188,7 @@ print_transition_summary(pe_working_set_t *data_set, bool print_spacer)
  * \param[in]     flags     Group of enum pcmk_scheduler_flags to set
  */
 static void
-reset(pe_working_set_t *data_set, xmlNodePtr input, pcmk__output_t *out,
+reset(pcmk_scheduler_t *data_set, xmlNodePtr input, pcmk__output_t *out,
       const char *use_date, unsigned int flags)
 {
     data_set->input = input;
@@ -219,7 +219,7 @@ reset(pe_working_set_t *data_set, xmlNodePtr input, pcmk__output_t *out,
  * \return Standard Pacemaker return code
  */
 static int
-write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
+write_sim_dotfile(pcmk_scheduler_t *data_set, const char *dot_file,
                   bool all_actions, bool verbose)
 {
     GList *iter = NULL;
@@ -231,7 +231,7 @@ write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
 
     fprintf(dot_strm, " digraph \"g\" {\n");
     for (iter = data_set->actions; iter != NULL; iter = iter->next) {
-        pe_action_t *action = (pe_action_t *) iter->data;
+        pcmk_action_t *action = (pcmk_action_t *) iter->data;
         const char *style = "dashed";
         const char *font = "black";
         const char *color = "black";
@@ -272,7 +272,7 @@ write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
     }
 
     for (iter = data_set->actions; iter != NULL; iter = iter->next) {
-        pe_action_t *action = (pe_action_t *) iter->data;
+        pcmk_action_t *action = (pcmk_action_t *) iter->data;
 
         for (GList *before_iter = action->actions_before;
              before_iter != NULL; before_iter = before_iter->next) {
@@ -326,7 +326,7 @@ write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
  * \param[in]     use_date  The date to set the cluster's time to (may be NULL)
  */
 static void
-profile_file(const char *xml_file, long long repeat, pe_working_set_t *data_set,
+profile_file(const char *xml_file, long long repeat, pcmk_scheduler_t *data_set,
              const char *use_date)
 {
     pcmk__output_t *out = data_set->priv;
@@ -375,7 +375,7 @@ profile_file(const char *xml_file, long long repeat, pe_working_set_t *data_set,
 }
 
 void
-pcmk__profile_dir(const char *dir, long long repeat, pe_working_set_t *data_set,
+pcmk__profile_dir(const char *dir, long long repeat, pcmk_scheduler_t *data_set,
                   const char *use_date)
 {
     pcmk__output_t *out = data_set->priv;
@@ -428,7 +428,7 @@ pcmk__profile_dir(const char *dir, long long repeat, pe_working_set_t *data_set,
  *                                (may be NULL)
  */
 static void
-set_effective_date(pe_working_set_t *data_set, bool print_original,
+set_effective_date(pcmk_scheduler_t *data_set, bool print_original,
                    const char *use_date)
 {
     pcmk__output_t *out = data_set->priv;
@@ -730,7 +730,7 @@ simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 }
 
 enum pcmk__graph_status
-pcmk__simulate_transition(pe_working_set_t *data_set, cib_t *cib,
+pcmk__simulate_transition(pcmk_scheduler_t *data_set, cib_t *cib,
                           const GList *op_fail_list)
 {
     pcmk__graph_t *transition = NULL;
@@ -785,7 +785,7 @@ pcmk__simulate_transition(pe_working_set_t *data_set, cib_t *cib,
 }
 
 int
-pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
+pcmk__simulate(pcmk_scheduler_t *data_set, pcmk__output_t *out,
                const pcmk_injections_t *injections, unsigned int flags,
                uint32_t section_opts, const char *use_date,
                const char *input_file, const char *graph_file,
@@ -982,7 +982,7 @@ simulate_done:
 }
 
 int
-pcmk_simulate(xmlNodePtr *xml, pe_working_set_t *data_set,
+pcmk_simulate(xmlNodePtr *xml, pcmk_scheduler_t *data_set,
               const pcmk_injections_t *injections, unsigned int flags,
               unsigned int section_opts, const char *use_date,
               const char *input_file, const char *graph_file,

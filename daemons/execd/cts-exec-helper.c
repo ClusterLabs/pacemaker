@@ -443,9 +443,9 @@ static int
 generate_params(void)
 {
     int rc = pcmk_rc_ok;
-    pe_working_set_t *data_set = NULL;
+    pcmk_scheduler_t *data_set = NULL;
     xmlNode *cib_xml_copy = NULL;
-    pe_resource_t *rsc = NULL;
+    pcmk_resource_t *rsc = NULL;
     GHashTable *params = NULL;
     GHashTable *meta = NULL;
     GHashTableIter iter;

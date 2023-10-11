@@ -96,13 +96,13 @@ attr_in_string(xmlAttrPtr a, void *user_data)
  * \param[in,out] data_set     Cluster working set
  */
 static void
-calculate_main_digest(op_digest_cache_t *data, pe_resource_t *rsc,
-                      const pe_node_t *node, GHashTable *params,
+calculate_main_digest(op_digest_cache_t *data, pcmk_resource_t *rsc,
+                      const pcmk_node_t *node, GHashTable *params,
                       const char *task, guint *interval_ms,
                       const xmlNode *xml_op, const char *op_version,
-                      GHashTable *overrides, pe_working_set_t *data_set)
+                      GHashTable *overrides, pcmk_scheduler_t *data_set)
 {
-    pe_action_t *action = NULL;
+    pcmk_action_t *action = NULL;
 
     data->params_all = create_xml_node(NULL, XML_TAG_PARAMS);
 
@@ -177,7 +177,7 @@ is_fence_param(xmlAttrPtr attr, void *user_data)
  * \param[in]  overrides   Key/value hash table to override resource parameters
  */
 static void
-calculate_secure_digest(op_digest_cache_t *data, const pe_resource_t *rsc,
+calculate_secure_digest(op_digest_cache_t *data, const pcmk_resource_t *rsc,
                         GHashTable *params, const xmlNode *xml_op,
                         const char *op_version, GHashTable *overrides)
 {
@@ -295,10 +295,10 @@ calculate_restart_digest(op_digest_cache_t *data, const xmlNode *xml_op,
  *       pe__free_digests().
  */
 op_digest_cache_t *
-pe__calculate_digests(pe_resource_t *rsc, const char *task, guint *interval_ms,
-                      const pe_node_t *node, const xmlNode *xml_op,
-                      GHashTable *overrides, bool calc_secure,
-                      pe_working_set_t *data_set)
+pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
+                      guint *interval_ms, const pcmk_node_t *node,
+                      const xmlNode *xml_op, GHashTable *overrides,
+                      bool calc_secure, pcmk_scheduler_t *data_set)
 {
     op_digest_cache_t *data = calloc(1, sizeof(op_digest_cache_t));
     const char *op_version = NULL;
@@ -348,9 +348,9 @@ pe__calculate_digests(pe_resource_t *rsc, const char *task, guint *interval_ms,
  * \return Pointer to node's digest cache entry
  */
 static op_digest_cache_t *
-rsc_action_digest(pe_resource_t *rsc, const char *task, guint interval_ms,
-                  pe_node_t *node, const xmlNode *xml_op,
-                  bool calc_secure, pe_working_set_t *data_set)
+rsc_action_digest(pcmk_resource_t *rsc, const char *task, guint interval_ms,
+                  pcmk_node_t *node, const xmlNode *xml_op,
+                  bool calc_secure, pcmk_scheduler_t *data_set)
 {
     op_digest_cache_t *data = NULL;
     char *key = pcmk__op_key(rsc->id, task, interval_ms);
@@ -378,8 +378,8 @@ rsc_action_digest(pe_resource_t *rsc, const char *task, guint interval_ms,
  * \return Pointer to node's digest cache entry, with comparison result set
  */
 op_digest_cache_t *
-rsc_action_digest_cmp(pe_resource_t *rsc, const xmlNode *xml_op,
-                      pe_node_t *node, pe_working_set_t *data_set)
+rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
+                      pcmk_node_t *node, pcmk_scheduler_t *data_set)
 {
     op_digest_cache_t *data = NULL;
     guint interval_ms = 0;
@@ -529,8 +529,8 @@ unfencing_digest_matches(const char *rsc_id, const char *agent,
  * \return Node's digest cache entry
  */
 op_digest_cache_t *
-pe__compare_fencing_digest(pe_resource_t *rsc, const char *agent,
-                           pe_node_t *node, pe_working_set_t *data_set)
+pe__compare_fencing_digest(pcmk_resource_t *rsc, const char *agent,
+                           pcmk_node_t *node, pcmk_scheduler_t *data_set)
 {
     const char *node_summary = NULL;
 

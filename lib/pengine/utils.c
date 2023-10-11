@@ -33,16 +33,16 @@ gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
  * \return true if node can be fenced, false otherwise
  */
 bool
-pe_can_fence(const pe_working_set_t *data_set, const pe_node_t *node)
+pe_can_fence(const pcmk_scheduler_t *data_set, const pcmk_node_t *node)
 {
     if (pe__is_guest_node(node)) {
         /* Guest nodes are fenced by stopping their container resource. We can
          * do that if the container's host is either online or fenceable.
          */
-        pe_resource_t *rsc = node->details->remote_rsc->container;
+        pcmk_resource_t *rsc = node->details->remote_rsc->container;
 
         for (GList *n = rsc->running_on; n != NULL; n = n->next) {
-            pe_node_t *container_node = n->data;
+            pcmk_node_t *container_node = n->data;
 
             if (!container_node->details->online
                 && !pe_can_fence(data_set, container_node)) {
@@ -85,14 +85,14 @@ pe_can_fence(const pe_working_set_t *data_set, const pe_node_t *node)
  * \return Newly allocated shallow copy of this_node
  * \note This function asserts on errors and is guaranteed to return non-NULL.
  */
-pe_node_t *
-pe__copy_node(const pe_node_t *this_node)
+pcmk_node_t *
+pe__copy_node(const pcmk_node_t *this_node)
 {
-    pe_node_t *new_node = NULL;
+    pcmk_node_t *new_node = NULL;
 
     CRM_ASSERT(this_node != NULL);
 
-    new_node = calloc(1, sizeof(pe_node_t));
+    new_node = calloc(1, sizeof(pcmk_node_t));
     CRM_ASSERT(new_node != NULL);
 
     new_node->rsc_discover_mode = this_node->rsc_discover_mode;
@@ -119,8 +119,9 @@ pe__node_list2table(const GList *list)
 
     result = pcmk__strkey_table(NULL, free);
     for (const GList *gIter = list; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *new_node = pe__copy_node((const pe_node_t *) gIter->data);
+        pcmk_node_t *new_node = NULL;
 
+        new_node = pe__copy_node((const pcmk_node_t *) gIter->data);
         g_hash_table_insert(result, (gpointer) new_node->details->id, new_node);
     }
     return result;
@@ -144,8 +145,8 @@ pe__node_list2table(const GList *list)
 gint
 pe__cmp_node_name(gconstpointer a, gconstpointer b)
 {
-    const pe_node_t *node1 = (const pe_node_t *) a;
-    const pe_node_t *node2 = (const pe_node_t *) b;
+    const pcmk_node_t *node1 = (const pcmk_node_t *) a;
+    const pcmk_node_t *node2 = (const pcmk_node_t *) b;
 
     if ((node1 == NULL) && (node2 == NULL)) {
         return 0;
@@ -173,8 +174,8 @@ pe__cmp_node_name(gconstpointer a, gconstpointer b)
  * \param[in,out] data_set  Cluster working set
  */
 static void
-pe__output_node_weights(const pe_resource_t *rsc, const char *comment,
-                        GHashTable *nodes, pe_working_set_t *data_set)
+pe__output_node_weights(const pcmk_resource_t *rsc, const char *comment,
+                        GHashTable *nodes, pcmk_scheduler_t *data_set)
 {
     pcmk__output_t *out = data_set->priv;
 
@@ -183,7 +184,7 @@ pe__output_node_weights(const pe_resource_t *rsc, const char *comment,
                               pe__cmp_node_name);
 
     for (const GList *gIter = list; gIter != NULL; gIter = gIter->next) {
-        const pe_node_t *node = (const pe_node_t *) gIter->data;
+        const pcmk_node_t *node = (const pcmk_node_t *) gIter->data;
 
         out->message(out, "node-weight", rsc, comment, node->details->uname,
                      pcmk_readable_score(node->weight));
@@ -204,11 +205,11 @@ pe__output_node_weights(const pe_resource_t *rsc, const char *comment,
  */
 static void
 pe__log_node_weights(const char *file, const char *function, int line,
-                     const pe_resource_t *rsc, const char *comment,
+                     const pcmk_resource_t *rsc, const char *comment,
                      GHashTable *nodes)
 {
     GHashTableIter iter;
-    pe_node_t *node = NULL;
+    pcmk_node_t *node = NULL;
 
     // Don't waste time if we're not tracing at this point
     pcmk__if_tracing({}, return);
@@ -247,9 +248,9 @@ pe__log_node_weights(const char *file, const char *function, int line,
  */
 void
 pe__show_node_scores_as(const char *file, const char *function, int line,
-                        bool to_log, const pe_resource_t *rsc,
+                        bool to_log, const pcmk_resource_t *rsc,
                         const char *comment, GHashTable *nodes,
-                        pe_working_set_t *data_set)
+                        pcmk_scheduler_t *data_set)
 {
     if ((rsc != NULL) && pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
         // Don't show allocation scores for orphans
@@ -269,7 +270,7 @@ pe__show_node_scores_as(const char *file, const char *function, int line,
     // If this resource has children, repeat recursively for each
     if (rsc && rsc->children) {
         for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child = (pe_resource_t *) gIter->data;
+            pcmk_resource_t *child = (pcmk_resource_t *) gIter->data;
 
             pe__show_node_scores_as(file, function, line, to_log, child,
                                     comment, child->allowed_nodes, data_set);
@@ -294,8 +295,8 @@ pe__show_node_scores_as(const char *file, const char *function, int line,
 gint
 pe__cmp_rsc_priority(gconstpointer a, gconstpointer b)
 {
-    const pe_resource_t *resource1 = (const pe_resource_t *)a;
-    const pe_resource_t *resource2 = (const pe_resource_t *)b;
+    const pcmk_resource_t *resource1 = (const pcmk_resource_t *)a;
+    const pcmk_resource_t *resource2 = (const pcmk_resource_t *)b;
 
     if (a == NULL && b == NULL) {
         return 0;
@@ -319,10 +320,10 @@ pe__cmp_rsc_priority(gconstpointer a, gconstpointer b)
 }
 
 static void
-resource_node_score(pe_resource_t *rsc, const pe_node_t *node, int score,
+resource_node_score(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
                     const char *tag)
 {
-    pe_node_t *match = NULL;
+    pcmk_node_t *match = NULL;
 
     if ((rsc->exclusive_discover
          || (node->rsc_discover_mode == pcmk_probe_never))
@@ -337,7 +338,7 @@ resource_node_score(pe_resource_t *rsc, const pe_node_t *node, int score,
         GList *gIter = rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+            pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
 
             resource_node_score(child_rsc, node, score, tag);
         }
@@ -356,8 +357,8 @@ resource_node_score(pe_resource_t *rsc, const pe_node_t *node, int score,
 }
 
 void
-resource_location(pe_resource_t *rsc, const pe_node_t *node, int score,
-                  const char *tag, pe_working_set_t *data_set)
+resource_location(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
+                  const char *tag, pcmk_scheduler_t *data_set)
 {
     if (node != NULL) {
         resource_node_score(rsc, node, score, tag);
@@ -366,14 +367,14 @@ resource_location(pe_resource_t *rsc, const pe_node_t *node, int score,
         GList *gIter = data_set->nodes;
 
         for (; gIter != NULL; gIter = gIter->next) {
-            pe_node_t *node_iter = (pe_node_t *) gIter->data;
+            pcmk_node_t *node_iter = (pcmk_node_t *) gIter->data;
 
             resource_node_score(rsc, node_iter, score, tag);
         }
 
     } else {
         GHashTableIter iter;
-        pe_node_t *node_iter = NULL;
+        pcmk_node_t *node_iter = NULL;
 
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **)&node_iter)) {
@@ -392,7 +393,7 @@ resource_location(pe_resource_t *rsc, const pe_node_t *node, int score,
 }
 
 time_t
-get_effective_time(pe_working_set_t * data_set)
+get_effective_time(pcmk_scheduler_t *data_set)
 {
     if(data_set) {
         if (data_set->now == NULL) {
@@ -407,7 +408,7 @@ get_effective_time(pe_working_set_t * data_set)
 }
 
 gboolean
-get_target_role(const pe_resource_t *rsc, enum rsc_role_e *role)
+get_target_role(const pcmk_resource_t *rsc, enum rsc_role_e *role)
 {
     enum rsc_role_e local_role = pcmk_role_unknown;
     const char *value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
@@ -446,7 +447,8 @@ get_target_role(const pe_resource_t *rsc, enum rsc_role_e *role)
 }
 
 gboolean
-order_actions(pe_action_t *lh_action, pe_action_t *rh_action, uint32_t flags)
+order_actions(pcmk_action_t *lh_action, pcmk_action_t *rh_action,
+              uint32_t flags)
 {
     GList *gIter = NULL;
     pe_action_wrapper_t *wrapper = NULL;
@@ -505,7 +507,7 @@ destroy_ticket(gpointer data)
 }
 
 pe_ticket_t *
-ticket_new(const char *ticket_id, pe_working_set_t * data_set)
+ticket_new(const char *ticket_id, pcmk_scheduler_t *data_set)
 {
     pe_ticket_t *ticket = NULL;
 
@@ -541,41 +543,43 @@ ticket_new(const char *ticket_id, pe_working_set_t * data_set)
 }
 
 const char *
-rsc_printable_id(const pe_resource_t *rsc)
+rsc_printable_id(const pcmk_resource_t *rsc)
 {
     return pcmk_is_set(rsc->flags, pcmk_rsc_unique)? rsc->id : ID(rsc->xml);
 }
 
 void
-pe__clear_resource_flags_recursive(pe_resource_t *rsc, uint64_t flags)
+pe__clear_resource_flags_recursive(pcmk_resource_t *rsc, uint64_t flags)
 {
     pe__clear_resource_flags(rsc, flags);
     for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-        pe__clear_resource_flags_recursive((pe_resource_t *) gIter->data, flags);
+        pe__clear_resource_flags_recursive((pcmk_resource_t *) gIter->data,
+                                           flags);
     }
 }
 
 void
-pe__clear_resource_flags_on_all(pe_working_set_t *data_set, uint64_t flag)
+pe__clear_resource_flags_on_all(pcmk_scheduler_t *data_set, uint64_t flag)
 {
     for (GList *lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
-        pe_resource_t *r = (pe_resource_t *) lpc->data;
+        pcmk_resource_t *r = (pcmk_resource_t *) lpc->data;
         pe__clear_resource_flags_recursive(r, flag);
     }
 }
 
 void
-pe__set_resource_flags_recursive(pe_resource_t *rsc, uint64_t flags)
+pe__set_resource_flags_recursive(pcmk_resource_t *rsc, uint64_t flags)
 {
     pe__set_resource_flags(rsc, flags);
     for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-        pe__set_resource_flags_recursive((pe_resource_t *) gIter->data, flags);
+        pe__set_resource_flags_recursive((pcmk_resource_t *) gIter->data,
+                                         flags);
     }
 }
 
 void
-trigger_unfencing(pe_resource_t *rsc, pe_node_t *node, const char *reason,
-                  pe_action_t *dependency, pe_working_set_t *data_set)
+trigger_unfencing(pcmk_resource_t *rsc, pcmk_node_t *node, const char *reason,
+                  pcmk_action_t *dependency, pcmk_scheduler_t *data_set)
 {
     if (!pcmk_is_set(data_set->flags, pcmk_sched_enable_unfencing)) {
         /* No resources require it */
@@ -590,8 +594,8 @@ trigger_unfencing(pe_resource_t *rsc, pe_node_t *node, const char *reason,
               && node->details->online
               && node->details->unclean == FALSE
               && node->details->shutdown == FALSE) {
-        pe_action_t *unfence = pe_fence_op(node, PCMK_ACTION_ON, FALSE, reason,
-                                           FALSE, data_set);
+        pcmk_action_t *unfence = pe_fence_op(node, PCMK_ACTION_ON, FALSE,
+                                             reason, FALSE, data_set);
 
         if(dependency) {
             order_actions(unfence, dependency, pcmk__ar_ordered);
@@ -659,7 +663,7 @@ add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref)
  *       shutdown of remote nodes by virtue of their connection stopping.
  */
 bool
-pe__shutdown_requested(const pe_node_t *node)
+pe__shutdown_requested(const pcmk_node_t *node)
 {
     const char *shutdown = pe_node_attribute_raw(node, XML_CIB_ATTR_SHUTDOWN);
 
@@ -674,7 +678,7 @@ pe__shutdown_requested(const pe_node_t *node)
  * \param[in,out] data_set  Current working set
  */
 void
-pe__update_recheck_time(time_t recheck, pe_working_set_t *data_set)
+pe__update_recheck_time(time_t recheck, pcmk_scheduler_t *data_set)
 {
     if ((recheck > get_effective_time(data_set))
         && ((data_set->recheck_by == 0)
@@ -699,7 +703,7 @@ void
 pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
                            const pe_rule_eval_data_t *rule_data,
                            GHashTable *hash, const char *always_first,
-                           gboolean overwrite, pe_working_set_t *data_set)
+                           gboolean overwrite, pcmk_scheduler_t *data_set)
 {
     crm_time_t *next_change = crm_time_new_undefined();
 
@@ -714,7 +718,7 @@ pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
 }
 
 bool
-pe__resource_is_disabled(const pe_resource_t *rsc)
+pe__resource_is_disabled(const pcmk_resource_t *rsc)
 {
     const char *target_role = NULL;
 
@@ -743,17 +747,17 @@ pe__resource_is_disabled(const pe_resource_t *rsc)
  * \return true if \p rsc is running only on \p node, otherwise false
  */
 bool
-pe__rsc_running_on_only(const pe_resource_t *rsc, const pe_node_t *node)
+pe__rsc_running_on_only(const pcmk_resource_t *rsc, const pcmk_node_t *node)
 {
     return (rsc != NULL) && pcmk__list_of_1(rsc->running_on)
-            && pe__same_node((const pe_node_t *) rsc->running_on->data, node);
+            && pe__same_node((const pcmk_node_t *) rsc->running_on->data, node);
 }
 
 bool
-pe__rsc_running_on_any(pe_resource_t *rsc, GList *node_list)
+pe__rsc_running_on_any(pcmk_resource_t *rsc, GList *node_list)
 {
     for (GList *ele = rsc->running_on; ele; ele = ele->next) {
-        pe_node_t *node = (pe_node_t *) ele->data;
+        pcmk_node_t *node = (pcmk_node_t *) ele->data;
         if (pcmk__str_in_list(node->details->uname, node_list,
                               pcmk__str_star_matches|pcmk__str_casei)) {
             return true;
@@ -764,7 +768,7 @@ pe__rsc_running_on_any(pe_resource_t *rsc, GList *node_list)
 }
 
 bool
-pcmk__rsc_filtered_by_node(pe_resource_t *rsc, GList *only_node)
+pcmk__rsc_filtered_by_node(pcmk_resource_t *rsc, GList *only_node)
 {
     return (rsc->fns->active(rsc, FALSE) && !pe__rsc_running_on_any(rsc, only_node));
 }
@@ -775,7 +779,7 @@ pe__filter_rsc_list(GList *rscs, GList *filter)
     GList *retval = NULL;
 
     for (GList *gIter = rscs; gIter; gIter = gIter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
+        pcmk_resource_t *rsc = (pcmk_resource_t *) gIter->data;
 
         /* I think the second condition is safe here for all callers of this
          * function.  If not, it needs to move into pe__node_text.
@@ -790,7 +794,8 @@ pe__filter_rsc_list(GList *rscs, GList *filter)
 }
 
 GList *
-pe__build_node_name_list(pe_working_set_t *data_set, const char *s) {
+pe__build_node_name_list(pcmk_scheduler_t *data_set, const char *s)
+{
     GList *nodes = NULL;
 
     if (pcmk__str_eq(s, "*", pcmk__str_null_matches)) {
@@ -800,7 +805,7 @@ pe__build_node_name_list(pe_working_set_t *data_set, const char *s) {
          */
         nodes = g_list_prepend(nodes, strdup("*"));
     } else {
-        pe_node_t *node = pe_find_node(data_set->nodes, s);
+        pcmk_node_t *node = pe_find_node(data_set->nodes, s);
 
         if (node) {
             /* The given string was a valid uname for a node.  Return a
@@ -822,15 +827,16 @@ pe__build_node_name_list(pe_working_set_t *data_set, const char *s) {
 }
 
 GList *
-pe__build_rsc_list(pe_working_set_t *data_set, const char *s) {
+pe__build_rsc_list(pcmk_scheduler_t *data_set, const char *s)
+{
     GList *resources = NULL;
 
     if (pcmk__str_eq(s, "*", pcmk__str_null_matches)) {
         resources = g_list_prepend(resources, strdup("*"));
     } else {
         const uint32_t flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
-        pe_resource_t *rsc = pe_find_resource_with_flags(data_set->resources, s,
-                                                         flags);
+        pcmk_resource_t *rsc = pe_find_resource_with_flags(data_set->resources,
+                                                           s, flags);
 
         if (rsc) {
             /* A colon in the name we were given means we're being asked to filter
@@ -856,9 +862,9 @@ pe__build_rsc_list(pe_working_set_t *data_set, const char *s) {
 }
 
 xmlNode *
-pe__failed_probe_for_rsc(const pe_resource_t *rsc, const char *name)
+pe__failed_probe_for_rsc(const pcmk_resource_t *rsc, const char *name)
 {
-    const pe_resource_t *parent = pe__const_top_resource(rsc, false);
+    const pcmk_resource_t *parent = pe__const_top_resource(rsc, false);
     const char *rsc_id = rsc->id;
 
     if (parent->variant == pcmk_rsc_variant_clone) {

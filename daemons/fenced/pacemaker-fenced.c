@@ -56,7 +56,7 @@ static gboolean stonith_shutdown_flag = FALSE;
 
 static qb_ipcs_service_t *ipcs = NULL;
 static xmlNode *local_cib = NULL;
-static pe_working_set_t *fenced_data_set = NULL;
+static pcmk_scheduler_t *fenced_data_set = NULL;
 static const unsigned long long data_set_flags = pcmk_sched_location_only
                                                  |pcmk_sched_no_compat
                                                  |pcmk_sched_no_counts;
@@ -604,11 +604,11 @@ fencing_topology_init(void)
  *
  * \return Pointer to node object if found, NULL otherwise
  */
-static pe_node_t *
-our_node_allowed_for(const pe_resource_t *rsc)
+static pcmk_node_t *
+our_node_allowed_for(const pcmk_resource_t *rsc)
 {
     GHashTableIter iter;
-    pe_node_t *node = NULL;
+    pcmk_node_t *node = NULL;
 
     if (rsc && stonith_our_uname) {
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
@@ -692,12 +692,12 @@ update_stonith_watchdog_timeout_ms(xmlNode *cib)
  * \param[in,out] data_set  Cluster working set with device information
  */
 static void
-cib_device_update(pe_resource_t *rsc, pe_working_set_t *data_set)
+cib_device_update(pcmk_resource_t *rsc, pcmk_scheduler_t *data_set)
 {
-    pe_node_t *node = NULL;
+    pcmk_node_t *node = NULL;
     const char *value = NULL;
     const char *rclass = NULL;
-    pe_node_t *parent = NULL;
+    pcmk_node_t *parent = NULL;
 
     /* If this is a complex resource, check children rather than this resource itself. */
     if(rsc->children) {

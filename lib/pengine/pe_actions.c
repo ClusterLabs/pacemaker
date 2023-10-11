@@ -19,11 +19,12 @@
 #include <crm/common/xml_internal.h>
 #include "pe_status_private.h"
 
-static void unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
-                             const pe_resource_t *container, guint interval_ms);
+static void unpack_operation(pcmk_action_t *action, const xmlNode *xml_obj,
+                             const pcmk_resource_t *container,
+                             guint interval_ms);
 
 static void
-add_singleton(pe_working_set_t *data_set, pe_action_t *action)
+add_singleton(pcmk_scheduler_t *data_set, pcmk_action_t *action)
 {
     if (data_set->singletons == NULL) {
         data_set->singletons = pcmk__strkey_table(NULL, NULL);
@@ -31,8 +32,8 @@ add_singleton(pe_working_set_t *data_set, pe_action_t *action)
     g_hash_table_insert(data_set->singletons, action->uuid, action);
 }
 
-static pe_action_t *
-lookup_singleton(pe_working_set_t *data_set, const char *action_uuid)
+static pcmk_action_t *
+lookup_singleton(pcmk_scheduler_t *data_set, const char *action_uuid)
 {
     if (data_set->singletons == NULL) {
         return NULL;
@@ -51,12 +52,12 @@ lookup_singleton(pe_working_set_t *data_set, const char *action_uuid)
  *
  * \return Existing action that matches arguments (or NULL if none)
  */
-static pe_action_t *
-find_existing_action(const char *key, const pe_resource_t *rsc,
-                     const pe_node_t *node, const pe_working_set_t *data_set)
+static pcmk_action_t *
+find_existing_action(const char *key, const pcmk_resource_t *rsc,
+                     const pcmk_node_t *node, const pcmk_scheduler_t *data_set)
 {
     GList *matches = NULL;
-    pe_action_t *action = NULL;
+    pcmk_action_t *action = NULL;
 
     /* When rsc is NULL, it would be quicker to check data_set->singletons,
      * but checking all data_set->actions takes the node into account.
@@ -74,7 +75,7 @@ find_existing_action(const char *key, const pe_resource_t *rsc,
 }
 
 static xmlNode *
-find_rsc_op_entry_helper(const pe_resource_t *rsc, const char *key,
+find_rsc_op_entry_helper(const pcmk_resource_t *rsc, const char *key,
                          gboolean include_disabled)
 {
     guint interval_ms = 0;
@@ -144,7 +145,7 @@ find_rsc_op_entry_helper(const pe_resource_t *rsc, const char *key,
 }
 
 xmlNode *
-find_rsc_op_entry(const pe_resource_t *rsc, const char *key)
+find_rsc_op_entry(const pcmk_resource_t *rsc, const char *key)
 {
     return find_rsc_op_entry_helper(rsc, key, FALSE);
 }
@@ -165,12 +166,12 @@ find_rsc_op_entry(const pe_resource_t *rsc, const char *key)
  * \note This function takes ownership of \p key. It is the caller's
  *       responsibility to free the return value with pe_free_action().
  */
-static pe_action_t *
-new_action(char *key, const char *task, pe_resource_t *rsc,
-           const pe_node_t *node, bool optional, bool for_graph,
-           pe_working_set_t *data_set)
+static pcmk_action_t *
+new_action(char *key, const char *task, pcmk_resource_t *rsc,
+           const pcmk_node_t *node, bool optional, bool for_graph,
+           pcmk_scheduler_t *data_set)
 {
-    pe_action_t *action = calloc(1, sizeof(pe_action_t));
+    pcmk_action_t *action = calloc(1, sizeof(pcmk_action_t));
 
     CRM_ASSERT(action != NULL);
 
@@ -231,7 +232,7 @@ new_action(char *key, const char *task, pe_resource_t *rsc,
  * \param[in,out] data_set  Cluster working set
  */
 static void
-unpack_action_node_attributes(pe_action_t *action, pe_working_set_t *data_set)
+unpack_action_node_attributes(pcmk_action_t *action, pcmk_scheduler_t *data_set)
 {
     if (!pcmk_is_set(action->flags, pcmk_action_attrs_evaluated)
         && (action->op_entry != NULL)) {
@@ -260,7 +261,7 @@ unpack_action_node_attributes(pe_action_t *action, pe_working_set_t *data_set)
  * \param[in]     optional  Requested optional status
  */
 static void
-update_action_optional(pe_action_t *action, gboolean optional)
+update_action_optional(pcmk_action_t *action, gboolean optional)
 {
     // Force a non-recurring action to be optional if its resource is unmanaged
     if ((action->rsc != NULL) && (action->node != NULL)
@@ -281,7 +282,7 @@ update_action_optional(pe_action_t *action, gboolean optional)
 }
 
 static enum pe_quorum_policy
-effective_quorum_policy(pe_resource_t *rsc, pe_working_set_t *data_set)
+effective_quorum_policy(pcmk_resource_t *rsc, pcmk_scheduler_t *data_set)
 {
     enum pe_quorum_policy policy = data_set->no_quorum_policy;
 
@@ -317,8 +318,8 @@ effective_quorum_policy(pe_resource_t *rsc, pe_working_set_t *data_set)
  * \note This may also schedule fencing if a stop is unrunnable.
  */
 static void
-update_resource_action_runnable(pe_action_t *action, bool for_graph,
-                                pe_working_set_t *data_set)
+update_resource_action_runnable(pcmk_action_t *action, bool for_graph,
+                                pcmk_scheduler_t *data_set)
 {
     if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
         return;
@@ -407,7 +408,8 @@ update_resource_action_runnable(pe_action_t *action, bool for_graph,
  * \param[in]     action  New action
  */
 static void
-update_resource_flags_for_action(pe_resource_t *rsc, const pe_action_t *action)
+update_resource_flags_for_action(pcmk_resource_t *rsc,
+                                 const pcmk_action_t *action)
 {
     /* @COMPAT pcmk_rsc_starting and pcmk_rsc_stopping are deprecated and unused
      * within Pacemaker, and will eventually be removed
@@ -440,7 +442,7 @@ valid_stop_on_fail(const char *value)
  * \param[in,out] meta           Table of action meta-attributes
  */
 static void
-validate_on_fail(const pe_resource_t *rsc, const char *action_name,
+validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
                  const xmlNode *action_config, GHashTable *meta)
 {
     const char *name = NULL;
@@ -623,7 +625,7 @@ unpack_start_delay(const char *value, GHashTable *meta)
 }
 
 static xmlNode *
-find_min_interval_mon(pe_resource_t * rsc, gboolean include_disabled)
+find_min_interval_mon(pcmk_resource_t * rsc, gboolean include_disabled)
 {
     guint interval_ms = 0;
     guint min_interval_ms = G_MAXUINT;
@@ -679,7 +681,7 @@ find_min_interval_mon(pe_resource_t * rsc, gboolean include_disabled)
  * \return Newly allocated hash table with normalized action meta-attributes
  */
 GHashTable *
-pcmk__unpack_action_meta(pe_resource_t *rsc, const pe_node_t *node,
+pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
                          const char *action_name, guint interval_ms,
                          const xmlNode *action_config)
 {
@@ -842,8 +844,8 @@ pcmk__unpack_action_meta(pe_resource_t *rsc, const pe_node_t *node,
  * \param[in]     interval_ms  How frequently to perform the operation
  */
 static void
-unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
-                 const pe_resource_t *container, guint interval_ms)
+unpack_operation(pcmk_action_t *action, const xmlNode *xml_obj,
+                 const pcmk_resource_t *container, guint interval_ms)
 {
     const char *value = NULL;
 
@@ -1031,12 +1033,12 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
  *       otherwise it is the caller's responsibility to free the return value
  *       with pe_free_action().
  */
-pe_action_t *
-custom_action(pe_resource_t *rsc, char *key, const char *task,
-              const pe_node_t *on_node, gboolean optional, gboolean save_action,
-              pe_working_set_t *data_set)
+pcmk_action_t *
+custom_action(pcmk_resource_t *rsc, char *key, const char *task,
+              const pcmk_node_t *on_node, gboolean optional,
+              gboolean save_action, pcmk_scheduler_t *data_set)
 {
-    pe_action_t *action = NULL;
+    pcmk_action_t *action = NULL;
 
     CRM_ASSERT((key != NULL) && (task != NULL) && (data_set != NULL));
 
@@ -1068,10 +1070,10 @@ custom_action(pe_resource_t *rsc, char *key, const char *task,
     return action;
 }
 
-pe_action_t *
-get_pseudo_op(const char *name, pe_working_set_t * data_set)
+pcmk_action_t *
+get_pseudo_op(const char *name, pcmk_scheduler_t * data_set)
 {
-    pe_action_t *op = lookup_singleton(data_set, name);
+    pcmk_action_t *op = lookup_singleton(data_set, name);
 
     if (op == NULL) {
         op = custom_action(NULL, strdup(name), name, NULL, TRUE, TRUE, data_set);
@@ -1084,7 +1086,7 @@ static GList *
 find_unfencing_devices(GList *candidates, GList *matches) 
 {
     for (GList *gIter = candidates; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *candidate = gIter->data;
+        pcmk_resource_t *candidate = gIter->data;
 
         if (candidate->children != NULL) {
             matches = find_unfencing_devices(candidate->children, matches);
@@ -1106,8 +1108,8 @@ find_unfencing_devices(GList *candidates, GList *matches)
 }
 
 static int
-node_priority_fencing_delay(const pe_node_t *node,
-                            const pe_working_set_t *data_set)
+node_priority_fencing_delay(const pcmk_node_t *node,
+                            const pcmk_scheduler_t *data_set)
 {
     int member_count = 0;
     int online_count = 0;
@@ -1132,7 +1134,7 @@ node_priority_fencing_delay(const pe_node_t *node,
     }
 
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *n =  gIter->data;
+        pcmk_node_t *n = gIter->data;
 
         if (n->details->type != pcmk_node_variant_cluster) {
             continue;
@@ -1173,12 +1175,12 @@ node_priority_fencing_delay(const pe_node_t *node,
     return data_set->priority_fencing_delay;
 }
 
-pe_action_t *
-pe_fence_op(pe_node_t *node, const char *op, bool optional,
-            const char *reason, bool priority_delay, pe_working_set_t *data_set)
+pcmk_action_t *
+pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
+            const char *reason, bool priority_delay, pcmk_scheduler_t *data_set)
 {
     char *op_key = NULL;
-    pe_action_t *stonith_op = NULL;
+    pcmk_action_t *stonith_op = NULL;
 
     if(op == NULL) {
         op = data_set->stonith_action;
@@ -1208,7 +1210,7 @@ pe_fence_op(pe_node_t *node, const char *op, bool optional,
             char *value = NULL;
 
             for (GList *gIter = matches; gIter != NULL; gIter = gIter->next) {
-                pe_resource_t *match = gIter->data;
+                pcmk_resource_t *match = gIter->data;
                 const char *agent = g_hash_table_lookup(match->meta,
                                                         XML_ATTR_TYPE);
                 op_digest_cache_t *data = NULL;
@@ -1288,7 +1290,7 @@ pe_fence_op(pe_node_t *node, const char *op, bool optional,
 }
 
 void
-pe_free_action(pe_action_t * action)
+pe_free_action(pcmk_action_t *action)
 {
     if (action == NULL) {
         return;
@@ -1310,7 +1312,8 @@ pe_free_action(pe_action_t * action)
 }
 
 int
-pe_get_configured_timeout(pe_resource_t *rsc, const char *action, pe_working_set_t *data_set)
+pe_get_configured_timeout(pcmk_resource_t *rsc, const char *action,
+                          pcmk_scheduler_t *data_set)
 {
     xmlNode *child = NULL;
     GHashTable *action_meta = NULL;
@@ -1357,7 +1360,7 @@ pe_get_configured_timeout(pe_resource_t *rsc, const char *action, pe_working_set
 }
 
 enum action_tasks
-get_complex_task(const pe_resource_t *rsc, const char *name)
+get_complex_task(const pcmk_resource_t *rsc, const char *name)
 {
     enum action_tasks task = text2task(name);
 
@@ -1389,14 +1392,14 @@ get_complex_task(const pe_resource_t *rsc, const char *name)
  *
  * \return First action in list that matches criteria, or NULL if none
  */
-pe_action_t *
+pcmk_action_t *
 find_first_action(const GList *input, const char *uuid, const char *task,
-                  const pe_node_t *on_node)
+                  const pcmk_node_t *on_node)
 {
     CRM_CHECK(uuid || task, return NULL);
 
     for (const GList *gIter = input; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
+        pcmk_action_t *action = (pcmk_action_t *) gIter->data;
 
         if (uuid != NULL && !pcmk__str_eq(uuid, action->uuid, pcmk__str_casei)) {
             continue;
@@ -1419,7 +1422,7 @@ find_first_action(const GList *input, const char *uuid, const char *task,
 }
 
 GList *
-find_actions(GList *input, const char *key, const pe_node_t *on_node)
+find_actions(GList *input, const char *key, const pcmk_node_t *on_node)
 {
     GList *gIter = input;
     GList *result = NULL;
@@ -1427,7 +1430,7 @@ find_actions(GList *input, const char *key, const pe_node_t *on_node)
     CRM_CHECK(key != NULL, return NULL);
 
     for (; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
+        pcmk_action_t *action = (pcmk_action_t *) gIter->data;
 
         if (!pcmk__str_eq(key, action->uuid, pcmk__str_casei)) {
             continue;
@@ -1453,7 +1456,7 @@ find_actions(GList *input, const char *key, const pe_node_t *on_node)
 }
 
 GList *
-find_actions_exact(GList *input, const char *key, const pe_node_t *on_node)
+find_actions_exact(GList *input, const char *key, const pcmk_node_t *on_node)
 {
     GList *result = NULL;
 
@@ -1464,7 +1467,7 @@ find_actions_exact(GList *input, const char *key, const pe_node_t *on_node)
     }
 
     for (GList *gIter = input; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
+        pcmk_action_t *action = (pcmk_action_t *) gIter->data;
 
         if ((action->node != NULL)
             && pcmk__str_eq(key, action->uuid, pcmk__str_casei)
@@ -1492,7 +1495,7 @@ find_actions_exact(GList *input, const char *key, const pe_node_t *on_node)
  *       without a node will be assigned to node.
  */
 GList *
-pe__resource_actions(const pe_resource_t *rsc, const pe_node_t *node,
+pe__resource_actions(const pcmk_resource_t *rsc, const pcmk_node_t *node,
                      const char *task, bool require_node)
 {
     GList *result = NULL;
@@ -1518,7 +1521,7 @@ pe__resource_actions(const pe_resource_t *rsc, const pe_node_t *node,
  * \note It is the caller's responsibility to free() the result.
  */
 char *
-pe__action2reason(const pe_action_t *action, enum pe_action_flags flag)
+pe__action2reason(const pcmk_action_t *action, enum pe_action_flags flag)
 {
     const char *change = NULL;
 
@@ -1543,7 +1546,8 @@ pe__action2reason(const pe_action_t *action, enum pe_action_flags flag)
                              action->task);
 }
 
-void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrite) 
+void pe_action_set_reason(pcmk_action_t *action, const char *reason,
+                          bool overwrite)
 {
     if (action->reason != NULL && overwrite) {
         pe_rsc_trace(action->rsc, "Changing %s reason from '%s' to '%s'",
@@ -1567,7 +1571,7 @@ void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrit
  * \param[in]     node      Node to clear history on
  */
 void
-pe__clear_resource_history(pe_resource_t *rsc, const pe_node_t *node)
+pe__clear_resource_history(pcmk_resource_t *rsc, const pcmk_node_t *node)
 {
     CRM_ASSERT((rsc != NULL) && (node != NULL));
 
@@ -1737,11 +1741,11 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
  *
  * \return New action object corresponding to arguments
  */
-pe_action_t *
-pe__new_rsc_pseudo_action(pe_resource_t *rsc, const char *task, bool optional,
+pcmk_action_t *
+pe__new_rsc_pseudo_action(pcmk_resource_t *rsc, const char *task, bool optional,
                           bool runnable)
 {
-    pe_action_t *action = NULL;
+    pcmk_action_t *action = NULL;
 
     CRM_ASSERT((rsc != NULL) && (task != NULL));
 
@@ -1764,7 +1768,7 @@ pe__new_rsc_pseudo_action(pe_resource_t *rsc, const char *task, bool optional,
  * \note This is more efficient than calling add_hash_param().
  */
 void
-pe__add_action_expected_result(pe_action_t *action, int expected_result)
+pe__add_action_expected_result(pcmk_action_t *action, int expected_result)
 {
     char *name = NULL;
 

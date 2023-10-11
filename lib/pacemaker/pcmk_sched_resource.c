@@ -108,7 +108,7 @@ static resource_alloc_functions_t assignment_methods[] = {
  * \return true if agent for \p rsc changed, otherwise false
  */
 bool
-pcmk__rsc_agent_changed(pe_resource_t *rsc, pe_node_t *node,
+pcmk__rsc_agent_changed(pcmk_resource_t *rsc, pcmk_node_t *node,
                         const xmlNode *rsc_entry, bool active_on_node)
 {
     bool changed = false;
@@ -154,14 +154,14 @@ pcmk__rsc_agent_changed(pe_resource_t *rsc, pe_node_t *node,
  * \return (Possibly new) head of list
  */
 static GList *
-add_rsc_if_matching(GList *result, pe_resource_t *rsc, const char *id)
+add_rsc_if_matching(GList *result, pcmk_resource_t *rsc, const char *id)
 {
     if ((strcmp(rsc->id, id) == 0)
         || ((rsc->clone_name != NULL) && (strcmp(rsc->clone_name, id) == 0))) {
         result = g_list_prepend(result, rsc);
     }
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-        pe_resource_t *child = (pe_resource_t *) iter->data;
+        pcmk_resource_t *child = (pcmk_resource_t *) iter->data;
 
         result = add_rsc_if_matching(result, child, id);
     }
@@ -180,13 +180,14 @@ add_rsc_if_matching(GList *result, pe_resource_t *rsc, const char *id)
  *       g_list_free().
  */
 GList *
-pcmk__rscs_matching_id(const char *id, const pe_working_set_t *data_set)
+pcmk__rscs_matching_id(const char *id, const pcmk_scheduler_t *data_set)
 {
     GList *result = NULL;
 
     CRM_CHECK((id != NULL) && (data_set != NULL), return NULL);
     for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
-        result = add_rsc_if_matching(result, (pe_resource_t *) iter->data, id);
+        result = add_rsc_if_matching(result, (pcmk_resource_t *) iter->data,
+                                     id);
     }
     return result;
 }
@@ -201,7 +202,7 @@ pcmk__rscs_matching_id(const char *id, const pe_working_set_t *data_set)
 static void
 set_assignment_methods_for_rsc(gpointer data, gpointer user_data)
 {
-    pe_resource_t *rsc = data;
+    pcmk_resource_t *rsc = data;
 
     rsc->cmds = &assignment_methods[rsc->variant];
     g_list_foreach(rsc->children, set_assignment_methods_for_rsc, NULL);
@@ -214,7 +215,7 @@ set_assignment_methods_for_rsc(gpointer data, gpointer user_data)
  * \param[in,out] data_set  Cluster working set
  */
 void
-pcmk__set_assignment_methods(pe_working_set_t *data_set)
+pcmk__set_assignment_methods(pcmk_scheduler_t *data_set)
 {
     g_list_foreach(data_set->resources, set_assignment_methods_for_rsc, NULL);
 }
@@ -230,16 +231,17 @@ pcmk__set_assignment_methods(pe_working_set_t *data_set)
  * \return (Possibly new) head of list
  */
 static inline void
-add_colocated_resources(const pe_resource_t *rsc, const pe_resource_t *orig_rsc,
-                        GList **list)
+add_colocated_resources(const pcmk_resource_t *rsc,
+                        const pcmk_resource_t *orig_rsc, GList **list)
 {
     *list = rsc->cmds->colocated_resources(rsc, orig_rsc, *list);
 }
 
 // Shared implementation of resource_alloc_functions_t:colocated_resources()
 GList *
-pcmk__colocated_resources(const pe_resource_t *rsc,
-                          const pe_resource_t *orig_rsc, GList *colocated_rscs)
+pcmk__colocated_resources(const pcmk_resource_t *rsc,
+                          const pcmk_resource_t *orig_rsc,
+                          GList *colocated_rscs)
 {
     const GList *iter = NULL;
     GList *colocations = NULL;
@@ -260,7 +262,7 @@ pcmk__colocated_resources(const pe_resource_t *rsc,
     colocations = pcmk__this_with_colocations(rsc);
     for (iter = colocations; iter != NULL; iter = iter->next) {
         const pcmk__colocation_t *constraint = iter->data;
-        const pe_resource_t *primary = constraint->primary;
+        const pcmk_resource_t *primary = constraint->primary;
 
         if (primary == orig_rsc) {
             continue; // Break colocation loop
@@ -278,7 +280,7 @@ pcmk__colocated_resources(const pe_resource_t *rsc,
     colocations = pcmk__with_this_colocations(rsc);
     for (iter = colocations; iter != NULL; iter = iter->next) {
         const pcmk__colocation_t *constraint = iter->data;
-        const pe_resource_t *dependent = constraint->dependent;
+        const pcmk_resource_t *dependent = constraint->dependent;
 
         if (dependent == orig_rsc) {
             continue; // Break colocation loop
@@ -301,7 +303,7 @@ pcmk__colocated_resources(const pe_resource_t *rsc,
 
 // No-op function for variants that don't need to implement add_graph_meta()
 void
-pcmk__noop_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml)
+pcmk__noop_add_graph_meta(const pcmk_resource_t *rsc, xmlNode *xml)
 {
 }
 
@@ -312,10 +314,10 @@ pcmk__noop_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml)
  * \param[in,out] rsc  Resource to output actions for
  */
 void
-pcmk__output_resource_actions(pe_resource_t *rsc)
+pcmk__output_resource_actions(pcmk_resource_t *rsc)
 {
-    pe_node_t *next = NULL;
-    pe_node_t *current = NULL;
+    pcmk_node_t *next = NULL;
+    pcmk_node_t *current = NULL;
     pcmk__output_t *out = NULL;
 
     CRM_ASSERT(rsc != NULL);
@@ -323,7 +325,7 @@ pcmk__output_resource_actions(pe_resource_t *rsc)
     out = rsc->cluster->priv;
     if (rsc->children != NULL) {
         for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-            pe_resource_t *child = (pe_resource_t *) iter->data;
+            pcmk_resource_t *child = (pcmk_resource_t *) iter->data;
 
             child->cmds->output_actions(child);
         }
@@ -357,7 +359,7 @@ pcmk__output_resource_actions(pe_resource_t *rsc)
  * \param[in]     rsc   Resource to add
  */
 static inline void
-add_assigned_resource(pe_node_t *node, pe_resource_t *rsc)
+add_assigned_resource(pcmk_node_t *node, pcmk_resource_t *rsc)
 {
     node->details->allocated_rsc = g_list_prepend(node->details->allocated_rsc,
                                                   rsc);
@@ -399,7 +401,7 @@ add_assigned_resource(pe_node_t *node, pe_resource_t *rsc)
  *       roles or actions.
  */
 bool
-pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force,
+pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
                       bool stop_if_fail)
 {
     bool changed = false;
@@ -408,7 +410,7 @@ pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force,
 
     if (rsc->children != NULL) {
         for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-            pe_resource_t *child_rsc = iter->data;
+            pcmk_resource_t *child_rsc = iter->data;
 
             changed |= pcmk__assign_resource(child_rsc, node, force,
                                              stop_if_fail);
@@ -456,7 +458,7 @@ pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force,
         pe__set_next_role(rsc, pcmk_role_stopped, "unable to assign");
 
         for (GList *iter = rsc->actions; iter != NULL; iter = iter->next) {
-            pe_action_t *op = (pe_action_t *) iter->data;
+            pcmk_action_t *op = (pcmk_action_t *) iter->data;
 
             pe_rsc_debug(rsc, "Updating %s for %s assignment failure",
                          op->uuid, rsc->id);
@@ -520,9 +522,9 @@ pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force,
  * \note This function is called recursively on \p rsc and its children.
  */
 void
-pcmk__unassign_resource(pe_resource_t *rsc)
+pcmk__unassign_resource(pcmk_resource_t *rsc)
 {
-    pe_node_t *old = rsc->allocated_to;
+    pcmk_node_t *old = rsc->allocated_to;
 
     if (old == NULL) {
         crm_info("Unassigning %s", rsc->id);
@@ -538,7 +540,7 @@ pcmk__unassign_resource(pe_resource_t *rsc)
         }
         rsc->allocated_to = NULL;
 
-        /* We're going to free the pe_node_t, but its details member is shared
+        /* We're going to free the pcmk_node_t, but its details member is shared
          * and will remain, so update that appropriately first.
          */
         old->details->allocated_rsc = g_list_remove(old->details->allocated_rsc,
@@ -550,7 +552,7 @@ pcmk__unassign_resource(pe_resource_t *rsc)
     }
 
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-        pcmk__unassign_resource((pe_resource_t *) iter->data);
+        pcmk__unassign_resource((pcmk_resource_t *) iter->data);
     }
 }
 
@@ -566,11 +568,11 @@ pcmk__unassign_resource(pe_resource_t *rsc)
  * \return true if the migration threshold has been reached, false otherwise
  */
 bool
-pcmk__threshold_reached(pe_resource_t *rsc, const pe_node_t *node,
-                        pe_resource_t **failed)
+pcmk__threshold_reached(pcmk_resource_t *rsc, const pcmk_node_t *node,
+                        pcmk_resource_t **failed)
 {
     int fail_count, remaining_tries;
-    pe_resource_t *rsc_to_ban = rsc;
+    pcmk_resource_t *rsc_to_ban = rsc;
 
     // Migration threshold of 0 means never force away
     if (rsc->migration_threshold == 0) {
@@ -626,9 +628,9 @@ pcmk__threshold_reached(pe_resource_t *rsc, const pe_node_t *node,
  * \return Node's score, or -INFINITY if not found
  */
 static int
-get_node_score(const pe_node_t *node, GHashTable *nodes)
+get_node_score(const pcmk_node_t *node, GHashTable *nodes)
 {
-    pe_node_t *found_node = NULL;
+    pcmk_node_t *found_node = NULL;
 
     if ((node != NULL) && (nodes != NULL)) {
         found_node = g_hash_table_lookup(nodes, node->details->id);
@@ -654,15 +656,15 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
      * make a small, temporary change to each argument (setting the
      * pe_rsc_merging flag) during comparison
      */
-    pe_resource_t *resource1 = (pe_resource_t *) a;
-    pe_resource_t *resource2 = (pe_resource_t *) b;
+    pcmk_resource_t *resource1 = (pcmk_resource_t *) a;
+    pcmk_resource_t *resource2 = (pcmk_resource_t *) b;
     const GList *nodes = data;
 
     int rc = 0;
     int r1_score = -INFINITY;
     int r2_score = -INFINITY;
-    pe_node_t *r1_node = NULL;
-    pe_node_t *r2_node = NULL;
+    pcmk_node_t *r1_node = NULL;
+    pcmk_node_t *r2_node = NULL;
     GHashTable *r1_nodes = NULL;
     GHashTable *r2_nodes = NULL;
     const char *reason = NULL;
@@ -720,7 +722,7 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
     // Otherwise a higher score on any node will do
     reason = "score";
     for (const GList *iter = nodes; iter != NULL; iter = iter->next) {
-        const pe_node_t *node = (const pe_node_t *) iter->data;
+        const pcmk_node_t *node = (const pcmk_node_t *) iter->data;
 
         r1_score = get_node_score(node, r1_nodes);
         r2_score = get_node_score(node, r2_nodes);
@@ -760,7 +762,7 @@ done:
  * \param[in,out] data_set  Cluster working set
  */
 void
-pcmk__sort_resources(pe_working_set_t *data_set)
+pcmk__sort_resources(pcmk_scheduler_t *data_set)
 {
     GList *nodes = g_list_copy(data_set->nodes);
 

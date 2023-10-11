@@ -20,7 +20,7 @@
  * \param[in,out] data_set  Cluster working set
  */
 void
-pe__unpack_node_health_scores(pe_working_set_t *data_set)
+pe__unpack_node_health_scores(pcmk_scheduler_t *data_set)
 {
     switch (pe__health_strategy(data_set)) {
         case pcmk__health_strategy_none:
@@ -93,7 +93,7 @@ add_node_health_value(gpointer key, gpointer value, gpointer user_data)
  * \return Sum of all health attribute scores of \p node plus \p base_health
  */
 int
-pe__sum_node_health_scores(const pe_node_t *node, int base_health)
+pe__sum_node_health_scores(const pcmk_node_t *node, int base_health)
 {
     CRM_ASSERT(node != NULL);
     g_hash_table_foreach(node->details->attrs, add_node_health_value,
@@ -111,7 +111,7 @@ pe__sum_node_health_scores(const pe_node_t *node, int base_health)
  *          otherwise 0 if any attribute is yellow, otherwise a positive value.
  */
 int
-pe__node_health(pe_node_t *node)
+pe__node_health(pcmk_node_t *node)
 {
     GHashTableIter iter;
     const char *name = NULL;

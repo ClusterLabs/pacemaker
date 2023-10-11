@@ -16,8 +16,8 @@
 #include "pe_status_private.h"
 
 typedef struct notify_entry_s {
-    const pe_resource_t *rsc;
-    const pe_node_t *node;
+    const pcmk_resource_t *rsc;
+    const pcmk_node_t *node;
 } notify_entry_t;
 
 /*!
@@ -107,7 +107,7 @@ dup_notify_entry(const notify_entry_t *entry)
  * \internal
  * \brief Given a list of nodes, create strings with node names
  *
- * \param[in]  list             List of nodes (as pe_node_t *)
+ * \param[in]  list             List of nodes (as pcmk_node_t *)
  * \param[out] all_node_names   If not NULL, will be set to space-separated list
  *                              of the names of all nodes in \p list
  * \param[out] host_node_names  Same as \p all_node_names, except active
@@ -128,7 +128,7 @@ get_node_names(const GList *list, GString **all_node_names,
     }
 
     for (const GList *iter = list; iter != NULL; iter = iter->next) {
-        const pe_node_t *node = (const pe_node_t *) iter->data;
+        const pcmk_node_t *node = (const pcmk_node_t *) iter->data;
 
         if (node->details->uname == NULL) {
             continue;
@@ -244,7 +244,7 @@ notify_entries_to_strings(GList *list, GString **rsc_names,
 static void
 copy_meta_to_notify(gpointer key, gpointer value, gpointer user_data)
 {
-    pe_action_t *notify = (pe_action_t *) user_data;
+    pcmk_action_t *notify = (pcmk_action_t *) user_data;
 
     /* Any existing meta-attributes (for example, the action timeout) are for
      * the notify action itself, so don't override those.
@@ -258,7 +258,8 @@ copy_meta_to_notify(gpointer key, gpointer value, gpointer user_data)
 }
 
 static void
-add_notify_data_to_action_meta(const notify_data_t *n_data, pe_action_t *action)
+add_notify_data_to_action_meta(const notify_data_t *n_data,
+                               pcmk_action_t *action)
 {
     for (const GSList *item = n_data->keys; item; item = item->next) {
         const pcmk_nvpair_t *nvpair = (const pcmk_nvpair_t *) item->data;
@@ -278,11 +279,11 @@ add_notify_data_to_action_meta(const notify_data_t *n_data, pe_action_t *action)
  *
  * \return Newly created notify pseudo-action
  */
-static pe_action_t *
-new_notify_pseudo_action(pe_resource_t *rsc, const pe_action_t *action,
+static pcmk_action_t *
+new_notify_pseudo_action(pcmk_resource_t *rsc, const pcmk_action_t *action,
                          const char *notif_action, const char *notif_type)
 {
-    pe_action_t *notify = NULL;
+    pcmk_action_t *notify = NULL;
 
     notify = custom_action(rsc,
                            pcmk__notify_key(rsc->id, notif_type, action->task),
@@ -307,12 +308,13 @@ new_notify_pseudo_action(pe_resource_t *rsc, const pe_action_t *action,
  *
  * \return Newly created notify action
  */
-static pe_action_t *
-new_notify_action(pe_resource_t *rsc, const pe_node_t *node, pe_action_t *op,
-                  pe_action_t *notify_done, const notify_data_t *n_data)
+static pcmk_action_t *
+new_notify_action(pcmk_resource_t *rsc, const pcmk_node_t *node,
+                  pcmk_action_t *op, pcmk_action_t *notify_done,
+                  const notify_data_t *n_data)
 {
     char *key = NULL;
-    pe_action_t *notify_action = NULL;
+    pcmk_action_t *notify_action = NULL;
     const char *value = NULL;
     const char *task = NULL;
     const char *skip_reason = NULL;
@@ -366,10 +368,10 @@ new_notify_action(pe_resource_t *rsc, const pe_node_t *node, pe_action_t *op,
  * \param[in,out] n_data  Notification values to add to action meta-data
  */
 static void
-new_post_notify_action(pe_resource_t *rsc, const pe_node_t *node,
+new_post_notify_action(pcmk_resource_t *rsc, const pcmk_node_t *node,
                        notify_data_t *n_data)
 {
-    pe_action_t *notify = NULL;
+    pcmk_action_t *notify = NULL;
 
     CRM_ASSERT(n_data != NULL);
 
@@ -385,7 +387,7 @@ new_post_notify_action(pe_resource_t *rsc, const pe_node_t *node,
         return;
     }
     for (GList *iter = rsc->actions; iter != NULL; iter = iter->next) {
-        pe_action_t *mon = (pe_action_t *) iter->data;
+        pcmk_action_t *mon = (pcmk_action_t *) iter->data;
         const char *interval_ms_s = NULL;
 
         interval_ms_s = g_hash_table_lookup(mon->meta,
@@ -430,8 +432,8 @@ new_post_notify_action(pe_resource_t *rsc, const pe_node_t *node,
  * \return Newly created notification data
  */
 notify_data_t *
-pe__action_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
-                            pe_action_t *action, pe_action_t *complete)
+pe__action_notif_pseudo_ops(pcmk_resource_t *rsc, const char *task,
+                            pcmk_action_t *action, pcmk_action_t *complete)
 {
     notify_data_t *n_data = NULL;
 
@@ -519,7 +521,7 @@ pe__action_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
  * \note The caller is responsible for freeing the return value.
  */
 static notify_entry_t *
-new_notify_entry(const pe_resource_t *rsc, const pe_node_t *node)
+new_notify_entry(const pcmk_resource_t *rsc, const pcmk_node_t *node)
 {
     notify_entry_t *entry = calloc(1, sizeof(notify_entry_t));
 
@@ -538,12 +540,12 @@ new_notify_entry(const pe_resource_t *rsc, const pe_node_t *node)
  * \param[in,out] n_data    Notification data for clone
  */
 static void
-collect_resource_data(const pe_resource_t *rsc, bool activity,
+collect_resource_data(const pcmk_resource_t *rsc, bool activity,
                       notify_data_t *n_data)
 {
     const GList *iter = NULL;
     notify_entry_t *entry = NULL;
-    const pe_node_t *node = NULL;
+    const pcmk_node_t *node = NULL;
 
     if (n_data == NULL) {
         return;
@@ -556,7 +558,7 @@ collect_resource_data(const pe_resource_t *rsc, bool activity,
     // If this is a clone, call recursively for each instance
     if (rsc->children != NULL) {
         for (iter = rsc->children; iter != NULL; iter = iter->next) {
-            const pe_resource_t *child = (const pe_resource_t *) iter->data;
+            const pcmk_resource_t *child = (const pcmk_resource_t *) iter->data;
 
             collect_resource_data(child, activity, n_data);
         }
@@ -606,7 +608,7 @@ collect_resource_data(const pe_resource_t *rsc, bool activity,
 
     // Add notification entries for each of the resource's actions
     for (iter = rsc->actions; iter != NULL; iter = iter->next) {
-        const pe_action_t *op = (const pe_action_t *) iter->data;
+        const pcmk_action_t *op = (const pcmk_action_t *) iter->data;
 
         if (!pcmk_is_set(op->flags, pcmk_action_optional)
             && (op->node != NULL)) {
@@ -667,7 +669,7 @@ collect_resource_data(const pe_resource_t *rsc, bool activity,
  * \param[in,out] n_data    Notification data
  */
 static void
-add_notif_keys(const pe_resource_t *rsc, notify_data_t *n_data)
+add_notif_keys(const pcmk_resource_t *rsc, notify_data_t *n_data)
 {
     bool required = false; // Whether to make notify actions required
     GString *rsc_list = NULL;
@@ -779,11 +781,11 @@ add_notif_keys(const pe_resource_t *rsc, notify_data_t *n_data)
  *
  * \return If action is behind a remote connection, connection's start
  */
-static pe_action_t *
-find_remote_start(pe_action_t *action)
+static pcmk_action_t *
+find_remote_start(pcmk_action_t *action)
 {
     if ((action != NULL) && (action->node != NULL)) {
-        pe_resource_t *remote_rsc = action->node->details->remote_rsc;
+        pcmk_resource_t *remote_rsc = action->node->details->remote_rsc;
 
         if (remote_rsc != NULL) {
             return find_first_action(remote_rsc->actions, NULL,
@@ -802,11 +804,11 @@ find_remote_start(pe_action_t *action)
  * \param[in,out] n_data  Clone notification data for some action
  */
 static void
-create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
+create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
 {
     GList *iter = NULL;
-    pe_action_t *stop = NULL;
-    pe_action_t *start = NULL;
+    pcmk_action_t *stop = NULL;
+    pcmk_action_t *start = NULL;
     enum action_tasks task = text2task(n_data->action);
 
     // If this is a clone, call recursively for each instance
@@ -817,7 +819,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
 
     // Add notification meta-attributes to original actions
     for (iter = rsc->actions; iter != NULL; iter = iter->next) {
-        pe_action_t *op = (pe_action_t *) iter->data;
+        pcmk_action_t *op = (pcmk_action_t *) iter->data;
 
         if (!pcmk_is_set(op->flags, pcmk_action_optional)
             && (op->node != NULL)) {
@@ -875,7 +877,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
         stop = find_first_action(rsc->actions, NULL, PCMK_ACTION_STOP, NULL);
 
         for (iter = rsc->running_on; iter != NULL; iter = iter->next) {
-            pe_node_t *current_node = (pe_node_t *) iter->data;
+            pcmk_node_t *current_node = (pcmk_node_t *) iter->data;
 
             /* If a stop is a pseudo-action implied by fencing, don't try to
              * notify the node getting fenced.
@@ -903,7 +905,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
 
         start = find_first_action(rsc->actions, NULL, PCMK_ACTION_START, NULL);
         if (start != NULL) {
-            pe_action_t *remote_start = find_remote_start(start);
+            pcmk_action_t *remote_start = find_remote_start(start);
 
             if ((remote_start != NULL)
                 && !pcmk_is_set(remote_start->flags, pcmk_action_runnable)) {
@@ -938,7 +940,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
  * \param[in,out] n_data  Clone notification data for some action
  */
 void
-pe__create_action_notifications(pe_resource_t *rsc, notify_data_t *n_data)
+pe__create_action_notifications(pcmk_resource_t *rsc, notify_data_t *n_data)
 {
     if ((rsc == NULL) || (n_data == NULL)) {
         return;
@@ -987,8 +989,8 @@ pe__free_action_notification_data(notify_data_t *n_data)
  * \param[in,out] stonith_op  Fencing action that implies \p stop
  */
 void
-pe__order_notifs_after_fencing(const pe_action_t *stop, pe_resource_t *rsc,
-                               pe_action_t *stonith_op)
+pe__order_notifs_after_fencing(const pcmk_action_t *stop, pcmk_resource_t *rsc,
+                               pcmk_action_t *stonith_op)
 {
     notify_data_t *n_data;
 

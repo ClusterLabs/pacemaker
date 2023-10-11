@@ -59,7 +59,7 @@ state2text(enum remote_connection_state state)
  */
 
 static inline void
-order_start_then_action(pe_resource_t *first_rsc, pe_action_t *then_action,
+order_start_then_action(pcmk_resource_t *first_rsc, pcmk_action_t *then_action,
                         uint32_t extra)
 {
     if ((first_rsc != NULL) && (then_action != NULL)) {
@@ -73,7 +73,7 @@ order_start_then_action(pe_resource_t *first_rsc, pe_action_t *then_action,
 }
 
 static inline void
-order_action_then_stop(pe_action_t *first_action, pe_resource_t *then_rsc,
+order_action_then_stop(pcmk_action_t *first_action, pcmk_resource_t *then_rsc,
                        uint32_t extra)
 {
     if ((first_action != NULL) && (then_rsc != NULL)) {
@@ -84,10 +84,10 @@ order_action_then_stop(pe_action_t *first_action, pe_resource_t *then_rsc,
 }
 
 static enum remote_connection_state
-get_remote_node_state(const pe_node_t *node)
+get_remote_node_state(const pcmk_node_t *node)
 {
-    const pe_resource_t *remote_rsc = NULL;
-    const pe_node_t *cluster_node = NULL;
+    const pcmk_resource_t *remote_rsc = NULL;
+    const pcmk_node_t *cluster_node = NULL;
 
     CRM_ASSERT(node != NULL);
 
@@ -166,9 +166,9 @@ get_remote_node_state(const pe_node_t *node)
  * \param[in,out] action    An action scheduled on a Pacemaker Remote node
  */
 static void
-apply_remote_ordering(pe_action_t *action)
+apply_remote_ordering(pcmk_action_t *action)
 {
-    pe_resource_t *remote_rsc = NULL;
+    pcmk_resource_t *remote_rsc = NULL;
     enum action_tasks task = text2task(action->task);
     enum remote_connection_state state = get_remote_node_state(action->node);
 
@@ -266,7 +266,7 @@ apply_remote_ordering(pe_action_t *action)
                                         pcmk__ar_first_implies_then);
 
             } else {
-                pe_node_t *cluster_node = pe__current_node(remote_rsc);
+                pcmk_node_t *cluster_node = pe__current_node(remote_rsc);
 
                 if ((task == pcmk_action_monitor) && (state == remote_state_failed)) {
                     /* We would only be here if we do not know the state of the
@@ -295,7 +295,7 @@ apply_remote_ordering(pe_action_t *action)
 }
 
 static void
-apply_container_ordering(pe_action_t *action)
+apply_container_ordering(pcmk_action_t *action)
 {
     /* VMs are also classified as containers for these purposes... in
      * that they both involve a 'thing' running on a real or remote
@@ -304,8 +304,8 @@ apply_container_ordering(pe_action_t *action)
      * This allows us to be smarter about the type and extent of
      * recovery actions required in various scenarios
      */
-    pe_resource_t *remote_rsc = NULL;
-    pe_resource_t *container = NULL;
+    pcmk_resource_t *remote_rsc = NULL;
+    pcmk_resource_t *container = NULL;
     enum action_tasks task = text2task(action->task);
 
     CRM_ASSERT(action->rsc != NULL);
@@ -396,7 +396,7 @@ apply_container_ordering(pe_action_t *action)
  * \param[in,out] data_set  Cluster working set
  */
 void
-pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
+pcmk__order_remote_connection_actions(pcmk_scheduler_t *data_set)
 {
     if (!pcmk_is_set(data_set->flags, pcmk_sched_have_remote_nodes)) {
         return;
@@ -405,8 +405,8 @@ pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
     crm_trace("Creating remote connection orderings");
 
     for (GList *iter = data_set->actions; iter != NULL; iter = iter->next) {
-        pe_action_t *action = iter->data;
-        pe_resource_t *remote = NULL;
+        pcmk_action_t *action = iter->data;
+        pcmk_resource_t *remote = NULL;
 
         // We are only interested in resource actions
         if (action->rsc == NULL) {
@@ -462,7 +462,7 @@ pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
         if (pcmk__str_eq(action->task, PCMK_ACTION_START, pcmk__str_none)) {
             for (GList *item = action->rsc->actions; item != NULL;
                  item = item->next) {
-                pe_action_t *rsc_action = item->data;
+                pcmk_action_t *rsc_action = item->data;
 
                 if (!pe__same_node(rsc_action->node, action->node)
                     && pcmk__str_eq(rsc_action->task, PCMK_ACTION_STOP,
@@ -503,7 +503,7 @@ pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
  * \return true if \p node is a failed remote node, false otherwise
  */
 bool
-pcmk__is_failed_remote_node(const pe_node_t *node)
+pcmk__is_failed_remote_node(const pcmk_node_t *node)
 {
     return pe__is_remote_node(node) && (node->details->remote_rsc != NULL)
            && (get_remote_node_state(node) == remote_state_failed);
@@ -520,7 +520,8 @@ pcmk__is_failed_remote_node(const pe_node_t *node)
  *         resource, otherwise false
  */
 bool
-pcmk__rsc_corresponds_to_guest(const pe_resource_t *rsc, const pe_node_t *node)
+pcmk__rsc_corresponds_to_guest(const pcmk_resource_t *rsc,
+                               const pcmk_node_t *node)
 {
     return (rsc != NULL) && (rsc->fillers != NULL) && (node != NULL)
             && (node->details->remote_rsc != NULL)
@@ -541,11 +542,11 @@ pcmk__rsc_corresponds_to_guest(const pe_resource_t *rsc, const pe_node_t *node)
  * \return Connection host that action should be routed through if remote,
  *         otherwise NULL
  */
-pe_node_t *
-pcmk__connection_host_for_action(const pe_action_t *action)
+pcmk_node_t *
+pcmk__connection_host_for_action(const pcmk_action_t *action)
 {
-    pe_node_t *began_on = NULL;
-    pe_node_t *ended_on = NULL;
+    pcmk_node_t *began_on = NULL;
+    pcmk_node_t *ended_on = NULL;
     bool partial_migration = false;
     const char *task = action->task;
 
@@ -651,7 +652,7 @@ pcmk__connection_host_for_action(const pe_action_t *action)
  * \param[in,out] params  Resource parameters evaluated per node
  */
 void
-pcmk__substitute_remote_addr(pe_resource_t *rsc, GHashTable *params)
+pcmk__substitute_remote_addr(pcmk_resource_t *rsc, GHashTable *params)
 {
     const char *remote_addr = g_hash_table_lookup(params,
                                                   XML_RSC_ATTR_REMOTE_RA_ADDR);
@@ -679,10 +680,10 @@ pcmk__substitute_remote_addr(pe_resource_t *rsc, GHashTable *params)
  * \param[in]     action    Action to check
  */
 void
-pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pe_action_t *action)
+pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
 {
-    const pe_node_t *guest = action->node;
-    const pe_node_t *host = NULL;
+    const pcmk_node_t *guest = action->node;
+    const pcmk_node_t *host = NULL;
     enum action_tasks task;
 
     if (!pe__is_guest_node(guest)) {

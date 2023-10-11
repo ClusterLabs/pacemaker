@@ -59,10 +59,10 @@ eval_date_expression(const xmlNode *expr, crm_time_t *now)
  */
 static int
 init_rule_check(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
-                pe_working_set_t **data_set)
+                pcmk_scheduler_t **data_set)
 {
     // Allows for cleaner syntax than dereferencing the data_set argument
-    pe_working_set_t *new_data_set = NULL;
+    pcmk_scheduler_t *new_data_set = NULL;
 
     new_data_set = pe_new_working_set();
     if (new_data_set == NULL) {
@@ -119,7 +119,7 @@ init_rule_check(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
  * \return Standard Pacemaker return code
  */
 static int
-eval_rule(pe_working_set_t *data_set, const char *rule_id, const char **error)
+eval_rule(pcmk_scheduler_t *data_set, const char *rule_id, const char **error)
 {
     xmlNodePtr cib_constraints = NULL;
     xmlNodePtr match = NULL;
@@ -245,7 +245,7 @@ int
 pcmk__check_rules(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
                   const char **rule_ids)
 {
-    pe_working_set_t *data_set = NULL;
+    pcmk_scheduler_t *data_set = NULL;
     int rc = pcmk_rc_ok;
 
     CRM_ASSERT(out != NULL);

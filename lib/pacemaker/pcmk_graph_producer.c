@@ -61,7 +61,7 @@ add_node_to_xml_by_id(const char *id, xmlNode *xml)
  * \param[in,out] xml   XML to add node to
  */
 static void
-add_node_to_xml(const pe_node_t *node, void *xml)
+add_node_to_xml(const pcmk_node_t *node, void *xml)
 {
     add_node_to_xml_by_id(node->details->id, (xmlNode *) xml);
 }
@@ -77,7 +77,7 @@ add_node_to_xml(const pe_node_t *node, void *xml)
  * \note Only Pacemaker Remote nodes are considered currently
  */
 static int
-add_maintenance_nodes(xmlNode *xml, const pe_working_set_t *data_set)
+add_maintenance_nodes(xmlNode *xml, const pcmk_scheduler_t *data_set)
 {
     xmlNode *maintenance = NULL;
     int count = 0;
@@ -86,7 +86,7 @@ add_maintenance_nodes(xmlNode *xml, const pe_working_set_t *data_set)
         maintenance = create_xml_node(xml, XML_GRAPH_TAG_MAINTENANCE);
     }
     for (const GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
-        const pe_node_t *node = iter->data;
+        const pcmk_node_t *node = iter->data;
 
         if (pe__is_guest_or_remote_node(node) &&
             (node->details->maintenance != node->details->remote_maintenance)) {
@@ -112,9 +112,9 @@ add_maintenance_nodes(xmlNode *xml, const pe_working_set_t *data_set)
  * \param[in,out] data_set  Working set for cluster
  */
 static void
-add_maintenance_update(pe_working_set_t *data_set)
+add_maintenance_update(pcmk_scheduler_t *data_set)
 {
-    pe_action_t *action = NULL;
+    pcmk_action_t *action = NULL;
 
     if (add_maintenance_nodes(NULL, data_set) != 0) {
         action = get_pseudo_op(PCMK_ACTION_MAINTENANCE_NODES, data_set);
@@ -134,7 +134,7 @@ add_maintenance_update(pe_working_set_t *data_set)
  * \param[in]     action    Action to check for downed nodes
  */
 static void
-add_downed_nodes(xmlNode *xml, const pe_action_t *action)
+add_downed_nodes(xmlNode *xml, const pcmk_action_t *action)
 {
     CRM_CHECK((xml != NULL) && (action != NULL) && (action->node != NULL),
               return);
@@ -166,7 +166,7 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action)
          * unless it's part of a migration
          */
         GList *iter;
-        pe_action_t *input;
+        pcmk_action_t *input;
         bool migrating = false;
 
         for (iter = action->actions_before; iter != NULL; iter = iter->next) {
@@ -196,7 +196,7 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action)
  * \return Newly allocated string with transition graph operation key
  */
 static char *
-clone_op_key(const pe_action_t *action, guint interval_ms)
+clone_op_key(const pcmk_action_t *action, guint interval_ms)
 {
     if (pcmk__str_eq(action->task, PCMK_ACTION_NOTIFY, pcmk__str_none)) {
         const char *n_type = g_hash_table_lookup(action->meta, "notify_type");
@@ -222,9 +222,9 @@ clone_op_key(const pe_action_t *action, guint interval_ms)
  * \param[in,out] xml     Transition graph action XML for \p action
  */
 static void
-add_node_details(const pe_action_t *action, xmlNode *xml)
+add_node_details(const pcmk_action_t *action, xmlNode *xml)
 {
-    pe_node_t *router_node = pcmk__connection_host_for_action(action);
+    pcmk_node_t *router_node = pcmk__connection_host_for_action(action);
 
     crm_xml_add(xml, XML_LRM_ATTR_TARGET, action->node->details->uname);
     crm_xml_add(xml, XML_LRM_ATTR_TARGET_UUID, action->node->details->id);
@@ -241,7 +241,7 @@ add_node_details(const pe_action_t *action, xmlNode *xml)
  * \param[in,out] action_xml  Transition graph action XML for \p action
  */
 static void
-add_resource_details(const pe_action_t *action, xmlNode *action_xml)
+add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
 {
     xmlNode *rsc_xml = NULL;
     const char *attr_list[] = {
@@ -324,7 +324,7 @@ add_resource_details(const pe_action_t *action, xmlNode *action_xml)
  * \param[in,out] action_xml  Transition graph action XML for \p action
  */
 static void
-add_action_attributes(pe_action_t *action, xmlNode *action_xml)
+add_action_attributes(pcmk_action_t *action, xmlNode *action_xml)
 {
     xmlNode *args_xml = NULL;
 
@@ -356,7 +356,7 @@ add_action_attributes(pe_action_t *action, xmlNode *action_xml)
 
     g_hash_table_foreach(action->meta, hash2metafield, args_xml);
     if (action->rsc != NULL) {
-        pe_resource_t *parent = action->rsc;
+        pcmk_resource_t *parent = action->rsc;
 
         while (parent != NULL) {
             parent->cmds->add_graph_meta(parent, args_xml);
@@ -391,8 +391,8 @@ add_action_attributes(pe_action_t *action, xmlNode *action_xml)
  * \param[in]     data_set      Cluster working set
  */
 static void
-create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
-                    const pe_working_set_t *data_set)
+create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
+                    const pcmk_scheduler_t *data_set)
 {
     bool needs_node_info = true;
     bool needs_maintenance_info = false;
@@ -496,7 +496,7 @@ create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
  * \return true if action should be added to graph, otherwise false
  */
 static bool
-should_add_action_to_graph(const pe_action_t *action)
+should_add_action_to_graph(const pcmk_action_t *action)
 {
     if (!pcmk_is_set(action->flags, pcmk_action_runnable)) {
         crm_trace("Ignoring action %s (%d): unrunnable",
@@ -608,7 +608,8 @@ ordering_can_change_actions(const pe_action_wrapper_t *ordering)
  *       circumstances (load or anti-colocation orderings that are not needed).
  */
 static bool
-should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
+should_add_input_to_graph(const pcmk_action_t *action,
+                          pe_action_wrapper_t *input)
 {
     if (input->state == pe_link_dumped) {
         return true;
@@ -663,13 +664,13 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
         return false;
 
     } else if ((uint32_t) input->type == pcmk__ar_if_on_same_node_or_target) {
-        pe_node_t *input_node = input->action->node;
+        pcmk_node_t *input_node = input->action->node;
 
         if ((action->rsc != NULL)
             && pcmk__str_eq(action->task, PCMK_ACTION_MIGRATE_TO,
                             pcmk__str_none)) {
 
-            pe_node_t *assigned = action->rsc->allocated_to;
+            pcmk_node_t *assigned = action->rsc->allocated_to;
 
             /* For load_stopped -> migrate_to orderings, we care about where
              * the resource has been assigned, not where migrate_to will be
@@ -770,8 +771,8 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
  * \return true if the ordering creates a loop, otherwise false
  */
 bool
-pcmk__graph_has_loop(const pe_action_t *init_action, const pe_action_t *action,
-                     pe_action_wrapper_t *input)
+pcmk__graph_has_loop(const pcmk_action_t *init_action,
+                     const pcmk_action_t *action, pe_action_wrapper_t *input)
 {
     bool has_loop = false;
 
@@ -846,7 +847,7 @@ pcmk__graph_has_loop(const pe_action_t *init_action, const pe_action_t *action,
  * \return Newly added XML element for new graph synapse
  */
 static xmlNode *
-create_graph_synapse(const pe_action_t *action, pe_working_set_t *data_set)
+create_graph_synapse(const pcmk_action_t *action, pcmk_scheduler_t *data_set)
 {
     int synapse_priority = 0;
     xmlNode *syn = create_xml_node(data_set->graph, "synapse");
@@ -885,8 +886,8 @@ create_graph_synapse(const pe_action_t *action, pe_working_set_t *data_set)
 static void
 add_action_to_graph(gpointer data, gpointer user_data)
 {
-    pe_action_t *action = (pe_action_t *) data;
-    pe_working_set_t *data_set = (pe_working_set_t *) user_data;
+    pcmk_action_t *action = (pcmk_action_t *) data;
+    pcmk_scheduler_t *data_set = (pcmk_scheduler_t *) user_data;
 
     xmlNode *syn = NULL;
     xmlNode *set = NULL;
@@ -972,7 +973,7 @@ pcmk__log_transition_summary(const char *filename)
  * \param[in,out] rsc  Resource whose actions should be added
  */
 void
-pcmk__add_rsc_actions_to_graph(pe_resource_t *rsc)
+pcmk__add_rsc_actions_to_graph(pcmk_resource_t *rsc)
 {
     GList *iter = NULL;
 
@@ -984,7 +985,7 @@ pcmk__add_rsc_actions_to_graph(pe_resource_t *rsc)
 
     // Then recursively add its children's actions (appropriate to variant)
     for (iter = rsc->children; iter != NULL; iter = iter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) iter->data;
+        pcmk_resource_t *child_rsc = (pcmk_resource_t *) iter->data;
 
         child_rsc->cmds->add_actions_to_graph(child_rsc);
     }
@@ -997,7 +998,7 @@ pcmk__add_rsc_actions_to_graph(pe_resource_t *rsc)
  * \param[in,out] data_set  Cluster working set
  */
 void
-pcmk__create_graph(pe_working_set_t *data_set)
+pcmk__create_graph(pcmk_scheduler_t *data_set)
 {
     GList *iter = NULL;
     const char *value = NULL;
@@ -1048,7 +1049,7 @@ pcmk__create_graph(pe_working_set_t *data_set)
 
     // Add resource actions to graph
     for (iter = data_set->resources; iter != NULL; iter = iter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+        pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         pe_rsc_trace(rsc, "Processing actions for %s", rsc->id);
         rsc->cmds->add_actions_to_graph(rsc);
@@ -1059,7 +1060,7 @@ pcmk__create_graph(pe_working_set_t *data_set)
 
     // Add non-resource (node) actions
     for (iter = data_set->actions; iter != NULL; iter = iter->next) {
-        pe_action_t *action = (pe_action_t *) iter->data;
+        pcmk_action_t *action = (pcmk_action_t *) iter->data;
 
         if ((action->rsc != NULL)
             && (action->node != NULL)

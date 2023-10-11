@@ -556,7 +556,7 @@ set_ticket_state_attr(pcmk__output_t *out, const char *ticket_id,
  */
 static void
 inject_action(pcmk__output_t *out, const char *spec, cib_t *cib,
-              const pe_working_set_t *data_set)
+              const pcmk_scheduler_t *data_set)
 {
     int rc;
     int outcome = PCMK_OCF_OK;
@@ -574,7 +574,7 @@ inject_action(pcmk__output_t *out, const char *spec, cib_t *cib,
     xmlNode *cib_op = NULL;
     xmlNode *cib_node = NULL;
     xmlNode *cib_resource = NULL;
-    const pe_resource_t *rsc = NULL;
+    const pcmk_resource_t *rsc = NULL;
     lrmd_event_data_t *op = NULL;
 
     out->message(out, "inject-spec", spec);
@@ -636,7 +636,7 @@ done:
  * \param[in]     injections  Injections to apply
  */
 void
-pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
+pcmk__inject_scheduler_input(pcmk_scheduler_t *data_set, cib_t *cib,
                              const pcmk_injections_t *injections)
 {
     int rc = pcmk_ok;

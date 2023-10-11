@@ -21,7 +21,7 @@
 
 static int
 get_node_score(const char *rule, const char *score, bool raw,
-               pe_node_t *node, pe_resource_t *rsc)
+               pcmk_node_t *node, pcmk_resource_t *rsc)
 {
     int score_f = 0;
 
@@ -53,7 +53,7 @@ get_node_score(const char *rule, const char *score, bool raw,
 }
 
 static pe__location_t *
-generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
+generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
                        const char *discovery, crm_time_t *next_change,
                        pe_re_match_data_t *re_match_data)
 {
@@ -130,7 +130,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
     if (do_and) {
         nodes = pcmk__copy_node_list(rsc->cluster->nodes, true);
         for (iter = nodes; iter != NULL; iter = iter->next) {
-            pe_node_t *node = iter->data;
+            pcmk_node_t *node = iter->data;
 
             node->weight = get_node_score(rule_id, score, raw_score, node, rsc);
         }
@@ -138,7 +138,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
 
     for (iter = rsc->cluster->nodes; iter != NULL; iter = iter->next) {
         int score_f = 0;
-        pe_node_t *node = iter->data;
+        pcmk_node_t *node = iter->data;
         pe_match_data_t match_data = {
             .re = re_match_data,
             .params = pe_rsc_params(rsc, node, rsc->cluster),
@@ -154,7 +154,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
         score_f = get_node_score(rule_id, score, raw_score, node, rsc);
 
         if (accept) {
-            pe_node_t *local = pe_find_node_id(nodes, node->details->id);
+            pcmk_node_t *local = pe_find_node_id(nodes, node->details->id);
 
             if ((local == NULL) && do_and) {
                 continue;
@@ -172,7 +172,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
 
         } else if (do_and && !accept) {
             // Remove it
-            pe_node_t *delete = pe_find_node_id(nodes, node->details->id);
+            pcmk_node_t *delete = pe_find_node_id(nodes, node->details->id);
 
             if (delete != NULL) {
                 nodes = g_list_remove(nodes, delete);
@@ -198,7 +198,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
 }
 
 static void
-unpack_rsc_location(xmlNode *xml_obj, pe_resource_t *rsc, const char *role,
+unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc, const char *role,
                     const char *score, pe_re_match_data_t *re_match_data)
 {
     pe__location_t *location = NULL;
@@ -220,7 +220,7 @@ unpack_rsc_location(xmlNode *xml_obj, pe_resource_t *rsc, const char *role,
 
     if ((node != NULL) && (score != NULL)) {
         int score_i = char2score(score);
-        pe_node_t *match = pe_find_node(rsc->cluster->nodes, node);
+        pcmk_node_t *match = pe_find_node(rsc->cluster->nodes, node);
 
         if (!match) {
             return;
@@ -287,13 +287,13 @@ unpack_rsc_location(xmlNode *xml_obj, pe_resource_t *rsc, const char *role,
 }
 
 static void
-unpack_simple_location(xmlNode *xml_obj, pe_working_set_t *data_set)
+unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *data_set)
 {
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
     const char *value = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
 
     if (value) {
-        pe_resource_t *rsc;
+        pcmk_resource_t *rsc;
 
         rsc = pcmk__find_constraint_resource(data_set->resources, value);
         unpack_rsc_location(xml_obj, rsc, NULL, NULL, NULL);
@@ -320,7 +320,7 @@ unpack_simple_location(xmlNode *xml_obj, pe_working_set_t *data_set)
         for (GList *iter = data_set->resources; iter != NULL;
              iter = iter->next) {
 
-            pe_resource_t *r = iter->data;
+            pcmk_resource_t *r = iter->data;
             int nregs = 0;
             regmatch_t *pmatch = NULL;
             int status;
@@ -364,12 +364,12 @@ unpack_simple_location(xmlNode *xml_obj, pe_working_set_t *data_set)
 // \return Standard Pacemaker return code
 static int
 unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
-                     pe_working_set_t *data_set)
+                     pcmk_scheduler_t *data_set)
 {
     const char *id = NULL;
     const char *rsc_id = NULL;
     const char *state = NULL;
-    pe_resource_t *rsc = NULL;
+    pcmk_resource_t *rsc = NULL;
     pe_tag_t *tag = NULL;
     xmlNode *rsc_set = NULL;
 
@@ -437,10 +437,10 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
 // \return Standard Pacemaker return code
 static int
-unpack_location_set(xmlNode *location, xmlNode *set, pe_working_set_t *data_set)
+unpack_location_set(xmlNode *location, xmlNode *set, pcmk_scheduler_t *data_set)
 {
     xmlNode *xml_rsc = NULL;
-    pe_resource_t *resource = NULL;
+    pcmk_resource_t *resource = NULL;
     const char *set_id;
     const char *role;
     const char *local_score;
@@ -476,7 +476,7 @@ unpack_location_set(xmlNode *location, xmlNode *set, pe_working_set_t *data_set)
 }
 
 void
-pcmk__unpack_location(xmlNode *xml_obj, pe_working_set_t *data_set)
+pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *data_set)
 {
     xmlNode *set = NULL;
     bool any_sets = false;
@@ -533,8 +533,8 @@ pcmk__unpack_location(xmlNode *xml_obj, pe_working_set_t *data_set)
  *       freed separately.
  */
 pe__location_t *
-pcmk__new_location(const char *id, pe_resource_t *rsc,
-                   int node_score, const char *discover_mode, pe_node_t *node)
+pcmk__new_location(const char *id, pcmk_resource_t *rsc,
+                   int node_score, const char *discover_mode, pcmk_node_t *node)
 {
     pe__location_t *new_con = NULL;
 
@@ -574,7 +574,7 @@ pcmk__new_location(const char *id, pe_resource_t *rsc,
         }
 
         if (node != NULL) {
-            pe_node_t *copy = pe__copy_node(node);
+            pcmk_node_t *copy = pe__copy_node(node);
 
             copy->weight = node_score;
             new_con->node_list_rh = g_list_prepend(NULL, copy);
@@ -595,7 +595,7 @@ pcmk__new_location(const char *id, pe_resource_t *rsc,
  * \param[in,out] data_set       Cluster working set
  */
 void
-pcmk__apply_locations(pe_working_set_t *data_set)
+pcmk__apply_locations(pcmk_scheduler_t *data_set)
 {
     for (GList *iter = data_set->placement_constraints;
          iter != NULL; iter = iter->next) {
@@ -616,7 +616,7 @@ pcmk__apply_locations(pe_working_set_t *data_set)
  *       apply_location() method should be used instead in most cases.
  */
 void
-pcmk__apply_location(pe_resource_t *rsc, pe__location_t *location)
+pcmk__apply_location(pcmk_resource_t *rsc, pe__location_t *location)
 {
     bool need_role = false;
 
@@ -645,9 +645,9 @@ pcmk__apply_location(pe_resource_t *rsc, pe__location_t *location)
     for (GList *iter = location->node_list_rh;
          iter != NULL; iter = iter->next) {
 
-        pe_node_t *node = iter->data;
-        pe_node_t *allowed_node = g_hash_table_lookup(rsc->allowed_nodes,
-                                                      node->details->id);
+        pcmk_node_t *node = iter->data;
+        pcmk_node_t *allowed_node = g_hash_table_lookup(rsc->allowed_nodes,
+                                                        node->details->id);
 
         if (allowed_node == NULL) {
             pe_rsc_trace(rsc, "* = %d on %s",

@@ -39,7 +39,7 @@ extern "C" {
  *       callers should be added.
  */
 int pcmk__output_simple_status(pcmk__output_t *out,
-                               const pe_working_set_t *data_set);
+                               const pcmk_scheduler_t *data_set);
 
 int pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith,
                                 cib_t *cib, xmlNode *current_cib,

@@ -22,10 +22,10 @@
 
 static GHashTable *schedulerd_handlers = NULL;
 
-static pe_working_set_t *
+static pcmk_scheduler_t *
 init_working_set(void)
 {
-    pe_working_set_t *data_set = pe_new_working_set();
+    pcmk_scheduler_t *data_set = pe_new_working_set();
 
     CRM_ASSERT(data_set != NULL);
 
@@ -72,7 +72,7 @@ handle_pecalc_request(pcmk__request_t *request)
     xmlNode *reply = NULL;
     bool is_repoke = false;
     bool process = true;
-    pe_working_set_t *data_set = init_working_set();
+    pcmk_scheduler_t *data_set = init_working_set();
 
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
                        "ack", NULL, CRM_EX_INDETERMINATE);

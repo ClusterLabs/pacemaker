@@ -25,11 +25,11 @@
  * \param[in]     node   Node that probe will run on
  */
 static void
-add_expected_result(pe_action_t *probe, const pe_resource_t *rsc,
-                    const pe_node_t *node)
+add_expected_result(pcmk_action_t *probe, const pcmk_resource_t *rsc,
+                    const pcmk_node_t *node)
 {
     // Check whether resource is currently active on node
-    pe_node_t *running = pe_find_node_id(rsc->running_on, node->details->id);
+    pcmk_node_t *running = pe_find_node_id(rsc->running_on, node->details->id);
 
     // The expected result is what we think the resource's current state is
     if (running == NULL) {
@@ -50,12 +50,12 @@ add_expected_result(pe_action_t *probe, const pe_resource_t *rsc,
  * \return true if any probe was created, otherwise false
  */
 bool
-pcmk__probe_resource_list(GList *rscs, pe_node_t *node)
+pcmk__probe_resource_list(GList *rscs, pcmk_node_t *node)
 {
     bool any_created = false;
 
     for (GList *iter = rscs; iter != NULL; iter = iter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+        pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         if (rsc->cmds->create_probe(rsc, node)) {
             any_created = true;
@@ -72,7 +72,7 @@ pcmk__probe_resource_list(GList *rscs, pe_node_t *node)
  * \param[in]     rsc2  Resource that might be started
  */
 static void
-probe_then_start(pe_resource_t *rsc1, pe_resource_t *rsc2)
+probe_then_start(pcmk_resource_t *rsc1, pcmk_resource_t *rsc2)
 {
     if ((rsc1->allocated_to != NULL)
         && (g_hash_table_lookup(rsc1->known_on,
@@ -96,9 +96,9 @@ probe_then_start(pe_resource_t *rsc1, pe_resource_t *rsc2)
  * \return true if guest resource will likely stop, otherwise false
  */
 static bool
-guest_resource_will_stop(const pe_node_t *node)
+guest_resource_will_stop(const pcmk_node_t *node)
 {
-    const pe_resource_t *guest_rsc = node->details->remote_rsc->container;
+    const pcmk_resource_t *guest_rsc = node->details->remote_rsc->container;
 
     /* Ideally, we'd check whether the guest has a required stop, but that
      * information doesn't exist yet, so approximate it ...
@@ -124,10 +124,10 @@ guest_resource_will_stop(const pe_node_t *node)
  *
  * \return Newly created probe action
  */
-static pe_action_t *
-probe_action(pe_resource_t *rsc, pe_node_t *node)
+static pcmk_action_t *
+probe_action(pcmk_resource_t *rsc, pcmk_node_t *node)
 {
-    pe_action_t *probe = NULL;
+    pcmk_action_t *probe = NULL;
     char *key = pcmk__op_key(rsc->id, PCMK_ACTION_MONITOR, 0);
 
     crm_debug("Scheduling probe of %s %s on %s",
@@ -154,12 +154,12 @@ probe_action(pe_resource_t *rsc, pe_node_t *node)
  * \return true if any probe was created, otherwise false
  */
 bool
-pcmk__probe_rsc_on_node(pe_resource_t *rsc, pe_node_t *node)
+pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
 {
     uint32_t flags = pcmk__ar_ordered;
-    pe_action_t *probe = NULL;
-    pe_node_t *allowed = NULL;
-    pe_resource_t *top = uber_parent(rsc);
+    pcmk_action_t *probe = NULL;
+    pcmk_node_t *allowed = NULL;
+    pcmk_resource_t *top = uber_parent(rsc);
     const char *reason = NULL;
 
     CRM_ASSERT((rsc != NULL) && (node != NULL));
@@ -233,7 +233,7 @@ pcmk__probe_rsc_on_node(pe_resource_t *rsc, pe_node_t *node)
     }
 
     if (pe__is_guest_node(node)) {
-        pe_resource_t *guest = node->details->remote_rsc->container;
+        pcmk_resource_t *guest = node->details->remote_rsc->container;
 
         if (guest->role == pcmk_role_stopped) {
             // The guest is stopped, so we know no resource is active there
@@ -300,7 +300,8 @@ no_probe:
  * \return true if \p probe should be ordered before \p then, otherwise false
  */
 static bool
-probe_needed_before_action(const pe_action_t *probe, const pe_action_t *then)
+probe_needed_before_action(const pcmk_action_t *probe,
+                           const pcmk_action_t *then)
 {
     // Probes on a node are performed after unfencing it, not before
     if (pcmk__str_eq(then->task, PCMK_ACTION_STONITH, pcmk__str_none)
@@ -337,7 +338,7 @@ probe_needed_before_action(const pe_action_t *probe, const pe_action_t *then)
  * \param[in,out] data_set  Cluster working set
  */
 static void
-add_probe_orderings_for_stops(pe_working_set_t *data_set)
+add_probe_orderings_for_stops(pcmk_scheduler_t *data_set)
 {
     for (GList *iter = data_set->ordering_constraints; iter != NULL;
          iter = iter->next) {
@@ -346,8 +347,8 @@ add_probe_orderings_for_stops(pe_working_set_t *data_set)
         uint32_t order_flags = pcmk__ar_ordered;
         GList *probes = NULL;
         GList *then_actions = NULL;
-        pe_action_t *first = NULL;
-        pe_action_t *then = NULL;
+        pcmk_action_t *first = NULL;
+        pcmk_action_t *then = NULL;
 
         // Skip disabled orderings
         if (order->flags == pcmk__ar_none) {
@@ -437,12 +438,12 @@ add_probe_orderings_for_stops(pe_working_set_t *data_set)
         for (GList *probe_iter = probes; probe_iter != NULL;
              probe_iter = probe_iter->next) {
 
-            pe_action_t *probe = (pe_action_t *) probe_iter->data;
+            pcmk_action_t *probe = (pcmk_action_t *) probe_iter->data;
 
             for (GList *then_iter = then_actions; then_iter != NULL;
                  then_iter = then_iter->next) {
 
-                pe_action_t *then = (pe_action_t *) then_iter->data;
+                pcmk_action_t *then = (pcmk_action_t *) then_iter->data;
 
                 if (probe_needed_before_action(probe, then)) {
                     order_actions(probe, then, order_flags);
@@ -466,7 +467,7 @@ add_probe_orderings_for_stops(pe_working_set_t *data_set)
  * \param[in,out] after     'then' action wrapper in the ordering
  */
 static void
-add_start_orderings_for_probe(pe_action_t *probe, pe_action_wrapper_t *after)
+add_start_orderings_for_probe(pcmk_action_t *probe, pe_action_wrapper_t *after)
 {
     uint32_t flags = pcmk__ar_ordered|pcmk__ar_unrunnable_first_blocks;
 
@@ -535,11 +536,11 @@ add_start_orderings_for_probe(pe_action_t *probe, pe_action_wrapper_t *after)
  * \param[in,out] after     'then' action in the ordering
  */
 static void
-add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
+add_restart_orderings_for_probe(pcmk_action_t *probe, pcmk_action_t *after)
 {
     GList *iter = NULL;
     bool interleave = false;
-    pe_resource_t *compatible_rsc = NULL;
+    pcmk_resource_t *compatible_rsc = NULL;
 
     // Validate that this is a resource probe followed by some action
     if ((after == NULL) || (probe == NULL) || (probe->rsc == NULL)
@@ -578,7 +579,7 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
             }
 
             for (iter = then_actions; iter != NULL; iter = iter->next) {
-                pe_action_t *then = (pe_action_t *) iter->data;
+                pcmk_action_t *then = (pcmk_action_t *) iter->data;
 
                 // Skip pseudo-actions (for example, those implied by fencing)
                 if (!pcmk_is_set(then->flags, pcmk_action_pseudo)) {
@@ -666,10 +667,10 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
  * \param[in,out] data_set  Cluster working set
  */
 static void
-clear_actions_tracking_flag(pe_working_set_t *data_set)
+clear_actions_tracking_flag(pcmk_scheduler_t *data_set)
 {
     for (GList *iter = data_set->actions; iter != NULL; iter = iter->next) {
-        pe_action_t *action = iter->data;
+        pcmk_action_t *action = iter->data;
 
         pe__clear_action_flags(action, pcmk_action_detect_loop);
     }
@@ -685,7 +686,7 @@ clear_actions_tracking_flag(pe_working_set_t *data_set)
 static void
 add_start_restart_orderings_for_rsc(gpointer data, gpointer user_data)
 {
-    pe_resource_t *rsc = data;
+    pcmk_resource_t *rsc = data;
     GList *probes = NULL;
 
     // For collective resources, order each instance recursively
@@ -700,7 +701,7 @@ add_start_restart_orderings_for_rsc(gpointer data, gpointer user_data)
 
     // Add probe restart orderings for each probe found
     for (GList *iter = probes; iter != NULL; iter = iter->next) {
-        pe_action_t *probe = (pe_action_t *) iter->data;
+        pcmk_action_t *probe = (pcmk_action_t *) iter->data;
 
         for (GList *then_iter = probe->actions_after; then_iter != NULL;
              then_iter = then_iter->next) {
@@ -725,7 +726,7 @@ add_start_restart_orderings_for_rsc(gpointer data, gpointer user_data)
  * \note This function is currently disabled (see next comment).
  */
 static void
-order_then_probes(pe_working_set_t *data_set)
+order_then_probes(pcmk_scheduler_t *data_set)
 {
 #if 0
     /* Given an ordering "A then B", we would prefer to wait for A to be started
@@ -758,9 +759,9 @@ order_then_probes(pe_working_set_t *data_set)
      * someone gets smarter.
      */
     for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+        pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
-        pe_action_t *start = NULL;
+        pcmk_action_t *start = NULL;
         GList *actions = NULL;
         GList *probes = NULL;
 
@@ -783,8 +784,8 @@ order_then_probes(pe_working_set_t *data_set)
 
             pe_action_wrapper_t *before = (pe_action_wrapper_t *) actions->data;
 
-            pe_action_t *first = before->action;
-            pe_resource_t *first_rsc = first->rsc;
+            pcmk_action_t *first = before->action;
+            pcmk_resource_t *first_rsc = first->rsc;
 
             if (first->required_runnable_before) {
                 for (GList *clone_actions = first->actions_before;
@@ -826,7 +827,7 @@ order_then_probes(pe_working_set_t *data_set)
             for (GList *probe_iter = probes; probe_iter != NULL;
                  probe_iter = probe_iter->next) {
 
-                pe_action_t *probe = (pe_action_t *) probe_iter->data;
+                pcmk_action_t *probe = (pcmk_action_t *) probe_iter->data;
 
                 crm_err("Ordering %s before %s", first->uuid, probe->uuid);
                 order_actions(first, probe, pcmk__ar_ordered);
@@ -837,7 +838,7 @@ order_then_probes(pe_working_set_t *data_set)
 }
 
 void
-pcmk__order_probes(pe_working_set_t *data_set)
+pcmk__order_probes(pcmk_scheduler_t *data_set)
 {
     // Add orderings for "probe then X"
     g_list_foreach(data_set->resources, add_start_restart_orderings_for_rsc,
@@ -856,11 +857,11 @@ pcmk__order_probes(pe_working_set_t *data_set)
  * \note This may also schedule fencing of failed remote nodes.
  */
 void
-pcmk__schedule_probes(pe_working_set_t *data_set)
+pcmk__schedule_probes(pcmk_scheduler_t *data_set)
 {
     // Schedule probes on each node in the cluster as needed
     for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
-        pe_node_t *node = (pe_node_t *) iter->data;
+        pcmk_node_t *node = (pcmk_node_t *) iter->data;
         const char *probed = NULL;
 
         if (!node->details->online) { // Don't probe offline nodes
@@ -885,7 +886,7 @@ pcmk__schedule_probes(pe_working_set_t *data_set)
          */
         probed = pe_node_attribute_raw(node, CRM_OP_PROBED);
         if (probed != NULL && crm_is_true(probed) == FALSE) {
-            pe_action_t *probe_op = NULL;
+            pcmk_action_t *probe_op = NULL;
 
             probe_op = custom_action(NULL,
                                      crm_strdup_printf("%s-%s", CRM_OP_REPROBE,

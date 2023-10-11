@@ -77,7 +77,8 @@ is_matched_failure(const char *rsc_id, const xmlNode *conf_op_xml,
 }
 
 static gboolean
-block_failure(const pe_node_t *node, pe_resource_t *rsc, const xmlNode *xml_op)
+block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
+              const xmlNode *xml_op)
 {
     char *xml_name = clone_strip(rsc->id);
 
@@ -180,7 +181,7 @@ block_failure(const pe_node_t *node, pe_resource_t *rsc, const xmlNode *xml_op)
  * \note The caller is responsible for freeing the result.
  */
 static inline char *
-rsc_fail_name(const pe_resource_t *rsc)
+rsc_fail_name(const pcmk_resource_t *rsc)
 {
     const char *name = (rsc->clone_name? rsc->clone_name : rsc->id);
 
@@ -244,7 +245,7 @@ generate_fail_regex(const char *prefix, const char *rsc_name,
  *       regfree().
  */
 static int
-generate_fail_regexes(const pe_resource_t *rsc,
+generate_fail_regexes(const pcmk_resource_t *rsc,
                       regex_t *failcount_re, regex_t *lastfailure_re)
 {
     int rc = pcmk_rc_ok;
@@ -274,8 +275,8 @@ generate_fail_regexes(const pe_resource_t *rsc,
 
 // Data for fail-count-related iterators
 struct failcount_data {
-    const pe_node_t *node;  // Node to check for fail count
-    pe_resource_t *rsc;     // Resource to check for fail count
+    const pcmk_node_t *node;// Node to check for fail count
+    pcmk_resource_t *rsc;     // Resource to check for fail count
     uint32_t flags;         // Fail count flags
     const xmlNode *xml_op;  // History entry for expiration purposes (or NULL)
     regex_t failcount_re;   // Fail count regular expression to match
@@ -329,7 +330,7 @@ update_failcount_for_attr(gpointer key, gpointer value, gpointer user_data)
 static void
 update_failcount_for_filler(gpointer data, gpointer user_data)
 {
-    pe_resource_t *filler = data;
+    pcmk_resource_t *filler = data;
     struct failcount_data *fc_data = user_data;
     time_t filler_last_failure = 0;
 
@@ -356,7 +357,7 @@ update_failcount_for_filler(gpointer data, gpointer user_data)
  * \return Fail count for \p rsc on \p node according to \p flags
  */
 int
-pe_get_failcount(const pe_node_t *node, pe_resource_t *rsc,
+pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
                  time_t *last_failure, uint32_t flags, const xmlNode *xml_op)
 {
     struct failcount_data fc_data = {
@@ -448,12 +449,12 @@ pe_get_failcount(const pe_node_t *node, pe_resource_t *rsc,
  *
  * \return Scheduled action
  */
-pe_action_t *
-pe__clear_failcount(pe_resource_t *rsc, const pe_node_t *node,
-                    const char *reason, pe_working_set_t *data_set)
+pcmk_action_t *
+pe__clear_failcount(pcmk_resource_t *rsc, const pcmk_node_t *node,
+                    const char *reason, pcmk_scheduler_t *data_set)
 {
     char *key = NULL;
-    pe_action_t *clear = NULL;
+    pcmk_action_t *clear = NULL;
 
     CRM_CHECK(rsc && node && reason && data_set, return NULL);
 

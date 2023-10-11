@@ -28,7 +28,7 @@ enum loss_ticket_policy {
 
 typedef struct {
     const char *id;
-    pe_resource_t *rsc;
+    pcmk_resource_t *rsc;
     pe_ticket_t *ticket;
     enum loss_ticket_policy loss_policy;
     int role;
@@ -44,7 +44,7 @@ typedef struct {
  *            constraint's, otherwise false
  */
 static bool
-ticket_role_matches(const pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
+ticket_role_matches(const pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
 {
     if ((rsc_ticket->role == pcmk_role_unknown)
         || (rsc_ticket->role == rsc->role)) {
@@ -62,7 +62,7 @@ ticket_role_matches(const pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
  * \param[in]     rsc_ticket  Ticket
  */
 static void
-constraints_for_ticket(pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
+constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
 {
     GList *iter = NULL;
 
@@ -75,7 +75,7 @@ constraints_for_ticket(pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
     if (rsc->children) {
         pe_rsc_trace(rsc, "Processing ticket dependencies from %s", rsc->id);
         for (iter = rsc->children; iter != NULL; iter = iter->next) {
-            constraints_for_ticket((pe_resource_t *) iter->data, rsc_ticket);
+            constraints_for_ticket((pcmk_resource_t *) iter->data, rsc_ticket);
         }
         return;
     }
@@ -109,7 +109,7 @@ constraints_for_ticket(pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
                                   rsc->cluster);
 
                 for (iter = rsc->running_on; iter != NULL; iter = iter->next) {
-                    pe_fence_node(rsc->cluster, (pe_node_t *) iter->data,
+                    pe_fence_node(rsc->cluster, (pcmk_node_t *) iter->data,
                                   "deadman ticket was lost", FALSE);
                 }
                 break;
@@ -144,7 +144,7 @@ constraints_for_ticket(pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
 }
 
 static void
-rsc_ticket_new(const char *id, pe_resource_t *rsc, pe_ticket_t *ticket,
+rsc_ticket_new(const char *id, pcmk_resource_t *rsc, pe_ticket_t *ticket,
                const char *state, const char *loss_policy)
 {
     rsc_ticket_t *new_rsc_ticket = NULL;
@@ -235,7 +235,7 @@ rsc_ticket_new(const char *id, pe_resource_t *rsc, pe_ticket_t *ticket,
 // \return Standard Pacemaker return code
 static int
 unpack_rsc_ticket_set(xmlNode *set, pe_ticket_t *ticket,
-                      const char *loss_policy, pe_working_set_t *data_set)
+                      const char *loss_policy, pcmk_scheduler_t *data_set)
 {
     const char *set_id = NULL;
     const char *role = NULL;
@@ -255,7 +255,7 @@ unpack_rsc_ticket_set(xmlNode *set, pe_ticket_t *ticket,
     for (xmlNode *xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
          xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
-        pe_resource_t *resource = NULL;
+        pcmk_resource_t *resource = NULL;
 
         resource = pcmk__find_constraint_resource(data_set->resources,
                                                   ID(xml_rsc));
@@ -273,7 +273,7 @@ unpack_rsc_ticket_set(xmlNode *set, pe_ticket_t *ticket,
 }
 
 static void
-unpack_simple_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
+unpack_simple_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *data_set)
 {
     const char *id = NULL;
     const char *ticket_str = crm_element_value(xml_obj, XML_TICKET_ATTR_TICKET);
@@ -290,7 +290,7 @@ unpack_simple_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
     const char *instance = crm_element_value(xml_obj,
                                              XML_COLOC_ATTR_SOURCE_INSTANCE);
 
-    pe_resource_t *rsc = NULL;
+    pcmk_resource_t *rsc = NULL;
 
     if (instance != NULL) {
         pe_warn_once(pcmk__wo_coloc_inst,
@@ -356,13 +356,13 @@ unpack_simple_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
 // \return Standard Pacemaker return code
 static int
 unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
-                       pe_working_set_t *data_set)
+                       pcmk_scheduler_t *data_set)
 {
     const char *id = NULL;
     const char *rsc_id = NULL;
     const char *state = NULL;
 
-    pe_resource_t *rsc = NULL;
+    pcmk_resource_t *rsc = NULL;
     pe_tag_t *tag = NULL;
 
     xmlNode *rsc_set = NULL;
@@ -428,7 +428,7 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 }
 
 void
-pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
+pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *data_set)
 {
     xmlNode *set = NULL;
     bool any_sets = false;
@@ -517,7 +517,7 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
  * \param[in,out] rsc  Resource to check
  */
 void
-pcmk__require_promotion_tickets(pe_resource_t *rsc)
+pcmk__require_promotion_tickets(pcmk_resource_t *rsc)
 {
     for (GList *item = rsc->rsc_tickets; item != NULL; item = item->next) {
         rsc_ticket_t *rsc_ticket = (rsc_ticket_t *) item->data;

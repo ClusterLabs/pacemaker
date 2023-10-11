@@ -16,17 +16,17 @@
 #include <crm/services_internal.h>
 
 static GList *
-build_node_info_list(const pe_resource_t *rsc)
+build_node_info_list(const pcmk_resource_t *rsc)
 {
     GList *retval = NULL;
 
     for (const GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-        const pe_resource_t *child = (const pe_resource_t *) iter->data;
+        const pcmk_resource_t *child = (const pcmk_resource_t *) iter->data;
 
         for (const GList *iter2 = child->running_on;
              iter2 != NULL; iter2 = iter2->next) {
 
-            const pe_node_t *node = (const pe_node_t *) iter2->data;
+            const pcmk_node_t *node = (const pcmk_node_t *) iter2->data;
             node_info_t *ni = calloc(1, sizeof(node_info_t));
 
             ni->node_name = node->details->uname;
@@ -41,11 +41,11 @@ build_node_info_list(const pe_resource_t *rsc)
 }
 
 GList *
-cli_resource_search(pe_resource_t *rsc, const char *requested_name,
-                    pe_working_set_t *data_set)
+cli_resource_search(pcmk_resource_t *rsc, const char *requested_name,
+                    pcmk_scheduler_t *data_set)
 {
     GList *retval = NULL;
-    const pe_resource_t *parent = pe__const_top_resource(rsc, false);
+    const pcmk_resource_t *parent = pe__const_top_resource(rsc, false);
 
     if (pe_rsc_is_clone(rsc)) {
         retval = build_node_info_list(rsc);
@@ -61,7 +61,7 @@ cli_resource_search(pe_resource_t *rsc, const char *requested_name,
 
     } else if (rsc->running_on != NULL) {
         for (GList *iter = rsc->running_on; iter != NULL; iter = iter->next) {
-            pe_node_t *node = (pe_node_t *) iter->data;
+            pcmk_node_t *node = (pcmk_node_t *) iter->data;
             node_info_t *ni = calloc(1, sizeof(node_info_t));
             ni->node_name = node->details->uname;
             ni->promoted = (rsc->fns->state(rsc, TRUE) == pcmk_role_promoted);
@@ -159,8 +159,9 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
 
 /* PRIVATE. Use the find_matching_attr_resources instead. */
 static void
-find_matching_attr_resources_recursive(pcmk__output_t *out, GList/* <pe_resource_t*> */ ** result,
-                                       pe_resource_t * rsc, const char * rsc_id,
+find_matching_attr_resources_recursive(pcmk__output_t *out,
+                                       GList /* <pcmk_resource_t*> */ **result,
+                                       pcmk_resource_t *rsc, const char *rsc_id,
                                        const char * attr_set, const char * attr_set_type,
                                        const char * attr_id, const char * attr_name,
                                        cib_t * cib, const char * cmd, int depth)
@@ -171,7 +172,8 @@ find_matching_attr_resources_recursive(pcmk__output_t *out, GList/* <pe_resource
 
     /* visit the children */
     for(GList *gIter = rsc->children; gIter; gIter = gIter->next) {
-        find_matching_attr_resources_recursive(out, result, (pe_resource_t*)gIter->data,
+        find_matching_attr_resources_recursive(out, result,
+                                               (pcmk_resource_t *) gIter->data,
                                                rsc_id, attr_set, attr_set_type,
                                                attr_id, attr_name, cib, cmd, depth+1);
         /* do it only once for clones */
@@ -195,8 +197,8 @@ find_matching_attr_resources_recursive(pcmk__output_t *out, GList/* <pe_resource
 
 
 /* The result is a linearized pre-ordered tree of resources. */
-static GList/*<pe_resource_t*>*/ *
-find_matching_attr_resources(pcmk__output_t *out, pe_resource_t * rsc,
+static GList/*<pcmk_resource_t*>*/ *
+find_matching_attr_resources(pcmk__output_t *out, pcmk_resource_t *rsc,
                              const char * rsc_id, const char * attr_set,
                              const char * attr_set_type, const char * attr_id,
                              const char * attr_name, cib_t * cib, const char * cmd,
@@ -229,7 +231,7 @@ find_matching_attr_resources(pcmk__output_t *out, pe_resource_t * rsc,
 
     } else if ((rsc->parent == NULL) && (rsc->children != NULL)
                && (rsc->variant == pcmk_rsc_variant_clone)) {
-        pe_resource_t *child = rsc->children->data;
+        pcmk_resource_t *child = rsc->children->data;
 
         if (child->variant == pcmk_rsc_variant_primitive) {
             lookup_id = clone_strip(child->id); /* Could be a cloned group! */
@@ -256,7 +258,7 @@ find_matching_attr_resources(pcmk__output_t *out, pe_resource_t * rsc,
 
 // \return Standard Pacemaker return code
 int
-cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
+cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                               const char *attr_set, const char *attr_set_type,
                               const char *attr_id, const char *attr_name,
                               const char *attr_value, gboolean recursive,
@@ -267,7 +269,7 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
 
     char *found_attr_id = NULL;
 
-    GList/*<pe_resource_t*>*/ *resources = NULL;
+    GList/*<pcmk_resource_t*>*/ *resources = NULL;
     const char *top_id = pe__const_top_resource(rsc, false)->id;
 
     if ((attr_id == NULL) && !force) {
@@ -336,7 +338,7 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
         xmlNode *xml_obj = NULL;
         found_attr_id = NULL;
 
-        rsc = (pe_resource_t *) iter->data;
+        rsc = (pcmk_resource_t *) iter->data;
 
         lookup_id = clone_strip(rsc->id); /* Could be a cloned group! */
         rc = find_resource_attr(out, cib, XML_ATTR_ID, lookup_id, attr_set_type,
@@ -443,14 +445,14 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
 
 // \return Standard Pacemaker return code
 int
-cli_resource_delete_attribute(pe_resource_t *rsc, const char *requested_name,
+cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
                               const char *attr_set, const char *attr_set_type,
                               const char *attr_id, const char *attr_name,
                               cib_t *cib, int cib_options, gboolean force)
 {
     pcmk__output_t *out = rsc->cluster->priv;
     int rc = pcmk_rc_ok;
-    GList/*<pe_resource_t*>*/ *resources = NULL;
+    GList/*<pcmk_resource_t*>*/ *resources = NULL;
 
     if ((attr_id == NULL) && !force) {
         find_resource_attr(out, cib, XML_ATTR_ID,
@@ -485,7 +487,7 @@ cli_resource_delete_attribute(pe_resource_t *rsc, const char *requested_name,
         char *found_attr_id = NULL;
         const char *rsc_attr_id = attr_id;
 
-        rsc = (pe_resource_t *) iter->data;
+        rsc = (pcmk_resource_t *) iter->data;
 
         lookup_id = clone_strip(rsc->id);
         rc = find_resource_attr(out, cib, XML_ATTR_ID, lookup_id, attr_set_type,
@@ -537,7 +539,8 @@ cli_resource_delete_attribute(pe_resource_t *rsc, const char *requested_name,
 // \return Standard Pacemaker return code
 static int
 send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
-                const char *host_uname, const char *rsc_id, pe_working_set_t *data_set)
+                const char *host_uname, const char *rsc_id,
+                pcmk_scheduler_t *data_set)
 {
     pcmk__output_t *out = data_set->priv;
     const char *router_node = host_uname;
@@ -547,7 +550,7 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
     const char *rsc_provider = NULL;
     const char *rsc_type = NULL;
     bool cib_only = false;
-    pe_resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
+    pcmk_resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
     if (rsc == NULL) {
         out->err(out, "Resource %s not found", rsc_id);
@@ -567,7 +570,7 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
     }
 
     {
-        pe_node_t *node = pe_find_node(data_set->nodes, host_uname);
+        pcmk_node_t *node = pe_find_node(data_set->nodes, host_uname);
 
         if (node == NULL) {
             out->err(out, "Node %s not found", host_uname);
@@ -620,7 +623,7 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
  * \note The caller is responsible for freeing the result.
  */
 static inline char *
-rsc_fail_name(const pe_resource_t *rsc)
+rsc_fail_name(const pcmk_resource_t *rsc)
 {
     const char *name = (rsc->clone_name? rsc->clone_name : rsc->id);
 
@@ -633,7 +636,7 @@ rsc_fail_name(const pe_resource_t *rsc)
 // \return Standard Pacemaker return code
 static int
 clear_rsc_history(pcmk_ipc_api_t *controld_api, const char *host_uname,
-                  const char *rsc_id, pe_working_set_t *data_set)
+                  const char *rsc_id, pcmk_scheduler_t *data_set)
 {
     int rc = pcmk_rc_ok;
 
@@ -660,7 +663,7 @@ clear_rsc_history(pcmk_ipc_api_t *controld_api, const char *host_uname,
 static int
 clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
                    const char *node_name, const char *rsc_id, const char *operation,
-                   const char *interval_spec, pe_working_set_t *data_set)
+                   const char *interval_spec, pcmk_scheduler_t *data_set)
 {
     int rc = pcmk_rc_ok;
     const char *failed_value = NULL;
@@ -693,7 +696,7 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
 
         // No resource specified means all resources match
         if (rsc_id) {
-            pe_resource_t *fail_rsc = NULL;
+            pcmk_resource_t *fail_rsc = NULL;
 
             fail_rsc = pe_find_resource_with_flags(data_set->resources,
                                                    failed_id,
@@ -741,8 +744,8 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
 
 // \return Standard Pacemaker return code
 static int
-clear_rsc_fail_attrs(const pe_resource_t *rsc, const char *operation,
-                     const char *interval_spec, const pe_node_t *node)
+clear_rsc_fail_attrs(const pcmk_resource_t *rsc, const char *operation,
+                     const char *interval_spec, const pcmk_node_t *node)
 {
     int rc = pcmk_rc_ok;
     int attr_options = pcmk__node_attr_none;
@@ -762,13 +765,13 @@ clear_rsc_fail_attrs(const pe_resource_t *rsc, const char *operation,
 // \return Standard Pacemaker return code
 int
 cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
-                    const pe_resource_t *rsc, const char *operation,
+                    const pcmk_resource_t *rsc, const char *operation,
                     const char *interval_spec, bool just_failures,
-                    pe_working_set_t *data_set, gboolean force)
+                    pcmk_scheduler_t *data_set, gboolean force)
 {
     pcmk__output_t *out = data_set->priv;
     int rc = pcmk_rc_ok;
-    pe_node_t *node = NULL;
+    pcmk_node_t *node = NULL;
 
     if (rsc == NULL) {
         return ENXIO;
@@ -776,7 +779,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
     } else if (rsc->children) {
 
         for (const GList *lpc = rsc->children; lpc != NULL; lpc = lpc->next) {
-            const pe_resource_t *child = (const pe_resource_t *) lpc->data;
+            const pcmk_resource_t *child = (const pcmk_resource_t *) lpc->data;
 
             rc = cli_resource_delete(controld_api, host_uname, child, operation,
                                      interval_spec, just_failures, data_set, force);
@@ -795,7 +798,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
 
         } else if(nodes == NULL && rsc->exclusive_discover) {
             GHashTableIter iter;
-            pe_node_t *node = NULL;
+            pcmk_node_t *node = NULL;
 
             g_hash_table_iter_init(&iter, rsc->allowed_nodes);
             while (g_hash_table_iter_next(&iter, NULL, (void**)&node)) {
@@ -809,7 +812,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
         }
 
         for (lpc = nodes; lpc != NULL; lpc = lpc->next) {
-            node = (pe_node_t *) lpc->data;
+            node = (pcmk_node_t *) lpc->data;
 
             if (node->details->online) {
                 rc = cli_resource_delete(controld_api, node->details->uname, rsc,
@@ -872,7 +875,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
 int
 cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
                 const char *operation, const char *interval_spec,
-                pe_working_set_t *data_set)
+                pcmk_scheduler_t *data_set)
 {
     pcmk__output_t *out = data_set->priv;
     int rc = pcmk_rc_ok;
@@ -886,7 +889,7 @@ cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
     }
 
     if (node_name) {
-        pe_node_t *node = pe_find_node(data_set->nodes, node_name);
+        pcmk_node_t *node = pe_find_node(data_set->nodes, node_name);
 
         if (node == NULL) {
             out->err(out, "Unknown node: %s", node_name);
@@ -915,7 +918,7 @@ cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
         }
     } else {
         for (GList *iter = data_set->nodes; iter; iter = iter->next) {
-            pe_node_t *node = (pe_node_t *) iter->data;
+            pcmk_node_t *node = (pcmk_node_t *) iter->data;
 
             rc = clear_rsc_failures(out, controld_api, node->details->uname, NULL,
                                     operation, interval_spec, data_set);
@@ -978,7 +981,7 @@ check_locked(resource_checks_t *checks)
 }
 
 static bool
-node_is_unhealthy(pe_node_t *node)
+node_is_unhealthy(pcmk_node_t *node)
 {
     switch (pe__health_strategy(node->details->data_set)) {
         case pcmk__health_strategy_none:
@@ -1008,7 +1011,7 @@ node_is_unhealthy(pe_node_t *node)
 }
 
 static void
-check_node_health(resource_checks_t *checks, pe_node_t *node)
+check_node_health(resource_checks_t *checks, pcmk_node_t *node)
 {
     if (node == NULL) {
         GHashTableIter iter;
@@ -1033,7 +1036,7 @@ check_node_health(resource_checks_t *checks, pe_node_t *node)
 }
 
 int
-cli_resource_check(pcmk__output_t *out, pe_resource_t *rsc, pe_node_t *node)
+cli_resource_check(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
 {
     resource_checks_t checks = { .rsc = rsc };
 
@@ -1048,15 +1051,15 @@ cli_resource_check(pcmk__output_t *out, pe_resource_t *rsc, pe_node_t *node)
 // \return Standard Pacemaker return code
 int
 cli_resource_fail(pcmk_ipc_api_t *controld_api, const char *host_uname,
-                  const char *rsc_id, pe_working_set_t *data_set)
+                  const char *rsc_id, pcmk_scheduler_t *data_set)
 {
     crm_notice("Failing %s on %s", rsc_id, host_uname);
     return send_lrm_rsc_op(controld_api, true, host_uname, rsc_id, data_set);
 }
 
 static GHashTable *
-generate_resource_params(pe_resource_t *rsc, pe_node_t *node,
-                         pe_working_set_t *data_set)
+generate_resource_params(pcmk_resource_t *rsc, pcmk_node_t *node,
+                         pcmk_scheduler_t *data_set)
 {
     GHashTable *params = NULL;
     GHashTable *meta = NULL;
@@ -1090,7 +1093,7 @@ generate_resource_params(pe_resource_t *rsc, pe_node_t *node,
     return combined;
 }
 
-bool resource_is_running_on(pe_resource_t *rsc, const char *host)
+bool resource_is_running_on(pcmk_resource_t *rsc, const char *host)
 {
     bool found = true;
     GList *hIter = NULL;
@@ -1102,7 +1105,7 @@ bool resource_is_running_on(pe_resource_t *rsc, const char *host)
 
     rsc->fns->location(rsc, &hosts, TRUE);
     for (hIter = hosts; host != NULL && hIter != NULL; hIter = hIter->next) {
-        pe_node_t *node = (pe_node_t *) hIter->data;
+        pcmk_node_t *node = (pcmk_node_t *) hIter->data;
 
         if (pcmk__strcase_any_of(host, node->details->uname, node->details->id, NULL)) {
             crm_trace("Resource %s is running on %s\n", rsc->id, host);
@@ -1140,7 +1143,7 @@ get_active_resources(const char *host, GList *rsc_list)
     GList *active = NULL;
 
     for (rIter = rsc_list; rIter != NULL; rIter = rIter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) rIter->data;
+        pcmk_resource_t *rsc = (pcmk_resource_t *) rIter->data;
 
         /* Expand groups to their members, because if we're restarting a member
          * other than the first, we can't otherwise tell which resources are
@@ -1193,7 +1196,7 @@ static void display_list(pcmk__output_t *out, GList *items, const char *tag)
  *       but perhaps pcmk_rc_schema_validation would be better in that case.
  */
 int
-update_working_set_xml(pe_working_set_t *data_set, xmlNode **xml)
+update_working_set_xml(pcmk_scheduler_t *data_set, xmlNode **xml)
 {
     if (cli_config_update(xml, NULL, FALSE) == FALSE) {
         return ENOKEY;
@@ -1215,7 +1218,7 @@ update_working_set_xml(pe_working_set_t *data_set, xmlNode **xml)
  *       data_set->input and data_set->now.
  */
 static int
-update_working_set_from_cib(pcmk__output_t *out, pe_working_set_t * data_set,
+update_working_set_from_cib(pcmk__output_t *out, pcmk_scheduler_t *data_set,
                             cib_t *cib)
 {
     xmlNode *cib_xml_copy = NULL;
@@ -1240,7 +1243,7 @@ update_working_set_from_cib(pcmk__output_t *out, pe_working_set_t * data_set,
 
 // \return Standard Pacemaker return code
 static int
-update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
+update_dataset(cib_t *cib, pcmk_scheduler_t *data_set, bool simulate)
 {
     char *pid = NULL;
     char *shadow_file = NULL;
@@ -1322,9 +1325,9 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
  * \return Maximum stop timeout for \p rsc (in milliseconds)
  */
 static int
-max_rsc_stop_timeout(pe_resource_t *rsc)
+max_rsc_stop_timeout(pcmk_resource_t *rsc)
 {
-    pe_action_t *stop = NULL;
+    pcmk_action_t *stop = NULL;
     long long result_ll;
     int max_delay = 0;
 
@@ -1335,7 +1338,7 @@ max_rsc_stop_timeout(pe_resource_t *rsc)
     // If resource is collective, use maximum of its children's stop timeouts
     if (rsc->children != NULL) {
         for (GList *iter = rsc->children; iter; iter = iter->next) {
-            pe_resource_t *child = iter->data;
+            pcmk_resource_t *child = iter->data;
             int delay = max_rsc_stop_timeout(child);
 
             if (delay > max_delay) {
@@ -1380,14 +1383,14 @@ max_rsc_stop_timeout(pe_resource_t *rsc)
  *       if the resources in question are actually being started.
  */
 static int
-wait_time_estimate(pe_working_set_t *data_set, const GList *resources)
+wait_time_estimate(pcmk_scheduler_t *data_set, const GList *resources)
 {
     int max_delay = 0;
 
     // Find maximum stop timeout in milliseconds
     for (const GList *item = resources; item != NULL; item = item->next) {
-        pe_resource_t *rsc = pe_find_resource(data_set->resources,
-                                              (const char *) (item->data));
+        pcmk_resource_t *rsc = pe_find_resource(data_set->resources,
+                                                (const char *) item->data);
         int delay = max_rsc_stop_timeout(rsc);
 
         if (delay > max_delay) {
@@ -1428,8 +1431,8 @@ wait_time_estimate(pe_working_set_t *data_set, const GList *resources)
  * \return Standard Pacemaker return code (exits on certain failures)
  */
 int
-cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc,
-                     const pe_node_t *node, const char *move_lifetime,
+cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
+                     const pcmk_node_t *node, const char *move_lifetime,
                      int timeout_ms, cib_t *cib, int cib_options,
                      gboolean promoted_role_only, gboolean force)
 {
@@ -1450,8 +1453,8 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc,
     GList *current_active = NULL;
     GList *restart_target_active = NULL;
 
-    pe_working_set_t *data_set = NULL;
-    pe_resource_t *parent = uber_parent(rsc);
+    pcmk_scheduler_t *data_set = NULL;
+    pcmk_resource_t *parent = uber_parent(rsc);
 
     bool running = false;
     const char *id = rsc->clone_name ? rsc->clone_name : rsc->id;
@@ -1754,7 +1757,7 @@ done:
 }
 
 static inline bool
-action_is_pending(const pe_action_t *action)
+action_is_pending(const pcmk_action_t *action)
 {
     if (pcmk_any_flags_set(action->flags,
                            pcmk_action_optional|pcmk_action_pseudo)
@@ -1777,7 +1780,7 @@ static bool
 actions_are_pending(const GList *actions)
 {
     for (const GList *action = actions; action != NULL; action = action->next) {
-        const pe_action_t *a = (const pe_action_t *) action->data;
+        const pcmk_action_t *a = (const pcmk_action_t *) action->data;
 
         if (action_is_pending(a)) {
             crm_notice("Waiting for %s (flags=%#.8x)", a->uuid, a->flags);
@@ -1794,7 +1797,7 @@ print_pending_actions(pcmk__output_t *out, GList *actions)
 
     out->info(out, "Pending actions:");
     for (action = actions; action != NULL; action = action->next) {
-        pe_action_t *a = (pe_action_t *) action->data;
+        pcmk_action_t *a = (pcmk_action_t *) action->data;
 
         if (!action_is_pending(a)) {
             continue;
@@ -1834,7 +1837,7 @@ print_pending_actions(pcmk__output_t *out, GList *actions)
 int
 wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
 {
-    pe_working_set_t *data_set = NULL;
+    pcmk_scheduler_t *data_set = NULL;
     int rc = pcmk_rc_ok;
     int timeout_s = timeout_ms? ((timeout_ms + 999) / 1000) : WAIT_DEFAULT_TIMEOUT_S;
     time_t expire_time = time(NULL) + timeout_s;
@@ -2049,9 +2052,9 @@ done:
 }
 
 crm_exit_t
-cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
+cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
                      const char *rsc_action, GHashTable *override_hash,
-                     int timeout_ms, cib_t * cib, pe_working_set_t *data_set,
+                     int timeout_ms, cib_t *cib, pcmk_scheduler_t *data_set,
                      int resource_verbose, gboolean force, int check_level)
 {
     pcmk__output_t *out = data_set->priv;
@@ -2112,16 +2115,16 @@ cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
 
 // \return Standard Pacemaker return code
 int
-cli_resource_move(const pe_resource_t *rsc, const char *rsc_id,
+cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
                   const char *host_name, const char *move_lifetime, cib_t *cib,
-                  int cib_options, pe_working_set_t *data_set,
+                  int cib_options, pcmk_scheduler_t *data_set,
                   gboolean promoted_role_only, gboolean force)
 {
     pcmk__output_t *out = data_set->priv;
     int rc = pcmk_rc_ok;
     unsigned int count = 0;
-    pe_node_t *current = NULL;
-    pe_node_t *dest = pe_find_node(data_set->nodes, host_name);
+    pcmk_node_t *current = NULL;
+    pcmk_node_t *dest = pe_find_node(data_set->nodes, host_name);
     bool cur_is_dest = false;
 
     if (dest == NULL) {
@@ -2131,7 +2134,7 @@ cli_resource_move(const pe_resource_t *rsc, const char *rsc_id,
     if (promoted_role_only
         && !pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
 
-        const pe_resource_t *p = pe__const_top_resource(rsc, false);
+        const pcmk_resource_t *p = pe__const_top_resource(rsc, false);
 
         if (pcmk_is_set(p->flags, pcmk_rsc_promotable)) {
             out->info(out, "Using parent '%s' for move instead of '%s'.", rsc->id, rsc_id);
@@ -2149,10 +2152,10 @@ cli_resource_move(const pe_resource_t *rsc, const char *rsc_id,
 
     if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
         unsigned int promoted_count = 0;
-        pe_node_t *promoted_node = NULL;
+        pcmk_node_t *promoted_node = NULL;
 
         for (const GList *iter = rsc->children; iter; iter = iter->next) {
-            const pe_resource_t *child = (const pe_resource_t *) iter->data;
+            const pcmk_resource_t *child = (const pcmk_resource_t *) iter->data;
             enum rsc_role_e child_role = child->fns->state(child, TRUE);
 
             if (child_role == pcmk_role_promoted) {
