@@ -6,7 +6,6 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 
 import re
 
-from pacemaker._cts.audits import AuditConstraint, AuditResource
 from pacemaker._cts.environment import EnvFactory
 from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.patterns import PatternSelector
