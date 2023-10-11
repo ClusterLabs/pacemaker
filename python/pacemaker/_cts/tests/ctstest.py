@@ -44,11 +44,13 @@ class CTSTest:
         self.name = None
         self.templates = PatternSelector(cm["Name"])
 
-        self.stats = { "auditfail": 0,
-                      "calls": 0,
-                      "failure": 0,
-                      "skipped": 0,
-                      "success": 0 }
+        self.stats = {
+            "auditfail": 0,
+            "calls": 0,
+            "failure": 0,
+            "skipped": 0,
+            "success": 0
+        }
 
         self._cm = cm
         self._env = EnvFactory().getInstance()

@@ -51,28 +51,29 @@ def test_list(cm, audits):
     # definitely be run - is_applicable is still taken into consideration.
     # Also note that there are other tests that are excluded from this
     # list for various reasons.
-    enabled_test_classes = [ FlipTest,
-                             RestartTest,
-                             StonithdTest,
-                             StartOnebyOne,
-                             SimulStart,
-                             SimulStop,
-                             StopOnebyOne,
-                             RestartOnebyOne,
-                             PartialStart,
-                             StandbyTest,
-                             MaintenanceMode,
-                             ResourceRecover,
-                             ComponentFail,
-                             SplitBrainTest,
-                             Reattach,
-                             ResyncCIB,
-                             NearQuorumPointTest,
-                             RemoteBasic,
-                             RemoteStonithd,
-                             RemoteMigrate,
-                             RemoteRscFailure,
-                           ]
+    enabled_test_classes = [
+        FlipTest,
+        RestartTest,
+        StonithdTest,
+        StartOnebyOne,
+        SimulStart,
+        SimulStop,
+        StopOnebyOne,
+        RestartOnebyOne,
+        PartialStart,
+        StandbyTest,
+        MaintenanceMode,
+        ResourceRecover,
+        ComponentFail,
+        SplitBrainTest,
+        Reattach,
+        ResyncCIB,
+        NearQuorumPointTest,
+        RemoteBasic,
+        RemoteStonithd,
+        RemoteMigrate,
+        RemoteRscFailure,
+    ]
 
     result = []
 

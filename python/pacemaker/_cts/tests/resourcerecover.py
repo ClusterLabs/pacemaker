@@ -66,7 +66,9 @@ class ResourceRecover(CTSTest):
             self.debug("Failing %s (also known as %s)" % (rsc.id, rsc.clone_id))
 
         # Log patterns to watch for (failure, plus restart if managed)
-        pats = [ self.templates["Pat:CloneOpFail"] % (self._action, rsc.id, rsc.clone_id) ]
+        pats = [
+            self.templates["Pat:CloneOpFail"] % (self._action, rsc.id, rsc.clone_id)
+        ]
 
         if rsc.managed:
             pats.append(self.templates["Pat:RscOpOK"] % ("stop", self._rid))
@@ -164,8 +166,10 @@ class ResourceRecover(CTSTest):
     def errors_to_ignore(self):
         """ Return list of errors which should be ignored """
 
-        return [ r"Updating failcount for %s" % self._rid,
-                 r"schedulerd.*: Recover\s+(%s|%s)\s+\(.*\)" % (self._rid, self._rid_alt),
-                 r"Unknown operation: fail",
-                 self.templates["Pat:RscOpOK"] % (self._action, self._rid),
-                 r"(ERROR|error).*: Action %s_%s_%d .* initiated outside of a transition" % (self._rid, self._action, self._interval) ]
+        return [
+            r"Updating failcount for %s" % self._rid,
+            r"schedulerd.*: Recover\s+(%s|%s)\s+\(.*\)" % (self._rid, self._rid_alt),
+            r"Unknown operation: fail",
+            self.templates["Pat:RscOpOK"] % (self._action, self._rid),
+            r"(ERROR|error).*: Action %s_%s_%d .* initiated outside of a transition" % (self._rid, self._action, self._interval)
+        ]

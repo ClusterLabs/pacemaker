@@ -82,15 +82,15 @@ class LogAudit(ClusterAudit):
             if self._cm.env["have_systemd"]:
                 (rc, _) = self._cm.rsh(node, "systemctl stop systemd-journald.socket")
                 if rc != 0:
-                    self._cm.log ("ERROR: Cannot stop 'systemd-journald' on %s" % node)
+                    self._cm.log("ERROR: Cannot stop 'systemd-journald' on %s" % node)
 
                 (rc, _) = self._cm.rsh(node, "systemctl start systemd-journald.service")
                 if rc != 0:
-                    self._cm.log ("ERROR: Cannot start 'systemd-journald' on %s" % node)
+                    self._cm.log("ERROR: Cannot start 'systemd-journald' on %s" % node)
 
             (rc, _) = self._cm.rsh(node, "service %s restart" % self._cm.env["syslogd"])
             if rc != 0:
-                self._cm.log ("ERROR: Cannot restart '%s' on %s" % (self._cm.env["syslogd"], node))
+                self._cm.log("ERROR: Cannot restart '%s' on %s" % (self._cm.env["syslogd"], node))
 
     def _create_watcher(self, patterns, kind):
         """ Create a new LogWatcher instance for the given patterns """
@@ -105,9 +105,9 @@ class LogAudit(ClusterAudit):
         """ Perform the log audit """
 
         patterns = []
-        prefix   = "Test message from"
-        suffix   = str(uuid.uuid4())
-        watch    = {}
+        prefix = "Test message from"
+        suffix = str(uuid.uuid4())
+        watch = {}
 
         for node in self._cm.env["nodes"]:
             # Look for the node name in two places to make sure
@@ -122,10 +122,10 @@ class LogAudit(ClusterAudit):
 
         watch_pref = self._cm.env["LogWatcher"]
         if watch_pref == LogKind.ANY:
-            kinds = [ LogKind.FILE ]
+            kinds = [LogKind.FILE]
             if self._cm.env["have_systemd"]:
-                kinds +=  [ LogKind.JOURNAL ]
-            kinds += [ LogKind.REMOTE_FILE ]
+                kinds += [LogKind.JOURNAL]
+            kinds += [LogKind.REMOTE_FILE]
             for k in kinds:
                 watch[k] = self._create_watcher(patterns, k)
             self._cm.log("Logging test message with identifier %s" % suffix)
@@ -137,7 +137,7 @@ class LogAudit(ClusterAudit):
 
             (rc, _) = self._cm.rsh(node, cmd, synchronous=False, verbose=0)
             if rc != 0:
-                self._cm.log ("ERROR: Cannot execute remote command [%s] on %s" % (cmd, node))
+                self._cm.log("ERROR: Cannot execute remote command [%s] on %s" % (cmd, node))
 
         for k in list(watch.keys()):
             w = watch[k]
@@ -209,7 +209,7 @@ class DiskAudit(ClusterAudit):
         for node in self._cm.env["nodes"]:
             (_, dfout) = self._cm.rsh(node, dfcmd, verbose=1)
             if not dfout:
-                self._cm.log ("ERROR: Cannot execute remote df command [%s] on %s" % (dfcmd, node))
+                self._cm.log("ERROR: Cannot execute remote df command [%s] on %s" % (dfcmd, node))
                 continue
 
             dfout = dfout[0].strip()
@@ -949,7 +949,7 @@ class PartitionAudit(ClusterAudit):
             self._node_quorum[node] = out[0].strip()
 
             self.debug("Node %s: %s - %s - %s." % (node, self._node_state[node], self._node_epoch[node], self._node_quorum[node]))
-            self._node_state[node]  = self._trim_string(self._node_state[node])
+            self._node_state[node] = self._trim_string(self._node_state[node])
             self._node_epoch[node] = self._trim2int(self._node_epoch[node])
             self._node_quorum[node] = self._trim_string(self._node_quorum[node])
 

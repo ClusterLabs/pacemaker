@@ -56,8 +56,10 @@ class RemoteRscFailure(RemoteDriver):
     def errors_to_ignore(self):
         """ Return list of errors which should be ignored """
 
-        return [ r"schedulerd.*: Recover\s+remote-rsc\s+\(.*\)",
-                 r"Dummy.*: No process state file found" ] + super().errors_to_ignore
+        return [
+            r"schedulerd.*: Recover\s+remote-rsc\s+\(.*\)",
+            r"Dummy.*: No process state file found"
+        ] + super().errors_to_ignore
 
     def is_applicable(self):
         """ Return True if this test is applicable in the current test configuration. """

@@ -164,11 +164,13 @@ class Reattach(CTSTest):
             self._logger.log("Patterns not found: %r" % managed.unmatched)
             return self.failure("Resource management not disabled")
 
-        pats = [ self.templates["Pat:RscOpOK"] % ("start", ".*"),
-                 self.templates["Pat:RscOpOK"] % ("stop", ".*"),
-                 self.templates["Pat:RscOpOK"] % ("promote", ".*"),
-                 self.templates["Pat:RscOpOK"] % ("demote", ".*"),
-                 self.templates["Pat:RscOpOK"] % ("migrate", ".*") ]
+        pats = [
+            self.templates["Pat:RscOpOK"] % ("start", ".*"),
+            self.templates["Pat:RscOpOK"] % ("stop", ".*"),
+            self.templates["Pat:RscOpOK"] % ("promote", ".*"),
+            self.templates["Pat:RscOpOK"] % ("demote", ".*"),
+            self.templates["Pat:RscOpOK"] % ("migrate", ".*")
+        ]
 
         watch = self.create_watch(pats, 60, "ShutdownActivity")
         watch.set_watch()
@@ -219,4 +221,6 @@ class Reattach(CTSTest):
     def errors_to_ignore(self):
         """ Return list of errors which should be ignored """
 
-        return [ r"resource( was|s were) active at shutdown" ]
+        return [
+            r"resource( was|s were) active at shutdown"
+        ]

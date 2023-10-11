@@ -1,6 +1,13 @@
 """ Test scenario classes for Pacemaker's Cluster Test Suite (CTS) """
 
-__all__ = [ "AllOnce", "Boot", "BootCluster", "LeaveBooted", "RandomTests", "Sequence" ]
+__all__ = [
+    "AllOnce",
+    "Boot",
+    "BootCluster",
+    "LeaveBooted",
+    "RandomTests",
+    "Sequence",
+]
 __copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
@@ -74,10 +81,15 @@ class Scenario:
 
         # pylint: disable=invalid-name
 
-        self.stats = { "success": 0, "failure": 0, "BadNews": 0, "skipped": 0 }
+        self.stats = {
+            "success": 0,
+            "failure": 0,
+            "BadNews": 0,
+            "skipped": 0
+        }
         self.tests = tests
 
-        self._audits  = audits
+        self._audits = audits
         self._bad_news = None
         self._cm = cm
         self._components = components
@@ -251,7 +263,12 @@ class Scenario:
         self._cm.log("Overall Results:%r" % self.stats)
         self._cm.log("****************")
 
-        stat_filter = { "calls": 0, "failure": 0, "skipped": 0, "auditfail": 0 }
+        stat_filter = {
+            "calls": 0,
+            "failure": 0,
+            "skipped": 0,
+            "auditfail": 0,
+        }
 
         self._cm.log("Test Summary")
         for test in self.tests:
