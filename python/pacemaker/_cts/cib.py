@@ -109,11 +109,12 @@ class CIB:
         # so each corosync.conf "object" is one record;
         # match the "node {" record that has "ring0_addr: node_name";
         # then print the substring of that record after "nodeid:"
-        (rc, output) = self._factory.rsh(self._factory.target,
-            r"""awk -v RS="}" """
-            r"""'/^(\s*nodelist\s*{)?\s*node\s*{.*(ring0_addr|name):\s*%s(\s+|$)/"""
-            r"""{gsub(/.*nodeid:\s*/,"");gsub(/\s+.*$/,"");print}' %s"""
-            % (node_name, BuildOptions.COROSYNC_CONFIG_FILE), verbose=1)
+        awk = r"""awk -v RS="}" """ \
+              r"""'/^(\s*nodelist\s*{)?\s*node\s*{.*(ring0_addr|name):\s*%s(\s+|$)/""" \
+              r"""{gsub(/.*nodeid:\s*/,"");gsub(/\s+.*$/,"");print}' %s""" \
+              % (node_name, BuildOptions.COROSYNC_CONFIG_FILE)
+
+        (rc, output) = self._factory.rsh(self._factory.target, awk, verbose=1)
 
         if rc == 0 and len(output) == 1:
             try:

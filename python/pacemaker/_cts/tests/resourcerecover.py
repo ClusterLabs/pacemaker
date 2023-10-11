@@ -157,8 +157,8 @@ class ResourceRecover(CTSTest):
 
         new_failcount = self._get_failcount(node)
         if new_failcount != orig_failcount + 1:
-            return self.failure("%s fail count is %d not %d" % (self._rid,
-                                new_failcount, orig_failcount + 1))
+            return self.failure("%s fail count is %d not %d"
+                                % (self._rid, new_failcount, orig_failcount + 1))
 
         return 0 # Anything but None is success
 
