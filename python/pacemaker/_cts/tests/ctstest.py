@@ -244,33 +244,6 @@ class CTSTest:
 
         return True
 
-    def _find_ocfs2_resources(self, node):
-        """ Find any OCFS2 filesystems mounted on the given cluster node,
-            populating the internal self._r_ocfs2 list with them and returning
-            the number of OCFS2 filesystems.
-         """
-
-        self._r_o2cb = None
-        self._r_ocfs2 = []
-
-        (_, lines) = self._rsh(node, "crm_resource -c", verbose=1)
-        for line in lines:
-            if re.search("^Resource", line):
-                r = AuditResource(self._cm, line)
-
-                if r.rtype == "o2cb" and r.parent != "NA":
-                    self.debug("Found o2cb: %s" % self._r_o2cb)
-                    self._r_o2cb = r.parent
-
-            if re.search("^Constraint", line):
-                c = AuditConstraint(self._cm, line)
-
-                if c.type == "rsc_colocation" and c.target == self._r_o2cb:
-                    self._r_ocfs2.append(c.rsc)
-
-        self.debug("Found ocfs2 filesystems: %s" % self._r_ocfs2)
-        return len(self._r_ocfs2)
-
     def can_run_now(self, node):
         """ Return True if we can meaningfully run right now """
 
