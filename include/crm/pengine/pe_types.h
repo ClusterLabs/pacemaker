@@ -29,13 +29,7 @@ extern "C" {
  * \ingroup pengine
  */
 
-typedef struct pe_ticket_s {
-    char *id;
-    gboolean granted;
-    time_t last_granted;
-    gboolean standby;
-    GHashTable *state;
-} pe_ticket_t;
+typedef struct pe_ticket_s pe_ticket_t;
 
 typedef struct pe_tag_s {
     char *id;

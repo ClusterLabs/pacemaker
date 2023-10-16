@@ -21,6 +21,7 @@
 #include <crm/common/resources.h>
 #include <crm/common/roles.h>
 #include <crm/common/scheduler_types.h>
+#include <crm/common/tickets.h>
 
 #ifdef __cplusplus
 extern "C" {
