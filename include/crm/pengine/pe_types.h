@@ -29,8 +29,6 @@ extern "C" {
  * \ingroup pengine
  */
 
-typedef struct pe_tag_s pe_tag_t;
-
 //!@{
 //! \deprecated Do not use
 enum pe_ordering {
