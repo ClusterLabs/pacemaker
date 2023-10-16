@@ -798,6 +798,7 @@ set_identity(const char *entity, int argc, char *const *argv)
 
     CRM_ASSERT(crm_system_name != NULL);
 
+    // Used by fencing.py.py (in fence-agents)
     setenv("PCMK_service", crm_system_name, 1);
 }
 
