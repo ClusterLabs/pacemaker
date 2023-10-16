@@ -21,11 +21,10 @@ CTS includes:
 * The CTS lab: This is a cluster exerciser for intensively testing the behavior
   of an entire working cluster. It is primarily for developers and packagers of
   the Pacemaker source code, but it can be useful for users who wish to see how
-  their cluster will react to various situations. In an installed deployment,
-  the CTS lab is in the cts subdirectory of this directory; in a source
-  distibution, it is in cts/lab.
+  their cluster will react to various situations. Most of the lab code is in
+  the Pacemaker Python module. The front end, cts-lab, is in this directory.
 
-  The CTS lab runs a randomized series of predefined tests on the cluster. CTS
+  The CTS lab runs a randomized series of predefined tests on the cluster. It
   can be run against a pre-existing cluster configuration or overwrite the
   existing configuration with a test configuration.
 
@@ -45,6 +44,9 @@ CTS includes:
   As you might expect, you can also remove the helpers with:
 
       /usr/libexec/pacemaker/cts-support uninstall
+
+  (The actual directory location may vary depending on how Pacemaker was
+  built.)
 
 * Cluster benchmark: The benchmark subdirectory of this directory contains some
   cluster test environment benchmarking code. It is not particularly useful for
@@ -107,6 +109,8 @@ CTS includes:
 The primary interface to the CTS lab is the cts-lab executable:
 
     /usr/share/pacemaker/tests/cts-lab [options] <number-of-tests-to-run>
+
+(The actual directory location may vary depending on how Pacemaker was built.)
 
 As part of the options, specify the cluster nodes with --nodes, for example:
 
@@ -212,22 +216,22 @@ lab, but the C library variables may be set differently on different nodes.
 
 ### Optional: Remote node testing
 
-If the pacemaker-remoted daemon is installed on all cluster nodes, CTS will
-enable remote node tests.
+If the pacemaker-remoted daemon is installed on all cluster nodes, the CTS lab
+will enable remote node tests.
 
 The remote node tests choose a random node, stop the cluster on it, start
 pacemaker-remoted on it, and add an ocf:pacemaker:remote resource to turn it
-into a remote node. When the test is done, CTS will turn the node back into
+into a remote node. When the test is done, the lab will turn the node back into
 a cluster node.
 
-To avoid conflicts, CTS will rename the node, prefixing the original node name
-with "remote-". For example, "pcmk-1" will become "remote-pcmk-1". These names
-do not need to be resolvable.
+To avoid conflicts, the lab will rename the node, prefixing the original node
+name with "remote-". For example, "pcmk-1" will become "remote-pcmk-1". These
+names do not need to be resolvable.
 
 The name change may require special fencing configuration, if the fence agent
 expects the node name to be the same as its hostname. A common approach is to
 specify the "remote-" names in pcmk\_host\_list. If you use
-pcmk\_host\_list=all, CTS will expand that to all cluster nodes and their
+pcmk\_host\_list=all, the lab will expand that to all cluster nodes and their
 "remote-" names.  You may additionally need a pcmk\_host\_map argument to map
 the "remote-" names to the hostnames. Example:
 
@@ -264,7 +268,7 @@ valgrind. For example:
 
 ### Mini-HOWTO: Allow passwordless remote SSH connections
 
-The CTS scripts run "ssh -l root" so you don't have to do any of your testing
+The CTS lab runs "ssh -l root" so you don't have to do any of your testing
 logged in as root on the exerciser. Here is how to allow such connections
 without requiring a password to be entered each time:
 
@@ -298,42 +302,20 @@ without requiring a password to be entered each time:
   If not, look at the documentation for your version of ssh.
 
 
-## Note on the maintenance
+## Upgrading scheduler test inputs for new XSLTs
 
-### Tests for scheduler
-
-The source `*.xml` files are preferably kept in sync with the newest
-major (and only major, which is enough) schema version, since these
-tests are not meant to double as schema upgrade ones (except some cases
+The scheduler/xml inputs should be kept in sync with the latest major schema
+version, since these tests are not meant to test schema upgrades (unless
 expressly designated as such).
 
-Currently and unless something goes wrong, the procedure of upgrading
-these tests en masse is as easy as:
+To upgrade the inputs to a new major schema version:
 
-    cd "$(git rev-parse --show-toplevel)/cts"  # if not already
-    pushd "$(git rev-parse --show-toplevel)/xml"
+    cd "$(git rev-parse --show-toplevel)/xml"
     ./regression.sh cts_scheduler -G
-    popd
+    cd "$(git rev-parse --show-toplevel)/cts"
     git add --interactive .
-    git commit -m 'XML: upgrade-M.N.xsl: apply on scheduler CTS test cases'
-    git reset HEAD && git checkout .  # if some differences still remain
-    ./cts-scheduler  # absolutely vital to check nothing got broken!
+    git commit -m 'Test: scheduler: upgrade test inputs to schema $X.$Y'
+    ./cts-scheduler || echo 'Investigate what went wrong'
 
-Now, sadly, there's no proved automated way to minimize instances like this:
-
-    <primitive id="rsc1" class="ocf" provider="heartbeat" type="apache">
-    </primitive>
-
-that may be left behind into more canonical:
-
-    <primitive id="rsc1" class="ocf" provider="heartbeat" type="apache"/>
-
-so manual editing is tasked, or perhaps `--format` or `--c14n`
-to `xmllint` will be of help (without any other side effects).
-
-If the overall process gets stuck anywhere, common sense to the rescue.
-The initial part of the above recipe can be repeated anytime to verify
-there's nothing to upgrade artificially like this, which is a desired
-state.  Note that `regression.sh` script performs validation of both
-the input and output, should the upgrade take place, implicitly, so
-there's no need of revalidation in the happy case.
+The first two commands can be run anytime to verify no further upgrades are
+needed.

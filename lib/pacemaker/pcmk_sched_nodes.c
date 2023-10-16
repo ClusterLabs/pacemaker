@@ -193,7 +193,7 @@ pcmk__copy_node_list(const GList *list, bool reset)
  *
  * \param[in] a     First node to compare
  * \param[in] b     Second node to compare
- * \param[in] data  Node that resource being assigned is active on, if any
+ * \param[in] data  Node to prefer if all else equal
  *
  * \return -1 if \p a is preferred, +1 if \p b is preferred, or 0 if they are
  *         equally preferred
@@ -203,7 +203,7 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
 {
     const pcmk_node_t *node1 = (const pcmk_node_t *) a;
     const pcmk_node_t *node2 = (const pcmk_node_t *) b;
-    const pcmk_node_t *active = (const pcmk_node_t *) data;
+    const pcmk_node_t *preferred = (const pcmk_node_t *) data;
 
     int node1_score = -INFINITY;
     int node2_score = -INFINITY;
@@ -227,22 +227,18 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
     }
 
     if (node1_score > node2_score) {
-        crm_trace("%s (%d) > %s (%d) : score",
-                  pe__node_name(node1), node1_score, pe__node_name(node2),
-                  node2_score);
+        crm_trace("%s before %s (score %d > %d)",
+                  pe__node_name(node1), pe__node_name(node2),
+                  node1_score, node2_score);
         return -1;
     }
 
     if (node1_score < node2_score) {
-        crm_trace("%s (%d) < %s (%d) : score",
-                  pe__node_name(node1), node1_score, pe__node_name(node2),
-                  node2_score);
+        crm_trace("%s after %s (score %d < %d)",
+                  pe__node_name(node1), pe__node_name(node2),
+                  node1_score, node2_score);
         return 1;
     }
-
-    crm_trace("%s (%d) == %s (%d) : score",
-              pe__node_name(node1), node1_score, pe__node_name(node2),
-              node2_score);
 
     // If appropriate, compare node utilization
 
@@ -255,11 +251,11 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
                      pcmk__str_casei)) {
         result = pcmk__compare_node_capacities(node1, node2);
         if (result < 0) {
-            crm_trace("%s > %s : capacity (%d)",
-                      pe__node_name(node1), pe__node_name(node2), result);
+            crm_trace("%s before %s (greater capacity by %d attributes)",
+                      pe__node_name(node1), pe__node_name(node2), result * -1);
             return -1;
         } else if (result > 0) {
-            crm_trace("%s < %s : capacity (%d)",
+            crm_trace("%s after %s (lower capacity by %d attributes)",
                       pe__node_name(node1), pe__node_name(node2), result);
             return 1;
         }
@@ -268,38 +264,47 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
     // Compare number of resources already assigned to node
 
     if (node1->details->num_resources < node2->details->num_resources) {
-        crm_trace("%s (%d) > %s (%d) : resources",
-                  pe__node_name(node1), node1->details->num_resources,
-                  pe__node_name(node2), node2->details->num_resources);
+        crm_trace("%s before %s (%d resources < %d)",
+                  pe__node_name(node1), pe__node_name(node2),
+                  node1->details->num_resources, node2->details->num_resources);
         return -1;
 
     } else if (node1->details->num_resources > node2->details->num_resources) {
-        crm_trace("%s (%d) < %s (%d) : resources",
-                  pe__node_name(node1), node1->details->num_resources,
-                  pe__node_name(node2), node2->details->num_resources);
+        crm_trace("%s after %s (%d resources > %d)",
+                  pe__node_name(node1), pe__node_name(node2),
+                  node1->details->num_resources, node2->details->num_resources);
         return 1;
     }
 
     // Check whether one node is already running desired resource
 
-    if (active != NULL) {
-        if (pe__same_node(active, node1)) {
-            crm_trace("%s (%d) > %s (%d) : active",
-                      pe__node_name(node1), node1->details->num_resources,
-                      pe__node_name(node2), node2->details->num_resources);
+    if (preferred != NULL) {
+        if (pe__same_node(preferred, node1)) {
+            crm_trace("%s before %s (preferred node)",
+                      pe__node_name(node1), pe__node_name(node2));
             return -1;
-        } else if (pe__same_node(active, node2)) {
-            crm_trace("%s (%d) < %s (%d) : active",
-                      pe__node_name(node1), node1->details->num_resources,
-                      pe__node_name(node2), node2->details->num_resources);
+        } else if (pe__same_node(preferred, node2)) {
+            crm_trace("%s after %s (not preferred node)",
+                      pe__node_name(node1), pe__node_name(node2));
             return 1;
         }
     }
 
     // If all else is equal, prefer node with lowest-sorting name
 equal:
-    crm_trace("%s = %s", pe__node_name(node1), pe__node_name(node2));
-    return strcmp(node1->details->uname, node2->details->uname);
+    result = strcmp(node1->details->uname, node2->details->uname);
+    if (result < 0) {
+        crm_trace("%s before %s (name)",
+                  pe__node_name(node1), pe__node_name(node2));
+        return -1;
+    } else if (result > 0) {
+        crm_trace("%s after %s (name)",
+                  pe__node_name(node1), pe__node_name(node2));
+        return 1;
+    }
+
+    crm_trace("%s == %s", pe__node_name(node1), pe__node_name(node2));
+    return 0;
 }
 
 /*!
