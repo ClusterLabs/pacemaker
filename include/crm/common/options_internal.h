@@ -85,6 +85,7 @@ bool pcmk__valid_sbd_timeout(const char *value);
 #define PCMK__ENV_FAIL_FAST                 "fail_fast"
 #define PCMK__ENV_LOGFACILITY               "logfacility"
 #define PCMK__ENV_LOGFILE                   "logfile"
+#define PCMK__ENV_LOGFILE_MODE              "logfile_mode"
 #define PCMK__ENV_LOGPRIORITY               "logpriority"
 #define PCMK__ENV_NODE_ACTION_LIMIT         "node_action_limit"
 #define PCMK__ENV_NODE_START_STATE          "node_start_state"

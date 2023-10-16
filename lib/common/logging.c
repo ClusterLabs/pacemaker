@@ -237,7 +237,7 @@ chown_logfile(const char *filename, int logfd)
 static void
 chmod_logfile(const char *filename, int logfd)
 {
-    const char *modestr = getenv("PCMK_logfile_mode");
+    const char *modestr = pcmk__env_option(PCMK__ENV_LOGFILE_MODE);
     mode_t filemode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
 
     if (modestr != NULL) {
