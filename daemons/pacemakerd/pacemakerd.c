@@ -404,7 +404,7 @@ main(int argc, char **argv)
 
         if (!pcmk__str_eq(facility, PCMK__VALUE_NONE,
                           pcmk__str_casei|pcmk__str_null_matches)) {
-            setenv("HA_LOGFACILITY", facility, 1);
+            pcmk__set_env_option("LOGFACILITY", facility, true);
         }
     }
 

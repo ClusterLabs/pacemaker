@@ -1950,7 +1950,7 @@ set_agent_environment(GHashTable *params, int timeout_ms, int check_level,
         free(level);
     }
 
-    setenv("HA_debug", (verbosity > 0)? "1" : "0", 1);
+    pcmk__set_env_option(PCMK__ENV_DEBUG, ((verbosity > 0)? "1" : "0"), true);
     if (verbosity > 1) {
         setenv("OCF_TRACE_RA", "1", 1);
     }
