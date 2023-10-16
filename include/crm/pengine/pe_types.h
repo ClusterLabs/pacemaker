@@ -29,47 +29,7 @@ extern "C" {
  * \ingroup pengine
  */
 
-typedef struct resource_object_functions_s {
-    gboolean (*unpack)(pcmk_resource_t*, pcmk_scheduler_t*);
-    pcmk_resource_t *(*find_rsc)(pcmk_resource_t *parent, const char *search,
-                                 const pcmk_node_t *node, int flags);
-    /* parameter result must be free'd */
-    char *(*parameter)(pcmk_resource_t*, pcmk_node_t*, gboolean, const char*,
-                       pcmk_scheduler_t*);
-    //! \deprecated will be removed in a future release
-    void (*print)(pcmk_resource_t*, const char*, long, void*);
-    gboolean (*active)(pcmk_resource_t*, gboolean);
-    enum rsc_role_e (*state)(const pcmk_resource_t*, gboolean);
-    pcmk_node_t *(*location)(const pcmk_resource_t*, GList**, int);
-    void (*free)(pcmk_resource_t*);
-    void (*count)(pcmk_resource_t*);
-    gboolean (*is_filtered)(const pcmk_resource_t*, GList *, gboolean);
-
-    /*!
-     * \brief Find a node (and optionally count all) where resource is active
-     *
-     * \param[in]  rsc          Resource to check
-     * \param[out] count_all    If not NULL, set this to count of active nodes
-     * \param[out] count_clean  If not NULL, set this to count of clean nodes
-     *
-     * \return A node where the resource is active, preferring the source node
-     *         if the resource is involved in a partial migration or a clean,
-     *         online node if the resource's "requires" is "quorum" or
-     *         "nothing", or NULL if the resource is inactive.
-     */
-    pcmk_node_t *(*active_node)(const pcmk_resource_t *rsc,
-                                unsigned int *count_all,
-                                unsigned int *count_clean);
-
-    /*!
-     * \brief Get maximum resource instances per node
-     *
-     * \param[in] rsc  Resource to check
-     *
-     * \return Maximum number of \p rsc instances that can be active on one node
-     */
-    unsigned int (*max_per_node)(const pcmk_resource_t *rsc);
-} resource_object_functions_t;
+typedef struct resource_object_functions_s resource_object_functions_t;
 
 struct pe_working_set_s {
     xmlNode *input;
