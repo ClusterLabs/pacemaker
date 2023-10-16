@@ -71,8 +71,6 @@ typedef struct resource_object_functions_s {
     unsigned int (*max_per_node)(const pcmk_resource_t *rsc);
 } resource_object_functions_t;
 
-typedef struct resource_alloc_functions_s resource_alloc_functions_t;
-
 struct pe_working_set_s {
     xmlNode *input;
     crm_time_t *now;

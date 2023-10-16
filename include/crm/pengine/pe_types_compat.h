@@ -211,38 +211,41 @@ enum pe_check_parameters {
 };
 //!@}
 
-//!< \deprecated Use pcmk_action_t instead
+//! \deprecated Use pcmk_action_t instead
 typedef struct pe_action_s action_t;
 
-//!< \deprecated Use pcmk_action_t instead
+//! \deprecated Use pcmk_action_t instead
 typedef struct pe_action_s pe_action_t;
 
-//!< \deprecated Use pe_action_wrapper_t instead
+//! \deprecated Use pe_action_wrapper_t instead
 typedef struct pe_action_wrapper_s action_wrapper_t;
 
-//!< \deprecated Use pcmk_node_t instead
+//! \deprecated Use pcmk_node_t instead
 typedef struct pe_node_s node_t;
 
-//!< \deprecated Use pcmk_node_t instead
+//! \deprecated Use pcmk_node_t instead
 typedef struct pe_node_s pe_node_t;
 
-//!< \deprecated Use enum pe_quorum_policy instead
+//! \deprecated Use enum pe_quorum_policy instead
 typedef enum pe_quorum_policy no_quorum_policy_t;
 
-//!< \deprecated use pcmk_resource_t instead
+//! \deprecated use pcmk_resource_t instead
 typedef struct pe_resource_s resource_t;
 
-//!< \deprecated use pcmk_resource_t instead
+//! \deprecated use pcmk_resource_t instead
 typedef struct pe_resource_s pe_resource_t;
 
-//!< \deprecated Use pe_tag_t instead
+//! \deprecated Use pe_tag_t instead
 typedef struct pe_tag_s tag_t;
 
-//!< \deprecated Use pe_ticket_t instead
+//! \deprecated Use pe_ticket_t instead
 typedef struct pe_ticket_s ticket_t;
 
-//!< \deprecated Use pcmk_scheduler_t instead
+//! \deprecated Use pcmk_scheduler_t instead
 typedef struct pe_working_set_s pe_working_set_t;
+
+//! \deprecated This type should be treated as internal to Pacemaker
+typedef struct resource_alloc_functions_s resource_alloc_functions_t;
 
 #ifdef __cplusplus
 }
