@@ -29,10 +29,7 @@ extern "C" {
  * \ingroup pengine
  */
 
-typedef struct pe_tag_s {
-    char *id;
-    GList *refs;
-} pe_tag_t;
+typedef struct pe_tag_s pe_tag_t;
 
 //!@{
 //! \deprecated Do not use
