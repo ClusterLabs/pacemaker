@@ -372,6 +372,18 @@ enum pe_ordering {
     pe_order_implies_first_master  = pe_order_promoted_implies_first,
 #endif
 };
+
+// Action sequenced relative to another action
+// @COMPAT This should be internal
+struct pe_action_wrapper_s {
+    // @COMPAT This should be uint32_t
+    enum pe_ordering type;      // Group of enum pcmk__action_relation_flags
+
+    // @COMPAT This should be a bool
+    enum pe_link_state state;   // Whether action has been added to graph yet
+
+    pcmk_action_t *action;      // Action to be sequenced
+};
 //!@}
 
 //! Implementation of pcmk_action_t
