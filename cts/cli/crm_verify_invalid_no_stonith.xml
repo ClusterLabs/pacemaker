@@ -1,0 +1,12 @@
+<cib crm_feature_set="3.17.4" validate-with="pacemaker-3.9" epoch="1" num_updates="0" admin_epoch="0" cib-last-written="Wed Sep  6 09:27:13 2023" update-origin="pcmk-2" update-client="crmd" update-user="hacluster">
+  <configuration>
+    <crm_config/>
+    <nodes>
+      <node id="1" uname="pcmk-1"/>
+      <node id="2" uname="pcmk-2"/>
+    </nodes>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
