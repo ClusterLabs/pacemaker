@@ -1262,7 +1262,7 @@ lrmd__init_remote_key(gnutls_datum_t *key)
     bool env_is_fallback = false;
 
     if (need_env) {
-        env_location = getenv("PCMK_authkey_location");
+        env_location = pcmk__env_option(PCMK__ENV_AUTHKEY_LOCATION);
         need_env = false;
     }
 

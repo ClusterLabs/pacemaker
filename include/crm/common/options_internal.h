@@ -76,6 +76,7 @@ long pcmk__auto_watchdog_timeout(void);
 bool pcmk__valid_sbd_timeout(const char *value);
 
 // Constants for environment variable names
+#define PCMK__ENV_AUTHKEY_LOCATION          "authkey_location"
 #define PCMK__ENV_BLACKBOX                  "blackbox"
 #define PCMK__ENV_CALLGRIND_ENABLED         "callgrind_enabled"
 #define PCMK__ENV_CIB_TIMEOUT               "cib_timeout"
