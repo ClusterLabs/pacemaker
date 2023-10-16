@@ -29,8 +29,6 @@ extern "C" {
  * \ingroup pengine
  */
 
-typedef struct resource_object_functions_s resource_object_functions_t;
-
 struct pe_working_set_s {
     xmlNode *input;
     crm_time_t *now;
