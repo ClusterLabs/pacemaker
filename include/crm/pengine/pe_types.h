@@ -29,8 +29,6 @@ extern "C" {
  * \ingroup pengine
  */
 
-typedef struct pe_action_wrapper_s pe_action_wrapper_t;
-
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 #include <crm/pengine/pe_types_compat.h>
 #endif
