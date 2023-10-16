@@ -406,7 +406,7 @@ bool pcmk__action_is_recurring(const pcmk_action_t *action);
 G_GNUC_INTERNAL
 bool pcmk__graph_has_loop(const pcmk_action_t *init_action,
                           const pcmk_action_t *action,
-                          pe_action_wrapper_t *input);
+                          pcmk__related_action_t *input);
 
 G_GNUC_INTERNAL
 void pcmk__add_rsc_actions_to_graph(pcmk_resource_t *rsc);

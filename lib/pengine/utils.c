@@ -451,7 +451,7 @@ order_actions(pcmk_action_t *lh_action, pcmk_action_t *rh_action,
               uint32_t flags)
 {
     GList *gIter = NULL;
-    pe_action_wrapper_t *wrapper = NULL;
+    pcmk__related_action_t *wrapper = NULL;
     GList *list = NULL;
 
     if (flags == pcmk__ar_none) {
@@ -471,21 +471,21 @@ order_actions(pcmk_action_t *lh_action, pcmk_action_t *rh_action,
     /* Filter dups, otherwise update_action_states() has too much work to do */
     gIter = lh_action->actions_after;
     for (; gIter != NULL; gIter = gIter->next) {
-        pe_action_wrapper_t *after = (pe_action_wrapper_t *) gIter->data;
+        pcmk__related_action_t *after = gIter->data;
 
         if (after->action == rh_action && (after->type & flags)) {
             return FALSE;
         }
     }
 
-    wrapper = calloc(1, sizeof(pe_action_wrapper_t));
+    wrapper = calloc(1, sizeof(pcmk__related_action_t));
     wrapper->action = rh_action;
     wrapper->type = flags;
     list = lh_action->actions_after;
     list = g_list_prepend(list, wrapper);
     lh_action->actions_after = list;
 
-    wrapper = calloc(1, sizeof(pe_action_wrapper_t));
+    wrapper = calloc(1, sizeof(pcmk__related_action_t));
     wrapper->action = lh_action;
     wrapper->type = flags;
     list = rh_action->actions_before;

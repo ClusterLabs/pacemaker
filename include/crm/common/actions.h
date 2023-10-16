@@ -329,7 +329,7 @@ enum pe_action_flags {
 };
 
 /* @COMPAT enum pe_link_state and enum pe_ordering are currently needed for
- * pe_action_wrapper_t (which is public) but should be removed at an
+ * struct pe_action_wrapper_s (which is public) but should be removed at an
  * API compatibility break when that can be refactored and made internal
  */
 
@@ -424,8 +424,9 @@ struct pe_action_s {
      */
     int required_runnable_before;
 
-    GList *actions_before;  //!< Actions ordered before (pe_action_wrapper_t *)
-    GList *actions_after;   //!< Actions ordered after (pe_action_wrapper_t *)
+    // Actions in a relation with this one (as pcmk__related_action_t *)
+    GList *actions_before;  //!< For Pacemaker use only
+    GList *actions_after;   //!< For Pacemaker use only
 
     /* This is intended to hold data that varies by the type of action, but is
      * not currently used. Some of the above fields could be moved here except

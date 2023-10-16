@@ -1384,8 +1384,8 @@ pe_free_action(pcmk_action_t *action)
     if (action == NULL) {
         return;
     }
-    g_list_free_full(action->actions_before, free);     /* pe_action_wrapper_t* */
-    g_list_free_full(action->actions_after, free);      /* pe_action_wrapper_t* */
+    g_list_free_full(action->actions_before, free);
+    g_list_free_full(action->actions_after, free);
     if (action->extra) {
         g_hash_table_destroy(action->extra);
     }
