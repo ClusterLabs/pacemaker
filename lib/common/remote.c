@@ -1256,13 +1256,14 @@ crm_default_remote_port(void)
     static int port = 0;
 
     if (port == 0) {
-        const char *env = getenv("PCMK_remote_port");
+        const char *env = pcmk__env_option(PCMK__ENV_REMOTE_PORT);
 
         if (env) {
             errno = 0;
             port = strtol(env, NULL, 10);
             if (errno || (port < 1) || (port > 65535)) {
-                crm_warn("Environment variable PCMK_remote_port has invalid value '%s', using %d instead",
+                crm_warn("Environment variable PCMK_" PCMK__ENV_REMOTE_PORT
+                         " has invalid value '%s', using %d instead",
                          env, DEFAULT_REMOTE_PORT);
                 port = DEFAULT_REMOTE_PORT;
             }

@@ -514,7 +514,7 @@ main(int argc, char **argv, char **envp)
 
 #ifdef PCMK__COMPILE_REMOTE
     if (options.port != NULL) {
-        setenv("PCMK_remote_port", options.port, 1);
+        pcmk__set_env_option(PCMK__ENV_REMOTE_PORT, options.port, false);
     }
 #endif  // PCMK__COMPILE_REMOTE
 

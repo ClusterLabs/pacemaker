@@ -488,11 +488,11 @@ create_container_resource(pcmk_resource_t *parent,
     }
 
     if (data->control_port != NULL) {
-        pcmk__g_strcat(buffer, " ", env_opt, "PCMK_remote_port=",
-                      data->control_port, NULL);
+        pcmk__g_strcat(buffer, " ", env_opt, "PCMK_" PCMK__ENV_REMOTE_PORT "=",
+                       data->control_port, NULL);
     } else {
-        g_string_append_printf(buffer, " %sPCMK_remote_port=%d", env_opt,
-                               DEFAULT_REMOTE_PORT);
+        g_string_append_printf(buffer, " %sPCMK_" PCMK__ENV_REMOTE_PORT "=%d",
+                               env_opt, DEFAULT_REMOTE_PORT);
     }
 
     for (GList *iter = data->mounts; iter != NULL; iter = iter->next) {

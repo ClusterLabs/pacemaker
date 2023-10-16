@@ -84,6 +84,7 @@ bool pcmk__valid_sbd_timeout(const char *value);
 #define PCMK__ENV_LOGPRIORITY               "logpriority"
 #define PCMK__ENV_NODE_START_STATE          "node_start_state"
 #define PCMK__ENV_PHYSICAL_HOST             "physical_host"
+#define PCMK__ENV_REMOTE_PORT               "remote_port"
 #define PCMK__ENV_SHUTDOWN_DELAY            "shutdown_delay"
 #define PCMK__ENV_STDERR                    "stderr"
 
