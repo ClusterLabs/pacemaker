@@ -103,7 +103,7 @@ struct pe_resource_s {
 
     enum pe_obj_types variant;
     void *variant_opaque;
-    resource_object_functions_t *fns;
+    pcmk_rsc_methods_t *fns;
     pcmk_assignment_methods_t *cmds;
 
     enum rsc_recovery_type recovery_type;

@@ -261,7 +261,7 @@ enum pe_print_options {
 typedef struct resource_alloc_functions_s pcmk_assignment_methods_t;
 
 //! Resource object methods
-struct resource_object_functions_s {
+typedef struct resource_object_functions_s {
     /*!
      * \brief Parse variant-specific resource XML from CIB into struct members
      *
@@ -391,7 +391,7 @@ struct resource_object_functions_s {
      * \return Maximum number of \p rsc instances that can be active on one node
      */
     unsigned int (*max_per_node)(const pcmk_resource_t *rsc);
-};
+} pcmk_rsc_methods_t;
 
 #ifdef __cplusplus
 }

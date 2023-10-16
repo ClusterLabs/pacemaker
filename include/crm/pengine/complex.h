@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-extern resource_object_functions_t resource_class_functions[];
+extern pcmk_rsc_methods_t resource_class_functions[];
 
 GHashTable *pe_rsc_params(pcmk_resource_t *rsc, const pcmk_node_t *node,
                           pcmk_scheduler_t *scheduler);
