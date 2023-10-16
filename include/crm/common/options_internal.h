@@ -97,6 +97,11 @@ bool pcmk__valid_sbd_timeout(const char *value);
 #define PCMK__ENV_SERVICE                   "service"
 #define PCMK__ENV_SHUTDOWN_DELAY            "shutdown_delay"
 #define PCMK__ENV_STDERR                    "stderr"
+#define PCMK__ENV_TRACE_BLACKBOX            "trace_blackbox"
+#define PCMK__ENV_TRACE_FILES               "trace_files"
+#define PCMK__ENV_TRACE_FORMATS             "trace_formats"
+#define PCMK__ENV_TRACE_FUNCTIONS           "trace_functions"
+#define PCMK__ENV_TRACE_TAGS                "trace_tags"
 #define PCMK__ENV_VALGRIND_ENABLED          "valgrind_enabled"
 
 // @COMPAT Drop at 3.0.0; likely last used in 1.1.24
