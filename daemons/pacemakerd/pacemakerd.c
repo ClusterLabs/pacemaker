@@ -425,10 +425,7 @@ main(int argc, char **argv)
 #endif
 
     if (pcmk__locate_sbd() > 0) {
-        setenv("PCMK_watchdog", "true", 1);
         running_with_sbd = TRUE;
-    } else {
-        setenv("PCMK_watchdog", "false", 1);
     }
 
     switch (find_and_track_existing_processes()) {
