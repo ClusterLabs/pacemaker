@@ -78,6 +78,7 @@ bool pcmk__valid_sbd_timeout(const char *value);
 // Constants for environment variable names
 #define PCMK__ENV_BLACKBOX                  "blackbox"
 #define PCMK__ENV_CALLGRIND_ENABLED         "callgrind_enabled"
+#define PCMK__ENV_CIB_TIMEOUT               "cib_timeout"
 #define PCMK__ENV_CLUSTER_TYPE              "cluster_type"
 #define PCMK__ENV_DEBUG                     "debug"
 #define PCMK__ENV_FAIL_FAST                 "fail_fast"

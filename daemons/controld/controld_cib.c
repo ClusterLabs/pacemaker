@@ -218,7 +218,7 @@ cib_op_timeout(void)
     unsigned int calculated_timeout = 0;
 
     if (env_timeout == -1) {
-        const char *env = getenv("PCMK_cib_timeout");
+        const char *env = pcmk__env_option(PCMK__ENV_CIB_TIMEOUT);
 
         pcmk__scan_min_int(env, &env_timeout, MIN_CIB_OP_TIMEOUT);
         crm_trace("Minimum CIB op timeout: %ds (environment: %s)",
