@@ -350,7 +350,7 @@ pcmk__clone_apply_coloc_score(pcmk_resource_t *dependent,
     }
 }
 
-// Clone implementation of resource_alloc_functions_t:with_this_colocations()
+// Clone implementation of pcmk_assignment_methods_t:with_this_colocations()
 void
 pcmk__with_clone_colocations(const pcmk_resource_t *rsc,
                              const pcmk_resource_t *orig_rsc, GList **list)
@@ -364,7 +364,7 @@ pcmk__with_clone_colocations(const pcmk_resource_t *rsc,
     }
 }
 
-// Clone implementation of resource_alloc_functions_t:this_with_colocations()
+// Clone implementation of pcmk_assignment_methods_t:this_with_colocations()
 void
 pcmk__clone_with_colocations(const pcmk_resource_t *rsc,
                              const pcmk_resource_t *orig_rsc, GList **list)
@@ -653,7 +653,7 @@ pcmk__clone_add_graph_meta(const pcmk_resource_t *rsc, xmlNode *xml)
     }
 }
 
-// Clone implementation of resource_alloc_functions_t:add_utilization()
+// Clone implementation of pcmk_assignment_methods_t:add_utilization()
 void
 pcmk__clone_add_utilization(const pcmk_resource_t *rsc,
                             const pcmk_resource_t *orig_rsc, GList *all_rscs,
@@ -700,7 +700,7 @@ pcmk__clone_add_utilization(const pcmk_resource_t *rsc,
     }
 }
 
-// Clone implementation of resource_alloc_functions_t:shutdown_lock()
+// Clone implementation of pcmk_assignment_methods_t:shutdown_lock()
 void
 pcmk__clone_shutdown_lock(pcmk_resource_t *rsc)
 {

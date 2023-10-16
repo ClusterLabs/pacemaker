@@ -643,7 +643,7 @@ pcmk__group_apply_location(pcmk_resource_t *rsc, pe__location_t *location)
     g_list_free_full(node_list_copy, free);
 }
 
-// Group implementation of resource_alloc_functions_t:colocated_resources()
+// Group implementation of pcmk_assignment_methods_t:colocated_resources()
 GList *
 pcmk__group_colocated_resources(const pcmk_resource_t *rsc,
                                 const pcmk_resource_t *orig_rsc,
@@ -683,7 +683,7 @@ pcmk__group_colocated_resources(const pcmk_resource_t *rsc,
     return colocated_rscs;
 }
 
-// Group implementation of resource_alloc_functions_t:with_this_colocations()
+// Group implementation of pcmk_assignment_methods_t:with_this_colocations()
 void
 pcmk__with_group_colocations(const pcmk_resource_t *rsc,
                              const pcmk_resource_t *orig_rsc, GList **list)
@@ -732,7 +732,7 @@ pcmk__with_group_colocations(const pcmk_resource_t *rsc,
     }
 }
 
-// Group implementation of resource_alloc_functions_t:this_with_colocations()
+// Group implementation of pcmk_assignment_methods_t:this_with_colocations()
 void
 pcmk__group_with_colocations(const pcmk_resource_t *rsc,
                              const pcmk_resource_t *orig_rsc, GList **list)
@@ -838,7 +838,7 @@ pcmk__group_with_colocations(const pcmk_resource_t *rsc,
  *       \c cmp_resources()).
  * \note The caller remains responsible for freeing \p *nodes.
  * \note This is the group implementation of
- *       \c resource_alloc_functions_t:add_colocated_node_scores().
+ *       \c pcmk_assignment_methods_t:add_colocated_node_scores().
  */
 void
 pcmk__group_add_colocated_node_scores(pcmk_resource_t *source_rsc,
@@ -894,7 +894,7 @@ pcmk__group_add_colocated_node_scores(pcmk_resource_t *source_rsc,
     pe__clear_resource_flags(source_rsc, pcmk_rsc_updating_nodes);
 }
 
-// Group implementation of resource_alloc_functions_t:add_utilization()
+// Group implementation of pcmk_assignment_methods_t:add_utilization()
 void
 pcmk__group_add_utilization(const pcmk_resource_t *rsc,
                             const pcmk_resource_t *orig_rsc, GList *all_rscs,
@@ -937,7 +937,6 @@ pcmk__group_add_utilization(const pcmk_resource_t *rsc,
     }
 }
 
-// Group implementation of resource_alloc_functions_t:shutdown_lock()
 void
 pcmk__group_shutdown_lock(pcmk_resource_t *rsc)
 {

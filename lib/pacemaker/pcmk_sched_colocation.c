@@ -1660,7 +1660,7 @@ add_node_scores_matching_attr(GHashTable *nodes,
  *       \c cmp_resources()).
  * \note The caller remains responsible for freeing \p *nodes.
  * \note This is the shared implementation of
- *       \c resource_alloc_functions_t:add_colocated_node_scores().
+ *       \c pcmk_assignment_methods_t:add_colocated_node_scores().
  */
 void
 pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,

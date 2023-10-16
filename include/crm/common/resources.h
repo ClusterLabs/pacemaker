@@ -251,6 +251,10 @@ enum pe_print_options {
 };
 //!@}
 
+// Resource assignment methods (implementation defined by libpacemaker)
+//! This type should be considered internal to Pacemaker
+typedef struct resource_alloc_functions_s pcmk_assignment_methods_t;
+
 #ifdef __cplusplus
 }
 #endif
