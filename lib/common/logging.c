@@ -51,6 +51,11 @@ static unsigned int crm_log_priority = LOG_NOTICE;
 static GLogFunc glib_log_default = NULL;
 static pcmk__output_t *logger_out = NULL;
 
+pcmk__config_error_func pcmk__config_error_handler = NULL;
+pcmk__config_warning_func pcmk__config_warning_handler = NULL;
+void *pcmk__config_error_context = NULL;
+void *pcmk__config_warning_context = NULL;
+
 static gboolean crm_tracing_enabled(void);
 
 static void
@@ -1280,3 +1285,15 @@ pcmk_log_xml_impl(uint8_t level, const char *text, const xmlNode *xml)
 
 // LCOV_EXCL_STOP
 // End deprecated API
+
+void pcmk__set_config_error_handler(pcmk__config_error_func error_handler, void *error_context)
+{
+    pcmk__config_error_handler = error_handler;
+    pcmk__config_error_context = error_context;    
+}
+
+void pcmk__set_config_warning_handler(pcmk__config_warning_func warning_handler, void *warning_context)
+{
+    pcmk__config_warning_handler = warning_handler;
+    pcmk__config_warning_context = warning_context;   
+}

@@ -19,6 +19,18 @@ extern "C" {
 #  include <crm/common/logging.h>
 #  include <crm/common/output_internal.h>
 
+typedef void (*pcmk__config_error_func) (void *ctx, const char *msg, ...);
+typedef void (*pcmk__config_warning_func) (void *ctx, const char *msg, ...);
+
+extern pcmk__config_error_func pcmk__config_error_handler;
+extern pcmk__config_warning_func pcmk__config_warning_handler;
+
+extern void *pcmk__config_error_context;
+extern void *pcmk__config_warning_context;
+
+void pcmk__set_config_error_handler(pcmk__config_error_func error_handler, void *error_context);
+void pcmk__set_config_warning_handler(pcmk__config_warning_func warning_handler, void *warning_context);
+
 /*!
  * \internal
  * \brief Log a configuration error
@@ -26,9 +38,13 @@ extern "C" {
  * \param[in] fmt   printf(3)-style format string
  * \param[in] ...   Arguments for format string
  */
-#  define pcmk__config_err(fmt...) do {     \
-        crm_config_error = TRUE;            \
-        crm_err(fmt);                       \
+#  define pcmk__config_err(fmt...) do {                             \
+        crm_config_error = TRUE;                                    \
+        if (pcmk__config_error_handler == NULL) {                   \
+            crm_err(fmt);                                           \
+        } else {                                                    \
+            pcmk__config_error_handler(pcmk__config_error_context, fmt);   \
+        }                                                           \
     } while (0)
 
 /*!
@@ -38,9 +54,13 @@ extern "C" {
  * \param[in] fmt   printf(3)-style format string
  * \param[in] ...   Arguments for format string
  */
-#  define pcmk__config_warn(fmt...) do {    \
-        crm_config_warning = TRUE;          \
-        crm_warn(fmt);                      \
+#  define pcmk__config_warn(fmt...) do {                            \
+        crm_config_warning = TRUE;                                  \
+        if (pcmk__config_warning_handler == NULL) {                   \
+            crm_warn(fmt);                                           \
+        } else {                                                    \
+            pcmk__config_warning_handler(pcmk__config_warning_context, fmt);   \
+        }                                                           \
     } while (0)
 
 /*!
