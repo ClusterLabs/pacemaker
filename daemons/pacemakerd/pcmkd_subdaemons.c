@@ -307,7 +307,7 @@ pcmk_process_exit(pcmk_child_t * child)
     } else if (!child->respawn) {
         /* nothing to do */
 
-    } else if (crm_is_true(getenv("PCMK_fail_fast"))) {
+    } else if (crm_is_true(pcmk__env_option(PCMK__ENV_FAIL_FAST))) {
         crm_err("Rebooting system because of %s", child->name);
         pcmk__panic(__func__);
 
@@ -353,8 +353,8 @@ pcmk_shutdown_worker(gpointer user_data)
                              " if it vitally depends on some other daemons"
                              " going down in a controlled way already,"
                              " or locate and kill the correct %s process"
-                             " on your own; set PCMK_fail_fast=1 to avoid"
-                             " this altogether next time around",
+                             " on your own; set PCMK_" PCMK__ENV_FAIL_FAST "=1"
+                             " to avoid this altogether next time around",
                              child->name, (long) SHUTDOWN_ESCALATION_PERIOD,
                              child->command);
                 }
@@ -712,14 +712,16 @@ find_and_track_existing_processes(void)
                 continue;
             }
 
+            // @TODO Functionize more of this to reduce nesting
             pcmk_children[i].respawn_count = rounds;
             switch (rc) {
                 case pcmk_rc_ok:
                     if (pcmk_children[i].pid == PCMK__SPECIAL_PID) {
-                        if (crm_is_true(getenv("PCMK_fail_fast"))) {
+                        if (crm_is_true(pcmk__env_option(PCMK__ENV_FAIL_FAST))) {
                             crm_crit("Cannot reliably track pre-existing"
                                      " authentic process behind %s IPC on this"
-                                     " platform and PCMK_fail_fast requested",
+                                     " platform and PCMK_" PCMK__ENV_FAIL_FAST
+                                     " requested",
                                      pcmk_children[i].endpoint);
                             return EOPNOTSUPP;
                         } else if (pcmk_children[i].respawn_count == WAIT_TRIES) {
@@ -727,9 +729,9 @@ find_and_track_existing_processes(void)
                                        " on this platform untrackable, process"
                                        " behind %s IPC is stable (was in %d"
                                        " previous samples) so rather than"
-                                       " bailing out (PCMK_fail_fast not"
-                                       " requested), we just switch to a less"
-                                       " optimal IPC liveness monitoring"
+                                       " bailing out (PCMK_" PCMK__ENV_FAIL_FAST
+                                       " not requested), we just switch to a"
+                                       " less optimal IPC liveness monitoring"
                                        " (not very suitable for heavy load)",
                                        pcmk_children[i].name, WAIT_TRIES - 1);
                             crm_warn("The process behind %s IPC cannot be"
