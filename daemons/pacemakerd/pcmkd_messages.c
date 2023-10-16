@@ -269,7 +269,7 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     return 0;
 }
 
-struct qb_ipcs_service_handlers mcp_ipc_callbacks = {
+struct qb_ipcs_service_handlers pacemakerd_ipc_callbacks = {
     .connection_accept = pcmk_ipc_accept,
     .connection_created = NULL,
     .msg_process = pcmk_ipc_dispatch,

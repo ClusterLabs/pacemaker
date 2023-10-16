@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2022 the Pacemaker project contributors
+ * Copyright 2010-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -82,7 +82,7 @@ cluster_reconnect_cb(gpointer data)
         mainloop_timer_del(reconnect_timer);
         reconnect_timer = NULL;
         crm_notice("Cluster reconnect succeeded");
-        mcp_read_config();
+        pacemakerd_read_config();
         restart_cluster_subdaemons();
         return G_SOURCE_REMOVE;
     } else {
@@ -260,7 +260,7 @@ get_config_opt(uint64_t unused, cmap_handle_t object_handle, const char *key, ch
 }
 
 gboolean
-mcp_read_config(void)
+pacemakerd_read_config(void)
 {
     cs_error_t rc = CS_OK;
     int retries = 0;

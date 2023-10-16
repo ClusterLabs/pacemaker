@@ -129,7 +129,7 @@ pcmk_sigquit(int nsig)
 }
 
 static void
-mcp_chown(const char *path, uid_t uid, gid_t gid)
+pacemakerd_chown(const char *path, uid_t uid, gid_t gid)
 {
     int rc = chown(path, uid, gid);
 
@@ -166,7 +166,7 @@ create_pcmk_dirs(void)
         crm_warn("Could not create directory " CRM_STATE_DIR ": %s",
                  pcmk_rc_str(errno));
     } else {
-        mcp_chown(CRM_STATE_DIR, pcmk_uid, pcmk_gid);
+        pacemakerd_chown(CRM_STATE_DIR, pcmk_uid, pcmk_gid);
     }
 
     for (int i = 0; dirs[i] != NULL; ++i) {
@@ -176,7 +176,7 @@ create_pcmk_dirs(void)
             crm_warn("Could not create directory %s: %s",
                      dirs[i], pcmk_rc_str(rc));
         } else {
-            mcp_chown(dirs[i], pcmk_uid, pcmk_gid);
+            pacemakerd_chown(dirs[i], pcmk_uid, pcmk_gid);
         }
     }
 }
@@ -312,7 +312,8 @@ main(int argc, char **argv)
         goto done;
     }
 
-    pcmk__set_env_option("mcp", "true");
+    // @COMPAT Drop at 3.0.0; likely last used in 1.1.24
+    pcmk__set_env_option(PCMK__ENV_MCP, "true");
 
     if (options.shutdown) {
         pcmk__cli_init_logging("pacemakerd", args->verbosity);
@@ -392,7 +393,7 @@ main(int argc, char **argv)
     }
 
 #ifdef SUPPORT_COROSYNC
-    if (mcp_read_config() == FALSE) {
+    if (pacemakerd_read_config() == FALSE) {
         crm_exit(CRM_EX_UNAVAILABLE);
     }
 #endif
@@ -413,7 +414,7 @@ main(int argc, char **argv)
 
     remove_core_file_limit();
     create_pcmk_dirs();
-    pcmk__serve_pacemakerd_ipc(&ipcs, &mcp_ipc_callbacks);
+    pcmk__serve_pacemakerd_ipc(&ipcs, &pacemakerd_ipc_callbacks);
 
 #ifdef SUPPORT_COROSYNC
     /* Allows us to block shutdown */
