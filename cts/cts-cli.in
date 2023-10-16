@@ -2289,6 +2289,53 @@ function test_tools() {
     desc="Switch to nonexistent shadow instance (force) (XML)"
     cmd="crm_shadow --switch $shadow --batch --force --output-as=xml"
     test_assert_validate $CRM_EX_NOSUCH 0
+    
+    CIB_file_invalid_1="$test_home/cli/crm_verify_invalid_bz.xml"
+    CIB_file_invalid_2="$test_home/cli/crm_verify_invalid_no_stonith.xml"
+    
+    desc="Verify a file-specified invalid configuration, outputting as xml"
+    cmd="crm_verify --xml-file '$CIB_file_invalid_1' --output-as=xml"
+    test_assert_validate $CRM_EX_CONFIG 0
+
+    desc="Verify another file-specified invalid configuration, outputting as xml"
+    cmd="crm_verify --xml-file '$CIB_file_invalid_2' --output-as=xml"
+    test_assert_validate $CRM_EX_CONFIG 0
+
+    desc="Verbosely verify a file-specified invalid configuration, outputting as xml"
+    cmd="crm_verify --xml-file '$CIB_file_invalid_1' --output-as=xml --verbose"
+    test_assert_validate $CRM_EX_CONFIG 0
+
+    desc="Verbosely verify another file-specified invalid configuration, outputting as xml"
+    cmd="crm_verify --xml-file '$CIB_file_invalid_2' --output-as=xml --verbose"
+    test_assert_validate $CRM_EX_CONFIG 0
+
+    export CIB_file="$test_home/cli/crm_mon.xml"
+
+    desc="Verify a file-specified valid configuration, outputting as xml"
+    cmd="crm_verify --xml-file '$CIB_file' --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+    
+    desc="Verify a piped-in valid configuration, outputting as xml"
+    cmd="cat '$CIB_file' | crm_verify -p --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Verbosely verify a file-specified valid configuration, outputting as xml"
+    cmd="crm_verify --xml-file '$CIB_file' --output-as=xml --verbose"
+    test_assert_validate $CRM_EX_OK 0
+    
+    desc="Verbosely verify a piped-in valid configuration, outputting as xml"
+    cmd="cat '$CIB_file' | crm_verify -p --output-as=xml --verbose"
+    test_assert_validate $CRM_EX_OK 0
+    
+    CIB_file_contents=$(cat "$CIB_file")
+
+    desc="Verify a string-supplied valid configuration, outputting as xml"
+    cmd="crm_verify -X '$CIB_file_contents' --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Verbosely verify a string-supplied valid configuration, outputting as xml"
+    cmd="crm_verify -X '$CIB_file_contents' --output-as=xml --verbose"
+    test_assert_validate $CRM_EX_OK 0
 
     unset CIB_file
     unset CIB_shadow
