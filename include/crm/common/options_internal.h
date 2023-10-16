@@ -101,6 +101,7 @@ bool pcmk__valid_sbd_timeout(const char *value);
 #define PCMK__ENV_SERVICE                   "service"
 #define PCMK__ENV_SHUTDOWN_DELAY            "shutdown_delay"
 #define PCMK__ENV_STDERR                    "stderr"
+#define PCMK__ENV_TLS_PRIORITIES            "tls_priorities"
 #define PCMK__ENV_TRACE_BLACKBOX            "trace_blackbox"
 #define PCMK__ENV_TRACE_FILES               "trace_files"
 #define PCMK__ENV_TRACE_FORMATS             "trace_formats"

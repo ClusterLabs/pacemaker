@@ -232,7 +232,7 @@ pcmk__new_tls_session(int csock, unsigned int conn_type,
      * http://www.manpagez.com/info/gnutls/gnutls-2.10.4/gnutls_81.php#Echo-Server-with-anonymous-authentication
      */
 
-    prio_base = getenv("PCMK_tls_priorities");
+    prio_base = pcmk__env_option(PCMK__ENV_TLS_PRIORITIES);
     if (prio_base == NULL) {
         prio_base = PCMK_GNUTLS_PRIORITIES;
     }
