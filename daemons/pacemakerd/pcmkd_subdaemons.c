@@ -423,7 +423,7 @@ start_child(pcmk_child_t * child)
     gid_t gid = 0;
     gboolean use_valgrind = FALSE;
     gboolean use_callgrind = FALSE;
-    const char *env_valgrind = getenv("PCMK_valgrind_enabled");
+    const char *env_valgrind = pcmk__env_option(PCMK__ENV_VALGRIND_ENABLED);
     const char *env_callgrind = getenv("PCMK_callgrind_enabled");
 
     child->active_before_startup = false;
