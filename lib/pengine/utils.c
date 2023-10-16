@@ -497,7 +497,7 @@ order_actions(pcmk_action_t *lh_action, pcmk_action_t *rh_action,
 void
 destroy_ticket(gpointer data)
 {
-    pe_ticket_t *ticket = data;
+    pcmk_ticket_t *ticket = data;
 
     if (ticket->state) {
         g_hash_table_destroy(ticket->state);
@@ -506,10 +506,10 @@ destroy_ticket(gpointer data)
     free(ticket);
 }
 
-pe_ticket_t *
+pcmk_ticket_t *
 ticket_new(const char *ticket_id, pcmk_scheduler_t *scheduler)
 {
-    pe_ticket_t *ticket = NULL;
+    pcmk_ticket_t *ticket = NULL;
 
     if (pcmk__str_empty(ticket_id)) {
         return NULL;
@@ -522,7 +522,7 @@ ticket_new(const char *ticket_id, pcmk_scheduler_t *scheduler)
     ticket = g_hash_table_lookup(scheduler->tickets, ticket_id);
     if (ticket == NULL) {
 
-        ticket = calloc(1, sizeof(pe_ticket_t));
+        ticket = calloc(1, sizeof(pcmk_ticket_t));
         if (ticket == NULL) {
             crm_err("Cannot allocate ticket '%s'", ticket_id);
             return NULL;

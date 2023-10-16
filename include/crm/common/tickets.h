@@ -24,13 +24,13 @@ extern "C" {
  */
 
 //! Ticket constraint object
-struct pe_ticket_s {
+typedef struct pe_ticket_s {
     char *id;               //!< XML ID of ticket constraint or state
     gboolean granted;       //!< Whether cluster has been granted the ticket
     time_t last_granted;    //!< When cluster was last granted the ticket
     gboolean standby;       //!< Whether ticket is temporarily suspended
     GHashTable *state;      //!< XML attributes from ticket state
-};
+} pcmk_ticket_t;
 
 #ifdef __cplusplus
 }

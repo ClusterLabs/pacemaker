@@ -938,7 +938,7 @@ unpack_ticket_state(xmlNode *xml_ticket, pcmk_scheduler_t *scheduler)
     const char *standby = NULL;
     xmlAttrPtr xIter = NULL;
 
-    pe_ticket_t *ticket = NULL;
+    pcmk_ticket_t *ticket = NULL;
 
     ticket_id = ID(xml_ticket);
     if (pcmk__str_empty(ticket_id)) {
