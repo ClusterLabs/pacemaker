@@ -29,8 +29,6 @@ extern "C" {
  * \ingroup pengine
  */
 
-typedef struct pe_ticket_s pe_ticket_t;
-
 typedef struct pe_tag_s {
     char *id;
     GList *refs;
