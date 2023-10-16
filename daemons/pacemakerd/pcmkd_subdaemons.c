@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2022 the Pacemaker project contributors
+ * Copyright 2010-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -822,7 +822,7 @@ init_children_processes(void *user_data)
      *
      * This may be useful for the daemons to know
      */
-    setenv("PCMK_respawned", "true", 1);
+    pcmk__set_env_option(PCMK__ENV_RESPAWNED, "true", false);
     pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_RUNNING;
     return TRUE;
 }
