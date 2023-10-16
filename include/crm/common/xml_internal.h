@@ -21,6 +21,7 @@
 #  include <crm/crm.h>  /* transitively imports qblog.h */
 #  include <crm/common/output_internal.h>
 
+#  include <libxml/relaxng.h>
 
 /*!
  * \brief Base for directing lib{xml2,xslt} log into standard libqb backend
@@ -439,5 +440,9 @@ pcmk__xml_attr_value(const xmlAttr *attr)
     return ((attr == NULL) || (attr->children == NULL))? NULL
            : (const char *) attr->children->content;
 }
+
+gboolean pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
+                            xmlRelaxNGValidityErrorFunc error_handler, 
+                            void *error_handler_context);
 
 #endif // PCMK__XML_INTERNAL__H
