@@ -203,10 +203,13 @@ remoted_spawn_pidone(int argc, char **argv, char **envp)
      *   from /etc/pacemaker/pcmk-init.env, which could be useful for testing or
      *   containers with a custom PID 1 script that launches pacemaker-remoted.
      */
-    const char *pid1 = (getpid() == 1)? "full" : getenv("PCMK_remote_pid1");
+    const char *pid1 = "full";
 
-    if (pid1 == NULL) {
-        return;
+    if (getpid() != 1) {
+        pid1 = pcmk__env_option(PCMK__ENV_REMOTE_PID1);
+        if (pid1 == NULL) {
+            return;
+        }
     }
 
     /* When a container is launched, it may be given specific environment
