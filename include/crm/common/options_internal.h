@@ -85,6 +85,8 @@ bool pcmk__valid_sbd_timeout(const char *value);
 #define PCMK__ENV_DH_MAX_BITS               "dh_max_bits"
 #define PCMK__ENV_DH_MIN_BITS               "dh_min_bits"
 #define PCMK__ENV_FAIL_FAST                 "fail_fast"
+#define PCMK__ENV_IPC_BUFFER                "ipc_buffer"
+#define PCMK__ENV_IPC_TYPE                  "ipc_type"
 #define PCMK__ENV_LOGFACILITY               "logfacility"
 #define PCMK__ENV_LOGFILE                   "logfile"
 #define PCMK__ENV_LOGFILE_MODE              "logfile_mode"
