@@ -820,8 +820,8 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     pcmk_resource_t *dependent = NULL;
     pcmk_resource_t *primary = NULL;
 
-    pe_tag_t *dependent_tag = NULL;
-    pe_tag_t *primary_tag = NULL;
+    pcmk_tag_t *dependent_tag = NULL;
+    pcmk_tag_t *primary_tag = NULL;
 
     xmlNode *dependent_set = NULL;
     xmlNode *primary_set = NULL;

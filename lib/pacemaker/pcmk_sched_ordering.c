@@ -901,8 +901,8 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     pcmk_resource_t *rsc_first = NULL;
     pcmk_resource_t *rsc_then = NULL;
-    pe_tag_t *tag_first = NULL;
-    pe_tag_t *tag_then = NULL;
+    pcmk_tag_t *tag_first = NULL;
+    pcmk_tag_t *tag_then = NULL;
 
     xmlNode *rsc_set_first = NULL;
     xmlNode *rsc_set_then = NULL;

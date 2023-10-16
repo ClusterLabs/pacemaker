@@ -209,7 +209,7 @@ struct pe_working_set_s {
     xmlNode *graph;                 //!< Transition graph
     GHashTable *template_rsc_sets;  //!< Mappings of template ID to resource ID
     const char *localhost;          //!< Node will be created for this if needed
-    GHashTable *tags;               //!< Configuration tags (ID -> pe_tag_t *)
+    GHashTable *tags;               //!< Configuration tags (ID -> pcmk_tag_t *)
     int blocked_resources;          //!< Number of blocked resources in cluster
     int disabled_resources;         //!< Number of disabled resources in cluster
     GList *param_check;             //!< History entries that need to be checked

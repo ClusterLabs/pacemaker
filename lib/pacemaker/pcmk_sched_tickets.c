@@ -363,7 +363,7 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     const char *state = NULL;
 
     pcmk_resource_t *rsc = NULL;
-    pe_tag_t *tag = NULL;
+    pcmk_tag_t *tag = NULL;
 
     xmlNode *rsc_set = NULL;
 

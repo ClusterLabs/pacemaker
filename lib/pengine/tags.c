@@ -32,7 +32,7 @@ pe__rscs_with_tag(pcmk_scheduler_t *scheduler, const char *tag_name)
         return retval;
     }
 
-    for (GList *refs = ((pe_tag_t *) value)->refs; refs; refs = refs->next) {
+    for (GList *refs = ((pcmk_tag_t *) value)->refs; refs; refs = refs->next) {
         const char *id = (const char *) refs->data;
         const uint32_t flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
         pcmk_resource_t *rsc = pe_find_resource_with_flags(scheduler->resources,
@@ -65,7 +65,7 @@ pe__unames_with_tag(pcmk_scheduler_t *scheduler, const char *tag_name)
     }
 
     /* Iterate over the list of node IDs. */
-    for (GList *refs = ((pe_tag_t *) value)->refs; refs; refs = refs->next) {
+    for (GList *refs = ((pcmk_tag_t *) value)->refs; refs; refs = refs->next) {
         /* Find the node that has this ID. */
         const char *id = (const char *) refs->data;
         pcmk_node_t *node = pe_find_node_id(scheduler->nodes, id);

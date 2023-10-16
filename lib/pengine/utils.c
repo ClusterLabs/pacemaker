@@ -616,7 +616,7 @@ trigger_unfencing(pcmk_resource_t *rsc, pcmk_node_t *node, const char *reason,
 gboolean
 add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref)
 {
-    pe_tag_t *tag = NULL;
+    pcmk_tag_t *tag = NULL;
     GList *gIter = NULL;
     gboolean is_existing = FALSE;
 
@@ -624,7 +624,7 @@ add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref)
 
     tag = g_hash_table_lookup(tags, tag_name);
     if (tag == NULL) {
-        tag = calloc(1, sizeof(pe_tag_t));
+        tag = calloc(1, sizeof(pcmk_tag_t));
         if (tag == NULL) {
             return FALSE;
         }

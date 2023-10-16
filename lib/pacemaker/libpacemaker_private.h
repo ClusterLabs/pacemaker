@@ -455,7 +455,7 @@ xmlNode *pcmk__expand_tags_in_sets(xmlNode *xml_obj,
 G_GNUC_INTERNAL
 bool pcmk__valid_resource_or_tag(const pcmk_scheduler_t *scheduler,
                                  const char *id, pcmk_resource_t **rsc,
-                                 pe_tag_t **tag);
+                                 pcmk_tag_t **tag);
 
 G_GNUC_INTERNAL
 bool pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,

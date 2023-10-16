@@ -23,10 +23,10 @@ extern "C" {
  */
 
 //! Configuration tag object
-struct pe_tag_s {
+typedef struct pe_tag_s {
     char *id;       //!< XML ID of tag
     GList *refs;    //!< XML IDs of objects that reference the tag
-};
+} pcmk_tag_t;
 
 #ifdef __cplusplus
 }

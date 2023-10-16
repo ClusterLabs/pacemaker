@@ -791,7 +791,7 @@ link_rsc2remotenode(pcmk_scheduler_t *scheduler, pcmk_resource_t *new_rsc)
 static void
 destroy_tag(gpointer data)
 {
-    pe_tag_t *tag = data;
+    pcmk_tag_t *tag = data;
 
     if (tag) {
         free(tag->id);

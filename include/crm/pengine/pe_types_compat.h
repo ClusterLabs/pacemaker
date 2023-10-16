@@ -235,7 +235,7 @@ typedef struct pe_resource_s resource_t;
 //! \deprecated use pcmk_resource_t instead
 typedef struct pe_resource_s pe_resource_t;
 
-//! \deprecated Use pe_tag_t instead
+//! \deprecated Use pcmk_tag_t instead
 typedef struct pe_tag_s tag_t;
 
 //! \deprecated Use pcmk_ticket_t instead
