@@ -25,6 +25,8 @@
 
 static int last_cib_op_done = 0;
 
+static void write_attribute(attribute_t *a, bool ignore_delay);
+
 static void
 attrd_cib_destroy_cb(gpointer user_data)
 {
@@ -273,7 +275,7 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *use
             /* We deferred a write of a new update because this update was in
              * progress. Write out the new value without additional delay.
              */
-            attrd_write_attribute(a, false);
+            write_attribute(a, false);
 
         /* We're re-attempting a write because the original failed; delay
          * the next attempt so we don't potentially flood the CIB manager
@@ -468,8 +470,16 @@ attrd_add_timer(const char *id, int timeout_ms, attribute_t *attr)
    return mainloop_timer_add(id, timeout_ms, FALSE, attribute_timer_cb, attr);
 }
 
-void
-attrd_write_attribute(attribute_t *a, bool ignore_delay)
+/*!
+ * \internal
+ * \brief Write an attribute's values to the CIB if appropriate
+ *
+ * \param[in,out] a             Attribute to write
+ * \param[in]     ignore_delay  If true, write attribute now regardless of any
+ *                              configured delay
+ */
+static void
+write_attribute(attribute_t *a, bool ignore_delay)
 {
     int private_updates = 0, cib_updates = 0;
     attribute_value_t *v = NULL;
@@ -485,22 +495,21 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
     if (!stand_alone && !a->is_private) {
         /* Defer the write if now's not a good time */
         if (a->update && (a->update < last_cib_op_done)) {
-            crm_info("Write out of '%s' continuing: update %d considered lost", a->id, a->update);
+            crm_info("Write out of '%s' continuing: update %d considered lost",
+                     a->id, a->update);
             a->update = 0; // Don't log this message again
 
         } else if (a->update) {
-            crm_info("Write out of '%s' delayed: update %d in progress", a->id, a->update);
+            crm_info("Write out of '%s' delayed: update %d in progress",
+                     a->id, a->update);
             goto done;
 
         } else if (mainloop_timer_running(a->timer)) {
             if (ignore_delay) {
-                /* 'refresh' forces a write of the current value of all attributes
-                 * Cancel any existing timers, we're writing it NOW
-                 */
                 mainloop_timer_stop(a->timer);
-                crm_debug("Write out of '%s': timer is running but ignore delay", a->id);
+                crm_debug("Overriding '%s' write delay", a->id);
             } else {
-                crm_info("Write out of '%s' delayed: timer is running", a->id);
+                crm_info("Delaying write of '%s'", a->id);
                 goto done;
             }
         }
@@ -527,12 +536,14 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
     a->force_write = FALSE;
 
     /* Make the table for the attribute trap */
-    alert_attribute_value = pcmk__strikey_table(NULL, attrd_free_attribute_value);
+    alert_attribute_value = pcmk__strikey_table(NULL,
+                                                attrd_free_attribute_value);
 
     /* Iterate over each peer value of this attribute */
     g_hash_table_iter_init(&iter, a->values);
-    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & v)) {
-        crm_node_t *peer = crm_get_peer_full(v->nodeid, v->nodename, CRM_GET_PEER_ANY);
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &v)) {
+        crm_node_t *peer = crm_get_peer_full(v->nodeid, v->nodename,
+                                             CRM_GET_PEER_ANY);
 
         /* If the value's peer info does not correspond to a peer, ignore it */
         if (peer == NULL) {
@@ -661,7 +672,7 @@ attrd_write_attributes(uint32_t options)
                 // Always ignore delay when forced write flag is set
                 ignore_delay = true;
             }
-            attrd_write_attribute(a, ignore_delay);
+            write_attribute(a, ignore_delay);
         } else {
             crm_trace("Skipping unchanged attribute %s", a->id);
         }
@@ -672,7 +683,7 @@ void
 attrd_write_or_elect_attribute(attribute_t *a)
 {
     if (attrd_election_won()) {
-        attrd_write_attribute(a, false);
+        write_attribute(a, false);
     } else {
         attrd_start_election_if_needed();
     }
