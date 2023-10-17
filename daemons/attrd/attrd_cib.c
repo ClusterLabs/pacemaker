@@ -477,17 +477,12 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
     GHashTable *alert_attribute_value = NULL;
     int rc = pcmk_ok;
 
-    CRM_CHECK(the_cib != NULL, return);
-
     if (a == NULL) {
         return;
     }
 
-    the_cib->cmds->set_user(the_cib, a->user);
-
     /* If this attribute will be written to the CIB ... */
     if (!stand_alone && !a->is_private) {
-
         /* Defer the write if now's not a good time */
         if (a->update && (a->update < last_cib_op_done)) {
             crm_info("Write out of '%s' continuing: update %d considered lost", a->id, a->update);
@@ -511,6 +506,8 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
         }
 
         // Initiate a transaction for all the peer value updates
+        CRM_CHECK(the_cib != NULL, goto done);
+        the_cib->cmds->set_user(the_cib, a->user);
         rc = the_cib->cmds->init_transaction(the_cib);
         if (rc != pcmk_ok) {
             crm_err("Failed to write %s (id %s, set %s): Could not initiate "
@@ -618,9 +615,10 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
 
 done:
     // Discard transaction (if any)
-    the_cib->cmds->end_transaction(the_cib, false, cib_none);
-
-    the_cib->cmds->set_user(the_cib, NULL);
+    if (the_cib != NULL) {
+        the_cib->cmds->end_transaction(the_cib, false, cib_none);
+        the_cib->cmds->set_user(the_cib, NULL);
+    }
 
     if (alert_attribute_value != NULL) {
         g_hash_table_destroy(alert_attribute_value);
