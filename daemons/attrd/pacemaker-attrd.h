@@ -183,7 +183,6 @@ enum attrd_write_options {
     attrd_write_no_delay        = (1 << 1),
 };
 
-void attrd_write_attribute(attribute_t *a, bool ignore_delay);
 void attrd_write_attributes(uint32_t options);
 void attrd_write_or_elect_attribute(attribute_t *a);
 
