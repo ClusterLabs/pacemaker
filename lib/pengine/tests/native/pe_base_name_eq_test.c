@@ -12,9 +12,9 @@
 #include <crm/common/unittest_internal.h>
 
 #include <crm/common/xml.h>
+#include <crm/common/scheduler.h>
 #include <crm/pengine/internal.h>
 #include <crm/pengine/status.h>
-#include <crm/pengine/pe_types.h>
 
 xmlNode *input = NULL;
 pcmk_scheduler_t *scheduler = NULL;

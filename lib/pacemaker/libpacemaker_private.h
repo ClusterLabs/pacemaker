@@ -15,7 +15,7 @@
  */
 
 #include <crm/lrmd_events.h>      // lrmd_event_data_t
-#include <crm/pengine/pe_types.h> // pcmk_action_t, pcmk_node_t, etc.
+#include <crm/common/scheduler.h> // pcmk_action_t, pcmk_node_t, etc.
 #include <crm/pengine/internal.h> // pe__location_t
 
 // Colocation flags

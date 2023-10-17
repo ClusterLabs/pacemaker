@@ -13,8 +13,8 @@
 #include <stdbool.h>
 
 #include <crm/common/util.h>
+#include <crm/common/scheduler.h>
 #include <crm/pengine/internal.h>
-#include <crm/pengine/pe_types.h>
 
 GList *
 pe__rscs_with_tag(pcmk_scheduler_t *scheduler, const char *tag_name)

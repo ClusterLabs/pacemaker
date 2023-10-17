@@ -11,7 +11,7 @@
 #include <crm/cib/internal.h>
 #include <crm/common/output.h>
 #include <crm/common/results.h>
-#include <crm/pengine/pe_types.h>
+#include <crm/common/scheduler.h>
 #include <pacemaker-internal.h>
 #include <pacemaker.h>
 

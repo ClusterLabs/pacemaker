@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2022 the Pacemaker project contributors
+ * Copyright 2021-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,7 +11,7 @@
 #  define PCMK__PCMKI_PCMKI_SIMULATE__H
 
 #include <crm/common/output_internal.h>
-#include <crm/pengine/pe_types.h>
+#include <crm/common/scheduler.h>
 #include <pcmki/pcmki_transition.h>
 #include <crm/cib.h>                    // cib_t
 #include <pacemaker.h>

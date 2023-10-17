@@ -10,7 +10,7 @@
 #ifndef PCMK__CRM_PENGINE_PE_TYPES_COMPAT__H
 #  define PCMK__CRM_PENGINE_PE_TYPES_COMPAT__H
 
-#include <crm/pengine/pe_types.h>
+#include <crm/common/scheduler.h>
 
 #ifdef __cplusplus
 extern "C" {

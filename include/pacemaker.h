@@ -12,8 +12,8 @@
 
 #  include <glib.h>
 #  include <libxml/tree.h>
+#  include <crm/common/scheduler.h>
 #  include <crm/cib/cib_types.h>
-#  include <crm/pengine/pe_types.h>
 
 #  include <crm/stonith-ng.h>
 
