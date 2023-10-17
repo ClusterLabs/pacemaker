@@ -92,7 +92,7 @@ pid_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **er
 static gboolean
 standby_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     options.standby = TRUE;
-    pcmk__set_env_option("node_start_state", "standby", false);
+    pcmk__set_env_option(PCMK__ENV_NODE_START_STATE, "standby", false);
     return TRUE;
 }
 
