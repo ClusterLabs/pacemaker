@@ -118,7 +118,7 @@ main(int argc, char **argv)
     xmlNode *cib_object = NULL;
     xmlNode *status = NULL;
 
-    pcmk_scheduler_t *data_set = NULL;
+    pcmk_scheduler_t *scheduler = NULL;
 
     int rc = pcmk_rc_ok;
     crm_exit_t exit_code = CRM_EX_OK;
@@ -230,14 +230,14 @@ main(int argc, char **argv)
                  xml_latest_schema());
     }
 
-    data_set = pe_new_working_set();
-    if (data_set == NULL) {
+    scheduler = pe_new_working_set();
+    if (scheduler == NULL) {
         rc = errno;
         g_set_error(&error, PCMK__RC_ERROR, rc,
-                    "Could not allocate working set: %s", pcmk_rc_str(rc));
+                    "Could not allocate scheduler data: %s", pcmk_rc_str(rc));
         goto done;
     }
-    data_set->priv = out;
+    scheduler->priv = out;
 
     /* Process the configuration to set crm_config_error/crm_config_warning.
      *
@@ -251,9 +251,9 @@ main(int argc, char **argv)
             // No status available, so do minimal checks
             flags |= pcmk_sched_validate_only;
         }
-        pcmk__schedule_actions(cib_object, flags, data_set);
+        pcmk__schedule_actions(cib_object, flags, scheduler);
     }
-    pe_free_working_set(data_set);
+    pe_free_working_set(scheduler);
 
     if (crm_config_error) {
         rc = pcmk_rc_schema_validation;

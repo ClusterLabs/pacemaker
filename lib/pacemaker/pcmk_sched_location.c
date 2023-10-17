@@ -287,7 +287,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc, const char *role,
 }
 
 static void
-unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *data_set)
+unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 {
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
     const char *value = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
@@ -295,7 +295,7 @@ unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *data_set)
     if (value) {
         pcmk_resource_t *rsc;
 
-        rsc = pcmk__find_constraint_resource(data_set->resources, value);
+        rsc = pcmk__find_constraint_resource(scheduler->resources, value);
         unpack_rsc_location(xml_obj, rsc, NULL, NULL, NULL);
     }
 
@@ -317,7 +317,7 @@ unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *data_set)
             return;
         }
 
-        for (GList *iter = data_set->resources; iter != NULL;
+        for (GList *iter = scheduler->resources; iter != NULL;
              iter = iter->next) {
 
             pcmk_resource_t *r = iter->data;
@@ -364,7 +364,7 @@ unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *data_set)
 // \return Standard Pacemaker return code
 static int
 unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
-                     pcmk_scheduler_t *data_set)
+                     pcmk_scheduler_t *scheduler)
 {
     const char *id = NULL;
     const char *rsc_id = NULL;
@@ -385,7 +385,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     }
 
     // Check whether there are any resource sets with template or tag references
-    *expanded_xml = pcmk__expand_tags_in_sets(xml_obj, data_set);
+    *expanded_xml = pcmk__expand_tags_in_sets(xml_obj, scheduler);
     if (*expanded_xml != NULL) {
         crm_log_xml_trace(*expanded_xml, "Expanded rsc_location");
         return pcmk_rc_ok;
@@ -396,7 +396,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         return pcmk_rc_ok;
     }
 
-    if (!pcmk__valid_resource_or_tag(data_set, rsc_id, &rsc, &tag)) {
+    if (!pcmk__valid_resource_or_tag(scheduler, rsc_id, &rsc, &tag)) {
         pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
                          "valid resource or tag", id, rsc_id);
         return pcmk_rc_unpack_error;
@@ -412,7 +412,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     // Convert any template or tag reference into constraint resource_set
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set, XML_LOC_ATTR_SOURCE,
-                          false, data_set)) {
+                          false, scheduler)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_unpack_error;
@@ -437,7 +437,8 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
 // \return Standard Pacemaker return code
 static int
-unpack_location_set(xmlNode *location, xmlNode *set, pcmk_scheduler_t *data_set)
+unpack_location_set(xmlNode *location, xmlNode *set,
+                    pcmk_scheduler_t *scheduler)
 {
     xmlNode *xml_rsc = NULL;
     pcmk_resource_t *resource = NULL;
@@ -461,7 +462,7 @@ unpack_location_set(xmlNode *location, xmlNode *set, pcmk_scheduler_t *data_set)
     for (xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
          xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
-        resource = pcmk__find_constraint_resource(data_set->resources,
+        resource = pcmk__find_constraint_resource(scheduler->resources,
                                                   ID(xml_rsc));
         if (resource == NULL) {
             pcmk__config_err("%s: No resource found for %s",
@@ -476,7 +477,7 @@ unpack_location_set(xmlNode *location, xmlNode *set, pcmk_scheduler_t *data_set)
 }
 
 void
-pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *data_set)
+pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 {
     xmlNode *set = NULL;
     bool any_sets = false;
@@ -484,7 +485,7 @@ pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *data_set)
     xmlNode *orig_xml = NULL;
     xmlNode *expanded_xml = NULL;
 
-    if (unpack_location_tags(xml_obj, &expanded_xml, data_set) != pcmk_rc_ok) {
+    if (unpack_location_tags(xml_obj, &expanded_xml, scheduler) != pcmk_rc_ok) {
         return;
     }
 
@@ -497,9 +498,9 @@ pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *data_set)
          set = crm_next_same_xml(set)) {
 
         any_sets = true;
-        set = expand_idref(set, data_set->input);
+        set = expand_idref(set, scheduler->input);
         if ((set == NULL) // Configuration error, message already logged
-            || (unpack_location_set(xml_obj, set, data_set) != pcmk_rc_ok)) {
+            || (unpack_location_set(xml_obj, set, scheduler) != pcmk_rc_ok)) {
 
             if (expanded_xml) {
                 free_xml(expanded_xml);
@@ -514,13 +515,13 @@ pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *data_set)
     }
 
     if (!any_sets) {
-        unpack_simple_location(xml_obj, data_set);
+        unpack_simple_location(xml_obj, scheduler);
     }
 }
 
 /*!
  * \internal
- * \brief Add a new location constraint to a cluster working set
+ * \brief Add a new location constraint to scheduler data
  *
  * \param[in]     id             XML ID of location constraint
  * \param[in,out] rsc            Resource in location constraint
@@ -592,12 +593,12 @@ pcmk__new_location(const char *id, pcmk_resource_t *rsc,
  * \internal
  * \brief Apply all location constraints
  *
- * \param[in,out] data_set       Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 void
-pcmk__apply_locations(pcmk_scheduler_t *data_set)
+pcmk__apply_locations(pcmk_scheduler_t *scheduler)
 {
-    for (GList *iter = data_set->placement_constraints;
+    for (GList *iter = scheduler->placement_constraints;
          iter != NULL; iter = iter->next) {
         pe__location_t *location = iter->data;
 

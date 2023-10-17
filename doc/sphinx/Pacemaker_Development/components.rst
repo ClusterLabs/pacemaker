@@ -355,7 +355,7 @@ ___________________
 The main data object for the scheduler is ``pcmk_scheduler_t``, which contains
 all information needed about nodes, resources, constraints, etc., both as the
 raw CIB XML and parsed into more usable data structures, plus the resulting
-transition graph XML. The variable name is usually ``data_set``.
+transition graph XML. The variable name is usually ``scheduler``.
 
 .. index::
    single: pcmk_resource_t

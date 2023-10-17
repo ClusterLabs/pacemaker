@@ -17,12 +17,12 @@
  * \internal
  * \brief Set the node health values to use for "red", "yellow", and "green"
  *
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 void
-pe__unpack_node_health_scores(pcmk_scheduler_t *data_set)
+pe__unpack_node_health_scores(pcmk_scheduler_t *scheduler)
 {
-    switch (pe__health_strategy(data_set)) {
+    switch (pe__health_strategy(scheduler)) {
         case pcmk__health_strategy_none:
             pcmk__score_red = 0;
             pcmk__score_yellow = 0;
@@ -43,11 +43,11 @@ pe__unpack_node_health_scores(pcmk_scheduler_t *data_set)
 
         default: // progressive or custom
             pcmk__score_red = pe__health_score(PCMK__OPT_NODE_HEALTH_RED,
-                                               data_set);
+                                               scheduler);
             pcmk__score_green = pe__health_score(PCMK__OPT_NODE_HEALTH_GREEN,
-                                                 data_set);
+                                                 scheduler);
             pcmk__score_yellow = pe__health_score(PCMK__OPT_NODE_HEALTH_YELLOW,
-                                                  data_set);
+                                                  scheduler);
             break;
     }
 

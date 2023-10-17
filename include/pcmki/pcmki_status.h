@@ -26,8 +26,8 @@ extern "C" {
  * \internal
  * \brief Print one-line status suitable for use with monitoring software
  *
- * \param[in,out] out       Output object
- * \param[in]     data_set  Cluster working set
+ * \param[in,out] out        Output object
+ * \param[in]     scheduler  Scheduler data
  *
  * \return Standard Pacemaker return code
  *
@@ -39,7 +39,7 @@ extern "C" {
  *       callers should be added.
  */
 int pcmk__output_simple_status(pcmk__output_t *out,
-                               const pcmk_scheduler_t *data_set);
+                               const pcmk_scheduler_t *scheduler);
 
 int pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith,
                                 cib_t *cib, xmlNode *current_cib,

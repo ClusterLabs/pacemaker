@@ -393,18 +393,18 @@ apply_container_ordering(pcmk_action_t *action)
  * \internal
  * \brief Order all relevant actions relative to remote connection actions
  *
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 void
-pcmk__order_remote_connection_actions(pcmk_scheduler_t *data_set)
+pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
 {
-    if (!pcmk_is_set(data_set->flags, pcmk_sched_have_remote_nodes)) {
+    if (!pcmk_is_set(scheduler->flags, pcmk_sched_have_remote_nodes)) {
         return;
     }
 
     crm_trace("Creating remote connection orderings");
 
-    for (GList *iter = data_set->actions; iter != NULL; iter = iter->next) {
+    for (GList *iter = scheduler->actions; iter != NULL; iter = iter->next) {
         pcmk_action_t *action = iter->data;
         pcmk_resource_t *remote = NULL;
 
@@ -424,7 +424,7 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *data_set)
             pcmk__new_ordering(action->rsc, NULL, action, action->rsc,
                                pcmk__op_key(action->rsc->id, PCMK_ACTION_START,
                                             0),
-                               NULL, pcmk__ar_ordered, data_set);
+                               NULL, pcmk__ar_ordered, scheduler);
 
             continue;
         }
@@ -469,7 +469,7 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *data_set)
                                     pcmk__str_none)) {
                     pcmk__new_ordering(remote, start_key(remote), NULL,
                                        action->rsc, NULL, rsc_action,
-                                       pcmk__ar_ordered, data_set);
+                                       pcmk__ar_ordered, scheduler);
                 }
             }
         }

@@ -353,14 +353,14 @@ pcmk__any_node_available(GHashTable *nodes)
  * \internal
  * \brief Apply node health values for all nodes in cluster
  *
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 void
-pcmk__apply_node_health(pcmk_scheduler_t *data_set)
+pcmk__apply_node_health(pcmk_scheduler_t *scheduler)
 {
     int base_health = 0;
     enum pcmk__health_strategy strategy;
-    const char *strategy_str = pe_pref(data_set->config_hash,
+    const char *strategy_str = pe_pref(scheduler->config_hash,
                                        PCMK__OPT_NODE_HEALTH_STRATEGY);
 
     strategy = pcmk__parse_health_strategy(strategy_str);
@@ -371,10 +371,10 @@ pcmk__apply_node_health(pcmk_scheduler_t *data_set)
 
     // The progressive strategy can use a base health score
     if (strategy == pcmk__health_strategy_progressive) {
-        base_health = pe__health_score(PCMK__OPT_NODE_HEALTH_BASE, data_set);
+        base_health = pe__health_score(PCMK__OPT_NODE_HEALTH_BASE, scheduler);
     }
 
-    for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
+    for (GList *iter = scheduler->nodes; iter != NULL; iter = iter->next) {
         pcmk_node_t *node = (pcmk_node_t *) iter->data;
         int health = pe__sum_node_health_scores(node, base_health);
 
@@ -386,7 +386,7 @@ pcmk__apply_node_health(pcmk_scheduler_t *data_set)
                  pe__node_name(node), health);
 
         // Use node health as a location score for each resource on the node
-        for (GList *r = data_set->resources; r != NULL; r = r->next) {
+        for (GList *r = scheduler->resources; r != NULL; r = r->next) {
             pcmk_resource_t *rsc = (pcmk_resource_t *) r->data;
 
             bool constrain = true;

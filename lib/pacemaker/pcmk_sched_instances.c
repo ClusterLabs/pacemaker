@@ -1550,17 +1550,17 @@ update_noninterleaved_actions(pcmk_resource_t *instance, pcmk_action_t *first,
  * appropriate for the ordering. Effects may cascade to other orderings
  * involving the actions as well.
  *
- * \param[in,out] first     'First' action in an ordering
- * \param[in,out] then      'Then' action in an ordering
- * \param[in]     node      If not NULL, limit scope of ordering to this node
- *                          (only used when interleaving instances)
- * \param[in]     flags     Action flags for \p first for ordering purposes
- * \param[in]     filter    Action flags to limit scope of certain updates (may
- *                          include pcmk_action_optional to affect only
- *                          mandatory actions, and pcmk_action_runnable to
- *                          affect only runnable actions)
- * \param[in]     type      Group of enum pcmk__action_relation_flags to apply
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] first      'First' action in an ordering
+ * \param[in,out] then       'Then' action in an ordering
+ * \param[in]     node       If not NULL, limit scope of ordering to this node
+ *                           (only used when interleaving instances)
+ * \param[in]     flags      Action flags for \p first for ordering purposes
+ * \param[in]     filter     Action flags to limit scope of certain updates (may
+ *                           include pcmk_action_optional to affect only
+ *                           mandatory actions, and pcmk_action_runnable to
+ *                           affect only runnable actions)
+ * \param[in]     type       Group of enum pcmk__action_relation_flags to apply
+ * \param[in,out] scheduler  Scheduler data
  *
  * \return Group of enum pcmk__updated flags indicating what was updated
  */
@@ -1568,9 +1568,9 @@ uint32_t
 pcmk__instance_update_ordered_actions(pcmk_action_t *first, pcmk_action_t *then,
                                       const pcmk_node_t *node, uint32_t flags,
                                       uint32_t filter, uint32_t type,
-                                      pcmk_scheduler_t *data_set)
+                                      pcmk_scheduler_t *scheduler)
 {
-    CRM_ASSERT((first != NULL) && (then != NULL) && (data_set != NULL));
+    CRM_ASSERT((first != NULL) && (then != NULL) && (scheduler != NULL));
 
     if (then->rsc == NULL) {
         return pcmk__updated_none;
@@ -1584,7 +1584,7 @@ pcmk__instance_update_ordered_actions(pcmk_action_t *first, pcmk_action_t *then,
 
         // Update actions for the clone or bundle resource itself
         changed |= pcmk__update_ordered_actions(first, then, node, flags,
-                                                filter, type, data_set);
+                                                filter, type, scheduler);
 
         // Update the 'then' clone instances or bundle containers individually
         for (GList *iter = instances; iter != NULL; iter = iter->next) {

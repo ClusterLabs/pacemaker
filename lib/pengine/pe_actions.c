@@ -24,21 +24,21 @@ static void unpack_operation(pcmk_action_t *action, const xmlNode *xml_obj,
                              guint interval_ms);
 
 static void
-add_singleton(pcmk_scheduler_t *data_set, pcmk_action_t *action)
+add_singleton(pcmk_scheduler_t *scheduler, pcmk_action_t *action)
 {
-    if (data_set->singletons == NULL) {
-        data_set->singletons = pcmk__strkey_table(NULL, NULL);
+    if (scheduler->singletons == NULL) {
+        scheduler->singletons = pcmk__strkey_table(NULL, NULL);
     }
-    g_hash_table_insert(data_set->singletons, action->uuid, action);
+    g_hash_table_insert(scheduler->singletons, action->uuid, action);
 }
 
 static pcmk_action_t *
-lookup_singleton(pcmk_scheduler_t *data_set, const char *action_uuid)
+lookup_singleton(pcmk_scheduler_t *scheduler, const char *action_uuid)
 {
-    if (data_set->singletons == NULL) {
+    if (scheduler->singletons == NULL) {
         return NULL;
     }
-    return g_hash_table_lookup(data_set->singletons, action_uuid);
+    return g_hash_table_lookup(scheduler->singletons, action_uuid);
 }
 
 /*!
@@ -48,21 +48,21 @@ lookup_singleton(pcmk_scheduler_t *data_set, const char *action_uuid)
  * \param[in] key        Action key to match
  * \param[in] rsc        Resource to match (if any)
  * \param[in] node       Node to match (if any)
- * \param[in] data_set   Cluster working set
+ * \param[in] scheduler  Scheduler data
  *
  * \return Existing action that matches arguments (or NULL if none)
  */
 static pcmk_action_t *
 find_existing_action(const char *key, const pcmk_resource_t *rsc,
-                     const pcmk_node_t *node, const pcmk_scheduler_t *data_set)
+                     const pcmk_node_t *node, const pcmk_scheduler_t *scheduler)
 {
     GList *matches = NULL;
     pcmk_action_t *action = NULL;
 
-    /* When rsc is NULL, it would be quicker to check data_set->singletons,
-     * but checking all data_set->actions takes the node into account.
+    /* When rsc is NULL, it would be quicker to check scheduler->singletons,
+     * but checking all scheduler->actions takes the node into account.
      */
-    matches = find_actions(((rsc == NULL)? data_set->actions : rsc->actions),
+    matches = find_actions(((rsc == NULL)? scheduler->actions : rsc->actions),
                            key, node);
     if (matches == NULL) {
         return NULL;
@@ -160,7 +160,7 @@ find_rsc_op_entry(const pcmk_resource_t *rsc, const char *key)
  * \param[in]     node       Node that action is on (if any)
  * \param[in]     optional   Whether action should be considered optional
  * \param[in]     for_graph  Whether action should be recorded in transition graph
- * \param[in,out] data_set   Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  *
  * \return Newly allocated action
  * \note This function takes ownership of \p key. It is the caller's
@@ -169,7 +169,7 @@ find_rsc_op_entry(const pcmk_resource_t *rsc, const char *key)
 static pcmk_action_t *
 new_action(char *key, const char *task, pcmk_resource_t *rsc,
            const pcmk_node_t *node, bool optional, bool for_graph,
-           pcmk_scheduler_t *data_set)
+           pcmk_scheduler_t *scheduler)
 {
     pcmk_action_t *action = calloc(1, sizeof(pcmk_action_t));
 
@@ -209,14 +209,14 @@ new_action(char *key, const char *task, pcmk_resource_t *rsc,
     if (for_graph) {
         pe_rsc_trace(rsc, "Created %s action %d (%s): %s for %s on %s",
                      (optional? "optional" : "required"),
-                     data_set->action_id, key, task,
+                     scheduler->action_id, key, task,
                      ((rsc == NULL)? "no resource" : rsc->id),
                      pe__node_name(node));
-        action->id = data_set->action_id++;
+        action->id = scheduler->action_id++;
 
-        data_set->actions = g_list_prepend(data_set->actions, action);
+        scheduler->actions = g_list_prepend(scheduler->actions, action);
         if (rsc == NULL) {
-            add_singleton(data_set, action);
+            add_singleton(scheduler, action);
         } else {
             rsc->actions = g_list_prepend(rsc->actions, action);
         }
@@ -228,11 +228,12 @@ new_action(char *key, const char *task, pcmk_resource_t *rsc,
  * \internal
  * \brief Evaluate node attribute values for an action
  *
- * \param[in,out] action    Action to unpack attributes for
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] action     Action to unpack attributes for
+ * \param[in,out] scheduler  Scheduler data
  */
 static void
-unpack_action_node_attributes(pcmk_action_t *action, pcmk_scheduler_t *data_set)
+unpack_action_node_attributes(pcmk_action_t *action,
+                              pcmk_scheduler_t *scheduler)
 {
     if (!pcmk_is_set(action->flags, pcmk_action_attrs_evaluated)
         && (action->op_entry != NULL)) {
@@ -240,7 +241,7 @@ unpack_action_node_attributes(pcmk_action_t *action, pcmk_scheduler_t *data_set)
         pe_rule_eval_data_t rule_data = {
             .node_hash = action->node->details->attrs,
             .role = pcmk_role_unknown,
-            .now = data_set->now,
+            .now = scheduler->now,
             .match_data = NULL,
             .rsc_data = NULL,
             .op_data = NULL
@@ -248,7 +249,7 @@ unpack_action_node_attributes(pcmk_action_t *action, pcmk_scheduler_t *data_set)
 
         pe__unpack_dataset_nvpairs(action->op_entry, XML_TAG_ATTR_SETS,
                                    &rule_data, action->extra, NULL,
-                                   FALSE, data_set);
+                                   FALSE, scheduler);
         pe__set_action_flags(action, pcmk_action_attrs_evaluated);
     }
 }
@@ -282,14 +283,14 @@ update_action_optional(pcmk_action_t *action, gboolean optional)
 }
 
 static enum pe_quorum_policy
-effective_quorum_policy(pcmk_resource_t *rsc, pcmk_scheduler_t *data_set)
+effective_quorum_policy(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 {
-    enum pe_quorum_policy policy = data_set->no_quorum_policy;
+    enum pe_quorum_policy policy = scheduler->no_quorum_policy;
 
-    if (pcmk_is_set(data_set->flags, pcmk_sched_quorate)) {
+    if (pcmk_is_set(scheduler->flags, pcmk_sched_quorate)) {
         policy = pcmk_no_quorum_ignore;
 
-    } else if (data_set->no_quorum_policy == pcmk_no_quorum_demote) {
+    } else if (scheduler->no_quorum_policy == pcmk_no_quorum_demote) {
         switch (rsc->role) {
             case pcmk_role_promoted:
             case pcmk_role_unpromoted:
@@ -313,13 +314,13 @@ effective_quorum_policy(pcmk_resource_t *rsc, pcmk_scheduler_t *data_set)
  *
  * \param[in,out] action     Action to update
  * \param[in]     for_graph  Whether action should be recorded in transition graph
- * \param[in,out] data_set   Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  *
  * \note This may also schedule fencing if a stop is unrunnable.
  */
 static void
 update_resource_action_runnable(pcmk_action_t *action, bool for_graph,
-                                pcmk_scheduler_t *data_set)
+                                pcmk_scheduler_t *scheduler)
 {
     if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
         return;
@@ -342,7 +343,7 @@ update_resource_action_runnable(pcmk_action_t *action, bool for_graph,
             && for_graph
             && pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_casei)
             && !(action->node->details->unclean)) {
-            pe_fence_node(data_set, action->node, "stop is unrunnable", false);
+            pe_fence_node(scheduler, action->node, "stop is unrunnable", false);
         }
 
     } else if (!pcmk_is_set(action->flags, pcmk_action_on_dc)
@@ -355,7 +356,7 @@ update_resource_action_runnable(pcmk_action_t *action, bool for_graph,
     } else if (action->needs == pcmk_requires_nothing) {
         pe_action_set_reason(action, NULL, TRUE);
         if (pe__is_guest_node(action->node)
-            && !pe_can_fence(data_set, action->node)) {
+            && !pe_can_fence(scheduler, action->node)) {
             /* An action that requires nothing usually does not require any
              * fencing in order to be runnable. However, there is an exception:
              * such an action cannot be completed if it is on a guest node whose
@@ -373,7 +374,7 @@ update_resource_action_runnable(pcmk_action_t *action, bool for_graph,
         }
 
     } else {
-        switch (effective_quorum_policy(action->rsc, data_set)) {
+        switch (effective_quorum_policy(action->rsc, scheduler)) {
             case pcmk_no_quorum_stop:
                 pe_rsc_debug(action->rsc, "%s on %s is unrunnable (no quorum)",
                              action->uuid, pe__node_name(action->node));
@@ -1024,31 +1025,31 @@ unpack_operation(pcmk_action_t *action, const xmlNode *xml_obj,
  * \param[in]     on_node      Node that action is on (if any)
  * \param[in]     optional     Whether action should be considered optional
  * \param[in]     save_action  Whether action should be recorded in transition graph
- * \param[in,out] data_set     Cluster working set
+ * \param[in,out] scheduler    Scheduler data
  *
  * \return Action object corresponding to arguments (guaranteed not to be
  *         \c NULL)
  * \note This function takes ownership of (and might free) \p key. If
- *       \p save_action is true, \p data_set will own the returned action,
+ *       \p save_action is true, \p scheduler will own the returned action,
  *       otherwise it is the caller's responsibility to free the return value
  *       with pe_free_action().
  */
 pcmk_action_t *
 custom_action(pcmk_resource_t *rsc, char *key, const char *task,
               const pcmk_node_t *on_node, gboolean optional,
-              gboolean save_action, pcmk_scheduler_t *data_set)
+              gboolean save_action, pcmk_scheduler_t *scheduler)
 {
     pcmk_action_t *action = NULL;
 
-    CRM_ASSERT((key != NULL) && (task != NULL) && (data_set != NULL));
+    CRM_ASSERT((key != NULL) && (task != NULL) && (scheduler != NULL));
 
     if (save_action) {
-        action = find_existing_action(key, rsc, on_node, data_set);
+        action = find_existing_action(key, rsc, on_node, scheduler);
     }
 
     if (action == NULL) {
         action = new_action(key, task, rsc, on_node, optional, save_action,
-                            data_set);
+                            scheduler);
     } else {
         free(key);
     }
@@ -1057,10 +1058,10 @@ custom_action(pcmk_resource_t *rsc, char *key, const char *task,
 
     if (rsc != NULL) {
         if (action->node != NULL) {
-            unpack_action_node_attributes(action, data_set);
+            unpack_action_node_attributes(action, scheduler);
         }
 
-        update_resource_action_runnable(action, save_action, data_set);
+        update_resource_action_runnable(action, save_action, scheduler);
 
         if (save_action) {
             update_resource_flags_for_action(rsc, action);
@@ -1071,12 +1072,13 @@ custom_action(pcmk_resource_t *rsc, char *key, const char *task,
 }
 
 pcmk_action_t *
-get_pseudo_op(const char *name, pcmk_scheduler_t * data_set)
+get_pseudo_op(const char *name, pcmk_scheduler_t *scheduler)
 {
-    pcmk_action_t *op = lookup_singleton(data_set, name);
+    pcmk_action_t *op = lookup_singleton(scheduler, name);
 
     if (op == NULL) {
-        op = custom_action(NULL, strdup(name), name, NULL, TRUE, TRUE, data_set);
+        op = custom_action(NULL, strdup(name), name, NULL, TRUE, TRUE,
+                           scheduler);
         pe__set_action_flags(op, pcmk_action_pseudo|pcmk_action_runnable);
     }
     return op;
@@ -1109,7 +1111,7 @@ find_unfencing_devices(GList *candidates, GList *matches)
 
 static int
 node_priority_fencing_delay(const pcmk_node_t *node,
-                            const pcmk_scheduler_t *data_set)
+                            const pcmk_scheduler_t *scheduler)
 {
     int member_count = 0;
     int online_count = 0;
@@ -1118,7 +1120,7 @@ node_priority_fencing_delay(const pcmk_node_t *node,
     GList *gIter = NULL;
 
     // `priority-fencing-delay` is disabled
-    if (data_set->priority_fencing_delay <= 0) {
+    if (scheduler->priority_fencing_delay <= 0) {
         return 0;
     }
 
@@ -1133,7 +1135,7 @@ node_priority_fencing_delay(const pcmk_node_t *node,
         return 0;
     }
 
-    for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
+    for (gIter = scheduler->nodes; gIter != NULL; gIter = gIter->next) {
         pcmk_node_t *n = gIter->data;
 
         if (n->details->type != pcmk_node_variant_cluster) {
@@ -1172,39 +1174,40 @@ node_priority_fencing_delay(const pcmk_node_t *node,
         return 0;
     }
 
-    return data_set->priority_fencing_delay;
+    return scheduler->priority_fencing_delay;
 }
 
 pcmk_action_t *
 pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
-            const char *reason, bool priority_delay, pcmk_scheduler_t *data_set)
+            const char *reason, bool priority_delay,
+            pcmk_scheduler_t *scheduler)
 {
     char *op_key = NULL;
     pcmk_action_t *stonith_op = NULL;
 
     if(op == NULL) {
-        op = data_set->stonith_action;
+        op = scheduler->stonith_action;
     }
 
     op_key = crm_strdup_printf("%s-%s-%s",
                                PCMK_ACTION_STONITH, node->details->uname, op);
 
-    stonith_op = lookup_singleton(data_set, op_key);
+    stonith_op = lookup_singleton(scheduler, op_key);
     if(stonith_op == NULL) {
         stonith_op = custom_action(NULL, op_key, PCMK_ACTION_STONITH, node,
-                                   TRUE, TRUE, data_set);
+                                   TRUE, TRUE, scheduler);
 
         add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET, node->details->uname);
         add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET_UUID, node->details->id);
         add_hash_param(stonith_op->meta, "stonith_action", op);
 
-        if (pcmk_is_set(data_set->flags, pcmk_sched_enable_unfencing)) {
+        if (pcmk_is_set(scheduler->flags, pcmk_sched_enable_unfencing)) {
             /* Extra work to detect device changes
              */
             GString *digests_all = g_string_sized_new(1024);
             GString *digests_secure = g_string_sized_new(1024);
 
-            GList *matches = find_unfencing_devices(data_set->resources, NULL);
+            GList *matches = find_unfencing_devices(scheduler->resources, NULL);
 
             char *key = NULL;
             char *value = NULL;
@@ -1215,13 +1218,14 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
                                                         XML_ATTR_TYPE);
                 op_digest_cache_t *data = NULL;
 
-                data = pe__compare_fencing_digest(match, agent, node, data_set);
+                data = pe__compare_fencing_digest(match, agent, node,
+                                                  scheduler);
                 if (data->rc == pcmk__digest_mismatch) {
                     optional = FALSE;
                     crm_notice("Unfencing node %s because the definition of "
                                "%s changed", pe__node_name(node), match->id);
-                    if (!pcmk__is_daemon && data_set->priv != NULL) {
-                        pcmk__output_t *out = data_set->priv;
+                    if (!pcmk__is_daemon && scheduler->priv != NULL) {
+                        pcmk__output_t *out = scheduler->priv;
 
                         out->info(out,
                                   "notice: Unfencing node %s because the "
@@ -1254,7 +1258,7 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
         free(op_key);
     }
 
-    if (data_set->priority_fencing_delay > 0
+    if (scheduler->priority_fencing_delay > 0
 
             /* It's a suitable case where `priority-fencing-delay` applies.
              * At least add `priority-fencing-delay` field as an indicator. */
@@ -1271,14 +1275,15 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
              * the targeting node. So that it takes precedence over any possible
              * `pcmk_delay_base/max`.
              */
-            char *delay_s = pcmk__itoa(node_priority_fencing_delay(node, data_set));
+            char *delay_s = pcmk__itoa(node_priority_fencing_delay(node,
+                                                                   scheduler));
 
             g_hash_table_insert(stonith_op->meta,
                                 strdup(XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY),
                                 delay_s);
     }
 
-    if(optional == FALSE && pe_can_fence(data_set, node)) {
+    if(optional == FALSE && pe_can_fence(scheduler, node)) {
         pe__clear_action_flags(stonith_op, pcmk_action_optional);
         pe_action_set_reason(stonith_op, reason, false);
 
@@ -1313,7 +1318,7 @@ pe_free_action(pcmk_action_t *action)
 
 int
 pe_get_configured_timeout(pcmk_resource_t *rsc, const char *action,
-                          pcmk_scheduler_t *data_set)
+                          pcmk_scheduler_t *scheduler)
 {
     xmlNode *child = NULL;
     GHashTable *action_meta = NULL;
@@ -1323,7 +1328,7 @@ pe_get_configured_timeout(pcmk_resource_t *rsc, const char *action,
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
         .role = pcmk_role_unknown,
-        .now = data_set->now,
+        .now = scheduler->now,
         .match_data = NULL,
         .rsc_data = NULL,
         .op_data = NULL
@@ -1338,10 +1343,11 @@ pe_get_configured_timeout(pcmk_resource_t *rsc, const char *action,
         }
     }
 
-    if (timeout_spec == NULL && data_set->op_defaults) {
+    if (timeout_spec == NULL && scheduler->op_defaults) {
         action_meta = pcmk__strkey_table(free, free);
-        pe__unpack_dataset_nvpairs(data_set->op_defaults, XML_TAG_META_SETS,
-                                   &rule_data, action_meta, NULL, FALSE, data_set);
+        pe__unpack_dataset_nvpairs(scheduler->op_defaults, XML_TAG_META_SETS,
+                                   &rule_data, action_meta, NULL, FALSE,
+                                   scheduler);
         timeout_spec = g_hash_table_lookup(action_meta, XML_ATTR_TIMEOUT);
     }
 

@@ -203,28 +203,28 @@ action_for_ordering(pcmk_action_t *action)
  * \internal
  * \brief Wrapper for update_ordered_actions() method for readability
  *
- * \param[in,out] rsc       Resource to call method for
- * \param[in,out] first     'First' action in an ordering
- * \param[in,out] then      'Then' action in an ordering
- * \param[in]     node      If not NULL, limit scope of ordering to this
- *                          node (only used when interleaving instances)
- * \param[in]     flags     Action flags for \p first for ordering purposes
- * \param[in]     filter    Action flags to limit scope of certain updates
- *                          (may include pcmk_action_optional to affect only
- *                          mandatory actions, and pe_action_runnable to
- *                          affect only runnable actions)
- * \param[in]     type      Group of enum pcmk__action_relation_flags to apply
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] rsc        Resource to call method for
+ * \param[in,out] first      'First' action in an ordering
+ * \param[in,out] then       'Then' action in an ordering
+ * \param[in]     node       If not NULL, limit scope of ordering to this
+ *                           node (only used when interleaving instances)
+ * \param[in]     flags      Action flags for \p first for ordering purposes
+ * \param[in]     filter     Action flags to limit scope of certain updates
+ *                           (may include pcmk_action_optional to affect only
+ *                           mandatory actions, and pe_action_runnable to
+ *                           affect only runnable actions)
+ * \param[in]     type       Group of enum pcmk__action_relation_flags to apply
+ * \param[in,out] scheduler  Scheduler data
  *
  * \return Group of enum pcmk__updated flags indicating what was updated
  */
 static inline uint32_t
 update(pcmk_resource_t *rsc, pcmk_action_t *first, pcmk_action_t *then,
        const pcmk_node_t *node, uint32_t flags, uint32_t filter, uint32_t type,
-       pcmk_scheduler_t *data_set)
+       pcmk_scheduler_t *scheduler)
 {
     return rsc->cmds->update_ordered_actions(first, then, node, flags, filter,
-                                             type, data_set);
+                                             type, scheduler);
 }
 
 /*!
@@ -236,7 +236,7 @@ update(pcmk_resource_t *rsc, pcmk_action_t *first, pcmk_action_t *then,
  * \param[in]     first_flags  Action flags for \p first for ordering purposes
  * \param[in]     then_flags   Action flags for \p then for ordering purposes
  * \param[in,out] order        Action wrapper for \p first in ordering
- * \param[in,out] data_set     Cluster working set
+ * \param[in,out] scheduler    Scheduler data
  *
  * \return Group of enum pcmk__updated flags
  */
@@ -244,7 +244,7 @@ static uint32_t
 update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                                  uint32_t first_flags, uint32_t then_flags,
                                  pe_action_wrapper_t *order,
-                                 pcmk_scheduler_t *data_set)
+                                 pcmk_scheduler_t *scheduler)
 {
     uint32_t changed = pcmk__updated_none;
 
@@ -276,7 +276,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
             changed |= update(then->rsc, first, then, node,
                               first_flags & pcmk_action_optional,
                               pcmk_action_optional, pcmk__ar_first_implies_then,
-                              data_set);
+                              scheduler);
         } else if (!pcmk_is_set(first_flags, pcmk_action_optional)
                    && pcmk_is_set(then->flags, pcmk_action_optional)) {
             pe__clear_action_flags(then, pcmk_action_optional);
@@ -294,7 +294,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                                        |pcmk_action_runnable;
 
         changed |= update(then->rsc, first, then, node, first_flags, restart,
-                          pcmk__ar_intermediate_stop, data_set);
+                          pcmk__ar_intermediate_stop, scheduler);
         pe_rsc_trace(then->rsc,
                      "%s then %s: %s after pcmk__ar_intermediate_stop",
                      first->uuid, then->uuid,
@@ -305,7 +305,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
         if (first->rsc != NULL) {
             changed |= update(first->rsc, first, then, node, first_flags,
                               pcmk_action_optional, pcmk__ar_then_implies_first,
-                              data_set);
+                              scheduler);
         } else if (!pcmk_is_set(first_flags, pcmk_action_optional)
                    && pcmk_is_set(first->flags, pcmk_action_runnable)) {
             pe__clear_action_flags(first, pcmk_action_runnable);
@@ -322,7 +322,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
             changed |= update(then->rsc, first, then, node,
                               first_flags & pcmk_action_optional,
                               pcmk_action_optional,
-                              pcmk__ar_promoted_then_implies_first, data_set);
+                              pcmk__ar_promoted_then_implies_first, scheduler);
         }
         pe_rsc_trace(then->rsc,
                      "%s then %s: %s after pcmk__ar_promoted_then_implies_first",
@@ -334,7 +334,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
         if (then->rsc != NULL) {
             changed |= update(then->rsc, first, then, node, first_flags,
                               pcmk_action_runnable, pcmk__ar_min_runnable,
-                              data_set);
+                              scheduler);
 
         } else if (pcmk_is_set(first_flags, pcmk_action_runnable)) {
             // We have another runnable instance of "first"
@@ -368,7 +368,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
         } else {
             changed |= update(then->rsc, first, then, node, first_flags,
                               pcmk_action_runnable,
-                              pcmk__ar_unrunnable_first_blocks, data_set);
+                              pcmk__ar_unrunnable_first_blocks, scheduler);
         }
         pe_rsc_trace(then->rsc,
                      "%s then %s: %s after pcmk__ar_nested_remote_probe",
@@ -380,7 +380,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
         if (then->rsc != NULL) {
             changed |= update(then->rsc, first, then, node, first_flags,
                               pcmk_action_runnable,
-                              pcmk__ar_unrunnable_first_blocks, data_set);
+                              pcmk__ar_unrunnable_first_blocks, scheduler);
 
         } else if (!pcmk_is_set(first_flags, pcmk_action_runnable)
                    && pcmk_is_set(then->flags, pcmk_action_runnable)) {
@@ -398,7 +398,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
         if (then->rsc != NULL) {
             changed |= update(then->rsc, first, then, node, first_flags,
                               pcmk_action_optional,
-                              pcmk__ar_unmigratable_then_blocks, data_set);
+                              pcmk__ar_unmigratable_then_blocks, scheduler);
         }
         pe_rsc_trace(then->rsc, "%s then %s: %s after "
                      "pcmk__ar_unmigratable_then_blocks",
@@ -410,7 +410,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
         if (then->rsc != NULL) {
             changed |= update(then->rsc, first, then, node, first_flags,
                               pcmk_action_optional, pcmk__ar_first_else_then,
-                              data_set);
+                              scheduler);
         }
         pe_rsc_trace(then->rsc, "%s then %s: %s after pcmk__ar_first_else_then",
                      first->uuid, then->uuid,
@@ -420,7 +420,8 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
     if (pcmk_is_set(order->type, pcmk__ar_ordered)) {
         if (then->rsc != NULL) {
             changed |= update(then->rsc, first, then, node, first_flags,
-                              pcmk_action_runnable, pcmk__ar_ordered, data_set);
+                              pcmk_action_runnable, pcmk__ar_ordered,
+                              scheduler);
         }
         pe_rsc_trace(then->rsc, "%s then %s: %s after pcmk__ar_ordered",
                      first->uuid, then->uuid,
@@ -431,7 +432,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
         if (then->rsc != NULL) {
             changed |= update(then->rsc, first, then, node, first_flags,
                               pcmk_action_runnable, pcmk__ar_asymmetric,
-                              data_set);
+                              scheduler);
         }
         pe_rsc_trace(then->rsc, "%s then %s: %s after pcmk__ar_asymmetric",
                      first->uuid, then->uuid,
@@ -497,12 +498,12 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
  * \internal
  * \brief Update an action's flags for all orderings where it is "then"
  *
- * \param[in,out] then      Action to update
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] then       Action to update
+ * \param[in,out] scheduler  Scheduler data
  */
 void
 pcmk__update_action_for_orderings(pcmk_action_t *then,
-                                  pcmk_scheduler_t *data_set)
+                                  pcmk_scheduler_t *scheduler)
 {
     GList *lpc = NULL;
     uint32_t changed = pcmk__updated_none;
@@ -619,7 +620,7 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
 
             changed |= update_action_for_ordering_flags(first, then,
                                                         first_flags, then_flags,
-                                                        other, data_set);
+                                                        other, scheduler);
 
             /* 'first' was for a complex resource (clone, group, etc),
              * create a new dependency if necessary
@@ -644,9 +645,9 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
                  lpc2 = lpc2->next) {
                 pe_action_wrapper_t *other = (pe_action_wrapper_t *) lpc2->data;
 
-                pcmk__update_action_for_orderings(other->action, data_set);
+                pcmk__update_action_for_orderings(other->action, scheduler);
             }
-            pcmk__update_action_for_orderings(first, data_set);
+            pcmk__update_action_for_orderings(first, scheduler);
         }
     }
 
@@ -665,11 +666,11 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
             && !pcmk_is_set(then->flags, pcmk_action_runnable)) {
             pcmk__block_colocation_dependents(then);
         }
-        pcmk__update_action_for_orderings(then, data_set);
+        pcmk__update_action_for_orderings(then, scheduler);
         for (lpc = then->actions_after; lpc != NULL; lpc = lpc->next) {
             pe_action_wrapper_t *other = (pe_action_wrapper_t *) lpc->data;
 
-            pcmk__update_action_for_orderings(other->action, data_set);
+            pcmk__update_action_for_orderings(other->action, scheduler);
         }
     }
 }
@@ -821,17 +822,17 @@ handle_restart_ordering(pcmk_action_t *first, pcmk_action_t *then,
  * (and runnable_before members if appropriate) as appropriate for the ordering.
  * Effects may cascade to other orderings involving the actions as well.
  *
- * \param[in,out] first     'First' action in an ordering
- * \param[in,out] then      'Then' action in an ordering
- * \param[in]     node      If not NULL, limit scope of ordering to this node
- *                          (ignored)
- * \param[in]     flags     Action flags for \p first for ordering purposes
- * \param[in]     filter    Action flags to limit scope of certain updates (may
- *                          include pcmk_action_optional to affect only
- *                          mandatory actions, and pcmk_action_runnable to
- *                          affect only runnable actions)
- * \param[in]     type      Group of enum pcmk__action_relation_flags to apply
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] first      'First' action in an ordering
+ * \param[in,out] then       'Then' action in an ordering
+ * \param[in]     node       If not NULL, limit scope of ordering to this node
+ *                           (ignored)
+ * \param[in]     flags      Action flags for \p first for ordering purposes
+ * \param[in]     filter     Action flags to limit scope of certain updates (may
+ *                           include pcmk_action_optional to affect only
+ *                           mandatory actions, and pcmk_action_runnable to
+ *                           affect only runnable actions)
+ * \param[in]     type       Group of enum pcmk__action_relation_flags to apply
+ * \param[in,out] scheduler  Scheduler data
  *
  * \return Group of enum pcmk__updated flags indicating what was updated
  */
@@ -839,13 +840,13 @@ uint32_t
 pcmk__update_ordered_actions(pcmk_action_t *first, pcmk_action_t *then,
                              const pcmk_node_t *node, uint32_t flags,
                              uint32_t filter, uint32_t type,
-                             pcmk_scheduler_t *data_set)
+                             pcmk_scheduler_t *scheduler)
 {
     uint32_t changed = pcmk__updated_none;
     uint32_t then_flags = 0U;
     uint32_t first_flags = 0U;
 
-    CRM_ASSERT((first != NULL) && (then != NULL) && (data_set != NULL));
+    CRM_ASSERT((first != NULL) && (then != NULL) && (scheduler != NULL));
 
     then_flags = then->flags;
     first_flags = first->flags;
@@ -935,7 +936,7 @@ pcmk__update_ordered_actions(pcmk_action_t *first, pcmk_action_t *then,
 
         if ((then->rsc != NULL) && (then->rsc->parent != NULL)) {
             // Required to handle "X_stop then X_start" for cloned groups
-            pcmk__update_action_for_orderings(then, data_set);
+            pcmk__update_action_for_orderings(then, scheduler);
         }
     }
 
@@ -1386,15 +1387,15 @@ pcmk__deduplicate_action_inputs(pcmk_action_t *action)
  * \internal
  * \brief Output all scheduled actions
  *
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 void
-pcmk__output_actions(pcmk_scheduler_t *data_set)
+pcmk__output_actions(pcmk_scheduler_t *scheduler)
 {
-    pcmk__output_t *out = data_set->priv;
+    pcmk__output_t *out = scheduler->priv;
 
     // Output node (non-resource) actions
-    for (GList *iter = data_set->actions; iter != NULL; iter = iter->next) {
+    for (GList *iter = scheduler->actions; iter != NULL; iter = iter->next) {
         char *node_name = NULL;
         char *task = NULL;
         pcmk_action_t *action = (pcmk_action_t *) iter->data;
@@ -1438,7 +1439,7 @@ pcmk__output_actions(pcmk_scheduler_t *data_set)
     }
 
     // Output resource actions
-    for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
+    for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         rsc->cmds->output_actions(rsc);
@@ -1502,18 +1503,18 @@ task_for_digest(const char *task, guint interval_ms)
  *
  * \param[in] xml_op       Resource history entry with secure digest
  * \param[in] digest_data  Operation digest information being compared
- * \param[in] data_set     Cluster working set
+ * \param[in] scheduler    Scheduler data
  *
  * \return true if only sanitized parameters changed, otherwise false
  */
 static bool
 only_sanitized_changed(const xmlNode *xml_op,
                        const op_digest_cache_t *digest_data,
-                       const pcmk_scheduler_t *data_set)
+                       const pcmk_scheduler_t *scheduler)
 {
     const char *digest_secure = NULL;
 
-    if (!pcmk_is_set(data_set->flags, pcmk_sched_sanitized)) {
+    if (!pcmk_is_set(scheduler->flags, pcmk_sched_sanitized)) {
         // The scheduler is not being run as a simulation
         return false;
     }
@@ -1907,10 +1908,10 @@ process_node_history(pcmk_node_t *node, const xmlNode *lrm_rscs)
  * (This also cancels recurring actions for maintenance mode, which is not
  * entirely related but convenient to do here.)
  *
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 void
-pcmk__handle_rsc_config_changes(pcmk_scheduler_t *data_set)
+pcmk__handle_rsc_config_changes(pcmk_scheduler_t *scheduler)
 {
     crm_trace("Check resource and action configuration for changes");
 
@@ -1918,7 +1919,7 @@ pcmk__handle_rsc_config_changes(pcmk_scheduler_t *data_set)
      * and search for the appropriate status subsection for each. This skips
      * orphaned nodes and lets us eliminate some cases before searching the XML.
      */
-    for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
+    for (GList *iter = scheduler->nodes; iter != NULL; iter = iter->next) {
         pcmk_node_t *node = (pcmk_node_t *) iter->data;
 
         /* Don't bother checking actions for a node that can't run actions ...
@@ -1932,7 +1933,7 @@ pcmk__handle_rsc_config_changes(pcmk_scheduler_t *data_set)
             xmlNode *history = NULL;
 
             xpath = crm_strdup_printf(XPATH_NODE_HISTORY, node->details->uname);
-            history = get_xpath_object(xpath, data_set->input, LOG_NEVER);
+            history = get_xpath_object(xpath, scheduler->input, LOG_NEVER);
             free(xpath);
 
             process_node_history(node, history);

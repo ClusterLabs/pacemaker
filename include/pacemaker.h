@@ -202,13 +202,13 @@ int pcmk_pacemakerd_status(xmlNodePtr *xml, const char *ipc_name,
  * \param[in,out] rsc        Resource to calculate digests for
  * \param[in]     node       Node whose operation history should be used
  * \param[in]     overrides  Hash table of configuration parameters to override
- * \param[in]     data_set   Cluster working set (with status)
+ * \param[in]     scheduler  Scheduler data (with status)
  *
  * \return Standard Pacemaker return code
  */
 int pcmk_resource_digests(xmlNodePtr *xml, pcmk_resource_t *rsc,
                           const pcmk_node_t *node, GHashTable *overrides,
-                          pcmk_scheduler_t *data_set);
+                          pcmk_scheduler_t *scheduler);
 
 /*!
  * \brief Simulate a cluster's response to events
@@ -219,7 +219,7 @@ int pcmk_resource_digests(xmlNodePtr *xml, pcmk_resource_t *rsc,
  * simulation. Output can be modified with various flags.
  *
  * \param[in,out] xml          The destination for the result, as an XML tree
- * \param[in,out] data_set     Working set for the cluster
+ * \param[in,out] scheduler    Scheduler data
  * \param[in]     injections   A structure containing cluster events
  *                             (node up/down, tickets, injected operations)
  * \param[in]     flags        A bitfield of :pcmk_sim_flags to modify
@@ -238,7 +238,7 @@ int pcmk_resource_digests(xmlNodePtr *xml, pcmk_resource_t *rsc,
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_simulate(xmlNodePtr *xml, pcmk_scheduler_t *data_set,
+int pcmk_simulate(xmlNodePtr *xml, pcmk_scheduler_t *scheduler,
                   const pcmk_injections_t *injections, unsigned int flags,
                   unsigned int section_opts, const char *use_date,
                   const char *input_file, const char *graph_file,

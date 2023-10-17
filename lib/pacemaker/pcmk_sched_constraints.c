@@ -28,16 +28,16 @@
 #include "libpacemaker_private.h"
 
 static bool
-evaluate_lifetime(xmlNode *lifetime, pcmk_scheduler_t *data_set)
+evaluate_lifetime(xmlNode *lifetime, pcmk_scheduler_t *scheduler)
 {
     bool result = FALSE;
     crm_time_t *next_change = crm_time_new_undefined();
 
-    result = pe_evaluate_rules(lifetime, NULL, data_set->now, next_change);
+    result = pe_evaluate_rules(lifetime, NULL, scheduler->now, next_change);
     if (crm_time_is_defined(next_change)) {
         time_t recheck = (time_t) crm_time_get_seconds_since_epoch(next_change);
 
-        pe__update_recheck_time(recheck, data_set);
+        pe__update_recheck_time(recheck, scheduler);
     }
     crm_time_free(next_change);
     return result;
@@ -47,15 +47,15 @@ evaluate_lifetime(xmlNode *lifetime, pcmk_scheduler_t *data_set)
  * \internal
  * \brief Unpack constraints from XML
  *
- * Given a cluster working set, unpack all constraints from its input XML into
+ * Given scheduler data, unpack all constraints from its input XML into
  * data structures.
  *
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 void
-pcmk__unpack_constraints(pcmk_scheduler_t *data_set)
+pcmk__unpack_constraints(pcmk_scheduler_t *scheduler)
 {
-    xmlNode *xml_constraints = pcmk_find_cib_element(data_set->input,
+    xmlNode *xml_constraints = pcmk_find_cib_element(scheduler->input,
                                                      XML_CIB_TAG_CONSTRAINTS);
 
     for (xmlNode *xml_obj = pcmk__xe_first_child(xml_constraints);
@@ -81,21 +81,21 @@ pcmk__unpack_constraints(pcmk_scheduler_t *data_set)
                               "constraint object)", id);
         }
 
-        if ((lifetime != NULL) && !evaluate_lifetime(lifetime, data_set)) {
+        if ((lifetime != NULL) && !evaluate_lifetime(lifetime, scheduler)) {
             crm_info("Constraint %s %s is not active", tag, id);
 
         } else if (pcmk__str_eq(XML_CONS_TAG_RSC_ORDER, tag, pcmk__str_none)) {
-            pcmk__unpack_ordering(xml_obj, data_set);
+            pcmk__unpack_ordering(xml_obj, scheduler);
 
         } else if (pcmk__str_eq(XML_CONS_TAG_RSC_DEPEND, tag, pcmk__str_none)) {
-            pcmk__unpack_colocation(xml_obj, data_set);
+            pcmk__unpack_colocation(xml_obj, scheduler);
 
         } else if (pcmk__str_eq(XML_CONS_TAG_RSC_LOCATION, tag,
                                 pcmk__str_none)) {
-            pcmk__unpack_location(xml_obj, data_set);
+            pcmk__unpack_location(xml_obj, scheduler);
 
         } else if (pcmk__str_eq(XML_CONS_TAG_RSC_TICKET, tag, pcmk__str_none)) {
-            pcmk__unpack_rsc_ticket(xml_obj, data_set);
+            pcmk__unpack_rsc_ticket(xml_obj, scheduler);
 
         } else {
             pe_err("Unsupported constraint type: %s", tag);
@@ -131,21 +131,21 @@ pcmk__find_constraint_resource(GList *rsc_list, const char *id)
  * \internal
  * \brief Check whether an ID references a resource tag
  *
- * \param[in]  data_set  Cluster working set
- * \param[in]  id        Tag ID to search for
- * \param[out] tag       Where to store tag, if found
+ * \param[in]  scheduler  Scheduler data
+ * \param[in]  id         Tag ID to search for
+ * \param[out] tag        Where to store tag, if found
  *
  * \return true if ID refers to a tagged resource or resource set template,
  *         otherwise false
  */
 static bool
-find_constraint_tag(const pcmk_scheduler_t *data_set, const char *id,
+find_constraint_tag(const pcmk_scheduler_t *scheduler, const char *id,
                     pe_tag_t **tag)
 {
     *tag = NULL;
 
     // Check whether id refers to a resource set template
-    if (g_hash_table_lookup_extended(data_set->template_rsc_sets, id,
+    if (g_hash_table_lookup_extended(scheduler->template_rsc_sets, id,
                                      NULL, (gpointer *) tag)) {
         if (*tag == NULL) {
             crm_warn("No resource is derived from template '%s'", id);
@@ -155,7 +155,7 @@ find_constraint_tag(const pcmk_scheduler_t *data_set, const char *id,
     }
 
     // If not, check whether id refers to a tag
-    if (g_hash_table_lookup_extended(data_set->tags, id,
+    if (g_hash_table_lookup_extended(scheduler->tags, id,
                                      NULL, (gpointer *) tag)) {
         if (*tag == NULL) {
             crm_warn("No resource is tagged with '%s'", id);
@@ -172,27 +172,27 @@ find_constraint_tag(const pcmk_scheduler_t *data_set, const char *id,
  * \brief
  * \internal Check whether an ID refers to a valid resource or tag
  *
- * \param[in]  data_set Cluster working set
- * \param[in]  id       ID to search for
- * \param[out] rsc      Where to store resource, if found (or NULL to skip
- *                      searching resources)
- * \param[out] tag      Where to store tag, if found (or NULL to skip searching
- *                      tags)
+ * \param[in]  scheduler  Scheduler data
+ * \param[in]  id         ID to search for
+ * \param[out] rsc        Where to store resource, if found
+ *                        (or NULL to skip searching resources)
+ * \param[out] tag        Where to store tag, if found
+ *                        (or NULL to skip searching tags)
  *
  * \return true if id refers to a resource (possibly indirectly via a tag)
  */
 bool
-pcmk__valid_resource_or_tag(const pcmk_scheduler_t *data_set, const char *id,
+pcmk__valid_resource_or_tag(const pcmk_scheduler_t *scheduler, const char *id,
                             pcmk_resource_t **rsc, pe_tag_t **tag)
 {
     if (rsc != NULL) {
-        *rsc = pcmk__find_constraint_resource(data_set->resources, id);
+        *rsc = pcmk__find_constraint_resource(scheduler->resources, id);
         if (*rsc != NULL) {
             return true;
         }
     }
 
-    if ((tag != NULL) && find_constraint_tag(data_set, id, tag)) {
+    if ((tag != NULL) && find_constraint_tag(scheduler, id, tag)) {
         return true;
     }
 
@@ -207,14 +207,14 @@ pcmk__valid_resource_or_tag(const pcmk_scheduler_t *data_set, const char *id,
  * entries that list tags rather than resource IDs, and replace any found with
  * resource_ref entries for the corresponding resource IDs.
  *
- * \param[in,out] xml_obj   Constraint XML
- * \param[in]     data_set  Cluster working set
+ * \param[in,out] xml_obj    Constraint XML
+ * \param[in]     scheduler  Scheduler data
  *
  * \return Equivalent XML with resource tags replaced (or NULL if none)
  * \note It is the caller's responsibility to free the result with free_xml().
  */
 xmlNode *
-pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *data_set)
+pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *scheduler)
 {
     xmlNode *new_xml = NULL;
     bool any_refs = false;
@@ -238,7 +238,7 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *data_set)
             pcmk_resource_t *rsc = NULL;
             pe_tag_t *tag = NULL;
 
-            if (!pcmk__valid_resource_or_tag(data_set, ID(xml_rsc), &rsc,
+            if (!pcmk__valid_resource_or_tag(scheduler, ID(xml_rsc), &rsc,
                                              &tag)) {
                 pcmk__config_err("Ignoring resource sets for constraint '%s' "
                                  "because '%s' is not a valid resource or tag",
@@ -329,11 +329,11 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *data_set)
  * \param[in]     attr         Name of XML attribute with resource or tag ID
  * \param[in]     convert_rsc  If true, convert to set even if \p attr
  *                             references a resource
- * \param[in]     data_set     Cluster working set
+ * \param[in]     scheduler    Scheduler data
  */
 bool
 pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
-                 bool convert_rsc, const pcmk_scheduler_t *data_set)
+                 bool convert_rsc, const pcmk_scheduler_t *scheduler)
 {
     const char *cons_id = NULL;
     const char *id = NULL;
@@ -357,7 +357,7 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
         return true;
     }
 
-    if (!pcmk__valid_resource_or_tag(data_set, id, &rsc, &tag)) {
+    if (!pcmk__valid_resource_or_tag(scheduler, id, &rsc, &tag)) {
         pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
                          "valid resource or tag", cons_id, id);
         return false;
@@ -410,13 +410,13 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
  * \internal
  * \brief Create constraints inherent to resource types
  *
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 void
-pcmk__create_internal_constraints(pcmk_scheduler_t *data_set)
+pcmk__create_internal_constraints(pcmk_scheduler_t *scheduler)
 {
     crm_trace("Create internal constraints");
-    for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
+    for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         rsc->cmds->internal_constraints(rsc);

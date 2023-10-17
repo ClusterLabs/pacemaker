@@ -442,25 +442,25 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
 /*!
  * \brief Schedule a controller operation to clear a fail count
  *
- * \param[in,out] rsc       Resource with failure
- * \param[in]     node      Node failure occurred on
- * \param[in]     reason    Readable description why needed (for logging)
- * \param[in,out] data_set  Working set for cluster
+ * \param[in,out] rsc        Resource with failure
+ * \param[in]     node       Node failure occurred on
+ * \param[in]     reason     Readable description why needed (for logging)
+ * \param[in,out] scheduler  Scheduler data cluster
  *
  * \return Scheduled action
  */
 pcmk_action_t *
 pe__clear_failcount(pcmk_resource_t *rsc, const pcmk_node_t *node,
-                    const char *reason, pcmk_scheduler_t *data_set)
+                    const char *reason, pcmk_scheduler_t *scheduler)
 {
     char *key = NULL;
     pcmk_action_t *clear = NULL;
 
-    CRM_CHECK(rsc && node && reason && data_set, return NULL);
+    CRM_CHECK(rsc && node && reason && scheduler, return NULL);
 
     key = pcmk__op_key(rsc->id, PCMK_ACTION_CLEAR_FAILCOUNT, 0);
     clear = custom_action(rsc, key, PCMK_ACTION_CLEAR_FAILCOUNT, node, FALSE,
-                          TRUE, data_set);
+                          TRUE, scheduler);
     add_hash_param(clear->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
     crm_notice("Clearing failure of %s on %s because %s " CRM_XS " %s",
                rsc->id, pe__node_name(node), reason, clear->uuid);

@@ -16,7 +16,7 @@
 #include <crm/pengine/pe_types.h>
 
 xmlNode *input = NULL;
-pcmk_scheduler_t *data_set = NULL;
+pcmk_scheduler_t *scheduler = NULL;
 
 pcmk_node_t *cluster01, *cluster02, *httpd_bundle_0;
 pcmk_resource_t *exim_group, *inactive_group;
@@ -37,25 +37,25 @@ setup(void **state) {
         return 1;
     }
 
-    data_set = pe_new_working_set();
+    scheduler = pe_new_working_set();
 
-    if (data_set == NULL) {
+    if (scheduler == NULL) {
         return 1;
     }
 
-    pe__set_working_set_flags(data_set,
+    pe__set_working_set_flags(scheduler,
                               pcmk_sched_no_counts|pcmk_sched_no_compat);
-    data_set->input = input;
+    scheduler->input = input;
 
-    cluster_status(data_set);
+    cluster_status(scheduler);
 
     /* Get references to the cluster nodes so we don't have to find them repeatedly. */
-    cluster01 = pe_find_node(data_set->nodes, "cluster01");
-    cluster02 = pe_find_node(data_set->nodes, "cluster02");
-    httpd_bundle_0 = pe_find_node(data_set->nodes, "httpd-bundle-0");
+    cluster01 = pe_find_node(scheduler->nodes, "cluster01");
+    cluster02 = pe_find_node(scheduler->nodes, "cluster02");
+    httpd_bundle_0 = pe_find_node(scheduler->nodes, "httpd-bundle-0");
 
     /* Get references to several resources we use frequently. */
-    for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
+    for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         if (strcmp(rsc->id, "exim-group") == 0) {
@@ -78,14 +78,14 @@ setup(void **state) {
 
 static int
 teardown(void **state) {
-    pe_free_working_set(data_set);
+    pe_free_working_set(scheduler);
 
     return 0;
 }
 
 static void
 bad_args(void **state) {
-    pcmk_resource_t *rsc = g_list_first(data_set->resources)->data;
+    pcmk_resource_t *rsc = g_list_first(scheduler->resources)->data;
     char *id = rsc->id;
     char *name = NULL;
 
@@ -118,7 +118,7 @@ primitive_rsc(void **state) {
     pcmk_resource_t *dummy = NULL;
 
     /* Find the "dummy" resource, which is the only one with that ID in the set. */
-    for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
+    for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         if (strcmp(rsc->id, "dummy") == 0) {

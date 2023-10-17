@@ -226,15 +226,15 @@ apply_stickiness(gpointer data, gpointer user_data)
  * \internal
  * \brief Apply shutdown locks for all resources as appropriate
  *
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 static void
-apply_shutdown_locks(pcmk_scheduler_t *data_set)
+apply_shutdown_locks(pcmk_scheduler_t *scheduler)
 {
-    if (!pcmk_is_set(data_set->flags, pcmk_sched_shutdown_lock)) {
+    if (!pcmk_is_set(scheduler->flags, pcmk_sched_shutdown_lock)) {
         return;
     }
-    for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
+    for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         rsc->cmds->shutdown_lock(rsc);
@@ -245,25 +245,25 @@ apply_shutdown_locks(pcmk_scheduler_t *data_set)
  * \internal
  * \brief Calculate the number of available nodes in the cluster
  *
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 static void
-count_available_nodes(pcmk_scheduler_t *data_set)
+count_available_nodes(pcmk_scheduler_t *scheduler)
 {
-    if (pcmk_is_set(data_set->flags, pcmk_sched_no_compat)) {
+    if (pcmk_is_set(scheduler->flags, pcmk_sched_no_compat)) {
         return;
     }
 
     // @COMPAT for API backward compatibility only (cluster does not use value)
-    for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
+    for (GList *iter = scheduler->nodes; iter != NULL; iter = iter->next) {
         pcmk_node_t *node = (pcmk_node_t *) iter->data;
 
         if ((node != NULL) && (node->weight >= 0) && node->details->online
             && (node->details->type != node_ping)) {
-            data_set->max_valid_nodes++;
+            scheduler->max_valid_nodes++;
         }
     }
-    crm_trace("Online node count: %d", data_set->max_valid_nodes);
+    crm_trace("Online node count: %d", scheduler->max_valid_nodes);
 }
 
 /*
@@ -275,17 +275,17 @@ count_available_nodes(pcmk_scheduler_t *data_set)
  * migration thresholds, and exclusive resource discovery.
  */
 static void
-apply_node_criteria(pcmk_scheduler_t *data_set)
+apply_node_criteria(pcmk_scheduler_t *scheduler)
 {
     crm_trace("Applying node-specific scheduling criteria");
-    apply_shutdown_locks(data_set);
-    count_available_nodes(data_set);
-    pcmk__apply_locations(data_set);
-    g_list_foreach(data_set->resources, apply_stickiness, NULL);
+    apply_shutdown_locks(scheduler);
+    count_available_nodes(scheduler);
+    pcmk__apply_locations(scheduler);
+    g_list_foreach(scheduler->resources, apply_stickiness, NULL);
 
-    for (GList *node_iter = data_set->nodes; node_iter != NULL;
+    for (GList *node_iter = scheduler->nodes; node_iter != NULL;
          node_iter = node_iter->next) {
-        for (GList *rsc_iter = data_set->resources; rsc_iter != NULL;
+        for (GList *rsc_iter = scheduler->resources; rsc_iter != NULL;
              rsc_iter = rsc_iter->next) {
             check_failure_threshold(rsc_iter->data, node_iter->data);
             apply_exclusive_discovery(rsc_iter->data, node_iter->data);
@@ -297,27 +297,27 @@ apply_node_criteria(pcmk_scheduler_t *data_set)
  * \internal
  * \brief Assign resources to nodes
  *
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 static void
-assign_resources(pcmk_scheduler_t *data_set)
+assign_resources(pcmk_scheduler_t *scheduler)
 {
     GList *iter = NULL;
 
     crm_trace("Assigning resources to nodes");
 
-    if (!pcmk__str_eq(data_set->placement_strategy, "default",
+    if (!pcmk__str_eq(scheduler->placement_strategy, "default",
                       pcmk__str_casei)) {
-        pcmk__sort_resources(data_set);
+        pcmk__sort_resources(scheduler);
     }
-    pcmk__show_node_capacities("Original", data_set);
+    pcmk__show_node_capacities("Original", scheduler);
 
-    if (pcmk_is_set(data_set->flags, pcmk_sched_have_remote_nodes)) {
+    if (pcmk_is_set(scheduler->flags, pcmk_sched_have_remote_nodes)) {
         /* Assign remote connection resources first (which will also assign any
          * colocation dependencies). If the connection is migrating, always
          * prefer the partial migration target.
          */
-        for (iter = data_set->resources; iter != NULL; iter = iter->next) {
+        for (iter = scheduler->resources; iter != NULL; iter = iter->next) {
             pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
             if (rsc->is_remote_node) {
@@ -329,7 +329,7 @@ assign_resources(pcmk_scheduler_t *data_set)
     }
 
     /* now do the rest of the resources */
-    for (iter = data_set->resources; iter != NULL; iter = iter->next) {
+    for (iter = scheduler->resources; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         if (!rsc->is_remote_node) {
@@ -339,7 +339,7 @@ assign_resources(pcmk_scheduler_t *data_set)
         }
     }
 
-    pcmk__show_node_capacities("Remaining", data_set);
+    pcmk__show_node_capacities("Remaining", scheduler);
 }
 
 /*!
@@ -389,26 +389,27 @@ clear_failcounts_if_orphaned(gpointer data, gpointer user_data)
  * \internal
  * \brief Schedule any resource actions needed
  *
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 static void
-schedule_resource_actions(pcmk_scheduler_t *data_set)
+schedule_resource_actions(pcmk_scheduler_t *scheduler)
 {
     // Process deferred action checks
-    pe__foreach_param_check(data_set, check_params);
-    pe__free_param_checks(data_set);
+    pe__foreach_param_check(scheduler, check_params);
+    pe__free_param_checks(scheduler);
 
-    if (pcmk_is_set(data_set->flags, pcmk_sched_probe_resources)) {
+    if (pcmk_is_set(scheduler->flags, pcmk_sched_probe_resources)) {
         crm_trace("Scheduling probes");
-        pcmk__schedule_probes(data_set);
+        pcmk__schedule_probes(scheduler);
     }
 
-    if (pcmk_is_set(data_set->flags, pcmk_sched_stop_removed_resources)) {
-        g_list_foreach(data_set->resources, clear_failcounts_if_orphaned, NULL);
+    if (pcmk_is_set(scheduler->flags, pcmk_sched_stop_removed_resources)) {
+        g_list_foreach(scheduler->resources, clear_failcounts_if_orphaned,
+                       NULL);
     }
 
     crm_trace("Scheduling resource actions");
-    for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
+    for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         rsc->cmds->create_actions(rsc);
@@ -441,14 +442,14 @@ is_managed(const pcmk_resource_t *rsc)
  * \internal
  * \brief Check whether any resources in the cluster are managed
  *
- * \param[in] data_set  Cluster working set
+ * \param[in] scheduler  Scheduler data
  *
  * \return true if any resource is managed, otherwise false
  */
 static bool
-any_managed_resources(const pcmk_scheduler_t *data_set)
+any_managed_resources(const pcmk_scheduler_t *scheduler)
 {
-    for (const GList *iter = data_set->resources;
+    for (const GList *iter = scheduler->resources;
          iter != NULL; iter = iter->next) {
         if (is_managed((const pcmk_resource_t *) iter->data)) {
             return true;
@@ -497,17 +498,17 @@ needs_shutdown(const pcmk_node_t *node)
  * \internal
  * \brief Track and order non-DC fencing
  *
- * \param[in,out] list      List of existing non-DC fencing actions
- * \param[in,out] action    Fencing action to prepend to \p list
- * \param[in]     data_set  Cluster working set
+ * \param[in,out] list       List of existing non-DC fencing actions
+ * \param[in,out] action     Fencing action to prepend to \p list
+ * \param[in]     scheduler  Scheduler data
  *
  * \return (Possibly new) head of \p list
  */
 static GList *
 add_nondc_fencing(GList *list, pcmk_action_t *action,
-                  const pcmk_scheduler_t *data_set)
+                  const pcmk_scheduler_t *scheduler)
 {
-    if (!pcmk_is_set(data_set->flags, pcmk_sched_concurrent_fencing)
+    if (!pcmk_is_set(scheduler->flags, pcmk_sched_concurrent_fencing)
         && (list != NULL)) {
         /* Concurrent fencing is disabled, so order each non-DC
          * fencing in a chain. If there is any DC fencing or
@@ -540,14 +541,14 @@ schedule_fencing(pcmk_node_t *node)
  * \internal
  * \brief Create and order node fencing and shutdown actions
  *
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 static void
-schedule_fencing_and_shutdowns(pcmk_scheduler_t *data_set)
+schedule_fencing_and_shutdowns(pcmk_scheduler_t *scheduler)
 {
     pcmk_action_t *dc_down = NULL;
     bool integrity_lost = false;
-    bool have_managed = any_managed_resources(data_set);
+    bool have_managed = any_managed_resources(scheduler);
     GList *fencing_ops = NULL;
     GList *shutdown_ops = NULL;
 
@@ -558,7 +559,7 @@ schedule_fencing_and_shutdowns(pcmk_scheduler_t *data_set)
     }
 
     // Check each node for whether it needs fencing or shutdown
-    for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
+    for (GList *iter = scheduler->nodes; iter != NULL; iter = iter->next) {
         pcmk_node_t *node = (pcmk_node_t *) iter->data;
         pcmk_action_t *fencing = NULL;
 
@@ -567,7 +568,7 @@ schedule_fencing_and_shutdowns(pcmk_scheduler_t *data_set)
          */
         if (pe__is_guest_node(node)) {
             if (node->details->remote_requires_reset && have_managed
-                && pe_can_fence(data_set, node)) {
+                && pe_can_fence(scheduler, node)) {
                 pcmk__fence_guest(node);
             }
             continue;
@@ -580,7 +581,8 @@ schedule_fencing_and_shutdowns(pcmk_scheduler_t *data_set)
             if (node->details->is_dc) {
                 dc_down = fencing;
             } else {
-                fencing_ops = add_nondc_fencing(fencing_ops, fencing, data_set);
+                fencing_ops = add_nondc_fencing(fencing_ops, fencing,
+                                                scheduler);
             }
 
         } else if (needs_shutdown(node)) {
@@ -602,12 +604,12 @@ schedule_fencing_and_shutdowns(pcmk_scheduler_t *data_set)
     }
 
     if (integrity_lost) {
-        if (!pcmk_is_set(data_set->flags, pcmk_sched_fencing_enabled)) {
+        if (!pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
             pe_warn("Resource functionality and data integrity cannot be "
                     "guaranteed (configure, enable, and test fencing to "
                     "correct this)");
 
-        } else if (!pcmk_is_set(data_set->flags, pcmk_sched_quorate)) {
+        } else if (!pcmk_is_set(scheduler->flags, pcmk_sched_quorate)) {
             crm_notice("Unclean nodes will not be fenced until quorum is "
                        "attained or no-quorum-policy is set to ignore");
         }
@@ -628,7 +630,7 @@ schedule_fencing_and_shutdowns(pcmk_scheduler_t *data_set)
 
         // Order any non-DC fencing before any DC fencing or shutdown
 
-        if (pcmk_is_set(data_set->flags, pcmk_sched_concurrent_fencing)) {
+        if (pcmk_is_set(scheduler->flags, pcmk_sched_concurrent_fencing)) {
             /* With concurrent fencing, order each non-DC fencing action
              * separately before any DC fencing or shutdown.
              */
@@ -648,9 +650,9 @@ schedule_fencing_and_shutdowns(pcmk_scheduler_t *data_set)
 }
 
 static void
-log_resource_details(pcmk_scheduler_t *data_set)
+log_resource_details(pcmk_scheduler_t *scheduler)
 {
-    pcmk__output_t *out = data_set->priv;
+    pcmk__output_t *out = scheduler->priv;
     GList *all = NULL;
 
     /* Due to the `crm_mon --node=` feature, out->message() for all the
@@ -659,7 +661,7 @@ log_resource_details(pcmk_scheduler_t *data_set)
      */
     all = g_list_prepend(all, (gpointer) "*");
 
-    for (GList *item = data_set->resources; item != NULL; item = item->next) {
+    for (GList *item = scheduler->resources; item != NULL; item = item->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) item->data;
 
         // Log all resources except inactive orphans
@@ -673,12 +675,12 @@ log_resource_details(pcmk_scheduler_t *data_set)
 }
 
 static void
-log_all_actions(pcmk_scheduler_t *data_set)
+log_all_actions(pcmk_scheduler_t *scheduler)
 {
     /* This only ever outputs to the log, so ignore whatever output object was
      * previously set and just log instead.
      */
-    pcmk__output_t *prev_out = data_set->priv;
+    pcmk__output_t *prev_out = scheduler->priv;
     pcmk__output_t *out = NULL;
 
     if (pcmk__log_output_new(&out) != pcmk_rc_ok) {
@@ -688,32 +690,32 @@ log_all_actions(pcmk_scheduler_t *data_set)
     pe__register_messages(out);
     pcmk__register_lib_messages(out);
     pcmk__output_set_log_level(out, LOG_NOTICE);
-    data_set->priv = out;
+    scheduler->priv = out;
 
     out->begin_list(out, NULL, NULL, "Actions");
-    pcmk__output_actions(data_set);
+    pcmk__output_actions(scheduler);
     out->end_list(out);
     out->finish(out, CRM_EX_OK, true, NULL);
     pcmk__output_free(out);
 
-    data_set->priv = prev_out;
+    scheduler->priv = prev_out;
 }
 
 /*!
  * \internal
  * \brief Log all required but unrunnable actions at trace level
  *
- * \param[in] data_set  Cluster working set
+ * \param[in] scheduler  Scheduler data
  */
 static void
-log_unrunnable_actions(const pcmk_scheduler_t *data_set)
+log_unrunnable_actions(const pcmk_scheduler_t *scheduler)
 {
     const uint64_t flags = pcmk_action_optional
                            |pcmk_action_runnable
                            |pcmk_action_pseudo;
 
     crm_trace("Required but unrunnable actions:");
-    for (const GList *iter = data_set->actions;
+    for (const GList *iter = scheduler->actions;
          iter != NULL; iter = iter->next) {
 
         const pcmk_action_t *action = (const pcmk_action_t *) iter->data;
@@ -728,23 +730,23 @@ log_unrunnable_actions(const pcmk_scheduler_t *data_set)
  * \internal
  * \brief Unpack the CIB for scheduling
  *
- * \param[in,out] cib       CIB XML to unpack (may be NULL if already unpacked)
- * \param[in]     flags     Working set flags to set in addition to defaults
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] cib        CIB XML to unpack (may be NULL if already unpacked)
+ * \param[in]     flags      Scheduler flags to set in addition to defaults
+ * \param[in,out] scheduler  Scheduler data
  */
 static void
-unpack_cib(xmlNode *cib, unsigned long long flags, pcmk_scheduler_t *data_set)
+unpack_cib(xmlNode *cib, unsigned long long flags, pcmk_scheduler_t *scheduler)
 {
     const char* localhost_save = NULL;
 
-    if (pcmk_is_set(data_set->flags, pcmk_sched_have_status)) {
+    if (pcmk_is_set(scheduler->flags, pcmk_sched_have_status)) {
         crm_trace("Reusing previously calculated cluster status");
-        pe__set_working_set_flags(data_set, flags);
+        pe__set_working_set_flags(scheduler, flags);
         return;
     }
 
-    if (data_set->localhost) {
-        localhost_save = data_set->localhost;
+    if (scheduler->localhost) {
+        localhost_save = scheduler->localhost;
     }
 
     CRM_ASSERT(cib != NULL);
@@ -755,64 +757,64 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pcmk_scheduler_t *data_set)
      * set unless pcmk_sched_have_status is set (i.e. cluster_status() was
      * previously called, whether directly or via pcmk__schedule_actions()).
      */
-    set_working_set_defaults(data_set);
+    set_working_set_defaults(scheduler);
 
     if (localhost_save) {
-        data_set->localhost = localhost_save;
+        scheduler->localhost = localhost_save;
     }
 
-    pe__set_working_set_flags(data_set, flags);
-    data_set->input = cib;
-    cluster_status(data_set); // Sets pcmk_sched_have_status
+    pe__set_working_set_flags(scheduler, flags);
+    scheduler->input = cib;
+    cluster_status(scheduler); // Sets pcmk_sched_have_status
 }
 
 /*!
  * \internal
  * \brief Run the scheduler for a given CIB
  *
- * \param[in,out] cib       CIB XML to use as scheduler input
- * \param[in]     flags     Working set flags to set in addition to defaults
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] cib        CIB XML to use as scheduler input
+ * \param[in]     flags      Scheduler flags to set in addition to defaults
+ * \param[in,out] scheduler  Scheduler data
  */
 void
 pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
-                       pcmk_scheduler_t *data_set)
+                       pcmk_scheduler_t *scheduler)
 {
-    unpack_cib(cib, flags, data_set);
-    pcmk__set_assignment_methods(data_set);
-    pcmk__apply_node_health(data_set);
-    pcmk__unpack_constraints(data_set);
-    if (pcmk_is_set(data_set->flags, pcmk_sched_validate_only)) {
+    unpack_cib(cib, flags, scheduler);
+    pcmk__set_assignment_methods(scheduler);
+    pcmk__apply_node_health(scheduler);
+    pcmk__unpack_constraints(scheduler);
+    if (pcmk_is_set(scheduler->flags, pcmk_sched_validate_only)) {
         return;
     }
 
-    if (!pcmk_is_set(data_set->flags, pcmk_sched_location_only)
+    if (!pcmk_is_set(scheduler->flags, pcmk_sched_location_only)
         && pcmk__is_daemon) {
-        log_resource_details(data_set);
+        log_resource_details(scheduler);
     }
 
-    apply_node_criteria(data_set);
+    apply_node_criteria(scheduler);
 
-    if (pcmk_is_set(data_set->flags, pcmk_sched_location_only)) {
+    if (pcmk_is_set(scheduler->flags, pcmk_sched_location_only)) {
         return;
     }
 
-    pcmk__create_internal_constraints(data_set);
-    pcmk__handle_rsc_config_changes(data_set);
-    assign_resources(data_set);
-    schedule_resource_actions(data_set);
+    pcmk__create_internal_constraints(scheduler);
+    pcmk__handle_rsc_config_changes(scheduler);
+    assign_resources(scheduler);
+    schedule_resource_actions(scheduler);
 
     /* Remote ordering constraints need to happen prior to calculating fencing
      * because it is one more place we can mark nodes as needing fencing.
      */
-    pcmk__order_remote_connection_actions(data_set);
+    pcmk__order_remote_connection_actions(scheduler);
 
-    schedule_fencing_and_shutdowns(data_set);
-    pcmk__apply_orderings(data_set);
-    log_all_actions(data_set);
-    pcmk__create_graph(data_set);
+    schedule_fencing_and_shutdowns(scheduler);
+    pcmk__apply_orderings(scheduler);
+    log_all_actions(scheduler);
+    pcmk__create_graph(scheduler);
 
     if (get_crm_log_level() == LOG_TRACE) {
-        log_unrunnable_actions(data_set);
+        log_unrunnable_actions(scheduler);
     }
 }

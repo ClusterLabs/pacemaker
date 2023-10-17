@@ -208,7 +208,7 @@ clone_header(pcmk__output_t *out, int *rc, const pcmk_resource_t *rsc,
 
 void
 pe__force_anon(const char *standard, pcmk_resource_t *rsc, const char *rid,
-               pcmk_scheduler_t *data_set)
+               pcmk_scheduler_t *scheduler)
 {
     if (pe_rsc_is_clone(rsc)) {
         clone_variant_data_t *clone_data = rsc->variant_opaque;
@@ -219,7 +219,7 @@ pe__force_anon(const char *standard, pcmk_resource_t *rsc, const char *rid,
 
         clone_data->clone_node_max = 1;
         clone_data->clone_max = QB_MIN(clone_data->clone_max,
-                                       g_list_length(data_set->nodes));
+                                       g_list_length(scheduler->nodes));
     }
 }
 
@@ -242,7 +242,7 @@ find_clone_instance(const pcmk_resource_t *rsc, const char *sub_id)
 }
 
 pcmk_resource_t *
-pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *data_set)
+pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 {
     gboolean as_orphan = FALSE;
     char *inc_num = NULL;
@@ -269,7 +269,7 @@ pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *data_set)
     crm_xml_add(child_copy, XML_RSC_ATTR_INCARNATION, inc_num);
 
     if (pe__unpack_resource(child_copy, &child_rsc, rsc,
-                            data_set) != pcmk_rc_ok) {
+                            scheduler) != pcmk_rc_ok) {
         goto bail;
     }
 /*  child_rsc->globally_unique = rsc->globally_unique; */
@@ -322,7 +322,7 @@ unpack_meta_int(const pcmk_resource_t *rsc, const char *meta_name,
 }
 
 gboolean
-clone_unpack(pcmk_resource_t * rsc, pcmk_scheduler_t * data_set)
+clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 {
     int lpc = 0;
     xmlNode *a_child = NULL;
@@ -359,7 +359,7 @@ clone_unpack(pcmk_resource_t * rsc, pcmk_scheduler_t * data_set)
      * for a CIB without nodes) as default, but 0 for minimum and invalid
      */
     clone_data->clone_max = unpack_meta_int(rsc, PCMK_META_CLONE_MAX, NULL,
-                                            QB_MAX(1, g_list_length(data_set->nodes)));
+                                            QB_MAX(1, g_list_length(scheduler->nodes)));
 
     if (crm_is_true(g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_ORDERED))) {
         clone_data->flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,
@@ -421,14 +421,14 @@ clone_unpack(pcmk_resource_t * rsc, pcmk_scheduler_t * data_set)
         /* Create one child instance so that unpack_find_resource() will hook up
          * any orphans up to the parent correctly.
          */
-        if (pe__create_clone_child(rsc, data_set) == NULL) {
+        if (pe__create_clone_child(rsc, scheduler) == NULL) {
             return FALSE;
         }
 
     } else {
         // Create a child instance for each available instance number
         for (lpc = 0; lpc < clone_data->clone_max; lpc++) {
-            if (pe__create_clone_child(rsc, data_set) == NULL) {
+            if (pe__create_clone_child(rsc, scheduler) == NULL) {
                 return FALSE;
             }
         }
@@ -1233,17 +1233,17 @@ clone_resource_state(const pcmk_resource_t * rsc, gboolean current)
  * \internal
  * \brief Check whether a clone has an instance for every node
  *
- * \param[in] rsc       Clone to check
- * \param[in] data_set  Cluster state
+ * \param[in] rsc        Clone to check
+ * \param[in] scheduler  Scheduler data
  */
 bool
 pe__is_universal_clone(const pcmk_resource_t *rsc,
-                       const pcmk_scheduler_t *data_set)
+                       const pcmk_scheduler_t *scheduler)
 {
     if (pe_rsc_is_clone(rsc)) {
         clone_variant_data_t *clone_data = rsc->variant_opaque;
 
-        if (clone_data->clone_max == g_list_length(data_set->nodes)) {
+        if (clone_data->clone_max == g_list_length(scheduler->nodes)) {
             return TRUE;
         }
     }

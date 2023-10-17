@@ -1786,7 +1786,7 @@ PCMK__OUTPUT_ARGS("cluster-status", "pcmk_scheduler_t *",
 int
 pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
 {
-    pcmk_scheduler_t *data_set = va_arg(args, pcmk_scheduler_t *);
+    pcmk_scheduler_t *scheduler = va_arg(args, pcmk_scheduler_t *);
     enum pcmk_pacemakerd_state pcmkd_state =
         (enum pcmk_pacemakerd_state) va_arg(args, int);
     crm_exit_t history_rc = va_arg(args, crm_exit_t);
@@ -1801,23 +1801,23 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
     int rc = pcmk_rc_no_output;
     bool already_printed_failure = false;
 
-    CHECK_RC(rc, out->message(out, "cluster-summary", data_set, pcmkd_state,
+    CHECK_RC(rc, out->message(out, "cluster-summary", scheduler, pcmkd_state,
                               section_opts, show_opts));
 
     if (pcmk_is_set(section_opts, pcmk_section_nodes) && unames) {
-        CHECK_RC(rc, out->message(out, "node-list", data_set->nodes, unames,
+        CHECK_RC(rc, out->message(out, "node-list", scheduler->nodes, unames,
                                   resources, show_opts, rc == pcmk_rc_ok));
     }
 
     /* Print resources section, if needed */
     if (pcmk_is_set(section_opts, pcmk_section_resources)) {
-        CHECK_RC(rc, out->message(out, "resource-list", data_set, show_opts,
+        CHECK_RC(rc, out->message(out, "resource-list", scheduler, show_opts,
                                   true, unames, resources, rc == pcmk_rc_ok));
     }
 
     /* print Node Attributes section if requested */
     if (pcmk_is_set(section_opts, pcmk_section_attributes)) {
-        CHECK_RC(rc, out->message(out, "node-attribute-list", data_set,
+        CHECK_RC(rc, out->message(out, "node-attribute-list", scheduler,
                                   show_opts, (rc == pcmk_rc_ok), unames,
                                   resources));
     }
@@ -1827,16 +1827,17 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
      */
     if (pcmk_any_flags_set(section_opts,
                            pcmk_section_operations|pcmk_section_failcounts)) {
-        CHECK_RC(rc, out->message(out, "node-summary", data_set, unames,
+        CHECK_RC(rc, out->message(out, "node-summary", scheduler, unames,
                                   resources, section_opts, show_opts,
                                   (rc == pcmk_rc_ok)));
     }
 
     /* If there were any failed actions, print them */
     if (pcmk_is_set(section_opts, pcmk_section_failures)
-        && (data_set->failed != NULL) && (data_set->failed->children != NULL)) {
+        && (scheduler->failed != NULL)
+        && (scheduler->failed->children != NULL)) {
 
-        CHECK_RC(rc, out->message(out, "failed-action-list", data_set, unames,
+        CHECK_RC(rc, out->message(out, "failed-action-list", scheduler, unames,
                                   resources, show_opts, rc == pcmk_rc_ok));
     }
 
@@ -1867,13 +1868,13 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
 
     /* Print tickets if requested */
     if (pcmk_is_set(section_opts, pcmk_section_tickets)) {
-        CHECK_RC(rc, out->message(out, "ticket-list", data_set,
+        CHECK_RC(rc, out->message(out, "ticket-list", scheduler,
                                   (rc == pcmk_rc_ok)));
     }
 
     /* Print negative location constraints if requested */
     if (pcmk_is_set(section_opts, pcmk_section_bans)) {
-        CHECK_RC(rc, out->message(out, "ban-list", data_set, prefix, resources,
+        CHECK_RC(rc, out->message(out, "ban-list", scheduler, prefix, resources,
                                   show_opts, rc == pcmk_rc_ok));
     }
 
@@ -1923,7 +1924,7 @@ PCMK__OUTPUT_ARGS("cluster-status", "pcmk_scheduler_t *",
 static int
 cluster_status_xml(pcmk__output_t *out, va_list args)
 {
-    pcmk_scheduler_t *data_set = va_arg(args, pcmk_scheduler_t *);
+    pcmk_scheduler_t *scheduler = va_arg(args, pcmk_scheduler_t *);
     enum pcmk_pacemakerd_state pcmkd_state =
         (enum pcmk_pacemakerd_state) va_arg(args, int);
     crm_exit_t history_rc = va_arg(args, crm_exit_t);
@@ -1935,12 +1936,12 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
     GList *unames = va_arg(args, GList *);
     GList *resources = va_arg(args, GList *);
 
-    out->message(out, "cluster-summary", data_set, pcmkd_state, section_opts,
+    out->message(out, "cluster-summary", scheduler, pcmkd_state, section_opts,
                  show_opts);
 
     /*** NODES ***/
     if (pcmk_is_set(section_opts, pcmk_section_nodes)) {
-        out->message(out, "node-list", data_set->nodes, unames, resources,
+        out->message(out, "node-list", scheduler->nodes, unames, resources,
                      show_opts, false);
     }
 
@@ -1949,13 +1950,13 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
         /* XML output always displays full details. */
         uint32_t full_show_opts = show_opts & ~pcmk_show_brief;
 
-        out->message(out, "resource-list", data_set, full_show_opts,
+        out->message(out, "resource-list", scheduler, full_show_opts,
                      false, unames, resources, false);
     }
 
     /* print Node Attributes section if requested */
     if (pcmk_is_set(section_opts, pcmk_section_attributes)) {
-        out->message(out, "node-attribute-list", data_set, show_opts, false,
+        out->message(out, "node-attribute-list", scheduler, show_opts, false,
                      unames, resources);
     }
 
@@ -1964,15 +1965,16 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
      */
     if (pcmk_any_flags_set(section_opts,
                            pcmk_section_operations|pcmk_section_failcounts)) {
-        out->message(out, "node-summary", data_set, unames,
+        out->message(out, "node-summary", scheduler, unames,
                      resources, section_opts, show_opts, false);
     }
 
     /* If there were any failed actions, print them */
     if (pcmk_is_set(section_opts, pcmk_section_failures)
-        && (data_set->failed != NULL) && (data_set->failed->children != NULL)) {
+        && (scheduler->failed != NULL)
+        && (scheduler->failed->children != NULL)) {
 
-        out->message(out, "failed-action-list", data_set, unames, resources,
+        out->message(out, "failed-action-list", scheduler, unames, resources,
                      show_opts, false);
     }
 
@@ -1985,12 +1987,12 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
 
     /* Print tickets if requested */
     if (pcmk_is_set(section_opts, pcmk_section_tickets)) {
-        out->message(out, "ticket-list", data_set, false);
+        out->message(out, "ticket-list", scheduler, false);
     }
 
     /* Print negative location constraints if requested */
     if (pcmk_is_set(section_opts, pcmk_section_bans)) {
-        out->message(out, "ban-list", data_set, prefix, resources, show_opts,
+        out->message(out, "ban-list", scheduler, prefix, resources, show_opts,
                      false);
     }
 
@@ -2004,7 +2006,7 @@ PCMK__OUTPUT_ARGS("cluster-status", "pcmk_scheduler_t *",
 static int
 cluster_status_html(pcmk__output_t *out, va_list args)
 {
-    pcmk_scheduler_t *data_set = va_arg(args, pcmk_scheduler_t *);
+    pcmk_scheduler_t *scheduler = va_arg(args, pcmk_scheduler_t *);
     enum pcmk_pacemakerd_state pcmkd_state =
         (enum pcmk_pacemakerd_state) va_arg(args, int);
     crm_exit_t history_rc = va_arg(args, crm_exit_t);
@@ -2017,24 +2019,24 @@ cluster_status_html(pcmk__output_t *out, va_list args)
     GList *resources = va_arg(args, GList *);
     bool already_printed_failure = false;
 
-    out->message(out, "cluster-summary", data_set, pcmkd_state, section_opts,
+    out->message(out, "cluster-summary", scheduler, pcmkd_state, section_opts,
                  show_opts);
 
     /*** NODE LIST ***/
     if (pcmk_is_set(section_opts, pcmk_section_nodes) && unames) {
-        out->message(out, "node-list", data_set->nodes, unames, resources,
+        out->message(out, "node-list", scheduler->nodes, unames, resources,
                      show_opts, false);
     }
 
     /* Print resources section, if needed */
     if (pcmk_is_set(section_opts, pcmk_section_resources)) {
-        out->message(out, "resource-list", data_set, show_opts, true, unames,
+        out->message(out, "resource-list", scheduler, show_opts, true, unames,
                      resources, false);
     }
 
     /* print Node Attributes section if requested */
     if (pcmk_is_set(section_opts, pcmk_section_attributes)) {
-        out->message(out, "node-attribute-list", data_set, show_opts, false,
+        out->message(out, "node-attribute-list", scheduler, show_opts, false,
                      unames, resources);
     }
 
@@ -2043,15 +2045,16 @@ cluster_status_html(pcmk__output_t *out, va_list args)
      */
     if (pcmk_any_flags_set(section_opts,
                            pcmk_section_operations|pcmk_section_failcounts)) {
-        out->message(out, "node-summary", data_set, unames,
+        out->message(out, "node-summary", scheduler, unames,
                      resources, section_opts, show_opts, false);
     }
 
     /* If there were any failed actions, print them */
     if (pcmk_is_set(section_opts, pcmk_section_failures)
-        && (data_set->failed != NULL) && (data_set->failed->children != NULL)) {
+        && (scheduler->failed != NULL)
+        && (scheduler->failed->children != NULL)) {
 
-        out->message(out, "failed-action-list", data_set, unames, resources,
+        out->message(out, "failed-action-list", scheduler, unames, resources,
                      show_opts, false);
     }
 
@@ -2111,12 +2114,12 @@ cluster_status_html(pcmk__output_t *out, va_list args)
 
     /* Print tickets if requested */
     if (pcmk_is_set(section_opts, pcmk_section_tickets)) {
-        out->message(out, "ticket-list", data_set, false);
+        out->message(out, "ticket-list", scheduler, false);
     }
 
     /* Print negative location constraints if requested */
     if (pcmk_is_set(section_opts, pcmk_section_bans)) {
-        out->message(out, "ban-list", data_set, prefix, resources, show_opts,
+        out->message(out, "ban-list", scheduler, prefix, resources, show_opts,
                      false);
     }
 

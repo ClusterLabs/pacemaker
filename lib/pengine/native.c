@@ -88,7 +88,7 @@ native_priority_to_node(pcmk_resource_t *rsc, pcmk_node_t *node,
 
 void
 native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
-                   pcmk_scheduler_t *data_set, gboolean failed)
+                   pcmk_scheduler_t *scheduler, gboolean failed)
 {
     GList *gIter = rsc->running_on;
 
@@ -122,7 +122,8 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
         pcmk_resource_t *p = rsc->parent;
 
         pe_rsc_info(rsc, "resource %s isn't managed", rsc->id);
-        resource_location(rsc, node, INFINITY, "not_managed_default", data_set);
+        resource_location(rsc, node, INFINITY, "not_managed_default",
+                          scheduler);
 
         while(p && node->details->online) {
             /* add without the additional location constraint */
@@ -143,7 +144,7 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                     if (rsc->allowed_nodes != NULL) {
                         g_hash_table_destroy(rsc->allowed_nodes);
                     }
-                    rsc->allowed_nodes = pe__node_list2table(data_set->nodes);
+                    rsc->allowed_nodes = pe__node_list2table(scheduler->nodes);
                     g_hash_table_iter_init(&gIter, rsc->allowed_nodes);
                     while (g_hash_table_iter_next(&gIter, NULL, (void **)&local_node)) {
                         local_node->weight = -INFINITY;
@@ -189,7 +190,7 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
     }
 
     if (rsc->parent != NULL) {
-        native_add_running(rsc->parent, node, data_set, FALSE);
+        native_add_running(rsc->parent, node, scheduler, FALSE);
     }
 }
 
@@ -202,7 +203,7 @@ recursive_clear_unique(pcmk_resource_t *rsc, gpointer user_data)
 }
 
 gboolean
-native_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *data_set)
+native_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 {
     pcmk_resource_t *parent = uber_parent(rsc);
     const char *standard = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
@@ -220,7 +221,7 @@ native_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *data_set)
          * be a backward-incompatible change that we should probably do with a
          * transform at a schema major version bump.
          */
-        pe__force_anon(standard, parent, rsc->id, data_set);
+        pe__force_anon(standard, parent, rsc->id, scheduler);
 
         /* Clear globally-unique on the parent and all its descendants unpacked
          * so far (clearing the parent should make any future children unpacking
@@ -326,7 +327,7 @@ native_find_rsc(pcmk_resource_t *rsc, const char *id,
 // create is ignored
 char *
 native_parameter(pcmk_resource_t *rsc, pcmk_node_t *node, gboolean create,
-                 const char *name, pcmk_scheduler_t *data_set)
+                 const char *name, pcmk_scheduler_t *scheduler)
 {
     char *value_copy = NULL;
     const char *value = NULL;
@@ -336,7 +337,7 @@ native_parameter(pcmk_resource_t *rsc, pcmk_node_t *node, gboolean create,
     CRM_CHECK(name != NULL && strlen(name) != 0, return NULL);
 
     pe_rsc_trace(rsc, "Looking up %s in %s", name, rsc->id);
-    params = pe_rsc_params(rsc, node, data_set);
+    params = pe_rsc_params(rsc, node, scheduler);
     value = g_hash_table_lookup(params, name);
     if (value == NULL) {
         /* try meta attributes instead */

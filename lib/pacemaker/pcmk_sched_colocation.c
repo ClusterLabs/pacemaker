@@ -333,7 +333,7 @@ anti_colocation_order(pcmk_resource_t *first_rsc, int first_role,
 
 /*!
  * \internal
- * \brief Add a new colocation constraint to a cluster working set
+ * \brief Add a new colocation constraint to scheduler data
  *
  * \param[in]     id              XML ID for this constraint
  * \param[in]     node_attr       Colocate by this attribute (NULL for #uname)
@@ -438,7 +438,7 @@ unpack_influence(const char *coloc_id, const pcmk_resource_t *rsc,
 
 static void
 unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
-                      const char *influence_s, pcmk_scheduler_t *data_set)
+                      const char *influence_s, pcmk_scheduler_t *scheduler)
 {
     xmlNode *xml_rsc = NULL;
     pcmk_resource_t *other = NULL;
@@ -484,7 +484,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
             xml_rsc_id = ID(xml_rsc);
-            resource = pcmk__find_constraint_resource(data_set->resources,
+            resource = pcmk__find_constraint_resource(scheduler->resources,
                                                       xml_rsc_id);
             if (resource == NULL) {
                 // Should be possible only with validation disabled
@@ -522,7 +522,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
             xmlNode *xml_rsc_with = NULL;
 
             xml_rsc_id = ID(xml_rsc);
-            resource = pcmk__find_constraint_resource(data_set->resources,
+            resource = pcmk__find_constraint_resource(scheduler->resources,
                                                       xml_rsc_id);
             if (resource == NULL) {
                 // Should be possible only with validation disabled
@@ -540,7 +540,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
                 if (pcmk__str_eq(resource->id, xml_rsc_id, pcmk__str_none)) {
                     break;
                 }
-                other = pcmk__find_constraint_resource(data_set->resources,
+                other = pcmk__find_constraint_resource(scheduler->resources,
                                                        xml_rsc_id);
                 CRM_ASSERT(other != NULL); // We already processed it
                 pcmk__new_colocation(set_id, NULL, local_score,
@@ -559,12 +559,12 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
  * \param[in]     set2         Primary set
  * \param[in]     score        Colocation score
  * \param[in]     influence_s  Value of colocation's "influence" attribute
- * \param[in,out] data_set     Cluster working set
+ * \param[in,out] scheduler    Scheduler data
  */
 static void
 colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
                   int score, const char *influence_s,
-                  pcmk_scheduler_t *data_set)
+                  pcmk_scheduler_t *scheduler)
 {
     xmlNode *xml_rsc = NULL;
     pcmk_resource_t *rsc_1 = NULL;
@@ -590,7 +590,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
         xml_rsc = first_named_child(set1, XML_TAG_RESOURCE_REF);
         if (xml_rsc != NULL) {
             xml_rsc_id = ID(xml_rsc);
-            rsc_1 = pcmk__find_constraint_resource(data_set->resources,
+            rsc_1 = pcmk__find_constraint_resource(scheduler->resources,
                                                    xml_rsc_id);
             if (rsc_1 == NULL) {
                 // Should be possible only with validation disabled
@@ -610,7 +610,8 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
 
             xml_rsc_id = ID(xml_rsc);
         }
-        rsc_2 = pcmk__find_constraint_resource(data_set->resources, xml_rsc_id);
+        rsc_2 = pcmk__find_constraint_resource(scheduler->resources,
+                                               xml_rsc_id);
         if (rsc_2 == NULL) {
             // Should be possible only with validation disabled
             pcmk__config_err("Ignoring colocation of set %s with set %s "
@@ -631,7 +632,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
             xml_rsc_id = ID(xml_rsc);
-            rsc_2 = pcmk__find_constraint_resource(data_set->resources,
+            rsc_2 = pcmk__find_constraint_resource(scheduler->resources,
                                                    xml_rsc_id);
             if (rsc_2 == NULL) {
                 // Should be possible only with validation disabled
@@ -649,7 +650,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
             xml_rsc_id = ID(xml_rsc);
-            rsc_1 = pcmk__find_constraint_resource(data_set->resources,
+            rsc_1 = pcmk__find_constraint_resource(scheduler->resources,
                                                    xml_rsc_id);
             if (rsc_1 == NULL) {
                 // Should be possible only with validation disabled
@@ -671,7 +672,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
             xmlNode *xml_rsc_2 = NULL;
 
             xml_rsc_id = ID(xml_rsc);
-            rsc_1 = pcmk__find_constraint_resource(data_set->resources,
+            rsc_1 = pcmk__find_constraint_resource(scheduler->resources,
                                                    xml_rsc_id);
             if (rsc_1 == NULL) {
                 // Should be possible only with validation disabled
@@ -688,7 +689,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
                  xml_rsc_2 = crm_next_same_xml(xml_rsc_2)) {
 
                 xml_rsc_id = ID(xml_rsc_2);
-                rsc_2 = pcmk__find_constraint_resource(data_set->resources,
+                rsc_2 = pcmk__find_constraint_resource(scheduler->resources,
                                                        xml_rsc_id);
                 if (rsc_2 == NULL) {
                     // Should be possible only with validation disabled
@@ -707,7 +708,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
 
 static void
 unpack_simple_colocation(xmlNode *xml_obj, const char *id,
-                         const char *influence_s, pcmk_scheduler_t *data_set)
+                         const char *influence_s, pcmk_scheduler_t *scheduler)
 {
     int score_i = 0;
     uint32_t flags = pcmk__coloc_none;
@@ -727,8 +728,8 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
     pcmk_resource_t *primary = NULL;
     pcmk_resource_t *dependent = NULL;
 
-    primary = pcmk__find_constraint_resource(data_set->resources, primary_id);
-    dependent = pcmk__find_constraint_resource(data_set->resources,
+    primary = pcmk__find_constraint_resource(scheduler->resources, primary_id);
+    dependent = pcmk__find_constraint_resource(scheduler->resources,
                                                dependent_id);
 
     // @COMPAT: Deprecated since 2.1.5
@@ -808,7 +809,7 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
 // \return Standard Pacemaker return code
 static int
 unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
-                       pcmk_scheduler_t *data_set)
+                       pcmk_scheduler_t *scheduler)
 {
     const char *id = NULL;
     const char *dependent_id = NULL;
@@ -838,7 +839,7 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     }
 
     // Check whether there are any resource sets with template or tag references
-    *expanded_xml = pcmk__expand_tags_in_sets(xml_obj, data_set);
+    *expanded_xml = pcmk__expand_tags_in_sets(xml_obj, scheduler);
     if (*expanded_xml != NULL) {
         crm_log_xml_trace(*expanded_xml, "Expanded rsc_colocation");
         return pcmk_rc_ok;
@@ -850,14 +851,14 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         return pcmk_rc_ok;
     }
 
-    if (!pcmk__valid_resource_or_tag(data_set, dependent_id, &dependent,
+    if (!pcmk__valid_resource_or_tag(scheduler, dependent_id, &dependent,
                                      &dependent_tag)) {
         pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
                          "valid resource or tag", id, dependent_id);
         return pcmk_rc_unpack_error;
     }
 
-    if (!pcmk__valid_resource_or_tag(data_set, primary_id, &primary,
+    if (!pcmk__valid_resource_or_tag(scheduler, primary_id, &primary,
                                      &primary_tag)) {
         pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
                          "valid resource or tag", id, primary_id);
@@ -883,7 +884,7 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     // Convert dependent's template/tag reference into constraint resource_set
     if (!pcmk__tag_to_set(*expanded_xml, &dependent_set, XML_COLOC_ATTR_SOURCE,
-                          true, data_set)) {
+                          true, scheduler)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_unpack_error;
@@ -900,7 +901,7 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     // Convert primary's template/tag reference into constraint resource_set
     if (!pcmk__tag_to_set(*expanded_xml, &primary_set, XML_COLOC_ATTR_TARGET,
-                          true, data_set)) {
+                          true, scheduler)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_unpack_error;
@@ -927,13 +928,13 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
 /*!
  * \internal
- * \brief Parse a colocation constraint from XML into a cluster working set
+ * \brief Parse a colocation constraint from XML into scheduler data
  *
- * \param[in,out] xml_obj   Colocation constraint XML to unpack
- * \param[in,out] data_set  Cluster working set to add constraint to
+ * \param[in,out] xml_obj    Colocation constraint XML to unpack
+ * \param[in,out] scheduler  Scheduler data to add constraint to
  */
 void
-pcmk__unpack_colocation(xmlNode *xml_obj, pcmk_scheduler_t *data_set)
+pcmk__unpack_colocation(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 {
     int score_i = 0;
     xmlNode *set = NULL;
@@ -953,7 +954,7 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pcmk_scheduler_t *data_set)
     }
 
     if (unpack_colocation_tags(xml_obj, &expanded_xml,
-                               data_set) != pcmk_rc_ok) {
+                               scheduler) != pcmk_rc_ok) {
         return;
     }
     if (expanded_xml != NULL) {
@@ -970,7 +971,7 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pcmk_scheduler_t *data_set)
     for (set = first_named_child(xml_obj, XML_CONS_TAG_RSC_SET); set != NULL;
          set = crm_next_same_xml(set)) {
 
-        set = expand_idref(set, data_set->input);
+        set = expand_idref(set, scheduler->input);
         if (set == NULL) { // Configuration error, message already logged
             if (expanded_xml != NULL) {
                 free_xml(expanded_xml);
@@ -983,10 +984,10 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pcmk_scheduler_t *data_set)
                              " without " CRM_ATTR_ID);
             continue;
         }
-        unpack_colocation_set(set, score_i, id, influence_s, data_set);
+        unpack_colocation_set(set, score_i, id, influence_s, scheduler);
 
         if (last != NULL) {
-            colocate_rsc_sets(id, last, set, score_i, influence_s, data_set);
+            colocate_rsc_sets(id, last, set, score_i, influence_s, scheduler);
         }
         last = set;
     }
@@ -997,7 +998,7 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pcmk_scheduler_t *data_set)
     }
 
     if (last == NULL) {
-        unpack_simple_colocation(xml_obj, id, influence_s, data_set);
+        unpack_simple_colocation(xml_obj, id, influence_s, scheduler);
     }
 }
 

@@ -27,18 +27,18 @@ calloc_fails(void **state) {
 
 static void
 calloc_succeeds(void **state) {
-    pcmk_scheduler_t *data_set = pe_new_working_set();
+    pcmk_scheduler_t *scheduler = pe_new_working_set();
 
     /* Nothing else to test about this function, as all it does is call
      * set_working_set_defaults which is also a public function and should
      * get its own unit test.
      */
-    assert_non_null(data_set);
+    assert_non_null(scheduler);
 
     /* Avoid calling pe_free_working_set here so we don't artificially
      * inflate the coverage numbers.
      */
-    free(data_set);
+    free(scheduler);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,

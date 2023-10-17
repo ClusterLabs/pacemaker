@@ -266,17 +266,17 @@ struct resource_alloc_functions_s {
      * ordering. Effects may cascade to other orderings involving the actions as
      * well.
      *
-     * \param[in,out] first     'First' action in an ordering
-     * \param[in,out] then      'Then' action in an ordering
-     * \param[in]     node      If not NULL, limit scope of ordering to this
-     *                          node (only used when interleaving instances)
-     * \param[in]     flags     Action flags for \p first for ordering purposes
-     * \param[in]     filter    Action flags to limit scope of certain updates
-     *                          (may include pcmk_action_optional to affect
-     *                          only mandatory actions, and pcmk_action_runnable
-     *                          to affect only runnable actions)
-     * \param[in]     type      Group of enum pcmk__action_relation_flags
-     * \param[in,out] data_set  Cluster working set
+     * \param[in,out] first      'First' action in an ordering
+     * \param[in,out] then       'Then' action in an ordering
+     * \param[in]     node       If not NULL, limit scope of ordering to this
+     *                           node (only used when interleaving instances)
+     * \param[in]     flags      Action flags for \p first for ordering purposes
+     * \param[in]     filter     Action flags to limit scope of certain updates
+     *                           (may include pcmk_action_optional to affect
+     *                           only mandatory actions and pcmk_action_runnable
+     *                           to affect only runnable actions)
+     * \param[in]     type       Group of enum pcmk__action_relation_flags
+     * \param[in,out] scheduler  Scheduler data
      *
      * \return Group of enum pcmk__updated flags indicating what was updated
      */
@@ -284,7 +284,7 @@ struct resource_alloc_functions_s {
                                        pcmk_action_t *then,
                                        const pcmk_node_t *node, uint32_t flags,
                                        uint32_t filter, uint32_t type,
-                                       pcmk_scheduler_t *data_set);
+                                       pcmk_scheduler_t *scheduler);
 
     /*!
      * \internal
@@ -346,13 +346,13 @@ struct resource_alloc_functions_s {
 
 G_GNUC_INTERNAL
 void pcmk__update_action_for_orderings(pcmk_action_t *action,
-                                       pcmk_scheduler_t *data_set);
+                                       pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
 uint32_t pcmk__update_ordered_actions(pcmk_action_t *first, pcmk_action_t *then,
                                       const pcmk_node_t *node, uint32_t flags,
                                       uint32_t filter, uint32_t type,
-                                      pcmk_scheduler_t *data_set);
+                                      pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
 void pcmk__log_action(const char *pre_text, const pcmk_action_t *action,
@@ -373,14 +373,14 @@ G_GNUC_INTERNAL
 void pcmk__deduplicate_action_inputs(pcmk_action_t *action);
 
 G_GNUC_INTERNAL
-void pcmk__output_actions(pcmk_scheduler_t *data_set);
+void pcmk__output_actions(pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
 bool pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
                                const xmlNode *xml_op);
 
 G_GNUC_INTERNAL
-void pcmk__handle_rsc_config_changes(pcmk_scheduler_t *data_set);
+void pcmk__handle_rsc_config_changes(pcmk_scheduler_t *scheduler);
 
 
 // Recurring actions (pcmk_sched_recurring.c)
@@ -412,14 +412,14 @@ G_GNUC_INTERNAL
 void pcmk__add_rsc_actions_to_graph(pcmk_resource_t *rsc);
 
 G_GNUC_INTERNAL
-void pcmk__create_graph(pcmk_scheduler_t *data_set);
+void pcmk__create_graph(pcmk_scheduler_t *scheduler);
 
 
 // Fencing (pcmk_sched_fencing.c)
 
 G_GNUC_INTERNAL
 void pcmk__order_vs_fence(pcmk_action_t *stonith_op,
-                          pcmk_scheduler_t *data_set);
+                          pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
 void pcmk__order_vs_unfence(const pcmk_resource_t *rsc, pcmk_node_t *node,
@@ -438,7 +438,7 @@ void pcmk__order_restart_vs_unfence(gpointer data, gpointer user_data);
 
 // Injected scheduler inputs (pcmk_sched_injections.c)
 
-void pcmk__inject_scheduler_input(pcmk_scheduler_t *data_set, cib_t *cib,
+void pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
                                   const pcmk_injections_t *injections);
 
 
@@ -450,25 +450,25 @@ pcmk_resource_t *pcmk__find_constraint_resource(GList *rsc_list,
 
 G_GNUC_INTERNAL
 xmlNode *pcmk__expand_tags_in_sets(xmlNode *xml_obj,
-                                   const pcmk_scheduler_t *data_set);
+                                   const pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
-bool pcmk__valid_resource_or_tag(const pcmk_scheduler_t *data_set,
+bool pcmk__valid_resource_or_tag(const pcmk_scheduler_t *scheduler,
                                  const char *id, pcmk_resource_t **rsc,
                                  pe_tag_t **tag);
 
 G_GNUC_INTERNAL
 bool pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
-                      bool convert_rsc, const pcmk_scheduler_t *data_set);
+                      bool convert_rsc, const pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
-void pcmk__create_internal_constraints(pcmk_scheduler_t *data_set);
+void pcmk__create_internal_constraints(pcmk_scheduler_t *scheduler);
 
 
 // Location constraints
 
 G_GNUC_INTERNAL
-void pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *data_set);
+void pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
 pe__location_t *pcmk__new_location(const char *id, pcmk_resource_t *rsc,
@@ -476,7 +476,7 @@ pe__location_t *pcmk__new_location(const char *id, pcmk_resource_t *rsc,
                                    pcmk_node_t *foo_node);
 
 G_GNUC_INTERNAL
-void pcmk__apply_locations(pcmk_scheduler_t *data_set);
+void pcmk__apply_locations(pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
 void pcmk__apply_location(pcmk_resource_t *rsc, pe__location_t *constraint);
@@ -556,7 +556,7 @@ void pcmk__colocation_intersect_nodes(pcmk_resource_t *dependent,
                                       bool merge_scores);
 
 G_GNUC_INTERNAL
-void pcmk__unpack_colocation(xmlNode *xml_obj, pcmk_scheduler_t *data_set);
+void pcmk__unpack_colocation(xmlNode *xml_obj, pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
 void pcmk__add_this_with(GList **list, const pcmk__colocation_t *colocation,
@@ -645,10 +645,10 @@ void pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_task,
                         uint32_t flags, pcmk_scheduler_t *sched);
 
 G_GNUC_INTERNAL
-void pcmk__unpack_ordering(xmlNode *xml_obj, pcmk_scheduler_t *data_set);
+void pcmk__unpack_ordering(xmlNode *xml_obj, pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
-void pcmk__disable_invalid_orderings(pcmk_scheduler_t *data_set);
+void pcmk__disable_invalid_orderings(pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
 void pcmk__order_stops_before_shutdown(pcmk_node_t *node,
@@ -692,7 +692,7 @@ void pcmk__order_after_each(pcmk_action_t *after, GList *list);
 // Ticket constraints (pcmk_sched_tickets.c)
 
 G_GNUC_INTERNAL
-void pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *data_set);
+void pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler);
 
 
 // Promotable clone resources (pcmk_sched_promotable.c)
@@ -734,7 +734,7 @@ G_GNUC_INTERNAL
 bool pcmk__is_failed_remote_node(const pcmk_node_t *node);
 
 G_GNUC_INTERNAL
-void pcmk__order_remote_connection_actions(pcmk_scheduler_t *data_set);
+void pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
 bool pcmk__rsc_corresponds_to_guest(const pcmk_resource_t *rsc,
@@ -849,7 +849,7 @@ uint32_t pcmk__group_update_ordered_actions(pcmk_action_t *first,
                                             const pcmk_node_t *node,
                                             uint32_t flags, uint32_t filter,
                                             uint32_t type,
-                                            pcmk_scheduler_t *data_set);
+                                            pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
 GList *pcmk__group_colocated_resources(const pcmk_resource_t *rsc,
@@ -998,7 +998,7 @@ uint32_t pcmk__instance_update_ordered_actions(pcmk_action_t *first,
                                                const pcmk_node_t *node,
                                                uint32_t flags, uint32_t filter,
                                                uint32_t type,
-                                               pcmk_scheduler_t *data_set);
+                                               pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
 uint32_t pcmk__collective_action_flags(pcmk_action_t *action,
@@ -1055,7 +1055,7 @@ G_GNUC_INTERNAL
 GList *pcmk__sort_nodes(GList *nodes, pcmk_node_t *active_node);
 
 G_GNUC_INTERNAL
-void pcmk__apply_node_health(pcmk_scheduler_t *data_set);
+void pcmk__apply_node_health(pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
 pcmk_node_t *pcmk__top_allowed_node(const pcmk_resource_t *rsc,
@@ -1065,14 +1065,15 @@ pcmk_node_t *pcmk__top_allowed_node(const pcmk_resource_t *rsc,
 // Functions applying to more than one variant (pcmk_sched_resource.c)
 
 G_GNUC_INTERNAL
-void pcmk__set_assignment_methods(pcmk_scheduler_t *data_set);
+void pcmk__set_assignment_methods(pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
 bool pcmk__rsc_agent_changed(pcmk_resource_t *rsc, pcmk_node_t *node,
                              const xmlNode *rsc_entry, bool active_on_node);
 
 G_GNUC_INTERNAL
-GList *pcmk__rscs_matching_id(const char *id, const pcmk_scheduler_t *data_set);
+GList *pcmk__rscs_matching_id(const char *id,
+                              const pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
 GList *pcmk__colocated_resources(const pcmk_resource_t *rsc,
@@ -1097,7 +1098,7 @@ bool pcmk__threshold_reached(pcmk_resource_t *rsc, const pcmk_node_t *node,
                              pcmk_resource_t **failed);
 
 G_GNUC_INTERNAL
-void pcmk__sort_resources(pcmk_scheduler_t *data_set);
+void pcmk__sort_resources(pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
 gint pcmk__cmp_instance(gconstpointer a, gconstpointer b);
@@ -1112,13 +1113,13 @@ G_GNUC_INTERNAL
 bool pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node);
 
 G_GNUC_INTERNAL
-void pcmk__order_probes(pcmk_scheduler_t *data_set);
+void pcmk__order_probes(pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
 bool pcmk__probe_resource_list(GList *rscs, pcmk_node_t *node);
 
 G_GNUC_INTERNAL
-void pcmk__schedule_probes(pcmk_scheduler_t *data_set);
+void pcmk__schedule_probes(pcmk_scheduler_t *scheduler);
 
 
 // Functions related to live migration (pcmk_sched_migration.c)
@@ -1156,6 +1157,6 @@ void pcmk__create_utilization_constraints(pcmk_resource_t *rsc,
                                           const GList *allowed_nodes);
 
 G_GNUC_INTERNAL
-void pcmk__show_node_capacities(const char *desc, pcmk_scheduler_t *data_set);
+void pcmk__show_node_capacities(const char *desc, pcmk_scheduler_t *scheduler);
 
 #endif // PCMK__LIBPACEMAKER_PRIVATE__H

@@ -76,7 +76,7 @@ struct {
     gboolean require_cib;         // Whether command requires CIB IPC
     int cib_options;              // Options to use with CIB IPC calls
     gboolean require_crmd;        // Whether command requires controller IPC
-    gboolean require_dataset;     // Whether command requires populated data set
+    gboolean require_scheduler;   // Whether command requires scheduler data
     gboolean require_resource;    // Whether command requires resource specified
     gboolean require_node;        // Whether command requires node specified
     int find_flags;               // Flags to use when searching for resource
@@ -117,7 +117,7 @@ struct {
     .check_level = -1,
     .cib_options = cib_sync_call,
     .require_cib = TRUE,
-    .require_dataset = TRUE,
+    .require_scheduler = TRUE,
     .require_resource = TRUE,
 };
 
@@ -183,7 +183,7 @@ static GError *error = NULL;
 static GMainLoop *mainloop = NULL;
 static cib_t *cib_conn = NULL;
 static pcmk_ipc_api_t *controld_api = NULL;
-static pcmk_scheduler_t *data_set = NULL;
+static pcmk_scheduler_t *scheduler = NULL;
 
 #define MESSAGE_TIMEOUT_S 60
 
@@ -227,8 +227,8 @@ bye(crm_exit_t ec)
         mainloop = NULL;
     }
 
-    pe_free_working_set(data_set);
-    data_set = NULL;
+    pe_free_working_set(scheduler);
+    scheduler = NULL;
     crm_exit(ec);
     return ec;
 }
@@ -650,7 +650,7 @@ reset_options(void) {
     options.require_node = FALSE;
 
     options.require_cib = TRUE;
-    options.require_dataset = TRUE;
+    options.require_scheduler = TRUE;
     options.require_resource = TRUE;
 
     options.find_flags = 0;
@@ -709,7 +709,7 @@ cleanup_refresh_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 gboolean
 delete_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     SET_COMMAND(cmd_delete);
-    options.require_dataset = FALSE;
+    options.require_scheduler = FALSE;
     options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
     return TRUE;
 }
@@ -725,7 +725,7 @@ static void
 get_agent_spec(const gchar *optarg)
 {
     options.require_cib = FALSE;
-    options.require_dataset = FALSE;
+    options.require_scheduler = FALSE;
     options.require_resource = FALSE;
     pcmk__str_update(&options.agent_spec, optarg);
 }
@@ -754,7 +754,7 @@ list_standards_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 {
     SET_COMMAND(cmd_list_standards);
     options.require_cib = FALSE;
-    options.require_dataset = FALSE;
+    options.require_scheduler = FALSE;
     options.require_resource = FALSE;
     return TRUE;
 }
@@ -889,7 +889,7 @@ set_delete_param_cb(const gchar *option_name, const gchar *optarg, gpointer data
 gboolean
 set_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     SET_COMMAND(cmd_set_property);
-    options.require_dataset = FALSE;
+    options.require_scheduler = FALSE;
     pcmk__str_update(&options.prop_name, optarg);
     options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
     return TRUE;
@@ -945,7 +945,7 @@ digests_cb(const gchar *option_name, const gchar *optarg, gpointer data,
         options.override_params = pcmk__strkey_table(free, free);
     }
     options.require_node = TRUE;
-    options.require_dataset = TRUE;
+    options.require_scheduler = TRUE;
     return TRUE;
 }
 
@@ -953,7 +953,7 @@ gboolean
 wait_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     SET_COMMAND(cmd_wait);
     options.require_resource = FALSE;
-    options.require_dataset = FALSE;
+    options.require_scheduler = FALSE;
     return TRUE;
 }
 
@@ -1036,8 +1036,9 @@ cleanup(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
 
     crm_debug("Erasing failures of %s (%s requested) on %s",
               rsc->id, options.rsc_id, (options.host_uname? options.host_uname: "all nodes"));
-    rc = cli_resource_delete(controld_api, options.host_uname, rsc, options.operation,
-                             options.interval_spec, TRUE, data_set, options.force);
+    rc = cli_resource_delete(controld_api, options.host_uname, rsc,
+                             options.operation, options.interval_spec, TRUE,
+                             scheduler, options.force);
 
     if ((rc == pcmk_rc_ok) && !out->is_quiet(out)) {
         // Show any reasons why resource might stay stopped
@@ -1060,16 +1061,17 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
     int rc = pcmk_rc_ok;
 
     if (!out->is_quiet(out)) {
-        before = build_constraint_list(data_set->input);
+        before = build_constraint_list(scheduler->input);
     }
 
     if (options.clear_expired) {
-        rc = cli_resource_clear_all_expired(data_set->input, cib_conn, options.cib_options,
-                                            options.rsc_id, options.host_uname,
+        rc = cli_resource_clear_all_expired(scheduler->input, cib_conn,
+                                            options.cib_options, options.rsc_id,
+                                            options.host_uname,
                                             options.promoted_role_only);
 
     } else if (options.host_uname) {
-        dest = pe_find_node(data_set->nodes, options.host_uname);
+        dest = pe_find_node(scheduler->nodes, options.host_uname);
         if (dest == NULL) {
             rc = pcmk_rc_node_unknown;
             if (!out->is_quiet(out)) {
@@ -1081,7 +1083,7 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
                                 cib_conn, options.cib_options, TRUE, options.force);
 
     } else {
-        rc = cli_resource_clear(options.rsc_id, NULL, data_set->nodes,
+        rc = cli_resource_clear(options.rsc_id, NULL, scheduler->nodes,
                                 cib_conn, options.cib_options, TRUE, options.force);
     }
 
@@ -1098,10 +1100,10 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
             return rc;
         }
 
-        data_set->input = *cib_xml_copy;
-        cluster_status(data_set);
+        scheduler->input = *cib_xml_copy;
+        cluster_status(scheduler);
 
-        after = build_constraint_list(data_set->input);
+        after = build_constraint_list(scheduler->input);
         remaining = pcmk__subtract_lists(before, after, (GCompareFunc) strcmp);
 
         for (ele = remaining; ele != NULL; ele = ele->next) {
@@ -1140,7 +1142,7 @@ delete(void)
 }
 
 static int
-populate_working_set(xmlNodePtr *cib_xml_copy)
+initialize_scheduler_data(xmlNodePtr *cib_xml_copy)
 {
     int rc = pcmk_rc_ok;
 
@@ -1155,15 +1157,15 @@ populate_working_set(xmlNodePtr *cib_xml_copy)
     }
 
     if (rc == pcmk_rc_ok) {
-        data_set = pe_new_working_set();
-        if (data_set == NULL) {
+        scheduler = pe_new_working_set();
+        if (scheduler == NULL) {
             rc = ENOMEM;
         } else {
-            pe__set_working_set_flags(data_set,
+            pe__set_working_set_flags(scheduler,
                                       pcmk_sched_no_counts
                                       |pcmk_sched_no_compat);
-            data_set->priv = out;
-            rc = update_working_set_xml(data_set, cib_xml_copy);
+            scheduler->priv = out;
+            rc = update_scheduler_input(scheduler, cib_xml_copy);
         }
     }
 
@@ -1173,7 +1175,7 @@ populate_working_set(xmlNodePtr *cib_xml_copy)
         return rc;
     }
 
-    cluster_status(data_set);
+    cluster_status(scheduler);
     return pcmk_rc_ok;
 }
 
@@ -1185,7 +1187,7 @@ refresh(pcmk__output_t *out)
     int attr_options = pcmk__node_attr_none;
 
     if (options.host_uname) {
-        pcmk_node_t *node = pe_find_node(data_set->nodes, options.host_uname);
+        pcmk_node_t *node = pe_find_node(scheduler->nodes, options.host_uname);
 
         if (pe__is_guest_or_remote_node(node)) {
             node = pe__current_node(node->details->remote_rsc);
@@ -1233,7 +1235,7 @@ refresh_resource(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
     crm_debug("Re-checking the state of %s (%s requested) on %s",
               rsc->id, options.rsc_id, (options.host_uname? options.host_uname: "all nodes"));
     rc = cli_resource_delete(controld_api, options.host_uname, rsc, NULL, 0,
-                             FALSE, data_set, options.force);
+                             FALSE, scheduler, options.force);
 
     if ((rc == pcmk_rc_ok) && !out->is_quiet(out)) {
         // Show any reasons why resource might stay stopped
@@ -1372,7 +1374,7 @@ validate_cmdline_config(void)
         options.cmdline_params = pcmk__strkey_table(free, free);
     }
     options.require_resource = FALSE;
-    options.require_dataset = FALSE;
+    options.require_scheduler = FALSE;
     options.require_cib = FALSE;
 }
 
@@ -1628,7 +1630,7 @@ main(int argc, char **argv)
      */
 
     if (options.find_flags && options.rsc_id) {
-        options.require_dataset = TRUE;
+        options.require_scheduler = TRUE;
     }
 
     // Establish a connection to the CIB if needed
@@ -1650,9 +1652,9 @@ main(int argc, char **argv)
         }
     }
 
-    /* Populate working set from XML file if specified or CIB query otherwise */
-    if (options.require_dataset) {
-        rc = populate_working_set(&cib_xml_copy);
+    // Populate scheduler data from XML file if specified or CIB query otherwise
+    if (options.require_scheduler) {
+        rc = initialize_scheduler_data(&cib_xml_copy);
         if (rc != pcmk_rc_ok) {
             exit_code = pcmk_rc2exitc(rc);
             goto done;
@@ -1661,7 +1663,7 @@ main(int argc, char **argv)
 
     // If command requires that resource exist if specified, find it
     if (options.find_flags && options.rsc_id) {
-        rsc = pe_find_resource_with_flags(data_set->resources, options.rsc_id,
+        rsc = pe_find_resource_with_flags(scheduler->resources, options.rsc_id,
                                           options.find_flags);
         if (rsc == NULL) {
             exit_code = CRM_EX_NOSUCH;
@@ -1684,8 +1686,8 @@ main(int argc, char **argv)
     }
 
     // If user supplied a node name, check whether it exists
-    if ((options.host_uname != NULL) && (data_set != NULL)) {
-        node = pe_find_node(data_set->nodes, options.host_uname);
+    if ((options.host_uname != NULL) && (scheduler != NULL)) {
+        node = pe_find_node(scheduler->nodes, options.host_uname);
 
         if (node == NULL) {
             exit_code = CRM_EX_NOSUCH;
@@ -1724,7 +1726,7 @@ main(int argc, char **argv)
         case cmd_list_resources: {
             GList *all = NULL;
             all = g_list_prepend(all, (gpointer) "*");
-            rc = out->message(out, "resource-list", data_set,
+            rc = out->message(out, "resource-list", scheduler,
                               pcmk_show_inactive_rscs | pcmk_show_rsc_only | pcmk_show_pending,
                               true, all, all, false);
             g_list_free(all);
@@ -1736,7 +1738,7 @@ main(int argc, char **argv)
         }
 
         case cmd_list_instances:
-            rc = out->message(out, "resource-names-list", data_set->resources);
+            rc = out->message(out, "resource-names-list", scheduler->resources);
 
             if (rc != pcmk_rc_ok) {
                 rc = ENXIO;
@@ -1765,10 +1767,10 @@ main(int argc, char **argv)
             break;
 
         case cmd_restart:
-            /* We don't pass data_set because rsc needs to stay valid for the
+            /* We don't pass scheduler because rsc needs to stay valid for the
              * entire lifetime of cli_resource_restart(), but it will reset and
-             * update the working set multiple times, so it needs to use its own
-             * copy.
+             * update the scheduler data multiple times, so it needs to use its
+             * own copy.
              */
             rc = cli_resource_restart(out, rsc, node, options.move_lifetime,
                                       options.timeout_ms, cib_conn,
@@ -1790,13 +1792,13 @@ main(int argc, char **argv)
             } else {
                 exit_code = cli_resource_execute(rsc, options.rsc_id,
                     options.operation, options.override_params,
-                    options.timeout_ms, cib_conn, data_set,
+                    options.timeout_ms, cib_conn, scheduler,
                     args->verbosity, options.force, options.check_level);
             }
             goto done;
 
         case cmd_digests:
-            node = pe_find_node(data_set->nodes, options.host_uname);
+            node = pe_find_node(scheduler->nodes, options.host_uname);
             if (node == NULL) {
                 rc = pcmk_rc_node_unknown;
             } else {
@@ -1812,13 +1814,14 @@ main(int argc, char **argv)
 
         case cmd_cts:
             rc = pcmk_rc_ok;
-            g_list_foreach(data_set->resources, (GFunc) cli_resource_print_cts, out);
-            cli_resource_print_cts_constraints(data_set);
+            g_list_foreach(scheduler->resources, (GFunc) cli_resource_print_cts,
+                           out);
+            cli_resource_print_cts_constraints(scheduler);
             break;
 
         case cmd_fail:
             rc = cli_resource_fail(controld_api, options.host_uname,
-                                   options.rsc_id, data_set);
+                                   options.rsc_id, scheduler);
             if (rc == pcmk_rc_ok) {
                 start_mainloop(controld_api);
             }
@@ -1827,28 +1830,28 @@ main(int argc, char **argv)
         case cmd_list_active_ops:
             rc = cli_resource_print_operations(options.rsc_id,
                                                options.host_uname, TRUE,
-                                               data_set);
+                                               scheduler);
             break;
 
         case cmd_list_all_ops:
             rc = cli_resource_print_operations(options.rsc_id,
                                                options.host_uname, FALSE,
-                                               data_set);
+                                               scheduler);
             break;
 
         case cmd_locate: {
-            GList *nodes = cli_resource_search(rsc, options.rsc_id, data_set);
+            GList *nodes = cli_resource_search(rsc, options.rsc_id, scheduler);
             rc = out->message(out, "resource-search-list", nodes, options.rsc_id);
             g_list_free_full(nodes, free);
             break;
         }
 
         case cmd_query_xml:
-            rc = cli_resource_print(rsc, data_set, true);
+            rc = cli_resource_print(rsc, scheduler, true);
             break;
 
         case cmd_query_raw_xml:
-            rc = cli_resource_print(rsc, data_set, false);
+            rc = cli_resource_print(rsc, scheduler, false);
             break;
 
         case cmd_why:
@@ -1856,7 +1859,7 @@ main(int argc, char **argv)
                 rc = pcmk_rc_node_unknown;
             } else {
                 rc = out->message(out, "resource-reasons-list",
-                                  data_set->resources, rsc, node);
+                                  scheduler->resources, rsc, node);
             }
             break;
 
@@ -1870,7 +1873,7 @@ main(int argc, char **argv)
             } else {
                 rc = cli_resource_move(rsc, options.rsc_id, options.host_uname,
                                        options.move_lifetime, cib_conn,
-                                       options.cib_options, data_set,
+                                       options.cib_options, scheduler,
                                        options.promoted_role_only,
                                        options.force);
             }
@@ -1931,14 +1934,14 @@ main(int argc, char **argv)
             crm_debug("Looking up %s in %s", options.prop_name, rsc->id);
 
             if (pcmk__str_eq(options.attr_set_type, XML_TAG_ATTR_SETS, pcmk__str_none)) {
-                params = pe_rsc_params(rsc, current, data_set);
+                params = pe_rsc_params(rsc, current, scheduler);
                 free_params = false;
 
                 value = g_hash_table_lookup(params, options.prop_name);
 
             } else if (pcmk__str_eq(options.attr_set_type, XML_TAG_META_SETS, pcmk__str_none)) {
                 params = pcmk__strkey_table(free, free);
-                get_meta_attributes(params, rsc, current, data_set);
+                get_meta_attributes(params, rsc, current, scheduler);
 
                 value = g_hash_table_lookup(params, options.prop_name);
 
@@ -1950,7 +1953,7 @@ main(int argc, char **argv)
             } else {
                 params = pcmk__strkey_table(free, free);
                 pe__unpack_dataset_nvpairs(rsc->xml, XML_TAG_UTILIZATION, NULL, params,
-                                           NULL, FALSE, data_set);
+                                           NULL, FALSE, scheduler);
 
                 value = g_hash_table_lookup(params, options.prop_name);
             }
@@ -1998,7 +2001,7 @@ main(int argc, char **argv)
             if (rsc == NULL) {
                 rc = cli_cleanup_all(controld_api, options.host_uname,
                                      options.operation, options.interval_spec,
-                                     data_set);
+                                     scheduler);
                 if (rc == pcmk_rc_ok) {
                     start_mainloop(controld_api);
                 }

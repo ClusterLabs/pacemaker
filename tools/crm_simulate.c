@@ -451,7 +451,7 @@ int
 main(int argc, char **argv)
 {
     int rc = pcmk_rc_ok;
-    pcmk_scheduler_t *data_set = NULL;
+    pcmk_scheduler_t *scheduler = NULL;
     pcmk__output_t *out = NULL;
 
     GError *error = NULL;
@@ -514,24 +514,26 @@ main(int argc, char **argv)
 #endif
     }
 
-    data_set = pe_new_working_set();
-    if (data_set == NULL) {
+    scheduler = pe_new_working_set();
+    if (scheduler == NULL) {
         rc = ENOMEM;
-        g_set_error(&error, PCMK__RC_ERROR, rc, "Could not allocate working set");
+        g_set_error(&error, PCMK__RC_ERROR, rc,
+                    "Could not allocate scheduler data");
         goto done;
     }
 
     if (pcmk_is_set(options.flags, pcmk_sim_show_scores)) {
-        pe__set_working_set_flags(data_set, pcmk_sched_output_scores);
+        pe__set_working_set_flags(scheduler, pcmk_sched_output_scores);
     }
     if (pcmk_is_set(options.flags, pcmk_sim_show_utilization)) {
-        pe__set_working_set_flags(data_set, pcmk_sched_show_utilization);
+        pe__set_working_set_flags(scheduler, pcmk_sched_show_utilization);
     }
-    pe__set_working_set_flags(data_set, pcmk_sched_no_compat);
+    pe__set_working_set_flags(scheduler, pcmk_sched_no_compat);
 
     if (options.test_dir != NULL) {
-        data_set->priv = out;
-        pcmk__profile_dir(options.test_dir, options.repeat, data_set, options.use_date);
+        scheduler->priv = out;
+        pcmk__profile_dir(options.test_dir, options.repeat, scheduler,
+                          options.use_date);
         rc = pcmk_rc_ok;
         goto done;
     }
@@ -543,9 +545,9 @@ main(int argc, char **argv)
         goto done;
     }
 
-    rc = pcmk__simulate(data_set, out, options.injections, options.flags, section_opts,
-                        options.use_date, options.input_file, options.graph_file,
-                        options.dot_file);
+    rc = pcmk__simulate(scheduler, out, options.injections, options.flags,
+                        section_opts, options.use_date, options.input_file,
+                        options.graph_file, options.dot_file);
 
   done:
     pcmk__output_and_clear_error(&error, NULL);
@@ -563,8 +565,8 @@ main(int argc, char **argv)
     pcmk__free_arg_context(context);
     g_strfreev(processed_args);
 
-    if (data_set) {
-        pe_free_working_set(data_set);
+    if (scheduler != NULL) {
+        pe_free_working_set(scheduler);
     }
 
     fflush(stderr);

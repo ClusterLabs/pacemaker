@@ -21,9 +21,9 @@
 #include <pe_status_private.h>
 
 /*!
- * \brief Create a new working set
+ * \brief Create a new object to hold scheduler data
  *
- * \return New, initialized working set on success, else NULL (and set errno)
+ * \return New, initialized scheduler data on success, else NULL (and set errno)
  * \note Only pcmk_scheduler_t objects created with this function (as opposed
  *       to statically declared or directly allocated) should be used with the
  *       functions in this library, to allow for future extensions to the
@@ -33,26 +33,26 @@
 pcmk_scheduler_t *
 pe_new_working_set(void)
 {
-    pcmk_scheduler_t *data_set = calloc(1, sizeof(pcmk_scheduler_t));
+    pcmk_scheduler_t *scheduler = calloc(1, sizeof(pcmk_scheduler_t));
 
-    if (data_set != NULL) {
-        set_working_set_defaults(data_set);
+    if (scheduler != NULL) {
+        set_working_set_defaults(scheduler);
     }
-    return data_set;
+    return scheduler;
 }
 
 /*!
- * \brief Free a working set
+ * \brief Free scheduler data
  *
- * \param[in,out] data_set  Working set to free
+ * \param[in,out] scheduler  Scheduler data to free
  */
 void
-pe_free_working_set(pcmk_scheduler_t *data_set)
+pe_free_working_set(pcmk_scheduler_t *scheduler)
 {
-    if (data_set != NULL) {
-        pe_reset_working_set(data_set);
-        data_set->priv = NULL;
-        free(data_set);
+    if (scheduler != NULL) {
+        pe_reset_working_set(scheduler);
+        scheduler->priv = NULL;
+        free(scheduler);
     }
 }
 
@@ -68,83 +68,83 @@ pe_free_working_set(pcmk_scheduler_t *data_set)
  *  - A list of the possible stop/start actions (without dependencies)
  */
 gboolean
-cluster_status(pcmk_scheduler_t * data_set)
+cluster_status(pcmk_scheduler_t * scheduler)
 {
     xmlNode *section = NULL;
 
-    if ((data_set == NULL) || (data_set->input == NULL)) {
+    if ((scheduler == NULL) || (scheduler->input == NULL)) {
         return FALSE;
     }
 
     crm_trace("Beginning unpack");
 
-    if (data_set->failed != NULL) {
-        free_xml(data_set->failed);
+    if (scheduler->failed != NULL) {
+        free_xml(scheduler->failed);
     }
-    data_set->failed = create_xml_node(NULL, "failed-ops");
+    scheduler->failed = create_xml_node(NULL, "failed-ops");
 
-    if (data_set->now == NULL) {
-        data_set->now = crm_time_new(NULL);
-    }
-
-    if (data_set->dc_uuid == NULL) {
-        data_set->dc_uuid = crm_element_value_copy(data_set->input,
-                                                   XML_ATTR_DC_UUID);
+    if (scheduler->now == NULL) {
+        scheduler->now = crm_time_new(NULL);
     }
 
-    if (pcmk__xe_attr_is_true(data_set->input, XML_ATTR_HAVE_QUORUM)) {
-        pe__set_working_set_flags(data_set, pcmk_sched_quorate);
+    if (scheduler->dc_uuid == NULL) {
+        scheduler->dc_uuid = crm_element_value_copy(scheduler->input,
+                                                    XML_ATTR_DC_UUID);
+    }
+
+    if (pcmk__xe_attr_is_true(scheduler->input, XML_ATTR_HAVE_QUORUM)) {
+        pe__set_working_set_flags(scheduler, pcmk_sched_quorate);
     } else {
-        pe__clear_working_set_flags(data_set, pcmk_sched_quorate);
+        pe__clear_working_set_flags(scheduler, pcmk_sched_quorate);
     }
 
-    data_set->op_defaults = get_xpath_object("//" XML_CIB_TAG_OPCONFIG,
-                                             data_set->input, LOG_NEVER);
-    data_set->rsc_defaults = get_xpath_object("//" XML_CIB_TAG_RSCCONFIG,
-                                              data_set->input, LOG_NEVER);
+    scheduler->op_defaults = get_xpath_object("//" XML_CIB_TAG_OPCONFIG,
+                                              scheduler->input, LOG_NEVER);
+    scheduler->rsc_defaults = get_xpath_object("//" XML_CIB_TAG_RSCCONFIG,
+                                               scheduler->input, LOG_NEVER);
 
-    section = get_xpath_object("//" XML_CIB_TAG_CRMCONFIG, data_set->input,
+    section = get_xpath_object("//" XML_CIB_TAG_CRMCONFIG, scheduler->input,
                                LOG_TRACE);
-    unpack_config(section, data_set);
+    unpack_config(section, scheduler);
 
-   if (!pcmk_any_flags_set(data_set->flags,
+   if (!pcmk_any_flags_set(scheduler->flags,
                            pcmk_sched_location_only|pcmk_sched_quorate)
-       && (data_set->no_quorum_policy != pcmk_no_quorum_ignore)) {
+       && (scheduler->no_quorum_policy != pcmk_no_quorum_ignore)) {
         crm_warn("Fencing and resource management disabled due to lack of quorum");
     }
 
-    section = get_xpath_object("//" XML_CIB_TAG_NODES, data_set->input,
+    section = get_xpath_object("//" XML_CIB_TAG_NODES, scheduler->input,
                                LOG_TRACE);
-    unpack_nodes(section, data_set);
+    unpack_nodes(section, scheduler);
 
-    section = get_xpath_object("//" XML_CIB_TAG_RESOURCES, data_set->input,
+    section = get_xpath_object("//" XML_CIB_TAG_RESOURCES, scheduler->input,
                                LOG_TRACE);
-    if (!pcmk_is_set(data_set->flags, pcmk_sched_location_only)) {
-        unpack_remote_nodes(section, data_set);
+    if (!pcmk_is_set(scheduler->flags, pcmk_sched_location_only)) {
+        unpack_remote_nodes(section, scheduler);
     }
-    unpack_resources(section, data_set);
+    unpack_resources(section, scheduler);
 
-    section = get_xpath_object("//" XML_CIB_TAG_TAGS, data_set->input,
+    section = get_xpath_object("//" XML_CIB_TAG_TAGS, scheduler->input,
                                LOG_NEVER);
-    unpack_tags(section, data_set);
+    unpack_tags(section, scheduler);
 
-    if (!pcmk_is_set(data_set->flags, pcmk_sched_location_only)) {
-        section = get_xpath_object("//"XML_CIB_TAG_STATUS, data_set->input,
+    if (!pcmk_is_set(scheduler->flags, pcmk_sched_location_only)) {
+        section = get_xpath_object("//"XML_CIB_TAG_STATUS, scheduler->input,
                                    LOG_TRACE);
-        unpack_status(section, data_set);
+        unpack_status(section, scheduler);
     }
 
-    if (!pcmk_is_set(data_set->flags, pcmk_sched_no_counts)) {
-        for (GList *item = data_set->resources; item != NULL;
+    if (!pcmk_is_set(scheduler->flags, pcmk_sched_no_counts)) {
+        for (GList *item = scheduler->resources; item != NULL;
              item = item->next) {
             ((pcmk_resource_t *) (item->data))->fns->count(item->data);
         }
         crm_trace("Cluster resource count: %d (%d disabled, %d blocked)",
-                  data_set->ninstances, data_set->disabled_resources,
-                  data_set->blocked_resources);
+                  scheduler->ninstances, scheduler->disabled_resources,
+                  scheduler->blocked_resources);
     }
 
-    pe__set_working_set_flags(data_set, pcmk_sched_have_status);
+    pe__set_working_set_flags(scheduler, pcmk_sched_have_status);
     return TRUE;
 }
 
@@ -154,9 +154,9 @@ cluster_status(pcmk_scheduler_t * data_set)
  *
  * \param[in,out] resources  List to free
  *
- * \note When a working set's resource list is freed, that includes the original
+ * \note When the scheduler's resource list is freed, that includes the original
  *       storage for the uname and id of any Pacemaker Remote nodes in the
- *       working set's node list, so take care not to use those afterward.
+ *       scheduler's node list, so take care not to use those afterward.
  * \todo Refactor pcmk_node_t to strdup() the node name.
  */
 static void
@@ -268,122 +268,122 @@ pe__free_location(GList *constraints)
 }
 
 /*!
- * \brief Reset working set to default state without freeing it or constraints
+ * \brief Reset scheduler data to defaults without freeing it or constraints
  *
- * \param[in,out] data_set  Working set to reset
+ * \param[in,out] scheduler  Scheduler data to reset
  *
  * \deprecated This function is deprecated as part of the API;
  *             pe_reset_working_set() should be used instead.
  */
 void
-cleanup_calculations(pcmk_scheduler_t * data_set)
+cleanup_calculations(pcmk_scheduler_t *scheduler)
 {
-    if (data_set == NULL) {
+    if (scheduler == NULL) {
         return;
     }
 
-    pe__clear_working_set_flags(data_set, pcmk_sched_have_status);
-    if (data_set->config_hash != NULL) {
-        g_hash_table_destroy(data_set->config_hash);
+    pe__clear_working_set_flags(scheduler, pcmk_sched_have_status);
+    if (scheduler->config_hash != NULL) {
+        g_hash_table_destroy(scheduler->config_hash);
     }
 
-    if (data_set->singletons != NULL) {
-        g_hash_table_destroy(data_set->singletons);
+    if (scheduler->singletons != NULL) {
+        g_hash_table_destroy(scheduler->singletons);
     }
 
-    if (data_set->tickets) {
-        g_hash_table_destroy(data_set->tickets);
+    if (scheduler->tickets) {
+        g_hash_table_destroy(scheduler->tickets);
     }
 
-    if (data_set->template_rsc_sets) {
-        g_hash_table_destroy(data_set->template_rsc_sets);
+    if (scheduler->template_rsc_sets) {
+        g_hash_table_destroy(scheduler->template_rsc_sets);
     }
 
-    if (data_set->tags) {
-        g_hash_table_destroy(data_set->tags);
+    if (scheduler->tags) {
+        g_hash_table_destroy(scheduler->tags);
     }
 
-    free(data_set->dc_uuid);
+    free(scheduler->dc_uuid);
 
     crm_trace("deleting resources");
-    pe_free_resources(data_set->resources);
+    pe_free_resources(scheduler->resources);
 
     crm_trace("deleting actions");
-    pe_free_actions(data_set->actions);
+    pe_free_actions(scheduler->actions);
 
     crm_trace("deleting nodes");
-    pe_free_nodes(data_set->nodes);
+    pe_free_nodes(scheduler->nodes);
 
-    pe__free_param_checks(data_set);
-    g_list_free(data_set->stop_needed);
-    free_xml(data_set->graph);
-    crm_time_free(data_set->now);
-    free_xml(data_set->input);
-    free_xml(data_set->failed);
+    pe__free_param_checks(scheduler);
+    g_list_free(scheduler->stop_needed);
+    free_xml(scheduler->graph);
+    crm_time_free(scheduler->now);
+    free_xml(scheduler->input);
+    free_xml(scheduler->failed);
 
-    set_working_set_defaults(data_set);
+    set_working_set_defaults(scheduler);
 
-    CRM_CHECK(data_set->ordering_constraints == NULL,;
+    CRM_CHECK(scheduler->ordering_constraints == NULL,;
         );
-    CRM_CHECK(data_set->placement_constraints == NULL,;
+    CRM_CHECK(scheduler->placement_constraints == NULL,;
         );
 }
 
 /*!
- * \brief Reset a working set to default state without freeing it
+ * \brief Reset scheduler data to default state without freeing it
  *
- * \param[in,out] data_set  Working set to reset
+ * \param[in,out] scheduler  Scheduler data to reset
  */
 void
-pe_reset_working_set(pcmk_scheduler_t *data_set)
+pe_reset_working_set(pcmk_scheduler_t *scheduler)
 {
-    if (data_set == NULL) {
+    if (scheduler == NULL) {
         return;
     }
 
     crm_trace("Deleting %d ordering constraints",
-              g_list_length(data_set->ordering_constraints));
-    pe__free_ordering(data_set->ordering_constraints);
-    data_set->ordering_constraints = NULL;
+              g_list_length(scheduler->ordering_constraints));
+    pe__free_ordering(scheduler->ordering_constraints);
+    scheduler->ordering_constraints = NULL;
 
     crm_trace("Deleting %d location constraints",
-              g_list_length(data_set->placement_constraints));
-    pe__free_location(data_set->placement_constraints);
-    data_set->placement_constraints = NULL;
+              g_list_length(scheduler->placement_constraints));
+    pe__free_location(scheduler->placement_constraints);
+    scheduler->placement_constraints = NULL;
 
     crm_trace("Deleting %d colocation constraints",
-              g_list_length(data_set->colocation_constraints));
-    g_list_free_full(data_set->colocation_constraints, free);
-    data_set->colocation_constraints = NULL;
+              g_list_length(scheduler->colocation_constraints));
+    g_list_free_full(scheduler->colocation_constraints, free);
+    scheduler->colocation_constraints = NULL;
 
     crm_trace("Deleting %d ticket constraints",
-              g_list_length(data_set->ticket_constraints));
-    g_list_free_full(data_set->ticket_constraints, free);
-    data_set->ticket_constraints = NULL;
+              g_list_length(scheduler->ticket_constraints));
+    g_list_free_full(scheduler->ticket_constraints, free);
+    scheduler->ticket_constraints = NULL;
 
-    cleanup_calculations(data_set);
+    cleanup_calculations(scheduler);
 }
 
 void
-set_working_set_defaults(pcmk_scheduler_t * data_set)
+set_working_set_defaults(pcmk_scheduler_t *scheduler)
 {
-    void *priv = data_set->priv;
+    void *priv = scheduler->priv;
 
-    memset(data_set, 0, sizeof(pcmk_scheduler_t));
+    memset(scheduler, 0, sizeof(pcmk_scheduler_t));
 
-    data_set->priv = priv;
-    data_set->order_id = 1;
-    data_set->action_id = 1;
-    data_set->no_quorum_policy = pcmk_no_quorum_stop;
+    scheduler->priv = priv;
+    scheduler->order_id = 1;
+    scheduler->action_id = 1;
+    scheduler->no_quorum_policy = pcmk_no_quorum_stop;
 
-    data_set->flags = 0x0ULL;
+    scheduler->flags = 0x0ULL;
 
-    pe__set_working_set_flags(data_set,
+    pe__set_working_set_flags(scheduler,
                               pcmk_sched_symmetric_cluster
                               |pcmk_sched_stop_removed_resources
                               |pcmk_sched_cancel_removed_actions);
     if (!strcmp(PCMK__CONCURRENT_FENCING_DEFAULT, "true")) {
-        pe__set_working_set_flags(data_set, pcmk_sched_concurrent_fencing);
+        pe__set_working_set_flags(scheduler, pcmk_sched_concurrent_fencing);
     }
 }
 

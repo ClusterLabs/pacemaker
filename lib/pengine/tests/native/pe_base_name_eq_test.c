@@ -17,7 +17,7 @@
 #include <crm/pengine/pe_types.h>
 
 xmlNode *input = NULL;
-pcmk_scheduler_t *data_set = NULL;
+pcmk_scheduler_t *scheduler = NULL;
 
 pcmk_resource_t *exim_group, *promotable_0, *promotable_1, *dummy;
 pcmk_resource_t *httpd_bundle, *mysql_group_0, *mysql_group_1;
@@ -36,20 +36,20 @@ setup(void **state) {
         return 1;
     }
 
-    data_set = pe_new_working_set();
+    scheduler = pe_new_working_set();
 
-    if (data_set == NULL) {
+    if (scheduler == NULL) {
         return 1;
     }
 
-    pe__set_working_set_flags(data_set,
+    pe__set_working_set_flags(scheduler,
                               pcmk_sched_no_counts|pcmk_sched_no_compat);
-    data_set->input = input;
+    scheduler->input = input;
 
-    cluster_status(data_set);
+    cluster_status(scheduler);
 
     /* Get references to several resources we use frequently. */
-    for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
+    for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         if (strcmp(rsc->id, "dummy") == 0) {
@@ -86,7 +86,7 @@ setup(void **state) {
 
 static int
 teardown(void **state) {
-    pe_free_working_set(data_set);
+    pe_free_working_set(scheduler);
 
     return 0;
 }

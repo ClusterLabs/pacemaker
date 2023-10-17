@@ -42,7 +42,7 @@ build_node_info_list(const pcmk_resource_t *rsc)
 
 GList *
 cli_resource_search(pcmk_resource_t *rsc, const char *requested_name,
-                    pcmk_scheduler_t *data_set)
+                    pcmk_scheduler_t *scheduler)
 {
     GList *retval = NULL;
     const pcmk_resource_t *parent = pe__const_top_resource(rsc, false);
@@ -540,9 +540,9 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
 static int
 send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
                 const char *host_uname, const char *rsc_id,
-                pcmk_scheduler_t *data_set)
+                pcmk_scheduler_t *scheduler)
 {
-    pcmk__output_t *out = data_set->priv;
+    pcmk__output_t *out = scheduler->priv;
     const char *router_node = host_uname;
     const char *rsc_api_id = NULL;
     const char *rsc_long_id = NULL;
@@ -550,7 +550,7 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
     const char *rsc_provider = NULL;
     const char *rsc_type = NULL;
     bool cib_only = false;
-    pcmk_resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
+    pcmk_resource_t *rsc = pe_find_resource(scheduler->resources, rsc_id);
 
     if (rsc == NULL) {
         out->err(out, "Resource %s not found", rsc_id);
@@ -570,7 +570,7 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
     }
 
     {
-        pcmk_node_t *node = pe_find_node(data_set->nodes, host_uname);
+        pcmk_node_t *node = pe_find_node(scheduler->nodes, host_uname);
 
         if (node == NULL) {
             out->err(out, "Node %s not found", host_uname);
@@ -636,7 +636,7 @@ rsc_fail_name(const pcmk_resource_t *rsc)
 // \return Standard Pacemaker return code
 static int
 clear_rsc_history(pcmk_ipc_api_t *controld_api, const char *host_uname,
-                  const char *rsc_id, pcmk_scheduler_t *data_set)
+                  const char *rsc_id, pcmk_scheduler_t *scheduler)
 {
     int rc = pcmk_rc_ok;
 
@@ -645,7 +645,7 @@ clear_rsc_history(pcmk_ipc_api_t *controld_api, const char *host_uname,
      * single operation, we might wind up with a wrong idea of the current
      * resource state, and we might not re-probe the resource.
      */
-    rc = send_lrm_rsc_op(controld_api, false, host_uname, rsc_id, data_set);
+    rc = send_lrm_rsc_op(controld_api, false, host_uname, rsc_id, scheduler);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
@@ -663,7 +663,7 @@ clear_rsc_history(pcmk_ipc_api_t *controld_api, const char *host_uname,
 static int
 clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
                    const char *node_name, const char *rsc_id, const char *operation,
-                   const char *interval_spec, pcmk_scheduler_t *data_set)
+                   const char *interval_spec, pcmk_scheduler_t *scheduler)
 {
     int rc = pcmk_rc_ok;
     const char *failed_value = NULL;
@@ -684,7 +684,7 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
                                           crm_parse_interval_spec(interval_spec));
     }
 
-    for (xmlNode *xml_op = pcmk__xml_first_child(data_set->failed);
+    for (xmlNode *xml_op = pcmk__xml_first_child(scheduler->failed);
          xml_op != NULL;
          xml_op = pcmk__xml_next(xml_op)) {
 
@@ -698,7 +698,7 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
         if (rsc_id) {
             pcmk_resource_t *fail_rsc = NULL;
 
-            fail_rsc = pe_find_resource_with_flags(data_set->resources,
+            fail_rsc = pe_find_resource_with_flags(scheduler->resources,
                                                    failed_id,
                                                    pcmk_rsc_match_history
                                                    |pcmk_rsc_match_anon_basename);
@@ -733,7 +733,7 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
     g_hash_table_iter_init(&iter, rscs);
     while (g_hash_table_iter_next(&iter, (gpointer *) &failed_id, NULL)) {
         crm_debug("Erasing failures of %s on %s", failed_id, node_name);
-        rc = clear_rsc_history(controld_api, node_name, failed_id, data_set);
+        rc = clear_rsc_history(controld_api, node_name, failed_id, scheduler);
         if (rc != pcmk_rc_ok) {
             return rc;
         }
@@ -767,9 +767,9 @@ int
 cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
                     const pcmk_resource_t *rsc, const char *operation,
                     const char *interval_spec, bool just_failures,
-                    pcmk_scheduler_t *data_set, gboolean force)
+                    pcmk_scheduler_t *scheduler, gboolean force)
 {
-    pcmk__output_t *out = data_set->priv;
+    pcmk__output_t *out = scheduler->priv;
     int rc = pcmk_rc_ok;
     pcmk_node_t *node = NULL;
 
@@ -782,7 +782,8 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
             const pcmk_resource_t *child = (const pcmk_resource_t *) lpc->data;
 
             rc = cli_resource_delete(controld_api, host_uname, child, operation,
-                                     interval_spec, just_failures, data_set, force);
+                                     interval_spec, just_failures, scheduler,
+                                     force);
             if (rc != pcmk_rc_ok) {
                 return rc;
             }
@@ -794,7 +795,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
         GList *nodes = g_hash_table_get_values(rsc->known_on);
 
         if(nodes == NULL && force) {
-            nodes = pcmk__copy_node_list(data_set->nodes, false);
+            nodes = pcmk__copy_node_list(scheduler->nodes, false);
 
         } else if(nodes == NULL && rsc->exclusive_discover) {
             GHashTableIter iter;
@@ -817,7 +818,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
             if (node->details->online) {
                 rc = cli_resource_delete(controld_api, node->details->uname, rsc,
                                          operation, interval_spec, just_failures,
-                                         data_set, force);
+                                         scheduler, force);
             }
             if (rc != pcmk_rc_ok) {
                 g_list_free(nodes);
@@ -829,7 +830,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
         return pcmk_rc_ok;
     }
 
-    node = pe_find_node(data_set->nodes, host_uname);
+    node = pe_find_node(scheduler->nodes, host_uname);
 
     if (node == NULL) {
         out->err(out, "Unable to clean up %s because node %s not found",
@@ -858,9 +859,9 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
 
     if (just_failures) {
         rc = clear_rsc_failures(out, controld_api, host_uname, rsc->id, operation,
-                                interval_spec, data_set);
+                                interval_spec, scheduler);
     } else {
-        rc = clear_rsc_history(controld_api, host_uname, rsc->id, data_set);
+        rc = clear_rsc_history(controld_api, host_uname, rsc->id, scheduler);
     }
     if (rc != pcmk_rc_ok) {
         out->err(out, "Cleaned %s failures on %s, but unable to clean history: %s",
@@ -875,9 +876,9 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
 int
 cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
                 const char *operation, const char *interval_spec,
-                pcmk_scheduler_t *data_set)
+                pcmk_scheduler_t *scheduler)
 {
-    pcmk__output_t *out = data_set->priv;
+    pcmk__output_t *out = scheduler->priv;
     int rc = pcmk_rc_ok;
     int attr_options = pcmk__node_attr_none;
     const char *display_name = node_name? node_name : "all nodes";
@@ -889,7 +890,7 @@ cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
     }
 
     if (node_name) {
-        pcmk_node_t *node = pe_find_node(data_set->nodes, node_name);
+        pcmk_node_t *node = pe_find_node(scheduler->nodes, node_name);
 
         if (node == NULL) {
             out->err(out, "Unknown node: %s", node_name);
@@ -910,18 +911,18 @@ cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
 
     if (node_name) {
         rc = clear_rsc_failures(out, controld_api, node_name, NULL,
-                                operation, interval_spec, data_set);
+                                operation, interval_spec, scheduler);
         if (rc != pcmk_rc_ok) {
             out->err(out, "Cleaned all resource failures on %s, but unable to clean history: %s",
                      node_name, pcmk_rc_str(rc));
             return rc;
         }
     } else {
-        for (GList *iter = data_set->nodes; iter; iter = iter->next) {
+        for (GList *iter = scheduler->nodes; iter; iter = iter->next) {
             pcmk_node_t *node = (pcmk_node_t *) iter->data;
 
             rc = clear_rsc_failures(out, controld_api, node->details->uname, NULL,
-                                    operation, interval_spec, data_set);
+                                    operation, interval_spec, scheduler);
             if (rc != pcmk_rc_ok) {
                 out->err(out, "Cleaned all resource failures on all nodes, but unable to clean history: %s",
                          pcmk_rc_str(rc));
@@ -1051,15 +1052,15 @@ cli_resource_check(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node)
 // \return Standard Pacemaker return code
 int
 cli_resource_fail(pcmk_ipc_api_t *controld_api, const char *host_uname,
-                  const char *rsc_id, pcmk_scheduler_t *data_set)
+                  const char *rsc_id, pcmk_scheduler_t *scheduler)
 {
     crm_notice("Failing %s on %s", rsc_id, host_uname);
-    return send_lrm_rsc_op(controld_api, true, host_uname, rsc_id, data_set);
+    return send_lrm_rsc_op(controld_api, true, host_uname, rsc_id, scheduler);
 }
 
 static GHashTable *
 generate_resource_params(pcmk_resource_t *rsc, pcmk_node_t *node,
-                         pcmk_scheduler_t *data_set)
+                         pcmk_scheduler_t *scheduler)
 {
     GHashTable *params = NULL;
     GHashTable *meta = NULL;
@@ -1070,7 +1071,7 @@ generate_resource_params(pcmk_resource_t *rsc, pcmk_node_t *node,
 
     combined = pcmk__strkey_table(free, free);
 
-    params = pe_rsc_params(rsc, node, data_set);
+    params = pe_rsc_params(rsc, node, scheduler);
     if (params != NULL) {
         g_hash_table_iter_init(&iter, params);
         while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
@@ -1079,7 +1080,7 @@ generate_resource_params(pcmk_resource_t *rsc, pcmk_node_t *node,
     }
 
     meta = pcmk__strkey_table(free, free);
-    get_meta_attributes(meta, rsc, node, data_set);
+    get_meta_attributes(meta, rsc, node, scheduler);
     if (meta != NULL) {
         g_hash_table_iter_init(&iter, meta);
         while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
@@ -1181,45 +1182,45 @@ static void display_list(pcmk__output_t *out, GList *items, const char *tag)
 
 /*!
  * \internal
- * \brief Upgrade XML to latest schema version and use it as working set input
+ * \brief Upgrade XML to latest schema version and use it as scheduler input
  *
- * This also updates the working set timestamp to the current time.
+ * This also updates the scheduler timestamp to the current time.
  *
- * \param[in,out] data_set  Working set instance to update
- * \param[in,out] xml       XML to use as input
+ * \param[in,out] scheduler  Scheduler data to update
+ * \param[in,out] xml        XML to use as input
  *
  * \return Standard Pacemaker return code
  * \note On success, caller is responsible for freeing memory allocated for
- *       data_set->now.
+ *       scheduler->now.
  * \todo This follows the example of other callers of cli_config_update()
  *       and returns ENOKEY ("Required key not available") if that fails,
  *       but perhaps pcmk_rc_schema_validation would be better in that case.
  */
 int
-update_working_set_xml(pcmk_scheduler_t *data_set, xmlNode **xml)
+update_scheduler_input(pcmk_scheduler_t *scheduler, xmlNode **xml)
 {
     if (cli_config_update(xml, NULL, FALSE) == FALSE) {
         return ENOKEY;
     }
-    data_set->input = *xml;
-    data_set->now = crm_time_new(NULL);
+    scheduler->input = *xml;
+    scheduler->now = crm_time_new(NULL);
     return pcmk_rc_ok;
 }
 
 /*!
  * \internal
- * \brief Update a working set's XML input based on a CIB query
+ * \brief Update scheduler XML input based on a CIB query
  *
- * \param[in] data_set   Data set instance to initialize
+ * \param[in] scheduler  Scheduler data to initialize
  * \param[in] cib        Connection to the CIB manager
  *
  * \return Standard Pacemaker return code
  * \note On success, caller is responsible for freeing memory allocated for
- *       data_set->input and data_set->now.
+ *       scheduler->input and scheduler->now.
  */
 static int
-update_working_set_from_cib(pcmk__output_t *out, pcmk_scheduler_t *data_set,
-                            cib_t *cib)
+update_scheduler_input_to_cib(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
+                              cib_t *cib)
 {
     xmlNode *cib_xml_copy = NULL;
     int rc = pcmk_rc_ok;
@@ -1231,7 +1232,7 @@ update_working_set_from_cib(pcmk__output_t *out, pcmk_scheduler_t *data_set,
         out->err(out, "Could not obtain the current CIB: %s (%d)", pcmk_rc_str(rc), rc);
         return rc;
     }
-    rc = update_working_set_xml(data_set, &cib_xml_copy);
+    rc = update_scheduler_input(scheduler, &cib_xml_copy);
     if (rc != pcmk_rc_ok) {
         out->err(out, "Could not upgrade the current CIB XML");
         free_xml(cib_xml_copy);
@@ -1243,19 +1244,19 @@ update_working_set_from_cib(pcmk__output_t *out, pcmk_scheduler_t *data_set,
 
 // \return Standard Pacemaker return code
 static int
-update_dataset(cib_t *cib, pcmk_scheduler_t *data_set, bool simulate)
+update_dataset(cib_t *cib, pcmk_scheduler_t *scheduler, bool simulate)
 {
     char *pid = NULL;
     char *shadow_file = NULL;
     cib_t *shadow_cib = NULL;
     int rc = pcmk_rc_ok;
 
-    pcmk__output_t *out = data_set->priv;
+    pcmk__output_t *out = scheduler->priv;
 
-    pe_reset_working_set(data_set);
-    pe__set_working_set_flags(data_set,
+    pe_reset_working_set(scheduler);
+    pe__set_working_set_flags(scheduler,
                               pcmk_sched_no_counts|pcmk_sched_no_compat);
-    rc = update_working_set_from_cib(out, data_set, cib);
+    rc = update_scheduler_input_to_cib(out, scheduler, cib);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
@@ -1273,7 +1274,7 @@ update_dataset(cib_t *cib, pcmk_scheduler_t *data_set, bool simulate)
             goto done;
         }
 
-        rc = write_xml_file(data_set->input, shadow_file, FALSE);
+        rc = write_xml_file(scheduler->input, shadow_file, FALSE);
 
         if (rc < 0) {
             out->err(out, "Could not populate shadow cib: %s (%d)", pcmk_strerror(rc), rc);
@@ -1288,23 +1289,23 @@ update_dataset(cib_t *cib, pcmk_scheduler_t *data_set, bool simulate)
             goto done;
         }
 
-        pcmk__schedule_actions(data_set->input,
+        pcmk__schedule_actions(scheduler->input,
                                pcmk_sched_no_counts|pcmk_sched_no_compat,
-                               data_set);
+                               scheduler);
 
         prev_quiet = out->is_quiet(out);
         out->quiet = true;
-        pcmk__simulate_transition(data_set, shadow_cib, NULL);
+        pcmk__simulate_transition(scheduler, shadow_cib, NULL);
         out->quiet = prev_quiet;
 
-        rc = update_dataset(shadow_cib, data_set, false);
+        rc = update_dataset(shadow_cib, scheduler, false);
 
     } else {
-        cluster_status(data_set);
+        cluster_status(scheduler);
     }
 
   done:
-    /* Do not free data_set->input here, we need rsc->xml to be valid later on */
+    // Do not free scheduler->input here, we need rsc->xml to be valid later on
     cib_delete(shadow_cib);
     free(pid);
 
@@ -1371,7 +1372,7 @@ max_rsc_stop_timeout(pcmk_resource_t *rsc)
  * \internal
  * \brief Find a reasonable waiting time for stopping any one resource in a list
  *
- * \param[in,out] data_set   Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  * \param[in]     resources  List of names of resources that will be stopped
  *
  * \return Rough estimate of a reasonable time to wait (in seconds) to stop any
@@ -1383,13 +1384,13 @@ max_rsc_stop_timeout(pcmk_resource_t *rsc)
  *       if the resources in question are actually being started.
  */
 static int
-wait_time_estimate(pcmk_scheduler_t *data_set, const GList *resources)
+wait_time_estimate(pcmk_scheduler_t *scheduler, const GList *resources)
 {
     int max_delay = 0;
 
     // Find maximum stop timeout in milliseconds
     for (const GList *item = resources; item != NULL; item = item->next) {
-        pcmk_resource_t *rsc = pe_find_resource(data_set->resources,
+        pcmk_resource_t *rsc = pe_find_resource(scheduler->resources,
                                                 (const char *) item->data);
         int delay = max_rsc_stop_timeout(rsc);
 
@@ -1453,7 +1454,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
     GList *current_active = NULL;
     GList *restart_target_active = NULL;
 
-    pcmk_scheduler_t *data_set = NULL;
+    pcmk_scheduler_t *scheduler = NULL;
     pcmk_resource_t *parent = uber_parent(rsc);
 
     bool running = false;
@@ -1533,23 +1534,23 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
       - Allow a --no-deps option (aka. --force-restart)
     */
 
-    data_set = pe_new_working_set();
-    if (data_set == NULL) {
+    scheduler = pe_new_working_set();
+    if (scheduler == NULL) {
         rc = errno;
-        out->err(out, "Could not allocate working set: %s", pcmk_rc_str(rc));
+        out->err(out, "Could not allocate scheduler data: %s", pcmk_rc_str(rc));
         goto done;
     }
 
-    data_set->priv = out;
-    rc = update_dataset(cib, data_set, false);
+    scheduler->priv = out;
+    rc = update_dataset(cib, scheduler, false);
 
     if(rc != pcmk_rc_ok) {
         out->err(out, "Could not get new resource list: %s (%d)", pcmk_rc_str(rc), rc);
         goto done;
     }
 
-    restart_target_active = get_active_resources(host, data_set->resources);
-    current_active = get_active_resources(host, data_set->resources);
+    restart_target_active = get_active_resources(host, scheduler->resources);
+    current_active = get_active_resources(host, scheduler->resources);
 
     dump_list(current_active, "Origin");
 
@@ -1585,13 +1586,13 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         goto done;
     }
 
-    rc = update_dataset(cib, data_set, true);
+    rc = update_dataset(cib, scheduler, true);
     if(rc != pcmk_rc_ok) {
         out->err(out, "Could not determine which resources would be stopped");
         goto failure;
     }
 
-    target_active = get_active_resources(host, data_set->resources);
+    target_active = get_active_resources(host, scheduler->resources);
     dump_list(target_active, "Target");
 
     list_delta = pcmk__subtract_lists(current_active, target_active, (GCompareFunc) strcmp);
@@ -1602,7 +1603,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
     while (list_delta != NULL) {
         before = g_list_length(list_delta);
         if(timeout_ms == 0) {
-            step_timeout_s = wait_time_estimate(data_set, list_delta)
+            step_timeout_s = wait_time_estimate(scheduler, list_delta)
                              / sleep_interval;
         }
 
@@ -1613,7 +1614,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                 timeout -= sleep_interval;
                 crm_trace("%ds remaining", timeout);
             }
-            rc = update_dataset(cib, data_set, FALSE);
+            rc = update_dataset(cib, scheduler, FALSE);
             if(rc != pcmk_rc_ok) {
                 out->err(out, "Could not determine which resources were stopped");
                 goto failure;
@@ -1623,7 +1624,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                 g_list_free_full(current_active, free);
                 current_active = NULL;
             }
-            current_active = get_active_resources(host, data_set->resources);
+            current_active = get_active_resources(host, scheduler->resources);
             g_list_free(list_delta);
             list_delta = NULL;
             list_delta = pcmk__subtract_lists(current_active, target_active, (GCompareFunc) strcmp);
@@ -1676,7 +1677,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
     while (waiting_for_starts(list_delta, rsc, host)) {
         before = g_list_length(list_delta);
         if(timeout_ms == 0) {
-            step_timeout_s = wait_time_estimate(data_set, list_delta)
+            step_timeout_s = wait_time_estimate(scheduler, list_delta)
                              / sleep_interval;
         }
 
@@ -1689,7 +1690,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                 crm_trace("%ds remaining", timeout);
             }
 
-            rc = update_dataset(cib, data_set, false);
+            rc = update_dataset(cib, scheduler, false);
             if(rc != pcmk_rc_ok) {
                 out->err(out, "Could not determine which resources were started");
                 goto failure;
@@ -1703,7 +1704,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
             /* It's OK if dependent resources moved to a different node,
              * so we check active resources on all nodes.
              */
-            current_active = get_active_resources(NULL, data_set->resources);
+            current_active = get_active_resources(NULL, scheduler->resources);
             g_list_free(list_delta);
             list_delta = pcmk__subtract_lists(target_active, current_active, (GCompareFunc) strcmp);
             dump_list(current_active, "Current");
@@ -1752,7 +1753,7 @@ done:
     }
     free(rsc_id);
     free(lookup_id);
-    pe_free_working_set(data_set);
+    pe_free_working_set(scheduler);
     return rc;
 }
 
@@ -1837,15 +1838,15 @@ print_pending_actions(pcmk__output_t *out, GList *actions)
 int
 wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
 {
-    pcmk_scheduler_t *data_set = NULL;
+    pcmk_scheduler_t *scheduler = NULL;
     int rc = pcmk_rc_ok;
     int timeout_s = timeout_ms? ((timeout_ms + 999) / 1000) : WAIT_DEFAULT_TIMEOUT_S;
     time_t expire_time = time(NULL) + timeout_s;
     time_t time_diff;
     bool printed_version_warning = out->is_quiet(out); // i.e. don't print if quiet
 
-    data_set = pe_new_working_set();
-    if (data_set == NULL) {
+    scheduler = pe_new_working_set();
+    if (scheduler == NULL) {
         return ENOMEM;
     }
 
@@ -1856,8 +1857,8 @@ wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
         if (time_diff > 0) {
             crm_info("Waiting up to %lld seconds for cluster actions to complete", (long long) time_diff);
         } else {
-            print_pending_actions(out, data_set->actions);
-            pe_free_working_set(data_set);
+            print_pending_actions(out, scheduler->actions);
+            pe_free_working_set(scheduler);
             return ETIME;
         }
         if (rc == pcmk_rc_ok) { /* this avoids sleep on first loop iteration */
@@ -1865,15 +1866,15 @@ wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
         }
 
         /* Get latest transition graph */
-        pe_reset_working_set(data_set);
-        rc = update_working_set_from_cib(out, data_set, cib);
+        pe_reset_working_set(scheduler);
+        rc = update_scheduler_input_to_cib(out, scheduler, cib);
         if (rc != pcmk_rc_ok) {
-            pe_free_working_set(data_set);
+            pe_free_working_set(scheduler);
             return rc;
         }
-        pcmk__schedule_actions(data_set->input,
+        pcmk__schedule_actions(scheduler->input,
                                pcmk_sched_no_counts|pcmk_sched_no_compat,
-                               data_set);
+                               scheduler);
 
         if (!printed_version_warning) {
             /* If the DC has a different version than the local node, the two
@@ -1884,7 +1885,7 @@ wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
              * wait as a new controller operation that would be forwarded to the
              * DC. However, that would have potential problems of its own.
              */
-            const char *dc_version = g_hash_table_lookup(data_set->config_hash,
+            const char *dc_version = g_hash_table_lookup(scheduler->config_hash,
                                                          "dc-version");
 
             if (!pcmk__str_eq(dc_version, PACEMAKER_VERSION "-" BUILD_VERSION, pcmk__str_casei)) {
@@ -1894,9 +1895,9 @@ wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
             }
         }
 
-    } while (actions_are_pending(data_set->actions));
+    } while (actions_are_pending(scheduler->actions));
 
-    pe_free_working_set(data_set);
+    pe_free_working_set(scheduler);
     return rc;
 }
 
@@ -2054,10 +2055,10 @@ done:
 crm_exit_t
 cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
                      const char *rsc_action, GHashTable *override_hash,
-                     int timeout_ms, cib_t *cib, pcmk_scheduler_t *data_set,
+                     int timeout_ms, cib_t *cib, pcmk_scheduler_t *scheduler,
                      int resource_verbose, gboolean force, int check_level)
 {
-    pcmk__output_t *out = data_set->priv;
+    pcmk__output_t *out = scheduler->priv;
     crm_exit_t exit_code = CRM_EX_OK;
     const char *rid = NULL;
     const char *rtype = NULL;
@@ -2068,7 +2069,7 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
     if (pcmk__strcase_any_of(rsc_action, "force-start", "force-demote",
                                     "force-promote", NULL)) {
         if(pe_rsc_is_clone(rsc)) {
-            GList *nodes = cli_resource_search(rsc, requested_name, data_set);
+            GList *nodes = cli_resource_search(rsc, requested_name, scheduler);
             if(nodes != NULL && force == FALSE) {
                 out->err(out, "It is not safe to %s %s here: the cluster claims it is already active",
                          rsc_action, rsc->id);
@@ -2099,10 +2100,11 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
     rtype = crm_element_value(rsc->xml, XML_ATTR_TYPE);
 
     params = generate_resource_params(rsc, NULL /* @TODO use local node */,
-                                      data_set);
+                                      scheduler);
 
     if (timeout_ms == 0) {
-        timeout_ms = pe_get_configured_timeout(rsc, get_action(rsc_action), data_set);
+        timeout_ms = pe_get_configured_timeout(rsc, get_action(rsc_action),
+                                               scheduler);
     }
 
     rid = pe_rsc_is_anon_clone(rsc->parent)? requested_name : rsc->id;
@@ -2117,14 +2119,14 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
 int
 cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
                   const char *host_name, const char *move_lifetime, cib_t *cib,
-                  int cib_options, pcmk_scheduler_t *data_set,
+                  int cib_options, pcmk_scheduler_t *scheduler,
                   gboolean promoted_role_only, gboolean force)
 {
-    pcmk__output_t *out = data_set->priv;
+    pcmk__output_t *out = scheduler->priv;
     int rc = pcmk_rc_ok;
     unsigned int count = 0;
     pcmk_node_t *current = NULL;
-    pcmk_node_t *dest = pe_find_node(data_set->nodes, host_name);
+    pcmk_node_t *dest = pe_find_node(scheduler->nodes, host_name);
     bool cur_is_dest = false;
 
     if (dest == NULL) {
@@ -2191,10 +2193,11 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
     }
 
     /* Clear any previous prefer constraints across all nodes. */
-    cli_resource_clear(rsc_id, NULL, data_set->nodes, cib, cib_options, false, force);
+    cli_resource_clear(rsc_id, NULL, scheduler->nodes, cib, cib_options, false,
+                       force);
 
     /* Clear any previous ban constraints on 'dest'. */
-    cli_resource_clear(rsc_id, dest->details->uname, data_set->nodes, cib,
+    cli_resource_clear(rsc_id, dest->details->uname, scheduler->nodes, cib,
                        cib_options, TRUE, force);
 
     /* Record an explicit preference for 'dest' */

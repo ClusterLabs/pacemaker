@@ -93,14 +93,14 @@ attr_in_string(xmlAttrPtr a, void *user_data)
  * \param[in]     xml_op       Unused
  * \param[in]     op_version   CRM feature set to use for digest calculation
  * \param[in]     overrides    Key/value table to override resource parameters
- * \param[in,out] data_set     Cluster working set
+ * \param[in,out] scheduler    Scheduler data
  */
 static void
 calculate_main_digest(op_digest_cache_t *data, pcmk_resource_t *rsc,
                       const pcmk_node_t *node, GHashTable *params,
                       const char *task, guint *interval_ms,
                       const xmlNode *xml_op, const char *op_version,
-                      GHashTable *overrides, pcmk_scheduler_t *data_set)
+                      GHashTable *overrides, pcmk_scheduler_t *scheduler)
 {
     pcmk_action_t *action = NULL;
 
@@ -109,7 +109,7 @@ calculate_main_digest(op_digest_cache_t *data, pcmk_resource_t *rsc,
     /* REMOTE_CONTAINER_HACK: Allow Pacemaker Remote nodes to run containers
      * that themselves are Pacemaker Remote nodes
      */
-    (void) pe__add_bundle_remote_name(rsc, data_set, data->params_all,
+    (void) pe__add_bundle_remote_name(rsc, scheduler, data->params_all,
                                       XML_RSC_ATTR_REMOTE_RA_ADDR);
 
     // If interval was overridden, reset it
@@ -128,7 +128,7 @@ calculate_main_digest(op_digest_cache_t *data, pcmk_resource_t *rsc,
     }
 
     action = custom_action(rsc, pcmk__op_key(rsc->id, task, *interval_ms),
-                           task, node, TRUE, FALSE, data_set);
+                           task, node, TRUE, FALSE, scheduler);
     if (overrides != NULL) {
         g_hash_table_foreach(overrides, hash2field, data->params_all);
     }
@@ -288,7 +288,7 @@ calculate_restart_digest(op_digest_cache_t *data, const xmlNode *xml_op,
  * \param[in]     xml_op       XML of operation in CIB status (if available)
  * \param[in]     overrides    Key/value table to override resource parameters
  * \param[in]     calc_secure  Whether to calculate secure digest
- * \param[in,out] data_set     Cluster working set
+ * \param[in,out] scheduler    Scheduler data
  *
  * \return Pointer to new digest cache entry (or NULL on memory error)
  * \note It is the caller's responsibility to free the result using
@@ -298,7 +298,7 @@ op_digest_cache_t *
 pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
                       guint *interval_ms, const pcmk_node_t *node,
                       const xmlNode *xml_op, GHashTable *overrides,
-                      bool calc_secure, pcmk_scheduler_t *data_set)
+                      bool calc_secure, pcmk_scheduler_t *scheduler)
 {
     op_digest_cache_t *data = calloc(1, sizeof(op_digest_cache_t));
     const char *op_version = NULL;
@@ -314,17 +314,17 @@ pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
         op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
     }
 
-    if (op_version == NULL && data_set != NULL && data_set->input != NULL) {
-        op_version = crm_element_value(data_set->input, XML_ATTR_CRM_VERSION);
+    if (op_version == NULL && scheduler != NULL && scheduler->input != NULL) {
+        op_version = crm_element_value(scheduler->input, XML_ATTR_CRM_VERSION);
     }
 
     if (op_version == NULL) {
         op_version = CRM_FEATURE_SET;
     }
 
-    params = pe_rsc_params(rsc, node, data_set);
+    params = pe_rsc_params(rsc, node, scheduler);
     calculate_main_digest(data, rsc, node, params, task, interval_ms, xml_op,
-                          op_version, overrides, data_set);
+                          op_version, overrides, scheduler);
     if (calc_secure) {
         calculate_secure_digest(data, rsc, params, xml_op, op_version,
                                 overrides);
@@ -343,14 +343,14 @@ pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
  * \param[in,out] node         Node action was performed on
  * \param[in]     xml_op       XML of operation in CIB status (if available)
  * \param[in]     calc_secure  Whether to calculate secure digest
- * \param[in,out] data_set     Cluster working set
+ * \param[in,out] scheduler    Scheduler data
  *
  * \return Pointer to node's digest cache entry
  */
 static op_digest_cache_t *
 rsc_action_digest(pcmk_resource_t *rsc, const char *task, guint interval_ms,
                   pcmk_node_t *node, const xmlNode *xml_op,
-                  bool calc_secure, pcmk_scheduler_t *data_set)
+                  bool calc_secure, pcmk_scheduler_t *scheduler)
 {
     op_digest_cache_t *data = NULL;
     char *key = pcmk__op_key(rsc->id, task, interval_ms);
@@ -358,7 +358,7 @@ rsc_action_digest(pcmk_resource_t *rsc, const char *task, guint interval_ms,
     data = g_hash_table_lookup(node->details->digest_cache, key);
     if (data == NULL) {
         data = pe__calculate_digests(rsc, task, &interval_ms, node, xml_op,
-                                     NULL, calc_secure, data_set);
+                                     NULL, calc_secure, scheduler);
         CRM_ASSERT(data != NULL);
         g_hash_table_insert(node->details->digest_cache, strdup(key), data);
     }
@@ -370,16 +370,16 @@ rsc_action_digest(pcmk_resource_t *rsc, const char *task, guint interval_ms,
  * \internal
  * \brief Calculate operation digests and compare against an XML history entry
  *
- * \param[in,out] rsc       Resource to check
- * \param[in]     xml_op    Resource history XML
- * \param[in,out] node      Node to use for digest calculation
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] rsc        Resource to check
+ * \param[in]     xml_op     Resource history XML
+ * \param[in,out] node       Node to use for digest calculation
+ * \param[in,out] scheduler  Scheduler data
  *
  * \return Pointer to node's digest cache entry, with comparison result set
  */
 op_digest_cache_t *
 rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
-                      pcmk_node_t *node, pcmk_scheduler_t *data_set)
+                      pcmk_node_t *node, pcmk_scheduler_t *scheduler)
 {
     op_digest_cache_t *data = NULL;
     guint interval_ms = 0;
@@ -397,8 +397,9 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
 
     crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
     data = rsc_action_digest(rsc, task, interval_ms, node, xml_op,
-                             pcmk_is_set(data_set->flags, pcmk_sched_sanitized),
-                             data_set);
+                             pcmk_is_set(scheduler->flags,
+                                         pcmk_sched_sanitized),
+                             scheduler);
 
     if (digest_restart && data->digest_restart_calc && strcmp(data->digest_restart_calc, digest_restart) != 0) {
         pe_rsc_info(rsc, "Parameters to %ums-interval %s action for %s on %s "
@@ -521,22 +522,22 @@ unfencing_digest_matches(const char *rsc_id, const char *agent,
  * \internal
  * \brief Calculate fence device digests and digest comparison result
  *
- * \param[in,out] rsc       Fence device resource
- * \param[in]     agent     Fence device's agent type
- * \param[in,out] node      Node with digest cache to use
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] rsc        Fence device resource
+ * \param[in]     agent      Fence device's agent type
+ * \param[in,out] node       Node with digest cache to use
+ * \param[in,out] scheduler  Scheduler data
  *
  * \return Node's digest cache entry
  */
 op_digest_cache_t *
 pe__compare_fencing_digest(pcmk_resource_t *rsc, const char *agent,
-                           pcmk_node_t *node, pcmk_scheduler_t *data_set)
+                           pcmk_node_t *node, pcmk_scheduler_t *scheduler)
 {
     const char *node_summary = NULL;
 
     // Calculate device's current parameter digests
     op_digest_cache_t *data = rsc_action_digest(rsc, STONITH_DIGEST_TASK, 0U,
-                                                node, NULL, TRUE, data_set);
+                                                node, NULL, TRUE, scheduler);
 
     // Check whether node has special unfencing summary node attribute
     node_summary = pe_node_attribute_raw(node, CRM_ATTR_DIGESTS_ALL);
@@ -557,8 +558,8 @@ pe__compare_fencing_digest(pcmk_resource_t *rsc, const char *agent,
     if (unfencing_digest_matches(rsc->id, agent, data->digest_secure_calc,
                                  node_summary)) {
         data->rc = pcmk__digest_match;
-        if (!pcmk__is_daemon && data_set->priv != NULL) {
-            pcmk__output_t *out = data_set->priv;
+        if (!pcmk__is_daemon && scheduler->priv != NULL) {
+            pcmk__output_t *out = scheduler->priv;
             out->info(out, "Only 'private' parameters to %s "
                       "for unfencing %s changed", rsc->id,
                       pe__node_name(node));
@@ -568,11 +569,11 @@ pe__compare_fencing_digest(pcmk_resource_t *rsc, const char *agent,
 
     // Parameters don't match
     data->rc = pcmk__digest_mismatch;
-    if (pcmk_is_set(data_set->flags, pcmk_sched_sanitized)
+    if (pcmk_is_set(scheduler->flags, pcmk_sched_sanitized)
         && (data->digest_secure_calc != NULL)) {
 
-        if (data_set->priv != NULL) {
-            pcmk__output_t *out = data_set->priv;
+        if (scheduler->priv != NULL) {
+            pcmk__output_t *out = scheduler->priv;
             char *digest = create_unfencing_summary(rsc->id, agent,
                                                     data->digest_secure_calc);
 
