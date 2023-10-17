@@ -26,7 +26,7 @@ _Noreturn void pcmk__cli_help(char cmd);
  */
 
 const char *pcmk__env_option(const char *option);
-void pcmk__set_env_option(const char *option, const char *value);
+void pcmk__set_env_option(const char *option, const char *value, bool compat);
 bool pcmk__env_option_enabled(const char *daemon, const char *option);
 
 

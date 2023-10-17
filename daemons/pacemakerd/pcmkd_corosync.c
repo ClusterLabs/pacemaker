@@ -327,10 +327,10 @@ pacemakerd_read_config(void)
 
     crm_info("Reading configuration for %s stack",
              name_for_cluster_type(stack));
-    pcmk__set_env_option(PCMK__ENV_CLUSTER_TYPE, "corosync");
+    pcmk__set_env_option(PCMK__ENV_CLUSTER_TYPE, "corosync", true);
 
     // @COMPAT Drop at 3.0.0; added unused in 1.1.9
-    pcmk__set_env_option(PCMK__ENV_QUORUM_TYPE, "corosync");
+    pcmk__set_env_option(PCMK__ENV_QUORUM_TYPE, "corosync", true);
 
     // If debug logging is not configured, check whether corosync has it
     if (pcmk__env_option(PCMK__ENV_DEBUG) == NULL) {
@@ -339,13 +339,13 @@ pacemakerd_read_config(void)
         get_config_opt(config, local_handle, "logging.debug", &debug_enabled, "off");
 
         if (crm_is_true(debug_enabled)) {
-            pcmk__set_env_option(PCMK__ENV_DEBUG, "1");
+            pcmk__set_env_option(PCMK__ENV_DEBUG, "1", true);
             if (get_crm_log_level() < LOG_DEBUG) {
                 set_crm_log_level(LOG_DEBUG);
             }
 
         } else {
-            pcmk__set_env_option(PCMK__ENV_DEBUG, "0");
+            pcmk__set_env_option(PCMK__ENV_DEBUG, "0", true);
         }
 
         free(debug_enabled);

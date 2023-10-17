@@ -91,15 +91,23 @@ pcmk__env_option(const char *option)
 /*!
  * \brief Set or unset a Pacemaker environment variable option
  *
- * Set an environment variable option with both a PCMK_ and (for
- * backward compatibility) HA_ prefix.
+ * Set an environment variable option with a \c "PCMK_" prefix and optionally
+ * an \c "HA_" prefix for backward compatibility.
  *
  * \param[in] option  Environment variable name (without prefix)
  * \param[in] value   New value (or NULL to unset)
+ * \param[in] compat  If false and \p value is not \c NULL, set only
+ *                    \c "PCMK_<option>"; otherwise, set (or unset) both
+ *                    \c "PCMK_<option>" and \c "HA_<option>"
+ *
+ * \note \p compat is ignored when \p value is \c NULL. A \c NULL \p value
+ *       means we're unsetting \p option. \c pcmk__get_env_option() checks for
+ *       both prefixes, so we want to clear them both.
  */
 void
-pcmk__set_env_option(const char *option, const char *value)
+pcmk__set_env_option(const char *option, const char *value, bool compat)
 {
+    // @COMPAT Drop support for "HA_" options eventually
     const char *const prefixes[] = {"PCMK_", "HA_"};
     char env_name[NAME_MAX];
 
@@ -131,6 +139,11 @@ pcmk__set_env_option(const char *option, const char *value)
         if (rv < 0) {
             crm_err("Failed to %sset %s: %s", (value != NULL)? "" : "un",
                     env_name, strerror(errno));
+        }
+
+        if (!compat && (value != NULL)) {
+            // For set, don't proceed to HA_<option> unless compat is enabled
+            break;
         }
     }
 }

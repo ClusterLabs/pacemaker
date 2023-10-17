@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,18 +20,18 @@ bad_input_string(void **state)
     // Never call setenv()
     pcmk__mock_setenv = true;
 
-    pcmk__set_env_option(NULL, "new_value");
-    pcmk__set_env_option("", "new_value");
-    pcmk__set_env_option("name=val", "new_value");
+    pcmk__set_env_option(NULL, "new_value", true);
+    pcmk__set_env_option("", "new_value", true);
+    pcmk__set_env_option("name=val", "new_value", true);
 
     pcmk__mock_setenv = false;
 
     // Never call unsetenv()
     pcmk__mock_unsetenv = true;
 
-    pcmk__set_env_option(NULL, NULL);
-    pcmk__set_env_option("", NULL);
-    pcmk__set_env_option("name=val", NULL);
+    pcmk__set_env_option(NULL, NULL, true);
+    pcmk__set_env_option("", NULL, true);
+    pcmk__set_env_option("name=val", NULL, true);
 
     pcmk__mock_unsetenv = false;
 }
@@ -53,11 +53,11 @@ input_too_long_for_both(void **state)
 
     // Never call setenv() or unsetenv()
     pcmk__mock_setenv = true;
-    pcmk__set_env_option(long_opt, "new_value");
+    pcmk__set_env_option(long_opt, "new_value", true);
     pcmk__mock_setenv = false;
 
     pcmk__mock_unsetenv = true;
-    pcmk__set_env_option(long_opt, NULL);
+    pcmk__set_env_option(long_opt, NULL, true);
     pcmk__mock_unsetenv = false;
 }
 
@@ -87,7 +87,7 @@ input_too_long_for_pcmk(void **state)
     expect_string(__wrap_setenv, value, "new_value");
     expect_value(__wrap_setenv, overwrite, 1);
     will_return(__wrap_setenv, 0);
-    pcmk__set_env_option(long_opt, "new_value");
+    pcmk__set_env_option(long_opt, "new_value", true);
 
     pcmk__mock_setenv = false;
 
@@ -96,7 +96,7 @@ input_too_long_for_pcmk(void **state)
 
     expect_string(__wrap_unsetenv, name, buf);
     will_return(__wrap_unsetenv, 0);
-    pcmk__set_env_option(long_opt, NULL);
+    pcmk__set_env_option(long_opt, NULL, true);
 
     pcmk__mock_unsetenv = false;
 }
@@ -115,7 +115,7 @@ valid_inputs_set(void **state)
     expect_string(__wrap_setenv, value, "new_value");
     expect_value(__wrap_setenv, overwrite, 1);
     will_return(__wrap_setenv, 0);
-    pcmk__set_env_option("env_var", "new_value");
+    pcmk__set_env_option("env_var", "new_value", true);
 
     // Empty string is also a valid value
     expect_string(__wrap_setenv, name, "PCMK_env_var");
@@ -126,7 +126,7 @@ valid_inputs_set(void **state)
     expect_string(__wrap_setenv, value, "");
     expect_value(__wrap_setenv, overwrite, 1);
     will_return(__wrap_setenv, 0);
-    pcmk__set_env_option("env_var", "");
+    pcmk__set_env_option("env_var", "", true);
 
     pcmk__mock_setenv = false;
 }
@@ -141,7 +141,33 @@ valid_inputs_unset(void **state)
     will_return(__wrap_unsetenv, 0);
     expect_string(__wrap_unsetenv, name, "HA_env_var");
     will_return(__wrap_unsetenv, 0);
-    pcmk__set_env_option("env_var", NULL);
+    pcmk__set_env_option("env_var", NULL, true);
+
+    pcmk__mock_unsetenv = false;
+}
+
+static void
+disable_compat(void **state)
+{
+    // Make sure we set only "PCMK_<option>" and not "HA_<option>"
+    pcmk__mock_setenv = true;
+
+    expect_string(__wrap_setenv, name, "PCMK_env_var");
+    expect_string(__wrap_setenv, value, "new_value");
+    expect_value(__wrap_setenv, overwrite, 1);
+    will_return(__wrap_setenv, 0);
+    pcmk__set_env_option("env_var", "new_value", false);
+
+    pcmk__mock_setenv = false;
+
+    // Make sure we clear both "PCMK_<option>" and "HA_<option>"
+    pcmk__mock_unsetenv = true;
+
+    expect_string(__wrap_unsetenv, name, "PCMK_env_var");
+    will_return(__wrap_unsetenv, 0);
+    expect_string(__wrap_unsetenv, name, "HA_env_var");
+    will_return(__wrap_unsetenv, 0);
+    pcmk__set_env_option("env_var", NULL, false);
 
     pcmk__mock_unsetenv = false;
 }
@@ -151,4 +177,5 @@ PCMK__UNIT_TEST(NULL, NULL,
                 cmocka_unit_test(input_too_long_for_both),
                 cmocka_unit_test(input_too_long_for_pcmk),
                 cmocka_unit_test(valid_inputs_set),
-                cmocka_unit_test(valid_inputs_unset))
+                cmocka_unit_test(valid_inputs_unset),
+                cmocka_unit_test(disable_compat))

@@ -297,7 +297,7 @@ setenv_logfile(const char *filename)
 {
     // Some resource agents will log only if environment variable is set
     if (pcmk__env_option(PCMK__ENV_LOGFILE) == NULL) {
-        pcmk__set_env_option(PCMK__ENV_LOGFILE, filename);
+        pcmk__set_env_option(PCMK__ENV_LOGFILE, filename, true);
     }
 }
 
@@ -912,7 +912,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
         } else {
             facility = PCMK__VALUE_NONE;
         }
-        pcmk__set_env_option(PCMK__ENV_LOGFACILITY, facility);
+        pcmk__set_env_option(PCMK__ENV_LOGFACILITY, facility, true);
     }
 
     if (pcmk__str_eq(facility, PCMK__VALUE_NONE, pcmk__str_casei)) {

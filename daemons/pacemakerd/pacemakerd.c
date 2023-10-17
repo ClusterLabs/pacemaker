@@ -92,7 +92,7 @@ pid_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **er
 static gboolean
 standby_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     options.standby = TRUE;
-    pcmk__set_env_option("node_start_state", "standby");
+    pcmk__set_env_option("node_start_state", "standby", false);
     return TRUE;
 }
 
@@ -313,7 +313,7 @@ main(int argc, char **argv)
     }
 
     // @COMPAT Drop at 3.0.0; likely last used in 1.1.24
-    pcmk__set_env_option(PCMK__ENV_MCP, "true");
+    pcmk__set_env_option(PCMK__ENV_MCP, "true", true);
 
     if (options.shutdown) {
         pcmk__cli_init_logging("pacemakerd", args->verbosity);
