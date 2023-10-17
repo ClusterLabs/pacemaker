@@ -25,7 +25,8 @@
 
 static int last_cib_op_done = 0;
 
-static void write_attribute(attribute_t *a, bool ignore_delay);
+static void write_attribute(attribute_t *a, bool ignore_delay,
+                            bool skip_shutdown);
 
 static void
 attrd_cib_destroy_cb(gpointer user_data)
@@ -275,7 +276,7 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *use
             /* We deferred a write of a new update because this update was in
              * progress. Write out the new value without additional delay.
              */
-            write_attribute(a, false);
+            write_attribute(a, false, false);
 
         /* We're re-attempting a write because the original failed; delay
          * the next attempt so we don't potentially flood the CIB manager
@@ -474,12 +475,13 @@ attrd_add_timer(const char *id, int timeout_ms, attribute_t *attr)
  * \internal
  * \brief Write an attribute's values to the CIB if appropriate
  *
- * \param[in,out] a             Attribute to write
- * \param[in]     ignore_delay  If true, write attribute now regardless of any
- *                              configured delay
+ * \param[in,out] a              Attribute to write
+ * \param[in]     ignore_delay   If true, write attribute now regardless of any
+ * \param[in]     skip_shutdown  If true, don't write values of "shutdown"
+ *                               attributes for other nodes
  */
 static void
-write_attribute(attribute_t *a, bool ignore_delay)
+write_attribute(attribute_t *a, bool ignore_delay, bool skip_shutdown)
 {
     int private_updates = 0, cib_updates = 0;
     attribute_value_t *v = NULL;
@@ -573,6 +575,13 @@ write_attribute(attribute_t *a, bool ignore_delay)
             continue;
         }
 
+        if (skip_shutdown
+            && pcmk__str_eq(a->id, XML_CIB_ATTR_SHUTDOWN, pcmk__str_none)
+            && !pcmk__str_eq(v->nodename, attrd_cluster->uname,
+                             pcmk__str_casei)) {
+            continue;
+        }
+
         // Update this value as part of the CIB transaction we're building
         rc = add_attr_update(a, v->current, peer->uuid);
         if (rc != pcmk_rc_ok) {
@@ -652,11 +661,6 @@ attrd_write_attributes(uint32_t options)
               pcmk_is_set(options, attrd_write_all)? "all" : "changed");
     g_hash_table_iter_init(&iter, attributes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & a)) {
-        if (pcmk_is_set(options, attrd_write_skip_shutdown)
-            && pcmk__str_eq(a->id, XML_CIB_ATTR_SHUTDOWN, pcmk__str_none)) {
-            continue;
-        }
-
         if (!pcmk_is_set(options, attrd_write_all) && a->unknown_peer_uuids) {
             // Try writing this attribute again, in case peer ID was learned
             a->changed = true;
@@ -672,7 +676,8 @@ attrd_write_attributes(uint32_t options)
                 // Always ignore delay when forced write flag is set
                 ignore_delay = true;
             }
-            write_attribute(a, ignore_delay);
+            write_attribute(a, ignore_delay,
+                            pcmk_is_set(options, attrd_write_skip_shutdown));
         } else {
             crm_trace("Skipping unchanged attribute %s", a->id);
         }
@@ -683,7 +688,7 @@ void
 attrd_write_or_elect_attribute(attribute_t *a)
 {
     if (attrd_election_won()) {
-        write_attribute(a, false);
+        write_attribute(a, false, false);
     } else {
         attrd_start_election_if_needed();
     }
