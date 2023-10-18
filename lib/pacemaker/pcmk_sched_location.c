@@ -165,16 +165,11 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
         case pcmk__combine_or:
             break;
 
-        default:
-            /* @COMPAT When we can break behavioral backward compatibility,
-             * return false
-             */
-            pcmk__config_warn("Location constraint rule %s has invalid "
-                              PCMK_XA_BOOLEAN_OP " value '%s', using default "
-                              "'" PCMK_VALUE_AND "'",
-                              rule_id, boolean);
-            combine = pcmk__combine_and;
-            break;
+        default: // Not possible with schema validation enabled
+            pcmk__config_err("Ignoring location constraint rule %s "
+                             "because '%s' is not a valid " PCMK_XA_BOOLEAN_OP,
+                             rule_id, boolean);
+            return false;
     }
 
     location_rule = pcmk__new_location(rule_id, rsc, 0, discovery, NULL);
@@ -270,13 +265,11 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
         if (parse_location_role(role_spec, &role)) {
             crm_trace("Setting location constraint %s role filter: %s",
                       id, role_spec);
-        } else {
-            /* @COMPAT The previous behavior of creating the constraint ignoring
-             * the role is retained for now, but we should ignore the entire
-             * constraint when we can break backward compatibility.
-             */
-            pcmk__config_err("Ignoring role in constraint %s: "
-                             "Invalid value '%s'", id, role_spec);
+        } else { // Not possible with schema validation enabled
+            pcmk__config_err("Ignoring location constraint %s "
+                             "because '%s' is not a valid " PCMK_XA_ROLE,
+                             id, role_spec);
+            return;
         }
 
         location = pcmk__new_location(id, rsc, score_i, discovery, match);
