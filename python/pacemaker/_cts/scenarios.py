@@ -211,9 +211,6 @@ class Scenario:
         if not test.setup(nodechoice):
             self._cm.log("Setup failed")
             ret = False
-        elif not test.can_run_now(nodechoice):
-            self._cm.log("Skipped")
-            test.skipped()
         else:
             did_run = True
             ret = test(nodechoice)

@@ -143,11 +143,6 @@ class Reattach(CTSTest):
 
         return self.success()
 
-    def can_run_now(self, node):
-        """ Return True if we can meaningfully run right now """
-
-        return True
-
     def __call__(self, node):
         """ Perform this test """
 

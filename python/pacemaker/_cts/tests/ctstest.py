@@ -245,14 +245,6 @@ class CTSTest:
 
         return True
 
-    def can_run_now(self, node):
-        """ Return True if we can meaningfully run right now """
-
-        # node is used in subclasses
-        # pylint: disable=unused-argument
-
-        return True
-
     @property
     def errors_to_ignore(self):
         """ Return list of errors which should be ignored """
