@@ -614,7 +614,7 @@ struct qb_ipcs_poll_handlers gio_poll_funcs = {
 static enum qb_ipc_type
 pick_ipc_type(enum qb_ipc_type requested)
 {
-    const char *env = getenv("PCMK_ipc_type");
+    const char *env = pcmk__env_option(PCMK__ENV_IPC_TYPE);
 
     if (env && strcmp("shared-mem", env) == 0) {
         return QB_IPC_SHM;
