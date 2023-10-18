@@ -89,6 +89,18 @@ parse_location_role(const char *role_spec, enum rsc_role_e *role)
     return true;
 }
 
+/*!
+ * \internal
+ * \brief Generate a location constraint from a rule
+ *
+ * \param[in,out] rsc            Resource that constraint is for
+ * \param[in]     rule_xml       Rule XML (sub-element of location constraint)
+ * \param[in]     discovery      Value of resource-discovery for constraint
+ * \param[out]    next_change    Where to set when rule evaluation will change
+ * \param[in]     re_match_data  Regular expression submatches
+ *
+ * \return New location constraint if rule is valid, otherwise NULL
+ */
 static pcmk__location_t *
 generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
                        const char *discovery, crm_time_t *next_change,
@@ -112,14 +124,13 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
 
     rule_xml = expand_idref(rule_xml, rsc->cluster->input);
     if (rule_xml == NULL) {
+        pcmk__config_err("Ignoring rule %s: Invalid " XML_ATTR_IDREF, rule_id);
         return NULL;
     }
 
     rule_id = crm_element_value(rule_xml, XML_ATTR_ID);
     boolean = crm_element_value(rule_xml, XML_RULE_ATTR_BOOLEAN_OP);
     role_spec = crm_element_value(rule_xml, XML_RULE_ATTR_ROLE);
-
-    crm_trace("Processing rule: %s", rule_id);
 
     if (parse_location_role(role_spec, &role)) {
         crm_trace("Setting rule %s role filter to %s", rule_id, role_spec);
@@ -129,6 +140,8 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
         return NULL;
     }
 
+    crm_trace("Processing location constraint rule %s", rule_id);
+
     score = crm_element_value(rule_xml, XML_RULE_ATTR_SCORE);
     if (score == NULL) {
         score = crm_element_value(rule_xml, XML_RULE_ATTR_SCORE_ATTRIBUTE);
@@ -136,14 +149,14 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
             raw_score = false;
         }
     }
+
     if (pcmk__str_eq(boolean, "or", pcmk__str_casei)) {
         do_and = false;
     }
 
     location_rule = pcmk__new_location(rule_id, rsc, 0, discovery, NULL);
-
     if (location_rule == NULL) {
-        return NULL;
+        return NULL; // Error already logged
     }
     location_rule->role_filter = role;
 
@@ -219,12 +232,12 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
 
     location_rule->nodes = nodes;
     if (location_rule->nodes == NULL) {
-        crm_trace("No matching nodes for rule %s", rule_id);
+        crm_trace("No matching nodes for location constraint rule %s", rule_id);
         return NULL;
+    } else {
+        crm_trace("Location constraint rule %s matched %d nodes",
+                  rule_id, g_list_length(location_rule->nodes));
     }
-
-    crm_trace("%s: %d nodes matched",
-              rule_id, g_list_length(location_rule->nodes));
     return location_rule;
 }
 
@@ -275,6 +288,9 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
         }
 
         location = pcmk__new_location(id, rsc, score_i, discovery, match);
+        if (location == NULL) {
+            return; // Error already logged
+        }
         location->role_filter = role;
 
     } else {
