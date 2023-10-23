@@ -460,7 +460,7 @@ pe__clear_failcount(pcmk_resource_t *rsc, const pcmk_node_t *node,
 
     key = pcmk__op_key(rsc->id, PCMK_ACTION_CLEAR_FAILCOUNT, 0);
     clear = custom_action(rsc, key, PCMK_ACTION_CLEAR_FAILCOUNT, node, FALSE,
-                          TRUE, scheduler);
+                          scheduler);
     add_hash_param(clear->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
     crm_notice("Clearing failure of %s on %s because %s " CRM_XS " %s",
                rsc->id, pe__node_name(node), reason, clear->uuid);

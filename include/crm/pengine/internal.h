@@ -367,33 +367,33 @@ enum rsc_role_e pcmk__role_after_failure(const pcmk_resource_t *rsc,
 
 pcmk_action_t *custom_action(pcmk_resource_t *rsc, char *key, const char *task,
                              const pcmk_node_t *on_node, gboolean optional,
-                             gboolean foo, pcmk_scheduler_t *scheduler);
+                             pcmk_scheduler_t *scheduler);
 
 #  define delete_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_DELETE, 0)
 #  define delete_action(rsc, node, optional) custom_action(		\
 		rsc, delete_key(rsc), PCMK_ACTION_DELETE, node, \
-		optional, TRUE, rsc->cluster);
+		optional, rsc->cluster);
 
 #  define stop_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_STOP, 0)
 #  define stop_action(rsc, node, optional) custom_action(			\
 		rsc, stop_key(rsc), PCMK_ACTION_STOP, node,		\
-		optional, TRUE, rsc->cluster);
+		optional, rsc->cluster);
 
 #  define reload_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_RELOAD_AGENT, 0)
 #  define start_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_START, 0)
 #  define start_action(rsc, node, optional) custom_action(		\
 		rsc, start_key(rsc), PCMK_ACTION_START, node,           \
-		optional, TRUE, rsc->cluster)
+		optional, rsc->cluster)
 
 #  define promote_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_PROMOTE, 0)
 #  define promote_action(rsc, node, optional) custom_action(		\
 		rsc, promote_key(rsc), PCMK_ACTION_PROMOTE, node,	\
-		optional, TRUE, rsc->cluster)
+		optional, rsc->cluster)
 
 #  define demote_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_DEMOTE, 0)
 #  define demote_action(rsc, node, optional) custom_action(		\
 		rsc, demote_key(rsc), PCMK_ACTION_DEMOTE, node, \
-		optional, TRUE, rsc->cluster)
+		optional, rsc->cluster)
 
 extern int pe_get_configured_timeout(pcmk_resource_t *rsc, const char *action,
                                      pcmk_scheduler_t *scheduler);

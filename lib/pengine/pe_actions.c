@@ -193,7 +193,6 @@ pcmk__find_action_config(const pcmk_resource_t *rsc, const char *key,
  * \param[in,out] rsc        Resource that action is for (if any)
  * \param[in]     node       Node that action is on (if any)
  * \param[in]     optional   Whether action should be considered optional
- * \param[in]     for_graph  Whether action should be recorded in transition graph
  * \param[in,out] scheduler  Scheduler data
  *
  * \return Newly allocated action
@@ -202,8 +201,7 @@ pcmk__find_action_config(const pcmk_resource_t *rsc, const char *key,
  */
 static pcmk_action_t *
 new_action(char *key, const char *task, pcmk_resource_t *rsc,
-           const pcmk_node_t *node, bool optional, bool for_graph,
-           pcmk_scheduler_t *scheduler)
+           const pcmk_node_t *node, bool optional, pcmk_scheduler_t *scheduler)
 {
     pcmk_action_t *action = calloc(1, sizeof(pcmk_action_t));
 
@@ -239,20 +237,18 @@ new_action(char *key, const char *task, pcmk_resource_t *rsc,
         unpack_operation(action, action->op_entry, interval_ms);
     }
 
-    if (for_graph) {
-        pe_rsc_trace(rsc, "Created %s action %d (%s): %s for %s on %s",
-                     (optional? "optional" : "required"),
-                     scheduler->action_id, key, task,
-                     ((rsc == NULL)? "no resource" : rsc->id),
-                     pe__node_name(node));
-        action->id = scheduler->action_id++;
+    pe_rsc_trace(rsc, "Created %s action %d (%s): %s for %s on %s",
+                 (optional? "optional" : "required"),
+                 scheduler->action_id, key, task,
+                 ((rsc == NULL)? "no resource" : rsc->id),
+                 pe__node_name(node));
+    action->id = scheduler->action_id++;
 
-        scheduler->actions = g_list_prepend(scheduler->actions, action);
-        if (rsc == NULL) {
-            add_singleton(scheduler, action);
-        } else {
-            rsc->actions = g_list_prepend(rsc->actions, action);
-        }
+    scheduler->actions = g_list_prepend(scheduler->actions, action);
+    if (rsc == NULL) {
+        add_singleton(scheduler, action);
+    } else {
+        rsc->actions = g_list_prepend(rsc->actions, action);
     }
     return action;
 }
@@ -348,13 +344,12 @@ effective_quorum_policy(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
  * \brief Update a resource action's runnable flag
  *
  * \param[in,out] action     Action to update
- * \param[in]     for_graph  Whether action should be recorded in transition graph
  * \param[in,out] scheduler  Scheduler data
  *
  * \note This may also schedule fencing if a stop is unrunnable.
  */
 static void
-update_resource_action_runnable(pcmk_action_t *action, bool for_graph,
+update_resource_action_runnable(pcmk_action_t *action,
                                 pcmk_scheduler_t *scheduler)
 {
     if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
@@ -371,11 +366,9 @@ update_resource_action_runnable(pcmk_action_t *action, bool for_graph,
                && (!pe__is_guest_node(action->node)
                    || action->node->details->remote_requires_reset)) {
         pe__clear_action_flags(action, pcmk_action_runnable);
-        do_crm_log((for_graph? LOG_WARNING: LOG_TRACE),
-                   "%s on %s is unrunnable (node is offline)",
+        do_crm_log(LOG_WARNING, "%s on %s is unrunnable (node is offline)",
                    action->uuid, pe__node_name(action->node));
         if (pcmk_is_set(action->rsc->flags, pcmk_rsc_managed)
-            && for_graph
             && pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_casei)
             && !(action->node->details->unclean)) {
             pe_fence_node(scheduler, action->node, "stop is unrunnable", false);
@@ -384,7 +377,7 @@ update_resource_action_runnable(pcmk_action_t *action, bool for_graph,
     } else if (!pcmk_is_set(action->flags, pcmk_action_on_dc)
                && action->node->details->pending) {
         pe__clear_action_flags(action, pcmk_action_runnable);
-        do_crm_log((for_graph? LOG_WARNING: LOG_TRACE),
+        do_crm_log(LOG_WARNING,
                    "Action %s on %s is unrunnable (node is pending)",
                    action->uuid, pe__node_name(action->node));
 
@@ -1139,32 +1132,26 @@ unpack_operation(pcmk_action_t *action, const xmlNode *xml_obj,
  * \param[in]     task         Action name (must be non-NULL)
  * \param[in]     on_node      Node that action is on (if any)
  * \param[in]     optional     Whether action should be considered optional
- * \param[in]     save_action  Whether action should be recorded in transition graph
  * \param[in,out] scheduler    Scheduler data
  *
  * \return Action object corresponding to arguments (guaranteed not to be
  *         \c NULL)
- * \note This function takes ownership of (and might free) \p key. If
- *       \p save_action is true, \p scheduler will own the returned action,
- *       otherwise it is the caller's responsibility to free the return value
- *       with pe_free_action().
+ * \note This function takes ownership of (and might free) \p key, and
+ *       \p scheduler takes ownership of the returned action (the caller should
+ *       not free it).
  */
 pcmk_action_t *
 custom_action(pcmk_resource_t *rsc, char *key, const char *task,
               const pcmk_node_t *on_node, gboolean optional,
-              gboolean save_action, pcmk_scheduler_t *scheduler)
+              pcmk_scheduler_t *scheduler)
 {
     pcmk_action_t *action = NULL;
 
     CRM_ASSERT((key != NULL) && (task != NULL) && (scheduler != NULL));
 
-    if (save_action) {
-        action = find_existing_action(key, rsc, on_node, scheduler);
-    }
-
+    action = find_existing_action(key, rsc, on_node, scheduler);
     if (action == NULL) {
-        action = new_action(key, task, rsc, on_node, optional, save_action,
-                            scheduler);
+        action = new_action(key, task, rsc, on_node, optional, scheduler);
     } else {
         free(key);
     }
@@ -1185,11 +1172,8 @@ custom_action(pcmk_resource_t *rsc, char *key, const char *task,
             pe__set_action_flags(action, pcmk_action_attrs_evaluated);
         }
 
-        update_resource_action_runnable(action, save_action, scheduler);
-
-        if (save_action) {
-            update_resource_flags_for_action(rsc, action);
-        }
+        update_resource_action_runnable(action, scheduler);
+        update_resource_flags_for_action(rsc, action);
     }
 
     if (action->extra == NULL) {
@@ -1205,8 +1189,7 @@ get_pseudo_op(const char *name, pcmk_scheduler_t *scheduler)
     pcmk_action_t *op = lookup_singleton(scheduler, name);
 
     if (op == NULL) {
-        op = custom_action(NULL, strdup(name), name, NULL, TRUE, TRUE,
-                           scheduler);
+        op = custom_action(NULL, strdup(name), name, NULL, TRUE, scheduler);
         pe__set_action_flags(op, pcmk_action_pseudo|pcmk_action_runnable);
     }
     return op;
@@ -1323,7 +1306,7 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
     stonith_op = lookup_singleton(scheduler, op_key);
     if(stonith_op == NULL) {
         stonith_op = custom_action(NULL, op_key, PCMK_ACTION_STONITH, node,
-                                   TRUE, TRUE, scheduler);
+                                   TRUE, scheduler);
 
         add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET, node->details->uname);
         add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET_UUID, node->details->id);
@@ -1710,7 +1693,7 @@ pe__clear_resource_history(pcmk_resource_t *rsc, const pcmk_node_t *node)
     CRM_ASSERT((rsc != NULL) && (node != NULL));
 
     custom_action(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_LRM_DELETE, 0),
-                  PCMK_ACTION_LRM_DELETE, node, FALSE, TRUE, rsc->cluster);
+                  PCMK_ACTION_LRM_DELETE, node, FALSE, rsc->cluster);
 }
 
 #define sort_return(an_int, why) do {					\
@@ -1884,7 +1867,7 @@ pe__new_rsc_pseudo_action(pcmk_resource_t *rsc, const char *task, bool optional,
     CRM_ASSERT((rsc != NULL) && (task != NULL));
 
     action = custom_action(rsc, pcmk__op_key(rsc->id, task, 0), task, NULL,
-                           optional, TRUE, rsc->cluster);
+                           optional, rsc->cluster);
     pe__set_action_flags(action, pcmk_action_pseudo);
     if (runnable) {
         pe__set_action_flags(action, pcmk_action_runnable);

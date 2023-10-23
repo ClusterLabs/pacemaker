@@ -133,7 +133,7 @@ probe_action(pcmk_resource_t *rsc, pcmk_node_t *node)
     crm_debug("Scheduling probe of %s %s on %s",
               role2text(rsc->role), rsc->id, pe__node_name(node));
 
-    probe = custom_action(rsc, key, PCMK_ACTION_MONITOR, node, FALSE, TRUE,
+    probe = custom_action(rsc, key, PCMK_ACTION_MONITOR, node, FALSE,
                           rsc->cluster);
     pe__clear_action_flags(probe, pcmk_action_optional);
 
@@ -891,8 +891,7 @@ pcmk__schedule_probes(pcmk_scheduler_t *scheduler)
             probe_op = custom_action(NULL,
                                      crm_strdup_printf("%s-%s", CRM_OP_REPROBE,
                                                        node->details->uname),
-                                     CRM_OP_REPROBE, node, FALSE, TRUE,
-                                     scheduler);
+                                     CRM_OP_REPROBE, node, FALSE, scheduler);
             add_hash_param(probe_op->meta, XML_ATTR_TE_NOWAIT,
                            XML_BOOLEAN_TRUE);
             continue;

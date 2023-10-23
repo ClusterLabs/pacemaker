@@ -2494,7 +2494,7 @@ process_recurring(pcmk_node_t *node, pcmk_resource_t *rsc,
         /* create the action */
         key = pcmk__op_key(rsc->id, task, interval_ms);
         pe_rsc_trace(rsc, "Creating %s on %s", key, pe__node_name(node));
-        custom_action(rsc, key, task, node, TRUE, TRUE, scheduler);
+        custom_action(rsc, key, task, node, TRUE, scheduler);
     }
 }
 

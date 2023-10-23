@@ -100,7 +100,7 @@ static pcmk_action_t *
 create_group_pseudo_op(pcmk_resource_t *group, const char *action)
 {
     pcmk_action_t *op = custom_action(group, pcmk__op_key(group->id, action, 0),
-                                      action, NULL, TRUE, TRUE, group->cluster);
+                                      action, NULL, TRUE, group->cluster);
     pe__set_action_flags(op, pcmk_action_pseudo|pcmk_action_runnable);
     return op;
 }

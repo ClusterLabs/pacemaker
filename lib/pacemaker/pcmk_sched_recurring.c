@@ -307,7 +307,7 @@ recurring_op_for_active(pcmk_resource_t *rsc, pcmk_action_t *start,
                  op->id, rsc->id, role2text(rsc->next_role),
                  pe__node_name(node));
 
-    mon = custom_action(rsc, strdup(op->key), op->name, node, is_optional, TRUE,
+    mon = custom_action(rsc, strdup(op->key), op->name, node, is_optional,
                         rsc->cluster);
 
     if (!pcmk_is_set(start->flags, pcmk_action_runnable)) {
@@ -524,7 +524,7 @@ recurring_op_for_inactive(pcmk_resource_t *rsc, const pcmk_node_t *node,
                      op->key, op->id, rsc->id, pe__node_name(stop_node));
 
         stopped_mon = custom_action(rsc, strdup(op->key), op->name, stop_node,
-                                    is_optional, TRUE, rsc->cluster);
+                                    is_optional, rsc->cluster);
 
         pe__add_action_expected_result(stopped_mon, CRM_EX_NOT_RUNNING);
 
@@ -635,7 +635,7 @@ pcmk__new_cancel_action(pcmk_resource_t *rsc, const char *task,
     // @TODO dangerous if possible to schedule another action with this key
     key = pcmk__op_key(rsc->id, task, interval_ms);
 
-    cancel_op = custom_action(rsc, key, PCMK_ACTION_CANCEL, node, FALSE, TRUE,
+    cancel_op = custom_action(rsc, key, PCMK_ACTION_CANCEL, node, FALSE,
                               rsc->cluster);
 
     pcmk__str_update(&cancel_op->task, PCMK_ACTION_CANCEL);
@@ -700,7 +700,7 @@ pcmk__reschedule_recurring(pcmk_resource_t *rsc, const char *task,
     trigger_unfencing(rsc, node, "Device parameters changed (reschedule)",
                       NULL, rsc->cluster);
     op = custom_action(rsc, pcmk__op_key(rsc->id, task, interval_ms),
-                       task, node, TRUE, TRUE, rsc->cluster);
+                       task, node, TRUE, rsc->cluster);
     pe__set_action_flags(op, pcmk_action_reschedule);
 }
 

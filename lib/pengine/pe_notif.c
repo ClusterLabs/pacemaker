@@ -289,7 +289,7 @@ new_notify_pseudo_action(pcmk_resource_t *rsc, const pcmk_action_t *action,
                            pcmk__notify_key(rsc->id, notif_type, action->task),
                            notif_action, NULL,
                            pcmk_is_set(action->flags, pcmk_action_optional),
-                           TRUE, rsc->cluster);
+                           rsc->cluster);
     pe__set_action_flags(notify, pcmk_action_pseudo);
     add_hash_param(notify->meta, "notify_key_type", notif_type);
     add_hash_param(notify->meta, "notify_key_operation", action->task);
@@ -347,7 +347,7 @@ new_notify_action(pcmk_resource_t *rsc, const pcmk_node_t *node,
     key = pcmk__notify_key(rsc->id, value, task);
     notify_action = custom_action(rsc, key, op->task, node,
                                   pcmk_is_set(op->flags, pcmk_action_optional),
-                                  TRUE, rsc->cluster);
+                                  rsc->cluster);
 
     // Add meta-data to notify action
     g_hash_table_foreach(op->meta, copy_meta_to_notify, notify_action);
