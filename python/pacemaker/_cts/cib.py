@@ -109,11 +109,12 @@ class CIB:
         # so each corosync.conf "object" is one record;
         # match the "node {" record that has "ring0_addr: node_name";
         # then print the substring of that record after "nodeid:"
-        (rc, output) = self._factory.rsh(self._factory.target,
-            r"""awk -v RS="}" """
-            r"""'/^(\s*nodelist\s*{)?\s*node\s*{.*(ring0_addr|name):\s*%s(\s+|$)/"""
-            r"""{gsub(/.*nodeid:\s*/,"");gsub(/\s+.*$/,"");print}' %s"""
-            % (node_name, BuildOptions.COROSYNC_CONFIG_FILE), verbose=1)
+        awk = r"""awk -v RS="}" """ \
+              r"""'/^(\s*nodelist\s*{)?\s*node\s*{.*(ring0_addr|name):\s*%s(\s+|$)/""" \
+              r"""{gsub(/.*nodeid:\s*/,"");gsub(/\s+.*$/,"");print}' %s""" \
+              % (node_name, BuildOptions.COROSYNC_CONFIG_FILE)
+
+        (rc, output) = self._factory.rsh(self._factory.target, awk, verbose=1)
 
         if rc == 0 and len(output) == 1:
             try:
@@ -174,7 +175,7 @@ class CIB:
             # For remote node tests, a cluster node is stopped and brought back up
             # as a remote node with the name "remote-OLDNAME". To allow fencing
             # devices to fence these nodes, create a list of all possible node names.
-            all_node_names = [ prefix+n for n in self._cm.env["nodes"] for prefix in ('', 'remote-') ]
+            all_node_names = [prefix+n for n in self._cm.env["nodes"] for prefix in ('', 'remote-')]
 
             # Add all parameters specified by user
             entries = self._cm.env["stonith-params"].split(',')
@@ -186,7 +187,7 @@ class CIB:
                     continue
 
                 # Allow user to specify "all" as the node list, and expand it here
-                if name in [ "hostlist", "pcmk_host_list" ] and value == "all":
+                if name in ["hostlist", "pcmk_host_list"] and value == "all":
                     value = ' '.join(all_node_names)
 
                 st[name] = value
@@ -236,7 +237,7 @@ class CIB:
                     stt_nodes.extend([node, remote_node])
 
                 elif ftype == "levels-or ":
-                    for n in [ node, remote_node ]:
+                    for n in [node, remote_node]:
                         stl.level(1, n, "FencingFail")
                         stl.level(2, n, "Fencing")
 
@@ -248,7 +249,7 @@ class CIB:
                 stn = Nodes(self._factory)
 
                 for (node_name, node_id) in attr_nodes.items():
-                    stn.add_node(node_name, node_id, { "cts-fencing" : "levels-and" })
+                    stn.add_node(node_name, node_id, {"cts-fencing": "levels-and"})
 
                 stl.level(1, None, "FencingPass,Fencing", "cts-fencing", "levels-and")
 
@@ -323,15 +324,15 @@ class CIB:
 
         # Migrator
         # Make this slightly sticky (since we have no other location constraints) to avoid relocation during Reattach
-        m = Resource(self._factory, "migrator","Dummy",  "ocf", "pacemaker")
+        m = Resource(self._factory, "migrator", "Dummy", "ocf", "pacemaker")
         m["passwd"] = "whatever"
-        m.add_meta("resource-stickiness","1")
+        m.add_meta("resource-stickiness", "1")
         m.add_meta("allow-migrate", "1")
         m.add_op("monitor", "P10S")
         m.commit()
 
         # Ping the test exerciser
-        p = Resource(self._factory, "ping-1","ping",  "ocf", "pacemaker")
+        p = Resource(self._factory, "ping-1", "ping", "ocf", "pacemaker")
         p.add_op("monitor", "60s")
         p["host_list"] = self._cm.env["cts-exerciser"]
         p["name"] = "connected"

@@ -236,4 +236,4 @@ class Process:
         (rc, _) = self._cm.rsh(node, "killall -9 %s" % self.name)
 
         if rc != 0:
-            self._cm.log ("ERROR: Kill %s failed on node %s" % (self.name, node))
+            self._cm.log("ERROR: Kill %s failed on node %s" % (self.name, node))

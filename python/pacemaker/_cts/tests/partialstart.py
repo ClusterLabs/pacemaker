@@ -46,7 +46,9 @@ class PartialStart(CTSTest):
         if not ret:
             return self.failure("Setup failed")
 
-        watchpats = [ "pacemaker-controld.*Connecting to .* cluster infrastructure" ]
+        watchpats = [
+            "pacemaker-controld.*Connecting to .* cluster infrastructure"
+        ]
         watch = self.create_watch(watchpats, self._env["DeadTime"] + 10)
         watch.set_watch()
 
@@ -67,5 +69,7 @@ class PartialStart(CTSTest):
         """ Return list of errors which should be ignored """
 
         # We might do some fencing in the 2-node case if we make it up far enough
-        return [ r"Executing reboot fencing operation",
-                 r"Requesting fencing \([^)]+\) targeting node " ]
+        return [
+            r"Executing reboot fencing operation",
+            r"Requesting fencing \([^)]+\) targeting node "
+        ]

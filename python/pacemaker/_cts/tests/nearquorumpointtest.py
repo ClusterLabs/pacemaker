@@ -46,16 +46,16 @@ class NearQuorumPointTest(CTSTest):
         for node in self._env["nodes"]:
             action = self._env.random_gen.choice(["start", "stop"])
 
-            if action == "start" :
+            if action == "start":
                 startset.append(node)
-            elif action == "stop" :
+            elif action == "stop":
                 stopset.append(node)
 
         self.debug("start nodes:%r" % startset)
         self.debug("stop nodes:%r" % stopset)
 
         #add search patterns
-        watchpats = [ ]
+        watchpats = []
         for node in stopset:
             if self._cm.expected_status[node] == "up":
                 watchpats.append(self.templates["Pat:We_stopped"] % node)

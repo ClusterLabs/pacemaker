@@ -1,6 +1,17 @@
 """ CIB XML generator for Pacemaker's Cluster Test Suite (CTS) """
 
-__all__ = [ "Alerts", "Clone", "Expression", "FencingTopology", "Group", "Nodes", "OpDefaults", "Option", "Resource", "Rule" ]
+__all__ = [
+    "Alerts",
+    "Clone",
+    "Expression",
+    "FencingTopology",
+    "Group",
+    "Nodes",
+    "OpDefaults",
+    "Option",
+    "Resource",
+    "Rule",
+]
 __copyright__ = "Copyright 2008-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
@@ -142,7 +153,7 @@ class XmlBase:
 
         self._factory.debug("Writing out %s" % label)
 
-        fixed  = "HOME=/root CIB_file=%s" % self._factory.tmpfile
+        fixed = "HOME=/root CIB_file=%s" % self._factory.tmpfile
         fixed += " cibadmin --%s --scope %s %s --xml-text '%s'" % (operation, section, options, xml)
 
         (rc, _) = self._factory.rsh(self._factory.target, fixed)
@@ -265,8 +276,8 @@ class FencingTopology(XmlBase):
         else:
             xml_id = "%s-%s.%d" % (target_attr, target_value, index)
             child = XmlBase(self._factory, "fencing-level", xml_id, index=index, devices=devices)
-            child["target-attribute"]=target_attr
-            child["target-value"]=target_value
+            child["target-attribute"] = target_attr
+            child["target-value"] = target_value
             self.add_child(child)
 
     def commit(self):

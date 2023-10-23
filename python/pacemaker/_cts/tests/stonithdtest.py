@@ -48,16 +48,20 @@ class StonithdTest(CTSTest):
         if not ret:
             return self.failure("Setup failed")
 
-        watchpats = [ self.templates["Pat:Fencing_ok"] % node,
-                      self.templates["Pat:NodeFenced"] % node ]
+        watchpats = [
+            self.templates["Pat:Fencing_ok"] % node,
+            self.templates["Pat:NodeFenced"] % node,
+        ]
 
         if not self._env["at-boot"]:
             self.debug("Expecting %s to stay down" % node)
             self._cm.expected_status[node] = "down"
         else:
             self.debug("Expecting %s to come up again %d" % (node, self._env["at-boot"]))
-            watchpats.extend([ "%s.* S_STARTING -> S_PENDING" % node,
-                               "%s.* S_PENDING -> S_NOT_DC" % node ])
+            watchpats.extend([
+                "%s.* S_STARTING -> S_PENDING" % node,
+                "%s.* S_PENDING -> S_NOT_DC" % node,
+            ])
 
         watch = self.create_watch(watchpats, 30 + self._env["DeadTime"] + self._env["StableTime"] + self._env["StartTime"])
         watch.set_watch()
@@ -120,10 +124,12 @@ class StonithdTest(CTSTest):
     def errors_to_ignore(self):
         """ Return list of errors which should be ignored """
 
-        return [ self.templates["Pat:Fencing_start"] % ".*",
-                 self.templates["Pat:Fencing_ok"] % ".*",
-                 self.templates["Pat:Fencing_active"],
-                 r"error.*: Operation 'reboot' targeting .* by .* for stonith_admin.*: Timer expired" ]
+        return [
+            self.templates["Pat:Fencing_start"] % ".*",
+            self.templates["Pat:Fencing_ok"] % ".*",
+            self.templates["Pat:Fencing_active"],
+            r"error.*: Operation 'reboot' targeting .* by .* for stonith_admin.*: Timer expired"
+        ]
 
     def is_applicable(self):
         """ Return True if this test is applicable in the current test configuration. """
