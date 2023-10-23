@@ -1328,9 +1328,11 @@ update_dataset(cib_t *cib, pcmk_scheduler_t *scheduler, bool simulate)
 static int
 max_rsc_stop_timeout(pcmk_resource_t *rsc)
 {
-    pcmk_action_t *stop = NULL;
     long long result_ll;
     int max_delay = 0;
+    char *key = NULL;
+    xmlNode *config = NULL;
+    GHashTable *meta = NULL;
 
     if (rsc == NULL) {
         return 0;
@@ -1352,19 +1354,24 @@ max_rsc_stop_timeout(pcmk_resource_t *rsc)
         return max_delay;
     }
 
-    /* Create a (transient) instance of the resource's stop action, to fully
-     * evaluate its timeout for rules, defaults, etc.
+    // Get resource's stop action configuration from CIB
+    key = stop_key(rsc);
+    config = pcmk__find_action_config(rsc, key, true);
+    free(key);
+
+    /* Get configured timeout for stop action (fully evaluated for rules,
+     * defaults, etc.).
      *
      * @TODO This currently ignores node (which might matter for rules)
      */
-    stop = custom_action(rsc, stop_key(rsc), PCMK_ACTION_STOP, NULL, TRUE,
-                         FALSE, rsc->cluster);
-    if ((pcmk__scan_ll(g_hash_table_lookup(stop->meta, XML_ATTR_TIMEOUT),
+    meta = pcmk__unpack_action_meta(rsc, NULL, PCMK_ACTION_STOP, 0, config);
+    if ((pcmk__scan_ll(g_hash_table_lookup(meta, XML_ATTR_TIMEOUT),
                        &result_ll, -1LL) == pcmk_rc_ok)
         && (result_ll >= 0) && (result_ll <= INT_MAX)) {
         max_delay = (int) result_ll;
     }
-    pe_free_action(stop);
+    g_hash_table_destroy(meta);
+
     return max_delay;
 }
 
