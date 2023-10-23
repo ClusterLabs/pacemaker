@@ -3617,7 +3617,7 @@ unpack_rsc_op_failure(struct action_history *history, xmlNode **last_failure,
     free(last_change_s);
 
     action = custom_action(history->rsc, strdup(history->key), history->task,
-                           NULL, TRUE, FALSE, history->rsc->cluster);
+                           history->node, TRUE, FALSE, history->rsc->cluster);
     if (cmp_on_fail(*on_fail, action->on_fail) < 0) {
         pe_rsc_trace(history->rsc, "on-fail %s -> %s for %s (%s)",
                      fail2text(*on_fail), fail2text(action->on_fail),
@@ -4238,8 +4238,8 @@ get_action_on_fail(struct action_history *history)
 {
     enum action_fail_response result = pcmk_on_fail_restart;
     pcmk_action_t *action = custom_action(history->rsc, strdup(history->key),
-                                          history->task, NULL, TRUE, FALSE,
-                                          history->rsc->cluster);
+                                          history->task, history->node, TRUE,
+                                          FALSE, history->rsc->cluster);
 
     result = action->on_fail;
     pe_free_action(action);
