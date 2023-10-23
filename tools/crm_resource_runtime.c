@@ -288,7 +288,7 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
         rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc->xml, cib_options);
         rc = pcmk_legacy2rc(rc);
         if (rc == pcmk_rc_ok) {
-            out->info(out, "Set attribute: name=%s value=%s",
+            out->info(out, "Set attribute: " PCMK_XA_NAME "=%s value=%s",
                       attr_name, attr_value);
         }
         return rc;
@@ -329,8 +329,8 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
 
         switch (rc) {
             case pcmk_rc_ok:
-                crm_debug("Found a match for name=%s: " PCMK_XA_ID "=%s",
-                          attr_name, found_attr_id);
+                crm_debug("Found a match for " PCMK_XA_NAME "='%s': "
+                          PCMK_XA_ID "='%s'", attr_name, found_attr_id);
                 rsc_attr_id = found_attr_id;
                 break;
 
@@ -376,7 +376,7 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                       lookup_id, found_attr_id,
                       ((rsc_attr_set == NULL)? "" : " set="),
                       pcmk__s(rsc_attr_set, ""),
-                      ((attr_name == NULL)? "" : " name="),
+                      ((attr_name == NULL)? "" : " " PCMK_XA_NAME "="),
                       pcmk__s(attr_name, ""), attr_value);
         }
 
@@ -505,7 +505,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
                       lookup_id, found_attr_id,
                       ((attr_set == NULL)? "" : " set="),
                       pcmk__s(attr_set, ""),
-                      ((attr_name == NULL)? "" : " name="),
+                      ((attr_name == NULL)? "" : " " PCMK_XA_NAME "="),
                       pcmk__s(attr_name, ""));
         }
 

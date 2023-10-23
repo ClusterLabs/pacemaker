@@ -195,8 +195,8 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
         const char *param_name = crm_element_value(match, PCMK_XA_NAME);
 
         if (param_name == NULL) {
-            crm_warn("Metadata for %s:%s:%s has parameter without a name",
-                     rsc->standard, rsc->provider, rsc->type);
+            crm_warn("Metadata for %s:%s:%s has parameter without a "
+                     PCMK_XA_NAME, rsc->standard, rsc->provider, rsc->type);
         } else {
             struct ra_param_s *p = ra_param_from_xml(match);
 

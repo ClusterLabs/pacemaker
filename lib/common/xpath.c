@@ -359,7 +359,7 @@ pcmk__warn_multiple_name_matches(pcmk__output_t *out, xmlNode *search,
         return;
     }
 
-    out->info(out, "Multiple attributes match name=%s", name);
+    out->info(out, "Multiple attributes match " PCMK_XA_NAME "=%s", name);
     pcmk__xe_foreach_child(search, NULL, output_attr_child, out);
 }
 
