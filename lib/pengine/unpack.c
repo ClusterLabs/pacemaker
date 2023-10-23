@@ -3769,7 +3769,7 @@ unpack_rsc_op_failure(struct action_history *history,
         if (config_on_fail == pcmk_on_fail_block) {
             history->rsc->role = pcmk_role_promoted;
             pe__set_next_role(history->rsc, pcmk_role_stopped,
-                              "demote with on-fail=block");
+                              "demote with " PCMK_META_ON_FAIL "=block");
 
         } else if (history->exit_status == PCMK_OCF_NOT_RUNNING) {
             history->rsc->role = pcmk_role_stopped;
