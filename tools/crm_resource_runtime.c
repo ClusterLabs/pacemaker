@@ -329,7 +329,7 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
 
         switch (rc) {
             case pcmk_rc_ok:
-                crm_debug("Found a match for name=%s: id=%s",
+                crm_debug("Found a match for name=%s: " PCMK_XA_ID "=%s",
                           attr_name, found_attr_id);
                 rsc_attr_id = found_attr_id;
                 break;
@@ -371,7 +371,8 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
         rc = cib->cmds->modify(cib, PCMK_XE_RESOURCES, xml_top, cib_options);
         rc = pcmk_legacy2rc(rc);
         if (rc == pcmk_rc_ok) {
-            out->info(out, "Set '%s' option: id=%s%s%s%s%s value=%s",
+            out->info(out, "Set '%s' option: "
+                      PCMK_XA_ID "=%s%s%s%s%s value=%s",
                       lookup_id, found_attr_id,
                       ((rsc_attr_set == NULL)? "" : " set="),
                       pcmk__s(rsc_attr_set, ""),
@@ -500,7 +501,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
         rc = pcmk_legacy2rc(rc);
 
         if (rc == pcmk_rc_ok) {
-            out->info(out, "Deleted '%s' option: id=%s%s%s%s%s",
+            out->info(out, "Deleted '%s' option: " PCMK_XA_ID "=%s%s%s%s%s",
                       lookup_id, found_attr_id,
                       ((attr_set == NULL)? "" : " set="),
                       pcmk__s(attr_set, ""),

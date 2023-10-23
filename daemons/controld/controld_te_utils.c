@@ -191,8 +191,8 @@ node_pending_timer_popped(gpointer key)
         return FALSE;
     }
 
-    crm_warn("Node with id '%s' pending timed out (%us) on joining the process "
-             "group",
+    crm_warn("Node with " PCMK_XA_ID " '%s' pending timed out (%us) "
+             "on joining the process group",
              (const char *) key, controld_globals.node_pending_timeout);
 
     if (controld_globals.node_pending_timeout > 0) {
@@ -223,8 +223,8 @@ init_node_pending_timer(const crm_node_t *node, guint timeout)
         return;
     }
 
-    crm_notice("Waiting for pending %s with id '%s' to join the process "
-               "group (timeout=%us)",
+    crm_notice("Waiting for pending %s with " PCMK_XA_ID " '%s' "
+               "to join the process group (timeout=%us)",
                node->uname ? node->uname : "node", node->uuid,
                controld_globals.node_pending_timeout);
 

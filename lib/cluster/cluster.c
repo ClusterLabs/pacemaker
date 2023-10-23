@@ -230,8 +230,8 @@ get_node_name(uint32_t nodeid)
     }
 
     if (name == NULL) {
-        crm_notice("Could not obtain a node name for %s node with id %u",
-                   name_for_cluster_type(stack), nodeid);
+        crm_notice("Could not obtain a node name for %s node with "
+                   PCMK_XA_ID " %u", name_for_cluster_type(stack), nodeid);
     }
     return name;
 }

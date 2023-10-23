@@ -575,22 +575,23 @@ pcmk__apply_creation_acl(xmlNode *xml, bool check_top)
 
     if (pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
         if (implicitly_allowed(xml)) {
-            crm_trace("Creation of <%s> scaffolding with id=\"%s\""
+            crm_trace("Creation of <%s> scaffolding with " PCMK_XA_ID "=\"%s\""
                       " is implicitly allowed",
                       xml->name, display_id(xml));
 
         } else if (pcmk__check_acl(xml, NULL, pcmk__xf_acl_write)) {
-            crm_trace("ACLs allow creation of <%s> with id=\"%s\"",
+            crm_trace("ACLs allow creation of <%s> with " PCMK_XA_ID "=\"%s\"",
                       xml->name, display_id(xml));
 
         } else if (check_top) {
-            crm_trace("ACLs disallow creation of <%s> with id=\"%s\"",
-                      xml->name, display_id(xml));
+            crm_trace("ACLs disallow creation of <%s> with "
+                      PCMK_XA_ID "=\"%s\"", xml->name, display_id(xml));
             pcmk_free_xml_subtree(xml);
             return;
 
         } else {
-            crm_notice("ACLs would disallow creation of %s<%s> with id=\"%s\"",
+            crm_notice("ACLs would disallow creation of %s<%s> with "
+                       PCMK_XA_ID "=\"%s\"",
                        ((xml == xmlDocGetRootElement(xml->doc))? "root element " : ""),
                        xml->name, display_id(xml));
         }
