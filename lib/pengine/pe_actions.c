@@ -168,19 +168,6 @@ pcmk__find_action_config(const pcmk_resource_t *rsc, const char *key,
         }
     }
 
-    /* If the given key is for one of the many notification pseudo-actions
-     * (pre_notify_promote, etc.), the actual action name is "notify"
-     */
-    if (strstr(key, "_notify_")) {
-        retry_key = pcmk__op_key(rsc->id, PCMK_ACTION_NOTIFY, 0);
-        action_config = find_exact_action_config(rsc, retry_key,
-                                                 include_disabled);
-        free(retry_key);
-        if (action_config != NULL) {
-            return action_config;
-        }
-    }
-
     return NULL;
 }
 
@@ -234,6 +221,17 @@ new_action(char *key, const char *task, pcmk_resource_t *rsc,
 
         action->op_entry = pcmk__find_action_config(rsc, key, true);
         parse_op_key(key, NULL, NULL, &interval_ms);
+
+        /* If the given key is for one of the many notification pseudo-actions
+         * (pre_notify_promote, etc.), the actual action name is "notify"
+         */
+        if ((action->op_entry == NULL) && (strstr(key, "_notify_") != NULL)) {
+            char *notify_key = pcmk__op_key(rsc->id, PCMK_ACTION_NOTIFY, 0);
+
+            action->op_entry = find_exact_action_config(rsc, notify_key, true);
+            free(notify_key);
+        }
+
         unpack_operation(action, action->op_entry, interval_ms);
     }
 
