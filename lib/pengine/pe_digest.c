@@ -103,7 +103,6 @@ calculate_main_digest(op_digest_cache_t *data, pcmk_resource_t *rsc,
                       GHashTable *overrides, pcmk_scheduler_t *scheduler)
 {
     xmlNode *action_config = NULL;
-    char *key = NULL;
 
     data->params_all = create_xml_node(NULL, XML_TAG_PARAMS);
 
@@ -135,9 +134,7 @@ calculate_main_digest(op_digest_cache_t *data, pcmk_resource_t *rsc,
     g_hash_table_foreach(params, hash2field, data->params_all);
 
     // Find action configuration XML in CIB
-    key = pcmk__op_key(rsc->id, task, *interval_ms);
-    action_config = pcmk__find_action_config(rsc, key, true);
-    free(key);
+    action_config = pcmk__find_action_config(rsc, task, *interval_ms, true);
 
     /* Add action-specific resource instance attributes to the digest list.
      *

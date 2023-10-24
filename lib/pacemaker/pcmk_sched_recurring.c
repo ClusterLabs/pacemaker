@@ -164,17 +164,17 @@ is_recurring_history(const pcmk_resource_t *rsc, const xmlNode *xml,
     }
 
     // Only actions that are still configured and enabled matter
-    op->key = pcmk__op_key(rsc->id, op->name, op->interval_ms);
-    if (pcmk__find_action_config(rsc, op->key, false) == NULL) {
+    if (pcmk__find_action_config(rsc, op->name, op->interval_ms,
+                                 false) == NULL) {
         pe_rsc_trace(rsc,
-                     "Not counting action %s (%s) as recurring because "
-                     "it is disabled or no longer in configuration",
-                     op->id, op->key);
-        free(op->key);
-        op->key = NULL;
+                     "Ignoring %s (%s-interval %s for %s) because it is "
+                     "disabled or no longer in configuration",
+                     op->id, pcmk__readable_interval(op->interval_ms), op->name,
+                     rsc->id);
         return false;
     }
 
+    op->key = pcmk__op_key(rsc->id, op->name, op->interval_ms);
     return true;
 }
 

@@ -84,20 +84,15 @@ find_existing_action(const char *key, const pcmk_resource_t *rsc,
  * \return XML configuration of desired action if any, otherwise NULL
  */
 static xmlNode *
-find_exact_action_config(const pcmk_resource_t *rsc, const char *key,
-                         bool include_disabled)
+find_exact_action_config(const pcmk_resource_t *rsc, const char *action_name,
+                         guint interval_ms, bool include_disabled)
 {
-    xmlNode *action_config = NULL;
-
     for (xmlNode *operation = first_named_child(rsc->ops_xml, XML_ATTR_OP);
          operation != NULL; operation = crm_next_same_xml(operation)) {
 
         bool enabled = false;
-        guint interval_ms = 0;
-        char *match_key = NULL;
-        const char *name = crm_element_value(operation, "name");
-        const char *interval_spec = crm_element_value(operation,
-                                                      XML_LRM_ATTR_INTERVAL);
+        const char *config_name = NULL;
+        const char *interval_spec = NULL;
 
         // @TODO This does not consider rules, defaults, etc.
         if (!include_disabled
@@ -106,30 +101,17 @@ find_exact_action_config(const pcmk_resource_t *rsc, const char *key,
             continue;
         }
 
-        interval_ms = crm_parse_interval_spec(interval_spec);
-
-        // Try first with resource ID
-        match_key = pcmk__op_key(rsc->id, name, interval_ms);
-        if (pcmk__str_eq(key, match_key, pcmk__str_none)) {
-            action_config = operation;
-        }
-        free(match_key);
-
-        // Then again with clone_name in case ID has instance number
-        if (rsc->clone_name != NULL) {
-            match_key = pcmk__op_key(rsc->clone_name, name, interval_ms);
-            if (pcmk__str_eq(key, match_key, pcmk__str_none)) {
-                action_config = operation;
-            }
-            free(match_key);
+        interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
+        if (crm_parse_interval_spec(interval_spec) != interval_ms) {
+            continue;
         }
 
-        if (action_config != NULL) {
-            break;
+        config_name = crm_element_value(operation, "name");
+        if (pcmk__str_eq(action_name, config_name, pcmk__str_none)) {
+            return operation;
         }
     }
-
-    return action_config;
+    return NULL;
 }
 
 /*!
@@ -137,38 +119,32 @@ find_exact_action_config(const pcmk_resource_t *rsc, const char *key,
  * \brief Find the XML configuration of a resource action
  *
  * \param[in] rsc               Resource to find action configuration for
- * \param[in] key               "RSC_ACTION_INTERVAL" of action to find
+ * \param[in] action_name       Action name to search for
+ * \param[in] interval_ms       Action interval (in milliseconds) to search for
  * \param[in] include_disabled  If false, do not return disabled actions
  *
  * \return XML configuration of desired action if any, otherwise NULL
  */
 xmlNode *
-pcmk__find_action_config(const pcmk_resource_t *rsc, const char *key,
-                         bool include_disabled)
+pcmk__find_action_config(const pcmk_resource_t *rsc, const char *action_name,
+                         guint interval_ms, bool include_disabled)
 {
-    char *retry_key = NULL;
     xmlNode *action_config = NULL;
 
-    // Try exact key first
-    action_config = find_exact_action_config(rsc, key, include_disabled);
-    if (action_config != NULL) {
-        return action_config;
-    }
+    // Try requested action first
+    action_config = find_exact_action_config(rsc, action_name, interval_ms,
+                                             include_disabled);
 
     // For migrate_to and migrate_from actions, retry with "migrate"
     // @TODO This should be either documented or deprecated
-    if (pcmk__ends_with(key, "_" PCMK_ACTION_MIGRATE_TO "_0")
-        || pcmk__ends_with(key, "_" PCMK_ACTION_MIGRATE_FROM "_0")) {
-        retry_key = pcmk__op_key(rsc->id, "migrate", 0);
-        action_config = find_exact_action_config(rsc, retry_key,
+    if ((action_config == NULL)
+        && pcmk__str_any_of(action_name, PCMK_ACTION_MIGRATE_TO,
+                            PCMK_ACTION_MIGRATE_FROM, NULL)) {
+        action_config = find_exact_action_config(rsc, "migrate", 0,
                                                  include_disabled);
-        free(retry_key);
-        if (action_config != NULL) {
-            return action_config;
-        }
     }
 
-    return NULL;
+    return action_config;
 }
 
 /*!
@@ -219,17 +195,16 @@ new_action(char *key, const char *task, pcmk_resource_t *rsc,
     } else {
         guint interval_ms = 0;
 
-        action->op_entry = pcmk__find_action_config(rsc, key, true);
         parse_op_key(key, NULL, NULL, &interval_ms);
+        action->op_entry = pcmk__find_action_config(rsc, task, interval_ms,
+                                                    true);
 
         /* If the given key is for one of the many notification pseudo-actions
          * (pre_notify_promote, etc.), the actual action name is "notify"
          */
         if ((action->op_entry == NULL) && (strstr(key, "_notify_") != NULL)) {
-            char *notify_key = pcmk__op_key(rsc->id, PCMK_ACTION_NOTIFY, 0);
-
-            action->op_entry = find_exact_action_config(rsc, notify_key, true);
-            free(notify_key);
+            action->op_entry = find_exact_action_config(rsc, PCMK_ACTION_NOTIFY,
+                                                        0, true);
         }
 
         unpack_operation(action, action->op_entry, interval_ms);

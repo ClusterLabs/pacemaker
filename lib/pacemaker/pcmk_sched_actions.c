@@ -1448,28 +1448,6 @@ pcmk__output_actions(pcmk_scheduler_t *scheduler)
 
 /*!
  * \internal
- * \brief Check whether action from resource history is still in configuration
- *
- * \param[in] rsc          Resource that action is for
- * \param[in] task         Action's name
- * \param[in] interval_ms  Action's interval (in milliseconds)
- *
- * \return true if action is still in resource configuration and enabled,
- *         otherwise false
- */
-static bool
-action_in_config(const pcmk_resource_t *rsc, const char *task,
-                 guint interval_ms)
-{
-    char *key = pcmk__op_key(rsc->id, task, interval_ms);
-    bool config = (pcmk__find_action_config(rsc, key, false) != NULL);
-
-    free(key);
-    return config;
-}
-
-/*!
- * \internal
  * \brief Get action name needed to compare digest for configuration changes
  *
  * \param[in] task         Action name from history
@@ -1639,7 +1617,7 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
 
     // If this is a recurring action, check whether it has been orphaned
     if (interval_ms > 0) {
-        if (action_in_config(rsc, task, interval_ms)) {
+        if (pcmk__find_action_config(rsc, task, interval_ms, false) != NULL) {
             pe_rsc_trace(rsc, "%s-interval %s for %s on %s is in configuration",
                          pcmk__readable_interval(interval_ms), task, rsc->id,
                          pe__node_name(node));

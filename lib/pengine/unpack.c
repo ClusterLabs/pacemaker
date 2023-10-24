@@ -3571,8 +3571,8 @@ unpack_failure_handling(struct action_history *history,
                         enum action_fail_response *on_fail,
                         enum rsc_role_e *fail_role)
 {
-    xmlNode *config = pcmk__find_action_config(history->rsc, history->key,
-                                               true);
+    xmlNode *config = pcmk__find_action_config(history->rsc, history->task,
+                                               history->interval_ms, true);
 
     GHashTable *meta = pcmk__unpack_action_meta(history->rsc, history->node,
                                                 history->task,

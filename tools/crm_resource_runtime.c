@@ -1330,7 +1330,6 @@ max_rsc_stop_timeout(pcmk_resource_t *rsc)
 {
     long long result_ll;
     int max_delay = 0;
-    char *key = NULL;
     xmlNode *config = NULL;
     GHashTable *meta = NULL;
 
@@ -1355,9 +1354,7 @@ max_rsc_stop_timeout(pcmk_resource_t *rsc)
     }
 
     // Get resource's stop action configuration from CIB
-    key = stop_key(rsc);
-    config = pcmk__find_action_config(rsc, key, true);
-    free(key);
+    config = pcmk__find_action_config(rsc, PCMK_ACTION_STOP, 0, true);
 
     /* Get configured timeout for stop action (fully evaluated for rules,
      * defaults, etc.).
