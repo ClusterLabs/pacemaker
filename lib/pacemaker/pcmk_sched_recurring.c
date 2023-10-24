@@ -170,6 +170,7 @@ is_recurring_history(const pcmk_resource_t *rsc, const xmlNode *xml,
                      "it is disabled or no longer in configuration",
                      op->id, op->key);
         free(op->key);
+        op->key = NULL;
         return false;
     }
 
