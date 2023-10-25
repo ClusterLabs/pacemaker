@@ -1253,3 +1253,24 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
     free(orig_value);
     return rc;
 }
+
+void
+pcmk__log_known_schemas(void)
+{
+    for (int lpc = 0; lpc < xml_schema_max; lpc++) {
+        if (known_schemas[lpc].after_transform < 0) {
+            crm_debug("known_schemas[%d] => %s", lpc, known_schemas[lpc].name);
+
+        } else if (known_schemas[lpc].transform != NULL) {
+            crm_debug("known_schemas[%d] => %s (upgrades to %d with %s.xsl)",
+                      lpc, known_schemas[lpc].name,
+                      known_schemas[lpc].after_transform,
+                      known_schemas[lpc].transform);
+
+        } else {
+            crm_debug("known_schemas[%d] => %s (upgrades to %d)",
+                      lpc, known_schemas[lpc].name,
+                      known_schemas[lpc].after_transform);
+        }
+    }
+}
