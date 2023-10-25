@@ -81,6 +81,17 @@
 # Default: PCMK_debug="no"
 # Example: PCMK_debug="pacemakerd,pacemaker-execd"
 
+# PCMK_stderr (Advanced Use Only)
+#
+# Whether to send daemon log messages to stderr. This would be useful only
+# during troubleshooting, when starting Pacemaker manually on the command line.
+#
+# Setting this option in this file is pointless, since this file is not read
+# when starting Pacemaker manually. However, it can be set directly as an
+# environment variable on the command line.
+#
+# Default: PCMK_stderr="no"
+
 # PCMK_trace_functions (Advanced Use Only)
 #
 # Send debug and trace severity messages from these (comma-separated)
