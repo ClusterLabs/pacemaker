@@ -100,7 +100,6 @@ bool pcmk__valid_sbd_timeout(const char *value);
 #define PCMK__ENV_RESPAWNED                 "respawned"
 #define PCMK__ENV_SCHEMA_DIRECTORY          "schema_directory"
 #define PCMK__ENV_SERVICE                   "service"
-#define PCMK__ENV_SHUTDOWN_DELAY            "shutdown_delay"
 #define PCMK__ENV_STDERR                    "stderr"
 #define PCMK__ENV_TLS_PRIORITIES            "tls_priorities"
 #define PCMK__ENV_TRACE_BLACKBOX            "trace_blackbox"
@@ -118,6 +117,11 @@ bool pcmk__valid_sbd_timeout(const char *value);
 
 // @COMPAT Drop at 3.0.0; added unused in 1.1.9
 #define PCMK__ENV_QUORUM_TYPE               "quorum_type"
+
+/* @COMPAT Drop at 3.0.0; added to debug shutdown issues when Pacemaker is
+ * managed by systemd, but no longer useful.
+ */
+#define PCMK__ENV_SHUTDOWN_DELAY            "shutdown_delay"
 
 // Constants for cluster option names
 #define PCMK__OPT_NODE_HEALTH_BASE          "node-health-base"
