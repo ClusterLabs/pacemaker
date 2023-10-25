@@ -1036,7 +1036,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
 
     while (lpc <= max_stable_schemas) {
         crm_debug("Testing '%s' validation (%d of %d)",
-                  known_schemas[lpc].name ? known_schemas[lpc].name : "<unset>",
+                  pcmk__s(known_schemas[lpc].name, "<unset>"),
                   lpc, max_stable_schemas);
 
         if (validate_with(xml, &known_schemas[lpc], error_handler, GUINT_TO_POINTER(LOG_ERR)) == FALSE) {
@@ -1046,7 +1046,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
                 next = -1;
             } else {
                 crm_trace("%s validation failed",
-                          known_schemas[lpc].name ? known_schemas[lpc].name : "<unset>");
+                          pcmk__s(known_schemas[lpc].name, "<unset>"));
             }
             if (*best) {
                 /* we've satisfied the validation, no need to check further */
@@ -1133,8 +1133,8 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
 
     if (*best > match && *best) {
         crm_info("%s the configuration from %s to %s",
-                   transform?"Transformed":"Upgraded",
-                   value ? value : "<none>", known_schemas[*best].name);
+                   transform?"Transformed":"Upgraded", pcmk__s(value, "<none>"),
+                   known_schemas[*best].name);
         crm_xml_add(xml, XML_ATTR_VALIDATION, known_schemas[*best].name);
     }
 
