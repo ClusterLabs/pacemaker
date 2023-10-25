@@ -61,7 +61,6 @@ struct schema_s {
 };
 
 static GList *known_schemas = NULL;
-static int xml_schema_max = 0;
 static bool silent_logging = FALSE;
 
 static void G_GNUC_PRINTF(2, 3)
@@ -196,10 +195,8 @@ add_schema(enum schema_validator_e validator, const schema_version_t *version,
            int after_transform)
 {
     struct schema_s *schema = NULL;
-    int last = xml_schema_max;
+    int last = g_list_length(known_schemas);
     bool have_version = false;
-
-    xml_schema_max++;
 
     schema = calloc(1, sizeof(struct schema_s));
     CRM_ASSERT(schema != NULL);
@@ -234,7 +231,7 @@ add_schema(enum schema_validator_e validator, const schema_version_t *version,
 
     schema->transform_onleave = transform_onleave;
     if (after_transform == 0) {
-        after_transform = xml_schema_max;  /* upgrade is a one-way */
+        after_transform = last + 1;        /* upgrade is a one-way */
     }
     schema->after_transform = after_transform;
 
@@ -734,7 +731,7 @@ pcmk__validate_xml(xmlNode *xml_blob, const char *validation, xmlRelaxNGValidity
     version = get_schema_version(validation);
     if (strcmp(validation, PCMK__VALUE_NONE) == 0) {
         return TRUE;
-    } else if (version < xml_schema_max) {
+    } else if (version < g_list_length(known_schemas)) {
         struct schema_s *schema = g_list_nth_data(known_schemas, version);
         return validate_with(xml_blob, schema, error_handler,
                              error_handler_context);
