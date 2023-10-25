@@ -359,7 +359,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
         && (then->rsc != NULL)) {
 
         if (!pcmk_is_set(first_flags, pcmk_action_runnable)
-            && (first->rsc->running_on != NULL)) {
+            && (first->rsc != NULL) && (first->rsc->running_on != NULL)) {
 
             pe_rsc_trace(then->rsc,
                          "%s then %s: ignoring because first is stopping",
