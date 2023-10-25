@@ -513,6 +513,43 @@ validate_with_relaxng(xmlDocPtr doc, xmlRelaxNGValidityErrorFunc error_handler, 
     return valid;
 }
 
+static void
+free_schema(struct schema_s *schema)
+{
+    relaxng_ctx_cache_t *ctx = NULL;
+
+    switch (schema->validator) {
+        case schema_validator_none: // not cached
+            break;
+
+        case schema_validator_rng: // cached
+            ctx = (relaxng_ctx_cache_t *) schema->cache;
+            if (ctx == NULL) {
+                break;
+            }
+
+            if (ctx->parser != NULL) {
+                xmlRelaxNGFreeParserCtxt(ctx->parser);
+            }
+
+            if (ctx->valid != NULL) {
+                xmlRelaxNGFreeValidCtxt(ctx->valid);
+            }
+
+            if (ctx->rng != NULL) {
+                xmlRelaxNGFree(ctx->rng);
+            }
+
+            free(ctx);
+            schema->cache = NULL;
+            break;
+    }
+
+    free(schema->name);
+    free(schema->transform);
+    free(schema->transform_enter);
+}
+
 /*!
  * \internal
  * \brief Clean up global memory associated with XML schemas
@@ -520,36 +557,10 @@ validate_with_relaxng(xmlDocPtr doc, xmlRelaxNGValidityErrorFunc error_handler, 
 void
 crm_schema_cleanup(void)
 {
-    int lpc;
-    relaxng_ctx_cache_t *ctx = NULL;
-
-    for (lpc = 0; lpc < xml_schema_max; lpc++) {
-
-        switch (known_schemas[lpc].validator) {
-            case schema_validator_none: // not cached
-                break;
-            case schema_validator_rng: // cached
-                ctx = (relaxng_ctx_cache_t *) known_schemas[lpc].cache;
-                if (ctx == NULL) {
-                    break;
-                }
-                if (ctx->parser != NULL) {
-                    xmlRelaxNGFreeParserCtxt(ctx->parser);
-                }
-                if (ctx->valid != NULL) {
-                    xmlRelaxNGFreeValidCtxt(ctx->valid);
-                }
-                if (ctx->rng != NULL) {
-                    xmlRelaxNGFree(ctx->rng);
-                }
-                free(ctx);
-                known_schemas[lpc].cache = NULL;
-                break;
-        }
-        free(known_schemas[lpc].name);
-        free(known_schemas[lpc].transform);
-        free(known_schemas[lpc].transform_enter);
+    for (int lpc = 0; lpc < xml_schema_max; lpc++) {
+        free_schema(&known_schemas[lpc]);
     }
+
     free(known_schemas);
     known_schemas = NULL;
 
