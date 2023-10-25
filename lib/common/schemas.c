@@ -557,18 +557,16 @@ crm_schema_cleanup(void)
 }
 
 static gboolean
-validate_with(xmlNode *xml, int method, xmlRelaxNGValidityErrorFunc error_handler, void* error_handler_context)
+validate_with(xmlNode *xml, struct schema_s *schema, xmlRelaxNGValidityErrorFunc error_handler, void* error_handler_context)
 {
     gboolean valid = FALSE;
     char *file = NULL;
-    struct schema_s *schema = NULL;
     relaxng_ctx_cache_t **cache = NULL;
 
-    if (method < 0) {
+    if (schema == NULL) {
         return FALSE;
     }
 
-    schema = &(known_schemas[method]);
     if (schema->validator == schema_validator_none) {
         return TRUE;
     }
@@ -589,8 +587,7 @@ validate_with(xmlNode *xml, int method, xmlRelaxNGValidityErrorFunc error_handle
             valid = validate_with_relaxng(xml->doc, error_handler, error_handler_context, file, cache);
             break;
         default:
-            crm_err("Unknown validator type: %d",
-                    known_schemas[method].validator);
+            crm_err("Unknown validator type: %d", schema->validator);
             break;
     }
 
@@ -599,11 +596,11 @@ validate_with(xmlNode *xml, int method, xmlRelaxNGValidityErrorFunc error_handle
 }
 
 static bool
-validate_with_silent(xmlNode *xml, int method)
+validate_with_silent(xmlNode *xml, struct schema_s *schema)
 {
     bool rc, sl_backup = silent_logging;
     silent_logging = TRUE;
-    rc = validate_with(xml, method, (xmlRelaxNGValidityErrorFunc) xml_log, GUINT_TO_POINTER(LOG_ERR));
+    rc = validate_with(xml, schema, (xmlRelaxNGValidityErrorFunc) xml_log, GUINT_TO_POINTER(LOG_ERR));
     silent_logging = sl_backup;
     return rc;
 }
@@ -689,7 +686,7 @@ pcmk__validate_xml(xmlNode *xml_blob, const char *validation, xmlRelaxNGValidity
         bool valid = FALSE;
 
         for (lpc = 0; lpc < xml_schema_max; lpc++) {
-            if (validate_with(xml_blob, lpc, NULL, NULL)) {
+            if (validate_with(xml_blob, &known_schemas[lpc], NULL, NULL)) {
                 valid = TRUE;
                 crm_xml_add(xml_blob, XML_ATTR_VALIDATION,
                             known_schemas[lpc].name);
@@ -707,7 +704,8 @@ pcmk__validate_xml(xmlNode *xml_blob, const char *validation, xmlRelaxNGValidity
     if (strcmp(validation, PCMK__VALUE_NONE) == 0) {
         return TRUE;
     } else if (version < xml_schema_max) {
-        return validate_with(xml_blob, version, error_handler, error_handler_context);
+        return validate_with(xml_blob, version >= 0 ? &known_schemas[version] : NULL,
+                             error_handler, error_handler_context);
     }
 
     crm_err("Unknown validator: %s", validation);
@@ -1024,7 +1022,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
                   known_schemas[lpc].name ? known_schemas[lpc].name : "<unset>",
                   lpc, max_stable_schemas);
 
-        if (validate_with(xml, lpc, error_handler, GUINT_TO_POINTER(LOG_ERR)) == FALSE) {
+        if (validate_with(xml, &known_schemas[lpc], error_handler, GUINT_TO_POINTER(LOG_ERR)) == FALSE) {
             if (next != -1) {
                 crm_info("Configuration not valid for schema: %s",
                          known_schemas[lpc].name);
@@ -1072,7 +1070,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
                           version boundary, as X.0 "transitional" version is
                           expected to be more strict than it's successors that
                           may re-allow constructs from previous major line) */
-                       || validate_with_silent(xml, next)) {
+                       || validate_with_silent(xml, next >= 0 ? &known_schemas[next] : NULL)) {
                 crm_debug("%s-style configuration is also valid for %s",
                            known_schemas[lpc].name, known_schemas[next].name);
 
@@ -1089,7 +1087,8 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
                             known_schemas[lpc].transform);
                     rc = -pcmk_err_transform_failed;
 
-                } else if (validate_with(upgrade, next, error_handler, GUINT_TO_POINTER(LOG_ERR))) {
+                } else if (validate_with(upgrade, next >= 0 ? &known_schemas[next] : NULL,
+                                         error_handler, GUINT_TO_POINTER(LOG_ERR))) {
                     crm_info("Transformation %s.xsl successful",
                              known_schemas[lpc].transform);
                     lpc = next;
