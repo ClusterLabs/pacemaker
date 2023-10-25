@@ -331,21 +331,31 @@ resource_history_string(pcmk_resource_t *rsc, const char *rsc_id, bool all,
     return buf;
 }
 
+/*!
+ * \internal
+ * \brief Get a node's feature set for status display purposes
+ *
+ * \param[in] node  Node to check
+ *
+ * \return String representation of feature set if the node is fully up (using
+ *         "<3.15.1" for older nodes that don't set the #feature-set attribute),
+ *         otherwise NULL
+ */
 static const char *
-get_node_feature_set(pcmk_node_t *node)
+get_node_feature_set(const pcmk_node_t *node)
 {
-    const char *feature_set = NULL;
+    if (node->details->online && node->details->expected_up
+        && !pe__is_guest_or_remote_node(node)) {
 
-    if (node->details->online && !pe__is_guest_or_remote_node(node)) {
-        feature_set = g_hash_table_lookup(node->details->attrs,
-                                          CRM_ATTR_FEATURE_SET);
-        /* The feature set attribute is present since 3.15.1. If it is missing
-         * then the node must be running an earlier version. */
-        if (feature_set == NULL) {
-            feature_set = "<3.15.1";
-        }
+        const char *feature_set = g_hash_table_lookup(node->details->attrs,
+                                                      CRM_ATTR_FEATURE_SET);
+
+        /* The feature set attribute is present since 3.15.1. If it is missing,
+         * then the node must be running an earlier version.
+         */
+        return pcmk__s(feature_set, "<3.15.1");
     }
-    return feature_set;
+    return NULL;
 }
 
 static bool
