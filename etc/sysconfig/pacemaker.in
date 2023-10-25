@@ -209,6 +209,30 @@
 #
 # Default: PCMK_remote_port="3121"
 
+# PCMK_remote_pid1 (Advanced Use Only)
+#
+# When a bundle resource's "run-command" option is left to default, Pacemaker
+# Remote runs as PID 1 in the bundle's containers. When it does so, it loads
+# environment variables from the container's
+# @PACEMAKER_CONFIG_DIR@/pcmk-init.env and performs the PID 1 responsibility of
+# reaping dead subprocesses.
+#
+# This option controls whether those actions are performed when Pacemaker
+# Remote is not running as PID 1. It is intended primarily for developer testing
+# but can be useful when "run-command" is set to a separate, custom PID 1
+# process that launches Pacemaker Remote.
+#
+# * If set to "full", Pacemaker Remote loads environment variables from
+#   @PACEMAKER_CONFIG_DIR@/pcmk-init.env and reaps dead subprocesses.
+# * If set to "vars", Pacemaker Remote loads environment variables from
+#   @PACEMAKER_CONFIG_DIR@/pcmk-init.env but does not reap dead subprocesses.
+# * If set to "default", Pacemaker Remote performs neither action.
+#
+# If Pacemaker Remote is running as PID 1, this option is ignored, and the
+# behavior is the same as for "full".
+#
+# Default: PCMK_remote_pid1="default"
+
 # PCMK_tls_priorities (Advanced Use Only)
 #
 # These GnuTLS cipher priorities will be used for TLS connections (whether for
