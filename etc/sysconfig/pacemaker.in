@@ -307,6 +307,19 @@
 # Default: PCMK_ipc_buffer="131072"
 
 
+## Cluster type
+
+# PCMK_cluster_type (Advanced Use Only)
+#
+# Specify the cluster layer to be used. If unset, Pacemaker will detect and use
+# a supported cluster layer, if available. Currently, "corosync" is the only
+# supported cluster layer. If multiple layers are supported in the future, this
+# will allow overriding Pacemaker's automatic detection to select a specific
+# one.
+#
+# Default: PCMK_cluster_type=""
+
+
 ## Developer Options
 
 # PCMK_schema_directory (Advanced Use Only)
