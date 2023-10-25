@@ -803,6 +803,9 @@ do_dc_join_ack(long long action,
     rc = cib->cmds->modify(cib, XML_CIB_TAG_STATUS, state,
                            cib_scope_local|cib_can_create|cib_transaction);
     free_xml(execd_state);
+    if (rc != pcmk_ok) {
+        goto done;
+    }
 
     // Commit the transaction
     rc = cib->cmds->end_transaction(cib, true, cib_scope_local);
