@@ -137,7 +137,7 @@
 # Example: PCMK_trace_blackbox="remote.c:144,remote.c:149"
 
 
-## Node start state
+## Option overrides
 
 # PCMK_node_start_state
 #
@@ -147,6 +147,13 @@
 # force the local host to join in the specified state.
 #
 # Default: PCMK_node_start_state="default"
+
+# PCMK_node_action_limit
+#
+# Specify the maximum number of jobs that can be scheduled on this node. If set,
+# this overrides the node-action-limit cluster property for this node.
+#
+# Default: PCMK_node_action_limit=""
 
 
 ## Crash Handling
