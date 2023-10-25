@@ -1626,12 +1626,12 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
 
             if (current_active != NULL) {
                 g_list_free_full(current_active, free);
-                current_active = NULL;
             }
             current_active = get_active_resources(host, scheduler->resources);
+
             g_list_free(list_delta);
-            list_delta = NULL;
             list_delta = pcmk__subtract_lists(current_active, target_active, (GCompareFunc) strcmp);
+
             dump_list(current_active, "Current");
             dump_list(list_delta, "Delta");
         }
@@ -1670,9 +1670,9 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
 
     if (target_active != NULL) {
         g_list_free_full(target_active, free);
-        target_active = NULL;
     }
     target_active = restart_target_active;
+
     list_delta = pcmk__subtract_lists(target_active, current_active, (GCompareFunc) strcmp);
     out->info(out, "Waiting for %d resources to start again:", g_list_length(list_delta));
     display_list(out, list_delta, " * ");
@@ -1700,15 +1700,14 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                 goto failure;
             }
 
-            if (current_active != NULL) {
-                g_list_free_full(current_active, free);
-                current_active = NULL;
-            }
-
             /* It's OK if dependent resources moved to a different node,
              * so we check active resources on all nodes.
              */
+            if (current_active != NULL) {
+                g_list_free_full(current_active, free);
+            }
             current_active = get_active_resources(NULL, scheduler->resources);
+
             g_list_free(list_delta);
             list_delta = pcmk__subtract_lists(target_active, current_active, (GCompareFunc) strcmp);
             dump_list(current_active, "Current");

@@ -658,8 +658,8 @@ mainloop_add_ipc_server_with_prio(const char *name, enum qb_ipc_type type,
     server = qb_ipcs_create(name, 0, pick_ipc_type(type), callbacks);
 
     if (server == NULL) {
-        rc = errno;
-        crm_err("Could not create %s IPC server: %s (%d)", name, pcmk_rc_str(errno), errno);
+        crm_err("Could not create %s IPC server: %s (%d)",
+                name, pcmk_rc_str(errno), errno);
         return NULL;
     }
 
