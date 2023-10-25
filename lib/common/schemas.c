@@ -1035,18 +1035,18 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
     }
 
     while (lpc <= max_stable_schemas) {
-        crm_debug("Testing '%s' validation (%d of %d)",
-                  pcmk__s(known_schemas[lpc].name, "<unset>"),
-                  lpc, max_stable_schemas);
+        struct schema_s *schema = &known_schemas[lpc];
 
-        if (validate_with(xml, &known_schemas[lpc], error_handler, GUINT_TO_POINTER(LOG_ERR)) == FALSE) {
+        crm_debug("Testing '%s' validation (%d of %d)",
+                  pcmk__s(schema->name, "<unset>"), lpc, max_stable_schemas);
+
+        if (validate_with(xml, schema, error_handler, GUINT_TO_POINTER(LOG_ERR)) == FALSE) {
             if (next != -1) {
                 crm_info("Configuration not valid for schema: %s",
-                         known_schemas[lpc].name);
+                         schema->name);
                 next = -1;
             } else {
-                crm_trace("%s validation failed",
-                          pcmk__s(known_schemas[lpc].name, "<unset>"));
+                crm_trace("%s validation failed", pcmk__s(schema->name, "<unset>"));
             }
             if (*best) {
                 /* we've satisfied the validation, no need to check further */
@@ -1056,8 +1056,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
 
         } else {
             if (next != -1) {
-                crm_debug("Configuration valid for schema: %s",
-                          known_schemas[next].name);
+                crm_debug("Configuration valid for schema: %s", schema->name);
                 next = -1;
             }
             rc = pcmk_ok;
@@ -1069,19 +1068,19 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
 
         if (rc == pcmk_ok && transform) {
             xmlNode *upgrade = NULL;
-            next = known_schemas[lpc].after_transform;
+            next = schema->after_transform;
 
             if (next <= lpc) {
                 /* There is no next version, or next would regress */
-                crm_trace("Stopping at %s", known_schemas[lpc].name);
+                crm_trace("Stopping at %s", schema->name);
                 break;
 
             } else if (max > 0 && (lpc == max || next > max)) {
                 crm_trace("Upgrade limit reached at %s (lpc=%d, next=%d, max=%d)",
-                          known_schemas[lpc].name, lpc, next, max);
+                          schema->name, lpc, next, max);
                 break;
 
-            } else if (known_schemas[lpc].transform == NULL
+            } else if (schema->transform == NULL
                        /* possibly avoid transforming when readily valid
                           (in general more restricted when crossing the major
                           version boundary, as X.0 "transitional" version is
@@ -1089,25 +1088,22 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
                           may re-allow constructs from previous major line) */
                        || validate_with_silent(xml, next >= 0 ? &known_schemas[next] : NULL)) {
                 crm_debug("%s-style configuration is also valid for %s",
-                           known_schemas[lpc].name, known_schemas[next].name);
+                           schema->name, known_schemas[next].name);
 
                 lpc = next;
 
             } else {
                 crm_debug("Upgrading %s-style configuration to %s with %s.xsl",
-                           known_schemas[lpc].name, known_schemas[next].name,
-                           known_schemas[lpc].transform);
+                           schema->name, known_schemas[next].name, schema->transform);
 
-                upgrade = apply_upgrade(xml, &known_schemas[lpc], to_logs);
+                upgrade = apply_upgrade(xml, schema, to_logs);
                 if (upgrade == NULL) {
-                    crm_err("Transformation %s.xsl failed",
-                            known_schemas[lpc].transform);
+                    crm_err("Transformation %s.xsl failed", schema->transform);
                     rc = -pcmk_err_transform_failed;
 
                 } else if (validate_with(upgrade, next >= 0 ? &known_schemas[next] : NULL,
                                          error_handler, GUINT_TO_POINTER(LOG_ERR))) {
-                    crm_info("Transformation %s.xsl successful",
-                             known_schemas[lpc].transform);
+                    crm_info("Transformation %s.xsl successful", schema->transform);
                     lpc = next;
                     *best = next;
                     free_xml(xml);
@@ -1116,7 +1112,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
 
                 } else {
                     crm_err("Transformation %s.xsl did not produce a valid configuration",
-                            known_schemas[lpc].transform);
+                            schema->transform);
                     crm_log_xml_info(upgrade, "transform:bad");
                     free_xml(upgrade);
                     rc = -pcmk_err_schema_validation;
