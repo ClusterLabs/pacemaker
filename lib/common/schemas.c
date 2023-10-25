@@ -64,11 +64,7 @@ static struct schema_s *known_schemas = NULL;
 static int xml_schema_max = 0;
 static bool silent_logging = FALSE;
 
-static void
-xml_log(int priority, const char *fmt, ...)
-G_GNUC_PRINTF(2, 3);
-
-static void
+static void G_GNUC_PRINTF(2, 3)
 xml_log(int priority, const char *fmt, ...)
 {
     va_list ap;
@@ -718,10 +714,6 @@ pcmk__validate_xml(xmlNode *xml_blob, const char *validation, xmlRelaxNGValidity
     return FALSE;
 }
 
-static void
-cib_upgrade_err(void *ctx, const char *fmt, ...)
-G_GNUC_PRINTF(2, 3);
-
 /* With this arrangement, an attempt to identify the message severity
    as explicitly signalled directly from XSLT is performed in rather
    a smart way (no reliance on formatting string + arguments being
@@ -745,7 +737,7 @@ G_GNUC_PRINTF(2, 3);
    (suspicious, likely internal errors or some runaways) is
    LOG_WARNING.
  */
-static void
+static void G_GNUC_PRINTF(2, 3)
 cib_upgrade_err(void *ctx, const char *fmt, ...)
 {
     va_list ap, aq;
