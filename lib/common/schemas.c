@@ -178,7 +178,7 @@ add_schema(enum schema_validator_e validator, const schema_version_t *version,
            int after_transform)
 {
     int last = xml_schema_max;
-    bool have_version = FALSE;
+    bool have_version = false;
 
     xml_schema_max++;
     known_schemas = pcmk__realloc(known_schemas,
@@ -188,26 +188,32 @@ add_schema(enum schema_validator_e validator, const schema_version_t *version,
     known_schemas[last].validator = validator;
     known_schemas[last].after_transform = after_transform;
 
-    for (int i = 0; i < 2; ++i) {
-        known_schemas[last].version.v[i] = version->v[i];
-        if (version->v[i]) {
-            have_version = TRUE;
-        }
+    known_schemas[last].version.v[0] = version->v[0];
+    known_schemas[last].version.v[1] = version->v[1];
+
+    if (version->v[0] || version->v[1]) {
+        have_version = true;
     }
+
     if (have_version) {
         known_schemas[last].name = schema_strdup_printf("pacemaker-", *version, "");
     } else {
-        CRM_ASSERT(name);
+        CRM_ASSERT(name != NULL);
         schema_scanf(name, "%*[^-]-", known_schemas[last].version, "");
         known_schemas[last].name = strdup(name);
+        CRM_ASSERT(known_schemas[last].name != NULL);
     }
 
     if (transform) {
         known_schemas[last].transform = strdup(transform);
+        CRM_ASSERT(known_schemas[last].transform != NULL);
     }
+
     if (transform_enter) {
         known_schemas[last].transform_enter = strdup(transform_enter);
+        CRM_ASSERT(known_schemas[last].transform_enter != NULL);
     }
+
     known_schemas[last].transform_onleave = transform_onleave;
     if (after_transform == 0) {
         after_transform = xml_schema_max;  /* upgrade is a one-way */
