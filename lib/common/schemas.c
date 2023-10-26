@@ -727,10 +727,6 @@ pcmk__validate_xml(xmlNode *xml_blob, const char *validation, xmlRelaxNGValidity
                 valid = TRUE;
                 crm_xml_add(xml_blob, XML_ATTR_VALIDATION, schema->name);
                 crm_info("XML validated against %s", schema->name);
-
-                if (schema->after_transform == 0) {
-                    break;
-                }
             }
         }
 
