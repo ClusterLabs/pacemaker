@@ -1842,7 +1842,9 @@ int
 wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
 {
     pcmk_scheduler_t *scheduler = NULL;
+    xmlXPathObjectPtr search;
     int rc = pcmk_rc_ok;
+    bool pending_unknown_state_resources;
     int timeout_s = timeout_ms? ((timeout_ms + 999) / 1000) : WAIT_DEFAULT_TIMEOUT_S;
     time_t expire_time = time(NULL) + timeout_s;
     time_t time_diff;
@@ -1854,7 +1856,6 @@ wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
     }
 
     do {
-
         /* Abort if timeout is reached */
         time_diff = expire_time - time(NULL);
         if (time_diff > 0) {
@@ -1898,7 +1899,11 @@ wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
             }
         }
 
-    } while (actions_are_pending(scheduler->actions));
+        search = xpath_search(scheduler->input, "/cib/status/node_state/lrm/lrm_resources/lrm_resource/"
+                                                XML_LRM_TAG_RSC_OP "[@" XML_LRM_ATTR_RC "='193']");
+        pending_unknown_state_resources = (numXpathResults(search) > 0);
+        freeXpathObject(search);
+    } while (actions_are_pending(scheduler->actions) || pending_unknown_state_resources);
 
     pe_free_working_set(scheduler);
     return rc;
