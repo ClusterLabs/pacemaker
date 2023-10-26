@@ -85,39 +85,48 @@ xml_latest_schema_index(void)
     return g_list_length(known_schemas) - 3; // index from 0, ignore "pacemaker-next"/"none"
 }
 
+/* Return the index of the most recent X.0 schema. */
 static int
-xml_minimum_schema_index(void)
+xml_find_x_0_schema_index(void)
 {
     static int best = 0;
+    int i = 0;
     struct schema_s *best_schema = NULL;
-    GList *last_real_ele = NULL;
 
     if (best != 0) {
         return best;
     }
 
+    /* Get the most recent schema so we can look at its version number. */
     best = xml_latest_schema_index();
+    best_schema = g_list_nth(known_schemas, best)->data;
 
-    /* We can't just use g_list_last here because "pacemaker-next" and "none"
-     * are stored at the end of the list.  We need to start several elements
-     * back, at the last real schema.
+    /* Iterate over the schema list until we find a schema with the same major
+     * version as best, and with a minor version number of 0.
+     *
+     * This assumes that the first schema in a major series is always X.0,
+     * which seems like a safe assumption.
      */
-    last_real_ele = g_list_nth(known_schemas, best);
-    best_schema = last_real_ele->data;
-
-    for (GList *iter = last_real_ele; iter != NULL; iter = iter->prev) {
+    for (GList *iter = known_schemas; iter != NULL; iter = iter->next) {
         struct schema_s *schema = iter->data;
 
-        if (schema->version.v[0] < best_schema->version.v[0]) {
-            return best;
-        } else {
-            best--;
+        /* If we hit the initial best schema, the only things left in the list
+         * are "pacemaker-next" and "none" which aren't worth checking.
+         */
+        if (schema == best_schema) {
+            break;
         }
+
+        if (schema->version.v[0] == best_schema->version.v[0] &&
+            schema->version.v[1] == 0) {
+            best = i;
+            return best;
+        }
+
+        i++;
     }
 
-    /* If we never found a schema that meets the above criteria, default to
-     * the last one.
-     */
+    /* If we got here, we never found a match.  Just return the latest. */
     best = xml_latest_schema_index();
     return best;
 }
@@ -1182,7 +1191,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
 
     int version = get_schema_version(value);
     int orig_version = version;
-    int min_version = xml_minimum_schema_index();
+    int min_version = xml_find_x_0_schema_index();
 
     if (version < min_version) {
         // Current configuration schema is not acceptable, try to update
