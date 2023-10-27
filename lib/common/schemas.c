@@ -449,6 +449,41 @@ pcmk__load_schemas_from_dir(const char *dir)
     free(namelist);
 }
 
+static gint
+schema_sort_GCompareFunc(gconstpointer a, gconstpointer b)
+{
+    const pcmk__schema_t *schema_a = a;
+    const pcmk__schema_t *schema_b = b;
+
+    if (pcmk__str_eq(schema_a->name, "pacemaker-next", pcmk__str_none)) {
+        if (pcmk__str_eq(schema_b->name, "none", pcmk__str_none)) {
+            return -1;
+        } else {
+            return 1;
+        }
+    } else if (pcmk__str_eq(schema_a->name, "none", pcmk__str_none)) {
+        return 1;
+    } else if (pcmk__str_eq(schema_b->name, "pacemaker-next", pcmk__str_none)) {
+        return -1;
+    } else {
+        return schema_cmp(schema_a->version, schema_b->version);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Sort the list of known schemas such that all pacemaker-X.Y are in
+ *        version order, then pacemaker-next, then none
+ *
+ * This function should be called whenever additional schemas are loaded using
+ * pcmk__load_schemas_from_dir(), after the initial sets in crm_schema_init().
+ */
+void
+pcmk__sort_schemas(void)
+{
+    known_schemas = g_list_sort(known_schemas, schema_sort_GCompareFunc);
+}
+
 /*!
  * \internal
  * \brief Load pacemaker schemas into cache
@@ -474,6 +509,11 @@ crm_schema_init(void)
 
     add_schema(pcmk__schema_validator_none, &zero, PCMK__VALUE_NONE,
                NULL, NULL, FALSE);
+
+    /* This shouldn't be strictly necessary, but we'll do it here just in case
+     * there's anything in PCMK__REMOTE_SCHEMA_DIR that messes up the order.
+     */
+    pcmk__sort_schemas();
 }
 
 static gboolean

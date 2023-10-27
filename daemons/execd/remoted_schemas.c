@@ -203,6 +203,7 @@ get_schema_files_complete(mainloop_child_t *p, pid_t pid, int core, int signo, i
          * schemas again too.  Instead just load the things we fetched.
          */
         pcmk__load_schemas_from_dir(remote_schema_dir);
+        pcmk__sort_schemas();
         crm_info("Fetching extra schema files completed successfully");
 
     } else {
