@@ -773,9 +773,8 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
     }
 
     /* Timeout order of precedence (highest to lowest):
-     *   1. pcmk_monitor_timeout resource parameter (only for starts and probes
-     *      when rsc has pcmk_ra_cap_fence_params; this gets used for recurring
-     *      monitors via the executor instead)
+     *   1. pcmk_monitor_timeout resource parameter (only for starts and
+     *      monitors when rsc has pcmk_ra_cap_fence_params)
      *   2. timeout configured in <op> (with <op timeout> taking precedence over
      *      <op> <meta_attributes>)
      *   3. timeout configured in <op_defaults> <meta_attributes>
@@ -785,8 +784,8 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
     // Check for pcmk_monitor_timeout
     if (pcmk_is_set(pcmk_get_ra_caps(rsc_rule_data.standard),
                     pcmk_ra_cap_fence_params)
-        && (pcmk__str_eq(action_name, PCMK_ACTION_START, pcmk__str_none)
-            || pcmk_is_probe(action_name, interval_ms))) {
+        && pcmk__str_any_of(action_name, PCMK_ACTION_START, PCMK_ACTION_MONITOR,
+                            NULL)) {
 
         GHashTable *params = pe_rsc_params(rsc, node, rsc->cluster);
 
