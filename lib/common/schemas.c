@@ -1100,10 +1100,10 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
         if (rc == pcmk_ok && transform) {
             xmlNode *upgrade = NULL;
             struct schema_s *next_schema = NULL;
-            next = schema->after_transform;
+            next = lpc+1;
 
-            if (next <= lpc) {
-                /* There is no next version, or next would regress */
+            if (next > max_stable_schemas) {
+                /* There is no next version */
                 crm_trace("Stopping at %s", schema->name);
                 break;
             }
