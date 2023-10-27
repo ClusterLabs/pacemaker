@@ -54,7 +54,6 @@ struct schema_s {
     char *transform;
     void *cache;
     enum schema_validator_e validator;
-    int after_transform;
     schema_version_t version;
     char *transform_enter;
     bool transform_onleave;
@@ -200,8 +199,7 @@ schema_sort(const struct dirent **a, const struct dirent **b)
 static void
 add_schema(enum schema_validator_e validator, const schema_version_t *version,
            const char *name, const char *transform,
-           const char *transform_enter, bool transform_onleave,
-           int after_transform)
+           const char *transform_enter, bool transform_onleave)
 {
     struct schema_s *schema = NULL;
     int last = g_list_length(known_schemas);
@@ -211,9 +209,9 @@ add_schema(enum schema_validator_e validator, const schema_version_t *version,
     CRM_ASSERT(schema != NULL);
 
     schema->validator = validator;
-    schema->after_transform = after_transform;
     schema->version.v[0] = version->v[0];
     schema->version.v[1] = version->v[1];
+    schema->transform_onleave = transform_onleave;
 
     if (version->v[0] || version->v[1]) {
         have_version = true;
@@ -238,24 +236,14 @@ add_schema(enum schema_validator_e validator, const schema_version_t *version,
         CRM_ASSERT(schema->transform_enter != NULL);
     }
 
-    schema->transform_onleave = transform_onleave;
-    if (after_transform == 0) {
-        after_transform = last + 1;        /* upgrade is a one-way */
-    }
-    schema->after_transform = after_transform;
-
     known_schemas = g_list_append(known_schemas, schema);
 
-    if (schema->after_transform < 0) {
-        crm_debug("Added supported schema %d: %s", last, schema->name);
-
-    } else if (schema->transform != NULL) {
-        crm_debug("Added supported schema %d: %s (upgrades to %d with %s.xsl)",
-                  last, schema->name, schema->after_transform, schema->transform);
+    if (schema->transform != NULL) {
+        crm_debug("Added supported schema %d: %s (upgrades with %s.xsl)",
+                  last, schema->name, schema->transform);
 
     } else {
-        crm_debug("Added supported schema %d: %s (upgrades to %d)",
-                  last, schema->name, schema->after_transform);
+        crm_debug("Added supported schema %d: %s", last, schema->name);
     }
 }
 
@@ -288,8 +276,7 @@ add_schema(enum schema_validator_e validator, const schema_version_t *version,
  *   . name convention:  (see "upgrade-enter")
  */
 static int
-add_schema_by_version(const schema_version_t *version, int next,
-                      bool transform_expected)
+add_schema_by_version(const schema_version_t *version, bool transform_expected)
 {
     bool transform_onleave = FALSE;
     int rc = pcmk_rc_ok;
@@ -345,12 +332,11 @@ add_schema_by_version(const schema_version_t *version, int next,
         free(xslt);
         free(transform_upgrade);
         transform_upgrade = NULL;
-        next = -1;
         rc = ENOENT;
     }
 
     add_schema(schema_validator_rng, version, NULL,
-               transform_upgrade, transform_enter, transform_onleave, next);
+               transform_upgrade, transform_enter, transform_onleave);
 
     free(transform_upgrade);
     free(transform_enter);
@@ -416,7 +402,6 @@ crm_schema_init(void)
         free(base);
         for (lpc = 0; lpc < max; lpc++) {
             bool transform_expected = FALSE;
-            int next = 0;
             schema_version_t version = SCHEMA_ZERO;
 
             if (!version_from_filename(namelist[lpc]->d_name, &version)) {
@@ -432,11 +417,9 @@ crm_schema_init(void)
                         && (version.v[0] < next_version.v[0])) {
                     transform_expected = TRUE;
                 }
-
-            } else {
-                next = -1;
             }
-            if (add_schema_by_version(&version, next, transform_expected)
+
+            if (add_schema_by_version(&version, transform_expected)
                     == ENOENT) {
                 break;
             }
@@ -450,10 +433,10 @@ crm_schema_init(void)
 
     // @COMPAT: Deprecated since 2.1.5
     add_schema(schema_validator_rng, &zero, "pacemaker-next",
-               NULL, NULL, FALSE, -1);
+               NULL, NULL, FALSE);
 
     add_schema(schema_validator_none, &zero, PCMK__VALUE_NONE,
-               NULL, NULL, FALSE, -1);
+               NULL, NULL, FALSE);
 }
 
 static gboolean
@@ -1295,17 +1278,12 @@ pcmk__log_known_schemas(void)
     for (GList *iter = known_schemas; iter != NULL; iter = iter->next) {
         struct schema_s *schema = iter->data;
 
-        if (schema->after_transform < 0) {
-            crm_debug("known_schemas[%d] => %s", lpc, schema->name);
-
-        } else if (schema->transform != NULL) {
-            crm_debug("known_schemas[%d] => %s (upgrades to %d with %s.xsl)",
-                      lpc, schema->name, schema->after_transform,
-                      schema->transform);
+        if (schema->transform != NULL) {
+            crm_debug("known_schemas[%d] => %s (upgrades with %s.xsl)",
+                      lpc, schema->name, schema->transform);
 
         } else {
-            crm_debug("known_schemas[%d] => %s (upgrades to %d)",
-                      lpc, schema->name, schema->after_transform);
+            crm_debug("known_schemas[%d] => %s", lpc, schema->name);
         }
 
         lpc++;
