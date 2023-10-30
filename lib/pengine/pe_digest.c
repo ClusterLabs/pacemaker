@@ -102,7 +102,7 @@ calculate_main_digest(op_digest_cache_t *data, pcmk_resource_t *rsc,
                       const xmlNode *xml_op, const char *op_version,
                       GHashTable *overrides, pcmk_scheduler_t *scheduler)
 {
-    pcmk_action_t *action = NULL;
+    xmlNode *action_config = NULL;
 
     data->params_all = create_xml_node(NULL, XML_TAG_PARAMS);
 
@@ -112,8 +112,8 @@ calculate_main_digest(op_digest_cache_t *data, pcmk_resource_t *rsc,
     (void) pe__add_bundle_remote_name(rsc, scheduler, data->params_all,
                                       XML_RSC_ATTR_REMOTE_RA_ADDR);
 
-    // If interval was overridden, reset it
     if (overrides != NULL) {
+        // If interval was overridden, reset it
         const char *interval_s = g_hash_table_lookup(overrides, CRM_META "_"
                                                      XML_LRM_ATTR_INTERVAL);
 
@@ -125,34 +125,42 @@ calculate_main_digest(op_digest_cache_t *data, pcmk_resource_t *rsc,
                 *interval_ms = (guint) value_ll;
             }
         }
-    }
 
-    action = custom_action(rsc, pcmk__op_key(rsc->id, task, *interval_ms),
-                           task, node, TRUE, FALSE, scheduler);
-    if (overrides != NULL) {
+        // Add overrides to list of all parameters
         g_hash_table_foreach(overrides, hash2field, data->params_all);
     }
+
+    // Add provided instance parameters
     g_hash_table_foreach(params, hash2field, data->params_all);
-    g_hash_table_foreach(action->extra, hash2field, data->params_all);
-    g_hash_table_foreach(action->meta, hash2metafield, data->params_all);
 
-    pcmk__filter_op_for_digest(data->params_all);
+    // Find action configuration XML in CIB
+    action_config = pcmk__find_action_config(rsc, task, *interval_ms, true);
 
-    /* Given a non-recurring operation with extra parameters configured,
-     * in case that the main digest doesn't match, even if the restart
-     * digest matches, enforce a restart rather than a reload-agent anyway.
-     * So that it ensures any changes of the extra parameters get applied
-     * for this specific operation, and the digests calculated for the
-     * resulting lrm_rsc_op will be correct.
-     * Mark the implied rc pcmk__digest_restart for the case that the main
-     * digest doesn't match.
+    /* Add action-specific resource instance attributes to the digest list.
+     *
+     * If this is a one-time action with action-specific instance attributes,
+     * enforce a restart instead of reload-agent in case the main digest doesn't
+     * match, even if the restart digest does. This ensures any changes of the
+     * action-specific parameters get applied for this specific action, and
+     * digests calculated for the resulting history will be correct. Default the
+     * result to RSC_DIGEST_RESTART for the case where the main digest doesn't
+     * match.
      */
-    if (*interval_ms == 0
-        && g_hash_table_size(action->extra) > 0) {
+    params = pcmk__unpack_action_rsc_params(action_config, node->details->attrs,
+                                            scheduler);
+    if ((*interval_ms == 0) && (g_hash_table_size(params) > 0)) {
         data->rc = pcmk__digest_restart;
     }
+    g_hash_table_foreach(params, hash2field, data->params_all);
+    g_hash_table_destroy(params);
 
-    pe_free_action(action);
+    // Add action meta-attributes
+    params = pcmk__unpack_action_meta(rsc, node, task, *interval_ms,
+                                      action_config);
+    g_hash_table_foreach(params, hash2metafield, data->params_all);
+    g_hash_table_destroy(params);
+
+    pcmk__filter_op_for_digest(data->params_all);
 
     data->digest_all_calc = calculate_operation_digest(data->params_all,
                                                        op_version);

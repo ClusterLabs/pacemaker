@@ -60,14 +60,13 @@ pcmk__create_migration_actions(pcmk_resource_t *rsc, const pcmk_node_t *current)
     if (rsc->partial_migration_target == NULL) {
         migrate_to = custom_action(rsc, pcmk__op_key(rsc->id,
                                                      PCMK_ACTION_MIGRATE_TO, 0),
-                                   PCMK_ACTION_MIGRATE_TO, current, TRUE, TRUE,
+                                   PCMK_ACTION_MIGRATE_TO, current, TRUE,
                                    rsc->cluster);
     }
     migrate_from = custom_action(rsc, pcmk__op_key(rsc->id,
                                                    PCMK_ACTION_MIGRATE_FROM, 0),
                                  PCMK_ACTION_MIGRATE_FROM, rsc->allocated_to,
-                                 TRUE, TRUE,
-                                 rsc->cluster);
+                                 TRUE, rsc->cluster);
 
     pe__set_action_flags(start, pcmk_action_migratable);
     pe__set_action_flags(stop, pcmk_action_migratable);

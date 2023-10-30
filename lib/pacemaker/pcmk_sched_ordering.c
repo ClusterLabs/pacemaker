@@ -1335,7 +1335,7 @@ rsc_order_first(pcmk_resource_t *first_rsc, pe__ordering_t *order)
                          "Creating first (%s for %s) for constraint %d ",
                          order->lh_action_task, first_rsc->id, order->id);
             first_action = custom_action(first_rsc, key, op_type, NULL, TRUE,
-                                         TRUE, first_rsc->cluster);
+                                         first_rsc->cluster);
             first_actions = g_list_prepend(NULL, first_action);
         }
 

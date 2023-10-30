@@ -2494,7 +2494,7 @@ process_recurring(pcmk_node_t *node, pcmk_resource_t *rsc,
         /* create the action */
         key = pcmk__op_key(rsc->id, task, interval_ms);
         pe_rsc_trace(rsc, "Creating %s on %s", key, pe__node_name(node));
-        custom_action(rsc, key, task, node, TRUE, TRUE, scheduler);
+        custom_action(rsc, key, task, node, TRUE, scheduler);
     }
 }
 
@@ -3560,18 +3560,50 @@ ban_from_all_nodes(pcmk_resource_t *rsc)
 
 /*!
  * \internal
- * \brief Update resource role, failure handling, etc., after a failed action
+ * \brief Get configured failure handling and role after failure for an action
  *
- * \param[in,out] history       Parsed action result history
- * \param[out]    last_failure  Set this to action XML
- * \param[in,out] on_fail       What should be done about the result
+ * \param[in,out] history    Unpacked action history entry
+ * \param[out]    on_fail    Where to set configured failure handling
+ * \param[out]    fail_role  Where to set to role after failure
  */
 static void
-unpack_rsc_op_failure(struct action_history *history, xmlNode **last_failure,
+unpack_failure_handling(struct action_history *history,
+                        enum action_fail_response *on_fail,
+                        enum rsc_role_e *fail_role)
+{
+    xmlNode *config = pcmk__find_action_config(history->rsc, history->task,
+                                               history->interval_ms, true);
+
+    GHashTable *meta = pcmk__unpack_action_meta(history->rsc, history->node,
+                                                history->task,
+                                                history->interval_ms, config);
+
+    const char *on_fail_str = g_hash_table_lookup(meta, XML_OP_ATTR_ON_FAIL);
+
+    *on_fail = pcmk__parse_on_fail(history->rsc, history->task,
+                                   history->interval_ms, on_fail_str);
+    *fail_role = pcmk__role_after_failure(history->rsc, history->task, *on_fail,
+                                          meta);
+    g_hash_table_destroy(meta);
+}
+
+/*!
+ * \internal
+ * \brief Update resource role, failure handling, etc., after a failed action
+ *
+ * \param[in,out] history         Parsed action result history
+ * \param[in]     config_on_fail  Action failure handling from configuration
+ * \param[in]     fail_role       Resource's role after failure of this action
+ * \param[out]    last_failure    This will be set to the history XML
+ * \param[in,out] on_fail         Actual handling of action result
+ */
+static void
+unpack_rsc_op_failure(struct action_history *history,
+                      enum action_fail_response config_on_fail,
+                      enum rsc_role_e fail_role, xmlNode **last_failure,
                       enum action_fail_response *on_fail)
 {
     bool is_probe = false;
-    pcmk_action_t *action = NULL;
     char *last_change_s = NULL;
 
     *last_failure = history->xml;
@@ -3616,13 +3648,11 @@ unpack_rsc_op_failure(struct action_history *history, xmlNode **last_failure,
 
     free(last_change_s);
 
-    action = custom_action(history->rsc, strdup(history->key), history->task,
-                           NULL, TRUE, FALSE, history->rsc->cluster);
-    if (cmp_on_fail(*on_fail, action->on_fail) < 0) {
-        pe_rsc_trace(history->rsc, "on-fail %s -> %s for %s (%s)",
-                     fail2text(*on_fail), fail2text(action->on_fail),
-                     action->uuid, history->key);
-        *on_fail = action->on_fail;
+    if (cmp_on_fail(*on_fail, config_on_fail) < 0) {
+        pe_rsc_trace(history->rsc, "on-fail %s -> %s for %s",
+                     fail2text(*on_fail), fail2text(config_on_fail),
+                     history->key);
+        *on_fail = config_on_fail;
     }
 
     if (strcmp(history->task, PCMK_ACTION_STOP) == 0) {
@@ -3639,7 +3669,7 @@ unpack_rsc_op_failure(struct action_history *history, xmlNode **last_failure,
         history->rsc->role = pcmk_role_promoted;
 
     } else if (strcmp(history->task, PCMK_ACTION_DEMOTE) == 0) {
-        if (action->on_fail == pcmk_on_fail_block) {
+        if (config_on_fail == pcmk_on_fail_block) {
             history->rsc->role = pcmk_role_promoted;
             pe__set_next_role(history->rsc, pcmk_role_stopped,
                               "demote with on-fail=block");
@@ -3671,18 +3701,16 @@ unpack_rsc_op_failure(struct action_history *history, xmlNode **last_failure,
                  "Resource %s: role=%s, unclean=%s, on_fail=%s, fail_role=%s",
                  history->rsc->id, role2text(history->rsc->role),
                  pcmk__btoa(history->node->details->unclean),
-                 fail2text(action->on_fail), role2text(action->fail_role));
+                 fail2text(config_on_fail), role2text(fail_role));
 
-    if ((action->fail_role != pcmk_role_started)
-        && (history->rsc->next_role < action->fail_role)) {
-        pe__set_next_role(history->rsc, action->fail_role, "failure");
+    if ((fail_role != pcmk_role_started)
+        && (history->rsc->next_role < fail_role)) {
+        pe__set_next_role(history->rsc, fail_role, "failure");
     }
 
-    if (action->fail_role == pcmk_role_stopped) {
+    if (fail_role == pcmk_role_stopped) {
         ban_from_all_nodes(history->rsc);
     }
-
-    pe_free_action(action);
 }
 
 /*!
@@ -4227,27 +4255,6 @@ pe__target_rc_from_xml(const xmlNode *xml_op)
 
 /*!
  * \internal
- * \brief Get the failure handling for an action
- *
- * \param[in,out] history  Parsed action history entry
- *
- * \return Failure handling appropriate to action
- */
-static enum action_fail_response
-get_action_on_fail(struct action_history *history)
-{
-    enum action_fail_response result = pcmk_on_fail_restart;
-    pcmk_action_t *action = custom_action(history->rsc, strdup(history->key),
-                                          history->task, NULL, TRUE, FALSE,
-                                          history->rsc->cluster);
-
-    result = action->on_fail;
-    pe_free_action(action);
-    return result;
-}
-
-/*!
- * \internal
  * \brief Update a resource's state for an action result
  *
  * \param[in,out] history       Parsed action history entry
@@ -4650,6 +4657,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
     int old_rc = 0;
     bool expired = false;
     pcmk_resource_t *parent = rsc;
+    enum rsc_role_e fail_role = pcmk_role_unknown;
     enum action_fail_response failure_strategy = pcmk_on_fail_restart;
 
     struct action_history history = {
@@ -4734,7 +4742,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
             goto done;
 
         case PCMK_EXEC_NOT_INSTALLED:
-            failure_strategy = get_action_on_fail(&history);
+            unpack_failure_handling(&history, &failure_strategy, &fail_role);
             if (failure_strategy == pcmk_on_fail_ignore) {
                 crm_warn("Cannot ignore failed %s of %s on %s: "
                          "Resource agent doesn't exist "
@@ -4749,7 +4757,8 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
             }
             resource_location(parent, node, -INFINITY, "hard-error",
                               rsc->cluster);
-            unpack_rsc_op_failure(&history, last_failure, on_fail);
+            unpack_rsc_op_failure(&history, failure_strategy, fail_role,
+                                  last_failure, on_fail);
             goto done;
 
         case PCMK_EXEC_NOT_CONNECTED:
@@ -4779,7 +4788,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
             break;
     }
 
-    failure_strategy = get_action_on_fail(&history);
+    unpack_failure_handling(&history, &failure_strategy, &fail_role);
     if ((failure_strategy == pcmk_on_fail_ignore)
         || ((failure_strategy == pcmk_on_fail_restart_container)
             && (strcmp(history.task, PCMK_ACTION_STOP) == 0))) {
@@ -4807,7 +4816,8 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
         }
 
     } else {
-        unpack_rsc_op_failure(&history, last_failure, on_fail);
+        unpack_rsc_op_failure(&history, failure_strategy, fail_role,
+                              last_failure, on_fail);
 
         if (history.execution_status == PCMK_EXEC_ERROR_HARD) {
             uint8_t log_level = LOG_ERR;

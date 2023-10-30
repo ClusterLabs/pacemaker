@@ -1063,7 +1063,7 @@ pcmk__new_shutdown_action(pcmk_node_t *node)
                                     node->details->uname);
 
     shutdown_op = custom_action(NULL, shutdown_id, PCMK_ACTION_DO_SHUTDOWN,
-                                node, FALSE, TRUE, node->details->data_set);
+                                node, FALSE, node->details->data_set);
 
     pcmk__order_stops_before_shutdown(node, shutdown_op);
     add_hash_param(shutdown_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
@@ -1448,27 +1448,6 @@ pcmk__output_actions(pcmk_scheduler_t *scheduler)
 
 /*!
  * \internal
- * \brief Check whether action from resource history is still in configuration
- *
- * \param[in] rsc          Resource that action is for
- * \param[in] task         Action's name
- * \param[in] interval_ms  Action's interval (in milliseconds)
- *
- * \return true if action is still in resource configuration, otherwise false
- */
-static bool
-action_in_config(const pcmk_resource_t *rsc, const char *task,
-                 guint interval_ms)
-{
-    char *key = pcmk__op_key(rsc->id, task, interval_ms);
-    bool config = (find_rsc_op_entry(rsc, key) != NULL);
-
-    free(key);
-    return config;
-}
-
-/*!
- * \internal
  * \brief Get action name needed to compare digest for configuration changes
  *
  * \param[in] task         Action name from history
@@ -1540,7 +1519,7 @@ force_restart(pcmk_resource_t *rsc, const char *task, guint interval_ms,
               pcmk_node_t *node)
 {
     char *key = pcmk__op_key(rsc->id, task, interval_ms);
-    pcmk_action_t *required = custom_action(rsc, key, task, NULL, FALSE, TRUE,
+    pcmk_action_t *required = custom_action(rsc, key, task, NULL, FALSE,
                                             rsc->cluster);
 
     pe_action_set_reason(required, "resource definition change", true);
@@ -1586,7 +1565,7 @@ schedule_reload(gpointer data, gpointer user_data)
     if (pcmk_is_set(rsc->flags, pcmk_rsc_start_pending)) {
         pe_rsc_trace(rsc, "%s: preventing agent reload because start pending",
                      rsc->id);
-        custom_action(rsc, stop_key(rsc), PCMK_ACTION_STOP, node, FALSE, TRUE,
+        custom_action(rsc, stop_key(rsc), PCMK_ACTION_STOP, node, FALSE,
                       rsc->cluster);
         return;
     }
@@ -1594,7 +1573,7 @@ schedule_reload(gpointer data, gpointer user_data)
     // Schedule the reload
     pe__set_resource_flags(rsc, pcmk_rsc_reload);
     reload = custom_action(rsc, reload_key(rsc), PCMK_ACTION_RELOAD_AGENT, node,
-                           FALSE, TRUE, rsc->cluster);
+                           FALSE, rsc->cluster);
     pe_action_set_reason(reload, "resource definition change", FALSE);
 
     // Set orderings so that a required stop or demote cancels the reload
@@ -1638,7 +1617,7 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
 
     // If this is a recurring action, check whether it has been orphaned
     if (interval_ms > 0) {
-        if (action_in_config(rsc, task, interval_ms)) {
+        if (pcmk__find_action_config(rsc, task, interval_ms, false) != NULL) {
             pe_rsc_trace(rsc, "%s-interval %s for %s on %s is in configuration",
                          pcmk__readable_interval(interval_ms), task, rsc->id,
                          pe__node_name(node));

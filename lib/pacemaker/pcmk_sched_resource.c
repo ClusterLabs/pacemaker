@@ -136,7 +136,7 @@ pcmk__rsc_agent_changed(pcmk_resource_t *rsc, pcmk_node_t *node,
     }
     if (changed && active_on_node) {
         // Make sure the resource is restarted
-        custom_action(rsc, stop_key(rsc), PCMK_ACTION_STOP, node, FALSE, TRUE,
+        custom_action(rsc, stop_key(rsc), PCMK_ACTION_STOP, node, FALSE,
                       rsc->cluster);
         pe__set_resource_flags(rsc, pcmk_rsc_start_pending);
     }

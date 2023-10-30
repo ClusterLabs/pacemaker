@@ -342,42 +342,59 @@ void pe__show_node_scores_as(const char *file, const char *function,
         pe__show_node_scores_as(__FILE__, __func__, __LINE__,      \
                                 (level), (rsc), (text), (nodes), (scheduler))
 
-xmlNode *find_rsc_op_entry(const pcmk_resource_t *rsc, const char *key);
-
 GHashTable *pcmk__unpack_action_meta(pcmk_resource_t *rsc,
                                      const pcmk_node_t *node,
                                      const char *action_name, guint interval_ms,
                                      const xmlNode *action_config);
+GHashTable *pcmk__unpack_action_rsc_params(const xmlNode *action_xml,
+                                           GHashTable *node_attrs,
+                                           pcmk_scheduler_t *data_set);
+xmlNode *pcmk__find_action_config(const pcmk_resource_t *rsc,
+                                  const char *action_name, guint interval_ms,
+                                  bool include_disabled);
+
+enum rsc_start_requirement pcmk__action_requires(const pcmk_resource_t *rsc,
+                                                 const char *action_name);
+
+enum action_fail_response pcmk__parse_on_fail(const pcmk_resource_t *rsc,
+                                              const char *action_name,
+                                              guint interval_ms,
+                                              const char *value);
+
+enum rsc_role_e pcmk__role_after_failure(const pcmk_resource_t *rsc,
+                                         const char *action_name,
+                                         enum action_fail_response on_fail,
+                                         GHashTable *meta);
 
 pcmk_action_t *custom_action(pcmk_resource_t *rsc, char *key, const char *task,
                              const pcmk_node_t *on_node, gboolean optional,
-                             gboolean foo, pcmk_scheduler_t *scheduler);
+                             pcmk_scheduler_t *scheduler);
 
 #  define delete_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_DELETE, 0)
 #  define delete_action(rsc, node, optional) custom_action(		\
 		rsc, delete_key(rsc), PCMK_ACTION_DELETE, node, \
-		optional, TRUE, rsc->cluster);
+		optional, rsc->cluster);
 
 #  define stop_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_STOP, 0)
 #  define stop_action(rsc, node, optional) custom_action(			\
 		rsc, stop_key(rsc), PCMK_ACTION_STOP, node,		\
-		optional, TRUE, rsc->cluster);
+		optional, rsc->cluster);
 
 #  define reload_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_RELOAD_AGENT, 0)
 #  define start_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_START, 0)
 #  define start_action(rsc, node, optional) custom_action(		\
 		rsc, start_key(rsc), PCMK_ACTION_START, node,           \
-		optional, TRUE, rsc->cluster)
+		optional, rsc->cluster)
 
 #  define promote_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_PROMOTE, 0)
 #  define promote_action(rsc, node, optional) custom_action(		\
 		rsc, promote_key(rsc), PCMK_ACTION_PROMOTE, node,	\
-		optional, TRUE, rsc->cluster)
+		optional, rsc->cluster)
 
 #  define demote_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_DEMOTE, 0)
 #  define demote_action(rsc, node, optional) custom_action(		\
 		rsc, demote_key(rsc), PCMK_ACTION_DEMOTE, node, \
-		optional, TRUE, rsc->cluster)
+		optional, rsc->cluster)
 
 extern int pe_get_configured_timeout(pcmk_resource_t *rsc, const char *action,
                                      pcmk_scheduler_t *scheduler);
