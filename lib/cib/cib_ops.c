@@ -497,7 +497,8 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
         }
     }
 
-    if(options & cib_mixed_update) {
+    // @COMPAT cib_mixed_update is deprecated as of 2.1.7
+    if (pcmk_is_set(options, cib_mixed_update)) {
         int max = 0, lpc;
         xmlXPathObjectPtr xpathObj = xpath_search(*result_cib, "//@__delete__");
 
@@ -562,33 +563,25 @@ update_cib_object(xmlNode * parent, xmlNode * update)
     // @COMPAT: XML_CIB_ATTR_REPLACE is unused internally. Remove at break.
     replace = crm_element_value(update, XML_CIB_ATTR_REPLACE);
     if (replace != NULL) {
-        xmlNode *remove = NULL;
-        int last = 0, lpc = 0, len = 0;
+        int last = 0;
+        int len = strlen(replace);
 
-        len = strlen(replace);
-        while (lpc <= len) {
+        for (int lpc = 0; lpc <= len; ++lpc) {
             if (replace[lpc] == ',' || replace[lpc] == 0) {
-                char *replace_item = NULL;
+                if (last != lpc) {
+                    char *replace_item = strndup(replace + last, lpc - last);
+                    xmlNode *remove = find_xml_node(target, replace_item,
+                                                    FALSE);
 
-                if (last == lpc) {
-                    /* nothing to do */
-                    last = lpc + 1;
-                    goto incr;
+                    if (remove != NULL) {
+                        crm_trace("Replacing node <%s> in <%s>",
+                                  replace_item, target->name);
+                        free_xml(remove);
+                    }
+                    free(replace_item);
                 }
-
-                replace_item = strndup(replace + last, lpc - last);
-                remove = find_xml_node(target, replace_item, FALSE);
-                if (remove != NULL) {
-                    crm_trace("Replacing node <%s> in <%s>",
-                              replace_item, target->name);
-                    free_xml(remove);
-                    remove = NULL;
-                }
-                free(replace_item);
                 last = lpc + 1;
             }
-  incr:
-            lpc++;
         }
         xml_remove_prop(update, XML_CIB_ATTR_REPLACE);
         xml_remove_prop(target, XML_CIB_ATTR_REPLACE);

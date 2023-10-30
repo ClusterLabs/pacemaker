@@ -30,7 +30,7 @@ enum ordering_symmetry {
 };
 
 #define EXPAND_CONSTRAINT_IDREF(__set, __rsc, __name) do {                  \
-        __rsc = pcmk__find_constraint_resource(data_set->resources,         \
+        __rsc = pcmk__find_constraint_resource(scheduler->resources,        \
                                                __name);                     \
         if (__rsc == NULL) {                                                \
             pcmk__config_err("%s: No resource found for %s", __set, __name);\
@@ -227,17 +227,17 @@ ordering_flags_for_kind(enum pe_order_kind kind, const char *first,
  * \param[in] instance_attr  XML attribute name for instance number.
  *                           This option is deprecated and will be removed in a
  *                           future release.
- * \param[in] data_set       Cluster working set
+ * \param[in] scheduler      Scheduler data
  *
  * \return Resource corresponding to \p id, or NULL if none
  */
-static pe_resource_t *
+static pcmk_resource_t *
 get_ordering_resource(const xmlNode *xml, const char *resource_attr,
                       const char *instance_attr,
-                      const pe_working_set_t *data_set)
+                      const pcmk_scheduler_t *scheduler)
 {
     // @COMPAT: instance_attr and instance_id variables deprecated since 2.1.5
-    pe_resource_t *rsc = NULL;
+    pcmk_resource_t *rsc = NULL;
     const char *rsc_id = crm_element_value(xml, resource_attr);
     const char *instance_id = crm_element_value(xml, instance_attr);
 
@@ -247,7 +247,7 @@ get_ordering_resource(const xmlNode *xml, const char *resource_attr,
         return NULL;
     }
 
-    rsc = pcmk__find_constraint_resource(data_set->resources, rsc_id);
+    rsc = pcmk__find_constraint_resource(scheduler->resources, rsc_id);
     if (rsc == NULL) {
         pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
                          "does not exist", ID(xml), rsc_id);
@@ -287,7 +287,7 @@ get_ordering_resource(const xmlNode *xml, const char *resource_attr,
  * \return Minimum 'first' instances required (or 0 if not applicable)
  */
 static int
-get_minimum_first_instances(const pe_resource_t *rsc, const xmlNode *xml)
+get_minimum_first_instances(const pcmk_resource_t *rsc, const xmlNode *xml)
 {
     const char *clone_min = NULL;
     bool require_all = false;
@@ -334,13 +334,13 @@ get_minimum_first_instances(const pe_resource_t *rsc, const xmlNode *xml)
  */
 static void
 clone_min_ordering(const char *id,
-                   pe_resource_t *rsc_first, const char *action_first,
-                   pe_resource_t *rsc_then, const char *action_then,
+                   pcmk_resource_t *rsc_first, const char *action_first,
+                   pcmk_resource_t *rsc_then, const char *action_then,
                    uint32_t flags, int clone_min)
 {
     // Create a pseudo-action for when the minimum instances are active
     char *task = crm_strdup_printf(PCMK_ACTION_CLONE_ONE_OR_MORE ":%s", id);
-    pe_action_t *clone_min_met = get_pseudo_op(task, rsc_first->cluster);
+    pcmk_action_t *clone_min_met = get_pseudo_op(task, rsc_first->cluster);
 
     free(task);
 
@@ -352,7 +352,7 @@ clone_min_ordering(const char *id,
 
     // Order the actions for each clone instance before the pseudo-action
     for (GList *iter = rsc_first->children; iter != NULL; iter = iter->next) {
-        pe_resource_t *child = iter->data;
+        pcmk_resource_t *child = iter->data;
 
         pcmk__new_ordering(child, pcmk__op_key(child->id, action_first, 0),
                            NULL, NULL, NULL, clone_min_met,
@@ -401,8 +401,8 @@ clone_min_ordering(const char *id,
  */
 static void
 inverse_ordering(const char *id, enum pe_order_kind kind,
-                 pe_resource_t *rsc_first, const char *action_first,
-                 pe_resource_t *rsc_then, const char *action_then)
+                 pcmk_resource_t *rsc_first, const char *action_first,
+                 pcmk_resource_t *rsc_then, const char *action_then)
 {
     action_then = invert_action(action_then);
     action_first = invert_action(action_first);
@@ -420,10 +420,10 @@ inverse_ordering(const char *id, enum pe_order_kind kind,
 }
 
 static void
-unpack_simple_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
+unpack_simple_rsc_order(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 {
-    pe_resource_t *rsc_then = NULL;
-    pe_resource_t *rsc_first = NULL;
+    pcmk_resource_t *rsc_then = NULL;
+    pcmk_resource_t *rsc_first = NULL;
     int min_required_before = 0;
     enum pe_order_kind kind = pe_order_kind_mandatory;
     uint32_t flags = pcmk__ar_none;
@@ -444,14 +444,14 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
 
     rsc_first = get_ordering_resource(xml_obj, XML_ORDER_ATTR_FIRST,
                                       XML_ORDER_ATTR_FIRST_INSTANCE,
-                                      data_set);
+                                      scheduler);
     if (rsc_first == NULL) {
         return;
     }
 
     rsc_then = get_ordering_resource(xml_obj, XML_ORDER_ATTR_THEN,
                                      XML_ORDER_ATTR_THEN_INSTANCE,
-                                     data_set);
+                                     scheduler);
     if (rsc_then == NULL) {
         return;
     }
@@ -516,16 +516,16 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
  *                                   \p then_action_task must be set)
  *
  * \param[in]     flags              Group of enum pcmk__action_relation_flags
- * \param[in,out] sched              Cluster working set to add ordering to
+ * \param[in,out] sched              Scheduler data to add ordering to
  *
  * \note This function takes ownership of first_action_task and
  *       then_action_task, which do not need to be freed by the caller.
  */
 void
-pcmk__new_ordering(pe_resource_t *first_rsc, char *first_action_task,
-                   pe_action_t *first_action, pe_resource_t *then_rsc,
-                   char *then_action_task, pe_action_t *then_action,
-                   uint32_t flags, pe_working_set_t *sched)
+pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
+                   pcmk_action_t *first_action, pcmk_resource_t *then_rsc,
+                   char *then_action_task, pcmk_action_t *then_action,
+                   uint32_t flags, pcmk_scheduler_t *sched)
 {
     pe__ordering_t *order = NULL;
 
@@ -585,19 +585,19 @@ pcmk__new_ordering(pe_resource_t *first_rsc, char *first_action_task,
  * \param[in]     set                   Set XML to unpack
  * \param[in]     parent_kind           rsc_order XML "kind" attribute
  * \param[in]     parent_symmetrical_s  rsc_order XML "symmetrical" attribute
- * \param[in,out] data_set              Cluster working set
+ * \param[in,out] scheduler             Scheduler data
  *
  * \return Standard Pacemaker return code
  */
 static int
 unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
-                 const char *parent_symmetrical_s, pe_working_set_t *data_set)
+                 const char *parent_symmetrical_s, pcmk_scheduler_t *scheduler)
 {
     GList *set_iter = NULL;
     GList *resources = NULL;
 
-    pe_resource_t *last = NULL;
-    pe_resource_t *resource = NULL;
+    pcmk_resource_t *last = NULL;
+    pcmk_resource_t *resource = NULL;
 
     int local_kind = parent_kind;
     bool sequential = false;
@@ -640,7 +640,7 @@ unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
 
     set_iter = resources;
     while (set_iter != NULL) {
-        resource = (pe_resource_t *) set_iter->data;
+        resource = (pcmk_resource_t *) set_iter->data;
         set_iter = set_iter->next;
 
         key = pcmk__op_key(resource->id, action, 0);
@@ -649,11 +649,11 @@ unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
             /* Serialize before everything that comes after */
 
             for (GList *iter = set_iter; iter != NULL; iter = iter->next) {
-                pe_resource_t *then_rsc = iter->data;
+                pcmk_resource_t *then_rsc = iter->data;
                 char *then_key = pcmk__op_key(then_rsc->id, action, 0);
 
                 pcmk__new_ordering(resource, strdup(key), NULL, then_rsc,
-                                   then_key, NULL, flags, data_set);
+                                   then_key, NULL, flags, scheduler);
             }
 
         } else if (sequential) {
@@ -678,7 +678,7 @@ unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
 
     set_iter = resources;
     while (set_iter != NULL) {
-        resource = (pe_resource_t *) set_iter->data;
+        resource = (pcmk_resource_t *) set_iter->data;
         set_iter = set_iter->next;
 
         if (sequential) {
@@ -698,26 +698,26 @@ unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
 /*!
  * \brief Order two resource sets relative to each other
  *
- * \param[in]     id        Ordering ID (for logging)
- * \param[in]     set1      First listed set
- * \param[in]     set2      Second listed set
- * \param[in]     kind      Ordering kind
- * \param[in,out] data_set  Cluster working set
- * \param[in]     symmetry  Which ordering symmetry applies to this relation
+ * \param[in]     id         Ordering ID (for logging)
+ * \param[in]     set1       First listed set
+ * \param[in]     set2       Second listed set
+ * \param[in]     kind       Ordering kind
+ * \param[in,out] scheduler  Scheduler data
+ * \param[in]     symmetry   Which ordering symmetry applies to this relation
  *
  * \return Standard Pacemaker return code
  */
 static int
 order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
-               enum pe_order_kind kind, pe_working_set_t *data_set,
+               enum pe_order_kind kind, pcmk_scheduler_t *scheduler,
                enum ordering_symmetry symmetry)
 {
 
     const xmlNode *xml_rsc = NULL;
     const xmlNode *xml_rsc_2 = NULL;
 
-    pe_resource_t *rsc_1 = NULL;
-    pe_resource_t *rsc_2 = NULL;
+    pcmk_resource_t *rsc_1 = NULL;
+    pcmk_resource_t *rsc_2 = NULL;
 
     const char *action_1 = crm_element_value(set1, "action");
     const char *action_2 = crm_element_value(set2, "action");
@@ -758,7 +758,7 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
      */
     if (!require_all) {
         char *task = crm_strdup_printf(PCMK_ACTION_ONE_OR_MORE ":%s", ID(set1));
-        pe_action_t *unordered_action = get_pseudo_op(task, data_set);
+        pcmk_action_t *unordered_action = get_pseudo_op(task, scheduler);
 
         free(task);
         pe__set_action_flags(unordered_action, pcmk_action_min_runnable);
@@ -776,7 +776,7 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
                                NULL, NULL, NULL, unordered_action,
                                pcmk__ar_min_runnable
                                |pcmk__ar_first_implies_then_graphed,
-                               data_set);
+                               scheduler);
         }
         for (xml_rsc_2 = first_named_child(set2, XML_TAG_RESOURCE_REF);
              xml_rsc_2 != NULL; xml_rsc_2 = crm_next_same_xml(xml_rsc_2)) {
@@ -790,7 +790,7 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
             pcmk__new_ordering(NULL, NULL, unordered_action,
                                rsc_2, pcmk__op_key(rsc_2->id, action_2, 0),
                                NULL, flags|pcmk__ar_unrunnable_first_blocks,
-                               data_set);
+                               scheduler);
         }
 
         return pcmk_rc_ok;
@@ -885,31 +885,31 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
  *
  * \param[in,out] xml_obj       Ordering constraint XML
  * \param[out]    expanded_xml  Equivalent XML with tags expanded
- * \param[in]     data_set      Cluster working set
+ * \param[in]     scheduler     Scheduler data
  *
  * \return Standard Pacemaker return code (specifically, pcmk_rc_ok on success,
  *         and pcmk_rc_unpack_error on invalid configuration)
  */
 static int
 unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
-                  const pe_working_set_t *data_set)
+                  const pcmk_scheduler_t *scheduler)
 {
     const char *id_first = NULL;
     const char *id_then = NULL;
     const char *action_first = NULL;
     const char *action_then = NULL;
 
-    pe_resource_t *rsc_first = NULL;
-    pe_resource_t *rsc_then = NULL;
-    pe_tag_t *tag_first = NULL;
-    pe_tag_t *tag_then = NULL;
+    pcmk_resource_t *rsc_first = NULL;
+    pcmk_resource_t *rsc_then = NULL;
+    pcmk_tag_t *tag_first = NULL;
+    pcmk_tag_t *tag_then = NULL;
 
     xmlNode *rsc_set_first = NULL;
     xmlNode *rsc_set_then = NULL;
     bool any_sets = false;
 
     // Check whether there are any resource sets with template or tag references
-    *expanded_xml = pcmk__expand_tags_in_sets(xml_obj, data_set);
+    *expanded_xml = pcmk__expand_tags_in_sets(xml_obj, scheduler);
     if (*expanded_xml != NULL) {
         crm_log_xml_trace(*expanded_xml, "Expanded rsc_order");
         return pcmk_rc_ok;
@@ -921,14 +921,15 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         return pcmk_rc_ok;
     }
 
-    if (!pcmk__valid_resource_or_tag(data_set, id_first, &rsc_first,
+    if (!pcmk__valid_resource_or_tag(scheduler, id_first, &rsc_first,
                                      &tag_first)) {
         pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
                          "valid resource or tag", ID(xml_obj), id_first);
         return pcmk_rc_unpack_error;
     }
 
-    if (!pcmk__valid_resource_or_tag(data_set, id_then, &rsc_then, &tag_then)) {
+    if (!pcmk__valid_resource_or_tag(scheduler, id_then, &rsc_then,
+                                     &tag_then)) {
         pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
                          "valid resource or tag", ID(xml_obj), id_then);
         return pcmk_rc_unpack_error;
@@ -946,7 +947,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     // Convert template/tag reference in "first" into constraint resource_set
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set_first, XML_ORDER_ATTR_FIRST,
-                          true, data_set)) {
+                          true, scheduler)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_unpack_error;
@@ -963,7 +964,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     // Convert template/tag reference in "then" into constraint resource_set
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set_then, XML_ORDER_ATTR_THEN,
-                          true, data_set)) {
+                          true, scheduler)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_unpack_error;
@@ -992,11 +993,11 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
  * \internal
  * \brief Unpack ordering constraint XML
  *
- * \param[in,out] xml_obj   Ordering constraint XML to unpack
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] xml_obj    Ordering constraint XML to unpack
+ * \param[in,out] scheduler  Scheduler data
  */
 void
-pcmk__unpack_ordering(xmlNode *xml_obj, pe_working_set_t *data_set)
+pcmk__unpack_ordering(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 {
     xmlNode *set = NULL;
     xmlNode *last = NULL;
@@ -1012,7 +1013,7 @@ pcmk__unpack_ordering(xmlNode *xml_obj, pe_working_set_t *data_set)
                                                             NULL);
 
     // Expand any resource tags in the constraint XML
-    if (unpack_order_tags(xml_obj, &expanded_xml, data_set) != pcmk_rc_ok) {
+    if (unpack_order_tags(xml_obj, &expanded_xml, scheduler) != pcmk_rc_ok) {
         return;
     }
     if (expanded_xml != NULL) {
@@ -1024,9 +1025,9 @@ pcmk__unpack_ordering(xmlNode *xml_obj, pe_working_set_t *data_set)
     for (set = first_named_child(xml_obj, XML_CONS_TAG_RSC_SET);
          set != NULL; set = crm_next_same_xml(set)) {
 
-        set = expand_idref(set, data_set->input);
+        set = expand_idref(set, scheduler->input);
         if ((set == NULL) // Configuration error, message already logged
-            || (unpack_order_set(set, kind, invert, data_set) != pcmk_rc_ok)) {
+            || (unpack_order_set(set, kind, invert, scheduler) != pcmk_rc_ok)) {
 
             if (expanded_xml != NULL) {
                 free_xml(expanded_xml);
@@ -1036,7 +1037,7 @@ pcmk__unpack_ordering(xmlNode *xml_obj, pe_working_set_t *data_set)
 
         if (last != NULL) {
 
-            if (order_rsc_sets(id, last, set, kind, data_set,
+            if (order_rsc_sets(id, last, set, kind, scheduler,
                                symmetry) != pcmk_rc_ok) {
                 if (expanded_xml != NULL) {
                     free_xml(expanded_xml);
@@ -1045,7 +1046,7 @@ pcmk__unpack_ordering(xmlNode *xml_obj, pe_working_set_t *data_set)
             }
 
             if ((symmetry == ordering_symmetric)
-                && (order_rsc_sets(id, set, last, kind, data_set,
+                && (order_rsc_sets(id, set, last, kind, scheduler,
                                    ordering_symmetric_inverse) != pcmk_rc_ok)) {
                 if (expanded_xml != NULL) {
                     free_xml(expanded_xml);
@@ -1064,12 +1065,12 @@ pcmk__unpack_ordering(xmlNode *xml_obj, pe_working_set_t *data_set)
 
     // If the constraint has no resource sets, unpack it as a simple ordering
     if (last == NULL) {
-        return unpack_simple_rsc_order(xml_obj, data_set);
+        return unpack_simple_rsc_order(xml_obj, scheduler);
     }
 }
 
 static bool
-ordering_is_invalid(pe_action_t *action, pe_action_wrapper_t *input)
+ordering_is_invalid(pcmk_action_t *action, pcmk__related_action_t *input)
 {
     /* Prevent user-defined ordering constraints between resources
      * running in a guest node and the resource that defines that node.
@@ -1101,16 +1102,16 @@ ordering_is_invalid(pe_action_t *action, pe_action_wrapper_t *input)
 }
 
 void
-pcmk__disable_invalid_orderings(pe_working_set_t *data_set)
+pcmk__disable_invalid_orderings(pcmk_scheduler_t *scheduler)
 {
-    for (GList *iter = data_set->actions; iter != NULL; iter = iter->next) {
-        pe_action_t *action = (pe_action_t *) iter->data;
-        pe_action_wrapper_t *input = NULL;
+    for (GList *iter = scheduler->actions; iter != NULL; iter = iter->next) {
+        pcmk_action_t *action = (pcmk_action_t *) iter->data;
+        pcmk__related_action_t *input = NULL;
 
         for (GList *input_iter = action->actions_before;
              input_iter != NULL; input_iter = input_iter->next) {
 
-            input = (pe_action_wrapper_t *) input_iter->data;
+            input = input_iter->data;
             if (ordering_is_invalid(action, input)) {
                 input->type = (enum pe_ordering) pcmk__ar_none;
             }
@@ -1126,12 +1127,12 @@ pcmk__disable_invalid_orderings(pe_working_set_t *data_set)
  * \param[in]     shutdown_op  Shutdown action for node
  */
 void
-pcmk__order_stops_before_shutdown(pe_node_t *node, pe_action_t *shutdown_op)
+pcmk__order_stops_before_shutdown(pcmk_node_t *node, pcmk_action_t *shutdown_op)
 {
     for (GList *iter = node->details->data_set->actions;
          iter != NULL; iter = iter->next) {
 
-        pe_action_t *action = (pe_action_t *) iter->data;
+        pcmk_action_t *action = (pcmk_action_t *) iter->data;
 
         // Only stops on the node shutting down are relevant
         if (!pe__same_node(action->node, node)
@@ -1190,7 +1191,7 @@ pcmk__order_stops_before_shutdown(pe_node_t *node, pe_action_t *shutdown_op)
  * \note It is the caller's responsibility to free the result with g_list_free()
  */
 static GList *
-find_actions_by_task(const pe_resource_t *rsc, const char *original_key)
+find_actions_by_task(const pcmk_resource_t *rsc, const char *original_key)
 {
     // Search under given task key directly
     GList *list = find_actions(rsc->actions, original_key, NULL);
@@ -1222,8 +1223,8 @@ find_actions_by_task(const pe_resource_t *rsc, const char *original_key)
  * \param[in,out] order         Ordering constraint being applied
  */
 static void
-order_resource_actions_after(pe_action_t *first_action,
-                             const pe_resource_t *rsc, pe__ordering_t *order)
+order_resource_actions_after(pcmk_action_t *first_action,
+                             const pcmk_resource_t *rsc, pe__ordering_t *order)
 {
     GList *then_actions = NULL;
     uint32_t flags = pcmk__ar_none;
@@ -1267,7 +1268,7 @@ order_resource_actions_after(pe_action_t *first_action,
     }
 
     for (GList *iter = then_actions; iter != NULL; iter = iter->next) {
-        pe_action_t *then_action_iter = (pe_action_t *) iter->data;
+        pcmk_action_t *then_action_iter = (pcmk_action_t *) iter->data;
 
         if (first_action != NULL) {
             order_actions(first_action, then_action_iter, flags);
@@ -1283,11 +1284,11 @@ order_resource_actions_after(pe_action_t *first_action,
 }
 
 static void
-rsc_order_first(pe_resource_t *first_rsc, pe__ordering_t *order)
+rsc_order_first(pcmk_resource_t *first_rsc, pe__ordering_t *order)
 {
     GList *first_actions = NULL;
-    pe_action_t *first_action = order->lh_action;
-    pe_resource_t *then_rsc = order->rh_rsc;
+    pcmk_action_t *first_action = order->lh_action;
+    pcmk_resource_t *then_rsc = order->rh_rsc;
 
     CRM_ASSERT(first_rsc != NULL);
     pe_rsc_trace(first_rsc, "Applying ordering constraint %d (first: %s)",
@@ -1334,7 +1335,7 @@ rsc_order_first(pe_resource_t *first_rsc, pe__ordering_t *order)
                          "Creating first (%s for %s) for constraint %d ",
                          order->lh_action_task, first_rsc->id, order->id);
             first_action = custom_action(first_rsc, key, op_type, NULL, TRUE,
-                                         TRUE, first_rsc->cluster);
+                                         first_rsc->cluster);
             first_actions = g_list_prepend(NULL, first_action);
         }
 
@@ -1374,18 +1375,18 @@ block_colocation_dependents(gpointer data, gpointer user_data)
 static void
 update_action_for_orderings(gpointer data, gpointer user_data)
 {
-    pcmk__update_action_for_orderings((pe_action_t *) data,
-                                      (pe_working_set_t *) user_data);
+    pcmk__update_action_for_orderings((pcmk_action_t *) data,
+                                      (pcmk_scheduler_t *) user_data);
 }
 
 /*!
  * \internal
  * \brief Apply all ordering constraints
  *
- * \param[in,out] sched  Cluster working set
+ * \param[in,out] sched  Scheduler data
  */
 void
-pcmk__apply_orderings(pe_working_set_t *sched)
+pcmk__apply_orderings(pcmk_scheduler_t *sched)
 {
     crm_trace("Applying ordering constraints");
 
@@ -1407,7 +1408,7 @@ pcmk__apply_orderings(pe_working_set_t *sched)
          iter != NULL; iter = iter->next) {
 
         pe__ordering_t *order = iter->data;
-        pe_resource_t *rsc = order->lh_rsc;
+        pcmk_resource_t *rsc = order->lh_rsc;
 
         if (rsc != NULL) {
             rsc_order_first(rsc, order);
@@ -1444,12 +1445,12 @@ pcmk__apply_orderings(pe_working_set_t *sched)
  * \param[in,out] list   List of "before" actions
  */
 void
-pcmk__order_after_each(pe_action_t *after, GList *list)
+pcmk__order_after_each(pcmk_action_t *after, GList *list)
 {
     const char *after_desc = (after->task == NULL)? after->uuid : after->task;
 
     for (GList *iter = list; iter != NULL; iter = iter->next) {
-        pe_action_t *before = (pe_action_t *) iter->data;
+        pcmk_action_t *before = (pcmk_action_t *) iter->data;
         const char *before_desc = before->task? before->task : before->uuid;
 
         crm_debug("Ordering %s on %s before %s on %s",
@@ -1466,7 +1467,7 @@ pcmk__order_after_each(pe_action_t *after, GList *list)
  * \param[in,out] rsc  Clone or bundle to order
  */
 void
-pcmk__promotable_restart_ordering(pe_resource_t *rsc)
+pcmk__promotable_restart_ordering(pcmk_resource_t *rsc)
 {
     // Order start and promote after all instances are stopped
     pcmk__order_resource_actions(rsc, PCMK_ACTION_STOPPED,

@@ -438,7 +438,7 @@ cluster_maint_mode_console(pcmk__output_t *out, va_list args) {
     }
 }
 
-PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *",
+PCMK__OUTPUT_ARGS("cluster-status", "pcmk_scheduler_t *",
                   "enum pcmk_pacemakerd_state", "crm_exit_t",
                   "stonith_history_t *", "enum pcmk__fence_history", "uint32_t",
                   "uint32_t", "const char *", "GList *", "GList *")

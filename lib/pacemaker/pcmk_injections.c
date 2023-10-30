@@ -552,11 +552,11 @@ set_ticket_state_attr(pcmk__output_t *out, const char *ticket_id,
  * \param[in,out] out       Output object for displaying error messages
  * \param[in]     spec      Action specification to inject
  * \param[in,out] cib       CIB object for scheduler input
- * \param[in]     data_set  Cluster working set
+ * \param[in]     scheduler  Scheduler data
  */
 static void
 inject_action(pcmk__output_t *out, const char *spec, cib_t *cib,
-              const pe_working_set_t *data_set)
+              const pcmk_scheduler_t *scheduler)
 {
     int rc;
     int outcome = PCMK_OCF_OK;
@@ -574,7 +574,7 @@ inject_action(pcmk__output_t *out, const char *spec, cib_t *cib,
     xmlNode *cib_op = NULL;
     xmlNode *cib_node = NULL;
     xmlNode *cib_resource = NULL;
-    const pe_resource_t *rsc = NULL;
+    const pcmk_resource_t *rsc = NULL;
     lrmd_event_data_t *op = NULL;
 
     out->message(out, "inject-spec", spec);
@@ -590,7 +590,7 @@ inject_action(pcmk__output_t *out, const char *spec, cib_t *cib,
 
     parse_op_key(key, &resource, &task, &interval_ms);
 
-    rsc = pe_find_resource(data_set->resources, resource);
+    rsc = pe_find_resource(scheduler->resources, resource);
     if (rsc == NULL) {
         out->err(out, "Invalid resource name: %s", resource);
         goto done;
@@ -631,18 +631,18 @@ done:
  * \internal
  * \brief Inject fictitious scheduler inputs
  *
- * \param[in,out] data_set    Cluster working set
+ * \param[in,out] scheduler   Scheduler data
  * \param[in,out] cib         CIB object for scheduler input to modify
  * \param[in]     injections  Injections to apply
  */
 void
-pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
+pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
                              const pcmk_injections_t *injections)
 {
     int rc = pcmk_ok;
     const GList *iter = NULL;
     xmlNode *cib_node = NULL;
-    pcmk__output_t *out = data_set->priv;
+    pcmk__output_t *out = scheduler->priv;
 
     out->message(out, "inject-modify-config", injections->quorum,
                  injections->watchdog);
@@ -757,7 +757,7 @@ pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
     }
 
     for (iter = injections->op_inject; iter != NULL; iter = iter->next) {
-        inject_action(out, (const char *) iter->data, cib, data_set);
+        inject_action(out, (const char *) iter->data, cib, scheduler);
     }
 
     if (!out->is_quiet(out)) {

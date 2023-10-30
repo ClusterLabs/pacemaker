@@ -19,10 +19,11 @@
 
 void populate_hash(xmlNode * nvpair_list, GHashTable * hash, const char **attrs, int attrs_length);
 
-static pe_node_t *active_node(const pe_resource_t *rsc, unsigned int *count_all,
-                              unsigned int *count_clean);
+static pcmk_node_t *active_node(const pcmk_resource_t *rsc,
+                                unsigned int *count_all,
+                                unsigned int *count_clean);
 
-resource_object_functions_t resource_class_functions[] = {
+pcmk_rsc_methods_t resource_class_functions[] = {
     {
          native_unpack,
          native_find_rsc,
@@ -111,10 +112,12 @@ dup_attr(gpointer key, gpointer value, gpointer user_data)
 }
 
 static void
-expand_parents_fixed_nvpairs(pe_resource_t * rsc, pe_rule_eval_data_t * rule_data, GHashTable * meta_hash, pe_working_set_t * data_set)
+expand_parents_fixed_nvpairs(pcmk_resource_t *rsc,
+                             pe_rule_eval_data_t *rule_data,
+                             GHashTable *meta_hash, pcmk_scheduler_t *scheduler)
 {
     GHashTable *parent_orig_meta = pcmk__strkey_table(free, free);
-    pe_resource_t *p = rsc->parent;
+    pcmk_resource_t *p = rsc->parent;
 
     if (p == NULL) {
         return ;
@@ -124,8 +127,8 @@ expand_parents_fixed_nvpairs(pe_resource_t * rsc, pe_rule_eval_data_t * rule_dat
     /* The fixed value of the lower parent resource takes precedence and is not overwritten. */
     while(p != NULL) {
         /* A hash table for comparison is generated, including the id-ref. */
-        pe__unpack_dataset_nvpairs(p->xml, XML_TAG_META_SETS,
-                               rule_data, parent_orig_meta, NULL, FALSE, data_set);
+        pe__unpack_dataset_nvpairs(p->xml, XML_TAG_META_SETS, rule_data,
+                                   parent_orig_meta, NULL, FALSE, scheduler);
         p = p->parent; 
     }
 
@@ -151,8 +154,8 @@ expand_parents_fixed_nvpairs(pe_resource_t * rsc, pe_rule_eval_data_t * rule_dat
 
 }
 void
-get_meta_attributes(GHashTable * meta_hash, pe_resource_t * rsc,
-                    pe_node_t * node, pe_working_set_t * data_set)
+get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
+                    pcmk_node_t *node, pcmk_scheduler_t *scheduler)
 {
     pe_rsc_eval_data_t rsc_rule_data = {
         .standard = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS),
@@ -163,7 +166,7 @@ get_meta_attributes(GHashTable * meta_hash, pe_resource_t * rsc,
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
         .role = pcmk_role_unknown,
-        .now = data_set->now,
+        .now = scheduler->now,
         .match_data = NULL,
         .rsc_data = &rsc_rule_data,
         .op_data = NULL
@@ -181,17 +184,17 @@ get_meta_attributes(GHashTable * meta_hash, pe_resource_t * rsc,
     }
 
     pe__unpack_dataset_nvpairs(rsc->xml, XML_TAG_META_SETS, &rule_data,
-                               meta_hash, NULL, FALSE, data_set);
+                               meta_hash, NULL, FALSE, scheduler);
 
     /* Set the "meta_attributes" explicitly set in the parent resource to the hash table of the child resource. */
     /* If it is already explicitly set as a child, it will not be overwritten. */
     if (rsc->parent != NULL) {
-        expand_parents_fixed_nvpairs(rsc, &rule_data, meta_hash, data_set);
+        expand_parents_fixed_nvpairs(rsc, &rule_data, meta_hash, scheduler);
     }
 
     /* check the defaults */
-    pe__unpack_dataset_nvpairs(data_set->rsc_defaults, XML_TAG_META_SETS,
-                               &rule_data, meta_hash, NULL, FALSE, data_set);
+    pe__unpack_dataset_nvpairs(scheduler->rsc_defaults, XML_TAG_META_SETS,
+                               &rule_data, meta_hash, NULL, FALSE, scheduler);
 
     /* If there is "meta_attributes" that the parent resource has not explicitly set, set a value that is not set from rsc_default either. */
     /* The values already set up to this point will not be overwritten. */
@@ -201,13 +204,13 @@ get_meta_attributes(GHashTable * meta_hash, pe_resource_t * rsc,
 }
 
 void
-get_rsc_attributes(GHashTable *meta_hash, const pe_resource_t *rsc,
-                   const pe_node_t *node, pe_working_set_t *data_set)
+get_rsc_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
+                   const pcmk_node_t *node, pcmk_scheduler_t *scheduler)
 {
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
         .role = pcmk_role_unknown,
-        .now = data_set->now,
+        .now = scheduler->now,
         .match_data = NULL,
         .rsc_data = NULL,
         .op_data = NULL
@@ -218,16 +221,17 @@ get_rsc_attributes(GHashTable *meta_hash, const pe_resource_t *rsc,
     }
 
     pe__unpack_dataset_nvpairs(rsc->xml, XML_TAG_ATTR_SETS, &rule_data,
-                               meta_hash, NULL, FALSE, data_set);
+                               meta_hash, NULL, FALSE, scheduler);
 
     /* set anything else based on the parent */
     if (rsc->parent != NULL) {
-        get_rsc_attributes(meta_hash, rsc->parent, node, data_set);
+        get_rsc_attributes(meta_hash, rsc->parent, node, scheduler);
 
     } else {
         /* and finally check the defaults */
-        pe__unpack_dataset_nvpairs(data_set->rsc_defaults, XML_TAG_ATTR_SETS,
-                                   &rule_data, meta_hash, NULL, FALSE, data_set);
+        pe__unpack_dataset_nvpairs(scheduler->rsc_defaults, XML_TAG_ATTR_SETS,
+                                   &rule_data, meta_hash, NULL, FALSE,
+                                   scheduler);
     }
 }
 
@@ -249,7 +253,8 @@ template_op_key(xmlNode * op)
 }
 
 static gboolean
-unpack_template(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t * data_set)
+unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
+                pcmk_scheduler_t *scheduler)
 {
     xmlNode *cib_resources = NULL;
     xmlNode *template = NULL;
@@ -282,7 +287,8 @@ unpack_template(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t * d
         return FALSE;
     }
 
-    cib_resources = get_xpath_object("//"XML_CIB_TAG_RESOURCES, data_set->input, LOG_TRACE);
+    cib_resources = get_xpath_object("//" XML_CIB_TAG_RESOURCES,
+                                     scheduler->input, LOG_TRACE);
     if (cib_resources == NULL) {
         pe_err("No resources configured");
         return FALSE;
@@ -351,19 +357,19 @@ unpack_template(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t * d
     /*free_xml(*expanded_xml); */
     *expanded_xml = new_xml;
 
-    /* Disable multi-level templates for now */
-    /*if(unpack_template(new_xml, expanded_xml, data_set) == FALSE) {
+#if 0 /* Disable multi-level templates for now */
+    if (!unpack_template(new_xml, expanded_xml, scheduler)) {
        free_xml(*expanded_xml);
        *expanded_xml = NULL;
-
        return FALSE;
-       } */
+    }
+#endif
 
     return TRUE;
 }
 
 static gboolean
-add_template_rsc(xmlNode * xml_obj, pe_working_set_t * data_set)
+add_template_rsc(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 {
     const char *template_ref = NULL;
     const char *id = NULL;
@@ -389,7 +395,7 @@ add_template_rsc(xmlNode * xml_obj, pe_working_set_t * data_set)
         return FALSE;
     }
 
-    if (add_tag_ref(data_set->template_rsc_sets, template_ref, id) == FALSE) {
+    if (add_tag_ref(scheduler->template_rsc_sets, template_ref, id) == FALSE) {
         return FALSE;
     }
 
@@ -397,7 +403,7 @@ add_template_rsc(xmlNode * xml_obj, pe_working_set_t * data_set)
 }
 
 static bool
-detect_promotable(pe_resource_t *rsc)
+detect_promotable(pcmk_resource_t *rsc)
 {
     const char *promotable = g_hash_table_lookup(rsc->meta,
                                                  XML_RSC_ATTR_PROMOTABLE);
@@ -427,18 +433,18 @@ free_params_table(gpointer data)
 /*!
  * \brief Get a table of resource parameters
  *
- * \param[in,out] rsc       Resource to query
- * \param[in]     node      Node for evaluating rules (NULL for defaults)
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] rsc        Resource to query
+ * \param[in]     node       Node for evaluating rules (NULL for defaults)
+ * \param[in,out] scheduler  Scheduler data
  *
  * \return Hash table containing resource parameter names and values
- *         (or NULL if \p rsc or \p data_set is NULL)
+ *         (or NULL if \p rsc or \p scheduler is NULL)
  * \note The returned table will be destroyed when the resource is freed, so
  *       callers should not destroy it.
  */
 GHashTable *
-pe_rsc_params(pe_resource_t *rsc, const pe_node_t *node,
-              pe_working_set_t *data_set)
+pe_rsc_params(pcmk_resource_t *rsc, const pcmk_node_t *node,
+              pcmk_scheduler_t *scheduler)
 {
     GHashTable *params_on_node = NULL;
 
@@ -449,7 +455,7 @@ pe_rsc_params(pe_resource_t *rsc, const pe_node_t *node,
     const char *node_name = "";
 
     // Sanity check
-    if ((rsc == NULL) || (data_set == NULL)) {
+    if ((rsc == NULL) || (scheduler == NULL)) {
         return NULL;
     }
     if ((node != NULL) && (node->details->uname != NULL)) {
@@ -466,7 +472,7 @@ pe_rsc_params(pe_resource_t *rsc, const pe_node_t *node,
     // If none exists yet, create one with parameters evaluated for node
     if (params_on_node == NULL) {
         params_on_node = pcmk__strkey_table(free, free);
-        get_rsc_attributes(params_on_node, rsc, node, data_set);
+        get_rsc_attributes(params_on_node, rsc, node, scheduler);
         g_hash_table_insert(rsc->parameter_cache, strdup(node_name),
                             params_on_node);
     }
@@ -482,7 +488,7 @@ pe_rsc_params(pe_resource_t *rsc, const pe_node_t *node,
  * \param[in]     is_default  Whether \p value was selected by default
  */
 static void
-unpack_requires(pe_resource_t *rsc, const char *value, bool is_default)
+unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
 {
     if (pcmk__str_eq(value, PCMK__VALUE_NOTHING, pcmk__str_casei)) {
 
@@ -557,7 +563,7 @@ unpack_requires(pe_resource_t *rsc, const char *value, bool is_default)
 
 #ifndef PCMK__COMPAT_2_0
 static void
-warn_about_deprecated_classes(pe_resource_t *rsc)
+warn_about_deprecated_classes(pcmk_resource_t *rsc)
 {
     const char *std = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
@@ -581,12 +587,12 @@ warn_about_deprecated_classes(pe_resource_t *rsc)
  * \brief Unpack configuration XML for a given resource
  *
  * Unpack the XML object containing a resource's configuration into a new
- * \c pe_resource_t object.
+ * \c pcmk_resource_t object.
  *
- * \param[in]     xml_obj   XML node containing the resource's configuration
- * \param[out]    rsc       Where to store the unpacked resource information
- * \param[in]     parent    Resource's parent, if any
- * \param[in,out] data_set  Cluster working set
+ * \param[in]     xml_obj    XML node containing the resource's configuration
+ * \param[out]    rsc        Where to store the unpacked resource information
+ * \param[in]     parent     Resource's parent, if any
+ * \param[in,out] scheduler  Scheduler data
  *
  * \return Standard Pacemaker return code
  * \note If pcmk_rc_ok is returned, \p *rsc is guaranteed to be non-NULL, and
@@ -594,8 +600,8 @@ warn_about_deprecated_classes(pe_resource_t *rsc)
  *       free() method. Otherwise, \p *rsc is guaranteed to be NULL.
  */
 int
-pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
-                    pe_resource_t *parent, pe_working_set_t *data_set)
+pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
+                    pcmk_resource_t *parent, pcmk_scheduler_t *scheduler)
 {
     xmlNode *expanded_xml = NULL;
     xmlNode *ops = NULL;
@@ -614,11 +620,11 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     };
 
     CRM_CHECK(rsc != NULL, return EINVAL);
-    CRM_CHECK((xml_obj != NULL) && (data_set != NULL),
+    CRM_CHECK((xml_obj != NULL) && (scheduler != NULL),
               *rsc = NULL;
               return EINVAL);
 
-    rule_data.now = data_set->now;
+    rule_data.now = scheduler->now;
 
     crm_log_xml_trace(xml_obj, "[raw XML]");
 
@@ -629,16 +635,16 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
         return pcmk_rc_unpack_error;
     }
 
-    if (unpack_template(xml_obj, &expanded_xml, data_set) == FALSE) {
+    if (unpack_template(xml_obj, &expanded_xml, scheduler) == FALSE) {
         return pcmk_rc_unpack_error;
     }
 
-    *rsc = calloc(1, sizeof(pe_resource_t));
+    *rsc = calloc(1, sizeof(pcmk_resource_t));
     if (*rsc == NULL) {
         crm_crit("Unable to allocate memory for resource '%s'", id);
         return ENOMEM;
     }
-    (*rsc)->cluster = data_set;
+    (*rsc)->cluster = scheduler;
 
     if (expanded_xml) {
         crm_log_xml_trace(expanded_xml, "[expanded XML]");
@@ -655,7 +661,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     (*rsc)->parent = parent;
 
     ops = find_xml_node((*rsc)->xml, "operations", FALSE);
-    (*rsc)->ops_xml = expand_idref(ops, data_set->input);
+    (*rsc)->ops_xml = expand_idref(ops, scheduler->input);
 
     (*rsc)->variant = get_resource_type((const char *) (*rsc)->xml->name);
     if ((*rsc)->variant == pcmk_rsc_variant_unknown) {
@@ -685,13 +691,13 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
 
     (*rsc)->fns = &resource_class_functions[(*rsc)->variant];
 
-    get_meta_attributes((*rsc)->meta, *rsc, NULL, data_set);
-    (*rsc)->parameters = pe_rsc_params(*rsc, NULL, data_set); // \deprecated
+    get_meta_attributes((*rsc)->meta, *rsc, NULL, scheduler);
+    (*rsc)->parameters = pe_rsc_params(*rsc, NULL, scheduler); // \deprecated
 
     (*rsc)->flags = 0;
     pe__set_resource_flags(*rsc, pcmk_rsc_runnable|pcmk_rsc_unassigned);
 
-    if (!pcmk_is_set(data_set->flags, pcmk_sched_in_maintenance)) {
+    if (!pcmk_is_set(scheduler->flags, pcmk_sched_in_maintenance)) {
         pe__set_resource_flags(*rsc, pcmk_rsc_managed);
     }
 
@@ -756,7 +762,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
         pe__clear_resource_flags(*rsc, pcmk_rsc_managed);
         pe__set_resource_flags(*rsc, pcmk_rsc_maintenance);
     }
-    if (pcmk_is_set(data_set->flags, pcmk_sched_in_maintenance)) {
+    if (pcmk_is_set(scheduler->flags, pcmk_sched_in_maintenance)) {
         pe__clear_resource_flags(*rsc, pcmk_rsc_managed);
         pe__set_resource_flags(*rsc, pcmk_rsc_maintenance);
     }
@@ -837,7 +843,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
 
     if (pcmk__str_eq(crm_element_value((*rsc)->xml, XML_AGENT_ATTR_CLASS),
                      PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
-        pe__set_working_set_flags(data_set, pcmk_sched_have_fencing);
+        pe__set_working_set_flags(scheduler, pcmk_sched_have_fencing);
         pe__set_resource_flags(*rsc, pcmk_rsc_fence_device);
     }
 
@@ -851,7 +857,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     }
 
     if (remote_node) {
-        GHashTable *params = pe_rsc_params(*rsc, NULL, data_set);
+        GHashTable *params = pe_rsc_params(*rsc, NULL, scheduler);
 
         /* Grabbing the value now means that any rules based on node attributes
          * will evaluate to false, so such rules should not be used with
@@ -874,20 +880,21 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     pe_rsc_trace((*rsc), "%s desired next state: %s", (*rsc)->id,
                  (*rsc)->next_role != pcmk_role_unknown? role2text((*rsc)->next_role) : "default");
 
-    if ((*rsc)->fns->unpack(*rsc, data_set) == FALSE) {
+    if ((*rsc)->fns->unpack(*rsc, scheduler) == FALSE) {
         (*rsc)->fns->free(*rsc);
         *rsc = NULL;
         return pcmk_rc_unpack_error;
     }
 
-    if (pcmk_is_set(data_set->flags, pcmk_sched_symmetric_cluster)) {
+    if (pcmk_is_set(scheduler->flags, pcmk_sched_symmetric_cluster)) {
         // This tag must stay exactly the same because it is tested elsewhere
-        resource_location(*rsc, NULL, 0, "symmetric_default", data_set);
+        resource_location(*rsc, NULL, 0, "symmetric_default", scheduler);
     } else if (guest_node) {
         /* remote resources tied to a container resource must always be allowed
          * to opt-in to the cluster. Whether the connection resource is actually
          * allowed to be placed on a node is dependent on the container resource */
-        resource_location(*rsc, NULL, 0, "remote_connection_default", data_set);
+        resource_location(*rsc, NULL, 0, "remote_connection_default",
+                          scheduler);
     }
 
     pe_rsc_trace((*rsc), "%s action notification: %s", (*rsc)->id,
@@ -896,10 +903,10 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     (*rsc)->utilization = pcmk__strkey_table(free, free);
 
     pe__unpack_dataset_nvpairs((*rsc)->xml, XML_TAG_UTILIZATION, &rule_data,
-                               (*rsc)->utilization, NULL, FALSE, data_set);
+                               (*rsc)->utilization, NULL, FALSE, scheduler);
 
     if (expanded_xml) {
-        if (add_template_rsc(xml_obj, data_set) == FALSE) {
+        if (add_template_rsc(xml_obj, scheduler) == FALSE) {
             (*rsc)->fns->free(*rsc);
             *rsc = NULL;
             return pcmk_rc_unpack_error;
@@ -909,9 +916,9 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
 }
 
 gboolean
-is_parent(pe_resource_t *child, pe_resource_t *rsc)
+is_parent(pcmk_resource_t *child, pcmk_resource_t *rsc)
 {
-    pe_resource_t *parent = child;
+    pcmk_resource_t *parent = child;
 
     if (parent == NULL || rsc == NULL) {
         return FALSE;
@@ -925,10 +932,10 @@ is_parent(pe_resource_t *child, pe_resource_t *rsc)
     return FALSE;
 }
 
-pe_resource_t *
-uber_parent(pe_resource_t * rsc)
+pcmk_resource_t *
+uber_parent(pcmk_resource_t *rsc)
 {
-    pe_resource_t *parent = rsc;
+    pcmk_resource_t *parent = rsc;
 
     if (parent == NULL) {
         return NULL;
@@ -951,10 +958,10 @@ uber_parent(pe_resource_t * rsc)
  *         the bundle if \p rsc is bundled and \p include_bundle is true,
  *         otherwise the topmost parent of \p rsc up to a clone
  */
-const pe_resource_t *
-pe__const_top_resource(const pe_resource_t *rsc, bool include_bundle)
+const pcmk_resource_t *
+pe__const_top_resource(const pcmk_resource_t *rsc, bool include_bundle)
 {
-    const pe_resource_t *parent = rsc;
+    const pcmk_resource_t *parent = rsc;
 
     if (parent == NULL) {
         return NULL;
@@ -970,7 +977,7 @@ pe__const_top_resource(const pe_resource_t *rsc, bool include_bundle)
 }
 
 void
-common_free(pe_resource_t * rsc)
+common_free(pcmk_resource_t * rsc)
 {
     if (rsc == NULL) {
         return;
@@ -1048,8 +1055,8 @@ common_free(pe_resource_t * rsc)
  * \return true if the count should continue, or false if sufficiently known
  */
 bool
-pe__count_active_node(const pe_resource_t *rsc, pe_node_t *node,
-                      pe_node_t **active, unsigned int *count_all,
+pe__count_active_node(const pcmk_resource_t *rsc, pcmk_node_t *node,
+                      pcmk_node_t **active, unsigned int *count_all,
                       unsigned int *count_clean)
 {
     bool keep_looking = false;
@@ -1090,12 +1097,12 @@ pe__count_active_node(const pe_resource_t *rsc, pe_node_t *node,
     return keep_looking;
 }
 
-// Shared implementation of resource_object_functions_t:active_node()
-static pe_node_t *
-active_node(const pe_resource_t *rsc, unsigned int *count_all,
+// Shared implementation of pcmk_rsc_methods_t:active_node()
+static pcmk_node_t *
+active_node(const pcmk_resource_t *rsc, unsigned int *count_all,
             unsigned int *count_clean)
 {
-    pe_node_t *active = NULL;
+    pcmk_node_t *active = NULL;
 
     if (count_all != NULL) {
         *count_all = 0;
@@ -1107,7 +1114,7 @@ active_node(const pe_resource_t *rsc, unsigned int *count_all,
         return NULL;
     }
     for (GList *iter = rsc->running_on; iter != NULL; iter = iter->next) {
-        if (!pe__count_active_node(rsc, (pe_node_t *) iter->data, &active,
+        if (!pe__count_active_node(rsc, (pcmk_node_t *) iter->data, &active,
                                    count_all, count_clean)) {
             break; // Don't waste time iterating if we don't have to
         }
@@ -1128,8 +1135,8 @@ active_node(const pe_resource_t *rsc, unsigned int *count_all,
  *       active nodes or only clean active nodes is desired according to the
  *       "requires" meta-attribute.
  */
-pe_node_t *
-pe__find_active_requires(const pe_resource_t *rsc, unsigned int *count)
+pcmk_node_t *
+pe__find_active_requires(const pcmk_resource_t *rsc, unsigned int *count)
 {
     if (rsc == NULL) {
         if (count != NULL) {
@@ -1146,11 +1153,11 @@ pe__find_active_requires(const pe_resource_t *rsc, unsigned int *count)
 }
 
 void
-pe__count_common(pe_resource_t *rsc)
+pe__count_common(pcmk_resource_t *rsc)
 {
     if (rsc->children != NULL) {
         for (GList *item = rsc->children; item != NULL; item = item->next) {
-            ((pe_resource_t *) item->data)->fns->count(item->data);
+            ((pcmk_resource_t *) item->data)->fns->count(item->data);
         }
 
     } else if (!pcmk_is_set(rsc->flags, pcmk_rsc_removed)
@@ -1174,7 +1181,7 @@ pe__count_common(pe_resource_t *rsc)
  * \param[in]     why   Human-friendly reason why role is changing (for logs)
  */
 void
-pe__set_next_role(pe_resource_t *rsc, enum rsc_role_e role, const char *why)
+pe__set_next_role(pcmk_resource_t *rsc, enum rsc_role_e role, const char *why)
 {
     CRM_ASSERT((rsc != NULL) && (why != NULL));
     if (rsc->next_role != role) {

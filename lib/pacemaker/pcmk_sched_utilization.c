@@ -43,8 +43,8 @@ utilization_value(const char *s)
  */
 
 struct compare_data {
-    const pe_node_t *node1;
-    const pe_node_t *node2;
+    const pcmk_node_t *node1;
+    const pcmk_node_t *node2;
     bool node2_only;
     int result;
 };
@@ -53,8 +53,8 @@ struct compare_data {
  * \internal
  * \brief Compare a single utilization attribute for two nodes
  *
- * Compare one utilization attribute for two nodes, incrementing the result if
- * the first node has greater capacity, and decrementing it if the second node
+ * Compare one utilization attribute for two nodes, decrementing the result if
+ * the first node has greater capacity, and incrementing it if the second node
  * has greater capacity.
  *
  * \param[in]     key        Utilization attribute name to compare
@@ -99,7 +99,8 @@ compare_utilization_value(gpointer key, gpointer value, gpointer user_data)
  *         if node2 has more free capacity
  */
 int
-pcmk__compare_node_capacities(const pe_node_t *node1, const pe_node_t *node2)
+pcmk__compare_node_capacities(const pcmk_node_t *node1,
+                              const pcmk_node_t *node2)
 {
     struct compare_data data = {
         .node1      = node1,
@@ -164,7 +165,7 @@ update_utilization_value(gpointer key, gpointer value, gpointer user_data)
  */
 void
 pcmk__consume_node_capacity(GHashTable *current_utilization,
-                            const pe_resource_t *rsc)
+                            const pcmk_resource_t *rsc)
 {
     struct calculate_data data = {
         .current_utilization = current_utilization,
@@ -183,7 +184,7 @@ pcmk__consume_node_capacity(GHashTable *current_utilization,
  */
 void
 pcmk__release_node_capacity(GHashTable *current_utilization,
-                            const pe_resource_t *rsc)
+                            const pcmk_resource_t *rsc)
 {
     struct calculate_data data = {
         .current_utilization = current_utilization,
@@ -199,7 +200,7 @@ pcmk__release_node_capacity(GHashTable *current_utilization,
  */
 
 struct capacity_data {
-    const pe_node_t *node;
+    const pcmk_node_t *node;
     const char *rsc_id;
     bool is_enough;
 };
@@ -245,7 +246,7 @@ check_capacity(gpointer key, gpointer value, gpointer user_data)
  * \return true if node has sufficient capacity for resource, otherwise false
  */
 static bool
-have_enough_capacity(const pe_node_t *node, const char *rsc_id,
+have_enough_capacity(const pcmk_node_t *node, const char *rsc_id,
                      GHashTable *utilization)
 {
     struct capacity_data data = {
@@ -270,12 +271,12 @@ have_enough_capacity(const pe_node_t *node, const char *rsc_id,
  *       g_hash_table_destroy().
  */
 static GHashTable *
-sum_resource_utilization(const pe_resource_t *orig_rsc, GList *rscs)
+sum_resource_utilization(const pcmk_resource_t *orig_rsc, GList *rscs)
 {
     GHashTable *utilization = pcmk__strkey_table(free, free);
 
     for (GList *iter = rscs; iter != NULL; iter = iter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+        pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         rsc->cmds->add_utilization(rsc, orig_rsc, rscs, utilization);
     }
@@ -291,13 +292,13 @@ sum_resource_utilization(const pe_resource_t *orig_rsc, GList *rscs)
  * \return Allowed node for \p rsc with most spare capacity, if there are no
  *         nodes with enough capacity for \p rsc and all its colocated resources
  */
-const pe_node_t *
-pcmk__ban_insufficient_capacity(pe_resource_t *rsc)
+const pcmk_node_t *
+pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
 {
     bool any_capable = false;
     char *rscs_id = NULL;
-    pe_node_t *node = NULL;
-    const pe_node_t *most_capable_node = NULL;
+    pcmk_node_t *node = NULL;
+    const pcmk_node_t *most_capable_node = NULL;
     GList *colocated_rscs = NULL;
     GHashTable *unassigned_utilization = NULL;
     GHashTableIter iter;
@@ -390,12 +391,12 @@ pcmk__ban_insufficient_capacity(pe_resource_t *rsc)
  *
  * \return Newly created load_stopped op
  */
-static pe_action_t *
-new_load_stopped_op(pe_node_t *node)
+static pcmk_action_t *
+new_load_stopped_op(pcmk_node_t *node)
 {
     char *load_stopped_task = crm_strdup_printf(PCMK_ACTION_LOAD_STOPPED "_%s",
                                                 node->details->uname);
-    pe_action_t *load_stopped = get_pseudo_op(load_stopped_task,
+    pcmk_action_t *load_stopped = get_pseudo_op(load_stopped_task,
                                               node->details->data_set);
 
     if (load_stopped->node == NULL) {
@@ -414,11 +415,11 @@ new_load_stopped_op(pe_node_t *node)
  * \param[in]     allowed_nodes  List of allowed next nodes for \p rsc
  */
 void
-pcmk__create_utilization_constraints(pe_resource_t *rsc,
+pcmk__create_utilization_constraints(pcmk_resource_t *rsc,
                                      const GList *allowed_nodes)
 {
     const GList *iter = NULL;
-    pe_action_t *load_stopped = NULL;
+    pcmk_action_t *load_stopped = NULL;
 
     pe_rsc_trace(rsc, "Creating utilization constraints for %s - strategy: %s",
                  rsc->id, rsc->cluster->placement_strategy);
@@ -447,18 +448,19 @@ pcmk__create_utilization_constraints(pe_resource_t *rsc,
  * \internal
  * \brief Output node capacities if enabled
  *
- * \param[in]     desc      Prefix for output
- * \param[in,out] data_set  Cluster working set
+ * \param[in]     desc       Prefix for output
+ * \param[in,out] scheduler  Scheduler data
  */
 void
-pcmk__show_node_capacities(const char *desc, pe_working_set_t *data_set)
+pcmk__show_node_capacities(const char *desc, pcmk_scheduler_t *scheduler)
 {
-    if (!pcmk_is_set(data_set->flags, pcmk_sched_show_utilization)) {
+    if (!pcmk_is_set(scheduler->flags, pcmk_sched_show_utilization)) {
         return;
     }
-    for (const GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
-        const pe_node_t *node = (const pe_node_t *) iter->data;
-        pcmk__output_t *out = data_set->priv;
+    for (const GList *iter = scheduler->nodes;
+         iter != NULL; iter = iter->next) {
+        const pcmk_node_t *node = (const pcmk_node_t *) iter->data;
+        pcmk__output_t *out = scheduler->priv;
 
         out->message(out, "node-capacity", node, desc);
     }

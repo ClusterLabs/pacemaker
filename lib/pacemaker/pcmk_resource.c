@@ -28,7 +28,7 @@
                          "/" XML_LRM_TAG_RESOURCE "[@" XML_ATTR_ID "='%s']"
 
 static xmlNode *
-best_op(const pe_resource_t *rsc, const pe_node_t *node)
+best_op(const pcmk_resource_t *rsc, const pcmk_node_t *node)
 {
     char *xpath = NULL;
     xmlNode *history = NULL;
@@ -115,8 +115,8 @@ is_best:
  * \return Standard Pacemaker return code
  */
 int
-pcmk__resource_digests(pcmk__output_t *out, pe_resource_t *rsc,
-                       const pe_node_t *node, GHashTable *overrides)
+pcmk__resource_digests(pcmk__output_t *out, pcmk_resource_t *rsc,
+                       const pcmk_node_t *node, GHashTable *overrides)
 {
     const char *task = NULL;
     xmlNode *xml_op = NULL;
@@ -155,9 +155,9 @@ pcmk__resource_digests(pcmk__output_t *out, pe_resource_t *rsc,
 }
 
 int
-pcmk_resource_digests(xmlNodePtr *xml, pe_resource_t *rsc,
-                      const pe_node_t *node, GHashTable *overrides,
-                      pe_working_set_t *data_set)
+pcmk_resource_digests(xmlNodePtr *xml, pcmk_resource_t *rsc,
+                      const pcmk_node_t *node, GHashTable *overrides,
+                      pcmk_scheduler_t *scheduler)
 {
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;

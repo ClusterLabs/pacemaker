@@ -17,12 +17,12 @@
  * \internal
  * \brief Set the node health values to use for "red", "yellow", and "green"
  *
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 void
-pe__unpack_node_health_scores(pe_working_set_t *data_set)
+pe__unpack_node_health_scores(pcmk_scheduler_t *scheduler)
 {
-    switch (pe__health_strategy(data_set)) {
+    switch (pe__health_strategy(scheduler)) {
         case pcmk__health_strategy_none:
             pcmk__score_red = 0;
             pcmk__score_yellow = 0;
@@ -43,11 +43,11 @@ pe__unpack_node_health_scores(pe_working_set_t *data_set)
 
         default: // progressive or custom
             pcmk__score_red = pe__health_score(PCMK__OPT_NODE_HEALTH_RED,
-                                               data_set);
+                                               scheduler);
             pcmk__score_green = pe__health_score(PCMK__OPT_NODE_HEALTH_GREEN,
-                                                 data_set);
+                                                 scheduler);
             pcmk__score_yellow = pe__health_score(PCMK__OPT_NODE_HEALTH_YELLOW,
-                                                  data_set);
+                                                  scheduler);
             break;
     }
 
@@ -93,7 +93,7 @@ add_node_health_value(gpointer key, gpointer value, gpointer user_data)
  * \return Sum of all health attribute scores of \p node plus \p base_health
  */
 int
-pe__sum_node_health_scores(const pe_node_t *node, int base_health)
+pe__sum_node_health_scores(const pcmk_node_t *node, int base_health)
 {
     CRM_ASSERT(node != NULL);
     g_hash_table_foreach(node->details->attrs, add_node_health_value,
@@ -111,7 +111,7 @@ pe__sum_node_health_scores(const pe_node_t *node, int base_health)
  *          otherwise 0 if any attribute is yellow, otherwise a positive value.
  */
 int
-pe__node_health(pe_node_t *node)
+pe__node_health(pcmk_node_t *node)
 {
     GHashTableIter iter;
     const char *name = NULL;

@@ -237,7 +237,7 @@ chown_logfile(const char *filename, int logfd)
 static void
 chmod_logfile(const char *filename, int logfd)
 {
-    const char *modestr = getenv("PCMK_logfile_mode");
+    const char *modestr = pcmk__env_option(PCMK__ENV_LOGFILE_MODE);
     mode_t filemode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
 
     if (modestr != NULL) {
@@ -297,7 +297,7 @@ setenv_logfile(const char *filename)
 {
     // Some resource agents will log only if environment variable is set
     if (pcmk__env_option(PCMK__ENV_LOGFILE) == NULL) {
-        pcmk__set_env_option(PCMK__ENV_LOGFILE, filename);
+        pcmk__set_env_option(PCMK__ENV_LOGFILE, filename, true);
     }
 }
 
@@ -636,11 +636,11 @@ crm_log_filter(struct qb_log_callsite *cs)
 
     if (need_init) {
         need_init = 0;
-        trace_fns = getenv("PCMK_trace_functions");
-        trace_fmts = getenv("PCMK_trace_formats");
-        trace_tags = getenv("PCMK_trace_tags");
-        trace_files = getenv("PCMK_trace_files");
-        trace_blackbox = getenv("PCMK_trace_blackbox");
+        trace_fns = pcmk__env_option(PCMK__ENV_TRACE_FUNCTIONS);
+        trace_fmts = pcmk__env_option(PCMK__ENV_TRACE_FORMATS);
+        trace_tags = pcmk__env_option(PCMK__ENV_TRACE_TAGS);
+        trace_files = pcmk__env_option(PCMK__ENV_TRACE_FILES);
+        trace_blackbox = pcmk__env_option(PCMK__ENV_TRACE_BLACKBOX);
 
         if (trace_tags != NULL) {
             uint32_t tag;
@@ -709,8 +709,10 @@ crm_update_callsites(void)
         log = FALSE;
         crm_debug
             ("Enabling callsites based on priority=%d, files=%s, functions=%s, formats=%s, tags=%s",
-             crm_log_level, getenv("PCMK_trace_files"), getenv("PCMK_trace_functions"),
-             getenv("PCMK_trace_formats"), getenv("PCMK_trace_tags"));
+             crm_log_level, pcmk__env_option(PCMK__ENV_TRACE_FILES),
+             pcmk__env_option(PCMK__ENV_TRACE_FUNCTIONS),
+             pcmk__env_option(PCMK__ENV_TRACE_FORMATS),
+             pcmk__env_option(PCMK__ENV_TRACE_TAGS));
     }
     qb_log_filter_fn_set(crm_log_filter);
 }
@@ -718,13 +720,11 @@ crm_update_callsites(void)
 static gboolean
 crm_tracing_enabled(void)
 {
-    if (crm_log_level == LOG_TRACE) {
-        return TRUE;
-    } else if (getenv("PCMK_trace_files") || getenv("PCMK_trace_functions")
-               || getenv("PCMK_trace_formats") || getenv("PCMK_trace_tags")) {
-        return TRUE;
-    }
-    return FALSE;
+    return (crm_log_level == LOG_TRACE)
+            || (pcmk__env_option(PCMK__ENV_TRACE_FILES) != NULL)
+            || (pcmk__env_option(PCMK__ENV_TRACE_FUNCTIONS) != NULL)
+            || (pcmk__env_option(PCMK__ENV_TRACE_FORMATS) != NULL)
+            || (pcmk__env_option(PCMK__ENV_TRACE_TAGS) != NULL);
 }
 
 static int
@@ -798,7 +798,8 @@ set_identity(const char *entity, int argc, char *const *argv)
 
     CRM_ASSERT(crm_system_name != NULL);
 
-    setenv("PCMK_service", crm_system_name, 1);
+    // Used by fencing.py.py (in fence-agents)
+    pcmk__set_env_option(PCMK__ENV_SERVICE, crm_system_name, false);
 }
 
 void
@@ -911,7 +912,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
         } else {
             facility = PCMK__VALUE_NONE;
         }
-        pcmk__set_env_option(PCMK__ENV_LOGFACILITY, facility);
+        pcmk__set_env_option(PCMK__ENV_LOGFACILITY, facility, true);
     }
 
     if (pcmk__str_eq(facility, PCMK__VALUE_NONE, pcmk__str_casei)) {

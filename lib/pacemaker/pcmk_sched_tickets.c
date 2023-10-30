@@ -28,8 +28,8 @@ enum loss_ticket_policy {
 
 typedef struct {
     const char *id;
-    pe_resource_t *rsc;
-    pe_ticket_t *ticket;
+    pcmk_resource_t *rsc;
+    pcmk_ticket_t *ticket;
     enum loss_ticket_policy loss_policy;
     int role;
 } rsc_ticket_t;
@@ -44,7 +44,7 @@ typedef struct {
  *            constraint's, otherwise false
  */
 static bool
-ticket_role_matches(const pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
+ticket_role_matches(const pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
 {
     if ((rsc_ticket->role == pcmk_role_unknown)
         || (rsc_ticket->role == rsc->role)) {
@@ -62,7 +62,7 @@ ticket_role_matches(const pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
  * \param[in]     rsc_ticket  Ticket
  */
 static void
-constraints_for_ticket(pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
+constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
 {
     GList *iter = NULL;
 
@@ -75,7 +75,7 @@ constraints_for_ticket(pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
     if (rsc->children) {
         pe_rsc_trace(rsc, "Processing ticket dependencies from %s", rsc->id);
         for (iter = rsc->children; iter != NULL; iter = iter->next) {
-            constraints_for_ticket((pe_resource_t *) iter->data, rsc_ticket);
+            constraints_for_ticket((pcmk_resource_t *) iter->data, rsc_ticket);
         }
         return;
     }
@@ -109,7 +109,7 @@ constraints_for_ticket(pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
                                   rsc->cluster);
 
                 for (iter = rsc->running_on; iter != NULL; iter = iter->next) {
-                    pe_fence_node(rsc->cluster, (pe_node_t *) iter->data,
+                    pe_fence_node(rsc->cluster, (pcmk_node_t *) iter->data,
                                   "deadman ticket was lost", FALSE);
                 }
                 break;
@@ -144,7 +144,7 @@ constraints_for_ticket(pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
 }
 
 static void
-rsc_ticket_new(const char *id, pe_resource_t *rsc, pe_ticket_t *ticket,
+rsc_ticket_new(const char *id, pcmk_resource_t *rsc, pcmk_ticket_t *ticket,
                const char *state, const char *loss_policy)
 {
     rsc_ticket_t *new_rsc_ticket = NULL;
@@ -234,8 +234,8 @@ rsc_ticket_new(const char *id, pe_resource_t *rsc, pe_ticket_t *ticket,
 
 // \return Standard Pacemaker return code
 static int
-unpack_rsc_ticket_set(xmlNode *set, pe_ticket_t *ticket,
-                      const char *loss_policy, pe_working_set_t *data_set)
+unpack_rsc_ticket_set(xmlNode *set, pcmk_ticket_t *ticket,
+                      const char *loss_policy, pcmk_scheduler_t *scheduler)
 {
     const char *set_id = NULL;
     const char *role = NULL;
@@ -255,9 +255,9 @@ unpack_rsc_ticket_set(xmlNode *set, pe_ticket_t *ticket,
     for (xmlNode *xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
          xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
-        pe_resource_t *resource = NULL;
+        pcmk_resource_t *resource = NULL;
 
-        resource = pcmk__find_constraint_resource(data_set->resources,
+        resource = pcmk__find_constraint_resource(scheduler->resources,
                                                   ID(xml_rsc));
         if (resource == NULL) {
             pcmk__config_err("%s: No resource found for %s",
@@ -273,14 +273,14 @@ unpack_rsc_ticket_set(xmlNode *set, pe_ticket_t *ticket,
 }
 
 static void
-unpack_simple_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
+unpack_simple_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 {
     const char *id = NULL;
     const char *ticket_str = crm_element_value(xml_obj, XML_TICKET_ATTR_TICKET);
     const char *loss_policy = crm_element_value(xml_obj,
                                                 XML_TICKET_ATTR_LOSS_POLICY);
 
-    pe_ticket_t *ticket = NULL;
+    pcmk_ticket_t *ticket = NULL;
 
     const char *rsc_id = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
     const char *state = crm_element_value(xml_obj,
@@ -290,7 +290,7 @@ unpack_simple_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
     const char *instance = crm_element_value(xml_obj,
                                              XML_COLOC_ATTR_SOURCE_INSTANCE);
 
-    pe_resource_t *rsc = NULL;
+    pcmk_resource_t *rsc = NULL;
 
     if (instance != NULL) {
         pe_warn_once(pcmk__wo_coloc_inst,
@@ -312,7 +312,7 @@ unpack_simple_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
                          id);
         return;
     } else {
-        ticket = g_hash_table_lookup(data_set->tickets, ticket_str);
+        ticket = g_hash_table_lookup(scheduler->tickets, ticket_str);
     }
 
     if (ticket == NULL) {
@@ -325,7 +325,7 @@ unpack_simple_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
         pcmk__config_err("Ignoring constraint '%s' without resource", id);
         return;
     } else {
-        rsc = pcmk__find_constraint_resource(data_set->resources, rsc_id);
+        rsc = pcmk__find_constraint_resource(scheduler->resources, rsc_id);
     }
 
     if (rsc == NULL) {
@@ -356,14 +356,14 @@ unpack_simple_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
 // \return Standard Pacemaker return code
 static int
 unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
-                       pe_working_set_t *data_set)
+                       pcmk_scheduler_t *scheduler)
 {
     const char *id = NULL;
     const char *rsc_id = NULL;
     const char *state = NULL;
 
-    pe_resource_t *rsc = NULL;
-    pe_tag_t *tag = NULL;
+    pcmk_resource_t *rsc = NULL;
+    pcmk_tag_t *tag = NULL;
 
     xmlNode *rsc_set = NULL;
 
@@ -379,7 +379,7 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     }
 
     // Check whether there are any resource sets with template or tag references
-    *expanded_xml = pcmk__expand_tags_in_sets(xml_obj, data_set);
+    *expanded_xml = pcmk__expand_tags_in_sets(xml_obj, scheduler);
     if (*expanded_xml != NULL) {
         crm_log_xml_trace(*expanded_xml, "Expanded rsc_ticket");
         return pcmk_rc_ok;
@@ -390,7 +390,7 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         return pcmk_rc_ok;
     }
 
-    if (!pcmk__valid_resource_or_tag(data_set, rsc_id, &rsc, &tag)) {
+    if (!pcmk__valid_resource_or_tag(scheduler, rsc_id, &rsc, &tag)) {
         pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
                          "valid resource or tag", id, rsc_id);
         return pcmk_rc_unpack_error;
@@ -406,7 +406,7 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     // Convert any template or tag reference in "rsc" into ticket resource_set
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set, XML_COLOC_ATTR_SOURCE,
-                          false, data_set)) {
+                          false, scheduler)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_unpack_error;
@@ -428,7 +428,7 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 }
 
 void
-pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
+pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 {
     xmlNode *set = NULL;
     bool any_sets = false;
@@ -436,7 +436,7 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
     const char *id = NULL;
     const char *ticket_str = NULL;
 
-    pe_ticket_t *ticket = NULL;
+    pcmk_ticket_t *ticket = NULL;
 
     xmlNode *orig_xml = NULL;
     xmlNode *expanded_xml = NULL;
@@ -450,8 +450,8 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
         return;
     }
 
-    if (data_set->tickets == NULL) {
-        data_set->tickets = pcmk__strkey_table(free, destroy_ticket);
+    if (scheduler->tickets == NULL) {
+        scheduler->tickets = pcmk__strkey_table(free, destroy_ticket);
     }
 
     ticket_str = crm_element_value(xml_obj, XML_TICKET_ATTR_TICKET);
@@ -459,18 +459,18 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
         pcmk__config_err("Ignoring constraint '%s' without ticket", id);
         return;
     } else {
-        ticket = g_hash_table_lookup(data_set->tickets, ticket_str);
+        ticket = g_hash_table_lookup(scheduler->tickets, ticket_str);
     }
 
     if (ticket == NULL) {
-        ticket = ticket_new(ticket_str, data_set);
+        ticket = ticket_new(ticket_str, scheduler);
         if (ticket == NULL) {
             return;
         }
     }
 
     if (unpack_rsc_ticket_tags(xml_obj, &expanded_xml,
-                               data_set) != pcmk_rc_ok) {
+                               scheduler) != pcmk_rc_ok) {
         return;
     }
     if (expanded_xml != NULL) {
@@ -484,12 +484,12 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
         const char *loss_policy = NULL;
 
         any_sets = true;
-        set = expand_idref(set, data_set->input);
+        set = expand_idref(set, scheduler->input);
         loss_policy = crm_element_value(xml_obj, XML_TICKET_ATTR_LOSS_POLICY);
 
         if ((set == NULL) // Configuration error, message already logged
             || (unpack_rsc_ticket_set(set, ticket, loss_policy,
-                                      data_set) != pcmk_rc_ok)) {
+                                      scheduler) != pcmk_rc_ok)) {
             if (expanded_xml != NULL) {
                 free_xml(expanded_xml);
             }
@@ -503,7 +503,7 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
     }
 
     if (!any_sets) {
-        unpack_simple_rsc_ticket(xml_obj, data_set);
+        unpack_simple_rsc_ticket(xml_obj, scheduler);
     }
 }
 
@@ -517,7 +517,7 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
  * \param[in,out] rsc  Resource to check
  */
 void
-pcmk__require_promotion_tickets(pe_resource_t *rsc)
+pcmk__require_promotion_tickets(pcmk_resource_t *rsc)
 {
     for (GList *item = rsc->rsc_tickets; item != NULL; item = item->next) {
         rsc_ticket_t *rsc_ticket = (rsc_ticket_t *) item->data;

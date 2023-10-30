@@ -998,14 +998,17 @@ pcmk__serve_schedulerd_ipc(struct qb_ipcs_service_handlers *cb)
 bool
 crm_is_daemon_name(const char *name)
 {
-    name = pcmk__message_name(name);
-    return (!strcmp(name, CRM_SYSTEM_CRMD)
-            || !strcmp(name, CRM_SYSTEM_STONITHD)
-            || !strcmp(name, "stonith-ng")
-            || !strcmp(name, "attrd")
-            || !strcmp(name, CRM_SYSTEM_CIB)
-            || !strcmp(name, CRM_SYSTEM_MCP)
-            || !strcmp(name, CRM_SYSTEM_DC)
-            || !strcmp(name, CRM_SYSTEM_TENGINE)
-            || !strcmp(name, CRM_SYSTEM_LRMD));
+    return pcmk__str_any_of(pcmk__message_name(name),
+                            "attrd",
+                            CRM_SYSTEM_CIB,
+                            CRM_SYSTEM_CRMD,
+                            CRM_SYSTEM_DC,
+                            CRM_SYSTEM_LRMD,
+                            CRM_SYSTEM_MCP,
+                            CRM_SYSTEM_PENGINE,
+                            CRM_SYSTEM_STONITHD,
+                            CRM_SYSTEM_TENGINE,
+                            "pacemaker-remoted",
+                            "stonith-ng",
+                            NULL);
 }

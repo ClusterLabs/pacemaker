@@ -225,8 +225,8 @@ a ``GHashTable *`` member, the argument should be marked as ``[in,out]`` if the
 function inserts data into the table, even if the struct members themselves are
 not changed. However, an argument is not ``[in,out]`` if something reachable
 via the argument is modified via a separate argument. For example, both
-``pe_resource_t`` and ``pe_node_t`` contain pointers to their
-``pe_working_set_t`` and thus indirectly to each other, but if the function
+``pcmk_resource_t`` and ``pcmk_node_t`` contain pointers to their
+``pcmk_scheduler_t`` and thus indirectly to each other, but if the function
 modifies the resource via the resource argument, the node argument does not
 have to be ``[in,out]``.
 

@@ -62,7 +62,9 @@ class StandbyTest(CTSTest):
         if self._cm.in_standby_mode(node):
             return self.failure("standby status of %s is [on] but we expect [off]" % node)
 
-        watchpats = [ r"State transition .* -> S_POLICY_ENGINE" ]
+        watchpats = [
+            r"State transition .* -> S_POLICY_ENGINE",
+        ]
         watch = self.create_watch(watchpats, self._env["DeadTime"]+10)
         watch.set_watch()
 

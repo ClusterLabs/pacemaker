@@ -292,9 +292,11 @@ class Test:
 
         # FIXME: When we support python >= 3.5, this function can be replaced with:
         #   signal.Signals(self.daemon_process.returncode).name
-        return { getattr(signal, _signame): _signame
-                     for _signame in dir(signal)
-                     if _signame.startswith("SIG") and not _signame.startswith("SIG_") }
+        return {
+            getattr(signal, _signame): _signame
+                for _signame in dir(signal)
+                if _signame.startswith("SIG") and not _signame.startswith("SIG_")
+        }
 
     def clean_environment(self):
         """ Clean up the host after executing a test """
@@ -318,7 +320,7 @@ class Test:
         # makes fenced output any kind of 8 bit value - while still interesting
         # for debugging and we'd still like the regression-test to go over the
         # full set of test-cases
-        with open(self.logpath, 'rt', encoding = "ISO-8859-1") as logfile:
+        with open(self.logpath, 'rt', encoding="ISO-8859-1") as logfile:
             for line in logfile.readlines():
                 self._daemon_output += line
 
@@ -485,7 +487,7 @@ class Test:
 
             if not self.force_wait and logfile is None \
                and os.path.exists(self.logpath):
-                logfile = io.open(self.logpath, 'rt', encoding = "ISO-8859-1")
+                logfile = io.open(self.logpath, 'rt', encoding="ISO-8859-1")
 
             if not self.force_wait and logfile is not None:
                 for line in logfile.readlines():

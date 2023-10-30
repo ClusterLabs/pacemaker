@@ -169,8 +169,10 @@ class ClusterManager(UserDict):
             if self.expected_status[peer] == "up":
                 continue
 
-            stonith_pats.extend([ self.templates["Pat:Fencing_ok"] % peer,
-                                 self.templates["Pat:Fencing_start"] % peer ])
+            stonith_pats.extend([
+                self.templates["Pat:Fencing_ok"] % peer,
+                self.templates["Pat:Fencing_start"] % peer,
+            ])
 
         stonith = LogWatcher(self.env["LogFileName"], stonith_pats, self.env["nodes"],
                              self.env["LogWatcher"], "StartupFencing", 0)
@@ -275,7 +277,9 @@ class ClusterManager(UserDict):
             return True
 
         # Technically we should always be able to notice ourselves starting
-        patterns = [ self.templates["Pat:Local_started"] % node ]
+        patterns = [
+            self.templates["Pat:Local_started"] % node,
+        ]
 
         if self.upcount() == 0:
             patterns.append(self.templates["Pat:DC_started"] % node)
@@ -290,7 +294,7 @@ class ClusterManager(UserDict):
         self.expected_status[node] = "any"
 
         if self.stat_cm(node) and self.cluster_stable(self.env["DeadTime"]):
-            self._logger.log ("%s was already started" % node)
+            self._logger.log("%s was already started" % node)
             return True
 
         stonith = self.prepare_fencing_watcher()
@@ -298,7 +302,7 @@ class ClusterManager(UserDict):
 
         (rc, _) = self.rsh(node, self.templates["StartCmd"])
         if rc != 0:
-            self._logger.log ("Warn: Start command failed on node %s" % node)
+            self._logger.log("Warn: Start command failed on node %s" % node)
             self.fencing_cleanup(node, stonith)
             return False
 
@@ -307,7 +311,7 @@ class ClusterManager(UserDict):
 
         if watch.unmatched:
             for regex in watch.unmatched:
-                self._logger.log ("Warn: Startup pattern not found: %s" % regex)
+                self._logger.log("Warn: Startup pattern not found: %s" % regex)
 
         if watch_result and self.cluster_stable(self.env["DeadTime"]):
             self.fencing_cleanup(node, stonith)
@@ -317,7 +321,7 @@ class ClusterManager(UserDict):
             self.fencing_cleanup(node, stonith)
             return True
 
-        self._logger.log ("Warn: Start failed for node %s" % node)
+        self._logger.log("Warn: Start failed for node %s" % node)
         return False
 
     def start_cm_async(self, node, verbose=False):
@@ -350,7 +354,7 @@ class ClusterManager(UserDict):
             self.cluster_stable(self.env["DeadTime"])
             return True
 
-        self._logger.log ("ERROR: Could not stop %s on node %s" % (self["Name"], node))
+        self._logger.log("ERROR: Could not stop %s on node %s" % (self["Name"], node))
         return False
 
     def stop_cm_async(self, node):
@@ -378,12 +382,16 @@ class ClusterManager(UserDict):
             return self.start_cm(nodelist[0], verbose=verbose)
 
         # Approximation of SimulStartList for --boot
-        watchpats = [ self.templates["Pat:DC_IDLE"] ]
+        watchpats = [
+            self.templates["Pat:DC_IDLE"],
+        ]
         for node in nodelist:
-            watchpats.extend([ self.templates["Pat:InfraUp"] % node,
-                               self.templates["Pat:PacemakerUp"] % node,
-                               self.templates["Pat:Local_started"] % node,
-                               self.templates["Pat:They_up"] % (nodelist[0], node) ])
+            watchpats.extend([
+                self.templates["Pat:InfraUp"] % node,
+                self.templates["Pat:PacemakerUp"] % node,
+                self.templates["Pat:Local_started"] % node,
+                self.templates["Pat:They_up"] % (nodelist[0], node),
+            ])
 
         #   Start all the nodes - at about the same time...
         watch = LogWatcher(self.env["LogFileName"], watchpats, self.env["nodes"],
@@ -399,7 +407,7 @@ class ClusterManager(UserDict):
         watch.look_for_all()
         if watch.unmatched:
             for regex in watch.unmatched:
-                self._logger.log ("Warn: Startup pattern not found: %s" % regex)
+                self._logger.log("Warn: Startup pattern not found: %s" % regex)
 
         if not self.cluster_stable():
             self._logger.log("Cluster did not stabilize")
@@ -577,9 +585,11 @@ class ClusterManager(UserDict):
             up and stable
         """
 
-        watchpats = [ "Current ping state: (S_IDLE|S_NOT_DC)",
-                      self.templates["Pat:NonDC_started"] % node,
-                      self.templates["Pat:DC_started"] % node ]
+        watchpats = [
+            "Current ping state: (S_IDLE|S_NOT_DC)",
+            self.templates["Pat:NonDC_started"] % node,
+            self.templates["Pat:DC_started"] % node,
+        ]
 
         idle_watch = LogWatcher(self.env["LogFileName"], watchpats, [node],
                                 self.env["LogWatcher"], "ClusterIdle")
@@ -644,8 +654,10 @@ class ClusterManager(UserDict):
     def partition_stable(self, nodes, timeout=None):
         """ Return whether or not all nodes in the given partition are stable """
 
-        watchpats = [ "Current ping state: S_IDLE",
-                      self.templates["Pat:DC_IDLE"] ]
+        watchpats = [
+            "Current ping state: S_IDLE",
+            self.templates["Pat:DC_IDLE"],
+        ]
 
         self.debug("Waiting for cluster stability...")
 

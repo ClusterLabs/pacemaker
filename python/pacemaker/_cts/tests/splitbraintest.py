@@ -53,7 +53,7 @@ class SplitBrainTest(CTSTest):
             try:
                 other_nodes.remove(node)
             except ValueError:
-                self._logger.log("Node %s not in %r from %r" % (node,self._env["nodes"], partition))
+                self._logger.log("Node %s not in %r from %r" % (node, self._env["nodes"], partition))
 
         if not other_nodes:
             return
@@ -199,10 +199,12 @@ class SplitBrainTest(CTSTest):
     def errors_to_ignore(self):
         """ Return list of errors which should be ignored """
 
-        return [ r"Another DC detected:",
-                 r"(ERROR|error).*: .*Application of an update diff failed",
-                 r"pacemaker-controld.*:.*not in our membership list",
-                 r"CRIT:.*node.*returning after partition" ]
+        return [
+            r"Another DC detected:",
+            r"(ERROR|error).*: .*Application of an update diff failed",
+            r"pacemaker-controld.*:.*not in our membership list",
+            r"CRIT:.*node.*returning after partition"
+        ]
 
     def is_applicable(self):
         """ Return True if this test is applicable in the current test configuration. """

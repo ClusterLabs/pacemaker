@@ -35,7 +35,7 @@ pcmk__ipc_buffer_size(unsigned int max)
     if (global_max == 0) {
         long long global_ll;
 
-        if ((pcmk__scan_ll(getenv("PCMK_ipc_buffer"), &global_ll,
+        if ((pcmk__scan_ll(pcmk__env_option(PCMK__ENV_IPC_BUFFER), &global_ll,
                            0LL) != pcmk_rc_ok)
             || (global_ll <= 0)) {
             global_max = MAX_MSG_SIZE; // Default for unset or invalid

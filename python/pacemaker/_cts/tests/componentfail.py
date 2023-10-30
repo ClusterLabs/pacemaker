@@ -70,18 +70,22 @@ class ComponentFail(CTSTest):
         self.incr(chosen.name)
 
         if chosen.name != "corosync":
-            self._patterns.extend([ self.templates["Pat:ChildKilled"] % (node, chosen.name),
-                                    self.templates["Pat:ChildRespawn"] % (node, chosen.name) ])
+            self._patterns.extend([
+                self.templates["Pat:ChildKilled"] % (node, chosen.name),
+                self.templates["Pat:ChildRespawn"] % (node, chosen.name),
+            ])
 
         self._patterns.extend(chosen.pats)
         if node_is_dc:
             self._patterns.extend(chosen.dc_pats)
 
         # @TODO this should be a flag in the Component
-        if chosen.name in [ "corosync", "pacemaker-based", "pacemaker-fenced" ]:
+        if chosen.name in ["corosync", "pacemaker-based", "pacemaker-fenced"]:
             # Ignore actions for fence devices if fencer will respawn
             # (their registration will be lost, and probes will fail)
-            self._okerrpatterns = [ self.templates["Pat:Fencing_active"] ]
+            self._okerrpatterns = [
+                self.templates["Pat:Fencing_active"],
+            ]
             (_, lines) = self._rsh(node, "crm_resource -c", verbose=1)
 
             for line in lines:
@@ -89,15 +93,19 @@ class ComponentFail(CTSTest):
                     r = AuditResource(self._cm, line)
 
                     if r.rclass == "stonith":
-                        self._okerrpatterns.extend([ self.templates["Pat:Fencing_recover"] % r.id,
-                                                     self.templates["Pat:Fencing_probe"] % r.id ])
+                        self._okerrpatterns.extend([
+                            self.templates["Pat:Fencing_recover"] % r.id,
+                            self.templates["Pat:Fencing_probe"] % r.id,
+                        ])
 
         # supply a copy so self.patterns doesn't end up empty
         tmp_pats = self._patterns.copy()
         self._patterns.extend(chosen.badnews_ignore)
 
         # Look for STONITH ops, depending on Env["at-boot"] we might need to change the nodes status
-        stonith_pats = [ self.templates["Pat:Fencing_ok"] % node ]
+        stonith_pats = [
+            self.templates["Pat:Fencing_ok"] % node
+        ]
         stonith = self.create_watch(stonith_pats, 0)
         stonith.set_watch()
 

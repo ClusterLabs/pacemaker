@@ -285,7 +285,7 @@ class Environment:
             # pylint: disable=no-member
             if int(self["IPBase"].split('.')[3]) >= 240:
                 self._logger.log("Could not determine an offset for IPaddr resources. Upper bound is too high: %s %s"
-                                % (self["IPBase"], self["IPBase"].split('.')[3]))
+                                 % (self["IPBase"], self["IPBase"].split('.')[3]))
                 self["IPBase"] = " fe80::1234:56:7890:1000"
                 self._logger.log("Defaulting to '%s', use --test-ip-base to override" % self["IPBase"])
 
@@ -300,7 +300,7 @@ class Environment:
                 # it as an int in __init__ and treat it as an int everywhere.
                 # pylint: disable=bad-string-format-type
                 self._logger.log("Limiting the number of nodes configured=%d (max=%d)"
-                                %(len(self["nodes"]), self["node-limit"]))
+                                 % (len(self["nodes"]), self["node-limit"]))
 
                 while len(self["nodes"]) > self["node-limit"]:
                     self["nodes"].pop(len(self["nodes"])-1)

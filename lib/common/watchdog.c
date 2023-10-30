@@ -52,6 +52,7 @@ panic_local(void)
     int rc = pcmk_ok;
     uid_t uid = geteuid();
     pid_t ppid = getppid();
+    const char *panic_action = pcmk__env_option(PCMK__ENV_PANIC_ACTION);
 
     if(uid != 0 && ppid > 1) {
         /* We're a non-root pacemaker daemon (pacemaker-based,
@@ -89,13 +90,15 @@ panic_local(void)
 
     /* We're either pacemakerd, or a pacemaker daemon running as root */
 
-    if (pcmk__str_eq("crash", getenv("PCMK_panic_action"), pcmk__str_casei)) {
+    if (pcmk__str_eq(panic_action, "crash", pcmk__str_casei)) {
         sysrq_trigger('c');
-    } else if (pcmk__str_eq("sync-crash", getenv("PCMK_panic_action"), pcmk__str_casei)) {
+
+    } else if (pcmk__str_eq(panic_action, "sync-crash", pcmk__str_casei)) {
         sync();
         sysrq_trigger('c');
+
     } else {
-        if (pcmk__str_eq("sync-reboot", getenv("PCMK_panic_action"), pcmk__str_casei)) {
+        if (pcmk__str_eq(panic_action, "sync-reboot", pcmk__str_casei)) {
             sync();
         }
         sysrq_trigger('b');

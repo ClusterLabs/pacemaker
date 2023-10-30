@@ -164,6 +164,8 @@ coverity-clean:
 
 ## cppcheck
 
+GLIB_CFLAGS	?= $(pkg-config --cflags glib-2.0)
+
 # Use CPPCHECK_ARGS to pass extra cppcheck options, e.g.:
 # --enable={warning,style,performance,portability,information,all}
 # --inconclusive --std=posix
@@ -295,6 +297,30 @@ indent:
 		find $(INDENT_DIRS) -type f -name "*.[ch]"	\
 		$(INDENT_IGNORE_PATHS:%= ! -path '%')		\
 		-exec indent $(INDENT_PACEMAKER_STYLE) $(INDENT_OPTS) \{\} \;
+
+#
+# Check whether copyrights have been updated appropriately
+# (Set COMMIT to desired commit or commit range to check, defaulting to HEAD,
+# or set it empty to check uncommitted changes)
+#
+YEAR		= $(shell date +%Y)
+MODIFIED_FILES	= $(shell case "$(COMMIT)" in				\
+		  	[0-9a-f]*$(rparen)				\
+				git diff-tree --no-commit-id		\
+					--name-only "$(COMMIT)" -r ;;	\
+		  	*$(rparen)					\
+				cd "$(top_srcdir)";			\
+				git ls-files --modified ;;		\
+			esac)
+
+.PHONY: copyright
+copyright:
+	@cd "$(top_srcdir)" && for file in $(MODIFIED_FILES); do	\
+		if ! grep 'opyright .*$(YEAR).* Pacemaker' "$$file"	\
+			>/dev/null 2>&1; then				\
+			echo "$$file";					\
+		fi;							\
+	done
 
 #
 # Scratch file for ad-hoc testing

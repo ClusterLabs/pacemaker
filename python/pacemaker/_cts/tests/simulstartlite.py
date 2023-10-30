@@ -31,7 +31,7 @@ class SimulStartLite(CTSTest):
             cm -- A ClusterManager instance
         """
 
-        CTSTest.__init__(self,cm)
+        CTSTest.__init__(self, cm)
         self.name = "SimulStartLite"
 
     def __call__(self, dummy):
@@ -56,7 +56,9 @@ class SimulStartLite(CTSTest):
             if self._cm.upcount() == 0:
                 uppat = self.templates["Pat:Local_started"]
 
-            watchpats = [ self.templates["Pat:DC_IDLE"] ]
+            watchpats = [
+                self.templates["Pat:DC_IDLE"]
+            ]
             for node in node_list:
                 watchpats.extend([uppat % node,
                                   self.templates["Pat:InfraUp"] % node,
@@ -99,7 +101,7 @@ class SimulStartLite(CTSTest):
 
             if watch.unmatched:
                 for regex in watch.unmatched:
-                    self._logger.log ("Warn: Startup pattern not found: %s" % regex)
+                    self._logger.log("Warn: Startup pattern not found: %s" % regex)
 
             if not self._cm.cluster_stable():
                 return self.failure("Cluster did not stabilize")

@@ -294,8 +294,8 @@ class JournalObj(SearchObj):
             self.limit = lines[0].strip()
             self.debug("Set limit to: %s" % self.limit)
         else:
-            self.debug("Unable to set limit for %s because date returned %d lines with status %d" % (self.host,
-                len(lines), rc))
+            self.debug("Unable to set limit for %s because date returned %d lines with status %d"
+                       % (self.host, len(lines), rc))
 
 class LogWatcher:
     """ A class for watching a single log file or journal across multiple hosts,

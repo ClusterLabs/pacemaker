@@ -407,7 +407,7 @@ static void
 throttle_update_job_max(const char *preference)
 {
     long long max = 0LL;
-    const char *env_limit = getenv("PCMK_node_action_limit");
+    const char *env_limit = pcmk__env_option(PCMK__ENV_NODE_ACTION_LIMIT);
 
     if (env_limit != NULL) {
         preference = env_limit; // Per-node override

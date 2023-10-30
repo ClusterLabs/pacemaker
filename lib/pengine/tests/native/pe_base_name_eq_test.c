@@ -12,15 +12,15 @@
 #include <crm/common/unittest_internal.h>
 
 #include <crm/common/xml.h>
+#include <crm/common/scheduler.h>
 #include <crm/pengine/internal.h>
 #include <crm/pengine/status.h>
-#include <crm/pengine/pe_types.h>
 
 xmlNode *input = NULL;
-pe_working_set_t *data_set = NULL;
+pcmk_scheduler_t *scheduler = NULL;
 
-pe_resource_t *exim_group, *promotable_0, *promotable_1, *dummy;
-pe_resource_t *httpd_bundle, *mysql_group_0, *mysql_group_1;
+pcmk_resource_t *exim_group, *promotable_0, *promotable_1, *dummy;
+pcmk_resource_t *httpd_bundle, *mysql_group_0, *mysql_group_1;
 
 static int
 setup(void **state) {
@@ -36,21 +36,21 @@ setup(void **state) {
         return 1;
     }
 
-    data_set = pe_new_working_set();
+    scheduler = pe_new_working_set();
 
-    if (data_set == NULL) {
+    if (scheduler == NULL) {
         return 1;
     }
 
-    pe__set_working_set_flags(data_set,
+    pe__set_working_set_flags(scheduler,
                               pcmk_sched_no_counts|pcmk_sched_no_compat);
-    data_set->input = input;
+    scheduler->input = input;
 
-    cluster_status(data_set);
+    cluster_status(scheduler);
 
     /* Get references to several resources we use frequently. */
-    for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+    for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
+        pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         if (strcmp(rsc->id, "dummy") == 0) {
             dummy = rsc;
@@ -60,7 +60,7 @@ setup(void **state) {
             httpd_bundle = rsc;
         } else if (strcmp(rsc->id, "mysql-clone-group") == 0) {
             for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-                pe_resource_t *child = (pe_resource_t *) iter->data;
+                pcmk_resource_t *child = (pcmk_resource_t *) iter->data;
 
                 if (strcmp(child->id, "mysql-group:0") == 0) {
                     mysql_group_0 = child;
@@ -70,7 +70,7 @@ setup(void **state) {
             }
         } else if (strcmp(rsc->id, "promotable-clone") == 0) {
             for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-                pe_resource_t *child = (pe_resource_t *) iter->data;
+                pcmk_resource_t *child = (pcmk_resource_t *) iter->data;
 
                 if (strcmp(child->id, "promotable-rsc:0") == 0) {
                     promotable_0 = child;
@@ -86,7 +86,7 @@ setup(void **state) {
 
 static int
 teardown(void **state) {
-    pe_free_working_set(data_set);
+    pe_free_working_set(scheduler);
 
     return 0;
 }

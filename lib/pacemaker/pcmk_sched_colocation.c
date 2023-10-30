@@ -52,8 +52,8 @@ static gint
 cmp_colocation_priority(const pcmk__colocation_t *colocation1,
                         const pcmk__colocation_t *colocation2, bool dependent)
 {
-    const pe_resource_t *rsc1 = NULL;
-    const pe_resource_t *rsc2 = NULL;
+    const pcmk_resource_t *rsc1 = NULL;
+    const pcmk_resource_t *rsc2 = NULL;
 
     if (colocation1 == NULL) {
         return 1;
@@ -171,7 +171,7 @@ cmp_primary_priority(gconstpointer a, gconstpointer b)
  */
 void
 pcmk__add_this_with(GList **list, const pcmk__colocation_t *colocation,
-                    const pe_resource_t *rsc)
+                    const pcmk_resource_t *rsc)
 {
     CRM_ASSERT((list != NULL) && (colocation != NULL) && (rsc != NULL));
 
@@ -198,7 +198,7 @@ pcmk__add_this_with(GList **list, const pcmk__colocation_t *colocation,
  */
 void
 pcmk__add_this_with_list(GList **list, GList *addition,
-                         const pe_resource_t *rsc)
+                         const pcmk_resource_t *rsc)
 {
     CRM_ASSERT((list != NULL) && (rsc != NULL));
 
@@ -231,7 +231,7 @@ pcmk__add_this_with_list(GList **list, GList *addition,
  */
 void
 pcmk__add_with_this(GList **list, const pcmk__colocation_t *colocation,
-                    const pe_resource_t *rsc)
+                    const pcmk_resource_t *rsc)
 {
     CRM_ASSERT((list != NULL) && (colocation != NULL) && (rsc != NULL));
 
@@ -258,7 +258,7 @@ pcmk__add_with_this(GList **list, const pcmk__colocation_t *colocation,
  */
 void
 pcmk__add_with_this_list(GList **list, GList *addition,
-                         const pe_resource_t *rsc)
+                         const pcmk_resource_t *rsc)
 {
     CRM_ASSERT((list != NULL) && (rsc != NULL));
 
@@ -288,8 +288,8 @@ pcmk__add_with_this_list(GList **list, GList *addition,
  * \param[in]     then_role   Anti-colocation role of \p then_rsc
  */
 static void
-anti_colocation_order(pe_resource_t *first_rsc, int first_role,
-                      pe_resource_t *then_rsc, int then_role)
+anti_colocation_order(pcmk_resource_t *first_rsc, int first_role,
+                      pcmk_resource_t *then_rsc, int then_role)
 {
     const char *first_tasks[] = { NULL, NULL };
     const char *then_tasks[] = { NULL, NULL };
@@ -333,7 +333,7 @@ anti_colocation_order(pe_resource_t *first_rsc, int first_role,
 
 /*!
  * \internal
- * \brief Add a new colocation constraint to a cluster working set
+ * \brief Add a new colocation constraint to scheduler data
  *
  * \param[in]     id              XML ID for this constraint
  * \param[in]     node_attr       Colocate by this attribute (NULL for #uname)
@@ -346,7 +346,7 @@ anti_colocation_order(pe_resource_t *first_rsc, int first_role,
  */
 void
 pcmk__new_colocation(const char *id, const char *node_attr, int score,
-                     pe_resource_t *dependent, pe_resource_t *primary,
+                     pcmk_resource_t *dependent, pcmk_resource_t *primary,
                      const char *dependent_role, const char *primary_role,
                      uint32_t flags)
 {
@@ -416,7 +416,7 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
  *         pcmk__coloc_none
  */
 static uint32_t
-unpack_influence(const char *coloc_id, const pe_resource_t *rsc,
+unpack_influence(const char *coloc_id, const pcmk_resource_t *rsc,
                  const char *influence_s)
 {
     if (influence_s != NULL) {
@@ -438,11 +438,11 @@ unpack_influence(const char *coloc_id, const pe_resource_t *rsc,
 
 static void
 unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
-                      const char *influence_s, pe_working_set_t *data_set)
+                      const char *influence_s, pcmk_scheduler_t *scheduler)
 {
     xmlNode *xml_rsc = NULL;
-    pe_resource_t *other = NULL;
-    pe_resource_t *resource = NULL;
+    pcmk_resource_t *other = NULL;
+    pcmk_resource_t *resource = NULL;
     const char *set_id = ID(set);
     const char *role = crm_element_value(set, "role");
     bool with_previous = false;
@@ -484,7 +484,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
             xml_rsc_id = ID(xml_rsc);
-            resource = pcmk__find_constraint_resource(data_set->resources,
+            resource = pcmk__find_constraint_resource(scheduler->resources,
                                                       xml_rsc_id);
             if (resource == NULL) {
                 // Should be possible only with validation disabled
@@ -522,7 +522,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
             xmlNode *xml_rsc_with = NULL;
 
             xml_rsc_id = ID(xml_rsc);
-            resource = pcmk__find_constraint_resource(data_set->resources,
+            resource = pcmk__find_constraint_resource(scheduler->resources,
                                                       xml_rsc_id);
             if (resource == NULL) {
                 // Should be possible only with validation disabled
@@ -540,7 +540,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
                 if (pcmk__str_eq(resource->id, xml_rsc_id, pcmk__str_none)) {
                     break;
                 }
-                other = pcmk__find_constraint_resource(data_set->resources,
+                other = pcmk__find_constraint_resource(scheduler->resources,
                                                        xml_rsc_id);
                 CRM_ASSERT(other != NULL); // We already processed it
                 pcmk__new_colocation(set_id, NULL, local_score,
@@ -559,16 +559,16 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
  * \param[in]     set2         Primary set
  * \param[in]     score        Colocation score
  * \param[in]     influence_s  Value of colocation's "influence" attribute
- * \param[in,out] data_set     Cluster working set
+ * \param[in,out] scheduler    Scheduler data
  */
 static void
 colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
                   int score, const char *influence_s,
-                  pe_working_set_t *data_set)
+                  pcmk_scheduler_t *scheduler)
 {
     xmlNode *xml_rsc = NULL;
-    pe_resource_t *rsc_1 = NULL;
-    pe_resource_t *rsc_2 = NULL;
+    pcmk_resource_t *rsc_1 = NULL;
+    pcmk_resource_t *rsc_2 = NULL;
 
     const char *xml_rsc_id = NULL;
     const char *role_1 = crm_element_value(set1, "role");
@@ -590,7 +590,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
         xml_rsc = first_named_child(set1, XML_TAG_RESOURCE_REF);
         if (xml_rsc != NULL) {
             xml_rsc_id = ID(xml_rsc);
-            rsc_1 = pcmk__find_constraint_resource(data_set->resources,
+            rsc_1 = pcmk__find_constraint_resource(scheduler->resources,
                                                    xml_rsc_id);
             if (rsc_1 == NULL) {
                 // Should be possible only with validation disabled
@@ -610,7 +610,8 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
 
             xml_rsc_id = ID(xml_rsc);
         }
-        rsc_2 = pcmk__find_constraint_resource(data_set->resources, xml_rsc_id);
+        rsc_2 = pcmk__find_constraint_resource(scheduler->resources,
+                                               xml_rsc_id);
         if (rsc_2 == NULL) {
             // Should be possible only with validation disabled
             pcmk__config_err("Ignoring colocation of set %s with set %s "
@@ -631,7 +632,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
             xml_rsc_id = ID(xml_rsc);
-            rsc_2 = pcmk__find_constraint_resource(data_set->resources,
+            rsc_2 = pcmk__find_constraint_resource(scheduler->resources,
                                                    xml_rsc_id);
             if (rsc_2 == NULL) {
                 // Should be possible only with validation disabled
@@ -649,7 +650,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
             xml_rsc_id = ID(xml_rsc);
-            rsc_1 = pcmk__find_constraint_resource(data_set->resources,
+            rsc_1 = pcmk__find_constraint_resource(scheduler->resources,
                                                    xml_rsc_id);
             if (rsc_1 == NULL) {
                 // Should be possible only with validation disabled
@@ -671,7 +672,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
             xmlNode *xml_rsc_2 = NULL;
 
             xml_rsc_id = ID(xml_rsc);
-            rsc_1 = pcmk__find_constraint_resource(data_set->resources,
+            rsc_1 = pcmk__find_constraint_resource(scheduler->resources,
                                                    xml_rsc_id);
             if (rsc_1 == NULL) {
                 // Should be possible only with validation disabled
@@ -688,7 +689,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
                  xml_rsc_2 = crm_next_same_xml(xml_rsc_2)) {
 
                 xml_rsc_id = ID(xml_rsc_2);
-                rsc_2 = pcmk__find_constraint_resource(data_set->resources,
+                rsc_2 = pcmk__find_constraint_resource(scheduler->resources,
                                                        xml_rsc_id);
                 if (rsc_2 == NULL) {
                     // Should be possible only with validation disabled
@@ -707,7 +708,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
 
 static void
 unpack_simple_colocation(xmlNode *xml_obj, const char *id,
-                         const char *influence_s, pe_working_set_t *data_set)
+                         const char *influence_s, pcmk_scheduler_t *scheduler)
 {
     int score_i = 0;
     uint32_t flags = pcmk__coloc_none;
@@ -724,11 +725,11 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
 
     const char *primary_instance = NULL;
     const char *dependent_instance = NULL;
-    pe_resource_t *primary = NULL;
-    pe_resource_t *dependent = NULL;
+    pcmk_resource_t *primary = NULL;
+    pcmk_resource_t *dependent = NULL;
 
-    primary = pcmk__find_constraint_resource(data_set->resources, primary_id);
-    dependent = pcmk__find_constraint_resource(data_set->resources,
+    primary = pcmk__find_constraint_resource(scheduler->resources, primary_id);
+    dependent = pcmk__find_constraint_resource(scheduler->resources,
                                                dependent_id);
 
     // @COMPAT: Deprecated since 2.1.5
@@ -808,7 +809,7 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
 // \return Standard Pacemaker return code
 static int
 unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
-                       pe_working_set_t *data_set)
+                       pcmk_scheduler_t *scheduler)
 {
     const char *id = NULL;
     const char *dependent_id = NULL;
@@ -816,11 +817,11 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     const char *dependent_role = NULL;
     const char *primary_role = NULL;
 
-    pe_resource_t *dependent = NULL;
-    pe_resource_t *primary = NULL;
+    pcmk_resource_t *dependent = NULL;
+    pcmk_resource_t *primary = NULL;
 
-    pe_tag_t *dependent_tag = NULL;
-    pe_tag_t *primary_tag = NULL;
+    pcmk_tag_t *dependent_tag = NULL;
+    pcmk_tag_t *primary_tag = NULL;
 
     xmlNode *dependent_set = NULL;
     xmlNode *primary_set = NULL;
@@ -838,7 +839,7 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     }
 
     // Check whether there are any resource sets with template or tag references
-    *expanded_xml = pcmk__expand_tags_in_sets(xml_obj, data_set);
+    *expanded_xml = pcmk__expand_tags_in_sets(xml_obj, scheduler);
     if (*expanded_xml != NULL) {
         crm_log_xml_trace(*expanded_xml, "Expanded rsc_colocation");
         return pcmk_rc_ok;
@@ -850,14 +851,14 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         return pcmk_rc_ok;
     }
 
-    if (!pcmk__valid_resource_or_tag(data_set, dependent_id, &dependent,
+    if (!pcmk__valid_resource_or_tag(scheduler, dependent_id, &dependent,
                                      &dependent_tag)) {
         pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
                          "valid resource or tag", id, dependent_id);
         return pcmk_rc_unpack_error;
     }
 
-    if (!pcmk__valid_resource_or_tag(data_set, primary_id, &primary,
+    if (!pcmk__valid_resource_or_tag(scheduler, primary_id, &primary,
                                      &primary_tag)) {
         pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
                          "valid resource or tag", id, primary_id);
@@ -883,7 +884,7 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     // Convert dependent's template/tag reference into constraint resource_set
     if (!pcmk__tag_to_set(*expanded_xml, &dependent_set, XML_COLOC_ATTR_SOURCE,
-                          true, data_set)) {
+                          true, scheduler)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_unpack_error;
@@ -900,7 +901,7 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     // Convert primary's template/tag reference into constraint resource_set
     if (!pcmk__tag_to_set(*expanded_xml, &primary_set, XML_COLOC_ATTR_TARGET,
-                          true, data_set)) {
+                          true, scheduler)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_unpack_error;
@@ -927,13 +928,13 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
 /*!
  * \internal
- * \brief Parse a colocation constraint from XML into a cluster working set
+ * \brief Parse a colocation constraint from XML into scheduler data
  *
- * \param[in,out] xml_obj   Colocation constraint XML to unpack
- * \param[in,out] data_set  Cluster working set to add constraint to
+ * \param[in,out] xml_obj    Colocation constraint XML to unpack
+ * \param[in,out] scheduler  Scheduler data to add constraint to
  */
 void
-pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
+pcmk__unpack_colocation(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 {
     int score_i = 0;
     xmlNode *set = NULL;
@@ -953,7 +954,7 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
     }
 
     if (unpack_colocation_tags(xml_obj, &expanded_xml,
-                               data_set) != pcmk_rc_ok) {
+                               scheduler) != pcmk_rc_ok) {
         return;
     }
     if (expanded_xml != NULL) {
@@ -970,7 +971,7 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
     for (set = first_named_child(xml_obj, XML_CONS_TAG_RSC_SET); set != NULL;
          set = crm_next_same_xml(set)) {
 
-        set = expand_idref(set, data_set->input);
+        set = expand_idref(set, scheduler->input);
         if (set == NULL) { // Configuration error, message already logged
             if (expanded_xml != NULL) {
                 free_xml(expanded_xml);
@@ -983,10 +984,10 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
                              " without " CRM_ATTR_ID);
             continue;
         }
-        unpack_colocation_set(set, score_i, id, influence_s, data_set);
+        unpack_colocation_set(set, score_i, id, influence_s, scheduler);
 
         if (last != NULL) {
-            colocate_rsc_sets(id, last, set, score_i, influence_s, data_set);
+            colocate_rsc_sets(id, last, set, score_i, influence_s, scheduler);
         }
         last = set;
     }
@@ -997,7 +998,7 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
     }
 
     if (last == NULL) {
-        unpack_simple_colocation(xml_obj, id, influence_s, data_set);
+        unpack_simple_colocation(xml_obj, id, influence_s, scheduler);
     }
 }
 
@@ -1010,14 +1011,14 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
  * \param[in]     reason  Unrunnable start action causing the block
  */
 static void
-mark_action_blocked(pe_resource_t *rsc, const char *task,
-                    const pe_resource_t *reason)
+mark_action_blocked(pcmk_resource_t *rsc, const char *task,
+                    const pcmk_resource_t *reason)
 {
     GList *iter = NULL;
     char *reason_text = crm_strdup_printf("colocation with %s", reason->id);
 
     for (iter = rsc->actions; iter != NULL; iter = iter->next) {
-        pe_action_t *action = iter->data;
+        pcmk_action_t *action = iter->data;
 
         if (pcmk_is_set(action->flags, pcmk_action_runnable)
             && pcmk__str_eq(action->task, task, pcmk__str_none)) {
@@ -1031,7 +1032,7 @@ mark_action_blocked(pe_resource_t *rsc, const char *task,
 
     // If parent resource can't perform an action, neither can any children
     for (iter = rsc->children; iter != NULL; iter = iter->next) {
-        mark_action_blocked((pe_resource_t *) (iter->data), task, reason);
+        mark_action_blocked((pcmk_resource_t *) (iter->data), task, reason);
     }
     free(reason_text);
 }
@@ -1047,11 +1048,11 @@ mark_action_blocked(pe_resource_t *rsc, const char *task,
  * \param[in,out] action  Action to check
  */
 void
-pcmk__block_colocation_dependents(pe_action_t *action)
+pcmk__block_colocation_dependents(pcmk_action_t *action)
 {
     GList *iter = NULL;
     GList *colocations = NULL;
-    pe_resource_t *rsc = NULL;
+    pcmk_resource_t *rsc = NULL;
     bool is_start = false;
 
     if (pcmk_is_set(action->flags, pcmk_action_runnable)) {
@@ -1077,9 +1078,9 @@ pcmk__block_colocation_dependents(pe_action_t *action)
 
     // Colocation fails only if entire primary can't reach desired role
     for (iter = rsc->children; iter != NULL; iter = iter->next) {
-        pe_resource_t *child = iter->data;
-        pe_action_t *child_action = find_first_action(child->actions, NULL,
-                                                      action->task, NULL);
+        pcmk_resource_t *child = iter->data;
+        pcmk_action_t *child_action = find_first_action(child->actions, NULL,
+                                                        action->task, NULL);
 
         if ((child_action == NULL)
             || pcmk_is_set(child_action->flags, pcmk_action_runnable)) {
@@ -1142,11 +1143,11 @@ pcmk__block_colocation_dependents(pe_action_t *action)
  *
  * \return Resource to use for role comparisons
  */
-static const pe_resource_t *
-get_resource_for_role(const pe_resource_t *rsc)
+static const pcmk_resource_t *
+get_resource_for_role(const pcmk_resource_t *rsc)
 {
     if (pcmk_is_set(rsc->flags, pcmk_rsc_replica_container)) {
-        const pe_resource_t *child = pe__get_rsc_in_container(rsc);
+        const pcmk_resource_t *child = pe__get_rsc_in_container(rsc);
 
         if (child != NULL) {
             return child;
@@ -1174,12 +1175,12 @@ get_resource_for_role(const pe_resource_t *rsc)
  * \return How colocation constraint should be applied at this point
  */
 enum pcmk__coloc_affects
-pcmk__colocation_affects(const pe_resource_t *dependent,
-                         const pe_resource_t *primary,
+pcmk__colocation_affects(const pcmk_resource_t *dependent,
+                         const pcmk_resource_t *primary,
                          const pcmk__colocation_t *colocation, bool preview)
 {
-    const pe_resource_t *dependent_role_rsc = NULL;
-    const pe_resource_t *primary_role_rsc = NULL;
+    const pcmk_resource_t *dependent_role_rsc = NULL;
+    const pcmk_resource_t *primary_role_rsc = NULL;
 
     CRM_ASSERT((dependent != NULL) && (primary != NULL)
                && (colocation != NULL));
@@ -1210,7 +1211,7 @@ pcmk__colocation_affects(const pe_resource_t *dependent,
          * colocation constraint has been violated.
          */
 
-        const pe_node_t *primary_node = primary->allocated_to;
+        const pcmk_node_t *primary_node = primary->allocated_to;
 
         if (dependent->allocated_to == NULL) {
             crm_trace("Skipping colocation '%s': %s will not run anywhere",
@@ -1276,15 +1277,15 @@ pcmk__colocation_affects(const pe_resource_t *dependent,
  * \param[in]     colocation  Colocation constraint
  */
 void
-pcmk__apply_coloc_to_scores(pe_resource_t *dependent,
-                            const pe_resource_t *primary,
+pcmk__apply_coloc_to_scores(pcmk_resource_t *dependent,
+                            const pcmk_resource_t *primary,
                             const pcmk__colocation_t *colocation)
 {
     const char *attr = colocation->node_attribute;
     const char *value = NULL;
     GHashTable *work = NULL;
     GHashTableIter iter;
-    pe_node_t *node = NULL;
+    pcmk_node_t *node = NULL;
 
     if (primary->allocated_to != NULL) {
         value = pcmk__colocation_node_attr(primary->allocated_to, attr,
@@ -1377,8 +1378,8 @@ pcmk__apply_coloc_to_scores(pe_resource_t *dependent,
  * \param[in]     colocation  Colocation constraint
  */
 void
-pcmk__apply_coloc_to_priority(pe_resource_t *dependent,
-                              const pe_resource_t *primary,
+pcmk__apply_coloc_to_priority(pcmk_resource_t *dependent,
+                              const pcmk_resource_t *primary,
                               const pcmk__colocation_t *colocation)
 {
     const char *dependent_value = NULL;
@@ -1386,7 +1387,7 @@ pcmk__apply_coloc_to_priority(pe_resource_t *dependent,
     const char *attr = colocation->node_attribute;
     int score_multiplier = 1;
 
-    const pe_resource_t *primary_role_rsc = NULL;
+    const pcmk_resource_t *primary_role_rsc = NULL;
 
     CRM_ASSERT((dependent != NULL) && (primary != NULL) &&
                (colocation != NULL));
@@ -1438,11 +1439,11 @@ pcmk__apply_coloc_to_priority(pe_resource_t *dependent,
  * \param[in] value  Colocation attribute value to require
  */
 static int
-best_node_score_matching_attr(const pe_resource_t *rsc, const char *attr,
+best_node_score_matching_attr(const pcmk_resource_t *rsc, const char *attr,
                               const char *value)
 {
     GHashTableIter iter;
-    pe_node_t *node = NULL;
+    pcmk_node_t *node = NULL;
     int best_score = -INFINITY;
     const char *best_node = NULL;
 
@@ -1482,10 +1483,10 @@ best_node_score_matching_attr(const pe_resource_t *rsc, const char *attr,
  * \return \c true if \p rsc is allowed only on one node, otherwise \c false
  */
 static bool
-allowed_on_one(const pe_resource_t *rsc)
+allowed_on_one(const pcmk_resource_t *rsc)
 {
     GHashTableIter iter;
-    pe_node_t *allowed_node = NULL;
+    pcmk_node_t *allowed_node = NULL;
     int allowed_nodes = 0;
 
     g_hash_table_iter_init(&iter, rsc->allowed_nodes);
@@ -1520,13 +1521,13 @@ allowed_on_one(const pe_resource_t *rsc)
  */
 static void
 add_node_scores_matching_attr(GHashTable *nodes,
-                              const pe_resource_t *source_rsc,
-                              const pe_resource_t *target_rsc,
+                              const pcmk_resource_t *source_rsc,
+                              const pcmk_resource_t *target_rsc,
                               const pcmk__colocation_t *colocation,
                               float factor, bool only_positive)
 {
     GHashTableIter iter;
-    pe_node_t *node = NULL;
+    pcmk_node_t *node = NULL;
     const char *attr = colocation->node_attribute;
 
     // Iterate through each node
@@ -1659,11 +1660,11 @@ add_node_scores_matching_attr(GHashTable *nodes,
  *       \c cmp_resources()).
  * \note The caller remains responsible for freeing \p *nodes.
  * \note This is the shared implementation of
- *       \c resource_alloc_functions_t:add_colocated_node_scores().
+ *       \c pcmk_assignment_methods_t:add_colocated_node_scores().
  */
 void
-pcmk__add_colocated_node_scores(pe_resource_t *source_rsc,
-                                const pe_resource_t *target_rsc,
+pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
+                                const pcmk_resource_t *target_rsc,
                                 const char *log_id,
                                 GHashTable **nodes,
                                 const pcmk__colocation_t *colocation,
@@ -1726,7 +1727,7 @@ pcmk__add_colocated_node_scores(pe_resource_t *source_rsc,
         for (GList *iter = colocations; iter != NULL; iter = iter->next) {
             pcmk__colocation_t *constraint = iter->data;
 
-            pe_resource_t *other = NULL;
+            pcmk_resource_t *other = NULL;
             float other_factor = factor * constraint->score / (float) INFINITY;
 
             if (pcmk_is_set(flags, pcmk__coloc_select_this_with)) {
@@ -1759,7 +1760,7 @@ pcmk__add_colocated_node_scores(pe_resource_t *source_rsc,
 
 
     if (pcmk_is_set(flags, pcmk__coloc_select_nonnegative)) {
-        pe_node_t *node = NULL;
+        pcmk_node_t *node = NULL;
         GHashTableIter iter;
 
         g_hash_table_iter_init(&iter, work);
@@ -1789,9 +1790,9 @@ void
 pcmk__add_dependent_scores(gpointer data, gpointer user_data)
 {
     pcmk__colocation_t *colocation = data;
-    pe_resource_t *target_rsc = user_data;
+    pcmk_resource_t *target_rsc = user_data;
 
-    pe_resource_t *source_rsc = colocation->dependent;
+    pcmk_resource_t *source_rsc = colocation->dependent;
     const float factor = colocation->score / (float) INFINITY;
     uint32_t flags = pcmk__coloc_select_active;
 
@@ -1829,20 +1830,20 @@ pcmk__add_dependent_scores(gpointer data, gpointer user_data)
  *                               the node's score in \p table
  */
 void
-pcmk__colocation_intersect_nodes(pe_resource_t *dependent,
-                                 const pe_resource_t *primary,
+pcmk__colocation_intersect_nodes(pcmk_resource_t *dependent,
+                                 const pcmk_resource_t *primary,
                                  const pcmk__colocation_t *colocation,
                                  const GList *primary_nodes, bool merge_scores)
 {
     GHashTableIter iter;
-    pe_node_t *dependent_node = NULL;
+    pcmk_node_t *dependent_node = NULL;
 
     CRM_ASSERT((dependent != NULL) && (primary != NULL)
                && (colocation != NULL));
 
     g_hash_table_iter_init(&iter, dependent->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &dependent_node)) {
-        const pe_node_t *primary_node = NULL;
+        const pcmk_node_t *primary_node = NULL;
 
         primary_node = pe_find_node_id(primary_nodes,
                                        dependent_node->details->id);
@@ -1878,7 +1879,7 @@ pcmk__colocation_intersect_nodes(pe_resource_t *dependent,
  * \note This is a convenience wrapper for the with_this_colocations() method.
  */
 GList *
-pcmk__with_this_colocations(const pe_resource_t *rsc)
+pcmk__with_this_colocations(const pcmk_resource_t *rsc)
 {
     GList *list = NULL;
 
@@ -1897,7 +1898,7 @@ pcmk__with_this_colocations(const pe_resource_t *rsc)
  * \note This is a convenience wrapper for the this_with_colocations() method.
  */
 GList *
-pcmk__this_with_colocations(const pe_resource_t *rsc)
+pcmk__this_with_colocations(const pcmk_resource_t *rsc)
 {
     GList *list = NULL;
 

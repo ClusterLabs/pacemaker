@@ -330,7 +330,7 @@ cli_resource_clear(const char *rsc_id, const char *host, GList *allnodes, cib_t 
          * On the first error, abort.
          */
         for(; n; n = n->next) {
-            pe_node_t *target = n->data;
+            pcmk_node_t *target = n->data;
 
             rc = cli_resource_clear(rsc_id, target->details->uname, NULL,
                                     cib_conn, cib_options, clear_ban_constraints,

@@ -403,7 +403,7 @@ poll_until_reply(data_t *data, pcmk_ipc_api_t *api, const char *on_node)
     pcmk__output_t *out = data->out;
 
     uint64_t start_nsec = qb_util_nano_current_get();
-    uint64_t end_nsec = start_nsec;
+    uint64_t end_nsec = 0;
     uint64_t elapsed_ms = 0;
     uint64_t remaining_ms = data->message_timeout_ms;
 
