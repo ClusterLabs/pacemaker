@@ -135,7 +135,7 @@ typedef struct {
     int id;                     // Counter to identify relation
     uint32_t flags;             // Group of enum pcmk__action_relation_flags
     pcmk_resource_t *rsc1;      // Resource for first action, if any
-    pcmk_action_t *lh_action;   // First action in relation
+    pcmk_action_t *action1;     // First action in relation
     char *lh_action_task;       // Action name or key for first action
     pcmk_resource_t *rsc2;      // Resource for second action, if any
     pcmk_action_t *rh_action;   // 'Then' action in relation

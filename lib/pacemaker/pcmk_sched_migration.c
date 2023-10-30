@@ -283,8 +283,7 @@ pcmk__order_migration_equivalents(pcmk__action_relation_t *order)
     }
 
     // Check which actions are involved
-    first_task = task_from_action_or_key(order->lh_action,
-                                         order->lh_action_task);
+    first_task = task_from_action_or_key(order->action1, order->lh_action_task);
     then_task = task_from_action_or_key(order->rh_action,
                                         order->rh_action_task);
 

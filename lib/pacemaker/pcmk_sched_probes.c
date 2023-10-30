@@ -361,7 +361,7 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
         }
 
         // Skip invalid orderings (shouldn't be possible)
-        first = order->lh_action;
+        first = order->action1;
         then = order->rh_action;
         if (((first == NULL) && (order->lh_action_task == NULL))
             || ((then == NULL) && (order->rh_action_task == NULL))) {

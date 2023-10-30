@@ -548,7 +548,7 @@ pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
     order->flags = flags;
     order->rsc1 = first_rsc;
     order->rsc2 = then_rsc;
-    order->lh_action = first_action;
+    order->action1 = first_action;
     order->rh_action = then_action;
     order->lh_action_task = first_action_task;
     order->rh_action_task = then_action_task;
@@ -1288,7 +1288,7 @@ static void
 rsc_order_first(pcmk_resource_t *first_rsc, pcmk__action_relation_t *order)
 {
     GList *first_actions = NULL;
-    pcmk_action_t *first_action = order->lh_action;
+    pcmk_action_t *first_action = order->action1;
     pcmk_resource_t *then_rsc = order->rsc2;
 
     CRM_ASSERT(first_rsc != NULL);
@@ -1418,12 +1418,12 @@ pcmk__apply_orderings(pcmk_scheduler_t *sched)
 
         rsc = order->rsc2;
         if (rsc != NULL) {
-            order_resource_actions_after(order->lh_action, rsc, order);
+            order_resource_actions_after(order->action1, rsc, order);
 
         } else {
             crm_trace("Applying ordering constraint %d (non-resource actions)",
                       order->id);
-            order_actions(order->lh_action, order->rh_action, order->flags);
+            order_actions(order->action1, order->rh_action, order->flags);
         }
     }
 
