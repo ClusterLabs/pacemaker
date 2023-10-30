@@ -18,7 +18,9 @@ liblrmd_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 liblrmd_la_LIBADD = $(top_builddir)/lib/fencing/libstonithd.la
 liblrmd_la_LIBADD += $(top_builddir)/lib/services/libcrmservice.la
 liblrmd_la_LIBADD += $(top_builddir)/lib/common/libcrmcommon.la
-liblrmd_la_SOURCES	= lrmd_client.c 	\
-			  proxy_common.c 	\
-			  lrmd_alerts.c 	\
-			  lrmd_output.c
+
+## Library sources (*must* use += format for bumplibs)
+liblrmd_la_SOURCES	= lrmd_alerts.c 
+liblrmd_la_SOURCES	+= lrmd_client.c
+liblrmd_la_SOURCES	+= lrmd_output.c
+liblrmd_la_SOURCES	+= proxy_common.c
