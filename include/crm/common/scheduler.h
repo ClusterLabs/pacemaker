@@ -208,7 +208,10 @@ struct pe_working_set_s {
     int action_id;                  //!< ID to use for next created action
     xmlNode *graph;                 //!< Transition graph
     GHashTable *template_rsc_sets;  //!< Mappings of template ID to resource ID
-    const char *localhost;          //!< Node will be created for this if needed
+
+    // @COMPAT Replace this with a fencer variable (only place it's used)
+    const char *localhost;          //!< \deprecated Do not use
+
     GHashTable *tags;               //!< Configuration tags (ID -> pcmk_tag_t *)
     int blocked_resources;          //!< Number of blocked resources in cluster
     int disabled_resources;         //!< Number of disabled resources in cluster
