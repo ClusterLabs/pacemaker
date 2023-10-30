@@ -23,6 +23,7 @@ libcrmservice_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 libcrmservice_la_LIBADD		= $(top_builddir)/lib/common/libcrmcommon.la \
 				  $(DBUS_LIBS)
 
+## Library sources (*must* use += format for bumplibs)
 libcrmservice_la_SOURCES	= services.c
 libcrmservice_la_SOURCES	+= services_linux.c
 libcrmservice_la_SOURCES	+= services_lsb.c

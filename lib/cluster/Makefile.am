@@ -22,10 +22,11 @@ libcrmcluster_la_LIBADD = $(top_builddir)/lib/fencing/libstonithd.la
 libcrmcluster_la_LIBADD += $(top_builddir)/lib/common/libcrmcommon.la
 libcrmcluster_la_LIBADD += $(CLUSTERLIBS)
 
-libcrmcluster_la_SOURCES = election.c 	\
-			   cluster.c 	\
-			   membership.c
+## Library sources (*must* use += format for bumplibs)
+libcrmcluster_la_SOURCES = cluster.c
+libcrmcluster_la_SOURCES += election.c
+libcrmcluster_la_SOURCES += membership.c
 if BUILD_CS_SUPPORT
-libcrmcluster_la_SOURCES += cpg.c 	\
-			    corosync.c
+libcrmcluster_la_SOURCES += corosync.c
+libcrmcluster_la_SOURCES += cpg.c
 endif

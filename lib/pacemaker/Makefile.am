@@ -16,8 +16,6 @@ noinst_HEADERS  = libpacemaker_private.h
 ## libraries
 lib_LTLIBRARIES	= libpacemaker.la
 
-## SOURCES
-
 libpacemaker_la_LDFLAGS	= -version-info 7:0:6
 
 libpacemaker_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
@@ -31,7 +29,8 @@ libpacemaker_la_LIBADD += $(top_builddir)/lib/services/libcrmservice.la
 libpacemaker_la_LIBADD += $(top_builddir)/lib/common/libcrmcommon.la
 
 # -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version
-# Use += rather than backlashed continuation lines for parsing by bumplibs
+
+## Library sources (*must* use += format for bumplibs)
 libpacemaker_la_SOURCES	=
 libpacemaker_la_SOURCES += pcmk_acl.c
 libpacemaker_la_SOURCES += pcmk_agents.c
