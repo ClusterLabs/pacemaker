@@ -178,7 +178,10 @@ struct pe_working_set_s {
     pcmk_node_t *dc_node;           //!< Node object for DC
     const char *stonith_action;     //!< Default fencing action
     const char *placement_strategy; //!< Value of placement-strategy property
+
+    // @COMPAT Change to uint64_t at a compatibility break
     unsigned long long flags;       //!< Group of enum pcmk_scheduler_flags
+
     int stonith_timeout;            //!< Value of stonith-timeout property
     enum pe_quorum_policy no_quorum_policy; //!< Response to loss of quorum
     GHashTable *config_hash;        //!< Cluster properties

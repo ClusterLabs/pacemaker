@@ -469,7 +469,7 @@ struct pe_resource_s {
     enum rsc_role_e next_role;      //!< Resource's scheduled next role
 
     GHashTable *meta;               //!< Resource's meta-attributes
-    GHashTable *parameters;         //! \deprecated Use pe_rsc_params() instead
+    GHashTable *parameters;         //!< \deprecated Use pe_rsc_params() instead
     GHashTable *utilization;        //!< Resource's utilization attributes
 
     GList *children;                //!< Resource's child resources, if any

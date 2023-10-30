@@ -405,7 +405,9 @@ struct pe_action_s {
     char *cancel_task;      //!< If task is "cancel", the action being cancelled
     char *reason;           //!< Readable description of why action is needed
 
+    //@ COMPAT Change to uint32_t at a compatibility break
     enum pe_action_flags flags;         //!< Group of enum pe_action_flags
+
     enum rsc_start_requirement needs;   //!< Prerequisite for recovery
     enum action_fail_response on_fail;  //!< Response to failure
     enum rsc_role_e fail_role;          //!< Resource role if action fails
