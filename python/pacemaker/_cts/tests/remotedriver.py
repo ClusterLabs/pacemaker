@@ -40,7 +40,7 @@ class RemoteDriver(CTSTest):
             cm -- A ClusterManager instance
         """
 
-        CTSTest.__init__(self,cm)
+        CTSTest.__init__(self, cm)
         self.name = "RemoteDriver"
 
         self._corosync_enabled = False
@@ -64,7 +64,7 @@ class RemoteDriver(CTSTest):
         self._pcmk_started = False
         self._remote_node_added = False
         self._remote_rsc_added = False
-        self._remote_use_reconnect_interval = self._env.random_gen.choice([True,False])
+        self._remote_use_reconnect_interval = self._env.random_gen.choice([True, False])
 
     def fail(self, msg):
         """ Mark test as failed """
@@ -124,7 +124,9 @@ class RemoteDriver(CTSTest):
   <operations>
     <op id="%(node)s-monitor-interval-20s" interval="20s" name="monitor"/>
   </operations>
-</primitive>""" % { "node": self._remote_rsc }
+</primitive>""" % {
+    "node": self._remote_rsc
+}
 
         self._add_rsc(node, rsc_xml)
         if not self.failed:
@@ -140,7 +142,9 @@ class RemoteDriver(CTSTest):
 <primitive class="ocf" id="%(node)s" provider="pacemaker" type="remote">
   <instance_attributes id="%(node)s-instance_attributes">
     <nvpair id="%(node)s-instance_attributes-server" name="server" value="%(server)s"/>
-""" % { "node": self._remote_node, "server": node }
+""" % {
+    "node": self._remote_node, "server": node
+}
 
         if self._remote_use_reconnect_interval:
             # Set reconnect interval on resource
@@ -155,7 +159,9 @@ class RemoteDriver(CTSTest):
     <op id="%(node)s-monitor-20s" name="monitor" interval="20s" timeout="45s"/>
   </operations>
 </primitive>
-""" % { "node": self._remote_node }
+""" % {
+    "node": self._remote_node
+}
 
         self._add_rsc(node, rsc_xml)
         if not self.failed:
@@ -242,12 +248,14 @@ class RemoteDriver(CTSTest):
             return
 
         # Convert node to baremetal now that it has shutdown the cluster stack
-        pats = [ ]
+        pats = []
         watch = self.create_watch(pats, 120)
         watch.set_watch()
 
-        pats.extend([ self.templates["Pat:RscOpOK"] % ("start", self._remote_node),
-                      self.templates["Pat:DC_IDLE"] ])
+        pats.extend([
+            self.templates["Pat:RscOpOK"] % ("start", self._remote_node),
+            self.templates["Pat:DC_IDLE"]
+        ])
 
         self._add_connection_rsc(node)
 
@@ -265,9 +273,11 @@ class RemoteDriver(CTSTest):
         if self.failed:
             return
 
-        pats = [ self.templates["Pat:RscOpOK"] % ("migrate_to", self._remote_node),
-                 self.templates["Pat:RscOpOK"] % ("migrate_from", self._remote_node),
-                 self.templates["Pat:DC_IDLE"] ]
+        pats = [
+            self.templates["Pat:RscOpOK"] % ("migrate_to", self._remote_node),
+            self.templates["Pat:RscOpOK"] % ("migrate_from", self._remote_node),
+            self.templates["Pat:DC_IDLE"]
+        ]
 
         watch = self.create_watch(pats, 120)
         watch.set_watch()
@@ -291,9 +301,11 @@ class RemoteDriver(CTSTest):
         if self.failed:
             return
 
-        watchpats = [ self.templates["Pat:RscRemoteOpOK"] % ("stop", self._remote_rsc, self._remote_node),
-                      self.templates["Pat:RscRemoteOpOK"] % ("start", self._remote_rsc, self._remote_node),
-                      self.templates["Pat:DC_IDLE"] ]
+        watchpats = [
+            self.templates["Pat:RscRemoteOpOK"] % ("stop", self._remote_rsc, self._remote_node),
+            self.templates["Pat:RscRemoteOpOK"] % ("start", self._remote_rsc, self._remote_node),
+            self.templates["Pat:DC_IDLE"]
+        ]
 
         watch = self.create_watch(watchpats, 120)
         watch.set_watch()
@@ -317,8 +329,10 @@ class RemoteDriver(CTSTest):
         if self.failed:
             return
 
-        watchpats = [ self.templates["Pat:Fencing_ok"] % self._remote_node,
-                      self.templates["Pat:NodeFenced"] % self._remote_node ]
+        watchpats = [
+            self.templates["Pat:Fencing_ok"] % self._remote_node,
+            self.templates["Pat:NodeFenced"] % self._remote_node
+        ]
 
         watch = self.create_watch(watchpats, 120)
         watch.set_watch()
@@ -339,7 +353,7 @@ class RemoteDriver(CTSTest):
         self.debug("Waiting for the remote node to come back up")
         self._cm.ns.wait_for_node(node, 120)
 
-        pats = [ ]
+        pats = []
 
         watch = self.create_watch(pats, 240)
         watch.set_watch()
@@ -370,12 +384,14 @@ class RemoteDriver(CTSTest):
             return
 
         # verify we can put a resource on the remote node
-        pats = [ ]
+        pats = []
         watch = self.create_watch(pats, 120)
         watch.set_watch()
 
-        pats.extend([ self.templates["Pat:RscRemoteOpOK"] % ("start", self._remote_rsc, self._remote_node),
-                      self.templates["Pat:DC_IDLE"] ])
+        pats.extend([
+            self.templates["Pat:RscRemoteOpOK"] % ("start", self._remote_rsc, self._remote_node),
+            self.templates["Pat:DC_IDLE"]
+        ])
 
         # Add a resource that must live on remote-node
         self._add_primitive_rsc(node)
@@ -425,7 +441,7 @@ class RemoteDriver(CTSTest):
         if not self._pcmk_started:
             return
 
-        pats = [ ]
+        pats = []
 
         watch = self.create_watch(pats, 120)
         watch.set_watch()
@@ -533,6 +549,8 @@ class RemoteDriver(CTSTest):
     def errors_to_ignore(self):
         """ Return list of errors which should be ignored """
 
-        return [ r"""is running on remote.*which isn't allowed""",
-                 r"""Connection terminated""",
-                 r"""Could not send remote""" ]
+        return [
+            r"""is running on remote.*which isn't allowed""",
+            r"""Connection terminated""",
+            r"""Could not send remote"""
+        ]

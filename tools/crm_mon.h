@@ -14,8 +14,8 @@
 
 #include <glib.h>
 
+#include <crm/common/scheduler.h>
 #include <crm/common/output_internal.h>
-#include <crm/pengine/pe_types.h>
 #include <crm/stonith-ng.h>
 
 /*

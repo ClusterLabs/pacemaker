@@ -167,7 +167,8 @@ set_minimum_dh_bits(const gnutls_session_t *session)
 {
     int dh_min_bits;
 
-    pcmk__scan_min_int(getenv("PCMK_dh_min_bits"), &dh_min_bits, 0);
+    pcmk__scan_min_int(pcmk__env_option(PCMK__ENV_DH_MIN_BITS), &dh_min_bits,
+                       0);
 
     /* This function is deprecated since GnuTLS 3.1.7, in favor of letting
      * the priority string imply the DH requirements, but this is the only
@@ -186,8 +187,11 @@ get_bound_dh_bits(unsigned int dh_bits)
     int dh_min_bits;
     int dh_max_bits;
 
-    pcmk__scan_min_int(getenv("PCMK_dh_min_bits"), &dh_min_bits, 0);
-    pcmk__scan_min_int(getenv("PCMK_dh_max_bits"), &dh_max_bits, 0);
+    pcmk__scan_min_int(pcmk__env_option(PCMK__ENV_DH_MIN_BITS), &dh_min_bits,
+                       0);
+    pcmk__scan_min_int(pcmk__env_option(PCMK__ENV_DH_MAX_BITS), &dh_max_bits,
+                       0);
+
     if ((dh_max_bits > 0) && (dh_max_bits < dh_min_bits)) {
         crm_warn("Ignoring PCMK_dh_max_bits less than PCMK_dh_min_bits");
         dh_max_bits = 0;
@@ -228,7 +232,7 @@ pcmk__new_tls_session(int csock, unsigned int conn_type,
      * http://www.manpagez.com/info/gnutls/gnutls-2.10.4/gnutls_81.php#Echo-Server-with-anonymous-authentication
      */
 
-    prio_base = getenv("PCMK_tls_priorities");
+    prio_base = pcmk__env_option(PCMK__ENV_TLS_PRIORITIES);
     if (prio_base == NULL) {
         prio_base = PCMK_GNUTLS_PRIORITIES;
     }
@@ -1256,13 +1260,14 @@ crm_default_remote_port(void)
     static int port = 0;
 
     if (port == 0) {
-        const char *env = getenv("PCMK_remote_port");
+        const char *env = pcmk__env_option(PCMK__ENV_REMOTE_PORT);
 
         if (env) {
             errno = 0;
             port = strtol(env, NULL, 10);
             if (errno || (port < 1) || (port > 65535)) {
-                crm_warn("Environment variable PCMK_remote_port has invalid value '%s', using %d instead",
+                crm_warn("Environment variable PCMK_" PCMK__ENV_REMOTE_PORT
+                         " has invalid value '%s', using %d instead",
                          env, DEFAULT_REMOTE_PORT);
                 port = DEFAULT_REMOTE_PORT;
             }

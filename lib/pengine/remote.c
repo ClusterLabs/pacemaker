@@ -15,14 +15,14 @@
 #include <glib.h>
 
 bool
-pe__resource_is_remote_conn(const pe_resource_t *rsc)
+pe__resource_is_remote_conn(const pcmk_resource_t *rsc)
 {
     return (rsc != NULL) && rsc->is_remote_node
            && pe__is_remote_node(pe_find_node(rsc->cluster->nodes, rsc->id));
 }
 
 bool
-pe__is_remote_node(const pe_node_t *node)
+pe__is_remote_node(const pcmk_node_t *node)
 {
     return (node != NULL) && (node->details->type == pcmk_node_variant_remote)
            && ((node->details->remote_rsc == NULL)
@@ -30,7 +30,7 @@ pe__is_remote_node(const pe_node_t *node)
 }
 
 bool
-pe__is_guest_node(const pe_node_t *node)
+pe__is_guest_node(const pcmk_node_t *node)
 {
     return (node != NULL) && (node->details->type == pcmk_node_variant_remote)
            && (node->details->remote_rsc != NULL)
@@ -38,13 +38,13 @@ pe__is_guest_node(const pe_node_t *node)
 }
 
 bool
-pe__is_guest_or_remote_node(const pe_node_t *node)
+pe__is_guest_or_remote_node(const pcmk_node_t *node)
 {
     return (node != NULL) && (node->details->type == pcmk_node_variant_remote);
 }
 
 bool
-pe__is_bundle_node(const pe_node_t *node)
+pe__is_bundle_node(const pcmk_node_t *node)
 {
     return pe__is_guest_node(node)
            && pe_rsc_is_bundled(node->details->remote_rsc);
@@ -57,20 +57,20 @@ pe__is_bundle_node(const pe_node_t *node)
  * If a given resource contains a filler resource that is a remote connection,
  * return that filler resource (or NULL if none is found).
  *
- * \param[in] data_set  Working set of cluster
- * \param[in] rsc       Resource to check
+ * \param[in] scheduler  Scheduler data
+ * \param[in] rsc        Resource to check
  *
  * \return Filler resource with remote connection, or NULL if none found
  */
-pe_resource_t *
-pe__resource_contains_guest_node(const pe_working_set_t *data_set,
-                                 const pe_resource_t *rsc)
+pcmk_resource_t *
+pe__resource_contains_guest_node(const pcmk_scheduler_t *scheduler,
+                                 const pcmk_resource_t *rsc)
 {
-    if ((rsc != NULL) && (data_set != NULL)
-        && pcmk_is_set(data_set->flags, pcmk_sched_have_remote_nodes)) {
+    if ((rsc != NULL) && (scheduler != NULL)
+        && pcmk_is_set(scheduler->flags, pcmk_sched_have_remote_nodes)) {
 
         for (GList *gIter = rsc->fillers; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *filler = gIter->data;
+            pcmk_resource_t *filler = gIter->data;
 
             if (filler->is_remote_node) {
                 return filler;
@@ -111,26 +111,28 @@ xml_contains_remote_node(xmlNode *xml)
  * \internal
  * \brief Execute a supplied function for each guest node running on a host
  *
- * \param[in]     data_set   Working set for cluster
+ * \param[in]     scheduler  Scheduler data
  * \param[in]     host       Host node to check
  * \param[in]     helper     Function to call for each guest node
  * \param[in,out] user_data  Pointer to pass to helper function
  */
 void
-pe_foreach_guest_node(const pe_working_set_t *data_set, const pe_node_t *host,
-                      void (*helper)(const pe_node_t*, void*), void *user_data)
+pe_foreach_guest_node(const pcmk_scheduler_t *scheduler,
+                      const pcmk_node_t *host,
+                      void (*helper)(const pcmk_node_t*, void*),
+                      void *user_data)
 {
     GList *iter;
 
-    CRM_CHECK(data_set && host && host->details && helper, return);
-    if (!pcmk_is_set(data_set->flags, pcmk_sched_have_remote_nodes)) {
+    CRM_CHECK(scheduler && host && host->details && helper, return);
+    if (!pcmk_is_set(scheduler->flags, pcmk_sched_have_remote_nodes)) {
         return;
     }
     for (iter = host->details->running_rsc; iter != NULL; iter = iter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+        pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         if (rsc->is_remote_node && (rsc->container != NULL)) {
-            pe_node_t *guest_node = pe_find_node(data_set->nodes, rsc->id);
+            pcmk_node_t *guest_node = pe_find_node(scheduler->nodes, rsc->id);
 
             if (guest_node) {
                 (*helper)(guest_node, user_data);
@@ -213,20 +215,20 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
 
 // History entry to be checked for fail count clearing
 struct check_op {
-    const xmlNode *rsc_op; // History entry XML
-    pe_resource_t *rsc;    // Known resource corresponding to history entry
-    pe_node_t *node; // Known node corresponding to history entry
+    const xmlNode *rsc_op;  // History entry XML
+    pcmk_resource_t *rsc;   // Known resource corresponding to history entry
+    pcmk_node_t *node;      // Known node corresponding to history entry
     enum pcmk__check_parameters check_type; // What needs checking
 };
 
 void
-pe__add_param_check(const xmlNode *rsc_op, pe_resource_t *rsc,
-                    pe_node_t *node, enum pcmk__check_parameters flag,
-                    pe_working_set_t *data_set)
+pe__add_param_check(const xmlNode *rsc_op, pcmk_resource_t *rsc,
+                    pcmk_node_t *node, enum pcmk__check_parameters flag,
+                    pcmk_scheduler_t *scheduler)
 {
     struct check_op *check_op = NULL;
 
-    CRM_CHECK(data_set && rsc_op && rsc && node, return);
+    CRM_CHECK(scheduler && rsc_op && rsc && node, return);
 
     check_op = calloc(1, sizeof(struct check_op));
     CRM_ASSERT(check_op != NULL);
@@ -236,24 +238,25 @@ pe__add_param_check(const xmlNode *rsc_op, pe_resource_t *rsc,
     check_op->rsc = rsc;
     check_op->node = node;
     check_op->check_type = flag;
-    data_set->param_check = g_list_prepend(data_set->param_check, check_op);
+    scheduler->param_check = g_list_prepend(scheduler->param_check, check_op);
 }
 
 /*!
  * \internal
  * \brief Call a function for each action to be checked for addr substitution
  *
- * \param[in,out] data_set  Working set for cluster
- * \param[in]     cb        Function to be called
+ * \param[in,out] scheduler  Scheduler data
+ * \param[in]     cb         Function to be called
  */
 void
-pe__foreach_param_check(pe_working_set_t *data_set,
-                       void (*cb)(pe_resource_t*, pe_node_t*, const xmlNode*,
-                                  enum pcmk__check_parameters))
+pe__foreach_param_check(pcmk_scheduler_t *scheduler,
+                       void (*cb)(pcmk_resource_t*, pcmk_node_t*,
+                                  const xmlNode*, enum pcmk__check_parameters))
 {
-    CRM_CHECK(data_set && cb, return);
+    CRM_CHECK(scheduler && cb, return);
 
-    for (GList *item = data_set->param_check; item != NULL; item = item->next) {
+    for (GList *item = scheduler->param_check;
+         item != NULL; item = item->next) {
         struct check_op *check_op = item->data;
 
         cb(check_op->rsc, check_op->node, check_op->rsc_op,
@@ -262,10 +265,10 @@ pe__foreach_param_check(pe_working_set_t *data_set,
 }
 
 void
-pe__free_param_checks(pe_working_set_t *data_set)
+pe__free_param_checks(pcmk_scheduler_t *scheduler)
 {
-    if (data_set && data_set->param_check) {
-        g_list_free_full(data_set->param_check, free);
-        data_set->param_check = NULL;
+    if (scheduler && scheduler->param_check) {
+        g_list_free_full(scheduler->param_check, free);
+        scheduler->param_check = NULL;
     }
 }

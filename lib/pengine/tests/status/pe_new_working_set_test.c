@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,7 +19,7 @@ calloc_fails(void **state) {
     pcmk__mock_calloc = true;   // calloc() will return NULL
 
     expect_value(__wrap_calloc, nmemb, 1);
-    expect_value(__wrap_calloc, size, sizeof(pe_working_set_t));
+    expect_value(__wrap_calloc, size, sizeof(pcmk_scheduler_t));
     assert_null(pe_new_working_set());
 
     pcmk__mock_calloc = false;  // Use real calloc()
@@ -27,18 +27,18 @@ calloc_fails(void **state) {
 
 static void
 calloc_succeeds(void **state) {
-    pe_working_set_t *data_set = pe_new_working_set();
+    pcmk_scheduler_t *scheduler = pe_new_working_set();
 
     /* Nothing else to test about this function, as all it does is call
      * set_working_set_defaults which is also a public function and should
      * get its own unit test.
      */
-    assert_non_null(data_set);
+    assert_non_null(scheduler);
 
     /* Avoid calling pe_free_working_set here so we don't artificially
      * inflate the coverage numbers.
      */
-    free(data_set);
+    free(scheduler);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,

@@ -65,8 +65,9 @@ extern "C" {
  *           XML v2 patchsets are created by default
  * >=3.0.13: Fail counts include operation name and interval
  * >=3.2.0:  DC supports PCMK_EXEC_INVALID and PCMK_EXEC_NOT_CONNECTED
+ * >=3.19.0: DC supports PCMK__CIB_REQUEST_COMMIT_TRANSACT
  */
-#  define CRM_FEATURE_SET		"3.18.1"
+#  define CRM_FEATURE_SET		"3.19.0"
 
 /* Pacemaker's CPG protocols use fixed-width binary fields for the sender and
  * recipient of a CPG message. This imposes an arbitrary limit on cluster node

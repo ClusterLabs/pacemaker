@@ -1930,9 +1930,10 @@ pcmk__readable_interval(guint interval_ms)
 #define MS_IN_H (MS_IN_M * 60)
 #define MS_IN_D (MS_IN_H * 24)
 #define MAXSTR sizeof("..d..h..m..s...ms")
-    static char str[MAXSTR] = { '\0', };
+    static char str[MAXSTR];
     int offset = 0;
 
+    str[0] = '\0';
     if (interval_ms > MS_IN_D) {
         offset += snprintf(str + offset, MAXSTR - offset, "%ud",
                            interval_ms / MS_IN_D);

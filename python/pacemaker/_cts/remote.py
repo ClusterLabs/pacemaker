@@ -7,7 +7,7 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 import re
 import os
 
-from subprocess import Popen,PIPE
+from subprocess import Popen, PIPE
 from threading import Thread
 
 from pacemaker._cts.logging import LogFactory
@@ -188,7 +188,7 @@ class RemoteExec:
         result = None
         # pylint: disable=consider-using-with
         proc = Popen(self._cmd([node, command]),
-                     stdout = PIPE, stderr = PIPE, close_fds = True, shell = True)
+                     stdout=PIPE, stderr=PIPE, close_fds=True, shell=True)
 
         if not synchronous and proc.pid > 0 and not self._silent:
             aproc = AsyncCmd(node, command, proc=proc)

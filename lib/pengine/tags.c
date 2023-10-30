@@ -13,30 +13,30 @@
 #include <stdbool.h>
 
 #include <crm/common/util.h>
+#include <crm/common/scheduler.h>
 #include <crm/pengine/internal.h>
-#include <crm/pengine/pe_types.h>
 
 GList *
-pe__rscs_with_tag(pe_working_set_t *data_set, const char *tag_name)
+pe__rscs_with_tag(pcmk_scheduler_t *scheduler, const char *tag_name)
 {
     gpointer value;
     GList *retval = NULL;
 
-    if (data_set->tags == NULL) {
+    if (scheduler->tags == NULL) {
         return retval;
     }
 
-    value = g_hash_table_lookup(data_set->tags, tag_name);
+    value = g_hash_table_lookup(scheduler->tags, tag_name);
 
     if (value == NULL) {
         return retval;
     }
 
-    for (GList *refs = ((pe_tag_t *) value)->refs; refs; refs = refs->next) {
+    for (GList *refs = ((pcmk_tag_t *) value)->refs; refs; refs = refs->next) {
         const char *id = (const char *) refs->data;
         const uint32_t flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
-        pe_resource_t *rsc = pe_find_resource_with_flags(data_set->resources,
-                                                         id, flags);
+        pcmk_resource_t *rsc = pe_find_resource_with_flags(scheduler->resources,
+                                                           id, flags);
 
         if (!rsc) {
             continue;
@@ -49,26 +49,26 @@ pe__rscs_with_tag(pe_working_set_t *data_set, const char *tag_name)
 }
 
 GList *
-pe__unames_with_tag(pe_working_set_t *data_set, const char *tag_name)
+pe__unames_with_tag(pcmk_scheduler_t *scheduler, const char *tag_name)
 {
     gpointer value;
     GList *retval = NULL;
 
-    if (data_set->tags == NULL) {
+    if (scheduler->tags == NULL) {
         return retval;
     }
 
-    value = g_hash_table_lookup(data_set->tags, tag_name);
+    value = g_hash_table_lookup(scheduler->tags, tag_name);
 
     if (value == NULL) {
         return retval;
     }
 
     /* Iterate over the list of node IDs. */
-    for (GList *refs = ((pe_tag_t *) value)->refs; refs; refs = refs->next) {
+    for (GList *refs = ((pcmk_tag_t *) value)->refs; refs; refs = refs->next) {
         /* Find the node that has this ID. */
         const char *id = (const char *) refs->data;
-        pe_node_t *node = pe_find_node_id(data_set->nodes, id);
+        pcmk_node_t *node = pe_find_node_id(scheduler->nodes, id);
 
         if (!node) {
             continue;
@@ -82,9 +82,10 @@ pe__unames_with_tag(pe_working_set_t *data_set, const char *tag_name)
 }
 
 bool
-pe__rsc_has_tag(pe_working_set_t *data_set, const char *rsc_name, const char *tag_name)
+pe__rsc_has_tag(pcmk_scheduler_t *scheduler, const char *rsc_name,
+                const char *tag_name)
 {
-    GList *rscs = pe__rscs_with_tag(data_set, tag_name);
+    GList *rscs = pe__rscs_with_tag(scheduler, tag_name);
     bool retval = false;
 
     if (rscs == NULL) {
@@ -97,9 +98,10 @@ pe__rsc_has_tag(pe_working_set_t *data_set, const char *rsc_name, const char *ta
 }
 
 bool
-pe__uname_has_tag(pe_working_set_t *data_set, const char *node_name, const char *tag_name)
+pe__uname_has_tag(pcmk_scheduler_t *scheduler, const char *node_name,
+                  const char *tag_name)
 {
-    GList *unames = pe__unames_with_tag(data_set, tag_name);
+    GList *unames = pe__unames_with_tag(scheduler, tag_name);
     bool retval = false;
 
     if (unames == NULL) {

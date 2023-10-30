@@ -67,7 +67,9 @@ class ResyncCIB(CTSTest):
         """ Return list of errors which should be ignored """
 
         # Errors that occur as a result of the CIB being wiped
-        return [ r"error.*: v1 patchset error, patch failed to apply: Application of an update diff failed",
-                 r"error.*: Resource start-up disabled since no STONITH resources have been defined",
-                 r"error.*: Either configure some or disable STONITH with the stonith-enabled option",
-                 r"error.*: NOTE: Clusters with shared data need STONITH to ensure data integrity" ]
+        return [
+            r"error.*: v1 patchset error, patch failed to apply: Application of an update diff failed",
+            r"error.*: Resource start-up disabled since no STONITH resources have been defined",
+            r"error.*: Either configure some or disable STONITH with the stonith-enabled option",
+            r"error.*: NOTE: Clusters with shared data need STONITH to ensure data integrity"
+        ]

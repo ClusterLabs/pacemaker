@@ -27,7 +27,7 @@
  *         or maintenance mode, otherwise false
  */
 bool
-pcmk__node_available(const pe_node_t *node, bool consider_score,
+pcmk__node_available(const pcmk_node_t *node, bool consider_score,
                      bool consider_guest)
 {
     if ((node == NULL) || (node->details == NULL) || !node->details->online
@@ -42,7 +42,7 @@ pcmk__node_available(const pe_node_t *node, bool consider_score,
 
     // @TODO Go through all callers to see which should set consider_guest
     if (consider_guest && pe__is_guest_node(node)) {
-        pe_resource_t *guest = node->details->remote_rsc->container;
+        pcmk_resource_t *guest = node->details->remote_rsc->container;
 
         if (guest->fns->location(guest, NULL, FALSE) == NULL) {
             return false;
@@ -65,7 +65,7 @@ pcmk__copy_node_table(GHashTable *nodes)
 {
     GHashTable *new_table = NULL;
     GHashTableIter iter;
-    pe_node_t *node = NULL;
+    pcmk_node_t *node = NULL;
 
     if (nodes == NULL) {
         return NULL;
@@ -73,7 +73,7 @@ pcmk__copy_node_table(GHashTable *nodes)
     new_table = pcmk__strkey_table(NULL, free);
     g_hash_table_iter_init(&iter, nodes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-        pe_node_t *new_node = pe__copy_node(node);
+        pcmk_node_t *new_node = pe__copy_node(node);
 
         g_hash_table_insert(new_table, (gpointer) new_node->details->id,
                             new_node);
@@ -111,7 +111,7 @@ destroy_node_tables(gpointer data)
  *       \c g_hash_table_destroy().
  */
 void
-pcmk__copy_node_tables(const pe_resource_t *rsc, GHashTable **copy)
+pcmk__copy_node_tables(const pcmk_resource_t *rsc, GHashTable **copy)
 {
     CRM_ASSERT((rsc != NULL) && (copy != NULL));
 
@@ -123,7 +123,7 @@ pcmk__copy_node_tables(const pe_resource_t *rsc, GHashTable **copy)
                         pcmk__copy_node_table(rsc->allowed_nodes));
 
     for (const GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-        pcmk__copy_node_tables((const pe_resource_t *) iter->data, copy);
+        pcmk__copy_node_tables((const pcmk_resource_t *) iter->data, copy);
     }
 }
 
@@ -142,7 +142,7 @@ pcmk__copy_node_tables(const pe_resource_t *rsc, GHashTable **copy)
  * \note This function frees the resources' current node tables.
  */
 void
-pcmk__restore_node_tables(pe_resource_t *rsc, GHashTable *backup)
+pcmk__restore_node_tables(pcmk_resource_t *rsc, GHashTable *backup)
 {
     CRM_ASSERT((rsc != NULL) && (backup != NULL));
 
@@ -153,7 +153,7 @@ pcmk__restore_node_tables(pe_resource_t *rsc, GHashTable *backup)
     rsc->allowed_nodes = pcmk__copy_node_table(rsc->allowed_nodes);
 
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-        pcmk__restore_node_tables((pe_resource_t *) iter->data, backup);
+        pcmk__restore_node_tables((pcmk_resource_t *) iter->data, backup);
     }
 }
 
@@ -172,8 +172,8 @@ pcmk__copy_node_list(const GList *list, bool reset)
     GList *result = NULL;
 
     for (const GList *iter = list; iter != NULL; iter = iter->next) {
-        pe_node_t *new_node = NULL;
-        pe_node_t *this_node = iter->data;
+        pcmk_node_t *new_node = NULL;
+        pcmk_node_t *this_node = iter->data;
 
         new_node = pe__copy_node(this_node);
         if (reset) {
@@ -193,7 +193,7 @@ pcmk__copy_node_list(const GList *list, bool reset)
  *
  * \param[in] a     First node to compare
  * \param[in] b     Second node to compare
- * \param[in] data  Node that resource being assigned is active on, if any
+ * \param[in] data  Node to prefer if all else equal
  *
  * \return -1 if \p a is preferred, +1 if \p b is preferred, or 0 if they are
  *         equally preferred
@@ -201,9 +201,9 @@ pcmk__copy_node_list(const GList *list, bool reset)
 static gint
 compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
 {
-    const pe_node_t *node1 = (const pe_node_t *) a;
-    const pe_node_t *node2 = (const pe_node_t *) b;
-    const pe_node_t *active = (const pe_node_t *) data;
+    const pcmk_node_t *node1 = (const pcmk_node_t *) a;
+    const pcmk_node_t *node2 = (const pcmk_node_t *) b;
+    const pcmk_node_t *preferred = (const pcmk_node_t *) data;
 
     int node1_score = -INFINITY;
     int node2_score = -INFINITY;
@@ -227,22 +227,18 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
     }
 
     if (node1_score > node2_score) {
-        crm_trace("%s (%d) > %s (%d) : score",
-                  pe__node_name(node1), node1_score, pe__node_name(node2),
-                  node2_score);
+        crm_trace("%s before %s (score %d > %d)",
+                  pe__node_name(node1), pe__node_name(node2),
+                  node1_score, node2_score);
         return -1;
     }
 
     if (node1_score < node2_score) {
-        crm_trace("%s (%d) < %s (%d) : score",
-                  pe__node_name(node1), node1_score, pe__node_name(node2),
-                  node2_score);
+        crm_trace("%s after %s (score %d < %d)",
+                  pe__node_name(node1), pe__node_name(node2),
+                  node1_score, node2_score);
         return 1;
     }
-
-    crm_trace("%s (%d) == %s (%d) : score",
-              pe__node_name(node1), node1_score, pe__node_name(node2),
-              node2_score);
 
     // If appropriate, compare node utilization
 
@@ -255,11 +251,11 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
                      pcmk__str_casei)) {
         result = pcmk__compare_node_capacities(node1, node2);
         if (result < 0) {
-            crm_trace("%s > %s : capacity (%d)",
-                      pe__node_name(node1), pe__node_name(node2), result);
+            crm_trace("%s before %s (greater capacity by %d attributes)",
+                      pe__node_name(node1), pe__node_name(node2), result * -1);
             return -1;
         } else if (result > 0) {
-            crm_trace("%s < %s : capacity (%d)",
+            crm_trace("%s after %s (lower capacity by %d attributes)",
                       pe__node_name(node1), pe__node_name(node2), result);
             return 1;
         }
@@ -268,38 +264,47 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
     // Compare number of resources already assigned to node
 
     if (node1->details->num_resources < node2->details->num_resources) {
-        crm_trace("%s (%d) > %s (%d) : resources",
-                  pe__node_name(node1), node1->details->num_resources,
-                  pe__node_name(node2), node2->details->num_resources);
+        crm_trace("%s before %s (%d resources < %d)",
+                  pe__node_name(node1), pe__node_name(node2),
+                  node1->details->num_resources, node2->details->num_resources);
         return -1;
 
     } else if (node1->details->num_resources > node2->details->num_resources) {
-        crm_trace("%s (%d) < %s (%d) : resources",
-                  pe__node_name(node1), node1->details->num_resources,
-                  pe__node_name(node2), node2->details->num_resources);
+        crm_trace("%s after %s (%d resources > %d)",
+                  pe__node_name(node1), pe__node_name(node2),
+                  node1->details->num_resources, node2->details->num_resources);
         return 1;
     }
 
     // Check whether one node is already running desired resource
 
-    if (active != NULL) {
-        if (pe__same_node(active, node1)) {
-            crm_trace("%s (%d) > %s (%d) : active",
-                      pe__node_name(node1), node1->details->num_resources,
-                      pe__node_name(node2), node2->details->num_resources);
+    if (preferred != NULL) {
+        if (pe__same_node(preferred, node1)) {
+            crm_trace("%s before %s (preferred node)",
+                      pe__node_name(node1), pe__node_name(node2));
             return -1;
-        } else if (pe__same_node(active, node2)) {
-            crm_trace("%s (%d) < %s (%d) : active",
-                      pe__node_name(node1), node1->details->num_resources,
-                      pe__node_name(node2), node2->details->num_resources);
+        } else if (pe__same_node(preferred, node2)) {
+            crm_trace("%s after %s (not preferred node)",
+                      pe__node_name(node1), pe__node_name(node2));
             return 1;
         }
     }
 
     // If all else is equal, prefer node with lowest-sorting name
 equal:
-    crm_trace("%s = %s", pe__node_name(node1), pe__node_name(node2));
-    return strcmp(node1->details->uname, node2->details->uname);
+    result = strcmp(node1->details->uname, node2->details->uname);
+    if (result < 0) {
+        crm_trace("%s before %s (name)",
+                  pe__node_name(node1), pe__node_name(node2));
+        return -1;
+    } else if (result > 0) {
+        crm_trace("%s after %s (name)",
+                  pe__node_name(node1), pe__node_name(node2));
+        return 1;
+    }
+
+    crm_trace("%s == %s", pe__node_name(node1), pe__node_name(node2));
+    return 0;
 }
 
 /*!
@@ -312,7 +317,7 @@ equal:
  * \return New head of sorted list
  */
 GList *
-pcmk__sort_nodes(GList *nodes, pe_node_t *active_node)
+pcmk__sort_nodes(GList *nodes, pcmk_node_t *active_node)
 {
     return g_list_sort_with_data(nodes, compare_nodes, active_node);
 }
@@ -330,7 +335,7 @@ bool
 pcmk__any_node_available(GHashTable *nodes)
 {
     GHashTableIter iter;
-    const pe_node_t *node = NULL;
+    const pcmk_node_t *node = NULL;
 
     if (nodes == NULL) {
         return false;
@@ -348,14 +353,14 @@ pcmk__any_node_available(GHashTable *nodes)
  * \internal
  * \brief Apply node health values for all nodes in cluster
  *
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  */
 void
-pcmk__apply_node_health(pe_working_set_t *data_set)
+pcmk__apply_node_health(pcmk_scheduler_t *scheduler)
 {
     int base_health = 0;
     enum pcmk__health_strategy strategy;
-    const char *strategy_str = pe_pref(data_set->config_hash,
+    const char *strategy_str = pe_pref(scheduler->config_hash,
                                        PCMK__OPT_NODE_HEALTH_STRATEGY);
 
     strategy = pcmk__parse_health_strategy(strategy_str);
@@ -366,11 +371,11 @@ pcmk__apply_node_health(pe_working_set_t *data_set)
 
     // The progressive strategy can use a base health score
     if (strategy == pcmk__health_strategy_progressive) {
-        base_health = pe__health_score(PCMK__OPT_NODE_HEALTH_BASE, data_set);
+        base_health = pe__health_score(PCMK__OPT_NODE_HEALTH_BASE, scheduler);
     }
 
-    for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
-        pe_node_t *node = (pe_node_t *) iter->data;
+    for (GList *iter = scheduler->nodes; iter != NULL; iter = iter->next) {
+        pcmk_node_t *node = (pcmk_node_t *) iter->data;
         int health = pe__sum_node_health_scores(node, base_health);
 
         // An overall health score of 0 has no effect
@@ -381,8 +386,8 @@ pcmk__apply_node_health(pe_working_set_t *data_set)
                  pe__node_name(node), health);
 
         // Use node health as a location score for each resource on the node
-        for (GList *r = data_set->resources; r != NULL; r = r->next) {
-            pe_resource_t *rsc = (pe_resource_t *) r->data;
+        for (GList *r = scheduler->resources; r != NULL; r = r->next) {
+            pcmk_resource_t *rsc = (pcmk_resource_t *) r->data;
 
             bool constrain = true;
 
@@ -413,8 +418,8 @@ pcmk__apply_node_health(pe_working_set_t *data_set)
  * \return Equivalent of \p node from \p rsc's parent's allowed nodes if any,
  *         otherwise NULL
  */
-pe_node_t *
-pcmk__top_allowed_node(const pe_resource_t *rsc, const pe_node_t *node)
+pcmk_node_t *
+pcmk__top_allowed_node(const pcmk_resource_t *rsc, const pcmk_node_t *node)
 {
     GHashTable *allowed_nodes = NULL;
 

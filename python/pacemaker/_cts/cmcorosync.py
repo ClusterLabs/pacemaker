@@ -38,7 +38,14 @@ class Corosync2(ClusterManager):
         if not self._fullcomplist:
             common_ignore = self.templates.get_component("common-ignore")
 
-            for c in [ "pacemaker-based", "pacemaker-controld", "pacemaker-attrd", "pacemaker-execd", "pacemaker-fenced" ]:
+            daemons = [
+                "pacemaker-based",
+                "pacemaker-controld",
+                "pacemaker-attrd",
+                "pacemaker-execd",
+                "pacemaker-fenced"
+            ]
+            for c in daemons:
                 badnews = self.templates.get_component("%s-ignore" % c) + common_ignore
                 proc = Process(self, c, pats=self.templates.get_component(c),
                                badnews_ignore=badnews)

@@ -45,7 +45,9 @@ class MaintenanceMode(CTSTest):
     def _toggle_maintenance_mode(self, node, enabled):
         """ Toggle maintenance mode on the given node """
 
-        pats = [ self.templates["Pat:DC_IDLE"] ]
+        pats = [
+            self.templates["Pat:DC_IDLE"]
+        ]
 
         if enabled:
             action = "On"
@@ -57,8 +59,10 @@ class MaintenanceMode(CTSTest):
         if enabled:
             pats.append(self.templates["Pat:RscOpFail"] % (self._action, self._rid))
         else:
-            pats.extend([ self.templates["Pat:RscOpOK"] % ("stop", self._rid),
-                          self.templates["Pat:RscOpOK"] % ("start", self._rid) ])
+            pats.extend([
+                self.templates["Pat:RscOpOK"] % ("stop", self._rid),
+                self.templates["Pat:RscOpOK"] % ("start", self._rid)
+            ])
 
         watch = self.create_watch(pats, 60)
         watch.set_watch()
@@ -81,7 +85,9 @@ class MaintenanceMode(CTSTest):
     def _insert_maintenance_dummy(self, node):
         """ Create a dummy resource on the given node """
 
-        pats = [ ("%s.*" % node) + (self.templates["Pat:RscOpOK"] % ("start", self._rid)) ]
+        pats = [
+            ("%s.*" % node) + (self.templates["Pat:RscOpOK"] % ("start", self._rid))
+        ]
 
         watch = self.create_watch(pats, 60)
         watch.set_watch()
@@ -100,7 +106,9 @@ class MaintenanceMode(CTSTest):
     def _remove_maintenance_dummy(self, node):
         """ Remove the previously created dummy resource on the given node """
 
-        pats = [ self.templates["Pat:RscOpOK"] % ("stop", self._rid) ]
+        pats = [
+            self.templates["Pat:RscOpOK"] % ("stop", self._rid)
+        ]
 
         watch = self.create_watch(pats, 60)
         watch.set_watch()
@@ -221,8 +229,10 @@ class MaintenanceMode(CTSTest):
     def errors_to_ignore(self):
         """ Return list of errors which should be ignored """
 
-        return [ r"Updating failcount for %s" % self._rid,
-                 r"schedulerd.*: Recover\s+%s\s+\(.*\)" % self._rid,
-                 r"Unknown operation: fail",
-                 self.templates["Pat:RscOpOK"] % (self._action, self._rid),
-                 r"(ERROR|error).*: Action %s_%s_%d .* initiated outside of a transition" % (self._rid, self._action, 0) ]
+        return [
+            r"Updating failcount for %s" % self._rid,
+            r"schedulerd.*: Recover\s+%s\s+\(.*\)" % self._rid,
+            r"Unknown operation: fail",
+            self.templates["Pat:RscOpOK"] % (self._action, self._rid),
+            r"(ERROR|error).*: Action %s_%s_%d .* initiated outside of a transition" % (self._rid, self._action, 0)
+        ]

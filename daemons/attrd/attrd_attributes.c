@@ -25,25 +25,45 @@
 static attribute_t *
 attrd_create_attribute(xmlNode *xml)
 {
+    int is_private = 0;
     int dampen = 0;
-    const char *value = crm_element_value(xml, PCMK__XA_ATTR_DAMPENING);
-    attribute_t *a = calloc(1, sizeof(attribute_t));
+    const char *name = crm_element_value(xml, PCMK__XA_ATTR_NAME);
+    const char *set_type = crm_element_value(xml, PCMK__XA_ATTR_SET_TYPE);
+    const char *dampen_s = crm_element_value(xml, PCMK__XA_ATTR_DAMPENING);
+    attribute_t *a = NULL;
 
+    if (set_type == NULL) {
+        set_type = XML_TAG_ATTR_SETS;
+    }
+
+    /* Set type is meaningful only when writing to the CIB. Private
+     * attributes are not written.
+     */
+    crm_element_value_int(xml, PCMK__XA_ATTR_IS_PRIVATE, &is_private);
+    if ((is_private != 0)
+        && !pcmk__str_any_of(set_type, XML_TAG_ATTR_SETS, XML_TAG_UTILIZATION,
+                             NULL)) {
+        crm_warn("Ignoring attribute %s with invalid set type %s",
+                 pcmk__s(name, "(unidentified)"), set_type);
+        return NULL;
+    }
+
+    a = calloc(1, sizeof(attribute_t));
     CRM_ASSERT(a != NULL);
 
-    a->id      = crm_element_value_copy(xml, PCMK__XA_ATTR_NAME);
-    a->set_id  = crm_element_value_copy(xml, PCMK__XA_ATTR_SET);
-    a->set_type = crm_element_value_copy(xml, PCMK__XA_ATTR_SET_TYPE);
-    a->uuid    = crm_element_value_copy(xml, PCMK__XA_ATTR_UUID);
-    a->values = pcmk__strikey_table(NULL, attrd_free_attribute_value);
+    a->is_private = is_private;
+    pcmk__str_update(&a->id, name);
+    pcmk__str_update(&a->set_type, set_type);
 
-    crm_element_value_int(xml, PCMK__XA_ATTR_IS_PRIVATE, &a->is_private);
+    a->set_id = crm_element_value_copy(xml, PCMK__XA_ATTR_SET);
+    a->uuid = crm_element_value_copy(xml, PCMK__XA_ATTR_UUID);
+    a->values = pcmk__strikey_table(NULL, attrd_free_attribute_value);
 
     a->user = crm_element_value_copy(xml, PCMK__XA_ATTR_USER);
     crm_trace("Performing all %s operations as user '%s'", a->id, a->user);
 
-    if (value != NULL) {
-        dampen = crm_get_msec(value);
+    if (dampen_s != NULL) {
+        dampen = crm_get_msec(dampen_s);
     }
     crm_trace("Created attribute %s with %s write delay", a->id,
               (a->timeout_ms == 0)? "no" : pcmk__readable_interval(a->timeout_ms));
@@ -52,7 +72,7 @@ attrd_create_attribute(xmlNode *xml)
         a->timeout_ms = dampen;
         a->timer = attrd_add_timer(a->id, a->timeout_ms, a);
     } else if (dampen < 0) {
-        crm_warn("Ignoring invalid delay %s for attribute %s", value, a->id);
+        crm_warn("Ignoring invalid delay %s for attribute %s", dampen_s, a->id);
     }
 
     g_hash_table_replace(attributes, a->id, a);
@@ -169,6 +189,10 @@ attrd_populate_attribute(xmlNode *xml, const char *attr)
     if (a == NULL) {
         if (update_both || pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE, pcmk__str_none)) {
             a = attrd_create_attribute(xml);
+            if (a == NULL) {
+                return NULL;
+            }
+
         } else {
             crm_warn("Could not update %s: attribute not found", attr);
             return NULL;

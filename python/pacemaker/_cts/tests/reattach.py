@@ -7,6 +7,7 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 import re
 import time
 
+from pacemaker.exitstatus import ExitStatus
 from pacemaker._cts.audits import AuditResource
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
@@ -61,23 +62,63 @@ class Reattach(CTSTest):
         self.debug("Re-enable resource management")
         self._rsh(node, "crm_attribute -t rsc_defaults -n is-managed -D")
 
+    def _disable_incompatible_rscs(self, node):
+        """ Disable resources that are incompatible with this test
+
+        Starts and stops of stonith-class resources are implemented internally
+        by Pacemaker, which means that they must stop when Pacemaker is
+        stopped, even if unmanaged. Disable them before running the Reattach
+        test so they don't affect resource placement.
+
+        OCFS2 resources must be disabled too for some reason.
+
+        Set target-role to "Stopped" for any of these resources in the CIB.
+        """
+
+        self.debug("Disable incompatible (stonith/OCFS2) resources")
+        xml = """'<meta_attributes id="cts-lab-Reattach-meta">
+                    <nvpair id="cts-lab-Reattach-target-role" name="target-role" value="Stopped"/>
+                    <rule id="cts-lab-Reattach-rule" boolean-op="or" score="INFINITY">
+                      <rsc_expression id="cts-lab-Reattach-stonith" class="stonith"/>
+                      <rsc_expression id="cts-lab-Reattach-o2cb" type="o2cb"/>
+                    </rule>
+                  </meta_attributes>' --scope rsc_defaults"""
+        return self._rsh(node, self._cm.templates['CibAddXml'] % xml)
+
+    def _enable_incompatible_rscs(self, node):
+        """ Re-enable resources that were incompatible with this test """
+
+        self.debug("Re-enable incompatible (stonith/OCFS2) resources")
+        xml = """<meta_attributes id="cts-lab-Reattach-meta">"""
+        return self._rsh(node, """cibadmin --delete --xml-text '%s'""" % xml)
+
+    def _reprobe(self, node):
+        """ Reprobe all resources
+
+        The placement of some resources (such as promotable-1 in the
+        lab-generated CIB) is affected by constraints using node-attribute-based
+        rules. An earlier test may have erased the relevant node attribute, so
+        do a reprobe, which should add the attribute back.
+        """
+
+        return self._rsh(node, """crm_resource --refresh""")
+
     def setup(self, node):
         """ Setup this test """
 
-        attempt = 0
         if not self._startall(None):
             return self.failure("Startall failed")
 
-        # Make sure we are really _really_ stable and that all
-        # resources, including those that depend on transient node
-        # attributes, are started
-        while not self._cm.cluster_stable(double_check=True):
-            if attempt < 5:
-                attempt += 1
-                self.debug("Not stable yet, re-testing")
-            else:
-                self._logger.log("Cluster is not stable")
-                return self.failure("Cluster is not stable")
+        (rc, _) = self._disable_incompatible_rscs(node)
+        if rc != ExitStatus.OK:
+            return self.failure("Couldn't modify CIB to stop incompatible resources")
+
+        (rc, _) = self._reprobe(node)
+        if rc != ExitStatus.OK:
+            return self.failure("Couldn't reprobe resources")
+
+        if not self._cm.cluster_stable(double_check=True):
+            return self.failure("Cluster did not stabilize after setup")
 
         return self.success()
 
@@ -89,24 +130,18 @@ class Reattach(CTSTest):
         start(node)
 
         if not self._is_managed(node):
-            self._logger.log("Attempting to re-enable resource management on %s" % node)
             self._set_managed(node)
-            self._cm.cluster_stable()
 
-            if not self._is_managed(node):
-                self._logger.log("Could not re-enable resource management")
-                return self.failure("Could not re-establish resource management")
+        (rc, _) = self._enable_incompatible_rscs(node)
+        if rc != ExitStatus.OK:
+            return self.failure("Couldn't modify CIB to re-enable incompatible resources")
+
+        if not self._cm.cluster_stable():
+            return self.failure("Cluster did not stabilize after teardown")
+        if not self._is_managed(node):
+            return self.failure("Could not re-enable resource management")
 
         return self.success()
-
-    def can_run_now(self, node):
-        """ Return True if we can meaningfully run right now """
-
-        if self._find_ocfs2_resources(node):
-            self._logger.log("Detach/Reattach scenarios are not possible with OCFS2 services present")
-            return False
-
-        return True
 
     def __call__(self, node):
         """ Perform this test """
@@ -124,11 +159,13 @@ class Reattach(CTSTest):
             self._logger.log("Patterns not found: %r" % managed.unmatched)
             return self.failure("Resource management not disabled")
 
-        pats = [ self.templates["Pat:RscOpOK"] % ("start", ".*"),
-                 self.templates["Pat:RscOpOK"] % ("stop", ".*"),
-                 self.templates["Pat:RscOpOK"] % ("promote", ".*"),
-                 self.templates["Pat:RscOpOK"] % ("demote", ".*"),
-                 self.templates["Pat:RscOpOK"] % ("migrate", ".*") ]
+        pats = [
+            self.templates["Pat:RscOpOK"] % ("start", ".*"),
+            self.templates["Pat:RscOpOK"] % ("stop", ".*"),
+            self.templates["Pat:RscOpOK"] % ("promote", ".*"),
+            self.templates["Pat:RscOpOK"] % ("demote", ".*"),
+            self.templates["Pat:RscOpOK"] % ("migrate", ".*")
+        ]
 
         watch = self.create_watch(pats, 60, "ShutdownActivity")
         watch.set_watch()
@@ -179,4 +216,6 @@ class Reattach(CTSTest):
     def errors_to_ignore(self):
         """ Return list of errors which should be ignored """
 
-        return [ r"resource( was|s were) active at shutdown" ]
+        return [
+            r"resource( was|s were) active at shutdown"
+        ]

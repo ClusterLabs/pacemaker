@@ -443,9 +443,9 @@ static int
 generate_params(void)
 {
     int rc = pcmk_rc_ok;
-    pe_working_set_t *data_set = NULL;
+    pcmk_scheduler_t *scheduler = NULL;
     xmlNode *cib_xml_copy = NULL;
-    pe_resource_t *rsc = NULL;
+    pcmk_resource_t *rsc = NULL;
     GHashTable *params = NULL;
     GHashTable *meta = NULL;
     GHashTableIter iter;
@@ -467,29 +467,29 @@ generate_params(void)
     }
 
     // Calculate cluster status
-    data_set = pe_new_working_set();
-    if (data_set == NULL) {
-        crm_crit("Could not allocate working set");
+    scheduler = pe_new_working_set();
+    if (scheduler == NULL) {
+        crm_crit("Could not allocate scheduler data");
         return ENOMEM;
     }
-    pe__set_working_set_flags(data_set,
+    pe__set_working_set_flags(scheduler,
                               pcmk_sched_no_counts|pcmk_sched_no_compat);
-    data_set->input = cib_xml_copy;
-    data_set->now = crm_time_new(NULL);
-    cluster_status(data_set);
+    scheduler->input = cib_xml_copy;
+    scheduler->now = crm_time_new(NULL);
+    cluster_status(scheduler);
 
     // Find resource in CIB
-    rsc = pe_find_resource_with_flags(data_set->resources, options.rsc_id,
+    rsc = pe_find_resource_with_flags(scheduler->resources, options.rsc_id,
                                       pcmk_rsc_match_history
                                       |pcmk_rsc_match_basename);
     if (rsc == NULL) {
         crm_err("Resource does not exist in config");
-        pe_free_working_set(data_set);
+        pe_free_working_set(scheduler);
         return EINVAL;
     }
 
     // Add resource instance parameters to options.params
-    params = pe_rsc_params(rsc, NULL, data_set);
+    params = pe_rsc_params(rsc, NULL, scheduler);
     if (params != NULL) {
         g_hash_table_iter_init(&iter, params);
         while (g_hash_table_iter_next(&iter, (gpointer *) &key,
@@ -500,7 +500,7 @@ generate_params(void)
 
     // Add resource meta-attributes to options.params
     meta = pcmk__strkey_table(free, free);
-    get_meta_attributes(meta, rsc, NULL, data_set);
+    get_meta_attributes(meta, rsc, NULL, scheduler);
     g_hash_table_iter_init(&iter, meta);
     while (g_hash_table_iter_next(&iter, (gpointer *) &key,
                                   (gpointer *) &value)) {
@@ -511,7 +511,7 @@ generate_params(void)
     }
     g_hash_table_destroy(meta);
 
-    pe_free_working_set(data_set);
+    pe_free_working_set(scheduler);
     return rc;
 }
 

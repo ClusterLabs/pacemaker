@@ -543,8 +543,8 @@ add_hash_param(GHashTable * hash, const char *name, const char *value)
  * \note If \p force_host is \c true, \p node \e must be a guest node.
  */
 const char *
-pe__node_attribute_calculated(const pe_node_t *node, const char *name,
-                              const pe_resource_t *rsc,
+pe__node_attribute_calculated(const pcmk_node_t *node, const char *name,
+                              const pcmk_resource_t *rsc,
                               enum pcmk__rsc_node node_type,
                               bool force_host)
 {
@@ -557,8 +557,8 @@ pe__node_attribute_calculated(const pe_node_t *node, const char *name,
     const char *node_type_s = NULL;
     const char *reason = NULL;
 
-    const pe_resource_t *container = NULL;
-    const pe_node_t *host = NULL;
+    const pcmk_resource_t *container = NULL;
+    const pcmk_node_t *host = NULL;
 
     CRM_ASSERT((node != NULL) && (name != NULL) && (rsc != NULL)
                && (!force_host || is_guest));
@@ -618,7 +618,7 @@ pe__node_attribute_calculated(const pe_node_t *node, const char *name,
 }
 
 const char *
-pe_node_attribute_raw(const pe_node_t *node, const char *name)
+pe_node_attribute_raw(const pcmk_node_t *node, const char *name)
 {
     if(node == NULL) {
         return NULL;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2022 the Pacemaker project contributors
+ * Copyright 2010-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,7 +14,7 @@
 #define MAX_RESPAWN		100
 
 extern GMainLoop *mainloop;
-extern struct qb_ipcs_service_handlers mcp_ipc_callbacks;
+extern struct qb_ipcs_service_handlers pacemakerd_ipc_callbacks;
 extern const char *pacemakerd_state;
 extern gboolean running_with_sbd;
 extern unsigned int shutdown_complete_state_reported_to;
@@ -23,7 +23,7 @@ extern crm_trigger_t *shutdown_trigger;
 extern crm_trigger_t *startup_trigger;
 extern time_t subdaemon_check_progress;
 
-gboolean mcp_read_config(void);
+gboolean pacemakerd_read_config(void);
 
 gboolean cluster_connect_cfg(void);
 void cluster_disconnect_cfg(void);

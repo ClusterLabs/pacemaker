@@ -335,7 +335,7 @@ Working with the scheduler is difficult. Challenges include:
 * It produces an insane amount of log messages at debug and trace levels.
   You can put resource ID(s) in the ``PCMK_trace_tags`` environment variable to
   enable trace-level messages only when related to specific resources.
-* Different parts of the main ``pe_working_set_t`` structure are finalized at
+* Different parts of the main ``pcmk_scheduler_t`` structure are finalized at
   different points in the scheduling process, so you have to keep in mind
   whether information you're using at one point of the code can possibly change
   later. For example, data unpacked from the CIB can safely be used anytime
@@ -347,24 +347,24 @@ Working with the scheduler is difficult. Challenges include:
 
 
 .. index::
-   single: pe_working_set_t
+   single: pcmk_scheduler_t
 
 Cluster Working Set
 ___________________
 
-The main data object for the scheduler is ``pe_working_set_t``, which contains
+The main data object for the scheduler is ``pcmk_scheduler_t``, which contains
 all information needed about nodes, resources, constraints, etc., both as the
 raw CIB XML and parsed into more usable data structures, plus the resulting
-transition graph XML. The variable name is usually ``data_set``.
+transition graph XML. The variable name is usually ``scheduler``.
 
 .. index::
-   single: pe_resource_t
+   single: pcmk_resource_t
 
 Resources
 _________
 
-``pe_resource_t`` is the data object representing cluster resources. A resource
-has a variant: primitive (a.k.a. native), group, clone, or bundle.
+``pcmk_resource_t`` is the data object representing cluster resources. A
+resource has a variant: primitive (a.k.a. native), group, clone, or bundle.
 
 The resource object has members for two sets of methods,
 ``resource_object_functions_t`` from the ``libpe_status`` public API, and
@@ -380,7 +380,7 @@ such as processing location and ordering constraints. For example,
 ``internal_constraints()`` method for each top-level resource in the cluster.
 
 .. index::
-   single: pe_node_t
+   single: pcmk_node_t
 
 Nodes
 _____
@@ -389,30 +389,30 @@ Assignment of resources to nodes is done by choosing the node with the highest
 score for a given resource. The scheduler does a bunch of processing to
 generate the scores, then the actual assignment is straightforward.
 
-Node lists are frequently used. For example, ``pe_working_set_t`` has a
+Node lists are frequently used. For example, ``pcmk_scheduler_t`` has a
 ``nodes`` member which is a list of all nodes in the cluster, and
-``pe_resource_t`` has a ``running_on`` member which is a list of all nodes on
-which the resource is (or might be) active. These are lists of ``pe_node_t``
+``pcmk_resource_t`` has a ``running_on`` member which is a list of all nodes on
+which the resource is (or might be) active. These are lists of ``pcmk_node_t``
 objects.
 
-The ``pe_node_t`` object contains a ``struct pe_node_shared_s *details`` member
-with all node information that is independent of resource assignment (the node
-name, etc.).
+The ``pcmk_node_t`` object contains a ``struct pe_node_shared_s *details``
+member with all node information that is independent of resource assignment
+(the node name, etc.).
 
 The working set's ``nodes`` member contains the original of this information.
-All other node lists contain copies of ``pe_node_t`` where only the ``details``
-member points to the originals in the working set's ``nodes`` list. In this
-way, the other members of ``pe_node_t`` (such as ``weight``, which is the node
-score) may vary by node list, while the common details are shared.
+All other node lists contain copies of ``pcmk_node_t`` where only the
+``details`` member points to the originals in the working set's ``nodes`` list.
+In this way, the other members of ``pcmk_node_t`` (such as ``weight``, which is
+the node score) may vary by node list, while the common details are shared.
 
 .. index::
-   single: pe_action_t
+   single: pcmk_action_t
    single: pe_action_flags
 
 Actions
 _______
 
-``pe_action_t`` is the data object representing actions that might need to be
+``pcmk_action_t`` is the data object representing actions that might need to be
 taken. These could be resource actions, cluster-wide actions such as fencing a
 node, or "pseudo-actions" which are abstractions used as convenient points for
 ordering other actions against.

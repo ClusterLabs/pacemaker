@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,7 +11,7 @@
 #define PCMK__PACEMAKER_SCHEDULERD__H
 
 #include <crm_internal.h>
-#include <crm/pengine/pe_types.h>
+#include <crm/common/scheduler.h>
 
 extern pcmk__output_t *logger_out;
 extern pcmk__output_t *out;

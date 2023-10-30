@@ -2589,7 +2589,7 @@ pcmk__xml_artefact_root(enum pcmk__xml_artefact_ns ns)
     char *ret = NULL;
 
     if (base == NULL) {
-        base = getenv("PCMK_schema_directory");
+        base = pcmk__env_option(PCMK__ENV_SCHEMA_DIRECTORY);
     }
     if (pcmk__str_empty(base)) {
         base = CRM_SCHEMA_DIRECTORY;

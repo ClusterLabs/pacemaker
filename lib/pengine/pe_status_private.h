@@ -22,7 +22,7 @@
 #include <glib.h>                 // GSList, GList, GHashTable
 #include <libxml/tree.h>          // xmlNode
 
-#include <crm/pengine/status.h>   // pe_action_t, pe_resource_t, etc.
+#include <crm/pengine/status.h>   // pcmk_action_t, pcmk_resource_t, etc.
 
 /*!
  * \internal
@@ -48,10 +48,10 @@ typedef struct notify_data_s {
 
     const char *action;
 
-    pe_action_t *pre;
-    pe_action_t *post;
-    pe_action_t *pre_done;
-    pe_action_t *post_done;
+    pcmk_action_t *pre;
+    pcmk_action_t *post;
+    pcmk_action_t *pre_done;
+    pcmk_action_t *post_done;
 
     GList *active;            /* notify_entry_t*  */
     GList *inactive;          /* notify_entry_t*  */
@@ -65,82 +65,86 @@ typedef struct notify_data_s {
 } notify_data_t;
 
 G_GNUC_INTERNAL
-pe_resource_t *pe__create_clone_child(pe_resource_t *rsc,
-                                      pe_working_set_t *data_set);
+pcmk_resource_t *pe__create_clone_child(pcmk_resource_t *rsc,
+                                      pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
-void pe__create_action_notifications(pe_resource_t *rsc, notify_data_t *n_data);
+void pe__create_action_notifications(pcmk_resource_t *rsc,
+                                     notify_data_t *n_data);
 
 G_GNUC_INTERNAL
 void pe__free_action_notification_data(notify_data_t *n_data);
 
 G_GNUC_INTERNAL
-notify_data_t *pe__action_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
-                                           pe_action_t *action,
-                                           pe_action_t *complete);
+notify_data_t *pe__action_notif_pseudo_ops(pcmk_resource_t *rsc,
+                                           const char *task,
+                                           pcmk_action_t *action,
+                                           pcmk_action_t *complete);
 
 G_GNUC_INTERNAL
-void pe__force_anon(const char *standard, pe_resource_t *rsc, const char *rid,
-                    pe_working_set_t *data_set);
+void pe__force_anon(const char *standard, pcmk_resource_t *rsc, const char *rid,
+                    pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
 gint pe__cmp_rsc_priority(gconstpointer a, gconstpointer b);
 
 G_GNUC_INTERNAL
-gboolean pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
-                             pe_resource_t *parent, pe_working_set_t *data_set);
+gboolean pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
+                             pcmk_resource_t *parent,
+                             pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
-gboolean unpack_remote_nodes(xmlNode *xml_resources, pe_working_set_t *data_set);
+gboolean unpack_remote_nodes(xmlNode *xml_resources,
+                             pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
 gboolean unpack_resources(const xmlNode *xml_resources,
-                          pe_working_set_t *data_set);
+                          pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
-gboolean unpack_config(xmlNode *config, pe_working_set_t *data_set);
+gboolean unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
-gboolean unpack_nodes(xmlNode *xml_nodes, pe_working_set_t *data_set);
+gboolean unpack_nodes(xmlNode *xml_nodes, pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
-gboolean unpack_tags(xmlNode *xml_tags, pe_working_set_t *data_set);
+gboolean unpack_tags(xmlNode *xml_tags, pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
-gboolean unpack_status(xmlNode *status, pe_working_set_t *data_set);
+gboolean unpack_status(xmlNode *status, pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
-op_digest_cache_t *pe__compare_fencing_digest(pe_resource_t *rsc,
+op_digest_cache_t *pe__compare_fencing_digest(pcmk_resource_t *rsc,
                                               const char *agent,
-                                              pe_node_t *node,
-                                              pe_working_set_t *data_set);
+                                              pcmk_node_t *node,
+                                              pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
-void pe__unpack_node_health_scores(pe_working_set_t *data_set);
+void pe__unpack_node_health_scores(pcmk_scheduler_t *scheduler);
 
 // Primitive resource methods
 
 G_GNUC_INTERNAL
-unsigned int pe__primitive_max_per_node(const pe_resource_t *rsc);
+unsigned int pe__primitive_max_per_node(const pcmk_resource_t *rsc);
 
 // Group resource methods
 
 G_GNUC_INTERNAL
-unsigned int pe__group_max_per_node(const pe_resource_t *rsc);
+unsigned int pe__group_max_per_node(const pcmk_resource_t *rsc);
 
 // Clone resource methods
 
 G_GNUC_INTERNAL
-unsigned int pe__clone_max_per_node(const pe_resource_t *rsc);
+unsigned int pe__clone_max_per_node(const pcmk_resource_t *rsc);
 
 // Bundle resource methods
 
 G_GNUC_INTERNAL
-pe_node_t *pe__bundle_active_node(const pe_resource_t *rsc,
-                                  unsigned int *count_all,
-                                  unsigned int *count_clean);
+pcmk_node_t *pe__bundle_active_node(const pcmk_resource_t *rsc,
+                                    unsigned int *count_all,
+                                    unsigned int *count_clean);
 
 G_GNUC_INTERNAL
-unsigned int pe__bundle_max_per_node(const pe_resource_t *rsc);
+unsigned int pe__bundle_max_per_node(const pcmk_resource_t *rsc);
 
 #endif  // PE_STATUS_PRIVATE__H

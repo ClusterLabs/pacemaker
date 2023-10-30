@@ -33,7 +33,7 @@ Users are highly recommended *not* to modify any part of a node's
 state *directly*.  The cluster will periodically regenerate the entire
 section from authoritative sources, so any changes should be done
 with the tools appropriate to those sources.
-         
+
 .. table:: **Authoritative Sources for State Information**
    :widths: 1 1
 
@@ -48,9 +48,7 @@ with the tools appropriate to those sources.
    +----------------------+----------------------+
 
 The fields used in the ``node_state`` objects are named as they are
-largely for historical reasons and are rooted in Pacemaker's origins
-as the resource manager for the older Heartbeat project. They have remained
-unchanged to preserve compatibility with older versions.
+largely for historical reasons, to maintain compatibility with older versions.
          
 .. table:: **Node Status Fields**
    :widths: 1 3
@@ -147,8 +145,8 @@ all known resources have been checked for on this machine (``probe_complete``).
 Operation History
 #################
    
-A node's resource history is held in the ``lrm_resources`` tag (a child
-of the ``lrm`` tag). The information stored here includes enough
+A node's resource history is held in the ``lrm_resources`` element (a child
+of the ``lrm`` element). The information stored here includes enough
 information for the cluster to stop the resource safely if it is
 removed from the ``configuration`` section. Specifically, the resource's
 ``id``, ``class``, ``type`` and ``provider`` are stored.
@@ -159,11 +157,9 @@ removed from the ``configuration`` section. Specifically, the resource's
 
       <lrm_resource id="apcstonith" type="fence_apc_snmp" class="stonith"/>
    
-Additionally, we store the last job for every combination of
-``resource``, ``action`` and ``interval``.  The concatenation of the values in
-this tuple are used to create the id of the ``lrm_rsc_op`` object.
+Additionally, we store history entries for certain actions.
 
-.. table:: **Contents of an lrm_rsc_op job**
+.. table:: **Attributes of an lrm_rsc_op element**
    :class: longtable
    :widths: 1 3
 
@@ -174,78 +170,78 @@ this tuple are used to create the id of the ``lrm_rsc_op`` object.
    |                  |    single: id; action status                             |
    |                  |    single: action; status, id                            |
    |                  |                                                          |
-   |                  | Identifier for the job constructed from the resource's   |
-   |                  | ``operation`` and ``interval``.                          |
+   |                  | Identifier for the history entry constructed from the    |
+   |                  | resource ID, action name, and operation interval.        |
    +------------------+----------------------------------------------------------+
    | call-id          | .. index::                                               |
    |                  |    single: call-id; action status                        |
    |                  |    single: action; status, call-id                       |
    |                  |                                                          |
-   |                  | The job's ticket number. Used as a sort key to determine |
-   |                  | the order in which the jobs were executed.               |
+   |                  | A node-specific counter used to determine the order in   |
+   |                  | which actions were executed.                             |
    +------------------+----------------------------------------------------------+
    | operation        | .. index::                                               |
    |                  |    single: operation; action status                      |
    |                  |    single: action; status, operation                     |
    |                  |                                                          |
-   |                  | The action the resource agent was invoked with.          |
+   |                  | The action name the resource agent was invoked with.     |
    +------------------+----------------------------------------------------------+
    | interval         | .. index::                                               |
    |                  |    single: interval; action status                       |
    |                  |    single: action; status, interval                      |
    |                  |                                                          |
    |                  | The frequency, in milliseconds, at which the operation   |
-   |                  | will be repeated. A one-off job is indicated by 0.       |
+   |                  | will be repeated. One-time execution is indicated by 0.  |
    +------------------+----------------------------------------------------------+
    | op-status        | .. index::                                               |
    |                  |    single: op-status; action status                      |
    |                  |    single: action; status, op-status                     |
    |                  |                                                          |
-   |                  | The job's status. Generally this will be either 0 (done) |
-   |                  | or -1 (pending). Rarely used in favor of ``rc-code``.    |
+   |                  | The execution status of this action. The meanings of     |
+   |                  | these codes are internal to Pacemaker.                   |
    +------------------+----------------------------------------------------------+
    | rc-code          | .. index::                                               |
    |                  |    single: rc-code; action status                        |
    |                  |    single: action; status, rc-code                       |
    |                  |                                                          |
-   |                  | The job's result. Refer to the *Resource Agents* chapter |
-   |                  | of *Pacemaker Administration* for details on what the    |
-   |                  | values here mean and how they are interpreted.           |
+   |                  | The resource agent's exit status for this action. Refer  |
+   |                  | to the *Resource Agents* chapter of                      |
+   |                  | *Pacemaker Administration* for how these values are      |
+   |                  | interpreted.                                             |
    +------------------+----------------------------------------------------------+
    | last-rc-change   | .. index::                                               |
    |                  |    single: last-rc-change; action status                 |
    |                  |    single: action; status, last-rc-change                |
    |                  |                                                          |
    |                  | Machine-local date/time, in seconds since epoch, at      |
-   |                  | which the job first returned the current value of        |
+   |                  | which the action first returned the current value of     |
    |                  | ``rc-code``.  For diagnostic purposes.                   |
    +------------------+----------------------------------------------------------+
    | exec-time        | .. index::                                               |
    |                  |    single: exec-time; action status                      |
    |                  |    single: action; status, exec-time                     |
    |                  |                                                          |
-   |                  | Time, in milliseconds, that the job was running for.     |
+   |                  | Time, in milliseconds, that the action was running for.  |
    |                  | For diagnostic purposes.                                 |
    +------------------+----------------------------------------------------------+
    | queue-time       | .. index::                                               |
    |                  |    single: queue-time; action status                     |
    |                  |    single: action; status, queue-time                    |
    |                  |                                                          |
-   |                  | Time, in seconds, that the job was queued for in the     |
+   |                  | Time, in seconds, that the action was queued for in the  |
    |                  | local executor. For diagnostic purposes.                 |
    +------------------+----------------------------------------------------------+
    | crm_feature_set  | .. index::                                               |
    |                  |    single: crm_feature_set; action status                |
    |                  |    single: action; status, crm_feature_set               |
    |                  |                                                          |
-   |                  | The version which this job description conforms to. Used |
-   |                  | when processing ``op-digest``.                           |
+   |                  | The Pacemaker feature set used to record this entry.     |
    +------------------+----------------------------------------------------------+
    | transition-key   | .. index::                                               |
    |                  |    single: transition-key; action status                 |
    |                  |    single: action; status, transition-key                |
    |                  |                                                          |
-   |                  | A concatenation of the job's graph action number, the    |
+   |                  | A concatenation of the action's graph action number, the |
    |                  | graph number, the expected result and the UUID of the    |
    |                  | controller instance that scheduled it. This is used to   |
    |                  | construct ``transition-magic`` (below).                  |
@@ -254,13 +250,13 @@ this tuple are used to create the id of the ``lrm_rsc_op`` object.
    |                  |    single: transition-magic; action status               |
    |                  |    single: action; status, transition-magic              |
    |                  |                                                          |
-   |                  | A concatenation of the job's ``op-status``, ``rc-code``  |
+   |                  | A concatenation of ``op-status``, ``rc-code``            |
    |                  | and ``transition-key``. Guaranteed to be unique for the  |
    |                  | life of the cluster (which ensures it is part of CIB     |
    |                  | update notifications) and contains all the information   |
    |                  | needed for the controller to correctly analyze and       |
-   |                  | process the completed job. Most importantly, the         |
-   |                  | decomposed elements tell the controller if the job       |
+   |                  | process the completed action. Most importantly, the      |
+   |                  | decomposed elements tell the controller if the history   |
    |                  | entry was expected and whether it failed.                |
    +------------------+----------------------------------------------------------+
    | op-digest        | .. index::                                               |
@@ -268,7 +264,7 @@ this tuple are used to create the id of the ``lrm_rsc_op`` object.
    |                  |    single: action; status, op-digest                     |
    |                  |                                                          |
    |                  | An MD5 sum representing the parameters passed to the     |
-   |                  | job. Used to detect changes to the configuration, to     |
+   |                  | action. Used to detect changes to the configuration, to  |
    |                  | restart resources if necessary.                          |
    +------------------+----------------------------------------------------------+
    | crm-debug-origin | .. index::                                               |
@@ -296,7 +292,7 @@ ________________________________
           last-rc-change="1239008085" exec-time="10" queue-time="0"/>
       </lrm_resource>
 
-In the above example, the job is a non-recurring monitor operation
+In the above example, the action is a non-recurring monitor operation
 often referred to as a "probe" for the ``apcstonith`` resource.
 
 The cluster schedules probes for every configured resource on a node when
@@ -308,16 +304,16 @@ the 2nd graph produced by this instance of the controller
 (2668bbeb-06d5-40f9-936d-24cb7f87006a).
 
 The third field of the ``transition-key`` contains a 7, which indicates
-that the job expects to find the resource inactive. By looking at the ``rc-code``
-property, we see that this was the case.
+that the cluster expects to find the resource inactive. By looking at the
+``rc-code`` property, we see that this was the case.
 
-As that is the only job recorded for this node, we can conclude that
+As that is the only action recorded for this node, we can conclude that
 the cluster started the resource elsewhere.
    
 Complex Operation History Example
 _________________________________
            
-.. topic:: Resource history of a ``pingd`` clone with multiple jobs
+.. topic:: Resource history of a ``pingd`` clone with multiple entries
 
    .. code-block:: xml
 
@@ -344,7 +340,7 @@ _________________________________
           last-rc-change="1239008085" exec-time="20" queue-time="0"/>
         </lrm_resource>
    
-When more than one job record exists, it is important to first sort
+When more than one history entry exists, it is important to first sort
 them by ``call-id`` before interpreting them.
 
 Once sorted, the above example can be summarized as:
@@ -354,7 +350,7 @@ Once sorted, the above example can be summarized as:
 #. A start operation returning 0 (success), with a ``call-id`` of 33
 #. A recurring monitor returning 0 (success), with a ``call-id`` of 34
 
-The cluster processes each job record to build up a picture of the
+The cluster processes each history entry to build up a picture of the
 resource's state.  After the first and second entries, it is
 considered stopped, and after the third it considered active.
 

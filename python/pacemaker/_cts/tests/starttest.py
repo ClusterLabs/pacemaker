@@ -31,7 +31,7 @@ class StartTest(CTSTest):
             cm -- A ClusterManager instance
         """
 
-        CTSTest.__init__(self,cm)
+        CTSTest.__init__(self, cm)
         self.name = "Start"
 
     def __call__(self, node):

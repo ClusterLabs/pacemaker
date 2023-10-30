@@ -19,25 +19,25 @@
 #include <crm/common/xml_internal.h>
 #include "pe_status_private.h"
 
-static void unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
-                             const pe_resource_t *container, guint interval_ms);
+static void unpack_operation(pcmk_action_t *action, const xmlNode *xml_obj,
+                             guint interval_ms);
 
 static void
-add_singleton(pe_working_set_t *data_set, pe_action_t *action)
+add_singleton(pcmk_scheduler_t *scheduler, pcmk_action_t *action)
 {
-    if (data_set->singletons == NULL) {
-        data_set->singletons = pcmk__strkey_table(NULL, NULL);
+    if (scheduler->singletons == NULL) {
+        scheduler->singletons = pcmk__strkey_table(NULL, NULL);
     }
-    g_hash_table_insert(data_set->singletons, action->uuid, action);
+    g_hash_table_insert(scheduler->singletons, action->uuid, action);
 }
 
-static pe_action_t *
-lookup_singleton(pe_working_set_t *data_set, const char *action_uuid)
+static pcmk_action_t *
+lookup_singleton(pcmk_scheduler_t *scheduler, const char *action_uuid)
 {
-    if (data_set->singletons == NULL) {
+    if (scheduler->singletons == NULL) {
         return NULL;
     }
-    return g_hash_table_lookup(data_set->singletons, action_uuid);
+    return g_hash_table_lookup(scheduler->singletons, action_uuid);
 }
 
 /*!
@@ -47,21 +47,21 @@ lookup_singleton(pe_working_set_t *data_set, const char *action_uuid)
  * \param[in] key        Action key to match
  * \param[in] rsc        Resource to match (if any)
  * \param[in] node       Node to match (if any)
- * \param[in] data_set   Cluster working set
+ * \param[in] scheduler  Scheduler data
  *
  * \return Existing action that matches arguments (or NULL if none)
  */
-static pe_action_t *
-find_existing_action(const char *key, const pe_resource_t *rsc,
-                     const pe_node_t *node, const pe_working_set_t *data_set)
+static pcmk_action_t *
+find_existing_action(const char *key, const pcmk_resource_t *rsc,
+                     const pcmk_node_t *node, const pcmk_scheduler_t *scheduler)
 {
     GList *matches = NULL;
-    pe_action_t *action = NULL;
+    pcmk_action_t *action = NULL;
 
-    /* When rsc is NULL, it would be quicker to check data_set->singletons,
-     * but checking all data_set->actions takes the node into account.
+    /* When rsc is NULL, it would be quicker to check scheduler->singletons,
+     * but checking all scheduler->actions takes the node into account.
      */
-    matches = find_actions(((rsc == NULL)? data_set->actions : rsc->actions),
+    matches = find_actions(((rsc == NULL)? scheduler->actions : rsc->actions),
                            key, node);
     if (matches == NULL) {
         return NULL;
@@ -73,80 +73,78 @@ find_existing_action(const char *key, const pe_resource_t *rsc,
     return action;
 }
 
+/*!
+ * \internal
+ * \brief Find the XML configuration corresponding to a specific action key
+ *
+ * \param[in] rsc               Resource to find action configuration for
+ * \param[in] key               "RSC_ACTION_INTERVAL" of action to find
+ * \param[in] include_disabled  If false, do not return disabled actions
+ *
+ * \return XML configuration of desired action if any, otherwise NULL
+ */
 static xmlNode *
-find_rsc_op_entry_helper(const pe_resource_t *rsc, const char *key,
-                         gboolean include_disabled)
+find_exact_action_config(const pcmk_resource_t *rsc, const char *action_name,
+                         guint interval_ms, bool include_disabled)
 {
-    guint interval_ms = 0;
-    gboolean do_retry = TRUE;
-    char *local_key = NULL;
-    const char *name = NULL;
-    const char *interval_spec = NULL;
-    char *match_key = NULL;
-    xmlNode *op = NULL;
-    xmlNode *operation = NULL;
+    for (xmlNode *operation = first_named_child(rsc->ops_xml, XML_ATTR_OP);
+         operation != NULL; operation = crm_next_same_xml(operation)) {
 
-  retry:
-    for (operation = pcmk__xe_first_child(rsc->ops_xml); operation != NULL;
-         operation = pcmk__xe_next(operation)) {
+        bool enabled = false;
+        const char *config_name = NULL;
+        const char *interval_spec = NULL;
 
-        if (pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
-            bool enabled = false;
+        // @TODO This does not consider rules, defaults, etc.
+        if (!include_disabled
+            && (pcmk__xe_get_bool_attr(operation, "enabled",
+                                       &enabled) == pcmk_rc_ok) && !enabled) {
+            continue;
+        }
 
-            name = crm_element_value(operation, "name");
-            interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
-            if (!include_disabled && pcmk__xe_get_bool_attr(operation, "enabled", &enabled) == pcmk_rc_ok &&
-                !enabled) {
-                continue;
-            }
+        interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
+        if (crm_parse_interval_spec(interval_spec) != interval_ms) {
+            continue;
+        }
 
-            interval_ms = crm_parse_interval_spec(interval_spec);
-            match_key = pcmk__op_key(rsc->id, name, interval_ms);
-            if (pcmk__str_eq(key, match_key, pcmk__str_casei)) {
-                op = operation;
-            }
-            free(match_key);
-
-            if (rsc->clone_name) {
-                match_key = pcmk__op_key(rsc->clone_name, name, interval_ms);
-                if (pcmk__str_eq(key, match_key, pcmk__str_casei)) {
-                    op = operation;
-                }
-                free(match_key);
-            }
-
-            if (op != NULL) {
-                free(local_key);
-                return op;
-            }
+        config_name = crm_element_value(operation, "name");
+        if (pcmk__str_eq(action_name, config_name, pcmk__str_none)) {
+            return operation;
         }
     }
-
-    free(local_key);
-    if (do_retry == FALSE) {
-        return NULL;
-    }
-
-    do_retry = FALSE;
-    if ((strstr(key, PCMK_ACTION_MIGRATE_TO) != NULL)
-        || (strstr(key, PCMK_ACTION_MIGRATE_FROM) != NULL)) {
-        local_key = pcmk__op_key(rsc->id, "migrate", 0);
-        key = local_key;
-        goto retry;
-
-    } else if (strstr(key, "_notify_")) {
-        local_key = pcmk__op_key(rsc->id, PCMK_ACTION_NOTIFY, 0);
-        key = local_key;
-        goto retry;
-    }
-
     return NULL;
 }
 
+/*!
+ * \internal
+ * \brief Find the XML configuration of a resource action
+ *
+ * \param[in] rsc               Resource to find action configuration for
+ * \param[in] action_name       Action name to search for
+ * \param[in] interval_ms       Action interval (in milliseconds) to search for
+ * \param[in] include_disabled  If false, do not return disabled actions
+ *
+ * \return XML configuration of desired action if any, otherwise NULL
+ */
 xmlNode *
-find_rsc_op_entry(const pe_resource_t *rsc, const char *key)
+pcmk__find_action_config(const pcmk_resource_t *rsc, const char *action_name,
+                         guint interval_ms, bool include_disabled)
 {
-    return find_rsc_op_entry_helper(rsc, key, FALSE);
+    xmlNode *action_config = NULL;
+
+    // Try requested action first
+    action_config = find_exact_action_config(rsc, action_name, interval_ms,
+                                             include_disabled);
+
+    // For migrate_to and migrate_from actions, retry with "migrate"
+    // @TODO This should be either documented or deprecated
+    if ((action_config == NULL)
+        && pcmk__str_any_of(action_name, PCMK_ACTION_MIGRATE_TO,
+                            PCMK_ACTION_MIGRATE_FROM, NULL)) {
+        action_config = find_exact_action_config(rsc, "migrate", 0,
+                                                 include_disabled);
+    }
+
+    return action_config;
 }
 
 /*!
@@ -158,26 +156,23 @@ find_rsc_op_entry(const pe_resource_t *rsc, const char *key)
  * \param[in,out] rsc        Resource that action is for (if any)
  * \param[in]     node       Node that action is on (if any)
  * \param[in]     optional   Whether action should be considered optional
- * \param[in]     for_graph  Whether action should be recorded in transition graph
- * \param[in,out] data_set   Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  *
  * \return Newly allocated action
  * \note This function takes ownership of \p key. It is the caller's
  *       responsibility to free the return value with pe_free_action().
  */
-static pe_action_t *
-new_action(char *key, const char *task, pe_resource_t *rsc,
-           const pe_node_t *node, bool optional, bool for_graph,
-           pe_working_set_t *data_set)
+static pcmk_action_t *
+new_action(char *key, const char *task, pcmk_resource_t *rsc,
+           const pcmk_node_t *node, bool optional, pcmk_scheduler_t *scheduler)
 {
-    pe_action_t *action = calloc(1, sizeof(pe_action_t));
+    pcmk_action_t *action = calloc(1, sizeof(pcmk_action_t));
 
     CRM_ASSERT(action != NULL);
 
     action->rsc = rsc;
     action->task = strdup(task); CRM_ASSERT(action->task != NULL);
     action->uuid = key;
-    action->extra = pcmk__strkey_table(free, free);
 
     if (node) {
         action->node = pe__copy_node(node);
@@ -200,56 +195,67 @@ new_action(char *key, const char *task, pe_resource_t *rsc,
     } else {
         guint interval_ms = 0;
 
-        action->op_entry = find_rsc_op_entry_helper(rsc, key, TRUE);
         parse_op_key(key, NULL, NULL, &interval_ms);
-        unpack_operation(action, action->op_entry, rsc->container, interval_ms);
+        action->op_entry = pcmk__find_action_config(rsc, task, interval_ms,
+                                                    true);
+
+        /* If the given key is for one of the many notification pseudo-actions
+         * (pre_notify_promote, etc.), the actual action name is "notify"
+         */
+        if ((action->op_entry == NULL) && (strstr(key, "_notify_") != NULL)) {
+            action->op_entry = find_exact_action_config(rsc, PCMK_ACTION_NOTIFY,
+                                                        0, true);
+        }
+
+        unpack_operation(action, action->op_entry, interval_ms);
     }
 
-    if (for_graph) {
-        pe_rsc_trace(rsc, "Created %s action %d (%s): %s for %s on %s",
-                     (optional? "optional" : "required"),
-                     data_set->action_id, key, task,
-                     ((rsc == NULL)? "no resource" : rsc->id),
-                     pe__node_name(node));
-        action->id = data_set->action_id++;
+    pe_rsc_trace(rsc, "Created %s action %d (%s): %s for %s on %s",
+                 (optional? "optional" : "required"),
+                 scheduler->action_id, key, task,
+                 ((rsc == NULL)? "no resource" : rsc->id),
+                 pe__node_name(node));
+    action->id = scheduler->action_id++;
 
-        data_set->actions = g_list_prepend(data_set->actions, action);
-        if (rsc == NULL) {
-            add_singleton(data_set, action);
-        } else {
-            rsc->actions = g_list_prepend(rsc->actions, action);
-        }
+    scheduler->actions = g_list_prepend(scheduler->actions, action);
+    if (rsc == NULL) {
+        add_singleton(scheduler, action);
+    } else {
+        rsc->actions = g_list_prepend(rsc->actions, action);
     }
     return action;
 }
 
 /*!
  * \internal
- * \brief Evaluate node attribute values for an action
+ * \brief Unpack a resource's action-specific instance parameters
  *
- * \param[in,out] action    Action to unpack attributes for
- * \param[in,out] data_set  Cluster working set
+ * \param[in]     action_xml  XML of action's configuration in CIB (if any)
+ * \param[in,out] node_attrs  Table of node attributes (for rule evaluation)
+ * \param[in,out] scheduler   Cluster working set (for rule evaluation)
+ *
+ * \return Newly allocated hash table of action-specific instance parameters
  */
-static void
-unpack_action_node_attributes(pe_action_t *action, pe_working_set_t *data_set)
+GHashTable *
+pcmk__unpack_action_rsc_params(const xmlNode *action_xml,
+                               GHashTable *node_attrs,
+                               pcmk_scheduler_t *scheduler)
 {
-    if (!pcmk_is_set(action->flags, pcmk_action_attrs_evaluated)
-        && (action->op_entry != NULL)) {
+    GHashTable *params = pcmk__strkey_table(free, free);
 
-        pe_rule_eval_data_t rule_data = {
-            .node_hash = action->node->details->attrs,
-            .role = pcmk_role_unknown,
-            .now = data_set->now,
-            .match_data = NULL,
-            .rsc_data = NULL,
-            .op_data = NULL
-        };
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = node_attrs,
+        .role = pcmk_role_unknown,
+        .now = scheduler->now,
+        .match_data = NULL,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
 
-        pe__unpack_dataset_nvpairs(action->op_entry, XML_TAG_ATTR_SETS,
-                                   &rule_data, action->extra, NULL,
-                                   FALSE, data_set);
-        pe__set_action_flags(action, pcmk_action_attrs_evaluated);
-    }
+    pe__unpack_dataset_nvpairs(action_xml, XML_TAG_ATTR_SETS,
+                               &rule_data, params, NULL,
+                               FALSE, scheduler);
+    return params;
 }
 
 /*!
@@ -260,7 +266,7 @@ unpack_action_node_attributes(pe_action_t *action, pe_working_set_t *data_set)
  * \param[in]     optional  Requested optional status
  */
 static void
-update_action_optional(pe_action_t *action, gboolean optional)
+update_action_optional(pcmk_action_t *action, gboolean optional)
 {
     // Force a non-recurring action to be optional if its resource is unmanaged
     if ((action->rsc != NULL) && (action->node != NULL)
@@ -281,14 +287,14 @@ update_action_optional(pe_action_t *action, gboolean optional)
 }
 
 static enum pe_quorum_policy
-effective_quorum_policy(pe_resource_t *rsc, pe_working_set_t *data_set)
+effective_quorum_policy(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 {
-    enum pe_quorum_policy policy = data_set->no_quorum_policy;
+    enum pe_quorum_policy policy = scheduler->no_quorum_policy;
 
-    if (pcmk_is_set(data_set->flags, pcmk_sched_quorate)) {
+    if (pcmk_is_set(scheduler->flags, pcmk_sched_quorate)) {
         policy = pcmk_no_quorum_ignore;
 
-    } else if (data_set->no_quorum_policy == pcmk_no_quorum_demote) {
+    } else if (scheduler->no_quorum_policy == pcmk_no_quorum_demote) {
         switch (rsc->role) {
             case pcmk_role_promoted:
             case pcmk_role_unpromoted:
@@ -311,14 +317,13 @@ effective_quorum_policy(pe_resource_t *rsc, pe_working_set_t *data_set)
  * \brief Update a resource action's runnable flag
  *
  * \param[in,out] action     Action to update
- * \param[in]     for_graph  Whether action should be recorded in transition graph
- * \param[in,out] data_set   Cluster working set
+ * \param[in,out] scheduler  Scheduler data
  *
  * \note This may also schedule fencing if a stop is unrunnable.
  */
 static void
-update_resource_action_runnable(pe_action_t *action, bool for_graph,
-                                pe_working_set_t *data_set)
+update_resource_action_runnable(pcmk_action_t *action,
+                                pcmk_scheduler_t *scheduler)
 {
     if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
         return;
@@ -334,27 +339,25 @@ update_resource_action_runnable(pe_action_t *action, bool for_graph,
                && (!pe__is_guest_node(action->node)
                    || action->node->details->remote_requires_reset)) {
         pe__clear_action_flags(action, pcmk_action_runnable);
-        do_crm_log((for_graph? LOG_WARNING: LOG_TRACE),
-                   "%s on %s is unrunnable (node is offline)",
+        do_crm_log(LOG_WARNING, "%s on %s is unrunnable (node is offline)",
                    action->uuid, pe__node_name(action->node));
         if (pcmk_is_set(action->rsc->flags, pcmk_rsc_managed)
-            && for_graph
             && pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_casei)
             && !(action->node->details->unclean)) {
-            pe_fence_node(data_set, action->node, "stop is unrunnable", false);
+            pe_fence_node(scheduler, action->node, "stop is unrunnable", false);
         }
 
     } else if (!pcmk_is_set(action->flags, pcmk_action_on_dc)
                && action->node->details->pending) {
         pe__clear_action_flags(action, pcmk_action_runnable);
-        do_crm_log((for_graph? LOG_WARNING: LOG_TRACE),
+        do_crm_log(LOG_WARNING,
                    "Action %s on %s is unrunnable (node is pending)",
                    action->uuid, pe__node_name(action->node));
 
     } else if (action->needs == pcmk_requires_nothing) {
         pe_action_set_reason(action, NULL, TRUE);
         if (pe__is_guest_node(action->node)
-            && !pe_can_fence(data_set, action->node)) {
+            && !pe_can_fence(scheduler, action->node)) {
             /* An action that requires nothing usually does not require any
              * fencing in order to be runnable. However, there is an exception:
              * such an action cannot be completed if it is on a guest node whose
@@ -372,7 +375,7 @@ update_resource_action_runnable(pe_action_t *action, bool for_graph,
         }
 
     } else {
-        switch (effective_quorum_policy(action->rsc, data_set)) {
+        switch (effective_quorum_policy(action->rsc, scheduler)) {
             case pcmk_no_quorum_stop:
                 pe_rsc_debug(action->rsc, "%s on %s is unrunnable (no quorum)",
                              action->uuid, pe__node_name(action->node));
@@ -407,7 +410,8 @@ update_resource_action_runnable(pe_action_t *action, bool for_graph,
  * \param[in]     action  New action
  */
 static void
-update_resource_flags_for_action(pe_resource_t *rsc, const pe_action_t *action)
+update_resource_flags_for_action(pcmk_resource_t *rsc,
+                                 const pcmk_action_t *action)
 {
     /* @COMPAT pcmk_rsc_starting and pcmk_rsc_stopping are deprecated and unused
      * within Pacemaker, and will eventually be removed
@@ -440,7 +444,7 @@ valid_stop_on_fail(const char *value)
  * \param[in,out] meta           Table of action meta-attributes
  */
 static void
-validate_on_fail(const pe_resource_t *rsc, const char *action_name,
+validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
                  const xmlNode *action_config, GHashTable *meta)
 {
     const char *name = NULL;
@@ -622,43 +626,49 @@ unpack_start_delay(const char *value, GHashTable *meta)
     return start_delay;
 }
 
+/*!
+ * \internal
+ * \brief Find a resource's most frequent recurring monitor
+ *
+ * \param[in] rsc  Resource to check
+ *
+ * \return Operation XML configured for most frequent recurring monitor for
+ *         \p rsc (if any)
+ */
 static xmlNode *
-find_min_interval_mon(pe_resource_t * rsc, gboolean include_disabled)
+most_frequent_monitor(const pcmk_resource_t *rsc)
 {
-    guint interval_ms = 0;
     guint min_interval_ms = G_MAXUINT;
-    const char *name = NULL;
-    const char *interval_spec = NULL;
     xmlNode *op = NULL;
-    xmlNode *operation = NULL;
 
-    for (operation = pcmk__xe_first_child(rsc->ops_xml);
-         operation != NULL;
-         operation = pcmk__xe_next(operation)) {
+    for (xmlNode *operation = first_named_child(rsc->ops_xml, XML_ATTR_OP);
+         operation != NULL; operation = crm_next_same_xml(operation)) {
+        bool enabled = false;
+        guint interval_ms = 0;
+        const char *interval_spec = crm_element_value(operation,
+                                                      XML_LRM_ATTR_INTERVAL);
 
-        if (pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
-            bool enabled = false;
+        // We only care about enabled recurring monitors
+        if (!pcmk__str_eq(crm_element_value(operation, "name"),
+                          PCMK_ACTION_MONITOR, pcmk__str_none)) {
+            continue;
+        }
+        interval_ms = crm_parse_interval_spec(interval_spec);
+        if (interval_ms == 0) {
+            continue;
+        }
 
-            name = crm_element_value(operation, "name");
-            interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
-            if (!include_disabled && pcmk__xe_get_bool_attr(operation, "enabled", &enabled) == pcmk_rc_ok &&
-                !enabled) {
-                continue;
-            }
+        // @TODO This does not account for rules, defaults, etc.
+        if ((pcmk__xe_get_bool_attr(operation, "enabled",
+                                    &enabled) == pcmk_rc_ok) && !enabled) {
+            continue;
+        }
 
-            if (!pcmk__str_eq(name, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
-                continue;
-            }
-
-            interval_ms = crm_parse_interval_spec(interval_spec);
-
-            if (interval_ms && (interval_ms < min_interval_ms)) {
-                min_interval_ms = interval_ms;
-                op = operation;
-            }
+        if (interval_ms < min_interval_ms) {
+            min_interval_ms = interval_ms;
+            op = operation;
         }
     }
-
     return op;
 }
 
@@ -679,7 +689,7 @@ find_min_interval_mon(pe_resource_t * rsc, gboolean include_disabled)
  * \return Newly allocated hash table with normalized action meta-attributes
  */
 GHashTable *
-pcmk__unpack_action_meta(pe_resource_t *rsc, const pe_node_t *node,
+pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
                          const char *action_name, guint interval_ms,
                          const xmlNode *action_config)
 {
@@ -717,7 +727,7 @@ pcmk__unpack_action_meta(pe_resource_t *rsc, const pe_node_t *node,
 
     // Derive default timeout for probes from recurring monitor timeouts
     if (pcmk_is_probe(action_name, interval_ms)) {
-        xmlNode *min_interval_mon = find_min_interval_mon(rsc, FALSE);
+        xmlNode *min_interval_mon = most_frequent_monitor(rsc);
 
         if (min_interval_mon != NULL) {
             /* @TODO This does not consider timeouts set in meta_attributes
@@ -830,6 +840,235 @@ pcmk__unpack_action_meta(pe_resource_t *rsc, const pe_node_t *node,
 
 /*!
  * \internal
+ * \brief Determine an action's quorum and fencing dependency
+ *
+ * \param[in] rsc          Resource that action is for
+ * \param[in] action_name  Name of action being unpacked
+ *
+ * \return Quorum and fencing dependency appropriate to action
+ */
+enum rsc_start_requirement
+pcmk__action_requires(const pcmk_resource_t *rsc, const char *action_name)
+{
+    const char *value = NULL;
+    enum rsc_start_requirement requires = pcmk_requires_nothing;
+
+    CRM_CHECK((rsc != NULL) && (action_name != NULL), return requires);
+
+    if (!pcmk__strcase_any_of(action_name, PCMK_ACTION_START,
+                              PCMK_ACTION_PROMOTE, NULL)) {
+        value = "nothing (not start or promote)";
+
+    } else if (pcmk_is_set(rsc->flags, pcmk_rsc_needs_fencing)) {
+        requires = pcmk_requires_fencing;
+        value = "fencing";
+
+    } else if (pcmk_is_set(rsc->flags, pcmk_rsc_needs_quorum)) {
+        requires = pcmk_requires_quorum;
+        value = "quorum";
+
+    } else {
+        value = "nothing";
+    }
+    pe_rsc_trace(rsc, "%s of %s requires %s", action_name, rsc->id, value);
+    return requires;
+}
+
+/*!
+ * \internal
+ * \brief Parse action failure response from a user-provided string
+ *
+ * \param[in] rsc          Resource that action is for
+ * \param[in] action_name  Name of action
+ * \param[in] interval_ms  Action interval (in milliseconds)
+ * \param[in] value        User-provided configuration value for on-fail
+ *
+ * \return Action failure response parsed from \p text
+ */
+enum action_fail_response
+pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
+                    guint interval_ms, const char *value)
+{
+    const char *desc = NULL;
+    bool needs_remote_reset = false;
+    enum action_fail_response on_fail = pcmk_on_fail_ignore;
+
+    if (value == NULL) {
+        // Use default
+
+    } else if (pcmk__str_eq(value, "block", pcmk__str_casei)) {
+        on_fail = pcmk_on_fail_block;
+        desc = "block";
+
+    } else if (pcmk__str_eq(value, "fence", pcmk__str_casei)) {
+        if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)) {
+            on_fail = pcmk_on_fail_fence_node;
+            desc = "node fencing";
+        } else {
+            pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for "
+                             "%s of %s to 'stop' because 'fence' is not "
+                             "valid when fencing is disabled",
+                             action_name, rsc->id);
+            on_fail = pcmk_on_fail_stop;
+            desc = "stop resource";
+        }
+
+    } else if (pcmk__str_eq(value, "standby", pcmk__str_casei)) {
+        on_fail = pcmk_on_fail_standby_node;
+        desc = "node standby";
+
+    } else if (pcmk__strcase_any_of(value, "ignore", PCMK__VALUE_NOTHING,
+                                    NULL)) {
+        desc = "ignore";
+
+    } else if (pcmk__str_eq(value, "migrate", pcmk__str_casei)) {
+        on_fail = pcmk_on_fail_ban;
+        desc = "force migration";
+
+    } else if (pcmk__str_eq(value, "stop", pcmk__str_casei)) {
+        on_fail = pcmk_on_fail_stop;
+        desc = "stop resource";
+
+    } else if (pcmk__str_eq(value, "restart", pcmk__str_casei)) {
+        on_fail = pcmk_on_fail_restart;
+        desc = "restart (and possibly migrate)";
+
+    } else if (pcmk__str_eq(value, "restart-container", pcmk__str_casei)) {
+        if (rsc->container == NULL) {
+            pe_rsc_debug(rsc,
+                         "Using default " XML_OP_ATTR_ON_FAIL
+                         " for %s of %s because it does not have a container",
+                         action_name, rsc->id);
+        } else {
+            on_fail = pcmk_on_fail_restart_container;
+            desc = "restart container (and possibly migrate)";
+        }
+
+    } else if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
+        on_fail = pcmk_on_fail_demote;
+        desc = "demote instance";
+
+    } else {
+        pcmk__config_err("Using default '" XML_OP_ATTR_ON_FAIL "' for "
+                         "%s of %s because '%s' is not valid",
+                         action_name, rsc->id, value);
+    }
+
+    /* Remote node connections are handled specially. Failures that result
+     * in dropping an active connection must result in fencing. The only
+     * failures that don't are probes and starts. The user can explicitly set
+     * on-fail="fence" to fence after start failures.
+     */
+    if (pe__resource_is_remote_conn(rsc)
+        && !pcmk_is_probe(action_name, interval_ms)
+        && !pcmk__str_eq(action_name, PCMK_ACTION_START, pcmk__str_none)) {
+        needs_remote_reset = true;
+        if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
+            desc = NULL; // Force default for unmanaged connections
+        }
+    }
+
+    if (desc != NULL) {
+        // Explicit value used, default not needed
+
+    } else if (rsc->container != NULL) {
+        on_fail = pcmk_on_fail_restart_container;
+        desc = "restart container (and possibly migrate) (default)";
+
+    } else if (needs_remote_reset) {
+        if (pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
+            if (pcmk_is_set(rsc->cluster->flags,
+                            pcmk_sched_fencing_enabled)) {
+                desc = "fence remote node (default)";
+            } else {
+                desc = "recover remote node connection (default)";
+            }
+            on_fail = pcmk_on_fail_reset_remote;
+        } else {
+            on_fail = pcmk_on_fail_stop;
+            desc = "stop unmanaged remote node (enforcing default)";
+        }
+
+    } else if (pcmk__str_eq(action_name, PCMK_ACTION_STOP, pcmk__str_none)) {
+        if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)) {
+            on_fail = pcmk_on_fail_fence_node;
+            desc = "resource fence (default)";
+        } else {
+            on_fail = pcmk_on_fail_block;
+            desc = "resource block (default)";
+        }
+
+    } else {
+        on_fail = pcmk_on_fail_restart;
+        desc = "restart (and possibly migrate) (default)";
+    }
+
+    pe_rsc_trace(rsc, "Failure handling for %s-interval %s of %s: %s",
+                 pcmk__readable_interval(interval_ms), action_name,
+                 rsc->id, desc);
+    return on_fail;
+}
+
+/*!
+ * \internal
+ * \brief Determine a resource's role after failure of an action
+ *
+ * \param[in] rsc          Resource that action is for
+ * \param[in] action_name  Action name
+ * \param[in] on_fail      Failure handling for action
+ * \param[in] meta         Unpacked action meta-attributes
+ *
+ * \return Resource role that results from failure of action
+ */
+enum rsc_role_e
+pcmk__role_after_failure(const pcmk_resource_t *rsc, const char *action_name,
+                         enum action_fail_response on_fail, GHashTable *meta)
+{
+    const char *value = NULL;
+    enum rsc_role_e role = pcmk_role_unknown;
+
+    // Set default for role after failure specially in certain circumstances
+    switch (on_fail) {
+        case pcmk_on_fail_stop:
+            role = pcmk_role_stopped;
+            break;
+
+        case pcmk_on_fail_reset_remote:
+            if (rsc->remote_reconnect_ms != 0) {
+                role = pcmk_role_stopped;
+            }
+            break;
+
+        default:
+            break;
+    }
+
+    // @COMPAT Check for explicitly configured role (deprecated)
+    value = g_hash_table_lookup(meta, "role_after_failure");
+    if (value != NULL) {
+        pe_warn_once(pcmk__wo_role_after,
+                    "Support for role_after_failure is deprecated "
+                    "and will be removed in a future release");
+        if (role == pcmk_role_unknown) {
+            role = text2role(value);
+        }
+    }
+
+    if (role == pcmk_role_unknown) {
+        // Use default
+        if (pcmk__str_eq(action_name, PCMK_ACTION_PROMOTE, pcmk__str_none)) {
+            role = pcmk_role_unpromoted;
+        } else {
+            role = pcmk_role_started;
+        }
+    }
+    pe_rsc_trace(rsc, "Role after %s %s failure is: %s",
+                 rsc->id, action_name, role2text(role));
+    return role;
+}
+
+/*!
+ * \internal
  * \brief Unpack action configuration
  *
  * Unpack a resource action's meta-attributes (normalizing the interval,
@@ -838,179 +1077,24 @@ pcmk__unpack_action_meta(pe_resource_t *rsc, const pe_node_t *node,
  *
  * \param[in,out] action       Resource action to unpack into
  * \param[in]     xml_obj      Action configuration XML (NULL for defaults only)
- * \param[in]     container    Resource that contains affected resource, if any
  * \param[in]     interval_ms  How frequently to perform the operation
  */
 static void
-unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
-                 const pe_resource_t *container, guint interval_ms)
+unpack_operation(pcmk_action_t *action, const xmlNode *xml_obj,
+                 guint interval_ms)
 {
     const char *value = NULL;
 
     action->meta = pcmk__unpack_action_meta(action->rsc, action->node,
                                             action->task, interval_ms, xml_obj);
-
-    if (!pcmk__strcase_any_of(action->task, PCMK_ACTION_START,
-                              PCMK_ACTION_PROMOTE, NULL)) {
-        action->needs = pcmk_requires_nothing;
-        value = "nothing (not start or promote)";
-
-    } else if (pcmk_is_set(action->rsc->flags, pcmk_rsc_needs_fencing)) {
-        action->needs = pcmk_requires_fencing;
-        value = "fencing";
-
-    } else if (pcmk_is_set(action->rsc->flags, pcmk_rsc_needs_quorum)) {
-        action->needs = pcmk_requires_quorum;
-        value = "quorum";
-
-    } else {
-        action->needs = pcmk_requires_nothing;
-        value = "nothing";
-    }
-    pe_rsc_trace(action->rsc, "%s requires %s", action->uuid, value);
+    action->needs = pcmk__action_requires(action->rsc, action->task);
 
     value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ON_FAIL);
-    if (value == NULL) {
+    action->on_fail = pcmk__parse_on_fail(action->rsc, action->task,
+                                          interval_ms, value);
 
-    } else if (pcmk__str_eq(value, "block", pcmk__str_casei)) {
-        action->on_fail = pcmk_on_fail_block;
-
-    } else if (pcmk__str_eq(value, "fence", pcmk__str_casei)) {
-        action->on_fail = pcmk_on_fail_fence_node;
-        value = "node fencing";
-
-        if (!pcmk_is_set(action->rsc->cluster->flags,
-                         pcmk_sched_fencing_enabled)) {
-            pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for "
-                             "operation '%s' to 'stop' because 'fence' is not "
-                             "valid when fencing is disabled", action->uuid);
-            action->on_fail = pcmk_on_fail_stop;
-            action->fail_role = pcmk_role_stopped;
-            value = "stop resource";
-        }
-
-    } else if (pcmk__str_eq(value, "standby", pcmk__str_casei)) {
-        action->on_fail = pcmk_on_fail_standby_node;
-        value = "node standby";
-
-    } else if (pcmk__strcase_any_of(value, "ignore", PCMK__VALUE_NOTHING,
-                                    NULL)) {
-        action->on_fail = pcmk_on_fail_ignore;
-        value = "ignore";
-
-    } else if (pcmk__str_eq(value, "migrate", pcmk__str_casei)) {
-        action->on_fail = pcmk_on_fail_ban;
-        value = "force migration";
-
-    } else if (pcmk__str_eq(value, "stop", pcmk__str_casei)) {
-        action->on_fail = pcmk_on_fail_stop;
-        action->fail_role = pcmk_role_stopped;
-        value = "stop resource";
-
-    } else if (pcmk__str_eq(value, "restart", pcmk__str_casei)) {
-        action->on_fail = pcmk_on_fail_restart;
-        value = "restart (and possibly migrate)";
-
-    } else if (pcmk__str_eq(value, "restart-container", pcmk__str_casei)) {
-        if (container) {
-            action->on_fail = pcmk_on_fail_restart_container;
-            value = "restart container (and possibly migrate)";
-
-        } else {
-            value = NULL;
-        }
-
-    } else if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
-        action->on_fail = pcmk_on_fail_demote;
-        value = "demote instance";
-
-    } else {
-        pe_err("Resource %s: Unknown failure type (%s)", action->rsc->id, value);
-        value = NULL;
-    }
-
-    /* defaults */
-    if (value == NULL && container) {
-        action->on_fail = pcmk_on_fail_restart_container;
-        value = "restart container (and possibly migrate) (default)";
-
-    /* For remote nodes, ensure that any failure that results in dropping an
-     * active connection to the node results in fencing of the node.
-     *
-     * There are only two action failures that don't result in fencing.
-     * 1. probes - probe failures are expected.
-     * 2. start - a start failure indicates that an active connection does not already
-     * exist. The user can set op on-fail=fence if they really want to fence start
-     * failures. */
-    } else if (((value == NULL)
-                || !pcmk_is_set(action->rsc->flags, pcmk_rsc_managed))
-               && pe__resource_is_remote_conn(action->rsc)
-               && !(pcmk__str_eq(action->task, PCMK_ACTION_MONITOR,
-                                 pcmk__str_casei)
-                    && (interval_ms == 0))
-               && !pcmk__str_eq(action->task, PCMK_ACTION_START, pcmk__str_casei)) {
-
-        if (!pcmk_is_set(action->rsc->flags, pcmk_rsc_managed)) {
-            action->on_fail = pcmk_on_fail_stop;
-            action->fail_role = pcmk_role_stopped;
-            value = "stop unmanaged remote node (enforcing default)";
-
-        } else {
-            if (pcmk_is_set(action->rsc->cluster->flags,
-                            pcmk_sched_fencing_enabled)) {
-                value = "fence remote node (default)";
-            } else {
-                value = "recover remote node connection (default)";
-            }
-
-            if (action->rsc->remote_reconnect_ms) {
-                action->fail_role = pcmk_role_stopped;
-            }
-            action->on_fail = pcmk_on_fail_reset_remote;
-        }
-
-    } else if ((value == NULL)
-               && pcmk__str_eq(action->task, PCMK_ACTION_STOP,
-                               pcmk__str_casei)) {
-        if (pcmk_is_set(action->rsc->cluster->flags,
-                        pcmk_sched_fencing_enabled)) {
-            action->on_fail = pcmk_on_fail_fence_node;
-            value = "resource fence (default)";
-
-        } else {
-            action->on_fail = pcmk_on_fail_block;
-            value = "resource block (default)";
-        }
-
-    } else if (value == NULL) {
-        action->on_fail = pcmk_on_fail_restart;
-        value = "restart (and possibly migrate) (default)";
-    }
-
-    pe_rsc_trace(action->rsc, "%s failure handling: %s",
-                 action->uuid, value);
-
-    value = NULL;
-    if (xml_obj != NULL) {
-        value = g_hash_table_lookup(action->meta, "role_after_failure");
-        if (value) {
-            pe_warn_once(pcmk__wo_role_after,
-                        "Support for role_after_failure is deprecated and will be removed in a future release");
-        }
-    }
-    if (value != NULL && action->fail_role == pcmk_role_unknown) {
-        action->fail_role = text2role(value);
-    }
-    /* defaults */
-    if (action->fail_role == pcmk_role_unknown) {
-        if (pcmk__str_eq(action->task, PCMK_ACTION_PROMOTE, pcmk__str_casei)) {
-            action->fail_role = pcmk_role_unpromoted;
-        } else {
-            action->fail_role = pcmk_role_started;
-        }
-    }
-    pe_rsc_trace(action->rsc, "%s failure results in: %s",
-                 action->uuid, role2text(action->fail_role));
+    action->fail_role = pcmk__role_after_failure(action->rsc, action->task,
+                                                 action->on_fail, action->meta);
 }
 
 /*!
@@ -1021,32 +1105,26 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
  * \param[in]     task         Action name (must be non-NULL)
  * \param[in]     on_node      Node that action is on (if any)
  * \param[in]     optional     Whether action should be considered optional
- * \param[in]     save_action  Whether action should be recorded in transition graph
- * \param[in,out] data_set     Cluster working set
+ * \param[in,out] scheduler    Scheduler data
  *
  * \return Action object corresponding to arguments (guaranteed not to be
  *         \c NULL)
- * \note This function takes ownership of (and might free) \p key. If
- *       \p save_action is true, \p data_set will own the returned action,
- *       otherwise it is the caller's responsibility to free the return value
- *       with pe_free_action().
+ * \note This function takes ownership of (and might free) \p key, and
+ *       \p scheduler takes ownership of the returned action (the caller should
+ *       not free it).
  */
-pe_action_t *
-custom_action(pe_resource_t *rsc, char *key, const char *task,
-              const pe_node_t *on_node, gboolean optional, gboolean save_action,
-              pe_working_set_t *data_set)
+pcmk_action_t *
+custom_action(pcmk_resource_t *rsc, char *key, const char *task,
+              const pcmk_node_t *on_node, gboolean optional,
+              pcmk_scheduler_t *scheduler)
 {
-    pe_action_t *action = NULL;
+    pcmk_action_t *action = NULL;
 
-    CRM_ASSERT((key != NULL) && (task != NULL) && (data_set != NULL));
+    CRM_ASSERT((key != NULL) && (task != NULL) && (scheduler != NULL));
 
-    if (save_action) {
-        action = find_existing_action(key, rsc, on_node, data_set);
-    }
-
+    action = find_existing_action(key, rsc, on_node, scheduler);
     if (action == NULL) {
-        action = new_action(key, task, rsc, on_node, optional, save_action,
-                            data_set);
+        action = new_action(key, task, rsc, on_node, optional, scheduler);
     } else {
         free(key);
     }
@@ -1054,27 +1132,37 @@ custom_action(pe_resource_t *rsc, char *key, const char *task,
     update_action_optional(action, optional);
 
     if (rsc != NULL) {
-        if (action->node != NULL) {
-            unpack_action_node_attributes(action, data_set);
+        if ((action->node != NULL) && (action->op_entry != NULL)
+            && !pcmk_is_set(action->flags, pcmk_action_attrs_evaluated)) {
+
+            GHashTable *attrs = action->node->details->attrs;
+
+            if (action->extra != NULL) {
+                g_hash_table_destroy(action->extra);
+            }
+            action->extra = pcmk__unpack_action_rsc_params(action->op_entry,
+                                                           attrs, scheduler);
+            pe__set_action_flags(action, pcmk_action_attrs_evaluated);
         }
 
-        update_resource_action_runnable(action, save_action, data_set);
+        update_resource_action_runnable(action, scheduler);
+        update_resource_flags_for_action(rsc, action);
+    }
 
-        if (save_action) {
-            update_resource_flags_for_action(rsc, action);
-        }
+    if (action->extra == NULL) {
+        action->extra = pcmk__strkey_table(free, free);
     }
 
     return action;
 }
 
-pe_action_t *
-get_pseudo_op(const char *name, pe_working_set_t * data_set)
+pcmk_action_t *
+get_pseudo_op(const char *name, pcmk_scheduler_t *scheduler)
 {
-    pe_action_t *op = lookup_singleton(data_set, name);
+    pcmk_action_t *op = lookup_singleton(scheduler, name);
 
     if (op == NULL) {
-        op = custom_action(NULL, strdup(name), name, NULL, TRUE, TRUE, data_set);
+        op = custom_action(NULL, strdup(name), name, NULL, TRUE, scheduler);
         pe__set_action_flags(op, pcmk_action_pseudo|pcmk_action_runnable);
     }
     return op;
@@ -1084,7 +1172,7 @@ static GList *
 find_unfencing_devices(GList *candidates, GList *matches) 
 {
     for (GList *gIter = candidates; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *candidate = gIter->data;
+        pcmk_resource_t *candidate = gIter->data;
 
         if (candidate->children != NULL) {
             matches = find_unfencing_devices(candidate->children, matches);
@@ -1106,8 +1194,8 @@ find_unfencing_devices(GList *candidates, GList *matches)
 }
 
 static int
-node_priority_fencing_delay(const pe_node_t *node,
-                            const pe_working_set_t *data_set)
+node_priority_fencing_delay(const pcmk_node_t *node,
+                            const pcmk_scheduler_t *scheduler)
 {
     int member_count = 0;
     int online_count = 0;
@@ -1116,7 +1204,7 @@ node_priority_fencing_delay(const pe_node_t *node,
     GList *gIter = NULL;
 
     // `priority-fencing-delay` is disabled
-    if (data_set->priority_fencing_delay <= 0) {
+    if (scheduler->priority_fencing_delay <= 0) {
         return 0;
     }
 
@@ -1131,8 +1219,8 @@ node_priority_fencing_delay(const pe_node_t *node,
         return 0;
     }
 
-    for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *n =  gIter->data;
+    for (gIter = scheduler->nodes; gIter != NULL; gIter = gIter->next) {
+        pcmk_node_t *n = gIter->data;
 
         if (n->details->type != pcmk_node_variant_cluster) {
             continue;
@@ -1170,56 +1258,58 @@ node_priority_fencing_delay(const pe_node_t *node,
         return 0;
     }
 
-    return data_set->priority_fencing_delay;
+    return scheduler->priority_fencing_delay;
 }
 
-pe_action_t *
-pe_fence_op(pe_node_t *node, const char *op, bool optional,
-            const char *reason, bool priority_delay, pe_working_set_t *data_set)
+pcmk_action_t *
+pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
+            const char *reason, bool priority_delay,
+            pcmk_scheduler_t *scheduler)
 {
     char *op_key = NULL;
-    pe_action_t *stonith_op = NULL;
+    pcmk_action_t *stonith_op = NULL;
 
     if(op == NULL) {
-        op = data_set->stonith_action;
+        op = scheduler->stonith_action;
     }
 
     op_key = crm_strdup_printf("%s-%s-%s",
                                PCMK_ACTION_STONITH, node->details->uname, op);
 
-    stonith_op = lookup_singleton(data_set, op_key);
+    stonith_op = lookup_singleton(scheduler, op_key);
     if(stonith_op == NULL) {
         stonith_op = custom_action(NULL, op_key, PCMK_ACTION_STONITH, node,
-                                   TRUE, TRUE, data_set);
+                                   TRUE, scheduler);
 
         add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET, node->details->uname);
         add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET_UUID, node->details->id);
         add_hash_param(stonith_op->meta, "stonith_action", op);
 
-        if (pcmk_is_set(data_set->flags, pcmk_sched_enable_unfencing)) {
+        if (pcmk_is_set(scheduler->flags, pcmk_sched_enable_unfencing)) {
             /* Extra work to detect device changes
              */
             GString *digests_all = g_string_sized_new(1024);
             GString *digests_secure = g_string_sized_new(1024);
 
-            GList *matches = find_unfencing_devices(data_set->resources, NULL);
+            GList *matches = find_unfencing_devices(scheduler->resources, NULL);
 
             char *key = NULL;
             char *value = NULL;
 
             for (GList *gIter = matches; gIter != NULL; gIter = gIter->next) {
-                pe_resource_t *match = gIter->data;
+                pcmk_resource_t *match = gIter->data;
                 const char *agent = g_hash_table_lookup(match->meta,
                                                         XML_ATTR_TYPE);
                 op_digest_cache_t *data = NULL;
 
-                data = pe__compare_fencing_digest(match, agent, node, data_set);
+                data = pe__compare_fencing_digest(match, agent, node,
+                                                  scheduler);
                 if (data->rc == pcmk__digest_mismatch) {
                     optional = FALSE;
                     crm_notice("Unfencing node %s because the definition of "
                                "%s changed", pe__node_name(node), match->id);
-                    if (!pcmk__is_daemon && data_set->priv != NULL) {
-                        pcmk__output_t *out = data_set->priv;
+                    if (!pcmk__is_daemon && scheduler->priv != NULL) {
+                        pcmk__output_t *out = scheduler->priv;
 
                         out->info(out,
                                   "notice: Unfencing node %s because the "
@@ -1252,7 +1342,7 @@ pe_fence_op(pe_node_t *node, const char *op, bool optional,
         free(op_key);
     }
 
-    if (data_set->priority_fencing_delay > 0
+    if (scheduler->priority_fencing_delay > 0
 
             /* It's a suitable case where `priority-fencing-delay` applies.
              * At least add `priority-fencing-delay` field as an indicator. */
@@ -1269,14 +1359,15 @@ pe_fence_op(pe_node_t *node, const char *op, bool optional,
              * the targeting node. So that it takes precedence over any possible
              * `pcmk_delay_base/max`.
              */
-            char *delay_s = pcmk__itoa(node_priority_fencing_delay(node, data_set));
+            char *delay_s = pcmk__itoa(node_priority_fencing_delay(node,
+                                                                   scheduler));
 
             g_hash_table_insert(stonith_op->meta,
                                 strdup(XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY),
                                 delay_s);
     }
 
-    if(optional == FALSE && pe_can_fence(data_set, node)) {
+    if(optional == FALSE && pe_can_fence(scheduler, node)) {
         pe__clear_action_flags(stonith_op, pcmk_action_optional);
         pe_action_set_reason(stonith_op, reason, false);
 
@@ -1288,13 +1379,13 @@ pe_fence_op(pe_node_t *node, const char *op, bool optional,
 }
 
 void
-pe_free_action(pe_action_t * action)
+pe_free_action(pcmk_action_t *action)
 {
     if (action == NULL) {
         return;
     }
-    g_list_free_full(action->actions_before, free);     /* pe_action_wrapper_t* */
-    g_list_free_full(action->actions_after, free);      /* pe_action_wrapper_t* */
+    g_list_free_full(action->actions_before, free);
+    g_list_free_full(action->actions_after, free);
     if (action->extra) {
         g_hash_table_destroy(action->extra);
     }
@@ -1310,7 +1401,8 @@ pe_free_action(pe_action_t * action)
 }
 
 int
-pe_get_configured_timeout(pe_resource_t *rsc, const char *action, pe_working_set_t *data_set)
+pe_get_configured_timeout(pcmk_resource_t *rsc, const char *action,
+                          pcmk_scheduler_t *scheduler)
 {
     xmlNode *child = NULL;
     GHashTable *action_meta = NULL;
@@ -1320,7 +1412,7 @@ pe_get_configured_timeout(pe_resource_t *rsc, const char *action, pe_working_set
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
         .role = pcmk_role_unknown,
-        .now = data_set->now,
+        .now = scheduler->now,
         .match_data = NULL,
         .rsc_data = NULL,
         .op_data = NULL
@@ -1335,10 +1427,11 @@ pe_get_configured_timeout(pe_resource_t *rsc, const char *action, pe_working_set
         }
     }
 
-    if (timeout_spec == NULL && data_set->op_defaults) {
+    if (timeout_spec == NULL && scheduler->op_defaults) {
         action_meta = pcmk__strkey_table(free, free);
-        pe__unpack_dataset_nvpairs(data_set->op_defaults, XML_TAG_META_SETS,
-                                   &rule_data, action_meta, NULL, FALSE, data_set);
+        pe__unpack_dataset_nvpairs(scheduler->op_defaults, XML_TAG_META_SETS,
+                                   &rule_data, action_meta, NULL, FALSE,
+                                   scheduler);
         timeout_spec = g_hash_table_lookup(action_meta, XML_ATTR_TIMEOUT);
     }
 
@@ -1357,7 +1450,7 @@ pe_get_configured_timeout(pe_resource_t *rsc, const char *action, pe_working_set
 }
 
 enum action_tasks
-get_complex_task(const pe_resource_t *rsc, const char *name)
+get_complex_task(const pcmk_resource_t *rsc, const char *name)
 {
     enum action_tasks task = text2task(name);
 
@@ -1389,14 +1482,14 @@ get_complex_task(const pe_resource_t *rsc, const char *name)
  *
  * \return First action in list that matches criteria, or NULL if none
  */
-pe_action_t *
+pcmk_action_t *
 find_first_action(const GList *input, const char *uuid, const char *task,
-                  const pe_node_t *on_node)
+                  const pcmk_node_t *on_node)
 {
     CRM_CHECK(uuid || task, return NULL);
 
     for (const GList *gIter = input; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
+        pcmk_action_t *action = (pcmk_action_t *) gIter->data;
 
         if (uuid != NULL && !pcmk__str_eq(uuid, action->uuid, pcmk__str_casei)) {
             continue;
@@ -1419,7 +1512,7 @@ find_first_action(const GList *input, const char *uuid, const char *task,
 }
 
 GList *
-find_actions(GList *input, const char *key, const pe_node_t *on_node)
+find_actions(GList *input, const char *key, const pcmk_node_t *on_node)
 {
     GList *gIter = input;
     GList *result = NULL;
@@ -1427,7 +1520,7 @@ find_actions(GList *input, const char *key, const pe_node_t *on_node)
     CRM_CHECK(key != NULL, return NULL);
 
     for (; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
+        pcmk_action_t *action = (pcmk_action_t *) gIter->data;
 
         if (!pcmk__str_eq(key, action->uuid, pcmk__str_casei)) {
             continue;
@@ -1453,7 +1546,7 @@ find_actions(GList *input, const char *key, const pe_node_t *on_node)
 }
 
 GList *
-find_actions_exact(GList *input, const char *key, const pe_node_t *on_node)
+find_actions_exact(GList *input, const char *key, const pcmk_node_t *on_node)
 {
     GList *result = NULL;
 
@@ -1464,7 +1557,7 @@ find_actions_exact(GList *input, const char *key, const pe_node_t *on_node)
     }
 
     for (GList *gIter = input; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
+        pcmk_action_t *action = (pcmk_action_t *) gIter->data;
 
         if ((action->node != NULL)
             && pcmk__str_eq(key, action->uuid, pcmk__str_casei)
@@ -1492,7 +1585,7 @@ find_actions_exact(GList *input, const char *key, const pe_node_t *on_node)
  *       without a node will be assigned to node.
  */
 GList *
-pe__resource_actions(const pe_resource_t *rsc, const pe_node_t *node,
+pe__resource_actions(const pcmk_resource_t *rsc, const pcmk_node_t *node,
                      const char *task, bool require_node)
 {
     GList *result = NULL;
@@ -1518,7 +1611,7 @@ pe__resource_actions(const pe_resource_t *rsc, const pe_node_t *node,
  * \note It is the caller's responsibility to free() the result.
  */
 char *
-pe__action2reason(const pe_action_t *action, enum pe_action_flags flag)
+pe__action2reason(const pcmk_action_t *action, enum pe_action_flags flag)
 {
     const char *change = NULL;
 
@@ -1543,7 +1636,8 @@ pe__action2reason(const pe_action_t *action, enum pe_action_flags flag)
                              action->task);
 }
 
-void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrite) 
+void pe_action_set_reason(pcmk_action_t *action, const char *reason,
+                          bool overwrite)
 {
     if (action->reason != NULL && overwrite) {
         pe_rsc_trace(action->rsc, "Changing %s reason from '%s' to '%s'",
@@ -1567,12 +1661,12 @@ void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrit
  * \param[in]     node      Node to clear history on
  */
 void
-pe__clear_resource_history(pe_resource_t *rsc, const pe_node_t *node)
+pe__clear_resource_history(pcmk_resource_t *rsc, const pcmk_node_t *node)
 {
     CRM_ASSERT((rsc != NULL) && (node != NULL));
 
     custom_action(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_LRM_DELETE, 0),
-                  PCMK_ACTION_LRM_DELETE, node, FALSE, TRUE, rsc->cluster);
+                  PCMK_ACTION_LRM_DELETE, node, FALSE, rsc->cluster);
 }
 
 #define sort_return(an_int, why) do {					\
@@ -1737,16 +1831,16 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
  *
  * \return New action object corresponding to arguments
  */
-pe_action_t *
-pe__new_rsc_pseudo_action(pe_resource_t *rsc, const char *task, bool optional,
+pcmk_action_t *
+pe__new_rsc_pseudo_action(pcmk_resource_t *rsc, const char *task, bool optional,
                           bool runnable)
 {
-    pe_action_t *action = NULL;
+    pcmk_action_t *action = NULL;
 
     CRM_ASSERT((rsc != NULL) && (task != NULL));
 
     action = custom_action(rsc, pcmk__op_key(rsc->id, task, 0), task, NULL,
-                           optional, TRUE, rsc->cluster);
+                           optional, rsc->cluster);
     pe__set_action_flags(action, pcmk_action_pseudo);
     if (runnable) {
         pe__set_action_flags(action, pcmk_action_runnable);
@@ -1764,7 +1858,7 @@ pe__new_rsc_pseudo_action(pe_resource_t *rsc, const char *task, bool optional,
  * \note This is more efficient than calling add_hash_param().
  */
 void
-pe__add_action_expected_result(pe_action_t *action, int expected_result)
+pe__add_action_expected_result(pcmk_action_t *action, int expected_result)
 {
     char *name = NULL;
 

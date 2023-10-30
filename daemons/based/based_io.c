@@ -195,7 +195,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     const char *name = NULL;
     const char *value = NULL;
     const char *validation = NULL;
-    const char *use_valgrind = getenv("PCMK_valgrind_enabled");
+    const char *use_valgrind = pcmk__env_option(PCMK__ENV_VALGRIND_ENABLED);
 
     xmlNode *root = NULL;
     xmlNode *status = NULL;

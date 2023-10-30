@@ -493,26 +493,28 @@ main(int argc, char **argv, char **envp)
     pcmk__cli_init_logging(EXECD_NAME, args->verbosity);
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
 
+    // ocf_log() (in resource-agents) uses the capitalized env options below
     option = pcmk__env_option(PCMK__ENV_LOGFACILITY);
     if (!pcmk__str_eq(option, PCMK__VALUE_NONE,
                       pcmk__str_casei|pcmk__str_null_matches)
         && !pcmk__str_eq(option, "/dev/null", pcmk__str_none)) {
-        setenv("HA_LOGFACILITY", option, 1);  /* Used by the ocf_log/ha_log OCF macro */
+
+        pcmk__set_env_option("LOGFACILITY", option, true);
     }
 
     option = pcmk__env_option(PCMK__ENV_LOGFILE);
     if (!pcmk__str_eq(option, PCMK__VALUE_NONE,
                       pcmk__str_casei|pcmk__str_null_matches)) {
-        setenv("HA_LOGFILE", option, 1);      /* Used by the ocf_log/ha_log OCF macro */
+        pcmk__set_env_option("LOGFILE", option, true);
 
         if (pcmk__env_option_enabled(crm_system_name, PCMK__ENV_DEBUG)) {
-            setenv("HA_DEBUGLOG", option, 1); /* Used by the ocf_log/ha_debug OCF macro */
+            pcmk__set_env_option("DEBUGLOG", option, true);
         }
     }
 
 #ifdef PCMK__COMPILE_REMOTE
     if (options.port != NULL) {
-        setenv("PCMK_remote_port", options.port, 1);
+        pcmk__set_env_option(PCMK__ENV_REMOTE_PORT, options.port, false);
     }
 #endif  // PCMK__COMPILE_REMOTE
 

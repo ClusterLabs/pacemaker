@@ -44,7 +44,9 @@ class StopTest(CTSTest):
             return self.skipped()
 
         # Technically we should always be able to notice ourselves stopping
-        patterns = [ self.templates["Pat:We_stopped"] % node ]
+        patterns = [
+            self.templates["Pat:We_stopped"] % node,
+        ]
 
         # Any active node needs to notice this one left
         # (note that this won't work if we have multiple partitions)
@@ -79,8 +81,8 @@ class StopTest(CTSTest):
                 self.debug(line)
 
             for regex in watch.unmatched:
-                self._logger.log ("ERROR: Shutdown pattern not found: %s" % regex)
-                unmatched_str +=  "%s||" % regex
+                self._logger.log("ERROR: Shutdown pattern not found: %s" % regex)
+                unmatched_str += "%s||" % regex
                 failreason = "Missing shutdown pattern"
 
         self._cm.cluster_stable(self._env["DeadTime"])

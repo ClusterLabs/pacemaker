@@ -614,7 +614,7 @@ struct qb_ipcs_poll_handlers gio_poll_funcs = {
 static enum qb_ipc_type
 pick_ipc_type(enum qb_ipc_type requested)
 {
-    const char *env = getenv("PCMK_ipc_type");
+    const char *env = pcmk__env_option(PCMK__ENV_IPC_TYPE);
 
     if (env && strcmp("shared-mem", env) == 0) {
         return QB_IPC_SHM;
@@ -658,8 +658,8 @@ mainloop_add_ipc_server_with_prio(const char *name, enum qb_ipc_type type,
     server = qb_ipcs_create(name, 0, pick_ipc_type(type), callbacks);
 
     if (server == NULL) {
-        rc = errno;
-        crm_err("Could not create %s IPC server: %s (%d)", name, pcmk_rc_str(errno), errno);
+        crm_err("Could not create %s IPC server: %s (%d)",
+                name, pcmk_rc_str(errno), errno);
         return NULL;
     }
 

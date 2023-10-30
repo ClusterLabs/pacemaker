@@ -17,7 +17,7 @@
 #include "libpacemaker_private.h"
 
 struct assign_data {
-    const pe_node_t *prefer;
+    const pcmk_node_t *prefer;
     bool stop_if_fail;
 };
 
@@ -33,14 +33,14 @@ struct assign_data {
 static bool
 assign_replica(pe__bundle_replica_t *replica, void *user_data)
 {
-    pe_node_t *container_host = NULL;
+    pcmk_node_t *container_host = NULL;
 
     struct assign_data *assign_data = user_data;
-    const pe_node_t *prefer = assign_data->prefer;
+    const pcmk_node_t *prefer = assign_data->prefer;
     bool stop_if_fail = assign_data->stop_if_fail;
 
-    const pe_resource_t *bundle = pe__const_top_resource(replica->container,
-                                                         true);
+    const pcmk_resource_t *bundle = pe__const_top_resource(replica->container,
+                                                           true);
 
     if (replica->ip != NULL) {
         pe_rsc_trace(bundle, "Assigning bundle %s IP %s",
@@ -66,7 +66,7 @@ assign_replica(pe__bundle_replica_t *replica, void *user_data)
     }
 
     if (replica->child != NULL) {
-        pe_node_t *node = NULL;
+        pcmk_node_t *node = NULL;
         GHashTableIter iter;
 
         g_hash_table_iter_init(&iter, replica->child->allowed_nodes);
@@ -107,12 +107,12 @@ assign_replica(pe__bundle_replica_t *replica, void *user_data)
  *       as calling pcmk__unassign_resource(); there are no side effects on
  *       roles or actions.
  */
-pe_node_t *
-pcmk__bundle_assign(pe_resource_t *rsc, const pe_node_t *prefer,
+pcmk_node_t *
+pcmk__bundle_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
                     bool stop_if_fail)
 {
     GList *containers = NULL;
-    pe_resource_t *bundled_resource = NULL;
+    pcmk_resource_t *bundled_resource = NULL;
     struct assign_data assign_data = { prefer, stop_if_fail };
 
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
@@ -136,7 +136,7 @@ pcmk__bundle_assign(pe_resource_t *rsc, const pe_node_t *prefer,
     // Finally, assign the bundled resources to each bundle node
     bundled_resource = pe__bundled_resource(rsc);
     if (bundled_resource != NULL) {
-        pe_node_t *node = NULL;
+        pcmk_node_t *node = NULL;
         GHashTableIter iter;
 
         g_hash_table_iter_init(&iter, bundled_resource->allowed_nodes);
@@ -185,11 +185,11 @@ create_replica_actions(pe__bundle_replica_t *replica, void *user_data)
  * \param[in,out] rsc  Bundle resource to create actions for
  */
 void
-pcmk__bundle_create_actions(pe_resource_t *rsc)
+pcmk__bundle_create_actions(pcmk_resource_t *rsc)
 {
-    pe_action_t *action = NULL;
+    pcmk_action_t *action = NULL;
     GList *containers = NULL;
-    pe_resource_t *bundled_resource = NULL;
+    pcmk_resource_t *bundled_resource = NULL;
 
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
 
@@ -229,7 +229,7 @@ pcmk__bundle_create_actions(pe_resource_t *rsc)
 static bool
 replica_internal_constraints(pe__bundle_replica_t *replica, void *user_data)
 {
-    pe_resource_t *bundle = user_data;
+    pcmk_resource_t *bundle = user_data;
 
     replica->container->cmds->internal_constraints(replica->container);
 
@@ -294,9 +294,9 @@ replica_internal_constraints(pe__bundle_replica_t *replica, void *user_data)
  * \param[in,out] rsc  Bundle resource to create implicit constraints for
  */
 void
-pcmk__bundle_internal_constraints(pe_resource_t *rsc)
+pcmk__bundle_internal_constraints(pcmk_resource_t *rsc)
 {
-    pe_resource_t *bundled_resource = NULL;
+    pcmk_resource_t *bundled_resource = NULL;
 
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
 
@@ -356,8 +356,8 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
 }
 
 struct match_data {
-    const pe_node_t *node;     // Node to compare against replica
-    pe_resource_t *container;  // Replica container corresponding to node
+    const pcmk_node_t *node;    // Node to compare against replica
+    pcmk_resource_t *container; // Replica container corresponding to node
 };
 
 /*!
@@ -392,11 +392,11 @@ match_replica_container(const pe__bundle_replica_t *replica, void *user_data)
  * \return Node to which the container for \p node is assigned if \p node is a
  *         bundle node, otherwise \p node itself
  */
-static const pe_node_t *
-get_bundle_node_host(const pe_node_t *node)
+static const pcmk_node_t *
+get_bundle_node_host(const pcmk_node_t *node)
 {
     if (pe__is_bundle_node(node)) {
-        const pe_resource_t *container = node->details->remote_rsc->container;
+        const pcmk_resource_t *container = node->details->remote_rsc->container;
 
         return container->fns->location(container, NULL, 0);
     }
@@ -414,9 +414,9 @@ get_bundle_node_host(const pe_node_t *node)
  *         if assigned, otherwise assigned to any of dependent's allowed nodes,
  *         otherwise NULL.
  */
-static pe_resource_t *
-compatible_container(const pe_resource_t *dependent,
-                     const pe_resource_t *bundle)
+static pcmk_resource_t *
+compatible_container(const pcmk_resource_t *dependent,
+                     const pcmk_resource_t *bundle)
 {
     GList *scratch = NULL;
     struct match_data match_data = { NULL, NULL };
@@ -452,7 +452,7 @@ compatible_container(const pe_resource_t *dependent,
 
 struct coloc_data {
     const pcmk__colocation_t *colocation;
-    pe_resource_t *dependent;
+    pcmk_resource_t *dependent;
     GList *container_hosts;
 };
 
@@ -469,7 +469,7 @@ static bool
 replica_apply_coloc_score(const pe__bundle_replica_t *replica, void *user_data)
 {
     struct coloc_data *coloc_data = user_data;
-    pe_node_t *chosen = NULL;
+    pcmk_node_t *chosen = NULL;
 
     if (coloc_data->colocation->score < INFINITY) {
         replica->container->cmds->apply_coloc_score(coloc_data->dependent,
@@ -514,8 +514,8 @@ replica_apply_coloc_score(const pe__bundle_replica_t *replica, void *user_data)
  * \param[in]     for_dependent  true if called on behalf of dependent
  */
 void
-pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
-                               const pe_resource_t *primary,
+pcmk__bundle_apply_coloc_score(pcmk_resource_t *dependent,
+                               const pcmk_resource_t *primary,
                                const pcmk__colocation_t *colocation,
                                bool for_dependent)
 {
@@ -546,9 +546,9 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
      * of its instances. Look for a compatible instance of this bundle.
      */
     if (colocation->dependent->variant > pcmk_rsc_variant_group) {
-        const pe_resource_t *primary_container = compatible_container(dependent,
-                                                                      primary);
+        const pcmk_resource_t *primary_container = NULL;
 
+        primary_container = compatible_container(dependent, primary);
         if (primary_container != NULL) { // Success, we found one
             pe_rsc_debug(primary, "Pairing %s with %s",
                          dependent->id, primary_container->id);
@@ -579,12 +579,12 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
     g_list_free(coloc_data.container_hosts);
 }
 
-// Bundle implementation of resource_alloc_functions_t:with_this_colocations()
+// Bundle implementation of pcmk_assignment_methods_t:with_this_colocations()
 void
-pcmk__with_bundle_colocations(const pe_resource_t *rsc,
-                              const pe_resource_t *orig_rsc, GList **list)
+pcmk__with_bundle_colocations(const pcmk_resource_t *rsc,
+                              const pcmk_resource_t *orig_rsc, GList **list)
 {
-    const pe_resource_t *bundled_rsc = NULL;
+    const pcmk_resource_t *bundled_rsc = NULL;
 
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle)
                && (orig_rsc != NULL) && (list != NULL));
@@ -624,12 +624,12 @@ pcmk__with_bundle_colocations(const pe_resource_t *rsc,
     }
 }
 
-// Bundle implementation of resource_alloc_functions_t:this_with_colocations()
+// Bundle implementation of pcmk_assignment_methods_t:this_with_colocations()
 void
-pcmk__bundle_with_colocations(const pe_resource_t *rsc,
-                              const pe_resource_t *orig_rsc, GList **list)
+pcmk__bundle_with_colocations(const pcmk_resource_t *rsc,
+                              const pcmk_resource_t *orig_rsc, GList **list)
 {
-    const pe_resource_t *bundled_rsc = NULL;
+    const pcmk_resource_t *bundled_rsc = NULL;
 
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle)
                && (orig_rsc != NULL) && (list != NULL));
@@ -679,11 +679,11 @@ pcmk__bundle_with_colocations(const pe_resource_t *rsc,
  * \return Flags appropriate to \p action on \p node
  */
 uint32_t
-pcmk__bundle_action_flags(pe_action_t *action, const pe_node_t *node)
+pcmk__bundle_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
 {
     GList *containers = NULL;
     uint32_t flags = 0;
-    pe_resource_t *bundled_resource = NULL;
+    pcmk_resource_t *bundled_resource = NULL;
 
     CRM_ASSERT((action != NULL) && (action->rsc != NULL)
                && (action->rsc->variant == pcmk_rsc_variant_bundle));
@@ -744,9 +744,9 @@ apply_location_to_replica(pe__bundle_replica_t *replica, void *user_data)
  * \param[in,out] location  Location constraint to apply
  */
 void
-pcmk__bundle_apply_location(pe_resource_t *rsc, pe__location_t *location)
+pcmk__bundle_apply_location(pcmk_resource_t *rsc, pe__location_t *location)
 {
-    pe_resource_t *bundled_resource = NULL;
+    pcmk_resource_t *bundled_resource = NULL;
 
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle)
                && (location != NULL));
@@ -809,7 +809,7 @@ add_replica_actions_to_graph(pe__bundle_replica_t *replica, void *user_data)
                                  strdup(XML_RSC_ATTR_REMOTE_RA_ADDR),
                                  strdup(calculated_addr));
         } else {
-            pe_resource_t *bundle = user_data;
+            pcmk_resource_t *bundle = user_data;
 
             /* The only way to get here is if the remote connection is
              * neither currently running nor scheduled to run. That means we
@@ -842,9 +842,9 @@ add_replica_actions_to_graph(pe__bundle_replica_t *replica, void *user_data)
  * \param[in,out] rsc  Bundle resource whose actions should be added
  */
 void
-pcmk__bundle_add_actions_to_graph(pe_resource_t *rsc)
+pcmk__bundle_add_actions_to_graph(pcmk_resource_t *rsc)
 {
-    pe_resource_t *bundled_resource = NULL;
+    pcmk_resource_t *bundled_resource = NULL;
 
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
 
@@ -856,9 +856,9 @@ pcmk__bundle_add_actions_to_graph(pe_resource_t *rsc)
 }
 
 struct probe_data {
-    pe_resource_t *bundle;  // Bundle being probed
-    pe_node_t *node;        // Node to create probes on
-    bool any_created;       // Whether any probes have been created
+    pcmk_resource_t *bundle;    // Bundle being probed
+    pcmk_node_t *node;          // Node to create probes on
+    bool any_created;           // Whether any probes have been created
 };
 
 /*!
@@ -944,9 +944,9 @@ create_replica_probes(pe__bundle_replica_t *replica, void *user_data)
          */
         char *probe_uuid = pcmk__op_key(replica->remote->id,
                                         PCMK_ACTION_MONITOR, 0);
-        pe_action_t *probe = find_first_action(replica->remote->actions,
-                                               probe_uuid, NULL,
-                                               probe_data->node);
+        pcmk_action_t *probe = find_first_action(replica->remote->actions,
+                                                 probe_uuid, NULL,
+                                                 probe_data->node);
 
         free(probe_uuid);
         if (probe != NULL) {
@@ -975,7 +975,7 @@ create_replica_probes(pe__bundle_replica_t *replica, void *user_data)
  * \return true if any probe was created, otherwise false
  */
 bool
-pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node)
+pcmk__bundle_create_probe(pcmk_resource_t *rsc, pcmk_node_t *node)
 {
     struct probe_data probe_data = { rsc, node, false };
 
@@ -1018,19 +1018,19 @@ output_replica_actions(pe__bundle_replica_t *replica, void *user_data)
  * \param[in,out] rsc  Bundle resource to output actions for
  */
 void
-pcmk__output_bundle_actions(pe_resource_t *rsc)
+pcmk__output_bundle_actions(pcmk_resource_t *rsc)
 {
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
     pe__foreach_bundle_replica(rsc, output_replica_actions, NULL);
 }
 
-// Bundle implementation of resource_alloc_functions_t:add_utilization()
+// Bundle implementation of pcmk_assignment_methods_t:add_utilization()
 void
-pcmk__bundle_add_utilization(const pe_resource_t *rsc,
-                             const pe_resource_t *orig_rsc, GList *all_rscs,
+pcmk__bundle_add_utilization(const pcmk_resource_t *rsc,
+                             const pcmk_resource_t *orig_rsc, GList *all_rscs,
                              GHashTable *utilization)
 {
-    pe_resource_t *container = NULL;
+    pcmk_resource_t *container = NULL;
 
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
 
@@ -1049,9 +1049,9 @@ pcmk__bundle_add_utilization(const pe_resource_t *rsc,
     }
 }
 
-// Bundle implementation of resource_alloc_functions_t:shutdown_lock()
+// Bundle implementation of pcmk_assignment_methods_t:shutdown_lock()
 void
-pcmk__bundle_shutdown_lock(pe_resource_t *rsc)
+pcmk__bundle_shutdown_lock(pcmk_resource_t *rsc)
 {
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
     // Bundles currently don't support shutdown locks

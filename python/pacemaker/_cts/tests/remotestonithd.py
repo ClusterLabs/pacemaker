@@ -52,9 +52,11 @@ class RemoteStonithd(RemoteDriver):
     def errors_to_ignore(self):
         """ Return list of errors which should be ignored """
 
-        return [ r"Lost connection to Pacemaker Remote node",
-                 r"Software caused connection abort",
-                 r"pacemaker-controld.*:\s+error.*: Operation remote-.*_monitor",
-                 r"pacemaker-controld.*:\s+error.*: Result of monitor operation for remote-.*",
-                 r"schedulerd.*:\s+Recover\s+remote-.*\s+\(.*\)",
-                 r"error: Result of monitor operation for .* on remote-.*: Internal communication failure" ] + super().errors_to_ignore
+        return [
+            r"Lost connection to Pacemaker Remote node",
+            r"Software caused connection abort",
+            r"pacemaker-controld.*:\s+error.*: Operation remote-.*_monitor",
+            r"pacemaker-controld.*:\s+error.*: Result of monitor operation for remote-.*",
+            r"schedulerd.*:\s+Recover\s+remote-.*\s+\(.*\)",
+            r"error: Result of monitor operation for .* on remote-.*: Internal communication failure"
+        ] + super().errors_to_ignore

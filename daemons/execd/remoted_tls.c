@@ -348,7 +348,7 @@ lrmd_init_remote_tls_server(void)
     int port = crm_default_remote_port();
     struct addrinfo *res = NULL, *iter;
     gnutls_datum_t psk_key = { NULL, 0 };
-    const char *bind_name = getenv("PCMK_remote_address");
+    const char *bind_name = pcmk__env_option(PCMK__ENV_REMOTE_ADDRESS);
 
     static struct mainloop_fd_callbacks remote_listen_fd_callbacks = {
         .dispatch = lrmd_remote_listen,
