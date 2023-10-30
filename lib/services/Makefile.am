@@ -14,7 +14,7 @@ AM_CPPFLAGS			= -I$(top_srcdir)/include
 lib_LTLIBRARIES			= libcrmservice.la
 noinst_HEADERS			= $(wildcard *.h)
 
-libcrmservice_la_LDFLAGS	= -version-info 31:2:3
+libcrmservice_la_LDFLAGS	= -version-info 32:0:4
 libcrmservice_la_CFLAGS		=
 
 libcrmservice_la_CFLAGS		+= $(CFLAGS_HARDENED_LIB)
