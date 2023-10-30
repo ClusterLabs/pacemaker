@@ -364,7 +364,7 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
         first = order->action1;
         then = order->action2;
         if (((first == NULL) && (order->task1 == NULL))
-            || ((then == NULL) && (order->rh_action_task == NULL))) {
+            || ((then == NULL) && (order->task2 == NULL))) {
             continue;
         }
 
@@ -388,7 +388,7 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
                                                pcmk__str_none)) {
                 continue;
             } else if ((then == NULL)
-                       && pcmk__ends_with(order->rh_action_task,
+                       && pcmk__ends_with(order->task2,
                                           "_" PCMK_ACTION_STOP "_0")) {
                 continue;
             }
@@ -420,8 +420,8 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
             then_actions = g_list_prepend(NULL, then);
 
         } else if (order->rsc2 != NULL) {
-            then_actions = find_actions(order->rsc2->actions,
-                                        order->rh_action_task, NULL);
+            then_actions = find_actions(order->rsc2->actions, order->task2,
+                                        NULL);
             if (then_actions == NULL) { // There aren't any
                 g_list_free(probes);
                 continue;
@@ -431,7 +431,7 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
         crm_trace("Implying 'probe then' orderings for '%s then %s' "
                   "(id=%d, type=%.6x)",
                   ((first == NULL)? order->task1 : first->uuid),
-                  ((then == NULL)? order->rh_action_task : then->uuid),
+                  ((then == NULL)? order->task2 : then->uuid),
                   order->id, order->flags);
 
         for (GList *probe_iter = probes; probe_iter != NULL;

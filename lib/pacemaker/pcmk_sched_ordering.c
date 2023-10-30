@@ -551,14 +551,14 @@ pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
     order->action1 = first_action;
     order->action2 = then_action;
     order->task1 = first_action_task;
-    order->rh_action_task = then_action_task;
+    order->task2 = then_action_task;
 
     if ((order->task1 == NULL) && (first_action != NULL)) {
         order->task1 = strdup(first_action->uuid);
     }
 
-    if ((order->rh_action_task == NULL) && (then_action != NULL)) {
-        order->rh_action_task = strdup(then_action->uuid);
+    if ((order->task2 == NULL) && (then_action != NULL)) {
+        order->task2 = strdup(then_action->uuid);
     }
 
     if ((order->rsc1 == NULL) && (first_action != NULL)) {
@@ -572,7 +572,7 @@ pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
     pe_rsc_trace(first_rsc, "Created ordering %d for %s then %s",
                  (sched->order_id - 1),
                  pcmk__s(order->task1, "an underspecified action"),
-                 pcmk__s(order->rh_action_task, "an underspecified action"));
+                 pcmk__s(order->task2, "an underspecified action"));
 
     sched->ordering_constraints = g_list_prepend(sched->ordering_constraints,
                                                  order);
@@ -1240,12 +1240,12 @@ order_resource_actions_after(pcmk_action_t *first_action,
         then_actions = g_list_prepend(NULL, order->action2);
 
     } else {
-        then_actions = find_actions_by_task(rsc, order->rh_action_task);
+        then_actions = find_actions_by_task(rsc, order->task2);
     }
 
     if (then_actions == NULL) {
         pe_rsc_trace(rsc, "Ignoring ordering %d: no %s actions found for %s",
-                     order->id, order->rh_action_task, rsc->id);
+                     order->id, order->task2, rsc->id);
         return;
     }
 
@@ -1254,7 +1254,7 @@ order_resource_actions_after(pcmk_action_t *first_action,
 
         pe_rsc_trace(rsc,
                      "Detected dangling migration ordering (%s then %s %s)",
-                     first_action->uuid, order->rh_action_task, rsc->id);
+                     first_action->uuid, order->task2, rsc->id);
         pe__clear_order_flags(flags, pcmk__ar_first_implies_then);
     }
 

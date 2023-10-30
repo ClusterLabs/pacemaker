@@ -284,7 +284,7 @@ pcmk__order_migration_equivalents(pcmk__action_relation_t *order)
 
     // Check which actions are involved
     first_task = task_from_action_or_key(order->action1, order->task1);
-    then_task = task_from_action_or_key(order->action2, order->rh_action_task);
+    then_task = task_from_action_or_key(order->action2, order->task2);
 
     if (pcmk__str_eq(first_task, PCMK_ACTION_START, pcmk__str_none)
         && pcmk__str_eq(then_task, PCMK_ACTION_START, pcmk__str_none)) {
