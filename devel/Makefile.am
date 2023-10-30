@@ -164,6 +164,8 @@ coverity-clean:
 
 ## cppcheck
 
+GLIB_CFLAGS	?= $(pkg-config --cflags glib-2.0)
+
 # Use CPPCHECK_ARGS to pass extra cppcheck options, e.g.:
 # --enable={warning,style,performance,portability,information,all}
 # --inconclusive --std=posix

@@ -22,14 +22,6 @@ attrd_election_cb(gpointer user_data)
 {
     attrd_declare_winner();
 
-    if (attrd_shutting_down(true)) {
-        /* This node is shutting down or about to, meaning its attributes will
-         * be removed (and may have already been removed from the CIB by a
-         * controller). Don't sync or write its attributes in this case.
-         */
-        return G_SOURCE_REMOVE;
-    }
-
     /* Update the peers after an election */
     attrd_peer_sync(NULL, NULL);
 

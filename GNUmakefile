@@ -18,8 +18,6 @@ default: build
 # directory if a relevant variable hasn't been defined.
 abs_srcdir	?= $(shell pwd)
 
-GLIB_CFLAGS	?= $(pkg-config --cflags glib-2.0)
-
 PACKAGE		?= pacemaker
 
 .PHONY: init

@@ -540,11 +540,9 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
 
     value = g_hash_table_lookup(action->params, "CRM_meta_can_fail");
     if (value != NULL) {
-
         int can_fail = 0;
 
-        crm_str_to_boolean(value, &can_fail);
-        if (can_fail) {
+        if ((crm_str_to_boolean(value, &can_fail) > 0) && (can_fail > 0)) {
             pcmk__set_graph_action_flags(action, pcmk__graph_action_can_fail);
         } else {
             pcmk__clear_graph_action_flags(action, pcmk__graph_action_can_fail);

@@ -417,10 +417,7 @@ crm_is_true(const char *s)
 {
     gboolean ret = FALSE;
 
-    if (s != NULL) {
-        crm_str_to_boolean(s, &ret);
-    }
-    return ret;
+    return (crm_str_to_boolean(s, &ret) < 0)? FALSE : ret;
 }
 
 int

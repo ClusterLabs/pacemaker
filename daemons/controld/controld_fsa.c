@@ -205,7 +205,6 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         fsa_data->data_type = fsa_dt_none;
         controld_globals.fsa_message_queue
             = g_list_append(controld_globals.fsa_message_queue, fsa_data);
-        fsa_data = NULL;
     }
     while ((controld_globals.fsa_message_queue != NULL)
            && !pcmk_is_set(controld_globals.flags, controld_fsa_is_stalled)) {
@@ -275,7 +274,6 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         /* start doing things... */
         s_crmd_fsa_actions(fsa_data);
         delete_fsa_input(fsa_data);
-        fsa_data = NULL;
     }
 
     if ((controld_globals.fsa_message_queue != NULL)
