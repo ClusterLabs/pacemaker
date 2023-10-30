@@ -549,7 +549,7 @@ pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
     order->rsc1 = first_rsc;
     order->rsc2 = then_rsc;
     order->action1 = first_action;
-    order->rh_action = then_action;
+    order->action2 = then_action;
     order->lh_action_task = first_action_task;
     order->rh_action_task = then_action_task;
 
@@ -1236,8 +1236,8 @@ order_resource_actions_after(pcmk_action_t *first_action,
     pe_rsc_trace(rsc, "Applying ordering %d for 'then' resource %s",
                  order->id, rsc->id);
 
-    if (order->rh_action != NULL) {
-        then_actions = g_list_prepend(NULL, order->rh_action);
+    if (order->action2 != NULL) {
+        then_actions = g_list_prepend(NULL, order->action2);
 
     } else {
         then_actions = find_actions_by_task(rsc, order->rh_action_task);
@@ -1344,18 +1344,18 @@ rsc_order_first(pcmk_resource_t *first_rsc, pcmk__action_relation_t *order)
     }
 
     if (then_rsc == NULL) {
-        if (order->rh_action == NULL) {
+        if (order->action2 == NULL) {
             pe_rsc_trace(first_rsc, "Ignoring constraint %d: then not found",
                          order->id);
             return;
         }
-        then_rsc = order->rh_action->rsc;
+        then_rsc = order->action2->rsc;
     }
     for (GList *iter = first_actions; iter != NULL; iter = iter->next) {
         first_action = iter->data;
 
         if (then_rsc == NULL) {
-            order_actions(first_action, order->rh_action, order->flags);
+            order_actions(first_action, order->action2, order->flags);
 
         } else {
             order_resource_actions_after(first_action, then_rsc, order);
@@ -1423,7 +1423,7 @@ pcmk__apply_orderings(pcmk_scheduler_t *sched)
         } else {
             crm_trace("Applying ordering constraint %d (non-resource actions)",
                       order->id);
-            order_actions(order->action1, order->rh_action, order->flags);
+            order_actions(order->action1, order->action2, order->flags);
         }
     }
 

@@ -138,7 +138,7 @@ typedef struct {
     pcmk_action_t *action1;     // First action in relation
     char *lh_action_task;       // Action name or key for first action
     pcmk_resource_t *rsc2;      // Resource for second action, if any
-    pcmk_action_t *rh_action;   // 'Then' action in relation
+    pcmk_action_t *action2;     // Second action in relation
     char *rh_action_task;       // Action name or key for 'then' action
 } pcmk__action_relation_t;
 
