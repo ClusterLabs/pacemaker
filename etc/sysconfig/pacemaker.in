@@ -276,7 +276,7 @@
 # the value must be lowered in order for the client's GnuTLS library to accept
 # a connection to an older server.
 # 
-# Default: PCMK_dh_min_bits="1024"
+# Default: PCMK_dh_min_bits="0" (no minimum)
 
 # PCMK_dh_max_bits (Advanced Use Only)
 #
@@ -293,7 +293,7 @@
 #
 # Clients do not use PCMK_dh_max_bits.
 #
-# Default: PCMK_dh_max_bits="2048"
+# Default: PCMK_dh_max_bits="0" (no maximum)
 
 
 ## Inter-process Communication
