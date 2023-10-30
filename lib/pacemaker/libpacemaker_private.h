@@ -15,7 +15,7 @@
  */
 
 #include <crm/lrmd_events.h>      // lrmd_event_data_t
-#include <crm/pengine/pe_types.h> // pcmk_action_t, pcmk_node_t, etc.
+#include <crm/common/scheduler.h> // pcmk_action_t, pcmk_node_t, etc.
 #include <crm/pengine/internal.h> // pe__location_t
 
 // Colocation flags
@@ -406,7 +406,7 @@ bool pcmk__action_is_recurring(const pcmk_action_t *action);
 G_GNUC_INTERNAL
 bool pcmk__graph_has_loop(const pcmk_action_t *init_action,
                           const pcmk_action_t *action,
-                          pe_action_wrapper_t *input);
+                          pcmk__related_action_t *input);
 
 G_GNUC_INTERNAL
 void pcmk__add_rsc_actions_to_graph(pcmk_resource_t *rsc);
@@ -455,7 +455,7 @@ xmlNode *pcmk__expand_tags_in_sets(xmlNode *xml_obj,
 G_GNUC_INTERNAL
 bool pcmk__valid_resource_or_tag(const pcmk_scheduler_t *scheduler,
                                  const char *id, pcmk_resource_t **rsc,
-                                 pe_tag_t **tag);
+                                 pcmk_tag_t **tag);
 
 G_GNUC_INTERNAL
 bool pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,

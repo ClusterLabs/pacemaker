@@ -2976,10 +2976,10 @@ resource_util_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("ticket", "pe_ticket_t *")
+PCMK__OUTPUT_ARGS("ticket", "pcmk_ticket_t *")
 static int
 ticket_html(pcmk__output_t *out, va_list args) {
-    pe_ticket_t *ticket = va_arg(args, pe_ticket_t *);
+    pcmk_ticket_t *ticket = va_arg(args, pcmk_ticket_t *);
 
     if (ticket->last_granted > -1) {
         char *epoch_str = pcmk__epoch2str(&(ticket->last_granted), 0);
@@ -2998,10 +2998,10 @@ ticket_html(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("ticket", "pe_ticket_t *")
+PCMK__OUTPUT_ARGS("ticket", "pcmk_ticket_t *")
 static int
 ticket_text(pcmk__output_t *out, va_list args) {
-    pe_ticket_t *ticket = va_arg(args, pe_ticket_t *);
+    pcmk_ticket_t *ticket = va_arg(args, pcmk_ticket_t *);
 
     if (ticket->last_granted > -1) {
         char *epoch_str = pcmk__epoch2str(&(ticket->last_granted), 0);
@@ -3020,10 +3020,10 @@ ticket_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("ticket", "pe_ticket_t *")
+PCMK__OUTPUT_ARGS("ticket", "pcmk_ticket_t *")
 static int
 ticket_xml(pcmk__output_t *out, va_list args) {
-    pe_ticket_t *ticket = va_arg(args, pe_ticket_t *);
+    pcmk_ticket_t *ticket = va_arg(args, pcmk_ticket_t *);
 
     xmlNodePtr node = NULL;
 
@@ -3064,7 +3064,7 @@ ticket_list(pcmk__output_t *out, va_list args) {
     /* Print each ticket */
     g_hash_table_iter_init(&iter, scheduler->tickets);
     while (g_hash_table_iter_next(&iter, &key, &value)) {
-        pe_ticket_t *ticket = (pe_ticket_t *) value;
+        pcmk_ticket_t *ticket = (pcmk_ticket_t *) value;
         out->message(out, "ticket", ticket);
     }
 

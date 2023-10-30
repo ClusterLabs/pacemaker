@@ -451,7 +451,7 @@ order_actions(pcmk_action_t *lh_action, pcmk_action_t *rh_action,
               uint32_t flags)
 {
     GList *gIter = NULL;
-    pe_action_wrapper_t *wrapper = NULL;
+    pcmk__related_action_t *wrapper = NULL;
     GList *list = NULL;
 
     if (flags == pcmk__ar_none) {
@@ -471,21 +471,21 @@ order_actions(pcmk_action_t *lh_action, pcmk_action_t *rh_action,
     /* Filter dups, otherwise update_action_states() has too much work to do */
     gIter = lh_action->actions_after;
     for (; gIter != NULL; gIter = gIter->next) {
-        pe_action_wrapper_t *after = (pe_action_wrapper_t *) gIter->data;
+        pcmk__related_action_t *after = gIter->data;
 
         if (after->action == rh_action && (after->type & flags)) {
             return FALSE;
         }
     }
 
-    wrapper = calloc(1, sizeof(pe_action_wrapper_t));
+    wrapper = calloc(1, sizeof(pcmk__related_action_t));
     wrapper->action = rh_action;
     wrapper->type = flags;
     list = lh_action->actions_after;
     list = g_list_prepend(list, wrapper);
     lh_action->actions_after = list;
 
-    wrapper = calloc(1, sizeof(pe_action_wrapper_t));
+    wrapper = calloc(1, sizeof(pcmk__related_action_t));
     wrapper->action = lh_action;
     wrapper->type = flags;
     list = rh_action->actions_before;
@@ -497,7 +497,7 @@ order_actions(pcmk_action_t *lh_action, pcmk_action_t *rh_action,
 void
 destroy_ticket(gpointer data)
 {
-    pe_ticket_t *ticket = data;
+    pcmk_ticket_t *ticket = data;
 
     if (ticket->state) {
         g_hash_table_destroy(ticket->state);
@@ -506,10 +506,10 @@ destroy_ticket(gpointer data)
     free(ticket);
 }
 
-pe_ticket_t *
+pcmk_ticket_t *
 ticket_new(const char *ticket_id, pcmk_scheduler_t *scheduler)
 {
-    pe_ticket_t *ticket = NULL;
+    pcmk_ticket_t *ticket = NULL;
 
     if (pcmk__str_empty(ticket_id)) {
         return NULL;
@@ -522,7 +522,7 @@ ticket_new(const char *ticket_id, pcmk_scheduler_t *scheduler)
     ticket = g_hash_table_lookup(scheduler->tickets, ticket_id);
     if (ticket == NULL) {
 
-        ticket = calloc(1, sizeof(pe_ticket_t));
+        ticket = calloc(1, sizeof(pcmk_ticket_t));
         if (ticket == NULL) {
             crm_err("Cannot allocate ticket '%s'", ticket_id);
             return NULL;
@@ -616,7 +616,7 @@ trigger_unfencing(pcmk_resource_t *rsc, pcmk_node_t *node, const char *reason,
 gboolean
 add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref)
 {
-    pe_tag_t *tag = NULL;
+    pcmk_tag_t *tag = NULL;
     GList *gIter = NULL;
     gboolean is_existing = FALSE;
 
@@ -624,7 +624,7 @@ add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref)
 
     tag = g_hash_table_lookup(tags, tag_name);
     if (tag == NULL) {
-        tag = calloc(1, sizeof(pe_tag_t));
+        tag = calloc(1, sizeof(pcmk_tag_t));
         if (tag == NULL) {
             return FALSE;
         }

@@ -11,7 +11,7 @@
 #include <crm/cib/internal.h>
 #include <crm/common/output.h>
 #include <crm/common/results.h>
-#include <crm/pengine/pe_types.h>
+#include <crm/common/scheduler.h>
 #include <pacemaker-internal.h>
 #include <pacemaker.h>
 
@@ -277,7 +277,7 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
         for (GList *before_iter = action->actions_before;
              before_iter != NULL; before_iter = before_iter->next) {
 
-            pe_action_wrapper_t *before = before_iter->data;
+            pcmk__related_action_t *before = before_iter->data;
 
             char *before_name = NULL;
             char *after_name = NULL;

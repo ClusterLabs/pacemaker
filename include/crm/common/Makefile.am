@@ -34,6 +34,8 @@ header_HEADERS = acl.h 			\
 		 roles.h		\
 		 scheduler.h		\
 		 scheduler_types.h	\
+		 tags.h			\
+		 tickets.h		\
 		 util.h 		\
 		 util_compat.h 		\
 		 xml.h 			\

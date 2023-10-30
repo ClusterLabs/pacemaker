@@ -17,6 +17,13 @@
 
 #include <crm/lrmd_events.h>            // lrmd_event_data_t
 
+#include <glib.h>                       // GList, GHashTable
+#include <libxml/tree.h>                // xmlNode
+
+#include <crm/common/nodes.h>
+#include <crm/common/resources.h>       // enum rsc_start_requirement, etc.
+#include <crm/common/scheduler_types.h> // pcmk_resource_t, pcmk_node_t
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -321,9 +328,9 @@ enum pe_action_flags {
 #endif
 };
 
-/* enum pe_link_state is currently needed for pe_action_wrapper_t (which is
- * public) but should be removed when that is refactored to no longer need it at
- * the next API compatibility break
+/* @COMPAT enum pe_link_state and enum pe_ordering are currently needed for
+ * struct pe_action_wrapper_s (which is public) but should be removed at an
+ * API compatibility break when that can be refactored and made internal
  */
 
 //!@{
@@ -335,7 +342,100 @@ enum pe_link_state {
     pe_link_dup         = 2,
 #endif
 };
+
+enum pe_ordering {
+    pe_order_none                  = 0x0,
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    pe_order_optional              = 0x1,
+    pe_order_apply_first_non_migratable = 0x2,
+    pe_order_implies_first         = 0x10,
+    pe_order_implies_then          = 0x20,
+    pe_order_promoted_implies_first = 0x40,
+    pe_order_implies_first_migratable  = 0x80,
+    pe_order_runnable_left         = 0x100,
+    pe_order_pseudo_left           = 0x200,
+    pe_order_implies_then_on_node  = 0x400,
+    pe_order_probe                 = 0x800,
+    pe_order_restart               = 0x1000,
+    pe_order_stonith_stop          = 0x2000,
+    pe_order_serialize_only        = 0x4000,
+    pe_order_same_node             = 0x8000,
+    pe_order_implies_first_printed = 0x10000,
+    pe_order_implies_then_printed  = 0x20000,
+    pe_order_asymmetrical          = 0x100000,
+    pe_order_load                  = 0x200000,
+    pe_order_one_or_more           = 0x400000,
+    pe_order_anti_colocation       = 0x800000,
+    pe_order_preserve              = 0x1000000,
+    pe_order_then_cancels_first    = 0x2000000,
+    pe_order_trace                 = 0x4000000,
+    pe_order_implies_first_master  = pe_order_promoted_implies_first,
+#endif
+};
+
+// Action sequenced relative to another action
+// @COMPAT This should be internal
+struct pe_action_wrapper_s {
+    // @COMPAT This should be uint32_t
+    enum pe_ordering type;      // Group of enum pcmk__action_relation_flags
+
+    // @COMPAT This should be a bool
+    enum pe_link_state state;   // Whether action has been added to graph yet
+
+    pcmk_action_t *action;      // Action to be sequenced
+};
 //!@}
+
+//! Implementation of pcmk_action_t
+struct pe_action_s {
+    int id;                 //!< Counter to identify action
+
+    /*!
+     * When the controller aborts a transition graph, it sets an abort priority.
+     * If this priority is higher, the action will still be executed anyway.
+     * Pseudo-actions are always allowed, so this is irrelevant for them.
+     */
+    int priority;
+
+    pcmk_resource_t *rsc;   //!< Resource to apply action to, if any
+    pcmk_node_t *node;      //!< Node to execute action on, if any
+    xmlNode *op_entry;      //!< Action XML configuration, if any
+    char *task;             //!< Action name
+    char *uuid;             //!< Action key
+    char *cancel_task;      //!< If task is "cancel", the action being cancelled
+    char *reason;           //!< Readable description of why action is needed
+
+    //@ COMPAT Change to uint32_t at a compatibility break
+    enum pe_action_flags flags;         //!< Group of enum pe_action_flags
+
+    enum rsc_start_requirement needs;   //!< Prerequisite for recovery
+    enum action_fail_response on_fail;  //!< Response to failure
+    enum rsc_role_e fail_role;          //!< Resource role if action fails
+    GHashTable *meta;                   //!< Meta-attributes relevant to action
+    GHashTable *extra;                  //!< Action-specific instance attributes
+
+    /* Current count of runnable instance actions for "first" action in an
+     * ordering dependency with pcmk__ar_min_runnable set.
+     */
+    int runnable_before;                //!< For Pacemaker use only
+
+    /*!
+     * Number of instance actions for "first" action in an ordering dependency
+     * with pcmk__ar_min_runnable set that must be runnable before this action
+     * can be runnable.
+     */
+    int required_runnable_before;
+
+    // Actions in a relation with this one (as pcmk__related_action_t *)
+    GList *actions_before;  //!< For Pacemaker use only
+    GList *actions_after;   //!< For Pacemaker use only
+
+    /* This is intended to hold data that varies by the type of action, but is
+     * not currently used. Some of the above fields could be moved here except
+     * for API backward compatibility.
+     */
+    void *action_details;               //!< For Pacemaker use only
+};
 
 // For parsing various action-related string specifications
 gboolean parse_op_key(const char *key, char **rsc_id, char **op_type,

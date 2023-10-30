@@ -1532,7 +1532,7 @@ update_noninterleaved_actions(pcmk_resource_t *instance, pcmk_action_t *first,
     if (pcmk_is_set(changed, pcmk__updated_then)) {
         for (GList *after_iter = instance_action->actions_after;
              after_iter != NULL; after_iter = after_iter->next) {
-            pe_action_wrapper_t *after = after_iter->data;
+            pcmk__related_action_t *after = after_iter->data;
 
             pcmk__update_action_for_orderings(after->action, instance->cluster);
         }

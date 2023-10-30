@@ -171,7 +171,7 @@ add_downed_nodes(xmlNode *xml, const pcmk_action_t *action)
         bool migrating = false;
 
         for (iter = action->actions_before; iter != NULL; iter = iter->next) {
-            input = ((pe_action_wrapper_t *) iter->data)->action;
+            input = ((pcmk__related_action_t *) iter->data)->action;
             if ((input->rsc != NULL)
                 && pcmk__str_eq(action->rsc->id, input->rsc->id, pcmk__str_none)
                 && pcmk__str_eq(input->task, PCMK_ACTION_MIGRATE_FROM,
@@ -589,7 +589,7 @@ should_add_action_to_graph(const pcmk_action_t *action)
  * \return true if ordering has flags that can change an action, false otherwise
  */
 static bool
-ordering_can_change_actions(const pe_action_wrapper_t *ordering)
+ordering_can_change_actions(const pcmk__related_action_t *ordering)
 {
     return pcmk_any_flags_set(ordering->type,
                               ~(pcmk__ar_then_implies_first_graphed
@@ -610,7 +610,7 @@ ordering_can_change_actions(const pe_action_wrapper_t *ordering)
  */
 static bool
 should_add_input_to_graph(const pcmk_action_t *action,
-                          pe_action_wrapper_t *input)
+                          pcmk__related_action_t *input)
 {
     if (input->state == pe_link_dumped) {
         return true;
@@ -773,7 +773,7 @@ should_add_input_to_graph(const pcmk_action_t *action,
  */
 bool
 pcmk__graph_has_loop(const pcmk_action_t *init_action,
-                     const pcmk_action_t *action, pe_action_wrapper_t *input)
+                     const pcmk_action_t *action, pcmk__related_action_t *input)
 {
     bool has_loop = false;
 
@@ -818,7 +818,7 @@ pcmk__graph_has_loop(const pcmk_action_t *init_action,
          iter != NULL; iter = iter->next) {
 
         if (pcmk__graph_has_loop(init_action, input->action,
-                                 (pe_action_wrapper_t *) iter->data)) {
+                                 (pcmk__related_action_t *) iter->data)) {
             // Recursive call already logged a debug message
             has_loop = true;
             break;
@@ -876,7 +876,7 @@ create_graph_synapse(const pcmk_action_t *action, pcmk_scheduler_t *scheduler)
  * \param[in,out] user_data  Scheduler data
  *
  * \note This will de-duplicate the action inputs, meaning that the
- *       pe_action_wrapper_t:type flags can no longer be relied on to retain
+ *       pcmk__related_action_t:type flags can no longer be relied on to retain
  *       their original settings. That means this MUST be called after
  *       pcmk__apply_orderings() is complete, and nothing after this should rely
  *       on those type flags. (For example, some code looks for type equal to
@@ -921,7 +921,7 @@ add_action_to_graph(gpointer data, gpointer user_data)
     create_graph_action(set, action, false, scheduler);
 
     for (GList *lpc = action->actions_before; lpc != NULL; lpc = lpc->next) {
-        pe_action_wrapper_t *input = (pe_action_wrapper_t *) lpc->data;
+        pcmk__related_action_t *input = lpc->data;
 
         if (should_add_input_to_graph(action, input)) {
             xmlNode *input_xml = create_xml_node(in, "trigger");

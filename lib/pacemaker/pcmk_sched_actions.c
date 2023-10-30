@@ -243,7 +243,7 @@ update(pcmk_resource_t *rsc, pcmk_action_t *first, pcmk_action_t *then,
 static uint32_t
 update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                                  uint32_t first_flags, uint32_t then_flags,
-                                 pe_action_wrapper_t *order,
+                                 pcmk__related_action_t *order,
                                  pcmk_scheduler_t *scheduler)
 {
     uint32_t changed = pcmk__updated_none;
@@ -537,7 +537,7 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
     }
 
     for (lpc = then->actions_before; lpc != NULL; lpc = lpc->next) {
-        pe_action_wrapper_t *other = (pe_action_wrapper_t *) lpc->data;
+        pcmk__related_action_t *other = lpc->data;
         pcmk_action_t *first = other->action;
 
         pcmk_node_t *then_node = then->node;
@@ -643,7 +643,7 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
                       "because it changed", first->uuid);
             for (GList *lpc2 = first->actions_after; lpc2 != NULL;
                  lpc2 = lpc2->next) {
-                pe_action_wrapper_t *other = (pe_action_wrapper_t *) lpc2->data;
+                pcmk__related_action_t *other = lpc2->data;
 
                 pcmk__update_action_for_orderings(other->action, scheduler);
             }
@@ -668,7 +668,7 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
         }
         pcmk__update_action_for_orderings(then, scheduler);
         for (lpc = then->actions_after; lpc != NULL; lpc = lpc->next) {
-            pe_action_wrapper_t *other = (pe_action_wrapper_t *) lpc->data;
+            pcmk__related_action_t *other = lpc->data;
 
             pcmk__update_action_for_orderings(other->action, scheduler);
         }
@@ -1022,16 +1022,16 @@ pcmk__log_action(const char *pre_text, const pcmk_action_t *action,
 
     if (details) {
         const GList *iter = NULL;
-        const pe_action_wrapper_t *other = NULL;
+        const pcmk__related_action_t *other = NULL;
 
         crm_trace("\t\t====== Preceding Actions");
         for (iter = action->actions_before; iter != NULL; iter = iter->next) {
-            other = (const pe_action_wrapper_t *) iter->data;
+            other = (const pcmk__related_action_t *) iter->data;
             pcmk__log_action("\t\t", other->action, false);
         }
         crm_trace("\t\t====== Subsequent Actions");
         for (iter = action->actions_after; iter != NULL; iter = iter->next) {
-            other = (const pe_action_wrapper_t *) iter->data;
+            other = (const pcmk__related_action_t *) iter->data;
             pcmk__log_action("\t\t", other->action, false);
         }
         crm_trace("\t\t====== End");
@@ -1321,8 +1321,8 @@ pcmk__action_locks_rsc_to_node(const pcmk_action_t *action)
 static gint
 sort_action_id(gconstpointer a, gconstpointer b)
 {
-    const pe_action_wrapper_t *action_wrapper2 = (const pe_action_wrapper_t *)a;
-    const pe_action_wrapper_t *action_wrapper1 = (const pe_action_wrapper_t *)b;
+    const pcmk__related_action_t *action_wrapper2 = a;
+    const pcmk__related_action_t *action_wrapper1 = b;
 
     if (a == NULL) {
         return 1;
@@ -1350,12 +1350,12 @@ pcmk__deduplicate_action_inputs(pcmk_action_t *action)
 {
     GList *item = NULL;
     GList *next = NULL;
-    pe_action_wrapper_t *last_input = NULL;
+    pcmk__related_action_t *last_input = NULL;
 
     action->actions_before = g_list_sort(action->actions_before,
                                          sort_action_id);
     for (item = action->actions_before; item != NULL; item = next) {
-        pe_action_wrapper_t *input = (pe_action_wrapper_t *) item->data;
+        pcmk__related_action_t *input = item->data;
 
         next = item->next;
         if ((last_input != NULL)

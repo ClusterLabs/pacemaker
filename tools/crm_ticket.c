@@ -254,7 +254,7 @@ static GOptionEntry deprecated_entries[] = {
     { NULL }
 };
 
-static pe_ticket_t *
+static pcmk_ticket_t *
 find_ticket(gchar *ticket_id, pcmk_scheduler_t *scheduler)
 {
     return g_hash_table_lookup(scheduler->tickets, ticket_id);
@@ -276,7 +276,7 @@ print_date(time_t time)
 }
 
 static void
-print_ticket(pe_ticket_t * ticket, bool raw, bool details)
+print_ticket(pcmk_ticket_t *ticket, bool raw, bool details)
 {
     if (raw) {
         fprintf(stdout, "%s\n", ticket->id);
@@ -329,7 +329,7 @@ static void
 print_ticket_list(pcmk_scheduler_t *scheduler, bool raw, bool details)
 {
     GHashTableIter iter;
-    pe_ticket_t *ticket = NULL;
+    pcmk_ticket_t *ticket = NULL;
 
     g_hash_table_iter_init(&iter, scheduler->tickets);
 
@@ -466,7 +466,7 @@ static int
 get_ticket_state_attr(gchar *ticket_id, const char *attr_name, const char **attr_value,
                       pcmk_scheduler_t *scheduler)
 {
-    pe_ticket_t *ticket = NULL;
+    pcmk_ticket_t *ticket = NULL;
 
     CRM_ASSERT(attr_value != NULL);
     *attr_value = NULL;
@@ -570,7 +570,7 @@ modify_ticket_state(gchar *ticket_id, cib_t *cib, pcmk_scheduler_t *scheduler)
     char *key = NULL;
     char *value = NULL;
 
-    pe_ticket_t *ticket = NULL;
+    pcmk_ticket_t *ticket = NULL;
 
     rc = find_ticket_state(cib, ticket_id, &ticket_state_xml);
     if (rc == pcmk_rc_ok) {
@@ -814,7 +814,7 @@ main(int argc, char **argv)
         }
 
         if (options.ticket_id) {
-            pe_ticket_t *ticket = find_ticket(options.ticket_id, scheduler);
+            pcmk_ticket_t *ticket = find_ticket(options.ticket_id, scheduler);
 
             if (ticket == NULL) {
                 exit_code = CRM_EX_NOSUCH;
@@ -875,7 +875,7 @@ main(int argc, char **argv)
         }
 
         if (options.force == FALSE) {
-            pe_ticket_t *ticket = NULL;
+            pcmk_ticket_t *ticket = NULL;
 
             ticket = find_ticket(options.ticket_id, scheduler);
             if (ticket == NULL) {

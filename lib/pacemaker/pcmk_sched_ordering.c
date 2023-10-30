@@ -901,8 +901,8 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     pcmk_resource_t *rsc_first = NULL;
     pcmk_resource_t *rsc_then = NULL;
-    pe_tag_t *tag_first = NULL;
-    pe_tag_t *tag_then = NULL;
+    pcmk_tag_t *tag_first = NULL;
+    pcmk_tag_t *tag_then = NULL;
 
     xmlNode *rsc_set_first = NULL;
     xmlNode *rsc_set_then = NULL;
@@ -1070,7 +1070,7 @@ pcmk__unpack_ordering(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 }
 
 static bool
-ordering_is_invalid(pcmk_action_t *action, pe_action_wrapper_t *input)
+ordering_is_invalid(pcmk_action_t *action, pcmk__related_action_t *input)
 {
     /* Prevent user-defined ordering constraints between resources
      * running in a guest node and the resource that defines that node.
@@ -1106,12 +1106,12 @@ pcmk__disable_invalid_orderings(pcmk_scheduler_t *scheduler)
 {
     for (GList *iter = scheduler->actions; iter != NULL; iter = iter->next) {
         pcmk_action_t *action = (pcmk_action_t *) iter->data;
-        pe_action_wrapper_t *input = NULL;
+        pcmk__related_action_t *input = NULL;
 
         for (GList *input_iter = action->actions_before;
              input_iter != NULL; input_iter = input_iter->next) {
 
-            input = (pe_action_wrapper_t *) input_iter->data;
+            input = input_iter->data;
             if (ordering_is_invalid(action, input)) {
                 input->type = (enum pe_ordering) pcmk__ar_none;
             }

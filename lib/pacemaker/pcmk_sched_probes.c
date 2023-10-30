@@ -467,7 +467,8 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
  * \param[in,out] after     'then' action wrapper in the ordering
  */
 static void
-add_start_orderings_for_probe(pcmk_action_t *probe, pe_action_wrapper_t *after)
+add_start_orderings_for_probe(pcmk_action_t *probe,
+                              pcmk__related_action_t *after)
 {
     uint32_t flags = pcmk__ar_ordered|pcmk__ar_unrunnable_first_blocks;
 
@@ -499,7 +500,7 @@ add_start_orderings_for_probe(pcmk_action_t *probe, pe_action_wrapper_t *after)
     for (GList *then_iter = after->action->actions_after; then_iter != NULL;
          then_iter = then_iter->next) {
 
-        pe_action_wrapper_t *then = (pe_action_wrapper_t *) then_iter->data;
+        pcmk__related_action_t *then = then_iter->data;
 
         if (then->action->rsc->running_on
             || (pe__const_top_resource(then->action->rsc, false)
@@ -611,7 +612,7 @@ add_restart_orderings_for_probe(pcmk_action_t *probe, pcmk_action_t *after)
      * ordered before its individual instances' actions.
      */
     for (iter = after->actions_after; iter != NULL; iter = iter->next) {
-        pe_action_wrapper_t *after_wrapper = (pe_action_wrapper_t *) iter->data;
+        pcmk__related_action_t *after_wrapper = iter->data;
 
         /* pcmk__ar_first_implies_then is the reason why a required A.start
          * implies/enforces B.start to be required too, which is the cause of
@@ -706,7 +707,7 @@ add_start_restart_orderings_for_rsc(gpointer data, gpointer user_data)
         for (GList *then_iter = probe->actions_after; then_iter != NULL;
              then_iter = then_iter->next) {
 
-            pe_action_wrapper_t *then = (pe_action_wrapper_t *) then_iter->data;
+            pcmk__related_action_t *then = then_iter->data;
 
             add_start_orderings_for_probe(probe, then);
             add_restart_orderings_for_probe(probe, then->action);
@@ -782,7 +783,7 @@ order_then_probes(pcmk_scheduler_t *scheduler)
         for (actions = start->actions_before; actions != NULL;
              actions = actions->next) {
 
-            pe_action_wrapper_t *before = (pe_action_wrapper_t *) actions->data;
+            pcmk__related_action_t *before = actions->data;
 
             pcmk_action_t *first = before->action;
             pcmk_resource_t *first_rsc = first->rsc;
@@ -792,7 +793,7 @@ order_then_probes(pcmk_scheduler_t *scheduler)
                      clone_actions != NULL;
                      clone_actions = clone_actions->next) {
 
-                    before = (pe_action_wrapper_t *) clone_actions->data;
+                    before = clone_actions->data;
 
                     crm_trace("Testing '%s then %s' for %s",
                               first->uuid, before->action->uuid, start->uuid);

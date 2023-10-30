@@ -29,7 +29,7 @@ enum loss_ticket_policy {
 typedef struct {
     const char *id;
     pcmk_resource_t *rsc;
-    pe_ticket_t *ticket;
+    pcmk_ticket_t *ticket;
     enum loss_ticket_policy loss_policy;
     int role;
 } rsc_ticket_t;
@@ -144,7 +144,7 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
 }
 
 static void
-rsc_ticket_new(const char *id, pcmk_resource_t *rsc, pe_ticket_t *ticket,
+rsc_ticket_new(const char *id, pcmk_resource_t *rsc, pcmk_ticket_t *ticket,
                const char *state, const char *loss_policy)
 {
     rsc_ticket_t *new_rsc_ticket = NULL;
@@ -234,7 +234,7 @@ rsc_ticket_new(const char *id, pcmk_resource_t *rsc, pe_ticket_t *ticket,
 
 // \return Standard Pacemaker return code
 static int
-unpack_rsc_ticket_set(xmlNode *set, pe_ticket_t *ticket,
+unpack_rsc_ticket_set(xmlNode *set, pcmk_ticket_t *ticket,
                       const char *loss_policy, pcmk_scheduler_t *scheduler)
 {
     const char *set_id = NULL;
@@ -280,7 +280,7 @@ unpack_simple_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     const char *loss_policy = crm_element_value(xml_obj,
                                                 XML_TICKET_ATTR_LOSS_POLICY);
 
-    pe_ticket_t *ticket = NULL;
+    pcmk_ticket_t *ticket = NULL;
 
     const char *rsc_id = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
     const char *state = crm_element_value(xml_obj,
@@ -363,7 +363,7 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     const char *state = NULL;
 
     pcmk_resource_t *rsc = NULL;
-    pe_tag_t *tag = NULL;
+    pcmk_tag_t *tag = NULL;
 
     xmlNode *rsc_set = NULL;
 
@@ -436,7 +436,7 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     const char *id = NULL;
     const char *ticket_str = NULL;
 
-    pe_ticket_t *ticket = NULL;
+    pcmk_ticket_t *ticket = NULL;
 
     xmlNode *orig_xml = NULL;
     xmlNode *expanded_xml = NULL;

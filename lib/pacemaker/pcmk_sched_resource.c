@@ -17,7 +17,7 @@
 #include "libpacemaker_private.h"
 
 // Resource assignment methods by resource variant
-static resource_alloc_functions_t assignment_methods[] = {
+static pcmk_assignment_methods_t assignment_methods[] = {
     {
         pcmk__primitive_assign,
         pcmk__primitive_create_actions,
@@ -237,7 +237,7 @@ add_colocated_resources(const pcmk_resource_t *rsc,
     *list = rsc->cmds->colocated_resources(rsc, orig_rsc, *list);
 }
 
-// Shared implementation of resource_alloc_functions_t:colocated_resources()
+// Shared implementation of pcmk_assignment_methods_t:colocated_resources()
 GList *
 pcmk__colocated_resources(const pcmk_resource_t *rsc,
                           const pcmk_resource_t *orig_rsc,
@@ -391,7 +391,7 @@ add_assigned_resource(pcmk_node_t *node, pcmk_resource_t *rsc)
  * \note Assigning a resource to the NULL node using this function is different
  *       from calling pcmk__unassign_resource(), in that it may also update any
  *       actions created for the resource.
- * \note The \c resource_alloc_functions_t:assign() method is preferred, unless
+ * \note The \c pcmk_assignment_methods_t:assign() method is preferred, unless
  *       a resource should be assigned to the \c NULL node or every resource in
  *       a tree should be assigned to the same node.
  * \note If \p stop_if_fail is \c false, then \c pcmk__unassign_resource() can

@@ -127,4 +127,6 @@ enum pcmk__action_relation_flags {
     pcmk__ar_then_cancels_first             = (1U << 25),
 };
 
+typedef struct pe_action_wrapper_s pcmk__related_action_t;
+
 #endif      // PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H

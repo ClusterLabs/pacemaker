@@ -10,8 +10,9 @@
 #include <crm_internal.h>
 
 #include <crm/common/unittest_internal.h>
+
+#include <crm/common/scheduler.h>
 #include <crm/pengine/internal.h>
-#include <crm/pengine/pe_types.h>
 #include <crm/pengine/status.h>
 
 #include "mock_private.h"
