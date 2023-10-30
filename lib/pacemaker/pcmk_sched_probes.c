@@ -363,7 +363,7 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
         // Skip invalid orderings (shouldn't be possible)
         first = order->action1;
         then = order->action2;
-        if (((first == NULL) && (order->lh_action_task == NULL))
+        if (((first == NULL) && (order->task1 == NULL))
             || ((then == NULL) && (order->rh_action_task == NULL))) {
             continue;
         }
@@ -373,7 +373,7 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
                                              pcmk__str_none)) {
             continue;
         } else if ((first == NULL)
-                   && !pcmk__ends_with(order->lh_action_task,
+                   && !pcmk__ends_with(order->task1,
                                        "_" PCMK_ACTION_STOP "_0")) {
             continue;
         }
@@ -430,7 +430,7 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
 
         crm_trace("Implying 'probe then' orderings for '%s then %s' "
                   "(id=%d, type=%.6x)",
-                  ((first == NULL)? order->lh_action_task : first->uuid),
+                  ((first == NULL)? order->task1 : first->uuid),
                   ((then == NULL)? order->rh_action_task : then->uuid),
                   order->id, order->flags);
 

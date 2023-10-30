@@ -239,7 +239,7 @@ pe__free_ordering(GList *constraints)
 
         iterator = iterator->next;
 
-        free(order->lh_action_task);
+        free(order->task1);
         free(order->rh_action_task);
         free(order);
     }

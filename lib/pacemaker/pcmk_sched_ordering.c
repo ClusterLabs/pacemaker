@@ -550,11 +550,11 @@ pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
     order->rsc2 = then_rsc;
     order->action1 = first_action;
     order->action2 = then_action;
-    order->lh_action_task = first_action_task;
+    order->task1 = first_action_task;
     order->rh_action_task = then_action_task;
 
-    if ((order->lh_action_task == NULL) && (first_action != NULL)) {
-        order->lh_action_task = strdup(first_action->uuid);
+    if ((order->task1 == NULL) && (first_action != NULL)) {
+        order->task1 = strdup(first_action->uuid);
     }
 
     if ((order->rh_action_task == NULL) && (then_action != NULL)) {
@@ -571,7 +571,7 @@ pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
 
     pe_rsc_trace(first_rsc, "Created ordering %d for %s then %s",
                  (sched->order_id - 1),
-                 pcmk__s(order->lh_action_task, "an underspecified action"),
+                 pcmk__s(order->task1, "an underspecified action"),
                  pcmk__s(order->rh_action_task, "an underspecified action"));
 
     sched->ordering_constraints = g_list_prepend(sched->ordering_constraints,
@@ -1277,7 +1277,7 @@ order_resource_actions_after(pcmk_action_t *first_action,
             pe__clear_action_flags(then_action_iter, pcmk_action_runnable);
             crm_warn("%s of %s is unrunnable because there is no %s of %s "
                      "to order it after", then_action_iter->task, rsc->id,
-                     order->lh_action_task, order->rsc1->id);
+                     order->task1, order->rsc1->id);
         }
     }
 
@@ -1299,20 +1299,20 @@ rsc_order_first(pcmk_resource_t *first_rsc, pcmk__action_relation_t *order)
         first_actions = g_list_prepend(NULL, first_action);
 
     } else {
-        first_actions = find_actions_by_task(first_rsc, order->lh_action_task);
+        first_actions = find_actions_by_task(first_rsc, order->task1);
     }
 
     if ((first_actions == NULL) && (first_rsc == then_rsc)) {
         pe_rsc_trace(first_rsc,
                      "Ignoring constraint %d: first (%s for %s) not found",
-                     order->id, order->lh_action_task, first_rsc->id);
+                     order->id, order->task1, first_rsc->id);
 
     } else if (first_actions == NULL) {
         char *key = NULL;
         char *op_type = NULL;
         guint interval_ms = 0;
 
-        parse_op_key(order->lh_action_task, NULL, &op_type, &interval_ms);
+        parse_op_key(order->task1, NULL, &op_type, &interval_ms);
         key = pcmk__op_key(first_rsc->id, op_type, interval_ms);
 
         if ((first_rsc->fns->state(first_rsc, TRUE) == pcmk_role_stopped)
@@ -1320,7 +1320,7 @@ rsc_order_first(pcmk_resource_t *first_rsc, pcmk__action_relation_t *order)
             free(key);
             pe_rsc_trace(first_rsc,
                          "Ignoring constraint %d: first (%s for %s) not found",
-                         order->id, order->lh_action_task, first_rsc->id);
+                         order->id, order->task1, first_rsc->id);
 
         } else if ((first_rsc->fns->state(first_rsc,
                                           TRUE) == pcmk_role_unpromoted)
@@ -1329,12 +1329,12 @@ rsc_order_first(pcmk_resource_t *first_rsc, pcmk__action_relation_t *order)
             free(key);
             pe_rsc_trace(first_rsc,
                          "Ignoring constraint %d: first (%s for %s) not found",
-                         order->id, order->lh_action_task, first_rsc->id);
+                         order->id, order->task1, first_rsc->id);
 
         } else {
             pe_rsc_trace(first_rsc,
                          "Creating first (%s for %s) for constraint %d ",
-                         order->lh_action_task, first_rsc->id, order->id);
+                         order->task1, first_rsc->id, order->id);
             first_action = custom_action(first_rsc, key, op_type, NULL, TRUE,
                                          first_rsc->cluster);
             first_actions = g_list_prepend(NULL, first_action);
