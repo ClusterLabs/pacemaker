@@ -356,7 +356,7 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
         }
 
         // Skip non-resource orderings, and orderings for the same resource
-        if ((order->lh_rsc == NULL) || (order->lh_rsc == order->rh_rsc)) {
+        if ((order->rsc1 == NULL) || (order->rsc1 == order->rh_rsc)) {
             continue;
         }
 
@@ -383,7 +383,7 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
          * probe could be scheduled after the container starts again.
          */
         if ((order->rh_rsc != NULL)
-            && (order->lh_rsc->container == order->rh_rsc)) {
+            && (order->rsc1->container == order->rh_rsc)) {
 
             if ((then != NULL) && pcmk__str_eq(then->task, PCMK_ACTION_STOP,
                                                pcmk__str_none)) {
@@ -410,7 +410,7 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
         }
 
         // List all scheduled probes for the first resource
-        probes = pe__resource_actions(order->lh_rsc, NULL, PCMK_ACTION_MONITOR,
+        probes = pe__resource_actions(order->rsc1, NULL, PCMK_ACTION_MONITOR,
                                       FALSE);
         if (probes == NULL) { // There aren't any
             continue;

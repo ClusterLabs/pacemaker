@@ -546,7 +546,7 @@ pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
 
     order->id = sched->order_id++;
     order->flags = flags;
-    order->lh_rsc = first_rsc;
+    order->rsc1 = first_rsc;
     order->rh_rsc = then_rsc;
     order->lh_action = first_action;
     order->rh_action = then_action;
@@ -561,8 +561,8 @@ pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
         order->rh_action_task = strdup(then_action->uuid);
     }
 
-    if ((order->lh_rsc == NULL) && (first_action != NULL)) {
-        order->lh_rsc = first_action->rsc;
+    if ((order->rsc1 == NULL) && (first_action != NULL)) {
+        order->rsc1 = first_action->rsc;
     }
 
     if ((order->rh_rsc == NULL) && (then_action != NULL)) {
@@ -1277,7 +1277,7 @@ order_resource_actions_after(pcmk_action_t *first_action,
             pe__clear_action_flags(then_action_iter, pcmk_action_runnable);
             crm_warn("%s of %s is unrunnable because there is no %s of %s "
                      "to order it after", then_action_iter->task, rsc->id,
-                     order->lh_action_task, order->lh_rsc->id);
+                     order->lh_action_task, order->rsc1->id);
         }
     }
 
@@ -1409,7 +1409,7 @@ pcmk__apply_orderings(pcmk_scheduler_t *sched)
          iter != NULL; iter = iter->next) {
 
         pcmk__action_relation_t *order = iter->data;
-        pcmk_resource_t *rsc = order->lh_rsc;
+        pcmk_resource_t *rsc = order->rsc1;
 
         if (rsc != NULL) {
             rsc_order_first(rsc, order);

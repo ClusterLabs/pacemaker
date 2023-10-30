@@ -134,7 +134,7 @@ enum pcmk__action_relation_flags {
 typedef struct {
     int id;                     // Counter to identify relation
     uint32_t flags;             // Group of enum pcmk__action_relation_flags
-    pcmk_resource_t *lh_rsc;    // Resource for first action, if any
+    pcmk_resource_t *rsc1;      // Resource for first action, if any
     pcmk_action_t *lh_action;   // First action in relation
     char *lh_action_task;       // Action name or key for first action
     pcmk_resource_t *rh_rsc;    // Resource for 'then' action, if any
