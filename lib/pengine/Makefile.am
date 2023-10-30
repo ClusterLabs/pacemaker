@@ -22,7 +22,7 @@ check_LTLIBRARIES 	= libpe_rules_test.la 	\
 
 noinst_HEADERS		= pe_status_private.h
 
-libpe_rules_la_LDFLAGS	= -version-info 30:0:4
+libpe_rules_la_LDFLAGS	= -version-info 30:1:4
 
 libpe_rules_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpe_rules_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
@@ -34,7 +34,7 @@ libpe_rules_la_SOURCES	= common.c
 libpe_rules_la_SOURCES	+= rules.c
 libpe_rules_la_SOURCES	+= rules_alerts.c
 
-libpe_status_la_LDFLAGS	= -version-info 34:0:6
+libpe_status_la_LDFLAGS	= -version-info 35:0:7
 
 libpe_status_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpe_status_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
