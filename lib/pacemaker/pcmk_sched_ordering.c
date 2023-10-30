@@ -547,7 +547,7 @@ pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
     order->id = sched->order_id++;
     order->flags = flags;
     order->rsc1 = first_rsc;
-    order->rh_rsc = then_rsc;
+    order->rsc2 = then_rsc;
     order->lh_action = first_action;
     order->rh_action = then_action;
     order->lh_action_task = first_action_task;
@@ -565,8 +565,8 @@ pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
         order->rsc1 = first_action->rsc;
     }
 
-    if ((order->rh_rsc == NULL) && (then_action != NULL)) {
-        order->rh_rsc = then_action->rsc;
+    if ((order->rsc2 == NULL) && (then_action != NULL)) {
+        order->rsc2 = then_action->rsc;
     }
 
     pe_rsc_trace(first_rsc, "Created ordering %d for %s then %s",
@@ -1289,7 +1289,7 @@ rsc_order_first(pcmk_resource_t *first_rsc, pcmk__action_relation_t *order)
 {
     GList *first_actions = NULL;
     pcmk_action_t *first_action = order->lh_action;
-    pcmk_resource_t *then_rsc = order->rh_rsc;
+    pcmk_resource_t *then_rsc = order->rsc2;
 
     CRM_ASSERT(first_rsc != NULL);
     pe_rsc_trace(first_rsc, "Applying ordering constraint %d (first: %s)",
@@ -1416,7 +1416,7 @@ pcmk__apply_orderings(pcmk_scheduler_t *sched)
             continue;
         }
 
-        rsc = order->rh_rsc;
+        rsc = order->rsc2;
         if (rsc != NULL) {
             order_resource_actions_after(order->lh_action, rsc, order);
 

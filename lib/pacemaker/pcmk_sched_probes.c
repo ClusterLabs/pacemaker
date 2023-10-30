@@ -356,7 +356,7 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
         }
 
         // Skip non-resource orderings, and orderings for the same resource
-        if ((order->rsc1 == NULL) || (order->rsc1 == order->rh_rsc)) {
+        if ((order->rsc1 == NULL) || (order->rsc1 == order->rsc2)) {
             continue;
         }
 
@@ -382,8 +382,7 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
          * container. Otherwise, it might introduce a transition loop, since a
          * probe could be scheduled after the container starts again.
          */
-        if ((order->rh_rsc != NULL)
-            && (order->rsc1->container == order->rh_rsc)) {
+        if ((order->rsc2 != NULL) && (order->rsc1->container == order->rsc2)) {
 
             if ((then != NULL) && pcmk__str_eq(then->task, PCMK_ACTION_STOP,
                                                pcmk__str_none)) {
@@ -420,8 +419,8 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
         if (then != NULL) {
             then_actions = g_list_prepend(NULL, then);
 
-        } else if (order->rh_rsc != NULL) {
-            then_actions = find_actions(order->rh_rsc->actions,
+        } else if (order->rsc2 != NULL) {
+            then_actions = find_actions(order->rsc2->actions,
                                         order->rh_action_task, NULL);
             if (then_actions == NULL) { // There aren't any
                 g_list_free(probes);
