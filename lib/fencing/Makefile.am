@@ -14,7 +14,7 @@ noinst_HEADERS		= fencing_private.h
 
 lib_LTLIBRARIES		= libstonithd.la
 
-libstonithd_la_LDFLAGS	= -version-info 34:3:8
+libstonithd_la_LDFLAGS	= -version-info 34:4:8
 
 libstonithd_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libstonithd_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
@@ -22,10 +22,11 @@ libstonithd_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 libstonithd_la_LIBADD = $(top_builddir)/lib/services/libcrmservice.la
 libstonithd_la_LIBADD += $(top_builddir)/lib/common/libcrmcommon.la
 
-libstonithd_la_SOURCES	= st_actions.c 	\
-			  st_client.c 	\
-			  st_output.c 	\
-			  st_rhcs.c
+## Library sources (*must* use += format for bumplibs)
+libstonithd_la_SOURCES	= st_actions.c
+libstonithd_la_SOURCES	+= st_client.c
 if BUILD_LHA_SUPPORT
 libstonithd_la_SOURCES	+= st_lha.c
 endif
+libstonithd_la_SOURCES	+= st_output.c
+libstonithd_la_SOURCES	+= st_rhcs.c

@@ -11,16 +11,16 @@ include $(top_srcdir)/mk/common.mk
 ## libraries
 lib_LTLIBRARIES		= libcib.la
 
-## SOURCES
-libcib_la_SOURCES	= cib_ops.c 	\
-			  cib_utils.c 	\
-			  cib_client.c 	\
-			  cib_native.c 	\
-			  cib_attrs.c 	\
-			  cib_file.c 	\
-			  cib_remote.c
+## Library sources (*must* use += format for bumplibs)
+libcib_la_SOURCES	= cib_attrs.c
+libcib_la_SOURCES	+= cib_client.c
+libcib_la_SOURCES	+= cib_file.c
+libcib_la_SOURCES	+= cib_native.c
+libcib_la_SOURCES	+= cib_ops.c
+libcib_la_SOURCES	+= cib_remote.c
+libcib_la_SOURCES	+= cib_utils.c
 
-libcib_la_LDFLAGS	= -version-info 31:0:4
+libcib_la_LDFLAGS	= -version-info 32:0:5
 libcib_la_CPPFLAGS	= -I$(top_srcdir) $(AM_CPPFLAGS)
 
 libcib_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)

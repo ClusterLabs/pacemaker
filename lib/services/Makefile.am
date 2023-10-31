@@ -14,7 +14,7 @@ AM_CPPFLAGS			= -I$(top_srcdir)/include
 lib_LTLIBRARIES			= libcrmservice.la
 noinst_HEADERS			= $(wildcard *.h)
 
-libcrmservice_la_LDFLAGS	= -version-info 31:2:3
+libcrmservice_la_LDFLAGS	= -version-info 32:0:4
 libcrmservice_la_CFLAGS		=
 
 libcrmservice_la_CFLAGS		+= $(CFLAGS_HARDENED_LIB)
@@ -23,6 +23,7 @@ libcrmservice_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 libcrmservice_la_LIBADD		= $(top_builddir)/lib/common/libcrmcommon.la \
 				  $(DBUS_LIBS)
 
+## Library sources (*must* use += format for bumplibs)
 libcrmservice_la_SOURCES	= services.c
 libcrmservice_la_SOURCES	+= services_linux.c
 libcrmservice_la_SOURCES	+= services_lsb.c

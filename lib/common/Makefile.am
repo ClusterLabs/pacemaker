@@ -33,7 +33,7 @@ SUBDIRS = . tests
 noinst_HEADERS		= crmcommon_private.h \
 			  mock_private.h
 
-libcrmcommon_la_LDFLAGS	= -version-info 45:0:11
+libcrmcommon_la_LDFLAGS	= -version-info 46:0:12
 
 libcrmcommon_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libcrmcommon_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
@@ -50,7 +50,7 @@ if BUILD_PROFILING
 libcrmcommon_la_LIBADD	+= -lm
 endif
 
-# Use += rather than backlashed continuation lines for parsing by bumplibs
+## Library sources (*must* use += format for bumplibs)
 libcrmcommon_la_SOURCES	=
 libcrmcommon_la_SOURCES	+= acl.c
 libcrmcommon_la_SOURCES	+= actions.c

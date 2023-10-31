@@ -1,3 +1,427 @@
+* Mon Oct 30 2023 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.7-rc1
+- 1345 commits with 358 files changed, 23622 insertions(+), 17197 deletions(-)
+
+- Features added since Pacemaker-2.1.6
+  + CIB: deprecate "ordering" attribute of "resource_set"
+  + CIB: new cluster option "node-pending-timeout" (defaulting to 2 hours) to
+    fence nodes that do not join Pacemaker's controller group within this much
+    time after joining the cluster
+  + controller: PCMK_node_start_state now works with Pacemaker Remote nodes
+  + crm_verify: add --quiet option (currently same as default behavior)
+  + tools: crm_node supports standard --output-as/--output-to arguments
+  + tests: CTSlab.py was renamed to cts-lab
+
+- Fixes since Pacemaker-2.1.6
+  + logging: restore ability to enable XML trace logs by file and function
+    (regression introduced in 2.1.6)
+  + scheduler: avoid double free with disabled recurring actions
+    (regression introduced in 2.1.5)
+  + tools: consider dampening argument when setting values with attrd_updater
+    (regression introduced in 2.1.5)
+  + tools: wait for reply from crm_node -R (regression introduced in 2.0.5)
+  + CIB: be more strict about ignoring colocation elements without an ID
+  + controller: do not check whether watchdog fencing is enabled
+    if "stonith-watchdog-timeout" is not configured
+  + controller: don't try to execute agent action at shutdown
+  + controller: avoid race condition when updating node state during join
+  + controller: correctly determine state of a fenced node without a name
+  + controller: wait a second between fencer connection attempts
+  + libpacemaker: avoid shuffling clone instances unnecessarily
+  + libpacemaker: get bundle container's promotion score from correct node
+  + libpacemaker: role-based colocations now works with bundles
+  + libpacemaker: clone-node-max now works with cloned groups
+  + scheduler: compare anti-colocation dependent negative preferences against
+    stickiness
+  + scheduler: consider explicit colocations with group members
+  + scheduler: avoid fencing a pending node without a name
+  + scheduler: properly evaluate rules in action meta-attributes
+  + scheduler: properly sort rule-based blocks when overwriting values
+  + tools: avoid showing pending nodes as having "<3.15.1" feature set in
+    crm_mon
+  + tools: fix display of clone descriptions
+  + tools: crm_resource now reports an error rather than time out when trying
+    to restart an unmanaged resource
+  + tools: crm_resource now properly detects which promoted role name to use
+    in ban and move constraints
+
+- Public API changes since Pacemaker-2.1.6 (all API/ABI backward-compatible)
+  + libcib: cib_t now supports transactions via new cib_api_operations_t
+    methods, new cib_transaction value in enum cib_call_options, and new
+    cib_t transaction and user members
+  + libcib: cib_t now supports setting the ACL user for methods via new
+    cib_api_operations_t set_user() method
+  + libcib: deprecate cib_api_operations_t methods inputfd(), noop(), quit(),
+    set_op_callback(), and signon_raw()
+  + libcib: deprecate cib_call_options values cib_mixed_update,
+    cib_scope_local, and cib_zero_copy
+  + libcib: deprecate cib_t op_callback member
+  + libcrmcluster: deprecate set_uuid()
+  + libcrmcluster: send_cluster_message()'s data argument is const
+  + libcrmcommon: add enum pcmk_rc_e values pcmk_rc_compression,
+    pcmk_rc_ns_resolution, and pcmk_rc_no_transaction
+  + libcrmcommon,libpe_rules,libpe_status: many APIs have been moved from
+    libpe_rules and libpe_status to libcrmcommon, sometimes with new names
+    (deprecating the old ones), as described below
+  + libcrmcommon: add (and deprecate) PCMK_DEFAULT_METADATA_TIMEOUT_MS defined
+    constant
+  + libcrmcommon: add enum pcmk_rsc_flags
+  + libcrmcommon: add enum pcmk_scheduler_flags
+  + libcrmcommon: add pcmk_action_added_to_graph
+  + libcrmcommon: add pcmk_action_always_in_graph
+  + libcrmcommon: add pcmk_action_attrs_evaluated
+  + libcrmcommon: add PCMK_ACTION_CANCEL string constant
+  + libcrmcommon: add PCMK_ACTION_CLEAR_FAILCOUNT string constant
+  + libcrmcommon: add PCMK_ACTION_CLONE_ONE_OR_MORE string constant
+  + libcrmcommon: add PCMK_ACTION_DELETE string constant
+  + libcrmcommon: add PCMK_ACTION_DEMOTE string constant
+  + libcrmcommon: add pcmk_action_demote to enum action_tasks
+  + libcrmcommon: add PCMK_ACTION_DEMOTED string constant
+  + libcrmcommon: add pcmk_action_demoted to enum action_tasks
+  + libcrmcommon: add pcmk_action_detect_loop
+  + libcrmcommon: add PCMK_ACTION_DO_SHUTDOWN string constant
+  + libcrmcommon: add pcmk_action_fence to enum action_tasks
+  + libcrmcommon: add pcmk_action_inputs_deduplicated
+  + libcrmcommon: add PCMK_ACTION_LIST string constant
+  + libcrmcommon: add PCMK_ACTION_LOAD_STOPPED string constant
+  + libcrmcommon: add PCMK_ACTION_LRM_DELETE string constant
+  + libcrmcommon: add PCMK_ACTION_MAINTENANCE_NODES string constant
+  + libcrmcommon: add PCMK_ACTION_META_DATA string constant
+  + libcrmcommon: add pcmk_action_migratable
+  + libcrmcommon: add PCMK_ACTION_MIGRATE_FROM string constant
+  + libcrmcommon: add PCMK_ACTION_MIGRATE_TO string constant
+  + libcrmcommon: add pcmk_action_migration_abort
+  + libcrmcommon: add pcmk_action_min_runnable
+  + libcrmcommon: add PCMK_ACTION_MONITOR string constant
+  + libcrmcommon: add pcmk_action_monitor to enum action_tasks
+  + libcrmcommon: add PCMK_ACTION_NOTIFIED string constant
+  + libcrmcommon: add pcmk_action_notified to enum action_tasks
+  + libcrmcommon: add PCMK_ACTION_NOTIFY string constant
+  + libcrmcommon: add pcmk_action_notify to enum action_tasks
+  + libcrmcommon: add PCMK_ACTION_OFF string constant
+  + libcrmcommon: add PCMK_ACTION_ON string constant
+  + libcrmcommon: add PCMK_ACTION_ONE_OR_MORE string constant
+  + libcrmcommon: add pcmk_action_on_dc
+  + libcrmcommon: add pcmk_action_optional
+  + libcrmcommon: add PCMK_ACTION_PROMOTE string constant
+  + libcrmcommon: add pcmk_action_promote to enum action_tasks
+  + libcrmcommon: add PCMK_ACTION_PROMOTED string constant
+  + libcrmcommon: add pcmk_action_promoted to enum action_tasks
+  + libcrmcommon: add pcmk_action_pseudo
+  + libcrmcommon: add PCMK_ACTION_REBOOT string constant
+  + libcrmcommon: add PCMK_ACTION_RELOAD string constant
+  + libcrmcommon: add PCMK_ACTION_RELOAD_AGENT string constant
+  + libcrmcommon: add pcmk_action_reschedule
+  + libcrmcommon: add pcmk_action_runnable
+  + libcrmcommon: add PCMK_ACTION_RUNNING string constant
+  + libcrmcommon: add pcmk_action_shutdown to enum action_tasks
+  + libcrmcommon: add PCMK_ACTION_START string constant
+  + libcrmcommon: add pcmk_action_start to enum action_tasks
+  + libcrmcommon: add pcmk_action_started to enum action_tasks
+  + libcrmcommon: add PCMK_ACTION_STATUS string constant
+  + libcrmcommon: add PCMK_ACTION_STONITH string constant
+  + libcrmcommon: add PCMK_ACTION_STOP string constant
+  + libcrmcommon: add pcmk_action_stop to enum action_tasks
+  + libcrmcommon: add PCMK_ACTION_STOPPED string constant
+  + libcrmcommon: add pcmk_action_stopped to enum action_tasks
+  + libcrmcommon: add pcmk_action_t type
+  + libcrmcommon: add pcmk_action_unspecified to enum action_tasks
+  + libcrmcommon: add PCMK_ACTION_VALIDATE_ALL string constant
+  + libcrmcommon: add pcmk_assignment_methods_t type
+  + libcrmcommon: add PCMK_DEFAULT_ACTION_TIMEOUT_MS defined constant
+  + libcrmcommon: add pcmk_log_xml_as()
+  + libcrmcommon: add PCMK_META_CLONE_MAX string constant
+  + libcrmcommon: add PCMK_META_CLONE_MIN string constant
+  + libcrmcommon: add PCMK_META_CLONE_NODE_MAX string constant
+  + libcrmcommon: add PCMK_META_FAILURE_TIMEOUT string constant
+  + libcrmcommon: add PCMK_META_MIGRATION_THRESHOLD string constant
+  + libcrmcommon: add PCMK_META_PROMOTED_MAX string constant
+  + libcrmcommon: add PCMK_META_PROMOTED_NODE_MAX string constant
+  + libcrmcommon: add pcmk_multiply_active_block to enum rsc_recovery_type
+  + libcrmcommon: add pcmk_multiply_active_restart to enum rsc_recovery_type
+  + libcrmcommon: add pcmk_multiply_active_stop to enum rsc_recovery_type
+  + libcrmcommon: add pcmk_multiply_active_unexpected to enum rsc_recovery_type
+  + libcrmcommon: add PCMK_NODE_ATTR_TERMINATE string constant
+  + libcrmcommon: add pcmk_node_t type
+  + libcrmcommon: add pcmk_node_variant_cluster
+  + libcrmcommon: add pcmk_node_variant_remote
+  + libcrmcommon: add pcmk_no_action_flags
+  + libcrmcommon: add pcmk_no_quorum_demote
+  + libcrmcommon: add pcmk_no_quorum_fence
+  + libcrmcommon: add pcmk_no_quorum_freeze
+  + libcrmcommon: add pcmk_no_quorum_ignore
+  + libcrmcommon: add pcmk_no_quorum_stop
+  + libcrmcommon: add pcmk_on_fail_ban to enum action_fail_response
+  + libcrmcommon: add pcmk_on_fail_block to enum action_fail_response
+  + libcrmcommon: add pcmk_on_fail_demote to enum action_fail_response
+  + libcrmcommon: add pcmk_on_fail_fence_node to enum action_fail_response
+  + libcrmcommon: add pcmk_on_fail_ignore to enum action_fail_response
+  + libcrmcommon: add pcmk_on_fail_reset_remote to enum action_fail_response
+  + libcrmcommon: add pcmk_on_fail_restart to enum action_fail_response
+  + libcrmcommon: add pcmk_on_fail_restart_container to enum action_fail_response
+  + libcrmcommon: add pcmk_on_fail_standby_node to action_fail_response
+  + libcrmcommon: add pcmk_on_fail_stop to enum action_fail_response
+  + libcrmcommon: add pcmk_probe_always to enum pe_discover_e
+  + libcrmcommon: add pcmk_probe_exclusive to enum pe_discover_e
+  + libcrmcommon: add pcmk_probe_never to enum pe_discover_e
+  + libcrmcommon: add pcmk_requires_fencing to enum rsc_start_requirement
+  + libcrmcommon: add pcmk_requires_nothing to enum rsc_start_requirement
+  + libcrmcommon: add pcmk_requires_quorum to enum rsc_start_requirement
+  + libcrmcommon: add pcmk_resource_t type
+  + libcrmcommon: add pcmk_role_promoted to enum rsc_role_e
+  + libcrmcommon: add pcmk_role_started to enum rsc_role_e
+  + libcrmcommon: add pcmk_role_stopped to enum rsc_role_e
+  + libcrmcommon: add pcmk_role_unknown to enum rsc_role_e
+  + libcrmcommon: add pcmk_role_unpromoted to enum rsc_role_e
+  + libcrmcommon: add pcmk_rsc_match_anon_basename
+  + libcrmcommon: add pcmk_rsc_match_basename
+  + libcrmcommon: add pcmk_rsc_match_clone_only
+  + libcrmcommon: add pcmk_rsc_match_current_node
+  + libcrmcommon: add pcmk_rsc_match_history
+  + libcrmcommon: add pcmk_rsc_methods_t type
+  + libcrmcommon: add pcmk_rsc_variant_bundle
+  + libcrmcommon: add pcmk_rsc_variant_clone
+  + libcrmcommon: add pcmk_rsc_variant_group
+  + libcrmcommon: add pcmk_rsc_variant_primitive
+  + libcrmcommon: add pcmk_rsc_variant_unknown
+  + libcrmcommon: add pcmk_scheduler_t type
+  + libcrmcommon: add pcmk_tag_t type
+  + libcrmcommon: add pcmk_ticket_t type
+  + libcrmcommon: add PCMK_XA_FORMAT string constant
+  + libcrmcommon: crm_ipc_send()'s message argument is now const
+  + libcrmcommon: deprecate action_demote in enum action_tasks
+  + libcrmcommon: deprecate action_demoted in enum action_tasks
+  + libcrmcommon: deprecate action_fail_block in enum action_fail_response
+  + libcrmcommon: deprecate action_fail_demote in enum action_fail_response
+  + libcrmcommon: deprecate action_fail_fence in enum action_fail_response
+  + libcrmcommon: deprecate action_fail_ignore in enum action_fail_response
+  + libcrmcommon: deprecate action_fail_migrate in enum action_fail_response
+  + libcrmcommon: deprecate action_fail_recover in enum action_fail_response
+  + libcrmcommon: deprecate action_fail_reset_remote in enum action_fail_response
+  + libcrmcommon: deprecate action_fail_standby in enum action_fail_response
+  + libcrmcommon: deprecate action_fail_stop in action_fail_response
+  + libcrmcommon: deprecate action_notified in enum action_tasks
+  + libcrmcommon: deprecate action_notify in enum action_tasks
+  + libcrmcommon: deprecate action_promote in enum action_tasks
+  + libcrmcommon: deprecate action_promoted in enum action_tasks
+  + libcrmcommon: deprecate action_restart_container in enum action_fail_response
+  + libcrmcommon: deprecate CRMD_ACTION_CANCEL string constant
+  + libcrmcommon: deprecate CRMD_ACTION_DELETE string constant
+  + libcrmcommon: deprecate CRMD_ACTION_DEMOTE string constant
+  + libcrmcommon: deprecate CRMD_ACTION_DEMOTED string constant
+  + libcrmcommon: deprecate CRMD_ACTION_METADATA string constant
+  + libcrmcommon: deprecate CRMD_ACTION_MIGRATE string constant
+  + libcrmcommon: deprecate CRMD_ACTION_MIGRATED string constant
+  + libcrmcommon: deprecate CRMD_ACTION_NOTIFIED string constant
+  + libcrmcommon: deprecate CRMD_ACTION_NOTIFY string constant
+  + libcrmcommon: deprecate CRMD_ACTION_PROMOTE string constant
+  + libcrmcommon: deprecate CRMD_ACTION_PROMOTED string constant
+  + libcrmcommon: deprecate CRMD_ACTION_RELOAD string constant
+  + libcrmcommon: deprecate CRMD_ACTION_RELOAD_AGENT string constant
+  + libcrmcommon: deprecate CRMD_ACTION_START string constant
+  + libcrmcommon: deprecate CRMD_ACTION_STARTED string constant
+  + libcrmcommon: deprecate CRMD_ACTION_STATUS string constant
+  + libcrmcommon: deprecate CRMD_ACTION_STOP string constant
+  + libcrmcommon: deprecate CRMD_ACTION_STOPPED string constant
+  + libcrmcommon: deprecate CRMD_METADATA_CALL_TIMEOUT defined constant
+  + libcrmcommon: deprecate crm_action_str()
+  + libcrmcommon: deprecate CRM_DEFAULT_OP_TIMEOUT_S string constant
+  + libcrmcommon: deprecate crm_element_name()
+  + libcrmcommon: deprecate CRM_OP_FENCE string constant
+  + libcrmcommon: deprecate CRM_OP_RELAXED_CLONE string constant
+  + libcrmcommon: deprecate CRM_OP_RELAXED_SET string constant
+  + libcrmcommon: deprecate crm_xml_replace()
+  + libcrmcommon: deprecate enum pe_link_state
+  + libcrmcommon: deprecate getDocPtr()
+  + libcrmcommon: deprecate monitor_rsc in enum action_tasks
+  + libcrmcommon: deprecate node_member
+  + libcrmcommon: deprecate node_remote
+  + libcrmcommon: deprecate no_action in enum action_tasks
+  + libcrmcommon: deprecate no_quorum_demote
+  + libcrmcommon: deprecate no_quorum_freeze
+  + libcrmcommon: deprecate no_quorum_ignore
+  + libcrmcommon: deprecate no_quorum_stop
+  + libcrmcommon: deprecate no_quorum_suicide
+  + libcrmcommon: deprecate pcmk_log_xml_impl()
+  + libcrmcommon: deprecate pcmk_scheduler_t localhost member
+  + libcrmcommon: deprecate pe_action_dangle
+  + libcrmcommon: deprecate pe_action_dc
+  + libcrmcommon: deprecate pe_action_dedup
+  + libcrmcommon: deprecate pe_action_dumped
+  + libcrmcommon: deprecate pe_action_have_node_attrs
+  + libcrmcommon: deprecate pe_action_implied_by_stonith
+  + libcrmcommon: deprecate pe_action_migrate_runnable
+  + libcrmcommon: deprecate pe_action_optional
+  + libcrmcommon: deprecate pe_action_print_always
+  + libcrmcommon: deprecate pe_action_processed
+  + libcrmcommon: deprecate pe_action_pseudo
+  + libcrmcommon: deprecate pe_action_requires_any
+  + libcrmcommon: deprecate pe_action_reschedule
+  + libcrmcommon: deprecate pe_action_runnable
+  + libcrmcommon: deprecate pe_action_tracking
+  + libcrmcommon: deprecate pe_clone
+  + libcrmcommon: deprecate pe_container
+  + libcrmcommon: deprecate pe_discover_always in enum pe_discover_e
+  + libcrmcommon: deprecate pe_discover_exclusive in enum pe_discover_e
+  + libcrmcommon: deprecate pe_discover_never in enum pe_discover_e
+  + libcrmcommon: deprecate pe_find_anon
+  + libcrmcommon: deprecate pe_find_any
+  + libcrmcommon: deprecate pe_find_clone
+  + libcrmcommon: deprecate pe_find_current
+  + libcrmcommon: deprecate pe_find_inactive
+  + libcrmcommon: deprecate pe_find_renamed
+  + libcrmcommon: deprecate pe_group
+  + libcrmcommon: deprecate pe_native
+  + libcrmcommon: deprecate pe_unknown
+  + libcrmcommon: deprecate recovery_block in enum rsc_recovery_type
+  + libcrmcommon: deprecate recovery_stop_only in enum rsc_recovery_type
+  + libcrmcommon: deprecate recovery_stop_start in enum rsc_recovery_type
+  + libcrmcommon: deprecate recovery_stop_unexpected in enum rsc_recovery_type
+  + libcrmcommon: deprecate RSC_CANCEL string constant
+  + libcrmcommon: deprecate RSC_DELETE string constant
+  + libcrmcommon: deprecate RSC_DEMOTE string constant
+  + libcrmcommon: deprecate RSC_DEMOTED string constant
+  + libcrmcommon: deprecate RSC_METADATA string constant
+  + libcrmcommon: deprecate RSC_MIGRATE string constant
+  + libcrmcommon: deprecate RSC_MIGRATED string constant
+  + libcrmcommon: deprecate RSC_NOTIFIED string constant
+  + libcrmcommon: deprecate RSC_NOTIFY string constant
+  + libcrmcommon: deprecate RSC_PROMOTE string constant
+  + libcrmcommon: deprecate RSC_PROMOTED string constant
+  + libcrmcommon: deprecate rsc_req_nothing in enum rsc_start_requirement
+  + libcrmcommon: deprecate rsc_req_quorum in enum rsc_start_requirement
+  + libcrmcommon: deprecate rsc_req_stonith in enum rsc_start_requirement
+  + libcrmcommon: deprecate RSC_ROLE_PROMOTED in enum rsc_role_e
+  + libcrmcommon: deprecate RSC_ROLE_STARTED in enum rsc_role_e
+  + libcrmcommon: deprecate RSC_ROLE_STOPPED in enum rsc_role_e
+  + libcrmcommon: deprecate RSC_ROLE_UNKNOWN in enum rsc_role_e
+  + libcrmcommon: deprecate RSC_ROLE_UNPROMOTED
+  + libcrmcommon: deprecate RSC_START string constant
+  + libcrmcommon: deprecate RSC_STARTED string constant
+  + libcrmcommon: deprecate RSC_STATUS string constant
+  + libcrmcommon: deprecate RSC_STOP string constant
+  + libcrmcommon: deprecate RSC_STOPPED string constant
+  + libcrmcommon: deprecate shutdown_crm in enum action_tasks
+  + libcrmcommon: deprecate started_rsc in enum action_tasks
+  + libcrmcommon: deprecate start_rsc in enum action_tasks
+  + libcrmcommon: deprecate stonith_node in enum action_tasks
+  + libcrmcommon: deprecate stopped_rsc in enum action_tasks
+  + libcrmcommon: deprecate stop_rsc in enum action_tasks
+  + libcrmcommon: deprecate TYPE() macro
+  + libcrmcommon: deprecate XML_ATTR_VERBOSE string constant
+  + libcrmcommon: deprecate XML_CIB_ATTR_SOURCE string constant
+  + libcrmcommon: deprecate XML_CIB_TAG_DOMAINS string constant
+  + libcrmcommon: deprecate xml_has_children()
+  + libcrmcommon: deprecate XML_NODE_EXPECTED string constant
+  + libcrmcommon: deprecate XML_NODE_IN_CLUSTER string constant
+  + libcrmcommon: deprecate XML_NODE_IS_PEER string constant
+  + libcrmcommon: deprecate XML_NODE_JOIN_STATE string constant
+  + libcrmcommon: deprecate XML_RSC_ATTR_FAIL_STICKINESS string constant
+  + libcrmcommon: deprecate XML_RSC_ATTR_FAIL_TIMEOUT string constant
+  + libcrmcommon: deprecate XML_RSC_ATTR_INCARNATION_MAX string constant
+  + libcrmcommon: deprecate XML_RSC_ATTR_INCARNATION_MIN string constant
+  + libcrmcommon: deprecate XML_RSC_ATTR_INCARNATION_NODEMAX string constant
+  + libcrmcommon: deprecate XML_RSC_ATTR_PROMOTED_MAX string constant
+  + libcrmcommon: deprecate XML_RSC_ATTR_PROMOTED_NODEMAX string constant
+  + libcrmcommon: deprecate XML_TAG_DIFF_ADDED string constant
+  + libcrmcommon: deprecate XML_TAG_DIFF_REMOVED string constant
+  + libcrmcommon: deprecate XML_TAG_FRAGMENT
+  + libcrmcommon: dump_xml_formatted()'s argument is now const
+  + libcrmcommon: dump_xml_formatted_with_text()'s argument is const
+  + libcrmcommon: dump_xml_unformatted()'s argument is now const
+  + libcrmcommon: save_xml_to_file()'s xml argument is now const
+  + libcrmcommon: validate_xml_verbose()'s xml_blob argument is const
+  + libcrmcommon: write_xml_fd()'s xml argument is now const
+  + libcrmcommon: write_xml_file()'s xml argument is now const
+  + libcrmcommon: xml_top argument of xpath_search() is now const
+  + libcrmcommon,libpe_rules,libpe_status: move enum pe_ordering, struct
+    pe_action_wrapper_s, struct pe_tag_s, struct pe_ticket_s, struct
+    resource_object_functions_s, enum node_type, enum pe_action_flags, enum
+    pe_discover_e, enum pe_find, enum pe_link_state, enum pe_obj_types, enum
+    pe_quorum_policy, enum pe_restart, struct pe_action_s, struct pe_node_s,
+    struct pe_node_shared_s, struct pe_resource_s, struct pe_working_set_s,
+    enum action_fail_response, enum action_tasks, enum pe_print_options, enum
+    rsc_recovery_type, enum rsc_role_e, and enum rsc_start_requirement to
+    libcrmcommon
+  + libpacemaker,libpe_rules,libpe_status: use pcmk_action_t instead of
+    pe_action_t, pcmk_node_t instead of pe_node_t, pcmk_resource_t instead of
+    pe_resource_t, and pcmk_scheduler_t instead of pe_working_set_t in all API
+    structs and functions
+  + libpacemaker: add pcmk_list_alternatives(), pcmk_list_providers(),
+    pcmk_list_standards(), and pcmk_list_agents() for functionality equivalent
+    to crm_resource --list-ocf-alternatives, --list-ocf-providers,
+    --list-standards, and --list-agents
+  + libpe_rules,libpe_status: deprecate pe_action_t type
+  + libpe_rules,libpe_status: deprecate pe_action_wrapper_t
+  + libpe_rules,libpe_status: deprecate pe_node_t type
+  + libpe_rules,libpe_status: deprecate pe_resource_t type
+  + libpe_rules,libpe_status: deprecate pe_tag_t
+  + libpe_rules,libpe_status: deprecate pe_ticket_t
+  + libpe_rules,libpe_status: deprecate pe_working_set_t type
+  + libpe_rules,libpe_status: deprecate resource_alloc_functions_t type
+  + libpe_rules,libpe_status: deprecate resource_object_functions_t
+  + libpe_status,libpe_rules: deprecate enum pe_ordering and all its values
+  + libpe_status,libpe_rules: deprecate RSC_ROLE_MAX
+  + libpe_status,libpe_rules: deprecate RSC_ROLE_PROMOTED_LEGACY_S string constant
+  + libpe_status,libpe_rules: deprecate RSC_ROLE_PROMOTED_S string constant
+  + libpe_status,libpe_rules: deprecate RSC_ROLE_STARTED_S string constant
+  + libpe_status,libpe_rules: deprecate RSC_ROLE_STOPPED_S string constant
+  + libpe_status,libpe_rules: deprecate RSC_ROLE_UNKNOWN_S
+  + libpe_status,libpe_rules: deprecate RSC_ROLE_UNPROMOTED_LEGACY_S string constant
+  + libpe_status,libpe_rules: deprecate RSC_ROLE_UNPROMOTED_S string constant
+  + libpe_status: deprecate enum pe_check_parameters
+  + libpe_status: deprecate pe_flag_check_config
+  + libpe_status: deprecate pe_flag_concurrent_fencing
+  + libpe_status: deprecate pe_flag_enable_unfencing
+  + libpe_status: deprecate pe_flag_have_quorum
+  + libpe_status: deprecate pe_flag_have_remote_nodes
+  + libpe_status: deprecate pe_flag_have_status
+  + libpe_status: deprecate pe_flag_have_stonith_resource
+  + libpe_status: deprecate pe_flag_maintenance_mode
+  + libpe_status: deprecate pe_flag_no_compat
+  + libpe_status: deprecate pe_flag_no_counts
+  + libpe_status: deprecate pe_flag_quick_location
+  + libpe_status: deprecate pe_flag_sanitized
+  + libpe_status: deprecate pe_flag_show_scores
+  + libpe_status: deprecate pe_flag_show_utilization
+  + libpe_status: deprecate pe_flag_shutdown_lock
+  + libpe_status: deprecate pe_flag_startup_fencing
+  + libpe_status: deprecate pe_flag_startup_probes
+  + libpe_status: deprecate pe_flag_start_failure_fatal
+  + libpe_status: deprecate pe_flag_stonith_enabled
+  + libpe_status: deprecate pe_flag_stop_action_orphans
+  + libpe_status: deprecate pe_flag_stop_everything
+  + libpe_status: deprecate pe_flag_stop_rsc_orphans
+  + libpe_status: deprecate pe_flag_symmetric_cluster
+  + libpe_status: deprecate pe_rsc_allow_migrate
+  + libpe_status: deprecate pe_rsc_allow_remote_remotes
+  + libpe_status: deprecate pe_rsc_assigning
+  + libpe_status: deprecate pe_rsc_block
+  + libpe_status: deprecate pe_rsc_critical
+  + libpe_status: deprecate pe_rsc_detect_loop
+  + libpe_status: deprecate pe_rsc_failed
+  + libpe_status: deprecate pe_rsc_failure_ignored
+  + libpe_status: deprecate pe_rsc_fence_device
+  + libpe_status: deprecate pe_rsc_is_container
+  + libpe_status: deprecate pe_rsc_maintenance
+  + libpe_status: deprecate pe_rsc_managed
+  + libpe_status: deprecate pe_rsc_merging
+  + libpe_status: deprecate pe_rsc_needs_fencing
+  + libpe_status: deprecate pe_rsc_needs_quorum
+  + libpe_status: deprecate pe_rsc_needs_unfencing
+  + libpe_status: deprecate pe_rsc_notify
+  + libpe_status: deprecate pe_rsc_orphan
+  + libpe_status: deprecate pe_rsc_orphan_container_filler
+  + libpe_status: deprecate pe_rsc_promotable
+  + libpe_status: deprecate pe_rsc_provisional
+  + libpe_status: deprecate pe_rsc_reload
+  + libpe_status: deprecate pe_rsc_replica_container
+  + libpe_status: deprecate pe_rsc_restarting
+  + libpe_status: deprecate pe_rsc_runnable
+  + libpe_status: deprecate pe_rsc_start_pending
+  + libpe_status: deprecate pe_rsc_stop
+  + libpe_status: deprecate pe_rsc_stop_unexpected
+  + libpe_status: deprecate pe_rsc_unique
+
 * Wed May 24 2023 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.6
 - 1124 commits with 402 files changed, 25220 insertions(+), 14751 deletions(-)
 
