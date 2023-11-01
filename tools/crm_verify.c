@@ -159,6 +159,9 @@ main(int argc, char **argv)
 
     pcmk__register_lib_messages(out);
 
+    pcmk__set_config_error_handler((pcmk__config_error_func) out->err, out);
+    pcmk__set_config_warning_handler((pcmk__config_warning_func) out->err, out);
+
     crm_info("=#=#=#=#= Getting XML =#=#=#=#=");
 
     if (options.use_live_cib) {
@@ -216,7 +219,7 @@ main(int argc, char **argv)
         create_xml_node(cib_object, XML_CIB_TAG_STATUS);
     }
 
-    if (validate_xml(cib_object, NULL, FALSE) == FALSE) {
+    if (pcmk__validate_xml(cib_object, NULL, (xmlRelaxNGValidityErrorFunc) out->err, out) == FALSE) {
         pcmk__config_err("CIB did not pass schema validation");
         free_xml(cib_object);
         cib_object = NULL;
@@ -258,18 +261,18 @@ main(int argc, char **argv)
     if (crm_config_error) {
         rc = pcmk_rc_schema_validation;
 
-        if (args->verbosity > 0) {
+        if (args->verbosity > 0 || pcmk__str_eq(args->output_ty, "xml", pcmk__str_none)) {
             g_set_error(&error, PCMK__RC_ERROR, rc,
                         "Errors found during check: config not valid");
         } else {
             g_set_error(&error, PCMK__RC_ERROR, rc,
                         "Errors found during check: config not valid\n-V may provide more details");
-        }
+        } 
 
     } else if (crm_config_warning) {
         rc = pcmk_rc_schema_validation;
 
-        if (args->verbosity > 0) {
+        if (args->verbosity > 0 || pcmk__str_eq(args->output_ty, "xml", pcmk__str_none)) {
             g_set_error(&error, PCMK__RC_ERROR, rc,
                         "Warnings found during check: config may not be valid");
         } else {
@@ -289,7 +292,7 @@ main(int argc, char **argv)
         exit_code = pcmk_rc2exitc(rc);
     }
 
-    pcmk__output_and_clear_error(&error, NULL);
+    pcmk__output_and_clear_error(&error, out);
 
     if (out != NULL) {
         out->finish(out, exit_code, true, NULL);

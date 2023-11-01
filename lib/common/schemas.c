@@ -433,7 +433,7 @@ crm_schema_init(void)
 }
 
 static gboolean
-validate_with_relaxng(xmlDocPtr doc, gboolean to_logs, const char *relaxng_file,
+validate_with_relaxng(xmlDocPtr doc, xmlRelaxNGValidityErrorFunc error_handler, void *error_handler_context, const char *relaxng_file,
                       relaxng_ctx_cache_t **cached_ctx)
 {
     int rc = 0;
@@ -454,11 +454,11 @@ validate_with_relaxng(xmlDocPtr doc, gboolean to_logs, const char *relaxng_file,
         ctx->parser = xmlRelaxNGNewParserCtxt(relaxng_file);
         CRM_CHECK(ctx->parser != NULL, goto cleanup);
 
-        if (to_logs) {
+        if (error_handler) {
             xmlRelaxNGSetParserErrors(ctx->parser,
-                                      (xmlRelaxNGValidityErrorFunc) xml_log,
-                                      (xmlRelaxNGValidityWarningFunc) xml_log,
-                                      GUINT_TO_POINTER(LOG_ERR));
+                                      (xmlRelaxNGValidityErrorFunc) error_handler,
+                                      (xmlRelaxNGValidityWarningFunc) error_handler,
+                                      error_handler_context);
         } else {
             xmlRelaxNGSetParserErrors(ctx->parser,
                                       (xmlRelaxNGValidityErrorFunc) fprintf,
@@ -474,11 +474,11 @@ validate_with_relaxng(xmlDocPtr doc, gboolean to_logs, const char *relaxng_file,
         ctx->valid = xmlRelaxNGNewValidCtxt(ctx->rng);
         CRM_CHECK(ctx->valid != NULL, goto cleanup);
 
-        if (to_logs) {
+        if (error_handler) {
             xmlRelaxNGSetValidErrors(ctx->valid,
-                                     (xmlRelaxNGValidityErrorFunc) xml_log,
-                                     (xmlRelaxNGValidityWarningFunc) xml_log,
-                                     GUINT_TO_POINTER(LOG_ERR));
+                                     (xmlRelaxNGValidityErrorFunc) error_handler,
+                                     (xmlRelaxNGValidityWarningFunc) error_handler,
+                                     error_handler_context);
         } else {
             xmlRelaxNGSetValidErrors(ctx->valid,
                                      (xmlRelaxNGValidityErrorFunc) fprintf,
@@ -561,7 +561,7 @@ crm_schema_cleanup(void)
 }
 
 static gboolean
-validate_with(xmlNode *xml, int method, gboolean to_logs)
+validate_with(xmlNode *xml, int method, xmlRelaxNGValidityErrorFunc error_handler, void* error_handler_context)
 {
     gboolean valid = FALSE;
     char *file = NULL;
@@ -590,7 +590,7 @@ validate_with(xmlNode *xml, int method, gboolean to_logs)
     switch (schema->validator) {
         case schema_validator_rng:
             cache = (relaxng_ctx_cache_t **) &(schema->cache);
-            valid = validate_with_relaxng(xml->doc, to_logs, file, cache);
+            valid = validate_with_relaxng(xml->doc, error_handler, error_handler_context, file, cache);
             break;
         default:
             crm_err("Unknown validator type: %d",
@@ -607,7 +607,7 @@ validate_with_silent(xmlNode *xml, int method)
 {
     bool rc, sl_backup = silent_logging;
     silent_logging = TRUE;
-    rc = validate_with(xml, method, TRUE);
+    rc = validate_with(xml, method, (xmlRelaxNGValidityErrorFunc) xml_log, GUINT_TO_POINTER(LOG_ERR));
     silent_logging = sl_backup;
     return rc;
 }
@@ -674,6 +674,12 @@ validate_xml_verbose(const xmlNode *xml_blob)
 gboolean
 validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs)
 {
+    return pcmk__validate_xml(xml_blob, validation, to_logs ? (xmlRelaxNGValidityErrorFunc) xml_log : NULL, GUINT_TO_POINTER(LOG_ERR));
+}
+
+gboolean
+pcmk__validate_xml(xmlNode *xml_blob, const char *validation, xmlRelaxNGValidityErrorFunc error_handler, void* error_handler_context)
+{
     int version = 0;
 
     CRM_CHECK((xml_blob != NULL) && (xml_blob->doc != NULL), return FALSE);
@@ -687,7 +693,7 @@ validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs)
         bool valid = FALSE;
 
         for (lpc = 0; lpc < xml_schema_max; lpc++) {
-            if (validate_with(xml_blob, lpc, FALSE)) {
+            if (validate_with(xml_blob, lpc, NULL, NULL)) {
                 valid = TRUE;
                 crm_xml_add(xml_blob, XML_ATTR_VALIDATION,
                             known_schemas[lpc].name);
@@ -705,7 +711,7 @@ validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs)
     if (strcmp(validation, PCMK__VALUE_NONE) == 0) {
         return TRUE;
     } else if (version < xml_schema_max) {
-        return validate_with(xml_blob, version, to_logs);
+        return validate_with(xml_blob, version, error_handler, error_handler_context);
     }
 
     crm_err("Unknown validator: %s", validation);
@@ -988,6 +994,8 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
     int max_stable_schemas = xml_latest_schema_index();
     int lpc = 0, match = -1, rc = pcmk_ok;
     int next = -1;  /* -1 denotes "inactive" value */
+    xmlRelaxNGValidityErrorFunc error_handler = 
+        to_logs ? (xmlRelaxNGValidityErrorFunc) xml_log : NULL;
 
     CRM_CHECK(best != NULL, return -EINVAL);
     *best = 0;
@@ -1024,7 +1032,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
                   known_schemas[lpc].name ? known_schemas[lpc].name : "<unset>",
                   lpc, max_stable_schemas);
 
-        if (validate_with(xml, lpc, to_logs) == FALSE) {
+        if (validate_with(xml, lpc, error_handler, GUINT_TO_POINTER(LOG_ERR)) == FALSE) {
             if (next != -1) {
                 crm_info("Configuration not valid for schema: %s",
                          known_schemas[lpc].name);
@@ -1089,7 +1097,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
                             known_schemas[lpc].transform);
                     rc = -pcmk_err_transform_failed;
 
-                } else if (validate_with(upgrade, next, to_logs)) {
+                } else if (validate_with(upgrade, next, error_handler, GUINT_TO_POINTER(LOG_ERR))) {
                     crm_info("Transformation %s.xsl successful",
                              known_schemas[lpc].transform);
                     lpc = next;
