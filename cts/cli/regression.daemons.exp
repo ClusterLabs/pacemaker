@@ -122,6 +122,11 @@
       <shortdesc lang="en">Do not lock resources to a cleanly shut down node longer than this</shortdesc>
       <content type="time" default=""/>
     </parameter>
+    <parameter name="node-pending-timeout">
+      <longdesc lang="en">Fence nodes that do not join the controller process group within this much time after joining the cluster, to allow the cluster to continue managing resources. A value of 0 means never fence pending nodes.</longdesc>
+      <shortdesc lang="en">How long to wait for a node that has joined the cluster to join the controller process group</shortdesc>
+      <content type="time" default=""/>
+    </parameter>
   </parameters>
 </resource-agent>
 =#=#=#= End test: Get controller metadata - OK (0) =#=#=#=
