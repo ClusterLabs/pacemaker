@@ -267,6 +267,10 @@ edited and verified before committing to the live configuration:
       crmsh    # crm configure ms WebDataClone WebData \
                  meta master-max=1 master-node-max=1 \
                  clone-max=2 clone-node-max=1 notify=true
+      crmsh    # crm configure clone WebDataClone WebData \
+                 meta promotable=true \
+                 promoted-max=1 promoted-node-max=1 \
+                 clone-max=2 clone-node-max=1 notify=true
       pcs-0.9  # pcs resource master WebDataClone WebData \
                  master-max=1 master-node-max=1 \
                  clone-max=2 clone-node-max=1 notify=true
@@ -274,6 +278,7 @@ edited and verified before committing to the live configuration:
                  promoted-max=1 promoted-node-max=1 \
                  clone-max=2 clone-node-max=1 notify=true
 
+crmsh supports both ways ('configure ms' is deprecated) to configure promotable clone since crmsh 4.4.0.
 pcs will generate the clone name automatically if it is omitted from the
 command line.
 
