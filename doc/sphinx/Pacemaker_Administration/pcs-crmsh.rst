@@ -118,14 +118,11 @@ Manage Resources
 .. topic:: Create a Resource
 
    .. code-block:: none
-
-      crmsh # crm configure primitive ClusterIP ocf:heartbeat:IPaddr2 \
-              params ip=192.168.122.120 cidr_netmask=24 \
-              op monitor interval=30s 
+      crmsh # crm configure primitive ClusterIP IPaddr2 params ip=192.168.122.120 cidr_netmask=24
       pcs   # pcs resource create ClusterIP IPaddr2 ip=192.168.122.120 cidr_netmask=24
 
-pcs determines the standard and provider (``ocf:heartbeat``) automatically
-since ``IPaddr2`` is unique, and automatically creates operations (including
+Both crmsh and pcs determine the standard and provider (``ocf:heartbeat``) automatically
+since ``IPaddr2`` is unique, and automatically create operations (including
 monitor) based on the agent's meta-data.
 
 .. topic:: Show Configuration of All Resources
