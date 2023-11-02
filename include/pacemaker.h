@@ -196,6 +196,20 @@ int pcmk_pacemakerd_status(xmlNodePtr *xml, const char *ipc_name,
                            unsigned int message_timeout_ms);
 
 /*!
+ * \brief Remove a resource
+ *
+ * \param[in,out] xml   Destination for the result, as an XML tree
+ * \param[in] rsc_id    Resource to remove
+ * \param[in] rsc_type  Type of the resource ("primitive", "group", etc.)
+ *
+ * \return Standard Pacemaker return code
+ * \note This function will return \p pcmk_rc_ok if \p rsc_id doesn't exist
+ *       or if \p rsc_type is incorrect for \p rsc_id (deleting something
+ *       that doesn't exist always succeeds).
+ */
+int pcmk_resource_delete(xmlNodePtr *xml, const char *rsc_id, const char *rsc_type);
+
+/*!
  * \brief Calculate and output resource operation digests
  *
  * \param[out]    xml        Where to store XML with result
