@@ -228,6 +228,7 @@ pcmk__resource_digests(pcmk__output_t *out, pcmk_resource_t *rsc,
     return rc;
 }
 
+// @COMPAT The scheduler parameter is unused and can be removed at the next break
 int
 pcmk_resource_digests(xmlNodePtr *xml, pcmk_resource_t *rsc,
                       const pcmk_node_t *node, GHashTable *overrides,
