@@ -32,9 +32,6 @@ typedef struct {
 
 #define SCHEMA_ZERO { .v = { 0, 0 } }
 
-#define schema_scanf(s, prefix, version, suffix) \
-    sscanf((s), prefix "%hhu.%hhu" suffix, &((version).v[0]), &((version).v[1]))
-
 #define schema_strdup_printf(prefix, version, suffix) \
     crm_strdup_printf(prefix "%u.%u" suffix, (version).v[0], (version).v[1])
 
@@ -139,9 +136,7 @@ xml_latest_schema(void)
 static inline bool
 version_from_filename(const char *filename, schema_version_t *version)
 {
-    int rc = schema_scanf(filename, "pacemaker-", *version, ".rng");
-
-    return (rc == 2);
+    return sscanf(filename, "pacemaker-%hhu.%hhu.rng", &(version->v[0]), &(version->v[1])) == 2;
 }
 
 static int
@@ -203,7 +198,6 @@ add_schema(enum schema_validator_e validator, const schema_version_t *version,
 {
     struct schema_s *schema = NULL;
     int last = g_list_length(known_schemas);
-    bool have_version = false;
 
     schema = calloc(1, sizeof(struct schema_s));
     CRM_ASSERT(schema != NULL);
@@ -214,14 +208,8 @@ add_schema(enum schema_validator_e validator, const schema_version_t *version,
     schema->transform_onleave = transform_onleave;
 
     if (version->v[0] || version->v[1]) {
-        have_version = true;
-    }
-
-    if (have_version) {
         schema->name = schema_strdup_printf("pacemaker-", *version, "");
     } else {
-        CRM_ASSERT(name != NULL);
-        schema_scanf(name, "%*[^-]-", schema->version, "");
         schema->name = strdup(name);
         CRM_ASSERT(schema->name != NULL);
     }
