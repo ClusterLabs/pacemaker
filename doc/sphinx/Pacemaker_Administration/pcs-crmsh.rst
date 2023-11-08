@@ -118,14 +118,11 @@ Manage Resources
 .. topic:: Create a Resource
 
    .. code-block:: none
-
-      crmsh # crm configure primitive ClusterIP ocf:heartbeat:IPaddr2 \
-              params ip=192.168.122.120 cidr_netmask=24 \
-              op monitor interval=30s 
+      crmsh # crm configure primitive ClusterIP IPaddr2 params ip=192.168.122.120 cidr_netmask=24
       pcs   # pcs resource create ClusterIP IPaddr2 ip=192.168.122.120 cidr_netmask=24
 
-pcs determines the standard and provider (``ocf:heartbeat``) automatically
-since ``IPaddr2`` is unique, and automatically creates operations (including
+Both crmsh and pcs determine the standard and provider (``ocf:heartbeat``) automatically
+since ``IPaddr2`` is unique, and automatically create operations (including
 monitor) based on the agent's meta-data.
 
 .. topic:: Show Configuration of All Resources
@@ -270,6 +267,10 @@ edited and verified before committing to the live configuration:
       crmsh    # crm configure ms WebDataClone WebData \
                  meta master-max=1 master-node-max=1 \
                  clone-max=2 clone-node-max=1 notify=true
+      crmsh    # crm configure clone WebDataClone WebData \
+                 meta promotable=true \
+                 promoted-max=1 promoted-node-max=1 \
+                 clone-max=2 clone-node-max=1 notify=true
       pcs-0.9  # pcs resource master WebDataClone WebData \
                  master-max=1 master-node-max=1 \
                  clone-max=2 clone-node-max=1 notify=true
@@ -277,6 +278,7 @@ edited and verified before committing to the live configuration:
                  promoted-max=1 promoted-node-max=1 \
                  clone-max=2 clone-node-max=1 notify=true
 
+crmsh supports both ways ('configure ms' is deprecated) to configure promotable clone since crmsh 4.4.0.
 pcs will generate the clone name automatically if it is omitted from the
 command line.
 
