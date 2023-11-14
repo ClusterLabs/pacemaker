@@ -967,11 +967,7 @@ handle_remote_ra_exec(gpointer user_data)
 
         } else if (pcmk__str_any_of(cmd->action, PCMK_ACTION_RELOAD,
                                     PCMK_ACTION_RELOAD_AGENT, NULL))  {
-            /* Currently the only reloadable parameter is reconnect_interval,
-             * which is only used by the scheduler via the CIB, so reloads are a
-             * no-op.
-             *
-             * @COMPAT DC <2.1.0: We only need to check for "reload" in case
+            /* @COMPAT DC <2.1.0: We only need to check for "reload" in case
              * we're in a rolling upgrade with a DC scheduling "reload" instead
              * of "reload-agent". An OCF 1.1 "reload" would be a no-op anyway,
              * so this would work for that purpose as well.
