@@ -170,7 +170,7 @@ attrd_erase_cb(xmlNode *msg, int call_id, int rc, xmlNode *output,
  * this handles the case where the node restarted so quickly that the
  * cluster layer didn't notice.
  *
- * \todo If pacemaker-attrd respawns after crashing (see PCMK_respawned),
+ * \todo If pacemaker-attrd respawns after crashing (see PCMK_ENV_RESPAWNED),
  *       ideally we'd skip this and sync our attributes from the writer.
  *       However, currently we reject any values for us that the writer has, in
  *       attrd_peer_update().
