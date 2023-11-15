@@ -7904,7 +7904,8 @@ crm_shadow: Could not access shadow instance 'cts-cli': No such file or director
     <errors>
       <error>Resource test2:0 is of type systemd and therefore cannot be used as a promotable clone resource</error>
       <error>Ignoring &lt;clone&gt; resource 'test2-clone' because configuration is invalid</error>
-      <error>crm_verify: Errors found during check: config not valid</error>
+      <error>CIB did not pass schema validation</error>
+      <error>Errors found during check: config not valid</error>
     </errors>
   </status>
 </pacemaker-result>
@@ -7919,7 +7920,8 @@ crm_shadow: Could not access shadow instance 'cts-cli': No such file or director
       <error>NOTE: Clusters with shared data need STONITH to ensure data integrity</error>
       <error>Node pcmk-1 is unclean but cannot be fenced</error>
       <error>Node pcmk-2 is unclean but cannot be fenced</error>
-      <error>crm_verify: Errors found during check: config not valid</error>
+      <error>CIB did not pass schema validation</error>
+      <error>Errors found during check: config not valid</error>
     </errors>
   </status>
 </pacemaker-result>
@@ -7932,7 +7934,8 @@ unpack_config 	warning: Blind faith: not fencing unseen nodes
     <errors>
       <error>Resource test2:0 is of type systemd and therefore cannot be used as a promotable clone resource</error>
       <error>Ignoring &lt;clone&gt; resource 'test2-clone' because configuration is invalid</error>
-      <error>crm_verify: Errors found during check: config not valid</error>
+      <error>CIB did not pass schema validation</error>
+      <error>Errors found during check: config not valid</error>
     </errors>
   </status>
 </pacemaker-result>
@@ -7948,7 +7951,8 @@ cluster_status 	warning: Fencing and resource management disabled due to lack of
       <error>NOTE: Clusters with shared data need STONITH to ensure data integrity</error>
       <error>Node pcmk-1 is unclean but cannot be fenced</error>
       <error>Node pcmk-2 is unclean but cannot be fenced</error>
-      <error>crm_verify: Errors found during check: config not valid</error>
+      <error>CIB did not pass schema validation</error>
+      <error>Errors found during check: config not valid</error>
     </errors>
   </status>
 </pacemaker-result>

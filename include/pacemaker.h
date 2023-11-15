@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the Pacemaker project contributors
+ * Copyright 2019-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -257,6 +257,22 @@ int pcmk_simulate(xmlNodePtr *xml, pcmk_scheduler_t *scheduler,
                   unsigned int section_opts, const char *use_date,
                   const char *input_file, const char *graph_file,
                   const char *dot_file);
+
+/*!
+ * \brief Verify that a CIB is error-free or output errors and warnings
+ *
+ * This high-level function essentially implements crm_verify(8). It operates
+ * on an input CIB file, which can be inputted through one of several ways. It
+ * writes out XML-formatted output.
+ *
+ * \param[in,out] xml          The destination for the result, as an XML tree
+ * \param[in]     cib_source   Source of the CIB: 
+ *                             NULL -> use live cib, "-" -> stdin
+ *                             "<..." -> xml str, otherwise -> xml file name
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_verify(xmlNodePtr *xml, const char *cib_source);
 
 /*!
  * \brief Get nodes list

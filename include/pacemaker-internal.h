@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the Pacemaker project contributors
+ * Copyright 2019-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,5 +22,6 @@
 #  include <pcmki/pcmki_simulate.h>
 #  include <pcmki/pcmki_status.h>
 #  include <pcmki/pcmki_transition.h>
+#  include <pcmki/pcmki_verify.h>
 
 #endif
