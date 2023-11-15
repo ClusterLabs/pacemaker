@@ -639,11 +639,11 @@ values, by running the ``man pacemaker-schedulerd`` and
       
        node-pending-timeout
      - :ref:`duration <duration>`
-     - 2h
+     - 0
      - Fence nodes that do not join the controller process group within this
        much time after joining the cluster, to allow the cluster to continue
-       managing resources. A value of 0 means never fence pending nodes.
-       *(since 2.1.7)* 
+       managing resources. A value of 0 means never fence pending nodes. Setting the value to 2h means fence nodes after 2 hours. 
+       *(since 2.1.7)*
    * - .. _cluster_delay:
       
        .. index::
