@@ -32,9 +32,6 @@ typedef struct {
 
 #define SCHEMA_ZERO { .v = { 0, 0 } }
 
-#define schema_scanf(s, prefix, version, suffix) \
-    sscanf((s), prefix "%hhu.%hhu" suffix, &((version).v[0]), &((version).v[1]))
-
 #define schema_strdup_printf(prefix, version, suffix) \
     crm_strdup_printf(prefix "%u.%u" suffix, (version).v[0], (version).v[1])
 
@@ -54,21 +51,15 @@ struct schema_s {
     char *transform;
     void *cache;
     enum schema_validator_e validator;
-    int after_transform;
     schema_version_t version;
     char *transform_enter;
     bool transform_onleave;
 };
 
-static struct schema_s *known_schemas = NULL;
-static int xml_schema_max = 0;
+static GList *known_schemas = NULL;
 static bool silent_logging = FALSE;
 
-static void
-xml_log(int priority, const char *fmt, ...)
-G_GNUC_PRINTF(2, 3);
-
-static void
+static void G_GNUC_PRINTF(2, 3)
 xml_log(int priority, const char *fmt, ...)
 {
     va_list ap;
@@ -85,27 +76,54 @@ static int
 xml_latest_schema_index(void)
 {
     // @COMPAT: pacemaker-next is deprecated since 2.1.5
-    return xml_schema_max - 3; // index from 0, ignore "pacemaker-next"/"none"
+    // FIXME: This function assumes at least three schemas have been added
+    // before it has been called for the first time.
+    return g_list_length(known_schemas) - 3; // index from 0, ignore "pacemaker-next"/"none"
 }
 
+/* Return the index of the most recent X.0 schema. */
 static int
-xml_minimum_schema_index(void)
+xml_find_x_0_schema_index(void)
 {
     static int best = 0;
-    if (best == 0) {
-        int lpc = 0;
+    int i = 0;
+    struct schema_s *best_schema = NULL;
 
-        best = xml_latest_schema_index();
-        for (lpc = best; lpc > 0; lpc--) {
-            if (known_schemas[lpc].version.v[0]
-                < known_schemas[best].version.v[0]) {
-                return best;
-            } else {
-                best = lpc;
-            }
-        }
-        best = xml_latest_schema_index();
+    if (best != 0) {
+        return best;
     }
+
+    /* Get the most recent schema so we can look at its version number. */
+    best = xml_latest_schema_index();
+    best_schema = g_list_nth(known_schemas, best)->data;
+
+    /* Iterate over the schema list until we find a schema with the same major
+     * version as best, and with a minor version number of 0.
+     *
+     * This assumes that the first schema in a major series is always X.0,
+     * which seems like a safe assumption.
+     */
+    for (GList *iter = known_schemas; iter != NULL; iter = iter->next) {
+        struct schema_s *schema = iter->data;
+
+        /* If we hit the initial best schema, the only things left in the list
+         * are "pacemaker-next" and "none" which aren't worth checking.
+         */
+        if (schema == best_schema) {
+            break;
+        }
+
+        if (schema->version.v[0] == best_schema->version.v[0] &&
+            schema->version.v[1] == 0) {
+            best = i;
+            return best;
+        }
+
+        i++;
+    }
+
+    /* If we got here, we never found a match.  Just return the latest. */
+    best = xml_latest_schema_index();
     return best;
 }
 
@@ -118,9 +136,7 @@ xml_latest_schema(void)
 static inline bool
 version_from_filename(const char *filename, schema_version_t *version)
 {
-    int rc = schema_scanf(filename, "pacemaker-", *version, ".rng");
-
-    return (rc == 2);
+    return sscanf(filename, "pacemaker-%hhu.%hhu.rng", &(version->v[0]), &(version->v[1])) == 2;
 }
 
 static int
@@ -178,60 +194,44 @@ schema_sort(const struct dirent **a, const struct dirent **b)
 static void
 add_schema(enum schema_validator_e validator, const schema_version_t *version,
            const char *name, const char *transform,
-           const char *transform_enter, bool transform_onleave,
-           int after_transform)
+           const char *transform_enter, bool transform_onleave)
 {
-    int last = xml_schema_max;
-    bool have_version = FALSE;
+    struct schema_s *schema = NULL;
+    int last = g_list_length(known_schemas);
 
-    xml_schema_max++;
-    known_schemas = pcmk__realloc(known_schemas,
-                                  xml_schema_max * sizeof(struct schema_s));
-    CRM_ASSERT(known_schemas != NULL);
-    memset(known_schemas+last, 0, sizeof(struct schema_s));
-    known_schemas[last].validator = validator;
-    known_schemas[last].after_transform = after_transform;
+    schema = calloc(1, sizeof(struct schema_s));
+    CRM_ASSERT(schema != NULL);
 
-    for (int i = 0; i < 2; ++i) {
-        known_schemas[last].version.v[i] = version->v[i];
-        if (version->v[i]) {
-            have_version = TRUE;
-        }
-    }
-    if (have_version) {
-        known_schemas[last].name = schema_strdup_printf("pacemaker-", *version, "");
+    schema->validator = validator;
+    schema->version.v[0] = version->v[0];
+    schema->version.v[1] = version->v[1];
+    schema->transform_onleave = transform_onleave;
+
+    if (version->v[0] || version->v[1]) {
+        schema->name = schema_strdup_printf("pacemaker-", *version, "");
     } else {
-        CRM_ASSERT(name);
-        schema_scanf(name, "%*[^-]-", known_schemas[last].version, "");
-        known_schemas[last].name = strdup(name);
+        schema->name = strdup(name);
+        CRM_ASSERT(schema->name != NULL);
     }
 
     if (transform) {
-        known_schemas[last].transform = strdup(transform);
+        schema->transform = strdup(transform);
+        CRM_ASSERT(schema->transform != NULL);
     }
+
     if (transform_enter) {
-        known_schemas[last].transform_enter = strdup(transform_enter);
+        schema->transform_enter = strdup(transform_enter);
+        CRM_ASSERT(schema->transform_enter != NULL);
     }
-    known_schemas[last].transform_onleave = transform_onleave;
-    if (after_transform == 0) {
-        after_transform = xml_schema_max;  /* upgrade is a one-way */
-    }
-    known_schemas[last].after_transform = after_transform;
 
-    if (known_schemas[last].after_transform < 0) {
-        crm_debug("Added supported schema %d: %s",
-                  last, known_schemas[last].name);
+    known_schemas = g_list_append(known_schemas, schema);
 
-    } else if (known_schemas[last].transform) {
-        crm_debug("Added supported schema %d: %s (upgrades to %d with %s.xsl)",
-                  last, known_schemas[last].name,
-                  known_schemas[last].after_transform,
-                  known_schemas[last].transform);
+    if (schema->transform != NULL) {
+        crm_debug("Added supported schema %d: %s (upgrades with %s.xsl)",
+                  last, schema->name, schema->transform);
 
     } else {
-        crm_debug("Added supported schema %d: %s (upgrades to %d)",
-                  last, known_schemas[last].name,
-                  known_schemas[last].after_transform);
+        crm_debug("Added supported schema %d: %s", last, schema->name);
     }
 }
 
@@ -264,8 +264,7 @@ add_schema(enum schema_validator_e validator, const schema_version_t *version,
  *   . name convention:  (see "upgrade-enter")
  */
 static int
-add_schema_by_version(const schema_version_t *version, int next,
-                      bool transform_expected)
+add_schema_by_version(const schema_version_t *version, bool transform_expected)
 {
     bool transform_onleave = FALSE;
     int rc = pcmk_rc_ok;
@@ -321,12 +320,11 @@ add_schema_by_version(const schema_version_t *version, int next,
         free(xslt);
         free(transform_upgrade);
         transform_upgrade = NULL;
-        next = -1;
         rc = ENOENT;
     }
 
     add_schema(schema_validator_rng, version, NULL,
-               transform_upgrade, transform_enter, transform_onleave, next);
+               transform_upgrade, transform_enter, transform_onleave);
 
     free(transform_upgrade);
     free(transform_enter);
@@ -392,7 +390,6 @@ crm_schema_init(void)
         free(base);
         for (lpc = 0; lpc < max; lpc++) {
             bool transform_expected = FALSE;
-            int next = 0;
             schema_version_t version = SCHEMA_ZERO;
 
             if (!version_from_filename(namelist[lpc]->d_name, &version)) {
@@ -408,11 +405,9 @@ crm_schema_init(void)
                         && (version.v[0] < next_version.v[0])) {
                     transform_expected = TRUE;
                 }
-
-            } else {
-                next = -1;
             }
-            if (add_schema_by_version(&version, next, transform_expected)
+
+            if (add_schema_by_version(&version, transform_expected)
                     == ENOENT) {
                 break;
             }
@@ -426,10 +421,10 @@ crm_schema_init(void)
 
     // @COMPAT: Deprecated since 2.1.5
     add_schema(schema_validator_rng, &zero, "pacemaker-next",
-               NULL, NULL, FALSE, -1);
+               NULL, NULL, FALSE);
 
     add_schema(schema_validator_none, &zero, PCMK__VALUE_NONE,
-               NULL, NULL, FALSE, -1);
+               NULL, NULL, FALSE);
 }
 
 static gboolean
@@ -517,6 +512,44 @@ validate_with_relaxng(xmlDocPtr doc, xmlRelaxNGValidityErrorFunc error_handler, 
     return valid;
 }
 
+static void
+free_schema(gpointer data)
+{
+    struct schema_s *schema = data;
+    relaxng_ctx_cache_t *ctx = NULL;
+
+    switch (schema->validator) {
+        case schema_validator_none: // not cached
+            break;
+
+        case schema_validator_rng: // cached
+            ctx = (relaxng_ctx_cache_t *) schema->cache;
+            if (ctx == NULL) {
+                break;
+            }
+
+            if (ctx->parser != NULL) {
+                xmlRelaxNGFreeParserCtxt(ctx->parser);
+            }
+
+            if (ctx->valid != NULL) {
+                xmlRelaxNGFreeValidCtxt(ctx->valid);
+            }
+
+            if (ctx->rng != NULL) {
+                xmlRelaxNGFree(ctx->rng);
+            }
+
+            free(ctx);
+            schema->cache = NULL;
+            break;
+    }
+
+    free(schema->name);
+    free(schema->transform);
+    free(schema->transform_enter);
+}
+
 /*!
  * \internal
  * \brief Clean up global memory associated with XML schemas
@@ -524,55 +557,23 @@ validate_with_relaxng(xmlDocPtr doc, xmlRelaxNGValidityErrorFunc error_handler, 
 void
 crm_schema_cleanup(void)
 {
-    int lpc;
-    relaxng_ctx_cache_t *ctx = NULL;
-
-    for (lpc = 0; lpc < xml_schema_max; lpc++) {
-
-        switch (known_schemas[lpc].validator) {
-            case schema_validator_none: // not cached
-                break;
-            case schema_validator_rng: // cached
-                ctx = (relaxng_ctx_cache_t *) known_schemas[lpc].cache;
-                if (ctx == NULL) {
-                    break;
-                }
-                if (ctx->parser != NULL) {
-                    xmlRelaxNGFreeParserCtxt(ctx->parser);
-                }
-                if (ctx->valid != NULL) {
-                    xmlRelaxNGFreeValidCtxt(ctx->valid);
-                }
-                if (ctx->rng != NULL) {
-                    xmlRelaxNGFree(ctx->rng);
-                }
-                free(ctx);
-                known_schemas[lpc].cache = NULL;
-                break;
-        }
-        free(known_schemas[lpc].name);
-        free(known_schemas[lpc].transform);
-        free(known_schemas[lpc].transform_enter);
-    }
-    free(known_schemas);
+    g_list_free_full(known_schemas, free_schema);
     known_schemas = NULL;
 
     wrap_libxslt(true);
 }
 
 static gboolean
-validate_with(xmlNode *xml, int method, xmlRelaxNGValidityErrorFunc error_handler, void* error_handler_context)
+validate_with(xmlNode *xml, struct schema_s *schema, xmlRelaxNGValidityErrorFunc error_handler, void* error_handler_context)
 {
     gboolean valid = FALSE;
     char *file = NULL;
-    struct schema_s *schema = NULL;
     relaxng_ctx_cache_t **cache = NULL;
 
-    if (method < 0) {
+    if (schema == NULL) {
         return FALSE;
     }
 
-    schema = &(known_schemas[method]);
     if (schema->validator == schema_validator_none) {
         return TRUE;
     }
@@ -593,8 +594,7 @@ validate_with(xmlNode *xml, int method, xmlRelaxNGValidityErrorFunc error_handle
             valid = validate_with_relaxng(xml->doc, error_handler, error_handler_context, file, cache);
             break;
         default:
-            crm_err("Unknown validator type: %d",
-                    known_schemas[method].validator);
+            crm_err("Unknown validator type: %d", schema->validator);
             break;
     }
 
@@ -603,11 +603,11 @@ validate_with(xmlNode *xml, int method, xmlRelaxNGValidityErrorFunc error_handle
 }
 
 static bool
-validate_with_silent(xmlNode *xml, int method)
+validate_with_silent(xmlNode *xml, struct schema_s *schema)
 {
     bool rc, sl_backup = silent_logging;
     silent_logging = TRUE;
-    rc = validate_with(xml, method, (xmlRelaxNGValidityErrorFunc) xml_log, GUINT_TO_POINTER(LOG_ERR));
+    rc = validate_with(xml, schema, (xmlRelaxNGValidityErrorFunc) xml_log, GUINT_TO_POINTER(LOG_ERR));
     silent_logging = sl_backup;
     return rc;
 }
@@ -689,18 +689,15 @@ pcmk__validate_xml(xmlNode *xml_blob, const char *validation, xmlRelaxNGValidity
     }
 
     if (validation == NULL) {
-        int lpc = 0;
         bool valid = FALSE;
 
-        for (lpc = 0; lpc < xml_schema_max; lpc++) {
-            if (validate_with(xml_blob, lpc, NULL, NULL)) {
+        for (GList *iter = known_schemas; iter != NULL; iter = iter->next) {
+            struct schema_s *schema = iter->data;
+
+            if (validate_with(xml_blob, schema, NULL, NULL)) {
                 valid = TRUE;
-                crm_xml_add(xml_blob, XML_ATTR_VALIDATION,
-                            known_schemas[lpc].name);
-                crm_info("XML validated against %s", known_schemas[lpc].name);
-                if(known_schemas[lpc].after_transform == 0) {
-                    break;
-                }
+                crm_xml_add(xml_blob, XML_ATTR_VALIDATION, schema->name);
+                crm_info("XML validated against %s", schema->name);
             }
         }
 
@@ -710,17 +707,15 @@ pcmk__validate_xml(xmlNode *xml_blob, const char *validation, xmlRelaxNGValidity
     version = get_schema_version(validation);
     if (strcmp(validation, PCMK__VALUE_NONE) == 0) {
         return TRUE;
-    } else if (version < xml_schema_max) {
-        return validate_with(xml_blob, version, error_handler, error_handler_context);
+    } else if (version < g_list_length(known_schemas)) {
+        struct schema_s *schema = g_list_nth_data(known_schemas, version);
+        return validate_with(xml_blob, schema, error_handler,
+                             error_handler_context);
     }
 
     crm_err("Unknown validator: %s", validation);
     return FALSE;
 }
-
-static void
-cib_upgrade_err(void *ctx, const char *fmt, ...)
-G_GNUC_PRINTF(2, 3);
 
 /* With this arrangement, an attempt to identify the message severity
    as explicitly signalled directly from XSLT is performed in rather
@@ -745,7 +740,7 @@ G_GNUC_PRINTF(2, 3);
    (suspicious, likely internal errors or some runaways) is
    LOG_WARNING.
  */
-static void
+static void G_GNUC_PRINTF(2, 3)
 cib_upgrade_err(void *ctx, const char *fmt, ...)
 {
     va_list ap, aq;
@@ -962,10 +957,13 @@ apply_upgrade(xmlNode *xml, const struct schema_s *schema, gboolean to_logs)
 const char *
 get_schema_name(int version)
 {
-    if (version < 0 || version >= xml_schema_max) {
+    struct schema_s *schema = g_list_nth_data(known_schemas, version);
+
+    if (schema == NULL) {
         return "unknown";
     }
-    return known_schemas[version].name;
+
+    return schema->name;
 }
 
 int
@@ -976,11 +974,17 @@ get_schema_version(const char *name)
     if (name == NULL) {
         name = PCMK__VALUE_NONE;
     }
-    for (; lpc < xml_schema_max; lpc++) {
-        if (pcmk__str_eq(name, known_schemas[lpc].name, pcmk__str_casei)) {
+
+    for (GList *iter = known_schemas; iter != NULL; iter = iter->next) {
+        struct schema_s *schema = iter->data;
+
+        if (pcmk__str_eq(name, schema->name, pcmk__str_casei)) {
             return lpc;
         }
+
+        lpc++;
     }
+
     return -1;
 }
 
@@ -1028,18 +1032,23 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
     }
 
     while (lpc <= max_stable_schemas) {
-        crm_debug("Testing '%s' validation (%d of %d)",
-                  known_schemas[lpc].name ? known_schemas[lpc].name : "<unset>",
-                  lpc, max_stable_schemas);
+        /* FIXME: This will cause us to walk the known_schemas list every time
+         * this loop iterates, which is not ideal.  However, for now it's a lot
+         * easier than trying to get all the loop indices we're using here
+         * sorted out and working correctly.
+         */
+        struct schema_s *schema = g_list_nth_data(known_schemas, lpc);
 
-        if (validate_with(xml, lpc, error_handler, GUINT_TO_POINTER(LOG_ERR)) == FALSE) {
+        crm_debug("Testing '%s' validation (%d of %d)",
+                  pcmk__s(schema->name, "<unset>"), lpc, max_stable_schemas);
+
+        if (validate_with(xml, schema, error_handler, GUINT_TO_POINTER(LOG_ERR)) == FALSE) {
             if (next != -1) {
                 crm_info("Configuration not valid for schema: %s",
-                         known_schemas[lpc].name);
+                         schema->name);
                 next = -1;
             } else {
-                crm_trace("%s validation failed",
-                          known_schemas[lpc].name ? known_schemas[lpc].name : "<unset>");
+                crm_trace("%s validation failed", pcmk__s(schema->name, "<unset>"));
             }
             if (*best) {
                 /* we've satisfied the validation, no need to check further */
@@ -1049,8 +1058,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
 
         } else {
             if (next != -1) {
-                crm_debug("Configuration valid for schema: %s",
-                          known_schemas[next].name);
+                crm_debug("Configuration valid for schema: %s", schema->name);
                 next = -1;
             }
             rc = pcmk_ok;
@@ -1062,44 +1070,48 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
 
         if (rc == pcmk_ok && transform) {
             xmlNode *upgrade = NULL;
-            next = known_schemas[lpc].after_transform;
+            struct schema_s *next_schema = NULL;
+            next = lpc+1;
 
-            if (next <= lpc) {
-                /* There is no next version, or next would regress */
-                crm_trace("Stopping at %s", known_schemas[lpc].name);
+            if (next > max_stable_schemas) {
+                /* There is no next version */
+                crm_trace("Stopping at %s", schema->name);
                 break;
+            }
 
-            } else if (max > 0 && (lpc == max || next > max)) {
+            if (max > 0 && (lpc == max || next > max)) {
                 crm_trace("Upgrade limit reached at %s (lpc=%d, next=%d, max=%d)",
-                          known_schemas[lpc].name, lpc, next, max);
+                          schema->name, lpc, next, max);
                 break;
+            }
 
-            } else if (known_schemas[lpc].transform == NULL
+            next_schema = g_list_nth_data(known_schemas, next);
+            CRM_ASSERT(next_schema != NULL);
+
+            if (schema->transform == NULL
                        /* possibly avoid transforming when readily valid
                           (in general more restricted when crossing the major
                           version boundary, as X.0 "transitional" version is
                           expected to be more strict than it's successors that
                           may re-allow constructs from previous major line) */
-                       || validate_with_silent(xml, next)) {
+                       || validate_with_silent(xml, next_schema)) {
                 crm_debug("%s-style configuration is also valid for %s",
-                           known_schemas[lpc].name, known_schemas[next].name);
+                           schema->name, next_schema->name);
 
                 lpc = next;
 
             } else {
                 crm_debug("Upgrading %s-style configuration to %s with %s.xsl",
-                           known_schemas[lpc].name, known_schemas[next].name,
-                           known_schemas[lpc].transform);
+                           schema->name, next_schema->name, schema->transform);
 
-                upgrade = apply_upgrade(xml, &known_schemas[lpc], to_logs);
+                upgrade = apply_upgrade(xml, schema, to_logs);
                 if (upgrade == NULL) {
-                    crm_err("Transformation %s.xsl failed",
-                            known_schemas[lpc].transform);
+                    crm_err("Transformation %s.xsl failed", schema->transform);
                     rc = -pcmk_err_transform_failed;
 
-                } else if (validate_with(upgrade, next, error_handler, GUINT_TO_POINTER(LOG_ERR))) {
-                    crm_info("Transformation %s.xsl successful",
-                             known_schemas[lpc].transform);
+                } else if (validate_with(upgrade, next_schema, error_handler,
+                                         GUINT_TO_POINTER(LOG_ERR))) {
+                    crm_info("Transformation %s.xsl successful", schema->transform);
                     lpc = next;
                     *best = next;
                     free_xml(xml);
@@ -1108,7 +1120,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
 
                 } else {
                     crm_err("Transformation %s.xsl did not produce a valid configuration",
-                            known_schemas[lpc].transform);
+                            schema->transform);
                     crm_log_xml_info(upgrade, "transform:bad");
                     free_xml(upgrade);
                     rc = -pcmk_err_schema_validation;
@@ -1124,10 +1136,12 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
     }
 
     if (*best > match && *best) {
+        struct schema_s *best_schema = g_list_nth_data(known_schemas, *best);
+
         crm_info("%s the configuration from %s to %s",
-                   transform?"Transformed":"Upgraded",
-                   value ? value : "<none>", known_schemas[*best].name);
-        crm_xml_add(xml, XML_ATTR_VALIDATION, known_schemas[*best].name);
+                   transform?"Transformed":"Upgraded", pcmk__s(value, "<none>"),
+                   best_schema->name);
+        crm_xml_add(xml, XML_ATTR_VALIDATION, best_schema->name);
     }
 
     *xml_blob = xml;
@@ -1144,7 +1158,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
 
     int version = get_schema_version(value);
     int orig_version = version;
-    int min_version = xml_minimum_schema_index();
+    int min_version = xml_find_x_0_schema_index();
 
     if (version < min_version) {
         // Current configuration schema is not acceptable, try to update
@@ -1242,4 +1256,24 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
 
     free(orig_value);
     return rc;
+}
+
+void
+pcmk__log_known_schemas(void)
+{
+    int lpc = 0;
+
+    for (GList *iter = known_schemas; iter != NULL; iter = iter->next) {
+        struct schema_s *schema = iter->data;
+
+        if (schema->transform != NULL) {
+            crm_debug("known_schemas[%d] => %s (upgrades with %s.xsl)",
+                      lpc, schema->name, schema->transform);
+
+        } else {
+            crm_debug("known_schemas[%d] => %s", lpc, schema->name);
+        }
+
+        lpc++;
+    }
 }

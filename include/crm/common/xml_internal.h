@@ -441,8 +441,11 @@ pcmk__xml_attr_value(const xmlAttr *attr)
            : (const char *) attr->children->content;
 }
 
+
 gboolean pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
                             xmlRelaxNGValidityErrorFunc error_handler, 
                             void *error_handler_context);
+
+void pcmk__log_known_schemas(void);
 
 #endif // PCMK__XML_INTERNAL__H
