@@ -25,12 +25,12 @@
 
 enum child_daemon_flags {
     child_none                  = 0,
+    child_respawn               = 1 << 0,
 };
 
 typedef struct pcmk_child_s {
     pid_t pid;
     int respawn_count;
-    bool respawn;
     const char *name;
     const char *uid;
     const char *command;
@@ -53,34 +53,34 @@ typedef struct pcmk_child_s {
 
 static pcmk_child_t pcmk_children[] = {
     {
-        0, 0, true,  "pacemaker-based", CRM_DAEMON_USER,
+        0, 0, "pacemaker-based", CRM_DAEMON_USER,
         CRM_DAEMON_DIR "/pacemaker-based", PCMK__SERVER_BASED_RO,
-        true, 0, child_none
+        true, 0, child_respawn
     },
     {
-        0, 0, true, "pacemaker-fenced", NULL,
+        0, 0, "pacemaker-fenced", NULL,
         CRM_DAEMON_DIR "/pacemaker-fenced", "stonith-ng",
-        true, 0, child_none
+        true, 0, child_respawn
     },
     {
-        0, 0, true,  "pacemaker-execd", NULL,
+        0, 0, "pacemaker-execd", NULL,
         CRM_DAEMON_DIR "/pacemaker-execd", CRM_SYSTEM_LRMD,
-        false, 0, child_none
+        false, 0, child_respawn
     },
     {
-        0, 0, true, "pacemaker-attrd", CRM_DAEMON_USER,
+        0, 0, "pacemaker-attrd", CRM_DAEMON_USER,
         CRM_DAEMON_DIR "/pacemaker-attrd", T_ATTRD,
-        true, 0, child_none
+        true, 0, child_respawn
     },
     {
-        0, 0, true, "pacemaker-schedulerd", CRM_DAEMON_USER,
+        0, 0, "pacemaker-schedulerd", CRM_DAEMON_USER,
         CRM_DAEMON_DIR "/pacemaker-schedulerd", CRM_SYSTEM_PENGINE,
-        false, 0, child_none
+        false, 0, child_respawn
     },
     {
-        0, 0, true, "pacemaker-controld", CRM_DAEMON_USER,
+        0, 0, "pacemaker-controld", CRM_DAEMON_USER,
         CRM_DAEMON_DIR "/pacemaker-controld", CRM_SYSTEM_CRMD,
-        true, 0, child_none
+        true, 0, child_respawn
     },
 };
 
@@ -159,7 +159,7 @@ check_next_subdaemon(gpointer user_data)
                             pcmk_children[next_child].pid),
                         pcmk_children[next_child].check_count);
                 stop_child(&pcmk_children[next_child], SIGKILL);
-                if (pcmk_children[next_child].respawn) {
+                if (pcmk_is_set(pcmk_children[next_child].flags, child_respawn)) {
                     /* as long as the respawn-limit isn't reached
                        give it another round of check retries
                      */
@@ -171,7 +171,7 @@ check_next_subdaemon(gpointer user_data)
                         (long long) PCMK__SPECIAL_PID_AS_0(
                             pcmk_children[next_child].pid),
                         pcmk_children[next_child].check_count);
-                if (pcmk_children[next_child].respawn) {
+                if (pcmk_is_set(pcmk_children[next_child].flags, child_respawn)) {
                     /* as long as the respawn-limit isn't reached
                        and we haven't run out of connect retries
                        we account this as progress we are willing
@@ -185,7 +185,7 @@ check_next_subdaemon(gpointer user_data)
              */
             break;
         case pcmk_rc_ipc_unresponsive:
-            if (!pcmk_children[next_child].respawn) {
+            if (!pcmk_is_set(pcmk_children[next_child].flags, child_respawn)) {
                 /* if a subdaemon is down and we don't want it
                    to be restarted this is a success during
                    shutdown. if it isn't restarted anymore
@@ -204,7 +204,7 @@ check_next_subdaemon(gpointer user_data)
                             pcmk_children[next_child].pid));
                 break;
             }
-            if (pcmk_children[next_child].respawn) {
+            if (pcmk_is_set(pcmk_children[next_child].flags, child_respawn)) {
                 crm_err("%s[%lld] terminated",
                         pcmk_children[next_child].name,
                         (long long) PCMK__SPECIAL_PID_AS_0(
@@ -269,14 +269,14 @@ pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitco
             case CRM_EX_FATAL:
                 crm_warn("Shutting cluster down because %s[%d] had fatal failure",
                          name, pid);
-                child->respawn = false;
+                child->flags &= ~child_respawn;
                 fatal_error = TRUE;
                 pcmk_shutdown(SIGTERM);
                 break;
 
             case CRM_EX_PANIC:
                 crm_emerg("%s[%d] instructed the machine to reset", name, pid);
-                child->respawn = false;
+                child->flags &= ~child_respawn;
                 fatal_error = TRUE;
                 pcmk__panic(__func__);
                 pcmk_shutdown(SIGTERM);
@@ -302,14 +302,14 @@ pcmk_process_exit(pcmk_child_t * child)
     child->respawn_count += 1;
     if (child->respawn_count > MAX_RESPAWN) {
         crm_err("Child respawn count exceeded by %s", child->name);
-        child->respawn = false;
+        child->flags &= ~child_respawn;
     }
 
     if (shutdown_trigger) {
         /* resume step-wise shutdown (returned TRUE yields no parallelizing) */
         mainloop_set_trigger(shutdown_trigger);
 
-    } else if (!child->respawn) {
+    } else if (!pcmk_is_set(child->flags, child_respawn)) {
         /* nothing to do */
 
     } else if (crm_is_true(pcmk__env_option(PCMK__ENV_FAIL_FAST))) {
@@ -350,7 +350,7 @@ pcmk_shutdown_worker(gpointer user_data)
         if (child->pid != 0) {
             time_t now = time(NULL);
 
-            if (child->respawn) {
+            if (pcmk_is_set(child->flags, child_respawn)) {
                 if (child->pid == PCMK__SPECIAL_PID) {
                     crm_warn("The process behind %s IPC cannot be"
                              " terminated, so either wait the graceful"
@@ -364,7 +364,7 @@ pcmk_shutdown_worker(gpointer user_data)
                              child->command);
                 }
                 next_log = now + 30;
-                child->respawn = false;
+                child->flags &= ~child_respawn;
                 stop_child(child, SIGTERM);
                 if (phase < PCMK_CHILD_CONTROLD) {
                     g_timeout_add(SHUTDOWN_ESCALATION_PERIOD,
