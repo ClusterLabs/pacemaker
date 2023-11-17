@@ -283,4 +283,30 @@ void pcmk__register_patchset_messages(pcmk__output_t *out);
 #define PCMK__PW_BUFFER_LEN 500
 
 
+/*
+ * Schemas
+ */
+typedef struct {
+    unsigned char v[2];
+} pcmk__schema_version_t;
+
+enum pcmk__schema_validator {
+    pcmk__schema_validator_none,
+    pcmk__schema_validator_rng
+};
+
+typedef struct {
+    char *name;
+    char *transform;
+    void *cache;
+    enum pcmk__schema_validator validator;
+    pcmk__schema_version_t version;
+    char *transform_enter;
+    bool transform_onleave;
+} pcmk__schema_t;
+
+G_GNUC_INTERNAL
+int pcmk__find_x_0_schema_index(GList *schemas);
+
+
 #endif  // CRMCOMMON_PRIVATE__H

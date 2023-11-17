@@ -26,9 +26,7 @@
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>  /* PCMK__XML_LOG_BASE */
 
-typedef struct {
-    unsigned char v[2];
-} pcmk__schema_version_t;
+#include "crmcommon_private.h"
 
 #define SCHEMA_ZERO { .v = { 0, 0 } }
 
@@ -40,21 +38,6 @@ typedef struct {
     xmlRelaxNGValidCtxtPtr valid;
     xmlRelaxNGParserCtxtPtr parser;
 } relaxng_ctx_cache_t;
-
-enum pcmk__schema_validator {
-    pcmk__schema_validator_none,
-    pcmk__schema_validator_rng
-};
-
-typedef struct {
-    char *name;
-    char *transform;
-    void *cache;
-    enum pcmk__schema_validator validator;
-    pcmk__schema_version_t version;
-    char *transform_enter;
-    bool transform_onleave;
-} pcmk__schema_t;
 
 static GList *known_schemas = NULL;
 static bool silent_logging = FALSE;
@@ -82,8 +65,8 @@ xml_latest_schema_index(GList *schemas)
 }
 
 /* Return the index of the most recent X.0 schema. */
-static int
-xml_find_x_0_schema_index(GList *schemas)
+int
+pcmk__find_x_0_schema_index(GList *schemas)
 {
     /* We can't just use best to determine whether we've found the index
      * or not.  What if we have a very long list of schemas all in the
@@ -1178,7 +1161,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
 
     int version = get_schema_version(value);
     int orig_version = version;
-    int min_version = xml_find_x_0_schema_index(known_schemas);
+    int min_version = pcmk__find_x_0_schema_index(known_schemas);
 
     if (version < min_version) {
         // Current configuration schema is not acceptable, try to update
