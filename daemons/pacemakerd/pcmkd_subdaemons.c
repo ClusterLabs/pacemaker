@@ -26,6 +26,7 @@
 enum child_daemon_flags {
     child_none                  = 0,
     child_respawn               = 1 << 0,
+    child_needs_cluster         = 1 << 1,
 };
 
 typedef struct pcmk_child_s {
@@ -35,7 +36,6 @@ typedef struct pcmk_child_s {
     const char *uid;
     const char *command;
     const char *endpoint;  /* IPC server name */
-    bool needs_cluster;
     int check_count;
     uint32_t flags;
 
@@ -55,32 +55,32 @@ static pcmk_child_t pcmk_children[] = {
     {
         0, 0, "pacemaker-based", CRM_DAEMON_USER,
         CRM_DAEMON_DIR "/pacemaker-based", PCMK__SERVER_BASED_RO,
-        true, 0, child_respawn
+        0, child_respawn | child_needs_cluster
     },
     {
         0, 0, "pacemaker-fenced", NULL,
         CRM_DAEMON_DIR "/pacemaker-fenced", "stonith-ng",
-        true, 0, child_respawn
+        0, child_respawn | child_needs_cluster
     },
     {
         0, 0, "pacemaker-execd", NULL,
         CRM_DAEMON_DIR "/pacemaker-execd", CRM_SYSTEM_LRMD,
-        false, 0, child_respawn
+        0, child_respawn
     },
     {
         0, 0, "pacemaker-attrd", CRM_DAEMON_USER,
         CRM_DAEMON_DIR "/pacemaker-attrd", T_ATTRD,
-        true, 0, child_respawn
+        0, child_respawn | child_needs_cluster
     },
     {
         0, 0, "pacemaker-schedulerd", CRM_DAEMON_USER,
         CRM_DAEMON_DIR "/pacemaker-schedulerd", CRM_SYSTEM_PENGINE,
-        false, 0, child_respawn
+        0, child_respawn
     },
     {
         0, 0, "pacemaker-controld", CRM_DAEMON_USER,
         CRM_DAEMON_DIR "/pacemaker-controld", CRM_SYSTEM_CRMD,
-        true, 0, child_respawn
+        0, child_respawn | child_needs_cluster
     },
 };
 
@@ -321,7 +321,7 @@ pcmk_process_exit(pcmk_child_t * child)
                  " appears alright per %s IPC end-point",
                  child->name, child->endpoint);
 
-    } else if (child->needs_cluster && !pcmkd_cluster_connected()) {
+    } else if (pcmk_is_set(child->flags, child_needs_cluster) && !pcmkd_cluster_connected()) {
         crm_notice("Not respawning %s subdaemon until cluster returns",
                    child->name);
         child->needs_retry = true;
