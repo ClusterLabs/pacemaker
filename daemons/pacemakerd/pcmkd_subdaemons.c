@@ -10,6 +10,10 @@
 #include <crm_internal.h>
 #include "pacemakerd.h"
 
+#if SUPPORT_COROSYNC
+#include "pcmkd_corosync.h"
+#endif
+
 #include <errno.h>
 #include <grp.h>
 #include <signal.h>

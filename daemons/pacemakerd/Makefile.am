@@ -20,7 +20,8 @@ EXTRA_DIST 	= pacemakerd.8.inc
 
 ## SOURCES
 
-noinst_HEADERS		= pacemakerd.h
+noinst_HEADERS		= pacemakerd.h \
+			  pcmkd_corosync.h
 
 pacemakerd_CFLAGS	= $(CFLAGS_HARDENED_EXE)
 pacemakerd_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
