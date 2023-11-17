@@ -85,45 +85,65 @@ xml_latest_schema_index(void)
 static int
 xml_find_x_0_schema_index(void)
 {
+    /* We can't just use best to determine whether we've found the index
+     * or not.  What if we have a very long list of schemas all in the
+     * same major version series?  We'd return 0 for that, which means
+     * we would still run this function every time.
+     */
+    static bool found = false;
     static int best = 0;
-    int i = 0;
+    int i;
+    GList *best_node = NULL;
     struct schema_s *best_schema = NULL;
 
-    if (best != 0) {
+    if (found) {
         return best;
     }
 
+    CRM_ASSERT(known_schemas != NULL);
+
     /* Get the most recent schema so we can look at its version number. */
     best = xml_latest_schema_index();
-    best_schema = g_list_nth(known_schemas, best)->data;
+    best_node = g_list_nth(known_schemas, best);
+    best_schema = best_node->data;
 
-    /* Iterate over the schema list until we find a schema with the same major
-     * version as best, and with a minor version number of 0.
-     *
-     * This assumes that the first schema in a major series is always X.0,
-     * which seems like a safe assumption.
-     */
-    for (GList *iter = known_schemas; iter != NULL; iter = iter->next) {
-        struct schema_s *schema = iter->data;
-
-        /* If we hit the initial best schema, the only things left in the list
-         * are "pacemaker-next" and "none" which aren't worth checking.
-         */
-        if (schema == best_schema) {
-            break;
-        }
-
-        if (schema->version.v[0] == best_schema->version.v[0] &&
-            schema->version.v[1] == 0) {
-            best = i;
-            return best;
-        }
-
-        i++;
+    /* If this is a singleton list, we're done. */
+    if (pcmk__list_of_1(known_schemas)) {
+        goto done;
     }
 
-    /* If we got here, we never found a match.  Just return the latest. */
-    best = xml_latest_schema_index();
+    /* Start comparing the list from the node before the best schema (there's
+     * no point in comparing something to itself).  Then, 'i' is an index
+     * starting at the best schema and will always point at the node after
+     * 'iter'.  This makes it the value we want to return when we find what
+     * we're looking for.
+     */
+    i = best;
+
+    for (GList *iter = best_node->prev; iter != NULL; iter = iter->prev) {
+        struct schema_s *schema = iter->data;
+
+        /* We've found a schema in an older major version series.  Return
+         * the index of the first one in the same major version series as
+         * the best schema.
+         */
+        if (schema->version.v[0] < best_schema->version.v[0]) {
+            best = i;
+            goto done;
+
+        /* We're out of list to examine.  This probably means there was only
+         * one major version series, so return index 0.
+         */
+        } else if (iter->prev == NULL) {
+            best = 0;
+            goto done;
+        }
+
+        i--;
+    }
+
+done:
+    found = true;
     return best;
 }
 
