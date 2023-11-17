@@ -28,6 +28,7 @@ enum child_daemon_flags {
     child_respawn               = 1 << 0,
     child_needs_cluster         = 1 << 1,
     child_needs_retry           = 1 << 2,
+    child_active_before_startup = 1 << 3,
 };
 
 typedef struct pcmk_child_s {
@@ -39,9 +40,6 @@ typedef struct pcmk_child_s {
     const char *endpoint;  /* IPC server name */
     int check_count;
     uint32_t flags;
-
-    /* Anything below here will be dynamically initialized */
-    bool active_before_startup;
 } pcmk_child_t;
 
 #define PCMK_PROCESS_CHECK_INTERVAL 1
@@ -196,7 +194,7 @@ check_next_subdaemon(gpointer user_data)
                     subdaemon_check_progress = time(NULL);
                 }
             }
-            if (!pcmk_children[next_child].active_before_startup) {
+            if (!pcmk_is_set(pcmk_children[next_child].flags, child_active_before_startup)) {
                 crm_trace("found %s[%lld] missing - signal-handler "
                           "will take care of it",
                            pcmk_children[next_child].name,
@@ -296,7 +294,7 @@ static void
 pcmk_process_exit(pcmk_child_t * child)
 {
     child->pid = 0;
-    child->active_before_startup = false;
+    child->flags &= ~child_active_before_startup;
     child->check_count = 0;
 
     child->respawn_count += 1;
@@ -431,7 +429,7 @@ start_child(pcmk_child_t * child)
     const char *env_valgrind = pcmk__env_option(PCMK__ENV_VALGRIND_ENABLED);
     const char *env_callgrind = pcmk__env_option(PCMK__ENV_CALLGRIND_ENABLED);
 
-    child->active_before_startup = false;
+    child->flags &= ~child_active_before_startup;
     child->check_count = 0;
 
     if (child->command == NULL) {
@@ -763,7 +761,7 @@ find_and_track_existing_processes(void)
                                (long long) PCMK__SPECIAL_PID_AS_0(
                                                pcmk_children[i].pid));
                     pcmk_children[i].respawn_count = -1;  /* 0~keep watching */
-                    pcmk_children[i].active_before_startup = true;
+                    pcmk_children[i].flags |= child_active_before_startup;
                     break;
                 case pcmk_rc_ipc_pid_only:
                     if (pcmk_children[i].respawn_count == WAIT_TRIES) {
