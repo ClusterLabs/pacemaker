@@ -23,6 +23,10 @@
 #include <crm/cluster.h>
 #include <crm/msg_xml.h>
 
+enum child_daemon_flags {
+    child_none                  = 0,
+};
+
 typedef struct pcmk_child_s {
     pid_t pid;
     int respawn_count;
@@ -33,6 +37,7 @@ typedef struct pcmk_child_s {
     const char *endpoint;  /* IPC server name */
     bool needs_cluster;
     int check_count;
+    uint32_t flags;
 
     /* Anything below here will be dynamically initialized */
     bool needs_retry;
@@ -50,32 +55,32 @@ static pcmk_child_t pcmk_children[] = {
     {
         0, 0, true,  "pacemaker-based", CRM_DAEMON_USER,
         CRM_DAEMON_DIR "/pacemaker-based", PCMK__SERVER_BASED_RO,
-        true
+        true, 0, child_none
     },
     {
         0, 0, true, "pacemaker-fenced", NULL,
         CRM_DAEMON_DIR "/pacemaker-fenced", "stonith-ng",
-        true
+        true, 0, child_none
     },
     {
         0, 0, true,  "pacemaker-execd", NULL,
         CRM_DAEMON_DIR "/pacemaker-execd", CRM_SYSTEM_LRMD,
-        false
+        false, 0, child_none
     },
     {
         0, 0, true, "pacemaker-attrd", CRM_DAEMON_USER,
         CRM_DAEMON_DIR "/pacemaker-attrd", T_ATTRD,
-        true
+        true, 0, child_none
     },
     {
         0, 0, true, "pacemaker-schedulerd", CRM_DAEMON_USER,
         CRM_DAEMON_DIR "/pacemaker-schedulerd", CRM_SYSTEM_PENGINE,
-        false
+        false, 0, child_none
     },
     {
         0, 0, true, "pacemaker-controld", CRM_DAEMON_USER,
         CRM_DAEMON_DIR "/pacemaker-controld", CRM_SYSTEM_CRMD,
-        true
+        true, 0, child_none
     },
 };
 
