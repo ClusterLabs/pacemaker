@@ -60,8 +60,13 @@ xml_latest_schema_index(GList *schemas)
 {
     // @COMPAT: pacemaker-next is deprecated since 2.1.5
     // FIXME: This function assumes at least three schemas have been added
-    // before it has been called for the first time.
+    // before it has been called for the first time, which is only the case
+    // if we are not unit testing.
+#if defined(PCMK__UNIT_TESTING)
+    return g_list_length(schemas) - 1; // index from 0
+#else
     return g_list_length(schemas) - 3; // index from 0, ignore "pacemaker-next"/"none"
+#endif
 }
 
 /* Return the index of the most recent X.0 schema. */
@@ -73,8 +78,17 @@ pcmk__find_x_0_schema_index(GList *schemas)
      * same major version series?  We'd return 0 for that, which means
      * we would still run this function every time.
      */
+#if defined(PCMK__UNIT_TESTING)
+    /* If we're unit testing, these can't be static because they'll stick
+     * around from one test run to the next.  They need to be cleared out
+     * every time.
+     */
+    bool found = false;
+    int best = 0;
+#else
     static bool found = false;
     static int best = 0;
+#endif
     int i;
     GList *best_node = NULL;
     pcmk__schema_t *best_schema = NULL;
@@ -90,10 +104,25 @@ pcmk__find_x_0_schema_index(GList *schemas)
     best_node = g_list_nth(schemas, best);
     best_schema = best_node->data;
 
-    /* If this is a singleton list, we're done. */
+    /* If we are unit testing, we don't add the pacemaker-next/none schemas
+     * to the list because we're not using the standard schema adding
+     * functions.  Thus, a singleton list means we're done.
+     *
+     * On the other hand, if we are running as usually, we have those two
+     * schemas added to the list.  A list of length three actually only has
+     * one useful schema.  So we're still done.
+     *
+     * @COMPAT Change this when we stop adding those schemas.
+     */
+#if defined(PCMK__UNIT_TESTING)
     if (pcmk__list_of_1(schemas)) {
         goto done;
     }
+#else
+    if (g_list_length(schemas) == 3) {
+        goto done;
+    }
+#endif
 
     /* Start comparing the list from the node before the best schema (there's
      * no point in comparing something to itself).  Then, 'i' is an index

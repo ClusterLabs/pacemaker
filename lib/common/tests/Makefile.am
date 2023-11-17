@@ -21,6 +21,7 @@ SUBDIRS = \
 	options		\
 	output 		\
 	results		\
+	schemas		\
 	scores		\
 	strings		\
 	utils		\
