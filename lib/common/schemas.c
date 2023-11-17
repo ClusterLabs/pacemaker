@@ -73,17 +73,17 @@ xml_log(int priority, const char *fmt, ...)
 }
 
 static int
-xml_latest_schema_index(void)
+xml_latest_schema_index(GList *schemas)
 {
     // @COMPAT: pacemaker-next is deprecated since 2.1.5
     // FIXME: This function assumes at least three schemas have been added
     // before it has been called for the first time.
-    return g_list_length(known_schemas) - 3; // index from 0, ignore "pacemaker-next"/"none"
+    return g_list_length(schemas) - 3; // index from 0, ignore "pacemaker-next"/"none"
 }
 
 /* Return the index of the most recent X.0 schema. */
 static int
-xml_find_x_0_schema_index(void)
+xml_find_x_0_schema_index(GList *schemas)
 {
     /* We can't just use best to determine whether we've found the index
      * or not.  What if we have a very long list of schemas all in the
@@ -100,15 +100,15 @@ xml_find_x_0_schema_index(void)
         return best;
     }
 
-    CRM_ASSERT(known_schemas != NULL);
+    CRM_ASSERT(schemas != NULL);
 
     /* Get the most recent schema so we can look at its version number. */
-    best = xml_latest_schema_index();
-    best_node = g_list_nth(known_schemas, best);
+    best = xml_latest_schema_index(schemas);
+    best_node = g_list_nth(schemas, best);
     best_schema = best_node->data;
 
     /* If this is a singleton list, we're done. */
-    if (pcmk__list_of_1(known_schemas)) {
+    if (pcmk__list_of_1(schemas)) {
         goto done;
     }
 
@@ -150,7 +150,7 @@ done:
 const char *
 xml_latest_schema(void)
 {
-    return get_schema_name(xml_latest_schema_index());
+    return get_schema_name(xml_latest_schema_index(known_schemas));
 }
 
 static inline bool
@@ -1015,7 +1015,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
 {
     xmlNode *xml = NULL;
     char *value = NULL;
-    int max_stable_schemas = xml_latest_schema_index();
+    int max_stable_schemas = xml_latest_schema_index(known_schemas);
     int lpc = 0, match = -1, rc = pcmk_ok;
     int next = -1;  /* -1 denotes "inactive" value */
     xmlRelaxNGValidityErrorFunc error_handler = 
@@ -1178,7 +1178,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
 
     int version = get_schema_version(value);
     int orig_version = version;
-    int min_version = xml_find_x_0_schema_index();
+    int min_version = xml_find_x_0_schema_index(known_schemas);
 
     if (version < min_version) {
         // Current configuration schema is not acceptable, try to update
@@ -1240,7 +1240,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
             free_xml(*xml);
             *xml = converted;
 
-            if (version < xml_latest_schema_index()) {
+            if (version < xml_latest_schema_index(known_schemas)) {
                 if (to_logs) {
                     pcmk__config_warn("Configuration with schema %s was "
                                       "internally upgraded to acceptable (but "
