@@ -27,6 +27,7 @@ enum child_daemon_flags {
     child_none                  = 0,
     child_respawn               = 1 << 0,
     child_needs_cluster         = 1 << 1,
+    child_needs_retry           = 1 << 2,
 };
 
 typedef struct pcmk_child_s {
@@ -40,7 +41,6 @@ typedef struct pcmk_child_s {
     uint32_t flags;
 
     /* Anything below here will be dynamically initialized */
-    bool needs_retry;
     bool active_before_startup;
 } pcmk_child_t;
 
@@ -324,7 +324,7 @@ pcmk_process_exit(pcmk_child_t * child)
     } else if (pcmk_is_set(child->flags, child_needs_cluster) && !pcmkd_cluster_connected()) {
         crm_notice("Not respawning %s subdaemon until cluster returns",
                    child->name);
-        child->needs_retry = true;
+        child->flags |= child_needs_retry;
 
     } else {
         crm_notice("Respawning %s subdaemon after unexpected exit",
@@ -847,13 +847,13 @@ void
 restart_cluster_subdaemons(void)
 {
     for (int i = 0; i < PCMK__NELEM(pcmk_children); i++) {
-        if (!pcmk_children[i].needs_retry || pcmk_children[i].pid != 0) {
+        if (!pcmk_is_set(pcmk_children[i].flags, child_needs_retry) || pcmk_children[i].pid != 0) {
             continue;
         }
 
         crm_notice("Respawning cluster-based subdaemon: %s", pcmk_children[i].name);
         if (start_child(&pcmk_children[i])) {
-            pcmk_children[i].needs_retry = false;
+            pcmk_children[i].flags &= ~child_needs_retry;
         }
     }
 }
