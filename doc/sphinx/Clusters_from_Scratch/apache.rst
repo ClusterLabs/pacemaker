@@ -316,7 +316,7 @@ have to worry about whether you can handle the load after a failover.
 To do this, we create a location constraint.
 
 In the location constraint below, we are saying the ``WebSite`` resource
-prefers the node ``pcmk-1`` with a score of ``50``.  Here, the score indicates
+prefers the node ``pcmk-2`` with a score of ``50``.  Here, the score indicates
 how strongly we'd like the resource to run at this location.
 
 .. code-block:: console
