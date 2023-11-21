@@ -11,7 +11,7 @@
 |                 | libuuid-devel      | libuuid-devel      | uuid-dev       |
 | 0.27 or later   | pkgconfig          | pkgconfig          | pkg-config     |
 | 2.42.0 or later | glib2-devel        | glib2-devel        | libglib2.0-dev |
-|                 | libxml2-devel      | libxml2-devel      | libxml2-dev    |
+| 2.6.0 or later  | libxml2-devel      | libxml2-devel      | libxml2-dev    |
 |                 | libxslt-devel      | libxslt-devel      | libxslt-dev    |
 |                 | bzip2-devel        | libbz2-devel       | libbz2-dev     |
 | 0.17.0 or later | libqb-devel        | libqb-devel        | libqb-dev      |
