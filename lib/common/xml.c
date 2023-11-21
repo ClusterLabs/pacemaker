@@ -802,7 +802,7 @@ string2xml(const char *input)
     xmlNode *xml = NULL;
     xmlDocPtr output = NULL;
     xmlParserCtxtPtr ctxt = NULL;
-    xmlErrorPtr last_error = NULL;
+    const xmlError *last_error = NULL;
 
     if (input == NULL) {
         crm_err("Can't parse NULL input");
@@ -993,7 +993,7 @@ filename2xml(const char *filename)
     xmlDocPtr output = NULL;
     bool uncompressed = true;
     xmlParserCtxtPtr ctxt = NULL;
-    xmlErrorPtr last_error = NULL;
+    const xmlError *last_error = NULL;
 
     /* create a parser context */
     ctxt = xmlNewParserCtxt();
