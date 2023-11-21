@@ -450,7 +450,6 @@ validate_with_relaxng(xmlDocPtr doc, gboolean to_logs, const char *relaxng_file,
         crm_debug("Creating RNG parser context");
         ctx = calloc(1, sizeof(relaxng_ctx_cache_t));
 
-        xmlLoadExtDtdDefaultValue = 1;
         ctx->parser = xmlRelaxNGNewParserCtxt(relaxng_file);
         CRM_CHECK(ctx->parser != NULL, goto cleanup);
 
@@ -487,7 +486,6 @@ validate_with_relaxng(xmlDocPtr doc, gboolean to_logs, const char *relaxng_file,
         }
     }
 
-    xmlLineNumbersDefault(1);
     rc = xmlRelaxNGValidateDoc(ctx->valid, doc);
     if (rc > 0) {
         valid = FALSE;
@@ -660,7 +658,7 @@ validate_xml_verbose(const xmlNode *xml_blob)
 
     dump_file(filename);
 
-    doc = xmlParseFile(filename);
+    doc = xmlReadFile(filename, NULL, 0);
     xml = xmlDocGetRootElement(doc);
     rc = validate_xml(xml, NULL, FALSE);
     free_xml(xml);
@@ -864,9 +862,6 @@ apply_transformation(xmlNode *xml, const char *transform, gboolean to_logs)
 
     xform = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_xslt,
                                     transform);
-
-    xmlLoadExtDtdDefaultValue = 1;
-    xmlSubstituteEntitiesDefault(1);
 
     /* for capturing, e.g., what's emitted via <xsl:message> */
     if (to_logs) {
