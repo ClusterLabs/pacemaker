@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 #include "pacemakerd.h"
+#include "pcmkd_corosync.h"
 
 #include <sys/utsname.h>
 #include <sys/stat.h>           /* for calls to stat() */
