@@ -389,6 +389,7 @@ pcmk_shutdown_worker(gpointer user_data)
         return TRUE;
     }
 
+    // @COMPAT Drop shutdown delay at 3.0.0
     {
         const char *delay = pcmk__env_option(PCMK__ENV_SHUTDOWN_DELAY);
         if(delay) {

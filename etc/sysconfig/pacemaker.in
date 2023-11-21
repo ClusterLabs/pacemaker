@@ -81,6 +81,17 @@
 # Default: PCMK_debug="no"
 # Example: PCMK_debug="pacemakerd,pacemaker-execd"
 
+# PCMK_stderr (Advanced Use Only)
+#
+# Whether to send daemon log messages to stderr. This would be useful only
+# during troubleshooting, when starting Pacemaker manually on the command line.
+#
+# Setting this option in this file is pointless, since this file is not read
+# when starting Pacemaker manually. However, it can be set directly as an
+# environment variable on the command line.
+#
+# Default: PCMK_stderr="no"
+
 # PCMK_trace_functions (Advanced Use Only)
 #
 # Send debug and trace severity messages from these (comma-separated)
@@ -137,7 +148,7 @@
 # Example: PCMK_trace_blackbox="remote.c:144,remote.c:149"
 
 
-## Node start state
+## Option overrides
 
 # PCMK_node_start_state
 #
@@ -147,6 +158,13 @@
 # force the local host to join in the specified state.
 #
 # Default: PCMK_node_start_state="default"
+
+# PCMK_node_action_limit
+#
+# Specify the maximum number of jobs that can be scheduled on this node. If set,
+# this overrides the node-action-limit cluster property for this node.
+#
+# Default: PCMK_node_action_limit=""
 
 
 ## Crash Handling
@@ -178,8 +196,8 @@
 #
 # Use the contents of this file as the authorization key to use with Pacemaker
 # Remote connections. This file must be readable by Pacemaker daemons (that is,
-# it must allow read permissions to either the hacluster user or the haclient
-# group), and its contents must be identical on all nodes.
+# it must allow read permissions to either the @CRM_DAEMON_USER@ user or the
+# @CRM_DAEMON_GROUP@ group), and its contents must be identical on all nodes.
 #
 # Default: PCMK_authkey_location="@PACEMAKER_CONFIG_DIR@/authkey"
 
@@ -201,6 +219,30 @@
 # must be the same on all nodes.
 #
 # Default: PCMK_remote_port="3121"
+
+# PCMK_remote_pid1 (Advanced Use Only)
+#
+# When a bundle resource's "run-command" option is left to default, Pacemaker
+# Remote runs as PID 1 in the bundle's containers. When it does so, it loads
+# environment variables from the container's
+# @PACEMAKER_CONFIG_DIR@/pcmk-init.env and performs the PID 1 responsibility of
+# reaping dead subprocesses.
+#
+# This option controls whether those actions are performed when Pacemaker
+# Remote is not running as PID 1. It is intended primarily for developer testing
+# but can be useful when "run-command" is set to a separate, custom PID 1
+# process that launches Pacemaker Remote.
+#
+# * If set to "full", Pacemaker Remote loads environment variables from
+#   @PACEMAKER_CONFIG_DIR@/pcmk-init.env and reaps dead subprocesses.
+# * If set to "vars", Pacemaker Remote loads environment variables from
+#   @PACEMAKER_CONFIG_DIR@/pcmk-init.env but does not reap dead subprocesses.
+# * If set to "default", Pacemaker Remote performs neither action.
+#
+# If Pacemaker Remote is running as PID 1, this option is ignored, and the
+# behavior is the same as for "full".
+#
+# Default: PCMK_remote_pid1="default"
 
 # PCMK_tls_priorities (Advanced Use Only)
 #
@@ -234,7 +276,7 @@
 # the value must be lowered in order for the client's GnuTLS library to accept
 # a connection to an older server.
 # 
-# Default: PCMK_dh_min_bits="1024"
+# Default: PCMK_dh_min_bits="0" (no minimum)
 
 # PCMK_dh_max_bits (Advanced Use Only)
 #
@@ -251,7 +293,7 @@
 #
 # Clients do not use PCMK_dh_max_bits.
 #
-# Default: PCMK_dh_max_bits="2048"
+# Default: PCMK_dh_max_bits="0" (no maximum)
 
 
 ## Inter-process Communication
@@ -274,6 +316,19 @@
 # also result in log messages referencing this variable).
 #
 # Default: PCMK_ipc_buffer="131072"
+
+
+## Cluster type
+
+# PCMK_cluster_type (Advanced Use Only)
+#
+# Specify the cluster layer to be used. If unset, Pacemaker will detect and use
+# a supported cluster layer, if available. Currently, "corosync" is the only
+# supported cluster layer. If multiple layers are supported in the future, this
+# will allow overriding Pacemaker's automatic detection to select a specific
+# one.
+#
+# Default: PCMK_cluster_type=""
 
 
 ## Developer Options

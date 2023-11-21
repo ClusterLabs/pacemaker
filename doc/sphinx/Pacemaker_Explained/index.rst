@@ -18,7 +18,8 @@ Table of Contents
    :numbered:
 
    intro
-   options
+   local-options
+   cluster-options
    nodes
    resources
    operations
