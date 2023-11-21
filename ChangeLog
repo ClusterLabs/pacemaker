@@ -1,3 +1,16 @@
+* Tue Nov 21 2023 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.7-rc2
+- 26 commits with 14 files changed, 119 insertions(+), 46 deletions(-)
+
+- Features added since Pacemaker-2.1.7-rc1
+  + Default of new node-pending-timeout option has been changed to 0
+    to preserve previous behavior
+
+- Fixes since Pacemaker-2.1.7-rc1
+  + build: Allow building with libxml2 2.12.0 and greater
+  + tools: crm_resource --wait will now wait if any actions are pending
+    (previously it would wait only if new actions were planned)
+  + tools: crm_verify --output-as=xml now includes detailed messages
+
 * Mon Oct 30 2023 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.7-rc1
 - 1345 commits with 358 files changed, 23622 insertions(+), 17197 deletions(-)
 
