@@ -214,6 +214,7 @@ do_cib_control(long long action,
 unsigned int
 cib_op_timeout(void)
 {
+    // @COMPAT: Drop env_timeout at 3.0.0
     static int env_timeout = -1;
     unsigned int calculated_timeout = 0;
 

@@ -677,6 +677,17 @@ static pcmk__cluster_option_t controller_options[] = {
             "passed since the shutdown was initiated, even if the node has not "
             "rejoined.")
     },
+    {
+        XML_CONFIG_ATTR_NODE_PENDING_TIMEOUT, NULL, "time", NULL,
+        "0", pcmk__valid_interval_spec,
+        N_("How long to wait for a node that has joined the cluster to join "
+           "the controller process group"),
+        N_("Fence nodes that do not join the controller process group within "
+           "this much time after joining the cluster, to allow the cluster "
+           "to continue managing resources. A value of 0 means never fence " 
+           "pending nodes. Setting the value to 2h means fence nodes after "
+           "2 hours.")
+    },
 };
 
 void
