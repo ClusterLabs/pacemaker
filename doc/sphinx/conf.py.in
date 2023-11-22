@@ -30,6 +30,15 @@ doc_license += " version 4.0 or later (CC-BY-SA v4.0+)"
 rst_prolog="""
 .. |CFS_DISTRO| replace:: AlmaLinux
 .. |CFS_DISTRO_VER| replace:: 9
+.. |CRM_BLACKBOX_DIR| replace:: ``%CRM_BLACKBOX_DIR%``
+.. |CRM_DAEMON_GROUP| replace:: ``%CRM_DAEMON_GROUP%``
+.. |CRM_DAEMON_USER| replace:: ``%CRM_DAEMON_USER%``
+.. |CRM_SCHEMA_DIRECTORY| replace:: %CRM_SCHEMA_DIRECTORY%
+.. |PCMK_AUTHKEY_FILE| replace:: %PACEMAKER_CONFIG_DIR%/authkey
+.. |PCMK_CONFIG_FILE| replace:: ``%CONFIGDIR%/pacemaker``
+.. |PCMK_INIT_ENV_FILE| replace:: ``%PACEMAKER_CONFIG_DIR%/pcmk-init.env``
+.. |PCMK_LOG_FILE| replace:: %CRM_LOG_DIR%/pacemaker.log
+.. |PCMK_GNUTLS_PRIORITIES| replace:: %PCMK_GNUTLS_PRIORITIES%
 .. |REMOTE_DISTRO| replace:: AlmaLinux
 .. |REMOTE_DISTRO_VER| replace:: 9
 """

@@ -79,7 +79,6 @@ bool pcmk__valid_sbd_timeout(const char *value);
 #define PCMK__ENV_AUTHKEY_LOCATION          "authkey_location"
 #define PCMK__ENV_BLACKBOX                  "blackbox"
 #define PCMK__ENV_CALLGRIND_ENABLED         "callgrind_enabled"
-#define PCMK__ENV_CIB_TIMEOUT               "cib_timeout"
 #define PCMK__ENV_CLUSTER_TYPE              "cluster_type"
 #define PCMK__ENV_DEBUG                     "debug"
 #define PCMK__ENV_DH_MAX_BITS               "dh_max_bits"
@@ -101,7 +100,6 @@ bool pcmk__valid_sbd_timeout(const char *value);
 #define PCMK__ENV_RESPAWNED                 "respawned"
 #define PCMK__ENV_SCHEMA_DIRECTORY          "schema_directory"
 #define PCMK__ENV_SERVICE                   "service"
-#define PCMK__ENV_SHUTDOWN_DELAY            "shutdown_delay"
 #define PCMK__ENV_STDERR                    "stderr"
 #define PCMK__ENV_TLS_PRIORITIES            "tls_priorities"
 #define PCMK__ENV_TRACE_BLACKBOX            "trace_blackbox"
@@ -111,11 +109,19 @@ bool pcmk__valid_sbd_timeout(const char *value);
 #define PCMK__ENV_TRACE_TAGS                "trace_tags"
 #define PCMK__ENV_VALGRIND_ENABLED          "valgrind_enabled"
 
+// @COMPAT Drop at 3.0.0; default is plenty
+#define PCMK__ENV_CIB_TIMEOUT               "cib_timeout"
+
 // @COMPAT Drop at 3.0.0; likely last used in 1.1.24
 #define PCMK__ENV_MCP                       "mcp"
 
 // @COMPAT Drop at 3.0.0; added unused in 1.1.9
 #define PCMK__ENV_QUORUM_TYPE               "quorum_type"
+
+/* @COMPAT Drop at 3.0.0; added to debug shutdown issues when Pacemaker is
+ * managed by systemd, but no longer useful.
+ */
+#define PCMK__ENV_SHUTDOWN_DELAY            "shutdown_delay"
 
 // Constants for cluster option names
 #define PCMK__OPT_NODE_HEALTH_BASE          "node-health-base"
