@@ -168,6 +168,6 @@ pcmk_resource_digests(xmlNodePtr *xml, pcmk_resource_t *rsc,
     }
     pcmk__register_lib_messages(out);
     rc = pcmk__resource_digests(out, rsc, node, overrides);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }

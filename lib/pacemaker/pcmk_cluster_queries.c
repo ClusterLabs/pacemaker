@@ -509,7 +509,7 @@ pcmk_controller_status(xmlNodePtr *xml, const char *node_name,
     pcmk__register_lib_messages(out);
 
     rc = pcmk__controller_status(out, node_name, message_timeout_ms);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }
 
@@ -577,7 +577,7 @@ pcmk_designated_controller(xmlNodePtr *xml, unsigned int message_timeout_ms)
     pcmk__register_lib_messages(out);
 
     rc = pcmk__designated_controller(out, message_timeout_ms);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }
 
@@ -707,7 +707,7 @@ pcmk_query_node_info(xmlNodePtr *xml, uint32_t *node_id, char **node_name,
     rc = pcmk__query_node_info(out, node_id, node_name, uuid, state,
                                have_quorum, is_remote, show_output,
                                message_timeout_ms);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }
 
@@ -797,7 +797,7 @@ pcmk_pacemakerd_status(xmlNodePtr *xml, const char *ipc_name,
     pcmk__register_lib_messages(out);
 
     rc = pcmk__pacemakerd_status(out, ipc_name, message_timeout_ms, true, NULL);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }
 
@@ -894,6 +894,6 @@ pcmk_list_nodes(xmlNodePtr *xml, const char *node_types)
     pcmk__register_lib_messages(out);
 
     rc = pcmk__list_nodes(out, node_types, FALSE);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }

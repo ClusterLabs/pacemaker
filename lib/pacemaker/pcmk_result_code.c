@@ -73,7 +73,7 @@ pcmk_show_result_code(xmlNodePtr *xml, int code, enum pcmk_result_type type,
     pcmk__register_lib_messages(out);
 
     rc = pcmk__show_result_code(out, code, type, flags);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }
 
@@ -162,6 +162,6 @@ pcmk_list_result_codes(xmlNodePtr *xml, enum pcmk_result_type type,
     pcmk__register_lib_messages(out);
 
     rc = pcmk__list_result_codes(out, type, flags);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }

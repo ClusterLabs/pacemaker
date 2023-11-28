@@ -1001,6 +1001,6 @@ pcmk_simulate(xmlNodePtr *xml, pcmk_scheduler_t *scheduler,
 
     rc = pcmk__simulate(scheduler, out, injections, flags, section_opts,
                         use_date, input_file, graph_file, dot_file);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }

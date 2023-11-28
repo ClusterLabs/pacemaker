@@ -251,12 +251,15 @@ pcmk__xml_output_new(pcmk__output_t **out, xmlNodePtr *xml) {
  * \internal
  * \brief  Finish and free an XML-only output object
  *
- * \param[in,out] out  Output object to free
- * \param[out]    xml  If not NULL, where to store XML output
+ * \param[in,out] out         Output object to free
+ * \param[in]     exit_status The exit value of the whole program
+ * \param[out]    xml         If not NULL, where to store XML output
  */
 void
-pcmk__xml_output_finish(pcmk__output_t *out, xmlNodePtr *xml) {
-    out->finish(out, 0, FALSE, (void **) xml);
+pcmk__xml_output_finish(pcmk__output_t *out, crm_exit_t exit_status,
+                        xmlNodePtr *xml)
+{
+    out->finish(out, exit_status, FALSE, (void **) xml);
     pcmk__output_free(out);
 }
 
