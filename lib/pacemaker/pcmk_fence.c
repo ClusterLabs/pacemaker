@@ -320,7 +320,7 @@ pcmk_fence_history(xmlNodePtr *xml, stonith_t *st, const char *target,
 
     rc = pcmk__fence_history(out, st, target, timeout, verbose, broadcast,
                              cleanup);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }
 #endif
@@ -364,7 +364,7 @@ pcmk_fence_installed(xmlNodePtr *xml, stonith_t *st, unsigned int timeout)
     stonith__register_messages(out);
 
     rc = pcmk__fence_installed(out, st, timeout);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }
 #endif
@@ -402,7 +402,7 @@ pcmk_fence_last(xmlNodePtr *xml, const char *target, bool as_nodeid)
     stonith__register_messages(out);
 
     rc = pcmk__fence_last(out, target, as_nodeid);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }
 #endif
@@ -449,7 +449,7 @@ pcmk_fence_list_targets(xmlNodePtr *xml, stonith_t *st, const char *device_id,
     stonith__register_messages(out);
 
     rc = pcmk__fence_list_targets(out, st, device_id, timeout);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }
 #endif
@@ -487,7 +487,7 @@ pcmk_fence_metadata(xmlNodePtr *xml, stonith_t *st, const char *agent,
     stonith__register_messages(out);
 
     rc = pcmk__fence_metadata(out, st, agent, timeout);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }
 #endif
@@ -536,7 +536,7 @@ pcmk_fence_registered(xmlNodePtr *xml, stonith_t *st, const char *target,
     stonith__register_messages(out);
 
     rc = pcmk__fence_registered(out, st, target, timeout);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }
 #endif
@@ -603,7 +603,7 @@ pcmk_fence_validate(xmlNodePtr *xml, stonith_t *st, const char *agent,
     stonith__register_messages(out);
 
     rc = pcmk__fence_validate(out, st, agent, id, params, timeout);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }
 #endif

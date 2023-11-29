@@ -291,6 +291,6 @@ pcmk_check_rules(xmlNodePtr *xml, xmlNodePtr input, const crm_time_t *date,
     pcmk__register_lib_messages(out);
 
     rc = pcmk__check_rules(out, input, date, rule_ids);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }

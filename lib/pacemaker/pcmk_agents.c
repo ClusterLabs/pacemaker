@@ -60,7 +60,7 @@ pcmk_list_alternatives(xmlNodePtr *xml, const char *agent_spec)
     lrmd__register_messages(out);
 
     rc = pcmk__list_alternatives(out, agent_spec);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }
 
@@ -131,7 +131,7 @@ pcmk_list_agents(xmlNodePtr *xml, char *agent_spec)
     lrmd__register_messages(out);
 
     rc = pcmk__list_agents(out, agent_spec);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }
 
@@ -187,7 +187,7 @@ pcmk_list_providers(xmlNodePtr *xml, const char *agent_spec)
     lrmd__register_messages(out);
 
     rc = pcmk__list_providers(out, agent_spec);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }
 
@@ -238,6 +238,6 @@ pcmk_list_standards(xmlNodePtr *xml)
     lrmd__register_messages(out);
 
     rc = pcmk__list_standards(out);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }
