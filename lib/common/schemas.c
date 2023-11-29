@@ -459,12 +459,14 @@ pcmk__load_schemas_from_dir(const char *dir)
 void
 crm_schema_init(void)
 {
+    const char *remote_schema_dir = pcmk__remote_schema_dir();
     char *base = pcmk__xml_artefact_root(pcmk__xml_artefact_ns_legacy_rng);
     const pcmk__schema_version_t zero = SCHEMA_ZERO;
 
     wrap_libxslt(false);
 
     pcmk__load_schemas_from_dir(base);
+    pcmk__load_schemas_from_dir(remote_schema_dir);
 
     // @COMPAT: Deprecated since 2.1.5
     add_schema(pcmk__schema_validator_rng, &zero, "pacemaker-next",
