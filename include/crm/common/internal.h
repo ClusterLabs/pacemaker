@@ -134,6 +134,7 @@ bool pcmk__procfs_has_pids(void);
 void crm_schema_init(void);
 void crm_schema_cleanup(void);
 
+GList *pcmk__schema_files_later_than(const char *name);
 
 /* internal functions related to process IDs (from pid.c) */
 

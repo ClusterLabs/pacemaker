@@ -168,7 +168,11 @@ xml_latest_schema(void)
 static inline bool
 version_from_filename(const char *filename, pcmk__schema_version_t *version)
 {
-    return sscanf(filename, "pacemaker-%hhu.%hhu.rng", &(version->v[0]), &(version->v[1])) == 2;
+    if (pcmk__ends_with(filename, ".rng")) {
+        return sscanf(filename, "pacemaker-%hhu.%hhu.rng", &(version->v[0]), &(version->v[1])) == 2;
+    } else {
+        return sscanf(filename, "pacemaker-%hhu.%hhu", &(version->v[0]), &(version->v[1])) == 2;
+    }
 }
 
 static int
@@ -1289,6 +1293,62 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
 
     free(orig_value);
     return rc;
+}
+
+/*!
+ * \internal
+ * \brief Return a list of all schema files and any associated XSLT files
+ *        later than the given one
+ * \brief Return a list of all schema versions later than the given one
+ *
+ * \param[in] schema The schema to compare against (for example,
+ *                   "pacemaker-3.1.rng" or "pacemaker-3.1")
+ *
+ * \note The caller is responsible for freeing both the returned list and
+ *       the elements of the list
+ */
+GList *
+pcmk__schema_files_later_than(const char *name)
+{
+    GList *lst = NULL;
+    pcmk__schema_version_t ver;
+
+    if (!version_from_filename(name, &ver)) {
+        return lst;
+    }
+
+    for (GList *iter = g_list_nth(known_schemas, xml_latest_schema_index(known_schemas));
+         iter != NULL; iter = iter->prev) {
+        pcmk__schema_t *schema = iter->data;
+        char *s = NULL;
+
+        if (schema_cmp(ver, schema->version) != -1) {
+            continue;
+        }
+
+        s = crm_strdup_printf("%s.rng", schema->name);
+        lst = g_list_prepend(lst, s);
+
+        if (schema->transform != NULL) {
+            char *xform = crm_strdup_printf("%s.xsl", schema->transform);
+            lst = g_list_prepend(lst, xform);
+        }
+
+        if (schema->transform_enter != NULL) {
+            char *enter = crm_strdup_printf("%s.xsl", schema->transform_enter);
+
+            lst = g_list_prepend(lst, enter);
+
+            if (schema->transform_onleave) {
+                int last_dash = strrchr(enter, '-') - enter;
+                char *leave = crm_strdup_printf("%.*s-leave.xsl", last_dash, enter);
+
+                lst = g_list_prepend(lst, leave);
+            }
+        }
+    }
+
+    return lst;
 }
 
 void
