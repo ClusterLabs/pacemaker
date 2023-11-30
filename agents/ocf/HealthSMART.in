@@ -136,29 +136,30 @@ END
 #######################################################################
 
 check_temperature() {
+    if [  -n "$1" ]; then
+        if [ $1 -lt ${lower_red_limit} ] ; then
+            ocf_log info "Drive ${DRIVE} ${DEVICE} too cold: ${1} C"
+            attrd_updater -n "#health-smart" -U "red" -d "${OCF_RESKEY_dampen}"
+            return 1
+        fi
 
-    if [ $1 -lt ${lower_red_limit} ] ; then
-        ocf_log info "Drive ${DRIVE} ${DEVICE} too cold: ${1} C"
-        attrd_updater -n "#health-smart" -U "red" -d "${OCF_RESKEY_dampen}"
-        return 1
-    fi
+        if [ $1 -gt ${upper_red_limit} ] ; then
+            ocf_log info "Drive ${DRIVE} ${DEVICE} too hot: ${1} C"
+            attrd_updater -n "#health-smart" -U "red" -d "${OCF_RESKEY_dampen}"
+            return 1
+        fi
 
-    if [ $1 -gt ${upper_red_limit} ] ; then
-        ocf_log info "Drive ${DRIVE} ${DEVICE} too hot: ${1} C"
-        attrd_updater -n "#health-smart" -U "red" -d "${OCF_RESKEY_dampen}"
-        return 1
-    fi
+        if [ $1 -lt ${lower_yellow_limit} ] ; then
+            ocf_log info "Drive ${DRIVE} ${DEVICE} quite cold: ${1} C"
+            attrd_updater -n "#health-smart" -U "yellow" -d "${OCF_RESKEY_dampen}"
+            return 1
+        fi
 
-    if [ $1 -lt ${lower_yellow_limit} ] ; then
-        ocf_log info "Drive ${DRIVE} ${DEVICE} quite cold: ${1} C"
-        attrd_updater -n "#health-smart" -U "yellow" -d "${OCF_RESKEY_dampen}"
-        return 1
-    fi
-
-    if [ $1 -gt ${upper_yellow_limit} ] ; then
-        ocf_log info "Drive ${DRIVE} ${DEVICE} quite hot: ${1} C"
-        attrd_updater -n "#health-smart" -U "yellow" -d "${OCF_RESKEY_dampen}"
-        return 1
+        if [ $1 -gt ${upper_yellow_limit} ] ; then
+            ocf_log info "Drive ${DRIVE} ${DEVICE} quite hot: ${1} C"
+            attrd_updater -n "#health-smart" -U "yellow" -d "${OCF_RESKEY_dampen}"
+            return 1
+        fi
     fi
 }
 
