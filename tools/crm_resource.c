@@ -1119,29 +1119,6 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
 }
 
 static int
-delete(void)
-{
-    int rc = pcmk_rc_ok;
-    xmlNode *msg_data = NULL;
-
-    if (options.rsc_type == NULL) {
-        rc = ENXIO;
-        g_set_error(&error, PCMK__RC_ERROR, rc,
-                    _("You need to specify a resource type with -t"));
-        return rc;
-    }
-
-    msg_data = create_xml_node(NULL, options.rsc_type);
-    crm_xml_add(msg_data, XML_ATTR_ID, options.rsc_id);
-
-    rc = cib_conn->cmds->remove(cib_conn, XML_CIB_TAG_RESOURCES, msg_data,
-                                options.cib_options);
-    rc = pcmk_legacy2rc(rc);
-    free_xml(msg_data);
-    return rc;
-}
-
-static int
 initialize_scheduler_data(xmlNodePtr *cib_xml_copy)
 {
     int rc = pcmk_rc_ok;
@@ -2019,7 +1996,25 @@ main(int argc, char **argv)
             break;
 
         case cmd_delete:
-            rc = delete();
+            /* rsc_id was already checked for NULL much earlier when validating
+             * command line arguments.
+             */
+            if (options.rsc_type == NULL) {
+                // @COMPAT @TODO change this to exit_code = CRM_EX_USAGE
+                rc = ENXIO;
+                g_set_error(&error, PCMK__RC_ERROR, rc,
+                            _("You need to specify a resource type with -t"));
+            } else {
+                rc = pcmk__resource_delete(cib_conn, options.cib_options,
+                                           options.rsc_id, options.rsc_type);
+
+                if (rc != pcmk_rc_ok) {
+                    g_set_error(&error, PCMK__RC_ERROR, rc,
+                                _("Could not delete resource %s: %s"),
+                                options.rsc_id, pcmk_rc_str(rc));
+                }
+            }
+
             break;
 
         default:

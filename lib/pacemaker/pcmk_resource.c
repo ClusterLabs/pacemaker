@@ -13,6 +13,7 @@
 #include <glib.h>
 #include <libxml/tree.h>
 
+#include <crm/cib/internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/results.h>
 #include <crm/common/output_internal.h>
@@ -105,6 +106,79 @@ is_best:
 
 /*!
  * \internal
+ * \brief Remove a resource
+ *
+ * \param[in,out] cib       An open connection to the CIB
+ * \param[in]     cib_opts  Options to use in the CIB operation call
+ * \param[in]     rsc_id    Resource to remove
+ * \param[in]     rsc_type  Type of the resource ("primitive", "group", etc.)
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__resource_delete(cib_t *cib, uint32_t cib_opts, const char *rsc_id,
+                      const char *rsc_type)
+{
+    int rc = pcmk_rc_ok;
+    xmlNode *msg_data = NULL;
+
+    if (cib == NULL) {
+        return ENOTCONN;
+    }
+
+    if (rsc_id == NULL || rsc_type == NULL) {
+        return EINVAL;
+    }
+
+    msg_data = create_xml_node(NULL, rsc_type);
+    crm_xml_add(msg_data, XML_ATTR_ID, rsc_id);
+
+    rc = cib->cmds->remove(cib, XML_CIB_TAG_RESOURCES, msg_data, cib_opts);
+    rc = pcmk_legacy2rc(rc);
+
+    free_xml(msg_data);
+    return rc;
+}
+
+int
+pcmk_resource_delete(xmlNodePtr *xml, const char *rsc_id, const char *rsc_type)
+{
+    pcmk__output_t *out = NULL;
+    int rc = pcmk_rc_ok;
+    uint32_t cib_opts = cib_sync_call;
+    cib_t *cib = NULL;
+
+    rc = pcmk__xml_output_new(&out, xml);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    cib = cib_new();
+    if (cib == NULL) {
+        rc = pcmk_rc_cib_corrupt;
+        goto done;
+    }
+
+    rc = cib->cmds->signon(cib, crm_system_name, cib_command);
+    rc = pcmk_legacy2rc(rc);
+
+    if (rc != pcmk_rc_ok) {
+        goto done;
+    }
+
+    rc = pcmk__resource_delete(cib, cib_opts, rsc_id, rsc_type);
+
+done:
+    if (cib != NULL) {
+        cib__clean_up_connection(&cib);
+    }
+
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
+    return rc;
+}
+
+/*!
+ * \internal
  * \brief Calculate and output resource operation digests
  *
  * \param[in,out] out        Output object
@@ -154,6 +228,7 @@ pcmk__resource_digests(pcmk__output_t *out, pcmk_resource_t *rsc,
     return rc;
 }
 
+// @COMPAT The scheduler parameter is unused and can be removed at the next break
 int
 pcmk_resource_digests(xmlNodePtr *xml, pcmk_resource_t *rsc,
                       const pcmk_node_t *node, GHashTable *overrides,
