@@ -1559,6 +1559,9 @@ pending_too_long(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
         if (get_effective_time(node->details->data_set) >= timeout) {
             return true; // Node has timed out
         }
+
+        // Node is pending, but still has time
+        pe__update_recheck_time(timeout, scheduler);
     }
     return false;
 }
