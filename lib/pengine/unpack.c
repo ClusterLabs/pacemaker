@@ -1533,6 +1533,36 @@ determine_online_status_no_fencing(pcmk_scheduler_t *scheduler,
     return online;
 }
 
+/*!
+ * \internal
+ * \brief Check whether a node has taken too long to join controller group
+ *
+ * \param[in,out] scheduler    Scheduler data
+ * \param[in]     node         Node to check
+ * \param[in]     when_member  Epoch time when node became a cluster member
+ * \param[in]     when_online  Epoch time when node joined controller group
+ *
+ * \return true if node has been pending (on the way up) longer than
+ *         node-pending-timeout, otherwise false
+ * \note This will also update the cluster's recheck time if appropriate.
+ */
+static inline bool
+pending_too_long(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
+                 long long when_member, long long when_online)
+{
+    if ((scheduler->node_pending_timeout > 0)
+        && (when_member > 0) && (when_online <= 0)) {
+        // There is a timeout on pending nodes, and node is pending
+
+        time_t timeout = when_member + scheduler->node_pending_timeout;
+
+        if (get_effective_time(node->details->data_set) >= timeout) {
+            return true; // Node has timed out
+        }
+    }
+    return false;
+}
+
 static bool
 determine_online_status_fencing(pcmk_scheduler_t *scheduler,
                                 const xmlNode *node_state,
@@ -1595,10 +1625,7 @@ determine_online_status_fencing(pcmk_scheduler_t *scheduler,
     } else if (pcmk__str_eq(exp_state, CRMD_JOINSTATE_DOWN,
                             pcmk__str_null_matches)) {
 
-        if ((scheduler->node_pending_timeout > 0)
-            && (when_member > 0) && (when_online <= 0)
-            && (get_effective_time(scheduler) - when_member
-                >= scheduler->node_pending_timeout)) {
+        if (pending_too_long(scheduler, this_node, when_member, when_online)) {
             pe_fence_node(scheduler, this_node,
                           "peer pending timed out on joining the process group",
                           FALSE);
