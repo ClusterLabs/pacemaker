@@ -676,14 +676,18 @@ pe__shutdown_requested(const pcmk_node_t *node)
  *
  * \param[in]     recheck    Epoch time when recheck should happen
  * \param[in,out] scheduler  Scheduler data
+ * \param[in]     reason     What time is being updated for (for logs)
  */
 void
-pe__update_recheck_time(time_t recheck, pcmk_scheduler_t *scheduler)
+pe__update_recheck_time(time_t recheck, pcmk_scheduler_t *scheduler,
+                        const char *reason)
 {
     if ((recheck > get_effective_time(scheduler))
         && ((scheduler->recheck_by == 0)
             || (scheduler->recheck_by > recheck))) {
         scheduler->recheck_by = recheck;
+        crm_debug("Updated next scheduler recheck to %s for %s",
+                  pcmk__trim(ctime(&recheck)), reason);
     }
 }
 
@@ -712,7 +716,7 @@ pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
     if (crm_time_is_defined(next_change)) {
         time_t recheck = (time_t) crm_time_get_seconds_since_epoch(next_change);
 
-        pe__update_recheck_time(recheck, scheduler);
+        pe__update_recheck_time(recheck, scheduler, "rule evaluation");
     }
     crm_time_free(next_change);
 }
