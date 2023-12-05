@@ -275,9 +275,9 @@ elements.
 
 .. important::
 
-   The ``root`` and ``hacluster`` user accounts always have full access to the
-   CIB, regardless of ACLs. For all other user accounts, when ``enable-acl`` is
-   true, permission to all parts of the CIB is denied by default (permissions
+   The ``root`` and |CRM_DAEMON_USER| user accounts always have full access to
+   the CIB, regardless of ACLs. For all other user accounts, when ``enable-acl``
+   is true, permission to all parts of the CIB is denied by default (permissions
    must be explicitly granted).
    
 ACL Examples

@@ -287,7 +287,7 @@ Special concerns when writing alert agents:
   this into consideration, for example by queueing resource-intensive actions
   into some other instance, instead of directly executing them.
    
-* Alert agents are run as the ``hacluster`` user, which has a minimal set
+* Alert agents are run as the |CRM_DAEMON_USER| user, which has a minimal set
   of permissions. If an agent requires additional privileges, it is
   recommended to configure ``sudo`` to allow the agent to run the necessary
   commands as another user with the appropriate privileges.
@@ -297,7 +297,7 @@ Special concerns when writing alert agents:
   user-configured ``timestamp-format``), ``CRM_alert_recipient,`` and all
   instance attributes. Mostly this is needed simply to protect against
   configuration errors, but if some user can modify the CIB without having
-  ``hacluster``-level access to the cluster nodes, it is a potential security
+  |CRM_DAEMON_USER| access to the cluster nodes, it is a potential security
   concern as well, to avoid the possibility of code injection.
    
 .. note:: **ocf:pacemaker:ClusterMon compatibility**
@@ -308,4 +308,4 @@ Special concerns when writing alert agents:
    passed to alert agents are available prepended with ``CRM_notify_``
    as well as ``CRM_alert_``. One break in compatibility is that ``ClusterMon``
    ran external scripts as the ``root`` user, while alert agents are run as the
-   ``hacluster`` user.
+   |CRM_DAEMON_USER| user.

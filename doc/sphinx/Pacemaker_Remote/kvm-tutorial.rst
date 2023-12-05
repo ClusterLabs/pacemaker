@@ -254,7 +254,7 @@ Start and enable the ``pcsd`` daemon on the guest.
     [root@guest1 ~]# systemctl enable pcsd
     Created symlink /etc/systemd/system/multi-user.target.wants/pcsd.service → /usr/lib/systemd/system/pcsd.service.
 
-Next, set a password for the ``hacluster`` user on the guest.
+Next, set a password for the |CRM_DAEMON_USER| user on the guest.
 
 .. code-block:: none
 
