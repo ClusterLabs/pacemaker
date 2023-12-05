@@ -203,8 +203,8 @@ when working on a cluster node.
 
        CIB_user
      - |CRM_DAEMON_USER_RAW|
-     - The user to connect as. Needs to be part of the ``haclient`` group on
-       the target host.
+     - The user to connect as. Needs to be part of the |CRM_DAEMON_GROUP| group
+       on the target host.
    * - .. index::
           single: CIB_passwd
           single: environment variable; CIB_passwd
@@ -235,7 +235,7 @@ when working on a cluster node.
      - Whether to encrypt network traffic
 
 So, if **c001n01** is an active cluster node and is listening on port 1234
-for connections, and **someuser** is a member of the **haclient** group,
+for connections, and **someuser** is a member of the |CRM_DAEMON_GROUP| group,
 then the following would prompt for **someuser**'s password and return
 the cluster's current configuration:
 
