@@ -202,7 +202,7 @@ when working on a cluster node.
           single: environment variable; CIB_user
 
        CIB_user
-     - $USER
+     - |CRM_DAEMON_USER_RAW|
      - The user to connect as. Needs to be part of the ``haclient`` group on
        the target host.
    * - .. index::
