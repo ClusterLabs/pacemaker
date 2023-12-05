@@ -254,7 +254,8 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc, const char *role,
         if (crm_time_is_defined(next_change)) {
             time_t t = (time_t) crm_time_get_seconds_since_epoch(next_change);
 
-            pe__update_recheck_time(t, rsc->cluster);
+            pe__update_recheck_time(t, rsc->cluster,
+                                    "location rule evaluation");
         }
         crm_time_free(next_change);
         return;

@@ -1561,7 +1561,7 @@ pending_too_long(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
         }
 
         // Node is pending, but still has time
-        pe__update_recheck_time(timeout, scheduler);
+        pe__update_recheck_time(timeout, scheduler, "pending node timeout");
     }
     return false;
 }
@@ -4181,7 +4181,8 @@ check_operation_expiry(struct action_history *history)
                   history->rsc->failure_timeout, (long long) last_failure);
         last_failure += history->rsc->failure_timeout + 1;
         if (unexpired_fail_count && (now < last_failure)) {
-            pe__update_recheck_time(last_failure, history->rsc->cluster);
+            pe__update_recheck_time(last_failure, history->rsc->cluster,
+                                    "fail count expiration");
         }
     }
 
