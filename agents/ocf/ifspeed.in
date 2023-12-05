@@ -123,7 +123,7 @@ Can be used to tune how big attribute value will be.
 <content type="integer" default="${OCF_RESKEY_weight_base_default}"/>
 </parameter>
 
-<parameter name="dampen">
+<parameter name="dampen" reloadable="1">
 <longdesc lang="en">
 The time to wait (dampening) for further changes to occur.
 </longdesc>
@@ -147,6 +147,7 @@ Log more verbosely.
 <action name="monitor" depth="0"  timeout="30s" interval="10s"/>
 <action name="meta-data"  timeout="5s" />
 <action name="validate-all"  timeout="30s" depth="0" />
+<action name="reload-agent"  timeout="20s" />
 </actions>
 </resource-agent>
 END
@@ -154,7 +155,7 @@ END
 
 usage() {
     cat <<END
-Usage: $0 {start|stop|monitor|validate-all|meta-data}
+Usage: $0 {start|stop|monitor|validate-all|meta-data|reload-agent}
 
 Expects to have a fully populated OCF RA-compliant environment set.
 END
@@ -172,7 +173,7 @@ start() {
 
 stop() {
     ha_pseudo_resource "${ha_pseudo_resource_name}" stop
-    attrd_updater -D -n "${OCF_RESKEY_name}" -d "${OCF_RESKEY_dampen}" ${attrd_options}
+    attrd_updater -D -n "${OCF_RESKEY_name}" ${attrd_options}
     return $OCF_SUCCESS
 }
 
@@ -491,11 +492,7 @@ update() {
     speed=$( iface_get_speed "${nic}" )
 
     : $(( score = speed * ${OCF_RESKEY_weight_base} / 1000 ))
-    if [ "$__OCF_ACTION" = "start" ] ; then
-        attrd_updater -n "${OCF_RESKEY_name}" -B "${score}" -d "${OCF_RESKEY_dampen}" ${attrd_options}
-    else
-        attrd_updater -n "${OCF_RESKEY_name}" -v "${score}" -d "${OCF_RESKEY_dampen}" ${attrd_options}
-    fi
+    attrd_updater -n "${OCF_RESKEY_name}" -B "${score}" -d "${OCF_RESKEY_dampen}" ${attrd_options}
     rc=$?
     case ${rc} in
         0)
@@ -506,6 +503,10 @@ update() {
             ;;
     esac
     return ${rc}
+}
+
+reload_agent() {
+    return $OCF_SUCCESS
 }
 
 case $__OCF_ACTION in
@@ -541,6 +542,9 @@ case "$__OCF_ACTION" in
         ;;
     validate-all)
         validate "$OCF_CHECK_LEVEL"
+        ;;
+    reload-agent)
+        reload_agent
         ;;
     *)
         usage

@@ -139,25 +139,25 @@ check_temperature() {
 
     if [ $1 -lt ${lower_red_limit} ] ; then
         ocf_log info "Drive ${DRIVE} ${DEVICE} too cold: ${1} C"
-        attrd_updater -n "#health-smart" -U "red" -d "${OCF_RESKEY_dampen}"
+        attrd_updater -n "#health-smart" -B "red" -d "${OCF_RESKEY_dampen}"
         return 1
     fi
 
     if [ $1 -gt ${upper_red_limit} ] ; then
         ocf_log info "Drive ${DRIVE} ${DEVICE} too hot: ${1} C"
-        attrd_updater -n "#health-smart" -U "red" -d "${OCF_RESKEY_dampen}"
+        attrd_updater -n "#health-smart" -B "red" -d "${OCF_RESKEY_dampen}"
         return 1
     fi
 
     if [ $1 -lt ${lower_yellow_limit} ] ; then
         ocf_log info "Drive ${DRIVE} ${DEVICE} quite cold: ${1} C"
-        attrd_updater -n "#health-smart" -U "yellow" -d "${OCF_RESKEY_dampen}"
+        attrd_updater -n "#health-smart" -B "yellow" -d "${OCF_RESKEY_dampen}"
         return 1
     fi
 
     if [ $1 -gt ${upper_yellow_limit} ] ; then
         ocf_log info "Drive ${DRIVE} ${DEVICE} quite hot: ${1} C"
-        attrd_updater -n "#health-smart" -U "yellow" -d "${OCF_RESKEY_dampen}"
+        attrd_updater -n "#health-smart" -B "yellow" -d "${OCF_RESKEY_dampen}"
         return 1
     fi
 }
@@ -244,7 +244,7 @@ HealthSMART_start() {
 }
 
 HealthSMART_stop() {
-    attrd_updater -D -n "#health-smart" -d "${OCF_RESKEY_dampen}"
+    attrd_updater -D -n "#health-smart"
 
     rm "${OCF_RESKEY_state}"
 
@@ -278,7 +278,7 @@ HealthSMART_monitor() {
                 # Check overall S.M.A.R.T. status
                 "${OCF_RESKEY_smartctl}" -d "${DEVICE}" -H ${DRIVE} | grep -q "SMART overall-health self-assessment test result: PASSED"
                 if [ $? -ne 0 ]; then
-                    attrd_updater -n "#health-smart" -U "red" -d "${OCF_RESKEY_dampen}"
+                    attrd_updater -n "#health-smart" -B "red" -d "${OCF_RESKEY_dampen}"
                     return $OCF_SUCCESS
                 fi
 
@@ -290,7 +290,7 @@ HealthSMART_monitor() {
             else
                 "${OCF_RESKEY_smartctl}" -H "${DRIVE}" | grep -q "SMART overall-health self-assessment test result: PASSED"
                 if [ $? -ne 0 ]; then
-                    attrd_updater -n "#health-smart" -U "red" -d "${OCF_RESKEY_dampen}"
+                    attrd_updater -n "#health-smart" -B "red" -d "${OCF_RESKEY_dampen}"
                     return $OCF_SUCCESS
                 fi
 
@@ -301,7 +301,7 @@ HealthSMART_monitor() {
             fi
         done
 
-        attrd_updater -n "#health-smart" -U "green" -d "${OCF_RESKEY_dampen}"
+        attrd_updater -n "#health-smart" -B "green" -d "${OCF_RESKEY_dampen}"
         return $OCF_SUCCESS
     fi
 
