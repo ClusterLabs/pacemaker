@@ -6,9 +6,9 @@
 Access Control Lists (ACLs)
 ---------------------------
 
-By default, the ``root`` user or any user in the ``haclient`` group can modify
-Pacemaker's CIB without restriction. Pacemaker offers *access control lists
-(ACLs)* to provide more fine-grained authorization.
+By default, the ``root`` user or any user in the |CRM_DAEMON_GROUP| group can
+modify Pacemaker's CIB without restriction. Pacemaker offers *access control
+lists (ACLs)* to provide more fine-grained authorization.
    
 .. important::
 
@@ -24,7 +24,7 @@ In order to use ACLs:
 * The ``enable-acl`` :ref:`cluster option <cluster_options>` must be set to
   true.
 
-* Desired users must have user accounts in the ``haclient`` group on all
+* Desired users must have user accounts in the |CRM_DAEMON_GROUP| group on all
   cluster nodes in the cluster.
 
 * If your CIB was created before Pacemaker 1.1.12, it might need to be updated
@@ -275,9 +275,9 @@ elements.
 
 .. important::
 
-   The ``root`` and ``hacluster`` user accounts always have full access to the
-   CIB, regardless of ACLs. For all other user accounts, when ``enable-acl`` is
-   true, permission to all parts of the CIB is denied by default (permissions
+   The ``root`` and |CRM_DAEMON_USER| user accounts always have full access to
+   the CIB, regardless of ACLs. For all other user accounts, when ``enable-acl``
+   is true, permission to all parts of the CIB is denied by default (permissions
    must be explicitly granted).
    
 ACL Examples
@@ -436,8 +436,8 @@ the CIB, such as ``crm_attribute`` when managing permanent node attributes,
 ``crm_mon``, and ``cibadmin``.
 
 However, command-line tools that communicate directly with Pacemaker daemons
-via IPC are not affected by ACLs. For example, users in the ``haclient`` group
-may still do the following, regardless of ACLs:
+via IPC are not affected by ACLs. For example, users in the |CRM_DAEMON_GROUP|
+group may still do the following, regardless of ACLs:
 
 * Query transient node attribute values using ``crm_attribute`` and
   ``attrd_updater``.
