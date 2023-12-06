@@ -1,3 +1,11 @@
+* Wed Dec 06 2023 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.7-rc3
+- 10 commits with 9 files changed, 72 insertions(+), 19 deletions(-)
+
+- Fixes since Pacemaker-2.1.7-rc2
+  + agents: handle dampening parameter consistently and correctly
+  + scheduler: update recheck time for node-pending-timeout
+  + tools: fix XML output regression introduced in 2.1.7-rc1
+
 * Tue Nov 21 2023 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.7-rc2
 - 26 commits with 14 files changed, 119 insertions(+), 46 deletions(-)
 
