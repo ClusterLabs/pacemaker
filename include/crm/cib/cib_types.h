@@ -317,7 +317,7 @@ typedef struct cib_api_operations_s {
      * \brief Set the user as whom all CIB requests via methods will be executed
      *
      * By default, the value of the \c CIB_user environment variable is used if
-     * set. Otherwise, \c root is used.
+     * set. Otherwise, the current effective user is used.
      *
      * \param[in,out] cib   CIB connection
      * \param[in]     user  Name of user whose permissions to use when
