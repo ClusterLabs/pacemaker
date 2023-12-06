@@ -1351,6 +1351,23 @@ pcmk__schema_files_later_than(const char *name)
     return lst;
 }
 
+/*!
+ * \internal
+ * \brief Return the directory containing any extra schema files that a
+ *        Pacemaker Remote node fetched from the cluster
+ */
+const char *
+pcmk__remote_schema_dir(void)
+{
+    const char *dir = pcmk__env_option(PCMK__ENV_REMOTE_SCHEMA_DIR);
+
+    if (pcmk__str_empty(dir)) {
+        return PCMK__REMOTE_SCHEMA_DIR;
+    }
+
+    return dir;
+}
+
 void
 pcmk__log_known_schemas(void)
 {
