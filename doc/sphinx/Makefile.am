@@ -128,6 +128,7 @@ $(BOOKS:%=%/conf.py): conf.py.in
 		-e 's#%ABS_TOP_SRCDIR%#$(abs_top_srcdir)#g'			\
 		-e 's#%CONFIGDIR%#@CONFIGDIR@#g'				\
 		-e 's#%CRM_BLACKBOX_DIR%#@CRM_BLACKBOX_DIR@#g'			\
+		-e 's#%CRM_CONFIG_DIR%#@CRM_CONFIG_DIR@#g'			\
 		-e 's#%CRM_DAEMON_GROUP%#@CRM_DAEMON_GROUP@#g'			\
 		-e 's#%CRM_DAEMON_USER%#@CRM_DAEMON_USER@#g'			\
 		-e 's#%CRM_LOG_DIR%#@CRM_LOG_DIR@#g'				\

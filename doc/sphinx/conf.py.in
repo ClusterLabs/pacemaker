@@ -31,9 +31,9 @@ rst_prolog="""
 .. |CFS_DISTRO| replace:: AlmaLinux
 .. |CFS_DISTRO_VER| replace:: 9
 .. |CRM_BLACKBOX_DIR| replace:: ``%CRM_BLACKBOX_DIR%``
+.. |CRM_CONFIG_DIR| replace:: ``%CRM_CONFIG_DIR%``
 .. |CRM_DAEMON_GROUP| replace:: ``%CRM_DAEMON_GROUP%``
 .. |CRM_DAEMON_USER| replace:: ``%CRM_DAEMON_USER%``
-.. |CRM_DAEMON_USER_RAW| replace:: %CRM_DAEMON_USER%
 .. |CRM_SCHEMA_DIRECTORY| replace:: %CRM_SCHEMA_DIRECTORY%
 .. |PCMK_AUTHKEY_FILE| replace:: %PACEMAKER_CONFIG_DIR%/authkey
 .. |PCMK_CONFIG_FILE| replace:: ``%CONFIGDIR%/pacemaker``
