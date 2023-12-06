@@ -478,6 +478,18 @@ environment variables when Pacemaker daemons start up.
      - *Advanced Use Only:* Specify an alternate location for RNG schemas and
        XSL transforms.
 
+   * - .. _pcmk_remote_schema_directory:
+
+       .. index::
+          pair:: node option; PCMK_remote_schema_directory
+
+       PCMK_remote_schema_directory
+     - :ref:`text <text>`
+     - |PCMK__REMOTE_SCHEMA_DIR|
+     - *Advanced Use Only:* Specify an alternate location on Pacemaker Remote
+       nodes for storing newer RNG schemas and XSL transforms fetched from
+       the cluster.
+
    * - .. _pcmk_valgrind_enabled:
 
        .. index::

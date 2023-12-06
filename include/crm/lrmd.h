@@ -33,12 +33,27 @@ typedef struct lrmd_key_value_s {
     struct lrmd_key_value_s *next;
 } lrmd_key_value_t;
 
-/* This should be bumped every time there is an incompatible change that
- * prevents older clients from connecting to this version of the server.
+/* The major version should be bumped every time there is an incompatible
+ * change that prevents older clients from connecting to this version of
+ * the server.  The minor version indicates feature support.
+ *
+ * Protocol  Pacemaker  Significant changes
+ * --------  ---------  -------------------
+ *   1.2       2.1.7    PCMK__CIB_REQUEST_SCHEMAS
  */
-#define LRMD_PROTOCOL_VERSION "1.1"
+#define LRMD_PROTOCOL_VERSION "1.2"
 
-/* This is the version that the client version will actually be compared
+#define LRMD_SUPPORTS_SCHEMA_XFER(x) (compare_version((x), "1.2") >= 0)
+
+/* The major protocol version the client and server both need to support for
+ * the connection to be successful.  This should only ever be the major
+ * version - not a complete version number.
+ */
+#define LRMD_COMPATIBLE_PROTOCOL "1"
+
+/* \deprecated Do not use (will be removed in a future release)
+ *
+ * This is the version that the client version will actually be compared
  * against. This should be identical to LRMD_PROTOCOL_VERSION. However, we
  * accidentally bumped LRMD_PROTOCOL_VERSION in 6424a647 (1.1.15) when we didn't
  * need to, so for now it's different. If we ever have a truly incompatible

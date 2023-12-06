@@ -451,6 +451,19 @@ cib_client_end_transaction(cib_t *cib, bool commit, int call_options)
     return rc;
 }
 
+static int
+cib_client_fetch_schemas(cib_t *cib, xmlNode **output_data, const char *after_ver,
+                         int call_options)
+{
+    xmlNode *data = create_xml_node(NULL, PCMK__XA_SCHEMA);
+
+    crm_xml_add(data, XML_ATTR_VERSION, after_ver);
+
+    return cib_internal_op(cib, PCMK__CIB_REQUEST_SCHEMAS, NULL, NULL, data,
+                           output_data, call_options, NULL);
+
+}
+
 static void
 cib_client_set_user(cib_t *cib, const char *user)
 {
@@ -735,6 +748,8 @@ cib_new_variant(void)
     new_cib->cmds->end_transaction = cib_client_end_transaction;
 
     new_cib->cmds->set_user = cib_client_set_user;
+
+    new_cib->cmds->fetch_schemas = cib_client_fetch_schemas;
 
     return new_cib;
 }

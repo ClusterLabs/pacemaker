@@ -247,6 +247,7 @@ pacemaker_*.info
 /lib/*/tests/*/*.log
 /lib/*/tests/*/*_test
 /lib/*/tests/*/*.trs
+/lib/common/tests/schemas/schemas
 /xml/test-*/*.up
 /xml/test-*/*.up.err
 /xml/assets/*.rng

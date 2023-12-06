@@ -168,7 +168,11 @@ xml_latest_schema(void)
 static inline bool
 version_from_filename(const char *filename, pcmk__schema_version_t *version)
 {
-    return sscanf(filename, "pacemaker-%hhu.%hhu.rng", &(version->v[0]), &(version->v[1])) == 2;
+    if (pcmk__ends_with(filename, ".rng")) {
+        return sscanf(filename, "pacemaker-%hhu.%hhu.rng", &(version->v[0]), &(version->v[1])) == 2;
+    } else {
+        return sscanf(filename, "pacemaker-%hhu.%hhu", &(version->v[0]), &(version->v[1])) == 2;
+    }
 }
 
 static int
@@ -195,7 +199,20 @@ schema_filter(const struct dirent *a)
 }
 
 static int
-schema_sort(const struct dirent **a, const struct dirent **b)
+schema_cmp(pcmk__schema_version_t a_version, pcmk__schema_version_t b_version)
+{
+    for (int i = 0; i < 2; ++i) {
+        if (a_version.v[i] < b_version.v[i]) {
+            return -1;
+        } else if (a_version.v[i] > b_version.v[i]) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int
+schema_cmp_directory(const struct dirent **a, const struct dirent **b)
 {
     pcmk__schema_version_t a_version = SCHEMA_ZERO;
     pcmk__schema_version_t b_version = SCHEMA_ZERO;
@@ -206,14 +223,7 @@ schema_sort(const struct dirent **a, const struct dirent **b)
         return 0;
     }
 
-    for (int i = 0; i < 2; ++i) {
-        if (a_version.v[i] < b_version.v[i]) {
-            return -1;
-        } else if (a_version.v[i] > b_version.v[i]) {
-            return 1;
-        }
-    }
-    return 0;
+    return schema_cmp(a_version, b_version);
 }
 
 /*!
@@ -396,6 +406,84 @@ wrap_libxslt(bool finalize)
     }
 }
 
+void
+pcmk__load_schemas_from_dir(const char *dir)
+{
+    int lpc, max;
+    struct dirent **namelist = NULL;
+
+    max = scandir(dir, &namelist, schema_filter, schema_cmp_directory);
+    if (max < 0) {
+        crm_warn("Could not load schemas from %s: %s", dir, strerror(errno));
+        return;
+    }
+
+    for (lpc = 0; lpc < max; lpc++) {
+        bool transform_expected = false;
+        pcmk__schema_version_t version = SCHEMA_ZERO;
+
+        if (!version_from_filename(namelist[lpc]->d_name, &version)) {
+            // Shouldn't be possible, but makes static analysis happy
+            crm_warn("Skipping schema '%s': could not parse version",
+                     namelist[lpc]->d_name);
+            continue;
+        }
+        if ((lpc + 1) < max) {
+            pcmk__schema_version_t next_version = SCHEMA_ZERO;
+
+            if (version_from_filename(namelist[lpc+1]->d_name, &next_version)
+                    && (version.v[0] < next_version.v[0])) {
+                transform_expected = true;
+            }
+        }
+
+        if (add_schema_by_version(&version, transform_expected) != pcmk_rc_ok) {
+            break;
+        }
+    }
+
+    for (lpc = 0; lpc < max; lpc++) {
+        free(namelist[lpc]);
+    }
+
+    free(namelist);
+}
+
+static gint
+schema_sort_GCompareFunc(gconstpointer a, gconstpointer b)
+{
+    const pcmk__schema_t *schema_a = a;
+    const pcmk__schema_t *schema_b = b;
+
+    if (pcmk__str_eq(schema_a->name, "pacemaker-next", pcmk__str_none)) {
+        if (pcmk__str_eq(schema_b->name, "none", pcmk__str_none)) {
+            return -1;
+        } else {
+            return 1;
+        }
+    } else if (pcmk__str_eq(schema_a->name, "none", pcmk__str_none)) {
+        return 1;
+    } else if (pcmk__str_eq(schema_b->name, "pacemaker-next", pcmk__str_none)) {
+        return -1;
+    } else {
+        return schema_cmp(schema_a->version, schema_b->version);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Sort the list of known schemas such that all pacemaker-X.Y are in
+ *        version order, then pacemaker-next, then none
+ *
+ * This function should be called whenever additional schemas are loaded using
+ * pcmk__load_schemas_from_dir(), after the initial sets in crm_schema_init().
+ */
+void
+pcmk__sort_schemas(void)
+{
+    known_schemas = g_list_sort(known_schemas, schema_sort_GCompareFunc);
+}
+
 /*!
  * \internal
  * \brief Load pacemaker schemas into cache
@@ -406,50 +494,14 @@ wrap_libxslt(bool finalize)
 void
 crm_schema_init(void)
 {
-    int lpc, max;
+    const char *remote_schema_dir = pcmk__remote_schema_dir();
     char *base = pcmk__xml_artefact_root(pcmk__xml_artefact_ns_legacy_rng);
-    struct dirent **namelist = NULL;
     const pcmk__schema_version_t zero = SCHEMA_ZERO;
 
     wrap_libxslt(false);
 
-    max = scandir(base, &namelist, schema_filter, schema_sort);
-    if (max < 0) {
-        crm_notice("scandir(%s) failed: %s (%d)", base, strerror(errno), errno);
-        free(base);
-
-    } else {
-        free(base);
-        for (lpc = 0; lpc < max; lpc++) {
-            bool transform_expected = FALSE;
-            pcmk__schema_version_t version = SCHEMA_ZERO;
-
-            if (!version_from_filename(namelist[lpc]->d_name, &version)) {
-                // Shouldn't be possible, but makes static analysis happy
-                crm_err("Skipping schema '%s': could not parse version",
-                        namelist[lpc]->d_name);
-                continue;
-            }
-            if ((lpc + 1) < max) {
-                pcmk__schema_version_t next_version = SCHEMA_ZERO;
-
-                if (version_from_filename(namelist[lpc+1]->d_name, &next_version)
-                        && (version.v[0] < next_version.v[0])) {
-                    transform_expected = TRUE;
-                }
-            }
-
-            if (add_schema_by_version(&version, transform_expected)
-                    == ENOENT) {
-                break;
-            }
-        }
-
-        for (lpc = 0; lpc < max; lpc++) {
-            free(namelist[lpc]);
-        }
-        free(namelist);
-    }
+    pcmk__load_schemas_from_dir(base);
+    pcmk__load_schemas_from_dir(remote_schema_dir);
 
     // @COMPAT: Deprecated since 2.1.5
     add_schema(pcmk__schema_validator_rng, &zero, "pacemaker-next",
@@ -457,6 +509,11 @@ crm_schema_init(void)
 
     add_schema(pcmk__schema_validator_none, &zero, PCMK__VALUE_NONE,
                NULL, NULL, FALSE);
+
+    /* This shouldn't be strictly necessary, but we'll do it here just in case
+     * there's anything in PCMK__REMOTE_SCHEMA_DIR that messes up the order.
+     */
+    pcmk__sort_schemas();
 }
 
 static gboolean
@@ -1283,6 +1340,223 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
 
     free(orig_value);
     return rc;
+}
+
+/*!
+ * \internal
+ * \brief Return a list of all schema files and any associated XSLT files
+ *        later than the given one
+ * \brief Return a list of all schema versions later than the given one
+ *
+ * \param[in] schema The schema to compare against (for example,
+ *                   "pacemaker-3.1.rng" or "pacemaker-3.1")
+ *
+ * \note The caller is responsible for freeing both the returned list and
+ *       the elements of the list
+ */
+GList *
+pcmk__schema_files_later_than(const char *name)
+{
+    GList *lst = NULL;
+    pcmk__schema_version_t ver;
+
+    if (!version_from_filename(name, &ver)) {
+        return lst;
+    }
+
+    for (GList *iter = g_list_nth(known_schemas, xml_latest_schema_index(known_schemas));
+         iter != NULL; iter = iter->prev) {
+        pcmk__schema_t *schema = iter->data;
+        char *s = NULL;
+
+        if (schema_cmp(ver, schema->version) != -1) {
+            continue;
+        }
+
+        s = crm_strdup_printf("%s.rng", schema->name);
+        lst = g_list_prepend(lst, s);
+
+        if (schema->transform != NULL) {
+            char *xform = crm_strdup_printf("%s.xsl", schema->transform);
+            lst = g_list_prepend(lst, xform);
+        }
+
+        if (schema->transform_enter != NULL) {
+            char *enter = crm_strdup_printf("%s.xsl", schema->transform_enter);
+
+            lst = g_list_prepend(lst, enter);
+
+            if (schema->transform_onleave) {
+                int last_dash = strrchr(enter, '-') - enter;
+                char *leave = crm_strdup_printf("%.*s-leave.xsl", last_dash, enter);
+
+                lst = g_list_prepend(lst, leave);
+            }
+        }
+    }
+
+    return lst;
+}
+
+static void
+append_href(xmlNode *xml, void *user_data)
+{
+    GList **list = user_data;
+    const char *href = crm_element_value(xml, "href");
+    char *s = NULL;
+
+    if (href == NULL) {
+        return;
+    }
+
+    s = strdup(href);
+    CRM_ASSERT(s != NULL);
+    *list = g_list_prepend(*list, s);
+}
+
+static void
+external_refs_in_schema(GList **list, const char *contents)
+{
+    /* local-name()= is needed to ignore the xmlns= setting at the top of
+     * the XML file.  Otherwise, the xpath query will always return nothing.
+     */
+    const char *search = "//*[local-name()='externalRef'] | //*[local-name()='include']";
+    xmlNode *xml = string2xml(contents);
+
+    crm_foreach_xpath_result(xml, search, append_href, list);
+    free_xml(xml);
+}
+
+static int
+read_file_contents(const char *file, char **contents)
+{
+    int rc = pcmk_rc_ok;
+    char *path = NULL;
+
+    if (pcmk__ends_with(file, ".rng")) {
+        path = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_rng, file);
+    } else {
+        path = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_xslt, file);
+    }
+
+    rc = pcmk__file_contents(path, contents);
+
+    free(path);
+    return rc;
+}
+
+static void
+add_schema_file_to_xml(xmlNode *parent, const char *file, GList **already_included)
+{
+    char *contents = NULL;
+    char *path = NULL;
+    xmlNode *file_node = NULL;
+    GList *includes = NULL;
+    int rc = pcmk_rc_ok;
+
+    /* If we already included this file, don't do so again. */
+    if (g_list_find_custom(*already_included, file, (GCompareFunc) strcmp) != NULL) {
+        return;
+    }
+
+    /* Ensure whatever file we were given has a suffix we know about.  If not,
+     * just assume it's an RNG file.
+     */
+    if (!pcmk__ends_with(file, ".rng") && !pcmk__ends_with(file, ".xsl")) {
+        path = crm_strdup_printf("%s.rng", file);
+    } else {
+        path = strdup(file);
+        CRM_ASSERT(path != NULL);
+    }
+
+    rc = read_file_contents(path, &contents);
+    if (rc != pcmk_rc_ok || contents == NULL) {
+        crm_warn("Could not read schema file %s: %s", file, pcmk_rc_str(rc));
+        free(path);
+        return;
+    }
+
+    /* Create a new <file path="..."> node with the contents of the file
+     * as a CDATA block underneath it.
+     */
+    file_node = create_xml_node(parent, PCMK__XA_FILE);
+    if (file_node == NULL) {
+        free(contents);
+        free(path);
+        return;
+    }
+
+    crm_xml_add(file_node, PCMK__XA_PATH, path);
+    *already_included = g_list_prepend(*already_included, path);
+
+    xmlAddChild(file_node, xmlNewCDataBlock(parent->doc, (pcmkXmlStr) contents,
+                                            strlen(contents)));
+
+    /* Scan the file for any <externalRef> or <include> nodes and build up
+     * a list of the files they reference.
+     */
+    external_refs_in_schema(&includes, contents);
+
+    /* For each referenced file, recurse to add it (and potentially anything it
+     * references, ...) to the XML.
+     */
+    for (GList *iter = includes; iter != NULL; iter = iter->next) {
+        add_schema_file_to_xml(parent, iter->data, already_included);
+    }
+
+    free(contents);
+    g_list_free_full(includes, free);
+}
+
+/*!
+ * \internal
+ * \brief Add an XML schema file and all the files it references as children
+ *        of a given XML node
+ *
+ * \param[in,out] parent            The parent XML node
+ * \param[in] name                  The schema version to compare against
+ *                                  (for example, "pacemaker-3.1" or "pacemaker-3.1.rng")
+ * \param[in,out] already_included  A list of names that have already been added
+ *                                  to the parent node.
+ *
+ * \note The caller is responsible for freeing both the returned list and
+ *       the elements of the list
+ */
+void
+pcmk__build_schema_xml_node(xmlNode *parent, const char *name, GList **already_included)
+{
+    /* First, create an unattached node to add all the schema files to as children. */
+    xmlNode *schema_node = create_xml_node(NULL, PCMK__XA_SCHEMA);
+
+    crm_xml_add(schema_node, XML_ATTR_VERSION, name);
+    add_schema_file_to_xml(schema_node, name, already_included);
+
+    /* Then, if we actually added any children, attach the node to parent.  If
+     * we did not add any children (for instance, name was invalid), this prevents
+     * us from returning a document with additional empty children.
+     */
+    if (schema_node->children != NULL) {
+        xmlAddChild(parent, schema_node);
+    } else {
+        free_xml(schema_node);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Return the directory containing any extra schema files that a
+ *        Pacemaker Remote node fetched from the cluster
+ */
+const char *
+pcmk__remote_schema_dir(void)
+{
+    const char *dir = pcmk__env_option(PCMK__ENV_REMOTE_SCHEMA_DIR);
+
+    if (pcmk__str_empty(dir)) {
+        return PCMK__REMOTE_SCHEMA_DIR;
+    }
+
+    return dir;
 }
 
 void

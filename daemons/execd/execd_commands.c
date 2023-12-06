@@ -1482,9 +1482,9 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
     const char *protocol_version = crm_element_value(request, F_LRMD_PROTOCOL_VERSION);
     const char *start_state = pcmk__env_option(PCMK__ENV_NODE_START_STATE);
 
-    if (compare_version(protocol_version, LRMD_MIN_PROTOCOL_VERSION) < 0) {
+    if (compare_version(protocol_version, LRMD_COMPATIBLE_PROTOCOL) < 0) {
         crm_err("Cluster API version must be greater than or equal to %s, not %s",
-                LRMD_MIN_PROTOCOL_VERSION, protocol_version);
+                LRMD_COMPATIBLE_PROTOCOL, protocol_version);
         rc = -EPROTO;
     }
 
@@ -1493,9 +1493,18 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
         if ((client->remote != NULL)
             && pcmk_is_set(client->flags,
                            pcmk__client_tls_handshake_complete)) {
+            const char *op = crm_element_value(request, F_LRMD_OPERATION);
 
             // This is a remote connection from a cluster node's controller
             ipc_proxy_add_provider(client);
+
+            /* If this was a register operation, also ask for new schema files but
+             * only if it's supported by the protocol version.
+             */
+            if (pcmk__str_eq(op, CRM_OP_REGISTER, pcmk__str_none) &&
+                LRMD_SUPPORTS_SCHEMA_XFER(protocol_version)) {
+                remoted_request_cib_schema_files();
+            }
         } else {
             rc = -EACCES;
         }

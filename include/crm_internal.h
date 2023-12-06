@@ -81,17 +81,21 @@
 #define PCMK__XA_CONFIG_ERRORS          "config-errors"
 #define PCMK__XA_CONFIG_WARNINGS        "config-warnings"
 #define PCMK__XA_CONFIRM                "confirm"
+#define PCMK__XA_CONN_HOST              "connection_host"
 #define PCMK__XA_CRMD                   "crmd"
 #define PCMK__XA_EXPECTED               "expected"
+#define PCMK__XA_FILE                   "file"
 #define PCMK__XA_GRAPH_ERRORS           "graph-errors"
 #define PCMK__XA_GRAPH_WARNINGS         "graph-warnings"
 #define PCMK__XA_IN_CCM                 "in_ccm"
 #define PCMK__XA_JOIN                   "join"
 #define PCMK__XA_MODE                   "mode"
 #define PCMK__XA_NODE_START_STATE       "node_start_state"
+#define PCMK__XA_PATH                   "path"
+#define PCMK__XA_SCHEMA                 "schema"
+#define PCMK__XA_SCHEMAS                "schemas"
 #define PCMK__XA_TASK                   "task"
 #define PCMK__XA_UPTIME                 "uptime"
-#define PCMK__XA_CONN_HOST              "connection_host"
 
 
 /*

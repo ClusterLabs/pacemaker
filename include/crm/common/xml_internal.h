@@ -447,5 +447,7 @@ gboolean pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
                             void *error_handler_context);
 
 void pcmk__log_known_schemas(void);
+const char *pcmk__remote_schema_dir(void);
+void pcmk__sort_schemas(void);
 
 #endif // PCMK__XML_INTERNAL__H
