@@ -180,41 +180,49 @@ only with advanced resource types such as clones.
 .. index::
    single: OCF resource agent; return code
 
-How are OCF Return Codes Interpreted?
+How Are OCF Return Codes Interpreted?
 _____________________________________
 
-The first thing the cluster does is to check the return code against
-the expected result.  If the result does not match the expected value,
-then the operation is considered to have failed, and recovery action is
-initiated.
+The first thing the cluster does is to check the return code against the
+expected result. If the result does not match the expected value, then the
+operation is considered to have failed, and recovery action is initiated.
 
 There are three types of failure recovery:
 
-.. table:: **Types of recovery performed by the cluster**
+.. list-table:: **Types of Recovery Performed by the Cluster**
+   :class: longtable
+   :widths: 1 5 5
+   :header-rows: 1
 
-   +-------+--------------------------------------------+--------------------------------------+
-   | Type  | Description                                | Action Taken by the Cluster          |
-   +=======+============================================+======================================+
-   | soft  | .. index::                                 | Restart the resource or move it to a |
-   |       |    single: OCF resource agent; soft error  | new location                         |
-   |       |                                            |                                      |
-   |       | A transient error occurred                 |                                      |
-   +-------+--------------------------------------------+--------------------------------------+
-   | hard  | .. index::                                 | Move the resource elsewhere and      |
-   |       |    single: OCF resource agent; hard error  | prevent it from being retried on the |
-   |       |                                            | current node                         |
-   |       | A non-transient error that                 |                                      |
-   |       | may be specific to the                     |                                      |
-   |       | current node                               |                                      |
-   +-------+--------------------------------------------+--------------------------------------+
-   | fatal | .. index::                                 | Stop the resource and prevent it     |
-   |       |    single: OCF resource agent; fatal error | from being started on any cluster    |
-   |       |                                            | node                                 |
-   |       | A non-transient error that                 |                                      |
-   |       | will be common to all                      |                                      |
-   |       | cluster nodes (e.g. a bad                  |                                      |
-   |       | configuration was specified)               |                                      |
-   +-------+--------------------------------------------+--------------------------------------+
+   * - Type
+     - Description
+     - Action Taken by the Cluster
+   * - .. _soft_error:
+
+       .. index::
+          single: OCF resource agent; soft error
+
+       soft
+     - A transient error
+     - Restart the resource or move it to a new location
+   * - .. _hard_error:
+
+       .. index::
+          single: OCF resource agent; hard error
+
+       hard
+     - A non-transient error that may be specific to the current node
+     - Move the resource elsewhere and prevent it from being retried on the
+       current node
+   * - .. _fatal_error:
+
+       .. index::
+          single: OCF resource agent; fatal error
+
+       fatal
+     - A non-transient error that will be common to all cluster nodes (for
+       example, a bad configuration was specified)
+     - Stop the resource and prevent it from being started on any cluster node
 
 .. _ocf_return_codes:
 
