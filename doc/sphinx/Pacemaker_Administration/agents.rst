@@ -229,118 +229,165 @@ There are three types of failure recovery:
 OCF Return Codes
 ________________
 
-The following table outlines the different OCF return codes and the type of
+The following table outlines the various OCF return codes and the type of
 recovery the cluster will initiate when a failure code is received. Although
-counterintuitive, even actions that return 0 (aka. ``OCF_SUCCESS``) can be
-considered to have failed, if 0 was not the expected return value.
+counterintuitive, even actions that return ``OCF_SUCCESS`` can be considered to
+have failed, if ``OCF_SUCCESS`` was not the expected return value.
 
-.. table:: **OCF Exit Codes and their Recovery Types**
+.. list-table:: **OCF Exit Codes and Their Recovery Types**
+   :class: longtable
+   :widths: 1 3 6 2
+   :header-rows: 1
 
-   +-------+-----------------------+---------------------------------------------------+----------+
-   | Exit  | OCF Alias             | Description                                       | Recovery |
-   | Code  |                       |                                                   |          |
-   +=======+=======================+===================================================+==========+
-   | 0     | OCF_SUCCESS           | .. index::                                        | soft     |
-   |       |                       |    single: OCF_SUCCESS                            |          |
-   |       |                       |    single: OCF return code; OCF_SUCCESS           |          |
-   |       |                       |    pair: OCF return code; 0                       |          |
-   |       |                       |                                                   |          |
-   |       |                       | Success. The command completed successfully.      |          |
-   |       |                       | This is the expected result for all start,        |          |
-   |       |                       | stop, promote and demote commands.                |          |
-   +-------+-----------------------+---------------------------------------------------+----------+
-   | 1     | OCF_ERR_GENERIC       | .. index::                                        | soft     |
-   |       |                       |    single: OCF_ERR_GENERIC                        |          |
-   |       |                       |    single: OCF return code; OCF_ERR_GENERIC       |          |
-   |       |                       |    pair: OCF return code; 1                       |          |
-   |       |                       |                                                   |          |
-   |       |                       | Generic "there was a problem" error code.         |          |
-   +-------+-----------------------+---------------------------------------------------+----------+
-   | 2     | OCF_ERR_ARGS          | .. index::                                        | hard     |
-   |       |                       |     single: OCF_ERR_ARGS                          |          |
-   |       |                       |     single: OCF return code; OCF_ERR_ARGS         |          |
-   |       |                       |     pair: OCF return code; 2                      |          |
-   |       |                       |                                                   |          |
-   |       |                       | The resource's parameter values are not valid on  |          |
-   |       |                       | this machine (for example, a value refers to a    |          |
-   |       |                       | file not found on the local host).                |          |
-   +-------+-----------------------+---------------------------------------------------+----------+
-   | 3     | OCF_ERR_UNIMPLEMENTED | .. index::                                        | hard     |
-   |       |                       |    single: OCF_ERR_UNIMPLEMENTED                  |          |
-   |       |                       |    single: OCF return code; OCF_ERR_UNIMPLEMENTED |          |
-   |       |                       |    pair: OCF return code; 3                       |          |
-   |       |                       |                                                   |          |
-   |       |                       | The requested action is not implemented.          |          |
-   +-------+-----------------------+---------------------------------------------------+----------+
-   | 4     | OCF_ERR_PERM          | .. index::                                        | hard     |
-   |       |                       |    single: OCF_ERR_PERM                           |          |
-   |       |                       |    single: OCF return code; OCF_ERR_PERM          |          |
-   |       |                       |    pair: OCF return code; 4                       |          |
-   |       |                       |                                                   |          |
-   |       |                       | The resource agent does not have                  |          |
-   |       |                       | sufficient privileges to complete the task.       |          |
-   +-------+-----------------------+---------------------------------------------------+----------+
-   | 5     | OCF_ERR_INSTALLED     | .. index::                                        | hard     |
-   |       |                       |    single: OCF_ERR_INSTALLED                      |          |
-   |       |                       |    single: OCF return code; OCF_ERR_INSTALLED     |          |
-   |       |                       |    pair: OCF return code; 5                       |          |
-   |       |                       |                                                   |          |
-   |       |                       | The tools required by the resource are            |          |
-   |       |                       | not installed on this machine.                    |          |
-   +-------+-----------------------+---------------------------------------------------+----------+
-   | 6     | OCF_ERR_CONFIGURED    | .. index::                                        | fatal    |
-   |       |                       |    single: OCF_ERR_CONFIGURED                     |          |
-   |       |                       |    single: OCF return code; OCF_ERR_CONFIGURED    |          |
-   |       |                       |    pair: OCF return code; 6                       |          |
-   |       |                       |                                                   |          |
-   |       |                       | The resource's parameter values are inherently    |          |
-   |       |                       | invalid (for example, a required parameter was    |          |
-   |       |                       | not given).                                       |          |
-   +-------+-----------------------+---------------------------------------------------+----------+
-   | 7     | OCF_NOT_RUNNING       | .. index::                                        | N/A      |
-   |       |                       |    single: OCF_NOT_RUNNING                        |          |
-   |       |                       |    single: OCF return code; OCF_NOT_RUNNING       |          |
-   |       |                       |    pair: OCF return code; 7                       |          |
-   |       |                       |                                                   |          |
-   |       |                       | The resource is safely stopped. This should only  |          |
-   |       |                       | be returned by monitor actions, not stop actions. |          |
-   +-------+-----------------------+---------------------------------------------------+----------+
-   | 8     | OCF_RUNNING_PROMOTED  | .. index::                                        | soft     |
-   |       |                       |    single: OCF_RUNNING_PROMOTED                   |          |
-   |       |                       |    single: OCF return code; OCF_RUNNING_PROMOTED  |          |
-   |       |                       |    pair: OCF return code; 8                       |          |
-   |       |                       |                                                   |          |
-   |       |                       | The resource is running in the promoted role.     |          |
-   +-------+-----------------------+---------------------------------------------------+----------+
-   | 9     | OCF_FAILED_PROMOTED   | .. index::                                        | soft     |
-   |       |                       |    single: OCF_FAILED_PROMOTED                    |          |
-   |       |                       |    single: OCF return code; OCF_FAILED_PROMOTED   |          |
-   |       |                       |    pair: OCF return code; 9                       |          |
-   |       |                       |                                                   |          |
-   |       |                       | The resource is (or might be) in the promoted     |          |
-   |       |                       | role but has failed. The resource will be         |          |
-   |       |                       | demoted, stopped and then started (and possibly   |          |
-   |       |                       | promoted) again.                                  |          |
-   +-------+-----------------------+---------------------------------------------------+----------+
-   | 190   | OCF_DEGRADED          | .. index::                                        | none     |
-   |       |                       |    single: OCF_DEGRADED                           |          |
-   |       |                       |    single: OCF return code; OCF_DEGRADED          |          |
-   |       |                       |    pair: OCF return code; 190                     |          |
-   |       |                       |                                                   |          |
-   |       |                       | The resource is properly active, but in such a    |          |
-   |       |                       | condition that future failures are more likely.   |          |
-   +-------+-----------------------+---------------------------------------------------+----------+
-   | 191   | OCF_DEGRADED_PROMOTED | .. index::                                        | none     |
-   |       |                       |    single: OCF_DEGRADED_PROMOTED                  |          |
-   |       |                       |    single: OCF return code; OCF_DEGRADED_PROMOTED |          |
-   |       |                       |    pair: OCF return code; 191                     |          |
-   |       |                       |                                                   |          |
-   |       |                       | The resource is properly active in the promoted   |          |
-   |       |                       | role, but in such a condition that future         |          |
-   |       |                       | failures are more likely.                         |          |
-   +-------+-----------------------+---------------------------------------------------+----------+
-   | other | *none*                | Custom error code.                                | soft     |
-   +-------+-----------------------+---------------------------------------------------+----------+
+   * - Exit Code
+     - OCF Alias
+     - Description
+     - Recovery
+   * - .. _OCF_SUCCESS:
+
+       .. index::
+          single: OCF_SUCCESS
+          single: OCF return code; OCF_SUCCESS
+          pair: OCF return code; 0
+
+       0
+     - OCF_SUCCESS
+     - Success. The command completed successfully. This is the expected result
+       for all start, stop, promote, and demote commands.
+     - :ref:`soft <soft_error>`
+   * - .. _OCF_ERR_GENERIC:
+
+       .. index::
+          single: OCF_ERR_GENERIC
+          single: OCF return code; OCF_ERR_GENERIC
+          pair: OCF return code; 1
+
+       1
+     - OCF_ERR_GENERIC
+     - Generic "there was a problem" error code.
+     - :ref:`hard <hard_error>`
+   * - .. _OCF_ERR_ARGS:
+
+       .. index::
+          single: OCF_ERR_ARGS
+          single: OCF return code; OCF_ERR_ARGS
+          pair: OCF return code; 2
+
+       2
+     - OCF_ERR_ARGS
+     - The resource's parameter values are not valid on this machine (for
+       example, a value refers to a file not found on the local host).
+     - :ref:`hard <hard_error>`
+   * - .. _OCF_ERR_UNIMPLEMENTED:
+
+       .. index::
+          single: OCF_ERR_UNIMPLEMENTED
+          single: OCF return code; OCF_ERR_UNIMPLEMENTED
+          pair: OCF return code; 3
+
+       3
+     - OCF_ERR_UNIMPLEMENTED
+     - The requested action is not implemented.
+     - :ref:`hard <hard_error>`
+   * - .. _OCF_ERR_PERM:
+
+       .. index::
+          single: OCF_ERR_PERM
+          single: OCF return code; OCF_ERR_PERM
+          pair: OCF return code; 4
+
+       4
+     - OCF_ERR_PERM
+     - The resource agent does not have sufficient privileges to complete the
+       task.
+     - :ref:`hard <hard_error>`
+   * - .. _OCF_ERR_INSTALLED:
+
+       .. index::
+          single: OCF_ERR_INSTALLED
+          single: OCF return code; OCF_ERR_INSTALLED
+          pair: OCF return code; 5
+
+       5
+     - OCF_ERR_INSTALLED
+     - The tools required by the resource are not installed on this machine.
+     - :ref:`hard <hard_error>`
+   * - .. _OCF_ERR_CONFIGURED:
+
+       .. index::
+          single: OCF_ERR_CONFIGURED
+          single: OCF return code; OCF_ERR_CONFIGURED
+          pair: OCF return code; 6
+
+       6
+     - OCF_ERR_CONFIGURED
+     - The resource's parameter values are inherently invalid (for example, a
+       required parameter was not given).
+     - :ref:`fatal <fatal_error>`
+   * - .. _OCF_NOT_RUNNING:
+
+       .. index::
+          single: OCF_NOT_RUNNING
+          single: OCF return code; OCF_NOT_RUNNING
+          pair: OCF return code; 7
+
+       7
+     - OCF_NOT_RUNNING
+     - The resource is safely stopped. This should only be returned by monitor
+       actions, not stop actions.
+     - N/A
+   * - .. _OCF_RUNNING_PROMOTED:
+
+       .. index::
+          single: OCF_RUNNING_PROMOTED
+          single: OCF return code; OCF_RUNNING_PROMOTED
+          pair: OCF return code; 8
+
+       8
+     - OCF_RUNNING_PROMOTED
+     - The resource is running in the promoted role.
+     - :ref:`soft <soft_error>`
+   * - .. _OCF_FAILED_PROMOTED:
+
+       .. index::
+          single: OCF_FAILED_PROMOTED
+          single: OCF return code; OCF_FAILED_PROMOTED
+          pair: OCF return code; 9
+
+       9
+     - OCF_FAILED_PROMOTED
+     - The resource is (or might be) in the promoted role but has failed. The
+       resource will be demoted, stopped, and then started (and possibly
+       promoted) again.
+     - :ref:`soft <soft_error>`
+   * - .. _OCF_DEGRADED:
+
+       .. index::
+          single: OCF_DEGRADED
+          single: OCF return code; OCF_DEGRADED
+          pair: OCF return code; 190
+
+       190
+     - OCF_DEGRADED
+     - The resource is properly active, but in such a condition that future
+       failures are more likely.
+     - none
+   * - .. _OCF_DEGRADED_PROMOTED:
+
+       .. index::
+          single: OCF_DEGRADED_PROMOTED
+          single: OCF return code; OCF_DEGRADED_PROMOTED
+          pair: OCF return code; 191
+
+       191
+     - OCF_DEGRADED_PROMOTED
+     - The resource is properly active in the promoted role, but in such a
+       condition that future failures are more likely.
+     - none
+   * - other
+     - *none*
+     - Custom error code.
+     - soft
 
 Exceptions to the recovery handling described above:
 
