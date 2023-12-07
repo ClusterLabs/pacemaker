@@ -53,123 +53,137 @@ _______
 
 All OCF resource agents are required to implement the following actions.
 
-.. table:: **Required Actions for OCF Agents**
+.. list-table:: **Required Actions for OCF Agents**
+   :class: longtable
+   :widths: 1 4 3
+   :header-rows: 1
 
-   +--------------+-------------+------------------------------------------------+
-   | Action       | Description | Instructions                                   |
-   +==============+=============+================================================+
-   | start        | Start the   | .. index::                                     |
-   |              | resource    |    single: OCF resource agent; start           |
-   |              |             |    single: start action                        |
-   |              |             |                                                |
-   |              |             | Return 0 on success and an appropriate         |
-   |              |             | error code otherwise. Must not report          |
-   |              |             | success until the resource is fully            |
-   |              |             | active.                                        |
-   +--------------+-------------+------------------------------------------------+
-   | stop         | Stop the    | .. index::                                     |
-   |              | resource    |    single: OCF resource agent; stop            |
-   |              |             |    single: stop action                         |
-   |              |             |                                                |
-   |              |             | Return 0 on success and an appropriate         |
-   |              |             | error code otherwise. Must not report          |
-   |              |             | success until the resource is fully            |
-   |              |             | stopped.                                       |
-   +--------------+-------------+------------------------------------------------+
-   | monitor      | Check the   | .. index::                                     |
-   |              | resource's  |    single: OCF resource agent; monitor         |
-   |              | state       |    single: monitor action                      |
-   |              |             |                                                |
-   |              |             | Exit 0 if the resource is running, 7           |
-   |              |             | if it is stopped, and any other OCF            |
-   |              |             | exit code if it is failed. NOTE: The           |
-   |              |             | monitor script should test the state           |
-   |              |             | of the resource on the local machine           |
-   |              |             | only.                                          |
-   +--------------+-------------+------------------------------------------------+
-   | meta-data    | Describe    | .. index::                                     |
-   |              | the         |    single: OCF resource agent; meta-data       |
-   |              | resource    |    single: meta-data action                    |
-   |              |             |                                                |
-   |              |             | Provide information about this                 |
-   |              |             | resource in the XML format defined by          |
-   |              |             | the OCF standard. Exit with 0. NOTE:           |
-   |              |             | This is *not* required to be performed         |
-   |              |             | as root.                                       |
-   +--------------+-------------+------------------------------------------------+
+   * - Action
+     - Description
+     - Instructions
+   * - .. _start_action:
+
+       .. index::
+          single: OCF resource agent; start
+          single: start action
+
+       start
+     - Start the resource
+     - Return 0 on success and an appropriate error code otherwise. Must not
+       report success until the resource is fully active.
+   * - .. _stop_action:
+
+       .. index::
+          single: OCF resource agent; stop
+          single: stop action
+
+       stop
+     - Stop the resource
+     - Return 0 on success and an appropriate error code otherwise. Must not
+       report success until the resource is fully stopped.
+   * - .. _monitor_action:
+
+       .. index::
+          single: OCF resource agent; monitor
+          single: monitor action
+
+       monitor
+     - Check the resource's state
+     - Return 0 if the resource is running, 7 if it is stopped, and any other
+       OCF exit code if it is failed. **Note:** The monitor action should test
+       the state of the resource on the local machine only.
+   * - .. _meta_data_action:
+
+       .. index::
+          single: OCF resource agent; meta-data
+          single: meta-data action
+
+       meta-data
+     - Describe the resource
+     - Provide information about this resource in the XML format defined by the
+       OCF standard. Return 0. **Note:** This is *not* required to be performed
+       as root.
 
 OCF resource agents may optionally implement additional actions. Some are used
 only with advanced resource types such as clones.
 
-.. table:: **Optional Actions for OCF Resource Agents**
+.. list-table:: **Optional Actions for OCF Resource Agents**
+   :class: longtable:
+   :widths: 1 4 3
+   :header-rows: 1
 
-   +--------------+-------------+------------------------------------------------+
-   | Action       | Description | Instructions                                   |
-   +==============+=============+================================================+
-   | validate-all | This should | .. index::                                     |
-   |              | validate    |    single: OCF resource agent; validate-all    |
-   |              | the         |    single: validate-all action                 |
-   |              | instance    |                                                |
-   |              | parameters  | Return 0 if parameters are valid, 2 if         |
-   |              | provided.   | not valid, and 6 if resource is not            |
-   |              |             | configured.                                    |
-   +--------------+-------------+------------------------------------------------+
-   | promote      | Bring the   | .. index::                                     |
-   |              | local       |    single: OCF resource agent; promote         |
-   |              | instance of |    single: promote action                      |
-   |              | a promotable|                                                |
-   |              | clone       | Return 0 on success                            |
-   |              | resource to |                                                |
-   |              | the promoted|                                                |
-   |              | role.       |                                                |
-   +--------------+-------------+------------------------------------------------+
-   | demote       | Bring the   | .. index::                                     |
-   |              | local       |    single: OCF resource agent; demote          |
-   |              | instance of |    single: demote action                       |
-   |              | a promotable|                                                |
-   |              | clone       | Return 0 on success                            |
-   |              | resource to |                                                |
-   |              | the         |                                                |
-   |              | unpromoted  |                                                |
-   |              | role.       |                                                |
-   +--------------+-------------+------------------------------------------------+
-   | notify       | Used by the | .. index::                                     |
-   |              | cluster to  |    single: OCF resource agent; notify          |
-   |              | send        |    single: notify action                       |
-   |              | the agent   |                                                |
-   |              | pre- and    | Must not fail. Must exit with 0                |
-   |              | post-       |                                                |
-   |              | notification|                                                |
-   |              | events      |                                                |
-   |              | telling the |                                                |
-   |              | resource    |                                                |
-   |              | what has    |                                                |
-   |              | happened and|                                                |
-   |              | will happen.|                                                |
-   +--------------+-------------+------------------------------------------------+
-   | reload       | Reload the  | .. index::                                     |
-   |              | service's   |    single: OCF resource agent; reload          |
-   |              | own         |    single: reload action                       |
-   |              | config.     |                                                |
-   |              |             | Not used by Pacemaker                          |
-   +--------------+-------------+------------------------------------------------+
-   | reload-agent | Make        | .. index::                                     |
-   |              | effective   |    single: OCF resource agent; reload-agent    |
-   |              | any changes |    single: reload-agent action                 |
-   |              | in instance |                                                |
-   |              | parameters  | This is used when the agent can handle a       |
-   |              | marked as   | change in some of its parameters more          |
-   |              | reloadable  | efficiently than stopping and starting the     |
-   |              | in the      | resource.                                      |
-   |              | agent's     |                                                |
-   |              | meta-data.  |                                                |
-   +--------------+-------------+------------------------------------------------+
-   | recover      | Restart the | .. index::                                     |
-   |              | service.    |    single: OCF resource agent; recover         |
-   |              |             |    single: recover action                      |
-   |              |             |                                                |
-   |              |             | Not used by Pacemaker                          |
-   +--------------+-------------+------------------------------------------------+
+   * - Action
+     - Description
+     - Instructions
+   * - .. _validate_all_action:
+
+       .. index::
+          single: OCF resource agent; validate-all
+          single: validate-all action
+
+       validate-all
+     - Validate the instance parameters provided.
+     - Return 0 if parameters are valid, 2 if not valid, and 6 if resource is
+       not configured.
+   * - .. _promote_action:
+
+       .. index::
+          single: OCF resource agent; promote
+          single: promote action
+
+       promote
+     - Bring the local instance of a promotable clone resource to the promoted
+       role.
+     - Return 0 on success.
+   * - .. _demote_action:
+
+       .. index::
+          single: OCF resource agent; demote
+          single: demote action
+
+       demote
+     - Bring the local instance of a promotable clone resource to the unpromoted
+       role.
+     - Return 0 on success.
+   * - .. _notify_action:
+
+       .. index::
+          single: OCF resource agent; notify
+          single: notify action
+
+       notify
+     - Used by the cluster to send the agent pre- and post-notification events
+       telling the resource what has happened and what will happen.
+     - Must not fail. Must return 0.
+   * - .. _reload_action:
+
+       .. index::
+          single: OCF resource agent; reload
+          single: reload action
+
+       reload
+     - Reload the service's own configuration.
+     - Not used by Pacemaker.
+   * - .. _reload_agent_action:
+
+       .. index::
+          single: OCF resource agent; reload-agent
+          single: reload-agent action
+
+       reload-agent
+     - Make effective any changes in instance parameters marked as reloadable in
+       the agent's meta-data.
+     - This is used when the agent can handle a change in some of its parameters
+       more efficiently than stopping and starting the resource.
+   * - .. _recover_action:
+
+       .. index::
+          single: OCF resource agent; recover
+          single: recover action
+
+       recover
+     - Restart the service.
+     - Not used by Pacemaker.
 
 .. important::
 
@@ -253,7 +267,7 @@ have failed, if ``OCF_SUCCESS`` was not the expected return value.
        0
      - OCF_SUCCESS
      - Success. The command completed successfully. This is the expected result
-       for all start, stop, promote, and demote commands.
+       for all start, stop, promote, and demote actions.
      - :ref:`soft <soft_error>`
    * - .. _OCF_ERR_GENERIC:
 
