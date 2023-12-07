@@ -69,8 +69,9 @@ All OCF resource agents are required to implement the following actions.
 
        start
      - Start the resource
-     - Return 0 on success and an appropriate error code otherwise. Must not
-       report success until the resource is fully active.
+     - Return :ref:`OCF_SUCCESS <OCF_SUCCESS>` on success and an appropriate
+       error code otherwise. Must not report success until the resource is fully
+       active.
    * - .. _stop_action:
 
        .. index::
@@ -79,8 +80,9 @@ All OCF resource agents are required to implement the following actions.
 
        stop
      - Stop the resource
-     - Return 0 on success and an appropriate error code otherwise. Must not
-       report success until the resource is fully stopped.
+     - Return :ref:`OCF_SUCCESS <OCF_SUCCESS>` on success and an appropriate
+       error code otherwise. Must not report success until the resource is fully
+       stopped.
    * - .. _monitor_action:
 
        .. index::
@@ -89,9 +91,11 @@ All OCF resource agents are required to implement the following actions.
 
        monitor
      - Check the resource's state
-     - Return 0 if the resource is running, 7 if it is stopped, and any other
-       OCF exit code if it is failed. **Note:** The monitor action should test
-       the state of the resource on the local machine only.
+     - Return :ref:`OCF_SUCCESS <OCF_SUCCESS>` if the resource is running,
+       :ref:`OCF_NOT_RUNNING <OCF_NOT_RUNNING>` if it is stopped, and any other
+       :ref:`OCF exit code <ocf_return_codes>` if it is failed. **Note:** The
+       monitor action should test the state of the resource on the local machine
+       only.
    * - .. _meta_data_action:
 
        .. index::
@@ -101,8 +105,8 @@ All OCF resource agents are required to implement the following actions.
        meta-data
      - Describe the resource
      - Provide information about this resource in the XML format defined by the
-       OCF standard. Return 0. **Note:** This is *not* required to be performed
-       as root.
+       OCF standard. Return :ref:`OCF_SUCCESS <OCF_SUCCESS>`. **Note:** This is
+       *not* required to be performed as root.
 
 OCF resource agents may optionally implement additional actions. Some are used
 only with advanced resource types such as clones.
@@ -123,8 +127,10 @@ only with advanced resource types such as clones.
 
        validate-all
      - Validate the instance parameters provided.
-     - Return 0 if parameters are valid, 2 if not valid, and 6 if resource is
-       not configured.
+     - Return :ref:`OCF_SUCCESS <OCF_SUCCESS>` if parameters are valid,
+       :ref:`OCF_ERR_ARGS <OCF_ERR_ARGS>` if not valid, and
+       :ref:`OCF_ERR_CONFIGURED <OCF_ERR_CONFIGURED>` if resource is not
+       configured.
    * - .. _promote_action:
 
        .. index::
@@ -134,7 +140,7 @@ only with advanced resource types such as clones.
        promote
      - Bring the local instance of a promotable clone resource to the promoted
        role.
-     - Return 0 on success.
+     - Return :ref:`OCF_SUCCESS <OCF_SUCCESS>` on success.
    * - .. _demote_action:
 
        .. index::
@@ -144,7 +150,7 @@ only with advanced resource types such as clones.
        demote
      - Bring the local instance of a promotable clone resource to the unpromoted
        role.
-     - Return 0 on success.
+     - Return :ref:`OCF_SUCCESS <OCF_SUCCESS>` on success.
    * - .. _notify_action:
 
        .. index::
@@ -154,7 +160,7 @@ only with advanced resource types such as clones.
        notify
      - Used by the cluster to send the agent pre- and post-notification events
        telling the resource what has happened and what will happen.
-     - Must not fail. Must return 0.
+     - Must not fail. Must return :ref:`OCF_SUCCESS <OCF_SUCCESS>`.
    * - .. _reload_action:
 
        .. index::
