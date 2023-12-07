@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 the Pacemaker project contributors
+ * Copyright 2012-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -39,7 +39,7 @@ typedef struct lrmd_key_value_s {
  *
  * Protocol  Pacemaker  Significant changes
  * --------  ---------  -------------------
- *   1.2       2.1.7    PCMK__CIB_REQUEST_SCHEMAS
+ *   1.2       2.1.8    PCMK__CIB_REQUEST_SCHEMAS
  */
 #define LRMD_PROTOCOL_VERSION "1.2"
 
