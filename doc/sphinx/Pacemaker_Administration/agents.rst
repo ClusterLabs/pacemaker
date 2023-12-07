@@ -422,6 +422,416 @@ Exceptions to the recovery handling described above:
   if they had returned success, but status output will indicate that the
   resource is degraded.
 
+Clone Resource Agent Requirements
+_________________________________
+
+Any resource can be used as an anonymous clone, as it requires no additional
+support from the resource agent. Whether it makes sense to do so depends on your
+resource and its resource agent.
+
+Resource Agent Requirements for Globally Unique Clones
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Globally unique clones require additional support in the resource agent. In
+particular, it must respond with ``OCF_SUCCESS`` only if the node has that exact
+instance active. All other probes for instances of the clone should result in
+``OCF_NOT_RUNNING`` (or one of the other OCF error codes if they are failed).
+
+Individual instances of a clone are identified by appending a colon and a
+numerical offset (for example, ``apache:2``).
+
+A resource agent can find out how many copies there are by examining the
+``OCF_RESKEY_CRM_meta_clone_max`` environment variable and which instance it is
+by examining ``OCF_RESKEY_CRM_meta_clone``.
+
+The resource agent must not make any assumptions (based on
+``OCF_RESKEY_CRM_meta_clone``) about which numerical instances are active. In
+particular, the list of active copies is not always an unbroken sequence, nor
+does it always start at 0.
+
+Resource Agent Requirements for Promotable Clones
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Promotable clone resources require two extra actions, ``demote`` and ``promote``,
+which are responsible for changing the state of the resource. Like ``start`` and
+``stop``, they should return ``OCF_SUCCESS`` if they completed successfully or a
+relevant error code if they did not.
+
+The states can mean whatever you wish, but when the resource is started, it must
+begin in the unpromoted role. From there, the cluster will decide which
+instances to promote.
+
+In addition to the clone requirements for monitor actions, agents must also
+*accurately* report which state they are in. The cluster relies on the agent to
+report its status (including role) accurately and does not indicate to the agent
+what role it currently believes it to be in.
+
+.. list-table:: **Role Implications of OCF Return Codes**
+   :class: longtable
+   :widths: 1 3
+   :header-rows: 1
+
+   * - Monitor Return Code
+     - Description
+   * - :ref:`OCF_NOT_RUNNING <OCF_NOT_RUNNING>`
+     - .. index::
+          single: OCF_NOT_RUNNING
+          single: OCF return code; OCF_NOT_RUNNING
+
+       Stopped
+   * - :ref:`OCF_SUCCESS <OCF_SUCCESS>`
+     - .. index::
+          single: OCF_SUCCESS
+          single: OCF return code; OCF_SUCCESS
+
+       Running (Unpromoted)
+   * - :ref:`OCF_RUNNING_PROMOTED <OCF_RUNNING_PROMOTED>`
+     - .. index::
+          single: OCF_RUNNING_PROMOTED
+          single: OCF return code; OCF_RUNNING_PROMOTED
+
+       Running (Promoted)
+   * - :ref:`OCF_FAILED_PROMOTED <OCF_FAILED_PROMOTED>`
+     - .. index::
+          single: OCF_FAILED_PROMOTED
+          single: OCF return code; OCF_FAILED_PROMOTED
+
+       Failed (Promoted)
+   * - Other
+     - Failed (Unpromoted)
+
+Clone Notifications
+~~~~~~~~~~~~~~~~~~~
+
+If the clone has the ``notify`` meta-attribute set to ``true`` and the resource
+agent supports the ``notify`` action, Pacemaker will call the action when
+appropriate, passing a number of extra variables. These variables, when combined
+with additional context, can be used to calculate the current state of the
+cluster and what is about to happen to it.
+
+.. index::
+   single: clone; environment variables
+   single: notify; environment variables
+
+.. list-table:: **Environment Variables Supplied with Clone Notify Actions**
+   :class: longtable
+   :widths: 1 1
+   :header-rows: 1
+
+   * - Variable
+     - Description
+   * - .. _OCF_RESKEY_CRM_meta_notify_type:
+
+       .. index::
+          single: environment variable; OCF_RESKEY_CRM_meta_notify_type
+          single: OCF_RESKEY_CRM_meta_notify_type
+
+       OCF_RESKEY_CRM_meta_notify_type
+     - Allowed values: ``pre``, ``post``
+   * - .. _OCF_RESKEY_CRM_meta_notify_operation:
+
+       .. index::
+          single: environment variable; OCF_RESKEY_CRM_meta_notify_operation
+          single: OCF_RESKEY_CRM_meta_notify_operation
+
+       OCF_RESKEY_CRM_meta_notify_operation
+     - Allowed values: ``start``, ``stop``
+   * - .. _OCF_RESKEY_CRM_meta_notify_start_resource:
+
+       .. index::
+          single: environment variable; OCF_RESKEY_CRM_meta_notify_start_resource
+          single: OCF_RESKEY_CRM_meta_notify_start_resource
+
+       OCF_RESKEY_CRM_meta_notify_start_resource
+     - Resources to be started
+   * - .. _OCF_RESKEY_CRM_meta_notify_stop_resource:
+
+       .. index::
+          single: environment variable; OCF_RESKEY_CRM_meta_notify_stop_resource
+          single: OCF_RESKEY_CRM_meta_notify_stop_resource
+
+       OCF_RESKEY_CRM_meta_notify_stop_resource
+     - Resources to be stopped
+   * - .. _OCF_RESKEY_CRM_meta_notify_active_resource:
+
+       .. index::
+          single: environment variable; OCF_RESKEY_CRM_meta_notify_active_resource
+          single: OCF_RESKEY_CRM_meta_notify_active_resource
+
+       OCF_RESKEY_CRM_meta_notify_active_resource
+     - Resources that are running
+   * - .. _OCF_RESKEY_CRM_meta_notify_inactive_resource:
+
+       .. index::
+          single: environment variable; OCF_RESKEY_CRM_meta_notify_inactive_resource
+          single: OCF_RESKEY_CRM_meta_notify_inactive_resource
+
+       OCF_RESKEY_CRM_meta_notify_inactive_resource
+     - Resources that are not running
+   * - .. _OCF_RESKEY_CRM_meta_notify_start_uname:
+
+       .. index::
+          single: environment variable; OCF_RESKEY_CRM_meta_notify_start_uname
+          single: OCF_RESKEY_CRM_meta_notify_start_uname
+
+       OCF_RESKEY_CRM_meta_notify_start_uname
+     - Nodes on which resources will be started
+   * - .. _OCF_RESKEY_CRM_meta_notify_stop_uname:
+
+       .. index::
+          single: environment variable; OCF_RESKEY_CRM_meta_notify_stop_uname
+          single: OCF_RESKEY_CRM_meta_notify_stop_uname
+
+       OCF_RESKEY_CRM_meta_notify_stop_uname
+     - Nodes on which resources will be stopped
+   * - .. _OCF_RESKEY_CRM_meta_notify_active_uname:
+
+       .. index::
+          single: environment variable; OCF_RESKEY_CRM_meta_notify_active_uname
+          single: OCF_RESKEY_CRM_meta_notify_active_uname
+
+       OCF_RESKEY_CRM_meta_notify_active_uname
+     - Nodes on which resources are running
+
+The variables come in pairs, such as
+``OCF_RESKEY_CRM_meta_notify_start_resource`` and
+``OCF_RESKEY_CRM_meta_notify_start_uname``, and should be treated as an array of
+whitespace-separated elements.
+
+``OCF_RESKEY_CRM_meta_notify_inactive_resource`` is an exception, as the
+matching ``uname`` variable does not exist since inactive resources are not
+running on any node.
+
+Thus, in order to indicate that ``clone:0`` will be started on ``sles-1``,
+``clone:2`` will be started on ``sles-3``, and ``clone:3`` will be started
+on ``sles-2``, the cluster would set:
+
+.. topic:: Notification Variables
+
+   .. code-block:: none
+
+      OCF_RESKEY_CRM_meta_notify_start_resource="clone:0 clone:2 clone:3"
+      OCF_RESKEY_CRM_meta_notify_start_uname="sles-1 sles-3 sles-2"
+
+.. note::
+
+   Pacemaker will log but otherwise ignore failures of notify actions.
+
+Interpretation of Notification Variables
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Pre-notification (stop):**
+
+* Active resources: ``$OCF_RESKEY_CRM_meta_notify_active_resource``
+* Inactive resources: ``$OCF_RESKEY_CRM_meta_notify_inactive_resource``
+* Resources to be started: ``$OCF_RESKEY_CRM_meta_notify_start_resource``
+* Resources to be stopped: ``$OCF_RESKEY_CRM_meta_notify_stop_resource``
+
+**Post-notification (stop) / Pre-notification (start):**
+
+* Active resources
+    * ``$OCF_RESKEY_CRM_meta_notify_active_resource``
+    * minus ``$OCF_RESKEY_CRM_meta_notify_stop_resource``
+* Inactive resources
+    * ``$OCF_RESKEY_CRM_meta_notify_inactive_resource``
+    * plus ``$OCF_RESKEY_CRM_meta_notify_stop_resource``
+* Resources that were started: ``$OCF_RESKEY_CRM_meta_notify_start_resource``
+* Resources that were stopped: ``$OCF_RESKEY_CRM_meta_notify_stop_resource``
+
+**Post-notification (start):**
+
+* Active resources:
+    * ``$OCF_RESKEY_CRM_meta_notify_active_resource``
+    * minus ``$OCF_RESKEY_CRM_meta_notify_stop_resource``
+    * plus ``$OCF_RESKEY_CRM_meta_notify_start_resource``
+* Inactive resources:
+    * ``$OCF_RESKEY_CRM_meta_notify_inactive_resource``
+    * plus ``$OCF_RESKEY_CRM_meta_notify_stop_resource``
+    * minus ``$OCF_RESKEY_CRM_meta_notify_start_resource``
+* Resources that were started: ``$OCF_RESKEY_CRM_meta_notify_start_resource``
+* Resources that were stopped: ``$OCF_RESKEY_CRM_meta_notify_stop_resource``
+
+Extra Notifications for Promotable Clones
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. index::
+   single: clone; environment variables
+   single: promotable; environment variables
+
+.. list-table:: **Extra Environment Variables Supplied for Promotable Clones**
+   :class: longtable
+   :widths: 1 1
+   :header-rows: 1
+
+   * - Variable
+     - Description
+   * - .. _OCF_RESKEY_CRM_meta_notify_promoted_resource:
+
+       .. index::
+          single: environment variable; OCF_RESKEY_CRM_meta_notify_promoted_resource
+          single: OCF_RESKEY_CRM_meta_notify_promoted_resource
+
+       OCF_RESKEY_CRM_meta_notify_promoted_resource
+     - Resources that are running in the promoted role
+   * - .. _OCF_RESKEY_CRM_meta_notify_unpromoted_resource:
+
+       .. index::
+          single: environment variable; OCF_RESKEY_CRM_meta_notify_unpromoted_resource
+          single: OCF_RESKEY_CRM_meta_notify_unpromoted_resource
+
+       OCF_RESKEY_CRM_meta_notify_unpromoted_resource
+     - Resources that are running in the unpromoted role
+   * - .. _OCF_RESKEY_CRM_meta_notify_promote_resource:
+
+       .. index::
+          single: environment variable; OCF_RESKEY_CRM_meta_notify_promote_resource
+          single: OCF_RESKEY_CRM_meta_notify_promote_resource
+
+       OCF_RESKEY_CRM_meta_notify_promote_resource
+     - Resources to be promoted
+   * - .. _OCF_RESKEY_CRM_meta_notify_demote_resource:
+
+       .. index::
+          single: environment variable; OCF_RESKEY_CRM_meta_notify_demote_resource
+          single: OCF_RESKEY_CRM_meta_notify_demote_resource
+
+       OCF_RESKEY_CRM_meta_notify_demote_resource
+     - Resources to be demoted
+   * - .. _OCF_RESKEY_CRM_meta_notify_promote_uname:
+
+       .. index::
+          single: environment variable; OCF_RESKEY_CRM_meta_notify_promote_uname
+          single: OCF_RESKEY_CRM_meta_notify_promote_uname
+
+       OCF_RESKEY_CRM_meta_notify_promote_uname
+     - Nodes on which resources will be promoted
+   * - .. _OCF_RESKEY_CRM_meta_notify_demote_uname:
+
+       .. index::
+          single: environment variable; OCF_RESKEY_CRM_meta_notify_demote_uname
+          single: OCF_RESKEY_CRM_meta_notify_demote_uname
+
+       OCF_RESKEY_CRM_meta_notify_demote_uname
+     - Nodes on which resources will be demoted
+   * - .. _OCF_RESKEY_CRM_meta_notify_promoted_uname:
+
+       .. index::
+          single: environment variable; OCF_RESKEY_CRM_meta_notify_promoted_uname
+          single: OCF_RESKEY_CRM_meta_notify_promoted_uname
+
+       OCF_RESKEY_CRM_meta_notify_promoted_uname
+     - Nodes on which resources are running in the promoted role
+   * - .. _OCF_RESKEY_CRM_meta_notify_unpromoted_uname:
+
+       .. index::
+          single: environment variable; OCF_RESKEY_CRM_meta_notify_unpromoted_uname
+          single: OCF_RESKEY_CRM_meta_notify_unpromoted_uname
+
+       OCF_RESKEY_CRM_meta_notify_unpromoted_uname
+     - Nodes on which resources are running in the unpromoted role
+
+Interpretation of Promotable Notification Variables
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Pre-notification (demote):**
+
+* Active resources: ``$OCF_RESKEY_CRM_meta_notify_active_resource``
+* Promoted resources: ``$OCF_RESKEY_CRM_meta_notify_promoted_resource``
+* Unpromoted resources: ``$OCF_RESKEY_CRM_meta_notify_unpromoted_resource``
+* Inactive resources: ``$OCF_RESKEY_CRM_meta_notify_inactive_resource``
+* Resources to be started: ``$OCF_RESKEY_CRM_meta_notify_start_resource``
+* Resources to be promoted: ``$OCF_RESKEY_CRM_meta_notify_promote_resource``
+* Resources to be demoted: ``$OCF_RESKEY_CRM_meta_notify_demote_resource``
+* Resources to be stopped: ``$OCF_RESKEY_CRM_meta_notify_stop_resource``
+
+**Post-notification (demote) / Pre-notification (stop):**
+
+* Active resources: ``$OCF_RESKEY_CRM_meta_notify_active_resource``
+* Promoted resources:
+    * ``$OCF_RESKEY_CRM_meta_notify_promoted_resource``
+    * minus ``$OCF_RESKEY_CRM_meta_notify_demote_resource``
+* Unpromoted resources: ``$OCF_RESKEY_CRM_meta_notify_unpromoted_resource``
+* Inactive resources: ``$OCF_RESKEY_CRM_meta_notify_inactive_resource``
+* Resources to be started: ``$OCF_RESKEY_CRM_meta_notify_start_resource``
+* Resources to be promoted: ``$OCF_RESKEY_CRM_meta_notify_promote_resource``
+* Resources to be demoted: ``$OCF_RESKEY_CRM_meta_notify_demote_resource``
+* Resources to be stopped: ``$OCF_RESKEY_CRM_meta_notify_stop_resource``
+* Resources that were demoted: ``$OCF_RESKEY_CRM_meta_notify_demote_resource``
+
+**Post-notification (stop) / Pre-notification (start)**
+
+* Active resources:
+    * ``$OCF_RESKEY_CRM_meta_notify_active_resource``
+    * minus ``$OCF_RESKEY_CRM_meta_notify_stop_resource``
+* Promoted resources:
+    * ``$OCF_RESKEY_CRM_meta_notify_promoted_resource``
+    * minus ``$OCF_RESKEY_CRM_meta_notify_demote_resource``
+* Unpromoted resources:
+    * ``$OCF_RESKEY_CRM_meta_notify_unpromoted_resource``
+    * minus ``$OCF_RESKEY_CRM_meta_notify_stop_resource``
+* Inactive resources:
+    * ``$OCF_RESKEY_CRM_meta_notify_inactive_resource``
+    * plus ``$OCF_RESKEY_CRM_meta_notify_stop_resource``
+* Resources to be started: ``$OCF_RESKEY_CRM_meta_notify_start_resource``
+* Resources to be promoted: ``$OCF_RESKEY_CRM_meta_notify_promote_resource``
+* Resources to be demoted: ``$OCF_RESKEY_CRM_meta_notify_demote_resource``
+* Resources to be stopped: ``$OCF_RESKEY_CRM_meta_notify_stop_resource``
+* Resources that were demoted: ``$OCF_RESKEY_CRM_meta_notify_demote_resource``
+* Resources that were stopped: ``$OCF_RESKEY_CRM_meta_notify_stop_resource``
+
+**Post-notification (start) / Pre-notification (promote)**
+
+* Active resources:
+    * ``$OCF_RESKEY_CRM_meta_notify_active_resource``
+    * minus ``$OCF_RESKEY_CRM_meta_notify_stop_resource``
+    * plus ``$OCF_RESKEY_CRM_meta_notify_start_resource``
+* Promoted resources:
+    * ``$OCF_RESKEY_CRM_meta_notify_promoted_resource``
+    * minus ``$OCF_RESKEY_CRM_meta_notify_demote_resource``
+* Unpromoted resources:
+    * ``$OCF_RESKEY_CRM_meta_notify_unpromoted_resource``
+    * minus ``$OCF_RESKEY_CRM_meta_notify_stop_resource``
+    * plus ``$OCF_RESKEY_CRM_meta_notify_start_resource``
+* Inactive resources:
+    * ``$OCF_RESKEY_CRM_meta_notify_inactive_resource``
+    * plus ``$OCF_RESKEY_CRM_meta_notify_stop_resource``
+    * minus ``$OCF_RESKEY_CRM_meta_notify_start_resource``
+* Resources to be started: ``$OCF_RESKEY_CRM_meta_notify_start_resource``
+* Resources to be promoted: ``$OCF_RESKEY_CRM_meta_notify_promote_resource``
+* Resources to be demoted: ``$OCF_RESKEY_CRM_meta_notify_demote_resource``
+* Resources to be stopped: ``$OCF_RESKEY_CRM_meta_notify_stop_resource``
+* Resources that were started: ``$OCF_RESKEY_CRM_meta_notify_start_resource``
+* Resources that were demoted: ``$OCF_RESKEY_CRM_meta_notify_demote_resource``
+* Resources that were stopped: ``$OCF_RESKEY_CRM_meta_notify_stop_resource``
+
+**Post-notification (promote)**
+
+* Active resources:
+    * ``$OCF_RESKEY_CRM_meta_notify_active_resource``
+    * minus ``$OCF_RESKEY_CRM_meta_notify_stop_resource``
+    * plus ``$OCF_RESKEY_CRM_meta_notify_start_resource``
+* Promoted resources:
+    * ``$OCF_RESKEY_CRM_meta_notify_promoted_resource``
+    * minus ``$OCF_RESKEY_CRM_meta_notify_demote_resource``
+    * plus ``$OCF_RESKEY_CRM_meta_notify_promote_resource``
+* Unpromoted resources:
+    * ``$OCF_RESKEY_CRM_meta_notify_unpromoted_resource``
+    * minus ``$OCF_RESKEY_CRM_meta_notify_stop_resource``
+    * plus ``$OCF_RESKEY_CRM_meta_notify_start_resource``
+    * minus ``$OCF_RESKEY_CRM_meta_notify_promote_resource``
+* Inactive resources:
+    * ``$OCF_RESKEY_CRM_meta_notify_inactive_resource``
+    * plus ``$OCF_RESKEY_CRM_meta_notify_stop_resource``
+    * minus ``$OCF_RESKEY_CRM_meta_notify_start_resource``
+* Resources to be started: ``$OCF_RESKEY_CRM_meta_notify_start_resource``
+* Resources to be promoted: ``$OCF_RESKEY_CRM_meta_notify_promote_resource``
+* Resources to be demoted: ``$OCF_RESKEY_CRM_meta_notify_demote_resource``
+* Resources to be stopped: ``$OCF_RESKEY_CRM_meta_notify_stop_resource``
+* Resources that were started: ``$OCF_RESKEY_CRM_meta_notify_start_resource``
+* Resources that were promoted: ``$OCF_RESKEY_CRM_meta_notify_promote_resource``
+* Resources that were demoted: ``$OCF_RESKEY_CRM_meta_notify_demote_resource``
+* Resources that were stopped: ``$OCF_RESKEY_CRM_meta_notify_stop_resource``
+
 
 .. index::
    single: resource agent; LSB
