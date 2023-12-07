@@ -18,7 +18,7 @@ check_PROGRAMS = crm_schema_init_test 			\
 		 get_schema_version_test 		\
 		 pcmk__build_schema_xml_node_test 	\
 		 pcmk__schema_files_later_than_test 	\
-		 pcmk__xml_find_x_0_schema_index_test
+		 pcmk__find_x_0_schema_index_test
 
 TESTS = $(check_PROGRAMS)
 
