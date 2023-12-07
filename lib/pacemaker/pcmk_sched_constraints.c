@@ -37,7 +37,7 @@ evaluate_lifetime(xmlNode *lifetime, pcmk_scheduler_t *scheduler)
     if (crm_time_is_defined(next_change)) {
         time_t recheck = (time_t) crm_time_get_seconds_since_epoch(next_change);
 
-        pe__update_recheck_time(recheck, scheduler);
+        pe__update_recheck_time(recheck, scheduler, "constraint lifetime");
     }
     crm_time_free(next_change);
     return result;

@@ -114,14 +114,14 @@ Start and enable the daemon by issuing the following commands on each node:
     # systemctl enable pcsd.service
     Created symlink from /etc/systemd/system/multi-user.target.wants/pcsd.service to /usr/lib/systemd/system/pcsd.service.
 
-The installed packages will create an ``hacluster`` user with a disabled password.
-While this is fine for running ``pcs`` commands locally,
+The installed packages will create an |CRM_DAEMON_USER| user with a disabled
+password. While this is fine for running ``pcs`` commands locally,
 the account needs a login password in order to perform such tasks as syncing
 the Corosync configuration, or starting and stopping the cluster on other nodes.
 
 This tutorial will make use of such commands,
-so now we will set a password for the ``hacluster`` user, using the same password
-on both nodes:
+so now we will set a password for the |CRM_DAEMON_USER| user, using the same
+password on both nodes:
 
 .. code-block:: console
 

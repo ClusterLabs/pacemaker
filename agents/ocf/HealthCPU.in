@@ -126,16 +126,16 @@ healthcpu_monitor() {
 
         if [ $IDLE -lt ${OCF_RESKEY_red_limit} ] ; then
             # echo "System state RED!"
-            attrd_updater -n "#health-cpu" -B "red" -d ${OCF_RESKEY_dampening}
+            attrd_updater -n "#health-cpu" -B "red" -d "${OCF_RESKEY_dampening}"
             return $OCF_SUCCESS
         fi
 
         if [ $IDLE -lt ${OCF_RESKEY_yellow_limit} ] ; then
             # echo "System state yellow."
-            attrd_updater -n "#health-cpu" -B "yellow" -d ${OCF_RESKEY_dampening}
+            attrd_updater -n "#health-cpu" -B "yellow" -d "${OCF_RESKEY_dampening}"
         else
             # echo "System state green."
-            attrd_updater -n "#health-cpu" -B "green" -d ${OCF_RESKEY_dampening}
+            attrd_updater -n "#health-cpu" -B "green" -d "${OCF_RESKEY_dampening}"
         fi
 
         return $OCF_SUCCESS
@@ -145,8 +145,7 @@ healthcpu_monitor() {
 }
 
 healthcpu_reload_agent() {
-    # No action required
-    :;
+    return $OCF_SUCCESS
 }
 
 healthcpu_validate() {

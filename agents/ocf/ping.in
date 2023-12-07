@@ -178,7 +178,7 @@ ping_stop() {
 
     rm -f "${OCF_RESKEY_pidfile}"
 
-    attrd_updater -D -n "$OCF_RESKEY_name" -d "$OCF_RESKEY_dampen"
+    attrd_updater -D -n "$OCF_RESKEY_name"
 
     return $OCF_SUCCESS
 }
@@ -237,8 +237,7 @@ ping_validate() {
 }
 
 ping_reload_agent() {
-    # No action required
-    :;
+    return $OCF_SUCCESS
 }
 
 fping_check() {
@@ -319,11 +318,7 @@ ping_update() {
     fi
 
     score=$(expr $active \* $OCF_RESKEY_multiplier)
-    if [ "$__OCF_ACTION" = "start" ] ; then
-        attrd_updater -n "$OCF_RESKEY_name" -B "$score" -d "$OCF_RESKEY_dampen"
-    else
-        attrd_updater -n "$OCF_RESKEY_name" -U "$score" -d "$OCF_RESKEY_dampen"
-    fi
+    attrd_updater -n "$OCF_RESKEY_name" -B "$score" -d "$OCF_RESKEY_dampen"
     rc=$?
     case $rc in
         0) ping_conditional_log debug "Updated $OCF_RESKEY_name = $score" ;;
@@ -423,7 +418,7 @@ start)          ping_start;;
 stop)           ping_stop;;
 monitor)        ping_monitor;;
 validate-all)   ping_validate;;
-reload-agent)         ping_reload_agent;;
+reload-agent)   ping_reload_agent;;
 usage|help)     ping_usage
                 exit $OCF_SUCCESS
                 ;;

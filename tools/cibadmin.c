@@ -12,7 +12,6 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/cmdline_internal.h>
-#include <crm/common/xml_internal.h>  /* pcmk__xml2fd */
 #include <crm/common/ipc.h>
 #include <crm/common/xml.h>
 #include <crm/cib/internal.h>
@@ -94,7 +93,9 @@ print_xml_output(xmlNode * xml)
         }
 
     } else {
-        pcmk__xml2fd(STDOUT_FILENO, xml);
+        char *buffer = dump_xml_formatted(xml);
+        fprintf(stdout, "%s", buffer);
+        free(buffer);
     }
 }
 
@@ -566,9 +567,13 @@ main(int argc, char **argv)
 
     if (strcmp(options.cib_action, "empty") == 0) {
         // Output an empty CIB
+        char *buf = NULL;
+
         output = createEmptyCib(1);
         crm_xml_add(output, XML_ATTR_VALIDATION, options.validate_with);
-        pcmk__xml2fd(STDOUT_FILENO, output);
+        buf = dump_xml_formatted(output);
+        fprintf(stdout, "%s", buf);
+        free(buf);
         goto done;
     }
 

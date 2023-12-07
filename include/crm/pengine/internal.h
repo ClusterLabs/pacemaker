@@ -566,7 +566,8 @@ void pe__foreach_param_check(pcmk_scheduler_t *scheduler,
 void pe__free_param_checks(pcmk_scheduler_t *scheduler);
 
 bool pe__shutdown_requested(const pcmk_node_t *node);
-void pe__update_recheck_time(time_t recheck, pcmk_scheduler_t *scheduler);
+void pe__update_recheck_time(time_t recheck, pcmk_scheduler_t *scheduler,
+                             const char *reason);
 
 /*!
  * \internal
