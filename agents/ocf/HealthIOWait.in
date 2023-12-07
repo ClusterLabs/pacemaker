@@ -60,6 +60,15 @@ the #health-iowait will go red if the %iowait of the CPU get higher than 15%.
 <content type="integer" default="15"/>
 </parameter>
 
+<parameter name="dampening" reloadable="1">
+<longdesc lang="en">
+The time to wait (dampening) in seconds for further changes before writing
+</longdesc>
+<shortdesc lang="en">The time to wait (dampening) in seconds for further changes 
+before writing</shortdesc>
+<content type="string" default="5s"/>
+</parameter>
+
 </parameters>
 
 <actions>
@@ -109,16 +118,16 @@ agent_monitor() {
           # echo $OCF_RESKEY_yellow_limit
           if [ $WAIT -gt ${OCF_RESKEY_red_limit} ] ; then
             # echo "System state RED!"
-            attrd_updater -n "#health-iowait" -U "red" -d "5s"
+            attrd_updater -n "#health-iowait" -U "red" -d ${OCF_RESKEY_dampening}
             return $OCF_SUCCESS
           fi
 
           if [ $WAIT -gt ${OCF_RESKEY_yellow_limit} ] ; then
             # echo "System state yellow."
-            attrd_updater -n "#health-iowait" -U "yellow" -d "5s"
+            attrd_updater -n "#health-iowait" -U "yellow" -d ${OCF_RESKEY_dampening}
           else
             # echo "System state green."
-            attrd_updater -n "#health-iowait" -U "green" -d "5s"
+            attrd_updater -n "#health-iowait" -U "green" -d ${OCF_RESKEY_dampening}
           fi
           return $OCF_SUCCESS
         fi
@@ -175,13 +184,17 @@ if [ -z "${OCF_RESKEY_yellow_limit}" ] ; then
   OCF_RESKEY_yellow_limit=10
 fi
 
+if [ -z "${OCF_RESKEY_dampening}" ] || [[ ${OCF_RESKEY_dampening} =~ ^[[:space:]]+$ ]]; then
+  OCF_RESKEY_dampening="5s"
+fi
+
 case $__OCF_ACTION in
 meta-data)      meta_data
                 exit $OCF_SUCCESS
                 ;;
 start)          agent_start;;
 stop)           agent_stop;;
-monitor)        agent_monitor;;
+monitor)        agent_validate && agent_monitor;;
 validate-all)   agent_validate;;
 usage|help)     agent_usage
                 exit $OCF_SUCCESS
