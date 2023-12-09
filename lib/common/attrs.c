@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2022 the Pacemaker project contributors
+ * Copyright 2011-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,7 +18,8 @@
 #include <crm/msg_xml.h>
 #include <crm/common/attrd_internal.h>
 
-#define LRM_TARGET_ENV "OCF_RESKEY_" CRM_META "_" XML_LRM_ATTR_TARGET
+#define OCF_RESKEY_PREFIX "OCF_RESKEY_"
+#define LRM_TARGET_ENV OCF_RESKEY_PREFIX CRM_META "_" XML_LRM_ATTR_TARGET
 
 /*!
  * \internal
@@ -39,10 +40,18 @@ const char *
 pcmk__node_attr_target(const char *name)
 {
     if (name == NULL || pcmk__strcase_any_of(name, "auto", "localhost", NULL)) {
+        char buf[128] = OCF_RESKEY_PREFIX;
+        size_t offset = sizeof(OCF_RESKEY_PREFIX) - 1;
         char *target_var = crm_meta_name(XML_RSC_ATTR_TARGET);
         char *phys_var = crm_meta_name(PCMK__ENV_PHYSICAL_HOST);
-        const char *target = getenv(target_var);
-        const char *host_physical = getenv(phys_var);
+        const char *target = NULL;
+        const char *host_physical = NULL;
+
+        snprintf(buf + offset, sizeof(buf) - offset, "%s", target_var);
+        target = getenv(buf);
+
+        snprintf(buf + offset, sizeof(buf) - offset, "%s", phys_var);
+        host_physical = getenv(buf);
 
         // It is important to use the name by which the scheduler knows us
         if (host_physical && pcmk__str_eq(target, "host", pcmk__str_casei)) {
