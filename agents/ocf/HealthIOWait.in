@@ -19,6 +19,7 @@
 : ${OCF_FUNCTIONS:="${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs"}
 . "${OCF_FUNCTIONS}"
 : ${__OCF_ACTION:="$1"}
+: ${OCF_RESKEY_dampening:="5s"}
 
 #######################################################################
 
@@ -60,12 +61,22 @@ the #health-iowait will go red if the %iowait of the CPU get higher than 15%.
 <content type="integer" default="15"/>
 </parameter>
 
+<parameter name="dampening" reloadable="1">
+<longdesc lang="en">
+The time to wait (dampening) in seconds for further changes before writing
+</longdesc>
+<shortdesc lang="en">The time to wait (dampening) in seconds for further changes 
+before writing</shortdesc>
+<content type="string" default="5s"/>
+</parameter>
+
 </parameters>
 
 <actions>
 <action name="start"        timeout="10s" />
 <action name="stop"         timeout="10s" />
 <action name="monitor"      timeout="10s" interval="10s" start-delay="0s" />
+<action name="reload-agent" timeout="20s" />
 <action name="meta-data"    timeout="5s" />
 <action name="validate-all" timeout="10s" depth="0" />
 </actions>
@@ -77,7 +88,7 @@ END
 
 agent_usage() {
         cat <<END
-usage: $0 {start|stop|monitor|validate-all|meta-data}
+usage: $0 {start|stop|monitor|reload-agent|validate-all|meta-data}
 
 Expects to have a fully populated OCF RA-compliant environment set.
 END
@@ -109,20 +120,24 @@ agent_monitor() {
           # echo $OCF_RESKEY_yellow_limit
           if [ $WAIT -gt ${OCF_RESKEY_red_limit} ] ; then
             # echo "System state RED!"
-            attrd_updater -n "#health-iowait" -U "red" -d "5s"
+            attrd_updater -n "#health-iowait" -B "red" -d "${OCF_RESKEY_dampening}"
             return $OCF_SUCCESS
           fi
 
           if [ $WAIT -gt ${OCF_RESKEY_yellow_limit} ] ; then
             # echo "System state yellow."
-            attrd_updater -n "#health-iowait" -U "yellow" -d "5s"
+            attrd_updater -n "#health-iowait" -B "yellow" -d "${OCF_RESKEY_dampening}"
           else
             # echo "System state green."
-            attrd_updater -n "#health-iowait" -U "green" -d "5s"
+            attrd_updater -n "#health-iowait" -B "green" -d "${OCF_RESKEY_dampening}"
           fi
           return $OCF_SUCCESS
         fi
         return $OCF_NOT_RUNNING
+}
+
+agent_reload_agent() {
+    return $OCF_SUCCESS
 }
 
 is_integer() {
@@ -181,7 +196,8 @@ meta-data)      meta_data
                 ;;
 start)          agent_start;;
 stop)           agent_stop;;
-monitor)        agent_monitor;;
+monitor)        agent_validate && agent_monitor;;
+reload-agent)   agent_reload_agent;;
 validate-all)   agent_validate;;
 usage|help)     agent_usage
                 exit $OCF_SUCCESS

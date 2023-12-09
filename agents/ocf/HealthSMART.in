@@ -116,7 +116,7 @@ The path to the smartctl program, used for querying device health.
 The time to wait (dampening) for further changes to occur
 </longdesc>
 <shortdesc lang="en">Dampening interval</shortdesc>
-<content type="integer" default="5s"/>
+<content type="string" default="5s"/>
 </parameter>
 
 </parameters>
@@ -350,7 +350,7 @@ fi
 case "$__OCF_ACTION" in
     start)        HealthSMART_start;;
     stop)         HealthSMART_stop;;
-    monitor)      HealthSMART_monitor;;
+    monitor)      HealthSMART_validate && HealthSMART_monitor;;
     validate-all) HealthSMART_validate;;
     reload-agent) HealthSMART_reload_agent;;
     meta-data)
