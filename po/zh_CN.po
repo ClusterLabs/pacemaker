@@ -248,8 +248,8 @@ msgid ""
 "resources. A value of 0 means never fence pending nodes. Setting the value "
 "to 2h means fence nodes after 2 hours."
 msgstr ""
-"隔离加入集群后在此时间内未加入控制器进程组的节点，以便集群继续管理资源。"
-"值为0表示永远不隔离fence节点。将值设置为2h表示2小时后的fence节点。"
+"如果节点加入集群后在此时间内不加入控制器进程组，Fence该节点，以便群集继续管理资源。"
+"值为0表示永远不 fence 待定节点。将值设置为2h表示2小时后 fence 待定节点。"
 
 #: daemons/fenced/pacemaker-fenced.c:536
 msgid "Advanced use only: An alternate parameter to supply instead of 'port'"
