@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 2\n"
 "Report-Msgid-Bugs-To: developers@clusterlabs.org\n"
-"POT-Creation-Date: 2023-10-25 17:36-0500\n"
+"POT-Creation-Date: 2023-12-05 15:13+0800\n"
 "PO-Revision-Date: 2021-11-08 11:04+0800\n"
 "Last-Translator: Vivi <developers@clusterlabs.org>\n"
 "Language-Team: CHINESE <wangluwei@uniontech.org>\n"
@@ -233,6 +233,23 @@ msgid ""
 msgstr ""
 "如果shutdown-lock为true，并且将此选项设置为非零持续时间，则自从开始shutdown以"
 "来经过了这么长的时间后，shutdown锁将过期，即使该节点尚未重新加入。"
+
+#: daemons/controld/controld_control.c:683 lib/pengine/common.c:164
+msgid ""
+"How long to wait for a node that has joined the cluster to join the "
+"controller process group"
+msgstr ""
+"等待已加入集群的节点加入控制器进程组的时间"
+
+#: daemons/controld/controld_control.c:685 lib/pengine/common.c:166
+msgid ""
+"Fence nodes that do not join the controller process group within this much "
+"time after joining the cluster, to allow the cluster to continue managing "
+"resources. A value of 0 means never fence pending nodes. Setting the value "
+"to 2h means fence nodes after 2 hours."
+msgstr ""
+"如果节点加入集群后在此时间内不加入控制器进程组，Fence该节点，以便群集继续管理资源。"
+"值为0表示永远不 fence 待定节点。将值设置为2h表示2小时后 fence 待定节点。"
 
 #: daemons/fenced/pacemaker-fenced.c:536
 msgid "Advanced use only: An alternate parameter to supply instead of 'port'"
@@ -692,12 +709,12 @@ msgid ""
 "fails to start there. When false, the cluster will instead check the "
 "resource's fail count against its migration-threshold."
 msgstr ""
-"当为true，如果资源启动失败，集群将立即禁止节点启动该资源，当为false，群集将根"
+"当为true，如果资源启动失败，集群将立即禁止节点启动该资源，当为false，集群将根"
 "据其迁移阈值来检查资源的失败计数。"
 
 #: lib/pengine/common.c:68
 msgid "Whether the cluster should check for active resources during start-up"
-msgstr "群集是否在启动期间检查运行资源"
+msgstr "集群是否在启动期间检查运行资源"
 
 #: lib/pengine/common.c:99
 msgid ""
@@ -792,19 +809,6 @@ msgstr ""
 "加到此延迟。为了安全, 这个延迟应该明显大于 pcmk_delay_base/max 的最大设置值，"
 "例如两倍。默认情况下，优先级fencing延迟已禁用。"
 
-#: lib/pengine/common.c:165
-msgid ""
-"How long to wait for a node that has joined the cluster to join the "
-"controller process group"
-msgstr ""
-
-#: lib/pengine/common.c:167
-msgid ""
-"Fence nodes that do not join the controller process group within this much "
-"time after joining the cluster, to allow the cluster to continue managing "
-"resources. A value of 0 means never fence pending nodes."
-msgstr ""
-
 #: lib/pengine/common.c:175
 msgid "Maximum time for node-to-node communication"
 msgstr "最大节点间通信时间"
@@ -845,7 +849,7 @@ msgstr "允许集群在一个节点上并行执行的实时迁移操作的数量
 #: lib/pengine/common.c:203
 #, fuzzy
 msgid "Whether the cluster should stop all active resources"
-msgstr "群集是否在启动期间检查运行资源"
+msgstr "集群是否在启动期间检查运行资源"
 
 #: lib/pengine/common.c:209
 msgid "Whether to stop resources that were removed from the configuration"
@@ -923,7 +927,7 @@ msgstr "为节点健康属性值为“red”所使用的分数"
 #: lib/pengine/common.c:289
 #, fuzzy
 msgid "How the cluster should allocate resources to nodes"
-msgstr "群集应该如何分配资源到节点"
+msgstr "集群应该如何分配资源到节点"
 
 #: tools/crm_resource.c:258
 #, c-format
@@ -961,127 +965,132 @@ msgstr ""
 msgid "Could not get modified CIB: %s\n"
 msgstr "无法获得修改的CIB：%s\n"
 
-#: tools/crm_resource.c:1130
-msgid "You need to specify a resource type with -t"
-msgstr "需要使用-t指定资源类型"
-
-#: tools/crm_resource.c:1197
+#: tools/crm_resource.c:1174
 #, c-format
 msgid "No cluster connection to Pacemaker Remote node %s detected"
 msgstr "未检测到至pacemaker远程节点%s的集群连接"
 
-#: tools/crm_resource.c:1258
+#: tools/crm_resource.c:1235
 msgid "Must specify -t with resource type"
 msgstr "需要使用-t指定资源类型"
 
-#: tools/crm_resource.c:1264
+#: tools/crm_resource.c:1241
 msgid "Must supply -v with new value"
 msgstr "必须使用-v指定新值"
 
-#: tools/crm_resource.c:1296
+#: tools/crm_resource.c:1273
 msgid "Could not create executor connection"
 msgstr "无法创建到pacemaker-execd守护进程的连接"
 
-#: tools/crm_resource.c:1321
+#: tools/crm_resource.c:1298
 #, fuzzy, c-format
 msgid "Metadata query for %s failed: %s"
 msgstr "，查询%s的元数据失败: %s\n"
 
-#: tools/crm_resource.c:1327
+#: tools/crm_resource.c:1304
 #, c-format
 msgid "'%s' is not a valid agent specification"
 msgstr "'%s' 是一个无效的代理"
 
-#: tools/crm_resource.c:1340
+#: tools/crm_resource.c:1317
 msgid "--resource cannot be used with --class, --agent, and --provider"
 msgstr "--resource 不能与 --class, --agent, --provider一起使用"
 
-#: tools/crm_resource.c:1345
+#: tools/crm_resource.c:1322
 msgid ""
 "--class, --agent, and --provider can only be used with --validate and --"
 "force-*"
 msgstr "--class, --agent和--provider只能被用于--validate和--force-*"
 
-#: tools/crm_resource.c:1354
+#: tools/crm_resource.c:1331
 msgid "stonith does not support providers"
 msgstr "stonith 不支持提供者"
 
-#: tools/crm_resource.c:1358
+#: tools/crm_resource.c:1335
 #, c-format
 msgid "%s is not a known stonith agent"
 msgstr "%s 不是一个已知stonith代理"
 
-#: tools/crm_resource.c:1363
+#: tools/crm_resource.c:1340
 #, c-format
 msgid "%s:%s:%s is not a known resource"
 msgstr "%s:%s:%s 不是一个已知资源"
 
-#: tools/crm_resource.c:1477
+#: tools/crm_resource.c:1454
 #, c-format
 msgid "Error creating output format %s: %s"
 msgstr "创建输出格式错误 %s:%s"
 
-#: tools/crm_resource.c:1504
+#: tools/crm_resource.c:1481
 msgid "--expired requires --clear or -U"
 msgstr "--expired需要和--clear或-U一起使用"
 
-#: tools/crm_resource.c:1521
+#: tools/crm_resource.c:1498
 #, c-format
 msgid "Error parsing '%s' as a name=value pair"
 msgstr "'%s'解析错误，格式为name=value"
 
-#: tools/crm_resource.c:1618
+#: tools/crm_resource.c:1595
 msgid "Must supply a resource id with -r"
 msgstr "必须使用-r指定资源id"
 
-#: tools/crm_resource.c:1624
+#: tools/crm_resource.c:1601
 msgid "Must supply a node name with -N"
 msgstr "必须使用-N指定节点名称"
 
-#: tools/crm_resource.c:1642
+#: tools/crm_resource.c:1619
 msgid "Could not create CIB connection"
 msgstr "无法创建到CIB的连接"
 
-#: tools/crm_resource.c:1650
+#: tools/crm_resource.c:1627
 #, c-format
 msgid "Could not connect to the CIB: %s"
 msgstr "不能连接到CIB：%s"
 
-#: tools/crm_resource.c:1671
+#: tools/crm_resource.c:1648
 #, c-format
 msgid "Resource '%s' not found"
 msgstr "没有发现'%s'资源"
 
-#: tools/crm_resource.c:1683
+#: tools/crm_resource.c:1660
 #, c-format
 msgid "Cannot operate on clone resource instance '%s'"
 msgstr "不能操作克隆资源实例'%s'"
 
-#: tools/crm_resource.c:1695
+#: tools/crm_resource.c:1672
 #, c-format
 msgid "Node '%s' not found"
 msgstr "没有发现%s节点"
 
-#: tools/crm_resource.c:1706
+#: tools/crm_resource.c:1683
 #, c-format
 msgid "Error connecting to the controller: %s"
 msgstr "连接到控制器错误：%s"
 
-#: tools/crm_resource.c:1715
+#: tools/crm_resource.c:1692
 #, fuzzy, c-format
 msgid "Error connecting to %s: %s"
 msgstr "连接到控制器错误：%s"
 
-#: tools/crm_resource.c:1973
+#: tools/crm_resource.c:1950
 msgid "You need to supply a value with the -v option"
 msgstr "需要使用-v选项提供一个值"
 
-#: tools/crm_resource.c:2028
+#: tools/crm_resource.c:2006
+msgid "You need to specify a resource type with -t"
+msgstr "需要使用-t指定资源类型"
+
+#: tools/crm_resource.c:2013
+#, fuzzy, c-format
+msgid "Could not delete resource %s: %s"
+msgstr "无法删除资源：%s：%s"
+
+#: tools/crm_resource.c:2023
 #, c-format
 msgid "Unimplemented command: %d"
 msgstr "无效的命令：%d"
 
-#: tools/crm_resource.c:2058
+#: tools/crm_resource.c:2053
 #, c-format
 msgid "Error performing operation: %s"
 msgstr "执行操作错误：%s"
