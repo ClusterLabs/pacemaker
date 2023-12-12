@@ -343,7 +343,7 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
     for (GList *iter = scheduler->ordering_constraints; iter != NULL;
          iter = iter->next) {
 
-        pe__ordering_t *order = iter->data;
+        pcmk__action_relation_t *order = iter->data;
         uint32_t order_flags = pcmk__ar_ordered;
         GList *probes = NULL;
         GList *then_actions = NULL;
@@ -356,15 +356,15 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
         }
 
         // Skip non-resource orderings, and orderings for the same resource
-        if ((order->lh_rsc == NULL) || (order->lh_rsc == order->rh_rsc)) {
+        if ((order->rsc1 == NULL) || (order->rsc1 == order->rsc2)) {
             continue;
         }
 
         // Skip invalid orderings (shouldn't be possible)
-        first = order->lh_action;
-        then = order->rh_action;
-        if (((first == NULL) && (order->lh_action_task == NULL))
-            || ((then == NULL) && (order->rh_action_task == NULL))) {
+        first = order->action1;
+        then = order->action2;
+        if (((first == NULL) && (order->task1 == NULL))
+            || ((then == NULL) && (order->task2 == NULL))) {
             continue;
         }
 
@@ -373,7 +373,7 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
                                              pcmk__str_none)) {
             continue;
         } else if ((first == NULL)
-                   && !pcmk__ends_with(order->lh_action_task,
+                   && !pcmk__ends_with(order->task1,
                                        "_" PCMK_ACTION_STOP "_0")) {
             continue;
         }
@@ -382,14 +382,13 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
          * container. Otherwise, it might introduce a transition loop, since a
          * probe could be scheduled after the container starts again.
          */
-        if ((order->rh_rsc != NULL)
-            && (order->lh_rsc->container == order->rh_rsc)) {
+        if ((order->rsc2 != NULL) && (order->rsc1->container == order->rsc2)) {
 
             if ((then != NULL) && pcmk__str_eq(then->task, PCMK_ACTION_STOP,
                                                pcmk__str_none)) {
                 continue;
             } else if ((then == NULL)
-                       && pcmk__ends_with(order->rh_action_task,
+                       && pcmk__ends_with(order->task2,
                                           "_" PCMK_ACTION_STOP "_0")) {
                 continue;
             }
@@ -410,7 +409,7 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
         }
 
         // List all scheduled probes for the first resource
-        probes = pe__resource_actions(order->lh_rsc, NULL, PCMK_ACTION_MONITOR,
+        probes = pe__resource_actions(order->rsc1, NULL, PCMK_ACTION_MONITOR,
                                       FALSE);
         if (probes == NULL) { // There aren't any
             continue;
@@ -420,9 +419,9 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
         if (then != NULL) {
             then_actions = g_list_prepend(NULL, then);
 
-        } else if (order->rh_rsc != NULL) {
-            then_actions = find_actions(order->rh_rsc->actions,
-                                        order->rh_action_task, NULL);
+        } else if (order->rsc2 != NULL) {
+            then_actions = find_actions(order->rsc2->actions, order->task2,
+                                        NULL);
             if (then_actions == NULL) { // There aren't any
                 g_list_free(probes);
                 continue;
@@ -431,8 +430,8 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
 
         crm_trace("Implying 'probe then' orderings for '%s then %s' "
                   "(id=%d, type=%.6x)",
-                  ((first == NULL)? order->lh_action_task : first->uuid),
-                  ((then == NULL)? order->rh_action_task : then->uuid),
+                  ((first == NULL)? order->task1 : first->uuid),
+                  ((then == NULL)? order->task2 : then->uuid),
                   order->id, order->flags);
 
         for (GList *probe_iter = probes; probe_iter != NULL;

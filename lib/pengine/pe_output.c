@@ -635,17 +635,17 @@ role_desc(enum rsc_role_e role)
     return "";
 }
 
-PCMK__OUTPUT_ARGS("ban", "pcmk_node_t *", "pe__location_t *", "uint32_t")
+PCMK__OUTPUT_ARGS("ban", "pcmk_node_t *", "pcmk__location_t *", "uint32_t")
 static int
 ban_html(pcmk__output_t *out, va_list args) {
     pcmk_node_t *pe_node = va_arg(args, pcmk_node_t *);
-    pe__location_t *location = va_arg(args, pe__location_t *);
+    pcmk__location_t *location = va_arg(args, pcmk__location_t *);
     uint32_t show_opts = va_arg(args, uint32_t);
 
     char *node_name = pe__node_display_name(pe_node,
                                             pcmk_is_set(show_opts, pcmk_show_node_id));
     char *buf = crm_strdup_printf("%s\tprevents %s from running %son %s",
-                                  location->id, location->rsc_lh->id,
+                                  location->id, location->rsc->id,
                                   role_desc(location->role_filter), node_name);
 
     pcmk__output_create_html_node(out, "li", NULL, NULL, buf);
@@ -655,28 +655,28 @@ ban_html(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("ban", "pcmk_node_t *", "pe__location_t *", "uint32_t")
+PCMK__OUTPUT_ARGS("ban", "pcmk_node_t *", "pcmk__location_t *", "uint32_t")
 static int
 ban_text(pcmk__output_t *out, va_list args) {
     pcmk_node_t *pe_node = va_arg(args, pcmk_node_t *);
-    pe__location_t *location = va_arg(args, pe__location_t *);
+    pcmk__location_t *location = va_arg(args, pcmk__location_t *);
     uint32_t show_opts = va_arg(args, uint32_t);
 
     char *node_name = pe__node_display_name(pe_node,
                                             pcmk_is_set(show_opts, pcmk_show_node_id));
     out->list_item(out, NULL, "%s\tprevents %s from running %son %s",
-                   location->id, location->rsc_lh->id,
+                   location->id, location->rsc->id,
                    role_desc(location->role_filter), node_name);
 
     free(node_name);
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("ban", "pcmk_node_t *", "pe__location_t *", "uint32_t")
+PCMK__OUTPUT_ARGS("ban", "pcmk_node_t *", "pcmk__location_t *", "uint32_t")
 static int
 ban_xml(pcmk__output_t *out, va_list args) {
     pcmk_node_t *pe_node = va_arg(args, pcmk_node_t *);
-    pe__location_t *location = va_arg(args, pe__location_t *);
+    pcmk__location_t *location = va_arg(args, pcmk__location_t *);
     uint32_t show_opts G_GNUC_UNUSED = va_arg(args, uint32_t);
 
     const char *promoted_only = pcmk__btoa(location->role_filter == pcmk_role_promoted);
@@ -684,7 +684,7 @@ ban_xml(pcmk__output_t *out, va_list args) {
 
     pcmk__output_create_xml_node(out, "ban",
                                  "id", location->id,
-                                 "resource", location->rsc_lh->id,
+                                 "resource", location->rsc->id,
                                  "node", pe_node->details->uname,
                                  "weight", weight_s,
                                  "promoted-only", promoted_only,
@@ -717,8 +717,8 @@ ban_list(pcmk__output_t *out, va_list args) {
     /* Print each ban */
     for (gIter = scheduler->placement_constraints;
          gIter != NULL; gIter = gIter->next) {
-        pe__location_t *location = gIter->data;
-        const pcmk_resource_t *rsc = location->rsc_lh;
+        pcmk__location_t *location = gIter->data;
+        const pcmk_resource_t *rsc = location->rsc;
 
         if (prefix != NULL && !g_str_has_prefix(location->id, prefix)) {
             continue;
@@ -731,7 +731,7 @@ ban_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        for (gIter2 = location->node_list_rh; gIter2 != NULL; gIter2 = gIter2->next) {
+        for (gIter2 = location->nodes; gIter2 != NULL; gIter2 = gIter2->next) {
             pcmk_node_t *node = (pcmk_node_t *) gIter2->data;
 
             if (node->weight < 0) {

@@ -235,12 +235,12 @@ pe__free_ordering(GList *constraints)
     GList *iterator = constraints;
 
     while (iterator != NULL) {
-        pe__ordering_t *order = iterator->data;
+        pcmk__action_relation_t *order = iterator->data;
 
         iterator = iterator->next;
 
-        free(order->lh_action_task);
-        free(order->rh_action_task);
+        free(order->task1);
+        free(order->task2);
         free(order);
     }
     if (constraints != NULL) {
@@ -254,11 +254,11 @@ pe__free_location(GList *constraints)
     GList *iterator = constraints;
 
     while (iterator != NULL) {
-        pe__location_t *cons = iterator->data;
+        pcmk__location_t *cons = iterator->data;
 
         iterator = iterator->next;
 
-        g_list_free_full(cons->node_list_rh, free);
+        g_list_free_full(cons->nodes, free);
         free(cons->id);
         free(cons);
     }

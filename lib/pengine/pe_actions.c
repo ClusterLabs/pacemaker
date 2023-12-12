@@ -1300,7 +1300,7 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
                 pcmk_resource_t *match = gIter->data;
                 const char *agent = g_hash_table_lookup(match->meta,
                                                         XML_ATTR_TYPE);
-                op_digest_cache_t *data = NULL;
+                pcmk__op_digest_t *data = NULL;
 
                 data = pe__compare_fencing_digest(match, agent, node,
                                                   scheduler);

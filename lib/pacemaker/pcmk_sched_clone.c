@@ -403,7 +403,7 @@ pcmk__clone_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
  * \param[in,out] location  Location constraint to apply
  */
 void
-pcmk__clone_apply_location(pcmk_resource_t *rsc, pe__location_t *location)
+pcmk__clone_apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
 {
     CRM_CHECK((location != NULL) && pe_rsc_is_clone(rsc), return);
 

@@ -1488,7 +1488,7 @@ task_for_digest(const char *task, guint interval_ms)
  */
 static bool
 only_sanitized_changed(const xmlNode *xml_op,
-                       const op_digest_cache_t *digest_data,
+                       const pcmk__op_digest_t *digest_data,
                        const pcmk_scheduler_t *scheduler)
 {
     const char *digest_secure = NULL;
@@ -1605,7 +1605,7 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
 {
     guint interval_ms = 0;
     const char *task = NULL;
-    const op_digest_cache_t *digest_data = NULL;
+    const pcmk__op_digest_t *digest_data = NULL;
 
     CRM_CHECK((rsc != NULL) && (node != NULL) && (xml_op != NULL),
               return false);

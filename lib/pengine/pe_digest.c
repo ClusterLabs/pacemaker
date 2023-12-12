@@ -33,7 +33,7 @@ extern bool pcmk__is_daemon;
 void
 pe__free_digests(gpointer ptr)
 {
-    op_digest_cache_t *data = ptr;
+    pcmk__op_digest_t *data = ptr;
 
     if (data != NULL) {
         free_xml(data->params_all);
@@ -96,7 +96,7 @@ attr_in_string(xmlAttrPtr a, void *user_data)
  * \param[in,out] scheduler    Scheduler data
  */
 static void
-calculate_main_digest(op_digest_cache_t *data, pcmk_resource_t *rsc,
+calculate_main_digest(pcmk__op_digest_t *data, pcmk_resource_t *rsc,
                       const pcmk_node_t *node, GHashTable *params,
                       const char *task, guint *interval_ms,
                       const xmlNode *xml_op, const char *op_version,
@@ -185,7 +185,7 @@ is_fence_param(xmlAttrPtr attr, void *user_data)
  * \param[in]  overrides   Key/value hash table to override resource parameters
  */
 static void
-calculate_secure_digest(op_digest_cache_t *data, const pcmk_resource_t *rsc,
+calculate_secure_digest(pcmk__op_digest_t *data, const pcmk_resource_t *rsc,
                         GHashTable *params, const xmlNode *xml_op,
                         const char *op_version, GHashTable *overrides)
 {
@@ -255,7 +255,7 @@ calculate_secure_digest(op_digest_cache_t *data, const pcmk_resource_t *rsc,
  *       data->params_all, which already has overrides applied.
  */
 static void
-calculate_restart_digest(op_digest_cache_t *data, const xmlNode *xml_op,
+calculate_restart_digest(pcmk__op_digest_t *data, const xmlNode *xml_op,
                          const char *op_version)
 {
     const char *value = NULL;
@@ -302,13 +302,13 @@ calculate_restart_digest(op_digest_cache_t *data, const xmlNode *xml_op,
  * \note It is the caller's responsibility to free the result using
  *       pe__free_digests().
  */
-op_digest_cache_t *
+pcmk__op_digest_t *
 pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
                       guint *interval_ms, const pcmk_node_t *node,
                       const xmlNode *xml_op, GHashTable *overrides,
                       bool calc_secure, pcmk_scheduler_t *scheduler)
 {
-    op_digest_cache_t *data = calloc(1, sizeof(op_digest_cache_t));
+    pcmk__op_digest_t *data = calloc(1, sizeof(pcmk__op_digest_t));
     const char *op_version = NULL;
     GHashTable *params = NULL;
 
@@ -355,12 +355,12 @@ pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
  *
  * \return Pointer to node's digest cache entry
  */
-static op_digest_cache_t *
+static pcmk__op_digest_t *
 rsc_action_digest(pcmk_resource_t *rsc, const char *task, guint interval_ms,
                   pcmk_node_t *node, const xmlNode *xml_op,
                   bool calc_secure, pcmk_scheduler_t *scheduler)
 {
-    op_digest_cache_t *data = NULL;
+    pcmk__op_digest_t *data = NULL;
     char *key = pcmk__op_key(rsc->id, task, interval_ms);
 
     data = g_hash_table_lookup(node->details->digest_cache, key);
@@ -385,11 +385,11 @@ rsc_action_digest(pcmk_resource_t *rsc, const char *task, guint interval_ms,
  *
  * \return Pointer to node's digest cache entry, with comparison result set
  */
-op_digest_cache_t *
+pcmk__op_digest_t *
 rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
                       pcmk_node_t *node, pcmk_scheduler_t *scheduler)
 {
-    op_digest_cache_t *data = NULL;
+    pcmk__op_digest_t *data = NULL;
     guint interval_ms = 0;
 
     const char *op_version;
@@ -537,14 +537,14 @@ unfencing_digest_matches(const char *rsc_id, const char *agent,
  *
  * \return Node's digest cache entry
  */
-op_digest_cache_t *
+pcmk__op_digest_t *
 pe__compare_fencing_digest(pcmk_resource_t *rsc, const char *agent,
                            pcmk_node_t *node, pcmk_scheduler_t *scheduler)
 {
     const char *node_summary = NULL;
 
     // Calculate device's current parameter digests
-    op_digest_cache_t *data = rsc_action_digest(rsc, STONITH_DIGEST_TASK, 0U,
+    pcmk__op_digest_t *data = rsc_action_digest(rsc, STONITH_DIGEST_TASK, 0U,
                                                 node, NULL, TRUE, scheduler);
 
     // Check whether node has special unfencing summary node attribute

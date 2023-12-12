@@ -71,7 +71,7 @@ typedef struct pe__bundle_variant_data_s {
 
         pcmk_resource_t *child;
 
-        GList *replicas;    // pe__bundle_replica_t *
+        GList *replicas;    // pcmk__bundle_replica_t *
         GList *ports;       // pe__bundle_port_t *
         GList *mounts;      // pe__bundle_mount_t *
 
@@ -139,7 +139,7 @@ pe__get_rsc_in_container(const pcmk_resource_t *instance)
     get_bundle_variant_data(data, top);
 
     for (const GList *iter = data->replicas; iter != NULL; iter = iter->next) {
-        const pe__bundle_replica_t *replica = iter->data;
+        const pcmk__bundle_replica_t *replica = iter->data;
 
         if (instance == replica->container) {
             return replica->child;
@@ -165,7 +165,7 @@ pe__node_is_bundle_instance(const pcmk_resource_t *bundle,
 
     get_bundle_variant_data(bundle_data, bundle);
     for (GList *iter = bundle_data->replicas; iter != NULL; iter = iter->next) {
-        pe__bundle_replica_t *replica = iter->data;
+        pcmk__bundle_replica_t *replica = iter->data;
 
         if (pe__same_node(node, replica->node)) {
             return true;
@@ -187,7 +187,7 @@ pcmk_resource_t *
 pe__first_container(const pcmk_resource_t *bundle)
 {
     const pe__bundle_variant_data_t *bundle_data = NULL;
-    const pe__bundle_replica_t *replica = NULL;
+    const pcmk__bundle_replica_t *replica = NULL;
 
     get_bundle_variant_data(bundle_data, bundle);
     if (bundle_data->replicas == NULL) {
@@ -208,14 +208,14 @@ pe__first_container(const pcmk_resource_t *bundle)
  */
 void
 pe__foreach_bundle_replica(pcmk_resource_t *bundle,
-                           bool (*fn)(pe__bundle_replica_t *, void *),
+                           bool (*fn)(pcmk__bundle_replica_t *, void *),
                            void *user_data)
 {
     const pe__bundle_variant_data_t *bundle_data = NULL;
 
     get_bundle_variant_data(bundle_data, bundle);
     for (GList *iter = bundle_data->replicas; iter != NULL; iter = iter->next) {
-        if (!fn((pe__bundle_replica_t *) iter->data, user_data)) {
+        if (!fn((pcmk__bundle_replica_t *) iter->data, user_data)) {
             break;
         }
     }
@@ -232,7 +232,7 @@ pe__foreach_bundle_replica(pcmk_resource_t *bundle,
  */
 void
 pe__foreach_const_bundle_replica(const pcmk_resource_t *bundle,
-                                 bool (*fn)(const pe__bundle_replica_t *,
+                                 bool (*fn)(const pcmk__bundle_replica_t *,
                                             void *),
                                  void *user_data)
 {
@@ -242,7 +242,7 @@ pe__foreach_const_bundle_replica(const pcmk_resource_t *bundle,
     for (const GList *iter = bundle_data->replicas; iter != NULL;
          iter = iter->next) {
 
-        if (!fn((const pe__bundle_replica_t *) iter->data, user_data)) {
+        if (!fn((const pcmk__bundle_replica_t *) iter->data, user_data)) {
             break;
         }
     }
@@ -276,7 +276,7 @@ next_ip(const char *last_ip)
 }
 
 static void
-allocate_ip(pe__bundle_variant_data_t *data, pe__bundle_replica_t *replica,
+allocate_ip(pe__bundle_variant_data_t *data, pcmk__bundle_replica_t *replica,
             GString *buffer)
 {
     if(data->ip_range_start == NULL) {
@@ -360,7 +360,7 @@ valid_network(pe__bundle_variant_data_t *data)
 
 static int
 create_ip_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
-                   pe__bundle_replica_t *replica)
+                   pcmk__bundle_replica_t *replica)
 {
     if(data->ip_range_start) {
         char *id = NULL;
@@ -421,7 +421,7 @@ container_agent_str(enum pe__container_agent t)
 static int
 create_container_resource(pcmk_resource_t *parent,
                           const pe__bundle_variant_data_t *data,
-                          pe__bundle_replica_t *replica)
+                          pcmk__bundle_replica_t *replica)
 {
     char *id = NULL;
     xmlNode *xml_container = NULL;
@@ -678,7 +678,7 @@ disallow_node(pcmk_resource_t *rsc, const char *uname)
 
 static int
 create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
-                       pe__bundle_replica_t *replica)
+                       pcmk__bundle_replica_t *replica)
 {
     if (replica->child && valid_network(data)) {
         GHashTableIter gIter;
@@ -819,8 +819,9 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
 }
 
 static int
-create_replica_resources(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
-                         pe__bundle_replica_t *replica)
+create_replica_resources(pcmk_resource_t *parent,
+                         pe__bundle_variant_data_t *data,
+                         pcmk__bundle_replica_t *replica)
 {
     int rc = pcmk_rc_ok;
 
@@ -889,7 +890,7 @@ port_free(pe__bundle_port_t *port)
     free(port);
 }
 
-static pe__bundle_replica_t *
+static pcmk__bundle_replica_t *
 replica_for_remote(pcmk_resource_t *remote)
 {
     pcmk_resource_t *top = remote;
@@ -906,7 +907,7 @@ replica_for_remote(pcmk_resource_t *remote)
     get_bundle_variant_data(bundle_data, top);
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
-        pe__bundle_replica_t *replica = gIter->data;
+        pcmk__bundle_replica_t *replica = gIter->data;
 
         if (replica->remote == remote) {
             return replica;
@@ -941,7 +942,7 @@ pe__add_bundle_remote_name(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler,
     // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
 
     pcmk_node_t *node = NULL;
-    pe__bundle_replica_t *replica = NULL;
+    pcmk__bundle_replica_t *replica = NULL;
 
     if (!pe__bundle_needs_remote_name(rsc)) {
         return NULL;
@@ -1218,8 +1219,9 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         for (childIter = bundle_data->child->children; childIter != NULL;
              childIter = childIter->next) {
 
-            pe__bundle_replica_t *replica = calloc(1, sizeof(pe__bundle_replica_t));
+            pcmk__bundle_replica_t *replica = NULL;
 
+            replica = calloc(1, sizeof(pcmk__bundle_replica_t));
             replica->child = childIter->data;
             replica->child->exclusive_discover = TRUE;
             replica->offset = lpc++;
@@ -1250,8 +1252,9 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         GString *buffer = g_string_sized_new(1024);
 
         for (int lpc = 0; lpc < bundle_data->nreplicas; lpc++) {
-            pe__bundle_replica_t *replica = calloc(1, sizeof(pe__bundle_replica_t));
+            pcmk__bundle_replica_t *replica = NULL;
 
+            replica = calloc(1, sizeof(pcmk__bundle_replica_t));
             replica->offset = lpc;
             allocate_ip(bundle_data, replica, buffer);
             bundle_data->replicas = g_list_append(bundle_data->replicas,
@@ -1262,7 +1265,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
-        pe__bundle_replica_t *replica = gIter->data;
+        pcmk__bundle_replica_t *replica = gIter->data;
 
         if (create_replica_resources(rsc, bundle_data, replica) != pcmk_rc_ok) {
             pe_err("Failed unpacking resource %s", rsc->id);
@@ -1323,7 +1326,7 @@ pe__bundle_active(pcmk_resource_t *rsc, gboolean all)
 
     get_bundle_variant_data(bundle_data, rsc);
     for (iter = bundle_data->replicas; iter != NULL; iter = iter->next) {
-        pe__bundle_replica_t *replica = iter->data;
+        pcmk__bundle_replica_t *replica = iter->data;
         int rsc_active;
 
         rsc_active = replica_resource_active(replica->ip, all);
@@ -1372,7 +1375,7 @@ pe__find_bundle_replica(const pcmk_resource_t *bundle, const pcmk_node_t *node)
     get_bundle_variant_data(bundle_data, bundle);
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
-        pe__bundle_replica_t *replica = gIter->data;
+        pcmk__bundle_replica_t *replica = gIter->data;
 
         CRM_ASSERT(replica && replica->node);
         if (replica->node->details == node->details) {
@@ -1432,7 +1435,7 @@ bundle_print_xml(pcmk_resource_t *rsc, const char *pre_text, long options,
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
-        pe__bundle_replica_t *replica = gIter->data;
+        pcmk__bundle_replica_t *replica = gIter->data;
 
         CRM_ASSERT(replica);
         status_print("%s    <replica " XML_ATTR_ID "=\"%d\">\n",
@@ -1476,7 +1479,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
-        pe__bundle_replica_t *replica = gIter->data;
+        pcmk__bundle_replica_t *replica = gIter->data;
         char *id = NULL;
         gboolean print_ip, print_child, print_ctnr, print_remote;
 
@@ -1552,7 +1555,8 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
 }
 
 static void
-pe__bundle_replica_output_html(pcmk__output_t *out, pe__bundle_replica_t *replica,
+pe__bundle_replica_output_html(pcmk__output_t *out,
+                               pcmk__bundle_replica_t *replica,
                                pcmk_node_t *node, uint32_t show_opts)
 {
     pcmk_resource_t *rsc = replica->child;
@@ -1629,7 +1633,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
-        pe__bundle_replica_t *replica = gIter->data;
+        pcmk__bundle_replica_t *replica = gIter->data;
         gboolean print_ip, print_child, print_ctnr, print_remote;
 
         CRM_ASSERT(replica);
@@ -1707,7 +1711,8 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
 }
 
 static void
-pe__bundle_replica_output_text(pcmk__output_t *out, pe__bundle_replica_t *replica,
+pe__bundle_replica_output_text(pcmk__output_t *out,
+                               pcmk__bundle_replica_t *replica,
                                pcmk_node_t *node, uint32_t show_opts)
 {
     const pcmk_resource_t *rsc = replica->child;
@@ -1763,7 +1768,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
-        pe__bundle_replica_t *replica = gIter->data;
+        pcmk__bundle_replica_t *replica = gIter->data;
         gboolean print_ip, print_child, print_ctnr, print_remote;
 
         CRM_ASSERT(replica);
@@ -1845,7 +1850,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
  * \deprecated This function will be removed in a future release
  */
 static void
-print_bundle_replica(pe__bundle_replica_t *replica, const char *pre_text,
+print_bundle_replica(pcmk__bundle_replica_t *replica, const char *pre_text,
                      long options, void *print_data)
 {
     pcmk_node_t *node = NULL;
@@ -1909,7 +1914,7 @@ pe__print_bundle(pcmk_resource_t *rsc, const char *pre_text, long options,
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
-        pe__bundle_replica_t *replica = gIter->data;
+        pcmk__bundle_replica_t *replica = gIter->data;
 
         CRM_ASSERT(replica);
         if (options & pe_print_html) {
@@ -1947,7 +1952,7 @@ pe__print_bundle(pcmk_resource_t *rsc, const char *pre_text, long options,
 }
 
 static void
-free_bundle_replica(pe__bundle_replica_t *replica)
+free_bundle_replica(pcmk__bundle_replica_t *replica)
 {
     if (replica == NULL) {
         return;
@@ -2048,7 +2053,7 @@ pe__count_bundle(pcmk_resource_t *rsc)
 
     get_bundle_variant_data(bundle_data, rsc);
     for (GList *item = bundle_data->replicas; item != NULL; item = item->next) {
-        pe__bundle_replica_t *replica = item->data;
+        pcmk__bundle_replica_t *replica = item->data;
 
         if (replica->ip) {
             replica->ip->fns->count(replica->ip);
@@ -2078,7 +2083,7 @@ pe__bundle_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
         get_bundle_variant_data(bundle_data, rsc);
 
         for (GList *gIter = bundle_data->replicas; gIter != NULL; gIter = gIter->next) {
-            pe__bundle_replica_t *replica = gIter->data;
+            pcmk__bundle_replica_t *replica = gIter->data;
 
             if (replica->ip != NULL && !replica->ip->fns->is_filtered(replica->ip, only_rsc, FALSE)) {
                 passes = TRUE;
@@ -2117,7 +2122,7 @@ pe__bundle_containers(const pcmk_resource_t *bundle)
 
     get_bundle_variant_data(data, bundle);
     for (GList *iter = data->replicas; iter != NULL; iter = iter->next) {
-        pe__bundle_replica_t *replica = iter->data;
+        pcmk__bundle_replica_t *replica = iter->data;
 
         containers = g_list_append(containers, replica->container);
     }
@@ -2152,7 +2157,7 @@ pe__bundle_active_node(const pcmk_resource_t *rsc, unsigned int *count_all,
      */
     get_bundle_variant_data(data, rsc);
     for (iter = data->replicas; iter != NULL; iter = iter->next) {
-        pe__bundle_replica_t *replica = iter->data;
+        pcmk__bundle_replica_t *replica = iter->data;
 
         if (replica->container->running_on != NULL) {
             containers = g_list_append(containers, replica->container);

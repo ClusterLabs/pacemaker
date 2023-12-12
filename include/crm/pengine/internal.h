@@ -154,30 +154,6 @@ pcmk_resource_t *pe__last_group_member(const pcmk_resource_t *group);
         }                                                                   \
     } while (0);
 
-
-typedef struct pe__location_constraint_s {
-    char *id;                           // Constraint XML ID
-    pcmk_resource_t *rsc_lh;            // Resource being located
-    enum rsc_role_e role_filter;        // Role to locate
-    enum pe_discover_e discover_mode;   // Resource discovery
-    GList *node_list_rh;                // List of pcmk_node_t*
-} pe__location_t;
-
-typedef struct pe__order_constraint_s {
-    int id;
-    uint32_t flags; // Group of enum pcmk__action_relation_flags
-
-    void *lh_opaque;
-    pcmk_resource_t *lh_rsc;
-    pcmk_action_t *lh_action;
-    char *lh_action_task;
-
-    void *rh_opaque;
-    pcmk_resource_t *rh_rsc;
-    pcmk_action_t *rh_action;
-    char *rh_action_task;
-} pe__ordering_t;
-
 const pcmk_resource_t *pe__const_top_resource(const pcmk_resource_t *rsc,
                                               bool include_bundle);
 
@@ -451,17 +427,7 @@ int pe__target_rc_from_xml(const xmlNode *xml_op);
 gint pe__cmp_node_name(gconstpointer a, gconstpointer b);
 bool is_set_recursive(const pcmk_resource_t *rsc, long long flag, bool any);
 
-typedef struct op_digest_cache_s {
-    enum pcmk__digest_result rc;
-    xmlNode *params_all;
-    xmlNode *params_secure;
-    xmlNode *params_restart;
-    char *digest_all_calc;
-    char *digest_secure_calc;
-    char *digest_restart_calc;
-} op_digest_cache_t;
-
-op_digest_cache_t *pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
+pcmk__op_digest_t *pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
                                          guint *interval_ms,
                                          const pcmk_node_t *node,
                                          const xmlNode *xml_op,
@@ -471,7 +437,7 @@ op_digest_cache_t *pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
 
 void pe__free_digests(gpointer ptr);
 
-op_digest_cache_t *rsc_action_digest_cmp(pcmk_resource_t *rsc,
+pcmk__op_digest_t *rsc_action_digest_cmp(pcmk_resource_t *rsc,
                                          const xmlNode *xml_op,
                                          pcmk_node_t *node,
                                          pcmk_scheduler_t *scheduler);
@@ -515,17 +481,6 @@ int pe__common_output_html(pcmk__output_t *out, const pcmk_resource_t *rsc,
                            const char *name, const pcmk_node_t *node,
                            unsigned int options);
 
-//! A single instance of a bundle
-typedef struct {
-    int offset;                 //!< 0-origin index of this instance in bundle
-    char *ipaddr;               //!< IP address associated with this instance
-    pcmk_node_t *node;          //!< Node created for this instance
-    pcmk_resource_t *ip;        //!< IP address resource for ipaddr
-    pcmk_resource_t *child;     //!< Instance of bundled resource
-    pcmk_resource_t *container; //!< Container associated with this instance
-    pcmk_resource_t *remote;    //!< Pacemaker Remote connection into container
-} pe__bundle_replica_t;
-
 GList *pe__bundle_containers(const pcmk_resource_t *bundle);
 
 int pe__bundle_max(const pcmk_resource_t *rsc);
@@ -535,10 +490,10 @@ pcmk_resource_t *pe__bundled_resource(const pcmk_resource_t *rsc);
 const pcmk_resource_t *pe__get_rsc_in_container(const pcmk_resource_t *instance);
 pcmk_resource_t *pe__first_container(const pcmk_resource_t *bundle);
 void pe__foreach_bundle_replica(pcmk_resource_t *bundle,
-                                bool (*fn)(pe__bundle_replica_t *, void *),
+                                bool (*fn)(pcmk__bundle_replica_t *, void *),
                                 void *user_data);
 void pe__foreach_const_bundle_replica(const pcmk_resource_t *bundle,
-                                      bool (*fn)(const pe__bundle_replica_t *,
+                                      bool (*fn)(const pcmk__bundle_replica_t *,
                                                  void *),
                                       void *user_data);
 pcmk_resource_t *pe__find_bundle_replica(const pcmk_resource_t *bundle,

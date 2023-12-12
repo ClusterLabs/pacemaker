@@ -13,26 +13,12 @@
 #  include <glib.h>
 #  include <crm/crm.h>
 #  include <crm/common/iso8601.h>
+#  include <crm/common/scheduler.h>
 #  include <crm/pengine/common.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-enum expression_type {
-    not_expr        = 0,
-    nested_rule     = 1,
-    attr_expr       = 2,
-    loc_expr        = 3,
-    role_expr       = 4,
-    time_expr       = 5,
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    //! \deprecated Do not use (will be removed in a future release)
-    version_expr    = 6,
-#endif
-    rsc_expr        = 7,
-    op_expr         = 8,
-};
 
 enum expression_type find_expression_type(xmlNode * expr);
 

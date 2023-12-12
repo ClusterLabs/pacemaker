@@ -44,7 +44,7 @@ check_params(pcmk_resource_t *rsc, pcmk_node_t *node, const xmlNode *rsc_op,
              enum pcmk__check_parameters check)
 {
     const char *reason = NULL;
-    op_digest_cache_t *digest_data = NULL;
+    pcmk__op_digest_t *digest_data = NULL;
 
     switch (check) {
         case pcmk__check_active:

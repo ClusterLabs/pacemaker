@@ -11,10 +11,12 @@
 #  define PCMK__CRM_COMMON_SCHEDULER_INTERNAL__H
 
 #include <crm/common/action_relation_internal.h>
+#include <crm/common/bundles_internal.h>
 #include <crm/common/clone_internal.h>
 #include <crm/common/digests_internal.h>
 #include <crm/common/failcounts_internal.h>
 #include <crm/common/group_internal.h>
+#include <crm/common/location_internal.h>
 #include <crm/common/roles_internal.h>
 
 #ifdef __cplusplus

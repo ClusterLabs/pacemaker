@@ -4037,7 +4037,7 @@ should_clear_for_param_change(const xmlNode *xml_op, const char *task,
                                 rsc->cluster);
 
         } else {
-            op_digest_cache_t *digest_data = NULL;
+            pcmk__op_digest_t *digest_data = NULL;
 
             digest_data = rsc_action_digest_cmp(rsc, xml_op, node,
                                                 rsc->cluster);

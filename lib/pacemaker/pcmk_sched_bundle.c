@@ -31,7 +31,7 @@ struct assign_data {
  * \return true (to indicate that any further replicas should be processed)
  */
 static bool
-assign_replica(pe__bundle_replica_t *replica, void *user_data)
+assign_replica(pcmk__bundle_replica_t *replica, void *user_data)
 {
     pcmk_node_t *container_host = NULL;
 
@@ -164,7 +164,7 @@ pcmk__bundle_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
  * \return true (to indicate that any further replicas should be processed)
  */
 static bool
-create_replica_actions(pe__bundle_replica_t *replica, void *user_data)
+create_replica_actions(pcmk__bundle_replica_t *replica, void *user_data)
 {
     if (replica->ip != NULL) {
         replica->ip->cmds->create_actions(replica->ip);
@@ -227,7 +227,7 @@ pcmk__bundle_create_actions(pcmk_resource_t *rsc)
  * \return true (to indicate that any further replicas should be processed)
  */
 static bool
-replica_internal_constraints(pe__bundle_replica_t *replica, void *user_data)
+replica_internal_constraints(pcmk__bundle_replica_t *replica, void *user_data)
 {
     pcmk_resource_t *bundle = user_data;
 
@@ -371,7 +371,7 @@ struct match_data {
  *         should be processed), otherwise false
  */
 static bool
-match_replica_container(const pe__bundle_replica_t *replica, void *user_data)
+match_replica_container(const pcmk__bundle_replica_t *replica, void *user_data)
 {
     struct match_data *match_data = user_data;
 
@@ -466,7 +466,8 @@ struct coloc_data {
  * \return true (to indicate that any further replicas should be processed)
  */
 static bool
-replica_apply_coloc_score(const pe__bundle_replica_t *replica, void *user_data)
+replica_apply_coloc_score(const pcmk__bundle_replica_t *replica,
+                          void *user_data)
 {
     struct coloc_data *coloc_data = user_data;
     pcmk_node_t *chosen = NULL;
@@ -723,9 +724,9 @@ pcmk__bundle_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
  * \return true (to indicate that any further replicas should be processed)
  */
 static bool
-apply_location_to_replica(pe__bundle_replica_t *replica, void *user_data)
+apply_location_to_replica(pcmk__bundle_replica_t *replica, void *user_data)
 {
-    pe__location_t *location = user_data;
+    pcmk__location_t *location = user_data;
 
     if (replica->container != NULL) {
         replica->container->cmds->apply_location(replica->container, location);
@@ -744,7 +745,7 @@ apply_location_to_replica(pe__bundle_replica_t *replica, void *user_data)
  * \param[in,out] location  Location constraint to apply
  */
 void
-pcmk__bundle_apply_location(pcmk_resource_t *rsc, pe__location_t *location)
+pcmk__bundle_apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
 {
     pcmk_resource_t *bundled_resource = NULL;
 
@@ -776,7 +777,7 @@ pcmk__bundle_apply_location(pcmk_resource_t *rsc, pe__location_t *location)
  * \return true (to indicate that any further replicas should be processed)
  */
 static bool
-add_replica_actions_to_graph(pe__bundle_replica_t *replica, void *user_data)
+add_replica_actions_to_graph(pcmk__bundle_replica_t *replica, void *user_data)
 {
     if ((replica->remote != NULL) && (replica->container != NULL)
         && pe__bundle_needs_remote_name(replica->remote)) {
@@ -871,9 +872,9 @@ struct probe_data {
  * \return true (to indicate that any further replicas should be processed)
  */
 static bool
-order_replica_start_after(pe__bundle_replica_t *replica, void *user_data)
+order_replica_start_after(pcmk__bundle_replica_t *replica, void *user_data)
 {
-    pe__bundle_replica_t *probed_replica = user_data;
+    pcmk__bundle_replica_t *probed_replica = user_data;
 
     if ((replica == probed_replica) || (replica->container == NULL)) {
         return true;
@@ -899,7 +900,7 @@ order_replica_start_after(pe__bundle_replica_t *replica, void *user_data)
  * \return true (to indicate that any further replicas should be processed)
  */
 static bool
-create_replica_probes(pe__bundle_replica_t *replica, void *user_data)
+create_replica_probes(pcmk__bundle_replica_t *replica, void *user_data)
 {
     struct probe_data *probe_data = user_data;
 
@@ -994,7 +995,7 @@ pcmk__bundle_create_probe(pcmk_resource_t *rsc, pcmk_node_t *node)
  * \return true (to indicate that any further replicas should be processed)
  */
 static bool
-output_replica_actions(pe__bundle_replica_t *replica, void *user_data)
+output_replica_actions(pcmk__bundle_replica_t *replica, void *user_data)
 {
     if (replica->ip != NULL) {
         replica->ip->cmds->output_actions(replica->ip);

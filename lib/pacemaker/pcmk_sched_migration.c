@@ -260,7 +260,7 @@ task_from_action_or_key(const pcmk_action_t *action, const char *key)
  * \param[in,out] order     Ordering constraint to check
  */
 void
-pcmk__order_migration_equivalents(pe__ordering_t *order)
+pcmk__order_migration_equivalents(pcmk__action_relation_t *order)
 {
     char *first_task = NULL;
     char *then_task = NULL;
@@ -268,25 +268,23 @@ pcmk__order_migration_equivalents(pe__ordering_t *order)
     bool first_migratable;
 
     // Only orderings between unrelated resources are relevant
-    if ((order->lh_rsc == NULL) || (order->rh_rsc == NULL)
-        || (order->lh_rsc == order->rh_rsc)
-        || is_parent(order->lh_rsc, order->rh_rsc)
-        || is_parent(order->rh_rsc, order->lh_rsc)) {
+    if ((order->rsc1 == NULL) || (order->rsc2 == NULL)
+        || (order->rsc1 == order->rsc2)
+        || is_parent(order->rsc1, order->rsc2)
+        || is_parent(order->rsc2, order->rsc1)) {
         return;
     }
 
     // Only orderings involving at least one migratable resource are relevant
-    first_migratable = pcmk_is_set(order->lh_rsc->flags, pcmk_rsc_migratable);
-    then_migratable = pcmk_is_set(order->rh_rsc->flags, pcmk_rsc_migratable);
+    first_migratable = pcmk_is_set(order->rsc1->flags, pcmk_rsc_migratable);
+    then_migratable = pcmk_is_set(order->rsc2->flags, pcmk_rsc_migratable);
     if (!first_migratable && !then_migratable) {
         return;
     }
 
     // Check which actions are involved
-    first_task = task_from_action_or_key(order->lh_action,
-                                         order->lh_action_task);
-    then_task = task_from_action_or_key(order->rh_action,
-                                        order->rh_action_task);
+    first_task = task_from_action_or_key(order->action1, order->task1);
+    then_task = task_from_action_or_key(order->action2, order->task2);
 
     if (pcmk__str_eq(first_task, PCMK_ACTION_START, pcmk__str_none)
         && pcmk__str_eq(then_task, PCMK_ACTION_START, pcmk__str_none)) {
@@ -296,13 +294,13 @@ pcmk__order_migration_equivalents(pe__ordering_t *order)
         if (first_migratable && then_migratable) {
             /* A start then B start
              * -> A migrate_from then B migrate_to */
-            pcmk__new_ordering(order->lh_rsc,
-                               pcmk__op_key(order->lh_rsc->id,
+            pcmk__new_ordering(order->rsc1,
+                               pcmk__op_key(order->rsc1->id,
                                             PCMK_ACTION_MIGRATE_FROM, 0),
-                               NULL, order->rh_rsc,
-                               pcmk__op_key(order->rh_rsc->id,
+                               NULL, order->rsc2,
+                               pcmk__op_key(order->rsc2->id,
                                             PCMK_ACTION_MIGRATE_TO, 0),
-                               NULL, flags, order->lh_rsc->cluster);
+                               NULL, flags, order->rsc1->cluster);
         }
 
         if (then_migratable) {
@@ -314,13 +312,13 @@ pcmk__order_migration_equivalents(pe__ordering_t *order)
              * -> A start then B migrate_to (if start is not part of a
              *    migration)
              */
-            pcmk__new_ordering(order->lh_rsc,
-                               pcmk__op_key(order->lh_rsc->id,
+            pcmk__new_ordering(order->rsc1,
+                               pcmk__op_key(order->rsc1->id,
                                             PCMK_ACTION_START, 0),
-                               NULL, order->rh_rsc,
-                               pcmk__op_key(order->rh_rsc->id,
+                               NULL, order->rsc2,
+                               pcmk__op_key(order->rsc2->id,
                                             PCMK_ACTION_MIGRATE_TO, 0),
-                               NULL, flags, order->lh_rsc->cluster);
+                               NULL, flags, order->rsc1->cluster);
         }
 
     } else if (then_migratable
@@ -336,23 +334,23 @@ pcmk__order_migration_equivalents(pe__ordering_t *order)
         /* For an ordering "stop A then stop B", if A is moving via restart, and
          * B is migrating, enforce that B's migrate_to occurs after A's stop.
          */
-        pcmk__new_ordering(order->lh_rsc,
-                           pcmk__op_key(order->lh_rsc->id, PCMK_ACTION_STOP, 0),
+        pcmk__new_ordering(order->rsc1,
+                           pcmk__op_key(order->rsc1->id, PCMK_ACTION_STOP, 0),
                            NULL,
-                           order->rh_rsc,
-                           pcmk__op_key(order->rh_rsc->id,
+                           order->rsc2,
+                           pcmk__op_key(order->rsc2->id,
                                         PCMK_ACTION_MIGRATE_TO, 0),
-                           NULL, flags, order->lh_rsc->cluster);
+                           NULL, flags, order->rsc1->cluster);
 
         // Also order B's migrate_from after A's stop during partial migrations
-        if (order->rh_rsc->partial_migration_target) {
-            pcmk__new_ordering(order->lh_rsc,
-                               pcmk__op_key(order->lh_rsc->id, PCMK_ACTION_STOP,
+        if (order->rsc2->partial_migration_target != NULL) {
+            pcmk__new_ordering(order->rsc1,
+                               pcmk__op_key(order->rsc1->id, PCMK_ACTION_STOP,
                                             0),
-                               NULL, order->rh_rsc,
-                               pcmk__op_key(order->rh_rsc->id,
+                               NULL, order->rsc2,
+                               pcmk__op_key(order->rsc2->id,
                                             PCMK_ACTION_MIGRATE_FROM, 0),
-                               NULL, flags, order->lh_rsc->cluster);
+                               NULL, flags, order->rsc1->cluster);
         }
 
     } else if (pcmk__str_eq(first_task, PCMK_ACTION_PROMOTE, pcmk__str_none)
@@ -363,13 +361,13 @@ pcmk__order_migration_equivalents(pe__ordering_t *order)
         if (then_migratable) {
             /* A promote then B start
              * -> A promote then B migrate_to */
-            pcmk__new_ordering(order->lh_rsc,
-                               pcmk__op_key(order->lh_rsc->id,
+            pcmk__new_ordering(order->rsc1,
+                               pcmk__op_key(order->rsc1->id,
                                             PCMK_ACTION_PROMOTE, 0),
-                               NULL, order->rh_rsc,
-                               pcmk__op_key(order->rh_rsc->id,
+                               NULL, order->rsc2,
+                               pcmk__op_key(order->rsc2->id,
                                             PCMK_ACTION_MIGRATE_TO, 0),
-                               NULL, flags, order->lh_rsc->cluster);
+                               NULL, flags, order->rsc1->cluster);
         }
 
     } else if (pcmk__str_eq(first_task, PCMK_ACTION_DEMOTE, pcmk__str_none)
@@ -380,23 +378,23 @@ pcmk__order_migration_equivalents(pe__ordering_t *order)
         if (then_migratable) {
             /* A demote then B stop
              * -> A demote then B migrate_to */
-            pcmk__new_ordering(order->lh_rsc,
-                               pcmk__op_key(order->lh_rsc->id,
+            pcmk__new_ordering(order->rsc1,
+                               pcmk__op_key(order->rsc1->id,
                                             PCMK_ACTION_DEMOTE, 0),
-                               NULL, order->rh_rsc,
-                               pcmk__op_key(order->rh_rsc->id,
+                               NULL, order->rsc2,
+                               pcmk__op_key(order->rsc2->id,
                                             PCMK_ACTION_MIGRATE_TO, 0),
-                               NULL, flags, order->lh_rsc->cluster);
+                               NULL, flags, order->rsc1->cluster);
 
             // Order B migrate_from after A demote during partial migrations
-            if (order->rh_rsc->partial_migration_target) {
-                pcmk__new_ordering(order->lh_rsc,
-                                   pcmk__op_key(order->lh_rsc->id,
+            if (order->rsc2->partial_migration_target != NULL) {
+                pcmk__new_ordering(order->rsc1,
+                                   pcmk__op_key(order->rsc1->id,
                                                 PCMK_ACTION_DEMOTE, 0),
-                                   NULL, order->rh_rsc,
-                                   pcmk__op_key(order->rh_rsc->id,
+                                   NULL, order->rsc2,
+                                   pcmk__op_key(order->rsc2->id,
                                                 PCMK_ACTION_MIGRATE_FROM, 0),
-                                   NULL, flags, order->lh_rsc->cluster);
+                                   NULL, flags, order->rsc1->cluster);
             }
         }
     }
