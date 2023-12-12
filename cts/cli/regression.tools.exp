@@ -7983,12 +7983,10 @@ unpack_config 	warning: Blind faith: not fencing unseen nodes
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= End test: Verify a string-supplied valid configuration, outputting as xml - OK (0) =#=#=#=
-* Passed: crm_verify     - </cib>'
-* Passed: Verify a string-supplied valid configuration, outputting as xml - 
+* Passed: crm_verify     - Verify a string-supplied valid configuration, outputting as xml
 =#=#=#= Begin test: Verbosely verify a string-supplied valid configuration, outputting as xml =#=#=#=
 <pacemaker-result api-version="X" request="crm_feature_set=&quot;3.7.1&quot; transition-key=&quot;1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx&quot; transition-magic=&quot;0:0;1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx&quot; exit-reason=&quot;&quot; call-id=&quot;1&quot; rc-code=&quot;0&quot; op-status=&quot;0&quot; interval=&quot;0&quot; last-rc-change=&quot;1613491700&quot; exec-time=&quot;0&quot; queue-time=&quot;0&quot; op-digest=&quot;f2317cad3d54cec5d7d7aa7d0bf35cf8&quot;/&gt; &lt;/lrm_resource&gt; &lt;/lrm_resources&gt; &lt;/lrm&gt; &lt;/node_state&gt; &lt;/status&gt; &lt;/cib&gt;' --output-as=xml --verbose">
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= End test: Verbosely verify a string-supplied valid configuration, outputting as xml - OK (0) =#=#=#=
-* Passed: crm_verify     - </cib>'
-* Passed: Verbosely verify a string-supplied valid configuration, outputting as xml - 
+* Passed: crm_verify     - Verbosely verify a string-supplied valid configuration, outputting as xml
