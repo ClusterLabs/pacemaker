@@ -42,8 +42,9 @@
  *     4       2.1.5    Multiple attributes can be updated in a single IPC
  *                      message
  *     5       2.1.5    Peers can request confirmation of a sent message
+ *     6       2.1.7    PCMK__ATTRD_CMD_PEER_REMOVE supports PCMK__XA_REAP
  */
-#define ATTRD_PROTOCOL_VERSION "5"
+#define ATTRD_PROTOCOL_VERSION "6"
 
 #define ATTRD_SUPPORTS_MULTI_MESSAGE(x) ((x) >= 4)
 #define ATTRD_SUPPORTS_CONFIRMATION(x)  ((x) >= 5)

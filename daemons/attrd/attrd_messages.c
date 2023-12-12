@@ -148,7 +148,13 @@ handle_remove_request(pcmk__request_t *request)
 {
     if (request->peer != NULL) {
         const char *host = crm_element_value(request->xml, PCMK__XA_ATTR_NODE_NAME);
-        attrd_peer_remove(host, true, request->peer);
+        bool reap = false;
+
+        if (pcmk__xe_get_bool_attr(request->xml, PCMK__XA_REAP,
+                                   &reap) != pcmk_rc_ok) {
+            reap = true; // Default to true for backward compatibility
+        }
+        attrd_peer_remove(host, reap, request->peer);
         pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
         return NULL;
     } else {

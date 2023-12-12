@@ -540,7 +540,9 @@ attrd_peer_remove(const char *host, bool uncache, const char *source)
     GHashTableIter aIter;
 
     CRM_CHECK(host != NULL, return);
-    crm_notice("Removing all %s attributes for peer %s", host, source);
+    crm_notice("Removing all %s attributes for node %s "
+               CRM_XS " %s reaping node from cache",
+               host, source, (uncache? "and" : "without"));
 
     g_hash_table_iter_init(&aIter, attributes);
     while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {

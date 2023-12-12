@@ -277,7 +277,7 @@ pcmk__attrd_api_delete(pcmk_ipc_api_t *api, const char *node, const char *name,
 }
 
 int
-pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node)
+pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node, bool reap)
 {
     int rc = pcmk_rc_ok;
     xmlNode *request = NULL;
@@ -291,6 +291,7 @@ pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node)
     request = create_attrd_op(NULL);
 
     crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_PEER_REMOVE);
+    pcmk__xe_set_bool_attr(request, PCMK__XA_REAP, reap);
     pcmk__xe_add_node(request, node, 0);
 
     if (api == NULL) {

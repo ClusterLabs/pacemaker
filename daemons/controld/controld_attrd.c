@@ -117,7 +117,7 @@ update_attrd_remote_node_removed(const char *host, const char *user_name)
     if (rc == pcmk_rc_ok) {
         crm_trace("Asking attribute manager to purge Pacemaker Remote node %s",
                   host);
-        rc = pcmk__attrd_api_purge(attrd_api, host);
+        rc = pcmk__attrd_api_purge(attrd_api, host, true);
     }
     if (rc != pcmk_rc_ok) {
         crm_err("Could not purge Pacemaker Remote node %s "
