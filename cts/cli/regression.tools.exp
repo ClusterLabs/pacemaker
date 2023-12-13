@@ -7939,7 +7939,7 @@ unpack_config 	warning: Blind faith: not fencing unseen nodes
 =#=#=#= End test: Verbosely verify a file-specified invalid configuration, outputting as xml - Invalid configuration (78) =#=#=#=
 * Passed: crm_verify     - Verbosely verify a file-specified invalid configuration, outputting as xml
 =#=#=#= Begin test: Verbosely verify another file-specified invalid configuration, outputting as xml =#=#=#=
-(cluster_status@status.c:113) 	warning: Fencing and resource management disabled due to lack of quorum
+cluster_status 	warning: Fencing and resource management disabled due to lack of quorum
 <pacemaker-result api-version="X" request="crm_verify_invalid_no_stonith.xml --output-as=xml --verbose">
   <status code="78" message="Invalid configuration">
     <errors>
