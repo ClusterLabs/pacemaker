@@ -274,11 +274,12 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *use
 
     g_hash_table_iter_init(&iter, a->values);
     while (g_hash_table_iter_next(&iter, (gpointer *) & peer, (gpointer *) & v)) {
-        do_crm_log(level, "* %s[%s]=%s", a->id, peer, v->requested);
-        free(v->requested);
-        v->requested = NULL;
-        if (rc != pcmk_ok) {
-            a->changed = true; /* Attempt write out again */
+        do_crm_log(level, "* %s[%s]=%s",
+                   a->id, peer, pcmk__s(v->requested, "(null)"));
+        if (rc == pcmk_ok) {
+            pcmk__str_update(&(v->requested), NULL);
+        } else {
+            a->changed = true; // Reattempt write below if we are still writer
         }
     }
 
@@ -605,11 +606,8 @@ write_attribute(attribute_t *a, bool ignore_delay)
         /* Preservation of the attribute to transmit alert */
         set_alert_attribute_value(alert_attribute_value, v);
 
-        free(v->requested);
-        v->requested = NULL;
-        if (v->current) {
-            v->requested = strdup(v->current);
-        }
+        // Save this value so we can log it when write completes
+        pcmk__str_update(&(v->requested), v->current);
     }
 
     if (private_updates) {
