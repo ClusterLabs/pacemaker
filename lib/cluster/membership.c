@@ -143,11 +143,23 @@ crm_remote_peer_get(const char *node_name)
     return node;
 }
 
+/*!
+ * \brief Remove a node from the Pacemaker Remote node cache
+ *
+ * \param[in] node_name  Name of node to remove from cache
+ *
+ * \note The caller must be careful not to use \p node_name after calling this
+ *       function if it might be a pointer into the cache entry being removed.
+ */
 void
 crm_remote_peer_cache_remove(const char *node_name)
 {
-    if (g_hash_table_remove(crm_remote_peer_cache, node_name)) {
-        crm_trace("removed %s from remote peer cache", node_name);
+    /* Do a lookup first, because node_name could be a pointer within the entry
+     * being removed -- we can't log it *after* removing it.
+     */
+    if (g_hash_table_lookup(crm_remote_peer_cache, node_name) != NULL) {
+        crm_trace("Removing %s from Pacemaker Remote node cache", node_name);
+        g_hash_table_remove(crm_remote_peer_cache, node_name);
     }
 }
 
