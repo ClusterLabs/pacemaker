@@ -66,6 +66,7 @@ void attrd_ipc_fini(void);
 int attrd_cib_connect(int max_retry);
 void attrd_cib_disconnect(void);
 void attrd_cib_init(void);
+void attrd_cib_erase_transient_attrs(const char *node);
 
 bool attrd_value_needs_expansion(const char *value);
 int attrd_expand_value(const char *value, const char *old_value);
