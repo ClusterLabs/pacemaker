@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2022 the Pacemaker project contributors
+ * Copyright 2013-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -143,7 +143,7 @@ attrd_add_value_xml(xmlNode *parent, const attribute_t *a,
     crm_xml_add(xml, PCMK__XA_ATTR_UUID, a->uuid);
     crm_xml_add(xml, PCMK__XA_ATTR_USER, a->user);
     pcmk__xe_add_node(xml, v->nodename, v->nodeid);
-    if (v->is_remote != 0) {
+    if (pcmk_is_set(v->flags, attrd_value_remote)) {
         crm_xml_add_int(xml, PCMK__XA_ATTR_IS_REMOTE, 1);
     }
     crm_xml_add(xml, PCMK__XA_ATTR_VALUE, v->current);
@@ -166,8 +166,7 @@ attrd_clear_value_seen(void)
     while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
         g_hash_table_iter_init(&vIter, a->values);
         while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & v)) {
-            v->seen = FALSE;
-            crm_trace("Clear seen flag %s[%s] = %s.", a->id, v->nodename, v->current);
+            attrd_clear_value_flags(v, attrd_value_from_peer);
         }
     }
 }
