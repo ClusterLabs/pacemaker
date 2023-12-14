@@ -1186,19 +1186,22 @@ role_matches(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
  * \param[in] rule_data  Only the role member is used
  *
  * \return TRUE if rule_data->role satisfies the expression, FALSE otherwise
+ * \todo Drop this whole code. The #role attribute was never implemented
+ *       (rule_data->role is always pcmk_role_unknown), and it would be a poor
+ *       design anyway, since a unique promotable clone could have multiple
+ *       instances with different roles on a given node.
  */
 gboolean
 pe__eval_role_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
 {
     const char *op = NULL;
 
-    if (rule_data->role == pcmk_role_unknown) { // Skip role checks for now
+    // A known role must be given to compare against
+    if (rule_data->role == pcmk_role_unknown) {
         return FALSE;
     }
 
     op = crm_element_value(expr, XML_EXPR_ATTR_OPERATION);
-
-    // @TODO Why are only Unpromoted/Promoted considered defined?
 
     if (pcmk__str_eq(op, "defined", pcmk__str_casei)) {
         if (rule_data->role > pcmk_role_started) {
@@ -1215,7 +1218,7 @@ pe__eval_role_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
         return role_matches(expr, rule_data)? TRUE : FALSE;
 
     } else if (pcmk__str_eq(op, "ne", pcmk__str_casei)
-               // Test "ne" only with promotable clone roles (@TODO Why?)
+               // Test "ne" only with promotable clone roles
                && (rule_data->role >= pcmk_role_unpromoted)) {
         return role_matches(expr, rule_data)? FALSE : TRUE;
 

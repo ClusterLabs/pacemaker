@@ -26,7 +26,7 @@ get_node_score(const char *rule, const char *score, bool raw,
     int score_f = 0;
 
     if (score == NULL) {
-        pcmk__config_err("Rule %s: no score specified (assuming 0)", rule);
+        pcmk__config_warn("Rule %s: no score specified (assuming 0)", rule);
 
     } else if (raw) {
         score_f = char2score(score);

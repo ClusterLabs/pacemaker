@@ -532,7 +532,7 @@ schedule_fencing(pcmk_node_t *node)
     pcmk_action_t *fencing = pe_fence_op(node, NULL, FALSE, "node is unclean",
                                        FALSE, node->details->data_set);
 
-    pcmk__config_warn("Scheduling node %s for fencing", pe__node_name(node));
+    pcmk__sched_warn("Scheduling node %s for fencing", pe__node_name(node));
     pcmk__order_vs_fence(fencing, node->details->data_set);
     return fencing;
 }

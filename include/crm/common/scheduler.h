@@ -236,7 +236,7 @@ struct pe_working_set_s {
  *
  * @COMPAT When we can break API compatibility, we should make these
  * internal-only. Ideally they would be converted to pcmk_scheduler_flags
- * values, but everywhere it's needed doesn't currently have access to the
+ * values, but everywhere they're needed doesn't currently have access to the
  * scheduler data.
  */
 //!@{
