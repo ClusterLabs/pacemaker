@@ -1001,6 +1001,7 @@ pe__eval_attr_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
     } else if (op == NULL) {
         pcmk__config_err("Expression %s invalid: " XML_EXPR_ATTR_OPERATION
                          " not specified", pcmk__s(ID(expr), "without ID"));
+        return FALSE;
     }
 
     if (rule_data->match_data != NULL) {
