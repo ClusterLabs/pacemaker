@@ -373,17 +373,13 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
         if (pcmk__str_eq((const char *)an_attr->name, XML_CIB_TAG_NVPAIR, pcmk__str_none)) {
             xmlNode *ref_nvpair = expand_idref(an_attr, top);
 
-            if (ref_nvpair == NULL) {
-                continue; // Not possible with schema validation enabled
-            }
-
             name = crm_element_value(an_attr, XML_NVPAIR_ATTR_NAME);
-            if (name == NULL) {
+            if ((name == NULL) && (ref_nvpair != NULL)) {
                 name = crm_element_value(ref_nvpair, XML_NVPAIR_ATTR_NAME);
             }
 
             value = crm_element_value(an_attr, XML_NVPAIR_ATTR_VALUE);
-            if (value == NULL) {
+            if ((value == NULL) && (ref_nvpair != NULL)) {
                 value = crm_element_value(ref_nvpair, XML_NVPAIR_ATTR_VALUE);
             }
 
