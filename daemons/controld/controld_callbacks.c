@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -232,20 +232,10 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                                     pcmk__str_casei)
                        && !pcmk__cluster_is_node_active(node)) {
 
-                /* The DC has left, so delete its transient attributes and
-                 * trigger a new election.
-                 *
-                 * A DC sends its shutdown request to all peers, who update the
-                 * DC's expected state to down. This avoids fencing upon
-                 * deletion of its transient attributes.
-                 */
+                // The DC has left, so trigger a new election
                 crm_notice("Our peer on the DC (%s) is dead",
                            controld_globals.dc_name);
-
                 register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
-                controld_delete_node_state(node->name, controld_section_attrs,
-                                           cib_none);
-
             } else if (AM_I_DC
                        || pcmk_is_set(controld_globals.flags, controld_dc_left)
                        || (controld_globals.dc_name == NULL)) {
@@ -255,10 +245,6 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                  */
                 if (appeared) {
                     te_trigger_stonith_history_sync(FALSE);
-                } else {
-                    controld_delete_node_state(node->name,
-                                               controld_section_attrs,
-                                               cib_none);
                 }
             }
             break;
