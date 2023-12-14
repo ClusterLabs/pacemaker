@@ -166,28 +166,6 @@ broadcast_local_value(const attribute_t *a)
     return v;
 }
 
-/*!
- * \internal
- * \brief Ensure a Pacemaker Remote node is in the correct peer cache
- *
- * \param[in] node_name  Name of Pacemaker Remote node to check
- */
-static void
-cache_remote_node(const char *node_name)
-{
-    /* If we previously assumed this node was an unseen cluster node,
-     * remove its entry from the cluster peer cache.
-     */
-    crm_node_t *dup = pcmk__search_cluster_node_cache(0, node_name, NULL);
-
-    if (dup && (dup->uuid == NULL)) {
-        reap_crm_member(0, node_name);
-    }
-
-    // Ensure node is in the remote peer cache
-    CRM_ASSERT(crm_remote_peer_get(node_name) != NULL);
-}
-
 #define state_text(state) pcmk__s((state), "in unknown state")
 
 /*!
@@ -218,7 +196,7 @@ attrd_lookup_or_create_value(GHashTable *values, const char *node_name,
     crm_element_value_int(xml, PCMK__XA_ATTR_IS_REMOTE, &is_remote);
     if (is_remote) {
         attrd_set_value_flags(v, attrd_value_remote);
-        cache_remote_node(node_name);
+        CRM_ASSERT(crm_remote_peer_get(node_name) != NULL);
     }
 
     return(v);
@@ -273,7 +251,7 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
 
     // Ensure remote nodes that come up are in the remote node cache
     } else if (!gone && is_remote) {
-        cache_remote_node(peer->uname);
+        CRM_ASSERT(crm_remote_peer_get(peer->uname) != NULL);
     }
 }
 

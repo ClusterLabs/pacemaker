@@ -102,26 +102,50 @@ crm_remote_peer_cache_size(void)
  * \note When creating a new entry, this will leave the node state undetermined,
  *       so the caller should also call pcmk__update_peer_state() if the state
  *       is known.
+ * \note Because this can add and remove cache entries, callers should not
+ *       assume any previously obtained cache entry pointers remain valid.
  */
 crm_node_t *
 crm_remote_peer_get(const char *node_name)
 {
     crm_node_t *node;
+    char *node_name_copy = NULL;
 
     if (node_name == NULL) {
-        errno = -EINVAL;
+        errno = EINVAL;
         return NULL;
+    }
+
+    /* It's theoretically possible that the node was added to the cluster peer
+     * cache before it was known to be a Pacemaker Remote node. Remove that
+     * entry unless it has a node ID, which means the name actually is
+     * associated with a cluster node. (@TODO return an error in that case?)
+     */
+    node = pcmk__search_cluster_node_cache(0, node_name, NULL);
+    if ((node != NULL) && (node->uuid == NULL)) {
+        /* node_name could be a pointer into the cache entry being removed, so
+         * reassign it to a copy before the original gets freed
+         */
+        node_name_copy = strdup(node_name);
+        if (node_name_copy == NULL) {
+            errno = ENOMEM;
+            return NULL;
+        }
+        node_name = node_name_copy;
+        reap_crm_member(0, node_name);
     }
 
     /* Return existing cache entry if one exists */
     node = g_hash_table_lookup(crm_remote_peer_cache, node_name);
     if (node) {
+        free(node_name_copy);
         return node;
     }
 
     /* Allocate a new entry */
     node = calloc(1, sizeof(crm_node_t));
     if (node == NULL) {
+        free(node_name_copy);
         return NULL;
     }
 
@@ -130,7 +154,8 @@ crm_remote_peer_get(const char *node_name)
     node->uuid = strdup(node_name);
     if (node->uuid == NULL) {
         free(node);
-        errno = -ENOMEM;
+        errno = ENOMEM;
+        free(node_name_copy);
         return NULL;
     }
 
@@ -140,6 +165,7 @@ crm_remote_peer_get(const char *node_name)
 
     /* Update the entry's uname, ensuring peer status callbacks are called */
     update_peer_uname(node, node_name);
+    free(node_name_copy);
     return node;
 }
 
