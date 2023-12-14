@@ -46,7 +46,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
         return;
     }
 
-    if (attrd_shutting_down(false)) {
+    if (attrd_shutting_down()) {
         /* If we're shutting down, we want to continue responding to election
          * ops as long as we're a cluster member (because our vote may be
          * needed). Ignore all other messages.
@@ -131,7 +131,7 @@ attrd_cpg_dispatch(cpg_handle_t handle,
 static void
 attrd_cpg_destroy(gpointer unused)
 {
-    if (attrd_shutting_down(false)) {
+    if (attrd_shutting_down()) {
         crm_info("Disconnected from Corosync process group");
 
     } else {
@@ -302,17 +302,6 @@ update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
             attrd_clear_value_flags(v, attrd_value_removed);
         }
         a->changed = true;
-
-        if (pcmk__str_eq(host, attrd_cluster->uname, pcmk__str_casei)
-            && pcmk__str_eq(attr, PCMK__NODE_ATTR_SHUTDOWN, pcmk__str_none)) {
-
-            if (!pcmk__str_eq(value, "0", pcmk__str_null_matches)) {
-                attrd_set_requesting_shutdown();
-
-            } else {
-                attrd_clear_requesting_shutdown();
-            }
-        }
 
         // Write out new value or start dampening timer
         if (a->timeout_ms && a->timer) {

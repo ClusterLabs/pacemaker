@@ -38,7 +38,7 @@ attrd_cib_destroy_cb(gpointer user_data)
 
     cib->cmds->signoff(cib);
 
-    if (attrd_shutting_down(false)) {
+    if (attrd_shutting_down()) {
         crm_info("Disconnected from the CIB manager");
 
     } else {
@@ -183,7 +183,7 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
     const char *client_name = NULL;
     bool status_changed = false;
 
-    if (attrd_shutting_down(true)) {
+    if (attrd_shutting_down()) {
         crm_debug("Ignoring CIB change during shutdown");
         return;
     }
