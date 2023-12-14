@@ -210,15 +210,16 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
     value = crm_element_value(reply, F_CRM_MSG_TYPE);
     if (pcmk__str_empty(value)
         || !pcmk__str_eq(value, XML_ATTR_RESPONSE, pcmk__str_none)) {
-        crm_info("Unrecognizable message from pacemakerd: "
+        crm_info("Unrecognizable message from %s: "
                  "message type '%s' not '" XML_ATTR_RESPONSE "'",
-                 pcmk__s(value, ""));
+                 pcmk_ipc_name(api, true), pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
 
     if (pcmk__str_empty(crm_element_value(reply, XML_ATTR_REFERENCE))) {
-        crm_info("Unrecognizable message from pacemakerd: no reference");
+        crm_info("Unrecognizable message from %s: no reference",
+                 pcmk_ipc_name(api, true));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
@@ -244,8 +245,8 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         reply_data.reply_type = pcmk_pacemakerd_reply_shutdown;
         reply_data.data.shutdown.status = atoi(crm_element_value(msg_data, XML_LRM_ATTR_OPSTATUS));
     } else {
-        crm_info("Unrecognizable message from pacemakerd: "
-                 "unknown command '%s'", pcmk__s(value, ""));
+        crm_info("Unrecognizable message from %s: unknown command '%s'",
+                 pcmk_ipc_name(api, true), pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
@@ -292,8 +293,8 @@ do_pacemakerd_api_call(pcmk_ipc_api_t *api, const char *ipc_name, const char *ta
     if (cmd) {
         rc = pcmk__send_ipc_request(api, cmd);
         if (rc != pcmk_rc_ok) {
-            crm_debug("Couldn't send request to pacemakerd: %s rc=%d",
-                      pcmk_rc_str(rc), rc);
+            crm_debug("Couldn't send request to %s: %s rc=%d",
+                      pcmk_ipc_name(api, true), pcmk_rc_str(rc), rc);
         }
         free_xml(cmd);
     } else {
