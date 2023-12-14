@@ -242,7 +242,7 @@ purge_remote_node_attrs(int call_opt, pcmk__node_status_t *node)
 
     // Purge node's transient attributes (from attribute manager and CIB)
     if (should_purge_attributes(node)) {
-        update_attrd_remote_node_removed(node->name, NULL);
+        controld_purge_node_attrs(node->name, true);
     }
 
     if (pcmk_is_set(controld_globals.flags, controld_shutdown_lock_enabled)) {
@@ -350,7 +350,7 @@ remote_node_down(const char *node_name, const enum down_opts opts)
     pcmk__node_status_t *node = NULL;
 
     // Purge node's transient attributes (from attribute manager and CIB)
-    update_attrd_remote_node_removed(node_name, NULL);
+    controld_purge_node_attrs(node_name, true);
 
     /* Normally, the resource history should be kept until the node comes back
      * up. However, after a successful fence, clear the history so we don't
