@@ -554,8 +554,7 @@ attrd_peer_remove(const char *host, bool uncache, const char *source)
     }
 
     if (uncache) {
-        crm_remote_peer_cache_remove(host);
-        reap_crm_member(0, host);
+        pcmk__purge_node_from_cache(host, 0);
     }
 }
 

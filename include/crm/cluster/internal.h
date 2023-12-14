@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef CRM_CLUSTER_INTERNAL__H
-#  define CRM_CLUSTER_INTERNAL__H
+#ifndef PCMK__CRM_CLUSTER_INTERNAL__H
+#  define PCMK__CRM_CLUSTER_INTERNAL__H
 
 #  include <stdint.h>       // uint32_t, uint64_t
 #  include <crm/cluster.h>
@@ -126,6 +126,7 @@ crm_node_t *pcmk__search_node_caches(unsigned int id, const char *uname,
                                      uint32_t flags);
 crm_node_t *pcmk__search_cluster_node_cache(unsigned int id, const char *uname,
                                             const char *uuid);
+void pcmk__purge_node_from_cache(const char *node_name, uint32_t node_id);
 
 void pcmk__refresh_node_caches_from_cib(xmlNode *cib);
 crm_node_t *pcmk__search_known_node_cache(unsigned int id, const char *uname,
@@ -136,4 +137,4 @@ crm_node_t *pcmk__get_peer(unsigned int id, const char *uname,
 crm_node_t *pcmk__get_peer_full(unsigned int id, const char *uname,
                                 const char *uuid, int flags);
 
-#endif
+#endif // PCMK__CRM_CLUSTER_INTERNAL__H

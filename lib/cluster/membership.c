@@ -341,6 +341,9 @@ crm_reap_dead_member(gpointer key, gpointer value, gpointer user_data)
  * \param[in] name  Uname of node to remove (or NULL to ignore)
  *
  * \return Number of cache entries removed
+ *
+ * \note The caller must be careful not to use \p name after calling this
+ *       function if it might be a pointer into the cache entry being removed.
  */
 guint
 reap_crm_member(uint32_t id, const char *name)
@@ -562,6 +565,47 @@ pcmk__get_peer_full(unsigned int id, const char *uname, const char *uuid,
         node = pcmk__get_peer(id, uname, uuid);
     }
     return node;
+}
+
+/*!
+ * \internal
+ * \brief Purge a node from cache (both cluster and Pacemaker Remote)
+ *
+ * \param[in] node_name  If not NULL, purge only nodes with this name
+ * \param[in] node_id    If not 0, purge cluster nodes only if they have this ID
+ *
+ * \note If \p node_name is NULL and \p node_id is 0, no nodes will be purged.
+ *       If \p node_name is not NULL and \p node_id is not 0, Pacemaker Remote
+ *       nodes that match \p node_name will be purged, and cluster nodes that
+ *       match both \p node_name and \p node_id will be purged.
+ * \note The caller must be careful not to use \p node_name after calling this
+ *       function if it might be a pointer into a cache entry being removed.
+ */
+void
+pcmk__purge_node_from_cache(const char *node_name, uint32_t node_id)
+{
+    char *node_name_copy = NULL;
+
+    if ((node_name == NULL) && (node_id == 0U)) {
+        return;
+    }
+
+    // Purge from Pacemaker Remote node cache
+    if ((node_name != NULL)
+        && (g_hash_table_lookup(crm_remote_peer_cache, node_name) != NULL)) {
+        /* node_name could be a pointer into the cache entry being purged,
+         * so reassign it to a copy before the original gets freed
+         */
+        node_name_copy = strdup(node_name);
+        CRM_ASSERT(node_name_copy != NULL);
+        node_name = node_name_copy;
+
+        crm_trace("Purging %s from Pacemaker Remote node cache", node_name);
+        g_hash_table_remove(crm_remote_peer_cache, node_name);
+    }
+
+    reap_crm_member(node_id, node_name);
+    free(node_name_copy);
 }
 
 /*!
