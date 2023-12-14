@@ -228,20 +228,6 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                            controld_globals.dc_name);
                 register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
 
-                /* @COMPAT DC < 1.1.13: If a DC shuts down normally, we don't
-                 * want to fence it. Newer DCs will send their shutdown request
-                 * to all peers, who will update the DC's expected state to
-                 * down, thus avoiding fencing. We can safely erase the DC's
-                 * transient attributes when it leaves in that case. However,
-                 * the only way to avoid fencing older DCs is to leave the
-                 * transient attributes intact until it rejoins.
-                 */
-                if (compare_version(controld_globals.dc_version, "3.0.9") > 0) {
-                    controld_delete_node_state(node->uname,
-                                               controld_section_attrs,
-                                               cib_scope_local);
-                }
-
             } else if (AM_I_DC
                        || pcmk_is_set(controld_globals.flags, controld_dc_left)
                        || (controld_globals.dc_name == NULL)) {
@@ -251,10 +237,6 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                  */
                 if (appeared) {
                     te_trigger_stonith_history_sync(FALSE);
-                } else {
-                    controld_delete_node_state(node->uname,
-                                               controld_section_attrs,
-                                               cib_scope_local);
                 }
             }
             break;
