@@ -283,7 +283,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
              * constraint when we can break backward compatibility.
              */
             pcmk__config_err("Ignoring role in constraint %s: "
-                             "Invalid value '%s'", id, role);
+                             "Invalid value '%s'", id, role_spec);
         }
 
         location = pcmk__new_location(id, rsc, score_i, discovery, match);
