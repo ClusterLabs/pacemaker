@@ -71,7 +71,7 @@ void controld_close_attrd_ipc(void);
 void update_attrd(const char *host, const char *name, const char *value,
                   bool is_remote_node);
 void update_attrd_list(GList *attrs, uint32_t opts);
-void update_attrd_remote_node_removed(const char *host);
+void controld_purge_node_attrs(const char *node_name, bool from_cache);
 void update_attrd_clear_failures(const char *host, const char *rsc,
                                  const char *op, const char *interval_spec,
                                  gboolean is_remote_node);
