@@ -149,45 +149,38 @@ create_attrd_op(const char *user_name)
 }
 
 static int
-create_api(pcmk_ipc_api_t **api)
-{
-    int rc = pcmk_new_ipc_api(api, pcmk_ipc_attrd);
-
-    if (rc != pcmk_rc_ok) {
-        crm_err("Could not connect to attrd: %s", pcmk_rc_str(rc));
-    }
-
-    return rc;
-}
-
-static void
-destroy_api(pcmk_ipc_api_t *api)
-{
-    pcmk_disconnect_ipc(api);
-    pcmk_free_ipc_api(api);
-    api = NULL;
-}
-
-static int
 connect_and_send_attrd_request(pcmk_ipc_api_t *api, const xmlNode *request)
 {
     int rc = pcmk_rc_ok;
+    bool created_api = false;
+
+    if (api == NULL) {
+        rc = pcmk_new_ipc_api(&api, pcmk_ipc_attrd);
+        if (rc != pcmk_rc_ok) {
+            crm_err("Could not connect to attribute manager: %s",
+                    pcmk_rc_str(rc));
+            return rc;
+        }
+        created_api = true;
+    }
 
     rc = pcmk__connect_ipc(api, pcmk_ipc_dispatch_sync, 5);
     if (rc != pcmk_rc_ok) {
         crm_err("Could not connect to %s: %s",
                 pcmk_ipc_name(api, true), pcmk_rc_str(rc));
-        return rc;
+
+    } else {
+        rc = pcmk__send_ipc_request(api, request);
+        if (rc != pcmk_rc_ok) {
+            crm_err("Could not send request to %s: %s",
+                    pcmk_ipc_name(api, true), pcmk_rc_str(rc));
+        }
     }
 
-    rc = pcmk__send_ipc_request(api, request);
-    if (rc != pcmk_rc_ok) {
-        crm_err("Could not send request to %s: %s",
-                pcmk_ipc_name(api, true), pcmk_rc_str(rc));
-        return rc;
+    if (created_api) {
+        pcmk_free_ipc_api(api);
     }
-
-    return pcmk_rc_ok;
+    return rc;
 }
 
 int
@@ -214,18 +207,7 @@ pcmk__attrd_api_clear_failures(pcmk_ipc_api_t *api, const char *node,
     crm_xml_add_int(request, PCMK__XA_ATTR_IS_REMOTE,
                     pcmk_is_set(options, pcmk__node_attr_remote));
 
-    if (api == NULL) {
-        rc = create_api(&api);
-        if (rc != pcmk_rc_ok) {
-            return rc;
-        }
-
-        rc = connect_and_send_attrd_request(api, request);
-        destroy_api(api);
-
-    } else {
-        rc = connect_and_send_attrd_request(api, request);
-    }
+    rc = connect_and_send_attrd_request(api, request);
 
     free_xml(request);
 
@@ -285,18 +267,7 @@ pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node, bool reap)
     pcmk__xe_set_bool_attr(request, PCMK__XA_REAP, reap);
     pcmk__xe_add_node(request, node, 0);
 
-    if (api == NULL) {
-        rc = create_api(&api);
-        if (rc != pcmk_rc_ok) {
-            return rc;
-        }
-
-        rc = connect_and_send_attrd_request(api, request);
-        destroy_api(api);
-
-    } else {
-        rc = connect_and_send_attrd_request(api, request);
-    }
+    rc = connect_and_send_attrd_request(api, request);
 
     free_xml(request);
 
@@ -365,18 +336,7 @@ pcmk__attrd_api_refresh(pcmk_ipc_api_t *api, const char *node)
     crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_REFRESH);
     pcmk__xe_add_node(request, node, 0);
 
-    if (api == NULL) {
-        rc = create_api(&api);
-        if (rc != pcmk_rc_ok) {
-            return rc;
-        }
-
-        rc = connect_and_send_attrd_request(api, request);
-        destroy_api(api);
-
-    } else {
-        rc = connect_and_send_attrd_request(api, request);
-    }
+    rc = connect_and_send_attrd_request(api, request);
 
     free_xml(request);
 
@@ -455,18 +415,7 @@ pcmk__attrd_api_update(pcmk_ipc_api_t *api, const char *node, const char *name,
     request = create_attrd_op(user_name);
     populate_update_op(request, node, name, value, dampen, set, options);
 
-    if (api == NULL) {
-        rc = create_api(&api);
-        if (rc != pcmk_rc_ok) {
-            return rc;
-        }
-
-        rc = connect_and_send_attrd_request(api, request);
-        destroy_api(api);
-
-    } else {
-        rc = connect_and_send_attrd_request(api, request);
-    }
+    rc = connect_and_send_attrd_request(api, request);
 
     free_xml(request);
 
@@ -547,23 +496,8 @@ pcmk__attrd_api_update_list(pcmk_ipc_api_t *api, GList *attrs, const char *dampe
      * request.  Do that now, creating and destroying the API object if needed.
      */
     if (pcmk__is_daemon) {
-        bool created_api = false;
-
-        if (api == NULL) {
-            rc = create_api(&api);
-            if (rc != pcmk_rc_ok) {
-                return rc;
-            }
-
-            created_api = true;
-        }
-
         rc = connect_and_send_attrd_request(api, request);
         free_xml(request);
-
-        if (created_api) {
-            destroy_api(api);
-        }
     }
 
     return rc;
