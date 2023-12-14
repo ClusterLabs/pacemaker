@@ -245,7 +245,6 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
                     const char *role_spec, const char *score,
                     pe_re_match_data_t *re_match_data)
 {
-    pcmk__location_t *location = NULL;
     const char *rsc_id = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
     const char *node = crm_element_value(xml_obj, XML_CIB_TAG_NODE);
@@ -266,6 +265,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
         int score_i = char2score(score);
         pcmk_node_t *match = pe_find_node(rsc->cluster->nodes, node);
         enum rsc_role_e role = pcmk_role_unknown;
+        pcmk__location_t *location = NULL;
 
         if (!match) {
             return;
