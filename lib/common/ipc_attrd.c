@@ -157,24 +157,14 @@ connect_and_send_attrd_request(pcmk_ipc_api_t *api, const xmlNode *request)
     if (api == NULL) {
         rc = pcmk_new_ipc_api(&api, pcmk_ipc_attrd);
         if (rc != pcmk_rc_ok) {
-            crm_err("Could not connect to attribute manager: %s",
-                    pcmk_rc_str(rc));
             return rc;
         }
         created_api = true;
     }
 
     rc = pcmk__connect_ipc(api, pcmk_ipc_dispatch_sync, 5);
-    if (rc != pcmk_rc_ok) {
-        crm_err("Could not connect to %s: %s",
-                pcmk_ipc_name(api, true), pcmk_rc_str(rc));
-
-    } else {
+    if (rc == pcmk_rc_ok) {
         rc = pcmk__send_ipc_request(api, request);
-        if (rc != pcmk_rc_ok) {
-            crm_err("Could not send request to %s: %s",
-                    pcmk_ipc_name(api, true), pcmk_rc_str(rc));
-        }
     }
 
     if (created_api) {
@@ -199,6 +189,17 @@ pcmk__attrd_api_clear_failures(pcmk_ipc_api_t *api, const char *node,
         node = target;
     }
 
+    if (operation) {
+        interval_desc = pcmk__s(interval_spec, "nonrecurring");
+        op_desc = operation;
+    } else {
+        interval_desc = "all";
+        op_desc = "operations";
+    }
+    crm_debug("Asking %s to clear failure of %s %s for %s on %s",
+              pcmk_ipc_name(api, true), interval_desc, op_desc,
+              pcmk__s(resource, "all resources"), pcmk__s(node, "all nodes"));
+
     crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_CLEAR_FAILURE);
     pcmk__xe_add_node(request, node, 0);
     crm_xml_add(request, PCMK__XA_ATTR_RESOURCE, resource);
@@ -210,19 +211,6 @@ pcmk__attrd_api_clear_failures(pcmk_ipc_api_t *api, const char *node,
     rc = connect_and_send_attrd_request(api, request);
 
     free_xml(request);
-
-    if (operation) {
-        interval_desc = interval_spec? interval_spec : "nonrecurring";
-        op_desc = operation;
-    } else {
-        interval_desc = "all";
-        op_desc = "operations";
-    }
-
-    crm_debug("Asked pacemaker-attrd to clear failure of %s %s for %s on %s: %s (%d)",
-              interval_desc, op_desc, (resource? resource : "all resources"),
-              (node? node : "all nodes"), pcmk_rc_str(rc), rc);
-
     return rc;
 }
 
@@ -254,12 +242,16 @@ pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node, bool reap)
 {
     int rc = pcmk_rc_ok;
     xmlNode *request = NULL;
-    const char *display_host = (node ? node : "localhost");
     const char *target = pcmk__node_attr_target(node);
 
     if (target != NULL) {
         node = target;
     }
+
+    crm_debug("Asking %s to purge transient attributes%s for %s",
+              pcmk_ipc_name(api, true),
+              (reap? " and node cache entries" : ""),
+              pcmk__s(node, "local node"));
 
     request = create_attrd_op(NULL);
 
@@ -270,10 +262,6 @@ pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node, bool reap)
     rc = connect_and_send_attrd_request(api, request);
 
     free_xml(request);
-
-    crm_debug("Asked pacemaker-attrd to purge %s: %s (%d)",
-              display_host, pcmk_rc_str(rc), rc);
-
     return rc;
 }
 
@@ -299,6 +287,10 @@ pcmk__attrd_api_query(pcmk_ipc_api_t *api, const char *node, const char *name,
         }
     }
 
+    crm_debug("Querying %s for value of '%s'%s%s",
+              pcmk_ipc_name(api, true), name,
+              ((node == NULL)? "" : " on "), pcmk__s(node, ""));
+
     request = create_attrd_op(NULL);
 
     crm_xml_add(request, PCMK__XA_ATTR_NAME, name);
@@ -307,15 +299,6 @@ pcmk__attrd_api_query(pcmk_ipc_api_t *api, const char *node, const char *name,
 
     rc = connect_and_send_attrd_request(api, request);
     free_xml(request);
-
-    if (node) {
-        crm_debug("Queried pacemaker-attrd for %s on %s: %s (%d)",
-                  name, node, pcmk_rc_str(rc), rc);
-    } else {
-        crm_debug("Queried pacemaker-attrd for %s: %s (%d)",
-                  name, pcmk_rc_str(rc), rc);
-    }
-
     return rc;
 }
 
@@ -324,12 +307,14 @@ pcmk__attrd_api_refresh(pcmk_ipc_api_t *api, const char *node)
 {
     int rc = pcmk_rc_ok;
     xmlNode *request = NULL;
-    const char *display_host = (node ? node : "localhost");
     const char *target = pcmk__node_attr_target(node);
 
     if (target != NULL) {
         node = target;
     }
+
+    crm_debug("Asking %s to write all transient attributes for %s to CIB",
+              pcmk_ipc_name(api, true), pcmk__s(node, "local node"));
 
     request = create_attrd_op(NULL);
 
@@ -339,10 +324,6 @@ pcmk__attrd_api_refresh(pcmk_ipc_api_t *api, const char *node)
     rc = connect_and_send_attrd_request(api, request);
 
     free_xml(request);
-
-    crm_debug("Asked pacemaker-attrd to refresh %s: %s (%d)",
-              display_host, pcmk_rc_str(rc), rc);
-
     return rc;
 }
 
@@ -399,7 +380,6 @@ pcmk__attrd_api_update(pcmk_ipc_api_t *api, const char *node, const char *name,
 {
     int rc = pcmk_rc_ok;
     xmlNode *request = NULL;
-    const char *display_host = (node ? node : "localhost");
     const char *target = NULL;
 
     if (name == NULL) {
@@ -412,16 +392,16 @@ pcmk__attrd_api_update(pcmk_ipc_api_t *api, const char *node, const char *name,
         node = target;
     }
 
+    crm_debug("Asking %s to update '%s' to '%s' for %s",
+              pcmk_ipc_name(api, true), name, pcmk__s(value, "(null)"),
+              pcmk__s(node, "local node"));
+
     request = create_attrd_op(user_name);
     populate_update_op(request, node, name, value, dampen, set, options);
 
     rc = connect_and_send_attrd_request(api, request);
 
     free_xml(request);
-
-    crm_debug("Asked pacemaker-attrd to update %s on %s: %s (%d)",
-              name, display_host, pcmk_rc_str(rc), rc);
-
     return rc;
 }
 
