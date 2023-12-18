@@ -237,35 +237,19 @@ should_purge_attributes(crm_node_t *node)
     return purge;
 }
 
-static enum controld_section_e
-section_to_delete(bool purge)
-{
-    if (pcmk_is_set(controld_globals.flags, controld_shutdown_lock_enabled)) {
-        if (purge) {
-            return controld_section_all_unlocked;
-        } else {
-            return controld_section_lrm_unlocked;
-        }
-    } else {
-        if (purge) {
-            return controld_section_all;
-        } else {
-            return controld_section_lrm;
-        }
-    }
-}
-
 static void
 purge_remote_node_attrs(int call_opt, crm_node_t *node)
 {
-    bool purge = should_purge_attributes(node);
-    enum controld_section_e section = section_to_delete(purge);
+    enum controld_section_e section = controld_section_lrm;
 
-    /* Purge node from attrd's memory */
-    if (purge) {
+    // Purge node's transient attributes (from attribute manager and CIB)
+    if (should_purge_attributes(node)) {
         update_attrd_remote_node_removed(node->uname, NULL);
     }
 
+    if (pcmk_is_set(controld_globals.flags, controld_shutdown_lock_enabled)) {
+        section = controld_section_lrm_unlocked;
+    }
     controld_delete_node_state(node->uname, section, call_opt);
 }
 
@@ -365,18 +349,15 @@ remote_node_down(const char *node_name, const enum down_opts opts)
     int call_opt = crmd_cib_smart_opt();
     crm_node_t *node;
 
-    /* Purge node from attrd's memory */
+    // Purge node's transient attributes (from attribute manager and CIB)
     update_attrd_remote_node_removed(node_name, NULL);
 
-    /* Normally, only node attributes should be erased, and the resource history
-     * should be kept until the node comes back up. However, after a successful
-     * fence, we want to clear the history as well, so we don't think resources
-     * are still running on the node.
+    /* Normally, the resource history should be kept until the node comes back
+     * up. However, after a successful fence, clear the history so we don't
+     * think resources are still running on the node.
      */
     if (opts == DOWN_ERASE_LRM) {
-        controld_delete_node_state(node_name, controld_section_all, call_opt);
-    } else {
-        controld_delete_node_state(node_name, controld_section_attrs, call_opt);
+        controld_delete_node_state(node_name, controld_section_lrm, call_opt);
     }
 
     /* Ensure node is in the remote peer cache with lost state */
