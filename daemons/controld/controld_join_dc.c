@@ -772,7 +772,8 @@ do_dc_join_ack(long long action,
     pcmk__node_status_t *peer = NULL;
     enum controld_join_phase phase = controld_join_none;
 
-    enum controld_section_e section = controld_section_lrm;
+    const bool unlocked_only = pcmk__is_set(controld_globals.flags,
+                                            controld_shutdown_lock_enabled);
     char *xpath = NULL;
     xmlNode *state = NULL;
     xmlNode *execd_state = NULL;
@@ -841,10 +842,8 @@ do_dc_join_ack(long long action,
     }
 
     // Delete relevant parts of node's current executor state from CIB
-    if (pcmk__is_set(controld_globals.flags, controld_shutdown_lock_enabled)) {
-        section = controld_section_lrm_unlocked;
-    }
-    controld_node_state_deletion_strings(join_from, section, &xpath, NULL);
+    controld_node_state_deletion_strings(join_from, unlocked_only, &xpath,
+                                         NULL);
 
     rc = cib->cmds->remove(cib, xpath, NULL,
                            cib_xpath|cib_multiple|cib_transaction);
