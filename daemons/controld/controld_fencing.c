@@ -269,8 +269,13 @@ send_stonith_update(pcmk__graph_action_t *action, const char *target,
      *                                             cib_scope_local);
      */
 
-    controld_delete_node_state(peer->uname, controld_section_all,
+    // Delete node's resource history from CIB
+    controld_delete_node_state(peer->uname, controld_section_lrm,
                                cib_scope_local);
+
+    // Ask attribute manager to delete node's transient attributes
+    controld_purge_node_attrs(peer->uname, false);
+
     free_xml(node_state);
     return;
 }
