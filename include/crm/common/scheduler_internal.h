@@ -62,6 +62,80 @@ enum pcmk__check_parameters {
 // Group of enum pcmk__sched_warnings flags for warnings we want to log once
 extern uint32_t pcmk__warnings;
 
+/*!
+ * \internal
+ * \brief Log a resource-tagged message at info severity
+ *
+ * \param[in] rsc       Tag message with this resource's ID
+ * \param[in] fmt...    printf(3)-style format and arguments
+ */
+#define pcmk__rsc_info(rsc, fmt, args...)   \
+    crm_log_tag(LOG_INFO, ((rsc) == NULL)? "<NULL>" : (rsc)->id, (fmt), ##args)
+
+/*!
+ * \internal
+ * \brief Log a resource-tagged message at debug severity
+ *
+ * \param[in] rsc       Tag message with this resource's ID
+ * \param[in] fmt...    printf(3)-style format and arguments
+ */
+#define pcmk__rsc_debug(rsc, fmt, args...)  \
+    crm_log_tag(LOG_DEBUG, ((rsc) == NULL)? "<NULL>" : (rsc)->id, (fmt), ##args)
+
+/*!
+ * \internal
+ * \brief Log a resource-tagged message at trace severity
+ *
+ * \param[in] rsc       Tag message with this resource's ID
+ * \param[in] fmt...    printf(3)-style format and arguments
+ */
+#define pcmk__rsc_trace(rsc, fmt, args...)  \
+    crm_log_tag(LOG_TRACE, ((rsc) == NULL)? "<NULL>" : (rsc)->id, (fmt), ##args)
+
+/*!
+ * \internal
+ * \brief Log an error and remember that current scheduler input has errors
+ *
+ * \param[in] fmt...  printf(3)-style format and arguments
+ */
+#define pcmk__sched_err(fmt...) do {    \
+        was_processing_error = TRUE;    \
+        crm_err(fmt);                   \
+    } while (0)
+
+/*!
+ * \internal
+ * \brief Log a warning and remember that current scheduler input has warnings
+ *
+ * \param[in] fmt...  printf(3)-style format and arguments
+ */
+#define pcmk__sched_warn(fmt...) do {   \
+        was_processing_warning = TRUE;  \
+        crm_warn(fmt);                  \
+    } while (0)
+
+/*!
+ * \internal
+ * \brief Log a warning once per scheduler run
+ *
+ * \param[in] wo_flag  enum pcmk__sched_warnings value for this warning
+ * \param[in] fmt...   printf(3)-style format and arguments
+ */
+#define pcmk__warn_once(wo_flag, fmt...) do {                           \
+        if (!pcmk_is_set(pcmk__warnings, wo_flag)) {                    \
+            if (wo_flag == pcmk__wo_blind) {                            \
+                crm_warn(fmt);                                          \
+            } else {                                                    \
+                pcmk__config_warn(fmt);                                 \
+            }                                                           \
+            pcmk__warnings = pcmk__set_flags_as(__func__, __LINE__,     \
+                                                LOG_TRACE,              \
+                                                "Warn-once", "logging", \
+                                                pcmk__warnings,         \
+                                                (wo_flag), #wo_flag);   \
+        }                                                               \
+    } while (0)
+
 #ifdef __cplusplus
 }
 #endif

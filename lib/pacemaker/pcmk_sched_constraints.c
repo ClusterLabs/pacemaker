@@ -98,7 +98,7 @@ pcmk__unpack_constraints(pcmk_scheduler_t *scheduler)
             pcmk__unpack_rsc_ticket(xml_obj, scheduler);
 
         } else {
-            pe_err("Unsupported constraint type: %s", tag);
+            pcmk__config_err("Unsupported constraint type: %s", tag);
         }
     }
 }
@@ -148,7 +148,7 @@ find_constraint_tag(const pcmk_scheduler_t *scheduler, const char *id,
     if (g_hash_table_lookup_extended(scheduler->template_rsc_sets, id,
                                      NULL, (gpointer *) tag)) {
         if (*tag == NULL) {
-            crm_warn("No resource is derived from template '%s'", id);
+            crm_notice("No resource is derived from template '%s'", id);
             return false;
         }
         return true;
@@ -158,13 +158,13 @@ find_constraint_tag(const pcmk_scheduler_t *scheduler, const char *id,
     if (g_hash_table_lookup_extended(scheduler->tags, id,
                                      NULL, (gpointer *) tag)) {
         if (*tag == NULL) {
-            crm_warn("No resource is tagged with '%s'", id);
+            crm_notice("No resource is tagged with '%s'", id);
             return false;
         }
         return true;
     }
 
-    crm_warn("No template or tag named '%s'", id);
+    pcmk__config_warn("No resource, template, or tag named '%s'", id);
     return false;
 }
 

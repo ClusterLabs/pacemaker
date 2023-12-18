@@ -87,8 +87,8 @@ order_start_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
                      * The most likely explanation is that the DC died and took
                      * its status with it.
                      */
-                    pe_rsc_debug(rsc, "Ordering %s after %s recovery",
-                                 action->uuid, pe__node_name(target));
+                    pcmk__rsc_debug(rsc, "Ordering %s after %s recovery",
+                                    action->uuid, pe__node_name(target));
                     order_actions(stonith_op, action,
                                   pcmk__ar_ordered
                                   |pcmk__ar_unrunnable_first_blocks);
@@ -217,13 +217,13 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
             || pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
 
             if (pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
-                pe_rsc_info(rsc,
-                            "Demote of failed resource %s is implicit "
-                            "after %s is fenced",
-                            rsc->id, pe__node_name(target));
+                pcmk__rsc_info(rsc,
+                               "Demote of failed resource %s is implicit "
+                               "after %s is fenced",
+                               rsc->id, pe__node_name(target));
             } else {
-                pe_rsc_info(rsc, "%s is implicit after %s is fenced",
-                            action->uuid, pe__node_name(target));
+                pcmk__rsc_info(rsc, "%s is implicit after %s is fenced",
+                               action->uuid, pe__node_name(target));
             }
 
             /* The demote would never complete and is now implied by the
@@ -263,9 +263,9 @@ rsc_stonith_ordering(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
         }
 
     } else if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
-        pe_rsc_trace(rsc,
-                     "Skipping fencing constraints for unmanaged resource: %s",
-                     rsc->id);
+        pcmk__rsc_trace(rsc,
+                        "Skipping fencing constraints for unmanaged resource: "
+                        "%s", rsc->id);
 
     } else {
         order_start_vs_fencing(rsc, stonith_op);

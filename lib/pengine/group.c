@@ -89,10 +89,10 @@ set_group_flag(pcmk_resource_t *group, const char *option, uint32_t flag,
         ((group_variant_data_t *) group->variant_opaque)->flags |= flag;
 
     } else {
-        pe_warn_once(wo_bit,
-                     "Support for the '%s' group meta-attribute is deprecated "
-                     "and will be removed in a future release "
-                     "(use a resource set instead)", option);
+        pcmk__warn_once(wo_bit,
+                        "Support for the '%s' group meta-attribute is "
+                        "deprecated and will be removed in a future release "
+                        "(use a resource set instead)", option);
     }
 }
 
@@ -184,7 +184,7 @@ group_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     group_variant_data_t *group_data = NULL;
     const char *clone_id = NULL;
 
-    pe_rsc_trace(rsc, "Processing resource %s...", rsc->id);
+    pcmk__rsc_trace(rsc, "Processing resource %s...", rsc->id);
 
     group_data = calloc(1, sizeof(group_variant_data_t));
     group_data->last_child = NULL;
@@ -213,7 +213,7 @@ group_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
             rsc->children = g_list_append(rsc->children, new_rsc);
             group_data->last_child = new_rsc;
-            pe_rsc_trace(rsc, "Added %s member %s", rsc->id, new_rsc->id);
+            pcmk__rsc_trace(rsc, "Added %s member %s", rsc->id, new_rsc->id);
         }
     }
 
@@ -457,17 +457,17 @@ group_free(pcmk_resource_t * rsc)
 {
     CRM_CHECK(rsc != NULL, return);
 
-    pe_rsc_trace(rsc, "Freeing %s", rsc->id);
+    pcmk__rsc_trace(rsc, "Freeing %s", rsc->id);
 
     for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
 
         CRM_ASSERT(child_rsc);
-        pe_rsc_trace(child_rsc, "Freeing child %s", child_rsc->id);
+        pcmk__rsc_trace(child_rsc, "Freeing child %s", child_rsc->id);
         child_rsc->fns->free(child_rsc);
     }
 
-    pe_rsc_trace(rsc, "Freeing child list");
+    pcmk__rsc_trace(rsc, "Freeing child list");
     g_list_free(rsc->children);
 
     common_free(rsc);
@@ -488,7 +488,7 @@ group_resource_state(const pcmk_resource_t * rsc, gboolean current)
         }
     }
 
-    pe_rsc_trace(rsc, "%s role: %s", rsc->id, role2text(group_role));
+    pcmk__rsc_trace(rsc, "%s role: %s", rsc->id, role2text(group_role));
     return group_role;
 }
 

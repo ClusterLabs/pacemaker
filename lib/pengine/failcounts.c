@@ -302,9 +302,10 @@ update_failcount_for_attr(gpointer key, gpointer value, gpointer user_data)
     if (regexec(&(fc_data->failcount_re), (const char *) key, 0, NULL, 0) == 0) {
         fc_data->failcount = pcmk__add_scores(fc_data->failcount,
                                               char2score(value));
-        pe_rsc_trace(fc_data->rsc, "Added %s (%s) to %s fail count (now %s)",
-                     (const char *) key, (const char *) value, fc_data->rsc->id,
-                     pcmk_readable_score(fc_data->failcount));
+        pcmk__rsc_trace(fc_data->rsc, "Added %s (%s) to %s fail count (now %s)",
+                        (const char *) key, (const char *) value,
+                        fc_data->rsc->id,
+                        pcmk_readable_score(fc_data->failcount));
         return;
     }
 
@@ -382,9 +383,9 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
     if ((fc_data.failcount > 0) && (rsc->failure_timeout > 0)
         && block_failure(node, rsc, xml_op)) {
 
-        pe_warn("Ignoring failure timeout %d for %s "
-                "because it conflicts with on-fail=block",
-                rsc->failure_timeout, rsc->id);
+        pcmk__config_warn("Ignoring failure timeout %d for %s "
+                          "because it conflicts with on-fail=block",
+                          rsc->failure_timeout, rsc->id);
         rsc->failure_timeout = 0;
     }
 
@@ -395,8 +396,8 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
         time_t now = get_effective_time(rsc->cluster);
 
         if (now > (fc_data.last_failure + rsc->failure_timeout)) {
-            pe_rsc_debug(rsc, "Failcount for %s on %s expired after %ds",
-                         rsc->id, pe__node_name(node), rsc->failure_timeout);
+            pcmk__rsc_debug(rsc, "Failcount for %s on %s expired after %ds",
+                            rsc->id, pe__node_name(node), rsc->failure_timeout);
             fc_data.failcount = 0;
         }
     }
@@ -416,17 +417,18 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
 
         g_list_foreach(rsc->fillers, update_failcount_for_filler, &fc_data);
         if (fc_data.failcount > 0) {
-            pe_rsc_info(rsc,
-                        "Container %s and the resources within it "
-                        "have failed %s time%s on %s",
-                        rsc->id, pcmk_readable_score(fc_data.failcount),
-                        pcmk__plural_s(fc_data.failcount), pe__node_name(node));
+            pcmk__rsc_info(rsc,
+                           "Container %s and the resources within it "
+                           "have failed %s time%s on %s",
+                           rsc->id, pcmk_readable_score(fc_data.failcount),
+                           pcmk__plural_s(fc_data.failcount),
+                           pe__node_name(node));
         }
 
     } else if (fc_data.failcount > 0) {
-        pe_rsc_info(rsc, "%s has failed %s time%s on %s",
-                    rsc->id, pcmk_readable_score(fc_data.failcount),
-                    pcmk__plural_s(fc_data.failcount), pe__node_name(node));
+        pcmk__rsc_info(rsc, "%s has failed %s time%s on %s",
+                       rsc->id, pcmk_readable_score(fc_data.failcount),
+                       pcmk__plural_s(fc_data.failcount), pe__node_name(node));
     }
 
     if (last_failure != NULL) {

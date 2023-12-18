@@ -1097,9 +1097,9 @@ rsc_action_default(pcmk__output_t *out, va_list args)
         || (current == NULL && next == NULL)) {
         const bool managed = pcmk_is_set(rsc->flags, pcmk_rsc_managed);
 
-        pe_rsc_info(rsc, "Leave   %s\t(%s%s)",
-                    rsc->id, role2text(rsc->role),
-                    (managed? "" : " unmanaged"));
+        pcmk__rsc_info(rsc, "Leave   %s\t(%s%s)",
+                       rsc->id, role2text(rsc->role),
+                       (managed? "" : " unmanaged"));
         return rc;
     }
 
@@ -1180,8 +1180,8 @@ rsc_action_default(pcmk__output_t *out, va_list args)
                 rc = out->message(out, "rsc-action-item", "Re-promote", rsc,
                                   current, next, promote, demote);
             } else {
-                pe_rsc_info(rsc, "Leave   %s\t(%s %s)", rsc->id,
-                            role2text(rsc->role), pe__node_name(next));
+                pcmk__rsc_info(rsc, "Leave   %s\t(%s %s)", rsc->id,
+                               role2text(rsc->role), pe__node_name(next));
             }
 
         } else if (!pcmk_is_set(start->flags, pcmk_action_runnable)) {

@@ -350,10 +350,10 @@ resource_node_score(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
         g_hash_table_insert(rsc->allowed_nodes, (gpointer) match->details->id, match);
     }
     match->weight = pcmk__add_scores(match->weight, score);
-    pe_rsc_trace(rsc,
-                 "Enabling %s preference (%s) for %s on %s (now %s)",
-                 tag, pcmk_readable_score(score), rsc->id, pe__node_name(node),
-                 pcmk_readable_score(match->weight));
+    pcmk__rsc_trace(rsc,
+                    "Enabling %s preference (%s) for %s on %s (now %s)",
+                    tag, pcmk_readable_score(score), rsc->id,
+                    pe__node_name(node), pcmk_readable_score(match->weight));
 }
 
 void
@@ -524,7 +524,7 @@ ticket_new(const char *ticket_id, pcmk_scheduler_t *scheduler)
 
         ticket = calloc(1, sizeof(pcmk_ticket_t));
         if (ticket == NULL) {
-            crm_err("Cannot allocate ticket '%s'", ticket_id);
+            pcmk__sched_err("Cannot allocate ticket '%s'", ticket_id);
             return NULL;
         }
 
@@ -626,6 +626,7 @@ add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref)
     if (tag == NULL) {
         tag = calloc(1, sizeof(pcmk_tag_t));
         if (tag == NULL) {
+            pcmk__sched_err("Could not allocate memory for tag %s", tag_name);
             return FALSE;
         }
         tag->id = strdup(tag_name);
@@ -729,6 +730,7 @@ pe__resource_is_disabled(const pcmk_resource_t *rsc)
     CRM_CHECK(rsc != NULL, return false);
     target_role = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
     if (target_role) {
+        // If invalid, we've already logged an error when unpacking
         enum rsc_role_e target_role_e = text2role(target_role);
 
         if ((target_role_e == pcmk_role_stopped)

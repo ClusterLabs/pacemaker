@@ -332,16 +332,16 @@ new_notify_action(pcmk_resource_t *rsc, const pcmk_node_t *node,
         skip_reason = "original action not runnable";
     }
     if (skip_reason != NULL) {
-        pe_rsc_trace(rsc, "Skipping notify action for %s on %s: %s",
-                     rsc->id, pe__node_name(node), skip_reason);
+        pcmk__rsc_trace(rsc, "Skipping notify action for %s on %s: %s",
+                        rsc->id, pe__node_name(node), skip_reason);
         return NULL;
     }
 
     value = g_hash_table_lookup(op->meta, "notify_type");     // "pre" or "post"
     task = g_hash_table_lookup(op->meta, "notify_operation"); // original action
 
-    pe_rsc_trace(rsc, "Creating notify action for %s on %s (%s-%s)",
-                 rsc->id, pe__node_name(node), value, task);
+    pcmk__rsc_trace(rsc, "Creating notify action for %s on %s (%s-%s)",
+                    rsc->id, pe__node_name(node), value, task);
 
     // Create the notify action
     key = pcmk__notify_key(rsc->id, value, task);
@@ -595,9 +595,9 @@ collect_resource_data(const pcmk_resource_t *rsc, bool activity,
             break;
 
         default:
-            crm_err("Resource %s role on %s (%s) is not supported for "
-                    "notifications (bug?)",
-                    rsc->id, pe__node_name(node), role2text(rsc->role));
+            pcmk__sched_err("Resource %s role on %s (%s) is not supported for "
+                            "notifications (bug?)",
+                            rsc->id, pe__node_name(node), role2text(rsc->role));
             free(entry);
             break;
     }
@@ -840,24 +840,24 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
     switch (task) {
         case pcmk_action_start:
             if (n_data->start == NULL) {
-                pe_rsc_trace(rsc, "No notify action needed for %s %s",
-                             rsc->id, n_data->action);
+                pcmk__rsc_trace(rsc, "No notify action needed for %s %s",
+                                rsc->id, n_data->action);
                 return;
             }
             break;
 
         case pcmk_action_promote:
             if (n_data->promote == NULL) {
-                pe_rsc_trace(rsc, "No notify action needed for %s %s",
-                             rsc->id, n_data->action);
+                pcmk__rsc_trace(rsc, "No notify action needed for %s %s",
+                                rsc->id, n_data->action);
                 return;
             }
             break;
 
         case pcmk_action_demote:
             if (n_data->demote == NULL) {
-                pe_rsc_trace(rsc, "No notify action needed for %s %s",
-                             rsc->id, n_data->action);
+                pcmk__rsc_trace(rsc, "No notify action needed for %s %s",
+                                rsc->id, n_data->action);
                 return;
             }
             break;
@@ -867,8 +867,8 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
             break;
     }
 
-    pe_rsc_trace(rsc, "Creating notify actions for %s %s",
-                 rsc->id, n_data->action);
+    pcmk__rsc_trace(rsc, "Creating notify actions for %s %s",
+                    rsc->id, n_data->action);
 
     // Create notify actions for stop or demote
     if ((rsc->role != pcmk_role_stopped)
@@ -918,8 +918,8 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
             }
         }
         if (rsc->allocated_to == NULL) {
-            pe_proc_err("Next role '%s' but %s is not allocated",
-                        role2text(rsc->next_role), rsc->id);
+            pcmk__sched_err("Next role '%s' but %s is not allocated",
+                            role2text(rsc->next_role), rsc->id);
             return;
         }
         if ((task != pcmk_action_start) || (start == NULL)

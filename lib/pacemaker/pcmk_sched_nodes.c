@@ -401,8 +401,8 @@ pcmk__apply_node_health(pcmk_scheduler_t *scheduler)
             if (constrain) {
                 pcmk__new_location(strategy_str, rsc, health, NULL, node);
             } else {
-                pe_rsc_trace(rsc, "%s is immune from health ban on %s",
-                             rsc->id, pe__node_name(node));
+                pcmk__rsc_trace(rsc, "%s is immune from health ban on %s",
+                                rsc->id, pe__node_name(node));
             }
         }
     }

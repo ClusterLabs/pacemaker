@@ -267,7 +267,7 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
     const char *id = NULL;
 
     if (xml_obj == NULL) {
-        pe_err("No resource object for template unpacking");
+        pcmk__config_err("No resource object for template unpacking");
         return FALSE;
     }
 
@@ -278,26 +278,27 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     id = ID(xml_obj);
     if (id == NULL) {
-        pe_err("'%s' object must have a id", xml_obj->name);
+        pcmk__config_err("'%s' object must have a id", xml_obj->name);
         return FALSE;
     }
 
     if (pcmk__str_eq(template_ref, id, pcmk__str_none)) {
-        pe_err("The resource object '%s' should not reference itself", id);
+        pcmk__config_err("The resource object '%s' should not reference itself",
+                         id);
         return FALSE;
     }
 
     cib_resources = get_xpath_object("//" XML_CIB_TAG_RESOURCES,
                                      scheduler->input, LOG_TRACE);
     if (cib_resources == NULL) {
-        pe_err("No resources configured");
+        pcmk__config_err("No resources configured");
         return FALSE;
     }
 
     template = pcmk__xe_match(cib_resources, XML_CIB_TAG_RSC_TEMPLATE,
                               XML_ATTR_ID, template_ref);
     if (template == NULL) {
-        pe_err("No template named '%s'", template_ref);
+        pcmk__config_err("No template named '%s'", template_ref);
         return FALSE;
     }
 
@@ -375,7 +376,8 @@ add_template_rsc(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     const char *id = NULL;
 
     if (xml_obj == NULL) {
-        pe_err("No resource object for processing resource list of template");
+        pcmk__config_err("No resource object for processing resource list "
+                         "of template");
         return FALSE;
     }
 
@@ -386,12 +388,13 @@ add_template_rsc(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 
     id = ID(xml_obj);
     if (id == NULL) {
-        pe_err("'%s' object must have a id", xml_obj->name);
+        pcmk__config_err("'%s' object must have a id", xml_obj->name);
         return FALSE;
     }
 
     if (pcmk__str_eq(template_ref, id, pcmk__str_none)) {
-        pe_err("The resource object '%s' should not reference itself", id);
+        pcmk__config_err("The resource object '%s' should not reference itself",
+                         id);
         return FALSE;
     }
 
@@ -414,7 +417,7 @@ detect_promotable(pcmk_resource_t *rsc)
 
     // @COMPAT deprecated since 2.0.0
     if (pcmk__xe_is(rsc->xml, PCMK_XE_PROMOTABLE_LEGACY)) {
-        /* @TODO in some future version, pe_warn_once() here,
+        /* @TODO in some future version, pcmk__warn_once() here,
          *       then drop support in even later version
          */
         g_hash_table_insert(rsc->meta, strdup(XML_RSC_ATTR_PROMOTABLE),
@@ -557,8 +560,8 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
         return;
     }
 
-    pe_rsc_trace(rsc, "\tRequired to start: %s%s", value,
-                 (is_default? " (default)" : ""));
+    pcmk__rsc_trace(rsc, "\tRequired to start: %s%s", value,
+                    (is_default? " (default)" : ""));
 }
 
 #ifndef PCMK__COMPAT_2_0
@@ -568,16 +571,16 @@ warn_about_deprecated_classes(pcmk_resource_t *rsc)
     const char *std = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
     if (pcmk__str_eq(std, PCMK_RESOURCE_CLASS_UPSTART, pcmk__str_none)) {
-        pe_warn_once(pcmk__wo_upstart,
-                     "Support for Upstart resources (such as %s) is deprecated "
-                     "and will be removed in a future release of Pacemaker",
-                     rsc->id);
+        pcmk__warn_once(pcmk__wo_upstart,
+                        "Support for Upstart resources (such as %s) is "
+                        "deprecated and will be removed in a future release",
+                        rsc->id);
 
     } else if (pcmk__str_eq(std, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_none)) {
-        pe_warn_once(pcmk__wo_nagios,
-                     "Support for Nagios resources (such as %s) is deprecated "
-                     "and will be removed in a future release of Pacemaker",
-                     rsc->id);
+        pcmk__warn_once(pcmk__wo_nagios,
+                        "Support for Nagios resources (such as %s) is "
+                        "deprecated and will be removed in a future release",
+                        rsc->id);
     }
 }
 #endif
@@ -630,8 +633,8 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     id = crm_element_value(xml_obj, XML_ATTR_ID);
     if (id == NULL) {
-        pe_err("Ignoring <%s> configuration without " XML_ATTR_ID,
-               xml_obj->name);
+        pcmk__config_err("Ignoring <%s> configuration without " XML_ATTR_ID,
+                         xml_obj->name);
         return pcmk_rc_unpack_error;
     }
 
@@ -641,7 +644,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     *rsc = calloc(1, sizeof(pcmk_resource_t));
     if (*rsc == NULL) {
-        crm_crit("Unable to allocate memory for resource '%s'", id);
+        pcmk__sched_err("Unable to allocate memory for resource '%s'", id);
         return ENOMEM;
     }
     (*rsc)->cluster = scheduler;
@@ -665,8 +668,8 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     (*rsc)->variant = get_resource_type((const char *) (*rsc)->xml->name);
     if ((*rsc)->variant == pcmk_rsc_variant_unknown) {
-        pe_err("Ignoring resource '%s' of unknown type '%s'",
-               id, (*rsc)->xml->name);
+        pcmk__config_err("Ignoring resource '%s' of unknown type '%s'",
+                         id, (*rsc)->xml->name);
         common_free(*rsc);
         *rsc = NULL;
         return pcmk_rc_unpack_error;
@@ -782,43 +785,47 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_RESTART);
     if (pcmk__str_eq(value, "restart", pcmk__str_casei)) {
         (*rsc)->restart_type = pe_restart_restart;
-        pe_rsc_trace((*rsc), "%s dependency restart handling: restart",
-                     (*rsc)->id);
-        pe_warn_once(pcmk__wo_restart_type,
-                     "Support for restart-type is deprecated and will be removed in a future release");
+        pcmk__rsc_trace(*rsc, "%s dependency restart handling: restart",
+                        (*rsc)->id);
+        pcmk__warn_once(pcmk__wo_restart_type,
+                        "Support for restart-type is deprecated "
+                        "and will be removed in a future release");
 
     } else {
         (*rsc)->restart_type = pe_restart_ignore;
-        pe_rsc_trace((*rsc), "%s dependency restart handling: ignore",
-                     (*rsc)->id);
+        pcmk__rsc_trace(*rsc, "%s dependency restart handling: ignore",
+                        (*rsc)->id);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MULTIPLE);
     if (pcmk__str_eq(value, "stop_only", pcmk__str_casei)) {
         (*rsc)->recovery_type = pcmk_multiply_active_stop;
-        pe_rsc_trace((*rsc), "%s multiple running resource recovery: stop only",
-                     (*rsc)->id);
+        pcmk__rsc_trace(*rsc, "%s multiple running resource recovery: stop only",
+                        (*rsc)->id);
 
     } else if (pcmk__str_eq(value, "block", pcmk__str_casei)) {
         (*rsc)->recovery_type = pcmk_multiply_active_block;
-        pe_rsc_trace((*rsc), "%s multiple running resource recovery: block",
-                     (*rsc)->id);
+        pcmk__rsc_trace(*rsc, "%s multiple running resource recovery: block",
+                        (*rsc)->id);
 
     } else if (pcmk__str_eq(value, "stop_unexpected", pcmk__str_casei)) {
         (*rsc)->recovery_type = pcmk_multiply_active_unexpected;
-        pe_rsc_trace((*rsc), "%s multiple running resource recovery: "
-                             "stop unexpected instances",
-                     (*rsc)->id);
+        pcmk__rsc_trace(*rsc,
+                        "%s multiple running resource recovery: "
+                        "stop unexpected instances",
+                        (*rsc)->id);
 
     } else { // "stop_start"
         if (!pcmk__str_eq(value, "stop_start",
                           pcmk__str_casei|pcmk__str_null_matches)) {
-            pe_warn("%s is not a valid value for " XML_RSC_ATTR_MULTIPLE
-                    ", using default of \"stop_start\"", value);
+            pcmk__config_warn("%s is not a valid value for "
+                              XML_RSC_ATTR_MULTIPLE
+                              ", using default of \"stop_start\"", value);
         }
         (*rsc)->recovery_type = pcmk_multiply_active_restart;
-        pe_rsc_trace((*rsc), "%s multiple running resource recovery: "
-                             "stop/start", (*rsc)->id);
+        pcmk__rsc_trace(*rsc,
+                        "%s multiple running resource recovery: stop/start",
+                        (*rsc)->id);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_STICKINESS);
@@ -834,9 +841,9 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
              * should probably use the default (INFINITY) or 0 (to disable)
              * instead.
              */
-            pe_warn_once(pcmk__wo_neg_threshold,
-                         PCMK_META_MIGRATION_THRESHOLD
-                         " must be non-negative, using 1 instead");
+            pcmk__warn_once(pcmk__wo_neg_threshold,
+                            PCMK_META_MIGRATION_THRESHOLD
+                            " must be non-negative, using 1 instead");
             (*rsc)->migration_threshold = 1;
         }
     }
@@ -877,8 +884,8 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     }
 
     get_target_role(*rsc, &((*rsc)->next_role));
-    pe_rsc_trace((*rsc), "%s desired next state: %s", (*rsc)->id,
-                 (*rsc)->next_role != pcmk_role_unknown? role2text((*rsc)->next_role) : "default");
+    pcmk__rsc_trace(*rsc, "%s desired next state: %s", (*rsc)->id,
+                    (*rsc)->next_role != pcmk_role_unknown? role2text((*rsc)->next_role) : "default");
 
     if ((*rsc)->fns->unpack(*rsc, scheduler) == FALSE) {
         (*rsc)->fns->free(*rsc);
@@ -897,8 +904,8 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                           scheduler);
     }
 
-    pe_rsc_trace((*rsc), "%s action notification: %s", (*rsc)->id,
-                 pcmk_is_set((*rsc)->flags, pcmk_rsc_notify)? "required" : "not required");
+    pcmk__rsc_trace(*rsc, "%s action notification: %s", (*rsc)->id,
+                    pcmk_is_set((*rsc)->flags, pcmk_rsc_notify)? "required" : "not required");
 
     (*rsc)->utilization = pcmk__strkey_table(free, free);
 
@@ -983,7 +990,7 @@ common_free(pcmk_resource_t * rsc)
         return;
     }
 
-    pe_rsc_trace(rsc, "Freeing %s %d", rsc->id, rsc->variant);
+    pcmk__rsc_trace(rsc, "Freeing %s %d", rsc->id, rsc->variant);
 
     g_list_free(rsc->rsc_cons);
     g_list_free(rsc->rsc_cons_lhs);
@@ -1031,7 +1038,7 @@ common_free(pcmk_resource_t * rsc)
     }
     g_list_free(rsc->fillers);
     g_list_free(rsc->rsc_location);
-    pe_rsc_trace(rsc, "Resource freed");
+    pcmk__rsc_trace(rsc, "Resource freed");
     free(rsc->id);
     free(rsc->clone_name);
     free(rsc->allocated_to);
@@ -1185,8 +1192,9 @@ pe__set_next_role(pcmk_resource_t *rsc, enum rsc_role_e role, const char *why)
 {
     CRM_ASSERT((rsc != NULL) && (why != NULL));
     if (rsc->next_role != role) {
-        pe_rsc_trace(rsc, "Resetting next role for %s from %s to %s (%s)",
-                     rsc->id, role2text(rsc->next_role), role2text(role), why);
+        pcmk__rsc_trace(rsc, "Resetting next role for %s from %s to %s (%s)",
+                        rsc->id, role2text(rsc->next_role), role2text(role),
+                        why);
         rsc->next_role = role;
     }
 }

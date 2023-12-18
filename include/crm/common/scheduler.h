@@ -232,6 +232,19 @@ struct pe_working_set_s {
     guint node_pending_timeout;     //!< Pending join times out after this (ms)
 };
 
+/* Whether the scheduler input currently being processed has warnings or errors
+ *
+ * @COMPAT When we can break API compatibility, we should make these
+ * internal-only. Ideally they would be converted to pcmk_scheduler_flags
+ * values, but everywhere they're needed doesn't currently have access to the
+ * scheduler data.
+ */
+//!@{
+//! \deprecated Do not use
+extern gboolean was_processing_error;
+extern gboolean was_processing_warning;
+//!@}
+
 #ifdef __cplusplus
 }
 #endif

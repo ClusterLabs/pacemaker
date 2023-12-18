@@ -374,12 +374,12 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
             xmlNode *ref_nvpair = expand_idref(an_attr, top);
 
             name = crm_element_value(an_attr, XML_NVPAIR_ATTR_NAME);
-            if (name == NULL) {
+            if ((name == NULL) && (ref_nvpair != NULL)) {
                 name = crm_element_value(ref_nvpair, XML_NVPAIR_ATTR_NAME);
             }
 
             value = crm_element_value(an_attr, XML_NVPAIR_ATTR_VALUE);
-            if (value == NULL) {
+            if ((value == NULL) && (ref_nvpair != NULL)) {
                 value = crm_element_value(ref_nvpair, XML_NVPAIR_ATTR_VALUE);
             }
 
@@ -465,8 +465,7 @@ make_pairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
             xmlNode *expanded_attr_set = expand_idref(attr_set, top);
 
             if (expanded_attr_set == NULL) {
-                // Schema (if not "none") prevents this
-                continue;
+                continue; // Not possible with schema validation enabled
             }
 
             pair = calloc(1, sizeof(sorted_set_t));
@@ -671,6 +670,10 @@ pe_eval_expr(xmlNode *rule, const pe_rule_eval_data_t *rule_data,
     const char *value = NULL;
 
     rule = expand_idref(rule, NULL);
+    if (rule == NULL) {
+        return FALSE; // Not possible with schema validation enabled
+    }
+
     value = crm_element_value(rule, XML_RULE_ATTR_BOOLEAN_OP);
     if (pcmk__str_eq(value, "or", pcmk__str_casei)) {
         do_and = FALSE;
@@ -695,7 +698,8 @@ pe_eval_expr(xmlNode *rule, const pe_rule_eval_data_t *rule_data,
     }
 
     if (empty) {
-        crm_err("Invalid Rule %s: rules must contain at least one expression", ID(rule));
+        pcmk__config_err("Ignoring rule %s because it contains no expressions",
+                         ID(rule));
     }
 
     crm_trace("Rule %s %s", ID(rule), passed ? "passed" : "failed");
@@ -987,12 +991,13 @@ pe__eval_attr_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
     value_source = crm_element_value(expr, XML_EXPR_ATTR_VALUE_SOURCE);
 
     if (attr == NULL) {
-        pe_err("Expression %s invalid: " XML_EXPR_ATTR_ATTRIBUTE
-               " not specified", pcmk__s(ID(expr), "without ID"));
+        pcmk__config_err("Expression %s invalid: " XML_EXPR_ATTR_ATTRIBUTE
+                         " not specified", pcmk__s(ID(expr), "without ID"));
         return FALSE;
     } else if (op == NULL) {
-        pe_err("Expression %s invalid: " XML_EXPR_ATTR_OPERATION
-               " not specified", pcmk__s(ID(expr), "without ID"));
+        pcmk__config_err("Expression %s invalid: " XML_EXPR_ATTR_OPERATION
+                         " not specified", pcmk__s(ID(expr), "without ID"));
+        return FALSE;
     }
 
     if (rule_data->match_data != NULL) {
@@ -1150,54 +1155,75 @@ pe__eval_op_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
 
 /*!
  * \internal
+ * \brief Check whether a resource role matches a rule role
+ *
+ * \param[in] expr       XML of rule expression
+ * \param[in] rule_data  Only the role member is used
+ *
+ * \return true if role matches, otherwise false
+ */
+static bool
+role_matches(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
+{
+    const char *value = crm_element_value(expr, XML_EXPR_ATTR_VALUE);
+    enum rsc_role_e role = text2role(value);
+
+    if (role == pcmk_role_unknown) {
+        pcmk__config_err("Invalid role %s in rule expression", value);
+        return false;
+    }
+    return role == rule_data->role;
+}
+
+/*!
+ * \internal
  * \brief Evaluate a node attribute expression based on #role
  *
  * \param[in] expr       XML of rule expression
  * \param[in] rule_data  Only the role member is used
  *
  * \return TRUE if rule_data->role satisfies the expression, FALSE otherwise
+ * \todo Drop this whole code. The #role attribute was never implemented
+ *       (rule_data->role is always pcmk_role_unknown), and it would be a poor
+ *       design anyway, since a unique promotable clone could have multiple
+ *       instances with different roles on a given node.
  */
 gboolean
 pe__eval_role_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
 {
-    gboolean accept = FALSE;
     const char *op = NULL;
-    const char *value = NULL;
 
+    // A known role must be given to compare against
     if (rule_data->role == pcmk_role_unknown) {
-        return accept;
+        return FALSE;
     }
 
-    value = crm_element_value(expr, XML_EXPR_ATTR_VALUE);
     op = crm_element_value(expr, XML_EXPR_ATTR_OPERATION);
 
     if (pcmk__str_eq(op, "defined", pcmk__str_casei)) {
         if (rule_data->role > pcmk_role_started) {
-            accept = TRUE;
+            return TRUE;
         }
 
     } else if (pcmk__str_eq(op, "not_defined", pcmk__str_casei)) {
         if ((rule_data->role > pcmk_role_unknown)
             && (rule_data->role < pcmk_role_unpromoted)) {
-            accept = TRUE;
+            return TRUE;
         }
 
     } else if (pcmk__str_eq(op, "eq", pcmk__str_casei)) {
-        if (text2role(value) == rule_data->role) {
-            accept = TRUE;
-        }
+        return role_matches(expr, rule_data)? TRUE : FALSE;
 
-    } else if (pcmk__str_eq(op, "ne", pcmk__str_casei)) {
-        // Test "ne" only with promotable clone roles
-        if ((rule_data->role > pcmk_role_unknown)
-            && (rule_data->role < pcmk_role_unpromoted)) {
-            accept = FALSE;
+    } else if (pcmk__str_eq(op, "ne", pcmk__str_casei)
+               // Test "ne" only with promotable clone roles
+               && (rule_data->role >= pcmk_role_unpromoted)) {
+        return role_matches(expr, rule_data)? FALSE : TRUE;
 
-        } else if (text2role(value) != rule_data->role) {
-            accept = TRUE;
-        }
+    } else {
+        pcmk__config_err("Operation '%s' is not valid with " CRM_ATTR_ROLE
+                         " comparisons", op);
     }
-    return accept;
+    return FALSE;
 }
 
 gboolean

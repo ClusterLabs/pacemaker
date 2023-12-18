@@ -2555,31 +2555,32 @@ crm_xml_cleanup(void)
 xmlNode *
 expand_idref(xmlNode * input, xmlNode * top)
 {
+    char *xpath = NULL;
     const char *ref = NULL;
-    xmlNode *result = input;
+    xmlNode *result = NULL;
 
-    if (result == NULL) {
+    if (input == NULL) {
         return NULL;
+    }
 
-    } else if (top == NULL) {
+    ref = crm_element_value(input, XML_ATTR_IDREF);
+    if (ref == NULL) {
+        return input;
+    }
+
+    if (top == NULL) {
         top = input;
     }
 
-    ref = crm_element_value(result, XML_ATTR_IDREF);
-    if (ref != NULL) {
-        char *xpath_string = crm_strdup_printf("//%s[@" XML_ATTR_ID "='%s']",
-                                               result->name, ref);
-
-        result = get_xpath_object(xpath_string, top, LOG_ERR);
-        if (result == NULL) {
-            char *nodePath = (char *)xmlGetNodePath(top);
-
-            crm_err("No match for %s found in %s: Invalid configuration",
-                    xpath_string, pcmk__s(nodePath, "unrecognizable path"));
-            free(nodePath);
-        }
-        free(xpath_string);
+    xpath = crm_strdup_printf("//%s[@" XML_ATTR_ID "='%s']", input->name, ref);
+    result = get_xpath_object(xpath, top, LOG_DEBUG);
+    if (result == NULL) { // Not possible with schema validation enabled
+        pcmk__config_err("Ignoring invalid %s configuration: "
+                         XML_ATTR_IDREF " '%s' does not reference "
+                         "a valid object " CRM_XS " xpath=%s",
+                         input->name, ref, xpath);
     }
+    free(xpath);
     return result;
 }
 

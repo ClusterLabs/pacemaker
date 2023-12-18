@@ -284,9 +284,9 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
     return true;
 
 no_probe:
-    pe_rsc_trace(rsc,
-                 "Skipping probe for %s on %s because %s",
-                 rsc->id, node->details->id, reason);
+    pcmk__rsc_trace(rsc,
+                    "Skipping probe for %s on %s because %s",
+                    rsc->id, node->details->id, reason);
     return false;
 }
 
@@ -773,7 +773,7 @@ order_then_probes(pcmk_scheduler_t *scheduler)
         }
 
         if (start == NULL) {
-            crm_err("No start action for %s", rsc->id);
+            crm_debug("No start action for %s", rsc->id);
             continue;
         }
 
@@ -821,15 +821,15 @@ order_then_probes(pcmk_scheduler_t *scheduler)
                 continue;
             }
 
-            crm_err("Applying %s before %s %d", first->uuid, start->uuid,
-                    pe__const_top_resource(first_rsc, false)->variant);
+            crm_debug("Applying %s before %s %d", first->uuid, start->uuid,
+                      pe__const_top_resource(first_rsc, false)->variant);
 
             for (GList *probe_iter = probes; probe_iter != NULL;
                  probe_iter = probe_iter->next) {
 
                 pcmk_action_t *probe = (pcmk_action_t *) probe_iter->data;
 
-                crm_err("Ordering %s before %s", first->uuid, probe->uuid);
+                crm_debug("Ordering %s before %s", first->uuid, probe->uuid);
                 order_actions(first, probe, pcmk__ar_ordered);
             }
         }

@@ -18,9 +18,6 @@
 #include <crm/common/scheduler_internal.h>
 #include <crm/pengine/internal.h>
 
-gboolean was_processing_error = FALSE;
-gboolean was_processing_warning = FALSE;
-
 static bool
 check_placement_strategy(const char *value)
 {
@@ -486,8 +483,10 @@ role2text(enum rsc_role_e role)
 enum rsc_role_e
 text2role(const char *role)
 {
-    CRM_ASSERT(role != NULL);
-    if (pcmk__str_eq(role, PCMK__ROLE_STOPPED, pcmk__str_casei)) {
+    if (pcmk__str_eq(role, PCMK__ROLE_UNKNOWN,
+                     pcmk__str_casei|pcmk__str_null_matches)) {
+        return pcmk_role_unknown;
+    } else if (pcmk__str_eq(role, PCMK__ROLE_STOPPED, pcmk__str_casei)) {
         return pcmk_role_stopped;
     } else if (pcmk__str_eq(role, PCMK__ROLE_STARTED, pcmk__str_casei)) {
         return pcmk_role_started;
@@ -497,11 +496,8 @@ text2role(const char *role)
     } else if (pcmk__strcase_any_of(role, PCMK__ROLE_PROMOTED,
                                     PCMK__ROLE_PROMOTED_LEGACY, NULL)) {
         return pcmk_role_promoted;
-    } else if (pcmk__str_eq(role, PCMK__ROLE_UNKNOWN, pcmk__str_casei)) {
-        return pcmk_role_unknown;
     }
-    crm_err("Unknown role: %s", role);
-    return pcmk_role_unknown;
+    return pcmk_role_unknown; // Invalid role given
 }
 
 void
@@ -604,16 +600,16 @@ pe__node_attribute_calculated(const pcmk_node_t *node, const char *name,
     if (host != NULL) {
         const char *value = g_hash_table_lookup(host->details->attrs, name);
 
-        pe_rsc_trace(rsc,
-                     "%s: Value lookup for %s on %s container host %s %s%s",
-                     rsc->id, name, node_type_s, pe__node_name(host),
-                     ((value != NULL)? "succeeded: " : "failed"),
-                     pcmk__s(value, ""));
+        pcmk__rsc_trace(rsc,
+                        "%s: Value lookup for %s on %s container host %s %s%s",
+                        rsc->id, name, node_type_s, pe__node_name(host),
+                        ((value != NULL)? "succeeded: " : "failed"),
+                        pcmk__s(value, ""));
         return value;
     }
-    pe_rsc_trace(rsc,
-                 "%s: Not looking for %s on %s container host: %s is %s",
-                 rsc->id, name, node_type_s, container->id, reason);
+    pcmk__rsc_trace(rsc,
+                    "%s: Not looking for %s on %s container host: %s is %s",
+                    rsc->id, name, node_type_s, container->id, reason);
     return NULL;
 }
 

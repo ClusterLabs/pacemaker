@@ -254,8 +254,8 @@ pcmk__colocated_resources(const pcmk_resource_t *rsc,
         return colocated_rscs;
     }
 
-    pe_rsc_trace(orig_rsc, "%s is in colocation chain with %s",
-                 rsc->id, orig_rsc->id);
+    pcmk__rsc_trace(orig_rsc, "%s is in colocation chain with %s",
+                    rsc->id, orig_rsc->id);
     colocated_rscs = g_list_prepend(colocated_rscs, (gpointer) rsc);
 
     // Follow colocations where this resource is the dependent resource
@@ -426,12 +426,12 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
             || (!pcmk__node_available(node, true, false)
                 && !pe__is_guest_node(node)))) {
 
-        pe_rsc_debug(rsc,
-                     "All nodes for resource %s are unavailable, unclean or "
-                     "shutting down (%s can%s run resources, with score %s)",
-                     rsc->id, pe__node_name(node),
-                     (pcmk__node_available(node, true, false)? "" : "not"),
-                     pcmk_readable_score(node->weight));
+        pcmk__rsc_debug(rsc,
+                        "All nodes for resource %s are unavailable, unclean or "
+                        "shutting down (%s can%s run resources, with score %s)",
+                        rsc->id, pe__node_name(node),
+                        (pcmk__node_available(node, true, false)? "" : "not"),
+                        pcmk_readable_score(node->weight));
 
         if (stop_if_fail) {
             pe__set_next_role(rsc, pcmk_role_stopped, "node availability");
@@ -450,7 +450,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
     if (node == NULL) {
         char *rc_stopped = NULL;
 
-        pe_rsc_debug(rsc, "Could not assign %s to a node", rsc->id);
+        pcmk__rsc_debug(rsc, "Could not assign %s to a node", rsc->id);
 
         if (!stop_if_fail) {
             return changed;
@@ -460,8 +460,8 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
         for (GList *iter = rsc->actions; iter != NULL; iter = iter->next) {
             pcmk_action_t *op = (pcmk_action_t *) iter->data;
 
-            pe_rsc_debug(rsc, "Updating %s for %s assignment failure",
-                         op->uuid, rsc->id);
+            pcmk__rsc_debug(rsc, "Updating %s for %s assignment failure",
+                            op->uuid, rsc->id);
 
             if (pcmk__str_eq(op->task, PCMK_ACTION_STOP, pcmk__str_none)) {
                 pe__clear_action_flags(op, pcmk_action_optional);
@@ -494,7 +494,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
         return changed;
     }
 
-    pe_rsc_debug(rsc, "Assigning %s to %s", rsc->id, pe__node_name(node));
+    pcmk__rsc_debug(rsc, "Assigning %s to %s", rsc->id, pe__node_name(node));
     rsc->allocated_to = pe__copy_node(node);
 
     add_assigned_resource(node, rsc);
@@ -600,11 +600,11 @@ pcmk__threshold_reached(pcmk_resource_t *rsc, const pcmk_node_t *node,
     remaining_tries = rsc->migration_threshold - fail_count;
 
     if (remaining_tries <= 0) {
-        crm_warn("%s cannot run on %s due to reaching migration threshold "
-                 "(clean up resource to allow again)"
-                 CRM_XS " failures=%d migration-threshold=%d",
-                 rsc_to_ban->id, pe__node_name(node), fail_count,
-                 rsc->migration_threshold);
+        pcmk__sched_warn("%s cannot run on %s due to reaching migration "
+                         "threshold (clean up resource to allow again)"
+                         CRM_XS " failures=%d migration-threshold=%d",
+                         rsc_to_ban->id, pe__node_name(node), fail_count,
+                         rsc->migration_threshold);
         if (failed != NULL) {
             *failed = rsc_to_ban;
         }

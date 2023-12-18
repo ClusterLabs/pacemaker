@@ -210,15 +210,15 @@ apply_stickiness(gpointer data, gpointer user_data)
     if (!pcmk_is_set(rsc->cluster->flags, pcmk_sched_symmetric_cluster)
         && (g_hash_table_lookup(rsc->allowed_nodes,
                                 node->details->id) == NULL)) {
-        pe_rsc_debug(rsc,
-                     "Ignoring %s stickiness because the cluster is "
-                     "asymmetric and %s is not explicitly allowed",
-                     rsc->id, pe__node_name(node));
+        pcmk__rsc_debug(rsc,
+                        "Ignoring %s stickiness because the cluster is "
+                        "asymmetric and %s is not explicitly allowed",
+                        rsc->id, pe__node_name(node));
         return;
     }
 
-    pe_rsc_debug(rsc, "Resource %s has %d stickiness on %s",
-                 rsc->id, rsc->stickiness, pe__node_name(node));
+    pcmk__rsc_debug(rsc, "Resource %s has %d stickiness on %s",
+                    rsc->id, rsc->stickiness, pe__node_name(node));
     resource_location(rsc, node, rsc->stickiness, "stickiness", rsc->cluster);
 }
 
@@ -321,8 +321,8 @@ assign_resources(pcmk_scheduler_t *scheduler)
             pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
             if (rsc->is_remote_node) {
-                pe_rsc_trace(rsc, "Assigning remote connection resource '%s'",
-                             rsc->id);
+                pcmk__rsc_trace(rsc, "Assigning remote connection resource '%s'",
+                                rsc->id);
                 rsc->cmds->assign(rsc, rsc->partial_migration_target, true);
             }
         }
@@ -333,8 +333,8 @@ assign_resources(pcmk_scheduler_t *scheduler)
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         if (!rsc->is_remote_node) {
-            pe_rsc_trace(rsc, "Assigning %s resource '%s'",
-                         rsc->xml->name, rsc->id);
+            pcmk__rsc_trace(rsc, "Assigning %s resource '%s'",
+                            rsc->xml->name, rsc->id);
             rsc->cmds->assign(rsc, NULL, true);
         }
     }
@@ -532,7 +532,7 @@ schedule_fencing(pcmk_node_t *node)
     pcmk_action_t *fencing = pe_fence_op(node, NULL, FALSE, "node is unclean",
                                        FALSE, node->details->data_set);
 
-    pe_warn("Scheduling node %s for fencing", pe__node_name(node));
+    pcmk__sched_warn("Scheduling node %s for fencing", pe__node_name(node));
     pcmk__order_vs_fence(fencing, node->details->data_set);
     return fencing;
 }
@@ -598,16 +598,16 @@ schedule_fencing_and_shutdowns(pcmk_scheduler_t *scheduler)
 
         if ((fencing == NULL) && node->details->unclean) {
             integrity_lost = true;
-            pe_warn("Node %s is unclean but cannot be fenced",
-                    pe__node_name(node));
+            pcmk__config_warn("Node %s is unclean but cannot be fenced",
+                              pe__node_name(node));
         }
     }
 
     if (integrity_lost) {
         if (!pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
-            pe_warn("Resource functionality and data integrity cannot be "
-                    "guaranteed (configure, enable, and test fencing to "
-                    "correct this)");
+            pcmk__config_warn("Resource functionality and data integrity "
+                              "cannot be guaranteed (configure, enable, "
+                              "and test fencing to correct this)");
 
         } else if (!pcmk_is_set(scheduler->flags, pcmk_sched_quorate)) {
             crm_notice("Unclean nodes will not be fenced until quorum is "

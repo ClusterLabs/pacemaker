@@ -147,9 +147,9 @@ action_uuid_for_ordering(const char *first_uuid,
         } else {
             uuid = pcmk__op_key(rid, task2text(remapped_task), 0);
         }
-        pe_rsc_trace(first_rsc,
-                     "Remapped action UUID %s to %s for ordering purposes",
-                     first_uuid, uuid);
+        pcmk__rsc_trace(first_rsc,
+                        "Remapped action UUID %s to %s for ordering purposes",
+                        first_uuid, uuid);
     }
 
 done:
@@ -265,10 +265,11 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                               pcmk__ar_first_implies_same_node_then);
         pe__set_order_flags(order->type, pcmk__ar_first_implies_then);
         node = first->node;
-        pe_rsc_trace(then->rsc,
-                     "%s then %s: mapped pcmk__ar_first_implies_same_node_then "
-                     "to pcmk__ar_first_implies_then on %s",
-                     first->uuid, then->uuid, pe__node_name(node));
+        pcmk__rsc_trace(then->rsc,
+                        "%s then %s: mapped "
+                        "pcmk__ar_first_implies_same_node_then to "
+                        "pcmk__ar_first_implies_then on %s",
+                        first->uuid, then->uuid, pe__node_name(node));
     }
 
     if (pcmk_is_set(order->type, pcmk__ar_first_implies_then)) {
@@ -282,10 +283,10 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
             pe__clear_action_flags(then, pcmk_action_optional);
             pcmk__set_updated_flags(changed, first, pcmk__updated_then);
         }
-        pe_rsc_trace(then->rsc,
-                     "%s then %s: %s after pcmk__ar_first_implies_then",
-                     first->uuid, then->uuid,
-                     (changed? "changed" : "unchanged"));
+        pcmk__rsc_trace(then->rsc,
+                        "%s then %s: %s after pcmk__ar_first_implies_then",
+                        first->uuid, then->uuid,
+                        (changed? "changed" : "unchanged"));
     }
 
     if (pcmk_is_set(order->type, pcmk__ar_intermediate_stop)
@@ -295,10 +296,10 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
 
         changed |= update(then->rsc, first, then, node, first_flags, restart,
                           pcmk__ar_intermediate_stop, scheduler);
-        pe_rsc_trace(then->rsc,
-                     "%s then %s: %s after pcmk__ar_intermediate_stop",
-                     first->uuid, then->uuid,
-                     (changed? "changed" : "unchanged"));
+        pcmk__rsc_trace(then->rsc,
+                        "%s then %s: %s after pcmk__ar_intermediate_stop",
+                        first->uuid, then->uuid,
+                        (changed? "changed" : "unchanged"));
     }
 
     if (pcmk_is_set(order->type, pcmk__ar_then_implies_first)) {
@@ -311,10 +312,10 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
             pe__clear_action_flags(first, pcmk_action_runnable);
             pcmk__set_updated_flags(changed, first, pcmk__updated_first);
         }
-        pe_rsc_trace(then->rsc,
-                     "%s then %s: %s after pcmk__ar_then_implies_first",
-                     first->uuid, then->uuid,
-                     (changed? "changed" : "unchanged"));
+        pcmk__rsc_trace(then->rsc,
+                        "%s then %s: %s after pcmk__ar_then_implies_first",
+                        first->uuid, then->uuid,
+                        (changed? "changed" : "unchanged"));
     }
 
     if (pcmk_is_set(order->type, pcmk__ar_promoted_then_implies_first)) {
@@ -324,10 +325,11 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                               pcmk_action_optional,
                               pcmk__ar_promoted_then_implies_first, scheduler);
         }
-        pe_rsc_trace(then->rsc,
-                     "%s then %s: %s after pcmk__ar_promoted_then_implies_first",
-                     first->uuid, then->uuid,
-                     (changed? "changed" : "unchanged"));
+        pcmk__rsc_trace(then->rsc,
+                        "%s then %s: %s after "
+                        "pcmk__ar_promoted_then_implies_first",
+                        first->uuid, then->uuid,
+                        (changed? "changed" : "unchanged"));
     }
 
     if (pcmk_is_set(order->type, pcmk__ar_min_runnable)) {
@@ -350,9 +352,9 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                 pcmk__set_updated_flags(changed, first, pcmk__updated_then);
             }
         }
-        pe_rsc_trace(then->rsc, "%s then %s: %s after pcmk__ar_min_runnable",
-                     first->uuid, then->uuid,
-                     (changed? "changed" : "unchanged"));
+        pcmk__rsc_trace(then->rsc, "%s then %s: %s after pcmk__ar_min_runnable",
+                        first->uuid, then->uuid,
+                        (changed? "changed" : "unchanged"));
     }
 
     if (pcmk_is_set(order->type, pcmk__ar_nested_remote_probe)
@@ -361,19 +363,19 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
         if (!pcmk_is_set(first_flags, pcmk_action_runnable)
             && (first->rsc != NULL) && (first->rsc->running_on != NULL)) {
 
-            pe_rsc_trace(then->rsc,
-                         "%s then %s: ignoring because first is stopping",
-                         first->uuid, then->uuid);
+            pcmk__rsc_trace(then->rsc,
+                            "%s then %s: ignoring because first is stopping",
+                            first->uuid, then->uuid);
             order->type = (enum pe_ordering) pcmk__ar_none;
         } else {
             changed |= update(then->rsc, first, then, node, first_flags,
                               pcmk_action_runnable,
                               pcmk__ar_unrunnable_first_blocks, scheduler);
         }
-        pe_rsc_trace(then->rsc,
-                     "%s then %s: %s after pcmk__ar_nested_remote_probe",
-                     first->uuid, then->uuid,
-                     (changed? "changed" : "unchanged"));
+        pcmk__rsc_trace(then->rsc,
+                        "%s then %s: %s after pcmk__ar_nested_remote_probe",
+                        first->uuid, then->uuid,
+                        (changed? "changed" : "unchanged"));
     }
 
     if (pcmk_is_set(order->type, pcmk__ar_unrunnable_first_blocks)) {
@@ -388,10 +390,10 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
             pe__clear_action_flags(then, pcmk_action_runnable);
             pcmk__set_updated_flags(changed, first, pcmk__updated_then);
         }
-        pe_rsc_trace(then->rsc,
-                     "%s then %s: %s after pcmk__ar_unrunnable_first_blocks",
-                     first->uuid, then->uuid,
-                     (changed? "changed" : "unchanged"));
+        pcmk__rsc_trace(then->rsc,
+                        "%s then %s: %s after pcmk__ar_unrunnable_first_blocks",
+                        first->uuid, then->uuid,
+                        (changed? "changed" : "unchanged"));
     }
 
     if (pcmk_is_set(order->type, pcmk__ar_unmigratable_then_blocks)) {
@@ -400,10 +402,11 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                               pcmk_action_optional,
                               pcmk__ar_unmigratable_then_blocks, scheduler);
         }
-        pe_rsc_trace(then->rsc, "%s then %s: %s after "
-                     "pcmk__ar_unmigratable_then_blocks",
-                     first->uuid, then->uuid,
-                     (changed? "changed" : "unchanged"));
+        pcmk__rsc_trace(then->rsc,
+                        "%s then %s: %s after "
+                        "pcmk__ar_unmigratable_then_blocks",
+                        first->uuid, then->uuid,
+                        (changed? "changed" : "unchanged"));
     }
 
     if (pcmk_is_set(order->type, pcmk__ar_first_else_then)) {
@@ -412,9 +415,10 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                               pcmk_action_optional, pcmk__ar_first_else_then,
                               scheduler);
         }
-        pe_rsc_trace(then->rsc, "%s then %s: %s after pcmk__ar_first_else_then",
-                     first->uuid, then->uuid,
-                     (changed? "changed" : "unchanged"));
+        pcmk__rsc_trace(then->rsc,
+                        "%s then %s: %s after pcmk__ar_first_else_then",
+                        first->uuid, then->uuid,
+                        (changed? "changed" : "unchanged"));
     }
 
     if (pcmk_is_set(order->type, pcmk__ar_ordered)) {
@@ -423,9 +427,9 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                               pcmk_action_runnable, pcmk__ar_ordered,
                               scheduler);
         }
-        pe_rsc_trace(then->rsc, "%s then %s: %s after pcmk__ar_ordered",
-                     first->uuid, then->uuid,
-                     (changed? "changed" : "unchanged"));
+        pcmk__rsc_trace(then->rsc, "%s then %s: %s after pcmk__ar_ordered",
+                        first->uuid, then->uuid,
+                        (changed? "changed" : "unchanged"));
     }
 
     if (pcmk_is_set(order->type, pcmk__ar_asymmetric)) {
@@ -434,17 +438,17 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                               pcmk_action_runnable, pcmk__ar_asymmetric,
                               scheduler);
         }
-        pe_rsc_trace(then->rsc, "%s then %s: %s after pcmk__ar_asymmetric",
-                     first->uuid, then->uuid,
-                     (changed? "changed" : "unchanged"));
+        pcmk__rsc_trace(then->rsc, "%s then %s: %s after pcmk__ar_asymmetric",
+                        first->uuid, then->uuid,
+                        (changed? "changed" : "unchanged"));
     }
 
     if (pcmk_is_set(first->flags, pcmk_action_runnable)
         && pcmk_is_set(order->type, pcmk__ar_first_implies_then_graphed)
         && !pcmk_is_set(first_flags, pcmk_action_optional)) {
 
-        pe_rsc_trace(then->rsc, "%s will be in graph because %s is required",
-                     then->uuid, first->uuid);
+        pcmk__rsc_trace(then->rsc, "%s will be in graph because %s is required",
+                        then->uuid, first->uuid);
         pe__set_action_flags(then, pcmk_action_always_in_graph);
         // Don't bother marking 'then' as changed just for this
     }
@@ -452,8 +456,8 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
     if (pcmk_is_set(order->type, pcmk__ar_then_implies_first_graphed)
         && !pcmk_is_set(then_flags, pcmk_action_optional)) {
 
-        pe_rsc_trace(then->rsc, "%s will be in graph because %s is required",
-                     first->uuid, then->uuid);
+        pcmk__rsc_trace(then->rsc, "%s will be in graph because %s is required",
+                        first->uuid, then->uuid);
         pe__set_action_flags(first, pcmk_action_always_in_graph);
         // Don't bother marking 'first' as changed just for this
     }
@@ -471,10 +475,11 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
             pe__clear_action_flags(then, pcmk_action_runnable);
             pcmk__set_updated_flags(changed, first, pcmk__updated_then);
         }
-        pe_rsc_trace(then->rsc, "%s then %s: %s after checking whether first "
-                     "is blocked, unmanaged, unrunnable stop",
-                     first->uuid, then->uuid,
-                     (changed? "changed" : "unchanged"));
+        pcmk__rsc_trace(then->rsc,
+                        "%s then %s: %s after checking whether first "
+                        "is blocked, unmanaged, unrunnable stop",
+                        first->uuid, then->uuid,
+                        (changed? "changed" : "unchanged"));
     }
 
     return changed;
@@ -509,10 +514,10 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
     uint32_t changed = pcmk__updated_none;
     int last_flags = then->flags;
 
-    pe_rsc_trace(then->rsc, "Updating %s %s (%s %s) on %s",
-                 action_type_str(then->flags), then->uuid,
-                 action_optional_str(then->flags),
-                 action_runnable_str(then->flags), action_node_str(then));
+    pcmk__rsc_trace(then->rsc, "Updating %s %s (%s %s) on %s",
+                    action_type_str(then->flags), then->uuid,
+                    action_optional_str(then->flags),
+                    action_runnable_str(then->flags), action_node_str(then));
 
     if (pcmk_is_set(then->flags, pcmk_action_min_runnable)) {
         /* Initialize current known "runnable before" actions. As
@@ -549,8 +554,8 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
 
             first_node = first->rsc->fns->location(first->rsc, NULL, FALSE);
             if (first_node != NULL) {
-                pe_rsc_trace(first->rsc, "Found %s for 'first' %s",
-                             pe__node_name(first_node), first->uuid);
+                pcmk__rsc_trace(first->rsc, "Found %s for 'first' %s",
+                                pe__node_name(first_node), first->uuid);
             }
         }
 
@@ -560,8 +565,8 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
 
             then_node = then->rsc->fns->location(then->rsc, NULL, FALSE);
             if (then_node != NULL) {
-                pe_rsc_trace(then->rsc, "Found %s for 'then' %s",
-                             pe__node_name(then_node), then->uuid);
+                pcmk__rsc_trace(then->rsc, "Found %s for 'then' %s",
+                                pe__node_name(then_node), then->uuid);
             }
         }
 
@@ -570,11 +575,11 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
             && (first_node != NULL) && (then_node != NULL)
             && !pe__same_node(first_node, then_node)) {
 
-            pe_rsc_trace(then->rsc,
-                         "Disabled ordering %s on %s then %s on %s: "
-                         "not same node",
-                         other->action->uuid, pe__node_name(first_node),
-                         then->uuid, pe__node_name(then_node));
+            pcmk__rsc_trace(then->rsc,
+                            "Disabled ordering %s on %s then %s on %s: "
+                            "not same node",
+                            other->action->uuid, pe__node_name(first_node),
+                            then->uuid, pe__node_name(then_node));
             other->type = (enum pe_ordering) pcmk__ar_none;
             continue;
         }
@@ -599,14 +604,14 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
             first = action_for_ordering(first);
         }
         if (first != other->action) {
-            pe_rsc_trace(then->rsc, "Ordering %s after %s instead of %s",
-                         then->uuid, first->uuid, other->action->uuid);
+            pcmk__rsc_trace(then->rsc, "Ordering %s after %s instead of %s",
+                            then->uuid, first->uuid, other->action->uuid);
         }
 
-        pe_rsc_trace(then->rsc,
-                     "%s (%#.6x) then %s (%#.6x): type=%#.6x node=%s",
-                     first->uuid, first->flags, then->uuid, then->flags,
-                     other->type, action_node_str(first));
+        pcmk__rsc_trace(then->rsc,
+                        "%s (%#.6x) then %s (%#.6x): type=%#.6x node=%s",
+                        first->uuid, first->flags, then->uuid, then->flags,
+                        other->type, action_node_str(first));
 
         if (first == other->action) {
             /* 'first' was not remapped (e.g. from 'start' to 'running'), which
@@ -630,10 +635,11 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
              * start again to get the new actions_before list
              */
             pcmk__set_updated_flags(changed, then, pcmk__updated_then);
-            pe_rsc_trace(then->rsc,
-                         "Disabled ordering %s then %s in favor of %s then %s",
-                         other->action->uuid, then->uuid, first->uuid,
-                         then->uuid);
+            pcmk__rsc_trace(then->rsc,
+                            "Disabled ordering %s then %s in favor of %s "
+                            "then %s",
+                            other->action->uuid, then->uuid, first->uuid,
+                            then->uuid);
             other->type = (enum pe_ordering) pcmk__ar_none;
         }
 
@@ -789,8 +795,8 @@ handle_restart_ordering(pcmk_action_t *first, pcmk_action_t *then,
         return;
     }
 
-    pe_rsc_trace(first->rsc, "Handling %s -> %s for %s",
-                 first->uuid, then->uuid, reason);
+    pcmk__rsc_trace(first->rsc, "Handling %s -> %s for %s",
+                    first->uuid, then->uuid, reason);
 
     // Make 'first' required if it is runnable
     if (pcmk_is_set(first->flags, pcmk_action_runnable)) {
@@ -928,11 +934,11 @@ pcmk__update_ordered_actions(pcmk_action_t *first, pcmk_action_t *then,
 
     if (then_flags != then->flags) {
         pcmk__set_updated_flags(changed, first, pcmk__updated_then);
-        pe_rsc_trace(then->rsc,
-                     "%s on %s: flags are now %#.6x (was %#.6x) "
-                     "because of 'first' %s (%#.6x)",
-                     then->uuid, pe__node_name(then->node),
-                     then->flags, then_flags, first->uuid, first->flags);
+        pcmk__rsc_trace(then->rsc,
+                        "%s on %s: flags are now %#.6x (was %#.6x) "
+                        "because of 'first' %s (%#.6x)",
+                        then->uuid, pe__node_name(then->node),
+                        then->flags, then_flags, first->uuid, first->flags);
 
         if ((then->rsc != NULL) && (then->rsc->parent != NULL)) {
             // Required to handle "X_stop then X_start" for cloned groups
@@ -942,11 +948,11 @@ pcmk__update_ordered_actions(pcmk_action_t *first, pcmk_action_t *then,
 
     if (first_flags != first->flags) {
         pcmk__set_updated_flags(changed, first, pcmk__updated_first);
-        pe_rsc_trace(first->rsc,
-                     "%s on %s: flags are now %#.6x (was %#.6x) "
-                     "because of 'then' %s (%#.6x)",
-                     first->uuid, pe__node_name(first->node),
-                     first->flags, first_flags, then->uuid, then->flags);
+        pcmk__rsc_trace(first->rsc,
+                        "%s on %s: flags are now %#.6x (was %#.6x) "
+                        "because of 'then' %s (%#.6x)",
+                        first->uuid, pe__node_name(first->node),
+                        first->flags, first_flags, then->uuid, then->flags);
     }
 
     return changed;
@@ -1551,11 +1557,11 @@ schedule_reload(gpointer data, gpointer user_data)
     if ((node == NULL)
         || !pcmk_is_set(rsc->flags, pcmk_rsc_managed)
         || pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
-        pe_rsc_trace(rsc, "Skip reload of %s:%s%s %s",
-                     rsc->id,
-                     pcmk_is_set(rsc->flags, pcmk_rsc_managed)? "" : " unmanaged",
-                     pcmk_is_set(rsc->flags, pcmk_rsc_failed)? " failed" : "",
-                     (node == NULL)? "inactive" : node->details->uname);
+        pcmk__rsc_trace(rsc, "Skip reload of %s:%s%s %s",
+                        rsc->id,
+                        pcmk_is_set(rsc->flags, pcmk_rsc_managed)? "" : " unmanaged",
+                        pcmk_is_set(rsc->flags, pcmk_rsc_failed)? " failed" : "",
+                        (node == NULL)? "inactive" : node->details->uname);
         return;
     }
 
@@ -1563,8 +1569,9 @@ schedule_reload(gpointer data, gpointer user_data)
      * force a full restart instead of a reload.
      */
     if (pcmk_is_set(rsc->flags, pcmk_rsc_start_pending)) {
-        pe_rsc_trace(rsc, "%s: preventing agent reload because start pending",
-                     rsc->id);
+        pcmk__rsc_trace(rsc,
+                        "%s: preventing agent reload because start pending",
+                        rsc->id);
         custom_action(rsc, stop_key(rsc), PCMK_ACTION_STOP, node, FALSE,
                       rsc->cluster);
         return;
@@ -1618,9 +1625,10 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
     // If this is a recurring action, check whether it has been orphaned
     if (interval_ms > 0) {
         if (pcmk__find_action_config(rsc, task, interval_ms, false) != NULL) {
-            pe_rsc_trace(rsc, "%s-interval %s for %s on %s is in configuration",
-                         pcmk__readable_interval(interval_ms), task, rsc->id,
-                         pe__node_name(node));
+            pcmk__rsc_trace(rsc,
+                            "%s-interval %s for %s on %s is in configuration",
+                            pcmk__readable_interval(interval_ms), task, rsc->id,
+                            pe__node_name(node));
         } else if (pcmk_is_set(rsc->cluster->flags,
                                pcmk_sched_cancel_removed_actions)) {
             pcmk__schedule_cancel(rsc,
@@ -1629,9 +1637,9 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
                                   task, interval_ms, node, "orphan");
             return true;
         } else {
-            pe_rsc_debug(rsc, "%s-interval %s for %s on %s is orphaned",
-                         pcmk__readable_interval(interval_ms), task, rsc->id,
-                         pe__node_name(node));
+            pcmk__rsc_debug(rsc, "%s-interval %s for %s on %s is orphaned",
+                            pcmk__readable_interval(interval_ms), task, rsc->id,
+                            pe__node_name(node));
             return true;
         }
     }
@@ -1684,9 +1692,10 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
                 schedule_reload((gpointer) rsc, (gpointer) node);
 
             } else {
-                pe_rsc_trace(rsc,
-                             "Restarting %s "
-                             "because agent doesn't support reload", rsc->id);
+                pcmk__rsc_trace(rsc,
+                                "Restarting %s "
+                                "because agent doesn't support reload",
+                                rsc->id);
                 crm_log_xml_debug(digest_data->params_restart,
                                   "params:restart");
                 force_restart(rsc, task, interval_ms, node);
@@ -1746,14 +1755,14 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
 
     if (pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
         if (pe_rsc_is_anon_clone(pe__const_top_resource(rsc, false))) {
-            pe_rsc_trace(rsc,
-                         "Skipping configuration check "
-                         "for orphaned clone instance %s",
-                         rsc->id);
+            pcmk__rsc_trace(rsc,
+                            "Skipping configuration check "
+                            "for orphaned clone instance %s",
+                            rsc->id);
         } else {
-            pe_rsc_trace(rsc,
-                         "Skipping configuration check and scheduling clean-up "
-                         "for orphaned resource %s", rsc->id);
+            pcmk__rsc_trace(rsc,
+                            "Skipping configuration check and scheduling "
+                            "clean-up for orphaned resource %s", rsc->id);
             pcmk__schedule_cleanup(rsc, node, false);
         }
         return;
@@ -1763,15 +1772,15 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
         if (pcmk__rsc_agent_changed(rsc, node, rsc_entry, false)) {
             pcmk__schedule_cleanup(rsc, node, false);
         }
-        pe_rsc_trace(rsc,
-                     "Skipping configuration check for %s "
-                     "because no longer active on %s",
-                     rsc->id, pe__node_name(node));
+        pcmk__rsc_trace(rsc,
+                        "Skipping configuration check for %s "
+                        "because no longer active on %s",
+                        rsc->id, pe__node_name(node));
         return;
     }
 
-    pe_rsc_trace(rsc, "Checking for configuration changes for %s on %s",
-                 rsc->id, pe__node_name(node));
+    pcmk__rsc_trace(rsc, "Checking for configuration changes for %s on %s",
+                    rsc->id, pe__node_name(node));
 
     if (pcmk__rsc_agent_changed(rsc, node, rsc_entry, true)) {
         pcmk__schedule_cleanup(rsc, node, false);

@@ -545,9 +545,9 @@ should_add_action_to_graph(const pcmk_action_t *action)
     }
 
     if (action->node == NULL) {
-        pe_err("Skipping action %s (%d) "
-               "because it was not assigned to a node (bug?)",
-               action->uuid, action->id);
+        pcmk__sched_err("Skipping action %s (%d) "
+                        "because it was not assigned to a node (bug?)",
+                        action->uuid, action->id);
         pcmk__log_action("Unassigned", action, false);
         return false;
     }
@@ -564,16 +564,16 @@ should_add_action_to_graph(const pcmk_action_t *action)
                   action->uuid, action->id, pe__node_name(action->node));
 
     } else if (!action->node->details->online) {
-        pe_err("Skipping action %s (%d) "
-               "because it was scheduled for offline node (bug?)",
-               action->uuid, action->id);
+        pcmk__sched_err("Skipping action %s (%d) "
+                        "because it was scheduled for offline node (bug?)",
+                        action->uuid, action->id);
         pcmk__log_action("Offline node", action, false);
         return false;
 
     } else if (action->node->details->unclean) {
-        pe_err("Skipping action %s (%d) "
-               "because it was scheduled for unclean node (bug?)",
-               action->uuid, action->id);
+        pcmk__sched_err("Skipping action %s (%d) "
+                        "because it was scheduled for unclean node (bug?)",
+                        action->uuid, action->id);
         pcmk__log_action("Unclean node", action, false);
         return false;
     }
@@ -943,13 +943,13 @@ static int transition_id = -1;
 void
 pcmk__log_transition_summary(const char *filename)
 {
-    if (was_processing_error) {
+    if (was_processing_error || crm_config_error) {
         crm_err("Calculated transition %d (with errors)%s%s",
                 transition_id,
                 (filename == NULL)? "" : ", saving inputs in ",
                 (filename == NULL)? "" : filename);
 
-    } else if (was_processing_warning) {
+    } else if (was_processing_warning || crm_config_warning) {
         crm_warn("Calculated transition %d (with warnings)%s%s",
                  transition_id,
                  (filename == NULL)? "" : ", saving inputs in ",
@@ -979,7 +979,7 @@ pcmk__add_rsc_actions_to_graph(pcmk_resource_t *rsc)
     GList *iter = NULL;
 
     CRM_ASSERT(rsc != NULL);
-    pe_rsc_trace(rsc, "Adding actions for %s to graph", rsc->id);
+    pcmk__rsc_trace(rsc, "Adding actions for %s to graph", rsc->id);
 
     // First add the resource's own actions
     g_list_foreach(rsc->actions, add_action_to_graph, rsc->cluster);
@@ -1052,7 +1052,7 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
     for (iter = scheduler->resources; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
-        pe_rsc_trace(rsc, "Processing actions for %s", rsc->id);
+        pcmk__rsc_trace(rsc, "Processing actions for %s", rsc->id);
         rsc->cmds->add_actions_to_graph(rsc);
     }
 

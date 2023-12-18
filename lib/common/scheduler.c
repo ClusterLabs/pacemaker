@@ -9,6 +9,10 @@
 
 #include <crm_internal.h>
 
+#include <glib.h>               // gboolean
 #include <stdint.h>             // uint32_t
 
 uint32_t pcmk__warnings = 0;
+
+gboolean was_processing_error = FALSE;
+gboolean was_processing_warning = FALSE;

@@ -19,9 +19,6 @@
 extern "C" {
 #endif
 
-extern gboolean was_processing_error;
-extern gboolean was_processing_warning;
-
 const char *task2text(enum action_tasks task);
 enum action_tasks text2task(const char *task);
 enum rsc_role_e text2role(const char *role);
