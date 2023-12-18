@@ -69,7 +69,7 @@ extern "C" {
  * >=3.2.0:  DC supports PCMK_EXEC_INVALID and PCMK_EXEC_NOT_CONNECTED
  * >=3.19.0: DC supports PCMK__CIB_REQUEST_COMMIT_TRANSACT
  */
-#  define CRM_FEATURE_SET		"3.19.0"
+#define CRM_FEATURE_SET "3.20.0"
 
 /* Pacemaker's CPG protocols use fixed-width binary fields for the sender and
  * recipient of a CPG message. This imposes an arbitrary limit on cluster node
