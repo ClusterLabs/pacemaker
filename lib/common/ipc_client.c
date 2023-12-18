@@ -759,6 +759,7 @@ create_purge_node_request(const pcmk_ipc_api_t *api, const char *node_name,
             crm_xml_add(request, F_TYPE, T_ATTRD);
             crm_xml_add(request, F_ORIG, crm_system_name);
             crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_PEER_REMOVE);
+            pcmk__xe_set_bool_attr(request, PCMK__XA_REAP, true);
             pcmk__xe_add_node(request, node_name, nodeid);
             break;
 

@@ -102,26 +102,50 @@ crm_remote_peer_cache_size(void)
  * \note When creating a new entry, this will leave the node state undetermined,
  *       so the caller should also call pcmk__update_peer_state() if the state
  *       is known.
+ * \note Because this can add and remove cache entries, callers should not
+ *       assume any previously obtained cache entry pointers remain valid.
  */
 crm_node_t *
 crm_remote_peer_get(const char *node_name)
 {
     crm_node_t *node;
+    char *node_name_copy = NULL;
 
     if (node_name == NULL) {
-        errno = -EINVAL;
+        errno = EINVAL;
         return NULL;
+    }
+
+    /* It's theoretically possible that the node was added to the cluster peer
+     * cache before it was known to be a Pacemaker Remote node. Remove that
+     * entry unless it has a node ID, which means the name actually is
+     * associated with a cluster node. (@TODO return an error in that case?)
+     */
+    node = pcmk__search_cluster_node_cache(0, node_name, NULL);
+    if ((node != NULL) && (node->uuid == NULL)) {
+        /* node_name could be a pointer into the cache entry being removed, so
+         * reassign it to a copy before the original gets freed
+         */
+        node_name_copy = strdup(node_name);
+        if (node_name_copy == NULL) {
+            errno = ENOMEM;
+            return NULL;
+        }
+        node_name = node_name_copy;
+        reap_crm_member(0, node_name);
     }
 
     /* Return existing cache entry if one exists */
     node = g_hash_table_lookup(crm_remote_peer_cache, node_name);
     if (node) {
+        free(node_name_copy);
         return node;
     }
 
     /* Allocate a new entry */
     node = calloc(1, sizeof(crm_node_t));
     if (node == NULL) {
+        free(node_name_copy);
         return NULL;
     }
 
@@ -130,7 +154,8 @@ crm_remote_peer_get(const char *node_name)
     node->uuid = strdup(node_name);
     if (node->uuid == NULL) {
         free(node);
-        errno = -ENOMEM;
+        errno = ENOMEM;
+        free(node_name_copy);
         return NULL;
     }
 
@@ -140,14 +165,27 @@ crm_remote_peer_get(const char *node_name)
 
     /* Update the entry's uname, ensuring peer status callbacks are called */
     update_peer_uname(node, node_name);
+    free(node_name_copy);
     return node;
 }
 
+/*!
+ * \brief Remove a node from the Pacemaker Remote node cache
+ *
+ * \param[in] node_name  Name of node to remove from cache
+ *
+ * \note The caller must be careful not to use \p node_name after calling this
+ *       function if it might be a pointer into the cache entry being removed.
+ */
 void
 crm_remote_peer_cache_remove(const char *node_name)
 {
-    if (g_hash_table_remove(crm_remote_peer_cache, node_name)) {
-        crm_trace("removed %s from remote peer cache", node_name);
+    /* Do a lookup first, because node_name could be a pointer within the entry
+     * being removed -- we can't log it *after* removing it.
+     */
+    if (g_hash_table_lookup(crm_remote_peer_cache, node_name) != NULL) {
+        crm_trace("Removing %s from Pacemaker Remote node cache", node_name);
+        g_hash_table_remove(crm_remote_peer_cache, node_name);
     }
 }
 
@@ -329,6 +367,9 @@ crm_reap_dead_member(gpointer key, gpointer value, gpointer user_data)
  * \param[in] name  Uname of node to remove (or NULL to ignore)
  *
  * \return Number of cache entries removed
+ *
+ * \note The caller must be careful not to use \p name after calling this
+ *       function if it might be a pointer into the cache entry being removed.
  */
 guint
 reap_crm_member(uint32_t id, const char *name)
@@ -550,6 +591,47 @@ pcmk__get_peer_full(unsigned int id, const char *uname, const char *uuid,
         node = pcmk__get_peer(id, uname, uuid);
     }
     return node;
+}
+
+/*!
+ * \internal
+ * \brief Purge a node from cache (both cluster and Pacemaker Remote)
+ *
+ * \param[in] node_name  If not NULL, purge only nodes with this name
+ * \param[in] node_id    If not 0, purge cluster nodes only if they have this ID
+ *
+ * \note If \p node_name is NULL and \p node_id is 0, no nodes will be purged.
+ *       If \p node_name is not NULL and \p node_id is not 0, Pacemaker Remote
+ *       nodes that match \p node_name will be purged, and cluster nodes that
+ *       match both \p node_name and \p node_id will be purged.
+ * \note The caller must be careful not to use \p node_name after calling this
+ *       function if it might be a pointer into a cache entry being removed.
+ */
+void
+pcmk__purge_node_from_cache(const char *node_name, uint32_t node_id)
+{
+    char *node_name_copy = NULL;
+
+    if ((node_name == NULL) && (node_id == 0U)) {
+        return;
+    }
+
+    // Purge from Pacemaker Remote node cache
+    if ((node_name != NULL)
+        && (g_hash_table_lookup(crm_remote_peer_cache, node_name) != NULL)) {
+        /* node_name could be a pointer into the cache entry being purged,
+         * so reassign it to a copy before the original gets freed
+         */
+        node_name_copy = strdup(node_name);
+        CRM_ASSERT(node_name_copy != NULL);
+        node_name = node_name_copy;
+
+        crm_trace("Purging %s from Pacemaker Remote node cache", node_name);
+        g_hash_table_remove(crm_remote_peer_cache, node_name);
+    }
+
+    reap_crm_member(node_id, node_name);
+    free(node_name_copy);
 }
 
 /*!

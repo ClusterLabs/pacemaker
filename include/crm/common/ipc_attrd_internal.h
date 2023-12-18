@@ -89,10 +89,11 @@ int pcmk__attrd_api_delete(pcmk_ipc_api_t *api, const char *node, const char *na
 
 /*!
  * \internal
- * \brief Purge a node from pacemaker-attrd
+ * \brief Request removal of a node's transient attributes
  *
  * \param[in,out] api           pacemaker-attrd IPC object
- * \param[in]     node          Node to remove
+ * \param[in]     node          Node whose attributes should be purged
+ * \param[in]     reap          If true, also request removal from node caches
  *
  * \note If \p api is NULL, a new temporary connection will be created
  *       just for this operation and destroyed afterwards.  If \p api is
@@ -102,7 +103,7 @@ int pcmk__attrd_api_delete(pcmk_ipc_api_t *api, const char *node, const char *na
  *
  * \return Standard Pacemaker return code
  */
-int pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node);
+int pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node, bool reap);
 
 /*!
  * \internal

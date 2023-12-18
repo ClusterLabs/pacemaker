@@ -42,8 +42,9 @@
  *     4       2.1.5    Multiple attributes can be updated in a single IPC
  *                      message
  *     5       2.1.5    Peers can request confirmation of a sent message
+ *     6       2.1.7    PCMK__ATTRD_CMD_PEER_REMOVE supports PCMK__XA_REAP
  */
-#define ATTRD_PROTOCOL_VERSION "5"
+#define ATTRD_PROTOCOL_VERSION "6"
 
 #define ATTRD_SUPPORTS_MULTI_MESSAGE(x) ((x) >= 4)
 #define ATTRD_SUPPORTS_CONFIRMATION(x)  ((x) >= 5)
@@ -65,6 +66,7 @@ void attrd_ipc_fini(void);
 int attrd_cib_connect(int max_retry);
 void attrd_cib_disconnect(void);
 void attrd_cib_init(void);
+void attrd_cib_erase_transient_attrs(const char *node);
 
 bool attrd_value_needs_expansion(const char *value);
 int attrd_expand_value(const char *value, const char *old_value);
@@ -138,14 +140,31 @@ typedef struct attribute_s {
 
 } attribute_t;
 
+enum attrd_value_flags {
+    attrd_value_none        = 0U,
+    attrd_value_remote      = (1U << 0),  // Value is for Pacemaker Remote node
+    attrd_value_from_peer   = (1U << 1),  // Value is from peer sync response
+};
+
 typedef struct attribute_value_s {
         uint32_t nodeid;
-        gboolean is_remote;
         char *nodename;
         char *current;
         char *requested;
-        gboolean seen;
+        uint32_t flags;     // Group of attrd_value_flags
 } attribute_value_t;
+
+#define attrd_set_value_flags(attr_value, flags_to_set) do {            \
+        (attr_value)->flags = pcmk__set_flags_as(__func__, __LINE__,    \
+            LOG_TRACE, "Value for node", (attr_value)->nodename,        \
+            (attr_value)->flags, (flags_to_set), #flags_to_set);        \
+    } while (0)
+
+#define attrd_clear_value_flags(attr_value, flags_to_clear) do {        \
+        (attr_value)->flags = pcmk__clear_flags_as(__func__, __LINE__,  \
+            LOG_TRACE, "Value for node", (attr_value)->nodename,        \
+            (attr_value)->flags, (flags_to_clear), #flags_to_clear);    \
+    } while (0)
 
 extern crm_cluster_t *attrd_cluster;
 extern GHashTable *attributes;

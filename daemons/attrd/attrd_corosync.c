@@ -166,60 +166,39 @@ broadcast_local_value(const attribute_t *a)
     return v;
 }
 
-/*!
- * \internal
- * \brief Ensure a Pacemaker Remote node is in the correct peer cache
- *
- * \param[in] node_name  Name of Pacemaker Remote node to check
- */
-static void
-cache_remote_node(const char *node_name)
-{
-    /* If we previously assumed this node was an unseen cluster node,
-     * remove its entry from the cluster peer cache.
-     */
-    crm_node_t *dup = pcmk__search_cluster_node_cache(0, node_name, NULL);
-
-    if (dup && (dup->uuid == NULL)) {
-        reap_crm_member(0, node_name);
-    }
-
-    // Ensure node is in the remote peer cache
-    CRM_ASSERT(crm_remote_peer_get(node_name) != NULL);
-}
-
 #define state_text(state) pcmk__s((state), "in unknown state")
 
 /*!
  * \internal
- * \brief Return host's hash table entry (creating one if needed)
+ * \brief Return a node's value from hash table (creating one if needed)
  *
- * \param[in,out] values Hash table of values
- * \param[in]     host   Name of peer to look up
- * \param[in]     xml    XML describing the attribute
+ * \param[in,out] values     Hash table of values
+ * \param[in]     node_name  Name of node to look up
+ * \param[in]     xml        XML describing the attribute
  *
  * \return Pointer to new or existing hash table entry
  */
 static attribute_value_t *
-attrd_lookup_or_create_value(GHashTable *values, const char *host,
+attrd_lookup_or_create_value(GHashTable *values, const char *node_name,
                              const xmlNode *xml)
 {
-    attribute_value_t *v = g_hash_table_lookup(values, host);
+    attribute_value_t *v = g_hash_table_lookup(values, node_name);
     int is_remote = 0;
-
-    crm_element_value_int(xml, PCMK__XA_ATTR_IS_REMOTE, &is_remote);
-    if (is_remote) {
-        cache_remote_node(host);
-    }
 
     if (v == NULL) {
         v = calloc(1, sizeof(attribute_value_t));
         CRM_ASSERT(v != NULL);
 
-        pcmk__str_update(&v->nodename, host);
-        v->is_remote = is_remote;
+        pcmk__str_update(&v->nodename, node_name);
         g_hash_table_replace(values, v->nodename, v);
     }
+
+    crm_element_value_int(xml, PCMK__XA_ATTR_IS_REMOTE, &is_remote);
+    if (is_remote) {
+        attrd_set_value_flags(v, attrd_value_remote);
+        CRM_ASSERT(crm_remote_peer_get(node_name) != NULL);
+    }
+
     return(v);
 }
 
@@ -269,10 +248,6 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
         attrd_remove_voter(peer);
         attrd_remove_peer_protocol_ver(peer->uname);
         attrd_do_not_expect_from_peer(peer->uname);
-
-    // Ensure remote nodes that come up are in the remote node cache
-    } else if (!gone && is_remote) {
-        cache_remote_node(peer->uname);
     }
 }
 
@@ -344,11 +319,11 @@ update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
         }
     }
 
-    /* Set the seen flag for attribute processing held only in the own node. */
-    v->seen = TRUE;
+    // This allows us to later detect local values that peer doesn't know about
+    attrd_set_value_flags(v, attrd_value_from_peer);
 
     /* If this is a cluster node whose node ID we are learning, remember it */
-    if ((v->nodeid == 0) && (v->is_remote == FALSE)
+    if ((v->nodeid == 0) && !pcmk_is_set(v->flags, attrd_value_remote)
         && (crm_element_value_int(xml, PCMK__XA_ATTR_NODE_ID,
                                   (int*)&v->nodeid) == 0) && (v->nodeid > 0)) {
         record_peer_nodeid(v, host);
@@ -414,8 +389,9 @@ broadcast_unseen_local_values(void)
     while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
         g_hash_table_iter_init(&vIter, a->values);
         while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & v)) {
-            if (!(v->seen) && pcmk__str_eq(v->nodename, attrd_cluster->uname,
-                                           pcmk__str_casei)) {
+            if (!pcmk_is_set(v->flags, attrd_value_from_peer)
+                && pcmk__str_eq(v->nodename, attrd_cluster->uname,
+                                pcmk__str_casei)) {
                 if (sync == NULL) {
                     sync = create_xml_node(NULL, __func__);
                     crm_xml_add(sync, PCMK__XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
@@ -540,7 +516,9 @@ attrd_peer_remove(const char *host, bool uncache, const char *source)
     GHashTableIter aIter;
 
     CRM_CHECK(host != NULL, return);
-    crm_notice("Removing all %s attributes for peer %s", host, source);
+    crm_notice("Removing all %s attributes for node %s "
+               CRM_XS " %s reaping node from cache",
+               host, source, (uncache? "and" : "without"));
 
     g_hash_table_iter_init(&aIter, attributes);
     while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
@@ -550,8 +528,7 @@ attrd_peer_remove(const char *host, bool uncache, const char *source)
     }
 
     if (uncache) {
-        crm_remote_peer_cache_remove(host);
-        reap_crm_member(0, host);
+        pcmk__purge_node_from_cache(host, 0);
     }
 }
 
