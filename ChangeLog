@@ -1,41 +1,18 @@
-* Mon Dec 11 2023 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.7-rc4
-- 4 commits with 1 file changed, 2 insertions(+), 1 deletion(-)
-
-- Fixes since Pacemaker-2.1.7-rc3
-  + attrd: Deletion of transient attributes works again
-           (regression introduced in 2.1.7-rc1)
-
-* Wed Dec 06 2023 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.7-rc3
-- 10 commits with 9 files changed, 72 insertions(+), 19 deletions(-)
-
-- Fixes since Pacemaker-2.1.7-rc2
-  + agents: handle dampening parameter consistently and correctly
-  + scheduler: update recheck time for node-pending-timeout
-  + tools: fix XML output regression introduced in 2.1.7-rc1
-
-* Tue Nov 21 2023 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.7-rc2
-- 26 commits with 14 files changed, 119 insertions(+), 46 deletions(-)
-
-- Features added since Pacemaker-2.1.7-rc1
-  + Default of new node-pending-timeout option has been changed to 0
-    to preserve previous behavior
-
-- Fixes since Pacemaker-2.1.7-rc1
-  + build: Allow building with libxml2 2.12.0 and greater
-  + tools: crm_resource --wait will now wait if any actions are pending
-    (previously it would wait only if new actions were planned)
-  + tools: crm_verify --output-as=xml now includes detailed messages
-
-* Mon Oct 30 2023 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.7-rc1
-- 1345 commits with 358 files changed, 23622 insertions(+), 17197 deletions(-)
+* Tue Dec 19 2023 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.7
+- 1388 commits with 358 files changed, 23771 insertions(+), 17219 deletions(-)
 
 - Features added since Pacemaker-2.1.6
+  + build: allow building with libxml2 2.12.0 and greater
   + CIB: deprecate "ordering" attribute of "resource_set"
-  + CIB: new cluster option "node-pending-timeout" (defaulting to 2 hours) to
-    fence nodes that do not join Pacemaker's controller group within this much
-    time after joining the cluster
+  + CIB: new cluster option "node-pending-timeout" (defaulting to 0, meaning
+    no timeout, to preserve existing behavior) allows fencing of nodes that do
+    not join Pacemaker's controller group within this much time after joining
+    the cluster
   + controller: PCMK_node_start_state now works with Pacemaker Remote nodes
-  + crm_verify: add --quiet option (currently same as default behavior)
+  + tools: crm_verify now supports --quiet option (currently same as default
+    behavior, but in the future, verbose behavior might become the default,
+    so script writers are recommended to explicitly add --quiet if they do not
+    want output)
   + tools: crm_node supports standard --output-as/--output-to arguments
   + tests: CTSlab.py was renamed to cts-lab
 
@@ -47,6 +24,7 @@
   + tools: consider dampening argument when setting values with attrd_updater
     (regression introduced in 2.1.5)
   + tools: wait for reply from crm_node -R (regression introduced in 2.0.5)
+  + agents: handle dampening parameter consistently and correctly
   + CIB: be more strict about ignoring colocation elements without an ID
   + controller: do not check whether watchdog fencing is enabled
     if "stonith-watchdog-timeout" is not configured
@@ -56,7 +34,7 @@
   + controller: wait a second between fencer connection attempts
   + libpacemaker: avoid shuffling clone instances unnecessarily
   + libpacemaker: get bundle container's promotion score from correct node
-  + libpacemaker: role-based colocations now works with bundles
+  + libpacemaker: role-based colocations now work with bundles
   + libpacemaker: clone-node-max now works with cloned groups
   + scheduler: compare anti-colocation dependent negative preferences against
     stickiness
@@ -64,11 +42,14 @@
   + scheduler: avoid fencing a pending node without a name
   + scheduler: properly evaluate rules in action meta-attributes
   + scheduler: properly sort rule-based blocks when overwriting values
+  + tools: crm_resource --wait will now wait if any actions are pending
+    (previously it would wait only if new actions were planned)
+  + tools: crm_verify --output-as=xml now includes detailed messages
   + tools: avoid showing pending nodes as having "<3.15.1" feature set in
     crm_mon
   + tools: fix display of clone descriptions
-  + tools: crm_resource now reports an error rather than time out when trying
-    to restart an unmanaged resource
+  + tools: crm_resource now reports an error rather than timing out when
+    trying to restart an unmanaged resource
   + tools: crm_resource now properly detects which promoted role name to use
     in ban and move constraints
 
