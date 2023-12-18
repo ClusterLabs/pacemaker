@@ -240,17 +240,15 @@ should_purge_attributes(crm_node_t *node)
 static void
 purge_remote_node_attrs(int call_opt, crm_node_t *node)
 {
-    enum controld_section_e section = controld_section_lrm;
+    const bool unlocked_only = pcmk_is_set(controld_globals.flags,
+                                           controld_shutdown_lock_enabled);
 
     // Purge node's transient attributes (from attribute manager and CIB)
     if (should_purge_attributes(node)) {
         controld_purge_node_attrs(node->uname, true);
     }
 
-    if (pcmk_is_set(controld_globals.flags, controld_shutdown_lock_enabled)) {
-        section = controld_section_lrm_unlocked;
-    }
-    controld_delete_node_state(node->uname, section, call_opt);
+    controld_delete_node_state(node->uname, unlocked_only, call_opt);
 }
 
 /*!
@@ -357,7 +355,7 @@ remote_node_down(const char *node_name, const enum down_opts opts)
      * think resources are still running on the node.
      */
     if (opts == DOWN_ERASE_LRM) {
-        controld_delete_node_state(node_name, controld_section_lrm, call_opt);
+        controld_delete_node_state(node_name, false, call_opt);
     }
 
     /* Ensure node is in the remote peer cache with lost state */

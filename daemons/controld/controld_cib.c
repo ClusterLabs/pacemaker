@@ -295,16 +295,15 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
 
 /*!
  * \internal
- * \brief Get the XPath and description of a node state section to be deleted
+ * \brief Get the XPath and description of resource history to be deleted
  *
- * \param[in]  uname    Desired node
- * \param[in]  section  Subsection of \c PCMK__XE_NODE_STATE to be deleted
- * \param[out] xpath    Where to store XPath of \p section
- * \param[out] desc     If not \c NULL, where to store description of \p section
+ * \param[in]  uname          Name of node to delete resource history for
+ * \param[in]  unlocked_only  If true, delete history of only unlocked resources
+ * \param[out] xpath          Where to store XPath for history deletion
+ * \param[out] desc           If not NULL, where to store loggable description
  */
 void
-controld_node_state_deletion_strings(const char *uname,
-                                     enum controld_section_e section,
+controld_node_state_deletion_strings(const char *uname, bool unlocked_only,
                                      char **xpath, char **desc)
 {
     const char *desc_pre = NULL;
@@ -313,20 +312,13 @@ controld_node_state_deletion_strings(const char *uname,
     long long expire = (long long) time(NULL)
                        - controld_globals.shutdown_lock_limit;
 
-    switch (section) {
-        case controld_section_lrm:
-            *xpath = crm_strdup_printf(XPATH_NODE_LRM, uname);
-            desc_pre = "resource history";
-            break;
-        case controld_section_lrm_unlocked:
-            *xpath = crm_strdup_printf(XPATH_NODE_LRM_UNLOCKED,
-                                       uname, uname, expire);
-            desc_pre = "resource history (other than shutdown locks)";
-            break;
-        default:
-            // We called this function incorrectly
-            CRM_ASSERT(false);
-            break;
+    if (unlocked_only) {
+        *xpath = crm_strdup_printf(XPATH_NODE_LRM_UNLOCKED,
+                                   uname, uname, expire);
+        desc_pre = "resource history (other than shutdown locks)";
+    } else {
+        *xpath = crm_strdup_printf(XPATH_NODE_LRM, uname);
+        desc_pre = "resource history";
     }
 
     if (desc != NULL) {
@@ -334,17 +326,17 @@ controld_node_state_deletion_strings(const char *uname,
     }
 }
 
+
 /*!
  * \internal
- * \brief Delete subsection of a node's CIB \c PCMK__XE_NODE_STATE
+ * \brief Delete a node's resource history from the CIB
  *
- * \param[in] uname    Desired node
- * \param[in] section  Subsection of \c PCMK__XE_NODE_STATE to delete
- * \param[in] options  CIB call options to use
+ * \param[in] uname          Desired node
+ * \param[in] unlocked_only  If true, delete history of only unlocked resources
+ * \param[in] options        CIB call options to use
  */
 void
-controld_delete_node_state(const char *uname, enum controld_section_e section,
-                           int options)
+controld_delete_node_state(const char *uname, bool unlocked_only, int options)
 {
     cib_t *cib = controld_globals.cib_conn;
     char *xpath = NULL;
@@ -353,8 +345,7 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
 
     CRM_ASSERT((uname != NULL) && (cib != NULL));
 
-    controld_node_state_deletion_strings(uname, section, &xpath, &desc);
-
+    controld_node_state_deletion_strings(uname, unlocked_only, &xpath, &desc);
     cib__set_call_options(options, "node state deletion",
                           cib_xpath|cib_multiple);
     cib_rc = cib->cmds->remove(cib, xpath, NULL, options);
