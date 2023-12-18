@@ -246,7 +246,7 @@ purge_remote_node_attrs(int call_opt, pcmk__node_status_t *node)
         controld_purge_node_attrs(node->name, true);
     }
 
-    controld_delete_node_state(node->name, unlocked_only, call_opt);
+    controld_delete_node_history(node->name, unlocked_only, call_opt);
 }
 
 /*!
@@ -355,7 +355,7 @@ remote_node_down(const char *node_name, const enum down_opts opts)
      * think resources are still running on the node.
      */
     if (opts == DOWN_ERASE_LRM) {
-        controld_delete_node_state(node_name, false, call_opt);
+        controld_delete_node_history(node_name, false, call_opt);
     }
 
     /* Ensure node is in the remote peer cache with lost state */
