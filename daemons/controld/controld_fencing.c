@@ -270,7 +270,7 @@ send_stonith_update(pcmk__graph_action_t *action, const char *target,
      */
 
     // Delete node's resource history from CIB
-    controld_delete_node_state(peer->uname, false, cib_scope_local);
+    controld_delete_node_history(peer->uname, false, cib_scope_local);
 
     // Ask attribute manager to delete node's transient attributes
     controld_purge_node_attrs(peer->uname, false);

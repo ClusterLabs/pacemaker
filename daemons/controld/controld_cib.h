@@ -48,10 +48,11 @@ int controld_update_cib(const char *section, xmlNode *data, int options,
                                          void *));
 unsigned int cib_op_timeout(void);
 
-void controld_node_state_deletion_strings(const char *uname, bool unlocked_only,
-                                          char **xpath, char **desc);
-void controld_delete_node_state(const char *uname, bool unlocked_only,
-                                int options);
+void controld_node_history_deletion_strings(const char *uname,
+                                            bool unlocked_only,
+                                            char **xpath, char **desc);
+void controld_delete_node_history(const char *uname, bool unlocked_only,
+                                  int options);
 int controld_delete_resource_history(const char *rsc_id, const char *node,
                                      const char *user_name, int call_options);
 

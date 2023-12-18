@@ -764,8 +764,8 @@ do_dc_join_ack(long long action,
     }
 
     // Delete relevant parts of node's current executor state from CIB
-    controld_node_state_deletion_strings(join_from, unlocked_only, &xpath,
-                                         NULL);
+    controld_node_history_deletion_strings(join_from, unlocked_only, &xpath,
+                                           NULL);
 
     rc = cib->cmds->remove(cib, xpath, NULL,
                            cib_scope_local

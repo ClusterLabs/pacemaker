@@ -303,8 +303,8 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
  * \param[out] desc           If not NULL, where to store loggable description
  */
 void
-controld_node_state_deletion_strings(const char *uname, bool unlocked_only,
-                                     char **xpath, char **desc)
+controld_node_history_deletion_strings(const char *uname, bool unlocked_only,
+                                       char **xpath, char **desc)
 {
     const char *desc_pre = NULL;
 
@@ -336,7 +336,7 @@ controld_node_state_deletion_strings(const char *uname, bool unlocked_only,
  * \param[in] options        CIB call options to use
  */
 void
-controld_delete_node_state(const char *uname, bool unlocked_only, int options)
+controld_delete_node_history(const char *uname, bool unlocked_only, int options)
 {
     cib_t *cib = controld_globals.cib_conn;
     char *xpath = NULL;
@@ -345,7 +345,7 @@ controld_delete_node_state(const char *uname, bool unlocked_only, int options)
 
     CRM_ASSERT((uname != NULL) && (cib != NULL));
 
-    controld_node_state_deletion_strings(uname, unlocked_only, &xpath, &desc);
+    controld_node_history_deletion_strings(uname, unlocked_only, &xpath, &desc);
     cib__set_call_options(options, "node state deletion",
                           cib_xpath|cib_multiple);
     cib_rc = cib->cmds->remove(cib, xpath, NULL, options);

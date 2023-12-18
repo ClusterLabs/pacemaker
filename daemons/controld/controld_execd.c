@@ -1072,7 +1072,7 @@ force_reprobe(lrm_state_t *lrm_state, const char *from_sys,
     }
 
     /* Now delete the copy in the CIB */
-    controld_delete_node_state(lrm_state->node_name, false, cib_scope_local);
+    controld_delete_node_history(lrm_state->node_name, false, cib_scope_local);
 
     // @COMPAT DCs < 1.1.14 need this deleted (in case it was explicitly false)
     update_attrd(lrm_state->node_name, CRM_OP_PROBED, NULL, user_name, is_remote_node);
