@@ -279,17 +279,6 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
                                 "[not(@" PCMK_OPT_SHUTDOWN_LOCK ") "        \
                                     "or " PCMK_OPT_SHUTDOWN_LOCK "<%lld]"
 
-// Node's PCMK__XE_TRANSIENT_ATTRIBUTES section (name 1x)
-#define XPATH_NODE_ATTRS XPATH_NODE_STATE "/" PCMK__XE_TRANSIENT_ATTRIBUTES
-
-// Everything under PCMK__XE_NODE_STATE (name 1x)
-#define XPATH_NODE_ALL          XPATH_NODE_STATE "/*"
-
-/* Unlocked history + transient attributes
- * (name 2x, (seconds_since_epoch - PCMK_OPT_SHUTDOWN_LOCK_LIMIT) 1x, name 1x)
- */
-#define XPATH_NODE_ALL_UNLOCKED XPATH_NODE_LRM_UNLOCKED "|" XPATH_NODE_ATTRS
-
 /*!
  * \internal
  * \brief Get the XPath and description of a node state section to be deleted
@@ -319,19 +308,6 @@ controld_node_state_deletion_strings(const char *uname,
             *xpath = pcmk__assert_asprintf(XPATH_NODE_LRM_UNLOCKED, uname,
                                            uname, expire);
             desc_pre = "resource history (other than shutdown locks)";
-            break;
-        case controld_section_attrs:
-            *xpath = pcmk__assert_asprintf(XPATH_NODE_ATTRS, uname);
-            desc_pre = "transient attributes";
-            break;
-        case controld_section_all:
-            *xpath = pcmk__assert_asprintf(XPATH_NODE_ALL, uname);
-            desc_pre = "all state";
-            break;
-        case controld_section_all_unlocked:
-            *xpath = pcmk__assert_asprintf(XPATH_NODE_ALL_UNLOCKED, uname,
-                                           uname, expire, uname);
-            desc_pre = "all state (other than shutdown locks)";
             break;
         default:
             // We called this function incorrectly
