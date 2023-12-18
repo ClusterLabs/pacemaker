@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -50,9 +50,6 @@ unsigned int cib_op_timeout(void);
 enum controld_section_e {
     controld_section_lrm,
     controld_section_lrm_unlocked,
-    controld_section_attrs,
-    controld_section_all,
-    controld_section_all_unlocked
 };
 
 void controld_node_state_deletion_strings(const char *uname,
