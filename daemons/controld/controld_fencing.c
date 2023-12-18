@@ -247,7 +247,13 @@ update_node_state_after_fencing(const char *target, const char *target_xml_id)
     crm_debug("Updating node state for %s after fencing (call %d)", target, rc);
     fsa_register_cib_callback(rc, pcmk__str_copy(target), cib_fencing_updated);
 
-    controld_delete_node_state(peer->name, controld_section_all, cib_none);
+    // Delete node's resource history from CIB
+    controld_delete_node_state(peer->name, controld_section_lrm, cib_none);
+
+    // Ask attribute manager to delete node's transient attributes
+    // @TODO: This is the only call to controld_purge_node_attrs that doesn't
+    //        want to also purge the node from the caches.  Why?
+    controld_purge_node_attrs(peer->name, false);
 }
 
 /*!
