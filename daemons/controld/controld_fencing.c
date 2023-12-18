@@ -267,7 +267,7 @@ update_node_state_after_fencing(const char *target, const char *target_xml_id)
     fsa_register_cib_callback(rc, pcmk__str_copy(target), cib_fencing_updated);
 
     // Delete node's resource history from CIB
-    controld_delete_node_state(peer->name, controld_section_lrm, cib_none);
+    controld_delete_node_state(peer->name, false, cib_none);
 
     // Ask attribute manager to delete node's transient attributes
     controld_purge_node_attrs(peer->name, false);
