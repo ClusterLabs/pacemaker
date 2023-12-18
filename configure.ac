@@ -1,7 +1,7 @@
 dnl
 dnl autoconf for Pacemaker
 dnl
-dnl Copyright 2009-2023 the Pacemaker project contributors
+dnl Copyright 2009-2024 the Pacemaker project contributors
 dnl
 dnl The version control history for this file may have further details.
 dnl
@@ -2153,6 +2153,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/common/tests/io/Makefile                        \
                 lib/common/tests/iso8601/Makefile                   \
                 lib/common/tests/lists/Makefile                     \
+                lib/common/tests/nodes/Makefile                     \
                 lib/common/tests/nvpair/Makefile                    \
                 lib/common/tests/options/Makefile                   \
                 lib/common/tests/output/Makefile                    \
