@@ -374,7 +374,7 @@ execute_stonith_cleanup(void)
 
     for (iter = stonith_cleanup_list; iter != NULL; iter = iter->next) {
         char *target = iter->data;
-        crm_node_t *target_node = crm_get_peer(0, target);
+        crm_node_t *target_node = pcmk__get_peer(0, target, NULL);
         const char *uuid = crm_peer_uuid(target_node);
 
         crm_notice("Marking %s, target of a previous stonith action, as clean", target);

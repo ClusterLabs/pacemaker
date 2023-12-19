@@ -27,6 +27,9 @@ extern "C" {
  */
 
 // \deprecated Do not use Pacemaker for cluster node cacheing
+crm_node_t *crm_get_peer(unsigned int id, const char *uname);
+
+// \deprecated Do not use Pacemaker for cluster node cacheing
 crm_node_t *crm_get_peer_full(unsigned int id, const char *uname, int flags);
 
 // \deprecated Use stonith_api_kick() from libstonithd instead

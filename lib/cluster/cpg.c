@@ -465,7 +465,7 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
 
         msg->sender.id = nodeid;
         if (msg->sender.size == 0) {
-            crm_node_t *peer = crm_get_peer(nodeid, NULL);
+            crm_node_t *peer = pcmk__get_peer(nodeid, NULL, NULL);
 
             if (peer == NULL) {
                 crm_err("Peer with nodeid=%u is unknown", nodeid);
@@ -526,7 +526,7 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
     }
 
     // Is this necessary?
-    crm_get_peer(msg->sender.id, msg->sender.uname);
+    pcmk__get_peer(msg->sender.id, msg->sender.uname, NULL);
 
     crm_trace("Payload: %.200s", data);
     return data;
@@ -720,7 +720,7 @@ pcmk_cpg_membership(cpg_handle_t handle,
     }
 
     for (i = 0; i < member_list_entries; i++) {
-        crm_node_t *peer = crm_get_peer(member_list[i].nodeid, NULL);
+        crm_node_t *peer = pcmk__get_peer(member_list[i].nodeid, NULL, NULL);
 
         if (member_list[i].nodeid == local_nodeid
                 && member_list[i].pid != getpid()) {
@@ -873,7 +873,7 @@ cluster_connect_cpg(crm_cluster_t *cluster)
         return FALSE;
     }
 
-    peer = crm_get_peer(id, NULL);
+    peer = pcmk__get_peer(id, NULL, NULL);
     crm_update_peer_proc(__func__, peer, crm_proc_cpg, ONLINESTATUS);
     return TRUE;
 }

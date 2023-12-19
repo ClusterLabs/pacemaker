@@ -1752,7 +1752,7 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
         to_sys = CRM_SYSTEM_TENGINE;
     }
 
-    peer = crm_get_peer(0, controld_globals.our_nodename);
+    peer = pcmk__get_peer(0, controld_globals.our_nodename, NULL);
     update = create_node_state_update(peer, node_update_none, NULL,
                                       __func__);
 

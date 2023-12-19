@@ -647,7 +647,7 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
     }
 
     if (device->include_nodeid && (cmd->target != NULL)) {
-        crm_node_t *node = crm_get_peer(0, cmd->target);
+        crm_node_t *node = pcmk__get_peer(0, cmd->target, NULL);
 
         cmd->target_nodeid = node->id;
     }
@@ -2409,8 +2409,8 @@ stonith_send_reply(const xmlNode *reply, int call_options,
     if (remote_peer == NULL) {
         do_local_reply(reply, client, call_options);
     } else {
-        send_cluster_message(crm_get_peer(0, remote_peer), crm_msg_stonith_ng,
-                             reply, FALSE);
+        send_cluster_message(pcmk__get_peer(0, remote_peer, NULL),
+                             crm_msg_stonith_ng, reply, FALSE);
     }
 }
 
@@ -3378,7 +3378,7 @@ handle_fence_request(pcmk__request_t *request)
             crm_xml_add(request->xml, F_STONITH_CLIENTID,
                         request->ipc_client->id);
             crm_xml_add(request->xml, F_STONITH_REMOTE_OP_ID, op->id);
-            send_cluster_message(crm_get_peer(0, alternate_host),
+            send_cluster_message(pcmk__get_peer(0, alternate_host, NULL),
                                  crm_msg_stonith_ng, request->xml, FALSE);
             pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_PENDING,
                              NULL);
