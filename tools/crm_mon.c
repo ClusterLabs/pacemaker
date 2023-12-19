@@ -297,6 +297,7 @@ struct {
     { "summary", pcmk_section_summary },
     { "tickets", pcmk_section_tickets },
     { "times", pcmk_section_times },
+    { "verifications", pcmk_section_verify },
     { NULL }
 };
 

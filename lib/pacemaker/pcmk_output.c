@@ -1801,6 +1801,9 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
     GList *unames = va_arg(args, GList *);
     GList *resources = va_arg(args, GList *);
 
+    pcmk__output_t *verify_out;
+    int verify_rc;
+
     int rc = pcmk_rc_no_output;
     bool already_printed_failure = false;
 
@@ -1917,6 +1920,20 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
         }
     }
 
+    /* If there are verification errors, always print a statement about that, even if not requested */
+
+    pcmk__output_new(&verify_out, "none", NULL, NULL);
+    verify_rc = pcmk__verify(scheduler, verify_out, scheduler->input);
+    pcmk__output_free(verify_out);
+
+    if (verify_rc != pcmk_rc_schema_validation) {
+        if (pcmk_is_set(section_opts, pcmk_section_verify)) {
+            out->info(out, "CIB is valid");
+        }
+    } else {
+        out->info(out, "CIB has errors (for details, run crm_verify -LV)");
+    }
+
     return rc;
 }
 
@@ -1938,6 +1955,9 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
     const char *prefix = va_arg(args, const char *);
     GList *unames = va_arg(args, GList *);
     GList *resources = va_arg(args, GList *);
+
+    pcmk__output_t *verify_out;
+    int verify_rc;
 
     out->message(out, "cluster-summary", scheduler, pcmkd_state, section_opts,
                  show_opts);
@@ -1999,6 +2019,21 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
                      false);
     }
 
+
+    /* If there are verification errors, always print a statement about that, even if not requested */
+
+    pcmk__output_new(&verify_out, "none", NULL, NULL);
+    verify_rc = pcmk__verify(scheduler, verify_out, scheduler->input);
+    pcmk__output_free(verify_out);
+
+    if (verify_rc != pcmk_rc_schema_validation) {
+        if (pcmk_is_set(section_opts, pcmk_section_verify)) {
+            out->info(out, "CIB is valid");
+        }
+    } else {
+        out->info(out, "CIB has errors (for details, run crm_verify -LV).");
+    }
+
     return pcmk_rc_ok;
 }
 
@@ -2021,6 +2056,9 @@ cluster_status_html(pcmk__output_t *out, va_list args)
     GList *unames = va_arg(args, GList *);
     GList *resources = va_arg(args, GList *);
     bool already_printed_failure = false;
+
+    pcmk__output_t *verify_out;
+    int verify_rc;
 
     out->message(out, "cluster-summary", scheduler, pcmkd_state, section_opts,
                  show_opts);
@@ -2124,6 +2162,20 @@ cluster_status_html(pcmk__output_t *out, va_list args)
     if (pcmk_is_set(section_opts, pcmk_section_bans)) {
         out->message(out, "ban-list", scheduler, prefix, resources, show_opts,
                      false);
+    }
+
+    /* If there are verification errors, always print a statement about that, even if not requested */
+
+    pcmk__output_new(&verify_out, "none", NULL, NULL);
+    verify_rc = pcmk__verify(scheduler, verify_out, scheduler->input);
+    pcmk__output_free(verify_out);
+
+    if (verify_rc != pcmk_rc_schema_validation) {
+        if (pcmk_is_set(section_opts, pcmk_section_verify)) {
+            out->info(out, "CIB is valid");
+        }
+    } else {
+        out->info(out, "CIB has errors (for details, run crm_verify -LV)");
     }
 
     return pcmk_rc_ok;
@@ -2337,12 +2389,40 @@ result_code_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("cluster-verify", "pcmk_scheduler_t *", "int")
+static int
+cluster_verify(pcmk__output_t *out, va_list args) {
+
+    /* If there are verification errors, always print a statement about that, even if not requested */
+    
+    pcmk_scheduler_t *scheduler = va_arg(args, pcmk_scheduler_t *);
+    int section_opts = va_arg(args, int);
+
+    pcmk__output_t *verify_out;
+    int verify_rc;
+
+    pcmk__output_new(&verify_out, "none", NULL, NULL);
+    verify_rc = pcmk__verify(scheduler, verify_out, scheduler->input);
+    pcmk__output_free(verify_out);
+
+    if (verify_rc != pcmk_rc_schema_validation) {
+        if (pcmk_is_set(section_opts, pcmk_section_verify)) {
+            out->list_item(out, "CIB is valid", NULL);
+        }
+    } else {
+        out->list_item(out, "CIB has errors (for details, run crm_verify -LV)", NULL);
+    }
+
+    return pcmk_rc_ok;
+}
+
 static pcmk__message_entry_t fmt_functions[] = {
     { "attribute", "default", attribute_default },
     { "attribute", "xml", attribute_xml },
     { "cluster-status", "default", pcmk__cluster_status_text },
     { "cluster-status", "html", cluster_status_html },
     { "cluster-status", "xml", cluster_status_xml },
+    { "cluster-verify", "default", cluster_verify },
     { "crmadmin-node", "default", crmadmin_node },
     { "crmadmin-node", "text", crmadmin_node_text },
     { "crmadmin-node", "xml", crmadmin_node_xml },
