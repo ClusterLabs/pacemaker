@@ -24,6 +24,15 @@
 
 /* internal unit testing related utilities */
 
+#if (PCMK__WITH_COVERAGE == 1)
+/* This function isn't exposed anywhere.  The following prototype was taken from
+ * /usr/lib/gcc/x86_64-redhat-linux/??/include/gcov.h
+ */
+extern void __gcov_dump(void);
+#else
+#define __gcov_dump()
+#endif
+
 /*!
  * \internal
  * \brief Assert that a statement aborts through CRM_ASSERT().
@@ -51,6 +60,7 @@
             struct rlimit cores = { 0, 0 }; \
             setrlimit(RLIMIT_CORE, &cores); \
             stmt; \
+            __gcov_dump(); \
             _exit(0); \
         } else if (p > 0) { \
             int wstatus = 0; \
@@ -96,6 +106,7 @@
             struct rlimit cores = { 0, 0 }; \
             setrlimit(RLIMIT_CORE, &cores); \
             stmt; \
+            __gcov_dump(); \
             _exit(CRM_EX_NONE); \
         } else if (p > 0) { \
             int wstatus = 0; \

@@ -22,6 +22,9 @@
 
 /* This header is for the sole use of libcrmcommon_test and unit tests */
 
+_Noreturn void __real_abort(void);
+_Noreturn void __wrap_abort(void);
+
 extern bool pcmk__mock_calloc;
 void *__real_calloc(size_t nmemb, size_t size);
 void *__wrap_calloc(size_t nmemb, size_t size);

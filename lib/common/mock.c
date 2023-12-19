@@ -25,6 +25,7 @@
 #include <grp.h>
 
 #include <cmocka.h>
+#include <crm/common/unittest_internal.h>
 #include "mock_private.h"
 
 /* This file is only used when running "make check".  It is built into
@@ -54,6 +55,27 @@
  */
 
 // LCOV_EXCL_START
+
+/* abort()
+ *
+ * Always mock abort - there's no pcmk__mock_abort tuneable to control this.
+ * Because abort calls _exit(), which doesn't run any of the things registered
+ * with atexit(), coverage numbers do not get written out.  This most noticably
+ * affects places where we are testing that things abort when they should.
+ *
+ * The solution is this wrapper that is always enabled when we are running
+ * unit tests (mock.c does not get included for the regular libcrmcommon.so).
+ * All it does is dump coverage data and call the real abort().
+ */
+_Noreturn void
+__wrap_abort(void)
+{
+#if (PCMK__WITH_COVERAGE == 1)
+    __gcov_dump();
+#endif
+    __real_abort();
+}
+
 /* calloc()
  *
  * If pcmk__mock_calloc is set to true, later calls to calloc() will return

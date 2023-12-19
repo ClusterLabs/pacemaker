@@ -15,7 +15,8 @@ LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) $(top_srcdir)/tests/tap-driver.sh
 LOG_COMPILER = $(top_srcdir)/tests/tap-test
 CLEANFILES = *.log *.trs
 
-WRAPPED = calloc		\
+WRAPPED = abort 		\
+	  calloc		\
 	  endgrent		\
 	  fopen 		\
 	  getenv		\
