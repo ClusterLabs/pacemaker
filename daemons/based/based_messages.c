@@ -129,7 +129,7 @@ send_sync_request(const char *host)
                 stand_alone? "localhost" : crm_cluster->uname);
 
     if (host != NULL) {
-        peer = pcmk__get_node(0, host, NULL, CRM_GET_PEER_CLUSTER);
+        peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster);
     }
     send_cluster_message(peer, crm_msg_cib, sync_me, FALSE);
     free_xml(sync_me);
@@ -448,7 +448,7 @@ sync_our_cib(xmlNode * request, gboolean all)
     add_message_xml(replace_request, F_CIB_CALLDATA, the_cib);
 
     if (!all) {
-        peer = pcmk__get_node(0, host, NULL, CRM_GET_PEER_CLUSTER);
+        peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster);
     }
     if (!send_cluster_message(peer, crm_msg_cib, replace_request, FALSE)) {
         result = -ENOTCONN;

@@ -120,7 +120,7 @@ attrd_cpg_dispatch(cpg_handle_t handle,
         crm_err("Bad message of class %d received from %s[%u]: '%.120s'", kind, from, nodeid, data);
     } else {
         attrd_peer_message(pcmk__get_node(nodeid, from, NULL,
-                                          CRM_GET_PEER_CLUSTER),
+                                          pcmk__node_search_cluster),
                            xml);
     }
 
@@ -255,7 +255,7 @@ static void
 record_peer_nodeid(attribute_value_t *v, const char *host)
 {
     crm_node_t *known_peer = pcmk__get_node(v->nodeid, host, NULL,
-                                            CRM_GET_PEER_CLUSTER);
+                                            pcmk__node_search_cluster);
 
     crm_trace("Learned %s has node id %s", known_peer->uname, known_peer->uuid);
     if (attrd_election_won()) {
@@ -441,7 +441,7 @@ attrd_peer_clear_failure(pcmk__request_t *request)
     regex_t regex;
 
     crm_node_t *peer = pcmk__get_node(0, request->peer, NULL,
-                                      CRM_GET_PEER_CLUSTER);
+                                      pcmk__node_search_cluster);
 
     pcmk_parse_interval_spec(interval_spec, &interval_ms);
 

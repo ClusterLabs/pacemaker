@@ -128,13 +128,6 @@ enum crm_ais_msg_types {
     crm_msg_stonith_ng = 9,
 };
 
-/* used with crm_get_peer_full */
-enum crm_get_peer_flags {
-    CRM_GET_PEER_CLUSTER   = 0x0001,
-    CRM_GET_PEER_REMOTE    = 0x0002,
-    CRM_GET_PEER_ANY       = CRM_GET_PEER_CLUSTER|CRM_GET_PEER_REMOTE,
-};
-
 gboolean send_cluster_message(const crm_node_t *node,
                               enum crm_ais_msg_types service,
                               const xmlNode *data, gboolean ordered);

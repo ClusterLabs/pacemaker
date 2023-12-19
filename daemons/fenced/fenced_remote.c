@@ -1031,7 +1031,7 @@ merge_duplicates(remote_fencing_op_t *op)
             continue;
         }
         if (!fencing_peer_active(pcmk__get_node(0, other->originator, NULL,
-                                                CRM_GET_PEER_CLUSTER))) {
+                                                pcmk__node_search_cluster))) {
             crm_notice("Failing action '%s' targeting %s originating from "
                        "client %s@%s: Originator is dead " CRM_XS " id=%.8s",
                        other->action, other->target, other->client_name,
@@ -1221,7 +1221,8 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
         crm_node_t *node;
 
         pcmk__scan_min_int(op->target, &nodeid, 0);
-        node = pcmk__search_known_node_cache(nodeid, NULL, CRM_GET_PEER_ANY);
+        node = pcmk__search_known_node_cache(nodeid, NULL,
+                                             pcmk__node_search_any);
 
         /* Ensure the conversion only happens once */
         stonith__clear_call_options(op->call_options, op->id, st_opt_cs_nodeid);
@@ -1665,7 +1666,7 @@ report_timeout_period(remote_fencing_op_t * op, int op_timeout)
     crm_xml_add_int(update, F_STONITH_TIMEOUT, op_timeout);
 
     send_cluster_message(pcmk__get_node(0, client_node, NULL,
-                                        CRM_GET_PEER_CLUSTER),
+                                        pcmk__node_search_cluster),
                          crm_msg_stonith_ng, update, FALSE);
 
     free_xml(update);
@@ -1920,7 +1921,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
         }
 
         send_cluster_message(pcmk__get_node(0, peer->host, NULL,
-                                            CRM_GET_PEER_CLUSTER),
+                                            pcmk__node_search_cluster),
                              crm_msg_stonith_ng, remote_op, FALSE);
         peer->tried = TRUE;
         free_xml(remote_op);
