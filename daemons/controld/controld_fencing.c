@@ -581,8 +581,9 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
                event->id);
 
     if (succeeded) {
-        crm_node_t *peer = pcmk__search_known_node_cache(0, event->target,
-                                                         pcmk__node_search_any);
+        crm_node_t *peer = pcmk__search_node_caches(0, event->target,
+                                                    pcmk__node_search_any
+                                                    |pcmk__node_search_known);
         const char *uuid = NULL;
 
         if (peer == NULL) {

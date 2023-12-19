@@ -41,6 +41,8 @@ enum pcmk__node_search_flags {
     /* @COMPAT The values before this must stay the same until we can drop
      * support for enum crm_get_peer_flags
      */
+
+    pcmk__node_search_known     = (1 << 2), // Search previously known nodes
 };
 
 /*!
@@ -142,8 +144,6 @@ crm_node_t *pcmk__search_cluster_node_cache(unsigned int id, const char *uname,
 void pcmk__purge_node_from_cache(const char *node_name, uint32_t node_id);
 
 void pcmk__refresh_node_caches_from_cib(xmlNode *cib);
-crm_node_t *pcmk__search_known_node_cache(unsigned int id, const char *uname,
-                                          uint32_t flags);
 
 crm_node_t *pcmk__get_node(unsigned int id, const char *uname,
                            const char *uuid, uint32_t flags);
