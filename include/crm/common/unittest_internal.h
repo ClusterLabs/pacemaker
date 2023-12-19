@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -64,6 +64,15 @@
             fail_msg("unable to fork for assert test"); \
         } \
     } while (0);
+
+/*!
+ * \internal
+ * \brief Assert that a statement aborts
+ *
+ * This is exactly the same as pcmk__assert_asserts (CRM_ASSERT() is implemented
+ * with abort()), but given a different name for clarity.
+ */
+#define pcmk__assert_aborts(stmt) pcmk__assert_asserts(stmt)
 
 /*!
  * \internal
