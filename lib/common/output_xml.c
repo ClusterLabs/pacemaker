@@ -84,7 +84,8 @@ static subst_t substitutions[] = {
       PCMK_XE_ACTIONS, },
     { "Utilization Information",
       PCMK_XE_UTILIZATIONS, },
-
+    { "Verification Information",
+      PCMK_XE_VERIFICATIONS, },
     { NULL, NULL }
 };
 
