@@ -20,7 +20,7 @@
 #include <crm/common/results.h>
 #include <crm/common/strings_internal.h>
 #include <crm/common/xml.h>
-#include <crm/cluster/internal.h>   // pcmk__get_peer_full()
+#include <crm/cluster/internal.h>   // pcmk__get_node()
 
 #include "pacemaker-attrd.h"
 
@@ -567,8 +567,8 @@ write_attribute(attribute_t *a, bool ignore_delay)
 
         } else {
             // This will create a cluster node cache entry if none exists
-            crm_node_t *peer = pcmk__get_peer_full(v->nodeid, v->nodename, NULL,
-                                                   CRM_GET_PEER_ANY);
+            crm_node_t *peer = pcmk__get_node(v->nodeid, v->nodename, NULL,
+                                              CRM_GET_PEER_ANY);
 
             uuid = peer->uuid;
 

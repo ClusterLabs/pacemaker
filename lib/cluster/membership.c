@@ -563,37 +563,6 @@ pcmk__search_node_caches(unsigned int id, const char *uname, uint32_t flags)
 }
 
 /*!
- * \brief Get a node cache entry (cluster or Pacemaker Remote)
- *
- * \param[in] id     If not 0, cluster node ID to search for
- * \param[in] uname  If not NULL, node name to search for
- * \param[in] uuid   If not NULL while id is 0, node UUID instead of cluster
- *                   node ID to search for
- * \param[in] flags  Bitmask of enum crm_get_peer_flags
- *
- * \return (Possibly newly created) node cache entry
- */
-crm_node_t *
-pcmk__get_peer_full(unsigned int id, const char *uname, const char *uuid,
-                    int flags)
-{
-    crm_node_t *node = NULL;
-
-    CRM_ASSERT(id > 0 || uname != NULL);
-
-    crm_peer_init();
-
-    if (pcmk_is_set(flags, CRM_GET_PEER_REMOTE)) {
-        node = g_hash_table_lookup(crm_remote_peer_cache, uname);
-    }
-
-    if ((node == NULL) && pcmk_is_set(flags, CRM_GET_PEER_CLUSTER)) {
-        node = pcmk__get_peer(id, uname, uuid);
-    }
-    return node;
-}
-
-/*!
  * \internal
  * \brief Purge a node from cache (both cluster and Pacemaker Remote)
  *
@@ -794,12 +763,14 @@ remove_conflicting_peer(crm_node_t *node)
  * \param[in] uname  If not NULL, node name to search for
  * \param[in] uuid   If not NULL while id is 0, node UUID instead of cluster
  *                   node ID to search for
+ * \param[in] flags  Group of enum crm_get_peer_flags
  *
  * \return (Possibly newly created) cluster node cache entry
  */
 /* coverity[-alloc] Memory is referenced in one or both hashtables */
 crm_node_t *
-pcmk__get_peer(unsigned int id, const char *uname, const char *uuid)
+pcmk__get_node(unsigned int id, const char *uname, const char *uuid,
+               uint32_t flags)
 {
     crm_node_t *node = NULL;
     char *uname_lookup = NULL;
@@ -807,6 +778,18 @@ pcmk__get_peer(unsigned int id, const char *uname, const char *uuid)
     CRM_ASSERT(id > 0 || uname != NULL);
 
     crm_peer_init();
+
+    // Check the Pacemaker Remote node cache first
+    if (pcmk_is_set(flags, CRM_GET_PEER_REMOTE)) {
+        node = g_hash_table_lookup(crm_remote_peer_cache, uname);
+        if (node != NULL) {
+            return node;
+        }
+    }
+
+    if (!pcmk_is_set(flags, CRM_GET_PEER_CLUSTER)) {
+        return NULL;
+    }
 
     node = pcmk__search_cluster_node_cache(id, uname, uuid);
 
@@ -825,7 +808,6 @@ pcmk__get_peer(unsigned int id, const char *uname, const char *uuid)
             node = pcmk__search_cluster_node_cache(id, uname, uuid);
         }
     }
-
 
     if (node == NULL) {
         char *uniqueid = crm_generate_uuid();
@@ -1417,13 +1399,13 @@ crm_terminate_member_no_mainloop(int nodeid, const char *uname, int *connection)
 crm_node_t *
 crm_get_peer(unsigned int id, const char *uname)
 {
-    return pcmk__get_peer(id, uname, NULL);
+    return pcmk__get_node(id, uname, NULL, CRM_GET_PEER_CLUSTER);
 }
 
 crm_node_t *
 crm_get_peer_full(unsigned int id, const char *uname, int flags)
 {
-    return pcmk__get_peer_full(id, uname, NULL, flags);
+    return pcmk__get_node(id, uname, NULL, flags);
 }
 
 // LCOV_EXCL_STOP

@@ -119,7 +119,8 @@ fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node)
             target_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
             router = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
             if (router) {
-                crm_node_t *node = pcmk__get_peer(0, router, NULL);
+                crm_node_t *node = pcmk__get_node(0, router, NULL,
+                                                  CRM_GET_PEER_CLUSTER);
 
                 if (node) {
                     router_uuid = node->uuid;

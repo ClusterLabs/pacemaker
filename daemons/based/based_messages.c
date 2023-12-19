@@ -118,6 +118,7 @@ void
 send_sync_request(const char *host)
 {
     xmlNode *sync_me = create_xml_node(NULL, "sync-me");
+    crm_node_t *peer = NULL;
 
     crm_info("Requesting re-sync from %s", (host? host : "all peers"));
     sync_in_progress = 1;
@@ -127,8 +128,10 @@ send_sync_request(const char *host)
     crm_xml_add(sync_me, F_CIB_DELEGATED,
                 stand_alone? "localhost" : crm_cluster->uname);
 
-    send_cluster_message((host == NULL)? NULL : pcmk__get_peer(0, host, NULL),
-                         crm_msg_cib, sync_me, FALSE);
+    if (host != NULL) {
+        peer = pcmk__get_node(0, host, NULL, CRM_GET_PEER_CLUSTER);
+    }
+    send_cluster_message(peer, crm_msg_cib, sync_me, FALSE);
     free_xml(sync_me);
 }
 
@@ -417,7 +420,7 @@ sync_our_cib(xmlNode * request, gboolean all)
     char *digest = NULL;
     const char *host = crm_element_value(request, F_ORIG);
     const char *op = crm_element_value(request, F_CIB_OPERATION);
-
+    crm_node_t *peer = NULL;
     xmlNode *replace_request = NULL;
 
     CRM_CHECK(the_cib != NULL, return -EINVAL);
@@ -444,8 +447,10 @@ sync_our_cib(xmlNode * request, gboolean all)
 
     add_message_xml(replace_request, F_CIB_CALLDATA, the_cib);
 
-    if (!send_cluster_message(all? NULL : pcmk__get_peer(0, host, NULL),
-                              crm_msg_cib, replace_request, FALSE)) {
+    if (!all) {
+        peer = pcmk__get_node(0, host, NULL, CRM_GET_PEER_CLUSTER);
+    }
+    if (!send_cluster_message(peer, crm_msg_cib, replace_request, FALSE)) {
         result = -ENOTCONN;
     }
     free_xml(replace_request);
