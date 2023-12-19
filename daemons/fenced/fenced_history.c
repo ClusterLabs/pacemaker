@@ -469,8 +469,9 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
             crm_node_t *node;
 
             pcmk__scan_min_int(target, &nodeid, 0);
-            node = pcmk__search_known_node_cache(nodeid, NULL,
-                                                 pcmk__node_search_any);
+            node = pcmk__search_node_caches(nodeid, NULL,
+                                            pcmk__node_search_any
+                                            |pcmk__node_search_known);
             if (node) {
                 target = node->uname;
             }

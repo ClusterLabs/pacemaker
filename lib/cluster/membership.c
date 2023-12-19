@@ -82,6 +82,7 @@ static gboolean crm_autoreap  = TRUE;
     } while (0)
 
 static void update_peer_uname(crm_node_t *node, const char *uname);
+static crm_node_t *find_known_node(const char *id, const char *uname);
 
 int
 crm_remote_peer_cache_size(void)
@@ -559,6 +560,14 @@ pcmk__search_node_caches(unsigned int id, const char *uname, uint32_t flags)
     if ((node == NULL) && pcmk_is_set(flags, pcmk__node_search_cluster)) {
         node = pcmk__search_cluster_node_cache(id, uname, NULL);
     }
+
+    if ((node == NULL) && pcmk_is_set(flags, pcmk__node_search_known)) {
+        char *id_str = (id == 0)? NULL : crm_strdup_printf("%u", id);
+
+        node = find_known_node(id_str, uname);
+        free(id_str);
+    }
+
     return node;
 }
 
@@ -1342,42 +1351,6 @@ pcmk__refresh_node_caches_from_cib(xmlNode *cib)
     crm_remote_peer_cache_refresh(cib);
     refresh_known_node_cache(cib);
 }
-
-/*!
- * \internal
- * \brief Search known node cache
- *
- * \param[in] id     If not 0, cluster node ID to search for
- * \param[in] uname  If not NULL, node name to search for
- * \param[in] flags  Group of enum pcmk__node_search_flags
- *
- * \return Known node cache entry if found, otherwise NULL
- */
-crm_node_t *
-pcmk__search_known_node_cache(unsigned int id, const char *uname,
-                              uint32_t flags)
-{
-    crm_node_t *node = NULL;
-    char *id_str = NULL;
-
-    CRM_ASSERT(id > 0 || uname != NULL);
-
-    node = pcmk__search_node_caches(id, uname, flags);
-
-    if (node || !(flags & pcmk__node_search_cluster)) {
-        return node;
-    }
-
-    if (id > 0) {
-        id_str = crm_strdup_printf("%u", id);
-    }
-
-    node = find_known_node(id_str, uname);
-
-    free(id_str);
-    return node;
-}
-
 
 // Deprecated functions kept only for backward API compatibility
 // LCOV_EXCL_START
