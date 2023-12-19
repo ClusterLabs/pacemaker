@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 the Pacemaker project contributors
+ * Copyright 2021-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -100,6 +100,31 @@ __wrap_getenv(const char *name)
     }
     check_expected_ptr(name);
     return mock_ptr_type(char *);
+}
+
+
+/* realloc()
+ *
+ * If pcmk__mock_realloc is set to true, later calls to realloc() will return
+ * NULL and must be preceded by:
+ *
+ *     expect_*(__wrap_realloc, ptr[, ...]);
+ *     expect_*(__wrap_realloc, size[, ...]);
+ *
+ * expect_* functions: https://api.cmocka.org/group__cmocka__param.html
+ */
+
+bool pcmk__mock_realloc = false;
+
+void *
+__wrap_realloc(void *ptr, size_t size)
+{
+    if (!pcmk__mock_realloc) {
+        return __real_realloc(ptr, size);
+    }
+    check_expected_ptr(ptr);
+    check_expected(size);
+    return NULL;
 }
 
 

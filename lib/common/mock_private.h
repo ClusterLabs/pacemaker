@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 the Pacemaker project contributors
+ * Copyright 2021-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -37,6 +37,10 @@ FILE *__wrap_fopen64(const char *pathname, const char *mode);
 extern bool pcmk__mock_getenv;
 char *__real_getenv(const char *name);
 char *__wrap_getenv(const char *name);
+
+extern bool pcmk__mock_realloc;
+void *__real_realloc(void *ptr, size_t size);
+void *__wrap_realloc(void *ptr, size_t size);
 
 extern bool pcmk__mock_setenv;
 int __real_setenv(const char *name, const char *value, int overwrite);
