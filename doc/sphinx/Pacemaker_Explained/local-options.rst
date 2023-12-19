@@ -22,6 +22,18 @@ environment variables when Pacemaker daemons start up.
      - Type
      - Default
      - Description
+
+   * - .. _cib_pam_service:
+
+       .. index::
+          pair: node option; CIB_pam_service
+
+       CIB_pam_service
+     - :ref:`text <text>`
+     - login
+     - PAM service to use for remote CIB client authentication (passed to
+       ``pam_start``).
+
    * - .. _pcmk_logfacility:
        
        .. index::
@@ -503,6 +515,32 @@ environment variables when Pacemaker daemons start up.
      - *Advanced Use Only:* Whether subsystem daemons should be run under
        ``valgrind`` with the ``callgrind`` tool enabled. Allowed values are the
        same as for ``PCMK_debug``.
+
+   * - .. _sbd_sync_resource_startup:
+
+       .. index::
+          pair:: node option; SBD_SYNC_RESOURCE_STARTUP
+
+       SBD_SYNC_RESOURCE_STARTUP
+     - :ref:`boolean <boolean>`
+     -
+     - If true, ``pacemakerd`` waits for a ping from ``sbd`` during startup
+       before starting other Pacemaker daemons, and during shutdown after
+       stopping other Pacemaker daemons but before exiting. Default value is set
+       based on the ``--with-sbd-sync-default`` configure script option.
+
+   * - .. _sbd_watchdog_timeout:
+
+       .. index::
+          pair:: node option; SBD_WATCHDOG_TIMEOUT
+
+       SBD_WATCHDOG_TIMEOUT
+     - :ref:`duration <duration>`
+     -
+     - If the ``stonith-watchdog-timeout`` cluster property is set to a negative
+       or invalid value, use double this value as the default if positive, or
+       use 0 as the default otherwise. This value must be greater than the value
+       of ``stonith-watchdog-timeout`` if both are set.
 
    * - .. _valgrind_opts:
 
