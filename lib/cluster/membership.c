@@ -122,7 +122,7 @@ crm_remote_peer_get(const char *node_name)
      * entry unless it has a node ID, which means the name actually is
      * associated with a cluster node. (@TODO return an error in that case?)
      */
-    node = pcmk__search_cluster_node_cache(0, node_name, NULL);
+    node = pcmk__search_node_caches(0, node_name, pcmk__node_search_cluster);
     if ((node != NULL) && (node->uuid == NULL)) {
         /* node_name could be a pointer into the cache entry being removed, so
          * reassign it to a copy before the original gets freed

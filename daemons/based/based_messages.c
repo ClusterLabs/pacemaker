@@ -248,7 +248,10 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
 
         if (rc != pcmk_ok) {
             // Notify originating peer so it can notify its local clients
-            crm_node_t *origin = pcmk__search_cluster_node_cache(0, host, NULL);
+            crm_node_t *origin = NULL;
+
+            origin = pcmk__search_node_caches(0, host,
+                                              pcmk__node_search_cluster);
 
             crm_info("Rejecting upgrade request from %s: %s "
                      CRM_XS " rc=%d peer=%s", host, pcmk_strerror(rc), rc,
