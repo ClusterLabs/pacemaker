@@ -635,21 +635,6 @@ pcmk__purge_node_from_cache(const char *node_name, uint32_t node_id)
 }
 
 /*!
- * \brief Get a node cache entry (cluster or Pacemaker Remote)
- *
- * \param[in] id     If not 0, cluster node ID to search for
- * \param[in] uname  If not NULL, node name to search for
- * \param[in] flags  Bitmask of enum crm_get_peer_flags
- *
- * \return (Possibly newly created) node cache entry
- */
-crm_node_t *
-crm_get_peer_full(unsigned int id, const char *uname, int flags)
-{
-    return pcmk__get_peer_full(id, uname, NULL, flags);
-}
-
-/*!
  * \internal
  * \brief Search cluster node cache
  *
@@ -1442,6 +1427,12 @@ int
 crm_terminate_member_no_mainloop(int nodeid, const char *uname, int *connection)
 {
     return stonith_api_kick(nodeid, uname, 120, TRUE);
+}
+
+crm_node_t *
+crm_get_peer_full(unsigned int id, const char *uname, int flags)
+{
+    return pcmk__get_peer_full(id, uname, NULL, flags);
 }
 
 // LCOV_EXCL_STOP

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -145,9 +145,6 @@ int crm_remote_peer_cache_size(void);
 void crm_remote_peer_cache_refresh(xmlNode *cib);
 crm_node_t *crm_remote_peer_get(const char *node_name);
 void crm_remote_peer_cache_remove(const char *node_name);
-
-/* allows filtering of remote and cluster nodes using crm_get_peer_flags */
-crm_node_t *crm_get_peer_full(unsigned int id, const char *uname, int flags);
 
 /* only searches cluster nodes */
 crm_node_t *crm_get_peer(unsigned int id, const char *uname);

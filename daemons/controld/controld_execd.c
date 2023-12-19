@@ -584,7 +584,7 @@ controld_query_executor_state(void)
         return NULL;
     }
 
-    peer = crm_get_peer_full(0, lrm_state->node_name, CRM_GET_PEER_ANY);
+    peer = pcmk__get_peer_full(0, lrm_state->node_name, NULL, CRM_GET_PEER_ANY);
     CRM_CHECK(peer != NULL, return NULL);
 
     xml_state = create_node_state_update(peer,
