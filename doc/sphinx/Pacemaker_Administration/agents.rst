@@ -422,6 +422,258 @@ Exceptions to the recovery handling described above:
   if they had returned success, but status output will indicate that the
   resource is degraded.
 
+.. _ocf_env_vars:
+
+Environment Variables
+_____________________
+
+Pacemaker sets certain environment variables when it executes an OCF resource
+agent. Agents can check these variables to get information about resource
+parameters or the execution environment.
+
+**Note:** Pacemaker may set other environment variables for its own purposes.
+They may be present in the agent's environment, but Pacemaker is not providing
+them for the agent's use, and so the agent should not rely on any variables not
+listed in the table below.
+
+.. list-table:: **OCF Environment Variables**
+   :class: longtable
+   :widths: 1 6
+   :header-rows: 1
+
+   * - Environment Variable
+     - Description
+   * - .. _OCF_CHECK_LEVEL:
+
+       .. index::
+          single: OCF_CHECK_LEVEL
+          single: environment variable; OCF_CHECK_LEVEL
+
+       OCF_CHECK_LEVEL
+     - Requested intensity level of checks in ``monitor`` and ``validate-all``
+       actions. Usually set as an operation attribute; see Pacemaker Explained
+       for an example.
+   * - .. _OCF_EXIT_REASON_PREFIX:
+
+       .. index::
+          single: OCF_EXIT_REASON_PREFIX
+          single: environment variable; OCF_EXIT_REASON_PREFIX
+
+       OCF_EXIT_REASON_PREFIX
+     - Prefix for printing fatal error messages from the resource agent.
+   * - .. _OCF_RA_VERSION_MAJOR:
+
+       .. index::
+          single: OCF_RA_VERSION_MAJOR
+          single: environment variable; OCF_RA_VERSION_MAJOR
+
+       OCF_RA_VERSION_MAJOR
+     - Major version number of the OCF Resource Agent API. If the script does
+       not support this revision, it should report an error.
+       See the `OCF specification <http://standards.clusterlabs.org>`_ for an
+       explanation of the versioning scheme used. The version number is split
+       into two numbers for ease of use in shell scripts. These two may be used
+       by the agent to determine whether it is run under an OCF-compliant
+       resource manager.
+   * - .. _OCF_RA_VERSION_MINOR:
+
+       .. index::
+          single: OCF_RA_VERSION_MINOR
+          single: environment variable; OCF_RA_VERSION_MINOR
+
+       OCF_RA_VERSION_MINOR
+     - Minor version number of the OCF Resource Agent API. See
+       :ref:`OCF_RA_VERSION_MAJOR <OCF_RA_VERSION_MAJOR>` for more details.
+   * - .. _OCF_RESKEY_crm_feature_set:
+
+       .. index::
+          single: OCF_RESKEY_crm_feature_set
+          single: environment variable; OCF_RESKEY_crm_feature_set
+
+       OCF_RESKEY_crm_feature_set
+     - ``crm_feature_set`` on the DC (or on the local node, if the agent is run
+       by ``crm_resource``).
+   * - .. _OCF_RESKEY_CRM_meta_interval:
+
+       .. index::
+          single: OCF_RESKEY_CRM_meta_interval
+          single: environment variable; OCF_RESKEY_CRM_meta_interval
+
+       OCF_RESKEY_CRM_meta_interval
+     - Interval (in milliseconds) of the current operation.
+   * - .. _OCF_RESKEY_CRM_meta_name:
+
+       .. index::
+          single: OCF_RESKEY_CRM_meta_name
+          single: environment variable; OCF_RESKEY_CRM_meta_name
+
+       OCF_RESKEY_CRM_meta_name
+     - Name of the current operation.
+   * - .. _OCF_RESKEY_CRM_meta_notify:
+
+       .. index::
+          single: OCF_RESKEY_CRM_meta_notify_*
+          single: environment variable; OCF_RESKEY_CRM_meta_notify_*
+
+       OCF_RESKEY_CRM_meta_notify_*
+     - See :ref:`Clone Notifications <clone_notifications>`.
+   * - .. _OCF_RESKEY_CRM_meta_on_node:
+
+       .. index::
+          single: OCF_RESKEY_CRM_meta_on_node
+          single: environment variable; OCF_RESKEY_CRM_meta_on_node
+
+       OCF_RESKEY_CRM_meta_on_node
+     - Name of the node where the current operation is running.
+   * - .. _OCF_RESKEY_CRM_meta_on_node_uuid:
+
+       .. index::
+          single: OCF_RESKEY_CRM_meta_on_node_uuid
+          single: environment variable; OCF_RESKEY_CRM_meta_on_node_uuid
+
+       OCF_RESKEY_CRM_meta_on_node_uuid
+     - Cluster-layer ID of the node where the current operation is running (or
+       node name for Pacemaker Remote nodes).
+   * - .. _OCF_RESKEY_CRM_meta_physical_host:
+
+       .. index::
+          single: OCF_RESKEY_CRM_meta_physical_host
+          single: environment variable; OCF_RESKEY_CRM_meta_physical_host
+
+       OCF_RESKEY_CRM_meta_physical_host
+     - If the node where the current operation is running is a guest node, the
+       host on which the container is running.
+   * - .. _OCF_RESKEY_CRM_meta_timeout:
+
+       .. index::
+          single: OCF_RESKEY_CRM_meta_timeout
+          single: environment variable; OCF_RESKEY_CRM_meta_timeout
+
+       OCF_RESKEY_CRM_meta_timeout
+     - Timeout (in milliseconds) of the current operation.
+   * - .. _OCF_RESKEY_CRM_meta:
+
+       .. index::
+          single: OCF_RESKEY_CRM_meta_*
+          single: environment variable; OCF_RESKEY_CRM_meta_*
+
+       OCF_RESKEY_CRM_meta_*
+     - Each of a resource's meta-attributes is converted to an environment
+       variable prefixed with "OCF_RESKEY_CRM_meta\_". See Pacemaker Explained
+       for some meta-attributes that have special meaning to Pacemaker.
+   * - .. _OCF_RESKEY:
+
+       .. index::
+          single: OCF_RESKEY_*
+          single: environment variable; OCF_RESKEY_*
+
+       OCF_RESKEY_*
+     - Each of a resource's instance parameters is converted to an environment
+       variable prefixed with "OCF_RESKEY\_".
+   * - .. _OCF_RESOURCE_INSTANCE:
+
+       .. index::
+          single: OCF_RESOURCE_INSTANCE
+          single: environment variable; OCF_RESOURCE_INSTANCE
+
+       OCF_RESOURCE_INSTANCE
+     - The name of the resource instance.
+   * - .. _OCF_RESOURCE_PROVIDER:
+
+       .. index::
+          single: OCF_RESOURCE_PROVIDER
+          single: environment variable; OCF_RESOURCE_PROVIDER
+
+       OCF_RESOURCE_PROVIDER
+     - The name of the resource agent provider.
+   * - .. _OCF_RESOURCE_TYPE:
+
+       .. index::
+          single: OCF_RESOURCE_TYPE
+          single: environment variable; OCF_RESOURCE_TYPE
+
+       OCF_RESOURCE_TYPE
+     - The name of the resource type.
+   * - .. _OCF_ROOT:
+
+       .. index::
+          single: OCF_ROOT
+          single: environment variable; OCF_ROOT
+
+       OCF_ROOT
+     - The root of the OCF directory hierarchy.
+   * - .. _OCF_TRACE_FILE:
+
+       .. index::
+          single: OCF_TRACE_FILE
+          single: environment variable; OCF_TRACE_FILE
+
+       OCF_TRACE_FILE
+     - The absolute path or file descriptor to write trace output to, if
+       ``OCF_TRACE_RA`` is set to true. Pacemaker sets this only to
+       ``/dev/stderr`` and only when running a resource agent via
+       ``crm_resource``.
+   * - .. _OCF_TRACE_RA:
+
+       .. index::
+          single: OCF_TRACE_RA
+          single: environment variable; OCF_TRACE_RA
+
+       OCF_TRACE_RA
+     - If set to true, enable tracing of the resource agent. Trace output is
+       written to ``OCF_TRACE_FILE`` if set; otherwise, it's written to a file
+       in ``OCF_RESKEY_trace_dir`` if set or in a default directory if not.
+       Pacemaker sets this to true only when running a resource agent via
+       ``crm_resource`` with one or more ``-V`` flags.
+   * - .. _PCMK_DEBUGLOG:
+       .. _HA_DEBUGLOG:
+
+       .. index::
+          single: PCMK_DEBUGLOG
+          single: environment variable; PCMK_DEBUGLOG
+          single: HA_DEBUGLOG
+          single: environment variable; HA_DEBUGLOG
+
+       PCMK_DEBUGLOG (and HA_DEBUGLOG)
+     - Where to write resource agent debug logs. Pacemaker sets this to
+       ``PCMK_logfile`` if set to a value other than ``none`` and if debugging
+       is enabled for the executor.
+   * - .. _PCMK_LOGFACILITY:
+       .. _HA_LOGFACILITY:
+
+       .. index::
+          single: PCMK_LOGFACILITY
+          single: environment variable; PCMK_LOGFACILITY
+          single: HA_LOGFACILITY
+          single: environment variable; HA_LOGFACILITY
+
+       PCMK_LOGFACILITY (and HA_LOGFACILITY)
+     - Syslog facility for resource agent logs. Pacemaker sets this to
+       ``PCMK_logfacility`` if set to a value other than ``none`` or
+       ``/dev/null``.
+   * - .. _PCMK_LOGFILE:
+       .. _HA_LOGFILE::
+
+       .. index::
+          single: PCMK_LOGFILE:
+          single: environment variable; PCMK_LOGFILE:
+          single: HA_LOGFILE:
+          single: environment variable; HA_LOGFILE:
+
+       PCMK_LOGFILE (and HA_LOGFILE)
+     - Where to write resource agent logs. Pacemaker sets this to
+       ``PCMK_logfile`` if set to a value other than ``none``.
+   * - .. _PCMK_service:
+
+       .. index::
+          single: PCMK_service
+          single: environment variable; PCMK_service
+
+       PCMK_service
+     - The name of the Pacemaker subsystem or command-line tool that's executing
+       the resource agent. Specific values are subject to change; useful mainly
+       for logging.
+
 Clone Resource Agent Requirements
 _________________________________
 
@@ -499,6 +751,8 @@ what role it currently believes it to be in.
        Failed (Promoted)
    * - Other
      - Failed (Unpromoted)
+
+.. _clone_notifications:
 
 Clone Notifications
 ~~~~~~~~~~~~~~~~~~~
