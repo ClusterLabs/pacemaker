@@ -539,7 +539,7 @@ hash_find_by_data(gpointer key, gpointer value, gpointer user_data)
  *
  * \param[in] id     If not 0, cluster node ID to search for
  * \param[in] uname  If not NULL, node name to search for
- * \param[in] flags  Bitmask of enum crm_get_peer_flags
+ * \param[in] flags  Group of enum pcmk__node_search_flags
  *
  * \return Node cache entry if found, otherwise NULL
  */
@@ -552,11 +552,11 @@ pcmk__search_node_caches(unsigned int id, const char *uname, uint32_t flags)
 
     crm_peer_init();
 
-    if ((uname != NULL) && pcmk_is_set(flags, CRM_GET_PEER_REMOTE)) {
+    if ((uname != NULL) && pcmk_is_set(flags, pcmk__node_search_remote)) {
         node = g_hash_table_lookup(crm_remote_peer_cache, uname);
     }
 
-    if ((node == NULL) && pcmk_is_set(flags, CRM_GET_PEER_CLUSTER)) {
+    if ((node == NULL) && pcmk_is_set(flags, pcmk__node_search_cluster)) {
         node = pcmk__search_cluster_node_cache(id, uname, NULL);
     }
     return node;
@@ -763,7 +763,7 @@ remove_conflicting_peer(crm_node_t *node)
  * \param[in] uname  If not NULL, node name to search for
  * \param[in] uuid   If not NULL while id is 0, node UUID instead of cluster
  *                   node ID to search for
- * \param[in] flags  Group of enum crm_get_peer_flags
+ * \param[in] flags  Group of enum pcmk__node_search_flags
  *
  * \return (Possibly newly created) cluster node cache entry
  */
@@ -780,14 +780,14 @@ pcmk__get_node(unsigned int id, const char *uname, const char *uuid,
     crm_peer_init();
 
     // Check the Pacemaker Remote node cache first
-    if (pcmk_is_set(flags, CRM_GET_PEER_REMOTE)) {
+    if (pcmk_is_set(flags, pcmk__node_search_remote)) {
         node = g_hash_table_lookup(crm_remote_peer_cache, uname);
         if (node != NULL) {
             return node;
         }
     }
 
-    if (!pcmk_is_set(flags, CRM_GET_PEER_CLUSTER)) {
+    if (!pcmk_is_set(flags, pcmk__node_search_cluster)) {
         return NULL;
     }
 
@@ -1349,7 +1349,7 @@ pcmk__refresh_node_caches_from_cib(xmlNode *cib)
  *
  * \param[in] id     If not 0, cluster node ID to search for
  * \param[in] uname  If not NULL, node name to search for
- * \param[in] flags  Bitmask of enum crm_get_peer_flags
+ * \param[in] flags  Group of enum pcmk__node_search_flags
  *
  * \return Known node cache entry if found, otherwise NULL
  */
@@ -1364,7 +1364,7 @@ pcmk__search_known_node_cache(unsigned int id, const char *uname,
 
     node = pcmk__search_node_caches(id, uname, flags);
 
-    if (node || !(flags & CRM_GET_PEER_CLUSTER)) {
+    if (node || !(flags & pcmk__node_search_cluster)) {
         return node;
     }
 
@@ -1399,7 +1399,7 @@ crm_terminate_member_no_mainloop(int nodeid, const char *uname, int *connection)
 crm_node_t *
 crm_get_peer(unsigned int id, const char *uname)
 {
-    return pcmk__get_node(id, uname, NULL, CRM_GET_PEER_CLUSTER);
+    return pcmk__get_node(id, uname, NULL, pcmk__node_search_cluster);
 }
 
 crm_node_t *

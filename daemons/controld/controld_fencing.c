@@ -222,7 +222,7 @@ send_stonith_update(pcmk__graph_action_t *action, const char *target,
      * Try getting any existing node cache entry also by node uuid in case it
      * doesn't have an uname yet.
      */
-    peer = pcmk__get_node(0, target, uuid, CRM_GET_PEER_ANY);
+    peer = pcmk__get_node(0, target, uuid, pcmk__node_search_any);
 
     CRM_CHECK(peer != NULL, return);
 
@@ -375,7 +375,7 @@ execute_stonith_cleanup(void)
     for (iter = stonith_cleanup_list; iter != NULL; iter = iter->next) {
         char *target = iter->data;
         crm_node_t *target_node = pcmk__get_node(0, target, NULL,
-                                                 CRM_GET_PEER_CLUSTER);
+                                                 pcmk__node_search_cluster);
         const char *uuid = crm_peer_uuid(target_node);
 
         crm_notice("Marking %s, target of a previous stonith action, as clean", target);
@@ -582,7 +582,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
 
     if (succeeded) {
         crm_node_t *peer = pcmk__search_known_node_cache(0, event->target,
-                                                         CRM_GET_PEER_ANY);
+                                                         pcmk__node_search_any);
         const char *uuid = NULL;
 
         if (peer == NULL) {

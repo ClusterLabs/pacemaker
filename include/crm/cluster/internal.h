@@ -30,6 +30,19 @@ enum crm_proc_flag {
 };
 /* *INDENT-ON* */
 
+// Used with node cache search functions
+enum pcmk__node_search_flags {
+    pcmk__node_search_none      = 0,
+    pcmk__node_search_cluster   = (1 << 0), // Search for cluster nodes
+    pcmk__node_search_remote    = (1 << 1), // Search for remote nodes
+    pcmk__node_search_any       = pcmk__node_search_cluster
+                                  |pcmk__node_search_remote,
+
+    /* @COMPAT The values before this must stay the same until we can drop
+     * support for enum crm_get_peer_flags
+     */
+};
+
 /*!
  * \internal
  * \brief Return the process bit corresponding to the current cluster stack

@@ -459,7 +459,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
             crm_log_xml_trace(msg, "relayed");
             if (!broadcast) {
                 node_to = pcmk__get_node(0, host_to, NULL,
-                                         CRM_GET_PEER_CLUSTER);
+                                         pcmk__node_search_cluster);
             }
             send_cluster_message(node_to, dest, msg, TRUE);
             return TRUE;
@@ -904,7 +904,7 @@ handle_node_info_request(const xmlNode *msg)
         value = controld_globals.our_nodename;
     }
 
-    node = pcmk__search_node_caches(node_id, value, CRM_GET_PEER_ANY);
+    node = pcmk__search_node_caches(node_id, value, pcmk__node_search_any);
     if (node) {
         crm_xml_add(reply_data, XML_ATTR_ID, node->uuid);
         crm_xml_add(reply_data, XML_ATTR_UNAME, node->uname);

@@ -735,7 +735,7 @@ update_dc(xmlNode * msg)
 
     } else if (controld_globals.dc_name != NULL) {
         crm_node_t *dc_node = pcmk__get_node(0, controld_globals.dc_name, NULL,
-                                             CRM_GET_PEER_CLUSTER);
+                                             pcmk__node_search_cluster);
 
         crm_info("Set DC to %s (%s)",
                  controld_globals.dc_name,

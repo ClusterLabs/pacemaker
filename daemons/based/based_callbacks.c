@@ -930,7 +930,7 @@ forward_request(xmlNode *request)
     crm_xml_add(request, F_CIB_DELEGATED, OUR_NODENAME);
 
     if (host != NULL) {
-        peer = pcmk__get_node(0, host, NULL, CRM_GET_PEER_CLUSTER);
+        peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster);
     }
     send_cluster_message(peer, crm_msg_cib, request, FALSE);
 
@@ -990,7 +990,7 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
         crm_trace("Sending request result to %s only", originator);
         crm_xml_add(msg, F_CIB_ISREPLY, originator);
         return send_cluster_message(pcmk__get_node(0, originator, NULL,
-                                                   CRM_GET_PEER_CLUSTER),
+                                                   pcmk__node_search_cluster),
                                     crm_msg_cib, msg, FALSE);
     }
 

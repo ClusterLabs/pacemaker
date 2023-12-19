@@ -318,7 +318,7 @@ do_dc_join_offer_one(long long action,
         crm_err("Can't make join-%d offer to unknown node", current_join_id);
         return;
     }
-    member = pcmk__get_node(0, join_to, NULL, CRM_GET_PEER_CLUSTER);
+    member = pcmk__get_node(0, join_to, NULL, pcmk__node_search_cluster);
 
     /* It is possible that a node will have been sick or starting up when the
      * original offer was made. However, it will either re-announce itself in
@@ -333,7 +333,7 @@ do_dc_join_offer_one(long long action,
      */
     if (strcasecmp(join_to, controld_globals.our_nodename) != 0) {
         member = pcmk__get_node(0, controld_globals.our_nodename, NULL,
-                                CRM_GET_PEER_CLUSTER);
+                                pcmk__node_search_cluster);
         join_make_offer(NULL, member, NULL);
     }
 
@@ -397,7 +397,7 @@ do_dc_join_filter_offer(long long action,
         crm_err("Ignoring invalid join request without node name");
         return;
     }
-    join_node = pcmk__get_node(0, join_from, NULL, CRM_GET_PEER_CLUSTER);
+    join_node = pcmk__get_node(0, join_from, NULL, pcmk__node_search_cluster);
 
     crm_element_value_int(join_ack->msg, F_CRM_JOIN_ID, &join_id);
     if (join_id != current_join_id) {
@@ -733,7 +733,7 @@ do_dc_join_ack(long long action,
         goto done;
     }
 
-    peer = pcmk__get_node(0, join_from, NULL, CRM_GET_PEER_CLUSTER);
+    peer = pcmk__get_node(0, join_from, NULL, pcmk__node_search_cluster);
     if (peer->join != crm_join_finalized) {
         crm_info("Ignoring out-of-sequence join-%d confirmation from %s "
                  "(currently %s not %s)",
@@ -867,7 +867,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
         return;
     }
 
-    join_node = pcmk__get_node(0, join_to, NULL, CRM_GET_PEER_CLUSTER);
+    join_node = pcmk__get_node(0, join_to, NULL, pcmk__node_search_cluster);
     if (!crm_is_peer_active(join_node)) {
         /*
          * NACK'ing nodes that the membership layer doesn't know about yet

@@ -568,7 +568,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
         } else {
             // This will create a cluster node cache entry if none exists
             crm_node_t *peer = pcmk__get_node(v->nodeid, v->nodename, NULL,
-                                              CRM_GET_PEER_ANY);
+                                              pcmk__node_search_any);
 
             uuid = peer->uuid;
 
