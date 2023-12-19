@@ -297,6 +297,7 @@ struct {
     { "summary", pcmk_section_summary },
     { "tickets", pcmk_section_tickets },
     { "times", pcmk_section_times },
+    { "verifications", pcmk_section_verify },
     { NULL }
 };
 
@@ -332,7 +333,7 @@ apply_exclude(const gchar *excludes, GError **error) {
                         "failcounts, failures, fencing, fencing-failed, "
                         "fencing-pending, fencing-succeeded, maint-mode, nodes, "
                         PCMK_VALUE_NONE ", operations, options, resources, "
-                        "stack, summary, tickets, times");
+                        "stack, summary, tickets, times, verifications");
             result = FALSE;
             break;
         }
@@ -374,7 +375,8 @@ apply_include(const gchar *includes, GError **error) {
                         PCMK_VALUE_DEFAULT ", failcounts, failures, fencing, "
                         "fencing-failed, fencing-pending, fencing-succeeded, "
                         "maint-mode, nodes, " PCMK_VALUE_NONE ", operations, "
-                        "options, resources, stack, summary, tickets, times");
+                        "options, resources, stack, summary, tickets, times, "
+                        "verifications");
             result = FALSE;
             break;
         }

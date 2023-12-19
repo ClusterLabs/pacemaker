@@ -411,6 +411,7 @@ cluster_summary(pcmk__output_t *out, va_list args) {
     uint32_t show_opts = va_arg(args, uint32_t);
 
     int rc = pcmk_rc_no_output;
+    
     const char *stack_s = get_cluster_stack(scheduler);
 
     if (pcmk_is_set(section_opts, pcmk_section_stack)) {
@@ -449,6 +450,9 @@ cluster_summary(pcmk__output_t *out, va_list args) {
         out->message(out, "cluster-times",
                      scheduler->localhost, last_written, user, client, origin);
     }
+
+    PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
+    out->message(out, "cluster-verify", scheduler, section_opts);
 
     if (pcmk_is_set(section_opts, pcmk_section_counts)) {
         PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
@@ -524,6 +528,9 @@ cluster_summary_html(pcmk__output_t *out, va_list args) {
         out->message(out, "cluster-times",
                      scheduler->localhost, last_written, user, client, origin);
     }
+
+    PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
+    out->message(out, "cluster-verify", scheduler, section_opts);
 
     if (pcmk_is_set(section_opts, pcmk_section_counts)) {
         PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
@@ -3429,7 +3436,6 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "ticket", "default", ticket_default },
     { "ticket", "xml", ticket_xml },
     { "ticket-list", "default", ticket_list },
-
     { NULL, NULL, NULL }
 };
 

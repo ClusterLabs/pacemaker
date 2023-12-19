@@ -1938,6 +1938,9 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
     GList *unames = va_arg(args, GList *);
     GList *resources = va_arg(args, GList *);
 
+    pcmk__output_t *verify_out;
+    int verify_rc;
+
     out->message(out, "cluster-summary", scheduler, pcmkd_state, section_opts,
                  show_opts);
 
@@ -1996,6 +1999,21 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
     if (pcmk_is_set(section_opts, pcmk_section_bans)) {
         out->message(out, "ban-list", scheduler, prefix, resources, show_opts,
                      false);
+    }
+
+
+    /* If there are verification errors, always print a statement about that, even if not requested */
+
+    pcmk__output_new(&verify_out, "none", NULL, NULL);
+    verify_rc = pcmk__verify(scheduler, verify_out, scheduler->input);
+    pcmk__output_free(verify_out);
+
+    if (verify_rc == pcmk_rc_ok) {
+        if (pcmk_is_set(section_opts, pcmk_section_verify)) {
+            out->info(out, "CIB syntax is valid");
+        }
+    } else {
+        out->info(out, "CIB syntax has errors (for details, run crm_verify -LV).");
     }
 
     return pcmk_rc_ok;
@@ -2467,6 +2485,33 @@ ticket_constraints_default(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("cluster-verify", "pcmk_scheduler_t *", "int")
+static int
+cluster_verify_text(pcmk__output_t *out, va_list args) {
+
+    /* If there are verification errors, always print a statement about that, even if not requested */
+    
+    pcmk_scheduler_t *scheduler = va_arg(args, pcmk_scheduler_t *);
+    int section_opts = va_arg(args, int);
+
+    pcmk__output_t *verify_out;
+    int verify_rc;
+
+    pcmk__output_new(&verify_out, "none", NULL, NULL);
+    verify_rc = pcmk__verify(scheduler, verify_out, scheduler->input);
+    pcmk__output_free(verify_out);
+
+    if (verify_rc == pcmk_rc_ok) {
+        if (pcmk_is_set(section_opts, pcmk_section_verify)) {
+            out->list_item(out, NULL, "CIB syntax is valid");
+        }
+    } else {
+        out->list_item(out, NULL, "CIB syntax has errors (for details, run crm_verify -LV)");
+    }
+
+    return pcmk_rc_ok;
+}
+
 static int
 add_ticket_element_with_constraints(xmlNode *node, void *userdata)
 {
@@ -2554,6 +2599,19 @@ ticket_constraints_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("cluster-verify", "pcmk_scheduler_t *", "int")
+static int
+cluster_verify_xml(pcmk__output_t *out, va_list args) {
+    pcmk_scheduler_t *scheduler = va_arg(args, pcmk_scheduler_t *);
+    int section_opts = va_arg(args, int);
+
+    if (pcmk_is_set(section_opts, pcmk_section_verify)) {
+        pcmk__verify(scheduler, out, scheduler->input);
+    }
+
+    return pcmk_rc_ok;
+}
+
 PCMK__OUTPUT_ARGS("ticket-state", "xmlNode *")
 static int
 ticket_state_default(pcmk__output_t *out, va_list args)
@@ -2615,6 +2673,9 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "cluster-status", "default", pcmk__cluster_status_text },
     { "cluster-status", "html", cluster_status_html },
     { "cluster-status", "xml", cluster_status_xml },
+    { "cluster-verify", "default", cluster_verify_text },
+    { "cluster-verify", "html", cluster_verify_xml },
+    { "cluster-verify", "xml", cluster_verify_xml },
     { "crmadmin-node", "default", crmadmin_node },
     { "crmadmin-node", "text", crmadmin_node_text },
     { "crmadmin-node", "xml", crmadmin_node_xml },
