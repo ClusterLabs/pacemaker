@@ -12,6 +12,7 @@
 #include <glib.h>
 
 #include <crm/common/messages_internal.h>
+#include <crm/cluster/internal.h>   // pcmk__get_peer()
 #include <crm/msg_xml.h>
 
 #include "pacemaker-attrd.h"
