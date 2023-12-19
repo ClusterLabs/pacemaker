@@ -81,7 +81,10 @@ environment variables when Pacemaker daemons start up.
        specified file (in addition to the system log, if enabled). These
        messages may have extended information, and will include messages of info
        severity. This log is of more use to developers and advanced system
-       administrators, and when reporting problems.
+       administrators, and when reporting problems. Note: The default is
+       |PCMK_CONTAINER_LOG_FILE| (inside the container) for bundled container
+       nodes; this would typically be mapped to a different path on the host
+       running the container.
 
    * - .. _pcmk_logfile_mode:
 

@@ -37,9 +37,10 @@ rst_prolog="""
 .. |CRM_SCHEMA_DIRECTORY| replace:: %CRM_SCHEMA_DIRECTORY%
 .. |PCMK_AUTHKEY_FILE| replace:: %PACEMAKER_CONFIG_DIR%/authkey
 .. |PCMK_CONFIG_FILE| replace:: ``%CONFIGDIR%/pacemaker``
+.. |PCMK_GNUTLS_PRIORITIES| replace:: %PCMK_GNUTLS_PRIORITIES%
 .. |PCMK_INIT_ENV_FILE| replace:: ``%PACEMAKER_CONFIG_DIR%/pcmk-init.env``
 .. |PCMK_LOG_FILE| replace:: %CRM_LOG_DIR%/pacemaker.log
-.. |PCMK_GNUTLS_PRIORITIES| replace:: %PCMK_GNUTLS_PRIORITIES%
+.. |PCMK_CONTAINER_LOG_FILE| replace:: ``/var/log/pcmk-init.log``
 .. |REMOTE_DISTRO| replace:: AlmaLinux
 .. |REMOTE_DISTRO_VER| replace:: 9
 """
