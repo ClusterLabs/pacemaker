@@ -206,7 +206,7 @@ should_purge_attributes(crm_node_t *node)
     /* Get the node that was hosting the remote connection resource from the
      * peer cache.  That's the one we really care about here.
      */
-    conn_node = pcmk__get_peer(0, node->conn_host, NULL);
+    conn_node = pcmk__get_node(0, node->conn_host, NULL, CRM_GET_PEER_CLUSTER);
     if (conn_node == NULL) {
         return purge;
     }

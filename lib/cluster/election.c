@@ -298,7 +298,7 @@ election_vote(election_t *e)
         return;
     }
 
-    our_node = pcmk__get_peer(0, e->uname, NULL);
+    our_node = pcmk__get_node(0, e->uname, NULL, CRM_GET_PEER_CLUSTER);
     if ((our_node == NULL) || (crm_is_peer_active(our_node) == FALSE)) {
         crm_trace("Cannot vote in %s yet: local node not connected to cluster",
                   e->name);
@@ -547,8 +547,8 @@ election_count_vote(election_t *e, const xmlNode *message, bool can_win)
         return election_error;
     }
 
-    your_node = pcmk__get_peer(0, vote.from, NULL);
-    our_node = pcmk__get_peer(0, e->uname, NULL);
+    your_node = pcmk__get_node(0, vote.from, NULL, CRM_GET_PEER_CLUSTER);
+    our_node = pcmk__get_node(0, e->uname, NULL, CRM_GET_PEER_CLUSTER);
     we_are_owner = (our_node != NULL)
                    && pcmk__str_eq(our_node->uuid, vote.election_owner,
                                    pcmk__str_none);

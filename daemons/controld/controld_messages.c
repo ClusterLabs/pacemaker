@@ -458,7 +458,8 @@ relay_message(xmlNode * msg, gboolean originated_locally)
                       ref, pcmk__s(host_to, "broadcast"));
             crm_log_xml_trace(msg, "relayed");
             if (!broadcast) {
-                node_to = pcmk__get_peer(0, host_to, NULL);
+                node_to = pcmk__get_node(0, host_to, NULL,
+                                         CRM_GET_PEER_CLUSTER);
             }
             send_cluster_message(node_to, dest, msg, TRUE);
             return TRUE;

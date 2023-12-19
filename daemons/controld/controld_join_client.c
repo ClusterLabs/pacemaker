@@ -35,7 +35,8 @@ update_dc_expected(const xmlNode *msg)
 {
     if ((controld_globals.dc_name != NULL)
         && pcmk__xe_attr_is_true(msg, F_CRM_DC_LEAVING)) {
-        crm_node_t *dc_node = pcmk__get_peer(0, controld_globals.dc_name, NULL);
+        crm_node_t *dc_node = pcmk__get_node(0, controld_globals.dc_name, NULL,
+                                             CRM_GET_PEER_CLUSTER);
 
         pcmk__update_peer_expected(__func__, dc_node, CRMD_JOINSTATE_DOWN);
     }
@@ -177,7 +178,8 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
 
         crm_xml_add(reply, F_CRM_JOIN_ID, join_id);
         crm_xml_add(reply, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
-        send_cluster_message(pcmk__get_peer(0, controld_globals.dc_name, NULL),
+        send_cluster_message(pcmk__get_node(0, controld_globals.dc_name, NULL,
+                                            CRM_GET_PEER_CLUSTER),
                              crm_msg_crmd, reply, TRUE);
         free_xml(reply);
     }
@@ -333,7 +335,8 @@ do_cl_join_finalize_respond(long long action,
             }
         }
 
-        send_cluster_message(pcmk__get_peer(0, controld_globals.dc_name, NULL),
+        send_cluster_message(pcmk__get_node(0, controld_globals.dc_name, NULL,
+                                            CRM_GET_PEER_CLUSTER),
                              crm_msg_crmd, reply, TRUE);
         free_xml(reply);
 

@@ -119,7 +119,9 @@ attrd_cpg_dispatch(cpg_handle_t handle,
     if (xml == NULL) {
         crm_err("Bad message of class %d received from %s[%u]: '%.120s'", kind, from, nodeid, data);
     } else {
-        attrd_peer_message(pcmk__get_peer(nodeid, from, NULL), xml);
+        attrd_peer_message(pcmk__get_node(nodeid, from, NULL,
+                                          CRM_GET_PEER_CLUSTER),
+                           xml);
     }
 
     free_xml(xml);
@@ -252,7 +254,8 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
 static void
 record_peer_nodeid(attribute_value_t *v, const char *host)
 {
-    crm_node_t *known_peer = pcmk__get_peer(v->nodeid, host, NULL);
+    crm_node_t *known_peer = pcmk__get_node(v->nodeid, host, NULL,
+                                            CRM_GET_PEER_CLUSTER);
 
     crm_trace("Learned %s has node id %s", known_peer->uname, known_peer->uuid);
     if (attrd_election_won()) {
@@ -437,7 +440,8 @@ attrd_peer_clear_failure(pcmk__request_t *request)
     GHashTableIter iter;
     regex_t regex;
 
-    crm_node_t *peer = pcmk__get_peer(0, request->peer, NULL);
+    crm_node_t *peer = pcmk__get_node(0, request->peer, NULL,
+                                      CRM_GET_PEER_CLUSTER);
 
     pcmk_parse_interval_spec(interval_spec, &interval_ms);
 
