@@ -163,10 +163,11 @@ attrd_client_peer_remove(pcmk__request_t *request)
 
         crm_element_value_int(xml, PCMK__XA_ATTR_NODE_ID, &nodeid);
         if (nodeid > 0) {
-            crm_node_t *node = pcmk__search_cluster_node_cache(nodeid, NULL,
-                                                               NULL);
+            crm_node_t *node = NULL;
             char *host_alloc = NULL;
 
+            node = pcmk__search_node_caches(nodeid, NULL,
+                                            pcmk__node_search_cluster);
             if (node && node->uname) {
                 // Use cached name if available
                 host = node->uname;
