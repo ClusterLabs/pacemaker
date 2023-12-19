@@ -146,9 +146,6 @@ void crm_remote_peer_cache_refresh(xmlNode *cib);
 crm_node_t *crm_remote_peer_get(const char *node_name);
 void crm_remote_peer_cache_remove(const char *node_name);
 
-/* only searches cluster nodes */
-crm_node_t *crm_get_peer(unsigned int id, const char *uname);
-
 guint crm_active_peers(void);
 gboolean crm_is_peer_active(const crm_node_t * node);
 guint reap_crm_member(uint32_t id, const char *name);

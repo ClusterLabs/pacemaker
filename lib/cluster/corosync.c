@@ -309,12 +309,12 @@ quorum_notification_cb(quorum_handle_t handle, uint32_t quorate,
         crm_debug("Member[%d] %u ", i, id);
 
         /* Get this node's peer cache entry (adding one if not already there) */
-        node = crm_get_peer(id, NULL);
+        node = pcmk__get_peer(id, NULL, NULL);
         if (node->uname == NULL) {
             char *name = pcmk__corosync_name(0, id);
 
             crm_info("Obtaining name for new node %u", id);
-            node = crm_get_peer(id, name);
+            node = pcmk__get_peer(id, name, NULL);
             free(name);
         }
 
@@ -480,7 +480,7 @@ pcmk__corosync_connect(crm_cluster_t *cluster)
     }
 
     // Ensure local node always exists in peer cache
-    peer = crm_get_peer(cluster->nodeid, cluster->uname);
+    peer = pcmk__get_peer(cluster->nodeid, cluster->uname, NULL);
     cluster->uuid = pcmk__corosync_uuid(peer);
 
     return TRUE;
@@ -640,7 +640,7 @@ pcmk__corosync_add_nodes(xmlNode *xml_parent)
 
         if (nodeid > 0 || name != NULL) {
             crm_trace("Initializing node[%d] %u = %s", lpc, nodeid, name);
-            crm_get_peer(nodeid, name);
+            pcmk__get_peer(nodeid, name, NULL);
         }
 
         if (nodeid > 0 && name != NULL) {

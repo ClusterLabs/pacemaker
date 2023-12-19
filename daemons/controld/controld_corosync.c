@@ -48,7 +48,7 @@ crmd_cs_dispatch(cpg_handle_t handle, const struct cpg_name *groupName,
 
         crm_xml_add(xml, PCMK__XA_SRC, from);
 
-        peer = crm_get_peer(0, from);
+        peer = pcmk__get_peer(0, from, NULL);
         if (!pcmk_is_set(peer->processes, crm_proc_cpg)) {
             /* If we can still talk to our peer process on that node,
              * then it must be part of the corosync membership

@@ -869,21 +869,6 @@ pcmk__get_peer(unsigned int id, const char *uname, const char *uuid)
 }
 
 /*!
- * \brief Get a cluster node cache entry
- *
- * \param[in] id     If not 0, cluster node ID to search for
- * \param[in] uname  If not NULL, node name to search for
- *
- * \return (Possibly newly created) cluster node cache entry
- */
-/* coverity[-alloc] Memory is referenced in one or both hashtables */
-crm_node_t *
-crm_get_peer(unsigned int id, const char *uname)
-{
-    return pcmk__get_peer(id, uname, NULL);
-}
-
-/*!
  * \internal
  * \brief Update a node's uname
  *
@@ -1427,6 +1412,12 @@ int
 crm_terminate_member_no_mainloop(int nodeid, const char *uname, int *connection)
 {
     return stonith_api_kick(nodeid, uname, 120, TRUE);
+}
+
+crm_node_t *
+crm_get_peer(unsigned int id, const char *uname)
+{
+    return pcmk__get_peer(id, uname, NULL);
 }
 
 crm_node_t *
