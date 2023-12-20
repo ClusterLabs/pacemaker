@@ -603,7 +603,8 @@ static pcmk__cluster_option_t controller_options[] = {
             "the presence of a bug.")
     },
     {
-        "join-integration-timeout", "crmd-integration-timeout", "time", NULL,
+        PCMK_OPT_JOIN_INTEGRATION_TIMEOUT, "crmd-integration-timeout", "time",
+            NULL,
         "3min", pcmk__valid_interval_spec,
         "*** Advanced Use Only ***",
         N_("If you need to adjust this value, it probably indicates "

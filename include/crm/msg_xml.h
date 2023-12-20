@@ -90,6 +90,7 @@ extern "C" {
 #define PCMK_OPT_FENCE_REACTION             "fence-reaction"
 #define PCMK_OPT_HAVE_WATCHDOG              "have-watchdog"
 #define PCMK_OPT_JOIN_FINALIZATION_TIMEOUT  "join-finalization-timeout"
+#define PCMK_OPT_JOIN_INTEGRATION_TIMEOUT   "join-integration-timeout"
 
 
 /*

@@ -38,7 +38,7 @@ static fsa_timer_t *election_timer = NULL;
 //! Delay start of new transition with expectation something else might happen
 static fsa_timer_t *transition_timer = NULL;
 
-//! join-integration-timeout
+//! \c PCMK_OPT_JOIN_INTEGRATION_TIMEOUT
 static fsa_timer_t *integration_timer = NULL;
 
 //! \c PCMK_OPT_JOIN_FINALIZATION_TIMEOUT
@@ -336,7 +336,7 @@ controld_configure_fsa_timers(GHashTable *options)
     election_timer->period_ms = crm_parse_interval_spec(value);
 
     // Integration timer
-    value = g_hash_table_lookup(options, "join-integration-timeout");
+    value = g_hash_table_lookup(options, PCMK_OPT_JOIN_INTEGRATION_TIMEOUT);
     integration_timer->period_ms = crm_parse_interval_spec(value);
 
     // Finalization timer
