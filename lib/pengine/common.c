@@ -157,7 +157,7 @@ static pcmk__cluster_option_t pe_opts[] = {
             "fencing delay is disabled.")
     },
     {
-        XML_CONFIG_ATTR_NODE_PENDING_TIMEOUT, NULL, "time", NULL,
+        PCMK_OPT_NODE_PENDING_TIMEOUT, NULL, "time", NULL,
         "0", pcmk__valid_interval_spec,
         N_("How long to wait for a node that has joined the cluster to join "
            "the controller process group"),

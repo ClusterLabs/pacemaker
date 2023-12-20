@@ -686,7 +686,7 @@ static pcmk__cluster_option_t controller_options[] = {
             "rejoined.")
     },
     {
-        XML_CONFIG_ATTR_NODE_PENDING_TIMEOUT, NULL, "time", NULL,
+        PCMK_OPT_NODE_PENDING_TIMEOUT, NULL, "time", NULL,
         "0", pcmk__valid_interval_spec,
         N_("How long to wait for a node that has joined the cluster to join "
            "the controller process group"),
@@ -772,8 +772,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     controld_globals.shutdown_lock_limit = crm_parse_interval_spec(value)
                                            / 1000;
 
-    value = g_hash_table_lookup(config_hash,
-                                XML_CONFIG_ATTR_NODE_PENDING_TIMEOUT);
+    value = g_hash_table_lookup(config_hash, PCMK_OPT_NODE_PENDING_TIMEOUT);
     controld_globals.node_pending_timeout = crm_parse_interval_spec(value) / 1000;
 
     value = g_hash_table_lookup(config_hash, PCMK_OPT_CLUSTER_NAME);

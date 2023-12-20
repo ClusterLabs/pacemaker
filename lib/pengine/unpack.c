@@ -427,8 +427,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
                   "shut down");
     }
 
-    value = pe_pref(scheduler->config_hash,
-                    XML_CONFIG_ATTR_NODE_PENDING_TIMEOUT);
+    value = pe_pref(scheduler->config_hash, PCMK_OPT_NODE_PENDING_TIMEOUT);
     scheduler->node_pending_timeout = crm_parse_interval_spec(value) / 1000;
     if (scheduler->node_pending_timeout == 0) {
         crm_trace("Do not fence pending nodes");
@@ -1420,7 +1419,7 @@ unpack_node_member(const xmlNode *node_state, pcmk_scheduler_t *scheduler)
         /* If in_ccm=0, we'll return 0 here. If in_ccm=1, either the entry was
          * recorded as a boolean for a DC < 2.1.7, or the node is pending
          * shutdown and has left the CPG, in which case it was set to 1 to avoid
-         * fencing for node-pending-timeout.
+         * fencing for PCMK_OPT_NODE_PENDING_TIMEOUT.
          *
          * We return the effective time for in_ccm=1 because what's important to
          * avoid fencing is that effective time minus this value is less than
@@ -1553,7 +1552,7 @@ determine_online_status_no_fencing(pcmk_scheduler_t *scheduler,
  * \param[in]     when_online  Epoch time when node joined controller group
  *
  * \return true if node has been pending (on the way up) longer than
- *         node-pending-timeout, otherwise false
+ *         \c PCMK_OPT_NODE_PENDING_TIMEOUT, otherwise false
  * \note This will also update the cluster's recheck time if appropriate.
  */
 static inline bool
