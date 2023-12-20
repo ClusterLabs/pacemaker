@@ -41,7 +41,7 @@ static fsa_timer_t *transition_timer = NULL;
 //! join-integration-timeout
 static fsa_timer_t *integration_timer = NULL;
 
-//! join-finalization-timeout
+//! \c PCMK_OPT_JOIN_FINALIZATION_TIMEOUT
 static fsa_timer_t *finalization_timer = NULL;
 
 // Wait for DC to stop all resources and give us the all-clear to shut down
@@ -340,7 +340,7 @@ controld_configure_fsa_timers(GHashTable *options)
     integration_timer->period_ms = crm_parse_interval_spec(value);
 
     // Finalization timer
-    value = g_hash_table_lookup(options, "join-finalization-timeout");
+    value = g_hash_table_lookup(options, PCMK_OPT_JOIN_FINALIZATION_TIMEOUT);
     finalization_timer->period_ms = crm_parse_interval_spec(value);
 
     // Shutdown escalation timer

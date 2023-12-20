@@ -610,7 +610,8 @@ static pcmk__cluster_option_t controller_options[] = {
             "the presence of a bug.")
     },
     {
-        "join-finalization-timeout", "crmd-finalization-timeout", "time", NULL,
+        PCMK_OPT_JOIN_FINALIZATION_TIMEOUT, "crmd-finalization-timeout",
+            "time", NULL,
         "30min", pcmk__valid_interval_spec,
         "*** Advanced Use Only ***",
         N_("If you need to adjust this value, it probably indicates "
