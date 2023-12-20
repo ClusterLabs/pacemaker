@@ -115,6 +115,7 @@ extern "C" {
 #define PCMK_OPT_STOP_ALL_RESOURCES         "stop-all-resources"
 #define PCMK_OPT_STOP_ORPHAN_ACTIONS        "stop-orphan-actions"
 #define PCMK_OPT_STOP_ORPHAN_RESOURCES      "stop-orphan-resources"
+#define PCMK_OPT_SYMMETRIC_CLUSTER          "symmetric-cluster"
 
 
 /*

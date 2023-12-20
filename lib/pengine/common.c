@@ -39,7 +39,7 @@ static pcmk__cluster_option_t pe_opts[] = {
         NULL
     },
     {
-        "symmetric-cluster", NULL, "boolean", NULL,
+        PCMK_OPT_SYMMETRIC_CLUSTER, NULL, "boolean", NULL,
         "true", pcmk__valid_boolean,
         N_("Whether resources can run on any node by default"),
         NULL

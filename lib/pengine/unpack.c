@@ -296,7 +296,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     crm_debug("Stop all active resources: %s",
               pcmk__btoa(pcmk_is_set(scheduler->flags, pcmk_sched_stop_all)));
 
-    set_config_flag(scheduler, "symmetric-cluster",
+    set_config_flag(scheduler, PCMK_OPT_SYMMETRIC_CLUSTER,
                     pcmk_sched_symmetric_cluster);
     if (pcmk_is_set(scheduler->flags, pcmk_sched_symmetric_cluster)) {
         crm_debug("Cluster is symmetric" " - resources can run anywhere by default");
