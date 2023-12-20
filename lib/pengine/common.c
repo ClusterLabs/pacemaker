@@ -202,7 +202,7 @@ static pcmk__cluster_option_t pe_opts[] = {
         NULL
     },
     {
-        "stop-orphan-resources", NULL, "boolean", NULL,
+        PCMK_OPT_STOP_ORPHAN_RESOURCES, NULL, "boolean", NULL,
         "true", pcmk__valid_boolean,
         N_("Whether to stop resources that were removed from the configuration"),
         NULL

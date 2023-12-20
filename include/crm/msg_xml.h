@@ -114,6 +114,7 @@ extern "C" {
 #define PCMK_OPT_STONITH_WATCHDOG_TIMEOUT   "stonith-watchdog-timeout"
 #define PCMK_OPT_STOP_ALL_RESOURCES         "stop-all-resources"
 #define PCMK_OPT_STOP_ORPHAN_ACTIONS        "stop-orphan-actions"
+#define PCMK_OPT_STOP_ORPHAN_RESOURCES      "stop-orphan-resources"
 
 
 /*

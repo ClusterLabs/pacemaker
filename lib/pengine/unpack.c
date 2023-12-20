@@ -355,7 +355,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
             break;
     }
 
-    set_config_flag(scheduler, "stop-orphan-resources",
+    set_config_flag(scheduler, PCMK_OPT_STOP_ORPHAN_RESOURCES,
                     pcmk_sched_stop_removed_resources);
     if (pcmk_is_set(scheduler->flags, pcmk_sched_stop_removed_resources)) {
         crm_trace("Orphan resources are stopped");
