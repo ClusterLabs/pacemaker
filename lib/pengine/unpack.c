@@ -399,7 +399,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     }
 
     if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
-        set_config_flag(scheduler, "startup-fencing",
+        set_config_flag(scheduler, PCMK_OPT_STARTUP_FENCING,
                         pcmk_sched_startup_fencing);
     }
     if (pcmk_is_set(scheduler->flags, pcmk_sched_startup_fencing)) {

@@ -133,7 +133,7 @@ static pcmk__cluster_option_t pe_opts[] = {
         NULL
     },
     {
-        "startup-fencing", NULL, "boolean", NULL,
+        PCMK_OPT_STARTUP_FENCING, NULL, "boolean", NULL,
         "true", pcmk__valid_boolean,
         N_("*** Advanced Use Only *** Whether to fence unseen nodes at start-up"),
         N_("Setting this to false may lead to a \"split-brain\" situation,"
