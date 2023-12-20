@@ -121,6 +121,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_OPT_FENCE_REACTION instead
 #define XML_CONFIG_ATTR_FENCE_REACTION PCMK_OPT_FENCE_REACTION
 
+//! \deprecated Use \c PCMK_OPT_HAVE_WATCHDOG instead
+#define XML_ATTR_HAVE_WATCHDOG PCMK_OPT_HAVE_WATCHDOG
+
 #ifdef __cplusplus
 }
 #endif
