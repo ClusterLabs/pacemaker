@@ -208,7 +208,7 @@ static pcmk__cluster_option_t pe_opts[] = {
         NULL
     },
     {
-        "stop-orphan-actions", NULL, "boolean", NULL,
+        PCMK_OPT_STOP_ORPHAN_ACTIONS, NULL, "boolean", NULL,
         "true", pcmk__valid_boolean,
         N_("Whether to cancel recurring actions removed from the configuration"),
         NULL
