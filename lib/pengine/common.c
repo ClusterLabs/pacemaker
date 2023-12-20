@@ -187,7 +187,7 @@ static pcmk__cluster_option_t pe_opts[] = {
             "high load.")
     },
     {
-        "migration-limit", NULL, "integer", NULL,
+        PCMK_OPT_MIGRATION_LIMIT, NULL, "integer", NULL,
         "-1", pcmk__valid_number,
         N_("The number of live migration actions that the cluster is allowed "
             "to execute in parallel on a node (-1 means no limit)")

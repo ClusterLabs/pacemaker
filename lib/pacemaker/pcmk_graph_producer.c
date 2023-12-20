@@ -1029,9 +1029,9 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
 
     crm_xml_add_int(scheduler->graph, "transition_id", transition_id);
 
-    value = pe_pref(scheduler->config_hash, "migration-limit");
+    value = pe_pref(scheduler->config_hash, PCMK_OPT_MIGRATION_LIMIT);
     if ((pcmk__scan_ll(value, &limit, 0LL) == pcmk_rc_ok) && (limit > 0)) {
-        crm_xml_add(scheduler->graph, "migration-limit", value);
+        crm_xml_add(scheduler->graph, PCMK_OPT_MIGRATION_LIMIT, value);
     }
 
     if (scheduler->recheck_by > 0) {
