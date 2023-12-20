@@ -1,6 +1,6 @@
 /*
  * Original copyright 2004 International Business Machines
- * Later changes copyright 2008-2023 the Pacemaker project contributors
+ * Later changes copyright 2008-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -876,7 +876,7 @@ static pcmk__cluster_option_t cib_opts[] = {
         NULL
     },
     {
-        "cluster-ipc-limit", NULL, "integer", NULL,
+        PCMK_OPT_CLUSTER_IPC_LIMIT, NULL, "integer", NULL,
         "500", pcmk__valid_positive_number,
         N_("Maximum IPC message backlog before disconnecting a cluster daemon"),
         N_("Raise this if log has \"Evicting client\" messages for cluster daemon"

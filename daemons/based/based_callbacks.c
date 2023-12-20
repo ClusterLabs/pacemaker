@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -363,7 +363,7 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
 
     /* Allow cluster daemons more leeway before being evicted */
     if (pcmk_is_set(cib_client->flags, cib_is_daemon)) {
-        const char *qmax = cib_config_lookup("cluster-ipc-limit");
+        const char *qmax = cib_config_lookup(PCMK_OPT_CLUSTER_IPC_LIMIT);
 
         if (pcmk__set_client_queue_max(cib_client, qmax)) {
             crm_trace("IPC threshold for client %s[%u] is now %u",
