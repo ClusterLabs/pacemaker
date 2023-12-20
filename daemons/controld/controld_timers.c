@@ -332,7 +332,7 @@ controld_configure_fsa_timers(GHashTable *options)
     const char *value = NULL;
 
     // Election timer
-    value = g_hash_table_lookup(options, XML_CONFIG_ATTR_DC_DEADTIME);
+    value = g_hash_table_lookup(options, PCMK_OPT_DC_DEADTIME);
     election_timer->period_ms = crm_parse_interval_spec(value);
 
     // Integration timer

@@ -82,6 +82,7 @@ extern "C" {
 #define PCMK_OPT_CLUSTER_NAME               "cluster-name"
 #define PCMK_OPT_CLUSTER_RECHECK_INTERVAL   "cluster-recheck-interval"
 #define PCMK_OPT_CONCURRENT_FENCING         "concurrent-fencing"
+#define PCMK_OPT_DC_DEADTIME                "dc-deadtime"
 
 
 /*

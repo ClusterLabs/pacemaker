@@ -543,8 +543,8 @@ static pcmk__cluster_option_t controller_options[] = {
             "by higher-level tools and resource agents.")
     },
     {
-        XML_CONFIG_ATTR_DC_DEADTIME, NULL, "time",
-        NULL, "20s", pcmk__valid_interval_spec,
+        PCMK_OPT_DC_DEADTIME, NULL, "time", NULL,
+        "20s", pcmk__valid_interval_spec,
         N_("How long to wait for a response from other nodes during start-up"),
         N_("The optimal value will depend on the speed and load of your network "
             "and the type of switches used.")
