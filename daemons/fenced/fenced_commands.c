@@ -1390,7 +1390,7 @@ stonith_device_register(xmlNode *dev, gboolean from_cib)
                      STONITH_WATCHDOG_AGENT_INTERNAL, NULL)) do {
         if (stonith_watchdog_timeout_ms <= 0) {
             crm_err("Ignoring watchdog fence device without "
-                    "stonith-watchdog-timeout set.");
+                    PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " set.");
             rv = -ENODEV;
             /* fall through to cleanup & return */
         } else if (!pcmk__str_any_of(device->agent, STONITH_WATCHDOG_AGENT,

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the Pacemaker project contributors
+ * Copyright 2009-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -187,6 +187,10 @@ remove_cib_device(xmlXPathObjectPtr xpathObj)
     }
 }
 
+#define XPATH_WATCHDOG_TIMEOUT "//" XML_CIB_TAG_NVPAIR         \
+                               "[@" XML_NVPAIR_ATTR_NAME "='"  \
+                                    PCMK_OPT_STONITH_WATCHDOG_TIMEOUT "']"
+
 static void
 update_stonith_watchdog_timeout_ms(xmlNode *cib)
 {
@@ -194,8 +198,8 @@ update_stonith_watchdog_timeout_ms(xmlNode *cib)
     xmlNode *stonith_watchdog_xml = NULL;
     const char *value = NULL;
 
-    stonith_watchdog_xml = get_xpath_object("//nvpair[@name='stonith-watchdog-timeout']",
-					    cib, LOG_NEVER);
+    stonith_watchdog_xml = get_xpath_object(XPATH_WATCHDOG_TIMEOUT, cib,
+                                            LOG_NEVER);
     if (stonith_watchdog_xml) {
         value = crm_element_value(stonith_watchdog_xml, XML_NVPAIR_ATTR_VALUE);
     }

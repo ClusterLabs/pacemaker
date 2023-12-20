@@ -628,7 +628,7 @@ static pcmk__cluster_option_t controller_options[] = {
             "the order in which ping updates arrive.")
     },
     {
-        "stonith-watchdog-timeout", NULL, "time", NULL,
+        PCMK_OPT_STONITH_WATCHDOG_TIMEOUT, NULL, "time", NULL,
         "0", controld_verify_stonith_watchdog_timeout,
         N_("How long before nodes can be assumed to be safely down when "
            "watchdog-based self-fencing via SBD is in use"),
