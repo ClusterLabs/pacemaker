@@ -133,6 +133,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_OPT_SHUTDOWN_ESCALATION instead
 #define XML_CONFIG_ATTR_FORCE_QUIT PCMK_OPT_SHUTDOWN_ESCALATION
 
+//! \deprecated Use \c PCMK_OPT_SHUTDOWN_LOCK instead
+#define XML_CONFIG_ATTR_SHUTDOWN_LOCK PCMK_OPT_SHUTDOWN_LOCK
+
 #ifdef __cplusplus
 }
 #endif
