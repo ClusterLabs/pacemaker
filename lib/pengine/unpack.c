@@ -271,7 +271,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     }
     crm_trace("STONITH will %s nodes", scheduler->stonith_action);
 
-    set_config_flag(scheduler, "concurrent-fencing",
+    set_config_flag(scheduler, PCMK_OPT_CONCURRENT_FENCING,
                     pcmk_sched_concurrent_fencing);
     if (pcmk_is_set(scheduler->flags, pcmk_sched_concurrent_fencing)) {
         crm_debug("Concurrent fencing is enabled");

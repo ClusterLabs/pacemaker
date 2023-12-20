@@ -126,7 +126,7 @@ static pcmk__cluster_option_t pe_opts[] = {
             "SBD without requiring a fencing resource explicitly configured.")
     },
     {
-        "concurrent-fencing", NULL, "boolean", NULL,
+        PCMK_OPT_CONCURRENT_FENCING, NULL, "boolean", NULL,
         PCMK__CONCURRENT_FENCING_DEFAULT, pcmk__valid_boolean,
         N_("Allow performing fencing operations in parallel"),
         NULL
