@@ -564,7 +564,7 @@ static pcmk__cluster_option_t controller_options[] = {
             "and serve as a fail-safe for certain types of scheduler bugs.")
     },
     {
-        "load-threshold", NULL, "percentage", NULL,
+        PCMK_OPT_LOAD_THRESHOLD, NULL, "percentage", NULL,
         "80%", pcmk__valid_percentage,
         N_("Maximum amount of system load that should be used by cluster nodes"),
         N_("The cluster will slow down its recovery process when the amount of "

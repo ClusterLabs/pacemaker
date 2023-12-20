@@ -444,7 +444,7 @@ throttle_init(void)
 void
 controld_configure_throttle(GHashTable *options)
 {
-    const char *value = g_hash_table_lookup(options, "load-threshold");
+    const char *value = g_hash_table_lookup(options, PCMK_OPT_LOAD_THRESHOLD);
 
     if (value != NULL) {
         throttle_set_load_target(strtof(value, NULL) / 100.0);
