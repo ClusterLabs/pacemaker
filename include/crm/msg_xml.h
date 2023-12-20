@@ -97,6 +97,7 @@ extern "C" {
 #define PCMK_OPT_NO_QUORUM_POLICY           "no-quorum-policy"
 #define PCMK_OPT_NODE_ACTION_LIMIT          "node-action-limit"
 #define PCMK_OPT_NODE_PENDING_TIMEOUT       "node-pending-timeout"
+#define PCMK_OPT_PE_ERROR_SERIES_MAX        "pe-error-series-max"
 
 
 /*

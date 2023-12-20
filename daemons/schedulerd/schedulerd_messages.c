@@ -51,7 +51,7 @@ handle_pecalc_request(pcmk__request_t *request)
          */
         int wrap;
     } series[] = {
-        { "pe-error", "pe-error-series-max", -1 },
+        { "pe-error", PCMK_OPT_PE_ERROR_SERIES_MAX, -1 },
         { "pe-warn",  "pe-warn-series-max",  5000 },
         { "pe-input", "pe-input-series-max", 4000 },
     };
