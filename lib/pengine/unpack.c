@@ -230,7 +230,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     verify_pe_options(scheduler->config_hash);
 
-    set_config_flag(scheduler, "enable-startup-probes",
+    set_config_flag(scheduler, PCMK_OPT_ENABLE_STARTUP_PROBES,
                     pcmk_sched_probe_resources);
     if (!pcmk_is_set(scheduler->flags, pcmk_sched_probe_resources)) {
         crm_info("Startup probes: disabled (dangerous)");

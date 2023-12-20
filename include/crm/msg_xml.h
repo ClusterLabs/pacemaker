@@ -86,6 +86,7 @@ extern "C" {
 #define PCMK_OPT_DC_VERSION                 "dc-version"
 #define PCMK_OPT_ELECTION_TIMEOUT           "election-timeout"
 #define PCMK_OPT_ENABLE_ACL                 "enable-acl"
+#define PCMK_OPT_ENABLE_STARTUP_PROBES      "enable-startup-probes"
 
 
 /*

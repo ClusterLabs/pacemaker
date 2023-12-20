@@ -60,7 +60,7 @@ static pcmk__cluster_option_t pe_opts[] = {
             "check the resource's fail count against its migration-threshold.")
     },
     {
-        "enable-startup-probes", NULL, "boolean", NULL,
+        PCMK_OPT_ENABLE_STARTUP_PROBES, NULL, "boolean", NULL,
         "true", pcmk__valid_boolean,
         N_("Whether the cluster should check for active resources during start-up"),
         NULL
