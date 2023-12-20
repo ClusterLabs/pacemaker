@@ -115,6 +115,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_OPT_DC_DEADTIME instead
 #define XML_CONFIG_ATTR_DC_DEADTIME PCMK_OPT_DC_DEADTIME
 
+//! \deprecated Use \c PCMK_OPT_ELECTION_TIMEOUT instead
+#define XML_CONFIG_ATTR_ELECTION_FAIL PCMK_OPT_ELECTION_TIMEOUT
+
 #ifdef __cplusplus
 }
 #endif
