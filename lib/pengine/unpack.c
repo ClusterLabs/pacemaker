@@ -298,7 +298,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
         crm_debug("Cluster is symmetric" " - resources can run anywhere by default");
     }
 
-    value = pe_pref(scheduler->config_hash, "no-quorum-policy");
+    value = pe_pref(scheduler->config_hash, PCMK_OPT_NO_QUORUM_POLICY);
 
     if (pcmk__str_eq(value, "ignore", pcmk__str_casei)) {
         scheduler->no_quorum_policy = pcmk_no_quorum_ignore;
@@ -318,12 +318,13 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
             if (do_panic || pcmk_is_set(scheduler->flags, pcmk_sched_quorate)) {
                 scheduler->no_quorum_policy = pcmk_no_quorum_fence;
             } else {
-                crm_notice("Resetting no-quorum-policy to 'stop': cluster has never had quorum");
+                crm_notice("Resetting " PCMK_OPT_NO_QUORUM_POLICY
+                           " to 'stop': cluster has never had quorum");
                 scheduler->no_quorum_policy = pcmk_no_quorum_stop;
             }
         } else {
-            pcmk__config_err("Resetting no-quorum-policy to 'stop' because "
-                             "fencing is disabled");
+            pcmk__config_err("Resetting " PCMK_OPT_NO_QUORUM_POLICY
+                             " to 'stop' because fencing is disabled");
             scheduler->no_quorum_policy = pcmk_no_quorum_stop;
         }
 

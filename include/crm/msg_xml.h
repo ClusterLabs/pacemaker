@@ -94,6 +94,7 @@ extern "C" {
 #define PCMK_OPT_LOAD_THRESHOLD             "load-threshold"
 #define PCMK_OPT_MAINTENANCE_MODE           "maintenance-mode"
 #define PCMK_OPT_MIGRATION_LIMIT            "migration-limit"
+#define PCMK_OPT_NO_QUORUM_POLICY           "no-quorum-policy"
 
 
 /*

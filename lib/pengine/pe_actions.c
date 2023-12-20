@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -301,7 +301,7 @@ effective_quorum_policy(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
             case pcmk_role_unpromoted:
                 if (rsc->next_role > pcmk_role_unpromoted) {
                     pe__set_next_role(rsc, pcmk_role_unpromoted,
-                                      "no-quorum-policy=demote");
+                                      PCMK_OPT_NO_QUORUM_POLICY "=demote");
                 }
                 policy = pcmk_no_quorum_ignore;
                 break;

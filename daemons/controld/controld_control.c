@@ -657,8 +657,9 @@ static pcmk__cluster_option_t controller_options[] = {
 
     // Already documented in libpe_status (other values must be kept identical)
     {
-        "no-quorum-policy", NULL, "select",
-        "stop, freeze, ignore, demote, suicide", "stop", pcmk__valid_quorum,
+        PCMK_OPT_NO_QUORUM_POLICY, NULL, "select",
+            "stop, freeze, ignore, demote, suicide",
+        "stop", pcmk__valid_quorum,
         N_("What to do when the cluster does not have quorum"), NULL
     },
     {
@@ -754,7 +755,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     pcmk__validate_cluster_options(config_hash, controller_options,
                                    PCMK__NELEM(controller_options));
 
-    value = g_hash_table_lookup(config_hash, "no-quorum-policy");
+    value = g_hash_table_lookup(config_hash, PCMK_OPT_NO_QUORUM_POLICY);
     if (pcmk__str_eq(value, "suicide", pcmk__str_casei) && pcmk__locate_sbd()) {
         controld_set_global_flags(controld_no_quorum_suicide);
     }

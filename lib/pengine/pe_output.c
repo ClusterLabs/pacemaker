@@ -1141,7 +1141,7 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
                                  bv(pcmk_sched_fencing_enabled),
                                  "symmetric-cluster",
                                  bv(pcmk_sched_symmetric_cluster),
-                                 "no-quorum-policy", no_quorum_policy,
+                                 PCMK_OPT_NO_QUORUM_POLICY, no_quorum_policy,
                                  PCMK_OPT_MAINTENANCE_MODE,
                                     bv(pcmk_sched_in_maintenance),
                                  "stop-all-resources", bv(pcmk_sched_stop_all),

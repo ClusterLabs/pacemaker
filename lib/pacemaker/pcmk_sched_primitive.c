@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -483,9 +483,9 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
                && !pcmk_is_set(rsc->cluster->flags, pcmk_sched_quorate)
                && (rsc->cluster->no_quorum_policy == pcmk_no_quorum_freeze)) {
         crm_notice("Resource %s cannot be elevated from %s to %s due to "
-                   "no-quorum-policy=freeze",
+                   PCMK_OPT_NO_QUORUM_POLICY "=freeze",
                    rsc->id, role2text(rsc->role), role2text(rsc->next_role));
-        pe__set_next_role(rsc, rsc->role, "no-quorum-policy=freeze");
+        pe__set_next_role(rsc, rsc->role, PCMK_OPT_NO_QUORUM_POLICY "=freeze");
     }
 
     pe__show_node_scores(!pcmk_is_set(rsc->cluster->flags,
