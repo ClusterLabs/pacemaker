@@ -410,7 +410,6 @@ extern "C" {
 #  define XML_CONFIG_ATTR_DC_DEADTIME	"dc-deadtime"
 #  define XML_CONFIG_ATTR_ELECTION_FAIL	"election-timeout"
 #  define XML_CONFIG_ATTR_FORCE_QUIT	"shutdown-escalation"
-#  define XML_CONFIG_ATTR_RECHECK	"cluster-recheck-interval"
 #  define XML_CONFIG_ATTR_FENCE_REACTION	"fence-reaction"
 #  define XML_CONFIG_ATTR_SHUTDOWN_LOCK         "shutdown-lock"
 #  define XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT   "shutdown-lock-limit"

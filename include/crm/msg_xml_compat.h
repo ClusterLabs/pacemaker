@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -108,6 +108,9 @@ extern "C" {
 
 //! \deprecated Use name member directly
 #define TYPE(x) (((x) == NULL)? NULL : (const char *) ((x)->name))
+
+//! \deprecated Use \c PCMK_OPT_CLUSTER_RECHECK_INTERVAL instead
+#define XML_CONFIG_ATTR_RECHECK PCMK_OPT_CLUSTER_RECHECK_INTERVAL
 
 #ifdef __cplusplus
 }
