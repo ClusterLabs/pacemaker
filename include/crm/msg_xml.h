@@ -109,6 +109,7 @@ extern "C" {
 #define PCMK_OPT_STARTUP_FENCING            "startup-fencing"
 #define PCMK_OPT_STONITH_ACTION             "stonith-action"
 #define PCMK_OPT_STONITH_ENABLED            "stonith-enabled"
+#define PCMK_OPT_STONITH_MAX_ATTEMPTS       "stonith-max-attempts"
 
 
 /*

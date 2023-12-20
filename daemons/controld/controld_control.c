@@ -649,7 +649,7 @@ static pcmk__cluster_option_t controller_options[] = {
            "that use SBD, otherwise data corruption or loss could occur.")
     },
     {
-        "stonith-max-attempts", NULL, "integer", NULL,
+        PCMK_OPT_STONITH_MAX_ATTEMPTS, NULL, "integer", NULL,
         "10", pcmk__valid_positive_number,
         N_("How many times fencing can fail before it will no longer be "
             "immediately re-attempted on a target")

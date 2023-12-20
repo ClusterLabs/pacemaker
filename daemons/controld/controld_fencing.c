@@ -85,7 +85,7 @@ controld_configure_fencing(GHashTable *options)
     value = g_hash_table_lookup(options, PCMK_OPT_FENCE_REACTION);
     set_fence_reaction(value);
 
-    value = g_hash_table_lookup(options, "stonith-max-attempts");
+    value = g_hash_table_lookup(options, PCMK_OPT_STONITH_MAX_ATTEMPTS);
     update_stonith_max_attempts(value);
 }
 
