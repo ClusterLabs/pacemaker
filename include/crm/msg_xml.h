@@ -95,6 +95,7 @@ extern "C" {
 #define PCMK_OPT_MAINTENANCE_MODE           "maintenance-mode"
 #define PCMK_OPT_MIGRATION_LIMIT            "migration-limit"
 #define PCMK_OPT_NO_QUORUM_POLICY           "no-quorum-policy"
+#define PCMK_OPT_NODE_ACTION_LIMIT          "node-action-limit"
 
 
 /*

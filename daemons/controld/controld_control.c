@@ -571,7 +571,7 @@ static pcmk__cluster_option_t controller_options[] = {
             "system resources used (currently CPU) approaches this limit"),
     },
     {
-        "node-action-limit", NULL, "integer", NULL,
+        PCMK_OPT_NODE_ACTION_LIMIT, NULL, "integer", NULL,
         "0", pcmk__valid_number,
         N_("Maximum number of jobs that can be scheduled per node "
             "(defaults to 2x cores)")

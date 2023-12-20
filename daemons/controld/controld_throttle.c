@@ -401,7 +401,8 @@ throttle_set_load_target(float target)
  * \internal
  * \brief Update the maximum number of simultaneous jobs
  *
- * \param[in] preference  Cluster-wide node-action-limit from the CIB
+ * \param[in] preference  Cluster-wide \c PCMK_OPT_NODE_ACTION_LIMIT from the
+ *                        CIB
  */
 static void
 throttle_update_job_max(const char *preference)
@@ -450,7 +451,7 @@ controld_configure_throttle(GHashTable *options)
         throttle_set_load_target(strtof(value, NULL) / 100.0);
     }
 
-    value = g_hash_table_lookup(options, "node-action-limit");
+    value = g_hash_table_lookup(options, PCMK_OPT_NODE_ACTION_LIMIT);
     throttle_update_job_max(value);
 }
 
