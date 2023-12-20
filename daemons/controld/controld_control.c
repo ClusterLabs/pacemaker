@@ -576,7 +576,9 @@ static pcmk__cluster_option_t controller_options[] = {
         N_("Maximum number of jobs that can be scheduled per node "
             "(defaults to 2x cores)")
     },
-    { XML_CONFIG_ATTR_FENCE_REACTION, NULL, "string", NULL, "stop", NULL,
+    {
+        PCMK_OPT_FENCE_REACTION, NULL, "string", NULL,
+        "stop", NULL,
         N_("How a cluster node should react if notified of its own fencing"),
         N_("A cluster node may receive notification of its own fencing if fencing "
         "is misconfigured, or if fabric fencing is in use that doesn't cut "
