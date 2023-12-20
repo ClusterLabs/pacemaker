@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the Pacemaker project contributors
+ * Copyright 2009-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -659,7 +659,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
     if (injections->watchdog != NULL) {
         rc = cib__update_node_attr(out, cib, cib_sync_call|cib_scope_local,
                                    XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL,
-                                   NULL, XML_ATTR_HAVE_WATCHDOG,
+                                   NULL, PCMK_OPT_HAVE_WATCHDOG,
                                    injections->watchdog, NULL, NULL);
         CRM_ASSERT(rc == pcmk_rc_ok);
     }

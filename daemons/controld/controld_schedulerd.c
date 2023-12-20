@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -481,7 +481,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
                            pcmk_is_set(controld_globals.flags,
                                        controld_has_quorum));
 
-    force_local_option(output, XML_ATTR_HAVE_WATCHDOG, pcmk__btoa(watchdog));
+    force_local_option(output, PCMK_OPT_HAVE_WATCHDOG, pcmk__btoa(watchdog));
 
     if (pcmk_is_set(controld_globals.flags, controld_ever_had_quorum)
         && !crm_have_quorum) {

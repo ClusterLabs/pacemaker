@@ -236,7 +236,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
         crm_info("Startup probes: disabled (dangerous)");
     }
 
-    value = pe_pref(scheduler->config_hash, XML_ATTR_HAVE_WATCHDOG);
+    value = pe_pref(scheduler->config_hash, PCMK_OPT_HAVE_WATCHDOG);
     if (value && crm_is_true(value)) {
         crm_info("Watchdog-based self-fencing will be performed via SBD if "
                  "fencing is required and stonith-watchdog-timeout is nonzero");

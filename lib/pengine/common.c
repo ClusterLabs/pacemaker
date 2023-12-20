@@ -115,7 +115,7 @@ static pcmk__cluster_option_t pe_opts[] = {
             "compatibility, and certain legacy fence agents might use it.")
     },
     {
-        XML_ATTR_HAVE_WATCHDOG, NULL, "boolean", NULL,
+        PCMK_OPT_HAVE_WATCHDOG, NULL, "boolean", NULL,
         "false", pcmk__valid_boolean,
         N_("Whether watchdog integration is enabled"),
         N_("This is set automatically by the cluster according to whether SBD "
