@@ -231,7 +231,8 @@ do_dc_takeover(long long action,
     controld_update_cib(XML_TAG_CIB, cib, cib_none, feature_update_callback);
 
     dc_takeover_update_attr(XML_ATTR_HAVE_WATCHDOG, pcmk__btoa(watchdog));
-    dc_takeover_update_attr("dc-version", PACEMAKER_VERSION "-" BUILD_VERSION);
+    dc_takeover_update_attr(PCMK_OPT_DC_VERSION,
+                            PACEMAKER_VERSION "-" BUILD_VERSION);
     dc_takeover_update_attr(PCMK_OPT_CLUSTER_INFRASTRUCTURE, cluster_type);
 
 #if SUPPORT_COROSYNC

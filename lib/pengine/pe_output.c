@@ -389,6 +389,10 @@ formatted_xml_buf(const pcmk_resource_t *rsc, bool raw)
     }
 }
 
+#define XPATH_DC_VERSION "//" XML_CIB_TAG_NVPAIR         \
+                         "[@" XML_NVPAIR_ATTR_NAME "='"  \
+                            PCMK_OPT_DC_VERSION "']"
+
 PCMK__OUTPUT_ARGS("cluster-summary", "pcmk_scheduler_t *",
                   "enum pcmk_pacemakerd_state", "uint32_t", "uint32_t")
 static int
@@ -408,7 +412,7 @@ cluster_summary(pcmk__output_t *out, va_list args) {
     }
 
     if (pcmk_is_set(section_opts, pcmk_section_dc)) {
-        xmlNode *dc_version = get_xpath_object("//nvpair[@name='dc-version']",
+        xmlNode *dc_version = get_xpath_object(XPATH_DC_VERSION,
                                                scheduler->input, LOG_DEBUG);
         const char *dc_version_s = dc_version?
                                    crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE)
@@ -483,7 +487,7 @@ cluster_summary_html(pcmk__output_t *out, va_list args) {
     /* Always print DC if none, even if not requested */
     if ((scheduler->dc_node == NULL)
         || pcmk_is_set(section_opts, pcmk_section_dc)) {
-        xmlNode *dc_version = get_xpath_object("//nvpair[@name='dc-version']",
+        xmlNode *dc_version = get_xpath_object(XPATH_DC_VERSION,
                                                scheduler->input, LOG_DEBUG);
         const char *dc_version_s = dc_version?
                                    crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE)
