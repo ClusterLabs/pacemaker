@@ -92,7 +92,7 @@ static pcmk__cluster_option_t pe_opts[] = {
 
     // Fencing-related options
     {
-        "stonith-enabled", NULL, "boolean", NULL,
+        PCMK_OPT_STONITH_ENABLED, NULL, "boolean", NULL,
         "true", pcmk__valid_boolean,
         N_("*** Advanced Use Only *** "
             "Whether nodes may be fenced as part of recovery"),

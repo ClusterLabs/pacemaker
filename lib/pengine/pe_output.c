@@ -1137,8 +1137,8 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
     }
 
     pcmk__output_create_xml_node(out, "cluster_options",
-                                 "stonith-enabled",
-                                 bv(pcmk_sched_fencing_enabled),
+                                 PCMK_OPT_STONITH_ENABLED,
+                                    bv(pcmk_sched_fencing_enabled),
                                  "symmetric-cluster",
                                  bv(pcmk_sched_symmetric_cluster),
                                  PCMK_OPT_NO_QUORUM_POLICY, no_quorum_policy,

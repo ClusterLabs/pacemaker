@@ -254,7 +254,8 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     scheduler->stonith_timeout = (int) crm_parse_interval_spec(value);
     crm_debug("STONITH timeout: %d", scheduler->stonith_timeout);
 
-    set_config_flag(scheduler, "stonith-enabled", pcmk_sched_fencing_enabled);
+    set_config_flag(scheduler, PCMK_OPT_STONITH_ENABLED,
+                    pcmk_sched_fencing_enabled);
     if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
         crm_debug("STONITH of failed nodes is enabled");
     } else {
@@ -882,7 +883,8 @@ unpack_resources(const xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
                && !pcmk_is_set(scheduler->flags, pcmk_sched_have_fencing)) {
 
         pcmk__config_err("Resource start-up disabled since no STONITH resources have been defined");
-        pcmk__config_err("Either configure some or disable STONITH with the stonith-enabled option");
+        pcmk__config_err("Either configure some or disable STONITH with the "
+                         PCMK_OPT_STONITH_ENABLED " option");
         pcmk__config_err("NOTE: Clusters with shared data need STONITH to ensure data integrity");
     }
 

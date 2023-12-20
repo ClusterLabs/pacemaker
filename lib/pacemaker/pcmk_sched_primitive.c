@@ -761,10 +761,10 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
     } else {
         /* If a resource has "requires" set to nothing or quorum, don't consider
          * it active on unclean nodes (similar to how all resources behave when
-         * stonith-enabled is false). We can start such resources elsewhere
-         * before fencing completes, and if we considered the resource active on
-         * the failed node, we would attempt recovery for being active on
-         * multiple nodes.
+         * PCMK_OPT_STONITH_ENABLED is false). We can start such resources
+         * elsewhere before fencing completes, and if we considered the resource
+         * active on the failed node, we would attempt recovery for being active
+         * on multiple nodes.
          */
         multiply_active = (num_clean_active > 1);
     }
