@@ -550,7 +550,7 @@ static pcmk__cluster_option_t controller_options[] = {
             "and the type of switches used.")
     },
     {
-        XML_CONFIG_ATTR_RECHECK, NULL, "time",
+        PCMK_OPT_CLUSTER_RECHECK_INTERVAL, NULL, "time",
         N_("Zero disables polling, while positive values are an interval in seconds"
             "(unless other units are specified, for example \"5min\")"),
         "15min", pcmk__valid_interval_spec,

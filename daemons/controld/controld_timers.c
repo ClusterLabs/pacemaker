@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -354,7 +354,7 @@ controld_configure_fsa_timers(GHashTable *options)
     transition_timer->period_ms = crm_parse_interval_spec(value);
 
     // Recheck interval
-    value = g_hash_table_lookup(options, XML_CONFIG_ATTR_RECHECK);
+    value = g_hash_table_lookup(options, PCMK_OPT_CLUSTER_RECHECK_INTERVAL);
     recheck_interval_ms = crm_parse_interval_spec(value);
     crm_debug("Re-run scheduler after %dms of inactivity", recheck_interval_ms);
 }
