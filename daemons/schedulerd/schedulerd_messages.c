@@ -53,7 +53,7 @@ handle_pecalc_request(pcmk__request_t *request)
     } series[] = {
         { "pe-error", PCMK_OPT_PE_ERROR_SERIES_MAX, -1 },
         { "pe-warn",  "pe-warn-series-max",  5000 },
-        { "pe-input", "pe-input-series-max", 4000 },
+        { "pe-input", PCMK_OPT_PE_INPUT_SERIES_MAX, 4000 },
     };
 
     xmlNode *msg = request->xml;
