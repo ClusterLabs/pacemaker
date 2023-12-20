@@ -281,8 +281,8 @@ static pcmk__cluster_option_t pe_opts[] = {
 
     /*Placement Strategy*/
     {
-        "placement-strategy", NULL, "select",
-        "default, utilization, minimal, balanced",
+        PCMK_OPT_PLACEMENT_STRATEGY, NULL, "select",
+            "default, utilization, minimal, balanced",
         "default", check_placement_strategy,
         N_("How the cluster should allocate resources to nodes"),
         NULL

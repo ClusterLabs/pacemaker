@@ -100,6 +100,7 @@ extern "C" {
 #define PCMK_OPT_PE_ERROR_SERIES_MAX        "pe-error-series-max"
 #define PCMK_OPT_PE_INPUT_SERIES_MAX        "pe-input-series-max"
 #define PCMK_OPT_PE_WARN_SERIES_MAX         "pe-warn-series-max"
+#define PCMK_OPT_PLACEMENT_STRATEGY         "placement-strategy"
 
 
 /*
