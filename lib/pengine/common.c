@@ -102,7 +102,7 @@ static pcmk__cluster_option_t pe_opts[] = {
             "potentially leading to data loss and/or service unavailability.")
     },
     {
-        "stonith-action", NULL, "select", "reboot, off, poweroff",
+        PCMK_OPT_STONITH_ACTION, NULL, "select", "reboot, off, poweroff",
         PCMK_ACTION_REBOOT, pcmk__is_fencing_action,
         N_("Action to send to fence device when a node needs to be fenced "
             "(\"poweroff\" is a deprecated alias for \"off\")"),

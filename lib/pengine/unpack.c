@@ -262,12 +262,12 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     }
 
     scheduler->stonith_action = pe_pref(scheduler->config_hash,
-                                        "stonith-action");
+                                        PCMK_OPT_STONITH_ACTION);
     if (!strcmp(scheduler->stonith_action, "poweroff")) {
         pcmk__warn_once(pcmk__wo_poweroff,
-                        "Support for stonith-action of 'poweroff' is "
-                        "deprecated and will be removed in a future release "
-                        "(use 'off' instead)");
+                        "Support for " PCMK_OPT_STONITH_ACTION " of "
+                        "'poweroff' is deprecated and will be removed in a "
+                        "future release (use 'off' instead)");
         scheduler->stonith_action = PCMK_ACTION_OFF;
     }
     crm_trace("STONITH will %s nodes", scheduler->stonith_action);

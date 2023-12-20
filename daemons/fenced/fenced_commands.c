@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the Pacemaker project contributors
+ * Copyright 2009-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1023,7 +1023,8 @@ xml2device_params(const char *name, const xmlNode *dev)
             crm_warn("Ignoring empty '%s' parameter", STONITH_ATTR_ACTION_OP);
 
         } else if (strcmp(value, PCMK_ACTION_REBOOT) == 0) {
-            crm_warn("Ignoring %s='reboot' (see stonith-action cluster property instead)",
+            crm_warn("Ignoring %s='reboot' (see " PCMK_OPT_STONITH_ACTION
+                     " cluster property instead)",
                      STONITH_ATTR_ACTION_OP);
 
         } else if (strcmp(value, PCMK_ACTION_OFF) == 0) {

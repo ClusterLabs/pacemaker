@@ -107,6 +107,7 @@ extern "C" {
 #define PCMK_OPT_SHUTDOWN_LOCK_LIMIT        "shutdown-lock-limit"
 #define PCMK_OPT_START_FAILURE_IS_FATAL     "start-failure-is-fatal"
 #define PCMK_OPT_STARTUP_FENCING            "startup-fencing"
+#define PCMK_OPT_STONITH_ACTION             "stonith-action"
 
 
 /*
