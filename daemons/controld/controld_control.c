@@ -534,7 +534,8 @@ static pcmk__cluster_option_t controller_options[] = {
         N_("Used for informational and diagnostic purposes.")
     },
     {
-        "cluster-name", NULL, "string", NULL, NULL, NULL,
+        PCMK_OPT_CLUSTER_NAME, NULL, "string", NULL,
+        NULL, NULL,
         N_("An arbitrary name for the cluster"),
         N_("This optional value is mostly for users' convenience as desired "
             "in administration, but may also be used in Pacemaker "
@@ -769,7 +770,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
                                 XML_CONFIG_ATTR_NODE_PENDING_TIMEOUT);
     controld_globals.node_pending_timeout = crm_parse_interval_spec(value) / 1000;
 
-    value = g_hash_table_lookup(config_hash, "cluster-name");
+    value = g_hash_table_lookup(config_hash, PCMK_OPT_CLUSTER_NAME);
     pcmk__str_update(&(controld_globals.cluster_name), value);
 
     // Let subcomponents initialize their own static variables

@@ -239,7 +239,7 @@ do_dc_takeover(long long action,
         char *cluster_name = pcmk__corosync_cluster_name();
 
         if (cluster_name != NULL) {
-            dc_takeover_update_attr("cluster-name", cluster_name);
+            dc_takeover_update_attr(PCMK_OPT_CLUSTER_NAME, cluster_name);
         }
         free(cluster_name);
     }
