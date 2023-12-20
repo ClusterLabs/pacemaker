@@ -214,7 +214,7 @@ static pcmk__cluster_option_t pe_opts[] = {
         NULL
     },
     {
-        "remove-after-stop", NULL, "boolean", NULL,
+        PCMK__OPT_REMOVE_AFTER_STOP, NULL, "boolean", NULL,
         "false", pcmk__valid_boolean,
         N_("*** Deprecated *** Whether to remove stopped resources from "
             "the executor"),

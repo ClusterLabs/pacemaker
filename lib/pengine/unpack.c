@@ -368,15 +368,15 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
         crm_trace("Orphan resource actions are ignored");
     }
 
-    value = pe_pref(scheduler->config_hash, "remove-after-stop");
+    value = pe_pref(scheduler->config_hash, PCMK__OPT_REMOVE_AFTER_STOP);
     if (value != NULL) {
         if (crm_is_true(value)) {
             pe__set_working_set_flags(scheduler, pcmk_sched_remove_after_stop);
 #ifndef PCMK__COMPAT_2_0
             pcmk__warn_once(pcmk__wo_remove_after,
-                            "Support for the remove-after-stop cluster "
-                            "property is deprecated and will be removed in a "
-                            "future release");
+                            "Support for the " PCMK__OPT_REMOVE_AFTER_STOP
+                            " cluster property is deprecated and will be "
+                            "removed in a future release");
 #endif
         } else {
             pe__clear_working_set_flags(scheduler,
