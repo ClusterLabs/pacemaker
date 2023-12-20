@@ -230,7 +230,7 @@ static pcmk__cluster_option_t pe_opts[] = {
         N_("Zero to disable, -1 to store unlimited.")
     },
     {
-        "pe-warn-series-max",  NULL, "integer", NULL,
+        PCMK_OPT_PE_WARN_SERIES_MAX, NULL, "integer", NULL,
         "5000", pcmk__valid_number,
         N_("The number of scheduler inputs resulting in warnings to save"),
         N_("Zero to disable, -1 to store unlimited.")
