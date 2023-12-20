@@ -167,7 +167,7 @@ static pcmk__cluster_option_t pe_opts[] = {
            "2 hours.")
     },
     {
-        "cluster-delay", NULL, "time", NULL,
+        PCMK_OPT_CLUSTER_DELAY, NULL, "time", NULL,
         "60s", pcmk__valid_interval_spec,
         N_("Maximum time for node-to-node communication"),
         N_("The node elected Designated Controller (DC) will consider an action "

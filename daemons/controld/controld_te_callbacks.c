@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -666,7 +666,7 @@ action_timer_callback(gpointer data)
         /* fail the action */
 
         crm_err("Node %s did not send %s result (via %s) within %dms "
-                "(action timeout plus cluster-delay)",
+                "(action timeout plus " PCMK_OPT_CLUSTER_DELAY ")",
                 (on_node? on_node : ""), (task? task : "unknown action"),
                 (via_node? via_node : "controller"),
                 (action->timeout

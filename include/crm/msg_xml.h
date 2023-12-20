@@ -76,6 +76,7 @@ extern "C" {
  */
 
 #define PCMK_OPT_BATCH_LIMIT                "batch-limit"
+#define PCMK_OPT_CLUSTER_DELAY              "cluster-delay"
 
 
 /*

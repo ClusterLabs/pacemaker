@@ -703,7 +703,7 @@ pcmk__unpack_graph(const xmlNode *xml_graph, const char *reference)
                                return NULL);
         pcmk__scan_min_int(buf, &(new_graph->id), -1);
 
-        buf = crm_element_value(xml_graph, "cluster-delay");
+        buf = crm_element_value(xml_graph, PCMK_OPT_CLUSTER_DELAY);
         CRM_CHECK(buf != NULL, free(new_graph);
                                return NULL);
         new_graph->network_delay = crm_parse_interval_spec(buf);
