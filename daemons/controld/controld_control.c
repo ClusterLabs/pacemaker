@@ -619,7 +619,7 @@ static pcmk__cluster_option_t controller_options[] = {
             "the presence of a bug.")
     },
     {
-        "transition-delay", "crmd-transition-delay", "time", NULL,
+        PCMK_OPT_TRANSITION_DELAY, "crmd-transition-delay", "time", NULL,
         "0s", pcmk__valid_interval_spec,
         N_("*** Advanced Use Only *** Enabling this option will slow down "
             "cluster recovery under all conditions"),

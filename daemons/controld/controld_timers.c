@@ -350,7 +350,7 @@ controld_configure_fsa_timers(GHashTable *options)
               "in %ums", shutdown_escalation_timer->period_ms);
 
     // Transition timer
-    value = g_hash_table_lookup(options, "transition-delay");
+    value = g_hash_table_lookup(options, PCMK_OPT_TRANSITION_DELAY);
     transition_timer->period_ms = crm_parse_interval_spec(value);
 
     // Recheck interval
