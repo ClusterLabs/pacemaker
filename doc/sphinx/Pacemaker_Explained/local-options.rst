@@ -203,7 +203,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_logpriority:
 
        .. index::
-          pair:: node option; PCMK_logpriority
+          pair: node option; PCMK_logpriority
 
        PCMK_logpriority
      - :ref:`enumeration <enumeration>`
@@ -225,7 +225,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_logfile:
 
        .. index::
-          pair:: node option; PCMK_logfile
+          pair: node option; PCMK_logfile
 
        PCMK_logfile
      - :ref:`text <text>`
@@ -242,7 +242,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_logfile_mode:
 
        .. index::
-          pair:: node option; PCMK_logfile_mode
+          pair: node option; PCMK_logfile_mode
 
        PCMK_logfile_mode
      - :ref:`text <text>`
@@ -253,7 +253,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_debug:
 
        .. index::
-          pair:: node option; PCMK_debug
+          pair: node option; PCMK_debug
 
        PCMK_debug
      - :ref:`enumeration <enumeration>`
@@ -275,7 +275,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_stderr:
 
        .. index::
-          pair:: node option; PCMK_stderr
+          pair: node option; PCMK_stderr
 
        PCMK_stderr
      - :ref:`boolean <boolean>`
@@ -291,7 +291,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_trace_functions:
 
        .. index::
-          pair:: node option; PCMK_trace_functions
+          pair: node option; PCMK_trace_functions
 
        PCMK_trace_functions
      - :ref:`text <text>`
@@ -305,7 +305,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_trace_files:
 
        .. index::
-          pair:: node option; PCMK_trace_files
+          pair: node option; PCMK_trace_files
 
        PCMK_trace_files
      - :ref:`text <text>`
@@ -318,7 +318,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_trace_formats:
 
        .. index::
-          pair:: node option; PCMK_trace_formats
+          pair: node option; PCMK_trace_formats
 
        PCMK_trace_formats
      - :ref:`text <text>`
@@ -332,7 +332,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_trace_tags:
 
        .. index::
-          pair:: node option; PCMK_trace_tags
+          pair: node option; PCMK_trace_tags
 
        PCMK_trace_tags
      - :ref:`text <text>`
@@ -345,7 +345,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_blackbox:
 
        .. index::
-          pair:: node option; PCMK_blackbox
+          pair: node option; PCMK_blackbox
 
        PCMK_blackbox
      - :ref:`enumeration <enumeration>`
@@ -370,7 +370,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_trace_blackbox:
 
        .. index::
-          pair:: node option; PCMK_trace_blackbox
+          pair: node option; PCMK_trace_blackbox
 
        PCMK_trace_blackbox
      - :ref:`enumeration <enumeration>`
@@ -384,7 +384,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_node_start_state:
 
        .. index::
-          pair:: node option; PCMK_node_start_state
+          pair: node option; PCMK_node_start_state
 
        PCMK_node_start_state
      - :ref:`enumeration <enumeration>`
@@ -397,7 +397,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_node_action_limit:
 
        .. index::
-          pair:: node option; PCMK_node_action_limit
+          pair: node option; PCMK_node_action_limit
 
        PCMK_node_action_limit
      - :ref:`nonnegative integer <nonnegative_integer>`
@@ -409,7 +409,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_shutdown_delay:
 
        .. index::
-          pair:: node option; PCMK_shutdown_delay
+          pair: node option; PCMK_shutdown_delay
 
        PCMK_shutdown_delay
      - :ref:`timeout <timeout>`
@@ -420,7 +420,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_fail_fast:
 
        .. index::
-          pair:: node option; PCMK_fail_fast
+          pair: node option; PCMK_fail_fast
 
        PCMK_fail_fast
      - :ref:`boolean <boolean>`
@@ -432,7 +432,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_panic_action:
 
        .. index::
-          pair:: node option; PCMK_panic_action
+          pair: node option; PCMK_panic_action
 
        PCMK_panic_action
      - :ref:`enumeration <enumeration>`
@@ -448,7 +448,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_authkey_location:
 
        .. index::
-          pair:: node option; PCMK_authkey_location
+          pair: node option; PCMK_authkey_location
 
        PCMK_authkey_location
      - :ref:`text <text>`
@@ -462,7 +462,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_remote_address:
 
        .. index::
-          pair:: node option; PCMK_remote_address
+          pair: node option; PCMK_remote_address
 
        PCMK_remote_address
      - :ref:`text <text>`
@@ -479,7 +479,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_remote_port:
 
        .. index::
-          pair:: node option; PCMK_remote_port
+          pair: node option; PCMK_remote_port
 
        PCMK_remote_port
      - :ref:`port <port>`
@@ -490,7 +490,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_remote_pid1:
 
        .. index::
-          pair:: node option; PCMK_remote_pid1
+          pair: node option; PCMK_remote_pid1
 
        PCMK_remote_pid1
      - :ref:`enumeration <enumeration>`
@@ -518,7 +518,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_tls_priorities:
 
        .. index::
-          pair:: node option; PCMK_tls_priorities
+          pair: node option; PCMK_tls_priorities
 
        PCMK_tls_priorities
      - :ref:`text <text>`
@@ -539,7 +539,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_dh_min_bits:
 
        .. index::
-          pair:: node option; PCMK_dh_min_bits
+          pair: node option; PCMK_dh_min_bits
 
        PCMK_dh_min_bits
      - :ref:`nonnegative integer <nonnegative_integer>`
@@ -563,7 +563,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_dh_max_bits:
 
        .. index::
-          pair:: node option; PCMK_dh_max_bits
+          pair: node option; PCMK_dh_max_bits
 
        PCMK_dh_max_bits
      - :ref:`nonnegative integer <nonnegative_integer>`
@@ -584,7 +584,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_ipc_type:
 
        .. index::
-          pair:: node option; PCMK_ipc_type
+          pair: node option; PCMK_ipc_type
 
        PCMK_ipc_type
      - :ref:`enumeration <enumeration>`
@@ -599,7 +599,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_ipc_buffer:
 
        .. index::
-          pair:: node option; PCMK_ipc_buffer
+          pair: node option; PCMK_ipc_buffer
 
        PCMK_ipc_buffer
      - :ref:`nonnegative integer <nonnegative_integer>`
@@ -612,7 +612,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_cluster_type:
 
        .. index::
-          pair:: node option; PCMK_cluster_type
+          pair: node option; PCMK_cluster_type
 
        PCMK_cluster_type
      - :ref:`enumeration <enumeration>`
@@ -626,7 +626,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_schema_directory:
 
        .. index::
-          pair:: node option; PCMK_schema_directory
+          pair: node option; PCMK_schema_directory
 
        PCMK_schema_directory
      - :ref:`text <text>`
@@ -637,7 +637,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_remote_schema_directory:
 
        .. index::
-          pair:: node option; PCMK_remote_schema_directory
+          pair: node option; PCMK_remote_schema_directory
 
        PCMK_remote_schema_directory
      - :ref:`text <text>`
@@ -649,7 +649,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_valgrind_enabled:
 
        .. index::
-          pair:: node option; PCMK_valgrind_enabled
+          pair: node option; PCMK_valgrind_enabled
 
        PCMK_valgrind_enabled
      - :ref:`enumeration <enumeration>`
@@ -660,7 +660,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_callgrind_enabled:
 
        .. index::
-          pair:: node option; PCMK_callgrind_enabled
+          pair: node option; PCMK_callgrind_enabled
 
        PCMK_callgrind_enabled
      - :ref:`enumeration <enumeration>`
@@ -698,7 +698,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _valgrind_opts:
 
        .. index::
-          pair:: node option; VALGRIND_OPTS
+          pair: node option; VALGRIND_OPTS
 
        VALGRIND_OPTS
      - :ref:`text <text>`
