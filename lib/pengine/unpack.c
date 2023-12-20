@@ -418,8 +418,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     set_config_flag(scheduler, PCMK_OPT_SHUTDOWN_LOCK,
                     pcmk_sched_shutdown_lock);
     if (pcmk_is_set(scheduler->flags, pcmk_sched_shutdown_lock)) {
-        value = pe_pref(scheduler->config_hash,
-                        XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT);
+        value = pe_pref(scheduler->config_hash, PCMK_OPT_SHUTDOWN_LOCK_LIMIT);
         scheduler->shutdown_lock = crm_parse_interval_spec(value) / 1000;
         crm_trace("Resources will be locked to nodes that were cleanly "
                   "shut down (locks expire after %s)",

@@ -104,6 +104,7 @@ extern "C" {
 #define PCMK_OPT_PRIORITY_FENCING_DELAY     "priority-fencing-delay"
 #define PCMK_OPT_SHUTDOWN_ESCALATION        "shutdown-escalation"
 #define PCMK_OPT_SHUTDOWN_LOCK              "shutdown-lock"
+#define PCMK_OPT_SHUTDOWN_LOCK_LIMIT        "shutdown-lock-limit"
 
 
 /*

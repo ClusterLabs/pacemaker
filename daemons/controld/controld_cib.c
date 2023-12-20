@@ -284,7 +284,7 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
 #define XPATH_NODE_LRM          XPATH_NODE_STATE "/" XML_CIB_TAG_LRM
 
 /* Node's lrm_rsc_op entries and lrm_resource entries without unexpired lock
- * (name 2x, (seconds_since_epoch - XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT) 1x)
+ * (name 2x, (seconds_since_epoch - PCMK_OPT_SHUTDOWN_LOCK_LIMIT) 1x)
  */
 #define XPATH_NODE_LRM_UNLOCKED XPATH_NODE_STATE "//" XML_LRM_TAG_RSC_OP    \
                                 "|" XPATH_NODE_STATE                        \
@@ -299,8 +299,7 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
 #define XPATH_NODE_ALL          XPATH_NODE_STATE "/*"
 
 /* Unlocked history + transient attributes
- * (name 2x, (seconds_since_epoch - XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT) 1x,
- * name 1x)
+ * (name 2x, (seconds_since_epoch - PCMK_OPT_SHUTDOWN_LOCK_LIMIT) 1x, name 1x)
  */
 #define XPATH_NODE_ALL_UNLOCKED XPATH_NODE_LRM_UNLOCKED "|" XPATH_NODE_ATTRS
 

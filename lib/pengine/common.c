@@ -80,7 +80,7 @@ static pcmk__cluster_option_t pe_opts[] = {
             "release.")
     },
     {
-        XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT, NULL, "time", NULL,
+        PCMK_OPT_SHUTDOWN_LOCK_LIMIT, NULL, "time", NULL,
         "0", pcmk__valid_interval_spec,
         N_("Do not lock resources to a cleanly shut down node longer than "
            "this"),

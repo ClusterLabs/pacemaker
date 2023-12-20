@@ -676,7 +676,7 @@ static pcmk__cluster_option_t controller_options[] = {
             "release.")
     },
     {
-        XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT, NULL, "time", NULL,
+        PCMK_OPT_SHUTDOWN_LOCK_LIMIT, NULL, "time", NULL,
         "0", pcmk__valid_interval_spec,
         N_("Do not lock resources to a cleanly shut down node longer than "
            "this"),
@@ -767,8 +767,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         controld_clear_global_flags(controld_shutdown_lock_enabled);
     }
 
-    value = g_hash_table_lookup(config_hash,
-                                XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT);
+    value = g_hash_table_lookup(config_hash, PCMK_OPT_SHUTDOWN_LOCK_LIMIT);
     controld_globals.shutdown_lock_limit = crm_parse_interval_spec(value)
                                            / 1000;
 
