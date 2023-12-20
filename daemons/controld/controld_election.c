@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -232,7 +232,7 @@ do_dc_takeover(long long action,
 
     dc_takeover_update_attr(XML_ATTR_HAVE_WATCHDOG, pcmk__btoa(watchdog));
     dc_takeover_update_attr("dc-version", PACEMAKER_VERSION "-" BUILD_VERSION);
-    dc_takeover_update_attr("cluster-infrastructure", cluster_type);
+    dc_takeover_update_attr(PCMK_OPT_CLUSTER_INFRASTRUCTURE, cluster_type);
 
 #if SUPPORT_COROSYNC
     if ((controld_globals.cluster_name == NULL) && is_corosync_cluster()) {
