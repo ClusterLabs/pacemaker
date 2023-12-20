@@ -595,7 +595,7 @@ static pcmk__cluster_option_t controller_options[] = {
             "the presence of a bug.")
     },
     {
-        XML_CONFIG_ATTR_FORCE_QUIT, NULL, "time", NULL,
+        PCMK_OPT_SHUTDOWN_ESCALATION, NULL, "time", NULL,
         "20min", pcmk__valid_interval_spec,
         "*** Advanced Use Only ***",
         N_("Exit immediately if shutdown does not complete within this much "
@@ -865,7 +865,7 @@ crm_shutdown(int nsig)
      */
     value = pcmk__cluster_option(NULL, controller_options,
                                  PCMK__NELEM(controller_options),
-                                 XML_CONFIG_ATTR_FORCE_QUIT);
+                                 PCMK_OPT_SHUTDOWN_ESCALATION);
     default_period_ms = crm_parse_interval_spec(value);
     controld_shutdown_start_countdown(default_period_ms);
 }

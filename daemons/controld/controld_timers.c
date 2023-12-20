@@ -344,7 +344,7 @@ controld_configure_fsa_timers(GHashTable *options)
     finalization_timer->period_ms = crm_parse_interval_spec(value);
 
     // Shutdown escalation timer
-    value = g_hash_table_lookup(options, XML_CONFIG_ATTR_FORCE_QUIT);
+    value = g_hash_table_lookup(options, PCMK_OPT_SHUTDOWN_ESCALATION);
     shutdown_escalation_timer->period_ms = crm_parse_interval_spec(value);
     crm_debug("Shutdown escalation occurs if DC has not responded to request "
               "in %ums", shutdown_escalation_timer->period_ms);
