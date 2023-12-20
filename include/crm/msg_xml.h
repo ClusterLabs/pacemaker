@@ -85,6 +85,7 @@ extern "C" {
 #define PCMK_OPT_DC_DEADTIME                "dc-deadtime"
 #define PCMK_OPT_DC_VERSION                 "dc-version"
 #define PCMK_OPT_ELECTION_TIMEOUT           "election-timeout"
+#define PCMK_OPT_ENABLE_ACL                 "enable-acl"
 
 
 /*

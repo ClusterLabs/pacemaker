@@ -281,7 +281,7 @@ cib_acl_enabled(xmlNode *xml, const char *user)
         GHashTable *options = pcmk__strkey_table(free, free);
 
         cib_read_config(options, xml);
-        value = cib_pref(options, "enable-acl");
+        value = cib_pref(options, PCMK_OPT_ENABLE_ACL);
         rc = crm_is_true(value);
         g_hash_table_destroy(options);
     }
@@ -870,7 +870,7 @@ static pcmk__cluster_option_t cib_opts[] = {
      * long description
      */
     {
-        "enable-acl", NULL, "boolean", NULL,
+        PCMK_OPT_ENABLE_ACL, NULL, "boolean", NULL,
         "false", pcmk__valid_boolean,
         N_("Enable Access Control Lists (ACLs) for the CIB"),
         NULL
