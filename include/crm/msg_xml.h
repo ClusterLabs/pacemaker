@@ -105,6 +105,7 @@ extern "C" {
 #define PCMK_OPT_SHUTDOWN_ESCALATION        "shutdown-escalation"
 #define PCMK_OPT_SHUTDOWN_LOCK              "shutdown-lock"
 #define PCMK_OPT_SHUTDOWN_LOCK_LIMIT        "shutdown-lock-limit"
+#define PCMK_OPT_START_FAILURE_IS_FATAL     "start-failure-is-fatal"
 
 
 /*

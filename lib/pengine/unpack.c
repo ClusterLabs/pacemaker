@@ -390,7 +390,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
               pcmk__btoa(pcmk_is_set(scheduler->flags,
                                      pcmk_sched_in_maintenance)));
 
-    set_config_flag(scheduler, "start-failure-is-fatal",
+    set_config_flag(scheduler, PCMK_OPT_START_FAILURE_IS_FATAL,
                     pcmk_sched_start_failure_fatal);
     if (pcmk_is_set(scheduler->flags, pcmk_sched_start_failure_fatal)) {
         crm_trace("Start failures are always fatal");

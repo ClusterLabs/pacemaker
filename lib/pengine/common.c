@@ -52,7 +52,7 @@ static pcmk__cluster_option_t pe_opts[] = {
         NULL
     },
     {
-        "start-failure-is-fatal", NULL, "boolean", NULL,
+        PCMK_OPT_START_FAILURE_IS_FATAL, NULL, "boolean", NULL,
         "true", pcmk__valid_boolean,
         N_("Whether a start failure should prevent a resource from being "
             "recovered on the same node"),
