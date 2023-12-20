@@ -46,7 +46,7 @@ controld_configure_election(GHashTable *options)
 {
     const char *value = NULL;
 
-    value = g_hash_table_lookup(options, XML_CONFIG_ATTR_ELECTION_FAIL);
+    value = g_hash_table_lookup(options, PCMK_OPT_ELECTION_TIMEOUT);
     election_timeout_set_period(fsa_election, crm_parse_interval_spec(value));
 }
 

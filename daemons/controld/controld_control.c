@@ -585,7 +585,7 @@ static pcmk__cluster_option_t controller_options[] = {
         "to immediately reboot the local node, falling back to stop on failure.")
     },
     {
-        XML_CONFIG_ATTR_ELECTION_FAIL, NULL, "time", NULL,
+        PCMK_OPT_ELECTION_TIMEOUT, NULL, "time", NULL,
         "2min", pcmk__valid_interval_spec,
         "*** Advanced Use Only ***",
         N_("Declare an election failed if it is not decided within this much "
