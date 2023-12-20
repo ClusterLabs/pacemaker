@@ -382,7 +382,8 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
         }
     }
 
-    set_config_flag(scheduler, "maintenance-mode", pcmk_sched_in_maintenance);
+    set_config_flag(scheduler, PCMK_OPT_MAINTENANCE_MODE,
+                    pcmk_sched_in_maintenance);
     crm_trace("Maintenance mode: %s",
               pcmk__btoa(pcmk_is_set(scheduler->flags,
                                      pcmk_sched_in_maintenance)));

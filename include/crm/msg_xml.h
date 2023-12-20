@@ -92,6 +92,7 @@ extern "C" {
 #define PCMK_OPT_JOIN_FINALIZATION_TIMEOUT  "join-finalization-timeout"
 #define PCMK_OPT_JOIN_INTEGRATION_TIMEOUT   "join-integration-timeout"
 #define PCMK_OPT_LOAD_THRESHOLD             "load-threshold"
+#define PCMK_OPT_MAINTENANCE_MODE           "maintenance-mode"
 
 
 /*

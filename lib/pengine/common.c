@@ -44,7 +44,7 @@ static pcmk__cluster_option_t pe_opts[] = {
         NULL
     },
     {
-        "maintenance-mode", NULL, "boolean", NULL,
+        PCMK_OPT_MAINTENANCE_MODE, NULL, "boolean", NULL,
         "false", pcmk__valid_boolean,
         N_("Whether the cluster should refrain from monitoring, starting, "
             "and stopping resources"),
