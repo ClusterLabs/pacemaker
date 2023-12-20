@@ -708,7 +708,7 @@ pcmk__unpack_graph(const xmlNode *xml_graph, const char *reference)
                                return NULL);
         new_graph->network_delay = crm_parse_interval_spec(buf);
 
-        buf = crm_element_value(xml_graph, "stonith-timeout");
+        buf = crm_element_value(xml_graph, PCMK_OPT_STONITH_TIMEOUT);
         if (buf == NULL) {
             new_graph->stonith_timeout = new_graph->network_delay;
         } else {

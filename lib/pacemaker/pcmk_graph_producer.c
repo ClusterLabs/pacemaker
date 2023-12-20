@@ -1014,8 +1014,8 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
     value = pe_pref(scheduler->config_hash, PCMK_OPT_CLUSTER_DELAY);
     crm_xml_add(scheduler->graph, PCMK_OPT_CLUSTER_DELAY, value);
 
-    value = pe_pref(scheduler->config_hash, "stonith-timeout");
-    crm_xml_add(scheduler->graph, "stonith-timeout", value);
+    value = pe_pref(scheduler->config_hash, PCMK_OPT_STONITH_TIMEOUT);
+    crm_xml_add(scheduler->graph, PCMK_OPT_STONITH_TIMEOUT, value);
 
     crm_xml_add(scheduler->graph, "failed-stop-offset", "INFINITY");
 

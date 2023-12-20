@@ -109,7 +109,7 @@ static pcmk__cluster_option_t pe_opts[] = {
         NULL
     },
     {
-        "stonith-timeout", NULL, "time", NULL,
+        PCMK_OPT_STONITH_TIMEOUT, NULL, "time", NULL,
         "60s", pcmk__valid_interval_spec,
         N_("*** Advanced Use Only *** Unused by Pacemaker"),
         N_("This value is not used by Pacemaker, but is kept for backward "

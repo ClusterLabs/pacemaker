@@ -2178,8 +2178,10 @@ can_fence_host_with_device(stonith_device_t *dev,
                                                     search->per_device_timeout);
 
             if (device_timeout > search->per_device_timeout) {
-                crm_notice("Since the pcmk_list_timeout(%ds) parameter of %s is larger than stonith-timeout(%ds), timeout may occur",
-                    device_timeout, dev_id, search->per_device_timeout);
+                crm_notice("Since the pcmk_list_timeout (%ds) parameter of %s "
+                           "is larger than " PCMK_OPT_STONITH_TIMEOUT
+                           " (%ds), timeout may occur",
+                           device_timeout, dev_id, search->per_device_timeout);
             }
 
             crm_trace("Running '%s' to check whether %s is eligible to fence %s (%s)",
@@ -2201,8 +2203,10 @@ can_fence_host_with_device(stonith_device_t *dev,
         int device_timeout = get_action_timeout(dev, check_type, search->per_device_timeout);
 
         if (device_timeout > search->per_device_timeout) {
-            crm_notice("Since the pcmk_status_timeout(%ds) parameter of %s is larger than stonith-timeout(%ds), timeout may occur",
-                device_timeout, dev_id, search->per_device_timeout);
+            crm_notice("Since the pcmk_status_timeout (%ds) parameter of %s is "
+                       "larger than " PCMK_OPT_STONITH_TIMEOUT " (%ds), "
+                       "timeout may occur",
+                       device_timeout, dev_id, search->per_device_timeout);
         }
 
         crm_trace("Running '%s' to check whether %s is eligible to fence %s (%s)",

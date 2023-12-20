@@ -250,7 +250,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     set_if_xpath(pcmk_sched_enable_unfencing, XPATH_ENABLE_UNFENCING,
                  scheduler);
 
-    value = pe_pref(scheduler->config_hash, "stonith-timeout");
+    value = pe_pref(scheduler->config_hash, PCMK_OPT_STONITH_TIMEOUT);
     scheduler->stonith_timeout = (int) crm_parse_interval_spec(value);
     crm_debug("STONITH timeout: %d", scheduler->stonith_timeout);
 

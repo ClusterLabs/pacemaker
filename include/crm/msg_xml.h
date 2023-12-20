@@ -110,6 +110,7 @@ extern "C" {
 #define PCMK_OPT_STONITH_ACTION             "stonith-action"
 #define PCMK_OPT_STONITH_ENABLED            "stonith-enabled"
 #define PCMK_OPT_STONITH_MAX_ATTEMPTS       "stonith-max-attempts"
+#define PCMK_OPT_STONITH_TIMEOUT            "stonith-timeout"
 
 
 /*
