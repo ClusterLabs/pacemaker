@@ -428,7 +428,6 @@ extern "C" {
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 
-#  define XML_CONFIG_ATTR_FORCE_QUIT	"shutdown-escalation"
 #  define XML_CONFIG_ATTR_SHUTDOWN_LOCK         "shutdown-lock"
 #  define XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT   "shutdown-lock-limit"
 
