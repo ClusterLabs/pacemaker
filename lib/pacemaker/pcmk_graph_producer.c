@@ -251,11 +251,12 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
         XML_ATTR_TYPE
     };
 
-    /* If a resource is locked to a node via shutdown-lock, mark its actions
-     * so the controller can preserve the lock when the action completes.
+    /* If a resource is locked to a node via PCMK_OPT_SHUTDOWN_LOCK, mark its
+     * actions so the controller can preserve the lock when the action
+     * completes.
      */
     if (pcmk__action_locks_rsc_to_node(action)) {
-        crm_xml_add_ll(action_xml, XML_CONFIG_ATTR_SHUTDOWN_LOCK,
+        crm_xml_add_ll(action_xml, PCMK_OPT_SHUTDOWN_LOCK,
                        (long long) action->rsc->lock_time);
     }
 

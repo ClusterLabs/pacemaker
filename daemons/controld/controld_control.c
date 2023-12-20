@@ -663,7 +663,7 @@ static pcmk__cluster_option_t controller_options[] = {
         N_("What to do when the cluster does not have quorum"), NULL
     },
     {
-        XML_CONFIG_ATTR_SHUTDOWN_LOCK, NULL, "boolean", NULL,
+        PCMK_OPT_SHUTDOWN_LOCK, NULL, "boolean", NULL,
         "false", pcmk__valid_boolean,
         N_("Whether to lock resources to a cleanly shut down node"),
         N_("When true, resources active on a node when it is cleanly shut down "
@@ -760,7 +760,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         controld_set_global_flags(controld_no_quorum_suicide);
     }
 
-    value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_SHUTDOWN_LOCK);
+    value = g_hash_table_lookup(config_hash, PCMK_OPT_SHUTDOWN_LOCK);
     if (crm_is_true(value)) {
         controld_set_global_flags(controld_shutdown_lock_enabled);
     } else {

@@ -415,7 +415,8 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
                                             PCMK_OPT_PLACEMENT_STRATEGY);
     crm_trace("Placement strategy: %s", scheduler->placement_strategy);
 
-    set_config_flag(scheduler, "shutdown-lock", pcmk_sched_shutdown_lock);
+    set_config_flag(scheduler, PCMK_OPT_SHUTDOWN_LOCK,
+                    pcmk_sched_shutdown_lock);
     if (pcmk_is_set(scheduler->flags, pcmk_sched_shutdown_lock)) {
         value = pe_pref(scheduler->config_hash,
                         XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT);
@@ -2600,7 +2601,7 @@ unpack_shutdown_lock(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
 {
     time_t lock_time = 0;   // When lock started (i.e. node shutdown time)
 
-    if ((crm_element_value_epoch(rsc_entry, XML_CONFIG_ATTR_SHUTDOWN_LOCK,
+    if ((crm_element_value_epoch(rsc_entry, PCMK_OPT_SHUTDOWN_LOCK,
                                  &lock_time) == pcmk_ok) && (lock_time != 0)) {
 
         if ((scheduler->shutdown_lock > 0)

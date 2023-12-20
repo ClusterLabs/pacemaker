@@ -67,7 +67,7 @@ static pcmk__cluster_option_t pe_opts[] = {
         NULL
     },
     {
-        XML_CONFIG_ATTR_SHUTDOWN_LOCK, NULL, "boolean", NULL,
+        PCMK_OPT_SHUTDOWN_LOCK, NULL, "boolean", NULL,
         "false", pcmk__valid_boolean,
         N_("Whether to lock resources to a cleanly shut down node"),
         N_("When true, resources active on a node when it is cleanly shut down "

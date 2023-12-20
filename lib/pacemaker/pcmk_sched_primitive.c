@@ -1594,7 +1594,7 @@ ban_if_not_locked(gpointer data, gpointer user_data)
 
     if (strcmp(node->details->uname, rsc->lock_node->details->uname) != 0) {
         resource_location(rsc, node, -CRM_SCORE_INFINITY,
-                          XML_CONFIG_ATTR_SHUTDOWN_LOCK, rsc->cluster);
+                          PCMK_OPT_SHUTDOWN_LOCK, rsc->cluster);
     }
 }
 

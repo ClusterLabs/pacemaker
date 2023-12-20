@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -2023,7 +2023,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
         pending->rsc_id = strdup(rsc->id);
         pending->start_time = time(NULL);
         pcmk__str_update(&pending->user_data, op->user_data);
-        if (crm_element_value_epoch(msg, XML_CONFIG_ATTR_SHUTDOWN_LOCK,
+        if (crm_element_value_epoch(msg, PCMK_OPT_SHUTDOWN_LOCK,
                                     &(pending->lock_time)) != pcmk_ok) {
             pending->lock_time = 0;
         }

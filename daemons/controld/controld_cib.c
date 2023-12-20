@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -289,8 +289,8 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
 #define XPATH_NODE_LRM_UNLOCKED XPATH_NODE_STATE "//" XML_LRM_TAG_RSC_OP    \
                                 "|" XPATH_NODE_STATE                        \
                                 "//" XML_LRM_TAG_RESOURCE                   \
-                                "[not(@" XML_CONFIG_ATTR_SHUTDOWN_LOCK ") " \
-                                "or " XML_CONFIG_ATTR_SHUTDOWN_LOCK "<%lld]"
+                                "[not(@" PCMK_OPT_SHUTDOWN_LOCK ") "       \
+                                    "or " PCMK_OPT_SHUTDOWN_LOCK "<%lld]"
 
 // Node's transient_attributes section (name 1x)
 #define XPATH_NODE_ATTRS        XPATH_NODE_STATE "/" XML_TAG_TRANSIENT_NODEATTRS
@@ -396,7 +396,7 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
                                XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES    \
                                "/" XML_LRM_TAG_RESOURCE                     \
                                "[@" XML_ATTR_ID "='%s']"
-// @TODO could add "and @XML_CONFIG_ATTR_SHUTDOWN_LOCK" to limit to locks
+// @TODO could add "and @PCMK_OPT_SHUTDOWN_LOCK" to limit to locks
 
 /*!
  * \internal
@@ -925,8 +925,7 @@ controld_update_resource_history(const char *node_name,
         if (!should_preserve_lock(op)) {
             lock_time = 0;
         }
-        crm_xml_add_ll(xml, XML_CONFIG_ATTR_SHUTDOWN_LOCK,
-                       (long long) lock_time);
+        crm_xml_add_ll(xml, PCMK_OPT_SHUTDOWN_LOCK, (long long) lock_time);
     }
     if (op->params != NULL) {
         container = g_hash_table_lookup(op->params,
