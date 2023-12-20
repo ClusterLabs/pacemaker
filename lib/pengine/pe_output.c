@@ -1146,7 +1146,8 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
                                     bv(pcmk_sched_in_maintenance),
                                  "stop-all-resources", bv(pcmk_sched_stop_all),
                                  "stonith-timeout-ms", stonith_timeout_str,
-                                 "priority-fencing-delay-ms", priority_fencing_delay_str,
+                                 PCMK_OPT_PRIORITY_FENCING_DELAY "-ms",
+                                    priority_fencing_delay_str,
                                  NULL);
     free(stonith_timeout_str);
     free(priority_fencing_delay_str);

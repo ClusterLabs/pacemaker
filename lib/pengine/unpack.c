@@ -104,7 +104,8 @@ is_dangling_guest_node(pcmk_node_t *node)
  * \param[in,out] scheduler       Scheduler data
  * \param[in,out] node            Node to fence
  * \param[in]     reason          Text description of why fencing is needed
- * \param[in]     priority_delay  Whether to consider `priority-fencing-delay`
+ * \param[in]     priority_delay  Whether to consider
+ *                                \c PCMK_OPT_PRIORITY_FENCING_DELAY
  */
 void
 pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
@@ -160,7 +161,7 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
                              reason);
         }
         node->details->unclean = TRUE;
-        // No need to apply `priority-fencing-delay` for remote nodes
+        // No need to apply PCMK_OPT_PRIORITY_FENCING_DELAY for remote nodes
         pe_fence_op(node, NULL, TRUE, reason, FALSE, scheduler);
 
     } else if (node->details->unclean) {
@@ -280,7 +281,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     }
 
     value = pe_pref(scheduler->config_hash,
-                    XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY);
+                    PCMK_OPT_PRIORITY_FENCING_DELAY);
     if (value) {
         scheduler->priority_fencing_delay = crm_parse_interval_spec(value)
                                             / 1000;
@@ -1654,7 +1655,7 @@ determine_online_status_fencing(pcmk_scheduler_t *scheduler,
         }
 
     } else if (when_member <= 0) {
-        // Consider `priority-fencing-delay` for lost nodes
+        // Consider PCMK_OPT_PRIORITY_FENCING_DELAY for lost nodes
         pe_fence_node(scheduler, this_node,
                       "peer is no longer part of the cluster", TRUE);
 

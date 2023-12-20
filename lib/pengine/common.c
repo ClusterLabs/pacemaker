@@ -140,7 +140,7 @@ static pcmk__cluster_option_t pe_opts[] = {
             "potentially leading to data loss and/or service unavailability.")
     },
     {
-        XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY, NULL, "time", NULL,
+        PCMK_OPT_PRIORITY_FENCING_DELAY, NULL, "time", NULL,
         "0", pcmk__valid_interval_spec,
         N_("Apply fencing delay targeting the lost nodes with the highest total resource priority"),
         N_("Apply specified delay for the fencings that are targeting the lost "

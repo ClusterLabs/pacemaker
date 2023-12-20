@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the Pacemaker project contributors
+ * Copyright 2009-2024 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -111,8 +111,8 @@ typedef struct remote_fencing_op_s {
 
     /*!
      * Fencing delay (in seconds) requested by API client (used by controller to
-     * implement priority-fencing-delay). A value of -1 means disable all
-     * configured delays.
+     * implement \c PCMK_OPT_PRIORITY_FENCING_DELAY). A value of -1 means
+     * disable all configured delays.
      */
     int client_delay;
 

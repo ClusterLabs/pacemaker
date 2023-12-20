@@ -1210,7 +1210,7 @@ node_priority_fencing_delay(const pcmk_node_t *node,
     int lowest_priority = 0;
     GList *gIter = NULL;
 
-    // `priority-fencing-delay` is disabled
+    // PCMK_OPT_PRIORITY_FENCING_DELAY is disabled
     if (scheduler->priority_fencing_delay <= 0) {
         return 0;
     }
@@ -1351,8 +1351,10 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
 
     if (scheduler->priority_fencing_delay > 0
 
-            /* It's a suitable case where `priority-fencing-delay` applies.
-             * At least add `priority-fencing-delay` field as an indicator. */
+            /* It's a suitable case where PCMK_OPT_PRIORITY_FENCING_DELAY
+             * applies. At least add PCMK_OPT_PRIORITY_FENCING_DELAY field as
+             * an indicator.
+             */
         && (priority_delay
 
             /* The priority delay needs to be recalculated if this function has
@@ -1360,17 +1362,17 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
              * priority has already been calculated by native_add_running().
              */
             || g_hash_table_lookup(stonith_op->meta,
-                                   XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY) != NULL)) {
+                                   PCMK_OPT_PRIORITY_FENCING_DELAY) != NULL)) {
 
-            /* Add `priority-fencing-delay` to the fencing op even if it's 0 for
-             * the targeting node. So that it takes precedence over any possible
-             * `pcmk_delay_base/max`.
+            /* Add PCMK_OPT_PRIORITY_FENCING_DELAY to the fencing op even if
+             * it's 0 for the targeting node. So that it takes precedence over
+             * any possible `pcmk_delay_base/max`.
              */
             char *delay_s = pcmk__itoa(node_priority_fencing_delay(node,
                                                                    scheduler));
 
             g_hash_table_insert(stonith_op->meta,
-                                strdup(XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY),
+                                strdup(PCMK_OPT_PRIORITY_FENCING_DELAY),
                                 delay_s);
     }
 

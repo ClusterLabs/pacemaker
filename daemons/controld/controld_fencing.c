@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -973,7 +973,8 @@ controld_execute_fence_action(pcmk__graph_t *graph,
         return EPROTO;
     }
 
-    priority_delay = crm_meta_value(action->params, XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY);
+    priority_delay = crm_meta_value(action->params,
+                                    PCMK_OPT_PRIORITY_FENCING_DELAY);
 
     crm_notice("Requesting fencing (%s) targeting node %s "
                CRM_XS " action=%s timeout=%i%s%s",
