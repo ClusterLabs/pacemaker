@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -69,6 +69,13 @@ extern "C" {
 #define PCMK_META_MIGRATION_THRESHOLD       "migration-threshold"
 #define PCMK_META_PROMOTED_MAX              "promoted-max"
 #define PCMK_META_PROMOTED_NODE_MAX         "promoted-node-max"
+
+
+/*
+ * Cluster options
+ */
+
+#define PCMK_OPT_BATCH_LIMIT                "batch-limit"
 
 
 /*

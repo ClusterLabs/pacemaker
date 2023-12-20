@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2021 the Pacemaker project contributors
+ * Copyright 2013-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -497,13 +497,12 @@ throttle_get_total_job_limit(int l)
         }
     }
     if(limit == l) {
-        /* crm_trace("No change to batch-limit=%d", limit); */
 
     } else if(l == 0) {
-        crm_trace("Using batch-limit=%d", limit);
+        crm_trace("Using " PCMK_OPT_BATCH_LIMIT "=%d", limit);
 
     } else {
-        crm_trace("Using batch-limit=%d instead of %d", limit, l);
+        crm_trace("Using " PCMK_OPT_BATCH_LIMIT "=%d instead of %d", limit, l);
     }
     return limit;
 }

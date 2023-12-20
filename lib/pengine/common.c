@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -177,7 +177,7 @@ static pcmk__cluster_option_t pe_opts[] = {
             "load of your network and cluster nodes.")
     },
     {
-        "batch-limit", NULL, "integer", NULL,
+        PCMK_OPT_BATCH_LIMIT, NULL, "integer", NULL,
         "0", pcmk__valid_number,
         N_("Maximum number of jobs that the cluster may execute in parallel "
             "across all nodes"),

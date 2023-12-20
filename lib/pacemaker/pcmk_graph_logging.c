@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -220,8 +220,9 @@ pcmk__log_graph(unsigned int log_level, pcmk__graph_t *graph)
         return;
     }
 
-    do_crm_log(log_level, "Graph %d with %d actions:"
-               " batch-limit=%d jobs, network-delay=%ums",
+    do_crm_log(log_level,
+               "Graph %d with %d actions: " PCMK_OPT_BATCH_LIMIT "=%d jobs, "
+               "network-delay=%ums",
                graph->id, graph->num_actions,
                graph->batch_limit, graph->network_delay);
 
