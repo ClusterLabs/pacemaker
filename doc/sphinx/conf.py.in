@@ -41,6 +41,7 @@ rst_prolog="""
 .. |PCMK_INIT_ENV_FILE| replace:: ``%PACEMAKER_CONFIG_DIR%/pcmk-init.env``
 .. |PCMK_LOG_FILE| replace:: %CRM_LOG_DIR%/pacemaker.log
 .. |PCMK_CONTAINER_LOG_FILE| replace:: ``/var/log/pcmk-init.log``
+.. |PCMK__REMOTE_SCHEMA_DIR| replace:: %PCMK__REMOTE_SCHEMA_DIR%
 .. |REMOTE_DISTRO| replace:: AlmaLinux
 .. |REMOTE_DISTRO_VER| replace:: 9
 """
