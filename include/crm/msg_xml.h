@@ -409,7 +409,6 @@ extern "C" {
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 
-#  define XML_CONFIG_ATTR_DC_DEADTIME	"dc-deadtime"
 #  define XML_CONFIG_ATTR_ELECTION_FAIL	"election-timeout"
 #  define XML_CONFIG_ATTR_FORCE_QUIT	"shutdown-escalation"
 #  define XML_CONFIG_ATTR_FENCE_REACTION	"fence-reaction"
