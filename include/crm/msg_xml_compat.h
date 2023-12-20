@@ -124,6 +124,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_OPT_HAVE_WATCHDOG instead
 #define XML_ATTR_HAVE_WATCHDOG PCMK_OPT_HAVE_WATCHDOG
 
+//! \deprecated Use \c PCMK_OPT_NODE_PENDING_TIMEOUT instead
+#define XML_CONFIG_ATTR_NODE_PENDING_TIMEOUT PCMK_OPT_NODE_PENDING_TIMEOUT
+
 #ifdef __cplusplus
 }
 #endif
