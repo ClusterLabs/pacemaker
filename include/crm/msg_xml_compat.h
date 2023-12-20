@@ -118,6 +118,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_OPT_ELECTION_TIMEOUT instead
 #define XML_CONFIG_ATTR_ELECTION_FAIL PCMK_OPT_ELECTION_TIMEOUT
 
+//! \deprecated Use \c PCMK_OPT_FENCE_REACTION instead
+#define XML_CONFIG_ATTR_FENCE_REACTION PCMK_OPT_FENCE_REACTION
+
 #ifdef __cplusplus
 }
 #endif
