@@ -522,7 +522,8 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     } else if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_stop_all)) {
         // Must stop at some point, but be consistent with stop_if_fail
         if (stop_if_fail) {
-            pcmk__rsc_debug(rsc, "Forcing %s to stop: stop-all-resources",
+            pcmk__rsc_debug(rsc,
+                            "Forcing %s to stop: " PCMK_OPT_STOP_ALL_RESOURCES,
                             rsc->id);
         }
         pcmk__assign_resource(rsc, NULL, true, stop_if_fail);

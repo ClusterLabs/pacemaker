@@ -196,7 +196,7 @@ static pcmk__cluster_option_t pe_opts[] = {
 
     /* Orphans and stopping */
     {
-        "stop-all-resources", NULL, "boolean", NULL,
+        PCMK_OPT_STOP_ALL_RESOURCES, NULL, "boolean", NULL,
         "false", pcmk__valid_boolean,
         N_("Whether the cluster should stop all active resources"),
         NULL

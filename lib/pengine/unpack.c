@@ -291,7 +291,8 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
                   scheduler->priority_fencing_delay);
     }
 
-    set_config_flag(scheduler, "stop-all-resources", pcmk_sched_stop_all);
+    set_config_flag(scheduler, PCMK_OPT_STOP_ALL_RESOURCES,
+                    pcmk_sched_stop_all);
     crm_debug("Stop all active resources: %s",
               pcmk__btoa(pcmk_is_set(scheduler->flags, pcmk_sched_stop_all)));
 
