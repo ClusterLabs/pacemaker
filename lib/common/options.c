@@ -224,13 +224,25 @@ pcmk__valid_int(const char *value)
                || (pcmk__scan_ll(value, NULL, 0LL) == pcmk_rc_ok));
 }
 
+/*!
+ * \internal
+ * \brief Check whether a string represents a valid positive integer
+ *
+ * Valid values include \c INFINITY and all 64-bit positive integers.
+ *
+ * \param[in] value  String to validate
+ *
+ * \return \c true if \p value is a valid positive integer, or \c false
+ *         otherwise
+ */
 bool
-pcmk__valid_positive_number(const char *value)
+pcmk__valid_positive_int(const char *value)
 {
     long long num = 0LL;
 
     return pcmk_str_is_infinity(value)
-           || ((pcmk__scan_ll(value, &num, 0LL) == pcmk_rc_ok) && (num > 0));
+           || ((pcmk__scan_ll(value, &num, 0LL) == pcmk_rc_ok)
+               && (num > 0));
 }
 
 bool

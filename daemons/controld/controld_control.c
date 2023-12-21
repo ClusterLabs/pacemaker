@@ -650,7 +650,7 @@ static pcmk__cluster_option_t controller_options[] = {
     },
     {
         PCMK_OPT_STONITH_MAX_ATTEMPTS, NULL, "integer", NULL,
-        "10", pcmk__valid_positive_number,
+        "10", pcmk__valid_positive_int,
         N_("How many times fencing can fail before it will no longer be "
             "immediately re-attempted on a target")
     },
