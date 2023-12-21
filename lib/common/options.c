@@ -263,6 +263,27 @@ pcmk__valid_no_quorum_policy(const char *value)
                                 NULL);
 }
 
+/*!
+ * \internal
+ * \brief Check whether a string represents a valid percentage
+ *
+ * Valid values include long integers, with an optional trailing string
+ * beginning with '%'.
+ *
+ * \param[in] value  String to validate
+ *
+ * \return \c true if \p value is a valid percentage value, or \c false
+ *         otherwise
+ */
+bool
+pcmk__valid_percentage(const char *value)
+{
+    char *end = NULL;
+    long number = strtol(value, &end, 10);
+
+    return ((end == NULL) || (end[0] == '%')) && (number >= 0);
+}
+
 bool
 pcmk__valid_script(const char *value)
 {
@@ -288,18 +309,6 @@ pcmk__valid_script(const char *value)
     }
 
     return true;
-}
-
-bool
-pcmk__valid_percentage(const char *value)
-{
-    char *end = NULL;
-    long number = strtol(value, &end, 10);
-
-    if (end && (end[0] != '%')) {
-        return false;
-    }
-    return number >= 0;
 }
 
 /*!
