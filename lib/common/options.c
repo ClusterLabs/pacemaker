@@ -279,7 +279,7 @@ bool
 pcmk__valid_percentage(const char *value)
 {
     char *end = NULL;
-    long number = strtol(value, &end, 10);
+    float number = strtof(value, &end);
 
     return ((end == NULL) || (end[0] == '%')) && (number >= 0);
 }
