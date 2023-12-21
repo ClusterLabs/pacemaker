@@ -572,7 +572,7 @@ static pcmk__cluster_option_t controller_options[] = {
     },
     {
         PCMK_OPT_NODE_ACTION_LIMIT, NULL, "integer", NULL,
-        "0", pcmk__valid_number,
+        "0", pcmk__valid_int,
         N_("Maximum number of jobs that can be scheduled per node "
             "(defaults to 2x cores)")
     },

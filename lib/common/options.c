@@ -205,18 +205,23 @@ pcmk__valid_boolean(const char *value)
     return crm_str_to_boolean(value, NULL) == 1;
 }
 
+/*!
+ * \internal
+ * \brief Check whether a string represents a valid integer
+ *
+ * Valid values include \c INFINITY, \c -INFINITY, and all 64-bit integers.
+ *
+ * \param[in] value  String to validate
+ *
+ * \return \c true if \p value is a valid integer, or \c false otherwise
+ */
 bool
-pcmk__valid_number(const char *value)
+pcmk__valid_int(const char *value)
 {
-    if (value == NULL) {
-        return false;
-
-    } else if (pcmk_str_is_minus_infinity(value) ||
-               pcmk_str_is_infinity(value)) {
-        return true;
-    }
-
-    return pcmk__scan_ll(value, NULL, 0LL) == pcmk_rc_ok;
+    return (value != NULL)
+           && (pcmk_str_is_infinity(value)
+               || pcmk_str_is_minus_infinity(value)
+               || (pcmk__scan_ll(value, NULL, 0LL) == pcmk_rc_ok));
 }
 
 bool

@@ -179,7 +179,7 @@ static pcmk__cluster_option_t pe_opts[] = {
     },
     {
         PCMK_OPT_BATCH_LIMIT, NULL, "integer", NULL,
-        "0", pcmk__valid_number,
+        "0", pcmk__valid_int,
         N_("Maximum number of jobs that the cluster may execute in parallel "
             "across all nodes"),
         N_("The \"correct\" value will depend on the speed and load of your "
@@ -189,7 +189,7 @@ static pcmk__cluster_option_t pe_opts[] = {
     },
     {
         PCMK_OPT_MIGRATION_LIMIT, NULL, "integer", NULL,
-        "-1", pcmk__valid_number,
+        "-1", pcmk__valid_int,
         N_("The number of live migration actions that the cluster is allowed "
             "to execute in parallel on a node (-1 means no limit)")
     },
@@ -225,19 +225,19 @@ static pcmk__cluster_option_t pe_opts[] = {
     /* Storing inputs */
     {
         PCMK_OPT_PE_ERROR_SERIES_MAX, NULL, "integer", NULL,
-        "-1", pcmk__valid_number,
+        "-1", pcmk__valid_int,
         N_("The number of scheduler inputs resulting in errors to save"),
         N_("Zero to disable, -1 to store unlimited.")
     },
     {
         PCMK_OPT_PE_WARN_SERIES_MAX, NULL, "integer", NULL,
-        "5000", pcmk__valid_number,
+        "5000", pcmk__valid_int,
         N_("The number of scheduler inputs resulting in warnings to save"),
         N_("Zero to disable, -1 to store unlimited.")
     },
     {
         PCMK_OPT_PE_INPUT_SERIES_MAX, NULL, "integer", NULL,
-        "4000", pcmk__valid_number,
+        "4000", pcmk__valid_int,
         N_("The number of scheduler inputs without errors or warnings to save"),
         N_("Zero to disable, -1 to store unlimited.")
     },
@@ -256,25 +256,25 @@ static pcmk__cluster_option_t pe_opts[] = {
     },
     {
         PCMK_OPT_NODE_HEALTH_BASE, NULL, "integer", NULL,
-        "0", pcmk__valid_number,
+        "0", pcmk__valid_int,
         N_("Base health score assigned to a node"),
         N_("Only used when \"node-health-strategy\" is set to \"progressive\".")
     },
     {
         PCMK_OPT_NODE_HEALTH_GREEN, NULL, "integer", NULL,
-        "0", pcmk__valid_number,
+        "0", pcmk__valid_int,
         N_("The score to use for a node health attribute whose value is \"green\""),
         N_("Only used when \"node-health-strategy\" is set to \"custom\" or \"progressive\".")
     },
     {
         PCMK_OPT_NODE_HEALTH_YELLOW, NULL, "integer", NULL,
-        "0", pcmk__valid_number,
+        "0", pcmk__valid_int,
         N_("The score to use for a node health attribute whose value is \"yellow\""),
         N_("Only used when \"node-health-strategy\" is set to \"custom\" or \"progressive\".")
     },
     {
         PCMK_OPT_NODE_HEALTH_RED, NULL, "integer", NULL,
-        "-INFINITY", pcmk__valid_number,
+        "-INFINITY", pcmk__valid_int,
         N_("The score to use for a node health attribute whose value is \"red\""),
         N_("Only used when \"node-health-strategy\" is set to \"custom\" or \"progressive\".")
     },
