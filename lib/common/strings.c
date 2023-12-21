@@ -481,13 +481,19 @@ crm_str_to_boolean(const char *s, int *ret)
     } else if (strcasecmp(s, "true") == 0
                || strcasecmp(s, "on") == 0
                || strcasecmp(s, "yes") == 0 || strcasecmp(s, "y") == 0 || strcasecmp(s, "1") == 0) {
-        *ret = TRUE;
+
+        if (ret != NULL) {
+            *ret = TRUE;
+        }
         return 1;
 
     } else if (strcasecmp(s, "false") == 0
                || strcasecmp(s, "off") == 0
                || strcasecmp(s, "no") == 0 || strcasecmp(s, "n") == 0 || strcasecmp(s, "0") == 0) {
-        *ret = FALSE;
+
+        if (ret != NULL) {
+            *ret = FALSE;
+        }
         return 1;
     }
     return -1;
