@@ -111,9 +111,9 @@ static pcmk__cluster_option_t pe_opts[] = {
     {
         PCMK_OPT_STONITH_TIMEOUT, NULL, "time", NULL,
         "60s", pcmk__valid_interval_spec,
-        N_("*** Advanced Use Only *** Unused by Pacemaker"),
-        N_("This value is not used by Pacemaker, but is kept for backward "
-            "compatibility, and certain legacy fence agents might use it.")
+        N_("How long to wait for on, off, and reboot fence actions to complete "
+            "by default"),
+        NULL
     },
     {
         PCMK_OPT_HAVE_WATCHDOG, NULL, "boolean", NULL,
