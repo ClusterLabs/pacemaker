@@ -451,7 +451,15 @@ add_desc(GString *s, const char *tag, const char *desc, const char *values,
     pcmk__g_strcat(s, "<", tag, " lang=\"en\">", escaped_en, NULL);
 
     if (values != NULL) {
-        pcmk__g_strcat(s, "  Allowed values: ", values, NULL);
+        // Append a period if desc doesn't end in "." or ".)"
+        if (!pcmk__str_empty(escaped_en)
+            && (s->str[s->len - 1] != '.')
+            && ((s->str[s->len - 2] != '.') || (s->str[s->len - 1] != ')'))) {
+
+            g_string_append_c(s, '.');
+        }
+        pcmk__g_strcat(s, " Allowed values: ", values, NULL);
+        g_string_append_c(s, '.');
     }
     pcmk__g_strcat(s, "</", tag, ">\n", NULL);
 
