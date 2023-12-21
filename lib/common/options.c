@@ -176,6 +176,15 @@ pcmk__env_option_enabled(const char *daemon, const char *option)
  * Cluster option handling
  */
 
+/*!
+ * \internal
+ * \brief Check whether a string represents a valid interval specification
+ *
+ * \param[in] value  String to validate
+ *
+ * \return \c true if \p value is a valid interval specification, or \c false
+ *         otherwise
+ */
 bool
 pcmk__valid_interval_spec(const char *value)
 {

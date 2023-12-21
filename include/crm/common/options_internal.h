@@ -18,6 +18,8 @@
 #  include <glib.h>     // GHashTable
 #  include <stdbool.h>  // bool
 
+#include <crm/common/strings_internal.h>    // pcmk__parse_interval_spec()
+
 _Noreturn void pcmk__cli_help(char cmd);
 
 
