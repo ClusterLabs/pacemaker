@@ -284,12 +284,22 @@ pcmk__valid_percentage(const char *value)
     return ((end == NULL) || (end[0] == '%')) && (number >= 0);
 }
 
+/*!
+ * \internal
+ * \brief Check whether a string represents a valid script
+ *
+ * Valid values include \c /dev/null and paths of executable regular files
+ *
+ * \param[in] value  String to validate
+ *
+ * \return \c true if \p value is a valid script, or \c false otherwise
+ */
 bool
 pcmk__valid_script(const char *value)
 {
     struct stat st;
 
-    if (pcmk__str_eq(value, "/dev/null", pcmk__str_casei)) {
+    if (pcmk__str_eq(value, "/dev/null", pcmk__str_none)) {
         return true;
     }
 
