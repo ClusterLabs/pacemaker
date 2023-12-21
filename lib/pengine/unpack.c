@@ -213,6 +213,7 @@ gboolean
 unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 {
     const char *value = NULL;
+    guint interval_ms = 0U;
     GHashTable *config_hash = pcmk__strkey_table(free, free);
 
     pe_rule_eval_data_t rule_data = {
@@ -252,7 +253,13 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
                  scheduler);
 
     value = pe_pref(scheduler->config_hash, PCMK_OPT_STONITH_TIMEOUT);
-    scheduler->stonith_timeout = (int) crm_parse_interval_spec(value);
+    pcmk__parse_interval_spec(value, &interval_ms);
+
+    if (interval_ms >= INT_MAX) {
+        scheduler->stonith_timeout = INT_MAX;
+    } else {
+        scheduler->stonith_timeout = (int) interval_ms;
+    }
     crm_debug("STONITH timeout: %d", scheduler->stonith_timeout);
 
     set_config_flag(scheduler, PCMK_OPT_STONITH_ENABLED,
@@ -285,8 +292,8 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     value = pe_pref(scheduler->config_hash,
                     PCMK_OPT_PRIORITY_FENCING_DELAY);
     if (value) {
-        scheduler->priority_fencing_delay = crm_parse_interval_spec(value)
-                                            / 1000;
+        pcmk__parse_interval_spec(value, &interval_ms);
+        scheduler->priority_fencing_delay = (int) (interval_ms / 1000);
         crm_trace("Priority fencing delay is %ds",
                   scheduler->priority_fencing_delay);
     }
@@ -422,7 +429,8 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
                     pcmk_sched_shutdown_lock);
     if (pcmk_is_set(scheduler->flags, pcmk_sched_shutdown_lock)) {
         value = pe_pref(scheduler->config_hash, PCMK_OPT_SHUTDOWN_LOCK_LIMIT);
-        scheduler->shutdown_lock = crm_parse_interval_spec(value) / 1000;
+        pcmk__parse_interval_spec(value, &(scheduler->shutdown_lock));
+        scheduler->shutdown_lock /= 1000;
         crm_trace("Resources will be locked to nodes that were cleanly "
                   "shut down (locks expire after %s)",
                   pcmk__readable_interval(scheduler->shutdown_lock));
@@ -432,7 +440,8 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     }
 
     value = pe_pref(scheduler->config_hash, PCMK_OPT_NODE_PENDING_TIMEOUT);
-    scheduler->node_pending_timeout = crm_parse_interval_spec(value) / 1000;
+    pcmk__parse_interval_spec(value, &(scheduler->node_pending_timeout));
+    scheduler->node_pending_timeout /= 1000;
     if (scheduler->node_pending_timeout == 0) {
         crm_trace("Do not fence pending nodes");
     } else {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -126,8 +126,9 @@ attrd_client_clear_failure(pcmk__request_t *request)
             pattern = crm_strdup_printf(ATTRD_RE_CLEAR_ONE, rsc);
 
         } else {
-            guint interval_ms = crm_parse_interval_spec(interval_spec);
+            guint interval_ms = 0U;
 
+            pcmk__parse_interval_spec(interval_spec, &interval_ms);
             pattern = crm_strdup_printf(ATTRD_RE_CLEAR_OP,
                                         rsc, op, interval_ms);
         }

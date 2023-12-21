@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -179,8 +179,7 @@ pcmk__env_option_enabled(const char *daemon, const char *option)
 bool
 pcmk__valid_interval_spec(const char *value)
 {
-    (void) crm_parse_interval_spec(value);
-    return errno == 0;
+    return pcmk__parse_interval_spec(value, NULL) == pcmk_rc_ok;
 }
 
 bool

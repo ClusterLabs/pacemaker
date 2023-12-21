@@ -412,6 +412,58 @@ crm_get_msec(const char *input)
     return msec;
 }
 
+/*!
+ * \internal
+ * \brief Parse milliseconds from a Pacemaker interval specification
+ *
+ * \param[in]  input      Pacemaker time interval specification (a bare number
+ *                        of seconds; a number with a unit, optionally with
+ *                        whitespace before and/or after the number; or an ISO
+ *                        8601 duration)
+ * \param[out] result_ms  Where to store milliseconds equivalent of \p input on
+ *                        success (limited to the range of an unsigned integer),
+ *                        or 0 if \p input is \c NULL or invalid
+ *
+ * \return Standard Pacemaker return code (specifically, \c pcmk_rc_ok if
+ *         \p input is valid or \c NULL, and \c EINVAL otherwise)
+ */
+int
+pcmk__parse_interval_spec(const char *input, guint *result_ms)
+{
+    long long msec = PCMK__PARSE_INT_DEFAULT;
+    int rc = pcmk_rc_ok;
+
+    if (input == NULL) {
+        msec = 0;
+        goto done;
+    }
+
+    if (input[0] == 'P') {
+        crm_time_t *period_s = crm_time_parse_duration(input);
+
+        if (period_s != NULL) {
+            msec = 1000 * crm_time_get_seconds(period_s);
+            crm_time_free(period_s);
+        }
+
+    } else {
+        msec = crm_get_msec(input);
+    }
+
+    if (msec == PCMK__PARSE_INT_DEFAULT) {
+        crm_warn("Using 0 instead of invalid interval specification '%s'",
+                 input);
+        msec = 0;
+        rc = EINVAL;
+    }
+
+done:
+    if (result_ms != NULL) {
+        *result_ms = (msec >= G_MAXUINT)? G_MAXUINT : (guint) msec;
+    }
+    return rc;
+}
+
 gboolean
 crm_is_true(const char *s)
 {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the Pacemaker project contributors
+ * Copyright 2013-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -434,12 +434,14 @@ attrd_peer_clear_failure(pcmk__request_t *request)
     const char *host = crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME);
     const char *op = crm_element_value(xml, PCMK__XA_ATTR_OPERATION);
     const char *interval_spec = crm_element_value(xml, PCMK__XA_ATTR_INTERVAL);
-    guint interval_ms = crm_parse_interval_spec(interval_spec);
+    guint interval_ms = 0U;
     char *attr = NULL;
     GHashTableIter iter;
     regex_t regex;
 
     crm_node_t *peer = crm_get_peer(0, request->peer);
+
+    pcmk__parse_interval_spec(interval_spec, &interval_ms);
 
     if (attrd_failure_regex(&regex, rsc, op, interval_ms) != pcmk_ok) {
         crm_info("Ignoring invalid request to clear failures for %s",

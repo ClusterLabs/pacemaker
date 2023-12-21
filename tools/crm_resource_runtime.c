@@ -668,7 +668,7 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
     int rc = pcmk_rc_ok;
     const char *failed_value = NULL;
     const char *failed_id = NULL;
-    const char *interval_ms_s = NULL;
+    char *interval_ms_s = NULL;
     GHashTable *rscs = NULL;
     GHashTableIter iter;
 
@@ -680,8 +680,10 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
 
     // Normalize interval to milliseconds for comparison to history entry
     if (operation) {
-        interval_ms_s = crm_strdup_printf("%u",
-                                          crm_parse_interval_spec(interval_spec));
+        guint interval_ms = 0U;
+
+        pcmk__parse_interval_spec(interval_spec, &interval_ms);
+        interval_ms_s = crm_strdup_printf("%u", interval_ms);
     }
 
     for (xmlNode *xml_op = pcmk__xml_first_child(scheduler->failed);
@@ -729,6 +731,8 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
 
         g_hash_table_add(rscs, (gpointer) failed_id);
     }
+
+    free(interval_ms_s);
 
     g_hash_table_iter_init(&iter, rscs);
     while (g_hash_table_iter_next(&iter, (gpointer *) &failed_id, NULL)) {

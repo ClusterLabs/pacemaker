@@ -768,11 +768,12 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     }
 
     value = g_hash_table_lookup(config_hash, PCMK_OPT_SHUTDOWN_LOCK_LIMIT);
-    controld_globals.shutdown_lock_limit = crm_parse_interval_spec(value)
-                                           / 1000;
+    pcmk__parse_interval_spec(value, &controld_globals.shutdown_lock_limit);
+    controld_globals.shutdown_lock_limit /= 1000;
 
     value = g_hash_table_lookup(config_hash, PCMK_OPT_NODE_PENDING_TIMEOUT);
-    controld_globals.node_pending_timeout = crm_parse_interval_spec(value) / 1000;
+    pcmk__parse_interval_spec(value, &controld_globals.node_pending_timeout);
+    controld_globals.node_pending_timeout /= 1000;
 
     value = g_hash_table_lookup(config_hash, PCMK_OPT_CLUSTER_NAME);
     pcmk__str_update(&(controld_globals.cluster_name), value);
@@ -865,6 +866,6 @@ crm_shutdown(int nsig)
     value = pcmk__cluster_option(NULL, controller_options,
                                  PCMK__NELEM(controller_options),
                                  PCMK_OPT_SHUTDOWN_ESCALATION);
-    default_period_ms = crm_parse_interval_spec(value);
+    pcmk__parse_interval_spec(value, &default_period_ms);
     controld_shutdown_start_countdown(default_period_ms);
 }

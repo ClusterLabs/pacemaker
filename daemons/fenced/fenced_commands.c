@@ -129,7 +129,7 @@ static int
 get_action_delay_max(const stonith_device_t *device, const char *action)
 {
     const char *value = NULL;
-    int delay_max = 0;
+    guint delay_max = 0U;
 
     if (!pcmk__is_fencing_action(action)) {
         return 0;
@@ -137,10 +137,11 @@ get_action_delay_max(const stonith_device_t *device, const char *action)
 
     value = g_hash_table_lookup(device->params, PCMK_STONITH_DELAY_MAX);
     if (value) {
-       delay_max = crm_parse_interval_spec(value) / 1000;
+        pcmk__parse_interval_spec(value, &delay_max);
+        delay_max /= 1000;
     }
 
-    return delay_max;
+    return (int) delay_max;
 }
 
 static int
@@ -148,7 +149,7 @@ get_action_delay_base(const stonith_device_t *device, const char *action,
                       const char *target)
 {
     char *hash_value = NULL;
-    int delay_base = 0;
+    guint delay_base = 0U;
 
     if (!pcmk__is_fencing_action(action)) {
         return 0;
@@ -181,13 +182,14 @@ get_action_delay_base(const stonith_device_t *device, const char *action,
         }
 
         if (strchr(value, ':') == 0) {
-           delay_base = crm_parse_interval_spec(value) / 1000;
+            pcmk__parse_interval_spec(value, &delay_base);
+            delay_base /= 1000;
         }
 
         free(valptr);
     }
 
-    return delay_base;
+    return (int) delay_base;
 }
 
 /*!

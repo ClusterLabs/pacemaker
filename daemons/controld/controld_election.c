@@ -44,10 +44,11 @@ controld_election_init(const char *uname)
 void
 controld_configure_election(GHashTable *options)
 {
-    const char *value = NULL;
+    const char *value = g_hash_table_lookup(options, PCMK_OPT_ELECTION_TIMEOUT);
+    guint interval_ms = 0U;
 
-    value = g_hash_table_lookup(options, PCMK_OPT_ELECTION_TIMEOUT);
-    election_timeout_set_period(fsa_election, crm_parse_interval_spec(value));
+    pcmk__parse_interval_spec(value, &interval_ms);
+    election_timeout_set_period(fsa_election, interval_ms);
 }
 
 void
