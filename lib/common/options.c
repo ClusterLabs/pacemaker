@@ -191,6 +191,14 @@ pcmk__valid_interval_spec(const char *value)
     return pcmk__parse_interval_spec(value, NULL) == pcmk_rc_ok;
 }
 
+/*!
+ * \internal
+ * \brief Check whether a string represents a valid boolean value
+ *
+ * \param[in] value  String to validate
+ *
+ * \return \c true if \p value is a valid boolean value, or \c false otherwise
+ */
 bool
 pcmk__valid_boolean(const char *value)
 {
