@@ -647,7 +647,7 @@ values, by running the ``man pacemaker-schedulerd`` and
       
        node-health-red
      - :ref:`score <score>`
-     - 0
+     - -INFINITY
      - The score to use for a node health attribute whose value is ``red``.
        Only used when ``node-health-strategy`` is ``progressive`` or
        ``custom``.
