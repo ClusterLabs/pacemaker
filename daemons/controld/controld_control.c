@@ -577,14 +577,15 @@ static pcmk__cluster_option_t controller_options[] = {
             "(defaults to 2x cores)")
     },
     {
-        PCMK_OPT_FENCE_REACTION, NULL, "string", NULL,
+        PCMK_OPT_FENCE_REACTION, NULL, "select", "stop, panic",
         "stop", NULL,
         N_("How a cluster node should react if notified of its own fencing"),
         N_("A cluster node may receive notification of its own fencing if fencing "
-        "is misconfigured, or if fabric fencing is in use that doesn't cut "
-        "cluster communication. Allowed values are \"stop\" to attempt to "
-        "immediately stop Pacemaker and stay stopped, or \"panic\" to attempt "
-        "to immediately reboot the local node, falling back to stop on failure.")
+            "is misconfigured, or if fabric fencing is in use that doesn't cut "
+            "cluster communication. Use \"stop\" to attempt to immediately "
+            "stop Pacemaker and stay stopped, or \"panic\" to attempt to "
+            "immediately reboot the local node, falling back to stop on "
+            "failure.")
     },
     {
         PCMK_OPT_ELECTION_TIMEOUT, NULL, "time", NULL,
