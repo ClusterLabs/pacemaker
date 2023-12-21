@@ -245,10 +245,22 @@ pcmk__valid_positive_int(const char *value)
                && (num > 0));
 }
 
+/*!
+ * \internal
+ * \brief Check whether a string represents a valid
+ *        \c PCMK__OPT_NO_QUORUM_POLICY value
+ *
+ * \param[in] value  String to validate
+ *
+ * \return \c true if \p value is a valid \c PCMK__OPT_NO_QUORUM_POLICY value,
+ *         or \c false otherwise
+ */
 bool
-pcmk__valid_quorum(const char *value)
+pcmk__valid_no_quorum_policy(const char *value)
 {
-    return pcmk__strcase_any_of(value, "stop", "freeze", "ignore", "demote", "suicide", NULL);
+    return pcmk__strcase_any_of(value,
+                                "stop", "freeze", "ignore", "demote", "suicide",
+                                NULL);
 }
 
 bool

@@ -34,7 +34,7 @@ static pcmk__cluster_option_t pe_opts[] = {
     {
         PCMK_OPT_NO_QUORUM_POLICY, NULL, "select",
             "stop, freeze, ignore, demote, suicide",
-        "stop", pcmk__valid_quorum,
+        "stop", pcmk__valid_no_quorum_policy,
         N_("What to do when the cluster does not have quorum"),
         NULL
     },
