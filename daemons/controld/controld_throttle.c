@@ -417,7 +417,7 @@ throttle_update_job_max(const char *preference)
         pcmk__scan_ll(preference, &max, 0LL);
     }
     if (max > 0) {
-        throttle_job_max = (int) max;
+        throttle_job_max = (max >= INT_MAX)? INT_MAX : (int) max;
     } else {
         // Default is based on the number of cores detected
         throttle_job_max = 2 * pcmk__procfs_num_cores();
