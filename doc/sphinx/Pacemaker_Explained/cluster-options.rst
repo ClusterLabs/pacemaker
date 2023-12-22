@@ -421,6 +421,22 @@ values, by running the ``man pacemaker-schedulerd`` and
      - How many times fencing can fail for a target before the cluster will no
        longer immediately re-attempt it. Any value below 1 will be ignored, and
        the default will be used instead.
+   * - .. _have_watchdog:
+
+       .. index::
+          pair: cluster option; have-watchdog
+
+       have-watchdog
+     - :ref:`boolean <boolean>`
+     - *detected*
+     - Whether watchdog integration is enabled. This is set automatically by the
+       cluster according to whether SBD is detected to be in use.
+       User-configured values are ignored. The value `true` is meaningful if
+       diskless SBD is used and
+       :ref:`stonith-watchdog-timeout <stonith_watchdog_timeout>` is nonzero. In
+       that case, if fencing is required, watchdog-based self-fencing will be
+       performed via SBD without requiring a fencing resource explicitly
+       configured.
    * - .. _stonith_watchdog_timeout:
       
        .. index::
