@@ -69,6 +69,13 @@ of the following types:
 
        nonnegative integer
      - 32-bit nonnegative integer value (0 to 2,147,483,647)
+   * - .. _percentage:
+
+       .. index::
+          pair: type; percentage
+
+       percentage
+     - Floating-point number followed by an optional percent sign ('%')
    * - .. _port:
 
        .. index::
