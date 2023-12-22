@@ -290,6 +290,17 @@ values, by running the ``man pacemaker-schedulerd`` and
      - The number of :ref:`live migration <live-migration>` actions that the
        cluster is allowed to execute in parallel on a node. A value of -1 means
        unlimited.
+   * - .. _load_threshold:
+       
+       .. index::
+          pair: cluster option; load-threshold
+       
+       load-threshold
+     - :ref:`percentage <percentage>`
+     - 80%
+     - Maximum amount of system load that should be used by cluster nodes. The
+       cluster will slow down its recovery process when the amount of system
+       resources used (currently CPU) approaches this limit.
    * - .. _symmetric_cluster:
        
        .. index::
