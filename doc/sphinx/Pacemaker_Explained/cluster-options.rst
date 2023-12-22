@@ -301,6 +301,18 @@ values, by running the ``man pacemaker-schedulerd`` and
      - Maximum amount of system load that should be used by cluster nodes. The
        cluster will slow down its recovery process when the amount of system
        resources used (currently CPU) approaches this limit.
+   * - .. _node_action_limit:
+       
+       .. index::
+          pair: cluster option; node-action-limit
+       
+       node-action-limit
+     - :ref:`integer <integer>`
+     - 0
+     - Maximum number of jobs that can be scheduled per node. If nonpositive or
+       invalid, double the number of cores is used as the maximum number of jobs
+       per node. :ref:`PCMK_node_action_limit <pcmk_node_action_limit>`
+       overrides this option on a per-node basis.
    * - .. _symmetric_cluster:
        
        .. index::
