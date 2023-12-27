@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 2\n"
 "Report-Msgid-Bugs-To: developers@clusterlabs.org\n"
-"POT-Creation-Date: 2023-12-05 15:13+0800\n"
+"POT-Creation-Date: 2023-12-27 13:34+0800\n"
 "PO-Revision-Date: 2021-11-08 11:04+0800\n"
 "Last-Translator: Vivi <developers@clusterlabs.org>\n"
 "Language-Team: CHINESE <wangluwei@uniontech.org>\n"
@@ -28,15 +28,15 @@ msgstr "集群选定的控制器节点(DC)的 Pacemaker 版本"
 msgid ""
 "Includes a hash which identifies the exact changeset the code was built "
 "from. Used for diagnostic purposes."
-msgstr "它包含一个标识所构建代码变更版本的哈希值，其可用于诊断。"
+msgstr "它包含一个标识构建代码变更集的哈希值. 其可用于诊断."
 
 #: daemons/controld/controld_control.c:532
 msgid "The messaging stack on which Pacemaker is currently running"
-msgstr "Pacemaker 正在使用的消息传输引擎"
+msgstr "Pacemaker 正在使用的消息堆栈"
 
 #: daemons/controld/controld_control.c:533
 msgid "Used for informational and diagnostic purposes."
-msgstr "用于提供信息和诊断。"
+msgstr "用于提供信息和诊断."
 
 #: daemons/controld/controld_control.c:537
 msgid "An arbitrary name for the cluster"
@@ -49,8 +49,8 @@ msgid ""
 "the #cluster-name node attribute, and by higher-level tools and resource "
 "agents."
 msgstr ""
-"该可选值主要是为了方便用户管理使用，也可以在pacemaker 配置规则中通过 "
-"#cluster-name 节点属性配置使用，也可以通过高级工具和资源代理使用。"
+"该可选值主要是为了方便用户根据管理的需要使用, 可以通过 #cluster-name "
+"节点属性在 Pacemaker 配置规则中使用, 以及被更高级的工具和资源代理使用."
 
 #: daemons/controld/controld_control.c:546
 msgid "How long to wait for a response from other nodes during start-up"
@@ -60,21 +60,21 @@ msgstr "启动过程中等待其他节点响应的时间"
 msgid ""
 "The optimal value will depend on the speed and load of your network and the "
 "type of switches used."
-msgstr "其最佳值将取决于你的网络速度和负载以及所用交换机的类型。"
+msgstr "最佳值将取决于您的网络速度和负载以及使用的交换机类型. "
 
 #: daemons/controld/controld_control.c:552
 msgid ""
 "Zero disables polling, while positive values are an interval in "
 "seconds(unless other units are specified, for example \"5min\")"
 msgstr ""
-"设置为0将禁用轮询，设置为正数将是以秒为单位的时间间隔（除非使用了其他单位，比"
-"如\"5min\"表示5分钟）"
+"0 表示禁用轮询，而正值表示以秒为单位的时间间隔(除非指定了其他单位, 例"
+"如 \"5min\" 表示5分钟)"
 
 #: daemons/controld/controld_control.c:555
 msgid ""
 "Polling interval to recheck cluster state and evaluate rules with date "
 "specifications"
-msgstr "重新检查集群状态并且评估具有日期规格的配置规则的轮询间隔"
+msgstr "重新检查集群状态及评估日期规范规则的轮询间隔"
 
 #: daemons/controld/controld_control.c:557
 msgid ""
@@ -84,10 +84,9 @@ msgid ""
 "rules with date specifications and serve as a fail-safe for certain types of "
 "scheduler bugs."
 msgstr ""
-"Pacemaker 主要是通过事件驱动的，并能预期重新检查集群状态以评估大多数基于时间"
-"的规则以及过期的错误。然而无论如何，在集群经过该时间间隔的不活动状态后，它还"
-"将重新检查集群，以评估具有日期规格的规则，并为某些类型的调度程序缺陷提供故障"
-"保护。"
+"Pacemaker 主要是通过触发事件驱动的, 但它为防止故障超时出现, 会提前重新检查集群状态"
+"并检查大多数基于时间的规则. 在指定的时间不活动之后，它将重新检查集群, 评估日期规范"
+"的规则，并为某些类型的调度程序错误提供故障保护."
 
 #: daemons/controld/controld_control.c:566
 msgid "Maximum amount of system load that should be used by cluster nodes"
@@ -97,16 +96,16 @@ msgstr "集群节点应该使用的最大系统负载量"
 msgid ""
 "The cluster will slow down its recovery process when the amount of system "
 "resources used (currently CPU) approaches this limit"
-msgstr "当使用的系统资源量（当前为CPU）接近此限制时，集群将减慢其恢复过程"
+msgstr "当使用的系统资源量 (当前指 CPU) 接近此限制时，集群将减慢其恢复过程"
 
 #: daemons/controld/controld_control.c:573
 msgid ""
 "Maximum number of jobs that can be scheduled per node (defaults to 2x cores)"
-msgstr "每个节点可以调度的最大作业数（默认为2x内核数）"
+msgstr "每个节点可以调度的最大作业数 (默认为2x内核数) "
 
 #: daemons/controld/controld_control.c:577
 msgid "How a cluster node should react if notified of its own fencing"
-msgstr "集群节点在收到针对自己的 fence 操作结果通知时应如何反应"
+msgstr "集群节点在收到针对自己的 fence 通知时应如何反应"
 
 #: daemons/controld/controld_control.c:578
 msgid ""
@@ -116,39 +115,40 @@ msgid ""
 "Pacemaker and stay stopped, or \"panic\" to attempt to immediately reboot "
 "the local node, falling back to stop on failure."
 msgstr ""
-"如果有错误的 fence 配置，或者在使用 fabric fence 机制 (并不会切断集群通信），"
-"则集群节点可能会收到针对自己的 fence 结果通知。允许的值为 \"stop\" 尝试立即停"
-"止 pacemaker 并保持停用状态,或者 \"panic\" 尝试立即重新启动本地节点，并在失败"
-"时返回执行stop。"
+"如果有错误的 fence 配置或者在使用不会切断集群通信的 fabric fence 机制, "
+"则集群节点可能会收到针对自己的 fence 通知. Allowed values(允许的值)为"
+" \"stop\" 时将尝试立即停止 Pacemaker 并保持停用状态, 当其值为 \"panic\" "
+"时将尝试立即重新启动本地节点，并在失败时返回执行 stop."
 
 #: daemons/controld/controld_control.c:588
 msgid ""
 "Declare an election failed if it is not decided within this much time. If "
 "you need to adjust this value, it probably indicates the presence of a bug."
 msgstr ""
-"如果集群在本项设置时间内没有作出决定则宣布选举失败。如果您需要调整该值，这可"
-"能代表存在某些缺陷。"
+"如果集群在本项设置时间内没有作出决定则宣布选举失败. 这可能表明当前存在"
+"错误, 您需要调整该值."
 
 #: daemons/controld/controld_control.c:596
 msgid ""
 "Exit immediately if shutdown does not complete within this much time. If you "
 "need to adjust this value, it probably indicates the presence of a bug."
 msgstr ""
-"如果在这段时间内关机仍未完成，则立即退出。如果您需要调整该值，这可能代表存在"
-"某些缺陷。"
+"如果在这段时间内关机仍未完成, 请立即退出. 这可能表明当前存在错误, "
+"您需要调整该值."
 
 #: daemons/controld/controld_control.c:604
 #: daemons/controld/controld_control.c:611
 msgid ""
 "If you need to adjust this value, it probably indicates the presence of a "
 "bug."
-msgstr "如果您需要调整该值，这可能代表存在某些缺陷。"
+msgstr "这可能表明当前存在错误, 您需要调整该值."
 
 #: daemons/controld/controld_control.c:617
 msgid ""
 "*** Advanced Use Only *** Enabling this option will slow down cluster "
 "recovery under all conditions"
-msgstr "*** Advanced Use Only *** 启用此选项将在所有情况下减慢集群恢复的速度"
+msgstr "*** Advanced Use Only(仅限高级用户使用)*** 启用此选项将在所有情况下"
+"减慢集群恢复的速度"
 
 #: daemons/controld/controld_control.c:619
 msgid ""
@@ -157,7 +157,7 @@ msgid ""
 "updates arrive."
 msgstr ""
 "集群恢复将被推迟指定的时间间隔，以等待更多事件发生。如果您的配置对 ping 更新"
-"到达的顺序很敏感，这就很有用"
+"到达的顺序很敏感, 则可以使用此选项."
 
 #: daemons/controld/controld_control.c:626
 #, fuzzy
@@ -165,8 +165,8 @@ msgid ""
 "How long before nodes can be assumed to be safely down when watchdog-based "
 "self-fencing via SBD is in use"
 msgstr ""
-"当基于 watchdog 的自我 fence 机制通过SBD 被执行时，我们可以假设节点安全关闭之"
-"前需要等待多长时间"
+"当基于 watchdog (watchdog-based)的自我 fence (self-fencing)机制通过 SBD "
+"被执行时，我们可以假设节点安全关闭之前需要等待多长时间"
 
 #: daemons/controld/controld_control.c:628
 msgid ""
@@ -184,14 +184,17 @@ msgid ""
 "to a negative value, `SBD_WATCHDOG_TIMEOUT` must be set to the same value on "
 "all nodes that use SBD, otherwise data corruption or loss could occur."
 msgstr ""
-"如果设置为正值，则假定丢失的节点在这段时间内使用基于watchdog的SBD进行自我防"
-"护。这不需要明确配置fence资源，但可以配置一个fence_watchdog资源，以限制特定节"
-"点的使用。如果设置为0（默认值），集群将永远不会假定基于watchdog的自我防护。如"
-"果设置为负值，且如果`SBD_WATCHDOG_TIMEOUT`环境变量的本地值为正值，则集群将使"
-"用该值的两倍，否则将其视为0。警告：在使用基于watchdog的SBD的所有节点上，此超"
-"时必须大于`SBD_WATCGDOG_TIMEOUT`,如果本地值不是这样，或者SBD未运行，则"
-"Pacemaker将拒绝在任何节点上启动。如果设置为负值，则在使用SBD的所有节点上，"
-"`SBD_WATCHDOG_TIMEOUT`必须设置为相同的值，否则可能会发生数据损坏或丢失。"
+"这个值如果设置为正值, 丢失的节点将在设定的时间内将被假设使用基于 "
+"watchdog (watchdog-based)的SBD进行自我 fence (self-fencing)."
+"这不需要明确配置一个隔离(fence)资源, 但可以配置一个 fence_watchdog "
+"资源来限制在特定节点上进行使用. 如果这个值设为0 (默认值), 集群将永远不会"
+"假定节点使用基于 watchdog (watchdog-based)的自我 fence(self-fencing)"
+". 如果这个值设为负数, 集群将使用本地 `SBD_WATCHDOG_TIMEOUT` 环境变量"
+"的两倍值(如果该值为正), 否则会将该值视为0. 警告: 在所有使用基于 watchdog"
+"(watchdog-based)的SBD的节点上, 此超时值需大于`SBD_WATCHDOG_TIMEOUT`"
+"的值, 否则Pacemaker将不会在任何不符合此条件的节点上启动. 当此值设为负数时"
+"所有使用SBD的节点上`SBD_WATCHDOG_TIMEOUT`的值必须设置为相同的值, 否则"
+"可能导致数据损坏或丢失."
 
 #: daemons/controld/controld_control.c:647
 msgid ""
@@ -965,135 +968,134 @@ msgstr ""
 msgid "Could not get modified CIB: %s\n"
 msgstr "无法获得修改的CIB：%s\n"
 
-#: tools/crm_resource.c:1174
+#: tools/crm_resource.c:1130
+msgid "You need to specify a resource type with -t"
+msgstr "需要使用-t指定资源类型"
+
+#: tools/crm_resource.c:1197
 #, c-format
 msgid "No cluster connection to Pacemaker Remote node %s detected"
 msgstr "未检测到至pacemaker远程节点%s的集群连接"
 
-#: tools/crm_resource.c:1235
+#: tools/crm_resource.c:1258
 msgid "Must specify -t with resource type"
 msgstr "需要使用-t指定资源类型"
 
-#: tools/crm_resource.c:1241
+#: tools/crm_resource.c:1264
 msgid "Must supply -v with new value"
 msgstr "必须使用-v指定新值"
 
-#: tools/crm_resource.c:1273
+#: tools/crm_resource.c:1296
 msgid "Could not create executor connection"
 msgstr "无法创建到pacemaker-execd守护进程的连接"
 
-#: tools/crm_resource.c:1298
+#: tools/crm_resource.c:1321
 #, fuzzy, c-format
 msgid "Metadata query for %s failed: %s"
 msgstr "，查询%s的元数据失败: %s\n"
 
-#: tools/crm_resource.c:1304
+#: tools/crm_resource.c:1327
 #, c-format
 msgid "'%s' is not a valid agent specification"
 msgstr "'%s' 是一个无效的代理"
 
-#: tools/crm_resource.c:1317
+#: tools/crm_resource.c:1340
 msgid "--resource cannot be used with --class, --agent, and --provider"
 msgstr "--resource 不能与 --class, --agent, --provider一起使用"
 
-#: tools/crm_resource.c:1322
+#: tools/crm_resource.c:1345
 msgid ""
 "--class, --agent, and --provider can only be used with --validate and --"
 "force-*"
 msgstr "--class, --agent和--provider只能被用于--validate和--force-*"
 
-#: tools/crm_resource.c:1331
+#: tools/crm_resource.c:1354
 msgid "stonith does not support providers"
 msgstr "stonith 不支持提供者"
 
-#: tools/crm_resource.c:1335
+#: tools/crm_resource.c:1358
 #, c-format
 msgid "%s is not a known stonith agent"
 msgstr "%s 不是一个已知stonith代理"
 
-#: tools/crm_resource.c:1340
+#: tools/crm_resource.c:1363
 #, c-format
 msgid "%s:%s:%s is not a known resource"
 msgstr "%s:%s:%s 不是一个已知资源"
 
-#: tools/crm_resource.c:1454
+#: tools/crm_resource.c:1477
 #, c-format
 msgid "Error creating output format %s: %s"
 msgstr "创建输出格式错误 %s:%s"
 
-#: tools/crm_resource.c:1481
+#: tools/crm_resource.c:1504
 msgid "--expired requires --clear or -U"
 msgstr "--expired需要和--clear或-U一起使用"
 
-#: tools/crm_resource.c:1498
+#: tools/crm_resource.c:1521
 #, c-format
 msgid "Error parsing '%s' as a name=value pair"
 msgstr "'%s'解析错误，格式为name=value"
 
-#: tools/crm_resource.c:1595
+#: tools/crm_resource.c:1618
 msgid "Must supply a resource id with -r"
 msgstr "必须使用-r指定资源id"
 
-#: tools/crm_resource.c:1601
+#: tools/crm_resource.c:1624
 msgid "Must supply a node name with -N"
 msgstr "必须使用-N指定节点名称"
 
-#: tools/crm_resource.c:1619
+#: tools/crm_resource.c:1642
 msgid "Could not create CIB connection"
 msgstr "无法创建到CIB的连接"
 
-#: tools/crm_resource.c:1627
+#: tools/crm_resource.c:1650
 #, c-format
 msgid "Could not connect to the CIB: %s"
 msgstr "不能连接到CIB：%s"
 
-#: tools/crm_resource.c:1648
+#: tools/crm_resource.c:1671
 #, c-format
 msgid "Resource '%s' not found"
 msgstr "没有发现'%s'资源"
 
-#: tools/crm_resource.c:1660
+#: tools/crm_resource.c:1683
 #, c-format
 msgid "Cannot operate on clone resource instance '%s'"
 msgstr "不能操作克隆资源实例'%s'"
 
-#: tools/crm_resource.c:1672
+#: tools/crm_resource.c:1695
 #, c-format
 msgid "Node '%s' not found"
 msgstr "没有发现%s节点"
 
-#: tools/crm_resource.c:1683
+#: tools/crm_resource.c:1706
 #, c-format
 msgid "Error connecting to the controller: %s"
 msgstr "连接到控制器错误：%s"
 
-#: tools/crm_resource.c:1692
+#: tools/crm_resource.c:1715
 #, fuzzy, c-format
 msgid "Error connecting to %s: %s"
 msgstr "连接到控制器错误：%s"
 
-#: tools/crm_resource.c:1950
+#: tools/crm_resource.c:1973
 msgid "You need to supply a value with the -v option"
 msgstr "需要使用-v选项提供一个值"
 
-#: tools/crm_resource.c:2006
-msgid "You need to specify a resource type with -t"
-msgstr "需要使用-t指定资源类型"
-
-#: tools/crm_resource.c:2013
-#, fuzzy, c-format
-msgid "Could not delete resource %s: %s"
-msgstr "无法删除资源：%s：%s"
-
-#: tools/crm_resource.c:2023
+#: tools/crm_resource.c:2028
 #, c-format
 msgid "Unimplemented command: %d"
 msgstr "无效的命令：%d"
 
-#: tools/crm_resource.c:2053
+#: tools/crm_resource.c:2058
 #, c-format
 msgid "Error performing operation: %s"
 msgstr "执行操作错误：%s"
+
+#, fuzzy, c-format
+#~ msgid "Could not delete resource %s: %s"
+#~ msgstr "无法删除资源：%s：%s"
 
 #~ msgid "No agents found for standard '%s'"
 #~ msgstr "没有发现指定的'%s'标准代理"
