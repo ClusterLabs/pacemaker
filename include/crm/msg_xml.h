@@ -75,6 +75,7 @@ extern "C" {
 #define PCMK_META_ENABLED                   "enabled"
 #define PCMK_META_FAILURE_TIMEOUT           "failure-timeout"
 #define PCMK_META_MIGRATION_THRESHOLD       "migration-threshold"
+#define PCMK_META_ORDERED                   "ordered"
 #define PCMK_META_PROMOTED_MAX              "promoted-max"
 #define PCMK_META_PROMOTED_NODE_MAX         "promoted-node-max"
 
