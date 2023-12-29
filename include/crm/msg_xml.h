@@ -84,6 +84,7 @@ extern "C" {
 #define PCMK_META_PROMOTABLE                "promotable"
 #define PCMK_META_PROMOTED_MAX              "promoted-max"
 #define PCMK_META_PROMOTED_NODE_MAX         "promoted-node-max"
+#define PCMK_META_REQUIRES                  "requires"
 #define PCMK_META_RESOURCE_STICKINESS       "resource-stickiness"
 #define PCMK_META_TARGET_ROLE               "target-role"
 

@@ -183,9 +183,9 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
 // @TODO xpaths can't handle templates, rules, or id-refs
 
 // nvpair with provides or requires set to unfencing
-#define XPATH_UNFENCING_NVPAIR XML_CIB_TAG_NVPAIR                \
-    "[(@" XML_NVPAIR_ATTR_NAME "='" PCMK_STONITH_PROVIDES "'"    \
-    "or @" XML_NVPAIR_ATTR_NAME "='" XML_RSC_ATTR_REQUIRES "') " \
+#define XPATH_UNFENCING_NVPAIR XML_CIB_TAG_NVPAIR               \
+    "[(@" XML_NVPAIR_ATTR_NAME "='" PCMK_STONITH_PROVIDES "'"   \
+    "or @" XML_NVPAIR_ATTR_NAME "='" PCMK_META_REQUIRES "') "  \
     "and @" XML_NVPAIR_ATTR_VALUE "='" PCMK__VALUE_UNFENCING "']"
 
 // unfencing in rsc_defaults or any resource

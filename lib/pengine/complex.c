@@ -503,7 +503,7 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
 
     } else if (pcmk__str_eq(value, PCMK__VALUE_UNFENCING, pcmk__str_casei)) {
         if (pcmk_is_set(rsc->flags, pcmk_rsc_fence_device)) {
-            pcmk__config_warn("Resetting \"" XML_RSC_ATTR_REQUIRES "\" for %s "
+            pcmk__config_warn("Resetting \"" PCMK_META_REQUIRES "\" for %s "
                               "to \"" PCMK__VALUE_QUORUM "\" because fencing "
                               "devices cannot require unfencing", rsc->id);
             unpack_requires(rsc, PCMK__VALUE_QUORUM, true);
@@ -511,7 +511,7 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
 
         } else if (!pcmk_is_set(rsc->cluster->flags,
                                 pcmk_sched_fencing_enabled)) {
-            pcmk__config_warn("Resetting \"" XML_RSC_ATTR_REQUIRES "\" for %s "
+            pcmk__config_warn("Resetting \"" PCMK_META_REQUIRES "\" for %s "
                               "to \"" PCMK__VALUE_QUORUM "\" because fencing "
                               "is disabled", rsc->id);
             unpack_requires(rsc, PCMK__VALUE_QUORUM, true);
@@ -548,7 +548,7 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
         }
 
         if (orig_value != NULL) {
-            pcmk__config_err("Resetting '" XML_RSC_ATTR_REQUIRES "' for %s "
+            pcmk__config_err("Resetting '" PCMK_META_REQUIRES "' for %s "
                              "to '%s' because '%s' is not valid",
                               rsc->id, value, orig_value);
         }
@@ -851,7 +851,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         pe__set_resource_flags(*rsc, pcmk_rsc_fence_device);
     }
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_REQUIRES);
+    value = g_hash_table_lookup((*rsc)->meta, PCMK_META_REQUIRES);
     unpack_requires(*rsc, value, false);
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_FAILURE_TIMEOUT);
