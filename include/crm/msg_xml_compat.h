@@ -193,6 +193,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_META_CONTAINER_ATTR_TARGET instead
 #define XML_RSC_ATTR_TARGET PCMK_META_CONTAINER_ATTR_TARGET
 
+//! \deprecated Do not use
+#define XML_RSC_ATTR_RESTART "restart-type"
+
 #ifdef __cplusplus
 }
 #endif
