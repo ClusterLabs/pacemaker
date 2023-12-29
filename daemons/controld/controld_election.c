@@ -282,6 +282,5 @@ do_dc_release(long long action,
         crm_err("Unknown DC action %s", fsa_action2string(action));
     }
 
-    crm_trace("Am I still the DC? %s", AM_I_DC ? XML_BOOLEAN_YES : XML_BOOLEAN_NO);
-
+    crm_trace("Am I still the DC? %s", pcmk__btoa(AM_I_DC));
 }
