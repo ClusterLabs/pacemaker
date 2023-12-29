@@ -226,6 +226,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_META_MULTIPLE_ACTIVE instead
 #define XML_RSC_ATTR_MULTIPLE PCMK_META_MULTIPLE_ACTIVE
 
+//! \deprecated Use \c PCMK_META_REQUIRES instead
+#define XML_RSC_ATTR_REQUIRES PCMK_META_REQUIRES
+
 #ifdef __cplusplus
 }
 #endif
