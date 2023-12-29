@@ -208,6 +208,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_META_PROMOTABLE instead
 #define XML_RSC_ATTR_PROMOTABLE PCMK_META_PROMOTABLE
 
+//! \deprecated Use \c PCMK_META_IS_MANAGED instead
+#define XML_RSC_ATTR_MANAGED PCMK_META_IS_MANAGED
+
 #ifdef __cplusplus
 }
 #endif
