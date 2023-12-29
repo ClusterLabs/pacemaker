@@ -187,7 +187,7 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
                               XML_OP_ATTR_ALLOW_MIGRATE, migrateable);
     }
     if (is_managed) {
-        crm_create_nvpair_xml(xml_sub, NULL, XML_RSC_ATTR_MANAGED, is_managed);
+        crm_create_nvpair_xml(xml_sub, NULL, PCMK_META_IS_MANAGED, is_managed);
     }
 
     // Add instance attributes

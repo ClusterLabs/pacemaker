@@ -566,7 +566,9 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pcmk_scheduler_t *data
                 connect_timeout = value;
             } else if (pcmk__str_eq(name, "remote-allow-migrate", pcmk__str_casei)) {
                 remote_allow_migrate=value;
-            } else if (pcmk__str_eq(name, XML_RSC_ATTR_MANAGED, pcmk__str_casei)) {
+
+            } else if (pcmk__str_eq(name, PCMK_META_IS_MANAGED,
+                                    pcmk__str_none)) {
                 is_managed = value;
             }
         }

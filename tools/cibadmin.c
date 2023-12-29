@@ -436,10 +436,10 @@ build_arg_context(pcmk__common_args_t *args)
                "\"//" XML_CIB_TAG_NVPAIR
                "[@" XML_NVPAIR_ATTR_NAME "='" XML_RSC_ATTR_TARGET_ROLE"']\""
                "\n\n"
-           "Remove all '" XML_RSC_ATTR_MANAGED "' settings:\n\n"
+           "Remove all '" PCMK_META_IS_MANAGED "' settings:\n\n"
            "\t# cibadmin --delete-all --xpath "
                "\"//" XML_CIB_TAG_NVPAIR
-               "[@" XML_NVPAIR_ATTR_NAME "='" XML_RSC_ATTR_MANAGED "']\"\n\n"
+               "[@" XML_NVPAIR_ATTR_NAME "='" PCMK_META_IS_MANAGED "']\"\n\n"
            "Remove the resource named 'old':\n\n"
            "\t# cibadmin --delete --xml-text "
                "'<" XML_CIB_TAG_RESOURCE " " PCMK_XA_ID "=\"old\"/>'\n\n"
