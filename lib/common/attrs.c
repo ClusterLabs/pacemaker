@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 the Pacemaker project contributors
+ * Copyright 2011-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -42,7 +42,7 @@ pcmk__node_attr_target(const char *name)
     if (name == NULL || pcmk__strcase_any_of(name, "auto", "localhost", NULL)) {
         char buf[128] = OCF_RESKEY_PREFIX;
         size_t offset = sizeof(OCF_RESKEY_PREFIX) - 1;
-        char *target_var = crm_meta_name(XML_RSC_ATTR_TARGET);
+        char *target_var = crm_meta_name(PCMK_META_CONTAINER_ATTR_TARGET);
         char *phys_var = crm_meta_name(PCMK__ENV_PHYSICAL_HOST);
         const char *target = NULL;
         const char *host_physical = NULL;

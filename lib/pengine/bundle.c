@@ -1236,16 +1236,18 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
             allocate_ip(bundle_data, replica, buffer);
             bundle_data->replicas = g_list_append(bundle_data->replicas,
                                                   replica);
-            bundle_data->attribute_target = g_hash_table_lookup(replica->child->meta,
-                                                                XML_RSC_ATTR_TARGET);
+            bundle_data->attribute_target =
+                g_hash_table_lookup(replica->child->meta,
+                                    PCMK_META_CONTAINER_ATTR_TARGET);
         }
         bundle_data->container_host_options = g_string_free(buffer, FALSE);
 
         if (bundle_data->attribute_target) {
-            g_hash_table_replace(rsc->meta, strdup(XML_RSC_ATTR_TARGET),
+            g_hash_table_replace(rsc->meta,
+                                 strdup(PCMK_META_CONTAINER_ATTR_TARGET),
                                  strdup(bundle_data->attribute_target));
             g_hash_table_replace(bundle_data->child->meta,
-                                 strdup(XML_RSC_ATTR_TARGET),
+                                 strdup(PCMK_META_CONTAINER_ATTR_TARGET),
                                  strdup(bundle_data->attribute_target));
         }
 

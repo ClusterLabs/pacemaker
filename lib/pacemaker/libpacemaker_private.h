@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 the Pacemaker project contributors
+ * Copyright 2021-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -496,9 +496,10 @@ enum pcmk__coloc_affects {
  *
  * When looking up a colocation node attribute on a bundle node for a bundle
  * primitive, we should always look on the bundle node's assigned host,
- * regardless of the value of XML_RSC_ATTR_TARGET. At most one resource (the
- * bundle primitive, if any) can run on a bundle node, so any colocation must
- * necessarily be evaluated with respect to the bundle node (the container).
+ * regardless of the value of \c PCMK_META_CONTAINER_ATTR_TARGET. At most one
+ * resource (the bundle primitive, if any) can run on a bundle node, so any
+ * colocation must necessarily be evaluated with respect to the bundle node
+ * (the container).
  *
  * \param[in] node  Node on which to look up the attribute
  * \param[in] attr  Name of attribute to look up
