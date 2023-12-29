@@ -68,6 +68,7 @@ extern "C" {
  * Meta attributes
  */
 
+#define PCMK_META_ALLOW_MIGRATE             "allow-migrate"
 #define PCMK_META_CLONE_MAX                 "clone-max"
 #define PCMK_META_CLONE_MIN                 "clone-min"
 #define PCMK_META_CLONE_NODE_MAX            "clone-node-max"

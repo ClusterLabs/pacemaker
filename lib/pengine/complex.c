@@ -733,7 +733,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         }
     }
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_OP_ATTR_ALLOW_MIGRATE);
+    value = g_hash_table_lookup((*rsc)->meta, PCMK_META_ALLOW_MIGRATE);
     if (crm_is_true(value)) {
         pe__set_resource_flags(*rsc, pcmk_rsc_migratable);
     } else if ((value == NULL) && remote_node) {
