@@ -213,8 +213,8 @@ pe__force_anon(const char *standard, pcmk_resource_t *rsc, const char *rid,
     if (pe_rsc_is_clone(rsc)) {
         clone_variant_data_t *clone_data = rsc->variant_opaque;
 
-        pcmk__config_warn("Ignoring " XML_RSC_ATTR_UNIQUE " for %s because "
-                          "%s resources such as %s can be used only as "
+        pcmk__config_warn("Ignoring " PCMK_META_GLOBALLY_UNIQUE " for %s "
+                          "because %s resources such as %s can be used only as "
                           "anonymous clones", rsc->id, standard, rid);
 
         clone_data->clone_node_max = 1;
@@ -415,7 +415,7 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     /* This ensures that the globally-unique value always exists for children to
      * inherit when being unpacked, as well as in resource agents' environment.
      */
-    add_hash_param(rsc->meta, XML_RSC_ATTR_UNIQUE,
+    add_hash_param(rsc->meta, PCMK_META_GLOBALLY_UNIQUE,
                    pe__rsc_bool_str(rsc, pcmk_rsc_unique));
 
     if (clone_data->clone_max <= 0) {

@@ -199,7 +199,7 @@ static void
 recursive_clear_unique(pcmk_resource_t *rsc, gpointer user_data)
 {
     pe__clear_resource_flags(rsc, pcmk_rsc_unique);
-    add_hash_param(rsc->meta, XML_RSC_ATTR_UNIQUE, XML_BOOLEAN_FALSE);
+    add_hash_param(rsc->meta, PCMK_META_GLOBALLY_UNIQUE, XML_BOOLEAN_FALSE);
     g_list_foreach(rsc->children, (GFunc) recursive_clear_unique, NULL);
 }
 

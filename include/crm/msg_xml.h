@@ -74,6 +74,7 @@ extern "C" {
 #define PCMK_META_CONTAINER_ATTR_TARGET     "container-attribute-target"
 #define PCMK_META_ENABLED                   "enabled"
 #define PCMK_META_FAILURE_TIMEOUT           "failure-timeout"
+#define PCMK_META_GLOBALLY_UNIQUE           "globally-unique"
 #define PCMK_META_INTERLEAVE                "interleave"
 #define PCMK_META_IS_MANAGED                "is-managed"
 #define PCMK_META_MIGRATION_THRESHOLD       "migration-threshold"
