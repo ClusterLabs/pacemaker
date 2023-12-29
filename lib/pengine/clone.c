@@ -337,10 +337,10 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
     if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
         // Use 1 as default but 0 for minimum and invalid
-        // @COMPAT PCMK_XA_PROMOTED_MAX_LEGACY deprecated since 2.0.0
-        clone_data->promoted_max = unpack_meta_int(rsc, PCMK_META_PROMOTED_MAX,
-                                                   PCMK_XA_PROMOTED_MAX_LEGACY,
-                                                   1);
+        // @COMPAT PCMK__META_PROMOTED_MAX_LEGACY deprecated since 2.0.0
+        clone_data->promoted_max =
+            unpack_meta_int(rsc, PCMK_META_PROMOTED_MAX,
+                            PCMK__META_PROMOTED_MAX_LEGACY, 1);
 
         // Use 1 as default but 0 for minimum and invalid
         // @COMPAT PCMK_XA_PROMOTED_NODE_MAX_LEGACY deprecated since 2.0.0
