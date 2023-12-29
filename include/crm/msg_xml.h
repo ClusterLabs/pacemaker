@@ -233,7 +233,6 @@ extern "C" {
 
 #  define XML_CIB_TAG_RSC_TEMPLATE	"template"
 
-#  define XML_RSC_ATTR_PROMOTABLE       "promotable"
 #  define XML_RSC_ATTR_MANAGED		"is-managed"
 #  define XML_RSC_ATTR_TARGET_ROLE	"target-role"
 #  define XML_RSC_ATTR_UNIQUE		"globally-unique"
