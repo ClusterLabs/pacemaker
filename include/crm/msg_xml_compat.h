@@ -199,6 +199,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_META_ORDERED instead
 #define XML_RSC_ATTR_ORDERED PCMK_META_ORDERED
 
+//! \deprecated Use \c PCMK_META_INTERLEAVE instead
+#define XML_RSC_ATTR_INTERLEAVE PCMK_META_INTERLEAVE
+
 #ifdef __cplusplus
 }
 #endif
