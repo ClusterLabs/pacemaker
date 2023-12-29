@@ -77,6 +77,7 @@ extern "C" {
 #define PCMK_META_GLOBALLY_UNIQUE           "globally-unique"
 #define PCMK_META_INTERLEAVE                "interleave"
 #define PCMK_META_IS_MANAGED                "is-managed"
+#define PCMK_META_MAINTENANCE               "maintenance"
 #define PCMK_META_MIGRATION_THRESHOLD       "migration-threshold"
 #define PCMK_META_MULTIPLE_ACTIVE           "multiple-active"
 #define PCMK_META_NOTIFY                    "notify"

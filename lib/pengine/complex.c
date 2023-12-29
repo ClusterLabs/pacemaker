@@ -756,7 +756,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         }
     }
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MAINTENANCE);
+    value = g_hash_table_lookup((*rsc)->meta, PCMK_META_MAINTENANCE);
     if (crm_is_true(value)) {
         pe__clear_resource_flags(*rsc, pcmk_rsc_managed);
         pe__set_resource_flags(*rsc, pcmk_rsc_maintenance);
