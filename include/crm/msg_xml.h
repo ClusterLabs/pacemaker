@@ -78,6 +78,7 @@ extern "C" {
 #define PCMK_META_INTERLEAVE                "interleave"
 #define PCMK_META_IS_MANAGED                "is-managed"
 #define PCMK_META_MIGRATION_THRESHOLD       "migration-threshold"
+#define PCMK_META_NOTIFY                    "notify"
 #define PCMK_META_ORDERED                   "ordered"
 #define PCMK_META_PROMOTABLE                "promotable"
 #define PCMK_META_PROMOTED_MAX              "promoted-max"

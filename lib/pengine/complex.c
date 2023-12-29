@@ -719,7 +719,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         pe__set_resource_flags(*rsc, pcmk_rsc_critical);
     }
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_NOTIFY);
+    value = g_hash_table_lookup((*rsc)->meta, PCMK_META_NOTIFY);
     if (crm_is_true(value)) {
         pe__set_resource_flags(*rsc, pcmk_rsc_notify);
     }

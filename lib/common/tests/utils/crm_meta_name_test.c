@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,7 +23,7 @@ standard_usage(void **state)
 {
     char *s = NULL;
 
-    s = crm_meta_name(XML_RSC_ATTR_NOTIFY);
+    s = crm_meta_name(PCMK_META_NOTIFY);
     assert_string_equal(s, "CRM_meta_notify");
     free(s);
 
