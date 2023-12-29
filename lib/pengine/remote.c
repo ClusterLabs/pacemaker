@@ -180,7 +180,7 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
                           XML_RSC_ATTR_INTERNAL_RSC, XML_BOOLEAN_TRUE);
     if (container_id) {
         crm_create_nvpair_xml(xml_sub, NULL,
-                              XML_RSC_ATTR_CONTAINER, container_id);
+                              PCMK__META_CONTAINER, container_id);
     }
     if (migrateable) {
         crm_create_nvpair_xml(xml_sub, NULL,

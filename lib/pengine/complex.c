@@ -726,7 +726,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     if (xml_contains_remote_node((*rsc)->xml)) {
         (*rsc)->is_remote_node = TRUE;
-        if (g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_CONTAINER)) {
+        if (g_hash_table_lookup((*rsc)->meta, PCMK__META_CONTAINER)) {
             guest_node = true;
         } else {
             remote_node = true;

@@ -547,10 +547,13 @@ build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list)
         crm_xml_add(xml_rsc, XML_AGENT_ATTR_PROVIDER, entry->rsc.provider);
 
         if (entry->last && entry->last->params) {
-            const char *container = g_hash_table_lookup(entry->last->params, CRM_META"_"XML_RSC_ATTR_CONTAINER);
+            static const char *name = CRM_META "_" PCMK__META_CONTAINER;
+            const char *container = g_hash_table_lookup(entry->last->params,
+                                                        name);
+
             if (container) {
                 crm_trace("Resource %s is a part of container resource %s", entry->id, container);
-                crm_xml_add(xml_rsc, XML_RSC_ATTR_CONTAINER, container);
+                crm_xml_add(xml_rsc, PCMK__META_CONTAINER, container);
             }
         }
         controld_add_resource_history_xml(xml_rsc, &(entry->rsc), entry->failed,

@@ -928,11 +928,11 @@ controld_update_resource_history(const char *node_name,
     }
     if (op->params != NULL) {
         container = g_hash_table_lookup(op->params,
-                                        CRM_META "_" XML_RSC_ATTR_CONTAINER);
+                                        CRM_META "_" PCMK__META_CONTAINER);
         if (container != NULL) {
             crm_trace("Resource %s is a part of container resource %s",
                       op->rsc_id, container);
-            crm_xml_add(xml, XML_RSC_ATTR_CONTAINER, container);
+            crm_xml_add(xml, PCMK__META_CONTAINER, container);
         }
     }
 

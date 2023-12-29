@@ -1522,7 +1522,7 @@ pcmk__primitive_add_graph_meta(const pcmk_resource_t *rsc, xmlNode *xml)
      */
     for (parent = rsc; parent != NULL; parent = parent->parent) {
         if (parent->container != NULL) {
-            crm_xml_add(xml, CRM_META "_" XML_RSC_ATTR_CONTAINER,
+            crm_xml_add(xml, CRM_META "_" PCMK__META_CONTAINER,
                         parent->container->id);
         }
     }

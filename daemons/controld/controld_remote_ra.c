@@ -866,7 +866,9 @@ handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeo
             server = tmp->value;
         } else if (pcmk__str_eq(tmp->key, XML_RSC_ATTR_REMOTE_RA_PORT, pcmk__str_casei)) {
             port = atoi(tmp->value);
-        } else if (pcmk__str_eq(tmp->key, CRM_META "_" XML_RSC_ATTR_CONTAINER, pcmk__str_casei)) {
+
+        } else if (pcmk__str_eq(tmp->key, CRM_META "_" PCMK__META_CONTAINER,
+                                pcmk__str_none)) {
             lrm_remote_set_flags(lrm_state, controlling_guest);
         }
     }

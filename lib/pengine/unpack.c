@@ -675,7 +675,7 @@ setup_container(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         return;
     }
 
-    container_id = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_CONTAINER);
+    container_id = g_hash_table_lookup(rsc->meta, PCMK__META_CONTAINER);
     if (container_id && !pcmk__str_eq(container_id, rsc->id, pcmk__str_casei)) {
         pcmk_resource_t *container = pe_find_resource(scheduler->resources,
                                                       container_id);
@@ -1954,7 +1954,7 @@ create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
         }
     }
 
-    if (crm_element_value(rsc_entry, XML_RSC_ATTR_CONTAINER)) {
+    if (crm_element_value(rsc_entry, PCMK__META_CONTAINER)) {
         /* This orphaned rsc needs to be mapped to a container. */
         crm_trace("Detected orphaned container filler %s", rsc_id);
         pe__set_resource_flags(rsc, pcmk_rsc_removed_filler);
@@ -2764,7 +2764,7 @@ handle_orphaned_container_fillers(const xmlNode *lrm_rsc_list,
             continue;
         }
 
-        container_id = crm_element_value(rsc_entry, XML_RSC_ATTR_CONTAINER);
+        container_id = crm_element_value(rsc_entry, PCMK__META_CONTAINER);
         rsc_id = crm_element_value(rsc_entry, PCMK_XA_ID);
         if (container_id == NULL || rsc_id == NULL) {
             continue;
