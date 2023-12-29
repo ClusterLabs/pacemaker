@@ -611,6 +611,19 @@ behave and can be easily set using the ``--meta`` option of the
      - If ``remote-node`` is specified, how long before a pending guest
        connection will time out.
 
+   * - .. _meta_remote_allow_migrate:
+
+       .. index::
+          single: remote-allow-migrate; resource option
+          single: resource; option, remote-allow-migrate
+
+       remote-allow-migrate
+     - :ref:`boolean <boolean>`
+     - true
+     - If ``remote-node`` is specified, this acts as the ``allow-migrate``
+       meta-attribute for the implicit remote connection resource
+       (``ocf:pacemaker:remote``).
+
 
 As an example of setting resource options, if you performed the following
 commands on an LSB Email resource:
