@@ -232,6 +232,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_RSC_ATTR_CONTAINER "container"
 
+//! \deprecated Do not use
+#define XML_RSC_ATTR_INTERNAL_RSC "internal_rsc"
+
 #ifdef __cplusplus
 }
 #endif
