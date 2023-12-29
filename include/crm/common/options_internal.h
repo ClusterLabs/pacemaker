@@ -138,6 +138,9 @@ bool pcmk__valid_sbd_timeout(const char *value);
 // @COMPAT Deprecated alias for PCMK__META_PROMOTED_NODE_MAX since 2.0.0
 #define PCMK__META_PROMOTED_NODE_MAX_LEGACY "master-node-max"
 
+// @COMPAT Deprecated meta-attribute since 2.0.0
+#define PCMK__META_RESTART_TYPE             "restart-type"
+
 // Constants for enumerated values for various options
 #define PCMK__VALUE_CLUSTER                 "cluster"
 #define PCMK__VALUE_CUSTOM                  "custom"

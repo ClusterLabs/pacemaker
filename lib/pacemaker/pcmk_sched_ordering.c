@@ -378,9 +378,9 @@ clone_min_ordering(const char *id,
  * \param[in]     flag   Ordering flag to set (when applicable)
  * \param[in,out] flags  Ordering flag set to update
  *
- * \compat The restart-type resource meta-attribute is deprecated. Eventually,
- *         it will be removed, and pe_restart_ignore will be the only behavior,
- *         at which time this can just be removed entirely.
+ * \compat The \c PCMK__META_RESTART_TYPE resource meta-attribute is deprecated.
+ *         Eventually, it will be removed, and \c pe_restart_ignore will be the
+ *         only behavior, at which time this can just be removed entirely.
  */
 #define handle_restart_type(rsc, kind, flag, flags) do {        \
         if (((kind) == pe_order_kind_optional)                  \
