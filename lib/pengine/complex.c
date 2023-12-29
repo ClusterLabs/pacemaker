@@ -794,7 +794,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                         (*rsc)->id);
     }
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MULTIPLE);
+    value = g_hash_table_lookup((*rsc)->meta, PCMK_META_MULTIPLE_ACTIVE);
     if (pcmk__str_eq(value, "stop_only", pcmk__str_casei)) {
         (*rsc)->recovery_type = pcmk_multiply_active_stop;
         pcmk__rsc_trace(*rsc, "%s multiple running resource recovery: stop only",
@@ -816,7 +816,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         if (!pcmk__str_eq(value, "stop_start",
                           pcmk__str_casei|pcmk__str_null_matches)) {
             pcmk__config_warn("%s is not a valid value for "
-                              XML_RSC_ATTR_MULTIPLE
+                              PCMK_META_MULTIPLE_ACTIVE
                               ", using default of \"stop_start\"", value);
         }
         (*rsc)->recovery_type = pcmk_multiply_active_restart;
