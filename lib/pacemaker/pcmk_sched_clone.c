@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -210,7 +210,7 @@ can_interleave(const pcmk__colocation_t *colocation)
 
     // Only the dependent needs to be marked for interleaving
     if (!crm_is_true(g_hash_table_lookup(dependent->meta,
-                                         XML_RSC_ATTR_INTERLEAVE))) {
+                                         PCMK_META_INTERLEAVE))) {
         return false;
     }
 

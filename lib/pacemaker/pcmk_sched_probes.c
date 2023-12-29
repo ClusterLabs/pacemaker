@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -595,7 +595,7 @@ add_restart_orderings_for_probe(pcmk_action_t *probe, pcmk_action_t *after)
     if ((after->rsc != NULL)
         && (after->rsc->variant > pcmk_rsc_variant_group)) {
         const char *interleave_s = g_hash_table_lookup(after->rsc->meta,
-                                                       XML_RSC_ATTR_INTERLEAVE);
+                                                       PCMK_META_INTERLEAVE);
 
         interleave = crm_is_true(interleave_s);
         if (interleave) {
