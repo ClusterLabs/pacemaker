@@ -220,6 +220,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_META_NOTIFY instead
 #define XML_RSC_ATTR_NOTIFY PCMK_META_NOTIFY
 
+//! \deprecated Use \c PCMK_META_RESOURCE_STICKINESS instead
+#define XML_RSC_ATTR_STICKINESS PCMK_META_RESOURCE_STICKINESS
+
 #ifdef __cplusplus
 }
 #endif
