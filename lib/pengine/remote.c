@@ -199,7 +199,8 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
                                   server);
         }
         if (port) {
-            crm_create_nvpair_xml(xml_sub, NULL, "port", port);
+            crm_create_nvpair_xml(xml_sub, NULL,
+                                  XML_RSC_ATTR_REMOTE_RA_PORT, port);
         }
     }
 
