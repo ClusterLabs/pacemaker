@@ -223,6 +223,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_META_RESOURCE_STICKINESS instead
 #define XML_RSC_ATTR_STICKINESS PCMK_META_RESOURCE_STICKINESS
 
+//! \deprecated Use \c PCMK_META_MULTIPLE_ACTIVE instead
+#define XML_RSC_ATTR_MULTIPLE PCMK_META_MULTIPLE_ACTIVE
+
 #ifdef __cplusplus
 }
 #endif

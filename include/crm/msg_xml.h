@@ -239,7 +239,6 @@ extern "C" {
 
 #  define XML_CIB_TAG_RSC_TEMPLATE	"template"
 
-#  define XML_RSC_ATTR_MULTIPLE		"multiple-active"
 #  define XML_RSC_ATTR_REQUIRES		"requires"
 #  define XML_RSC_ATTR_CONTAINER	"container"
 #  define XML_RSC_ATTR_INTERNAL_RSC	"internal_rsc"
