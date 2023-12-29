@@ -825,7 +825,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                         (*rsc)->id);
     }
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_STICKINESS);
+    value = g_hash_table_lookup((*rsc)->meta, PCMK_META_RESOURCE_STICKINESS);
     if (value != NULL && !pcmk__str_eq("default", value, pcmk__str_casei)) {
         (*rsc)->stickiness = char2score(value);
     }

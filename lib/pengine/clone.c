@@ -408,8 +408,8 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
      * This helps ensure clone instances are not shuffled around the cluster
      * for no benefit in situations when pre-allocation is not appropriate
      */
-    if (g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_STICKINESS) == NULL) {
-        add_hash_param(rsc->meta, XML_RSC_ATTR_STICKINESS, "1");
+    if (g_hash_table_lookup(rsc->meta, PCMK_META_RESOURCE_STICKINESS) == NULL) {
+        add_hash_param(rsc->meta, PCMK_META_RESOURCE_STICKINESS, "1");
     }
 
     /* This ensures that the globally-unique value always exists for children to

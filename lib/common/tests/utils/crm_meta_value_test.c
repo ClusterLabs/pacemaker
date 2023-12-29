@@ -31,7 +31,7 @@ key_not_in_table(void **state)
     GHashTable *tbl = pcmk__strkey_table(free, free);
 
     assert_null(crm_meta_value(tbl, PCMK_META_NOTIFY));
-    assert_null(crm_meta_value(tbl, XML_RSC_ATTR_STICKINESS));
+    assert_null(crm_meta_value(tbl, PCMK_META_RESOURCE_STICKINESS));
 
     g_hash_table_destroy(tbl);
 }
@@ -42,10 +42,12 @@ key_in_table(void **state)
     GHashTable *tbl = pcmk__strkey_table(free, free);
 
     g_hash_table_insert(tbl, crm_meta_name(PCMK_META_NOTIFY), strdup("1"));
-    g_hash_table_insert(tbl, crm_meta_name(XML_RSC_ATTR_STICKINESS), strdup("2"));
+    g_hash_table_insert(tbl, crm_meta_name(PCMK_META_RESOURCE_STICKINESS),
+                        strdup("2"));
 
     assert_string_equal(crm_meta_value(tbl, PCMK_META_NOTIFY), "1");
-    assert_string_equal(crm_meta_value(tbl, XML_RSC_ATTR_STICKINESS), "2");
+    assert_string_equal(crm_meta_value(tbl, PCMK_META_RESOURCE_STICKINESS),
+                        "2");
 
     g_hash_table_destroy(tbl);
 }
