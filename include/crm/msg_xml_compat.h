@@ -238,6 +238,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_META_MAINTENANCE instead
 #define XML_RSC_ATTR_MAINTENANCE PCMK_META_MAINTENANCE
 
+//! \deprecated Use \c PCMK_META_REMOTE_NODE instead
+#define XML_RSC_ATTR_REMOTE_NODE PCMK_META_REMOTE_NODE
+
 #ifdef __cplusplus
 }
 #endif
