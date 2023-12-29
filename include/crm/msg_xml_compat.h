@@ -211,6 +211,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_META_IS_MANAGED instead
 #define XML_RSC_ATTR_MANAGED PCMK_META_IS_MANAGED
 
+//! \deprecated Use \c PCMK_META_TARGET_ROLE instead
+#define XML_RSC_ATTR_TARGET_ROLE PCMK_META_TARGET_ROLE
+
 #ifdef __cplusplus
 }
 #endif
