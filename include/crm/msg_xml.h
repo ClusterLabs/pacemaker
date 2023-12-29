@@ -246,7 +246,6 @@ extern "C" {
 #  define XML_RSC_ATTR_REMOTE_RA_ADDR   "addr"
 #  define XML_RSC_ATTR_REMOTE_RA_SERVER "server"
 #  define XML_RSC_ATTR_REMOTE_RA_PORT   "port"
-#  define XML_RSC_ATTR_CRITICAL         "critical"
 
 #  define XML_REMOTE_ATTR_RECONNECT_INTERVAL "reconnect_interval"
 
