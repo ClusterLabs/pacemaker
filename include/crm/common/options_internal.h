@@ -135,6 +135,12 @@ bool pcmk__valid_sbd_timeout(const char *value);
 #define PCMK__META_CONTAINER                "container"
 #define PCMK__META_INTERNAL_RSC             "internal_rsc"
 
+/* @TODO Plug these in. Currently, they're never set. These are op attrs for use
+ * with https://projects.clusterlabs.org/T382.
+ */
+#define PCMK__META_CLEAR_FAILURE_OP         "clear_failure_op"
+#define PCMK__META_CLEAR_FAILURE_INTERVAL   "clear_failure_interval"
+
 // @COMPAT Deprecated alias for PCMK__META_PROMOTED_MAX since 2.0.0
 #define PCMK__META_PROMOTED_MAX_LEGACY      "master-max"
 
