@@ -196,6 +196,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_RSC_ATTR_RESTART "restart-type"
 
+//! \deprecated Use \c PCMK_META_ORDERED instead
+#define XML_RSC_ATTR_ORDERED PCMK_META_ORDERED
+
 #ifdef __cplusplus
 }
 #endif
