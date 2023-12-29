@@ -256,6 +256,9 @@ extern "C" {
 //! \deprecated Use \c XML_BOOLEAN_TRUE instead
 #define XML_BOOLEAN_YES XML_BOOLEAN_TRUE
 
+//! \deprecated Use \c XML_BOOLEAN_FALSE instead
+#define XML_BOOLEAN_NO XML_BOOLEAN_FALSE
+
 #ifdef __cplusplus
 }
 #endif
