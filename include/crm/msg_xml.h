@@ -72,6 +72,7 @@ extern "C" {
 #define PCMK_META_CLONE_MIN                 "clone-min"
 #define PCMK_META_CLONE_NODE_MAX            "clone-node-max"
 #define PCMK_META_CONTAINER_ATTR_TARGET     "container-attribute-target"
+#define PCMK_META_CRITICAL                  "critical"
 #define PCMK_META_ENABLED                   "enabled"
 #define PCMK_META_FAILURE_TIMEOUT           "failure-timeout"
 #define PCMK_META_GLOBALLY_UNIQUE           "globally-unique"

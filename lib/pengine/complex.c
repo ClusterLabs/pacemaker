@@ -714,7 +714,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     value = g_hash_table_lookup((*rsc)->meta, XML_CIB_ATTR_PRIORITY);
     (*rsc)->priority = char2score(value);
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_CRITICAL);
+    value = g_hash_table_lookup((*rsc)->meta, PCMK_META_CRITICAL);
     if ((value == NULL) || crm_is_true(value)) {
         pe__set_resource_flags(*rsc, pcmk_rsc_critical);
     }
