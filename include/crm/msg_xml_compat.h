@@ -217,6 +217,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_META_GLOBALLY_UNIQUE instead
 #define XML_RSC_ATTR_UNIQUE PCMK_META_GLOBALLY_UNIQUE
 
+//! \deprecated Use \c PCMK_META_NOTIFY instead
+#define XML_RSC_ATTR_NOTIFY PCMK_META_NOTIFY
+
 #ifdef __cplusplus
 }
 #endif

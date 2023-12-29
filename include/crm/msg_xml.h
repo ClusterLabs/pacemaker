@@ -237,7 +237,6 @@ extern "C" {
 
 #  define XML_CIB_TAG_RSC_TEMPLATE	"template"
 
-#  define XML_RSC_ATTR_NOTIFY		"notify"
 #  define XML_RSC_ATTR_STICKINESS	"resource-stickiness"
 #  define XML_RSC_ATTR_MULTIPLE		"multiple-active"
 #  define XML_RSC_ATTR_REQUIRES		"requires"
