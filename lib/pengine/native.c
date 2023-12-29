@@ -482,7 +482,7 @@ native_print_xml(pcmk_resource_t *rsc, const char *pre_text, long options,
 
     status_print("role=\"%s\" ", rsc_state);
     if (rsc->meta) {
-        target_role = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
+        target_role = g_hash_table_lookup(rsc->meta, PCMK_META_TARGET_ROLE);
     }
     if (target_role) {
         status_print("target_role=\"%s\" ", target_role);
@@ -647,7 +647,7 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
     if (target_role != NULL) {
         switch (text2role(target_role)) {
             case pcmk_role_unknown:
-                pcmk__config_err("Invalid " XML_RSC_ATTR_TARGET_ROLE
+                pcmk__config_err("Invalid " PCMK_META_TARGET_ROLE
                                  " %s for resource %s", target_role, rsc->id);
                 break;
 
@@ -748,7 +748,7 @@ pe__common_output_html(pcmk__output_t *out, const pcmk_resource_t *rsc,
             crm_trace("skipping print of internal resource %s", rsc->id);
             return pcmk_rc_no_output;
         }
-        target_role = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
+        target_role = g_hash_table_lookup(rsc->meta, PCMK_META_TARGET_ROLE);
     }
 
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
@@ -801,7 +801,7 @@ pe__common_output_text(pcmk__output_t *out, const pcmk_resource_t *rsc,
             crm_trace("skipping print of internal resource %s", rsc->id);
             return pcmk_rc_no_output;
         }
-        target_role = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
+        target_role = g_hash_table_lookup(rsc->meta, PCMK_META_TARGET_ROLE);
     }
 
     {
@@ -837,7 +837,7 @@ common_print(pcmk_resource_t *rsc, const char *pre_text, const char *name,
             crm_trace("skipping print of internal resource %s", rsc->id);
             return;
         }
-        target_role = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
+        target_role = g_hash_table_lookup(rsc->meta, PCMK_META_TARGET_ROLE);
     }
 
     if (options & pe_print_xml) {
@@ -986,7 +986,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     desc = pe__resource_description(rsc, show_opts);
 
     if (rsc->meta != NULL) {
-       target_role = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
+       target_role = g_hash_table_lookup(rsc->meta, PCMK_META_TARGET_ROLE);
     }
 
     CRM_ASSERT(rsc->variant == pcmk_rsc_variant_primitive);

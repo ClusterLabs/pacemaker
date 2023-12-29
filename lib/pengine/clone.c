@@ -497,13 +497,13 @@ static const char *
 configured_role_str(pcmk_resource_t * rsc)
 {
     const char *target_role = g_hash_table_lookup(rsc->meta,
-                                                  XML_RSC_ATTR_TARGET_ROLE);
+                                                  PCMK_META_TARGET_ROLE);
 
     if ((target_role == NULL) && rsc->children && rsc->children->data) {
         pcmk_resource_t *instance = rsc->children->data; // Any instance will do
 
         target_role = g_hash_table_lookup(instance->meta,
-                                          XML_RSC_ATTR_TARGET_ROLE);
+                                          PCMK_META_TARGET_ROLE);
     }
     return target_role;
 }
@@ -517,7 +517,7 @@ configured_role(pcmk_resource_t *rsc)
     if (target_role != NULL) {
         role = text2role(target_role);
         if (role == pcmk_role_unknown) {
-            pcmk__config_err("Invalid " XML_RSC_ATTR_TARGET_ROLE
+            pcmk__config_err("Invalid " PCMK_META_TARGET_ROLE
                              " for resource %s", rsc->id);
         }
     }

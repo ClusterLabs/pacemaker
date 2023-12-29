@@ -2037,7 +2037,8 @@ node_and_op(pcmk__output_t *out, va_list args) {
 
     if (rsc) {
         const pcmk_node_t *node = pe__current_node(rsc);
-        const char *target_role = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
+        const char *target_role = g_hash_table_lookup(rsc->meta,
+                                                      PCMK_META_TARGET_ROLE);
         uint32_t show_opts = pcmk_show_rsc_only | pcmk_show_pending;
 
         if (node == NULL) {

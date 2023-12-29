@@ -2730,7 +2730,7 @@ unpack_lrm_resource(pcmk_node_t *node, const xmlNode *lrm_resource,
         if ((rsc->next_role == pcmk_role_unknown)
             || (req_role < rsc->next_role)) {
 
-            pe__set_next_role(rsc, req_role, XML_RSC_ATTR_TARGET_ROLE);
+            pe__set_next_role(rsc, req_role, PCMK_META_TARGET_ROLE);
 
         } else if (req_role > rsc->next_role) {
             pcmk__rsc_info(rsc,

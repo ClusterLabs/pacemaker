@@ -476,7 +476,7 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
         pcmk__rsc_trace(rsc,
                         "Banning %s from all nodes because it will be stopped",
                         rsc->id);
-        resource_location(rsc, NULL, -INFINITY, XML_RSC_ATTR_TARGET_ROLE,
+        resource_location(rsc, NULL, -INFINITY, PCMK_META_TARGET_ROLE,
                           rsc->cluster);
 
     } else if ((rsc->next_role > rsc->role)
