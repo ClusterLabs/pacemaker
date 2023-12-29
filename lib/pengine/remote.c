@@ -177,7 +177,7 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
     xml_sub = create_xml_node(remote, XML_TAG_META_SETS);
     crm_xml_set_id(xml_sub, "%s-%s", uname, XML_TAG_META_SETS);
     crm_create_nvpair_xml(xml_sub, NULL,
-                          XML_RSC_ATTR_INTERNAL_RSC, XML_BOOLEAN_TRUE);
+                          PCMK__META_INTERNAL_RSC, XML_BOOLEAN_TRUE);
     if (container_id) {
         crm_create_nvpair_xml(xml_sub, NULL,
                               PCMK__META_CONTAINER, container_id);

@@ -740,7 +740,8 @@ pe__common_output_html(pcmk__output_t *out, const pcmk_resource_t *rsc,
     CRM_ASSERT(kind != NULL);
 
     if (rsc->meta) {
-        const char *is_internal = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INTERNAL_RSC);
+        const char *is_internal = g_hash_table_lookup(rsc->meta,
+                                                      PCMK__META_INTERNAL_RSC);
 
         if (crm_is_true(is_internal)
             && !pcmk_is_set(show_opts, pcmk_show_implicit_rscs)) {
@@ -793,7 +794,8 @@ pe__common_output_text(pcmk__output_t *out, const pcmk_resource_t *rsc,
     CRM_ASSERT(rsc->variant == pcmk_rsc_variant_primitive);
 
     if (rsc->meta) {
-        const char *is_internal = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INTERNAL_RSC);
+        const char *is_internal = g_hash_table_lookup(rsc->meta,
+                                                      PCMK__META_INTERNAL_RSC);
 
         if (crm_is_true(is_internal)
             && !pcmk_is_set(show_opts, pcmk_show_implicit_rscs)) {
@@ -829,7 +831,7 @@ common_print(pcmk_resource_t *rsc, const char *pre_text, const char *name,
 
     if (rsc->meta) {
         const char *is_internal = g_hash_table_lookup(rsc->meta,
-                                                      XML_RSC_ATTR_INTERNAL_RSC);
+                                                      PCMK__META_INTERNAL_RSC);
 
         if (crm_is_true(is_internal)
             && !pcmk_is_set(options, pe_print_implicit)) {
