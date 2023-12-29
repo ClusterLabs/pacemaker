@@ -647,7 +647,7 @@ pcmk__clone_add_graph_meta(const pcmk_resource_t *rsc, xmlNode *xml)
         crm_xml_add_int(xml, name, promoted_max);
         free(name);
 
-        name = crm_meta_name(PCMK_XA_PROMOTED_NODE_MAX_LEGACY);
+        name = crm_meta_name(PCMK__META_PROMOTED_NODE_MAX_LEGACY);
         crm_xml_add_int(xml, name, promoted_node_max);
         free(name);
     }

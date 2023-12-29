@@ -343,10 +343,10 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
                             PCMK__META_PROMOTED_MAX_LEGACY, 1);
 
         // Use 1 as default but 0 for minimum and invalid
-        // @COMPAT PCMK_XA_PROMOTED_NODE_MAX_LEGACY deprecated since 2.0.0
+        // @COMPAT PCMK__META_PROMOTED_NODE_MAX_LEGACY deprecated since 2.0.0
         clone_data->promoted_node_max =
             unpack_meta_int(rsc, PCMK_META_PROMOTED_NODE_MAX,
-                            PCMK_XA_PROMOTED_NODE_MAX_LEGACY, 1);
+                            PCMK__META_PROMOTED_NODE_MAX_LEGACY, 1);
     }
 
     // Implied by calloc()
