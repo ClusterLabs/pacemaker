@@ -214,6 +214,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_META_TARGET_ROLE instead
 #define XML_RSC_ATTR_TARGET_ROLE PCMK_META_TARGET_ROLE
 
+//! \deprecated Use \c PCMK_META_GLOBALLY_UNIQUE instead
+#define XML_RSC_ATTR_UNIQUE PCMK_META_GLOBALLY_UNIQUE
+
 #ifdef __cplusplus
 }
 #endif
