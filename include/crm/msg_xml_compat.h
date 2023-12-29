@@ -229,6 +229,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_META_REQUIRES instead
 #define XML_RSC_ATTR_REQUIRES PCMK_META_REQUIRES
 
+//! \deprecated Do not use
+#define XML_RSC_ATTR_CONTAINER "container"
+
 #ifdef __cplusplus
 }
 #endif

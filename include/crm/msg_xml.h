@@ -240,7 +240,6 @@ extern "C" {
 
 #  define XML_CIB_TAG_RSC_TEMPLATE	"template"
 
-#  define XML_RSC_ATTR_CONTAINER	"container"
 #  define XML_RSC_ATTR_INTERNAL_RSC	"internal_rsc"
 #  define XML_RSC_ATTR_MAINTENANCE	"maintenance"
 #  define XML_RSC_ATTR_REMOTE_NODE  	"remote-node"
