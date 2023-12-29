@@ -1143,7 +1143,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
         if (bundle_data->promoted_max) {
             crm_create_nvpair_xml(xml_set, NULL,
-                                  XML_RSC_ATTR_PROMOTABLE, XML_BOOLEAN_TRUE);
+                                  PCMK_META_PROMOTABLE, XML_BOOLEAN_TRUE);
 
             value = pcmk__itoa(bundle_data->promoted_max);
             crm_create_nvpair_xml(xml_set, NULL, PCMK_META_PROMOTED_MAX, value);

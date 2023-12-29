@@ -405,7 +405,7 @@ static bool
 detect_promotable(pcmk_resource_t *rsc)
 {
     const char *promotable = g_hash_table_lookup(rsc->meta,
-                                                 XML_RSC_ATTR_PROMOTABLE);
+                                                 PCMK_META_PROMOTABLE);
 
     if (crm_is_true(promotable)) {
         return TRUE;
@@ -416,7 +416,7 @@ detect_promotable(pcmk_resource_t *rsc)
         /* @TODO in some future version, pcmk__warn_once() here,
          *       then drop support in even later version
          */
-        g_hash_table_insert(rsc->meta, strdup(XML_RSC_ATTR_PROMOTABLE),
+        g_hash_table_insert(rsc->meta, strdup(PCMK_META_PROMOTABLE),
                             strdup(XML_BOOLEAN_TRUE));
         return TRUE;
     }
