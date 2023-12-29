@@ -256,7 +256,6 @@ extern "C" {
 
 #  define XML_OP_ATTR_ON_FAIL		"on-fail"
 #  define XML_OP_ATTR_START_DELAY	"start-delay"
-#  define XML_OP_ATTR_ALLOW_MIGRATE	"allow-migrate"
 #  define XML_OP_ATTR_ORIGIN		"interval-origin"
 #  define XML_OP_ATTR_PENDING		"record-pending"
 #  define XML_OP_ATTR_DIGESTS_ALL       "digests-all"

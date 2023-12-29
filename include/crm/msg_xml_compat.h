@@ -250,6 +250,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_META_CRITICAL instead
 #define XML_RSC_ATTR_CRITICAL PCMK_META_CRITICAL
 
+//! \deprecated Use \c PCMK_META_ALLOW_MIGRATE instead
+#define XML_OP_ATTR_ALLOW_MIGRATE "allow-migrate"
+
 #ifdef __cplusplus
 }
 #endif
