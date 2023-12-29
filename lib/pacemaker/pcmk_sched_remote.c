@@ -669,18 +669,22 @@ pcmk__substitute_remote_addr(pcmk_resource_t *rsc, GHashTable *params)
 }
 
 /*!
- * \brief Add special bundle meta-attributes to XML
+ * \brief Add special guest node meta-attributes to XML
  *
- * If a given action will be executed on a guest node (including a bundle),
- * add the special bundle meta-attribute \c PCMK_META_CONTAINER_ATTR_TARGET and
- * environment variable \c PCMK__META_PHYSICAL_HOST as XML attributes (using
- * meta-attribute naming).
+ * If a given action will be executed on a guest node, add the following as XML
+ * attributes (using meta-attribute naming):
+ * * The resource's \c PCMK_META_CONTAINER_ATTR_TARGET meta-attribute (usually
+ *   set only for bundles), as \c PCMK_META_CONTAINER_ATTR_TARGET
+ * * The guest's physical host (current host for "down" actions, next host for
+ *   "up" actions), as \c PCMK__META_PHYSICAL_HOST
+ *
+ * If the guest node has no physical host, then don't add either attribute.
  *
  * \param[in,out] args_xml  XML to add attributes to
  * \param[in]     action    Action to check
  */
 void
-pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
+pcmk__add_guest_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
 {
     const pcmk_node_t *guest = action->node;
     const pcmk_node_t *host = NULL;

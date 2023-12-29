@@ -748,8 +748,8 @@ G_GNUC_INTERNAL
 void pcmk__substitute_remote_addr(pcmk_resource_t *rsc, GHashTable *params);
 
 G_GNUC_INTERNAL
-void pcmk__add_bundle_meta_to_xml(xmlNode *args_xml,
-                                  const pcmk_action_t *action);
+void pcmk__add_guest_meta_to_xml(xmlNode *args_xml,
+                                 const pcmk_action_t *action);
 
 
 // Primitives (pcmk_sched_primitive.c)
