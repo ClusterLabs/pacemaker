@@ -131,6 +131,7 @@ bool pcmk__valid_sbd_timeout(const char *value);
 
 // Constants for meta-attribute names
 #define PCMK__META_ALLOW_UNHEALTHY_NODES    "allow-unhealthy-nodes"
+#define PCMK__META_CLONE_INSTANCE_NUM       "clone"
 
 // @COMPAT Deprecated alias for PCMK__META_PROMOTED_MAX since 2.0.0
 #define PCMK__META_PROMOTED_MAX_LEGACY      "master-max"
