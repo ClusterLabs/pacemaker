@@ -84,6 +84,7 @@ extern "C" {
 #define PCMK_META_MULTIPLE_ACTIVE           "multiple-active"
 #define PCMK_META_NOTIFY                    "notify"
 #define PCMK_META_ORDERED                   "ordered"
+#define PCMK_META_PRIORITY                  "priority"
 #define PCMK_META_PROMOTABLE                "promotable"
 #define PCMK_META_PROMOTED_MAX              "promoted-max"
 #define PCMK_META_PROMOTED_NODE_MAX         "promoted-node-max"

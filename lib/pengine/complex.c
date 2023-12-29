@@ -711,7 +711,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     (*rsc)->migration_threshold = INFINITY;
     (*rsc)->failure_timeout = 0;
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_CIB_ATTR_PRIORITY);
+    value = g_hash_table_lookup((*rsc)->meta, PCMK_META_PRIORITY);
     (*rsc)->priority = char2score(value);
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_CRITICAL);
