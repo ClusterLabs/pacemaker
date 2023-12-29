@@ -241,7 +241,6 @@ extern "C" {
 
 #  define XML_CIB_TAG_RSC_TEMPLATE	"template"
 
-#  define XML_RSC_ATTR_MAINTENANCE	"maintenance"
 #  define XML_RSC_ATTR_REMOTE_NODE  	"remote-node"
 #  define XML_RSC_ATTR_CLEAR_OP         "clear_failure_op"
 #  define XML_RSC_ATTR_CLEAR_INTERVAL   "clear_failure_interval"

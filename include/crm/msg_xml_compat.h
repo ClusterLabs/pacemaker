@@ -235,6 +235,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_RSC_ATTR_INTERNAL_RSC "internal_rsc"
 
+//! \deprecated Use \c PCMK_META_MAINTENANCE instead
+#define XML_RSC_ATTR_MAINTENANCE PCMK_META_MAINTENANCE
+
 #ifdef __cplusplus
 }
 #endif
