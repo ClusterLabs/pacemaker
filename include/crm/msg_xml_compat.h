@@ -190,6 +190,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_ID instead
 #define XML_FAILCIB_ATTR_ID PCMK_XA_ID
 
+//! \deprecated Use \c PCMK_META_CONTAINER_ATTR_TARGET instead
+#define XML_RSC_ATTR_TARGET PCMK_META_CONTAINER_ATTR_TARGET
+
 #ifdef __cplusplus
 }
 #endif
