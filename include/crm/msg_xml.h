@@ -177,7 +177,6 @@ extern "C" {
 
 #  define XML_BOOLEAN_TRUE		"true"
 #  define XML_BOOLEAN_FALSE		"false"
-#  define XML_BOOLEAN_YES		XML_BOOLEAN_TRUE
 #  define XML_BOOLEAN_NO		XML_BOOLEAN_FALSE
 
 #  define XML_TAG_OPTIONS		"options"
