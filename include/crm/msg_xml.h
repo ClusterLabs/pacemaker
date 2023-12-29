@@ -87,6 +87,7 @@ extern "C" {
 #define PCMK_META_PROMOTED_MAX              "promoted-max"
 #define PCMK_META_PROMOTED_NODE_MAX         "promoted-node-max"
 #define PCMK_META_REMOTE_ADDR               "remote-addr"
+#define PCMK_META_REMOTE_ALLOW_MIGRATE      "remote-allow-migrate"
 #define PCMK_META_REMOTE_CONNECT_TIMEOUT    "remote-connect-timeout"
 #define PCMK_META_REMOTE_NODE               "remote-node"
 #define PCMK_META_REMOTE_PORT               "remote-port"
