@@ -95,7 +95,6 @@ bool pcmk__valid_sbd_timeout(const char *value);
 #define PCMK__ENV_NODE_ACTION_LIMIT         "node_action_limit"
 #define PCMK__ENV_NODE_START_STATE          "node_start_state"
 #define PCMK__ENV_PANIC_ACTION              "panic_action"
-#define PCMK__ENV_PHYSICAL_HOST             "physical_host"
 #define PCMK__ENV_REMOTE_ADDRESS            "remote_address"
 #define PCMK__ENV_REMOTE_SCHEMA_DIR         "remote_schema_directory"
 #define PCMK__ENV_REMOTE_PID1               "remote_pid1"
@@ -134,6 +133,7 @@ bool pcmk__valid_sbd_timeout(const char *value);
 #define PCMK__META_CLONE_INSTANCE_NUM       "clone"
 #define PCMK__META_CONTAINER                "container"
 #define PCMK__META_INTERNAL_RSC             "internal_rsc"
+#define PCMK__META_PHYSICAL_HOST            "physical-host"
 
 /* @TODO Plug these in. Currently, they're never set. These are op attrs for use
  * with https://projects.clusterlabs.org/T382.

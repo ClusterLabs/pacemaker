@@ -672,9 +672,9 @@ pcmk__substitute_remote_addr(pcmk_resource_t *rsc, GHashTable *params)
  * \brief Add special bundle meta-attributes to XML
  *
  * If a given action will be executed on a guest node (including a bundle),
- * add the special bundle meta-attribute "container-attribute-target" and
- * environment variable "physical_host" as XML attributes (using meta-attribute
- * naming).
+ * add the special bundle meta-attribute \c PCMK_META_CONTAINER_ATTR_TARGET and
+ * environment variable \c PCMK__META_PHYSICAL_HOST as XML attributes (using
+ * meta-attribute naming).
  *
  * \param[in,out] args_xml  XML to add attributes to
  * \param[in]     action    Action to check
@@ -724,7 +724,7 @@ pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
         hash2metafield((gpointer) PCMK_META_CONTAINER_ATTR_TARGET,
                        target,
                        (gpointer) args_xml);
-        hash2metafield((gpointer) PCMK__ENV_PHYSICAL_HOST,
+        hash2metafield((gpointer) PCMK__META_PHYSICAL_HOST,
                        (gpointer) host->details->uname,
                        (gpointer) args_xml);
     }

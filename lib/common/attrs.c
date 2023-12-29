@@ -43,7 +43,7 @@ pcmk__node_attr_target(const char *name)
         char buf[128] = OCF_RESKEY_PREFIX;
         size_t offset = sizeof(OCF_RESKEY_PREFIX) - 1;
         char *target_var = crm_meta_name(PCMK_META_CONTAINER_ATTR_TARGET);
-        char *phys_var = crm_meta_name(PCMK__ENV_PHYSICAL_HOST);
+        char *phys_var = crm_meta_name(PCMK__META_PHYSICAL_HOST);
         const char *target = NULL;
         const char *host_physical = NULL;
 
