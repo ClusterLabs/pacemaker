@@ -103,6 +103,7 @@ extern "C" {
  */
 
 #define PCMK_REMOTE_RA_ADDR                 "addr"
+#define PCMK_REMOTE_RA_SERVER               "server"
 
 
 /*
