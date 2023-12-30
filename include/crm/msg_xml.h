@@ -257,8 +257,6 @@ extern "C" {
 
 #  define XML_CIB_TAG_RSC_TEMPLATE	"template"
 
-#  define XML_REMOTE_ATTR_RECONNECT_INTERVAL "reconnect_interval"
-
 #  define XML_OP_ATTR_ON_FAIL		"on-fail"
 #  define XML_OP_ATTR_START_DELAY	"start-delay"
 #  define XML_OP_ATTR_ORIGIN		"interval-origin"
