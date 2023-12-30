@@ -68,7 +68,7 @@ add_extra_info(const pcmk_node_t *node, GList *rsc_list,
 
     for (gIter = rsc_list; gIter != NULL; gIter = gIter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) gIter->data;
-        const char *type = g_hash_table_lookup(rsc->meta, "type");
+        const char *type = g_hash_table_lookup(rsc->meta, XML_ATTR_TYPE);
         const char *name = NULL;
         GHashTable *params = NULL;
 
