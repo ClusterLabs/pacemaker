@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -765,7 +765,7 @@ pcmk__bundle_apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
     }
 }
 
-#define XPATH_REMOTE "//nvpair[@name='" XML_RSC_ATTR_REMOTE_RA_ADDR "']"
+#define XPATH_REMOTE "//nvpair[@name='" PCMK_REMOTE_RA_ADDR "']"
 
 /*!
  * \internal
@@ -807,7 +807,7 @@ add_replica_actions_to_graph(pcmk__bundle_replica_t *replica, void *user_data)
                                                NULL, replica->remote->cluster);
 
             g_hash_table_replace(params,
-                                 strdup(XML_RSC_ATTR_REMOTE_RA_ADDR),
+                                 strdup(PCMK_REMOTE_RA_ADDR),
                                  strdup(calculated_addr));
         } else {
             pcmk_resource_t *bundle = user_data;

@@ -110,7 +110,7 @@ calculate_main_digest(pcmk__op_digest_t *data, pcmk_resource_t *rsc,
      * that themselves are Pacemaker Remote nodes
      */
     (void) pe__add_bundle_remote_name(rsc, scheduler, data->params_all,
-                                      XML_RSC_ATTR_REMOTE_RA_ADDR);
+                                      PCMK_REMOTE_RA_ADDR);
 
     if (overrides != NULL) {
         // If interval was overridden, reset it

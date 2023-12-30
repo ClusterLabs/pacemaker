@@ -930,7 +930,7 @@ pe__bundle_needs_remote_name(pcmk_resource_t *rsc)
 
     // Use NULL node since pcmk__bundle_expand() uses that to set value
     params = pe_rsc_params(rsc, NULL, rsc->cluster);
-    value = g_hash_table_lookup(params, XML_RSC_ATTR_REMOTE_RA_ADDR);
+    value = g_hash_table_lookup(params, PCMK_REMOTE_RA_ADDR);
 
     return pcmk__str_eq(value, "#uname", pcmk__str_casei)
            && xml_contains_remote_node(rsc->xml);

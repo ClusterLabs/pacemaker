@@ -654,15 +654,14 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
 void
 pcmk__substitute_remote_addr(pcmk_resource_t *rsc, GHashTable *params)
 {
-    const char *remote_addr = g_hash_table_lookup(params,
-                                                  XML_RSC_ATTR_REMOTE_RA_ADDR);
+    const char *remote_addr = g_hash_table_lookup(params, PCMK_REMOTE_RA_ADDR);
 
     if (pcmk__str_eq(remote_addr, "#uname", pcmk__str_none)) {
         GHashTable *base = pe_rsc_params(rsc, NULL, rsc->cluster);
 
-        remote_addr = g_hash_table_lookup(base, XML_RSC_ATTR_REMOTE_RA_ADDR);
+        remote_addr = g_hash_table_lookup(base, PCMK_REMOTE_RA_ADDR);
         if (remote_addr != NULL) {
-            g_hash_table_insert(params, strdup(XML_RSC_ATTR_REMOTE_RA_ADDR),
+            g_hash_table_insert(params, strdup(PCMK_REMOTE_RA_ADDR),
                                 strdup(remote_addr));
         }
     }

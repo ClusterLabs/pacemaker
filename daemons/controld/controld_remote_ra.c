@@ -861,7 +861,7 @@ handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeo
     int rc = pcmk_rc_ok;
 
     for (tmp = cmd->params; tmp; tmp = tmp->next) {
-        if (pcmk__strcase_any_of(tmp->key, XML_RSC_ATTR_REMOTE_RA_ADDR,
+        if (pcmk__strcase_any_of(tmp->key, PCMK_REMOTE_RA_ADDR,
                                  XML_RSC_ATTR_REMOTE_RA_SERVER, NULL)) {
             server = tmp->value;
         } else if (pcmk__str_eq(tmp->key, XML_RSC_ATTR_REMOTE_RA_PORT, pcmk__str_casei)) {

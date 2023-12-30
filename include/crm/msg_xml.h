@@ -99,6 +99,13 @@ extern "C" {
 
 
 /*
+ * Remote resource instance attributes
+ */
+
+#define PCMK_REMOTE_RA_ADDR                 "addr"
+
+
+/*
  * Older constants that don't follow current naming
  */
 

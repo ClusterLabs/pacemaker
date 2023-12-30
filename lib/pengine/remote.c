@@ -195,8 +195,7 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
         xml_sub = create_xml_node(remote, XML_TAG_ATTR_SETS);
         crm_xml_set_id(xml_sub, "%s-%s", uname, XML_TAG_ATTR_SETS);
         if (server) {
-            crm_create_nvpair_xml(xml_sub, NULL, XML_RSC_ATTR_REMOTE_RA_ADDR,
-                                  server);
+            crm_create_nvpair_xml(xml_sub, NULL, PCMK_REMOTE_RA_ADDR, server);
         }
         if (port) {
             crm_create_nvpair_xml(xml_sub, NULL,
