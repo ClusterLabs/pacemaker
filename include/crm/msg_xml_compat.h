@@ -259,6 +259,9 @@ extern "C" {
 //! \deprecated Use \c XML_BOOLEAN_FALSE instead
 #define XML_BOOLEAN_NO XML_BOOLEAN_FALSE
 
+//! \deprecated Use \c PCMK_REMOTE_RA_ADDR instead
+#define XML_RSC_ATTR_REMOTE_RA_ADDR "addr"
+
 #ifdef __cplusplus
 }
 #endif
