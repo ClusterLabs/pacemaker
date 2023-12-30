@@ -104,6 +104,7 @@ extern "C" {
 
 #define PCMK_REMOTE_RA_ADDR                 "addr"
 #define PCMK_REMOTE_RA_PORT                 "port"
+#define PCMK_REMOTE_RA_RECONNECT_INTERVAL   "reconnect_interval"
 #define PCMK_REMOTE_RA_SERVER               "server"
 
 
