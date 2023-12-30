@@ -339,193 +339,278 @@ Meta-attributes are used by the cluster to decide how a resource should
 behave and can be easily set using the ``--meta`` option of the
 **crm_resource** command.
 
-.. table:: **Meta-attributes of a Primitive Resource**
+.. list-table:: **Meta-attributes of a Primitive Resource**
    :class: longtable
-   :widths: 2 2 3
+   :widths: 2 2 3 5
+   :header-rows: 1
 
-   +----------------------------+----------------------------------+------------------------------------------------------+
-   | Field                      | Default                          | Description                                          |
-   +============================+==================================+======================================================+
-   | priority                   | 0                                | .. index::                                           |
-   |                            |                                  |    single: priority; resource option                 |
-   |                            |                                  |    single: resource; option, priority                |
-   |                            |                                  |                                                      |
-   |                            |                                  | If not all resources can be active, the cluster      |
-   |                            |                                  | will stop lower priority resources in order to       |
-   |                            |                                  | keep higher priority ones active.                    |
-   +----------------------------+----------------------------------+------------------------------------------------------+
-   | critical                   | true                             | .. index::                                           |
-   |                            |                                  |    single: critical; resource option                 |
-   |                            |                                  |    single: resource; option, critical                |
-   |                            |                                  |                                                      |
-   |                            |                                  | Use this value as the default for ``influence`` in   |
-   |                            |                                  | all :ref:`colocation constraints                     |
-   |                            |                                  | <s-resource-colocation>` involving this resource,    |
-   |                            |                                  | as well as the implicit colocation constraints       |
-   |                            |                                  | created if this resource is in a                     |
-   |                            |                                  | :ref:`group <group-resources>`. For details, see     |
-   |                            |                                  | :ref:`s-coloc-influence`. *(since 2.1.0)*            |
-   +----------------------------+----------------------------------+------------------------------------------------------+
-   | target-role                | Started                          | .. index::                                           |
-   |                            |                                  |    single: target-role; resource option              |
-   |                            |                                  |    single: resource; option, target-role             |
-   |                            |                                  |                                                      |
-   |                            |                                  | What state should the cluster attempt to keep this   |
-   |                            |                                  | resource in? Allowed values:                         |
-   |                            |                                  |                                                      |
-   |                            |                                  | * ``Stopped:`` Force the resource to be stopped      |
-   |                            |                                  | * ``Started:`` Allow the resource to be started      |
-   |                            |                                  |   (and in the case of                                |
-   |                            |                                  |   :ref:`promotable <s-resource-promotable>` clone    |
-   |                            |                                  |   resources, promoted if appropriate)                |
-   |                            |                                  | * ``Unpromoted:`` Allow the resource to be started,  |
-   |                            |                                  |   but only in the unpromoted role if the resource is |
-   |                            |                                  |   :ref:`promotable <s-resource-promotable>`          |
-   |                            |                                  | * ``Promoted:`` Equivalent to ``Started``            |
-   +----------------------------+----------------------------------+------------------------------------------------------+
-   | is-managed                 | TRUE                             | .. _is_managed:                                      |
-   |                            |                                  |                                                      |
-   |                            |                                  | .. index::                                           |
-   |                            |                                  |    single: is-managed; resource option               |
-   |                            |                                  |    single: resource; option, is-managed              |
-   |                            |                                  |                                                      |
-   |                            |                                  | If false, the cluster will not start or stop the     |
-   |                            |                                  | resource on any node. Recurring actions for the      |
-   |                            |                                  | resource are unaffected. Maintenance mode overrides  |
-   |                            |                                  | this setting. Allowed values: ``true``, ``false``    |
-   +----------------------------+----------------------------------+------------------------------------------------------+
-   | maintenance                | FALSE                            | .. _rsc_maintenance:                                 |
-   |                            |                                  |                                                      |
-   |                            |                                  | .. index::                                           |
-   |                            |                                  |    single: maintenance; resource option              |
-   |                            |                                  |    single: resource; option, maintenance             |
-   |                            |                                  |                                                      |
-   |                            |                                  | If true, the cluster will not start or stop the      |
-   |                            |                                  | resource on any node, and will pause any recurring   |
-   |                            |                                  | monitors (except those specifying ``role`` as        |
-   |                            |                                  | ``Stopped``). If true, the                           |
-   |                            |                                  | :ref:`maintenance-mode <maintenance_mode>` cluster   |
-   |                            |                                  | option or :ref:`maintenance <node_maintenance>`      |
-   |                            |                                  | node attribute override this. Allowed values:        |
-   |                            |                                  | ``true``, ``false``                                  |
-   +----------------------------+----------------------------------+------------------------------------------------------+
-   | resource-stickiness        | 1 for individual clone           | .. _resource-stickiness:                             |
-   |                            | instances, 0 for all             |                                                      |
-   |                            | other resources                  | .. index::                                           |
-   |                            |                                  |    single: resource-stickiness; resource option      |
-   |                            |                                  |    single: resource; option, resource-stickiness     |
-   |                            |                                  |                                                      |
-   |                            |                                  | A score that will be added to the current node when  |
-   |                            |                                  | a resource is already active. This allows running    |
-   |                            |                                  | resources to stay where they are, even if they       |
-   |                            |                                  | would be placed elsewhere if they were being         |
-   |                            |                                  | started from a stopped state.                        |
-   +----------------------------+----------------------------------+------------------------------------------------------+
-   | requires                   | ``quorum`` for resources         | .. _requires:                                        |
-   |                            | with a ``class`` of ``stonith``, |                                                      |
-   |                            | otherwise ``unfencing`` if       | .. index::                                           |
-   |                            | unfencing is active in the       |    single: requires; resource option                 |
-   |                            | cluster, otherwise ``fencing``   |    single: resource; option, requires                |
-   |                            | if ``stonith-enabled`` is true,  |                                                      |
-   |                            | otherwise ``quorum``             | Conditions under which the resource can be           |
-   |                            |                                  | started. Allowed values:                             |
-   |                            |                                  |                                                      |
-   |                            |                                  | * ``nothing:`` can always be started                 |
-   |                            |                                  | * ``quorum:`` The cluster can only start this        |
-   |                            |                                  |   resource if a majority of the configured nodes     |
-   |                            |                                  |   are active                                         |
-   |                            |                                  | * ``fencing:`` The cluster can only start this       |
-   |                            |                                  |   resource if a majority of the configured nodes     |
-   |                            |                                  |   are active *and* any failed or unknown nodes       |
-   |                            |                                  |   have been :ref:`fenced <fencing>`                  |
-   |                            |                                  | * ``unfencing:`` The cluster can only start this     |
-   |                            |                                  |   resource if a majority of the configured nodes     |
-   |                            |                                  |   are active *and* any failed or unknown nodes have  |
-   |                            |                                  |   been fenced *and* only on nodes that have been     |
-   |                            |                                  |   :ref:`unfenced <unfencing>`                        |
-   +----------------------------+----------------------------------+------------------------------------------------------+
-   | migration-threshold        | INFINITY                         | .. index::                                           |
-   |                            |                                  |    single: migration-threshold; resource option      |
-   |                            |                                  |    single: resource; option, migration-threshold     |
-   |                            |                                  |                                                      |
-   |                            |                                  | How many failures may occur for this resource on     |
-   |                            |                                  | a node, before this node is marked ineligible to     |
-   |                            |                                  | host this resource. A value of 0 indicates that this |
-   |                            |                                  | feature is disabled (the node will never be marked   |
-   |                            |                                  | ineligible); by constrast, the cluster treats        |
-   |                            |                                  | INFINITY (the default) as a very large but finite    |
-   |                            |                                  | number. This option has an effect only if the        |
-   |                            |                                  | failed operation specifies ``on-fail`` as            |
-   |                            |                                  | ``restart`` (the default), and additionally for      |
-   |                            |                                  | failed ``start`` operations, if the cluster          |
-   |                            |                                  | property ``start-failure-is-fatal`` is ``false``.    |
-   +----------------------------+----------------------------------+------------------------------------------------------+
-   | failure-timeout            | 0                                | .. index::                                           |
-   |                            |                                  |    single: failure-timeout; resource option          |
-   |                            |                                  |    single: resource; option, failure-timeout         |
-   |                            |                                  |                                                      |
-   |                            |                                  | How many seconds to wait before acting as if the     |
-   |                            |                                  | failure had not occurred, and potentially allowing   |
-   |                            |                                  | the resource back to the node on which it failed.    |
-   |                            |                                  | A value of 0 indicates that this feature is          |
-   |                            |                                  | disabled.                                            |
-   +----------------------------+----------------------------------+------------------------------------------------------+
-   | multiple-active            | stop_start                       | .. index::                                           |
-   |                            |                                  |    single: multiple-active; resource option          |
-   |                            |                                  |    single: resource; option, multiple-active         |
-   |                            |                                  |                                                      |
-   |                            |                                  | What should the cluster do if it ever finds the      |
-   |                            |                                  | resource active on more than one node? Allowed       |
-   |                            |                                  | values:                                              |
-   |                            |                                  |                                                      |
-   |                            |                                  | * ``block``: mark the resource as unmanaged          |
-   |                            |                                  | * ``stop_only``: stop all active instances and       |
-   |                            |                                  |   leave them that way                                |
-   |                            |                                  | * ``stop_start``: stop all active instances and      |
-   |                            |                                  |   start the resource in one location only            |
-   |                            |                                  | * ``stop_unexpected``: stop all active instances     |
-   |                            |                                  |   except where the resource should be active (this   |
-   |                            |                                  |   should be used only when extra instances are not   |
-   |                            |                                  |   expected to disrupt existing instances, and the    |
-   |                            |                                  |   resource agent's monitor of an existing instance   |
-   |                            |                                  |   is capable of detecting any problems that could be |
-   |                            |                                  |   caused; note that any resources ordered after this |
-   |                            |                                  |   will still need to be restarted) *(since 2.1.3)*   |
-   +----------------------------+----------------------------------+------------------------------------------------------+
-   | allow-migrate              | TRUE for ocf:pacemaker:remote    | Whether the cluster should try to "live migrate"     |
-   |                            | resources, FALSE otherwise       | this resource when it needs to be moved (see         |
-   |                            |                                  | :ref:`live-migration`)                               |
-   +----------------------------+----------------------------------+------------------------------------------------------+
-   | allow-unhealthy-nodes      | FALSE                            | Whether the resource should be able to run on a node |
-   |                            |                                  | even if the node's health score would otherwise      |
-   |                            |                                  | prevent it (see :ref:`node-health`) *(since 2.1.3)*  |
-   +----------------------------+----------------------------------+------------------------------------------------------+
-   | container-attribute-target |                                  | Specific to bundle resources; see                    |
-   |                            |                                  | :ref:`s-bundle-attributes`                           |
-   +----------------------------+----------------------------------+------------------------------------------------------+
-   | remote-node                |                                  | The name of the Pacemaker Remote guest node this     |
-   |                            |                                  | resource is associated with, if any. If              |
-   |                            |                                  | specified, this both enables the resource as a       |
-   |                            |                                  | guest node and defines the unique name used to       |
-   |                            |                                  | identify the guest node. The guest must be           |
-   |                            |                                  | configured to run the Pacemaker Remote daemon        |
-   |                            |                                  | when it is started. **WARNING:** This value          |
-   |                            |                                  | cannot overlap with any resource or node IDs.        |
-   +----------------------------+----------------------------------+------------------------------------------------------+
-   | remote-port                | 3121                             | If ``remote-node`` is specified, the port on the     |
-   |                            |                                  | guest used for its Pacemaker Remote connection.      |
-   |                            |                                  | The Pacemaker Remote daemon on the guest must        |
-   |                            |                                  | be configured to listen on this port.                |
-   +----------------------------+----------------------------------+------------------------------------------------------+
-   | remote-addr                | value of ``remote-node``         | If ``remote-node`` is specified, the IP              |
-   |                            |                                  | address or hostname used to connect to the           |
-   |                            |                                  | guest via Pacemaker Remote. The Pacemaker Remote     |
-   |                            |                                  | daemon on the guest must be configured to accept     |
-   |                            |                                  | connections on this address.                         |
-   +----------------------------+----------------------------------+------------------------------------------------------+
-   | remote-connect-timeout     | 60s                              | If ``remote-node`` is specified, how long before     |
-   |                            |                                  | a pending guest connection will time out.            |
-   +----------------------------+----------------------------------+------------------------------------------------------+
+   * - Name
+     - Type
+     - Default
+     - Description
+
+   * - .. _meta_priority:
+       
+       .. index::
+          single: priority; resource option
+          single: resource; option, priority
+
+       priority
+     - :ref:`score <score>`
+     - 0
+     - If not all resources can be active, the cluster will stop lower-priority
+       resources in order to keep higher-priority ones active.
+
+   * - .. _meta_critical:
+       
+       .. index::
+          single: critical; resource option
+          single: resource; option, critical
+
+       critical
+     - :ref:`boolean <boolean>`
+     - true
+     - Use this value as the default for ``influence`` in all
+       :ref:`colocation constraints <s-resource-colocation>` involving this
+       resource, as well as in the implicit colocation constraints created if
+       this resource is in a :ref:`group <group-resources>`. For details, see
+       :ref:`s-coloc-influence`. *(since 2.1.0)*
+
+   * - .. _meta_target_role:
+       
+       .. index::
+          single: target-role; resource option
+          single: resource; option, target-role
+
+       target-role
+     - :ref:`enumeration <enumeration>`
+     - Started
+     - What state should the cluster attempt to keep this resource in? Allowed
+       values:
+
+       * ``Stopped:`` Force the resource to be stopped
+       * ``Started:`` Allow the resource to be started (and in the case of
+         :ref:`promotable <s-resource-promotable>` clone resources, promoted if
+         appropriate)
+       * ``Unpromoted:`` Allow the resource to be started, but only in the
+         unpromoted role if the resource is
+         :ref:`promotable <s-resource-promotable>`
+       * ``Promoted:`` Equivalent to ``Started``
+
+   * - .. _meta_is_managed:
+       .. _is_managed:
+       
+       .. index::
+          single: is-managed; resource option
+          single: resource; option, is-managed
+
+       is-managed
+     - :ref:`boolean <boolean>`
+     - true
+     - If false, the cluster will not start or stop the resource on any node.
+       Recurring actions for the resource are unaffected. Maintenance mode
+       overrides this setting.
+
+   * - .. _meta_maintenance:
+       .. _rsc_maintenance:
+       
+       .. index::
+          single: maintenance; resource option
+          single: resource; option, maintenance
+
+       maintenance
+     - :ref:`boolean <boolean>`
+     - false
+     - If true, the cluster will not start or stop the resource on any node, and
+       will pause any recurring monitors (except those specifying ``role`` as
+       ``Stopped``). If true, the :ref:`maintenance-mode <maintenance_mode>`
+       cluster option or :ref:`maintenance <node_maintenance>` node attribute
+       override this.
+
+   * - .. _meta_resource_stickiness:
+       .. _resource-stickiness:
+       
+       .. index::
+          single: resource-stickiness; resource option
+          single: resource; option, resource-stickiness
+
+       resource-stickiness
+     - :ref:`score <score>`
+     - 1 for individual clone instances, 0 for all other resources
+     - A score that will be added to the current node when a resource is already
+       active. This allows running resources to stay where they are, even if
+       they would be placed elsewhere if they were being started from a stopped
+       state.
+
+   * - .. _meta_requires:
+       .. _requires:
+       
+       .. index::
+          single: requires; resource option
+          single: resource; option, requires
+
+       requires
+     - :ref:`enumeration <enumeration>`
+     - ``quorum`` for resources with a ``class`` of ``stonith``, otherwise
+       ``unfencing`` if unfencing is active in the cluster, otherwise
+       ``fencing`` if ``stonith-enabled`` is true, otherwise ``quorum``
+     - Conditions under which the resource can be started. Allowed values:
+
+       * ``nothing:`` The cluster can always start this resource.
+       * ``quorum:`` The cluster can start this resource only if a majority of
+         the configured nodes are active.
+       * ``fencing:`` The cluster can start this resource only if a majority of
+         the configured nodes are active *and* any failed or unknown nodes have
+         been :ref:`fenced <fencing>`.
+       * ``unfencing:`` The cluster can only start this resource if a majority
+         of the configured nodes are active *and* any failed or unknown nodes
+         have been fenced *and* only on nodes that have been
+         :ref:`unfenced <unfencing>`.
+
+   * - .. _meta_migration_threshold:
+       
+       .. index::
+          single: migration-threshold; resource option
+          single: resource; option, migration-threshold
+
+       migration-threshold
+     - :ref:`score <score>`
+     - INFINITY
+     - How many failures may occur for this resource on a node, before this node
+       is marked ineligible to host this resource. A value of 0 indicates that
+       this feature is disabled (the node will never be marked ineligible); by
+       contrast, the cluster treats ``INFINITY`` (the default) as a very large
+       but finite number. This option has an effect only if the failed operation
+       specifies ``on-fail`` as ``restart`` (the default), and additionally for 
+       failed ``start`` operations, if the cluster property
+       ``start-failure-is-fatal`` is ``false``.
+
+   * - .. _meta_failure_timeout:
+       
+       .. index::
+          single: failure-timeout; resource option
+          single: resource; option, failure-timeout
+
+       failure-timeout
+     - :ref:`duration <duration>`
+     - 0
+     - How many seconds to wait before acting as if the failure had not
+       occurred, and potentially allowing the resource back to the node on which
+       it failed. A value of 0 indicates that this feature is disabled.
+
+   * - .. _meta_multiple_active:
+       
+       .. index::
+          single: multiple-active; resource option
+          single: resource; option, multiple-active
+
+       multiple-active
+     - :ref:`enumeration <enumeration>`
+     - stop_start
+     - What should the cluster do if it ever finds the resource active on more
+       than one node? Allowed values:
+
+       * ``block``: mark the resource as unmanaged
+       * ``stop_only``: stop all active instances and leave them that way
+       * `stop_start``: stop all active instances and start the resource in one
+         location only
+       * ``stop_unexpected``: stop all active instances except where the
+         resource should be active (this should be used only when extra
+         instances are not expected to disrupt existing instances, and the
+         resource agent's monitor of an existing instance is capable of
+         detecting any problems that could be caused; note that any resources
+         ordered after this will still need to be restarted) *(since 2.1.3)*
+
+   * - .. _meta_allow_migrate:
+       
+       .. index::
+          single: allow-migrate; resource option
+          single: resource; option, allow-migrate
+
+       allow-migrate
+     - :ref:`boolean <boolean>`
+     - true for ``ocf:pacemaker:remote`` resources, false otherwise
+     - Whether the cluster should try to "live migrate" this resource when it
+       needs to be moved (see :ref:`live-migration`)
+
+   * - .. _meta_allow_unhealthy_nodes:
+       
+       .. index::
+          single: allow-unhealthy-nodes; resource option
+          single: resource; option, allow-unhealthy-nodes
+
+       allow-unhealthy-nodes
+     - :ref:`boolean <boolean>`
+     - false
+     - Whether the resource should be able to run on a node even if the node's
+       health score would otherwise prevent it (see :ref:`node-health`) *(since
+       2.1.3)*
+
+   * - .. _meta_container_attribute_target:
+       
+       .. index::
+          single: container-attribute-target; resource option
+          single: resource; option, container-attribute-target
+
+       container-attribute-target
+     - :ref:`enumeration <enumeration>`
+     -
+     - Specific to bundle resources; see :ref:`s-bundle-attributes`
+
+   * - .. _meta_remote_node:
+       
+       .. index::
+          single: remote-node; resource option
+          single: resource; option, remote-node
+
+       remote-node
+     - :ref:`text <text>`
+     -
+     - The name of the Pacemaker Remote guest node this resource is associated
+       with, if any. If specified, this both enables the resource as a guest
+       node and defines the unique name used to identify the guest node. The
+       guest must be configured to run the Pacemaker Remote daemon when it is
+       started. **WARNING:** This value cannot overlap with any resource or node
+       IDs.
+
+   * - .. _meta_remote_addr:
+       
+       .. index::
+          single: remote-addr; resource option
+          single: resource; option, remote-addr
+
+       remote-addr
+     - :ref:`text <text>`
+     - value of ``remote-node``
+     - If ``remote-node`` is specified, the IP address or hostname used to
+       connect to the guest via Pacemaker Remote. The Pacemaker Remote daemon on
+       the guest must be configured to accept connections on this address.
+
+   * - .. _meta_remote_port:
+       
+       .. index::
+          single: remote-port; resource option
+          single: resource; option, remote-port
+
+       remote-port
+     - :ref:`port <port>`
+     - 3121
+     - If ``remote-node`` is specified, the port on the guest used for its
+       Pacemaker Remote connection. The Pacemaker Remote daemon on the guest
+       must be configured to listen on this port.
+
+   * - .. _meta_remote_connect_timeout:
+       
+       .. index::
+          single: remote-connect-timeout; resource option
+          single: resource; option, remote-connect-timeout
+
+       remote-connect-timeout
+     - :ref:`timeout <timeout>`
+     - 60s
+     - If ``remote-node`` is specified, how long before a pending guest
+       connection will time out.
+
 
 As an example of setting resource options, if you performed the following
 commands on an LSB Email resource:
