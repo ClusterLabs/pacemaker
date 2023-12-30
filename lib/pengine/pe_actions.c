@@ -1054,16 +1054,17 @@ pcmk__role_after_failure(const pcmk_resource_t *rsc, const char *action_name,
     }
 
     // @COMPAT Check for explicitly configured role (deprecated)
-    value = g_hash_table_lookup(meta, "role_after_failure");
+    value = g_hash_table_lookup(meta, PCMK__META_ROLE_AFTER_FAILURE);
     if (value != NULL) {
         pcmk__warn_once(pcmk__wo_role_after,
-                        "Support for role_after_failure is deprecated "
-                        "and will be removed in a future release");
+                        "Support for " PCMK__META_ROLE_AFTER_FAILURE " is "
+                        "deprecated and will be removed in a future release");
         if (role == pcmk_role_unknown) {
             role = text2role(value);
             if (role == pcmk_role_unknown) {
-                pcmk__config_err("Ignoring invalid value %s "
-                                 "for role_after_failure", value);
+                pcmk__config_err("Ignoring invalid value %s for "
+                                 PCMK__META_ROLE_AFTER_FAILURE,
+                                 value);
             }
         }
     }
