@@ -265,6 +265,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_REMOTE_RA_SERVER instead
 #define XML_RSC_ATTR_REMOTE_RA_SERVER "server"
 
+//! \deprecated Use \c PCMK_REMOTE_RA_PORT instead
+#define XML_RSC_ATTR_REMOTE_RA_PORT "port"
+
 #ifdef __cplusplus
 }
 #endif
