@@ -255,7 +255,6 @@ extern "C" {
 
 #  define XML_CIB_TAG_RSC_TEMPLATE	"template"
 
-#  define XML_RSC_ATTR_REMOTE_RA_SERVER "server"
 #  define XML_RSC_ATTR_REMOTE_RA_PORT   "port"
 
 #  define XML_REMOTE_ATTR_RECONNECT_INTERVAL "reconnect_interval"
