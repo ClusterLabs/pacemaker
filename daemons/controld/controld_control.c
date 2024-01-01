@@ -30,7 +30,7 @@ static crm_trigger_t *config_read_trigger = NULL;
 extern gboolean crm_connect_corosync(crm_cluster_t * cluster);
 #endif
 
-void crm_shutdown(int nsig);
+static void crm_shutdown(int nsig);
 static gboolean crm_read_options(gpointer user_data);
 
 /*	 A_HA_CONNECT	*/
@@ -837,7 +837,7 @@ do_read_config(long long action,
     controld_trigger_config();
 }
 
-void
+static void
 crm_shutdown(int nsig)
 {
     const char *value = NULL;
