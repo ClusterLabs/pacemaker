@@ -563,7 +563,7 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pcmk_scheduler_t *data
             if (strcmp(name, PCMK_META_REMOTE_NODE) == 0) {
                 remote_name = value;
 
-            } else if (strcmp(name, "remote-addr") == 0) {
+            } else if (strcmp(name, PCMK_META_REMOTE_ADDR) == 0) {
                 remote_server = value;
 
             } else if (strcmp(name, "remote-port") == 0) {
