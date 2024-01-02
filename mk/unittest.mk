@@ -18,5 +18,11 @@ AM_CFLAGS += -fno-inline
 
 AM_LDFLAGS = $(LDFLAGS_WRAP)
 
-LDADD = $(top_builddir)/lib/common/libcrmcommon_test.la \
-	-lcmocka
+LDADD = $(top_builddir)/lib/common/libcrmcommon_test.la
+if BUILD_COVERAGE
+LDADD += -lgcov
+endif
+LDADD += -lcmocka
+# When -fno-builtin is used, -lm also needs to be added.  See the comments in
+# lib/common/Makefile.am for libcrmcommon_test_la_CFLAGS.
+LDADD += -lm
