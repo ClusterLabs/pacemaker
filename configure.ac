@@ -533,6 +533,9 @@ AC_ARG_WITH([coverage],
 yes_no_try "$with_coverage" "no"
 with_coverage=$?
 
+AC_DEFINE_UNQUOTED([PCMK__WITH_COVERAGE], [$with_coverage], [Build with code coverage])
+AM_CONDITIONAL([BUILD_COVERAGE], [test $with_coverage -ne $DISABLED])
+
 AC_ARG_WITH([sanitizers],
   [AS_HELP_STRING([--with-sanitizers=...,...],
     [enable SANitizer build, do *NOT* use for production. Only ASAN/UBSAN/TSAN are currently supported])],
