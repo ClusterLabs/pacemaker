@@ -244,6 +244,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_RSC_ATTR_CLEAR_OP "clear_failure_op"
 
+//! \deprecated Do not use
+#define XML_RSC_ATTR_CLEAR_INTERVAL "clear_failure_interval"
+
 #ifdef __cplusplus
 }
 #endif
