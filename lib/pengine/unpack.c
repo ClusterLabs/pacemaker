@@ -566,7 +566,7 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pcmk_scheduler_t *data
             } else if (strcmp(name, PCMK_META_REMOTE_ADDR) == 0) {
                 remote_server = value;
 
-            } else if (strcmp(name, "remote-port") == 0) {
+            } else if (strcmp(name, PCMK_META_REMOTE_PORT) == 0) {
                 remote_port = value;
 
             } else if (strcmp(name, "remote-connect-timeout") == 0) {
