@@ -27,6 +27,13 @@ extern "C" {
  * for XML element names, "XA" for XML attribute names, and "META" for meta
  * attribute names. Old names that don't follow this policy should eventually be
  * deprecated and replaced with names that do.
+ *
+ * Symbols should be public if the user may specify them somewhere (especially
+ * the CIB). They should be internal if they're used only internally to
+ * Pacemaker (such as daemon IPC/CPG message XML).
+ *
+ * For meta-attributes that can be specified as either XML attributes or nvpair
+ * names, use "META" unless using both "XA" and "META" constants adds clarity.
  */
 
 /*
