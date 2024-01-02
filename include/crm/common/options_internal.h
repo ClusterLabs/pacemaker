@@ -129,7 +129,6 @@ bool pcmk__valid_sbd_timeout(const char *value);
 #define PCMK__OPT_REMOVE_AFTER_STOP         "remove-after-stop"
 
 // Constants for meta-attribute names
-#define PCMK__META_ALLOW_UNHEALTHY_NODES    "allow-unhealthy-nodes"
 #define PCMK__META_CLONE_INSTANCE_NUM       "clone"
 #define PCMK__META_CONTAINER                "container"
 #define PCMK__META_INTERNAL_RSC             "internal_rsc"

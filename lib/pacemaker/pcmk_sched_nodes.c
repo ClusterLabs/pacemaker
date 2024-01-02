@@ -396,7 +396,7 @@ pcmk__apply_node_health(pcmk_scheduler_t *scheduler)
                  * allow-unhealthy-nodes=true.
                  */
                 constrain = !crm_is_true(g_hash_table_lookup(rsc->meta,
-                                         PCMK__META_ALLOW_UNHEALTHY_NODES));
+                                         PCMK_META_ALLOW_UNHEALTHY_NODES));
             }
             if (constrain) {
                 pcmk__new_location(strategy_str, rsc, health, NULL, node);
