@@ -20,6 +20,7 @@ Table of Contents
    intro
    installing
    cluster
+   options
    configuring
    tools
    administrative

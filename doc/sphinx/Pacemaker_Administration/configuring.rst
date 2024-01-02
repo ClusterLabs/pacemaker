@@ -186,53 +186,14 @@ Connecting from a Remote Machine
 
 Provided Pacemaker is installed on a machine, it is possible to connect to the
 cluster even if the machine itself is not in the same cluster. To do this, one
-simply sets up a number of environment variables and runs the same commands as
-when working on a cluster node.
+simply sets the following environment variables and runs the same commands as
+when working on a cluster node:
 
-.. list-table:: **Environment Variables Used to Connect to Remote Instances of the CIB**
-   :class: longtable
-   :widths: 2 2 5
-   :header-rows: 1
-
-   * - Environment Variable
-     - Default
-     - Description
-   * - .. index::
-          single: CIB_user
-          single: environment variable; CIB_user
-
-       CIB_user
-     - |CRM_DAEMON_USER_RAW|
-     - The user to connect as. Needs to be part of the |CRM_DAEMON_GROUP| group
-       on the target host.
-   * - .. index::
-          single: CIB_passwd
-          single: environment variable; CIB_passwd
-
-       CIB_passwd
-     -
-     - The user's password. Read from the command line if unset.
-   * - .. index::
-          single: CIB_server
-          single: environment variable; CIB_server
-
-       CIB_server
-     - localhost
-     - The host to contact
-   * - .. index::
-          single: CIB_port
-          single: environment variable; CIB_port
-
-       CIB_port
-     -
-     - The port on which to contact the server; required
-   * - .. index::
-          single: CIB_encrypted
-          single: environment variable; CIB_encrypted
-
-       CIB_encrypted
-     - true
-     - Whether to encrypt network traffic
+* :ref:`CIB_port <CIB_port>` (required)
+* :ref:`CIB_server <CIB_server>`
+* :ref:`CIB_user <CIB_user>`
+* :ref:`CIB_passwd <CIB_passwd>`
+* :ref:`CIB_encrypted <CIB_encrypted>`
 
 So, if **c001n01** is an active cluster node and is listening on port 1234
 for connections, and **someuser** is a member of the |CRM_DAEMON_GROUP| group,

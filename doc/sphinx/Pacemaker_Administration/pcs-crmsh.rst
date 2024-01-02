@@ -118,6 +118,7 @@ Manage Resources
 .. topic:: Create a Resource
 
    .. code-block:: none
+
       crmsh # crm configure primitive ClusterIP IPaddr2 params ip=192.168.122.120 cidr_netmask=24
       pcs   # pcs resource create ClusterIP IPaddr2 ip=192.168.122.120 cidr_netmask=24
 
