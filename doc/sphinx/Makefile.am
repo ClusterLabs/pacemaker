@@ -1,5 +1,5 @@
 #
-# Copyright 2003-2023 the Pacemaker project contributors
+# Copyright 2003-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -175,6 +175,15 @@ if BUILD_SPHINX_DOCS
 	@rsync $(RSYNC_OPTS) "$(builddir)/build-$(PACKAGE_SERIES).txt"	\
 		"$(RSYNC_DEST)/$(PACKAGE)/doc"
 endif
+
+.PHONY: vars
+vars:
+	@echo "BOOK_FORMATS='$(BOOK_FORMATS)'"
+	@echo "PAPER='$(PAPER)'"
+	@echo "SPHINXFLAGS='$(SPHINXFLAGS)'"
+	@echo "RSYNC_DEST='$(RSYNC_DEST)'"
+	@echo "VERSION='$(VERSION)'"
+	@echo "PACKAGE_SERIES='$(PACKAGE_SERIES)'"
 
 .PHONY: all-local
 all-local:
