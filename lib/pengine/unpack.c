@@ -569,7 +569,7 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pcmk_scheduler_t *data
             } else if (strcmp(name, PCMK_META_REMOTE_PORT) == 0) {
                 remote_port = value;
 
-            } else if (strcmp(name, "remote-connect-timeout") == 0) {
+            } else if (strcmp(name, PCMK_META_REMOTE_CONNECT_TIMEOUT) == 0) {
                 connect_timeout = value;
 
             } else if (strcmp(name, "remote-allow-migrate") == 0) {
