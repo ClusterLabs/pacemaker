@@ -84,7 +84,7 @@ EXTRA_DIST	= $(wildcard */*.rst) $(DOTS) $(SVGS)			\
 # don't cross filesystems, sparse, show progress
 RSYNC_OPTS      = -rlptvzxS --progress
 
-PACKAGE_SERIES=$(shell echo "$VERSION" | awk -F. '{ print $1"."$2 }')
+PACKAGE_SERIES=$(shell echo "$(VERSION)" | awk -F. '{ print $$1"."$$2 }')
 
 BOOK_RSYNC_DEST	= $(RSYNC_DEST)/$(PACKAGE)/doc/$(PACKAGE_SERIES)
 
