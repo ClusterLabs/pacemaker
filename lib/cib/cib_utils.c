@@ -585,7 +585,7 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
      static filter_t filter[] = {
      { 0, PCMK_XA_CRM_DEBUG_ORIGIN },
      { 0, PCMK_XA_CIB_LAST_WRITTEN },
-     { 0, XML_ATTR_UPDATE_ORIG },
+     { 0, PCMK_XA_UPDATE_ORIGIN },
      { 0, XML_ATTR_UPDATE_CLIENT },
      { 0, XML_ATTR_UPDATE_USER },
      };
@@ -612,9 +612,9 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
                 const char *client = crm_element_value(req, F_CIB_CLIENTNAME);
 
                 if (origin != NULL) {
-                    crm_xml_add(scratch, XML_ATTR_UPDATE_ORIG, origin);
+                    crm_xml_add(scratch, PCMK_XA_UPDATE_ORIGIN, origin);
                 } else {
-                    xml_remove_prop(scratch, XML_ATTR_UPDATE_ORIG);
+                    xml_remove_prop(scratch, PCMK_XA_UPDATE_ORIGIN);
                 }
 
                 if (client != NULL) {

@@ -236,7 +236,7 @@ pcmk__xa_filterable(const char *name)
     static const char *filter[] = {
         PCMK_XA_CRM_DEBUG_ORIGIN,
         PCMK_XA_CIB_LAST_WRITTEN,
-        XML_ATTR_UPDATE_ORIG,
+        PCMK_XA_UPDATE_ORIGIN,
         XML_ATTR_UPDATE_CLIENT,
         XML_ATTR_UPDATE_USER,
     };

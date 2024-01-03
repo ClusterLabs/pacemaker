@@ -435,7 +435,7 @@ cluster_summary(pcmk__output_t *out, va_list args) {
         const char *client = crm_element_value(scheduler->input,
                                                XML_ATTR_UPDATE_CLIENT);
         const char *origin = crm_element_value(scheduler->input,
-                                               XML_ATTR_UPDATE_ORIG);
+                                               PCMK_XA_UPDATE_ORIGIN);
 
         PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
         out->message(out, "cluster-times",
@@ -510,7 +510,7 @@ cluster_summary_html(pcmk__output_t *out, va_list args) {
         const char *client = crm_element_value(scheduler->input,
                                                XML_ATTR_UPDATE_CLIENT);
         const char *origin = crm_element_value(scheduler->input,
-                                               XML_ATTR_UPDATE_ORIG);
+                                               PCMK_XA_UPDATE_ORIGIN);
 
         PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
         out->message(out, "cluster-times",
