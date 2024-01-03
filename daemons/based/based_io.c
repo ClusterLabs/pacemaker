@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -271,7 +271,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     /* Do this before schema validation happens */
 
     /* fill in some defaults */
-    name = XML_ATTR_GENERATION_ADMIN;
+    name = PCMK_XA_ADMIN_EPOCH;
     value = crm_element_value(root, name);
     if (value == NULL) {
         crm_warn("No value for %s was specified in the configuration.", name);
@@ -283,13 +283,13 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
         crm_xml_add_int(root, name, 0);
     }
 
-    name = XML_ATTR_GENERATION;
+    name = PCMK_XA_EPOCH;
     value = crm_element_value(root, name);
     if (value == NULL) {
         crm_xml_add_int(root, name, 0);
     }
 
-    name = XML_ATTR_NUMUPDATES;
+    name = PCMK_XA_NUM_UPDATES;
     value = crm_element_value(root, name);
     if (value == NULL) {
         crm_xml_add_int(root, name, 0);
@@ -302,7 +302,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
         crm_log_xml_trace(root, "[on-disk]");
     }
 
-    validation = crm_element_value(root, XML_ATTR_VALIDATION);
+    validation = crm_element_value(root, PCMK_XA_VALIDATE_WITH);
     if (validate_xml(root, NULL, TRUE) == FALSE) {
         crm_err("CIB does not validate with %s",
                 pcmk__s(validation, "no schema specified"));

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 the Pacemaker project contributors
+ * Copyright 2020-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -123,7 +123,8 @@ set_node_info_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
     if (msg_data == NULL) {
         return;
     }
-    data->data.node_info.have_quorum = pcmk__xe_attr_is_true(msg_data, XML_ATTR_HAVE_QUORUM);
+    data->data.node_info.have_quorum =
+        pcmk__xe_attr_is_true(msg_data, PCMK_XA_HAVE_QUORUM);
     data->data.node_info.is_remote = pcmk__xe_attr_is_true(msg_data, XML_NODE_IS_REMOTE);
 
     /* Integer node_info.id is currently valid only for Corosync nodes.
@@ -131,9 +132,9 @@ set_node_info_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
      * @TODO: Improve handling after crm_node_t is refactored to handle layer-
      * specific data better.
      */
-    crm_element_value_int(msg_data, XML_ATTR_ID, &(data->data.node_info.id));
+    crm_element_value_int(msg_data, PCMK_XA_ID, &(data->data.node_info.id));
 
-    data->data.node_info.uuid = crm_element_value(msg_data, XML_ATTR_ID);
+    data->data.node_info.uuid = crm_element_value(msg_data, PCMK_XA_ID);
     data->data.node_info.uname = crm_element_value(msg_data, XML_ATTR_UNAME);
     data->data.node_info.state = crm_element_value(msg_data, PCMK__XA_CRMD);
 }
@@ -164,7 +165,7 @@ set_nodes_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
         long long id_ll = 0;
 
         node_info = calloc(1, sizeof(pcmk_controld_api_node_t));
-        crm_element_value_ll(node, XML_ATTR_ID, &id_ll);
+        crm_element_value_ll(node, PCMK_XA_ID, &id_ll);
         if (id_ll > 0) {
             node_info->id = id_ll;
         }
@@ -243,7 +244,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
 
     // Parse useful info from reply
 
-    reply_data.feature_set = crm_element_value(reply, XML_ATTR_VERSION);
+    reply_data.feature_set = crm_element_value(reply, PCMK_XA_VERSION);
     reply_data.host_from = crm_element_value(reply, F_CRM_HOST_FROM);
     msg_data = get_message_xml(reply, F_CRM_DATA);
 
@@ -508,14 +509,14 @@ controller_resource_op(pcmk_ipc_api_t *api, const char *op,
     }
 
     xml_rsc = create_xml_node(msg_data, XML_CIB_TAG_RESOURCE);
-    crm_xml_add(xml_rsc, XML_ATTR_ID, rsc_id);
+    crm_xml_add(xml_rsc, PCMK_XA_ID, rsc_id);
     crm_xml_add(xml_rsc, XML_ATTR_ID_LONG, rsc_long_id);
     crm_xml_add(xml_rsc, XML_AGENT_ATTR_CLASS, standard);
     crm_xml_add(xml_rsc, XML_AGENT_ATTR_PROVIDER, provider);
     crm_xml_add(xml_rsc, XML_ATTR_TYPE, type);
 
     params = create_xml_node(msg_data, XML_TAG_ATTRS);
-    crm_xml_add(params, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+    crm_xml_add(params, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
 
     // The controller parses the timeout from the request
     key = crm_meta_name(XML_ATTR_TIMEOUT);

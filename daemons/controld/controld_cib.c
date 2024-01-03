@@ -394,7 +394,7 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
                                "[@" XML_ATTR_UNAME "='%s']/"                \
                                XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES    \
                                "/" XML_LRM_TAG_RESOURCE                     \
-                               "[@" XML_ATTR_ID "='%s']"
+                               "[@" PCMK_XA_ID "='%s']"
 // @TODO could add "and @PCMK_OPT_SHUTDOWN_LOCK" to limit to locks
 
 /*!
@@ -671,7 +671,7 @@ controld_add_resource_history_xml_as(const char *func, xmlNode *parent,
 
     target_rc = rsc_op_expected_rc(op);
 
-    caller_version = g_hash_table_lookup(op->params, XML_ATTR_CRM_VERSION);
+    caller_version = g_hash_table_lookup(op->params, PCMK_XA_CRM_FEATURE_SET);
     CRM_CHECK(caller_version != NULL, caller_version = CRM_FEATURE_SET);
 
     xml_op = pcmk__create_history_xml(parent, op, caller_version, target_rc,
@@ -900,20 +900,20 @@ controld_update_resource_history(const char *node_name,
         node_id = node_name;
         pcmk__xe_set_bool_attr(xml, XML_NODE_IS_REMOTE, true);
     }
-    crm_xml_add(xml, XML_ATTR_ID, node_id);
+    crm_xml_add(xml, PCMK_XA_ID, node_id);
     crm_xml_add(xml, XML_ATTR_UNAME, node_name);
-    crm_xml_add(xml, XML_ATTR_ORIGIN, __func__);
+    crm_xml_add(xml, PCMK_XA_CRM_DEBUG_ORIGIN, __func__);
 
     //     <lrm ...>
     xml = create_xml_node(xml, XML_CIB_TAG_LRM);
-    crm_xml_add(xml, XML_ATTR_ID, node_id);
+    crm_xml_add(xml, PCMK_XA_ID, node_id);
 
     //       <lrm_resources>
     xml = create_xml_node(xml, XML_LRM_TAG_RESOURCES);
 
     //         <lrm_resource ...>
     xml = create_xml_node(xml, XML_LRM_TAG_RESOURCE);
-    crm_xml_add(xml, XML_ATTR_ID, op->rsc_id);
+    crm_xml_add(xml, PCMK_XA_ID, op->rsc_id);
     crm_xml_add(xml, XML_AGENT_ATTR_CLASS, rsc->standard);
     crm_xml_add(xml, XML_AGENT_ATTR_PROVIDER, rsc->provider);
     crm_xml_add(xml, XML_ATTR_TYPE, rsc->type);
@@ -969,7 +969,7 @@ controld_delete_action_history(const lrmd_event_data_t *op)
         char *op_id = pcmk__op_key(op->rsc_id, op->op_type, op->interval_ms);
 
         /* Avoid deleting last_failure too (if it was a result of this recurring op failing) */
-        crm_xml_add(xml_top, XML_ATTR_ID, op_id);
+        crm_xml_add(xml_top, PCMK_XA_ID, op_id);
         free(op_id);
     }
 
@@ -988,20 +988,19 @@ controld_delete_action_history(const lrmd_event_data_t *op)
     "/" XML_TAG_CIB "/" XML_CIB_TAG_STATUS              \
     "/" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='%s']"  \
     "/" XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES       \
-    "/" XML_LRM_TAG_RESOURCE "[@" XML_ATTR_ID "='%s']"  \
+    "/" XML_LRM_TAG_RESOURCE "[@" PCMK_XA_ID "='%s']"   \
     "/" XML_LRM_TAG_RSC_OP
 
 /* ... and also by operation key */
-#define XPATH_HISTORY_ID XPATH_HISTORY \
-    "[@" XML_ATTR_ID "='%s']"
+#define XPATH_HISTORY_ID XPATH_HISTORY "[@" PCMK_XA_ID "='%s']"
 
 /* ... and also by operation key and operation call ID */
 #define XPATH_HISTORY_CALL XPATH_HISTORY \
-    "[@" XML_ATTR_ID "='%s' and @" XML_LRM_ATTR_CALLID "='%d']"
+    "[@" PCMK_XA_ID "='%s' and @" XML_LRM_ATTR_CALLID "='%d']"
 
 /* ... and also by operation key and original operation key */
 #define XPATH_HISTORY_ORIG XPATH_HISTORY \
-    "[@" XML_ATTR_ID "='%s' and @" XML_LRM_ATTR_TASK_KEY "='%s']"
+    "[@" PCMK_XA_ID "='%s' and @" XML_LRM_ATTR_TASK_KEY "='%s']"
 
 /*!
  * \internal

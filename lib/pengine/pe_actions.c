@@ -777,7 +777,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
         }
     }
 
-    g_hash_table_remove(meta, XML_ATTR_ID);
+    g_hash_table_remove(meta, PCMK_XA_ID);
 
     // Normalize interval to milliseconds
     if (interval_ms > 0) {
@@ -1705,8 +1705,8 @@ pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b,
     char *a_uuid = NULL;
     char *b_uuid = NULL;
 
-    const char *a_xml_id = crm_element_value(xml_a, XML_ATTR_ID);
-    const char *b_xml_id = crm_element_value(xml_b, XML_ATTR_ID);
+    const char *a_xml_id = crm_element_value(xml_a, PCMK_XA_ID);
+    const char *b_xml_id = crm_element_value(xml_b, PCMK_XA_ID);
 
     const char *a_node = crm_element_value(xml_a, XML_LRM_ATTR_TARGET);
     const char *b_node = crm_element_value(xml_b, XML_LRM_ATTR_TARGET);

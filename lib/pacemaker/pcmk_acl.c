@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -225,7 +225,7 @@ pcmk__acl_annotate_permissions(const char *cred, const xmlDoc *cib_doc,
     // @COMPAT xmlDocGetRootElement() requires non-const in libxml2 < 2.9.2
 
     validation = crm_element_value(xmlDocGetRootElement((xmlDoc *) cib_doc),
-                                   XML_ATTR_VALIDATION);
+                                   PCMK_XA_VALIDATE_WITH);
     version = get_schema_version(validation);
     if (get_schema_version(PCMK__COMPAT_ACL_2_MIN_INCL) > version) {
         return pcmk_rc_schema_validation;

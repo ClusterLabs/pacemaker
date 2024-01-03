@@ -406,7 +406,7 @@ cib_digester_cb(gpointer data)
         crm_xml_add(ping, F_CIB_OPERATION, CRM_OP_PING);
         crm_xml_add(ping, F_CIB_PING_ID, buffer);
 
-        crm_xml_add(ping, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+        crm_xml_add(ping, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
         send_cluster_message(NULL, crm_msg_cib, ping, TRUE);
 
         free_xml(ping);
@@ -422,7 +422,7 @@ process_ping_reply(xmlNode *reply)
 
     xmlNode *pong = get_message_xml(reply, F_CIB_CALLDATA);
     const char *seq_s = crm_element_value(pong, F_CIB_PING_ID);
-    const char *digest = crm_element_value(pong, XML_ATTR_DIGEST);
+    const char *digest = crm_element_value(pong, PCMK__XA_DIGEST);
 
     if (seq_s == NULL) {
         crm_debug("Ignoring ping reply with no " F_CIB_PING_ID);
@@ -447,7 +447,7 @@ process_ping_reply(xmlNode *reply)
         crm_trace("Ignoring ping reply %s from %s: cib updated since", seq_s, host);
 
     } else {
-        const char *version = crm_element_value(pong, XML_ATTR_CRM_VERSION);
+        const char *version = crm_element_value(pong, PCMK_XA_CRM_FEATURE_SET);
 
         if(ping_digest == NULL) {
             crm_trace("Calculating new digest");
@@ -457,15 +457,24 @@ process_ping_reply(xmlNode *reply)
         crm_trace("Processing ping reply %s from %s (%s)", seq_s, host, digest);
         if (!pcmk__str_eq(ping_digest, digest, pcmk__str_casei)) {
             xmlNode *remote_cib = get_message_xml(pong, F_CIB_CALLDATA);
+            const char *admin_epoch_s = "_";
+            const char *epoch_s = "_";
+            const char *num_updates_s = "_";
+
+            if (remote_cib != NULL) {
+                admin_epoch_s = crm_element_value(remote_cib,
+                                                  PCMK_XA_ADMIN_EPOCH);
+                epoch_s = crm_element_value(remote_cib, PCMK_XA_EPOCH);
+                num_updates_s = crm_element_value(remote_cib,
+                                                  PCMK_XA_NUM_UPDATES);
+            }
 
             crm_notice("Local CIB %s.%s.%s.%s differs from %s: %s.%s.%s.%s %p",
-                       crm_element_value(the_cib, XML_ATTR_GENERATION_ADMIN),
-                       crm_element_value(the_cib, XML_ATTR_GENERATION),
-                       crm_element_value(the_cib, XML_ATTR_NUMUPDATES),
+                       crm_element_value(the_cib, PCMK_XA_ADMIN_EPOCH),
+                       crm_element_value(the_cib, PCMK_XA_EPOCH),
+                       crm_element_value(the_cib, PCMK_XA_NUM_UPDATES),
                        ping_digest, host,
-                       remote_cib?crm_element_value(remote_cib, XML_ATTR_GENERATION_ADMIN):"_",
-                       remote_cib?crm_element_value(remote_cib, XML_ATTR_GENERATION):"_",
-                       remote_cib?crm_element_value(remote_cib, XML_ATTR_NUMUPDATES):"_",
+                       admin_epoch_s, epoch_s, num_updates_s,
                        digest, remote_cib);
 
             if(remote_cib && remote_cib->children) {
@@ -958,7 +967,7 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
         int format = 1;
 
         CRM_LOG_ASSERT(result_diff != NULL);
-        digest = crm_element_value(result_diff, XML_ATTR_DIGEST);
+        digest = crm_element_value(result_diff, PCMK__XA_DIGEST);
         crm_element_value_int(result_diff, PCMK_XA_FORMAT, &format);
 
         cib_diff_version_details(result_diff,
@@ -1125,6 +1134,15 @@ cib_process_request(xmlNode *request, gboolean privileged,
         time_t now = time(NULL);
         int level = LOG_INFO;
         const char *section = crm_element_value(request, F_CIB_SECTION);
+        const char *admin_epoch_s = "0";
+        const char *epoch_s = "0";
+        const char *num_updates_s = "0";
+
+        if (the_cib != NULL) {
+            admin_epoch_s = crm_element_value(the_cib, PCMK_XA_ADMIN_EPOCH);
+            epoch_s = crm_element_value(the_cib, PCMK_XA_EPOCH);
+            num_updates_s = crm_element_value(the_cib, PCMK_XA_NUM_UPDATES);
+        }
 
         rc = cib_process_command(request, operation, op_function, &op_reply,
                                  &result_diff, privileged);
@@ -1154,9 +1172,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
                    "Completed %s operation for section %s: %s (rc=%d, origin=%s/%s/%s, version=%s.%s.%s)",
                    op, section ? section : "'all'", pcmk_strerror(rc), rc,
                    originator ? originator : "local", client_name, call_id,
-                   the_cib ? crm_element_value(the_cib, XML_ATTR_GENERATION_ADMIN) : "0",
-                   the_cib ? crm_element_value(the_cib, XML_ATTR_GENERATION) : "0",
-                   the_cib ? crm_element_value(the_cib, XML_ATTR_NUMUPDATES) : "0");
+                   admin_epoch_s, epoch_s, num_updates_s);
 
         finished = time(NULL);
         if ((finished - now) > 3) {
@@ -1426,8 +1442,8 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
             }
 
             crm_trace("Activating %s->%s%s",
-                      crm_element_value(the_cib, XML_ATTR_NUMUPDATES),
-                      crm_element_value(result_cib, XML_ATTR_NUMUPDATES),
+                      crm_element_value(the_cib, PCMK_XA_NUM_UPDATES),
+                      crm_element_value(result_cib, PCMK_XA_NUM_UPDATES),
                       (config_changed? " changed" : ""));
 
             rc = activateCibXml(result_cib, config_changed, op);
@@ -1451,7 +1467,8 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
          */
         if ((operation->type == cib__op_commit_transact)
             && pcmk__str_eq(originator, OUR_NODENAME, pcmk__str_casei)
-            && compare_version(crm_element_value(the_cib, XML_ATTR_CRM_VERSION),
+            && compare_version(crm_element_value(the_cib,
+                                                 PCMK_XA_CRM_FEATURE_SET),
                                "3.19.0") < 0) {
 
             sync_our_cib(request, TRUE);
@@ -1473,7 +1490,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     } else {
         crm_trace("Not activating %d %d %s", rc,
                   pcmk_is_set(call_options, cib_dryrun),
-                  crm_element_value(result_cib, XML_ATTR_NUMUPDATES));
+                  crm_element_value(result_cib, PCMK_XA_NUM_UPDATES));
 
         if (result_cib != the_cib) {
             free_xml(result_cib);

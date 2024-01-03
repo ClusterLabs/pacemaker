@@ -421,7 +421,7 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
                                               NULL, NULL);
         if (cluster_property_set == NULL) {
             cluster_property_set = create_xml_node(crm_config, XML_CIB_TAG_PROPSET);
-            crm_xml_add(cluster_property_set, XML_ATTR_ID, CIB_OPTIONS_FIRST);
+            crm_xml_add(cluster_property_set, PCMK_XA_ID, CIB_OPTIONS_FIRST);
         }
 
         xml = create_xml_node(cluster_property_set, XML_CIB_TAG_NVPAIR);
@@ -477,7 +477,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     pcmk__refresh_node_caches_from_cib(output);
 
     crm_xml_add(output, XML_ATTR_DC_UUID, controld_globals.our_uuid);
-    pcmk__xe_set_bool_attr(output, XML_ATTR_HAVE_QUORUM,
+    pcmk__xe_set_bool_attr(output, PCMK_XA_HAVE_QUORUM,
                            pcmk_is_set(controld_globals.flags,
                                        controld_has_quorum));
 
@@ -485,7 +485,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     if (pcmk_is_set(controld_globals.flags, controld_ever_had_quorum)
         && !crm_have_quorum) {
-        crm_xml_add_int(output, XML_ATTR_QUORUM_PANIC, 1);
+        crm_xml_add_int(output, PCMK_XA_NO_QUORUM_PANIC, 1);
     }
 
     rc = pcmk_rc2legacy(pcmk_schedulerd_api_graph(schedulerd_api, output, &ref));

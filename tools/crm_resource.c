@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1246,7 +1246,7 @@ set_property(void)
     CRM_LOG_ASSERT(options.prop_name != NULL);
 
     msg_data = create_xml_node(NULL, options.rsc_type);
-    crm_xml_add(msg_data, XML_ATTR_ID, options.rsc_id);
+    crm_xml_add(msg_data, PCMK_XA_ID, options.rsc_id);
     crm_xml_add(msg_data, options.prop_name, options.prop_value);
 
     rc = cib_conn->cmds->modify(cib_conn, XML_CIB_TAG_RESOURCES, msg_data,

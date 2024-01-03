@@ -541,7 +541,7 @@ build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list)
         GList *gIter = NULL;
         xmlNode *xml_rsc = create_xml_node(rsc_list, XML_LRM_TAG_RESOURCE);
 
-        crm_xml_add(xml_rsc, XML_ATTR_ID, entry->id);
+        crm_xml_add(xml_rsc, PCMK_XA_ID, entry->id);
         crm_xml_add(xml_rsc, XML_ATTR_TYPE, entry->rsc.type);
         crm_xml_add(xml_rsc, XML_AGENT_ATTR_CLASS, entry->rsc.standard);
         crm_xml_add(xml_rsc, XML_AGENT_ATTR_PROVIDER, entry->rsc.provider);
@@ -592,7 +592,7 @@ controld_query_executor_state(void)
     }
 
     xml_data = create_xml_node(xml_state, XML_CIB_TAG_LRM);
-    crm_xml_add(xml_data, XML_ATTR_ID, peer->uuid);
+    crm_xml_add(xml_data, PCMK_XA_ID, peer->uuid);
     rsc_list = create_xml_node(xml_data, XML_LRM_TAG_RESOURCES);
 
     /* Build a list of active (not always running) resources */
@@ -1302,7 +1302,8 @@ static bool do_lrm_cancel(ha_msg_input_t *input, lrm_state_t *lrm_state,
          * not abcdaa8, they will time out waiting for the ack (no
          * released versions of Pacemaker are affected).
          */
-        const char *peer_version = crm_element_value(params, XML_ATTR_CRM_VERSION);
+        const char *peer_version = crm_element_value(params,
+                                                     PCMK_XA_CRM_FEATURE_SET);
 
         if (compare_version(peer_version, "3.0.8") <= 0) {
             crm_info("Sending compatibility ack for %s cancellation to %s (CRM version %s)",
@@ -1632,7 +1633,8 @@ construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
          */
         op->params = pcmk__strkey_table(free, free);
 
-        g_hash_table_insert(op->params, strdup(XML_ATTR_CRM_VERSION), strdup(CRM_FEATURE_SET));
+        g_hash_table_insert(op->params, strdup(PCMK_XA_CRM_FEATURE_SET),
+                            strdup(CRM_FEATURE_SET));
 
         crm_trace("Constructed %s op for %s", operation, rsc_id);
         return op;
@@ -1757,11 +1759,11 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
                                       __func__);
 
     iter = create_xml_node(update, XML_CIB_TAG_LRM);
-    crm_xml_add(iter, XML_ATTR_ID, controld_globals.our_uuid);
+    crm_xml_add(iter, PCMK_XA_ID, controld_globals.our_uuid);
     iter = create_xml_node(iter, XML_LRM_TAG_RESOURCES);
     iter = create_xml_node(iter, XML_LRM_TAG_RESOURCE);
 
-    crm_xml_add(iter, XML_ATTR_ID, op->rsc_id);
+    crm_xml_add(iter, PCMK_XA_ID, op->rsc_id);
 
     controld_add_resource_history_xml(iter, rsc, op,
                                       controld_globals.our_nodename);

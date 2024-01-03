@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 the Pacemaker project contributors
+ * Copyright 2021-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -530,7 +530,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
      * (which is preferred when writing history), and if necessary, the instance
      * name.
      */
-    resource_config_name = crm_element_value(action_rsc, XML_ATTR_ID);
+    resource_config_name = crm_element_value(action_rsc, PCMK_XA_ID);
     if (resource_config_name == NULL) { // Shouldn't be possible
         crm_log_xml_err(action->xml, "No ID");
         free(node);
@@ -698,7 +698,7 @@ simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                                                            false);
 
         CRM_ASSERT(cib_node != NULL);
-        crm_xml_add(cib_node, XML_ATTR_ORIGIN, __func__);
+        crm_xml_add(cib_node, PCMK_XA_CRM_DEBUG_ORIGIN, __func__);
         rc = fake_cib->cmds->replace(fake_cib, XML_CIB_TAG_STATUS, cib_node,
                                      cib_sync_call|cib_scope_local);
         CRM_ASSERT(rc == pcmk_ok);

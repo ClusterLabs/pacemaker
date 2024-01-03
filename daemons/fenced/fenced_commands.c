@@ -1081,7 +1081,7 @@ build_device_from_xml(xmlNode *dev)
 
     CRM_CHECK(device != NULL, {free(agent); return device;});
 
-    device->id = crm_element_value_copy(dev, XML_ATTR_ID);
+    device->id = crm_element_value_copy(dev, PCMK_XA_ID);
     device->agent = agent;
     device->namespace = crm_element_value_copy(dev, "namespace");
     device->params = xml2device_params(device->id, dev);
@@ -1333,7 +1333,7 @@ device_params_diff(GHashTable *first, GHashTable *second) {
 
         if(strstr(key, "CRM_meta") == key) {
             continue;
-        } else if(strcmp(key, "crm_feature_set") == 0) {
+        } else if (strcmp(key, PCMK_XA_CRM_FEATURE_SET) == 0) {
             continue;
         } else {
             char *other_value = g_hash_table_lookup(second, key);
@@ -2385,7 +2385,7 @@ add_action_reply(xmlNode *xml, const char *action,
 {
     xmlNode *child = create_xml_node(xml, F_STONITH_ACTION);
 
-    crm_xml_add(child, XML_ATTR_ID, action);
+    crm_xml_add(child, PCMK_XA_ID, action);
     add_action_specific_attributes(child, action, device, target);
     add_disallowed(child, action, device, target, allow_suicide);
 }
@@ -2449,7 +2449,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
         available_devices++;
 
         dev = create_xml_node(list, F_STONITH_DEVICE);
-        crm_xml_add(dev, XML_ATTR_ID, device->id);
+        crm_xml_add(dev, PCMK_XA_ID, device->id);
         crm_xml_add(dev, "namespace", device->namespace);
         crm_xml_add(dev, "agent", device->agent);
         crm_xml_add_int(dev, F_STONITH_DEVICE_VERIFIED, device->verified);
@@ -3450,7 +3450,7 @@ handle_device_delete_request(pcmk__request_t *request)
 {
     xmlNode *dev = get_xpath_object("//" F_STONITH_DEVICE, request->xml,
                                     LOG_ERR);
-    const char *device_id = crm_element_value(dev, XML_ATTR_ID);
+    const char *device_id = crm_element_value(dev, PCMK_XA_ID);
     const char *op = crm_element_value(request->xml, F_STONITH_OPERATION);
 
     if (is_privileged(request->ipc_client, op)) {
@@ -3512,7 +3512,7 @@ handle_cache_request(pcmk__request_t *request)
     int node_id = 0;
     const char *name = NULL;
 
-    crm_element_value_int(request->xml, XML_ATTR_ID, &node_id);
+    crm_element_value_int(request->xml, PCMK_XA_ID, &node_id);
     name = crm_element_value(request->xml, XML_ATTR_UNAME);
     reap_crm_member(node_id, name);
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);

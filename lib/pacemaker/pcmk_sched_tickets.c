@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -246,7 +246,7 @@ unpack_rsc_ticket_set(xmlNode *set, pcmk_ticket_t *ticket,
     set_id = ID(set);
     if (set_id == NULL) {
         pcmk__config_err("Ignoring <" XML_CONS_TAG_RSC_SET "> without "
-                         XML_ATTR_ID);
+                         PCMK_XA_ID);
         return pcmk_rc_unpack_error;
     }
 
@@ -302,7 +302,7 @@ unpack_simple_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 
     id = ID(xml_obj);
     if (id == NULL) {
-        pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
+        pcmk__config_err("Ignoring <%s> constraint without " PCMK_XA_ID,
                          xml_obj->name);
         return;
     }
@@ -373,7 +373,7 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     id = ID(xml_obj);
     if (id == NULL) {
-        pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
+        pcmk__config_err("Ignoring <%s> constraint without " PCMK_XA_ID,
                          xml_obj->name);
         return pcmk_rc_unpack_error;
     }
@@ -445,7 +445,7 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 
     id = ID(xml_obj);
     if (id == NULL) {
-        pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
+        pcmk__config_err("Ignoring <%s> constraint without " PCMK_XA_ID,
                          xml_obj->name);
         return;
     }

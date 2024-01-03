@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 the Pacemaker project contributors
+ * Copyright 2023-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -80,7 +80,8 @@ single_schema(void **state)
      * </schemas>
      */
     schema_node = pcmk__xml_first_child(parent);
-    assert_string_equal("pacemaker-3.0", crm_element_value(schema_node, XML_ATTR_VERSION));
+    assert_string_equal("pacemaker-3.0",
+                        crm_element_value(schema_node, PCMK_XA_VERSION));
 
     file_node = pcmk__xml_first_child(schema_node);
     while (file_node != NULL && rngs1[i] != NULL) {
@@ -114,7 +115,8 @@ multiple_schemas(void **state)
      * when the function is called repeatedly.
      */
     schema_node = pcmk__xml_first_child(parent);
-    assert_string_equal("pacemaker-2.0", crm_element_value(schema_node, XML_ATTR_VERSION));
+    assert_string_equal("pacemaker-2.0",
+                        crm_element_value(schema_node, PCMK_XA_VERSION));
 
     file_node = pcmk__xml_first_child(schema_node);
     while (file_node != NULL && rngs2[i] != NULL) {
@@ -126,7 +128,8 @@ multiple_schemas(void **state)
     }
 
     schema_node = pcmk__xml_next(schema_node);
-    assert_string_equal("pacemaker-2.1", crm_element_value(schema_node, XML_ATTR_VERSION));
+    assert_string_equal("pacemaker-2.1",
+                        crm_element_value(schema_node, PCMK_XA_VERSION));
 
     file_node = pcmk__xml_first_child(schema_node);
     i = 0;

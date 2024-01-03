@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -774,7 +774,7 @@ crm_create_nvpair_xml(xmlNode *parent, const char *id, const char *name,
     CRM_CHECK(nvp, return NULL);
 
     if (id) {
-        crm_xml_add(nvp, XML_ATTR_ID, id);
+        crm_xml_add(nvp, PCMK_XA_ID, id);
     } else {
         const char *parent_id = ID(parent);
 

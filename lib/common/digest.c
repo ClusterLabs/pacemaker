@@ -106,9 +106,9 @@ calculate_xml_digest_v2(const xmlNode *source, gboolean do_filter)
                                                  pcmk__get_tmpdir(), digest);
 
             crm_trace("Saving %s.%s.%s to %s",
-                      crm_element_value(source, XML_ATTR_GENERATION_ADMIN),
-                      crm_element_value(source, XML_ATTR_GENERATION),
-                      crm_element_value(source, XML_ATTR_NUMUPDATES),
+                      crm_element_value(source, PCMK_XA_ADMIN_EPOCH),
+                      crm_element_value(source, PCMK_XA_EPOCH),
+                      crm_element_value(source, PCMK_XA_NUM_UPDATES),
                       trace_file);
             save_xml_to_file(source, "digest input", trace_file);
             free(trace_file);
@@ -234,8 +234,8 @@ bool
 pcmk__xa_filterable(const char *name)
 {
     static const char *filter[] = {
-        XML_ATTR_ORIGIN,
-        XML_CIB_ATTR_WRITTEN,
+        PCMK_XA_CRM_DEBUG_ORIGIN,
+        PCMK_XA_CIB_LAST_WRITTEN,
         XML_ATTR_UPDATE_ORIG,
         XML_ATTR_UPDATE_CLIENT,
         XML_ATTR_UPDATE_USER,

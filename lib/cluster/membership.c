@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -292,7 +292,7 @@ crm_remote_peer_cache_refresh(xmlNode *cib)
     g_hash_table_foreach(crm_remote_peer_cache, mark_dirty, NULL);
 
     /* Look for guest nodes and remote nodes in the status section */
-    data.field = "id";
+    data.field = PCMK_XA_ID;
     data.has_state = TRUE;
     crm_foreach_xpath_result(cib, PCMK__XP_REMOTE_NODE_STATUS,
                              remote_cache_refresh_helper, &data);
@@ -307,7 +307,7 @@ crm_remote_peer_cache_refresh(xmlNode *cib)
     data.has_state = FALSE;
     crm_foreach_xpath_result(cib, PCMK__XP_GUEST_NODE_CONFIG,
                              remote_cache_refresh_helper, &data);
-    data.field = "id";
+    data.field = PCMK_XA_ID;
     data.has_state = FALSE;
     crm_foreach_xpath_result(cib, PCMK__XP_REMOTE_NODE_CONFIG,
                              remote_cache_refresh_helper, &data);
@@ -1340,7 +1340,7 @@ find_known_node(const char *id, const char *uname)
 static void
 known_node_cache_refresh_helper(xmlNode *xml_node, void *user_data)
 {
-    const char *id = crm_element_value(xml_node, XML_ATTR_ID);
+    const char *id = crm_element_value(xml_node, PCMK_XA_ID);
     const char *uname = crm_element_value(xml_node, XML_ATTR_UNAME);
     crm_node_t * node =  NULL;
 

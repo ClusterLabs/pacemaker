@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -320,7 +320,7 @@ create_resource(const char *name, const char *provider, const char *kind)
 {
     xmlNode *rsc = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
 
-    crm_xml_add(rsc, XML_ATTR_ID, name);
+    crm_xml_add(rsc, PCMK_XA_ID, name);
     crm_xml_add(rsc, XML_AGENT_ATTR_CLASS, PCMK_RESOURCE_CLASS_OCF);
     crm_xml_add(rsc, XML_AGENT_ATTR_PROVIDER, provider);
     crm_xml_add(rsc, XML_ATTR_TYPE, kind);
@@ -1150,7 +1150,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
             free(value);
         }
 
-        //crm_xml_add(xml_obj, XML_ATTR_ID, bundle_data->prefix);
+        //crm_xml_add(xml_obj, PCMK_XA_ID, bundle_data->prefix);
         add_node_copy(xml_resource, xml_obj);
 
     } else if(xml_obj) {
@@ -1426,7 +1426,7 @@ bundle_print_xml(pcmk_resource_t *rsc, const char *pre_text, long options,
     get_bundle_variant_data(bundle_data, rsc);
 
     status_print("%s<bundle ", pre_text);
-    status_print(XML_ATTR_ID "=\"%s\" ", rsc->id);
+    status_print(PCMK_XA_ID "=\"%s\" ", rsc->id);
     status_print("type=\"%s\" ", container_agent_str(bundle_data->agent_type));
     status_print("image=\"%s\" ", bundle_data->image);
     status_print("unique=\"%s\" ", pe__rsc_bool_str(rsc, pcmk_rsc_unique));
@@ -1440,7 +1440,7 @@ bundle_print_xml(pcmk_resource_t *rsc, const char *pre_text, long options,
         pcmk__bundle_replica_t *replica = gIter->data;
 
         CRM_ASSERT(replica);
-        status_print("%s    <replica " XML_ATTR_ID "=\"%d\">\n",
+        status_print("%s    <replica " PCMK_XA_ID "=\"%d\">\n",
                      pre_text, replica->offset);
         print_rsc_in_list(replica->ip, child_text, options, print_data);
         print_rsc_in_list(replica->child, child_text, options, print_data);
@@ -1509,7 +1509,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
             desc = pe__resource_description(rsc, show_opts);
 
             rc = pe__name_and_nvpairs_xml(out, true, "bundle", 8,
-                     "id", rsc->id,
+                     PCMK_XA_ID, rsc->id,
                      "type", container_agent_str(bundle_data->agent_type),
                      "image", bundle_data->image,
                      "unique", pe__rsc_bool_str(rsc, pcmk_rsc_unique),
@@ -1517,12 +1517,12 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
                      pe__rsc_bool_str(rsc, pcmk_rsc_maintenance),
                      "managed", pe__rsc_bool_str(rsc, pcmk_rsc_managed),
                      "failed", pe__rsc_bool_str(rsc, pcmk_rsc_failed),
-                     "description", desc);
+                     PCMK_XA_DESCRIPTION, desc);
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
 
         id = pcmk__itoa(replica->offset);
-        rc = pe__name_and_nvpairs_xml(out, true, "replica", 1, "id", id);
+        rc = pe__name_and_nvpairs_xml(out, true, "replica", 1, PCMK_XA_ID, id);
         free(id);
         CRM_ASSERT(rc == pcmk_rc_ok);
 

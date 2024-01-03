@@ -324,7 +324,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
         if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
             int do_panic = 0;
 
-            crm_element_value_int(scheduler->input, XML_ATTR_QUORUM_PANIC,
+            crm_element_value_int(scheduler->input, PCMK_XA_NO_QUORUM_PANIC,
                                   &do_panic);
             if (do_panic || pcmk_is_set(scheduler->flags, pcmk_sched_quorate)) {
                 scheduler->no_quorum_policy = pcmk_no_quorum_fence;
@@ -628,7 +628,7 @@ unpack_nodes(xmlNode *xml_nodes, pcmk_scheduler_t *scheduler)
         if (pcmk__str_eq((const char *)xml_obj->name, XML_CIB_TAG_NODE, pcmk__str_none)) {
             new_node = NULL;
 
-            id = crm_element_value(xml_obj, XML_ATTR_ID);
+            id = crm_element_value(xml_obj, PCMK_XA_ID);
             uname = crm_element_value(xml_obj, XML_ATTR_UNAME);
             type = crm_element_value(xml_obj, XML_ATTR_TYPE);
             score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
@@ -864,8 +864,7 @@ unpack_resources(const xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
             continue;
         }
 
-        crm_trace("Unpacking <%s " XML_ATTR_ID "='%s'>",
-                  xml_obj->name, id);
+        crm_trace("Unpacking <%s " PCMK_XA_ID "='%s'>", xml_obj->name, id);
         if (pe__unpack_resource(xml_obj, &new_rsc, NULL,
                                 scheduler) == pcmk_rc_ok) {
             scheduler->resources = g_list_append(scheduler->resources, new_rsc);
@@ -920,7 +919,7 @@ unpack_tags(xmlNode *xml_tags, pcmk_scheduler_t *scheduler)
         }
 
         if (tag_id == NULL) {
-            pcmk__config_err("Ignoring <%s> without " XML_ATTR_ID,
+            pcmk__config_err("Ignoring <%s> without " PCMK_XA_ID,
                              (const char *) xml_tag->name);
             continue;
         }
@@ -935,7 +934,7 @@ unpack_tags(xmlNode *xml_tags, pcmk_scheduler_t *scheduler)
             }
 
             if (obj_ref == NULL) {
-                pcmk__config_err("Ignoring <%s> for tag '%s' without " XML_ATTR_ID,
+                pcmk__config_err("Ignoring <%s> for tag '%s' without " PCMK_XA_ID,
                                  xml_obj_ref->name, tag_id);
                 continue;
             }
@@ -981,7 +980,7 @@ unpack_ticket_state(xmlNode *xml_ticket, pcmk_scheduler_t *scheduler)
         const char *prop_name = (const char *)xIter->name;
         const char *prop_value = pcmk__xml_attr_value(xIter);
 
-        if (pcmk__str_eq(prop_name, XML_ATTR_ID, pcmk__str_none)) {
+        if (pcmk__str_eq(prop_name, PCMK_XA_ID, pcmk__str_none)) {
             continue;
         }
         g_hash_table_replace(ticket->state, strdup(prop_name), strdup(prop_value));
@@ -1156,10 +1155,10 @@ unpack_node_state(const xmlNode *state, pcmk_scheduler_t *scheduler)
     const char *uname = NULL;
     pcmk_node_t *this_node = NULL;
 
-    id = crm_element_value(state, XML_ATTR_ID);
+    id = crm_element_value(state, PCMK_XA_ID);
     if (id == NULL) {
         pcmk__config_err("Ignoring invalid " XML_CIB_TAG_STATE " entry without "
-                         XML_ATTR_ID);
+                         PCMK_XA_ID);
         crm_log_xml_info(state, "missing-id");
         return;
     }
@@ -1930,7 +1929,7 @@ create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
     xmlNode *xml_rsc = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
 
     copy_in_properties(xml_rsc, rsc_entry);
-    crm_xml_add(xml_rsc, XML_ATTR_ID, rsc_id);
+    crm_xml_add(xml_rsc, PCMK_XA_ID, rsc_id);
     crm_log_xml_debug(xml_rsc, "Orphan resource");
 
     if (pe__unpack_resource(xml_rsc, &rsc, NULL, scheduler) != pcmk_rc_ok) {
@@ -2196,7 +2195,7 @@ process_orphan_resource(const xmlNode *rsc_entry, const pcmk_node_t *node,
                         pcmk_scheduler_t *scheduler)
 {
     pcmk_resource_t *rsc = NULL;
-    const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
+    const char *rsc_id = crm_element_value(rsc_entry, PCMK_XA_ID);
 
     crm_debug("Detected orphan resource %s on %s", rsc_id, pe__node_name(node));
     rsc = create_fake_resource(rsc_id, rsc_entry, scheduler);
@@ -2666,7 +2665,7 @@ unpack_lrm_resource(pcmk_node_t *node, const xmlNode *lrm_resource,
 
     if (rsc_id == NULL) {
         pcmk__config_err("Ignoring invalid " XML_LRM_TAG_RESOURCE
-                         " entry: No " XML_ATTR_ID);
+                         " entry: No " PCMK_XA_ID);
         crm_log_xml_info(lrm_resource, "missing-id");
         return NULL;
     }
@@ -2764,7 +2763,7 @@ handle_orphaned_container_fillers(const xmlNode *lrm_rsc_list,
         }
 
         container_id = crm_element_value(rsc_entry, XML_RSC_ATTR_CONTAINER);
-        rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
+        rsc_id = crm_element_value(rsc_entry, PCMK_XA_ID);
         if (container_id == NULL || rsc_id == NULL) {
             continue;
         }
@@ -2872,7 +2871,7 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
     xpath = g_string_sized_new(256);
     pcmk__g_strcat(xpath,
                    XPATH_NODE_STATE "[@" XML_ATTR_UNAME "='", node, "']"
-                   SUB_XPATH_LRM_RESOURCE "[@" XML_ATTR_ID "='", resource, "']"
+                   SUB_XPATH_LRM_RESOURCE "[@" PCMK_XA_ID "='", resource, "']"
                    SUB_XPATH_LRM_RSC_OP "[@" XML_LRM_ATTR_TASK "='", op, "'",
                    NULL);
 
@@ -2920,7 +2919,7 @@ find_lrm_resource(const char *rsc_id, const char *node_name,
     xpath = g_string_sized_new(256);
     pcmk__g_strcat(xpath,
                    XPATH_NODE_STATE "[@" XML_ATTR_UNAME "='", node_name, "']"
-                   SUB_XPATH_LRM_RESOURCE "[@" XML_ATTR_ID "='", rsc_id, "']",
+                   SUB_XPATH_LRM_RESOURCE "[@" PCMK_XA_ID "='", rsc_id, "']",
                    NULL);
 
     xml = get_xpath_object((const char *) xpath->str, scheduler->input,
@@ -2948,7 +2947,7 @@ unknown_on_node(pcmk_resource_t *rsc, const char *node_name)
 
     pcmk__g_strcat(xpath,
                    XPATH_NODE_STATE "[@" XML_ATTR_UNAME "='", node_name, "']"
-                   SUB_XPATH_LRM_RESOURCE "[@" XML_ATTR_ID "='", rsc->id, "']"
+                   SUB_XPATH_LRM_RESOURCE "[@" PCMK_XA_ID "='", rsc->id, "']"
                    SUB_XPATH_LRM_RSC_OP "[@" XML_LRM_ATTR_RC "!='193']",
                    NULL);
     search = xpath_search(rsc->cluster->input, (const char *) xpath->str);
@@ -5101,7 +5100,8 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
                     if (pcmk__str_eq((const char *)lrm_rsc->name,
                                      XML_LRM_TAG_RESOURCE, pcmk__str_none)) {
 
-                        const char *rsc_id = crm_element_value(lrm_rsc, XML_ATTR_ID);
+                        const char *rsc_id = crm_element_value(lrm_rsc,
+                                                               PCMK_XA_ID);
 
                         if (rsc != NULL && !pcmk__str_eq(rsc_id, rsc, pcmk__str_casei)) {
                             continue;

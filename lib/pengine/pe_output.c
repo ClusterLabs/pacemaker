@@ -24,7 +24,7 @@ pe__resource_description(const pcmk_resource_t *rsc, uint32_t show_opts)
     const char * desc = NULL;
     // User-supplied description
     if (pcmk_any_flags_set(show_opts, pcmk_show_rsc_only|pcmk_show_description)) {
-        desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
+        desc = crm_element_value(rsc->xml, PCMK_XA_DESCRIPTION);
     }
     return desc;
 }
@@ -418,7 +418,7 @@ cluster_summary(pcmk__output_t *out, va_list args) {
                                    crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE)
                                    : NULL;
         const char *quorum = crm_element_value(scheduler->input,
-                                               XML_ATTR_HAVE_QUORUM);
+                                               PCMK_XA_HAVE_QUORUM);
         char *dc_name = scheduler->dc_node? pe__node_display_name(scheduler->dc_node, pcmk_is_set(show_opts, pcmk_show_node_id)) : NULL;
         bool mixed_version = is_mixed_version(scheduler);
 
@@ -430,7 +430,7 @@ cluster_summary(pcmk__output_t *out, va_list args) {
 
     if (pcmk_is_set(section_opts, pcmk_section_times)) {
         const char *last_written = crm_element_value(scheduler->input,
-                                                     XML_CIB_ATTR_WRITTEN);
+                                                     PCMK_XA_CIB_LAST_WRITTEN);
         const char *user = crm_element_value(scheduler->input,
                                              XML_ATTR_UPDATE_USER);
         const char *client = crm_element_value(scheduler->input,
@@ -493,7 +493,7 @@ cluster_summary_html(pcmk__output_t *out, va_list args) {
                                    crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE)
                                    : NULL;
         const char *quorum = crm_element_value(scheduler->input,
-                                               XML_ATTR_HAVE_QUORUM);
+                                               PCMK_XA_HAVE_QUORUM);
         char *dc_name = scheduler->dc_node? pe__node_display_name(scheduler->dc_node, pcmk_is_set(show_opts, pcmk_show_node_id)) : NULL;
         bool mixed_version = is_mixed_version(scheduler);
 
@@ -505,7 +505,7 @@ cluster_summary_html(pcmk__output_t *out, va_list args) {
 
     if (pcmk_is_set(section_opts, pcmk_section_times)) {
         const char *last_written = crm_element_value(scheduler->input,
-                                                     XML_CIB_ATTR_WRITTEN);
+                                                     PCMK_XA_CIB_LAST_WRITTEN);
         const char *user = crm_element_value(scheduler->input,
                                              XML_ATTR_UPDATE_USER);
         const char *client = crm_element_value(scheduler->input,
@@ -690,7 +690,7 @@ ban_xml(pcmk__output_t *out, va_list args) {
     char *weight_s = pcmk__itoa(pe_node->weight);
 
     pcmk__output_create_xml_node(out, "ban",
-                                 "id", location->id,
+                                 PCMK_XA_ID, location->id,
                                  "resource", location->rsc->id,
                                  "node", pe_node->details->uname,
                                  "weight", weight_s,
@@ -952,9 +952,9 @@ cluster_dc_xml(pcmk__output_t *out, va_list args) {
     if (dc) {
         pcmk__output_create_xml_node(out, "current_dc",
                                      "present", "true",
-                                     "version", dc_version_s ? dc_version_s : "",
+                                     PCMK_XA_VERSION, pcmk__s(dc_version_s, ""),
                                      "name", dc->details->uname,
-                                     "id", dc->details->id,
+                                     PCMK_XA_ID, dc->details->id,
                                      "with_quorum", pcmk__btoa(crm_is_true(quorum)),
                                      "mixed_version", pcmk__btoa(mixed_version),
                                      NULL);
@@ -1511,7 +1511,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
 
     rc_s = pcmk__itoa(rc);
     if (crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY) == NULL) {
-        op_key_name = "id";
+        op_key_name = PCMK_XA_ID;
     }
     node = pcmk__output_create_xml_node(out, "failure",
                                         op_key_name, op_key,
@@ -1906,7 +1906,7 @@ node_xml(pcmk__output_t *out, va_list args) {
 
         pe__name_and_nvpairs_xml(out, true, "node", 15,
                                  "name", node->details->uname,
-                                 "id", node->details->id,
+                                 PCMK_XA_ID, node->details->id,
                                  "online", pcmk__btoa(node->details->online),
                                  "standby", pcmk__btoa(node->details->standby),
                                  "standby_onfail", pcmk__btoa(node->details->standby_onfail),
@@ -2264,7 +2264,7 @@ node_history_list(pcmk__output_t *out, va_list args) {
     /* Print history of each of the node's resources */
     for (rsc_entry = first_named_child(lrm_rsc, XML_LRM_TAG_RESOURCE);
          rsc_entry != NULL; rsc_entry = crm_next_same_xml(rsc_entry)) {
-        const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
+        const char *rsc_id = crm_element_value(rsc_entry, PCMK_XA_ID);
         pcmk_resource_t *rsc = pe_find_resource(scheduler->resources, rsc_id);
         const pcmk_resource_t *parent = pe__const_top_resource(rsc, false);
 
@@ -2308,12 +2308,14 @@ node_history_list(pcmk__output_t *out, va_list args) {
                          failcount, last_failure, false);
         } else {
             GList *op_list = get_operation_list(rsc_entry);
-            pcmk_resource_t *rsc = pe_find_resource(scheduler->resources,
-                                                  crm_element_value(rsc_entry, XML_ATTR_ID));
+            pcmk_resource_t *rsc = NULL;
 
             if (op_list == NULL) {
                 continue;
             }
+
+            rsc = pe_find_resource(scheduler->resources,
+                                   crm_element_value(rsc_entry, PCMK_XA_ID));
 
             if (rc == pcmk_rc_no_output) {
                 rc = pcmk_rc_ok;
@@ -2568,7 +2570,7 @@ node_weight_xml(pcmk__output_t *out, va_list args)
                                                    NULL);
 
     if (rsc) {
-        crm_xml_add(node, "id", rsc->id);
+        crm_xml_add(node, PCMK_XA_ID, rsc->id);
     }
 
     return pcmk_rc_ok;
@@ -2670,7 +2672,7 @@ promotion_score_xml(pcmk__output_t *out, va_list args)
     const char *score = va_arg(args, const char *);
 
     xmlNodePtr node = pcmk__output_create_xml_node(out, "promotion_score",
-                                                   "id", child_rsc->id,
+                                                   PCMK_XA_ID, child_rsc->id,
                                                    "score", score,
                                                    NULL);
 
@@ -2745,7 +2747,7 @@ resource_history_xml(pcmk__output_t *out, va_list args) {
     bool as_header = va_arg(args, int);
 
     xmlNodePtr node = pcmk__output_xml_create_parent(out, "resource_history",
-                                                     "id", rsc_id,
+                                                     PCMK_XA_ID, rsc_id,
                                                      NULL);
 
     if (rsc == NULL) {
@@ -3048,7 +3050,7 @@ ticket_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr node = NULL;
 
     node = pcmk__output_create_xml_node(out, "ticket",
-                                        "id", ticket->id,
+                                        PCMK_XA_ID, ticket->id,
                                         "status", ticket->granted ? "granted" : "revoked",
                                         "standby", pcmk__btoa(ticket->standby),
                                         NULL);

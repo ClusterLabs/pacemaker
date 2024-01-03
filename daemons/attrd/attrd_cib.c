@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the Pacemaker project contributors
+ * Copyright 2013-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -340,25 +340,25 @@ add_set_attr_update(const attribute_t *attr, const char *attr_id,
     if (child == NULL) {
         goto done;
     }
-    crm_xml_add(child, XML_ATTR_ID, node_id);
+    crm_xml_add(child, PCMK_XA_ID, node_id);
 
     child = create_xml_node(child, XML_TAG_TRANSIENT_NODEATTRS);
     if (child == NULL) {
         goto done;
     }
-    crm_xml_add(child, XML_ATTR_ID, node_id);
+    crm_xml_add(child, PCMK_XA_ID, node_id);
 
     child = create_xml_node(child, attr->set_type);
     if (child == NULL) {
         goto done;
     }
-    crm_xml_add(child, XML_ATTR_ID, set_id);
+    crm_xml_add(child, PCMK_XA_ID, set_id);
 
     child = create_xml_node(child, XML_CIB_TAG_NVPAIR);
     if (child == NULL) {
         goto done;
     }
-    crm_xml_add(child, XML_ATTR_ID, attr_id);
+    crm_xml_add(child, PCMK_XA_ID, attr_id);
     crm_xml_add(child, XML_NVPAIR_ATTR_NAME, attr->id);
     crm_xml_add(child, XML_NVPAIR_ATTR_VALUE, value);
 
@@ -389,12 +389,12 @@ add_unset_attr_update(const attribute_t *attr, const char *attr_id,
     char *xpath = crm_strdup_printf("/" XML_TAG_CIB
                                     "/" XML_CIB_TAG_STATUS
                                     "/" XML_CIB_TAG_STATE
-                                        "[@" XML_ATTR_ID "='%s']"
+                                        "[@" PCMK_XA_ID "='%s']"
                                     "/" XML_TAG_TRANSIENT_NODEATTRS
-                                        "[@" XML_ATTR_ID "='%s']"
-                                    "/%s[@" XML_ATTR_ID "='%s']"
+                                        "[@" PCMK_XA_ID "='%s']"
+                                    "/%s[@" PCMK_XA_ID "='%s']"
                                     "/" XML_CIB_TAG_NVPAIR
-                                        "[@" XML_ATTR_ID "='%s' "
+                                        "[@" PCMK_XA_ID "='%s' "
                                          "and @" XML_NVPAIR_ATTR_NAME "='%s']",
                                     node_id, node_id, attr->set_type, set_id,
                                     attr_id, attr->id);

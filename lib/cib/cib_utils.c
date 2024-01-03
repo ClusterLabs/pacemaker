@@ -51,9 +51,9 @@ cib_version_details(xmlNode * cib, int *admin_epoch, int *epoch, int *updates)
         return FALSE;
 
     } else {
-        crm_element_value_int(cib, XML_ATTR_GENERATION, epoch);
-        crm_element_value_int(cib, XML_ATTR_NUMUPDATES, updates);
-        crm_element_value_int(cib, XML_ATTR_GENERATION_ADMIN, admin_epoch);
+        crm_element_value_int(cib, PCMK_XA_EPOCH, epoch);
+        crm_element_value_int(cib, PCMK_XA_NUM_UPDATES, updates);
+        crm_element_value_int(cib, PCMK_XA_ADMIN_EPOCH, admin_epoch);
     }
     return TRUE;
 }
@@ -229,7 +229,7 @@ cib__element_in_patchset(const xmlNode *patchset, const char *element)
 /*!
  * \brief Create XML for a new (empty) CIB
  *
- * \param[in] cib_epoch   What to use as "epoch" CIB property
+ * \param[in] cib_epoch  What to use as \c PCMK_XA_EPOCH CIB attribute
  *
  * \return Newly created XML for empty CIB
  * \note It is the caller's responsibility to free the result with free_xml().
@@ -240,12 +240,12 @@ createEmptyCib(int cib_epoch)
     xmlNode *cib_root = NULL, *config = NULL;
 
     cib_root = create_xml_node(NULL, XML_TAG_CIB);
-    crm_xml_add(cib_root, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
-    crm_xml_add(cib_root, XML_ATTR_VALIDATION, xml_latest_schema());
+    crm_xml_add(cib_root, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
+    crm_xml_add(cib_root, PCMK_XA_VALIDATE_WITH, xml_latest_schema());
 
-    crm_xml_add_int(cib_root, XML_ATTR_GENERATION, cib_epoch);
-    crm_xml_add_int(cib_root, XML_ATTR_NUMUPDATES, 0);
-    crm_xml_add_int(cib_root, XML_ATTR_GENERATION_ADMIN, 0);
+    crm_xml_add_int(cib_root, PCMK_XA_EPOCH, cib_epoch);
+    crm_xml_add_int(cib_root, PCMK_XA_NUM_UPDATES, 0);
+    crm_xml_add_int(cib_root, PCMK_XA_ADMIN_EPOCH, 0);
 
     config = create_xml_node(cib_root, XML_CIB_TAG_CONFIGURATION);
     create_xml_node(cib_root, XML_CIB_TAG_STATUS);
@@ -261,8 +261,8 @@ createEmptyCib(int cib_epoch)
         xmlNode *meta = create_xml_node(rsc_defaults, XML_TAG_META_SETS);
         xmlNode *nvpair = create_xml_node(meta, XML_CIB_TAG_NVPAIR);
 
-        crm_xml_add(meta, XML_ATTR_ID, "build-resource-defaults");
-        crm_xml_add(nvpair, XML_ATTR_ID, "build-" XML_RSC_ATTR_STICKINESS);
+        crm_xml_add(meta, PCMK_XA_ID, "build-resource-defaults");
+        crm_xml_add(nvpair, PCMK_XA_ID, "build-" XML_RSC_ATTR_STICKINESS);
         crm_xml_add(nvpair, XML_NVPAIR_ATTR_NAME, XML_RSC_ATTR_STICKINESS);
         crm_xml_add_int(nvpair, XML_NVPAIR_ATTR_VALUE,
                         PCMK__RESOURCE_STICKINESS_DEFAULT);
@@ -470,7 +470,7 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
     }
 
     if (scratch) {
-        new_version = crm_element_value(scratch, XML_ATTR_CRM_VERSION);
+        new_version = crm_element_value(scratch, PCMK_XA_CRM_FEATURE_SET);
 
         if (new_version && compare_version(new_version, CRM_FEATURE_SET) > 0) {
             crm_err("Discarding update with feature set '%s' greater than our own '%s'",
@@ -484,22 +484,22 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
         int old = 0;
         int new = 0;
 
-        crm_element_value_int(scratch, XML_ATTR_GENERATION_ADMIN, &new);
-        crm_element_value_int(patchset_cib, XML_ATTR_GENERATION_ADMIN, &old);
+        crm_element_value_int(scratch, PCMK_XA_ADMIN_EPOCH, &new);
+        crm_element_value_int(patchset_cib, PCMK_XA_ADMIN_EPOCH, &old);
 
         if (old > new) {
             crm_err("%s went backwards: %d -> %d (Opts: %#x)",
-                    XML_ATTR_GENERATION_ADMIN, old, new, call_options);
+                    PCMK_XA_ADMIN_EPOCH, old, new, call_options);
             crm_log_xml_warn(req, "Bad Op");
             crm_log_xml_warn(input, "Bad Data");
             rc = -pcmk_err_old_data;
 
         } else if (old == new) {
-            crm_element_value_int(scratch, XML_ATTR_GENERATION, &new);
-            crm_element_value_int(patchset_cib, XML_ATTR_GENERATION, &old);
+            crm_element_value_int(scratch, PCMK_XA_EPOCH, &new);
+            crm_element_value_int(patchset_cib, PCMK_XA_EPOCH, &old);
             if (old > new) {
                 crm_err("%s went backwards: %d -> %d (Opts: %#x)",
-                        XML_ATTR_GENERATION, old, new, call_options);
+                        PCMK_XA_EPOCH, old, new, call_options);
                 crm_log_xml_warn(req, "Bad Op");
                 crm_log_xml_warn(input, "Bad Data");
                 rc = -pcmk_err_old_data;
@@ -583,8 +583,8 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
      * Exceptions, anything in:
 
      static filter_t filter[] = {
-     { 0, XML_ATTR_ORIGIN },
-     { 0, XML_CIB_ATTR_WRITTEN },
+     { 0, PCMK_XA_CRM_DEBUG_ORIGIN },
+     { 0, PCMK_XA_CIB_LAST_WRITTEN },
      { 0, XML_ATTR_UPDATE_ORIG },
      { 0, XML_ATTR_UPDATE_CLIENT },
      { 0, XML_ATTR_UPDATE_USER },
@@ -592,7 +592,7 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
      */
 
     if (*config_changed && !pcmk_is_set(call_options, cib_no_mtime)) {
-        const char *schema = crm_element_value(scratch, XML_ATTR_VALIDATION);
+        const char *schema = crm_element_value(scratch, PCMK_XA_VALIDATE_WITH);
 
         pcmk__xe_add_last_written(scratch);
         if (schema) {
@@ -635,7 +635,7 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
     crm_trace("Perform validation: %s", pcmk__btoa(check_schema));
     if ((rc == pcmk_ok) && check_schema && !validate_xml(scratch, NULL, true)) {
         const char *current_schema = crm_element_value(scratch,
-                                                       XML_ATTR_VALIDATION);
+                                                       PCMK_XA_VALIDATE_WITH);
 
         crm_warn("Updated CIB does not validate against %s schema",
                  pcmk__s(current_schema, "unspecified"));

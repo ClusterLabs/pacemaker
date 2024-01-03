@@ -93,7 +93,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
      * meta-attributes table that takes all that into consideration.
      */
     char *xpath = crm_strdup_printf("//" XML_CIB_TAG_RESOURCE
-                                    "[@" XML_ATTR_ID "='%s']"
+                                    "[@" PCMK_XA_ID "='%s']"
                                     "//" XML_ATTR_OP
                                     "[@" XML_OP_ATTR_ON_FAIL "='block']",
                                     xml_name);
@@ -130,7 +130,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                                          &conf_op_interval_ms);
 
 #define XPATH_FMT "//" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='%s']"       \
-                  "//" XML_LRM_TAG_RESOURCE "[@" XML_ATTR_ID "='%s']"       \
+                  "//" XML_LRM_TAG_RESOURCE "[@" PCMK_XA_ID "='%s']"        \
                   "/" XML_LRM_TAG_RSC_OP "[@" XML_LRM_ATTR_TASK "='%s']"    \
                   "[@" XML_LRM_ATTR_INTERVAL "='%u']"
 
@@ -252,7 +252,7 @@ generate_fail_regexes(const pcmk_resource_t *rsc,
     int rc = pcmk_rc_ok;
     char *rsc_name = rsc_fail_name(rsc);
     const char *version = crm_element_value(rsc->cluster->input,
-                                            XML_ATTR_CRM_VERSION);
+                                            PCMK_XA_CRM_FEATURE_SET);
 
     // @COMPAT Pacemaker <= 1.1.16 used a single fail count per resource
     gboolean is_legacy = (compare_version(version, "3.0.13") < 0);

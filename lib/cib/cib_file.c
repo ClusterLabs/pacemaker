@@ -1,6 +1,6 @@
 /*
  * Original copyright 2004 International Business Machines
- * Later changes copyright 2008-2023 the Pacemaker project contributors
+ * Later changes copyright 2008-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -395,7 +395,7 @@ load_file_cib(const char *filename, xmlNode **output)
 
     /* Validate XML against its specified schema */
     if (validate_xml(root, NULL, TRUE) == FALSE) {
-        const char *schema = crm_element_value(root, XML_ATTR_VALIDATION);
+        const char *schema = crm_element_value(root, PCMK_XA_VALIDATE_WITH);
 
         crm_err("CIB does not validate against %s", schema);
         free_xml(root);
@@ -876,8 +876,8 @@ cib_file_backup(const char *cib_dirname, const char *cib_filename)
  * \internal
  * \brief Prepare CIB XML to be written to disk
  *
- * Set num_updates to 0, set cib-last-written to the current timestamp,
- * and strip out the status section.
+ * Set \c PCMK_XA_NUM_UPDATES to 0, set \c PCMK_XA_CIB_LAST_WRITTEN to the
+ * current timestamp, and strip out the status section.
  *
  * \param[in,out] root  Root of CIB XML tree
  *
@@ -889,7 +889,7 @@ cib_file_prepare_xml(xmlNode *root)
     xmlNode *cib_status_root = NULL;
 
     /* Always write out with num_updates=0 and current last-written timestamp */
-    crm_xml_add(root, XML_ATTR_NUMUPDATES, "0");
+    crm_xml_add(root, PCMK_XA_NUM_UPDATES, "0");
     pcmk__xe_add_last_written(root);
 
     /* Delete status section before writing to file, because
@@ -923,9 +923,8 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
     char *digest = NULL;
 
     /* Detect CIB version for diagnostic purposes */
-    const char *epoch = crm_element_value(cib_root, XML_ATTR_GENERATION);
-    const char *admin_epoch = crm_element_value(cib_root,
-                                                XML_ATTR_GENERATION_ADMIN);
+    const char *epoch = crm_element_value(cib_root, PCMK_XA_EPOCH);
+    const char *admin_epoch = crm_element_value(cib_root, PCMK_XA_ADMIN_EPOCH);
 
     /* Determine full CIB and signature pathnames */
     char *cib_path = crm_strdup_printf("%s/%s", cib_dirname, cib_filename);

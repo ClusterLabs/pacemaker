@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -244,9 +244,9 @@ resource_clear_node_in_expr(const char *rsc_id, const char *host, cib_t * cib_co
     char *xpath_string = NULL;
 
 #define XPATH_FMT                                                       \
-    "//" XML_CONS_TAG_RSC_LOCATION "[@" XML_ATTR_ID "='cli-prefer-%s']" \
+    "//" XML_CONS_TAG_RSC_LOCATION "[@" PCMK_XA_ID "='cli-prefer-%s']"  \
     "[" XML_TAG_RULE                                                    \
-        "[@" XML_ATTR_ID "='cli-prefer-rule-%s']"                       \
+        "[@" PCMK_XA_ID "='cli-prefer-rule-%s']"                        \
         "/" XML_TAG_EXPRESSION                                          \
         "[@" XML_EXPR_ATTR_ATTRIBUTE "='#uname' "                       \
         "and @" XML_EXPR_ATTR_VALUE "='%s']"                            \
@@ -412,7 +412,7 @@ build_clear_xpath_string(GString *buf, const xmlNode *constraint_node,
                        "and @" XML_EXPR_ATTR_VALUE "='", node, "']]", NULL);
     }
 
-    g_string_append(buf, "//" PCMK_XE_DATE_EXPRESSION "[@" XML_ATTR_ID "='");
+    g_string_append(buf, "//" PCMK_XE_DATE_EXPRESSION "[@" PCMK_XA_ID "='");
     if (pcmk__starts_with(cons_id, "cli-ban-")) {
         pcmk__g_strcat(buf, cons_id, "-lifetime']", NULL);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -302,7 +302,7 @@ pcmk__element_xpath(const xmlNode *xml)
 
     id = ID(xml);
     if (id != NULL) {
-        pcmk__g_strcat(xpath, "[@" XML_ATTR_ID "='", id, "']", NULL);
+        pcmk__g_strcat(xpath, "[@" PCMK_XA_ID "='", id, "']", NULL);
     }
 
     return xpath;
@@ -320,7 +320,7 @@ pcmk__xpath_node_id(const char *xpath, const char *node)
         return retval;
     }
 
-    patt = crm_strdup_printf("/%s[@" XML_ATTR_ID "=", node);
+    patt = crm_strdup_printf("/%s[@" PCMK_XA_ID "=", node);
     start = strstr(xpath, patt);
 
     if (!start) {

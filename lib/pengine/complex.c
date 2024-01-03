@@ -296,7 +296,7 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
     }
 
     template = pcmk__xe_match(cib_resources, XML_CIB_TAG_RSC_TEMPLATE,
-                              XML_ATTR_ID, template_ref);
+                              PCMK_XA_ID, template_ref);
     if (template == NULL) {
         pcmk__config_err("No template named '%s'", template_ref);
         return FALSE;
@@ -304,7 +304,7 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     new_xml = copy_xml(template);
     xmlNodeSetName(new_xml, xml_obj->name);
-    crm_xml_add(new_xml, XML_ATTR_ID, id);
+    crm_xml_add(new_xml, PCMK_XA_ID, id);
 
     clone = crm_element_value(xml_obj, XML_RSC_ATTR_INCARNATION);
     if(clone) {
@@ -631,9 +631,9 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     crm_log_xml_trace(xml_obj, "[raw XML]");
 
-    id = crm_element_value(xml_obj, XML_ATTR_ID);
+    id = crm_element_value(xml_obj, PCMK_XA_ID);
     if (id == NULL) {
-        pcmk__config_err("Ignoring <%s> configuration without " XML_ATTR_ID,
+        pcmk__config_err("Ignoring <%s> configuration without " PCMK_XA_ID,
                          xml_obj->name);
         return pcmk_rc_unpack_error;
     }

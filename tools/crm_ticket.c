@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 the Pacemaker project contributors
+ * Copyright 2012-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -357,7 +357,7 @@ find_ticket_state(cib_t * the_cib, gchar *ticket_id, xmlNode ** ticket_state_xml
     if (ticket_id != NULL) {
         pcmk__g_strcat(xpath,
                        "/" XML_CIB_TAG_TICKET_STATE
-                       "[@" XML_ATTR_ID "=\"", ticket_id, "\"]", NULL);
+                       "[@" PCMK_XA_ID "=\"", ticket_id, "\"]", NULL);
     }
 
     rc = the_cib->cmds->query(the_cib, (const char *) xpath->str, &xml_search,
@@ -597,7 +597,7 @@ modify_ticket_state(gchar *ticket_id, cib_t *cib, pcmk_scheduler_t *scheduler)
         xml_top = create_xml_node(NULL, XML_CIB_TAG_STATUS);
         xml_obj = create_xml_node(xml_top, XML_CIB_TAG_TICKETS);
         ticket_state_xml = create_xml_node(xml_obj, XML_CIB_TAG_TICKET_STATE);
-        crm_xml_add(ticket_state_xml, XML_ATTR_ID, ticket_id);
+        crm_xml_add(ticket_state_xml, PCMK_XA_ID, ticket_id);
     }
 
     for(list_iter = attr_delete; list_iter; list_iter = list_iter->next) {

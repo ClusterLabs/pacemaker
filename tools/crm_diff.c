@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2023 the Pacemaker project contributors
+ * Copyright 2005-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -133,7 +133,7 @@ apply_patch(xmlNode *input, xmlNode *patch, gboolean as_cib)
 
         print_patch(output);
 
-        version = crm_element_value(output, XML_ATTR_CRM_VERSION);
+        version = crm_element_value(output, PCMK_XA_CRM_FEATURE_SET);
         buffer = calculate_xml_versioned_digest(output, FALSE, TRUE, version);
         crm_trace("Digest: %s", pcmk__s(buffer, "<null>\n"));
         free(buffer);
@@ -153,7 +153,7 @@ log_patch_cib_versions(xmlNode *patch)
 
     xml_patch_versions(patch, add, del);
     fmt = crm_element_value(patch, PCMK_XA_FORMAT);
-    digest = crm_element_value(patch, XML_ATTR_DIGEST);
+    digest = crm_element_value(patch, PCMK__XA_DIGEST);
 
     if (add[2] != del[2] || add[1] != del[1] || add[0] != del[0]) {
         crm_info("Patch: --- %d.%d.%d %s", del[0], del[1], del[2], fmt);
@@ -209,9 +209,9 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
                gboolean as_cib, gboolean no_version)
 {
     const char *vfields[] = {
-        XML_ATTR_GENERATION_ADMIN,
-        XML_ATTR_GENERATION,
-        XML_ATTR_NUMUPDATES,
+        PCMK_XA_ADMIN_EPOCH,
+        PCMK_XA_EPOCH,
+        PCMK_XA_NUM_UPDATES,
     };
 
     xmlNode *output = NULL;

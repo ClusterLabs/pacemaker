@@ -100,19 +100,19 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
 
     xpath = g_string_sized_new(1024);
     pcmk__g_strcat(xpath,
-                   xpath_base, "//*[@" XML_ATTR_ID "=\"", rsc, "\"]", NULL);
+                   xpath_base, "//*[@" PCMK_XA_ID "=\"", rsc, "\"]", NULL);
 
     if (attr_set_type != NULL) {
         pcmk__g_strcat(xpath, "/", attr_set_type, NULL);
         if (set_name != NULL) {
-            pcmk__g_strcat(xpath, "[@" XML_ATTR_ID "=\"", set_name, "\"]",
+            pcmk__g_strcat(xpath, "[@" PCMK_XA_ID "=\"", set_name, "\"]",
                            NULL);
         }
     }
 
     g_string_append(xpath, "//" XML_CIB_TAG_NVPAIR "[");
     if (attr_id != NULL) {
-        pcmk__g_strcat(xpath, "@" XML_ATTR_ID "=\"", attr_id, "\"", NULL);
+        pcmk__g_strcat(xpath, "@" PCMK_XA_ID "=\"", attr_id, "\"", NULL);
     }
 
     if (attr_name != NULL) {
@@ -182,7 +182,7 @@ find_matching_attr_resources_recursive(pcmk__output_t *out,
         }
     }
 
-    rc = find_resource_attr(out, cib, XML_ATTR_ID, lookup_id, attr_set_type,
+    rc = find_resource_attr(out, cib, PCMK_XA_ID, lookup_id, attr_set_type,
                             attr_set, attr_id, attr_name, &local_attr_id);
     /* Post-order traversal.
      * The root is always on the list and it is the last item. */
@@ -218,7 +218,7 @@ find_matching_attr_resources(pcmk__output_t *out, pcmk_resource_t *rsc,
         && (rsc->parent->variant == pcmk_rsc_variant_clone)) {
         int rc = pcmk_rc_ok;
         char *local_attr_id = NULL;
-        rc = find_resource_attr(out, cib, XML_ATTR_ID, rsc_id, attr_set_type,
+        rc = find_resource_attr(out, cib, PCMK_XA_ID, rsc_id, attr_set_type,
                                 attr_set, attr_id, attr_name, &local_attr_id);
         free(local_attr_id);
 
@@ -235,8 +235,9 @@ find_matching_attr_resources(pcmk__output_t *out, pcmk_resource_t *rsc,
 
         if (child->variant == pcmk_rsc_variant_primitive) {
             lookup_id = clone_strip(child->id); /* Could be a cloned group! */
-            rc = find_resource_attr(out, cib, XML_ATTR_ID, lookup_id, attr_set_type,
-                                    attr_set, attr_id, attr_name, &local_attr_id);
+            rc = find_resource_attr(out, cib, PCMK_XA_ID, lookup_id,
+                                    attr_set_type, attr_set, attr_id, attr_name,
+                                    &local_attr_id);
 
             if(rc == pcmk_rc_ok) {
                 rsc = child;
@@ -273,13 +274,13 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
     const char *top_id = pe__const_top_resource(rsc, false)->id;
 
     if ((attr_id == NULL) && !force) {
-        find_resource_attr(out, cib, XML_ATTR_ID, top_id, NULL, NULL, NULL,
+        find_resource_attr(out, cib, PCMK_XA_ID, top_id, NULL, NULL, NULL,
                            attr_name, NULL);
     }
 
     if (pcmk__str_eq(attr_set_type, XML_TAG_ATTR_SETS, pcmk__str_casei)) {
         if (!force) {
-            rc = find_resource_attr(out, cib, XML_ATTR_ID, top_id,
+            rc = find_resource_attr(out, cib, PCMK_XA_ID, top_id,
                                     XML_TAG_META_SETS, attr_set, attr_id,
                                     attr_name, &found_attr_id);
             if ((rc == pcmk_rc_ok) && !out->is_quiet(out)) {
@@ -341,7 +342,7 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
         rsc = (pcmk_resource_t *) iter->data;
 
         lookup_id = clone_strip(rsc->id); /* Could be a cloned group! */
-        rc = find_resource_attr(out, cib, XML_ATTR_ID, lookup_id, attr_set_type,
+        rc = find_resource_attr(out, cib, PCMK_XA_ID, lookup_id, attr_set_type,
                                 attr_set, attr_id, attr_name, &found_attr_id);
 
         switch (rc) {
@@ -364,10 +365,10 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                 }
 
                 xml_top = create_xml_node(NULL, (const char *) rsc->xml->name);
-                crm_xml_add(xml_top, XML_ATTR_ID, lookup_id);
+                crm_xml_add(xml_top, PCMK_XA_ID, lookup_id);
 
                 xml_obj = create_xml_node(xml_top, attr_set_type);
-                crm_xml_add(xml_obj, XML_ATTR_ID, rsc_attr_set);
+                crm_xml_add(xml_obj, PCMK_XA_ID, rsc_attr_set);
                 break;
 
             default:
@@ -455,7 +456,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
     GList/*<pcmk_resource_t*>*/ *resources = NULL;
 
     if ((attr_id == NULL) && !force) {
-        find_resource_attr(out, cib, XML_ATTR_ID,
+        find_resource_attr(out, cib, PCMK_XA_ID,
                            pe__const_top_resource(rsc, false)->id, NULL,
                            NULL, NULL, attr_name, NULL);
     }
@@ -490,7 +491,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
         rsc = (pcmk_resource_t *) iter->data;
 
         lookup_id = clone_strip(rsc->id);
-        rc = find_resource_attr(out, cib, XML_ATTR_ID, lookup_id, attr_set_type,
+        rc = find_resource_attr(out, cib, PCMK_XA_ID, lookup_id, attr_set_type,
                                 attr_set, attr_id, attr_name, &found_attr_id);
         switch (rc) {
             case pcmk_rc_ok:
@@ -1954,7 +1955,7 @@ set_agent_environment(GHashTable *params, int timeout_ms, int check_level,
     g_hash_table_insert(params, strdup("CRM_meta_timeout"),
                         crm_strdup_printf("%d", timeout_ms));
 
-    g_hash_table_insert(params, strdup(XML_ATTR_CRM_VERSION),
+    g_hash_table_insert(params, strdup(PCMK_XA_CRM_FEATURE_SET),
                         strdup(CRM_FEATURE_SET));
 
     if (check_level >= 0) {

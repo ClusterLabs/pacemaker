@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -107,24 +107,24 @@ find_attr(cib_t *cib, const char *section, const char *node_uuid,
             set_type = XML_TAG_TRANSIENT_NODEATTRS;
         }
         pcmk__g_strcat(xpath,
-                       "//", node_type, "[@" XML_ATTR_ID "='", node_uuid, "']",
+                       "//", node_type, "[@" PCMK_XA_ID "='", node_uuid, "']",
                        NULL);
     }
 
     pcmk__g_strcat(xpath, "//", set_type, NULL);
     if (set_name) {
-        pcmk__g_strcat(xpath, "[@" XML_ATTR_ID "='", set_name, "']", NULL);
+        pcmk__g_strcat(xpath, "[@" PCMK_XA_ID "='", set_name, "']", NULL);
     }
 
     g_string_append(xpath, "//nvpair");
 
     if (attr_id && attr_name) {
         pcmk__g_strcat(xpath,
-                       "[@" XML_ATTR_ID "='", attr_id, "' "
+                       "[@" PCMK_XA_ID "='", attr_id, "' "
                        "and @" XML_ATTR_NAME "='", attr_name, "']", NULL);
 
     } else if (attr_id) {
-        pcmk__g_strcat(xpath, "[@" XML_ATTR_ID "='", attr_id, "']", NULL);
+        pcmk__g_strcat(xpath, "[@" PCMK_XA_ID "='", attr_id, "']", NULL);
 
     } else if (attr_name) {
         pcmk__g_strcat(xpath, "[@" XML_ATTR_NAME "='", attr_name, "']", NULL);
@@ -195,7 +195,8 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
             free_xml(xml_search);
             return ENOTUNIQ;
         } else {
-            pcmk__str_update(&local_attr_id, crm_element_value(xml_search, XML_ATTR_ID));
+            pcmk__str_update(&local_attr_id,
+                             crm_element_value(xml_search, PCMK_XA_ID));
             attr_id = local_attr_id;
             free_xml(xml_search);
             goto do_modify;
@@ -229,7 +230,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
                 xml_top = create_xml_node(xml_obj, XML_CIB_TAG_NODES);
                 xml_obj = create_xml_node(xml_top, XML_CIB_TAG_NODE);
                 crm_xml_add(xml_obj, XML_ATTR_TYPE, "remote");
-                crm_xml_add(xml_obj, XML_ATTR_ID, node_uuid);
+                crm_xml_add(xml_obj, PCMK_XA_ID, node_uuid);
                 crm_xml_add(xml_obj, XML_ATTR_UNAME, node_uuid);
             } else {
                 tag = XML_CIB_TAG_NODE;
@@ -242,7 +243,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
             }
 
             xml_top = create_xml_node(xml_obj, XML_CIB_TAG_STATE);
-            crm_xml_add(xml_top, XML_ATTR_ID, node_uuid);
+            crm_xml_add(xml_top, PCMK_XA_ID, node_uuid);
             xml_obj = xml_top;
 
         } else {
@@ -286,7 +287,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
         crm_trace("Creating %s/%s", section, tag);
         if (tag != NULL) {
             xml_obj = create_xml_node(xml_obj, tag);
-            crm_xml_add(xml_obj, XML_ATTR_ID, node_uuid);
+            crm_xml_add(xml_obj, PCMK_XA_ID, node_uuid);
             if (xml_top == NULL) {
                 xml_top = xml_obj;
             }
@@ -305,7 +306,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
         } else {
             xml_obj = create_xml_node(xml_obj, XML_TAG_ATTR_SETS);
         }
-        crm_xml_add(xml_obj, XML_ATTR_ID, set_name);
+        crm_xml_add(xml_obj, PCMK_XA_ID, set_name);
 
         if (xml_top == NULL) {
             xml_top = xml_obj;
@@ -387,7 +388,8 @@ cib__delete_node_attr(pcmk__output_t *out, cib_t *cib, int options, const char *
             free_xml(xml_search);
             return rc;
         } else {
-            pcmk__str_update(&local_attr_id, crm_element_value(xml_search, XML_ATTR_ID));
+            pcmk__str_update(&local_attr_id,
+                             crm_element_value(xml_search, PCMK_XA_ID));
             attr_id = local_attr_id;
             free_xml(xml_search);
         }
@@ -614,7 +616,7 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
         "/" XML_CIB_TAG_RESOURCE "/" XML_TAG_META_SETS "/" XML_CIB_TAG_NVPAIR \
         "[@name='" XML_RSC_ATTR_REMOTE_NODE "'][translate(@value,'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']" \
     "|/" XML_TAG_CIB "/" XML_CIB_TAG_STATUS "/" XML_CIB_TAG_STATE \
-        "[@" XML_NODE_IS_REMOTE "='true'][translate(@" XML_ATTR_ID ",'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']"
+        "[@" XML_NODE_IS_REMOTE "='true'][translate(@" PCMK_XA_ID ",'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']"
 
 int
 query_node_uuid(cib_t * the_cib, const char *uname, char **uuid, int *is_remote_node)

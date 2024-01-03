@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2022 the Pacemaker project contributors
+ * Copyright 2021-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -24,29 +24,29 @@ empty_input(void **state) {
 
 static void
 no_quotes(void **state) {
-    const char *xpath = "/some/xpath/lrm[@" XML_ATTR_ID "=xyz]";
+    const char *xpath = "/some/xpath/lrm[@" PCMK_XA_ID "=xyz]";
     pcmk__assert_asserts(pcmk__xpath_node_id(xpath, "lrm"));
 }
 
 static void
 not_present(void **state) {
-    const char *xpath = "/some/xpath/string[@" XML_ATTR_ID "='xyz']";
+    const char *xpath = "/some/xpath/string[@" PCMK_XA_ID "='xyz']";
     assert_null(pcmk__xpath_node_id(xpath, "lrm"));
 
-    xpath = "/some/xpath/containing[@" XML_ATTR_ID "='lrm']";
+    xpath = "/some/xpath/containing[@" PCMK_XA_ID "='lrm']";
     assert_null(pcmk__xpath_node_id(xpath, "lrm"));
 }
 
 static void
 present(void **state) {
     char *s = NULL;
-    const char *xpath = "/some/xpath/containing/lrm[@" XML_ATTR_ID "='xyz']";
+    const char *xpath = "/some/xpath/containing/lrm[@" PCMK_XA_ID "='xyz']";
 
     s = pcmk__xpath_node_id(xpath, "lrm");
     assert_int_equal(strcmp(s, "xyz"), 0);
     free(s);
 
-    xpath = "/some/other/lrm[@" XML_ATTR_ID "='xyz']/xpath";
+    xpath = "/some/other/lrm[@" PCMK_XA_ID "='xyz']/xpath";
     s = pcmk__xpath_node_id(xpath, "lrm");
     assert_int_equal(strcmp(s, "xyz"), 0);
     free(s);

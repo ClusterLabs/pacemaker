@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -249,7 +249,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
     offer = create_dc_message(CRM_OP_JOIN_OFFER, member->uname);
 
     // Advertise our feature set so the joining node can bail if not compatible
-    crm_xml_add(offer, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+    crm_xml_add(offer, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
 
     crm_info("Sending join-%d offer to %s", current_join_id, member->uname);
     send_cluster_message(member, crm_msg_crmd, offer, TRUE);
@@ -389,7 +389,7 @@ do_dc_join_filter_offer(long long action,
     const char *join_from = crm_element_value(join_ack->msg, F_CRM_HOST_FROM);
     const char *ref = crm_element_value(join_ack->msg, F_CRM_REFERENCE);
     const char *join_version = crm_element_value(join_ack->msg,
-                                                 XML_ATTR_CRM_VERSION);
+                                                 PCMK_XA_CRM_FEATURE_SET);
     crm_node_t *join_node = NULL;
 
     if (join_from == NULL) {
@@ -411,9 +411,9 @@ do_dc_join_filter_offer(long long action,
         int lpc = 0;
 
         const char *attributes[] = {
-            XML_ATTR_GENERATION_ADMIN,
-            XML_ATTR_GENERATION,
-            XML_ATTR_NUMUPDATES,
+            PCMK_XA_ADMIN_EPOCH,
+            PCMK_XA_EPOCH,
+            PCMK_XA_NUM_UPDATES,
         };
 
         for (lpc = 0; cmp == 0 && lpc < PCMK__NELEM(attributes); lpc++) {
@@ -463,7 +463,7 @@ do_dc_join_filter_offer(long long action,
 
     } else if (max_generation_xml == NULL) {
         const char *validation = crm_element_value(generation,
-                                                   XML_ATTR_VALIDATION);
+                                                   PCMK_XA_VALIDATE_WITH);
 
         if (get_schema_version(validation) < 0) {
             crm_err("Rejecting join-%d request from %s (with first CIB "
@@ -485,7 +485,7 @@ do_dc_join_filter_offer(long long action,
                    && pcmk__str_eq(join_from, controld_globals.our_nodename,
                                    pcmk__str_casei))) {
         const char *validation = crm_element_value(generation,
-                                                   XML_ATTR_VALIDATION);
+                                                   PCMK_XA_VALIDATE_WITH);
 
         if (get_schema_version(validation) < 0) {
             crm_err("Rejecting join-%d request from %s (with better CIB "
@@ -855,7 +855,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
      */
     crm_trace("Updating node name and UUID in CIB for %s", join_to);
     tmp1 = create_xml_node(NULL, XML_CIB_TAG_NODE);
-    crm_xml_add(tmp1, XML_ATTR_ID, crm_peer_uuid(join_node));
+    crm_xml_add(tmp1, PCMK_XA_ID, crm_peer_uuid(join_node));
     crm_xml_add(tmp1, XML_ATTR_UNAME, join_to);
     fsa_cib_anon_update(XML_CIB_TAG_NODES, tmp1);
     free_xml(tmp1);
@@ -911,7 +911,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 
                 remote = create_xml_node(remotes, XML_CIB_TAG_NODE);
                 pcmk__xe_set_props(remote,
-                                   XML_ATTR_ID, node->uname,
+                                   PCMK_XA_ID, node->uname,
                                    XML_CIB_TAG_STATE, node->state,
                                    PCMK__XA_CONN_HOST, node->conn_host,
                                    NULL);

@@ -268,7 +268,7 @@ group_print_xml(pcmk_resource_t *rsc, const char *pre_text, long options,
     GList *gIter = rsc->children;
     char *child_text = crm_strdup_printf("%s     ", pre_text);
 
-    status_print("%s<group " XML_ATTR_ID "=\"%s\" ", pre_text, rsc->id);
+    status_print("%s<group " PCMK_XA_ID "=\"%s\" ", pre_text, rsc->id);
     status_print("number_resources=\"%d\" ", g_list_length(rsc->children));
     status_print(">\n");
 
@@ -374,12 +374,12 @@ pe__group_xml(pcmk__output_t *out, va_list args)
             const char *disabled_s = pcmk__btoa(pe__resource_is_disabled(rsc));
 
             rc = pe__name_and_nvpairs_xml(out, true, "group", 5,
-                                          XML_ATTR_ID, rsc->id,
+                                          PCMK_XA_ID, rsc->id,
                                           "number_resources", count,
                                           "maintenance", maint_s,
                                           "managed", managed_s,
                                           "disabled", disabled_s,
-                                          "description", desc);
+                                          PCMK_XA_DESCRIPTION, desc);
             free(count);
             CRM_ASSERT(rc == pcmk_rc_ok);
         }

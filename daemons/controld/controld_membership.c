@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -138,7 +138,7 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
         pcmk__xe_set_bool_attr(node_state, XML_NODE_IS_REMOTE, true);
     }
 
-    if (crm_xml_add(node_state, XML_ATTR_ID, crm_peer_uuid(node)) == NULL) {
+    if (crm_xml_add(node_state, PCMK_XA_ID, crm_peer_uuid(node)) == NULL) {
         crm_info("Node update for %s cancelled: no ID", node->uname);
         free_xml(node_state);
         return NULL;
@@ -188,7 +188,7 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
         }
     }
 
-    crm_xml_add(node_state, XML_ATTR_ORIGIN, source);
+    crm_xml_add(node_state, PCMK_XA_CRM_DEBUG_ORIGIN, source);
 
     return node_state;
 }
@@ -240,7 +240,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
             continue;
         }
 
-        node_uuid = crm_element_value(node_xml, XML_ATTR_ID);
+        node_uuid = crm_element_value(node_xml, PCMK_XA_ID);
         node_uname = crm_element_value(node_xml, XML_ATTR_UNAME);
 
         if (node_uuid == NULL || node_uname == NULL) {
@@ -273,7 +273,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
                                       remove_conflicting_node_callback);
 
             node_state_xml = create_xml_node(NULL, XML_CIB_TAG_STATE);
-            crm_xml_add(node_state_xml, XML_ATTR_ID, node_uuid);
+            crm_xml_add(node_state_xml, PCMK_XA_ID, node_uuid);
             crm_xml_add(node_state_xml, XML_ATTR_UNAME, node_uname);
 
             delete_call_id = cib_conn->cmds->remove(cib_conn,
@@ -338,7 +338,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
 
                 /* We need both to be valid */
                 new_node = create_xml_node(node_list, XML_CIB_TAG_NODE);
-                crm_xml_add(new_node, XML_ATTR_ID, node->uuid);
+                crm_xml_add(new_node, PCMK_XA_ID, node->uuid);
                 crm_xml_add(new_node, XML_ATTR_UNAME, node->uname);
 
                 /* Search and remove unknown nodes with the conflicting uname from CIB */
@@ -346,7 +346,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
                                "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION
                                "/" XML_CIB_TAG_NODES "/" XML_CIB_TAG_NODE
                                "[@" XML_ATTR_UNAME "='", node->uname, "']"
-                               "[@" XML_ATTR_ID "!='", node->uuid, "']", NULL);
+                               "[@" PCMK_XA_ID "!='", node->uuid, "']", NULL);
 
                 call_id = cib_conn->cmds->query(cib_conn,
                                                 (const char *) xpath->str,
@@ -430,7 +430,7 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
         xmlNode *update = NULL;
 
         update = create_xml_node(NULL, XML_TAG_CIB);
-        crm_xml_add_int(update, XML_ATTR_HAVE_QUORUM, quorum);
+        crm_xml_add_int(update, PCMK_XA_HAVE_QUORUM, quorum);
         crm_xml_add(update, XML_ATTR_DC_UUID, controld_globals.our_uuid);
 
         crm_debug("Updating quorum status to %s", pcmk__btoa(quorum));

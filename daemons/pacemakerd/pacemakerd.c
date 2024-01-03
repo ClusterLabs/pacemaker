@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2023 the Pacemaker project contributors
+ * Copyright 2010-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -65,7 +65,7 @@ pacemakerd_features_xml(pcmk__output_t *out, va_list args) {
     gchar **feature_list = g_strsplit(CRM_FEATURES, " ", 0);
 
     pcmk__output_xml_create_parent(out, "pacemakerd",
-                                   "version", PACEMAKER_VERSION,
+                                   PCMK_XA_VERSION, PACEMAKER_VERSION,
                                    "build", BUILD_VERSION,
                                    "feature_set", CRM_FEATURE_SET,
                                    NULL);

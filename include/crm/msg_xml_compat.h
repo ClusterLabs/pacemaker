@@ -79,7 +79,7 @@ extern "C" {
 //! \deprecated Do not use (will be removed in a future release)
 #define XML_TAG_OP_VER_META "op_versioned_meta"
 
-//! \deprecated Use \p XML_ATTR_ID instead
+//! \deprecated Use \p PCMK_XA_ID instead
 #define XML_ATTR_UUID "id"
 
 //! \deprecated Do not use (will be removed in a future release)
@@ -138,6 +138,51 @@ extern "C" {
 
 //! \deprecated Use \c PCMK_OPT_SHUTDOWN_LOCK_LIMIT instead
 #define XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT PCMK_OPT_SHUTDOWN_LOCK_LIMIT
+
+//! \deprecated Use \c PCMK_XA_CRM_FEATURE_SET instead
+#define XML_ATTR_CRM_VERSION PCMK_XA_CRM_FEATURE_SET
+
+//! \deprecated Do not use
+#define XML_ATTR_DIGEST "digest"
+
+//! \deprecated Use \c PCMK_XA_VALIDATE_WITH instead
+#define XML_ATTR_VALIDATION PCMK_XA_VALIDATE_WITH
+
+//! \deprecated Use \c PCMK_XA_NO_QUORUM_PANIC instead
+#define XML_ATTR_QUORUM_PANIC PCMK_XA_NO_QUORUM_PANIC
+
+//! \deprecated Use \c PCMK_XA_HAVE_QUORUM instead
+#define XML_ATTR_HAVE_QUORUM PCMK_XA_HAVE_QUORUM
+
+//! \deprecated Use \c PCMK_XA_EPOCH instead
+#define XML_ATTR_GENERATION PCMK_XA_EPOCH
+
+//! \deprecated Use \c PCMK_XA_ADMIN_EPOCH instead
+#define XML_ATTR_GENERATION_ADMIN PCMK_XA_ADMIN_EPOCH
+
+//! \deprecated Use \c PCMK_XA_NUM_UPDATES instead
+#define XML_ATTR_NUMUPDATES PCMK_XA_NUM_UPDATES
+
+//! \deprecated Use \c PCMK_XA_CRM_DEBUG_ORIGIN instead
+#define XML_ATTR_ORIGIN PCMK_XA_CRM_DEBUG_ORIGIN
+
+//! \deprecated Use \c PCMK_XA_CRM_TIMESTAMP instead
+#define XML_ATTR_TSTAMP PCMK_XA_CRM_TIMESTAMP
+
+//! \deprecated Use \c PCMK_XA_CIB_LAST_WRITTEN instead
+#define XML_CIB_ATTR_WRITTEN PCMK_XA_CIB_LAST_WRITTEN
+
+//! \deprecated Use \c PCMK_XA_VERSION instead
+#define XML_ATTR_VERSION PCMK_XA_VERSION
+
+//! \deprecated Use \c PCMK_XA_DESCRIPTION instead
+#define XML_ATTR_DESC PCMK_XA_DESCRIPTION
+
+//! \deprecated Use \c PCMK_XA_ID instead
+#define XML_ATTR_ID PCMK_XA_ID
+
+//! \deprecated Use \c PCMK_XA_ID instead
+#define XML_FAILCIB_ATTR_ID PCMK_XA_ID
 
 #ifdef __cplusplus
 }

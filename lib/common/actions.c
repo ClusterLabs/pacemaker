@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -325,8 +325,8 @@ should_filter_for_digest(xmlAttrPtr a, void *user_data)
         return true;
     }
     return pcmk__str_any_of((const char *) a->name,
-                            XML_ATTR_ID,
-                            XML_ATTR_CRM_VERSION,
+                            PCMK_XA_ID,
+                            PCMK_XA_CRM_FEATURE_SET,
                             XML_LRM_ATTR_OP_DIGEST,
                             XML_LRM_ATTR_TARGET,
                             XML_LRM_ATTR_TARGET_UUID,

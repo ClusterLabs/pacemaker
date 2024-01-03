@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -187,9 +187,9 @@ xml_repair_v1_diff(xmlNode *last, xmlNode *next, xmlNode *local_diff,
     const char *tag = NULL;
 
     const char *vfields[] = {
-        XML_ATTR_GENERATION_ADMIN,
-        XML_ATTR_GENERATION,
-        XML_ATTR_NUMUPDATES,
+        PCMK_XA_ADMIN_EPOCH,
+        PCMK_XA_EPOCH,
+        PCMK_XA_NUM_UPDATES,
     };
 
     if (local_diff == NULL) {
@@ -271,9 +271,9 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
     xmlNode *version = NULL;
     xmlNode *patchset = NULL;
     const char *vfields[] = {
-        XML_ATTR_GENERATION_ADMIN,
-        XML_ATTR_GENERATION,
-        XML_ATTR_NUMUPDATES,
+        PCMK_XA_ADMIN_EPOCH,
+        PCMK_XA_EPOCH,
+        PCMK_XA_NUM_UPDATES,
     };
 
     CRM_ASSERT(target);
@@ -331,7 +331,7 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target,
     int counter = 0;
     bool config = FALSE;
     xmlNode *patch = NULL;
-    const char *version = crm_element_value(source, XML_ATTR_CRM_VERSION);
+    const char *version = crm_element_value(source, PCMK_XA_CRM_FEATURE_SET);
 
     xml_acl_disable(target);
     if (!xml_document_dirty(target)) {
@@ -346,16 +346,16 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target,
 
     if (manage_version && config) {
         crm_trace("Config changed %d", format);
-        crm_xml_add(target, XML_ATTR_NUMUPDATES, "0");
+        crm_xml_add(target, PCMK_XA_NUM_UPDATES, "0");
 
-        crm_element_value_int(target, XML_ATTR_GENERATION, &counter);
-        crm_xml_add_int(target, XML_ATTR_GENERATION, counter+1);
+        crm_element_value_int(target, PCMK_XA_EPOCH, &counter);
+        crm_xml_add_int(target, PCMK_XA_EPOCH, counter+1);
 
     } else if (manage_version) {
-        crm_element_value_int(target, XML_ATTR_NUMUPDATES, &counter);
+        crm_element_value_int(target, PCMK_XA_NUM_UPDATES, &counter);
         crm_trace("Status changed %d - %d %s", format, counter,
-                  crm_element_value(source, XML_ATTR_NUMUPDATES));
-        crm_xml_add_int(target, XML_ATTR_NUMUPDATES, (counter + 1));
+                  crm_element_value(source, PCMK_XA_NUM_UPDATES));
+        crm_xml_add_int(target, PCMK_XA_NUM_UPDATES, (counter + 1));
     }
 
     if (format == 0) {
@@ -403,20 +403,20 @@ patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
         return;
     }
 
-    version = crm_element_value(source, XML_ATTR_CRM_VERSION);
+    version = crm_element_value(source, PCMK_XA_CRM_FEATURE_SET);
     digest = calculate_xml_versioned_digest(target, FALSE, TRUE, version);
 
-    crm_xml_add(patch, XML_ATTR_DIGEST, digest);
+    crm_xml_add(patch, PCMK__XA_DIGEST, digest);
     free(digest);
 
     return;
 }
 
-// Return true if attribute name is not "id"
+// Return true if attribute name is not \c PCMK_XML_ID
 static bool
 not_id(xmlAttrPtr attr, void *user_data)
 {
-    return strcmp((const char *) attr->name, XML_ATTR_ID) != 0;
+    return strcmp((const char *) attr->name, PCMK_XA_ID) != 0;
 }
 
 // Apply the removals section of an v1 patchset to an XML node
@@ -443,7 +443,7 @@ process_v1_removals(xmlNode *target, xmlNode *patch)
     CRM_CHECK(pcmk__str_eq(ID(target), ID(patch), pcmk__str_casei), return);
 
     // Check for XML_DIFF_MARKER in a child
-    id = crm_element_value_copy(target, XML_ATTR_ID);
+    id = crm_element_value_copy(target, PCMK_XA_ID);
     value = crm_element_value(patch, XML_DIFF_MARKER);
     if ((value != NULL) && (strcmp(value, "removed:top") == 0)) {
         crm_trace("We are the root of the deletion: %s.id=%s",
@@ -576,9 +576,9 @@ xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
     xmlNode *tmp = NULL;
 
     const char *vfields[] = {
-        XML_ATTR_GENERATION_ADMIN,
-        XML_ATTR_GENERATION,
-        XML_ATTR_NUMUPDATES,
+        PCMK_XA_ADMIN_EPOCH,
+        PCMK_XA_EPOCH,
+        PCMK_XA_NUM_UPDATES,
     };
 
 
@@ -628,9 +628,9 @@ xml_patch_version_check(const xmlNode *xml, const xmlNode *patchset)
     int del[] = { 0, 0, 0 };
 
     const char *vfields[] = {
-        XML_ATTR_GENERATION_ADMIN,
-        XML_ATTR_GENERATION,
-        XML_ATTR_NUMUPDATES,
+        PCMK_XA_ADMIN_EPOCH,
+        PCMK_XA_EPOCH,
+        PCMK_XA_NUM_UPDATES,
     };
 
     for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
@@ -828,7 +828,7 @@ search_v2_xpath(const xmlNode *top, const char *key, int target_position)
         rc = sscanf(current, "/%[^/]%s", section, remainder);
         if (rc > 0) {
             // Separate FIRST_COMPONENT into TAG[@id='ID']
-            int f = sscanf(section, "%[^[][@" XML_ATTR_ID "='%[^']", tag, id);
+            int f = sscanf(section, "%[^[][@" PCMK_XA_ID "='%[^']", tag, id);
             int current_position = -1;
 
             /* The target position is for the final component tag, so only use
@@ -1116,7 +1116,7 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
         }
     }
 
-    digest = crm_element_value(patchset, XML_ATTR_DIGEST);
+    digest = crm_element_value(patchset, PCMK__XA_DIGEST);
     if (digest != NULL) {
         /* Make original XML available for logging in case result doesn't have
          * expected digest
@@ -1141,7 +1141,7 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
 
     if ((rc == pcmk_ok) && (digest != NULL)) {
         char *new_digest = NULL;
-        char *version = crm_element_value_copy(xml, XML_ATTR_CRM_VERSION);
+        char *version = crm_element_value_copy(xml, PCMK_XA_CRM_FEATURE_SET);
 
         new_digest = calculate_xml_versioned_digest(xml, FALSE, TRUE, version);
         if (!pcmk__str_eq(new_digest, digest, pcmk__str_casei)) {
@@ -1190,7 +1190,7 @@ diff_xml_object(xmlNode *old, xmlNode *new, gboolean suppress)
     xmlNode *removed = create_xml_node(diff, XML_TAG_DIFF_REMOVED);
     xmlNode *added = create_xml_node(diff, XML_TAG_DIFF_ADDED);
 
-    crm_xml_add(diff, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+    crm_xml_add(diff, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
 
     tmp1 = subtract_xml_object(removed, old, new, FALSE, NULL, "removed:top");
     if (suppress && (tmp1 != NULL) && can_prune_leaf(tmp1)) {
@@ -1263,7 +1263,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
     if (right == NULL) {
         xmlNode *deleted = NULL;
 
-        crm_trace("Processing <%s " XML_ATTR_ID "=%s> (complete copy)",
+        crm_trace("Processing <%s " PCMK_XA_ID "=%s> (complete copy)",
                   name, id);
         deleted = add_node_copy(parent, left);
         crm_xml_add(deleted, XML_DIFF_MARKER, marker);
@@ -1324,9 +1324,9 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
         xmlAttrPtr right_attr = NULL;
         xml_node_private_t *nodepriv = NULL;
 
-        if (strcmp(prop_name, XML_ATTR_ID) == 0) {
+        if (strcmp(prop_name, PCMK_XA_ID) == 0) {
             // id already obtained when present ~ this case, so just reuse
-            xmlSetProp(diff, (pcmkXmlStr) XML_ATTR_ID, (pcmkXmlStr) id);
+            xmlSetProp(diff, (pcmkXmlStr) PCMK_XA_ID, (pcmkXmlStr) id);
             continue;
         }
 
@@ -1375,7 +1375,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
                     xmlAttrPtr pIter = NULL;
 
                     crm_trace("Changes detected to %s in "
-                              "<%s " XML_ATTR_ID "=%s>", prop_name, name, id);
+                              "<%s " PCMK_XA_ID "=%s>", prop_name, name, id);
                     for (pIter = pcmk__xe_first_attr(left); pIter != NULL;
                          pIter = pIter->next) {
                         const char *p_name = (const char *) pIter->name;
@@ -1388,7 +1388,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
 
                 } else {
                     crm_trace("Changes detected to %s (%s -> %s) in "
-                              "<%s " XML_ATTR_ID "=%s>",
+                              "<%s " PCMK_XA_ID "=%s>",
                               prop_name, left_value, right_val, name, id);
                     crm_xml_add(diff, prop_name, left_value);
                 }
@@ -1401,7 +1401,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
         return NULL;
 
     } else if (!full && (id != NULL)) {
-        crm_xml_add(diff, XML_ATTR_ID, id);
+        crm_xml_add(diff, PCMK_XA_ID, id);
     }
   done:
     return diff;
@@ -1417,8 +1417,8 @@ apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
 {
     gboolean result = TRUE;
     int root_nodes_seen = 0;
-    const char *digest = crm_element_value(diff, XML_ATTR_DIGEST);
-    const char *version = crm_element_value(diff, XML_ATTR_CRM_VERSION);
+    const char *digest = crm_element_value(diff, PCMK__XA_DIGEST);
+    const char *version = crm_element_value(diff, PCMK_XA_CRM_FEATURE_SET);
 
     xmlNode *child_diff = NULL;
     xmlNode *added = find_xml_node(diff, XML_TAG_DIFF_ADDED, FALSE);

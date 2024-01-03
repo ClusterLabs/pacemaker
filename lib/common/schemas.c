@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -772,7 +772,7 @@ pcmk__validate_xml(xmlNode *xml_blob, const char *validation, xmlRelaxNGValidity
     CRM_CHECK((xml_blob != NULL) && (xml_blob->doc != NULL), return FALSE);
 
     if (validation == NULL) {
-        validation = crm_element_value(xml_blob, XML_ATTR_VALIDATION);
+        validation = crm_element_value(xml_blob, PCMK_XA_VALIDATE_WITH);
     }
 
     if (validation == NULL) {
@@ -783,7 +783,7 @@ pcmk__validate_xml(xmlNode *xml_blob, const char *validation, xmlRelaxNGValidity
 
             if (validate_with(xml_blob, schema, NULL, NULL)) {
                 valid = TRUE;
-                crm_xml_add(xml_blob, XML_ATTR_VALIDATION, schema->name);
+                crm_xml_add(xml_blob, PCMK_XA_VALIDATE_WITH, schema->name);
                 crm_info("XML validated against %s", schema->name);
             }
         }
@@ -1093,7 +1093,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
               return -EINVAL);
 
     xml = *xml_blob;
-    value = crm_element_value_copy(xml, XML_ATTR_VALIDATION);
+    value = crm_element_value_copy(xml, PCMK_XA_VALIDATE_WITH);
 
     if (value != NULL) {
         match = get_schema_version(value);
@@ -1225,7 +1225,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
         crm_info("%s the configuration from %s to %s",
                    transform?"Transformed":"Upgraded", pcmk__s(value, "<none>"),
                    best_schema->name);
-        crm_xml_add(xml, XML_ATTR_VALIDATION, best_schema->name);
+        crm_xml_add(xml, PCMK_XA_VALIDATE_WITH, best_schema->name);
     }
 
     *xml_blob = xml;
@@ -1237,7 +1237,7 @@ gboolean
 cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
 {
     gboolean rc = TRUE;
-    const char *value = crm_element_value(*xml, XML_ATTR_VALIDATION);
+    const char *value = crm_element_value(*xml, PCMK_XA_VALIDATE_WITH);
     char *const orig_value = strdup(value == NULL ? "(none)" : value);
 
     int version = get_schema_version(value);
@@ -1251,7 +1251,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
         converted = copy_xml(*xml);
         update_validation(&converted, &version, 0, TRUE, to_logs);
 
-        value = crm_element_value(converted, XML_ATTR_VALIDATION);
+        value = crm_element_value(converted, PCMK_XA_VALIDATE_WITH);
         if (version < min_version) {
             // Updated configuration schema is still not acceptable
 
@@ -1528,7 +1528,7 @@ pcmk__build_schema_xml_node(xmlNode *parent, const char *name, GList **already_i
     /* First, create an unattached node to add all the schema files to as children. */
     xmlNode *schema_node = create_xml_node(NULL, PCMK__XA_SCHEMA);
 
-    crm_xml_add(schema_node, XML_ATTR_VERSION, name);
+    crm_xml_add(schema_node, PCMK_XA_VERSION, name);
     add_schema_file_to_xml(schema_node, name, already_included);
 
     /* Then, if we actually added any children, attach the node to parent.  If

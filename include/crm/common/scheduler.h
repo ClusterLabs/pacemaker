@@ -68,7 +68,7 @@ enum pcmk_scheduler_flags {
 
     // These flags are dynamically determined conditions
 
-    //! Whether partition has quorum (via have-quorum property)
+    //! Whether partition has quorum (via \c PCMK_XA_HAVE_QUORUM attribute)
     pcmk_sched_quorate                  = (1ULL << 0),
 
     //! Whether cluster is symmetric (via symmetric-cluster property)

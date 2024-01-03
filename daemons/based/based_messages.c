@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -142,8 +142,8 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
     crm_trace("Processing \"%s\" event %s from %s", op, seq, host);
     *answer = create_xml_node(NULL, XML_CRM_TAG_PING);
 
-    crm_xml_add(*answer, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
-    crm_xml_add(*answer, XML_ATTR_DIGEST, digest);
+    crm_xml_add(*answer, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
+    crm_xml_add(*answer, PCMK__XA_DIGEST, digest);
     crm_xml_add(*answer, F_CIB_PING_ID, seq);
 
     pcmk__if_tracing(
@@ -164,9 +164,9 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
 
     crm_info("Reporting our current digest to %s: %s for %s.%s.%s",
              host, digest,
-             crm_element_value(existing_cib, XML_ATTR_GENERATION_ADMIN),
-             crm_element_value(existing_cib, XML_ATTR_GENERATION),
-             crm_element_value(existing_cib, XML_ATTR_NUMUPDATES));
+             crm_element_value(existing_cib, PCMK_XA_ADMIN_EPOCH),
+             crm_element_value(existing_cib, PCMK_XA_EPOCH),
+             crm_element_value(existing_cib, PCMK_XA_NUM_UPDATES));
 
     free(digest);
 
@@ -202,7 +202,8 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
         int current_version = 0;
         xmlNode *scratch = copy_xml(existing_cib);
         const char *host = crm_element_value(req, F_ORIG);
-        const char *value = crm_element_value(existing_cib, XML_ATTR_VALIDATION);
+        const char *value = crm_element_value(existing_cib,
+                                              PCMK_XA_VALIDATE_WITH);
         const char *client_id = crm_element_value(req, F_CIB_CLIENTID);
         const char *call_opts = crm_element_value(req, F_CIB_CALLOPTS);
         const char *call_id = crm_element_value(req, F_CIB_CALLID);
@@ -437,9 +438,9 @@ sync_our_cib(xmlNode * request, gboolean all)
     crm_xml_add(replace_request, "original_" F_CIB_OPERATION, op);
     pcmk__xe_set_bool_attr(replace_request, F_CIB_GLOBAL_UPDATE, true);
 
-    crm_xml_add(replace_request, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+    crm_xml_add(replace_request, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
     digest = calculate_xml_versioned_digest(the_cib, FALSE, TRUE, CRM_FEATURE_SET);
-    crm_xml_add(replace_request, XML_ATTR_DIGEST, digest);
+    crm_xml_add(replace_request, PCMK__XA_DIGEST, digest);
 
     add_message_xml(replace_request, F_CIB_CALLDATA, the_cib);
 
@@ -497,7 +498,7 @@ cib_process_schemas(const char *op, int options, const char *section, xmlNode *r
         return -EPROTO;
     }
 
-    after_ver = crm_element_value(data, XML_ATTR_VERSION);
+    after_ver = crm_element_value(data, PCMK_XA_VERSION);
     if (after_ver == NULL) {
         crm_warn("No version specified in request");
         return -EPROTO;

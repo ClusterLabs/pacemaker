@@ -48,7 +48,20 @@ extern "C" {
  * XML attributes
  */
 
+#define PCMK_XA_ADMIN_EPOCH                 "admin_epoch"
+#define PCMK_XA_CIB_LAST_WRITTEN            "cib-last-written"
+#define PCMK_XA_CRM_DEBUG_ORIGIN            "crm-debug-origin"
+#define PCMK_XA_CRM_FEATURE_SET             "crm_feature_set"
+#define PCMK_XA_CRM_TIMESTAMP               "crm-timestamp"
+#define PCMK_XA_DESCRIPTION                 "description"
+#define PCMK_XA_EPOCH                       "epoch"
 #define PCMK_XA_FORMAT                      "format"
+#define PCMK_XA_HAVE_QUORUM                 "have-quorum"
+#define PCMK_XA_ID                          "id"
+#define PCMK_XA_NO_QUORUM_PANIC             "no-quorum-panic"
+#define PCMK_XA_NUM_UPDATES                 "num_updates"
+#define PCMK_XA_VALIDATE_WITH               "validate-with"
+#define PCMK_XA_VERSION                     "version"
 
 /* These have been deprecated as CIB <clone> element attributes (aliases for
  * "promoted-max" and "promoted-node-max") since 2.0.0.
@@ -117,7 +130,7 @@ extern "C" {
 #  define F_CRM_SYS_FROM		"crm_sys_from"
 #  define F_CRM_HOST_FROM		F_ORIG
 #  define F_CRM_REFERENCE		XML_ATTR_REFERENCE
-#  define F_CRM_VERSION			XML_ATTR_VERSION
+#  define F_CRM_VERSION			PCMK_XA_VERSION
 #  define F_CRM_ORIGIN			"origin"
 #  define F_CRM_USER			"crm_user"
 #  define F_CRM_JOIN_ID			"join_id"
@@ -137,22 +150,7 @@ extern "C" {
 #  define XML_TAG_CIB			"cib"
 #  define XML_TAG_FAILED		"failed"
 
-#  define XML_ATTR_CRM_VERSION		"crm_feature_set"
-#  define XML_ATTR_DIGEST		"digest"
-#  define XML_ATTR_VALIDATION		"validate-with"
-
-#  define XML_ATTR_QUORUM_PANIC		"no-quorum-panic"
-#  define XML_ATTR_HAVE_QUORUM		"have-quorum"
-#  define XML_ATTR_GENERATION		"epoch"
-#  define XML_ATTR_GENERATION_ADMIN	"admin_epoch"
-#  define XML_ATTR_NUMUPDATES		"num_updates"
 #  define XML_ATTR_TIMEOUT		"timeout"
-#  define XML_ATTR_ORIGIN		"crm-debug-origin"
-#  define XML_ATTR_TSTAMP		"crm-timestamp"
-#  define XML_CIB_ATTR_WRITTEN		"cib-last-written"
-#  define XML_ATTR_VERSION		"version"
-#  define XML_ATTR_DESC			"description"
-#  define XML_ATTR_ID			"id"
 #  define XML_ATTR_NAME			"name"
 #  define XML_ATTR_IDREF			"id-ref"
 #  define XML_ATTR_ID_LONG		"long-id"
@@ -192,7 +190,6 @@ extern "C" {
 
 #  define XML_FAIL_TAG_CIB		"failed_update"
 
-#  define XML_FAILCIB_ATTR_ID		"id"
 #  define XML_FAILCIB_ATTR_OBJTYPE	"object_type"
 #  define XML_FAILCIB_ATTR_OP		"operation"
 #  define XML_FAILCIB_ATTR_REASON	"reason"
@@ -460,7 +457,7 @@ extern "C" {
 #  define XML_DIFF_PATH                 "path"
 #  define XML_DIFF_POSITION             "position"
 
-#  define ID(x) crm_element_value(x, XML_ATTR_ID)
+#  define ID(x) crm_element_value(x, PCMK_XA_ID)
 
 #ifdef __cplusplus
 }
