@@ -361,7 +361,12 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_DEVICES instead
 #define XML_ATTR_STONITH_DEVICES PCMK_XA_DEVICES
 
-//! \deprecated Use \c F_ORIG instead
+#ifndef F_ORIG
+//! \deprecated Do not use
+#define F_ORIG "src"
+#endif
+
+//! \deprecated Do not use
 #define F_CRM_HOST_FROM F_ORIG
 
 #ifdef __cplusplus

@@ -95,10 +95,6 @@ extern "C" {
  * Older constants that don't follow current naming
  */
 
-#  ifndef F_ORIG
-#    define F_ORIG    "src"
-#  endif
-
 #  ifndef F_SEQ
 #    define F_SEQ		"seq"
 #  endif
