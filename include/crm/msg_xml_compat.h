@@ -283,6 +283,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_VALUE instead
 #define XML_NVPAIR_ATTR_VALUE PCMK_XA_VALUE
 
+//! \deprecated Use \c PCMK_XA_VALUE instead
+#define XML_ALERT_ATTR_REC_VALUE PCMK_XA_VALUE
+
 #ifdef __cplusplus
 }
 #endif

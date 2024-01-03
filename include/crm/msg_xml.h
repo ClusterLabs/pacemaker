@@ -349,7 +349,6 @@ extern "C" {
 #  define XML_ALERT_ATTR_PATH		"path"
 #  define XML_ALERT_ATTR_TIMEOUT	"timeout"
 #  define XML_ALERT_ATTR_TSTAMP_FORMAT	"timestamp-format"
-#  define XML_ALERT_ATTR_REC_VALUE	"value"
 
 #  define XML_CIB_TAG_GENERATION_TUPPLE	"generation_tuple"
 
