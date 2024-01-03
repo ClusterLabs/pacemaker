@@ -95,10 +95,6 @@ extern "C" {
  * Older constants that don't follow current naming
  */
 
-#  ifndef F_XML_TAGNAME
-#    define F_XML_TAGNAME	"__name__"
-#  endif
-
 #  ifndef T_CRM
 #    define T_CRM     "crmd"
 #  endif

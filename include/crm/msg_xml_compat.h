@@ -392,6 +392,11 @@ extern "C" {
 #define	F_CLIENTNAME "cn"
 #endif
 
+#ifndef F_XML_TAGNAME
+//! \deprecated Do not use
+#define F_XML_TAGNAME "__name__"
+#endif
+
 #ifdef __cplusplus
 }
 #endif
