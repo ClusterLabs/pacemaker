@@ -70,6 +70,7 @@ extern "C" {
 #define PCMK_XA_NAME                        "name"
 #define PCMK_XA_NO_QUORUM_PANIC             "no-quorum-panic"
 #define PCMK_XA_NUM_UPDATES                 "num_updates"
+#define PCMK_XA_OP                          "op"
 #define PCMK_XA_PROVIDER                    "provider"
 #define PCMK_XA_TYPE                        "type"
 #define PCMK_XA_VALIDATE_WITH               "validate-with"

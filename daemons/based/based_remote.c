@@ -230,7 +230,7 @@ cib_remote_auth(xmlNode * login)
         return FALSE;
     }
 
-    tmp = crm_element_value(login, "op");
+    tmp = crm_element_value(login, PCMK_XA_OP);
     if (!pcmk__str_eq(tmp, "authenticate", pcmk__str_casei)) {
         crm_err("Wrong operation: %s", tmp);
         return FALSE;

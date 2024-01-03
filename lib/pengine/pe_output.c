@@ -2086,7 +2086,7 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
     pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS),
                        &status, PCMK_EXEC_UNKNOWN);
     node = pcmk__output_create_xml_node(out, "operation",
-                                        "op", pe__xe_history_key(xml_op),
+                                        PCMK_XA_OP, pe__xe_history_key(xml_op),
                                         "node", crm_element_value(xml_op, XML_ATTR_UNAME),
                                         "call", crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
                                         "rc", crm_element_value(xml_op, XML_LRM_ATTR_RC),
