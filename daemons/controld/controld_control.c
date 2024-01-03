@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -522,18 +522,21 @@ static pcmk__cluster_option_t controller_options[] = {
      * long description
      */
     {
-        "dc-version", NULL, "string", NULL, PCMK__VALUE_NONE, NULL,
+        PCMK_OPT_DC_VERSION, NULL, "string", NULL,
+        PCMK__VALUE_NONE, NULL,
         N_("Pacemaker version on cluster node elected Designated Controller (DC)"),
         N_("Includes a hash which identifies the exact changeset the code was "
             "built from. Used for diagnostic purposes.")
     },
     {
-        "cluster-infrastructure", NULL, "string", NULL, "corosync", NULL,
+        PCMK_OPT_CLUSTER_INFRASTRUCTURE, NULL, "string", NULL,
+        "corosync", NULL,
         N_("The messaging stack on which Pacemaker is currently running"),
         N_("Used for informational and diagnostic purposes.")
     },
     {
-        "cluster-name", NULL, "string", NULL, NULL, NULL,
+        PCMK_OPT_CLUSTER_NAME, NULL, "string", NULL,
+        NULL, NULL,
         N_("An arbitrary name for the cluster"),
         N_("This optional value is mostly for users' convenience as desired "
             "in administration, but may also be used in Pacemaker "
@@ -541,16 +544,16 @@ static pcmk__cluster_option_t controller_options[] = {
             "by higher-level tools and resource agents.")
     },
     {
-        XML_CONFIG_ATTR_DC_DEADTIME, NULL, "time",
-        NULL, "20s", pcmk__valid_interval_spec,
+        PCMK_OPT_DC_DEADTIME, NULL, "time", NULL,
+        "20s", pcmk__valid_interval_spec,
         N_("How long to wait for a response from other nodes during start-up"),
         N_("The optimal value will depend on the speed and load of your network "
             "and the type of switches used.")
     },
     {
-        XML_CONFIG_ATTR_RECHECK, NULL, "time",
-        N_("Zero disables polling, while positive values are an interval in seconds"
-            "(unless other units are specified, for example \"5min\")"),
+        PCMK_OPT_CLUSTER_RECHECK_INTERVAL, NULL, "time",
+        N_("Zero disables polling, while positive values are an interval in "
+            "seconds (unless other units are specified, for example \"5min\")"),
         "15min", pcmk__valid_interval_spec,
         N_("Polling interval to recheck cluster state and evaluate rules "
             "with date specifications"),
@@ -561,28 +564,31 @@ static pcmk__cluster_option_t controller_options[] = {
             "and serve as a fail-safe for certain types of scheduler bugs.")
     },
     {
-        "load-threshold", NULL, "percentage", NULL,
+        PCMK_OPT_LOAD_THRESHOLD, NULL, "percentage", NULL,
         "80%", pcmk__valid_percentage,
         N_("Maximum amount of system load that should be used by cluster nodes"),
         N_("The cluster will slow down its recovery process when the amount of "
             "system resources used (currently CPU) approaches this limit"),
     },
     {
-        "node-action-limit", NULL, "integer", NULL,
-        "0", pcmk__valid_number,
+        PCMK_OPT_NODE_ACTION_LIMIT, NULL, "integer", NULL,
+        "0", pcmk__valid_int,
         N_("Maximum number of jobs that can be scheduled per node "
             "(defaults to 2x cores)")
     },
-    { XML_CONFIG_ATTR_FENCE_REACTION, NULL, "string", NULL, "stop", NULL,
+    {
+        PCMK_OPT_FENCE_REACTION, NULL, "select", "stop, panic",
+        "stop", NULL,
         N_("How a cluster node should react if notified of its own fencing"),
         N_("A cluster node may receive notification of its own fencing if fencing "
-        "is misconfigured, or if fabric fencing is in use that doesn't cut "
-        "cluster communication. Allowed values are \"stop\" to attempt to "
-        "immediately stop Pacemaker and stay stopped, or \"panic\" to attempt "
-        "to immediately reboot the local node, falling back to stop on failure.")
+            "is misconfigured, or if fabric fencing is in use that doesn't cut "
+            "cluster communication. Use \"stop\" to attempt to immediately "
+            "stop Pacemaker and stay stopped, or \"panic\" to attempt to "
+            "immediately reboot the local node, falling back to stop on "
+            "failure.")
     },
     {
-        XML_CONFIG_ATTR_ELECTION_FAIL, NULL, "time", NULL,
+        PCMK_OPT_ELECTION_TIMEOUT, NULL, "time", NULL,
         "2min", pcmk__valid_interval_spec,
         "*** Advanced Use Only ***",
         N_("Declare an election failed if it is not decided within this much "
@@ -590,7 +596,7 @@ static pcmk__cluster_option_t controller_options[] = {
             "the presence of a bug.")
     },
     {
-        XML_CONFIG_ATTR_FORCE_QUIT, NULL, "time", NULL,
+        PCMK_OPT_SHUTDOWN_ESCALATION, NULL, "time", NULL,
         "20min", pcmk__valid_interval_spec,
         "*** Advanced Use Only ***",
         N_("Exit immediately if shutdown does not complete within this much "
@@ -598,21 +604,23 @@ static pcmk__cluster_option_t controller_options[] = {
             "the presence of a bug.")
     },
     {
-        "join-integration-timeout", "crmd-integration-timeout", "time", NULL,
+        PCMK_OPT_JOIN_INTEGRATION_TIMEOUT, "crmd-integration-timeout", "time",
+            NULL,
         "3min", pcmk__valid_interval_spec,
         "*** Advanced Use Only ***",
         N_("If you need to adjust this value, it probably indicates "
             "the presence of a bug.")
     },
     {
-        "join-finalization-timeout", "crmd-finalization-timeout", "time", NULL,
+        PCMK_OPT_JOIN_FINALIZATION_TIMEOUT, "crmd-finalization-timeout",
+            "time", NULL,
         "30min", pcmk__valid_interval_spec,
         "*** Advanced Use Only ***",
         N_("If you need to adjust this value, it probably indicates "
             "the presence of a bug.")
     },
     {
-        "transition-delay", "crmd-transition-delay", "time", NULL,
+        PCMK_OPT_TRANSITION_DELAY, "crmd-transition-delay", "time", NULL,
         "0s", pcmk__valid_interval_spec,
         N_("*** Advanced Use Only *** Enabling this option will slow down "
             "cluster recovery under all conditions"),
@@ -621,7 +629,7 @@ static pcmk__cluster_option_t controller_options[] = {
             "the order in which ping updates arrive.")
     },
     {
-        "stonith-watchdog-timeout", NULL, "time", NULL,
+        PCMK_OPT_STONITH_WATCHDOG_TIMEOUT, NULL, "time", NULL,
         "0", controld_verify_stonith_watchdog_timeout,
         N_("How long before nodes can be assumed to be safely down when "
            "watchdog-based self-fencing via SBD is in use"),
@@ -642,20 +650,21 @@ static pcmk__cluster_option_t controller_options[] = {
            "that use SBD, otherwise data corruption or loss could occur.")
     },
     {
-        "stonith-max-attempts", NULL, "integer", NULL,
-        "10", pcmk__valid_positive_number,
+        PCMK_OPT_STONITH_MAX_ATTEMPTS, NULL, "integer", NULL,
+        "10", pcmk__valid_positive_int,
         N_("How many times fencing can fail before it will no longer be "
             "immediately re-attempted on a target")
     },
 
     // Already documented in libpe_status (other values must be kept identical)
     {
-        "no-quorum-policy", NULL, "select",
-        "stop, freeze, ignore, demote, suicide", "stop", pcmk__valid_quorum,
+        PCMK_OPT_NO_QUORUM_POLICY, NULL, "select",
+            "stop, freeze, ignore, demote, suicide",
+        "stop", pcmk__valid_no_quorum_policy,
         N_("What to do when the cluster does not have quorum"), NULL
     },
     {
-        XML_CONFIG_ATTR_SHUTDOWN_LOCK, NULL, "boolean", NULL,
+        PCMK_OPT_SHUTDOWN_LOCK, NULL, "boolean", NULL,
         "false", pcmk__valid_boolean,
         N_("Whether to lock resources to a cleanly shut down node"),
         N_("When true, resources active on a node when it is cleanly shut down "
@@ -668,7 +677,7 @@ static pcmk__cluster_option_t controller_options[] = {
             "release.")
     },
     {
-        XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT, NULL, "time", NULL,
+        PCMK_OPT_SHUTDOWN_LOCK_LIMIT, NULL, "time", NULL,
         "0", pcmk__valid_interval_spec,
         N_("Do not lock resources to a cleanly shut down node longer than "
            "this"),
@@ -678,7 +687,7 @@ static pcmk__cluster_option_t controller_options[] = {
             "rejoined.")
     },
     {
-        XML_CONFIG_ATTR_NODE_PENDING_TIMEOUT, NULL, "time", NULL,
+        PCMK_OPT_NODE_PENDING_TIMEOUT, NULL, "time", NULL,
         "0", pcmk__valid_interval_spec,
         N_("How long to wait for a node that has joined the cluster to join "
            "the controller process group"),
@@ -747,28 +756,27 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     pcmk__validate_cluster_options(config_hash, controller_options,
                                    PCMK__NELEM(controller_options));
 
-    value = g_hash_table_lookup(config_hash, "no-quorum-policy");
+    value = g_hash_table_lookup(config_hash, PCMK_OPT_NO_QUORUM_POLICY);
     if (pcmk__str_eq(value, "suicide", pcmk__str_casei) && pcmk__locate_sbd()) {
         controld_set_global_flags(controld_no_quorum_suicide);
     }
 
-    value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_SHUTDOWN_LOCK);
+    value = g_hash_table_lookup(config_hash, PCMK_OPT_SHUTDOWN_LOCK);
     if (crm_is_true(value)) {
         controld_set_global_flags(controld_shutdown_lock_enabled);
     } else {
         controld_clear_global_flags(controld_shutdown_lock_enabled);
     }
 
-    value = g_hash_table_lookup(config_hash,
-                                XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT);
-    controld_globals.shutdown_lock_limit = crm_parse_interval_spec(value)
-                                           / 1000;
+    value = g_hash_table_lookup(config_hash, PCMK_OPT_SHUTDOWN_LOCK_LIMIT);
+    pcmk_parse_interval_spec(value, &controld_globals.shutdown_lock_limit);
+    controld_globals.shutdown_lock_limit /= 1000;
 
-    value = g_hash_table_lookup(config_hash,
-                                XML_CONFIG_ATTR_NODE_PENDING_TIMEOUT);
-    controld_globals.node_pending_timeout = crm_parse_interval_spec(value) / 1000;
+    value = g_hash_table_lookup(config_hash, PCMK_OPT_NODE_PENDING_TIMEOUT);
+    pcmk_parse_interval_spec(value, &controld_globals.node_pending_timeout);
+    controld_globals.node_pending_timeout /= 1000;
 
-    value = g_hash_table_lookup(config_hash, "cluster-name");
+    value = g_hash_table_lookup(config_hash, PCMK_OPT_CLUSTER_NAME);
     pcmk__str_update(&(controld_globals.cluster_name), value);
 
     // Let subcomponents initialize their own static variables
@@ -858,7 +866,7 @@ crm_shutdown(int nsig)
      */
     value = pcmk__cluster_option(NULL, controller_options,
                                  PCMK__NELEM(controller_options),
-                                 XML_CONFIG_ATTR_FORCE_QUIT);
-    default_period_ms = crm_parse_interval_spec(value);
+                                 PCMK_OPT_SHUTDOWN_ESCALATION);
+    pcmk_parse_interval_spec(value, &default_period_ms);
     controld_shutdown_start_countdown(default_period_ms);
 }

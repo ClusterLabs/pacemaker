@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the Pacemaker project contributors
+ * Copyright 2013-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -280,17 +280,20 @@ pcmk__valid_sbd_timeout(const char *value)
 
     if (st_timeout < 0) {
         st_timeout = pcmk__auto_watchdog_timeout();
-        crm_debug("Using calculated value %ld for stonith-watchdog-timeout (%s)",
+        crm_debug("Using calculated value %ld for "
+                  PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " (%s)",
                   st_timeout, value);
     }
 
     if (st_timeout == 0) {
-        crm_debug("Watchdog may be enabled but stonith-watchdog-timeout is disabled (%s)",
+        crm_debug("Watchdog may be enabled but "
+                  PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " is disabled (%s)",
                   value? value : "default");
 
     } else if (pcmk__locate_sbd() == 0) {
-        crm_emerg("Shutting down: stonith-watchdog-timeout configured (%s) "
-                  "but SBD not active", (value? value : "auto"));
+        crm_emerg("Shutting down: " PCMK_OPT_STONITH_WATCHDOG_TIMEOUT
+                  " configured (%s) but SBD not active",
+                  pcmk__s(value, "auto"));
         crm_exit(CRM_EX_FATAL);
         return false;
 
@@ -298,12 +301,14 @@ pcmk__valid_sbd_timeout(const char *value)
         long sbd_timeout = pcmk__get_sbd_timeout();
 
         if (st_timeout < sbd_timeout) {
-            crm_emerg("Shutting down: stonith-watchdog-timeout (%s) too short "
-                      "(must be >%ldms)", value, sbd_timeout);
+            crm_emerg("Shutting down: " PCMK_OPT_STONITH_WATCHDOG_TIMEOUT
+                      " (%s) too short (must be >%ldms)",
+                      value, sbd_timeout);
             crm_exit(CRM_EX_FATAL);
             return false;
         }
-        crm_info("Watchdog configured with stonith-watchdog-timeout %s and SBD timeout %ldms",
+        crm_info("Watchdog configured with " PCMK_OPT_STONITH_WATCHDOG_TIMEOUT
+                 " %s and SBD timeout %ldms",
                  value, sbd_timeout);
     }
     return true;

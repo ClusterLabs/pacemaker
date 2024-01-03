@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 the Pacemaker project contributors
+ * Copyright 2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -40,6 +40,13 @@ is_true(void **state) {
     assert_true(ret);
     assert_int_equal(crm_str_to_boolean("1", &ret), 1);
     assert_true(ret);
+
+    // Ensure it still validates the string with a NULL result argument
+    assert_int_equal(crm_str_to_boolean("true", NULL), 1);
+    assert_int_equal(crm_str_to_boolean("on", NULL), 1);
+    assert_int_equal(crm_str_to_boolean("yes", NULL), 1);
+    assert_int_equal(crm_str_to_boolean("y", NULL), 1);
+    assert_int_equal(crm_str_to_boolean("1", NULL), 1);
 }
 
 static void
@@ -73,6 +80,13 @@ is_false(void **state) {
     assert_false(ret);
     assert_int_equal(crm_str_to_boolean("0", &ret), 1);
     assert_false(ret);
+
+    // Ensure it still validates the string with a NULL result argument
+    assert_int_equal(crm_str_to_boolean("false", NULL), 1);
+    assert_int_equal(crm_str_to_boolean("off", NULL), 1);
+    assert_int_equal(crm_str_to_boolean("no", NULL), 1);
+    assert_int_equal(crm_str_to_boolean("n", NULL), 1);
+    assert_int_equal(crm_str_to_boolean("0", NULL), 1);
 }
 
 static void

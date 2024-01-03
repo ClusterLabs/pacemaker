@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -44,10 +44,11 @@ controld_election_init(const char *uname)
 void
 controld_configure_election(GHashTable *options)
 {
-    const char *value = NULL;
+    const char *value = g_hash_table_lookup(options, PCMK_OPT_ELECTION_TIMEOUT);
+    guint interval_ms = 0U;
 
-    value = g_hash_table_lookup(options, XML_CONFIG_ATTR_ELECTION_FAIL);
-    election_timeout_set_period(fsa_election, crm_parse_interval_spec(value));
+    pcmk_parse_interval_spec(value, &interval_ms);
+    election_timeout_set_period(fsa_election, interval_ms);
 }
 
 void
@@ -230,16 +231,17 @@ do_dc_takeover(long long action,
     crm_xml_add(cib, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
     controld_update_cib(XML_TAG_CIB, cib, cib_none, feature_update_callback);
 
-    dc_takeover_update_attr(XML_ATTR_HAVE_WATCHDOG, pcmk__btoa(watchdog));
-    dc_takeover_update_attr("dc-version", PACEMAKER_VERSION "-" BUILD_VERSION);
-    dc_takeover_update_attr("cluster-infrastructure", cluster_type);
+    dc_takeover_update_attr(PCMK_OPT_HAVE_WATCHDOG, pcmk__btoa(watchdog));
+    dc_takeover_update_attr(PCMK_OPT_DC_VERSION,
+                            PACEMAKER_VERSION "-" BUILD_VERSION);
+    dc_takeover_update_attr(PCMK_OPT_CLUSTER_INFRASTRUCTURE, cluster_type);
 
 #if SUPPORT_COROSYNC
     if ((controld_globals.cluster_name == NULL) && is_corosync_cluster()) {
         char *cluster_name = pcmk__corosync_cluster_name();
 
         if (cluster_name != NULL) {
-            dc_takeover_update_attr("cluster-name", cluster_name);
+            dc_takeover_update_attr(PCMK_OPT_CLUSTER_NAME, cluster_name);
         }
         free(cluster_name);
     }

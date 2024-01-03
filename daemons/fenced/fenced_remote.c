@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the Pacemaker project contributors
+ * Copyright 2009-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1907,8 +1907,8 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
                  enabled for a node but the watchdog-fencing-device isn't
                  explicitly chosen for suicide. Local pe-execution in sbd
                  may detect the node as unclean and lead to timely suicide.
-                 Otherwise the selection of stonith-watchdog-timeout at
-                 least is questionable.
+                 Otherwise the selection of PCMK_OPT_STONITH_WATCHDOG_TIMEOUT
+                 at least is questionable.
              */
 
             /* coming here we're not waiting for watchdog timeout -

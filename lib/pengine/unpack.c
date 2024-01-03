@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -104,7 +104,8 @@ is_dangling_guest_node(pcmk_node_t *node)
  * \param[in,out] scheduler       Scheduler data
  * \param[in,out] node            Node to fence
  * \param[in]     reason          Text description of why fencing is needed
- * \param[in]     priority_delay  Whether to consider `priority-fencing-delay`
+ * \param[in]     priority_delay  Whether to consider
+ *                                \c PCMK_OPT_PRIORITY_FENCING_DELAY
  */
 void
 pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
@@ -160,7 +161,7 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
                              reason);
         }
         node->details->unclean = TRUE;
-        // No need to apply `priority-fencing-delay` for remote nodes
+        // No need to apply PCMK_OPT_PRIORITY_FENCING_DELAY for remote nodes
         pe_fence_op(node, NULL, TRUE, reason, FALSE, scheduler);
 
     } else if (node->details->unclean) {
@@ -212,6 +213,7 @@ gboolean
 unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 {
     const char *value = NULL;
+    guint interval_ms = 0U;
     GHashTable *config_hash = pcmk__strkey_table(free, free);
 
     pe_rule_eval_data_t rule_data = {
@@ -230,16 +232,17 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     verify_pe_options(scheduler->config_hash);
 
-    set_config_flag(scheduler, "enable-startup-probes",
+    set_config_flag(scheduler, PCMK_OPT_ENABLE_STARTUP_PROBES,
                     pcmk_sched_probe_resources);
     if (!pcmk_is_set(scheduler->flags, pcmk_sched_probe_resources)) {
         crm_info("Startup probes: disabled (dangerous)");
     }
 
-    value = pe_pref(scheduler->config_hash, XML_ATTR_HAVE_WATCHDOG);
+    value = pe_pref(scheduler->config_hash, PCMK_OPT_HAVE_WATCHDOG);
     if (value && crm_is_true(value)) {
         crm_info("Watchdog-based self-fencing will be performed via SBD if "
-                 "fencing is required and stonith-watchdog-timeout is nonzero");
+                 "fencing is required and " PCMK_OPT_STONITH_WATCHDOG_TIMEOUT
+                 " is nonzero");
         pe__set_working_set_flags(scheduler, pcmk_sched_have_fencing);
     }
 
@@ -249,11 +252,18 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     set_if_xpath(pcmk_sched_enable_unfencing, XPATH_ENABLE_UNFENCING,
                  scheduler);
 
-    value = pe_pref(scheduler->config_hash, "stonith-timeout");
-    scheduler->stonith_timeout = (int) crm_parse_interval_spec(value);
+    value = pe_pref(scheduler->config_hash, PCMK_OPT_STONITH_TIMEOUT);
+    pcmk_parse_interval_spec(value, &interval_ms);
+
+    if (interval_ms >= INT_MAX) {
+        scheduler->stonith_timeout = INT_MAX;
+    } else {
+        scheduler->stonith_timeout = (int) interval_ms;
+    }
     crm_debug("STONITH timeout: %d", scheduler->stonith_timeout);
 
-    set_config_flag(scheduler, "stonith-enabled", pcmk_sched_fencing_enabled);
+    set_config_flag(scheduler, PCMK_OPT_STONITH_ENABLED,
+                    pcmk_sched_fencing_enabled);
     if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
         crm_debug("STONITH of failed nodes is enabled");
     } else {
@@ -261,17 +271,17 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     }
 
     scheduler->stonith_action = pe_pref(scheduler->config_hash,
-                                        "stonith-action");
+                                        PCMK_OPT_STONITH_ACTION);
     if (!strcmp(scheduler->stonith_action, "poweroff")) {
         pcmk__warn_once(pcmk__wo_poweroff,
-                        "Support for stonith-action of 'poweroff' is "
-                        "deprecated and will be removed in a future release "
-                        "(use 'off' instead)");
+                        "Support for " PCMK_OPT_STONITH_ACTION " of "
+                        "'poweroff' is deprecated and will be removed in a "
+                        "future release (use 'off' instead)");
         scheduler->stonith_action = PCMK_ACTION_OFF;
     }
     crm_trace("STONITH will %s nodes", scheduler->stonith_action);
 
-    set_config_flag(scheduler, "concurrent-fencing",
+    set_config_flag(scheduler, PCMK_OPT_CONCURRENT_FENCING,
                     pcmk_sched_concurrent_fencing);
     if (pcmk_is_set(scheduler->flags, pcmk_sched_concurrent_fencing)) {
         crm_debug("Concurrent fencing is enabled");
@@ -280,25 +290,26 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     }
 
     value = pe_pref(scheduler->config_hash,
-                    XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY);
+                    PCMK_OPT_PRIORITY_FENCING_DELAY);
     if (value) {
-        scheduler->priority_fencing_delay = crm_parse_interval_spec(value)
-                                            / 1000;
+        pcmk_parse_interval_spec(value, &interval_ms);
+        scheduler->priority_fencing_delay = (int) (interval_ms / 1000);
         crm_trace("Priority fencing delay is %ds",
                   scheduler->priority_fencing_delay);
     }
 
-    set_config_flag(scheduler, "stop-all-resources", pcmk_sched_stop_all);
+    set_config_flag(scheduler, PCMK_OPT_STOP_ALL_RESOURCES,
+                    pcmk_sched_stop_all);
     crm_debug("Stop all active resources: %s",
               pcmk__btoa(pcmk_is_set(scheduler->flags, pcmk_sched_stop_all)));
 
-    set_config_flag(scheduler, "symmetric-cluster",
+    set_config_flag(scheduler, PCMK_OPT_SYMMETRIC_CLUSTER,
                     pcmk_sched_symmetric_cluster);
     if (pcmk_is_set(scheduler->flags, pcmk_sched_symmetric_cluster)) {
         crm_debug("Cluster is symmetric" " - resources can run anywhere by default");
     }
 
-    value = pe_pref(scheduler->config_hash, "no-quorum-policy");
+    value = pe_pref(scheduler->config_hash, PCMK_OPT_NO_QUORUM_POLICY);
 
     if (pcmk__str_eq(value, "ignore", pcmk__str_casei)) {
         scheduler->no_quorum_policy = pcmk_no_quorum_ignore;
@@ -318,12 +329,13 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
             if (do_panic || pcmk_is_set(scheduler->flags, pcmk_sched_quorate)) {
                 scheduler->no_quorum_policy = pcmk_no_quorum_fence;
             } else {
-                crm_notice("Resetting no-quorum-policy to 'stop': cluster has never had quorum");
+                crm_notice("Resetting " PCMK_OPT_NO_QUORUM_POLICY
+                           " to 'stop': cluster has never had quorum");
                 scheduler->no_quorum_policy = pcmk_no_quorum_stop;
             }
         } else {
-            pcmk__config_err("Resetting no-quorum-policy to 'stop' because "
-                             "fencing is disabled");
+            pcmk__config_err("Resetting " PCMK_OPT_NO_QUORUM_POLICY
+                             " to 'stop' because fencing is disabled");
             scheduler->no_quorum_policy = pcmk_no_quorum_stop;
         }
 
@@ -350,7 +362,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
             break;
     }
 
-    set_config_flag(scheduler, "stop-orphan-resources",
+    set_config_flag(scheduler, PCMK_OPT_STOP_ORPHAN_RESOURCES,
                     pcmk_sched_stop_removed_resources);
     if (pcmk_is_set(scheduler->flags, pcmk_sched_stop_removed_resources)) {
         crm_trace("Orphan resources are stopped");
@@ -358,7 +370,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
         crm_trace("Orphan resources are ignored");
     }
 
-    set_config_flag(scheduler, "stop-orphan-actions",
+    set_config_flag(scheduler, PCMK_OPT_STOP_ORPHAN_ACTIONS,
                     pcmk_sched_cancel_removed_actions);
     if (pcmk_is_set(scheduler->flags, pcmk_sched_cancel_removed_actions)) {
         crm_trace("Orphan resource actions are stopped");
@@ -366,15 +378,15 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
         crm_trace("Orphan resource actions are ignored");
     }
 
-    value = pe_pref(scheduler->config_hash, "remove-after-stop");
+    value = pe_pref(scheduler->config_hash, PCMK__OPT_REMOVE_AFTER_STOP);
     if (value != NULL) {
         if (crm_is_true(value)) {
             pe__set_working_set_flags(scheduler, pcmk_sched_remove_after_stop);
 #ifndef PCMK__COMPAT_2_0
             pcmk__warn_once(pcmk__wo_remove_after,
-                            "Support for the remove-after-stop cluster "
-                            "property is deprecated and will be removed in a "
-                            "future release");
+                            "Support for the " PCMK__OPT_REMOVE_AFTER_STOP
+                            " cluster property is deprecated and will be "
+                            "removed in a future release");
 #endif
         } else {
             pe__clear_working_set_flags(scheduler,
@@ -382,12 +394,13 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
         }
     }
 
-    set_config_flag(scheduler, "maintenance-mode", pcmk_sched_in_maintenance);
+    set_config_flag(scheduler, PCMK_OPT_MAINTENANCE_MODE,
+                    pcmk_sched_in_maintenance);
     crm_trace("Maintenance mode: %s",
               pcmk__btoa(pcmk_is_set(scheduler->flags,
                                      pcmk_sched_in_maintenance)));
 
-    set_config_flag(scheduler, "start-failure-is-fatal",
+    set_config_flag(scheduler, PCMK_OPT_START_FAILURE_IS_FATAL,
                     pcmk_sched_start_failure_fatal);
     if (pcmk_is_set(scheduler->flags, pcmk_sched_start_failure_fatal)) {
         crm_trace("Start failures are always fatal");
@@ -396,7 +409,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     }
 
     if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
-        set_config_flag(scheduler, "startup-fencing",
+        set_config_flag(scheduler, PCMK_OPT_STARTUP_FENCING,
                         pcmk_sched_startup_fencing);
     }
     if (pcmk_is_set(scheduler->flags, pcmk_sched_startup_fencing)) {
@@ -409,14 +422,15 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     pe__unpack_node_health_scores(scheduler);
 
     scheduler->placement_strategy = pe_pref(scheduler->config_hash,
-                                            "placement-strategy");
+                                            PCMK_OPT_PLACEMENT_STRATEGY);
     crm_trace("Placement strategy: %s", scheduler->placement_strategy);
 
-    set_config_flag(scheduler, "shutdown-lock", pcmk_sched_shutdown_lock);
+    set_config_flag(scheduler, PCMK_OPT_SHUTDOWN_LOCK,
+                    pcmk_sched_shutdown_lock);
     if (pcmk_is_set(scheduler->flags, pcmk_sched_shutdown_lock)) {
-        value = pe_pref(scheduler->config_hash,
-                        XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT);
-        scheduler->shutdown_lock = crm_parse_interval_spec(value) / 1000;
+        value = pe_pref(scheduler->config_hash, PCMK_OPT_SHUTDOWN_LOCK_LIMIT);
+        pcmk_parse_interval_spec(value, &(scheduler->shutdown_lock));
+        scheduler->shutdown_lock /= 1000;
         crm_trace("Resources will be locked to nodes that were cleanly "
                   "shut down (locks expire after %s)",
                   pcmk__readable_interval(scheduler->shutdown_lock));
@@ -425,9 +439,9 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
                   "shut down");
     }
 
-    value = pe_pref(scheduler->config_hash,
-                    XML_CONFIG_ATTR_NODE_PENDING_TIMEOUT);
-    scheduler->node_pending_timeout = crm_parse_interval_spec(value) / 1000;
+    value = pe_pref(scheduler->config_hash, PCMK_OPT_NODE_PENDING_TIMEOUT);
+    pcmk_parse_interval_spec(value, &(scheduler->node_pending_timeout));
+    scheduler->node_pending_timeout /= 1000;
     if (scheduler->node_pending_timeout == 0) {
         crm_trace("Do not fence pending nodes");
     } else {
@@ -880,7 +894,8 @@ unpack_resources(const xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
                && !pcmk_is_set(scheduler->flags, pcmk_sched_have_fencing)) {
 
         pcmk__config_err("Resource start-up disabled since no STONITH resources have been defined");
-        pcmk__config_err("Either configure some or disable STONITH with the stonith-enabled option");
+        pcmk__config_err("Either configure some or disable STONITH with the "
+                         PCMK_OPT_STONITH_ENABLED " option");
         pcmk__config_err("NOTE: Clusters with shared data need STONITH to ensure data integrity");
     }
 
@@ -1418,7 +1433,7 @@ unpack_node_member(const xmlNode *node_state, pcmk_scheduler_t *scheduler)
         /* If in_ccm=0, we'll return 0 here. If in_ccm=1, either the entry was
          * recorded as a boolean for a DC < 2.1.7, or the node is pending
          * shutdown and has left the CPG, in which case it was set to 1 to avoid
-         * fencing for node-pending-timeout.
+         * fencing for PCMK_OPT_NODE_PENDING_TIMEOUT.
          *
          * We return the effective time for in_ccm=1 because what's important to
          * avoid fencing is that effective time minus this value is less than
@@ -1551,7 +1566,7 @@ determine_online_status_no_fencing(pcmk_scheduler_t *scheduler,
  * \param[in]     when_online  Epoch time when node joined controller group
  *
  * \return true if node has been pending (on the way up) longer than
- *         node-pending-timeout, otherwise false
+ *         \c PCMK_OPT_NODE_PENDING_TIMEOUT, otherwise false
  * \note This will also update the cluster's recheck time if appropriate.
  */
 static inline bool
@@ -1653,7 +1668,7 @@ determine_online_status_fencing(pcmk_scheduler_t *scheduler,
         }
 
     } else if (when_member <= 0) {
-        // Consider `priority-fencing-delay` for lost nodes
+        // Consider PCMK_OPT_PRIORITY_FENCING_DELAY for lost nodes
         pe_fence_node(scheduler, this_node,
                       "peer is no longer part of the cluster", TRUE);
 
@@ -2598,7 +2613,7 @@ unpack_shutdown_lock(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
 {
     time_t lock_time = 0;   // When lock started (i.e. node shutdown time)
 
-    if ((crm_element_value_epoch(rsc_entry, XML_CONFIG_ATTR_SHUTDOWN_LOCK,
+    if ((crm_element_value_epoch(rsc_entry, PCMK_OPT_SHUTDOWN_LOCK,
                                  &lock_time) == pcmk_ok) && (lock_time != 0)) {
 
         if ((scheduler->shutdown_lock > 0)
@@ -4937,7 +4952,8 @@ add_node_attrs(const xmlNode *xml_obj, pcmk_node_t *node, bool overwrite,
                             strdup(CRM_ATTR_IS_DC), strdup(XML_BOOLEAN_FALSE));
     }
 
-    cluster_name = g_hash_table_lookup(scheduler->config_hash, "cluster-name");
+    cluster_name = g_hash_table_lookup(scheduler->config_hash,
+                                       PCMK_OPT_CLUSTER_NAME);
     if (cluster_name) {
         g_hash_table_insert(node->details->attrs, strdup(CRM_ATTR_CLUSTER_NAME),
                             strdup(cluster_name));

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,6 +18,8 @@
 #  include <string.h>
 
 #  include <libxml/tree.h>
+
+#include <crm/common/options.h>
 
 #ifdef __cplusplus
 extern "C" {

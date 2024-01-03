@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -176,56 +176,130 @@ pcmk__env_option_enabled(const char *daemon, const char *option)
  * Cluster option handling
  */
 
+/*!
+ * \internal
+ * \brief Check whether a string represents a valid interval specification
+ *
+ * \param[in] value  String to validate
+ *
+ * \return \c true if \p value is a valid interval specification, or \c false
+ *         otherwise
+ */
 bool
 pcmk__valid_interval_spec(const char *value)
 {
-    (void) crm_parse_interval_spec(value);
-    return errno == 0;
+    return pcmk_parse_interval_spec(value, NULL) == pcmk_rc_ok;
 }
 
+/*!
+ * \internal
+ * \brief Check whether a string represents a valid boolean value
+ *
+ * \param[in] value  String to validate
+ *
+ * \return \c true if \p value is a valid boolean value, or \c false otherwise
+ */
 bool
 pcmk__valid_boolean(const char *value)
 {
-    int tmp;
-
-    return crm_str_to_boolean(value, &tmp) == 1;
+    return crm_str_to_boolean(value, NULL) == 1;
 }
 
+/*!
+ * \internal
+ * \brief Check whether a string represents a valid integer
+ *
+ * Valid values include \c INFINITY, \c -INFINITY, and all 64-bit integers.
+ *
+ * \param[in] value  String to validate
+ *
+ * \return \c true if \p value is a valid integer, or \c false otherwise
+ */
 bool
-pcmk__valid_number(const char *value)
+pcmk__valid_int(const char *value)
 {
-    if (value == NULL) {
-        return false;
-
-    } else if (pcmk_str_is_minus_infinity(value) ||
-               pcmk_str_is_infinity(value)) {
-        return true;
-    }
-
-    return pcmk__scan_ll(value, NULL, 0LL) == pcmk_rc_ok;
+    return (value != NULL)
+           && (pcmk_str_is_infinity(value)
+               || pcmk_str_is_minus_infinity(value)
+               || (pcmk__scan_ll(value, NULL, 0LL) == pcmk_rc_ok));
 }
 
+/*!
+ * \internal
+ * \brief Check whether a string represents a valid positive integer
+ *
+ * Valid values include \c INFINITY and all 64-bit positive integers.
+ *
+ * \param[in] value  String to validate
+ *
+ * \return \c true if \p value is a valid positive integer, or \c false
+ *         otherwise
+ */
 bool
-pcmk__valid_positive_number(const char *value)
+pcmk__valid_positive_int(const char *value)
 {
     long long num = 0LL;
 
     return pcmk_str_is_infinity(value)
-           || ((pcmk__scan_ll(value, &num, 0LL) == pcmk_rc_ok) && (num > 0));
+           || ((pcmk__scan_ll(value, &num, 0LL) == pcmk_rc_ok)
+               && (num > 0));
 }
 
+/*!
+ * \internal
+ * \brief Check whether a string represents a valid
+ *        \c PCMK__OPT_NO_QUORUM_POLICY value
+ *
+ * \param[in] value  String to validate
+ *
+ * \return \c true if \p value is a valid \c PCMK__OPT_NO_QUORUM_POLICY value,
+ *         or \c false otherwise
+ */
 bool
-pcmk__valid_quorum(const char *value)
+pcmk__valid_no_quorum_policy(const char *value)
 {
-    return pcmk__strcase_any_of(value, "stop", "freeze", "ignore", "demote", "suicide", NULL);
+    return pcmk__strcase_any_of(value,
+                                "stop", "freeze", "ignore", "demote", "suicide",
+                                NULL);
 }
 
+/*!
+ * \internal
+ * \brief Check whether a string represents a valid percentage
+ *
+ * Valid values include long integers, with an optional trailing string
+ * beginning with '%'.
+ *
+ * \param[in] value  String to validate
+ *
+ * \return \c true if \p value is a valid percentage value, or \c false
+ *         otherwise
+ */
+bool
+pcmk__valid_percentage(const char *value)
+{
+    char *end = NULL;
+    float number = strtof(value, &end);
+
+    return ((end == NULL) || (end[0] == '%')) && (number >= 0);
+}
+
+/*!
+ * \internal
+ * \brief Check whether a string represents a valid script
+ *
+ * Valid values include \c /dev/null and paths of executable regular files
+ *
+ * \param[in] value  String to validate
+ *
+ * \return \c true if \p value is a valid script, or \c false otherwise
+ */
 bool
 pcmk__valid_script(const char *value)
 {
     struct stat st;
 
-    if (pcmk__str_eq(value, "/dev/null", pcmk__str_casei)) {
+    if (pcmk__str_eq(value, "/dev/null", pcmk__str_none)) {
         return true;
     }
 
@@ -245,18 +319,6 @@ pcmk__valid_script(const char *value)
     }
 
     return true;
-}
-
-bool
-pcmk__valid_percentage(const char *value)
-{
-    char *end = NULL;
-    long number = strtol(value, &end, 10);
-
-    if (end && (end[0] != '%')) {
-        return false;
-    }
-    return number >= 0;
 }
 
 /*!
@@ -389,7 +451,15 @@ add_desc(GString *s, const char *tag, const char *desc, const char *values,
     pcmk__g_strcat(s, "<", tag, " lang=\"en\">", escaped_en, NULL);
 
     if (values != NULL) {
-        pcmk__g_strcat(s, "  Allowed values: ", values, NULL);
+        // Append a period if desc doesn't end in "." or ".)"
+        if (!pcmk__str_empty(escaped_en)
+            && (s->str[s->len - 1] != '.')
+            && ((s->str[s->len - 2] != '.') || (s->str[s->len - 1] != ')'))) {
+
+            g_string_append_c(s, '.');
+        }
+        pcmk__g_strcat(s, " Allowed values: ", values, NULL);
+        g_string_append_c(s, '.');
     }
     pcmk__g_strcat(s, "</", tag, ">\n", NULL);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -108,6 +108,36 @@ extern "C" {
 
 //! \deprecated Use name member directly
 #define TYPE(x) (((x) == NULL)? NULL : (const char *) ((x)->name))
+
+//! \deprecated Use \c PCMK_OPT_CLUSTER_RECHECK_INTERVAL instead
+#define XML_CONFIG_ATTR_RECHECK PCMK_OPT_CLUSTER_RECHECK_INTERVAL
+
+//! \deprecated Use \c PCMK_OPT_DC_DEADTIME instead
+#define XML_CONFIG_ATTR_DC_DEADTIME PCMK_OPT_DC_DEADTIME
+
+//! \deprecated Use \c PCMK_OPT_ELECTION_TIMEOUT instead
+#define XML_CONFIG_ATTR_ELECTION_FAIL PCMK_OPT_ELECTION_TIMEOUT
+
+//! \deprecated Use \c PCMK_OPT_FENCE_REACTION instead
+#define XML_CONFIG_ATTR_FENCE_REACTION PCMK_OPT_FENCE_REACTION
+
+//! \deprecated Use \c PCMK_OPT_HAVE_WATCHDOG instead
+#define XML_ATTR_HAVE_WATCHDOG PCMK_OPT_HAVE_WATCHDOG
+
+//! \deprecated Use \c PCMK_OPT_NODE_PENDING_TIMEOUT instead
+#define XML_CONFIG_ATTR_NODE_PENDING_TIMEOUT PCMK_OPT_NODE_PENDING_TIMEOUT
+
+//! \deprecated Use \c PCMK_OPT_PRIORITY_FENCING_DELAY instead
+#define XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY PCMK_OPT_PRIORITY_FENCING_DELAY
+
+//! \deprecated Use \c PCMK_OPT_SHUTDOWN_ESCALATION instead
+#define XML_CONFIG_ATTR_FORCE_QUIT PCMK_OPT_SHUTDOWN_ESCALATION
+
+//! \deprecated Use \c PCMK_OPT_SHUTDOWN_LOCK instead
+#define XML_CONFIG_ATTR_SHUTDOWN_LOCK PCMK_OPT_SHUTDOWN_LOCK
+
+//! \deprecated Use \c PCMK_OPT_SHUTDOWN_LOCK_LIMIT instead
+#define XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT PCMK_OPT_SHUTDOWN_LOCK_LIMIT
 
 #ifdef __cplusplus
 }

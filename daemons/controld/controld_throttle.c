@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2021 the Pacemaker project contributors
+ * Copyright 2013-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -401,7 +401,8 @@ throttle_set_load_target(float target)
  * \internal
  * \brief Update the maximum number of simultaneous jobs
  *
- * \param[in] preference  Cluster-wide node-action-limit from the CIB
+ * \param[in] preference  Cluster-wide \c PCMK_OPT_NODE_ACTION_LIMIT from the
+ *                        CIB
  */
 static void
 throttle_update_job_max(const char *preference)
@@ -416,7 +417,7 @@ throttle_update_job_max(const char *preference)
         pcmk__scan_ll(preference, &max, 0LL);
     }
     if (max > 0) {
-        throttle_job_max = (int) max;
+        throttle_job_max = (max >= INT_MAX)? INT_MAX : (int) max;
     } else {
         // Default is based on the number of cores detected
         throttle_job_max = 2 * pcmk__procfs_num_cores();
@@ -444,13 +445,13 @@ throttle_init(void)
 void
 controld_configure_throttle(GHashTable *options)
 {
-    const char *value = g_hash_table_lookup(options, "load-threshold");
+    const char *value = g_hash_table_lookup(options, PCMK_OPT_LOAD_THRESHOLD);
 
     if (value != NULL) {
         throttle_set_load_target(strtof(value, NULL) / 100.0);
     }
 
-    value = g_hash_table_lookup(options, "node-action-limit");
+    value = g_hash_table_lookup(options, PCMK_OPT_NODE_ACTION_LIMIT);
     throttle_update_job_max(value);
 }
 
@@ -497,13 +498,12 @@ throttle_get_total_job_limit(int l)
         }
     }
     if(limit == l) {
-        /* crm_trace("No change to batch-limit=%d", limit); */
 
     } else if(l == 0) {
-        crm_trace("Using batch-limit=%d", limit);
+        crm_trace("Using " PCMK_OPT_BATCH_LIMIT "=%d", limit);
 
     } else {
-        crm_trace("Using batch-limit=%d instead of %d", limit, l);
+        crm_trace("Using " PCMK_OPT_BATCH_LIMIT "=%d instead of %d", limit, l);
     }
     return limit;
 }

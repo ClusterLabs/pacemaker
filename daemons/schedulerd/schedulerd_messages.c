@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -51,9 +51,9 @@ handle_pecalc_request(pcmk__request_t *request)
          */
         int wrap;
     } series[] = {
-        { "pe-error", "pe-error-series-max", -1 },
-        { "pe-warn",  "pe-warn-series-max",  5000 },
-        { "pe-input", "pe-input-series-max", 4000 },
+        { "pe-error", PCMK_OPT_PE_ERROR_SERIES_MAX, -1 },
+        { "pe-warn",  PCMK_OPT_PE_WARN_SERIES_MAX, 5000 },
+        { "pe-input", PCMK_OPT_PE_INPUT_SERIES_MAX, 4000 },
     };
 
     xmlNode *msg = request->xml;
@@ -83,7 +83,7 @@ handle_pecalc_request(pcmk__request_t *request)
     if (!cli_config_update(&converted, NULL, TRUE)) {
         scheduler->graph = create_xml_node(NULL, XML_TAG_GRAPH);
         crm_xml_add_int(scheduler->graph, "transition_id", 0);
-        crm_xml_add_int(scheduler->graph, "cluster-delay", 0);
+        crm_xml_add_int(scheduler->graph, PCMK_OPT_CLUSTER_DELAY, 0);
         process = false;
         free(digest);
 

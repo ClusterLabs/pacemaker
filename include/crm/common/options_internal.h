@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2023 the Pacemaker project contributors
+ * Copyright 2006-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,6 +17,8 @@
 
 #  include <glib.h>     // GHashTable
 #  include <stdbool.h>  // bool
+
+#include <crm/common/util.h>    // pcmk_parse_interval_spec()
 
 _Noreturn void pcmk__cli_help(char cmd);
 
@@ -63,11 +65,11 @@ void pcmk__validate_cluster_options(GHashTable *options,
 
 bool pcmk__valid_interval_spec(const char *value);
 bool pcmk__valid_boolean(const char *value);
-bool pcmk__valid_number(const char *value);
-bool pcmk__valid_positive_number(const char *value);
-bool pcmk__valid_quorum(const char *value);
-bool pcmk__valid_script(const char *value);
+bool pcmk__valid_int(const char *value);
+bool pcmk__valid_positive_int(const char *value);
+bool pcmk__valid_no_quorum_policy(const char *value);
 bool pcmk__valid_percentage(const char *value);
+bool pcmk__valid_script(const char *value);
 
 // from watchdog.c
 long pcmk__get_sbd_timeout(void);
@@ -124,12 +126,8 @@ bool pcmk__valid_sbd_timeout(const char *value);
  */
 #define PCMK__ENV_SHUTDOWN_DELAY            "shutdown_delay"
 
-// Constants for cluster option names
-#define PCMK__OPT_NODE_HEALTH_BASE          "node-health-base"
-#define PCMK__OPT_NODE_HEALTH_GREEN         "node-health-green"
-#define PCMK__OPT_NODE_HEALTH_RED           "node-health-red"
-#define PCMK__OPT_NODE_HEALTH_STRATEGY      "node-health-strategy"
-#define PCMK__OPT_NODE_HEALTH_YELLOW        "node-health-yellow"
+// @COMPAT Deprecated since 2.1.0
+#define PCMK__OPT_REMOVE_AFTER_STOP         "remove-after-stop"
 
 // Constants for meta-attribute names
 #define PCMK__META_ALLOW_UNHEALTHY_NODES    "allow-unhealthy-nodes"

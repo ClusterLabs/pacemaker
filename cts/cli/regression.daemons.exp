@@ -47,7 +47,7 @@
       <content type="time" default=""/>
     </parameter>
     <parameter name="cluster-recheck-interval">
-      <longdesc lang="en">Pacemaker is primarily event-driven, and looks ahead to know when to recheck cluster state for failure timeouts and most time-based rules. However, it will also recheck the cluster after this amount of inactivity, to evaluate rules with date specifications and serve as a fail-safe for certain types of scheduler bugs.  Allowed values: Zero disables polling, while positive values are an interval in seconds(unless other units are specified, for example "5min")</longdesc>
+      <longdesc lang="en">Pacemaker is primarily event-driven, and looks ahead to know when to recheck cluster state for failure timeouts and most time-based rules. However, it will also recheck the cluster after this amount of inactivity, to evaluate rules with date specifications and serve as a fail-safe for certain types of scheduler bugs. Allowed values: Zero disables polling, while positive values are an interval in seconds (unless other units are specified, for example "5min").</longdesc>
       <shortdesc lang="en">Polling interval to recheck cluster state and evaluate rules with date specifications</shortdesc>
       <content type="time" default=""/>
     </parameter>
@@ -62,9 +62,12 @@
       <content type="integer" default=""/>
     </parameter>
     <parameter name="fence-reaction">
-      <longdesc lang="en">A cluster node may receive notification of its own fencing if fencing is misconfigured, or if fabric fencing is in use that doesn&apos;t cut cluster communication. Allowed values are &quot;stop&quot; to attempt to immediately stop Pacemaker and stay stopped, or &quot;panic&quot; to attempt to immediately reboot the local node, falling back to stop on failure.</longdesc>
+      <longdesc lang="en">A cluster node may receive notification of its own fencing if fencing is misconfigured, or if fabric fencing is in use that doesn&apos;t cut cluster communication. Use &quot;stop&quot; to attempt to immediately stop Pacemaker and stay stopped, or &quot;panic&quot; to attempt to immediately reboot the local node, falling back to stop on failure. Allowed values: stop, panic.</longdesc>
       <shortdesc lang="en">How a cluster node should react if notified of its own fencing</shortdesc>
-      <content type="string" default=""/>
+      <content type="select" default="">
+        <option value="stop" />
+        <option value="panic" />
+      </content>
     </parameter>
     <parameter name="election-timeout">
       <longdesc lang="en">Declare an election failed if it is not decided within this much time. If you need to adjust this value, it probably indicates the presence of a bug.</longdesc>
@@ -102,7 +105,7 @@
       <content type="integer" default=""/>
     </parameter>
     <parameter name="no-quorum-policy">
-      <longdesc lang="en">What to do when the cluster does not have quorum  Allowed values: stop, freeze, ignore, demote, suicide</longdesc>
+      <longdesc lang="en">What to do when the cluster does not have quorum. Allowed values: stop, freeze, ignore, demote, suicide.</longdesc>
       <shortdesc lang="en">What to do when the cluster does not have quorum</shortdesc>
       <content type="select" default="">
         <option value="stop" />
@@ -275,7 +278,7 @@
   <shortdesc lang="en">Pacemaker scheduler options</shortdesc>
   <parameters>
     <parameter name="no-quorum-policy">
-      <longdesc lang="en">What to do when the cluster does not have quorum  Allowed values: stop, freeze, ignore, demote, suicide</longdesc>
+      <longdesc lang="en">What to do when the cluster does not have quorum. Allowed values: stop, freeze, ignore, demote, suicide.</longdesc>
       <shortdesc lang="en">What to do when the cluster does not have quorum</shortdesc>
       <content type="select" default="">
         <option value="stop" />
@@ -321,7 +324,7 @@
       <content type="boolean" default=""/>
     </parameter>
     <parameter name="stonith-action">
-      <longdesc lang="en">Action to send to fence device when a node needs to be fenced (&quot;poweroff&quot; is a deprecated alias for &quot;off&quot;)  Allowed values: reboot, off, poweroff</longdesc>
+      <longdesc lang="en">Action to send to fence device when a node needs to be fenced (&quot;poweroff&quot; is a deprecated alias for &quot;off&quot;). Allowed values: reboot, off, poweroff.</longdesc>
       <shortdesc lang="en">Action to send to fence device when a node needs to be fenced (&quot;poweroff&quot; is a deprecated alias for &quot;off&quot;)</shortdesc>
       <content type="select" default="">
         <option value="reboot" />
@@ -330,8 +333,8 @@
       </content>
     </parameter>
     <parameter name="stonith-timeout">
-      <longdesc lang="en">This value is not used by Pacemaker, but is kept for backward compatibility, and certain legacy fence agents might use it.</longdesc>
-      <shortdesc lang="en">*** Advanced Use Only *** Unused by Pacemaker</shortdesc>
+      <longdesc lang="en">How long to wait for on, off, and reboot fence actions to complete by default</longdesc>
+      <shortdesc lang="en">How long to wait for on, off, and reboot fence actions to complete by default</shortdesc>
       <content type="time" default=""/>
     </parameter>
     <parameter name="have-watchdog">
@@ -345,7 +348,7 @@
       <content type="boolean" default=""/>
     </parameter>
     <parameter name="startup-fencing">
-      <longdesc lang="en">Setting this to false may lead to a &quot;split-brain&quot; situation,potentially leading to data loss and/or service unavailability.</longdesc>
+      <longdesc lang="en">Setting this to false may lead to a &quot;split-brain&quot; situation, potentially leading to data loss and/or service unavailability.</longdesc>
       <shortdesc lang="en">*** Advanced Use Only *** Whether to fence unseen nodes at start-up</shortdesc>
       <content type="boolean" default=""/>
     </parameter>
@@ -410,7 +413,7 @@
       <content type="integer" default=""/>
     </parameter>
     <parameter name="node-health-strategy">
-      <longdesc lang="en">Requires external entities to create node attributes (named with the prefix &quot;#health&quot;) with values &quot;red&quot;, &quot;yellow&quot;, or &quot;green&quot;.  Allowed values: none, migrate-on-red, only-green, progressive, custom</longdesc>
+      <longdesc lang="en">Requires external entities to create node attributes (named with the prefix &quot;#health&quot;) with values &quot;red&quot;, &quot;yellow&quot;, or &quot;green&quot;. Allowed values: none, migrate-on-red, only-green, progressive, custom.</longdesc>
       <shortdesc lang="en">How cluster should react to node health attributes</shortdesc>
       <content type="select" default="">
         <option value="none" />
@@ -441,7 +444,7 @@
       <content type="integer" default=""/>
     </parameter>
     <parameter name="placement-strategy">
-      <longdesc lang="en">How the cluster should allocate resources to nodes  Allowed values: default, utilization, minimal, balanced</longdesc>
+      <longdesc lang="en">How the cluster should allocate resources to nodes. Allowed values: default, utilization, minimal, balanced.</longdesc>
       <shortdesc lang="en">How the cluster should allocate resources to nodes</shortdesc>
       <content type="select" default="">
         <option value="default" />

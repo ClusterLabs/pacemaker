@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -664,10 +664,14 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
                               "\tcrm_attribute --node myhost --name location --update backoffice\n\n"
                               "Delete the 'location' node attribute for host 'myhost':\n\n"
                               "\tcrm_attribute --node myhost --name location --delete\n\n"
-                              "Query the value of the 'cluster-delay' cluster option:\n\n"
-                              "\tcrm_attribute --type crm_config --name cluster-delay --query\n\n"
-                              "Query value of the 'cluster-delay' cluster option and print only the value:\n\n"
-                              "\tcrm_attribute --type crm_config --name cluster-delay --query --quiet\n\n";
+                              "Query the value of the '" PCMK_OPT_CLUSTER_DELAY
+                                "' cluster option:\n\n"
+                              "\tcrm_attribute --type crm_config --name "
+                                PCMK_OPT_CLUSTER_DELAY " --query\n\n"
+                              "Query value of the '" PCMK_OPT_CLUSTER_DELAY
+                                "' cluster option and print only the value:\n\n"
+                              "\tcrm_attribute --type crm_config --name "
+                                PCMK_OPT_CLUSTER_DELAY " --query --quiet\n\n";
 
     context = pcmk__build_arg_context(args, "text (default), xml", group, NULL);
     pcmk__add_main_args(context, extra_prog_entries);

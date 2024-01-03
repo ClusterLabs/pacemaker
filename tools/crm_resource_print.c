@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -477,10 +477,10 @@ resource_check_list_default(pcmk__output_t *out, va_list args) {
     if (pcmk_is_set(checks->flags, rsc_node_health)) {
         out->list_item(out, "check",
                        "'%s' cannot run on unhealthy nodes due to "
-                       PCMK__OPT_NODE_HEALTH_STRATEGY "='%s'",
+                       PCMK_OPT_NODE_HEALTH_STRATEGY "='%s'",
                        parent->id,
                        pe_pref(checks->rsc->cluster->config_hash,
-                               PCMK__OPT_NODE_HEALTH_STRATEGY));
+                               PCMK_OPT_NODE_HEALTH_STRATEGY));
     }
 
     out->end_list(out);

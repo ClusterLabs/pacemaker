@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the Pacemaker project contributors
+ * Copyright 2019-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -193,11 +193,14 @@ append_dump_text(gpointer key, gpointer value, gpointer user_data)
     *dump_text = new_text;
 }
 
+#define XPATH_STACK "//" XML_CIB_TAG_NVPAIR         \
+                    "[@" XML_NVPAIR_ATTR_NAME "='"  \
+                        PCMK_OPT_CLUSTER_INFRASTRUCTURE "']"
+
 static const char *
 get_cluster_stack(pcmk_scheduler_t *scheduler)
 {
-    xmlNode *stack = get_xpath_object("//nvpair[@name='cluster-infrastructure']",
-                                      scheduler->input, LOG_DEBUG);
+    xmlNode *stack = get_xpath_object(XPATH_STACK, scheduler->input, LOG_DEBUG);
     return stack? crm_element_value(stack, XML_NVPAIR_ATTR_VALUE) : "unknown";
 }
 
@@ -386,6 +389,10 @@ formatted_xml_buf(const pcmk_resource_t *rsc, bool raw)
     }
 }
 
+#define XPATH_DC_VERSION "//" XML_CIB_TAG_NVPAIR         \
+                         "[@" XML_NVPAIR_ATTR_NAME "='"  \
+                            PCMK_OPT_DC_VERSION "']"
+
 PCMK__OUTPUT_ARGS("cluster-summary", "pcmk_scheduler_t *",
                   "enum pcmk_pacemakerd_state", "uint32_t", "uint32_t")
 static int
@@ -405,7 +412,7 @@ cluster_summary(pcmk__output_t *out, va_list args) {
     }
 
     if (pcmk_is_set(section_opts, pcmk_section_dc)) {
-        xmlNode *dc_version = get_xpath_object("//nvpair[@name='dc-version']",
+        xmlNode *dc_version = get_xpath_object(XPATH_DC_VERSION,
                                                scheduler->input, LOG_DEBUG);
         const char *dc_version_s = dc_version?
                                    crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE)
@@ -480,7 +487,7 @@ cluster_summary_html(pcmk__output_t *out, va_list args) {
     /* Always print DC if none, even if not requested */
     if ((scheduler->dc_node == NULL)
         || pcmk_is_set(section_opts, pcmk_section_dc)) {
-        xmlNode *dc_version = get_xpath_object("//nvpair[@name='dc-version']",
+        xmlNode *dc_version = get_xpath_object(XPATH_DC_VERSION,
                                                scheduler->input, LOG_DEBUG);
         const char *dc_version_s = dc_version?
                                    crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE)
@@ -1130,16 +1137,19 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
     }
 
     pcmk__output_create_xml_node(out, "cluster_options",
-                                 "stonith-enabled",
-                                 bv(pcmk_sched_fencing_enabled),
-                                 "symmetric-cluster",
-                                 bv(pcmk_sched_symmetric_cluster),
-                                 "no-quorum-policy", no_quorum_policy,
-                                 "maintenance-mode",
-                                 bv(pcmk_sched_in_maintenance),
-                                 "stop-all-resources", bv(pcmk_sched_stop_all),
-                                 "stonith-timeout-ms", stonith_timeout_str,
-                                 "priority-fencing-delay-ms", priority_fencing_delay_str,
+                                 PCMK_OPT_STONITH_ENABLED,
+                                    bv(pcmk_sched_fencing_enabled),
+                                 PCMK_OPT_SYMMETRIC_CLUSTER,
+                                    bv(pcmk_sched_symmetric_cluster),
+                                 PCMK_OPT_NO_QUORUM_POLICY, no_quorum_policy,
+                                 PCMK_OPT_MAINTENANCE_MODE,
+                                    bv(pcmk_sched_in_maintenance),
+                                 PCMK_OPT_STOP_ALL_RESOURCES,
+                                    bv(pcmk_sched_stop_all),
+                                 PCMK_OPT_STONITH_TIMEOUT "-ms",
+                                    stonith_timeout_str,
+                                 PCMK_OPT_PRIORITY_FENCING_DELAY "-ms",
+                                    priority_fencing_delay_str,
                                  NULL);
     free(stonith_timeout_str);
     free(priority_fencing_delay_str);

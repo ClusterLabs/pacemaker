@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -251,11 +251,12 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
         XML_ATTR_TYPE
     };
 
-    /* If a resource is locked to a node via shutdown-lock, mark its actions
-     * so the controller can preserve the lock when the action completes.
+    /* If a resource is locked to a node via PCMK_OPT_SHUTDOWN_LOCK, mark its
+     * actions so the controller can preserve the lock when the action
+     * completes.
      */
     if (pcmk__action_locks_rsc_to_node(action)) {
-        crm_xml_add_ll(action_xml, XML_CONFIG_ATTR_SHUTDOWN_LOCK,
+        crm_xml_add_ll(action_xml, PCMK_OPT_SHUTDOWN_LOCK,
                        (long long) action->rsc->lock_time);
     }
 
@@ -1010,11 +1011,11 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
 
     scheduler->graph = create_xml_node(NULL, XML_TAG_GRAPH);
 
-    value = pe_pref(scheduler->config_hash, "cluster-delay");
-    crm_xml_add(scheduler->graph, "cluster-delay", value);
+    value = pe_pref(scheduler->config_hash, PCMK_OPT_CLUSTER_DELAY);
+    crm_xml_add(scheduler->graph, PCMK_OPT_CLUSTER_DELAY, value);
 
-    value = pe_pref(scheduler->config_hash, "stonith-timeout");
-    crm_xml_add(scheduler->graph, "stonith-timeout", value);
+    value = pe_pref(scheduler->config_hash, PCMK_OPT_STONITH_TIMEOUT);
+    crm_xml_add(scheduler->graph, PCMK_OPT_STONITH_TIMEOUT, value);
 
     crm_xml_add(scheduler->graph, "failed-stop-offset", "INFINITY");
 
@@ -1024,14 +1025,14 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
         crm_xml_add(scheduler->graph, "failed-start-offset", "1");
     }
 
-    value = pe_pref(scheduler->config_hash, "batch-limit");
-    crm_xml_add(scheduler->graph, "batch-limit", value);
+    value = pe_pref(scheduler->config_hash, PCMK_OPT_BATCH_LIMIT);
+    crm_xml_add(scheduler->graph, PCMK_OPT_BATCH_LIMIT, value);
 
     crm_xml_add_int(scheduler->graph, "transition_id", transition_id);
 
-    value = pe_pref(scheduler->config_hash, "migration-limit");
+    value = pe_pref(scheduler->config_hash, PCMK_OPT_MIGRATION_LIMIT);
     if ((pcmk__scan_ll(value, &limit, 0LL) == pcmk_rc_ok) && (limit > 0)) {
-        crm_xml_add(scheduler->graph, "migration-limit", value);
+        crm_xml_add(scheduler->graph, PCMK_OPT_MIGRATION_LIMIT, value);
     }
 
     if (scheduler->recheck_by > 0) {

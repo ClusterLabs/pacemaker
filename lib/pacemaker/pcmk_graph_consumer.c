@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -703,27 +703,27 @@ pcmk__unpack_graph(const xmlNode *xml_graph, const char *reference)
                                return NULL);
         pcmk__scan_min_int(buf, &(new_graph->id), -1);
 
-        buf = crm_element_value(xml_graph, "cluster-delay");
+        buf = crm_element_value(xml_graph, PCMK_OPT_CLUSTER_DELAY);
         CRM_CHECK(buf != NULL, free(new_graph);
                                return NULL);
-        new_graph->network_delay = crm_parse_interval_spec(buf);
+        pcmk_parse_interval_spec(buf, &(new_graph->network_delay));
 
-        buf = crm_element_value(xml_graph, "stonith-timeout");
+        buf = crm_element_value(xml_graph, PCMK_OPT_STONITH_TIMEOUT);
         if (buf == NULL) {
             new_graph->stonith_timeout = new_graph->network_delay;
         } else {
-            new_graph->stonith_timeout = crm_parse_interval_spec(buf);
+            pcmk_parse_interval_spec(buf, &(new_graph->stonith_timeout));
         }
 
         // Use 0 (dynamic limit) as default/invalid, -1 (no limit) as minimum
-        buf = crm_element_value(xml_graph, "batch-limit");
+        buf = crm_element_value(xml_graph, PCMK_OPT_BATCH_LIMIT);
         if ((buf == NULL)
             || (pcmk__scan_min_int(buf, &(new_graph->batch_limit),
                                    -1) != pcmk_rc_ok)) {
             new_graph->batch_limit = 0;
         }
 
-        buf = crm_element_value(xml_graph, "migration-limit");
+        buf = crm_element_value(xml_graph, PCMK_OPT_MIGRATION_LIMIT);
         pcmk__scan_min_int(buf, &(new_graph->migration_limit), -1);
 
         pcmk__str_update(&(new_graph->failed_stop_offset),

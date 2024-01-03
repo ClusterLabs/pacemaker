@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the Pacemaker project contributors
+ * Copyright 2013-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1452,8 +1452,9 @@ remote_ra_process_maintenance_nodes(xmlNode *xml)
                 remote_ra_maintenance(lrm_state, is_maint);
             }
         }
-        crm_trace("Action holds %d nodes (%d remotes found) "
-                    "adjusting maintenance-mode", cnt, cnt_remote);
+        crm_trace("Action holds %d nodes (%d remotes found) adjusting "
+                  PCMK_OPT_MAINTENANCE_MODE,
+                  cnt, cnt_remote);
     }
     freeXpathObject(search);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -143,7 +143,6 @@ extern "C" {
 
 #  define XML_ATTR_QUORUM_PANIC		"no-quorum-panic"
 #  define XML_ATTR_HAVE_QUORUM		"have-quorum"
-#  define XML_ATTR_HAVE_WATCHDOG	"have-watchdog"
 #  define XML_ATTR_GENERATION		"epoch"
 #  define XML_ATTR_GENERATION_ADMIN	"admin_epoch"
 #  define XML_ATTR_NUMUPDATES		"num_updates"
@@ -394,16 +393,6 @@ extern "C" {
 #  define XML_NVPAIR_ATTR_VALUE        	"value"
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
-
-#  define XML_CONFIG_ATTR_DC_DEADTIME	"dc-deadtime"
-#  define XML_CONFIG_ATTR_ELECTION_FAIL	"election-timeout"
-#  define XML_CONFIG_ATTR_FORCE_QUIT	"shutdown-escalation"
-#  define XML_CONFIG_ATTR_RECHECK	"cluster-recheck-interval"
-#  define XML_CONFIG_ATTR_FENCE_REACTION	"fence-reaction"
-#  define XML_CONFIG_ATTR_SHUTDOWN_LOCK         "shutdown-lock"
-#  define XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT   "shutdown-lock-limit"
-#  define XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY "priority-fencing-delay"
-#  define XML_CONFIG_ATTR_NODE_PENDING_TIMEOUT "node-pending-timeout"
 
 #  define XML_ALERT_ATTR_PATH		"path"
 #  define XML_ALERT_ATTR_TIMEOUT	"timeout"

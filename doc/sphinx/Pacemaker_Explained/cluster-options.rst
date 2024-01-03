@@ -62,143 +62,6 @@ Normally, you will use command-line tools that abstract the XML, so the
 distinction will be unimportant; both properties and options are cluster
 settings you can tweak.
 
-Configuration Value Types
-#########################
-
-Throughout this document, configuration values will be designated as having one
-of the following types:
-
-.. list-table:: **Configuration Value Types**
-   :class: longtable
-   :widths: 1 3
-   :header-rows: 1
-
-   * - Type
-     - Description
-   * - .. _boolean:
-       
-       .. index::
-          pair: type; boolean
-       
-       boolean
-     - Case-insensitive text value where ``1``, ``yes``, ``y``, ``on``,
-       and ``true`` evaluate as true and ``0``, ``no``, ``n``, ``off``,
-       ``false``, and unset evaluate as false
-   * - .. _date_time:
-       
-       .. index::
-          pair: type; date/time
-       
-       date/time
-     - Textual timestamp like ``Sat Dec 21 11:47:45 2013``
-   * - .. _duration:
-       
-       .. index::
-          pair: type; duration
-       
-       duration
-     - A time duration, specified either like a :ref:`timeout <timeout>` or an
-       `ISO 8601 duration <https://en.wikipedia.org/wiki/ISO_8601#Durations>`_.
-       A duration may be up to approximately 49 days but is intended for much
-       smaller time periods.
-   * - .. _enumeration:
-       
-       .. index::
-          pair: type; enumeration
-       
-       enumeration
-     - Text that must be one of a set of defined values (which will be listed
-       in the description)
-   * - .. _integer:
-       
-       .. index::
-          pair: type; integer
-       
-       integer
-     - 32-bit signed integer value (-2,147,483,648 to 2,147,483,647)
-   * - .. _nonnegative_integer:
-       
-       .. index::
-          pair: type; nonnegative integer
-       
-       nonnegative integer
-     - 32-bit nonnegative integer value (0 to 2,147,483,647)
-   * - .. _port:
-       
-       .. index::
-          pair: type; port
-       
-       port
-     - Integer TCP port number (0 to 65535)
-   * - .. _score:
-       
-       .. index::
-          pair: type; score
-       
-       score
-     - A Pacemaker score can be an integer between -1,000,000 and 1,000,000, or
-       a string alias: ``INFINITY`` or ``+INFINITY`` is equivalent to
-       1,000,000, ``-INFINITY`` is equivalent to -1,000,000, and ``red``,
-       ``yellow``, and ``green`` are equivalent to integers as described in
-       :ref:`node-health`.
-   * - .. _text:
-       
-       .. index::
-          pair: type; text
-       
-       text
-     - A text string
-   * - .. _timeout:
-       
-       .. index::
-          pair: type; timeout
-       
-       timeout
-     - A time duration, specified as a bare number (in which case it is
-       considered to be in seconds) or a number with a unit (``ms`` or ``msec``
-       for milliseconds, ``us`` or ``usec`` for microseconds, ``s`` or ``sec``
-       for seconds, ``m`` or ``min`` for minutes, ``h`` or ``hr`` for hours)
-       optionally with whitespace before and/or after the number.
-   * - .. _version:
-       
-       .. index::
-          pair: type; version
-       
-       version
-     - Version number (any combination of alphanumeric characters, dots, and
-       dashes, starting with a number).
-
-
-Scores
-______
-
-Scores are integral to how Pacemaker works. Practically everything from moving
-a resource to deciding which resource to stop in a degraded cluster is achieved
-by manipulating scores in some way.
-
-Scores are calculated per resource and node. Any node with a negative score for
-a resource can't run that resource. The cluster places a resource on the node
-with the highest score for it.
-
-Score addition and subtraction follow these rules:
-
-* Any value (including ``INFINITY``) - ``INFINITY`` = ``-INFINITY``
-* ``INFINITY`` + any value other than ``-INFINITY`` = ``INFINITY``
-
-.. note::
-
-   What if you want to use a score higher than 1,000,000? Typically this possibility
-   arises when someone wants to base the score on some external metric that might
-   go above 1,000,000.
-
-   The short answer is you can't.
-
-   The long answer is it is sometimes possible work around this limitation
-   creatively. You may be able to set the score to some computed value based on
-   the external metric rather than use the metric directly. For nodes, you can
-   store the metric as a node attribute, and query the attribute when computing
-   the score (possibly as part of a custom resource agent).
-
 
 CIB Properties
 ##############
@@ -427,6 +290,29 @@ values, by running the ``man pacemaker-schedulerd`` and
      - The number of :ref:`live migration <live-migration>` actions that the
        cluster is allowed to execute in parallel on a node. A value of -1 means
        unlimited.
+   * - .. _load_threshold:
+       
+       .. index::
+          pair: cluster option; load-threshold
+       
+       load-threshold
+     - :ref:`percentage <percentage>`
+     - 80%
+     - Maximum amount of system load that should be used by cluster nodes. The
+       cluster will slow down its recovery process when the amount of system
+       resources used (currently CPU) approaches this limit.
+   * - .. _node_action_limit:
+       
+       .. index::
+          pair: cluster option; node-action-limit
+       
+       node-action-limit
+     - :ref:`integer <integer>`
+     - 0
+     - Maximum number of jobs that can be scheduled per node. If nonpositive or
+       invalid, double the number of cores is used as the maximum number of jobs
+       per node. :ref:`PCMK_node_action_limit <pcmk_node_action_limit>`
+       overrides this option on a per-node basis.
    * - .. _symmetric_cluster:
        
        .. index::
@@ -558,6 +444,22 @@ values, by running the ``man pacemaker-schedulerd`` and
      - How many times fencing can fail for a target before the cluster will no
        longer immediately re-attempt it. Any value below 1 will be ignored, and
        the default will be used instead.
+   * - .. _have_watchdog:
+
+       .. index::
+          pair: cluster option; have-watchdog
+
+       have-watchdog
+     - :ref:`boolean <boolean>`
+     - *detected*
+     - Whether watchdog integration is enabled. This is set automatically by the
+       cluster according to whether SBD is detected to be in use.
+       User-configured values are ignored. The value `true` is meaningful if
+       diskless SBD is used and
+       :ref:`stonith-watchdog-timeout <stonith_watchdog_timeout>` is nonzero. In
+       that case, if fencing is required, watchdog-based self-fencing will be
+       performed via SBD without requiring a fencing resource explicitly
+       configured.
    * - .. _stonith_watchdog_timeout:
       
        .. index::
@@ -784,7 +686,7 @@ values, by running the ``man pacemaker-schedulerd`` and
       
        node-health-red
      - :ref:`score <score>`
-     - 0
+     - -INFINITY
      - The score to use for a node health attribute whose value is ``red``.
        Only used when ``node-health-strategy`` is ``progressive`` or
        ``custom``.

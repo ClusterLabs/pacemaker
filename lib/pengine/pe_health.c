@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -42,11 +42,11 @@ pe__unpack_node_health_scores(pcmk_scheduler_t *scheduler)
             break;
 
         default: // progressive or custom
-            pcmk__score_red = pe__health_score(PCMK__OPT_NODE_HEALTH_RED,
+            pcmk__score_red = pe__health_score(PCMK_OPT_NODE_HEALTH_RED,
                                                scheduler);
-            pcmk__score_green = pe__health_score(PCMK__OPT_NODE_HEALTH_GREEN,
+            pcmk__score_green = pe__health_score(PCMK_OPT_NODE_HEALTH_GREEN,
                                                  scheduler);
-            pcmk__score_yellow = pe__health_score(PCMK__OPT_NODE_HEALTH_YELLOW,
+            pcmk__score_yellow = pe__health_score(PCMK_OPT_NODE_HEALTH_YELLOW,
                                                   scheduler);
             break;
     }

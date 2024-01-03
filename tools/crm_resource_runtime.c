@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -668,7 +668,7 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
     int rc = pcmk_rc_ok;
     const char *failed_value = NULL;
     const char *failed_id = NULL;
-    const char *interval_ms_s = NULL;
+    char *interval_ms_s = NULL;
     GHashTable *rscs = NULL;
     GHashTableIter iter;
 
@@ -680,8 +680,10 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
 
     // Normalize interval to milliseconds for comparison to history entry
     if (operation) {
-        interval_ms_s = crm_strdup_printf("%u",
-                                          crm_parse_interval_spec(interval_spec));
+        guint interval_ms = 0U;
+
+        pcmk_parse_interval_spec(interval_spec, &interval_ms);
+        interval_ms_s = crm_strdup_printf("%u", interval_ms);
     }
 
     for (xmlNode *xml_op = pcmk__xml_first_child(scheduler->failed);
@@ -729,6 +731,8 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
 
         g_hash_table_add(rscs, (gpointer) failed_id);
     }
+
+    free(interval_ms_s);
 
     g_hash_table_iter_init(&iter, rscs);
     while (g_hash_table_iter_next(&iter, (gpointer *) &failed_id, NULL)) {
@@ -1891,7 +1895,7 @@ wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
              * DC. However, that would have potential problems of its own.
              */
             const char *dc_version = g_hash_table_lookup(scheduler->config_hash,
-                                                         "dc-version");
+                                                         PCMK_OPT_DC_VERSION);
 
             if (!pcmk__str_eq(dc_version, PACEMAKER_VERSION "-" BUILD_VERSION, pcmk__str_casei)) {
                 out->info(out, "warning: wait option may not work properly in "

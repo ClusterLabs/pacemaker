@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -483,9 +483,9 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
                && !pcmk_is_set(rsc->cluster->flags, pcmk_sched_quorate)
                && (rsc->cluster->no_quorum_policy == pcmk_no_quorum_freeze)) {
         crm_notice("Resource %s cannot be elevated from %s to %s due to "
-                   "no-quorum-policy=freeze",
+                   PCMK_OPT_NO_QUORUM_POLICY "=freeze",
                    rsc->id, role2text(rsc->role), role2text(rsc->next_role));
-        pe__set_next_role(rsc, rsc->role, "no-quorum-policy=freeze");
+        pe__set_next_role(rsc, rsc->role, PCMK_OPT_NO_QUORUM_POLICY "=freeze");
     }
 
     pe__show_node_scores(!pcmk_is_set(rsc->cluster->flags,
@@ -522,7 +522,8 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     } else if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_stop_all)) {
         // Must stop at some point, but be consistent with stop_if_fail
         if (stop_if_fail) {
-            pcmk__rsc_debug(rsc, "Forcing %s to stop: stop-all-resources",
+            pcmk__rsc_debug(rsc,
+                            "Forcing %s to stop: " PCMK_OPT_STOP_ALL_RESOURCES,
                             rsc->id);
         }
         pcmk__assign_resource(rsc, NULL, true, stop_if_fail);
@@ -761,10 +762,10 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
     } else {
         /* If a resource has "requires" set to nothing or quorum, don't consider
          * it active on unclean nodes (similar to how all resources behave when
-         * stonith-enabled is false). We can start such resources elsewhere
-         * before fencing completes, and if we considered the resource active on
-         * the failed node, we would attempt recovery for being active on
-         * multiple nodes.
+         * PCMK_OPT_STONITH_ENABLED is false). We can start such resources
+         * elsewhere before fencing completes, and if we considered the resource
+         * active on the failed node, we would attempt recovery for being active
+         * on multiple nodes.
          */
         multiply_active = (num_clean_active > 1);
     }
@@ -1594,7 +1595,7 @@ ban_if_not_locked(gpointer data, gpointer user_data)
 
     if (strcmp(node->details->uname, rsc->lock_node->details->uname) != 0) {
         resource_location(rsc, node, -CRM_SCORE_INFINITY,
-                          XML_CONFIG_ATTR_SHUTDOWN_LOCK, rsc->cluster);
+                          PCMK_OPT_SHUTDOWN_LOCK, rsc->cluster);
     }
 }
 

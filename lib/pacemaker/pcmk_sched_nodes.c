@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -361,7 +361,7 @@ pcmk__apply_node_health(pcmk_scheduler_t *scheduler)
     int base_health = 0;
     enum pcmk__health_strategy strategy;
     const char *strategy_str = pe_pref(scheduler->config_hash,
-                                       PCMK__OPT_NODE_HEALTH_STRATEGY);
+                                       PCMK_OPT_NODE_HEALTH_STRATEGY);
 
     strategy = pcmk__parse_health_strategy(strategy_str);
     if (strategy == pcmk__health_strategy_none) {
@@ -371,7 +371,7 @@ pcmk__apply_node_health(pcmk_scheduler_t *scheduler)
 
     // The progressive strategy can use a base health score
     if (strategy == pcmk__health_strategy_progressive) {
-        base_health = pe__health_score(PCMK__OPT_NODE_HEALTH_BASE, scheduler);
+        base_health = pe__health_score(PCMK_OPT_NODE_HEALTH_BASE, scheduler);
     }
 
     for (GList *iter = scheduler->nodes; iter != NULL; iter = iter->next) {

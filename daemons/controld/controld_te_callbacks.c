@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -24,13 +24,13 @@ void te_update_confirm(const char *event, xmlNode * msg);
 #define RSC_OP_PREFIX "//" XML_TAG_DIFF_ADDED "//" XML_TAG_CIB \
                       "//" XML_LRM_TAG_RSC_OP "[@" XML_ATTR_ID "='"
 
-// An explicit shutdown-lock of 0 means the lock has been cleared
+// An explicit PCMK_OPT_SHUTDOWN_LOCK of 0 means the lock has been cleared
 static bool
 shutdown_lock_cleared(xmlNode *lrm_resource)
 {
     time_t shutdown_lock = 0;
 
-    return (crm_element_value_epoch(lrm_resource, XML_CONFIG_ATTR_SHUTDOWN_LOCK,
+    return (crm_element_value_epoch(lrm_resource, PCMK_OPT_SHUTDOWN_LOCK,
                                     &shutdown_lock) == pcmk_ok)
            && (shutdown_lock == 0);
 }
@@ -666,7 +666,7 @@ action_timer_callback(gpointer data)
         /* fail the action */
 
         crm_err("Node %s did not send %s result (via %s) within %dms "
-                "(action timeout plus cluster-delay)",
+                "(action timeout plus " PCMK_OPT_CLUSTER_DELAY ")",
                 (on_node? on_node : ""), (task? task : "unknown action"),
                 (via_node? via_node : "controller"),
                 (action->timeout

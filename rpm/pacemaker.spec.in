@@ -1,5 +1,5 @@
 #
-# Copyright 2008-2023 the Pacemaker project contributors
+# Copyright 2008-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -769,6 +769,7 @@ exit 0
 %endif
 %{_sbindir}/fence_watchdog
 
+%doc %{_mandir}/man7/pacemaker-based.*
 %doc %{_mandir}/man7/pacemaker-controld.*
 %doc %{_mandir}/man7/pacemaker-schedulerd.*
 %doc %{_mandir}/man7/pacemaker-fenced.*
@@ -849,6 +850,7 @@ exit 0
 %{ocf_root}/resource.d/pacemaker
 
 %doc %{_mandir}/man7/*pacemaker*
+%exclude %{_mandir}/man7/pacemaker-based.*
 %exclude %{_mandir}/man7/pacemaker-controld.*
 %exclude %{_mandir}/man7/pacemaker-schedulerd.*
 %exclude %{_mandir}/man7/pacemaker-fenced.*

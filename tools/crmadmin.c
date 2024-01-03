@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -33,7 +33,7 @@ static enum {
 
 struct {
     gboolean health;
-    gint timeout;
+    guint timeout;
     char *optarg;
     char *ipc_name;
     gboolean bash_export;
@@ -117,11 +117,7 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
     }
 
     if (!strcmp(option_name, "--timeout") || !strcmp(option_name, "-t")) {
-        options.timeout = crm_parse_interval_spec(optarg);
-        if (errno == EINVAL) {
-            return FALSE;
-        }
-        return TRUE;
+        return pcmk_parse_interval_spec(optarg, &options.timeout) == pcmk_rc_ok;
     }
 
     pcmk__str_update(&options.optarg, optarg);

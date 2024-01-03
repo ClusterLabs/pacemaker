@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 the Pacemaker project contributors
+ * Copyright 2012-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -56,8 +56,8 @@ static struct {
 
 static gboolean
 interval_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.interval_ms = crm_parse_interval_spec(optarg);
-    return errno == 0;
+    return pcmk_parse_interval_spec(optarg,
+                                    &options.interval_ms) == pcmk_rc_ok;
 }
 
 static gboolean

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the Pacemaker project contributors
+ * Copyright 2009-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -129,7 +129,7 @@ static int
 get_action_delay_max(const stonith_device_t *device, const char *action)
 {
     const char *value = NULL;
-    int delay_max = 0;
+    guint delay_max = 0U;
 
     if (!pcmk__is_fencing_action(action)) {
         return 0;
@@ -137,10 +137,11 @@ get_action_delay_max(const stonith_device_t *device, const char *action)
 
     value = g_hash_table_lookup(device->params, PCMK_STONITH_DELAY_MAX);
     if (value) {
-       delay_max = crm_parse_interval_spec(value) / 1000;
+        pcmk_parse_interval_spec(value, &delay_max);
+        delay_max /= 1000;
     }
 
-    return delay_max;
+    return (int) delay_max;
 }
 
 static int
@@ -148,7 +149,7 @@ get_action_delay_base(const stonith_device_t *device, const char *action,
                       const char *target)
 {
     char *hash_value = NULL;
-    int delay_base = 0;
+    guint delay_base = 0U;
 
     if (!pcmk__is_fencing_action(action)) {
         return 0;
@@ -181,13 +182,14 @@ get_action_delay_base(const stonith_device_t *device, const char *action,
         }
 
         if (strchr(value, ':') == 0) {
-           delay_base = crm_parse_interval_spec(value) / 1000;
+            pcmk_parse_interval_spec(value, &delay_base);
+            delay_base /= 1000;
         }
 
         free(valptr);
     }
 
-    return delay_base;
+    return (int) delay_base;
 }
 
 /*!
@@ -1023,7 +1025,8 @@ xml2device_params(const char *name, const xmlNode *dev)
             crm_warn("Ignoring empty '%s' parameter", STONITH_ATTR_ACTION_OP);
 
         } else if (strcmp(value, PCMK_ACTION_REBOOT) == 0) {
-            crm_warn("Ignoring %s='reboot' (see stonith-action cluster property instead)",
+            crm_warn("Ignoring %s='reboot' (see " PCMK_OPT_STONITH_ACTION
+                     " cluster property instead)",
                      STONITH_ATTR_ACTION_OP);
 
         } else if (strcmp(value, PCMK_ACTION_OFF) == 0) {
@@ -1389,7 +1392,7 @@ stonith_device_register(xmlNode *dev, gboolean from_cib)
                      STONITH_WATCHDOG_AGENT_INTERNAL, NULL)) do {
         if (stonith_watchdog_timeout_ms <= 0) {
             crm_err("Ignoring watchdog fence device without "
-                    "stonith-watchdog-timeout set.");
+                    PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " set.");
             rv = -ENODEV;
             /* fall through to cleanup & return */
         } else if (!pcmk__str_any_of(device->agent, STONITH_WATCHDOG_AGENT,
@@ -2177,8 +2180,10 @@ can_fence_host_with_device(stonith_device_t *dev,
                                                     search->per_device_timeout);
 
             if (device_timeout > search->per_device_timeout) {
-                crm_notice("Since the pcmk_list_timeout(%ds) parameter of %s is larger than stonith-timeout(%ds), timeout may occur",
-                    device_timeout, dev_id, search->per_device_timeout);
+                crm_notice("Since the pcmk_list_timeout (%ds) parameter of %s "
+                           "is larger than " PCMK_OPT_STONITH_TIMEOUT
+                           " (%ds), timeout may occur",
+                           device_timeout, dev_id, search->per_device_timeout);
             }
 
             crm_trace("Running '%s' to check whether %s is eligible to fence %s (%s)",
@@ -2200,8 +2205,10 @@ can_fence_host_with_device(stonith_device_t *dev,
         int device_timeout = get_action_timeout(dev, check_type, search->per_device_timeout);
 
         if (device_timeout > search->per_device_timeout) {
-            crm_notice("Since the pcmk_status_timeout(%ds) parameter of %s is larger than stonith-timeout(%ds), timeout may occur",
-                device_timeout, dev_id, search->per_device_timeout);
+            crm_notice("Since the pcmk_status_timeout (%ds) parameter of %s is "
+                       "larger than " PCMK_OPT_STONITH_TIMEOUT " (%ds), "
+                       "timeout may occur",
+                       device_timeout, dev_id, search->per_device_timeout);
         }
 
         crm_trace("Running '%s' to check whether %s is eligible to fence %s (%s)",

@@ -120,11 +120,11 @@ INKSCAPE_CMD	= $(INKSCAPE) --export-dpi=90 -C
 # Create the book directory in case this is a VPATH build.
 $(BOOKS:%=%/conf.py): conf.py.in
 	$(AM_V_at)-$(MKDIR_P) "$(@:%/conf.py=%)"
-	$(AM_V_GEN)sed							\
-		-e 's/%VERSION%/$(VERSION)/g'				\
-		-e 's/%BOOK_ID%/$(@:%/conf.py=%)/g'			\
-		-e 's/%BOOK_TITLE%/$(subst _, ,$(@:%/conf.py=%))/g'	\
-		-e 's#%SRC_DIR%#$(abs_srcdir)#g'			\
+	$(AM_V_GEN)sed								\
+		-e 's/%VERSION%/$(VERSION)/g'					\
+		-e 's/%BOOK_ID%/$(@:%/conf.py=%)/g'				\
+		-e 's/%BOOK_TITLE%/$(subst _, ,$(@:%/conf.py=%))/g'		\
+		-e 's#%SRC_DIR%#$(abs_srcdir)#g'				\
 		-e 's#%ABS_TOP_SRCDIR%#$(abs_top_srcdir)#g'			\
 		-e 's#%CONFIGDIR%#@CONFIGDIR@#g'				\
 		-e 's#%CRM_BLACKBOX_DIR%#@CRM_BLACKBOX_DIR@#g'			\
@@ -135,6 +135,7 @@ $(BOOKS:%=%/conf.py): conf.py.in
 		-e 's#%CRM_SCHEMA_DIRECTORY%#@CRM_SCHEMA_DIRECTORY@#g'		\
 		-e 's#%PACEMAKER_CONFIG_DIR%#@PACEMAKER_CONFIG_DIR@#g'		\
 		-e 's#%PCMK_GNUTLS_PRIORITIES%#@PCMK_GNUTLS_PRIORITIES@#g'	\
+		-e 's#%PCMK__REMOTE_SCHEMA_DIR%#@PCMK__REMOTE_SCHEMA_DIR@#g'	\
 		$(<) > "$@"
 
 $(BOOK)/_build: $(STATIC_FILES) $(BOOK)/conf.py $(DEPS_$(BOOK)) $(wildcard $(srcdir)/$(BOOK)/*.rst)

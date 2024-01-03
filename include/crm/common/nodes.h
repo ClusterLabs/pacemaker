@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -119,7 +119,7 @@ struct pe_node_shared_s {
     /*!
      * Sum of priorities of all resources active on node and on any guest nodes
      * connected to this node, with +1 for promoted instances (used to compare
-     * nodes for priority-fencing-delay)
+     * nodes for PCMK_OPT_PRIORITY_FENCING_DELAY)
      */
     int priority;
 

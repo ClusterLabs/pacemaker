@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -349,7 +349,8 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             && (node->when_member > 1)) {
             /* The node left CPG but is still a cluster member. Set its
              * membership time to 1 to record it in the cluster state as a
-             * boolean, so we don't fence it due to node-pending-timeout.
+             * boolean, so we don't fence it due to
+             * PCMK_OPT_NODE_PENDING_TIMEOUT.
              */
             node->when_member = 1;
             flags |= node_update_cluster;

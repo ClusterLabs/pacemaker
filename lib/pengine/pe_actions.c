@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -93,6 +93,7 @@ find_exact_action_config(const pcmk_resource_t *rsc, const char *action_name,
         bool enabled = false;
         const char *config_name = NULL;
         const char *interval_spec = NULL;
+        guint tmp_ms = 0U;
 
         // @TODO This does not consider rules, defaults, etc.
         if (!include_disabled
@@ -102,7 +103,8 @@ find_exact_action_config(const pcmk_resource_t *rsc, const char *action_name,
         }
 
         interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
-        if (crm_parse_interval_spec(interval_spec) != interval_ms) {
+        pcmk_parse_interval_spec(interval_spec, &tmp_ms);
+        if (tmp_ms != interval_ms) {
             continue;
         }
 
@@ -301,7 +303,7 @@ effective_quorum_policy(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
             case pcmk_role_unpromoted:
                 if (rsc->next_role > pcmk_role_unpromoted) {
                     pe__set_next_role(rsc, pcmk_role_unpromoted,
-                                      "no-quorum-policy=demote");
+                                      PCMK_OPT_NO_QUORUM_POLICY "=demote");
                 }
                 policy = pcmk_no_quorum_ignore;
                 break;
@@ -456,6 +458,7 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
     const char *value = g_hash_table_lookup(meta, XML_OP_ATTR_ON_FAIL);
     char *key = NULL;
     char *new_value = NULL;
+    guint interval_ms = 0U;
 
     // Stop actions can only use certain on-fail values
     if (pcmk__str_eq(action_name, PCMK_ACTION_STOP, pcmk__str_none)
@@ -500,7 +503,8 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
                 continue;
             }
             interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
-            if (crm_parse_interval_spec(interval_spec) == 0) {
+            pcmk_parse_interval_spec(interval_spec, &interval_ms);
+            if (interval_ms == 0U) {
                 continue;
             }
 
@@ -539,12 +543,14 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
         role = crm_element_value(action_config, "role");
         interval_spec = crm_element_value(action_config,
                                           XML_LRM_ATTR_INTERVAL);
+        pcmk_parse_interval_spec(interval_spec, &interval_ms);
 
         if (!pcmk__str_eq(name, PCMK_ACTION_PROMOTE, pcmk__str_none)
-            && (!pcmk__str_eq(name, PCMK_ACTION_MONITOR, pcmk__str_none)
+            && ((interval_ms == 0U)
+                || !pcmk__str_eq(name, PCMK_ACTION_MONITOR, pcmk__str_none)
                 || !pcmk__strcase_any_of(role, PCMK__ROLE_PROMOTED,
-                                         PCMK__ROLE_PROMOTED_LEGACY, NULL)
-                || (crm_parse_interval_spec(interval_spec) == 0))) {
+                                         PCMK__ROLE_PROMOTED_LEGACY, NULL))) {
+
             pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for %s %s "
                              "action to default value because 'demote' is not "
                              "allowed for it", rsc->id, name);
@@ -647,7 +653,7 @@ most_frequent_monitor(const pcmk_resource_t *rsc)
     for (xmlNode *operation = first_named_child(rsc->ops_xml, XML_ATTR_OP);
          operation != NULL; operation = crm_next_same_xml(operation)) {
         bool enabled = false;
-        guint interval_ms = 0;
+        guint interval_ms = 0U;
         const char *interval_spec = crm_element_value(operation,
                                                       XML_LRM_ATTR_INTERVAL);
 
@@ -656,8 +662,9 @@ most_frequent_monitor(const pcmk_resource_t *rsc)
                           PCMK_ACTION_MONITOR, pcmk__str_none)) {
             continue;
         }
-        interval_ms = crm_parse_interval_spec(interval_spec);
-        if (interval_ms == 0) {
+
+        pcmk_parse_interval_spec(interval_spec, &interval_ms);
+        if (interval_ms == 0U) {
             continue;
         }
 
@@ -1210,7 +1217,7 @@ node_priority_fencing_delay(const pcmk_node_t *node,
     int lowest_priority = 0;
     GList *gIter = NULL;
 
-    // `priority-fencing-delay` is disabled
+    // PCMK_OPT_PRIORITY_FENCING_DELAY is disabled
     if (scheduler->priority_fencing_delay <= 0) {
         return 0;
     }
@@ -1351,8 +1358,10 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
 
     if (scheduler->priority_fencing_delay > 0
 
-            /* It's a suitable case where `priority-fencing-delay` applies.
-             * At least add `priority-fencing-delay` field as an indicator. */
+            /* It's a suitable case where PCMK_OPT_PRIORITY_FENCING_DELAY
+             * applies. At least add PCMK_OPT_PRIORITY_FENCING_DELAY field as
+             * an indicator.
+             */
         && (priority_delay
 
             /* The priority delay needs to be recalculated if this function has
@@ -1360,17 +1369,17 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
              * priority has already been calculated by native_add_running().
              */
             || g_hash_table_lookup(stonith_op->meta,
-                                   XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY) != NULL)) {
+                                   PCMK_OPT_PRIORITY_FENCING_DELAY) != NULL)) {
 
-            /* Add `priority-fencing-delay` to the fencing op even if it's 0 for
-             * the targeting node. So that it takes precedence over any possible
-             * `pcmk_delay_base/max`.
+            /* Add PCMK_OPT_PRIORITY_FENCING_DELAY to the fencing op even if
+             * it's 0 for the targeting node. So that it takes precedence over
+             * any possible `pcmk_delay_base/max`.
              */
             char *delay_s = pcmk__itoa(node_priority_fencing_delay(node,
                                                                    scheduler));
 
             g_hash_table_insert(stonith_op->meta,
-                                strdup(XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY),
+                                strdup(PCMK_OPT_PRIORITY_FENCING_DELAY),
                                 delay_s);
     }
 

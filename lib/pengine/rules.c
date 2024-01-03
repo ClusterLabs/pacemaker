@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1125,7 +1125,7 @@ pe__eval_op_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
 {
     const char *name = crm_element_value(expr, XML_NVPAIR_ATTR_NAME);
     const char *interval_s = crm_element_value(expr, XML_LRM_ATTR_INTERVAL);
-    guint interval;
+    guint interval_ms = 0U;
 
     crm_trace("Testing op_defaults expression: %s", ID(expr));
 
@@ -1134,14 +1134,14 @@ pe__eval_op_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
         return FALSE;
     }
 
-    interval = crm_parse_interval_spec(interval_s);
-    if (interval == 0 && errno != 0) {
+    if (pcmk_parse_interval_spec(interval_s, &interval_ms) != pcmk_rc_ok) {
         crm_trace("Could not parse interval: %s", interval_s);
         return FALSE;
     }
 
-    if (interval_s != NULL && interval != rule_data->op_data->interval) {
-        crm_trace("Interval doesn't match: %d != %d", interval, rule_data->op_data->interval);
+    if ((interval_s != NULL) && (interval_ms != rule_data->op_data->interval)) {
+        crm_trace("Interval doesn't match: %d != %d",
+                  interval_ms, rule_data->op_data->interval);
         return FALSE;
     }
 
