@@ -924,8 +924,7 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
 
     /* Detect CIB version for diagnostic purposes */
     const char *epoch = crm_element_value(cib_root, PCMK_XA_EPOCH);
-    const char *admin_epoch = crm_element_value(cib_root,
-                                                XML_ATTR_GENERATION_ADMIN);
+    const char *admin_epoch = crm_element_value(cib_root, PCMK_XA_ADMIN_EPOCH);
 
     /* Determine full CIB and signature pathnames */
     char *cib_path = crm_strdup_printf("%s/%s", cib_dirname, cib_filename);

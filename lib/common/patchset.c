@@ -187,7 +187,7 @@ xml_repair_v1_diff(xmlNode *last, xmlNode *next, xmlNode *local_diff,
     const char *tag = NULL;
 
     const char *vfields[] = {
-        XML_ATTR_GENERATION_ADMIN,
+        PCMK_XA_ADMIN_EPOCH,
         PCMK_XA_EPOCH,
         XML_ATTR_NUMUPDATES,
     };
@@ -271,7 +271,7 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
     xmlNode *version = NULL;
     xmlNode *patchset = NULL;
     const char *vfields[] = {
-        XML_ATTR_GENERATION_ADMIN,
+        PCMK_XA_ADMIN_EPOCH,
         PCMK_XA_EPOCH,
         XML_ATTR_NUMUPDATES,
     };
@@ -576,7 +576,7 @@ xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
     xmlNode *tmp = NULL;
 
     const char *vfields[] = {
-        XML_ATTR_GENERATION_ADMIN,
+        PCMK_XA_ADMIN_EPOCH,
         PCMK_XA_EPOCH,
         XML_ATTR_NUMUPDATES,
     };
@@ -628,7 +628,7 @@ xml_patch_version_check(const xmlNode *xml, const xmlNode *patchset)
     int del[] = { 0, 0, 0 };
 
     const char *vfields[] = {
-        XML_ATTR_GENERATION_ADMIN,
+        PCMK_XA_ADMIN_EPOCH,
         PCMK_XA_EPOCH,
         XML_ATTR_NUMUPDATES,
     };

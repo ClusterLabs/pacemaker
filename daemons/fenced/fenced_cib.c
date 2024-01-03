@@ -225,7 +225,7 @@ cib_devices_update(void)
     stonith_device_t *device = NULL;
 
     crm_info("Updating devices to version %s.%s.%s",
-             crm_element_value(local_cib, XML_ATTR_GENERATION_ADMIN),
+             crm_element_value(local_cib, PCMK_XA_ADMIN_EPOCH),
              crm_element_value(local_cib, PCMK_XA_EPOCH),
              crm_element_value(local_cib, XML_ATTR_NUMUPDATES));
 

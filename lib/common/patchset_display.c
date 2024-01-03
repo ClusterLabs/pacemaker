@@ -22,7 +22,7 @@
  *
  * All header lines contain three integers separated by dots, of the form
  * <tt>{0}.{1}.{2}</tt>:
- * * \p {0}: \p XML_ATTR_GENERATION_ADMIN
+ * * \p {0}: \c PCMK_XA_ADMIN_EPOCH
  * * \p {1}: \c PCMK_XA_EPOCH
  * * \p {2}: \p XML_ATTR_NUMUPDATES
  *

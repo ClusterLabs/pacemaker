@@ -53,7 +53,7 @@ cib_version_details(xmlNode * cib, int *admin_epoch, int *epoch, int *updates)
     } else {
         crm_element_value_int(cib, PCMK_XA_EPOCH, epoch);
         crm_element_value_int(cib, XML_ATTR_NUMUPDATES, updates);
-        crm_element_value_int(cib, XML_ATTR_GENERATION_ADMIN, admin_epoch);
+        crm_element_value_int(cib, PCMK_XA_ADMIN_EPOCH, admin_epoch);
     }
     return TRUE;
 }
@@ -245,7 +245,7 @@ createEmptyCib(int cib_epoch)
 
     crm_xml_add_int(cib_root, PCMK_XA_EPOCH, cib_epoch);
     crm_xml_add_int(cib_root, XML_ATTR_NUMUPDATES, 0);
-    crm_xml_add_int(cib_root, XML_ATTR_GENERATION_ADMIN, 0);
+    crm_xml_add_int(cib_root, PCMK_XA_ADMIN_EPOCH, 0);
 
     config = create_xml_node(cib_root, XML_CIB_TAG_CONFIGURATION);
     create_xml_node(cib_root, XML_CIB_TAG_STATUS);
@@ -484,12 +484,12 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
         int old = 0;
         int new = 0;
 
-        crm_element_value_int(scratch, XML_ATTR_GENERATION_ADMIN, &new);
-        crm_element_value_int(patchset_cib, XML_ATTR_GENERATION_ADMIN, &old);
+        crm_element_value_int(scratch, PCMK_XA_ADMIN_EPOCH, &new);
+        crm_element_value_int(patchset_cib, PCMK_XA_ADMIN_EPOCH, &old);
 
         if (old > new) {
             crm_err("%s went backwards: %d -> %d (Opts: %#x)",
-                    XML_ATTR_GENERATION_ADMIN, old, new, call_options);
+                    PCMK_XA_ADMIN_EPOCH, old, new, call_options);
             crm_log_xml_warn(req, "Bad Op");
             crm_log_xml_warn(input, "Bad Data");
             rc = -pcmk_err_old_data;

@@ -456,8 +456,8 @@ build_arg_context(pcmk__common_args_t *args)
            "Increase configuration version to prevent old configurations from "
                "being loaded accidentally:\n\n"
            "\t# cibadmin --modify --xml-text "
-               "'<" XML_TAG_CIB " " XML_ATTR_GENERATION_ADMIN
-                   "=\"" XML_ATTR_GENERATION_ADMIN "++\"/>'\n\n"
+               "'<" XML_TAG_CIB " " PCMK_XA_ADMIN_EPOCH
+                   "=\"" PCMK_XA_ADMIN_EPOCH "++\"/>'\n\n"
            "Edit the configuration with your favorite $EDITOR:\n\n"
            "\t# cibadmin --query > $HOME/local.xml\n\n"
            "\t# $EDITOR $HOME/local.xml\n\n"

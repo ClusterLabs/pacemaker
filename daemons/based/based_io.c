@@ -271,7 +271,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     /* Do this before schema validation happens */
 
     /* fill in some defaults */
-    name = XML_ATTR_GENERATION_ADMIN;
+    name = PCMK_XA_ADMIN_EPOCH;
     value = crm_element_value(root, name);
     if (value == NULL) {
         crm_warn("No value for %s was specified in the configuration.", name);

@@ -457,19 +457,21 @@ process_ping_reply(xmlNode *reply)
         crm_trace("Processing ping reply %s from %s (%s)", seq_s, host, digest);
         if (!pcmk__str_eq(ping_digest, digest, pcmk__str_casei)) {
             xmlNode *remote_cib = get_message_xml(pong, F_CIB_CALLDATA);
+            const char *admin_epoch_s = "_";
             const char *epoch_s = "_";
 
             if (remote_cib != NULL) {
+                admin_epoch_s = crm_element_value(remote_cib,
+                                                  PCMK_XA_ADMIN_EPOCH);
                 epoch_s = crm_element_value(remote_cib, PCMK_XA_EPOCH);
             }
 
             crm_notice("Local CIB %s.%s.%s.%s differs from %s: %s.%s.%s.%s %p",
-                       crm_element_value(the_cib, XML_ATTR_GENERATION_ADMIN),
+                       crm_element_value(the_cib, PCMK_XA_ADMIN_EPOCH),
                        crm_element_value(the_cib, PCMK_XA_EPOCH),
                        crm_element_value(the_cib, XML_ATTR_NUMUPDATES),
                        ping_digest, host,
-                       remote_cib?crm_element_value(remote_cib, XML_ATTR_GENERATION_ADMIN):"_",
-                       epoch_s,
+                       admin_epoch_s, epoch_s,
                        remote_cib?crm_element_value(remote_cib, XML_ATTR_NUMUPDATES):"_",
                        digest, remote_cib);
 
@@ -1130,9 +1132,11 @@ cib_process_request(xmlNode *request, gboolean privileged,
         time_t now = time(NULL);
         int level = LOG_INFO;
         const char *section = crm_element_value(request, F_CIB_SECTION);
+        const char *admin_epoch_s = "0";
         const char *epoch_s = "0";
 
         if (the_cib != NULL) {
+            admin_epoch_s = crm_element_value(the_cib, PCMK_XA_ADMIN_EPOCH);
             epoch_s = crm_element_value(the_cib, PCMK_XA_EPOCH);
         }
 
@@ -1164,8 +1168,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
                    "Completed %s operation for section %s: %s (rc=%d, origin=%s/%s/%s, version=%s.%s.%s)",
                    op, section ? section : "'all'", pcmk_strerror(rc), rc,
                    originator ? originator : "local", client_name, call_id,
-                   the_cib ? crm_element_value(the_cib, XML_ATTR_GENERATION_ADMIN) : "0",
-                   epoch_s,
+                   admin_epoch_s, epoch_s,
                    the_cib ? crm_element_value(the_cib, XML_ATTR_NUMUPDATES) : "0");
 
         finished = time(NULL);

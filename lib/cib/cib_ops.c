@@ -252,7 +252,7 @@ cib_process_erase(const char *op, int options, const char *section, xmlNode * re
     }
     *result_cib = createEmptyCib(0);
     copy_in_properties(*result_cib, existing_cib);
-    update_counter(*result_cib, XML_ATTR_GENERATION_ADMIN, false);
+    update_counter(*result_cib, PCMK_XA_ADMIN_EPOCH, false);
     *answer = NULL;
 
     return result;
@@ -284,7 +284,7 @@ cib_process_upgrade(const char *op, int options, const char *section, xmlNode * 
     rc = update_validation(result_cib, &new_version, max_version, TRUE,
                            !(options & cib_verbose));
     if (new_version > current_version) {
-        update_counter(*result_cib, XML_ATTR_GENERATION_ADMIN, false);
+        update_counter(*result_cib, PCMK_XA_ADMIN_EPOCH, false);
         update_counter(*result_cib, PCMK_XA_EPOCH, true);
         update_counter(*result_cib, XML_ATTR_NUMUPDATES, true);
         return pcmk_ok;
@@ -374,7 +374,7 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
         cib_version_details(input, &replace_admin_epoch, &replace_epoch, &replace_updates);
 
         if (replace_admin_epoch < admin_epoch) {
-            reason = XML_ATTR_GENERATION_ADMIN;
+            reason = PCMK_XA_ADMIN_EPOCH;
 
         } else if (replace_admin_epoch > admin_epoch) {
             /* no more checks */
@@ -833,7 +833,7 @@ cib__config_changed_v1(xmlNode *last, xmlNode *next, xmlNode **diff)
             config_changes = true;
             goto done;
         }
-        if (crm_element_value(top, XML_ATTR_GENERATION_ADMIN) != NULL) {
+        if (crm_element_value(top, PCMK_XA_ADMIN_EPOCH) != NULL) {
             config_changes = true;
             goto done;
         }
