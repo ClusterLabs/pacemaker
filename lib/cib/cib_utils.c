@@ -688,7 +688,7 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
     }
 
     crm_xml_add(*op_msg, F_XML_TAGNAME, T_CIB_COMMAND);
-    crm_xml_add(*op_msg, F_TYPE, T_CIB);
+    crm_xml_add(*op_msg, PCMK__XA_T, T_CIB);
     crm_xml_add(*op_msg, F_CIB_OPERATION, op);
     crm_xml_add(*op_msg, F_CIB_HOST, host);
     crm_xml_add(*op_msg, F_CIB_SECTION, section);

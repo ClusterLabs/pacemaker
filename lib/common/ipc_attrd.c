@@ -73,7 +73,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
     }
 
     /* Do some basic validation of the reply */
-    value = crm_element_value(reply, F_TYPE);
+    value = crm_element_value(reply, PCMK__XA_T);
     if (pcmk__str_empty(value)
         || !pcmk__str_eq(value, T_ATTRD, pcmk__str_none)) {
         crm_info("Unrecognizable message from attribute manager: "
@@ -141,7 +141,7 @@ create_attrd_op(const char *user_name)
 {
     xmlNode *attrd_op = create_xml_node(NULL, __func__);
 
-    crm_xml_add(attrd_op, F_TYPE, T_ATTRD);
+    crm_xml_add(attrd_op, PCMK__XA_T, T_ATTRD);
     crm_xml_add(attrd_op, PCMK__XA_SRC, pcmk__s(crm_system_name, "unknown"));
     crm_xml_add(attrd_op, PCMK__XA_ATTR_USER, user_name);
 

@@ -48,7 +48,7 @@ stonith_send_broadcast_history(xmlNode *history,
     if (target) {
         crm_xml_add(data, F_STONITH_TARGET, target);
     }
-    crm_xml_add(bcast, F_TYPE, T_STONITH_NG);
+    crm_xml_add(bcast, PCMK__XA_T, T_STONITH_NG);
     crm_xml_add(bcast, PCMK__XA_SUBT, "broadcast");
     crm_xml_add(bcast, F_STONITH_OPERATION, STONITH_OP_FENCE_HISTORY);
     crm_xml_add_int(bcast, F_STONITH_CALLOPTS, callopts);

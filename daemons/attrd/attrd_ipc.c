@@ -46,7 +46,7 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
     if (reply == NULL) {
         return NULL;
     }
-    crm_xml_add(reply, F_TYPE, T_ATTRD);
+    crm_xml_add(reply, PCMK__XA_T, T_ATTRD);
     crm_xml_add(reply, PCMK__XA_SUBT, PCMK__ATTRD_CMD_QUERY);
     crm_xml_add(reply, PCMK__XA_ATTR_VERSION, ATTRD_PROTOCOL_VERSION);
 

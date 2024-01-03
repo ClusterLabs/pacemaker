@@ -349,7 +349,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     host_to = crm_element_value(msg, F_CRM_HOST_TO);
     sys_to = crm_element_value(msg, F_CRM_SYS_TO);
     sys_from = crm_element_value(msg, F_CRM_SYS_FROM);
-    type = crm_element_value(msg, F_TYPE);
+    type = crm_element_value(msg, PCMK__XA_T);
     task = crm_element_value(msg, F_CRM_TASK);
     ref = crm_element_value(msg, PCMK_XA_REFERENCE);
 

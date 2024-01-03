@@ -756,7 +756,7 @@ create_purge_node_request(const pcmk_ipc_api_t *api, const char *node_name,
     switch (api->server) {
         case pcmk_ipc_attrd:
             request = create_xml_node(NULL, __func__);
-            crm_xml_add(request, F_TYPE, T_ATTRD);
+            crm_xml_add(request, PCMK__XA_T, T_ATTRD);
             crm_xml_add(request, PCMK__XA_SRC, crm_system_name);
             crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_PEER_REMOVE);
             pcmk__xe_set_bool_attr(request, PCMK__XA_REAP, true);

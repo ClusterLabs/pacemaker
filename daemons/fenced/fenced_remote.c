@@ -408,7 +408,7 @@ fenced_broadcast_op_result(const remote_fencing_op_t *op, bool op_merged)
 
     count++;
     crm_trace("Broadcasting result to peers");
-    crm_xml_add(bcast, F_TYPE, T_STONITH_NOTIFY);
+    crm_xml_add(bcast, PCMK__XA_T, T_STONITH_NOTIFY);
     crm_xml_add(bcast, PCMK__XA_SUBT, "broadcast");
     crm_xml_add(bcast, F_STONITH_OPERATION, T_STONITH_NOTIFY);
     crm_xml_add_int(bcast, "count", count);

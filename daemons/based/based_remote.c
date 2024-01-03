@@ -432,7 +432,7 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
     xml_remove_prop(command, F_CIB_HOST);
     xml_remove_prop(command, F_CIB_GLOBAL_UPDATE);
 
-    crm_xml_add(command, F_TYPE, T_CIB);
+    crm_xml_add(command, PCMK__XA_T, T_CIB);
     crm_xml_add(command, F_CIB_CLIENTID, client->id);
     crm_xml_add(command, F_CIB_CLIENTNAME, client->name);
     crm_xml_add(command, F_CIB_USER, client->user);

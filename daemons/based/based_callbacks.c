@@ -163,7 +163,7 @@ create_cib_reply(const char *op, const char *call_id, const char *client_id,
 
     CRM_ASSERT(reply != NULL);
 
-    crm_xml_add(reply, F_TYPE, T_CIB);
+    crm_xml_add(reply, PCMK__XA_T, T_CIB);
     crm_xml_add(reply, F_CIB_OPERATION, op);
     crm_xml_add(reply, F_CIB_CALLID, call_id);
     crm_xml_add(reply, F_CIB_CLIENTID, client_id);
@@ -402,7 +402,7 @@ cib_digester_cb(gpointer data)
         snprintf(buffer, 32, "%" PRIu64, ping_seq);
         crm_trace("Requesting peer digests (%s)", buffer);
 
-        crm_xml_add(ping, F_TYPE, "cib");
+        crm_xml_add(ping, PCMK__XA_T, T_CIB);
         crm_xml_add(ping, F_CIB_OPERATION, CRM_OP_PING);
         crm_xml_add(ping, F_CIB_PING_ID, buffer);
 
@@ -1590,7 +1590,7 @@ initiate_exit(void)
     crm_info("Sending shutdown request to %d peers", active);
 
     leaving = create_xml_node(NULL, "exit-notification");
-    crm_xml_add(leaving, F_TYPE, "cib");
+    crm_xml_add(leaving, PCMK__XA_T, T_CIB);
     crm_xml_add(leaving, F_CIB_OPERATION, PCMK__CIB_REQUEST_SHUTDOWN);
 
     send_cluster_message(NULL, crm_msg_cib, leaving, TRUE);

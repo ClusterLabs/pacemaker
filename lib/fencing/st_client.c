@@ -282,7 +282,7 @@ stonith_connection_destroy(gpointer user_data)
 
     free(native->token); native->token = NULL;
     stonith->state = stonith_disconnected;
-    crm_xml_add(blob.xml, F_TYPE, T_STONITH_NOTIFY);
+    crm_xml_add(blob.xml, PCMK__XA_T, T_STONITH_NOTIFY);
     crm_xml_add(blob.xml, PCMK__XA_SUBT, T_STONITH_NOTIFY_DISCONNECT);
 
     foreach_notify_entry(native, stonith_send_notification, &blob);
@@ -816,7 +816,7 @@ stonith_create_op(int call_id, const char *token, const char *op, xmlNode * data
 
     crm_xml_add(op_msg, F_XML_TAGNAME, "stonith_command");
 
-    crm_xml_add(op_msg, F_TYPE, T_STONITH_NG);
+    crm_xml_add(op_msg, PCMK__XA_T, T_STONITH_NG);
     crm_xml_add(op_msg, F_STONITH_CALLBACK_TOKEN, token);
     crm_xml_add(op_msg, F_STONITH_OPERATION, op);
     crm_xml_add_int(op_msg, F_STONITH_CALLID, call_id);
@@ -1064,7 +1064,7 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
     }
 
     /* do callbacks */
-    type = crm_element_value(blob.xml, F_TYPE);
+    type = crm_element_value(blob.xml, PCMK__XA_T);
     crm_trace("Activating %s callbacks...", type);
 
     if (pcmk__str_eq(type, T_STONITH_NG, pcmk__str_none)) {
@@ -1142,7 +1142,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
         xmlNode *reply = NULL;
         xmlNode *hello = create_xml_node(NULL, "stonith_command");
 
-        crm_xml_add(hello, F_TYPE, T_STONITH_NG);
+        crm_xml_add(hello, PCMK__XA_T, T_STONITH_NG);
         crm_xml_add(hello, F_STONITH_OPERATION, CRM_OP_REGISTER);
         crm_xml_add(hello, F_STONITH_CLIENTNAME, name);
         rc = crm_ipc_send(native->ipc, hello, crm_ipc_client_response, -1, &reply);

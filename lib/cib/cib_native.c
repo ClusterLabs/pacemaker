@@ -1,6 +1,6 @@
 /*
  * Copyright 2004 International Business Machines
- * Later changes copyright 2004-2023 the Pacemaker project contributors
+ * Later changes copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -196,7 +196,7 @@ cib_native_dispatch_internal(const char *buffer, ssize_t length,
     }
 
     /* do callbacks */
-    type = crm_element_value(msg, F_TYPE);
+    type = crm_element_value(msg, PCMK__XA_T);
     crm_trace("Activating %s callbacks...", type);
     crm_log_xml_explicit(msg, "cib-reply");
 
