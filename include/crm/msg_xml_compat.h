@@ -148,6 +148,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_VALIDATE_WITH instead
 #define XML_ATTR_VALIDATION PCMK_XA_VALIDATE_WITH
 
+//! \deprecated Use \c PCMK_XA_NO_QUORUM_PANIC instead
+#define XML_ATTR_QUORUM_PANIC PCMK_XA_NO_QUORUM_PANIC
+
 #ifdef __cplusplus
 }
 #endif
