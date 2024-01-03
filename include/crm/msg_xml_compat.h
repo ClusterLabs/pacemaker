@@ -346,6 +346,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_INDEX instead
 #define XML_ATTR_STONITH_INDEX PCMK_XA_INDEX
 
+//! \deprecated Use \c PCMK_XA_TARGET instead
+#define XML_ATTR_STONITH_TARGET PCMK_XA_TARGET
+
 #ifdef __cplusplus
 }
 #endif
