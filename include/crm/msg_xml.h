@@ -371,7 +371,6 @@ extern "C" {
 #  define XML_ACL_TAG_READ		"read"
 #  define XML_ACL_TAG_WRITE		"write"
 #  define XML_ACL_TAG_DENY		"deny"
-#  define XML_ACL_ATTR_REF		"reference"
 #  define XML_ACL_ATTR_REFv1		"ref"
 #  define XML_ACL_ATTR_TAG		"object-type"
 #  define XML_ACL_ATTR_TAGv1		"tag"
