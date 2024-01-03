@@ -1,5 +1,5 @@
 #
-# Copyright 2020-2023 the Pacemaker project contributors
+# Copyright 2020-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -21,7 +21,8 @@ check_PROGRAMS = compare_version_test			\
 		 pcmk__fail_attr_name_test 		\
 		 pcmk__failcount_name_test 		\
 		 pcmk__getpid_s_test 			\
-		 pcmk__lastfailure_name_test
+		 pcmk__lastfailure_name_test 		\
+		 pcmk__realloc_test
 
 if WRAPPABLE_UNAME
 check_PROGRAMS += pcmk_hostname_test

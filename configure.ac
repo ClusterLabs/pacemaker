@@ -1,7 +1,7 @@
 dnl
 dnl autoconf for Pacemaker
 dnl
-dnl Copyright 2009-2023 the Pacemaker project contributors
+dnl Copyright 2009-2024 the Pacemaker project contributors
 dnl
 dnl The version control history for this file may have further details.
 dnl
@@ -532,6 +532,9 @@ AC_ARG_WITH([coverage],
 )
 yes_no_try "$with_coverage" "no"
 with_coverage=$?
+
+AC_DEFINE_UNQUOTED([PCMK__WITH_COVERAGE], [$with_coverage], [Build with code coverage])
+AM_CONDITIONAL([BUILD_COVERAGE], [test $with_coverage -ne $DISABLED])
 
 AC_ARG_WITH([sanitizers],
   [AS_HELP_STRING([--with-sanitizers=...,...],
@@ -2153,6 +2156,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/common/tests/io/Makefile                        \
                 lib/common/tests/iso8601/Makefile                   \
                 lib/common/tests/lists/Makefile                     \
+                lib/common/tests/nodes/Makefile                     \
                 lib/common/tests/nvpair/Makefile                    \
                 lib/common/tests/options/Makefile                   \
                 lib/common/tests/output/Makefile                    \

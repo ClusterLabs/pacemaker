@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the Pacemaker project contributors
+ * Copyright 2019-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,10 +18,12 @@
 static GHashTable *formatters = NULL;
 
 #if defined(PCMK__UNIT_TESTING)
+// LCOV_EXCL_START
 GHashTable *
 pcmk__output_formatters(void) {
     return formatters;
 }
+// LCOV_EXCL_STOP
 #endif
 
 void

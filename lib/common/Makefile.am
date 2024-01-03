@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2023 the Pacemaker project contributors
+# Copyright 2004-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -70,7 +70,7 @@ libcrmcommon_la_SOURCES	+= ipc_client.c
 libcrmcommon_la_SOURCES	+= ipc_common.c
 libcrmcommon_la_SOURCES	+= ipc_controld.c
 libcrmcommon_la_SOURCES	+= ipc_pacemakerd.c
-libcrmcommon_la_SOURCES 	+= ipc_schedulerd.c
+libcrmcommon_la_SOURCES	+= ipc_schedulerd.c
 libcrmcommon_la_SOURCES	+= ipc_server.c
 libcrmcommon_la_SOURCES	+= iso8601.c
 libcrmcommon_la_SOURCES	+= lists.c
@@ -126,8 +126,11 @@ libcrmcommon_test_la_CFLAGS	= $(libcrmcommon_la_CFLAGS) 	\
 				  -fno-inline
 # If -fno-builtin is used, -lm also needs to be added.  See the comment at
 # BUILD_PROFILING above.
-libcrmcommon_test_la_LIBADD	= $(libcrmcommon_la_LIBADD) 	\
-				  -lcmocka 			\
-				  -lm
+libcrmcommon_test_la_LIBADD	= $(libcrmcommon_la_LIBADD)
+if BUILD_COVERAGE
+libcrmcommon_test_la_LIBADD 	+= -lgcov
+endif
+libcrmcommon_test_la_LIBADD 	+= -lcmocka
+libcrmcommon_test_la_LIBADD 	+= -lm
 
 nodist_libcrmcommon_test_la_SOURCES = $(nodist_libcrmcommon_la_SOURCES)

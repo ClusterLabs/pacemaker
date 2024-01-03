@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,6 +23,15 @@
 #define CRM_COMMON_UNITTEST_INTERNAL__H
 
 /* internal unit testing related utilities */
+
+#if (PCMK__WITH_COVERAGE == 1)
+/* This function isn't exposed anywhere.  The following prototype was taken from
+ * /usr/lib/gcc/x86_64-redhat-linux/??/include/gcov.h
+ */
+extern void __gcov_dump(void);
+#else
+#define __gcov_dump()
+#endif
 
 /*!
  * \internal
@@ -51,6 +60,7 @@
             struct rlimit cores = { 0, 0 }; \
             setrlimit(RLIMIT_CORE, &cores); \
             stmt; \
+            __gcov_dump(); \
             _exit(0); \
         } else if (p > 0) { \
             int wstatus = 0; \
@@ -64,6 +74,15 @@
             fail_msg("unable to fork for assert test"); \
         } \
     } while (0);
+
+/*!
+ * \internal
+ * \brief Assert that a statement aborts
+ *
+ * This is exactly the same as pcmk__assert_asserts (CRM_ASSERT() is implemented
+ * with abort()), but given a different name for clarity.
+ */
+#define pcmk__assert_aborts(stmt) pcmk__assert_asserts(stmt)
 
 /*!
  * \internal
@@ -87,6 +106,7 @@
             struct rlimit cores = { 0, 0 }; \
             setrlimit(RLIMIT_CORE, &cores); \
             stmt; \
+            __gcov_dump(); \
             _exit(CRM_EX_NONE); \
         } else if (p > 0) { \
             int wstatus = 0; \

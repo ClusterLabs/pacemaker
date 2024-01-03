@@ -115,11 +115,11 @@ create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
         crm_err("Cannot create new_message, no message type in original message");
         CRM_ASSERT(type != NULL);
         return NULL;
-#if 0
     } else if (strcasecmp(XML_ATTR_REQUEST, type) != 0) {
-        crm_err("Cannot create new_message, original message was not a request");
-        return NULL;
-#endif
+        /* Replies should only be generated for request messages, but it's possible
+         * we expect replies to other messages right now so this can't be enforced.
+         */
+        crm_trace("Creating a reply for a non-request original message");
     }
     reply = create_xml_node(NULL, __func__);
     if (reply == NULL) {

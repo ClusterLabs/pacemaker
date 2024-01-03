@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,6 +14,8 @@
 void
 pcmk__xe_add_node(xmlNode *xml, const char *node, int nodeid)
 {
+    CRM_ASSERT(xml != NULL);
+
     if (node != NULL) {
         crm_xml_add(xml, PCMK__XA_ATTR_NODE_NAME, node);
     }

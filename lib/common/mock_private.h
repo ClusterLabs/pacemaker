@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 the Pacemaker project contributors
+ * Copyright 2021-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,6 +22,9 @@
 
 /* This header is for the sole use of libcrmcommon_test and unit tests */
 
+_Noreturn void __real_abort(void);
+_Noreturn void __wrap_abort(void);
+
 extern bool pcmk__mock_calloc;
 void *__real_calloc(size_t nmemb, size_t size);
 void *__wrap_calloc(size_t nmemb, size_t size);
@@ -37,6 +40,10 @@ FILE *__wrap_fopen64(const char *pathname, const char *mode);
 extern bool pcmk__mock_getenv;
 char *__real_getenv(const char *name);
 char *__wrap_getenv(const char *name);
+
+extern bool pcmk__mock_realloc;
+void *__real_realloc(void *ptr, size_t size);
+void *__wrap_realloc(void *ptr, size_t size);
 
 extern bool pcmk__mock_setenv;
 int __real_setenv(const char *name, const char *value, int overwrite);
