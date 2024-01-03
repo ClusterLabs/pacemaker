@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -178,7 +178,7 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
     const char *value = NULL;
     const char *id = crm_element_value(event, XML_LRM_ATTR_TASK_KEY);
     const char *on_uname = crm_peer_uname(event_node_uuid);
-    const char *origin = crm_element_value(event, XML_ATTR_ORIGIN);
+    const char *origin = crm_element_value(event, PCMK_XA_CRM_DEBUG_ORIGIN);
 
     // Nothing needs to be done for success or status refresh
     if (rc == target_rc) {

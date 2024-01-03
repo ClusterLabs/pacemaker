@@ -188,7 +188,7 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
         }
     }
 
-    crm_xml_add(node_state, XML_ATTR_ORIGIN, source);
+    crm_xml_add(node_state, PCMK_XA_CRM_DEBUG_ORIGIN, source);
 
     return node_state;
 }

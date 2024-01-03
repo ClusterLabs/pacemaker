@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 the Pacemaker project contributors
+ * Copyright 2021-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -698,7 +698,7 @@ simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                                                            false);
 
         CRM_ASSERT(cib_node != NULL);
-        crm_xml_add(cib_node, XML_ATTR_ORIGIN, __func__);
+        crm_xml_add(cib_node, PCMK_XA_CRM_DEBUG_ORIGIN, __func__);
         rc = fake_cib->cmds->replace(fake_cib, XML_CIB_TAG_STATUS, cib_node,
                                      cib_sync_call|cib_scope_local);
         CRM_ASSERT(rc == pcmk_ok);

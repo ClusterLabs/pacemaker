@@ -902,7 +902,7 @@ controld_update_resource_history(const char *node_name,
     }
     crm_xml_add(xml, XML_ATTR_ID, node_id);
     crm_xml_add(xml, XML_ATTR_UNAME, node_name);
-    crm_xml_add(xml, XML_ATTR_ORIGIN, __func__);
+    crm_xml_add(xml, PCMK_XA_CRM_DEBUG_ORIGIN, __func__);
 
     //     <lrm ...>
     xml = create_xml_node(xml, XML_CIB_TAG_LRM);

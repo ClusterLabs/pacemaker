@@ -333,7 +333,7 @@ pcmk__inject_node_state_change(cib_t *cib_conn, const char *node, bool up)
                            PCMK__XA_EXPECTED, CRMD_JOINSTATE_DOWN,
                            NULL);
     }
-    crm_xml_add(cib_node, XML_ATTR_ORIGIN, crm_system_name);
+    crm_xml_add(cib_node, PCMK_XA_CRM_DEBUG_ORIGIN, crm_system_name);
     return cib_node;
 }
 
