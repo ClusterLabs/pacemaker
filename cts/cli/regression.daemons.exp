@@ -47,7 +47,7 @@
       <content type="time" default=""/>
     </parameter>
     <parameter name="cluster-recheck-interval">
-      <longdesc lang="en">Pacemaker is primarily event-driven, and looks ahead to know when to recheck cluster state for failure timeouts and most time-based rules. However, it will also recheck the cluster after this amount of inactivity, to evaluate rules with date specifications and serve as a fail-safe for certain types of scheduler bugs.  Allowed values: Zero disables polling, while positive values are an interval in seconds(unless other units are specified, for example "5min")</longdesc>
+      <longdesc lang="en">Pacemaker is primarily event-driven, and looks ahead to know when to recheck cluster state for failure timeouts and most time-based rules. However, it will also recheck the cluster after this amount of inactivity, to evaluate rules with date specifications and serve as a fail-safe for certain types of scheduler bugs.  Allowed values: Zero disables polling, while positive values are an interval in seconds (unless other units are specified, for example "5min")</longdesc>
       <shortdesc lang="en">Polling interval to recheck cluster state and evaluate rules with date specifications</shortdesc>
       <content type="time" default=""/>
     </parameter>
@@ -345,7 +345,7 @@
       <content type="boolean" default=""/>
     </parameter>
     <parameter name="startup-fencing">
-      <longdesc lang="en">Setting this to false may lead to a &quot;split-brain&quot; situation,potentially leading to data loss and/or service unavailability.</longdesc>
+      <longdesc lang="en">Setting this to false may lead to a &quot;split-brain&quot; situation, potentially leading to data loss and/or service unavailability.</longdesc>
       <shortdesc lang="en">*** Advanced Use Only *** Whether to fence unseen nodes at start-up</shortdesc>
       <content type="boolean" default=""/>
     </parameter>
