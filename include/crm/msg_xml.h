@@ -77,6 +77,7 @@ extern "C" {
 #define PCMK_XA_REFERENCE                   "reference"
 #define PCMK_XA_REQUEST                     "request"
 #define PCMK_XA_TARGET                      "target"
+#define PCMK_XA_TARGET_PATTERN              "target-pattern"
 #define PCMK_XA_TARGET_VALUE                "target-value"
 #define PCMK_XA_TYPE                        "type"
 #define PCMK_XA_UNAME                       "uname"
