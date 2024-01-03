@@ -74,6 +74,7 @@ extern "C" {
 #define PCMK_XA_OP                          "op"
 #define PCMK_XA_PROVIDER                    "provider"
 #define PCMK_XA_TYPE                        "type"
+#define PCMK_XA_UPDATE_CLIENT               "update-client"
 #define PCMK_XA_UPDATE_ORIGIN               "update-origin"
 #define PCMK_XA_VALIDATE_WITH               "validate-with"
 #define PCMK_XA_VALUE                       "value"
