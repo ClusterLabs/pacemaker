@@ -688,7 +688,7 @@ pcmk_create_html_node(xmlNode * parent, const char *element_name, const char *id
     xmlNode *node = pcmk_create_xml_text_node(parent, element_name, text);
 
     if (class_name != NULL) {
-        crm_xml_add(node, "class", class_name);
+        crm_xml_add(node, PCMK_XA_CLASS, class_name);
     }
 
     if (id != NULL) {

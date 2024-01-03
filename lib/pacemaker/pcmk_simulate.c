@@ -554,7 +554,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         goto done; // Confirm action and update graph
     }
 
-    rclass = crm_element_value(action_rsc, XML_AGENT_ATTR_CLASS);
+    rclass = crm_element_value(action_rsc, PCMK_XA_CLASS);
     rtype = crm_element_value(action_rsc, PCMK_XA_TYPE);
     rprovider = crm_element_value(action_rsc, PCMK_XA_PROVIDER);
 

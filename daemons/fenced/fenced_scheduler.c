@@ -131,7 +131,7 @@ register_if_fencing_device(gpointer data, gpointer user_data)
         return;
     }
 
-    rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    rclass = crm_element_value(rsc->xml, PCMK_XA_CLASS);
     if (!pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         return; // Not a fencing device
     }

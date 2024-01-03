@@ -543,7 +543,7 @@ build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list)
 
         crm_xml_add(xml_rsc, PCMK_XA_ID, entry->id);
         crm_xml_add(xml_rsc, PCMK_XA_TYPE, entry->rsc.type);
-        crm_xml_add(xml_rsc, XML_AGENT_ATTR_CLASS, entry->rsc.standard);
+        crm_xml_add(xml_rsc, PCMK_XA_CLASS, entry->rsc.standard);
         crm_xml_add(xml_rsc, PCMK_XA_PROVIDER, entry->rsc.provider);
 
         if (entry->last && entry->last->params) {
@@ -932,7 +932,7 @@ get_lrm_resource(lrm_state_t *lrm_state, const xmlNode *rsc_xml,
     }
 
     if ((*rsc_info == NULL) && do_create) {
-        const char *class = crm_element_value(rsc_xml, XML_AGENT_ATTR_CLASS);
+        const char *class = crm_element_value(rsc_xml, PCMK_XA_CLASS);
         const char *provider = crm_element_value(rsc_xml, PCMK_XA_PROVIDER);
         const char *type = crm_element_value(rsc_xml, PCMK_XA_TYPE);
         int rc;
@@ -1660,7 +1660,7 @@ construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
     /* Use pcmk_monitor_timeout instead of meta timeout for stonith
        recurring monitor, if set */
     primitive = find_xml_node(rsc_op, XML_CIB_TAG_RESOURCE, FALSE);
-    class = crm_element_value(primitive, XML_AGENT_ATTR_CLASS);
+    class = crm_element_value(primitive, PCMK_XA_CLASS);
 
     if (pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_fence_params)
             && pcmk__str_eq(operation, PCMK_ACTION_MONITOR, pcmk__str_casei)
@@ -2256,7 +2256,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
     if ((rsc == NULL) && action_xml) {
         xmlNode *xml = find_xml_node(action_xml, XML_CIB_TAG_RESOURCE, TRUE);
 
-        const char *standard = crm_element_value(xml, XML_AGENT_ATTR_CLASS);
+        const char *standard = crm_element_value(xml, PCMK_XA_CLASS);
         const char *provider = crm_element_value(xml, PCMK_XA_PROVIDER);
         const char *type = crm_element_value(xml, PCMK_XA_TYPE);
 

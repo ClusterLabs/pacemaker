@@ -114,7 +114,7 @@ pcmk__rsc_agent_changed(pcmk_resource_t *rsc, pcmk_node_t *node,
     bool changed = false;
     const char *attr_list[] = {
         PCMK_XA_TYPE,
-        XML_AGENT_ATTR_CLASS,
+        PCMK_XA_CLASS,
         PCMK_XA_PROVIDER,
     };
 

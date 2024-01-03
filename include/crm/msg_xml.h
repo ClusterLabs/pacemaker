@@ -57,6 +57,7 @@ extern "C" {
 
 #define PCMK_XA_ADMIN_EPOCH                 "admin_epoch"
 #define PCMK_XA_CIB_LAST_WRITTEN            "cib-last-written"
+#define PCMK_XA_CLASS                       "class"
 #define PCMK_XA_CRM_DEBUG_ORIGIN            "crm-debug-origin"
 #define PCMK_XA_CRM_FEATURE_SET             "crm_feature_set"
 #define PCMK_XA_CRM_TIMESTAMP               "crm-timestamp"

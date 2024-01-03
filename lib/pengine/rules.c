@@ -1229,7 +1229,7 @@ pe__eval_role_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
 gboolean
 pe__eval_rsc_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
 {
-    const char *class = crm_element_value(expr, XML_AGENT_ATTR_CLASS);
+    const char *class = crm_element_value(expr, PCMK_XA_CLASS);
     const char *provider = crm_element_value(expr, PCMK_XA_PROVIDER);
     const char *type = crm_element_value(expr, PCMK_XA_TYPE);
 

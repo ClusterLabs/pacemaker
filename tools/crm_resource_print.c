@@ -66,7 +66,7 @@ cli_resource_print_cts(pcmk_resource_t *rsc, pcmk__output_t *out)
     bool needs_quorum = TRUE;
     const char *rtype = crm_element_value(rsc->xml, PCMK_XA_TYPE);
     const char *rprov = crm_element_value(rsc->xml, PCMK_XA_PROVIDER);
-    const char *rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    const char *rclass = crm_element_value(rsc->xml, PCMK_XA_CLASS);
     pcmk_node_t *node = pe__current_node(rsc);
 
     if (pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
@@ -393,7 +393,7 @@ resource_agent_action_xml(pcmk__output_t *out, va_list args) {
 
     xmlNodePtr node = pcmk__output_xml_create_parent(out, "resource-agent-action",
                                                      "action", action,
-                                                     "class", class,
+                                                     PCMK_XA_CLASS, class,
                                                      PCMK_XA_TYPE, type,
                                                      NULL);
 

@@ -174,7 +174,7 @@ remove_cib_device(xmlXPathObjectPtr xpathObj)
 
         CRM_LOG_ASSERT(match != NULL);
         if(match != NULL) {
-            standard = crm_element_value(match, XML_AGENT_ATTR_CLASS);
+            standard = crm_element_value(match, PCMK_XA_CLASS);
         }
 
         if (!pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
@@ -294,7 +294,7 @@ update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
             xmlNode *match = getXpathResult(xpath_obj, lpc);
 
             rsc_id = crm_element_value(match, PCMK_XA_ID);
-            standard = crm_element_value(match, XML_AGENT_ATTR_CLASS);
+            standard = crm_element_value(match, PCMK_XA_CLASS);
 
             if (!pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
                 continue;

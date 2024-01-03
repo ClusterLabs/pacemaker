@@ -561,7 +561,7 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
         return EINVAL;
     }
 
-    rsc_class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    rsc_class = crm_element_value(rsc->xml, PCMK_XA_CLASS);
     rsc_provider = crm_element_value(rsc->xml, PCMK_XA_PROVIDER),
     rsc_type = crm_element_value(rsc->xml, PCMK_XA_TYPE);
     if ((rsc_class == NULL) || (rsc_type == NULL)) {
@@ -2113,7 +2113,7 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
         return CRM_EX_UNIMPLEMENT_FEATURE;
     }
 
-    rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    rclass = crm_element_value(rsc->xml, PCMK_XA_CLASS);
     rprov = crm_element_value(rsc->xml, PCMK_XA_PROVIDER);
     rtype = crm_element_value(rsc->xml, PCMK_XA_TYPE);
 

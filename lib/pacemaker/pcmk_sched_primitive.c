@@ -771,7 +771,7 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
     }
 
     if (multiply_active) {
-        const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+        const char *class = crm_element_value(rsc->xml, PCMK_XA_CLASS);
 
         // Resource was (possibly) incorrectly multiply active
         pcmk__sched_err("%s resource %s might be active on %u nodes (%s)",
@@ -1608,7 +1608,7 @@ pcmk__primitive_shutdown_lock(pcmk_resource_t *rsc)
 
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_primitive));
 
-    class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    class = crm_element_value(rsc->xml, PCMK_XA_CLASS);
 
     // Fence devices and remote connections can't be locked
     if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_null_matches)

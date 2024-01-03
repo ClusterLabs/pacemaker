@@ -207,7 +207,7 @@ gboolean
 native_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 {
     pcmk_resource_t *parent = uber_parent(rsc);
-    const char *standard = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    const char *standard = crm_element_value(rsc->xml, PCMK_XA_CLASS);
     uint32_t ra_caps = pcmk_get_ra_caps(standard);
 
     pcmk__rsc_trace(rsc, "Processing resource %s...", rsc->id);
@@ -467,7 +467,7 @@ static void
 native_print_xml(pcmk_resource_t *rsc, const char *pre_text, long options,
                  void *print_data)
 {
-    const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    const char *class = crm_element_value(rsc->xml, PCMK_XA_CLASS);
     const char *prov = crm_element_value(rsc->xml, PCMK_XA_PROVIDER);
     const char *rsc_state = native_displayable_state(rsc, pcmk_is_set(options, pe_print_pending));
     const char *target_role = NULL;
@@ -565,7 +565,7 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
                            const pcmk_node_t *node, uint32_t show_opts,
                            const char *target_role, bool show_nodes)
 {
-    const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    const char *class = crm_element_value(rsc->xml, PCMK_XA_CLASS);
     const char *provider = NULL;
     const char *kind = crm_element_value(rsc->xml, PCMK_XA_TYPE);
     GString *outstr = NULL;
@@ -975,7 +975,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     GList *only_rsc = va_arg(args, GList *);
 
     bool print_pending = pcmk_is_set(show_opts, pcmk_show_pending);
-    const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    const char *class = crm_element_value(rsc->xml, PCMK_XA_CLASS);
     const char *prov = crm_element_value(rsc->xml, PCMK_XA_PROVIDER);
     const char *rsc_state = native_displayable_state(rsc, print_pending);
 
@@ -1185,7 +1185,7 @@ get_rscs_brief(GList *rsc_list, GHashTable * rsc_table, GHashTable * active_tabl
     for (; gIter != NULL; gIter = gIter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) gIter->data;
 
-        const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+        const char *class = crm_element_value(rsc->xml, PCMK_XA_CLASS);
         const char *kind = crm_element_value(rsc->xml, PCMK_XA_TYPE);
 
         int offset = 0;

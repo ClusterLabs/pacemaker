@@ -321,7 +321,7 @@ create_resource(const char *name, const char *provider, const char *kind)
     xmlNode *rsc = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
 
     crm_xml_add(rsc, PCMK_XA_ID, name);
-    crm_xml_add(rsc, XML_AGENT_ATTR_CLASS, PCMK_RESOURCE_CLASS_OCF);
+    crm_xml_add(rsc, PCMK_XA_CLASS, PCMK_RESOURCE_CLASS_OCF);
     crm_xml_add(rsc, PCMK_XA_PROVIDER, provider);
     crm_xml_add(rsc, PCMK_XA_TYPE, kind);
 

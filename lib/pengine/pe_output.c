@@ -2096,7 +2096,7 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
     rsc = pe_find_resource(scheduler->resources, op_rsc);
 
     if (rsc) {
-        const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+        const char *class = crm_element_value(rsc->xml, PCMK_XA_CLASS);
         const char *provider = crm_element_value(rsc->xml, PCMK_XA_PROVIDER);
         const char *kind = crm_element_value(rsc->xml, PCMK_XA_TYPE);
         bool has_provider = pcmk_is_set(pcmk_get_ra_caps(class),

@@ -914,7 +914,7 @@ controld_update_resource_history(const char *node_name,
     //         <lrm_resource ...>
     xml = create_xml_node(xml, XML_LRM_TAG_RESOURCE);
     crm_xml_add(xml, PCMK_XA_ID, op->rsc_id);
-    crm_xml_add(xml, XML_AGENT_ATTR_CLASS, rsc->standard);
+    crm_xml_add(xml, PCMK_XA_CLASS, rsc->standard);
     crm_xml_add(xml, PCMK_XA_PROVIDER, rsc->provider);
     crm_xml_add(xml, PCMK_XA_TYPE, rsc->type);
     if (lock_time != 0) {

@@ -246,7 +246,7 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
 {
     xmlNode *rsc_xml = NULL;
     const char *attr_list[] = {
-        XML_AGENT_ATTR_CLASS,
+        PCMK_XA_CLASS,
         PCMK_XA_PROVIDER,
         PCMK_XA_TYPE,
     };
