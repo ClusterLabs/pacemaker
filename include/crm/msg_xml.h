@@ -72,51 +72,6 @@ extern "C" {
 
 
 /*
- * Meta attributes
- */
-
-#define PCMK_META_ALLOW_MIGRATE             "allow-migrate"
-#define PCMK_META_ALLOW_UNHEALTHY_NODES     "allow-unhealthy-nodes"
-#define PCMK_META_CLONE_MAX                 "clone-max"
-#define PCMK_META_CLONE_MIN                 "clone-min"
-#define PCMK_META_CLONE_NODE_MAX            "clone-node-max"
-#define PCMK_META_CONTAINER_ATTR_TARGET     "container-attribute-target"
-#define PCMK_META_CRITICAL                  "critical"
-#define PCMK_META_ENABLED                   "enabled"
-#define PCMK_META_FAILURE_TIMEOUT           "failure-timeout"
-#define PCMK_META_GLOBALLY_UNIQUE           "globally-unique"
-#define PCMK_META_INTERLEAVE                "interleave"
-#define PCMK_META_IS_MANAGED                "is-managed"
-#define PCMK_META_MAINTENANCE               "maintenance"
-#define PCMK_META_MIGRATION_THRESHOLD       "migration-threshold"
-#define PCMK_META_MULTIPLE_ACTIVE           "multiple-active"
-#define PCMK_META_NOTIFY                    "notify"
-#define PCMK_META_ORDERED                   "ordered"
-#define PCMK_META_PRIORITY                  "priority"
-#define PCMK_META_PROMOTABLE                "promotable"
-#define PCMK_META_PROMOTED_MAX              "promoted-max"
-#define PCMK_META_PROMOTED_NODE_MAX         "promoted-node-max"
-#define PCMK_META_REMOTE_ADDR               "remote-addr"
-#define PCMK_META_REMOTE_ALLOW_MIGRATE      "remote-allow-migrate"
-#define PCMK_META_REMOTE_CONNECT_TIMEOUT    "remote-connect-timeout"
-#define PCMK_META_REMOTE_NODE               "remote-node"
-#define PCMK_META_REMOTE_PORT               "remote-port"
-#define PCMK_META_REQUIRES                  "requires"
-#define PCMK_META_RESOURCE_STICKINESS       "resource-stickiness"
-#define PCMK_META_TARGET_ROLE               "target-role"
-
-
-/*
- * Remote resource instance attributes
- */
-
-#define PCMK_REMOTE_RA_ADDR                 "addr"
-#define PCMK_REMOTE_RA_PORT                 "port"
-#define PCMK_REMOTE_RA_RECONNECT_INTERVAL   "reconnect_interval"
-#define PCMK_REMOTE_RA_SERVER               "server"
-
-
-/*
  * Older constants that don't follow current naming
  */
 
