@@ -289,6 +289,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_ID_REF instead
 #define XML_ATTR_IDREF PCMK_XA_ID_REF
 
+//! \deprecated Do not use
+#define XML_ATTR_ID_LONG "long-id"
+
 #ifdef __cplusplus
 }
 #endif
