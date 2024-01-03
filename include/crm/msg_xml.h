@@ -386,7 +386,6 @@ extern "C" {
 
 #  define XML_TAG_FENCING_TOPOLOGY      "fencing-topology"
 #  define XML_TAG_FENCING_LEVEL         "fencing-level"
-#  define XML_ATTR_STONITH_TARGET_PATTERN   "target-pattern"
 #  define XML_ATTR_STONITH_TARGET_ATTRIBUTE "target-attribute"
 #  define XML_ATTR_STONITH_DEVICES      "devices"
 

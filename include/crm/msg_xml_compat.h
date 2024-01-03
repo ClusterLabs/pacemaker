@@ -352,6 +352,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_TARGET_VALUE instead
 #define XML_ATTR_STONITH_TARGET_VALUE PCMK_XA_TARGET_VALUE
 
+//! \deprecated Use \c PCMK_XA_TARGET_PATTERN instead
+#define XML_ATTR_STONITH_TARGET_PATTERN PCMK_XA_TARGET_PATTERN
+
 #ifdef __cplusplus
 }
 #endif
