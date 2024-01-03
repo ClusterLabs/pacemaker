@@ -403,6 +403,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_VALUE_FALSE instead
 #define XML_BOOLEAN_FALSE PCMK_VALUE_FALSE
 
+//! \deprecated Do not use
+#define F_CRM_TASK "crm_task"
+
 #ifdef __cplusplus
 }
 #endif
