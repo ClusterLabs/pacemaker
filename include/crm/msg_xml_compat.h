@@ -271,6 +271,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_REMOTE_RA_RECONNECT_INTERVAL instead
 #define XML_REMOTE_ATTR_RECONNECT_INTERVAL "reconnect_interval"
 
+//! \deprecated Use \c PCMK_XA_NAME instead
+#define XML_ATTR_NAME PCMK_XA_NAME
+
 #ifdef __cplusplus
 }
 #endif
