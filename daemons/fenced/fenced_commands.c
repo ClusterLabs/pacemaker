@@ -2650,7 +2650,7 @@ send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result
          */
         crm_trace("Broadcast '%s' result for %s (target was also originator)",
                   cmd->action, cmd->target);
-        crm_xml_add(reply, F_SUBTYPE, "broadcast");
+        crm_xml_add(reply, PCMK__XA_SUBT, "broadcast");
         crm_xml_add(reply, F_STONITH_OPERATION, T_STONITH_NOTIFY);
         send_cluster_message(NULL, crm_msg_stonith_ng, reply, FALSE);
     } else {

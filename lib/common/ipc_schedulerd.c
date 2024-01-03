@@ -88,7 +88,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         return false;
     }
 
-    value = crm_element_value(reply, F_CRM_MSG_TYPE);
+    value = crm_element_value(reply, PCMK__XA_SUBT);
     if (!pcmk__str_eq(value, PCMK__VALUE_RESPONSE, pcmk__str_none)) {
         crm_info("Unrecognizable message from schedulerd: "
                   "message type '%s' not '" PCMK__VALUE_RESPONSE "'",

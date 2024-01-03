@@ -220,7 +220,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
      *       if we fix the controller, we'll still need to handle replies from
      *       old versions (feature set could be used to differentiate).
      */
-    value = crm_element_value(reply, F_CRM_MSG_TYPE);
+    value = crm_element_value(reply, PCMK__XA_SUBT);
     if (!pcmk__str_any_of(value, PCMK__VALUE_REQUEST, PCMK__VALUE_RESPONSE,
                           NULL)) {
         crm_info("Unrecognizable message from controller: "

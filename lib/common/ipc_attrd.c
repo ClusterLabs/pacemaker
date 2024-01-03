@@ -82,7 +82,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         goto done;
     }
 
-    value = crm_element_value(reply, F_SUBTYPE);
+    value = crm_element_value(reply, PCMK__XA_SUBT);
 
     /* Only the query command gets a reply for now. NULL counts as query for
      * backward compatibility with attribute managers <2.1.3 that didn't set it.

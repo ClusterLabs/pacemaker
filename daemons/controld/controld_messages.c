@@ -596,7 +596,7 @@ handle_message(xmlNode *msg, enum crmd_fsa_cause cause)
 
     CRM_CHECK(msg != NULL, return I_NULL);
 
-    type = crm_element_value(msg, F_CRM_MSG_TYPE);
+    type = crm_element_value(msg, PCMK__XA_SUBT);
     if (pcmk__str_eq(type, PCMK__VALUE_REQUEST, pcmk__str_none)) {
         return handle_request(msg, cause);
     }
@@ -606,7 +606,7 @@ handle_message(xmlNode *msg, enum crmd_fsa_cause cause)
         return I_NULL;
     }
 
-    crm_warn("Ignoring message with unknown " F_CRM_MSG_TYPE " '%s'",
+    crm_warn("Ignoring message with unknown " PCMK__XA_SUBT" '%s'",
              pcmk__s(type, ""));
     crm_log_xml_trace(msg, "bad");
     return I_NULL;

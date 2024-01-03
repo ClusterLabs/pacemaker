@@ -283,7 +283,7 @@ stonith_connection_destroy(gpointer user_data)
     free(native->token); native->token = NULL;
     stonith->state = stonith_disconnected;
     crm_xml_add(blob.xml, F_TYPE, T_STONITH_NOTIFY);
-    crm_xml_add(blob.xml, F_SUBTYPE, T_STONITH_NOTIFY_DISCONNECT);
+    crm_xml_add(blob.xml, PCMK__XA_SUBT, T_STONITH_NOTIFY_DISCONNECT);
 
     foreach_notify_entry(native, stonith_send_notification, &blob);
     free_xml(blob.xml);
@@ -1501,7 +1501,7 @@ stonith_send_notification(gpointer data, gpointer user_data)
         return;
     }
 
-    event = crm_element_value(blob->xml, F_SUBTYPE);
+    event = crm_element_value(blob->xml, PCMK__XA_SUBT);
 
     if (entry == NULL) {
         crm_warn("Skipping callback - NULL callback client");

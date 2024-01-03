@@ -843,7 +843,7 @@ cib_native_notify(gpointer data, gpointer user_data)
         return;
     }
 
-    event = crm_element_value(msg, F_SUBTYPE);
+    event = crm_element_value(msg, PCMK__XA_SUBT);
 
     if (entry == NULL) {
         crm_warn("Skipping callback - NULL callback client");

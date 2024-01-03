@@ -286,7 +286,7 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
     CRM_CHECK(client != NULL, return);
     CRM_CHECK(update_msg != NULL, return);
 
-    type = crm_element_value(update_msg, F_SUBTYPE);
+    type = crm_element_value(update_msg, PCMK__XA_SUBT);
     CRM_CHECK(type != NULL, crm_log_xml_err(update_msg, "notify"); return);
 
     if (client->ipcs == NULL) {
@@ -356,7 +356,7 @@ fenced_send_notification(const char *type, const pcmk__action_result_t *result,
     CRM_LOG_ASSERT(type != NULL);
 
     crm_xml_add(update_msg, F_TYPE, T_STONITH_NOTIFY);
-    crm_xml_add(update_msg, F_SUBTYPE, type);
+    crm_xml_add(update_msg, PCMK__XA_SUBT, type);
     crm_xml_add(update_msg, F_STONITH_OPERATION, type);
     stonith__xe_set_result(update_msg, result);
 
