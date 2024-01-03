@@ -322,6 +322,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_REQUEST instead
 #define XML_ATTR_REQUEST PCMK_XA_REQUEST
 
+//! \deprecated Do not use
+#define XML_ATTR_RESPONSE "response"
+
 #ifdef __cplusplus
 }
 #endif

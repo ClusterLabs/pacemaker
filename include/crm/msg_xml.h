@@ -157,8 +157,6 @@ extern "C" {
 #  define XML_TAG_OPTIONS		"options"
 
 /*---- top level tags/attrs */
-#  define XML_ATTR_RESPONSE		"response"
-
 #  define XML_ATTR_UNAME		"uname"
 #  define XML_ATTR_REFERENCE		"reference"
 
