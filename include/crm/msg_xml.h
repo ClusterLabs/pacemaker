@@ -100,6 +100,7 @@ extern "C" {
 #define PCMK_OPT_NODE_HEALTH_GREEN          "node-health-green"
 #define PCMK_OPT_NODE_HEALTH_RED            "node-health-red"
 #define PCMK_OPT_NODE_HEALTH_STRATEGY       "node-health-strategy"
+#define PCMK_OPT_NODE_HEALTH_YELLOW         "node-health-yellow"
 #define PCMK_OPT_NODE_PENDING_TIMEOUT       "node-pending-timeout"
 #define PCMK_OPT_PE_ERROR_SERIES_MAX        "pe-error-series-max"
 #define PCMK_OPT_PE_INPUT_SERIES_MAX        "pe-input-series-max"

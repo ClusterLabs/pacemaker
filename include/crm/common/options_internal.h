@@ -124,9 +124,6 @@ bool pcmk__valid_sbd_timeout(const char *value);
  */
 #define PCMK__ENV_SHUTDOWN_DELAY            "shutdown_delay"
 
-// Constants for cluster option names
-#define PCMK__OPT_NODE_HEALTH_YELLOW        "node-health-yellow"
-
 // @COMPAT Deprecated since 2.1.0
 #define PCMK__OPT_REMOVE_AFTER_STOP         "remove-after-stop"
 

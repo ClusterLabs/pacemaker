@@ -46,7 +46,7 @@ pe__unpack_node_health_scores(pcmk_scheduler_t *scheduler)
                                                scheduler);
             pcmk__score_green = pe__health_score(PCMK_OPT_NODE_HEALTH_GREEN,
                                                  scheduler);
-            pcmk__score_yellow = pe__health_score(PCMK__OPT_NODE_HEALTH_YELLOW,
+            pcmk__score_yellow = pe__health_score(PCMK_OPT_NODE_HEALTH_YELLOW,
                                                   scheduler);
             break;
     }
