@@ -244,7 +244,7 @@ static pcmk__cluster_option_t pe_opts[] = {
 
     /* Node health */
     {
-        PCMK__OPT_NODE_HEALTH_STRATEGY, NULL, "select",
+        PCMK_OPT_NODE_HEALTH_STRATEGY, NULL, "select",
         PCMK__VALUE_NONE ", " PCMK__VALUE_MIGRATE_ON_RED ", "
             PCMK__VALUE_ONLY_GREEN ", " PCMK__VALUE_PROGRESSIVE ", "
             PCMK__VALUE_CUSTOM,

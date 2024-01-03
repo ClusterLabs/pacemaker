@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,6 +8,8 @@
  */
 
 #include <crm_internal.h>
+
+#include <crm/msg_xml.h>
 
 /*!
  * \internal
@@ -62,7 +64,7 @@ pcmk__parse_health_strategy(const char *value)
 
     } else {
         pcmk__config_err("Using default of \"" PCMK__VALUE_NONE "\" for "
-                         PCMK__OPT_NODE_HEALTH_STRATEGY
+                         PCMK_OPT_NODE_HEALTH_STRATEGY
                          " because '%s' is not a valid value",
                          value);
         return pcmk__health_strategy_none;

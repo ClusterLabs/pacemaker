@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -544,7 +544,7 @@ static inline enum pcmk__health_strategy
 pe__health_strategy(pcmk_scheduler_t *scheduler)
 {
     return pcmk__parse_health_strategy(pe_pref(scheduler->config_hash,
-                                               PCMK__OPT_NODE_HEALTH_STRATEGY));
+                                               PCMK_OPT_NODE_HEALTH_STRATEGY));
 }
 
 static inline int
