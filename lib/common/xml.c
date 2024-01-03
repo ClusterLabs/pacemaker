@@ -2232,8 +2232,8 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
     if (object_href_val != NULL) {
         object_href = PCMK_XA_ID;
     } else {
-        object_href_val = crm_element_value(update, XML_ATTR_IDREF);
-        object_href = (object_href_val == NULL) ? NULL : XML_ATTR_IDREF;
+        object_href_val = crm_element_value(update, PCMK_XA_ID_REF);
+        object_href = (object_href_val == NULL)? NULL : PCMK_XA_ID_REF;
     }
 
     CRM_CHECK(object_name != NULL, return);
@@ -2563,7 +2563,7 @@ expand_idref(xmlNode * input, xmlNode * top)
         return NULL;
     }
 
-    ref = crm_element_value(input, XML_ATTR_IDREF);
+    ref = crm_element_value(input, PCMK_XA_ID_REF);
     if (ref == NULL) {
         return input;
     }
@@ -2576,7 +2576,7 @@ expand_idref(xmlNode * input, xmlNode * top)
     result = get_xpath_object(xpath, top, LOG_DEBUG);
     if (result == NULL) { // Not possible with schema validation enabled
         pcmk__config_err("Ignoring invalid %s configuration: "
-                         XML_ATTR_IDREF " '%s' does not reference "
+                         PCMK_XA_ID_REF " '%s' does not reference "
                          "a valid object " CRM_XS " xpath=%s",
                          input->name, ref, xpath);
     }

@@ -65,6 +65,7 @@ extern "C" {
 #define PCMK_XA_FORMAT                      "format"
 #define PCMK_XA_HAVE_QUORUM                 "have-quorum"
 #define PCMK_XA_ID                          "id"
+#define PCMK_XA_ID_REF                      "id-ref"
 #define PCMK_XA_NAME                        "name"
 #define PCMK_XA_NO_QUORUM_PANIC             "no-quorum-panic"
 #define PCMK_XA_NUM_UPDATES                 "num_updates"
@@ -140,7 +141,7 @@ extern "C" {
 #  define XML_TAG_FAILED		"failed"
 
 #  define XML_ATTR_TIMEOUT		"timeout"
-#  define XML_ATTR_IDREF			"id-ref"
+#  define XML_ATTR_IDREF			PCMK_XA_ID_REF
 #  define XML_ATTR_ID_LONG		"long-id"
 #  define XML_ATTR_TYPE			"type"
 #  define XML_ATTR_OP			"op"
