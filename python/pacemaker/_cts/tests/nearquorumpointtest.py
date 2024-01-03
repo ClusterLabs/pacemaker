@@ -1,7 +1,7 @@
-""" Randomly start and stop nodes to bring the cluster close to the quorum point """
+"""Randomly start and stop nodes to bring the cluster close to the quorum point."""
 
 __all__ = ["NearQuorumPointTest"]
-__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.tests.ctstest import CTSTest
@@ -18,25 +18,21 @@ from pacemaker._cts.tests.ctstest import CTSTest
 
 
 class NearQuorumPointTest(CTSTest):
-    """ A concrete test that randomly starts and stops nodes to bring the
-        cluster close to the quorum point
-    """
+    """Randomly start and stop nodes to bring the cluster close to the quorum point."""
 
     def __init__(self, cm):
-        """ Create a new NearQuorumPointTest instance
-
-            Arguments:
-
-            cm -- A ClusterManager instance
         """
+        Create a new NearQuorumPointTest instance.
 
+        Arguments:
+        cm -- A ClusterManager instance
+        """
         CTSTest.__init__(self, cm)
 
         self.name = "NearQuorumPoint"
 
     def __call__(self, dummy):
-        """ Perform this test """
-
+        """Perform this test."""
         self.incr("calls")
         startset = []
         stopset = []

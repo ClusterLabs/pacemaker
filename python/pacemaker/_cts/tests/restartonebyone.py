@@ -1,7 +1,7 @@
-""" Restart all nodes in order """
+"""Restart all nodes in order."""
 
 __all__ = ["RestartOnebyOne"]
-__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.tests.ctstest import CTSTest
@@ -18,16 +18,15 @@ from pacemaker._cts.tests.simulstartlite import SimulStartLite
 
 
 class RestartOnebyOne(CTSTest):
-    """ A concrete test that restarts all nodes in order """
+    """Restart all nodes in order."""
 
     def __init__(self, cm):
-        """ Create a new RestartOnebyOne instance
-
-            Arguments:
-
-            cm -- A ClusterManager instance
         """
+        Create a new RestartOnebyOne instance.
 
+        Arguments:
+        cm -- A ClusterManager instance
+        """
         CTSTest.__init__(self, cm)
 
         self.name = "RestartOnebyOne"
@@ -36,8 +35,7 @@ class RestartOnebyOne(CTSTest):
         self._startall = SimulStartLite(cm)
 
     def __call__(self, dummy):
-        """ Perform the test """
-
+        """Perform the test."""
         self.incr("calls")
 
         ret = self._startall(None)

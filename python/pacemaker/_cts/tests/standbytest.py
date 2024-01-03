@@ -1,7 +1,7 @@
-""" Put a node into standby mode and check that resources migrate """
+"""Put a node into standby mode and check that resources migrate."""
 
 __all__ = ["StandbyTest"]
-__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.tests.ctstest import CTSTest
@@ -18,18 +18,15 @@ from pacemaker._cts.tests.starttest import StartTest
 
 
 class StandbyTest(CTSTest):
-    """ A concrete tests that puts a node into standby and checks that resources
-        migrate away from the node
-    """
+    """Put a node into standby and check that resources migrate away from it."""
 
     def __init__(self, cm):
-        """ Create a new StandbyTest instance
-
-            Arguments:
-
-            cm -- A ClusterManager instance
         """
+        Create a new StandbyTest instance.
 
+        Arguments:
+        cm -- A ClusterManager instance
+        """
         CTSTest.__init__(self, cm)
 
         self.benchmark = True
@@ -45,8 +42,7 @@ class StandbyTest(CTSTest):
     # check resources, resources should have been migrated back (SHOULD THEY?)
 
     def __call__(self, node):
-        """ Perform this test """
-
+        """Perform this test."""
         self.incr("calls")
         ret = self._startall(None)
         if not ret:

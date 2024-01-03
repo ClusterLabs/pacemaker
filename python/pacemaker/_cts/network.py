@@ -1,29 +1,28 @@
-""" Network related utilities for CTS """
+"""Network related utilities for CTS."""
 
 __all__ = ["next_ip"]
-__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 # pylint: disable=global-statement
 CURRENT_IP = None
 
 def next_ip(ip_base=None, reset=False):
-    """ Return the next available IP address.
-
-        Arguments:
-
-        ip_base -- The initial IP address to start from.  The first call to next_ip
-                   will return the next IP address from this base.  Each subsequent
-                   call will return the next address from the previous call, so you
-                   can just omit this argument for subsequent calls.
-        reset   -- Force next_ip to start from ip_base again.  This requires also
-                   passing the ip_base argument.  (Mostly useful for unit testing,
-                   but may be useful elsewhere).
-
-        This function only increments the last portion of the IP address.  Once it
-        has hit the upper limit, ValueError will be raised.
     """
+    Return the next available IP address.
 
+    This function only increments the last portion of the IP address.  Once it
+    has hit the upper limit, ValueError will be raised.
+
+    Arguments:
+    ip_base -- The initial IP address to start from.  The first call to next_ip
+               will return the next IP address from this base.  Each subsequent
+               call will return the next address from the previous call, so you
+               can just omit this argument for subsequent calls.
+    reset   -- Force next_ip to start from ip_base again.  This requires also
+               passing the ip_base argument.  (Mostly useful for unit testing,
+               but may be useful elsewhere).
+    """
     global CURRENT_IP
 
     if CURRENT_IP is None or reset:

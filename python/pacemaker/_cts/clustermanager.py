@@ -1,7 +1,7 @@
-""" ClusterManager class for Pacemaker's Cluster Test Suite (CTS) """
+"""ClusterManager class for Pacemaker's Cluster Test Suite (CTS)."""
 
 __all__ = ["ClusterManager"]
-__copyright__ = """Copyright 2000-2023 the Pacemaker project contributors.
+__copyright__ = """Copyright 2000-2024 the Pacemaker project contributors.
 Certain portions by Huang Zhen <zhenhltc@cn.ibm.com> are copyright 2004
 International Business Machines. The version control history for this file
 may have further details."""
@@ -35,30 +35,31 @@ from pacemaker._cts.watcher import LogWatcher
 # pylint: disable=too-many-public-methods
 
 class ClusterManager(UserDict):
-    """ An abstract base class for managing the cluster.  This class implements
-        high-level operations on the cluster and/or its cluster managers.
-        Actual cluster-specific management classes should be subclassed from this
-        one.
+    """
+    An abstract base class for managing the cluster.
 
-        Among other things, this class tracks the state every node is expected to
-        be in.
+    This class implements high-level operations on the cluster and/or its cluster
+    managers.  Actual cluster-specific management classes should be subclassed
+    from this one.
+
+    Among other things, this class tracks the state every node is expected to be in.
     """
 
     def _final_conditions(self):
-        """ Check all keys to make sure they have a non-None value """
-
+        """Check all keys to make sure they have a non-None value."""
         for (key, val) in self._data.items():
             if val is None:
                 raise ValueError("Improper derivation: self[%s] must be overridden by subclass." % key)
 
     def __init__(self):
-        """ Create a new ClusterManager instance.  This class can be treated
-            kind of like a dictionary due to the process of certain dict
-            functions like __getitem__ and __setitem__.  This is because it
-            contains a lot of name/value pairs.  However, it is not actually
-            a dictionary so do not rely on standard dictionary behavior.
         """
+        Create a new ClusterManager instance.
 
+        This class can be treated kind of like a dictionary due to the process
+        of certain dict functions like __getitem__ and __setitem__.  This is
+        because it contains a lot of name/value pairs.  However, it is not
+        actually a dictionary so do not rely on standard dictionary behavior.
+        """
         # Eventually, ClusterManager should not be a UserDict subclass.  Until
         # that point...
         # pylint: disable=super-init-not-called
@@ -85,6 +86,15 @@ class ClusterManager(UserDict):
         self._cib_sync = {}
 
     def __getitem__(self, key):
+        """
+        Return the given key, checking for it in several places.
+
+        If key is "Name", return the name of the cluster manager.  If the key
+        was previously added to the dictionary via __setitem__, return that.
+        Otherwise, return the template pattern for the key.
+
+        This method should not be used and may be removed in the future.
+        """
         if key == "Name":
             return self.name
 
@@ -95,41 +105,38 @@ class ClusterManager(UserDict):
         return self.templates.get_patterns(key)
 
     def __setitem__(self, key, value):
+        """
+        Set the given key to the given value, overriding any previous value.
+
+        This method should not be used and may be removed in the future.
+        """
         print("FIXME: Setting %s=%s on %r" % (key, value, self))
         self._data[key] = value
 
     def clear_instance_errors_to_ignore(self):
-        """ Reset instance-specific errors to ignore on each iteration """
-
+        """Reset instance-specific errors to ignore on each iteration."""
         self.__instance_errors_to_ignore = []
 
     @property
     def instance_errors_to_ignore(self):
-        """ Return a list of known errors that should be ignored for a specific
-            test instance
-        """
-
+        """Return a list of known errors that should be ignored for a specific test instance."""
         return self.__instance_errors_to_ignore
 
     @property
     def errors_to_ignore(self):
-        """ Return a list of known error messages that should be ignored """
-
+        """Return a list of known error messages that should be ignored."""
         return self.templates.get_patterns("BadNewsIgnore")
 
     def log(self, args):
-        """ Log a message """
-
+        """Log a message."""
         self._logger.log(args)
 
     def debug(self, args):
-        """ Log a debug message """
-
+        """Log a debug message."""
         self._logger.debug(args)
 
     def upcount(self):
-        """ How many nodes are up? """
-
+        """Return how many nodes are up."""
         count = 0
 
         for node in self.env["nodes"]:
@@ -139,16 +146,16 @@ class ClusterManager(UserDict):
         return count
 
     def install_support(self, command="install"):
-        """ Install or uninstall the CTS support files - various init scripts and data,
-            daemons, fencing agents, etc.
         """
+        Install or uninstall the CTS support files.
 
+        This includes various init scripts and data, daemons, fencing agents, etc.
+        """
         for node in self.env["nodes"]:
             self.rsh(node, "%s/cts-support %s" % (BuildOptions.DAEMON_DIR, command))
 
     def prepare_fencing_watcher(self):
-        """ Return a LogWatcher object that watches for fencing log messages """
-
+        """Return a LogWatcher object that watches for fencing log messages."""
         # If we don't have quorum now but get it as a result of starting this node,
         # then a bunch of nodes might get fenced
         if self.has_quorum(None):
@@ -180,8 +187,7 @@ class ClusterManager(UserDict):
         return stonith
 
     def fencing_cleanup(self, node, stonith):
-        """ Wait for a previously fenced node to return to the cluster """
-
+        """Wait for a previously fenced node to return to the cluster."""
         peer_list = []
         peer_state = {}
 
@@ -263,8 +269,7 @@ class ClusterManager(UserDict):
         return peer_list
 
     def start_cm(self, node, verbose=False):
-        """ Start up the cluster manager on a given node """
-
+        """Start up the cluster manager on a given node."""
         if verbose:
             self._logger.log("Starting %s on node %s" % (self.templates["Name"], node))
         else:
@@ -325,8 +330,7 @@ class ClusterManager(UserDict):
         return False
 
     def start_cm_async(self, node, verbose=False):
-        """ Start up the cluster manager on a given node without blocking """
-
+        """Start up the cluster manager on a given node without blocking."""
         if verbose:
             self._logger.log("Starting %s on node %s" % (self["Name"], node))
         else:
@@ -337,8 +341,7 @@ class ClusterManager(UserDict):
         self.expected_status[node] = "up"
 
     def stop_cm(self, node, verbose=False, force=False):
-        """ Stop the cluster manager on a given node """
-
+        """Stop the cluster manager on a given node."""
         if verbose:
             self._logger.log("Stopping %s on node %s" % (self["Name"], node))
         else:
@@ -358,18 +361,14 @@ class ClusterManager(UserDict):
         return False
 
     def stop_cm_async(self, node):
-        """ Stop the cluster manager on a given node without blocking """
-
+        """Stop the cluster manager on a given node without blocking."""
         self.debug("Stopping %s on node %s" % (self["Name"], node))
 
         self.rsh(node, self.templates["StopCmd"], synchronous=False)
         self.expected_status[node] = "down"
 
     def startall(self, nodelist=None, verbose=False, quick=False):
-        """ Start the cluster manager on every node in the cluster, or on every
-            node in nodelist if not None
-        """
-
+        """Start the cluster manager on every node in the cluster, or on every node in nodelist."""
         if not nodelist:
             nodelist = self.env["nodes"]
 
@@ -416,10 +415,7 @@ class ClusterManager(UserDict):
         return True
 
     def stopall(self, nodelist=None, verbose=False, force=False):
-        """ Stop the cluster manager on every node in the cluster, or on every
-            node in nodelist if not None
-        """
-
+        """Stop the cluster manager on every node in the cluster, or on every node in nodelist."""
         ret = True
 
         if not nodelist:
@@ -433,10 +429,7 @@ class ClusterManager(UserDict):
         return ret
 
     def statall(self, nodelist=None):
-        """ Return the status of the cluster manager on every node in the cluster,
-            or on every node in nodelist if not None
-        """
-
+        """Return the status of the cluster manager on every node in the cluster, or on every node in nodelist."""
         result = {}
 
         if not nodelist:
@@ -451,10 +444,7 @@ class ClusterManager(UserDict):
         return result
 
     def isolate_node(self, target, nodes=None):
-        """ Break communication between the target node and all other nodes in the
-            cluster, or nodes if not None
-        """
-
+        """Break communication between the target node and all other nodes in the cluster, or nodes."""
         if not nodes:
             nodes = self.env["nodes"]
 
@@ -472,10 +462,7 @@ class ClusterManager(UserDict):
         return True
 
     def unisolate_node(self, target, nodes=None):
-        """ Re-establish communication between the target node and all other nodes
-            in the cluster, or nodes if not None
-        """
-
+        """Re-establish communication between the target node and all other nodes in the cluster, or nodes."""
         if not nodes:
             nodes = self.env["nodes"]
 
@@ -490,8 +477,7 @@ class ClusterManager(UserDict):
             self.debug("Communication restored between %s and %s" % (target, node))
 
     def oprofile_start(self, node=None):
-        """ Start profiling on the given node, or all nodes in the cluster """
-
+        """Start profiling on the given node, or all nodes in the cluster."""
         if not node:
             for n in self.env["oprofile"]:
                 self.oprofile_start(n)
@@ -504,10 +490,7 @@ class ClusterManager(UserDict):
             self.rsh(node, "opcontrol --reset")
 
     def oprofile_save(self, test, node=None):
-        """ Save profiling data and restart profiling on the given node, or all
-            nodes in the cluster if None
-        """
-
+        """Save profiling data and restart profiling on the given node, or all nodes in the cluster."""
         if not node:
             for n in self.env["oprofile"]:
                 self.oprofile_save(test, n)
@@ -520,10 +503,11 @@ class ClusterManager(UserDict):
             self.oprofile_start(node)
 
     def oprofile_stop(self, node=None):
-        """ Start profiling on the given node, or all nodes in the cluster.  This
-            does not save profiling data, so call oprofile_save first if needed.
         """
+        Start profiling on the given node, or all nodes in the cluster.
 
+        This does not save profiling data, so call oprofile_save first if needed.
+        """
         if not node:
             for n in self.env["oprofile"]:
                 self.oprofile_stop(n)
@@ -534,8 +518,7 @@ class ClusterManager(UserDict):
             self.rsh(node, "opcontrol --shutdown 2>&1 > /dev/null")
 
     def install_config(self, node):
-        """ Remove and re-install the CIB on the first node in the cluster """
-
+        """Remove and re-install the CIB on the first node in the cluster."""
         if not self.ns.wait_for_node(node):
             self.log("Node %s is not up." % node)
             return
@@ -566,10 +549,12 @@ class ClusterManager(UserDict):
         self.rsh(node, "chown %s %s/cib.xml" % (BuildOptions.DAEMON_USER, BuildOptions.CIB_DIR))
 
     def prepare(self):
-        """ Finish initialization by clearing out the expected status and recording
-            the current status of every node in the cluster
         """
+        Finish initialization.
 
+        Clear out the expected status and record the current status of every
+        node in the cluster.
+        """
         self.partitions_expected = 1
         for node in self.env["nodes"]:
             self.expected_status[node] = ""
@@ -580,11 +565,12 @@ class ClusterManager(UserDict):
             self.stat_cm(node)
 
     def test_node_cm(self, node):
-        """ Check the status of a given node.  Returns 0 if the node is
-            down, 1 if the node is up but unstable, and 2 if the node is
-            up and stable
         """
+        Check the status of a given node.
 
+        Returns 0 if the node is down, 1 if the node is up but unstable, and 2
+        if the node is up and stable.
+        """
         watchpats = [
             "Current ping state: (S_IDLE|S_NOT_DC)",
             self.templates["Pat:NonDC_started"] % node,
@@ -637,14 +623,12 @@ class ClusterManager(UserDict):
         return 2
 
     def stat_cm(self, node):
-        """ Report the status of the cluster manager on a given node """
-
+        """Report the status of the cluster manager on a given node."""
         return self.test_node_cm(node) > 0
 
     # Being up and being stable is not the same question...
     def node_stable(self, node):
-        """ Return whether or not the given node is stable """
-
+        """Return whether or not the given node is stable."""
         if self.test_node_cm(node) == 2:
             return True
 
@@ -652,8 +636,7 @@ class ClusterManager(UserDict):
         return False
 
     def partition_stable(self, nodes, timeout=None):
-        """ Return whether or not all nodes in the given partition are stable """
-
+        """Return whether or not all nodes in the given partition are stable."""
         watchpats = [
             "Current ping state: S_IDLE",
             self.templates["Pat:DC_IDLE"],
@@ -691,8 +674,7 @@ class ClusterManager(UserDict):
         return False
 
     def cluster_stable(self, timeout=None, double_check=False):
-        """ Return whether or not all nodes in the cluster are stable """
-
+        """Return whether or not all nodes in the cluster are stable."""
         partitions = self.find_partitions()
 
         for partition in partitions:
@@ -713,10 +695,11 @@ class ClusterManager(UserDict):
         return True
 
     def is_node_dc(self, node, status_line=None):
-        """ Return whether or not the given node is the cluster DC by checking
-            the given status_line, or by querying the cluster if None
         """
+        Return whether or not the given node is the cluster DC.
 
+        Check the given status_line, or query the cluster if None.
+        """
         if not status_line:
             (_, out) = self.rsh(node, self.templates["StatusCmd"] % node, verbose=1)
 
@@ -744,8 +727,7 @@ class ClusterManager(UserDict):
         return False
 
     def active_resources(self, node):
-        """ Return a list of primitive resources active on the given node """
-
+        """Return a list of primitive resources active on the given node."""
         (_, output) = self.rsh(node, "crm_resource -c", verbose=1)
         resources = []
         for line in output:
@@ -759,8 +741,7 @@ class ClusterManager(UserDict):
         return resources
 
     def resource_location(self, rid):
-        """ Return a list of nodes on which the given resource is running """
-
+        """Return a list of nodes on which the given resource is running."""
         resource_nodes = []
         for node in self.env["nodes"]:
             if self.expected_status[node] != "up":
@@ -780,10 +761,12 @@ class ClusterManager(UserDict):
         return resource_nodes
 
     def find_partitions(self):
-        """ Return a list of all partitions in the cluster.  Each element of the
-            list is itself a list of all active nodes in that partition.
         """
+        Return a list of all partitions in the cluster.
 
+        Each element of the list is itself a list of all active nodes in that
+        partition.
+        """
         ccm_partitions = []
 
         for node in self.env["nodes"]:
@@ -822,8 +805,7 @@ class ClusterManager(UserDict):
         return ccm_partitions
 
     def has_quorum(self, node_list):
-        """ Return whether or not the cluster has quorum """
-
+        """Return whether or not the cluster has quorum."""
         # If we are auditing a partition, then one side will
         #   have quorum and the other not.
         # So the caller needs to tell us which we are checking
@@ -850,15 +832,15 @@ class ClusterManager(UserDict):
 
     @property
     def components(self):
-        """ A list of all patterns that should be ignored for the cluster's
-            components.  This must be provided by all subclasses.
         """
+        Return a list of all patterns that should be ignored for the cluster's components.
 
+        This must be provided by all subclasses.
+        """
         raise NotImplementedError
 
     def in_standby_mode(self, node):
-        """ Return whether or not the node is in Standby """
-
+        """Return whether or not the node is in Standby."""
         (_, out) = self.rsh(node, self.templates["StandbyQueryCmd"] % node, verbose=1)
 
         if not out:
@@ -869,10 +851,11 @@ class ClusterManager(UserDict):
         return out == "on"
 
     def set_standby_mode(self, node, status):
-        """ Set node to Standby if status is True, or Active if status is False.
-            Return whether the node is now in the requested status.
         """
+        Set node to Standby if status is True, or Active if status is False.
 
+        Return whether the node is now in the requested status.
+        """
         current_status = self.in_standby_mode(node)
 
         if current_status == status:
@@ -887,8 +870,7 @@ class ClusterManager(UserDict):
         return rc == 0
 
     def add_dummy_rsc(self, node, rid):
-        """ Add a dummy resource with the given ID to the given node """
-
+        """Add a dummy resource with the given ID to the given node."""
         rsc_xml = """ '<resources>
                 <primitive class=\"ocf\" id=\"%s\" provider=\"pacemaker\" type=\"Dummy\">
                     <operations>
@@ -905,10 +887,7 @@ class ClusterManager(UserDict):
         self.rsh(node, self.templates['CibAddXml'] % constraint_xml)
 
     def remove_dummy_rsc(self, node, rid):
-        """ Remove the previously added dummy resource given by rid on the
-            given node
-        """
-
+        """Remove the previously added dummy resource given by rid on the given node."""
         constraint = "\"//rsc_location[@rsc='%s']\"" % rid
         rsc = "\"//primitive[@id='%s']\"" % rid
 

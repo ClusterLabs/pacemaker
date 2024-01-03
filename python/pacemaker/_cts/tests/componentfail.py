@@ -1,7 +1,7 @@
-""" Kill a pacemaker daemon and test how the cluster recovers """
+"""Kill a pacemaker daemon and test how the cluster recovers."""
 
 __all__ = ["ComponentFail"]
-__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import re
@@ -22,18 +22,15 @@ from pacemaker._cts.tests.simulstartlite import SimulStartLite
 
 
 class ComponentFail(CTSTest):
-    """ A concrete test that kills a random pacemaker daemon and waits for the
-        cluster to recover
-    """
+    """Kill a random pacemaker daemon and wait for the cluster to recover."""
 
     def __init__(self, cm):
-        """ Create a new ComponentFail instance
-
-            Arguments:
-
-            cm -- A ClusterManager instance
         """
+        Create a new ComponentFail instance.
 
+        Arguments:
+        cm -- A ClusterManager instance
+        """
         CTSTest.__init__(self, cm)
 
         self.is_unsafe = True
@@ -45,8 +42,7 @@ class ComponentFail(CTSTest):
         self._startall = SimulStartLite(cm)
 
     def __call__(self, node):
-        """ Perform this test """
-
+        """Perform this test."""
         self.incr("calls")
         self._patterns = []
         self._okerrpatterns = []
@@ -159,8 +155,7 @@ class ComponentFail(CTSTest):
 
     @property
     def errors_to_ignore(self):
-        """ Return list of errors which should be ignored """
-
+        """Return a list of errors which should be ignored."""
         # Note that okerrpatterns refers to the last time we ran this test
         # The good news is that this works fine for us...
         self._okerrpatterns.extend(self._patterns)

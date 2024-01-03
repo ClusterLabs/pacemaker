@@ -1,8 +1,6 @@
-"""
-Test classes for the `pacemaker._cts` package.
-"""
+"""Test classes for the `pacemaker._cts` package."""
 
-__copyright__ = "Copyright 2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2023-2024 the Pacemaker project contributors"
 __license__ = "GNU Lesser General Public License version 2.1 or later (LGPLv2.1+)"
 
 from pacemaker._cts.tests.componentfail import ComponentFail
@@ -34,11 +32,12 @@ from pacemaker._cts.tests.stoponebyone import StopOnebyOne
 from pacemaker._cts.tests.stoptest import StopTest
 
 def test_list(cm, audits):
-    """ Return a list of test class objects that are enabled and whose
-        is_applicable methods return True.  These are the tests that
-        should be run.
     """
+    Return a list of runnable test class objects.
 
+    These are objects that are enabled and whose is_applicable methods return
+    True.
+    """
     # cm is a reasonable name here.
     # pylint: disable=invalid-name
 

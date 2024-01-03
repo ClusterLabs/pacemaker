@@ -1,7 +1,7 @@
-""" Restart the cluster and verify resources remain running """
+"""Restart the cluster and verify resources remain running."""
 
 __all__ = ["Reattach"]
-__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import re
@@ -24,18 +24,15 @@ from pacemaker._cts.tests.starttest import StartTest
 
 
 class Reattach(CTSTest):
-    """ A concrete test that restarts the cluster and verifies that resources
-        remain running throughout
-    """
+    """Restart the cluster and verify that resources remain running throughout."""
 
     def __init__(self, cm):
-        """ Create a new Reattach instance
-
-            Arguments:
-
-            cm -- A ClusterManager instance
         """
+        Create a new Reattach instance.
 
+        Arguments:
+        cm -- A ClusterManager instance
+        """
         CTSTest.__init__(self, cm)
 
         self.name = "Reattach"
@@ -44,26 +41,24 @@ class Reattach(CTSTest):
         self._stopall = SimulStopLite(cm)
 
     def _is_managed(self, node):
-        """ Are resources managed by the cluster? """
-
+        """Return whether resources are managed by the cluster."""
         (_, is_managed) = self._rsh(node, "crm_attribute -t rsc_defaults -n is-managed -q -G -d true", verbose=1)
         is_managed = is_managed[0].strip()
         return is_managed == "true"
 
     def _set_unmanaged(self, node):
-        """ Disable resource management """
-
+        """Disable resource management."""
         self.debug("Disable resource management")
         self._rsh(node, "crm_attribute -t rsc_defaults -n is-managed -v false")
 
     def _set_managed(self, node):
-        """ Enable resource management """
-
+        """Enable resource management."""
         self.debug("Re-enable resource management")
         self._rsh(node, "crm_attribute -t rsc_defaults -n is-managed -D")
 
     def _disable_incompatible_rscs(self, node):
-        """ Disable resources that are incompatible with this test
+        """
+        Disable resources that are incompatible with this test.
 
         Starts and stops of stonith-class resources are implemented internally
         by Pacemaker, which means that they must stop when Pacemaker is
@@ -74,7 +69,6 @@ class Reattach(CTSTest):
 
         Set target-role to "Stopped" for any of these resources in the CIB.
         """
-
         self.debug("Disable incompatible (stonith/OCFS2) resources")
         xml = """'<meta_attributes id="cts-lab-Reattach-meta">
                     <nvpair id="cts-lab-Reattach-target-role" name="target-role" value="Stopped"/>
@@ -86,26 +80,24 @@ class Reattach(CTSTest):
         return self._rsh(node, self._cm.templates['CibAddXml'] % xml)
 
     def _enable_incompatible_rscs(self, node):
-        """ Re-enable resources that were incompatible with this test """
-
+        """Re-enable resources that were incompatible with this test."""
         self.debug("Re-enable incompatible (stonith/OCFS2) resources")
         xml = """<meta_attributes id="cts-lab-Reattach-meta">"""
         return self._rsh(node, """cibadmin --delete --xml-text '%s'""" % xml)
 
     def _reprobe(self, node):
-        """ Reprobe all resources
+        """
+        Reprobe all resources.
 
         The placement of some resources (such as promotable-1 in the
         lab-generated CIB) is affected by constraints using node-attribute-based
         rules. An earlier test may have erased the relevant node attribute, so
         do a reprobe, which should add the attribute back.
         """
-
         return self._rsh(node, """crm_resource --refresh""")
 
     def setup(self, node):
-        """ Setup this test """
-
+        """Set up this test."""
         if not self._startall(None):
             return self.failure("Startall failed")
 
@@ -123,8 +115,7 @@ class Reattach(CTSTest):
         return self.success()
 
     def teardown(self, node):
-        """ Tear down this test """
-
+        """Tear down this test."""
         # Make sure 'node' is up
         start = StartTest(self._cm)
         start(node)
@@ -144,8 +135,7 @@ class Reattach(CTSTest):
         return self.success()
 
     def __call__(self, node):
-        """ Perform this test """
-
+        """Perform this test."""
         self.incr("calls")
 
         # Conveniently, the scheduler will display this message when disabling
@@ -214,8 +204,7 @@ class Reattach(CTSTest):
 
     @property
     def errors_to_ignore(self):
-        """ Return list of errors which should be ignored """
-
+        """Return a list of errors which should be ignored."""
         return [
             r"resource( was|s were) active at shutdown"
         ]

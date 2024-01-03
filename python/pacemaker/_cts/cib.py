@@ -1,7 +1,7 @@
-""" CIB generator for Pacemaker's Cluster Test Suite (CTS) """
+"""CIB generator for Pacemaker's Cluster Test Suite (CTS)."""
 
 __all__ = ["ConfigFactory"]
-__copyright__ = "Copyright 2008-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2008-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import warnings
@@ -13,21 +13,18 @@ from pacemaker._cts.network import next_ip
 
 
 class CIB:
-    """ A class for generating, representing, and installing a CIB file onto
-        cluster nodes
-    """
+    """A class for generating, representing, and installing a CIB file onto cluster nodes."""
 
     def __init__(self, cm, version, factory, tmpfile=None):
-        """ Create a new CIB instance
-
-            Arguments:
-
-            cm      -- A ClusterManager instance
-            version -- The schema syntax version
-            factory -- A ConfigFactory instance
-            tmpfile -- Where to store the CIB, or None to use a new tempfile
         """
+        Create a new CIB instance.
 
+        Arguments:
+        cm      -- A ClusterManager instance
+        version -- The schema syntax version
+        factory -- A ConfigFactory instance
+        tmpfile -- Where to store the CIB, or None to use a new tempfile
+        """
         # pylint: disable=invalid-name
         self._cib = None
         self._cm = cm
@@ -50,8 +47,7 @@ class CIB:
         self._factory.tmpfile = tmpfile
 
     def _show(self):
-        """ Query a cluster node for its generated CIB; log and return the result """
-
+        """Query a cluster node for its generated CIB; log and return the result."""
         output = ""
         (_, result) = self._factory.rsh(self._factory.target, "HOME=/root CIB_file=%s cibadmin -Ql" % self._factory.tmpfile, verbose=1)
 
@@ -62,10 +58,7 @@ class CIB:
         return output
 
     def new_ip(self, name=None):
-        """ Generate an IP resource for the next available IP address, optionally
-            specifying the resource's name.
-        """
-
+        """Generate an IP resource for the next available IP address, optionally specifying the resource's name."""
         if self._cm.env["IPagent"] == "IPaddr2":
             ip = next_ip(self._cm.env["IPBase"])
             if not name:
@@ -95,8 +88,7 @@ class CIB:
         return r
 
     def get_node_id(self, node_name):
-        """ Check the cluster configuration for the node ID for the given node_name """
-
+        """Check the cluster configuration for the node ID for the given node_name."""
         # We can't account for every possible configuration,
         # so we only return a node ID if:
         # * The node is specified in /etc/corosync/corosync.conf
@@ -125,8 +117,7 @@ class CIB:
         return node_id
 
     def install(self, target):
-        """ Generate a CIB file and install it to the given cluster node """
-
+        """Generate a CIB file and install it to the given cluster node."""
         old = self._factory.tmpfile
 
         # Force a rebuild
@@ -139,8 +130,7 @@ class CIB:
         self._factory.tmpfile = old
 
     def contents(self, target):
-        """ Generate a complete CIB file """
-
+        """Generate a complete CIB file."""
         # fencing resource
         if self._cib:
             return self._cib
@@ -313,8 +303,7 @@ class CIB:
         return self._cib
 
     def add_resources(self):
-        """ Add various resources and their constraints to the CIB """
-
+        """Add various resources and their constraints to the CIB."""
         # Per-node resources
         for node in self._cm.env["nodes"]:
             name = "rsc_%s" % node
@@ -392,16 +381,15 @@ class CIB:
 
 
 class ConfigFactory:
-    """ Singleton to generate a CIB file for the environment's schema version """
+    """Singleton to generate a CIB file for the environment's schema version."""
 
     def __init__(self, cm):
-        """ Create a new ConfigFactory instance
-
-            Arguments:
-
-            cm      -- A ClusterManager instance
         """
+        Create a new ConfigFactory instance.
 
+        Arguments:
+        cm      -- A ClusterManager instance
+        """
         # pylint: disable=invalid-name
         self._cm = cm
         self.rsh = self._cm.rsh
@@ -410,16 +398,13 @@ class ConfigFactory:
         self.tmpfile = None
 
     def log(self, args):
-        """ Log a message """
-
+        """Log a message."""
         self._cm.log("cib: %s" % args)
 
     def debug(self, args):
-        """ Log a debug message """
-
+        """Log a debug message."""
         self._cm.debug("cib: %s" % args)
 
     def create_config(self, name="pacemaker-%s" % BuildOptions.CIB_SCHEMA_VERSION):
-        """ Return a CIB object for the given schema version """
-
+        """Return a CIB object for the given schema version."""
         return CIB(self._cm, name, self)

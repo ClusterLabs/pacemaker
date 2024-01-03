@@ -1,7 +1,7 @@
-""" Simultaneously stop running nodes """
+"""Simultaneously stop running nodes."""
 
 __all__ = ["SimulStopLite"]
-__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.tests.ctstest import CTSTest
@@ -18,30 +18,26 @@ from pacemaker._cts.tests.ctstest import CTSTest
 
 
 class SimulStopLite(CTSTest):
-    """ A pseudo-test that is only used to set up conditions before running
-        some other test.  This class stops any running nodes more or less
-        simultaneously.  It can be used both to set up a test or to clean up
-        a test.
+    """
+    A pseudo-test that sets up conditions before running some other test.
 
-        Other test classes should not use this one as a superclass.
+    This class stops any running nodes more or less simultaneously.  It can be
+    used both to set up a test or to clean up a test.  Other test classes
+    should not use this one as a superclass.
     """
 
     def __init__(self, cm):
-        """ Create a new SimulStopLite instance
-
-            Arguments:
-
-            cm -- A ClusterManager instance
         """
+        Create a new SimulStopLite instance.
 
+        Arguments:
+        cm -- A ClusterManager instance
+        """
         CTSTest.__init__(self, cm)
         self.name = "SimulStopLite"
 
     def __call__(self, dummy):
-        """ Stop all running nodes more or less simultaneously, returning
-            whether this succeeded or not.
-        """
-
+        """Return whether stopping all running nodes more or less simultaneously succeeds."""
         self.incr("calls")
         self.debug("Setup: %s" % self.name)
 
@@ -86,6 +82,5 @@ class SimulStopLite(CTSTest):
         return self.failure("Missing log message: %s " % watch.unmatched)
 
     def is_applicable(self):
-        """ SimulStopLite is a setup test and never applicable """
-
+        """Return True if this test is applicable in the current test configuration."""
         return False

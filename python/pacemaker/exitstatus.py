@@ -1,7 +1,7 @@
-""" A module providing constants relating to why a process or function exited """
+"""A module providing constants relating to why a process or function exited."""
 
 __all__ = ["ExitStatus"]
-__copyright__ = "Copyright 2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2023-2024 the Pacemaker project contributors"
 __license__ = "GNU Lesser General Public License version 2.1 or later (LGPLv2.1+)"
 
 from enum import IntEnum, unique
@@ -9,8 +9,10 @@ from enum import IntEnum, unique
 # These values must be kept in sync with include/crm/common/results.h
 @unique
 class ExitStatus(IntEnum):
-    """ Why did a function or process exit?  These constants describe both success
-        and failure conditions.
+    """
+    Exit status codes for a function or process.
+
+    These constants describe both success and failure conditions.
     """
 
     OK                   =   0

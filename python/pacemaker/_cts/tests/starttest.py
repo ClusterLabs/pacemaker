@@ -1,7 +1,7 @@
-""" Start the cluster manager on a given node """
+"""Start the cluster manager on a given node."""
 
 __all__ = ["StartTest"]
-__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.tests.ctstest import CTSTest
@@ -16,27 +16,25 @@ from pacemaker._cts.tests.ctstest import CTSTest
 
 
 class StartTest(CTSTest):
-    """ A pseudo-test that is only used to set up conditions before running
-        some other test.  This class starts the cluster manager on a given
-        node.
+    """
+    A pseudo-test that sets up conditions before running some other test.
 
-        Other test classes should not use this one as a superclass.
+    This class starts the cluster manager on a given node.  Other test classes
+    should not use this one as a superclass.
     """
 
     def __init__(self, cm):
-        """ Create a new StartTest instance
-
-            Arguments:
-
-            cm -- A ClusterManager instance
         """
+        Create a new StartTest instance.
 
+        Arguments:
+        cm -- A ClusterManager instance
+        """
         CTSTest.__init__(self, cm)
         self.name = "Start"
 
     def __call__(self, node):
-        """ Start the given node, returning whether this succeeded or not """
-
+        """Start the given node, returning whether this succeeded or not."""
         self.incr("calls")
 
         if self._cm.upcount() == 0:
