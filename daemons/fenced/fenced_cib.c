@@ -89,7 +89,7 @@ topology_remove_helper(const char *node, int level)
     xmlNode *data = create_xml_node(NULL, XML_TAG_FENCING_LEVEL);
 
     crm_xml_add(data, F_STONITH_ORIGIN, __func__);
-    crm_xml_add_int(data, XML_ATTR_STONITH_INDEX, level);
+    crm_xml_add_int(data, PCMK_XA_INDEX, level);
     crm_xml_add(data, XML_ATTR_STONITH_TARGET, node);
 
     fenced_unregister_level(data, &desc, &result);
@@ -108,7 +108,7 @@ remove_topology_level(xmlNode *match)
     CRM_CHECK(match != NULL, return);
 
     key = stonith_level_key(match, fenced_target_by_unknown);
-    crm_element_value_int(match, XML_ATTR_STONITH_INDEX, &index);
+    crm_element_value_int(match, PCMK_XA_INDEX, &index);
     topology_remove_helper(key, index);
     free(key);
 }
@@ -474,7 +474,7 @@ remove_fencing_topology(xmlXPathObjectPtr xpathObj)
             int index = 0;
             char *target = stonith_level_key(match, fenced_target_by_unknown);
 
-            crm_element_value_int(match, XML_ATTR_STONITH_INDEX, &index);
+            crm_element_value_int(match, PCMK_XA_INDEX, &index);
             if (target == NULL) {
                 crm_err("Invalid fencing target in element %s", ID(match));
 

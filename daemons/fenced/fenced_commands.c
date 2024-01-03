@@ -1684,7 +1684,7 @@ unpack_level_request(xmlNode *xml, enum fenced_target_by *mode, char **target,
     } else {
         local_mode = unpack_level_kind(xml);
         local_target = stonith_level_key(xml, local_mode);
-        crm_element_value_int(xml, XML_ATTR_STONITH_INDEX, &local_id);
+        crm_element_value_int(xml, PCMK_XA_INDEX, &local_id);
         if (desc != NULL) {
             *desc = crm_strdup_printf("%s[%d]", local_target, local_id);
         }
@@ -1769,8 +1769,7 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
         crm_log_xml_trace(level, "Bad level");
         pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
                             "Invalid level number '%s' for topology level '%s'",
-                            pcmk__s(crm_element_value(level,
-                                                      XML_ATTR_STONITH_INDEX),
+                            pcmk__s(crm_element_value(level, PCMK_XA_INDEX),
                                     ""),
                             ID(level));
         return;
@@ -1860,8 +1859,7 @@ fenced_unregister_level(xmlNode *msg, char **desc,
         crm_log_xml_trace(level, "Bad level");
         pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
                             "Invalid level number '%s' for topology level %s",
-                            pcmk__s(crm_element_value(level,
-                                                      XML_ATTR_STONITH_INDEX),
+                            pcmk__s(crm_element_value(level, PCMK_XA_INDEX),
                                     "<null>"),
 
                             // Client API doesn't add ID to unregistration XML
