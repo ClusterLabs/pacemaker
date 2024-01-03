@@ -172,6 +172,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_CIB_LAST_WRITTEN instead
 #define XML_CIB_ATTR_WRITTEN PCMK_XA_CIB_LAST_WRITTEN
 
+//! \deprecated Use \c PCMK_XA_VERSION instead
+#define XML_ATTR_VERSION PCMK_XA_VERSION
+
 #ifdef __cplusplus
 }
 #endif

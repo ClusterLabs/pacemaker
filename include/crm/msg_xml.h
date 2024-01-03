@@ -149,7 +149,6 @@ extern "C" {
 #  define XML_TAG_FAILED		"failed"
 
 #  define XML_ATTR_TIMEOUT		"timeout"
-#  define XML_ATTR_VERSION		"version"
 #  define XML_ATTR_DESC			"description"
 #  define XML_ATTR_ID			"id"
 #  define XML_ATTR_NAME			"name"
