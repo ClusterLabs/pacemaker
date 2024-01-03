@@ -310,6 +310,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_DC_UUID instead
 #define XML_ATTR_DC_UUID PCMK_XA_DC_UUID
 
+//! \deprecated Use \c PCMK_XA_UPDATE_ORIGIN instead
+#define XML_ATTR_UPDATE_ORIG PCMK_XA_UPDATE_ORIGIN
+
 #ifdef __cplusplus
 }
 #endif
