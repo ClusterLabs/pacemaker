@@ -333,8 +333,8 @@
       </content>
     </parameter>
     <parameter name="stonith-timeout">
-      <longdesc lang="en">This value is not used by Pacemaker, but is kept for backward compatibility, and certain legacy fence agents might use it.</longdesc>
-      <shortdesc lang="en">*** Advanced Use Only *** Unused by Pacemaker</shortdesc>
+      <longdesc lang="en">How long to wait for on, off, and reboot fence actions to complete by default</longdesc>
+      <shortdesc lang="en">How long to wait for on, off, and reboot fence actions to complete by default</shortdesc>
       <content type="time" default=""/>
     </parameter>
     <parameter name="have-watchdog">
