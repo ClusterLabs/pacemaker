@@ -1375,7 +1375,7 @@ node_info_xml(pcmk__output_t *out, va_list args)
 
     pcmk__output_create_xml_node(out, "node-info",
                                  "nodeid", id_s,
-                                 XML_ATTR_UNAME, node_name,
+                                 PCMK_XA_UNAME, node_name,
                                  PCMK_XA_ID, uuid,
                                  PCMK__XA_CRMD, state,
                                  PCMK_XA_HAVE_QUORUM, pcmk__btoa(have_quorum),

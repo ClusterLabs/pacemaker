@@ -638,7 +638,7 @@ unpack_nodes(xmlNode *xml_nodes, pcmk_scheduler_t *scheduler)
             new_node = NULL;
 
             id = crm_element_value(xml_obj, PCMK_XA_ID);
-            uname = crm_element_value(xml_obj, XML_ATTR_UNAME);
+            uname = crm_element_value(xml_obj, PCMK_XA_UNAME);
             type = crm_element_value(xml_obj, PCMK_XA_TYPE);
             score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
             crm_trace("Processing node %s/%s", uname, id);
@@ -658,7 +658,8 @@ unpack_nodes(xmlNode *xml_nodes, pcmk_scheduler_t *scheduler)
 
             add_node_attrs(xml_obj, new_node, FALSE, scheduler);
 
-            crm_trace("Done with node %s", crm_element_value(xml_obj, XML_ATTR_UNAME));
+            crm_trace("Done with node %s",
+                      crm_element_value(xml_obj, PCMK_XA_UNAME));
         }
     }
 
@@ -1172,7 +1173,7 @@ unpack_node_state(const xmlNode *state, pcmk_scheduler_t *scheduler)
         return;
     }
 
-    uname = crm_element_value(state, XML_ATTR_UNAME);
+    uname = crm_element_value(state, PCMK_XA_UNAME);
     if (uname == NULL) {
         /* If a joining peer makes the cluster acquire the quorum from corosync
          * meanwhile it has not joined CPG membership of pacemaker-controld yet,
@@ -1181,7 +1182,7 @@ unpack_node_state(const xmlNode *state, pcmk_scheduler_t *scheduler)
          * join CPG.
          */
         crm_trace("Handling " XML_CIB_TAG_STATE " entry with id=\"%s\" without "
-                  XML_ATTR_UNAME, id);
+                  PCMK_XA_UNAME, id);
     }
 
     this_node = pe_find_node_any(scheduler->nodes, id, uname);
@@ -1255,7 +1256,7 @@ unpack_node_history(const xmlNode *status, bool fence,
          state != NULL; state = crm_next_same_xml(state)) {
 
         const char *id = ID(state);
-        const char *uname = crm_element_value(state, XML_ATTR_UNAME);
+        const char *uname = crm_element_value(state, PCMK_XA_UNAME);
         pcmk_node_t *this_node = NULL;
 
         if ((id == NULL) || (uname == NULL)) {
@@ -2877,7 +2878,7 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
 
     xpath = g_string_sized_new(256);
     pcmk__g_strcat(xpath,
-                   XPATH_NODE_STATE "[@" XML_ATTR_UNAME "='", node, "']"
+                   XPATH_NODE_STATE "[@" PCMK_XA_UNAME "='", node, "']"
                    SUB_XPATH_LRM_RESOURCE "[@" PCMK_XA_ID "='", resource, "']"
                    SUB_XPATH_LRM_RSC_OP "[@" XML_LRM_ATTR_TASK "='", op, "'",
                    NULL);
@@ -2925,7 +2926,7 @@ find_lrm_resource(const char *rsc_id, const char *node_name,
 
     xpath = g_string_sized_new(256);
     pcmk__g_strcat(xpath,
-                   XPATH_NODE_STATE "[@" XML_ATTR_UNAME "='", node_name, "']"
+                   XPATH_NODE_STATE "[@" PCMK_XA_UNAME "='", node_name, "']"
                    SUB_XPATH_LRM_RESOURCE "[@" PCMK_XA_ID "='", rsc_id, "']",
                    NULL);
 
@@ -2953,7 +2954,7 @@ unknown_on_node(pcmk_resource_t *rsc, const char *node_name)
     GString *xpath = g_string_sized_new(256);
 
     pcmk__g_strcat(xpath,
-                   XPATH_NODE_STATE "[@" XML_ATTR_UNAME "='", node_name, "']"
+                   XPATH_NODE_STATE "[@" PCMK_XA_UNAME "='", node_name, "']"
                    SUB_XPATH_LRM_RESOURCE "[@" PCMK_XA_ID "='", rsc->id, "']"
                    SUB_XPATH_LRM_RSC_OP "[@" XML_LRM_ATTR_RC "!='193']",
                    NULL);
@@ -3456,7 +3457,7 @@ record_failed_op(struct action_history *history)
          xIter != NULL; xIter = xIter->next) {
 
         const char *key = pe__xe_history_key(xIter);
-        const char *uname = crm_element_value(xIter, XML_ATTR_UNAME);
+        const char *uname = crm_element_value(xIter, PCMK_XA_UNAME);
 
         if (pcmk__str_eq(history->key, key, pcmk__str_none)
             && pcmk__str_eq(uname, history->node->details->uname,
@@ -3469,7 +3470,7 @@ record_failed_op(struct action_history *history)
 
     crm_trace("Adding entry for %s on %s to failed action list",
               history->key, pe__node_name(history->node));
-    crm_xml_add(history->xml, XML_ATTR_UNAME, history->node->details->uname);
+    crm_xml_add(history->xml, PCMK_XA_UNAME, history->node->details->uname);
     crm_xml_add(history->xml, XML_LRM_ATTR_RSCID, history->rsc->id);
     add_node_copy(history->rsc->cluster->failed, history->xml);
 }
@@ -4601,7 +4602,7 @@ mask_probe_failure(struct action_history *history, int orig_exit_status,
                pe__node_name(history->node));
     update_resource_state(history, history->expected_exit_status, last_failure,
                           on_fail);
-    crm_xml_add(history->xml, XML_ATTR_UNAME, history->node->details->uname);
+    crm_xml_add(history->xml, PCMK_XA_UNAME, history->node->details->uname);
 
     record_failed_op(history);
     resource_location(ban_rsc, history->node, -INFINITY, "masked-probe-failure",
@@ -4882,7 +4883,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
 
         update_resource_state(&history, history.expected_exit_status,
                               *last_failure, on_fail);
-        crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
+        crm_xml_add(xml_op, PCMK_XA_UNAME, node->details->uname);
         pcmk__set_rsc_flags(rsc, pcmk_rsc_ignore_failure);
 
         record_failed_op(&history);
@@ -5015,7 +5016,7 @@ extract_operations(const char *node, const char *rsc, xmlNode * rsc_entry, gbool
         if (pcmk__str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP,
                          pcmk__str_none)) {
             crm_xml_add(rsc_op, "resource", rsc);
-            crm_xml_add(rsc_op, XML_ATTR_UNAME, node);
+            crm_xml_add(rsc_op, PCMK_XA_UNAME, node);
             op_list = g_list_prepend(op_list, rsc_op);
         }
     }
@@ -5074,7 +5075,7 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
          node_state = pcmk__xe_next(node_state)) {
 
         if (pcmk__str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, pcmk__str_none)) {
-            const char *uname = crm_element_value(node_state, XML_ATTR_UNAME);
+            const char *uname = crm_element_value(node_state, PCMK_XA_UNAME);
 
             if (node != NULL && !pcmk__str_eq(uname, node, pcmk__str_casei)) {
                 continue;

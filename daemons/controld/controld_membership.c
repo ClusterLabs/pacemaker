@@ -144,7 +144,7 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
         return NULL;
     }
 
-    crm_xml_add(node_state, XML_ATTR_UNAME, node->uname);
+    crm_xml_add(node_state, PCMK_XA_UNAME, node->uname);
 
     if ((flags & node_update_cluster) && node->state) {
         if (compare_version(controld_globals.dc_version, "3.18.0") >= 0) {
@@ -241,7 +241,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
         }
 
         node_uuid = crm_element_value(node_xml, PCMK_XA_ID);
-        node_uname = crm_element_value(node_xml, XML_ATTR_UNAME);
+        node_uname = crm_element_value(node_xml, PCMK_XA_UNAME);
 
         if (node_uuid == NULL || node_uname == NULL) {
             continue;
@@ -274,7 +274,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
 
             node_state_xml = create_xml_node(NULL, XML_CIB_TAG_STATE);
             crm_xml_add(node_state_xml, PCMK_XA_ID, node_uuid);
-            crm_xml_add(node_state_xml, XML_ATTR_UNAME, node_uname);
+            crm_xml_add(node_state_xml, PCMK_XA_UNAME, node_uname);
 
             delete_call_id = cib_conn->cmds->remove(cib_conn,
                                                     XML_CIB_TAG_STATUS,
@@ -339,13 +339,13 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
                 /* We need both to be valid */
                 new_node = create_xml_node(node_list, XML_CIB_TAG_NODE);
                 crm_xml_add(new_node, PCMK_XA_ID, node->uuid);
-                crm_xml_add(new_node, XML_ATTR_UNAME, node->uname);
+                crm_xml_add(new_node, PCMK_XA_UNAME, node->uname);
 
                 /* Search and remove unknown nodes with the conflicting uname from CIB */
                 pcmk__g_strcat(xpath,
                                "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION
                                "/" XML_CIB_TAG_NODES "/" XML_CIB_TAG_NODE
-                               "[@" XML_ATTR_UNAME "='", node->uname, "']"
+                               "[@" PCMK_XA_UNAME "='", node->uname, "']"
                                "[@" PCMK_XA_ID "!='", node->uuid, "']", NULL);
 
                 call_id = cib_conn->cmds->query(cib_conn,

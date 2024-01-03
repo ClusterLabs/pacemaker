@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -771,7 +771,7 @@ create_purge_node_request(const pcmk_ipc_api_t *api, const char *node_name,
             if (nodeid > 0) {
                 crm_xml_set_id(request, "%lu", (unsigned long) nodeid);
             }
-            crm_xml_add(request, XML_ATTR_UNAME, node_name);
+            crm_xml_add(request, PCMK_XA_UNAME, node_name);
             break;
 
         case pcmk_ipc_based:

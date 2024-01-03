@@ -228,7 +228,7 @@ node_name_xml(pcmk__output_t *out, va_list args) {
 
     pcmk__output_create_xml_node(out, "node-info",
                                  "nodeid", id_s,
-                                 XML_ATTR_UNAME, node_name,
+                                 PCMK_XA_UNAME, node_name,
                                  NULL);
 
     free(id_s);
@@ -550,7 +550,7 @@ remove_from_section(cib_t *cib, const char *element, const char *section,
     if (xml == NULL) {
         return pcmk_rc_error;
     }
-    crm_xml_add(xml, XML_ATTR_UNAME, node_name);
+    crm_xml_add(xml, PCMK_XA_UNAME, node_name);
     if (node_id > 0) {
         crm_xml_set_id(xml, "%ld", node_id);
     }
@@ -693,7 +693,7 @@ purge_node_from_fencer(const char *node_name, long node_id)
     if (node_id > 0) {
         crm_xml_set_id(cmd, "%ld", node_id);
     }
-    crm_xml_add(cmd, XML_ATTR_UNAME, node_name);
+    crm_xml_add(cmd, PCMK_XA_UNAME, node_name);
 
     rc = crm_ipc_send(conn, cmd, 0, 0, NULL);
     if (rc >= 0) {

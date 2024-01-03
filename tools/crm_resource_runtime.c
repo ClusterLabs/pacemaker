@@ -710,7 +710,7 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
         }
 
         // Host name should always have been provided by this point
-        failed_value = crm_element_value(xml_op, XML_ATTR_UNAME);
+        failed_value = crm_element_value(xml_op, PCMK_XA_UNAME);
         if (!pcmk__str_eq(node_name, failed_value, pcmk__str_casei)) {
             continue;
         }

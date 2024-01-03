@@ -815,7 +815,7 @@ remote_node_print_helper(xmlNode *result, void *user_data)
 {
     struct node_data *data = user_data;
     pcmk__output_t *out = data->out;
-    const char *name = crm_element_value(result, XML_ATTR_UNAME);
+    const char *name = crm_element_value(result, PCMK_XA_UNAME);
     const char *id = crm_element_value(result, data->field);
 
     // node name and node id are the same for remote/guest nodes

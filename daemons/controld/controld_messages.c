@@ -850,7 +850,7 @@ handle_node_list(const xmlNode *request)
         xmlNode *xml = create_xml_node(reply_data, XML_CIB_TAG_NODE);
 
         crm_xml_add_ll(xml, PCMK_XA_ID, (long long) node->id); // uint32_t
-        crm_xml_add(xml, XML_ATTR_UNAME, node->uname);
+        crm_xml_add(xml, PCMK_XA_UNAME, node->uname);
         crm_xml_add(xml, PCMK__XA_IN_CCM, node->state);
     }
 
@@ -897,7 +897,7 @@ handle_node_info_request(const xmlNode *msg)
     if (node_id < 0) {
         node_id = 0;
     }
-    value = crm_element_value(msg, XML_ATTR_UNAME);
+    value = crm_element_value(msg, PCMK_XA_UNAME);
 
     // Default to local node if none given
     if ((node_id == 0) && (value == NULL)) {
@@ -907,7 +907,7 @@ handle_node_info_request(const xmlNode *msg)
     node = pcmk__search_node_caches(node_id, value, CRM_GET_PEER_ANY);
     if (node) {
         crm_xml_add(reply_data, PCMK_XA_ID, node->uuid);
-        crm_xml_add(reply_data, XML_ATTR_UNAME, node->uname);
+        crm_xml_add(reply_data, PCMK_XA_UNAME, node->uname);
         crm_xml_add(reply_data, PCMK__XA_CRMD, node->state);
         pcmk__xe_set_bool_attr(reply_data, XML_NODE_IS_REMOTE,
                                pcmk_is_set(node->flags, crm_remote_node));
@@ -1137,7 +1137,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
         const char *name = NULL;
 
         crm_element_value_int(stored_msg, PCMK_XA_ID, &id);
-        name = crm_element_value(stored_msg, XML_ATTR_UNAME);
+        name = crm_element_value(stored_msg, PCMK_XA_UNAME);
 
         if(cause == C_IPC_MESSAGE) {
             msg = create_request(CRM_OP_RM_NODE_CACHE, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);

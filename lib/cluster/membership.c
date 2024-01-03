@@ -1341,7 +1341,7 @@ static void
 known_node_cache_refresh_helper(xmlNode *xml_node, void *user_data)
 {
     const char *id = crm_element_value(xml_node, PCMK_XA_ID);
-    const char *uname = crm_element_value(xml_node, XML_ATTR_UNAME);
+    const char *uname = crm_element_value(xml_node, PCMK_XA_UNAME);
     crm_node_t * node =  NULL;
 
     CRM_CHECK(id != NULL && uname !=NULL, return);

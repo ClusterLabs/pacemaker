@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -650,7 +650,7 @@ pcmk__corosync_add_nodes(xmlNode *xml_parent)
                 xmlNode *node = create_xml_node(xml_parent, XML_CIB_TAG_NODE);
 
                 crm_xml_set_id(node, "%u", nodeid);
-                crm_xml_add(node, XML_ATTR_UNAME, name);
+                crm_xml_add(node, PCMK_XA_UNAME, name);
             }
         }
 

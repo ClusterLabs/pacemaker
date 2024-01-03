@@ -33,8 +33,8 @@
 
 bool pcmk__simulate_node_config = false;
 
-#define XPATH_NODE_CONFIG   "//" XML_CIB_TAG_NODE "[@" XML_ATTR_UNAME "='%s']"
-#define XPATH_NODE_STATE    "//" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='%s']"
+#define XPATH_NODE_CONFIG   "//" XML_CIB_TAG_NODE "[@" PCMK_XA_UNAME "='%s']"
+#define XPATH_NODE_STATE    "//" XML_CIB_TAG_STATE "[@" PCMK_XA_UNAME "='%s']"
 #define XPATH_NODE_STATE_BY_ID "//" XML_CIB_TAG_STATE "[@" PCMK_XA_ID "='%s']"
 #define XPATH_RSC_HISTORY   XPATH_NODE_STATE \
                             "//" XML_LRM_TAG_RESOURCE "[@" PCMK_XA_ID "='%s']"
@@ -133,7 +133,7 @@ create_node_entry(cib_t *cib_conn, const char *node)
         xmlNode *cib_object = create_xml_node(NULL, XML_CIB_TAG_NODE);
 
         crm_xml_add(cib_object, PCMK_XA_ID, node); // Use node name as ID
-        crm_xml_add(cib_object, XML_ATTR_UNAME, node);
+        crm_xml_add(cib_object, PCMK_XA_UNAME, node);
         cib_conn->cmds->create(cib_conn, XML_CIB_TAG_NODES, cib_object,
                                cib_sync_call|cib_scope_local);
         /* Not bothering with subsequent query to see if it exists,
@@ -265,7 +265,7 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
                 goto done;
 
             } else if (cib_object != NULL) {
-                crm_xml_add(cib_object, XML_ATTR_UNAME, node);
+                crm_xml_add(cib_object, PCMK_XA_UNAME, node);
 
                 rc = cib_conn->cmds->modify(cib_conn, XML_CIB_TAG_STATUS,
                                             cib_object,
@@ -279,7 +279,7 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
     if (rc == -ENXIO) {
         cib_object = create_xml_node(NULL, XML_CIB_TAG_STATE);
         crm_xml_add(cib_object, PCMK_XA_ID, found_uuid);
-        crm_xml_add(cib_object, XML_ATTR_UNAME, node);
+        crm_xml_add(cib_object, PCMK_XA_UNAME, node);
         cib_conn->cmds->create(cib_conn, XML_CIB_TAG_STATUS, cib_object,
                                cib_sync_call|cib_scope_local);
         free_xml(cib_object);
@@ -350,7 +350,7 @@ pcmk__inject_node_state_change(cib_t *cib_conn, const char *node, bool up)
 static xmlNode *
 find_resource_xml(xmlNode *cib_node, const char *resource)
 {
-    const char *node = crm_element_value(cib_node, XML_ATTR_UNAME);
+    const char *node = crm_element_value(cib_node, PCMK_XA_UNAME);
     char *xpath = crm_strdup_printf(XPATH_RSC_HISTORY, node, resource);
     xmlNode *match = get_xpath_object(xpath, cib_node, LOG_TRACE);
 

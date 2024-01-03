@@ -278,7 +278,8 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
 // Searches for various portions of node_state to delete
 
 // Match a particular node's node_state (takes node name 1x)
-#define XPATH_NODE_STATE        "//" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='%s']"
+#define XPATH_NODE_STATE        "//" XML_CIB_TAG_STATE  \
+                                "[@" PCMK_XA_UNAME "='%s']"
 
 // Node's lrm section (name 1x)
 #define XPATH_NODE_LRM          XPATH_NODE_STATE "/" XML_CIB_TAG_LRM
@@ -391,7 +392,7 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
 
 // Takes node name and resource ID
 #define XPATH_RESOURCE_HISTORY "//" XML_CIB_TAG_STATE                       \
-                               "[@" XML_ATTR_UNAME "='%s']/"                \
+                               "[@" PCMK_XA_UNAME "='%s']/"                 \
                                XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES    \
                                "/" XML_LRM_TAG_RESOURCE                     \
                                "[@" PCMK_XA_ID "='%s']"
@@ -901,7 +902,7 @@ controld_update_resource_history(const char *node_name,
         pcmk__xe_set_bool_attr(xml, XML_NODE_IS_REMOTE, true);
     }
     crm_xml_add(xml, PCMK_XA_ID, node_id);
-    crm_xml_add(xml, XML_ATTR_UNAME, node_name);
+    crm_xml_add(xml, PCMK_XA_UNAME, node_name);
     crm_xml_add(xml, PCMK_XA_CRM_DEBUG_ORIGIN, __func__);
 
     //     <lrm ...>
@@ -986,7 +987,7 @@ controld_delete_action_history(const lrmd_event_data_t *op)
 /* Define xpath to find LRM resource history entry by node and resource */
 #define XPATH_HISTORY                                   \
     "/" XML_TAG_CIB "/" XML_CIB_TAG_STATUS              \
-    "/" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='%s']"  \
+    "/" XML_CIB_TAG_STATE "[@" PCMK_XA_UNAME "='%s']"   \
     "/" XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES       \
     "/" XML_LRM_TAG_RESOURCE "[@" PCMK_XA_ID "='%s']"   \
     "/" XML_LRM_TAG_RSC_OP

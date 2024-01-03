@@ -231,7 +231,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
                 xml_obj = create_xml_node(xml_top, XML_CIB_TAG_NODE);
                 crm_xml_add(xml_obj, PCMK_XA_TYPE, "remote");
                 crm_xml_add(xml_obj, PCMK_XA_ID, node_uuid);
-                crm_xml_add(xml_obj, XML_ATTR_UNAME, node_uuid);
+                crm_xml_add(xml_obj, PCMK_XA_UNAME, node_uuid);
             } else {
                 tag = XML_CIB_TAG_NODE;
             }
@@ -559,7 +559,7 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
 
         if (pcmk__str_eq(crm_element_value(result, PCMK_XA_TYPE), "remote",
                          pcmk__str_casei)) {
-            parsed_uuid = crm_element_value(result, XML_ATTR_UNAME);
+            parsed_uuid = crm_element_value(result, PCMK_XA_UNAME);
             parsed_is_remote = TRUE;
         } else {
             parsed_uuid = ID(result);
@@ -583,7 +583,7 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
     } else if (pcmk__str_eq(tag, XML_CIB_TAG_STATE, pcmk__str_casei)) {
         /* Result is <node_state> tag from <status> section */
 
-        parsed_uuid = crm_element_value(result, XML_ATTR_UNAME);
+        parsed_uuid = crm_element_value(result, PCMK_XA_UNAME);
         if (pcmk__xe_attr_is_true(result, XML_NODE_IS_REMOTE)) {
             parsed_is_remote = TRUE;
         }
@@ -612,7 +612,7 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
 #define XPATH_LOWER_TRANS "abcdefghijklmnopqrstuvwxyz"
 #define XPATH_NODE \
     "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_NODES \
-        "/" XML_CIB_TAG_NODE "[translate(@" XML_ATTR_UNAME ",'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']" \
+        "/" XML_CIB_TAG_NODE "[translate(@" PCMK_XA_UNAME ",'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']" \
     "|/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_RESOURCES \
         "/" XML_CIB_TAG_RESOURCE \
         "[@class='ocf'][@provider='pacemaker'][@type='remote'][translate(@id,'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']" \
@@ -695,7 +695,7 @@ query_node_uname(cib_t * the_cib, const char *uuid, char **uname)
                          pcmk__str_none)) {
             child_name = ID(a_child);
             if (pcmk__str_eq(uuid, child_name, pcmk__str_casei)) {
-                child_name = crm_element_value(a_child, XML_ATTR_UNAME);
+                child_name = crm_element_value(a_child, PCMK_XA_UNAME);
                 if (child_name != NULL) {
                     *uname = strdup(child_name);
                     rc = pcmk_ok;

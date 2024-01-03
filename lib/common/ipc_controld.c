@@ -135,7 +135,7 @@ set_node_info_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
     crm_element_value_int(msg_data, PCMK_XA_ID, &(data->data.node_info.id));
 
     data->data.node_info.uuid = crm_element_value(msg_data, PCMK_XA_ID);
-    data->data.node_info.uname = crm_element_value(msg_data, XML_ATTR_UNAME);
+    data->data.node_info.uname = crm_element_value(msg_data, PCMK_XA_UNAME);
     data->data.node_info.state = crm_element_value(msg_data, PCMK__XA_CRMD);
 }
 
@@ -169,7 +169,7 @@ set_nodes_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
         if (id_ll > 0) {
             node_info->id = id_ll;
         }
-        node_info->uname = crm_element_value(node, XML_ATTR_UNAME);
+        node_info->uname = crm_element_value(node, PCMK_XA_UNAME);
         node_info->state = crm_element_value(node, PCMK__XA_IN_CCM);
         data->data.nodes = g_list_prepend(data->data.nodes, node_info);
     }

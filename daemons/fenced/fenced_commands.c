@@ -3513,7 +3513,7 @@ handle_cache_request(pcmk__request_t *request)
     const char *name = NULL;
 
     crm_element_value_int(request->xml, PCMK_XA_ID, &node_id);
-    name = crm_element_value(request->xml, XML_ATTR_UNAME);
+    name = crm_element_value(request->xml, PCMK_XA_UNAME);
     reap_crm_member(node_id, name);
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     return NULL;
