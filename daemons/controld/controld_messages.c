@@ -348,7 +348,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     sys_to = crm_element_value(msg, F_CRM_SYS_TO);
     sys_from = crm_element_value(msg, F_CRM_SYS_FROM);
     type = crm_element_value(msg, PCMK__XA_T);
-    task = crm_element_value(msg, F_CRM_TASK);
+    task = crm_element_value(msg, PCMK__XA_CRM_TASK);
     ref = crm_element_value(msg, PCMK_XA_REFERENCE);
 
     broadcast = pcmk__str_empty(host_to);
@@ -541,7 +541,7 @@ controld_authorize_ipc_message(const xmlNode *client_msg, pcmk__client_t *curr_c
 {
     xmlNode *message_data = NULL;
     const char *client_name = NULL;
-    const char *op = crm_element_value(client_msg, F_CRM_TASK);
+    const char *op = crm_element_value(client_msg, PCMK__XA_CRM_TASK);
     const char *ref = crm_element_value(client_msg, PCMK_XA_REFERENCE);
     const char *uuid = (curr_client? curr_client->id : proxy_session);
 
@@ -1016,13 +1016,13 @@ static enum crmd_fsa_input
 handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
 {
     xmlNode *msg = NULL;
-    const char *op = crm_element_value(stored_msg, F_CRM_TASK);
+    const char *op = crm_element_value(stored_msg, PCMK__XA_CRM_TASK);
 
     /* Optimize this for the DC - it has the most to do */
 
     crm_log_xml_trace(stored_msg, "request");
     if (op == NULL) {
-        crm_warn("Ignoring request without " F_CRM_TASK);
+        crm_warn("Ignoring request without " PCMK__XA_CRM_TASK);
         return I_NULL;
     }
 
@@ -1178,11 +1178,11 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
 static void
 handle_response(xmlNode *stored_msg)
 {
-    const char *op = crm_element_value(stored_msg, F_CRM_TASK);
+    const char *op = crm_element_value(stored_msg, PCMK__XA_CRM_TASK);
 
     crm_log_xml_trace(stored_msg, "reply");
     if (op == NULL) {
-        crm_warn("Ignoring reply without " F_CRM_TASK);
+        crm_warn("Ignoring reply without " PCMK__XA_CRM_TASK);
 
     } else if (AM_I_DC && strcmp(op, CRM_OP_PECALC) == 0) {
         // Check whether scheduler answer been superseded by subsequent request

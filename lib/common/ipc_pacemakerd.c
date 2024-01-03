@@ -180,7 +180,7 @@ post_disconnect(pcmk_ipc_api_t *api)
 static bool
 reply_expected(pcmk_ipc_api_t *api, const xmlNode *request)
 {
-    const char *command = crm_element_value(request, F_CRM_TASK);
+    const char *command = crm_element_value(request, PCMK__XA_CRM_TASK);
 
     if (command == NULL) {
         return false;
@@ -223,7 +223,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         goto done;
     }
 
-    value = crm_element_value(reply, F_CRM_TASK);
+    value = crm_element_value(reply, PCMK__XA_CRM_TASK);
 
     // Parse useful info from reply
     msg_data = get_message_xml(reply, F_CRM_DATA);

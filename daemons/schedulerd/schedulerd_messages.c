@@ -271,7 +271,7 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
             .result         = PCMK__UNKNOWN_RESULT,
         };
 
-        request.op = crm_element_value_copy(request.xml, F_CRM_TASK);
+        request.op = crm_element_value_copy(request.xml, PCMK__XA_CRM_TASK);
         CRM_CHECK(request.op != NULL, return 0);
 
         reply = pcmk__process_request(&request, schedulerd_handlers);

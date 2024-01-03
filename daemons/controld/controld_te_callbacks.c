@@ -592,7 +592,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
     }
 
     // Only the lrm_invoke command is supported as a transition request
-    value = crm_element_value(msg, F_CRM_TASK);
+    value = crm_element_value(msg, PCMK__XA_CRM_TASK);
     if (!pcmk__str_eq(value, CRM_OP_INVOKE_LRM, pcmk__str_none)) {
         crm_info("Received invalid transition request: command '%s' not '"
                  CRM_OP_INVOKE_LRM "'", pcmk__s(value, ""));

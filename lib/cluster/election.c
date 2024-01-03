@@ -428,7 +428,7 @@ parse_election_message(const election_t *e, const xmlNode *message,
     vote->age.tv_sec = -1;
     vote->age.tv_usec = -1;
 
-    vote->op = crm_element_value(message, F_CRM_TASK);
+    vote->op = crm_element_value(message, PCMK__XA_CRM_TASK);
     vote->from = crm_element_value(message, PCMK__XA_SRC);
     vote->version = crm_element_value(message, F_CRM_VERSION);
     vote->election_owner = crm_element_value(message, F_CRM_ELECTION_OWNER);

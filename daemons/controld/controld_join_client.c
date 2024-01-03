@@ -258,7 +258,7 @@ do_cl_join_finalize_respond(long long action,
     const char *start_state = pcmk__env_option(PCMK__ENV_NODE_START_STATE);
 
     int join_id = -1;
-    const char *op = crm_element_value(input->msg, F_CRM_TASK);
+    const char *op = crm_element_value(input->msg, PCMK__XA_CRM_TASK);
     const char *welcome_from = crm_element_value(input->msg, PCMK__XA_SRC);
 
     if (!pcmk__str_eq(op, CRM_OP_JOIN_ACKNAK, pcmk__str_casei)) {

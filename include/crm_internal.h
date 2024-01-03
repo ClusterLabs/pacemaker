@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2023 the Pacemaker project contributors
+ * Copyright 2006-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -83,6 +83,7 @@
 #define PCMK__XA_CONFIRM                "confirm"
 #define PCMK__XA_CONN_HOST              "connection_host"
 #define PCMK__XA_CRMD                   "crmd"
+#define PCMK__XA_CRM_TASK               "crm_task"
 #define PCMK__XA_DIGEST                 "digest"
 #define PCMK__XA_EXPECTED               "expected"
 #define PCMK__XA_FILE                   "file"

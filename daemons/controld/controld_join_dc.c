@@ -699,7 +699,7 @@ do_dc_join_ack(long long action,
     int join_id = -1;
     ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
 
-    const char *op = crm_element_value(join_ack->msg, F_CRM_TASK);
+    const char *op = crm_element_value(join_ack->msg, PCMK__XA_CRM_TASK);
     char *join_from = crm_element_value_copy(join_ack->msg, PCMK__XA_SRC);
     crm_node_t *peer = NULL;
 

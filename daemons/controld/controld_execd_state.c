@@ -559,7 +559,8 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
          * the name, so we don't return info for ourselves instead of the
          * Pacemaker Remote node.
          */
-        if (pcmk__str_eq(crm_element_value(request, F_CRM_TASK), CRM_OP_NODE_INFO, pcmk__str_casei)) {
+        if (pcmk__str_eq(crm_element_value(request, PCMK__XA_CRM_TASK),
+                         CRM_OP_NODE_INFO, pcmk__str_none)) {
             int node_id = 0;
 
             crm_element_value_int(request, PCMK_XA_ID, &node_id);

@@ -179,7 +179,7 @@ static bool
 reply_expected(pcmk_ipc_api_t *api, const xmlNode *request)
 {
     // We only need to handle commands that API functions can send
-    return pcmk__str_any_of(crm_element_value(request, F_CRM_TASK),
+    return pcmk__str_any_of(crm_element_value(request, PCMK__XA_CRM_TASK),
                             PCMK__CONTROLD_CMD_NODES,
                             CRM_OP_LRM_DELETE,
                             CRM_OP_LRM_FAIL,
@@ -235,7 +235,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         goto done;
     }
 
-    value = crm_element_value(reply, F_CRM_TASK);
+    value = crm_element_value(reply, PCMK__XA_CRM_TASK);
     if (pcmk__str_empty(value)) {
         crm_info("Unrecognizable message from controller: no command name");
         status = CRM_EX_PROTOCOL;
