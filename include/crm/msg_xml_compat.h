@@ -319,6 +319,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_UPDATE_USER instead
 #define XML_ATTR_UPDATE_USER PCMK_XA_UPDATE_USER
 
+//! \deprecated Use \c PCMK_XA_REQUEST instead
+#define XML_ATTR_REQUEST PCMK_XA_REQUEST
+
 #ifdef __cplusplus
 }
 #endif
