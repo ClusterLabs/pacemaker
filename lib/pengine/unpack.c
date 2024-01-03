@@ -324,7 +324,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
         if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
             int do_panic = 0;
 
-            crm_element_value_int(scheduler->input, XML_ATTR_QUORUM_PANIC,
+            crm_element_value_int(scheduler->input, PCMK_XA_NO_QUORUM_PANIC,
                                   &do_panic);
             if (do_panic || pcmk_is_set(scheduler->flags, pcmk_sched_quorate)) {
                 scheduler->no_quorum_policy = pcmk_no_quorum_fence;
