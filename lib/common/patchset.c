@@ -406,7 +406,7 @@ patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
     version = crm_element_value(source, PCMK_XA_CRM_FEATURE_SET);
     digest = calculate_xml_versioned_digest(target, FALSE, TRUE, version);
 
-    crm_xml_add(patch, XML_ATTR_DIGEST, digest);
+    crm_xml_add(patch, PCMK__XA_DIGEST, digest);
     free(digest);
 
     return;
@@ -1116,7 +1116,7 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
         }
     }
 
-    digest = crm_element_value(patchset, XML_ATTR_DIGEST);
+    digest = crm_element_value(patchset, PCMK__XA_DIGEST);
     if (digest != NULL) {
         /* Make original XML available for logging in case result doesn't have
          * expected digest
@@ -1417,7 +1417,7 @@ apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
 {
     gboolean result = TRUE;
     int root_nodes_seen = 0;
-    const char *digest = crm_element_value(diff, XML_ATTR_DIGEST);
+    const char *digest = crm_element_value(diff, PCMK__XA_DIGEST);
     const char *version = crm_element_value(diff, PCMK_XA_CRM_FEATURE_SET);
 
     xmlNode *child_diff = NULL;

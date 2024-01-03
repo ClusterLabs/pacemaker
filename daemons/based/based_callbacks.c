@@ -422,7 +422,7 @@ process_ping_reply(xmlNode *reply)
 
     xmlNode *pong = get_message_xml(reply, F_CIB_CALLDATA);
     const char *seq_s = crm_element_value(pong, F_CIB_PING_ID);
-    const char *digest = crm_element_value(pong, XML_ATTR_DIGEST);
+    const char *digest = crm_element_value(pong, PCMK__XA_DIGEST);
 
     if (seq_s == NULL) {
         crm_debug("Ignoring ping reply with no " F_CIB_PING_ID);
@@ -958,7 +958,7 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
         int format = 1;
 
         CRM_LOG_ASSERT(result_diff != NULL);
-        digest = crm_element_value(result_diff, XML_ATTR_DIGEST);
+        digest = crm_element_value(result_diff, PCMK__XA_DIGEST);
         crm_element_value_int(result_diff, PCMK_XA_FORMAT, &format);
 
         cib_diff_version_details(result_diff,

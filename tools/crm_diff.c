@@ -153,7 +153,7 @@ log_patch_cib_versions(xmlNode *patch)
 
     xml_patch_versions(patch, add, del);
     fmt = crm_element_value(patch, PCMK_XA_FORMAT);
-    digest = crm_element_value(patch, XML_ATTR_DIGEST);
+    digest = crm_element_value(patch, PCMK__XA_DIGEST);
 
     if (add[2] != del[2] || add[1] != del[1] || add[0] != del[0]) {
         crm_info("Patch: --- %d.%d.%d %s", del[0], del[1], del[2], fmt);

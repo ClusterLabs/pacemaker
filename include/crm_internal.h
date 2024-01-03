@@ -83,6 +83,7 @@
 #define PCMK__XA_CONFIRM                "confirm"
 #define PCMK__XA_CONN_HOST              "connection_host"
 #define PCMK__XA_CRMD                   "crmd"
+#define PCMK__XA_DIGEST                 "digest"
 #define PCMK__XA_EXPECTED               "expected"
 #define PCMK__XA_FILE                   "file"
 #define PCMK__XA_GRAPH_ERRORS           "graph-errors"

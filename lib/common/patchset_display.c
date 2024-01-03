@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -48,7 +48,7 @@ xml_show_patchset_header(pcmk__output_t *out, const xmlNode *patchset)
 
     if ((add[0] != del[0]) || (add[1] != del[1]) || (add[2] != del[2])) {
         const char *fmt = crm_element_value(patchset, PCMK_XA_FORMAT);
-        const char *digest = crm_element_value(patchset, XML_ATTR_DIGEST);
+        const char *digest = crm_element_value(patchset, PCMK__XA_DIGEST);
 
         out->info(out, "Diff: --- %d.%d.%d %s", del[0], del[1], del[2], fmt);
         rc = out->info(out, "Diff: +++ %d.%d.%d %s",

@@ -347,7 +347,7 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
 
         const char *reason = NULL;
         const char *peer = crm_element_value(req, F_ORIG);
-        const char *digest = crm_element_value(req, XML_ATTR_DIGEST);
+        const char *digest = crm_element_value(req, PCMK__XA_DIGEST);
 
         if (digest) {
             const char *version = crm_element_value(req,
