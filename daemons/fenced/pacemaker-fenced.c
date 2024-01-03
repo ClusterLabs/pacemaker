@@ -210,7 +210,6 @@ stonith_peer_ais_callback(cpg_handle_t handle,
             return;
         }
         crm_xml_add(xml, PCMK__XA_SRC, from);
-        /* crm_xml_add_int(xml, F_SEQ, wrapper->id); */
         stonith_peer_callback(xml, NULL);
     }
 

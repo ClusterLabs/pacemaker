@@ -1552,10 +1552,9 @@ cib_peer_callback(xmlNode * msg, void *private_data)
 
   bail:
     if (reason) {
-        const char *seq = crm_element_value(msg, F_SEQ);
         const char *op = crm_element_value(msg, F_CIB_OPERATION);
 
-        crm_warn("Discarding %s message (%s) from %s: %s", op, seq, originator, reason);
+        crm_warn("Discarding %s message from %s: %s", op, originator, reason);
     }
 }
 

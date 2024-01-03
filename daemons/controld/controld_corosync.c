@@ -47,7 +47,6 @@ crmd_cs_dispatch(cpg_handle_t handle, const struct cpg_name *groupName,
         }
 
         crm_xml_add(xml, PCMK__XA_SRC, from);
-        /* crm_xml_add_int(xml, F_SEQ, wrapper->id); Fake? */
 
         peer = crm_get_peer(0, from);
         if (!pcmk_is_set(peer->processes, crm_proc_cpg)) {
