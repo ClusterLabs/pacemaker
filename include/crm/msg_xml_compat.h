@@ -292,6 +292,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_ATTR_ID_LONG "long-id"
 
+//! \deprecated Use \c PCMK_XA_TYPE instead
+#define XML_ATTR_TYPE PCMK_XA_TYPE
+
 #ifdef __cplusplus
 }
 #endif
