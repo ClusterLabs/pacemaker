@@ -95,10 +95,6 @@ extern "C" {
  * Older constants that don't follow current naming
  */
 
-#  ifndef F_SEQ
-#    define F_SEQ		"seq"
-#  endif
-
 #  ifndef F_SUBTYPE
 #    define F_SUBTYPE "subt"
 #  endif

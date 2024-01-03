@@ -369,6 +369,11 @@ extern "C" {
 //! \deprecated Do not use
 #define F_CRM_HOST_FROM F_ORIG
 
+#ifndef F_SEQ
+//! \deprecated Do not use
+#define F_SEQ "seq"
+#endif
+
 #ifdef __cplusplus
 }
 #endif
