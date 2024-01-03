@@ -307,6 +307,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_OP instead
 #define XML_ATTR_OP PCMK_XE_OP
 
+//! \deprecated Use \c PCMK_XA_DC_UUID instead
+#define XML_ATTR_DC_UUID PCMK_XA_DC_UUID
+
 #ifdef __cplusplus
 }
 #endif
