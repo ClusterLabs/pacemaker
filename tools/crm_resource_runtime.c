@@ -682,7 +682,7 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
     if (operation) {
         guint interval_ms = 0U;
 
-        pcmk__parse_interval_spec(interval_spec, &interval_ms);
+        pcmk_parse_interval_spec(interval_spec, &interval_ms);
         interval_ms_s = crm_strdup_printf("%u", interval_ms);
     }
 

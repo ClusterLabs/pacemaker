@@ -1134,7 +1134,7 @@ pe__eval_op_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
         return FALSE;
     }
 
-    if (pcmk__parse_interval_spec(interval_s, &interval_ms) != pcmk_rc_ok) {
+    if (pcmk_parse_interval_spec(interval_s, &interval_ms) != pcmk_rc_ok) {
         crm_trace("Could not parse interval: %s", interval_s);
         return FALSE;
     }

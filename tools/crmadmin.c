@@ -117,8 +117,7 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
     }
 
     if (!strcmp(option_name, "--timeout") || !strcmp(option_name, "-t")) {
-        return pcmk__parse_interval_spec(optarg,
-                                         &options.timeout) == pcmk_rc_ok;
+        return pcmk_parse_interval_spec(optarg, &options.timeout) == pcmk_rc_ok;
     }
 
     pcmk__str_update(&options.optarg, optarg);

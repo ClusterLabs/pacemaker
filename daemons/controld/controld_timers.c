@@ -333,29 +333,29 @@ controld_configure_fsa_timers(GHashTable *options)
 
     // Election timer
     value = g_hash_table_lookup(options, PCMK_OPT_DC_DEADTIME);
-    pcmk__parse_interval_spec(value, &(election_timer->period_ms));
+    pcmk_parse_interval_spec(value, &(election_timer->period_ms));
 
     // Integration timer
     value = g_hash_table_lookup(options, PCMK_OPT_JOIN_INTEGRATION_TIMEOUT);
-    pcmk__parse_interval_spec(value, &(integration_timer->period_ms));
+    pcmk_parse_interval_spec(value, &(integration_timer->period_ms));
 
     // Finalization timer
     value = g_hash_table_lookup(options, PCMK_OPT_JOIN_FINALIZATION_TIMEOUT);
-    pcmk__parse_interval_spec(value, &(finalization_timer->period_ms));
+    pcmk_parse_interval_spec(value, &(finalization_timer->period_ms));
 
     // Shutdown escalation timer
     value = g_hash_table_lookup(options, PCMK_OPT_SHUTDOWN_ESCALATION);
-    pcmk__parse_interval_spec(value, &(shutdown_escalation_timer->period_ms));
+    pcmk_parse_interval_spec(value, &(shutdown_escalation_timer->period_ms));
     crm_debug("Shutdown escalation occurs if DC has not responded to request "
               "in %ums", shutdown_escalation_timer->period_ms);
 
     // Transition timer
     value = g_hash_table_lookup(options, PCMK_OPT_TRANSITION_DELAY);
-    pcmk__parse_interval_spec(value, &(transition_timer->period_ms));
+    pcmk_parse_interval_spec(value, &(transition_timer->period_ms));
 
     // Recheck interval
     value = g_hash_table_lookup(options, PCMK_OPT_CLUSTER_RECHECK_INTERVAL);
-    pcmk__parse_interval_spec(value, &recheck_interval_ms);
+    pcmk_parse_interval_spec(value, &recheck_interval_ms);
     crm_debug("Re-run scheduler after %dms of inactivity", recheck_interval_ms);
 }
 

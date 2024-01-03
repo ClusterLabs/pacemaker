@@ -553,7 +553,7 @@ reconnect_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
         g_set_error(err, PCMK__EXITC_ERROR, CRM_EX_INVALID_PARAM, "Invalid value for -i: %s", optarg);
         return FALSE;
     } else {
-        pcmk__parse_interval_spec(optarg, &options.reconnect_ms);
+        pcmk_parse_interval_spec(optarg, &options.reconnect_ms);
 
         if (options.exec_mode != mon_exec_daemonized) {
             // Reconnect interval applies to daemonized too, so don't override

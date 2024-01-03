@@ -47,7 +47,7 @@ controld_configure_election(GHashTable *options)
     const char *value = g_hash_table_lookup(options, PCMK_OPT_ELECTION_TIMEOUT);
     guint interval_ms = 0U;
 
-    pcmk__parse_interval_spec(value, &interval_ms);
+    pcmk_parse_interval_spec(value, &interval_ms);
     election_timeout_set_period(fsa_election, interval_ms);
 }
 

@@ -55,6 +55,8 @@ long long crm_get_msec(const char *input);
 char * crm_strip_trailing_newline(char *str);
 char *crm_strdup_printf(char const *format, ...) G_GNUC_PRINTF(1, 2);
 
+int pcmk_parse_interval_spec(const char *input, guint *result_ms);
+
 int compare_version(const char *version1, const char *version2);
 
 /* coverity[+kill] */

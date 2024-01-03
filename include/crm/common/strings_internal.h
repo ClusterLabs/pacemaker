@@ -33,7 +33,6 @@ int pcmk__scan_double(const char *text, double *result,
                       const char *default_text, char **end_text);
 int pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
                           guint *result);
-int pcmk__parse_interval_spec(const char *input, guint *result_ms);
 bool pcmk__starts_with(const char *str, const char *prefix);
 bool pcmk__ends_with(const char *s, const char *match);
 bool pcmk__ends_with_ext(const char *s, const char *match);

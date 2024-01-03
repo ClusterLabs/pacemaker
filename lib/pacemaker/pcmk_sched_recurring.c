@@ -42,7 +42,7 @@ xe_interval(const xmlNode *xml)
 {
     guint interval_ms = 0U;
 
-    pcmk__parse_interval_spec(crm_element_value(xml, XML_LRM_ATTR_INTERVAL),
+    pcmk_parse_interval_spec(crm_element_value(xml, XML_LRM_ATTR_INTERVAL),
                               &interval_ms);
     return interval_ms;
 }

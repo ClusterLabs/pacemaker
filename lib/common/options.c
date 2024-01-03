@@ -188,7 +188,7 @@ pcmk__env_option_enabled(const char *daemon, const char *option)
 bool
 pcmk__valid_interval_spec(const char *value)
 {
-    return pcmk__parse_interval_spec(value, NULL) == pcmk_rc_ok;
+    return pcmk_parse_interval_spec(value, NULL) == pcmk_rc_ok;
 }
 
 /*!

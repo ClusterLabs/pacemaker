@@ -413,7 +413,6 @@ crm_get_msec(const char *input)
 }
 
 /*!
- * \internal
  * \brief Parse milliseconds from a Pacemaker interval specification
  *
  * \param[in]  input      Pacemaker time interval specification (a bare number
@@ -428,7 +427,7 @@ crm_get_msec(const char *input)
  *         \p input is valid or \c NULL, and \c EINVAL otherwise)
  */
 int
-pcmk__parse_interval_spec(const char *input, guint *result_ms)
+pcmk_parse_interval_spec(const char *input, guint *result_ms)
 {
     long long msec = PCMK__PARSE_INT_DEFAULT;
     int rc = pcmk_rc_ok;

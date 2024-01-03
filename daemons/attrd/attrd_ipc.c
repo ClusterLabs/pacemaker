@@ -128,7 +128,7 @@ attrd_client_clear_failure(pcmk__request_t *request)
         } else {
             guint interval_ms = 0U;
 
-            pcmk__parse_interval_spec(interval_spec, &interval_ms);
+            pcmk_parse_interval_spec(interval_spec, &interval_ms);
             pattern = crm_strdup_printf(ATTRD_RE_CLEAR_OP,
                                         rsc, op, interval_ms);
         }

@@ -441,7 +441,7 @@ attrd_peer_clear_failure(pcmk__request_t *request)
 
     crm_node_t *peer = crm_get_peer(0, request->peer);
 
-    pcmk__parse_interval_spec(interval_spec, &interval_ms);
+    pcmk_parse_interval_spec(interval_spec, &interval_ms);
 
     if (attrd_failure_regex(&regex, rsc, op, interval_ms) != pcmk_ok) {
         crm_info("Ignoring invalid request to clear failures for %s",

@@ -103,7 +103,7 @@ find_exact_action_config(const pcmk_resource_t *rsc, const char *action_name,
         }
 
         interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
-        pcmk__parse_interval_spec(interval_spec, &tmp_ms);
+        pcmk_parse_interval_spec(interval_spec, &tmp_ms);
         if (tmp_ms != interval_ms) {
             continue;
         }
@@ -503,7 +503,7 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
                 continue;
             }
             interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
-            pcmk__parse_interval_spec(interval_spec, &interval_ms);
+            pcmk_parse_interval_spec(interval_spec, &interval_ms);
             if (interval_ms == 0U) {
                 continue;
             }
@@ -543,7 +543,7 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
         role = crm_element_value(action_config, "role");
         interval_spec = crm_element_value(action_config,
                                           XML_LRM_ATTR_INTERVAL);
-        pcmk__parse_interval_spec(interval_spec, &interval_ms);
+        pcmk_parse_interval_spec(interval_spec, &interval_ms);
 
         if (!pcmk__str_eq(name, PCMK_ACTION_PROMOTE, pcmk__str_none)
             && ((interval_ms == 0U)
@@ -663,7 +663,7 @@ most_frequent_monitor(const pcmk_resource_t *rsc)
             continue;
         }
 
-        pcmk__parse_interval_spec(interval_spec, &interval_ms);
+        pcmk_parse_interval_spec(interval_spec, &interval_ms);
         if (interval_ms == 0U) {
             continue;
         }

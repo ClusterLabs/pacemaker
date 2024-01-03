@@ -253,7 +253,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
                  scheduler);
 
     value = pe_pref(scheduler->config_hash, PCMK_OPT_STONITH_TIMEOUT);
-    pcmk__parse_interval_spec(value, &interval_ms);
+    pcmk_parse_interval_spec(value, &interval_ms);
 
     if (interval_ms >= INT_MAX) {
         scheduler->stonith_timeout = INT_MAX;
@@ -292,7 +292,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     value = pe_pref(scheduler->config_hash,
                     PCMK_OPT_PRIORITY_FENCING_DELAY);
     if (value) {
-        pcmk__parse_interval_spec(value, &interval_ms);
+        pcmk_parse_interval_spec(value, &interval_ms);
         scheduler->priority_fencing_delay = (int) (interval_ms / 1000);
         crm_trace("Priority fencing delay is %ds",
                   scheduler->priority_fencing_delay);
@@ -429,7 +429,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
                     pcmk_sched_shutdown_lock);
     if (pcmk_is_set(scheduler->flags, pcmk_sched_shutdown_lock)) {
         value = pe_pref(scheduler->config_hash, PCMK_OPT_SHUTDOWN_LOCK_LIMIT);
-        pcmk__parse_interval_spec(value, &(scheduler->shutdown_lock));
+        pcmk_parse_interval_spec(value, &(scheduler->shutdown_lock));
         scheduler->shutdown_lock /= 1000;
         crm_trace("Resources will be locked to nodes that were cleanly "
                   "shut down (locks expire after %s)",
@@ -440,7 +440,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     }
 
     value = pe_pref(scheduler->config_hash, PCMK_OPT_NODE_PENDING_TIMEOUT);
-    pcmk__parse_interval_spec(value, &(scheduler->node_pending_timeout));
+    pcmk_parse_interval_spec(value, &(scheduler->node_pending_timeout));
     scheduler->node_pending_timeout /= 1000;
     if (scheduler->node_pending_timeout == 0) {
         crm_trace("Do not fence pending nodes");

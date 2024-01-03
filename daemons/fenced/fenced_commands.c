@@ -137,7 +137,7 @@ get_action_delay_max(const stonith_device_t *device, const char *action)
 
     value = g_hash_table_lookup(device->params, PCMK_STONITH_DELAY_MAX);
     if (value) {
-        pcmk__parse_interval_spec(value, &delay_max);
+        pcmk_parse_interval_spec(value, &delay_max);
         delay_max /= 1000;
     }
 
@@ -182,7 +182,7 @@ get_action_delay_base(const stonith_device_t *device, const char *action,
         }
 
         if (strchr(value, ':') == 0) {
-            pcmk__parse_interval_spec(value, &delay_base);
+            pcmk_parse_interval_spec(value, &delay_base);
             delay_base /= 1000;
         }
 
