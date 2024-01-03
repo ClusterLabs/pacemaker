@@ -1775,15 +1775,18 @@ pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b,
         sort_return(0, "rc-change");
 
     } else {
-        /* One of the inputs is a pending operation
-         * Attempt to use XML_ATTR_TRANSITION_MAGIC to determine its age relative to the other
+        /* One of the inputs is a pending operation.
+         * Attempt to use PCMK__XA_TRANSITION_MAGIC to determine its age relative
+         * to the other.
          */
 
         int a_id = -1;
         int b_id = -1;
 
-        const char *a_magic = crm_element_value(xml_a, XML_ATTR_TRANSITION_MAGIC);
-        const char *b_magic = crm_element_value(xml_b, XML_ATTR_TRANSITION_MAGIC);
+        const char *a_magic = crm_element_value(xml_a,
+                                                PCMK__XA_TRANSITION_MAGIC);
+        const char *b_magic = crm_element_value(xml_b,
+                                                PCMK__XA_TRANSITION_MAGIC);
 
         CRM_CHECK(a_magic != NULL && b_magic != NULL, sort_return(0, "No magic"));
         if (!decode_transition_magic(a_magic, &a_uuid, &a_id, NULL, NULL, NULL,

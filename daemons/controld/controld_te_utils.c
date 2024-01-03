@@ -460,7 +460,8 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
                        pcmk__btoa(controld_globals.transition_graph->complete));
 
         } else if (pcmk__xe_is(reason, XML_LRM_TAG_RSC_OP)) {
-            const char *magic = crm_element_value(reason, XML_ATTR_TRANSITION_MAGIC);
+            const char *magic = crm_element_value(reason,
+                                                  PCMK__XA_TRANSITION_MAGIC);
 
             do_crm_log(level, "Transition %d aborted by operation %s '%s' on %s: %s "
                        CRM_XS " magic=%s cib=%d.%d.%d source=%s:%d complete=%s",

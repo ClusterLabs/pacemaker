@@ -1821,7 +1821,7 @@ handle_rsc_op(xmlNode *xml, void *userdata)
 
     id = pe__xe_history_key(rsc_op);
 
-    magic = crm_element_value(rsc_op, XML_ATTR_TRANSITION_MAGIC);
+    magic = crm_element_value(rsc_op, PCMK__XA_TRANSITION_MAGIC);
     if (magic == NULL) {
         /* non-change */
         return pcmk_rc_ok;

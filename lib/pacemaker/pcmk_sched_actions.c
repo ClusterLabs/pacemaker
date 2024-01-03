@@ -1229,7 +1229,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     crm_xml_add(xml_op, PCMK_XA_CRM_DEBUG_ORIGIN, origin);
     crm_xml_add(xml_op, PCMK_XA_CRM_FEATURE_SET, caller_version);
     crm_xml_add(xml_op, XML_ATTR_TRANSITION_KEY, op->user_data);
-    crm_xml_add(xml_op, XML_ATTR_TRANSITION_MAGIC, magic);
+    crm_xml_add(xml_op, PCMK__XA_TRANSITION_MAGIC, magic);
     crm_xml_add(xml_op, XML_LRM_ATTR_EXIT_REASON, pcmk__s(exit_reason, ""));
     crm_xml_add(xml_op, XML_LRM_ATTR_TARGET, node); // For context during triage
 
@@ -1661,7 +1661,7 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
                       "on %s changed: %s",
                       pcmk__readable_interval(interval_ms), task, rsc->id,
                       pe__node_name(node),
-                      crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
+                      crm_element_value(xml_op, PCMK__XA_TRANSITION_MAGIC));
         }
         return false;
     }
