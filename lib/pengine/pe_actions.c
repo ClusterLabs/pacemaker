@@ -712,7 +712,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
     pe_rsc_eval_data_t rsc_rule_data = {
         .standard = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS),
         .provider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER),
-        .agent = crm_element_value(rsc->xml, XML_ATTR_TYPE),
+        .agent = crm_element_value(rsc->xml, PCMK_XA_TYPE),
     };
 
     pe_op_eval_data_t op_rule_data = {
@@ -1314,7 +1314,7 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
             for (GList *gIter = matches; gIter != NULL; gIter = gIter->next) {
                 pcmk_resource_t *match = gIter->data;
                 const char *agent = g_hash_table_lookup(match->meta,
-                                                        XML_ATTR_TYPE);
+                                                        PCMK_XA_TYPE);
                 pcmk__op_digest_t *data = NULL;
 
                 data = pe__compare_fencing_digest(match, agent, node,

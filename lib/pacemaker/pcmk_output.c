@@ -948,7 +948,7 @@ crmadmin_node_xml(pcmk__output_t *out, va_list args)
     bool bash_export G_GNUC_UNUSED = va_arg(args, int);
 
     pcmk__output_create_xml_node(out, "node",
-                                 "type", type ? type : "cluster",
+                                 PCMK_XA_TYPE, pcmk__s(type, "cluster"),
                                  PCMK_XA_NAME, pcmk__s(name, ""),
                                  PCMK_XA_ID, pcmk__s(id, ""),
                                  NULL);
@@ -1017,7 +1017,7 @@ add_digest_xml(xmlNode *parent, const char *type, const char *digest,
     if (digest != NULL) {
         xmlNodePtr digest_xml = create_xml_node(parent, "digest");
 
-        crm_xml_add(digest_xml, "type", ((type == NULL)? "unspecified" : type));
+        crm_xml_add(digest_xml, PCMK_XA_TYPE, pcmk__s(type, "unspecified"));
         crm_xml_add(digest_xml, "hash", digest);
         if (digest_source != NULL) {
             add_node_copy(digest_xml, digest_source);

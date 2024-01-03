@@ -68,7 +68,7 @@ add_extra_info(const pcmk_node_t *node, GList *rsc_list,
 
     for (gIter = rsc_list; gIter != NULL; gIter = gIter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) gIter->data;
-        const char *type = g_hash_table_lookup(rsc->meta, XML_ATTR_TYPE);
+        const char *type = g_hash_table_lookup(rsc->meta, PCMK_XA_TYPE);
         const char *name = NULL;
         GHashTable *params = NULL;
 
@@ -1208,7 +1208,7 @@ cluster_stack_xml(pcmk__output_t *out, va_list args) {
     }
 
     pcmk__output_create_xml_node(out, "stack",
-                                 "type", stack_s,
+                                 PCMK_XA_TYPE, stack_s,
                                  "pacemakerd-state", state_s,
                                  NULL);
 
@@ -1918,7 +1918,7 @@ node_xml(pcmk__output_t *out, va_list args) {
                                  "expected_up", pcmk__btoa(node->details->expected_up),
                                  "is_dc", pcmk__btoa(node->details->is_dc),
                                  "resources_running", length_s,
-                                 "type", node_type);
+                                 PCMK_XA_TYPE, node_type);
 
         if (pe__is_guest_node(node)) {
             xmlNodePtr xml_node = pcmk__output_xml_peek_parent(out);
@@ -2097,7 +2097,7 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
 
     if (rsc) {
         const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-        const char *kind = crm_element_value(rsc->xml, XML_ATTR_TYPE);
+        const char *kind = crm_element_value(rsc->xml, PCMK_XA_TYPE);
         char *agent_tuple = NULL;
 
         agent_tuple = crm_strdup_printf("%s:%s:%s", class,

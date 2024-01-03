@@ -248,7 +248,7 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
     const char *attr_list[] = {
         XML_AGENT_ATTR_CLASS,
         XML_AGENT_ATTR_PROVIDER,
-        XML_ATTR_TYPE
+        PCMK_XA_TYPE,
     };
 
     /* If a resource is locked to a node via PCMK_OPT_SHUTDOWN_LOCK, mark its

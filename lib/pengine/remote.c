@@ -89,7 +89,7 @@ xml_contains_remote_node(xmlNode *xml)
         return false;
     }
 
-    value = crm_element_value(xml, XML_ATTR_TYPE);
+    value = crm_element_value(xml, PCMK_XA_TYPE);
     if (!pcmk__str_eq(value, "remote", pcmk__str_casei)) {
         return false;
     }
@@ -173,7 +173,7 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
     crm_xml_add(remote, PCMK_XA_ID, uname);
     crm_xml_add(remote, XML_AGENT_ATTR_CLASS, PCMK_RESOURCE_CLASS_OCF);
     crm_xml_add(remote, XML_AGENT_ATTR_PROVIDER, "pacemaker");
-    crm_xml_add(remote, XML_ATTR_TYPE, "remote");
+    crm_xml_add(remote, PCMK_XA_TYPE, "remote");
 
     // Add meta-attributes
     xml_sub = create_xml_node(remote, XML_TAG_META_SETS);

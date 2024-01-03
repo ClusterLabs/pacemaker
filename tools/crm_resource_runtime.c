@@ -563,7 +563,7 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
 
     rsc_class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     rsc_provider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER),
-    rsc_type = crm_element_value(rsc->xml, XML_ATTR_TYPE);
+    rsc_type = crm_element_value(rsc->xml, PCMK_XA_TYPE);
     if ((rsc_class == NULL) || (rsc_type == NULL)) {
         out->err(out, "Resource %s does not have a class and type", rsc_id);
         return EINVAL;
@@ -2115,7 +2115,7 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
 
     rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     rprov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
-    rtype = crm_element_value(rsc->xml, XML_ATTR_TYPE);
+    rtype = crm_element_value(rsc->xml, PCMK_XA_TYPE);
 
     params = generate_resource_params(rsc, NULL /* @TODO use local node */,
                                       scheduler);

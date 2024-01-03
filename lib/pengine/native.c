@@ -478,7 +478,7 @@ native_print_xml(pcmk_resource_t *rsc, const char *pre_text, long options,
     status_print("resource_agent=\"%s%s%s:%s\" ", class,
                  ((prov == NULL)? "" : PROVIDER_SEP),
                  ((prov == NULL)? "" : prov),
-                 crm_element_value(rsc->xml, XML_ATTR_TYPE));
+                 crm_element_value(rsc->xml, PCMK_XA_TYPE));
 
     status_print("role=\"%s\" ", rsc_state);
     if (rsc->meta) {
@@ -567,7 +567,7 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
 {
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     const char *provider = NULL;
-    const char *kind = crm_element_value(rsc->xml, XML_ATTR_TYPE);
+    const char *kind = crm_element_value(rsc->xml, PCMK_XA_TYPE);
     GString *outstr = NULL;
     bool have_flags = false;
 
@@ -731,7 +731,7 @@ pe__common_output_html(pcmk__output_t *out, const pcmk_resource_t *rsc,
                        const char *name, const pcmk_node_t *node,
                        uint32_t show_opts)
 {
-    const char *kind = crm_element_value(rsc->xml, XML_ATTR_TYPE);
+    const char *kind = crm_element_value(rsc->xml, PCMK_XA_TYPE);
     const char *target_role = NULL;
 
     xmlNodePtr list_node = NULL;
@@ -1001,7 +1001,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     /* resource information. */
     snprintf(ra_name, LINE_MAX, "%s%s%s:%s", class,
             ((prov == NULL)? "" : PROVIDER_SEP), ((prov == NULL)? "" : prov),
-            crm_element_value(rsc->xml, XML_ATTR_TYPE));
+            crm_element_value(rsc->xml, PCMK_XA_TYPE));
 
     nodes_running_on = pcmk__itoa(g_list_length(rsc->running_on));
 
@@ -1186,7 +1186,7 @@ get_rscs_brief(GList *rsc_list, GHashTable * rsc_table, GHashTable * active_tabl
         pcmk_resource_t *rsc = (pcmk_resource_t *) gIter->data;
 
         const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-        const char *kind = crm_element_value(rsc->xml, XML_ATTR_TYPE);
+        const char *kind = crm_element_value(rsc->xml, PCMK_XA_TYPE);
 
         int offset = 0;
         char buffer[LINE_MAX];

@@ -542,7 +542,7 @@ build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list)
         xmlNode *xml_rsc = create_xml_node(rsc_list, XML_LRM_TAG_RESOURCE);
 
         crm_xml_add(xml_rsc, PCMK_XA_ID, entry->id);
-        crm_xml_add(xml_rsc, XML_ATTR_TYPE, entry->rsc.type);
+        crm_xml_add(xml_rsc, PCMK_XA_TYPE, entry->rsc.type);
         crm_xml_add(xml_rsc, XML_AGENT_ATTR_CLASS, entry->rsc.standard);
         crm_xml_add(xml_rsc, XML_AGENT_ATTR_PROVIDER, entry->rsc.provider);
 
@@ -934,7 +934,7 @@ get_lrm_resource(lrm_state_t *lrm_state, const xmlNode *rsc_xml,
     if ((*rsc_info == NULL) && do_create) {
         const char *class = crm_element_value(rsc_xml, XML_AGENT_ATTR_CLASS);
         const char *provider = crm_element_value(rsc_xml, XML_AGENT_ATTR_PROVIDER);
-        const char *type = crm_element_value(rsc_xml, XML_ATTR_TYPE);
+        const char *type = crm_element_value(rsc_xml, PCMK_XA_TYPE);
         int rc;
 
         crm_trace("Registering resource %s with the executor", id);
@@ -2258,7 +2258,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
 
         const char *standard = crm_element_value(xml, XML_AGENT_ATTR_CLASS);
         const char *provider = crm_element_value(xml, XML_AGENT_ATTR_PROVIDER);
-        const char *type = crm_element_value(xml, XML_ATTR_TYPE);
+        const char *type = crm_element_value(xml, PCMK_XA_TYPE);
 
         if (standard && type) {
             crm_info("%s agent information not cached, using %s%s%s:%s from action XML",

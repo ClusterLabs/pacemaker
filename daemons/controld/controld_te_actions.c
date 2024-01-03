@@ -291,7 +291,7 @@ controld_record_action_event(pcmk__graph_action_t *action,
     crm_xml_add(rsc, PCMK_XA_ID, rsc_id);
 
 
-    crm_copy_xml_element(action_rsc, rsc, XML_ATTR_TYPE);
+    crm_copy_xml_element(action_rsc, rsc, PCMK_XA_TYPE);
     crm_copy_xml_element(action_rsc, rsc, XML_AGENT_ATTR_CLASS);
     crm_copy_xml_element(action_rsc, rsc, XML_AGENT_ATTR_PROVIDER);
 

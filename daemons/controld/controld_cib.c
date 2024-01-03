@@ -916,7 +916,7 @@ controld_update_resource_history(const char *node_name,
     crm_xml_add(xml, PCMK_XA_ID, op->rsc_id);
     crm_xml_add(xml, XML_AGENT_ATTR_CLASS, rsc->standard);
     crm_xml_add(xml, XML_AGENT_ATTR_PROVIDER, rsc->provider);
-    crm_xml_add(xml, XML_ATTR_TYPE, rsc->type);
+    crm_xml_add(xml, PCMK_XA_TYPE, rsc->type);
     if (lock_time != 0) {
         /* Actions on a locked resource should either preserve the lock by
          * recording it with the action result, or clear it.
