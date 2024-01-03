@@ -151,6 +151,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_NO_QUORUM_PANIC instead
 #define XML_ATTR_QUORUM_PANIC PCMK_XA_NO_QUORUM_PANIC
 
+//! \deprecated Use \c PCMK_XA_HAVE_QUORUM instead
+#define XML_ATTR_HAVE_QUORUM PCMK_XA_HAVE_QUORUM
+
 #ifdef __cplusplus
 }
 #endif

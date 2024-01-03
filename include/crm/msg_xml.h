@@ -141,7 +141,6 @@ extern "C" {
 #  define XML_TAG_CIB			"cib"
 #  define XML_TAG_FAILED		"failed"
 
-#  define XML_ATTR_HAVE_QUORUM		"have-quorum"
 #  define XML_ATTR_GENERATION		"epoch"
 #  define XML_ATTR_GENERATION_ADMIN	"admin_epoch"
 #  define XML_ATTR_NUMUPDATES		"num_updates"
