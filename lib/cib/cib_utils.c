@@ -587,7 +587,7 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
      { 0, PCMK_XA_CIB_LAST_WRITTEN },
      { 0, PCMK_XA_UPDATE_ORIGIN },
      { 0, PCMK_XA_UPDATE_CLIENT },
-     { 0, XML_ATTR_UPDATE_USER },
+     { 0, PCMK_XA_UPDATE_USER },
      };
      */
 
@@ -624,9 +624,9 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
                 }
 
                 if (user != NULL) {
-                    crm_xml_add(scratch, XML_ATTR_UPDATE_USER, user);
+                    crm_xml_add(scratch, PCMK_XA_UPDATE_USER, user);
                 } else {
-                    xml_remove_prop(scratch, XML_ATTR_UPDATE_USER);
+                    xml_remove_prop(scratch, PCMK_XA_UPDATE_USER);
                 }
             }
         }

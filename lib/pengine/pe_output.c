@@ -431,7 +431,7 @@ cluster_summary(pcmk__output_t *out, va_list args) {
         const char *last_written = crm_element_value(scheduler->input,
                                                      PCMK_XA_CIB_LAST_WRITTEN);
         const char *user = crm_element_value(scheduler->input,
-                                             XML_ATTR_UPDATE_USER);
+                                             PCMK_XA_UPDATE_USER);
         const char *client = crm_element_value(scheduler->input,
                                                PCMK_XA_UPDATE_CLIENT);
         const char *origin = crm_element_value(scheduler->input,
@@ -506,7 +506,7 @@ cluster_summary_html(pcmk__output_t *out, va_list args) {
         const char *last_written = crm_element_value(scheduler->input,
                                                      PCMK_XA_CIB_LAST_WRITTEN);
         const char *user = crm_element_value(scheduler->input,
-                                             XML_ATTR_UPDATE_USER);
+                                             PCMK_XA_UPDATE_USER);
         const char *client = crm_element_value(scheduler->input,
                                                PCMK_XA_UPDATE_CLIENT);
         const char *origin = crm_element_value(scheduler->input,
