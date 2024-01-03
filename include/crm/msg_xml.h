@@ -344,7 +344,6 @@ extern "C" {
 #  define XML_TICKET_ATTR_TICKET	"ticket"
 #  define XML_TICKET_ATTR_LOSS_POLICY	"loss-policy"
 
-#  define XML_NVPAIR_ATTR_NAME        	"name"
 #  define XML_NVPAIR_ATTR_VALUE        	"value"
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
