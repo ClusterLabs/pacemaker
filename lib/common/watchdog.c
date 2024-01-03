@@ -20,8 +20,6 @@
 #include <dirent.h>
 #include <signal.h>
 
-#include <crm/msg_xml.h>
-
 static pid_t sbd_pid = 0;
 
 static void

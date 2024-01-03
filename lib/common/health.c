@@ -9,8 +9,6 @@
 
 #include <crm_internal.h>
 
-#include <crm/msg_xml.h>
-
 /*!
  * \internal
  * \brief Ensure a health strategy value is allowed
