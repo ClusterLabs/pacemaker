@@ -189,7 +189,7 @@ xml_repair_v1_diff(xmlNode *last, xmlNode *next, xmlNode *local_diff,
     const char *vfields[] = {
         PCMK_XA_ADMIN_EPOCH,
         PCMK_XA_EPOCH,
-        XML_ATTR_NUMUPDATES,
+        PCMK_XA_NUM_UPDATES,
     };
 
     if (local_diff == NULL) {
@@ -273,7 +273,7 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
     const char *vfields[] = {
         PCMK_XA_ADMIN_EPOCH,
         PCMK_XA_EPOCH,
-        XML_ATTR_NUMUPDATES,
+        PCMK_XA_NUM_UPDATES,
     };
 
     CRM_ASSERT(target);
@@ -346,16 +346,16 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target,
 
     if (manage_version && config) {
         crm_trace("Config changed %d", format);
-        crm_xml_add(target, XML_ATTR_NUMUPDATES, "0");
+        crm_xml_add(target, PCMK_XA_NUM_UPDATES, "0");
 
         crm_element_value_int(target, PCMK_XA_EPOCH, &counter);
         crm_xml_add_int(target, PCMK_XA_EPOCH, counter+1);
 
     } else if (manage_version) {
-        crm_element_value_int(target, XML_ATTR_NUMUPDATES, &counter);
+        crm_element_value_int(target, PCMK_XA_NUM_UPDATES, &counter);
         crm_trace("Status changed %d - %d %s", format, counter,
-                  crm_element_value(source, XML_ATTR_NUMUPDATES));
-        crm_xml_add_int(target, XML_ATTR_NUMUPDATES, (counter + 1));
+                  crm_element_value(source, PCMK_XA_NUM_UPDATES));
+        crm_xml_add_int(target, PCMK_XA_NUM_UPDATES, (counter + 1));
     }
 
     if (format == 0) {
@@ -578,7 +578,7 @@ xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
     const char *vfields[] = {
         PCMK_XA_ADMIN_EPOCH,
         PCMK_XA_EPOCH,
-        XML_ATTR_NUMUPDATES,
+        PCMK_XA_NUM_UPDATES,
     };
 
 
@@ -630,7 +630,7 @@ xml_patch_version_check(const xmlNode *xml, const xmlNode *patchset)
     const char *vfields[] = {
         PCMK_XA_ADMIN_EPOCH,
         PCMK_XA_EPOCH,
-        XML_ATTR_NUMUPDATES,
+        PCMK_XA_NUM_UPDATES,
     };
 
     for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {

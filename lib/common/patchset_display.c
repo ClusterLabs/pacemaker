@@ -24,7 +24,7 @@
  * <tt>{0}.{1}.{2}</tt>:
  * * \p {0}: \c PCMK_XA_ADMIN_EPOCH
  * * \p {1}: \c PCMK_XA_EPOCH
- * * \p {2}: \p XML_ATTR_NUMUPDATES
+ * * \p {2}: \c PCMK_XA_NUM_UPDATES
  *
  * Lines containing \p "---" describe removals and end with the patch format
  * number. Lines containing \p "+++" describe additions and end with the patch

@@ -211,7 +211,7 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
     const char *vfields[] = {
         PCMK_XA_ADMIN_EPOCH,
         PCMK_XA_EPOCH,
-        XML_ATTR_NUMUPDATES,
+        PCMK_XA_NUM_UPDATES,
     };
 
     xmlNode *output = NULL;

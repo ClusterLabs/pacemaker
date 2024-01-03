@@ -108,7 +108,7 @@ calculate_xml_digest_v2(const xmlNode *source, gboolean do_filter)
             crm_trace("Saving %s.%s.%s to %s",
                       crm_element_value(source, PCMK_XA_ADMIN_EPOCH),
                       crm_element_value(source, PCMK_XA_EPOCH),
-                      crm_element_value(source, XML_ATTR_NUMUPDATES),
+                      crm_element_value(source, PCMK_XA_NUM_UPDATES),
                       trace_file);
             save_xml_to_file(source, "digest input", trace_file);
             free(trace_file);

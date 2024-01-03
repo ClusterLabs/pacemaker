@@ -413,7 +413,7 @@ do_dc_join_filter_offer(long long action,
         const char *attributes[] = {
             PCMK_XA_ADMIN_EPOCH,
             PCMK_XA_EPOCH,
-            XML_ATTR_NUMUPDATES,
+            PCMK_XA_NUM_UPDATES,
         };
 
         for (lpc = 0; cmp == 0 && lpc < PCMK__NELEM(attributes); lpc++) {

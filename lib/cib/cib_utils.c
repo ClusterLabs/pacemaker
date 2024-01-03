@@ -52,7 +52,7 @@ cib_version_details(xmlNode * cib, int *admin_epoch, int *epoch, int *updates)
 
     } else {
         crm_element_value_int(cib, PCMK_XA_EPOCH, epoch);
-        crm_element_value_int(cib, XML_ATTR_NUMUPDATES, updates);
+        crm_element_value_int(cib, PCMK_XA_NUM_UPDATES, updates);
         crm_element_value_int(cib, PCMK_XA_ADMIN_EPOCH, admin_epoch);
     }
     return TRUE;
@@ -244,7 +244,7 @@ createEmptyCib(int cib_epoch)
     crm_xml_add(cib_root, PCMK_XA_VALIDATE_WITH, xml_latest_schema());
 
     crm_xml_add_int(cib_root, PCMK_XA_EPOCH, cib_epoch);
-    crm_xml_add_int(cib_root, XML_ATTR_NUMUPDATES, 0);
+    crm_xml_add_int(cib_root, PCMK_XA_NUM_UPDATES, 0);
     crm_xml_add_int(cib_root, PCMK_XA_ADMIN_EPOCH, 0);
 
     config = create_xml_node(cib_root, XML_CIB_TAG_CONFIGURATION);

@@ -166,7 +166,7 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
              host, digest,
              crm_element_value(existing_cib, PCMK_XA_ADMIN_EPOCH),
              crm_element_value(existing_cib, PCMK_XA_EPOCH),
-             crm_element_value(existing_cib, XML_ATTR_NUMUPDATES));
+             crm_element_value(existing_cib, PCMK_XA_NUM_UPDATES));
 
     free(digest);
 

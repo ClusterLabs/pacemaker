@@ -286,7 +286,7 @@ cib_process_upgrade(const char *op, int options, const char *section, xmlNode * 
     if (new_version > current_version) {
         update_counter(*result_cib, PCMK_XA_ADMIN_EPOCH, false);
         update_counter(*result_cib, PCMK_XA_EPOCH, true);
-        update_counter(*result_cib, XML_ATTR_NUMUPDATES, true);
+        update_counter(*result_cib, PCMK_XA_NUM_UPDATES, true);
         return pcmk_ok;
     }
 
@@ -386,7 +386,7 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
             /* no more checks */
 
         } else if (replace_updates < updates) {
-            reason = XML_ATTR_NUMUPDATES;
+            reason = PCMK_XA_NUM_UPDATES;
         }
 
         if (reason != NULL) {

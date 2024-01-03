@@ -876,8 +876,8 @@ cib_file_backup(const char *cib_dirname, const char *cib_filename)
  * \internal
  * \brief Prepare CIB XML to be written to disk
  *
- * Set num_updates to 0, set cib-last-written to the current timestamp,
- * and strip out the status section.
+ * Set \c PCMK_XA_NUM_UPDATES to 0, set cib-last-written to the current
+ * timestamp, and strip out the status section.
  *
  * \param[in,out] root  Root of CIB XML tree
  *
@@ -889,7 +889,7 @@ cib_file_prepare_xml(xmlNode *root)
     xmlNode *cib_status_root = NULL;
 
     /* Always write out with num_updates=0 and current last-written timestamp */
-    crm_xml_add(root, XML_ATTR_NUMUPDATES, "0");
+    crm_xml_add(root, PCMK_XA_NUM_UPDATES, "0");
     pcmk__xe_add_last_written(root);
 
     /* Delete status section before writing to file, because
