@@ -145,6 +145,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_ATTR_DIGEST "digest"
 
+//! \deprecated Use \c PCMK_XA_VALIDATE_WITH instead
+#define XML_ATTR_VALIDATION PCMK_XA_VALIDATE_WITH
+
 #ifdef __cplusplus
 }
 #endif
