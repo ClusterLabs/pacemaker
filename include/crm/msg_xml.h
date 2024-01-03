@@ -346,7 +346,6 @@ extern "C" {
 
 #  define XML_CIB_TAG_GENERATION_TUPPLE	"generation_tuple"
 
-#  define XML_ATTR_TRANSITION_MAGIC	"transition-magic"
 #  define XML_ATTR_TRANSITION_KEY	"transition-key"
 
 #  define XML_ATTR_TE_NOWAIT		"op_no_wait"
