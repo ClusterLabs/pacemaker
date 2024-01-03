@@ -268,7 +268,7 @@ cib_process_upgrade(const char *op, int options, const char *section, xmlNode * 
     int current_version = 0;
     int max_version = 0;
     const char *max = crm_element_value(req, F_CIB_SCHEMA_MAX);
-    const char *value = crm_element_value(existing_cib, XML_ATTR_VALIDATION);
+    const char *value = crm_element_value(existing_cib, PCMK_XA_VALIDATE_WITH);
 
     *answer = NULL;
     crm_trace("Processing \"%s\" event with max=%s", op, max);
@@ -838,7 +838,7 @@ cib__config_changed_v1(xmlNode *last, xmlNode *next, xmlNode **diff)
             goto done;
         }
 
-        if (crm_element_value(top, XML_ATTR_VALIDATION) != NULL) {
+        if (crm_element_value(top, PCMK_XA_VALIDATE_WITH) != NULL) {
             config_changes = true;
             goto done;
         }

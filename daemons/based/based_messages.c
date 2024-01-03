@@ -202,7 +202,8 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
         int current_version = 0;
         xmlNode *scratch = copy_xml(existing_cib);
         const char *host = crm_element_value(req, F_ORIG);
-        const char *value = crm_element_value(existing_cib, XML_ATTR_VALIDATION);
+        const char *value = crm_element_value(existing_cib,
+                                              PCMK_XA_VALIDATE_WITH);
         const char *client_id = crm_element_value(req, F_CIB_CLIENTID);
         const char *call_opts = crm_element_value(req, F_CIB_CALLOPTS);
         const char *call_id = crm_element_value(req, F_CIB_CALLID);

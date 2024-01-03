@@ -463,7 +463,7 @@ do_dc_join_filter_offer(long long action,
 
     } else if (max_generation_xml == NULL) {
         const char *validation = crm_element_value(generation,
-                                                   XML_ATTR_VALIDATION);
+                                                   PCMK_XA_VALIDATE_WITH);
 
         if (get_schema_version(validation) < 0) {
             crm_err("Rejecting join-%d request from %s (with first CIB "
@@ -485,7 +485,7 @@ do_dc_join_filter_offer(long long action,
                    && pcmk__str_eq(join_from, controld_globals.our_nodename,
                                    pcmk__str_casei))) {
         const char *validation = crm_element_value(generation,
-                                                   XML_ATTR_VALIDATION);
+                                                   PCMK_XA_VALIDATE_WITH);
 
         if (get_schema_version(validation) < 0) {
             crm_err("Rejecting join-%d request from %s (with better CIB "

@@ -241,7 +241,7 @@ createEmptyCib(int cib_epoch)
 
     cib_root = create_xml_node(NULL, XML_TAG_CIB);
     crm_xml_add(cib_root, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
-    crm_xml_add(cib_root, XML_ATTR_VALIDATION, xml_latest_schema());
+    crm_xml_add(cib_root, PCMK_XA_VALIDATE_WITH, xml_latest_schema());
 
     crm_xml_add_int(cib_root, XML_ATTR_GENERATION, cib_epoch);
     crm_xml_add_int(cib_root, XML_ATTR_NUMUPDATES, 0);
@@ -592,7 +592,7 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
      */
 
     if (*config_changed && !pcmk_is_set(call_options, cib_no_mtime)) {
-        const char *schema = crm_element_value(scratch, XML_ATTR_VALIDATION);
+        const char *schema = crm_element_value(scratch, PCMK_XA_VALIDATE_WITH);
 
         pcmk__xe_add_last_written(scratch);
         if (schema) {
@@ -635,7 +635,7 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
     crm_trace("Perform validation: %s", pcmk__btoa(check_schema));
     if ((rc == pcmk_ok) && check_schema && !validate_xml(scratch, NULL, true)) {
         const char *current_schema = crm_element_value(scratch,
-                                                       XML_ATTR_VALIDATION);
+                                                       PCMK_XA_VALIDATE_WITH);
 
         crm_warn("Updated CIB does not validate against %s schema",
                  pcmk__s(current_schema, "unspecified"));

@@ -1,6 +1,6 @@
 /*
  * Original copyright 2004 International Business Machines
- * Later changes copyright 2008-2023 the Pacemaker project contributors
+ * Later changes copyright 2008-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -395,7 +395,7 @@ load_file_cib(const char *filename, xmlNode **output)
 
     /* Validate XML against its specified schema */
     if (validate_xml(root, NULL, TRUE) == FALSE) {
-        const char *schema = crm_element_value(root, XML_ATTR_VALIDATION);
+        const char *schema = crm_element_value(root, PCMK_XA_VALIDATE_WITH);
 
         crm_err("CIB does not validate against %s", schema);
         free_xml(root);

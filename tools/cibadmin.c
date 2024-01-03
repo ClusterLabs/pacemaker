@@ -298,7 +298,7 @@ static GOptionEntry command_entries[] = {
     { "empty", 'a', G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK,
       command_cb,
       "Output an empty CIB. Accepts an optional schema name argument to use as "
-      "the " XML_ATTR_VALIDATION " value.\n"
+      "the " PCMK_XA_VALIDATE_WITH " value.\n"
       INDENT "If no schema is given, the latest will be used.",
       "[schema]" },
 
@@ -570,7 +570,7 @@ main(int argc, char **argv)
         char *buf = NULL;
 
         output = createEmptyCib(1);
-        crm_xml_add(output, XML_ATTR_VALIDATION, options.validate_with);
+        crm_xml_add(output, PCMK_XA_VALIDATE_WITH, options.validate_with);
         buf = dump_xml_formatted(output);
         fprintf(stdout, "%s", buf);
         free(buf);

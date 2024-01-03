@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -302,7 +302,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
         crm_log_xml_trace(root, "[on-disk]");
     }
 
-    validation = crm_element_value(root, XML_ATTR_VALIDATION);
+    validation = crm_element_value(root, PCMK_XA_VALIDATE_WITH);
     if (validate_xml(root, NULL, TRUE) == FALSE) {
         crm_err("CIB does not validate with %s",
                 pcmk__s(validation, "no schema specified"));

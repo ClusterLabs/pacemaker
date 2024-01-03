@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -726,9 +726,9 @@ create_shadow_empty(pcmk__output_t *out, GError **error)
     }
 
     output = createEmptyCib(0);
-    crm_xml_add(output, XML_ATTR_VALIDATION, options.validate_with);
+    crm_xml_add(output, PCMK_XA_VALIDATE_WITH, options.validate_with);
     out->info(out, "Created new %s configuration",
-              crm_element_value(output, XML_ATTR_VALIDATION));
+              crm_element_value(output, PCMK_XA_VALIDATE_WITH));
 
     if (write_shadow_file(output, filename, false, error) != pcmk_rc_ok) {
         goto done;
