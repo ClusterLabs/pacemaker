@@ -141,7 +141,6 @@ extern "C" {
 #  define XML_TAG_FAILED		"failed"
 
 #  define XML_ATTR_TIMEOUT		"timeout"
-#  define XML_ATTR_IDREF			PCMK_XA_ID_REF
 #  define XML_ATTR_ID_LONG		"long-id"
 #  define XML_ATTR_TYPE			"type"
 #  define XML_ATTR_OP			"op"
