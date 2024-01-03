@@ -149,7 +149,6 @@ extern "C" {
 #  define XML_TAG_FAILED		"failed"
 
 #  define XML_ATTR_TIMEOUT		"timeout"
-#  define XML_ATTR_UPDATE_USER		"update-user"
 
 #  define XML_BOOLEAN_TRUE		"true"
 #  define XML_BOOLEAN_FALSE		"false"
