@@ -982,7 +982,7 @@ delete_resource(lrm_state_t *lrm_state, const char *id, lrmd_rsc_info_t *rsc,
         crm_info("Deletion of resource '%s' from executor is pending", id);
         if (request) {
             struct pending_deletion_op_s *op = NULL;
-            char *ref = crm_element_value_copy(request->msg, XML_ATTR_REFERENCE);
+            char *ref = crm_element_value_copy(request->msg, PCMK_XA_REFERENCE);
 
             op = calloc(1, sizeof(struct pending_deletion_op_s));
             op->rsc = strdup(rsc->id);
@@ -1776,7 +1776,7 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
 
     crm_debug("ACK'ing resource op " PCMK__OP_FMT " from %s: %s",
               op->rsc_id, op->op_type, op->interval_ms, op->user_data,
-              crm_element_value(reply, XML_ATTR_REFERENCE));
+              crm_element_value(reply, PCMK_XA_REFERENCE));
 
     if (relay_message(reply, TRUE) == FALSE) {
         crm_log_xml_err(reply, "Unable to route reply");

@@ -387,7 +387,7 @@ do_dc_join_filter_offer(long long action,
     ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
 
     const char *join_from = crm_element_value(join_ack->msg, F_CRM_HOST_FROM);
-    const char *ref = crm_element_value(join_ack->msg, F_CRM_REFERENCE);
+    const char *ref = crm_element_value(join_ack->msg, PCMK_XA_REFERENCE);
     const char *join_version = crm_element_value(join_ack->msg,
                                                  PCMK_XA_CRM_FEATURE_SET);
     crm_node_t *join_node = NULL;

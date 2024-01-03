@@ -351,7 +351,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     sys_from = crm_element_value(msg, F_CRM_SYS_FROM);
     type = crm_element_value(msg, F_TYPE);
     task = crm_element_value(msg, F_CRM_TASK);
-    ref = crm_element_value(msg, XML_ATTR_REFERENCE);
+    ref = crm_element_value(msg, PCMK_XA_REFERENCE);
 
     broadcast = pcmk__str_empty(host_to);
 
@@ -542,7 +542,7 @@ controld_authorize_ipc_message(const xmlNode *client_msg, pcmk__client_t *curr_c
     xmlNode *message_data = NULL;
     const char *client_name = NULL;
     const char *op = crm_element_value(client_msg, F_CRM_TASK);
-    const char *ref = crm_element_value(client_msg, XML_ATTR_REFERENCE);
+    const char *ref = crm_element_value(client_msg, PCMK_XA_REFERENCE);
     const char *uuid = (curr_client? curr_client->id : proxy_session);
 
     if (uuid == NULL) {
@@ -1192,7 +1192,7 @@ handle_response(xmlNode *stored_msg)
 
     } else if (AM_I_DC && strcmp(op, CRM_OP_PECALC) == 0) {
         // Check whether scheduler answer been superseded by subsequent request
-        const char *msg_ref = crm_element_value(stored_msg, XML_ATTR_REFERENCE);
+        const char *msg_ref = crm_element_value(stored_msg, PCMK_XA_REFERENCE);
 
         if (msg_ref == NULL) {
             crm_err("%s - Ignoring calculation with no reference", op);

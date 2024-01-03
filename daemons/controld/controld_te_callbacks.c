@@ -608,7 +608,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
     }
 
     crm_debug("Processing transition request with ref='%s' origin='%s'",
-              pcmk__s(crm_element_value(msg, F_CRM_REFERENCE), ""),
+              pcmk__s(crm_element_value(msg, PCMK_XA_REFERENCE), ""),
               pcmk__s(crm_element_value(msg, F_ORIG), ""));
 
     xpathObj = xpath_search(xml_data, "//" XML_LRM_TAG_RSC_OP);

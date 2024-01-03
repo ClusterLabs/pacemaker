@@ -73,6 +73,7 @@ extern "C" {
 #define PCMK_XA_NUM_UPDATES                 "num_updates"
 #define PCMK_XA_OP                          "op"
 #define PCMK_XA_PROVIDER                    "provider"
+#define PCMK_XA_REFERENCE                   "reference"
 #define PCMK_XA_REQUEST                     "request"
 #define PCMK_XA_TYPE                        "type"
 #define PCMK_XA_UNAME                       "uname"
@@ -129,7 +130,7 @@ extern "C" {
 #  define F_CRM_SYS_TO			"crm_sys_to"
 #  define F_CRM_SYS_FROM		"crm_sys_from"
 #  define F_CRM_HOST_FROM		F_ORIG
-#  define F_CRM_REFERENCE		XML_ATTR_REFERENCE
+#  define F_CRM_REFERENCE		PCMK_XA_REFERENCE
 #  define F_CRM_VERSION			PCMK_XA_VERSION
 #  define F_CRM_ORIGIN			"origin"
 #  define F_CRM_USER			"crm_user"

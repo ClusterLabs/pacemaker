@@ -145,7 +145,7 @@ handle_reply(pcmk_schedulerd_api_reply_t *reply)
          * The name of the top level element here is irrelevant.  Nothing checks it.
          */
         fsa_input.msg = create_xml_node(NULL, "dummy-reply");
-        crm_xml_add(fsa_input.msg, XML_ATTR_REFERENCE, msg_ref);
+        crm_xml_add(fsa_input.msg, PCMK_XA_REFERENCE, msg_ref);
         crm_xml_add(fsa_input.msg, F_CRM_TGRAPH_INPUT, reply->data.graph.input);
 
         crm_data_node = create_xml_node(fsa_input.msg, F_CRM_DATA);

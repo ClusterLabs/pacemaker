@@ -111,7 +111,7 @@ handle_shutdown_request(pcmk__request_t *request)
 
     if (allowed) {
         crm_notice("Shutting down in response to IPC request %s from %s",
-                   crm_element_value(msg, F_CRM_REFERENCE),
+                   crm_element_value(msg, PCMK_XA_REFERENCE),
                    crm_element_value(msg, F_CRM_ORIGIN));
         crm_xml_add_int(shutdown, XML_LRM_ATTR_OPSTATUS, CRM_EX_OK);
     } else {

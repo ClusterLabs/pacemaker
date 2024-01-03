@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 the Pacemaker project contributors
+ * Copyright 2021-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -97,7 +97,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         goto done;
     }
 
-    if (pcmk__str_empty(crm_element_value(reply, XML_ATTR_REFERENCE))) {
+    if (pcmk__str_empty(crm_element_value(reply, PCMK_XA_REFERENCE))) {
         crm_info("Unrecognizable message from schedulerd: no reference");
         status = CRM_EX_PROTOCOL;
         goto done;
@@ -109,7 +109,8 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
 
     if (pcmk__str_eq(value, CRM_OP_PECALC, pcmk__str_none)) {
         reply_data.reply_type = pcmk_schedulerd_reply_graph;
-        reply_data.data.graph.reference = crm_element_value(reply, XML_ATTR_REFERENCE);
+        reply_data.data.graph.reference = crm_element_value(reply,
+                                                            PCMK_XA_REFERENCE);
         reply_data.data.graph.input = crm_element_value(reply, F_CRM_TGRAPH_INPUT);
         reply_data.data.graph.tgraph = msg_data;
     } else {
@@ -164,7 +165,7 @@ do_schedulerd_api_call(pcmk_ipc_api_t *api, const char *task, xmlNode *cib, char
                       pcmk_rc_str(rc), rc);
         }
 
-        *ref = strdup(crm_element_value(cmd, F_CRM_REFERENCE));
+        *ref = strdup(crm_element_value(cmd, PCMK_XA_REFERENCE));
         free_xml(cmd);
     } else {
         rc = ENOMSG;

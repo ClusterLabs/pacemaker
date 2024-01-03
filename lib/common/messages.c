@@ -66,7 +66,7 @@ create_request_adv(const char *task, xmlNode *msg_data,
     crm_xml_add(request, F_TYPE, T_CRM);
     crm_xml_add(request, F_CRM_VERSION, CRM_FEATURE_SET);
     crm_xml_add(request, F_CRM_MSG_TYPE, PCMK__VALUE_REQUEST);
-    crm_xml_add(request, F_CRM_REFERENCE, reference);
+    crm_xml_add(request, PCMK_XA_REFERENCE, reference);
     crm_xml_add(request, F_CRM_TASK, task);
     crm_xml_add(request, F_CRM_SYS_TO, sys_to);
     crm_xml_add(request, F_CRM_SYS_FROM, true_from);
@@ -109,7 +109,8 @@ create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
     const char *sys_to = crm_element_value(original_request, F_CRM_SYS_TO);
     const char *type = crm_element_value(original_request, F_CRM_MSG_TYPE);
     const char *operation = crm_element_value(original_request, F_CRM_TASK);
-    const char *crm_msg_reference = crm_element_value(original_request, F_CRM_REFERENCE);
+    const char *crm_msg_reference = crm_element_value(original_request,
+                                                      PCMK_XA_REFERENCE);
 
     if (type == NULL) {
         crm_err("Cannot create new_message, no message type in original message");
@@ -133,7 +134,7 @@ create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
     crm_xml_add(reply, F_TYPE, T_CRM);
     crm_xml_add(reply, F_CRM_VERSION, CRM_FEATURE_SET);
     crm_xml_add(reply, F_CRM_MSG_TYPE, PCMK__VALUE_RESPONSE);
-    crm_xml_add(reply, F_CRM_REFERENCE, crm_msg_reference);
+    crm_xml_add(reply, PCMK_XA_REFERENCE, crm_msg_reference);
     crm_xml_add(reply, F_CRM_TASK, operation);
 
     /* since this is a reply, we reverse the from and to */

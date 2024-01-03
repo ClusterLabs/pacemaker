@@ -216,7 +216,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         goto done;
     }
 
-    if (pcmk__str_empty(crm_element_value(reply, XML_ATTR_REFERENCE))) {
+    if (pcmk__str_empty(crm_element_value(reply, PCMK_XA_REFERENCE))) {
         crm_info("Unrecognizable message from %s: no reference",
                  pcmk_ipc_name(api, true));
         status = CRM_EX_PROTOCOL;
