@@ -382,6 +382,11 @@ extern "C" {
 //! \deprecated Do not use
 #define F_CRM_MSG_TYPE F_SUBTYPE
 
+#ifndef F_TYPE
+//! \deprecated Do not use
+#define F_TYPE "t"
+#endif
+
 #ifdef __cplusplus
 }
 #endif
