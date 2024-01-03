@@ -411,20 +411,13 @@ cib_remote_connection_destroy(gpointer user_data)
 static void
 cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
 {
-    const char *value = NULL;
-
     if (!pcmk__xe_is(command, T_CIB_COMMAND)) {
         crm_log_xml_trace(command, "bad");
         return;
     }
 
     if (client->name == NULL) {
-        value = crm_element_value(command, F_CLIENTNAME);
-        if (value == NULL) {
-            client->name = strdup(client->id);
-        } else {
-            client->name = strdup(value);
-        }
+        client->name = strdup(client->id);
     }
 
     /* unset dangerous options */
