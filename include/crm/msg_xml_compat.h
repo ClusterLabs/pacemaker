@@ -160,6 +160,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_ADMIN_EPOCH instead
 #define XML_ATTR_GENERATION_ADMIN PCMK_XA_ADMIN_EPOCH
 
+//! \deprecated Use \c PCMK_XA_NUM_UPDATES instead
+#define XML_ATTR_NUMUPDATES PCMK_XA_NUM_UPDATES
+
 #ifdef __cplusplus
 }
 #endif
