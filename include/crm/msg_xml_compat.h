@@ -139,6 +139,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_OPT_SHUTDOWN_LOCK_LIMIT instead
 #define XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT PCMK_OPT_SHUTDOWN_LOCK_LIMIT
 
+//! \deprecated Use \c PCMK_XA_CRM_FEATURE_SET instead
+#define XML_ATTR_CRM_VERSION PCMK_XA_CRM_FEATURE_SET
+
 #ifdef __cplusplus
 }
 #endif
