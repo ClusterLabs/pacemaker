@@ -380,7 +380,7 @@ stonith_api_remove_level_full(stonith_t *st, int options,
 
     } else {
         crm_xml_add(data, XML_ATTR_STONITH_TARGET_ATTRIBUTE, attr);
-        crm_xml_add(data, XML_ATTR_STONITH_TARGET_VALUE, value);
+        crm_xml_add(data, PCMK_XA_TARGET_VALUE, value);
     }
 
     crm_xml_add_int(data, PCMK_XA_INDEX, level);
@@ -437,7 +437,7 @@ create_level_registration_xml(const char *node, const char *pattern,
 
     } else {
         crm_xml_add(data, XML_ATTR_STONITH_TARGET_ATTRIBUTE, attr);
-        crm_xml_add(data, XML_ATTR_STONITH_TARGET_VALUE, value);
+        crm_xml_add(data, PCMK_XA_TARGET_VALUE, value);
     }
 
     for (; device_list; device_list = device_list->next) {
