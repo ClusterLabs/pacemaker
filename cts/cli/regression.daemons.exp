@@ -62,9 +62,12 @@
       <content type="integer" default=""/>
     </parameter>
     <parameter name="fence-reaction">
-      <longdesc lang="en">A cluster node may receive notification of its own fencing if fencing is misconfigured, or if fabric fencing is in use that doesn&apos;t cut cluster communication. Allowed values are &quot;stop&quot; to attempt to immediately stop Pacemaker and stay stopped, or &quot;panic&quot; to attempt to immediately reboot the local node, falling back to stop on failure.</longdesc>
+      <longdesc lang="en">A cluster node may receive notification of its own fencing if fencing is misconfigured, or if fabric fencing is in use that doesn&apos;t cut cluster communication. Use &quot;stop&quot; to attempt to immediately stop Pacemaker and stay stopped, or &quot;panic&quot; to attempt to immediately reboot the local node, falling back to stop on failure.  Allowed values: stop, panic</longdesc>
       <shortdesc lang="en">How a cluster node should react if notified of its own fencing</shortdesc>
-      <content type="string" default=""/>
+      <content type="select" default="">
+        <option value="stop" />
+        <option value="panic" />
+      </content>
     </parameter>
     <parameter name="election-timeout">
       <longdesc lang="en">Declare an election failed if it is not decided within this much time. If you need to adjust this value, it probably indicates the presence of a bug.</longdesc>
