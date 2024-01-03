@@ -255,7 +255,7 @@ static pcmk__cluster_option_t pe_opts[] = {
             "\"yellow\", or \"green\".")
     },
     {
-        PCMK__OPT_NODE_HEALTH_BASE, NULL, "integer", NULL,
+        PCMK_OPT_NODE_HEALTH_BASE, NULL, "integer", NULL,
         "0", pcmk__valid_number,
         N_("Base health score assigned to a node"),
         N_("Only used when \"node-health-strategy\" is set to \"progressive\".")
