@@ -855,7 +855,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
      */
     crm_trace("Updating node name and UUID in CIB for %s", join_to);
     tmp1 = create_xml_node(NULL, XML_CIB_TAG_NODE);
-    crm_xml_add(tmp1, XML_ATTR_ID, crm_peer_uuid(join_node));
+    crm_xml_add(tmp1, PCMK_XA_ID, crm_peer_uuid(join_node));
     crm_xml_add(tmp1, XML_ATTR_UNAME, join_to);
     fsa_cib_anon_update(XML_CIB_TAG_NODES, tmp1);
     free_xml(tmp1);
@@ -911,7 +911,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 
                 remote = create_xml_node(remotes, XML_CIB_TAG_NODE);
                 pcmk__xe_set_props(remote,
-                                   XML_ATTR_ID, node->uname,
+                                   PCMK_XA_ID, node->uname,
                                    XML_CIB_TAG_STATE, node->state,
                                    PCMK__XA_CONN_HOST, node->conn_host,
                                    NULL);

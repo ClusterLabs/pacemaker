@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -86,11 +86,11 @@ create_acl(const xmlNode *xml, GList *acls, enum xml_private_flags mode)
 
         if ((ref != NULL) && (attr != NULL)) {
             // NOTE: schema currently does not allow this
-            pcmk__g_strcat(buf, "//", pcmk__s(tag, "*"), "[@" XML_ATTR_ID "='",
+            pcmk__g_strcat(buf, "//", pcmk__s(tag, "*"), "[@" PCMK_XA_ID "='",
                            ref, "' and @", attr, "]", NULL);
 
         } else if (ref != NULL) {
-            pcmk__g_strcat(buf, "//", pcmk__s(tag, "*"), "[@" XML_ATTR_ID "='",
+            pcmk__g_strcat(buf, "//", pcmk__s(tag, "*"), "[@" PCMK_XA_ID "='",
                            ref, "']", NULL);
 
         } else if (attr != NULL) {
@@ -142,7 +142,7 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
 
         if (strcmp(XML_ACL_TAG_ROLE_REF, tag) == 0
                    || strcmp(XML_ACL_TAG_ROLE_REFv1, tag) == 0) {
-            const char *ref_role = crm_element_value(child, XML_ATTR_ID);
+            const char *ref_role = crm_element_value(child, PCMK_XA_ID);
 
             if (ref_role) {
                 xmlNode *role = NULL;
@@ -151,7 +151,7 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
                      role = pcmk__xe_next(role)) {
                     if (!strcmp(XML_ACL_TAG_ROLE, (const char *) role->name)) {
                         const char *role_id = crm_element_value(role,
-                                                                XML_ATTR_ID);
+                                                                PCMK_XA_ID);
 
                         if (role_id && strcmp(ref_role, role_id) == 0) {
                             crm_trace("Unpacking referenced role '%s' in ACL <%s> element",
@@ -308,7 +308,7 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
                     const char *id = crm_element_value(child, XML_ATTR_NAME);
 
                     if (id == NULL) {
-                        id = crm_element_value(child, XML_ATTR_ID);
+                        id = crm_element_value(child, PCMK_XA_ID);
                     }
 
                     if (id && strcmp(id, user) == 0) {
@@ -319,7 +319,7 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
                     const char *id = crm_element_value(child, XML_ATTR_NAME);
 
                     if (id == NULL) {
-                        id = crm_element_value(child, XML_ATTR_ID);
+                        id = crm_element_value(child, PCMK_XA_ID);
                     }
 
                     if (id && pcmk__is_user_in_group(user,id)) {
@@ -388,7 +388,7 @@ purge_xml_attributes(xmlNode *xml)
     xml_node_private_t *nodepriv = xml->_private;
 
     if (test_acl_mode(nodepriv->flags, pcmk__xf_acl_read)) {
-        crm_trace("%s[@" XML_ATTR_ID "=%s] is readable",
+        crm_trace("%s[@" PCMK_XA_ID "=%s] is readable",
                   xml->name, ID(xml));
         return true;
     }
@@ -399,7 +399,7 @@ purge_xml_attributes(xmlNode *xml)
         const char *prop_name = (const char *)xIter->name;
 
         xIter = xIter->next;
-        if (strcmp(prop_name, XML_ATTR_ID) == 0) {
+        if (strcmp(prop_name, PCMK_XA_ID) == 0) {
             continue;
         }
 
@@ -513,7 +513,7 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
  *
  * Check whether XML is a "scaffolding" element whose creation is implicitly
  * allowed regardless of ACLs (that is, it is not in the ACL section and has
- * no attributes other than "id").
+ * no attributes other than \c PCMK_XA_ID).
  *
  * \param[in] xml  XML element to check
  *
@@ -525,7 +525,7 @@ implicitly_allowed(const xmlNode *xml)
     GString *path = NULL;
 
     for (xmlAttr *prop = xml->properties; prop != NULL; prop = prop->next) {
-        if (strcmp((const char *) prop->name, XML_ATTR_ID) != 0) {
+        if (strcmp((const char *) prop->name, PCMK_XA_ID) != 0) {
             return false;
         }
     }
@@ -551,7 +551,7 @@ implicitly_allowed(const xmlNode *xml)
  * Given an XML element, free all of its descendant nodes created in violation
  * of ACLs, with the exception of allowing "scaffolding" elements (i.e. those
  * that aren't in the ACL section and don't have any attributes other than
- * "id").
+ * \c PCMK_XA_ID).
  *
  * \param[in,out] xml        XML to check
  * \param[in]     check_top  Whether to apply checks to argument itself

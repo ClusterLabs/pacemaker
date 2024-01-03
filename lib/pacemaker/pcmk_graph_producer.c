@@ -48,7 +48,7 @@ add_node_to_xml_by_id(const char *id, xmlNode *xml)
     xmlNode *node_xml;
 
     node_xml = create_xml_node(xml, XML_CIB_TAG_NODE);
-    crm_xml_add(node_xml, XML_ATTR_ID, id);
+    crm_xml_add(node_xml, PCMK_XA_ID, id);
 
     return node_xml;
 }
@@ -276,7 +276,7 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
          */
         crm_debug("Using orphan clone name %s instead of %s",
                   action->rsc->id, action->rsc->clone_name);
-        crm_xml_add(rsc_xml, XML_ATTR_ID, action->rsc->clone_name);
+        crm_xml_add(rsc_xml, PCMK_XA_ID, action->rsc->clone_name);
         crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->id);
 
     } else if (!pcmk_is_set(action->rsc->flags, pcmk_rsc_unique)) {
@@ -298,7 +298,7 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
          * 'instance free' name will correspond to an orphan
          * and fall into the clause above instead
          */
-        crm_xml_add(rsc_xml, XML_ATTR_ID, xml_id);
+        crm_xml_add(rsc_xml, PCMK_XA_ID, xml_id);
         if ((action->rsc->clone_name != NULL)
             && !pcmk__str_eq(xml_id, action->rsc->clone_name,
                              pcmk__str_none)) {
@@ -309,7 +309,7 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
 
     } else {
         CRM_ASSERT(action->rsc->clone_name == NULL);
-        crm_xml_add(rsc_xml, XML_ATTR_ID, action->rsc->id);
+        crm_xml_add(rsc_xml, PCMK_XA_ID, action->rsc->id);
     }
 
     for (int lpc = 0; lpc < PCMK__NELEM(attr_list); lpc++) {
@@ -437,7 +437,7 @@ create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
         action_xml = create_xml_node(parent, XML_GRAPH_TAG_RSC_OP);
     }
 
-    crm_xml_add_int(action_xml, XML_ATTR_ID, action->id);
+    crm_xml_add_int(action_xml, PCMK_XA_ID, action->id);
     crm_xml_add(action_xml, XML_LRM_ATTR_TASK, action->task);
 
     if ((action->rsc != NULL) && (action->rsc->clone_name != NULL)) {
@@ -854,7 +854,7 @@ create_graph_synapse(const pcmk_action_t *action, pcmk_scheduler_t *scheduler)
     int synapse_priority = 0;
     xmlNode *syn = create_xml_node(scheduler->graph, "synapse");
 
-    crm_xml_add_int(syn, XML_ATTR_ID, scheduler->num_synapse);
+    crm_xml_add_int(syn, PCMK_XA_ID, scheduler->num_synapse);
     scheduler->num_synapse++;
 
     if (action->rsc != NULL) {

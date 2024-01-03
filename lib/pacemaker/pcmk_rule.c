@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -106,7 +106,7 @@ init_rule_check(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
     return pcmk_rc_ok;
 }
 
-#define XPATH_NODE_RULE "//" XML_TAG_RULE "[@" XML_ATTR_ID "='%s']"
+#define XPATH_NODE_RULE "//" XML_TAG_RULE "[@" PCMK_XA_ID "='%s']"
 
 /*!
  * \internal

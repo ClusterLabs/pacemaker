@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 the Pacemaker project contributors
+ * Copyright 2021-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -26,7 +26,7 @@
 #define XPATH_OP_HISTORY "//" XML_CIB_TAG_STATUS                            \
                          "/" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='%s']" \
                          "/" XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES      \
-                         "/" XML_LRM_TAG_RESOURCE "[@" XML_ATTR_ID "='%s']"
+                         "/" XML_LRM_TAG_RESOURCE "[@" PCMK_XA_ID "='%s']"
 
 static xmlNode *
 best_op(const pcmk_resource_t *rsc, const pcmk_node_t *node)
@@ -131,7 +131,7 @@ pcmk__resource_delete(cib_t *cib, uint32_t cib_opts, const char *rsc_id,
     }
 
     msg_data = create_xml_node(NULL, rsc_type);
-    crm_xml_add(msg_data, XML_ATTR_ID, rsc_id);
+    crm_xml_add(msg_data, PCMK_XA_ID, rsc_id);
 
     rc = cib->cmds->remove(cib, XML_CIB_TAG_RESOURCES, msg_data, cib_opts);
     rc = pcmk_legacy2rc(rc);

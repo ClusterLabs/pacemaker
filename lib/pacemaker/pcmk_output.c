@@ -44,7 +44,7 @@ colocations_xml_node(pcmk__output_t *out, pcmk_resource_t *rsc,
     xmlNodePtr node = NULL;
 
     node = pcmk__output_create_xml_node(out, XML_CONS_TAG_RSC_DEPEND,
-                                        "id", cons->id,
+                                        PCMK_XA_ID, cons->id,
                                         "rsc", cons->dependent->id,
                                         "with-rsc", cons->primary->id,
                                         "score",
@@ -90,7 +90,7 @@ do_locations_list_xml(pcmk__output_t *out, pcmk_resource_t *rsc,
             pcmk__output_create_xml_node(out, XML_CONS_TAG_RSC_LOCATION,
                                          "node", node->details->uname,
                                          "rsc", rsc->id,
-                                         "id", cons->id,
+                                         PCMK_XA_ID, cons->id,
                                          "score",
                                          pcmk_readable_score(node->weight),
                                          NULL);
@@ -950,7 +950,7 @@ crmadmin_node_xml(pcmk__output_t *out, va_list args)
     pcmk__output_create_xml_node(out, "node",
                                  "type", type ? type : "cluster",
                                  "name", pcmk__s(name, ""),
-                                 "id", pcmk__s(id, ""),
+                                 PCMK_XA_ID, pcmk__s(id, ""),
                                  NULL);
     return pcmk_rc_ok;
 }
@@ -1376,7 +1376,7 @@ node_info_xml(pcmk__output_t *out, va_list args)
     pcmk__output_create_xml_node(out, "node-info",
                                  "nodeid", id_s,
                                  XML_ATTR_UNAME, node_name,
-                                 XML_ATTR_ID, uuid,
+                                 PCMK_XA_ID, uuid,
                                  PCMK__XA_CRMD, state,
                                  PCMK_XA_HAVE_QUORUM, pcmk__btoa(have_quorum),
                                  XML_NODE_IS_REMOTE, pcmk__btoa(is_remote),
@@ -1429,7 +1429,7 @@ inject_cluster_action_xml(pcmk__output_t *out, va_list args)
                                             NULL);
 
     if (rsc) {
-        crm_xml_add(xml_node, "id", ID(rsc));
+        crm_xml_add(xml_node, PCMK_XA_ID, ID(rsc));
     }
 
     return pcmk_rc_ok;
@@ -2184,7 +2184,7 @@ attribute_xml(pcmk__output_t *out, va_list args)
     }
 
     if (!pcmk__str_empty(instance)) {
-        crm_xml_add(node, "id", instance);
+        crm_xml_add(node, PCMK_XA_ID, instance);
     }
 
     if (!pcmk__str_empty(host)) {

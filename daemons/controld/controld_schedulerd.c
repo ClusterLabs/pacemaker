@@ -421,7 +421,7 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
                                               NULL, NULL);
         if (cluster_property_set == NULL) {
             cluster_property_set = create_xml_node(crm_config, XML_CIB_TAG_PROPSET);
-            crm_xml_add(cluster_property_set, XML_ATTR_ID, CIB_OPTIONS_FIRST);
+            crm_xml_add(cluster_property_set, PCMK_XA_ID, CIB_OPTIONS_FIRST);
         }
 
         xml = create_xml_node(cluster_property_set, XML_CIB_TAG_NVPAIR);

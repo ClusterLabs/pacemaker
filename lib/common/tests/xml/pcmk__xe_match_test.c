@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,23 +16,23 @@
 const char *str1 =
     "<xml>\n"
     "  <!-- This is an A node -->\n"
-    "  <nodeA attrA=\"123\" " XML_ATTR_ID "=\"1\">\n"
+    "  <nodeA attrA=\"123\" " PCMK_XA_ID "=\"1\">\n"
     "    content\n"
     "  </nodeA>\n"
     "  <!-- This is an A node -->\n"
-    "  <nodeA attrA=\"456\" " XML_ATTR_ID "=\"2\">\n"
+    "  <nodeA attrA=\"456\" " PCMK_XA_ID "=\"2\">\n"
     "    content\n"
     "  </nodeA>\n"
     "  <!-- This is an A node -->\n"
-    "  <nodeA attrB=\"XYZ\" " XML_ATTR_ID "=\"3\">\n"
+    "  <nodeA attrB=\"XYZ\" " PCMK_XA_ID "=\"3\">\n"
     "    content\n"
     "  </nodeA>\n"
     "  <!-- This is a B node -->\n"
-    "  <nodeB attrA=\"123\" " XML_ATTR_ID "=\"4\">\n"
+    "  <nodeB attrA=\"123\" " PCMK_XA_ID "=\"4\">\n"
     "    content\n"
     "  </nodeA>\n"
     "  <!-- This is a B node -->\n"
-    "  <nodeB attrB=\"ABC\" " XML_ATTR_ID "=\"5\">\n"
+    "  <nodeB attrB=\"ABC\" " PCMK_XA_ID "=\"5\">\n"
     "    content\n"
     "  </nodeA>\n"
     "</xml>";
@@ -71,12 +71,12 @@ find_attrB(void **state) {
     /* Find the first node with attrB */
     result = pcmk__xe_match(xml, NULL, "attrB", NULL);
     assert_non_null(result);
-    assert_string_equal(crm_element_value(result, "id"), "3");
+    assert_string_equal(crm_element_value(result, PCMK_XA_ID), "3");
 
     /* Find the first nodeB with attrB */
     result = pcmk__xe_match(xml, "nodeB", "attrB", NULL);
     assert_non_null(result);
-    assert_string_equal(crm_element_value(result, "id"), "5");
+    assert_string_equal(crm_element_value(result, PCMK_XA_ID), "5");
 
     free_xml(xml);
 }
@@ -89,12 +89,12 @@ find_attrA_matching(void **state) {
     /* Find attrA=456 */
     result = pcmk__xe_match(xml, NULL, "attrA", "456");
     assert_non_null(result);
-    assert_string_equal(crm_element_value(result, "id"), "2");
+    assert_string_equal(crm_element_value(result, PCMK_XA_ID), "2");
 
     /* Find a nodeB with attrA=123 */
     result = pcmk__xe_match(xml, "nodeB", "attrA", "123");
     assert_non_null(result);
-    assert_string_equal(crm_element_value(result, "id"), "4");
+    assert_string_equal(crm_element_value(result, PCMK_XA_ID), "4");
 
     free_xml(xml);
 }

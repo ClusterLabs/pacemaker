@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 the Pacemaker project contributors
+ * Copyright 2020-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -847,7 +847,7 @@ pcmk__list_nodes(pcmk__output_t *out, const char *node_types, bool bash_export)
         }
 
         if (pcmk__str_empty(node_types) || strstr(node_types, "cluster")) {
-            data.field = "id";
+            data.field = PCMK_XA_ID;
             data.type = "cluster";
             crm_foreach_xpath_result(xml_node, PCMK__XP_MEMBER_NODE_CONFIG,
                                      remote_node_print_helper, &data);
@@ -862,7 +862,7 @@ pcmk__list_nodes(pcmk__output_t *out, const char *node_types, bool bash_export)
 
         if (pcmk__str_empty(node_types)
             || pcmk__str_eq(node_types, ",|^remote", pcmk__str_regex)) {
-            data.field = "id";
+            data.field = PCMK_XA_ID;
             data.type = "remote";
             crm_foreach_xpath_result(xml_node, PCMK__XP_REMOTE_NODE_CONFIG,
                                      remote_node_print_helper, &data);

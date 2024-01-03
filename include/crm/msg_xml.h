@@ -57,6 +57,7 @@ extern "C" {
 #define PCMK_XA_EPOCH                       "epoch"
 #define PCMK_XA_FORMAT                      "format"
 #define PCMK_XA_HAVE_QUORUM                 "have-quorum"
+#define PCMK_XA_ID                          "id"
 #define PCMK_XA_NO_QUORUM_PANIC             "no-quorum-panic"
 #define PCMK_XA_NUM_UPDATES                 "num_updates"
 #define PCMK_XA_VALIDATE_WITH               "validate-with"
@@ -458,7 +459,7 @@ extern "C" {
 #  define XML_DIFF_PATH                 "path"
 #  define XML_DIFF_POSITION             "position"
 
-#  define ID(x) crm_element_value(x, XML_ATTR_ID)
+#  define ID(x) crm_element_value(x, PCMK_XA_ID)
 
 #ifdef __cplusplus
 }

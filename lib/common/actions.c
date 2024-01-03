@@ -325,7 +325,7 @@ should_filter_for_digest(xmlAttrPtr a, void *user_data)
         return true;
     }
     return pcmk__str_any_of((const char *) a->name,
-                            XML_ATTR_ID,
+                            PCMK_XA_ID,
                             PCMK_XA_CRM_FEATURE_SET,
                             XML_LRM_ATTR_OP_DIGEST,
                             XML_LRM_ATTR_TARGET,

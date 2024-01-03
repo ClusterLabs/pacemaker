@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -195,7 +195,7 @@ node_list_xml(pcmk__output_t *out, va_list args)
         char *id_s = crm_strdup_printf("%" PRIu32, node->id);
 
         pcmk__output_create_xml_node(out, "node",
-                                     "id", id_s,
+                                     PCMK_XA_ID, id_s,
                                      "name", node->uname,
                                      "state", node->state,
                                      NULL);
@@ -274,7 +274,7 @@ partition_list_xml(pcmk__output_t *out, va_list args)
             char *id_s = crm_strdup_printf("%" PRIu32, node->id);
 
             pcmk__output_create_xml_node(out, "node",
-                                         "id", id_s,
+                                         PCMK_XA_ID, id_s,
                                          "name", node->uname,
                                          "state", node->state,
                                          NULL);

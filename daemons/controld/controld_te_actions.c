@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -280,15 +280,15 @@ controld_record_action_event(pcmk__graph_action_t *action,
 
     state = create_xml_node(NULL, XML_CIB_TAG_STATE);
 
-    crm_xml_add(state, XML_ATTR_ID, target_uuid);
+    crm_xml_add(state, PCMK_XA_ID, target_uuid);
     crm_xml_add(state, XML_ATTR_UNAME, target);
 
     rsc = create_xml_node(state, XML_CIB_TAG_LRM);
-    crm_xml_add(rsc, XML_ATTR_ID, target_uuid);
+    crm_xml_add(rsc, PCMK_XA_ID, target_uuid);
 
     rsc = create_xml_node(rsc, XML_LRM_TAG_RESOURCES);
     rsc = create_xml_node(rsc, XML_LRM_TAG_RESOURCE);
-    crm_xml_add(rsc, XML_ATTR_ID, rsc_id);
+    crm_xml_add(rsc, PCMK_XA_ID, rsc_id);
 
 
     crm_copy_xml_element(action_rsc, rsc, XML_ATTR_TYPE);

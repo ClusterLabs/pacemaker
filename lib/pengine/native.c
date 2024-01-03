@@ -474,7 +474,7 @@ native_print_xml(pcmk_resource_t *rsc, const char *pre_text, long options,
 
     /* resource information. */
     status_print("%s<resource ", pre_text);
-    status_print(XML_ATTR_ID "=\"%s\" ", rsc_printable_id(rsc));
+    status_print(PCMK_XA_ID "=\"%s\" ", rsc_printable_id(rsc));
     status_print("resource_agent=\"%s%s%s:%s\" ", class,
                  ((prov == NULL)? "" : PROVIDER_SEP),
                  ((prov == NULL)? "" : prov),
@@ -517,7 +517,7 @@ native_print_xml(pcmk_resource_t *rsc, const char *pre_text, long options,
         for (; gIter != NULL; gIter = gIter->next) {
             pcmk_node_t *node = (pcmk_node_t *) gIter->data;
 
-            status_print("%s    <node name=\"%s\" " XML_ATTR_ID "=\"%s\" "
+            status_print("%s    <node name=\"%s\" " PCMK_XA_ID "=\"%s\" "
                          "cached=\"%s\"/>\n",
                          pre_text, pcmk__s(node->details->uname, ""),
                          node->details->id, pcmk__btoa(!node->details->online));
@@ -1007,7 +1007,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     }
 
     rc = pe__name_and_nvpairs_xml(out, true, "resource", 15,
-             "id", rsc_printable_id(rsc),
+             PCMK_XA_ID, rsc_printable_id(rsc),
              "resource_agent", ra_name,
              "role", rsc_state,
              "target_role", target_role,
@@ -1034,7 +1034,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
 
             rc = pe__name_and_nvpairs_xml(out, false, "node", 3,
                      "name", node->details->uname,
-                     "id", node->details->id,
+                     PCMK_XA_ID, node->details->id,
                      "cached", pcmk__btoa(node->details->online));
             CRM_ASSERT(rc == pcmk_rc_ok);
         }

@@ -412,11 +412,11 @@ patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
     return;
 }
 
-// Return true if attribute name is not "id"
+// Return true if attribute name is not \c PCMK_XML_ID
 static bool
 not_id(xmlAttrPtr attr, void *user_data)
 {
-    return strcmp((const char *) attr->name, XML_ATTR_ID) != 0;
+    return strcmp((const char *) attr->name, PCMK_XA_ID) != 0;
 }
 
 // Apply the removals section of an v1 patchset to an XML node
@@ -443,7 +443,7 @@ process_v1_removals(xmlNode *target, xmlNode *patch)
     CRM_CHECK(pcmk__str_eq(ID(target), ID(patch), pcmk__str_casei), return);
 
     // Check for XML_DIFF_MARKER in a child
-    id = crm_element_value_copy(target, XML_ATTR_ID);
+    id = crm_element_value_copy(target, PCMK_XA_ID);
     value = crm_element_value(patch, XML_DIFF_MARKER);
     if ((value != NULL) && (strcmp(value, "removed:top") == 0)) {
         crm_trace("We are the root of the deletion: %s.id=%s",
@@ -828,7 +828,7 @@ search_v2_xpath(const xmlNode *top, const char *key, int target_position)
         rc = sscanf(current, "/%[^/]%s", section, remainder);
         if (rc > 0) {
             // Separate FIRST_COMPONENT into TAG[@id='ID']
-            int f = sscanf(section, "%[^[][@" XML_ATTR_ID "='%[^']", tag, id);
+            int f = sscanf(section, "%[^[][@" PCMK_XA_ID "='%[^']", tag, id);
             int current_position = -1;
 
             /* The target position is for the final component tag, so only use
@@ -1263,7 +1263,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
     if (right == NULL) {
         xmlNode *deleted = NULL;
 
-        crm_trace("Processing <%s " XML_ATTR_ID "=%s> (complete copy)",
+        crm_trace("Processing <%s " PCMK_XA_ID "=%s> (complete copy)",
                   name, id);
         deleted = add_node_copy(parent, left);
         crm_xml_add(deleted, XML_DIFF_MARKER, marker);
@@ -1324,9 +1324,9 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
         xmlAttrPtr right_attr = NULL;
         xml_node_private_t *nodepriv = NULL;
 
-        if (strcmp(prop_name, XML_ATTR_ID) == 0) {
+        if (strcmp(prop_name, PCMK_XA_ID) == 0) {
             // id already obtained when present ~ this case, so just reuse
-            xmlSetProp(diff, (pcmkXmlStr) XML_ATTR_ID, (pcmkXmlStr) id);
+            xmlSetProp(diff, (pcmkXmlStr) PCMK_XA_ID, (pcmkXmlStr) id);
             continue;
         }
 
@@ -1375,7 +1375,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
                     xmlAttrPtr pIter = NULL;
 
                     crm_trace("Changes detected to %s in "
-                              "<%s " XML_ATTR_ID "=%s>", prop_name, name, id);
+                              "<%s " PCMK_XA_ID "=%s>", prop_name, name, id);
                     for (pIter = pcmk__xe_first_attr(left); pIter != NULL;
                          pIter = pIter->next) {
                         const char *p_name = (const char *) pIter->name;
@@ -1388,7 +1388,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
 
                 } else {
                     crm_trace("Changes detected to %s (%s -> %s) in "
-                              "<%s " XML_ATTR_ID "=%s>",
+                              "<%s " PCMK_XA_ID "=%s>",
                               prop_name, left_value, right_val, name, id);
                     crm_xml_add(diff, prop_name, left_value);
                 }
@@ -1401,7 +1401,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
         return NULL;
 
     } else if (!full && (id != NULL)) {
-        crm_xml_add(diff, XML_ATTR_ID, id);
+        crm_xml_add(diff, PCMK_XA_ID, id);
     }
   done:
     return diff;

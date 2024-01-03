@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -127,7 +127,7 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
         return NULL; // Error already logged
     }
 
-    rule_id = crm_element_value(rule_xml, XML_ATTR_ID);
+    rule_id = crm_element_value(rule_xml, PCMK_XA_ID);
     boolean = crm_element_value(rule_xml, XML_RULE_ATTR_BOOLEAN_OP);
     role_spec = crm_element_value(rule_xml, XML_RULE_ATTR_ROLE);
 
@@ -246,7 +246,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
                     pe_re_match_data_t *re_match_data)
 {
     const char *rsc_id = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
-    const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
+    const char *id = crm_element_value(xml_obj, PCMK_XA_ID);
     const char *node = crm_element_value(xml_obj, XML_CIB_TAG_NODE);
     const char *discovery = crm_element_value(xml_obj,
                                               XML_LOCATION_ATTR_DISCOVERY);
@@ -329,7 +329,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
 static void
 unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 {
-    const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
+    const char *id = crm_element_value(xml_obj, PCMK_XA_ID);
     const char *value = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
 
     if (value) {
@@ -419,7 +419,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     id = ID(xml_obj);
     if (id == NULL) {
-        pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
+        pcmk__config_err("Ignoring <%s> constraint without " PCMK_XA_ID,
                          xml_obj->name);
         return pcmk_rc_unpack_error;
     }
@@ -491,7 +491,7 @@ unpack_location_set(xmlNode *location, xmlNode *set,
     set_id = ID(set);
     if (set_id == NULL) {
         pcmk__config_err("Ignoring " XML_CONS_TAG_RSC_SET " without "
-                         XML_ATTR_ID " in constraint '%s'",
+                         PCMK_XA_ID " in constraint '%s'",
                          pcmk__s(ID(location), "(missing ID)"));
         return pcmk_rc_unpack_error;
     }

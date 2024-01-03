@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -537,7 +537,7 @@ clone_print_xml(pcmk_resource_t *rsc, const char *pre_text, long options,
     GList *gIter = rsc->children;
 
     status_print("%s<clone ", pre_text);
-    status_print(XML_ATTR_ID "=\"%s\" ", rsc->id);
+    status_print(PCMK_XA_ID "=\"%s\" ", rsc->id);
     status_print("multi_state=\"%s\" ",
                  pe__rsc_bool_str(rsc, pcmk_rsc_promotable));
     status_print("unique=\"%s\" ", pe__rsc_bool_str(rsc, pcmk_rsc_unique));
@@ -866,7 +866,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
 
             desc = pe__resource_description(rsc, show_opts);
             rc = pe__name_and_nvpairs_xml(out, true, "clone", 10,
-                    "id", rsc->id,
+                    PCMK_XA_ID, rsc->id,
                     "multi_state",
                     pe__rsc_bool_str(rsc, pcmk_rsc_promotable),
                     "unique", pe__rsc_bool_str(rsc, pcmk_rsc_unique),

@@ -1202,7 +1202,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     }
 
   again:
-    xml_op = pcmk__xe_match(parent, XML_LRM_TAG_RSC_OP, XML_ATTR_ID, op_id);
+    xml_op = pcmk__xe_match(parent, XML_LRM_TAG_RSC_OP, PCMK_XA_ID, op_id);
     if (xml_op == NULL) {
         xml_op = create_xml_node(parent, XML_LRM_TAG_RSC_OP);
     }
@@ -1221,7 +1221,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
                                   (const char *) op->user_data);
     }
 
-    crm_xml_add(xml_op, XML_ATTR_ID, op_id);
+    crm_xml_add(xml_op, PCMK_XA_ID, op_id);
     crm_xml_add(xml_op, XML_LRM_ATTR_TASK_KEY, key);
     crm_xml_add(xml_op, XML_LRM_ATTR_TASK, task);
     crm_xml_add(xml_op, PCMK_XA_CRM_DEBUG_ORIGIN, origin);

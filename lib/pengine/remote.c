@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the Pacemaker project contributors
+ * Copyright 2013-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -168,7 +168,7 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
     remote = create_xml_node(parent, XML_CIB_TAG_RESOURCE);
 
     // Add identity
-    crm_xml_add(remote, XML_ATTR_ID, uname);
+    crm_xml_add(remote, PCMK_XA_ID, uname);
     crm_xml_add(remote, XML_AGENT_ATTR_CLASS, PCMK_RESOURCE_CLASS_OCF);
     crm_xml_add(remote, XML_AGENT_ATTR_PROVIDER, "pacemaker");
     crm_xml_add(remote, XML_ATTR_TYPE, "remote");

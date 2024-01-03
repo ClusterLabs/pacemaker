@@ -23,7 +23,7 @@ print_constraint(xmlNode *xml_obj, void *userdata)
     pcmk_scheduler_t *scheduler = (pcmk_scheduler_t *) userdata;
     pcmk__output_t *out = scheduler->priv;
     xmlNode *lifetime = NULL;
-    const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
+    const char *id = crm_element_value(xml_obj, PCMK_XA_ID);
 
     if (id == NULL) {
         return pcmk_rc_ok;
@@ -41,7 +41,7 @@ print_constraint(xmlNode *xml_obj, void *userdata)
 
     out->info(out, "Constraint %s %s %s %s %s %s %s",
               xml_obj->name,
-              cons_string(crm_element_value(xml_obj, XML_ATTR_ID)),
+              cons_string(crm_element_value(xml_obj, PCMK_XA_ID)),
               cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE)),
               cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET)),
               cons_string(crm_element_value(xml_obj, XML_RULE_ATTR_SCORE)),
@@ -495,7 +495,7 @@ resource_check_list_xml(pcmk__output_t *out, va_list args) {
     const pcmk_resource_t *parent = pe__const_top_resource(checks->rsc, false);
 
     xmlNodePtr node = pcmk__output_create_xml_node(out, "check",
-                                                   "id", parent->id,
+                                                   PCMK_XA_ID, parent->id,
                                                    NULL);
 
     if (pcmk_is_set(checks->flags, rsc_remain_stopped)) {
@@ -699,7 +699,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
             rsc->fns->location(rsc, &hosts, TRUE);
 
             pcmk__output_xml_create_parent(out, "resource",
-                                           "id", rsc->id,
+                                           PCMK_XA_ID, rsc->id,
                                            "running", pcmk__btoa(hosts != NULL),
                                            NULL);
 
@@ -731,7 +731,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
             pcmk_resource_t *rsc = (pcmk_resource_t *) lpc->data;
 
             pcmk__output_xml_create_parent(out, "resource",
-                                           "id", rsc->id,
+                                           PCMK_XA_ID, rsc->id,
                                            "running", "true",
                                            "host", host_uname,
                                            NULL);
@@ -744,7 +744,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
             pcmk_resource_t *rsc = (pcmk_resource_t *) lpc->data;
 
             pcmk__output_xml_create_parent(out, "resource",
-                                           "id", rsc->id,
+                                           PCMK_XA_ID, rsc->id,
                                            "running", "false",
                                            "host", host_uname,
                                            NULL);

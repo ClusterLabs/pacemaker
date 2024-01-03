@@ -220,7 +220,7 @@ set_join_state(const char *start_state, const char *node_name, const char *node_
 static int
 update_conn_host_cache(xmlNode *node, void *userdata)
 {
-    const char *remote = crm_element_value(node, XML_ATTR_ID);
+    const char *remote = crm_element_value(node, PCMK_XA_ID);
     const char *conn_host = crm_element_value(node, PCMK__XA_CONN_HOST);
     const char *state = crm_element_value(node, XML_CIB_TAG_STATE);
 

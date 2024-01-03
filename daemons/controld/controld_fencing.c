@@ -253,7 +253,7 @@ send_stonith_update(pcmk__graph_action_t *action, const char *target,
     }
 
     /* Force our known ID */
-    crm_xml_add(node_state, XML_ATTR_ID, uuid);
+    crm_xml_add(node_state, PCMK_XA_ID, uuid);
 
     rc = controld_globals.cib_conn->cmds->modify(controld_globals.cib_conn,
                                                  XML_CIB_TAG_STATUS, node_state,

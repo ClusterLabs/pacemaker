@@ -262,7 +262,7 @@ initiate_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
             return graph_fns->cluster(graph, action);
 
         default:
-            crm_err("Unsupported graph action type <%s " XML_ATTR_ID "='%s'> "
+            crm_err("Unsupported graph action type <%s " PCMK_XA_ID "='%s'> "
                     "(bug?)",
                     action->xml->name, id);
             return EINVAL;
@@ -287,7 +287,7 @@ fire_synapse(pcmk__graph_t *graph, pcmk__graph_synapse_t *synapse)
         int rc = initiate_action(graph, action);
 
         if (rc != pcmk_rc_ok) {
-            crm_err("Failed initiating <%s " XML_ATTR_ID "=%d> in synapse %d: "
+            crm_err("Failed initiating <%s " PCMK_XA_ID "=%d> in synapse %d: "
                     "%s",
                     action->xml->name, action->id, synapse->id,
                     pcmk_rc_str(rc));
@@ -595,7 +595,7 @@ unpack_synapse(pcmk__graph_t *new_graph, const xmlNode *xml_synapse)
     new_graph->num_synapses++;
 
     crm_trace("Unpacking synapse %s action sets",
-              crm_element_value(xml_synapse, XML_ATTR_ID));
+              crm_element_value(xml_synapse, PCMK_XA_ID));
 
     for (action_set = first_named_child(xml_synapse, "action_set");
          action_set != NULL; action_set = crm_next_same_xml(action_set)) {

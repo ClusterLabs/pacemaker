@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -436,9 +436,9 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 
     CRM_CHECK(xml_obj != NULL, return);
 
-    id = crm_element_value(xml_obj, XML_ATTR_ID);
+    id = crm_element_value(xml_obj, PCMK_XA_ID);
     if (id == NULL) {
-        pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
+        pcmk__config_err("Ignoring <%s> constraint without " PCMK_XA_ID,
                          xml_obj->name);
         return;
     }
@@ -1006,7 +1006,7 @@ pcmk__unpack_ordering(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     xmlNode *orig_xml = NULL;
     xmlNode *expanded_xml = NULL;
 
-    const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
+    const char *id = crm_element_value(xml_obj, PCMK_XA_ID);
     const char *invert = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
     enum pe_order_kind kind = get_ordering_type(xml_obj);
 

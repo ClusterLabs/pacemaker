@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -308,7 +308,7 @@ create_device_registration_xml(const char *id, enum stonith_namespace namespace,
     }
 #endif
 
-    crm_xml_add(data, XML_ATTR_ID, id);
+    crm_xml_add(data, PCMK_XA_ID, id);
     crm_xml_add(data, F_STONITH_ORIGIN, __func__);
     crm_xml_add(data, "agent", agent);
     if ((namespace != st_namespace_any) && (namespace != st_namespace_invalid)) {
@@ -351,7 +351,7 @@ stonith_api_remove_device(stonith_t * st, int call_options, const char *name)
 
     data = create_xml_node(NULL, F_STONITH_DEVICE);
     crm_xml_add(data, F_STONITH_ORIGIN, __func__);
-    crm_xml_add(data, XML_ATTR_ID, name);
+    crm_xml_add(data, PCMK_XA_ID, name);
     rc = stonith_send_command(st, STONITH_OP_DEVICE_DEL, data, NULL, call_options, 0);
     free_xml(data);
 
@@ -425,7 +425,7 @@ create_level_registration_xml(const char *node, const char *pattern,
     CRM_CHECK(data, return NULL);
 
     crm_xml_add(data, F_STONITH_ORIGIN, __func__);
-    crm_xml_add_int(data, XML_ATTR_ID, level);
+    crm_xml_add_int(data, PCMK_XA_ID, level);
     crm_xml_add_int(data, XML_ATTR_STONITH_INDEX, level);
 
     if (node) {
@@ -573,7 +573,9 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
 
                 crm_info("%s[%d] = %s", "//@agent", lpc, match_path);
                 free(match_path);
-                *devices = stonith_key_value_add(*devices, NULL, crm_element_value(match, XML_ATTR_ID));
+                *devices = stonith_key_value_add(*devices, NULL,
+                                                 crm_element_value(match,
+                                                                   PCMK_XA_ID));
             }
         }
 

@@ -79,7 +79,7 @@ print_xml_output(xmlNode * xml)
     }
 
     if (pcmk_is_set(options.cmd_options, cib_xpath_address)) {
-        const char *id = crm_element_value(xml, XML_ATTR_ID);
+        const char *id = crm_element_value(xml, PCMK_XA_ID);
 
         if (pcmk__str_eq((const char *)xml->name, "xpath-query", pcmk__str_casei)) {
             xmlNode *child = NULL;
@@ -283,7 +283,7 @@ static GOptionEntry command_entries[] = {
 
     { "delete", 'D', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "Delete first object matching supplied criteria (for example, "
-      "<" XML_ATTR_OP " " XML_ATTR_ID "=\"rsc1_op1\" "
+      "<" XML_ATTR_OP " " PCMK_XA_ID "=\"rsc1_op1\" "
           XML_ATTR_NAME "=\"monitor\"/>).\n"
       INDENT "The XML element name and all attributes must match in order for "
       "the element to be deleted.",
@@ -372,8 +372,8 @@ static GOptionEntry addl_entries[] = {
       INDENT "(for example, "
       "\"/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION
       "/" XML_CIB_TAG_RESOURCES "/" XML_CIB_TAG_INCARNATION
-      "[@" XML_ATTR_ID "='dummy-clone']"
-      "/" XML_CIB_TAG_RESOURCE "[@" XML_ATTR_ID "='dummy']\")",
+      "[@" PCMK_XA_ID "='dummy-clone']"
+      "/" XML_CIB_TAG_RESOURCE "[@" PCMK_XA_ID "='dummy']\")",
       NULL },
 
     { "show-access", 'S', G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK,
@@ -442,7 +442,7 @@ build_arg_context(pcmk__common_args_t *args)
                "[@" XML_NVPAIR_ATTR_NAME "='" XML_RSC_ATTR_MANAGED "']\"\n\n"
            "Remove the resource named 'old':\n\n"
            "\t# cibadmin --delete --xml-text "
-               "'<" XML_CIB_TAG_RESOURCE " " XML_ATTR_ID "=\"old\"/>'\n\n"
+               "'<" XML_CIB_TAG_RESOURCE " " PCMK_XA_ID "=\"old\"/>'\n\n"
            "Remove all resources from the configuration:\n\n"
            "\t# cibadmin --replace --scope " XML_CIB_TAG_RESOURCES
                " --xml-text '<" XML_CIB_TAG_RESOURCES "/>'\n\n"

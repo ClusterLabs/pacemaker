@@ -350,7 +350,7 @@ pcmk__xml_match(const xmlNode *haystack, const xmlNode *needle, bool exact)
 
     } else {
         const char *id = ID(needle);
-        const char *attr = (id == NULL)? NULL : XML_ATTR_ID;
+        const char *attr = (id == NULL)? NULL : PCMK_XA_ID;
 
         return pcmk__xe_match(haystack, (const char *) needle->name, attr, id);
     }
@@ -692,7 +692,7 @@ pcmk_create_html_node(xmlNode * parent, const char *element_name, const char *id
     }
 
     if (id != NULL) {
-        crm_xml_add(node, "id", id);
+        crm_xml_add(node, PCMK_XA_ID, id);
     }
 
     return node;
@@ -1139,7 +1139,7 @@ crm_xml_set_id(xmlNode *xml, const char *format, ...)
     CRM_ASSERT(len > 0);
 
     crm_xml_sanitize_id(id);
-    crm_xml_add(xml, XML_ATTR_ID, id);
+    crm_xml_add(xml, PCMK_XA_ID, id);
     free(id);
 }
 
@@ -2098,7 +2098,7 @@ can_prune_leaf(xmlNode * xml_node)
     for (xmlAttrPtr a = pcmk__xe_first_attr(xml_node); a != NULL; a = a->next) {
         const char *p_name = (const char *) a->name;
 
-        if (strcmp(p_name, XML_ATTR_ID) == 0) {
+        if (strcmp(p_name, PCMK_XA_ID) == 0) {
             continue;
         }
         can_prune = FALSE;
@@ -2230,7 +2230,7 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
     object_name = (const char *) update->name;
     object_href_val = ID(update);
     if (object_href_val != NULL) {
-        object_href = XML_ATTR_ID;
+        object_href = PCMK_XA_ID;
     } else {
         object_href_val = crm_element_value(update, XML_ATTR_IDREF);
         object_href = (object_href_val == NULL) ? NULL : XML_ATTR_IDREF;
@@ -2572,7 +2572,7 @@ expand_idref(xmlNode * input, xmlNode * top)
         top = input;
     }
 
-    xpath = crm_strdup_printf("//%s[@" XML_ATTR_ID "='%s']", input->name, ref);
+    xpath = crm_strdup_printf("//%s[@" PCMK_XA_ID "='%s']", input->name, ref);
     result = get_xpath_object(xpath, top, LOG_DEBUG);
     if (result == NULL) { // Not possible with schema validation enabled
         pcmk__config_err("Ignoring invalid %s configuration: "
@@ -2718,7 +2718,7 @@ xmlNode *
 find_entity(xmlNode *parent, const char *node_name, const char *id)
 {
     return pcmk__xe_match(parent, node_name,
-                          ((id == NULL)? id : XML_ATTR_ID), id);
+                          ((id == NULL)? id : PCMK_XA_ID), id);
 }
 
 void

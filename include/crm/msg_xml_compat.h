@@ -79,7 +79,7 @@ extern "C" {
 //! \deprecated Do not use (will be removed in a future release)
 #define XML_TAG_OP_VER_META "op_versioned_meta"
 
-//! \deprecated Use \p XML_ATTR_ID instead
+//! \deprecated Use \p PCMK_XA_ID instead
 #define XML_ATTR_UUID "id"
 
 //! \deprecated Do not use (will be removed in a future release)

@@ -181,7 +181,7 @@ remove_cib_device(xmlXPathObjectPtr xpathObj)
             continue;
         }
 
-        rsc_id = crm_element_value(match, XML_ATTR_ID);
+        rsc_id = crm_element_value(match, PCMK_XA_ID);
 
         stonith_device_remove(rsc_id, true);
     }
@@ -293,7 +293,7 @@ update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
             const char *standard = NULL;
             xmlNode *match = getXpathResult(xpath_obj, lpc);
 
-            rsc_id = crm_element_value(match, XML_ATTR_ID);
+            rsc_id = crm_element_value(match, PCMK_XA_ID);
             standard = crm_element_value(match, XML_AGENT_ATTR_CLASS);
 
             if (!pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
@@ -344,9 +344,9 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
                 break;
             }
             pcmk__str_update(&mutable, xpath);
-            rsc_id = strstr(mutable, "primitive[@" XML_ATTR_ID "=\'");
+            rsc_id = strstr(mutable, "primitive[@" PCMK_XA_ID "=\'");
             if (rsc_id != NULL) {
-                rsc_id += strlen("primitive[@" XML_ATTR_ID "=\'");
+                rsc_id += strlen("primitive[@" PCMK_XA_ID "=\'");
                 search = strchr(rsc_id, '\'');
             }
             if (search != NULL) {

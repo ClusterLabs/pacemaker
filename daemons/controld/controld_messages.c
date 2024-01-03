@@ -848,7 +848,7 @@ handle_node_list(const xmlNode *request)
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
         xmlNode *xml = create_xml_node(reply_data, XML_CIB_TAG_NODE);
 
-        crm_xml_add_ll(xml, XML_ATTR_ID, (long long) node->id); // uint32_t
+        crm_xml_add_ll(xml, PCMK_XA_ID, (long long) node->id); // uint32_t
         crm_xml_add(xml, XML_ATTR_UNAME, node->uname);
         crm_xml_add(xml, PCMK__XA_IN_CCM, node->state);
     }
@@ -892,7 +892,7 @@ handle_node_info_request(const xmlNode *msg)
                                        controld_has_quorum));
 
     // Check whether client requested node info by ID and/or name
-    crm_element_value_int(msg, XML_ATTR_ID, &node_id);
+    crm_element_value_int(msg, PCMK_XA_ID, &node_id);
     if (node_id < 0) {
         node_id = 0;
     }
@@ -905,7 +905,7 @@ handle_node_info_request(const xmlNode *msg)
 
     node = pcmk__search_node_caches(node_id, value, CRM_GET_PEER_ANY);
     if (node) {
-        crm_xml_add(reply_data, XML_ATTR_ID, node->uuid);
+        crm_xml_add(reply_data, PCMK_XA_ID, node->uuid);
         crm_xml_add(reply_data, XML_ATTR_UNAME, node->uname);
         crm_xml_add(reply_data, PCMK__XA_CRMD, node->state);
         pcmk__xe_set_bool_attr(reply_data, XML_NODE_IS_REMOTE,
@@ -1135,7 +1135,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
         int id = 0;
         const char *name = NULL;
 
-        crm_element_value_int(stored_msg, XML_ATTR_ID, &id);
+        crm_element_value_int(stored_msg, PCMK_XA_ID, &id);
         name = crm_element_value(stored_msg, XML_ATTR_UNAME);
 
         if(cause == C_IPC_MESSAGE) {
@@ -1323,7 +1323,7 @@ broadcast_remote_state_message(const char *node_name, bool node_up)
     crm_info("Notifying cluster of Pacemaker Remote node %s %s",
              node_name, node_up? "coming up" : "going down");
 
-    crm_xml_add(msg, XML_ATTR_ID, node_name);
+    crm_xml_add(msg, PCMK_XA_ID, node_name);
     pcmk__xe_set_bool_attr(msg, PCMK__XA_IN_CCM, node_up);
 
     if (node_up) {

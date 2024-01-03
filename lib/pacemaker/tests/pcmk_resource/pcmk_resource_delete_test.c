@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 the Pacemaker project contributors
+ * Copyright 2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -112,7 +112,7 @@ find_rsc(const char *rsc)
 
     pcmk__g_strcat(xpath,
                    pcmk_cib_xpath_for(XML_CIB_TAG_RESOURCES),
-                   "//*[@" XML_ATTR_ID "=\"", rsc, "\"]", NULL);
+                   "//*[@" PCMK_XA_ID "=\"", rsc, "\"]", NULL);
 
     cib->cmds->query(cib, (const char *) xpath->str, &xml_search,
                      cib_xpath|cib_scope_local);

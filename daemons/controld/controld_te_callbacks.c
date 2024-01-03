@@ -22,7 +22,7 @@
 void te_update_confirm(const char *event, xmlNode * msg);
 
 #define RSC_OP_PREFIX "//" XML_TAG_DIFF_ADDED "//" XML_TAG_CIB \
-                      "//" XML_LRM_TAG_RSC_OP "[@" XML_ATTR_ID "='"
+                      "//" XML_LRM_TAG_RSC_OP "[@" PCMK_XA_ID "='"
 
 // An explicit PCMK_OPT_SHUTDOWN_LOCK of 0 means the lock has been cleared
 static bool
@@ -267,12 +267,12 @@ static char *extract_node_uuid(const char *xpath)
     char *search = NULL;
     char *match = NULL;
 
-    match = strstr(mutable_path, "node_state[@" XML_ATTR_ID "=\'");
+    match = strstr(mutable_path, "node_state[@" PCMK_XA_ID "=\'");
     if (match == NULL) {
         free(mutable_path);
         return NULL;
     }
-    match += strlen("node_state[@" XML_ATTR_ID "=\'");
+    match += strlen("node_state[@" PCMK_XA_ID "=\'");
 
     search = strchr(match, '\'');
     if (search == NULL) {

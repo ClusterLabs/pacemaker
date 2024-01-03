@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2023 the Pacemaker project contributors
+ * Copyright 2015-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -228,7 +228,7 @@ pe_unpack_alerts(const xmlNode *alerts)
 
         /* The schema should enforce this, but to be safe ... */
         if (alert_id == NULL) {
-            pcmk__config_warn("Ignoring invalid alert without " XML_ATTR_ID);
+            pcmk__config_warn("Ignoring invalid alert without " PCMK_XA_ID);
             crm_log_xml_info(alert, "missing-id");
             continue;
         }

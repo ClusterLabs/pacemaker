@@ -132,9 +132,9 @@ set_node_info_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
      * @TODO: Improve handling after crm_node_t is refactored to handle layer-
      * specific data better.
      */
-    crm_element_value_int(msg_data, XML_ATTR_ID, &(data->data.node_info.id));
+    crm_element_value_int(msg_data, PCMK_XA_ID, &(data->data.node_info.id));
 
-    data->data.node_info.uuid = crm_element_value(msg_data, XML_ATTR_ID);
+    data->data.node_info.uuid = crm_element_value(msg_data, PCMK_XA_ID);
     data->data.node_info.uname = crm_element_value(msg_data, XML_ATTR_UNAME);
     data->data.node_info.state = crm_element_value(msg_data, PCMK__XA_CRMD);
 }
@@ -165,7 +165,7 @@ set_nodes_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
         long long id_ll = 0;
 
         node_info = calloc(1, sizeof(pcmk_controld_api_node_t));
-        crm_element_value_ll(node, XML_ATTR_ID, &id_ll);
+        crm_element_value_ll(node, PCMK_XA_ID, &id_ll);
         if (id_ll > 0) {
             node_info->id = id_ll;
         }
@@ -509,7 +509,7 @@ controller_resource_op(pcmk_ipc_api_t *api, const char *op,
     }
 
     xml_rsc = create_xml_node(msg_data, XML_CIB_TAG_RESOURCE);
-    crm_xml_add(xml_rsc, XML_ATTR_ID, rsc_id);
+    crm_xml_add(xml_rsc, PCMK_XA_ID, rsc_id);
     crm_xml_add(xml_rsc, XML_ATTR_ID_LONG, rsc_long_id);
     crm_xml_add(xml_rsc, XML_AGENT_ATTR_CLASS, standard);
     crm_xml_add(xml_rsc, XML_AGENT_ATTR_PROVIDER, provider);

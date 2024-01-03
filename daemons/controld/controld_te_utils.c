@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -453,7 +453,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
             do_crm_log(level, "Transition %d aborted by %s doing %s %s=%s: %s "
                        CRM_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",
                        controld_globals.transition_graph->id,
-                       crm_element_value(reason, XML_ATTR_ID), op,
+                       crm_element_value(reason, PCMK_XA_ID), op,
                        crm_element_value(reason, XML_NVPAIR_ATTR_NAME),
                        crm_element_value(reason, XML_NVPAIR_ATTR_VALUE),
                        abort_text, add[0], add[1], add[2], fn, line, path,
