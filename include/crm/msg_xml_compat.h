@@ -169,6 +169,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_CRM_TIMESTAMP instead
 #define XML_ATTR_TSTAMP PCMK_XA_CRM_TIMESTAMP
 
+//! \deprecated Use \c PCMK_XA_CIB_LAST_WRITTEN instead
+#define XML_CIB_ATTR_WRITTEN PCMK_XA_CIB_LAST_WRITTEN
+
 #ifdef __cplusplus
 }
 #endif
