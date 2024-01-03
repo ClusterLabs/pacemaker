@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 the Pacemaker project contributors
+ * Copyright 2020-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -228,7 +228,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
 
     // Parse useful info from reply
     msg_data = get_message_xml(reply, F_CRM_DATA);
-    crm_element_value_ll(msg_data, XML_ATTR_TSTAMP, &value_ll);
+    crm_element_value_ll(msg_data, PCMK_XA_CRM_TIMESTAMP, &value_ll);
 
     if (pcmk__str_eq(value, CRM_OP_PING, pcmk__str_none)) {
         reply_data.reply_type = pcmk_pacemakerd_reply_ping;

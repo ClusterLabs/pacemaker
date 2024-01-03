@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2022 the Pacemaker project contributors
+ * Copyright 2010-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -56,7 +56,7 @@ handle_ping_request(pcmk__request_t *request)
     value = crm_element_value(msg, F_CRM_SYS_TO);
     crm_xml_add(ping, XML_PING_ATTR_SYSFROM, value);
     crm_xml_add(ping, XML_PING_ATTR_PACEMAKERDSTATE, pacemakerd_state);
-    crm_xml_add_ll(ping, XML_ATTR_TSTAMP,
+    crm_xml_add_ll(ping, PCMK_XA_CRM_TIMESTAMP,
                    (long long) subdaemon_check_progress);
     crm_xml_add(ping, XML_PING_ATTR_STATUS, "ok");
     reply = create_reply(msg, ping);

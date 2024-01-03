@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -135,7 +135,7 @@ extern "C" {
 #define PE_OBJ_T_MASTER             "master"
 #define SERVICE_SCRIPT              "/sbin/service"
 #define SOCKET_LEN                  1024
-#define TSTAMP(x)                   crm_element_value(x, XML_ATTR_TSTAMP)
+#define TSTAMP(x)                   crm_element_value(x, PCMK_XA_CRM_TIMESTAMP)
 #define XML_ATTR_TAGNAME            F_XML_TAGNAME
 #define XML_ATTR_FILTER_TYPE        "type-filter"
 #define XML_ATTR_FILTER_ID          "id-filter"
