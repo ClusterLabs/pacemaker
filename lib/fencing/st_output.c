@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 the Pacemaker project contributors
+ * Copyright 2019-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -345,7 +345,7 @@ last_fenced_xml(pcmk__output_t *out, va_list args) {
         char *buf = timespec_string(when, 0, false);
 
         pcmk__output_create_xml_node(out, "last-fenced",
-                                     "target", target,
+                                     PCMK_XA_TARGET, target,
                                      "when", buf,
                                      NULL);
 
@@ -456,12 +456,14 @@ stonith_event_xml(pcmk__output_t *out, va_list args)
     const char *succeeded G_GNUC_UNUSED = va_arg(args, const char *);
     uint32_t show_opts G_GNUC_UNUSED = va_arg(args, uint32_t);
 
-    xmlNodePtr node = pcmk__output_create_xml_node(out, "fence_event",
-                                                   "action", event->action,
-                                                   "target", event->target,
-                                                   "client", event->client,
-                                                   "origin", event->origin,
-                                                   NULL);
+    xmlNodePtr node = NULL;
+
+    node = pcmk__output_create_xml_node(out, "fence_event",
+                                        "action", event->action,
+                                        PCMK_XA_TARGET, event->target,
+                                        "client", event->client,
+                                        "origin", event->origin,
+                                        NULL);
 
     switch (event->state) {
         case st_failed:

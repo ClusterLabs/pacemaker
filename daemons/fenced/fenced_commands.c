@@ -1581,7 +1581,7 @@ stonith_level_key(const xmlNode *level, enum fenced_target_by mode)
     }
     switch (mode) {
         case fenced_target_by_name:
-            return crm_element_value_copy(level, XML_ATTR_STONITH_TARGET);
+            return crm_element_value_copy(level, PCMK_XA_TARGET);
 
         case fenced_target_by_pattern:
             return crm_element_value_copy(level, XML_ATTR_STONITH_TARGET_PATTERN);
@@ -1607,7 +1607,7 @@ stonith_level_key(const xmlNode *level, enum fenced_target_by mode)
 static enum fenced_target_by
 unpack_level_kind(const xmlNode *level)
 {
-    if (crm_element_value(level, XML_ATTR_STONITH_TARGET) != NULL) {
+    if (crm_element_value(level, PCMK_XA_TARGET) != NULL) {
         return fenced_target_by_name;
     }
     if (crm_element_value(level, XML_ATTR_STONITH_TARGET_PATTERN) != NULL) {

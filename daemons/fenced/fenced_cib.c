@@ -90,7 +90,7 @@ topology_remove_helper(const char *node, int level)
 
     crm_xml_add(data, F_STONITH_ORIGIN, __func__);
     crm_xml_add_int(data, PCMK_XA_INDEX, level);
-    crm_xml_add(data, XML_ATTR_STONITH_TARGET, node);
+    crm_xml_add(data, PCMK_XA_TARGET, node);
 
     fenced_unregister_level(data, &desc, &result);
     fenced_send_level_notification(STONITH_OP_LEVEL_DEL, &result, desc);

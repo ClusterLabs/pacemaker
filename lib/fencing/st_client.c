@@ -373,7 +373,7 @@ stonith_api_remove_level_full(stonith_t *st, int options,
     crm_xml_add(data, F_STONITH_ORIGIN, __func__);
 
     if (node) {
-        crm_xml_add(data, XML_ATTR_STONITH_TARGET, node);
+        crm_xml_add(data, PCMK_XA_TARGET, node);
 
     } else if (pattern) {
         crm_xml_add(data, XML_ATTR_STONITH_TARGET_PATTERN, pattern);
@@ -430,7 +430,7 @@ create_level_registration_xml(const char *node, const char *pattern,
     crm_xml_add_int(data, PCMK_XA_INDEX, level);
 
     if (node) {
-        crm_xml_add(data, XML_ATTR_STONITH_TARGET, node);
+        crm_xml_add(data, PCMK_XA_TARGET, node);
 
     } else if (pattern) {
         crm_xml_add(data, XML_ATTR_STONITH_TARGET_PATTERN, pattern);

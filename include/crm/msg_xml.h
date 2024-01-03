@@ -76,6 +76,7 @@ extern "C" {
 #define PCMK_XA_PROVIDER                    "provider"
 #define PCMK_XA_REFERENCE                   "reference"
 #define PCMK_XA_REQUEST                     "request"
+#define PCMK_XA_TARGET                      "target"
 #define PCMK_XA_TYPE                        "type"
 #define PCMK_XA_UNAME                       "uname"
 #define PCMK_XA_UPDATE_CLIENT               "update-client"

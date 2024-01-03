@@ -1462,7 +1462,7 @@ inject_fencing_action_xml(pcmk__output_t *out, va_list args)
     }
 
     pcmk__output_create_xml_node(out, "fencing_action",
-                                 "target", target,
+                                 PCMK_XA_TARGET, target,
                                  PCMK_XA_OP, op,
                                  NULL);
     return pcmk_rc_ok;
