@@ -285,7 +285,7 @@ cib_process_upgrade(const char *op, int options, const char *section, xmlNode * 
                            !(options & cib_verbose));
     if (new_version > current_version) {
         update_counter(*result_cib, XML_ATTR_GENERATION_ADMIN, false);
-        update_counter(*result_cib, XML_ATTR_GENERATION, true);
+        update_counter(*result_cib, PCMK_XA_EPOCH, true);
         update_counter(*result_cib, XML_ATTR_NUMUPDATES, true);
         return pcmk_ok;
     }
@@ -300,10 +300,10 @@ cib_process_bump(const char *op, int options, const char *section, xmlNode * req
     int result = pcmk_ok;
 
     crm_trace("Processing %s for epoch='%s'", op,
-              pcmk__s(crm_element_value(existing_cib, XML_ATTR_GENERATION), ""));
+              pcmk__s(crm_element_value(existing_cib, PCMK_XA_EPOCH), ""));
 
     *answer = NULL;
-    update_counter(*result_cib, XML_ATTR_GENERATION, false);
+    update_counter(*result_cib, PCMK_XA_EPOCH, false);
 
     return result;
 }
@@ -380,7 +380,7 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
             /* no more checks */
 
         } else if (replace_epoch < epoch) {
-            reason = XML_ATTR_GENERATION;
+            reason = PCMK_XA_EPOCH;
 
         } else if (replace_epoch > epoch) {
             /* no more checks */
@@ -829,7 +829,7 @@ cib__config_changed_v1(xmlNode *last, xmlNode *next, xmlNode **diff)
     for (lpc = 0; lpc < max; lpc++) {
         xmlNode *top = getXpathResult(xpathObj, lpc);
 
-        if (crm_element_value(top, XML_ATTR_GENERATION) != NULL) {
+        if (crm_element_value(top, PCMK_XA_EPOCH) != NULL) {
             config_changes = true;
             goto done;
         }

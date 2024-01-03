@@ -457,14 +457,19 @@ process_ping_reply(xmlNode *reply)
         crm_trace("Processing ping reply %s from %s (%s)", seq_s, host, digest);
         if (!pcmk__str_eq(ping_digest, digest, pcmk__str_casei)) {
             xmlNode *remote_cib = get_message_xml(pong, F_CIB_CALLDATA);
+            const char *epoch_s = "_";
+
+            if (remote_cib != NULL) {
+                epoch_s = crm_element_value(remote_cib, PCMK_XA_EPOCH);
+            }
 
             crm_notice("Local CIB %s.%s.%s.%s differs from %s: %s.%s.%s.%s %p",
                        crm_element_value(the_cib, XML_ATTR_GENERATION_ADMIN),
-                       crm_element_value(the_cib, XML_ATTR_GENERATION),
+                       crm_element_value(the_cib, PCMK_XA_EPOCH),
                        crm_element_value(the_cib, XML_ATTR_NUMUPDATES),
                        ping_digest, host,
                        remote_cib?crm_element_value(remote_cib, XML_ATTR_GENERATION_ADMIN):"_",
-                       remote_cib?crm_element_value(remote_cib, XML_ATTR_GENERATION):"_",
+                       epoch_s,
                        remote_cib?crm_element_value(remote_cib, XML_ATTR_NUMUPDATES):"_",
                        digest, remote_cib);
 
@@ -1125,6 +1130,11 @@ cib_process_request(xmlNode *request, gboolean privileged,
         time_t now = time(NULL);
         int level = LOG_INFO;
         const char *section = crm_element_value(request, F_CIB_SECTION);
+        const char *epoch_s = "0";
+
+        if (the_cib != NULL) {
+            epoch_s = crm_element_value(the_cib, PCMK_XA_EPOCH);
+        }
 
         rc = cib_process_command(request, operation, op_function, &op_reply,
                                  &result_diff, privileged);
@@ -1155,7 +1165,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
                    op, section ? section : "'all'", pcmk_strerror(rc), rc,
                    originator ? originator : "local", client_name, call_id,
                    the_cib ? crm_element_value(the_cib, XML_ATTR_GENERATION_ADMIN) : "0",
-                   the_cib ? crm_element_value(the_cib, XML_ATTR_GENERATION) : "0",
+                   epoch_s,
                    the_cib ? crm_element_value(the_cib, XML_ATTR_NUMUPDATES) : "0");
 
         finished = time(NULL);

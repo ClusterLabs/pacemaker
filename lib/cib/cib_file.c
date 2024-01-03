@@ -923,7 +923,7 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
     char *digest = NULL;
 
     /* Detect CIB version for diagnostic purposes */
-    const char *epoch = crm_element_value(cib_root, XML_ATTR_GENERATION);
+    const char *epoch = crm_element_value(cib_root, PCMK_XA_EPOCH);
     const char *admin_epoch = crm_element_value(cib_root,
                                                 XML_ATTR_GENERATION_ADMIN);
 

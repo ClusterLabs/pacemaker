@@ -51,7 +51,7 @@ cib_version_details(xmlNode * cib, int *admin_epoch, int *epoch, int *updates)
         return FALSE;
 
     } else {
-        crm_element_value_int(cib, XML_ATTR_GENERATION, epoch);
+        crm_element_value_int(cib, PCMK_XA_EPOCH, epoch);
         crm_element_value_int(cib, XML_ATTR_NUMUPDATES, updates);
         crm_element_value_int(cib, XML_ATTR_GENERATION_ADMIN, admin_epoch);
     }
@@ -229,7 +229,7 @@ cib__element_in_patchset(const xmlNode *patchset, const char *element)
 /*!
  * \brief Create XML for a new (empty) CIB
  *
- * \param[in] cib_epoch   What to use as "epoch" CIB property
+ * \param[in] cib_epoch  What to use as \c PCMK_XA_EPOCH CIB attribute
  *
  * \return Newly created XML for empty CIB
  * \note It is the caller's responsibility to free the result with free_xml().
@@ -243,7 +243,7 @@ createEmptyCib(int cib_epoch)
     crm_xml_add(cib_root, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
     crm_xml_add(cib_root, PCMK_XA_VALIDATE_WITH, xml_latest_schema());
 
-    crm_xml_add_int(cib_root, XML_ATTR_GENERATION, cib_epoch);
+    crm_xml_add_int(cib_root, PCMK_XA_EPOCH, cib_epoch);
     crm_xml_add_int(cib_root, XML_ATTR_NUMUPDATES, 0);
     crm_xml_add_int(cib_root, XML_ATTR_GENERATION_ADMIN, 0);
 
@@ -495,11 +495,11 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
             rc = -pcmk_err_old_data;
 
         } else if (old == new) {
-            crm_element_value_int(scratch, XML_ATTR_GENERATION, &new);
-            crm_element_value_int(patchset_cib, XML_ATTR_GENERATION, &old);
+            crm_element_value_int(scratch, PCMK_XA_EPOCH, &new);
+            crm_element_value_int(patchset_cib, PCMK_XA_EPOCH, &old);
             if (old > new) {
                 crm_err("%s went backwards: %d -> %d (Opts: %#x)",
-                        XML_ATTR_GENERATION, old, new, call_options);
+                        PCMK_XA_EPOCH, old, new, call_options);
                 crm_log_xml_warn(req, "Bad Op");
                 crm_log_xml_warn(input, "Bad Data");
                 rc = -pcmk_err_old_data;

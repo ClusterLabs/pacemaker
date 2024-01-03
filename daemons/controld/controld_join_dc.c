@@ -412,7 +412,7 @@ do_dc_join_filter_offer(long long action,
 
         const char *attributes[] = {
             XML_ATTR_GENERATION_ADMIN,
-            XML_ATTR_GENERATION,
+            PCMK_XA_EPOCH,
             XML_ATTR_NUMUPDATES,
         };
 

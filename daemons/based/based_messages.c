@@ -165,7 +165,7 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
     crm_info("Reporting our current digest to %s: %s for %s.%s.%s",
              host, digest,
              crm_element_value(existing_cib, XML_ATTR_GENERATION_ADMIN),
-             crm_element_value(existing_cib, XML_ATTR_GENERATION),
+             crm_element_value(existing_cib, PCMK_XA_EPOCH),
              crm_element_value(existing_cib, XML_ATTR_NUMUPDATES));
 
     free(digest);

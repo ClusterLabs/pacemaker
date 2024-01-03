@@ -210,7 +210,7 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
 {
     const char *vfields[] = {
         XML_ATTR_GENERATION_ADMIN,
-        XML_ATTR_GENERATION,
+        PCMK_XA_EPOCH,
         XML_ATTR_NUMUPDATES,
     };
 

@@ -283,7 +283,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
         crm_xml_add_int(root, name, 0);
     }
 
-    name = XML_ATTR_GENERATION;
+    name = PCMK_XA_EPOCH;
     value = crm_element_value(root, name);
     if (value == NULL) {
         crm_xml_add_int(root, name, 0);

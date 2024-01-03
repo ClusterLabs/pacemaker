@@ -226,7 +226,7 @@ cib_devices_update(void)
 
     crm_info("Updating devices to version %s.%s.%s",
              crm_element_value(local_cib, XML_ATTR_GENERATION_ADMIN),
-             crm_element_value(local_cib, XML_ATTR_GENERATION),
+             crm_element_value(local_cib, PCMK_XA_EPOCH),
              crm_element_value(local_cib, XML_ATTR_NUMUPDATES));
 
     g_hash_table_iter_init(&iter, device_list);

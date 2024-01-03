@@ -49,6 +49,7 @@ extern "C" {
  */
 
 #define PCMK_XA_CRM_FEATURE_SET             "crm_feature_set"
+#define PCMK_XA_EPOCH                       "epoch"
 #define PCMK_XA_FORMAT                      "format"
 #define PCMK_XA_HAVE_QUORUM                 "have-quorum"
 #define PCMK_XA_NO_QUORUM_PANIC             "no-quorum-panic"
