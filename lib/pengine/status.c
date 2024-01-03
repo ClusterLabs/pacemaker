@@ -89,7 +89,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
 
     if (scheduler->dc_uuid == NULL) {
         scheduler->dc_uuid = crm_element_value_copy(scheduler->input,
-                                                    XML_ATTR_DC_UUID);
+                                                    PCMK_XA_DC_UUID);
     }
 
     if (pcmk__xe_attr_is_true(scheduler->input, PCMK_XA_HAVE_QUORUM)) {
