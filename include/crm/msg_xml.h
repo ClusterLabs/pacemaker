@@ -147,7 +147,6 @@ extern "C" {
 #  define XML_TAG_FAILED		"failed"
 
 #  define XML_ATTR_TIMEOUT		"timeout"
-#  define XML_ATTR_TSTAMP		"crm-timestamp"
 #  define XML_CIB_ATTR_WRITTEN		"cib-last-written"
 #  define XML_ATTR_VERSION		"version"
 #  define XML_ATTR_DESC			"description"
