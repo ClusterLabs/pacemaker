@@ -94,7 +94,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
      */
     char *xpath = crm_strdup_printf("//" XML_CIB_TAG_RESOURCE
                                     "[@" PCMK_XA_ID "='%s']"
-                                    "//" XML_ATTR_OP
+                                    "//" PCMK_XE_OP
                                     "[@" XML_OP_ATTR_ON_FAIL "='block']",
                                     xml_name);
 

@@ -41,14 +41,14 @@ extern "C" {
  */
 
 #define PCMK_XE_DATE_EXPRESSION             "date_expression"
+#define PCMK_XE_OP                          "op"
 #define PCMK_XE_OP_EXPRESSION               "op_expression"
+#define PCMK_XE_RSC_EXPRESSION              "rsc_expression"
 
 /* This has been deprecated as a CIB element (an alias for <clone> with
  * PCMK_META_PROMOTABLE set to "true") since 2.0.0.
  */
 #define PCMK_XE_PROMOTABLE_LEGACY           "master"
-
-#define PCMK_XE_RSC_EXPRESSION              "rsc_expression"
 
 
 /*

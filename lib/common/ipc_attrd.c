@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 the Pacemaker project contributors
+ * Copyright 2011-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -457,7 +457,7 @@ pcmk__attrd_api_update_list(pcmk_ipc_api_t *api, GList *attrs, const char *dampe
              * then we also add the task to each child node in populate_update_op
              * so attrd_client_update knows what form of update is taking place.
              */
-            child = create_xml_node(request, XML_ATTR_OP);
+            child = create_xml_node(request, PCMK_XE_OP);
             target = pcmk__node_attr_target(pair->node);
 
             if (target != NULL) {

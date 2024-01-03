@@ -271,7 +271,7 @@ expand_regexes(xmlNode *xml, const char *attr, const char *value, const char *re
             int status = regexec(&r_patt, attr, 0, NULL, 0);
 
             if (status == 0) {
-                xmlNode *child = create_xml_node(xml, XML_ATTR_OP);
+                xmlNode *child = create_xml_node(xml, PCMK_XE_OP);
 
                 crm_trace("Matched %s with %s", attr, regex);
                 matched = true;
@@ -417,8 +417,9 @@ attrd_client_update(pcmk__request_t *request)
              * we also need to apply all the transformations in this function
              * to the children since they don't happen anywhere else.
              */
-            for (xmlNode *child = first_named_child(xml, XML_ATTR_OP); child != NULL;
-                 child = crm_next_same_xml(child)) {
+            for (xmlNode *child = first_named_child(xml, PCMK_XE_OP);
+                 child != NULL; child = crm_next_same_xml(child)) {
+
                 attr = crm_element_value(child, PCMK__XA_ATTR_NAME);
                 value = crm_element_value(child, PCMK__XA_ATTR_VALUE);
 
@@ -444,7 +445,7 @@ attrd_client_update(pcmk__request_t *request)
              * up into individual messages and call attrd_client_update on
              * each one.
              */
-            pcmk__xe_foreach_child(xml, XML_ATTR_OP, send_child_update, request);
+            pcmk__xe_foreach_child(xml, PCMK_XE_OP, send_child_update, request);
             request->xml = orig_xml;
         }
 

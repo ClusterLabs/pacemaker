@@ -283,7 +283,7 @@ static GOptionEntry command_entries[] = {
 
     { "delete", 'D', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "Delete first object matching supplied criteria (for example, "
-      "<" XML_ATTR_OP " " PCMK_XA_ID "=\"rsc1_op1\" "
+      "<" PCMK_XE_OP " " PCMK_XA_ID "=\"rsc1_op1\" "
           PCMK_XA_NAME "=\"monitor\"/>).\n"
       INDENT "The XML element name and all attributes must match in order for "
       "the element to be deleted.",
