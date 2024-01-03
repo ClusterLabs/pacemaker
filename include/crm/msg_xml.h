@@ -190,7 +190,6 @@ extern "C" {
 
 #  define XML_FAIL_TAG_CIB		"failed_update"
 
-#  define XML_FAILCIB_ATTR_ID		"id"
 #  define XML_FAILCIB_ATTR_OBJTYPE	"object_type"
 #  define XML_FAILCIB_ATTR_OP		"operation"
 #  define XML_FAILCIB_ATTR_REASON	"reason"
