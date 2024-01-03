@@ -313,6 +313,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_UPDATE_ORIGIN instead
 #define XML_ATTR_UPDATE_ORIG PCMK_XA_UPDATE_ORIGIN
 
+//! \deprecated Use \c PCMK_XA_UPDATE_CLIENT instead
+#define XML_ATTR_UPDATE_CLIENT PCMK_XA_UPDATE_CLIENT
+
 #ifdef __cplusplus
 }
 #endif
