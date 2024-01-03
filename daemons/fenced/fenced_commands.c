@@ -1588,7 +1588,7 @@ stonith_level_key(const xmlNode *level, enum fenced_target_by mode)
 
         case fenced_target_by_attribute:
             return crm_strdup_printf("%s=%s",
-                crm_element_value(level, XML_ATTR_STONITH_TARGET_ATTRIBUTE),
+                crm_element_value(level, PCMK_XA_TARGET_ATTRIBUTE),
                 crm_element_value(level, PCMK_XA_TARGET_VALUE));
 
         default:
@@ -1614,7 +1614,7 @@ unpack_level_kind(const xmlNode *level)
         return fenced_target_by_pattern;
     }
     if (!stand_alone /* if standalone, there's no attribute manager */
-        && (crm_element_value(level, XML_ATTR_STONITH_TARGET_ATTRIBUTE) != NULL)
+        && (crm_element_value(level, PCMK_XA_TARGET_ATTRIBUTE) != NULL)
         && (crm_element_value(level, PCMK_XA_TARGET_VALUE) != NULL)) {
         return fenced_target_by_attribute;
     }
@@ -1790,7 +1790,8 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
         tp->target_value = crm_element_value_copy(level, PCMK_XA_TARGET_VALUE);
         tp->target_pattern = crm_element_value_copy(level,
                                                     PCMK_XA_TARGET_PATTERN);
-        tp->target_attribute = crm_element_value_copy(level, XML_ATTR_STONITH_TARGET_ATTRIBUTE);
+        tp->target_attribute = crm_element_value_copy(level,
+                                                      PCMK_XA_TARGET_ATTRIBUTE);
 
         g_hash_table_replace(topology, tp->target, tp);
         crm_trace("Added %s (%d) to the topology (%d active entries)",
