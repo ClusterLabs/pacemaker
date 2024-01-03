@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2022 the Pacemaker project contributors
+ * Copyright 2015-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,8 +16,8 @@
 #include <crm/pengine/common.h>
 #include <crm/pengine/rules.h>
 
-GList *pe_unpack_alerts(const xmlNode *alerts);
-void pe_free_alert_list(GList *alert_list);
+GList *pe__unpack_alerts(const xmlNode *alerts);
+void pe__free_alert_list(GList *alert_list);
 
 gboolean pe__eval_attr_expr(const xmlNode *expr,
                             const pe_rule_eval_data_t *rule_data);
@@ -31,6 +31,6 @@ gboolean pe__eval_role_expr(const xmlNode *expr,
 gboolean pe__eval_rsc_expr(const xmlNode *expr,
                            const pe_rule_eval_data_t *rule_data);
 
-int pe_cron_range_satisfied(const crm_time_t *now, const xmlNode *cron_spec);
+int pe__cron_range_satisfied(const crm_time_t *now, const xmlNode *cron_spec);
 
 #endif

@@ -21,6 +21,7 @@ header_HEADERS = acl.h 			\
 		 ipc_pacemakerd.h 	\
 		 ipc_schedulerd.h 	\
 		 iso8601.h 		\
+		 iso8601_compat.h	\
 		 logging.h 		\
 		 logging_compat.h 	\
 		 mainloop.h 		\

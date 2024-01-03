@@ -56,6 +56,7 @@ extern "C" {
 #define PCMK_XA_PROMOTED_MAX_LEGACY         "master-max"
 #define PCMK_XA_PROMOTED_NODE_MAX_LEGACY    "master-node-max"
 
+#define PCMK_XA_TIME_ZONE                   "timezone"
 
 /*
  * Meta attributes

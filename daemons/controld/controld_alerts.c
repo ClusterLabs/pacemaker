@@ -26,8 +26,8 @@ static GList *crmd_alert_list = NULL;
 void
 crmd_unpack_alerts(xmlNode *alerts)
 {
-    pe_free_alert_list(crmd_alert_list);
-    crmd_alert_list = pe_unpack_alerts(alerts);
+    pe__free_alert_list(crmd_alert_list);
+    crmd_alert_list = pe__unpack_alerts(alerts);
 }
 
 void

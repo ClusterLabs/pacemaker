@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2022 the Pacemaker project contributors
+ * Copyright 2005-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -303,13 +303,71 @@ crm_time_get_timeofday(const crm_time_t *dt, uint32_t *h, uint32_t *m,
     return TRUE;
 }
 
-int
-crm_time_get_timezone(const crm_time_t *dt, uint32_t *h, uint32_t *m)
+/*!
+ * \internal
+ * \brief Get a date/time object's timezone as offset relative to UTC
+ *
+ * \param[in]  dt       Date/time object whose timezone to get
+ * \param[out] hours    Where to store hours offset from UTC
+ * \param[out] minutes  Where to store remaining minutes offset from UTC
+ *
+ * \note If the offset is negative, both \p hours and \p minutes will be set to
+ *       nonpositive values. Make note of this if formatting text. Typically, a
+ *       negative sign should precede only the hours field.
+ */
+void
+pcmk__time_get_timezone(const crm_time_t *dt, int *hours, int *minutes)
 {
-    uint32_t s;
+    // Be paranoid and don't cast (int *) to (uint32_t *)
+    uint32_t hours_u = 0;
+    uint32_t minutes_u = 0;
+    uint32_t seconds_u = 0;
 
-    crm_time_get_sec(dt->seconds, h, m, &s);
-    return TRUE;
+    CRM_ASSERT((dt != NULL) && (hours != NULL) && (minutes != NULL));
+
+    crm_time_get_sec(dt->offset, &hours_u, &minutes_u, &seconds_u);
+
+    if (dt->offset < 0) {
+        *hours = -hours_u;
+        *minutes = -minutes_u;
+    } else {
+        *hours = hours_u;
+        *minutes = minutes_u;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Set a date/time object's timezone relative to UTC
+ *
+ * \param[in,out] dt       Date/time object whose timezone to set
+ * \param[in]     hours    Hours offset from UTC
+ * \param[in]     minutes  Minutes offset from UTC
+ *
+ * \note \p hours and \p minutes are summed. If \p hours is negative, then
+ *       \p minutes typically should also be nonpositive, and vice-versa.
+ */
+void
+pcmk__time_set_timezone(crm_time_t *dt, int hours, int minutes)
+{
+    // Desired offset from UTC in seconds
+    int seconds = (hours * HOUR_SECONDS) + (minutes * 60);
+
+    // Current offsets from UTC
+    int hours_current = 0;
+    int minutes_current = 0;
+    int seconds_current = 0;
+
+    CRM_ASSERT(dt != NULL);
+
+    pcmk__time_get_timezone(dt, &hours_current, &minutes_current);
+    seconds_current = (hours_current * HOUR_SECONDS) + (minutes_current * 60);
+
+    // Adjust the object's time
+    crm_time_add_seconds(dt, seconds - seconds_current);
+
+    // Set the object's timezone
+    dt->offset = seconds;
 }
 
 long long
@@ -1969,3 +2027,20 @@ pcmk__readable_interval(guint interval_ms)
     }
     return str;
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/iso8601_compat.h>
+
+int
+crm_time_get_timezone(const crm_time_t *dt, uint32_t *h, uint32_t *m)
+{
+    uint32_t s;
+
+    crm_time_get_sec(dt->offset, h, m, &s);
+    return TRUE;
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

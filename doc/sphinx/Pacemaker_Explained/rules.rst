@@ -254,21 +254,27 @@ A ``date_expression`` element may optionally contain a ``date_spec`` or
    |               |    pair: start; date_expression                           |
    |               |                                                           |
    |               | A date/time conforming to the                             |
-   |               | `ISO8601 <https://en.wikipedia.org/wiki/ISO_8601>`_       |
+   |               | `ISO 8601 <https://en.wikipedia.org/wiki/ISO_8601>`_      |
    |               | specification. May be used when ``operation`` is          |
    |               | ``in_range`` (in which case at least one of ``start`` or  |
    |               | ``end`` must be specified) or ``gt`` (in which case       |
    |               | ``start`` is required).                                   |
+   |               |                                                           |
+   |               | Parsing of ISO 8601 timezones in date/time strings is     |
+   |               | currently incomplete and should not be relied upon.       |
    +---------------+-----------------------------------------------------------+
    | end           | .. index::                                                |
    |               |    pair: end; date_expression                             |
    |               |                                                           |
    |               | A date/time conforming to the                             |
-   |               | `ISO8601 <https://en.wikipedia.org/wiki/ISO_8601>`_       |
+   |               | `ISO 8601 <https://en.wikipedia.org/wiki/ISO_8601>`_      |
    |               | specification. May be used when ``operation`` is          |
    |               | ``in_range`` (in which case at least one of ``start`` or  |
    |               | ``end`` must be specified) or ``lt`` (in which case       |
    |               | ``end`` is required).                                     |
+   |               |                                                           |
+   |               | Parsing of ISO 8601 timezones in date/time strings is     |
+   |               | currently incomplete and should not be relied upon.       |
    +---------------+-----------------------------------------------------------+
    | operation     | .. index::                                                |
    |               |    pair: operation; date_expression                       |
@@ -288,10 +294,27 @@ A ``date_expression`` element may optionally contain a ``date_spec`` or
    |               |   the specification given in the contained ``date_spec``  |
    |               |   element (described below)                               |
    +---------------+-----------------------------------------------------------+
+   | timezone      | .. index::                                                |
+   |               |    pair: timezone; date_expression                        |
+   |               |                                                           |
+   |               | A timezone conforming to the format specified in the      |
+   |               | ``tzset(3)`` man page. The ``date_expression`` is         |
+   |               | evaluated based on the current time in this timezone.     |
+   |               | Defaults to the existing value of the ``TZ`` environment  |
+   |               | variable if set, or to the system timezone otherwise. As  |
+   |               | with ``TZ``, if the value is set but empty or cannot be   |
+   |               | interpreted, UTC is used.                                 |
+   +---------------+-----------------------------------------------------------+
 
 
 .. note:: There is no ``eq``, ``neq``, ``gte``, or ``lte`` operation, since
           they would be valid only for a single second.
+.. note:: Pacemaker will try to adjust ``start`` and ``end`` to ``timezone`` if
+          specified, or to the local timezone otherwise, for correct comparison
+          to the current time. This adjustment takes place after parsing and
+          applying the timezone (if present) from the ``start`` or ``end``
+          string. As noted above, this parsing is incomplete and should not be
+          relied upon.
 
 
 .. index::

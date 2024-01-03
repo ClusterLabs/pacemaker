@@ -101,8 +101,8 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         return;
     }
 
-    pe_free_alert_list(attrd_alert_list);
-    attrd_alert_list = pe_unpack_alerts(crmalerts);
+    pe__free_alert_list(attrd_alert_list);
+    attrd_alert_list = pe__unpack_alerts(crmalerts);
 }
 
 gboolean
