@@ -241,7 +241,7 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
 
             for (const xmlNode *child = pcmk__xml_first_child(clist);
                  child != NULL; child = pcmk__xml_next(child)) {
-                const char *name = crm_element_value(child, "name");
+                const char *name = crm_element_value(child, PCMK_XA_NAME);
 
                 op = crm_element_value(child, XML_DIFF_OP);
                 if (op == NULL) {

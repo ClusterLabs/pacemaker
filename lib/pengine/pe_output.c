@@ -84,7 +84,7 @@ add_extra_info(const pcmk_node_t *node, GList *rsc_list,
         }
 
         params = pe_rsc_params(rsc, node, scheduler);
-        name = g_hash_table_lookup(params, "name");
+        name = g_hash_table_lookup(params, PCMK_XA_NAME);
 
         if (name == NULL) {
             name = "pingd";
@@ -193,8 +193,8 @@ append_dump_text(gpointer key, gpointer value, gpointer user_data)
     *dump_text = new_text;
 }
 
-#define XPATH_STACK "//" XML_CIB_TAG_NVPAIR         \
-                    "[@" XML_NVPAIR_ATTR_NAME "='"  \
+#define XPATH_STACK "//" XML_CIB_TAG_NVPAIR \
+                    "[@" PCMK_XA_NAME "='"  \
                         PCMK_OPT_CLUSTER_INFRASTRUCTURE "']"
 
 static const char *
@@ -389,9 +389,8 @@ formatted_xml_buf(const pcmk_resource_t *rsc, bool raw)
     }
 }
 
-#define XPATH_DC_VERSION "//" XML_CIB_TAG_NVPAIR         \
-                         "[@" XML_NVPAIR_ATTR_NAME "='"  \
-                            PCMK_OPT_DC_VERSION "']"
+#define XPATH_DC_VERSION "//" XML_CIB_TAG_NVPAIR    \
+                         "[@" PCMK_XA_NAME "='" PCMK_OPT_DC_VERSION "']"
 
 PCMK__OUTPUT_ARGS("cluster-summary", "pcmk_scheduler_t *",
                   "enum pcmk_pacemakerd_state", "uint32_t", "uint32_t")
@@ -953,7 +952,7 @@ cluster_dc_xml(pcmk__output_t *out, va_list args) {
         pcmk__output_create_xml_node(out, "current_dc",
                                      "present", "true",
                                      PCMK_XA_VERSION, pcmk__s(dc_version_s, ""),
-                                     "name", dc->details->uname,
+                                     PCMK_XA_NAME, dc->details->uname,
                                      PCMK_XA_ID, dc->details->id,
                                      "with_quorum", pcmk__btoa(crm_is_true(quorum)),
                                      "mixed_version", pcmk__btoa(mixed_version),
@@ -1905,7 +1904,7 @@ node_xml(pcmk__output_t *out, va_list args) {
         feature_set = get_node_feature_set(node);
 
         pe__name_and_nvpairs_xml(out, true, "node", 15,
-                                 "name", node->details->uname,
+                                 PCMK_XA_NAME, node->details->uname,
                                  PCMK_XA_ID, node->details->id,
                                  "online", pcmk__btoa(node->details->online),
                                  "standby", pcmk__btoa(node->details->standby),
@@ -1943,7 +1942,7 @@ node_xml(pcmk__output_t *out, va_list args) {
         out->end_list(out);
     } else {
         pcmk__output_xml_create_parent(out, "node",
-                                       "name", node->details->uname,
+                                       PCMK_XA_NAME, node->details->uname,
                                        NULL);
     }
 
@@ -2131,7 +2130,7 @@ node_attribute_xml(pcmk__output_t *out, va_list args) {
     int expected_score = va_arg(args, int);
 
     xmlNodePtr node = pcmk__output_create_xml_node(out, "attribute",
-                                                   "name", name,
+                                                   PCMK_XA_NAME, name,
                                                    "value", value,
                                                    NULL);
 

@@ -364,7 +364,7 @@ delete_attr_on_node(xmlNode *child, void *userdata)
 {
     struct delete_data_s *dd = (struct delete_data_s *) userdata;
 
-    const char *attr_name = crm_element_value(child, XML_NVPAIR_ATTR_NAME);
+    const char *attr_name = crm_element_value(child, PCMK_XA_NAME);
     int rc = pcmk_rc_ok;
 
     if (!pcmk__str_eq(attr_name, options.attr_pattern, pcmk__str_regex)) {
@@ -440,7 +440,7 @@ update_attr_on_node(xmlNode *child, void *userdata)
 {
     struct update_data_s *ud = (struct update_data_s *) userdata;
 
-    const char *attr_name = crm_element_value(child, XML_NVPAIR_ATTR_NAME);
+    const char *attr_name = crm_element_value(child, PCMK_XA_NAME);
 
     if (!pcmk__str_eq(attr_name, options.attr_pattern, pcmk__str_regex)) {
         return pcmk_rc_ok;
@@ -507,7 +507,7 @@ output_one_attribute(xmlNode *node, void *userdata)
 {
     struct output_data_s *od = (struct output_data_s *) userdata;
 
-    const char *name = crm_element_value(node, XML_NVPAIR_ATTR_NAME);
+    const char *name = crm_element_value(node, PCMK_XA_NAME);
     const char *value = crm_element_value(node, XML_NVPAIR_ATTR_VALUE);
     const char *host = crm_element_value(node, PCMK__XA_ATTR_NODE_NAME);
 

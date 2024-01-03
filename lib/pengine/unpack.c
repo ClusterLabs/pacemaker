@@ -183,9 +183,9 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
 // @TODO xpaths can't handle templates, rules, or id-refs
 
 // nvpair with provides or requires set to unfencing
-#define XPATH_UNFENCING_NVPAIR XML_CIB_TAG_NVPAIR               \
-    "[(@" XML_NVPAIR_ATTR_NAME "='" PCMK_STONITH_PROVIDES "'"   \
-    "or @" XML_NVPAIR_ATTR_NAME "='" PCMK_META_REQUIRES "') "  \
+#define XPATH_UNFENCING_NVPAIR XML_CIB_TAG_NVPAIR       \
+    "[(@" PCMK_XA_NAME "='" PCMK_STONITH_PROVIDES "'"   \
+    "or @" PCMK_XA_NAME "='" PCMK_META_REQUIRES "') "   \
     "and @" XML_NVPAIR_ATTR_VALUE "='" PCMK__VALUE_UNFENCING "']"
 
 // unfencing in rsc_defaults or any resource
@@ -554,7 +554,7 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pcmk_scheduler_t *data
         for (attr = pcmk__xe_first_child(attr_set); attr != NULL;
              attr = pcmk__xe_next(attr)) {
             const char *value = crm_element_value(attr, XML_NVPAIR_ATTR_VALUE);
-            const char *name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
+            const char *name = crm_element_value(attr, PCMK_XA_NAME);
 
             if (name == NULL) { // Sanity
                 continue;

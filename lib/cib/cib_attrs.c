@@ -121,13 +121,13 @@ find_attr(cib_t *cib, const char *section, const char *node_uuid,
     if (attr_id && attr_name) {
         pcmk__g_strcat(xpath,
                        "[@" PCMK_XA_ID "='", attr_id, "' "
-                       "and @" XML_ATTR_NAME "='", attr_name, "']", NULL);
+                       "and @" PCMK_XA_NAME "='", attr_name, "']", NULL);
 
     } else if (attr_id) {
         pcmk__g_strcat(xpath, "[@" PCMK_XA_ID "='", attr_id, "']", NULL);
 
     } else if (attr_name) {
-        pcmk__g_strcat(xpath, "[@" XML_ATTR_NAME "='", attr_name, "']", NULL);
+        pcmk__g_strcat(xpath, "[@" PCMK_XA_NAME "='", attr_name, "']", NULL);
     }
 
     rc = cib_internal_op(cib, PCMK__CIB_REQUEST_QUERY, NULL,

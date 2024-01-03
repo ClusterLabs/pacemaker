@@ -108,7 +108,7 @@ find_exact_action_config(const pcmk_resource_t *rsc, const char *action_name,
             continue;
         }
 
-        config_name = crm_element_value(operation, "name");
+        config_name = crm_element_value(operation, PCMK_XA_NAME);
         if (pcmk__str_eq(action_name, config_name, pcmk__str_none)) {
             return operation;
         }
@@ -495,7 +495,7 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
             }
 
             // We only care about recurring monitors for the promoted role
-            name = crm_element_value(operation, "name");
+            name = crm_element_value(operation, PCMK_XA_NAME);
             role = crm_element_value(operation, "role");
             if (!pcmk__str_eq(name, PCMK_ACTION_MONITOR, pcmk__str_none)
                 || !pcmk__strcase_any_of(role, PCMK__ROLE_PROMOTED,
@@ -539,7 +539,7 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
 
     // on-fail="demote" is allowed only for certain actions
     if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
-        name = crm_element_value(action_config, "name");
+        name = crm_element_value(action_config, PCMK_XA_NAME);
         role = crm_element_value(action_config, "role");
         interval_spec = crm_element_value(action_config,
                                           XML_LRM_ATTR_INTERVAL);
@@ -658,7 +658,7 @@ most_frequent_monitor(const pcmk_resource_t *rsc)
                                                       XML_LRM_ATTR_INTERVAL);
 
         // We only care about enabled recurring monitors
-        if (!pcmk__str_eq(crm_element_value(operation, "name"),
+        if (!pcmk__str_eq(crm_element_value(operation, PCMK_XA_NAME),
                           PCMK_ACTION_MONITOR, pcmk__str_none)) {
             continue;
         }
@@ -1437,7 +1437,7 @@ pe_get_configured_timeout(pcmk_resource_t *rsc, const char *action,
 
     for (child = first_named_child(rsc->ops_xml, XML_ATTR_OP);
          child != NULL; child = crm_next_same_xml(child)) {
-        if (pcmk__str_eq(action, crm_element_value(child, XML_NVPAIR_ATTR_NAME),
+        if (pcmk__str_eq(action, crm_element_value(child, PCMK_XA_NAME),
                 pcmk__str_casei)) {
             timeout_spec = crm_element_value(child, XML_ATTR_TIMEOUT);
             break;

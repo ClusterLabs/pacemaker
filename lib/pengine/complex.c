@@ -238,7 +238,7 @@ get_rsc_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
 static char *
 template_op_key(xmlNode * op)
 {
-    const char *name = crm_element_value(op, "name");
+    const char *name = crm_element_value(op, PCMK_XA_NAME);
     const char *role = crm_element_value(op, "role");
     char *key = NULL;
 

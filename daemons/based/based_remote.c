@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -515,7 +515,7 @@ cib_remote_msg(gpointer data)
         pcmk__set_client_flags(client, pcmk__client_authenticated);
         g_source_remove(client->remote->auth_timeout);
         client->remote->auth_timeout = 0;
-        client->name = crm_element_value_copy(command, "name");
+        client->name = crm_element_value_copy(command, PCMK_XA_NAME);
 
         user = crm_element_value(command, "user");
         if (user) {

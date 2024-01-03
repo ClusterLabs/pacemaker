@@ -454,7 +454,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
                        CRM_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",
                        controld_globals.transition_graph->id,
                        crm_element_value(reason, PCMK_XA_ID), op,
-                       crm_element_value(reason, XML_NVPAIR_ATTR_NAME),
+                       crm_element_value(reason, PCMK_XA_NAME),
                        crm_element_value(reason, XML_NVPAIR_ATTR_VALUE),
                        abort_text, add[0], add[1], add[2], fn, line, path,
                        pcmk__btoa(controld_globals.transition_graph->complete));

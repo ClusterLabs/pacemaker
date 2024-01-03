@@ -127,7 +127,7 @@ extern "C" {
 #define LOG_DEBUG_6  LOG_TRACE
 #define LRMD_OP_RSC_CHK_REG         "lrmd_rsc_check_register"
 #define MAX_IPC_FAIL                5
-#define NAME(x)                     crm_element_value(x, XML_NVPAIR_ATTR_NAME)
+#define NAME(x)                     crm_element_value(x, PCMK_XA_NAME)
 #define MSG_LOG                     1
 #define PE_OBJ_T_NATIVE             "native"
 #define PE_OBJ_T_GROUP              "group"

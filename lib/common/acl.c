@@ -305,7 +305,7 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
 
                 if (pcmk__xe_is(child, XML_ACL_TAG_USER)
                     || pcmk__xe_is(child, XML_ACL_TAG_USERv1)) {
-                    const char *id = crm_element_value(child, XML_ATTR_NAME);
+                    const char *id = crm_element_value(child, PCMK_XA_NAME);
 
                     if (id == NULL) {
                         id = crm_element_value(child, PCMK_XA_ID);
@@ -316,7 +316,7 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
                         docpriv->acls = parse_acl_entry(acls, child, docpriv->acls);
                     }
                 } else if (pcmk__xe_is(child, XML_ACL_TAG_GROUP)) {
-                    const char *id = crm_element_value(child, XML_ATTR_NAME);
+                    const char *id = crm_element_value(child, PCMK_XA_NAME);
 
                     if (id == NULL) {
                         id = crm_element_value(child, PCMK_XA_ID);

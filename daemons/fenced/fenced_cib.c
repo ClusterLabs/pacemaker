@@ -58,7 +58,7 @@ node_has_attr(const char *node, const char *name, const char *value)
                    "//" XML_CIB_TAG_NODES "/" XML_CIB_TAG_NODE
                    "[@" XML_ATTR_UNAME "='", node, "']/" XML_TAG_ATTR_SETS
                    "/" XML_CIB_TAG_NVPAIR
-                   "[@" XML_NVPAIR_ATTR_NAME "='", name, "' "
+                   "[@" PCMK_XA_NAME "='", name, "' "
                    "and @" XML_NVPAIR_ATTR_VALUE "='", value, "']", NULL);
 
     match = get_xpath_object((const char *) xpath->str, local_cib, LOG_NEVER);
@@ -188,7 +188,7 @@ remove_cib_device(xmlXPathObjectPtr xpathObj)
 }
 
 #define XPATH_WATCHDOG_TIMEOUT "//" XML_CIB_TAG_NVPAIR         \
-                               "[@" XML_NVPAIR_ATTR_NAME "='"  \
+                               "[@" PCMK_XA_NAME "='"  \
                                     PCMK_OPT_STONITH_WATCHDOG_TIMEOUT "']"
 
 static void

@@ -946,7 +946,7 @@ read_action_metadata(stonith_device_t *device)
         CRM_LOG_ASSERT(match != NULL);
         if(match == NULL) { continue; };
 
-        action = crm_element_value(match, "name");
+        action = crm_element_value(match, PCMK_XA_NAME);
 
         if (pcmk__str_eq(action, PCMK_ACTION_LIST, pcmk__str_none)) {
             stonith__set_device_flags(device->flags, device->id,

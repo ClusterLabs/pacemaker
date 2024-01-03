@@ -949,7 +949,7 @@ crmadmin_node_xml(pcmk__output_t *out, va_list args)
 
     pcmk__output_create_xml_node(out, "node",
                                  "type", type ? type : "cluster",
-                                 "name", pcmk__s(name, ""),
+                                 PCMK_XA_NAME, pcmk__s(name, ""),
                                  PCMK_XA_ID, pcmk__s(id, ""),
                                  NULL);
     return pcmk_rc_ok;
@@ -1508,7 +1508,7 @@ inject_attr_xml(pcmk__output_t *out, va_list args)
     node_path = xmlGetNodePath(cib_node);
 
     pcmk__output_create_xml_node(out, "inject_attr",
-                                 "name", name,
+                                 PCMK_XA_NAME, name,
                                  "value", value,
                                  "node_path", node_path,
                                  "cib_node", ID(cib_node),
@@ -2175,7 +2175,7 @@ attribute_xml(pcmk__output_t *out, va_list args)
     xmlNodePtr node = NULL;
 
     node = pcmk__output_create_xml_node(out, "attribute",
-                                        "name", name,
+                                        PCMK_XA_NAME, name,
                                         "value", value ? value : "",
                                         NULL);
 
@@ -2327,7 +2327,7 @@ result_code_xml(pcmk__output_t *out, va_list args)
 
     pcmk__output_create_xml_node(out, "result-code",
                                  "code", code_str,
-                                 XML_ATTR_NAME, name,
+                                 PCMK_XA_NAME, name,
                                  PCMK_XA_DESCRIPTION, desc,
                                  NULL);
     free(code_str);

@@ -373,9 +373,9 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
         if (pcmk__str_eq((const char *)an_attr->name, XML_CIB_TAG_NVPAIR, pcmk__str_none)) {
             xmlNode *ref_nvpair = expand_idref(an_attr, top);
 
-            name = crm_element_value(an_attr, XML_NVPAIR_ATTR_NAME);
+            name = crm_element_value(an_attr, PCMK_XA_NAME);
             if ((name == NULL) && (ref_nvpair != NULL)) {
-                name = crm_element_value(ref_nvpair, XML_NVPAIR_ATTR_NAME);
+                name = crm_element_value(ref_nvpair, PCMK_XA_NAME);
             }
 
             value = crm_element_value(an_attr, XML_NVPAIR_ATTR_VALUE);
@@ -1123,7 +1123,7 @@ pe__eval_date_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data,
 gboolean
 pe__eval_op_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
 {
-    const char *name = crm_element_value(expr, XML_NVPAIR_ATTR_NAME);
+    const char *name = crm_element_value(expr, PCMK_XA_NAME);
     const char *interval_s = crm_element_value(expr, XML_LRM_ATTR_INTERVAL);
     guint interval_ms = 0U;
 

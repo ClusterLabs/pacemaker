@@ -263,8 +263,7 @@ createEmptyCib(int cib_epoch)
 
         crm_xml_add(meta, PCMK_XA_ID, "build-resource-defaults");
         crm_xml_add(nvpair, PCMK_XA_ID, "build-" PCMK_META_RESOURCE_STICKINESS);
-        crm_xml_add(nvpair, XML_NVPAIR_ATTR_NAME,
-                    PCMK_META_RESOURCE_STICKINESS);
+        crm_xml_add(nvpair, PCMK_XA_NAME, PCMK_META_RESOURCE_STICKINESS);
         crm_xml_add_int(nvpair, XML_NVPAIR_ATTR_VALUE,
                         PCMK__RESOURCE_STICKINESS_DEFAULT);
     }

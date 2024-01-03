@@ -269,7 +269,7 @@ override_xml(pcmk__output_t *out, va_list args) {
     const char *value = va_arg(args, const char *);
 
     xmlNodePtr node = pcmk__output_create_xml_node(out, "override",
-                                                   "name", name,
+                                                   PCMK_XA_NAME, name,
                                                    "value", value,
                                                    NULL);
 

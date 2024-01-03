@@ -2427,7 +2427,7 @@ stonith__device_parameter_flags(uint32_t *device_flags, const char *device_name,
             continue;
         }
 
-        parameter = crm_element_value(match, "name");
+        parameter = crm_element_value(match, PCMK_XA_NAME);
 
         if (pcmk__str_eq(parameter, "plug", pcmk__str_casei)) {
             stonith__set_device_flags(*device_flags, device_name,

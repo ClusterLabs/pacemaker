@@ -327,7 +327,7 @@ xml_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plura
         pcmk__output_xml_create_parent(out, name, NULL);
     } else {
         pcmk__output_xml_create_parent(out, "list",
-                                       "name", name,
+                                       PCMK_XA_NAME, name,
                                        NULL);
     }
 
@@ -353,7 +353,7 @@ xml_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
     item_node = pcmk__output_create_xml_text_node(out, "item", buf);
 
     if (name != NULL) {
-        crm_xml_add(item_node, "name", name);
+        crm_xml_add(item_node, PCMK_XA_NAME, name);
     }
 
     free(buf);

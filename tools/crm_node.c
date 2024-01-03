@@ -196,7 +196,7 @@ node_list_xml(pcmk__output_t *out, va_list args)
 
         pcmk__output_create_xml_node(out, "node",
                                      PCMK_XA_ID, id_s,
-                                     "name", node->uname,
+                                     PCMK_XA_NAME, node->uname,
                                      "state", node->state,
                                      NULL);
 
@@ -275,7 +275,7 @@ partition_list_xml(pcmk__output_t *out, va_list args)
 
             pcmk__output_create_xml_node(out, "node",
                                          PCMK_XA_ID, id_s,
-                                         "name", node->uname,
+                                         PCMK_XA_NAME, node->uname,
                                          "state", node->state,
                                          NULL);
             free(id_s);

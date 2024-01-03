@@ -103,7 +103,7 @@ get_envvars_from_cib(xmlNode *basenode, pcmk__alert_t *entry)
     for (child = first_named_child(child, XML_CIB_TAG_NVPAIR); child != NULL;
          child = crm_next_same_xml(child)) {
 
-        const char *name = crm_element_value(child, XML_NVPAIR_ATTR_NAME);
+        const char *name = crm_element_value(child, PCMK_XA_NAME);
         const char *value = crm_element_value(child, XML_NVPAIR_ATTR_VALUE);
 
         if (value == NULL) {
@@ -144,7 +144,7 @@ unpack_alert_filter(xmlNode *basenode, pcmk__alert_t *entry)
                  attr != NULL;
                  attr = crm_next_same_xml(attr)) {
 
-                attr_name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
+                attr_name = crm_element_value(attr, PCMK_XA_NAME);
                 if (attr_name) {
                     if (nattrs == 0) {
                         g_strfreev(entry->select_attribute_name);
