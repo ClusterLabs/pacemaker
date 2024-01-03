@@ -445,7 +445,7 @@ create_level_registration_xml(const char *node, const char *pattern,
     }
 
     if (list != NULL) {
-        crm_xml_add(data, XML_ATTR_STONITH_DEVICES, (const char *) list->str);
+        crm_xml_add(data, PCMK_XA_DEVICES, (const char *) list->str);
         g_string_free(list, TRUE);
     }
     return data;

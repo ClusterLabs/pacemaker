@@ -63,6 +63,7 @@ extern "C" {
 #define PCMK_XA_CRM_TIMESTAMP               "crm-timestamp"
 #define PCMK_XA_DC_UUID                     "dc-uuid"
 #define PCMK_XA_DESCRIPTION                 "description"
+#define PCMK_XA_DEVICES                     "devices"
 #define PCMK_XA_EPOCH                       "epoch"
 #define PCMK_XA_FORMAT                      "format"
 #define PCMK_XA_HAVE_QUORUM                 "have-quorum"

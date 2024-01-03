@@ -1805,7 +1805,7 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
                  tp->target, id);
     }
 
-    devices = parse_device_list(crm_element_value(level, XML_ATTR_STONITH_DEVICES));
+    devices = parse_device_list(crm_element_value(level, PCMK_XA_DEVICES));
     for (dIter = devices; dIter; dIter = dIter->next) {
         const char *device = dIter->value;
 
