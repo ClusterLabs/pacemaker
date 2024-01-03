@@ -387,6 +387,11 @@ extern "C" {
 #define F_TYPE "t"
 #endif
 
+#ifndef F_CLIENTNAME
+//! \deprecated Do not use
+#define	F_CLIENTNAME "cn"
+#endif
+
 #ifdef __cplusplus
 }
 #endif

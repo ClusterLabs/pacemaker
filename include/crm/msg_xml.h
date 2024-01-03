@@ -95,10 +95,6 @@ extern "C" {
  * Older constants that don't follow current naming
  */
 
-#  ifndef F_CLIENTNAME
-#    define	F_CLIENTNAME	"cn"
-#  endif
-
 #  ifndef F_XML_TAGNAME
 #    define F_XML_TAGNAME	"__name__"
 #  endif
