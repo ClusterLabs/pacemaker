@@ -327,14 +327,15 @@ create_device_registration_xml(const char *id, enum stonith_namespace namespace,
 
 static int
 stonith_api_register_device(stonith_t *st, int call_options,
-                            const char *id, const char *namespace,
+                            const char *id, const char *namespace_s,
                             const char *agent,
                             const stonith_key_value_t *params)
 {
     int rc = 0;
     xmlNode *data = NULL;
 
-    data = create_device_registration_xml(id, stonith_text2namespace(namespace),
+    data = create_device_registration_xml(id,
+                                          stonith_text2namespace(namespace_s),
                                           agent, params, NULL);
 
     rc = stonith_send_command(st, STONITH_OP_DEVICE_ADD, data, NULL, call_options, 0);
@@ -476,11 +477,12 @@ stonith_api_register_level(stonith_t * st, int options, const char *node, int le
 }
 
 static int
-stonith_api_device_list(stonith_t * stonith, int call_options, const char *namespace,
-                        stonith_key_value_t ** devices, int timeout)
+stonith_api_device_list(stonith_t *stonith, int call_options,
+                        const char *namespace_s, stonith_key_value_t **devices,
+                        int timeout)
 {
     int count = 0;
-    enum stonith_namespace ns = stonith_text2namespace(namespace);
+    enum stonith_namespace ns = stonith_text2namespace(namespace_s);
 
     if (devices == NULL) {
         crm_err("Parameter error: stonith_api_device_list");
@@ -505,14 +507,14 @@ stonith_api_device_list(stonith_t * stonith, int call_options, const char *names
 // See stonith_api_operations_t:metadata() documentation
 static int
 stonith_api_device_metadata(stonith_t *stonith, int call_options,
-                            const char *agent, const char *namespace,
+                            const char *agent, const char *namespace_s,
                             char **output, int timeout_sec)
 {
     /* By executing meta-data directly, we can get it from stonith_admin when
      * the cluster is not running, which is important for higher-level tools.
      */
 
-    enum stonith_namespace ns = stonith_get_namespace(agent, namespace);
+    enum stonith_namespace ns = stonith_get_namespace(agent, namespace_s);
 
     if (timeout_sec <= 0) {
         timeout_sec = PCMK_DEFAULT_METADATA_TIMEOUT_MS;

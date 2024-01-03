@@ -880,6 +880,30 @@ __________________________________
 * The convenience macros ``pcmk__plural_s()`` and ``pcmk__plural_alt()`` are
   handy when logging a word that may be singular or plural.
 
+Log Levels
+__________
+
+When to use each log level:
+
+* **critical:** fatal error (usually something that would make a daemon exit)
+* **error:** failure of something that affects the cluster (such as a resource
+  action, fencing action, etc.) or daemon operation
+* **warning:** minor, potential, or recoverable failures (such as something
+  only affecting a daemon client, or invalid configuration that can be left to
+  default)
+* **notice:** important successful events (such as a node joining or leaving,
+  resource action results, or configuration changes)
+* **info:** events that would be helpful with troubleshooting (such as status
+  section updates or elections)
+* **debug:** information that would be helpful for debugging code or complex
+  problems
+* **trace:** like debug but for very noisy or low-level stuff
+
+By default, critical through notice are logged to the system log and detail
+log, info is logged to the detail log only, and debug and trace are not logged
+(if enabled, they go to the detail log only).
+
+
 Logging
 _______
 
@@ -910,6 +934,34 @@ using libqb's "extended logging" feature:
    */
    crm_warn("Action failed: %s " CRM_XS " rc=%d id=%s",
             pcmk_rc_str(rc), rc, id);
+
+
+Assertion Logging
+_________________
+
+``CRM_ASSERT(expr)``
+  If ``expr`` is false, this will call <code>crm_err()</code> with a "Triggered
+  fatal assert" message (with details), then abort execution. This should be
+  used for logic errors that should be impossible (such as a NULL function
+  argument where not accepted) and environmental errors that can't be handled
+  gracefully (for example, memory allocation failures, though returning
+  ``ENOMEM`` is often better).
+
+``CRM_LOG_ASSERT(expr)``
+  If ``expr`` is false, this will generally log a message without aborting. If
+  the log level is below trace, it just calls ``crm_err()`` with a "Triggered
+  assert" message (with details). If the log level is trace, and the caller is
+  a daemon, then it will fork a child process in which to dump core, as well as
+  logging the message. If the log level is trace, and the caller is not a
+  daemon, then it will behave like ``CRM_ASSERT()`` (i.e. log and abort). This
+  should be used for logic or protocol errors that require no special handling.
+
+``CRM_CHECK(expr, failed_action)``
+  If ``expr`` is false, behave like ``CRM_LOG_ASSERT(expr)`` (that is, log a
+  message and dump core if requested) then perform ``failed_action`` (which
+  must not contain ``continue``, ``break``, or ``errno``). This should be used
+  for logic or protocol errors that can be handled, usually by returning an
+  error status.
 
 
 Output
