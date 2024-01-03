@@ -556,7 +556,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
     rclass = crm_element_value(action_rsc, XML_AGENT_ATTR_CLASS);
     rtype = crm_element_value(action_rsc, PCMK_XA_TYPE);
-    rprovider = crm_element_value(action_rsc, XML_AGENT_ATTR_PROVIDER);
+    rprovider = crm_element_value(action_rsc, PCMK_XA_PROVIDER);
 
     pcmk__scan_min_int(target_rc_s, &target_outcome, 0);
 

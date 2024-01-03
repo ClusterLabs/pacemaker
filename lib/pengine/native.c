@@ -468,7 +468,7 @@ native_print_xml(pcmk_resource_t *rsc, const char *pre_text, long options,
                  void *print_data)
 {
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-    const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
+    const char *prov = crm_element_value(rsc->xml, PCMK_XA_PROVIDER);
     const char *rsc_state = native_displayable_state(rsc, pcmk_is_set(options, pe_print_pending));
     const char *target_role = NULL;
 
@@ -580,7 +580,7 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
     CRM_CHECK(class != NULL, class = "unknown");
 
     if (pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)) {
-        provider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
+        provider = crm_element_value(rsc->xml, PCMK_XA_PROVIDER);
     }
 
     if ((node == NULL) && (rsc->lock_node != NULL)) {
@@ -976,7 +976,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
 
     bool print_pending = pcmk_is_set(show_opts, pcmk_show_pending);
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-    const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
+    const char *prov = crm_element_value(rsc->xml, PCMK_XA_PROVIDER);
     const char *rsc_state = native_displayable_state(rsc, print_pending);
 
     const char *desc = NULL;
@@ -1200,7 +1200,7 @@ get_rscs_brief(GList *rsc_list, GHashTable * rsc_table, GHashTable * active_tabl
 
         offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", class);
         if (pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)) {
-            const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
+            const char *prov = crm_element_value(rsc->xml, PCMK_XA_PROVIDER);
 
             if (prov != NULL) {
                 offset += snprintf(buffer + offset, LINE_MAX - offset,

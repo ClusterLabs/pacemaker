@@ -2097,12 +2097,15 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
 
     if (rsc) {
         const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+        const char *provider = crm_element_value(rsc->xml, PCMK_XA_PROVIDER);
         const char *kind = crm_element_value(rsc->xml, PCMK_XA_TYPE);
-        char *agent_tuple = NULL;
+        bool has_provider = pcmk_is_set(pcmk_get_ra_caps(class),
+                                        pcmk_ra_cap_provider);
 
-        agent_tuple = crm_strdup_printf("%s:%s:%s", class,
-                                        pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider) ? crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER) : "",
-                                        kind);
+        char *agent_tuple = crm_strdup_printf("%s:%s:%s",
+                                              class,
+                                              (has_provider? provider : ""),
+                                              kind);
 
         pcmk__xe_set_props(node, "rsc", rsc_printable_id(rsc),
                            "agent", agent_tuple,

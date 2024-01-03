@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 the Pacemaker project contributors
+ * Copyright 2020-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,6 +11,7 @@
 #include <stdarg.h>
 
 #include <crm/lrmd_internal.h>
+#include <crm/msg_xml.h>
 #include <crm/common/output_internal.h>
 
 static int
@@ -73,7 +74,7 @@ lrmd__agents_list_xml(pcmk__output_t *out, va_list args) {
                                                      NULL);
 
     if (!pcmk__str_empty(provider)) {
-        crm_xml_add(node, "provider", provider);
+        crm_xml_add(node, PCMK_XA_PROVIDER, provider);
     }
 
     return xml_list(out, list, "agent");

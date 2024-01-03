@@ -544,7 +544,7 @@ build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list)
         crm_xml_add(xml_rsc, PCMK_XA_ID, entry->id);
         crm_xml_add(xml_rsc, PCMK_XA_TYPE, entry->rsc.type);
         crm_xml_add(xml_rsc, XML_AGENT_ATTR_CLASS, entry->rsc.standard);
-        crm_xml_add(xml_rsc, XML_AGENT_ATTR_PROVIDER, entry->rsc.provider);
+        crm_xml_add(xml_rsc, PCMK_XA_PROVIDER, entry->rsc.provider);
 
         if (entry->last && entry->last->params) {
             static const char *name = CRM_META "_" PCMK__META_CONTAINER;
@@ -933,7 +933,7 @@ get_lrm_resource(lrm_state_t *lrm_state, const xmlNode *rsc_xml,
 
     if ((*rsc_info == NULL) && do_create) {
         const char *class = crm_element_value(rsc_xml, XML_AGENT_ATTR_CLASS);
-        const char *provider = crm_element_value(rsc_xml, XML_AGENT_ATTR_PROVIDER);
+        const char *provider = crm_element_value(rsc_xml, PCMK_XA_PROVIDER);
         const char *type = crm_element_value(rsc_xml, PCMK_XA_TYPE);
         int rc;
 
@@ -2257,7 +2257,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
         xmlNode *xml = find_xml_node(action_xml, XML_CIB_TAG_RESOURCE, TRUE);
 
         const char *standard = crm_element_value(xml, XML_AGENT_ATTR_CLASS);
-        const char *provider = crm_element_value(xml, XML_AGENT_ATTR_PROVIDER);
+        const char *provider = crm_element_value(xml, PCMK_XA_PROVIDER);
         const char *type = crm_element_value(xml, PCMK_XA_TYPE);
 
         if (standard && type) {

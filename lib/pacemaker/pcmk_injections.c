@@ -447,7 +447,7 @@ pcmk__inject_resource_history(pcmk__output_t *out, xmlNode *cib_node,
     crm_xml_add(cib_resource, PCMK_XA_ID, lrm_name);
 
     crm_xml_add(cib_resource, XML_AGENT_ATTR_CLASS, rclass);
-    crm_xml_add(cib_resource, XML_AGENT_ATTR_PROVIDER, rprovider);
+    crm_xml_add(cib_resource, PCMK_XA_PROVIDER, rprovider);
     crm_xml_add(cib_resource, PCMK_XA_TYPE, rtype);
 
     return cib_resource;
@@ -598,7 +598,7 @@ inject_action(pcmk__output_t *out, const char *spec, cib_t *cib,
 
     rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     rtype = crm_element_value(rsc->xml, PCMK_XA_TYPE);
-    rprovider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
+    rprovider = crm_element_value(rsc->xml, PCMK_XA_PROVIDER);
 
     cib_node = pcmk__inject_node(cib, node, NULL);
     CRM_ASSERT(cib_node != NULL);

@@ -159,7 +159,7 @@ get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
 {
     pe_rsc_eval_data_t rsc_rule_data = {
         .standard = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS),
-        .provider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER),
+        .provider = crm_element_value(rsc->xml, PCMK_XA_PROVIDER),
         .agent = crm_element_value(rsc->xml, PCMK_XA_TYPE)
     };
 
