@@ -178,6 +178,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_DESCRIPTION instead
 #define XML_ATTR_DESC PCMK_XA_DESCRIPTION
 
+//! \deprecated Use \c PCMK_XA_ID instead
+#define XML_ATTR_ID PCMK_XA_ID
+
 #ifdef __cplusplus
 }
 #endif
