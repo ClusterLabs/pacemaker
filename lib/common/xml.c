@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1092,7 +1092,7 @@ pcmk__xe_add_last_written(xmlNode *xe)
     char *now_s = pcmk__epoch2str(NULL, 0);
     const char *result = NULL;
 
-    result = crm_xml_add(xe, XML_CIB_ATTR_WRITTEN,
+    result = crm_xml_add(xe, PCMK_XA_CIB_LAST_WRITTEN,
                          pcmk__s(now_s, "Could not determine current time"));
     free(now_s);
     return result;

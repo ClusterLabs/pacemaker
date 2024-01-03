@@ -584,7 +584,7 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
 
      static filter_t filter[] = {
      { 0, PCMK_XA_CRM_DEBUG_ORIGIN },
-     { 0, XML_CIB_ATTR_WRITTEN },
+     { 0, PCMK_XA_CIB_LAST_WRITTEN },
      { 0, XML_ATTR_UPDATE_ORIG },
      { 0, XML_ATTR_UPDATE_CLIENT },
      { 0, XML_ATTR_UPDATE_USER },

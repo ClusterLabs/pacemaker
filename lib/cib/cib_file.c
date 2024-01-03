@@ -876,8 +876,8 @@ cib_file_backup(const char *cib_dirname, const char *cib_filename)
  * \internal
  * \brief Prepare CIB XML to be written to disk
  *
- * Set \c PCMK_XA_NUM_UPDATES to 0, set cib-last-written to the current
- * timestamp, and strip out the status section.
+ * Set \c PCMK_XA_NUM_UPDATES to 0, set \c PCMK_XA_CIB_LAST_WRITTEN to the
+ * current timestamp, and strip out the status section.
  *
  * \param[in,out] root  Root of CIB XML tree
  *
