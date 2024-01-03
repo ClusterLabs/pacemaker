@@ -73,6 +73,7 @@ extern "C" {
 #define PCMK_XA_NUM_UPDATES                 "num_updates"
 #define PCMK_XA_OP                          "op"
 #define PCMK_XA_PROVIDER                    "provider"
+#define PCMK_XA_REQUEST                     "request"
 #define PCMK_XA_TYPE                        "type"
 #define PCMK_XA_UPDATE_CLIENT               "update-client"
 #define PCMK_XA_UPDATE_ORIGIN               "update-origin"

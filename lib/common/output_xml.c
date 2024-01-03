@@ -125,10 +125,7 @@ xml_init(pcmk__output_t *out) {
     } else {
         priv->root = create_xml_node(NULL, "pacemaker-result");
         crm_xml_add(priv->root, "api-version", PCMK__API_VERSION);
-
-        if (out->request != NULL) {
-            crm_xml_add(priv->root, "request", out->request);
-        }
+        crm_xml_add(priv->root, PCMK_XA_REQUEST, out->request);
     }
 
     priv->parent_q = g_queue_new();
