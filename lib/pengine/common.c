@@ -273,7 +273,7 @@ static pcmk__cluster_option_t pe_opts[] = {
         N_("Only used when \"node-health-strategy\" is set to \"custom\" or \"progressive\".")
     },
     {
-        PCMK__OPT_NODE_HEALTH_RED, NULL, "integer", NULL,
+        PCMK_OPT_NODE_HEALTH_RED, NULL, "integer", NULL,
         "-INFINITY", pcmk__valid_number,
         N_("The score to use for a node health attribute whose value is \"red\""),
         N_("Only used when \"node-health-strategy\" is set to \"custom\" or \"progressive\".")
