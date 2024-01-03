@@ -972,9 +972,9 @@ handle_remote_ra_exec(gpointer user_data)
 
         } else if (pcmk__str_any_of(cmd->action, PCMK_ACTION_RELOAD,
                                     PCMK_ACTION_RELOAD_AGENT, NULL))  {
-            /* Currently the only reloadable parameter is reconnect_interval,
-             * which is only used by the scheduler via the CIB, so reloads are a
-             * no-op.
+            /* Currently the only reloadable parameter is
+             * PCMK_REMOTE_RA_RECONNECT_INTERVAL, which is only used by the
+             * scheduler via the CIB, so reloads are a no-op.
              *
              * @COMPAT DC <2.1.0: We only need to check for "reload" in case
              * we're in a rolling upgrade with a DC scheduling "reload" instead

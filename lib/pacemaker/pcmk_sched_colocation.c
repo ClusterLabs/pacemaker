@@ -411,9 +411,9 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
  * \param[in] rsc          Resource involved in constraint (for default)
  * \param[in] influence_s  String value of influence option
  *
- * \return pcmk__coloc_influence if string evaluates true, or string is NULL or
- *         invalid and resource's critical option evaluates true, otherwise
- *         pcmk__coloc_none
+ * \return \c pcmk__coloc_influence if string evaluates true, or string is
+ *         \c NULL or invalid and resource's \c PCMK_META_CRITICAL option
+ *         evaluates true, otherwise \c pcmk__coloc_none
  */
 static uint32_t
 unpack_influence(const char *coloc_id, const pcmk_resource_t *rsc,

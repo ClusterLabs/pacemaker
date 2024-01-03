@@ -322,7 +322,7 @@ resource_history_string(pcmk_resource_t *rsc, const char *rsc_id, bool all,
             free(buf);
         }
 
-        buf = crm_strdup_printf("%s: migration-threshold=%d%s%s",
+        buf = crm_strdup_printf("%s: " PCMK_META_MIGRATION_THRESHOLD "=%d%s%s",
                                 rsc_id, rsc->migration_threshold, failcount_s,
                                 lastfail_s? lastfail_s : "");
         free(failcount_s);
@@ -2757,7 +2757,7 @@ resource_history_xml(pcmk__output_t *out, va_list args) {
         char *migration_s = pcmk__itoa(rsc->migration_threshold);
 
         pcmk__xe_set_props(node, "orphan", "false",
-                           "migration-threshold", migration_s,
+                           PCMK_META_MIGRATION_THRESHOLD, migration_s,
                            NULL);
         free(migration_s);
 

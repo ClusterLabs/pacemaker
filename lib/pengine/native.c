@@ -157,7 +157,7 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                 pe__set_resource_flags(rsc, pcmk_rsc_blocked);
 
                 /* If the resource belongs to a group or bundle configured with
-                 * multiple-active=block, block the entire entity.
+                 * PCMK_META_MULTIPLE_ACTIVE=block, block the entire entity.
                  */
                 if (rsc->parent
                     && ((rsc->parent->variant == pcmk_rsc_variant_group)
@@ -224,10 +224,10 @@ native_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
          */
         pe__force_anon(standard, parent, rsc->id, scheduler);
 
-        /* Clear globally-unique on the parent and all its descendants unpacked
-         * so far (clearing the parent should make any future children unpacking
-         * correct). We have to clear this resource explicitly because it isn't
-         * hooked into the parent's children yet.
+        /* Clear PCMK_META_GLOBALLY_UNIQUE on the parent and all its descendants
+         * unpacked so far (clearing the parent should make any future children
+         * unpacking correct). We have to clear this resource explicitly because
+         * it isn't hooked into the parent's children yet.
          */
         recursive_clear_unique(parent, NULL);
         recursive_clear_unique(rsc, NULL);
@@ -658,7 +658,8 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
             case pcmk_role_unpromoted:
                 if (pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
                                 pcmk_rsc_promotable)) {
-                    have_flags = add_output_flag(outstr, "target-role:",
+                    have_flags = add_output_flag(outstr,
+                                                 PCMK_META_TARGET_ROLE ":",
                                                  have_flags);
                     g_string_append(outstr, target_role);
                 }

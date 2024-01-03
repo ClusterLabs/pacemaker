@@ -306,13 +306,14 @@ get_minimum_first_instances(const pcmk_resource_t *rsc, const xmlNode *xml)
     }
 
     /* @COMPAT 1.1.13:
-     * require-all=false is deprecated equivalent of clone-min=1
+     * require-all=false is deprecated equivalent of PCMK_META_CLONE_MIN=1
      */
     if (pcmk__xe_get_bool_attr(xml, "require-all", &require_all) != ENODATA) {
         pcmk__warn_once(pcmk__wo_require_all,
                         "Support for require-all in ordering constraints "
                         "is deprecated and will be removed in a future release "
-                        "(use clone-min clone meta-attribute instead)");
+                        "(use " PCMK_META_CLONE_MIN " clone meta-attribute "
+                        "instead)");
         if (!require_all) {
             return 1;
         }
@@ -323,7 +324,7 @@ get_minimum_first_instances(const pcmk_resource_t *rsc, const xmlNode *xml)
 
 /*!
  * \internal
- * \brief Create orderings for a constraint with clone-min > 0
+ * \brief Create orderings for a constraint with \c PCMK_META_CLONE_MIN > 0
  *
  * \param[in]     id            Ordering ID
  * \param[in,out] rsc_first     'First' resource in ordering (a clone)

@@ -1015,7 +1015,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         }
     }
 
-    // Use 0 for default, minimum, and invalid promoted-max
+    // Use 0 for default, minimum, and invalid PCMK_META_PROMOTED_MAX
     value = crm_element_value(xml_obj, PCMK_META_PROMOTED_MAX);
     if (value == NULL) {
         // @COMPAT deprecated since 2.0.0
@@ -1023,7 +1023,9 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     }
     pcmk__scan_min_int(value, &bundle_data->promoted_max, 0);
 
-    // Default replicas to promoted-max if it was specified and 1 otherwise
+    /* Default replicas to PCMK_META_PROMOTED_MAX if it was specified and 1
+     * otherwise
+     */
     value = crm_element_value(xml_obj, "replicas");
     if ((value == NULL) && (bundle_data->promoted_max > 0)) {
         bundle_data->nreplicas = bundle_data->promoted_max;

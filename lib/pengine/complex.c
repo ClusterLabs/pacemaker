@@ -742,7 +742,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
          * resources within the remote-node before moving. Allowing
          * migration support enables this feature. If this ever causes
          * problems, migration support can be explicitly turned off with
-         * allow-migrate=false.
+         * PCMK_META_ALLOW_MIGRATE=false.
          */
         pe__set_resource_flags(*rsc, pcmk_rsc_migratable);
     }
@@ -868,7 +868,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
         /* Grabbing the value now means that any rules based on node attributes
          * will evaluate to false, so such rules should not be used with
-         * reconnect_interval.
+         * PCMK_REMOTE_RA_RECONNECT_INTERVAL.
          *
          * @TODO Evaluate per node before using
          */
@@ -878,8 +878,9 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
              * connection from starting until the failure is cleared. */
             pcmk_parse_interval_spec(value, &((*rsc)->remote_reconnect_ms));
 
-            /* we want to override any default failure_timeout in use when remote
-             * reconnect_interval is in use. */ 
+            /* We want to override any default failure_timeout in use when remote
+             * PCMK_REMOTE_RA_RECONNECT_INTERVAL is in use.
+             */
             (*rsc)->failure_timeout = (*rsc)->remote_reconnect_ms / 1000;
         }
     }

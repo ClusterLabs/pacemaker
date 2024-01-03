@@ -44,7 +44,7 @@ extern "C" {
 #define PCMK_XE_OP_EXPRESSION               "op_expression"
 
 /* This has been deprecated as a CIB element (an alias for <clone> with
- * "promotable" set to "true") since 2.0.0.
+ * PCMK_META_PROMOTABLE set to "true") since 2.0.0.
  */
 #define PCMK_XE_PROMOTABLE_LEGACY           "master"
 

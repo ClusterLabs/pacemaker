@@ -1571,9 +1571,9 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                               cib_options, promoted_role_only,
                               PCMK__ROLE_PROMOTED);
     } else {
-        /* Stop the resource by setting target-role to Stopped.
-         * Remember any existing target-role so we can restore it later
-         * (though it only makes any difference if it's Unpromoted).
+        /* Stop the resource by setting PCMK_META_TARGET_ROLE to Stopped.
+         * Remember any existing PCMK_META_TARGET_ROLE so we can restore it
+         * later (though it only makes any difference if it's Unpromoted).
          */
 
         find_resource_attr(out, cib, XML_NVPAIR_ATTR_VALUE, lookup_id, NULL, NULL,
@@ -1584,7 +1584,8 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                                            cib_options, force);
     }
     if(rc != pcmk_rc_ok) {
-        out->err(out, "Could not set target-role for %s: %s (%d)", rsc_id, pcmk_rc_str(rc), rc);
+        out->err(out, "Could not set " PCMK_META_TARGET_ROLE " for %s: %s (%d)",
+                 rsc_id, pcmk_rc_str(rc), rc);
         if (current_active != NULL) {
             g_list_free_full(current_active, free);
             current_active = NULL;
@@ -1670,7 +1671,9 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
     }
 
     if(rc != pcmk_rc_ok) {
-        out->err(out, "Could not unset target-role for %s: %s (%d)", rsc_id, pcmk_rc_str(rc), rc);
+        out->err(out,
+                 "Could not unset " PCMK_META_TARGET_ROLE " for %s: %s (%d)",
+                 rsc_id, pcmk_rc_str(rc), rc);
         goto done;
     }
 
@@ -2087,8 +2090,10 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
             if(nodes != NULL && force == FALSE) {
                 out->err(out, "It is not safe to %s %s here: the cluster claims it is already active",
                          rsc_action, rsc->id);
-                out->err(out, "Try setting target-role=Stopped first or specifying "
-                         "the force option");
+                out->err(out,
+                         "Try setting "
+                         PCMK_META_TARGET_ROLE "=" PCMK__ROLE_STOPPED
+                         " first or specifying the force option");
                 return CRM_EX_UNSAFE;
             }
 

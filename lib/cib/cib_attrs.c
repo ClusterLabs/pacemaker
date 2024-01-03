@@ -571,7 +571,9 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
         parsed_is_remote = TRUE;
 
     } else if (pcmk__str_eq(tag, XML_CIB_TAG_NVPAIR, pcmk__str_casei)) {
-        /* Result is remote-node parameter of <primitive> for guest node */
+        /* Result is PCMK_META_REMOTE_NODE parameter of <primitive> for guest
+         * node
+         */
 
         parsed_uuid = crm_element_value(result, XML_NVPAIR_ATTR_VALUE);
         parsed_is_remote = TRUE;

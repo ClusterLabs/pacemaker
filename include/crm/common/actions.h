@@ -260,8 +260,8 @@ enum pe_action_flags {
 
     /*!
      * Whether action is an ordering point for minimum required instances
-     * (used to implement ordering after clones with clone-min configured,
-     * and ordered sets with require-all=false)
+     * (used to implement ordering after clones with \c PCMK_META_CLONE_MIN
+     * configured, and ordered sets with require-all=false)
      */
     pcmk_action_min_runnable         = (1 << 12),
 

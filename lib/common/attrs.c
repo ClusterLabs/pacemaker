@@ -28,7 +28,7 @@
  * If given NULL, "auto", or "localhost" as an argument, check the environment
  * to detect the node name that should be used to set node attributes. (The
  * caller might not know the correct name, for example if the target is part of
- * a bundle with container-attribute-target set to "host".)
+ * a bundle with \c PCMK_META_CONTAINER_ATTR_TARGET set to "host".)
  *
  * \param[in] name  NULL, "auto" or "localhost" to check environment variables,
  *                  or anything else to return NULL

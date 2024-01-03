@@ -412,8 +412,9 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         add_hash_param(rsc->meta, PCMK_META_RESOURCE_STICKINESS, "1");
     }
 
-    /* This ensures that the globally-unique value always exists for children to
-     * inherit when being unpacked, as well as in resource agents' environment.
+    /* This ensures that the PCMK_META_GLOBALLY_UNIQUE value always exists for
+     * children to inherit when being unpacked, as well as in resource agents'
+     * environment.
      */
     add_hash_param(rsc->meta, PCMK_META_GLOBALLY_UNIQUE,
                    pe__rsc_bool_str(rsc, pcmk_rsc_unique));
@@ -749,8 +750,8 @@ clone_print(pcmk_resource_t *rsc, const char *pre_text, long options,
 
             if (role == pcmk_role_unpromoted) {
                 short_print((const char *) list_text->str, child_text,
-                            UNPROMOTED_INSTANCES " (target-role)", NULL,
-                            options, print_data);
+                            UNPROMOTED_INSTANCES " (" PCMK_META_TARGET_ROLE ")",
+                            NULL, options, print_data);
             } else {
                 short_print((const char *) list_text->str, child_text,
                             UNPROMOTED_INSTANCES, NULL, options, print_data);
@@ -1075,7 +1076,8 @@ pe__clone_default(pcmk__output_t *out, va_list args)
 
             if (role == pcmk_role_unpromoted) {
                 out->list_item(out, NULL,
-                               UNPROMOTED_INSTANCES " (target-role): [ %s ]",
+                               UNPROMOTED_INSTANCES
+                               " (" PCMK_META_TARGET_ROLE "): [ %s ]",
                                (const char *) list_text->str);
             } else {
                 out->list_item(out, NULL, UNPROMOTED_INSTANCES ": [ %s ]",

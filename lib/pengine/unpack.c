@@ -2003,8 +2003,9 @@ create_anonymous_orphan(pcmk_resource_t *parent, const char *rsc_id,
  *
  * Return a child instance of the specified anonymous clone, in order of
  * preference: (1) the instance running on the specified node, if any;
- * (2) an inactive instance (i.e. within the total of clone-max instances);
- * (3) a newly created orphan (i.e. clone-max instances are already active).
+ * (2) an inactive instance (i.e. within the total of \c PCMK_META_CLONE_MAX
+ * instances); (3) a newly created orphan (that is, \c PCMK_META_CLONE_MAX
+ * instances are already active).
  *
  * \param[in,out] scheduler  Scheduler data
  * \param[in]     node       Node on which to check for instance
@@ -2041,8 +2042,8 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
          * (1) when child is a cloned group and we have already unpacked the
          *     history of another member of the group on the same node;
          * (2) when we've already unpacked the history of another numbered
-         *     instance on the same node (which can happen if globally-unique
-         *     was flipped from true to false); and
+         *     instance on the same node (which can happen if
+         *     PCMK_META_GLOBALLY_UNIQUE was flipped from true to false); and
          * (3) when we re-run calculations on the same scheduler data as part of
          *     a simulation.
          */
@@ -2067,8 +2068,8 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
                 if (rsc) {
                     /* If there are multiple instance history entries for an
                      * anonymous clone in a single node's history (which can
-                     * happen if globally-unique is switched from true to
-                     * false), we want to consider the instances beyond the
+                     * happen if PCMK_META_GLOBALLY_UNIQUE is switched from true
+                     * to false), we want to consider the instances beyond the
                      * first as orphans, even if there are inactive instance
                      * numbers available.
                      */
@@ -2149,8 +2150,8 @@ unpack_find_resource(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
 
     if (rsc == NULL) {
         /* If we didn't find the resource by its name in the operation history,
-         * check it again as a clone instance. Even when clone-max=0, we create
-         * a single :0 orphan to match against here.
+         * check it again as a clone instance. Even when PCMK_META_CLONE_MAX=0,
+         * we create a single :0 orphan to match against here.
          */
         char *clone0_id = clone_zero(rsc_id);
         pcmk_resource_t *clone0 = pe_find_resource(scheduler->resources,
@@ -4193,7 +4194,9 @@ check_operation_expiry(struct action_history *history)
         && (crm_element_value_epoch(history->xml, XML_RSC_OP_LAST_CHANGE,
                                     &last_run) == 0)) {
 
-        // Resource has a failure-timeout, and history entry has a timestamp
+        /* Resource has a PCMK_META_FAILURE_TIMEOUT and history entry has a
+         * timestamp
+         */
 
         time_t now = get_effective_time(history->rsc->cluster);
         time_t last_failure = 0;

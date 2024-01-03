@@ -145,14 +145,16 @@ pe_foreach_guest_node(const pcmk_scheduler_t *scheduler,
  * \internal
  * \brief Create CIB XML for an implicit remote connection
  *
- * \param[in,out] parent           If not NULL, use as parent XML element
- * \param[in]     uname            Name of Pacemaker Remote node
- * \param[in]     container        If not NULL, use this as connection container
- * \param[in]     migrateable      If not NULL, use as allow-migrate value
- * \param[in]     is_managed       If not NULL, use as is-managed value
- * \param[in]     start_timeout    If not NULL, use as remote connect timeout
- * \param[in]     server           If not NULL, use as remote server value
- * \param[in]     port             If not NULL, use as remote port value
+ * \param[in,out] parent         If not \c NULL, use as parent XML element
+ * \param[in]     uname          Name of Pacemaker Remote node
+ * \param[in]     container_id   If not \c NULL, use this as connection container
+ * \param[in]     migrateable    If not \c NULL, use as remote
+ *                               \c PCMK_META_ALLOW_MIGRATE value
+ * \param[in]     is_managed     If not \c NULL, use as remote
+ *                               \c PCMK_META_IS_MANAGED value
+ * \param[in]     start_timeout  If not \c NULL, use as remote connect timeout
+ * \param[in]     server         If not \c NULL, use as \c PCMK_REMOTE_RA_ADDR
+ * \param[in]     port           If not \c NULL, use as \c PCMK_REMOTE_RA_PORT
  *
  * \return Newly created XML
  */

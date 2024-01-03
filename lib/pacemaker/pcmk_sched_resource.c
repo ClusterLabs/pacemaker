@@ -602,7 +602,8 @@ pcmk__threshold_reached(pcmk_resource_t *rsc, const pcmk_node_t *node,
     if (remaining_tries <= 0) {
         pcmk__sched_warn("%s cannot run on %s due to reaching migration "
                          "threshold (clean up resource to allow again)"
-                         CRM_XS " failures=%d migration-threshold=%d",
+                         CRM_XS " failures=%d "
+                         PCMK_META_MIGRATION_THRESHOLD "=%d",
                          rsc_to_ban->id, pe__node_name(node), fail_count,
                          rsc->migration_threshold);
         if (failed != NULL) {

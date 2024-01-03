@@ -1205,8 +1205,9 @@ pcmk__primitive_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
  * \param[in] rsc  Resource to check
  * \param[in] node  Node to check
  *
- * \return true if \p rsc is multiply active with multiple-active set to
- *         stop_unexpected, and \p node is the node where it will remain active
+ * \return \c true if \p rsc is multiply active with
+ *         \c PCMK_META_MULTIPLE_ACTIVE set to \c stop_unexpected, and \p node
+ *         is the node where it will remain active
  * \note This assumes that the resource's next role cannot be changed to stopped
  *       after this is called, which should be reasonable if status has already
  *       been unpacked and resources have been assigned to nodes.
@@ -1237,8 +1238,8 @@ stop_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
 
         if (is_expected_node(rsc, current)) {
             /* We are scheduling restart actions for a multiply active resource
-             * with multiple-active=stop_unexpected, and this is where it should
-             * not be stopped.
+             * with PCMK_META_MULTIPLE_ACTIVE=stop_unexpected, and this is where
+             * it should not be stopped.
              */
             pcmk__rsc_trace(rsc,
                             "Skipping stop of multiply active resource %s "
