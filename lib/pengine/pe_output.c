@@ -952,7 +952,7 @@ cluster_dc_xml(pcmk__output_t *out, va_list args) {
     if (dc) {
         pcmk__output_create_xml_node(out, "current_dc",
                                      "present", "true",
-                                     "version", dc_version_s ? dc_version_s : "",
+                                     PCMK_XA_VERSION, pcmk__s(dc_version_s, ""),
                                      "name", dc->details->uname,
                                      "id", dc->details->id,
                                      "with_quorum", pcmk__btoa(crm_is_true(quorum)),

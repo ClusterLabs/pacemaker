@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the Pacemaker project contributors
+ * Copyright 2019-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,13 +14,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <crm/crm.h>
-#include <crm/common/output.h>
-#include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>  /* pcmk__xml2fd */
 #include <glib.h>
 
+#include <crm/msg_xml.h>
 #include <crm/common/cmdline_internal.h>
+#include <crm/common/output.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>    // pcmk__xml2fd
 
 static gboolean legacy_xml = FALSE;
 static gboolean simple_list = FALSE;
@@ -121,7 +121,7 @@ xml_init(pcmk__output_t *out) {
 
     if (legacy_xml) {
         priv->root = create_xml_node(NULL, "crm_mon");
-        crm_xml_add(priv->root, "version", PACEMAKER_VERSION);
+        crm_xml_add(priv->root, PCMK_XA_VERSION, PACEMAKER_VERSION);
     } else {
         priv->root = create_xml_node(NULL, "pacemaker-result");
         crm_xml_add(priv->root, "api-version", PCMK__API_VERSION);
@@ -246,7 +246,7 @@ xml_version(pcmk__output_t *out, bool extended) {
 
     pcmk__output_create_xml_node(out, "version",
                                  "program", "Pacemaker",
-                                 "version", PACEMAKER_VERSION,
+                                 PCMK_XA_VERSION, PACEMAKER_VERSION,
                                  "author", "Andrew Beekhof and the "
                                            "Pacemaker project contributors",
                                  "build", BUILD_VERSION,

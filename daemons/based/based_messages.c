@@ -498,7 +498,7 @@ cib_process_schemas(const char *op, int options, const char *section, xmlNode *r
         return -EPROTO;
     }
 
-    after_ver = crm_element_value(data, XML_ATTR_VERSION);
+    after_ver = crm_element_value(data, PCMK_XA_VERSION);
     if (after_ver == NULL) {
         crm_warn("No version specified in request");
         return -EPROTO;

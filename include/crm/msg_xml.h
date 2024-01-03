@@ -59,6 +59,7 @@ extern "C" {
 #define PCMK_XA_NO_QUORUM_PANIC             "no-quorum-panic"
 #define PCMK_XA_NUM_UPDATES                 "num_updates"
 #define PCMK_XA_VALIDATE_WITH               "validate-with"
+#define PCMK_XA_VERSION                     "version"
 
 /* These have been deprecated as CIB <clone> element attributes (aliases for
  * "promoted-max" and "promoted-node-max") since 2.0.0.
@@ -127,7 +128,7 @@ extern "C" {
 #  define F_CRM_SYS_FROM		"crm_sys_from"
 #  define F_CRM_HOST_FROM		F_ORIG
 #  define F_CRM_REFERENCE		XML_ATTR_REFERENCE
-#  define F_CRM_VERSION			XML_ATTR_VERSION
+#  define F_CRM_VERSION			PCMK_XA_VERSION
 #  define F_CRM_ORIGIN			"origin"
 #  define F_CRM_USER			"crm_user"
 #  define F_CRM_JOIN_ID			"join_id"

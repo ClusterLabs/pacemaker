@@ -1528,7 +1528,7 @@ pcmk__build_schema_xml_node(xmlNode *parent, const char *name, GList **already_i
     /* First, create an unattached node to add all the schema files to as children. */
     xmlNode *schema_node = create_xml_node(NULL, PCMK__XA_SCHEMA);
 
-    crm_xml_add(schema_node, XML_ATTR_VERSION, name);
+    crm_xml_add(schema_node, PCMK_XA_VERSION, name);
     add_schema_file_to_xml(schema_node, name, already_included);
 
     /* Then, if we actually added any children, attach the node to parent.  If

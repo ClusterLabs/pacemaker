@@ -244,7 +244,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
 
     // Parse useful info from reply
 
-    reply_data.feature_set = crm_element_value(reply, XML_ATTR_VERSION);
+    reply_data.feature_set = crm_element_value(reply, PCMK_XA_VERSION);
     reply_data.host_from = crm_element_value(reply, F_CRM_HOST_FROM);
     msg_data = get_message_xml(reply, F_CRM_DATA);
 
