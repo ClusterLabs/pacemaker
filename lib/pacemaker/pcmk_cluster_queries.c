@@ -854,7 +854,7 @@ pcmk__list_nodes(pcmk__output_t *out, const char *node_types, bool bash_export)
         }
 
         if (pcmk__str_empty(node_types) || strstr(node_types, "guest")) {
-            data.field = "value";
+            data.field = PCMK_XA_VALUE;
             data.type = "guest";
             crm_foreach_xpath_result(xml_node, PCMK__XP_GUEST_NODE_CONFIG,
                                      remote_node_print_helper, &data);

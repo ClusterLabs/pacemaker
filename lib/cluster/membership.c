@@ -303,7 +303,7 @@ crm_remote_peer_cache_refresh(xmlNode *cib)
      * peer status callback isn't called until we're sure the node started
      * successfully.
      */
-    data.field = "value";
+    data.field = PCMK_XA_VALUE;
     data.has_state = FALSE;
     crm_foreach_xpath_result(cib, PCMK__XP_GUEST_NODE_CONFIG,
                              remote_cache_refresh_helper, &data);

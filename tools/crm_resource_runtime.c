@@ -141,7 +141,7 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
         for (child = pcmk__xml_first_child(xml_search); child != NULL;
              child = pcmk__xml_next(child)) {
             out->info(out, "  Value: %s \t(id=%s)",
-                      crm_element_value(child, XML_NVPAIR_ATTR_VALUE), ID(child));
+                      crm_element_value(child, PCMK_XA_VALUE), ID(child));
         }
 
         out->spacer(out);
@@ -1575,8 +1575,8 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
          * later (though it only makes any difference if it's Unpromoted).
          */
 
-        find_resource_attr(out, cib, XML_NVPAIR_ATTR_VALUE, lookup_id, NULL, NULL,
-                           NULL, PCMK_META_TARGET_ROLE, &orig_target_role);
+        find_resource_attr(out, cib, PCMK_XA_VALUE, lookup_id, NULL, NULL, NULL,
+                           PCMK_META_TARGET_ROLE, &orig_target_role);
         rc = cli_resource_update_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS,
                                            NULL, PCMK_META_TARGET_ROLE,
                                            PCMK_ACTION_STOPPED, FALSE, cib,

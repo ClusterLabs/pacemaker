@@ -249,7 +249,7 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
                 }
 
                 if (strcmp(op, "set") == 0) {
-                    const char *value = crm_element_value(child, "value");
+                    const char *value = crm_element_value(child, PCMK_XA_VALUE);
 
                     pcmk__add_separated_word(&buffer_set, 256, "@", ", ");
                     pcmk__g_strcat(buffer_set, name, "=", value, NULL);

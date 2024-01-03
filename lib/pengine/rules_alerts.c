@@ -104,7 +104,7 @@ get_envvars_from_cib(xmlNode *basenode, pcmk__alert_t *entry)
          child = crm_next_same_xml(child)) {
 
         const char *name = crm_element_value(child, PCMK_XA_NAME);
-        const char *value = crm_element_value(child, XML_NVPAIR_ATTR_VALUE);
+        const char *value = crm_element_value(child, PCMK_XA_VALUE);
 
         if (value == NULL) {
             value = "";
@@ -261,8 +261,8 @@ pe_unpack_alerts(const xmlNode *alerts)
             pcmk__alert_t *recipient_entry = pcmk__dup_alert(entry);
 
             recipients++;
-            recipient_entry->recipient = strdup(crm_element_value(recipient,
-                                                XML_ALERT_ATTR_REC_VALUE));
+            recipient_entry->recipient = crm_element_value_copy(recipient,
+                                                                PCMK_XA_VALUE);
 
             if (unpack_alert(recipient, recipient_entry,
                              &max_timeout) != pcmk_rc_ok) {

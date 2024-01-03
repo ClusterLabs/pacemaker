@@ -394,7 +394,7 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
     for (lpc = 0; lpc < max; lpc++) {
         xmlNode *match = getXpathResult(xpathObj, lpc);
         crm_trace("Forcing %s/%s = %s", ID(match), attr_name, attr_value);
-        crm_xml_add(match, XML_NVPAIR_ATTR_VALUE, attr_value);
+        crm_xml_add(match, PCMK_XA_VALUE, attr_value);
     }
 
     if(max == 0) {
@@ -428,7 +428,7 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
 
         crm_xml_set_id(xml, "%s-%s", CIB_OPTIONS_FIRST, attr_name);
         crm_xml_add(xml, PCMK_XA_NAME, attr_name);
-        crm_xml_add(xml, XML_NVPAIR_ATTR_VALUE, attr_value);
+        crm_xml_add(xml, PCMK_XA_VALUE, attr_value);
     }
     freeXpathObject(xpathObj);
 }

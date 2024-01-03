@@ -360,7 +360,7 @@ add_set_attr_update(const attribute_t *attr, const char *attr_id,
     }
     crm_xml_add(child, PCMK_XA_ID, attr_id);
     crm_xml_add(child, PCMK_XA_NAME, attr->id);
-    crm_xml_add(child, XML_NVPAIR_ATTR_VALUE, value);
+    crm_xml_add(child, PCMK_XA_VALUE, value);
 
     rc = the_cib->cmds->modify(the_cib, XML_CIB_TAG_STATUS, update,
                                cib_can_create|cib_transaction);

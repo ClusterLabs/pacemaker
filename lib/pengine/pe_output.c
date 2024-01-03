@@ -201,7 +201,7 @@ static const char *
 get_cluster_stack(pcmk_scheduler_t *scheduler)
 {
     xmlNode *stack = get_xpath_object(XPATH_STACK, scheduler->input, LOG_DEBUG);
-    return stack? crm_element_value(stack, XML_NVPAIR_ATTR_VALUE) : "unknown";
+    return (stack != NULL)? crm_element_value(stack, PCMK_XA_VALUE) : "unknown";
 }
 
 static char *
@@ -414,7 +414,7 @@ cluster_summary(pcmk__output_t *out, va_list args) {
         xmlNode *dc_version = get_xpath_object(XPATH_DC_VERSION,
                                                scheduler->input, LOG_DEBUG);
         const char *dc_version_s = dc_version?
-                                   crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE)
+                                   crm_element_value(dc_version, PCMK_XA_VALUE)
                                    : NULL;
         const char *quorum = crm_element_value(scheduler->input,
                                                PCMK_XA_HAVE_QUORUM);
@@ -489,7 +489,7 @@ cluster_summary_html(pcmk__output_t *out, va_list args) {
         xmlNode *dc_version = get_xpath_object(XPATH_DC_VERSION,
                                                scheduler->input, LOG_DEBUG);
         const char *dc_version_s = dc_version?
-                                   crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE)
+                                   crm_element_value(dc_version, PCMK_XA_VALUE)
                                    : NULL;
         const char *quorum = crm_element_value(scheduler->input,
                                                PCMK_XA_HAVE_QUORUM);
@@ -2131,7 +2131,7 @@ node_attribute_xml(pcmk__output_t *out, va_list args) {
 
     xmlNodePtr node = pcmk__output_create_xml_node(out, "attribute",
                                                    PCMK_XA_NAME, name,
-                                                   "value", value,
+                                                   PCMK_XA_VALUE, value,
                                                    NULL);
 
     if (add_extra) {

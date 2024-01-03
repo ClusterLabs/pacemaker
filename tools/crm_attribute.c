@@ -508,7 +508,7 @@ output_one_attribute(xmlNode *node, void *userdata)
     struct output_data_s *od = (struct output_data_s *) userdata;
 
     const char *name = crm_element_value(node, PCMK_XA_NAME);
-    const char *value = crm_element_value(node, XML_NVPAIR_ATTR_VALUE);
+    const char *value = crm_element_value(node, PCMK_XA_VALUE);
     const char *host = crm_element_value(node, PCMK__XA_ATTR_NODE_NAME);
 
     const char *type = options.type;

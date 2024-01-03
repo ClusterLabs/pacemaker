@@ -102,7 +102,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
             crm_xml_add(attr, XML_DIFF_OP, "set");
 
             value = pcmk__xml_attr_value(pIter);
-            crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, value);
+            crm_xml_add(attr, PCMK_XA_VALUE, value);
         }
     }
 

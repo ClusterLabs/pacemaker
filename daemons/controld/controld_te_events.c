@@ -224,7 +224,7 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
 
         // Fail count will be either incremented or set to infinity
         if (!pcmk_str_is_infinity(value)) {
-            value = XML_NVPAIR_ATTR_VALUE "++";
+            value = PCMK_XA_VALUE "++";
         }
 
         if (g_hash_table_lookup(crm_remote_peer_cache, event_node_uuid)) {

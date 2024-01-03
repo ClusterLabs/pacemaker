@@ -167,7 +167,7 @@ extern "C" {
 #define XML_NODE_ATTR_STATE         "state"
 #define XML_ATTR_LRM_PROBE          "lrm-is-probe"
 #define XML_ATTR_TE_ALLOWFAIL       "op_allow_fail"
-#define VALUE(x)                    crm_element_value(x, XML_NVPAIR_ATTR_VALUE)
+#define VALUE(x)                    crm_element_value(x, PCMK_XA_VALUE)
 #define action_wrapper_s            pe_action_wrapper_s
 #define add_cib_op_callback(cib, id, flag, data, fn) do {                \
         cib->cmds->register_callback(cib, id, 120, flag, data, #fn, fn); \

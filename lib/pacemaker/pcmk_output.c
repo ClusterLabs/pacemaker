@@ -1509,7 +1509,7 @@ inject_attr_xml(pcmk__output_t *out, va_list args)
 
     pcmk__output_create_xml_node(out, "inject_attr",
                                  PCMK_XA_NAME, name,
-                                 "value", value,
+                                 PCMK_XA_VALUE, value,
                                  "node_path", node_path,
                                  "cib_node", ID(cib_node),
                                  NULL);
@@ -2176,7 +2176,7 @@ attribute_xml(pcmk__output_t *out, va_list args)
 
     node = pcmk__output_create_xml_node(out, "attribute",
                                         PCMK_XA_NAME, name,
-                                        "value", value ? value : "",
+                                        PCMK_XA_VALUE, pcmk__s(value, ""),
                                         NULL);
 
     if (!pcmk__str_empty(scope)) {

@@ -159,7 +159,7 @@ handle_multiples(pcmk__output_t *out, xmlNode *search, const char *attr_name)
         for (child = pcmk__xml_first_child(search); child != NULL;
              child = pcmk__xml_next(child)) {
             out->info(out, "  Value: %s \t(id=%s)",
-                      crm_element_value(child, XML_NVPAIR_ATTR_VALUE), ID(child));
+                      crm_element_value(child, PCMK_XA_VALUE), ID(child));
         }
         return ENOTUNIQ;
 
@@ -489,7 +489,8 @@ read_attr_delegate(cib_t *cib, const char *section, const char *node_uuid,
 
     if (rc == pcmk_rc_ok) {
         if (result->children == NULL) {
-            pcmk__str_update(attr_value, crm_element_value(result, XML_NVPAIR_ATTR_VALUE));
+            pcmk__str_update(attr_value,
+                             crm_element_value(result, PCMK_XA_VALUE));
         } else {
             rc = ENOTUNIQ;
         }
@@ -575,7 +576,7 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
          * node
          */
 
-        parsed_uuid = crm_element_value(result, XML_NVPAIR_ATTR_VALUE);
+        parsed_uuid = crm_element_value(result, PCMK_XA_VALUE);
         parsed_is_remote = TRUE;
 
     } else if (pcmk__str_eq(tag, XML_CIB_TAG_STATE, pcmk__str_casei)) {

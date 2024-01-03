@@ -378,9 +378,9 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
                 name = crm_element_value(ref_nvpair, PCMK_XA_NAME);
             }
 
-            value = crm_element_value(an_attr, XML_NVPAIR_ATTR_VALUE);
+            value = crm_element_value(an_attr, PCMK_XA_VALUE);
             if ((value == NULL) && (ref_nvpair != NULL)) {
-                value = crm_element_value(ref_nvpair, XML_NVPAIR_ATTR_VALUE);
+                value = crm_element_value(ref_nvpair, PCMK_XA_VALUE);
             }
 
             if (name == NULL || value == NULL) {
@@ -986,7 +986,7 @@ pe__eval_attr_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
 
     attr = crm_element_value(expr, XML_EXPR_ATTR_ATTRIBUTE);
     op = crm_element_value(expr, XML_EXPR_ATTR_OPERATION);
-    value = crm_element_value(expr, XML_EXPR_ATTR_VALUE);
+    value = crm_element_value(expr, PCMK_XA_VALUE);
     type = crm_element_value(expr, XML_EXPR_ATTR_TYPE);
     value_source = crm_element_value(expr, XML_EXPR_ATTR_VALUE_SOURCE);
 
@@ -1165,7 +1165,7 @@ pe__eval_op_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
 static bool
 role_matches(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
 {
-    const char *value = crm_element_value(expr, XML_EXPR_ATTR_VALUE);
+    const char *value = crm_element_value(expr, PCMK_XA_VALUE);
     enum rsc_role_e role = text2role(value);
 
     if (role == pcmk_role_unknown) {

@@ -98,7 +98,7 @@ create_attr_node(void **state) {
     xmlDocPtr doc = xmlNewDoc((pcmkXmlStr) "1.0");
     xmlNodePtr node = xmlNewDocNode(doc, NULL, (pcmkXmlStr) "test", NULL);
     xmlAttrPtr attr = xmlNewProp(node, (pcmkXmlStr) PCMK_XA_NAME,
-                                 (pcmkXmlStr) "value");
+                                 (pcmkXmlStr) "dummy-value");
 
     /* Adding a node to the document marks it as dirty */
     docpriv = doc->_private;
