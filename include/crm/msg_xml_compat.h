@@ -295,6 +295,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_TYPE instead
 #define XML_ATTR_TYPE PCMK_XA_TYPE
 
+//! \deprecated Use \c PCMK_XA_TYPE instead
+#define XML_EXPR_ATTR_TYPE PCMK_XA_TYPE
+
 #ifdef __cplusplus
 }
 #endif
