@@ -142,6 +142,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_CRM_FEATURE_SET instead
 #define XML_ATTR_CRM_VERSION PCMK_XA_CRM_FEATURE_SET
 
+//! \deprecated Do not use
+#define XML_ATTR_DIGEST "digest"
+
 #ifdef __cplusplus
 }
 #endif

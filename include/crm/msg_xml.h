@@ -138,7 +138,6 @@ extern "C" {
 #  define XML_TAG_CIB			"cib"
 #  define XML_TAG_FAILED		"failed"
 
-#  define XML_ATTR_DIGEST		"digest"
 #  define XML_ATTR_VALIDATION		"validate-with"
 
 #  define XML_ATTR_QUORUM_PANIC		"no-quorum-panic"
