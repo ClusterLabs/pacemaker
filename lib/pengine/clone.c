@@ -878,7 +878,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
                     "failure_ignored",
                     pe__rsc_bool_str(rsc, pcmk_rsc_ignore_failure),
                     "target_role", configured_role_str(rsc),
-                    "description", desc);
+                    PCMK_XA_DESCRIPTION, desc);
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
 

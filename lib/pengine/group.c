@@ -379,7 +379,7 @@ pe__group_xml(pcmk__output_t *out, va_list args)
                                           "maintenance", maint_s,
                                           "managed", managed_s,
                                           "disabled", disabled_s,
-                                          "description", desc);
+                                          PCMK_XA_DESCRIPTION, desc);
             free(count);
             CRM_ASSERT(rc == pcmk_rc_ok);
         }

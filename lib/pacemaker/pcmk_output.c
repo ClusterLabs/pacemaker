@@ -2328,7 +2328,7 @@ result_code_xml(pcmk__output_t *out, va_list args)
     pcmk__output_create_xml_node(out, "result-code",
                                  "code", code_str,
                                  XML_ATTR_NAME, name,
-                                 XML_ATTR_DESC, desc,
+                                 PCMK_XA_DESCRIPTION, desc,
                                  NULL);
     free(code_str);
     return pcmk_rc_ok;

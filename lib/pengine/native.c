@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -698,7 +698,7 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
     // User-supplied description
     if (pcmk_any_flags_set(show_opts, pcmk_show_rsc_only|pcmk_show_description)
         || pcmk__list_of_multiple(rsc->running_on)) {
-        const char *desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
+        const char *desc = crm_element_value(rsc->xml, PCMK_XA_DESCRIPTION);
 
         if (desc) {
             g_string_append(outstr, " (");
@@ -1021,7 +1021,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
              "nodes_running_on", nodes_running_on,
              "pending", (print_pending? native_pending_task(rsc) : NULL),
              "locked_to", lock_node_name,
-             "description", desc);
+             PCMK_XA_DESCRIPTION, desc);
     free(nodes_running_on);
 
     CRM_ASSERT(rc == pcmk_rc_ok);

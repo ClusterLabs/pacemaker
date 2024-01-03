@@ -1517,7 +1517,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
                      pe__rsc_bool_str(rsc, pcmk_rsc_maintenance),
                      "managed", pe__rsc_bool_str(rsc, pcmk_rsc_managed),
                      "failed", pe__rsc_bool_str(rsc, pcmk_rsc_failed),
-                     "description", desc);
+                     PCMK_XA_DESCRIPTION, desc);
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
 
