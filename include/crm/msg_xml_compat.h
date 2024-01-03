@@ -358,6 +358,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_TARGET_ATTRIBUTE instead
 #define XML_ATTR_STONITH_TARGET_ATTRIBUTE PCMK_XA_TARGET_ATTRIBUTE
 
+//! \deprecated Use \c PCMK_XA_DEVICES instead
+#define XML_ATTR_STONITH_DEVICES PCMK_XA_DEVICES
+
 #ifdef __cplusplus
 }
 #endif
