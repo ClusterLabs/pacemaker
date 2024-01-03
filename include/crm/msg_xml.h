@@ -346,8 +346,6 @@ extern "C" {
 
 #  define XML_CIB_TAG_GENERATION_TUPPLE	"generation_tuple"
 
-#  define XML_ATTR_TRANSITION_KEY	"transition-key"
-
 #  define XML_ATTR_TE_NOWAIT		"op_no_wait"
 #  define XML_ATTR_TE_TARGET_RC		"op_target_rc"
 #  define XML_TAG_TRANSIENT_NODEATTRS	"transient_attributes"

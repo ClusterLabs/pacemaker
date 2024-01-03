@@ -340,6 +340,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_ATTR_TRANSITION_MAGIC "transition-magic"
 
+//! \deprecated Do not use
+#define XML_ATTR_TRANSITION_KEY	"transition-key"
+
 #ifdef __cplusplus
 }
 #endif
