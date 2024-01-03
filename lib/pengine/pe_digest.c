@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -280,7 +280,7 @@ calculate_restart_digest(pcmk__op_digest_t *data, const xmlNode *xml_op,
                                        (void *) value);
     }
 
-    value = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
+    value = crm_element_value(xml_op, PCMK_XA_CRM_FEATURE_SET);
     data->digest_restart_calc = calculate_operation_digest(data->params_restart,
                                                            value);
 }
@@ -320,11 +320,12 @@ pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
     data->rc = pcmk__digest_match;
 
     if (xml_op != NULL) {
-        op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
+        op_version = crm_element_value(xml_op, PCMK_XA_CRM_FEATURE_SET);
     }
 
     if (op_version == NULL && scheduler != NULL && scheduler->input != NULL) {
-        op_version = crm_element_value(scheduler->input, XML_ATTR_CRM_VERSION);
+        op_version = crm_element_value(scheduler->input,
+                                       PCMK_XA_CRM_FEATURE_SET);
     }
 
     if (op_version == NULL) {
@@ -400,7 +401,7 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
 
     CRM_ASSERT(node != NULL);
 
-    op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
+    op_version = crm_element_value(xml_op, PCMK_XA_CRM_FEATURE_SET);
     digest_all = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
     digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
 

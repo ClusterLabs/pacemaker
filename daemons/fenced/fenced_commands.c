@@ -1333,7 +1333,7 @@ device_params_diff(GHashTable *first, GHashTable *second) {
 
         if(strstr(key, "CRM_meta") == key) {
             continue;
-        } else if(strcmp(key, "crm_feature_set") == 0) {
+        } else if (strcmp(key, PCMK_XA_CRM_FEATURE_SET) == 0) {
             continue;
         } else {
             char *other_value = g_hash_table_lookup(second, key);

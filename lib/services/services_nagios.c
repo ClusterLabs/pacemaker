@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2023 the Pacemaker project contributors
+ * Copyright 2010-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -73,7 +73,7 @@ services__nagios_prepare(svc_action_t *op)
                 return E2BIG;
             }
 
-            if (pcmk__str_eq(key, XML_ATTR_CRM_VERSION, pcmk__str_casei)
+            if (pcmk__str_eq(key, PCMK_XA_CRM_FEATURE_SET, pcmk__str_casei)
                 || strstr(key, CRM_META "_")) {
                 continue;
             }

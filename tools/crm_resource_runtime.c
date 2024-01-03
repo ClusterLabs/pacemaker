@@ -1954,7 +1954,7 @@ set_agent_environment(GHashTable *params, int timeout_ms, int check_level,
     g_hash_table_insert(params, strdup("CRM_meta_timeout"),
                         crm_strdup_printf("%d", timeout_ms));
 
-    g_hash_table_insert(params, strdup(XML_ATTR_CRM_VERSION),
+    g_hash_table_insert(params, strdup(PCMK_XA_CRM_FEATURE_SET),
                         strdup(CRM_FEATURE_SET));
 
     if (check_level >= 0) {

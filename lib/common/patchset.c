@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -331,7 +331,7 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target,
     int counter = 0;
     bool config = FALSE;
     xmlNode *patch = NULL;
-    const char *version = crm_element_value(source, XML_ATTR_CRM_VERSION);
+    const char *version = crm_element_value(source, PCMK_XA_CRM_FEATURE_SET);
 
     xml_acl_disable(target);
     if (!xml_document_dirty(target)) {
@@ -403,7 +403,7 @@ patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
         return;
     }
 
-    version = crm_element_value(source, XML_ATTR_CRM_VERSION);
+    version = crm_element_value(source, PCMK_XA_CRM_FEATURE_SET);
     digest = calculate_xml_versioned_digest(target, FALSE, TRUE, version);
 
     crm_xml_add(patch, XML_ATTR_DIGEST, digest);
@@ -1141,7 +1141,7 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
 
     if ((rc == pcmk_ok) && (digest != NULL)) {
         char *new_digest = NULL;
-        char *version = crm_element_value_copy(xml, XML_ATTR_CRM_VERSION);
+        char *version = crm_element_value_copy(xml, PCMK_XA_CRM_FEATURE_SET);
 
         new_digest = calculate_xml_versioned_digest(xml, FALSE, TRUE, version);
         if (!pcmk__str_eq(new_digest, digest, pcmk__str_casei)) {
@@ -1190,7 +1190,7 @@ diff_xml_object(xmlNode *old, xmlNode *new, gboolean suppress)
     xmlNode *removed = create_xml_node(diff, XML_TAG_DIFF_REMOVED);
     xmlNode *added = create_xml_node(diff, XML_TAG_DIFF_ADDED);
 
-    crm_xml_add(diff, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+    crm_xml_add(diff, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
 
     tmp1 = subtract_xml_object(removed, old, new, FALSE, NULL, "removed:top");
     if (suppress && (tmp1 != NULL) && can_prune_leaf(tmp1)) {
@@ -1418,7 +1418,7 @@ apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
     gboolean result = TRUE;
     int root_nodes_seen = 0;
     const char *digest = crm_element_value(diff, XML_ATTR_DIGEST);
-    const char *version = crm_element_value(diff, XML_ATTR_CRM_VERSION);
+    const char *version = crm_element_value(diff, PCMK_XA_CRM_FEATURE_SET);
 
     xmlNode *child_diff = NULL;
     xmlNode *added = find_xml_node(diff, XML_TAG_DIFF_ADDED, FALSE);

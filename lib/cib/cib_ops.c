@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -350,7 +350,8 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
         const char *digest = crm_element_value(req, XML_ATTR_DIGEST);
 
         if (digest) {
-            const char *version = crm_element_value(req, XML_ATTR_CRM_VERSION);
+            const char *version = crm_element_value(req,
+                                                    PCMK_XA_CRM_FEATURE_SET);
             char *digest_verify = calculate_xml_versioned_digest(input, FALSE, TRUE,
                                                                  version ? version :
                                                                  CRM_FEATURE_SET);
@@ -841,7 +842,7 @@ cib__config_changed_v1(xmlNode *last, xmlNode *next, xmlNode **diff)
             config_changes = true;
             goto done;
         }
-        if (crm_element_value(top, XML_ATTR_CRM_VERSION) != NULL) {
+        if (crm_element_value(top, PCMK_XA_CRM_FEATURE_SET) != NULL) {
             config_changes = true;
             goto done;
         }

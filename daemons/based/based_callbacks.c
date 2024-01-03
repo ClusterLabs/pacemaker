@@ -406,7 +406,7 @@ cib_digester_cb(gpointer data)
         crm_xml_add(ping, F_CIB_OPERATION, CRM_OP_PING);
         crm_xml_add(ping, F_CIB_PING_ID, buffer);
 
-        crm_xml_add(ping, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+        crm_xml_add(ping, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
         send_cluster_message(NULL, crm_msg_cib, ping, TRUE);
 
         free_xml(ping);
@@ -447,7 +447,7 @@ process_ping_reply(xmlNode *reply)
         crm_trace("Ignoring ping reply %s from %s: cib updated since", seq_s, host);
 
     } else {
-        const char *version = crm_element_value(pong, XML_ATTR_CRM_VERSION);
+        const char *version = crm_element_value(pong, PCMK_XA_CRM_FEATURE_SET);
 
         if(ping_digest == NULL) {
             crm_trace("Calculating new digest");
@@ -1451,7 +1451,8 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
          */
         if ((operation->type == cib__op_commit_transact)
             && pcmk__str_eq(originator, OUR_NODENAME, pcmk__str_casei)
-            && compare_version(crm_element_value(the_cib, XML_ATTR_CRM_VERSION),
+            && compare_version(crm_element_value(the_cib,
+                                                 PCMK_XA_CRM_FEATURE_SET),
                                "3.19.0") < 0) {
 
             sync_our_cib(request, TRUE);

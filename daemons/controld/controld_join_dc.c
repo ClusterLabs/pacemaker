@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -249,7 +249,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
     offer = create_dc_message(CRM_OP_JOIN_OFFER, member->uname);
 
     // Advertise our feature set so the joining node can bail if not compatible
-    crm_xml_add(offer, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+    crm_xml_add(offer, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
 
     crm_info("Sending join-%d offer to %s", current_join_id, member->uname);
     send_cluster_message(member, crm_msg_crmd, offer, TRUE);
@@ -389,7 +389,7 @@ do_dc_join_filter_offer(long long action,
     const char *join_from = crm_element_value(join_ack->msg, F_CRM_HOST_FROM);
     const char *ref = crm_element_value(join_ack->msg, F_CRM_REFERENCE);
     const char *join_version = crm_element_value(join_ack->msg,
-                                                 XML_ATTR_CRM_VERSION);
+                                                 PCMK_XA_CRM_FEATURE_SET);
     crm_node_t *join_node = NULL;
 
     if (join_from == NULL) {

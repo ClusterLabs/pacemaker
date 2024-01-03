@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -142,7 +142,7 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
     crm_trace("Processing \"%s\" event %s from %s", op, seq, host);
     *answer = create_xml_node(NULL, XML_CRM_TAG_PING);
 
-    crm_xml_add(*answer, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+    crm_xml_add(*answer, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
     crm_xml_add(*answer, XML_ATTR_DIGEST, digest);
     crm_xml_add(*answer, F_CIB_PING_ID, seq);
 
@@ -437,7 +437,7 @@ sync_our_cib(xmlNode * request, gboolean all)
     crm_xml_add(replace_request, "original_" F_CIB_OPERATION, op);
     pcmk__xe_set_bool_attr(replace_request, F_CIB_GLOBAL_UPDATE, true);
 
-    crm_xml_add(replace_request, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+    crm_xml_add(replace_request, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
     digest = calculate_xml_versioned_digest(the_cib, FALSE, TRUE, CRM_FEATURE_SET);
     crm_xml_add(replace_request, XML_ATTR_DIGEST, digest);
 

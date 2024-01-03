@@ -240,7 +240,7 @@ createEmptyCib(int cib_epoch)
     xmlNode *cib_root = NULL, *config = NULL;
 
     cib_root = create_xml_node(NULL, XML_TAG_CIB);
-    crm_xml_add(cib_root, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+    crm_xml_add(cib_root, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
     crm_xml_add(cib_root, XML_ATTR_VALIDATION, xml_latest_schema());
 
     crm_xml_add_int(cib_root, XML_ATTR_GENERATION, cib_epoch);
@@ -470,7 +470,7 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
     }
 
     if (scratch) {
-        new_version = crm_element_value(scratch, XML_ATTR_CRM_VERSION);
+        new_version = crm_element_value(scratch, PCMK_XA_CRM_FEATURE_SET);
 
         if (new_version && compare_version(new_version, CRM_FEATURE_SET) > 0) {
             crm_err("Discarding update with feature set '%s' greater than our own '%s'",

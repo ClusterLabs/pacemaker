@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2023 the Pacemaker project contributors
+ * Copyright 2005-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -133,7 +133,7 @@ apply_patch(xmlNode *input, xmlNode *patch, gboolean as_cib)
 
         print_patch(output);
 
-        version = crm_element_value(output, XML_ATTR_CRM_VERSION);
+        version = crm_element_value(output, PCMK_XA_CRM_FEATURE_SET);
         buffer = calculate_xml_versioned_digest(output, FALSE, TRUE, version);
         crm_trace("Digest: %s", pcmk__s(buffer, "<null>\n"));
         free(buffer);

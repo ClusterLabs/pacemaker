@@ -252,7 +252,7 @@ generate_fail_regexes(const pcmk_resource_t *rsc,
     int rc = pcmk_rc_ok;
     char *rsc_name = rsc_fail_name(rsc);
     const char *version = crm_element_value(rsc->cluster->input,
-                                            XML_ATTR_CRM_VERSION);
+                                            PCMK_XA_CRM_FEATURE_SET);
 
     // @COMPAT Pacemaker <= 1.1.16 used a single fail count per resource
     gboolean is_legacy = (compare_version(version, "3.0.13") < 0);

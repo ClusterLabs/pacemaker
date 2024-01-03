@@ -671,7 +671,7 @@ controld_add_resource_history_xml_as(const char *func, xmlNode *parent,
 
     target_rc = rsc_op_expected_rc(op);
 
-    caller_version = g_hash_table_lookup(op->params, XML_ATTR_CRM_VERSION);
+    caller_version = g_hash_table_lookup(op->params, PCMK_XA_CRM_FEATURE_SET);
     CRM_CHECK(caller_version != NULL, caller_version = CRM_FEATURE_SET);
 
     xml_op = pcmk__create_history_xml(parent, op, caller_version, target_rc,

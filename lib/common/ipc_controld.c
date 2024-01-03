@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 the Pacemaker project contributors
+ * Copyright 2020-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -515,7 +515,7 @@ controller_resource_op(pcmk_ipc_api_t *api, const char *op,
     crm_xml_add(xml_rsc, XML_ATTR_TYPE, type);
 
     params = create_xml_node(msg_data, XML_TAG_ATTRS);
-    crm_xml_add(params, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+    crm_xml_add(params, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
 
     // The controller parses the timeout from the request
     key = crm_meta_name(XML_ATTR_TIMEOUT);

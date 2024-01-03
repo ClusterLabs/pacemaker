@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -176,7 +176,7 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
                                CRM_SYSTEM_CRMD, NULL);
 
         crm_xml_add(reply, F_CRM_JOIN_ID, join_id);
-        crm_xml_add(reply, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+        crm_xml_add(reply, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
         send_cluster_message(crm_get_peer(0, controld_globals.dc_name),
                              crm_msg_crmd, reply, TRUE);
         free_xml(reply);

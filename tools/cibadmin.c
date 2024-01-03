@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -751,7 +751,7 @@ main(int argc, char **argv)
             goto done;
         }
 
-        version = crm_element_value(input, XML_ATTR_CRM_VERSION);
+        version = crm_element_value(input, PCMK_XA_CRM_FEATURE_SET);
         digest = calculate_xml_versioned_digest(input, FALSE, TRUE, version);
         fprintf(stderr, "Versioned (%s) digest: ", version);
         fprintf(stdout, "%s\n", pcmk__s(digest, "<null>"));

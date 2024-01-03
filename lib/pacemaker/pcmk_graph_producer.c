@@ -336,7 +336,7 @@ add_action_attributes(pcmk_action_t *action, xmlNode *action_xml)
      */
     args_xml = create_xml_node(NULL, XML_TAG_ATTRS);
 
-    crm_xml_add(args_xml, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+    crm_xml_add(args_xml, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
     g_hash_table_foreach(action->extra, hash2field, args_xml);
 
     if ((action->rsc != NULL) && (action->node != NULL)) {

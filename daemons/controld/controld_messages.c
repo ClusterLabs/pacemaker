@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -737,7 +737,7 @@ handle_lrm_delete(xmlNode *stored_msg)
             op->type = lrmd_event_exec_complete;
             op->user_data = strdup(transition? transition : FAKE_TE_ID);
             op->params = pcmk__strkey_table(free, free);
-            g_hash_table_insert(op->params, strdup(XML_ATTR_CRM_VERSION),
+            g_hash_table_insert(op->params, strdup(PCMK_XA_CRM_FEATURE_SET),
                                 strdup(CRM_FEATURE_SET));
             controld_rc2event(op, rc);
             controld_ack_event_directly(from_host, from_sys, NULL, op, rsc_id);
@@ -927,7 +927,7 @@ handle_node_info_request(const xmlNode *msg)
 static void
 verify_feature_set(xmlNode *msg)
 {
-    const char *dc_version = crm_element_value(msg, XML_ATTR_CRM_VERSION);
+    const char *dc_version = crm_element_value(msg, PCMK_XA_CRM_FEATURE_SET);
 
     if (dc_version == NULL) {
         /* All we really know is that the DC feature set is older than 3.1.0,

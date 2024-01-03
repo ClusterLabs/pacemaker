@@ -1225,7 +1225,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     crm_xml_add(xml_op, XML_LRM_ATTR_TASK_KEY, key);
     crm_xml_add(xml_op, XML_LRM_ATTR_TASK, task);
     crm_xml_add(xml_op, XML_ATTR_ORIGIN, origin);
-    crm_xml_add(xml_op, XML_ATTR_CRM_VERSION, caller_version);
+    crm_xml_add(xml_op, PCMK_XA_CRM_FEATURE_SET, caller_version);
     crm_xml_add(xml_op, XML_ATTR_TRANSITION_KEY, op->user_data);
     crm_xml_add(xml_op, XML_ATTR_TRANSITION_MAGIC, magic);
     crm_xml_add(xml_op, XML_LRM_ATTR_EXIT_REASON, pcmk__s(exit_reason, ""));

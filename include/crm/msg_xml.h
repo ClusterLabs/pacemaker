@@ -48,6 +48,7 @@ extern "C" {
  * XML attributes
  */
 
+#define PCMK_XA_CRM_FEATURE_SET             "crm_feature_set"
 #define PCMK_XA_FORMAT                      "format"
 
 /* These have been deprecated as CIB <clone> element attributes (aliases for
