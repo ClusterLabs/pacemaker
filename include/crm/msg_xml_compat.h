@@ -328,6 +328,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_UNAME instead
 #define XML_ATTR_UNAME PCMK_XA_UNAME
 
+//! \deprecated Use \c PCMK_XA_REFERENCE instead
+#define XML_ATTR_REFERENCE PCMK_XA_REFERENCE
+
 #ifdef __cplusplus
 }
 #endif

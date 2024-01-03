@@ -159,8 +159,6 @@ extern "C" {
 #  define XML_TAG_OPTIONS		"options"
 
 /*---- top level tags/attrs */
-#  define XML_ATTR_REFERENCE		"reference"
-
 #  define XML_CRM_TAG_PING		"ping_response"
 #  define XML_PING_ATTR_STATUS		"result"
 #  define XML_PING_ATTR_SYSFROM		"crm_subsystem"
