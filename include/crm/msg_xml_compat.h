@@ -343,6 +343,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_ATTR_TRANSITION_KEY	"transition-key"
 
+//! \deprecated Use \c PCMK_XA_INDEX instead
+#define XML_ATTR_STONITH_INDEX PCMK_XA_INDEX
+
 #ifdef __cplusplus
 }
 #endif
