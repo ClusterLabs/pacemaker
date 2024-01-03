@@ -157,6 +157,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_EPOCH instead
 #define XML_ATTR_GENERATION PCMK_XA_EPOCH
 
+//! \deprecated Use \c PCMK_XA_ADMIN_EPOCH instead
+#define XML_ATTR_GENERATION_ADMIN PCMK_XA_ADMIN_EPOCH
+
 #ifdef __cplusplus
 }
 #endif
