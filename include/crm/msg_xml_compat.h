@@ -374,6 +374,9 @@ extern "C" {
 #define F_SEQ "seq"
 #endif
 
+//! \deprecated Use \c F_SUBTYPE instead
+#define F_CRM_MSG_TYPE F_SUBTYPE
+
 #ifdef __cplusplus
 }
 #endif
