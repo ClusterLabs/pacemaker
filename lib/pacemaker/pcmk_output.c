@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the Pacemaker project contributors
+ * Copyright 2019-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1378,7 +1378,7 @@ node_info_xml(pcmk__output_t *out, va_list args)
                                  XML_ATTR_UNAME, node_name,
                                  XML_ATTR_ID, uuid,
                                  PCMK__XA_CRMD, state,
-                                 XML_ATTR_HAVE_QUORUM, pcmk__btoa(have_quorum),
+                                 PCMK_XA_HAVE_QUORUM, pcmk__btoa(have_quorum),
                                  XML_NODE_IS_REMOTE, pcmk__btoa(is_remote),
                                  NULL);
     free(id_s);

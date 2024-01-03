@@ -123,7 +123,8 @@ set_node_info_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
     if (msg_data == NULL) {
         return;
     }
-    data->data.node_info.have_quorum = pcmk__xe_attr_is_true(msg_data, XML_ATTR_HAVE_QUORUM);
+    data->data.node_info.have_quorum =
+        pcmk__xe_attr_is_true(msg_data, PCMK_XA_HAVE_QUORUM);
     data->data.node_info.is_remote = pcmk__xe_attr_is_true(msg_data, XML_NODE_IS_REMOTE);
 
     /* Integer node_info.id is currently valid only for Corosync nodes.

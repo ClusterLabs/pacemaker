@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -430,7 +430,7 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
         xmlNode *update = NULL;
 
         update = create_xml_node(NULL, XML_TAG_CIB);
-        crm_xml_add_int(update, XML_ATTR_HAVE_QUORUM, quorum);
+        crm_xml_add_int(update, PCMK_XA_HAVE_QUORUM, quorum);
         crm_xml_add(update, XML_ATTR_DC_UUID, controld_globals.our_uuid);
 
         crm_debug("Updating quorum status to %s", pcmk__btoa(quorum));

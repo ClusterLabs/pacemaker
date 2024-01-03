@@ -650,7 +650,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
         xmlNode *top = create_xml_node(NULL, XML_TAG_CIB);
 
         /* crm_xml_add(top, XML_ATTR_DC_UUID, dc_uuid);      */
-        crm_xml_add(top, XML_ATTR_HAVE_QUORUM, injections->quorum);
+        crm_xml_add(top, PCMK_XA_HAVE_QUORUM, injections->quorum);
 
         rc = cib->cmds->modify(cib, NULL, top, cib_sync_call|cib_scope_local);
         CRM_ASSERT(rc == pcmk_ok);

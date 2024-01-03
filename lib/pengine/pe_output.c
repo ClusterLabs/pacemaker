@@ -418,7 +418,7 @@ cluster_summary(pcmk__output_t *out, va_list args) {
                                    crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE)
                                    : NULL;
         const char *quorum = crm_element_value(scheduler->input,
-                                               XML_ATTR_HAVE_QUORUM);
+                                               PCMK_XA_HAVE_QUORUM);
         char *dc_name = scheduler->dc_node? pe__node_display_name(scheduler->dc_node, pcmk_is_set(show_opts, pcmk_show_node_id)) : NULL;
         bool mixed_version = is_mixed_version(scheduler);
 
@@ -493,7 +493,7 @@ cluster_summary_html(pcmk__output_t *out, va_list args) {
                                    crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE)
                                    : NULL;
         const char *quorum = crm_element_value(scheduler->input,
-                                               XML_ATTR_HAVE_QUORUM);
+                                               PCMK_XA_HAVE_QUORUM);
         char *dc_name = scheduler->dc_node? pe__node_display_name(scheduler->dc_node, pcmk_is_set(show_opts, pcmk_show_node_id)) : NULL;
         bool mixed_version = is_mixed_version(scheduler);
 

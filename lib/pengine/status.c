@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -92,7 +92,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
                                                     XML_ATTR_DC_UUID);
     }
 
-    if (pcmk__xe_attr_is_true(scheduler->input, XML_ATTR_HAVE_QUORUM)) {
+    if (pcmk__xe_attr_is_true(scheduler->input, PCMK_XA_HAVE_QUORUM)) {
         pe__set_working_set_flags(scheduler, pcmk_sched_quorate);
     } else {
         pe__clear_working_set_flags(scheduler, pcmk_sched_quorate);
