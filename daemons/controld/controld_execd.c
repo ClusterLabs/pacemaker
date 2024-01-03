@@ -1706,7 +1706,7 @@ construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
         op->start_delay = 0;
     }
 
-    transition = crm_element_value(rsc_op, XML_ATTR_TRANSITION_KEY);
+    transition = crm_element_value(rsc_op, PCMK__XA_TRANSITION_KEY);
     CRM_CHECK(transition != NULL, return op);
 
     op->user_data = strdup(transition);
@@ -1924,7 +1924,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
     operation = crm_element_value(msg, XML_LRM_ATTR_TASK);
     CRM_CHECK(!pcmk__str_empty(operation), return);
 
-    transition = crm_element_value(msg, XML_ATTR_TRANSITION_KEY);
+    transition = crm_element_value(msg, PCMK__XA_TRANSITION_KEY);
     if (pcmk__str_empty(transition)) {
         crm_log_xml_err(msg, "Missing transition number");
     }

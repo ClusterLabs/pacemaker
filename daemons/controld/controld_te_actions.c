@@ -168,7 +168,7 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     counter = pcmk__transition_key(controld_globals.transition_graph->id,
                                    action->id, get_target_rc(action),
                                    controld_globals.te_uuid);
-    crm_xml_add(cmd, XML_ATTR_TRANSITION_KEY, counter);
+    crm_xml_add(cmd, PCMK__XA_TRANSITION_KEY, counter);
 
     rc = send_cluster_message(crm_get_peer(0, router_node), crm_msg_crmd, cmd, TRUE);
     free(counter);
@@ -381,7 +381,7 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     counter = pcmk__transition_key(controld_globals.transition_graph->id,
                                    action->id, get_target_rc(action),
                                    controld_globals.te_uuid);
-    crm_xml_add(rsc_op, XML_ATTR_TRANSITION_KEY, counter);
+    crm_xml_add(rsc_op, PCMK__XA_TRANSITION_KEY, counter);
 
     if (pcmk__str_eq(router_node, controld_globals.our_nodename,
                      pcmk__str_casei)) {

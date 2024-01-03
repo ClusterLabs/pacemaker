@@ -725,10 +725,10 @@ handle_lrm_delete(xmlNode *stored_msg)
 
             if (strcmp(from_sys, CRM_SYSTEM_TENGINE)) {
                 transition = crm_element_value(msg_data,
-                                                       XML_ATTR_TRANSITION_KEY);
+                                               PCMK__XA_TRANSITION_KEY);
             } else {
                 transition = crm_element_value(stored_msg,
-                                                       XML_ATTR_TRANSITION_KEY);
+                                               PCMK__XA_TRANSITION_KEY);
             }
 
             crm_info("Notifying %s on %s that %s was%s deleted",

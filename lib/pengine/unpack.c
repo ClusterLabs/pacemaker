@@ -4315,7 +4315,7 @@ int
 pe__target_rc_from_xml(const xmlNode *xml_op)
 {
     int target_rc = 0;
-    const char *key = crm_element_value(xml_op, XML_ATTR_TRANSITION_KEY);
+    const char *key = crm_element_value(xml_op, PCMK__XA_TRANSITION_KEY);
 
     if (key == NULL) {
         return -1;

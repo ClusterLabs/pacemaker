@@ -964,7 +964,7 @@ controld_delete_action_history(const lrmd_event_data_t *op)
 
     xml_top = create_xml_node(NULL, XML_LRM_TAG_RSC_OP);
     crm_xml_add_int(xml_top, XML_LRM_ATTR_CALLID, op->call_id);
-    crm_xml_add(xml_top, XML_ATTR_TRANSITION_KEY, op->user_data);
+    crm_xml_add(xml_top, PCMK__XA_TRANSITION_KEY, op->user_data);
 
     if (op->interval_ms > 0) {
         char *op_id = pcmk__op_key(op->rsc_id, op->op_type, op->interval_ms);

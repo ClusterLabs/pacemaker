@@ -495,7 +495,7 @@ controller_resource_op(pcmk_ipc_api_t *api, const char *op,
      */
     key = pcmk__transition_key(0, getpid(), 0,
                                "xxxxxxxx-xrsc-opxx-xcrm-resourcexxxx");
-    crm_xml_add(msg_data, XML_ATTR_TRANSITION_KEY, key);
+    crm_xml_add(msg_data, PCMK__XA_TRANSITION_KEY, key);
     free(key);
 
     crm_xml_add(msg_data, XML_LRM_ATTR_TARGET, target_node);
