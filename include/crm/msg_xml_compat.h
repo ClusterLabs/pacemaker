@@ -325,6 +325,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_ATTR_RESPONSE "response"
 
+//! \deprecated Use \c PCMK_XA_UNAME instead
+#define XML_ATTR_UNAME PCMK_XA_UNAME
+
 #ifdef __cplusplus
 }
 #endif
