@@ -163,6 +163,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_NUM_UPDATES instead
 #define XML_ATTR_NUMUPDATES PCMK_XA_NUM_UPDATES
 
+//! \deprecated Use \c PCMK_XA_CRM_DEBUG_ORIGIN instead
+#define XML_ATTR_ORIGIN PCMK_XA_CRM_DEBUG_ORIGIN
+
 #ifdef __cplusplus
 }
 #endif
