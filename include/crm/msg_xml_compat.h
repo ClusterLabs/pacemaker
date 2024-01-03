@@ -301,6 +301,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_PROVIDER instead
 #define XML_AGENT_ATTR_PROVIDER PCMK_XA_PROVIDER
 
+//! \deprecated Use \c PCMK_XA_CLASS instead
+#define XML_AGENT_ATTR_CLASS PCMK_XA_CLASS
+
 #ifdef __cplusplus
 }
 #endif
