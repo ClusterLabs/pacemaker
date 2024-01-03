@@ -175,6 +175,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_VERSION instead
 #define XML_ATTR_VERSION PCMK_XA_VERSION
 
+//! \deprecated Use \c PCMK_XA_DESCRIPTION instead
+#define XML_ATTR_DESC PCMK_XA_DESCRIPTION
+
 #ifdef __cplusplus
 }
 #endif
