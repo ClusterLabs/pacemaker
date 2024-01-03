@@ -538,7 +538,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     }
     resource = resource_config_name;
     if (pe_find_resource(fake_resource_list, resource) == NULL) {
-        const char *longname = crm_element_value(action_rsc, XML_ATTR_ID_LONG);
+        const char *longname = crm_element_value(action_rsc, PCMK__XA_LONG_ID);
 
         if ((longname != NULL)
             && (pe_find_resource(fake_resource_list, longname) != NULL)) {

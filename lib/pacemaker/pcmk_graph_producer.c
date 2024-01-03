@@ -277,7 +277,7 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
         crm_debug("Using orphan clone name %s instead of %s",
                   action->rsc->id, action->rsc->clone_name);
         crm_xml_add(rsc_xml, PCMK_XA_ID, action->rsc->clone_name);
-        crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->id);
+        crm_xml_add(rsc_xml, PCMK__XA_LONG_ID, action->rsc->id);
 
     } else if (!pcmk_is_set(action->rsc->flags, pcmk_rsc_unique)) {
         const char *xml_id = ID(action->rsc->xml);
@@ -286,9 +286,9 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
                   xml_id, action->rsc->id, action->rsc->clone_name);
 
         /* ID is what we'd like client to use
-         * ID_LONG is what they might know it as instead
+         * LONG_ID is what they might know it as instead
          *
-         * ID_LONG is only strictly needed /here/ during the
+         * LONG_ID is only strictly needed /here/ during the
          * transition period until all nodes in the cluster
          * are running the new software /and/ have rebooted
          * once (meaning that they've only ever spoken to a DC
@@ -302,9 +302,9 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
         if ((action->rsc->clone_name != NULL)
             && !pcmk__str_eq(xml_id, action->rsc->clone_name,
                              pcmk__str_none)) {
-            crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->clone_name);
+            crm_xml_add(rsc_xml, PCMK__XA_LONG_ID, action->rsc->clone_name);
         } else {
-            crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->id);
+            crm_xml_add(rsc_xml, PCMK__XA_LONG_ID, action->rsc->id);
         }
 
     } else {

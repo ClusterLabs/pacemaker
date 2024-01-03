@@ -924,7 +924,7 @@ get_lrm_resource(lrm_state_t *lrm_state, const xmlNode *rsc_xml,
 
     // If resource isn't known by ID, try clone name, if provided
     if (!*rsc_info) {
-        const char *long_id = crm_element_value(rsc_xml, XML_ATTR_ID_LONG);
+        const char *long_id = crm_element_value(rsc_xml, PCMK__XA_LONG_ID);
 
         if (long_id) {
             *rsc_info = lrm_state_get_rsc_info(lrm_state, long_id, 0);
