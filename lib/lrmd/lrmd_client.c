@@ -522,7 +522,6 @@ lrmd_create_op(const char *token, const char *op, xmlNode *data, int timeout,
     CRM_CHECK(op_msg != NULL, return NULL);
     CRM_CHECK(token != NULL, return NULL);
 
-    crm_xml_add(op_msg, F_XML_TAGNAME, "lrmd_command");
     crm_xml_add(op_msg, PCMK__XA_T, T_LRMD);
     crm_xml_add(op_msg, F_LRMD_CALLBACK_TOKEN, token);
     crm_xml_add(op_msg, F_LRMD_OPERATION, op);

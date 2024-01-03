@@ -814,8 +814,6 @@ stonith_create_op(int call_id, const char *token, const char *op, xmlNode * data
     CRM_CHECK(op_msg != NULL, return NULL);
     CRM_CHECK(token != NULL, return NULL);
 
-    crm_xml_add(op_msg, F_XML_TAGNAME, "stonith_command");
-
     crm_xml_add(op_msg, PCMK__XA_T, T_STONITH_NG);
     crm_xml_add(op_msg, F_STONITH_CALLBACK_TOKEN, token);
     crm_xml_add(op_msg, F_STONITH_OPERATION, op);

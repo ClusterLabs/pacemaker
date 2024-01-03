@@ -371,7 +371,6 @@ static xmlNode *
 cib_msg_copy(xmlNode *msg)
 {
     static const char *field_list[] = {
-        F_XML_TAGNAME,
         PCMK__XA_T,
         F_CIB_CLIENTID,
         F_CIB_CALLOPTS,

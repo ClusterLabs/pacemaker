@@ -513,7 +513,6 @@ st_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void
          */
         xmlNode *query = create_xml_node(NULL, "stonith_command");
 
-        crm_xml_add(query, F_XML_TAGNAME, "stonith_command");
         crm_xml_add(query, PCMK__XA_T, T_STONITH_NG);
         crm_xml_add(query, F_STONITH_OPERATION, "poke");
 
