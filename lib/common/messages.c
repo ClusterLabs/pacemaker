@@ -104,7 +104,7 @@ create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
 {
     xmlNode *reply = NULL;
 
-    const char *host_from = crm_element_value(original_request, F_CRM_HOST_FROM);
+    const char *host_from = crm_element_value(original_request, PCMK__XA_SRC);
     const char *sys_from = crm_element_value(original_request, F_CRM_SYS_FROM);
     const char *sys_to = crm_element_value(original_request, F_CRM_SYS_TO);
     const char *type = crm_element_value(original_request, F_CRM_MSG_TYPE);

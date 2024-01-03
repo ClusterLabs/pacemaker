@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the Pacemaker project contributors
+ * Copyright 2013-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -69,7 +69,7 @@ attrd_handle_election_op(const crm_node_t *peer, xmlNode *xml)
     enum election_result rc = 0;
     enum election_result previous = election_state(writer);
 
-    crm_xml_add(xml, F_CRM_HOST_FROM, peer->uname);
+    crm_xml_add(xml, PCMK__XA_SRC, peer->uname);
 
     // Don't become writer if we're shutting down
     rc = election_count_vote(writer, xml, !attrd_shutting_down(false));

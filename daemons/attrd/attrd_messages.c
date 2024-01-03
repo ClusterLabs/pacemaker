@@ -332,7 +332,7 @@ attrd_broadcast_protocol(void)
     xmlNode *attrd_op = create_xml_node(NULL, __func__);
 
     crm_xml_add(attrd_op, F_TYPE, T_ATTRD);
-    crm_xml_add(attrd_op, F_ORIG, crm_system_name);
+    crm_xml_add(attrd_op, PCMK__XA_SRC, crm_system_name);
     crm_xml_add(attrd_op, PCMK__XA_TASK, PCMK__ATTRD_CMD_UPDATE);
     crm_xml_add(attrd_op, PCMK__XA_ATTR_NAME, CRM_ATTR_PROTOCOL);
     crm_xml_add(attrd_op, PCMK__XA_ATTR_VALUE, ATTRD_PROTOCOL_VERSION);

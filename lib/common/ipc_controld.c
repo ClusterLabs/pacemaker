@@ -245,7 +245,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
     // Parse useful info from reply
 
     reply_data.feature_set = crm_element_value(reply, PCMK_XA_VERSION);
-    reply_data.host_from = crm_element_value(reply, F_CRM_HOST_FROM);
+    reply_data.host_from = crm_element_value(reply, PCMK__XA_SRC);
     msg_data = get_message_xml(reply, F_CRM_DATA);
 
     if (!strcmp(value, CRM_OP_REPROBE)) {

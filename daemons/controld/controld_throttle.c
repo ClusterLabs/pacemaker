@@ -552,7 +552,7 @@ throttle_update(xmlNode *xml)
     int max = 0;
     int mode = 0;
     struct throttle_record_s *r = NULL;
-    const char *from = crm_element_value(xml, F_CRM_HOST_FROM);
+    const char *from = crm_element_value(xml, PCMK__XA_SRC);
 
     crm_element_value_int(xml, F_CRM_THROTTLE_MODE, &mode);
     crm_element_value_int(xml, F_CRM_THROTTLE_MAX, &max);

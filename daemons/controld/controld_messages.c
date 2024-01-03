@@ -719,8 +719,7 @@ handle_lrm_delete(xmlNode *stored_msg)
         //Notify client and tengine.(Only notify tengine if mode = "cib" and CRM_OP_LRM_DELETE.)
         if (from_sys) {
             lrmd_event_data_t *op = NULL;
-            const char *from_host = crm_element_value(stored_msg,
-                                                      F_CRM_HOST_FROM);
+            const char *from_host = crm_element_value(stored_msg, PCMK__XA_SRC);
             const char *transition;
 
             if (strcmp(from_sys, CRM_SYSTEM_TENGINE)) {
@@ -954,7 +953,7 @@ verify_feature_set(xmlNode *msg)
 static enum crmd_fsa_input
 handle_shutdown_self_ack(xmlNode *stored_msg)
 {
-    const char *host_from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
+    const char *host_from = crm_element_value(stored_msg, PCMK__XA_SRC);
 
     if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
         // The expected case -- we initiated own shutdown sequence
@@ -987,7 +986,7 @@ handle_shutdown_self_ack(xmlNode *stored_msg)
 static enum crmd_fsa_input
 handle_shutdown_ack(xmlNode *stored_msg)
 {
-    const char *host_from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
+    const char *host_from = crm_element_value(stored_msg, PCMK__XA_SRC);
 
     if (host_from == NULL) {
         crm_warn("Ignoring shutdown request without origin specified");
@@ -1028,7 +1027,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
     }
 
     if (strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
-        const char *from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
+        const char *from = crm_element_value(stored_msg, PCMK__XA_SRC);
         crm_node_t *node = pcmk__search_cluster_node_cache(0, from, NULL);
 
         pcmk__update_peer_expected(__func__, node, CRMD_JOINSTATE_DOWN);
@@ -1213,7 +1212,7 @@ handle_response(xmlNode *stored_msg)
                || strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0 || strcmp(op, CRM_OP_SHUTDOWN) == 0) {
 
     } else {
-        const char *host_from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
+        const char *host_from = crm_element_value(stored_msg, PCMK__XA_SRC);
 
         crm_err("Unexpected response (op=%s, src=%s) sent to the %s",
                 op, host_from, AM_I_DC ? "DC" : "controller");
@@ -1231,7 +1230,7 @@ handle_shutdown_request(xmlNode * stored_msg)
      */
 
     char *now_s = NULL;
-    const char *host_from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
+    const char *host_from = crm_element_value(stored_msg, PCMK__XA_SRC);
 
     if (host_from == NULL) {
         /* we're shutting down and the DC */
@@ -1259,8 +1258,8 @@ send_msg_via_ipc(xmlNode * msg, const char *sys)
 
     client_channel = pcmk__find_client_by_id(sys);
 
-    if (crm_element_value(msg, F_CRM_HOST_FROM) == NULL) {
-        crm_xml_add(msg, F_CRM_HOST_FROM, controld_globals.our_nodename);
+    if (crm_element_value(msg, PCMK__XA_SRC) == NULL) {
+        crm_xml_add(msg, PCMK__XA_SRC, controld_globals.our_nodename);
     }
 
     if (client_channel != NULL) {

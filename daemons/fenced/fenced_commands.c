@@ -370,7 +370,7 @@ create_async_command(xmlNode *msg)
     crm_element_value_int(msg, F_STONITH_TIMEOUT, &(cmd->default_timeout));
     cmd->timeout = cmd->default_timeout;
 
-    cmd->origin = crm_element_value_copy(msg, F_ORIG);
+    cmd->origin = crm_element_value_copy(msg, PCMK__XA_SRC);
     cmd->remote_op_id = crm_element_value_copy(msg, F_STONITH_REMOTE_OP_ID);
     cmd->client_name = crm_element_value_copy(msg, F_STONITH_CLIENTNAME);
     cmd->target = crm_element_value_copy(op, F_STONITH_TARGET);

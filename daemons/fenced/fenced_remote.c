@@ -512,7 +512,7 @@ delegate_from_xml(xmlNode *xml)
     xmlNode *match = get_xpath_object("//@" F_STONITH_DELEGATE, xml, LOG_NEVER);
 
     if (match == NULL) {
-        return crm_element_value_copy(xml, F_ORIG);
+        return crm_element_value_copy(xml, PCMK__XA_SRC);
     } else {
         return crm_element_value_copy(match, F_STONITH_DELEGATE);
     }
@@ -2266,7 +2266,7 @@ process_remote_stonith_query(xmlNode *msg)
     if ((++op->replies >= replies_expected) && (op->state == st_query)) {
         have_all_replies = TRUE;
     }
-    host = crm_element_value(msg, F_ORIG);
+    host = crm_element_value(msg, PCMK__XA_SRC);
     host_is_target = pcmk__str_eq(host, op->target, pcmk__str_casei);
 
     crm_info("Query result %d of %d from %s for %s/%s (%d device%s) %s",

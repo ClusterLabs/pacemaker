@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -695,7 +695,7 @@ update_dc(xmlNode * msg)
         gboolean invalid = FALSE;
 
         dc_version = crm_element_value(msg, F_CRM_VERSION);
-        welcome_from = crm_element_value(msg, F_CRM_HOST_FROM);
+        welcome_from = crm_element_value(msg, PCMK__XA_SRC);
 
         CRM_CHECK(dc_version != NULL, return FALSE);
         CRM_CHECK(welcome_from != NULL, return FALSE);

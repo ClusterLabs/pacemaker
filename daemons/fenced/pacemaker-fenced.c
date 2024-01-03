@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the Pacemaker project contributors
+ * Copyright 2009-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -177,7 +177,7 @@ st_ipc_destroy(qb_ipcs_connection_t * c)
 static void
 stonith_peer_callback(xmlNode * msg, void *private_data)
 {
-    const char *remote_peer = crm_element_value(msg, F_ORIG);
+    const char *remote_peer = crm_element_value(msg, PCMK__XA_SRC);
     const char *op = crm_element_value(msg, F_STONITH_OPERATION);
 
     if (pcmk__str_eq(op, "poke", pcmk__str_none)) {
@@ -209,7 +209,7 @@ stonith_peer_ais_callback(cpg_handle_t handle,
             free(data);
             return;
         }
-        crm_xml_add(xml, F_ORIG, from);
+        crm_xml_add(xml, PCMK__XA_SRC, from);
         /* crm_xml_add_int(xml, F_SEQ, wrapper->id); */
         stonith_peer_callback(xml, NULL);
     }

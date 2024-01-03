@@ -608,7 +608,7 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
                 /* Ensure values of origin, client, and user in scratch match
                  * the values in req
                  */
-                const char *origin = crm_element_value(req, F_ORIG);
+                const char *origin = crm_element_value(req, PCMK__XA_SRC);
                 const char *client = crm_element_value(req, F_CIB_CLIENTNAME);
 
                 if (origin != NULL) {

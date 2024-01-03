@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -429,7 +429,7 @@ parse_election_message(const election_t *e, const xmlNode *message,
     vote->age.tv_usec = -1;
 
     vote->op = crm_element_value(message, F_CRM_TASK);
-    vote->from = crm_element_value(message, F_CRM_HOST_FROM);
+    vote->from = crm_element_value(message, PCMK__XA_SRC);
     vote->version = crm_element_value(message, F_CRM_VERSION);
     vote->election_owner = crm_element_value(message, F_CRM_ELECTION_OWNER);
 

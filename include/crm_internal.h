@@ -97,6 +97,7 @@
 #define PCMK__XA_REAP                   "reap"
 #define PCMK__XA_SCHEMA                 "schema"
 #define PCMK__XA_SCHEMAS                "schemas"
+#define PCMK__XA_SRC                    "src"
 #define PCMK__XA_TASK                   "task"
 #define PCMK__XA_TRANSITION_KEY         "transition-key"
 #define PCMK__XA_TRANSITION_MAGIC       "transition-magic"
