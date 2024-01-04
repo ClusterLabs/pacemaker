@@ -565,6 +565,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_ATTR_TE_TARGET_RC "op_target_rc"
 
+//! \deprecated Do not use
+#define XML_LRM_ATTR_ROUTER_NODE "router_node"
+
 #ifdef __cplusplus
 }
 #endif
