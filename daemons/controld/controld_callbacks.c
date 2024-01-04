@@ -27,7 +27,7 @@ void
 crmd_ha_msg_filter(xmlNode * msg)
 {
     if (AM_I_DC) {
-        const char *sys_from = crm_element_value(msg, F_CRM_SYS_FROM);
+        const char *sys_from = crm_element_value(msg, PCMK__XA_CRM_SYS_FROM);
 
         if (pcmk__str_eq(sys_from, CRM_SYSTEM_DC, pcmk__str_casei)) {
             const char *from = crm_element_value(msg, PCMK__XA_SRC);

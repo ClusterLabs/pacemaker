@@ -42,10 +42,11 @@ handle_ping_request(pcmk__request_t *request)
     const char *value = NULL;
     xmlNode *ping = NULL;
     xmlNode *reply = NULL;
-    const char *from = crm_element_value(msg, F_CRM_SYS_FROM);
+    const char *from = crm_element_value(msg, PCMK__XA_CRM_SYS_FROM);
 
     /* Pinged for status */
-    crm_trace("Pinged from " F_CRM_SYS_FROM "='%s' " F_CRM_ORIGIN "='%s'",
+    crm_trace("Pinged from " PCMK__XA_CRM_SYS_FROM "='%s' "
+              F_CRM_ORIGIN "='%s'",
               pcmk__s(from, ""),
               pcmk__s(crm_element_value(msg, F_CRM_ORIGIN), ""));
 

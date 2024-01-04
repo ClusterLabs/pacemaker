@@ -70,8 +70,8 @@ new_data(pcmk_ipc_api_t *api)
 
     /* This is set to the PID because that's how it was always done, but PIDs
      * are not unique because clients can be remote. The value appears to be
-     * unused other than as part of F_CRM_SYS_FROM in IPC requests, which is
-     * only compared against the internal system names (CRM_SYSTEM_TENGINE,
+     * unused other than as part of PCMK__XA_CRM_SYS_FROM in IPC requests, which
+     * is only compared against the internal system names (CRM_SYSTEM_TENGINE,
      * etc.), so it shouldn't be a problem.
      */
     private->client_uuid = pcmk__getpid_s();

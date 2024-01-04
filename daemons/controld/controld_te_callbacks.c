@@ -600,7 +600,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
     }
 
     // Transition requests must be marked as coming from the executor
-    value = crm_element_value(msg, F_CRM_SYS_FROM);
+    value = crm_element_value(msg, PCMK__XA_CRM_SYS_FROM);
     if (!pcmk__str_eq(value, CRM_SYSTEM_LRMD, pcmk__str_none)) {
         crm_info("Received invalid transition request: from '%s' not '"
                  CRM_SYSTEM_LRMD "'", pcmk__s(value, ""));

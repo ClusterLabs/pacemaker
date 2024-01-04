@@ -664,7 +664,7 @@ static void
 notify_deleted(lrm_state_t * lrm_state, ha_msg_input_t * input, const char *rsc_id, int rc)
 {
     lrmd_event_data_t *op = NULL;
-    const char *from_sys = crm_element_value(input->msg, F_CRM_SYS_FROM);
+    const char *from_sys = crm_element_value(input->msg, PCMK__XA_CRM_SYS_FROM);
     const char *from_host = crm_element_value(input->msg, PCMK__XA_SRC);
 
     crm_info("Notifying %s on %s that %s was%s deleted",
@@ -1439,7 +1439,7 @@ do_lrm_invoke(long long action,
 
     user_name = pcmk__update_acl_user(input->msg, F_CRM_USER, NULL);
     crm_op = crm_element_value(input->msg, PCMK__XA_CRM_TASK);
-    from_sys = crm_element_value(input->msg, F_CRM_SYS_FROM);
+    from_sys = crm_element_value(input->msg, PCMK__XA_CRM_SYS_FROM);
     if (!pcmk__str_eq(from_sys, CRM_SYSTEM_TENGINE, pcmk__str_none)) {
         from_host = crm_element_value(input->msg, PCMK__XA_SRC);
     }

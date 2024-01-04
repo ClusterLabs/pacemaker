@@ -453,7 +453,7 @@ crmd_proxy_dispatch(const char *session, xmlNode *msg)
 {
     crm_trace("Processing proxied IPC message from session %s", session);
     crm_log_xml_trace(msg, "controller[inbound]");
-    crm_xml_add(msg, F_CRM_SYS_FROM, session);
+    crm_xml_add(msg, PCMK__XA_CRM_SYS_FROM, session);
     if (controld_authorize_ipc_message(msg, NULL, session)) {
         route_message(C_IPC_MESSAGE, msg);
     }

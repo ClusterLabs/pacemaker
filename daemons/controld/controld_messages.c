@@ -346,7 +346,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
 
     host_to = crm_element_value(msg, PCMK__XA_CRM_HOST_TO);
     sys_to = crm_element_value(msg, PCMK__XA_CRM_SYS_TO);
-    sys_from = crm_element_value(msg, F_CRM_SYS_FROM);
+    sys_from = crm_element_value(msg, PCMK__XA_CRM_SYS_FROM);
     type = crm_element_value(msg, PCMK__XA_T);
     task = crm_element_value(msg, PCMK__XA_CRM_TASK);
     ref = crm_element_value(msg, PCMK_XA_REFERENCE);
@@ -704,7 +704,7 @@ handle_lrm_delete(xmlNode *stored_msg)
         CRM_CHECK(rsc_xml != NULL, return I_NULL);
 
         rsc_id = ID(rsc_xml);
-        from_sys = crm_element_value(stored_msg, F_CRM_SYS_FROM);
+        from_sys = crm_element_value(stored_msg, PCMK__XA_CRM_SYS_FROM);
         node = crm_element_value(msg_data, XML_LRM_ATTR_TARGET);
         user_name = pcmk__update_acl_user(stored_msg, F_CRM_USER, NULL);
         crm_debug("Handling " CRM_OP_LRM_DELETE " for %s on %s locally%s%s "
