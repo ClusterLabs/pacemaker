@@ -314,7 +314,8 @@ election_vote(election_t *e)
     crm_xml_add_int(vote, PCMK__XA_ELECTION_ID, e->count);
 
     get_uptime(&age);
-    crm_xml_add_timeval(vote, F_CRM_ELECTION_AGE_S, F_CRM_ELECTION_AGE_US, &age);
+    crm_xml_add_timeval(vote, PCMK__XA_ELECTION_AGE_SEC, F_CRM_ELECTION_AGE_US,
+                        &age);
 
     send_cluster_message(NULL, crm_msg_crmd, vote, TRUE);
     free_xml(vote);
@@ -449,7 +450,7 @@ parse_election_message(const election_t *e, const xmlNode *message,
 
     if (pcmk__str_eq(vote->op, CRM_OP_VOTE, pcmk__str_none)) {
         // Only vote ops have uptime
-        crm_element_value_timeval(message, F_CRM_ELECTION_AGE_S,
+        crm_element_value_timeval(message, PCMK__XA_ELECTION_AGE_SEC,
                                   F_CRM_ELECTION_AGE_US, &(vote->age));
         if ((vote->age.tv_sec < 0) || (vote->age.tv_usec < 0)) {
             crm_warn("Cannot count %s %s from %s because it is missing uptime",
