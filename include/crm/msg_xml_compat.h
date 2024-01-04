@@ -466,6 +466,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_PING_ATTR_PACEMAKERDSTATE "pacemakerd_state"
 
+//! \deprecated Do not use
+#define XML_FAILCIB_ATTR_OBJTYPE "object_type"
+
 #ifdef __cplusplus
 }
 #endif
