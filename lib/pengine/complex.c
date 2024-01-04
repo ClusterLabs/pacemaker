@@ -94,7 +94,8 @@ get_resource_type(const char *name)
     } else if (pcmk__str_eq(name, XML_CIB_TAG_INCARNATION, pcmk__str_casei)) {
         return pcmk_rsc_variant_clone;
 
-    } else if (pcmk__str_eq(name, PCMK_XE_PROMOTABLE_LEGACY, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(name, PCMK__XE_PROMOTABLE_LEGACY,
+                            pcmk__str_casei)) {
         // @COMPAT deprecated since 2.0.0
         return pcmk_rsc_variant_clone;
 
@@ -412,7 +413,7 @@ detect_promotable(pcmk_resource_t *rsc)
     }
 
     // @COMPAT deprecated since 2.0.0
-    if (pcmk__xe_is(rsc->xml, PCMK_XE_PROMOTABLE_LEGACY)) {
+    if (pcmk__xe_is(rsc->xml, PCMK__XE_PROMOTABLE_LEGACY)) {
         /* @TODO in some future version, pcmk__warn_once() here,
          *       then drop support in even later version
          */
