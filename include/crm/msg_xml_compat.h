@@ -517,6 +517,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_COLOC_ATTR_TARGET_INSTANCE "with-rsc-instance"
 
+//! \deprecated Use \c PCMK_META_ON_FAIL instead
+#define XML_OP_ATTR_ON_FAIL PCMK_META_ON_FAIL
+
 #ifdef __cplusplus
 }
 #endif
