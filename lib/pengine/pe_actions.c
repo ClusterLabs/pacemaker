@@ -625,7 +625,7 @@ unpack_start_delay(const char *value, GHashTable *meta)
         }
 
         if (meta) {
-            g_hash_table_replace(meta, strdup(XML_OP_ATTR_START_DELAY),
+            g_hash_table_replace(meta, strdup(PCMK_META_START_DELAY),
                                  pcmk__itoa(start_delay));
         }
     }
@@ -827,8 +827,8 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
     // Ensure on-fail has a valid value
     validate_on_fail(rsc, action_name, action_config, meta);
 
-    // Normalize start-delay
-    str = g_hash_table_lookup(meta, XML_OP_ATTR_START_DELAY);
+    // Normalize PCMK_META_START_DELAY
+    str = g_hash_table_lookup(meta, PCMK_META_START_DELAY);
     if (str != NULL) {
         unpack_start_delay(str, meta);
     } else {
@@ -837,7 +837,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
         str = g_hash_table_lookup(meta, XML_OP_ATTR_ORIGIN);
         if (unpack_interval_origin(str, action_config, interval_ms,
                                    rsc->cluster->now, &start_delay)) {
-            name = strdup(XML_OP_ATTR_START_DELAY);
+            name = strdup(PCMK_META_START_DELAY);
             CRM_ASSERT(name != NULL);
             g_hash_table_insert(meta, name,
                                 crm_strdup_printf("%lld", start_delay));

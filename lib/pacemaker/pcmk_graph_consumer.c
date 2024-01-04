@@ -523,8 +523,10 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
     value = crm_meta_value(action->params, PCMK_META_TIMEOUT);
     pcmk__scan_min_int(value, &(action->timeout), 0);
 
-    /* Take start-delay into account for the timeout of the action timer */
-    value = g_hash_table_lookup(action->params, "CRM_meta_start_delay");
+    /* Take PCMK_META_START_DELAY into account for the timeout of the action
+     * timer
+     */
+    value = crm_meta_value(action->params, PCMK_META_START_DELAY);
     {
         int start_delay;
 
