@@ -6,6 +6,7 @@ __license__ = "GNU Lesser General Public License version 2.1 or later (LGPLv2.1+
 
 from enum import IntEnum, unique
 
+
 # These values must be kept in sync with include/crm/common/results.h
 @unique
 class ExitStatus(IntEnum):

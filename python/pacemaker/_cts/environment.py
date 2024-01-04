@@ -16,6 +16,7 @@ from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.remote import RemoteFactory
 from pacemaker._cts.watcher import LogKind
 
+
 class Environment:
     """
     A class for managing the CTS environment.
@@ -617,6 +618,7 @@ class Environment:
             (name, value) = kv.split("=")
             self[name] = value
             print("Setting %s = %s" % (name, value))
+
 
 class EnvFactory:
     """A class for constructing a singleton instance of an Environment object."""

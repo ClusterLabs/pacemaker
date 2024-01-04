@@ -6,6 +6,7 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 
 import time
 
+
 class Timer:
     """
     A class for measuring the runtime of some task.

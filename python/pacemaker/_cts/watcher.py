@@ -15,6 +15,7 @@ from pacemaker._cts.remote import RemoteFactory
 
 LOG_WATCHER_BIN = "%s/cts-log-watcher" % BuildOptions.DAEMON_DIR
 
+
 @unique
 class LogKind(Enum):
     """The various kinds of log files that can be watched."""
@@ -34,6 +35,7 @@ class LogKind(Enum):
             return "remote"
 
         return "journal"
+
 
 class SearchObj:
     """
@@ -104,6 +106,7 @@ class SearchObj:
         """
         self.debug("Unsetting the limit")
         self.limit = None
+
 
 class FileObj(SearchObj):
     """A specialized SearchObj subclass for watching log files."""
@@ -193,6 +196,7 @@ class FileObj(SearchObj):
             if match:
                 self.limit = int(match.group(1))
                 self.debug("Set limit to: %d" % self.limit)
+
 
 class JournalObj(SearchObj):
     """A specialized SearchObj subclass for watching systemd journals."""
@@ -300,6 +304,7 @@ class JournalObj(SearchObj):
         else:
             self.debug("Unable to set limit for %s because date returned %d lines with status %d"
                        % (self.host, len(lines), rc))
+
 
 class LogWatcher:
     """

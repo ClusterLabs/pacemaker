@@ -34,6 +34,7 @@ from pacemaker._cts.watcher import LogWatcher
 # ClusterManager has a lot of methods.
 # pylint: disable=too-many-public-methods
 
+
 class ClusterManager(UserDict):
     """
     An abstract base class for managing the cluster.

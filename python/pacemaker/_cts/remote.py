@@ -12,6 +12,7 @@ from threading import Thread
 
 from pacemaker._cts.logging import LogFactory
 
+
 def convert2string(lines):
     """
     Convert byte strings to UTF-8 strings.
@@ -33,6 +34,7 @@ def convert2string(lines):
         return lst
 
     return lines
+
 
 class AsyncCmd(Thread):
     """A class for doing the hard work of running a command on another machine."""
@@ -91,6 +93,7 @@ class AsyncCmd(Thread):
 
         if self._delegate:
             self._delegate.async_complete(self._proc.pid, self._proc.returncode, out, err)
+
 
 class RemoteExec:
     """

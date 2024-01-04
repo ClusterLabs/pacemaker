@@ -14,6 +14,7 @@ from pacemaker._cts.input import should_continue
 from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.remote import RemoteFactory
 
+
 class CtsLab:
     """
     A class that defines the Lab Environment for the Cluster Test System.

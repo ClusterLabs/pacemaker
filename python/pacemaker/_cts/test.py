@@ -26,6 +26,7 @@ from pacemaker._cts.process import pipe_communicate
 from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
 
+
 def find_validator(rng_file):
     """
     Return the command line used to validate XML output.
@@ -204,7 +205,6 @@ class Test:
             msg = "FAILURE - '%s' failed. %d patterns out of %d not matched. %d negative matches."
             self._result_txt = msg % (self.name, n_failed_matches, len(self._patterns), n_negative_matches)
             self.exitcode = ExitStatus.ERROR
-
 
     def _new_cmd(self, cmd, args, exitcode, **kwargs):
         """

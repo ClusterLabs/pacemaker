@@ -7,6 +7,7 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 # pylint: disable=global-statement
 CURRENT_IP = None
 
+
 def next_ip(ip_base=None, reset=False):
     """
     Return the next available IP address.

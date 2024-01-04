@@ -31,6 +31,7 @@ from pacemaker._cts.tests.stonithdtest import StonithdTest
 from pacemaker._cts.tests.stoponebyone import StopOnebyOne
 from pacemaker._cts.tests.stoptest import StopTest
 
+
 def test_list(cm, audits):
     """
     Return a list of runnable test class objects.

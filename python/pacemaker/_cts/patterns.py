@@ -8,6 +8,7 @@ import argparse
 
 from pacemaker.buildoptions import BuildOptions
 
+
 class BasePatterns:
     """
     The base class for holding a stack-specific set of command and log file/stdout patterns.

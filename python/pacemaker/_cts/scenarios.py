@@ -19,6 +19,7 @@ from pacemaker._cts.input import should_continue
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.watcher import LogWatcher
 
+
 class ScenarioComponent:
     """
     The base class for all scenario components.

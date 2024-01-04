@@ -14,6 +14,7 @@ from pacemaker._cts.patterns import PatternSelector
 # self._rsh in environment.py.
 # pylint: disable=unsubscriptable-object
 
+
 class Corosync2(ClusterManager):
     """A subclass of ClusterManager specialized to handle corosync2 and later based clusters."""
 
