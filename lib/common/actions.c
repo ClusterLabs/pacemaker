@@ -525,7 +525,7 @@ pcmk_xe_mask_probe_failure(const xmlNode *xml_op)
     }
 
     crm_element_value_int(xml_op, PCMK__XA_OP_STATUS, &status);
-    crm_element_value_int(xml_op, XML_LRM_ATTR_RC, &rc);
+    crm_element_value_int(xml_op, PCMK__XA_RC_CODE, &rc);
 
     return rc == PCMK_OCF_NOT_INSTALLED || rc == PCMK_OCF_INVALID_PARAM ||
            status == PCMK_EXEC_NOT_INSTALLED;

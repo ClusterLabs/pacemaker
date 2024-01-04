@@ -456,7 +456,7 @@ process_graph_event(xmlNode *event, const char *event_node)
     }
 
     id = crm_element_value(event, PCMK__XA_OPERATION_KEY);
-    crm_element_value_int(event, XML_LRM_ATTR_RC, &rc);
+    crm_element_value_int(event, PCMK__XA_RC_CODE, &rc);
     crm_element_value_int(event, XML_LRM_ATTR_CALLID, &callid);
 
     rc = pcmk__effective_rc(rc);

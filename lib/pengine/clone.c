@@ -1134,7 +1134,9 @@ pe__clone_default(pcmk__output_t *out, va_list args)
                     if (probe_op != NULL) {
                         int rc;
 
-                        pcmk__scan_min_int(crm_element_value(probe_op, XML_LRM_ATTR_RC), &rc, 0);
+                        pcmk__scan_min_int(crm_element_value(probe_op,
+                                                             PCMK__XA_RC_CODE),
+                                           &rc, 0);
                         g_hash_table_insert(stopped, strdup(node->details->uname),
                                             crm_strdup_printf("Stopped (%s)", services_ocf_exitcode_str(rc)));
                     } else {

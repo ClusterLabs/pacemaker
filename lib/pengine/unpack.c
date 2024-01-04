@@ -2593,7 +2593,7 @@ calculate_active_ops(const GList *sorted_op_list, int *start_index,
         } else if ((implied_monitor_start <= *stop_index)
                    && pcmk__str_eq(task, PCMK_ACTION_MONITOR,
                                    pcmk__str_casei)) {
-            const char *rc = crm_element_value(rsc_op, XML_LRM_ATTR_RC);
+            const char *rc = crm_element_value(rsc_op, PCMK__XA_RC_CODE);
 
             if (pcmk__strcase_any_of(rc, "0", "8", NULL)) {
                 implied_monitor_start = counter;
@@ -2906,7 +2906,7 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
         int rc = PCMK_OCF_UNKNOWN_ERROR;
         int status = PCMK_EXEC_ERROR;
 
-        crm_element_value_int(xml, XML_LRM_ATTR_RC, &rc);
+        crm_element_value_int(xml, PCMK__XA_RC_CODE, &rc);
         crm_element_value_int(xml, PCMK__XA_OP_STATUS, &status);
         if ((rc != target_rc) || (status != PCMK_EXEC_DONE)) {
             return NULL;
@@ -2956,7 +2956,7 @@ unknown_on_node(pcmk_resource_t *rsc, const char *node_name)
     pcmk__g_strcat(xpath,
                    XPATH_NODE_STATE "[@" PCMK_XA_UNAME "='", node_name, "']"
                    SUB_XPATH_LRM_RESOURCE "[@" PCMK_XA_ID "='", rsc->id, "']"
-                   SUB_XPATH_LRM_RSC_OP "[@" XML_LRM_ATTR_RC "!='193']",
+                   SUB_XPATH_LRM_RSC_OP "[@" PCMK__XA_RC_CODE "!='193']",
                    NULL);
     search = xpath_search(rsc->cluster->input, (const char *) xpath->str);
     result = (numXpathResults(search) == 0);
@@ -3237,7 +3237,7 @@ unpack_migrate_to_success(struct action_history *history)
              */
             return;
         }
-        crm_element_value_int(migrate_from, XML_LRM_ATTR_RC, &from_rc);
+        crm_element_value_int(migrate_from, PCMK__XA_RC_CODE, &from_rc);
         crm_element_value_int(migrate_from, PCMK__XA_OP_STATUS, &from_status);
     }
 
@@ -4489,7 +4489,7 @@ unpack_action_result(struct action_history *history)
                                  ""));
         return pcmk_rc_unpack_error;
     }
-    if ((crm_element_value_int(history->xml, XML_LRM_ATTR_RC,
+    if ((crm_element_value_int(history->xml, PCMK__XA_RC_CODE,
                                &(history->exit_status)) < 0)
         || (history->exit_status < 0) || (history->exit_status > CRM_EX_MAX)) {
 #if 0
@@ -4498,11 +4498,11 @@ unpack_action_result(struct action_history *history)
          * release.
          */
         pcmk__config_err("Ignoring resource history entry %s for %s on %s "
-                         "with invalid " XML_LRM_ATTR_RC " '%s'",
+                         "with invalid " PCMK__XA_RC_CODE " '%s'",
                          history->id, history->rsc->id,
                          pe__node_name(history->node),
                          pcmk__s(crm_element_value(history->xml,
-                                                   XML_LRM_ATTR_RC),
+                                                   PCMK__XA_RC_CODE),
                                  ""));
         return pcmk_rc_unpack_error;
 #else

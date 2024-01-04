@@ -130,6 +130,7 @@
 #define PCMK__XA_OP_STATUS              "op-status"
 #define PCMK__XA_PACEMAKERD_STATE       "pacemakerd_state"
 #define PCMK__XA_PRIORITY               "priority"
+#define PCMK__XA_RC_CODE                "rc-code"
 #define PCMK__XA_REAP                   "reap"
 
 /* Actions to be executed on Pacemaker Remote nodes are routed through the

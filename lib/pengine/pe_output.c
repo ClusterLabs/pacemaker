@@ -148,7 +148,7 @@ get_operation_list(xmlNode *rsc_entry) {
         const char *task = crm_element_value(rsc_op, PCMK_XA_OPERATION);
         const char *interval_ms_s = crm_element_value(rsc_op,
                                                       PCMK_META_INTERVAL);
-        const char *op_rc = crm_element_value(rsc_op, XML_LRM_ATTR_RC);
+        const char *op_rc = crm_element_value(rsc_op, PCMK__XA_RC_CODE);
         int op_rc_i;
 
         pcmk__scan_min_int(op_rc, &op_rc_i, 0);
@@ -1468,7 +1468,7 @@ failed_action_default(pcmk__output_t *out, va_list args)
     int rc;
     int status;
 
-    pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_RC), &rc, 0);
+    pcmk__scan_min_int(crm_element_value(xml_op, PCMK__XA_RC_CODE), &rc, 0);
 
     pcmk__scan_min_int(crm_element_value(xml_op, PCMK__XA_OP_STATUS), &status,
                        0);
@@ -1505,7 +1505,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     char *reason_s = crm_xml_escape(exit_reason ? exit_reason : "none");
     xmlNodePtr node = NULL;
 
-    pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_RC), &rc, 0);
+    pcmk__scan_min_int(crm_element_value(xml_op, PCMK__XA_RC_CODE), &rc, 0);
     pcmk__scan_min_int(crm_element_value(xml_op, PCMK__XA_OP_STATUS), &status,
                        0);
 
@@ -2064,7 +2064,7 @@ node_and_op(pcmk__output_t *out, va_list args) {
                    node_str, pe__xe_history_key(xml_op),
                    crm_element_value(xml_op, PCMK_XA_UNAME),
                    crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
-                   crm_element_value(xml_op, XML_LRM_ATTR_RC),
+                   crm_element_value(xml_op, PCMK__XA_RC_CODE),
                    last_change_str ? last_change_str : "",
                    pcmk_exec_status_str(status));
 
@@ -2081,6 +2081,7 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
 
     pcmk_resource_t *rsc = NULL;
     const char *uname = crm_element_value(xml_op, PCMK_XA_UNAME);
+    const char *rc_s = crm_element_value(xml_op, PCMK__XA_RC_CODE);
     const char *op_rsc = crm_element_value(xml_op, "resource");
     int status;
     time_t last_change = 0;
@@ -2092,7 +2093,7 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
                                         PCMK_XA_OP, pe__xe_history_key(xml_op),
                                         "node", uname,
                                         "call", crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
-                                        "rc", crm_element_value(xml_op, XML_LRM_ATTR_RC),
+                                        "rc", rc_s,
                                         "status", pcmk_exec_status_str(status),
                                         NULL);
 
@@ -2932,7 +2933,7 @@ resource_operation_list(pcmk__output_t *out, va_list args)
         const char *task = crm_element_value(xml_op, PCMK_XA_OPERATION);
         const char *interval_ms_s = crm_element_value(xml_op,
                                                       PCMK_META_INTERVAL);
-        const char *op_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
+        const char *op_rc = crm_element_value(xml_op, PCMK__XA_RC_CODE);
         int op_rc_i;
 
         pcmk__scan_min_int(op_rc, &op_rc_i, 0);

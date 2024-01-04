@@ -1236,7 +1236,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     crm_xml_add(xml_op, PCMK__META_ON_NODE, node); // For context during triage
 
     crm_xml_add_int(xml_op, XML_LRM_ATTR_CALLID, op->call_id);
-    crm_xml_add_int(xml_op, XML_LRM_ATTR_RC, op->rc);
+    crm_xml_add_int(xml_op, PCMK__XA_RC_CODE, op->rc);
     crm_xml_add_int(xml_op, PCMK__XA_OP_STATUS, op->op_status);
     crm_xml_add_ms(xml_op, PCMK_META_INTERVAL, op->interval_ms);
 

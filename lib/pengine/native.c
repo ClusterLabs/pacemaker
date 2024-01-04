@@ -624,7 +624,8 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
         if (probe_op != NULL) {
             int rc;
 
-            pcmk__scan_min_int(crm_element_value(probe_op, XML_LRM_ATTR_RC), &rc, 0);
+            pcmk__scan_min_int(crm_element_value(probe_op, PCMK__XA_RC_CODE),
+                               &rc, 0);
             pcmk__g_strcat(outstr, " (", services_ocf_exitcode_str(rc), ") ",
                            NULL);
         }
