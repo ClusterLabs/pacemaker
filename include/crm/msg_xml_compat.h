@@ -559,6 +559,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_TAG_DIFF_REMOVED "diff-removed"
 
+//! \deprecated Do not use
+#define XML_ATTR_TE_NOWAIT "op_no_wait"
+
 #ifdef __cplusplus
 }
 #endif
