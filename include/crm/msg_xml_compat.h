@@ -484,6 +484,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_REASON instead
 #define XML_FAILCIB_ATTR_REASON PCMK_XA_REASON
 
+//! \deprecated Use \c PCMK_META_TIMEOUT instead
+#define XML_ATTR_TIMEOUT PCMK_META_TIMEOUT
+
 #ifdef __cplusplus
 }
 #endif

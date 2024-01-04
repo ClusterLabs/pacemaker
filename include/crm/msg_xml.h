@@ -132,8 +132,6 @@ extern "C" {
 #  define XML_TAG_CIB			"cib"
 #  define XML_TAG_FAILED		"failed"
 
-#  define XML_ATTR_TIMEOUT		PCMK_META_TIMEOUT
-
 #  define XML_TAG_OPTIONS		"options"
 
 /*---- top level tags/attrs */
