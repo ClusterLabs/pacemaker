@@ -247,7 +247,7 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     sys_to = crm_element_value(msg, F_CRM_SYS_TO);
 
     if (pcmk__str_eq(crm_element_value(msg, F_CRM_MSG_TYPE),
-                            XML_ATTR_RESPONSE, pcmk__str_none)) {
+                     PCMK__VALUE_RESPONSE, pcmk__str_none)) {
         pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
         crm_info("Ignoring IPC reply from %s", pcmk__client_name(c));
 

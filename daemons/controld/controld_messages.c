@@ -599,8 +599,9 @@ handle_message(xmlNode *msg, enum crmd_fsa_cause cause)
     type = crm_element_value(msg, F_CRM_MSG_TYPE);
     if (pcmk__str_eq(type, PCMK__VALUE_REQUEST, pcmk__str_none)) {
         return handle_request(msg, cause);
+    }
 
-    } else if (pcmk__str_eq(type, XML_ATTR_RESPONSE, pcmk__str_none)) {
+    if (pcmk__str_eq(type, PCMK__VALUE_RESPONSE, pcmk__str_none)) {
         handle_response(msg);
         return I_NULL;
     }

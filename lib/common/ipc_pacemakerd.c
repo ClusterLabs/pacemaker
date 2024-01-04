@@ -208,10 +208,9 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
     }
 
     value = crm_element_value(reply, F_CRM_MSG_TYPE);
-    if (pcmk__str_empty(value)
-        || !pcmk__str_eq(value, XML_ATTR_RESPONSE, pcmk__str_none)) {
+    if (!pcmk__str_eq(value, PCMK__VALUE_RESPONSE, pcmk__str_none)) {
         crm_info("Unrecognizable message from %s: "
-                 "message type '%s' not '" XML_ATTR_RESPONSE "'",
+                 "message type '%s' not '" PCMK__VALUE_RESPONSE "'",
                  pcmk_ipc_name(api, true), pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
         goto done;

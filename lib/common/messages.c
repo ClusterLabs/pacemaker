@@ -132,7 +132,7 @@ create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
     crm_xml_add(reply, F_CRM_ORIGIN, origin);
     crm_xml_add(reply, F_TYPE, T_CRM);
     crm_xml_add(reply, F_CRM_VERSION, CRM_FEATURE_SET);
-    crm_xml_add(reply, F_CRM_MSG_TYPE, XML_ATTR_RESPONSE);
+    crm_xml_add(reply, F_CRM_MSG_TYPE, PCMK__VALUE_RESPONSE);
     crm_xml_add(reply, F_CRM_REFERENCE, crm_msg_reference);
     crm_xml_add(reply, F_CRM_TASK, operation);
 
