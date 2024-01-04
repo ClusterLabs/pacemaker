@@ -493,6 +493,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_PATH instead
 #define XML_ALERT_ATTR_PATH PCMK_XA_PATH
 
+//! \deprecated Use \c PCMK_XA_PATH instead
+#define XML_DIFF_PATH PCMK_XA_PATH
+
 #ifdef __cplusplus
 }
 #endif

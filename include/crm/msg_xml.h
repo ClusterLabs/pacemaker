@@ -357,7 +357,6 @@ extern "C" {
 #  define XML_DIFF_LIST                 "change-list"
 #  define XML_DIFF_ATTR                 "change-attr"
 #  define XML_DIFF_RESULT               "change-result"
-#  define XML_DIFF_PATH                 PCMK_XA_PATH
 #  define XML_DIFF_POSITION             "position"
 
 #  define ID(x) crm_element_value(x, PCMK_XA_ID)
