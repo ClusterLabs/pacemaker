@@ -73,7 +73,9 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     /* Tickets Attributes - Removed */
     xpathObj =
         xpath_search(diff,
-                     "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_REMOVED "//" XML_CIB_TAG_TICKETS);
+                     "//" F_CIB_UPDATE_RESULT
+                     "//" PCMK__XE_DIFF_REMOVED
+                     "//" XML_CIB_TAG_TICKETS);
     if (numXpathResults(xpathObj) > 0) {
         xmlNode *aborted = getXpathResult(xpathObj, 0);
 
@@ -86,8 +88,9 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     /* Transient Attributes - Removed */
     xpathObj =
         xpath_search(diff,
-                     "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_REMOVED "//"
-                     XML_TAG_TRANSIENT_NODEATTRS);
+                     "//" F_CIB_UPDATE_RESULT
+                     "//" PCMK__XE_DIFF_REMOVED
+                     "//" XML_TAG_TRANSIENT_NODEATTRS);
     if (numXpathResults(xpathObj) > 0) {
         xmlNode *aborted = getXpathResult(xpathObj, 0);
 
@@ -156,7 +159,8 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     freeXpathObject(xpathObj);
 
     /* Detect deleted (as opposed to replaced or added) actions - eg. crm_resource -C */
-    xpathObj = xpath_search(diff, "//" XML_TAG_DIFF_REMOVED "//" XML_LRM_TAG_RSC_OP);
+    xpathObj = xpath_search(diff,
+                            "//" PCMK__XE_DIFF_REMOVED "//" XML_LRM_TAG_RSC_OP);
     max = numXpathResults(xpathObj);
     for (lpc = 0; lpc < max; lpc++) {
         const char *op_id = NULL;

@@ -822,7 +822,7 @@ cib__config_changed_v1(xmlNode *last, xmlNode *next, xmlNode **diff)
      * This always contains every field and would produce a false positive
      * every time if the checked value existed
      */
-    xpathObj = xpath_search(*diff, "//" XML_TAG_DIFF_REMOVED "//" XML_TAG_CIB);
+    xpathObj = xpath_search(*diff, "//" PCMK__XE_DIFF_REMOVED "//" XML_TAG_CIB);
     max = numXpathResults(xpathObj);
 
     for (lpc = 0; lpc < max; lpc++) {

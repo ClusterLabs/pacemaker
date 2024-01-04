@@ -143,7 +143,7 @@ xml_show_patchset_v1(pcmk__output_t *out, const xmlNode *patchset,
      * However, v1 patchsets can only exist during rolling upgrades from
      * Pacemaker 1.1.11, so not worth worrying about.
      */
-    removed = find_xml_node(patchset, XML_TAG_DIFF_REMOVED, FALSE);
+    removed = find_xml_node(patchset, PCMK__XE_DIFF_REMOVED, FALSE);
     for (child = pcmk__xml_first_child(removed); child != NULL;
          child = pcmk__xml_next(child)) {
         int temp_rc = xml_show_patchset_v1_recursive(out, "- ", child, 0,

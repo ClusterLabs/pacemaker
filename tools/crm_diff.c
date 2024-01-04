@@ -178,7 +178,7 @@ strip_patch_cib_version(xmlNode *patch, const char **vfields, size_t nvfields)
         int i = 0;
 
         const char *tags[] = {
-            XML_TAG_DIFF_REMOVED,
+            PCMK__XE_DIFF_REMOVED,
             PCMK__XE_DIFF_ADDED,
         };
 
