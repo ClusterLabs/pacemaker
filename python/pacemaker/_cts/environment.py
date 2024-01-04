@@ -248,7 +248,7 @@ class Environment:
         """Detect if the cluster starts at boot."""
         if "at-boot" not in self.data:
             self["at-boot"] = self.service_is_enabled(self._target, "corosync") \
-                              or self.service_is_enabled(self._target, "pacemaker")
+                or self.service_is_enabled(self._target, "pacemaker")
 
     def _detect_ip_offset(self):
         """Detect the offset for IPaddr resources."""

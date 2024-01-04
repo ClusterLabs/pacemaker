@@ -127,9 +127,7 @@ class RemoteDriver(CTSTest):
   <operations>
     <op id="%(node)s-monitor-interval-20s" interval="20s" name="monitor"/>
   </operations>
-</primitive>""" % {
-    "node": self._remote_rsc
-}
+</primitive>""" % {"node": self._remote_rsc}
 
         self._add_rsc(node, rsc_xml)
         if not self.failed:
@@ -146,9 +144,7 @@ class RemoteDriver(CTSTest):
 <primitive class="ocf" id="%(node)s" provider="pacemaker" type="remote">
   <instance_attributes id="%(node)s-instance_attributes">
     <nvpair id="%(node)s-instance_attributes-server" name="server" value="%(server)s"/>
-""" % {
-    "node": self._remote_node, "server": node
-}
+""" % {"node": self._remote_node, "server": node}
 
         if self._remote_use_reconnect_interval:
             # Set reconnect interval on resource
@@ -163,9 +159,7 @@ class RemoteDriver(CTSTest):
     <op id="%(node)s-monitor-20s" name="monitor" interval="20s" timeout="45s"/>
   </operations>
 </primitive>
-""" % {
-    "node": self._remote_node
-}
+""" % {"node": self._remote_node}
 
         self._add_rsc(node, rsc_xml)
         if not self.failed:

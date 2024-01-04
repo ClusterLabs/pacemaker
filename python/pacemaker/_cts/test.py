@@ -295,8 +295,8 @@ class Test:
         #   signal.Signals(self.daemon_process.returncode).name
         return {
             getattr(signal, _signame): _signame
-                for _signame in dir(signal)
-                if _signame.startswith("SIG") and not _signame.startswith("SIG_")
+            for _signame in dir(signal)
+            if _signame.startswith("SIG") and not _signame.startswith("SIG_")
         }
 
     def clean_environment(self):
