@@ -122,6 +122,8 @@
 #define PCMK__XA_TRANSITION_MAGIC       "transition-magic"
 #define PCMK__XA_UPTIME                 "uptime"
 
+// @COMPAT Deprecated since 2.1.6
+#define PCMK__XA_REPLACE                "replace"
 
 /*
  * IPC service names that are only used internally

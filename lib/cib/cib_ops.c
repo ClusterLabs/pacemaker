@@ -564,8 +564,8 @@ update_cib_object(xmlNode * parent, xmlNode * update)
               pcmk__s(object_id, ""),
               ((object_id == NULL)? "" : "'"));
 
-    // @COMPAT: XML_CIB_ATTR_REPLACE is unused internally. Remove at break.
-    replace = crm_element_value(update, XML_CIB_ATTR_REPLACE);
+    // @COMPAT PCMK__XA__REPLACE is deprecated since 2.1.6
+    replace = crm_element_value(update, PCMK__XA_REPLACE);
     if (replace != NULL) {
         int last = 0;
         int len = strlen(replace);
@@ -587,8 +587,8 @@ update_cib_object(xmlNode * parent, xmlNode * update)
                 last = lpc + 1;
             }
         }
-        xml_remove_prop(update, XML_CIB_ATTR_REPLACE);
-        xml_remove_prop(target, XML_CIB_ATTR_REPLACE);
+        xml_remove_prop(update, PCMK__XA_REPLACE);
+        xml_remove_prop(target, PCMK__XA_REPLACE);
     }
 
     copy_in_properties(target, update);

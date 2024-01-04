@@ -200,9 +200,6 @@ extern "C" {
 #  define XML_LRM_TAG_RESOURCE     	"lrm_resource"
 #  define XML_LRM_TAG_RSC_OP		"lrm_rsc_op"
 
-//! \deprecated Do not use (will be removed in a future release)
-#  define XML_CIB_ATTR_REPLACE       	"replace"
-
 #  define XML_CIB_ATTR_PRIORITY     	"priority"
 
 #  define XML_NODE_IS_REMOTE    	"remote_node"

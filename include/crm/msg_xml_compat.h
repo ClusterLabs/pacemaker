@@ -505,6 +505,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_META_INTERVAL instead
 #define XML_LRM_ATTR_INTERVAL_MS PCMK_META_INTERVAL
 
+//! \deprecated Do not use
+#define XML_CIB_ATTR_REPLACE "replace"
+
 #ifdef __cplusplus
 }
 #endif
