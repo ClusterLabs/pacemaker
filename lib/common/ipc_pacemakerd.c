@@ -233,7 +233,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         reply_data.reply_type = pcmk_pacemakerd_reply_ping;
         reply_data.data.ping.state =
             pcmk_pacemakerd_api_daemon_state_text2enum(
-                crm_element_value(msg_data, XML_PING_ATTR_PACEMAKERDSTATE));
+                crm_element_value(msg_data, PCMK__XA_PACEMAKERD_STATE));
         reply_data.data.ping.status =
             pcmk__str_eq(crm_element_value(msg_data, PCMK_XA_RESULT), "ok",
                          pcmk__str_casei)?pcmk_rc_ok:pcmk_rc_error;
