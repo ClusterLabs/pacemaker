@@ -1754,15 +1754,14 @@ pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b,
 
     } else if (a_call_id >= 0 && b_call_id >= 0
                && (!same_node || a_call_id == b_call_id)) {
-        /*
-         * The op and last_failed_op are the same
-         * Order on last-rc-change
+        /* The op and last_failed_op are the same. Order on
+         * PCMK_XA_LAST_RC_CHANGE.
          */
         time_t last_a = -1;
         time_t last_b = -1;
 
-        crm_element_value_epoch(xml_a, XML_RSC_OP_LAST_CHANGE, &last_a);
-        crm_element_value_epoch(xml_b, XML_RSC_OP_LAST_CHANGE, &last_b);
+        crm_element_value_epoch(xml_a, PCMK_XA_LAST_RC_CHANGE, &last_a);
+        crm_element_value_epoch(xml_b, PCMK_XA_LAST_RC_CHANGE, &last_b);
 
         crm_trace("rc-change: %lld vs %lld",
                   (long long) last_a, (long long) last_b);

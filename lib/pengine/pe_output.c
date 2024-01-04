@@ -243,12 +243,13 @@ op_history_string(xmlNode *xml_op, const char *task, const char *interval_ms_s,
 
         time_t epoch = 0;
 
-        if ((crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE, &epoch) == pcmk_ok)
+        if ((crm_element_value_epoch(xml_op, PCMK_XA_LAST_RC_CHANGE,
+                                     &epoch) == pcmk_ok)
             && (epoch > 0)) {
             char *epoch_str = pcmk__epoch2str(&epoch, 0);
 
             last_change_str = crm_strdup_printf(" %s=\"%s\"",
-                                                XML_RSC_OP_LAST_CHANGE,
+                                                PCMK_XA_LAST_RC_CHANGE,
                                                 pcmk__s(epoch_str, ""));
             free(epoch_str);
         }
@@ -1362,7 +1363,7 @@ failed_action_friendly(pcmk__output_t *out, const xmlNode *xml_op,
     }
 
 
-    if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
+    if (crm_element_value_epoch(xml_op, PCMK_XA_LAST_RC_CHANGE,
                                 &last_change_epoch) == pcmk_ok) {
         char *s = pcmk__epoch2str(&last_change_epoch, 0);
 
@@ -1432,12 +1433,12 @@ failed_action_technical(pcmk__output_t *out, const xmlNode *xml_op,
         pcmk__g_strcat(str, ", exitreason='", exit_reason, "'", NULL);
     }
 
-    if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
+    if (crm_element_value_epoch(xml_op, PCMK_XA_LAST_RC_CHANGE,
                                 &last_change_epoch) == pcmk_ok) {
         char *last_change_str = pcmk__epoch2str(&last_change_epoch, 0);
 
         pcmk__g_strcat(str,
-                       ", " XML_RSC_OP_LAST_CHANGE "="
+                       ", " PCMK_XA_LAST_RC_CHANGE "="
                        "'", last_change_str, "'", NULL);
         free(last_change_str);
     }
@@ -1524,7 +1525,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
                                         NULL);
     free(rc_s);
 
-    if ((crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
+    if ((crm_element_value_epoch(xml_op, PCMK_XA_LAST_RC_CHANGE,
                                  &epoch) == pcmk_ok) && (epoch > 0)) {
         guint interval_ms = 0;
         char *interval_ms_s = NULL;
@@ -1536,7 +1537,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
         crm_element_value_ms(xml_op, PCMK_META_INTERVAL, &interval_ms);
         interval_ms_s = crm_strdup_printf("%u", interval_ms);
 
-        pcmk__xe_set_props(node, XML_RSC_OP_LAST_CHANGE, rc_change,
+        pcmk__xe_set_props(node, PCMK_XA_LAST_RC_CHANGE, rc_change,
                            "queued", crm_element_value(xml_op, XML_RSC_OP_T_QUEUE),
                            "exec", crm_element_value(xml_op, XML_RSC_OP_T_EXEC),
                            "interval", interval_ms_s,
@@ -2052,10 +2053,10 @@ node_and_op(pcmk__output_t *out, va_list args) {
         node_str = crm_strdup_printf("Unknown resource %s", op_rsc);
     }
 
-    if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
+    if (crm_element_value_epoch(xml_op, PCMK_XA_LAST_RC_CHANGE,
                                 &last_change) == pcmk_ok) {
         last_change_str = crm_strdup_printf(", %s='%s', exec=%sms",
-                                            XML_RSC_OP_LAST_CHANGE,
+                                            PCMK_XA_LAST_RC_CHANGE,
                                             pcmk__trim(ctime(&last_change)),
                                             crm_element_value(xml_op, XML_RSC_OP_T_EXEC));
     }
@@ -2118,9 +2119,9 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
         free(agent_tuple);
     }
 
-    if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
+    if (crm_element_value_epoch(xml_op, PCMK_XA_LAST_RC_CHANGE,
                                 &last_change) == pcmk_ok) {
-        pcmk__xe_set_props(node, XML_RSC_OP_LAST_CHANGE,
+        pcmk__xe_set_props(node, PCMK_XA_LAST_RC_CHANGE,
                            pcmk__trim(ctime(&last_change)),
                            XML_RSC_OP_T_EXEC, crm_element_value(xml_op, XML_RSC_OP_T_EXEC),
                            NULL);
@@ -2631,10 +2632,10 @@ op_history_xml(pcmk__output_t *out, va_list args) {
         const char *value = NULL;
         time_t epoch = 0;
 
-        if ((crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
+        if ((crm_element_value_epoch(xml_op, PCMK_XA_LAST_RC_CHANGE,
                                      &epoch) == pcmk_ok) && (epoch > 0)) {
             char *s = pcmk__epoch2str(&epoch, 0);
-            crm_xml_add(node, XML_RSC_OP_LAST_CHANGE, s);
+            crm_xml_add(node, PCMK_XA_LAST_RC_CHANGE, s);
             free(s);
         }
 

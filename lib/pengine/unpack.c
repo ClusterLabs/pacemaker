@@ -3480,7 +3480,7 @@ last_change_str(const xmlNode *xml_op)
     time_t when;
     char *result = NULL;
 
-    if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
+    if (crm_element_value_epoch(xml_op, PCMK_XA_LAST_RC_CHANGE,
                                 &when) == pcmk_ok) {
         char *when_s = pcmk__epoch2str(&when, 0);
         const char *p = strchr(when_s, ' ');
@@ -4188,7 +4188,7 @@ check_operation_expiry(struct action_history *history)
     }
 
     if ((history->rsc->failure_timeout > 0)
-        && (crm_element_value_epoch(history->xml, XML_RSC_OP_LAST_CHANGE,
+        && (crm_element_value_epoch(history->xml, PCMK_XA_LAST_RC_CHANGE,
                                     &last_run) == 0)) {
 
         /* Resource has a PCMK_META_FAILURE_TIMEOUT and history entry has a
@@ -4642,10 +4642,10 @@ failure_is_newer(const struct action_history *history,
         return false; // last_failure is for action with different interval
     }
 
-    if ((pcmk__scan_ll(crm_element_value(history->xml, XML_RSC_OP_LAST_CHANGE),
+    if ((pcmk__scan_ll(crm_element_value(history->xml, PCMK_XA_LAST_RC_CHANGE),
                        &this_change, 0LL) != pcmk_rc_ok)
         || (pcmk__scan_ll(crm_element_value(last_failure,
-                                            XML_RSC_OP_LAST_CHANGE),
+                                            PCMK_XA_LAST_RC_CHANGE),
                           &failure_change, 0LL) != pcmk_rc_ok)
         || (failure_change < this_change)) {
         return false; // Failure is not known to be newer
