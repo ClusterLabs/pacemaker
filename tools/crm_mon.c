@@ -756,7 +756,7 @@ static GOptionEntry display_entries[] = {
       NULL },
 
     { "pending", 'j', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &options.print_pending,
-      "Display pending state if 'record-pending' is enabled",
+      "Display pending state if '" PCMK_META_RECORD_PENDING "' is enabled",
       NULL },
 
     { NULL }

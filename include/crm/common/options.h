@@ -101,6 +101,7 @@ extern "C" {
 #define PCMK_META_PROMOTABLE                "promotable"
 #define PCMK_META_PROMOTED_MAX              "promoted-max"
 #define PCMK_META_PROMOTED_NODE_MAX         "promoted-node-max"
+#define PCMK_META_RECORD_PENDING            "record-pending"
 #define PCMK_META_REMOTE_ADDR               "remote-addr"
 #define PCMK_META_REMOTE_ALLOW_MIGRATE      "remote-allow-migrate"
 #define PCMK_META_REMOTE_CONNECT_TIMEOUT    "remote-connect-timeout"
