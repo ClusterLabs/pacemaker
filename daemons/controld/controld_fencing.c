@@ -870,7 +870,8 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
                 update_attrd(target, CRM_ATTR_DIGESTS_ALL, value, NULL,
                              is_remote_node);
 
-                value = crm_meta_value(action->params, XML_OP_ATTR_DIGESTS_SECURE);
+                value = crm_meta_value(action->params,
+                                       PCMK__META_DIGESTS_SECURE);
                 update_attrd(target, CRM_ATTR_DIGESTS_SECURE, value, NULL,
                              is_remote_node);
 

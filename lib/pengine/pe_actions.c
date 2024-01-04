@@ -1344,7 +1344,7 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
             g_hash_table_insert(stonith_op->meta, key, value);
             g_string_free(digests_all, TRUE);
 
-            key = strdup(XML_OP_ATTR_DIGESTS_SECURE);
+            key = strdup(PCMK__META_DIGESTS_SECURE);
             value = strdup((const char *) digests_secure->str);
             CRM_ASSERT((key != NULL) && (value != NULL));
             g_hash_table_insert(stonith_op->meta, key, value);
