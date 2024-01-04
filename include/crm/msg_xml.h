@@ -108,8 +108,6 @@ extern "C" {
 
 #  define F_CRM_DATA			"crm_xml"
 
-#  define F_CRM_THROTTLE_MAX		"crm-limit-max"
-
 /*---- Common tags/attrs */
 #  define XML_DIFF_MARKER		"__crm_diff_marker__"
 #  define XML_TAG_CIB			"cib"

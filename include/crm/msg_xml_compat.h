@@ -451,6 +451,9 @@ extern "C" {
 //! \deprecated Do not use
 #define F_CRM_THROTTLE_MODE "crm-limit-mode"
 
+//! \deprecated Do not use
+#define F_CRM_THROTTLE_MAX "crm-limit-max"
+
 #ifdef __cplusplus
 }
 #endif
