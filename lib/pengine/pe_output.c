@@ -1461,8 +1461,7 @@ failed_action_default(pcmk__output_t *out, va_list args)
 
     const char *op_key = pe__xe_history_key(xml_op);
     const char *node_name = crm_element_value(xml_op, PCMK_XA_UNAME);
-    const char *exit_reason = crm_element_value(xml_op,
-                                                XML_LRM_ATTR_EXIT_REASON);
+    const char *exit_reason = crm_element_value(xml_op, PCMK_XA_EXIT_REASON);
     const char *exec_time = crm_element_value(xml_op, XML_RSC_OP_T_EXEC);
 
     int rc;
@@ -1499,7 +1498,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     int status;
     const char *uname = crm_element_value(xml_op, PCMK_XA_UNAME);
     const char *call_id = crm_element_value(xml_op, PCMK__XA_CALL_ID);
-    const char *exit_reason = crm_element_value(xml_op, XML_LRM_ATTR_EXIT_REASON);
+    const char *exit_reason = crm_element_value(xml_op, PCMK_XA_EXIT_REASON);
 
     time_t epoch = 0;
     char *rc_s = NULL;

@@ -76,6 +76,7 @@ extern "C" {
 #define PCMK_XA_DESCRIPTION                 "description"
 #define PCMK_XA_DEVICES                     "devices"
 #define PCMK_XA_EPOCH                       "epoch"
+#define PCMK_XA_EXIT_REASON                 "exit-reason"
 #define PCMK_XA_FORMAT                      "format"
 #define PCMK_XA_HAVE_QUORUM                 "have-quorum"
 #define PCMK_XA_ID                          "id"
@@ -199,7 +200,7 @@ extern "C" {
  * executor operations.
  */
 
-#  define XML_LRM_ATTR_EXIT_REASON	"exit-reason"
+#  define XML_LRM_ATTR_EXIT_REASON	PCMK_XA_EXIT_REASON
 
 #  define XML_RSC_OP_LAST_CHANGE        "last-rc-change"
 #  define XML_RSC_OP_T_EXEC             "exec-time"

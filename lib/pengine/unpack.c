@@ -4509,8 +4509,7 @@ unpack_action_result(struct action_history *history)
         history->exit_status = CRM_EX_ERROR;
 #endif
     }
-    history->exit_reason = crm_element_value(history->xml,
-                                             XML_LRM_ATTR_EXIT_REASON);
+    history->exit_reason = crm_element_value(history->xml, PCMK_XA_EXIT_REASON);
     return pcmk_rc_ok;
 }
 
