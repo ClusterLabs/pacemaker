@@ -469,7 +469,7 @@ static int
 simulate_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     const char *node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-    const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
+    const char *task = crm_element_value(action->xml, PCMK__XA_OPERATION_KEY);
 
     pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     out->message(out, "inject-pseudo-action", node, task);

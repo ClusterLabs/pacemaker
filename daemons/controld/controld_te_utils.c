@@ -466,7 +466,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
             do_crm_log(level, "Transition %d aborted by operation %s '%s' on %s: %s "
                        CRM_XS " magic=%s cib=%d.%d.%d source=%s:%d complete=%s",
                        controld_globals.transition_graph->id,
-                       crm_element_value(reason, XML_LRM_ATTR_TASK_KEY), op,
+                       crm_element_value(reason, PCMK__XA_OPERATION_KEY), op,
                        crm_element_value(reason, XML_LRM_ATTR_TARGET), abort_text,
                        magic, add[0], add[1], add[2], fn, line,
                        pcmk__btoa(controld_globals.transition_graph->complete));

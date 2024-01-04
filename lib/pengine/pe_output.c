@@ -1510,7 +1510,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
                        &status, 0);
 
     rc_s = pcmk__itoa(rc);
-    if (crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY) == NULL) {
+    if (crm_element_value(xml_op, PCMK__XA_OPERATION_KEY) == NULL) {
         op_key_name = PCMK_XA_ID;
     }
     node = pcmk__output_create_xml_node(out, "failure",

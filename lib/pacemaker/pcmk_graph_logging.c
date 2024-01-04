@@ -146,7 +146,7 @@ log_unresolved_inputs(unsigned int log_level, pcmk__graph_t *graph,
 {
     for (GList *lpc = synapse->inputs; lpc != NULL; lpc = lpc->next) {
         pcmk__graph_action_t *input = (pcmk__graph_action_t *) lpc->data;
-        const char *key = crm_element_value(input->xml, XML_LRM_ATTR_TASK_KEY);
+        const char *key = crm_element_value(input->xml, PCMK__XA_OPERATION_KEY);
         const char *host = crm_element_value(input->xml, XML_LRM_ATTR_TARGET);
 
         if (find_graph_action_by_id(graph, input->id) == NULL) {
@@ -162,7 +162,7 @@ static void
 log_synapse_action(unsigned int log_level, pcmk__graph_synapse_t *synapse,
                    pcmk__graph_action_t *action, const char *pending_inputs)
 {
-    const char *key = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
+    const char *key = crm_element_value(action->xml, PCMK__XA_OPERATION_KEY);
     const char *host = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
     char *desc = crm_strdup_printf("%s %s op %s",
                                    synapse_state_str(synapse),

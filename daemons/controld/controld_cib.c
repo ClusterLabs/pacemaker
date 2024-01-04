@@ -1001,7 +1001,7 @@ controld_delete_action_history(const lrmd_event_data_t *op)
 
 /* ... and also by operation key and original operation key */
 #define XPATH_HISTORY_ORIG XPATH_HISTORY \
-    "[@" PCMK_XA_ID "='%s' and @" XML_LRM_ATTR_TASK_KEY "='%s']"
+    "[@" PCMK_XA_ID "='%s' and @" PCMK__XA_OPERATION_KEY "='%s']"
 
 /*!
  * \internal

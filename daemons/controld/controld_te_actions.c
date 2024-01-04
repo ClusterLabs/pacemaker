@@ -73,7 +73,7 @@ execute_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *pseudo)
     }
 
     crm_debug("Pseudo-action %d (%s) fired and confirmed", pseudo->id,
-              crm_element_value(pseudo->xml, XML_LRM_ATTR_TASK_KEY));
+              crm_element_value(pseudo->xml, PCMK__XA_OPERATION_KEY));
     te_action_confirmed(pseudo, graph);
     return pcmk_rc_ok;
 }
@@ -258,7 +258,8 @@ controld_record_action_event(pcmk__graph_action_t *action,
 
     const char *rsc_id = NULL;
     const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-    const char *task_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
+    const char *task_uuid = crm_element_value(action->xml,
+                                              PCMK__XA_OPERATION_KEY);
     const char *target_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
 
     int target_rc = get_target_rc(action);
@@ -317,7 +318,8 @@ controld_record_action_timeout(pcmk__graph_action_t *action)
     lrmd_event_data_t *op = NULL;
 
     const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-    const char *task_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
+    const char *task_uuid = crm_element_value(action->xml,
+                                              PCMK__XA_OPERATION_KEY);
 
     int target_rc = get_target_rc(action);
 
@@ -374,7 +376,7 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
     rsc_op = action->xml;
     task = crm_element_value(rsc_op, PCMK_XA_OPERATION);
-    task_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
+    task_uuid = crm_element_value(action->xml, PCMK__XA_OPERATION_KEY);
     router_node = crm_element_value(rsc_op, XML_LRM_ATTR_ROUTER_NODE);
 
     if (!router_node) {
@@ -567,7 +569,7 @@ allowed_on_node(const pcmk__graph_t *graph, const pcmk__graph_action_t *action,
     int limit = 0;
     struct te_peer_s *r = NULL;
     const char *task = crm_element_value(action->xml, PCMK_XA_OPERATION);
-    const char *id = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
+    const char *id = crm_element_value(action->xml, PCMK__XA_OPERATION_KEY);
 
     if(target == NULL) {
         /* No limit on these */

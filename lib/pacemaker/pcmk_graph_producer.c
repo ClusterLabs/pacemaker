@@ -449,12 +449,12 @@ create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
             interval_ms = 0;
         }
         clone_key = clone_op_key(action, interval_ms);
-        crm_xml_add(action_xml, XML_LRM_ATTR_TASK_KEY, clone_key);
-        crm_xml_add(action_xml, "internal_" XML_LRM_ATTR_TASK_KEY,
+        crm_xml_add(action_xml, PCMK__XA_OPERATION_KEY, clone_key);
+        crm_xml_add(action_xml, "internal_" PCMK__XA_OPERATION_KEY,
                     action->uuid);
         free(clone_key);
     } else {
-        crm_xml_add(action_xml, XML_LRM_ATTR_TASK_KEY, action->uuid);
+        crm_xml_add(action_xml, PCMK__XA_OPERATION_KEY, action->uuid);
     }
 
     if (needs_node_info && (action->node != NULL)) {

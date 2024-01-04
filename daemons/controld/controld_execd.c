@@ -1106,7 +1106,7 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, const xmlNode *action,
     if ((xml_rsc == NULL) || (ID(xml_rsc) == NULL)) {
         /* @TODO Should we do something else, like direct ack? */
         crm_info("Can't fake %s failure (%d) on %s without resource configuration",
-                 crm_element_value(action, XML_LRM_ATTR_TASK_KEY), rc,
+                 crm_element_value(action, PCMK__XA_OPERATION_KEY), rc,
                  target_node);
         return;
 
