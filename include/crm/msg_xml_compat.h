@@ -454,6 +454,9 @@ extern "C" {
 //! \deprecated Do not use
 #define F_CRM_THROTTLE_MAX "crm-limit-max"
 
+//! \deprecated Use \c PCMK_XA_RESULT instead
+#define XML_PING_ATTR_STATUS PCMK_XA_RESULT
+
 #ifdef __cplusplus
 }
 #endif

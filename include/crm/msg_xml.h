@@ -120,7 +120,6 @@ extern "C" {
 
 /*---- top level tags/attrs */
 #  define XML_CRM_TAG_PING		"ping_response"
-#  define XML_PING_ATTR_STATUS		"result"
 #  define XML_PING_ATTR_SYSFROM		"crm_subsystem"
 #  define XML_PING_ATTR_CRMDSTATE   "crmd_state"
 #  define XML_PING_ATTR_PACEMAKERDSTATE "pacemakerd_state"
