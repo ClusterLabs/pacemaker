@@ -469,6 +469,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_FAILCIB_ATTR_OBJTYPE "object_type"
 
+//! \deprecated Use \c PCMK_XA_OPERATION instead
+#define XML_FAILCIB_ATTR_OP PCMK_XA_OPERATION
+
 #ifdef __cplusplus
 }
 #endif
