@@ -20,10 +20,10 @@ LOG_WATCHER_BIN = "%s/cts-log-watcher" % BuildOptions.DAEMON_DIR
 class LogKind(Enum):
     """The various kinds of log files that can be watched."""
 
-    ANY         = 0
-    FILE        = 1
+    ANY = 0
+    FILE = 1
     REMOTE_FILE = 2
-    JOURNAL     = 3
+    JOURNAL = 3
 
     def __str__(self):
         """Return a printable string for a LogKind value."""
