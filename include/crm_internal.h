@@ -84,6 +84,7 @@
 #define PCMK__XA_CONN_HOST              "connection_host"
 #define PCMK__XA_CRMD                   "crmd"
 #define PCMK__XA_CRM_HOST_TO            "crm_host_to"
+#define PCMK__XA_CRM_LIMIT_MODE         "crm-limit-mode"
 #define PCMK__XA_CRM_SYS_FROM           "crm_sys_from"
 #define PCMK__XA_CRM_SYS_TO             "crm_sys_to"
 #define PCMK__XA_CRM_TASK               "crm_task"
