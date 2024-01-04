@@ -199,7 +199,6 @@ extern "C" {
  * executor operations.
  */
 
-#  define XML_LRM_ATTR_CALLID		"call-id"
 #  define XML_LRM_ATTR_OP_DIGEST	"op-digest"
 #  define XML_LRM_ATTR_OP_RESTART	"op-force-restart"
 #  define XML_LRM_ATTR_OP_SECURE	"op-secure-params"

@@ -577,6 +577,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_LRM_ATTR_RC "rc-code"
 
+//! \deprecated Do not use
+#define XML_LRM_ATTR_CALLID "call-id"
+
 #ifdef __cplusplus
 }
 #endif
