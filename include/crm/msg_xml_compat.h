@@ -478,6 +478,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_OPERATION instead
 #define XML_EXPR_ATTR_OPERATION PCMK_XA_OPERATION
 
+//! \deprecated Use \c PCMK_XA_OPERATION instead
+#define XML_DIFF_OP PCMK_XA_OPERATION
+
 #ifdef __cplusplus
 }
 #endif

@@ -345,7 +345,6 @@ extern "C" {
 #  define XML_DIFF_LIST                 "change-list"
 #  define XML_DIFF_ATTR                 "change-attr"
 #  define XML_DIFF_RESULT               "change-result"
-#  define XML_DIFF_OP                   "operation"
 #  define XML_DIFF_PATH                 "path"
 #  define XML_DIFF_POSITION             "position"
 
