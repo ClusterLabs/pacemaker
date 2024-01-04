@@ -463,6 +463,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_PING_ATTR_CRMDSTATE "crmd_state"
 
+//! \deprecated Do not use
+#define XML_PING_ATTR_PACEMAKERDSTATE "pacemakerd_state"
+
 #ifdef __cplusplus
 }
 #endif
