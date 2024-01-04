@@ -2004,7 +2004,8 @@ crm_diff_update_v1(const char *event, xmlNode * msg)
 {
     /* Process operation updates */
     xmlXPathObject *xpathObj = xpath_search(msg,
-                                            "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED
+                                            "//" F_CIB_UPDATE_RESULT
+                                            "//" PCMK__XE_DIFF_ADDED
                                             "//" XML_LRM_TAG_RSC_OP);
     int lpc = 0, max = numXpathResults(xpathObj);
 

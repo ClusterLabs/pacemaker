@@ -818,7 +818,7 @@ cib__config_changed_v1(xmlNode *last, xmlNode *next, xmlNode **diff)
     freeXpathObject(xpathObj);
 
     /*
-     * Do not check XML_TAG_DIFF_ADDED "//" XML_TAG_CIB
+     * Do not check PCMK__XE_DIFF_ADDED "//" XML_TAG_CIB
      * This always contains every field and would produce a false positive
      * every time if the checked value existed
      */

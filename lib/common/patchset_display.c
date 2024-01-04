@@ -159,7 +159,7 @@ xml_show_patchset_v1(pcmk__output_t *out, const xmlNode *patchset,
     }
 
     is_first = true;
-    added = find_xml_node(patchset, XML_TAG_DIFF_ADDED, FALSE);
+    added = find_xml_node(patchset, PCMK__XE_DIFF_ADDED, FALSE);
     for (child = pcmk__xml_first_child(added); child != NULL;
          child = pcmk__xml_next(child)) {
         int temp_rc = xml_show_patchset_v1_recursive(out, "+ ", child, 0,

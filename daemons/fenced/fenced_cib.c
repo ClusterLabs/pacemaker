@@ -284,7 +284,10 @@ update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
     freeXpathObject(xpath_obj);
 
     /* process additions */
-    xpath_obj = xpath_search(msg, "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_CIB_TAG_RESOURCE);
+    xpath_obj = xpath_search(msg,
+                             "//" F_CIB_UPDATE_RESULT
+                             "//" PCMK__XE_DIFF_ADDED
+                             "//" XML_CIB_TAG_RESOURCE);
     if (numXpathResults(xpath_obj) > 0) {
         int max = numXpathResults(xpath_obj), lpc = 0;
 
@@ -509,7 +512,9 @@ update_fencing_topology(const char *event, xmlNode * msg)
         freeXpathObject(xpathObj);
 
         /* Process additions and changes */
-        xpath = "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_TAG_FENCING_LEVEL;
+        xpath = "//" F_CIB_UPDATE_RESULT
+                "//" PCMK__XE_DIFF_ADDED
+                "//" XML_TAG_FENCING_LEVEL;
         xpathObj = xpath_search(msg, xpath);
 
         register_fencing_topology(xpathObj);

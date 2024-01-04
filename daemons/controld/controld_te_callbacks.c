@@ -21,7 +21,7 @@
 
 void te_update_confirm(const char *event, xmlNode * msg);
 
-#define RSC_OP_PREFIX "//" XML_TAG_DIFF_ADDED "//" XML_TAG_CIB \
+#define RSC_OP_PREFIX "//" PCMK__XE_DIFF_ADDED "//" XML_TAG_CIB \
                       "//" XML_LRM_TAG_RSC_OP "[@" PCMK_XA_ID "='"
 
 // An explicit PCMK_OPT_SHUTDOWN_LOCK of 0 means the lock has been cleared
@@ -57,7 +57,9 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     /* Tickets Attributes - Added/Updated */
     xpathObj =
         xpath_search(diff,
-                     "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_CIB_TAG_TICKETS);
+                     "//" F_CIB_UPDATE_RESULT
+                     "//" PCMK__XE_DIFF_ADDED
+                     "//" XML_CIB_TAG_TICKETS);
     if (numXpathResults(xpathObj) > 0) {
         xmlNode *aborted = getXpathResult(xpathObj, 0);
 
@@ -99,7 +101,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     // Check for lrm_resource entries
     xpathObj = xpath_search(diff,
                             "//" F_CIB_UPDATE_RESULT
-                            "//" XML_TAG_DIFF_ADDED
+                            "//" PCMK__XE_DIFF_ADDED
                             "//" XML_LRM_TAG_RESOURCE);
     max = numXpathResults(xpathObj);
 
@@ -137,7 +139,9 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     /* Process operation updates */
     xpathObj =
         xpath_search(diff,
-                     "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_LRM_TAG_RSC_OP);
+                     "//" F_CIB_UPDATE_RESULT
+                     "//" PCMK__XE_DIFF_ADDED
+                     "//" XML_LRM_TAG_RSC_OP);
     max = numXpathResults(xpathObj);
     if (max > 0) {
         int lpc = 0;

@@ -58,6 +58,9 @@
  * XML element names used only by internal code
  */
 
+// @COMPAT Deprecated since 2.1.7
+#define PCMK__XE_DIFF_ADDED             "diff-added"
+
 /* @COMPAT Deprecated since 2.0.0; alias for <clone> with PCMK_META_PROMOTABLE
  * set to "true"
  */
