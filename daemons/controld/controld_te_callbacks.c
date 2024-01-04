@@ -663,7 +663,7 @@ action_timer_callback(gpointer data)
 
     task = crm_element_value(action->xml, PCMK_XA_OPERATION);
     on_node = crm_element_value(action->xml, PCMK__META_ON_NODE);
-    via_node = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
+    via_node = crm_element_value(action->xml, PCMK__XA_ROUTER_NODE);
 
     if (controld_globals.transition_graph->complete) {
         crm_notice("Node %s did not send %s result (via %s) within %dms "

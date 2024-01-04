@@ -199,10 +199,6 @@ extern "C" {
  * executor operations.
  */
 
-/*! Actions to be executed on Pacemaker Remote nodes are routed through the
- *  controller on the cluster node hosting the remote connection. That cluster
- *  node is considered the router node for the action.
- */
 #  define XML_LRM_ATTR_ROUTER_NODE  "router_node"
 #  define XML_LRM_ATTR_RSCID		"rsc-id"
 #  define XML_LRM_ATTR_OPSTATUS		"op-status"

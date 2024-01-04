@@ -352,7 +352,7 @@ create_reprobe_message_data(const char *target_node, const char *router_node)
     msg_data = create_xml_node(NULL, "data_for_" CRM_OP_REPROBE);
     crm_xml_add(msg_data, PCMK__META_ON_NODE, target_node);
     if ((router_node != NULL) && !pcmk__str_eq(router_node, target_node, pcmk__str_casei)) {
-        crm_xml_add(msg_data, XML_LRM_ATTR_ROUTER_NODE, router_node);
+        crm_xml_add(msg_data, PCMK__XA_ROUTER_NODE, router_node);
     }
     return msg_data;
 }
@@ -500,7 +500,7 @@ controller_resource_op(pcmk_ipc_api_t *api, const char *op,
 
     crm_xml_add(msg_data, PCMK__META_ON_NODE, target_node);
     if (!pcmk__str_eq(router_node, target_node, pcmk__str_casei)) {
-        crm_xml_add(msg_data, XML_LRM_ATTR_ROUTER_NODE, router_node);
+        crm_xml_add(msg_data, PCMK__XA_ROUTER_NODE, router_node);
     }
 
     if (cib_only) {

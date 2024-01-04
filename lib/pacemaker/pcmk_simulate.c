@@ -510,7 +510,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     char *node = crm_element_value_copy(action->xml, PCMK__META_ON_NODE);
     char *uuid = NULL;
     const char *router_node = crm_element_value(action->xml,
-                                                XML_LRM_ATTR_ROUTER_NODE);
+                                                PCMK__XA_ROUTER_NODE);
 
     // Certain actions don't need to be displayed or history entries
     if (pcmk__str_eq(operation, CRM_OP_REPROBE, pcmk__str_none)) {

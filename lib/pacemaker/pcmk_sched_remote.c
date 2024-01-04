@@ -481,8 +481,8 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
          *
          * This is somewhat brittle in that we need to make sure the results of
          * this ordering are compatible with the result of get_router_node().
-         * It would probably be better to add XML_LRM_ATTR_ROUTER_NODE as part
-         * of this logic rather than create_graph_action().
+         * It would probably be better to add PCMK__XA_ROUTER_NODE as part of
+         * this logic rather than create_graph_action().
          */
         if (remote->container) {
             crm_trace("Container ordering for %s", action->uuid);

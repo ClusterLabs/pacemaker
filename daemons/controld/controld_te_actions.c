@@ -122,7 +122,7 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     on_node = crm_element_value(action->xml, PCMK__META_ON_NODE);
     CRM_CHECK(!pcmk__str_empty(on_node), return pcmk_rc_node_unknown);
 
-    router_node = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
+    router_node = crm_element_value(action->xml, PCMK__XA_ROUTER_NODE);
     if (router_node == NULL) {
         router_node = on_node;
         if (pcmk__str_eq(task, PCMK_ACTION_LRM_DELETE, pcmk__str_none)) {
@@ -225,7 +225,7 @@ synthesize_timeout_event(const pcmk__graph_action_t *action, int target_rc)
     } else {
         const char *router_node = NULL;
 
-        router_node = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
+        router_node = crm_element_value(action->xml, PCMK__XA_ROUTER_NODE);
         if (router_node == NULL) {
             router_node = target;
         }
@@ -378,7 +378,7 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     rsc_op = action->xml;
     task = crm_element_value(rsc_op, PCMK_XA_OPERATION);
     task_uuid = crm_element_value(action->xml, PCMK__XA_OPERATION_KEY);
-    router_node = crm_element_value(rsc_op, XML_LRM_ATTR_ROUTER_NODE);
+    router_node = crm_element_value(rsc_op, PCMK__XA_ROUTER_NODE);
 
     if (!router_node) {
         router_node = on_node;
@@ -535,7 +535,7 @@ te_update_job_count(pcmk__graph_action_t *action, int offset)
      * on a remote node. For now, we count all actions occurring on a
      * remote node against the job list on the cluster node hosting
      * the connection resources */
-    target = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
+    target = crm_element_value(action->xml, PCMK__XA_ROUTER_NODE);
 
     if ((target == NULL)
         && pcmk__strcase_any_of(task, PCMK_ACTION_MIGRATE_TO,
@@ -632,7 +632,7 @@ graph_action_allowed(pcmk__graph_t *graph, pcmk__graph_action_t *action)
      * on a remote node. For now, we count all actions occurring on a
      * remote node against the job list on the cluster node hosting
      * the connection resources */
-    target = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
+    target = crm_element_value(action->xml, PCMK__XA_ROUTER_NODE);
 
     if ((target == NULL)
         && pcmk__strcase_any_of(task, PCMK_ACTION_MIGRATE_TO,

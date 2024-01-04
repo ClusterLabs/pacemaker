@@ -230,7 +230,7 @@ add_node_details(const pcmk_action_t *action, xmlNode *xml)
     crm_xml_add(xml, PCMK__META_ON_NODE, action->node->details->uname);
     crm_xml_add(xml, PCMK__META_ON_NODE_UUID, action->node->details->id);
     if (router_node != NULL) {
-        crm_xml_add(xml, XML_LRM_ATTR_ROUTER_NODE, router_node->details->uname);
+        crm_xml_add(xml, PCMK__XA_ROUTER_NODE, router_node->details->uname);
     }
 }
 

@@ -646,7 +646,7 @@ handle_failcount_op(xmlNode * stored_msg)
         return I_NULL;
     }
 
-    if (crm_element_value(xml_op, XML_LRM_ATTR_ROUTER_NODE)) {
+    if (crm_element_value(xml_op, PCMK__XA_ROUTER_NODE)) {
         is_remote_node = TRUE;
     }
 
