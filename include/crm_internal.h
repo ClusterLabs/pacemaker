@@ -134,6 +134,9 @@
 #define PCMK__XA_TRANSITION_MAGIC       "transition-magic"
 #define PCMK__XA_UPTIME                 "uptime"
 
+// @COMPAT Deprecated since 2.1.5
+#define PCMK__XA_FIRST_INSTANCE         "first-instance"
+
 // @COMPAT Deprecated since 2.1.6
 #define PCMK__XA_REPLACE                "replace"
 

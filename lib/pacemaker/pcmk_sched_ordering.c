@@ -259,7 +259,7 @@ get_ordering_resource(const xmlNode *xml, const char *resource_attr,
 
     if (instance_id != NULL) {
         pcmk__warn_once(pcmk__wo_order_inst,
-                        "Support for " XML_ORDER_ATTR_FIRST_INSTANCE " and "
+                        "Support for " PCMK__XA_FIRST_INSTANCE " and "
                         XML_ORDER_ATTR_THEN_INSTANCE " is deprecated and will "
                         "be removed in a future release.");
 
@@ -447,8 +447,7 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     }
 
     rsc_first = get_ordering_resource(xml_obj, XML_ORDER_ATTR_FIRST,
-                                      XML_ORDER_ATTR_FIRST_INSTANCE,
-                                      scheduler);
+                                      PCMK__XA_FIRST_INSTANCE, scheduler);
     if (rsc_first == NULL) {
         return;
     }
