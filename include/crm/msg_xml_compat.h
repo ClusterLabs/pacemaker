@@ -424,6 +424,9 @@ extern "C" {
 //! \deprecated Do not use
 #define F_CRM_USER "crm_user"
 
+//! \deprecated Do not use
+#define F_CRM_JOIN_ID "join_id"
+
 #ifdef __cplusplus
 }
 #endif
