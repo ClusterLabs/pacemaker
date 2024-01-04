@@ -574,6 +574,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_LRM_ATTR_OPSTATUS "op-status"
 
+//! \deprecated Do not use
+#define XML_LRM_ATTR_RC "rc-code"
+
 #ifdef __cplusplus
 }
 #endif
