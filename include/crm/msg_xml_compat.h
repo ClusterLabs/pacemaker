@@ -406,6 +406,9 @@ extern "C" {
 //! \deprecated Do not use
 #define F_CRM_TASK "crm_task"
 
+//! \deprecated Do not use
+#define F_CRM_HOST_TO "crm_host_to"
+
 #ifdef __cplusplus
 }
 #endif
