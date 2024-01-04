@@ -604,6 +604,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_EXEC_TIME instead
 #define XML_RSC_OP_T_EXEC PCMK_XA_EXEC_TIME
 
+//! \deprecated Use \c PCMK_XA_QUEUE_TIME instead
+#define XML_RSC_OP_T_QUEUE PCMK_XA_QUEUE_TIME
+
 #ifdef __cplusplus
 }
 #endif
