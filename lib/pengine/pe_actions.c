@@ -587,8 +587,8 @@ unpack_interval_origin(const char *value, const xmlNode *xml_obj,
     // Parse interval origin from text
     origin = crm_time_new(value);
     if (origin == NULL) {
-        pcmk__config_err("Ignoring '" XML_OP_ATTR_ORIGIN "' for operation "
-                         "'%s' because '%s' is not valid",
+        pcmk__config_err("Ignoring '" PCMK_META_INTERVAL_ORIGIN "' for "
+                         "operation '%s' because '%s' is not valid",
                          (ID(xml_obj)? ID(xml_obj) : "(missing ID)"), value);
         return false;
     }
@@ -834,7 +834,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
     } else {
         long long start_delay = 0;
 
-        str = g_hash_table_lookup(meta, XML_OP_ATTR_ORIGIN);
+        str = g_hash_table_lookup(meta, PCMK_META_INTERVAL_ORIGIN);
         if (unpack_interval_origin(str, action_config, interval_ms,
                                    rsc->cluster->now, &start_delay)) {
             name = strdup(PCMK_META_START_DELAY);

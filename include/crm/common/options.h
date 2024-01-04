@@ -90,6 +90,7 @@ extern "C" {
 #define PCMK_META_INTERLEAVE                "interleave"
 #define PCMK_META_INTERVAL                  "interval"
 #define PCMK_META_IS_MANAGED                "is-managed"
+#define PCMK_META_INTERVAL_ORIGIN           "interval-origin"
 #define PCMK_META_MAINTENANCE               "maintenance"
 #define PCMK_META_MIGRATION_THRESHOLD       "migration-threshold"
 #define PCMK_META_MULTIPLE_ACTIVE           "multiple-active"
