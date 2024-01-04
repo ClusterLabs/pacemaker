@@ -532,6 +532,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_OP_ATTR_DIGESTS_ALL "digests-all"
 
+//! \deprecated Do not use
+#define XML_OP_ATTR_DIGESTS_SECURE "digests-secure"
+
 #ifdef __cplusplus
 }
 #endif

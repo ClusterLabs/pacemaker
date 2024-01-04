@@ -183,8 +183,6 @@ extern "C" {
 
 #  define XML_CIB_TAG_RSC_TEMPLATE	"template"
 
-#  define XML_OP_ATTR_DIGESTS_SECURE    "digests-secure"
-
 #  define XML_CIB_TAG_LRM		"lrm"
 #  define XML_LRM_TAG_RESOURCES     	"lrm_resources"
 #  define XML_LRM_TAG_RESOURCE     	"lrm_resource"
