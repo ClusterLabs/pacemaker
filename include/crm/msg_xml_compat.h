@@ -511,6 +511,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_CIB_ATTR_REPLACE "replace"
 
+//! \deprecated Do not use
+#define XML_COLOC_ATTR_SOURCE_INSTANCE "rsc-instance"
+
 #ifdef __cplusplus
 }
 #endif

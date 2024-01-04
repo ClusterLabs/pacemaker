@@ -268,9 +268,6 @@ extern "C" {
 #  define XML_COLOC_ATTR_INFLUENCE          "influence"
 
 //! \deprecated Deprecated since 2.1.5
-#  define XML_COLOC_ATTR_SOURCE_INSTANCE	"rsc-instance"
-
-//! \deprecated Deprecated since 2.1.5
 #  define XML_COLOC_ATTR_TARGET_INSTANCE	"with-rsc-instance"
 
 #  define XML_LOC_ATTR_SOURCE           "rsc"
