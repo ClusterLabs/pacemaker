@@ -40,48 +40,48 @@ class BasePatterns:
         ]
 
         self._commands = {
-            "StatusCmd"      : "crmadmin -t 60 -S %s 2>/dev/null",
-            "CibQuery"       : "cibadmin -Ql",
-            "CibAddXml"      : "cibadmin --modify -c --xml-text %s",
-            "CibDelXpath"    : "cibadmin --delete --xpath %s",
-            "RscRunning"     : BuildOptions.DAEMON_DIR + "/cts-exec-helper -R -r %s",
-            "CIBfile"        : "%s:" + BuildOptions.CIB_DIR + "/cib.xml",
-            "TmpDir"         : "/tmp",
+            "StatusCmd": "crmadmin -t 60 -S %s 2>/dev/null",
+            "CibQuery": "cibadmin -Ql",
+            "CibAddXml": "cibadmin --modify -c --xml-text %s",
+            "CibDelXpath": "cibadmin --delete --xpath %s",
+            "RscRunning": BuildOptions.DAEMON_DIR + "/cts-exec-helper -R -r %s",
+            "CIBfile": "%s:" + BuildOptions.CIB_DIR + "/cib.xml",
+            "TmpDir": "/tmp",
 
-            "BreakCommCmd"   : "iptables -A INPUT -s %s -j DROP >/dev/null 2>&1",
-            "FixCommCmd"     : "iptables -D INPUT -s %s -j DROP >/dev/null 2>&1",
+            "BreakCommCmd": "iptables -A INPUT -s %s -j DROP >/dev/null 2>&1",
+            "FixCommCmd": "iptables -D INPUT -s %s -j DROP >/dev/null 2>&1",
 
-            "MaintenanceModeOn"    : "cibadmin --modify -c --xml-text '<cluster_property_set id=\"cib-bootstrap-options\"><nvpair id=\"cts-maintenance-mode-setting\" name=\"maintenance-mode\" value=\"true\"/></cluster_property_set>'",
-            "MaintenanceModeOff"    : "cibadmin --delete --xpath \"//nvpair[@name='maintenance-mode']\"",
+            "MaintenanceModeOn": "cibadmin --modify -c --xml-text '<cluster_property_set id=\"cib-bootstrap-options\"><nvpair id=\"cts-maintenance-mode-setting\" name=\"maintenance-mode\" value=\"true\"/></cluster_property_set>'",
+            "MaintenanceModeOff": "cibadmin --delete --xpath \"//nvpair[@name='maintenance-mode']\"",
 
-            "StandbyCmd"      : "crm_attribute -Vq  -U %s -n standby -l forever -v %s 2>/dev/null",
-            "StandbyQueryCmd" : "crm_attribute -qG -U %s -n standby -l forever -d off 2>/dev/null",
+            "StandbyCmd": "crm_attribute -Vq  -U %s -n standby -l forever -v %s 2>/dev/null",
+            "StandbyQueryCmd": "crm_attribute -qG -U %s -n standby -l forever -d off 2>/dev/null",
         }
 
         self._search = {
-            "Pat:DC_IDLE"      : r"pacemaker-controld.*State transition.*-> S_IDLE",
+            "Pat:DC_IDLE": r"pacemaker-controld.*State transition.*-> S_IDLE",
 
             # This won't work if we have multiple partitions
-            "Pat:Local_started" : r"%s\W.*controller successfully started",
-            "Pat:NonDC_started" : r"%s\W.*State transition.*-> S_NOT_DC",
-            "Pat:DC_started"    : r"%s\W.*State transition.*-> S_IDLE",
-            "Pat:We_stopped"    : r"%s\W.*OVERRIDE THIS PATTERN",
-            "Pat:They_stopped"  : r"%s\W.*LOST:.* %s ",
-            "Pat:They_dead"     : r"node %s.*: is dead",
-            "Pat:They_up"       : r"%s %s\W.*OVERRIDE THIS PATTERN",
-            "Pat:TransitionComplete" : "Transition status: Complete: complete",
+            "Pat:Local_started": r"%s\W.*controller successfully started",
+            "Pat:NonDC_started": r"%s\W.*State transition.*-> S_NOT_DC",
+            "Pat:DC_started": r"%s\W.*State transition.*-> S_IDLE",
+            "Pat:We_stopped": r"%s\W.*OVERRIDE THIS PATTERN",
+            "Pat:They_stopped": r"%s\W.*LOST:.* %s ",
+            "Pat:They_dead": r"node %s.*: is dead",
+            "Pat:They_up": r"%s %s\W.*OVERRIDE THIS PATTERN",
+            "Pat:TransitionComplete": "Transition status: Complete: complete",
 
-            "Pat:Fencing_start"   : r"Requesting peer fencing .* targeting %s",
-            "Pat:Fencing_ok"      : r"pacemaker-fenced.*:\s*Operation .* targeting %s by .* for .*@.*: OK",
-            "Pat:Fencing_recover" : r"pacemaker-schedulerd.*: Recover\s+%s",
-            "Pat:Fencing_active"  : r"stonith resource .* is active on 2 nodes (attempting recovery)",
-            "Pat:Fencing_probe"   : r"pacemaker-controld.* Result of probe operation for %s on .*: Error",
+            "Pat:Fencing_start": r"Requesting peer fencing .* targeting %s",
+            "Pat:Fencing_ok": r"pacemaker-fenced.*:\s*Operation .* targeting %s by .* for .*@.*: OK",
+            "Pat:Fencing_recover": r"pacemaker-schedulerd.*: Recover\s+%s",
+            "Pat:Fencing_active": r"stonith resource .* is active on 2 nodes (attempting recovery)",
+            "Pat:Fencing_probe": r"pacemaker-controld.* Result of probe operation for %s on .*: Error",
 
-            "Pat:RscOpOK"       : r"pacemaker-controld.*:\s+Result of %s operation for %s.*: (0 \()?ok",
-            "Pat:RscOpFail"     : r"pacemaker-schedulerd.*:.*Unexpected result .* recorded for %s of %s ",
-            "Pat:CloneOpFail"   : r"pacemaker-schedulerd.*:.*Unexpected result .* recorded for %s of (%s|%s) ",
-            "Pat:RscRemoteOpOK" : r"pacemaker-controld.*:\s+Result of %s operation for %s on %s: (0 \()?ok",
-            "Pat:NodeFenced"    : r"pacemaker-controld.*:\s* Peer %s was terminated \(.*\) by .* on behalf of .*: OK",
+            "Pat:RscOpOK": r"pacemaker-controld.*:\s+Result of %s operation for %s.*: (0 \()?ok",
+            "Pat:RscOpFail": r"pacemaker-schedulerd.*:.*Unexpected result .* recorded for %s of %s ",
+            "Pat:CloneOpFail": r"pacemaker-schedulerd.*:.*Unexpected result .* recorded for %s of (%s|%s) ",
+            "Pat:RscRemoteOpOK": r"pacemaker-controld.*:\s+Result of %s operation for %s on %s: (0 \()?ok",
+            "Pat:NodeFenced": r"pacemaker-controld.*:\s* Peer %s was terminated \(.*\) by .* on behalf of .*: OK",
         }
 
     def get_component(self, key):
@@ -139,29 +139,29 @@ class Corosync2Patterns(BasePatterns):
         self._name = "crm-corosync"
 
         self._commands.update({
-            "StartCmd"       : "service corosync start && service pacemaker start",
-            "StopCmd"        : "service pacemaker stop; [ ! -e /usr/sbin/pacemaker-remoted ] || service pacemaker_remote stop; service corosync stop",
+            "StartCmd": "service corosync start && service pacemaker start",
+            "StopCmd": "service pacemaker stop; [ ! -e /usr/sbin/pacemaker-remoted ] || service pacemaker_remote stop; service corosync stop",
 
-            "EpochCmd"       : "crm_node -e",
-            "QuorumCmd"      : "crm_node -q",
-            "PartitionCmd"   : "crm_node -p",
+            "EpochCmd": "crm_node -e",
+            "QuorumCmd": "crm_node -q",
+            "PartitionCmd": "crm_node -p",
         })
 
         self._search.update({
             # Close enough ... "Corosync Cluster Engine exiting normally" isn't
             # printed reliably.
-            "Pat:We_stopped"   : r"%s\W.*Unloading all Corosync service engines",
-            "Pat:They_stopped" : r"%s\W.*pacemaker-controld.*Node %s(\[|\s).*state is now lost",
-            "Pat:They_dead"    : r"pacemaker-controld.*Node %s(\[|\s).*state is now lost",
-            "Pat:They_up"      : r"\W%s\W.*pacemaker-controld.*Node %s state is now member",
+            "Pat:We_stopped": r"%s\W.*Unloading all Corosync service engines",
+            "Pat:They_stopped": r"%s\W.*pacemaker-controld.*Node %s(\[|\s).*state is now lost",
+            "Pat:They_dead": r"pacemaker-controld.*Node %s(\[|\s).*state is now lost",
+            "Pat:They_up": r"\W%s\W.*pacemaker-controld.*Node %s state is now member",
 
-            "Pat:ChildExit"    : r"\[[0-9]+\] exited with status [0-9]+ \(",
+            "Pat:ChildExit": r"\[[0-9]+\] exited with status [0-9]+ \(",
             # "with signal 9" == pcmk_child_exit(), "$" == check_active_before_startup_processes()
-            "Pat:ChildKilled"  : r"%s\W.*pacemakerd.*%s\[[0-9]+\] terminated( with signal 9|$)",
-            "Pat:ChildRespawn" : r"%s\W.*pacemakerd.*Respawning %s subdaemon after unexpected exit",
+            "Pat:ChildKilled": r"%s\W.*pacemakerd.*%s\[[0-9]+\] terminated( with signal 9|$)",
+            "Pat:ChildRespawn": r"%s\W.*pacemakerd.*Respawning %s subdaemon after unexpected exit",
 
-            "Pat:InfraUp"      : r"%s\W.*corosync.*Initializing transport",
-            "Pat:PacemakerUp"  : r"%s\W.*pacemakerd.*Starting Pacemaker",
+            "Pat:InfraUp": r"%s\W.*corosync.*Initializing transport",
+            "Pat:PacemakerUp": r"%s\W.*pacemakerd.*Starting Pacemaker",
         })
 
         self._ignore += [
