@@ -501,7 +501,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     const char *resource_config_name = NULL;
     const char *operation = crm_element_value(action->xml, PCMK_XA_OPERATION);
     const char *target_rc_s = crm_meta_value(action->params,
-                                             XML_ATTR_TE_TARGET_RC);
+                                             PCMK__META_OP_TARGET_RC);
 
     xmlNode *cib_node = NULL;
     xmlNode *cib_resource = NULL;

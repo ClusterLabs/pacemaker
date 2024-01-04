@@ -478,7 +478,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
                 interval_ms_s = g_hash_table_lookup(op->meta,
                                                     PCMK_META_INTERVAL);
                 target_rc_s = g_hash_table_lookup(op->meta,
-                                                  XML_ATTR_TE_TARGET_RC);
+                                                  PCMK__META_OP_TARGET_RC);
                 if (rc_stopped == NULL) {
                     rc_stopped = pcmk__itoa(PCMK_OCF_NOT_RUNNING);
                 }

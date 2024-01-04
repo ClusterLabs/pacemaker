@@ -1885,7 +1885,7 @@ pe__add_action_expected_result(pcmk_action_t *action, int expected_result)
 
     CRM_ASSERT((action != NULL) && (action->meta != NULL));
 
-    name = strdup(XML_ATTR_TE_TARGET_RC);
+    name = strdup(PCMK__META_OP_TARGET_RC);
     CRM_ASSERT (name != NULL);
 
     g_hash_table_insert(action->meta, name, pcmk__itoa(expected_result));

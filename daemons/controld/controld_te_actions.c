@@ -83,7 +83,7 @@ get_target_rc(pcmk__graph_action_t *action)
 {
     int exit_status;
 
-    pcmk__scan_min_int(crm_meta_value(action->params, XML_ATTR_TE_TARGET_RC),
+    pcmk__scan_min_int(crm_meta_value(action->params, PCMK__META_OP_TARGET_RC),
                        &exit_status, 0);
     return exit_status;
 }
