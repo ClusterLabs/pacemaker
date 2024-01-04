@@ -445,6 +445,9 @@ extern "C" {
 //! \deprecated Do not use
 #define F_CRM_TGRAPH "crm-tgraph-file"
 
+//! \deprecated Do not use
+#define F_CRM_TGRAPH_INPUT "crm-tgraph-in"
+
 #ifdef __cplusplus
 }
 #endif

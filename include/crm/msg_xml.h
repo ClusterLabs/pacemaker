@@ -107,7 +107,6 @@ extern "C" {
 #  define CIB_OPTIONS_FIRST "cib-bootstrap-options"
 
 #  define F_CRM_DATA			"crm_xml"
-#  define F_CRM_TGRAPH_INPUT		"crm-tgraph-in"
 
 #  define F_CRM_THROTTLE_MODE		"crm-limit-mode"
 #  define F_CRM_THROTTLE_MAX		"crm-limit-max"
