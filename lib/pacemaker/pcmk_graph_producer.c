@@ -863,7 +863,7 @@ create_graph_synapse(const pcmk_action_t *action, pcmk_scheduler_t *scheduler)
         synapse_priority = action->priority;
     }
     if (synapse_priority > 0) {
-        crm_xml_add_int(syn, XML_CIB_ATTR_PRIORITY, synapse_priority);
+        crm_xml_add_int(syn, PCMK__XA_PRIORITY, synapse_priority);
     }
     return syn;
 }

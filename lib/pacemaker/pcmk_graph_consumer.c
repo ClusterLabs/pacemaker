@@ -587,7 +587,7 @@ unpack_synapse(pcmk__graph_t *new_graph, const xmlNode *xml_synapse)
 
     pcmk__scan_min_int(ID(xml_synapse), &(new_synapse->id), 0);
 
-    value = crm_element_value(xml_synapse, XML_CIB_ATTR_PRIORITY);
+    value = crm_element_value(xml_synapse, PCMK__XA_PRIORITY);
     pcmk__scan_min_int(value, &(new_synapse->priority), 0);
 
     CRM_CHECK(new_synapse->id >= 0, free(new_synapse);

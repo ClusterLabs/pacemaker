@@ -121,6 +121,7 @@
 #define PCMK__XA_NODE_START_STATE       "node_start_state"
 #define PCMK__XA_OBJECT_TYPE            "object_type"
 #define PCMK__XA_PACEMAKERD_STATE       "pacemakerd_state"
+#define PCMK__XA_PRIORITY               "priority"
 #define PCMK__XA_REAP                   "reap"
 #define PCMK__XA_SCHEMA                 "schema"
 #define PCMK__XA_SCHEMAS                "schemas"
