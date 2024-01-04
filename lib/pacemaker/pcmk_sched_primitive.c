@@ -422,7 +422,7 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
         pcmk__rsc_debug(rsc, "Breaking assignment loop involving %s", rsc->id);
         return NULL;
     }
-    pe__set_resource_flags(rsc, pcmk_rsc_assigning);
+    pcmk__set_rsc_flags(rsc, pcmk_rsc_assigning);
 
     pe__show_node_scores(true, rsc, "Pre-assignment", rsc->allowed_nodes,
                          rsc->cluster);
@@ -495,7 +495,7 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     // Unmanage resource if fencing is enabled but no device is configured
     if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)
         && !pcmk_is_set(rsc->cluster->flags, pcmk_sched_have_fencing)) {
-        pe__clear_resource_flags(rsc, pcmk_rsc_managed);
+        pcmk__clear_rsc_flags(rsc, pcmk_rsc_managed);
     }
 
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
@@ -537,7 +537,7 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
         }
     }
 
-    pe__clear_resource_flags(rsc, pcmk_rsc_assigning);
+    pcmk__clear_rsc_flags(rsc, pcmk_rsc_assigning);
 
     if (rsc->is_remote_node) {
         remote_connection_assigned(rsc);
@@ -565,7 +565,7 @@ schedule_restart_actions(pcmk_resource_t *rsc, pcmk_node_t *current,
     enum rsc_role_e next_role;
     rsc_transition_fn fn = NULL;
 
-    pe__set_resource_flags(rsc, pcmk_rsc_restarting);
+    pcmk__set_rsc_flags(rsc, pcmk_rsc_restarting);
 
     // Bring resource down to a stop on its current node
     while (role != pcmk_role_stopped) {
@@ -601,7 +601,7 @@ schedule_restart_actions(pcmk_resource_t *rsc, pcmk_node_t *current,
         role = next_role;
     }
 
-    pe__clear_resource_flags(rsc, pcmk_rsc_restarting);
+    pcmk__clear_rsc_flags(rsc, pcmk_rsc_restarting);
 }
 
 /*!
@@ -642,7 +642,7 @@ create_pending_start(pcmk_resource_t *rsc)
                     "Creating action for %s to represent already pending start",
                     rsc->id);
     start = start_action(rsc, rsc->allocated_to, TRUE);
-    pe__set_action_flags(start, pcmk_action_always_in_graph);
+    pcmk__set_action_flags(start, pcmk_action_always_in_graph);
 }
 
 /*!
@@ -776,7 +776,7 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
         // Resource was (possibly) incorrectly multiply active
         pcmk__sched_err("%s resource %s might be active on %u nodes (%s)",
                         pcmk__s(class, "Untyped"), rsc->id, num_all_active,
-                        recovery2text(rsc->recovery_type));
+                        pcmk_multiply_active_text(rsc->recovery_type));
         crm_notice("See https://wiki.clusterlabs.org/wiki/FAQ"
                    "#Resource_is_Too_Active for more information");
 
@@ -786,14 +786,14 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
                 break;
             case pcmk_multiply_active_unexpected:
                 need_stop = true; // stop_resource() will skip expected node
-                pe__set_resource_flags(rsc, pcmk_rsc_stop_unexpected);
+                pcmk__set_rsc_flags(rsc, pcmk_rsc_stop_unexpected);
                 break;
             default:
                 break;
         }
 
     } else {
-        pe__clear_resource_flags(rsc, pcmk_rsc_stop_unexpected);
+        pcmk__clear_rsc_flags(rsc, pcmk_rsc_stop_unexpected);
     }
 
     if (pcmk_is_set(rsc->flags, pcmk_rsc_start_pending)) {
@@ -1282,7 +1282,7 @@ stop_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
         }
 
         if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
-            pe__clear_action_flags(stop, pcmk_action_runnable);
+            pcmk__clear_action_flags(stop, pcmk_action_runnable);
         }
 
         if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_remove_after_stop)) {
@@ -1325,7 +1325,7 @@ start_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
     pcmk__order_vs_unfence(rsc, node, start, pcmk__ar_first_implies_then);
 
     if (pcmk_is_set(start->flags, pcmk_action_runnable) && !optional) {
-        pe__clear_action_flags(start, pcmk_action_optional);
+        pcmk__clear_action_flags(start, pcmk_action_optional);
     }
 
     if (is_expected_node(rsc, node)) {
@@ -1336,7 +1336,7 @@ start_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
                         "Start of multiply active resouce %s "
                         "on expected node %s will be a pseudo-action",
                         rsc->id, pe__node_name(node));
-        pe__set_action_flags(start, pcmk_action_pseudo);
+        pcmk__set_action_flags(start, pcmk_action_pseudo);
     }
 }
 
@@ -1383,7 +1383,7 @@ promote_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
                             "Promotion of multiply active resouce %s "
                             "on expected node %s will be a pseudo-action",
                             rsc->id, pe__node_name(node));
-            pe__set_action_flags(promote, pcmk_action_pseudo);
+            pcmk__set_action_flags(promote, pcmk_action_pseudo);
         }
     } else {
         pcmk__rsc_trace(rsc, "Not promoting %s on %s: start unrunnable",
@@ -1393,7 +1393,7 @@ promote_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
         for (iter = action_list; iter != NULL; iter = iter->next) {
             pcmk_action_t *promote = (pcmk_action_t *) iter->data;
 
-            pe__clear_action_flags(promote, pcmk_action_runnable);
+            pcmk__clear_action_flags(promote, pcmk_action_runnable);
         }
         g_list_free(action_list);
     }

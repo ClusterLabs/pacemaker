@@ -495,6 +495,8 @@ struct pe_resource_s {
     GHashTable *parameter_cache;
 };
 
+const char *pcmk_multiply_active_text(enum rsc_recovery_type recovery);
+
 #ifdef __cplusplus
 }
 #endif

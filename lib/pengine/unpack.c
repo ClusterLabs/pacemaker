@@ -46,7 +46,7 @@ struct action_history {
 };
 
 /* This uses pcmk__set_flags_as()/pcmk__clear_flags_as() directly rather than
- * use pe__set_working_set_flags()/pe__clear_working_set_flags() so that the
+ * use pcmk__set_scheduler_flags()/pcmk__clear_scheduler_flags() so that the
  * flag is stringified more readably in log messages.
  */
 #define set_config_flag(scheduler, option, flag) do {                         \
@@ -133,8 +133,8 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
                  * in this transition if the recovery succeeds.
                  */
                 node->details->remote_requires_reset = TRUE;
-                pe__set_resource_flags(rsc,
-                                       pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
+                pcmk__set_rsc_flags(rsc,
+                                    pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
             }
         }
 
@@ -143,8 +143,8 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
                  "fencing was already done because %s, "
                  "and guest resource no longer exists",
                  pe__node_name(node), reason);
-        pe__set_resource_flags(node->details->remote_rsc,
-                               pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
+        pcmk__set_rsc_flags(node->details->remote_rsc,
+                            pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
 
     } else if (pe__is_remote_node(node)) {
         pcmk_resource_t *rsc = node->details->remote_rsc;
@@ -203,7 +203,7 @@ set_if_xpath(uint64_t flag, const char *xpath, pcmk_scheduler_t *scheduler)
     if (!pcmk_is_set(scheduler->flags, flag)) {
         result = xpath_search(scheduler->input, xpath);
         if (result && (numXpathResults(result) > 0)) {
-            pe__set_working_set_flags(scheduler, flag);
+            pcmk__set_scheduler_flags(scheduler, flag);
         }
         freeXpathObject(result);
     }
@@ -243,7 +243,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
         crm_info("Watchdog-based self-fencing will be performed via SBD if "
                  "fencing is required and " PCMK_OPT_STONITH_WATCHDOG_TIMEOUT
                  " is nonzero");
-        pe__set_working_set_flags(scheduler, pcmk_sched_have_fencing);
+        pcmk__set_scheduler_flags(scheduler, pcmk_sched_have_fencing);
     }
 
     /* Set certain flags via xpath here, so they can be used before the relevant
@@ -381,7 +381,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     value = pe_pref(scheduler->config_hash, PCMK__OPT_REMOVE_AFTER_STOP);
     if (value != NULL) {
         if (crm_is_true(value)) {
-            pe__set_working_set_flags(scheduler, pcmk_sched_remove_after_stop);
+            pcmk__set_scheduler_flags(scheduler, pcmk_sched_remove_after_stop);
 #ifndef PCMK__COMPAT_2_0
             pcmk__warn_once(pcmk__wo_remove_after,
                             "Support for the " PCMK__OPT_REMOVE_AFTER_STOP
@@ -389,7 +389,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
                             "removed in a future release");
 #endif
         } else {
-            pe__clear_working_set_flags(scheduler,
+            pcmk__clear_scheduler_flags(scheduler,
                                         pcmk_sched_remove_after_stop);
         }
     }
@@ -492,7 +492,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
 
     } else if (pcmk__str_eq(type, "remote", pcmk__str_casei)) {
         new_node->details->type = pcmk_node_variant_remote;
-        pe__set_working_set_flags(scheduler, pcmk_sched_have_remote_nodes);
+        pcmk__set_scheduler_flags(scheduler, pcmk_sched_have_remote_nodes);
 
     } else {
         /* @COMPAT 'ping' is the default for backward compatibility, but it
@@ -689,7 +689,7 @@ setup_container(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
         if (container) {
             rsc->container = container;
-            pe__set_resource_flags(container, pcmk_rsc_has_filler);
+            pcmk__set_rsc_flags(container, pcmk_rsc_has_filler);
             container->fillers = g_list_append(container->fillers, rsc);
             pcmk__rsc_trace(rsc, "Resource %s's container is %s",
                             rsc->id, container_id);
@@ -1964,9 +1964,9 @@ create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
     if (crm_element_value(rsc_entry, PCMK__META_CONTAINER)) {
         /* This orphaned rsc needs to be mapped to a container. */
         crm_trace("Detected orphaned container filler %s", rsc_id);
-        pe__set_resource_flags(rsc, pcmk_rsc_removed_filler);
+        pcmk__set_rsc_flags(rsc, pcmk_rsc_removed_filler);
     }
-    pe__set_resource_flags(rsc, pcmk_rsc_removed);
+    pcmk__set_rsc_flags(rsc, pcmk_rsc_removed);
     scheduler->resources = g_list_append(scheduler->resources, rsc);
     return rsc;
 }
@@ -2214,7 +2214,7 @@ process_orphan_resource(const xmlNode *rsc_entry, const pcmk_node_t *node,
     }
 
     if (!pcmk_is_set(scheduler->flags, pcmk_sched_stop_removed_resources)) {
-        pe__clear_resource_flags(rsc, pcmk_rsc_managed);
+        pcmk__clear_rsc_flags(rsc, pcmk_rsc_managed);
 
     } else {
         CRM_CHECK(rsc != NULL, return NULL);
@@ -2276,8 +2276,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
          * resource to run again once we are sure we know its state.
          */
         if (pe__is_guest_node(node)) {
-            pe__set_resource_flags(rsc,
-                                   pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
+            pcmk__set_rsc_flags(rsc, pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
             should_fence = TRUE;
 
         } else if (pcmk_is_set(rsc->cluster->flags,
@@ -2326,7 +2325,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
             break;
 
         case pcmk_on_fail_demote:
-            pe__set_resource_flags(rsc, pcmk_rsc_failed);
+            pcmk__set_rsc_flags(rsc, pcmk_rsc_failed);
             demote_action(rsc, node, FALSE);
             break;
 
@@ -2348,8 +2347,8 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
             /* is_managed == FALSE will prevent any
              * actions being sent for the resource
              */
-            pe__clear_resource_flags(rsc, pcmk_rsc_managed);
-            pe__set_resource_flags(rsc, pcmk_rsc_blocked);
+            pcmk__clear_rsc_flags(rsc, pcmk_rsc_managed);
+            pcmk__set_rsc_flags(rsc, pcmk_rsc_blocked);
             break;
 
         case pcmk_on_fail_ban:
@@ -2367,15 +2366,14 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
         case pcmk_on_fail_restart:
             if ((rsc->role != pcmk_role_stopped)
                 && (rsc->role != pcmk_role_unknown)) {
-                pe__set_resource_flags(rsc,
-                                       pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
+                pcmk__set_rsc_flags(rsc,
+                                    pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
                 stop_action(rsc, node, FALSE);
             }
             break;
 
         case pcmk_on_fail_restart_container:
-            pe__set_resource_flags(rsc,
-                                   pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
+            pcmk__set_rsc_flags(rsc, pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
             if (rsc->container && pe_rsc_is_bundled(rsc)) {
                 /* A bundle's remote connection can run on a different node than
                  * the bundle's container. We don't necessarily know where the
@@ -2393,8 +2391,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
             break;
 
         case pcmk_on_fail_reset_remote:
-            pe__set_resource_flags(rsc,
-                                   pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
+            pcmk__set_rsc_flags(rsc, pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
             if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)) {
                 tmpnode = NULL;
                 if (rsc->is_remote_node) {
@@ -2457,11 +2454,11 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
                 break;
             case pcmk_on_fail_demote:
             case pcmk_on_fail_block:
-                pe__set_resource_flags(rsc, pcmk_rsc_failed);
+                pcmk__set_rsc_flags(rsc, pcmk_rsc_failed);
                 break;
             default:
-                pe__set_resource_flags(rsc,
-                                       pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
+                pcmk__set_rsc_flags(rsc,
+                                    pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
                 break;
         }
 
@@ -2482,7 +2479,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
         for (; gIter != NULL; gIter = gIter->next) {
             pcmk_action_t *stop = (pcmk_action_t *) gIter->data;
 
-            pe__set_action_flags(stop, pcmk_action_optional);
+            pcmk__set_action_flags(stop, pcmk_action_optional);
         }
 
         g_list_free(possible_matches);
@@ -3278,9 +3275,9 @@ unpack_migrate_to_success(struct action_history *history)
                                TRUE);
         } else {
             // Mark resource as failed, require recovery, and prevent migration
-            pe__set_resource_flags(history->rsc,
-                                   pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
-            pe__clear_resource_flags(history->rsc, pcmk_rsc_migratable);
+            pcmk__set_rsc_flags(history->rsc,
+                                pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
+            pcmk__clear_rsc_flags(history->rsc, pcmk_rsc_migratable);
         }
         return;
     }
@@ -3315,9 +3312,9 @@ unpack_migrate_to_success(struct action_history *history)
 
     } else if (!source_newer_op) {
         // Mark resource as failed, require recovery, and prevent migration
-        pe__set_resource_flags(history->rsc,
-                               pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
-        pe__clear_resource_flags(history->rsc, pcmk_rsc_migratable);
+        pcmk__set_rsc_flags(history->rsc,
+                            pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
+        pcmk__clear_rsc_flags(history->rsc, pcmk_rsc_migratable);
     }
 }
 
@@ -3815,8 +3812,8 @@ block_if_unrecoverable(struct action_history *history)
 
     free(last_change_s);
 
-    pe__clear_resource_flags(history->rsc, pcmk_rsc_managed);
-    pe__set_resource_flags(history->rsc, pcmk_rsc_blocked);
+    pcmk__clear_rsc_flags(history->rsc, pcmk_rsc_managed);
+    pcmk__set_rsc_flags(history->rsc, pcmk_rsc_blocked);
 }
 
 /*!
@@ -4683,7 +4680,7 @@ process_pending_action(struct action_history *history,
     }
 
     if (strcmp(history->task, PCMK_ACTION_START) == 0) {
-        pe__set_resource_flags(history->rsc, pcmk_rsc_start_pending);
+        pcmk__set_rsc_flags(history->rsc, pcmk_rsc_start_pending);
         set_active(history->rsc);
 
     } else if (strcmp(history->task, PCMK_ACTION_PROMOTE) == 0) {
@@ -4851,8 +4848,8 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
                  * fail-safe in case a bug or unusual circumstances do lead to
                  * that, ensure the remote connection is considered failed.
                  */
-                pe__set_resource_flags(node->details->remote_rsc,
-                                       pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
+                pcmk__set_rsc_flags(node->details->remote_rsc,
+                                    pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
             }
             break; // Not done, do error handling
 
@@ -4886,7 +4883,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
         update_resource_state(&history, history.expected_exit_status,
                               *last_failure, on_fail);
         crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
-        pe__set_resource_flags(rsc, pcmk_rsc_ignore_failure);
+        pcmk__set_rsc_flags(rsc, pcmk_rsc_ignore_failure);
 
         record_failed_op(&history);
 

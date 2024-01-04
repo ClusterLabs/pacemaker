@@ -27,29 +27,6 @@ const char *fail2text(enum action_fail_response fail);
 
 const char *pe_pref(GHashTable * options, const char *name);
 
-/*!
- * \brief Get readable description of a recovery type
- *
- * \param[in] type  Recovery type
- *
- * \return Static string describing \p type
- */
-static inline const char *
-recovery2text(enum rsc_recovery_type type)
-{
-    switch (type) {
-        case pcmk_multiply_active_stop:
-            return "shutting it down";
-        case pcmk_multiply_active_restart:
-            return "attempting recovery";
-        case pcmk_multiply_active_block:
-            return "waiting for an administrator";
-        case pcmk_multiply_active_unexpected:
-            return "stopping unexpected instances";
-    }
-    return "Unknown";
-}
-
 typedef struct pe_re_match_data {
     char *string;
     int nregs;

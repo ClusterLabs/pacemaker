@@ -93,9 +93,9 @@ cluster_status(pcmk_scheduler_t * scheduler)
     }
 
     if (pcmk__xe_attr_is_true(scheduler->input, PCMK_XA_HAVE_QUORUM)) {
-        pe__set_working_set_flags(scheduler, pcmk_sched_quorate);
+        pcmk__set_scheduler_flags(scheduler, pcmk_sched_quorate);
     } else {
-        pe__clear_working_set_flags(scheduler, pcmk_sched_quorate);
+        pcmk__clear_scheduler_flags(scheduler, pcmk_sched_quorate);
     }
 
     scheduler->op_defaults = get_xpath_object("//" XML_CIB_TAG_OPCONFIG,
@@ -145,7 +145,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
                   scheduler->blocked_resources);
     }
 
-    pe__set_working_set_flags(scheduler, pcmk_sched_have_status);
+    pcmk__set_scheduler_flags(scheduler, pcmk_sched_have_status);
     return TRUE;
 }
 
@@ -283,7 +283,7 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
         return;
     }
 
-    pe__clear_working_set_flags(scheduler, pcmk_sched_have_status);
+    pcmk__clear_scheduler_flags(scheduler, pcmk_sched_have_status);
     if (scheduler->config_hash != NULL) {
         g_hash_table_destroy(scheduler->config_hash);
     }
@@ -379,12 +379,12 @@ set_working_set_defaults(pcmk_scheduler_t *scheduler)
 
     scheduler->flags = 0x0ULL;
 
-    pe__set_working_set_flags(scheduler,
+    pcmk__set_scheduler_flags(scheduler,
                               pcmk_sched_symmetric_cluster
                               |pcmk_sched_stop_removed_resources
                               |pcmk_sched_cancel_removed_actions);
     if (!strcmp(PCMK__CONCURRENT_FENCING_DEFAULT, "true")) {
-        pe__set_working_set_flags(scheduler, pcmk_sched_concurrent_fencing);
+        pcmk__set_scheduler_flags(scheduler, pcmk_sched_concurrent_fencing);
     }
 }
 

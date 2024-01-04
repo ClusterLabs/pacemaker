@@ -69,7 +69,7 @@ init_rule_check(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
         return ENOMEM;
     }
 
-    pe__set_working_set_flags(new_scheduler,
+    pcmk__set_scheduler_flags(new_scheduler,
                               pcmk_sched_no_counts|pcmk_sched_no_compat);
 
     // Populate the scheduler data

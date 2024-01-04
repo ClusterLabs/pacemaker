@@ -1023,7 +1023,7 @@ mark_action_blocked(pcmk_resource_t *rsc, const char *task,
         if (pcmk_is_set(action->flags, pcmk_action_runnable)
             && pcmk__str_eq(action->task, task, pcmk__str_none)) {
 
-            pe__clear_action_flags(action, pcmk_action_runnable);
+            pcmk__clear_action_flags(action, pcmk_action_runnable);
             pe_action_set_reason(action, reason_text, false);
             pcmk__block_colocation_dependents(action);
             pcmk__update_action_for_orderings(action, rsc->cluster);
@@ -1688,7 +1688,7 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
                        log_id, source_rsc->id);
         return;
     }
-    pe__set_resource_flags(source_rsc, pcmk_rsc_updating_nodes);
+    pcmk__set_rsc_flags(source_rsc, pcmk_rsc_updating_nodes);
 
     if (*nodes == NULL) {
         work = pcmk__copy_node_table(source_rsc->allowed_nodes);
@@ -1704,7 +1704,7 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
     }
 
     if (work == NULL) {
-        pe__clear_resource_flags(source_rsc, pcmk_rsc_updating_nodes);
+        pcmk__clear_rsc_flags(source_rsc, pcmk_rsc_updating_nodes);
         return;
     }
 
@@ -1756,7 +1756,7 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
         pcmk__rsc_info(source_rsc, "%s: Rolling back optional scores from %s",
                        log_id, source_rsc->id);
         g_hash_table_destroy(work);
-        pe__clear_resource_flags(source_rsc, pcmk_rsc_updating_nodes);
+        pcmk__clear_rsc_flags(source_rsc, pcmk_rsc_updating_nodes);
         return;
     }
 
@@ -1778,7 +1778,7 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
     }
     *nodes = work;
 
-    pe__clear_resource_flags(source_rsc, pcmk_rsc_updating_nodes);
+    pcmk__clear_rsc_flags(source_rsc, pcmk_rsc_updating_nodes);
 }
 
 /*!

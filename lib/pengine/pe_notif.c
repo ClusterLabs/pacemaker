@@ -290,7 +290,7 @@ new_notify_pseudo_action(pcmk_resource_t *rsc, const pcmk_action_t *action,
                            notif_action, NULL,
                            pcmk_is_set(action->flags, pcmk_action_optional),
                            rsc->cluster);
-    pe__set_action_flags(notify, pcmk_action_pseudo);
+    pcmk__set_action_flags(notify, pcmk_action_pseudo);
     add_hash_param(notify->meta, "notify_key_type", notif_type);
     add_hash_param(notify->meta, "notify_key_operation", action->task);
     return notify;
@@ -451,7 +451,7 @@ pe__action_notif_pseudo_ops(pcmk_resource_t *rsc, const char *task,
         // Create "pre-" notify pseudo-action for clone
         n_data->pre = new_notify_pseudo_action(rsc, action, PCMK_ACTION_NOTIFY,
                                                "pre");
-        pe__set_action_flags(n_data->pre, pcmk_action_runnable);
+        pcmk__set_action_flags(n_data->pre, pcmk_action_runnable);
         add_hash_param(n_data->pre->meta, "notify_type", "pre");
         add_hash_param(n_data->pre->meta, "notify_operation", n_data->action);
 
@@ -459,7 +459,7 @@ pe__action_notif_pseudo_ops(pcmk_resource_t *rsc, const char *task,
         n_data->pre_done = new_notify_pseudo_action(rsc, action,
                                                     PCMK_ACTION_NOTIFIED,
                                                     "confirmed-pre");
-        pe__set_action_flags(n_data->pre_done, pcmk_action_runnable);
+        pcmk__set_action_flags(n_data->pre_done, pcmk_action_runnable);
         add_hash_param(n_data->pre_done->meta, "notify_type", "pre");
         add_hash_param(n_data->pre_done->meta,
                        "notify_operation", n_data->action);
@@ -476,9 +476,9 @@ pe__action_notif_pseudo_ops(pcmk_resource_t *rsc, const char *task,
                                                 PCMK_ACTION_NOTIFY, "post");
         n_data->post->priority = INFINITY;
         if (pcmk_is_set(complete->flags, pcmk_action_runnable)) {
-            pe__set_action_flags(n_data->post, pcmk_action_runnable);
+            pcmk__set_action_flags(n_data->post, pcmk_action_runnable);
         } else {
-            pe__clear_action_flags(n_data->post, pcmk_action_runnable);
+            pcmk__clear_action_flags(n_data->post, pcmk_action_runnable);
         }
         add_hash_param(n_data->post->meta, "notify_type", "post");
         add_hash_param(n_data->post->meta, "notify_operation", n_data->action);
@@ -489,9 +489,9 @@ pe__action_notif_pseudo_ops(pcmk_resource_t *rsc, const char *task,
                                                      "confirmed-post");
         n_data->post_done->priority = INFINITY;
         if (pcmk_is_set(complete->flags, pcmk_action_runnable)) {
-            pe__set_action_flags(n_data->post_done, pcmk_action_runnable);
+            pcmk__set_action_flags(n_data->post_done, pcmk_action_runnable);
         } else {
-            pe__clear_action_flags(n_data->post_done, pcmk_action_runnable);
+            pcmk__clear_action_flags(n_data->post_done, pcmk_action_runnable);
         }
         add_hash_param(n_data->post_done->meta, "notify_type", "post");
         add_hash_param(n_data->post_done->meta,
@@ -763,13 +763,13 @@ add_notif_keys(const pcmk_resource_t *rsc, notify_data_t *n_data)
     add_notify_env_free_gs(n_data, "notify_all_uname", node_list);
 
     if (required && (n_data->pre != NULL)) {
-        pe__clear_action_flags(n_data->pre, pcmk_action_optional);
-        pe__clear_action_flags(n_data->pre_done, pcmk_action_optional);
+        pcmk__clear_action_flags(n_data->pre, pcmk_action_optional);
+        pcmk__clear_action_flags(n_data->pre_done, pcmk_action_optional);
     }
 
     if (required && (n_data->post != NULL)) {
-        pe__clear_action_flags(n_data->post, pcmk_action_optional);
-        pe__clear_action_flags(n_data->post_done, pcmk_action_optional);
+        pcmk__clear_action_flags(n_data->post, pcmk_action_optional);
+        pcmk__clear_action_flags(n_data->post_done, pcmk_action_optional);
     }
 }
 

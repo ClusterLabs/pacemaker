@@ -492,10 +492,10 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
     if (pcmk__str_eq(value, PCMK__VALUE_NOTHING, pcmk__str_casei)) {
 
     } else if (pcmk__str_eq(value, PCMK__VALUE_QUORUM, pcmk__str_casei)) {
-        pe__set_resource_flags(rsc, pcmk_rsc_needs_quorum);
+        pcmk__set_rsc_flags(rsc, pcmk_rsc_needs_quorum);
 
     } else if (pcmk__str_eq(value, PCMK__VALUE_FENCING, pcmk__str_casei)) {
-        pe__set_resource_flags(rsc, pcmk_rsc_needs_fencing);
+        pcmk__set_rsc_flags(rsc, pcmk_rsc_needs_fencing);
         if (!pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)) {
             pcmk__config_warn("%s requires fencing but fencing is disabled",
                               rsc->id);
@@ -518,8 +518,8 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
             return;
 
         } else {
-            pe__set_resource_flags(rsc, pcmk_rsc_needs_fencing
-                                        |pcmk_rsc_needs_unfencing);
+            pcmk__set_rsc_flags(rsc, pcmk_rsc_needs_fencing
+                                     |pcmk_rsc_needs_unfencing);
         }
 
     } else {
@@ -694,10 +694,10 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     (*rsc)->parameters = pe_rsc_params(*rsc, NULL, scheduler); // \deprecated
 
     (*rsc)->flags = 0;
-    pe__set_resource_flags(*rsc, pcmk_rsc_runnable|pcmk_rsc_unassigned);
+    pcmk__set_rsc_flags(*rsc, pcmk_rsc_runnable|pcmk_rsc_unassigned);
 
     if (!pcmk_is_set(scheduler->flags, pcmk_sched_in_maintenance)) {
-        pe__set_resource_flags(*rsc, pcmk_rsc_managed);
+        pcmk__set_rsc_flags(*rsc, pcmk_rsc_managed);
     }
 
     (*rsc)->rsc_cons = NULL;
@@ -716,12 +716,12 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_CRITICAL);
     if ((value == NULL) || crm_is_true(value)) {
-        pe__set_resource_flags(*rsc, pcmk_rsc_critical);
+        pcmk__set_rsc_flags(*rsc, pcmk_rsc_critical);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_NOTIFY);
     if (crm_is_true(value)) {
-        pe__set_resource_flags(*rsc, pcmk_rsc_notify);
+        pcmk__set_rsc_flags(*rsc, pcmk_rsc_notify);
     }
 
     if (xml_contains_remote_node((*rsc)->xml)) {
@@ -735,7 +735,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_ALLOW_MIGRATE);
     if (crm_is_true(value)) {
-        pe__set_resource_flags(*rsc, pcmk_rsc_migratable);
+        pcmk__set_rsc_flags(*rsc, pcmk_rsc_migratable);
     } else if ((value == NULL) && remote_node) {
         /* By default, we want remote nodes to be able
          * to float around the cluster without having to stop all the
@@ -744,38 +744,38 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
          * problems, migration support can be explicitly turned off with
          * PCMK_META_ALLOW_MIGRATE=false.
          */
-        pe__set_resource_flags(*rsc, pcmk_rsc_migratable);
+        pcmk__set_rsc_flags(*rsc, pcmk_rsc_migratable);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_IS_MANAGED);
     if (value != NULL && !pcmk__str_eq("default", value, pcmk__str_casei)) {
         if (crm_is_true(value)) {
-            pe__set_resource_flags(*rsc, pcmk_rsc_managed);
+            pcmk__set_rsc_flags(*rsc, pcmk_rsc_managed);
         } else {
-            pe__clear_resource_flags(*rsc, pcmk_rsc_managed);
+            pcmk__clear_rsc_flags(*rsc, pcmk_rsc_managed);
         }
     }
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_MAINTENANCE);
     if (crm_is_true(value)) {
-        pe__clear_resource_flags(*rsc, pcmk_rsc_managed);
-        pe__set_resource_flags(*rsc, pcmk_rsc_maintenance);
+        pcmk__clear_rsc_flags(*rsc, pcmk_rsc_managed);
+        pcmk__set_rsc_flags(*rsc, pcmk_rsc_maintenance);
     }
     if (pcmk_is_set(scheduler->flags, pcmk_sched_in_maintenance)) {
-        pe__clear_resource_flags(*rsc, pcmk_rsc_managed);
-        pe__set_resource_flags(*rsc, pcmk_rsc_maintenance);
+        pcmk__clear_rsc_flags(*rsc, pcmk_rsc_managed);
+        pcmk__set_rsc_flags(*rsc, pcmk_rsc_maintenance);
     }
 
     if (pe_rsc_is_clone(pe__const_top_resource(*rsc, false))) {
         value = g_hash_table_lookup((*rsc)->meta, PCMK_META_GLOBALLY_UNIQUE);
         if (crm_is_true(value)) {
-            pe__set_resource_flags(*rsc, pcmk_rsc_unique);
+            pcmk__set_rsc_flags(*rsc, pcmk_rsc_unique);
         }
         if (detect_promotable(*rsc)) {
-            pe__set_resource_flags(*rsc, pcmk_rsc_promotable);
+            pcmk__set_rsc_flags(*rsc, pcmk_rsc_promotable);
         }
     } else {
-        pe__set_resource_flags(*rsc, pcmk_rsc_unique);
+        pcmk__set_rsc_flags(*rsc, pcmk_rsc_unique);
     }
 
     // @COMPAT Deprecated meta-attribute
@@ -847,8 +847,8 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     if (pcmk__str_eq(crm_element_value((*rsc)->xml, XML_AGENT_ATTR_CLASS),
                      PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
-        pe__set_working_set_flags(scheduler, pcmk_sched_have_fencing);
-        pe__set_resource_flags(*rsc, pcmk_rsc_fence_device);
+        pcmk__set_scheduler_flags(scheduler, pcmk_sched_have_fencing);
+        pcmk__set_rsc_flags(*rsc, pcmk_rsc_fence_device);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_REQUIRES);

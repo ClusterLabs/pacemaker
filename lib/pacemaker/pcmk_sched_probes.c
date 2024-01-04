@@ -135,7 +135,7 @@ probe_action(pcmk_resource_t *rsc, pcmk_node_t *node)
 
     probe = custom_action(rsc, key, PCMK_ACTION_MONITOR, node, FALSE,
                           rsc->cluster);
-    pe__clear_action_flags(probe, pcmk_action_optional);
+    pcmk__clear_action_flags(probe, pcmk_action_optional);
 
     pcmk__order_vs_unfence(rsc, node, probe, pcmk__ar_ordered);
     add_expected_result(probe, rsc, node);
@@ -271,7 +271,7 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
      */
     if (!pcmk_is_set(probe->flags, pcmk_action_runnable)
         && (top->running_on == NULL)) {
-        pe__set_order_flags(flags, pcmk__ar_unrunnable_first_blocks);
+        pcmk__set_relation_flags(flags, pcmk__ar_unrunnable_first_blocks);
     }
 
     // Start or reload after probing the resource
@@ -396,10 +396,11 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
 
         // Preserve certain order options for future filtering
         if (pcmk_is_set(order->flags, pcmk__ar_if_first_unmigratable)) {
-            pe__set_order_flags(order_flags, pcmk__ar_if_first_unmigratable);
+            pcmk__set_relation_flags(order_flags,
+                                     pcmk__ar_if_first_unmigratable);
         }
         if (pcmk_is_set(order->flags, pcmk__ar_if_on_same_node)) {
-            pe__set_order_flags(order_flags, pcmk__ar_if_on_same_node);
+            pcmk__set_relation_flags(order_flags, pcmk__ar_if_on_same_node);
         }
 
         // Preserve certain order types for future filtering
@@ -553,7 +554,7 @@ add_restart_orderings_for_probe(pcmk_action_t *probe, pcmk_action_t *after)
     if (pcmk_is_set(after->flags, pcmk_action_detect_loop)) {
         return;
     }
-    pe__set_action_flags(after, pcmk_action_detect_loop);
+    pcmk__set_action_flags(after, pcmk_action_detect_loop);
 
     crm_trace("Adding probe restart orderings for '%s@%s then %s@%s'",
               probe->uuid, pe__node_name(probe->node),
@@ -672,7 +673,7 @@ clear_actions_tracking_flag(pcmk_scheduler_t *scheduler)
     for (GList *iter = scheduler->actions; iter != NULL; iter = iter->next) {
         pcmk_action_t *action = iter->data;
 
-        pe__clear_action_flags(action, pcmk_action_detect_loop);
+        pcmk__clear_action_flags(action, pcmk_action_detect_loop);
     }
 }
 

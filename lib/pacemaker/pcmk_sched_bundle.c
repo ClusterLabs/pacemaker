@@ -78,12 +78,12 @@ assign_replica(pcmk__bundle_replica_t *replica, void *user_data)
             }
         }
 
-        pe__set_resource_flags(replica->child->parent, pcmk_rsc_assigning);
+        pcmk__set_rsc_flags(replica->child->parent, pcmk_rsc_assigning);
         pcmk__rsc_trace(bundle, "Assigning bundle %s replica child %s",
                         bundle->id, replica->child->id);
         replica->child->cmds->assign(replica->child, replica->node,
                                      stop_if_fail);
-        pe__clear_resource_flags(replica->child->parent, pcmk_rsc_assigning);
+        pcmk__clear_rsc_flags(replica->child->parent, pcmk_rsc_assigning);
     }
     return true;
 }
@@ -118,7 +118,7 @@ pcmk__bundle_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
 
     pcmk__rsc_trace(rsc, "Assigning bundle %s", rsc->id);
-    pe__set_resource_flags(rsc, pcmk_rsc_assigning);
+    pcmk__set_rsc_flags(rsc, pcmk_rsc_assigning);
 
     pe__show_node_scores(!pcmk_is_set(rsc->cluster->flags,
                                       pcmk_sched_output_scores),
@@ -150,7 +150,7 @@ pcmk__bundle_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
         bundled_resource->cmds->assign(bundled_resource, prefer, stop_if_fail);
     }
 
-    pe__clear_resource_flags(rsc, pcmk_rsc_assigning|pcmk_rsc_unassigned);
+    pcmk__clear_rsc_flags(rsc, pcmk_rsc_assigning|pcmk_rsc_unassigned);
     return NULL;
 }
 

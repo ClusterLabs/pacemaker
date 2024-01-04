@@ -42,7 +42,7 @@ setup(void **state) {
         return 1;
     }
 
-    pe__set_working_set_flags(scheduler,
+    pcmk__set_scheduler_flags(scheduler,
                               pcmk_sched_no_counts|pcmk_sched_no_compat);
     scheduler->input = input;
 

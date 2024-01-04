@@ -421,7 +421,7 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
              * colocated with this one, so we use rsc->rsc_cons_lhs directly
              * rather than the with_this_colocations() method.
              */
-            pe__set_resource_flags(rsc, pcmk_rsc_detect_loop);
+            pcmk__set_rsc_flags(rsc, pcmk_rsc_detect_loop);
             for (lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
                 pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
 
@@ -1259,7 +1259,7 @@ update_dataset(cib_t *cib, pcmk_scheduler_t *scheduler, bool simulate)
     pcmk__output_t *out = scheduler->priv;
 
     pe_reset_working_set(scheduler);
-    pe__set_working_set_flags(scheduler,
+    pcmk__set_scheduler_flags(scheduler,
                               pcmk_sched_no_counts|pcmk_sched_no_compat);
     rc = update_scheduler_input_to_cib(out, scheduler, cib);
     if (rc != pcmk_rc_ok) {

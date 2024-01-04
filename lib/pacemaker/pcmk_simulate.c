@@ -195,13 +195,13 @@ reset(pcmk_scheduler_t *scheduler, xmlNodePtr input, pcmk__output_t *out,
     scheduler->priv = out;
     set_effective_date(scheduler, true, use_date);
     if (pcmk_is_set(flags, pcmk_sim_sanitized)) {
-        pe__set_working_set_flags(scheduler, pcmk_sched_sanitized);
+        pcmk__set_scheduler_flags(scheduler, pcmk_sched_sanitized);
     }
     if (pcmk_is_set(flags, pcmk_sim_show_scores)) {
-        pe__set_working_set_flags(scheduler, pcmk_sched_output_scores);
+        pcmk__set_scheduler_flags(scheduler, pcmk_sched_output_scores);
     }
     if (pcmk_is_set(flags, pcmk_sim_show_utilization)) {
-        pe__set_working_set_flags(scheduler, pcmk_sched_show_utilization);
+        pcmk__set_scheduler_flags(scheduler, pcmk_sched_show_utilization);
     }
 }
 
@@ -264,7 +264,7 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
             CRM_LOG_ASSERT(!pcmk_is_set(action->flags, pcmk_action_runnable));
         }
 
-        pe__set_action_flags(action, pcmk_action_added_to_graph);
+        pcmk__set_action_flags(action, pcmk_action_added_to_graph);
         fprintf(dot_strm, "\"%s\" [ style=%s color=\"%s\" fontcolor=\"%s\"]\n",
                 action_name, style, color, font);
   do_not_write:
@@ -966,10 +966,10 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
     set_effective_date(scheduler, true, use_date);
 
     if (pcmk_is_set(flags, pcmk_sim_show_scores)) {
-        pe__set_working_set_flags(scheduler, pcmk_sched_output_scores);
+        pcmk__set_scheduler_flags(scheduler, pcmk_sched_output_scores);
     }
     if (pcmk_is_set(flags, pcmk_sim_show_utilization)) {
-        pe__set_working_set_flags(scheduler, pcmk_sched_show_utilization);
+        pcmk__set_scheduler_flags(scheduler, pcmk_sched_show_utilization);
     }
 
     cluster_status(scheduler);

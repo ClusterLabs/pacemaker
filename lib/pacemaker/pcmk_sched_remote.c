@@ -203,7 +203,8 @@ apply_remote_ordering(pcmk_action_t *action)
 
             if (state == remote_state_failed) {
                 /* Force recovery, by making this action required */
-                pe__set_order_flags(order_opts, pcmk__ar_first_implies_then);
+                pcmk__set_relation_flags(order_opts,
+                                         pcmk__ar_first_implies_then);
             }
 
             /* Ensure connection is up before running this action */

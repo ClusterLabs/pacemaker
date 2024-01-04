@@ -182,14 +182,14 @@ new_action(char *key, const char *task, pcmk_resource_t *rsc,
 
     if (pcmk__str_eq(task, PCMK_ACTION_LRM_DELETE, pcmk__str_casei)) {
         // Resource history deletion for a node can be done on the DC
-        pe__set_action_flags(action, pcmk_action_on_dc);
+        pcmk__set_action_flags(action, pcmk_action_on_dc);
     }
 
-    pe__set_action_flags(action, pcmk_action_runnable);
+    pcmk__set_action_flags(action, pcmk_action_runnable);
     if (optional) {
-        pe__set_action_flags(action, pcmk_action_optional);
+        pcmk__set_action_flags(action, pcmk_action_optional);
     } else {
-        pe__clear_action_flags(action, pcmk_action_optional);
+        pcmk__clear_action_flags(action, pcmk_action_optional);
     }
 
     if (rsc == NULL) {
@@ -280,12 +280,12 @@ update_action_optional(pcmk_action_t *action, gboolean optional)
                             "%s on %s is optional (%s is unmanaged)",
                             action->uuid, pe__node_name(action->node),
                             action->rsc->id);
-            pe__set_action_flags(action, pcmk_action_optional);
+            pcmk__set_action_flags(action, pcmk_action_optional);
             // We shouldn't clear runnable here because ... something
 
     // Otherwise require the action if requested
     } else if (!optional) {
-        pe__clear_action_flags(action, pcmk_action_optional);
+        pcmk__clear_action_flags(action, pcmk_action_optional);
     }
 }
 
@@ -335,13 +335,13 @@ update_resource_action_runnable(pcmk_action_t *action,
     if (action->node == NULL) {
         pcmk__rsc_trace(action->rsc, "%s is unrunnable (unallocated)",
                         action->uuid);
-        pe__clear_action_flags(action, pcmk_action_runnable);
+        pcmk__clear_action_flags(action, pcmk_action_runnable);
 
     } else if (!pcmk_is_set(action->flags, pcmk_action_on_dc)
                && !(action->node->details->online)
                && (!pe__is_guest_node(action->node)
                    || action->node->details->remote_requires_reset)) {
-        pe__clear_action_flags(action, pcmk_action_runnable);
+        pcmk__clear_action_flags(action, pcmk_action_runnable);
         do_crm_log(LOG_WARNING, "%s on %s is unrunnable (node is offline)",
                    action->uuid, pe__node_name(action->node));
         if (pcmk_is_set(action->rsc->flags, pcmk_rsc_managed)
@@ -352,7 +352,7 @@ update_resource_action_runnable(pcmk_action_t *action,
 
     } else if (!pcmk_is_set(action->flags, pcmk_action_on_dc)
                && action->node->details->pending) {
-        pe__clear_action_flags(action, pcmk_action_runnable);
+        pcmk__clear_action_flags(action, pcmk_action_runnable);
         do_crm_log(LOG_WARNING,
                    "Action %s on %s is unrunnable (node is pending)",
                    action->uuid, pe__node_name(action->node));
@@ -370,12 +370,12 @@ update_resource_action_runnable(pcmk_action_t *action,
                             "%s on %s is unrunnable "
                             "(node's host cannot be fenced)",
                             action->uuid, pe__node_name(action->node));
-            pe__clear_action_flags(action, pcmk_action_runnable);
+            pcmk__clear_action_flags(action, pcmk_action_runnable);
         } else {
             pcmk__rsc_trace(action->rsc,
                             "%s on %s does not require fencing or quorum",
                             action->uuid, pe__node_name(action->node));
-            pe__set_action_flags(action, pcmk_action_runnable);
+            pcmk__set_action_flags(action, pcmk_action_runnable);
         }
 
     } else {
@@ -384,7 +384,7 @@ update_resource_action_runnable(pcmk_action_t *action,
                 pcmk__rsc_debug(action->rsc,
                                 "%s on %s is unrunnable (no quorum)",
                                 action->uuid, pe__node_name(action->node));
-                pe__clear_action_flags(action, pcmk_action_runnable);
+                pcmk__clear_action_flags(action, pcmk_action_runnable);
                 pe_action_set_reason(action, "no quorum", true);
                 break;
 
@@ -394,14 +394,14 @@ update_resource_action_runnable(pcmk_action_t *action,
                     pcmk__rsc_debug(action->rsc,
                                     "%s on %s is unrunnable (no quorum)",
                                     action->uuid, pe__node_name(action->node));
-                    pe__clear_action_flags(action, pcmk_action_runnable);
+                    pcmk__clear_action_flags(action, pcmk_action_runnable);
                     pe_action_set_reason(action, "quorum freeze", true);
                 }
                 break;
 
             default:
                 //pe_action_set_reason(action, NULL, TRUE);
-                pe__set_action_flags(action, pcmk_action_runnable);
+                pcmk__set_action_flags(action, pcmk_action_runnable);
                 break;
         }
     }
@@ -422,13 +422,13 @@ update_resource_flags_for_action(pcmk_resource_t *rsc,
      * within Pacemaker, and will eventually be removed
      */
     if (pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_casei)) {
-        pe__set_resource_flags(rsc, pcmk_rsc_stopping);
+        pcmk__set_rsc_flags(rsc, pcmk_rsc_stopping);
 
     } else if (pcmk__str_eq(action->task, PCMK_ACTION_START, pcmk__str_casei)) {
         if (pcmk_is_set(action->flags, pcmk_action_runnable)) {
-            pe__set_resource_flags(rsc, pcmk_rsc_starting);
+            pcmk__set_rsc_flags(rsc, pcmk_rsc_starting);
         } else {
-            pe__clear_resource_flags(rsc, pcmk_rsc_starting);
+            pcmk__clear_rsc_flags(rsc, pcmk_rsc_starting);
         }
     }
 }
@@ -1157,7 +1157,7 @@ custom_action(pcmk_resource_t *rsc, char *key, const char *task,
             }
             action->extra = pcmk__unpack_action_rsc_params(action->op_entry,
                                                            attrs, scheduler);
-            pe__set_action_flags(action, pcmk_action_attrs_evaluated);
+            pcmk__set_action_flags(action, pcmk_action_attrs_evaluated);
         }
 
         update_resource_action_runnable(action, scheduler);
@@ -1178,7 +1178,7 @@ get_pseudo_op(const char *name, pcmk_scheduler_t *scheduler)
 
     if (op == NULL) {
         op = custom_action(NULL, strdup(name), name, NULL, TRUE, scheduler);
-        pe__set_action_flags(op, pcmk_action_pseudo|pcmk_action_runnable);
+        pcmk__set_action_flags(op, pcmk_action_pseudo|pcmk_action_runnable);
     }
     return op;
 }
@@ -1385,7 +1385,7 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
     }
 
     if(optional == FALSE && pe_can_fence(scheduler, node)) {
-        pe__clear_action_flags(stonith_op, pcmk_action_optional);
+        pcmk__clear_action_flags(stonith_op, pcmk_action_optional);
         pe_action_set_reason(stonith_op, reason, false);
 
     } else if(reason && stonith_op->reason == NULL) {
@@ -1859,9 +1859,9 @@ pe__new_rsc_pseudo_action(pcmk_resource_t *rsc, const char *task, bool optional,
 
     action = custom_action(rsc, pcmk__op_key(rsc->id, task, 0), task, NULL,
                            optional, rsc->cluster);
-    pe__set_action_flags(action, pcmk_action_pseudo);
+    pcmk__set_action_flags(action, pcmk_action_pseudo);
     if (runnable) {
-        pe__set_action_flags(action, pcmk_action_runnable);
+        pcmk__set_action_flags(action, pcmk_action_runnable);
     }
     return action;
 }

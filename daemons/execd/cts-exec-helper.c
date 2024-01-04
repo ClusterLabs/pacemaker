@@ -472,7 +472,7 @@ generate_params(void)
         crm_crit("Could not allocate scheduler data");
         return ENOMEM;
     }
-    pe__set_working_set_flags(scheduler,
+    pcmk__set_scheduler_flags(scheduler,
                               pcmk_sched_no_counts|pcmk_sched_no_compat);
     scheduler->input = cib_xml_copy;
     scheduler->now = crm_time_new(NULL);

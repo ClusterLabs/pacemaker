@@ -54,11 +54,11 @@ pcmk__group_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
 
     if (rsc->children == NULL) {
         // No members to assign
-        pe__clear_resource_flags(rsc, pcmk_rsc_unassigned);
+        pcmk__clear_rsc_flags(rsc, pcmk_rsc_unassigned);
         return NULL;
     }
 
-    pe__set_resource_flags(rsc, pcmk_rsc_assigning);
+    pcmk__set_rsc_flags(rsc, pcmk_rsc_assigning);
     first_member = (pcmk_resource_t *) rsc->children->data;
     rsc->role = first_member->role;
 
@@ -79,7 +79,7 @@ pcmk__group_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     }
 
     pe__set_next_role(rsc, first_member->next_role, "first group member");
-    pe__clear_resource_flags(rsc, pcmk_rsc_assigning|pcmk_rsc_unassigned);
+    pcmk__clear_rsc_flags(rsc, pcmk_rsc_assigning|pcmk_rsc_unassigned);
 
     if (!pe__group_flag_is_set(rsc, pcmk__group_colocated)) {
         return NULL;
@@ -101,7 +101,8 @@ create_group_pseudo_op(pcmk_resource_t *group, const char *action)
 {
     pcmk_action_t *op = custom_action(group, pcmk__op_key(group->id, action, 0),
                                       action, NULL, TRUE, group->cluster);
-    pe__set_action_flags(op, pcmk_action_pseudo|pcmk_action_runnable);
+
+    pcmk__set_action_flags(op, pcmk_action_pseudo|pcmk_action_runnable);
     return op;
 }
 
@@ -174,7 +175,7 @@ member_internal_constraints(gpointer data, gpointer user_data)
     if (member_data->previous_member == NULL) {
         // This is first member
         if (member_data->ordered) {
-            pe__set_order_flags(down_flags, pcmk__ar_ordered);
+            pcmk__set_relation_flags(down_flags, pcmk__ar_ordered);
             post_down_flags = pcmk__ar_first_implies_then;
         }
 
@@ -512,9 +513,9 @@ pcmk__group_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
                 && !pcmk_is_set(member_flags, pcmk_action_optional)) {
                 pcmk__rsc_trace(action->rsc, "%s is mandatory because %s is",
                                 action->uuid, member_action->uuid);
-                pe__clear_raw_action_flags(flags, "group action",
-                                           pcmk_action_optional);
-                pe__clear_action_flags(action, pcmk_action_optional);
+                pcmk__clear_raw_action_flags(flags, "group action",
+                                             pcmk_action_optional);
+                pcmk__clear_action_flags(action, pcmk_action_optional);
             }
 
             // Group action is unrunnable if any member action is
@@ -524,9 +525,9 @@ pcmk__group_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
 
                 pcmk__rsc_trace(action->rsc, "%s is unrunnable because %s is",
                                 action->uuid, member_action->uuid);
-                pe__clear_raw_action_flags(flags, "group action",
-                                           pcmk_action_runnable);
-                pe__clear_action_flags(action, pcmk_action_runnable);
+                pcmk__clear_raw_action_flags(flags, "group action",
+                                             pcmk_action_runnable);
+                pcmk__clear_action_flags(action, pcmk_action_runnable);
             }
 
         /* Group (pseudo-)actions other than stop or demote are unrunnable
@@ -536,8 +537,8 @@ pcmk__group_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
             pcmk__rsc_trace(action->rsc,
                             "%s is not runnable because %s will not %s",
                             action->uuid, member->id, task_s);
-            pe__clear_raw_action_flags(flags, "group action",
-                                       pcmk_action_runnable);
+            pcmk__clear_raw_action_flags(flags, "group action",
+                                         pcmk_action_runnable);
         }
     }
 
@@ -865,7 +866,7 @@ pcmk__group_add_colocated_node_scores(pcmk_resource_t *source_rsc,
                        log_id, source_rsc->id);
         return;
     }
-    pe__set_resource_flags(source_rsc, pcmk_rsc_updating_nodes);
+    pcmk__set_rsc_flags(source_rsc, pcmk_rsc_updating_nodes);
 
     // Ignore empty groups (only possible with schema validation disabled)
     if (source_rsc->children == NULL) {
@@ -891,7 +892,7 @@ pcmk__group_add_colocated_node_scores(pcmk_resource_t *source_rsc,
                     "(at %.6f)", log_id, source_rsc->id, member->id, factor);
     member->cmds->add_colocated_node_scores(member, target_rsc, log_id, nodes,
                                             colocation, factor, flags);
-    pe__clear_resource_flags(source_rsc, pcmk_rsc_updating_nodes);
+    pcmk__clear_rsc_flags(source_rsc, pcmk_rsc_updating_nodes);
 }
 
 // Group implementation of pcmk_assignment_methods_t:add_utilization()

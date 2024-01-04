@@ -102,7 +102,7 @@ pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith, cib_t *cib,
 
     scheduler = pe_new_working_set();
     CRM_ASSERT(scheduler != NULL);
-    pe__set_working_set_flags(scheduler, pcmk_sched_no_compat);
+    pcmk__set_scheduler_flags(scheduler, pcmk_sched_no_compat);
 
     scheduler->input = cib_copy;
     scheduler->priv = out;

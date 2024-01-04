@@ -148,4 +148,32 @@ typedef struct {
 
 typedef struct pe_action_wrapper_s pcmk__related_action_t;
 
+/*!
+ * \internal
+ * \brief Set action relation flags
+ *
+ * \param[in,out] ar_flags      Flag group to modify
+ * \param[in]     flags_to_set  enum pcmk__action_relation_flags to set
+ */
+#define pcmk__set_relation_flags(ar_flags, flags_to_set) do {           \
+        ar_flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,    \
+                                      "Action relation", "constraint",  \
+                                      ar_flags, (flags_to_set),         \
+                                      #flags_to_set);                   \
+    } while (0)
+
+/*!
+ * \internal
+ * \brief Clear action relation flags
+ *
+ * \param[in,out] ar_flags        Flag group to modify
+ * \param[in]     flags_to_clear  enum pcmk__action_relation_flags to clear
+ */
+#define pcmk__clear_relation_flags(ar_flags, flags_to_clear) do {           \
+        ar_flags = pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE,      \
+                                        "Action relation", "constraint",    \
+                                        ar_flags, (flags_to_clear),         \
+                                        #flags_to_clear);                   \
+    } while (0)
+
 #endif      // PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H
