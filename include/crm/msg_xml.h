@@ -264,9 +264,6 @@ extern "C" {
 #  define XML_ORDER_ATTR_THEN_ACTION	"then-action"
 #  define XML_ORDER_ATTR_KIND		"kind"
 
-//! \deprecated Deprecated since 2.1.5
-#  define XML_ORDER_ATTR_THEN_INSTANCE	"then-instance"
-
 #  define XML_TICKET_ATTR_TICKET	"ticket"
 #  define XML_TICKET_ATTR_LOSS_POLICY	"loss-policy"
 

@@ -550,6 +550,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_ORDER_ATTR_FIRST_INSTANCE "first-instance"
 
+//! \deprecated Do not use
+#define XML_ORDER_ATTR_THEN_INSTANCE "then-instance"
+
 #ifdef __cplusplus
 }
 #endif
