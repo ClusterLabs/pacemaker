@@ -221,8 +221,8 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
      *       old versions (feature set could be used to differentiate).
      */
     value = crm_element_value(reply, F_CRM_MSG_TYPE);
-    if (pcmk__str_empty(value)
-        || !pcmk__str_any_of(value, XML_ATTR_REQUEST, XML_ATTR_RESPONSE, NULL)) {
+    if (!pcmk__str_any_of(value, PCMK__VALUE_REQUEST, XML_ATTR_RESPONSE,
+                          NULL)) {
         crm_info("Unrecognizable message from controller: "
                  "invalid message type '%s'", pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;

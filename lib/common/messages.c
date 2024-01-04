@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -65,7 +65,7 @@ create_request_adv(const char *task, xmlNode *msg_data,
     crm_xml_add(request, F_CRM_ORIGIN, origin);
     crm_xml_add(request, F_TYPE, T_CRM);
     crm_xml_add(request, F_CRM_VERSION, CRM_FEATURE_SET);
-    crm_xml_add(request, F_CRM_MSG_TYPE, XML_ATTR_REQUEST);
+    crm_xml_add(request, F_CRM_MSG_TYPE, PCMK__VALUE_REQUEST);
     crm_xml_add(request, F_CRM_REFERENCE, reference);
     crm_xml_add(request, F_CRM_TASK, task);
     crm_xml_add(request, F_CRM_SYS_TO, sys_to);
@@ -115,7 +115,9 @@ create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
         crm_err("Cannot create new_message, no message type in original message");
         CRM_ASSERT(type != NULL);
         return NULL;
-    } else if (strcasecmp(XML_ATTR_REQUEST, type) != 0) {
+    }
+
+    if (strcmp(type, PCMK__VALUE_REQUEST) != 0) {
         /* Replies should only be generated for request messages, but it's possible
          * we expect replies to other messages right now so this can't be enforced.
          */
