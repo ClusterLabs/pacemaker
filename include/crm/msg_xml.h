@@ -183,7 +183,6 @@ extern "C" {
 
 #  define XML_CIB_TAG_RSC_TEMPLATE	"template"
 
-#  define XML_OP_ATTR_ORIGIN		PCMK_META_INTERVAL_ORIGIN
 #  define XML_OP_ATTR_PENDING		"record-pending"
 #  define XML_OP_ATTR_DIGESTS_ALL       "digests-all"
 #  define XML_OP_ATTR_DIGESTS_SECURE    "digests-secure"

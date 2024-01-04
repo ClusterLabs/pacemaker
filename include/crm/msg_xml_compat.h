@@ -523,6 +523,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_META_START_DELAY instead
 #define XML_OP_ATTR_START_DELAY PCMK_META_START_DELAY
 
+//! \deprecated Use \c PCMK_META_INTERVAL_ORIGIN instead
+#define XML_OP_ATTR_ORIGIN PCMK_META_INTERVAL_ORIGIN
+
 #ifdef __cplusplus
 }
 #endif
