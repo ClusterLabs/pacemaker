@@ -109,6 +109,7 @@
 #define PCMK__XA_LONG_ID                "long-id"
 #define PCMK__XA_MODE                   "mode"
 #define PCMK__XA_NODE_START_STATE       "node_start_state"
+#define PCMK__XA_OBJECT_TYPE            "object_type"
 #define PCMK__XA_PACEMAKERD_STATE       "pacemakerd_state"
 #define PCMK__XA_PATH                   "path"
 #define PCMK__XA_REAP                   "reap"

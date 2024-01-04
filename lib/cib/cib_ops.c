@@ -688,7 +688,7 @@ update_results(xmlNode *failed, xmlNode *target, const char *operation,
         add_node_copy(xml_node, target);
 
         crm_xml_add(xml_node, PCMK_XA_ID, ID(target));
-        crm_xml_add(xml_node, XML_FAILCIB_ATTR_OBJTYPE,
+        crm_xml_add(xml_node, PCMK__XA_OBJECT_TYPE,
                     (const char *) target->name);
         crm_xml_add(xml_node, XML_FAILCIB_ATTR_OP, operation);
         crm_xml_add(xml_node, XML_FAILCIB_ATTR_REASON, error_msg);
