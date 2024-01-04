@@ -216,9 +216,6 @@ extern "C" {
  * executor operations.
  */
 
-// XML attribute that takes interval specification (user-facing configuration)
-#  define XML_LRM_ATTR_INTERVAL		PCMK_META_INTERVAL
-
 // XML attribute that takes interval in milliseconds (daemon APIs)
 // (identical value as above, but different constant allows clearer code intent)
 #  define XML_LRM_ATTR_INTERVAL_MS  PCMK_META_INTERVAL
