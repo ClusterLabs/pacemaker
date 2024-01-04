@@ -287,15 +287,14 @@ unpack_simple_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
                                              XML_COLOC_ATTR_SOURCE_ROLE);
 
     // @COMPAT: Deprecated since 2.1.5
-    const char *instance = crm_element_value(xml_obj,
-                                             XML_COLOC_ATTR_SOURCE_INSTANCE);
+    const char *instance = crm_element_value(xml_obj, PCMK__XA_RSC_INSTANCE);
 
     pcmk_resource_t *rsc = NULL;
 
     if (instance != NULL) {
         pcmk__warn_once(pcmk__wo_coloc_inst,
-                        "Support for " XML_COLOC_ATTR_SOURCE_INSTANCE " is "
-                        "deprecated and will be removed in a future release");
+                        "Support for " PCMK__XA_RSC_INSTANCE " is deprecated "
+                        "and will be removed in a future release");
     }
 
     CRM_CHECK(xml_obj != NULL, return);
