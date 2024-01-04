@@ -430,6 +430,9 @@ extern "C" {
 //! \deprecated Do not use
 #define F_CRM_DC_LEAVING "dc-leaving"
 
+//! \deprecated Do not use
+#define F_CRM_ELECTION_ID "election-id"
+
 #ifdef __cplusplus
 }
 #endif
