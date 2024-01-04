@@ -457,6 +457,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_RESULT instead
 #define XML_PING_ATTR_STATUS PCMK_XA_RESULT
 
+//! \deprecated Do not use
+#define XML_PING_ATTR_SYSFROM "crm_subsystem"
+
 #ifdef __cplusplus
 }
 #endif
