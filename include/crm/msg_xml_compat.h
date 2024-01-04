@@ -43,7 +43,10 @@ extern "C" {
 //! \deprecated Use PCMK_STONITH_PROVIDES instead
 #define XML_RSC_ATTR_PROVIDES PCMK_STONITH_PROVIDES
 
-//! \deprecated Use PCMK_XE_PROMOTABLE_LEGACY instead
+//! \deprecated Do not use
+#define PCMK_XE_PROMOTABLE_LEGACY "master"
+
+//! \deprecated Do not use
 #define XML_CIB_TAG_MASTER PCMK_XE_PROMOTABLE_LEGACY
 
 //! \deprecated Do not use
