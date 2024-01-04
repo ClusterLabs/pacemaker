@@ -539,7 +539,7 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
         action->interval_ms = 0;
     }
 
-    value = g_hash_table_lookup(action->params, "CRM_meta_can_fail");
+    value = crm_meta_value(action->params, PCMK__META_CAN_FAIL);
     if (value != NULL) {
         int can_fail = 0;
 
@@ -551,8 +551,8 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
 
 #ifndef PCMK__COMPAT_2_0
         if (pcmk_is_set(action->flags, pcmk__graph_action_can_fail)) {
-            crm_warn("Support for the can_fail meta-attribute is deprecated"
-                     " and will be removed in a future release");
+            crm_warn("Support for the " PCMK__META_CAN_FAIL " meta-attribute "
+                     "is deprecated and will be removed in a future release");
         }
 #endif
     }
