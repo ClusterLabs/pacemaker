@@ -465,7 +465,8 @@ print_node_name(uint32_t nodeid)
 
     if (nodeid == 0) {
         // Check environment first (i.e. when called by resource agent)
-        const char *name = getenv("OCF_RESKEY_" CRM_META "_" XML_LRM_ATTR_TARGET);
+        const char *name = getenv("OCF_RESKEY_" CRM_META "_"
+                                  PCMK__META_ON_NODE);
 
         if (name != NULL) {
             rc = out->message(out, "node-name", 0, name);

@@ -831,7 +831,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
         goto bail;
     }
 
-    target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+    target = crm_element_value(action->xml, PCMK__META_ON_NODE);
     if (target == NULL) {
         crm_err("Ignoring fence operation %d result: No target given (bug?)",
                 data->call_id);
@@ -957,7 +957,7 @@ controld_execute_fence_action(pcmk__graph_t *graph,
     int rc = 0;
     const char *id = ID(action->xml);
     const char *uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
-    const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+    const char *target = crm_element_value(action->xml, PCMK__META_ON_NODE);
     const char *type = crm_meta_value(action->params, "stonith_action");
     char *transition_key = NULL;
     const char *priority_delay = NULL;

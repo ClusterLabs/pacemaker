@@ -1100,7 +1100,7 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, const xmlNode *action,
 {
     lrmd_event_data_t *op = NULL;
     const char *operation = crm_element_value(action, PCMK_XA_OPERATION);
-    const char *target_node = crm_element_value(action, XML_LRM_ATTR_TARGET);
+    const char *target_node = crm_element_value(action, PCMK__META_ON_NODE);
     xmlNode *xml_rsc = find_xml_node(action, XML_CIB_TAG_RESOURCE, TRUE);
 
     if ((xml_rsc == NULL) || (ID(xml_rsc) == NULL)) {
@@ -1149,7 +1149,7 @@ lrm_op_target(const xmlNode *xml)
     const char *target = NULL;
 
     if (xml) {
-        target = crm_element_value(xml, XML_LRM_ATTR_TARGET);
+        target = crm_element_value(xml, PCMK__META_ON_NODE);
     }
     if (target == NULL) {
         target = controld_globals.our_nodename;
@@ -1484,7 +1484,7 @@ do_lrm_invoke(long long action,
 
         if (input->xml != NULL) {
             // For CRM_OP_REPROBE, a NULL target means we're targeting all nodes
-            raw_target = crm_element_value(input->xml, XML_LRM_ATTR_TARGET);
+            raw_target = crm_element_value(input->xml, PCMK__META_ON_NODE);
         }
         handle_reprobe_op(lrm_state, from_sys, from_host, user_name,
                           is_remote_node, (raw_target == NULL));
@@ -2276,7 +2276,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
     if (lrm_state) {
         node_name = lrm_state->node_name;
     } else if (action_xml) {
-        node_name = crm_element_value(action_xml, XML_LRM_ATTR_TARGET);
+        node_name = crm_element_value(action_xml, PCMK__META_ON_NODE);
     }
 
     if(pending == NULL) {

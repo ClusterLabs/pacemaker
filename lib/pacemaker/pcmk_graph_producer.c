@@ -227,7 +227,7 @@ add_node_details(const pcmk_action_t *action, xmlNode *xml)
 {
     pcmk_node_t *router_node = pcmk__connection_host_for_action(action);
 
-    crm_xml_add(xml, XML_LRM_ATTR_TARGET, action->node->details->uname);
+    crm_xml_add(xml, PCMK__META_ON_NODE, action->node->details->uname);
     crm_xml_add(xml, XML_LRM_ATTR_TARGET_UUID, action->node->details->id);
     if (router_node != NULL) {
         crm_xml_add(xml, XML_LRM_ATTR_ROUTER_NODE, router_node->details->uname);
@@ -459,7 +459,7 @@ create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
 
     if (needs_node_info && (action->node != NULL)) {
         add_node_details(action, action_xml);
-        g_hash_table_insert(action->meta, strdup(XML_LRM_ATTR_TARGET),
+        g_hash_table_insert(action->meta, strdup(PCMK__META_ON_NODE),
                             strdup(action->node->details->uname));
         g_hash_table_insert(action->meta, strdup(XML_LRM_ATTR_TARGET_UUID),
                             strdup(action->node->details->id));

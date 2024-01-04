@@ -357,7 +357,7 @@ confirm_cancel_action(const char *id, const char *node_id)
         return FALSE;
     }
     op_key = crm_element_value(cancel->xml, PCMK__XA_OPERATION_KEY);
-    node_name = crm_element_value(cancel->xml, XML_LRM_ATTR_TARGET);
+    node_name = crm_element_value(cancel->xml, PCMK__META_ON_NODE);
 
     stop_te_timer(cancel);
     te_action_confirmed(cancel, controld_globals.transition_graph);
@@ -563,7 +563,7 @@ process_graph_event(xmlNode *event, const char *event_node)
     if (id == NULL) {
         id = "unknown action";
     }
-    uname = crm_element_value(event, XML_LRM_ATTR_TARGET);
+    uname = crm_element_value(event, PCMK__META_ON_NODE);
     if (uname == NULL) {
         uname = "unknown node";
     }

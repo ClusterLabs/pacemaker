@@ -654,7 +654,7 @@ action_timer_callback(gpointer data)
     stop_te_timer(action);
 
     task = crm_element_value(action->xml, PCMK_XA_OPERATION);
-    on_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+    on_node = crm_element_value(action->xml, PCMK__META_ON_NODE);
     via_node = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
 
     if (controld_globals.transition_graph->complete) {

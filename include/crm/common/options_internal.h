@@ -134,6 +134,7 @@ bool pcmk__valid_sbd_timeout(const char *value);
 #define PCMK__META_DIGESTS_ALL              "digests-all"
 #define PCMK__META_DIGESTS_SECURE           "digests-secure"
 #define PCMK__META_INTERNAL_RSC             "internal_rsc"
+#define PCMK__META_ON_NODE                  "on_node"
 #define PCMK__META_PHYSICAL_HOST            "physical-host"
 
 /* @TODO Plug these in. Currently, they're never set. These are op attrs for use

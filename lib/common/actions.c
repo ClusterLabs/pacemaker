@@ -328,7 +328,7 @@ should_filter_for_digest(xmlAttrPtr a, void *user_data)
                             PCMK_XA_ID,
                             PCMK_XA_CRM_FEATURE_SET,
                             XML_LRM_ATTR_OP_DIGEST,
-                            XML_LRM_ATTR_TARGET,
+                            PCMK__META_ON_NODE,
                             XML_LRM_ATTR_TARGET_UUID,
                             "pcmk_external_ip",
                             NULL);

@@ -1294,7 +1294,8 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
         stonith_op = custom_action(NULL, op_key, PCMK_ACTION_STONITH, node,
                                    TRUE, scheduler);
 
-        add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET, node->details->uname);
+        add_hash_param(stonith_op->meta, PCMK__META_ON_NODE,
+                       node->details->uname);
         add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET_UUID, node->details->id);
         add_hash_param(stonith_op->meta, "stonith_action", op);
 
@@ -1707,8 +1708,8 @@ pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b,
     const char *a_xml_id = crm_element_value(xml_a, PCMK_XA_ID);
     const char *b_xml_id = crm_element_value(xml_b, PCMK_XA_ID);
 
-    const char *a_node = crm_element_value(xml_a, XML_LRM_ATTR_TARGET);
-    const char *b_node = crm_element_value(xml_b, XML_LRM_ATTR_TARGET);
+    const char *a_node = crm_element_value(xml_a, PCMK__META_ON_NODE);
+    const char *b_node = crm_element_value(xml_b, PCMK__META_ON_NODE);
     bool same_node = true;
 
     /* @COMPAT The on_node attribute was added to last_failure as of 1.1.13 (via

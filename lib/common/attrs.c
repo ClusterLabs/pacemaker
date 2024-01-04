@@ -19,7 +19,7 @@
 #include <crm/common/attrd_internal.h>
 
 #define OCF_RESKEY_PREFIX "OCF_RESKEY_"
-#define LRM_TARGET_ENV OCF_RESKEY_PREFIX CRM_META "_" XML_LRM_ATTR_TARGET
+#define LRM_TARGET_ENV OCF_RESKEY_PREFIX CRM_META "_" PCMK__META_ON_NODE
 
 /*!
  * \internal

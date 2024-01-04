@@ -1838,7 +1838,7 @@ handle_rsc_op(xmlNode *xml, void *userdata)
         goto bail;
     }
 
-    node = crm_element_value(rsc_op, XML_LRM_ATTR_TARGET);
+    node = crm_element_value(rsc_op, PCMK__META_ON_NODE);
 
     while ((n != NULL) && !pcmk__xe_is(n, XML_CIB_TAG_STATE)) {
         n = n->parent;
