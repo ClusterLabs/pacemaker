@@ -1508,7 +1508,7 @@ only_sanitized_changed(const xmlNode *xml_op,
         return false;
     }
 
-    digest_secure = crm_element_value(xml_op, XML_LRM_ATTR_SECURE_DIGEST);
+    digest_secure = crm_element_value(xml_op, PCMK__XA_OP_SECURE_DIGEST);
 
     return (digest_data->rc != pcmk__digest_match) && (digest_secure != NULL)
            && (digest_data->digest_secure_calc != NULL)
