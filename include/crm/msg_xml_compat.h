@@ -583,6 +583,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_LRM_ATTR_OP_DIGEST "op-digest"
 
+//! \deprecated Do not use
+#define XML_LRM_ATTR_OP_RESTART "op-force-restart"
+
 #ifdef __cplusplus
 }
 #endif
