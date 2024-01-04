@@ -88,6 +88,7 @@
 #define PCMK__XA_CRM_SYS_TO             "crm_sys_to"
 #define PCMK__XA_CRM_TASK               "crm_task"
 #define PCMK__XA_CRM_USER               "crm_user"
+#define PCMK__XA_DC_LEAVING             "dc-leaving"
 #define PCMK__XA_DIGEST                 "digest"
 #define PCMK__XA_EXPECTED               "expected"
 #define PCMK__XA_FILE                   "file"

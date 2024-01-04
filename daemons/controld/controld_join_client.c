@@ -34,7 +34,7 @@ static void
 update_dc_expected(const xmlNode *msg)
 {
     if ((controld_globals.dc_name != NULL)
-        && pcmk__xe_attr_is_true(msg, F_CRM_DC_LEAVING)) {
+        && pcmk__xe_attr_is_true(msg, PCMK__XA_DC_LEAVING)) {
         crm_node_t *dc_node = pcmk__get_node(0, controld_globals.dc_name, NULL,
                                              pcmk__node_search_cluster);
 

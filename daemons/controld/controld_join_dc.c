@@ -193,7 +193,7 @@ create_dc_message(const char *join_op, const char *host_to)
     /* Add a field specifying whether the DC is shutting down. This keeps the
      * joining node from fencing the old DC if it becomes the new DC.
      */
-    pcmk__xe_set_bool_attr(msg, F_CRM_DC_LEAVING,
+    pcmk__xe_set_bool_attr(msg, PCMK__XA_DC_LEAVING,
                            pcmk_is_set(controld_globals.fsa_input_register,
                                        R_SHUTDOWN));
     return msg;
