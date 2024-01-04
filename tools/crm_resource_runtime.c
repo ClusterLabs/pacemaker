@@ -723,7 +723,7 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
             }
 
             // Interval (if operation was specified) defaults to 0 (not all)
-            failed_value = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL_MS);
+            failed_value = crm_element_value(xml_op, PCMK_META_INTERVAL);
             if (!pcmk__str_eq(interval_ms_s, failed_value, pcmk__str_casei)) {
                 continue;
             }

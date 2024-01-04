@@ -476,7 +476,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
                 const char *target_rc_s = NULL;
 
                 interval_ms_s = g_hash_table_lookup(op->meta,
-                                                    XML_LRM_ATTR_INTERVAL_MS);
+                                                    PCMK_META_INTERVAL);
                 target_rc_s = g_hash_table_lookup(op->meta,
                                                   XML_ATTR_TE_TARGET_RC);
                 if (rc_stopped == NULL) {

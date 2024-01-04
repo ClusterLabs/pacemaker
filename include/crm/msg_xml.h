@@ -217,11 +217,11 @@ extern "C" {
  */
 
 // XML attribute that takes interval specification (user-facing configuration)
-#  define XML_LRM_ATTR_INTERVAL		"interval"
+#  define XML_LRM_ATTR_INTERVAL		PCMK_META_INTERVAL
 
 // XML attribute that takes interval in milliseconds (daemon APIs)
 // (identical value as above, but different constant allows clearer code intent)
-#  define XML_LRM_ATTR_INTERVAL_MS  XML_LRM_ATTR_INTERVAL
+#  define XML_LRM_ATTR_INTERVAL_MS  PCMK_META_INTERVAL
 
 #  define XML_LRM_ATTR_TASK_KEY		"operation_key"
 #  define XML_LRM_ATTR_TARGET		"on_node"

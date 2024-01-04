@@ -1124,7 +1124,7 @@ gboolean
 pe__eval_op_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
 {
     const char *name = crm_element_value(expr, PCMK_XA_NAME);
-    const char *interval_s = crm_element_value(expr, XML_LRM_ATTR_INTERVAL);
+    const char *interval_s = crm_element_value(expr, PCMK_META_INTERVAL);
     guint interval_ms = 0U;
 
     crm_trace("Testing op_defaults expression: %s", ID(expr));

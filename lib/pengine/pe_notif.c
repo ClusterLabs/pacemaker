@@ -390,8 +390,7 @@ new_post_notify_action(pcmk_resource_t *rsc, const pcmk_node_t *node,
         pcmk_action_t *mon = (pcmk_action_t *) iter->data;
         const char *interval_ms_s = NULL;
 
-        interval_ms_s = g_hash_table_lookup(mon->meta,
-                                            XML_LRM_ATTR_INTERVAL_MS);
+        interval_ms_s = g_hash_table_lookup(mon->meta, PCMK_META_INTERVAL);
         if (pcmk__str_eq(interval_ms_s, "0", pcmk__str_null_matches)
             || pcmk__str_eq(mon->task, PCMK_ACTION_CANCEL, pcmk__str_none)) {
             continue; // Not a recurring monitor

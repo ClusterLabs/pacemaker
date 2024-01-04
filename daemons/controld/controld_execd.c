@@ -1254,7 +1254,7 @@ static bool do_lrm_cancel(ha_msg_input_t *input, lrm_state_t *lrm_state,
     free(meta_key);
     CRM_CHECK(op_task != NULL, return FALSE);
 
-    meta_key = crm_meta_name(XML_LRM_ATTR_INTERVAL_MS);
+    meta_key = crm_meta_name(PCMK_META_INTERVAL);
     if (crm_element_value_ms(params, meta_key, &interval_ms) != pcmk_ok) {
         free(meta_key);
         return FALSE;
@@ -1652,7 +1652,7 @@ construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
     op_timeout = crm_meta_value(params, PCMK_META_TIMEOUT);
     pcmk__scan_min_int(op_timeout, &op->timeout, 0);
 
-    if (pcmk__guint_from_hash(params, CRM_META "_" XML_LRM_ATTR_INTERVAL_MS, 0,
+    if (pcmk__guint_from_hash(params, CRM_META "_" PCMK_META_INTERVAL, 0,
                               &(op->interval_ms)) != pcmk_rc_ok) {
         op->interval_ms = 0;
     }

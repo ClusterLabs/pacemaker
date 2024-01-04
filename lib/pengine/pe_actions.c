@@ -102,7 +102,7 @@ find_exact_action_config(const pcmk_resource_t *rsc, const char *action_name,
             continue;
         }
 
-        interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
+        interval_spec = crm_element_value(operation, PCMK_META_INTERVAL);
         pcmk_parse_interval_spec(interval_spec, &tmp_ms);
         if (tmp_ms != interval_ms) {
             continue;
@@ -274,8 +274,7 @@ update_action_optional(pcmk_action_t *action, gboolean optional)
     if ((action->rsc != NULL) && (action->node != NULL)
         && !pcmk_is_set(action->flags, pcmk_action_pseudo)
         && !pcmk_is_set(action->rsc->flags, pcmk_rsc_managed)
-        && (g_hash_table_lookup(action->meta,
-                                XML_LRM_ATTR_INTERVAL_MS) == NULL)) {
+        && (g_hash_table_lookup(action->meta, PCMK_META_INTERVAL) == NULL)) {
             pcmk__rsc_debug(action->rsc,
                             "%s on %s is optional (%s is unmanaged)",
                             action->uuid, pe__node_name(action->node),
@@ -502,7 +501,7 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
                                          PCMK__ROLE_PROMOTED_LEGACY, NULL)) {
                 continue;
             }
-            interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
+            interval_spec = crm_element_value(operation, PCMK_META_INTERVAL);
             pcmk_parse_interval_spec(interval_spec, &interval_ms);
             if (interval_ms == 0U) {
                 continue;
@@ -541,8 +540,7 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
     if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
         name = crm_element_value(action_config, PCMK_XA_NAME);
         role = crm_element_value(action_config, "role");
-        interval_spec = crm_element_value(action_config,
-                                          XML_LRM_ATTR_INTERVAL);
+        interval_spec = crm_element_value(action_config, PCMK_META_INTERVAL);
         pcmk_parse_interval_spec(interval_spec, &interval_ms);
 
         if (!pcmk__str_eq(name, PCMK_ACTION_PROMOTE, pcmk__str_none)
@@ -655,7 +653,7 @@ most_frequent_monitor(const pcmk_resource_t *rsc)
         bool enabled = false;
         guint interval_ms = 0U;
         const char *interval_spec = crm_element_value(operation,
-                                                      XML_LRM_ATTR_INTERVAL);
+                                                      PCMK_META_INTERVAL);
 
         // We only care about enabled recurring monitors
         if (!pcmk__str_eq(crm_element_value(operation, PCMK_XA_NAME),
@@ -781,12 +779,12 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
 
     // Normalize interval to milliseconds
     if (interval_ms > 0) {
-        name = strdup(XML_LRM_ATTR_INTERVAL);
+        name = strdup(PCMK_META_INTERVAL);
         CRM_ASSERT(name != NULL);
         value = crm_strdup_printf("%u", interval_ms);
         g_hash_table_insert(meta, name, value);
     } else {
-        g_hash_table_remove(meta, XML_LRM_ATTR_INTERVAL);
+        g_hash_table_remove(meta, PCMK_META_INTERVAL);
     }
 
     /* Timeout order of precedence (highest to lowest):

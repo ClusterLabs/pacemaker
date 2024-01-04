@@ -532,9 +532,8 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
         action->timeout += start_delay;
     }
 
-    if (pcmk__guint_from_hash(action->params,
-                              CRM_META "_" XML_LRM_ATTR_INTERVAL, 0,
-                              &(action->interval_ms)) != pcmk_rc_ok) {
+    if (pcmk__guint_from_hash(action->params, CRM_META "_" PCMK_META_INTERVAL,
+                              0, &(action->interval_ms)) != pcmk_rc_ok) {
         action->interval_ms = 0;
     }
 

@@ -56,7 +56,7 @@ best_op(const pcmk_resource_t *rsc, const pcmk_node_t *node)
         bool failure = pcmk__ends_with(ID(lrm_rsc_op), "_last_failure_0");
 
 
-        crm_element_value_ms(lrm_rsc_op, XML_LRM_ATTR_INTERVAL, &interval_ms);
+        crm_element_value_ms(lrm_rsc_op, PCMK_META_INTERVAL, &interval_ms);
         effective_op = interval_ms == 0
                        && pcmk__strcase_any_of(task, PCMK_ACTION_MONITOR,
                                                PCMK_ACTION_START,
@@ -212,7 +212,7 @@ pcmk__resource_digests(pcmk__output_t *out, pcmk_resource_t *rsc,
     // Generate an operation key
     if (xml_op != NULL) {
         task = crm_element_value(xml_op, PCMK_XA_OPERATION);
-        crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
+        crm_element_value_ms(xml_op, PCMK_META_INTERVAL, &interval_ms);
     }
     if (task == NULL) { // Assume start if no history is available
         task = PCMK_ACTION_START;

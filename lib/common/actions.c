@@ -354,7 +354,7 @@ pcmk__filter_op_for_digest(xmlNode *param_set)
     /* Timeout is useful for recurring operation digests, so grab it before
      * removing meta-attributes
      */
-    key = crm_meta_name(XML_LRM_ATTR_INTERVAL_MS);
+    key = crm_meta_name(PCMK_META_INTERVAL);
     if (crm_element_value_ms(param_set, key, &interval_ms) != pcmk_ok) {
         interval_ms = 0;
     }
@@ -434,7 +434,7 @@ crm_create_op_xml(xmlNode *parent, const char *prefix, const char *task,
 
     xml_op = create_xml_node(parent, PCMK_XE_OP);
     crm_xml_set_id(xml_op, "%s-%s-%s", prefix, task, interval_spec);
-    crm_xml_add(xml_op, XML_LRM_ATTR_INTERVAL, interval_spec);
+    crm_xml_add(xml_op, PCMK_META_INTERVAL, interval_spec);
     crm_xml_add(xml_op, PCMK_XA_NAME, task);
     if (timeout) {
         crm_xml_add(xml_op, PCMK_META_TIMEOUT, timeout);
@@ -507,7 +507,7 @@ bool
 pcmk_xe_is_probe(const xmlNode *xml_op)
 {
     const char *task = crm_element_value(xml_op, PCMK_XA_OPERATION);
-    const char *interval_ms_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL_MS);
+    const char *interval_ms_s = crm_element_value(xml_op, PCMK_META_INTERVAL);
     int interval_ms;
 
     pcmk__scan_min_int(interval_ms_s, &interval_ms, 0);

@@ -147,7 +147,7 @@ get_operation_list(xmlNode *rsc_entry) {
          rsc_op = pcmk__xe_next(rsc_op)) {
         const char *task = crm_element_value(rsc_op, PCMK_XA_OPERATION);
         const char *interval_ms_s = crm_element_value(rsc_op,
-                                                      XML_LRM_ATTR_INTERVAL_MS);
+                                                      PCMK_META_INTERVAL);
         const char *op_rc = crm_element_value(rsc_op, XML_LRM_ATTR_RC);
         int op_rc_i;
 
@@ -1533,7 +1533,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
                                           |crm_time_log_timeofday
                                           |crm_time_log_with_timezone);
 
-        crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
+        crm_element_value_ms(xml_op, PCMK_META_INTERVAL, &interval_ms);
         interval_ms_s = crm_strdup_printf("%u", interval_ms);
 
         pcmk__xe_set_props(node, XML_RSC_OP_LAST_CHANGE, rc_change,
@@ -2931,7 +2931,7 @@ resource_operation_list(pcmk__output_t *out, va_list args)
         xmlNode *xml_op = (xmlNode *) gIter->data;
         const char *task = crm_element_value(xml_op, PCMK_XA_OPERATION);
         const char *interval_ms_s = crm_element_value(xml_op,
-                                                      XML_LRM_ATTR_INTERVAL_MS);
+                                                      PCMK_META_INTERVAL);
         const char *op_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
         int op_rc_i;
 

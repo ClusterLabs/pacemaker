@@ -68,8 +68,7 @@ create_action_name(const pcmk_action_t *action, bool verbose)
         char *key = NULL;
         guint interval_ms = 0;
 
-        if (pcmk__guint_from_hash(action->meta,
-                                  XML_LRM_ATTR_INTERVAL_MS, 0,
+        if (pcmk__guint_from_hash(action->meta, PCMK_META_INTERVAL, 0,
                                   &interval_ms) != pcmk_rc_ok) {
             interval_ms = 0;
         }
