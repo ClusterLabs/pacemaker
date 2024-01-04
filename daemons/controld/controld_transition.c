@@ -125,7 +125,8 @@ do_te_invoke(long long action,
         ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
         xmlNode *graph_data = input->xml;
         const char *ref = crm_element_value(input->msg, PCMK_XA_REFERENCE);
-        const char *graph_input = crm_element_value(input->msg, F_CRM_TGRAPH_INPUT);
+        const char *graph_input = crm_element_value(input->msg,
+                                                    PCMK__XA_CRM_TGRAPH_IN);
 
         if (graph_data == NULL) {
             crm_log_xml_err(input->msg, "Bad command");

@@ -146,7 +146,7 @@ handle_pecalc_request(pcmk__request_t *request)
                                          series[series_id].name, seq, true);
     }
 
-    crm_xml_add(reply, F_CRM_TGRAPH_INPUT, filename);
+    crm_xml_add(reply, PCMK__XA_CRM_TGRAPH_IN, filename);
     crm_xml_add_int(reply, PCMK__XA_GRAPH_ERRORS, was_processing_error);
     crm_xml_add_int(reply, PCMK__XA_GRAPH_WARNINGS, was_processing_warning);
     crm_xml_add_int(reply, PCMK__XA_CONFIG_ERRORS, crm_config_error);
