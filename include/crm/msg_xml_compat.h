@@ -427,6 +427,9 @@ extern "C" {
 //! \deprecated Do not use
 #define F_CRM_JOIN_ID "join_id"
 
+//! \deprecated Do not use
+#define F_CRM_DC_LEAVING "dc-leaving"
+
 #ifdef __cplusplus
 }
 #endif

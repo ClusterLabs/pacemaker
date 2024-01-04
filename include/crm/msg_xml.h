@@ -107,7 +107,6 @@ extern "C" {
 #  define CIB_OPTIONS_FIRST "cib-bootstrap-options"
 
 #  define F_CRM_DATA			"crm_xml"
-#  define F_CRM_DC_LEAVING      "dc-leaving"
 #  define F_CRM_ELECTION_ID		"election-id"
 #  define F_CRM_ELECTION_AGE_S		"election-age-sec"
 #  define F_CRM_ELECTION_AGE_US		"election-age-nano-sec"
