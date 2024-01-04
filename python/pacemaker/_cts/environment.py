@@ -294,7 +294,7 @@ class Environment:
                                  % (len(self["nodes"]), self["node-limit"]))
 
                 while len(self["nodes"]) > self["node-limit"]:
-                    self["nodes"].pop(len(self["nodes"])-1)
+                    self["nodes"].pop(len(self["nodes"]) - 1)
 
     def _validate(self):
         """Check that we were given all required command line parameters."""

@@ -495,12 +495,12 @@ class Test:
                 if not self.force_wait:
                     print("\tDaemon %s doesn't seem to have been initialized within %fs."
                           "\n\tConsider specifying a longer '--timeout' value."
-                          %(self._daemon_location, self.timeout))
+                          % (self._daemon_location, self.timeout))
                 return
 
             if self.verbose and (now - update_time) >= 5:
                 print("Waiting for %s to be initialized: %fs ..."
-                      %(self._daemon_location, now - init_time))
+                      % (self._daemon_location, now - init_time))
                 update_time = now
 
 

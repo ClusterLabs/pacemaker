@@ -50,7 +50,7 @@ class StopTest(CTSTest):
         # (note that this won't work if we have multiple partitions)
         for other in self._env["nodes"]:
             if self._cm.expected_status[other] == "up" and other != node:
-                patterns.append(self.templates["Pat:They_stopped"] %(other, node))
+                patterns.append(self.templates["Pat:They_stopped"] % (other, node))
 
         watch = self.create_watch(patterns, self._env["DeadTime"])
         watch.set_watch()

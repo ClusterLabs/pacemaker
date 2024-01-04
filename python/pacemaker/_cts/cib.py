@@ -165,7 +165,7 @@ class CIB:
             # For remote node tests, a cluster node is stopped and brought back up
             # as a remote node with the name "remote-OLDNAME". To allow fencing
             # devices to fence these nodes, create a list of all possible node names.
-            all_node_names = [prefix+n for n in self._cm.env["nodes"] for prefix in ('', 'remote-')]
+            all_node_names = [prefix + n for n in self._cm.env["nodes"] for prefix in ('', 'remote-')]
 
             # Add all parameters specified by user
             entries = self._cm.env["stonith-params"].split(',')

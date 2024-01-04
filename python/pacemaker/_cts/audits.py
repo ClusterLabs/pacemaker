@@ -164,7 +164,7 @@ class LogAudit(ClusterAudit):
         while attempt <= max_attempts and not self._test_logging():
             attempt += 1
             self._restart_cluster_logging()
-            time.sleep(60*attempt)
+            time.sleep(60 * attempt)
 
         if attempt > max_attempts:
             self._cm.log("ERROR: Cluster logging unrecoverable.")

@@ -61,7 +61,7 @@ class StandbyTest(CTSTest):
         watchpats = [
             r"State transition .* -> S_POLICY_ENGINE",
         ]
-        watch = self.create_watch(watchpats, self._env["DeadTime"]+10)
+        watch = self.create_watch(watchpats, self._env["DeadTime"] + 10)
         watch.set_watch()
 
         self.debug("Setting node %s to standby mode" % node)

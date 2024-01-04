@@ -53,7 +53,7 @@ class SimulStopLite(CTSTest):
             return self.success()
 
         # Stop all the nodes - at about the same time...
-        watch = self.create_watch(watchpats, self._env["DeadTime"]+10)
+        watch = self.create_watch(watchpats, self._env["DeadTime"] + 10)
 
         watch.set_watch()
         self.set_timer()

@@ -162,7 +162,7 @@ class Scenario:
         If n_components is not None, only tear down that many components.
         """
         if not n_components:
-            n_components = len(self._components)-1
+            n_components = len(self._components) - 1
 
         j = n_components
 
