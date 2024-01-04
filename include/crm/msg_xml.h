@@ -92,6 +92,7 @@ extern "C" {
 #define PCMK_XA_ORIGIN                      "origin"
 #define PCMK_XA_PATH                        "path"
 #define PCMK_XA_PROVIDER                    "provider"
+#define PCMK_XA_QUEUE_TIME                  "queue-time"
 #define PCMK_XA_REASON                      "reason"
 #define PCMK_XA_REFERENCE                   "reference"
 #define PCMK_XA_REQUEST                     "request"
@@ -202,7 +203,7 @@ extern "C" {
  * executor operations.
  */
 
-#  define XML_RSC_OP_T_QUEUE            "queue-time"
+#  define XML_RSC_OP_T_QUEUE            PCMK_XA_QUEUE_TIME
 
 #  define XML_LRM_ATTR_MIGRATE_SOURCE	"migrate_source"
 #  define XML_LRM_ATTR_MIGRATE_TARGET	"migrate_target"

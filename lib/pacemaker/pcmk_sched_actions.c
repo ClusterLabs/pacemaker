@@ -1257,7 +1257,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
             }
 
             crm_xml_add_int(xml_op, PCMK_XA_EXEC_TIME, op->exec_time);
-            crm_xml_add_int(xml_op, XML_RSC_OP_T_QUEUE, op->queue_time);
+            crm_xml_add_int(xml_op, PCMK_XA_QUEUE_TIME, op->queue_time);
         }
     }
 
