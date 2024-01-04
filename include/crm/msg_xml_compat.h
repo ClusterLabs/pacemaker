@@ -460,6 +460,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_PING_ATTR_SYSFROM "crm_subsystem"
 
+//! \deprecated Do not use
+#define XML_PING_ATTR_CRMDSTATE "crmd_state"
+
 #ifdef __cplusplus
 }
 #endif
