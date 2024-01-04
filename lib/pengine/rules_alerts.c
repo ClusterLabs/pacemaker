@@ -224,7 +224,7 @@ pe_unpack_alerts(const xmlNode *alerts)
         xmlNode *recipient;
         int recipients = 0;
         const char *alert_id = ID(alert);
-        const char *alert_path = crm_element_value(alert, XML_ALERT_ATTR_PATH);
+        const char *alert_path = crm_element_value(alert, PCMK_XA_PATH);
 
         /* The schema should enforce this, but to be safe ... */
         if (alert_id == NULL) {
@@ -233,8 +233,7 @@ pe_unpack_alerts(const xmlNode *alerts)
             continue;
         }
         if (alert_path == NULL) {
-            pcmk__config_warn("Ignoring alert %s: No " XML_ALERT_ATTR_PATH,
-                              alert_id);
+            pcmk__config_warn("Ignoring alert %s: No " PCMK_XA_PATH, alert_id);
             continue;
         }
 

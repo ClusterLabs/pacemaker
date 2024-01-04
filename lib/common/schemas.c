@@ -1486,7 +1486,7 @@ add_schema_file_to_xml(xmlNode *parent, const char *file, GList **already_includ
         return;
     }
 
-    crm_xml_add(file_node, PCMK__XA_PATH, path);
+    crm_xml_add(file_node, PCMK_XA_PATH, path);
     *already_included = g_list_prepend(*already_included, path);
 
     xmlAddChild(file_node, xmlNewCDataBlock(parent->doc, (pcmkXmlStr) contents,

@@ -324,7 +324,7 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
     for (change = pcmk__xml_first_child(patchset); change != NULL;
          change = pcmk__xml_next(change)) {
         const char *op = crm_element_value(change, PCMK_XA_OPERATION);
-        const char *xpath = crm_element_value(change, XML_DIFF_PATH);
+        const char *xpath = crm_element_value(change, PCMK_XA_PATH);
         const char *shortpath = NULL;
 
         if ((op == NULL) ||
@@ -525,7 +525,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
         for (change = pcmk__xml_first_child(patchset); change != NULL;
              change = pcmk__xml_next(change)) {
             const char *op = crm_element_value(change, PCMK_XA_OPERATION);
-            const char *xpath = crm_element_value(change, XML_DIFF_PATH);
+            const char *xpath = crm_element_value(change, PCMK_XA_PATH);
 
             if(op == NULL) {
                 continue;

@@ -407,7 +407,7 @@ te_update_diff_v2(xmlNode *diff)
 
         xmlNode *match = NULL;
         const char *name = NULL;
-        const char *xpath = crm_element_value(change, XML_DIFF_PATH);
+        const char *xpath = crm_element_value(change, PCMK_XA_PATH);
 
         // Possible ops: create, modify, delete, move
         const char *op = crm_element_value(change, PCMK_XA_OPERATION);

@@ -1922,7 +1922,7 @@ crm_diff_update_v2(const char *event, xmlNode * msg)
          change = pcmk__xml_next(change)) {
         const char *name = NULL;
         const char *op = crm_element_value(change, PCMK_XA_OPERATION);
-        const char *xpath = crm_element_value(change, XML_DIFF_PATH);
+        const char *xpath = crm_element_value(change, PCMK_XA_PATH);
         xmlNode *match = NULL;
         const char *node = NULL;
 

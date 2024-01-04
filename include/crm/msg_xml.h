@@ -92,6 +92,7 @@ extern "C" {
 #define PCMK_XA_OP                          "op"
 #define PCMK_XA_OPERATION                   "operation"
 #define PCMK_XA_ORIGIN                      "origin"
+#define PCMK_XA_PATH                        "path"
 #define PCMK_XA_PROVIDER                    "provider"
 #define PCMK_XA_REASON                      "reason"
 #define PCMK_XA_REFERENCE                   "reference"
@@ -307,7 +308,7 @@ extern "C" {
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 
-#  define XML_ALERT_ATTR_PATH		"path"
+#  define XML_ALERT_ATTR_PATH		PCMK_XA_PATH
 #  define XML_ALERT_ATTR_TSTAMP_FORMAT	"timestamp-format"
 
 #  define XML_CIB_TAG_GENERATION_TUPPLE	"generation_tuple"
@@ -357,7 +358,7 @@ extern "C" {
 #  define XML_DIFF_LIST                 "change-list"
 #  define XML_DIFF_ATTR                 "change-attr"
 #  define XML_DIFF_RESULT               "change-result"
-#  define XML_DIFF_PATH                 "path"
+#  define XML_DIFF_PATH                 PCMK_XA_PATH
 #  define XML_DIFF_POSITION             "position"
 
 #  define ID(x) crm_element_value(x, PCMK_XA_ID)

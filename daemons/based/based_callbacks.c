@@ -1313,7 +1313,7 @@ prepare_input(const xmlNode *request, enum cib__op_type type,
 #define XPATH_CONFIG_CHANGE             \
     "//" XML_CIB_TAG_CRMCONFIG " | "    \
     "//" XML_DIFF_CHANGE                \
-    "[contains(@" XML_DIFF_PATH ",'/" XML_CIB_TAG_CRMCONFIG "/')]"
+    "[contains(@" PCMK_XA_PATH ",'/" XML_CIB_TAG_CRMCONFIG "/')]"
 
 static bool
 contains_config_change(xmlNode *diff)

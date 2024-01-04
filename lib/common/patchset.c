@@ -59,7 +59,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
             change = create_xml_node(patchset, XML_DIFF_CHANGE);
 
             crm_xml_add(change, PCMK_XA_OPERATION, "create");
-            crm_xml_add(change, XML_DIFF_PATH, (const char *) xpath->str);
+            crm_xml_add(change, PCMK_XA_PATH, (const char *) xpath->str);
             crm_xml_add_int(change, XML_DIFF_POSITION, position);
             add_node_copy(change, xml);
             g_string_free(xpath, TRUE);
@@ -85,7 +85,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
                 change = create_xml_node(patchset, XML_DIFF_CHANGE);
 
                 crm_xml_add(change, PCMK_XA_OPERATION, "modify");
-                crm_xml_add(change, XML_DIFF_PATH, (const char *) xpath->str);
+                crm_xml_add(change, PCMK_XA_PATH, (const char *) xpath->str);
 
                 change = create_xml_node(change, XML_DIFF_LIST);
                 g_string_free(xpath, TRUE);
@@ -139,7 +139,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
             change = create_xml_node(patchset, XML_DIFF_CHANGE);
 
             crm_xml_add(change, PCMK_XA_OPERATION, "move");
-            crm_xml_add(change, XML_DIFF_PATH, (const char *) xpath->str);
+            crm_xml_add(change, PCMK_XA_PATH, (const char *) xpath->str);
             crm_xml_add_int(change, XML_DIFF_POSITION,
                             pcmk__xml_position(xml, pcmk__xf_deleted));
             g_string_free(xpath, TRUE);
@@ -314,7 +314,7 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
         xmlNode *change = create_xml_node(patchset, XML_DIFF_CHANGE);
 
         crm_xml_add(change, PCMK_XA_OPERATION, "delete");
-        crm_xml_add(change, XML_DIFF_PATH, deleted_obj->path);
+        crm_xml_add(change, PCMK_XA_PATH, deleted_obj->path);
         if (deleted_obj->position >= 0) {
             crm_xml_add_int(change, XML_DIFF_POSITION, deleted_obj->position);
         }
@@ -920,7 +920,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
          change = pcmk__xml_next(change)) {
         xmlNode *match = NULL;
         const char *op = crm_element_value(change, PCMK_XA_OPERATION);
-        const char *xpath = crm_element_value(change, XML_DIFF_PATH);
+        const char *xpath = crm_element_value(change, PCMK_XA_PATH);
         int position = -1;
 
         if (op == NULL) {
@@ -1003,7 +1003,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
         change = change_obj->change;
 
         op = crm_element_value(change, PCMK_XA_OPERATION);
-        xpath = crm_element_value(change, XML_DIFF_PATH);
+        xpath = crm_element_value(change, PCMK_XA_PATH);
 
         crm_trace("Continue performing %s on %s with %p", op, xpath, match);
 

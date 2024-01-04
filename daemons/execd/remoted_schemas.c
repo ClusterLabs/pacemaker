@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 the Pacemaker project contributors
+ * Copyright 2023-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -91,7 +91,7 @@ write_extra_schema_file(xmlNode *xml, void *user_data)
     char *path = NULL;
     int rc;
 
-    file = crm_element_value(xml, PCMK__XA_PATH);
+    file = crm_element_value(xml, PCMK_XA_PATH);
     if (file == NULL) {
         crm_warn("No destination path given in schema request");
         return;
