@@ -502,9 +502,6 @@ class LogWatcher:
                 self._debug("Waiting: start=%d, end=%d, now=%d, lines=%d" % (begin, end, time.time(), len(self._line_cache)))
                 time.sleep(1)
 
-        self._debug("How did we get here")
-        return None
-
     def look_for_all(self, allow_multiple_matches=False, silent=False):
         """
         Like look(), but looks for matches for multiple regexes.
