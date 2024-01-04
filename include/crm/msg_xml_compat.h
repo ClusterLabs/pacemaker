@@ -547,6 +547,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_LRM_ATTR_TARGET_UUID "on_node_uuid"
 
+//! \deprecated Do not use
+#define XML_ORDER_ATTR_FIRST_INSTANCE "first-instance"
+
 #ifdef __cplusplus
 }
 #endif
