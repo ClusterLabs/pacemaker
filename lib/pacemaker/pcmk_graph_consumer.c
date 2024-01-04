@@ -520,7 +520,7 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
     action->type = action_type;
     action->params = xml2list(action->xml);
 
-    value = g_hash_table_lookup(action->params, "CRM_meta_timeout");
+    value = crm_meta_value(action->params, PCMK_META_TIMEOUT);
     pcmk__scan_min_int(value, &(action->timeout), 0);
 
     /* Take start-delay into account for the timeout of the action timer */

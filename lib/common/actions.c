@@ -361,7 +361,7 @@ pcmk__filter_op_for_digest(xmlNode *param_set)
     free(key);
     key = NULL;
     if (interval_ms != 0) {
-        key = crm_meta_name(XML_ATTR_TIMEOUT);
+        key = crm_meta_name(PCMK_META_TIMEOUT);
         timeout = crm_element_value_copy(param_set, key);
     }
 
@@ -437,7 +437,7 @@ crm_create_op_xml(xmlNode *parent, const char *prefix, const char *task,
     crm_xml_add(xml_op, XML_LRM_ATTR_INTERVAL, interval_spec);
     crm_xml_add(xml_op, PCMK_XA_NAME, task);
     if (timeout) {
-        crm_xml_add(xml_op, XML_ATTR_TIMEOUT, timeout);
+        crm_xml_add(xml_op, PCMK_META_TIMEOUT, timeout);
     }
     return xml_op;
 }

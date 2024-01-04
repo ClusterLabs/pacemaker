@@ -45,7 +45,7 @@ get_meta_attrs_from_cib(xmlNode *basenode, pcmk__alert_t *entry,
         goto done;
     }
 
-    value = g_hash_table_lookup(config_hash, XML_ALERT_ATTR_TIMEOUT);
+    value = g_hash_table_lookup(config_hash, PCMK_META_TIMEOUT);
     if (value) {
         entry->timeout = crm_get_msec(value);
         if (entry->timeout <= 0) {

@@ -519,7 +519,7 @@ controller_resource_op(pcmk_ipc_api_t *api, const char *op,
     crm_xml_add(params, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
 
     // The controller parses the timeout from the request
-    key = crm_meta_name(XML_ATTR_TIMEOUT);
+    key = crm_meta_name(PCMK_META_TIMEOUT);
     crm_xml_add(params, key, "60000");  /* 1 minute */ //@TODO pass as arg
     free(key);
 

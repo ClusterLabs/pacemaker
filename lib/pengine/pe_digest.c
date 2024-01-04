@@ -236,7 +236,7 @@ calculate_secure_digest(pcmk__op_digest_t *data, const pcmk_resource_t *rsc,
      * Remove any timeout that made it this far, to match.
      */
     if (old_version) {
-        xml_remove_prop(data->params_secure, CRM_META "_" XML_ATTR_TIMEOUT);
+        xml_remove_prop(data->params_secure, CRM_META "_" PCMK_META_TIMEOUT);
     }
 
     data->digest_secure_calc = calculate_operation_digest(data->params_secure,

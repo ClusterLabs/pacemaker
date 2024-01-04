@@ -744,13 +744,13 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
              * blocks (which may also have rules that need to be evaluated).
              */
             timeout_spec = crm_element_value(min_interval_mon,
-                                             XML_ATTR_TIMEOUT);
+                                             PCMK_META_TIMEOUT);
             if (timeout_spec != NULL) {
                 pcmk__rsc_trace(rsc,
                                 "Setting default timeout for %s probe to "
                                 "most frequent monitor's timeout '%s'",
                                 rsc->id, timeout_spec);
-                name = strdup(XML_ATTR_TIMEOUT);
+                name = strdup(PCMK_META_TIMEOUT);
                 value = strdup(timeout_spec);
                 CRM_ASSERT((name != NULL) && (value != NULL));
                 g_hash_table_insert(meta, name, value);
@@ -813,7 +813,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
                             "Setting timeout for %s %s to "
                             "pcmk_monitor_timeout (%s)",
                             rsc->id, action_name, timeout_spec);
-            name = strdup(XML_ATTR_TIMEOUT);
+            name = strdup(PCMK_META_TIMEOUT);
             value = strdup(timeout_spec);
             CRM_ASSERT((name != NULL) && (value != NULL));
             g_hash_table_insert(meta, name, value);
@@ -821,9 +821,9 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
     }
 
     // Normalize timeout to positive milliseconds
-    name = strdup(XML_ATTR_TIMEOUT);
+    name = strdup(PCMK_META_TIMEOUT);
     CRM_ASSERT(name != NULL);
-    timeout_spec = g_hash_table_lookup(meta, XML_ATTR_TIMEOUT);
+    timeout_spec = g_hash_table_lookup(meta, PCMK_META_TIMEOUT);
     g_hash_table_insert(meta, name, pcmk__itoa(unpack_timeout(timeout_spec)));
 
     // Ensure on-fail has a valid value
@@ -1439,7 +1439,7 @@ pe_get_configured_timeout(pcmk_resource_t *rsc, const char *action,
          child != NULL; child = crm_next_same_xml(child)) {
         if (pcmk__str_eq(action, crm_element_value(child, PCMK_XA_NAME),
                 pcmk__str_casei)) {
-            timeout_spec = crm_element_value(child, XML_ATTR_TIMEOUT);
+            timeout_spec = crm_element_value(child, PCMK_META_TIMEOUT);
             break;
         }
     }
@@ -1449,7 +1449,7 @@ pe_get_configured_timeout(pcmk_resource_t *rsc, const char *action,
         pe__unpack_dataset_nvpairs(scheduler->op_defaults, XML_TAG_META_SETS,
                                    &rule_data, action_meta, NULL, FALSE,
                                    scheduler);
-        timeout_spec = g_hash_table_lookup(action_meta, XML_ATTR_TIMEOUT);
+        timeout_spec = g_hash_table_lookup(action_meta, PCMK_META_TIMEOUT);
     }
 
     // @TODO check meta-attributes
