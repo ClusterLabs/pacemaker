@@ -311,7 +311,7 @@ election_vote(election_t *e)
 
     e->count++;
     crm_xml_add(vote, F_CRM_ELECTION_OWNER, our_node->uuid);
-    crm_xml_add_int(vote, F_CRM_ELECTION_ID, e->count);
+    crm_xml_add_int(vote, PCMK__XA_ELECTION_ID, e->count);
 
     get_uptime(&age);
     crm_xml_add_timeval(vote, F_CRM_ELECTION_AGE_S, F_CRM_ELECTION_AGE_US, &age);
@@ -433,7 +433,7 @@ parse_election_message(const election_t *e, const xmlNode *message,
     vote->version = crm_element_value(message, PCMK_XA_VERSION);
     vote->election_owner = crm_element_value(message, F_CRM_ELECTION_OWNER);
 
-    crm_element_value_int(message, F_CRM_ELECTION_ID, &(vote->election_id));
+    crm_element_value_int(message, PCMK__XA_ELECTION_ID, &(vote->election_id));
 
     if ((vote->op == NULL) || (vote->from == NULL) || (vote->version == NULL)
         || (vote->election_owner == NULL) || (vote->election_id < 0)) {
@@ -509,7 +509,7 @@ send_no_vote(crm_node_t *peer, struct vote *vote)
                                      CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
     crm_xml_add(novote, F_CRM_ELECTION_OWNER, vote->election_owner);
-    crm_xml_add_int(novote, F_CRM_ELECTION_ID, vote->election_id);
+    crm_xml_add_int(novote, PCMK__XA_ELECTION_ID, vote->election_id);
 
     send_cluster_message(peer, crm_msg_crmd, novote, TRUE);
     free_xml(novote);
