@@ -526,6 +526,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_META_INTERVAL_ORIGIN instead
 #define XML_OP_ATTR_ORIGIN PCMK_META_INTERVAL_ORIGIN
 
+//! \deprecated Use \c PCMK_META_RECORD_PENDING instead
+#define XML_OP_ATTR_PENDING PCMK_META_RECORD_PENDING
+
 #ifdef __cplusplus
 }
 #endif
