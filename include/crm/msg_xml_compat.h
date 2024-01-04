@@ -448,6 +448,9 @@ extern "C" {
 //! \deprecated Do not use
 #define F_CRM_TGRAPH_INPUT "crm-tgraph-in"
 
+//! \deprecated Do not use
+#define F_CRM_THROTTLE_MODE "crm-limit-mode"
+
 #ifdef __cplusplus
 }
 #endif
