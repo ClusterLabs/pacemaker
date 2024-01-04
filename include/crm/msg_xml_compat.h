@@ -601,6 +601,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_LAST_RC_CHANGE instead
 #define XML_RSC_OP_LAST_CHANGE PCMK_XA_LAST_RC_CHANGE
 
+//! \deprecated Use \c PCMK_XA_EXEC_TIME instead
+#define XML_RSC_OP_T_EXEC PCMK_XA_EXEC_TIME
+
 #ifdef __cplusplus
 }
 #endif

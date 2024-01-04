@@ -202,7 +202,6 @@ extern "C" {
  * executor operations.
  */
 
-#  define XML_RSC_OP_T_EXEC             PCMK_XA_EXEC_TIME
 #  define XML_RSC_OP_T_QUEUE            "queue-time"
 
 #  define XML_LRM_ATTR_MIGRATE_SOURCE	"migrate_source"
