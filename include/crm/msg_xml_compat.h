@@ -481,6 +481,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_OPERATION instead
 #define XML_DIFF_OP PCMK_XA_OPERATION
 
+//! \deprecated Use \c PCMK_XA_REASON instead
+#define XML_FAILCIB_ATTR_REASON PCMK_XA_REASON
+
 #ifdef __cplusplus
 }
 #endif

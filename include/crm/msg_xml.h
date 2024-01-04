@@ -132,8 +132,6 @@ extern "C" {
 
 #  define XML_FAIL_TAG_CIB		"failed_update"
 
-#  define XML_FAILCIB_ATTR_REASON	"reason"
-
 /*---- CIB specific tags/attrs */
 #  define XML_CIB_TAG_SECTION_ALL	"all"
 #  define XML_CIB_TAG_CONFIGURATION	"configuration"
