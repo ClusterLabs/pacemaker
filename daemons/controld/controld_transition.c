@@ -125,10 +125,9 @@ do_te_invoke(long long action,
         ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
         xmlNode *graph_data = input->xml;
         const char *ref = crm_element_value(input->msg, PCMK_XA_REFERENCE);
-        const char *graph_file = crm_element_value(input->msg, F_CRM_TGRAPH);
         const char *graph_input = crm_element_value(input->msg, F_CRM_TGRAPH_INPUT);
 
-        if (graph_file == NULL && graph_data == NULL) {
+        if (graph_data == NULL) {
             crm_log_xml_err(input->msg, "Bad command");
             register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
             return;
@@ -149,10 +148,6 @@ do_te_invoke(long long action,
                      pcmk__s(ref, "no reference"));
             abort_transition(INFINITY, pcmk__graph_restart,
                              "Transition Redundant", NULL);
-        }
-
-        if (graph_data == NULL && graph_file != NULL) {
-            graph_data = filename2xml(graph_file);
         }
 
         if (controld_is_started_transition_timer()) {

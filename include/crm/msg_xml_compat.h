@@ -442,6 +442,9 @@ extern "C" {
 //! \deprecated Do not use
 #define F_CRM_ELECTION_OWNER "election-owner"
 
+//! \deprecated Do not use
+#define F_CRM_TGRAPH "crm-tgraph-file"
+
 #ifdef __cplusplus
 }
 #endif
