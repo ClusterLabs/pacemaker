@@ -117,7 +117,8 @@ fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node)
                 }
             }
 
-            target_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
+            target_uuid = crm_element_value(action->xml,
+                                            PCMK__META_ON_NODE_UUID);
             router = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
             if (router) {
                 crm_node_t *node = pcmk__get_node(0, router, NULL,
@@ -332,7 +333,7 @@ get_cancel_action(const char *id, const char *node)
                 continue;
             }
 
-            target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
+            target = crm_element_value(action->xml, PCMK__META_ON_NODE_UUID);
             if (node && !pcmk__str_eq(target, node, pcmk__str_casei)) {
                 crm_trace("Wrong node %s for %s on %s", target, id, node);
                 continue;

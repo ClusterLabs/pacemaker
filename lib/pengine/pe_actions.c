@@ -1296,7 +1296,8 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
 
         add_hash_param(stonith_op->meta, PCMK__META_ON_NODE,
                        node->details->uname);
-        add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET_UUID, node->details->id);
+        add_hash_param(stonith_op->meta, PCMK__META_ON_NODE_UUID,
+                       node->details->id);
         add_hash_param(stonith_op->meta, "stonith_action", op);
 
         if (pcmk_is_set(scheduler->flags, pcmk_sched_enable_unfencing)) {

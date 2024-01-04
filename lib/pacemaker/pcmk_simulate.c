@@ -563,7 +563,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                                      cib_sync_call|cib_scope_local) == pcmk_ok);
 
     // Ensure the action node is in the CIB
-    uuid = crm_element_value_copy(action->xml, XML_LRM_ATTR_TARGET_UUID);
+    uuid = crm_element_value_copy(action->xml, PCMK__META_ON_NODE_UUID);
     cib_node = pcmk__inject_node(fake_cib, node,
                                  ((router_node == NULL)? uuid: node));
     free(uuid);

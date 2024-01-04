@@ -260,7 +260,8 @@ controld_record_action_event(pcmk__graph_action_t *action,
     const char *target = crm_element_value(action->xml, PCMK__META_ON_NODE);
     const char *task_uuid = crm_element_value(action->xml,
                                               PCMK__XA_OPERATION_KEY);
-    const char *target_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
+    const char *target_uuid = crm_element_value(action->xml,
+                                                PCMK__META_ON_NODE_UUID);
 
     int target_rc = get_target_rc(action);
 
