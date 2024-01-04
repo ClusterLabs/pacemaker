@@ -266,7 +266,7 @@ record_peer_nodeid(attribute_value_t *v, const char *host)
 static void
 update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
                     const char *attr, const char *value, const char *host,
-                    bool filter, int is_force_write)
+                    bool filter)
 {
     attribute_value_t *v = NULL;
 
@@ -309,6 +309,10 @@ update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
         }
 
     } else {
+        int is_force_write = 0;
+
+        crm_element_value_int(xml, PCMK__XA_ATTR_FORCE, &is_force_write);
+
         if (is_force_write == 1 && a->timeout_ms && a->timer) {
             /* Save forced writing and set change flag. */
             /* The actual attribute is written by Writer after election. */
@@ -338,14 +342,11 @@ attrd_peer_update_one(const crm_node_t *peer, xmlNode *xml, bool filter)
     const char *attr = crm_element_value(xml, PCMK__XA_ATTR_NAME);
     const char *value = crm_element_value(xml, PCMK__XA_ATTR_VALUE);
     const char *host = crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME);
-    int is_force_write = 0;
 
     if (attr == NULL) {
         crm_warn("Could not update attribute: peer did not specify name");
         return;
     }
-
-    crm_element_value_int(xml, PCMK__XA_ATTR_FORCE, &is_force_write);
 
     a = attrd_populate_attribute(xml, attr);
     if (a == NULL) {
@@ -361,12 +362,12 @@ attrd_peer_update_one(const crm_node_t *peer, xmlNode *xml, bool filter)
         g_hash_table_iter_init(&vIter, a->values);
 
         while (g_hash_table_iter_next(&vIter, (gpointer *) & host, NULL)) {
-            update_attr_on_host(a, peer, xml, attr, value, host, filter, is_force_write);
+            update_attr_on_host(a, peer, xml, attr, value, host, filter);
         }
 
     } else {
         // Update attribute value for the given host
-        update_attr_on_host(a, peer, xml, attr, value, host, filter, is_force_write);
+        update_attr_on_host(a, peer, xml, attr, value, host, filter);
     }
 
     /* If this is a message from some attrd instance broadcasting its protocol
