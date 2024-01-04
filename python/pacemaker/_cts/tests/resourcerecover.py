@@ -111,7 +111,7 @@ class ResourceRecover(CTSTest):
                                 verbose=1)
 
         if rc != 0 or len(lines) != 1:
-            lines = [l.strip() for l in lines]
+            lines = [line.strip() for line in lines]
             self._logger.log("crm_failcount on %s failed (%d): %s" % (node, rc, " // ".join(lines)))
             return -1
 

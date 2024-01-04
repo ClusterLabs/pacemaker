@@ -515,10 +515,10 @@ class Environment:
 
                 with open(dsh_file, "r", encoding="utf-8") as f:
                     for line in f:
-                        l = line.strip()
+                        stripped = line.strip()
 
-                        if not l.startswith('#'):
-                            self["nodes"].append(l)
+                        if not stripped.startswith('#'):
+                            self["nodes"].append(stripped)
             else:
                 print("Unknown DSH group: %s" % args.dsh_group)
 
