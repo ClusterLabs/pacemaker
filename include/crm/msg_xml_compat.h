@@ -538,6 +538,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_CIB_ATTR_PRIORITY "priority"
 
+//! \deprecated Do not use
+#define XML_LRM_ATTR_TASK_KEY "operation_key"
+
 #ifdef __cplusplus
 }
 #endif
