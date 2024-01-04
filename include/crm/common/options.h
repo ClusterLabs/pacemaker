@@ -94,6 +94,7 @@ extern "C" {
 #define PCMK_META_MIGRATION_THRESHOLD       "migration-threshold"
 #define PCMK_META_MULTIPLE_ACTIVE           "multiple-active"
 #define PCMK_META_NOTIFY                    "notify"
+#define PCMK_META_ON_FAIL                   "on-fail"
 #define PCMK_META_ORDERED                   "ordered"
 #define PCMK_META_PRIORITY                  "priority"
 #define PCMK_META_PROMOTABLE                "promotable"

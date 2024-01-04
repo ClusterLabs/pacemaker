@@ -454,7 +454,7 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
     const char *name = NULL;
     const char *role = NULL;
     const char *interval_spec = NULL;
-    const char *value = g_hash_table_lookup(meta, XML_OP_ATTR_ON_FAIL);
+    const char *value = g_hash_table_lookup(meta, PCMK_META_ON_FAIL);
     char *key = NULL;
     char *new_value = NULL;
     guint interval_ms = 0U;
@@ -463,10 +463,10 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
     if (pcmk__str_eq(action_name, PCMK_ACTION_STOP, pcmk__str_none)
         && !valid_stop_on_fail(value)) {
 
-        pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for %s stop "
+        pcmk__config_err("Resetting '" PCMK_META_ON_FAIL "' for %s stop "
                          "action to default value because '%s' is not "
                          "allowed for stop", rsc->id, value);
-        g_hash_table_remove(meta, XML_OP_ATTR_ON_FAIL);
+        g_hash_table_remove(meta, PCMK_META_ON_FAIL);
         return;
     }
 
@@ -488,7 +488,7 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
             /* We only care about explicit on-fail (if promote uses default, so
              * can demote)
              */
-            promote_on_fail = crm_element_value(operation, XML_OP_ATTR_ON_FAIL);
+            promote_on_fail = crm_element_value(operation, PCMK_META_ON_FAIL);
             if (promote_on_fail == NULL) {
                 continue;
             }
@@ -519,7 +519,7 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
             }
 
             // Use value from first applicable promote action found
-            key = strdup(XML_OP_ATTR_ON_FAIL);
+            key = strdup(PCMK_META_ON_FAIL);
             new_value = strdup(promote_on_fail);
             CRM_ASSERT((key != NULL) && (new_value != NULL));
             g_hash_table_insert(meta, key, new_value);
@@ -529,7 +529,7 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
 
     if (pcmk__str_eq(action_name, PCMK_ACTION_LRM_DELETE, pcmk__str_none)
         && !pcmk__str_eq(value, "ignore", pcmk__str_casei)) {
-        key = strdup(XML_OP_ATTR_ON_FAIL);
+        key = strdup(PCMK_META_ON_FAIL);
         new_value = strdup("ignore");
         CRM_ASSERT((key != NULL) && (new_value != NULL));
         g_hash_table_insert(meta, key, new_value);
@@ -549,10 +549,10 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
                 || !pcmk__strcase_any_of(role, PCMK__ROLE_PROMOTED,
                                          PCMK__ROLE_PROMOTED_LEGACY, NULL))) {
 
-            pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for %s %s "
+            pcmk__config_err("Resetting '" PCMK_META_ON_FAIL "' for %s %s "
                              "action to default value because 'demote' is not "
                              "allowed for it", rsc->id, name);
-            g_hash_table_remove(meta, XML_OP_ATTR_ON_FAIL);
+            g_hash_table_remove(meta, PCMK_META_ON_FAIL);
             return;
         }
     }
@@ -913,7 +913,7 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
             on_fail = pcmk_on_fail_fence_node;
             desc = "node fencing";
         } else {
-            pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for "
+            pcmk__config_err("Resetting '" PCMK_META_ON_FAIL "' for "
                              "%s of %s to 'stop' because 'fence' is not "
                              "valid when fencing is disabled",
                              action_name, rsc->id);
@@ -944,7 +944,7 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
     } else if (pcmk__str_eq(value, "restart-container", pcmk__str_casei)) {
         if (rsc->container == NULL) {
             pcmk__rsc_debug(rsc,
-                            "Using default " XML_OP_ATTR_ON_FAIL " for %s "
+                            "Using default " PCMK_META_ON_FAIL " for %s "
                             "of %s because it does not have a container",
                             action_name, rsc->id);
         } else {
@@ -957,7 +957,7 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
         desc = "demote instance";
 
     } else {
-        pcmk__config_err("Using default '" XML_OP_ATTR_ON_FAIL "' for "
+        pcmk__config_err("Using default '" PCMK_META_ON_FAIL "' for "
                          "%s of %s because '%s' is not valid",
                          action_name, rsc->id, value);
     }
@@ -1102,7 +1102,7 @@ unpack_operation(pcmk_action_t *action, const xmlNode *xml_obj,
                                             action->task, interval_ms, xml_obj);
     action->needs = pcmk__action_requires(action->rsc, action->task);
 
-    value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ON_FAIL);
+    value = g_hash_table_lookup(action->meta, PCMK_META_ON_FAIL);
     action->on_fail = pcmk__parse_on_fail(action->rsc, action->task,
                                           interval_ms, value);
 

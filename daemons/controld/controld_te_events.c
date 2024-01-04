@@ -536,7 +536,8 @@ process_graph_event(xmlNode *event, const char *event_node)
              * (This is the only case where desc == NULL.)
              */
 
-            if (pcmk__str_eq(crm_meta_value(action->params, XML_OP_ATTR_ON_FAIL), "ignore", pcmk__str_casei)) {
+            if (pcmk__str_eq(crm_meta_value(action->params, PCMK_META_ON_FAIL),
+                             "ignore", pcmk__str_casei)) {
                 ignore_failures = TRUE;
 
             } else if (rc != target_rc) {

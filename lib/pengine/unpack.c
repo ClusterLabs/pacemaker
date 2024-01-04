@@ -3644,7 +3644,7 @@ unpack_failure_handling(struct action_history *history,
                                                 history->task,
                                                 history->interval_ms, config);
 
-    const char *on_fail_str = g_hash_table_lookup(meta, XML_OP_ATTR_ON_FAIL);
+    const char *on_fail_str = g_hash_table_lookup(meta, PCMK_META_ON_FAIL);
 
     *on_fail = pcmk__parse_on_fail(history->rsc, history->task,
                                    history->interval_ms, on_fail_str);
