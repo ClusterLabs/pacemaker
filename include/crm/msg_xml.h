@@ -106,7 +106,6 @@ extern "C" {
 #  define CIB_OPTIONS_FIRST "cib-bootstrap-options"
 
 #  define F_CRM_DATA			"crm_xml"
-#  define F_CRM_VERSION			PCMK_XA_VERSION
 #  define F_CRM_ORIGIN			"origin"
 #  define F_CRM_USER			"crm_user"
 #  define F_CRM_JOIN_ID			"join_id"

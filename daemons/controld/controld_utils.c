@@ -694,7 +694,7 @@ update_dc(xmlNode * msg)
     if (msg != NULL) {
         gboolean invalid = FALSE;
 
-        dc_version = crm_element_value(msg, F_CRM_VERSION);
+        dc_version = crm_element_value(msg, PCMK_XA_VERSION);
         welcome_from = crm_element_value(msg, PCMK__XA_SRC);
 
         CRM_CHECK(dc_version != NULL, return FALSE);

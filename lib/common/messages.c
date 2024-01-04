@@ -64,7 +64,7 @@ create_request_adv(const char *task, xmlNode *msg_data,
     request = create_xml_node(NULL, __func__);
     crm_xml_add(request, F_CRM_ORIGIN, origin);
     crm_xml_add(request, PCMK__XA_T, T_CRM);
-    crm_xml_add(request, F_CRM_VERSION, CRM_FEATURE_SET);
+    crm_xml_add(request, PCMK_XA_VERSION, CRM_FEATURE_SET);
     crm_xml_add(request, PCMK__XA_SUBT, PCMK__VALUE_REQUEST);
     crm_xml_add(request, PCMK_XA_REFERENCE, reference);
     crm_xml_add(request, PCMK__XA_CRM_TASK, task);
@@ -135,7 +135,7 @@ create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
 
     crm_xml_add(reply, F_CRM_ORIGIN, origin);
     crm_xml_add(reply, PCMK__XA_T, T_CRM);
-    crm_xml_add(reply, F_CRM_VERSION, CRM_FEATURE_SET);
+    crm_xml_add(reply, PCMK_XA_VERSION, CRM_FEATURE_SET);
     crm_xml_add(reply, PCMK__XA_SUBT, PCMK__VALUE_RESPONSE);
     crm_xml_add(reply, PCMK_XA_REFERENCE, crm_msg_reference);
     crm_xml_add(reply, PCMK__XA_CRM_TASK, operation);
