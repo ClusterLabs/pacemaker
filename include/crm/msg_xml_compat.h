@@ -568,6 +568,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_LRM_ATTR_ROUTER_NODE "router_node"
 
+//! \deprecated Do not use
+#define XML_LRM_ATTR_RSCID "rsc-id"
+
 #ifdef __cplusplus
 }
 #endif
