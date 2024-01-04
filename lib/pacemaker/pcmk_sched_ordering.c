@@ -260,8 +260,8 @@ get_ordering_resource(const xmlNode *xml, const char *resource_attr,
     if (instance_id != NULL) {
         pcmk__warn_once(pcmk__wo_order_inst,
                         "Support for " PCMK__XA_FIRST_INSTANCE " and "
-                        XML_ORDER_ATTR_THEN_INSTANCE " is deprecated and will "
-                        "be removed in a future release.");
+                        PCMK__XA_THEN_INSTANCE " is deprecated and will be "
+                        "removed in a future release.");
 
         if (!pe_rsc_is_clone(rsc)) {
             pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
@@ -453,8 +453,7 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     }
 
     rsc_then = get_ordering_resource(xml_obj, XML_ORDER_ATTR_THEN,
-                                     XML_ORDER_ATTR_THEN_INSTANCE,
-                                     scheduler);
+                                     PCMK__XA_THEN_INSTANCE, scheduler);
     if (rsc_then == NULL) {
         return;
     }
