@@ -487,6 +487,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_META_TIMEOUT instead
 #define XML_ATTR_TIMEOUT PCMK_META_TIMEOUT
 
+//! \deprecated Use \c PCMK_META_TIMEOUT instead
+#define XML_ALERT_ATTR_TIMEOUT PCMK_META_TIMEOUT
+
 #ifdef __cplusplus
 }
 #endif

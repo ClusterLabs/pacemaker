@@ -308,7 +308,6 @@ extern "C" {
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 
 #  define XML_ALERT_ATTR_PATH		"path"
-#  define XML_ALERT_ATTR_TIMEOUT	PCMK_META_TIMEOUT
 #  define XML_ALERT_ATTR_TSTAMP_FORMAT	"timestamp-format"
 
 #  define XML_CIB_TAG_GENERATION_TUPPLE	"generation_tuple"
