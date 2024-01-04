@@ -535,6 +535,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_OP_ATTR_DIGESTS_SECURE "digests-secure"
 
+//! \deprecated Do not use
+#define XML_CIB_ATTR_PRIORITY "priority"
+
 #ifdef __cplusplus
 }
 #endif
