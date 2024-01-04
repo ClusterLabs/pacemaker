@@ -586,6 +586,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_LRM_ATTR_OP_RESTART "op-force-restart"
 
+//! \deprecated Do not use
+#define XML_LRM_ATTR_OP_SECURE "op-secure-params"
+
 #ifdef __cplusplus
 }
 #endif

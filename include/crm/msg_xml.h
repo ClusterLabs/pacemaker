@@ -199,7 +199,6 @@ extern "C" {
  * executor operations.
  */
 
-#  define XML_LRM_ATTR_OP_SECURE	"op-secure-params"
 #  define XML_LRM_ATTR_RESTART_DIGEST	"op-restart-digest"
 #  define XML_LRM_ATTR_SECURE_DIGEST	"op-secure-digest"
 #  define XML_LRM_ATTR_EXIT_REASON	"exit-reason"
