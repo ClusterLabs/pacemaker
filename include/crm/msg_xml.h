@@ -275,9 +275,6 @@ extern "C" {
 #  define XML_ATTR_TE_TARGET_RC		"op_target_rc"
 #  define XML_TAG_TRANSIENT_NODEATTRS	"transient_attributes"
 
-//! \deprecated Do not use (will be removed in a future release)
-#  define XML_TAG_DIFF_REMOVED		"diff-removed"
-
 #  define XML_ACL_TAG_USER		"acl_target"
 #  define XML_ACL_TAG_USERv1		"acl_user"
 #  define XML_ACL_TAG_GROUP		"acl_group"

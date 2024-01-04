@@ -556,6 +556,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_TAG_DIFF_ADDED "diff-added"
 
+//! \deprecated Do not use
+#define XML_TAG_DIFF_REMOVED "diff-removed"
+
 #ifdef __cplusplus
 }
 #endif
