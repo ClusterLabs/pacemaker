@@ -93,6 +93,7 @@
 #define PCMK__XA_ELECTION_AGE_SEC       "election-age-sec"
 #define PCMK__XA_ELECTION_AGE_NANO_SEC  "election-age-nano-sec"
 #define PCMK__XA_ELECTION_ID            "election-id"
+#define PCMK__XA_ELECTION_OWNER         "election-owner"
 #define PCMK__XA_EXPECTED               "expected"
 #define PCMK__XA_FILE                   "file"
 #define PCMK__XA_GRAPH_ERRORS           "graph-errors"
