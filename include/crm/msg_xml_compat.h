@@ -412,6 +412,9 @@ extern "C" {
 //! \deprecated Do not use
 #define F_CRM_SYS_TO "crm_sys_to"
 
+//! \deprecated Do not use
+#define F_CRM_SYS_FROM "crm_sys_from"
+
 #ifdef __cplusplus
 }
 #endif
