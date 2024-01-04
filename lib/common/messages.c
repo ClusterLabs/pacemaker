@@ -73,7 +73,7 @@ create_request_adv(const char *task, xmlNode *msg_data,
 
     /* HOSTTO will be ignored if it is to the DC anyway. */
     if (host_to != NULL && strlen(host_to) > 0) {
-        crm_xml_add(request, F_CRM_HOST_TO, host_to);
+        crm_xml_add(request, PCMK__XA_CRM_HOST_TO, host_to);
     }
 
     if (msg_data != NULL) {
@@ -144,7 +144,7 @@ create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
 
     /* HOSTTO will be ignored if it is to the DC anyway. */
     if (host_from != NULL && strlen(host_from) > 0) {
-        crm_xml_add(reply, F_CRM_HOST_TO, host_from);
+        crm_xml_add(reply, PCMK__XA_CRM_HOST_TO, host_from);
     }
 
     if (xml_response_data != NULL) {
