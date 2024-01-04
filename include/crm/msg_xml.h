@@ -308,7 +308,7 @@ extern "C" {
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 
-#  define XML_ALERT_ATTR_TSTAMP_FORMAT	"timestamp-format"
+#  define XML_ALERT_ATTR_TSTAMP_FORMAT	PCMK_META_TIMESTAMP_FORMAT
 
 #  define XML_CIB_TAG_GENERATION_TUPPLE	"generation_tuple"
 

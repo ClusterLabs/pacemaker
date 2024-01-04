@@ -107,6 +107,7 @@ extern "C" {
 #define PCMK_META_RESOURCE_STICKINESS       "resource-stickiness"
 #define PCMK_META_TARGET_ROLE               "target-role"
 #define PCMK_META_TIMEOUT                   "timeout"
+#define PCMK_META_TIMESTAMP_FORMAT          "timestamp-format"
 
 
 /*

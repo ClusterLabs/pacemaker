@@ -67,7 +67,7 @@ get_meta_attrs_from_cib(xmlNode *basenode, pcmk__alert_t *entry,
             *max_timeout = entry->timeout;
         }
     }
-    value = g_hash_table_lookup(config_hash, XML_ALERT_ATTR_TSTAMP_FORMAT);
+    value = g_hash_table_lookup(config_hash, PCMK_META_TIMESTAMP_FORMAT);
     if (value) {
         /* hard to do any checks here as merely anything can
          * can be a valid time-format-string
