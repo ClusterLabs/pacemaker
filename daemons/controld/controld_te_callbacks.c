@@ -583,7 +583,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
     CRM_CHECK(msg != NULL, return);
 
     // Transition requests must specify transition engine as subsystem
-    value = crm_element_value(msg, F_CRM_SYS_TO);
+    value = crm_element_value(msg, PCMK__XA_CRM_SYS_TO);
     if (pcmk__str_empty(value)
         || !pcmk__str_eq(value, CRM_SYSTEM_TENGINE, pcmk__str_none)) {
         crm_info("Received invalid transition request: subsystem '%s' not '"

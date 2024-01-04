@@ -345,7 +345,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     CRM_CHECK(msg != NULL, return TRUE);
 
     host_to = crm_element_value(msg, PCMK__XA_CRM_HOST_TO);
-    sys_to = crm_element_value(msg, F_CRM_SYS_TO);
+    sys_to = crm_element_value(msg, PCMK__XA_CRM_SYS_TO);
     sys_from = crm_element_value(msg, F_CRM_SYS_FROM);
     type = crm_element_value(msg, PCMK__XA_T);
     task = crm_element_value(msg, PCMK__XA_CRM_TASK);
@@ -374,7 +374,8 @@ relay_message(xmlNode * msg, gboolean originated_locally)
 
     // Require a destination subsystem (also set by create_request())
     if (sys_to == NULL) {
-        crm_warn("Ignoring invalid message %s with no " F_CRM_SYS_TO, ref);
+        crm_warn("Ignoring invalid message %s with no " PCMK__XA_CRM_SYS_TO,
+                 ref);
         crm_log_xml_trace(msg, "ignored");
         return TRUE;
     }
@@ -687,7 +688,7 @@ handle_lrm_delete(xmlNode *stored_msg)
     mode = crm_element_value(msg_data, PCMK__XA_MODE);
     if ((mode == NULL) || strcmp(mode, XML_TAG_CIB)) {
         // Relay to affected node
-        crm_xml_add(stored_msg, F_CRM_SYS_TO, CRM_SYSTEM_LRMD);
+        crm_xml_add(stored_msg, PCMK__XA_CRM_SYS_TO, CRM_SYSTEM_LRMD);
         return I_ROUTER;
 
     } else {
@@ -803,7 +804,7 @@ handle_ping(const xmlNode *msg)
     // Build reply
 
     ping = create_xml_node(NULL, XML_CRM_TAG_PING);
-    value = crm_element_value(msg, F_CRM_SYS_TO);
+    value = crm_element_value(msg, PCMK__XA_CRM_SYS_TO);
     crm_xml_add(ping, XML_PING_ATTR_SYSFROM, value);
 
     // Add controller state
@@ -1114,7 +1115,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
                || (strcmp(op, CRM_OP_LRM_REFRESH) == 0) // @COMPAT
                || (strcmp(op, CRM_OP_REPROBE) == 0)) {
 
-        crm_xml_add(stored_msg, F_CRM_SYS_TO, CRM_SYSTEM_LRMD);
+        crm_xml_add(stored_msg, PCMK__XA_CRM_SYS_TO, CRM_SYSTEM_LRMD);
         return I_ROUTER;
 
     } else if (strcmp(op, CRM_OP_NOOP) == 0) {

@@ -244,7 +244,7 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         return 0;
     }
 
-    sys_to = crm_element_value(msg, F_CRM_SYS_TO);
+    sys_to = crm_element_value(msg, PCMK__XA_CRM_SYS_TO);
 
     if (pcmk__str_eq(crm_element_value(msg, PCMK__XA_SUBT),
                      PCMK__VALUE_RESPONSE, pcmk__str_none)) {

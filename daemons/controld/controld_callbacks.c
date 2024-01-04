@@ -53,7 +53,7 @@ crmd_ha_msg_filter(xmlNode * msg)
         }
 
     } else {
-        const char *sys_to = crm_element_value(msg, F_CRM_SYS_TO);
+        const char *sys_to = crm_element_value(msg, PCMK__XA_CRM_SYS_TO);
 
         if (pcmk__str_eq(sys_to, CRM_SYSTEM_DC, pcmk__str_casei)) {
             return;

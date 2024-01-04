@@ -68,7 +68,7 @@ create_request_adv(const char *task, xmlNode *msg_data,
     crm_xml_add(request, PCMK__XA_SUBT, PCMK__VALUE_REQUEST);
     crm_xml_add(request, PCMK_XA_REFERENCE, reference);
     crm_xml_add(request, PCMK__XA_CRM_TASK, task);
-    crm_xml_add(request, F_CRM_SYS_TO, sys_to);
+    crm_xml_add(request, PCMK__XA_CRM_SYS_TO, sys_to);
     crm_xml_add(request, F_CRM_SYS_FROM, true_from);
 
     /* HOSTTO will be ignored if it is to the DC anyway. */
@@ -106,7 +106,8 @@ create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
 
     const char *host_from = crm_element_value(original_request, PCMK__XA_SRC);
     const char *sys_from = crm_element_value(original_request, F_CRM_SYS_FROM);
-    const char *sys_to = crm_element_value(original_request, F_CRM_SYS_TO);
+    const char *sys_to = crm_element_value(original_request,
+                                           PCMK__XA_CRM_SYS_TO);
     const char *type = crm_element_value(original_request, PCMK__XA_SUBT);
     const char *operation = crm_element_value(original_request,
                                               PCMK__XA_CRM_TASK);
@@ -139,7 +140,7 @@ create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
     crm_xml_add(reply, PCMK__XA_CRM_TASK, operation);
 
     /* since this is a reply, we reverse the from and to */
-    crm_xml_add(reply, F_CRM_SYS_TO, sys_from);
+    crm_xml_add(reply, PCMK__XA_CRM_SYS_TO, sys_from);
     crm_xml_add(reply, F_CRM_SYS_FROM, sys_to);
 
     /* HOSTTO will be ignored if it is to the DC anyway. */
