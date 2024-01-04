@@ -418,6 +418,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_VERSION instead
 #define F_CRM_VERSION PCMK_XA_VERSION
 
+//! \deprecated Use \c PCMK_XA_ORIGIN instead
+#define F_CRM_ORIGIN PCMK_XA_ORIGIN
+
 #ifdef __cplusplus
 }
 #endif
