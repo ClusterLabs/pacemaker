@@ -18,9 +18,6 @@ from pacemaker._cts.watcher import LogWatcher
 # possibility that we'll miss some other cause of the same warning, but we'll
 # just have to be careful.
 
-# pylint doesn't understand that self._rsh is callable.
-# pylint: disable=not-callable
-
 
 class CTSTest:
     """
