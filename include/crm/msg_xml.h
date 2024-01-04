@@ -107,7 +107,6 @@ extern "C" {
 #  define CIB_OPTIONS_FIRST "cib-bootstrap-options"
 
 #  define F_CRM_DATA			"crm_xml"
-#  define F_CRM_ELECTION_AGE_US		"election-age-nano-sec"
 #  define F_CRM_ELECTION_OWNER		"election-owner"
 #  define F_CRM_TGRAPH			"crm-tgraph-file"
 #  define F_CRM_TGRAPH_INPUT		"crm-tgraph-in"

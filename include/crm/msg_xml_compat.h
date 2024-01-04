@@ -436,6 +436,9 @@ extern "C" {
 //! \deprecated Do not use
 #define F_CRM_ELECTION_AGE_S "election-age-sec"
 
+//! \deprecated Do not use
+#define F_CRM_ELECTION_AGE_US "election-age-nano-sec"
+
 #ifdef __cplusplus
 }
 #endif
