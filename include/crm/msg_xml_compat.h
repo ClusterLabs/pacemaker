@@ -46,23 +46,29 @@ extern "C" {
 //! \deprecated Use PCMK_XE_PROMOTABLE_LEGACY instead
 #define XML_CIB_TAG_MASTER PCMK_XE_PROMOTABLE_LEGACY
 
-//! \deprecated Use PCMK_XA_PROMOTED_MAX_LEGACY instead
+//! \deprecated Do not use
+#define PCMK_XA_PROMOTED_MAX_LEGACY "master-max"
+
+//! \deprecated Do not use
 #define PCMK_XE_PROMOTED_MAX_LEGACY PCMK_XA_PROMOTED_MAX_LEGACY
 
-//! \deprecated Use PCMK_XA_PROMOTED_MAX_LEGACY instead
+//! \deprecated Do not use
 #define XML_RSC_ATTR_MASTER_MAX PCMK_XA_PROMOTED_MAX_LEGACY
 
-//! \deprecated Use PCMK_XA_PROMOTED_NODE_MAX_LEGACY instead
+//! \deprecated Do not use
+#define PCMK_XA_PROMOTED_NODE_MAX_LEGACY "master-node-max"
+
+//! \deprecated Do not use
 #define PCMK_XE_PROMOTED_NODE_MAX_LEGACY PCMK_XA_PROMOTED_NODE_MAX_LEGACY
+
+//! \deprecated Do not use
+#define XML_RSC_ATTR_MASTER_NODEMAX PCMK_XA_PROMOTED_NODE_MAX_LEGACY
 
 //! \deprecated Use PCMK_META_MIGRATION_THRESHOLD instead
 #define XML_RSC_ATTR_FAIL_STICKINESS PCMK_META_MIGRATION_THRESHOLD
 
 //! \deprecated Use PCMK_META_FAILURE_TIMEOUT instead
 #define XML_RSC_ATTR_FAIL_TIMEOUT PCMK_META_FAILURE_TIMEOUT
-
-//! \deprecated Use PCMK_XA_PROMOTED_NODE_MAX_LEGACY instead
-#define XML_RSC_ATTR_MASTER_NODEMAX PCMK_XA_PROMOTED_NODE_MAX_LEGACY
 
 //! \deprecated Do not use (will be removed in a future release)
 #define XML_ATTR_RA_VERSION "ra-version"
@@ -183,6 +189,87 @@ extern "C" {
 
 //! \deprecated Use \c PCMK_XA_ID instead
 #define XML_FAILCIB_ATTR_ID PCMK_XA_ID
+
+//! \deprecated Use \c PCMK_META_CONTAINER_ATTR_TARGET instead
+#define XML_RSC_ATTR_TARGET PCMK_META_CONTAINER_ATTR_TARGET
+
+//! \deprecated Do not use
+#define XML_RSC_ATTR_RESTART "restart-type"
+
+//! \deprecated Use \c PCMK_META_ORDERED instead
+#define XML_RSC_ATTR_ORDERED PCMK_META_ORDERED
+
+//! \deprecated Use \c PCMK_META_INTERLEAVE instead
+#define XML_RSC_ATTR_INTERLEAVE PCMK_META_INTERLEAVE
+
+//! \deprecated Do not use
+#define XML_RSC_ATTR_INCARNATION "clone"
+
+//! \deprecated Use \c PCMK_META_PROMOTABLE instead
+#define XML_RSC_ATTR_PROMOTABLE PCMK_META_PROMOTABLE
+
+//! \deprecated Use \c PCMK_META_IS_MANAGED instead
+#define XML_RSC_ATTR_MANAGED PCMK_META_IS_MANAGED
+
+//! \deprecated Use \c PCMK_META_TARGET_ROLE instead
+#define XML_RSC_ATTR_TARGET_ROLE PCMK_META_TARGET_ROLE
+
+//! \deprecated Use \c PCMK_META_GLOBALLY_UNIQUE instead
+#define XML_RSC_ATTR_UNIQUE PCMK_META_GLOBALLY_UNIQUE
+
+//! \deprecated Use \c PCMK_META_NOTIFY instead
+#define XML_RSC_ATTR_NOTIFY PCMK_META_NOTIFY
+
+//! \deprecated Use \c PCMK_META_RESOURCE_STICKINESS instead
+#define XML_RSC_ATTR_STICKINESS PCMK_META_RESOURCE_STICKINESS
+
+//! \deprecated Use \c PCMK_META_MULTIPLE_ACTIVE instead
+#define XML_RSC_ATTR_MULTIPLE PCMK_META_MULTIPLE_ACTIVE
+
+//! \deprecated Use \c PCMK_META_REQUIRES instead
+#define XML_RSC_ATTR_REQUIRES PCMK_META_REQUIRES
+
+//! \deprecated Do not use
+#define XML_RSC_ATTR_CONTAINER "container"
+
+//! \deprecated Do not use
+#define XML_RSC_ATTR_INTERNAL_RSC "internal_rsc"
+
+//! \deprecated Use \c PCMK_META_MAINTENANCE instead
+#define XML_RSC_ATTR_MAINTENANCE PCMK_META_MAINTENANCE
+
+//! \deprecated Use \c PCMK_META_REMOTE_NODE instead
+#define XML_RSC_ATTR_REMOTE_NODE PCMK_META_REMOTE_NODE
+
+//! \deprecated Do not use
+#define XML_RSC_ATTR_CLEAR_OP "clear_failure_op"
+
+//! \deprecated Do not use
+#define XML_RSC_ATTR_CLEAR_INTERVAL "clear_failure_interval"
+
+//! \deprecated Use \c PCMK_META_CRITICAL instead
+#define XML_RSC_ATTR_CRITICAL PCMK_META_CRITICAL
+
+//! \deprecated Use \c PCMK_META_ALLOW_MIGRATE instead
+#define XML_OP_ATTR_ALLOW_MIGRATE "allow-migrate"
+
+//! \deprecated Use \c XML_BOOLEAN_TRUE instead
+#define XML_BOOLEAN_YES XML_BOOLEAN_TRUE
+
+//! \deprecated Use \c XML_BOOLEAN_FALSE instead
+#define XML_BOOLEAN_NO XML_BOOLEAN_FALSE
+
+//! \deprecated Use \c PCMK_REMOTE_RA_ADDR instead
+#define XML_RSC_ATTR_REMOTE_RA_ADDR "addr"
+
+//! \deprecated Use \c PCMK_REMOTE_RA_SERVER instead
+#define XML_RSC_ATTR_REMOTE_RA_SERVER "server"
+
+//! \deprecated Use \c PCMK_REMOTE_RA_PORT instead
+#define XML_RSC_ATTR_REMOTE_RA_PORT "port"
+
+//! \deprecated Use \c PCMK_REMOTE_RA_RECONNECT_INTERVAL instead
+#define XML_REMOTE_ATTR_RECONNECT_INTERVAL "reconnect_interval"
 
 #ifdef __cplusplus
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -654,33 +654,36 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
 void
 pcmk__substitute_remote_addr(pcmk_resource_t *rsc, GHashTable *params)
 {
-    const char *remote_addr = g_hash_table_lookup(params,
-                                                  XML_RSC_ATTR_REMOTE_RA_ADDR);
+    const char *remote_addr = g_hash_table_lookup(params, PCMK_REMOTE_RA_ADDR);
 
     if (pcmk__str_eq(remote_addr, "#uname", pcmk__str_none)) {
         GHashTable *base = pe_rsc_params(rsc, NULL, rsc->cluster);
 
-        remote_addr = g_hash_table_lookup(base, XML_RSC_ATTR_REMOTE_RA_ADDR);
+        remote_addr = g_hash_table_lookup(base, PCMK_REMOTE_RA_ADDR);
         if (remote_addr != NULL) {
-            g_hash_table_insert(params, strdup(XML_RSC_ATTR_REMOTE_RA_ADDR),
+            g_hash_table_insert(params, strdup(PCMK_REMOTE_RA_ADDR),
                                 strdup(remote_addr));
         }
     }
 }
 
 /*!
- * \brief Add special bundle meta-attributes to XML
+ * \brief Add special guest node meta-attributes to XML
  *
- * If a given action will be executed on a guest node (including a bundle),
- * add the special bundle meta-attribute "container-attribute-target" and
- * environment variable "physical_host" as XML attributes (using meta-attribute
- * naming).
+ * If a given action will be executed on a guest node, add the following as XML
+ * attributes (using meta-attribute naming):
+ * * The resource's \c PCMK_META_CONTAINER_ATTR_TARGET meta-attribute (usually
+ *   set only for bundles), as \c PCMK_META_CONTAINER_ATTR_TARGET
+ * * The guest's physical host (current host for "down" actions, next host for
+ *   "up" actions), as \c PCMK__META_PHYSICAL_HOST
+ *
+ * If the guest node has no physical host, then don't add either attribute.
  *
  * \param[in,out] args_xml  XML to add attributes to
  * \param[in]     action    Action to check
  */
 void
-pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
+pcmk__add_guest_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
 {
     const pcmk_node_t *guest = action->node;
     const pcmk_node_t *host = NULL;
@@ -718,11 +721,13 @@ pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
     }
 
     if (host != NULL) {
-        hash2metafield((gpointer) XML_RSC_ATTR_TARGET,
-                       (gpointer) g_hash_table_lookup(action->rsc->meta,
-                                                      XML_RSC_ATTR_TARGET),
+        gpointer target = g_hash_table_lookup(action->rsc->meta,
+                                              PCMK_META_CONTAINER_ATTR_TARGET);
+
+        hash2metafield((gpointer) PCMK_META_CONTAINER_ATTR_TARGET,
+                       target,
                        (gpointer) args_xml);
-        hash2metafield((gpointer) PCMK__ENV_PHYSICAL_HOST,
+        hash2metafield((gpointer) PCMK__META_PHYSICAL_HOST,
                        (gpointer) host->details->uname,
                        (gpointer) args_xml);
     }

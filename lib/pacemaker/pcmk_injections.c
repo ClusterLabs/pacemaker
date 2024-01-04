@@ -320,14 +320,14 @@ pcmk__inject_node_state_change(cib_t *cib_conn, const char *node, bool up)
 
     if (up) {
         pcmk__xe_set_props(cib_node,
-                           PCMK__XA_IN_CCM, XML_BOOLEAN_YES,
+                           PCMK__XA_IN_CCM, XML_BOOLEAN_TRUE,
                            PCMK__XA_CRMD, ONLINESTATUS,
                            PCMK__XA_JOIN, CRMD_JOINSTATE_MEMBER,
                            PCMK__XA_EXPECTED, CRMD_JOINSTATE_MEMBER,
                            NULL);
     } else {
         pcmk__xe_set_props(cib_node,
-                           PCMK__XA_IN_CCM, XML_BOOLEAN_NO,
+                           PCMK__XA_IN_CCM, XML_BOOLEAN_FALSE,
                            PCMK__XA_CRMD, OFFLINESTATUS,
                            PCMK__XA_JOIN, CRMD_JOINSTATE_DOWN,
                            PCMK__XA_EXPECTED, CRMD_JOINSTATE_DOWN,
@@ -711,7 +711,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
         out->message(out, "inject-modify-node", "Failing", node);
 
         cib_node = pcmk__inject_node_state_change(cib, node, true);
-        crm_xml_add(cib_node, PCMK__XA_IN_CCM, XML_BOOLEAN_NO);
+        crm_xml_add(cib_node, PCMK__XA_IN_CCM, XML_BOOLEAN_FALSE);
         CRM_ASSERT(cib_node != NULL);
 
         rc = cib->cmds->modify(cib, XML_CIB_TAG_STATUS, cib_node,

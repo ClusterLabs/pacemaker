@@ -529,7 +529,8 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
 
         if (then->required_runnable_before == 0) {
             /* @COMPAT This ordering constraint uses the deprecated
-             * "require-all=false" attribute. Treat it like "clone-min=1".
+             * "require-all=false" attribute. Treat it like
+             * PCMK_META_CLONE_MIN=1.
              */
             then->required_runnable_before = 1;
         }

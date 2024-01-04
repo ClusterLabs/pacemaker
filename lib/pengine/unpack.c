@@ -183,9 +183,9 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
 // @TODO xpaths can't handle templates, rules, or id-refs
 
 // nvpair with provides or requires set to unfencing
-#define XPATH_UNFENCING_NVPAIR XML_CIB_TAG_NVPAIR                \
-    "[(@" XML_NVPAIR_ATTR_NAME "='" PCMK_STONITH_PROVIDES "'"    \
-    "or @" XML_NVPAIR_ATTR_NAME "='" XML_RSC_ATTR_REQUIRES "') " \
+#define XPATH_UNFENCING_NVPAIR XML_CIB_TAG_NVPAIR               \
+    "[(@" XML_NVPAIR_ATTR_NAME "='" PCMK_STONITH_PROVIDES "'"   \
+    "or @" XML_NVPAIR_ATTR_NAME "='" PCMK_META_REQUIRES "') "  \
     "and @" XML_NVPAIR_ATTR_VALUE "='" PCMK__VALUE_UNFENCING "']"
 
 // unfencing in rsc_defaults or any resource
@@ -556,17 +556,26 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pcmk_scheduler_t *data
             const char *value = crm_element_value(attr, XML_NVPAIR_ATTR_VALUE);
             const char *name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
 
-            if (pcmk__str_eq(name, XML_RSC_ATTR_REMOTE_NODE, pcmk__str_casei)) {
+            if (name == NULL) { // Sanity
+                continue;
+            }
+
+            if (strcmp(name, PCMK_META_REMOTE_NODE) == 0) {
                 remote_name = value;
-            } else if (pcmk__str_eq(name, "remote-addr", pcmk__str_casei)) {
+
+            } else if (strcmp(name, PCMK_META_REMOTE_ADDR) == 0) {
                 remote_server = value;
-            } else if (pcmk__str_eq(name, "remote-port", pcmk__str_casei)) {
+
+            } else if (strcmp(name, PCMK_META_REMOTE_PORT) == 0) {
                 remote_port = value;
-            } else if (pcmk__str_eq(name, "remote-connect-timeout", pcmk__str_casei)) {
+
+            } else if (strcmp(name, PCMK_META_REMOTE_CONNECT_TIMEOUT) == 0) {
                 connect_timeout = value;
-            } else if (pcmk__str_eq(name, "remote-allow-migrate", pcmk__str_casei)) {
-                remote_allow_migrate=value;
-            } else if (pcmk__str_eq(name, XML_RSC_ATTR_MANAGED, pcmk__str_casei)) {
+
+            } else if (strcmp(name, PCMK_META_REMOTE_ALLOW_MIGRATE) == 0) {
+                remote_allow_migrate = value;
+
+            } else if (strcmp(name, PCMK_META_IS_MANAGED) == 0) {
                 is_managed = value;
             }
         }
@@ -673,7 +682,7 @@ setup_container(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         return;
     }
 
-    container_id = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_CONTAINER);
+    container_id = g_hash_table_lookup(rsc->meta, PCMK__META_CONTAINER);
     if (container_id && !pcmk__str_eq(container_id, rsc->id, pcmk__str_casei)) {
         pcmk_resource_t *container = pe_find_resource(scheduler->resources,
                                                       container_id);
@@ -1952,7 +1961,7 @@ create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
         }
     }
 
-    if (crm_element_value(rsc_entry, XML_RSC_ATTR_CONTAINER)) {
+    if (crm_element_value(rsc_entry, PCMK__META_CONTAINER)) {
         /* This orphaned rsc needs to be mapped to a container. */
         crm_trace("Detected orphaned container filler %s", rsc_id);
         pe__set_resource_flags(rsc, pcmk_rsc_removed_filler);
@@ -1994,8 +2003,9 @@ create_anonymous_orphan(pcmk_resource_t *parent, const char *rsc_id,
  *
  * Return a child instance of the specified anonymous clone, in order of
  * preference: (1) the instance running on the specified node, if any;
- * (2) an inactive instance (i.e. within the total of clone-max instances);
- * (3) a newly created orphan (i.e. clone-max instances are already active).
+ * (2) an inactive instance (i.e. within the total of \c PCMK_META_CLONE_MAX
+ * instances); (3) a newly created orphan (that is, \c PCMK_META_CLONE_MAX
+ * instances are already active).
  *
  * \param[in,out] scheduler  Scheduler data
  * \param[in]     node       Node on which to check for instance
@@ -2032,8 +2042,8 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
          * (1) when child is a cloned group and we have already unpacked the
          *     history of another member of the group on the same node;
          * (2) when we've already unpacked the history of another numbered
-         *     instance on the same node (which can happen if globally-unique
-         *     was flipped from true to false); and
+         *     instance on the same node (which can happen if
+         *     PCMK_META_GLOBALLY_UNIQUE was flipped from true to false); and
          * (3) when we re-run calculations on the same scheduler data as part of
          *     a simulation.
          */
@@ -2058,8 +2068,8 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
                 if (rsc) {
                     /* If there are multiple instance history entries for an
                      * anonymous clone in a single node's history (which can
-                     * happen if globally-unique is switched from true to
-                     * false), we want to consider the instances beyond the
+                     * happen if PCMK_META_GLOBALLY_UNIQUE is switched from true
+                     * to false), we want to consider the instances beyond the
                      * first as orphans, even if there are inactive instance
                      * numbers available.
                      */
@@ -2140,8 +2150,8 @@ unpack_find_resource(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
 
     if (rsc == NULL) {
         /* If we didn't find the resource by its name in the operation history,
-         * check it again as a clone instance. Even when clone-max=0, we create
-         * a single :0 orphan to match against here.
+         * check it again as a clone instance. Even when PCMK_META_CLONE_MAX=0,
+         * we create a single :0 orphan to match against here.
          */
         char *clone0_id = clone_zero(rsc_id);
         pcmk_resource_t *clone0 = pe_find_resource(scheduler->resources,
@@ -2728,7 +2738,7 @@ unpack_lrm_resource(pcmk_node_t *node, const xmlNode *lrm_resource,
         if ((rsc->next_role == pcmk_role_unknown)
             || (req_role < rsc->next_role)) {
 
-            pe__set_next_role(rsc, req_role, XML_RSC_ATTR_TARGET_ROLE);
+            pe__set_next_role(rsc, req_role, PCMK_META_TARGET_ROLE);
 
         } else if (req_role > rsc->next_role) {
             pcmk__rsc_info(rsc,
@@ -2762,7 +2772,7 @@ handle_orphaned_container_fillers(const xmlNode *lrm_rsc_list,
             continue;
         }
 
-        container_id = crm_element_value(rsc_entry, XML_RSC_ATTR_CONTAINER);
+        container_id = crm_element_value(rsc_entry, PCMK__META_CONTAINER);
         rsc_id = crm_element_value(rsc_entry, PCMK_XA_ID);
         if (container_id == NULL || rsc_id == NULL) {
             continue;
@@ -4184,7 +4194,9 @@ check_operation_expiry(struct action_history *history)
         && (crm_element_value_epoch(history->xml, XML_RSC_OP_LAST_CHANGE,
                                     &last_run) == 0)) {
 
-        // Resource has a failure-timeout, and history entry has a timestamp
+        /* Resource has a PCMK_META_FAILURE_TIMEOUT and history entry has a
+         * timestamp
+         */
 
         time_t now = get_effective_time(history->rsc->cluster);
         time_t last_failure = 0;

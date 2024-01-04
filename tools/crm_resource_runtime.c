@@ -944,7 +944,7 @@ static void
 check_role(resource_checks_t *checks)
 {
     const char *role_s = g_hash_table_lookup(checks->rsc->meta,
-                                             XML_RSC_ATTR_TARGET_ROLE);
+                                             PCMK_META_TARGET_ROLE);
 
     if (role_s == NULL) {
         return;
@@ -970,7 +970,7 @@ static void
 check_managed(resource_checks_t *checks)
 {
     const char *managed_s = g_hash_table_lookup(checks->rsc->meta,
-                                                XML_RSC_ATTR_MANAGED);
+                                                PCMK_META_IS_MANAGED);
 
     if ((managed_s != NULL) && !crm_is_true(managed_s)) {
         checks->flags |= rsc_unmanaged;
@@ -1571,20 +1571,21 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                               cib_options, promoted_role_only,
                               PCMK__ROLE_PROMOTED);
     } else {
-        /* Stop the resource by setting target-role to Stopped.
-         * Remember any existing target-role so we can restore it later
-         * (though it only makes any difference if it's Unpromoted).
+        /* Stop the resource by setting PCMK_META_TARGET_ROLE to Stopped.
+         * Remember any existing PCMK_META_TARGET_ROLE so we can restore it
+         * later (though it only makes any difference if it's Unpromoted).
          */
 
         find_resource_attr(out, cib, XML_NVPAIR_ATTR_VALUE, lookup_id, NULL, NULL,
-                           NULL, XML_RSC_ATTR_TARGET_ROLE, &orig_target_role);
+                           NULL, PCMK_META_TARGET_ROLE, &orig_target_role);
         rc = cli_resource_update_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS,
-                                           NULL, XML_RSC_ATTR_TARGET_ROLE,
+                                           NULL, PCMK_META_TARGET_ROLE,
                                            PCMK_ACTION_STOPPED, FALSE, cib,
                                            cib_options, force);
     }
     if(rc != pcmk_rc_ok) {
-        out->err(out, "Could not set target-role for %s: %s (%d)", rsc_id, pcmk_rc_str(rc), rc);
+        out->err(out, "Could not set " PCMK_META_TARGET_ROLE " for %s: %s (%d)",
+                 rsc_id, pcmk_rc_str(rc), rc);
         if (current_active != NULL) {
             g_list_free_full(current_active, free);
             current_active = NULL;
@@ -1658,19 +1659,21 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
 
     } else if (orig_target_role) {
         rc = cli_resource_update_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS,
-                                           NULL, XML_RSC_ATTR_TARGET_ROLE,
+                                           NULL, PCMK_META_TARGET_ROLE,
                                            orig_target_role, FALSE, cib,
                                            cib_options, force);
         free(orig_target_role);
         orig_target_role = NULL;
     } else {
         rc = cli_resource_delete_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS,
-                                           NULL, XML_RSC_ATTR_TARGET_ROLE, cib,
+                                           NULL, PCMK_META_TARGET_ROLE, cib,
                                            cib_options, force);
     }
 
     if(rc != pcmk_rc_ok) {
-        out->err(out, "Could not unset target-role for %s: %s (%d)", rsc_id, pcmk_rc_str(rc), rc);
+        out->err(out,
+                 "Could not unset " PCMK_META_TARGET_ROLE " for %s: %s (%d)",
+                 rsc_id, pcmk_rc_str(rc), rc);
         goto done;
     }
 
@@ -1738,12 +1741,12 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         cli_resource_clear(lookup_id, host, NULL, cib, cib_options, true, force);
     } else if (orig_target_role) {
         cli_resource_update_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS, NULL,
-                                      XML_RSC_ATTR_TARGET_ROLE, orig_target_role,
+                                      PCMK_META_TARGET_ROLE, orig_target_role,
                                       FALSE, cib, cib_options, force);
         free(orig_target_role);
     } else {
         cli_resource_delete_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS,
-                                      NULL, XML_RSC_ATTR_TARGET_ROLE, cib,
+                                      NULL, PCMK_META_TARGET_ROLE, cib,
                                       cib_options, force);
     }
 
@@ -2087,8 +2090,10 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
             if(nodes != NULL && force == FALSE) {
                 out->err(out, "It is not safe to %s %s here: the cluster claims it is already active",
                          rsc_action, rsc->id);
-                out->err(out, "Try setting target-role=Stopped first or specifying "
-                         "the force option");
+                out->err(out,
+                         "Try setting "
+                         PCMK_META_TARGET_ROLE "=" PCMK__ROLE_STOPPED
+                         " first or specifying the force option");
                 return CRM_EX_UNSAFE;
             }
 

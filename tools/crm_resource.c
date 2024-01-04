@@ -479,8 +479,8 @@ static GOptionEntry location_entries[] = {
       INDENT "removed with --clear. If --node is not specified, it defaults\n"
       INDENT "to the node currently running the resource for primitives\n"
       INDENT "and groups, or the promoted instance of promotable clones with\n"
-      INDENT "promoted-max=1 (all other situations result in an error as\n"
-      INDENT "there is no sane default).",
+      INDENT PCMK_META_PROMOTED_MAX "=1 (all other situations result in an\n"
+      INDENT "error as there is no sane default).",
       NULL },
     { "clear", 'U', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, flag_cb,
       "Remove all constraints created by the --ban and/or --move\n"
@@ -1384,14 +1384,14 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
                               "location:\n\n"
                               "\t# crm_resource --resource myResource --clear\n\n"
                               "Stop 'myResource' (and anything that depends on it):\n\n"
-                              "\t# crm_resource --resource myResource --set-parameter target-role "
-                              "--meta --parameter-value Stopped\n\n"
+                              "\t# crm_resource --resource myResource --set-parameter "
+                              PCMK_META_TARGET_ROLE "--meta --parameter-value Stopped\n\n"
                               "Tell the cluster not to manage 'myResource' (the cluster will not "
                               "attempt to start or stop the\n"
                               "resource under any circumstances; useful when performing maintenance "
                               "tasks on a resource):\n\n"
-                              "\t# crm_resource --resource myResource --set-parameter is-managed "
-                              "--meta --parameter-value false\n\n"
+                              "\t# crm_resource --resource myResource --set-parameter "
+                              PCMK_META_IS_MANAGED "--meta --parameter-value false\n\n"
                               "Erase the operation history of 'myResource' on 'aNode' (the cluster "
                               "will 'forget' the existing\n"
                               "resource state, including any errors, and attempt to recover the"

@@ -213,8 +213,8 @@ pe__force_anon(const char *standard, pcmk_resource_t *rsc, const char *rid,
     if (pe_rsc_is_clone(rsc)) {
         clone_variant_data_t *clone_data = rsc->variant_opaque;
 
-        pcmk__config_warn("Ignoring " XML_RSC_ATTR_UNIQUE " for %s because "
-                          "%s resources such as %s can be used only as "
+        pcmk__config_warn("Ignoring " PCMK_META_GLOBALLY_UNIQUE " for %s "
+                          "because %s resources such as %s can be used only as "
                           "anonymous clones", rsc->id, standard, rid);
 
         clone_data->clone_node_max = 1;
@@ -266,7 +266,7 @@ pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
     child_copy = copy_xml(clone_data->xml_obj_child);
 
-    crm_xml_add(child_copy, XML_RSC_ATTR_INCARNATION, inc_num);
+    crm_xml_add(child_copy, PCMK__META_CLONE_INSTANCE_NUM, inc_num);
 
     if (pe__unpack_resource(child_copy, &child_rsc, rsc,
                             scheduler) != pcmk_rc_ok) {
@@ -337,16 +337,16 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
     if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
         // Use 1 as default but 0 for minimum and invalid
-        // @COMPAT PCMK_XA_PROMOTED_MAX_LEGACY deprecated since 2.0.0
-        clone_data->promoted_max = unpack_meta_int(rsc, PCMK_META_PROMOTED_MAX,
-                                                   PCMK_XA_PROMOTED_MAX_LEGACY,
-                                                   1);
+        // @COMPAT PCMK__META_PROMOTED_MAX_LEGACY deprecated since 2.0.0
+        clone_data->promoted_max =
+            unpack_meta_int(rsc, PCMK_META_PROMOTED_MAX,
+                            PCMK__META_PROMOTED_MAX_LEGACY, 1);
 
         // Use 1 as default but 0 for minimum and invalid
-        // @COMPAT PCMK_XA_PROMOTED_NODE_MAX_LEGACY deprecated since 2.0.0
+        // @COMPAT PCMK__META_PROMOTED_NODE_MAX_LEGACY deprecated since 2.0.0
         clone_data->promoted_node_max =
             unpack_meta_int(rsc, PCMK_META_PROMOTED_NODE_MAX,
-                            PCMK_XA_PROMOTED_NODE_MAX_LEGACY, 1);
+                            PCMK__META_PROMOTED_NODE_MAX_LEGACY, 1);
     }
 
     // Implied by calloc()
@@ -362,7 +362,7 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     clone_data->clone_max = unpack_meta_int(rsc, PCMK_META_CLONE_MAX, NULL,
                                             QB_MAX(1, g_list_length(scheduler->nodes)));
 
-    if (crm_is_true(g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_ORDERED))) {
+    if (crm_is_true(g_hash_table_lookup(rsc->meta, PCMK_META_ORDERED))) {
         clone_data->flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,
                                                "Clone", rsc->id,
                                                clone_data->flags,
@@ -408,14 +408,15 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
      * This helps ensure clone instances are not shuffled around the cluster
      * for no benefit in situations when pre-allocation is not appropriate
      */
-    if (g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_STICKINESS) == NULL) {
-        add_hash_param(rsc->meta, XML_RSC_ATTR_STICKINESS, "1");
+    if (g_hash_table_lookup(rsc->meta, PCMK_META_RESOURCE_STICKINESS) == NULL) {
+        add_hash_param(rsc->meta, PCMK_META_RESOURCE_STICKINESS, "1");
     }
 
-    /* This ensures that the globally-unique value always exists for children to
-     * inherit when being unpacked, as well as in resource agents' environment.
+    /* This ensures that the PCMK_META_GLOBALLY_UNIQUE value always exists for
+     * children to inherit when being unpacked, as well as in resource agents'
+     * environment.
      */
-    add_hash_param(rsc->meta, XML_RSC_ATTR_UNIQUE,
+    add_hash_param(rsc->meta, PCMK_META_GLOBALLY_UNIQUE,
                    pe__rsc_bool_str(rsc, pcmk_rsc_unique));
 
     if (clone_data->clone_max <= 0) {
@@ -497,13 +498,13 @@ static const char *
 configured_role_str(pcmk_resource_t * rsc)
 {
     const char *target_role = g_hash_table_lookup(rsc->meta,
-                                                  XML_RSC_ATTR_TARGET_ROLE);
+                                                  PCMK_META_TARGET_ROLE);
 
     if ((target_role == NULL) && rsc->children && rsc->children->data) {
         pcmk_resource_t *instance = rsc->children->data; // Any instance will do
 
         target_role = g_hash_table_lookup(instance->meta,
-                                          XML_RSC_ATTR_TARGET_ROLE);
+                                          PCMK_META_TARGET_ROLE);
     }
     return target_role;
 }
@@ -517,7 +518,7 @@ configured_role(pcmk_resource_t *rsc)
     if (target_role != NULL) {
         role = text2role(target_role);
         if (role == pcmk_role_unknown) {
-            pcmk__config_err("Invalid " XML_RSC_ATTR_TARGET_ROLE
+            pcmk__config_err("Invalid " PCMK_META_TARGET_ROLE
                              " for resource %s", rsc->id);
         }
     }
@@ -749,8 +750,8 @@ clone_print(pcmk_resource_t *rsc, const char *pre_text, long options,
 
             if (role == pcmk_role_unpromoted) {
                 short_print((const char *) list_text->str, child_text,
-                            UNPROMOTED_INSTANCES " (target-role)", NULL,
-                            options, print_data);
+                            UNPROMOTED_INSTANCES " (" PCMK_META_TARGET_ROLE ")",
+                            NULL, options, print_data);
             } else {
                 short_print((const char *) list_text->str, child_text,
                             UNPROMOTED_INSTANCES, NULL, options, print_data);
@@ -1075,7 +1076,8 @@ pe__clone_default(pcmk__output_t *out, va_list args)
 
             if (role == pcmk_role_unpromoted) {
                 out->list_item(out, NULL,
-                               UNPROMOTED_INSTANCES " (target-role): [ %s ]",
+                               UNPROMOTED_INSTANCES
+                               " (" PCMK_META_TARGET_ROLE "): [ %s ]",
                                (const char *) list_text->str);
             } else {
                 out->list_item(out, NULL, UNPROMOTED_INSTANCES ": [ %s ]",

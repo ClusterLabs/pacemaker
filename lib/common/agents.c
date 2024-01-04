@@ -46,7 +46,8 @@ pcmk_get_ra_caps(const char *standard)
          * (which were likely never used as real configurations).
          *
          * @TODO Remove pcmk_ra_cap_unique at the next major schema version
-         * bump, with a transform to remove globally-unique from the config.
+         * bump, with a transform to remove PCMK_META_GLOBALLY_UNIQUE from the
+         * config.
          */
         return pcmk_ra_cap_params | pcmk_ra_cap_unique | pcmk_ra_cap_stdin
                | pcmk_ra_cap_fence_params;

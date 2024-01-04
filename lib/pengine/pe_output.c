@@ -68,7 +68,7 @@ add_extra_info(const pcmk_node_t *node, GList *rsc_list,
 
     for (gIter = rsc_list; gIter != NULL; gIter = gIter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) gIter->data;
-        const char *type = g_hash_table_lookup(rsc->meta, "type");
+        const char *type = g_hash_table_lookup(rsc->meta, XML_ATTR_TYPE);
         const char *name = NULL;
         GHashTable *params = NULL;
 
@@ -322,7 +322,7 @@ resource_history_string(pcmk_resource_t *rsc, const char *rsc_id, bool all,
             free(buf);
         }
 
-        buf = crm_strdup_printf("%s: migration-threshold=%d%s%s",
+        buf = crm_strdup_printf("%s: " PCMK_META_MIGRATION_THRESHOLD "=%d%s%s",
                                 rsc_id, rsc->migration_threshold, failcount_s,
                                 lastfail_s? lastfail_s : "");
         free(failcount_s);
@@ -2037,7 +2037,8 @@ node_and_op(pcmk__output_t *out, va_list args) {
 
     if (rsc) {
         const pcmk_node_t *node = pe__current_node(rsc);
-        const char *target_role = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
+        const char *target_role = g_hash_table_lookup(rsc->meta,
+                                                      PCMK_META_TARGET_ROLE);
         uint32_t show_opts = pcmk_show_rsc_only | pcmk_show_pending;
 
         if (node == NULL) {
@@ -2756,7 +2757,7 @@ resource_history_xml(pcmk__output_t *out, va_list args) {
         char *migration_s = pcmk__itoa(rsc->migration_threshold);
 
         pcmk__xe_set_props(node, "orphan", "false",
-                           "migration-threshold", migration_s,
+                           PCMK_META_MIGRATION_THRESHOLD, migration_s,
                            NULL);
         free(migration_s);
 

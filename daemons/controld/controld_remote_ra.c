@@ -861,12 +861,17 @@ handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeo
     int rc = pcmk_rc_ok;
 
     for (tmp = cmd->params; tmp; tmp = tmp->next) {
-        if (pcmk__strcase_any_of(tmp->key, XML_RSC_ATTR_REMOTE_RA_ADDR,
-                                 XML_RSC_ATTR_REMOTE_RA_SERVER, NULL)) {
+        if (pcmk__strcase_any_of(tmp->key,
+                                 PCMK_REMOTE_RA_ADDR, PCMK_REMOTE_RA_SERVER,
+                                 NULL)) {
             server = tmp->value;
-        } else if (pcmk__str_eq(tmp->key, XML_RSC_ATTR_REMOTE_RA_PORT, pcmk__str_casei)) {
+
+        } else if (pcmk__str_eq(tmp->key, PCMK_REMOTE_RA_PORT,
+                                pcmk__str_none)) {
             port = atoi(tmp->value);
-        } else if (pcmk__str_eq(tmp->key, CRM_META "_" XML_RSC_ATTR_CONTAINER, pcmk__str_casei)) {
+
+        } else if (pcmk__str_eq(tmp->key, CRM_META "_" PCMK__META_CONTAINER,
+                                pcmk__str_none)) {
             lrm_remote_set_flags(lrm_state, controlling_guest);
         }
     }
@@ -967,9 +972,9 @@ handle_remote_ra_exec(gpointer user_data)
 
         } else if (pcmk__str_any_of(cmd->action, PCMK_ACTION_RELOAD,
                                     PCMK_ACTION_RELOAD_AGENT, NULL))  {
-            /* Currently the only reloadable parameter is reconnect_interval,
-             * which is only used by the scheduler via the CIB, so reloads are a
-             * no-op.
+            /* Currently the only reloadable parameter is
+             * PCMK_REMOTE_RA_RECONNECT_INTERVAL, which is only used by the
+             * scheduler via the CIB, so reloads are a no-op.
              *
              * @COMPAT DC <2.1.0: We only need to check for "reload" in case
              * we're in a rolling upgrade with a DC scheduling "reload" instead

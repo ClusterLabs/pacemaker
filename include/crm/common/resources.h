@@ -144,7 +144,7 @@ enum pcmk_rsc_flags {
     //! Whether resource is a remote connection allowed to run on a remote node
     pcmk_rsc_remote_nesting_allowed = (1ULL << 14),
 
-    //! Whether resource has "critical" meta-attribute enabled
+    //! Whether resource has \c PCMK_META_CRITICAL meta-attribute enabled
     pcmk_rsc_critical               = (1ULL << 15),
 
     //! Whether resource is considered failed

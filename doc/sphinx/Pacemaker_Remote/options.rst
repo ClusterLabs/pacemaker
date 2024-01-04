@@ -53,6 +53,10 @@ and define its connection parameters.
   +------------------------+-----------------+-----------------------------------------------------------+
   | remote-connect-timeout | 60s             | How long before a pending guest connection will time out. |
   +------------------------+-----------------+-----------------------------------------------------------+
+  | remote-allow-migrate   | TRUE            | The ``allow-migrate`` meta-attribute value for the        |
+  |                        |                 | implicit remote connection resource                       |
+  |                        |                 | (``ocf:pacemaker:remote``).                               |
+  +------------------------+-----------------+-----------------------------------------------------------+
 
 .. index::
    pair: configuration; remote node

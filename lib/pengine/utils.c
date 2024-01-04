@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -411,7 +411,7 @@ gboolean
 get_target_role(const pcmk_resource_t *rsc, enum rsc_role_e *role)
 {
     enum rsc_role_e local_role = pcmk_role_unknown;
-    const char *value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
+    const char *value = g_hash_table_lookup(rsc->meta, PCMK_META_TARGET_ROLE);
 
     CRM_CHECK(role != NULL, return FALSE);
 
@@ -422,7 +422,7 @@ get_target_role(const pcmk_resource_t *rsc, enum rsc_role_e *role)
 
     local_role = text2role(value);
     if (local_role == pcmk_role_unknown) {
-        pcmk__config_err("Ignoring '" XML_RSC_ATTR_TARGET_ROLE "' for %s "
+        pcmk__config_err("Ignoring '" PCMK_META_TARGET_ROLE "' for %s "
                          "because '%s' is not valid", rsc->id, value);
         return FALSE;
 
@@ -435,7 +435,7 @@ get_target_role(const pcmk_resource_t *rsc, enum rsc_role_e *role)
             }
 
         } else {
-            pcmk__config_err("Ignoring '" XML_RSC_ATTR_TARGET_ROLE "' for %s "
+            pcmk__config_err("Ignoring '" PCMK_META_TARGET_ROLE "' for %s "
                              "because '%s' only makes sense for promotable "
                              "clones", rsc->id, value);
             return FALSE;
@@ -728,7 +728,7 @@ pe__resource_is_disabled(const pcmk_resource_t *rsc)
     const char *target_role = NULL;
 
     CRM_CHECK(rsc != NULL, return false);
-    target_role = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
+    target_role = g_hash_table_lookup(rsc->meta, PCMK_META_TARGET_ROLE);
     if (target_role) {
         // If invalid, we've already logged an error when unpacking
         enum rsc_role_e target_role_e = text2role(target_role);

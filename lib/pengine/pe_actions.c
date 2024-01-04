@@ -95,9 +95,9 @@ find_exact_action_config(const pcmk_resource_t *rsc, const char *action_name,
         const char *interval_spec = NULL;
         guint tmp_ms = 0U;
 
-        // @TODO This does not consider rules, defaults, etc.
+        // @TODO This does not consider meta-attributes, rules, defaults, etc.
         if (!include_disabled
-            && (pcmk__xe_get_bool_attr(operation, "enabled",
+            && (pcmk__xe_get_bool_attr(operation, PCMK_META_ENABLED,
                                        &enabled) == pcmk_rc_ok) && !enabled) {
             continue;
         }
@@ -509,7 +509,7 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
             }
 
             // We only care about enabled monitors
-            if ((pcmk__xe_get_bool_attr(operation, "enabled",
+            if ((pcmk__xe_get_bool_attr(operation, PCMK_META_ENABLED,
                                         &enabled) == pcmk_rc_ok) && !enabled) {
                 continue;
             }
@@ -668,8 +668,8 @@ most_frequent_monitor(const pcmk_resource_t *rsc)
             continue;
         }
 
-        // @TODO This does not account for rules, defaults, etc.
-        if ((pcmk__xe_get_bool_attr(operation, "enabled",
+        // @TODO This does not consider meta-attributes, rules, defaults, etc.
+        if ((pcmk__xe_get_bool_attr(operation, PCMK_META_ENABLED,
                                     &enabled) == pcmk_rc_ok) && !enabled) {
             continue;
         }
@@ -712,7 +712,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
     pe_rsc_eval_data_t rsc_rule_data = {
         .standard = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS),
         .provider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER),
-        .agent = crm_element_value(rsc->xml, XML_EXPR_ATTR_TYPE),
+        .agent = crm_element_value(rsc->xml, XML_ATTR_TYPE),
     };
 
     pe_op_eval_data_t op_rule_data = {
@@ -1054,16 +1054,17 @@ pcmk__role_after_failure(const pcmk_resource_t *rsc, const char *action_name,
     }
 
     // @COMPAT Check for explicitly configured role (deprecated)
-    value = g_hash_table_lookup(meta, "role_after_failure");
+    value = g_hash_table_lookup(meta, PCMK__META_ROLE_AFTER_FAILURE);
     if (value != NULL) {
         pcmk__warn_once(pcmk__wo_role_after,
-                        "Support for role_after_failure is deprecated "
-                        "and will be removed in a future release");
+                        "Support for " PCMK__META_ROLE_AFTER_FAILURE " is "
+                        "deprecated and will be removed in a future release");
         if (role == pcmk_role_unknown) {
             role = text2role(value);
             if (role == pcmk_role_unknown) {
-                pcmk__config_err("Ignoring invalid value %s "
-                                 "for role_after_failure", value);
+                pcmk__config_err("Ignoring invalid value %s for "
+                                 PCMK__META_ROLE_AFTER_FAILURE,
+                                 value);
             }
         }
     }

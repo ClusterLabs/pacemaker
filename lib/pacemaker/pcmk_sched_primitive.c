@@ -476,7 +476,7 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
         pcmk__rsc_trace(rsc,
                         "Banning %s from all nodes because it will be stopped",
                         rsc->id);
-        resource_location(rsc, NULL, -INFINITY, XML_RSC_ATTR_TARGET_ROLE,
+        resource_location(rsc, NULL, -INFINITY, PCMK_META_TARGET_ROLE,
                           rsc->cluster);
 
     } else if ((rsc->next_role > rsc->role)
@@ -1205,8 +1205,9 @@ pcmk__primitive_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
  * \param[in] rsc  Resource to check
  * \param[in] node  Node to check
  *
- * \return true if \p rsc is multiply active with multiple-active set to
- *         stop_unexpected, and \p node is the node where it will remain active
+ * \return \c true if \p rsc is multiply active with
+ *         \c PCMK_META_MULTIPLE_ACTIVE set to \c stop_unexpected, and \p node
+ *         is the node where it will remain active
  * \note This assumes that the resource's next role cannot be changed to stopped
  *       after this is called, which should be reasonable if status has already
  *       been unpacked and resources have been assigned to nodes.
@@ -1237,8 +1238,8 @@ stop_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
 
         if (is_expected_node(rsc, current)) {
             /* We are scheduling restart actions for a multiply active resource
-             * with multiple-active=stop_unexpected, and this is where it should
-             * not be stopped.
+             * with PCMK_META_MULTIPLE_ACTIVE=stop_unexpected, and this is where
+             * it should not be stopped.
              */
             pcmk__rsc_trace(rsc,
                             "Skipping stop of multiply active resource %s "
@@ -1501,17 +1502,17 @@ pcmk__primitive_add_graph_meta(const pcmk_resource_t *rsc, xmlNode *xml)
      * needed in the transition graph (for example, to tell unique clone
      * instances apart).
      */
-    value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INCARNATION);
+    value = g_hash_table_lookup(rsc->meta, PCMK__META_CLONE_INSTANCE_NUM);
     if (value != NULL) {
-        name = crm_meta_name(XML_RSC_ATTR_INCARNATION);
+        name = crm_meta_name(PCMK__META_CLONE_INSTANCE_NUM);
         crm_xml_add(xml, name, value);
         free(name);
     }
 
     // Not sure if this one is really needed ...
-    value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_REMOTE_NODE);
+    value = g_hash_table_lookup(rsc->meta, PCMK_META_REMOTE_NODE);
     if (value != NULL) {
-        name = crm_meta_name(XML_RSC_ATTR_REMOTE_NODE);
+        name = crm_meta_name(PCMK_META_REMOTE_NODE);
         crm_xml_add(xml, name, value);
         free(name);
     }
@@ -1522,7 +1523,7 @@ pcmk__primitive_add_graph_meta(const pcmk_resource_t *rsc, xmlNode *xml)
      */
     for (parent = rsc; parent != NULL; parent = parent->parent) {
         if (parent->container != NULL) {
-            crm_xml_add(xml, CRM_META "_" XML_RSC_ATTR_CONTAINER,
+            crm_xml_add(xml, CRM_META "_" PCMK__META_CONTAINER,
                         parent->container->id);
         }
     }

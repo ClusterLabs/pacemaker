@@ -105,8 +105,9 @@ enum pcmk_scheduler_flags {
     pcmk_sched_stop_all                 = (1ULL << 10),
 
     /*!
-     * Whether start failure should be treated as if migration-threshold is 1
-     * (via start-failure-is-fatal property)
+     * Whether start failure should be treated as if
+     * \c PCMK_META_MIGRATION_THRESHOLD is 1 (via
+     * \c PCMK_OPT_START_FAILURE_IS_FATAL property)
      */
     pcmk_sched_start_failure_fatal      = (1ULL << 12),
 

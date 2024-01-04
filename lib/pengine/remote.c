@@ -145,14 +145,16 @@ pe_foreach_guest_node(const pcmk_scheduler_t *scheduler,
  * \internal
  * \brief Create CIB XML for an implicit remote connection
  *
- * \param[in,out] parent           If not NULL, use as parent XML element
- * \param[in]     uname            Name of Pacemaker Remote node
- * \param[in]     container        If not NULL, use this as connection container
- * \param[in]     migrateable      If not NULL, use as allow-migrate value
- * \param[in]     is_managed       If not NULL, use as is-managed value
- * \param[in]     start_timeout    If not NULL, use as remote connect timeout
- * \param[in]     server           If not NULL, use as remote server value
- * \param[in]     port             If not NULL, use as remote port value
+ * \param[in,out] parent         If not \c NULL, use as parent XML element
+ * \param[in]     uname          Name of Pacemaker Remote node
+ * \param[in]     container_id   If not \c NULL, use this as connection container
+ * \param[in]     migrateable    If not \c NULL, use as remote
+ *                               \c PCMK_META_ALLOW_MIGRATE value
+ * \param[in]     is_managed     If not \c NULL, use as remote
+ *                               \c PCMK_META_IS_MANAGED value
+ * \param[in]     start_timeout  If not \c NULL, use as remote connect timeout
+ * \param[in]     server         If not \c NULL, use as \c PCMK_REMOTE_RA_ADDR
+ * \param[in]     port           If not \c NULL, use as \c PCMK_REMOTE_RA_PORT
  *
  * \return Newly created XML
  */
@@ -177,17 +179,17 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
     xml_sub = create_xml_node(remote, XML_TAG_META_SETS);
     crm_xml_set_id(xml_sub, "%s-%s", uname, XML_TAG_META_SETS);
     crm_create_nvpair_xml(xml_sub, NULL,
-                          XML_RSC_ATTR_INTERNAL_RSC, XML_BOOLEAN_TRUE);
+                          PCMK__META_INTERNAL_RSC, XML_BOOLEAN_TRUE);
     if (container_id) {
         crm_create_nvpair_xml(xml_sub, NULL,
-                              XML_RSC_ATTR_CONTAINER, container_id);
+                              PCMK__META_CONTAINER, container_id);
     }
     if (migrateable) {
         crm_create_nvpair_xml(xml_sub, NULL,
-                              XML_OP_ATTR_ALLOW_MIGRATE, migrateable);
+                              PCMK_META_ALLOW_MIGRATE, migrateable);
     }
     if (is_managed) {
-        crm_create_nvpair_xml(xml_sub, NULL, XML_RSC_ATTR_MANAGED, is_managed);
+        crm_create_nvpair_xml(xml_sub, NULL, PCMK_META_IS_MANAGED, is_managed);
     }
 
     // Add instance attributes
@@ -195,11 +197,10 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
         xml_sub = create_xml_node(remote, XML_TAG_ATTR_SETS);
         crm_xml_set_id(xml_sub, "%s-%s", uname, XML_TAG_ATTR_SETS);
         if (server) {
-            crm_create_nvpair_xml(xml_sub, NULL, XML_RSC_ATTR_REMOTE_RA_ADDR,
-                                  server);
+            crm_create_nvpair_xml(xml_sub, NULL, PCMK_REMOTE_RA_ADDR, server);
         }
         if (port) {
-            crm_create_nvpair_xml(xml_sub, NULL, "port", port);
+            crm_create_nvpair_xml(xml_sub, NULL, PCMK_REMOTE_RA_PORT, port);
         }
     }
 

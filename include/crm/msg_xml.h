@@ -27,6 +27,13 @@ extern "C" {
  * for XML element names, "XA" for XML attribute names, and "META" for meta
  * attribute names. Old names that don't follow this policy should eventually be
  * deprecated and replaced with names that do.
+ *
+ * Symbols should be public if the user may specify them somewhere (especially
+ * the CIB). They should be internal if they're used only internally to
+ * Pacemaker (such as daemon IPC/CPG message XML).
+ *
+ * For meta-attributes that can be specified as either XML attributes or nvpair
+ * names, use "META" unless using both "XA" and "META" constants adds clarity.
  */
 
 /*
@@ -37,7 +44,7 @@ extern "C" {
 #define PCMK_XE_OP_EXPRESSION               "op_expression"
 
 /* This has been deprecated as a CIB element (an alias for <clone> with
- * "promotable" set to "true") since 2.0.0.
+ * PCMK_META_PROMOTABLE set to "true") since 2.0.0.
  */
 #define PCMK_XE_PROMOTABLE_LEGACY           "master"
 
@@ -62,26 +69,6 @@ extern "C" {
 #define PCMK_XA_NUM_UPDATES                 "num_updates"
 #define PCMK_XA_VALIDATE_WITH               "validate-with"
 #define PCMK_XA_VERSION                     "version"
-
-/* These have been deprecated as CIB <clone> element attributes (aliases for
- * "promoted-max" and "promoted-node-max") since 2.0.0.
- */
-#define PCMK_XA_PROMOTED_MAX_LEGACY         "master-max"
-#define PCMK_XA_PROMOTED_NODE_MAX_LEGACY    "master-node-max"
-
-
-/*
- * Meta attributes
- */
-
-#define PCMK_META_CLONE_MAX                 "clone-max"
-#define PCMK_META_CLONE_MIN                 "clone-min"
-#define PCMK_META_CLONE_NODE_MAX            "clone-node-max"
-#define PCMK_META_ENABLED                   "enabled"
-#define PCMK_META_FAILURE_TIMEOUT           "failure-timeout"
-#define PCMK_META_MIGRATION_THRESHOLD       "migration-threshold"
-#define PCMK_META_PROMOTED_MAX              "promoted-max"
-#define PCMK_META_PROMOTED_NODE_MAX         "promoted-node-max"
 
 
 /*
@@ -163,8 +150,6 @@ extern "C" {
 
 #  define XML_BOOLEAN_TRUE		"true"
 #  define XML_BOOLEAN_FALSE		"false"
-#  define XML_BOOLEAN_YES		XML_BOOLEAN_TRUE
-#  define XML_BOOLEAN_NO		XML_BOOLEAN_FALSE
 
 #  define XML_TAG_OPTIONS		"options"
 
@@ -235,35 +220,8 @@ extern "C" {
 
 #  define XML_CIB_TAG_RSC_TEMPLATE	"template"
 
-#  define XML_RSC_ATTR_TARGET           "container-attribute-target"
-#  define XML_RSC_ATTR_RESTART	  	"restart-type"
-#  define XML_RSC_ATTR_ORDERED		"ordered"
-#  define XML_RSC_ATTR_INTERLEAVE	"interleave"
-#  define XML_RSC_ATTR_INCARNATION	"clone"
-#  define XML_RSC_ATTR_PROMOTABLE       "promotable"
-#  define XML_RSC_ATTR_MANAGED		"is-managed"
-#  define XML_RSC_ATTR_TARGET_ROLE	"target-role"
-#  define XML_RSC_ATTR_UNIQUE		"globally-unique"
-#  define XML_RSC_ATTR_NOTIFY		"notify"
-#  define XML_RSC_ATTR_STICKINESS	"resource-stickiness"
-#  define XML_RSC_ATTR_MULTIPLE		"multiple-active"
-#  define XML_RSC_ATTR_REQUIRES		"requires"
-#  define XML_RSC_ATTR_CONTAINER	"container"
-#  define XML_RSC_ATTR_INTERNAL_RSC	"internal_rsc"
-#  define XML_RSC_ATTR_MAINTENANCE	"maintenance"
-#  define XML_RSC_ATTR_REMOTE_NODE  	"remote-node"
-#  define XML_RSC_ATTR_CLEAR_OP         "clear_failure_op"
-#  define XML_RSC_ATTR_CLEAR_INTERVAL   "clear_failure_interval"
-#  define XML_RSC_ATTR_REMOTE_RA_ADDR   "addr"
-#  define XML_RSC_ATTR_REMOTE_RA_SERVER "server"
-#  define XML_RSC_ATTR_REMOTE_RA_PORT   "port"
-#  define XML_RSC_ATTR_CRITICAL         "critical"
-
-#  define XML_REMOTE_ATTR_RECONNECT_INTERVAL "reconnect_interval"
-
 #  define XML_OP_ATTR_ON_FAIL		"on-fail"
 #  define XML_OP_ATTR_START_DELAY	"start-delay"
-#  define XML_OP_ATTR_ALLOW_MIGRATE	"allow-migrate"
 #  define XML_OP_ATTR_ORIGIN		"interval-origin"
 #  define XML_OP_ATTR_PENDING		"record-pending"
 #  define XML_OP_ATTR_DIGESTS_ALL       "digests-all"

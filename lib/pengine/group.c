@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -191,12 +191,12 @@ group_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     rsc->variant_opaque = group_data;
 
     // @COMPAT These are deprecated since 2.1.5
-    set_group_flag(rsc, XML_RSC_ATTR_ORDERED, pcmk__group_ordered,
+    set_group_flag(rsc, PCMK_META_ORDERED, pcmk__group_ordered,
                    pcmk__wo_group_order);
     set_group_flag(rsc, "collocated", pcmk__group_colocated,
                    pcmk__wo_group_coloc);
 
-    clone_id = crm_element_value(rsc->xml, XML_RSC_ATTR_INCARNATION);
+    clone_id = crm_element_value(rsc->xml, PCMK__META_CLONE_INSTANCE_NUM);
 
     for (xml_native_rsc = pcmk__xe_first_child(xml_obj); xml_native_rsc != NULL;
          xml_native_rsc = pcmk__xe_next(xml_native_rsc)) {
@@ -205,7 +205,7 @@ group_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
                          XML_CIB_TAG_RESOURCE, pcmk__str_none)) {
             pcmk_resource_t *new_rsc = NULL;
 
-            crm_xml_add(xml_native_rsc, XML_RSC_ATTR_INCARNATION, clone_id);
+            crm_xml_add(xml_native_rsc, PCMK__META_CLONE_INSTANCE_NUM, clone_id);
             if (pe__unpack_resource(xml_native_rsc, &new_rsc, rsc,
                                     scheduler) != pcmk_rc_ok) {
                 continue;

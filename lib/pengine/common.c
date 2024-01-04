@@ -523,9 +523,9 @@ add_hash_param(GHashTable * hash, const char *name, const char *value)
  * \internal
  * \brief Look up an attribute value on the appropriate node
  *
- * If \p node is a guest node and either the \c XML_RSC_ATTR_TARGET meta
- * attribute is set to "host" for \p rsc or \p force_host is \c true, query the
- * attribute on the node's host. Otherwise, query the attribute on \p node
+ * If \p node is a guest node and either the \c PCMK_META_CONTAINER_ATTR_TARGET
+ * meta attribute is set to "host" for \p rsc or \p force_host is \c true, query
+ * the attribute on the node's host. Otherwise, query the attribute on \p node
  * itself.
  *
  * \param[in] node        Node to query attribute value on by default
@@ -533,7 +533,7 @@ add_hash_param(GHashTable * hash, const char *name, const char *value)
  * \param[in] rsc         Resource on whose behalf we're querying
  * \param[in] node_type   Type of resource location lookup
  * \param[in] force_host  Force a lookup on the guest node's host, regardless of
- *                        the \c XML_RSC_ATTR_TARGET value
+ *                        the \c PCMK_META_CONTAINER_ATTR_TARGET value
  *
  * \return Value of the attribute on \p node or on the host of \p node
  *
@@ -560,10 +560,10 @@ pe__node_attribute_calculated(const pcmk_node_t *node, const char *name,
     CRM_ASSERT((node != NULL) && (name != NULL) && (rsc != NULL)
                && (!force_host || is_guest));
 
-    /* Ignore XML_RSC_ATTR_TARGET if node is not a guest node. This represents a
-     * user configuration error.
+    /* Ignore PCMK_META_CONTAINER_ATTR_TARGET if node is not a guest node. This
+     * represents a user configuration error.
      */
-    source = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET);
+    source = g_hash_table_lookup(rsc->meta, PCMK_META_CONTAINER_ATTR_TARGET);
     if (!force_host
         && (!is_guest || !pcmk__str_eq(source, "host", pcmk__str_casei))) {
 

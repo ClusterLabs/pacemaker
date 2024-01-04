@@ -365,7 +365,7 @@ add_action_attributes(pcmk_action_t *action, xmlNode *action_xml)
             parent = parent->parent;
         }
 
-        pcmk__add_bundle_meta_to_xml(args_xml, action);
+        pcmk__add_guest_meta_to_xml(args_xml, action);
 
     } else if (pcmk__str_eq(action->task, PCMK_ACTION_STONITH, pcmk__str_none)
                && (action->node != NULL)) {

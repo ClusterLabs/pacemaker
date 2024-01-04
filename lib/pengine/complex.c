@@ -160,7 +160,7 @@ get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
     pe_rsc_eval_data_t rsc_rule_data = {
         .standard = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS),
         .provider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER),
-        .agent = crm_element_value(rsc->xml, XML_EXPR_ATTR_TYPE)
+        .agent = crm_element_value(rsc->xml, XML_ATTR_TYPE)
     };
 
     pe_rule_eval_data_t rule_data = {
@@ -263,7 +263,6 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
     xmlNode *rsc_ops = NULL;
     xmlNode *template_ops = NULL;
     const char *template_ref = NULL;
-    const char *clone = NULL;
     const char *id = NULL;
 
     if (xml_obj == NULL) {
@@ -305,11 +304,8 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
     new_xml = copy_xml(template);
     xmlNodeSetName(new_xml, xml_obj->name);
     crm_xml_add(new_xml, PCMK_XA_ID, id);
-
-    clone = crm_element_value(xml_obj, XML_RSC_ATTR_INCARNATION);
-    if(clone) {
-        crm_xml_add(new_xml, XML_RSC_ATTR_INCARNATION, clone);
-    }
+    crm_xml_add(new_xml, PCMK__META_CLONE_INSTANCE_NUM,
+                crm_element_value(xml_obj, PCMK__META_CLONE_INSTANCE_NUM));
 
     template_ops = find_xml_node(new_xml, "operations", FALSE);
 
@@ -409,7 +405,7 @@ static bool
 detect_promotable(pcmk_resource_t *rsc)
 {
     const char *promotable = g_hash_table_lookup(rsc->meta,
-                                                 XML_RSC_ATTR_PROMOTABLE);
+                                                 PCMK_META_PROMOTABLE);
 
     if (crm_is_true(promotable)) {
         return TRUE;
@@ -420,7 +416,7 @@ detect_promotable(pcmk_resource_t *rsc)
         /* @TODO in some future version, pcmk__warn_once() here,
          *       then drop support in even later version
          */
-        g_hash_table_insert(rsc->meta, strdup(XML_RSC_ATTR_PROMOTABLE),
+        g_hash_table_insert(rsc->meta, strdup(PCMK_META_PROMOTABLE),
                             strdup(XML_BOOLEAN_TRUE));
         return TRUE;
     }
@@ -507,7 +503,7 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
 
     } else if (pcmk__str_eq(value, PCMK__VALUE_UNFENCING, pcmk__str_casei)) {
         if (pcmk_is_set(rsc->flags, pcmk_rsc_fence_device)) {
-            pcmk__config_warn("Resetting \"" XML_RSC_ATTR_REQUIRES "\" for %s "
+            pcmk__config_warn("Resetting \"" PCMK_META_REQUIRES "\" for %s "
                               "to \"" PCMK__VALUE_QUORUM "\" because fencing "
                               "devices cannot require unfencing", rsc->id);
             unpack_requires(rsc, PCMK__VALUE_QUORUM, true);
@@ -515,7 +511,7 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
 
         } else if (!pcmk_is_set(rsc->cluster->flags,
                                 pcmk_sched_fencing_enabled)) {
-            pcmk__config_warn("Resetting \"" XML_RSC_ATTR_REQUIRES "\" for %s "
+            pcmk__config_warn("Resetting \"" PCMK_META_REQUIRES "\" for %s "
                               "to \"" PCMK__VALUE_QUORUM "\" because fencing "
                               "is disabled", rsc->id);
             unpack_requires(rsc, PCMK__VALUE_QUORUM, true);
@@ -552,7 +548,7 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
         }
 
         if (orig_value != NULL) {
-            pcmk__config_err("Resetting '" XML_RSC_ATTR_REQUIRES "' for %s "
+            pcmk__config_err("Resetting '" PCMK_META_REQUIRES "' for %s "
                              "to '%s' because '%s' is not valid",
                               rsc->id, value, orig_value);
         }
@@ -683,10 +679,10 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     (*rsc)->allowed_nodes = pcmk__strkey_table(NULL, free);
     (*rsc)->known_on = pcmk__strkey_table(NULL, free);
 
-    value = crm_element_value((*rsc)->xml, XML_RSC_ATTR_INCARNATION);
+    value = crm_element_value((*rsc)->xml, PCMK__META_CLONE_INSTANCE_NUM);
     if (value) {
         (*rsc)->id = crm_strdup_printf("%s:%s", id, value);
-        add_hash_param((*rsc)->meta, XML_RSC_ATTR_INCARNATION, value);
+        add_hash_param((*rsc)->meta, PCMK__META_CLONE_INSTANCE_NUM, value);
 
     } else {
         (*rsc)->id = strdup(id);
@@ -715,29 +711,29 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     (*rsc)->migration_threshold = INFINITY;
     (*rsc)->failure_timeout = 0;
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_CIB_ATTR_PRIORITY);
+    value = g_hash_table_lookup((*rsc)->meta, PCMK_META_PRIORITY);
     (*rsc)->priority = char2score(value);
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_CRITICAL);
+    value = g_hash_table_lookup((*rsc)->meta, PCMK_META_CRITICAL);
     if ((value == NULL) || crm_is_true(value)) {
         pe__set_resource_flags(*rsc, pcmk_rsc_critical);
     }
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_NOTIFY);
+    value = g_hash_table_lookup((*rsc)->meta, PCMK_META_NOTIFY);
     if (crm_is_true(value)) {
         pe__set_resource_flags(*rsc, pcmk_rsc_notify);
     }
 
     if (xml_contains_remote_node((*rsc)->xml)) {
         (*rsc)->is_remote_node = TRUE;
-        if (g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_CONTAINER)) {
+        if (g_hash_table_lookup((*rsc)->meta, PCMK__META_CONTAINER)) {
             guest_node = true;
         } else {
             remote_node = true;
         }
     }
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_OP_ATTR_ALLOW_MIGRATE);
+    value = g_hash_table_lookup((*rsc)->meta, PCMK_META_ALLOW_MIGRATE);
     if (crm_is_true(value)) {
         pe__set_resource_flags(*rsc, pcmk_rsc_migratable);
     } else if ((value == NULL) && remote_node) {
@@ -746,12 +742,12 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
          * resources within the remote-node before moving. Allowing
          * migration support enables this feature. If this ever causes
          * problems, migration support can be explicitly turned off with
-         * allow-migrate=false.
+         * PCMK_META_ALLOW_MIGRATE=false.
          */
         pe__set_resource_flags(*rsc, pcmk_rsc_migratable);
     }
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MANAGED);
+    value = g_hash_table_lookup((*rsc)->meta, PCMK_META_IS_MANAGED);
     if (value != NULL && !pcmk__str_eq("default", value, pcmk__str_casei)) {
         if (crm_is_true(value)) {
             pe__set_resource_flags(*rsc, pcmk_rsc_managed);
@@ -760,7 +756,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         }
     }
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MAINTENANCE);
+    value = g_hash_table_lookup((*rsc)->meta, PCMK_META_MAINTENANCE);
     if (crm_is_true(value)) {
         pe__clear_resource_flags(*rsc, pcmk_rsc_managed);
         pe__set_resource_flags(*rsc, pcmk_rsc_maintenance);
@@ -771,7 +767,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     }
 
     if (pe_rsc_is_clone(pe__const_top_resource(*rsc, false))) {
-        value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_UNIQUE);
+        value = g_hash_table_lookup((*rsc)->meta, PCMK_META_GLOBALLY_UNIQUE);
         if (crm_is_true(value)) {
             pe__set_resource_flags(*rsc, pcmk_rsc_unique);
         }
@@ -782,13 +778,14 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         pe__set_resource_flags(*rsc, pcmk_rsc_unique);
     }
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_RESTART);
+    // @COMPAT Deprecated meta-attribute
+    value = g_hash_table_lookup((*rsc)->meta, PCMK__META_RESTART_TYPE);
     if (pcmk__str_eq(value, "restart", pcmk__str_casei)) {
         (*rsc)->restart_type = pe_restart_restart;
         pcmk__rsc_trace(*rsc, "%s dependency restart handling: restart",
                         (*rsc)->id);
         pcmk__warn_once(pcmk__wo_restart_type,
-                        "Support for restart-type is deprecated "
+                        "Support for " PCMK__META_RESTART_TYPE " is deprecated "
                         "and will be removed in a future release");
 
     } else {
@@ -797,7 +794,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                         (*rsc)->id);
     }
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MULTIPLE);
+    value = g_hash_table_lookup((*rsc)->meta, PCMK_META_MULTIPLE_ACTIVE);
     if (pcmk__str_eq(value, "stop_only", pcmk__str_casei)) {
         (*rsc)->recovery_type = pcmk_multiply_active_stop;
         pcmk__rsc_trace(*rsc, "%s multiple running resource recovery: stop only",
@@ -819,7 +816,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         if (!pcmk__str_eq(value, "stop_start",
                           pcmk__str_casei|pcmk__str_null_matches)) {
             pcmk__config_warn("%s is not a valid value for "
-                              XML_RSC_ATTR_MULTIPLE
+                              PCMK_META_MULTIPLE_ACTIVE
                               ", using default of \"stop_start\"", value);
         }
         (*rsc)->recovery_type = pcmk_multiply_active_restart;
@@ -828,7 +825,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                         (*rsc)->id);
     }
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_STICKINESS);
+    value = g_hash_table_lookup((*rsc)->meta, PCMK_META_RESOURCE_STICKINESS);
     if (value != NULL && !pcmk__str_eq("default", value, pcmk__str_casei)) {
         (*rsc)->stickiness = char2score(value);
     }
@@ -854,7 +851,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         pe__set_resource_flags(*rsc, pcmk_rsc_fence_device);
     }
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_REQUIRES);
+    value = g_hash_table_lookup((*rsc)->meta, PCMK_META_REQUIRES);
     unpack_requires(*rsc, value, false);
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_FAILURE_TIMEOUT);
@@ -871,18 +868,19 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
         /* Grabbing the value now means that any rules based on node attributes
          * will evaluate to false, so such rules should not be used with
-         * reconnect_interval.
+         * PCMK_REMOTE_RA_RECONNECT_INTERVAL.
          *
          * @TODO Evaluate per node before using
          */
-        value = g_hash_table_lookup(params, XML_REMOTE_ATTR_RECONNECT_INTERVAL);
+        value = g_hash_table_lookup(params, PCMK_REMOTE_RA_RECONNECT_INTERVAL);
         if (value) {
             /* reconnect delay works by setting failure_timeout and preventing the
              * connection from starting until the failure is cleared. */
             pcmk_parse_interval_spec(value, &((*rsc)->remote_reconnect_ms));
 
-            /* we want to override any default failure_timeout in use when remote
-             * reconnect_interval is in use. */ 
+            /* We want to override any default failure_timeout in use when remote
+             * PCMK_REMOTE_RA_RECONNECT_INTERVAL is in use.
+             */
             (*rsc)->failure_timeout = (*rsc)->remote_reconnect_ms / 1000;
         }
     }

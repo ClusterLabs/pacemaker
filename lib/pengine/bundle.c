@@ -930,7 +930,7 @@ pe__bundle_needs_remote_name(pcmk_resource_t *rsc)
 
     // Use NULL node since pcmk__bundle_expand() uses that to set value
     params = pe_rsc_params(rsc, NULL, rsc->cluster);
-    value = g_hash_table_lookup(params, XML_RSC_ATTR_REMOTE_RA_ADDR);
+    value = g_hash_table_lookup(params, PCMK_REMOTE_RA_ADDR);
 
     return pcmk__str_eq(value, "#uname", pcmk__str_casei)
            && xml_contains_remote_node(rsc->xml);
@@ -1015,7 +1015,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         }
     }
 
-    // Use 0 for default, minimum, and invalid promoted-max
+    // Use 0 for default, minimum, and invalid PCMK_META_PROMOTED_MAX
     value = crm_element_value(xml_obj, PCMK_META_PROMOTED_MAX);
     if (value == NULL) {
         // @COMPAT deprecated since 2.0.0
@@ -1023,7 +1023,9 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     }
     pcmk__scan_min_int(value, &bundle_data->promoted_max, 0);
 
-    // Default replicas to promoted-max if it was specified and 1 otherwise
+    /* Default replicas to PCMK_META_PROMOTED_MAX if it was specified and 1
+     * otherwise
+     */
     value = crm_element_value(xml_obj, "replicas");
     if ((value == NULL) && (bundle_data->promoted_max > 0)) {
         bundle_data->nreplicas = bundle_data->promoted_max;
@@ -1128,7 +1130,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         crm_xml_set_id(xml_set, "%s-%s-meta", bundle_data->prefix, xml_resource->name);
 
         crm_create_nvpair_xml(xml_set, NULL,
-                              XML_RSC_ATTR_ORDERED, XML_BOOLEAN_TRUE);
+                              PCMK_META_ORDERED, XML_BOOLEAN_TRUE);
 
         value = pcmk__itoa(bundle_data->nreplicas);
         crm_create_nvpair_xml(xml_set, NULL, PCMK_META_CLONE_MAX, value);
@@ -1138,12 +1140,12 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         crm_create_nvpair_xml(xml_set, NULL, PCMK_META_CLONE_NODE_MAX, value);
         free(value);
 
-        crm_create_nvpair_xml(xml_set, NULL, XML_RSC_ATTR_UNIQUE,
+        crm_create_nvpair_xml(xml_set, NULL, PCMK_META_GLOBALLY_UNIQUE,
                               pcmk__btoa(bundle_data->nreplicas_per_host > 1));
 
         if (bundle_data->promoted_max) {
             crm_create_nvpair_xml(xml_set, NULL,
-                                  XML_RSC_ATTR_PROMOTABLE, XML_BOOLEAN_TRUE);
+                                  PCMK_META_PROMOTABLE, XML_BOOLEAN_TRUE);
 
             value = pcmk__itoa(bundle_data->promoted_max);
             crm_create_nvpair_xml(xml_set, NULL, PCMK_META_PROMOTED_MAX, value);
@@ -1236,16 +1238,18 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
             allocate_ip(bundle_data, replica, buffer);
             bundle_data->replicas = g_list_append(bundle_data->replicas,
                                                   replica);
-            bundle_data->attribute_target = g_hash_table_lookup(replica->child->meta,
-                                                                XML_RSC_ATTR_TARGET);
+            bundle_data->attribute_target =
+                g_hash_table_lookup(replica->child->meta,
+                                    PCMK_META_CONTAINER_ATTR_TARGET);
         }
         bundle_data->container_host_options = g_string_free(buffer, FALSE);
 
         if (bundle_data->attribute_target) {
-            g_hash_table_replace(rsc->meta, strdup(XML_RSC_ATTR_TARGET),
+            g_hash_table_replace(rsc->meta,
+                                 strdup(PCMK_META_CONTAINER_ATTR_TARGET),
                                  strdup(bundle_data->attribute_target));
             g_hash_table_replace(bundle_data->child->meta,
-                                 strdup(XML_RSC_ATTR_TARGET),
+                                 strdup(PCMK_META_CONTAINER_ATTR_TARGET),
                                  strdup(bundle_data->attribute_target));
         }
 

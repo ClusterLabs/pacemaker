@@ -95,7 +95,6 @@ bool pcmk__valid_sbd_timeout(const char *value);
 #define PCMK__ENV_NODE_ACTION_LIMIT         "node_action_limit"
 #define PCMK__ENV_NODE_START_STATE          "node_start_state"
 #define PCMK__ENV_PANIC_ACTION              "panic_action"
-#define PCMK__ENV_PHYSICAL_HOST             "physical_host"
 #define PCMK__ENV_REMOTE_ADDRESS            "remote_address"
 #define PCMK__ENV_REMOTE_SCHEMA_DIR         "remote_schema_directory"
 #define PCMK__ENV_REMOTE_PID1               "remote_pid1"
@@ -130,7 +129,28 @@ bool pcmk__valid_sbd_timeout(const char *value);
 #define PCMK__OPT_REMOVE_AFTER_STOP         "remove-after-stop"
 
 // Constants for meta-attribute names
-#define PCMK__META_ALLOW_UNHEALTHY_NODES    "allow-unhealthy-nodes"
+#define PCMK__META_CLONE_INSTANCE_NUM       "clone"
+#define PCMK__META_CONTAINER                "container"
+#define PCMK__META_INTERNAL_RSC             "internal_rsc"
+#define PCMK__META_PHYSICAL_HOST            "physical-host"
+
+/* @TODO Plug these in. Currently, they're never set. These are op attrs for use
+ * with https://projects.clusterlabs.org/T382.
+ */
+#define PCMK__META_CLEAR_FAILURE_OP         "clear_failure_op"
+#define PCMK__META_CLEAR_FAILURE_INTERVAL   "clear_failure_interval"
+
+// @COMPAT Deprecated alias for PCMK__META_PROMOTED_MAX since 2.0.0
+#define PCMK__META_PROMOTED_MAX_LEGACY      "master-max"
+
+// @COMPAT Deprecated alias for PCMK__META_PROMOTED_NODE_MAX since 2.0.0
+#define PCMK__META_PROMOTED_NODE_MAX_LEGACY "master-node-max"
+
+// @COMPAT Deprecated meta-attribute since 2.0.0
+#define PCMK__META_RESTART_TYPE             "restart-type"
+
+// @COMPAT Deprecated meta-attribute since 2.0.0
+#define PCMK__META_ROLE_AFTER_FAILURE       "role_after_failure"
 
 // Constants for enumerated values for various options
 #define PCMK__VALUE_CLUSTER                 "cluster"

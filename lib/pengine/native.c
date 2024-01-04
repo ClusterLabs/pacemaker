@@ -157,7 +157,7 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                 pe__set_resource_flags(rsc, pcmk_rsc_blocked);
 
                 /* If the resource belongs to a group or bundle configured with
-                 * multiple-active=block, block the entire entity.
+                 * PCMK_META_MULTIPLE_ACTIVE=block, block the entire entity.
                  */
                 if (rsc->parent
                     && ((rsc->parent->variant == pcmk_rsc_variant_group)
@@ -199,7 +199,7 @@ static void
 recursive_clear_unique(pcmk_resource_t *rsc, gpointer user_data)
 {
     pe__clear_resource_flags(rsc, pcmk_rsc_unique);
-    add_hash_param(rsc->meta, XML_RSC_ATTR_UNIQUE, XML_BOOLEAN_FALSE);
+    add_hash_param(rsc->meta, PCMK_META_GLOBALLY_UNIQUE, XML_BOOLEAN_FALSE);
     g_list_foreach(rsc->children, (GFunc) recursive_clear_unique, NULL);
 }
 
@@ -224,10 +224,10 @@ native_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
          */
         pe__force_anon(standard, parent, rsc->id, scheduler);
 
-        /* Clear globally-unique on the parent and all its descendants unpacked
-         * so far (clearing the parent should make any future children unpacking
-         * correct). We have to clear this resource explicitly because it isn't
-         * hooked into the parent's children yet.
+        /* Clear PCMK_META_GLOBALLY_UNIQUE on the parent and all its descendants
+         * unpacked so far (clearing the parent should make any future children
+         * unpacking correct). We have to clear this resource explicitly because
+         * it isn't hooked into the parent's children yet.
          */
         recursive_clear_unique(parent, NULL);
         recursive_clear_unique(rsc, NULL);
@@ -482,7 +482,7 @@ native_print_xml(pcmk_resource_t *rsc, const char *pre_text, long options,
 
     status_print("role=\"%s\" ", rsc_state);
     if (rsc->meta) {
-        target_role = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
+        target_role = g_hash_table_lookup(rsc->meta, PCMK_META_TARGET_ROLE);
     }
     if (target_role) {
         status_print("target_role=\"%s\" ", target_role);
@@ -647,7 +647,7 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
     if (target_role != NULL) {
         switch (text2role(target_role)) {
             case pcmk_role_unknown:
-                pcmk__config_err("Invalid " XML_RSC_ATTR_TARGET_ROLE
+                pcmk__config_err("Invalid " PCMK_META_TARGET_ROLE
                                  " %s for resource %s", target_role, rsc->id);
                 break;
 
@@ -658,7 +658,8 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
             case pcmk_role_unpromoted:
                 if (pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
                                 pcmk_rsc_promotable)) {
-                    have_flags = add_output_flag(outstr, "target-role:",
+                    have_flags = add_output_flag(outstr,
+                                                 PCMK_META_TARGET_ROLE ":",
                                                  have_flags);
                     g_string_append(outstr, target_role);
                 }
@@ -740,7 +741,8 @@ pe__common_output_html(pcmk__output_t *out, const pcmk_resource_t *rsc,
     CRM_ASSERT(kind != NULL);
 
     if (rsc->meta) {
-        const char *is_internal = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INTERNAL_RSC);
+        const char *is_internal = g_hash_table_lookup(rsc->meta,
+                                                      PCMK__META_INTERNAL_RSC);
 
         if (crm_is_true(is_internal)
             && !pcmk_is_set(show_opts, pcmk_show_implicit_rscs)) {
@@ -748,7 +750,7 @@ pe__common_output_html(pcmk__output_t *out, const pcmk_resource_t *rsc,
             crm_trace("skipping print of internal resource %s", rsc->id);
             return pcmk_rc_no_output;
         }
-        target_role = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
+        target_role = g_hash_table_lookup(rsc->meta, PCMK_META_TARGET_ROLE);
     }
 
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
@@ -793,7 +795,8 @@ pe__common_output_text(pcmk__output_t *out, const pcmk_resource_t *rsc,
     CRM_ASSERT(rsc->variant == pcmk_rsc_variant_primitive);
 
     if (rsc->meta) {
-        const char *is_internal = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INTERNAL_RSC);
+        const char *is_internal = g_hash_table_lookup(rsc->meta,
+                                                      PCMK__META_INTERNAL_RSC);
 
         if (crm_is_true(is_internal)
             && !pcmk_is_set(show_opts, pcmk_show_implicit_rscs)) {
@@ -801,7 +804,7 @@ pe__common_output_text(pcmk__output_t *out, const pcmk_resource_t *rsc,
             crm_trace("skipping print of internal resource %s", rsc->id);
             return pcmk_rc_no_output;
         }
-        target_role = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
+        target_role = g_hash_table_lookup(rsc->meta, PCMK_META_TARGET_ROLE);
     }
 
     {
@@ -829,7 +832,7 @@ common_print(pcmk_resource_t *rsc, const char *pre_text, const char *name,
 
     if (rsc->meta) {
         const char *is_internal = g_hash_table_lookup(rsc->meta,
-                                                      XML_RSC_ATTR_INTERNAL_RSC);
+                                                      PCMK__META_INTERNAL_RSC);
 
         if (crm_is_true(is_internal)
             && !pcmk_is_set(options, pe_print_implicit)) {
@@ -837,7 +840,7 @@ common_print(pcmk_resource_t *rsc, const char *pre_text, const char *name,
             crm_trace("skipping print of internal resource %s", rsc->id);
             return;
         }
-        target_role = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
+        target_role = g_hash_table_lookup(rsc->meta, PCMK_META_TARGET_ROLE);
     }
 
     if (options & pe_print_xml) {
@@ -986,7 +989,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     desc = pe__resource_description(rsc, show_opts);
 
     if (rsc->meta != NULL) {
-       target_role = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
+       target_role = g_hash_table_lookup(rsc->meta, PCMK_META_TARGET_ROLE);
     }
 
     CRM_ASSERT(rsc->variant == pcmk_rsc_variant_primitive);

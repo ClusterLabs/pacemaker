@@ -393,10 +393,10 @@ pcmk__apply_node_health(pcmk_scheduler_t *scheduler)
 
             if (health < 0) {
                 /* Negative health scores do not apply to resources with
-                 * allow-unhealthy-nodes=true.
+                 * PCMK_META_ALLOW_UNHEALTHY_NODES=true.
                  */
                 constrain = !crm_is_true(g_hash_table_lookup(rsc->meta,
-                                         PCMK__META_ALLOW_UNHEALTHY_NODES));
+                                         PCMK_META_ALLOW_UNHEALTHY_NODES));
             }
             if (constrain) {
                 pcmk__new_location(strategy_str, rsc, health, NULL, node);
