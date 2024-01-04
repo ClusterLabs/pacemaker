@@ -421,6 +421,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_ORIGIN instead
 #define F_CRM_ORIGIN PCMK_XA_ORIGIN
 
+//! \deprecated Do not use
+#define F_CRM_USER "crm_user"
+
 #ifdef __cplusplus
 }
 #endif
