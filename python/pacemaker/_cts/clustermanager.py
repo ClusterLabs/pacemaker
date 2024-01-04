@@ -232,7 +232,7 @@ class ClusterManager(UserDict):
             if not peer:
                 self._logger.log("ERROR: Unknown stonith match: %r" % shot)
 
-            elif not peer in peer_list:
+            elif peer not in peer_list:
                 self.debug("Found peer: %s" % peer)
                 peer_list.append(peer)
 
@@ -276,7 +276,7 @@ class ClusterManager(UserDict):
         else:
             self.debug("Starting %s on node %s" % (self.templates["Name"], node))
 
-        if not node in self.expected_status:
+        if node not in self.expected_status:
             self.expected_status[node] = "down"
 
         if self.expected_status[node] != "down":

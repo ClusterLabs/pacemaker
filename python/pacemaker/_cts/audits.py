@@ -675,7 +675,7 @@ class ColocationAudit(PrimitiveAudit):
                 self.debug("Colocation audit (%s): %s not running" % (coloc.id, coloc.rsc))
             else:
                 for node in source:
-                    if not node in target:
+                    if node not in target:
                         result = False
                         self._cm.log("Colocation audit (%s): %s running on %s (not in %r)"
                                      % (coloc.id, coloc.rsc, node, target))

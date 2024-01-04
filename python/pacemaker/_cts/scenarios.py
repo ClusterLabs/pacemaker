@@ -175,7 +175,7 @@ class Scenario:
 
     def incr(self, name):
         """Increment the given stats key."""
-        if not name in self.stats:
+        if name not in self.stats:
             self.stats[name] = 0
 
         self.stats[name] += 1
