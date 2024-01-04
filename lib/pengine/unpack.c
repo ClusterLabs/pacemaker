@@ -3471,7 +3471,7 @@ record_failed_op(struct action_history *history)
     crm_trace("Adding entry for %s on %s to failed action list",
               history->key, pe__node_name(history->node));
     crm_xml_add(history->xml, PCMK_XA_UNAME, history->node->details->uname);
-    crm_xml_add(history->xml, XML_LRM_ATTR_RSCID, history->rsc->id);
+    crm_xml_add(history->xml, PCMK__XA_RSC_ID, history->rsc->id);
     add_node_copy(history->rsc->cluster->failed, history->xml);
 }
 

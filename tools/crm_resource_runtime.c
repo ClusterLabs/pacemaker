@@ -690,7 +690,7 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
          xml_op != NULL;
          xml_op = pcmk__xml_next(xml_op)) {
 
-        failed_id = crm_element_value(xml_op, XML_LRM_ATTR_RSCID);
+        failed_id = crm_element_value(xml_op, PCMK__XA_RSC_ID);
         if (failed_id == NULL) {
             // Malformed history entry, should never happen
             continue;

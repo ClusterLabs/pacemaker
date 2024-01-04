@@ -137,6 +137,7 @@
  */
 #define PCMK__XA_ROUTER_NODE            "router_node"
 
+#define PCMK__XA_RSC_ID                 "rsc-id"
 #define PCMK__XA_SCHEMA                 "schema"
 #define PCMK__XA_SCHEMAS                "schemas"
 #define PCMK__XA_SRC                    "src"
