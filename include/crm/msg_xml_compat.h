@@ -529,6 +529,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_META_RECORD_PENDING instead
 #define XML_OP_ATTR_PENDING PCMK_META_RECORD_PENDING
 
+//! \deprecated Do not use
+#define XML_OP_ATTR_DIGESTS_ALL "digests-all"
+
 #ifdef __cplusplus
 }
 #endif
