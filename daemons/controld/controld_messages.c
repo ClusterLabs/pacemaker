@@ -805,7 +805,7 @@ handle_ping(const xmlNode *msg)
 
     ping = create_xml_node(NULL, XML_CRM_TAG_PING);
     value = crm_element_value(msg, PCMK__XA_CRM_SYS_TO);
-    crm_xml_add(ping, XML_PING_ATTR_SYSFROM, value);
+    crm_xml_add(ping, PCMK__XA_CRM_SUBSYSTEM, value);
 
     // Add controller state
     value = fsa_state2string(controld_globals.fsa_state);
@@ -885,7 +885,7 @@ handle_node_info_request(const xmlNode *msg)
     // Build reply
 
     reply_data = create_xml_node(NULL, XML_CIB_TAG_NODE);
-    crm_xml_add(reply_data, XML_PING_ATTR_SYSFROM, CRM_SYSTEM_CRMD);
+    crm_xml_add(reply_data, PCMK__XA_CRM_SUBSYSTEM, CRM_SYSTEM_CRMD);
 
     // Add whether current partition has quorum
     pcmk__xe_set_bool_attr(reply_data, PCMK_XA_HAVE_QUORUM,

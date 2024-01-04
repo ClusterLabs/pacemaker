@@ -238,8 +238,8 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
             pcmk__str_eq(crm_element_value(msg_data, PCMK_XA_RESULT), "ok",
                          pcmk__str_casei)?pcmk_rc_ok:pcmk_rc_error;
         reply_data.data.ping.last_good = (value_ll < 0)? 0 : (time_t) value_ll;
-        reply_data.data.ping.sys_from = crm_element_value(msg_data,
-                                            XML_PING_ATTR_SYSFROM);
+        reply_data.data.ping.sys_from =
+            crm_element_value(msg_data, PCMK__XA_CRM_SUBSYSTEM);
     } else if (pcmk__str_eq(value, CRM_OP_QUIT, pcmk__str_none)) {
         reply_data.reply_type = pcmk_pacemakerd_reply_shutdown;
         reply_data.data.shutdown.status = atoi(crm_element_value(msg_data, XML_LRM_ATTR_OPSTATUS));

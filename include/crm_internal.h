@@ -86,6 +86,7 @@
 #define PCMK__XA_CRM_HOST_TO            "crm_host_to"
 #define PCMK__XA_CRM_LIMIT_MAX          "crm-limit-max"
 #define PCMK__XA_CRM_LIMIT_MODE         "crm-limit-mode"
+#define PCMK__XA_CRM_SUBSYSTEM          "crm_subsystem"
 #define PCMK__XA_CRM_SYS_FROM           "crm_sys_from"
 #define PCMK__XA_CRM_SYS_TO             "crm_sys_to"
 #define PCMK__XA_CRM_TASK               "crm_task"
