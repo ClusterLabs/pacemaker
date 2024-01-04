@@ -76,6 +76,7 @@ extern "C" {
 #define PCMK_XA_DESCRIPTION                 "description"
 #define PCMK_XA_DEVICES                     "devices"
 #define PCMK_XA_EPOCH                       "epoch"
+#define PCMK_XA_EXEC_TIME                   "exec-time"
 #define PCMK_XA_EXIT_REASON                 "exit-reason"
 #define PCMK_XA_FORMAT                      "format"
 #define PCMK_XA_HAVE_QUORUM                 "have-quorum"
@@ -201,7 +202,7 @@ extern "C" {
  * executor operations.
  */
 
-#  define XML_RSC_OP_T_EXEC             "exec-time"
+#  define XML_RSC_OP_T_EXEC             PCMK_XA_EXEC_TIME
 #  define XML_RSC_OP_T_QUEUE            "queue-time"
 
 #  define XML_LRM_ATTR_MIGRATE_SOURCE	"migrate_source"
