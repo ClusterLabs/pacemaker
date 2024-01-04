@@ -595,13 +595,13 @@ append_restart_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
     }
 
     digest = calculate_operation_digest(restart, version);
-    /* Add PCMK__XA_OP_FORCE_RESTART and "op-restart-digest" to indicate the
-     * resource supports reload, no matter if it actually supports any
+    /* Add PCMK__XA_OP_FORCE_RESTART and PCMK__XA_OP_RESTART_DIGEST to indicate
+     * the resource supports reload, no matter if it actually supports any
      * reloadable parameters
      */
     crm_xml_add(update, PCMK__XA_OP_FORCE_RESTART,
                 (list == NULL)? "" : (const char *) list->str);
-    crm_xml_add(update, XML_LRM_ATTR_RESTART_DIGEST, digest);
+    crm_xml_add(update, PCMK__XA_OP_RESTART_DIGEST, digest);
 
     if ((list != NULL) && (list->len > 0)) {
         crm_trace("%s: %s, %s", op->rsc_id, digest, (const char *) list->str);

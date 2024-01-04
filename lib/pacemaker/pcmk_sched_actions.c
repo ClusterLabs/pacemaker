@@ -1686,7 +1686,7 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
                 pcmk__reschedule_recurring(rsc, task, interval_ms, node);
 
             } else if (crm_element_value(xml_op,
-                                         XML_LRM_ATTR_RESTART_DIGEST) != NULL) {
+                                         PCMK__XA_OP_RESTART_DIGEST) != NULL) {
                 // Agent supports reload, so use it
                 trigger_unfencing(rsc, node,
                                   "Device parameters changed (reload)", NULL,

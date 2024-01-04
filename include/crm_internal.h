@@ -130,6 +130,7 @@
 #define PCMK__XA_OPERATION_KEY          "operation_key"
 #define PCMK__XA_OP_DIGEST              "op-digest"
 #define PCMK__XA_OP_FORCE_RESTART       "op-force-restart"
+#define PCMK__XA_OP_RESTART_DIGEST      "op-restart-digest"
 #define PCMK__XA_OP_SECURE_PARAMS       "op-secure-params"
 #define PCMK__XA_OP_STATUS              "op-status"
 #define PCMK__XA_PACEMAKERD_STATE       "pacemakerd_state"

@@ -4568,7 +4568,7 @@ process_expired_result(struct action_history *history, int orig_exit_status)
                    "after failure expired",
                    pcmk__readable_interval(history->interval_ms), history->task,
                    history->rsc->id, pe__node_name(history->node));
-        crm_xml_add(history->xml, XML_LRM_ATTR_RESTART_DIGEST,
+        crm_xml_add(history->xml, PCMK__XA_OP_RESTART_DIGEST,
                     "calculated-failure-timeout");
         return pcmk_rc_ok;
     }
