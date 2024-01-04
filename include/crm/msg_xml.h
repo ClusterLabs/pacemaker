@@ -199,7 +199,6 @@ extern "C" {
  * executor operations.
  */
 
-#  define XML_LRM_ATTR_OPSTATUS		"op-status"
 #  define XML_LRM_ATTR_RC		"rc-code"
 #  define XML_LRM_ATTR_CALLID		"call-id"
 #  define XML_LRM_ATTR_OP_DIGEST	"op-digest"

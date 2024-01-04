@@ -571,6 +571,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_LRM_ATTR_RSCID "rsc-id"
 
+//! \deprecated Do not use
+#define XML_LRM_ATTR_OPSTATUS "op-status"
+
 #ifdef __cplusplus
 }
 #endif
