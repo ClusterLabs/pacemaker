@@ -544,6 +544,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_LRM_ATTR_TARGET "on_node"
 
+//! \deprecated Do not use
+#define XML_LRM_ATTR_TARGET_UUID "on_node_uuid"
+
 #ifdef __cplusplus
 }
 #endif
