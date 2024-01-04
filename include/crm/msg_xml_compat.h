@@ -595,6 +595,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_LRM_ATTR_SECURE_DIGEST "op-secure-digest"
 
+//! \deprecated Use \c PCMK_XA_EXIT_REASON instead
+#define XML_LRM_ATTR_EXIT_REASON PCMK_XA_EXIT_REASON
+
 #ifdef __cplusplus
 }
 #endif

@@ -200,8 +200,6 @@ extern "C" {
  * executor operations.
  */
 
-#  define XML_LRM_ATTR_EXIT_REASON	PCMK_XA_EXIT_REASON
-
 #  define XML_RSC_OP_LAST_CHANGE        "last-rc-change"
 #  define XML_RSC_OP_T_EXEC             "exec-time"
 #  define XML_RSC_OP_T_QUEUE            "queue-time"
