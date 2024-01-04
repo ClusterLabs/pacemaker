@@ -514,6 +514,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_COLOC_ATTR_SOURCE_INSTANCE "rsc-instance"
 
+//! \deprecated Do not use
+#define XML_COLOC_ATTR_TARGET_INSTANCE "with-rsc-instance"
+
 #ifdef __cplusplus
 }
 #endif
