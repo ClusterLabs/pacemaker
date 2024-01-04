@@ -209,7 +209,6 @@ extern "C" {
 // (identical value as above, but different constant allows clearer code intent)
 #  define XML_LRM_ATTR_INTERVAL_MS  XML_LRM_ATTR_INTERVAL
 
-#  define XML_LRM_ATTR_TASK		"operation"
 #  define XML_LRM_ATTR_TASK_KEY		"operation_key"
 #  define XML_LRM_ATTR_TARGET		"on_node"
 #  define XML_LRM_ATTR_TARGET_UUID	"on_node_uuid"

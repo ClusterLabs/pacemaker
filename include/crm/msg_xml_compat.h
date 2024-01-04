@@ -472,6 +472,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_OPERATION instead
 #define XML_FAILCIB_ATTR_OP PCMK_XA_OPERATION
 
+//! \deprecated Use \c PCMK_XA_OPERATION instead
+#define XML_LRM_ATTR_TASK PCMK_XA_OPERATION
+
 #ifdef __cplusplus
 }
 #endif
