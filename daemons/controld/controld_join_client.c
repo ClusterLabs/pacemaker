@@ -114,9 +114,9 @@ do_cl_join_offer_respond(long long action,
     CRM_CHECK(input != NULL, return);
 
     welcome_from = crm_element_value(input->msg, PCMK__XA_SRC);
-    join_id = crm_element_value(input->msg, F_CRM_JOIN_ID);
+    join_id = crm_element_value(input->msg, PCMK__XA_JOIN_ID);
     crm_trace("Accepting cluster join offer from node %s "CRM_XS" join-%s",
-              welcome_from, crm_element_value(input->msg, F_CRM_JOIN_ID));
+              welcome_from, crm_element_value(input->msg, PCMK__XA_JOIN_ID));
 
     /* we only ever want the last one */
     if (query_call_id > 0) {
@@ -176,7 +176,7 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
                                controld_globals.dc_name, CRM_SYSTEM_DC,
                                CRM_SYSTEM_CRMD, NULL);
 
-        crm_xml_add(reply, F_CRM_JOIN_ID, join_id);
+        crm_xml_add(reply, PCMK__XA_JOIN_ID, join_id);
         crm_xml_add(reply, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
         send_cluster_message(pcmk__get_node(0, controld_globals.dc_name, NULL,
                                             pcmk__node_search_cluster),
@@ -271,7 +271,7 @@ do_cl_join_finalize_respond(long long action,
         was_nack = FALSE;
     }
 
-    crm_element_value_int(input->msg, F_CRM_JOIN_ID, &join_id);
+    crm_element_value_int(input->msg, PCMK__XA_JOIN_ID, &join_id);
 
     if (was_nack) {
         crm_err("Shutting down because cluster join with leader %s failed "
@@ -308,7 +308,7 @@ do_cl_join_finalize_respond(long long action,
                                         controld_globals.dc_name, CRM_SYSTEM_DC,
                                         CRM_SYSTEM_CRMD, NULL);
 
-        crm_xml_add_int(reply, F_CRM_JOIN_ID, join_id);
+        crm_xml_add_int(reply, PCMK__XA_JOIN_ID, join_id);
 
         crm_debug("Confirming join-%d: sending local operation history to %s",
                   join_id, controld_globals.dc_name);

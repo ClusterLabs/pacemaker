@@ -1101,11 +1101,13 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
 
     } else if (strcmp(op, CRM_OP_JOIN_OFFER) == 0) {
         verify_feature_set(stored_msg);
-        crm_debug("Raising I_JOIN_OFFER: join-%s", crm_element_value(stored_msg, F_CRM_JOIN_ID));
+        crm_debug("Raising I_JOIN_OFFER: join-%s",
+                  crm_element_value(stored_msg, PCMK__XA_JOIN_ID));
         return I_JOIN_OFFER;
 
     } else if (strcmp(op, CRM_OP_JOIN_ACKNAK) == 0) {
-        crm_debug("Raising I_JOIN_RESULT: join-%s", crm_element_value(stored_msg, F_CRM_JOIN_ID));
+        crm_debug("Raising I_JOIN_RESULT: join-%s",
+                  crm_element_value(stored_msg, PCMK__XA_JOIN_ID));
         return I_JOIN_RESULT;
 
     } else if (strcmp(op, CRM_OP_LRM_DELETE) == 0) {
