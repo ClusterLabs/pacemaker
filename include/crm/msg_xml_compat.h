@@ -553,6 +553,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_ORDER_ATTR_THEN_INSTANCE "then-instance"
 
+//! \deprecated Do not use
+#define XML_TAG_DIFF_ADDED "diff-added"
+
 #ifdef __cplusplus
 }
 #endif
