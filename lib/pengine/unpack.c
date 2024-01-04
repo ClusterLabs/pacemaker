@@ -4560,7 +4560,7 @@ process_expired_result(struct action_history *history, int orig_exit_status)
          *
          * @TODO We should skip this if there is a newer successful monitor.
          *       Also, this causes rescheduling only if the history entry
-         *       has an op-digest (which the expire-non-blocked-failure
+         *       has a PCMK__XA_OP_DIGEST (which the expire-non-blocked-failure
          *       scheduler regression test doesn't, but that may not be a
          *       realistic scenario in production).
          */

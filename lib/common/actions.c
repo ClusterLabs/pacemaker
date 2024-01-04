@@ -327,7 +327,7 @@ should_filter_for_digest(xmlAttrPtr a, void *user_data)
     return pcmk__str_any_of((const char *) a->name,
                             PCMK_XA_ID,
                             PCMK_XA_CRM_FEATURE_SET,
-                            XML_LRM_ATTR_OP_DIGEST,
+                            PCMK__XA_OP_DIGEST,
                             PCMK__META_ON_NODE,
                             PCMK__META_ON_NODE_UUID,
                             "pcmk_external_ip",

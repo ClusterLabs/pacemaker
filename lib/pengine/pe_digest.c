@@ -402,7 +402,7 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
     CRM_ASSERT(node != NULL);
 
     op_version = crm_element_value(xml_op, PCMK_XA_CRM_FEATURE_SET);
-    digest_all = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
+    digest_all = crm_element_value(xml_op, PCMK__XA_OP_DIGEST);
     digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
 
     crm_element_value_ms(xml_op, PCMK_META_INTERVAL, &interval_ms);
