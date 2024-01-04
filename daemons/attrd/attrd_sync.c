@@ -175,7 +175,7 @@ attrd_add_client_to_waitlist(pcmk__request_t *request)
     /* And then add the key to the request XML so we can uniquely identify
      * it when it comes time to issue the ACK.
      */
-    crm_xml_add_int(request->xml, XML_LRM_ATTR_CALLID, waitlist_client);
+    crm_xml_add_int(request->xml, PCMK__XA_CALL_ID, waitlist_client);
 }
 
 /*!
@@ -245,7 +245,7 @@ attrd_ack_waitlist_clients(enum attrd_sync_point sync_point, const xmlNode *xml)
         return;
     }
 
-    if (crm_element_value_int(xml, XML_LRM_ATTR_CALLID, &callid) == -1) {
+    if (crm_element_value_int(xml, PCMK__XA_CALL_ID, &callid) == -1) {
         crm_warn("Could not get callid from request XML");
         return;
     }
@@ -487,7 +487,7 @@ attrd_expect_confirmations(pcmk__request_t *request, attrd_confirmation_action_f
         expected_confirmations = pcmk__intkey_table((GDestroyNotify) free_action);
     }
 
-    if (crm_element_value_int(request->xml, XML_LRM_ATTR_CALLID, &callid) == -1) {
+    if (crm_element_value_int(request->xml, PCMK__XA_CALL_ID, &callid) == -1) {
         crm_err("Could not get callid from xml");
         return;
     }

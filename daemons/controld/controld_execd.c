@@ -1263,7 +1263,7 @@ static bool do_lrm_cancel(ha_msg_input_t *input, lrm_state_t *lrm_state,
 
     op_key = pcmk__op_key(rsc->id, op_task, interval_ms);
 
-    meta_key = crm_meta_name(XML_LRM_ATTR_CALLID);
+    meta_key = crm_meta_name(PCMK__XA_CALL_ID);
     call_id = crm_element_value(params, meta_key);
     free(meta_key);
 

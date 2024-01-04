@@ -224,7 +224,7 @@ last_changed_string(const char *last_written, const char *user,
 static char *
 op_history_string(xmlNode *xml_op, const char *task, const char *interval_ms_s,
                   int rc, bool print_timing) {
-    const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
+    const char *call = crm_element_value(xml_op, PCMK__XA_CALL_ID);
     char *interval_str = NULL;
     char *buf = NULL;
 
@@ -1405,7 +1405,7 @@ failed_action_technical(pcmk__output_t *out, const xmlNode *xml_op,
                         int status, const char *exit_reason,
                         const char *exec_time)
 {
-    const char *call_id = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
+    const char *call_id = crm_element_value(xml_op, PCMK__XA_CALL_ID);
     const char *queue_time = crm_element_value(xml_op, XML_RSC_OP_T_QUEUE);
     const char *exit_status = services_ocf_exitcode_str(rc);
     const char *lrm_status = pcmk_exec_status_str(status);
@@ -1498,6 +1498,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     int rc;
     int status;
     const char *uname = crm_element_value(xml_op, PCMK_XA_UNAME);
+    const char *call_id = crm_element_value(xml_op, PCMK__XA_CALL_ID);
     const char *exit_reason = crm_element_value(xml_op, XML_LRM_ATTR_EXIT_REASON);
 
     time_t epoch = 0;
@@ -1519,7 +1520,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
                                         "exitstatus", services_ocf_exitcode_str(rc),
                                         "exitreason", pcmk__s(reason_s, ""),
                                         "exitcode", rc_s,
-                                        "call", crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
+                                        "call", call_id,
                                         "status", pcmk_exec_status_str(status),
                                         NULL);
     free(rc_s);
@@ -2063,7 +2064,7 @@ node_and_op(pcmk__output_t *out, va_list args) {
     out->list_item(out, NULL, "%s: %s (node=%s, call=%s, rc=%s%s): %s",
                    node_str, pe__xe_history_key(xml_op),
                    crm_element_value(xml_op, PCMK_XA_UNAME),
-                   crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
+                   crm_element_value(xml_op, PCMK__XA_CALL_ID),
                    crm_element_value(xml_op, PCMK__XA_RC_CODE),
                    last_change_str ? last_change_str : "",
                    pcmk_exec_status_str(status));
@@ -2081,6 +2082,7 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
 
     pcmk_resource_t *rsc = NULL;
     const char *uname = crm_element_value(xml_op, PCMK_XA_UNAME);
+    const char *call_id = crm_element_value(xml_op, PCMK__XA_CALL_ID);
     const char *rc_s = crm_element_value(xml_op, PCMK__XA_RC_CODE);
     const char *op_rsc = crm_element_value(xml_op, "resource");
     int status;
@@ -2092,7 +2094,7 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
     node = pcmk__output_create_xml_node(out, PCMK_XE_OPERATION,
                                         PCMK_XA_OP, pe__xe_history_key(xml_op),
                                         "node", uname,
-                                        "call", crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
+                                        "call", call_id,
                                         "rc", rc_s,
                                         "status", pcmk_exec_status_str(status),
                                         NULL);
@@ -2610,9 +2612,10 @@ op_history_xml(pcmk__output_t *out, va_list args) {
     int rc = va_arg(args, int);
     uint32_t show_opts = va_arg(args, uint32_t);
 
+    const char *call_id = crm_element_value(xml_op, PCMK__XA_CALL_ID);
     char *rc_s = pcmk__itoa(rc);
     xmlNodePtr node = pcmk__output_create_xml_node(out, "operation_history",
-                                                   "call", crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
+                                                   "call", call_id,
                                                    "task", task,
                                                    "rc", rc_s,
                                                    "rc_text", services_ocf_exitcode_str(rc),

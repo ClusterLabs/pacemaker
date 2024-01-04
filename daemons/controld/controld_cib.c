@@ -963,7 +963,7 @@ controld_delete_action_history(const lrmd_event_data_t *op)
     CRM_CHECK(op != NULL, return);
 
     xml_top = create_xml_node(NULL, XML_LRM_TAG_RSC_OP);
-    crm_xml_add_int(xml_top, XML_LRM_ATTR_CALLID, op->call_id);
+    crm_xml_add_int(xml_top, PCMK__XA_CALL_ID, op->call_id);
     crm_xml_add(xml_top, PCMK__XA_TRANSITION_KEY, op->user_data);
 
     if (op->interval_ms > 0) {
@@ -997,7 +997,7 @@ controld_delete_action_history(const lrmd_event_data_t *op)
 
 /* ... and also by operation key and operation call ID */
 #define XPATH_HISTORY_CALL XPATH_HISTORY \
-    "[@" PCMK_XA_ID "='%s' and @" XML_LRM_ATTR_CALLID "='%d']"
+    "[@" PCMK_XA_ID "='%s' and @" PCMK__XA_CALL_ID "='%d']"
 
 /* ... and also by operation key and original operation key */
 #define XPATH_HISTORY_ORIG XPATH_HISTORY \

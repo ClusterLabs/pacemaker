@@ -1235,7 +1235,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     crm_xml_add(xml_op, XML_LRM_ATTR_EXIT_REASON, pcmk__s(exit_reason, ""));
     crm_xml_add(xml_op, PCMK__META_ON_NODE, node); // For context during triage
 
-    crm_xml_add_int(xml_op, XML_LRM_ATTR_CALLID, op->call_id);
+    crm_xml_add_int(xml_op, PCMK__XA_CALL_ID, op->call_id);
     crm_xml_add_int(xml_op, PCMK__XA_RC_CODE, op->rc);
     crm_xml_add_int(xml_op, PCMK__XA_OP_STATUS, op->op_status);
     crm_xml_add_ms(xml_op, PCMK_META_INTERVAL, op->interval_ms);
@@ -1636,8 +1636,7 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
         } else if (pcmk_is_set(rsc->cluster->flags,
                                pcmk_sched_cancel_removed_actions)) {
             pcmk__schedule_cancel(rsc,
-                                  crm_element_value(xml_op,
-                                                    XML_LRM_ATTR_CALLID),
+                                  crm_element_value(xml_op, PCMK__XA_CALL_ID),
                                   task, interval_ms, node, "orphan");
             return true;
         } else {
@@ -1813,8 +1812,7 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
                 || node->details->maintenance)) {
             // Maintenance mode cancels recurring operations
             pcmk__schedule_cancel(rsc,
-                                  crm_element_value(rsc_op,
-                                                    XML_LRM_ATTR_CALLID),
+                                  crm_element_value(rsc_op, PCMK__XA_CALL_ID),
                                   task, interval_ms, node, "maintenance mode");
 
         } else if ((interval_ms > 0)

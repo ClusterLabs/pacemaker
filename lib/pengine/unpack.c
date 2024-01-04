@@ -4774,7 +4774,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
 
     history.expected_exit_status = pe__target_rc_from_xml(xml_op);
     history.key = pe__xe_history_key(xml_op);
-    crm_element_value_int(xml_op, XML_LRM_ATTR_CALLID, &(history.call_id));
+    crm_element_value_int(xml_op, PCMK__XA_CALL_ID, &(history.call_id));
 
     pcmk__rsc_trace(rsc, "Unpacking %s (%s call %d on %s): %s (%s)",
                     history.id, history.task, history.call_id,

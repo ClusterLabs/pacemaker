@@ -1737,8 +1737,8 @@ pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b,
         sort_return(0, "duplicate");
     }
 
-    crm_element_value_int(xml_a, XML_LRM_ATTR_CALLID, &a_call_id);
-    crm_element_value_int(xml_b, XML_LRM_ATTR_CALLID, &b_call_id);
+    crm_element_value_int(xml_a, PCMK__XA_CALL_ID, &a_call_id);
+    crm_element_value_int(xml_b, PCMK__XA_CALL_ID, &b_call_id);
 
     if (a_call_id == -1 && b_call_id == -1) {
         /* both are pending ops so it doesn't matter since

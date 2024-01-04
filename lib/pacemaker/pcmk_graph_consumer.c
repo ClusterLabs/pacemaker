@@ -871,7 +871,7 @@ pcmk__event_from_graph_action(const xmlNode *resource,
          xop = pcmk__xml_next(xop)) {
         int tmp = 0;
 
-        crm_element_value_int(xop, XML_LRM_ATTR_CALLID, &tmp);
+        crm_element_value_int(xop, PCMK__XA_CALL_ID, &tmp);
         crm_debug("Got call_id=%d for %s", tmp, ID(resource));
         if (tmp > op->call_id) {
             op->call_id = tmp;

@@ -106,7 +106,8 @@ handle_confirm_request(pcmk__request_t *request)
 
         crm_debug("Received confirmation from %s", request->peer);
 
-        if (crm_element_value_int(request->xml, XML_LRM_ATTR_CALLID, &callid) == -1) {
+        if (crm_element_value_int(request->xml, PCMK__XA_CALL_ID,
+                                  &callid) == -1) {
             pcmk__set_result(&request->result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
                              "Could not get callid from XML");
         } else {
