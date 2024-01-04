@@ -562,6 +562,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_ATTR_TE_NOWAIT "op_no_wait"
 
+//! \deprecated Do not use
+#define XML_ATTR_TE_TARGET_RC "op_target_rc"
+
 #ifdef __cplusplus
 }
 #endif
