@@ -691,7 +691,7 @@ update_results(xmlNode *failed, xmlNode *target, const char *operation,
         crm_xml_add(xml_node, PCMK__XA_OBJECT_TYPE,
                     (const char *) target->name);
         crm_xml_add(xml_node, PCMK_XA_OPERATION, operation);
-        crm_xml_add(xml_node, XML_FAILCIB_ATTR_REASON, error_msg);
+        crm_xml_add(xml_node, PCMK_XA_REASON, error_msg);
 
         crm_warn("Action %s failed: %s (cde=%d)",
                  operation, error_msg, return_code);

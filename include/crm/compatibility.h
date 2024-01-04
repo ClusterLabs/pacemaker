@@ -145,7 +145,7 @@ extern "C" {
 #define XML_MSG_TAG_DATA            "msg_data"
 #define XML_FAIL_TAG_RESOURCE       "failed_resource"
 #define XML_FAILRES_ATTR_RESID      "resource_id"
-#define XML_FAILRES_ATTR_REASON     "reason"
+#define XML_FAILRES_ATTR_REASON     PCMK_XA_REASON
 #define XML_FAILRES_ATTR_RESSTATUS  "resource_status"
 #define XML_ATTR_RESULT             PCMK_XA_RESULT
 #define XML_ATTR_SECTION            "section"

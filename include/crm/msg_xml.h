@@ -77,6 +77,7 @@ extern "C" {
 #define PCMK_XA_OPERATION                   "operation"
 #define PCMK_XA_ORIGIN                      "origin"
 #define PCMK_XA_PROVIDER                    "provider"
+#define PCMK_XA_REASON                      "reason"
 #define PCMK_XA_REFERENCE                   "reference"
 #define PCMK_XA_REQUEST                     "request"
 #define PCMK_XA_RESULT                      "result"
