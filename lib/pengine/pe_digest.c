@@ -196,7 +196,7 @@ calculate_secure_digest(pcmk__op_digest_t *data, const pcmk_resource_t *rsc,
     if (xml_op == NULL) {
         secure_list = " passwd password user ";
     } else {
-        secure_list = crm_element_value(xml_op, XML_LRM_ATTR_OP_SECURE);
+        secure_list = crm_element_value(xml_op, PCMK__XA_OP_SECURE_PARAMS);
     }
 
     if (old_version) {

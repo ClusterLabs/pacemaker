@@ -626,16 +626,16 @@ append_secure_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
 
     CRM_LOG_ASSERT(op->params != NULL);
 
-    /*
-     * To keep XML_LRM_ATTR_OP_SECURE short, we want it to contain the
-     * secure parameters but XML_LRM_ATTR_SECURE_DIGEST to be based on
-     * the insecure ones
+    /* To keep PCMK__XA_OP_SECURE_PARAMS short, we want it to contain the secure
+     * parameters but XML_LRM_ATTR_SECURE_DIGEST to be based on the insecure
+     * ones
      */
     list = build_parameter_list(op, metadata, ra_param_private, &secure);
 
     if (list != NULL) {
         digest = calculate_operation_digest(secure, version);
-        crm_xml_add(update, XML_LRM_ATTR_OP_SECURE, (const char *) list->str);
+        crm_xml_add(update, PCMK__XA_OP_SECURE_PARAMS,
+                    (const char *) list->str);
         crm_xml_add(update, XML_LRM_ATTR_SECURE_DIGEST, digest);
 
         crm_trace("%s: %s, %s", op->rsc_id, digest, (const char *) list->str);
