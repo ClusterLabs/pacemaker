@@ -2547,7 +2547,7 @@ process_recurring(pcmk_node_t *node, pcmk_resource_t *rsc,
             continue;
         }
 
-        status = crm_element_value(rsc_op, XML_LRM_ATTR_OPSTATUS);
+        status = crm_element_value(rsc_op, PCMK__XA_OP_STATUS);
         if (pcmk__str_eq(status, "-1", pcmk__str_casei)) {
             pcmk__rsc_trace(rsc, "Skipping %s on %s: status",
                             id, pe__node_name(node));
@@ -2580,7 +2580,7 @@ calculate_active_ops(const GList *sorted_op_list, int *start_index,
         counter++;
 
         task = crm_element_value(rsc_op, PCMK_XA_OPERATION);
-        status = crm_element_value(rsc_op, XML_LRM_ATTR_OPSTATUS);
+        status = crm_element_value(rsc_op, PCMK__XA_OP_STATUS);
 
         if (pcmk__str_eq(task, PCMK_ACTION_STOP, pcmk__str_casei)
             && pcmk__str_eq(status, "0", pcmk__str_casei)) {
@@ -2907,7 +2907,7 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
         int status = PCMK_EXEC_ERROR;
 
         crm_element_value_int(xml, XML_LRM_ATTR_RC, &rc);
-        crm_element_value_int(xml, XML_LRM_ATTR_OPSTATUS, &status);
+        crm_element_value_int(xml, PCMK__XA_OP_STATUS, &status);
         if ((rc != target_rc) || (status != PCMK_EXEC_DONE)) {
             return NULL;
         }
@@ -3238,8 +3238,7 @@ unpack_migrate_to_success(struct action_history *history)
             return;
         }
         crm_element_value_int(migrate_from, XML_LRM_ATTR_RC, &from_rc);
-        crm_element_value_int(migrate_from, XML_LRM_ATTR_OPSTATUS,
-                              &from_status);
+        crm_element_value_int(migrate_from, PCMK__XA_OP_STATUS, &from_status);
     }
 
     /* If the resource has newer state on both the source and target after the
@@ -4476,17 +4475,17 @@ can_affect_state(struct action_history *history)
 static int
 unpack_action_result(struct action_history *history)
 {
-    if ((crm_element_value_int(history->xml, XML_LRM_ATTR_OPSTATUS,
+    if ((crm_element_value_int(history->xml, PCMK__XA_OP_STATUS,
                                &(history->execution_status)) < 0)
         || (history->execution_status < PCMK_EXEC_PENDING)
         || (history->execution_status > PCMK_EXEC_MAX)
         || (history->execution_status == PCMK_EXEC_CANCELLED)) {
         pcmk__config_err("Ignoring resource history entry %s for %s on %s "
-                         "with invalid " XML_LRM_ATTR_OPSTATUS " '%s'",
+                         "with invalid " PCMK__XA_OP_STATUS " '%s'",
                          history->id, history->rsc->id,
                          pe__node_name(history->node),
                          pcmk__s(crm_element_value(history->xml,
-                                                   XML_LRM_ATTR_OPSTATUS),
+                                                   PCMK__XA_OP_STATUS),
                                  ""));
         return pcmk_rc_unpack_error;
     }

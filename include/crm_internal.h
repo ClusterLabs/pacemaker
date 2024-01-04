@@ -127,6 +127,7 @@
 #define PCMK__XA_NODE_START_STATE       "node_start_state"
 #define PCMK__XA_OBJECT_TYPE            "object_type"
 #define PCMK__XA_OPERATION_KEY          "operation_key"
+#define PCMK__XA_OP_STATUS              "op-status"
 #define PCMK__XA_PACEMAKERD_STATE       "pacemakerd_state"
 #define PCMK__XA_PRIORITY               "priority"
 #define PCMK__XA_REAP                   "reap"

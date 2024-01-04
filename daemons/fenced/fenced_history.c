@@ -265,7 +265,7 @@ stonith_xml_history_to_list(const xmlNode *history)
          * status. Instead, set an unknown status in that case.
          */
         if ((crm_element_value_int(xml_op, XML_LRM_ATTR_RC, &exit_status) < 0)
-            || (crm_element_value_int(xml_op, XML_LRM_ATTR_OPSTATUS,
+            || (crm_element_value_int(xml_op, PCMK__XA_OP_STATUS,
                                       &execution_status) < 0)) {
             exit_status = CRM_EX_INDETERMINATE;
             execution_status = PCMK_EXEC_UNKNOWN;

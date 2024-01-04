@@ -1470,8 +1470,8 @@ failed_action_default(pcmk__output_t *out, va_list args)
 
     pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_RC), &rc, 0);
 
-    pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS),
-                       &status, 0);
+    pcmk__scan_min_int(crm_element_value(xml_op, PCMK__XA_OP_STATUS), &status,
+                       0);
 
     if (pcmk__str_empty(node_name)) {
         node_name = "unknown node";
@@ -1506,8 +1506,8 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr node = NULL;
 
     pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_RC), &rc, 0);
-    pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS),
-                       &status, 0);
+    pcmk__scan_min_int(crm_element_value(xml_op, PCMK__XA_OP_STATUS), &status,
+                       0);
 
     rc_s = pcmk__itoa(rc);
     if (crm_element_value(xml_op, PCMK__XA_OPERATION_KEY) == NULL) {
@@ -2031,8 +2031,8 @@ node_and_op(pcmk__output_t *out, va_list args) {
     int status;
     time_t last_change = 0;
 
-    pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS),
-                       &status, PCMK_EXEC_UNKNOWN);
+    pcmk__scan_min_int(crm_element_value(xml_op, PCMK__XA_OP_STATUS), &status,
+                       PCMK_EXEC_UNKNOWN);
 
     rsc = pe_find_resource(scheduler->resources, op_rsc);
 
@@ -2086,7 +2086,7 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
     time_t last_change = 0;
     xmlNode *node = NULL;
 
-    pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS),
+    pcmk__scan_min_int(crm_element_value(xml_op, PCMK__XA_OP_STATUS),
                        &status, PCMK_EXEC_UNKNOWN);
     node = pcmk__output_create_xml_node(out, PCMK_XE_OPERATION,
                                         PCMK_XA_OP, pe__xe_history_key(xml_op),

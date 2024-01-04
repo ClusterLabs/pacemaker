@@ -1237,7 +1237,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
 
     crm_xml_add_int(xml_op, XML_LRM_ATTR_CALLID, op->call_id);
     crm_xml_add_int(xml_op, XML_LRM_ATTR_RC, op->rc);
-    crm_xml_add_int(xml_op, XML_LRM_ATTR_OPSTATUS, op->op_status);
+    crm_xml_add_int(xml_op, PCMK__XA_OP_STATUS, op->op_status);
     crm_xml_add_ms(xml_op, PCMK_META_INTERVAL, op->interval_ms);
 
     if (compare_version("2.1", caller_version) <= 0) {

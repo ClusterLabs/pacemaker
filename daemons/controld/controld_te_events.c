@@ -450,7 +450,7 @@ process_graph_event(xmlNode *event, const char *event_node)
         return;
     }
 
-    crm_element_value_int(event, XML_LRM_ATTR_OPSTATUS, &status);
+    crm_element_value_int(event, PCMK__XA_OP_STATUS, &status);
     if (status == PCMK_EXEC_PENDING) {
         return;
     }

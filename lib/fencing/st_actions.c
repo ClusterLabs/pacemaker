@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -449,7 +449,7 @@ stonith__xe_set_result(xmlNode *xml, const pcmk__action_result_t *result)
         rc = pcmk_rc2legacy(stonith__result2rc(result));
     }
 
-    crm_xml_add_int(xml, XML_LRM_ATTR_OPSTATUS, (int) execution_status);
+    crm_xml_add_int(xml, PCMK__XA_OP_STATUS, (int) execution_status);
     crm_xml_add_int(xml, XML_LRM_ATTR_RC, exit_status);
     crm_xml_add(xml, XML_LRM_ATTR_EXIT_REASON, exit_reason);
     crm_xml_add(xml, F_STONITH_OUTPUT, action_stdout);
@@ -505,7 +505,7 @@ stonith__xe_get_result(const xmlNode *xml, pcmk__action_result_t *result)
 
     // A result must include an exit status and execution status
     if ((crm_element_value_int(xml, XML_LRM_ATTR_RC, &exit_status) < 0)
-        || (crm_element_value_int(xml, XML_LRM_ATTR_OPSTATUS,
+        || (crm_element_value_int(xml, PCMK__XA_OP_STATUS,
                                   &execution_status) < 0)) {
         int rc = pcmk_ok;
         exit_status = CRM_EX_ERROR;
