@@ -1338,7 +1338,7 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
                                match->id, ":", agent, ":",
                                data->digest_secure_calc, ",", NULL);
             }
-            key = strdup(XML_OP_ATTR_DIGESTS_ALL);
+            key = strdup(PCMK__META_DIGESTS_ALL);
             value = strdup((const char *) digests_all->str);
             CRM_ASSERT((key != NULL) && (value != NULL));
             g_hash_table_insert(stonith_op->meta, key, value);
