@@ -138,6 +138,9 @@
 // @COMPAT Deprecated since 2.1.5
 #define PCMK__XA_RSC_INSTANCE           "rsc-instance"
 
+// @COMPAT Deprecated since 2.1.5
+#define PCMK__XA_WITH_RSC_INSTANCE      "with-rsc-instance"
+
 
 /*
  * IPC service names that are only used internally
