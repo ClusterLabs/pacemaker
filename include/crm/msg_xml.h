@@ -201,7 +201,6 @@ extern "C" {
  * executor operations.
  */
 
-#  define XML_RSC_OP_LAST_CHANGE        PCMK_XA_LAST_RC_CHANGE
 #  define XML_RSC_OP_T_EXEC             "exec-time"
 #  define XML_RSC_OP_T_QUEUE            "queue-time"
 

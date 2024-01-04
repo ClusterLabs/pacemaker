@@ -598,6 +598,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_EXIT_REASON instead
 #define XML_LRM_ATTR_EXIT_REASON PCMK_XA_EXIT_REASON
 
+//! \deprecated Use \c PCMK_XA_LAST_RC_CHANGE instead
+#define XML_RSC_OP_LAST_CHANGE PCMK_XA_LAST_RC_CHANGE
+
 #ifdef __cplusplus
 }
 #endif
