@@ -809,7 +809,7 @@ handle_ping(const xmlNode *msg)
 
     // Add controller state
     value = fsa_state2string(controld_globals.fsa_state);
-    crm_xml_add(ping, XML_PING_ATTR_CRMDSTATE, value);
+    crm_xml_add(ping, PCMK__XA_CRMD_STATE, value);
     crm_notice("Current ping state: %s", value); // CTS needs this
 
     // Add controller health

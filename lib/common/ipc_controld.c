@@ -149,7 +149,7 @@ set_ping_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
     data->data.ping.sys_from = crm_element_value(msg_data,
                                                  PCMK__XA_CRM_SUBSYSTEM);
     data->data.ping.fsa_state = crm_element_value(msg_data,
-                                                  XML_PING_ATTR_CRMDSTATE);
+                                                  PCMK__XA_CRMD_STATE);
     data->data.ping.result = crm_element_value(msg_data, PCMK_XA_RESULT);
 }
 

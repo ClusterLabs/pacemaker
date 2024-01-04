@@ -83,6 +83,7 @@
 #define PCMK__XA_CONFIRM                "confirm"
 #define PCMK__XA_CONN_HOST              "connection_host"
 #define PCMK__XA_CRMD                   "crmd"
+#define PCMK__XA_CRMD_STATE             "crmd_state"
 #define PCMK__XA_CRM_HOST_TO            "crm_host_to"
 #define PCMK__XA_CRM_LIMIT_MAX          "crm-limit-max"
 #define PCMK__XA_CRM_LIMIT_MODE         "crm-limit-mode"
