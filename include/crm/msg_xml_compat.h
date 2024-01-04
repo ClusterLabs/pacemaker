@@ -580,6 +580,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_LRM_ATTR_CALLID "call-id"
 
+//! \deprecated Do not use
+#define XML_LRM_ATTR_OP_DIGEST "op-digest"
+
 #ifdef __cplusplus
 }
 #endif
