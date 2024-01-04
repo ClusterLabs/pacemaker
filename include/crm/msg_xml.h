@@ -23,17 +23,32 @@ extern "C" {
 /* This file defines constants for various XML syntax (mainly element and
  * attribute names).
  *
- * For consistency, new constants should start with "PCMK_", followed by "XE"
- * for XML element names, "XA" for XML attribute names, and "META" for meta
- * attribute names. Old names that don't follow this policy should eventually be
- * deprecated and replaced with names that do.
+ * For consistency, new constants should start with "PCMK_", followed by:
+ * * "XE" for XML element names
+ * * "XA" for XML attribute names
+ * * "OPT" for cluster option (property) names
+ * * "META" for meta-attribute names
+ * * "VALUE" for enumerated values for various options
+ *
+ * Old names that don't follow this policy should eventually be deprecated and
+ * replaced with names that do.
  *
  * Symbols should be public if the user may specify them somewhere (especially
- * the CIB). They should be internal if they're used only internally to
+ * the CIB) or if they're part of a well-defined structure that a user may need
+ * to parse. They should be internal if they're used only internally to
  * Pacemaker (such as daemon IPC/CPG message XML).
+ *
+ * Constants belong in the following locations:
+ * * Public "XE" and "XA": msg_xml.h
+ * * Internal "XE" and "XA": crm_internal.h
+ * * Public "OPT", "META", and "VALUE": options.h
+ * * Internal "OPT", "META", and "VALUE": options_internal.h
  *
  * For meta-attributes that can be specified as either XML attributes or nvpair
  * names, use "META" unless using both "XA" and "META" constants adds clarity.
+ * An example is operation attributes, which can be specified either as
+ * attributes of the PCMK_XE_OP element or as nvpairs in a meta-attribute set
+ * beneath the PCMK_XE_OP element.
  */
 
 /*
