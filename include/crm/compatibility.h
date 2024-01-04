@@ -152,7 +152,7 @@ extern "C" {
 #define XML_CIB_TAG_DOMAIN          "domain"
 #define XML_CIB_TAG_CONSTRAINT      "constraint"
 #define XML_RSC_ATTR_STATE          "clone-state"
-#define XML_RSC_ATTR_PRIORITY       "priority"
+#define XML_RSC_ATTR_PRIORITY       PCMK_META_PRIORITY
 #define XML_OP_ATTR_DEPENDENT       "dependent-on"
 #define XML_LRM_TAG_AGENTS          "lrm_agents"
 #define XML_LRM_TAG_AGENT           "lrm_agent"
