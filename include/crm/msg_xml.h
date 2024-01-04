@@ -199,7 +199,6 @@ extern "C" {
  * executor operations.
  */
 
-#  define XML_LRM_ATTR_TARGET		"on_node"
 #  define XML_LRM_ATTR_TARGET_UUID	"on_node_uuid"
 /*! Actions to be executed on Pacemaker Remote nodes are routed through the
  *  controller on the cluster node hosting the remote connection. That cluster
