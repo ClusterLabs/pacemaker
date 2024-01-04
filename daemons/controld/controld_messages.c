@@ -814,7 +814,7 @@ handle_ping(const xmlNode *msg)
 
     // Add controller health
     // @TODO maybe do some checks to determine meaningful status
-    crm_xml_add(ping, XML_PING_ATTR_STATUS, "ok");
+    crm_xml_add(ping, PCMK_XA_RESULT, "ok");
 
     // Send reply
     reply = create_reply(msg, ping);

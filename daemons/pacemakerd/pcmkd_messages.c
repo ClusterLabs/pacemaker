@@ -59,7 +59,7 @@ handle_ping_request(pcmk__request_t *request)
     crm_xml_add(ping, XML_PING_ATTR_PACEMAKERDSTATE, pacemakerd_state);
     crm_xml_add_ll(ping, PCMK_XA_CRM_TIMESTAMP,
                    (long long) subdaemon_check_progress);
-    crm_xml_add(ping, XML_PING_ATTR_STATUS, "ok");
+    crm_xml_add(ping, PCMK_XA_RESULT, "ok");
     reply = create_reply(msg, ping);
 
     free_xml(ping);

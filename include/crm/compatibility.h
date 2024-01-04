@@ -147,7 +147,7 @@ extern "C" {
 #define XML_FAILRES_ATTR_RESID      "resource_id"
 #define XML_FAILRES_ATTR_REASON     "reason"
 #define XML_FAILRES_ATTR_RESSTATUS  "resource_status"
-#define XML_ATTR_RESULT             "result"
+#define XML_ATTR_RESULT             PCMK_XA_RESULT
 #define XML_ATTR_SECTION            "section"
 #define XML_CIB_TAG_DOMAIN          "domain"
 #define XML_CIB_TAG_CONSTRAINT      "constraint"
@@ -163,7 +163,7 @@ extern "C" {
 #define XML_CIB_ATTR_STONITH        "stonith"
 #define XML_CIB_ATTR_STANDBY        "standby"
 #define XML_RULE_ATTR_SCORE_MANGLED "score-attribute-mangled"
-#define XML_RULE_ATTR_RESULT        "result"
+#define XML_RULE_ATTR_RESULT        PCMK_XA_RESULT
 #define XML_NODE_ATTR_STATE         "state"
 #define XML_ATTR_LRM_PROBE          "lrm-is-probe"
 #define XML_ATTR_TE_ALLOWFAIL       "op_allow_fail"
