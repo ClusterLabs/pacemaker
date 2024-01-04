@@ -274,7 +274,7 @@ calculate_restart_digest(pcmk__op_digest_t *data, const xmlNode *xml_op,
     data->params_restart = copy_xml(data->params_all);
 
     // Then filter out reloadable parameters, if any
-    value = crm_element_value(xml_op, XML_LRM_ATTR_OP_RESTART);
+    value = crm_element_value(xml_op, PCMK__XA_OP_FORCE_RESTART);
     if (value != NULL) {
         pcmk__xe_remove_matching_attrs(data->params_restart, attr_not_in_string,
                                        (void *) value);

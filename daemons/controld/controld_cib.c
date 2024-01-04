@@ -574,7 +574,9 @@ append_restart_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
     }
 
     if (pcmk_is_set(metadata->ra_flags, ra_supports_reload_agent)) {
-        // Add parameters not marked reloadable to the "op-force-restart" list
+        /* Add parameters not marked reloadable to the PCMK__XA_OP_FORCE_RESTART
+         * list
+         */
         list = build_parameter_list(op, metadata, ra_param_reloadable,
                                     &restart);
 
@@ -583,7 +585,7 @@ append_restart_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
          *
          * Before OCF 1.1, Pacemaker abused "unique=0" to indicate
          * reloadability. Add any parameters with unique="1" to the
-         * "op-force-restart" list.
+         * PCMK__XA_OP_FORCE_RESTART list.
          */
         list = build_parameter_list(op, metadata, ra_param_unique, &restart);
 
@@ -593,9 +595,11 @@ append_restart_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
     }
 
     digest = calculate_operation_digest(restart, version);
-    /* Add "op-force-restart" and "op-restart-digest" to indicate the resource supports reload,
-     * no matter if it actually supports any parameters with unique="1"). */
-    crm_xml_add(update, XML_LRM_ATTR_OP_RESTART,
+    /* Add PCMK__XA_OP_FORCE_RESTART and "op-restart-digest" to indicate the
+     * resource supports reload, no matter if it actually supports any
+     * reloadable parameters
+     */
+    crm_xml_add(update, PCMK__XA_OP_FORCE_RESTART,
                 (list == NULL)? "" : (const char *) list->str);
     crm_xml_add(update, XML_LRM_ATTR_RESTART_DIGEST, digest);
 
