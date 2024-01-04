@@ -251,7 +251,7 @@ extern "C" {
 #define XML_RSC_ATTR_CRITICAL PCMK_META_CRITICAL
 
 //! \deprecated Use \c PCMK_META_ALLOW_MIGRATE instead
-#define XML_OP_ATTR_ALLOW_MIGRATE "allow-migrate"
+#define XML_OP_ATTR_ALLOW_MIGRATE PCMK_META_ALLOW_MIGRATE
 
 //! \deprecated Use \c PCMK_VALUE_TRUE instead
 #define XML_BOOLEAN_YES PCMK_VALUE_TRUE
@@ -260,16 +260,16 @@ extern "C" {
 #define XML_BOOLEAN_NO PCMK_VALUE_FALSE
 
 //! \deprecated Use \c PCMK_REMOTE_RA_ADDR instead
-#define XML_RSC_ATTR_REMOTE_RA_ADDR "addr"
+#define XML_RSC_ATTR_REMOTE_RA_ADDR PCMK_REMOTE_RA_ADDR
 
 //! \deprecated Use \c PCMK_REMOTE_RA_SERVER instead
-#define XML_RSC_ATTR_REMOTE_RA_SERVER "server"
+#define XML_RSC_ATTR_REMOTE_RA_SERVER PCMK_REMOTE_RA_SERVER
 
 //! \deprecated Use \c PCMK_REMOTE_RA_PORT instead
-#define XML_RSC_ATTR_REMOTE_RA_PORT "port"
+#define XML_RSC_ATTR_REMOTE_RA_PORT PCMK_REMOTE_RA_PORT
 
 //! \deprecated Use \c PCMK_REMOTE_RA_RECONNECT_INTERVAL instead
-#define XML_REMOTE_ATTR_RECONNECT_INTERVAL "reconnect_interval"
+#define XML_REMOTE_ATTR_RECONNECT_INTERVAL PCMK_REMOTE_RA_RECONNECT_INTERVAL
 
 //! \deprecated Use \c PCMK_XA_NAME instead
 #define XML_ATTR_NAME PCMK_XA_NAME
