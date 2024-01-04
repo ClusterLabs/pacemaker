@@ -199,7 +199,6 @@ extern "C" {
  * executor operations.
  */
 
-#  define XML_LRM_ATTR_SECURE_DIGEST	"op-secure-digest"
 #  define XML_LRM_ATTR_EXIT_REASON	"exit-reason"
 
 #  define XML_RSC_OP_LAST_CHANGE        "last-rc-change"
