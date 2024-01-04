@@ -44,7 +44,7 @@ te_start_action_timer(const pcmk__graph_t *graph, pcmk__graph_action_t *action)
 static int
 execute_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *pseudo)
 {
-    const char *task = crm_element_value(pseudo->xml, XML_LRM_ATTR_TASK);
+    const char *task = crm_element_value(pseudo->xml, PCMK_XA_OPERATION);
 
     /* send to peers as well? */
     if (pcmk__str_eq(task, PCMK_ACTION_MAINTENANCE_NODES, pcmk__str_casei)) {
@@ -116,7 +116,7 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     id = ID(action->xml);
     CRM_CHECK(!pcmk__str_empty(id), return EPROTO);
 
-    task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+    task = crm_element_value(action->xml, PCMK_XA_OPERATION);
     CRM_CHECK(!pcmk__str_empty(task), return EPROTO);
 
     on_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
@@ -373,7 +373,7 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
               return pcmk_rc_node_unknown);
 
     rsc_op = action->xml;
-    task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
+    task = crm_element_value(rsc_op, PCMK_XA_OPERATION);
     task_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
     router_node = crm_element_value(rsc_op, XML_LRM_ATTR_ROUTER_NODE);
 
@@ -520,7 +520,7 @@ te_update_job_count_on(const char *target, int offset, bool migrate)
 static void
 te_update_job_count(pcmk__graph_action_t *action, int offset)
 {
-    const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+    const char *task = crm_element_value(action->xml, PCMK_XA_OPERATION);
     const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 
     if ((action->type != pcmk__rsc_graph_action) || (target == NULL)) {
@@ -566,7 +566,7 @@ allowed_on_node(const pcmk__graph_t *graph, const pcmk__graph_action_t *action,
 {
     int limit = 0;
     struct te_peer_s *r = NULL;
-    const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+    const char *task = crm_element_value(action->xml, PCMK_XA_OPERATION);
     const char *id = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
 
     if(target == NULL) {
@@ -618,7 +618,7 @@ static bool
 graph_action_allowed(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     const char *target = NULL;
-    const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+    const char *task = crm_element_value(action->xml, PCMK_XA_OPERATION);
 
     if (action->type != pcmk__rsc_graph_action) {
         /* No limit on these */

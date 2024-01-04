@@ -506,7 +506,7 @@ pcmk_is_probe(const char *task, guint interval)
 bool
 pcmk_xe_is_probe(const xmlNode *xml_op)
 {
-    const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+    const char *task = crm_element_value(xml_op, PCMK_XA_OPERATION);
     const char *interval_ms_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL_MS);
     int interval_ms;
 

@@ -717,7 +717,7 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
 
         // No operation specified means all operations match
         if (operation) {
-            failed_value = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+            failed_value = crm_element_value(xml_op, PCMK_XA_OPERATION);
             if (!pcmk__str_eq(operation, failed_value, pcmk__str_casei)) {
                 continue;
             }

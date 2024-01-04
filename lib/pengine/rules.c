@@ -985,7 +985,7 @@ pe__eval_attr_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
     const char *value_source = NULL;
 
     attr = crm_element_value(expr, XML_EXPR_ATTR_ATTRIBUTE);
-    op = crm_element_value(expr, XML_EXPR_ATTR_OPERATION);
+    op = crm_element_value(expr, PCMK_XA_OPERATION);
     value = crm_element_value(expr, PCMK_XA_VALUE);
     type = crm_element_value(expr, PCMK_XA_TYPE);
     value_source = crm_element_value(expr, XML_EXPR_ATTR_VALUE_SOURCE);
@@ -995,7 +995,7 @@ pe__eval_attr_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
                          " not specified", pcmk__s(ID(expr), "without ID"));
         return FALSE;
     } else if (op == NULL) {
-        pcmk__config_err("Expression %s invalid: " XML_EXPR_ATTR_OPERATION
+        pcmk__config_err("Expression %s invalid: " PCMK_XA_OPERATION
                          " not specified", pcmk__s(ID(expr), "without ID"));
         return FALSE;
     }
@@ -1044,7 +1044,7 @@ pe__eval_date_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data,
     crm_time_t *start = NULL;
     crm_time_t *end = NULL;
     const char *value = NULL;
-    const char *op = crm_element_value(expr, "operation");
+    const char *op = crm_element_value(expr, PCMK_XA_OPERATION);
 
     xmlNode *duration_spec = NULL;
     xmlNode *date_spec = NULL;
@@ -1198,7 +1198,7 @@ pe__eval_role_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
         return FALSE;
     }
 
-    op = crm_element_value(expr, XML_EXPR_ATTR_OPERATION);
+    op = crm_element_value(expr, PCMK_XA_OPERATION);
 
     if (pcmk__str_eq(op, "defined", pcmk__str_casei)) {
         if (rule_data->role > pcmk_role_started) {

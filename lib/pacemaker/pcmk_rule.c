@@ -181,7 +181,7 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
 
     /* Then, check that it's something we actually support. */
     xpath = crm_strdup_printf(XPATH_NODE_RULE "//date_expression["
-                              "@" XML_EXPR_ATTR_OPERATION "!='date_spec']",
+                              "@" PCMK_XA_OPERATION "!='date_spec']",
                               rule_id);
     xpath_obj = xpath_search(cib_constraints, xpath);
     num_results = numXpathResults(xpath_obj);
@@ -192,7 +192,7 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
         freeXpathObject(xpath_obj);
 
         xpath = crm_strdup_printf(XPATH_NODE_RULE "//date_expression["
-                                  "@" XML_EXPR_ATTR_OPERATION "='date_spec' "
+                                  "@" PCMK_XA_OPERATION "='date_spec' "
                                   "and date_spec/@years "
                                   "and not(date_spec/@moon)]", rule_id);
         xpath_obj = xpath_search(cib_constraints, xpath);

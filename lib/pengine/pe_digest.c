@@ -395,7 +395,7 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
     guint interval_ms = 0;
 
     const char *op_version;
-    const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+    const char *task = crm_element_value(xml_op, PCMK_XA_OPERATION);
     const char *digest_all;
     const char *digest_restart;
 

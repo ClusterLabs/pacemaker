@@ -252,7 +252,7 @@ initiate_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
             return graph_fns->rsc(graph, action);
 
         case pcmk__cluster_graph_action:
-            if (pcmk__str_eq(crm_element_value(action->xml, XML_LRM_ATTR_TASK),
+            if (pcmk__str_eq(crm_element_value(action->xml, PCMK_XA_OPERATION),
                              PCMK_ACTION_STONITH, pcmk__str_none)) {
                 crm_trace("Executing fencing action %d (%s)",
                           action->id, id);
@@ -854,7 +854,7 @@ pcmk__event_from_graph_action(const xmlNode *resource,
                                        return NULL);
 
     op = lrmd_new_event(ID(action_resource),
-                        crm_element_value(action->xml, XML_LRM_ATTR_TASK),
+                        crm_element_value(action->xml, PCMK_XA_OPERATION),
                         action->interval_ms);
     lrmd__set_result(op, rc, status, exit_reason);
     op->t_run = time(NULL);

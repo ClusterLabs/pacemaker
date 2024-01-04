@@ -654,7 +654,7 @@ pcmk__new_cancel_action(pcmk_resource_t *rsc, const char *task,
     pcmk__str_update(&cancel_op->cancel_task, task);
 
     interval_ms_s = crm_strdup_printf("%u", interval_ms);
-    add_hash_param(cancel_op->meta, XML_LRM_ATTR_TASK, task);
+    add_hash_param(cancel_op->meta, PCMK_XA_OPERATION, task);
     add_hash_param(cancel_op->meta, XML_LRM_ATTR_INTERVAL_MS, interval_ms_s);
     free(interval_ms_s);
 

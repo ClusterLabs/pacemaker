@@ -1099,7 +1099,7 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, const xmlNode *action,
                         const char *exit_reason)
 {
     lrmd_event_data_t *op = NULL;
-    const char *operation = crm_element_value(action, XML_LRM_ATTR_TASK);
+    const char *operation = crm_element_value(action, PCMK_XA_OPERATION);
     const char *target_node = crm_element_value(action, XML_LRM_ATTR_TARGET);
     xmlNode *xml_rsc = find_xml_node(action, XML_CIB_TAG_RESOURCE, TRUE);
 
@@ -1249,7 +1249,7 @@ static bool do_lrm_cancel(ha_msg_input_t *input, lrm_state_t *lrm_state,
 
     CRM_CHECK(params != NULL, return FALSE);
 
-    meta_key = crm_meta_name(XML_LRM_ATTR_TASK);
+    meta_key = crm_meta_name(PCMK_XA_OPERATION);
     op_task = crm_element_value(params, meta_key);
     free(meta_key);
     CRM_CHECK(op_task != NULL, return FALSE);
@@ -1451,7 +1451,7 @@ do_lrm_invoke(long long action,
         operation = PCMK_ACTION_DELETE;
 
     } else if (input->xml != NULL) {
-        operation = crm_element_value(input->xml, XML_LRM_ATTR_TASK);
+        operation = crm_element_value(input->xml, PCMK_XA_OPERATION);
     }
 
     CRM_CHECK(!pcmk__str_empty(crm_op) || !pcmk__str_empty(operation), return);
@@ -1922,7 +1922,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
 
     CRM_CHECK((rsc != NULL) && (msg != NULL), return);
 
-    operation = crm_element_value(msg, XML_LRM_ATTR_TASK);
+    operation = crm_element_value(msg, PCMK_XA_OPERATION);
     CRM_CHECK(!pcmk__str_empty(operation), return);
 
     transition = crm_element_value(msg, PCMK__XA_TRANSITION_KEY);

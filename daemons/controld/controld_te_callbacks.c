@@ -410,7 +410,7 @@ te_update_diff_v2(xmlNode *diff)
         const char *xpath = crm_element_value(change, XML_DIFF_PATH);
 
         // Possible ops: create, modify, delete, move
-        const char *op = crm_element_value(change, XML_DIFF_OP);
+        const char *op = crm_element_value(change, PCMK_XA_OPERATION);
 
         // Ignore uninteresting updates
         if (op == NULL) {
@@ -653,7 +653,7 @@ action_timer_callback(gpointer data)
 
     stop_te_timer(action);
 
-    task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+    task = crm_element_value(action->xml, PCMK_XA_OPERATION);
     on_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
     via_node = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
 

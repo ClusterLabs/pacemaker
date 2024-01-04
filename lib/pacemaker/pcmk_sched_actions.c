@@ -1225,7 +1225,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
 
     crm_xml_add(xml_op, PCMK_XA_ID, op_id);
     crm_xml_add(xml_op, XML_LRM_ATTR_TASK_KEY, key);
-    crm_xml_add(xml_op, XML_LRM_ATTR_TASK, task);
+    crm_xml_add(xml_op, PCMK_XA_OPERATION, task);
     crm_xml_add(xml_op, PCMK_XA_CRM_DEBUG_ORIGIN, origin);
     crm_xml_add(xml_op, PCMK_XA_CRM_FEATURE_SET, caller_version);
     crm_xml_add(xml_op, PCMK__XA_TRANSITION_KEY, op->user_data);
@@ -1619,7 +1619,7 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
     CRM_CHECK((rsc != NULL) && (node != NULL) && (xml_op != NULL),
               return false);
 
-    task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+    task = crm_element_value(xml_op, PCMK_XA_OPERATION);
     CRM_CHECK(task != NULL, return false);
 
     crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
@@ -1803,7 +1803,7 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
             continue;
         }
 
-        task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
+        task = crm_element_value(rsc_op, PCMK_XA_OPERATION);
         crm_element_value_ms(rsc_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
 
         if ((interval_ms > 0)

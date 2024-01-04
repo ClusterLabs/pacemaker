@@ -438,7 +438,7 @@ create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
     }
 
     crm_xml_add_int(action_xml, PCMK_XA_ID, action->id);
-    crm_xml_add(action_xml, XML_LRM_ATTR_TASK, action->task);
+    crm_xml_add(action_xml, PCMK_XA_OPERATION, action->task);
 
     if ((action->rsc != NULL) && (action->rsc->clone_name != NULL)) {
         char *clone_key = NULL;

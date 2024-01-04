@@ -1354,7 +1354,7 @@ remote_ra_fail(const char *node_name)
  *  </pseudo_event>
  */
 #define XPATH_PSEUDO_FENCE "/" XML_GRAPH_TAG_PSEUDO_EVENT \
-    "[@" XML_LRM_ATTR_TASK "='stonith']/" XML_GRAPH_TAG_DOWNED \
+    "[@" PCMK_XA_OPERATION "='stonith']/" XML_GRAPH_TAG_DOWNED \
     "/" XML_CIB_TAG_NODE
 
 /*!
@@ -1423,7 +1423,7 @@ remote_ra_maintenance(lrm_state_t * lrm_state, gboolean maintenance)
 }
 
 #define XPATH_PSEUDO_MAINTENANCE "//" XML_GRAPH_TAG_PSEUDO_EVENT \
-    "[@" XML_LRM_ATTR_TASK "='" PCMK_ACTION_MAINTENANCE_NODES "']/" \
+    "[@" PCMK_XA_OPERATION "='" PCMK_ACTION_MAINTENANCE_NODES "']/" \
     XML_GRAPH_TAG_MAINTENANCE
 
 /*!

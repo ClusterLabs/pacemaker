@@ -274,7 +274,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
         }
 
         if (down) {
-            const char *task = crm_element_value(down->xml, XML_LRM_ATTR_TASK);
+            const char *task = crm_element_value(down->xml, PCMK_XA_OPERATION);
 
             if (pcmk__str_eq(task, PCMK_ACTION_STONITH, pcmk__str_casei)) {
 

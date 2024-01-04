@@ -41,7 +41,7 @@ is_matched_failure(const char *rsc_id, const xmlNode *conf_op_xml,
     pcmk_parse_interval_spec(conf_op_interval_spec, &conf_op_interval_ms);
 
     // Get name and interval from op history entry
-    lrm_op_task = crm_element_value(lrm_op_xml, XML_LRM_ATTR_TASK);
+    lrm_op_task = crm_element_value(lrm_op_xml, PCMK_XA_OPERATION);
     crm_element_value_ms(lrm_op_xml, XML_LRM_ATTR_INTERVAL_MS,
                          &lrm_op_interval_ms);
 
@@ -131,7 +131,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
 
 #define XPATH_FMT "//" XML_CIB_TAG_STATE "[@" PCMK_XA_UNAME "='%s']"        \
                   "//" XML_LRM_TAG_RESOURCE "[@" PCMK_XA_ID "='%s']"        \
-                  "/" XML_LRM_TAG_RSC_OP "[@" XML_LRM_ATTR_TASK "='%s']"    \
+                  "/" XML_LRM_TAG_RSC_OP "[@" PCMK_XA_OPERATION "='%s']"    \
                   "[@" XML_LRM_ATTR_INTERVAL "='%u']"
 
                 lrm_op_xpath = crm_strdup_printf(XPATH_FMT,

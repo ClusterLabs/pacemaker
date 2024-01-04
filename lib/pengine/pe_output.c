@@ -145,7 +145,7 @@ get_operation_list(xmlNode *rsc_entry) {
 
     for (rsc_op = pcmk__xe_first_child(rsc_entry); rsc_op != NULL;
          rsc_op = pcmk__xe_next(rsc_op)) {
-        const char *task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
+        const char *task = crm_element_value(rsc_op, PCMK_XA_OPERATION);
         const char *interval_ms_s = crm_element_value(rsc_op,
                                                       XML_LRM_ATTR_INTERVAL_MS);
         const char *op_rc = crm_element_value(rsc_op, XML_LRM_ATTR_RC);
@@ -1540,7 +1540,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
                            "queued", crm_element_value(xml_op, XML_RSC_OP_T_QUEUE),
                            "exec", crm_element_value(xml_op, XML_RSC_OP_T_EXEC),
                            "interval", interval_ms_s,
-                           "task", crm_element_value(xml_op, XML_LRM_ATTR_TASK),
+                           "task", crm_element_value(xml_op, PCMK_XA_OPERATION),
                            NULL);
 
         free(interval_ms_s);
@@ -2929,7 +2929,7 @@ resource_operation_list(pcmk__output_t *out, va_list args)
     /* Print each operation */
     for (gIter = op_list; gIter != NULL; gIter = gIter->next) {
         xmlNode *xml_op = (xmlNode *) gIter->data;
-        const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+        const char *task = crm_element_value(xml_op, PCMK_XA_OPERATION);
         const char *interval_ms_s = crm_element_value(xml_op,
                                                       XML_LRM_ATTR_INTERVAL_MS);
         const char *op_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);

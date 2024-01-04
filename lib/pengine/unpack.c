@@ -2553,7 +2553,7 @@ process_recurring(pcmk_node_t *node, pcmk_resource_t *rsc,
                             id, pe__node_name(node));
             continue;
         }
-        task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
+        task = crm_element_value(rsc_op, PCMK_XA_OPERATION);
         /* create the action */
         key = pcmk__op_key(rsc->id, task, interval_ms);
         pcmk__rsc_trace(rsc, "Creating %s on %s", key, pe__node_name(node));
@@ -2579,7 +2579,7 @@ calculate_active_ops(const GList *sorted_op_list, int *start_index,
 
         counter++;
 
-        task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
+        task = crm_element_value(rsc_op, PCMK_XA_OPERATION);
         status = crm_element_value(rsc_op, XML_LRM_ATTR_OPSTATUS);
 
         if (pcmk__str_eq(task, PCMK_ACTION_STOP, pcmk__str_casei)
@@ -2880,7 +2880,7 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
     pcmk__g_strcat(xpath,
                    XPATH_NODE_STATE "[@" PCMK_XA_UNAME "='", node, "']"
                    SUB_XPATH_LRM_RESOURCE "[@" PCMK_XA_ID "='", resource, "']"
-                   SUB_XPATH_LRM_RSC_OP "[@" XML_LRM_ATTR_TASK "='", op, "'",
+                   SUB_XPATH_LRM_RSC_OP "[@" PCMK_XA_OPERATION "='", op, "'",
                    NULL);
 
     /* Need to check against transition_magic too? */
@@ -3023,7 +3023,7 @@ non_monitor_after(const char *rsc_id, const char *node_name,
             continue;
         }
 
-        task = crm_element_value(op, XML_LRM_ATTR_TASK);
+        task = crm_element_value(op, PCMK_XA_OPERATION);
 
         if (pcmk__str_any_of(task, PCMK_ACTION_START, PCMK_ACTION_STOP,
                              PCMK_ACTION_MIGRATE_TO, PCMK_ACTION_MIGRATE_FROM,
@@ -4633,7 +4633,7 @@ failure_is_newer(const struct action_history *history,
     }
 
     if (!pcmk__str_eq(history->task,
-                      crm_element_value(last_failure, XML_LRM_ATTR_TASK),
+                      crm_element_value(last_failure, PCMK_XA_OPERATION),
                       pcmk__str_none)) {
         return false; // last_failure is for different action
     }
@@ -4753,10 +4753,10 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
     }
 
     // Task and interval
-    history.task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+    history.task = crm_element_value(xml_op, PCMK_XA_OPERATION);
     if (history.task == NULL) {
         pcmk__config_err("Ignoring resource history entry %s for %s on %s "
-                         "without " XML_LRM_ATTR_TASK,
+                         "without " PCMK_XA_OPERATION,
                          history.id, rsc->id, pe__node_name(node));
         return;
     }
