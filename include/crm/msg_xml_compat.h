@@ -334,6 +334,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_REFERENCE instead
 #define XML_ACL_ATTR_REF PCMK_XA_REFERENCE
 
+//! \deprecated Use \c PCMK_XA_REFERENCE instead
+#define F_CRM_REFERENCE PCMK_XA_REFERENCE
+
 #ifdef __cplusplus
 }
 #endif

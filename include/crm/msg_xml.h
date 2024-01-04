@@ -130,7 +130,6 @@ extern "C" {
 #  define F_CRM_SYS_TO			"crm_sys_to"
 #  define F_CRM_SYS_FROM		"crm_sys_from"
 #  define F_CRM_HOST_FROM		F_ORIG
-#  define F_CRM_REFERENCE		PCMK_XA_REFERENCE
 #  define F_CRM_VERSION			PCMK_XA_VERSION
 #  define F_CRM_ORIGIN			"origin"
 #  define F_CRM_USER			"crm_user"
