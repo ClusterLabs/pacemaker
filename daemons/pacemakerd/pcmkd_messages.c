@@ -46,9 +46,9 @@ handle_ping_request(pcmk__request_t *request)
 
     /* Pinged for status */
     crm_trace("Pinged from " PCMK__XA_CRM_SYS_FROM "='%s' "
-              F_CRM_ORIGIN "='%s'",
+              PCMK_XA_ORIGIN "='%s'",
               pcmk__s(from, ""),
-              pcmk__s(crm_element_value(msg, F_CRM_ORIGIN), ""));
+              pcmk__s(crm_element_value(msg, PCMK_XA_ORIGIN), ""));
 
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
                        "ack", NULL, CRM_EX_INDETERMINATE);
@@ -113,7 +113,7 @@ handle_shutdown_request(pcmk__request_t *request)
     if (allowed) {
         crm_notice("Shutting down in response to IPC request %s from %s",
                    crm_element_value(msg, PCMK_XA_REFERENCE),
-                   crm_element_value(msg, F_CRM_ORIGIN));
+                   crm_element_value(msg, PCMK_XA_ORIGIN));
         crm_xml_add_int(shutdown, XML_LRM_ATTR_OPSTATUS, CRM_EX_OK);
     } else {
         crm_warn("Ignoring shutdown request from unprivileged client %s",

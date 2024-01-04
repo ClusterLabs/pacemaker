@@ -1262,14 +1262,14 @@ cluster_times_xml(pcmk__output_t *out, va_list args) {
 
     pcmk__output_create_xml_node(out, "last_update",
                                  "time", time_s,
-                                 "origin", our_nodename,
+                                 PCMK_XA_ORIGIN, our_nodename,
                                  NULL);
 
     pcmk__output_create_xml_node(out, "last_change",
                                  "time", last_written ? last_written : "",
                                  "user", user ? user : "",
                                  "client", client ? client : "",
-                                 "origin", origin ? origin : "",
+                                 PCMK_XA_ORIGIN, pcmk__s(origin, ""),
                                  NULL);
 
     free(time_s);

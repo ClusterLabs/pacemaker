@@ -462,7 +462,7 @@ stonith_event_xml(pcmk__output_t *out, va_list args)
                                         "action", event->action,
                                         PCMK_XA_TARGET, event->target,
                                         "client", event->client,
-                                        "origin", event->origin,
+                                        PCMK_XA_ORIGIN, event->origin,
                                         NULL);
 
     switch (event->state) {
