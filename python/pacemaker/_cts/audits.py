@@ -521,8 +521,8 @@ class PrimitiveAudit(ClusterAudit):
         # so this audit (and those derived from it) would never run.
         # Uncommenting the next lines fixes the name test, but that then
         # exposes pre-existing bugs that need to be fixed.
-        #if self._cm["Name"] == "crm-corosync":
-        #    return True
+        # if self._cm["Name"] == "crm-corosync":
+        #     return True
         return False
 
 
@@ -742,8 +742,8 @@ class ControllerStateAudit(ClusterAudit):
         # so this audit (and those derived from it) would never run.
         # Uncommenting the next lines fixes the name test, but that then
         # exposes pre-existing bugs that need to be fixed.
-        #if self._cm["Name"] == "crm-corosync":
-        #    return True
+        # if self._cm["Name"] == "crm-corosync":
+        #     return True
         return False
 
 
@@ -847,8 +847,8 @@ class CIBAudit(ClusterAudit):
         # so this audit (and those derived from it) would never run.
         # Uncommenting the next lines fixes the name test, but that then
         # exposes pre-existing bugs that need to be fixed.
-        #if self._cm["Name"] == "crm-corosync":
-        #    return True
+        # if self._cm["Name"] == "crm-corosync":
+        #     return True
         return False
 
 
@@ -1002,8 +1002,8 @@ class PartitionAudit(ClusterAudit):
         # so this audit (and those derived from it) would never run.
         # Uncommenting the next lines fixes the name test, but that then
         # exposes pre-existing bugs that need to be fixed.
-        #if self._cm["Name"] == "crm-corosync":
-        #    return True
+        # if self._cm["Name"] == "crm-corosync":
+        #     return True
         return False
 
 

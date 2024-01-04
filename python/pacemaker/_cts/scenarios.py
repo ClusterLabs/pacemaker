@@ -128,7 +128,7 @@ class Scenario:
         successfully set up.
         """
         self._cm.prepare()
-        self.audit() # Also detects remote/local log config
+        self.audit()  # Also detects remote/local log config
         self._cm.ns.wait_for_all_nodes(self._cm.env["nodes"])
 
         self.audit()
@@ -139,7 +139,7 @@ class Scenario:
                                     self._cm.env["nodes"],
                                     self._cm.env["LogWatcher"],
                                     "BadNews", 0)
-        self._bad_news.set_watch() # Call after we've figured out what type of log watching to do in LogAudit
+        self._bad_news.set_watch()  # Call after we've figured out what type of log watching to do in LogAudit
 
         j = 0
         while j < len(self._components):

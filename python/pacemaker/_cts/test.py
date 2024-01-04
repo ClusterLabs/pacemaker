@@ -130,9 +130,9 @@ class Test:
         self._result_exitcode = ExitStatus.OK
         self._result_txt = ""
 
-    ###
-    ### PROPERTIES
-    ###
+    #
+    # PROPERTIES
+    #
 
     @property
     def exitcode(self):
@@ -158,9 +158,9 @@ class Test:
         """
         return os.path.join(self.logdir, "%s.log" % self._daemon_location)
 
-    ###
-    ### PRIVATE METHODS
-    ###
+    #
+    # PRIVATE METHODS
+    #
 
     def _kill_daemons(self):
         """Kill any running daemons in preparation for executing the test."""
@@ -258,9 +258,9 @@ class Test:
         """Start any necessary daemons in preparation for executing the test."""
         raise NotImplementedError("_start_daemons not provided by subclass")
 
-    ###
-    ### PUBLIC METHODS
-    ###
+    #
+    # PUBLIC METHODS
+    #
 
     def add_cmd(self, cmd, args, validate=True, check_rng=True, check_stderr=True,
                 env=None):
@@ -403,10 +403,10 @@ class Test:
             if self.verbose:
                 print("Also running: %s" % args['kill'])
 
-            ### Typically, the kill argument is used to detect some sort of
-            ### failure. Without yielding for a few seconds here, the process
-            ### launched earlier that is listening for the failure may not have
-            ### time to connect to pacemaker-execd.
+            # Typically, the kill argument is used to detect some sort of
+            # failure. Without yielding for a few seconds here, the process
+            # launched earlier that is listening for the failure may not have
+            # time to connect to pacemaker-execd.
             time.sleep(2)
             subprocess.Popen(shlex.split(args['kill']))
 

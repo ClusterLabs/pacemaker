@@ -155,7 +155,8 @@ class ResourceRecover(CTSTest):
             return self.failure("%s fail count is %d not %d"
                                 % (self._rid, new_failcount, orig_failcount + 1))
 
-        return 0 # Anything but None is success
+        # Anything but None is success
+        return 0
 
     @property
     def errors_to_ignore(self):

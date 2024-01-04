@@ -168,7 +168,7 @@ class Reattach(CTSTest):
 
         self.debug("Bringing the cluster back up")
         ret = self._startall(None)
-        time.sleep(5) # allow ping to update the CIB
+        time.sleep(5)  # allow ping to update the CIB
         if not ret:
             self._set_managed(node)
             return self.failure("Couldn't restart the cluster")
