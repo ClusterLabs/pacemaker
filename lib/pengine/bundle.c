@@ -1125,7 +1125,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
                       (bundle_data->promoted_max? "master"
                       : (const char *)xml_resource->name));
 
-        xml_set = create_xml_node(xml_resource, XML_TAG_META_SETS);
+        xml_set = create_xml_node(xml_resource, PCMK_XE_META_ATTRIBUTES);
         crm_xml_set_id(xml_set, "%s-%s-meta", bundle_data->prefix, xml_resource->name);
 
         crm_create_nvpair_xml(xml_set, NULL,

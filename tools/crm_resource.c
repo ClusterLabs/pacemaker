@@ -673,7 +673,7 @@ agent_provider_cb(const gchar *option_name, const gchar *optarg, gpointer data, 
 gboolean
 attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     if (pcmk__str_any_of(option_name, "-m", "--meta", NULL)) {
-        options.attr_set_type = XML_TAG_META_SETS;
+        options.attr_set_type = PCMK_XE_META_ATTRIBUTES;
     } else if (pcmk__str_any_of(option_name, "-z", "--utilization", NULL)) {
         options.attr_set_type = XML_TAG_UTILIZATION;
     } else if (pcmk__str_eq(option_name, "--element", pcmk__str_casei)) {
@@ -1917,7 +1917,8 @@ main(int argc, char **argv)
 
                 value = g_hash_table_lookup(params, options.prop_name);
 
-            } else if (pcmk__str_eq(options.attr_set_type, XML_TAG_META_SETS, pcmk__str_none)) {
+            } else if (pcmk__str_eq(options.attr_set_type,
+                                    PCMK_XE_META_ATTRIBUTES, pcmk__str_none)) {
                 params = pcmk__strkey_table(free, free);
                 get_meta_attributes(params, rsc, current, scheduler);
 

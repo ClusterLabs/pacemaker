@@ -175,7 +175,7 @@ int pcmk__xml_show_changes(pcmk__output_t *out, const xmlNode *xml);
 /* search string to find CIB resources entries for guest nodes */
 #define PCMK__XP_GUEST_NODE_CONFIG \
     "//" PCMK_XE_CIB "//" PCMK_XE_CONFIGURATION "//" XML_CIB_TAG_RESOURCE \
-    "//" XML_TAG_META_SETS "//" PCMK_XE_NVPAIR \
+    "//" PCMK_XE_META_ATTRIBUTES "//" PCMK_XE_NVPAIR                      \
     "[@name='" PCMK_META_REMOTE_NODE "']"
 
 /* search string to find CIB resources entries for remote nodes */

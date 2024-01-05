@@ -343,7 +343,7 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
             char *mutable = NULL;
 
             if ((strstr(xpath, PCMK_XE_INSTANCE_ATTRIBUTES) != NULL)
-                || (strstr(xpath, XML_TAG_META_SETS) != NULL)) {
+                || (strstr(xpath, PCMK_XE_META_ATTRIBUTES) != NULL)) {
                 needs_update = TRUE;
                 pcmk__str_update(&reason,
                                  "(meta) attribute deleted from resource");

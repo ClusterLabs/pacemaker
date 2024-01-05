@@ -176,8 +176,8 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
     crm_xml_add(remote, PCMK_XA_TYPE, "remote");
 
     // Add meta-attributes
-    xml_sub = create_xml_node(remote, XML_TAG_META_SETS);
-    crm_xml_set_id(xml_sub, "%s-%s", uname, XML_TAG_META_SETS);
+    xml_sub = create_xml_node(remote, PCMK_XE_META_ATTRIBUTES);
+    crm_xml_set_id(xml_sub, "%s-%s", uname, PCMK_XE_META_ATTRIBUTES);
     crm_create_nvpair_xml(xml_sub, NULL,
                           PCMK__META_INTERNAL_RSC, PCMK_VALUE_TRUE);
     if (container_id) {

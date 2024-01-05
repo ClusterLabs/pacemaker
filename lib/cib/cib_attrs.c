@@ -77,7 +77,7 @@ find_attr(cib_t *cib, const char *section, const char *node_uuid,
                                     PCMK_XE_OP_DEFAULTS, PCMK_XE_RSC_DEFAULTS,
                                     NULL)) {
         node_uuid = NULL;
-        set_type = XML_TAG_META_SETS;
+        set_type = PCMK_XE_META_ATTRIBUTES;
 
     } else if (pcmk__str_eq(section, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
         node_uuid = NULL;
@@ -299,7 +299,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
                 xml_obj = create_xml_node(xml_obj,
                                           PCMK_XE_CLUSTER_PROPERTY_SET);
             } else {
-                xml_obj = create_xml_node(xml_obj, XML_TAG_META_SETS);
+                xml_obj = create_xml_node(xml_obj, PCMK_XE_META_ATTRIBUTES);
             }
 
         } else if (set_type) {
@@ -619,7 +619,7 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
         "/" XML_CIB_TAG_RESOURCE \
         "[@class='ocf'][@provider='pacemaker'][@type='remote'][translate(@id,'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']" \
     "|/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_RESOURCES \
-        "/" XML_CIB_TAG_RESOURCE "/" XML_TAG_META_SETS "/" PCMK_XE_NVPAIR \
+        "/" XML_CIB_TAG_RESOURCE "/" PCMK_XE_META_ATTRIBUTES "/" PCMK_XE_NVPAIR \
         "[@name='" PCMK_META_REMOTE_NODE "'][translate(@value,'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']" \
     "|/" PCMK_XE_CIB "/" PCMK_XE_STATUS "/" PCMK__XE_NODE_STATE \
         "[@" XML_NODE_IS_REMOTE "='true'][translate(@" PCMK_XA_ID ",'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']"

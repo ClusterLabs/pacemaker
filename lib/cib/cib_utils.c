@@ -243,7 +243,7 @@ createEmptyCib(int cib_epoch)
 #if PCMK__RESOURCE_STICKINESS_DEFAULT != 0
     {
         xmlNode *rsc_defaults = create_xml_node(config, PCMK_XE_RSC_DEFAULTS);
-        xmlNode *meta = create_xml_node(rsc_defaults, XML_TAG_META_SETS);
+        xmlNode *meta = create_xml_node(rsc_defaults, PCMK_XE_META_ATTRIBUTES);
         xmlNode *nvpair = create_xml_node(meta, PCMK_XE_NVPAIR);
 
         crm_xml_add(meta, PCMK_XA_ID, "build-resource-defaults");

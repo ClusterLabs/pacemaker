@@ -191,9 +191,9 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
 // unfencing in rsc_defaults or any resource
 #define XPATH_ENABLE_UNFENCING \
     "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_RESOURCES     \
-    "//" XML_TAG_META_SETS "/" XPATH_UNFENCING_NVPAIR                   \
+    "//" PCMK_XE_META_ATTRIBUTES "/" XPATH_UNFENCING_NVPAIR             \
     "|/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_RSC_DEFAULTS \
-    "/" XML_TAG_META_SETS "/" XPATH_UNFENCING_NVPAIR
+    "/" PCMK_XE_META_ATTRIBUTES "/" XPATH_UNFENCING_NVPAIR
 
 static void
 set_if_xpath(uint64_t flag, const char *xpath, pcmk_scheduler_t *scheduler)
@@ -546,8 +546,8 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pcmk_scheduler_t *data
     for (attr_set = pcmk__xe_first_child(xml_obj); attr_set != NULL;
          attr_set = pcmk__xe_next(attr_set)) {
 
-        if (!pcmk__str_eq((const char *)attr_set->name, XML_TAG_META_SETS,
-                          pcmk__str_casei)) {
+        if (!pcmk__str_eq((const char *) attr_set->name,
+                          PCMK_XE_META_ATTRIBUTES, pcmk__str_casei)) {
             continue;
         }
 

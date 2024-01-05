@@ -281,7 +281,7 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                      pcmk__str_casei)) {
         if (!force) {
             rc = find_resource_attr(out, cib, PCMK_XA_ID, top_id,
-                                    XML_TAG_META_SETS, attr_set, attr_id,
+                                    PCMK_XE_META_ATTRIBUTES, attr_set, attr_id,
                                     attr_name, &found_attr_id);
             if ((rc == pcmk_rc_ok) && !out->is_quiet(out)) {
                 out->err(out,
@@ -403,7 +403,7 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
         free(local_attr_set);
 
         if (recursive
-            && pcmk__str_eq(attr_set_type, XML_TAG_META_SETS,
+            && pcmk__str_eq(attr_set_type, PCMK_XE_META_ATTRIBUTES,
                             pcmk__str_casei)) {
             GList *lpc = NULL;
             static bool need_init = true;
@@ -459,7 +459,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
                            NULL, NULL, attr_name, NULL);
     }
 
-    if (pcmk__str_eq(attr_set_type, XML_TAG_META_SETS, pcmk__str_casei)) {
+    if (pcmk__str_eq(attr_set_type, PCMK_XE_META_ATTRIBUTES, pcmk__str_casei)) {
         resources = find_matching_attr_resources(out, rsc, requested_name,
                                                  attr_set, attr_set_type,
                                                  attr_id, attr_name, cib,
@@ -1574,8 +1574,9 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
 
         find_resource_attr(out, cib, PCMK_XA_VALUE, lookup_id, NULL, NULL, NULL,
                            PCMK_META_TARGET_ROLE, &orig_target_role);
-        rc = cli_resource_update_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS,
-                                           NULL, PCMK_META_TARGET_ROLE,
+        rc = cli_resource_update_attribute(rsc, rsc_id, NULL,
+                                           PCMK_XE_META_ATTRIBUTES, NULL,
+                                           PCMK_META_TARGET_ROLE,
                                            PCMK_ACTION_STOPPED, FALSE, cib,
                                            cib_options, force);
     }
@@ -1654,15 +1655,17 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         rc = cli_resource_clear(lookup_id, host, NULL, cib, cib_options, true, force);
 
     } else if (orig_target_role) {
-        rc = cli_resource_update_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS,
-                                           NULL, PCMK_META_TARGET_ROLE,
+        rc = cli_resource_update_attribute(rsc, rsc_id, NULL,
+                                           PCMK_XE_META_ATTRIBUTES, NULL,
+                                           PCMK_META_TARGET_ROLE,
                                            orig_target_role, FALSE, cib,
                                            cib_options, force);
         free(orig_target_role);
         orig_target_role = NULL;
     } else {
-        rc = cli_resource_delete_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS,
-                                           NULL, PCMK_META_TARGET_ROLE, cib,
+        rc = cli_resource_delete_attribute(rsc, rsc_id, NULL,
+                                           PCMK_XE_META_ATTRIBUTES, NULL,
+                                           PCMK_META_TARGET_ROLE, cib,
                                            cib_options, force);
     }
 
@@ -1736,14 +1739,16 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
     if (stop_via_ban) {
         cli_resource_clear(lookup_id, host, NULL, cib, cib_options, true, force);
     } else if (orig_target_role) {
-        cli_resource_update_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS, NULL,
+        cli_resource_update_attribute(rsc, rsc_id, NULL,
+                                      PCMK_XE_META_ATTRIBUTES, NULL,
                                       PCMK_META_TARGET_ROLE, orig_target_role,
                                       FALSE, cib, cib_options, force);
         free(orig_target_role);
     } else {
-        cli_resource_delete_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS,
-                                      NULL, PCMK_META_TARGET_ROLE, cib,
-                                      cib_options, force);
+        cli_resource_delete_attribute(rsc, rsc_id, NULL,
+                                      PCMK_XE_META_ATTRIBUTES, NULL,
+                                      PCMK_META_TARGET_ROLE, cib, cib_options,
+                                      force);
     }
 
 done:
