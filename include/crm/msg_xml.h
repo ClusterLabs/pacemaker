@@ -247,8 +247,6 @@ extern "C" {
 #  define XML_CONS_TAG_RSC_TICKET	"rsc_ticket"
 #  define XML_CONS_TAG_RSC_SET		"resource_set"
 
-#  define XML_TICKET_ATTR_LOSS_POLICY	PCMK_XA_LOSS_POLICY
-
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 
 #  define XML_CIB_TAG_GENERATION_TUPPLE	"generation_tuple"

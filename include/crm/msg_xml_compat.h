@@ -691,6 +691,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_TICKET instead
 #define XML_TICKET_ATTR_TICKET PCMK_XA_TICKET
 
+//! \deprecated Use \c PCMK_XA_LOSS_POLICY instead
+#define XML_TICKET_ATTR_LOSS_POLICY PCMK_XA_LOSS_POLICY
+
 #ifdef __cplusplus
 }
 #endif
