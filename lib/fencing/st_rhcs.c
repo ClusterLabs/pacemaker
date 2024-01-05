@@ -99,7 +99,8 @@ stonith_rhcs_parameter_not_required(xmlNode *metadata, const char *parameter)
     CRM_CHECK(metadata != NULL, return);
     CRM_CHECK(parameter != NULL, return);
 
-    xpath = crm_strdup_printf("//parameter[@name='%s']", parameter);
+    xpath = crm_strdup_printf("//" PCMK_XE_PARAMETER "[@" PCMK_XA_NAME "='%s']",
+                              parameter);
     /* Fudge metadata so that the parameter isn't required in config
      * Pacemaker handles and adds it */
     xpathObj = xpath_search(metadata, xpath);

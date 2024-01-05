@@ -189,7 +189,7 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
 
     // Build a parameter list
     match = first_named_child(metadata, PCMK_XE_PARAMETERS);
-    for (match = first_named_child(match, "parameter"); match != NULL;
+    for (match = first_named_child(match, PCMK_XE_PARAMETER); match != NULL;
          match = crm_next_same_xml(match)) {
 
         const char *param_name = crm_element_value(match, PCMK_XA_NAME);

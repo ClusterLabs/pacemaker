@@ -2407,7 +2407,7 @@ stonith__device_parameter_flags(uint32_t *device_flags, const char *device_name,
 
     CRM_CHECK((device_flags != NULL) && (metadata != NULL), return);
 
-    xpath = xpath_search(metadata, "//parameter");
+    xpath = xpath_search(metadata, "//" PCMK_XE_PARAMETER);
     max = numXpathResults(xpath);
 
     if (max <= 0) {

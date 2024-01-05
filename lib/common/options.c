@@ -20,6 +20,7 @@
 #include <sys/stat.h>
 
 #include <crm/crm.h>
+#include <crm/msg_xml.h>
 
 void
 pcmk__cli_help(char cmd)
@@ -532,7 +533,9 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
         // The standard requires a parameter type
         CRM_ASSERT(opt_type != NULL);
 
-        pcmk__g_strcat(s, "    <parameter name=\"", opt_name, "\">\n", NULL);
+        pcmk__g_strcat(s,
+                       "    <" PCMK_XE_PARAMETER " "
+                               PCMK_XA_NAME "=\"", opt_name, "\">\n", NULL);
 
         add_desc(s, "longdesc", opt_desc_long, opt_values, "      ");
         add_desc(s, "shortdesc", opt_desc_short, NULL, "      ");
@@ -561,7 +564,7 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
             g_string_append(s, "/>\n");
         }
 
-        g_string_append(s, "    </parameter>\n");
+        g_string_append(s, "    </" PCMK_XE_PARAMETER ">\n");
     }
     g_string_append(s, "  </" PCMK_XE_PARAMETERS ">\n</resource-agent>\n");
 

@@ -60,6 +60,7 @@ extern "C" {
 #define PCMK_XE_OPERATION                   "operation"
 #define PCMK_XE_OP_EXPRESSION               "op_expression"
 #define PCMK_XE_ROLE                        "role"
+#define PCMK_XE_PARAMETER                   "parameter"
 #define PCMK_XE_PARAMETERS                  "parameters"
 #define PCMK_XE_RSC_EXPRESSION              "rsc_expression"
 
