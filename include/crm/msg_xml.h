@@ -68,6 +68,7 @@ extern "C" {
  */
 
 #define PCMK_XA_ADMIN_EPOCH                 "admin_epoch"
+#define PCMK_XA_BOOLEAN_OP                  "boolean-op"
 #define PCMK_XA_CIB_LAST_WRITTEN            "cib-last-written"
 #define PCMK_XA_CLASS                       "class"
 #define PCMK_XA_CRM_DEBUG_ORIGIN            "crm-debug-origin"
@@ -210,7 +211,7 @@ extern "C" {
 #  define XML_GRAPH_TAG_MAINTENANCE       "maintenance"
 
 #  define XML_TAG_RULE			"rule"
-#  define XML_RULE_ATTR_BOOLEAN_OP	"boolean-op"
+#  define XML_RULE_ATTR_BOOLEAN_OP	PCMK_XA_BOOLEAN_OP
 
 #  define XML_TAG_EXPRESSION		"expression"
 #  define XML_EXPR_ATTR_ATTRIBUTE	"attribute"

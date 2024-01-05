@@ -128,7 +128,7 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
     }
 
     rule_id = crm_element_value(rule_xml, PCMK_XA_ID);
-    boolean = crm_element_value(rule_xml, XML_RULE_ATTR_BOOLEAN_OP);
+    boolean = crm_element_value(rule_xml, PCMK_XA_BOOLEAN_OP);
     role_spec = crm_element_value(rule_xml, PCMK_XA_ROLE);
 
     if (parse_location_role(role_spec, &role)) {

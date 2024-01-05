@@ -105,7 +105,7 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
 
         crm_xml_set_id(rule, "cli-ban-%s-on-%s-rule", rsc_id, host);
         crm_xml_add(rule, PCMK_XA_SCORE, CRM_MINUS_INFINITY_S);
-        crm_xml_add(rule, XML_RULE_ATTR_BOOLEAN_OP, "and");
+        crm_xml_add(rule, PCMK_XA_BOOLEAN_OP, "and");
 
         crm_xml_set_id(expr, "cli-ban-%s-on-%s-expr", rsc_id, host);
         crm_xml_add(expr, XML_EXPR_ATTR_ATTRIBUTE, CRM_ATTR_UNAME);
@@ -182,7 +182,7 @@ cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
 
         crm_xml_set_id(rule, "cli-prefer-rule-%s", rsc_id);
         crm_xml_add(rule, PCMK_XA_SCORE, CRM_INFINITY_S);
-        crm_xml_add(rule, XML_RULE_ATTR_BOOLEAN_OP, "and");
+        crm_xml_add(rule, PCMK_XA_BOOLEAN_OP, "and");
 
         crm_xml_set_id(expr, "cli-prefer-expr-%s", rsc_id);
         crm_xml_add(expr, XML_EXPR_ATTR_ATTRIBUTE, CRM_ATTR_UNAME);

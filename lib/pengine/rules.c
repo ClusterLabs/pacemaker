@@ -674,7 +674,7 @@ pe_eval_expr(xmlNode *rule, const pe_rule_eval_data_t *rule_data,
         return FALSE; // Not possible with schema validation enabled
     }
 
-    value = crm_element_value(rule, XML_RULE_ATTR_BOOLEAN_OP);
+    value = crm_element_value(rule, PCMK_XA_BOOLEAN_OP);
     if (pcmk__str_eq(value, "or", pcmk__str_casei)) {
         do_and = FALSE;
         passed = FALSE;
