@@ -540,9 +540,11 @@ te_update_job_count(pcmk__graph_action_t *action, int offset)
     if ((target == NULL)
         && pcmk__strcase_any_of(task, PCMK_ACTION_MIGRATE_TO,
                                 PCMK_ACTION_MIGRATE_FROM, NULL)) {
+
         const char *t1 = crm_meta_value(action->params,
                                         PCMK__META_MIGRATE_SOURCE);
-        const char *t2 = crm_meta_value(action->params, XML_LRM_ATTR_MIGRATE_TARGET);
+        const char *t2 = crm_meta_value(action->params,
+                                        PCMK__META_MIGRATE_TARGET);
 
         te_update_job_count_on(t1, offset, TRUE);
         te_update_job_count_on(t2, offset, TRUE);
@@ -643,7 +645,7 @@ graph_action_allowed(pcmk__graph_t *graph, pcmk__graph_action_t *action)
             return false;
         }
 
-        target = crm_meta_value(action->params, XML_LRM_ATTR_MIGRATE_TARGET);
+        target = crm_meta_value(action->params, PCMK__META_MIGRATE_TARGET);
 
     } else if (target == NULL) {
         target = crm_element_value(action->xml, PCMK__META_ON_NODE);

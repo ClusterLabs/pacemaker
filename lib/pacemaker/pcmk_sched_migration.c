@@ -31,7 +31,7 @@ add_migration_meta(pcmk_action_t *action, const pcmk_node_t *source,
     add_hash_param(action->meta, PCMK__META_MIGRATE_SOURCE,
                    source->details->uname);
 
-    add_hash_param(action->meta, XML_LRM_ATTR_MIGRATE_TARGET,
+    add_hash_param(action->meta, PCMK__META_MIGRATE_TARGET,
                    target->details->uname);
 }
 

@@ -2886,7 +2886,7 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
     /* Need to check against transition_magic too? */
     if ((source != NULL) && (strcmp(op, PCMK_ACTION_MIGRATE_TO) == 0)) {
         pcmk__g_strcat(xpath,
-                       " and @" XML_LRM_ATTR_MIGRATE_TARGET "='", source, "']",
+                       " and @" PCMK__META_MIGRATE_TARGET "='", source, "']",
                        NULL);
 
     } else if ((source != NULL)
@@ -3064,7 +3064,7 @@ newer_state_after_migrate(const char *rsc_id, const char *node_name,
     }
 
     source = crm_element_value(xml_op, PCMK__META_MIGRATE_SOURCE);
-    target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
+    target = crm_element_value(xml_op, PCMK__META_MIGRATE_TARGET);
 
     /* It's preferred to compare to the migrate event on the same node if
      * existing, since call ids are more reliable.
@@ -3115,11 +3115,11 @@ get_migration_node_names(const xmlNode *entry, const pcmk_node_t *source_node,
                          const char **source_name, const char **target_name)
 {
     *source_name = crm_element_value(entry, PCMK__META_MIGRATE_SOURCE);
-    *target_name = crm_element_value(entry, XML_LRM_ATTR_MIGRATE_TARGET);
+    *target_name = crm_element_value(entry, PCMK__META_MIGRATE_TARGET);
     if ((*source_name == NULL) || (*target_name == NULL)) {
         pcmk__config_err("Ignoring resource history entry %s without "
                          PCMK__META_MIGRATE_SOURCE " and "
-                         XML_LRM_ATTR_MIGRATE_TARGET, ID(entry));
+                         PCMK__META_MIGRATE_TARGET, ID(entry));
         return pcmk_rc_unpack_error;
     }
 
@@ -3136,7 +3136,7 @@ get_migration_node_names(const xmlNode *entry, const pcmk_node_t *source_node,
         && !pcmk__str_eq(*target_name, target_node->details->uname,
                          pcmk__str_casei|pcmk__str_null_matches)) {
         pcmk__config_err("Ignoring resource history entry %s because "
-                         XML_LRM_ATTR_MIGRATE_TARGET "='%s' does not match %s",
+                         PCMK__META_MIGRATE_TARGET "='%s' does not match %s",
                          ID(entry), *target_name, pe__node_name(target_node));
         return pcmk_rc_unpack_error;
     }
@@ -4694,7 +4694,7 @@ process_pending_action(struct action_history *history,
         pcmk_node_t *target = NULL;
 
         migrate_target = crm_element_value(history->xml,
-                                           XML_LRM_ATTR_MIGRATE_TARGET);
+                                           PCMK__META_MIGRATE_TARGET);
         target = pe_find_node(history->rsc->cluster->nodes, migrate_target);
         if (target != NULL) {
             stop_action(history->rsc, target, FALSE);
