@@ -57,7 +57,7 @@ colocations_xml_node(pcmk__output_t *out, pcmk_resource_t *rsc,
     }
 
     if (cons->dependent_role != pcmk_role_unknown) {
-        xmlSetProp(node, (pcmkXmlStr) "rsc-role",
+        xmlSetProp(node, (pcmkXmlStr) PCMK_XA_RSC_ROLE,
                    (pcmkXmlStr) role2text(cons->dependent_role));
     }
 

@@ -461,7 +461,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     if (rsc_set != NULL) {
         if (state != NULL) {
-            /* Move "rsc-role" into converted resource_set as PCMK_XA_ROLE
+            /* Move PCMK_XA_RSC_ROLE into converted resource_set as PCMK_XA_ROLE
              * attribute
              */
             crm_xml_add(rsc_set, PCMK_XA_ROLE, state);

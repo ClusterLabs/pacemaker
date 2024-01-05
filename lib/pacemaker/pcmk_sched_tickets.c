@@ -283,8 +283,7 @@ unpack_simple_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     pcmk_ticket_t *ticket = NULL;
 
     const char *rsc_id = crm_element_value(xml_obj, PCMK_XA_RSC);
-    const char *state = crm_element_value(xml_obj,
-                                             XML_COLOC_ATTR_SOURCE_ROLE);
+    const char *state = crm_element_value(xml_obj, PCMK_XA_RSC_ROLE);
 
     // @COMPAT: Deprecated since 2.1.5
     const char *instance = crm_element_value(xml_obj, PCMK__XA_RSC_INSTANCE);
@@ -399,7 +398,7 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         return pcmk_rc_ok;
     }
 
-    state = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE);
+    state = crm_element_value(xml_obj, PCMK_XA_RSC_ROLE);
 
     *expanded_xml = copy_xml(xml_obj);
 
@@ -413,11 +412,11 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     if (rsc_set != NULL) {
         if (state != NULL) {
-            /* Move "rsc-role" into converted resource_set as a PCMK_XA_ROLE
-             * attribute
+            /* Move PCMK_XA_RSC_ROLE into converted resource_set as a
+             * PCMK_XA_ROLE attribute
              */
             crm_xml_add(rsc_set, PCMK_XA_ROLE, state);
-            xml_remove_prop(*expanded_xml, XML_COLOC_ATTR_SOURCE_ROLE);
+            xml_remove_prop(*expanded_xml, PCMK_XA_RSC_ROLE);
         }
 
     } else {
