@@ -394,7 +394,7 @@ process_cib_diff(xmlNode *cib, xmlNode *change, const char *op,
                  const char *xpath)
 {
     xmlNode *status = first_named_child(cib, XML_CIB_TAG_STATUS);
-    xmlNode *config = first_named_child(cib, XML_CIB_TAG_CONFIGURATION);
+    xmlNode *config = first_named_child(cib, PCMK_XE_CONFIGURATION);
 
     if (status) {
         process_status_diff(status, change, op, xpath);
@@ -430,7 +430,7 @@ te_update_diff_v2(xmlNode *diff)
 
         } else if ((strcmp(op, "move") == 0)
                    && (strstr(xpath,
-                              "/" PCMK_XE_CIB "/" XML_CIB_TAG_CONFIGURATION
+                              "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION
                               "/" XML_CIB_TAG_RESOURCES) == NULL)) {
             /* We still need to consider moves within the resources section,
              * since they affect placement order.
@@ -467,7 +467,7 @@ te_update_diff_v2(xmlNode *diff)
                   op, (xpath? xpath : "CIB"),
                   (name? " matched by " : ""), (name? name : ""));
 
-        if (strstr(xpath, "/" PCMK_XE_CIB "/" XML_CIB_TAG_CONFIGURATION)) {
+        if (strstr(xpath, "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION)) {
             abort_transition(INFINITY, pcmk__graph_restart,
                              "Configuration change", change);
             break; // Won't be packaged with operation results we may be waiting for

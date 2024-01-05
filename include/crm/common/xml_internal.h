@@ -169,18 +169,18 @@ int pcmk__xml_show_changes(pcmk__output_t *out, const xmlNode *xml);
 
 /* search string to find CIB resources entries for cluster nodes */
 #define PCMK__XP_MEMBER_NODE_CONFIG \
-    "//" PCMK_XE_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_NODES \
+    "//" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" XML_CIB_TAG_NODES \
     "/" XML_CIB_TAG_NODE "[not(@type) or @type='member']"
 
 /* search string to find CIB resources entries for guest nodes */
 #define PCMK__XP_GUEST_NODE_CONFIG \
-    "//" PCMK_XE_CIB "//" XML_CIB_TAG_CONFIGURATION "//" XML_CIB_TAG_RESOURCE \
+    "//" PCMK_XE_CIB "//" PCMK_XE_CONFIGURATION "//" XML_CIB_TAG_RESOURCE \
     "//" XML_TAG_META_SETS "//" XML_CIB_TAG_NVPAIR \
     "[@name='" PCMK_META_REMOTE_NODE "']"
 
 /* search string to find CIB resources entries for remote nodes */
 #define PCMK__XP_REMOTE_NODE_CONFIG \
-    "//" PCMK_XE_CIB "//" XML_CIB_TAG_CONFIGURATION "//" XML_CIB_TAG_RESOURCE \
+    "//" PCMK_XE_CIB "//" PCMK_XE_CONFIGURATION "//" XML_CIB_TAG_RESOURCE \
     "[@type='remote'][@provider='pacemaker']"
 
 /* search string to find CIB node status entries for pacemaker_remote nodes */

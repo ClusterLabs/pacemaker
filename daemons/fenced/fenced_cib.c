@@ -573,7 +573,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
                 fencing_topology_init();
                 return;
 
-            } else if (strstr(xpath, "/" XML_CIB_TAG_CONFIGURATION)) {
+            } else if (strstr(xpath, "/" PCMK_XE_CONFIGURATION)) {
                 /* Changes to the whole config section, possibly including the topology as a whild */
                 if(first_named_child(change, XML_TAG_FENCING_TOPOLOGY) == NULL) {
                     crm_trace("Nothing for us in %s operation %d.%d.%d for %s.",

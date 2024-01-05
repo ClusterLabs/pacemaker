@@ -343,7 +343,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
 
                 /* Search and remove unknown nodes with the conflicting uname from CIB */
                 pcmk__g_strcat(xpath,
-                               "/" PCMK_XE_CIB "/" XML_CIB_TAG_CONFIGURATION
+                               "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION
                                "/" XML_CIB_TAG_NODES "/" XML_CIB_TAG_NODE
                                "[@" PCMK_XA_UNAME "='", node->uname, "']"
                                "[@" PCMK_XA_ID "!='", node->uuid, "']", NULL);

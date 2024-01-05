@@ -138,7 +138,7 @@ static inline bool
 scope_is_valid(const char *scope)
 {
     return pcmk__str_any_of(scope,
-                            XML_CIB_TAG_CONFIGURATION,
+                            PCMK_XE_CONFIGURATION,
                             XML_CIB_TAG_NODES,
                             XML_CIB_TAG_RESOURCES,
                             XML_CIB_TAG_CONSTRAINTS,
@@ -350,7 +350,7 @@ static GOptionEntry addl_entries[] = {
 
     { "scope", 'o', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, section_cb,
       "Limit scope of operation to specific section of CIB\n"
-      INDENT "Valid values: " XML_CIB_TAG_CONFIGURATION ", " XML_CIB_TAG_NODES
+      INDENT "Valid values: " PCMK_XE_CONFIGURATION ", " XML_CIB_TAG_NODES
       ", " XML_CIB_TAG_RESOURCES ", " XML_CIB_TAG_CONSTRAINTS
       ", " XML_CIB_TAG_CRMCONFIG ", " XML_CIB_TAG_RSCCONFIG ",\n"
       INDENT "              " XML_CIB_TAG_OPCONFIG ", " XML_CIB_TAG_ACLS
@@ -370,7 +370,7 @@ static GOptionEntry addl_entries[] = {
       &options.get_node_path,
       "When performing XPath queries, return paths of any matches found\n"
       INDENT "(for example, "
-      "\"/" PCMK_XE_CIB "/" XML_CIB_TAG_CONFIGURATION
+      "\"/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION
       "/" XML_CIB_TAG_RESOURCES "/" XML_CIB_TAG_INCARNATION
       "[@" PCMK_XA_ID "='dummy-clone']"
       "/" XML_CIB_TAG_RESOURCE "[@" PCMK_XA_ID "='dummy']\")",

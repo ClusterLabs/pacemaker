@@ -56,6 +56,7 @@ extern "C" {
  */
 
 #define PCMK_XE_CIB                         "cib"
+#define PCMK_XE_CONFIGURATION               "configuration"
 #define PCMK_XE_CONTENT                     "content"
 #define PCMK_XE_DATE_EXPRESSION             "date_expression"
 #define PCMK_XE_LONGDESC                    "longdesc"
@@ -182,7 +183,7 @@ extern "C" {
 
 /*---- CIB specific tags/attrs */
 #  define XML_CIB_TAG_SECTION_ALL	"all"
-#  define XML_CIB_TAG_CONFIGURATION	"configuration"
+#  define XML_CIB_TAG_CONFIGURATION	PCMK_XE_CONFIGURATION
 #  define XML_CIB_TAG_STATUS       	"status"
 #  define XML_CIB_TAG_RESOURCES		"resources"
 #  define XML_CIB_TAG_NODES         	"nodes"

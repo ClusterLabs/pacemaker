@@ -406,10 +406,9 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
         crm_trace("Creating %s-%s for %s=%s",
                   CIB_OPTIONS_FIRST, attr_name, attr_name, attr_value);
 
-        configuration = pcmk__xe_match(xml, XML_CIB_TAG_CONFIGURATION, NULL,
-                                       NULL);
+        configuration = pcmk__xe_match(xml, PCMK_XE_CONFIGURATION, NULL, NULL);
         if (configuration == NULL) {
-            configuration = create_xml_node(xml, XML_CIB_TAG_CONFIGURATION);
+            configuration = create_xml_node(xml, PCMK_XE_CONFIGURATION);
         }
 
         crm_config = pcmk__xe_match(configuration, XML_CIB_TAG_CRMCONFIG, NULL,

@@ -153,7 +153,7 @@ is_config_change(xmlNode *xml)
     GList *gIter = NULL;
     xml_node_private_t *nodepriv = NULL;
     xml_doc_private_t *docpriv;
-    xmlNode *config = first_named_child(xml, XML_CIB_TAG_CONFIGURATION);
+    xmlNode *config = first_named_child(xml, PCMK_XE_CONFIGURATION);
 
     if (config) {
         nodepriv = config->_private;
@@ -168,7 +168,7 @@ is_config_change(xmlNode *xml)
             pcmk__deleted_xml_t *deleted_obj = gIter->data;
 
             if (strstr(deleted_obj->path,
-                       "/" PCMK_XE_CIB "/" XML_CIB_TAG_CONFIGURATION) != NULL) {
+                       "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION) != NULL) {
                 return TRUE;
             }
         }

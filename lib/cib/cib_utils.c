@@ -247,7 +247,7 @@ createEmptyCib(int cib_epoch)
     crm_xml_add_int(cib_root, PCMK_XA_NUM_UPDATES, 0);
     crm_xml_add_int(cib_root, PCMK_XA_ADMIN_EPOCH, 0);
 
-    config = create_xml_node(cib_root, XML_CIB_TAG_CONFIGURATION);
+    config = create_xml_node(cib_root, PCMK_XE_CONFIGURATION);
     create_xml_node(cib_root, XML_CIB_TAG_STATUS);
 
     create_xml_node(config, XML_CIB_TAG_CRMCONFIG);

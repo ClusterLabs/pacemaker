@@ -683,7 +683,7 @@ commit_shadow_file(GError **error)
     section_xml = input;
 
     if (!options.full_upload) {
-        section = XML_CIB_TAG_CONFIGURATION;
+        section = PCMK_XE_CONFIGURATION;
         section_xml = first_named_child(input, section);
     }
 
