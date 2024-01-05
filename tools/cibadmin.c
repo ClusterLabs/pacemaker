@@ -144,7 +144,7 @@ scope_is_valid(const char *scope)
                             PCMK_XE_CONSTRAINTS,
                             PCMK_XE_CRM_CONFIG,
                             XML_CIB_TAG_RSCCONFIG,
-                            XML_CIB_TAG_OPCONFIG,
+                            PCMK_XE_OP_DEFAULTS,
                             XML_CIB_TAG_ACLS,
                             XML_TAG_FENCING_TOPOLOGY,
                             XML_CIB_TAG_TAGS,
@@ -353,7 +353,7 @@ static GOptionEntry addl_entries[] = {
       INDENT "Valid values: " PCMK_XE_CONFIGURATION ", " PCMK_XE_NODES
       ", " PCMK_XE_RESOURCES ", " PCMK_XE_CONSTRAINTS
       ", " PCMK_XE_CRM_CONFIG ", " XML_CIB_TAG_RSCCONFIG ",\n"
-      INDENT "              " XML_CIB_TAG_OPCONFIG ", " XML_CIB_TAG_ACLS
+      INDENT "              " PCMK_XE_OP_DEFAULTS ", " XML_CIB_TAG_ACLS
       ", " XML_TAG_FENCING_TOPOLOGY ", " XML_CIB_TAG_TAGS
       ", " XML_CIB_TAG_ALERTS ", " PCMK_XE_STATUS "\n"
       INDENT "If both --scope/-o and --xpath/-a are specified, the last one to "

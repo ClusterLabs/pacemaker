@@ -64,6 +64,7 @@ extern "C" {
 #define PCMK_XE_LONGDESC                    "longdesc"
 #define PCMK_XE_NODES                       "nodes"
 #define PCMK_XE_OP                          "op"
+#define PCMK_XE_OP_DEFAULTS                 "op_defaults"
 #define PCMK_XE_OPERATION                   "operation"
 #define PCMK_XE_OP_EXPRESSION               "op_expression"
 #define PCMK_XE_OPTION                      "option"
@@ -188,7 +189,7 @@ extern "C" {
 
 /*---- CIB specific tags/attrs */
 #  define XML_CIB_TAG_SECTION_ALL	"all"
-#  define XML_CIB_TAG_OPCONFIG		"op_defaults"
+#  define XML_CIB_TAG_OPCONFIG		PCMK_XE_OP_DEFAULTS
 #  define XML_CIB_TAG_RSCCONFIG   	"rsc_defaults"
 #  define XML_CIB_TAG_ACLS   		"acls"
 #  define XML_CIB_TAG_ALERTS    	"alerts"
