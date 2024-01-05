@@ -1354,7 +1354,7 @@ remote_ra_fail(const char *node_name)
  *  </pseudo_event>
  */
 #define XPATH_PSEUDO_FENCE "/" PCMK__XE_PSEUDO_EVENT \
-    "[@" PCMK_XA_OPERATION "='stonith']/" XML_GRAPH_TAG_DOWNED "/" PCMK_XE_NODE
+    "[@" PCMK_XA_OPERATION "='stonith']/" PCMK__XE_DOWNED "/" PCMK_XE_NODE
 
 /*!
  * \internal

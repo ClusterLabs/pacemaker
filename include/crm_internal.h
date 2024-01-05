@@ -60,6 +60,7 @@
 
 #define PCMK__XE_ATTRIBUTES             "attributes"
 #define PCMK__XE_CRM_EVENT              "crm_event"
+#define PCMK__XE_DOWNED                 "downed"
 #define PCMK__XE_LRM                    "lrm"
 #define PCMK__XE_LRM_RESOURCE           "lrm_resource"
 #define PCMK__XE_LRM_RESOURCES          "lrm_resources"

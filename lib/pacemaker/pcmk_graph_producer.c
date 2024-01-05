@@ -143,7 +143,7 @@ add_downed_nodes(xmlNode *xml, const pcmk_action_t *action)
     if (pcmk__str_eq(action->task, PCMK_ACTION_DO_SHUTDOWN, pcmk__str_none)) {
 
         /* Shutdown makes the action's node down */
-        xmlNode *downed = create_xml_node(xml, XML_GRAPH_TAG_DOWNED);
+        xmlNode *downed = create_xml_node(xml, PCMK__XE_DOWNED);
         add_node_to_xml_by_id(action->node->details->id, downed);
 
     } else if (pcmk__str_eq(action->task, PCMK_ACTION_STONITH,
@@ -153,7 +153,7 @@ add_downed_nodes(xmlNode *xml, const pcmk_action_t *action)
         const char *fence = g_hash_table_lookup(action->meta, "stonith_action");
 
         if (pcmk__is_fencing_action(fence)) {
-            xmlNode *downed = create_xml_node(xml, XML_GRAPH_TAG_DOWNED);
+            xmlNode *downed = create_xml_node(xml, PCMK__XE_DOWNED);
             add_node_to_xml_by_id(action->node->details->id, downed);
             pe_foreach_guest_node(action->node->details->data_set,
                                   action->node, add_node_to_xml, downed);
@@ -181,7 +181,7 @@ add_downed_nodes(xmlNode *xml, const pcmk_action_t *action)
             }
         }
         if (!migrating) {
-            xmlNode *downed = create_xml_node(xml, XML_GRAPH_TAG_DOWNED);
+            xmlNode *downed = create_xml_node(xml, PCMK__XE_DOWNED);
             add_node_to_xml_by_id(action->rsc->id, downed);
         }
     }
