@@ -130,6 +130,7 @@ extern "C" {
 #define PCMK_XA_VALUE                       "value"
 #define PCMK_XA_VALUE_SOURCE                "value-source"
 #define PCMK_XA_VERSION                     "version"
+#define PCMK_XA_WITH_RSC                    "with-rsc"
 
 
 /*
@@ -235,7 +236,7 @@ extern "C" {
 #  define XML_CONS_TAG_RSC_TICKET	"rsc_ticket"
 #  define XML_CONS_TAG_RSC_SET		"resource_set"
 
-#  define XML_COLOC_ATTR_TARGET		"with-rsc"
+#  define XML_COLOC_ATTR_TARGET		PCMK_XA_WITH_RSC
 #  define XML_COLOC_ATTR_TARGET_ROLE	"with-rsc-role"
 #  define XML_COLOC_ATTR_NODE_ATTR	"node-attribute"
 #  define XML_COLOC_ATTR_INFLUENCE          "influence"

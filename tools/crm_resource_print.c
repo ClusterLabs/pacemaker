@@ -43,7 +43,7 @@ print_constraint(xmlNode *xml_obj, void *userdata)
               xml_obj->name,
               cons_string(crm_element_value(xml_obj, PCMK_XA_ID)),
               cons_string(crm_element_value(xml_obj, PCMK_XA_RSC)),
-              cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET)),
+              cons_string(crm_element_value(xml_obj, PCMK_XA_WITH_RSC)),
               cons_string(crm_element_value(xml_obj, PCMK_XA_SCORE)),
               cons_string(crm_element_value(xml_obj, PCMK_XA_RSC_ROLE)),
               cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_ROLE)));

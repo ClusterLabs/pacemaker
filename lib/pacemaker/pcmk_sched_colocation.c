@@ -715,7 +715,7 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
 
     const char *score = crm_element_value(xml_obj, PCMK_XA_SCORE);
     const char *dependent_id = crm_element_value(xml_obj, PCMK_XA_RSC);
-    const char *primary_id = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET);
+    const char *primary_id = crm_element_value(xml_obj, PCMK_XA_WITH_RSC);
     const char *dependent_role = crm_element_value(xml_obj, PCMK_XA_RSC_ROLE);
     const char *primary_role = crm_element_value(xml_obj,
                                                  XML_COLOC_ATTR_TARGET_ROLE);
@@ -842,7 +842,7 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     }
 
     dependent_id = crm_element_value(xml_obj, PCMK_XA_RSC);
-    primary_id = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET);
+    primary_id = crm_element_value(xml_obj, PCMK_XA_WITH_RSC);
     if ((dependent_id == NULL) || (primary_id == NULL)) {
         return pcmk_rc_ok;
     }
@@ -896,8 +896,8 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     }
 
     // Convert primary's template/tag reference into constraint resource_set
-    if (!pcmk__tag_to_set(*expanded_xml, &primary_set, XML_COLOC_ATTR_TARGET,
-                          true, scheduler)) {
+    if (!pcmk__tag_to_set(*expanded_xml, &primary_set, PCMK_XA_WITH_RSC, true,
+                          scheduler)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_unpack_error;
