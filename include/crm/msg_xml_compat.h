@@ -784,6 +784,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_META_ATTRIBUTES instead
 #define XML_TAG_META_SETS PCMK_XE_META_ATTRIBUTES
 
+//! \deprecated Do not use
+#define XML_TAG_ATTRS "attributes"
+
 #ifdef __cplusplus
 }
 #endif
