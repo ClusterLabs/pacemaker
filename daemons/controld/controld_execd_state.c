@@ -477,7 +477,7 @@ remote_config_check(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
 
         crm_debug("Call %d : Parsing CIB options", call_id);
 
-        pe_unpack_nvpairs(output, output, XML_CIB_TAG_PROPSET, NULL,
+        pe_unpack_nvpairs(output, output, PCMK_XE_CLUSTER_PROPERTY_SET, NULL,
                           config_hash, CIB_OPTIONS_FIRST, FALSE, now, NULL);
 
         /* Now send it to the remote peer */

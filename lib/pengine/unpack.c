@@ -227,8 +227,9 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     scheduler->config_hash = config_hash;
 
-    pe__unpack_dataset_nvpairs(config, XML_CIB_TAG_PROPSET, &rule_data, config_hash,
-                               CIB_OPTIONS_FIRST, FALSE, scheduler);
+    pe__unpack_dataset_nvpairs(config, PCMK_XE_CLUSTER_PROPERTY_SET, &rule_data,
+                               config_hash, CIB_OPTIONS_FIRST, FALSE,
+                               scheduler);
 
     verify_pe_options(scheduler->config_hash);
 

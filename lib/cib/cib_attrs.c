@@ -71,7 +71,7 @@ find_attr(cib_t *cib, const char *section, const char *node_uuid,
 
     if (pcmk__str_eq(section, PCMK_XE_CRM_CONFIG, pcmk__str_casei)) {
         node_uuid = NULL;
-        set_type = XML_CIB_TAG_PROPSET;
+        set_type = PCMK_XE_CLUSTER_PROPERTY_SET;
 
     } else if (pcmk__strcase_any_of(section,
                                     PCMK_XE_OP_DEFAULTS, PCMK_XE_RSC_DEFAULTS,
@@ -296,7 +296,8 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
 
         if (node_uuid == NULL && !pcmk__str_eq(node_type, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
             if (pcmk__str_eq(section, PCMK_XE_CRM_CONFIG, pcmk__str_casei)) {
-                xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_PROPSET);
+                xml_obj = create_xml_node(xml_obj,
+                                          PCMK_XE_CLUSTER_PROPERTY_SET);
             } else {
                 xml_obj = create_xml_node(xml_obj, XML_TAG_META_SETS);
             }

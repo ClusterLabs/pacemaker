@@ -748,7 +748,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     crm_debug("Call %d : Parsing CIB options", call_id);
     config_hash = pcmk__strkey_table(free, free);
-    pe_unpack_nvpairs(crmconfig, crmconfig, XML_CIB_TAG_PROPSET, NULL,
+    pe_unpack_nvpairs(crmconfig, crmconfig, PCMK_XE_CLUSTER_PROPERTY_SET, NULL,
                       config_hash, CIB_OPTIONS_FIRST, FALSE, now, NULL);
 
     // Validate all options, and use defaults if not already present in hash

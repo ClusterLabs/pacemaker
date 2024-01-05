@@ -386,7 +386,7 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
     }
 
     xpath_string = crm_strdup_printf("%s//%s//nvpair[@name='%s']",
-                                     xpath_base, XML_CIB_TAG_PROPSET,
+                                     xpath_base, PCMK_XE_CLUSTER_PROPERTY_SET,
                                      attr_name);
     xpathObj = xpath_search(xml, xpath_string);
     max = numXpathResults(xpathObj);
@@ -417,10 +417,12 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
             crm_config = create_xml_node(configuration, PCMK_XE_CRM_CONFIG);
         }
 
-        cluster_property_set = pcmk__xe_match(crm_config, XML_CIB_TAG_PROPSET,
+        cluster_property_set = pcmk__xe_match(crm_config,
+                                              PCMK_XE_CLUSTER_PROPERTY_SET,
                                               NULL, NULL);
         if (cluster_property_set == NULL) {
-            cluster_property_set = create_xml_node(crm_config, XML_CIB_TAG_PROPSET);
+            cluster_property_set =
+                create_xml_node(crm_config, PCMK_XE_CLUSTER_PROPERTY_SET);
             crm_xml_add(cluster_property_set, PCMK_XA_ID, CIB_OPTIONS_FIRST);
         }
 

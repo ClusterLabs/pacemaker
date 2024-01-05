@@ -913,8 +913,8 @@ cib_read_config(GHashTable * options, xmlNode * current_cib)
 
     config = pcmk_find_cib_element(current_cib, PCMK_XE_CRM_CONFIG);
     if (config) {
-        pe_unpack_nvpairs(current_cib, config, XML_CIB_TAG_PROPSET, NULL,
-                          options, CIB_OPTIONS_FIRST, TRUE, now, NULL);
+        pe_unpack_nvpairs(current_cib, config, PCMK_XE_CLUSTER_PROPERTY_SET,
+                          NULL, options, CIB_OPTIONS_FIRST, TRUE, now, NULL);
     }
 
     verify_cib_options(options);
