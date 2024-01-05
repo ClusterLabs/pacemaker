@@ -159,6 +159,9 @@
 // @COMPAT Deprecated since 2.1.5
 #define PCMK__XA_FIRST_INSTANCE         "first-instance"
 
+// @COMPAT Deprecated since 1.1.12
+#define PCMK__XA_REF                    "ref"
+
 // @COMPAT Deprecated since 2.1.6
 #define PCMK__XA_REPLACE                "replace"
 

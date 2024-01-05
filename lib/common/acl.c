@@ -61,8 +61,8 @@ create_acl(const xmlNode *xml, GList *acls, enum xml_private_flags mode)
         tag = crm_element_value(xml, XML_ACL_ATTR_TAGv1);
     }
     if (ref == NULL) {
-        // @COMPAT rolling upgrades <=1.1.11
-        ref = crm_element_value(xml, XML_ACL_ATTR_REFv1);
+        // @COMPAT Deprecated since 1.1.12 (needed for rolling upgrades)
+        ref = crm_element_value(xml, PCMK__XA_REF);
     }
 
     if ((tag == NULL) && (ref == NULL) && (xpath == NULL)) {
