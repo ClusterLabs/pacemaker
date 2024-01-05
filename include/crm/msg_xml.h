@@ -223,8 +223,6 @@ extern "C" {
 
 #  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
 
-#  define XML_TAG_EXPRESSION		PCMK_XE_EXPRESSION
-
 #  define XML_CONS_TAG_RSC_DEPEND	"rsc_colocation"
 #  define XML_CONS_TAG_RSC_ORDER	"rsc_order"
 #  define XML_CONS_TAG_RSC_LOCATION	"rsc_location"
