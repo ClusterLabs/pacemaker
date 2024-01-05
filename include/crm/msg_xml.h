@@ -211,7 +211,6 @@ extern "C" {
 #  define XML_GRAPH_TAG_MAINTENANCE       "maintenance"
 
 #  define XML_TAG_RULE			"rule"
-#  define XML_RULE_ATTR_BOOLEAN_OP	PCMK_XA_BOOLEAN_OP
 
 #  define XML_TAG_EXPRESSION		"expression"
 #  define XML_EXPR_ATTR_ATTRIBUTE	"attribute"

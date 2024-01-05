@@ -625,6 +625,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_ROLE instead
 #define XML_RULE_ATTR_ROLE PCMK_XA_ROLE
 
+//! \deprecated Use \c PCMK_XA_BOOLEAN_OP instead
+#define XML_RULE_ATTR_BOOLEAN_OP PCMK_XA_BOOLEAN_OP
+
 #ifdef __cplusplus
 }
 #endif
