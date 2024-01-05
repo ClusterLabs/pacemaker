@@ -218,8 +218,8 @@ pe_unpack_alerts(const xmlNode *alerts)
         return alert_list;
     }
 
-    for (alert = first_named_child(alerts, XML_CIB_TAG_ALERT);
-         alert != NULL; alert = crm_next_same_xml(alert)) {
+    for (alert = first_named_child(alerts, PCMK_XE_ALERT); alert != NULL;
+         alert = crm_next_same_xml(alert)) {
 
         xmlNode *recipient;
         int recipients = 0;
