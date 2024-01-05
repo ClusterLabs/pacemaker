@@ -2820,7 +2820,7 @@ unpack_node_lrm(pcmk_node_t *node, const xmlNode *xml,
     bool found_orphaned_container_filler = false;
 
     // Drill down to lrm_resources section
-    xml = find_xml_node(xml, XML_CIB_TAG_LRM, FALSE);
+    xml = find_xml_node(xml, PCMK__XE_LRM, FALSE);
     if (xml == NULL) {
         return;
     }
@@ -2872,8 +2872,8 @@ set_node_score(gpointer key, gpointer value, gpointer user_data)
 
 #define XPATH_NODE_STATE "/" PCMK_XE_CIB "/" PCMK_XE_STATUS \
                          "/" PCMK__XE_NODE_STATE
-#define SUB_XPATH_LRM_RESOURCE "/" XML_CIB_TAG_LRM              \
-                               "/" XML_LRM_TAG_RESOURCES        \
+#define SUB_XPATH_LRM_RESOURCE "/" PCMK__XE_LRM             \
+                               "/" XML_LRM_TAG_RESOURCES    \
                                "/" XML_LRM_TAG_RESOURCE
 #define SUB_XPATH_LRM_RSC_OP "/" XML_LRM_TAG_RSC_OP
 
@@ -5113,7 +5113,7 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
                  */
                 xmlNode *lrm_rsc = NULL;
 
-                tmp = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
+                tmp = find_xml_node(node_state, PCMK__XE_LRM, FALSE);
                 tmp = find_xml_node(tmp, XML_LRM_TAG_RESOURCES, FALSE);
 
                 for (lrm_rsc = pcmk__xe_first_child(tmp); lrm_rsc != NULL;

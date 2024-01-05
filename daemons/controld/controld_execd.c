@@ -594,7 +594,7 @@ controld_query_executor_state(void)
         return NULL;
     }
 
-    xml_data = create_xml_node(xml_state, XML_CIB_TAG_LRM);
+    xml_data = create_xml_node(xml_state, PCMK__XE_LRM);
     crm_xml_add(xml_data, PCMK_XA_ID, peer->uuid);
     rsc_list = create_xml_node(xml_data, XML_LRM_TAG_RESOURCES);
 
@@ -1762,7 +1762,7 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
     update = create_node_state_update(peer, node_update_none, NULL,
                                       __func__);
 
-    iter = create_xml_node(update, XML_CIB_TAG_LRM);
+    iter = create_xml_node(update, PCMK__XE_LRM);
     crm_xml_add(iter, PCMK_XA_ID, controld_globals.our_uuid);
     iter = create_xml_node(iter, XML_LRM_TAG_RESOURCES);
     iter = create_xml_node(iter, XML_LRM_TAG_RESOURCE);

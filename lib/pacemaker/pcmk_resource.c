@@ -23,10 +23,10 @@
 #include <pacemaker-internal.h>
 
 // Search path for resource operation history (takes node name and resource ID)
-#define XPATH_OP_HISTORY "//" PCMK_XE_STATUS                            \
-                         "/" PCMK__XE_NODE_STATE                        \
-                         "[@" PCMK_XA_UNAME "='%s']"                    \
-                         "/" XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES  \
+#define XPATH_OP_HISTORY "//" PCMK_XE_STATUS                        \
+                         "/" PCMK__XE_NODE_STATE                    \
+                         "[@" PCMK_XA_UNAME "='%s']"                \
+                         "/" PCMK__XE_LRM "/" XML_LRM_TAG_RESOURCES \
                          "/" XML_LRM_TAG_RESOURCE "[@" PCMK_XA_ID "='%s']"
 
 static xmlNode *

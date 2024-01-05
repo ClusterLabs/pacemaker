@@ -1887,7 +1887,7 @@ process_node_history(pcmk_node_t *node, const xmlNode *lrm_rscs)
 #define XPATH_NODE_HISTORY "/" PCMK_XE_CIB "/" PCMK_XE_STATUS   \
                            "/" PCMK__XE_NODE_STATE              \
                            "[@" PCMK_XA_UNAME "='%s']"          \
-                           "/" XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES
+                           "/" PCMK__XE_LRM "/" XML_LRM_TAG_RESOURCES
 
 /*!
  * \internal

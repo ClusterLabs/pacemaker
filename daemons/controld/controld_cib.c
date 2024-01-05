@@ -281,7 +281,7 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
 #define XPATH_NODE_STATE "//" PCMK__XE_NODE_STATE "[@" PCMK_XA_UNAME "='%s']"
 
 // Node's lrm section (name 1x)
-#define XPATH_NODE_LRM          XPATH_NODE_STATE "/" XML_CIB_TAG_LRM
+#define XPATH_NODE_LRM XPATH_NODE_STATE "/" PCMK__XE_LRM
 
 /* Node's lrm_rsc_op entries and lrm_resource entries without unexpired lock
  * (name 2x, (seconds_since_epoch - PCMK_OPT_SHUTDOWN_LOCK_LIMIT) 1x)
@@ -390,10 +390,10 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
 }
 
 // Takes node name and resource ID
-#define XPATH_RESOURCE_HISTORY "//" PCMK__XE_NODE_STATE                     \
-                               "[@" PCMK_XA_UNAME "='%s']/"                 \
-                               XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES    \
-                               "/" XML_LRM_TAG_RESOURCE                     \
+#define XPATH_RESOURCE_HISTORY "//" PCMK__XE_NODE_STATE                 \
+                               "[@" PCMK_XA_UNAME "='%s']/"             \
+                               PCMK__XE_LRM "/" XML_LRM_TAG_RESOURCES   \
+                               "/" XML_LRM_TAG_RESOURCE                 \
                                "[@" PCMK_XA_ID "='%s']"
 // @TODO could add "and @PCMK_OPT_SHUTDOWN_LOCK" to limit to locks
 
@@ -908,7 +908,7 @@ controld_update_resource_history(const char *node_name,
     crm_xml_add(xml, PCMK_XA_CRM_DEBUG_ORIGIN, __func__);
 
     //     <lrm ...>
-    xml = create_xml_node(xml, XML_CIB_TAG_LRM);
+    xml = create_xml_node(xml, PCMK__XE_LRM);
     crm_xml_add(xml, PCMK_XA_ID, node_id);
 
     //       <lrm_resources>
@@ -989,7 +989,7 @@ controld_delete_action_history(const lrmd_event_data_t *op)
 #define XPATH_HISTORY                                   \
     "/" PCMK_XE_CIB "/" PCMK_XE_STATUS                  \
     "/" PCMK__XE_NODE_STATE "[@" PCMK_XA_UNAME "='%s']" \
-    "/" XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES       \
+    "/" PCMK__XE_LRM "/" XML_LRM_TAG_RESOURCES          \
     "/" XML_LRM_TAG_RESOURCE "[@" PCMK_XA_ID "='%s']"   \
     "/" XML_LRM_TAG_RSC_OP
 

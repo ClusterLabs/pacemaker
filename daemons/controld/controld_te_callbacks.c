@@ -233,7 +233,7 @@ process_resource_updates(const char *node, xmlNode *xml, xmlNode *change,
         return;
     }
 
-    if (pcmk__xe_is(xml, XML_CIB_TAG_LRM)) {
+    if (pcmk__xe_is(xml, PCMK__XE_LRM)) {
         xml = first_named_child(xml, XML_LRM_TAG_RESOURCES);
         CRM_CHECK(xml != NULL, return);
     }
@@ -359,7 +359,7 @@ process_delete_diff(const char *xpath, const char *op, xmlNode *change)
     if (strstr(xpath, "/" XML_LRM_TAG_RSC_OP "[")) {
         process_op_deletion(xpath, change);
 
-    } else if (strstr(xpath, "/" XML_CIB_TAG_LRM "[")) {
+    } else if (strstr(xpath, "/" PCMK__XE_LRM "[")) {
         abort_unless_down(xpath, op, change, "Resource state removal");
 
     } else if (strstr(xpath, "/" PCMK__XE_NODE_STATE "[")) {
@@ -374,7 +374,7 @@ static void
 process_node_state_diff(xmlNode *state, xmlNode *change, const char *op,
                         const char *xpath)
 {
-    xmlNode *lrm = first_named_child(state, XML_CIB_TAG_LRM);
+    xmlNode *lrm = first_named_child(state, PCMK__XE_LRM);
 
     process_resource_updates(ID(state), lrm, change, op, xpath);
 }
@@ -500,23 +500,23 @@ te_update_diff_v2(xmlNode *diff)
         } else if (strcmp(name, PCMK__XE_NODE_STATE) == 0) {
             process_node_state_diff(match, change, op, xpath);
 
-        } else if (strcmp(name, XML_CIB_TAG_LRM) == 0) {
+        } else if (strcmp(name, PCMK__XE_LRM) == 0) {
             process_resource_updates(ID(match), match, change, op, xpath);
 
         } else if (strcmp(name, XML_LRM_TAG_RESOURCES) == 0) {
-            char *local_node = pcmk__xpath_node_id(xpath, "lrm");
+            char *local_node = pcmk__xpath_node_id(xpath, PCMK__XE_LRM);
 
             process_resource_updates(local_node, match, change, op, xpath);
             free(local_node);
 
         } else if (strcmp(name, XML_LRM_TAG_RESOURCE) == 0) {
-            char *local_node = pcmk__xpath_node_id(xpath, "lrm");
+            char *local_node = pcmk__xpath_node_id(xpath, PCMK__XE_LRM);
 
             process_lrm_resource_diff(match, local_node);
             free(local_node);
 
         } else if (strcmp(name, XML_LRM_TAG_RSC_OP) == 0) {
-            char *local_node = pcmk__xpath_node_id(xpath, "lrm");
+            char *local_node = pcmk__xpath_node_id(xpath, PCMK__XE_LRM);
 
             process_graph_event(match, local_node);
             free(local_node);

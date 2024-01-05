@@ -431,11 +431,11 @@ pcmk__inject_resource_history(pcmk__output_t *out, xmlNode *cib_node,
     crm_info("Injecting new resource %s into node state '%s'",
              lrm_name, ID(cib_node));
 
-    lrm = first_named_child(cib_node, XML_CIB_TAG_LRM);
+    lrm = first_named_child(cib_node, PCMK__XE_LRM);
     if (lrm == NULL) {
         const char *node_uuid = ID(cib_node);
 
-        lrm = create_xml_node(cib_node, XML_CIB_TAG_LRM);
+        lrm = create_xml_node(cib_node, PCMK__XE_LRM);
         crm_xml_add(lrm, PCMK_XA_ID, node_uuid);
     }
 
@@ -697,7 +697,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
 
         xpath = crm_strdup_printf("//" PCMK__XE_NODE_STATE
                                   "[@" PCMK_XA_UNAME "='%s']"
-                                  "/" XML_CIB_TAG_LRM,
+                                  "/" PCMK__XE_LRM,
                                   node);
         cib->cmds->remove(cib, xpath, NULL,
                           cib_xpath|cib_sync_call|cib_scope_local);
