@@ -84,7 +84,7 @@ pcmk__unpack_constraints(pcmk_scheduler_t *scheduler)
         if ((lifetime != NULL) && !evaluate_lifetime(lifetime, scheduler)) {
             crm_info("Constraint %s %s is not active", tag, id);
 
-        } else if (pcmk__str_eq(XML_CONS_TAG_RSC_ORDER, tag, pcmk__str_none)) {
+        } else if (pcmk__str_eq(PCMK_XE_RSC_ORDER, tag, pcmk__str_none)) {
             pcmk__unpack_ordering(xml_obj, scheduler);
 
         } else if (pcmk__str_eq(PCMK_XE_RSC_COLOCATION, tag, pcmk__str_none)) {

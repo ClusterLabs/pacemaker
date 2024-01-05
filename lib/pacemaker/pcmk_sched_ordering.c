@@ -89,9 +89,10 @@ get_ordering_type(const xmlNode *xml_obj)
                 kind_e = pe_order_kind_optional;
             }
             pcmk__warn_once(pcmk__wo_order_score,
-                            "Support for 'score' in rsc_order is deprecated "
-                            "and will be removed in a future release "
-                            "(use 'kind' instead)");
+                            "Support for '" PCMK_XA_SCORE "' in "
+                            PCMK_XE_RSC_ORDER " is deprecated and will be "
+                            "removed in a future release "
+                            "(use '" PCMK_XA_KIND "' instead)");
         }
 
     } else if (pcmk__str_eq(kind, "Mandatory", pcmk__str_none)) {
@@ -586,9 +587,10 @@ pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
  * \brief Unpack a set in an ordering constraint
  *
  * \param[in]     set                   Set XML to unpack
- * \param[in]     parent_kind           rsc_order XML \c PCMK_XA_KIND attribute
- * \param[in]     parent_symmetrical_s  rsc_order XML \c PCMK_XA_SYMMETRICAL
+ * \param[in]     parent_kind           \c PCMK_XE_RSC_ORDER XML \c PCMK_XA_KIND
  *                                      attribute
+ * \param[in]     parent_symmetrical_s  \c PCMK_XE_RSC_ORDER XML
+ *                                      \c PCMK_XA_SYMMETRICAL attribute
  * \param[in,out] scheduler             Scheduler data
  *
  * \return Standard Pacemaker return code
@@ -915,7 +917,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     // Check whether there are any resource sets with template or tag references
     *expanded_xml = pcmk__expand_tags_in_sets(xml_obj, scheduler);
     if (*expanded_xml != NULL) {
-        crm_log_xml_trace(*expanded_xml, "Expanded rsc_order");
+        crm_log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_ORDER);
         return pcmk_rc_ok;
     }
 
@@ -988,7 +990,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     }
 
     if (any_sets) {
-        crm_log_xml_trace(*expanded_xml, "Expanded rsc_order");
+        crm_log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_ORDER);
     } else {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
