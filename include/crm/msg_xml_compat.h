@@ -646,6 +646,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_PARAMETERS instead
 #define XML_TAG_PARAMS PCMK_XE_PARAMETERS
 
+//! \deprecated Use \c PCMK_XA_RSC instead
+#define XML_COLOC_ATTR_SOURCE PCMK_XA_RSC
+
 #ifdef __cplusplus
 }
 #endif
