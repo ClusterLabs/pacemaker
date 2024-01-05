@@ -95,7 +95,7 @@ class CtsLab:
         # pylint: disable=bare-except
         try:
             scenario.run(iterations)
-        except:
+        except:  # noqa: E722
             self._logger.log("Exception by %s" % sys.exc_info()[0])
             self._logger.traceback(traceback)
 

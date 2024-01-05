@@ -187,7 +187,7 @@ class Scenario:
         try:
             self._run_loop(iterations)
             self._cm.oprofile_stop()
-        except:
+        except:  # noqa: E722
             self._cm.oprofile_stop()
             raise
 

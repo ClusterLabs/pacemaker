@@ -145,7 +145,7 @@ class Environment:
                     n = node.strip()
                     socket.gethostbyname_ex(n)
                     self._nodes.append(n)
-                except:
+                except socket.herror:
                     self._logger.log("%s not found in DNS... aborting" % node)
                     raise
 
