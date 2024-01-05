@@ -131,7 +131,7 @@ unpack_alert_filter(xmlNode *basenode, pcmk__alert_t *entry)
         } else if (pcmk__xe_is(event_type, PCMK_XE_SELECT_NODES)) {
             flags |= pcmk__alert_node;
 
-        } else if (pcmk__xe_is(event_type, XML_CIB_TAG_ALERT_RESOURCES)) {
+        } else if (pcmk__xe_is(event_type, PCMK_XE_SELECT_RESOURCES)) {
             flags |= pcmk__alert_resource;
 
         } else if (pcmk__xe_is(event_type, PCMK_XE_SELECT_ATTRIBUTES)) {
