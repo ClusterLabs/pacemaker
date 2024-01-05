@@ -101,7 +101,7 @@ find_attr(cib_t *cib, const char *section, const char *node_uuid,
         pcmk__g_strcat(xpath, "//", node_type, NULL);
 
     } else if (node_uuid) {
-        const char *node_type = XML_CIB_TAG_NODE;
+        const char *node_type = PCMK_XE_NODE;
 
         if (pcmk__str_eq(section, PCMK_XE_STATUS, pcmk__str_casei)) {
             node_type = PCMK__XE_NODE_STATE;
@@ -229,12 +229,12 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
 
             if (pcmk__str_eq(node_type, "remote", pcmk__str_casei)) {
                 xml_top = create_xml_node(xml_obj, PCMK_XE_NODES);
-                xml_obj = create_xml_node(xml_top, XML_CIB_TAG_NODE);
+                xml_obj = create_xml_node(xml_top, PCMK_XE_NODE);
                 crm_xml_add(xml_obj, PCMK_XA_TYPE, "remote");
                 crm_xml_add(xml_obj, PCMK_XA_ID, node_uuid);
                 crm_xml_add(xml_obj, PCMK_XA_UNAME, node_uuid);
             } else {
-                tag = XML_CIB_TAG_NODE;
+                tag = PCMK_XE_NODE;
             }
 
         } else if (pcmk__str_eq(section, PCMK_XE_STATUS, pcmk__str_casei)) {
@@ -555,7 +555,7 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
         tag = (const char *) (result->name);
     }
 
-    if (pcmk__str_eq(tag, XML_CIB_TAG_NODE, pcmk__str_casei)) {
+    if (pcmk__str_eq(tag, PCMK_XE_NODE, pcmk__str_casei)) {
         /* Result is <node> tag from <nodes> section */
 
         if (pcmk__str_eq(crm_element_value(result, PCMK_XA_TYPE), "remote",
@@ -613,7 +613,7 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
 #define XPATH_LOWER_TRANS "abcdefghijklmnopqrstuvwxyz"
 #define XPATH_NODE \
     "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_NODES \
-        "/" XML_CIB_TAG_NODE "[translate(@" PCMK_XA_UNAME ",'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']" \
+        "/" PCMK_XE_NODE "[translate(@" PCMK_XA_UNAME ",'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']" \
     "|/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_RESOURCES \
         "/" XML_CIB_TAG_RESOURCE \
         "[@class='ocf'][@provider='pacemaker'][@type='remote'][translate(@id,'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']" \
@@ -697,7 +697,7 @@ query_node_uname(cib_t * the_cib, const char *uuid, char **uname)
     for (a_child = pcmk__xml_first_child(xml_obj); a_child != NULL;
          a_child = pcmk__xml_next(a_child)) {
 
-        if (pcmk__str_eq((const char *)a_child->name, XML_CIB_TAG_NODE,
+        if (pcmk__str_eq((const char *) a_child->name, PCMK_XE_NODE,
                          pcmk__str_none)) {
             child_name = ID(a_child);
             if (pcmk__str_eq(uuid, child_name, pcmk__str_casei)) {

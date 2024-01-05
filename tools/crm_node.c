@@ -194,7 +194,7 @@ node_list_xml(pcmk__output_t *out, va_list args)
         pcmk_controld_api_node_t *node = node_iter->data;
         char *id_s = crm_strdup_printf("%" PRIu32, node->id);
 
-        pcmk__output_create_xml_node(out, "node",
+        pcmk__output_create_xml_node(out, PCMK_XE_NODE,
                                      PCMK_XA_ID, id_s,
                                      PCMK_XA_NAME, node->uname,
                                      "state", node->state,
@@ -273,7 +273,7 @@ partition_list_xml(pcmk__output_t *out, va_list args)
         if (pcmk__str_eq(node->state, "member", pcmk__str_none)) {
             char *id_s = crm_strdup_printf("%" PRIu32, node->id);
 
-            pcmk__output_create_xml_node(out, "node",
+            pcmk__output_create_xml_node(out, PCMK_XE_NODE,
                                          PCMK_XA_ID, id_s,
                                          PCMK_XA_NAME, node->uname,
                                          "state", node->state,
@@ -593,7 +593,7 @@ purge_node_from_cib(const char *node_name, long node_id)
     }
 
     // Remove from configuration and status
-    rc = remove_from_section(cib, XML_CIB_TAG_NODE, PCMK_XE_NODES, node_name,
+    rc = remove_from_section(cib, PCMK_XE_NODE, PCMK_XE_NODES, node_name,
                              node_id);
     if (rc == pcmk_rc_ok) {
         rc = remove_from_section(cib, PCMK__XE_NODE_STATE, PCMK_XE_STATUS,

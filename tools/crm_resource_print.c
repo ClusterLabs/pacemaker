@@ -580,7 +580,9 @@ resource_search_list_xml(pcmk__output_t *out, va_list args)
 
     for (GList *lpc = nodes; lpc != NULL; lpc = lpc->next) {
         node_info_t *ni = (node_info_t *) lpc->data;
-        xmlNodePtr sub_node = pcmk__output_create_xml_text_node(out, "node", ni->node_name);
+        xmlNodePtr sub_node = pcmk__output_create_xml_text_node(out,
+                                                                PCMK_XE_NODE,
+                                                                ni->node_name);
 
         if (ni->promoted) {
             crm_xml_add(sub_node, "state", "promoted");

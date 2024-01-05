@@ -1354,8 +1354,7 @@ remote_ra_fail(const char *node_name)
  *  </pseudo_event>
  */
 #define XPATH_PSEUDO_FENCE "/" XML_GRAPH_TAG_PSEUDO_EVENT \
-    "[@" PCMK_XA_OPERATION "='stonith']/" XML_GRAPH_TAG_DOWNED \
-    "/" XML_CIB_TAG_NODE
+    "[@" PCMK_XA_OPERATION "='stonith']/" XML_GRAPH_TAG_DOWNED "/" PCMK_XE_NODE
 
 /*!
  * \internal
@@ -1441,8 +1440,7 @@ remote_ra_process_maintenance_nodes(xmlNode *xml)
         xmlNode *node;
         int cnt = 0, cnt_remote = 0;
 
-        for (node = first_named_child(getXpathResult(search, 0),
-                                      XML_CIB_TAG_NODE);
+        for (node = first_named_child(getXpathResult(search, 0), PCMK_XE_NODE);
              node != NULL; node = crm_next_same_xml(node)) {
 
             lrm_state_t *lrm_state = lrm_state_find(ID(node));

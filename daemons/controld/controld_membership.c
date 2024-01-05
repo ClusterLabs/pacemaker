@@ -222,7 +222,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
         return;
     }
 
-    if (pcmk__xe_is(output, XML_CIB_TAG_NODE)) {
+    if (pcmk__xe_is(output, PCMK_XE_NODE)) {
         node_xml = output;
 
     } else {
@@ -236,7 +236,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
         crm_node_t *node = NULL;
         gboolean known = FALSE;
 
-        if (!pcmk__xe_is(node_xml, XML_CIB_TAG_NODE)) {
+        if (!pcmk__xe_is(node_xml, PCMK_XE_NODE)) {
             continue;
         }
 
@@ -336,14 +336,14 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
                 }
 
                 /* We need both to be valid */
-                new_node = create_xml_node(node_list, XML_CIB_TAG_NODE);
+                new_node = create_xml_node(node_list, PCMK_XE_NODE);
                 crm_xml_add(new_node, PCMK_XA_ID, node->uuid);
                 crm_xml_add(new_node, PCMK_XA_UNAME, node->uname);
 
                 /* Search and remove unknown nodes with the conflicting uname from CIB */
                 pcmk__g_strcat(xpath,
                                "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION
-                               "/" PCMK_XE_NODES "/" XML_CIB_TAG_NODE
+                               "/" PCMK_XE_NODES "/" PCMK_XE_NODE
                                "[@" PCMK_XA_UNAME "='", node->uname, "']"
                                "[@" PCMK_XA_ID "!='", node->uuid, "']", NULL);
 

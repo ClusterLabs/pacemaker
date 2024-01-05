@@ -1918,7 +1918,7 @@ node_xml(pcmk__output_t *out, va_list args) {
 
         feature_set = get_node_feature_set(node);
 
-        pe__name_and_nvpairs_xml(out, true, "node", 15,
+        pe__name_and_nvpairs_xml(out, true, PCMK_XE_NODE, 15,
                                  PCMK_XA_NAME, node->details->uname,
                                  PCMK_XA_ID, node->details->id,
                                  "online", pcmk__btoa(node->details->online),
@@ -1956,7 +1956,7 @@ node_xml(pcmk__output_t *out, va_list args) {
 
         out->end_list(out);
     } else {
-        pcmk__output_xml_create_parent(out, "node",
+        pcmk__output_xml_create_parent(out, PCMK_XE_NODE,
                                        PCMK_XA_NAME, node->details->uname,
                                        NULL);
     }

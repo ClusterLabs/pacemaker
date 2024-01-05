@@ -33,7 +33,7 @@
 
 bool pcmk__simulate_node_config = false;
 
-#define XPATH_NODE_CONFIG   "//" XML_CIB_TAG_NODE "[@" PCMK_XA_UNAME "='%s']"
+#define XPATH_NODE_CONFIG   "//" PCMK_XE_NODE "[@" PCMK_XA_UNAME "='%s']"
 #define XPATH_NODE_STATE    "//" PCMK__XE_NODE_STATE "[@" PCMK_XA_UNAME "='%s']"
 #define XPATH_NODE_STATE_BY_ID "//" PCMK__XE_NODE_STATE "[@" PCMK_XA_ID "='%s']"
 #define XPATH_RSC_HISTORY   XPATH_NODE_STATE \
@@ -130,7 +130,7 @@ create_node_entry(cib_t *cib_conn, const char *node)
                                cib_xpath|cib_sync_call|cib_scope_local);
 
     if (rc == -ENXIO) { // Only add if not already existing
-        xmlNode *cib_object = create_xml_node(NULL, XML_CIB_TAG_NODE);
+        xmlNode *cib_object = create_xml_node(NULL, PCMK_XE_NODE);
 
         crm_xml_add(cib_object, PCMK_XA_ID, node); // Use node name as ID
         crm_xml_add(cib_object, PCMK_XA_UNAME, node);

@@ -1037,7 +1037,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
         for (; gIter != NULL; gIter = gIter->next) {
             pcmk_node_t *node = (pcmk_node_t *) gIter->data;
 
-            rc = pe__name_and_nvpairs_xml(out, false, "node", 3,
+            rc = pe__name_and_nvpairs_xml(out, false, PCMK_XE_NODE, 3,
                      PCMK_XA_NAME, node->details->uname,
                      PCMK_XA_ID, node->details->id,
                      "cached", pcmk__btoa(node->details->online));

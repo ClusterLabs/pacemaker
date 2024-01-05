@@ -947,7 +947,7 @@ crmadmin_node_xml(pcmk__output_t *out, va_list args)
     const char *id = va_arg(args, const char *);
     bool bash_export G_GNUC_UNUSED = va_arg(args, int);
 
-    pcmk__output_create_xml_node(out, "node",
+    pcmk__output_create_xml_node(out, PCMK_XE_NODE,
                                  PCMK_XA_TYPE, pcmk__s(type, "cluster"),
                                  PCMK_XA_NAME, pcmk__s(name, ""),
                                  PCMK_XA_ID, pcmk__s(id, ""),

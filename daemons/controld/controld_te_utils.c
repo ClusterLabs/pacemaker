@@ -473,7 +473,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
                        pcmk__btoa(controld_globals.transition_graph->complete));
 
         } else if (pcmk__str_any_of((const char *) reason->name,
-                   PCMK__XE_NODE_STATE, XML_CIB_TAG_NODE, NULL)) {
+                   PCMK__XE_NODE_STATE, PCMK_XE_NODE, NULL)) {
             const char *uname = crm_peer_uname(ID(reason));
 
             do_crm_log(level, "Transition %d aborted by %s '%s' on %s: %s "

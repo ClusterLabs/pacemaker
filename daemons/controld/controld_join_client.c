@@ -352,7 +352,8 @@ do_cl_join_finalize_respond(long long action,
          */
         remotes = pcmk__xe_match(input->msg, PCMK_XE_NODES, NULL, NULL);
         if (remotes != NULL) {
-            pcmk__xe_foreach_child(remotes, XML_CIB_TAG_NODE, update_conn_host_cache, NULL);
+            pcmk__xe_foreach_child(remotes, PCMK_XE_NODE,
+                                   update_conn_host_cache, NULL);
         }
 
     } else {

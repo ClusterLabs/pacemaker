@@ -633,7 +633,8 @@ unpack_nodes(xmlNode *xml_nodes, pcmk_scheduler_t *scheduler)
     for (xml_obj = pcmk__xe_first_child(xml_nodes); xml_obj != NULL;
          xml_obj = pcmk__xe_next(xml_obj)) {
 
-        if (pcmk__str_eq((const char *)xml_obj->name, XML_CIB_TAG_NODE, pcmk__str_none)) {
+        if (pcmk__str_eq((const char *) xml_obj->name, PCMK_XE_NODE,
+                         pcmk__str_none)) {
             new_node = NULL;
 
             id = crm_element_value(xml_obj, PCMK_XA_ID);
@@ -643,7 +644,7 @@ unpack_nodes(xmlNode *xml_nodes, pcmk_scheduler_t *scheduler)
             crm_trace("Processing node %s/%s", uname, id);
 
             if (id == NULL) {
-                pcmk__config_err("Ignoring <" XML_CIB_TAG_NODE
+                pcmk__config_err("Ignoring <" PCMK_XE_NODE
                                  "> entry in configuration without id");
                 continue;
             }

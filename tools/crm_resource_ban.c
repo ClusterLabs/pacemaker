@@ -96,7 +96,7 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
 
     if (later_s == NULL) {
         /* Short form */
-        crm_xml_add(location, XML_CIB_TAG_NODE, host);
+        crm_xml_add(location, PCMK_XE_NODE, host);
         crm_xml_add(location, PCMK_XA_SCORE, CRM_MINUS_INFINITY_S);
 
     } else {
@@ -173,7 +173,7 @@ cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
 
     if (later_s == NULL) {
         /* Short form */
-        crm_xml_add(location, XML_CIB_TAG_NODE, host);
+        crm_xml_add(location, PCMK_XE_NODE, host);
         crm_xml_add(location, PCMK_XA_SCORE, CRM_INFINITY_S);
 
     } else {
@@ -284,7 +284,7 @@ resource_clear_node_in_location(const char *rsc_id, const char *host, cib_t * ci
     location = create_xml_node(fragment, XML_CONS_TAG_RSC_LOCATION);
     crm_xml_set_id(location, "cli-prefer-%s", rsc_id);
     if (force == FALSE) {
-        crm_xml_add(location, XML_CIB_TAG_NODE, host);
+        crm_xml_add(location, PCMK_XE_NODE, host);
     }
 
     crm_log_xml_info(fragment, "Delete");
@@ -371,7 +371,7 @@ build_clear_xpath_string(GString *buf, const xmlNode *constraint_node,
         g_string_append_c(buf, '[');
 
         if (node != NULL) {
-            pcmk__g_strcat(buf, "@" XML_CIB_TAG_NODE "='", node, "'", NULL);
+            pcmk__g_strcat(buf, "@" PCMK_XE_NODE "='", node, "'", NULL);
 
             if (promoted_role_only || (rsc != NULL)) {
                 g_string_append(buf, " and ");
