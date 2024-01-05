@@ -778,6 +778,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_CLUSTER_PROPERTY_SET instead
 #define XML_CIB_TAG_PROPSET PCMK_XE_CLUSTER_PROPERTY_SET
 
+//! \deprecated Use \c PCMK_XE_INSTANCE_ATTRIBUTES instead
+#define XML_TAG_ATTR_SETS PCMK_XE_INSTANCE_ATTRIBUTES
+
 #ifdef __cplusplus
 }
 #endif
