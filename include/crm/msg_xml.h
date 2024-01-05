@@ -260,7 +260,6 @@ extern "C" {
 #  define XML_ACL_TAG_ROLE		"acl_role"
 #  define XML_ACL_TAG_PERMISSION	"acl_permission"
 #  define XML_ACL_TAG_ROLE_REFv1	"role_ref"
-#  define XML_ACL_ATTR_KIND		PCMK_XA_KIND
 #  define XML_ACL_TAG_READ		"read"
 #  define XML_ACL_TAG_WRITE		"write"
 #  define XML_ACL_TAG_DENY		"deny"

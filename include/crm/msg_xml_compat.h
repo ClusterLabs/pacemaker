@@ -685,6 +685,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_KIND instead
 #define XML_ORDER_ATTR_KIND PCMK_XA_KIND
 
+//! \deprecated Use \c PCMK_XA_KIND instead
+#define XML_ACL_ATTR_KIND PCMK_XA_KIND
+
 #ifdef __cplusplus
 }
 #endif
