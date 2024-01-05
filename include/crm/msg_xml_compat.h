@@ -712,6 +712,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
 
+//! \deprecated Use \c PCMK_XE_CONFIGURATION instead
+#define XML_CIB_TAG_CONFIGURATION PCMK_XE_CONFIGURATION
+
 #ifdef __cplusplus
 }
 #endif
