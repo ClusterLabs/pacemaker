@@ -242,7 +242,6 @@ extern "C" {
 #  define XML_CONS_TAG_RSC_TICKET	"rsc_ticket"
 #  define XML_CONS_TAG_RSC_SET		"resource_set"
 
-#  define XML_ORDER_ATTR_THEN		PCMK_XA_THEN
 #  define XML_ORDER_ATTR_FIRST_ACTION	"first-action"
 #  define XML_ORDER_ATTR_THEN_ACTION	"then-action"
 #  define XML_ORDER_ATTR_KIND		"kind"
