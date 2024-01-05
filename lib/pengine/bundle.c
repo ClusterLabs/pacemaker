@@ -1115,7 +1115,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         char *value = NULL;
         xmlNode *xml_set = NULL;
 
-        xml_resource = create_xml_node(NULL, XML_CIB_TAG_INCARNATION);
+        xml_resource = create_xml_node(NULL, PCMK_XE_CLONE);
 
         /* @COMPAT We no longer use the <master> tag, but we need to keep it as
          * part of the resource name, so that bundles don't restart in a rolling

@@ -870,7 +870,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
             printed_header = TRUE;
 
             desc = pe__resource_description(rsc, show_opts);
-            rc = pe__name_and_nvpairs_xml(out, true, "clone", 10,
+            rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_CLONE, 10,
                     PCMK_XA_ID, rsc->id,
                     "multi_state",
                     pcmk__flag_text(rsc->flags, pcmk_rsc_promotable),

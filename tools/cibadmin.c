@@ -371,7 +371,7 @@ static GOptionEntry addl_entries[] = {
       "When performing XPath queries, return paths of any matches found\n"
       INDENT "(for example, "
       "\"/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION
-      "/" PCMK_XE_RESOURCES "/" XML_CIB_TAG_INCARNATION
+      "/" PCMK_XE_RESOURCES "/" PCMK_XE_CLONE
       "[@" PCMK_XA_ID "='dummy-clone']"
       "/" PCMK_XE_PRIMITIVE "[@" PCMK_XA_ID "='dummy']\")",
       NULL },

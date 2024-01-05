@@ -207,7 +207,7 @@ get_resource_type(const char *name)
     } else if (safe_str_eq(name, PCMK_XE_GROUP)) {
         return pcmk_rsc_variant_group;
 
-    } else if (safe_str_eq(name, XML_CIB_TAG_INCARNATION)
+    } else if (safe_str_eq(name, PCMK_XE_CLONE)
                 || safe_str_eq(name, PCMK_XE_PROMOTABLE_LEGACY)) {
         return pcmk_rsc_variant_clone;
 
@@ -227,7 +227,7 @@ get_resource_typename(enum pe_obj_types type)
         case pcmk_rsc_variant_group:
             return PCMK_XE_GROUP;
         case pcmk_rsc_variant_clone:
-            return XML_CIB_TAG_INCARNATION;
+            return PCMK_XE_CLONE;
         case pcmk_rsc_variant_bundle:
             return XML_CIB_TAG_CONTAINER;
         case pcmk_rsc_variant_unknown:
