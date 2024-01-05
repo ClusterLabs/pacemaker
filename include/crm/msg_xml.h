@@ -240,8 +240,6 @@ extern "C" {
 #  define XML_CONS_TAG_RSC_TICKET	"rsc_ticket"
 #  define XML_CONS_TAG_RSC_SET		"resource_set"
 
-#  define XML_LOC_ATTR_SOURCE_PATTERN   PCMK_XA_RSC_PATTERN
-
 #  define XML_ORDER_ATTR_FIRST		"first"
 #  define XML_ORDER_ATTR_THEN		"then"
 #  define XML_ORDER_ATTR_FIRST_ACTION	"first-action"
