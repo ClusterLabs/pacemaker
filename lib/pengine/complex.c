@@ -280,7 +280,7 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
         return FALSE;
     }
 
-    template_ref = crm_element_value(xml_obj, XML_CIB_TAG_RSC_TEMPLATE);
+    template_ref = crm_element_value(xml_obj, PCMK_XA_TEMPLATE);
     if (template_ref == NULL) {
         return TRUE;
     }
@@ -387,7 +387,7 @@ add_template_rsc(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         return FALSE;
     }
 
-    template_ref = crm_element_value(xml_obj, XML_CIB_TAG_RSC_TEMPLATE);
+    template_ref = crm_element_value(xml_obj, PCMK_XA_TEMPLATE);
     if (template_ref == NULL) {
         return TRUE;
     }
