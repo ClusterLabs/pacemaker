@@ -114,8 +114,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
                          "due to lack of quorum");
     }
 
-    section = get_xpath_object("//" XML_CIB_TAG_NODES, scheduler->input,
-                               LOG_TRACE);
+    section = get_xpath_object("//" PCMK_XE_NODES, scheduler->input, LOG_TRACE);
     unpack_nodes(section, scheduler);
 
     section = get_xpath_object("//" PCMK_XE_RESOURCES, scheduler->input,

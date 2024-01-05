@@ -139,7 +139,7 @@ scope_is_valid(const char *scope)
 {
     return pcmk__str_any_of(scope,
                             PCMK_XE_CONFIGURATION,
-                            XML_CIB_TAG_NODES,
+                            PCMK_XE_NODES,
                             PCMK_XE_RESOURCES,
                             XML_CIB_TAG_CONSTRAINTS,
                             XML_CIB_TAG_CRMCONFIG,
@@ -350,7 +350,7 @@ static GOptionEntry addl_entries[] = {
 
     { "scope", 'o', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, section_cb,
       "Limit scope of operation to specific section of CIB\n"
-      INDENT "Valid values: " PCMK_XE_CONFIGURATION ", " XML_CIB_TAG_NODES
+      INDENT "Valid values: " PCMK_XE_CONFIGURATION ", " PCMK_XE_NODES
       ", " PCMK_XE_RESOURCES ", " XML_CIB_TAG_CONSTRAINTS
       ", " XML_CIB_TAG_CRMCONFIG ", " XML_CIB_TAG_RSCCONFIG ",\n"
       INDENT "              " XML_CIB_TAG_OPCONFIG ", " XML_CIB_TAG_ACLS

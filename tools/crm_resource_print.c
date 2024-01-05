@@ -574,7 +574,7 @@ resource_search_list_xml(pcmk__output_t *out, va_list args)
     GList *nodes = va_arg(args, GList *);
     const char *requested_name = va_arg(args, const char *);
 
-    pcmk__output_xml_create_parent(out, "nodes",
+    pcmk__output_xml_create_parent(out, PCMK_XE_NODES,
                                    "resource", requested_name,
                                    NULL);
 

@@ -147,7 +147,7 @@ utilization_cb(const gchar *option_name, const gchar *optarg, gpointer data, GEr
         g_free(options.type);
     }
 
-    options.type = g_strdup(XML_CIB_TAG_NODES);
+    options.type = g_strdup(PCMK_XE_NODES);
     pcmk__str_update(&options.set_type, XML_TAG_UTILIZATION);
     return TRUE;
 }
@@ -593,7 +593,7 @@ set_type(void)
 
         } else if (options.dest_uname != NULL) {
             // Updating some other node attribute
-            options.type = g_strdup(XML_CIB_TAG_NODES);
+            options.type = g_strdup(PCMK_XE_NODES);
 
         } else {
             // Updating cluster options
@@ -604,7 +604,7 @@ set_type(void)
         options.type = g_strdup(PCMK_XE_STATUS);
 
     } else if (pcmk__str_eq(options.type, "forever", pcmk__str_casei)) {
-        options.type = g_strdup(XML_CIB_TAG_NODES);
+        options.type = g_strdup(PCMK_XE_NODES);
     }
 }
 

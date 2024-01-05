@@ -267,7 +267,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
             crm_notice("Deleting unknown node %s/%s which has conflicting uname with %s",
                        node_uuid, node_uname, new_node_uuid);
 
-            delete_call_id = cib_conn->cmds->remove(cib_conn, XML_CIB_TAG_NODES,
+            delete_call_id = cib_conn->cmds->remove(cib_conn, PCMK_XE_NODES,
                                                     node_xml, cib_scope_local);
             fsa_register_cib_callback(delete_call_id, strdup(node_uuid),
                                       remove_conflicting_node_callback);
@@ -310,7 +310,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
 
     int call_id = 0;
     gboolean from_hashtable = TRUE;
-    xmlNode *node_list = create_xml_node(NULL, XML_CIB_TAG_NODES);
+    xmlNode *node_list = create_xml_node(NULL, PCMK_XE_NODES);
 
 #if SUPPORT_COROSYNC
     if (!pcmk_is_set(flags, node_update_quick) && is_corosync_cluster()) {
@@ -343,7 +343,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
                 /* Search and remove unknown nodes with the conflicting uname from CIB */
                 pcmk__g_strcat(xpath,
                                "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION
-                               "/" XML_CIB_TAG_NODES "/" XML_CIB_TAG_NODE
+                               "/" PCMK_XE_NODES "/" XML_CIB_TAG_NODE
                                "[@" PCMK_XA_UNAME "='", node->uname, "']"
                                "[@" PCMK_XA_ID "!='", node->uuid, "']", NULL);
 
@@ -363,7 +363,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
 
     crm_trace("Populating <nodes> section from %s", from_hashtable ? "hashtable" : "cluster");
 
-    if ((controld_update_cib(XML_CIB_TAG_NODES, node_list, cib_scope_local,
+    if ((controld_update_cib(PCMK_XE_NODES, node_list, cib_scope_local,
                              node_list_update_callback) == pcmk_rc_ok)
          && (crm_peer_cache != NULL) && AM_I_DC) {
         /*

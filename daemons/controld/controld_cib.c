@@ -76,12 +76,12 @@ do_cib_updated(const char *event, xmlNode * msg)
         return;
     }
 
-    if (cib__element_in_patchset(patchset, XML_CIB_TAG_NODES)
+    if (cib__element_in_patchset(patchset, PCMK_XE_NODES)
         || cib__element_in_patchset(patchset, PCMK_XE_STATUS)) {
 
-        /* An unsafe client modified the nodes or PCMK_XE_STATUS section. Ensure
-         * the node list is up-to-date, and start the join process again so we
-         * get everyone's current resource history.
+        /* An unsafe client modified the PCMK_XE_NODES or PCMK_XE_STATUS
+         * section. Ensure the node list is up-to-date, and start the join
+         * process again so we get everyone's current resource history.
          */
         if (client_name == NULL) {
             client_name = crm_element_value(msg, F_CIB_CLIENTID);

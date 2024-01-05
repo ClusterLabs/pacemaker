@@ -2500,7 +2500,11 @@ node_list_xml(pcmk__output_t *out, va_list args) {
     uint32_t show_opts = va_arg(args, uint32_t);
     bool print_spacer G_GNUC_UNUSED = va_arg(args, int);
 
-    out->begin_list(out, NULL, NULL, "nodes");
+    /* PCMK_XE_NODES acts as the list's element name for CLI tools that force
+     * --xml-simple-list. Otherwise PCMK_XE_NODES is the value of the list's
+     * PCMK_XA_NAME attribute.
+     */
+    out->begin_list(out, NULL, NULL, PCMK_XE_NODES);
     for (GList *gIter = nodes; gIter != NULL; gIter = gIter->next) {
         pcmk_node_t *node = (pcmk_node_t *) gIter->data;
 

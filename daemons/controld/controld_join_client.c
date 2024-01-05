@@ -197,7 +197,7 @@ set_join_state(const char *start_state, const char *node_name, const char *node_
                    "environment", node_name, start_state);
         cib__update_node_attr(controld_globals.logger_out,
                               controld_globals.cib_conn, cib_sync_call,
-                              XML_CIB_TAG_NODES, node_uuid,
+                              PCMK_XE_NODES, node_uuid,
                               NULL, NULL, NULL, "standby", "on", NULL,
                               remote ? "remote" : NULL);
 
@@ -206,7 +206,7 @@ set_join_state(const char *start_state, const char *node_name, const char *node_
                    "environment", node_name, start_state);
         cib__update_node_attr(controld_globals.logger_out,
                               controld_globals.cib_conn, cib_sync_call,
-                              XML_CIB_TAG_NODES, node_uuid,
+                              PCMK_XE_NODES, node_uuid,
                               NULL, NULL, NULL, "standby", "off", NULL,
                               remote ? "remote" : NULL);
 
@@ -350,7 +350,7 @@ do_cl_join_finalize_respond(long long action,
         /* Update the remote node cache with information about which node
          * is hosting the connection.
          */
-        remotes = pcmk__xe_match(input->msg, XML_CIB_TAG_NODES, NULL, NULL);
+        remotes = pcmk__xe_match(input->msg, PCMK_XE_NODES, NULL, NULL);
         if (remotes != NULL) {
             pcmk__xe_foreach_child(remotes, XML_CIB_TAG_NODE, update_conn_host_cache, NULL);
         }

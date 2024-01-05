@@ -858,7 +858,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
     tmp1 = create_xml_node(NULL, XML_CIB_TAG_NODE);
     crm_xml_add(tmp1, PCMK_XA_ID, crm_peer_uuid(join_node));
     crm_xml_add(tmp1, PCMK_XA_UNAME, join_to);
-    fsa_cib_anon_update(XML_CIB_TAG_NODES, tmp1);
+    fsa_cib_anon_update(PCMK_XE_NODES, tmp1);
     free_xml(tmp1);
 
     if (join_node->join == crm_join_nack_quiet) {
@@ -900,7 +900,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
         if (crm_remote_peer_cache_size() != 0) {
             GHashTableIter iter;
             crm_node_t *node = NULL;
-            xmlNode *remotes = create_xml_node(acknak, XML_CIB_TAG_NODES);
+            xmlNode *remotes = create_xml_node(acknak, PCMK_XE_NODES);
 
             g_hash_table_iter_init(&iter, crm_remote_peer_cache);
             while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {

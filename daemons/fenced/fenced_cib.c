@@ -55,7 +55,7 @@ node_has_attr(const char *node, const char *name, const char *value)
      */
     xpath = g_string_sized_new(256);
     pcmk__g_strcat(xpath,
-                   "//" XML_CIB_TAG_NODES "/" XML_CIB_TAG_NODE
+                   "//" PCMK_XE_NODES "/" XML_CIB_TAG_NODE
                    "[@" PCMK_XA_UNAME "='", node, "']/" XML_TAG_ATTR_SETS
                    "/" XML_CIB_TAG_NVPAIR
                    "[@" PCMK_XA_NAME "='", name, "' "

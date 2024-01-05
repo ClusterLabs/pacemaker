@@ -75,11 +75,12 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
         return;
     }
 
-    if (cib__element_in_patchset(patchset, XML_CIB_TAG_NODES)
+    if (cib__element_in_patchset(patchset, PCMK_XE_NODES)
         || cib__element_in_patchset(patchset, PCMK_XE_STATUS)) {
 
-        /* An unsafe client modified the nodes or PCMK_XE_STATUS section. Write
-         * transient attributes to ensure they're up-to-date in the CIB.
+        /* An unsafe client modified the PCMK_XE_NODES or PCMK_XE_STATUS
+         * section. Write transient attributes to ensure they're up-to-date in
+         * the CIB.
          */
         if (client_name == NULL) {
             client_name = crm_element_value(msg, F_CIB_CLIENTID);

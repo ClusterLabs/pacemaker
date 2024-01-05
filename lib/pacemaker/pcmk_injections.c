@@ -134,7 +134,7 @@ create_node_entry(cib_t *cib_conn, const char *node)
 
         crm_xml_add(cib_object, PCMK_XA_ID, node); // Use node name as ID
         crm_xml_add(cib_object, PCMK_XA_UNAME, node);
-        cib_conn->cmds->create(cib_conn, XML_CIB_TAG_NODES, cib_object,
+        cib_conn->cmds->create(cib_conn, PCMK_XE_NODES, cib_object,
                                cib_sync_call|cib_scope_local);
         /* Not bothering with subsequent query to see if it exists,
            we'll bomb out later in the call to query_node_uuid()... */

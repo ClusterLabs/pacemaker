@@ -188,7 +188,7 @@ node_list_xml(pcmk__output_t *out, va_list args)
 {
     GList *nodes = va_arg(args, GList *);
 
-    out->begin_list(out, NULL, NULL, "nodes");
+    out->begin_list(out, NULL, NULL, PCMK_XE_NODES);
 
     for (GList *node_iter = nodes; node_iter != NULL; node_iter = node_iter->next) {
         pcmk_controld_api_node_t *node = node_iter->data;
@@ -265,7 +265,7 @@ partition_list_xml(pcmk__output_t *out, va_list args)
 {
     GList *nodes = va_arg(args, GList *);
 
-    out->begin_list(out, NULL, NULL, "nodes");
+    out->begin_list(out, NULL, NULL, PCMK_XE_NODES);
 
     for (GList *node_iter = nodes; node_iter != NULL; node_iter = node_iter->next) {
         pcmk_controld_api_node_t *node = node_iter->data;
@@ -593,8 +593,8 @@ purge_node_from_cib(const char *node_name, long node_id)
     }
 
     // Remove from configuration and status
-    rc = remove_from_section(cib, XML_CIB_TAG_NODE, XML_CIB_TAG_NODES,
-                             node_name, node_id);
+    rc = remove_from_section(cib, XML_CIB_TAG_NODE, PCMK_XE_NODES, node_name,
+                             node_id);
     if (rc == pcmk_rc_ok) {
         rc = remove_from_section(cib, XML_CIB_TAG_STATE, PCMK_XE_STATUS,
                                  node_name, node_id);

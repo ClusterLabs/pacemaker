@@ -220,14 +220,14 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
             xml_top = create_xml_node(xml_obj, PCMK_XE_STATUS);
             xml_obj = create_xml_node(xml_top, XML_CIB_TAG_TICKETS);
 
-        } else if (pcmk__str_eq(section, XML_CIB_TAG_NODES, pcmk__str_casei)) {
+        } else if (pcmk__str_eq(section, PCMK_XE_NODES, pcmk__str_casei)) {
 
             if (node_uuid == NULL) {
                 return EINVAL;
             }
 
             if (pcmk__str_eq(node_type, "remote", pcmk__str_casei)) {
-                xml_top = create_xml_node(xml_obj, XML_CIB_TAG_NODES);
+                xml_top = create_xml_node(xml_obj, PCMK_XE_NODES);
                 xml_obj = create_xml_node(xml_top, XML_CIB_TAG_NODE);
                 crm_xml_add(xml_obj, PCMK_XA_TYPE, "remote");
                 crm_xml_add(xml_obj, PCMK_XA_ID, node_uuid);
@@ -611,7 +611,7 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
 #define XPATH_UPPER_TRANS "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 #define XPATH_LOWER_TRANS "abcdefghijklmnopqrstuvwxyz"
 #define XPATH_NODE \
-    "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" XML_CIB_TAG_NODES \
+    "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_NODES \
         "/" XML_CIB_TAG_NODE "[translate(@" PCMK_XA_UNAME ",'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']" \
     "|/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_RESOURCES \
         "/" XML_CIB_TAG_RESOURCE \
@@ -680,14 +680,14 @@ query_node_uname(cib_t * the_cib, const char *uuid, char **uname)
     CRM_ASSERT(uname != NULL);
     CRM_ASSERT(uuid != NULL);
 
-    rc = the_cib->cmds->query(the_cib, XML_CIB_TAG_NODES, &fragment,
+    rc = the_cib->cmds->query(the_cib, PCMK_XE_NODES, &fragment,
                               cib_sync_call | cib_scope_local);
     if (rc != pcmk_ok) {
         return rc;
     }
 
     xml_obj = fragment;
-    CRM_CHECK(pcmk__xe_is(xml_obj, XML_CIB_TAG_NODES), return -ENOMSG);
+    CRM_CHECK(pcmk__xe_is(xml_obj, PCMK_XE_NODES), return -ENOMSG);
     crm_log_xml_trace(xml_obj, "Result section");
 
     rc = -ENXIO;
@@ -728,7 +728,7 @@ set_standby(cib_t * the_cib, const char *uuid, const char *scope, const char *st
         attr_id = crm_strdup_printf("transient-standby-%.256s", uuid);
 
     } else {
-        scope = XML_CIB_TAG_NODES;
+        scope = PCMK_XE_NODES;
         attr_id = crm_strdup_printf("standby-%.256s", uuid);
     }
 
