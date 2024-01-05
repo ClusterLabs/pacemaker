@@ -126,7 +126,6 @@
 #define PCMK__XA_LONG_ID                "long-id"
 #define PCMK__XA_MODE                   "mode"
 #define PCMK__XA_NODE_START_STATE       "node_start_state"
-#define PCMK__XA_OBJECT_TYPE            "object_type"
 #define PCMK__XA_OPERATION_KEY          "operation_key"
 #define PCMK__XA_OP_DIGEST              "op-digest"
 #define PCMK__XA_OP_FORCE_RESTART       "op-force-restart"
