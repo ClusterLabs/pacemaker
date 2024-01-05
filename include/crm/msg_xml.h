@@ -207,7 +207,6 @@ extern "C" {
 #  define XML_GRAPH_TAG_MAINTENANCE       "maintenance"
 
 #  define XML_TAG_RULE			"rule"
-#  define XML_RULE_ATTR_SCORE		PCMK_XA_SCORE
 #  define XML_RULE_ATTR_SCORE_ATTRIBUTE	"score-attribute"
 #  define XML_RULE_ATTR_ROLE		"role"
 #  define XML_RULE_ATTR_BOOLEAN_OP	"boolean-op"

@@ -613,6 +613,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_LRM_ATTR_MIGRATE_TARGET "migrate_target"
 
+//! \deprecated Use \c PCMK_XA_SCORE instead
+#define XML_RULE_ATTR_SCORE PCMK_XA_SCORE
+
 #ifdef __cplusplus
 }
 #endif
