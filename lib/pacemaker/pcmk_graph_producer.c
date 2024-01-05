@@ -1008,7 +1008,7 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
     transition_id++;
     crm_trace("Creating transition graph %d", transition_id);
 
-    scheduler->graph = create_xml_node(NULL, XML_TAG_GRAPH);
+    scheduler->graph = create_xml_node(NULL, PCMK__XE_TRANSITION_GRAPH);
 
     value = pe_pref(scheduler->config_hash, PCMK_OPT_CLUSTER_DELAY);
     crm_xml_add(scheduler->graph, PCMK_OPT_CLUSTER_DELAY, value);

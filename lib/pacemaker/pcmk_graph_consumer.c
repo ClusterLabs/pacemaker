@@ -696,7 +696,7 @@ pcmk__unpack_graph(const xmlNode *xml_graph, const char *reference)
     new_graph->stonith_timeout = 0;
     new_graph->completion_action = pcmk__graph_done;
 
-    // Parse top-level attributes from <transition_graph>
+    // Parse top-level attributes from PCMK__XE_TRANSITION_GRAPH
     if (xml_graph != NULL) {
         const char *buf = crm_element_value(xml_graph, "transition_id");
 
