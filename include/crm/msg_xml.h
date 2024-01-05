@@ -185,7 +185,6 @@ extern "C" {
 #  define XML_TAG_ATTR_SETS	   	"instance_attributes"
 #  define XML_TAG_META_SETS	   	"meta_attributes"
 #  define XML_TAG_ATTRS			"attributes"
-#  define XML_TAG_PARAMS		PCMK_XE_PARAMETERS
 #  define XML_TAG_PARAM			"param"
 #  define XML_TAG_UTILIZATION		"utilization"
 

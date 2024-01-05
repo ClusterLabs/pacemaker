@@ -643,6 +643,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_RESOURCE_DISCOVERY instead
 #define XML_LOCATION_ATTR_DISCOVERY PCMK_XA_RESOURCE_DISCOVERY
 
+//! \deprecated Use \c PCMK_XE_PARAMETERS instead
+#define XML_TAG_PARAMS PCMK_XE_PARAMETERS
+
 #ifdef __cplusplus
 }
 #endif
