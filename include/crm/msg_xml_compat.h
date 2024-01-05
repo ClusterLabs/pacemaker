@@ -640,6 +640,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_SYMMETRICAL instead
 #define XML_CONS_ATTR_SYMMETRICAL PCMK_XA_SYMMETRICAL
 
+//! \deprecated Use \c PCMK_XA_RESOURCE_DISCOVERY instead
+#define XML_LOCATION_ATTR_DISCOVERY PCMK_XA_RESOURCE_DISCOVERY
+
 #ifdef __cplusplus
 }
 #endif
