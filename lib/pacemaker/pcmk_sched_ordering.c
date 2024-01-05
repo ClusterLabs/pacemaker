@@ -74,7 +74,7 @@ static enum pe_order_kind
 get_ordering_type(const xmlNode *xml_obj)
 {
     enum pe_order_kind kind_e = pe_order_kind_mandatory;
-    const char *kind = crm_element_value(xml_obj, XML_ORDER_ATTR_KIND);
+    const char *kind = crm_element_value(xml_obj, PCMK_XA_KIND);
 
     if (kind == NULL) {
         const char *score = crm_element_value(xml_obj, PCMK_XA_SCORE);
@@ -104,8 +104,8 @@ get_ordering_type(const xmlNode *xml_obj)
         kind_e = pe_order_kind_serialize;
 
     } else {
-        pcmk__config_err("Resetting '" XML_ORDER_ATTR_KIND "' for constraint "
-                         "%s to 'Mandatory' because '%s' is not valid",
+        pcmk__config_err("Resetting '" PCMK_XA_KIND "' for constraint %s to "
+                         "'Mandatory' because '%s' is not valid",
                          pcmk__s(ID(xml_obj), "missing ID"), kind);
     }
     return kind_e;
@@ -132,7 +132,7 @@ get_ordering_symmetry(const xmlNode *xml_obj, enum pe_order_kind parent_kind,
     enum pe_order_kind kind = parent_kind; // Default to parent's kind
 
     // Check ordering XML for explicit kind
-    if ((crm_element_value(xml_obj, XML_ORDER_ATTR_KIND) != NULL)
+    if ((crm_element_value(xml_obj, PCMK_XA_KIND) != NULL)
         || (crm_element_value(xml_obj, PCMK_XA_SCORE) != NULL)) {
         kind = get_ordering_type(xml_obj);
     }
@@ -150,7 +150,7 @@ get_ordering_symmetry(const xmlNode *xml_obj, enum pe_order_kind parent_kind,
             if (kind == pe_order_kind_serialize) {
                 pcmk__config_warn("Ignoring " PCMK_XA_SYMMETRICAL
                                   " for '%s' because not valid with "
-                                  XML_ORDER_ATTR_KIND " of 'Serialize'",
+                                  PCMK_XA_KIND " of 'Serialize'",
                                   ID(xml_obj));
             } else {
                 return ordering_symmetric;
@@ -586,7 +586,7 @@ pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
  * \brief Unpack a set in an ordering constraint
  *
  * \param[in]     set                   Set XML to unpack
- * \param[in]     parent_kind           rsc_order XML "kind" attribute
+ * \param[in]     parent_kind           rsc_order XML \c PCMK_XA_KIND attribute
  * \param[in]     parent_symmetrical_s  rsc_order XML \c PCMK_XA_SYMMETRICAL
  *                                      attribute
  * \param[in,out] scheduler             Scheduler data
@@ -612,7 +612,7 @@ unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
     const char *id = ID(set);
     const char *action = crm_element_value(set, "action");
     const char *sequential_s = crm_element_value(set, "sequential");
-    const char *kind_s = crm_element_value(set, XML_ORDER_ATTR_KIND);
+    const char *kind_s = crm_element_value(set, PCMK_XA_KIND);
 
     if (action == NULL) {
         action = PCMK_ACTION_START;

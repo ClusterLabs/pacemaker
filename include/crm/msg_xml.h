@@ -98,6 +98,7 @@ extern "C" {
 #define PCMK_XA_ID_REF                      "id-ref"
 #define PCMK_XA_INDEX                       "index"
 #define PCMK_XA_INFLUENCE                   "influence"
+#define PCMK_XA_KIND                        "kind"
 #define PCMK_XA_LAST_RC_CHANGE              "last-rc-change"
 #define PCMK_XA_LANG                        "lang"
 #define PCMK_XA_NAME                        "name"
@@ -244,7 +245,7 @@ extern "C" {
 #  define XML_CONS_TAG_RSC_TICKET	"rsc_ticket"
 #  define XML_CONS_TAG_RSC_SET		"resource_set"
 
-#  define XML_ORDER_ATTR_KIND		"kind"
+#  define XML_ORDER_ATTR_KIND		PCMK_XA_KIND
 
 #  define XML_TICKET_ATTR_TICKET	"ticket"
 #  define XML_TICKET_ATTR_LOSS_POLICY	"loss-policy"
@@ -261,7 +262,7 @@ extern "C" {
 #  define XML_ACL_TAG_ROLE		"acl_role"
 #  define XML_ACL_TAG_PERMISSION	"acl_permission"
 #  define XML_ACL_TAG_ROLE_REFv1	"role_ref"
-#  define XML_ACL_ATTR_KIND		"kind"
+#  define XML_ACL_ATTR_KIND		PCMK_XA_KIND
 #  define XML_ACL_TAG_READ		"read"
 #  define XML_ACL_TAG_WRITE		"write"
 #  define XML_ACL_TAG_DENY		"deny"
