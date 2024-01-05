@@ -191,7 +191,6 @@ extern "C" {
 
 /*---- CIB specific tags/attrs */
 #  define XML_CIB_TAG_SECTION_ALL	"all"
-#  define XML_CIB_TAG_ACLS   		PCMK_XE_ACLS
 #  define XML_CIB_TAG_ALERTS    	"alerts"
 #  define XML_CIB_TAG_ALERT   		"alert"
 #  define XML_CIB_TAG_ALERT_RECIPIENT	"recipient"
