@@ -99,7 +99,7 @@ get_resource_type(const char *name)
         // @COMPAT deprecated since 2.0.0
         return pcmk_rsc_variant_clone;
 
-    } else if (pcmk__str_eq(name, XML_CIB_TAG_CONTAINER, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(name, PCMK_XE_BUNDLE, pcmk__str_casei)) {
         return pcmk_rsc_variant_bundle;
     }
 

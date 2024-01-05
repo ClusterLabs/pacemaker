@@ -1513,7 +1513,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
 
             desc = pe__resource_description(rsc, show_opts);
 
-            rc = pe__name_and_nvpairs_xml(out, true, "bundle", 8,
+            rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_BUNDLE, 8,
                      PCMK_XA_ID, rsc->id,
                      PCMK_XA_TYPE, container_agent_str(bundle_data->agent_type),
                      "image", bundle_data->image,

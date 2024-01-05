@@ -59,6 +59,7 @@ extern "C" {
 #define PCMK_XE_ALERT                       "alert"
 #define PCMK_XE_ALERTS                      "alerts"
 #define PCMK_XE_ATTRIBUTE                   "attribute"
+#define PCMK_XE_BUNDLE                      "bundle"
 #define PCMK_XE_CIB                         "cib"
 #define PCMK_XE_CLONE                       "clone"
 #define PCMK_XE_CLUSTER_PROPERTY_SET        "cluster_property_set"
@@ -212,7 +213,7 @@ extern "C" {
 /*---- CIB specific tags/attrs */
 #  define XML_CIB_TAG_SECTION_ALL	"all"
 
-#  define XML_CIB_TAG_CONTAINER		"bundle"
+#  define XML_CIB_TAG_CONTAINER		PCMK_XE_BUNDLE
 
 #  define XML_CIB_TAG_RSC_TEMPLATE	"template"
 
