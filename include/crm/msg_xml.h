@@ -99,8 +99,9 @@ extern "C" {
 #define PCMK_XA_INDEX                       "index"
 #define PCMK_XA_INFLUENCE                   "influence"
 #define PCMK_XA_KIND                        "kind"
-#define PCMK_XA_LAST_RC_CHANGE              "last-rc-change"
 #define PCMK_XA_LANG                        "lang"
+#define PCMK_XA_LAST_RC_CHANGE              "last-rc-change"
+#define PCMK_XA_LOSS_POLICY                 "loss-policy"
 #define PCMK_XA_NAME                        "name"
 #define PCMK_XA_NO_QUORUM_PANIC             "no-quorum-panic"
 #define PCMK_XA_NODE_ATTRIBUTE              "node-attribute"
@@ -246,7 +247,7 @@ extern "C" {
 #  define XML_CONS_TAG_RSC_TICKET	"rsc_ticket"
 #  define XML_CONS_TAG_RSC_SET		"resource_set"
 
-#  define XML_TICKET_ATTR_LOSS_POLICY	"loss-policy"
+#  define XML_TICKET_ATTR_LOSS_POLICY	PCMK_XA_LOSS_POLICY
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 

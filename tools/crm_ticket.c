@@ -512,7 +512,8 @@ ticket_warning(gchar *ticket_id, const char *action)
     } else {
         pcmk__g_strcat(warning,
                        "Revoking '", ticket_id, "' can trigger the specified "
-                       "'loss-policy'(s) relating to '", ticket_id, "'.\n\n"
+                       "'" PCMK_XA_LOSS_POLICY "'(s) "
+                       "relating to '", ticket_id, "'.\n\n"
                        "You can check that with:\n"
                        "crm_ticket --ticket ", ticket_id, " --constraints\n\n"
                        "Otherwise before revoking '", ticket_id, "', "

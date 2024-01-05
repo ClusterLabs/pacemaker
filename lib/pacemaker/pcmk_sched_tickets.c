@@ -174,8 +174,8 @@ rsc_ticket_new(const char *id, pcmk_resource_t *rsc, pcmk_ticket_t *ticket,
         if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)) {
             new_rsc_ticket->loss_policy = loss_ticket_fence;
         } else {
-            pcmk__config_err("Resetting '" XML_TICKET_ATTR_LOSS_POLICY
-                             "' for ticket '%s' to 'stop' "
+            pcmk__config_err("Resetting '" PCMK_XA_LOSS_POLICY "' "
+                             "for ticket '%s' to 'stop' "
                              "because fencing is not configured", ticket->id);
             loss_policy = "stop";
         }
@@ -277,8 +277,7 @@ unpack_simple_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 {
     const char *id = NULL;
     const char *ticket_str = crm_element_value(xml_obj, PCMK_XA_TICKET);
-    const char *loss_policy = crm_element_value(xml_obj,
-                                                XML_TICKET_ATTR_LOSS_POLICY);
+    const char *loss_policy = crm_element_value(xml_obj, PCMK_XA_LOSS_POLICY);
 
     pcmk_ticket_t *ticket = NULL;
 
@@ -485,7 +484,7 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 
         any_sets = true;
         set = expand_idref(set, scheduler->input);
-        loss_policy = crm_element_value(xml_obj, XML_TICKET_ATTR_LOSS_POLICY);
+        loss_policy = crm_element_value(xml_obj, PCMK_XA_LOSS_POLICY);
 
         if ((set == NULL) // Configuration error, message already logged
             || (unpack_rsc_ticket_set(set, ticket, loss_policy,
