@@ -505,7 +505,7 @@ controller_resource_op(pcmk_ipc_api_t *api, const char *op,
 
     if (cib_only) {
         // Indicate that only the CIB needs to be cleaned
-        crm_xml_add(msg_data, PCMK__XA_MODE, XML_TAG_CIB);
+        crm_xml_add(msg_data, PCMK__XA_MODE, PCMK__VALUE_CIB);
     }
 
     xml_rsc = create_xml_node(msg_data, XML_CIB_TAG_RESOURCE);

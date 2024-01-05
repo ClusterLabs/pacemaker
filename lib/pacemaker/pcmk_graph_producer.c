@@ -423,7 +423,7 @@ create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
                             pcmk__str_none)) {
         // CIB-only clean-up for shutdown locks
         action_xml = create_xml_node(parent, XML_GRAPH_TAG_CRM_EVENT);
-        crm_xml_add(action_xml, PCMK__XA_MODE, XML_TAG_CIB);
+        crm_xml_add(action_xml, PCMK__XA_MODE, PCMK__VALUE_CIB);
 
     } else if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
         if (pcmk__str_eq(action->task, PCMK_ACTION_MAINTENANCE_NODES,

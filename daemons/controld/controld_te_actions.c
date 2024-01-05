@@ -128,7 +128,7 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         if (pcmk__str_eq(task, PCMK_ACTION_LRM_DELETE, pcmk__str_none)) {
             const char *mode = crm_element_value(action->xml, PCMK__XA_MODE);
 
-            if (pcmk__str_eq(mode, XML_TAG_CIB, pcmk__str_none)) {
+            if (pcmk__str_eq(mode, PCMK__VALUE_CIB, pcmk__str_none)) {
                 router_node = controld_globals.our_nodename;
             }
         }

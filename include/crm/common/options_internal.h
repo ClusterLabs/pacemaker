@@ -164,6 +164,7 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 #define PCMK__META_ROLE_AFTER_FAILURE       "role_after_failure"
 
 // Constants for enumerated values for various options
+#define PCMK__VALUE_CIB                     "cib"
 #define PCMK__VALUE_CLUSTER                 "cluster"
 #define PCMK__VALUE_CUSTOM                  "custom"
 #define PCMK__VALUE_EN                      "en"
