@@ -68,6 +68,7 @@ extern "C" {
 #define PCMK_XE_CONTENT                     "content"
 #define PCMK_XE_CRM_CONFIG                  "crm_config"
 #define PCMK_XE_DATE_EXPRESSION             "date_expression"
+#define PCMK_XE_EXPRESSION                  "expression"
 #define PCMK_XE_GROUP                       "group"
 #define PCMK_XE_INSTANCE_ATTRIBUTES         "instance_attributes"
 #define PCMK_XE_LONGDESC                    "longdesc"
@@ -222,7 +223,7 @@ extern "C" {
 
 #  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
 
-#  define XML_TAG_EXPRESSION		"expression"
+#  define XML_TAG_EXPRESSION		PCMK_XE_EXPRESSION
 
 #  define XML_CONS_TAG_RSC_DEPEND	"rsc_colocation"
 #  define XML_CONS_TAG_RSC_ORDER	"rsc_order"

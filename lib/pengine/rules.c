@@ -120,7 +120,7 @@ find_expression_type(xmlNode * expr)
     } else if (pcmk__xe_is(expr, PCMK_XE_RULE)) {
         return pcmk__subexpr_rule;
 
-    } else if (!pcmk__xe_is(expr, XML_TAG_EXPRESSION)) {
+    } else if (!pcmk__xe_is(expr, PCMK_XE_EXPRESSION)) {
         return pcmk__subexpr_unknown;
 
     } else if (pcmk__str_any_of(attr, CRM_ATTR_UNAME, CRM_ATTR_KIND, CRM_ATTR_ID, NULL)) {
