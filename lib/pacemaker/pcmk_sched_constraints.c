@@ -201,11 +201,13 @@ pcmk__valid_resource_or_tag(const pcmk_scheduler_t *scheduler, const char *id,
 
 /*!
  * \internal
- * \brief Replace any resource tags with equivalent resource_ref entries
+ * \brief Replace any resource tags with equivalent \C PCMK_XE_RESOURCE_REF
+ *        entries
  *
- * If a given constraint has resource sets, check each set for resource_ref
- * entries that list tags rather than resource IDs, and replace any found with
- * resource_ref entries for the corresponding resource IDs.
+ * If a given constraint has resource sets, check each set for
+ * \c PCMK_XE_RESOURCE_REF entries that list tags rather than resource IDs, and
+ * replace any found with \c PCMK_XE_RESOURCE_REF entries for the corresponding
+ * resource IDs.
  *
  * \param[in,out] xml_obj    Constraint XML
  * \param[in]     scheduler  Scheduler data
@@ -232,7 +234,7 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *scheduler)
         GList *tag_refs = NULL;
         GList *iter = NULL;
 
-        for (xmlNode *xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
+        for (xmlNode *xml_rsc = first_named_child(set, PCMK_XE_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
             pcmk_resource_t *rsc = NULL;
@@ -250,7 +252,9 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *scheduler)
                 continue;
 
             } else if (tag) {
-                // resource_ref under resource_set references template or tag
+                /* PCMK_XE_RESOURCE_REF under resource_set references template
+                 * or tag
+                 */
                 xmlNode *last_ref = xml_rsc;
 
                 /* For example, given the original XML:
@@ -278,7 +282,7 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *scheduler)
 
                     new_rsc_ref = xmlNewDocRawNode(set->doc, NULL,
                                                    (pcmkXmlStr)
-                                                   XML_TAG_RESOURCE_REF,
+                                                   PCMK_XE_RESOURCE_REF,
                                                    NULL);
                     crm_xml_add(new_rsc_ref, PCMK_XA_ID, obj_ref);
                     xmlAddNextSibling(last_ref, new_rsc_ref);
@@ -374,7 +378,7 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
             const char *obj_ref = iter->data;
             xmlNode *rsc_ref = NULL;
 
-            rsc_ref = create_xml_node(*rsc_set, XML_TAG_RESOURCE_REF);
+            rsc_ref = create_xml_node(*rsc_set, PCMK_XE_RESOURCE_REF);
             crm_xml_add(rsc_ref, PCMK_XA_ID, obj_ref);
         }
 
@@ -391,7 +395,7 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
         *rsc_set = create_xml_node(xml_obj, XML_CONS_TAG_RSC_SET);
         crm_xml_add(*rsc_set, PCMK_XA_ID, id);
 
-        rsc_ref = create_xml_node(*rsc_set, XML_TAG_RESOURCE_REF);
+        rsc_ref = create_xml_node(*rsc_set, PCMK_XE_RESOURCE_REF);
         crm_xml_add(rsc_ref, PCMK_XA_ID, id);
 
     } else {

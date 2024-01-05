@@ -480,7 +480,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
     }
 
     if (local_score > 0) {
-        for (xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
+        for (xml_rsc = first_named_child(set, PCMK_XE_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
             xml_rsc_id = ID(xml_rsc);
@@ -516,7 +516,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
          * (i.e. that no one in the set can run with anyone else in the set)
          */
 
-        for (xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
+        for (xml_rsc = first_named_child(set, PCMK_XE_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
             xmlNode *xml_rsc_with = NULL;
@@ -532,7 +532,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
             }
             flags = pcmk__coloc_explicit
                     | unpack_influence(coloc_id, resource, influence_s);
-            for (xml_rsc_with = first_named_child(set, XML_TAG_RESOURCE_REF);
+            for (xml_rsc_with = first_named_child(set, PCMK_XE_RESOURCE_REF);
                  xml_rsc_with != NULL;
                  xml_rsc_with = crm_next_same_xml(xml_rsc_with)) {
 
@@ -588,7 +588,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
     rc = pcmk__xe_get_bool_attr(set1, "sequential", &sequential);
     if ((rc != pcmk_rc_ok) || sequential) {
         // Get the first one
-        xml_rsc = first_named_child(set1, XML_TAG_RESOURCE_REF);
+        xml_rsc = first_named_child(set1, PCMK_XE_RESOURCE_REF);
         if (xml_rsc != NULL) {
             xml_rsc_id = ID(xml_rsc);
             rsc_1 = pcmk__find_constraint_resource(scheduler->resources,
@@ -606,7 +606,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
     rc = pcmk__xe_get_bool_attr(set2, "sequential", &sequential);
     if ((rc != pcmk_rc_ok) || sequential) {
         // Get the last one
-        for (xml_rsc = first_named_child(set2, XML_TAG_RESOURCE_REF);
+        for (xml_rsc = first_named_child(set2, PCMK_XE_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
             xml_rsc_id = ID(xml_rsc);
@@ -629,7 +629,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
 
     } else if (rsc_1 != NULL) { // Only set1 is sequential
         flags = pcmk__coloc_explicit | unpack_influence(id, rsc_1, influence_s);
-        for (xml_rsc = first_named_child(set2, XML_TAG_RESOURCE_REF);
+        for (xml_rsc = first_named_child(set2, PCMK_XE_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
             xml_rsc_id = ID(xml_rsc);
@@ -647,7 +647,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
         }
 
     } else if (rsc_2 != NULL) { // Only set2 is sequential
-        for (xml_rsc = first_named_child(set1, XML_TAG_RESOURCE_REF);
+        for (xml_rsc = first_named_child(set1, PCMK_XE_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
             xml_rsc_id = ID(xml_rsc);
@@ -667,7 +667,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
         }
 
     } else { // Neither set is sequential
-        for (xml_rsc = first_named_child(set1, XML_TAG_RESOURCE_REF);
+        for (xml_rsc = first_named_child(set1, PCMK_XE_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
             xmlNode *xml_rsc_2 = NULL;
@@ -685,7 +685,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
 
             flags = pcmk__coloc_explicit
                     | unpack_influence(id, rsc_1, influence_s);
-            for (xml_rsc_2 = first_named_child(set2, XML_TAG_RESOURCE_REF);
+            for (xml_rsc_2 = first_named_child(set2, PCMK_XE_RESOURCE_REF);
                  xml_rsc_2 != NULL;
                  xml_rsc_2 = crm_next_same_xml(xml_rsc_2)) {
 

@@ -252,7 +252,7 @@ unpack_rsc_ticket_set(xmlNode *set, pcmk_ticket_t *ticket,
 
     role = crm_element_value(set, PCMK_XA_ROLE);
 
-    for (xmlNode *xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
+    for (xmlNode *xml_rsc = first_named_child(set, PCMK_XE_RESOURCE_REF);
          xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
         pcmk_resource_t *resource = NULL;

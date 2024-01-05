@@ -502,7 +502,7 @@ unpack_location_set(xmlNode *location, xmlNode *set,
     role = crm_element_value(set, PCMK_XA_ROLE);
     local_score = crm_element_value(set, PCMK_XA_SCORE);
 
-    for (xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
+    for (xml_rsc = first_named_child(set, PCMK_XE_RESOURCE_REF);
          xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
         resource = pcmk__find_constraint_resource(scheduler->resources,

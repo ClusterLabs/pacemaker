@@ -81,6 +81,7 @@ extern "C" {
 #define PCMK_XE_PARAMETERS                  "parameters"
 #define PCMK_XE_RECIPIENT                   "recipient"
 #define PCMK_XE_RESOURCE_AGENT              "resource-agent"
+#define PCMK_XE_RESOURCE_REF                "resource_ref"
 #define PCMK_XE_RESOURCES                   "resources"
 #define PCMK_XE_ROLE                        "role"
 #define PCMK_XE_RSC_DEFAULTS                "rsc_defaults"
@@ -208,7 +209,7 @@ extern "C" {
 /*---- CIB specific tags/attrs */
 #  define XML_CIB_TAG_SECTION_ALL	"all"
 
-#  define XML_TAG_RESOURCE_REF		"resource_ref"
+#  define XML_TAG_RESOURCE_REF		PCMK_XE_RESOURCE_REF
 #  define XML_CIB_TAG_RESOURCE	  	"primitive"
 #  define XML_CIB_TAG_GROUP	  	"group"
 #  define XML_CIB_TAG_INCARNATION	"clone"
