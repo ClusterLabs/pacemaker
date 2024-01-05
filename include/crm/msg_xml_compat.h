@@ -823,6 +823,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_LRM_TAG_RSC_OP "lrm_rsc_op"
 
+//! \deprecated Do not use
+#define XML_TAG_GRAPH "transition_graph"
+
 #ifdef __cplusplus
 }
 #endif
