@@ -98,6 +98,7 @@ extern "C" {
 #define PCMK_XA_REFERENCE                   "reference"
 #define PCMK_XA_REQUEST                     "request"
 #define PCMK_XA_RESULT                      "result"
+#define PCMK_XA_ROLE                        "role"
 #define PCMK_XA_SCORE                       "score"
 #define PCMK_XA_SCORE_ATTRIBUTE             "score-attribute"
 #define PCMK_XA_TARGET                      "target"
@@ -209,7 +210,7 @@ extern "C" {
 #  define XML_GRAPH_TAG_MAINTENANCE       "maintenance"
 
 #  define XML_TAG_RULE			"rule"
-#  define XML_RULE_ATTR_ROLE		"role"
+#  define XML_RULE_ATTR_ROLE		PCMK_XA_ROLE
 #  define XML_RULE_ATTR_BOOLEAN_OP	"boolean-op"
 
 #  define XML_TAG_EXPRESSION		"expression"

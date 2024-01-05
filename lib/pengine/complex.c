@@ -240,7 +240,7 @@ static char *
 template_op_key(xmlNode * op)
 {
     const char *name = crm_element_value(op, PCMK_XA_NAME);
-    const char *role = crm_element_value(op, "role");
+    const char *role = crm_element_value(op, PCMK_XA_ROLE);
     char *key = NULL;
 
     if ((role == NULL)

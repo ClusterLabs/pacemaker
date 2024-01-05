@@ -495,7 +495,7 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
 
             // We only care about recurring monitors for the promoted role
             name = crm_element_value(operation, PCMK_XA_NAME);
-            role = crm_element_value(operation, "role");
+            role = crm_element_value(operation, PCMK_XA_ROLE);
             if (!pcmk__str_eq(name, PCMK_ACTION_MONITOR, pcmk__str_none)
                 || !pcmk__strcase_any_of(role, PCMK__ROLE_PROMOTED,
                                          PCMK__ROLE_PROMOTED_LEGACY, NULL)) {
@@ -539,7 +539,7 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
     // on-fail="demote" is allowed only for certain actions
     if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
         name = crm_element_value(action_config, PCMK_XA_NAME);
-        role = crm_element_value(action_config, "role");
+        role = crm_element_value(action_config, PCMK_XA_ROLE);
         interval_spec = crm_element_value(action_config, PCMK_META_INTERVAL);
         pcmk_parse_interval_spec(interval_spec, &interval_ms);
 

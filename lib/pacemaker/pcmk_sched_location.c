@@ -129,13 +129,13 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
 
     rule_id = crm_element_value(rule_xml, PCMK_XA_ID);
     boolean = crm_element_value(rule_xml, XML_RULE_ATTR_BOOLEAN_OP);
-    role_spec = crm_element_value(rule_xml, XML_RULE_ATTR_ROLE);
+    role_spec = crm_element_value(rule_xml, PCMK_XA_ROLE);
 
     if (parse_location_role(role_spec, &role)) {
         crm_trace("Setting rule %s role filter to %s", rule_id, role_spec);
     } else {
-        pcmk__config_err("Ignoring rule %s: Invalid " XML_RULE_ATTR_ROLE
-                         " '%s'", rule_id, role_spec);
+        pcmk__config_err("Ignoring rule %s: Invalid " PCMK_XA_ROLE " '%s'",
+                         rule_id, role_spec);
         return NULL;
     }
 
@@ -272,7 +272,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
         }
 
         if (role_spec == NULL) {
-            role_spec = crm_element_value(xml_obj, XML_RULE_ATTR_ROLE);
+            role_spec = crm_element_value(xml_obj, PCMK_XA_ROLE);
         }
         if (parse_location_role(role_spec, &role)) {
             crm_trace("Setting location constraint %s role filter: %s",
@@ -446,7 +446,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         return pcmk_rc_ok;
     }
 
-    state = crm_element_value(xml_obj, XML_RULE_ATTR_ROLE);
+    state = crm_element_value(xml_obj, PCMK_XA_ROLE);
 
     *expanded_xml = copy_xml(xml_obj);
 
@@ -460,9 +460,11 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     if (rsc_set != NULL) {
         if (state != NULL) {
-            // Move "rsc-role" into converted resource_set as "role" attribute
-            crm_xml_add(rsc_set, "role", state);
-            xml_remove_prop(*expanded_xml, XML_RULE_ATTR_ROLE);
+            /* Move "rsc-role" into converted resource_set as PCMK_XA_ROLE
+             * attribute
+             */
+            crm_xml_add(rsc_set, PCMK_XA_ROLE, state);
+            xml_remove_prop(*expanded_xml, PCMK_XA_ROLE);
         }
         crm_log_xml_trace(*expanded_xml, "Expanded rsc_location");
 
@@ -496,7 +498,7 @@ unpack_location_set(xmlNode *location, xmlNode *set,
         return pcmk_rc_unpack_error;
     }
 
-    role = crm_element_value(set, "role");
+    role = crm_element_value(set, PCMK_XA_ROLE);
     local_score = crm_element_value(set, PCMK_XA_SCORE);
 
     for (xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);

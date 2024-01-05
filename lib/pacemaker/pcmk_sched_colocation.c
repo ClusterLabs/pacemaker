@@ -444,7 +444,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
     pcmk_resource_t *other = NULL;
     pcmk_resource_t *resource = NULL;
     const char *set_id = ID(set);
-    const char *role = crm_element_value(set, "role");
+    const char *role = crm_element_value(set, PCMK_XA_ROLE);
     bool with_previous = false;
     int local_score = score;
     bool sequential = false;
@@ -571,8 +571,8 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
     pcmk_resource_t *rsc_2 = NULL;
 
     const char *xml_rsc_id = NULL;
-    const char *role_1 = crm_element_value(set1, "role");
-    const char *role_2 = crm_element_value(set2, "role");
+    const char *role_1 = crm_element_value(set1, PCMK_XA_ROLE);
+    const char *role_2 = crm_element_value(set2, PCMK_XA_ROLE);
 
     int rc = pcmk_rc_ok;
     bool sequential = false;
@@ -890,8 +890,8 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     if (dependent_set != NULL) {
         if (dependent_role != NULL) {
-            // Move "rsc-role" into converted resource_set as "role"
-            crm_xml_add(dependent_set, "role", dependent_role);
+            // Move "rsc-role" into converted resource_set as PCMK_XA_ROLE
+            crm_xml_add(dependent_set, PCMK_XA_ROLE, dependent_role);
             xml_remove_prop(*expanded_xml, XML_COLOC_ATTR_SOURCE_ROLE);
         }
         any_sets = true;
@@ -907,8 +907,8 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     if (primary_set != NULL) {
         if (primary_role != NULL) {
-            // Move "with-rsc-role" into converted resource_set as "role"
-            crm_xml_add(primary_set, "role", primary_role);
+            // Move "with-rsc-role" into converted resource_set as PCMK_XA_ROLE
+            crm_xml_add(primary_set, PCMK_XA_ROLE, primary_role);
             xml_remove_prop(*expanded_xml, XML_COLOC_ATTR_TARGET_ROLE);
         }
         any_sets = true;

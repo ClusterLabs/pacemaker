@@ -155,7 +155,7 @@ is_recurring_history(const pcmk_resource_t *rsc, const xmlNode *xml,
     }
 
     // Ensure role is valid if specified
-    role = crm_element_value(xml, "role");
+    role = crm_element_value(xml, PCMK_XA_ROLE);
     if (role == NULL) {
         op->role = pcmk_role_unknown;
     } else {
