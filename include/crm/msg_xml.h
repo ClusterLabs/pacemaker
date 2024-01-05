@@ -264,7 +264,6 @@ extern "C" {
 #  define XML_ACL_ATTR_TAG		"object-type"
 #  define XML_ACL_ATTR_TAGv1		"tag"
 #  define XML_ACL_ATTR_XPATH		"xpath"
-#  define XML_ACL_ATTR_ATTRIBUTE	PCMK_XA_ATTRIBUTE
 
 #  define XML_CIB_TAG_TICKETS		"tickets"
 #  define XML_CIB_TAG_TICKET_STATE	"ticket_state"
