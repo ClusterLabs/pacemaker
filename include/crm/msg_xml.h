@@ -245,8 +245,6 @@ extern "C" {
 #  define XML_CONS_TAG_RSC_TICKET	"rsc_ticket"
 #  define XML_CONS_TAG_RSC_SET		"resource_set"
 
-#  define XML_ORDER_ATTR_KIND		PCMK_XA_KIND
-
 #  define XML_TICKET_ATTR_TICKET	"ticket"
 #  define XML_TICKET_ATTR_LOSS_POLICY	"loss-policy"
 
