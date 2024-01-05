@@ -254,7 +254,7 @@ pe_unpack_alerts(const xmlNode *alerts)
                   entry->id, entry->path, entry->timeout, entry->tstamp_format,
                   (entry->envvars? g_hash_table_size(entry->envvars) : 0));
 
-        for (recipient = first_named_child(alert, XML_CIB_TAG_ALERT_RECIPIENT);
+        for (recipient = first_named_child(alert, PCMK_XE_RECIPIENT);
              recipient != NULL; recipient = crm_next_same_xml(recipient)) {
 
             pcmk__alert_t *recipient_entry = pcmk__dup_alert(entry);

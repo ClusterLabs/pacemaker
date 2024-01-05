@@ -71,6 +71,7 @@ extern "C" {
 #define PCMK_XE_OPERATION                   "operation"
 #define PCMK_XE_OP_EXPRESSION               "op_expression"
 #define PCMK_XE_OPTION                      "option"
+#define PCMK_XE_RECIPIENT                   "recipient"
 #define PCMK_XE_RESOURCES                   "resources"
 #define PCMK_XE_ROLE                        "role"
 #define PCMK_XE_PARAMETER                   "parameter"
@@ -193,7 +194,7 @@ extern "C" {
 
 /*---- CIB specific tags/attrs */
 #  define XML_CIB_TAG_SECTION_ALL	"all"
-#  define XML_CIB_TAG_ALERT_RECIPIENT	"recipient"
+#  define XML_CIB_TAG_ALERT_RECIPIENT	PCMK_XE_RECIPIENT
 #  define XML_CIB_TAG_ALERT_SELECT      "select"
 #  define XML_CIB_TAG_ALERT_ATTRIBUTES  "select_attributes"
 #  define XML_CIB_TAG_ALERT_FENCING     "select_fencing"
