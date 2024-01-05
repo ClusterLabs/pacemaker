@@ -784,7 +784,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     controld_configure_fsa_timers(config_hash);
     controld_configure_throttle(config_hash);
 
-    alerts = first_named_child(output, XML_CIB_TAG_ALERTS);
+    alerts = first_named_child(output, PCMK_XE_ALERTS);
     crmd_unpack_alerts(alerts);
 
     controld_set_fsa_input_flags(R_READ_CONFIG);
@@ -817,7 +817,7 @@ crm_read_options(gpointer user_data)
     cib_t *cib_conn = controld_globals.cib_conn;
     int call_id = cib_conn->cmds->query(cib_conn,
                                         "//" PCMK_XE_CRM_CONFIG
-                                        " | //" XML_CIB_TAG_ALERTS,
+                                        " | //" PCMK_XE_ALERTS,
                                         NULL, cib_xpath|cib_scope_local);
 
     fsa_register_cib_callback(call_id, NULL, config_query_callback);

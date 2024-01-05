@@ -89,9 +89,9 @@ static struct {
         "//" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" XML_CIB_TAG_TAGS
     },
     {
-        XML_CIB_TAG_ALERTS,
+        PCMK_XE_ALERTS,
         "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION,
-        "//" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" XML_CIB_TAG_ALERTS
+        "//" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_ALERTS
     },
     {
         XML_CIB_TAG_SECTION_ALL,

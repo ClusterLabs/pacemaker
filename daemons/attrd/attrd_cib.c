@@ -60,7 +60,7 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
         return;
     }
 
-    if (cib__element_in_patchset(patchset, XML_CIB_TAG_ALERTS)) {
+    if (cib__element_in_patchset(patchset, PCMK_XE_ALERTS)) {
         mainloop_set_trigger(attrd_config_read);
     }
 
