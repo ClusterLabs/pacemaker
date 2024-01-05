@@ -340,7 +340,7 @@ unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         unpack_rsc_location(xml_obj, rsc, NULL, NULL, NULL);
     }
 
-    value = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE_PATTERN);
+    value = crm_element_value(xml_obj, PCMK_XA_RSC_PATTERN);
     if (value) {
         regex_t *r_patt = calloc(1, sizeof(regex_t));
         bool invert = false;
@@ -352,7 +352,7 @@ unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 
         if (regcomp(r_patt, value, REG_EXTENDED) != 0) {
             pcmk__config_err("Ignoring constraint '%s' because "
-                             XML_LOC_ATTR_SOURCE_PATTERN
+                             PCMK_XA_RSC_PATTERN
                              " has invalid value '%s'", id, value);
             free(r_patt);
             return;

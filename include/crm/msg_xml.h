@@ -115,6 +115,7 @@ extern "C" {
 #define PCMK_XA_RESULT                      "result"
 #define PCMK_XA_ROLE                        "role"
 #define PCMK_XA_RSC                         "rsc"
+#define PCMK_XA_RSC_PATTERN                 "rsc-pattern"
 #define PCMK_XA_RSC_ROLE                    "rsc-role"
 #define PCMK_XA_SCORE                       "score"
 #define PCMK_XA_SCORE_ATTRIBUTE             "score-attribute"
@@ -239,7 +240,7 @@ extern "C" {
 #  define XML_CONS_TAG_RSC_TICKET	"rsc_ticket"
 #  define XML_CONS_TAG_RSC_SET		"resource_set"
 
-#  define XML_LOC_ATTR_SOURCE_PATTERN   "rsc-pattern"
+#  define XML_LOC_ATTR_SOURCE_PATTERN   PCMK_XA_RSC_PATTERN
 
 #  define XML_ORDER_ATTR_FIRST		"first"
 #  define XML_ORDER_ATTR_THEN		"then"
