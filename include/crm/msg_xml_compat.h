@@ -763,6 +763,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_SELECT_RESOURCES instead
 #define XML_CIB_TAG_ALERT_RESOURCES PCMK_XE_SELECT_RESOURCES
 
+//! \deprecated Use \c PCMK_XE_ATTRIBUTE instead
+#define XML_CIB_TAG_ALERT_ATTR PCMK_XE_ATTRIBUTE
+
 #ifdef __cplusplus
 }
 #endif
