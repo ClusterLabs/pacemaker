@@ -2156,7 +2156,7 @@ node_attribute_xml(pcmk__output_t *out, va_list args) {
     bool add_extra = va_arg(args, int);
     int expected_score = va_arg(args, int);
 
-    xmlNodePtr node = pcmk__output_create_xml_node(out, "attribute",
+    xmlNodePtr node = pcmk__output_create_xml_node(out, PCMK_XE_ATTRIBUTE,
                                                    PCMK_XA_NAME, name,
                                                    PCMK_XA_VALUE, value,
                                                    NULL);

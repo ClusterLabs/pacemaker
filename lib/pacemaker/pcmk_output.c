@@ -2174,7 +2174,7 @@ attribute_xml(pcmk__output_t *out, va_list args)
 
     xmlNodePtr node = NULL;
 
-    node = pcmk__output_create_xml_node(out, "attribute",
+    node = pcmk__output_create_xml_node(out, PCMK_XE_ATTRIBUTE,
                                         PCMK_XA_NAME, name,
                                         PCMK_XA_VALUE, pcmk__s(value, ""),
                                         NULL);

@@ -58,6 +58,7 @@ extern "C" {
 #define PCMK_XE_ACLS                        "acls"
 #define PCMK_XE_ALERT                       "alert"
 #define PCMK_XE_ALERTS                      "alerts"
+#define PCMK_XE_ATTRIBUTE                   "attribute"
 #define PCMK_XE_CIB                         "cib"
 #define PCMK_XE_CONFIGURATION               "configuration"
 #define PCMK_XE_CONSTRAINTS                 "constraints"
@@ -199,7 +200,7 @@ extern "C" {
 
 /*---- CIB specific tags/attrs */
 #  define XML_CIB_TAG_SECTION_ALL	"all"
-#  define XML_CIB_TAG_ALERT_ATTR        "attribute"
+#  define XML_CIB_TAG_ALERT_ATTR        PCMK_XE_ATTRIBUTE
 
 #  define XML_CIB_TAG_STATE         	"node_state"
 #  define XML_CIB_TAG_NODE          	"node"

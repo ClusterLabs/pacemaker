@@ -140,7 +140,7 @@ unpack_alert_filter(xmlNode *basenode, pcmk__alert_t *entry)
             int nattrs = 0;
 
             flags |= pcmk__alert_attribute;
-            for (attr = first_named_child(event_type, XML_CIB_TAG_ALERT_ATTR);
+            for (attr = first_named_child(event_type, PCMK_XE_ATTRIBUTE);
                  attr != NULL;
                  attr = crm_next_same_xml(attr)) {
 
