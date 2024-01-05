@@ -597,7 +597,7 @@ set_type(void)
 
         } else {
             // Updating cluster options
-            options.type = g_strdup(XML_CIB_TAG_CRMCONFIG);
+            options.type = g_strdup(PCMK_XE_CRM_CONFIG);
         }
 
     } else if (pcmk__str_eq(options.type, "reboot", pcmk__str_casei)) {
@@ -757,8 +757,8 @@ main(int argc, char **argv)
     set_type();
 
     // Use default node if not given (except for cluster options and tickets)
-    if (!pcmk__strcase_any_of(options.type, XML_CIB_TAG_CRMCONFIG, XML_CIB_TAG_TICKETS,
-                              NULL)) {
+    if (!pcmk__strcase_any_of(options.type,
+                              PCMK_XE_CRM_CONFIG, XML_CIB_TAG_TICKETS, NULL)) {
         /* If we are being called from a resource agent via the cluster,
          * the correct local node name will be passed as an environment
          * variable. Otherwise, we have to ask the cluster.

@@ -202,7 +202,7 @@ feature_update_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, vo
 #define dc_takeover_update_attr(name, value) do {                           \
        cib__update_node_attr(controld_globals.logger_out,                   \
                              controld_globals.cib_conn, cib_none,           \
-                             XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL, \
+                             PCMK_XE_CRM_CONFIG, NULL, NULL, NULL, NULL,    \
                              name, value, NULL, NULL);                      \
     } while (0)
 

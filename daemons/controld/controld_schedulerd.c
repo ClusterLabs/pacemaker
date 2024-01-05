@@ -379,9 +379,9 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
     char *xpath_string = NULL;
     xmlXPathObjectPtr xpathObj = NULL;
 
-    xpath_base = pcmk_cib_xpath_for(XML_CIB_TAG_CRMCONFIG);
+    xpath_base = pcmk_cib_xpath_for(PCMK_XE_CRM_CONFIG);
     if (xpath_base == NULL) {
-        crm_err(XML_CIB_TAG_CRMCONFIG " CIB element not known (bug?)");
+        crm_err(PCMK_XE_CRM_CONFIG " CIB element not known (bug?)");
         return;
     }
 
@@ -411,10 +411,10 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
             configuration = create_xml_node(xml, PCMK_XE_CONFIGURATION);
         }
 
-        crm_config = pcmk__xe_match(configuration, XML_CIB_TAG_CRMCONFIG, NULL,
+        crm_config = pcmk__xe_match(configuration, PCMK_XE_CRM_CONFIG, NULL,
                                     NULL);
         if (crm_config == NULL) {
-            crm_config = create_xml_node(configuration, XML_CIB_TAG_CRMCONFIG);
+            crm_config = create_xml_node(configuration, PCMK_XE_CRM_CONFIG);
         }
 
         cluster_property_set = pcmk__xe_match(crm_config, XML_CIB_TAG_PROPSET,

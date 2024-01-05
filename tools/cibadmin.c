@@ -142,7 +142,7 @@ scope_is_valid(const char *scope)
                             PCMK_XE_NODES,
                             PCMK_XE_RESOURCES,
                             PCMK_XE_CONSTRAINTS,
-                            XML_CIB_TAG_CRMCONFIG,
+                            PCMK_XE_CRM_CONFIG,
                             XML_CIB_TAG_RSCCONFIG,
                             XML_CIB_TAG_OPCONFIG,
                             XML_CIB_TAG_ACLS,
@@ -352,7 +352,7 @@ static GOptionEntry addl_entries[] = {
       "Limit scope of operation to specific section of CIB\n"
       INDENT "Valid values: " PCMK_XE_CONFIGURATION ", " PCMK_XE_NODES
       ", " PCMK_XE_RESOURCES ", " PCMK_XE_CONSTRAINTS
-      ", " XML_CIB_TAG_CRMCONFIG ", " XML_CIB_TAG_RSCCONFIG ",\n"
+      ", " PCMK_XE_CRM_CONFIG ", " XML_CIB_TAG_RSCCONFIG ",\n"
       INDENT "              " XML_CIB_TAG_OPCONFIG ", " XML_CIB_TAG_ACLS
       ", " XML_TAG_FENCING_TOPOLOGY ", " XML_CIB_TAG_TAGS
       ", " XML_CIB_TAG_ALERTS ", " PCMK_XE_STATUS "\n"
@@ -430,7 +430,7 @@ build_arg_context(pcmk__common_args_t *args)
            "Query the configuration from the local node:\n\n"
            "\t# cibadmin --query --local\n\n"
            "Query just the cluster options configuration:\n\n"
-           "\t# cibadmin --query --scope " XML_CIB_TAG_CRMCONFIG "\n\n"
+           "\t# cibadmin --query --scope " PCMK_XE_CRM_CONFIG "\n\n"
            "Query all '" PCMK_META_TARGET_ROLE "' settings:\n\n"
            "\t# cibadmin --query --xpath "
                "\"//" XML_CIB_TAG_NVPAIR

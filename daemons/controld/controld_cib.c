@@ -60,7 +60,7 @@ do_cib_updated(const char *event, xmlNode * msg)
     }
 
     if (cib__element_in_patchset(patchset, XML_CIB_TAG_ALERTS)
-        || cib__element_in_patchset(patchset, XML_CIB_TAG_CRMCONFIG)) {
+        || cib__element_in_patchset(patchset, PCMK_XE_CRM_CONFIG)) {
 
         controld_trigger_config();
     }

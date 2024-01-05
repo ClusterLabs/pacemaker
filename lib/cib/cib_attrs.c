@@ -69,7 +69,7 @@ find_attr(cib_t *cib, const char *section, const char *node_uuid,
         set_type = XML_TAG_ATTR_SETS;
     }
 
-    if (pcmk__str_eq(section, XML_CIB_TAG_CRMCONFIG, pcmk__str_casei)) {
+    if (pcmk__str_eq(section, PCMK_XE_CRM_CONFIG, pcmk__str_casei)) {
         node_uuid = NULL;
         set_type = XML_CIB_TAG_PROPSET;
 
@@ -252,7 +252,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
         }
 
         if (set_name == NULL) {
-            if (pcmk__str_eq(section, XML_CIB_TAG_CRMCONFIG, pcmk__str_casei)) {
+            if (pcmk__str_eq(section, PCMK_XE_CRM_CONFIG, pcmk__str_casei)) {
                 local_set_name = strdup(CIB_OPTIONS_FIRST);
 
             } else if (pcmk__str_eq(node_type, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
@@ -294,7 +294,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
         }
 
         if (node_uuid == NULL && !pcmk__str_eq(node_type, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
-            if (pcmk__str_eq(section, XML_CIB_TAG_CRMCONFIG, pcmk__str_casei)) {
+            if (pcmk__str_eq(section, PCMK_XE_CRM_CONFIG, pcmk__str_casei)) {
                 xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_PROPSET);
             } else {
                 xml_obj = create_xml_node(xml_obj, XML_TAG_META_SETS);

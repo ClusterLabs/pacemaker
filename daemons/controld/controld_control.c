@@ -735,14 +735,13 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     }
 
     crmconfig = output;
-    if ((crmconfig != NULL)
-        && !pcmk__xe_is(crmconfig, XML_CIB_TAG_CRMCONFIG)) {
-        crmconfig = first_named_child(crmconfig, XML_CIB_TAG_CRMCONFIG);
+    if ((crmconfig != NULL) && !pcmk__xe_is(crmconfig, PCMK_XE_CRM_CONFIG)) {
+        crmconfig = first_named_child(crmconfig, PCMK_XE_CRM_CONFIG);
     }
     if (!crmconfig) {
         fsa_data_t *msg_data = NULL;
 
-        crm_err("Local CIB query for " XML_CIB_TAG_CRMCONFIG " section failed");
+        crm_err("Local CIB query for " PCMK_XE_CRM_CONFIG " section failed");
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
         goto bail;
     }
@@ -817,7 +816,7 @@ crm_read_options(gpointer user_data)
 {
     cib_t *cib_conn = controld_globals.cib_conn;
     int call_id = cib_conn->cmds->query(cib_conn,
-                                        "//" XML_CIB_TAG_CRMCONFIG
+                                        "//" PCMK_XE_CRM_CONFIG
                                         " | //" XML_CIB_TAG_ALERTS,
                                         NULL, cib_xpath|cib_scope_local);
 

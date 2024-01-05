@@ -103,7 +103,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
     scheduler->rsc_defaults = get_xpath_object("//" XML_CIB_TAG_RSCCONFIG,
                                                scheduler->input, LOG_NEVER);
 
-    section = get_xpath_object("//" XML_CIB_TAG_CRMCONFIG, scheduler->input,
+    section = get_xpath_object("//" PCMK_XE_CRM_CONFIG, scheduler->input,
                                LOG_TRACE);
     unpack_config(section, scheduler);
 

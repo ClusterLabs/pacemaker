@@ -235,7 +235,7 @@ createEmptyCib(int cib_epoch)
     config = create_xml_node(cib_root, PCMK_XE_CONFIGURATION);
     create_xml_node(cib_root, PCMK_XE_STATUS);
 
-    create_xml_node(config, XML_CIB_TAG_CRMCONFIG);
+    create_xml_node(config, PCMK_XE_CRM_CONFIG);
     create_xml_node(config, PCMK_XE_NODES);
     create_xml_node(config, PCMK_XE_RESOURCES);
     create_xml_node(config, PCMK_XE_CONSTRAINTS);
@@ -911,7 +911,7 @@ cib_read_config(GHashTable * options, xmlNode * current_cib)
 
     g_hash_table_remove_all(options);
 
-    config = pcmk_find_cib_element(current_cib, XML_CIB_TAG_CRMCONFIG);
+    config = pcmk_find_cib_element(current_cib, PCMK_XE_CRM_CONFIG);
     if (config) {
         pe_unpack_nvpairs(current_cib, config, XML_CIB_TAG_PROPSET, NULL,
                           options, CIB_OPTIONS_FIRST, TRUE, now, NULL);

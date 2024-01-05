@@ -654,7 +654,7 @@ controld_trigger_delete_refresh(const char *from_sys, const char *rsc_id)
         crm_debug("Triggering a refresh after %s cleaned %s", from_sys, rsc_id);
         cib__update_node_attr(controld_globals.logger_out,
                               controld_globals.cib_conn, cib_none,
-                              XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
+                              PCMK_XE_CRM_CONFIG, NULL, NULL, NULL, NULL,
                               "last-lrm-refresh", now_s, NULL, NULL);
         free(now_s);
     }

@@ -658,7 +658,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
 
     if (injections->watchdog != NULL) {
         rc = cib__update_node_attr(out, cib, cib_sync_call|cib_scope_local,
-                                   XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL,
+                                   PCMK_XE_CRM_CONFIG, NULL, NULL, NULL,
                                    NULL, PCMK_OPT_HAVE_WATCHDOG,
                                    injections->watchdog, NULL, NULL);
         CRM_ASSERT(rc == pcmk_rc_ok);
