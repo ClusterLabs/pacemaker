@@ -209,7 +209,6 @@ extern "C" {
 /*---- CIB specific tags/attrs */
 #  define XML_CIB_TAG_SECTION_ALL	"all"
 
-#  define XML_TAG_RESOURCE_REF		PCMK_XE_RESOURCE_REF
 #  define XML_CIB_TAG_RESOURCE	  	"primitive"
 #  define XML_CIB_TAG_GROUP	  	"group"
 #  define XML_CIB_TAG_INCARNATION	"clone"
