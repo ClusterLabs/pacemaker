@@ -2090,7 +2090,7 @@ can_prune_leaf(xmlNode * xml_node)
 
     if (pcmk__strcase_any_of((const char *) xml_node->name,
                              XML_TAG_RESOURCE_REF, XML_CIB_TAG_OBJ_REF,
-                             XML_ACL_TAG_ROLE_REF, XML_ACL_TAG_ROLE_REFv1,
+                             PCMK_XE_ROLE, XML_ACL_TAG_ROLE_REFv1,
                              NULL)) {
         return FALSE;
     }

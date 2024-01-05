@@ -59,6 +59,7 @@ extern "C" {
 #define PCMK_XE_OP                          "op"
 #define PCMK_XE_OPERATION                   "operation"
 #define PCMK_XE_OP_EXPRESSION               "op_expression"
+#define PCMK_XE_ROLE                        "role"
 #define PCMK_XE_RSC_EXPRESSION              "rsc_expression"
 
 
@@ -254,7 +255,7 @@ extern "C" {
 #  define XML_ACL_TAG_GROUP		"acl_group"
 #  define XML_ACL_TAG_ROLE		"acl_role"
 #  define XML_ACL_TAG_PERMISSION	"acl_permission"
-#  define XML_ACL_TAG_ROLE_REF 		"role"
+#  define XML_ACL_TAG_ROLE_REF 		PCMK_XE_ROLE
 #  define XML_ACL_TAG_ROLE_REFv1	"role_ref"
 #  define XML_ACL_ATTR_KIND		"kind"
 #  define XML_ACL_TAG_READ		"read"
