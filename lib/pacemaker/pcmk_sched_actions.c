@@ -1263,10 +1263,10 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
 
     if (pcmk__str_any_of(op->op_type, PCMK_ACTION_MIGRATE_TO,
                          PCMK_ACTION_MIGRATE_FROM, NULL)) {
-        /*
-         * Record migrate_source and migrate_target always for migrate ops.
+        /* Record PCMK__META_MIGRATE_SOURCE and migrate_target always for
+         * migrate ops.
          */
-        const char *name = XML_LRM_ATTR_MIGRATE_SOURCE;
+        const char *name = PCMK__META_MIGRATE_SOURCE;
 
         crm_xml_add(xml_op, name, crm_meta_value(op->params, name));
 
