@@ -184,7 +184,6 @@ extern "C" {
 
 /*---- CIB specific tags/attrs */
 #  define XML_CIB_TAG_SECTION_ALL	"all"
-#  define XML_CIB_TAG_STATUS       	PCMK_XE_STATUS
 #  define XML_CIB_TAG_RESOURCES		"resources"
 #  define XML_CIB_TAG_NODES         	"nodes"
 #  define XML_CIB_TAG_CONSTRAINTS   	"constraints"
