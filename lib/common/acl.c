@@ -57,8 +57,8 @@ create_acl(const xmlNode *xml, GList *acls, enum xml_private_flags mode)
     const char *attr = crm_element_value(xml, PCMK_XA_ATTRIBUTE);
 
     if (tag == NULL) {
-        // @COMPAT rolling upgrades <=1.1.11
-        tag = crm_element_value(xml, XML_ACL_ATTR_TAGv1);
+        // @COMPAT Deprecated since 1.1.12 (needed for rolling upgrades)
+        tag = crm_element_value(xml, PCMK__XA_TAG);
     }
     if (ref == NULL) {
         // @COMPAT Deprecated since 1.1.12 (needed for rolling upgrades)
