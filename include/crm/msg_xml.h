@@ -205,7 +205,6 @@ extern "C" {
 /*---- CIB specific tags/attrs */
 #  define XML_CIB_TAG_SECTION_ALL	"all"
 
-#  define XML_CIB_TAG_PROPSET	   	PCMK_XE_CLUSTER_PROPERTY_SET
 #  define XML_TAG_ATTR_SETS	   	"instance_attributes"
 #  define XML_TAG_META_SETS	   	"meta_attributes"
 #  define XML_TAG_ATTRS			"attributes"
