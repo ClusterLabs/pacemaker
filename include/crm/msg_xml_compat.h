@@ -697,6 +697,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_ACL_ATTR_REFv1 "ref"
 
+//! \deprecated Use \c PCMK_XA_OBJECT_TYPE instead
+#define XML_ACL_ATTR_TAG PCMK_XA_OBJECT_TYPE
+
 #ifdef __cplusplus
 }
 #endif

@@ -263,7 +263,6 @@ extern "C" {
 #  define XML_ACL_TAG_READ		"read"
 #  define XML_ACL_TAG_WRITE		"write"
 #  define XML_ACL_TAG_DENY		"deny"
-#  define XML_ACL_ATTR_TAG		PCMK_XA_OBJECT_TYPE
 #  define XML_ACL_ATTR_TAGv1		"tag"
 #  define XML_ACL_ATTR_XPATH		"xpath"
 
