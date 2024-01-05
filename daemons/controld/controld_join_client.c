@@ -224,7 +224,7 @@ update_conn_host_cache(xmlNode *node, void *userdata)
 {
     const char *remote = crm_element_value(node, PCMK_XA_ID);
     const char *conn_host = crm_element_value(node, PCMK__XA_CONN_HOST);
-    const char *state = crm_element_value(node, "node_state");
+    const char *state = crm_element_value(node, PCMK__XA_NODE_STATE);
 
     crm_node_t *remote_peer = crm_remote_peer_get(remote);
 
