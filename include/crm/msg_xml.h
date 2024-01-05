@@ -88,6 +88,7 @@ extern "C" {
 #define PCMK_XE_RESOURCE_REF                "resource_ref"
 #define PCMK_XE_RESOURCES                   "resources"
 #define PCMK_XE_ROLE                        "role"
+#define PCMK_XE_RULE                        "rule"
 #define PCMK_XE_RSC_DEFAULTS                "rsc_defaults"
 #define PCMK_XE_RSC_EXPRESSION              "rsc_expression"
 #define PCMK_XE_SELECT                      "select"
@@ -221,7 +222,7 @@ extern "C" {
 
 #  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
 
-#  define XML_TAG_RULE			"rule"
+#  define XML_TAG_RULE			PCMK_XE_RULE
 
 #  define XML_TAG_EXPRESSION		"expression"
 

@@ -301,7 +301,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
          * instead of checking whether any rule is active, we set up location
          * constraints for each active rule.
          */
-        for (xmlNode *rule_xml = first_named_child(xml_obj, XML_TAG_RULE);
+        for (xmlNode *rule_xml = first_named_child(xml_obj, PCMK_XE_RULE);
              rule_xml != NULL; rule_xml = crm_next_same_xml(rule_xml)) {
             empty = false;
             crm_trace("Unpacking %s/%s", id, ID(rule_xml));
