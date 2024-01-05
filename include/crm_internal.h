@@ -60,6 +60,7 @@
 
 #define PCMK__XE_ATTRIBUTES             "attributes"
 #define PCMK__XE_NODE_STATE             "node_state"
+#define PCMK__XE_PARAM                  "param"
 #define PCMK__XE_PING_RESPONSE          "ping_response"
 
 // @COMPAT Deprecated since 2.1.7

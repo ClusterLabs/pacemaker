@@ -671,7 +671,7 @@ hash2smartfield(gpointer key, gpointer value, gpointer user_data)
     xmlNode *xml_node = user_data;
 
     if (isdigit(name[0])) {
-        xmlNode *tmp = create_xml_node(xml_node, XML_TAG_PARAM);
+        xmlNode *tmp = create_xml_node(xml_node, PCMK__XE_PARAM);
 
         crm_xml_add(tmp, PCMK_XA_NAME, name);
         crm_xml_add(tmp, PCMK_XA_VALUE, s_value);
@@ -851,7 +851,7 @@ xml2list(const xmlNode *parent)
     for (child = pcmk__xml_first_child(nvpair_list); child != NULL;
          child = pcmk__xml_next(child)) {
 
-        if (strcmp((const char *)child->name, XML_TAG_PARAM) == 0) {
+        if (strcmp((const char *) child->name, PCMK__XE_PARAM) == 0) {
             const char *key = crm_element_value(child, PCMK_XA_NAME);
             const char *value = crm_element_value(child, PCMK_XA_VALUE);
 
