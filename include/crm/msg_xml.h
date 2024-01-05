@@ -81,6 +81,7 @@ extern "C" {
 #define PCMK_XE_RSC_EXPRESSION              "rsc_expression"
 #define PCMK_XE_SELECT                      "select"
 #define PCMK_XE_SELECT_ATTRIBUTES           "select_attributes"
+#define PCMK_XE_SELECT_FENCING              "select_fencing"
 #define PCMK_XE_SHORTDESC                   "shortdesc"
 #define PCMK_XE_STATUS                      "status"
 #define PCMK_XE_VERSION                     "version"
@@ -196,7 +197,7 @@ extern "C" {
 
 /*---- CIB specific tags/attrs */
 #  define XML_CIB_TAG_SECTION_ALL	"all"
-#  define XML_CIB_TAG_ALERT_FENCING     "select_fencing"
+#  define XML_CIB_TAG_ALERT_FENCING     PCMK_XE_SELECT_FENCING
 #  define XML_CIB_TAG_ALERT_NODES       "select_nodes"
 #  define XML_CIB_TAG_ALERT_RESOURCES   "select_resources"
 #  define XML_CIB_TAG_ALERT_ATTR        "attribute"
