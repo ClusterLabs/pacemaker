@@ -318,7 +318,7 @@ allocate_ip(pe__bundle_variant_data_t *data, pcmk__bundle_replica_t *replica,
 static xmlNode *
 create_resource(const char *name, const char *provider, const char *kind)
 {
-    xmlNode *rsc = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
+    xmlNode *rsc = create_xml_node(NULL, PCMK_XE_PRIMITIVE);
 
     crm_xml_add(rsc, PCMK_XA_ID, name);
     crm_xml_add(rsc, PCMK_XA_CLASS, PCMK_RESOURCE_CLASS_OCF);
@@ -1110,7 +1110,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         }
     }
 
-    xml_obj = first_named_child(rsc->xml, "primitive");
+    xml_obj = first_named_child(rsc->xml, PCMK_XE_PRIMITIVE);
     if (xml_obj && valid_network(bundle_data)) {
         char *value = NULL;
         xmlNode *xml_set = NULL;

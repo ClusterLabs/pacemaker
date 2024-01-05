@@ -373,7 +373,7 @@ static GOptionEntry addl_entries[] = {
       "\"/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION
       "/" PCMK_XE_RESOURCES "/" XML_CIB_TAG_INCARNATION
       "[@" PCMK_XA_ID "='dummy-clone']"
-      "/" XML_CIB_TAG_RESOURCE "[@" PCMK_XA_ID "='dummy']\")",
+      "/" PCMK_XE_PRIMITIVE "[@" PCMK_XA_ID "='dummy']\")",
       NULL },
 
     { "show-access", 'S', G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK,
@@ -441,7 +441,7 @@ build_arg_context(pcmk__common_args_t *args)
                "[@" PCMK_XA_NAME "='" PCMK_META_IS_MANAGED "']\"\n\n"
            "Remove the resource named 'old':\n\n"
            "\t# cibadmin --delete --xml-text "
-               "'<" XML_CIB_TAG_RESOURCE " " PCMK_XA_ID "=\"old\"/>'\n\n"
+               "'<" PCMK_XE_PRIMITIVE " " PCMK_XA_ID "=\"old\"/>'\n\n"
            "Remove all resources from the configuration:\n\n"
            "\t# cibadmin --replace --scope " PCMK_XE_RESOURCES
                " --xml-text '<" PCMK_XE_RESOURCES "/>'\n\n"

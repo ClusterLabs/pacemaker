@@ -201,7 +201,7 @@ extern "C" {
 static inline enum pe_obj_types
 get_resource_type(const char *name)
 {
-    if (safe_str_eq(name, XML_CIB_TAG_RESOURCE)) {
+    if (safe_str_eq(name, PCMK_XE_PRIMITIVE)) {
         return pcmk_rsc_variant_primitive;
 
     } else if (safe_str_eq(name, XML_CIB_TAG_GROUP)) {
@@ -223,7 +223,7 @@ get_resource_typename(enum pe_obj_types type)
 {
     switch (type) {
         case pcmk_rsc_variant_primitive:
-            return XML_CIB_TAG_RESOURCE;
+            return PCMK_XE_PRIMITIVE;
         case pcmk_rsc_variant_group:
             return XML_CIB_TAG_GROUP;
         case pcmk_rsc_variant_clone:

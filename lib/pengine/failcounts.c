@@ -90,7 +90,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
      * Ideally, we'd unpack the operation before this point, and pass in a
      * meta-attributes table that takes all that into consideration.
      */
-    char *xpath = crm_strdup_printf("//" XML_CIB_TAG_RESOURCE
+    char *xpath = crm_strdup_printf("//" PCMK_XE_PRIMITIVE
                                     "[@" PCMK_XA_ID "='%s']"
                                     "//" PCMK_XE_OP
                                     "[@" PCMK_META_ON_FAIL "='block']",

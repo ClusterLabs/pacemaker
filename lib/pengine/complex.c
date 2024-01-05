@@ -85,7 +85,7 @@ pcmk_rsc_methods_t resource_class_functions[] = {
 static enum pe_obj_types
 get_resource_type(const char *name)
 {
-    if (pcmk__str_eq(name, XML_CIB_TAG_RESOURCE, pcmk__str_casei)) {
+    if (pcmk__str_eq(name, PCMK_XE_PRIMITIVE, pcmk__str_casei)) {
         return pcmk_rsc_variant_primitive;
 
     } else if (pcmk__str_eq(name, XML_CIB_TAG_GROUP, pcmk__str_casei)) {

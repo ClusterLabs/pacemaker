@@ -735,7 +735,8 @@ unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
         /* Check for guest nodes, which are defined by special meta-attributes
          * of a primitive of any type (for example, VirtualDomain or Xen).
          */
-        if (pcmk__str_eq((const char *)xml_obj->name, XML_CIB_TAG_RESOURCE, pcmk__str_none)) {
+        if (pcmk__str_eq((const char *) xml_obj->name, PCMK_XE_PRIMITIVE,
+                         pcmk__str_none)) {
             /* This will add an ocf:pacemaker:remote primitive to the
              * configuration for the guest node's connection, to be unpacked
              * later.
@@ -1943,7 +1944,7 @@ create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
                      pcmk_scheduler_t *scheduler)
 {
     pcmk_resource_t *rsc = NULL;
-    xmlNode *xml_rsc = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
+    xmlNode *xml_rsc = create_xml_node(NULL, PCMK_XE_PRIMITIVE);
 
     copy_in_properties(xml_rsc, rsc_entry);
     crm_xml_add(xml_rsc, PCMK_XA_ID, rsc_id);

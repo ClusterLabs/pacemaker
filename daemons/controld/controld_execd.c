@@ -1101,7 +1101,7 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, const xmlNode *action,
     lrmd_event_data_t *op = NULL;
     const char *operation = crm_element_value(action, PCMK_XA_OPERATION);
     const char *target_node = crm_element_value(action, PCMK__META_ON_NODE);
-    xmlNode *xml_rsc = find_xml_node(action, XML_CIB_TAG_RESOURCE, TRUE);
+    xmlNode *xml_rsc = find_xml_node(action, PCMK_XE_PRIMITIVE, TRUE);
 
     if ((xml_rsc == NULL) || (ID(xml_rsc) == NULL)) {
         /* @TODO Should we do something else, like direct ack? */
@@ -1163,7 +1163,7 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
 {
     lrmd_event_data_t *op = NULL;
     lrmd_rsc_info_t *rsc = NULL;
-    xmlNode *xml_rsc = find_xml_node(xml, XML_CIB_TAG_RESOURCE, TRUE);
+    xmlNode *xml_rsc = find_xml_node(xml, PCMK_XE_PRIMITIVE, TRUE);
 
     CRM_CHECK(xml_rsc != NULL, return);
 
@@ -1491,7 +1491,7 @@ do_lrm_invoke(long long action,
 
     } else if (operation != NULL) {
         lrmd_rsc_info_t *rsc = NULL;
-        xmlNode *xml_rsc = find_xml_node(input->xml, XML_CIB_TAG_RESOURCE, TRUE);
+        xmlNode *xml_rsc = find_xml_node(input->xml, PCMK_XE_PRIMITIVE, TRUE);
         gboolean create_rsc = !pcmk__str_eq(operation, PCMK_ACTION_DELETE,
                                             pcmk__str_none);
         int rc;
@@ -1659,7 +1659,7 @@ construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
 
     /* Use pcmk_monitor_timeout instead of meta timeout for stonith
        recurring monitor, if set */
-    primitive = find_xml_node(rsc_op, XML_CIB_TAG_RESOURCE, FALSE);
+    primitive = find_xml_node(rsc_op, PCMK_XE_PRIMITIVE, FALSE);
     class = crm_element_value(primitive, PCMK_XA_CLASS);
 
     if (pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_fence_params)
@@ -2255,7 +2255,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
         rsc = lrm_state_get_rsc_info(lrm_state, op->rsc_id, 0);
     }
     if ((rsc == NULL) && action_xml) {
-        xmlNode *xml = find_xml_node(action_xml, XML_CIB_TAG_RESOURCE, TRUE);
+        xmlNode *xml = find_xml_node(action_xml, PCMK_XE_PRIMITIVE, TRUE);
 
         const char *standard = crm_element_value(xml, PCMK_XA_CLASS);
         const char *provider = crm_element_value(xml, PCMK_XA_PROVIDER);

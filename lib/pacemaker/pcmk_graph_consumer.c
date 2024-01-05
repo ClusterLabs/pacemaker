@@ -850,7 +850,7 @@ pcmk__event_from_graph_action(const xmlNode *resource,
     CRM_CHECK(action != NULL, return NULL);
     CRM_CHECK(action->type == pcmk__rsc_graph_action, return NULL);
 
-    action_resource = first_named_child(action->xml, XML_CIB_TAG_RESOURCE);
+    action_resource = first_named_child(action->xml, PCMK_XE_PRIMITIVE);
     CRM_CHECK(action_resource != NULL, crm_log_xml_warn(action->xml, "invalid");
                                        return NULL);
 

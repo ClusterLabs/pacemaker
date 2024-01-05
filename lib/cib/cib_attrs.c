@@ -568,7 +568,7 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
             parsed_is_remote = FALSE;
         }
 
-    } else if (pcmk__str_eq(tag, XML_CIB_TAG_RESOURCE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(tag, PCMK_XE_PRIMITIVE, pcmk__str_casei)) {
         /* Result is <primitive> for ocf:pacemaker:remote resource */
 
         parsed_uuid = ID(result);
@@ -616,10 +616,10 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
     "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_NODES \
         "/" PCMK_XE_NODE "[translate(@" PCMK_XA_UNAME ",'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']" \
     "|/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_RESOURCES \
-        "/" XML_CIB_TAG_RESOURCE \
+        "/" PCMK_XE_PRIMITIVE \
         "[@class='ocf'][@provider='pacemaker'][@type='remote'][translate(@id,'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']" \
     "|/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_RESOURCES \
-        "/" XML_CIB_TAG_RESOURCE "/" PCMK_XE_META_ATTRIBUTES "/" PCMK_XE_NVPAIR \
+        "/" PCMK_XE_PRIMITIVE "/" PCMK_XE_META_ATTRIBUTES "/" PCMK_XE_NVPAIR \
         "[@name='" PCMK_META_REMOTE_NODE "'][translate(@value,'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']" \
     "|/" PCMK_XE_CIB "/" PCMK_XE_STATUS "/" PCMK__XE_NODE_STATE \
         "[@" XML_NODE_IS_REMOTE "='true'][translate(@" PCMK_XA_ID ",'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']"

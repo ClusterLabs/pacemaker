@@ -167,7 +167,7 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
     xmlNode *remote;
     xmlNode *xml_sub;
 
-    remote = create_xml_node(parent, XML_CIB_TAG_RESOURCE);
+    remote = create_xml_node(parent, PCMK_XE_PRIMITIVE);
 
     // Add identity
     crm_xml_add(remote, PCMK_XA_ID, uname);

@@ -281,7 +281,7 @@ update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
     xpath_obj = xpath_search(msg,
                              "//" F_CIB_UPDATE_RESULT
                              "//" PCMK__XE_DIFF_REMOVED
-                             "//" XML_CIB_TAG_RESOURCE);
+                             "//" PCMK_XE_PRIMITIVE);
     if (numXpathResults(xpath_obj) > 0) {
         remove_cib_device(xpath_obj);
     }
@@ -291,7 +291,7 @@ update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
     xpath_obj = xpath_search(msg,
                              "//" F_CIB_UPDATE_RESULT
                              "//" PCMK__XE_DIFF_ADDED
-                             "//" XML_CIB_TAG_RESOURCE);
+                             "//" PCMK_XE_PRIMITIVE);
     if (numXpathResults(xpath_obj) > 0) {
         int max = numXpathResults(xpath_obj), lpc = 0;
 
@@ -337,7 +337,8 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
         if (pcmk__str_eq(op, "move", pcmk__str_null_matches)
             || (strstr(xpath, "/" PCMK_XE_STATUS) != NULL)) {
             continue;
-        } else if (pcmk__str_eq(op, "delete", pcmk__str_casei) && strstr(xpath, "/"XML_CIB_TAG_RESOURCE)) {
+        } else if (pcmk__str_eq(op, "delete", pcmk__str_casei)
+                   && (strstr(xpath, "/" PCMK_XE_PRIMITIVE) != NULL)) {
             const char *rsc_id = NULL;
             char *search = NULL;
             char *mutable = NULL;

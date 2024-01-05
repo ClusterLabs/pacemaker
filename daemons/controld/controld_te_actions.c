@@ -265,7 +265,7 @@ controld_record_action_event(pcmk__graph_action_t *action,
 
     int target_rc = get_target_rc(action);
 
-    action_rsc = find_xml_node(action->xml, XML_CIB_TAG_RESOURCE, TRUE);
+    action_rsc = find_xml_node(action->xml, PCMK_XE_PRIMITIVE, TRUE);
     if (action_rsc == NULL) {
         return;
     }

@@ -508,7 +508,7 @@ controller_resource_op(pcmk_ipc_api_t *api, const char *op,
         crm_xml_add(msg_data, PCMK__XA_MODE, PCMK__VALUE_CIB);
     }
 
-    xml_rsc = create_xml_node(msg_data, XML_CIB_TAG_RESOURCE);
+    xml_rsc = create_xml_node(msg_data, PCMK_XE_PRIMITIVE);
     crm_xml_add(xml_rsc, PCMK_XA_ID, rsc_id);
     crm_xml_add(xml_rsc, PCMK__XA_LONG_ID, rsc_long_id);
     crm_xml_add(xml_rsc, PCMK_XA_CLASS, standard);
