@@ -751,6 +751,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_SELECT instead
 #define XML_CIB_TAG_ALERT_SELECT PCMK_XE_SELECT
 
+//! \deprecated Use \c PCMK_XE_SELECT_ATTRIBUTES instead
+#define XML_CIB_TAG_ALERT_ATTRIBUTES PCMK_XE_SELECT_ATTRIBUTES
+
 #ifdef __cplusplus
 }
 #endif
