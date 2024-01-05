@@ -207,7 +207,6 @@ extern "C" {
 /*---- CIB specific tags/attrs */
 #  define XML_CIB_TAG_SECTION_ALL	"all"
 
-#  define XML_TAG_PARAM			"param"
 #  define XML_TAG_UTILIZATION		"utilization"
 
 #  define XML_TAG_RESOURCE_REF		"resource_ref"
