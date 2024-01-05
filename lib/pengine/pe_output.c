@@ -692,7 +692,7 @@ ban_xml(pcmk__output_t *out, va_list args) {
     pcmk__output_create_xml_node(out, "ban",
                                  PCMK_XA_ID, location->id,
                                  "resource", location->rsc->id,
-                                 "node", pe_node->details->uname,
+                                 PCMK_XA_NODE, pe_node->details->uname,
                                  "weight", weight_s,
                                  "promoted-only", promoted_only,
                                  /* This is a deprecated alias for
@@ -1525,7 +1525,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     }
     node = pcmk__output_create_xml_node(out, "failure",
                                         op_key_name, op_key,
-                                        "node", uname,
+                                        PCMK_XA_NODE, uname,
                                         "exitstatus", services_ocf_exitcode_str(rc),
                                         "exitreason", pcmk__s(reason_s, ""),
                                         "exitcode", rc_s,
@@ -2107,7 +2107,7 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
                        &status, PCMK_EXEC_UNKNOWN);
     node = pcmk__output_create_xml_node(out, PCMK_XE_OPERATION,
                                         PCMK_XA_OP, pcmk__xe_history_key(xml_op),
-                                        "node", uname,
+                                        PCMK_XA_NODE, uname,
                                         "call", call_id,
                                         "rc", rc_s,
                                         "status", pcmk_exec_status_str(status),
@@ -2258,10 +2258,11 @@ static int
 node_capacity_xml(pcmk__output_t *out, va_list args)
 {
     const pcmk_node_t *node = va_arg(args, pcmk_node_t *);
+    const char *uname = node->details->uname;
     const char *comment = va_arg(args, const char *);
 
     xmlNodePtr xml_node = pcmk__output_create_xml_node(out, "capacity",
-                                                       "node", node->details->uname,
+                                                       PCMK_XA_NODE, uname,
                                                        "comment", comment,
                                                        NULL);
     g_hash_table_foreach(node->details->utilization, add_dump_node, xml_node);
@@ -2596,7 +2597,7 @@ node_weight_xml(pcmk__output_t *out, va_list args)
 
     xmlNodePtr node = pcmk__output_create_xml_node(out, "node_weight",
                                                    "function", prefix,
-                                                   "node", uname,
+                                                   PCMK_XA_NODE, uname,
                                                    PCMK_XA_SCORE, score,
                                                    NULL);
 
@@ -2709,7 +2710,7 @@ promotion_score_xml(pcmk__output_t *out, va_list args)
                                                    NULL);
 
     if (chosen) {
-        crm_xml_add(node, "node", chosen->details->uname);
+        crm_xml_add(node, PCMK_XA_NODE, chosen->details->uname);
     }
 
     return pcmk_rc_ok;
@@ -3018,11 +3019,12 @@ resource_util_xml(pcmk__output_t *out, va_list args)
 {
     pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     pcmk_node_t *node = va_arg(args, pcmk_node_t *);
+    const char *uname = node->details->uname;
     const char *fn = va_arg(args, const char *);
 
     xmlNodePtr xml_node = pcmk__output_create_xml_node(out, "utilization",
                                                        "resource", rsc->id,
-                                                       "node", node->details->uname,
+                                                       PCMK_XA_NODE, uname,
                                                        "function", fn,
                                                        NULL);
     g_hash_table_foreach(rsc->utilization, add_dump_node, xml_node);

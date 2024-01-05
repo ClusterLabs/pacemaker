@@ -124,6 +124,7 @@ extern "C" {
 #define PCMK_XA_LOSS_POLICY                 "loss-policy"
 #define PCMK_XA_NAME                        "name"
 #define PCMK_XA_NO_QUORUM_PANIC             "no-quorum-panic"
+#define PCMK_XA_NODE                        "node"
 #define PCMK_XA_NODE_ATTRIBUTE              "node-attribute"
 #define PCMK_XA_NUM_UPDATES                 "num_updates"
 #define PCMK_XA_OBJECT_TYPE                 "object-type"
