@@ -127,6 +127,7 @@ extern "C" {
 #define PCMK_XA_TARGET_PATTERN              "target-pattern"
 #define PCMK_XA_TARGET_VALUE                "target-value"
 #define PCMK_XA_THEN                        "then"
+#define PCMK_XA_THEN_ACTION                 "then-action"
 #define PCMK_XA_TYPE                        "type"
 #define PCMK_XA_UNAME                       "uname"
 #define PCMK_XA_UPDATE_CLIENT               "update-client"
@@ -243,7 +244,7 @@ extern "C" {
 #  define XML_CONS_TAG_RSC_TICKET	"rsc_ticket"
 #  define XML_CONS_TAG_RSC_SET		"resource_set"
 
-#  define XML_ORDER_ATTR_THEN_ACTION	"then-action"
+#  define XML_ORDER_ATTR_THEN_ACTION	PCMK_XA_THEN_ACTION
 #  define XML_ORDER_ATTR_KIND		"kind"
 
 #  define XML_TICKET_ATTR_TICKET	"ticket"

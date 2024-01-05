@@ -464,7 +464,7 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         action_first = PCMK_ACTION_START;
     }
 
-    action_then = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN_ACTION);
+    action_then = crm_element_value(xml_obj, PCMK_XA_THEN_ACTION);
     if (action_then == NULL) {
         action_then = action_first;
     }
@@ -945,7 +945,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     }
 
     action_first = crm_element_value(xml_obj, PCMK_XA_FIRST_ACTION);
-    action_then = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN_ACTION);
+    action_then = crm_element_value(xml_obj, PCMK_XA_THEN_ACTION);
 
     *expanded_xml = copy_xml(xml_obj);
 
@@ -980,9 +980,9 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     if (rsc_set_then != NULL) {
         if (action_then != NULL) {
-            // Move "then-action" into converted resource_set as "action"
+            // Move PCMK_XA_THEN_ACTION into converted resource_set as "action"
             crm_xml_add(rsc_set_then, "action", action_then);
-            xml_remove_prop(*expanded_xml, XML_ORDER_ATTR_THEN_ACTION);
+            xml_remove_prop(*expanded_xml, PCMK_XA_THEN_ACTION);
         }
         any_sets = true;
     }
