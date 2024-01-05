@@ -1840,7 +1840,7 @@ handle_rsc_op(xmlNode *xml, void *userdata)
 
     node = crm_element_value(rsc_op, PCMK__META_ON_NODE);
 
-    while ((n != NULL) && !pcmk__xe_is(n, XML_CIB_TAG_STATE)) {
+    while ((n != NULL) && !pcmk__xe_is(n, PCMK__XE_NODE_STATE)) {
         n = n->parent;
     }
 
@@ -1964,7 +1964,7 @@ crm_diff_update_v2(const char *event, xmlNode * msg)
         } else if (strcmp(name, PCMK_XE_STATUS) == 0) {
             pcmk__xe_foreach_child(match, NULL, handle_op_for_node, NULL);
 
-        } else if(strcmp(name, XML_CIB_TAG_STATE) == 0) {
+        } else if (strcmp(name, PCMK__XE_NODE_STATE) == 0) {
             node = crm_element_value(match, PCMK_XA_UNAME);
             if (node == NULL) {
                 node = ID(match);

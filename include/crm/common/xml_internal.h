@@ -184,8 +184,8 @@ int pcmk__xml_show_changes(pcmk__output_t *out, const xmlNode *xml);
     "[@type='remote'][@provider='pacemaker']"
 
 /* search string to find CIB node status entries for pacemaker_remote nodes */
-#define PCMK__XP_REMOTE_NODE_STATUS                             \
-    "//" PCMK_XE_CIB "//" PCMK_XE_STATUS "//" XML_CIB_TAG_STATE \
+#define PCMK__XP_REMOTE_NODE_STATUS                                 \
+    "//" PCMK_XE_CIB "//" PCMK_XE_STATUS "//" PCMK__XE_NODE_STATE   \
     "[@" XML_NODE_IS_REMOTE "='true']"
 /*!
  * \internal

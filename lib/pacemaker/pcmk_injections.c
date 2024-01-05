@@ -34,8 +34,8 @@
 bool pcmk__simulate_node_config = false;
 
 #define XPATH_NODE_CONFIG   "//" XML_CIB_TAG_NODE "[@" PCMK_XA_UNAME "='%s']"
-#define XPATH_NODE_STATE    "//" XML_CIB_TAG_STATE "[@" PCMK_XA_UNAME "='%s']"
-#define XPATH_NODE_STATE_BY_ID "//" XML_CIB_TAG_STATE "[@" PCMK_XA_ID "='%s']"
+#define XPATH_NODE_STATE    "//" PCMK__XE_NODE_STATE "[@" PCMK_XA_UNAME "='%s']"
+#define XPATH_NODE_STATE_BY_ID "//" PCMK__XE_NODE_STATE "[@" PCMK_XA_ID "='%s']"
 #define XPATH_RSC_HISTORY   XPATH_NODE_STATE \
                             "//" XML_LRM_TAG_RESOURCE "[@" PCMK_XA_ID "='%s']"
 
@@ -45,7 +45,7 @@ bool pcmk__simulate_node_config = false;
  * \brief Inject a fictitious transient node attribute into scheduler input
  *
  * \param[in,out] out       Output object for displaying error messages
- * \param[in,out] cib_node  node_state XML to inject attribute into
+ * \param[in,out] cib_node  \c PCMK__XE_NODE_STATE XML to inject attribute into
  * \param[in]     name      Transient node attribute name to inject
  * \param[in]     value     Transient node attribute value to inject
  */
@@ -214,7 +214,7 @@ pcmk__inject_action_result(xmlNode *cib_resource, lrmd_event_data_t *op,
  * \param[in]     node      Name of node to inject
  * \param[in]     uuid      UUID of node to inject
  *
- * \return XML of node_state entry for new node
+ * \return XML of \c PCMK__XE_NODE_STATE entry for new node
  * \note If the global pcmk__simulate_node_config has been set to true, a
  *       node entry in the configuration section will be added, as well as a
  *       node state entry in the status section.
@@ -236,7 +236,8 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
                                cib_xpath|cib_sync_call|cib_scope_local);
 
     if ((cib_object != NULL) && (ID(cib_object) == NULL)) {
-        crm_err("Detected multiple node_state entries for xpath=%s, bailing",
+        crm_err("Detected multiple " PCMK__XE_NODE_STATE " entries for "
+                "xpath=%s, bailing",
                 xpath);
         duplicate = true;
         goto done;
@@ -253,7 +254,9 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
             char *xpath_by_uuid = crm_strdup_printf(XPATH_NODE_STATE_BY_ID,
                                                     found_uuid);
 
-            // It's possible that a node_state entry doesn't have an uname yet.
+            /* It's possible that a PCMK__XE_NODE_STATE entry doesn't have a
+             * PCMK_XA_UNAME yet
+             */
             rc = cib_conn->cmds->query(cib_conn, xpath_by_uuid, &cib_object,
                                        cib_xpath|cib_sync_call|cib_scope_local);
 
@@ -277,7 +280,7 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
     }
 
     if (rc == -ENXIO) {
-        cib_object = create_xml_node(NULL, XML_CIB_TAG_STATE);
+        cib_object = create_xml_node(NULL, PCMK__XE_NODE_STATE);
         crm_xml_add(cib_object, PCMK_XA_ID, found_uuid);
         crm_xml_add(cib_object, PCMK_XA_UNAME, node);
         cib_conn->cmds->create(cib_conn, PCMK_XE_STATUS, cib_object,
@@ -692,14 +695,18 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
         CRM_ASSERT(rc == pcmk_ok);
         free_xml(cib_node);
 
-        xpath = crm_strdup_printf("//node_state[@uname='%s']/%s",
-                                  node, XML_CIB_TAG_LRM);
+        xpath = crm_strdup_printf("//" PCMK__XE_NODE_STATE
+                                  "[@" PCMK_XA_UNAME "='%s']"
+                                  "/" XML_CIB_TAG_LRM,
+                                  node);
         cib->cmds->remove(cib, xpath, NULL,
                           cib_xpath|cib_sync_call|cib_scope_local);
         free(xpath);
 
-        xpath = crm_strdup_printf("//node_state[@uname='%s']/%s",
-                                  node, XML_TAG_TRANSIENT_NODEATTRS);
+        xpath = crm_strdup_printf("//" PCMK__XE_NODE_STATE
+                                  "[@" PCMK_XA_UNAME "='%s']"
+                                  "/" XML_TAG_TRANSIENT_NODEATTRS,
+                                  node);
         cib->cmds->remove(cib, xpath, NULL,
                           cib_xpath|cib_sync_call|cib_scope_local);
         free(xpath);

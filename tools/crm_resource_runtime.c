@@ -1904,8 +1904,10 @@ wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
         }
 
         search = xpath_search(scheduler->input,
-                              "/cib/status/node_state/lrm/lrm_resources"
-                              "/lrm_resource/" XML_LRM_TAG_RSC_OP
+                              "/" PCMK_XE_CIB "/" PCMK_XE_STATUS
+                              "/" PCMK__XE_NODE_STATE "/" XML_CIB_TAG_LRM
+                              "/" XML_LRM_TAG_RESOURCES "/" XML_LRM_TAG_RESOURCE
+                              "/" XML_LRM_TAG_RSC_OP
                               "[@" PCMK__XA_RC_CODE "='193']");
         pending_unknown_state_resources = (numXpathResults(search) > 0);
         freeXpathObject(search);

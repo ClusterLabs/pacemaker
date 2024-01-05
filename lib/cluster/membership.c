@@ -196,8 +196,8 @@ crm_remote_peer_cache_remove(const char *node_name)
  *
  * \param[in] node_state  XML of node state
  *
- * \return CRM_NODE_LOST if PCMK__XA_IN_CCM is false in node_state,
- *         CRM_NODE_MEMBER otherwise
+ * \return \c CRM_NODE_LOST if \c PCMK__XA_IN_CCM is false in
+ *         \c PCMK__XE_NODE_STATE, \c CRM_NODE_MEMBER otherwise
  * \note Unlike most boolean XML attributes, this one defaults to true, for
  *       backward compatibility with older controllers that don't set it.
  */

@@ -275,11 +275,10 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
     }
 }
 
-// Searches for various portions of node_state to delete
+// Searches for various portions of PCMK__XE_NODE_STATE to delete
 
-// Match a particular node's node_state (takes node name 1x)
-#define XPATH_NODE_STATE        "//" XML_CIB_TAG_STATE  \
-                                "[@" PCMK_XA_UNAME "='%s']"
+// Match a particular node's PCMK__XE_NODE_STATE (takes node name 1x)
+#define XPATH_NODE_STATE "//" PCMK__XE_NODE_STATE "[@" PCMK_XA_UNAME "='%s']"
 
 // Node's lrm section (name 1x)
 #define XPATH_NODE_LRM          XPATH_NODE_STATE "/" XML_CIB_TAG_LRM
@@ -296,7 +295,7 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
 // Node's transient_attributes section (name 1x)
 #define XPATH_NODE_ATTRS        XPATH_NODE_STATE "/" XML_TAG_TRANSIENT_NODEATTRS
 
-// Everything under node_state (name 1x)
+// Everything under PCMK__XE_NODE_STATE (name 1x)
 #define XPATH_NODE_ALL          XPATH_NODE_STATE "/*"
 
 /* Unlocked history + transient attributes
@@ -309,7 +308,7 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
  * \brief Get the XPath and description of a node state section to be deleted
  *
  * \param[in]  uname    Desired node
- * \param[in]  section  Subsection of node_state to be deleted
+ * \param[in]  section  Subsection of \c PCMK__XE_NODE_STATE to be deleted
  * \param[out] xpath    Where to store XPath of \p section
  * \param[out] desc     If not \c NULL, where to store description of \p section
  */
@@ -360,10 +359,10 @@ controld_node_state_deletion_strings(const char *uname,
 
 /*!
  * \internal
- * \brief Delete subsection of a node's CIB node_state
+ * \brief Delete subsection of a node's CIB \c PCMK__XE_NODE_STATE
  *
  * \param[in] uname    Desired node
- * \param[in] section  Subsection of node_state to delete
+ * \param[in] section  Subsection of \c PCMK__XE_NODE_STATE to delete
  * \param[in] options  CIB call options to use
  */
 void
@@ -391,7 +390,7 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
 }
 
 // Takes node name and resource ID
-#define XPATH_RESOURCE_HISTORY "//" XML_CIB_TAG_STATE                       \
+#define XPATH_RESOURCE_HISTORY "//" PCMK__XE_NODE_STATE                     \
                                "[@" PCMK_XA_UNAME "='%s']/"                 \
                                XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES    \
                                "/" XML_LRM_TAG_RESOURCE                     \
@@ -896,7 +895,7 @@ controld_update_resource_history(const char *node_name,
     update = create_xml_node(NULL, PCMK_XE_STATUS);
 
     //   <node_state ...>
-    xml = create_xml_node(update, XML_CIB_TAG_STATE);
+    xml = create_xml_node(update, PCMK__XE_NODE_STATE);
     if (pcmk__str_eq(node_name, controld_globals.our_nodename,
                      pcmk__str_casei)) {
         node_id = controld_globals.our_uuid;
@@ -989,7 +988,7 @@ controld_delete_action_history(const lrmd_event_data_t *op)
 /* Define xpath to find LRM resource history entry by node and resource */
 #define XPATH_HISTORY                                   \
     "/" PCMK_XE_CIB "/" PCMK_XE_STATUS                  \
-    "/" XML_CIB_TAG_STATE "[@" PCMK_XA_UNAME "='%s']"   \
+    "/" PCMK__XE_NODE_STATE "[@" PCMK_XA_UNAME "='%s']" \
     "/" XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES       \
     "/" XML_LRM_TAG_RESOURCE "[@" PCMK_XA_ID "='%s']"   \
     "/" XML_LRM_TAG_RSC_OP

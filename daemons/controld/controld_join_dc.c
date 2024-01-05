@@ -913,7 +913,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
                 remote = create_xml_node(remotes, XML_CIB_TAG_NODE);
                 pcmk__xe_set_props(remote,
                                    PCMK_XA_ID, node->uname,
-                                   XML_CIB_TAG_STATE, node->state,
+                                   "node_state", node->state,
                                    PCMK__XA_CONN_HOST, node->conn_host,
                                    NULL);
             }

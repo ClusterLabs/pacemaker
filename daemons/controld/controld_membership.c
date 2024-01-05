@@ -132,7 +132,7 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
        return NULL;
     }
 
-    node_state = create_xml_node(parent, XML_CIB_TAG_STATE);
+    node_state = create_xml_node(parent, PCMK__XE_NODE_STATE);
 
     if (pcmk_is_set(node->flags, crm_remote_node)) {
         pcmk__xe_set_bool_attr(node_state, XML_NODE_IS_REMOTE, true);
@@ -272,7 +272,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
             fsa_register_cib_callback(delete_call_id, strdup(node_uuid),
                                       remove_conflicting_node_callback);
 
-            node_state_xml = create_xml_node(NULL, XML_CIB_TAG_STATE);
+            node_state_xml = create_xml_node(NULL, PCMK__XE_NODE_STATE);
             crm_xml_add(node_state_xml, PCMK_XA_ID, node_uuid);
             crm_xml_add(node_state_xml, PCMK_XA_UNAME, node_uname);
 

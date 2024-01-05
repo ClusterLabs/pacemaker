@@ -829,7 +829,7 @@ get_node_id(xmlNode *lrm_rsc_op)
 {
     xmlNode *node = lrm_rsc_op;
 
-    while ((node != NULL) && !pcmk__xe_is(node, XML_CIB_TAG_STATE)) {
+    while ((node != NULL) && !pcmk__xe_is(node, PCMK__XE_NODE_STATE)) {
         node = node->parent;
     }
 

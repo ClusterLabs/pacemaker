@@ -283,7 +283,7 @@ controld_record_action_event(pcmk__graph_action_t *action,
           <lrm_resource id="rsc2" last_op="start" op_code="0" target="hadev"/>
 */
 
-    state = create_xml_node(NULL, XML_CIB_TAG_STATE);
+    state = create_xml_node(NULL, PCMK__XE_NODE_STATE);
 
     crm_xml_add(state, PCMK_XA_ID, target_uuid);
     crm_xml_add(state, PCMK_XA_UNAME, target);

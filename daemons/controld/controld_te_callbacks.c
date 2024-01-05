@@ -275,12 +275,12 @@ static char *extract_node_uuid(const char *xpath)
     char *search = NULL;
     char *match = NULL;
 
-    match = strstr(mutable_path, "node_state[@" PCMK_XA_ID "=\'");
+    match = strstr(mutable_path, PCMK__XE_NODE_STATE "[@" PCMK_XA_ID "=\'");
     if (match == NULL) {
         free(mutable_path);
         return NULL;
     }
-    match += strlen("node_state[@" PCMK_XA_ID "=\'");
+    match += strlen(PCMK__XE_NODE_STATE "[@" PCMK_XA_ID "=\'");
 
     search = strchr(match, '\'');
     if (search == NULL) {
@@ -362,7 +362,7 @@ process_delete_diff(const char *xpath, const char *op, xmlNode *change)
     } else if (strstr(xpath, "/" XML_CIB_TAG_LRM "[")) {
         abort_unless_down(xpath, op, change, "Resource state removal");
 
-    } else if (strstr(xpath, "/" XML_CIB_TAG_STATE "[")) {
+    } else if (strstr(xpath, "/" PCMK__XE_NODE_STATE "[")) {
         abort_unless_down(xpath, op, change, "Node state removal");
 
     } else {
@@ -497,7 +497,7 @@ te_update_diff_v2(xmlNode *diff)
         } else if (strcmp(name, PCMK_XE_STATUS) == 0) {
             process_status_diff(match, change, op, xpath);
 
-        } else if (strcmp(name, XML_CIB_TAG_STATE) == 0) {
+        } else if (strcmp(name, PCMK__XE_NODE_STATE) == 0) {
             process_node_state_diff(match, change, op, xpath);
 
         } else if (strcmp(name, XML_CIB_TAG_LRM) == 0) {

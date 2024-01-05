@@ -596,7 +596,7 @@ purge_node_from_cib(const char *node_name, long node_id)
     rc = remove_from_section(cib, XML_CIB_TAG_NODE, PCMK_XE_NODES, node_name,
                              node_id);
     if (rc == pcmk_rc_ok) {
-        rc = remove_from_section(cib, XML_CIB_TAG_STATE, PCMK_XE_STATUS,
+        rc = remove_from_section(cib, PCMK__XE_NODE_STATE, PCMK_XE_STATUS,
                                  node_name, node_id);
     }
 
