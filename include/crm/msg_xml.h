@@ -91,6 +91,7 @@ extern "C" {
 #define PCMK_XA_EXEC_TIME                   "exec-time"
 #define PCMK_XA_EXIT_REASON                 "exit-reason"
 #define PCMK_XA_FIRST                       "first"
+#define PCMK_XA_FIRST_ACTION                "first-action"
 #define PCMK_XA_FORMAT                      "format"
 #define PCMK_XA_HAVE_QUORUM                 "have-quorum"
 #define PCMK_XA_ID                          "id"
@@ -242,7 +243,7 @@ extern "C" {
 #  define XML_CONS_TAG_RSC_TICKET	"rsc_ticket"
 #  define XML_CONS_TAG_RSC_SET		"resource_set"
 
-#  define XML_ORDER_ATTR_FIRST_ACTION	"first-action"
+#  define XML_ORDER_ATTR_FIRST_ACTION	PCMK_XA_FIRST_ACTION
 #  define XML_ORDER_ATTR_THEN_ACTION	"then-action"
 #  define XML_ORDER_ATTR_KIND		"kind"
 
