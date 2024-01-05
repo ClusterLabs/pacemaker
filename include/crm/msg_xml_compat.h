@@ -634,6 +634,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_ATTRIBUTE instead
 #define XML_ACL_ATTR_ATTRIBUTE PCMK_XA_ATTRIBUTE
 
+//! \deprecated Use \c PCMK_XA_VALUE_SOURCE instead
+#define XML_EXPR_ATTR_VALUE_SOURCE PCMK_XA_VALUE_SOURCE
+
 #ifdef __cplusplus
 }
 #endif
