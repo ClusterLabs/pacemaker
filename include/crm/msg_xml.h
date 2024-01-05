@@ -225,7 +225,6 @@ extern "C" {
 
 #  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
 
-#  define XML_CONS_TAG_RSC_ORDER	PCMK_XE_RSC_ORDER
 #  define XML_CONS_TAG_RSC_LOCATION	"rsc_location"
 #  define XML_CONS_TAG_RSC_TICKET	"rsc_ticket"
 #  define XML_CONS_TAG_RSC_SET		"resource_set"

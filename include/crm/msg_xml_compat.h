@@ -850,6 +850,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_RSC_COLOCATION instead
 #define XML_CONS_TAG_RSC_DEPEND PCMK_XE_RSC_COLOCATION
 
+//! \deprecated Use \c PCMK_XE_RSC_ORDER instead
+#define XML_CONS_TAG_RSC_ORDER PCMK_XE_RSC_ORDER
+
 #ifdef __cplusplus
 }
 #endif
