@@ -675,7 +675,7 @@ attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
     if (pcmk__str_any_of(option_name, "-m", "--meta", NULL)) {
         options.attr_set_type = PCMK_XE_META_ATTRIBUTES;
     } else if (pcmk__str_any_of(option_name, "-z", "--utilization", NULL)) {
-        options.attr_set_type = XML_TAG_UTILIZATION;
+        options.attr_set_type = PCMK_XE_UTILIZATION;
     } else if (pcmk__str_eq(option_name, "--element", pcmk__str_casei)) {
         options.attr_set_type = ATTR_SET_ELEMENT;
     }
@@ -1931,8 +1931,8 @@ main(int argc, char **argv)
 
             } else {
                 params = pcmk__strkey_table(free, free);
-                pe__unpack_dataset_nvpairs(rsc->xml, XML_TAG_UTILIZATION, NULL, params,
-                                           NULL, FALSE, scheduler);
+                pe__unpack_dataset_nvpairs(rsc->xml, PCMK_XE_UTILIZATION, NULL,
+                                           params, NULL, FALSE, scheduler);
 
                 value = g_hash_table_lookup(params, options.prop_name);
             }

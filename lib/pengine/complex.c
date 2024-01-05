@@ -921,7 +921,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     (*rsc)->utilization = pcmk__strkey_table(free, free);
 
-    pe__unpack_dataset_nvpairs((*rsc)->xml, XML_TAG_UTILIZATION, &rule_data,
+    pe__unpack_dataset_nvpairs((*rsc)->xml, PCMK_XE_UTILIZATION, &rule_data,
                                (*rsc)->utilization, NULL, FALSE, scheduler);
 
     if (expanded_xml) {

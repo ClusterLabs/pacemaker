@@ -3022,7 +3022,7 @@ resource_util_xml(pcmk__output_t *out, va_list args)
     const char *uname = node->details->uname;
     const char *fn = va_arg(args, const char *);
 
-    xmlNodePtr xml_node = pcmk__output_create_xml_node(out, "utilization",
+    xmlNodePtr xml_node = pcmk__output_create_xml_node(out, PCMK_XE_UTILIZATION,
                                                        "resource", rsc->id,
                                                        PCMK_XA_NODE, uname,
                                                        "function", fn,

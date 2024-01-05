@@ -4980,7 +4980,7 @@ add_node_attrs(const xmlNode *xml_obj, pcmk_node_t *node, bool overwrite,
                                node->details->attrs, NULL, overwrite,
                                scheduler);
 
-    pe__unpack_dataset_nvpairs(xml_obj, XML_TAG_UTILIZATION, &rule_data,
+    pe__unpack_dataset_nvpairs(xml_obj, PCMK_XE_UTILIZATION, &rule_data,
                                node->details->utilization, NULL,
                                FALSE, scheduler);
 

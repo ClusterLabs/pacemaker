@@ -148,7 +148,7 @@ utilization_cb(const gchar *option_name, const gchar *optarg, gpointer data, GEr
     }
 
     options.type = g_strdup(PCMK_XE_NODES);
-    pcmk__str_update(&options.set_type, XML_TAG_UTILIZATION);
+    pcmk__str_update(&options.set_type, PCMK_XE_UTILIZATION);
     return TRUE;
 }
 
@@ -828,7 +828,7 @@ main(int argc, char **argv)
         options.attr_options |= pcmk__node_attr_remote;
     }
 
-    if (pcmk__str_eq(options.set_type, XML_TAG_UTILIZATION, pcmk__str_none)) {
+    if (pcmk__str_eq(options.set_type, PCMK_XE_UTILIZATION, pcmk__str_none)) {
         options.attr_options |= pcmk__node_attr_utilization;
     }
 

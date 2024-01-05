@@ -350,7 +350,7 @@ populate_update_op(xmlNode *op, const char *node, const char *name, const char *
     }
 
     if (pcmk_is_set(options, pcmk__node_attr_utilization)) {
-        crm_xml_add(op, PCMK__XA_ATTR_SET_TYPE, XML_TAG_UTILIZATION);
+        crm_xml_add(op, PCMK__XA_ATTR_SET_TYPE, PCMK_XE_UTILIZATION);
     } else {
         crm_xml_add(op, PCMK__XA_ATTR_SET_TYPE, PCMK_XE_INSTANCE_ATTRIBUTES);
     }

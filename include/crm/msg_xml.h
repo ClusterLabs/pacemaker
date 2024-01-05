@@ -92,6 +92,7 @@ extern "C" {
 #define PCMK_XE_SELECT_RESOURCES            "select_resources"
 #define PCMK_XE_SHORTDESC                   "shortdesc"
 #define PCMK_XE_STATUS                      "status"
+#define PCMK_XE_UTILIZATION                 "utilization"
 #define PCMK_XE_VERSION                     "version"
 
 
@@ -207,7 +208,7 @@ extern "C" {
 /*---- CIB specific tags/attrs */
 #  define XML_CIB_TAG_SECTION_ALL	"all"
 
-#  define XML_TAG_UTILIZATION		"utilization"
+#  define XML_TAG_UTILIZATION		PCMK_XE_UTILIZATION
 
 #  define XML_TAG_RESOURCE_REF		"resource_ref"
 #  define XML_CIB_TAG_RESOURCE	  	"primitive"
