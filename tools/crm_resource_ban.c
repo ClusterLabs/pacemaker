@@ -72,7 +72,7 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
         return EINVAL;
     }
 
-    fragment = create_xml_node(NULL, XML_CIB_TAG_CONSTRAINTS);
+    fragment = create_xml_node(NULL, PCMK_XE_CONSTRAINTS);
 
     location = create_xml_node(fragment, XML_CONS_TAG_RSC_LOCATION);
     crm_xml_set_id(location, "cli-ban-%s-on-%s", rsc_id, host);
@@ -120,7 +120,7 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
     }
 
     crm_log_xml_notice(fragment, "Modify");
-    rc = cib_conn->cmds->modify(cib_conn, XML_CIB_TAG_CONSTRAINTS, fragment,
+    rc = cib_conn->cmds->modify(cib_conn, PCMK_XE_CONSTRAINTS, fragment,
                                 cib_options);
     rc = pcmk_legacy2rc(rc);
 
@@ -159,7 +159,7 @@ cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
         return ENOTCONN;
     }
 
-    fragment = create_xml_node(NULL, XML_CIB_TAG_CONSTRAINTS);
+    fragment = create_xml_node(NULL, PCMK_XE_CONSTRAINTS);
 
     location = create_xml_node(fragment, XML_CONS_TAG_RSC_LOCATION);
     crm_xml_set_id(location, "cli-prefer-%s", rsc_id);
@@ -197,7 +197,7 @@ cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
     }
 
     crm_log_xml_info(fragment, "Modify");
-    rc = cib_conn->cmds->modify(cib_conn, XML_CIB_TAG_CONSTRAINTS, fragment,
+    rc = cib_conn->cmds->modify(cib_conn, PCMK_XE_CONSTRAINTS, fragment,
                                 cib_options);
     rc = pcmk_legacy2rc(rc);
 
@@ -274,7 +274,7 @@ resource_clear_node_in_location(const char *rsc_id, const char *host, cib_t * ci
     xmlNode *fragment = NULL;
     xmlNode *location = NULL;
 
-    fragment = create_xml_node(NULL, XML_CIB_TAG_CONSTRAINTS);
+    fragment = create_xml_node(NULL, PCMK_XE_CONSTRAINTS);
 
     if (clear_ban_constraints == TRUE) {
         location = create_xml_node(fragment, XML_CONS_TAG_RSC_LOCATION);
@@ -288,7 +288,8 @@ resource_clear_node_in_location(const char *rsc_id, const char *host, cib_t * ci
     }
 
     crm_log_xml_info(fragment, "Delete");
-    rc = cib_conn->cmds->remove(cib_conn, XML_CIB_TAG_CONSTRAINTS, fragment, cib_options);
+    rc = cib_conn->cmds->remove(cib_conn, PCMK_XE_CONSTRAINTS, fragment,
+                                cib_options);
     if (rc == -ENXIO) {
         rc = pcmk_rc_ok;
     } else {
@@ -437,7 +438,7 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, int cib_options,
     int i;
     int rc = pcmk_rc_ok;
 
-    cib_constraints = pcmk_find_cib_element(root, XML_CIB_TAG_CONSTRAINTS);
+    cib_constraints = pcmk_find_cib_element(root, PCMK_XE_CONSTRAINTS);
     xpathObj = xpath_search(cib_constraints, "//" XML_CONS_TAG_RSC_LOCATION);
 
     for (i = 0; i < numXpathResults(xpathObj); i++) {
@@ -470,13 +471,13 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, int cib_options,
             xmlNode *fragment = NULL;
             xmlNode *location = NULL;
 
-            fragment = create_xml_node(NULL, XML_CIB_TAG_CONSTRAINTS);
+            fragment = create_xml_node(NULL, PCMK_XE_CONSTRAINTS);
             location = create_xml_node(fragment, XML_CONS_TAG_RSC_LOCATION);
             crm_xml_set_id(location, "%s", ID(constraint_node));
             crm_log_xml_info(fragment, "Delete");
 
-            rc = cib_conn->cmds->remove(cib_conn, XML_CIB_TAG_CONSTRAINTS,
-                                        fragment, cib_options);
+            rc = cib_conn->cmds->remove(cib_conn, PCMK_XE_CONSTRAINTS, fragment,
+                                        cib_options);
             rc = pcmk_legacy2rc(rc);
 
             if (rc != pcmk_rc_ok) {

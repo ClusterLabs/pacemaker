@@ -364,9 +364,9 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
             }
             free(mutable);
 
-        } else if (strstr(xpath, "/" PCMK_XE_RESOURCES) ||
-                   strstr(xpath, "/"XML_CIB_TAG_CONSTRAINTS) ||
-                   strstr(xpath, "/"XML_CIB_TAG_RSCCONFIG)) {
+        } else if (strstr(xpath, "/" PCMK_XE_RESOURCES)
+                   || strstr(xpath, "/" PCMK_XE_CONSTRAINTS)
+                   || strstr(xpath, "/" XML_CIB_TAG_RSCCONFIG)) {
             shortpath = strrchr(xpath, '/'); CRM_ASSERT(shortpath);
             reason = crm_strdup_printf("%s %s", op, shortpath+1);
             needs_update = TRUE;

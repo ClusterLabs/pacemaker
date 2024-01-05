@@ -141,7 +141,7 @@ scope_is_valid(const char *scope)
                             PCMK_XE_CONFIGURATION,
                             PCMK_XE_NODES,
                             PCMK_XE_RESOURCES,
-                            XML_CIB_TAG_CONSTRAINTS,
+                            PCMK_XE_CONSTRAINTS,
                             XML_CIB_TAG_CRMCONFIG,
                             XML_CIB_TAG_RSCCONFIG,
                             XML_CIB_TAG_OPCONFIG,
@@ -351,7 +351,7 @@ static GOptionEntry addl_entries[] = {
     { "scope", 'o', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, section_cb,
       "Limit scope of operation to specific section of CIB\n"
       INDENT "Valid values: " PCMK_XE_CONFIGURATION ", " PCMK_XE_NODES
-      ", " PCMK_XE_RESOURCES ", " XML_CIB_TAG_CONSTRAINTS
+      ", " PCMK_XE_RESOURCES ", " PCMK_XE_CONSTRAINTS
       ", " XML_CIB_TAG_CRMCONFIG ", " XML_CIB_TAG_RSCCONFIG ",\n"
       INDENT "              " XML_CIB_TAG_OPCONFIG ", " XML_CIB_TAG_ACLS
       ", " XML_TAG_FENCING_TOPOLOGY ", " XML_CIB_TAG_TAGS
@@ -449,9 +449,9 @@ build_arg_context(pcmk__common_args_t *args)
            "Replace complete configuration with contents of "
                "$HOME/pacemaker.xml:\n\n"
            "\t# cibadmin --replace --xml-file $HOME/pacemaker.xml\n\n"
-           "Replace " XML_CIB_TAG_CONSTRAINTS " section of configuration with "
+           "Replace " PCMK_XE_CONSTRAINTS " section of configuration with "
                "contents of $HOME/constraints.xml:\n\n"
-           "\t# cibadmin --replace --scope " XML_CIB_TAG_CONSTRAINTS
+           "\t# cibadmin --replace --scope " PCMK_XE_CONSTRAINTS
                " --xml-file $HOME/constraints.xml\n\n"
            "Increase configuration version to prevent old configurations from "
                "being loaded accidentally:\n\n"

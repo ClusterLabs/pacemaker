@@ -326,7 +326,7 @@ build_constraint_list(xmlNode *root)
     xmlXPathObjectPtr xpathObj = NULL;
     int ndx = 0;
 
-    cib_constraints = pcmk_find_cib_element(root, XML_CIB_TAG_CONSTRAINTS);
+    cib_constraints = pcmk_find_cib_element(root, PCMK_XE_CONSTRAINTS);
     xpathObj = xpath_search(cib_constraints, "//" XML_CONS_TAG_RSC_LOCATION);
 
     for (ndx = 0; ndx < numXpathResults(xpathObj); ndx++) {

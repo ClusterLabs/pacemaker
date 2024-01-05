@@ -55,7 +55,7 @@ void
 cli_resource_print_cts_constraints(pcmk_scheduler_t *scheduler)
 {
     pcmk__xe_foreach_child(pcmk_find_cib_element(scheduler->input,
-                                                 XML_CIB_TAG_CONSTRAINTS),
+                                                 PCMK_XE_CONSTRAINTS),
                            NULL, print_constraint, scheduler);
 }
 

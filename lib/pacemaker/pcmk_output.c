@@ -613,7 +613,7 @@ locations_and_colocations_xml(pcmk__output_t *out, va_list args)
         rsc = uber_parent(rsc);
     }
 
-    pcmk__output_xml_create_parent(out, "constraints", NULL);
+    pcmk__output_xml_create_parent(out, PCMK_XE_CONSTRAINTS, NULL);
     do_locations_list_xml(out, rsc, false);
 
     pe__clear_resource_flags_on_all(rsc->cluster, pcmk_rsc_detect_loop);

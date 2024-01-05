@@ -57,6 +57,7 @@ extern "C" {
 
 #define PCMK_XE_CIB                         "cib"
 #define PCMK_XE_CONFIGURATION               "configuration"
+#define PCMK_XE_CONSTRAINTS                 "constraints"
 #define PCMK_XE_CONTENT                     "content"
 #define PCMK_XE_DATE_EXPRESSION             "date_expression"
 #define PCMK_XE_LONGDESC                    "longdesc"
@@ -186,7 +187,7 @@ extern "C" {
 
 /*---- CIB specific tags/attrs */
 #  define XML_CIB_TAG_SECTION_ALL	"all"
-#  define XML_CIB_TAG_CONSTRAINTS   	"constraints"
+#  define XML_CIB_TAG_CONSTRAINTS   	PCMK_XE_CONSTRAINTS
 #  define XML_CIB_TAG_CRMCONFIG   	"crm_config"
 #  define XML_CIB_TAG_OPCONFIG		"op_defaults"
 #  define XML_CIB_TAG_RSCCONFIG   	"rsc_defaults"

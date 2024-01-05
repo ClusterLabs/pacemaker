@@ -396,9 +396,9 @@ find_ticket_constraints(cib_t * the_cib, gchar *ticket_id, xmlNode ** ticket_con
     CRM_ASSERT(ticket_cons_xml != NULL);
     *ticket_cons_xml = NULL;
 
-    xpath_base = pcmk_cib_xpath_for(XML_CIB_TAG_CONSTRAINTS);
+    xpath_base = pcmk_cib_xpath_for(PCMK_XE_CONSTRAINTS);
     if (xpath_base == NULL) {
-        crm_err(XML_CIB_TAG_CONSTRAINTS " CIB element not known (bug?)");
+        crm_err(PCMK_XE_CONSTRAINTS " CIB element not known (bug?)");
         return -ENOMSG;
     }
 
