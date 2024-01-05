@@ -73,6 +73,7 @@ extern "C" {
 #define PCMK_XE_PARAMETER                   "parameter"
 #define PCMK_XE_PARAMETERS                  "parameters"
 #define PCMK_XE_RESOURCE_AGENT              "resource-agent"
+#define PCMK_XE_RSC_DEFAULTS                "rsc_defaults"
 #define PCMK_XE_RSC_EXPRESSION              "rsc_expression"
 #define PCMK_XE_SHORTDESC                   "shortdesc"
 #define PCMK_XE_STATUS                      "status"
@@ -189,7 +190,7 @@ extern "C" {
 
 /*---- CIB specific tags/attrs */
 #  define XML_CIB_TAG_SECTION_ALL	"all"
-#  define XML_CIB_TAG_RSCCONFIG   	"rsc_defaults"
+#  define XML_CIB_TAG_RSCCONFIG   	PCMK_XE_RSC_DEFAULTS
 #  define XML_CIB_TAG_ACLS   		"acls"
 #  define XML_CIB_TAG_ALERTS    	"alerts"
 #  define XML_CIB_TAG_ALERT   		"alert"

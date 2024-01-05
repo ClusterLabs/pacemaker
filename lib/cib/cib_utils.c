@@ -242,7 +242,7 @@ createEmptyCib(int cib_epoch)
 
 #if PCMK__RESOURCE_STICKINESS_DEFAULT != 0
     {
-        xmlNode *rsc_defaults = create_xml_node(config, XML_CIB_TAG_RSCCONFIG);
+        xmlNode *rsc_defaults = create_xml_node(config, PCMK_XE_RSC_DEFAULTS);
         xmlNode *meta = create_xml_node(rsc_defaults, XML_TAG_META_SETS);
         xmlNode *nvpair = create_xml_node(meta, XML_CIB_TAG_NVPAIR);
 

@@ -69,9 +69,9 @@ static struct {
         "//" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_OP_DEFAULTS
     },
     {
-        XML_CIB_TAG_RSCCONFIG,
+        PCMK_XE_RSC_DEFAULTS,
         "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION,
-        "//" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" XML_CIB_TAG_RSCCONFIG
+        "//" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_RSC_DEFAULTS
     },
     {
         XML_CIB_TAG_ACLS,

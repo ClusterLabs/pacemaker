@@ -190,9 +190,9 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
 
 // unfencing in rsc_defaults or any resource
 #define XPATH_ENABLE_UNFENCING \
-    "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_RESOURCES         \
-    "//" XML_TAG_META_SETS "/" XPATH_UNFENCING_NVPAIR                       \
-    "|/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" XML_CIB_TAG_RSCCONFIG    \
+    "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_RESOURCES     \
+    "//" XML_TAG_META_SETS "/" XPATH_UNFENCING_NVPAIR                   \
+    "|/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_RSC_DEFAULTS \
     "/" XML_TAG_META_SETS "/" XPATH_UNFENCING_NVPAIR
 
 static void

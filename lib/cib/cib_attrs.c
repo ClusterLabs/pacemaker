@@ -74,7 +74,7 @@ find_attr(cib_t *cib, const char *section, const char *node_uuid,
         set_type = XML_CIB_TAG_PROPSET;
 
     } else if (pcmk__strcase_any_of(section,
-                                    PCMK_XE_OP_DEFAULTS, XML_CIB_TAG_RSCCONFIG,
+                                    PCMK_XE_OP_DEFAULTS, PCMK_XE_RSC_DEFAULTS,
                                     NULL)) {
         node_uuid = NULL;
         set_type = XML_TAG_META_SETS;

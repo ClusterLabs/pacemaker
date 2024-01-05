@@ -100,7 +100,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
 
     scheduler->op_defaults = get_xpath_object("//" PCMK_XE_OP_DEFAULTS,
                                               scheduler->input, LOG_NEVER);
-    scheduler->rsc_defaults = get_xpath_object("//" XML_CIB_TAG_RSCCONFIG,
+    scheduler->rsc_defaults = get_xpath_object("//" PCMK_XE_RSC_DEFAULTS,
                                                scheduler->input, LOG_NEVER);
 
     section = get_xpath_object("//" PCMK_XE_CRM_CONFIG, scheduler->input,

@@ -143,7 +143,7 @@ scope_is_valid(const char *scope)
                             PCMK_XE_RESOURCES,
                             PCMK_XE_CONSTRAINTS,
                             PCMK_XE_CRM_CONFIG,
-                            XML_CIB_TAG_RSCCONFIG,
+                            PCMK_XE_RSC_DEFAULTS,
                             PCMK_XE_OP_DEFAULTS,
                             XML_CIB_TAG_ACLS,
                             XML_TAG_FENCING_TOPOLOGY,
@@ -352,7 +352,7 @@ static GOptionEntry addl_entries[] = {
       "Limit scope of operation to specific section of CIB\n"
       INDENT "Valid values: " PCMK_XE_CONFIGURATION ", " PCMK_XE_NODES
       ", " PCMK_XE_RESOURCES ", " PCMK_XE_CONSTRAINTS
-      ", " PCMK_XE_CRM_CONFIG ", " XML_CIB_TAG_RSCCONFIG ",\n"
+      ", " PCMK_XE_CRM_CONFIG ", " PCMK_XE_RSC_DEFAULTS ",\n"
       INDENT "              " PCMK_XE_OP_DEFAULTS ", " XML_CIB_TAG_ACLS
       ", " XML_TAG_FENCING_TOPOLOGY ", " XML_CIB_TAG_TAGS
       ", " XML_CIB_TAG_ALERTS ", " PCMK_XE_STATUS "\n"
