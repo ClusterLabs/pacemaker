@@ -757,6 +757,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_SELECT_FENCING instead
 #define XML_CIB_TAG_ALERT_FENCING PCMK_XE_SELECT_FENCING
 
+//! \deprecated Use \c PCMK_XE_SELECT_NODES instead
+#define XML_CIB_TAG_ALERT_NODES PCMK_XE_SELECT_NODES
+
 #ifdef __cplusplus
 }
 #endif

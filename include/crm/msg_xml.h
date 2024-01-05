@@ -198,7 +198,6 @@ extern "C" {
 
 /*---- CIB specific tags/attrs */
 #  define XML_CIB_TAG_SECTION_ALL	"all"
-#  define XML_CIB_TAG_ALERT_NODES       PCMK_XE_SELECT_NODES
 #  define XML_CIB_TAG_ALERT_RESOURCES   "select_resources"
 #  define XML_CIB_TAG_ALERT_ATTR        "attribute"
 
