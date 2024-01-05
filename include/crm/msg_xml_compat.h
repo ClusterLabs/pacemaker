@@ -610,6 +610,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_LRM_ATTR_MIGRATE_SOURCE "migrate_source"
 
+//! \deprecated Do not use
+#define XML_LRM_ATTR_MIGRATE_TARGET "migrate_target"
+
 #ifdef __cplusplus
 }
 #endif

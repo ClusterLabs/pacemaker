@@ -198,13 +198,6 @@ extern "C" {
 
 #  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
 
-/* Aside from being an old name for the executor, LRM is a misnomer here because
- * the controller and scheduler use these to track actions, which are not always
- * executor operations.
- */
-
-#  define XML_LRM_ATTR_MIGRATE_TARGET	"migrate_target"
-
 #  define XML_TAG_GRAPH			"transition_graph"
 #  define XML_GRAPH_TAG_RSC_OP		"rsc_op"
 #  define XML_GRAPH_TAG_PSEUDO_EVENT	"pseudo_event"
