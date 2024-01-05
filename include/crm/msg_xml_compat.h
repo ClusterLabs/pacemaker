@@ -664,6 +664,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_NODE_ATTRIBUTE instead
 #define XML_COLOC_ATTR_NODE_ATTR PCMK_XA_NODE_ATTRIBUTE
 
+//! \deprecated Use \c PCMK_XA_INFLUENCE instead
+#define XML_COLOC_ATTR_INFLUENCE PCMK_XA_INFLUENCE
+
 #ifdef __cplusplus
 }
 #endif
