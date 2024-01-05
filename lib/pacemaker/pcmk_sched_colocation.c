@@ -789,10 +789,10 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
         }
     }
 
-    if (pcmk__xe_attr_is_true(xml_obj, XML_CONS_ATTR_SYMMETRICAL)) {
-        pcmk__config_warn("The colocation constraint '"
-                          XML_CONS_ATTR_SYMMETRICAL
-                          "' attribute has been removed");
+    if (pcmk__xe_attr_is_true(xml_obj, PCMK_XA_SYMMETRICAL)) {
+        pcmk__config_warn("The colocation constraint "
+                          "'" PCMK_XA_SYMMETRICAL "' attribute has been "
+                          "removed");
     }
 
     if (score) {

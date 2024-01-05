@@ -785,8 +785,9 @@ clone_print(pcmk_resource_t *rsc, const char *pre_text, long options,
             }
 
             if (list == NULL) {
-                /* Clusters with symmetrical=false haven't calculated allowed_nodes yet
-                 * If we've not probed for them yet, the Stopped list will be empty
+                /* Clusters with PCMK_OPT_SYMMETRIC_CLUSTER=false haven't
+                 * calculated allowed_nodes yet. If we've not probed for them
+                 * yet, the Stopped list will be empty.
                  */
                 list = g_hash_table_get_values(rsc->known_on);
             }
@@ -1108,8 +1109,9 @@ pe__clone_default(pcmk__output_t *out, va_list args)
             }
 
             if (list == NULL) {
-                /* Clusters with symmetrical=false haven't calculated allowed_nodes yet
-                 * If we've not probed for them yet, the Stopped list will be empty
+                /* Clusters with PCMK_OPT_SYMMETRIC_CLUSTER=false haven't
+                 * calculated allowed_nodes yet. If we've not probed for them
+                 * yet, the Stopped list will be empty.
                  */
                 list = g_hash_table_get_values(rsc->known_on);
             }

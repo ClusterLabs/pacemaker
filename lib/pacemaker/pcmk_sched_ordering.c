@@ -117,7 +117,8 @@ get_ordering_type(const xmlNode *xml_obj)
  *
  * \param[in] xml_obj               Ordering XML
  * \param[in] parent_kind           Default ordering kind
- * \param[in] parent_symmetrical_s  Parent element's symmetrical setting, if any
+ * \param[in] parent_symmetrical_s  Parent element's \c PCMK_XA_SYMMETRICAL
+ *                                  setting, if any
  *
  * \retval ordering_symmetric   Ordering is symmetric
  * \retval ordering_asymmetric  Ordering is asymmetric
@@ -136,8 +137,8 @@ get_ordering_symmetry(const xmlNode *xml_obj, enum pe_order_kind parent_kind,
         kind = get_ordering_type(xml_obj);
     }
 
-    // Check ordering XML (and parent) for explicit symmetrical setting
-    rc = pcmk__xe_get_bool_attr(xml_obj, XML_CONS_ATTR_SYMMETRICAL, &symmetric);
+    // Check ordering XML (and parent) for explicit PCMK_XA_SYMMETRICAL setting
+    rc = pcmk__xe_get_bool_attr(xml_obj, PCMK_XA_SYMMETRICAL, &symmetric);
 
     if (rc != pcmk_rc_ok && parent_symmetrical_s != NULL) {
         symmetric = crm_is_true(parent_symmetrical_s);
@@ -147,7 +148,7 @@ get_ordering_symmetry(const xmlNode *xml_obj, enum pe_order_kind parent_kind,
     if (rc == pcmk_rc_ok) {
         if (symmetric) {
             if (kind == pe_order_kind_serialize) {
-                pcmk__config_warn("Ignoring " XML_CONS_ATTR_SYMMETRICAL
+                pcmk__config_warn("Ignoring " PCMK_XA_SYMMETRICAL
                                   " for '%s' because not valid with "
                                   XML_ORDER_ATTR_KIND " of 'Serialize'",
                                   ID(xml_obj));
@@ -586,7 +587,8 @@ pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
  *
  * \param[in]     set                   Set XML to unpack
  * \param[in]     parent_kind           rsc_order XML "kind" attribute
- * \param[in]     parent_symmetrical_s  rsc_order XML "symmetrical" attribute
+ * \param[in]     parent_symmetrical_s  rsc_order XML \c PCMK_XA_SYMMETRICAL
+ *                                      attribute
  * \param[in,out] scheduler             Scheduler data
  *
  * \return Standard Pacemaker return code
@@ -1008,7 +1010,7 @@ pcmk__unpack_ordering(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     xmlNode *expanded_xml = NULL;
 
     const char *id = crm_element_value(xml_obj, PCMK_XA_ID);
-    const char *invert = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
+    const char *invert = crm_element_value(xml_obj, PCMK_XA_SYMMETRICAL);
     enum pe_order_kind kind = get_ordering_type(xml_obj);
 
     enum ordering_symmetry symmetry = get_ordering_symmetry(xml_obj, kind,

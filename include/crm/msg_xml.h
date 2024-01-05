@@ -103,6 +103,7 @@ extern "C" {
 #define PCMK_XA_ROLE                        "role"
 #define PCMK_XA_SCORE                       "score"
 #define PCMK_XA_SCORE_ATTRIBUTE             "score-attribute"
+#define PCMK_XA_SYMMETRICAL                 "symmetrical"
 #define PCMK_XA_TARGET                      "target"
 #define PCMK_XA_TARGET_ATTRIBUTE            "target-attribute"
 #define PCMK_XA_TARGET_PATTERN              "target-pattern"
@@ -221,7 +222,7 @@ extern "C" {
 #  define XML_CONS_TAG_RSC_LOCATION	"rsc_location"
 #  define XML_CONS_TAG_RSC_TICKET	"rsc_ticket"
 #  define XML_CONS_TAG_RSC_SET		"resource_set"
-#  define XML_CONS_ATTR_SYMMETRICAL	"symmetrical"
+#  define XML_CONS_ATTR_SYMMETRICAL	PCMK_XA_SYMMETRICAL
 
 #  define XML_LOCATION_ATTR_DISCOVERY	"resource-discovery"
 
