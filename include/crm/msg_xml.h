@@ -222,7 +222,6 @@ extern "C" {
 #  define XML_CONS_TAG_RSC_LOCATION	"rsc_location"
 #  define XML_CONS_TAG_RSC_TICKET	"rsc_ticket"
 #  define XML_CONS_TAG_RSC_SET		"resource_set"
-#  define XML_CONS_ATTR_SYMMETRICAL	PCMK_XA_SYMMETRICAL
 
 #  define XML_LOCATION_ATTR_DISCOVERY	"resource-discovery"
 
