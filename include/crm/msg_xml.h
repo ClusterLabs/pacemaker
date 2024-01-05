@@ -68,6 +68,7 @@ extern "C" {
 #define PCMK_XE_LONGDESC                    "longdesc"
 #define PCMK_XE_NODE                        "node"
 #define PCMK_XE_NODES                       "nodes"
+#define PCMK_XE_NVPAIR                      "nvpair"
 #define PCMK_XE_OP                          "op"
 #define PCMK_XE_OP_DEFAULTS                 "op_defaults"
 #define PCMK_XE_OPERATION                   "operation"
@@ -203,7 +204,7 @@ extern "C" {
 /*---- CIB specific tags/attrs */
 #  define XML_CIB_TAG_SECTION_ALL	"all"
 
-#  define XML_CIB_TAG_NVPAIR        	"nvpair"
+#  define XML_CIB_TAG_NVPAIR        	PCMK_XE_NVPAIR
 
 #  define XML_CIB_TAG_PROPSET	   	"cluster_property_set"
 #  define XML_TAG_ATTR_SETS	   	"instance_attributes"

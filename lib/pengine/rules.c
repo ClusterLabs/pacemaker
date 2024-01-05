@@ -370,7 +370,8 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
     for (an_attr = pcmk__xe_first_child(list); an_attr != NULL;
          an_attr = pcmk__xe_next(an_attr)) {
 
-        if (pcmk__str_eq((const char *)an_attr->name, XML_CIB_TAG_NVPAIR, pcmk__str_none)) {
+        if (pcmk__str_eq((const char *) an_attr->name, PCMK_XE_NVPAIR,
+                         pcmk__str_none)) {
             xmlNode *ref_nvpair = expand_idref(an_attr, top);
 
             name = crm_element_value(an_attr, PCMK_XA_NAME);

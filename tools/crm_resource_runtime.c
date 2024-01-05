@@ -110,7 +110,7 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
         }
     }
 
-    g_string_append(xpath, "//" XML_CIB_TAG_NVPAIR "[");
+    g_string_append(xpath, "//" PCMK_XE_NVPAIR "[");
     if (attr_id != NULL) {
         pcmk__g_strcat(xpath, "@" PCMK_XA_ID "=\"", attr_id, "\"", NULL);
     }

@@ -433,12 +433,11 @@ build_arg_context(pcmk__common_args_t *args)
            "\t# cibadmin --query --scope " PCMK_XE_CRM_CONFIG "\n\n"
            "Query all '" PCMK_META_TARGET_ROLE "' settings:\n\n"
            "\t# cibadmin --query --xpath "
-               "\"//" XML_CIB_TAG_NVPAIR
-               "[@" PCMK_XA_NAME "='" PCMK_META_TARGET_ROLE"']\""
-               "\n\n"
+               "\"//" PCMK_XE_NVPAIR
+               "[@" PCMK_XA_NAME "='" PCMK_META_TARGET_ROLE"']\"\n\n"
            "Remove all '" PCMK_META_IS_MANAGED "' settings:\n\n"
            "\t# cibadmin --delete-all --xpath "
-               "\"//" XML_CIB_TAG_NVPAIR
+               "\"//" PCMK_XE_NVPAIR
                "[@" PCMK_XA_NAME "='" PCMK_META_IS_MANAGED "']\"\n\n"
            "Remove the resource named 'old':\n\n"
            "\t# cibadmin --delete --xml-text "

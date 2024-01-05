@@ -449,7 +449,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
                        add[0], add[1], add[2], fn, line, path,
                        pcmk__btoa(controld_globals.transition_graph->complete));
 
-        } else if (pcmk__xe_is(reason, XML_CIB_TAG_NVPAIR)) {
+        } else if (pcmk__xe_is(reason, PCMK_XE_NVPAIR)) {
             do_crm_log(level, "Transition %d aborted by %s doing %s %s=%s: %s "
                        CRM_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",
                        controld_globals.transition_graph->id,

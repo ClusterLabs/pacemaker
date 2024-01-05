@@ -57,7 +57,7 @@ node_has_attr(const char *node, const char *name, const char *value)
     pcmk__g_strcat(xpath,
                    "//" PCMK_XE_NODES "/" PCMK_XE_NODE
                    "[@" PCMK_XA_UNAME "='", node, "']/" XML_TAG_ATTR_SETS
-                   "/" XML_CIB_TAG_NVPAIR
+                   "/" PCMK_XE_NVPAIR
                    "[@" PCMK_XA_NAME "='", name, "' "
                    "and @" PCMK_XA_VALUE "='", value, "']", NULL);
 
@@ -187,8 +187,8 @@ remove_cib_device(xmlXPathObjectPtr xpathObj)
     }
 }
 
-#define XPATH_WATCHDOG_TIMEOUT "//" XML_CIB_TAG_NVPAIR         \
-                               "[@" PCMK_XA_NAME "='"  \
+#define XPATH_WATCHDOG_TIMEOUT "//" PCMK_XE_NVPAIR      \
+                               "[@" PCMK_XA_NAME "='"   \
                                     PCMK_OPT_STONITH_WATCHDOG_TIMEOUT "']"
 
 static void

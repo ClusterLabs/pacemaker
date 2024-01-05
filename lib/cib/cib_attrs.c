@@ -573,7 +573,7 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
         parsed_uuid = ID(result);
         parsed_is_remote = TRUE;
 
-    } else if (pcmk__str_eq(tag, XML_CIB_TAG_NVPAIR, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(tag, PCMK_XE_NVPAIR, pcmk__str_casei)) {
         /* Result is PCMK_META_REMOTE_NODE parameter of <primitive> for guest
          * node
          */
@@ -618,7 +618,7 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
         "/" XML_CIB_TAG_RESOURCE \
         "[@class='ocf'][@provider='pacemaker'][@type='remote'][translate(@id,'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']" \
     "|/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_RESOURCES \
-        "/" XML_CIB_TAG_RESOURCE "/" XML_TAG_META_SETS "/" XML_CIB_TAG_NVPAIR \
+        "/" XML_CIB_TAG_RESOURCE "/" XML_TAG_META_SETS "/" PCMK_XE_NVPAIR \
         "[@name='" PCMK_META_REMOTE_NODE "'][translate(@value,'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']" \
     "|/" PCMK_XE_CIB "/" PCMK_XE_STATUS "/" PCMK__XE_NODE_STATE \
         "[@" XML_NODE_IS_REMOTE "='true'][translate(@" PCMK_XA_ID ",'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']"

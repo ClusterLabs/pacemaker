@@ -100,7 +100,7 @@ get_envvars_from_cib(xmlNode *basenode, pcmk__alert_t *entry)
         entry->envvars = pcmk__strkey_table(free, free);
     }
 
-    for (child = first_named_child(child, XML_CIB_TAG_NVPAIR); child != NULL;
+    for (child = first_named_child(child, PCMK_XE_NVPAIR); child != NULL;
          child = crm_next_same_xml(child)) {
 
         const char *name = crm_element_value(child, PCMK_XA_NAME);

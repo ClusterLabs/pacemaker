@@ -193,7 +193,7 @@ append_dump_text(gpointer key, gpointer value, gpointer user_data)
     *dump_text = new_text;
 }
 
-#define XPATH_STACK "//" XML_CIB_TAG_NVPAIR \
+#define XPATH_STACK "//" PCMK_XE_NVPAIR     \
                     "[@" PCMK_XA_NAME "='"  \
                         PCMK_OPT_CLUSTER_INFRASTRUCTURE "']"
 
@@ -390,7 +390,7 @@ formatted_xml_buf(const pcmk_resource_t *rsc, bool raw)
     }
 }
 
-#define XPATH_DC_VERSION "//" XML_CIB_TAG_NVPAIR    \
+#define XPATH_DC_VERSION "//" PCMK_XE_NVPAIR    \
                          "[@" PCMK_XA_NAME "='" PCMK_OPT_DC_VERSION "']"
 
 PCMK__OUTPUT_ARGS("cluster-summary", "pcmk_scheduler_t *",

@@ -424,7 +424,7 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
             crm_xml_add(cluster_property_set, PCMK_XA_ID, CIB_OPTIONS_FIRST);
         }
 
-        xml = create_xml_node(cluster_property_set, XML_CIB_TAG_NVPAIR);
+        xml = create_xml_node(cluster_property_set, PCMK_XE_NVPAIR);
 
         crm_xml_set_id(xml, "%s-%s", CIB_OPTIONS_FIRST, attr_name);
         crm_xml_add(xml, PCMK_XA_NAME, attr_name);

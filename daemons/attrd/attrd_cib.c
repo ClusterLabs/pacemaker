@@ -358,7 +358,7 @@ add_set_attr_update(const attribute_t *attr, const char *attr_id,
     }
     crm_xml_add(child, PCMK_XA_ID, set_id);
 
-    child = create_xml_node(child, XML_CIB_TAG_NVPAIR);
+    child = create_xml_node(child, PCMK_XE_NVPAIR);
     if (child == NULL) {
         goto done;
     }
@@ -397,7 +397,7 @@ add_unset_attr_update(const attribute_t *attr, const char *attr_id,
                                     "/" XML_TAG_TRANSIENT_NODEATTRS
                                         "[@" PCMK_XA_ID "='%s']"
                                     "/%s[@" PCMK_XA_ID "='%s']"
-                                    "/" XML_CIB_TAG_NVPAIR
+                                    "/" PCMK_XE_NVPAIR
                                         "[@" PCMK_XA_ID "='%s' "
                                          "and @" PCMK_XA_NAME "='%s']",
                                     node_id, node_id, attr->set_type, set_id,

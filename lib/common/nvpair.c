@@ -770,16 +770,13 @@ crm_create_nvpair_xml(xmlNode *parent, const char *id, const char *name,
      */
     CRM_CHECK(id || name, return NULL);
 
-    nvp = create_xml_node(parent, XML_CIB_TAG_NVPAIR);
+    nvp = create_xml_node(parent, PCMK_XE_NVPAIR);
     CRM_CHECK(nvp, return NULL);
 
     if (id) {
         crm_xml_add(nvp, PCMK_XA_ID, id);
     } else {
-        const char *parent_id = ID(parent);
-
-        crm_xml_set_id(nvp, "%s-%s",
-                       (parent_id? parent_id : XML_CIB_TAG_NVPAIR), name);
+        crm_xml_set_id(nvp, "%s-%s", pcmk__s(ID(parent), PCMK_XE_NVPAIR), name);
     }
     crm_xml_add(nvp, PCMK_XA_NAME, name);
     crm_xml_add(nvp, PCMK_XA_VALUE, value);
