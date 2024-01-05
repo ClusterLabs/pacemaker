@@ -42,7 +42,7 @@ print_constraint(xmlNode *xml_obj, void *userdata)
     out->info(out, "Constraint %s %s %s %s %s %s %s",
               xml_obj->name,
               cons_string(crm_element_value(xml_obj, PCMK_XA_ID)),
-              cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE)),
+              cons_string(crm_element_value(xml_obj, PCMK_XA_RSC)),
               cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET)),
               cons_string(crm_element_value(xml_obj, PCMK_XA_SCORE)),
               cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE)),
@@ -274,7 +274,7 @@ override_xml(pcmk__output_t *out, va_list args) {
                                                    NULL);
 
     if (rsc_name != NULL) {
-        crm_xml_add(node, "rsc", rsc_name);
+        crm_xml_add(node, PCMK_XA_RSC, rsc_name);
     }
 
     return pcmk_rc_ok;
@@ -398,7 +398,7 @@ resource_agent_action_xml(pcmk__output_t *out, va_list args) {
                                                      NULL);
 
     if (rsc_name) {
-        crm_xml_add(node, "rsc", rsc_name);
+        crm_xml_add(node, PCMK_XA_RSC, rsc_name);
     }
 
     crm_xml_add(node, PCMK_XA_PROVIDER, provider);

@@ -246,7 +246,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
                     const char *role_spec, const char *score,
                     pe_re_match_data_t *re_match_data)
 {
-    const char *rsc_id = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
+    const char *rsc_id = crm_element_value(xml_obj, PCMK_XA_RSC);
     const char *id = crm_element_value(xml_obj, PCMK_XA_ID);
     const char *node = crm_element_value(xml_obj, XML_CIB_TAG_NODE);
     const char *discovery = crm_element_value(xml_obj,
@@ -331,7 +331,7 @@ static void
 unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 {
     const char *id = crm_element_value(xml_obj, PCMK_XA_ID);
-    const char *value = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
+    const char *value = crm_element_value(xml_obj, PCMK_XA_RSC);
 
     if (value) {
         pcmk_resource_t *rsc;
@@ -432,7 +432,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         return pcmk_rc_ok;
     }
 
-    rsc_id = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
+    rsc_id = crm_element_value(xml_obj, PCMK_XA_RSC);
     if (rsc_id == NULL) {
         return pcmk_rc_ok;
     }
@@ -452,7 +452,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     *expanded_xml = copy_xml(xml_obj);
 
     // Convert any template or tag reference into constraint resource_set
-    if (!pcmk__tag_to_set(*expanded_xml, &rsc_set, XML_LOC_ATTR_SOURCE,
+    if (!pcmk__tag_to_set(*expanded_xml, &rsc_set, PCMK_XA_RSC,
                           false, scheduler)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;

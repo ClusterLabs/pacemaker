@@ -112,6 +112,7 @@ extern "C" {
 #define PCMK_XA_RESOURCE_DISCOVERY          "resource-discovery"
 #define PCMK_XA_RESULT                      "result"
 #define PCMK_XA_ROLE                        "role"
+#define PCMK_XA_RSC                         "rsc"
 #define PCMK_XA_SCORE                       "score"
 #define PCMK_XA_SCORE_ATTRIBUTE             "score-attribute"
 #define PCMK_XA_SYMMETRICAL                 "symmetrical"
@@ -233,14 +234,14 @@ extern "C" {
 #  define XML_CONS_TAG_RSC_TICKET	"rsc_ticket"
 #  define XML_CONS_TAG_RSC_SET		"resource_set"
 
-#  define XML_COLOC_ATTR_SOURCE		"rsc"
+#  define XML_COLOC_ATTR_SOURCE		PCMK_XA_RSC
 #  define XML_COLOC_ATTR_SOURCE_ROLE	"rsc-role"
 #  define XML_COLOC_ATTR_TARGET		"with-rsc"
 #  define XML_COLOC_ATTR_TARGET_ROLE	"with-rsc-role"
 #  define XML_COLOC_ATTR_NODE_ATTR	"node-attribute"
 #  define XML_COLOC_ATTR_INFLUENCE          "influence"
 
-#  define XML_LOC_ATTR_SOURCE           "rsc"
+#  define XML_LOC_ATTR_SOURCE           PCMK_XA_RSC
 #  define XML_LOC_ATTR_SOURCE_PATTERN   "rsc-pattern"
 
 #  define XML_ORDER_ATTR_FIRST		"first"

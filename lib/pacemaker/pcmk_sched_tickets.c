@@ -282,7 +282,7 @@ unpack_simple_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 
     pcmk_ticket_t *ticket = NULL;
 
-    const char *rsc_id = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
+    const char *rsc_id = crm_element_value(xml_obj, PCMK_XA_RSC);
     const char *state = crm_element_value(xml_obj,
                                              XML_COLOC_ATTR_SOURCE_ROLE);
 
@@ -384,7 +384,7 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         return pcmk_rc_ok;
     }
 
-    rsc_id = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
+    rsc_id = crm_element_value(xml_obj, PCMK_XA_RSC);
     if (rsc_id == NULL) {
         return pcmk_rc_ok;
     }
@@ -404,8 +404,8 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     *expanded_xml = copy_xml(xml_obj);
 
     // Convert any template or tag reference in "rsc" into ticket resource_set
-    if (!pcmk__tag_to_set(*expanded_xml, &rsc_set, XML_COLOC_ATTR_SOURCE,
-                          false, scheduler)) {
+    if (!pcmk__tag_to_set(*expanded_xml, &rsc_set, PCMK_XA_RSC, false,
+                          scheduler)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_unpack_error;

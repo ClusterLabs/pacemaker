@@ -87,7 +87,7 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
                    (promoted_role_only? "being promoted" : "running"),
                    host, host);
 
-    crm_xml_add(location, XML_LOC_ATTR_SOURCE, rsc_id);
+    crm_xml_add(location, PCMK_XA_RSC, rsc_id);
     if(promoted_role_only) {
         crm_xml_add(location, PCMK_XA_ROLE, promoted_role);
     } else {
@@ -164,7 +164,7 @@ cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
     location = create_xml_node(fragment, XML_CONS_TAG_RSC_LOCATION);
     crm_xml_set_id(location, "cli-prefer-%s", rsc_id);
 
-    crm_xml_add(location, XML_LOC_ATTR_SOURCE, rsc_id);
+    crm_xml_add(location, PCMK_XA_RSC, rsc_id);
     if(promoted_role_only) {
         crm_xml_add(location, PCMK_XA_ROLE, promoted_role);
     } else {
@@ -350,8 +350,7 @@ build_clear_xpath_string(GString *buf, const xmlNode *constraint_node,
                          bool promoted_role_only)
 {
     const char *cons_id = ID(constraint_node);
-    const char *cons_rsc = crm_element_value(constraint_node,
-                                             XML_LOC_ATTR_SOURCE);
+    const char *cons_rsc = crm_element_value(constraint_node, PCMK_XA_RSC);
     GString *rsc_role_substr = NULL;
     const char *promoted_role_rule = "@" PCMK_XA_ROLE "='" PCMK__ROLE_PROMOTED
                                      "' or @" PCMK_XA_ROLE "='"
@@ -381,13 +380,13 @@ build_clear_xpath_string(GString *buf, const xmlNode *constraint_node,
         if ((rsc != NULL) && promoted_role_only) {
             rsc_role_substr = g_string_sized_new(64);
             pcmk__g_strcat(rsc_role_substr,
-                           "@" XML_LOC_ATTR_SOURCE "='", rsc, "' "
+                           "@" PCMK_XA_RSC "='", rsc, "' "
                            "and (" , promoted_role_rule, ")", NULL);
 
         } else if (rsc != NULL) {
             rsc_role_substr = g_string_sized_new(64);
             pcmk__g_strcat(rsc_role_substr,
-                           "@" XML_LOC_ATTR_SOURCE "='", rsc, "'", NULL);
+                           "@" PCMK_XA_RSC "='", rsc, "'", NULL);
 
         } else if (promoted_role_only) {
             rsc_role_substr = g_string_sized_new(64);

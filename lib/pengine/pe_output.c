@@ -2127,7 +2127,8 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
                                               (has_provider? provider : ""),
                                               kind);
 
-        pcmk__xe_set_props(node, "rsc", rsc_printable_id(rsc),
+        pcmk__xe_set_props(node,
+                           PCMK_XA_RSC, rsc_printable_id(rsc),
                            "agent", agent_tuple,
                            NULL);
         free(agent_tuple);
