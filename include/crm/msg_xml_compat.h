@@ -622,6 +622,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_ROLE instead
 #define XML_ACL_TAG_ROLE_REF PCMK_XE_ROLE
 
+//! \deprecated Use \c PCMK_XA_ROLE instead
+#define XML_RULE_ATTR_ROLE PCMK_XA_ROLE
+
 #ifdef __cplusplus
 }
 #endif
