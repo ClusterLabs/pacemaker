@@ -212,7 +212,6 @@ extern "C" {
 /*---- CIB specific tags/attrs */
 #  define XML_CIB_TAG_SECTION_ALL	"all"
 
-#  define XML_CIB_TAG_INCARNATION	PCMK_XE_CLONE
 #  define XML_CIB_TAG_CONTAINER		"bundle"
 
 #  define XML_CIB_TAG_RSC_TEMPLATE	"template"
