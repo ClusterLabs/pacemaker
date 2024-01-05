@@ -234,11 +234,11 @@ process_resource_updates(const char *node, xmlNode *xml, xmlNode *change,
     }
 
     if (pcmk__xe_is(xml, PCMK__XE_LRM)) {
-        xml = first_named_child(xml, XML_LRM_TAG_RESOURCES);
+        xml = first_named_child(xml, PCMK__XE_LRM_RESOURCES);
         CRM_CHECK(xml != NULL, return);
     }
 
-    CRM_CHECK(pcmk__xe_is(xml, XML_LRM_TAG_RESOURCES), return);
+    CRM_CHECK(pcmk__xe_is(xml, PCMK__XE_LRM_RESOURCES), return);
 
     /*
      * Updates by, or in response to, TE actions will never contain updates
@@ -503,7 +503,7 @@ te_update_diff_v2(xmlNode *diff)
         } else if (strcmp(name, PCMK__XE_LRM) == 0) {
             process_resource_updates(ID(match), match, change, op, xpath);
 
-        } else if (strcmp(name, XML_LRM_TAG_RESOURCES) == 0) {
+        } else if (strcmp(name, PCMK__XE_LRM_RESOURCES) == 0) {
             char *local_node = pcmk__xpath_node_id(xpath, PCMK__XE_LRM);
 
             process_resource_updates(local_node, match, change, op, xpath);

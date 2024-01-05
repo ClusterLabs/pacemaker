@@ -1912,7 +1912,7 @@ wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
         search = xpath_search(scheduler->input,
                               "/" PCMK_XE_CIB "/" PCMK_XE_STATUS
                               "/" PCMK__XE_NODE_STATE "/" PCMK__XE_LRM
-                              "/" XML_LRM_TAG_RESOURCES "/" XML_LRM_TAG_RESOURCE
+                              "/" PCMK__XE_LRM_RESOURCES "/" XML_LRM_TAG_RESOURCE
                               "/" XML_LRM_TAG_RSC_OP
                               "[@" PCMK__XA_RC_CODE "='193']");
         pending_unknown_state_resources = (numXpathResults(search) > 0);

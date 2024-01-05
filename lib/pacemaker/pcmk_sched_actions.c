@@ -1857,7 +1857,7 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
  * entirely related but convenient to do here.)
  *
  * \param[in,out] node      Node whose history is being processed
- * \param[in]     lrm_rscs  Node's <lrm_resources> from CIB status XML
+ * \param[in]     lrm_rscs  Node's \c PCMK__XE_LRM_RESOURCES from CIB status XML
  */
 static void
 process_node_history(pcmk_node_t *node, const xmlNode *lrm_rscs)
@@ -1887,7 +1887,7 @@ process_node_history(pcmk_node_t *node, const xmlNode *lrm_rscs)
 #define XPATH_NODE_HISTORY "/" PCMK_XE_CIB "/" PCMK_XE_STATUS   \
                            "/" PCMK__XE_NODE_STATE              \
                            "[@" PCMK_XA_UNAME "='%s']"          \
-                           "/" PCMK__XE_LRM "/" XML_LRM_TAG_RESOURCES
+                           "/" PCMK__XE_LRM "/" PCMK__XE_LRM_RESOURCES
 
 /*!
  * \internal

@@ -392,7 +392,7 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
 // Takes node name and resource ID
 #define XPATH_RESOURCE_HISTORY "//" PCMK__XE_NODE_STATE                 \
                                "[@" PCMK_XA_UNAME "='%s']/"             \
-                               PCMK__XE_LRM "/" XML_LRM_TAG_RESOURCES   \
+                               PCMK__XE_LRM "/" PCMK__XE_LRM_RESOURCES  \
                                "/" XML_LRM_TAG_RESOURCE                 \
                                "[@" PCMK_XA_ID "='%s']"
 // @TODO could add "and @PCMK_OPT_SHUTDOWN_LOCK" to limit to locks
@@ -912,7 +912,7 @@ controld_update_resource_history(const char *node_name,
     crm_xml_add(xml, PCMK_XA_ID, node_id);
 
     //       <lrm_resources>
-    xml = create_xml_node(xml, XML_LRM_TAG_RESOURCES);
+    xml = create_xml_node(xml, PCMK__XE_LRM_RESOURCES);
 
     //         <lrm_resource ...>
     xml = create_xml_node(xml, XML_LRM_TAG_RESOURCE);
@@ -989,7 +989,7 @@ controld_delete_action_history(const lrmd_event_data_t *op)
 #define XPATH_HISTORY                                   \
     "/" PCMK_XE_CIB "/" PCMK_XE_STATUS                  \
     "/" PCMK__XE_NODE_STATE "[@" PCMK_XA_UNAME "='%s']" \
-    "/" PCMK__XE_LRM "/" XML_LRM_TAG_RESOURCES          \
+    "/" PCMK__XE_LRM "/" PCMK__XE_LRM_RESOURCES         \
     "/" XML_LRM_TAG_RESOURCE "[@" PCMK_XA_ID "='%s']"   \
     "/" XML_LRM_TAG_RSC_OP
 

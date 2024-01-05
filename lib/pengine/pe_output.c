@@ -2287,7 +2287,7 @@ node_history_list(pcmk__output_t *out, va_list args) {
     int rc = pcmk_rc_no_output;
 
     lrm_rsc = find_xml_node(node_state, PCMK__XE_LRM, FALSE);
-    lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
+    lrm_rsc = find_xml_node(lrm_rsc, PCMK__XE_LRM_RESOURCES, FALSE);
 
     /* Print history of each of the node's resources */
     for (rsc_entry = first_named_child(lrm_rsc, XML_LRM_TAG_RESOURCE);

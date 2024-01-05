@@ -1975,7 +1975,7 @@ crm_diff_update_v2(const char *event, xmlNode * msg)
             node = ID(match);
             handle_rsc_op(match, (void *) node);
 
-        } else if(strcmp(name, XML_LRM_TAG_RESOURCES) == 0) {
+        } else if (strcmp(name, PCMK__XE_LRM_RESOURCES) == 0) {
             char *local_node = pcmk__xpath_node_id(xpath, PCMK__XE_LRM);
 
             handle_rsc_op(match, local_node);

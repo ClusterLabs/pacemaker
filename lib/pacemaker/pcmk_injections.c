@@ -439,9 +439,9 @@ pcmk__inject_resource_history(pcmk__output_t *out, xmlNode *cib_node,
         crm_xml_add(lrm, PCMK_XA_ID, node_uuid);
     }
 
-    container = first_named_child(lrm, XML_LRM_TAG_RESOURCES);
+    container = first_named_child(lrm, PCMK__XE_LRM_RESOURCES);
     if (container == NULL) {
-        container = create_xml_node(lrm, XML_LRM_TAG_RESOURCES);
+        container = create_xml_node(lrm, PCMK__XE_LRM_RESOURCES);
     }
 
     cib_resource = create_xml_node(container, XML_LRM_TAG_RESOURCE);
