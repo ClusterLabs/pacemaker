@@ -496,7 +496,7 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
     } else if (pcmk__xe_is(xml_action, PCMK__XE_PSEUDO_EVENT)) {
         action_type = pcmk__pseudo_graph_action;
 
-    } else if (pcmk__xe_is(xml_action, XML_GRAPH_TAG_CRM_EVENT)) {
+    } else if (pcmk__xe_is(xml_action, PCMK__XE_CRM_EVENT)) {
         action_type = pcmk__cluster_graph_action;
 
     } else {

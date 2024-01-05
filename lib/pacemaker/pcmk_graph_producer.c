@@ -411,18 +411,18 @@ create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
         if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
             action_xml = create_xml_node(parent, PCMK__XE_PSEUDO_EVENT);
         } else {
-            action_xml = create_xml_node(parent, XML_GRAPH_TAG_CRM_EVENT);
+            action_xml = create_xml_node(parent, PCMK__XE_CRM_EVENT);
         }
 
     } else if (pcmk__str_any_of(action->task,
                                 PCMK_ACTION_DO_SHUTDOWN,
                                 PCMK_ACTION_CLEAR_FAILCOUNT, NULL)) {
-        action_xml = create_xml_node(parent, XML_GRAPH_TAG_CRM_EVENT);
+        action_xml = create_xml_node(parent, PCMK__XE_CRM_EVENT);
 
     } else if (pcmk__str_eq(action->task, PCMK_ACTION_LRM_DELETE,
                             pcmk__str_none)) {
         // CIB-only clean-up for shutdown locks
-        action_xml = create_xml_node(parent, XML_GRAPH_TAG_CRM_EVENT);
+        action_xml = create_xml_node(parent, PCMK__XE_CRM_EVENT);
         crm_xml_add(action_xml, PCMK__XA_MODE, PCMK__VALUE_CIB);
 
     } else if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
