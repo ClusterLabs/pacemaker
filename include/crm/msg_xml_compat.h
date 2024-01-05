@@ -679,6 +679,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_FIRST_ACTION instead
 #define XML_ORDER_ATTR_FIRST_ACTION PCMK_XA_FIRST_ACTION
 
+//! \deprecated Use \c PCMK_XA_THEN_ACTION instead
+#define XML_ORDER_ATTR_THEN_ACTION PCMK_XA_THEN_ACTION
+
 #ifdef __cplusplus
 }
 #endif
