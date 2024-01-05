@@ -83,7 +83,7 @@ add_maintenance_nodes(xmlNode *xml, const pcmk_scheduler_t *scheduler)
     int count = 0;
 
     if (xml != NULL) {
-        maintenance = create_xml_node(xml, XML_GRAPH_TAG_MAINTENANCE);
+        maintenance = create_xml_node(xml, PCMK__XE_MAINTENANCE);
     }
     for (const GList *iter = scheduler->nodes;
          iter != NULL; iter = iter->next) {

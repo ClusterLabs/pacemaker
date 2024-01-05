@@ -1423,7 +1423,7 @@ remote_ra_maintenance(lrm_state_t * lrm_state, gboolean maintenance)
 
 #define XPATH_PSEUDO_MAINTENANCE "//" PCMK__XE_PSEUDO_EVENT         \
     "[@" PCMK_XA_OPERATION "='" PCMK_ACTION_MAINTENANCE_NODES "']/" \
-    XML_GRAPH_TAG_MAINTENANCE
+    PCMK__XE_MAINTENANCE
 
 /*!
  * \internal
