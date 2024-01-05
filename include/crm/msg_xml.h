@@ -202,7 +202,6 @@ extern "C" {
 /*---- CIB specific tags/attrs */
 #  define XML_CIB_TAG_SECTION_ALL	"all"
 
-#  define XML_CIB_TAG_NODE          	PCMK_XE_NODE
 #  define XML_CIB_TAG_NVPAIR        	"nvpair"
 
 #  define XML_CIB_TAG_PROPSET	   	"cluster_property_set"
