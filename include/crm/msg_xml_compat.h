@@ -832,6 +832,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_GRAPH_TAG_PSEUDO_EVENT "pseudo_event"
 
+//! \deprecated Do not use
+#define XML_GRAPH_TAG_CRM_EVENT "crm_event"
+
 #ifdef __cplusplus
 }
 #endif

@@ -221,7 +221,6 @@ extern "C" {
 
 #  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
 
-#  define XML_GRAPH_TAG_CRM_EVENT	"crm_event"
 #  define XML_GRAPH_TAG_DOWNED            "downed"
 #  define XML_GRAPH_TAG_MAINTENANCE       "maintenance"
 
