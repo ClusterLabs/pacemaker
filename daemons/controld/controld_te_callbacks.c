@@ -101,11 +101,11 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     }
     freeXpathObject(xpathObj);
 
-    // Check for lrm_resource entries
+    // Check for PCMK__XE_LRM_RESOURCE entries
     xpathObj = xpath_search(diff,
                             "//" F_CIB_UPDATE_RESULT
                             "//" PCMK__XE_DIFF_ADDED
-                            "//" XML_LRM_TAG_RESOURCE);
+                            "//" PCMK__XE_LRM_RESOURCE);
     max = numXpathResults(xpathObj);
 
     /*
@@ -509,7 +509,7 @@ te_update_diff_v2(xmlNode *diff)
             process_resource_updates(local_node, match, change, op, xpath);
             free(local_node);
 
-        } else if (strcmp(name, XML_LRM_TAG_RESOURCE) == 0) {
+        } else if (strcmp(name, PCMK__XE_LRM_RESOURCE) == 0) {
             char *local_node = pcmk__xpath_node_id(xpath, PCMK__XE_LRM);
 
             process_lrm_resource_diff(match, local_node);

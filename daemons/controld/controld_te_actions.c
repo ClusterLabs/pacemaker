@@ -292,7 +292,7 @@ controld_record_action_event(pcmk__graph_action_t *action,
     crm_xml_add(rsc, PCMK_XA_ID, target_uuid);
 
     rsc = create_xml_node(rsc, PCMK__XE_LRM_RESOURCES);
-    rsc = create_xml_node(rsc, XML_LRM_TAG_RESOURCE);
+    rsc = create_xml_node(rsc, PCMK__XE_LRM_RESOURCE);
     crm_xml_add(rsc, PCMK_XA_ID, rsc_id);
 
 

@@ -37,7 +37,7 @@ bool pcmk__simulate_node_config = false;
 #define XPATH_NODE_STATE    "//" PCMK__XE_NODE_STATE "[@" PCMK_XA_UNAME "='%s']"
 #define XPATH_NODE_STATE_BY_ID "//" PCMK__XE_NODE_STATE "[@" PCMK_XA_ID "='%s']"
 #define XPATH_RSC_HISTORY   XPATH_NODE_STATE \
-                            "//" XML_LRM_TAG_RESOURCE "[@" PCMK_XA_ID "='%s']"
+                            "//" PCMK__XE_LRM_RESOURCE "[@" PCMK_XA_ID "='%s']"
 
 
 /*!
@@ -347,8 +347,8 @@ pcmk__inject_node_state_change(cib_t *cib_conn, const char *node, bool up)
  * \param[in,out] cib_node  Node state XML to check
  * \param[in]     resource  Resource name to check for
  *
- * \return Resource's lrm_resource XML entry beneath \p cib_node if found,
- *         otherwise NULL
+ * \return Resource's \c PCMK__XE_LRM_RESOURCE XML entry beneath \p cib_node if
+ *         found, otherwise \c NULL
  */
 static xmlNode *
 find_resource_xml(xmlNode *cib_node, const char *resource)
@@ -444,7 +444,7 @@ pcmk__inject_resource_history(pcmk__output_t *out, xmlNode *cib_node,
         container = create_xml_node(lrm, PCMK__XE_LRM_RESOURCES);
     }
 
-    cib_resource = create_xml_node(container, XML_LRM_TAG_RESOURCE);
+    cib_resource = create_xml_node(container, PCMK__XE_LRM_RESOURCE);
 
     // If we're creating a new entry, use the preferred name
     crm_xml_add(cib_resource, PCMK_XA_ID, lrm_name);

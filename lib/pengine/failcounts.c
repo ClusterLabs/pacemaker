@@ -129,7 +129,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                                          &conf_op_interval_ms);
 
 #define XPATH_FMT "//" PCMK__XE_NODE_STATE "[@" PCMK_XA_UNAME "='%s']"      \
-                  "//" XML_LRM_TAG_RESOURCE "[@" PCMK_XA_ID "='%s']"        \
+                  "//" PCMK__XE_LRM_RESOURCE "[@" PCMK_XA_ID "='%s']"       \
                   "/" XML_LRM_TAG_RSC_OP "[@" PCMK_XA_OPERATION "='%s']"    \
                   "[@" PCMK_META_INTERVAL "='%u']"
 

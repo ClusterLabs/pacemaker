@@ -539,7 +539,7 @@ build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list)
     while (g_hash_table_iter_next(&iter, NULL, (void **)&entry)) {
 
         GList *gIter = NULL;
-        xmlNode *xml_rsc = create_xml_node(rsc_list, XML_LRM_TAG_RESOURCE);
+        xmlNode *xml_rsc = create_xml_node(rsc_list, PCMK__XE_LRM_RESOURCE);
 
         crm_xml_add(xml_rsc, PCMK_XA_ID, entry->id);
         crm_xml_add(xml_rsc, PCMK_XA_TYPE, entry->rsc.type);
@@ -1765,7 +1765,7 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
     iter = create_xml_node(update, PCMK__XE_LRM);
     crm_xml_add(iter, PCMK_XA_ID, controld_globals.our_uuid);
     iter = create_xml_node(iter, PCMK__XE_LRM_RESOURCES);
-    iter = create_xml_node(iter, XML_LRM_TAG_RESOURCE);
+    iter = create_xml_node(iter, PCMK__XE_LRM_RESOURCE);
 
     crm_xml_add(iter, PCMK_XA_ID, op->rsc_id);
 

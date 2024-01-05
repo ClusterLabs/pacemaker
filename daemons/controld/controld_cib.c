@@ -283,13 +283,13 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
 // Node's lrm section (name 1x)
 #define XPATH_NODE_LRM XPATH_NODE_STATE "/" PCMK__XE_LRM
 
-/* Node's lrm_rsc_op entries and lrm_resource entries without unexpired lock
- * (name 2x, (seconds_since_epoch - PCMK_OPT_SHUTDOWN_LOCK_LIMIT) 1x)
+/* Node's lrm_rsc_op entries and PCMK__XE_LRM_RESOURCE entries without unexpired
+ * lock (name 2x, (seconds_since_epoch - PCMK_OPT_SHUTDOWN_LOCK_LIMIT) 1x)
  */
 #define XPATH_NODE_LRM_UNLOCKED XPATH_NODE_STATE "//" XML_LRM_TAG_RSC_OP    \
                                 "|" XPATH_NODE_STATE                        \
-                                "//" XML_LRM_TAG_RESOURCE                   \
-                                "[not(@" PCMK_OPT_SHUTDOWN_LOCK ") "       \
+                                "//" PCMK__XE_LRM_RESOURCE                  \
+                                "[not(@" PCMK_OPT_SHUTDOWN_LOCK ") "        \
                                     "or " PCMK_OPT_SHUTDOWN_LOCK "<%lld]"
 
 // Node's transient_attributes section (name 1x)
@@ -393,7 +393,7 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
 #define XPATH_RESOURCE_HISTORY "//" PCMK__XE_NODE_STATE                 \
                                "[@" PCMK_XA_UNAME "='%s']/"             \
                                PCMK__XE_LRM "/" PCMK__XE_LRM_RESOURCES  \
-                               "/" XML_LRM_TAG_RESOURCE                 \
+                               "/" PCMK__XE_LRM_RESOURCE                \
                                "[@" PCMK_XA_ID "='%s']"
 // @TODO could add "and @PCMK_OPT_SHUTDOWN_LOCK" to limit to locks
 
@@ -915,7 +915,7 @@ controld_update_resource_history(const char *node_name,
     xml = create_xml_node(xml, PCMK__XE_LRM_RESOURCES);
 
     //         <lrm_resource ...>
-    xml = create_xml_node(xml, XML_LRM_TAG_RESOURCE);
+    xml = create_xml_node(xml, PCMK__XE_LRM_RESOURCE);
     crm_xml_add(xml, PCMK_XA_ID, op->rsc_id);
     crm_xml_add(xml, PCMK_XA_CLASS, rsc->standard);
     crm_xml_add(xml, PCMK_XA_PROVIDER, rsc->provider);
@@ -990,7 +990,7 @@ controld_delete_action_history(const lrmd_event_data_t *op)
     "/" PCMK_XE_CIB "/" PCMK_XE_STATUS                  \
     "/" PCMK__XE_NODE_STATE "[@" PCMK_XA_UNAME "='%s']" \
     "/" PCMK__XE_LRM "/" PCMK__XE_LRM_RESOURCES         \
-    "/" XML_LRM_TAG_RESOURCE "[@" PCMK_XA_ID "='%s']"   \
+    "/" PCMK__XE_LRM_RESOURCE "[@" PCMK_XA_ID "='%s']"  \
     "/" XML_LRM_TAG_RSC_OP
 
 /* ... and also by operation key */

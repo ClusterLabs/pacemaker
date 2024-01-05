@@ -1864,7 +1864,7 @@ process_node_history(pcmk_node_t *node, const xmlNode *lrm_rscs)
 {
     crm_trace("Processing node history for %s", pcmk__node_name(node));
     for (const xmlNode *rsc_entry = first_named_child(lrm_rscs,
-                                                      XML_LRM_TAG_RESOURCE);
+                                                      PCMK__XE_LRM_RESOURCE);
          rsc_entry != NULL; rsc_entry = crm_next_same_xml(rsc_entry)) {
 
         if (rsc_entry->children != NULL) {

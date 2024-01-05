@@ -60,6 +60,7 @@
 
 #define PCMK__XE_ATTRIBUTES             "attributes"
 #define PCMK__XE_LRM                    "lrm"
+#define PCMK__XE_LRM_RESOURCE           "lrm_resource"
 #define PCMK__XE_LRM_RESOURCES          "lrm_resources"
 #define PCMK__XE_NODE_STATE             "node_state"
 #define PCMK__XE_PARAM                  "param"

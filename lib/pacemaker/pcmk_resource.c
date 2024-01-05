@@ -27,7 +27,7 @@
                          "/" PCMK__XE_NODE_STATE                        \
                          "[@" PCMK_XA_UNAME "='%s']"                    \
                          "/" PCMK__XE_LRM "/" PCMK__XE_LRM_RESOURCES    \
-                         "/" XML_LRM_TAG_RESOURCE "[@" PCMK_XA_ID "='%s']"
+                         "/" PCMK__XE_LRM_RESOURCE "[@" PCMK_XA_ID "='%s']"
 
 static xmlNode *
 best_op(const pcmk_resource_t *rsc, const pcmk_node_t *node)

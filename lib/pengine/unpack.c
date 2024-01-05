@@ -2653,10 +2653,10 @@ unpack_shutdown_lock(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
 
 /*!
  * \internal
- * \brief Unpack one lrm_resource entry from a node's CIB status
+ * \brief Unpack one \c PCMK__XE_LRM_RESOURCE entry from a node's CIB status
  *
  * \param[in,out] node       Node whose status is being unpacked
- * \param[in]     rsc_entry  lrm_resource XML being unpacked
+ * \param[in]     rsc_entry  \c PCMK__XE_LRM_RESOURCE XML being unpacked
  * \param[in,out] scheduler  Scheduler data
  *
  * \return Resource corresponding to the entry, or NULL if no operation history
@@ -2683,12 +2683,12 @@ unpack_lrm_resource(pcmk_node_t *node, const xmlNode *lrm_resource,
     enum rsc_role_e saved_role = pcmk_role_unknown;
 
     if (rsc_id == NULL) {
-        pcmk__config_err("Ignoring invalid " XML_LRM_TAG_RESOURCE
+        pcmk__config_err("Ignoring invalid " PCMK__XE_LRM_RESOURCE
                          " entry: No " PCMK_XA_ID);
         crm_log_xml_info(lrm_resource, "missing-id");
         return NULL;
     }
-    crm_trace("Unpacking " XML_LRM_TAG_RESOURCE " for %s on %s",
+    crm_trace("Unpacking " PCMK__XE_LRM_RESOURCE " for %s on %s",
               rsc_id, pcmk__node_name(node));
 
     // Build a list of individual lrm_rsc_op entries, so we can sort them
@@ -2777,7 +2777,8 @@ handle_orphaned_container_fillers(const xmlNode *lrm_rsc_list,
         const char *rsc_id;
         const char *container_id;
 
-        if (!pcmk__str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, pcmk__str_casei)) {
+        if (!pcmk__str_eq((const char *) rsc_entry->name, PCMK__XE_LRM_RESOURCE,
+                          pcmk__str_casei)) {
             continue;
         }
 
@@ -2829,8 +2830,9 @@ unpack_node_lrm(pcmk_node_t *node, const xmlNode *xml,
         return;
     }
 
-    // Unpack each lrm_resource entry
-    for (const xmlNode *rsc_entry = first_named_child(xml, XML_LRM_TAG_RESOURCE);
+    // Unpack each PCMK__XE_LRM_RESOURCE entry
+    for (const xmlNode *rsc_entry = first_named_child(xml,
+                                                      PCMK__XE_LRM_RESOURCE);
          rsc_entry != NULL; rsc_entry = crm_next_same_xml(rsc_entry)) {
 
         pcmk_resource_t *rsc = unpack_lrm_resource(node, rsc_entry, scheduler);
@@ -2874,7 +2876,7 @@ set_node_score(gpointer key, gpointer value, gpointer user_data)
                          "/" PCMK__XE_NODE_STATE
 #define SUB_XPATH_LRM_RESOURCE "/" PCMK__XE_LRM             \
                                "/" PCMK__XE_LRM_RESOURCES   \
-                               "/" XML_LRM_TAG_RESOURCE
+                               "/" PCMK__XE_LRM_RESOURCE
 #define SUB_XPATH_LRM_RSC_OP "/" XML_LRM_TAG_RSC_OP
 
 static xmlNode *
@@ -4628,7 +4630,8 @@ mask_probe_failure(struct action_history *history, int orig_exit_status,
  * \return true if \p last_failure is failure of pending action in \p history,
  *         otherwise false
  * \note Both \p history and \p last_failure must come from the same
- *       lrm_resource block, as node and resource are assumed to be the same.
+ *       \c PCMK__XE_LRM_RESOURCE block, as node and resource are assumed to be
+ *       the same.
  */
 static bool
 failure_is_newer(const struct action_history *history,
@@ -5119,8 +5122,8 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
                 for (lrm_rsc = pcmk__xe_first_child(tmp); lrm_rsc != NULL;
                      lrm_rsc = pcmk__xe_next(lrm_rsc)) {
 
-                    if (pcmk__str_eq((const char *)lrm_rsc->name,
-                                     XML_LRM_TAG_RESOURCE, pcmk__str_none)) {
+                    if (pcmk__str_eq((const char *) lrm_rsc->name,
+                                     PCMK__XE_LRM_RESOURCE, pcmk__str_none)) {
 
                         const char *rsc_id = crm_element_value(lrm_rsc,
                                                                PCMK_XA_ID);
