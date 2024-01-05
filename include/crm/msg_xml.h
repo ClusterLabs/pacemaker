@@ -90,6 +90,7 @@ extern "C" {
 #define PCMK_XE_RESOURCES                   "resources"
 #define PCMK_XE_ROLE                        "role"
 #define PCMK_XE_RULE                        "rule"
+#define PCMK_XE_RSC_COLOCATION              "rsc_colocation"
 #define PCMK_XE_RSC_DEFAULTS                "rsc_defaults"
 #define PCMK_XE_RSC_EXPRESSION              "rsc_expression"
 #define PCMK_XE_SELECT                      "select"
@@ -223,7 +224,7 @@ extern "C" {
 
 #  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
 
-#  define XML_CONS_TAG_RSC_DEPEND	"rsc_colocation"
+#  define XML_CONS_TAG_RSC_DEPEND	PCMK_XE_RSC_COLOCATION
 #  define XML_CONS_TAG_RSC_ORDER	"rsc_order"
 #  define XML_CONS_TAG_RSC_LOCATION	"rsc_location"
 #  define XML_CONS_TAG_RSC_TICKET	"rsc_ticket"

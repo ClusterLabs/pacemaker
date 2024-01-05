@@ -87,7 +87,7 @@ pcmk__unpack_constraints(pcmk_scheduler_t *scheduler)
         } else if (pcmk__str_eq(XML_CONS_TAG_RSC_ORDER, tag, pcmk__str_none)) {
             pcmk__unpack_ordering(xml_obj, scheduler);
 
-        } else if (pcmk__str_eq(XML_CONS_TAG_RSC_DEPEND, tag, pcmk__str_none)) {
+        } else if (pcmk__str_eq(PCMK_XE_RSC_COLOCATION, tag, pcmk__str_none)) {
             pcmk__unpack_colocation(xml_obj, scheduler);
 
         } else if (pcmk__str_eq(XML_CONS_TAG_RSC_LOCATION, tag,

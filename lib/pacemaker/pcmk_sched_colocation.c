@@ -838,7 +838,7 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     // Check whether there are any resource sets with template or tag references
     *expanded_xml = pcmk__expand_tags_in_sets(xml_obj, scheduler);
     if (*expanded_xml != NULL) {
-        crm_log_xml_trace(*expanded_xml, "Expanded rsc_colocation");
+        crm_log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_COLOCATION);
         return pcmk_rc_ok;
     }
 
@@ -916,7 +916,7 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     }
 
     if (any_sets) {
-        crm_log_xml_trace(*expanded_xml, "Expanded rsc_colocation");
+        crm_log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_COLOCATION);
     } else {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
@@ -947,7 +947,7 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     const char *influence_s = NULL;
 
     if (pcmk__str_empty(id)) {
-        pcmk__config_err("Ignoring " XML_CONS_TAG_RSC_DEPEND
+        pcmk__config_err("Ignoring " PCMK_XE_RSC_COLOCATION
                          " without " CRM_ATTR_ID);
         return;
     }
