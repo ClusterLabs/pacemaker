@@ -170,7 +170,6 @@ extern "C" {
 #  define XML_TAG_OPTIONS		"options"
 
 /*---- top level tags/attrs */
-#  define XML_CRM_TAG_PING		"ping_response"
 #  define XML_PING_ATTR_PACEMAKERDSTATE_INIT "init"
 #  define XML_PING_ATTR_PACEMAKERDSTATE_STARTINGDAEMONS "starting_daemons"
 #  define XML_PING_ATTR_PACEMAKERDSTATE_WAITPING "wait_for_ping"

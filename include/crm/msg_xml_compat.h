@@ -706,6 +706,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_XPATH instead
 #define XML_ACL_ATTR_XPATH PCMK_XA_XPATH
 
+//! \deprecated Do not use
+#define XML_CRM_TAG_PING "ping_response"
+
 #ifdef __cplusplus
 }
 #endif
