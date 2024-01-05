@@ -453,7 +453,7 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         return;
     }
 
-    rsc_then = get_ordering_resource(xml_obj, XML_ORDER_ATTR_THEN,
+    rsc_then = get_ordering_resource(xml_obj, PCMK_XA_THEN,
                                      PCMK__XA_THEN_INSTANCE, scheduler);
     if (rsc_then == NULL) {
         return;
@@ -920,7 +920,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     }
 
     id_first = crm_element_value(xml_obj, PCMK_XA_FIRST);
-    id_then = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN);
+    id_then = crm_element_value(xml_obj, PCMK_XA_THEN);
     if ((id_first == NULL) || (id_then == NULL)) {
         return pcmk_rc_ok;
     }
@@ -968,9 +968,11 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         any_sets = true;
     }
 
-    // Convert template/tag reference in "then" into constraint resource_set
-    if (!pcmk__tag_to_set(*expanded_xml, &rsc_set_then, XML_ORDER_ATTR_THEN,
-                          true, scheduler)) {
+    /* Convert template/tag reference in PCMK_XA_THEN into constraint
+     * resource_set
+     */
+    if (!pcmk__tag_to_set(*expanded_xml, &rsc_set_then, PCMK_XA_THEN, true,
+                          scheduler)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_unpack_error;
