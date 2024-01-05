@@ -288,8 +288,8 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
         return FALSE;
     }
 
-    cib_resources = get_xpath_object("//" XML_CIB_TAG_RESOURCES,
-                                     scheduler->input, LOG_TRACE);
+    cib_resources = get_xpath_object("//" PCMK_XE_RESOURCES, scheduler->input,
+                                     LOG_TRACE);
     if (cib_resources == NULL) {
         pcmk__config_err("No resources configured");
         return FALSE;

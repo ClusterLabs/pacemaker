@@ -689,7 +689,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
         GList *lpc = NULL;
         GList *hosts = NULL;
 
-        pcmk__output_xml_create_parent(out, "resources", NULL);
+        pcmk__output_xml_create_parent(out, PCMK_XE_RESOURCES, NULL);
 
         for (lpc = resources; lpc != NULL; lpc = lpc->next) {
             pcmk_resource_t *rsc = (pcmk_resource_t *) lpc->data;
@@ -723,7 +723,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
         GList *unactiveResources = pcmk__subtract_lists(allResources, activeResources, (GCompareFunc) strcmp);
         GList *lpc = NULL;
 
-        pcmk__output_xml_create_parent(out, "resources", NULL);
+        pcmk__output_xml_create_parent(out, PCMK_XE_RESOURCES, NULL);
 
         for (lpc = activeResources; lpc != NULL; lpc = lpc->next) {
             pcmk_resource_t *rsc = (pcmk_resource_t *) lpc->data;

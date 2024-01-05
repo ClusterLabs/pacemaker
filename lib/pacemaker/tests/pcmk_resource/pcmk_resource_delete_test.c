@@ -111,7 +111,7 @@ find_rsc(const char *rsc)
     cib->cmds->signon(cib, crm_system_name, cib_command);
 
     pcmk__g_strcat(xpath,
-                   pcmk_cib_xpath_for(XML_CIB_TAG_RESOURCES),
+                   pcmk_cib_xpath_for(PCMK_XE_RESOURCES),
                    "//*[@" PCMK_XA_ID "=\"", rsc, "\"]", NULL);
 
     cib->cmds->query(cib, (const char *) xpath->str, &xml_search,

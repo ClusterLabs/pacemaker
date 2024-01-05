@@ -237,7 +237,7 @@ createEmptyCib(int cib_epoch)
 
     create_xml_node(config, XML_CIB_TAG_CRMCONFIG);
     create_xml_node(config, XML_CIB_TAG_NODES);
-    create_xml_node(config, XML_CIB_TAG_RESOURCES);
+    create_xml_node(config, PCMK_XE_RESOURCES);
     create_xml_node(config, XML_CIB_TAG_CONSTRAINTS);
 
 #if PCMK__RESOURCE_STICKINESS_DEFAULT != 0

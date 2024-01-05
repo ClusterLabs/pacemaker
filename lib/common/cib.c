@@ -54,9 +54,9 @@ static struct {
         "//" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" XML_CIB_TAG_NODES
     },
     {
-        XML_CIB_TAG_RESOURCES,
+        PCMK_XE_RESOURCES,
         "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION,
-        "//" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" XML_CIB_TAG_RESOURCES
+        "//" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_RESOURCES
     },
     {
         XML_CIB_TAG_CONSTRAINTS,

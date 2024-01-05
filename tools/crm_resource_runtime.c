@@ -92,9 +92,9 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
         return ENOTCONN;
     }
 
-    xpath_base = pcmk_cib_xpath_for(XML_CIB_TAG_RESOURCES);
+    xpath_base = pcmk_cib_xpath_for(PCMK_XE_RESOURCES);
     if (xpath_base == NULL) {
-        crm_err(XML_CIB_TAG_RESOURCES " CIB element not known (bug?)");
+        crm_err(PCMK_XE_RESOURCES " CIB element not known (bug?)");
         return ENOMSG;
     }
 
@@ -301,8 +301,7 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
     } else if (pcmk__str_eq(attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
         crm_xml_add(rsc->xml, attr_name, attr_value);
         CRM_ASSERT(cib != NULL);
-        rc = cib->cmds->replace(cib, XML_CIB_TAG_RESOURCES, rsc->xml,
-                                cib_options);
+        rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc->xml, cib_options);
         rc = pcmk_legacy2rc(rc);
         if (rc == pcmk_rc_ok) {
             out->info(out, "Set attribute: name=%s value=%s",
@@ -385,8 +384,7 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
 
         crm_log_xml_debug(xml_top, "Update");
 
-        rc = cib->cmds->modify(cib, XML_CIB_TAG_RESOURCES, xml_top,
-                               cib_options);
+        rc = cib->cmds->modify(cib, PCMK_XE_RESOURCES, xml_top, cib_options);
         rc = pcmk_legacy2rc(rc);
         if (rc == pcmk_rc_ok) {
             out->info(out, "Set '%s' option: id=%s%s%s%s%s value=%s",
@@ -469,8 +467,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
     } else if (pcmk__str_eq(attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
         xml_remove_prop(rsc->xml, attr_name);
         CRM_ASSERT(cib != NULL);
-        rc = cib->cmds->replace(cib, XML_CIB_TAG_RESOURCES, rsc->xml,
-                                cib_options);
+        rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc->xml, cib_options);
         rc = pcmk_legacy2rc(rc);
         if (rc == pcmk_rc_ok) {
             out->info(out, "Deleted attribute: %s", attr_name);
@@ -515,8 +512,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
         crm_log_xml_debug(xml_obj, "Delete");
 
         CRM_ASSERT(cib);
-        rc = cib->cmds->remove(cib, XML_CIB_TAG_RESOURCES, xml_obj,
-                               cib_options);
+        rc = cib->cmds->remove(cib, PCMK_XE_RESOURCES, xml_obj, cib_options);
         rc = pcmk_legacy2rc(rc);
 
         if (rc == pcmk_rc_ok) {

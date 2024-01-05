@@ -431,7 +431,7 @@ te_update_diff_v2(xmlNode *diff)
         } else if ((strcmp(op, "move") == 0)
                    && (strstr(xpath,
                               "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION
-                              "/" XML_CIB_TAG_RESOURCES) == NULL)) {
+                              "/" PCMK_XE_RESOURCES) == NULL)) {
             /* We still need to consider moves within the resources section,
              * since they affect placement order.
              */

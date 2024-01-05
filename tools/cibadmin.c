@@ -140,7 +140,7 @@ scope_is_valid(const char *scope)
     return pcmk__str_any_of(scope,
                             PCMK_XE_CONFIGURATION,
                             XML_CIB_TAG_NODES,
-                            XML_CIB_TAG_RESOURCES,
+                            PCMK_XE_RESOURCES,
                             XML_CIB_TAG_CONSTRAINTS,
                             XML_CIB_TAG_CRMCONFIG,
                             XML_CIB_TAG_RSCCONFIG,
@@ -351,7 +351,7 @@ static GOptionEntry addl_entries[] = {
     { "scope", 'o', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, section_cb,
       "Limit scope of operation to specific section of CIB\n"
       INDENT "Valid values: " PCMK_XE_CONFIGURATION ", " XML_CIB_TAG_NODES
-      ", " XML_CIB_TAG_RESOURCES ", " XML_CIB_TAG_CONSTRAINTS
+      ", " PCMK_XE_RESOURCES ", " XML_CIB_TAG_CONSTRAINTS
       ", " XML_CIB_TAG_CRMCONFIG ", " XML_CIB_TAG_RSCCONFIG ",\n"
       INDENT "              " XML_CIB_TAG_OPCONFIG ", " XML_CIB_TAG_ACLS
       ", " XML_TAG_FENCING_TOPOLOGY ", " XML_CIB_TAG_TAGS
@@ -371,7 +371,7 @@ static GOptionEntry addl_entries[] = {
       "When performing XPath queries, return paths of any matches found\n"
       INDENT "(for example, "
       "\"/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION
-      "/" XML_CIB_TAG_RESOURCES "/" XML_CIB_TAG_INCARNATION
+      "/" PCMK_XE_RESOURCES "/" XML_CIB_TAG_INCARNATION
       "[@" PCMK_XA_ID "='dummy-clone']"
       "/" XML_CIB_TAG_RESOURCE "[@" PCMK_XA_ID "='dummy']\")",
       NULL },
@@ -444,8 +444,8 @@ build_arg_context(pcmk__common_args_t *args)
            "\t# cibadmin --delete --xml-text "
                "'<" XML_CIB_TAG_RESOURCE " " PCMK_XA_ID "=\"old\"/>'\n\n"
            "Remove all resources from the configuration:\n\n"
-           "\t# cibadmin --replace --scope " XML_CIB_TAG_RESOURCES
-               " --xml-text '<" XML_CIB_TAG_RESOURCES "/>'\n\n"
+           "\t# cibadmin --replace --scope " PCMK_XE_RESOURCES
+               " --xml-text '<" PCMK_XE_RESOURCES "/>'\n\n"
            "Replace complete configuration with contents of "
                "$HOME/pacemaker.xml:\n\n"
            "\t# cibadmin --replace --xml-file $HOME/pacemaker.xml\n\n"

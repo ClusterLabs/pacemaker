@@ -118,7 +118,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
                                LOG_TRACE);
     unpack_nodes(section, scheduler);
 
-    section = get_xpath_object("//" XML_CIB_TAG_RESOURCES, scheduler->input,
+    section = get_xpath_object("//" PCMK_XE_RESOURCES, scheduler->input,
                                LOG_TRACE);
     if (!pcmk_is_set(scheduler->flags, pcmk_sched_location_only)) {
         unpack_remote_nodes(section, scheduler);

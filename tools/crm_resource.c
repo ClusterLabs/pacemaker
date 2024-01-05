@@ -1249,7 +1249,7 @@ set_property(void)
     crm_xml_add(msg_data, PCMK_XA_ID, options.rsc_id);
     crm_xml_add(msg_data, options.prop_name, options.prop_value);
 
-    rc = cib_conn->cmds->modify(cib_conn, XML_CIB_TAG_RESOURCES, msg_data,
+    rc = cib_conn->cmds->modify(cib_conn, PCMK_XE_RESOURCES, msg_data,
                                 options.cib_options);
     rc = pcmk_legacy2rc(rc);
     free_xml(msg_data);
