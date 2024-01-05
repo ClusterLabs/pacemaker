@@ -203,7 +203,6 @@ extern "C" {
  * executor operations.
  */
 
-#  define XML_LRM_ATTR_MIGRATE_SOURCE	"migrate_source"
 #  define XML_LRM_ATTR_MIGRATE_TARGET	"migrate_target"
 
 #  define XML_TAG_GRAPH			"transition_graph"

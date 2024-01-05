@@ -607,6 +607,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_QUEUE_TIME instead
 #define XML_RSC_OP_T_QUEUE PCMK_XA_QUEUE_TIME
 
+//! \deprecated Do not use
+#define XML_LRM_ATTR_MIGRATE_SOURCE "migrate_source"
+
 #ifdef __cplusplus
 }
 #endif
