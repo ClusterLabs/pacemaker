@@ -95,7 +95,8 @@ parse_location_role(const char *role_spec, enum rsc_role_e *role)
  *
  * \param[in,out] rsc            Resource that constraint is for
  * \param[in]     rule_xml       Rule XML (sub-element of location constraint)
- * \param[in]     discovery      Value of resource-discovery for constraint
+ * \param[in]     discovery      Value of \c PCMK_XA_RESOURCE_DISCOVERY for
+ *                               constraint
  * \param[out]    next_change    Where to set when rule evaluation will change
  * \param[in]     re_match_data  Regular expression submatches
  *
@@ -249,7 +250,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
     const char *id = crm_element_value(xml_obj, PCMK_XA_ID);
     const char *node = crm_element_value(xml_obj, XML_CIB_TAG_NODE);
     const char *discovery = crm_element_value(xml_obj,
-                                              XML_LOCATION_ATTR_DISCOVERY);
+                                              PCMK_XA_RESOURCE_DISCOVERY);
 
     if (rsc == NULL) {
         pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
@@ -612,7 +613,7 @@ pcmk__new_location(const char *id, pcmk_resource_t *rsc,
             rsc->exclusive_discover = TRUE;
 
         } else {
-            pcmk__config_err("Invalid " XML_LOCATION_ATTR_DISCOVERY " value %s "
+            pcmk__config_err("Invalid " PCMK_XA_RESOURCE_DISCOVERY " value %s "
                              "in location constraint", discover_mode);
         }
 

@@ -3704,7 +3704,8 @@ unpack_rsc_op_failure(struct action_history *history,
              * didn't know resources will be probed even where they can't run.
              */
             crm_notice("If it is not possible for %s to run on %s, see "
-                       "the resource-discovery option for location constraints",
+                       "the " PCMK_XA_RESOURCE_DISCOVERY " option for location "
+                       "constraints",
                        history->rsc->id, pe__node_name(history->node));
         }
 

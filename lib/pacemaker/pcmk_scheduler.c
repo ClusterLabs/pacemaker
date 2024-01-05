@@ -144,10 +144,11 @@ check_failure_threshold(gpointer data, gpointer user_data)
  * \internal
  * \brief If resource has exclusive discovery, ban node if not allowed
  *
- * Location constraints have a resource-discovery option that allows users to
- * specify where probes are done for the affected resource. If this is set to
- * exclusive, probes will only be done on nodes listed in exclusive constraints.
- * This function bans the resource from the node if the node is not listed.
+ * Location constraints have a PCMK_XA_RESOURCE_DISCOVERY option that allows
+ * users to specify where probes are done for the affected resource. If this is
+ * set to \c exclusive, probes will only be done on nodes listed in exclusive
+ * constraints. This function bans the resource from the node if the node is not
+ * listed.
  *
  * \param[in,out] data       Resource to check
  * \param[in]     user_data  Node to check resource on
