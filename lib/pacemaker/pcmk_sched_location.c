@@ -143,7 +143,7 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
 
     score = crm_element_value(rule_xml, PCMK_XA_SCORE);
     if (score == NULL) {
-        score = crm_element_value(rule_xml, XML_RULE_ATTR_SCORE_ATTRIBUTE);
+        score = crm_element_value(rule_xml, PCMK_XA_SCORE_ATTRIBUTE);
         if (score != NULL) {
             raw_score = false;
         }
