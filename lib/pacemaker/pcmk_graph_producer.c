@@ -409,7 +409,7 @@ create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
     if (pcmk__str_eq(action->task, PCMK_ACTION_STONITH, pcmk__str_none)) {
         /* All fences need node info; guest node fences are pseudo-events */
         if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
-            action_xml = create_xml_node(parent, XML_GRAPH_TAG_PSEUDO_EVENT);
+            action_xml = create_xml_node(parent, PCMK__XE_PSEUDO_EVENT);
         } else {
             action_xml = create_xml_node(parent, XML_GRAPH_TAG_CRM_EVENT);
         }
@@ -430,7 +430,7 @@ create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
                          pcmk__str_none)) {
             needs_maintenance_info = true;
         }
-        action_xml = create_xml_node(parent, XML_GRAPH_TAG_PSEUDO_EVENT);
+        action_xml = create_xml_node(parent, PCMK__XE_PSEUDO_EVENT);
         needs_node_info = false;
 
     } else {
