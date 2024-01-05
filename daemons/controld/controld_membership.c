@@ -343,7 +343,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
 
                 /* Search and remove unknown nodes with the conflicting uname from CIB */
                 pcmk__g_strcat(xpath,
-                               "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION
+                               "/" PCMK_XE_CIB "/" XML_CIB_TAG_CONFIGURATION
                                "/" XML_CIB_TAG_NODES "/" XML_CIB_TAG_NODE
                                "[@" PCMK_XA_UNAME "='", node->uname, "']"
                                "[@" PCMK_XA_ID "!='", node->uuid, "']", NULL);
@@ -429,12 +429,12 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
             || force_update)) {
         xmlNode *update = NULL;
 
-        update = create_xml_node(NULL, XML_TAG_CIB);
+        update = create_xml_node(NULL, PCMK_XE_CIB);
         crm_xml_add_int(update, PCMK_XA_HAVE_QUORUM, quorum);
         crm_xml_add(update, PCMK_XA_DC_UUID, controld_globals.our_uuid);
 
         crm_debug("Updating quorum status to %s", pcmk__btoa(quorum));
-        controld_update_cib(XML_TAG_CIB, update, cib_scope_local,
+        controld_update_cib(PCMK_XE_CIB, update, cib_scope_local,
                             cib_quorum_update_complete);
         free_xml(update);
 

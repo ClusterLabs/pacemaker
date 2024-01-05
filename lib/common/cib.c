@@ -1,6 +1,6 @@
 /*
  * Original copyright 2004 International Business Machines
- * Later changes copyright 2008-2023 the Pacemaker project contributors
+ * Later changes copyright 2008-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -29,74 +29,76 @@ static struct {
 } cib_sections[] = {
     {
         // This first entry is also the default if a NULL is compared
-        XML_TAG_CIB,
+        PCMK_XE_CIB,
         NULL,
-        "//" XML_TAG_CIB
+        "//" PCMK_XE_CIB
     },
     {
         XML_CIB_TAG_STATUS,
-        "/" XML_TAG_CIB,
-        "//" XML_TAG_CIB "/" XML_CIB_TAG_STATUS
+        "/" PCMK_XE_CIB,
+        "//" PCMK_XE_CIB "/" XML_CIB_TAG_STATUS
     },
     {
         XML_CIB_TAG_CONFIGURATION,
-        "/" XML_TAG_CIB,
-        "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION
+        "/" PCMK_XE_CIB,
+        "//" PCMK_XE_CIB "/" XML_CIB_TAG_CONFIGURATION
     },
     {
         XML_CIB_TAG_CRMCONFIG,
-        "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION,
-        "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_CRMCONFIG
+        "/" PCMK_XE_CIB "/" XML_CIB_TAG_CONFIGURATION,
+        "//" PCMK_XE_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_CRMCONFIG
     },
     {
         XML_CIB_TAG_NODES,
-        "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION,
-        "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_NODES
+        "/" PCMK_XE_CIB "/" XML_CIB_TAG_CONFIGURATION,
+        "//" PCMK_XE_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_NODES
     },
     {
         XML_CIB_TAG_RESOURCES,
-        "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION,
-        "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_RESOURCES
+        "/" PCMK_XE_CIB "/" XML_CIB_TAG_CONFIGURATION,
+        "//" PCMK_XE_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_RESOURCES
     },
     {
         XML_CIB_TAG_CONSTRAINTS,
-        "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION,
-        "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_CONSTRAINTS
+        "/" PCMK_XE_CIB "/" XML_CIB_TAG_CONFIGURATION,
+        "//" PCMK_XE_CIB "/" XML_CIB_TAG_CONFIGURATION
+            "/" XML_CIB_TAG_CONSTRAINTS
     },
     {
         XML_CIB_TAG_OPCONFIG,
-        "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION,
-        "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_OPCONFIG
+        "/" PCMK_XE_CIB "/" XML_CIB_TAG_CONFIGURATION,
+        "//" PCMK_XE_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_OPCONFIG
     },
     {
         XML_CIB_TAG_RSCCONFIG,
-        "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION,
-        "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_RSCCONFIG
+        "/" PCMK_XE_CIB "/" XML_CIB_TAG_CONFIGURATION,
+        "//" PCMK_XE_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_RSCCONFIG
     },
     {
         XML_CIB_TAG_ACLS,
-        "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION,
-        "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_ACLS
+        "/" PCMK_XE_CIB "/" XML_CIB_TAG_CONFIGURATION,
+        "//" PCMK_XE_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_ACLS
     },
     {
         XML_TAG_FENCING_TOPOLOGY,
-        "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION,
-        "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_TAG_FENCING_TOPOLOGY
+        "/" PCMK_XE_CIB "/" XML_CIB_TAG_CONFIGURATION,
+        "//" PCMK_XE_CIB "/" XML_CIB_TAG_CONFIGURATION
+            "/" XML_TAG_FENCING_TOPOLOGY
     },
     {
         XML_CIB_TAG_TAGS,
-        "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION,
-        "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_TAGS
+        "/" PCMK_XE_CIB "/" XML_CIB_TAG_CONFIGURATION,
+        "//" PCMK_XE_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_TAGS
     },
     {
         XML_CIB_TAG_ALERTS,
-        "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION,
-        "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_ALERTS
+        "/" PCMK_XE_CIB "/" XML_CIB_TAG_CONFIGURATION,
+        "//" PCMK_XE_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_ALERTS
     },
     {
         XML_CIB_TAG_SECTION_ALL,
         NULL,
-        "//" XML_TAG_CIB
+        "//" PCMK_XE_CIB
     },
 };
 

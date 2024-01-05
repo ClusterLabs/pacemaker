@@ -190,9 +190,9 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
 
 // unfencing in rsc_defaults or any resource
 #define XPATH_ENABLE_UNFENCING \
-    "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_RESOURCES   \
-    "//" XML_TAG_META_SETS "/" XPATH_UNFENCING_NVPAIR                                               \
-    "|/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_RSCCONFIG  \
+    "/" PCMK_XE_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_RESOURCES   \
+    "//" XML_TAG_META_SETS "/" XPATH_UNFENCING_NVPAIR                         \
+    "|/" PCMK_XE_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_RSCCONFIG  \
     "/" XML_TAG_META_SETS "/" XPATH_UNFENCING_NVPAIR
 
 static void
@@ -2863,7 +2863,7 @@ set_node_score(gpointer key, gpointer value, gpointer user_data)
     node->weight = *score;
 }
 
-#define XPATH_NODE_STATE "/" XML_TAG_CIB "/" XML_CIB_TAG_STATUS     \
+#define XPATH_NODE_STATE "/" PCMK_XE_CIB "/" XML_CIB_TAG_STATUS     \
                          "/" XML_CIB_TAG_STATE
 #define SUB_XPATH_LRM_RESOURCE "/" XML_CIB_TAG_LRM              \
                                "/" XML_LRM_TAG_RESOURCES        \

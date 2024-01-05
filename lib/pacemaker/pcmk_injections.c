@@ -466,7 +466,7 @@ find_ticket_state(pcmk__output_t *out, cib_t *the_cib, const char *ticket_id,
     *ticket_state_xml = NULL;
 
     g_string_append(xpath,
-                    "/" XML_TAG_CIB "/" XML_CIB_TAG_STATUS
+                    "/" PCMK_XE_CIB "/" XML_CIB_TAG_STATUS
                     "/" XML_CIB_TAG_TICKETS);
 
     if (ticket_id) {
@@ -647,7 +647,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
     out->message(out, "inject-modify-config", injections->quorum,
                  injections->watchdog);
     if (injections->quorum != NULL) {
-        xmlNode *top = create_xml_node(NULL, XML_TAG_CIB);
+        xmlNode *top = create_xml_node(NULL, PCMK_XE_CIB);
 
         /* crm_xml_add(top, PCMK_XA_DC_UUID, dc_uuid);      */
         crm_xml_add(top, PCMK_XA_HAVE_QUORUM, injections->quorum);

@@ -387,7 +387,7 @@ static int
 add_unset_attr_update(const attribute_t *attr, const char *attr_id,
                       const char *node_id, const char *set_id)
 {
-    char *xpath = crm_strdup_printf("/" XML_TAG_CIB
+    char *xpath = crm_strdup_printf("/" PCMK_XE_CIB
                                     "/" XML_CIB_TAG_STATUS
                                     "/" XML_CIB_TAG_STATE
                                         "[@" PCMK_XA_ID "='%s']"

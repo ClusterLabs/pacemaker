@@ -370,7 +370,7 @@ static GOptionEntry addl_entries[] = {
       &options.get_node_path,
       "When performing XPath queries, return paths of any matches found\n"
       INDENT "(for example, "
-      "\"/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION
+      "\"/" PCMK_XE_CIB "/" XML_CIB_TAG_CONFIGURATION
       "/" XML_CIB_TAG_RESOURCES "/" XML_CIB_TAG_INCARNATION
       "[@" PCMK_XA_ID "='dummy-clone']"
       "/" XML_CIB_TAG_RESOURCE "[@" PCMK_XA_ID "='dummy']\")",
@@ -456,7 +456,7 @@ build_arg_context(pcmk__common_args_t *args)
            "Increase configuration version to prevent old configurations from "
                "being loaded accidentally:\n\n"
            "\t# cibadmin --modify --xml-text "
-               "'<" XML_TAG_CIB " " PCMK_XA_ADMIN_EPOCH
+               "'<" PCMK_XE_CIB " " PCMK_XA_ADMIN_EPOCH
                    "=\"" PCMK_XA_ADMIN_EPOCH "++\"/>'\n\n"
            "Edit the configuration with your favorite $EDITOR:\n\n"
            "\t# cibadmin --query > $HOME/local.xml\n\n"
@@ -883,7 +883,7 @@ do_work(xmlNode *input, xmlNode **output)
     /* construct the request */
     the_cib->call_timeout = options.message_timeout_sec;
     if ((strcmp(options.cib_action, PCMK__CIB_REQUEST_REPLACE) == 0)
-        && pcmk__xe_is(input, XML_TAG_CIB)) {
+        && pcmk__xe_is(input, PCMK_XE_CIB)) {
         xmlNode *status = pcmk_find_cib_element(input, XML_CIB_TAG_STATUS);
 
         if (status == NULL) {

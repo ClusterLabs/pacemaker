@@ -192,7 +192,7 @@ strip_patch_cib_version(xmlNode *patch, const char **vfields, size_t nvfields)
                     xml_remove_prop(tmp, vfields[lpc]);
                 }
 
-                tmp = find_xml_node(tmp, XML_TAG_CIB, FALSE);
+                tmp = find_xml_node(tmp, PCMK_XE_CIB, FALSE);
                 if (tmp) {
                     for (lpc = 0; lpc < nvfields; lpc++) {
                         xml_remove_prop(tmp, vfields[lpc]);

@@ -1884,7 +1884,7 @@ process_node_history(pcmk_node_t *node, const xmlNode *lrm_rscs)
 }
 
 // XPath to find a node's resource history
-#define XPATH_NODE_HISTORY "/" XML_TAG_CIB "/" XML_CIB_TAG_STATUS             \
+#define XPATH_NODE_HISTORY "/" PCMK_XE_CIB "/" XML_CIB_TAG_STATUS             \
                            "/" XML_CIB_TAG_STATE "[@" PCMK_XA_UNAME "='%s']"  \
                            "/" XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES
 

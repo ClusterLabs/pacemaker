@@ -355,7 +355,7 @@ find_ticket_state(cib_t * the_cib, gchar *ticket_id, xmlNode ** ticket_state_xml
 
     xpath = g_string_sized_new(1024);
     g_string_append(xpath,
-                    "/" XML_TAG_CIB "/" XML_CIB_TAG_STATUS
+                    "/" PCMK_XE_CIB "/" XML_CIB_TAG_STATUS
                     "/" XML_CIB_TAG_TICKETS);
 
     if (ticket_id != NULL) {

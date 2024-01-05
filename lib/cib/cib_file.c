@@ -240,7 +240,7 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
     read_only = !pcmk_is_set(operation->flags, cib__op_attr_modifies);
 
     // Mirror the logic in prepare_input() in pacemaker-based
-    if ((section != NULL) && pcmk__xe_is(data, XML_TAG_CIB)) {
+    if ((section != NULL) && pcmk__xe_is(data, PCMK_XE_CIB)) {
 
         data = pcmk_find_cib_element(data, section);
     }

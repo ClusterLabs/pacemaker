@@ -124,7 +124,7 @@ cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
  *
  * \param[in] patchset  CIB XML patchset
  * \param[in] element   XML tag of CIB element to check (\c NULL is equivalent
- *                      to \c XML_TAG_CIB)
+ *                      to \c PCMK_XE_CIB)
  *
  * \return \c true if \p element was modified, or \c false otherwise
  */
@@ -132,7 +132,7 @@ static bool
 element_in_patchset_v1(const xmlNode *patchset, const char *element)
 {
     char *xpath = crm_strdup_printf(XPATH_DIFF_V1 "//%s",
-                                    pcmk__s(element, XML_TAG_CIB));
+                                    pcmk__s(element, PCMK_XE_CIB));
     xmlXPathObject *xpath_obj = xpath_search(patchset, xpath);
 
     free(xpath);
@@ -150,7 +150,7 @@ element_in_patchset_v1(const xmlNode *patchset, const char *element)
  *
  * \param[in] patchset  CIB XML patchset
  * \param[in] element   XML tag of CIB element to check (\c NULL is equivalent
- *                      to \c XML_TAG_CIB). Supported values include any CIB
+ *                      to \c PCMK_XE_CIB). Supported values include any CIB
  *                      element supported by \c pcmk__cib_abs_xpath_for().
  *
  * \return \c true if \p element was modified, or \c false otherwise
@@ -200,7 +200,7 @@ element_in_patchset_v2(const xmlNode *patchset, const char *element)
  *
  * \param[in] patchset  CIB XML patchset
  * \param[in] element   XML tag of CIB element to check (\c NULL is equivalent
- *                      to \c XML_TAG_CIB). Supported values include any CIB
+ *                      to \c PCMK_XE_CIB). Supported values include any CIB
  *                      element supported by \c pcmk__cib_abs_xpath_for().
  *
  * \return \c true if \p element was modified, or \c false otherwise
@@ -239,7 +239,7 @@ createEmptyCib(int cib_epoch)
 {
     xmlNode *cib_root = NULL, *config = NULL;
 
-    cib_root = create_xml_node(NULL, XML_TAG_CIB);
+    cib_root = create_xml_node(NULL, PCMK_XE_CIB);
     crm_xml_add(cib_root, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
     crm_xml_add(cib_root, PCMK_XA_VALIDATE_WITH, xml_latest_schema());
 
@@ -512,7 +512,8 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
     fix_plus_plus_recursive(scratch);
 
     if (!make_copy) {
-        /* At this point, patchset_cib is just the "cib" tag and its properties.
+        /* At this point, patchset_cib is just the PCMK_XE_CIB tag and its
+         * properties.
          *
          * The v1 format would barf on this, but we know the v2 patch
          * format only needs it for the top-level version fields

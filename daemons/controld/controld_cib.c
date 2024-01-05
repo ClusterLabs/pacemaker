@@ -989,7 +989,7 @@ controld_delete_action_history(const lrmd_event_data_t *op)
 
 /* Define xpath to find LRM resource history entry by node and resource */
 #define XPATH_HISTORY                                   \
-    "/" XML_TAG_CIB "/" XML_CIB_TAG_STATUS              \
+    "/" PCMK_XE_CIB "/" XML_CIB_TAG_STATUS              \
     "/" XML_CIB_TAG_STATE "[@" PCMK_XA_UNAME "='%s']"   \
     "/" XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES       \
     "/" XML_LRM_TAG_RESOURCE "[@" PCMK_XA_ID "='%s']"   \

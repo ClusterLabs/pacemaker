@@ -1957,7 +1957,7 @@ crm_diff_update_v2(const char *event, xmlNode * msg)
             crm_debug("No result for %s operation to %s", op, xpath);
             CRM_ASSERT(strcmp(op, "delete") == 0 || strcmp(op, "move") == 0);
 
-        } else if(strcmp(name, XML_TAG_CIB) == 0) {
+        } else if (strcmp(name, PCMK_XE_CIB) == 0) {
             pcmk__xe_foreach_child(first_named_child(match, XML_CIB_TAG_STATUS),
                                    NULL, handle_op_for_node, NULL);
 

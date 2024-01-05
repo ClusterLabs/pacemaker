@@ -1306,7 +1306,7 @@ prepare_input(const xmlNode *request, enum cib__op_type type,
     }
 
     // Grab the specified section
-    if ((*section != NULL) && pcmk__xe_is(input, XML_TAG_CIB)) {
+    if ((*section != NULL) && pcmk__xe_is(input, PCMK_XE_CIB)) {
         input = pcmk_find_cib_element(input, *section);
     }
 
