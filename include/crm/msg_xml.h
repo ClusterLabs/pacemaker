@@ -143,6 +143,7 @@ extern "C" {
 #define PCMK_XA_VERSION                     "version"
 #define PCMK_XA_WITH_RSC                    "with-rsc"
 #define PCMK_XA_WITH_RSC_ROLE               "with-rsc-role"
+#define PCMK_XA_XPATH                       "xpath"
 
 
 /*
@@ -263,7 +264,7 @@ extern "C" {
 #  define XML_ACL_TAG_READ		"read"
 #  define XML_ACL_TAG_WRITE		"write"
 #  define XML_ACL_TAG_DENY		"deny"
-#  define XML_ACL_ATTR_XPATH		"xpath"
+#  define XML_ACL_ATTR_XPATH		PCMK_XA_XPATH
 
 #  define XML_CIB_TAG_TICKETS		"tickets"
 #  define XML_CIB_TAG_TICKET_STATE	"ticket_state"

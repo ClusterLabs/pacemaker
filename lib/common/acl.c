@@ -53,7 +53,7 @@ create_acl(const xmlNode *xml, GList *acls, enum xml_private_flags mode)
 
     const char *tag = crm_element_value(xml, PCMK_XA_OBJECT_TYPE);
     const char *ref = crm_element_value(xml, PCMK_XA_REFERENCE);
-    const char *xpath = crm_element_value(xml, XML_ACL_ATTR_XPATH);
+    const char *xpath = crm_element_value(xml, PCMK_XA_XPATH);
     const char *attr = crm_element_value(xml, PCMK_XA_ATTRIBUTE);
 
     if (tag == NULL) {
