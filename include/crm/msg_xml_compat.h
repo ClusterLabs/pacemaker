@@ -781,6 +781,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_INSTANCE_ATTRIBUTES instead
 #define XML_TAG_ATTR_SETS PCMK_XE_INSTANCE_ATTRIBUTES
 
+//! \deprecated Use \c PCMK_XE_META_ATTRIBUTES instead
+#define XML_TAG_META_SETS PCMK_XE_META_ATTRIBUTES
+
 #ifdef __cplusplus
 }
 #endif
