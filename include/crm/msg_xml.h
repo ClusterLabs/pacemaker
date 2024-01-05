@@ -68,6 +68,7 @@ extern "C" {
  */
 
 #define PCMK_XA_ADMIN_EPOCH                 "admin_epoch"
+#define PCMK_XA_ATTRIBUTE                   "attribute"
 #define PCMK_XA_BOOLEAN_OP                  "boolean-op"
 #define PCMK_XA_CIB_LAST_WRITTEN            "cib-last-written"
 #define PCMK_XA_CLASS                       "class"
@@ -213,7 +214,7 @@ extern "C" {
 #  define XML_TAG_RULE			"rule"
 
 #  define XML_TAG_EXPRESSION		"expression"
-#  define XML_EXPR_ATTR_ATTRIBUTE	"attribute"
+#  define XML_EXPR_ATTR_ATTRIBUTE	PCMK_XA_ATTRIBUTE
 #  define XML_EXPR_ATTR_VALUE_SOURCE	"value-source"
 
 #  define XML_CONS_TAG_RSC_DEPEND	"rsc_colocation"
@@ -264,7 +265,7 @@ extern "C" {
 #  define XML_ACL_ATTR_TAG		"object-type"
 #  define XML_ACL_ATTR_TAGv1		"tag"
 #  define XML_ACL_ATTR_XPATH		"xpath"
-#  define XML_ACL_ATTR_ATTRIBUTE	"attribute"
+#  define XML_ACL_ATTR_ATTRIBUTE	PCMK_XA_ATTRIBUTE
 
 #  define XML_CIB_TAG_TICKETS		"tickets"
 #  define XML_CIB_TAG_TICKET_STATE	"ticket_state"

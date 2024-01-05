@@ -106,7 +106,7 @@ find_expression_type(xmlNode * expr)
 {
     const char *attr = NULL;
 
-    attr = crm_element_value(expr, XML_EXPR_ATTR_ATTRIBUTE);
+    attr = crm_element_value(expr, PCMK_XA_ATTRIBUTE);
 
     if (pcmk__xe_is(expr, PCMK_XE_DATE_EXPRESSION)) {
         return pcmk__subexpr_datetime;
@@ -984,14 +984,14 @@ pe__eval_attr_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
     const char *value = NULL;
     const char *value_source = NULL;
 
-    attr = crm_element_value(expr, XML_EXPR_ATTR_ATTRIBUTE);
+    attr = crm_element_value(expr, PCMK_XA_ATTRIBUTE);
     op = crm_element_value(expr, PCMK_XA_OPERATION);
     value = crm_element_value(expr, PCMK_XA_VALUE);
     type = crm_element_value(expr, PCMK_XA_TYPE);
     value_source = crm_element_value(expr, XML_EXPR_ATTR_VALUE_SOURCE);
 
     if (attr == NULL) {
-        pcmk__config_err("Expression %s invalid: " XML_EXPR_ATTR_ATTRIBUTE
+        pcmk__config_err("Expression %s invalid: " PCMK_XA_ATTRIBUTE
                          " not specified", pcmk__s(ID(expr), "without ID"));
         return FALSE;
     } else if (op == NULL) {

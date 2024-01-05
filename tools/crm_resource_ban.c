@@ -108,7 +108,7 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
         crm_xml_add(rule, PCMK_XA_BOOLEAN_OP, "and");
 
         crm_xml_set_id(expr, "cli-ban-%s-on-%s-expr", rsc_id, host);
-        crm_xml_add(expr, XML_EXPR_ATTR_ATTRIBUTE, CRM_ATTR_UNAME);
+        crm_xml_add(expr, PCMK_XA_ATTRIBUTE, CRM_ATTR_UNAME);
         crm_xml_add(expr, PCMK_XA_OPERATION, "eq");
         crm_xml_add(expr, PCMK_XA_VALUE, host);
         crm_xml_add(expr, PCMK_XA_TYPE, "string");
@@ -185,7 +185,7 @@ cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
         crm_xml_add(rule, PCMK_XA_BOOLEAN_OP, "and");
 
         crm_xml_set_id(expr, "cli-prefer-expr-%s", rsc_id);
-        crm_xml_add(expr, XML_EXPR_ATTR_ATTRIBUTE, CRM_ATTR_UNAME);
+        crm_xml_add(expr, PCMK_XA_ATTRIBUTE, CRM_ATTR_UNAME);
         crm_xml_add(expr, PCMK_XA_OPERATION, "eq");
         crm_xml_add(expr, PCMK_XA_VALUE, host);
         crm_xml_add(expr, PCMK_XA_TYPE, "string");
@@ -248,7 +248,7 @@ resource_clear_node_in_expr(const char *rsc_id, const char *host, cib_t * cib_co
     "[" XML_TAG_RULE                                                    \
         "[@" PCMK_XA_ID "='cli-prefer-rule-%s']"                        \
         "/" XML_TAG_EXPRESSION                                          \
-        "[@" XML_EXPR_ATTR_ATTRIBUTE "='#uname' "                       \
+        "[@" PCMK_XA_ATTRIBUTE "='" CRM_ATTR_UNAME "' "                 \
         "and @" PCMK_XA_VALUE "='%s']"                                  \
     "]"
 
@@ -408,7 +408,7 @@ build_clear_xpath_string(GString *buf, const xmlNode *constraint_node,
         }
         pcmk__g_strcat(buf,
                        "/" XML_TAG_RULE "[" XML_TAG_EXPRESSION
-                       "[@" XML_EXPR_ATTR_ATTRIBUTE "='" CRM_ATTR_UNAME "' "
+                       "[@" PCMK_XA_ATTRIBUTE "='" CRM_ATTR_UNAME "' "
                        "and @" PCMK_XA_VALUE "='", node, "']]", NULL);
     }
 
