@@ -186,7 +186,6 @@ extern "C" {
 
 /*---- CIB specific tags/attrs */
 #  define XML_CIB_TAG_SECTION_ALL	"all"
-#  define XML_CIB_TAG_NODES         	PCMK_XE_NODES
 #  define XML_CIB_TAG_CONSTRAINTS   	"constraints"
 #  define XML_CIB_TAG_CRMCONFIG   	"crm_config"
 #  define XML_CIB_TAG_OPCONFIG		"op_defaults"

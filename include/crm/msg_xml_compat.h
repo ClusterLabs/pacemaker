@@ -721,6 +721,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_RESOURCES instead
 #define XML_CIB_TAG_RESOURCES PCMK_XE_RESOURCES
 
+//! \deprecated Use \c PCMK_XE_NODES instead
+#define XML_CIB_TAG_NODES PCMK_XE_NODES
+
 #ifdef __cplusplus
 }
 #endif
