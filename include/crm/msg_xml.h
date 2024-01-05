@@ -106,6 +106,7 @@ extern "C" {
 #define PCMK_XA_NO_QUORUM_PANIC             "no-quorum-panic"
 #define PCMK_XA_NODE_ATTRIBUTE              "node-attribute"
 #define PCMK_XA_NUM_UPDATES                 "num_updates"
+#define PCMK_XA_OBJECT_TYPE                 "object-type"
 #define PCMK_XA_OP                          "op"
 #define PCMK_XA_OPERATION                   "operation"
 #define PCMK_XA_ORIGIN                      "origin"
@@ -262,7 +263,7 @@ extern "C" {
 #  define XML_ACL_TAG_READ		"read"
 #  define XML_ACL_TAG_WRITE		"write"
 #  define XML_ACL_TAG_DENY		"deny"
-#  define XML_ACL_ATTR_TAG		"object-type"
+#  define XML_ACL_ATTR_TAG		PCMK_XA_OBJECT_TYPE
 #  define XML_ACL_ATTR_TAGv1		"tag"
 #  define XML_ACL_ATTR_XPATH		"xpath"
 
