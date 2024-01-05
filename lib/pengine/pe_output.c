@@ -2583,7 +2583,7 @@ node_weight_xml(pcmk__output_t *out, va_list args)
     xmlNodePtr node = pcmk__output_create_xml_node(out, "node_weight",
                                                    "function", prefix,
                                                    "node", uname,
-                                                   "score", score,
+                                                   PCMK_XA_SCORE, score,
                                                    NULL);
 
     if (rsc) {
@@ -2691,7 +2691,7 @@ promotion_score_xml(pcmk__output_t *out, va_list args)
 
     xmlNodePtr node = pcmk__output_create_xml_node(out, "promotion_score",
                                                    PCMK_XA_ID, child_rsc->id,
-                                                   "score", score,
+                                                   PCMK_XA_SCORE, score,
                                                    NULL);
 
     if (chosen) {

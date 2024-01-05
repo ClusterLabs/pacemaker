@@ -77,7 +77,7 @@ get_ordering_type(const xmlNode *xml_obj)
     const char *kind = crm_element_value(xml_obj, XML_ORDER_ATTR_KIND);
 
     if (kind == NULL) {
-        const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
+        const char *score = crm_element_value(xml_obj, PCMK_XA_SCORE);
 
         kind_e = pe_order_kind_mandatory;
 
@@ -132,7 +132,7 @@ get_ordering_symmetry(const xmlNode *xml_obj, enum pe_order_kind parent_kind,
 
     // Check ordering XML for explicit kind
     if ((crm_element_value(xml_obj, XML_ORDER_ATTR_KIND) != NULL)
-        || (crm_element_value(xml_obj, XML_RULE_ATTR_SCORE) != NULL)) {
+        || (crm_element_value(xml_obj, PCMK_XA_SCORE) != NULL)) {
         kind = get_ordering_type(xml_obj);
     }
 

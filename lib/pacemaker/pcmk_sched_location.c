@@ -141,7 +141,7 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
 
     crm_trace("Processing location constraint rule %s", rule_id);
 
-    score = crm_element_value(rule_xml, XML_RULE_ATTR_SCORE);
+    score = crm_element_value(rule_xml, PCMK_XA_SCORE);
     if (score == NULL) {
         score = crm_element_value(rule_xml, XML_RULE_ATTR_SCORE_ATTRIBUTE);
         if (score != NULL) {
@@ -258,7 +258,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
     }
 
     if (score == NULL) {
-        score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
+        score = crm_element_value(xml_obj, PCMK_XA_SCORE);
     }
 
     if ((node != NULL) && (score != NULL)) {
@@ -497,7 +497,7 @@ unpack_location_set(xmlNode *location, xmlNode *set,
     }
 
     role = crm_element_value(set, "role");
-    local_score = crm_element_value(set, XML_RULE_ATTR_SCORE);
+    local_score = crm_element_value(set, PCMK_XA_SCORE);
 
     for (xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
          xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {

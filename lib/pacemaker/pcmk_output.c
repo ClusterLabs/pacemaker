@@ -47,7 +47,7 @@ colocations_xml_node(pcmk__output_t *out, pcmk_resource_t *rsc,
                                         PCMK_XA_ID, cons->id,
                                         "rsc", cons->dependent->id,
                                         "with-rsc", cons->primary->id,
-                                        "score",
+                                        PCMK_XA_SCORE,
                                         pcmk_readable_score(cons->score),
                                         NULL);
 
@@ -91,7 +91,7 @@ do_locations_list_xml(pcmk__output_t *out, pcmk_resource_t *rsc,
                                          "node", node->details->uname,
                                          "rsc", rsc->id,
                                          PCMK_XA_ID, cons->id,
-                                         "score",
+                                         PCMK_XA_SCORE,
                                          pcmk_readable_score(node->weight),
                                          NULL);
         }

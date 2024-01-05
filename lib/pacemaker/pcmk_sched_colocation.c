@@ -450,7 +450,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
     bool sequential = false;
     uint32_t flags = pcmk__coloc_none;
     const char *xml_rsc_id = NULL;
-    const char *score_s = crm_element_value(set, XML_RULE_ATTR_SCORE);
+    const char *score_s = crm_element_value(set, PCMK_XA_SCORE);
 
     if (score_s) {
         local_score = char2score(score_s);
@@ -713,7 +713,7 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
     int score_i = 0;
     uint32_t flags = pcmk__coloc_none;
 
-    const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
+    const char *score = crm_element_value(xml_obj, PCMK_XA_SCORE);
     const char *dependent_id = crm_element_value(xml_obj,
                                                  XML_COLOC_ATTR_SOURCE);
     const char *primary_id = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET);
@@ -960,7 +960,7 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         xml_obj = expanded_xml;
     }
 
-    score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
+    score = crm_element_value(xml_obj, PCMK_XA_SCORE);
     if (score != NULL) {
         score_i = char2score(score);
     }

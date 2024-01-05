@@ -640,7 +640,7 @@ unpack_nodes(xmlNode *xml_nodes, pcmk_scheduler_t *scheduler)
             id = crm_element_value(xml_obj, PCMK_XA_ID);
             uname = crm_element_value(xml_obj, PCMK_XA_UNAME);
             type = crm_element_value(xml_obj, PCMK_XA_TYPE);
-            score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
+            score = crm_element_value(xml_obj, PCMK_XA_SCORE);
             crm_trace("Processing node %s/%s", uname, id);
 
             if (id == NULL) {

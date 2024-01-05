@@ -474,7 +474,7 @@ make_pairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
             pair->attr_set = expanded_attr_set;
             pair->overwrite = overwrite;
 
-            score = crm_element_value(expanded_attr_set, XML_RULE_ATTR_SCORE);
+            score = crm_element_value(expanded_attr_set, PCMK_XA_SCORE);
             pair->score = char2score(score);
 
             unsorted = g_list_prepend(unsorted, pair);
