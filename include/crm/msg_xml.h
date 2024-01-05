@@ -66,6 +66,7 @@ extern "C" {
 #define PCMK_XE_CONTENT                     "content"
 #define PCMK_XE_CRM_CONFIG                  "crm_config"
 #define PCMK_XE_DATE_EXPRESSION             "date_expression"
+#define PCMK_XE_GROUP                       "group"
 #define PCMK_XE_INSTANCE_ATTRIBUTES         "instance_attributes"
 #define PCMK_XE_LONGDESC                    "longdesc"
 #define PCMK_XE_META_ATTRIBUTES             "meta_attributes"
@@ -210,7 +211,7 @@ extern "C" {
 /*---- CIB specific tags/attrs */
 #  define XML_CIB_TAG_SECTION_ALL	"all"
 
-#  define XML_CIB_TAG_GROUP	  	"group"
+#  define XML_CIB_TAG_GROUP	  	PCMK_XE_GROUP
 #  define XML_CIB_TAG_INCARNATION	"clone"
 #  define XML_CIB_TAG_CONTAINER		"bundle"
 

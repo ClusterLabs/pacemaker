@@ -756,7 +756,8 @@ unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
         /* Check for guest nodes inside a group. Clones are currently not
          * supported as guest nodes.
          */
-        if (pcmk__str_eq((const char *)xml_obj->name, XML_CIB_TAG_GROUP, pcmk__str_none)) {
+        if (pcmk__str_eq((const char *) xml_obj->name, PCMK_XE_GROUP,
+                         pcmk__str_none)) {
             xmlNode *xml_obj2 = NULL;
             for (xml_obj2 = pcmk__xe_first_child(xml_obj); xml_obj2 != NULL;
                  xml_obj2 = pcmk__xe_next(xml_obj2)) {

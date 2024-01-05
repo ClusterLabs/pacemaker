@@ -392,7 +392,7 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
          a_child = pcmk__xe_next(a_child)) {
 
         if (pcmk__str_any_of((const char *) a_child->name,
-                             PCMK_XE_PRIMITIVE, XML_CIB_TAG_GROUP, NULL)) {
+                             PCMK_XE_PRIMITIVE, PCMK_XE_GROUP, NULL)) {
             clone_data->xml_obj_child = a_child;
             break;
         }

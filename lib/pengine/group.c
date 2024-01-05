@@ -375,7 +375,7 @@ pe__group_xml(pcmk__output_t *out, va_list args)
                                                     pcmk_rsc_managed);
             const char *disabled_s = pcmk__btoa(pe__resource_is_disabled(rsc));
 
-            rc = pe__name_and_nvpairs_xml(out, true, "group", 5,
+            rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_GROUP, 5,
                                           PCMK_XA_ID, rsc->id,
                                           "number_resources", count,
                                           "maintenance", maint_s,
