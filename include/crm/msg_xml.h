@@ -165,7 +165,6 @@ extern "C" {
 
 /*---- Common tags/attrs */
 #  define XML_DIFF_MARKER		"__crm_diff_marker__"
-#  define XML_TAG_CIB			PCMK_XE_CIB
 #  define XML_TAG_FAILED		"failed"
 
 #  define XML_TAG_OPTIONS		"options"

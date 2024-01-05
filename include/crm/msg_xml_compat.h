@@ -709,6 +709,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_CRM_TAG_PING "ping_response"
 
+//! \deprecated Use \c PCMK_XE_CIB instead
+#define XML_TAG_CIB PCMK_XE_CIB
+
 #ifdef __cplusplus
 }
 #endif
