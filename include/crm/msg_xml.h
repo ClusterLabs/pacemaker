@@ -194,7 +194,6 @@ extern "C" {
 
 /*---- CIB specific tags/attrs */
 #  define XML_CIB_TAG_SECTION_ALL	"all"
-#  define XML_CIB_TAG_ALERT_RECIPIENT	PCMK_XE_RECIPIENT
 #  define XML_CIB_TAG_ALERT_SELECT      "select"
 #  define XML_CIB_TAG_ALERT_ATTRIBUTES  "select_attributes"
 #  define XML_CIB_TAG_ALERT_FENCING     "select_fencing"
