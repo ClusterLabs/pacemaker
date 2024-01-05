@@ -490,7 +490,7 @@ build_parameter_list(const lrmd_event_data_t *op,
 {
     GString *list = NULL;
 
-    *result = create_xml_node(NULL, XML_TAG_PARAMS);
+    *result = create_xml_node(NULL, PCMK_XE_PARAMETERS);
 
     /* Consider all parameters only except private ones to be consistent with
      * what scheduler does with calculate_secure_digest().

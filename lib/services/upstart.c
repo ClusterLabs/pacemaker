@@ -14,6 +14,7 @@
 #include <stdio.h>
 
 #include <crm/crm.h>
+#include <crm/msg_xml.h>
 #include <crm/services.h>
 #include <crm/common/mainloop.h>
 
@@ -373,13 +374,15 @@ parse_status_result(const char *name, const char *state, void *userdata)
 // @TODO Use XML string constants and maybe a real XML object
 #define METADATA_FORMAT                                                     \
     "<?xml version=\"1.0\"?>\n"                                             \
-    "<resource-agent name=\"%s\" version=\"" PCMK_DEFAULT_AGENT_VERSION "\">\n" \
+    "<resource-agent " PCMK_XA_NAME "=\"%s\" "                              \
+                       PCMK_XA_VERSION                                      \
+                           "=\"" PCMK_DEFAULT_AGENT_VERSION "\">\n"         \
     "  <version>1.1</version>\n"                                            \
     "  <longdesc lang=\"en\">\n"                                            \
     "    Upstart agent for controlling the system %s service\n"             \
     "  </longdesc>\n"                                                       \
     "  <shortdesc lang=\"en\">Upstart job for %s</shortdesc>\n"             \
-    "  <parameters/>\n"                                                     \
+    "  <" PCMK_XE_PARAMETERS "/>\n"                                         \
     "  <actions>\n"                                                         \
     "    <action name=\"start\"     timeout=\"15\" />\n"                    \
     "    <action name=\"stop\"      timeout=\"15\" />\n"                    \

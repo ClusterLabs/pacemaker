@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 #include <crm/crm.h>
+#include <crm/msg_xml.h>
 #include <crm/services.h>
 #include <crm/services_internal.h>
 #include <crm/common/mainloop.h>
@@ -666,13 +667,15 @@ systemd_unit_exists(const char *name)
 // @TODO Use XML string constants and maybe a real XML object
 #define METADATA_FORMAT                                                     \
     "<?xml version=\"1.0\"?>\n"                                             \
-    "<resource-agent name=\"%s\" version=\"" PCMK_DEFAULT_AGENT_VERSION "\">\n" \
+    "<resource-agent " PCMK_XA_NAME "=\"%s\" "                              \
+                       PCMK_XA_VERSION                                      \
+                           "=\"" PCMK_DEFAULT_AGENT_VERSION "\">\n"         \
     "  <version>1.1</version>\n"                                            \
     "  <longdesc lang=\"en\">\n"                                            \
     "    %s\n"                                                              \
     "  </longdesc>\n"                                                       \
     "  <shortdesc lang=\"en\">systemd unit file for %s</shortdesc>\n"       \
-    "  <parameters/>\n"                                                     \
+    "  <" PCMK_XE_PARAMETERS "/>\n"                                         \
     "  <actions>\n"                                                         \
     "    <action name=\"start\"     timeout=\"100\" />\n"                   \
     "    <action name=\"stop\"      timeout=\"100\" />\n"                   \

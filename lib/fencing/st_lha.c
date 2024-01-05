@@ -33,7 +33,7 @@ static void *lha_agents_lib = NULL;
 // @TODO Use XML string constants and maybe a real XML object
 static const char META_TEMPLATE[] =
     "<?xml version=\"1.0\"?>\n"
-    "<resource-agent name=\"%s\">\n"
+    "<resource-agent " PCMK_XA_NAME "=\"%s\">\n"
     "  <version>1.0</version>\n"
     "  <longdesc lang=\"en\">\n"
     "%s\n"

@@ -188,7 +188,7 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
     }
 
     // Build a parameter list
-    match = first_named_child(metadata, "parameters");
+    match = first_named_child(metadata, PCMK_XE_PARAMETERS);
     for (match = first_named_child(match, "parameter"); match != NULL;
          match = crm_next_same_xml(match)) {
 

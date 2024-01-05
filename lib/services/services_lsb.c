@@ -18,6 +18,7 @@
 #include <sys/stat.h>
 
 #include <crm/crm.h>
+#include <crm/msg_xml.h>
 #include <crm/services.h>
 #include "services_private.h"
 #include "services_lsb.h"
@@ -25,14 +26,15 @@
 // @TODO Use XML string constants and maybe a real XML object
 #define lsb_metadata_template  \
     "<?xml version='1.0'?>\n"                                           \
-    "<resource-agent name='%s' version='" PCMK_DEFAULT_AGENT_VERSION "'>\n" \
+    "<resource-agent " PCMK_XA_NAME "='%s' "                            \
+                       PCMK_XA_VERSION                                  \
+                           "='" PCMK_DEFAULT_AGENT_VERSION "'>\n"       \
     "  <version>1.0</version>\n"                                        \
     "  <longdesc lang='en'>\n"                                          \
     "%s"                                                                \
     "  </longdesc>\n"                                                   \
     "  <shortdesc lang='en'>%s</shortdesc>\n"                           \
-    "  <parameters>\n"                                                  \
-    "  </parameters>\n"                                                 \
+    "  <" PCMK_XE_PARAMETERS "/>\n"                                     \
     "  <actions>\n"                                                     \
     "    <action name='meta-data'    timeout='5' />\n"                  \
     "    <action name='start'        timeout='15' />\n"                 \
