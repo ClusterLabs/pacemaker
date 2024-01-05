@@ -661,6 +661,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_WITH_RSC_ROLE instead
 #define XML_COLOC_ATTR_TARGET_ROLE PCMK_XA_WITH_RSC_ROLE
 
+//! \deprecated Use \c PCMK_XA_NODE_ATTRIBUTE instead
+#define XML_COLOC_ATTR_NODE_ATTR PCMK_XA_NODE_ATTRIBUTE
+
 #ifdef __cplusplus
 }
 #endif
