@@ -65,9 +65,9 @@ inject_transient_attr(pcmk__output_t *out, xmlNode *cib_node,
         crm_xml_add(attrs, PCMK_XA_ID, node_uuid);
     }
 
-    instance_attrs = first_named_child(attrs, XML_TAG_ATTR_SETS);
+    instance_attrs = first_named_child(attrs, PCMK_XE_INSTANCE_ATTRIBUTES);
     if (instance_attrs == NULL) {
-        instance_attrs = create_xml_node(attrs, XML_TAG_ATTR_SETS);
+        instance_attrs = create_xml_node(attrs, PCMK_XE_INSTANCE_ATTRIBUTES);
         crm_xml_add(instance_attrs, PCMK_XA_ID, node_uuid);
     }
 

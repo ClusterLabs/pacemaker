@@ -254,7 +254,7 @@ pcmk__unpack_action_rsc_params(const xmlNode *action_xml,
         .op_data = NULL
     };
 
-    pe__unpack_dataset_nvpairs(action_xml, XML_TAG_ATTR_SETS,
+    pe__unpack_dataset_nvpairs(action_xml, PCMK_XE_INSTANCE_ATTRIBUTES,
                                &rule_data, params, NULL,
                                FALSE, scheduler);
     return params;

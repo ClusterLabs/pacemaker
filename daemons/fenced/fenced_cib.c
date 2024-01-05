@@ -56,7 +56,8 @@ node_has_attr(const char *node, const char *name, const char *value)
     xpath = g_string_sized_new(256);
     pcmk__g_strcat(xpath,
                    "//" PCMK_XE_NODES "/" PCMK_XE_NODE
-                   "[@" PCMK_XA_UNAME "='", node, "']/" XML_TAG_ATTR_SETS
+                   "[@" PCMK_XA_UNAME "='", node, "']"
+                   "/" PCMK_XE_INSTANCE_ATTRIBUTES
                    "/" PCMK_XE_NVPAIR
                    "[@" PCMK_XA_NAME "='", name, "' "
                    "and @" PCMK_XA_VALUE "='", value, "']", NULL);
@@ -341,8 +342,8 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
             char *search = NULL;
             char *mutable = NULL;
 
-            if (strstr(xpath, XML_TAG_ATTR_SETS) ||
-                strstr(xpath, XML_TAG_META_SETS)) {
+            if ((strstr(xpath, PCMK_XE_INSTANCE_ATTRIBUTES) != NULL)
+                || (strstr(xpath, XML_TAG_META_SETS) != NULL)) {
                 needs_update = TRUE;
                 pcmk__str_update(&reason,
                                  "(meta) attribute deleted from resource");

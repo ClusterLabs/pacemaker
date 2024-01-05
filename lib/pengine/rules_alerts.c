@@ -91,7 +91,7 @@ get_envvars_from_cib(xmlNode *basenode, pcmk__alert_t *entry)
         return;
     }
 
-    child = first_named_child(basenode, XML_TAG_ATTR_SETS);
+    child = first_named_child(basenode, PCMK_XE_INSTANCE_ATTRIBUTES);
     if (child == NULL) {
         return;
     }

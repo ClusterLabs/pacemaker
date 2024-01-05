@@ -221,8 +221,8 @@ get_rsc_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
         rule_data.node_hash = node->details->attrs;
     }
 
-    pe__unpack_dataset_nvpairs(rsc->xml, XML_TAG_ATTR_SETS, &rule_data,
-                               meta_hash, NULL, FALSE, scheduler);
+    pe__unpack_dataset_nvpairs(rsc->xml, PCMK_XE_INSTANCE_ATTRIBUTES,
+                               &rule_data, meta_hash, NULL, FALSE, scheduler);
 
     /* set anything else based on the parent */
     if (rsc->parent != NULL) {
@@ -230,9 +230,9 @@ get_rsc_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
 
     } else {
         /* and finally check the defaults */
-        pe__unpack_dataset_nvpairs(scheduler->rsc_defaults, XML_TAG_ATTR_SETS,
-                                   &rule_data, meta_hash, NULL, FALSE,
-                                   scheduler);
+        pe__unpack_dataset_nvpairs(scheduler->rsc_defaults,
+                                   PCMK_XE_INSTANCE_ATTRIBUTES, &rule_data,
+                                   meta_hash, NULL, FALSE, scheduler);
     }
 }
 

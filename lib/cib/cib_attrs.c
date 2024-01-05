@@ -66,7 +66,7 @@ find_attr(cib_t *cib, const char *section, const char *node_uuid,
     if (attr_set_type) {
         set_type = attr_set_type;
     } else {
-        set_type = XML_TAG_ATTR_SETS;
+        set_type = PCMK_XE_INSTANCE_ATTRIBUTES;
     }
 
     if (pcmk__str_eq(section, PCMK_XE_CRM_CONFIG, pcmk__str_casei)) {
@@ -306,7 +306,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
             xml_obj = create_xml_node(xml_obj, set_type);
 
         } else {
-            xml_obj = create_xml_node(xml_obj, XML_TAG_ATTR_SETS);
+            xml_obj = create_xml_node(xml_obj, PCMK_XE_INSTANCE_ATTRIBUTES);
         }
         crm_xml_add(xml_obj, PCMK_XA_ID, set_name);
 

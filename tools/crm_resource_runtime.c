@@ -277,7 +277,8 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                            attr_name, NULL);
     }
 
-    if (pcmk__str_eq(attr_set_type, XML_TAG_ATTR_SETS, pcmk__str_casei)) {
+    if (pcmk__str_eq(attr_set_type, PCMK_XE_INSTANCE_ATTRIBUTES,
+                     pcmk__str_casei)) {
         if (!force) {
             rc = find_resource_attr(out, cib, PCMK_XA_ID, top_id,
                                     XML_TAG_META_SETS, attr_set, attr_id,

@@ -244,7 +244,7 @@ static GOptionEntry addl_entries[] = {
 
 static GOptionEntry deprecated_entries[] = {
     { "set-name", 'n', 0, G_OPTION_ARG_STRING, &options.set_name,
-      "(Advanced) ID of the instance_attributes object to change",
+      "(Advanced) ID of the " PCMK_XE_INSTANCE_ATTRIBUTES " object to change",
       "ID" },
 
     { "nvpair", 'i', 0, G_OPTION_ARG_STRING, &options.attr_id,

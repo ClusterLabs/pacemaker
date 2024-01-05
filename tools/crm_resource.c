@@ -113,7 +113,7 @@ struct {
     gchar **remainder;            // Positional arguments as given
     GHashTable *override_params;  // Resource parameter values that override config
 } options = {
-    .attr_set_type = XML_TAG_ATTR_SETS,
+    .attr_set_type = PCMK_XE_INSTANCE_ATTRIBUTES,
     .check_level = -1,
     .cib_options = cib_sync_call,
     .require_cib = TRUE,
@@ -1910,7 +1910,8 @@ main(int argc, char **argv)
 
             crm_debug("Looking up %s in %s", options.prop_name, rsc->id);
 
-            if (pcmk__str_eq(options.attr_set_type, XML_TAG_ATTR_SETS, pcmk__str_none)) {
+            if (pcmk__str_eq(options.attr_set_type, PCMK_XE_INSTANCE_ATTRIBUTES,
+                             pcmk__str_none)) {
                 params = pe_rsc_params(rsc, current, scheduler);
                 free_params = false;
 

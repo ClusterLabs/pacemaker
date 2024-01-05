@@ -373,7 +373,7 @@ create_ip_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         xml_ip = create_resource(id, "heartbeat", "IPaddr2");
         free(id);
 
-        xml_obj = create_xml_node(xml_ip, XML_TAG_ATTR_SETS);
+        xml_obj = create_xml_node(xml_ip, PCMK_XE_INSTANCE_ATTRIBUTES);
         crm_xml_set_id(xml_obj, "%s-attributes-%d",
                        data->prefix, replica->offset);
 
@@ -461,7 +461,7 @@ create_container_resource(pcmk_resource_t *parent,
     xml_container = create_resource(id, "heartbeat", agent_str);
     free(id);
 
-    xml_obj = create_xml_node(xml_container, XML_TAG_ATTR_SETS);
+    xml_obj = create_xml_node(xml_container, PCMK_XE_INSTANCE_ATTRIBUTES);
     crm_xml_set_id(xml_obj, "%s-attributes-%d", data->prefix, replica->offset);
 
     crm_create_nvpair_xml(xml_obj, NULL, "image", data->image);
