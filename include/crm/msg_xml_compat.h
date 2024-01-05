@@ -652,6 +652,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_RSC instead
 #define XML_LOC_ATTR_SOURCE PCMK_XA_RSC
 
+//! \deprecated Use \c PCMK_XA_RSC_ROLE instead
+#define XML_COLOC_ATTR_SOURCE_ROLE PCMK_XA_RSC_ROLE
+
 #ifdef __cplusplus
 }
 #endif
