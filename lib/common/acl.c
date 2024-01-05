@@ -291,8 +291,7 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
                   user);
 
     } else if (docpriv->acls == NULL) {
-        xmlNode *acls = get_xpath_object("//" XML_CIB_TAG_ACLS,
-                                         source, LOG_NEVER);
+        xmlNode *acls = get_xpath_object("//" PCMK_XE_ACLS, source, LOG_NEVER);
 
         pcmk__str_update(&docpriv->user, user);
 
@@ -532,7 +531,7 @@ implicitly_allowed(const xmlNode *xml)
     path = pcmk__element_xpath(xml);
     CRM_ASSERT(path != NULL);
 
-    if (strstr((const char *) path->str, "/" XML_CIB_TAG_ACLS "/") != NULL) {
+    if (strstr((const char *) path->str, "/" PCMK_XE_ACLS "/") != NULL) {
         g_string_free(path, TRUE);
         return false;
     }
