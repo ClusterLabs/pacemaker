@@ -694,6 +694,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_LOSS_POLICY instead
 #define XML_TICKET_ATTR_LOSS_POLICY PCMK_XA_LOSS_POLICY
 
+//! \deprecated Do not use
+#define XML_ACL_ATTR_REFv1 "ref"
+
 #ifdef __cplusplus
 }
 #endif
