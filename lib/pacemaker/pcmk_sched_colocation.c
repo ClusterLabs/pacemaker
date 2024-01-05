@@ -409,7 +409,7 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
  *
  * \param[in] coloc_id     Colocation XML ID (for error logging)
  * \param[in] rsc          Resource involved in constraint (for default)
- * \param[in] influence_s  String value of influence option
+ * \param[in] influence_s  String value of \c PCMK_XA_INFLUENCE option
  *
  * \return \c pcmk__coloc_influence if string evaluates true, or string is
  *         \c NULL or invalid and resource's \c PCMK_META_CRITICAL option
@@ -424,7 +424,7 @@ unpack_influence(const char *coloc_id, const pcmk_resource_t *rsc,
 
         if (crm_str_to_boolean(influence_s, &influence_i) < 0) {
             pcmk__config_err("Constraint '%s' has invalid value for "
-                             XML_COLOC_ATTR_INFLUENCE " (using default)",
+                             PCMK_XA_INFLUENCE " (using default)",
                              coloc_id);
         } else {
             return (influence_i == 0)? pcmk__coloc_none : pcmk__coloc_influence;
@@ -558,7 +558,8 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
  * \param[in]     set1         Dependent set
  * \param[in]     set2         Primary set
  * \param[in]     score        Colocation score
- * \param[in]     influence_s  Value of colocation's "influence" attribute
+ * \param[in]     influence_s  Value of colocation's \c PCMK_XA_INFLUENCE
+ *                             attribute
  * \param[in,out] scheduler    Scheduler data
  */
 static void
@@ -964,7 +965,7 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     if (score != NULL) {
         score_i = char2score(score);
     }
-    influence_s = crm_element_value(xml_obj, XML_COLOC_ATTR_INFLUENCE);
+    influence_s = crm_element_value(xml_obj, PCMK_XA_INFLUENCE);
 
     for (set = first_named_child(xml_obj, XML_CONS_TAG_RSC_SET); set != NULL;
          set = crm_next_same_xml(set)) {
