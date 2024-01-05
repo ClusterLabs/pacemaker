@@ -52,7 +52,7 @@ colocations_xml_node(pcmk__output_t *out, pcmk_resource_t *rsc,
                                         NULL);
 
     if (cons->node_attribute) {
-        xmlSetProp(node, (pcmkXmlStr) "node-attribute",
+        xmlSetProp(node, (pcmkXmlStr) PCMK_XA_NODE_ATTRIBUTE,
                    (pcmkXmlStr) cons->node_attribute);
     }
 

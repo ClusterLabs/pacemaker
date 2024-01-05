@@ -99,6 +99,7 @@ extern "C" {
 #define PCMK_XA_LANG                        "lang"
 #define PCMK_XA_NAME                        "name"
 #define PCMK_XA_NO_QUORUM_PANIC             "no-quorum-panic"
+#define PCMK_XA_NODE_ATTRIBUTE              "node-attribute"
 #define PCMK_XA_NUM_UPDATES                 "num_updates"
 #define PCMK_XA_OP                          "op"
 #define PCMK_XA_OPERATION                   "operation"
@@ -237,7 +238,7 @@ extern "C" {
 #  define XML_CONS_TAG_RSC_TICKET	"rsc_ticket"
 #  define XML_CONS_TAG_RSC_SET		"resource_set"
 
-#  define XML_COLOC_ATTR_NODE_ATTR	"node-attribute"
+#  define XML_COLOC_ATTR_NODE_ATTR	PCMK_XA_NODE_ATTRIBUTE
 #  define XML_COLOC_ATTR_INFLUENCE          "influence"
 
 #  define XML_LOC_ATTR_SOURCE_PATTERN   "rsc-pattern"

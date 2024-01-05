@@ -719,7 +719,7 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
     const char *dependent_role = crm_element_value(xml_obj, PCMK_XA_RSC_ROLE);
     const char *primary_role = crm_element_value(xml_obj,
                                                  PCMK_XA_WITH_RSC_ROLE);
-    const char *attr = crm_element_value(xml_obj, XML_COLOC_ATTR_NODE_ATTR);
+    const char *attr = crm_element_value(xml_obj, PCMK_XA_NODE_ATTRIBUTE);
 
     const char *primary_instance = NULL;
     const char *dependent_instance = NULL;
