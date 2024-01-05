@@ -670,6 +670,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_RSC_PATTERN instead
 #define XML_LOC_ATTR_SOURCE_PATTERN PCMK_XA_RSC_PATTERN
 
+//! \deprecated Use \c PCMK_XA_FIRST instead
+#define XML_ORDER_ATTR_FIRST PCMK_XA_FIRST
+
 #ifdef __cplusplus
 }
 #endif
