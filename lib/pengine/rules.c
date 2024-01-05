@@ -931,10 +931,10 @@ accept_attr_expr(const char *l_val, const char *r_val, const char *type,
 
 /*!
  * \internal
- * \brief Get correct value according to value-source
+ * \brief Get correct value according to \c PCMK_XA_VALUE_SOURCE
  *
  * \param[in] value         value given in rule expression
- * \param[in] value_source  value-source given in rule expressions
+ * \param[in] value_source  \c PCMK_XA_VALUE_SOURCE given in rule expressions
  * \param[in] match_data    If not NULL, resource back-references and params
  */
 static const char *
@@ -988,7 +988,7 @@ pe__eval_attr_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
     op = crm_element_value(expr, PCMK_XA_OPERATION);
     value = crm_element_value(expr, PCMK_XA_VALUE);
     type = crm_element_value(expr, PCMK_XA_TYPE);
-    value_source = crm_element_value(expr, XML_EXPR_ATTR_VALUE_SOURCE);
+    value_source = crm_element_value(expr, PCMK_XA_VALUE_SOURCE);
 
     if (attr == NULL) {
         pcmk__config_err("Expression %s invalid: " PCMK_XA_ATTRIBUTE
@@ -1011,7 +1011,7 @@ pe__eval_attr_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
             }
         }
 
-        // Get value appropriate to value-source
+        // Get value appropriate to PCMK_XA_VALUE_SOURCE
         value = expand_value_source(value, value_source, rule_data->match_data);
     }
 

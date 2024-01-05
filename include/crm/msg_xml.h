@@ -114,6 +114,7 @@ extern "C" {
 #define PCMK_XA_UPDATE_USER                 "update-user"
 #define PCMK_XA_VALIDATE_WITH               "validate-with"
 #define PCMK_XA_VALUE                       "value"
+#define PCMK_XA_VALUE_SOURCE                "value-source"
 #define PCMK_XA_VERSION                     "version"
 
 
@@ -214,7 +215,7 @@ extern "C" {
 #  define XML_TAG_RULE			"rule"
 
 #  define XML_TAG_EXPRESSION		"expression"
-#  define XML_EXPR_ATTR_VALUE_SOURCE	"value-source"
+#  define XML_EXPR_ATTR_VALUE_SOURCE	PCMK_XA_VALUE_SOURCE
 
 #  define XML_CONS_TAG_RSC_DEPEND	"rsc_colocation"
 #  define XML_CONS_TAG_RSC_ORDER	"rsc_order"
