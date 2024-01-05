@@ -276,8 +276,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
             crm_xml_add(node_state_xml, PCMK_XA_ID, node_uuid);
             crm_xml_add(node_state_xml, PCMK_XA_UNAME, node_uname);
 
-            delete_call_id = cib_conn->cmds->remove(cib_conn,
-                                                    XML_CIB_TAG_STATUS,
+            delete_call_id = cib_conn->cmds->remove(cib_conn, PCMK_XE_STATUS,
                                                     node_state_xml,
                                                     cib_scope_local);
             fsa_register_cib_callback(delete_call_id, strdup(node_uuid),
@@ -375,7 +374,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
         crm_node_t *node = NULL;
 
         free_xml(node_list);
-        node_list = create_xml_node(NULL, XML_CIB_TAG_STATUS);
+        node_list = create_xml_node(NULL, PCMK_XE_STATUS);
 
         g_hash_table_iter_init(&iter, crm_peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
@@ -389,7 +388,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
             }
         }
 
-        controld_update_cib(XML_CIB_TAG_STATUS, node_list, cib_scope_local,
+        controld_update_cib(PCMK_XE_STATUS, node_list, cib_scope_local,
                             crmd_node_update_complete);
     }
     free_xml(node_list);

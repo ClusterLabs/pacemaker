@@ -365,8 +365,8 @@ setup_input(pcmk__output_t *out, const char *input, const char *output,
         cib_object = filename2xml(input);
     }
 
-    if (pcmk_find_cib_element(cib_object, XML_CIB_TAG_STATUS) == NULL) {
-        create_xml_node(cib_object, XML_CIB_TAG_STATUS);
+    if (pcmk_find_cib_element(cib_object, PCMK_XE_STATUS) == NULL) {
+        create_xml_node(cib_object, PCMK_XE_STATUS);
     }
 
     if (cli_config_update(&cib_object, NULL, FALSE) == FALSE) {

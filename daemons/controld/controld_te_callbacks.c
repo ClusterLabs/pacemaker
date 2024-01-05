@@ -393,7 +393,7 @@ static void
 process_cib_diff(xmlNode *cib, xmlNode *change, const char *op,
                  const char *xpath)
 {
-    xmlNode *status = first_named_child(cib, XML_CIB_TAG_STATUS);
+    xmlNode *status = first_named_child(cib, PCMK_XE_STATUS);
     xmlNode *config = first_named_child(cib, PCMK_XE_CONFIGURATION);
 
     if (status) {
@@ -494,7 +494,7 @@ te_update_diff_v2(xmlNode *diff)
         } else if (strcmp(name, PCMK_XE_CIB) == 0) {
             process_cib_diff(match, change, op, xpath);
 
-        } else if (strcmp(name, XML_CIB_TAG_STATUS) == 0) {
+        } else if (strcmp(name, PCMK_XE_STATUS) == 0) {
             process_status_diff(match, change, op, xpath);
 
         } else if (strcmp(name, XML_CIB_TAG_STATE) == 0) {

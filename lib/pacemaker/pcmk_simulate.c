@@ -339,8 +339,8 @@ profile_file(const char *xml_file, long long repeat,
     cib_object = filename2xml(xml_file);
     start = clock();
 
-    if (pcmk_find_cib_element(cib_object, XML_CIB_TAG_STATUS) == NULL) {
-        create_xml_node(cib_object, XML_CIB_TAG_STATUS);
+    if (pcmk_find_cib_element(cib_object, PCMK_XE_STATUS) == NULL) {
+        create_xml_node(cib_object, PCMK_XE_STATUS);
     }
 
     if (cli_config_update(&cib_object, NULL, FALSE) == FALSE) {
@@ -637,7 +637,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
     pcmk__inject_action_result(cib_resource, op, target_outcome);
     lrmd_free_event(op);
-    rc = fake_cib->cmds->modify(fake_cib, XML_CIB_TAG_STATUS, cib_node,
+    rc = fake_cib->cmds->modify(fake_cib, PCMK_XE_STATUS, cib_node,
                                 cib_sync_call|cib_scope_local);
     CRM_ASSERT(rc == pcmk_ok);
 
@@ -698,7 +698,7 @@ simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
         CRM_ASSERT(cib_node != NULL);
         crm_xml_add(cib_node, PCMK_XA_CRM_DEBUG_ORIGIN, __func__);
-        rc = fake_cib->cmds->replace(fake_cib, XML_CIB_TAG_STATUS, cib_node,
+        rc = fake_cib->cmds->replace(fake_cib, PCMK_XE_STATUS, cib_node,
                                      cib_sync_call|cib_scope_local);
         CRM_ASSERT(rc == pcmk_ok);
 

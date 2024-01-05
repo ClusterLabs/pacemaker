@@ -2863,7 +2863,7 @@ set_node_score(gpointer key, gpointer value, gpointer user_data)
     node->weight = *score;
 }
 
-#define XPATH_NODE_STATE "/" PCMK_XE_CIB "/" XML_CIB_TAG_STATUS     \
+#define XPATH_NODE_STATE "/" PCMK_XE_CIB "/" PCMK_XE_STATUS \
                          "/" XML_CIB_TAG_STATE
 #define SUB_XPATH_LRM_RESOURCE "/" XML_CIB_TAG_LRM              \
                                "/" XML_LRM_TAG_RESOURCES        \
@@ -5068,7 +5068,7 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
     GList *intermediate = NULL;
 
     xmlNode *tmp = NULL;
-    xmlNode *status = find_xml_node(scheduler->input, XML_CIB_TAG_STATUS, TRUE);
+    xmlNode *status = find_xml_node(scheduler->input, PCMK_XE_STATUS, TRUE);
 
     pcmk_node_t *this_node = NULL;
 

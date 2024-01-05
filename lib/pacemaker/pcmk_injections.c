@@ -267,7 +267,7 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
             } else if (cib_object != NULL) {
                 crm_xml_add(cib_object, PCMK_XA_UNAME, node);
 
-                rc = cib_conn->cmds->modify(cib_conn, XML_CIB_TAG_STATUS,
+                rc = cib_conn->cmds->modify(cib_conn, PCMK_XE_STATUS,
                                             cib_object,
                                             cib_sync_call|cib_scope_local);
             }
@@ -280,7 +280,7 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
         cib_object = create_xml_node(NULL, XML_CIB_TAG_STATE);
         crm_xml_add(cib_object, PCMK_XA_ID, found_uuid);
         crm_xml_add(cib_object, PCMK_XA_UNAME, node);
-        cib_conn->cmds->create(cib_conn, XML_CIB_TAG_STATUS, cib_object,
+        cib_conn->cmds->create(cib_conn, PCMK_XE_STATUS, cib_object,
                                cib_sync_call|cib_scope_local);
         free_xml(cib_object);
 
@@ -466,7 +466,7 @@ find_ticket_state(pcmk__output_t *out, cib_t *the_cib, const char *ticket_id,
     *ticket_state_xml = NULL;
 
     g_string_append(xpath,
-                    "/" PCMK_XE_CIB "/" XML_CIB_TAG_STATUS
+                    "/" PCMK_XE_CIB "/" PCMK_XE_STATUS
                     "/" XML_CIB_TAG_TICKETS);
 
     if (ticket_id) {
@@ -523,7 +523,7 @@ set_ticket_state_attr(pcmk__output_t *out, const char *ticket_id,
     } else if (rc == ENXIO) { // No ticket state, create it
         xmlNode *xml_obj = NULL;
 
-        xml_top = create_xml_node(NULL, XML_CIB_TAG_STATUS);
+        xml_top = create_xml_node(NULL, PCMK_XE_STATUS);
         xml_obj = create_xml_node(xml_top, XML_CIB_TAG_TICKETS);
         ticket_state_xml = create_xml_node(xml_obj, XML_CIB_TAG_TICKET_STATE);
         crm_xml_add(ticket_state_xml, PCMK_XA_ID, ticket_id);
@@ -537,7 +537,7 @@ set_ticket_state_attr(pcmk__output_t *out, const char *ticket_id,
     crm_log_xml_debug(xml_top, "Update");
 
     // Commit the change to the CIB
-    rc = cib->cmds->modify(cib, XML_CIB_TAG_STATUS, xml_top,
+    rc = cib->cmds->modify(cib, PCMK_XE_STATUS, xml_top,
                            cib_sync_call|cib_scope_local);
     rc = pcmk_legacy2rc(rc);
 
@@ -617,7 +617,7 @@ inject_action(pcmk__output_t *out, const char *spec, cib_t *cib,
     CRM_ASSERT(cib_op != NULL);
     lrmd_free_event(op);
 
-    rc = cib->cmds->modify(cib, XML_CIB_TAG_STATUS, cib_node,
+    rc = cib->cmds->modify(cib, PCMK_XE_STATUS, cib_node,
                            cib_sync_call|cib_scope_local);
     CRM_ASSERT(rc == pcmk_ok);
 
@@ -672,7 +672,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
         cib_node = pcmk__inject_node_state_change(cib, node, true);
         CRM_ASSERT(cib_node != NULL);
 
-        rc = cib->cmds->modify(cib, XML_CIB_TAG_STATUS, cib_node,
+        rc = cib->cmds->modify(cib, PCMK_XE_STATUS, cib_node,
                                cib_sync_call|cib_scope_local);
         CRM_ASSERT(rc == pcmk_ok);
         free_xml(cib_node);
@@ -687,7 +687,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
         cib_node = pcmk__inject_node_state_change(cib, node, false);
         CRM_ASSERT(cib_node != NULL);
 
-        rc = cib->cmds->modify(cib, XML_CIB_TAG_STATUS, cib_node,
+        rc = cib->cmds->modify(cib, PCMK_XE_STATUS, cib_node,
                                cib_sync_call|cib_scope_local);
         CRM_ASSERT(rc == pcmk_ok);
         free_xml(cib_node);
@@ -714,7 +714,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
         crm_xml_add(cib_node, PCMK__XA_IN_CCM, PCMK_VALUE_FALSE);
         CRM_ASSERT(cib_node != NULL);
 
-        rc = cib->cmds->modify(cib, XML_CIB_TAG_STATUS, cib_node,
+        rc = cib->cmds->modify(cib, PCMK_XE_STATUS, cib_node,
                                cib_sync_call|cib_scope_local);
         CRM_ASSERT(rc == pcmk_ok);
         free_xml(cib_node);

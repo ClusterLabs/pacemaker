@@ -355,8 +355,7 @@ find_ticket_state(cib_t * the_cib, gchar *ticket_id, xmlNode ** ticket_state_xml
 
     xpath = g_string_sized_new(1024);
     g_string_append(xpath,
-                    "/" PCMK_XE_CIB "/" XML_CIB_TAG_STATUS
-                    "/" XML_CIB_TAG_TICKETS);
+                    "/" PCMK_XE_CIB "/" PCMK_XE_STATUS "/" XML_CIB_TAG_TICKETS);
 
     if (ticket_id != NULL) {
         pcmk__g_strcat(xpath,
@@ -598,7 +597,7 @@ modify_ticket_state(gchar *ticket_id, cib_t *cib, pcmk_scheduler_t *scheduler)
     } else {
         xmlNode *xml_obj = NULL;
 
-        xml_top = create_xml_node(NULL, XML_CIB_TAG_STATUS);
+        xml_top = create_xml_node(NULL, PCMK_XE_STATUS);
         xml_obj = create_xml_node(xml_top, XML_CIB_TAG_TICKETS);
         ticket_state_xml = create_xml_node(xml_obj, XML_CIB_TAG_TICKET_STATE);
         crm_xml_add(ticket_state_xml, PCMK_XA_ID, ticket_id);
@@ -628,12 +627,13 @@ modify_ticket_state(gchar *ticket_id, cib_t *cib, pcmk_scheduler_t *scheduler)
 
     if (found && (attr_delete != NULL)) {
         crm_log_xml_debug(xml_top, "Replace");
-        rc = cib->cmds->replace(cib, XML_CIB_TAG_STATUS, ticket_state_xml, cib_options);
+        rc = cib->cmds->replace(cib, PCMK_XE_STATUS, ticket_state_xml,
+                                cib_options);
         rc = pcmk_legacy2rc(rc);
 
     } else {
         crm_log_xml_debug(xml_top, "Update");
-        rc = cib->cmds->modify(cib, XML_CIB_TAG_STATUS, xml_top, cib_options);
+        rc = cib->cmds->modify(cib, PCMK_XE_STATUS, xml_top, cib_options);
         rc = pcmk_legacy2rc(rc);
     }
 
@@ -659,7 +659,7 @@ delete_ticket_state(gchar *ticket_id, cib_t * cib)
 
     crm_log_xml_debug(ticket_state_xml, "Delete");
 
-    rc = cib->cmds->remove(cib, XML_CIB_TAG_STATUS, ticket_state_xml, cib_options);
+    rc = cib->cmds->remove(cib, PCMK_XE_STATUS, ticket_state_xml, cib_options);
     rc = pcmk_legacy2rc(rc);
 
     if (rc == pcmk_rc_ok) {

@@ -130,7 +130,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
     unpack_tags(section, scheduler);
 
     if (!pcmk_is_set(scheduler->flags, pcmk_sched_location_only)) {
-        section = get_xpath_object("//"XML_CIB_TAG_STATUS, scheduler->input,
+        section = get_xpath_object("//" PCMK_XE_STATUS, scheduler->input,
                                    LOG_TRACE);
         unpack_status(section, scheduler);
     }

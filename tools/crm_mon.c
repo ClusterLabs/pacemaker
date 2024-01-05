@@ -1958,10 +1958,10 @@ crm_diff_update_v2(const char *event, xmlNode * msg)
             CRM_ASSERT(strcmp(op, "delete") == 0 || strcmp(op, "move") == 0);
 
         } else if (strcmp(name, PCMK_XE_CIB) == 0) {
-            pcmk__xe_foreach_child(first_named_child(match, XML_CIB_TAG_STATUS),
+            pcmk__xe_foreach_child(first_named_child(match, PCMK_XE_STATUS),
                                    NULL, handle_op_for_node, NULL);
 
-        } else if(strcmp(name, XML_CIB_TAG_STATUS) == 0) {
+        } else if (strcmp(name, PCMK_XE_STATUS) == 0) {
             pcmk__xe_foreach_child(match, NULL, handle_op_for_node, NULL);
 
         } else if(strcmp(name, XML_CIB_TAG_STATE) == 0) {

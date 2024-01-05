@@ -274,7 +274,7 @@ do_dc_release(long long action,
             update = create_node_state_update(node, node_update_expected, NULL,
                                               __func__);
             /* Don't need a based response because controld will stop. */
-            fsa_cib_anon_update_discard_reply(XML_CIB_TAG_STATUS, update);
+            fsa_cib_anon_update_discard_reply(PCMK_XE_STATUS, update);
             free_xml(update);
         }
         register_fsa_input(C_FSA_INTERNAL, I_RELEASE_SUCCESS, NULL);

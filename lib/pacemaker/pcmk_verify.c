@@ -66,9 +66,9 @@ pcmk__verify(pcmk_scheduler_t *scheduler, pcmk__output_t *out, xmlNode *cib_obje
         goto verify_done;
     }
 
-    status = pcmk_find_cib_element(cib_object, XML_CIB_TAG_STATUS);
+    status = pcmk_find_cib_element(cib_object, PCMK_XE_STATUS);
     if (status == NULL) {
-        create_xml_node(cib_object, XML_CIB_TAG_STATUS);
+        create_xml_node(cib_object, PCMK_XE_STATUS);
     }
 
     if (pcmk__validate_xml(cib_object, NULL, (xmlRelaxNGValidityErrorFunc) out->err, out) == FALSE) {

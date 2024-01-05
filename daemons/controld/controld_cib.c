@@ -77,11 +77,11 @@ do_cib_updated(const char *event, xmlNode * msg)
     }
 
     if (cib__element_in_patchset(patchset, XML_CIB_TAG_NODES)
-        || cib__element_in_patchset(patchset, XML_CIB_TAG_STATUS)) {
+        || cib__element_in_patchset(patchset, PCMK_XE_STATUS)) {
 
-        /* An unsafe client modified the nodes or status section. Ensure the
-         * node list is up-to-date, and start the join process again so we get
-         * everyone's current resource history.
+        /* An unsafe client modified the nodes or PCMK_XE_STATUS section. Ensure
+         * the node list is up-to-date, and start the join process again so we
+         * get everyone's current resource history.
          */
         if (client_name == NULL) {
             client_name = crm_element_value(msg, F_CIB_CLIENTID);
@@ -893,7 +893,7 @@ controld_update_resource_history(const char *node_name,
     }
 
     // <status>
-    update = create_xml_node(NULL, XML_CIB_TAG_STATUS);
+    update = create_xml_node(NULL, PCMK_XE_STATUS);
 
     //   <node_state ...>
     xml = create_xml_node(update, XML_CIB_TAG_STATE);
@@ -948,7 +948,7 @@ controld_update_resource_history(const char *node_name,
      * fenced for running a resource it isn't.
      */
     crm_log_xml_trace(update, __func__);
-    controld_update_cib(XML_CIB_TAG_STATUS, update, call_opt, cib_rsc_callback);
+    controld_update_cib(PCMK_XE_STATUS, update, call_opt, cib_rsc_callback);
     free_xml(update);
 }
 
@@ -981,15 +981,14 @@ controld_delete_action_history(const lrmd_event_data_t *op)
               op->rsc_id, op->op_type, op->interval_ms, op->call_id);
 
     controld_globals.cib_conn->cmds->remove(controld_globals.cib_conn,
-                                            XML_CIB_TAG_STATUS, xml_top,
-                                            cib_none);
+                                            PCMK_XE_STATUS, xml_top, cib_none);
     crm_log_xml_trace(xml_top, "op:cancel");
     free_xml(xml_top);
 }
 
 /* Define xpath to find LRM resource history entry by node and resource */
 #define XPATH_HISTORY                                   \
-    "/" PCMK_XE_CIB "/" XML_CIB_TAG_STATUS              \
+    "/" PCMK_XE_CIB "/" PCMK_XE_STATUS                  \
     "/" XML_CIB_TAG_STATE "[@" PCMK_XA_UNAME "='%s']"   \
     "/" XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES       \
     "/" XML_LRM_TAG_RESOURCE "[@" PCMK_XA_ID "='%s']"   \

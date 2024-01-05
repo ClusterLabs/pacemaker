@@ -76,9 +76,9 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
     }
 
     if (cib__element_in_patchset(patchset, XML_CIB_TAG_NODES)
-        || cib__element_in_patchset(patchset, XML_CIB_TAG_STATUS)) {
+        || cib__element_in_patchset(patchset, PCMK_XE_STATUS)) {
 
-        /* An unsafe client modified the nodes or status section. Write
+        /* An unsafe client modified the nodes or PCMK_XE_STATUS section. Write
          * transient attributes to ensure they're up-to-date in the CIB.
          */
         if (client_name == NULL) {
@@ -363,7 +363,7 @@ add_set_attr_update(const attribute_t *attr, const char *attr_id,
     crm_xml_add(child, PCMK_XA_NAME, attr->id);
     crm_xml_add(child, PCMK_XA_VALUE, value);
 
-    rc = the_cib->cmds->modify(the_cib, XML_CIB_TAG_STATUS, update,
+    rc = the_cib->cmds->modify(the_cib, PCMK_XE_STATUS, update,
                                cib_can_create|cib_transaction);
     rc = pcmk_legacy2rc(rc);
 
@@ -388,7 +388,7 @@ add_unset_attr_update(const attribute_t *attr, const char *attr_id,
                       const char *node_id, const char *set_id)
 {
     char *xpath = crm_strdup_printf("/" PCMK_XE_CIB
-                                    "/" XML_CIB_TAG_STATUS
+                                    "/" PCMK_XE_STATUS
                                     "/" XML_CIB_TAG_STATE
                                         "[@" PCMK_XA_ID "='%s']"
                                     "/" XML_TAG_TRANSIENT_NODEATTRS
@@ -427,7 +427,7 @@ add_attr_update(const attribute_t *attr, const char *value, const char *node_id)
     if (attr->set_id != NULL) {
         pcmk__str_update(&set_id, attr->set_id);
     } else {
-        set_id = crm_strdup_printf("%s-%s", XML_CIB_TAG_STATUS, node_id);
+        set_id = crm_strdup_printf("%s-%s", PCMK_XE_STATUS, node_id);
     }
     crm_xml_sanitize_id(set_id);
 

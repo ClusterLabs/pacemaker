@@ -70,6 +70,7 @@ extern "C" {
 #define PCMK_XE_RESOURCE_AGENT              "resource-agent"
 #define PCMK_XE_RSC_EXPRESSION              "rsc_expression"
 #define PCMK_XE_SHORTDESC                   "shortdesc"
+#define PCMK_XE_STATUS                      "status"
 #define PCMK_XE_VERSION                     "version"
 
 
@@ -183,7 +184,7 @@ extern "C" {
 
 /*---- CIB specific tags/attrs */
 #  define XML_CIB_TAG_SECTION_ALL	"all"
-#  define XML_CIB_TAG_STATUS       	"status"
+#  define XML_CIB_TAG_STATUS       	PCMK_XE_STATUS
 #  define XML_CIB_TAG_RESOURCES		"resources"
 #  define XML_CIB_TAG_NODES         	"nodes"
 #  define XML_CIB_TAG_CONSTRAINTS   	"constraints"

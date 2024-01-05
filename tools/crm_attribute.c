@@ -589,7 +589,7 @@ set_type(void)
     if (options.type == NULL) {
         if (options.promotion_score) {
             // Updating a promotion score node attribute
-            options.type = g_strdup(XML_CIB_TAG_STATUS);
+            options.type = g_strdup(PCMK_XE_STATUS);
 
         } else if (options.dest_uname != NULL) {
             // Updating some other node attribute
@@ -601,7 +601,7 @@ set_type(void)
         }
 
     } else if (pcmk__str_eq(options.type, "reboot", pcmk__str_casei)) {
-        options.type = g_strdup(XML_CIB_TAG_STATUS);
+        options.type = g_strdup(PCMK_XE_STATUS);
 
     } else if (pcmk__str_eq(options.type, "forever", pcmk__str_casei)) {
         options.type = g_strdup(XML_CIB_TAG_NODES);
@@ -614,7 +614,7 @@ use_attrd(void)
     /* Only go through the attribute manager for transient attributes, and
      * then only if we're not using a file as the CIB.
      */
-    return pcmk__str_eq(options.type, XML_CIB_TAG_STATUS, pcmk__str_casei) &&
+    return pcmk__str_eq(options.type, PCMK_XE_STATUS, pcmk__str_casei) &&
            getenv("CIB_file") == NULL && getenv("CIB_shadow") == NULL;
 }
 

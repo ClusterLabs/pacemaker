@@ -149,7 +149,7 @@ scope_is_valid(const char *scope)
                             XML_TAG_FENCING_TOPOLOGY,
                             XML_CIB_TAG_TAGS,
                             XML_CIB_TAG_ALERTS,
-                            XML_CIB_TAG_STATUS,
+                            PCMK_XE_STATUS,
                             NULL);
 }
 
@@ -355,7 +355,7 @@ static GOptionEntry addl_entries[] = {
       ", " XML_CIB_TAG_CRMCONFIG ", " XML_CIB_TAG_RSCCONFIG ",\n"
       INDENT "              " XML_CIB_TAG_OPCONFIG ", " XML_CIB_TAG_ACLS
       ", " XML_TAG_FENCING_TOPOLOGY ", " XML_CIB_TAG_TAGS
-      ", " XML_CIB_TAG_ALERTS ", " XML_CIB_TAG_STATUS "\n"
+      ", " XML_CIB_TAG_ALERTS ", " PCMK_XE_STATUS "\n"
       INDENT "If both --scope/-o and --xpath/-a are specified, the last one to "
       "appear takes effect",
       "value" },
@@ -884,10 +884,10 @@ do_work(xmlNode *input, xmlNode **output)
     the_cib->call_timeout = options.message_timeout_sec;
     if ((strcmp(options.cib_action, PCMK__CIB_REQUEST_REPLACE) == 0)
         && pcmk__xe_is(input, PCMK_XE_CIB)) {
-        xmlNode *status = pcmk_find_cib_element(input, XML_CIB_TAG_STATUS);
+        xmlNode *status = pcmk_find_cib_element(input, PCMK_XE_STATUS);
 
         if (status == NULL) {
-            create_xml_node(input, XML_CIB_TAG_STATUS);
+            create_xml_node(input, PCMK_XE_STATUS);
         }
     }
 

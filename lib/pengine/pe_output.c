@@ -2529,7 +2529,7 @@ node_summary(pcmk__output_t *out, va_list args) {
 
     xmlNode *node_state = NULL;
     xmlNode *cib_status = pcmk_find_cib_element(scheduler->input,
-                                                XML_CIB_TAG_STATUS);
+                                                PCMK_XE_STATUS);
     int rc = pcmk_rc_no_output;
 
     if (xmlChildElementCount(cib_status) == 0) {

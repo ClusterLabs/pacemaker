@@ -333,9 +333,8 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
         const char *xpath = crm_element_value(change, PCMK_XA_PATH);
         const char *shortpath = NULL;
 
-        if ((op == NULL) ||
-            (strcmp(op, "move") == 0) ||
-            strstr(xpath, "/"XML_CIB_TAG_STATUS)) {
+        if (pcmk__str_eq(op, "move", pcmk__str_null_matches)
+            || (strstr(xpath, "/" PCMK_XE_STATUS) != NULL)) {
             continue;
         } else if (pcmk__str_eq(op, "delete", pcmk__str_casei) && strstr(xpath, "/"XML_CIB_TAG_RESOURCE)) {
             const char *rsc_id = NULL;

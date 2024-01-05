@@ -80,7 +80,7 @@ find_attr(cib_t *cib, const char *section, const char *node_uuid,
 
     } else if (pcmk__str_eq(section, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
         node_uuid = NULL;
-        section = XML_CIB_TAG_STATUS;
+        section = PCMK_XE_STATUS;
         node_type = XML_CIB_TAG_TICKETS;
 
     } else if (node_uuid == NULL) {
@@ -102,7 +102,7 @@ find_attr(cib_t *cib, const char *section, const char *node_uuid,
     } else if (node_uuid) {
         const char *node_type = XML_CIB_TAG_NODE;
 
-        if (pcmk__str_eq(section, XML_CIB_TAG_STATUS, pcmk__str_casei)) {
+        if (pcmk__str_eq(section, PCMK_XE_STATUS, pcmk__str_casei)) {
             node_type = XML_CIB_TAG_STATE;
             set_type = XML_TAG_TRANSIENT_NODEATTRS;
         }
@@ -214,10 +214,10 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
         crm_trace("%s does not exist, create it", attr_name);
         if (pcmk__str_eq(section, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
             node_uuid = NULL;
-            section = XML_CIB_TAG_STATUS;
+            section = PCMK_XE_STATUS;
             node_type = XML_CIB_TAG_TICKETS;
 
-            xml_top = create_xml_node(xml_obj, XML_CIB_TAG_STATUS);
+            xml_top = create_xml_node(xml_obj, PCMK_XE_STATUS);
             xml_obj = create_xml_node(xml_top, XML_CIB_TAG_TICKETS);
 
         } else if (pcmk__str_eq(section, XML_CIB_TAG_NODES, pcmk__str_casei)) {
@@ -236,7 +236,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
                 tag = XML_CIB_TAG_NODE;
             }
 
-        } else if (pcmk__str_eq(section, XML_CIB_TAG_STATUS, pcmk__str_casei)) {
+        } else if (pcmk__str_eq(section, PCMK_XE_STATUS, pcmk__str_casei)) {
             tag = XML_TAG_TRANSIENT_NODEATTRS;
             if (node_uuid == NULL) {
                 return EINVAL;
@@ -619,7 +619,7 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
     "|/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" XML_CIB_TAG_RESOURCES \
         "/" XML_CIB_TAG_RESOURCE "/" XML_TAG_META_SETS "/" XML_CIB_TAG_NVPAIR \
         "[@name='" PCMK_META_REMOTE_NODE "'][translate(@value,'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']" \
-    "|/" PCMK_XE_CIB "/" XML_CIB_TAG_STATUS "/" XML_CIB_TAG_STATE \
+    "|/" PCMK_XE_CIB "/" PCMK_XE_STATUS "/" XML_CIB_TAG_STATE \
         "[@" XML_NODE_IS_REMOTE "='true'][translate(@" PCMK_XA_ID ",'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']"
 
 int
@@ -718,8 +718,8 @@ set_standby(cib_t * the_cib, const char *uuid, const char *scope, const char *st
     CRM_CHECK(uuid != NULL, return -EINVAL);
     CRM_CHECK(standby_value != NULL, return -EINVAL);
 
-    if (pcmk__strcase_any_of(scope, "reboot", XML_CIB_TAG_STATUS, NULL)) {
-        scope = XML_CIB_TAG_STATUS;
+    if (pcmk__strcase_any_of(scope, "reboot", PCMK_XE_STATUS, NULL)) {
+        scope = PCMK_XE_STATUS;
         attr_id = crm_strdup_printf("transient-standby-%.256s", uuid);
 
     } else {

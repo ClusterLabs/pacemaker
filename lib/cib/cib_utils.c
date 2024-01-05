@@ -248,7 +248,7 @@ createEmptyCib(int cib_epoch)
     crm_xml_add_int(cib_root, PCMK_XA_ADMIN_EPOCH, 0);
 
     config = create_xml_node(cib_root, PCMK_XE_CONFIGURATION);
-    create_xml_node(cib_root, XML_CIB_TAG_STATUS);
+    create_xml_node(cib_root, PCMK_XE_STATUS);
 
     create_xml_node(config, XML_CIB_TAG_CRMCONFIG);
     create_xml_node(config, XML_CIB_TAG_NODES);
@@ -324,7 +324,7 @@ should_copy_cib(const char *op, const char *section, int call_options)
         return false;
     }
 
-    if (pcmk__str_eq(section, XML_CIB_TAG_STATUS, pcmk__str_none)) {
+    if (pcmk__str_eq(section, PCMK_XE_STATUS, pcmk__str_none)) {
         /* Copying large CIBs accounts for a huge percentage of our CIB usage,
          * and this avoids some of it.
          *
@@ -572,7 +572,7 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
         );
     }
 
-    if (pcmk__str_eq(section, XML_CIB_TAG_STATUS, pcmk__str_casei)) {
+    if (pcmk__str_eq(section, PCMK_XE_STATUS, pcmk__str_casei)) {
         /* Throttle the amount of costly validation we perform due to status updates
          * a) we don't really care whats in the status section
          * b) we don't validate any of its contents at the moment anyway
