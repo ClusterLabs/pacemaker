@@ -790,6 +790,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_TAG_PARAM "param"
 
+//! \deprecated Use \c PCMK_XE_UTILIZATION instead
+#define XML_TAG_UTILIZATION PCMK_XE_UTILIZATION
+
 #ifdef __cplusplus
 }
 #endif
