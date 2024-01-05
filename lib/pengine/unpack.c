@@ -2691,8 +2691,10 @@ unpack_lrm_resource(pcmk_node_t *node, const xmlNode *lrm_resource,
     crm_trace("Unpacking " PCMK__XE_LRM_RESOURCE " for %s on %s",
               rsc_id, pcmk__node_name(node));
 
-    // Build a list of individual lrm_rsc_op entries, so we can sort them
-    for (rsc_op = first_named_child(lrm_resource, XML_LRM_TAG_RSC_OP);
+    /* Build a list of individual PCMK__XE_LRM_RSC_OP entries, so we can sort
+     * them
+     */
+    for (rsc_op = first_named_child(lrm_resource, PCMK__XE_LRM_RSC_OP);
          rsc_op != NULL; rsc_op = crm_next_same_xml(rsc_op)) {
 
         op_list = g_list_prepend(op_list, rsc_op);
@@ -2877,7 +2879,7 @@ set_node_score(gpointer key, gpointer value, gpointer user_data)
 #define SUB_XPATH_LRM_RESOURCE "/" PCMK__XE_LRM             \
                                "/" PCMK__XE_LRM_RESOURCES   \
                                "/" PCMK__XE_LRM_RESOURCE
-#define SUB_XPATH_LRM_RSC_OP "/" XML_LRM_TAG_RSC_OP
+#define SUB_XPATH_LRM_RSC_OP "/" PCMK__XE_LRM_RSC_OP
 
 static xmlNode *
 find_lrm_op(const char *resource, const char *op, const char *node, const char *source,
@@ -2969,7 +2971,8 @@ unknown_on_node(pcmk_resource_t *rsc, const char *node_name)
     pcmk__g_strcat(xpath,
                    XPATH_NODE_STATE "[@" PCMK_XA_UNAME "='", node_name, "']"
                    SUB_XPATH_LRM_RESOURCE "[@" PCMK_XA_ID "='", rsc->id, "']"
-                   SUB_XPATH_LRM_RSC_OP "[@" PCMK__XA_RC_CODE "!='193']",
+                   SUB_XPATH_LRM_RSC_OP
+                   "[@" PCMK__XA_RC_CODE "!='193']",
                    NULL);
     search = xpath_search(rsc->cluster->input, (const char *) xpath->str);
     result = (numXpathResults(search) == 0);
@@ -3028,7 +3031,7 @@ non_monitor_after(const char *rsc_id, const char *node_name,
         return false;
     }
 
-    for (xmlNode *op = first_named_child(lrm_resource, XML_LRM_TAG_RSC_OP);
+    for (xmlNode *op = first_named_child(lrm_resource, PCMK__XE_LRM_RSC_OP);
          op != NULL; op = crm_next_same_xml(op)) {
         const char * task = NULL;
 
@@ -5027,7 +5030,7 @@ extract_operations(const char *node, const char *rsc, xmlNode * rsc_entry, gbool
     for (rsc_op = pcmk__xe_first_child(rsc_entry);
          rsc_op != NULL; rsc_op = pcmk__xe_next(rsc_op)) {
 
-        if (pcmk__str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP,
+        if (pcmk__str_eq((const char *)rsc_op->name, PCMK__XE_LRM_RSC_OP,
                          pcmk__str_none)) {
             crm_xml_add(rsc_op, "resource", rsc);
             crm_xml_add(rsc_op, PCMK_XA_UNAME, node);

@@ -1814,7 +1814,7 @@ handle_rsc_op(xmlNode *xml, void *userdata)
     xmlNode *n = xml;
     xmlNode * rsc_op = xml;
 
-    if(strcmp((const char*)xml->name, XML_LRM_TAG_RSC_OP) != 0) {
+    if(strcmp((const char*)xml->name, PCMK__XE_LRM_RSC_OP) != 0) {
         pcmk__xe_foreach_child(xml, NULL, handle_rsc_op, (void *) node_id);
         return pcmk_rc_ok;
     }
@@ -1987,7 +1987,7 @@ crm_diff_update_v2(const char *event, xmlNode * msg)
             handle_rsc_op(match, local_node);
             free(local_node);
 
-        } else if(strcmp(name, XML_LRM_TAG_RSC_OP) == 0) {
+        } else if (strcmp(name, PCMK__XE_LRM_RSC_OP) == 0) {
             char *local_node = pcmk__xpath_node_id(xpath, PCMK__XE_LRM);
 
             handle_rsc_op(match, local_node);
@@ -2006,7 +2006,7 @@ crm_diff_update_v1(const char *event, xmlNode * msg)
     xmlXPathObject *xpathObj = xpath_search(msg,
                                             "//" F_CIB_UPDATE_RESULT
                                             "//" PCMK__XE_DIFF_ADDED
-                                            "//" XML_LRM_TAG_RSC_OP);
+                                            "//" PCMK__XE_LRM_RSC_OP);
     int lpc = 0, max = numXpathResults(xpathObj);
 
     for (lpc = 0; lpc < max; lpc++) {

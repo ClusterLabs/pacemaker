@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 the Pacemaker project contributors
+ * Copyright 2021-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,23 +18,31 @@ op_is_probe_test(void **state)
 
     assert_false(pcmk_xe_is_probe(NULL));
 
-    node = string2xml("<lrm_rsc_op/>");
+    node = string2xml("<" PCMK__XE_LRM_RSC_OP "/>");
     assert_false(pcmk_xe_is_probe(node));
     free_xml(node);
 
-    node = string2xml("<lrm_rsc_op operation_key=\"blah\" interval=\"30s\"/>");
+    node = string2xml("<" PCMK__XE_LRM_RSC_OP " "
+                          PCMK__XA_OPERATION_KEY "=\"blah\" "
+                          PCMK_META_INTERVAL "=\"30s\"/>");
     assert_false(pcmk_xe_is_probe(node));
     free_xml(node);
 
-    node = string2xml("<lrm_rsc_op operation=\"monitor\" interval=\"30s\"/>");
+    node = string2xml("<" PCMK__XE_LRM_RSC_OP " "
+                          PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
+                          PCMK_META_INTERVAL "=\"30s\"/>");
     assert_false(pcmk_xe_is_probe(node));
     free_xml(node);
 
-    node = string2xml("<lrm_rsc_op operation=\"start\" interval=\"0\"/>");
+    node = string2xml("<" PCMK__XE_LRM_RSC_OP " "
+                          PCMK_XA_OPERATION "=\"" PCMK_ACTION_START "\" "
+                          PCMK_META_INTERVAL "=\"0\"/>");
     assert_false(pcmk_xe_is_probe(node));
     free_xml(node);
 
-    node = string2xml("<lrm_rsc_op operation=\"monitor\" interval=\"0\"/>");
+    node = string2xml("<" PCMK__XE_LRM_RSC_OP " "
+                          PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
+                          PCMK_META_INTERVAL "=\"0\"/>");
     assert_true(pcmk_xe_is_probe(node));
     free_xml(node);
 }

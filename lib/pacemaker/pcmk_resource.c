@@ -46,7 +46,7 @@ best_op(const pcmk_resource_t *rsc, const pcmk_node_t *node)
     free(xpath);
 
     // Examine each history entry
-    for (xmlNode *lrm_rsc_op = first_named_child(history, XML_LRM_TAG_RSC_OP);
+    for (xmlNode *lrm_rsc_op = first_named_child(history, PCMK__XE_LRM_RSC_OP);
          lrm_rsc_op != NULL; lrm_rsc_op = crm_next_same_xml(lrm_rsc_op)) {
 
         const char *digest = crm_element_value(lrm_rsc_op,

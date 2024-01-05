@@ -1206,9 +1206,9 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     }
 
   again:
-    xml_op = pcmk__xe_match(parent, XML_LRM_TAG_RSC_OP, PCMK_XA_ID, op_id);
+    xml_op = pcmk__xe_match(parent, PCMK__XE_LRM_RSC_OP, PCMK_XA_ID, op_id);
     if (xml_op == NULL) {
-        xml_op = create_xml_node(parent, XML_LRM_TAG_RSC_OP);
+        xml_op = create_xml_node(parent, PCMK__XE_LRM_RSC_OP);
     }
 
     if (op->user_data == NULL) {
@@ -1715,7 +1715,7 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
  * \internal
  * \brief Create a list of resource's action history entries, sorted by call ID
  *
- * \param[in]  rsc_entry    Resource's <lrm_rsc_op> status XML
+ * \param[in]  rsc_entry    Resource's \c PCMK__XE_LRM_RSC_OP status XML
  * \param[out] start_index  Where to store index of start-like action, if any
  * \param[out] stop_index   Where to store index of stop action, if any
  */
@@ -1724,7 +1724,7 @@ rsc_history_as_list(const xmlNode *rsc_entry, int *start_index, int *stop_index)
 {
     GList *ops = NULL;
 
-    for (xmlNode *rsc_op = first_named_child(rsc_entry, XML_LRM_TAG_RSC_OP);
+    for (xmlNode *rsc_op = first_named_child(rsc_entry, PCMK__XE_LRM_RSC_OP);
          rsc_op != NULL; rsc_op = crm_next_same_xml(rsc_op)) {
         ops = g_list_prepend(ops, rsc_op);
     }
@@ -1743,7 +1743,7 @@ rsc_history_as_list(const xmlNode *rsc_entry, int *start_index, int *stop_index)
  * (This also cancels recurring actions for maintenance mode, which is not
  * entirely related but convenient to do here.)
  *
- * \param[in]     rsc_entry  Resource's <lrm_rsc_op> status XML
+ * \param[in]     rsc_entry  Resource's \c PCMK__XE_LRM_RSC_OP status XML
  * \param[in,out] rsc        Resource whose history is being processed
  * \param[in,out] node       Node whose history is being processed
  */

@@ -283,10 +283,11 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
 // Node's lrm section (name 1x)
 #define XPATH_NODE_LRM XPATH_NODE_STATE "/" PCMK__XE_LRM
 
-/* Node's lrm_rsc_op entries and PCMK__XE_LRM_RESOURCE entries without unexpired
- * lock (name 2x, (seconds_since_epoch - PCMK_OPT_SHUTDOWN_LOCK_LIMIT) 1x)
+/* Node's PCMK__XE_LRM_RSC_OP entries and PCMK__XE_LRM_RESOURCE entries without
+ * unexpired lock
+ * (name 2x, (seconds_since_epoch - PCMK_OPT_SHUTDOWN_LOCK_LIMIT) 1x)
  */
-#define XPATH_NODE_LRM_UNLOCKED XPATH_NODE_STATE "//" XML_LRM_TAG_RSC_OP    \
+#define XPATH_NODE_LRM_UNLOCKED XPATH_NODE_STATE "//" PCMK__XE_LRM_RSC_OP   \
                                 "|" XPATH_NODE_STATE                        \
                                 "//" PCMK__XE_LRM_RESOURCE                  \
                                 "[not(@" PCMK_OPT_SHUTDOWN_LOCK ") "        \
@@ -964,7 +965,7 @@ controld_delete_action_history(const lrmd_event_data_t *op)
 
     CRM_CHECK(op != NULL, return);
 
-    xml_top = create_xml_node(NULL, XML_LRM_TAG_RSC_OP);
+    xml_top = create_xml_node(NULL, PCMK__XE_LRM_RSC_OP);
     crm_xml_add_int(xml_top, PCMK__XA_CALL_ID, op->call_id);
     crm_xml_add(xml_top, PCMK__XA_TRANSITION_KEY, op->user_data);
 
@@ -991,7 +992,7 @@ controld_delete_action_history(const lrmd_event_data_t *op)
     "/" PCMK__XE_NODE_STATE "[@" PCMK_XA_UNAME "='%s']" \
     "/" PCMK__XE_LRM "/" PCMK__XE_LRM_RESOURCES         \
     "/" PCMK__XE_LRM_RESOURCE "[@" PCMK_XA_ID "='%s']"  \
-    "/" XML_LRM_TAG_RSC_OP
+    "/" PCMK__XE_LRM_RSC_OP
 
 /* ... and also by operation key */
 #define XPATH_HISTORY_ID XPATH_HISTORY "[@" PCMK_XA_ID "='%s']"

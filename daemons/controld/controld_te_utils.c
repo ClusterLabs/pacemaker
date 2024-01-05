@@ -459,7 +459,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
                        abort_text, add[0], add[1], add[2], fn, line, path,
                        pcmk__btoa(controld_globals.transition_graph->complete));
 
-        } else if (pcmk__xe_is(reason, XML_LRM_TAG_RSC_OP)) {
+        } else if (pcmk__xe_is(reason, PCMK__XE_LRM_RSC_OP)) {
             const char *magic = crm_element_value(reason,
                                                   PCMK__XA_TRANSITION_MAGIC);
 

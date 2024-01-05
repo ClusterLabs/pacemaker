@@ -1914,7 +1914,7 @@ wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
                               "/" PCMK__XE_NODE_STATE "/" PCMK__XE_LRM
                               "/" PCMK__XE_LRM_RESOURCES
                               "/" PCMK__XE_LRM_RESOURCE
-                              "/" XML_LRM_TAG_RSC_OP
+                              "/" PCMK__XE_LRM_RSC_OP
                               "[@" PCMK__XA_RC_CODE "='193']");
         pending_unknown_state_resources = (numXpathResults(search) > 0);
         freeXpathObject(search);

@@ -431,7 +431,7 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
          * digest matches, enforce a restart rather than a reload-agent anyway.
          * So that it ensures any changes of the extra parameters get applied
          * for this specific operation, and the digests calculated for the
-         * resulting lrm_rsc_op will be correct.
+         * resulting PCMK__XE_LRM_RSC_OP will be correct.
          * Preserve the implied rc pcmk__digest_restart for the case that the
          * main digest doesn't match.
          */
