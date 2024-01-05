@@ -62,7 +62,7 @@ colocations_xml_node(pcmk__output_t *out, pcmk_resource_t *rsc,
     }
 
     if (cons->primary_role != pcmk_role_unknown) {
-        xmlSetProp(node, (pcmkXmlStr) "with-rsc-role",
+        xmlSetProp(node, (pcmkXmlStr) PCMK_XA_WITH_RSC_ROLE,
                    (pcmkXmlStr) role2text(cons->primary_role));
     }
 }
