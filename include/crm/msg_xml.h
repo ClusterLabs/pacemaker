@@ -210,7 +210,6 @@ extern "C" {
 /*---- CIB specific tags/attrs */
 #  define XML_CIB_TAG_SECTION_ALL	"all"
 
-#  define XML_CIB_TAG_RESOURCE	  	PCMK_XE_PRIMITIVE
 #  define XML_CIB_TAG_GROUP	  	"group"
 #  define XML_CIB_TAG_INCARNATION	"clone"
 #  define XML_CIB_TAG_CONTAINER		"bundle"
