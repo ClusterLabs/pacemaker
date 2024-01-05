@@ -127,7 +127,7 @@ extern "C" {
 #define LOG_DEBUG_6  LOG_TRACE
 #define LRMD_OP_RSC_CHK_REG         "lrmd_rsc_check_register"
 #define MAX_IPC_FAIL                5
-#define NAME(x)                     crm_element_value(x, XML_NVPAIR_ATTR_NAME)
+#define NAME(x)                     crm_element_value(x, PCMK_XA_NAME)
 #define MSG_LOG                     1
 #define PE_OBJ_T_NATIVE             "native"
 #define PE_OBJ_T_GROUP              "group"
@@ -167,7 +167,7 @@ extern "C" {
 #define XML_NODE_ATTR_STATE         "state"
 #define XML_ATTR_LRM_PROBE          "lrm-is-probe"
 #define XML_ATTR_TE_ALLOWFAIL       "op_allow_fail"
-#define VALUE(x)                    crm_element_value(x, XML_NVPAIR_ATTR_VALUE)
+#define VALUE(x)                    crm_element_value(x, PCMK_XA_VALUE)
 #define action_wrapper_s            pe_action_wrapper_s
 #define add_cib_op_callback(cib, id, flag, data, fn) do {                \
         cib->cmds->register_callback(cib, id, 120, flag, data, #fn, fn); \

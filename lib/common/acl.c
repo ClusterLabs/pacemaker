@@ -52,7 +52,7 @@ create_acl(const xmlNode *xml, GList *acls, enum xml_private_flags mode)
     xml_acl_t *acl = NULL;
 
     const char *tag = crm_element_value(xml, XML_ACL_ATTR_TAG);
-    const char *ref = crm_element_value(xml, XML_ACL_ATTR_REF);
+    const char *ref = crm_element_value(xml, PCMK_XA_REFERENCE);
     const char *xpath = crm_element_value(xml, XML_ACL_ATTR_XPATH);
     const char *attr = crm_element_value(xml, XML_ACL_ATTR_ATTRIBUTE);
 
@@ -305,7 +305,7 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
 
                 if (pcmk__xe_is(child, XML_ACL_TAG_USER)
                     || pcmk__xe_is(child, XML_ACL_TAG_USERv1)) {
-                    const char *id = crm_element_value(child, XML_ATTR_NAME);
+                    const char *id = crm_element_value(child, PCMK_XA_NAME);
 
                     if (id == NULL) {
                         id = crm_element_value(child, PCMK_XA_ID);
@@ -316,7 +316,7 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
                         docpriv->acls = parse_acl_entry(acls, child, docpriv->acls);
                     }
                 } else if (pcmk__xe_is(child, XML_ACL_TAG_GROUP)) {
-                    const char *id = crm_element_value(child, XML_ATTR_NAME);
+                    const char *id = crm_element_value(child, PCMK_XA_NAME);
 
                     if (id == NULL) {
                         id = crm_element_value(child, PCMK_XA_ID);

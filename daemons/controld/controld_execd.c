@@ -542,9 +542,9 @@ build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list)
         xmlNode *xml_rsc = create_xml_node(rsc_list, XML_LRM_TAG_RESOURCE);
 
         crm_xml_add(xml_rsc, PCMK_XA_ID, entry->id);
-        crm_xml_add(xml_rsc, XML_ATTR_TYPE, entry->rsc.type);
-        crm_xml_add(xml_rsc, XML_AGENT_ATTR_CLASS, entry->rsc.standard);
-        crm_xml_add(xml_rsc, XML_AGENT_ATTR_PROVIDER, entry->rsc.provider);
+        crm_xml_add(xml_rsc, PCMK_XA_TYPE, entry->rsc.type);
+        crm_xml_add(xml_rsc, PCMK_XA_CLASS, entry->rsc.standard);
+        crm_xml_add(xml_rsc, PCMK_XA_PROVIDER, entry->rsc.provider);
 
         if (entry->last && entry->last->params) {
             static const char *name = CRM_META "_" PCMK__META_CONTAINER;
@@ -665,7 +665,7 @@ notify_deleted(lrm_state_t * lrm_state, ha_msg_input_t * input, const char *rsc_
 {
     lrmd_event_data_t *op = NULL;
     const char *from_sys = crm_element_value(input->msg, F_CRM_SYS_FROM);
-    const char *from_host = crm_element_value(input->msg, F_CRM_HOST_FROM);
+    const char *from_host = crm_element_value(input->msg, PCMK__XA_SRC);
 
     crm_info("Notifying %s on %s that %s was%s deleted",
              from_sys, (from_host? from_host : "localhost"), rsc_id,
@@ -924,7 +924,7 @@ get_lrm_resource(lrm_state_t *lrm_state, const xmlNode *rsc_xml,
 
     // If resource isn't known by ID, try clone name, if provided
     if (!*rsc_info) {
-        const char *long_id = crm_element_value(rsc_xml, XML_ATTR_ID_LONG);
+        const char *long_id = crm_element_value(rsc_xml, PCMK__XA_LONG_ID);
 
         if (long_id) {
             *rsc_info = lrm_state_get_rsc_info(lrm_state, long_id, 0);
@@ -932,9 +932,9 @@ get_lrm_resource(lrm_state_t *lrm_state, const xmlNode *rsc_xml,
     }
 
     if ((*rsc_info == NULL) && do_create) {
-        const char *class = crm_element_value(rsc_xml, XML_AGENT_ATTR_CLASS);
-        const char *provider = crm_element_value(rsc_xml, XML_AGENT_ATTR_PROVIDER);
-        const char *type = crm_element_value(rsc_xml, XML_ATTR_TYPE);
+        const char *class = crm_element_value(rsc_xml, PCMK_XA_CLASS);
+        const char *provider = crm_element_value(rsc_xml, PCMK_XA_PROVIDER);
+        const char *type = crm_element_value(rsc_xml, PCMK_XA_TYPE);
         int rc;
 
         crm_trace("Registering resource %s with the executor", id);
@@ -982,7 +982,7 @@ delete_resource(lrm_state_t *lrm_state, const char *id, lrmd_rsc_info_t *rsc,
         crm_info("Deletion of resource '%s' from executor is pending", id);
         if (request) {
             struct pending_deletion_op_s *op = NULL;
-            char *ref = crm_element_value_copy(request->msg, XML_ATTR_REFERENCE);
+            char *ref = crm_element_value_copy(request->msg, PCMK_XA_REFERENCE);
 
             op = calloc(1, sizeof(struct pending_deletion_op_s));
             op->rsc = strdup(rsc->id);
@@ -1441,7 +1441,7 @@ do_lrm_invoke(long long action,
     crm_op = crm_element_value(input->msg, F_CRM_TASK);
     from_sys = crm_element_value(input->msg, F_CRM_SYS_FROM);
     if (!pcmk__str_eq(from_sys, CRM_SYSTEM_TENGINE, pcmk__str_none)) {
-        from_host = crm_element_value(input->msg, F_CRM_HOST_FROM);
+        from_host = crm_element_value(input->msg, PCMK__XA_SRC);
     }
 
     if (pcmk__str_eq(crm_op, PCMK_ACTION_LRM_DELETE, pcmk__str_none)) {
@@ -1660,7 +1660,7 @@ construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
     /* Use pcmk_monitor_timeout instead of meta timeout for stonith
        recurring monitor, if set */
     primitive = find_xml_node(rsc_op, XML_CIB_TAG_RESOURCE, FALSE);
-    class = crm_element_value(primitive, XML_AGENT_ATTR_CLASS);
+    class = crm_element_value(primitive, PCMK_XA_CLASS);
 
     if (pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_fence_params)
             && pcmk__str_eq(operation, PCMK_ACTION_MONITOR, pcmk__str_casei)
@@ -1706,7 +1706,7 @@ construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
         op->start_delay = 0;
     }
 
-    transition = crm_element_value(rsc_op, XML_ATTR_TRANSITION_KEY);
+    transition = crm_element_value(rsc_op, PCMK__XA_TRANSITION_KEY);
     CRM_CHECK(transition != NULL, return op);
 
     op->user_data = strdup(transition);
@@ -1776,7 +1776,7 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
 
     crm_debug("ACK'ing resource op " PCMK__OP_FMT " from %s: %s",
               op->rsc_id, op->op_type, op->interval_ms, op->user_data,
-              crm_element_value(reply, XML_ATTR_REFERENCE));
+              crm_element_value(reply, PCMK_XA_REFERENCE));
 
     if (relay_message(reply, TRUE) == FALSE) {
         crm_log_xml_err(reply, "Unable to route reply");
@@ -1924,7 +1924,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
     operation = crm_element_value(msg, XML_LRM_ATTR_TASK);
     CRM_CHECK(!pcmk__str_empty(operation), return);
 
-    transition = crm_element_value(msg, XML_ATTR_TRANSITION_KEY);
+    transition = crm_element_value(msg, PCMK__XA_TRANSITION_KEY);
     if (pcmk__str_empty(transition)) {
         crm_log_xml_err(msg, "Missing transition number");
     }
@@ -2256,9 +2256,9 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
     if ((rsc == NULL) && action_xml) {
         xmlNode *xml = find_xml_node(action_xml, XML_CIB_TAG_RESOURCE, TRUE);
 
-        const char *standard = crm_element_value(xml, XML_AGENT_ATTR_CLASS);
-        const char *provider = crm_element_value(xml, XML_AGENT_ATTR_PROVIDER);
-        const char *type = crm_element_value(xml, XML_ATTR_TYPE);
+        const char *standard = crm_element_value(xml, PCMK_XA_CLASS);
+        const char *provider = crm_element_value(xml, PCMK_XA_PROVIDER);
+        const char *type = crm_element_value(xml, PCMK_XA_TYPE);
 
         if (standard && type) {
             crm_info("%s agent information not cached, using %s%s%s:%s from action XML",

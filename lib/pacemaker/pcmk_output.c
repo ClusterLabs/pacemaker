@@ -948,8 +948,8 @@ crmadmin_node_xml(pcmk__output_t *out, va_list args)
     bool bash_export G_GNUC_UNUSED = va_arg(args, int);
 
     pcmk__output_create_xml_node(out, "node",
-                                 "type", type ? type : "cluster",
-                                 "name", pcmk__s(name, ""),
+                                 PCMK_XA_TYPE, pcmk__s(type, "cluster"),
+                                 PCMK_XA_NAME, pcmk__s(name, ""),
                                  PCMK_XA_ID, pcmk__s(id, ""),
                                  NULL);
     return pcmk_rc_ok;
@@ -1017,7 +1017,7 @@ add_digest_xml(xmlNode *parent, const char *type, const char *digest,
     if (digest != NULL) {
         xmlNodePtr digest_xml = create_xml_node(parent, "digest");
 
-        crm_xml_add(digest_xml, "type", ((type == NULL)? "unspecified" : type));
+        crm_xml_add(digest_xml, PCMK_XA_TYPE, pcmk__s(type, "unspecified"));
         crm_xml_add(digest_xml, "hash", digest);
         if (digest_source != NULL) {
             add_node_copy(digest_xml, digest_source);
@@ -1375,7 +1375,7 @@ node_info_xml(pcmk__output_t *out, va_list args)
 
     pcmk__output_create_xml_node(out, "node-info",
                                  "nodeid", id_s,
-                                 XML_ATTR_UNAME, node_name,
+                                 PCMK_XA_UNAME, node_name,
                                  PCMK_XA_ID, uuid,
                                  PCMK__XA_CRMD, state,
                                  PCMK_XA_HAVE_QUORUM, pcmk__btoa(have_quorum),
@@ -1462,8 +1462,8 @@ inject_fencing_action_xml(pcmk__output_t *out, va_list args)
     }
 
     pcmk__output_create_xml_node(out, "fencing_action",
-                                 "target", target,
-                                 "op", op,
+                                 PCMK_XA_TARGET, target,
+                                 PCMK_XA_OP, op,
                                  NULL);
     return pcmk_rc_ok;
 }
@@ -1508,8 +1508,8 @@ inject_attr_xml(pcmk__output_t *out, va_list args)
     node_path = xmlGetNodePath(cib_node);
 
     pcmk__output_create_xml_node(out, "inject_attr",
-                                 "name", name,
-                                 "value", value,
+                                 PCMK_XA_NAME, name,
+                                 PCMK_XA_VALUE, value,
                                  "node_path", node_path,
                                  "cib_node", ID(cib_node),
                                  NULL);
@@ -1760,7 +1760,7 @@ inject_rsc_action_xml(pcmk__output_t *out, va_list args)
 
     xml_node = pcmk__output_create_xml_node(out, "rsc_action",
                                             "resource", rsc,
-                                            "op", operation,
+                                            PCMK_XA_OP, operation,
                                             "node", node,
                                             NULL);
 
@@ -2175,8 +2175,8 @@ attribute_xml(pcmk__output_t *out, va_list args)
     xmlNodePtr node = NULL;
 
     node = pcmk__output_create_xml_node(out, "attribute",
-                                        "name", name,
-                                        "value", value ? value : "",
+                                        PCMK_XA_NAME, name,
+                                        PCMK_XA_VALUE, pcmk__s(value, ""),
                                         NULL);
 
     if (!pcmk__str_empty(scope)) {
@@ -2327,7 +2327,7 @@ result_code_xml(pcmk__output_t *out, va_list args)
 
     pcmk__output_create_xml_node(out, "result-code",
                                  "code", code_str,
-                                 XML_ATTR_NAME, name,
+                                 PCMK_XA_NAME, name,
                                  PCMK_XA_DESCRIPTION, desc,
                                  NULL);
     free(code_str);

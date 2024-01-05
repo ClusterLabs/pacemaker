@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the Pacemaker project contributors
+ * Copyright 2009-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -131,7 +131,7 @@ register_if_fencing_device(gpointer data, gpointer user_data)
         return;
     }
 
-    rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    rclass = crm_element_value(rsc->xml, PCMK_XA_CLASS);
     if (!pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         return; // Not a fencing device
     }
@@ -177,7 +177,7 @@ register_if_fencing_device(gpointer data, gpointer user_data)
 
     crm_debug("Reloading configuration of fencing device %s", rsc->id);
 
-    agent = crm_element_value(rsc->xml, XML_ATTR_TYPE);
+    agent = crm_element_value(rsc->xml, PCMK_XA_TYPE);
 
     get_meta_attributes(rsc->meta, rsc, node, scheduler);
     rsc_provides = g_hash_table_lookup(rsc->meta, PCMK_STONITH_PROVIDES);

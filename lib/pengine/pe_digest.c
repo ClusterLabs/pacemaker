@@ -189,7 +189,7 @@ calculate_secure_digest(pcmk__op_digest_t *data, const pcmk_resource_t *rsc,
                         GHashTable *params, const xmlNode *xml_op,
                         const char *op_version, GHashTable *overrides)
 {
-    const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    const char *class = crm_element_value(rsc->xml, PCMK_XA_CLASS);
     const char *secure_list = NULL;
     bool old_version = (compare_version(op_version, "3.16.0") < 0);
 
@@ -418,7 +418,7 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
                        interval_ms, task, rsc->id, pe__node_name(node),
                        pcmk__s(digest_restart, "missing"),
                        data->digest_restart_calc, op_version,
-                       crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
+                       crm_element_value(xml_op, PCMK__XA_TRANSITION_MAGIC));
         data->rc = pcmk__digest_restart;
 
     } else if (digest_all == NULL) {
@@ -444,7 +444,7 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
                            pcmk__s(digest_all, "missing"),
                            data->digest_all_calc, op_version,
                            crm_element_value(xml_op,
-                                             XML_ATTR_TRANSITION_MAGIC));
+                                             PCMK__XA_TRANSITION_MAGIC));
 
         } else {
             pcmk__rsc_info(rsc,
@@ -456,7 +456,7 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
                            (interval_ms > 0)? "reschedule" : "reload",
                            op_version,
                            crm_element_value(xml_op,
-                                             XML_ATTR_TRANSITION_MAGIC));
+                                             PCMK__XA_TRANSITION_MAGIC));
             data->rc = pcmk__digest_mismatch;
         }
 

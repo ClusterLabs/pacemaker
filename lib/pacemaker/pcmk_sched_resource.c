@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2023 the Pacemaker project contributors
+ * Copyright 2014-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -113,9 +113,9 @@ pcmk__rsc_agent_changed(pcmk_resource_t *rsc, pcmk_node_t *node,
 {
     bool changed = false;
     const char *attr_list[] = {
-        XML_ATTR_TYPE,
-        XML_AGENT_ATTR_CLASS,
-        XML_AGENT_ATTR_PROVIDER
+        PCMK_XA_TYPE,
+        PCMK_XA_CLASS,
+        PCMK_XA_PROVIDER,
     };
 
     for (int i = 0; i < PCMK__NELEM(attr_list); i++) {

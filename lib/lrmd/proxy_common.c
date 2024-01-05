@@ -253,7 +253,7 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
         pcmk__update_acl_user(request, F_LRMD_IPC_USER, node_name);
 
         if (pcmk_is_set(flags, crm_ipc_proxied)) {
-            const char *type = crm_element_value(request, F_TYPE);
+            const char *type = crm_element_value(request, PCMK__XA_T);
             int rc = 0;
 
             if (pcmk__str_eq(type, T_ATTRD, pcmk__str_casei)

@@ -168,7 +168,7 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     counter = pcmk__transition_key(controld_globals.transition_graph->id,
                                    action->id, get_target_rc(action),
                                    controld_globals.te_uuid);
-    crm_xml_add(cmd, XML_ATTR_TRANSITION_KEY, counter);
+    crm_xml_add(cmd, PCMK__XA_TRANSITION_KEY, counter);
 
     rc = send_cluster_message(crm_get_peer(0, router_node), crm_msg_crmd, cmd, TRUE);
     free(counter);
@@ -281,7 +281,7 @@ controld_record_action_event(pcmk__graph_action_t *action,
     state = create_xml_node(NULL, XML_CIB_TAG_STATE);
 
     crm_xml_add(state, PCMK_XA_ID, target_uuid);
-    crm_xml_add(state, XML_ATTR_UNAME, target);
+    crm_xml_add(state, PCMK_XA_UNAME, target);
 
     rsc = create_xml_node(state, XML_CIB_TAG_LRM);
     crm_xml_add(rsc, PCMK_XA_ID, target_uuid);
@@ -291,9 +291,9 @@ controld_record_action_event(pcmk__graph_action_t *action,
     crm_xml_add(rsc, PCMK_XA_ID, rsc_id);
 
 
-    crm_copy_xml_element(action_rsc, rsc, XML_ATTR_TYPE);
-    crm_copy_xml_element(action_rsc, rsc, XML_AGENT_ATTR_CLASS);
-    crm_copy_xml_element(action_rsc, rsc, XML_AGENT_ATTR_PROVIDER);
+    crm_copy_xml_element(action_rsc, rsc, PCMK_XA_TYPE);
+    crm_copy_xml_element(action_rsc, rsc, PCMK_XA_CLASS);
+    crm_copy_xml_element(action_rsc, rsc, PCMK_XA_PROVIDER);
 
     pcmk__create_history_xml(rsc, op, CRM_FEATURE_SET, target_rc, target,
                              __func__);
@@ -381,7 +381,7 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     counter = pcmk__transition_key(controld_globals.transition_graph->id,
                                    action->id, get_target_rc(action),
                                    controld_globals.te_uuid);
-    crm_xml_add(rsc_op, XML_ATTR_TRANSITION_KEY, counter);
+    crm_xml_add(rsc_op, PCMK__XA_TRANSITION_KEY, counter);
 
     if (pcmk__str_eq(router_node, controld_globals.our_nodename,
                      pcmk__str_casei)) {

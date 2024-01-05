@@ -158,9 +158,9 @@ get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
                     pcmk_node_t *node, pcmk_scheduler_t *scheduler)
 {
     pe_rsc_eval_data_t rsc_rule_data = {
-        .standard = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS),
-        .provider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER),
-        .agent = crm_element_value(rsc->xml, XML_ATTR_TYPE)
+        .standard = crm_element_value(rsc->xml, PCMK_XA_CLASS),
+        .provider = crm_element_value(rsc->xml, PCMK_XA_PROVIDER),
+        .agent = crm_element_value(rsc->xml, PCMK_XA_TYPE)
     };
 
     pe_rule_eval_data_t rule_data = {
@@ -238,7 +238,7 @@ get_rsc_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
 static char *
 template_op_key(xmlNode * op)
 {
-    const char *name = crm_element_value(op, "name");
+    const char *name = crm_element_value(op, PCMK_XA_NAME);
     const char *role = crm_element_value(op, "role");
     char *key = NULL;
 
@@ -564,7 +564,7 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
 static void
 warn_about_deprecated_classes(pcmk_resource_t *rsc)
 {
-    const char *std = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    const char *std = crm_element_value(rsc->xml, PCMK_XA_CLASS);
 
     if (pcmk__str_eq(std, PCMK_RESOURCE_CLASS_UPSTART, pcmk__str_none)) {
         pcmk__warn_once(pcmk__wo_upstart,
@@ -845,7 +845,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         }
     }
 
-    if (pcmk__str_eq(crm_element_value((*rsc)->xml, XML_AGENT_ATTR_CLASS),
+    if (pcmk__str_eq(crm_element_value((*rsc)->xml, PCMK_XA_CLASS),
                      PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         pcmk__set_scheduler_flags(scheduler, pcmk_sched_have_fencing);
         pcmk__set_rsc_flags(*rsc, pcmk_rsc_fence_device);

@@ -278,7 +278,8 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
 // Searches for various portions of node_state to delete
 
 // Match a particular node's node_state (takes node name 1x)
-#define XPATH_NODE_STATE        "//" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='%s']"
+#define XPATH_NODE_STATE        "//" XML_CIB_TAG_STATE  \
+                                "[@" PCMK_XA_UNAME "='%s']"
 
 // Node's lrm section (name 1x)
 #define XPATH_NODE_LRM          XPATH_NODE_STATE "/" XML_CIB_TAG_LRM
@@ -391,7 +392,7 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
 
 // Takes node name and resource ID
 #define XPATH_RESOURCE_HISTORY "//" XML_CIB_TAG_STATE                       \
-                               "[@" XML_ATTR_UNAME "='%s']/"                \
+                               "[@" PCMK_XA_UNAME "='%s']/"                 \
                                XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES    \
                                "/" XML_LRM_TAG_RESOURCE                     \
                                "[@" PCMK_XA_ID "='%s']"
@@ -901,7 +902,7 @@ controld_update_resource_history(const char *node_name,
         pcmk__xe_set_bool_attr(xml, XML_NODE_IS_REMOTE, true);
     }
     crm_xml_add(xml, PCMK_XA_ID, node_id);
-    crm_xml_add(xml, XML_ATTR_UNAME, node_name);
+    crm_xml_add(xml, PCMK_XA_UNAME, node_name);
     crm_xml_add(xml, PCMK_XA_CRM_DEBUG_ORIGIN, __func__);
 
     //     <lrm ...>
@@ -914,9 +915,9 @@ controld_update_resource_history(const char *node_name,
     //         <lrm_resource ...>
     xml = create_xml_node(xml, XML_LRM_TAG_RESOURCE);
     crm_xml_add(xml, PCMK_XA_ID, op->rsc_id);
-    crm_xml_add(xml, XML_AGENT_ATTR_CLASS, rsc->standard);
-    crm_xml_add(xml, XML_AGENT_ATTR_PROVIDER, rsc->provider);
-    crm_xml_add(xml, XML_ATTR_TYPE, rsc->type);
+    crm_xml_add(xml, PCMK_XA_CLASS, rsc->standard);
+    crm_xml_add(xml, PCMK_XA_PROVIDER, rsc->provider);
+    crm_xml_add(xml, PCMK_XA_TYPE, rsc->type);
     if (lock_time != 0) {
         /* Actions on a locked resource should either preserve the lock by
          * recording it with the action result, or clear it.
@@ -963,7 +964,7 @@ controld_delete_action_history(const lrmd_event_data_t *op)
 
     xml_top = create_xml_node(NULL, XML_LRM_TAG_RSC_OP);
     crm_xml_add_int(xml_top, XML_LRM_ATTR_CALLID, op->call_id);
-    crm_xml_add(xml_top, XML_ATTR_TRANSITION_KEY, op->user_data);
+    crm_xml_add(xml_top, PCMK__XA_TRANSITION_KEY, op->user_data);
 
     if (op->interval_ms > 0) {
         char *op_id = pcmk__op_key(op->rsc_id, op->op_type, op->interval_ms);
@@ -986,7 +987,7 @@ controld_delete_action_history(const lrmd_event_data_t *op)
 /* Define xpath to find LRM resource history entry by node and resource */
 #define XPATH_HISTORY                                   \
     "/" XML_TAG_CIB "/" XML_CIB_TAG_STATUS              \
-    "/" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='%s']"  \
+    "/" XML_CIB_TAG_STATE "[@" PCMK_XA_UNAME "='%s']"   \
     "/" XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES       \
     "/" XML_LRM_TAG_RESOURCE "[@" PCMK_XA_ID "='%s']"   \
     "/" XML_LRM_TAG_RSC_OP

@@ -815,7 +815,7 @@ remote_node_print_helper(xmlNode *result, void *user_data)
 {
     struct node_data *data = user_data;
     pcmk__output_t *out = data->out;
-    const char *name = crm_element_value(result, XML_ATTR_UNAME);
+    const char *name = crm_element_value(result, PCMK_XA_UNAME);
     const char *id = crm_element_value(result, data->field);
 
     // node name and node id are the same for remote/guest nodes
@@ -854,7 +854,7 @@ pcmk__list_nodes(pcmk__output_t *out, const char *node_types, bool bash_export)
         }
 
         if (pcmk__str_empty(node_types) || strstr(node_types, "guest")) {
-            data.field = "value";
+            data.field = PCMK_XA_VALUE;
             data.type = "guest";
             crm_foreach_xpath_result(xml_node, PCMK__XP_GUEST_NODE_CONFIG,
                                      remote_node_print_helper, &data);

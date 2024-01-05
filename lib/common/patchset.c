@@ -94,7 +94,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
 
         attr = create_xml_node(change, XML_DIFF_ATTR);
 
-        crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, (const char *)pIter->name);
+        crm_xml_add(attr, PCMK_XA_NAME, (const char *) pIter->name);
         if (nodepriv->flags & pcmk__xf_deleted) {
             crm_xml_add(attr, XML_DIFF_OP, "unset");
 
@@ -102,7 +102,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
             crm_xml_add(attr, XML_DIFF_OP, "set");
 
             value = pcmk__xml_attr_value(pIter);
-            crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, value);
+            crm_xml_add(attr, PCMK_XA_VALUE, value);
         }
     }
 

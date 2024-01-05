@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -30,7 +30,7 @@ static int
 remove_sync_point_attribute(xmlNode *xml, void *data)
 {
     pcmk__xe_remove_matching_attrs(xml, is_sync_point_attr, NULL);
-    pcmk__xe_foreach_child(xml, XML_ATTR_OP, remove_sync_point_attribute, NULL);
+    pcmk__xe_foreach_child(xml, PCMK_XE_OP, remove_sync_point_attribute, NULL);
     return pcmk_rc_ok;
 }
 
@@ -331,8 +331,8 @@ attrd_broadcast_protocol(void)
 {
     xmlNode *attrd_op = create_xml_node(NULL, __func__);
 
-    crm_xml_add(attrd_op, F_TYPE, T_ATTRD);
-    crm_xml_add(attrd_op, F_ORIG, crm_system_name);
+    crm_xml_add(attrd_op, PCMK__XA_T, T_ATTRD);
+    crm_xml_add(attrd_op, PCMK__XA_SRC, crm_system_name);
     crm_xml_add(attrd_op, PCMK__XA_TASK, PCMK__ATTRD_CMD_UPDATE);
     crm_xml_add(attrd_op, PCMK__XA_ATTR_NAME, CRM_ATTR_PROTOCOL);
     crm_xml_add(attrd_op, PCMK__XA_ATTR_VALUE, ATTRD_PROTOCOL_VERSION);
@@ -352,7 +352,7 @@ attrd_send_message(crm_node_t *node, xmlNode *data, bool confirm)
 {
     const char *op = crm_element_value(data, PCMK__XA_TASK);
 
-    crm_xml_add(data, F_TYPE, T_ATTRD);
+    crm_xml_add(data, PCMK__XA_T, T_ATTRD);
     crm_xml_add(data, PCMK__XA_ATTR_VERSION, ATTRD_PROTOCOL_VERSION);
 
     /* Request a confirmation from the destination peer node (which could

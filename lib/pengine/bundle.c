@@ -321,9 +321,9 @@ create_resource(const char *name, const char *provider, const char *kind)
     xmlNode *rsc = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
 
     crm_xml_add(rsc, PCMK_XA_ID, name);
-    crm_xml_add(rsc, XML_AGENT_ATTR_CLASS, PCMK_RESOURCE_CLASS_OCF);
-    crm_xml_add(rsc, XML_AGENT_ATTR_PROVIDER, provider);
-    crm_xml_add(rsc, XML_ATTR_TYPE, kind);
+    crm_xml_add(rsc, PCMK_XA_CLASS, PCMK_RESOURCE_CLASS_OCF);
+    crm_xml_add(rsc, PCMK_XA_PROVIDER, provider);
+    crm_xml_add(rsc, PCMK_XA_TYPE, kind);
 
     return rsc;
 }
@@ -1513,7 +1513,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
 
             rc = pe__name_and_nvpairs_xml(out, true, "bundle", 8,
                      PCMK_XA_ID, rsc->id,
-                     "type", container_agent_str(bundle_data->agent_type),
+                     PCMK_XA_TYPE, container_agent_str(bundle_data->agent_type),
                      "image", bundle_data->image,
                      "unique", pe__rsc_bool_str(rsc, pcmk_rsc_unique),
                      "maintenance",

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -318,8 +318,7 @@ cib_cs_dispatch(cpg_handle_t handle,
             free(data);
             return;
         }
-        crm_xml_add(xml, F_ORIG, from);
-        /* crm_xml_add_int(xml, F_SEQ, wrapper->id); */
+        crm_xml_add(xml, PCMK__XA_SRC, from);
         cib_peer_callback(xml, NULL);
     }
 

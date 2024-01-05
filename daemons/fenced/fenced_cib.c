@@ -56,10 +56,10 @@ node_has_attr(const char *node, const char *name, const char *value)
     xpath = g_string_sized_new(256);
     pcmk__g_strcat(xpath,
                    "//" XML_CIB_TAG_NODES "/" XML_CIB_TAG_NODE
-                   "[@" XML_ATTR_UNAME "='", node, "']/" XML_TAG_ATTR_SETS
+                   "[@" PCMK_XA_UNAME "='", node, "']/" XML_TAG_ATTR_SETS
                    "/" XML_CIB_TAG_NVPAIR
-                   "[@" XML_NVPAIR_ATTR_NAME "='", name, "' "
-                   "and @" XML_NVPAIR_ATTR_VALUE "='", value, "']", NULL);
+                   "[@" PCMK_XA_NAME "='", name, "' "
+                   "and @" PCMK_XA_VALUE "='", value, "']", NULL);
 
     match = get_xpath_object((const char *) xpath->str, local_cib, LOG_NEVER);
 
@@ -89,8 +89,8 @@ topology_remove_helper(const char *node, int level)
     xmlNode *data = create_xml_node(NULL, XML_TAG_FENCING_LEVEL);
 
     crm_xml_add(data, F_STONITH_ORIGIN, __func__);
-    crm_xml_add_int(data, XML_ATTR_STONITH_INDEX, level);
-    crm_xml_add(data, XML_ATTR_STONITH_TARGET, node);
+    crm_xml_add_int(data, PCMK_XA_INDEX, level);
+    crm_xml_add(data, PCMK_XA_TARGET, node);
 
     fenced_unregister_level(data, &desc, &result);
     fenced_send_level_notification(STONITH_OP_LEVEL_DEL, &result, desc);
@@ -108,7 +108,7 @@ remove_topology_level(xmlNode *match)
     CRM_CHECK(match != NULL, return);
 
     key = stonith_level_key(match, fenced_target_by_unknown);
-    crm_element_value_int(match, XML_ATTR_STONITH_INDEX, &index);
+    crm_element_value_int(match, PCMK_XA_INDEX, &index);
     topology_remove_helper(key, index);
     free(key);
 }
@@ -174,7 +174,7 @@ remove_cib_device(xmlXPathObjectPtr xpathObj)
 
         CRM_LOG_ASSERT(match != NULL);
         if(match != NULL) {
-            standard = crm_element_value(match, XML_AGENT_ATTR_CLASS);
+            standard = crm_element_value(match, PCMK_XA_CLASS);
         }
 
         if (!pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
@@ -188,7 +188,7 @@ remove_cib_device(xmlXPathObjectPtr xpathObj)
 }
 
 #define XPATH_WATCHDOG_TIMEOUT "//" XML_CIB_TAG_NVPAIR         \
-                               "[@" XML_NVPAIR_ATTR_NAME "='"  \
+                               "[@" PCMK_XA_NAME "='"  \
                                     PCMK_OPT_STONITH_WATCHDOG_TIMEOUT "']"
 
 static void
@@ -201,7 +201,7 @@ update_stonith_watchdog_timeout_ms(xmlNode *cib)
     stonith_watchdog_xml = get_xpath_object(XPATH_WATCHDOG_TIMEOUT, cib,
                                             LOG_NEVER);
     if (stonith_watchdog_xml) {
-        value = crm_element_value(stonith_watchdog_xml, XML_NVPAIR_ATTR_VALUE);
+        value = crm_element_value(stonith_watchdog_xml, PCMK_XA_VALUE);
     }
     if (value) {
         timeout_ms = crm_get_msec(value);
@@ -294,7 +294,7 @@ update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
             xmlNode *match = getXpathResult(xpath_obj, lpc);
 
             rsc_id = crm_element_value(match, PCMK_XA_ID);
-            standard = crm_element_value(match, XML_AGENT_ATTR_CLASS);
+            standard = crm_element_value(match, PCMK_XA_CLASS);
 
             if (!pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
                 continue;
@@ -474,7 +474,7 @@ remove_fencing_topology(xmlXPathObjectPtr xpathObj)
             int index = 0;
             char *target = stonith_level_key(match, fenced_target_by_unknown);
 
-            crm_element_value_int(match, XML_ATTR_STONITH_INDEX, &index);
+            crm_element_value_int(match, PCMK_XA_INDEX, &index);
             if (target == NULL) {
                 crm_err("Invalid fencing target in element %s", ID(match));
 

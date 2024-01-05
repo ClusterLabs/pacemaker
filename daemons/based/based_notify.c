@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -53,7 +53,7 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
         return;
     }
 
-    type = crm_element_value(update->msg, F_SUBTYPE);
+    type = crm_element_value(update->msg, PCMK__XA_SUBT);
     CRM_LOG_ASSERT(type != NULL);
 
     if (pcmk_is_set(client->flags, cib_notify_diff)
@@ -193,13 +193,13 @@ cib_diff_notify(const char *op, int result, const char *call_id,
 
     update_msg = create_xml_node(NULL, "notify");
 
-    crm_xml_add(update_msg, F_TYPE, T_CIB_NOTIFY);
-    crm_xml_add(update_msg, F_SUBTYPE, T_CIB_DIFF_NOTIFY);
+    crm_xml_add(update_msg, PCMK__XA_T, T_CIB_NOTIFY);
+    crm_xml_add(update_msg, PCMK__XA_SUBT, T_CIB_DIFF_NOTIFY);
     crm_xml_add(update_msg, F_CIB_OPERATION, op);
     crm_xml_add(update_msg, F_CIB_CLIENTID, client_id);
     crm_xml_add(update_msg, F_CIB_CLIENTNAME, client_name);
     crm_xml_add(update_msg, F_CIB_CALLID, call_id);
-    crm_xml_add(update_msg, F_ORIG, origin);
+    crm_xml_add(update_msg, PCMK__XA_SRC, origin);
     crm_xml_add_int(update_msg, F_CIB_RC, result);
 
     if (update != NULL) {

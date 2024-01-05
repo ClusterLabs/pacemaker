@@ -135,7 +135,7 @@ set_node_info_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
     crm_element_value_int(msg_data, PCMK_XA_ID, &(data->data.node_info.id));
 
     data->data.node_info.uuid = crm_element_value(msg_data, PCMK_XA_ID);
-    data->data.node_info.uname = crm_element_value(msg_data, XML_ATTR_UNAME);
+    data->data.node_info.uname = crm_element_value(msg_data, PCMK_XA_UNAME);
     data->data.node_info.state = crm_element_value(msg_data, PCMK__XA_CRMD);
 }
 
@@ -169,7 +169,7 @@ set_nodes_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
         if (id_ll > 0) {
             node_info->id = id_ll;
         }
-        node_info->uname = crm_element_value(node, XML_ATTR_UNAME);
+        node_info->uname = crm_element_value(node, PCMK_XA_UNAME);
         node_info->state = crm_element_value(node, PCMK__XA_IN_CCM);
         data->data.nodes = g_list_prepend(data->data.nodes, node_info);
     }
@@ -220,16 +220,16 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
      *       if we fix the controller, we'll still need to handle replies from
      *       old versions (feature set could be used to differentiate).
      */
-    value = crm_element_value(reply, F_CRM_MSG_TYPE);
-    if (pcmk__str_empty(value)
-        || !pcmk__str_any_of(value, XML_ATTR_REQUEST, XML_ATTR_RESPONSE, NULL)) {
+    value = crm_element_value(reply, PCMK__XA_SUBT);
+    if (!pcmk__str_any_of(value, PCMK__VALUE_REQUEST, PCMK__VALUE_RESPONSE,
+                          NULL)) {
         crm_info("Unrecognizable message from controller: "
                  "invalid message type '%s'", pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
 
-    if (pcmk__str_empty(crm_element_value(reply, XML_ATTR_REFERENCE))) {
+    if (pcmk__str_empty(crm_element_value(reply, PCMK_XA_REFERENCE))) {
         crm_info("Unrecognizable message from controller: no reference");
         status = CRM_EX_PROTOCOL;
         goto done;
@@ -245,7 +245,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
     // Parse useful info from reply
 
     reply_data.feature_set = crm_element_value(reply, PCMK_XA_VERSION);
-    reply_data.host_from = crm_element_value(reply, F_CRM_HOST_FROM);
+    reply_data.host_from = crm_element_value(reply, PCMK__XA_SRC);
     msg_data = get_message_xml(reply, F_CRM_DATA);
 
     if (!strcmp(value, CRM_OP_REPROBE)) {
@@ -333,7 +333,7 @@ static int
 send_controller_request(pcmk_ipc_api_t *api, const xmlNode *request,
                         bool reply_is_expected)
 {
-    if (crm_element_value(request, XML_ATTR_REFERENCE) == NULL) {
+    if (crm_element_value(request, PCMK_XA_REFERENCE) == NULL) {
         return EINVAL;
     }
     if (reply_is_expected) {
@@ -495,7 +495,7 @@ controller_resource_op(pcmk_ipc_api_t *api, const char *op,
      */
     key = pcmk__transition_key(0, getpid(), 0,
                                "xxxxxxxx-xrsc-opxx-xcrm-resourcexxxx");
-    crm_xml_add(msg_data, XML_ATTR_TRANSITION_KEY, key);
+    crm_xml_add(msg_data, PCMK__XA_TRANSITION_KEY, key);
     free(key);
 
     crm_xml_add(msg_data, XML_LRM_ATTR_TARGET, target_node);
@@ -510,10 +510,10 @@ controller_resource_op(pcmk_ipc_api_t *api, const char *op,
 
     xml_rsc = create_xml_node(msg_data, XML_CIB_TAG_RESOURCE);
     crm_xml_add(xml_rsc, PCMK_XA_ID, rsc_id);
-    crm_xml_add(xml_rsc, XML_ATTR_ID_LONG, rsc_long_id);
-    crm_xml_add(xml_rsc, XML_AGENT_ATTR_CLASS, standard);
-    crm_xml_add(xml_rsc, XML_AGENT_ATTR_PROVIDER, provider);
-    crm_xml_add(xml_rsc, XML_ATTR_TYPE, type);
+    crm_xml_add(xml_rsc, PCMK__XA_LONG_ID, rsc_long_id);
+    crm_xml_add(xml_rsc, PCMK_XA_CLASS, standard);
+    crm_xml_add(xml_rsc, PCMK_XA_PROVIDER, provider);
+    crm_xml_add(xml_rsc, PCMK_XA_TYPE, type);
 
     params = create_xml_node(msg_data, XML_TAG_ATTRS);
     crm_xml_add(params, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);

@@ -432,10 +432,10 @@ crm_create_op_xml(xmlNode *parent, const char *prefix, const char *task,
 
     CRM_CHECK(prefix && task && interval_spec, return NULL);
 
-    xml_op = create_xml_node(parent, XML_ATTR_OP);
+    xml_op = create_xml_node(parent, PCMK_XE_OP);
     crm_xml_set_id(xml_op, "%s-%s-%s", prefix, task, interval_spec);
     crm_xml_add(xml_op, XML_LRM_ATTR_INTERVAL, interval_spec);
-    crm_xml_add(xml_op, "name", task);
+    crm_xml_add(xml_op, PCMK_XA_NAME, task);
     if (timeout) {
         crm_xml_add(xml_op, XML_ATTR_TIMEOUT, timeout);
     }

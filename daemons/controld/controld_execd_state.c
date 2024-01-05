@@ -564,8 +564,8 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
 
             crm_element_value_int(request, PCMK_XA_ID, &node_id);
             if ((node_id <= 0)
-                && (crm_element_value(request, XML_ATTR_UNAME) == NULL)) {
-                crm_xml_add(request, XML_ATTR_UNAME, lrm_state->node_name);
+                && (crm_element_value(request, PCMK_XA_UNAME) == NULL)) {
+                crm_xml_add(request, PCMK_XA_UNAME, lrm_state->node_name);
             }
         }
 

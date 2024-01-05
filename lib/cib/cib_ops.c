@@ -346,7 +346,7 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
         int replace_admin_epoch = 0;
 
         const char *reason = NULL;
-        const char *peer = crm_element_value(req, F_ORIG);
+        const char *peer = crm_element_value(req, PCMK__XA_SRC);
         const char *digest = crm_element_value(req, PCMK__XA_DIGEST);
 
         if (digest) {
@@ -773,7 +773,7 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
     const char *originator = NULL;
 
     if (req != NULL) {
-        originator = crm_element_value(req, F_ORIG);
+        originator = crm_element_value(req, PCMK__XA_SRC);
     }
 
     crm_trace("Processing \"%s\" event from %s%s",

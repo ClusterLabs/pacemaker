@@ -165,6 +165,8 @@ bool pcmk__valid_sbd_timeout(const char *value);
 #define PCMK__VALUE_PROGRESSIVE             "progressive"
 #define PCMK__VALUE_QUORUM                  "quorum"
 #define PCMK__VALUE_RED                     "red"
+#define PCMK__VALUE_REQUEST                 "request"
+#define PCMK__VALUE_RESPONSE                "response"
 #define PCMK__VALUE_UNFENCING               "unfencing"
 #define PCMK__VALUE_YELLOW                  "yellow"
 

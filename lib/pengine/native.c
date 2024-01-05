@@ -207,7 +207,7 @@ gboolean
 native_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 {
     pcmk_resource_t *parent = uber_parent(rsc);
-    const char *standard = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    const char *standard = crm_element_value(rsc->xml, PCMK_XA_CLASS);
     uint32_t ra_caps = pcmk_get_ra_caps(standard);
 
     pcmk__rsc_trace(rsc, "Processing resource %s...", rsc->id);
@@ -467,8 +467,8 @@ static void
 native_print_xml(pcmk_resource_t *rsc, const char *pre_text, long options,
                  void *print_data)
 {
-    const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-    const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
+    const char *class = crm_element_value(rsc->xml, PCMK_XA_CLASS);
+    const char *prov = crm_element_value(rsc->xml, PCMK_XA_PROVIDER);
     const char *rsc_state = native_displayable_state(rsc, pcmk_is_set(options, pe_print_pending));
     const char *target_role = NULL;
 
@@ -478,7 +478,7 @@ native_print_xml(pcmk_resource_t *rsc, const char *pre_text, long options,
     status_print("resource_agent=\"%s%s%s:%s\" ", class,
                  ((prov == NULL)? "" : PROVIDER_SEP),
                  ((prov == NULL)? "" : prov),
-                 crm_element_value(rsc->xml, XML_ATTR_TYPE));
+                 crm_element_value(rsc->xml, PCMK_XA_TYPE));
 
     status_print("role=\"%s\" ", rsc_state);
     if (rsc->meta) {
@@ -565,9 +565,9 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
                            const pcmk_node_t *node, uint32_t show_opts,
                            const char *target_role, bool show_nodes)
 {
-    const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    const char *class = crm_element_value(rsc->xml, PCMK_XA_CLASS);
     const char *provider = NULL;
-    const char *kind = crm_element_value(rsc->xml, XML_ATTR_TYPE);
+    const char *kind = crm_element_value(rsc->xml, PCMK_XA_TYPE);
     GString *outstr = NULL;
     bool have_flags = false;
 
@@ -580,7 +580,7 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
     CRM_CHECK(class != NULL, class = "unknown");
 
     if (pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)) {
-        provider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
+        provider = crm_element_value(rsc->xml, PCMK_XA_PROVIDER);
     }
 
     if ((node == NULL) && (rsc->lock_node != NULL)) {
@@ -731,7 +731,7 @@ pe__common_output_html(pcmk__output_t *out, const pcmk_resource_t *rsc,
                        const char *name, const pcmk_node_t *node,
                        uint32_t show_opts)
 {
-    const char *kind = crm_element_value(rsc->xml, XML_ATTR_TYPE);
+    const char *kind = crm_element_value(rsc->xml, PCMK_XA_TYPE);
     const char *target_role = NULL;
 
     xmlNodePtr list_node = NULL;
@@ -975,8 +975,8 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     GList *only_rsc = va_arg(args, GList *);
 
     bool print_pending = pcmk_is_set(show_opts, pcmk_show_pending);
-    const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-    const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
+    const char *class = crm_element_value(rsc->xml, PCMK_XA_CLASS);
+    const char *prov = crm_element_value(rsc->xml, PCMK_XA_PROVIDER);
     const char *rsc_state = native_displayable_state(rsc, print_pending);
 
     const char *desc = NULL;
@@ -1001,7 +1001,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     /* resource information. */
     snprintf(ra_name, LINE_MAX, "%s%s%s:%s", class,
             ((prov == NULL)? "" : PROVIDER_SEP), ((prov == NULL)? "" : prov),
-            crm_element_value(rsc->xml, XML_ATTR_TYPE));
+            crm_element_value(rsc->xml, PCMK_XA_TYPE));
 
     nodes_running_on = pcmk__itoa(g_list_length(rsc->running_on));
 
@@ -1036,7 +1036,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
             pcmk_node_t *node = (pcmk_node_t *) gIter->data;
 
             rc = pe__name_and_nvpairs_xml(out, false, "node", 3,
-                     "name", node->details->uname,
+                     PCMK_XA_NAME, node->details->uname,
                      PCMK_XA_ID, node->details->id,
                      "cached", pcmk__btoa(node->details->online));
             CRM_ASSERT(rc == pcmk_rc_ok);
@@ -1185,8 +1185,8 @@ get_rscs_brief(GList *rsc_list, GHashTable * rsc_table, GHashTable * active_tabl
     for (; gIter != NULL; gIter = gIter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) gIter->data;
 
-        const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-        const char *kind = crm_element_value(rsc->xml, XML_ATTR_TYPE);
+        const char *class = crm_element_value(rsc->xml, PCMK_XA_CLASS);
+        const char *kind = crm_element_value(rsc->xml, PCMK_XA_TYPE);
 
         int offset = 0;
         char buffer[LINE_MAX];
@@ -1200,7 +1200,7 @@ get_rscs_brief(GList *rsc_list, GHashTable * rsc_table, GHashTable * active_tabl
 
         offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", class);
         if (pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)) {
-            const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
+            const char *prov = crm_element_value(rsc->xml, PCMK_XA_PROVIDER);
 
             if (prov != NULL) {
                 offset += snprintf(buffer + offset, LINE_MAX - offset,

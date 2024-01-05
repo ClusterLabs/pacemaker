@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -316,7 +316,8 @@ attrd_request_sync_point(xmlNode *xml)
     CRM_CHECK(xml != NULL, return NULL);
 
     if (xml->children != NULL) {
-        xmlNode *child = pcmk__xe_match(xml, XML_ATTR_OP, PCMK__XA_ATTR_SYNC_POINT, NULL);
+        xmlNode *child = pcmk__xe_match(xml, PCMK_XE_OP,
+                                        PCMK__XA_ATTR_SYNC_POINT, NULL);
 
         if (child) {
             return crm_element_value(child, PCMK__XA_ATTR_SYNC_POINT);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 the Pacemaker project contributors
+ * Copyright 2023-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -97,7 +97,8 @@ create_attr_node(void **state) {
     xml_node_private_t *priv = NULL;
     xmlDocPtr doc = xmlNewDoc((pcmkXmlStr) "1.0");
     xmlNodePtr node = xmlNewDocNode(doc, NULL, (pcmkXmlStr) "test", NULL);
-    xmlAttrPtr attr = xmlNewProp(node, (pcmkXmlStr) "name", (pcmkXmlStr) "value");
+    xmlAttrPtr attr = xmlNewProp(node, (pcmkXmlStr) PCMK_XA_NAME,
+                                 (pcmkXmlStr) "dummy-value");
 
     /* Adding a node to the document marks it as dirty */
     docpriv = doc->_private;
@@ -173,7 +174,8 @@ create_dtd_node(void **state) {
     xml_doc_private_t *docpriv = NULL;
     xml_node_private_t *priv = NULL;
     xmlDocPtr doc = xmlNewDoc((pcmkXmlStr) "1.0");
-    xmlDtdPtr dtd = xmlNewDtd(doc, (pcmkXmlStr) "name", (pcmkXmlStr) "externalId",
+    xmlDtdPtr dtd = xmlNewDtd(doc, (pcmkXmlStr) PCMK_XA_NAME,
+                              (pcmkXmlStr) "externalId",
                               (pcmkXmlStr) "systemId");
 
     /* Adding a node to the document marks it as dirty */

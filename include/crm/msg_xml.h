@@ -41,14 +41,14 @@ extern "C" {
  */
 
 #define PCMK_XE_DATE_EXPRESSION             "date_expression"
+#define PCMK_XE_OP                          "op"
 #define PCMK_XE_OP_EXPRESSION               "op_expression"
+#define PCMK_XE_RSC_EXPRESSION              "rsc_expression"
 
 /* This has been deprecated as a CIB element (an alias for <clone> with
  * PCMK_META_PROMOTABLE set to "true") since 2.0.0.
  */
 #define PCMK_XE_PROMOTABLE_LEGACY           "master"
-
-#define PCMK_XE_RSC_EXPRESSION              "rsc_expression"
 
 
 /*
@@ -57,47 +57,43 @@ extern "C" {
 
 #define PCMK_XA_ADMIN_EPOCH                 "admin_epoch"
 #define PCMK_XA_CIB_LAST_WRITTEN            "cib-last-written"
+#define PCMK_XA_CLASS                       "class"
 #define PCMK_XA_CRM_DEBUG_ORIGIN            "crm-debug-origin"
 #define PCMK_XA_CRM_FEATURE_SET             "crm_feature_set"
 #define PCMK_XA_CRM_TIMESTAMP               "crm-timestamp"
+#define PCMK_XA_DC_UUID                     "dc-uuid"
 #define PCMK_XA_DESCRIPTION                 "description"
+#define PCMK_XA_DEVICES                     "devices"
 #define PCMK_XA_EPOCH                       "epoch"
 #define PCMK_XA_FORMAT                      "format"
 #define PCMK_XA_HAVE_QUORUM                 "have-quorum"
 #define PCMK_XA_ID                          "id"
+#define PCMK_XA_ID_REF                      "id-ref"
+#define PCMK_XA_INDEX                       "index"
+#define PCMK_XA_NAME                        "name"
 #define PCMK_XA_NO_QUORUM_PANIC             "no-quorum-panic"
 #define PCMK_XA_NUM_UPDATES                 "num_updates"
+#define PCMK_XA_OP                          "op"
+#define PCMK_XA_PROVIDER                    "provider"
+#define PCMK_XA_REFERENCE                   "reference"
+#define PCMK_XA_REQUEST                     "request"
+#define PCMK_XA_TARGET                      "target"
+#define PCMK_XA_TARGET_ATTRIBUTE            "target-attribute"
+#define PCMK_XA_TARGET_PATTERN              "target-pattern"
+#define PCMK_XA_TARGET_VALUE                "target-value"
+#define PCMK_XA_TYPE                        "type"
+#define PCMK_XA_UNAME                       "uname"
+#define PCMK_XA_UPDATE_CLIENT               "update-client"
+#define PCMK_XA_UPDATE_ORIGIN               "update-origin"
+#define PCMK_XA_UPDATE_USER                 "update-user"
 #define PCMK_XA_VALIDATE_WITH               "validate-with"
+#define PCMK_XA_VALUE                       "value"
 #define PCMK_XA_VERSION                     "version"
 
 
 /*
  * Older constants that don't follow current naming
  */
-
-#  ifndef F_ORIG
-#    define F_ORIG    "src"
-#  endif
-
-#  ifndef F_SEQ
-#    define F_SEQ		"seq"
-#  endif
-
-#  ifndef F_SUBTYPE
-#    define F_SUBTYPE "subt"
-#  endif
-
-#  ifndef F_TYPE
-#    define F_TYPE    "t"
-#  endif
-
-#  ifndef F_CLIENTNAME
-#    define	F_CLIENTNAME	"cn"
-#  endif
-
-#  ifndef F_XML_TAGNAME
-#    define F_XML_TAGNAME	"__name__"
-#  endif
 
 #  ifndef T_CRM
 #    define T_CRM     "crmd"
@@ -112,11 +108,8 @@ extern "C" {
 #  define F_CRM_DATA			"crm_xml"
 #  define F_CRM_TASK			"crm_task"
 #  define F_CRM_HOST_TO			"crm_host_to"
-#  define F_CRM_MSG_TYPE		F_SUBTYPE
 #  define F_CRM_SYS_TO			"crm_sys_to"
 #  define F_CRM_SYS_FROM		"crm_sys_from"
-#  define F_CRM_HOST_FROM		F_ORIG
-#  define F_CRM_REFERENCE		XML_ATTR_REFERENCE
 #  define F_CRM_VERSION			PCMK_XA_VERSION
 #  define F_CRM_ORIGIN			"origin"
 #  define F_CRM_USER			"crm_user"
@@ -138,15 +131,6 @@ extern "C" {
 #  define XML_TAG_FAILED		"failed"
 
 #  define XML_ATTR_TIMEOUT		"timeout"
-#  define XML_ATTR_NAME			"name"
-#  define XML_ATTR_IDREF			"id-ref"
-#  define XML_ATTR_ID_LONG		"long-id"
-#  define XML_ATTR_TYPE			"type"
-#  define XML_ATTR_OP			"op"
-#  define XML_ATTR_DC_UUID		"dc-uuid"
-#  define XML_ATTR_UPDATE_ORIG		"update-origin"
-#  define XML_ATTR_UPDATE_CLIENT	"update-client"
-#  define XML_ATTR_UPDATE_USER		"update-user"
 
 #  define XML_BOOLEAN_TRUE		"true"
 #  define XML_BOOLEAN_FALSE		"false"
@@ -154,12 +138,6 @@ extern "C" {
 #  define XML_TAG_OPTIONS		"options"
 
 /*---- top level tags/attrs */
-#  define XML_ATTR_REQUEST		"request"
-#  define XML_ATTR_RESPONSE		"response"
-
-#  define XML_ATTR_UNAME		"uname"
-#  define XML_ATTR_REFERENCE		"reference"
-
 #  define XML_CRM_TAG_PING		"ping_response"
 #  define XML_PING_ATTR_STATUS		"result"
 #  define XML_PING_ATTR_SYSFROM		"crm_subsystem"
@@ -231,8 +209,6 @@ extern "C" {
 #  define XML_LRM_TAG_RESOURCES     	"lrm_resources"
 #  define XML_LRM_TAG_RESOURCE     	"lrm_resource"
 #  define XML_LRM_TAG_RSC_OP		"lrm_rsc_op"
-#  define XML_AGENT_ATTR_CLASS		"class"
-#  define XML_AGENT_ATTR_PROVIDER	"provider"
 
 //! \deprecated Do not use (will be removed in a future release)
 #  define XML_CIB_ATTR_REPLACE       	"replace"
@@ -300,8 +276,6 @@ extern "C" {
 #  define XML_TAG_EXPRESSION		"expression"
 #  define XML_EXPR_ATTR_ATTRIBUTE	"attribute"
 #  define XML_EXPR_ATTR_OPERATION	"operation"
-#  define XML_EXPR_ATTR_VALUE		"value"
-#  define XML_EXPR_ATTR_TYPE		"type"
 #  define XML_EXPR_ATTR_VALUE_SOURCE	"value-source"
 
 #  define XML_CONS_TAG_RSC_DEPEND	"rsc_colocation"
@@ -344,20 +318,13 @@ extern "C" {
 #  define XML_TICKET_ATTR_TICKET	"ticket"
 #  define XML_TICKET_ATTR_LOSS_POLICY	"loss-policy"
 
-#  define XML_NVPAIR_ATTR_NAME        	"name"
-#  define XML_NVPAIR_ATTR_VALUE        	"value"
-
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 
 #  define XML_ALERT_ATTR_PATH		"path"
 #  define XML_ALERT_ATTR_TIMEOUT	"timeout"
 #  define XML_ALERT_ATTR_TSTAMP_FORMAT	"timestamp-format"
-#  define XML_ALERT_ATTR_REC_VALUE	"value"
 
 #  define XML_CIB_TAG_GENERATION_TUPPLE	"generation_tuple"
-
-#  define XML_ATTR_TRANSITION_MAGIC	"transition-magic"
-#  define XML_ATTR_TRANSITION_KEY	"transition-key"
 
 #  define XML_ATTR_TE_NOWAIT		"op_no_wait"
 #  define XML_ATTR_TE_TARGET_RC		"op_target_rc"
@@ -380,7 +347,6 @@ extern "C" {
 #  define XML_ACL_TAG_READ		"read"
 #  define XML_ACL_TAG_WRITE		"write"
 #  define XML_ACL_TAG_DENY		"deny"
-#  define XML_ACL_ATTR_REF		"reference"
 #  define XML_ACL_ATTR_REFv1		"ref"
 #  define XML_ACL_ATTR_TAG		"object-type"
 #  define XML_ACL_ATTR_TAGv1		"tag"
@@ -396,12 +362,6 @@ extern "C" {
 
 #  define XML_TAG_FENCING_TOPOLOGY      "fencing-topology"
 #  define XML_TAG_FENCING_LEVEL         "fencing-level"
-#  define XML_ATTR_STONITH_INDEX        "index"
-#  define XML_ATTR_STONITH_TARGET       "target"
-#  define XML_ATTR_STONITH_TARGET_VALUE     "target-value"
-#  define XML_ATTR_STONITH_TARGET_PATTERN   "target-pattern"
-#  define XML_ATTR_STONITH_TARGET_ATTRIBUTE "target-attribute"
-#  define XML_ATTR_STONITH_DEVICES      "devices"
 
 #  define XML_TAG_DIFF                  "diff"
 #  define XML_DIFF_VERSION              "version"

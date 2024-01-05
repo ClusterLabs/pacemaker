@@ -63,11 +63,12 @@ is_op_dup(const pcmk_resource_t *rsc, const char *name, guint interval_ms)
 {
     const char *id = NULL;
 
-    for (xmlNode *op = first_named_child(rsc->ops_xml, "op");
-         op != NULL; op = crm_next_same_xml(op)) {
+    for (xmlNode *op = first_named_child(rsc->ops_xml, PCMK_XE_OP); op != NULL;
+         op = crm_next_same_xml(op)) {
 
         // Check whether action name and interval match
-        if (!pcmk__str_eq(crm_element_value(op, "name"), name, pcmk__str_none)
+        if (!pcmk__str_eq(crm_element_value(op, PCMK_XA_NAME), name,
+                          pcmk__str_none)
             || (xe_interval(op) != interval_ms)) {
             continue;
         }
@@ -141,7 +142,7 @@ is_recurring_history(const pcmk_resource_t *rsc, const xmlNode *xml,
         return false; // Shouldn't be possible (unless CIB was manually edited)
     }
 
-    op->name = crm_element_value(xml, "name");
+    op->name = crm_element_value(xml, PCMK_XA_NAME);
     if (op_cannot_recur(op->name)) {
         pcmk__config_err("Ignoring %s because %s action cannot be recurring",
                          op->id, pcmk__s(op->name, "unnamed"));
@@ -604,8 +605,8 @@ pcmk__create_recurring_actions(pcmk_resource_t *rsc)
     pcmk__rsc_trace(rsc, "Creating any recurring actions needed for %s",
                     rsc->id);
 
-    for (xmlNode *op = first_named_child(rsc->ops_xml, "op");
-         op != NULL; op = crm_next_same_xml(op)) {
+    for (xmlNode *op = first_named_child(rsc->ops_xml, PCMK_XE_OP); op != NULL;
+         op = crm_next_same_xml(op)) {
 
         struct op_history op_history = { NULL, };
 

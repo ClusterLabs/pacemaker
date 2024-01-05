@@ -224,7 +224,7 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
 
         // Fail count will be either incremented or set to infinity
         if (!pcmk_str_is_infinity(value)) {
-            value = XML_NVPAIR_ATTR_VALUE "++";
+            value = PCMK_XA_VALUE "++";
         }
 
         if (g_hash_table_lookup(crm_remote_peer_cache, event_node_uuid)) {
@@ -434,7 +434,7 @@ process_graph_event(xmlNode *event, const char *event_node)
 <lrm_rsc_op id="rsc_east-05_last_0" operation_key="rsc_east-05_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="9:2:7:be2e97d9-05e2-439d-863e-48f7aecab2aa" transition-magic="0:7;9:2:7:be2e97d9-05e2-439d-863e-48f7aecab2aa" call-id="17" rc-code="7" op-status="0" interval="0" last-rc-change="1355361636" exec-time="128" queue-time="0" op-digest="c81f5f40b1c9e859c992e800b1aa6972"/>
 */
 
-    magic = crm_element_value(event, XML_ATTR_TRANSITION_KEY);
+    magic = crm_element_value(event, PCMK__XA_TRANSITION_KEY);
     if (magic == NULL) {
         /* non-change */
         return;

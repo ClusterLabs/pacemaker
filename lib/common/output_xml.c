@@ -125,10 +125,7 @@ xml_init(pcmk__output_t *out) {
     } else {
         priv->root = create_xml_node(NULL, "pacemaker-result");
         crm_xml_add(priv->root, "api-version", PCMK__API_VERSION);
-
-        if (out->request != NULL) {
-            crm_xml_add(priv->root, "request", out->request);
-        }
+        crm_xml_add(priv->root, PCMK_XA_REQUEST, out->request);
     }
 
     priv->parent_q = g_queue_new();
@@ -327,7 +324,7 @@ xml_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plura
         pcmk__output_xml_create_parent(out, name, NULL);
     } else {
         pcmk__output_xml_create_parent(out, "list",
-                                       "name", name,
+                                       PCMK_XA_NAME, name,
                                        NULL);
     }
 
@@ -353,7 +350,7 @@ xml_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
     item_node = pcmk__output_create_xml_text_node(out, "item", buf);
 
     if (name != NULL) {
-        crm_xml_add(item_node, "name", name);
+        crm_xml_add(item_node, PCMK_XA_NAME, name);
     }
 
     free(buf);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 the Pacemaker project contributors
+ * Copyright 2011-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -73,7 +73,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
     }
 
     /* Do some basic validation of the reply */
-    value = crm_element_value(reply, F_TYPE);
+    value = crm_element_value(reply, PCMK__XA_T);
     if (pcmk__str_empty(value)
         || !pcmk__str_eq(value, T_ATTRD, pcmk__str_none)) {
         crm_info("Unrecognizable message from attribute manager: "
@@ -82,7 +82,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         goto done;
     }
 
-    value = crm_element_value(reply, F_SUBTYPE);
+    value = crm_element_value(reply, PCMK__XA_SUBT);
 
     /* Only the query command gets a reply for now. NULL counts as query for
      * backward compatibility with attribute managers <2.1.3 that didn't set it.
@@ -141,8 +141,8 @@ create_attrd_op(const char *user_name)
 {
     xmlNode *attrd_op = create_xml_node(NULL, __func__);
 
-    crm_xml_add(attrd_op, F_TYPE, T_ATTRD);
-    crm_xml_add(attrd_op, F_ORIG, (crm_system_name? crm_system_name: "unknown"));
+    crm_xml_add(attrd_op, PCMK__XA_T, T_ATTRD);
+    crm_xml_add(attrd_op, PCMK__XA_SRC, pcmk__s(crm_system_name, "unknown"));
     crm_xml_add(attrd_op, PCMK__XA_ATTR_USER, user_name);
 
     return attrd_op;
@@ -457,7 +457,7 @@ pcmk__attrd_api_update_list(pcmk_ipc_api_t *api, GList *attrs, const char *dampe
              * then we also add the task to each child node in populate_update_op
              * so attrd_client_update knows what form of update is taking place.
              */
-            child = create_xml_node(request, XML_ATTR_OP);
+            child = create_xml_node(request, PCMK_XE_OP);
             target = pcmk__node_attr_target(pair->node);
 
             if (target != NULL) {

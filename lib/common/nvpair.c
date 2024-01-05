@@ -673,8 +673,8 @@ hash2smartfield(gpointer key, gpointer value, gpointer user_data)
     if (isdigit(name[0])) {
         xmlNode *tmp = create_xml_node(xml_node, XML_TAG_PARAM);
 
-        crm_xml_add(tmp, XML_NVPAIR_ATTR_NAME, name);
-        crm_xml_add(tmp, XML_NVPAIR_ATTR_VALUE, s_value);
+        crm_xml_add(tmp, PCMK_XA_NAME, name);
+        crm_xml_add(tmp, PCMK_XA_VALUE, s_value);
 
     } else if (crm_element_value(xml_node, name) == NULL) {
         crm_xml_add(xml_node, name, s_value);
@@ -781,8 +781,8 @@ crm_create_nvpair_xml(xmlNode *parent, const char *id, const char *name,
         crm_xml_set_id(nvp, "%s-%s",
                        (parent_id? parent_id : XML_CIB_TAG_NVPAIR), name);
     }
-    crm_xml_add(nvp, XML_NVPAIR_ATTR_NAME, name);
-    crm_xml_add(nvp, XML_NVPAIR_ATTR_VALUE, value);
+    crm_xml_add(nvp, PCMK_XA_NAME, name);
+    crm_xml_add(nvp, PCMK_XA_VALUE, value);
     return nvp;
 }
 
@@ -855,8 +855,8 @@ xml2list(const xmlNode *parent)
          child = pcmk__xml_next(child)) {
 
         if (strcmp((const char *)child->name, XML_TAG_PARAM) == 0) {
-            const char *key = crm_element_value(child, XML_NVPAIR_ATTR_NAME);
-            const char *value = crm_element_value(child, XML_NVPAIR_ATTR_VALUE);
+            const char *key = crm_element_value(child, PCMK_XA_NAME);
+            const char *value = crm_element_value(child, PCMK_XA_VALUE);
 
             crm_trace("Added %s=%s", key, value);
             if (key != NULL && value != NULL) {

@@ -350,7 +350,7 @@ html_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
     free(buf);
 
     if (name != NULL) {
-        crm_xml_add(item_node, "class", name);
+        crm_xml_add(item_node, PCMK_XA_CLASS, name);
     }
 }
 
@@ -442,7 +442,7 @@ pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, con
     node = pcmk__output_create_xml_text_node(out, element_name, text);
 
     if (class_name != NULL) {
-        crm_xml_add(node, "class", class_name);
+        crm_xml_add(node, PCMK_XA_CLASS, class_name);
     }
 
     if (id != NULL) {

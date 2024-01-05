@@ -68,7 +68,7 @@ add_extra_info(const pcmk_node_t *node, GList *rsc_list,
 
     for (gIter = rsc_list; gIter != NULL; gIter = gIter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) gIter->data;
-        const char *type = g_hash_table_lookup(rsc->meta, XML_ATTR_TYPE);
+        const char *type = g_hash_table_lookup(rsc->meta, PCMK_XA_TYPE);
         const char *name = NULL;
         GHashTable *params = NULL;
 
@@ -84,7 +84,7 @@ add_extra_info(const pcmk_node_t *node, GList *rsc_list,
         }
 
         params = pe_rsc_params(rsc, node, scheduler);
-        name = g_hash_table_lookup(params, "name");
+        name = g_hash_table_lookup(params, PCMK_XA_NAME);
 
         if (name == NULL) {
             name = "pingd";
@@ -193,15 +193,15 @@ append_dump_text(gpointer key, gpointer value, gpointer user_data)
     *dump_text = new_text;
 }
 
-#define XPATH_STACK "//" XML_CIB_TAG_NVPAIR         \
-                    "[@" XML_NVPAIR_ATTR_NAME "='"  \
+#define XPATH_STACK "//" XML_CIB_TAG_NVPAIR \
+                    "[@" PCMK_XA_NAME "='"  \
                         PCMK_OPT_CLUSTER_INFRASTRUCTURE "']"
 
 static const char *
 get_cluster_stack(pcmk_scheduler_t *scheduler)
 {
     xmlNode *stack = get_xpath_object(XPATH_STACK, scheduler->input, LOG_DEBUG);
-    return stack? crm_element_value(stack, XML_NVPAIR_ATTR_VALUE) : "unknown";
+    return (stack != NULL)? crm_element_value(stack, PCMK_XA_VALUE) : "unknown";
 }
 
 static char *
@@ -389,9 +389,8 @@ formatted_xml_buf(const pcmk_resource_t *rsc, bool raw)
     }
 }
 
-#define XPATH_DC_VERSION "//" XML_CIB_TAG_NVPAIR         \
-                         "[@" XML_NVPAIR_ATTR_NAME "='"  \
-                            PCMK_OPT_DC_VERSION "']"
+#define XPATH_DC_VERSION "//" XML_CIB_TAG_NVPAIR    \
+                         "[@" PCMK_XA_NAME "='" PCMK_OPT_DC_VERSION "']"
 
 PCMK__OUTPUT_ARGS("cluster-summary", "pcmk_scheduler_t *",
                   "enum pcmk_pacemakerd_state", "uint32_t", "uint32_t")
@@ -415,7 +414,7 @@ cluster_summary(pcmk__output_t *out, va_list args) {
         xmlNode *dc_version = get_xpath_object(XPATH_DC_VERSION,
                                                scheduler->input, LOG_DEBUG);
         const char *dc_version_s = dc_version?
-                                   crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE)
+                                   crm_element_value(dc_version, PCMK_XA_VALUE)
                                    : NULL;
         const char *quorum = crm_element_value(scheduler->input,
                                                PCMK_XA_HAVE_QUORUM);
@@ -432,11 +431,11 @@ cluster_summary(pcmk__output_t *out, va_list args) {
         const char *last_written = crm_element_value(scheduler->input,
                                                      PCMK_XA_CIB_LAST_WRITTEN);
         const char *user = crm_element_value(scheduler->input,
-                                             XML_ATTR_UPDATE_USER);
+                                             PCMK_XA_UPDATE_USER);
         const char *client = crm_element_value(scheduler->input,
-                                               XML_ATTR_UPDATE_CLIENT);
+                                               PCMK_XA_UPDATE_CLIENT);
         const char *origin = crm_element_value(scheduler->input,
-                                               XML_ATTR_UPDATE_ORIG);
+                                               PCMK_XA_UPDATE_ORIGIN);
 
         PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
         out->message(out, "cluster-times",
@@ -490,7 +489,7 @@ cluster_summary_html(pcmk__output_t *out, va_list args) {
         xmlNode *dc_version = get_xpath_object(XPATH_DC_VERSION,
                                                scheduler->input, LOG_DEBUG);
         const char *dc_version_s = dc_version?
-                                   crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE)
+                                   crm_element_value(dc_version, PCMK_XA_VALUE)
                                    : NULL;
         const char *quorum = crm_element_value(scheduler->input,
                                                PCMK_XA_HAVE_QUORUM);
@@ -507,11 +506,11 @@ cluster_summary_html(pcmk__output_t *out, va_list args) {
         const char *last_written = crm_element_value(scheduler->input,
                                                      PCMK_XA_CIB_LAST_WRITTEN);
         const char *user = crm_element_value(scheduler->input,
-                                             XML_ATTR_UPDATE_USER);
+                                             PCMK_XA_UPDATE_USER);
         const char *client = crm_element_value(scheduler->input,
-                                               XML_ATTR_UPDATE_CLIENT);
+                                               PCMK_XA_UPDATE_CLIENT);
         const char *origin = crm_element_value(scheduler->input,
-                                               XML_ATTR_UPDATE_ORIG);
+                                               PCMK_XA_UPDATE_ORIGIN);
 
         PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
         out->message(out, "cluster-times",
@@ -953,7 +952,7 @@ cluster_dc_xml(pcmk__output_t *out, va_list args) {
         pcmk__output_create_xml_node(out, "current_dc",
                                      "present", "true",
                                      PCMK_XA_VERSION, pcmk__s(dc_version_s, ""),
-                                     "name", dc->details->uname,
+                                     PCMK_XA_NAME, dc->details->uname,
                                      PCMK_XA_ID, dc->details->id,
                                      "with_quorum", pcmk__btoa(crm_is_true(quorum)),
                                      "mixed_version", pcmk__btoa(mixed_version),
@@ -1209,7 +1208,7 @@ cluster_stack_xml(pcmk__output_t *out, va_list args) {
     }
 
     pcmk__output_create_xml_node(out, "stack",
-                                 "type", stack_s,
+                                 PCMK_XA_TYPE, stack_s,
                                  "pacemakerd-state", state_s,
                                  NULL);
 
@@ -1461,7 +1460,7 @@ failed_action_default(pcmk__output_t *out, va_list args)
     uint32_t show_opts = va_arg(args, uint32_t);
 
     const char *op_key = pe__xe_history_key(xml_op);
-    const char *node_name = crm_element_value(xml_op, XML_ATTR_UNAME);
+    const char *node_name = crm_element_value(xml_op, PCMK_XA_UNAME);
     const char *exit_reason = crm_element_value(xml_op,
                                                 XML_LRM_ATTR_EXIT_REASON);
     const char *exec_time = crm_element_value(xml_op, XML_RSC_OP_T_EXEC);
@@ -1498,6 +1497,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     const char *op_key_name = "op_key";
     int rc;
     int status;
+    const char *uname = crm_element_value(xml_op, PCMK_XA_UNAME);
     const char *exit_reason = crm_element_value(xml_op, XML_LRM_ATTR_EXIT_REASON);
 
     time_t epoch = 0;
@@ -1515,7 +1515,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     }
     node = pcmk__output_create_xml_node(out, "failure",
                                         op_key_name, op_key,
-                                        "node", crm_element_value(xml_op, XML_ATTR_UNAME),
+                                        "node", uname,
                                         "exitstatus", services_ocf_exitcode_str(rc),
                                         "exitreason", pcmk__s(reason_s, ""),
                                         "exitcode", rc_s,
@@ -1572,7 +1572,8 @@ failed_action_list(pcmk__output_t *out, va_list args) {
          xml_op = pcmk__xml_next(xml_op)) {
         char *rsc = NULL;
 
-        if (!pcmk__str_in_list(crm_element_value(xml_op, XML_ATTR_UNAME), only_node,
+        if (!pcmk__str_in_list(crm_element_value(xml_op, PCMK_XA_UNAME),
+                               only_node,
                                pcmk__str_star_matches|pcmk__str_casei)) {
             continue;
         }
@@ -1905,7 +1906,7 @@ node_xml(pcmk__output_t *out, va_list args) {
         feature_set = get_node_feature_set(node);
 
         pe__name_and_nvpairs_xml(out, true, "node", 15,
-                                 "name", node->details->uname,
+                                 PCMK_XA_NAME, node->details->uname,
                                  PCMK_XA_ID, node->details->id,
                                  "online", pcmk__btoa(node->details->online),
                                  "standby", pcmk__btoa(node->details->standby),
@@ -1919,7 +1920,7 @@ node_xml(pcmk__output_t *out, va_list args) {
                                  "expected_up", pcmk__btoa(node->details->expected_up),
                                  "is_dc", pcmk__btoa(node->details->is_dc),
                                  "resources_running", length_s,
-                                 "type", node_type);
+                                 PCMK_XA_TYPE, node_type);
 
         if (pe__is_guest_node(node)) {
             xmlNodePtr xml_node = pcmk__output_xml_peek_parent(out);
@@ -1943,7 +1944,7 @@ node_xml(pcmk__output_t *out, va_list args) {
         out->end_list(out);
     } else {
         pcmk__output_xml_create_parent(out, "node",
-                                       "name", node->details->uname,
+                                       PCMK_XA_NAME, node->details->uname,
                                        NULL);
     }
 
@@ -2061,7 +2062,7 @@ node_and_op(pcmk__output_t *out, va_list args) {
 
     out->list_item(out, NULL, "%s: %s (node=%s, call=%s, rc=%s%s): %s",
                    node_str, pe__xe_history_key(xml_op),
-                   crm_element_value(xml_op, XML_ATTR_UNAME),
+                   crm_element_value(xml_op, PCMK_XA_UNAME),
                    crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
                    crm_element_value(xml_op, XML_LRM_ATTR_RC),
                    last_change_str ? last_change_str : "",
@@ -2079,6 +2080,7 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
 
     pcmk_resource_t *rsc = NULL;
+    const char *uname = crm_element_value(xml_op, PCMK_XA_UNAME);
     const char *op_rsc = crm_element_value(xml_op, "resource");
     int status;
     time_t last_change = 0;
@@ -2087,8 +2089,8 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
     pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS),
                        &status, PCMK_EXEC_UNKNOWN);
     node = pcmk__output_create_xml_node(out, "operation",
-                                        "op", pe__xe_history_key(xml_op),
-                                        "node", crm_element_value(xml_op, XML_ATTR_UNAME),
+                                        PCMK_XA_OP, pe__xe_history_key(xml_op),
+                                        "node", uname,
                                         "call", crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
                                         "rc", crm_element_value(xml_op, XML_LRM_ATTR_RC),
                                         "status", pcmk_exec_status_str(status),
@@ -2097,13 +2099,16 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
     rsc = pe_find_resource(scheduler->resources, op_rsc);
 
     if (rsc) {
-        const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-        const char *kind = crm_element_value(rsc->xml, XML_ATTR_TYPE);
-        char *agent_tuple = NULL;
+        const char *class = crm_element_value(rsc->xml, PCMK_XA_CLASS);
+        const char *provider = crm_element_value(rsc->xml, PCMK_XA_PROVIDER);
+        const char *kind = crm_element_value(rsc->xml, PCMK_XA_TYPE);
+        bool has_provider = pcmk_is_set(pcmk_get_ra_caps(class),
+                                        pcmk_ra_cap_provider);
 
-        agent_tuple = crm_strdup_printf("%s:%s:%s", class,
-                                        pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider) ? crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER) : "",
-                                        kind);
+        char *agent_tuple = crm_strdup_printf("%s:%s:%s",
+                                              class,
+                                              (has_provider? provider : ""),
+                                              kind);
 
         pcmk__xe_set_props(node, "rsc", rsc_printable_id(rsc),
                            "agent", agent_tuple,
@@ -2131,8 +2136,8 @@ node_attribute_xml(pcmk__output_t *out, va_list args) {
     int expected_score = va_arg(args, int);
 
     xmlNodePtr node = pcmk__output_create_xml_node(out, "attribute",
-                                                   "name", name,
-                                                   "value", value,
+                                                   PCMK_XA_NAME, name,
+                                                   PCMK_XA_VALUE, value,
                                                    NULL);
 
     if (add_extra) {

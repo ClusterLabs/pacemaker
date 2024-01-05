@@ -119,8 +119,7 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
         if (attr_id != NULL) {
             g_string_append(xpath, " and ");
         }
-        pcmk__g_strcat(xpath, "@" XML_NVPAIR_ATTR_NAME "=\"", attr_name, "\"",
-                       NULL);
+        pcmk__g_strcat(xpath, "@" PCMK_XA_NAME "=\"", attr_name, "\"", NULL);
     }
     g_string_append_c(xpath, ']');
 
@@ -142,7 +141,7 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
         for (child = pcmk__xml_first_child(xml_search); child != NULL;
              child = pcmk__xml_next(child)) {
             out->info(out, "  Value: %s \t(id=%s)",
-                      crm_element_value(child, XML_NVPAIR_ATTR_VALUE), ID(child));
+                      crm_element_value(child, PCMK_XA_VALUE), ID(child));
         }
 
         out->spacer(out);
@@ -562,9 +561,9 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
         return EINVAL;
     }
 
-    rsc_class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-    rsc_provider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER),
-    rsc_type = crm_element_value(rsc->xml, XML_ATTR_TYPE);
+    rsc_class = crm_element_value(rsc->xml, PCMK_XA_CLASS);
+    rsc_provider = crm_element_value(rsc->xml, PCMK_XA_PROVIDER),
+    rsc_type = crm_element_value(rsc->xml, PCMK_XA_TYPE);
     if ((rsc_class == NULL) || (rsc_type == NULL)) {
         out->err(out, "Resource %s does not have a class and type", rsc_id);
         return EINVAL;
@@ -711,7 +710,7 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
         }
 
         // Host name should always have been provided by this point
-        failed_value = crm_element_value(xml_op, XML_ATTR_UNAME);
+        failed_value = crm_element_value(xml_op, PCMK_XA_UNAME);
         if (!pcmk__str_eq(node_name, failed_value, pcmk__str_casei)) {
             continue;
         }
@@ -1576,8 +1575,8 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
          * later (though it only makes any difference if it's Unpromoted).
          */
 
-        find_resource_attr(out, cib, XML_NVPAIR_ATTR_VALUE, lookup_id, NULL, NULL,
-                           NULL, PCMK_META_TARGET_ROLE, &orig_target_role);
+        find_resource_attr(out, cib, PCMK_XA_VALUE, lookup_id, NULL, NULL, NULL,
+                           PCMK_META_TARGET_ROLE, &orig_target_role);
         rc = cli_resource_update_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS,
                                            NULL, PCMK_META_TARGET_ROLE,
                                            PCMK_ACTION_STOPPED, FALSE, cib,
@@ -2114,9 +2113,9 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
         return CRM_EX_UNIMPLEMENT_FEATURE;
     }
 
-    rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-    rprov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
-    rtype = crm_element_value(rsc->xml, XML_ATTR_TYPE);
+    rclass = crm_element_value(rsc->xml, PCMK_XA_CLASS);
+    rprov = crm_element_value(rsc->xml, PCMK_XA_PROVIDER);
+    rtype = crm_element_value(rsc->xml, PCMK_XA_TYPE);
 
     params = generate_resource_params(rsc, NULL /* @TODO use local node */,
                                       scheduler);

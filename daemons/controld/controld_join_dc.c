@@ -313,7 +313,7 @@ do_dc_join_offer_one(long long action,
         return;
     }
 
-    join_to = crm_element_value(welcome->msg, F_CRM_HOST_FROM);
+    join_to = crm_element_value(welcome->msg, PCMK__XA_SRC);
     if (join_to == NULL) {
         crm_err("Can't make join-%d offer to unknown node", current_join_id);
         return;
@@ -386,8 +386,8 @@ do_dc_join_filter_offer(long long action,
     gboolean ack_nack_bool = TRUE;
     ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
 
-    const char *join_from = crm_element_value(join_ack->msg, F_CRM_HOST_FROM);
-    const char *ref = crm_element_value(join_ack->msg, F_CRM_REFERENCE);
+    const char *join_from = crm_element_value(join_ack->msg, PCMK__XA_SRC);
+    const char *ref = crm_element_value(join_ack->msg, PCMK_XA_REFERENCE);
     const char *join_version = crm_element_value(join_ack->msg,
                                                  PCMK_XA_CRM_FEATURE_SET);
     crm_node_t *join_node = NULL;
@@ -699,7 +699,7 @@ do_dc_join_ack(long long action,
     ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
 
     const char *op = crm_element_value(join_ack->msg, F_CRM_TASK);
-    char *join_from = crm_element_value_copy(join_ack->msg, F_CRM_HOST_FROM);
+    char *join_from = crm_element_value_copy(join_ack->msg, PCMK__XA_SRC);
     crm_node_t *peer = NULL;
 
     enum controld_section_e section = controld_section_lrm;
@@ -856,7 +856,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
     crm_trace("Updating node name and UUID in CIB for %s", join_to);
     tmp1 = create_xml_node(NULL, XML_CIB_TAG_NODE);
     crm_xml_add(tmp1, PCMK_XA_ID, crm_peer_uuid(join_node));
-    crm_xml_add(tmp1, XML_ATTR_UNAME, join_to);
+    crm_xml_add(tmp1, PCMK_XA_UNAME, join_to);
     fsa_cib_anon_update(XML_CIB_TAG_NODES, tmp1);
     free_xml(tmp1);
 

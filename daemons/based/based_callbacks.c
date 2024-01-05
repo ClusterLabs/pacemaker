@@ -163,7 +163,7 @@ create_cib_reply(const char *op, const char *call_id, const char *client_id,
 
     CRM_ASSERT(reply != NULL);
 
-    crm_xml_add(reply, F_TYPE, T_CIB);
+    crm_xml_add(reply, PCMK__XA_T, T_CIB);
     crm_xml_add(reply, F_CIB_OPERATION, op);
     crm_xml_add(reply, F_CIB_CALLID, call_id);
     crm_xml_add(reply, F_CIB_CLIENTID, client_id);
@@ -402,7 +402,7 @@ cib_digester_cb(gpointer data)
         snprintf(buffer, 32, "%" PRIu64, ping_seq);
         crm_trace("Requesting peer digests (%s)", buffer);
 
-        crm_xml_add(ping, F_TYPE, "cib");
+        crm_xml_add(ping, PCMK__XA_T, T_CIB);
         crm_xml_add(ping, F_CIB_OPERATION, CRM_OP_PING);
         crm_xml_add(ping, F_CIB_PING_ID, buffer);
 
@@ -418,7 +418,7 @@ static void
 process_ping_reply(xmlNode *reply) 
 {
     uint64_t seq = 0;
-    const char *host = crm_element_value(reply, F_ORIG);
+    const char *host = crm_element_value(reply, PCMK__XA_SRC);
 
     xmlNode *pong = get_message_xml(reply, F_CIB_CALLDATA);
     const char *seq_s = crm_element_value(pong, F_CIB_PING_ID);
@@ -667,7 +667,7 @@ parse_peer_options_v1(const cib__operation_t *operation, xmlNode *request,
     const char *op = NULL;
     const char *host = NULL;
     const char *delegated = NULL;
-    const char *originator = crm_element_value(request, F_ORIG);
+    const char *originator = crm_element_value(request, PCMK__XA_SRC);
     const char *reply_to = crm_element_value(request, F_CIB_ISREPLY);
 
     gboolean is_reply = pcmk__str_eq(reply_to, OUR_NODENAME, pcmk__str_casei);
@@ -766,7 +766,7 @@ parse_peer_options_v2(const cib__operation_t *operation, xmlNode *request,
     const char *host = NULL;
     const char *delegated = crm_element_value(request, F_CIB_DELEGATED);
     const char *op = crm_element_value(request, F_CIB_OPERATION);
-    const char *originator = crm_element_value(request, F_ORIG);
+    const char *originator = crm_element_value(request, PCMK__XA_SRC);
     const char *reply_to = crm_element_value(request, F_CIB_ISREPLY);
 
     gboolean is_reply = pcmk__str_eq(reply_to, OUR_NODENAME, pcmk__str_casei);
@@ -916,7 +916,7 @@ forward_request(xmlNode *request)
     const char *op = crm_element_value(request, F_CIB_OPERATION);
     const char *section = crm_element_value(request, F_CIB_SECTION);
     const char *host = crm_element_value(request, F_CIB_HOST);
-    const char *originator = crm_element_value(request, F_ORIG);
+    const char *originator = crm_element_value(request, PCMK__XA_SRC);
     const char *client_name = crm_element_value(request, F_CIB_CLIENTNAME);
     const char *call_id = crm_element_value(request, F_CIB_CALLID);
 
@@ -1030,7 +1030,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
 
     int rc = pcmk_ok;
     const char *op = crm_element_value(request, F_CIB_OPERATION);
-    const char *originator = crm_element_value(request, F_ORIG);
+    const char *originator = crm_element_value(request, PCMK__XA_SRC);
     const char *host = crm_element_value(request, F_CIB_HOST);
     const char *target = NULL;
     const char *call_id = crm_element_value(request, F_CIB_CALLID);
@@ -1062,7 +1062,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
         crm_trace("Processing peer %s operation from %s/%s on %s intended for %s (reply=%s)",
                   op, client_name, call_id, originator, target, reply_to);
     } else {
-        crm_xml_add(request, F_ORIG, OUR_NODENAME);
+        crm_xml_add(request, PCMK__XA_SRC, OUR_NODENAME);
         crm_trace("Processing local %s operation from %s/%s intended for %s", op, client_name, call_id, target);
     }
 
@@ -1342,7 +1342,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     const char *call_id = crm_element_value(request, F_CIB_CALLID);
     const char *client_id = crm_element_value(request, F_CIB_CLIENTID);
     const char *client_name = crm_element_value(request, F_CIB_CLIENTNAME);
-    const char *originator = crm_element_value(request, F_ORIG);
+    const char *originator = crm_element_value(request, PCMK__XA_SRC);
 
     int rc = pcmk_ok;
 
@@ -1524,7 +1524,7 @@ void
 cib_peer_callback(xmlNode * msg, void *private_data)
 {
     const char *reason = NULL;
-    const char *originator = crm_element_value(msg, F_ORIG);
+    const char *originator = crm_element_value(msg, PCMK__XA_SRC);
 
     if (cib_legacy_mode()
         && pcmk__str_eq(originator, OUR_NODENAME,
@@ -1552,10 +1552,9 @@ cib_peer_callback(xmlNode * msg, void *private_data)
 
   bail:
     if (reason) {
-        const char *seq = crm_element_value(msg, F_SEQ);
         const char *op = crm_element_value(msg, F_CIB_OPERATION);
 
-        crm_warn("Discarding %s message (%s) from %s: %s", op, seq, originator, reason);
+        crm_warn("Discarding %s message from %s: %s", op, originator, reason);
     }
 }
 
@@ -1591,7 +1590,7 @@ initiate_exit(void)
     crm_info("Sending shutdown request to %d peers", active);
 
     leaving = create_xml_node(NULL, "exit-notification");
-    crm_xml_add(leaving, F_TYPE, "cib");
+    crm_xml_add(leaving, PCMK__XA_T, T_CIB);
     crm_xml_add(leaving, F_CIB_OPERATION, PCMK__CIB_REQUEST_SHUTDOWN);
 
     send_cluster_message(NULL, crm_msg_cib, leaving, TRUE);

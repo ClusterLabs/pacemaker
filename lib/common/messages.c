@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -63,10 +63,10 @@ create_request_adv(const char *task, xmlNode *msg_data,
     // host_from will get set for us if necessary by the controller when routed
     request = create_xml_node(NULL, __func__);
     crm_xml_add(request, F_CRM_ORIGIN, origin);
-    crm_xml_add(request, F_TYPE, T_CRM);
+    crm_xml_add(request, PCMK__XA_T, T_CRM);
     crm_xml_add(request, F_CRM_VERSION, CRM_FEATURE_SET);
-    crm_xml_add(request, F_CRM_MSG_TYPE, XML_ATTR_REQUEST);
-    crm_xml_add(request, F_CRM_REFERENCE, reference);
+    crm_xml_add(request, PCMK__XA_SUBT, PCMK__VALUE_REQUEST);
+    crm_xml_add(request, PCMK_XA_REFERENCE, reference);
     crm_xml_add(request, F_CRM_TASK, task);
     crm_xml_add(request, F_CRM_SYS_TO, sys_to);
     crm_xml_add(request, F_CRM_SYS_FROM, true_from);
@@ -104,18 +104,21 @@ create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
 {
     xmlNode *reply = NULL;
 
-    const char *host_from = crm_element_value(original_request, F_CRM_HOST_FROM);
+    const char *host_from = crm_element_value(original_request, PCMK__XA_SRC);
     const char *sys_from = crm_element_value(original_request, F_CRM_SYS_FROM);
     const char *sys_to = crm_element_value(original_request, F_CRM_SYS_TO);
-    const char *type = crm_element_value(original_request, F_CRM_MSG_TYPE);
+    const char *type = crm_element_value(original_request, PCMK__XA_SUBT);
     const char *operation = crm_element_value(original_request, F_CRM_TASK);
-    const char *crm_msg_reference = crm_element_value(original_request, F_CRM_REFERENCE);
+    const char *crm_msg_reference = crm_element_value(original_request,
+                                                      PCMK_XA_REFERENCE);
 
     if (type == NULL) {
         crm_err("Cannot create new_message, no message type in original message");
         CRM_ASSERT(type != NULL);
         return NULL;
-    } else if (strcasecmp(XML_ATTR_REQUEST, type) != 0) {
+    }
+
+    if (strcmp(type, PCMK__VALUE_REQUEST) != 0) {
         /* Replies should only be generated for request messages, but it's possible
          * we expect replies to other messages right now so this can't be enforced.
          */
@@ -128,10 +131,10 @@ create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
     }
 
     crm_xml_add(reply, F_CRM_ORIGIN, origin);
-    crm_xml_add(reply, F_TYPE, T_CRM);
+    crm_xml_add(reply, PCMK__XA_T, T_CRM);
     crm_xml_add(reply, F_CRM_VERSION, CRM_FEATURE_SET);
-    crm_xml_add(reply, F_CRM_MSG_TYPE, XML_ATTR_RESPONSE);
-    crm_xml_add(reply, F_CRM_REFERENCE, crm_msg_reference);
+    crm_xml_add(reply, PCMK__XA_SUBT, PCMK__VALUE_RESPONSE);
+    crm_xml_add(reply, PCMK_XA_REFERENCE, crm_msg_reference);
     crm_xml_add(reply, F_CRM_TASK, operation);
 
     /* since this is a reply, we reverse the from and to */

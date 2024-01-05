@@ -207,17 +207,16 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         return ack_status == CRM_EX_INDETERMINATE;
     }
 
-    value = crm_element_value(reply, F_CRM_MSG_TYPE);
-    if (pcmk__str_empty(value)
-        || !pcmk__str_eq(value, XML_ATTR_RESPONSE, pcmk__str_none)) {
+    value = crm_element_value(reply, PCMK__XA_SUBT);
+    if (!pcmk__str_eq(value, PCMK__VALUE_RESPONSE, pcmk__str_none)) {
         crm_info("Unrecognizable message from %s: "
-                 "message type '%s' not '" XML_ATTR_RESPONSE "'",
+                 "message type '%s' not '" PCMK__VALUE_RESPONSE "'",
                  pcmk_ipc_name(api, true), pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
 
-    if (pcmk__str_empty(crm_element_value(reply, XML_ATTR_REFERENCE))) {
+    if (pcmk__str_empty(crm_element_value(reply, PCMK_XA_REFERENCE))) {
         crm_info("Unrecognizable message from %s: no reference",
                  pcmk_ipc_name(api, true));
         status = CRM_EX_PROTOCOL;

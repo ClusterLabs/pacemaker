@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -230,7 +230,7 @@ cib_remote_auth(xmlNode * login)
         return FALSE;
     }
 
-    tmp = crm_element_value(login, "op");
+    tmp = crm_element_value(login, PCMK_XA_OP);
     if (!pcmk__str_eq(tmp, "authenticate", pcmk__str_casei)) {
         crm_err("Wrong operation: %s", tmp);
         return FALSE;
@@ -411,28 +411,21 @@ cib_remote_connection_destroy(gpointer user_data)
 static void
 cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
 {
-    const char *value = NULL;
-
     if (!pcmk__xe_is(command, T_CIB_COMMAND)) {
         crm_log_xml_trace(command, "bad");
         return;
     }
 
     if (client->name == NULL) {
-        value = crm_element_value(command, F_CLIENTNAME);
-        if (value == NULL) {
-            client->name = strdup(client->id);
-        } else {
-            client->name = strdup(value);
-        }
+        client->name = strdup(client->id);
     }
 
     /* unset dangerous options */
-    xml_remove_prop(command, F_ORIG);
+    xml_remove_prop(command, PCMK__XA_SRC);
     xml_remove_prop(command, F_CIB_HOST);
     xml_remove_prop(command, F_CIB_GLOBAL_UPDATE);
 
-    crm_xml_add(command, F_TYPE, T_CIB);
+    crm_xml_add(command, PCMK__XA_T, T_CIB);
     crm_xml_add(command, F_CIB_CLIENTID, client->id);
     crm_xml_add(command, F_CIB_CLIENTNAME, client->name);
     crm_xml_add(command, F_CIB_USER, client->user);
@@ -515,7 +508,7 @@ cib_remote_msg(gpointer data)
         pcmk__set_client_flags(client, pcmk__client_authenticated);
         g_source_remove(client->remote->auth_timeout);
         client->remote->auth_timeout = 0;
-        client->name = crm_element_value_copy(command, "name");
+        client->name = crm_element_value_copy(command, PCMK_XA_NAME);
 
         user = crm_element_value(command, "user");
         if (user) {

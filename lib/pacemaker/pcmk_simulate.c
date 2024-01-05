@@ -538,7 +538,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     }
     resource = resource_config_name;
     if (pe_find_resource(fake_resource_list, resource) == NULL) {
-        const char *longname = crm_element_value(action_rsc, XML_ATTR_ID_LONG);
+        const char *longname = crm_element_value(action_rsc, PCMK__XA_LONG_ID);
 
         if ((longname != NULL)
             && (pe_find_resource(fake_resource_list, longname) != NULL)) {
@@ -554,9 +554,9 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         goto done; // Confirm action and update graph
     }
 
-    rclass = crm_element_value(action_rsc, XML_AGENT_ATTR_CLASS);
-    rtype = crm_element_value(action_rsc, XML_ATTR_TYPE);
-    rprovider = crm_element_value(action_rsc, XML_AGENT_ATTR_PROVIDER);
+    rclass = crm_element_value(action_rsc, PCMK_XA_CLASS);
+    rtype = crm_element_value(action_rsc, PCMK_XA_TYPE);
+    rprovider = crm_element_value(action_rsc, PCMK_XA_PROVIDER);
 
     pcmk__scan_min_int(target_rc_s, &target_outcome, 0);
 
@@ -706,7 +706,7 @@ simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         // Simulate controller clearing node's resource history and attributes
         pcmk__g_strcat(xpath,
                        "//" XML_CIB_TAG_STATE
-                       "[@" XML_ATTR_UNAME "='", target, "']/" XML_CIB_TAG_LRM,
+                       "[@" PCMK_XA_UNAME "='", target, "']/" XML_CIB_TAG_LRM,
                        NULL);
         fake_cib->cmds->remove(fake_cib, (const char *) xpath->str, NULL,
                                cib_xpath|cib_sync_call|cib_scope_local);
@@ -714,7 +714,7 @@ simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         g_string_truncate(xpath, 0);
         pcmk__g_strcat(xpath,
                        "//" XML_CIB_TAG_STATE
-                       "[@" XML_ATTR_UNAME "='", target, "']"
+                       "[@" PCMK_XA_UNAME "='", target, "']"
                        "/" XML_TAG_TRANSIENT_NODEATTRS, NULL);
         fake_cib->cmds->remove(fake_cib, (const char *) xpath->str, NULL,
                                cib_xpath|cib_sync_call|cib_scope_local);

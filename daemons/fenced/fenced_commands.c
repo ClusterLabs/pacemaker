@@ -370,7 +370,7 @@ create_async_command(xmlNode *msg)
     crm_element_value_int(msg, F_STONITH_TIMEOUT, &(cmd->default_timeout));
     cmd->timeout = cmd->default_timeout;
 
-    cmd->origin = crm_element_value_copy(msg, F_ORIG);
+    cmd->origin = crm_element_value_copy(msg, PCMK__XA_SRC);
     cmd->remote_op_id = crm_element_value_copy(msg, F_STONITH_REMOTE_OP_ID);
     cmd->client_name = crm_element_value_copy(msg, F_STONITH_CLIENTNAME);
     cmd->target = crm_element_value_copy(op, F_STONITH_TARGET);
@@ -946,7 +946,7 @@ read_action_metadata(stonith_device_t *device)
         CRM_LOG_ASSERT(match != NULL);
         if(match == NULL) { continue; };
 
-        action = crm_element_value(match, "name");
+        action = crm_element_value(match, PCMK_XA_NAME);
 
         if (pcmk__str_eq(action, PCMK_ACTION_LIST, pcmk__str_none)) {
             stonith__set_device_flags(device->flags, device->id,
@@ -1581,15 +1581,15 @@ stonith_level_key(const xmlNode *level, enum fenced_target_by mode)
     }
     switch (mode) {
         case fenced_target_by_name:
-            return crm_element_value_copy(level, XML_ATTR_STONITH_TARGET);
+            return crm_element_value_copy(level, PCMK_XA_TARGET);
 
         case fenced_target_by_pattern:
-            return crm_element_value_copy(level, XML_ATTR_STONITH_TARGET_PATTERN);
+            return crm_element_value_copy(level, PCMK_XA_TARGET_PATTERN);
 
         case fenced_target_by_attribute:
             return crm_strdup_printf("%s=%s",
-                crm_element_value(level, XML_ATTR_STONITH_TARGET_ATTRIBUTE),
-                crm_element_value(level, XML_ATTR_STONITH_TARGET_VALUE));
+                crm_element_value(level, PCMK_XA_TARGET_ATTRIBUTE),
+                crm_element_value(level, PCMK_XA_TARGET_VALUE));
 
         default:
             return crm_strdup_printf("unknown-%s", ID(level));
@@ -1607,15 +1607,15 @@ stonith_level_key(const xmlNode *level, enum fenced_target_by mode)
 static enum fenced_target_by
 unpack_level_kind(const xmlNode *level)
 {
-    if (crm_element_value(level, XML_ATTR_STONITH_TARGET) != NULL) {
+    if (crm_element_value(level, PCMK_XA_TARGET) != NULL) {
         return fenced_target_by_name;
     }
-    if (crm_element_value(level, XML_ATTR_STONITH_TARGET_PATTERN) != NULL) {
+    if (crm_element_value(level, PCMK_XA_TARGET_PATTERN) != NULL) {
         return fenced_target_by_pattern;
     }
     if (!stand_alone /* if standalone, there's no attribute manager */
-        && (crm_element_value(level, XML_ATTR_STONITH_TARGET_ATTRIBUTE) != NULL)
-        && (crm_element_value(level, XML_ATTR_STONITH_TARGET_VALUE) != NULL)) {
+        && (crm_element_value(level, PCMK_XA_TARGET_ATTRIBUTE) != NULL)
+        && (crm_element_value(level, PCMK_XA_TARGET_VALUE) != NULL)) {
         return fenced_target_by_attribute;
     }
     return fenced_target_by_unknown;
@@ -1684,7 +1684,7 @@ unpack_level_request(xmlNode *xml, enum fenced_target_by *mode, char **target,
     } else {
         local_mode = unpack_level_kind(xml);
         local_target = stonith_level_key(xml, local_mode);
-        crm_element_value_int(xml, XML_ATTR_STONITH_INDEX, &local_id);
+        crm_element_value_int(xml, PCMK_XA_INDEX, &local_id);
         if (desc != NULL) {
             *desc = crm_strdup_printf("%s[%d]", local_target, local_id);
         }
@@ -1769,8 +1769,7 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
         crm_log_xml_trace(level, "Bad level");
         pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
                             "Invalid level number '%s' for topology level '%s'",
-                            pcmk__s(crm_element_value(level,
-                                                      XML_ATTR_STONITH_INDEX),
+                            pcmk__s(crm_element_value(level, PCMK_XA_INDEX),
                                     ""),
                             ID(level));
         return;
@@ -1788,9 +1787,11 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
         }
         tp->kind = mode;
         tp->target = target;
-        tp->target_value = crm_element_value_copy(level, XML_ATTR_STONITH_TARGET_VALUE);
-        tp->target_pattern = crm_element_value_copy(level, XML_ATTR_STONITH_TARGET_PATTERN);
-        tp->target_attribute = crm_element_value_copy(level, XML_ATTR_STONITH_TARGET_ATTRIBUTE);
+        tp->target_value = crm_element_value_copy(level, PCMK_XA_TARGET_VALUE);
+        tp->target_pattern = crm_element_value_copy(level,
+                                                    PCMK_XA_TARGET_PATTERN);
+        tp->target_attribute = crm_element_value_copy(level,
+                                                      PCMK_XA_TARGET_ATTRIBUTE);
 
         g_hash_table_replace(topology, tp->target, tp);
         crm_trace("Added %s (%d) to the topology (%d active entries)",
@@ -1804,7 +1805,7 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
                  tp->target, id);
     }
 
-    devices = parse_device_list(crm_element_value(level, XML_ATTR_STONITH_DEVICES));
+    devices = parse_device_list(crm_element_value(level, PCMK_XA_DEVICES));
     for (dIter = devices; dIter; dIter = dIter->next) {
         const char *device = dIter->value;
 
@@ -1860,8 +1861,7 @@ fenced_unregister_level(xmlNode *msg, char **desc,
         crm_log_xml_trace(level, "Bad level");
         pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
                             "Invalid level number '%s' for topology level %s",
-                            pcmk__s(crm_element_value(level,
-                                                      XML_ATTR_STONITH_INDEX),
+                            pcmk__s(crm_element_value(level, PCMK_XA_INDEX),
                                     "<null>"),
 
                             // Client API doesn't add ID to unregistration XML
@@ -2650,7 +2650,7 @@ send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result
          */
         crm_trace("Broadcast '%s' result for %s (target was also originator)",
                   cmd->action, cmd->target);
-        crm_xml_add(reply, F_SUBTYPE, "broadcast");
+        crm_xml_add(reply, PCMK__XA_SUBT, "broadcast");
         crm_xml_add(reply, F_STONITH_OPERATION, T_STONITH_NOTIFY);
         send_cluster_message(NULL, crm_msg_stonith_ng, reply, FALSE);
     } else {
@@ -2963,7 +2963,7 @@ fenced_construct_reply(const xmlNode *request, xmlNode *data,
     reply = create_xml_node(NULL, T_STONITH_REPLY);
 
     crm_xml_add(reply, "st_origin", __func__);
-    crm_xml_add(reply, F_TYPE, T_STONITH_NG);
+    crm_xml_add(reply, PCMK__XA_T, T_STONITH_NG);
     stonith__xe_set_result(reply, result);
 
     if (request == NULL) {
@@ -3017,7 +3017,7 @@ construct_async_reply(const async_command_t *cmd,
     xmlNode *reply = create_xml_node(NULL, T_STONITH_REPLY);
 
     crm_xml_add(reply, "st_origin", __func__);
-    crm_xml_add(reply, F_TYPE, T_STONITH_NG);
+    crm_xml_add(reply, PCMK__XA_T, T_STONITH_NG);
     crm_xml_add(reply, F_STONITH_OPERATION, cmd->op);
     crm_xml_add(reply, F_STONITH_DEVICE, cmd->device);
     crm_xml_add(reply, F_STONITH_REMOTE_OP_ID, cmd->remote_op_id);
@@ -3513,7 +3513,7 @@ handle_cache_request(pcmk__request_t *request)
     const char *name = NULL;
 
     crm_element_value_int(request->xml, PCMK_XA_ID, &node_id);
-    name = crm_element_value(request->xml, XML_ATTR_UNAME);
+    name = crm_element_value(request->xml, PCMK_XA_UNAME);
     reap_crm_member(node_id, name);
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     return NULL;

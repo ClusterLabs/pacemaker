@@ -359,8 +359,8 @@ add_set_attr_update(const attribute_t *attr, const char *attr_id,
         goto done;
     }
     crm_xml_add(child, PCMK_XA_ID, attr_id);
-    crm_xml_add(child, XML_NVPAIR_ATTR_NAME, attr->id);
-    crm_xml_add(child, XML_NVPAIR_ATTR_VALUE, value);
+    crm_xml_add(child, PCMK_XA_NAME, attr->id);
+    crm_xml_add(child, PCMK_XA_VALUE, value);
 
     rc = the_cib->cmds->modify(the_cib, XML_CIB_TAG_STATUS, update,
                                cib_can_create|cib_transaction);
@@ -395,7 +395,7 @@ add_unset_attr_update(const attribute_t *attr, const char *attr_id,
                                     "/%s[@" PCMK_XA_ID "='%s']"
                                     "/" XML_CIB_TAG_NVPAIR
                                         "[@" PCMK_XA_ID "='%s' "
-                                         "and @" XML_NVPAIR_ATTR_NAME "='%s']",
+                                         "and @" PCMK_XA_NAME "='%s']",
                                     node_id, node_id, attr->set_type, set_id,
                                     attr_id, attr->id);
 

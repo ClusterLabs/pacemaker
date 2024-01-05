@@ -271,6 +271,132 @@ extern "C" {
 //! \deprecated Use \c PCMK_REMOTE_RA_RECONNECT_INTERVAL instead
 #define XML_REMOTE_ATTR_RECONNECT_INTERVAL "reconnect_interval"
 
+//! \deprecated Use \c PCMK_XA_NAME instead
+#define XML_ATTR_NAME PCMK_XA_NAME
+
+//! \deprecated Use \c PCMK_XA_NAME instead
+#define XML_NVPAIR_ATTR_NAME PCMK_XA_NAME
+
+//! \deprecated Use \c PCMK_XA_VALUE instead
+#define XML_EXPR_ATTR_VALUE PCMK_XA_VALUE
+
+//! \deprecated Use \c PCMK_XA_VALUE instead
+#define XML_NVPAIR_ATTR_VALUE PCMK_XA_VALUE
+
+//! \deprecated Use \c PCMK_XA_VALUE instead
+#define XML_ALERT_ATTR_REC_VALUE PCMK_XA_VALUE
+
+//! \deprecated Use \c PCMK_XA_ID_REF instead
+#define XML_ATTR_IDREF PCMK_XA_ID_REF
+
+//! \deprecated Do not use
+#define XML_ATTR_ID_LONG "long-id"
+
+//! \deprecated Use \c PCMK_XA_TYPE instead
+#define XML_ATTR_TYPE PCMK_XA_TYPE
+
+//! \deprecated Use \c PCMK_XA_TYPE instead
+#define XML_EXPR_ATTR_TYPE PCMK_XA_TYPE
+
+//! \deprecated Use \c PCMK_XA_PROVIDER instead
+#define XML_AGENT_ATTR_PROVIDER PCMK_XA_PROVIDER
+
+//! \deprecated Use \c PCMK_XA_CLASS instead
+#define XML_AGENT_ATTR_CLASS PCMK_XA_CLASS
+
+//! \deprecated Use \c PCMK_XE_OP instead
+#define XML_ATTR_OP PCMK_XE_OP
+
+//! \deprecated Use \c PCMK_XA_DC_UUID instead
+#define XML_ATTR_DC_UUID PCMK_XA_DC_UUID
+
+//! \deprecated Use \c PCMK_XA_UPDATE_ORIGIN instead
+#define XML_ATTR_UPDATE_ORIG PCMK_XA_UPDATE_ORIGIN
+
+//! \deprecated Use \c PCMK_XA_UPDATE_CLIENT instead
+#define XML_ATTR_UPDATE_CLIENT PCMK_XA_UPDATE_CLIENT
+
+//! \deprecated Use \c PCMK_XA_UPDATE_USER instead
+#define XML_ATTR_UPDATE_USER PCMK_XA_UPDATE_USER
+
+//! \deprecated Use \c PCMK_XA_REQUEST instead
+#define XML_ATTR_REQUEST PCMK_XA_REQUEST
+
+//! \deprecated Do not use
+#define XML_ATTR_RESPONSE "response"
+
+//! \deprecated Use \c PCMK_XA_UNAME instead
+#define XML_ATTR_UNAME PCMK_XA_UNAME
+
+//! \deprecated Use \c PCMK_XA_REFERENCE instead
+#define XML_ATTR_REFERENCE PCMK_XA_REFERENCE
+
+//! \deprecated Use \c PCMK_XA_REFERENCE instead
+#define XML_ACL_ATTR_REF PCMK_XA_REFERENCE
+
+//! \deprecated Use \c PCMK_XA_REFERENCE instead
+#define F_CRM_REFERENCE PCMK_XA_REFERENCE
+
+//! \deprecated Do not use
+#define XML_ATTR_TRANSITION_MAGIC "transition-magic"
+
+//! \deprecated Do not use
+#define XML_ATTR_TRANSITION_KEY	"transition-key"
+
+//! \deprecated Use \c PCMK_XA_INDEX instead
+#define XML_ATTR_STONITH_INDEX PCMK_XA_INDEX
+
+//! \deprecated Use \c PCMK_XA_TARGET instead
+#define XML_ATTR_STONITH_TARGET PCMK_XA_TARGET
+
+//! \deprecated Use \c PCMK_XA_TARGET_VALUE instead
+#define XML_ATTR_STONITH_TARGET_VALUE PCMK_XA_TARGET_VALUE
+
+//! \deprecated Use \c PCMK_XA_TARGET_PATTERN instead
+#define XML_ATTR_STONITH_TARGET_PATTERN PCMK_XA_TARGET_PATTERN
+
+//! \deprecated Use \c PCMK_XA_TARGET_ATTRIBUTE instead
+#define XML_ATTR_STONITH_TARGET_ATTRIBUTE PCMK_XA_TARGET_ATTRIBUTE
+
+//! \deprecated Use \c PCMK_XA_DEVICES instead
+#define XML_ATTR_STONITH_DEVICES PCMK_XA_DEVICES
+
+#ifndef F_ORIG
+//! \deprecated Do not use
+#define F_ORIG "src"
+#endif
+
+//! \deprecated Do not use
+#define F_CRM_HOST_FROM F_ORIG
+
+#ifndef F_SEQ
+//! \deprecated Do not use
+#define F_SEQ "seq"
+#endif
+
+#ifndef F_SUBTYPE
+//! \deprecated Do not use
+#define F_SUBTYPE "subt"
+#endif
+
+//! \deprecated Do not use
+#define F_CRM_MSG_TYPE F_SUBTYPE
+
+#ifndef F_TYPE
+//! \deprecated Do not use
+#define F_TYPE "t"
+#endif
+
+#ifndef F_CLIENTNAME
+//! \deprecated Do not use
+#define	F_CLIENTNAME "cn"
+#endif
+
+#ifndef F_XML_TAGNAME
+//! \deprecated Do not use
+#define F_XML_TAGNAME "__name__"
+#endif
+
 #ifdef __cplusplus
 }
 #endif

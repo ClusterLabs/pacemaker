@@ -283,8 +283,8 @@ static GOptionEntry command_entries[] = {
 
     { "delete", 'D', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "Delete first object matching supplied criteria (for example, "
-      "<" XML_ATTR_OP " " PCMK_XA_ID "=\"rsc1_op1\" "
-          XML_ATTR_NAME "=\"monitor\"/>).\n"
+      "<" PCMK_XE_OP " " PCMK_XA_ID "=\"rsc1_op1\" "
+          PCMK_XA_NAME "=\"monitor\"/>).\n"
       INDENT "The XML element name and all attributes must match in order for "
       "the element to be deleted.",
       NULL },
@@ -434,12 +434,12 @@ build_arg_context(pcmk__common_args_t *args)
            "Query all '" PCMK_META_TARGET_ROLE "' settings:\n\n"
            "\t# cibadmin --query --xpath "
                "\"//" XML_CIB_TAG_NVPAIR
-               "[@" XML_NVPAIR_ATTR_NAME "='" PCMK_META_TARGET_ROLE"']\""
+               "[@" PCMK_XA_NAME "='" PCMK_META_TARGET_ROLE"']\""
                "\n\n"
            "Remove all '" PCMK_META_IS_MANAGED "' settings:\n\n"
            "\t# cibadmin --delete-all --xpath "
                "\"//" XML_CIB_TAG_NVPAIR
-               "[@" XML_NVPAIR_ATTR_NAME "='" PCMK_META_IS_MANAGED "']\"\n\n"
+               "[@" PCMK_XA_NAME "='" PCMK_META_IS_MANAGED "']\"\n\n"
            "Remove the resource named 'old':\n\n"
            "\t# cibadmin --delete --xml-text "
                "'<" XML_CIB_TAG_RESOURCE " " PCMK_XA_ID "=\"old\"/>'\n\n"

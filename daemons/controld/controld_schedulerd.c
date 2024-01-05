@@ -145,7 +145,7 @@ handle_reply(pcmk_schedulerd_api_reply_t *reply)
          * The name of the top level element here is irrelevant.  Nothing checks it.
          */
         fsa_input.msg = create_xml_node(NULL, "dummy-reply");
-        crm_xml_add(fsa_input.msg, XML_ATTR_REFERENCE, msg_ref);
+        crm_xml_add(fsa_input.msg, PCMK_XA_REFERENCE, msg_ref);
         crm_xml_add(fsa_input.msg, F_CRM_TGRAPH_INPUT, reply->data.graph.input);
 
         crm_data_node = create_xml_node(fsa_input.msg, F_CRM_DATA);
@@ -394,7 +394,7 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
     for (lpc = 0; lpc < max; lpc++) {
         xmlNode *match = getXpathResult(xpathObj, lpc);
         crm_trace("Forcing %s/%s = %s", ID(match), attr_name, attr_value);
-        crm_xml_add(match, XML_NVPAIR_ATTR_VALUE, attr_value);
+        crm_xml_add(match, PCMK_XA_VALUE, attr_value);
     }
 
     if(max == 0) {
@@ -427,8 +427,8 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
         xml = create_xml_node(cluster_property_set, XML_CIB_TAG_NVPAIR);
 
         crm_xml_set_id(xml, "%s-%s", CIB_OPTIONS_FIRST, attr_name);
-        crm_xml_add(xml, XML_NVPAIR_ATTR_NAME, attr_name);
-        crm_xml_add(xml, XML_NVPAIR_ATTR_VALUE, attr_value);
+        crm_xml_add(xml, PCMK_XA_NAME, attr_name);
+        crm_xml_add(xml, PCMK_XA_VALUE, attr_value);
     }
     freeXpathObject(xpathObj);
 }
@@ -476,7 +476,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
      * scheduler is invoked */
     pcmk__refresh_node_caches_from_cib(output);
 
-    crm_xml_add(output, XML_ATTR_DC_UUID, controld_globals.our_uuid);
+    crm_xml_add(output, PCMK_XA_DC_UUID, controld_globals.our_uuid);
     pcmk__xe_set_bool_attr(output, PCMK_XA_HAVE_QUORUM,
                            pcmk_is_set(controld_globals.flags,
                                        controld_has_quorum));

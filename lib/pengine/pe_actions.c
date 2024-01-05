@@ -87,7 +87,7 @@ static xmlNode *
 find_exact_action_config(const pcmk_resource_t *rsc, const char *action_name,
                          guint interval_ms, bool include_disabled)
 {
-    for (xmlNode *operation = first_named_child(rsc->ops_xml, XML_ATTR_OP);
+    for (xmlNode *operation = first_named_child(rsc->ops_xml, PCMK_XE_OP);
          operation != NULL; operation = crm_next_same_xml(operation)) {
 
         bool enabled = false;
@@ -108,7 +108,7 @@ find_exact_action_config(const pcmk_resource_t *rsc, const char *action_name,
             continue;
         }
 
-        config_name = crm_element_value(operation, "name");
+        config_name = crm_element_value(operation, PCMK_XA_NAME);
         if (pcmk__str_eq(action_name, config_name, pcmk__str_none)) {
             return operation;
         }
@@ -481,7 +481,7 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
          * block (which may have rules that need to be evaluated) rather than
          * XML properties.
          */
-        for (xmlNode *operation = first_named_child(rsc->ops_xml, XML_ATTR_OP);
+        for (xmlNode *operation = first_named_child(rsc->ops_xml, PCMK_XE_OP);
              operation != NULL; operation = crm_next_same_xml(operation)) {
             bool enabled = false;
             const char *promote_on_fail = NULL;
@@ -495,7 +495,7 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
             }
 
             // We only care about recurring monitors for the promoted role
-            name = crm_element_value(operation, "name");
+            name = crm_element_value(operation, PCMK_XA_NAME);
             role = crm_element_value(operation, "role");
             if (!pcmk__str_eq(name, PCMK_ACTION_MONITOR, pcmk__str_none)
                 || !pcmk__strcase_any_of(role, PCMK__ROLE_PROMOTED,
@@ -539,7 +539,7 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
 
     // on-fail="demote" is allowed only for certain actions
     if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
-        name = crm_element_value(action_config, "name");
+        name = crm_element_value(action_config, PCMK_XA_NAME);
         role = crm_element_value(action_config, "role");
         interval_spec = crm_element_value(action_config,
                                           XML_LRM_ATTR_INTERVAL);
@@ -650,7 +650,7 @@ most_frequent_monitor(const pcmk_resource_t *rsc)
     guint min_interval_ms = G_MAXUINT;
     xmlNode *op = NULL;
 
-    for (xmlNode *operation = first_named_child(rsc->ops_xml, XML_ATTR_OP);
+    for (xmlNode *operation = first_named_child(rsc->ops_xml, PCMK_XE_OP);
          operation != NULL; operation = crm_next_same_xml(operation)) {
         bool enabled = false;
         guint interval_ms = 0U;
@@ -658,7 +658,7 @@ most_frequent_monitor(const pcmk_resource_t *rsc)
                                                       XML_LRM_ATTR_INTERVAL);
 
         // We only care about enabled recurring monitors
-        if (!pcmk__str_eq(crm_element_value(operation, "name"),
+        if (!pcmk__str_eq(crm_element_value(operation, PCMK_XA_NAME),
                           PCMK_ACTION_MONITOR, pcmk__str_none)) {
             continue;
         }
@@ -710,9 +710,9 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
     const char *str = NULL;
 
     pe_rsc_eval_data_t rsc_rule_data = {
-        .standard = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS),
-        .provider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER),
-        .agent = crm_element_value(rsc->xml, XML_ATTR_TYPE),
+        .standard = crm_element_value(rsc->xml, PCMK_XA_CLASS),
+        .provider = crm_element_value(rsc->xml, PCMK_XA_PROVIDER),
+        .agent = crm_element_value(rsc->xml, PCMK_XA_TYPE),
     };
 
     pe_op_eval_data_t op_rule_data = {
@@ -1314,7 +1314,7 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
             for (GList *gIter = matches; gIter != NULL; gIter = gIter->next) {
                 pcmk_resource_t *match = gIter->data;
                 const char *agent = g_hash_table_lookup(match->meta,
-                                                        XML_ATTR_TYPE);
+                                                        PCMK_XA_TYPE);
                 pcmk__op_digest_t *data = NULL;
 
                 data = pe__compare_fencing_digest(match, agent, node,
@@ -1435,9 +1435,9 @@ pe_get_configured_timeout(pcmk_resource_t *rsc, const char *action,
         .op_data = NULL
     };
 
-    for (child = first_named_child(rsc->ops_xml, XML_ATTR_OP);
+    for (child = first_named_child(rsc->ops_xml, PCMK_XE_OP);
          child != NULL; child = crm_next_same_xml(child)) {
-        if (pcmk__str_eq(action, crm_element_value(child, XML_NVPAIR_ATTR_NAME),
+        if (pcmk__str_eq(action, crm_element_value(child, PCMK_XA_NAME),
                 pcmk__str_casei)) {
             timeout_spec = crm_element_value(child, XML_ATTR_TIMEOUT);
             break;
@@ -1775,15 +1775,18 @@ pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b,
         sort_return(0, "rc-change");
 
     } else {
-        /* One of the inputs is a pending operation
-         * Attempt to use XML_ATTR_TRANSITION_MAGIC to determine its age relative to the other
+        /* One of the inputs is a pending operation.
+         * Attempt to use PCMK__XA_TRANSITION_MAGIC to determine its age relative
+         * to the other.
          */
 
         int a_id = -1;
         int b_id = -1;
 
-        const char *a_magic = crm_element_value(xml_a, XML_ATTR_TRANSITION_MAGIC);
-        const char *b_magic = crm_element_value(xml_b, XML_ATTR_TRANSITION_MAGIC);
+        const char *a_magic = crm_element_value(xml_a,
+                                                PCMK__XA_TRANSITION_MAGIC);
+        const char *b_magic = crm_element_value(xml_b,
+                                                PCMK__XA_TRANSITION_MAGIC);
 
         CRM_CHECK(a_magic != NULL && b_magic != NULL, sort_return(0, "No magic"));
         if (!decode_transition_magic(a_magic, &a_uuid, &a_id, NULL, NULL, NULL,

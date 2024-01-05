@@ -282,8 +282,8 @@ stonith_connection_destroy(gpointer user_data)
 
     free(native->token); native->token = NULL;
     stonith->state = stonith_disconnected;
-    crm_xml_add(blob.xml, F_TYPE, T_STONITH_NOTIFY);
-    crm_xml_add(blob.xml, F_SUBTYPE, T_STONITH_NOTIFY_DISCONNECT);
+    crm_xml_add(blob.xml, PCMK__XA_T, T_STONITH_NOTIFY);
+    crm_xml_add(blob.xml, PCMK__XA_SUBT, T_STONITH_NOTIFY_DISCONNECT);
 
     foreach_notify_entry(native, stonith_send_notification, &blob);
     free_xml(blob.xml);
@@ -373,17 +373,17 @@ stonith_api_remove_level_full(stonith_t *st, int options,
     crm_xml_add(data, F_STONITH_ORIGIN, __func__);
 
     if (node) {
-        crm_xml_add(data, XML_ATTR_STONITH_TARGET, node);
+        crm_xml_add(data, PCMK_XA_TARGET, node);
 
     } else if (pattern) {
-        crm_xml_add(data, XML_ATTR_STONITH_TARGET_PATTERN, pattern);
+        crm_xml_add(data, PCMK_XA_TARGET_PATTERN, pattern);
 
     } else {
-        crm_xml_add(data, XML_ATTR_STONITH_TARGET_ATTRIBUTE, attr);
-        crm_xml_add(data, XML_ATTR_STONITH_TARGET_VALUE, value);
+        crm_xml_add(data, PCMK_XA_TARGET_ATTRIBUTE, attr);
+        crm_xml_add(data, PCMK_XA_TARGET_VALUE, value);
     }
 
-    crm_xml_add_int(data, XML_ATTR_STONITH_INDEX, level);
+    crm_xml_add_int(data, PCMK_XA_INDEX, level);
     rc = stonith_send_command(st, STONITH_OP_LEVEL_DEL, data, NULL, options, 0);
     free_xml(data);
 
@@ -427,17 +427,17 @@ create_level_registration_xml(const char *node, const char *pattern,
 
     crm_xml_add(data, F_STONITH_ORIGIN, __func__);
     crm_xml_add_int(data, PCMK_XA_ID, level);
-    crm_xml_add_int(data, XML_ATTR_STONITH_INDEX, level);
+    crm_xml_add_int(data, PCMK_XA_INDEX, level);
 
     if (node) {
-        crm_xml_add(data, XML_ATTR_STONITH_TARGET, node);
+        crm_xml_add(data, PCMK_XA_TARGET, node);
 
     } else if (pattern) {
-        crm_xml_add(data, XML_ATTR_STONITH_TARGET_PATTERN, pattern);
+        crm_xml_add(data, PCMK_XA_TARGET_PATTERN, pattern);
 
     } else {
-        crm_xml_add(data, XML_ATTR_STONITH_TARGET_ATTRIBUTE, attr);
-        crm_xml_add(data, XML_ATTR_STONITH_TARGET_VALUE, value);
+        crm_xml_add(data, PCMK_XA_TARGET_ATTRIBUTE, attr);
+        crm_xml_add(data, PCMK_XA_TARGET_VALUE, value);
     }
 
     for (; device_list; device_list = device_list->next) {
@@ -445,7 +445,7 @@ create_level_registration_xml(const char *node, const char *pattern,
     }
 
     if (list != NULL) {
-        crm_xml_add(data, XML_ATTR_STONITH_DEVICES, (const char *) list->str);
+        crm_xml_add(data, PCMK_XA_DEVICES, (const char *) list->str);
         g_string_free(list, TRUE);
     }
     return data;
@@ -814,9 +814,7 @@ stonith_create_op(int call_id, const char *token, const char *op, xmlNode * data
     CRM_CHECK(op_msg != NULL, return NULL);
     CRM_CHECK(token != NULL, return NULL);
 
-    crm_xml_add(op_msg, F_XML_TAGNAME, "stonith_command");
-
-    crm_xml_add(op_msg, F_TYPE, T_STONITH_NG);
+    crm_xml_add(op_msg, PCMK__XA_T, T_STONITH_NG);
     crm_xml_add(op_msg, F_STONITH_CALLBACK_TOKEN, token);
     crm_xml_add(op_msg, F_STONITH_OPERATION, op);
     crm_xml_add_int(op_msg, F_STONITH_CALLID, call_id);
@@ -1064,7 +1062,7 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
     }
 
     /* do callbacks */
-    type = crm_element_value(blob.xml, F_TYPE);
+    type = crm_element_value(blob.xml, PCMK__XA_T);
     crm_trace("Activating %s callbacks...", type);
 
     if (pcmk__str_eq(type, T_STONITH_NG, pcmk__str_none)) {
@@ -1142,7 +1140,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
         xmlNode *reply = NULL;
         xmlNode *hello = create_xml_node(NULL, "stonith_command");
 
-        crm_xml_add(hello, F_TYPE, T_STONITH_NG);
+        crm_xml_add(hello, PCMK__XA_T, T_STONITH_NG);
         crm_xml_add(hello, F_STONITH_OPERATION, CRM_OP_REGISTER);
         crm_xml_add(hello, F_STONITH_CLIENTNAME, name);
         rc = crm_ipc_send(native->ipc, hello, crm_ipc_client_response, -1, &reply);
@@ -1501,7 +1499,7 @@ stonith_send_notification(gpointer data, gpointer user_data)
         return;
     }
 
-    event = crm_element_value(blob->xml, F_SUBTYPE);
+    event = crm_element_value(blob->xml, PCMK__XA_SUBT);
 
     if (entry == NULL) {
         crm_warn("Skipping callback - NULL callback client");
@@ -2427,7 +2425,7 @@ stonith__device_parameter_flags(uint32_t *device_flags, const char *device_name,
             continue;
         }
 
-        parameter = crm_element_value(match, "name");
+        parameter = crm_element_value(match, PCMK_XA_NAME);
 
         if (pcmk__str_eq(parameter, "plug", pcmk__str_casei)) {
             stonith__set_device_flags(*device_flags, device_name,

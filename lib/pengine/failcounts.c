@@ -35,7 +35,7 @@ is_matched_failure(const char *rsc_id, const xmlNode *conf_op_xml,
     }
 
     // Get name and interval from configured op
-    conf_op_name = crm_element_value(conf_op_xml, "name");
+    conf_op_name = crm_element_value(conf_op_xml, PCMK_XA_NAME);
     conf_op_interval_spec = crm_element_value(conf_op_xml,
                                               XML_LRM_ATTR_INTERVAL);
     pcmk_parse_interval_spec(conf_op_interval_spec, &conf_op_interval_ms);
@@ -94,7 +94,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
      */
     char *xpath = crm_strdup_printf("//" XML_CIB_TAG_RESOURCE
                                     "[@" PCMK_XA_ID "='%s']"
-                                    "//" XML_ATTR_OP
+                                    "//" PCMK_XE_OP
                                     "[@" XML_OP_ATTR_ON_FAIL "='block']",
                                     xml_name);
 
@@ -124,12 +124,12 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                 xmlXPathObject *lrm_op_xpathObj = NULL;
 
                 // Get name and interval from configured op
-                conf_op_name = crm_element_value(pref, "name");
+                conf_op_name = crm_element_value(pref, PCMK_XA_NAME);
                 conf_op_interval_spec = crm_element_value(pref, XML_LRM_ATTR_INTERVAL);
                 pcmk_parse_interval_spec(conf_op_interval_spec,
                                          &conf_op_interval_ms);
 
-#define XPATH_FMT "//" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='%s']"       \
+#define XPATH_FMT "//" XML_CIB_TAG_STATE "[@" PCMK_XA_UNAME "='%s']"        \
                   "//" XML_LRM_TAG_RESOURCE "[@" PCMK_XA_ID "='%s']"        \
                   "/" XML_LRM_TAG_RSC_OP "[@" XML_LRM_ATTR_TASK "='%s']"    \
                   "[@" XML_LRM_ATTR_INTERVAL "='%u']"

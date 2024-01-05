@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,6 +16,7 @@
 #include <dirent.h>
 
 #include <crm/crm.h>
+#include <crm/msg_xml.h>
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
 
@@ -185,11 +186,11 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
         timeout_str = pcmk__readable_interval(PCMK_DEFAULT_ACTION_TIMEOUT_MS);
 
         tmp = create_xml_node(actions, "action");
-        crm_xml_add(tmp, "name", PCMK_ACTION_STOP);
+        crm_xml_add(tmp, PCMK_XA_NAME, PCMK_ACTION_STOP);
         crm_xml_add(tmp, "timeout", timeout_str);
 
         tmp = create_xml_node(actions, "action");
-        crm_xml_add(tmp, "name", PCMK_ACTION_START);
+        crm_xml_add(tmp, PCMK_XA_NAME, PCMK_ACTION_START);
         crm_xml_add(tmp, "timeout", timeout_str);
     }
     freeXpathObject(xpathObj);

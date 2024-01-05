@@ -263,9 +263,8 @@ createEmptyCib(int cib_epoch)
 
         crm_xml_add(meta, PCMK_XA_ID, "build-resource-defaults");
         crm_xml_add(nvpair, PCMK_XA_ID, "build-" PCMK_META_RESOURCE_STICKINESS);
-        crm_xml_add(nvpair, XML_NVPAIR_ATTR_NAME,
-                    PCMK_META_RESOURCE_STICKINESS);
-        crm_xml_add_int(nvpair, XML_NVPAIR_ATTR_VALUE,
+        crm_xml_add(nvpair, PCMK_XA_NAME, PCMK_META_RESOURCE_STICKINESS);
+        crm_xml_add_int(nvpair, PCMK_XA_VALUE,
                         PCMK__RESOURCE_STICKINESS_DEFAULT);
     }
 #endif
@@ -586,9 +585,9 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
      static filter_t filter[] = {
      { 0, PCMK_XA_CRM_DEBUG_ORIGIN },
      { 0, PCMK_XA_CIB_LAST_WRITTEN },
-     { 0, XML_ATTR_UPDATE_ORIG },
-     { 0, XML_ATTR_UPDATE_CLIENT },
-     { 0, XML_ATTR_UPDATE_USER },
+     { 0, PCMK_XA_UPDATE_ORIGIN },
+     { 0, PCMK_XA_UPDATE_CLIENT },
+     { 0, PCMK_XA_UPDATE_USER },
      };
      */
 
@@ -609,25 +608,25 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
                 /* Ensure values of origin, client, and user in scratch match
                  * the values in req
                  */
-                const char *origin = crm_element_value(req, F_ORIG);
+                const char *origin = crm_element_value(req, PCMK__XA_SRC);
                 const char *client = crm_element_value(req, F_CIB_CLIENTNAME);
 
                 if (origin != NULL) {
-                    crm_xml_add(scratch, XML_ATTR_UPDATE_ORIG, origin);
+                    crm_xml_add(scratch, PCMK_XA_UPDATE_ORIGIN, origin);
                 } else {
-                    xml_remove_prop(scratch, XML_ATTR_UPDATE_ORIG);
+                    xml_remove_prop(scratch, PCMK_XA_UPDATE_ORIGIN);
                 }
 
                 if (client != NULL) {
-                    crm_xml_add(scratch, XML_ATTR_UPDATE_CLIENT, user);
+                    crm_xml_add(scratch, PCMK_XA_UPDATE_CLIENT, user);
                 } else {
-                    xml_remove_prop(scratch, XML_ATTR_UPDATE_CLIENT);
+                    xml_remove_prop(scratch, PCMK_XA_UPDATE_CLIENT);
                 }
 
                 if (user != NULL) {
-                    crm_xml_add(scratch, XML_ATTR_UPDATE_USER, user);
+                    crm_xml_add(scratch, PCMK_XA_UPDATE_USER, user);
                 } else {
-                    xml_remove_prop(scratch, XML_ATTR_UPDATE_USER);
+                    xml_remove_prop(scratch, PCMK_XA_UPDATE_USER);
                 }
             }
         }
@@ -688,8 +687,7 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
         cib->call_id = 1;
     }
 
-    crm_xml_add(*op_msg, F_XML_TAGNAME, T_CIB_COMMAND);
-    crm_xml_add(*op_msg, F_TYPE, T_CIB);
+    crm_xml_add(*op_msg, PCMK__XA_T, T_CIB);
     crm_xml_add(*op_msg, F_CIB_OPERATION, op);
     crm_xml_add(*op_msg, F_CIB_HOST, host);
     crm_xml_add(*op_msg, F_CIB_SECTION, section);
@@ -844,7 +842,7 @@ cib_native_notify(gpointer data, gpointer user_data)
         return;
     }
 
-    event = crm_element_value(msg, F_SUBTYPE);
+    event = crm_element_value(msg, PCMK__XA_SUBT);
 
     if (entry == NULL) {
         crm_warn("Skipping callback - NULL callback client");
