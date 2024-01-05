@@ -490,7 +490,7 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
         return NULL;
     }
 
-    if (pcmk__xe_is(xml_action, XML_GRAPH_TAG_RSC_OP)) {
+    if (pcmk__xe_is(xml_action, PCMK__XE_RSC_OP)) {
         action_type = pcmk__rsc_graph_action;
 
     } else if (pcmk__xe_is(xml_action, XML_GRAPH_TAG_PSEUDO_EVENT)) {

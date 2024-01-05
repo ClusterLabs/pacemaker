@@ -434,7 +434,7 @@ create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
         needs_node_info = false;
 
     } else {
-        action_xml = create_xml_node(parent, XML_GRAPH_TAG_RSC_OP);
+        action_xml = create_xml_node(parent, PCMK__XE_RSC_OP);
     }
 
     crm_xml_add_int(action_xml, PCMK_XA_ID, action->id);

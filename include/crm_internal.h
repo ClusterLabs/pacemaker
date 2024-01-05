@@ -66,6 +66,7 @@
 #define PCMK__XE_NODE_STATE             "node_state"
 #define PCMK__XE_PARAM                  "param"
 #define PCMK__XE_PING_RESPONSE          "ping_response"
+#define PCMK__XE_RSC_OP                 "rsc_op"
 #define PCMK__XE_TRANSITION_GRAPH       "transition_graph"
 
 // @COMPAT Deprecated since 2.1.7

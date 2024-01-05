@@ -487,7 +487,7 @@ controller_resource_op(pcmk_ipc_api_t *api, const char *op,
         router_node = target_node;
     }
 
-    msg_data = create_xml_node(NULL, XML_GRAPH_TAG_RSC_OP);
+    msg_data = create_xml_node(NULL, PCMK__XE_RSC_OP);
 
     /* The controller logs the transition key from resource op requests, so we
      * need to have *something* for it.
