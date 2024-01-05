@@ -118,7 +118,7 @@ get_envvars_from_cib(xmlNode *basenode, pcmk__alert_t *entry)
 static void
 unpack_alert_filter(xmlNode *basenode, pcmk__alert_t *entry)
 {
-    xmlNode *select = first_named_child(basenode, XML_CIB_TAG_ALERT_SELECT);
+    xmlNode *select = first_named_child(basenode, PCMK_XE_SELECT);
     xmlNode *event_type = NULL;
     uint32_t flags = pcmk__alert_none;
 
