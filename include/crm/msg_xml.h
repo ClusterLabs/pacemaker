@@ -240,7 +240,6 @@ extern "C" {
 #  define XML_COLOC_ATTR_NODE_ATTR	"node-attribute"
 #  define XML_COLOC_ATTR_INFLUENCE          "influence"
 
-#  define XML_LOC_ATTR_SOURCE           PCMK_XA_RSC
 #  define XML_LOC_ATTR_SOURCE_PATTERN   "rsc-pattern"
 
 #  define XML_ORDER_ATTR_FIRST		"first"
