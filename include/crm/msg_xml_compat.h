@@ -700,6 +700,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_OBJECT_TYPE instead
 #define XML_ACL_ATTR_TAG PCMK_XA_OBJECT_TYPE
 
+//! \deprecated Do not use
+#define XML_ACL_ATTR_TAGv1 "tag"
+
 #ifdef __cplusplus
 }
 #endif
