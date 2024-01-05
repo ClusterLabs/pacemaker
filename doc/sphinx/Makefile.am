@@ -1,5 +1,5 @@
 #
-# Copyright 2003-2023 the Pacemaker project contributors
+# Copyright 2003-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -135,6 +135,7 @@ $(BOOKS:%=%/conf.py): conf.py.in
 		-e 's#%CRM_SCHEMA_DIRECTORY%#@CRM_SCHEMA_DIRECTORY@#g'		\
 		-e 's#%PACEMAKER_CONFIG_DIR%#@PACEMAKER_CONFIG_DIR@#g'		\
 		-e 's#%PCMK_GNUTLS_PRIORITIES%#@PCMK_GNUTLS_PRIORITIES@#g'	\
+		-e 's#%PCMK__REMOTE_SCHEMA_DIR%#@PCMK__REMOTE_SCHEMA_DIR@#g'	\
 		$(<) > "$@"
 
 $(BOOK)/_build: $(STATIC_FILES) $(BOOK)/conf.py $(DEPS_$(BOOK)) $(wildcard $(srcdir)/$(BOOK)/*.rst)
