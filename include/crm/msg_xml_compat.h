@@ -616,6 +616,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_SCORE instead
 #define XML_RULE_ATTR_SCORE PCMK_XA_SCORE
 
+//! \deprecated Use \c PCMK_XA_SCORE_ATTRIBUTE instead
+#define XML_RULE_ATTR_SCORE_ATTRIBUTE PCMK_XA_SCORE_ATTRIBUTE
+
 #ifdef __cplusplus
 }
 #endif
