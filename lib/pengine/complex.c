@@ -304,7 +304,7 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
         return FALSE;
     }
 
-    template = pcmk__xe_match(cib_resources, XML_CIB_TAG_RSC_TEMPLATE,
+    template = pcmk__xe_match(cib_resources, PCMK_XE_TEMPLATE,
                               PCMK_XA_ID, template_ref);
     if (template == NULL) {
         pcmk__config_err("No template named '%s'", template_ref);

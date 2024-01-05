@@ -866,7 +866,7 @@ unpack_resources(const xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
             continue;
         }
 
-        if (pcmk__str_eq((const char *) xml_obj->name, XML_CIB_TAG_RSC_TEMPLATE,
+        if (pcmk__str_eq((const char *) xml_obj->name, PCMK_XE_TEMPLATE,
                          pcmk__str_none)) {
             if (g_hash_table_lookup_extended(scheduler->template_rsc_sets, id,
                                              NULL, NULL) == FALSE) {
