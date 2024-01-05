@@ -628,6 +628,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_BOOLEAN_OP instead
 #define XML_RULE_ATTR_BOOLEAN_OP PCMK_XA_BOOLEAN_OP
 
+//! \deprecated Use \c PCMK_XA_ATTRIBUTE instead
+#define XML_EXPR_ATTR_ATTRIBUTE PCMK_XA_ATTRIBUTE
+
 #ifdef __cplusplus
 }
 #endif

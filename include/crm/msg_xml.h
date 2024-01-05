@@ -214,7 +214,6 @@ extern "C" {
 #  define XML_TAG_RULE			"rule"
 
 #  define XML_TAG_EXPRESSION		"expression"
-#  define XML_EXPR_ATTR_ATTRIBUTE	PCMK_XA_ATTRIBUTE
 #  define XML_EXPR_ATTR_VALUE_SOURCE	"value-source"
 
 #  define XML_CONS_TAG_RSC_DEPEND	"rsc_colocation"
