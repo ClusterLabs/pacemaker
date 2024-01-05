@@ -841,6 +841,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_GRAPH_TAG_MAINTENANCE "maintenance"
 
+//! \deprecated Use \c PCMK_XE_RULE instead
+#define XML_TAG_RULE PCMK_XE_RULE
+
 #ifdef __cplusplus
 }
 #endif

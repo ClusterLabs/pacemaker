@@ -222,8 +222,6 @@ extern "C" {
 
 #  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
 
-#  define XML_TAG_RULE			PCMK_XE_RULE
-
 #  define XML_TAG_EXPRESSION		"expression"
 
 #  define XML_CONS_TAG_RSC_DEPEND	"rsc_colocation"
