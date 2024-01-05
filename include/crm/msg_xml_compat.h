@@ -760,6 +760,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_SELECT_NODES instead
 #define XML_CIB_TAG_ALERT_NODES PCMK_XE_SELECT_NODES
 
+//! \deprecated Use \c PCMK_XE_SELECT_RESOURCES instead
+#define XML_CIB_TAG_ALERT_RESOURCES PCMK_XE_SELECT_RESOURCES
+
 #ifdef __cplusplus
 }
 #endif
