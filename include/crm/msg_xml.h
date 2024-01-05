@@ -213,8 +213,6 @@ extern "C" {
 /*---- CIB specific tags/attrs */
 #  define XML_CIB_TAG_SECTION_ALL	"all"
 
-#  define XML_CIB_TAG_CONTAINER		PCMK_XE_BUNDLE
-
 #  define XML_CIB_TAG_RSC_TEMPLATE	"template"
 
 #  define XML_CIB_TAG_LRM		"lrm"

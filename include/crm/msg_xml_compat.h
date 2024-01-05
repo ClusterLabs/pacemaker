@@ -805,6 +805,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_CLONE instead
 #define XML_CIB_TAG_INCARNATION PCMK_XE_CLONE
 
+//! \deprecated Use \c PCMK_XE_BUNDLE instead
+#define XML_CIB_TAG_CONTAINER PCMK_XE_BUNDLE
+
 #ifdef __cplusplus
 }
 #endif
