@@ -215,8 +215,6 @@ extern "C" {
 /*---- CIB specific tags/attrs */
 #  define XML_CIB_TAG_SECTION_ALL	"all"
 
-#  define XML_LRM_TAG_RSC_OP		"lrm_rsc_op"
-
 #  define XML_NODE_IS_REMOTE    	"remote_node"
 #  define XML_NODE_IS_FENCED		"node_fenced"
 #  define XML_NODE_IS_MAINTENANCE   "node_in_maintenance"
