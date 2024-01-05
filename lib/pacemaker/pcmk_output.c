@@ -1673,7 +1673,7 @@ inject_modify_ticket_xml(pcmk__output_t *out, va_list args)
 
     pcmk__output_create_xml_node(out, "modify_ticket",
                                  "action", action,
-                                 "ticket", ticket,
+                                 PCMK_XA_TICKET, ticket,
                                  NULL);
     return pcmk_rc_ok;
 }

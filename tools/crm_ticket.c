@@ -407,8 +407,7 @@ find_ticket_constraints(cib_t * the_cib, gchar *ticket_id, xmlNode ** ticket_con
     pcmk__g_strcat(xpath, xpath_base, "/" XML_CONS_TAG_RSC_TICKET, NULL);
 
     if (ticket_id != NULL) {
-        pcmk__g_strcat(xpath,
-                       "[@" XML_TICKET_ATTR_TICKET "=\"", ticket_id, "\"]",
+        pcmk__g_strcat(xpath, "[@" PCMK_XA_TICKET "=\"", ticket_id, "\"]",
                        NULL);
     }
 

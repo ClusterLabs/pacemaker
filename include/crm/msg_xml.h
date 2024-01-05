@@ -127,6 +127,7 @@ extern "C" {
 #define PCMK_XA_TARGET_ATTRIBUTE            "target-attribute"
 #define PCMK_XA_TARGET_PATTERN              "target-pattern"
 #define PCMK_XA_TARGET_VALUE                "target-value"
+#define PCMK_XA_TICKET                      "ticket"
 #define PCMK_XA_THEN                        "then"
 #define PCMK_XA_THEN_ACTION                 "then-action"
 #define PCMK_XA_TYPE                        "type"
@@ -245,7 +246,7 @@ extern "C" {
 #  define XML_CONS_TAG_RSC_TICKET	"rsc_ticket"
 #  define XML_CONS_TAG_RSC_SET		"resource_set"
 
-#  define XML_TICKET_ATTR_TICKET	"ticket"
+#  define XML_TICKET_ATTR_TICKET	PCMK_XA_TICKET
 #  define XML_TICKET_ATTR_LOSS_POLICY	"loss-policy"
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"

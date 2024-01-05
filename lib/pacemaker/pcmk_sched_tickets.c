@@ -276,7 +276,7 @@ static void
 unpack_simple_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 {
     const char *id = NULL;
-    const char *ticket_str = crm_element_value(xml_obj, XML_TICKET_ATTR_TICKET);
+    const char *ticket_str = crm_element_value(xml_obj, PCMK_XA_TICKET);
     const char *loss_policy = crm_element_value(xml_obj,
                                                 XML_TICKET_ATTR_LOSS_POLICY);
 
@@ -454,7 +454,7 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         scheduler->tickets = pcmk__strkey_table(free, destroy_ticket);
     }
 
-    ticket_str = crm_element_value(xml_obj, XML_TICKET_ATTR_TICKET);
+    ticket_str = crm_element_value(xml_obj, PCMK_XA_TICKET);
     if (ticket_str == NULL) {
         pcmk__config_err("Ignoring constraint '%s' without ticket", id);
         return;
