@@ -803,7 +803,7 @@ handle_ping(const xmlNode *msg)
 
     // Build reply
 
-    ping = create_xml_node(NULL, XML_CRM_TAG_PING);
+    ping = create_xml_node(NULL, PCMK__XE_PING_RESPONSE);
     value = crm_element_value(msg, PCMK__XA_CRM_SYS_TO);
     crm_xml_add(ping, PCMK__XA_CRM_SUBSYSTEM, value);
 

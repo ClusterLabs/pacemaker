@@ -53,7 +53,7 @@ handle_ping_request(pcmk__request_t *request)
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
                        "ack", NULL, CRM_EX_INDETERMINATE);
 
-    ping = create_xml_node(NULL, XML_CRM_TAG_PING);
+    ping = create_xml_node(NULL, PCMK__XE_PING_RESPONSE);
     value = crm_element_value(msg, PCMK__XA_CRM_SYS_TO);
     crm_xml_add(ping, PCMK__XA_CRM_SUBSYSTEM, value);
     crm_xml_add(ping, PCMK__XA_PACEMAKERD_STATE, pacemakerd_state);

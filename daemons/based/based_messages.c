@@ -144,7 +144,7 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
     char *digest = calculate_xml_versioned_digest(the_cib, FALSE, TRUE, CRM_FEATURE_SET);
 
     crm_trace("Processing \"%s\" event %s from %s", op, seq, host);
-    *answer = create_xml_node(NULL, XML_CRM_TAG_PING);
+    *answer = create_xml_node(NULL, PCMK__XE_PING_RESPONSE);
 
     crm_xml_add(*answer, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
     crm_xml_add(*answer, PCMK__XA_DIGEST, digest);

@@ -58,6 +58,8 @@
  * XML element names used only by internal code
  */
 
+#define PCMK__XE_PING_RESPONSE          "ping_response"
+
 // @COMPAT Deprecated since 2.1.7
 #define PCMK__XE_DIFF_ADDED             "diff-added"
 
