@@ -829,7 +829,7 @@ xml2list(const xmlNode *parent)
 
     CRM_CHECK(parent != NULL, return nvpair_hash);
 
-    nvpair_list = find_xml_node(parent, XML_TAG_ATTRS, FALSE);
+    nvpair_list = find_xml_node(parent, PCMK__XE_ATTRIBUTES, FALSE);
     if (nvpair_list == NULL) {
         crm_trace("No attributes in %s", parent->name);
         crm_log_xml_trace(parent, "No attributes for resource op");

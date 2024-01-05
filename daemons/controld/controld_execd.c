@@ -1245,7 +1245,7 @@ static bool do_lrm_cancel(ha_msg_input_t *input, lrm_state_t *lrm_state,
     const char *op_task = NULL;
     guint interval_ms = 0;
     gboolean in_progress = FALSE;
-    xmlNode *params = find_xml_node(input->xml, XML_TAG_ATTRS, TRUE);
+    xmlNode *params = find_xml_node(input->xml, PCMK__XE_ATTRIBUTES, TRUE);
 
     CRM_CHECK(params != NULL, return FALSE);
 

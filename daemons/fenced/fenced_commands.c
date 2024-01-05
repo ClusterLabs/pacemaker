@@ -2492,7 +2492,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
 
         /* A query without a target wants device parameters */
         if (query->target == NULL) {
-            xmlNode *attrs = create_xml_node(dev, XML_TAG_ATTRS);
+            xmlNode *attrs = create_xml_node(dev, PCMK__XE_ATTRIBUTES);
 
             g_hash_table_foreach(device->params, hash2field, attrs);
         }

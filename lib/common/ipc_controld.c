@@ -515,7 +515,7 @@ controller_resource_op(pcmk_ipc_api_t *api, const char *op,
     crm_xml_add(xml_rsc, PCMK_XA_PROVIDER, provider);
     crm_xml_add(xml_rsc, PCMK_XA_TYPE, type);
 
-    params = create_xml_node(msg_data, XML_TAG_ATTRS);
+    params = create_xml_node(msg_data, PCMK__XE_ATTRIBUTES);
     crm_xml_add(params, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
 
     // The controller parses the timeout from the request

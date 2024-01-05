@@ -334,7 +334,7 @@ add_action_attributes(pcmk_action_t *action, xmlNode *action_xml)
      * before adding it to action_xml, which keeps the scheduler regression
      * test graphs comparable.
      */
-    args_xml = create_xml_node(NULL, XML_TAG_ATTRS);
+    args_xml = create_xml_node(NULL, PCMK__XE_ATTRIBUTES);
 
     crm_xml_add(args_xml, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
     g_hash_table_foreach(action->extra, hash2field, args_xml);

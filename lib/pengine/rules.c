@@ -363,7 +363,7 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
     xmlNode *list = nvpair_list;
     xmlNode *an_attr = NULL;
 
-    if (pcmk__xe_is(list->children, XML_TAG_ATTRS)) {
+    if (pcmk__xe_is(list->children, PCMK__XE_ATTRIBUTES)) {
         list = list->children;
     }
 

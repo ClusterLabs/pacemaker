@@ -626,7 +626,7 @@ handle_failcount_op(xmlNode * stored_msg)
 
     if (xml_op) {
         xmlNode *xml_rsc = first_named_child(xml_op, XML_CIB_TAG_RESOURCE);
-        xmlNode *xml_attrs = first_named_child(xml_op, XML_TAG_ATTRS);
+        xmlNode *xml_attrs = first_named_child(xml_op, PCMK__XE_ATTRIBUTES);
 
         if (xml_rsc) {
             rsc = ID(xml_rsc);

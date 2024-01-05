@@ -296,7 +296,7 @@ create_device_registration_xml(const char *id, enum stonith_namespace namespace,
                                const char *rsc_provides)
 {
     xmlNode *data = create_xml_node(NULL, F_STONITH_DEVICE);
-    xmlNode *args = create_xml_node(data, XML_TAG_ATTRS);
+    xmlNode *args = create_xml_node(data, PCMK__XE_ATTRIBUTES);
 
 #if HAVE_STONITH_STONITH_H
     if (namespace == st_namespace_any) {
