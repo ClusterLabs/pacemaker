@@ -219,8 +219,6 @@ extern "C" {
 #  define CIB_OPTIONS_FIRST "cib-bootstrap-options"
 
 /*---- Common tags/attrs */
-#  define XML_TAG_FAILED		"failed"
-
 #  define XML_TAG_OPTIONS		"options"
 
 /*---- top level tags/attrs */
