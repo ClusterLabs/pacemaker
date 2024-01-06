@@ -32,8 +32,8 @@ static qb_ipcs_service_t *ipcs = NULL;
  * \internal
  * \brief Build the XML reply to a client query
  *
- * param[in] attr Name of requested attribute
- * param[in] host Name of requested host (or NULL for all hosts)
+ * \param[in] attr Name of requested attribute
+ * \param[in] host Name of requested host (or NULL for all hosts)
  *
  * \return New XML reply
  * \note Caller is responsible for freeing the resulting XML

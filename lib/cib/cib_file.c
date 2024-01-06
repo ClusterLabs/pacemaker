@@ -437,8 +437,8 @@ cib_file_signon(cib_t *cib, const char *name, enum cib_conn_type type)
  * \internal
  * \brief Write out the in-memory CIB to a live CIB file
  *
- * param[in]     cib_root  Root of XML tree to write
- * param[in,out] path      Full path to file to write
+ * \param[in]     cib_root  Root of XML tree to write
+ * \param[in,out] path      Full path to file to write
  *
  * \return 0 on success, -1 on failure
  */
