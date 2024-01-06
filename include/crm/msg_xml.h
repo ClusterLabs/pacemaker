@@ -231,7 +231,6 @@ extern "C" {
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 
-#  define XML_ACL_TAG_USERv1		"acl_user"
 #  define XML_ACL_TAG_GROUP		"acl_group"
 #  define XML_ACL_TAG_ROLE		"acl_role"
 #  define XML_ACL_TAG_PERMISSION	"acl_permission"
