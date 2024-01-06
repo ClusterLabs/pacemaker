@@ -172,7 +172,7 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
         return -pcmk_err_schema_validation;
     }
 
-    xpathObj = xpath_search(xml, "//actions");
+    xpathObj = xpath_search(xml, "//" PCMK_XE_ACTIONS);
     if (numXpathResults(xpathObj) > 0) {
         actions = getXpathResult(xpathObj, 0);
     }
