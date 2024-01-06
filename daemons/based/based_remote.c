@@ -237,7 +237,7 @@ cib_remote_auth(xmlNode * login)
     }
 
     user = crm_element_value(login, PCMK_XA_USER);
-    pass = crm_element_value(login, "password");
+    pass = crm_element_value(login, PCMK__XA_PASSWORD);
 
     if (!user || !pass) {
         crm_err("missing auth credentials");
