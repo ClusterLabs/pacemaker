@@ -209,10 +209,6 @@ extern "C" {
  * Older constants that don't follow current naming
  */
 
-#  ifndef T_ATTRD
-#    define T_ATTRD     "attrd"
-#  endif
-
 /*---- CIB specific tags/attrs */
 #  define XML_CIB_TAG_SECTION_ALL	"all"
 
