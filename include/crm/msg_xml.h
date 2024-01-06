@@ -73,6 +73,7 @@ extern "C" {
 #define PCMK_XE_CRM_CONFIG                  "crm_config"
 #define PCMK_XE_DATE_EXPRESSION             "date_expression"
 #define PCMK_XE_EXPRESSION                  "expression"
+#define PCMK_XE_FENCING_LEVEL               "fencing-level"
 #define PCMK_XE_FENCING_TOPOLOGY            "fencing-topology"
 #define PCMK_XE_GROUP                       "group"
 #define PCMK_XE_INSTANCE_ATTRIBUTES         "instance_attributes"
@@ -239,7 +240,7 @@ extern "C" {
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 
-#  define XML_TAG_FENCING_LEVEL         "fencing-level"
+#  define XML_TAG_FENCING_LEVEL         PCMK_XE_FENCING_LEVEL
 
 #  define XML_TAG_DIFF                  "diff"
 #  define XML_DIFF_VERSION              PCMK_XE_VERSION

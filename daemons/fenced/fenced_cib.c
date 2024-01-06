@@ -87,7 +87,7 @@ topology_remove_helper(const char *node, int level)
 {
     char *desc = NULL;
     pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
-    xmlNode *data = create_xml_node(NULL, XML_TAG_FENCING_LEVEL);
+    xmlNode *data = create_xml_node(NULL, PCMK_XE_FENCING_LEVEL);
 
     crm_xml_add(data, F_STONITH_ORIGIN, __func__);
     crm_xml_add_int(data, PCMK_XA_INDEX, level);
@@ -150,7 +150,7 @@ void
 fencing_topology_init(void)
 {
     xmlXPathObjectPtr xpathObj = NULL;
-    const char *xpath = "//" XML_TAG_FENCING_LEVEL;
+    const char *xpath = "//" PCMK_XE_FENCING_LEVEL;
 
     crm_trace("Full topology refresh");
     free_topology_list();
@@ -513,7 +513,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
         /* Process deletions (only) */
         xpath = "//" F_CIB_UPDATE_RESULT
                 "//" PCMK__XE_DIFF_REMOVED
-                "//" XML_TAG_FENCING_LEVEL;
+                "//" PCMK_XE_FENCING_LEVEL;
         xpathObj = xpath_search(msg, xpath);
 
         remove_fencing_topology(xpathObj);
@@ -522,7 +522,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
         /* Process additions and changes */
         xpath = "//" F_CIB_UPDATE_RESULT
                 "//" PCMK__XE_DIFF_ADDED
-                "//" XML_TAG_FENCING_LEVEL;
+                "//" PCMK_XE_FENCING_LEVEL;
         xpathObj = xpath_search(msg, xpath);
 
         register_fencing_topology(xpathObj);
@@ -543,7 +543,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
             if(op == NULL) {
                 continue;
 
-            } else if(strstr(xpath, "/" XML_TAG_FENCING_LEVEL) != NULL) {
+            } else if(strstr(xpath, "/" PCMK_XE_FENCING_LEVEL) != NULL) {
                 /* Change to a specific entry */
 
                 crm_trace("Handling %s operation %d.%d.%d for %s", op, add[0], add[1], add[2], xpath);

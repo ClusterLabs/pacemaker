@@ -1675,8 +1675,8 @@ unpack_level_request(xmlNode *xml, enum fenced_target_by *mode, char **target,
      * search by xpath, because it might give multiple hits if the XML is the
      * CIB.
      */
-    if ((xml != NULL) && !pcmk__xe_is(xml, XML_TAG_FENCING_LEVEL)) {
-        xml = get_xpath_object("//" XML_TAG_FENCING_LEVEL, xml, LOG_WARNING);
+    if ((xml != NULL) && !pcmk__xe_is(xml, PCMK_XE_FENCING_LEVEL)) {
+        xml = get_xpath_object("//" PCMK_XE_FENCING_LEVEL, xml, LOG_WARNING);
     }
 
     if (xml == NULL) {
