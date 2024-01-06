@@ -218,7 +218,6 @@ extern "C" {
 #  endif
 
 /*---- top level tags/attrs */
-#  define XML_PING_ATTR_PACEMAKERDSTATE_SHUTDOWNCOMPLETE "shutdown_complete"
 #  define XML_PING_ATTR_PACEMAKERDSTATE_REMOTE "remote"
 
 /*---- CIB specific tags/attrs */
