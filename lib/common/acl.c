@@ -165,7 +165,13 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
                 }
             }
 
-        } else if (strcmp(XML_ACL_TAG_READ, tag) == 0) {
+        /* @COMPAT Use of a tag instead of a PCMK_XA_KIND attribute was
+         * deprecated in 1.1.12. We still need to look for tags named
+         * PCMK_VALUE_READ, etc., to support rolling upgrades. However,
+         * eventually we can clean this up and make the variables more intuitive
+         * (for example, don't assign a PCMK_XA_KIND value to the tag variable).
+         */
+        } else if (strcmp(tag, PCMK_VALUE_READ) == 0) {
             acls = create_acl(child, acls, pcmk__xf_acl_read);
 
         } else if (strcmp(XML_ACL_TAG_WRITE, tag) == 0) {
