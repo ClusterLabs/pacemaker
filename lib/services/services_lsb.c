@@ -29,7 +29,7 @@
     "<resource-agent " PCMK_XA_NAME "='%s' "                            \
                        PCMK_XA_VERSION                                  \
                            "='" PCMK_DEFAULT_AGENT_VERSION "'>\n"       \
-    "  <version>1.0</version>\n"                                        \
+    "  <" PCMK_XE_VERSION ">1.0</" PCMK_XE_VERSION ">\n"                \
     "  <longdesc lang='en'>\n"                                          \
     "%s"                                                                \
     "  </longdesc>\n"                                                   \

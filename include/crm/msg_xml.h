@@ -63,6 +63,7 @@ extern "C" {
 #define PCMK_XE_PARAMETER                   "parameter"
 #define PCMK_XE_PARAMETERS                  "parameters"
 #define PCMK_XE_RSC_EXPRESSION              "rsc_expression"
+#define PCMK_XE_VERSION                     "version"
 
 
 /*
@@ -276,7 +277,7 @@ extern "C" {
 #  define XML_TAG_FENCING_LEVEL         "fencing-level"
 
 #  define XML_TAG_DIFF                  "diff"
-#  define XML_DIFF_VERSION              "version"
+#  define XML_DIFF_VERSION              PCMK_XE_VERSION
 #  define XML_DIFF_VSOURCE              "source"
 #  define XML_DIFF_VTARGET              "target"
 #  define XML_DIFF_CHANGE               "change"

@@ -506,7 +506,9 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
                    "<resource-agent " PCMK_XA_NAME "=\"", name, "\" "
                                       PCMK_XA_VERSION
                                           "=\"" PACEMAKER_VERSION "\">\n"
-                   "  <version>" PCMK_OCF_VERSION "</version>\n", NULL);
+
+                   "  <" PCMK_XE_VERSION ">" PCMK_OCF_VERSION
+                     "</" PCMK_XE_VERSION ">\n", NULL);
 
     add_desc(s, "longdesc", desc_long, NULL, "  ");
     add_desc(s, "shortdesc", desc_short, NULL, "  ");

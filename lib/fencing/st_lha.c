@@ -34,7 +34,7 @@ static void *lha_agents_lib = NULL;
 static const char META_TEMPLATE[] =
     "<?xml version=\"1.0\"?>\n"
     "<resource-agent " PCMK_XA_NAME "=\"%s\">\n"
-    "  <version>1.0</version>\n"
+    "  <" PCMK_XE_VERSION ">1.0</" PCMK_XE_VERSION ">\n"
     "  <longdesc lang=\"en\">\n"
     "%s\n"
     "  </longdesc>\n"
@@ -48,7 +48,9 @@ static const char META_TEMPLATE[] =
     "    <action name=\"meta-data\"  timeout=\"15\" />\n"
     "  </actions>\n"
     "  <special tag=\"heartbeat\">\n"
-    "    <version>2.0</version>\n" "  </special>\n" "</resource-agent>\n";
+    "    <" PCMK_XE_VERSION ">2.0</" PCMK_XE_VERSION ">\n"
+    "  </special>\n"
+    "</resource-agent>\n";
 
 static void *
 find_library_function(void **handle, const char *lib, const char *fn)

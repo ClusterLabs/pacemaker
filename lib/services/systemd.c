@@ -670,7 +670,7 @@ systemd_unit_exists(const char *name)
     "<resource-agent " PCMK_XA_NAME "=\"%s\" "                              \
                        PCMK_XA_VERSION                                      \
                            "=\"" PCMK_DEFAULT_AGENT_VERSION "\">\n"         \
-    "  <version>1.1</version>\n"                                            \
+    "  <" PCMK_XE_VERSION ">1.1</" PCMK_XE_VERSION ">\n"                    \
     "  <longdesc lang=\"en\">\n"                                            \
     "    %s\n"                                                              \
     "  </longdesc>\n"                                                       \
