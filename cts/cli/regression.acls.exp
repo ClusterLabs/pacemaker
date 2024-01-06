@@ -376,7 +376,7 @@ pcmk__check_acl 	trace: User 'unknownguy' without ACLs denied read/write access 
 pcmk__apply_creation_acl 	trace: Creation of <primitive> scaffolding with id="<unset>" is implicitly allowed
 Call failed: Permission denied
 <failed>
-  <failed_update id="dummy" object_type="primitive" operation="cib_create" reason="Permission denied">
+  <failed_update id="dummy" object-type="primitive" operation="cib_create" reason="Permission denied">
     <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>
   </failed_update>
 </failed>
@@ -2327,7 +2327,7 @@ pcmk__check_acl 	trace: User 'unknownguy' without ACLs denied read/write access 
 pcmk__apply_creation_acl 	trace: Creation of <primitive> scaffolding with id="<unset>" is implicitly allowed
 Call failed: Permission denied
 <failed>
-  <failed_update id="dummy" object_type="primitive" operation="cib_create" reason="Permission denied">
+  <failed_update id="dummy" object-type="primitive" operation="cib_create" reason="Permission denied">
     <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>
   </failed_update>
 </failed>
