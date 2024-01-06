@@ -217,8 +217,6 @@ extern "C" {
 #    define T_ATTRD     "attrd"
 #  endif
 
-#  define CIB_OPTIONS_FIRST PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS
-
 /*---- top level tags/attrs */
 #  define XML_PING_ATTR_PACEMAKERDSTATE_INIT "init"
 #  define XML_PING_ATTR_PACEMAKERDSTATE_STARTINGDAEMONS "starting_daemons"

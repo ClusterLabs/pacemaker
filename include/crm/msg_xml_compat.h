@@ -958,6 +958,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_FAIL_TAG_CIB "failed_update"
 
+//! \deprecated Use \c PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS instead
+#define CIB_OPTIONS_FIRST "cib-bootstrap-options"
+
 #ifdef __cplusplus
 }
 #endif
