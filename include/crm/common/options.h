@@ -129,6 +129,7 @@ extern "C" {
  * Enumerated values
  */
 
+#define PCMK_VALUE_ALWAYS                   "always"
 #define PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS    "cib-bootstrap-options"
 #define PCMK_VALUE_DENY                     "deny"
 #define PCMK_VALUE_EXCLUSIVE                "exclusive"
