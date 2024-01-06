@@ -55,6 +55,7 @@ extern "C" {
  * XML elements
  */
 
+#define PCMK_XE_ACL_TARGET                  "acl_target"
 #define PCMK_XE_ACLS                        "acls"
 #define PCMK_XE_ALERT                       "alert"
 #define PCMK_XE_ALERTS                      "alerts"
@@ -230,7 +231,7 @@ extern "C" {
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 
-#  define XML_ACL_TAG_USER		"acl_target"
+#  define XML_ACL_TAG_USER		PCMK_XE_ACL_TARGET
 #  define XML_ACL_TAG_USERv1		"acl_user"
 #  define XML_ACL_TAG_GROUP		"acl_group"
 #  define XML_ACL_TAG_ROLE		"acl_role"

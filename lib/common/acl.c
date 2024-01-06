@@ -301,7 +301,7 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
             for (child = pcmk__xe_first_child(acls); child;
                  child = pcmk__xe_next(child)) {
 
-                if (pcmk__xe_is(child, XML_ACL_TAG_USER)
+                if (pcmk__xe_is(child, PCMK_XE_ACL_TARGET)
                     || pcmk__xe_is(child, XML_ACL_TAG_USERv1)) {
                     const char *id = crm_element_value(child, PCMK_XA_NAME);
 
@@ -801,19 +801,19 @@ pcmk__update_acl_user(xmlNode *request, const char *field,
         }
     }
 
-    requested_user = crm_element_value(request, XML_ACL_TAG_USER);
+    requested_user = crm_element_value(request, PCMK_XE_ACL_TARGET);
     if (requested_user == NULL) {
         /* @COMPAT rolling upgrades <=1.1.11
          *
          * field is checked for backward compatibility with older versions that
-         * did not use XML_ACL_TAG_USER.
+         * did not use PCMK_XE_ACL_TARGET.
          */
         requested_user = crm_element_value(request, field);
     }
 
     if (!pcmk__is_privileged(effective_user)) {
         /* We're not running as a privileged user, set or overwrite any existing
-         * value for $XML_ACL_TAG_USER
+         * value for PCMK_XE_ACL_TARGET
          */
         user = effective_user;
 
@@ -829,7 +829,7 @@ pcmk__update_acl_user(xmlNode *request, const char *field,
 
     } else if (!pcmk__is_privileged(peer_user)) {
         /* The peer is not a privileged user, set or overwrite any existing
-         * value for $XML_ACL_TAG_USER
+         * value for PCMK_XE_ACL_TARGET
          */
         user = peer_user;
 
@@ -843,8 +843,8 @@ pcmk__update_acl_user(xmlNode *request, const char *field,
     }
 
     // This requires pointer comparison, not string comparison
-    if (user != crm_element_value(request, XML_ACL_TAG_USER)) {
-        crm_xml_add(request, XML_ACL_TAG_USER, user);
+    if (user != crm_element_value(request, PCMK_XE_ACL_TARGET)) {
+        crm_xml_add(request, PCMK_XE_ACL_TARGET, user);
     }
 
     if (field != NULL && user != crm_element_value(request, field)) {
