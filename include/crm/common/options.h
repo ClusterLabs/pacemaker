@@ -139,6 +139,7 @@ extern "C" {
 #define PCMK_VALUE_META                     "meta"
 #define PCMK_VALUE_NEVER                    "never"
 #define PCMK_VALUE_OR                       "or"
+#define PCMK_VALUE_PARAM                    "param"
 #define PCMK_VALUE_READ                     "read"
 #define PCMK_VALUE_TRUE                     "true"
 #define PCMK_VALUE_WRITE                    "write"
