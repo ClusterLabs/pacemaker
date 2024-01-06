@@ -289,7 +289,7 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
 
     version = create_xml_node(patchset, PCMK_XE_VERSION);
 
-    v = create_xml_node(version, XML_DIFF_VSOURCE);
+    v = create_xml_node(version, PCMK_XE_SOURCE);
     for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
         const char *value = crm_element_value(source, vfields[lpc]);
 

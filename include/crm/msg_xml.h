@@ -111,6 +111,7 @@ extern "C" {
 #define PCMK_XE_SELECT_NODES                "select_nodes"
 #define PCMK_XE_SELECT_RESOURCES            "select_resources"
 #define PCMK_XE_SHORTDESC                   "shortdesc"
+#define PCMK_XE_SOURCE                      "source"
 #define PCMK_XE_STATUS                      "status"
 #define PCMK_XE_TAG                         "tag"
 #define PCMK_XE_TAGS                        "tags"
@@ -241,7 +242,7 @@ extern "C" {
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 
-#  define XML_DIFF_VSOURCE              "source"
+#  define XML_DIFF_VSOURCE              PCMK_XE_SOURCE
 #  define XML_DIFF_VTARGET              "target"
 #  define XML_DIFF_CHANGE               "change"
 #  define XML_DIFF_LIST                 "change-list"
