@@ -40,6 +40,7 @@
 #  include <crm/common/ipc_internal.h>
 #  include <crm/common/options_internal.h>
 #  include <crm/common/output_internal.h>
+#  include <crm/common/scheduler_internal.h>
 #  include <crm/common/xml_internal.h>
 #  include <crm/common/xml_names_internal.h>
 #  include <crm/common/internal.h>

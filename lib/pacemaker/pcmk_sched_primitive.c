@@ -1573,7 +1573,8 @@ pcmk__primitive_add_utilization(const pcmk_resource_t *rsc,
 static time_t
 shutdown_time(pcmk_node_t *node)
 {
-    const char *shutdown = pe_node_attribute_raw(node, XML_CIB_ATTR_SHUTDOWN);
+    const char *shutdown = pe_node_attribute_raw(node,
+                                                 PCMK__NODE_ATTR_SHUTDOWN);
     time_t result = 0;
 
     if (shutdown != NULL) {

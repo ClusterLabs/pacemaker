@@ -1243,7 +1243,7 @@ handle_shutdown_request(xmlNode * stored_msg)
     crm_log_xml_trace(stored_msg, "message");
 
     now_s = pcmk__ttoa(time(NULL));
-    update_attrd(host_from, XML_CIB_ATTR_SHUTDOWN, now_s, NULL, FALSE);
+    update_attrd(host_from, PCMK__NODE_ATTR_SHUTDOWN, now_s, NULL, FALSE);
     free(now_s);
 
     /* will be picked up by the TE as long as its running */
