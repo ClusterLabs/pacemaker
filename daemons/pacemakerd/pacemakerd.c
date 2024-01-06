@@ -456,7 +456,7 @@ main(int argc, char **argv)
                      "by your SBD version) improve reliability of "
                      "interworking between SBD & pacemaker.");
         }
-        pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_STARTINGDAEMONS;
+        pacemakerd_state = PCMK__VALUE_STARTING_DAEMONS;
         init_children_processes(NULL);
     }
 

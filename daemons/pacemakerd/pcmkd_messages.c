@@ -83,7 +83,7 @@ handle_ping_request(pcmk__request_t *request)
 
         } else if (pcmk__str_eq(pacemakerd_state, XML_PING_ATTR_PACEMAKERDSTATE_WAITPING, pcmk__str_none)) {
             crm_notice("Received startup-trigger from SBD.");
-            pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_STARTINGDAEMONS;
+            pacemakerd_state = PCMK__VALUE_STARTING_DAEMONS;
             mainloop_set_trigger(startup_trigger);
         }
     }
