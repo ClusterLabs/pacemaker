@@ -129,6 +129,7 @@ extern "C" {
  * Enumerated values
  */
 
+#define PCMK_VALUE_DENY                     "deny"
 #define PCMK_VALUE_FALSE                    "false"
 #define PCMK_VALUE_READ                     "read"
 #define PCMK_VALUE_TRUE                     "true"

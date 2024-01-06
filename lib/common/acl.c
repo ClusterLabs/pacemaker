@@ -177,7 +177,7 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
         } else if (strcmp(tag, PCMK_VALUE_WRITE) == 0) {
             acls = create_acl(child, acls, pcmk__xf_acl_write);
 
-        } else if (strcmp(XML_ACL_TAG_DENY, tag) == 0) {
+        } else if (strcmp(tag, PCMK_VALUE_DENY) == 0) {
             acls = create_acl(child, acls, pcmk__xf_acl_deny);
 
         } else {
