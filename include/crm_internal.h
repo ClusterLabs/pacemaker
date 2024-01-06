@@ -83,6 +83,11 @@
 // @COMPAT Deprecated since 1.1.12
 #define PCMK__XE_ACL_USER               "acl_user"
 
+/* @TODO Deprecate somehow. It's undocumented and behaves the same as
+ * PCMK__XE_CIB in places where it's recognized.
+ */
+#define PCMK__XE_ALL                    "all"
+
 // @COMPAT Deprecated since 2.1.7
 #define PCMK__XE_DIFF_ADDED             "diff-added"
 

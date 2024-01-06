@@ -183,7 +183,7 @@ cib_process_query(const char *op, int options, const char *section, xmlNode * re
     CRM_CHECK(*answer == NULL, free_xml(*answer));
     *answer = NULL;
 
-    if (pcmk__str_eq(XML_CIB_TAG_SECTION_ALL, section, pcmk__str_casei)) {
+    if (pcmk__str_eq(PCMK__XE_ALL, section, pcmk__str_casei)) {
         section = NULL;
     }
 
@@ -329,7 +329,7 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
         return -EINVAL;
     }
 
-    if (pcmk__str_eq(XML_CIB_TAG_SECTION_ALL, section, pcmk__str_casei)) {
+    if (pcmk__str_eq(PCMK__XE_ALL, section, pcmk__str_casei)) {
         section = NULL;
 
     } else if (pcmk__xe_is(input, section)) {
@@ -709,7 +709,7 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
 
     crm_trace("Processing %s for %s section",
               op, pcmk__s(section, "unspecified"));
-    if (pcmk__str_eq(XML_CIB_TAG_SECTION_ALL, section, pcmk__str_casei)) {
+    if (pcmk__str_eq(PCMK__XE_ALL, section, pcmk__str_casei)) {
         section = NULL;
 
     } else if (pcmk__str_eq(section, PCMK_XE_CIB, pcmk__str_casei)) {
