@@ -25,21 +25,6 @@
 #include <crm/common/xml_internal.h>
 #include <crm/pengine/rules.h>
 
-xmlNode *
-cib_get_generation(cib_t * cib)
-{
-    xmlNode *the_cib = NULL;
-    xmlNode *generation = create_xml_node(NULL, XML_CIB_TAG_GENERATION_TUPPLE);
-
-    cib->cmds->query(cib, NULL, &the_cib, cib_scope_local | cib_sync_call);
-    if (the_cib != NULL) {
-        copy_in_properties(generation, the_cib);
-        free_xml(the_cib);
-    }
-
-    return generation;
-}
-
 gboolean
 cib_version_details(xmlNode * cib, int *admin_epoch, int *epoch, int *updates)
 {
@@ -1091,6 +1076,21 @@ cib__clean_up_connection(cib_t **cib)
 // LCOV_EXCL_START
 
 #include <crm/cib/util_compat.h>
+
+xmlNode *
+cib_get_generation(cib_t * cib)
+{
+    xmlNode *the_cib = NULL;
+    xmlNode *generation = create_xml_node(NULL, XML_CIB_TAG_GENERATION_TUPPLE);
+
+    cib->cmds->query(cib, NULL, &the_cib, cib_scope_local | cib_sync_call);
+    if (the_cib != NULL) {
+        copy_in_properties(generation, the_cib);
+        free_xml(the_cib);
+    }
+
+    return generation;
+}
 
 const char *
 get_object_path(const char *object_type)
