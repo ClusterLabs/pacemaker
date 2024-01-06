@@ -919,6 +919,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_DIFF instead
 #define XML_TAG_DIFF PCMK_XE_DIFF
 
+//! \deprecated Use \c PCMK_XE_VERSION instead
+#define XML_DIFF_VERSION PCMK_XE_VERSION
+
 #ifdef __cplusplus
 }
 #endif
