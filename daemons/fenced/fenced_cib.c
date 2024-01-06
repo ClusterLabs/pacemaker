@@ -569,7 +569,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
                     return;
                 }
 
-            } else if (strstr(xpath, "/" XML_TAG_FENCING_TOPOLOGY) != NULL) {
+            } else if (strstr(xpath, "/" PCMK_XE_FENCING_TOPOLOGY) != NULL) {
                 /* Change to the topology in general */
                 crm_info("Re-initializing fencing topology after top-level %s operation  %d.%d.%d for %s",
                          op, add[0], add[1], add[2], xpath);
@@ -578,7 +578,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
 
             } else if (strstr(xpath, "/" PCMK_XE_CONFIGURATION)) {
                 /* Changes to the whole config section, possibly including the topology as a whild */
-                if(first_named_child(change, XML_TAG_FENCING_TOPOLOGY) == NULL) {
+                if(first_named_child(change, PCMK_XE_FENCING_TOPOLOGY) == NULL) {
                     crm_trace("Nothing for us in %s operation %d.%d.%d for %s.",
                               op, add[0], add[1], add[2], xpath);
 
