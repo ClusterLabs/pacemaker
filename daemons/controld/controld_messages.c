@@ -365,8 +365,9 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     }
 
     // Require message type (set by create_request())
-    if (!pcmk__str_eq(type, T_CRM, pcmk__str_casei)) {
-        crm_warn("Ignoring invalid message %s with type '%s' (not '" T_CRM "')",
+    if (!pcmk__str_eq(type, PCMK__VALUE_CRMD, pcmk__str_none)) {
+        crm_warn("Ignoring invalid message %s with type '%s' "
+                 "(not '" PCMK__VALUE_CRMD "')",
                  ref, pcmk__s(type, ""));
         crm_log_xml_trace(msg, "ignored");
         return TRUE;
