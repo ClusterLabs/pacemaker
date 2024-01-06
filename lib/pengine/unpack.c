@@ -1071,7 +1071,7 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
     crm_trace("Processing Pacemaker Remote node %s",
               pcmk__node_name(this_node));
 
-    pcmk__scan_min_int(crm_element_value(state, XML_NODE_IS_MAINTENANCE),
+    pcmk__scan_min_int(crm_element_value(state, PCMK__XA_NODE_IN_MAINTENANCE),
                        &(this_node->details->remote_maintenance), 0);
 
     rsc = this_node->details->remote_rsc;
