@@ -247,7 +247,6 @@ extern "C" {
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 
-#  define XML_DIFF_RESULT               PCMK_XE_CHANGE_RESULT
 #  define XML_DIFF_POSITION             "position"
 
 #  define ID(x) crm_element_value(x, PCMK_XA_ID)
