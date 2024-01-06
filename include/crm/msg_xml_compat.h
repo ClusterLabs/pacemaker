@@ -922,6 +922,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_VERSION instead
 #define XML_DIFF_VERSION PCMK_XE_VERSION
 
+//! \deprecated Use \c PCMK_XE_SOURCE instead
+#define XML_DIFF_VSOURCE PCMK_XE_SOURCE
+
 #ifdef __cplusplus
 }
 #endif
