@@ -217,9 +217,6 @@ extern "C" {
 #    define T_ATTRD     "attrd"
 #  endif
 
-/*---- top level tags/attrs */
-#  define XML_PING_ATTR_PACEMAKERDSTATE_REMOTE "remote"
-
 /*---- CIB specific tags/attrs */
 #  define XML_CIB_TAG_SECTION_ALL	"all"
 
