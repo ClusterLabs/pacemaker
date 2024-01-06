@@ -395,7 +395,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
         if(diff) {
             xml_patch_versions(diff, add, del);
             for(search = reason; search; search = search->parent) {
-                if (pcmk__xe_is(search, XML_DIFF_CHANGE)) {
+                if (pcmk__xe_is(search, PCMK_XE_CHANGE)) {
                     change = search;
                     break;
                 }

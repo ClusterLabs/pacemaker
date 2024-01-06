@@ -153,7 +153,7 @@ element_in_patchset_v2(const xmlNode *patchset, const char *element)
     // Matches if and only if element_xpath is part of a changed path
     element_regex = crm_strdup_printf("^%s(/|$)", element_xpath);
 
-    for (const xmlNode *change = first_named_child(patchset, XML_DIFF_CHANGE);
+    for (const xmlNode *change = first_named_child(patchset, PCMK_XE_CHANGE);
          change != NULL; change = crm_next_same_xml(change)) {
 
         const char *op = crm_element_value(change, F_CIB_OPERATION);

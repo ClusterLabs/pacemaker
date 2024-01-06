@@ -56,7 +56,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
         if (xpath != NULL) {
             int position = pcmk__xml_position(xml, pcmk__xf_deleted);
 
-            change = create_xml_node(patchset, XML_DIFF_CHANGE);
+            change = create_xml_node(patchset, PCMK_XE_CHANGE);
 
             crm_xml_add(change, PCMK_XA_OPERATION, "create");
             crm_xml_add(change, PCMK_XA_PATH, (const char *) xpath->str);
@@ -82,7 +82,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
             GString *xpath = pcmk__element_xpath(xml);
 
             if (xpath != NULL) {
-                change = create_xml_node(patchset, XML_DIFF_CHANGE);
+                change = create_xml_node(patchset, PCMK_XE_CHANGE);
 
                 crm_xml_add(change, PCMK_XA_OPERATION, "modify");
                 crm_xml_add(change, PCMK_XA_PATH, (const char *) xpath->str);
@@ -136,7 +136,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
                   xml->name, ID(xml), pcmk__xml_position(xml, pcmk__xf_skip));
 
         if (xpath != NULL) {
-            change = create_xml_node(patchset, XML_DIFF_CHANGE);
+            change = create_xml_node(patchset, PCMK_XE_CHANGE);
 
             crm_xml_add(change, PCMK_XA_OPERATION, "move");
             crm_xml_add(change, PCMK_XA_PATH, (const char *) xpath->str);
@@ -311,7 +311,7 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
 
     for (gIter = docpriv->deleted_objs; gIter; gIter = gIter->next) {
         pcmk__deleted_xml_t *deleted_obj = gIter->data;
-        xmlNode *change = create_xml_node(patchset, XML_DIFF_CHANGE);
+        xmlNode *change = create_xml_node(patchset, PCMK_XE_CHANGE);
 
         crm_xml_add(change, PCMK_XA_OPERATION, "delete");
         crm_xml_add(change, PCMK_XA_PATH, deleted_obj->path);
