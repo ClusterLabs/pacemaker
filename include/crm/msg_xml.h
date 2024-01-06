@@ -219,9 +219,6 @@ extern "C" {
 
 #  define CIB_OPTIONS_FIRST "cib-bootstrap-options"
 
-/*---- Common tags/attrs */
-#  define XML_TAG_OPTIONS		"options"
-
 /*---- top level tags/attrs */
 #  define XML_PING_ATTR_PACEMAKERDSTATE_INIT "init"
 #  define XML_PING_ATTR_PACEMAKERDSTATE_STARTINGDAEMONS "starting_daemons"
