@@ -1007,6 +1007,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_CIB_ATTR_SHUTDOWN "shutdown"
 
+//! \deprecated Do not use
+#define XML_NODE_ATTR_RSC_DISCOVERY "resource-discovery-enabled"
+
 #ifdef __cplusplus
 }
 #endif

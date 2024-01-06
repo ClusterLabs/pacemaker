@@ -205,12 +205,6 @@ extern "C" {
 #define PCMK_XA_XPATH                       "xpath"
 
 
-/*
- * Older constants that don't follow current naming
- */
-
-#  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
-
 #  define ID(x) crm_element_value(x, PCMK_XA_ID)
 
 #ifdef __cplusplus
