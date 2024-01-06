@@ -209,10 +209,6 @@ extern "C" {
  * Older constants that don't follow current naming
  */
 
-#  ifndef T_CRM
-#    define T_CRM     "crmd"
-#  endif
-
 #  ifndef T_ATTRD
 #    define T_ATTRD     "attrd"
 #  endif
