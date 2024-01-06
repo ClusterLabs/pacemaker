@@ -50,8 +50,6 @@ int delete_attr_delegate(cib_t * the_cib, int options,
 
 int query_node_uuid(cib_t * the_cib, const char *uname, char **uuid, int *is_remote_node);
 
-int query_node_uname(cib_t * the_cib, const char *uuid, char **uname);
-
 xmlNode *cib_get_generation(cib_t * cib);
 
 void cib_metadata(void);

@@ -663,6 +663,11 @@ query_node_uuid(cib_t * the_cib, const char *uname, char **uuid, int *is_remote_
     return rc;
 }
 
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/cib/util_compat.h>
+
 int
 query_node_uname(cib_t * the_cib, const char *uuid, char **uname)
 {
@@ -708,11 +713,6 @@ query_node_uname(cib_t * the_cib, const char *uuid, char **uname)
     free_xml(fragment);
     return rc;
 }
-
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-#include <crm/cib/util_compat.h>
 
 int
 set_standby(cib_t * the_cib, const char *uuid, const char *scope, const char *standby_value)
