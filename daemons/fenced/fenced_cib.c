@@ -261,7 +261,9 @@ update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
     xmlXPathObjectPtr xpath_obj = NULL;
 
     /* process new constraints */
-    xpath_obj = xpath_search(msg, "//" F_CIB_UPDATE_RESULT "//" XML_CONS_TAG_RSC_LOCATION);
+    xpath_obj = xpath_search(msg,
+                             "//" F_CIB_UPDATE_RESULT
+                             "//" PCMK_XE_RSC_LOCATION);
     if (numXpathResults(xpath_obj) > 0) {
         int max = numXpathResults(xpath_obj), lpc = 0;
 
