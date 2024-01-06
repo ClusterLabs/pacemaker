@@ -384,7 +384,7 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
     crm_xml_add(login, PCMK_XA_OP, "authenticate");
     crm_xml_add(login, PCMK_XA_USER, private->user);
     crm_xml_add(login, PCMK__XA_PASSWORD, private->passwd);
-    crm_xml_add(login, "hidden", "password");
+    crm_xml_add(login, "hidden", PCMK__VALUE_PASSWORD);
 
     pcmk__remote_send_xml(connection, login);
     free_xml(login);

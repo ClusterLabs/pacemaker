@@ -196,6 +196,7 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 #define PCMK__VALUE_NONE                    "none"
 #define PCMK__VALUE_NOTHING                 "nothing"
 #define PCMK__VALUE_ONLY_GREEN              "only-green"
+#define PCMK__VALUE_PASSWORD                "password"
 #define PCMK__VALUE_PROGRESSIVE             "progressive"
 #define PCMK__VALUE_QUORUM                  "quorum"
 #define PCMK__VALUE_RED                     "red"
