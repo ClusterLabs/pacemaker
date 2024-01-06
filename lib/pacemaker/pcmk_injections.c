@@ -473,7 +473,7 @@ find_ticket_state(pcmk__output_t *out, cib_t *the_cib, const char *ticket_id,
 
     if (ticket_id) {
         pcmk__g_strcat(xpath,
-                       "/" XML_CIB_TAG_TICKET_STATE
+                       "/" PCMK__XE_TICKET_STATE
                        "[@" PCMK_XA_ID "=\"", ticket_id, "\"]", NULL);
     }
     rc = the_cib->cmds->query(the_cib, (const char *) xpath->str, &xml_search,
@@ -486,7 +486,8 @@ find_ticket_state(pcmk__output_t *out, cib_t *the_cib, const char *ticket_id,
 
     crm_log_xml_debug(xml_search, "Match");
     if ((xml_search->children != NULL) && (ticket_id != NULL)) {
-        out->err(out, "Multiple ticket_states match ticket_id=%s", ticket_id);
+        out->err(out, "Multiple " PCMK__XE_TICKET_STATE "s match ticket_id=%s",
+                 ticket_id);
     }
     *ticket_state_xml = xml_search;
 
@@ -527,7 +528,7 @@ set_ticket_state_attr(pcmk__output_t *out, const char *ticket_id,
 
         xml_top = create_xml_node(NULL, PCMK_XE_STATUS);
         xml_obj = create_xml_node(xml_top, PCMK_XE_TICKETS);
-        ticket_state_xml = create_xml_node(xml_obj, XML_CIB_TAG_TICKET_STATE);
+        ticket_state_xml = create_xml_node(xml_obj, PCMK__XE_TICKET_STATE);
         crm_xml_add(ticket_state_xml, PCMK_XA_ID, ticket_id);
 
     } else { // Error

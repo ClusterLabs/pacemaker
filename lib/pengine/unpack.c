@@ -1039,7 +1039,8 @@ unpack_tickets_state(xmlNode *xml_tickets, pcmk_scheduler_t *scheduler)
     for (xml_obj = pcmk__xe_first_child(xml_tickets); xml_obj != NULL;
          xml_obj = pcmk__xe_next(xml_obj)) {
 
-        if (!pcmk__str_eq((const char *)xml_obj->name, XML_CIB_TAG_TICKET_STATE, pcmk__str_none)) {
+        if (!pcmk__str_eq((const char *) xml_obj->name, PCMK__XE_TICKET_STATE,
+                          pcmk__str_none)) {
             continue;
         }
         unpack_ticket_state(xml_obj, scheduler);
