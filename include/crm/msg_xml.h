@@ -228,8 +228,6 @@ extern "C" {
 #  define XML_PING_ATTR_PACEMAKERDSTATE_SHUTDOWNCOMPLETE "shutdown_complete"
 #  define XML_PING_ATTR_PACEMAKERDSTATE_REMOTE "remote"
 
-#  define XML_FAIL_TAG_CIB		"failed_update"
-
 /*---- CIB specific tags/attrs */
 #  define XML_CIB_TAG_SECTION_ALL	"all"
 
