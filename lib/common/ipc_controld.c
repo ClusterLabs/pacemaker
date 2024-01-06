@@ -632,7 +632,7 @@ create_hello_message(const char *uuid, const char *client_name,
         return NULL;
     }
 
-    hello_node = create_xml_node(NULL, XML_TAG_OPTIONS);
+    hello_node = create_xml_node(NULL, PCMK__XE_OPTIONS);
     if (hello_node == NULL) {
         crm_err("Could not create IPC hello message from %s (UUID %s): "
                 "Message data creation failed", client_name, uuid);
