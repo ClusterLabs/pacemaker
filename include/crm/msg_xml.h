@@ -209,7 +209,6 @@ extern "C" {
  * Older constants that don't follow current naming
  */
 
-#  define XML_NODE_IS_FENCED		"node_fenced"
 #  define XML_NODE_IS_MAINTENANCE   "node_in_maintenance"
 
 #  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
