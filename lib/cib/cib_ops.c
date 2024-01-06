@@ -684,7 +684,7 @@ update_results(xmlNode *failed, xmlNode *target, const char *operation,
         error_msg = pcmk_strerror(return_code);
 
         was_error = true;
-        xml_node = create_xml_node(failed, XML_FAIL_TAG_CIB);
+        xml_node = create_xml_node(failed, PCMK__XE_FAILED_UPDATE);
         add_node_copy(xml_node, target);
 
         crm_xml_add(xml_node, PCMK_XA_ID, ID(target));
