@@ -1281,7 +1281,7 @@ cluster_times_xml(pcmk__output_t *out, va_list args) {
 
     pcmk__output_create_xml_node(out, "last_change",
                                  PCMK_XA_TIME, pcmk__s(last_written, ""),
-                                 "user", user ? user : "",
+                                 PCMK_XA_USER, pcmk__s(user, ""),
                                  PCMK_XA_CLIENT, pcmk__s(client, ""),
                                  PCMK_XA_ORIGIN, pcmk__s(origin, ""),
                                  NULL);

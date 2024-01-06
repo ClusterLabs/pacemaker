@@ -236,7 +236,7 @@ cib_remote_auth(xmlNode * login)
         return FALSE;
     }
 
-    user = crm_element_value(login, "user");
+    user = crm_element_value(login, PCMK_XA_USER);
     pass = crm_element_value(login, "password");
 
     if (!user || !pass) {
@@ -510,7 +510,7 @@ cib_remote_msg(gpointer data)
         client->remote->auth_timeout = 0;
         client->name = crm_element_value_copy(command, PCMK_XA_NAME);
 
-        user = crm_element_value(command, "user");
+        user = crm_element_value(command, PCMK_XA_USER);
         if (user) {
             client->user = strdup(user);
         }

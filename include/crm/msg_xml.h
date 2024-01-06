@@ -207,6 +207,7 @@ extern "C" {
 #define PCMK_XA_THEN_ACTION                 "then-action"
 #define PCMK_XA_TYPE                        "type"
 #define PCMK_XA_UNAME                       "uname"
+#define PCMK_XA_USER                        "user"
 #define PCMK_XA_UPDATE_CLIENT               "update-client"
 #define PCMK_XA_UPDATE_ORIGIN               "update-origin"
 #define PCMK_XA_UPDATE_USER                 "update-user"
