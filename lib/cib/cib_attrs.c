@@ -254,7 +254,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
 
         if (set_name == NULL) {
             if (pcmk__str_eq(section, PCMK_XE_CRM_CONFIG, pcmk__str_casei)) {
-                local_set_name = strdup(CIB_OPTIONS_FIRST);
+                local_set_name = strdup(PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS);
 
             } else if (pcmk__str_eq(node_type, PCMK_XE_TICKETS,
                                     pcmk__str_casei)) {

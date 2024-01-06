@@ -749,7 +749,8 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     crm_debug("Call %d : Parsing CIB options", call_id);
     config_hash = pcmk__strkey_table(free, free);
     pe_unpack_nvpairs(crmconfig, crmconfig, PCMK_XE_CLUSTER_PROPERTY_SET, NULL,
-                      config_hash, CIB_OPTIONS_FIRST, FALSE, now, NULL);
+                      config_hash, PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, FALSE, now,
+                      NULL);
 
     // Validate all options, and use defaults if not already present in hash
     pcmk__validate_cluster_options(config_hash, controller_options,
