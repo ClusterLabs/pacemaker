@@ -961,6 +961,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS instead
 #define CIB_OPTIONS_FIRST "cib-bootstrap-options"
 
+//! \deprecated Do not use
+#define XML_PING_ATTR_PACEMAKERDSTATE_INIT "init"
+
 #ifdef __cplusplus
 }
 #endif
