@@ -833,7 +833,7 @@ init_children_processes(void *user_data)
      * This may be useful for the daemons to know
      */
     pcmk__set_env_option(PCMK__ENV_RESPAWNED, PCMK_VALUE_TRUE, false);
-    pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_RUNNING;
+    pacemakerd_state = PCMK__VALUE_RUNNING;
     return TRUE;
 }
 
