@@ -115,6 +115,7 @@ extern "C" {
 #define PCMK_XE_STATUS                      "status"
 #define PCMK_XE_TAG                         "tag"
 #define PCMK_XE_TAGS                        "tags"
+#define PCMK_XE_TARGET                      "target"
 #define PCMK_XE_TEMPLATE                    "template"
 #define PCMK_XE_TICKETS                     "tickets"
 #define PCMK_XE_UTILIZATION                 "utilization"
@@ -242,7 +243,7 @@ extern "C" {
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 
-#  define XML_DIFF_VTARGET              "target"
+#  define XML_DIFF_VTARGET              PCMK_XE_TARGET
 #  define XML_DIFF_CHANGE               "change"
 #  define XML_DIFF_LIST                 "change-list"
 #  define XML_DIFF_ATTR                 "change-attr"
