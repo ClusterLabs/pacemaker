@@ -329,15 +329,15 @@ remote_node_up(const char *node_name)
     state = create_node_state_update(node, node_update_cluster, update,
                                      __func__);
 
-    /* Clear the XML_NODE_IS_FENCED flag in the node state. If the node ever
+    /* Clear the PCMK__XA_NODE_FENCED flag in the node state. If the node ever
      * needs to be fenced, this flag will allow various actions to determine
      * whether the fencing has happened yet.
      */
-    crm_xml_add(state, XML_NODE_IS_FENCED, "0");
+    crm_xml_add(state, PCMK__XA_NODE_FENCED, "0");
 
     /* TODO: If the remote connection drops, and this (async) CIB update either
      * failed or has not yet completed, later actions could mistakenly think the
-     * node has already been fenced (if the XML_NODE_IS_FENCED attribute was
+     * node has already been fenced (if the PCMK__XA_NODE_FENCED attribute was
      * previously set, because it won't have been cleared). This could prevent
      * actual fencing or allow recurring monitor failures to be cleared too
      * soon. Ideally, we wouldn't rely on the CIB for the fenced status.

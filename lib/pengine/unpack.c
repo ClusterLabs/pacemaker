@@ -1210,7 +1210,7 @@ unpack_node_state(const xmlNode *state, pcmk_scheduler_t *scheduler)
          * do need to mark whether the node has been fenced, as this plays a
          * role during unpacking cluster node resource state.
          */
-        pcmk__scan_min_int(crm_element_value(state, XML_NODE_IS_FENCED),
+        pcmk__scan_min_int(crm_element_value(state, PCMK__XA_NODE_FENCED),
                            &(this_node->details->remote_was_fenced), 0);
         return;
     }

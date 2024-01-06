@@ -248,7 +248,7 @@ send_stonith_update(pcmk__graph_action_t *action, const char *target,
     if (peer->flags & crm_remote_node) {
         char *now_s = pcmk__ttoa(time(NULL));
 
-        crm_xml_add(node_state, XML_NODE_IS_FENCED, now_s);
+        crm_xml_add(node_state, PCMK__XA_NODE_FENCED, now_s);
         free(now_s);
     }
 
