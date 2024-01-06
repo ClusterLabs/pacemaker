@@ -343,7 +343,7 @@ pcmk_shutdown_worker(gpointer user_data)
 
     if (phase == PCMK__NELEM(pcmk_children) - 1) {
         crm_notice("Shutting down Pacemaker");
-        pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_SHUTTINGDOWN;
+        pacemakerd_state = PCMK__VALUE_SHUTTING_DOWN;
     }
 
     for (; phase >= 0; phase--) {
