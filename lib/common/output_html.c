@@ -161,7 +161,7 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
         pcmk_create_xml_text_node(head_node, "title", out->request);
     }
 
-    charset_node = create_xml_node(head_node, "meta");
+    charset_node = create_xml_node(head_node, PCMK__XE_META);
     crm_xml_add(charset_node, "charset", "utf-8");
 
     /* Add any extra header nodes the caller might have created. */

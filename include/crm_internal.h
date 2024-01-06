@@ -72,6 +72,7 @@
 #define PCMK__XE_LRM_RESOURCES          "lrm_resources"
 #define PCMK__XE_LRM_RSC_OP             "lrm_rsc_op"
 #define PCMK__XE_MAINTENANCE            "maintenance"
+#define PCMK__XE_META                   "meta"
 #define PCMK__XE_NODE_STATE             "node_state"
 #define PCMK__XE_OPTIONS                "options"
 #define PCMK__XE_PARAM                  "param"
