@@ -228,8 +228,6 @@ extern "C" {
 
 #  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
 
-#  define XML_CONS_TAG_RSC_SET		PCMK_XE_RESOURCE_SET
-
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 
 #  define XML_CIB_TAG_GENERATION_TUPPLE	"generation_tuple"
