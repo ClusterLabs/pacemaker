@@ -154,6 +154,7 @@ extern "C" {
 #define PCMK_XA_FIRST_ACTION                "first-action"
 #define PCMK_XA_FORMAT                      "format"
 #define PCMK_XA_HAVE_QUORUM                 "have-quorum"
+#define PCMK_XA_HOST                        "host"
 #define PCMK_XA_ID                          "id"
 #define PCMK_XA_ID_REF                      "id-ref"
 #define PCMK_XA_INDEX                       "index"

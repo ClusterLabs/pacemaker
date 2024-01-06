@@ -735,7 +735,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
             pcmk__output_xml_create_parent(out, "resource",
                                            PCMK_XA_ID, rsc->id,
                                            PCMK_XA_RUNNING, PCMK_VALUE_TRUE,
-                                           "host", host_uname,
+                                           PCMK_XA_HOST, host_uname,
                                            NULL);
 
             cli_resource_check(out, rsc, node);
@@ -748,7 +748,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
             pcmk__output_xml_create_parent(out, "resource",
                                            PCMK_XA_ID, rsc->id,
                                            PCMK_XA_RUNNING, PCMK_VALUE_FALSE,
-                                           "host", host_uname,
+                                           PCMK_XA_HOST, host_uname,
                                            NULL);
 
             cli_resource_check(out, rsc, node);

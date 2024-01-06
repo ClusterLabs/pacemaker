@@ -2191,7 +2191,7 @@ attribute_xml(pcmk__output_t *out, va_list args)
     }
 
     if (!pcmk__str_empty(host)) {
-        crm_xml_add(node, "host", host);
+        crm_xml_add(node, PCMK_XA_HOST, host);
     }
 
     return pcmk_rc_ok;
