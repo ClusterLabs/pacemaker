@@ -131,6 +131,7 @@ extern "C" {
  * XML attributes
  */
 
+#define PCMK_XA_ACTION                      "action"
 #define PCMK_XA_ADMIN_EPOCH                 "admin_epoch"
 #define PCMK_XA_ATTRIBUTE                   "attribute"
 #define PCMK_XA_BOOLEAN_OP                  "boolean-op"

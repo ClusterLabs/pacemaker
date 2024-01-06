@@ -612,7 +612,7 @@ unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
 
     char *key = NULL;
     const char *id = ID(set);
-    const char *action = crm_element_value(set, "action");
+    const char *action = crm_element_value(set, PCMK_XA_ACTION);
     const char *sequential_s = crm_element_value(set, PCMK_XA_SEQUENTIAL);
     const char *kind_s = crm_element_value(set, PCMK_XA_KIND);
 
@@ -725,8 +725,8 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
     pcmk_resource_t *rsc_1 = NULL;
     pcmk_resource_t *rsc_2 = NULL;
 
-    const char *action_1 = crm_element_value(set1, "action");
-    const char *action_2 = crm_element_value(set2, "action");
+    const char *action_1 = crm_element_value(set1, PCMK_XA_ACTION);
+    const char *action_2 = crm_element_value(set2, PCMK_XA_ACTION);
 
     uint32_t flags = pcmk__ar_none;
 
@@ -964,9 +964,9 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     if (rsc_set_first != NULL) {
         if (action_first != NULL) {
             /* Move PCMK_XA_FIRST_ACTION into converted PCMK_XE_RESOURCE_SET as
-             * "action"
+             * PCMK_XA_ACTION
              */
-            crm_xml_add(rsc_set_first, "action", action_first);
+            crm_xml_add(rsc_set_first, PCMK_XA_ACTION, action_first);
             xml_remove_prop(*expanded_xml, PCMK_XA_FIRST_ACTION);
         }
         any_sets = true;
@@ -985,9 +985,9 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     if (rsc_set_then != NULL) {
         if (action_then != NULL) {
             /* Move PCMK_XA_THEN_ACTION into converted PCMK_XE_RESOURCE_SET as
-             * "action"
+             * PCMK_XA_ACTION
              */
-            crm_xml_add(rsc_set_then, "action", action_then);
+            crm_xml_add(rsc_set_then, PCMK_XA_ACTION, action_then);
             xml_remove_prop(*expanded_xml, PCMK_XA_THEN_ACTION);
         }
         any_sets = true;
