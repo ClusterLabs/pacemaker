@@ -209,9 +209,6 @@ extern "C" {
  * Older constants that don't follow current naming
  */
 
-/*---- CIB specific tags/attrs */
-#  define XML_CIB_TAG_SECTION_ALL	"all"
-
 #  define XML_NODE_IS_REMOTE    	"remote_node"
 #  define XML_NODE_IS_FENCED		"node_fenced"
 #  define XML_NODE_IS_MAINTENANCE   "node_in_maintenance"
