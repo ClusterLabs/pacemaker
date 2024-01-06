@@ -87,6 +87,7 @@ extern "C" {
 #define PCMK_XE_RECIPIENT                   "recipient"
 #define PCMK_XE_RESOURCE_AGENT              "resource-agent"
 #define PCMK_XE_RESOURCE_REF                "resource_ref"
+#define PCMK_XE_RESOURCE_SET                "resource_set"
 #define PCMK_XE_RESOURCES                   "resources"
 #define PCMK_XE_ROLE                        "role"
 #define PCMK_XE_RULE                        "rule"
@@ -227,7 +228,7 @@ extern "C" {
 
 #  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
 
-#  define XML_CONS_TAG_RSC_SET		"resource_set"
+#  define XML_CONS_TAG_RSC_SET		PCMK_XE_RESOURCE_SET
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 

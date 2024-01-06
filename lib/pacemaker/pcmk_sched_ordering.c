@@ -952,7 +952,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     *expanded_xml = copy_xml(xml_obj);
 
     /* Convert template/tag reference in PCMK_XA_FIRST into constraint
-     * resource_set
+     * PCMK_XE_RESOURCE_SET
      */
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set_first, PCMK_XA_FIRST, true,
                           scheduler)) {
@@ -963,7 +963,9 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     if (rsc_set_first != NULL) {
         if (action_first != NULL) {
-            // Move PCMK_XA_FIRST_ACTION into converted resource_set as "action"
+            /* Move PCMK_XA_FIRST_ACTION into converted PCMK_XE_RESOURCE_SET as
+             * "action"
+             */
             crm_xml_add(rsc_set_first, "action", action_first);
             xml_remove_prop(*expanded_xml, PCMK_XA_FIRST_ACTION);
         }
@@ -971,7 +973,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     }
 
     /* Convert template/tag reference in PCMK_XA_THEN into constraint
-     * resource_set
+     * PCMK_XE_RESOURCE_SET
      */
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set_then, PCMK_XA_THEN, true,
                           scheduler)) {
@@ -982,7 +984,9 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     if (rsc_set_then != NULL) {
         if (action_then != NULL) {
-            // Move PCMK_XA_THEN_ACTION into converted resource_set as "action"
+            /* Move PCMK_XA_THEN_ACTION into converted PCMK_XE_RESOURCE_SET as
+             * "action"
+             */
             crm_xml_add(rsc_set_then, "action", action_then);
             xml_remove_prop(*expanded_xml, PCMK_XA_THEN_ACTION);
         }
@@ -1032,7 +1036,7 @@ pcmk__unpack_ordering(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     }
 
     // If the constraint has resource sets, unpack them
-    for (set = first_named_child(xml_obj, XML_CONS_TAG_RSC_SET);
+    for (set = first_named_child(xml_obj, PCMK_XE_RESOURCE_SET);
          set != NULL; set = crm_next_same_xml(set)) {
 
         set = expand_idref(set, scheduler->input);

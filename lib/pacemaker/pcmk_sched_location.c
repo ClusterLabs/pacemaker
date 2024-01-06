@@ -451,7 +451,9 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     *expanded_xml = copy_xml(xml_obj);
 
-    // Convert any template or tag reference into constraint resource_set
+    /* Convert any template or tag reference into constraint
+     * PCMK_XE_RESOURCE_SET
+     */
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set, PCMK_XA_RSC,
                           false, scheduler)) {
         free_xml(*expanded_xml);
@@ -461,8 +463,8 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     if (rsc_set != NULL) {
         if (state != NULL) {
-            /* Move PCMK_XA_RSC_ROLE into converted resource_set as PCMK_XA_ROLE
-             * attribute
+            /* Move PCMK_XA_RSC_ROLE into converted PCMK_XE_RESOURCE_SET as
+             * PCMK_XA_ROLE attribute
              */
             crm_xml_add(rsc_set, PCMK_XA_ROLE, state);
             xml_remove_prop(*expanded_xml, PCMK_XA_ROLE);
@@ -493,7 +495,7 @@ unpack_location_set(xmlNode *location, xmlNode *set,
 
     set_id = ID(set);
     if (set_id == NULL) {
-        pcmk__config_err("Ignoring " XML_CONS_TAG_RSC_SET " without "
+        pcmk__config_err("Ignoring " PCMK_XE_RESOURCE_SET " without "
                          PCMK_XA_ID " in constraint '%s'",
                          pcmk__s(ID(location), "(missing ID)"));
         return pcmk_rc_unpack_error;
@@ -537,7 +539,7 @@ pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         xml_obj = expanded_xml;
     }
 
-    for (set = first_named_child(xml_obj, XML_CONS_TAG_RSC_SET); set != NULL;
+    for (set = first_named_child(xml_obj, PCMK_XE_RESOURCE_SET); set != NULL;
          set = crm_next_same_xml(set)) {
 
         any_sets = true;

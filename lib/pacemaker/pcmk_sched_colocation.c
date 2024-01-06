@@ -470,7 +470,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
     } else {
         pcmk__warn_once(pcmk__wo_set_ordering,
                         "Support for 'ordering' other than 'group' in "
-                        XML_CONS_TAG_RSC_SET " (such as %s) is deprecated and "
+                        PCMK_XE_RESOURCE_SET " (such as %s) is deprecated and "
                         "will be removed in a future release", set_id);
     }
 
@@ -879,7 +879,9 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     *expanded_xml = copy_xml(xml_obj);
 
-    // Convert dependent's template/tag reference into constraint resource_set
+    /* Convert dependent's template/tag reference into constraint
+     * PCMK_XE_RESOURCE_SET
+     */
     if (!pcmk__tag_to_set(*expanded_xml, &dependent_set, PCMK_XA_RSC, true,
                           scheduler)) {
         free_xml(*expanded_xml);
@@ -889,14 +891,18 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     if (dependent_set != NULL) {
         if (dependent_role != NULL) {
-            // Move PCMK_XA_RSC_ROLE into converted resource_set as PCMK_XA_ROLE
+            /* Move PCMK_XA_RSC_ROLE into converted PCMK_XE_RESOURCE_SET as
+             * PCMK_XA_ROLE
+             */
             crm_xml_add(dependent_set, PCMK_XA_ROLE, dependent_role);
             xml_remove_prop(*expanded_xml, PCMK_XA_RSC_ROLE);
         }
         any_sets = true;
     }
 
-    // Convert primary's template/tag reference into constraint resource_set
+    /* Convert primary's template/tag reference into constraint
+     * PCMK_XE_RESOURCE_SET
+     */
     if (!pcmk__tag_to_set(*expanded_xml, &primary_set, PCMK_XA_WITH_RSC, true,
                           scheduler)) {
         free_xml(*expanded_xml);
@@ -906,7 +912,7 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     if (primary_set != NULL) {
         if (primary_role != NULL) {
-            /* Move PCMK_XA_WITH_RSC_ROLE into converted resource_set as
+            /* Move PCMK_XA_WITH_RSC_ROLE into converted PCMK_XE_RESOURCE_SET as
              * PCMK_XA_ROLE
              */
             crm_xml_add(primary_set, PCMK_XA_ROLE, primary_role);
@@ -967,7 +973,7 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     }
     influence_s = crm_element_value(xml_obj, PCMK_XA_INFLUENCE);
 
-    for (set = first_named_child(xml_obj, XML_CONS_TAG_RSC_SET); set != NULL;
+    for (set = first_named_child(xml_obj, PCMK_XE_RESOURCE_SET); set != NULL;
          set = crm_next_same_xml(set)) {
 
         set = expand_idref(set, scheduler->input);
@@ -979,7 +985,7 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         }
 
         if (pcmk__str_empty(ID(set))) {
-            pcmk__config_err("Ignoring " XML_CONS_TAG_RSC_SET
+            pcmk__config_err("Ignoring " PCMK_XE_RESOURCE_SET
                              " without " CRM_ATTR_ID);
             continue;
         }
