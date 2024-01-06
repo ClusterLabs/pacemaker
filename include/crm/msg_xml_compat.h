@@ -874,6 +874,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_ACL_TAG_USERv1 "acl_user"
 
+//! \deprecated Use \c PCMK_XE_ACL_GROUP instead
+#define XML_ACL_TAG_GROUP PCMK_XE_ACL_GROUP
+
 #ifdef __cplusplus
 }
 #endif
