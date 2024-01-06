@@ -110,7 +110,7 @@ handle_shutdown_request(pcmk__request_t *request)
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
                        "ack", NULL, CRM_EX_INDETERMINATE);
 
-    shutdown = create_xml_node(NULL, XML_CIB_ATTR_SHUTDOWN);
+    shutdown = create_xml_node(NULL, PCMK__XE_SHUTDOWN);
 
     if (allowed) {
         crm_notice("Shutting down in response to IPC request %s from %s",
