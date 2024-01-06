@@ -230,8 +230,6 @@ extern "C" {
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 
-#  define XML_TAG_TRANSIENT_NODEATTRS	"transient_attributes"
-
 #  define XML_ACL_TAG_USER		"acl_target"
 #  define XML_ACL_TAG_USERv1		"acl_user"
 #  define XML_ACL_TAG_GROUP		"acl_group"
