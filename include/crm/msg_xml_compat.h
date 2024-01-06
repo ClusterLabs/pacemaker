@@ -856,6 +856,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_RSC_LOCATION instead
 #define XML_CONS_TAG_RSC_LOCATION PCMK_XE_RSC_LOCATION
 
+//! \deprecated Use \c PCMK_XE_RSC_TICKET instead
+#define XML_CONS_TAG_RSC_TICKET PCMK_XE_RSC_TICKET
+
 #ifdef __cplusplus
 }
 #endif

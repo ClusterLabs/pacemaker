@@ -227,7 +227,6 @@ extern "C" {
 
 #  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
 
-#  define XML_CONS_TAG_RSC_TICKET	PCMK_XE_RSC_TICKET
 #  define XML_CONS_TAG_RSC_SET		"resource_set"
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
