@@ -589,7 +589,7 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
         // Result is PCMK__XE_NODE_STATE tag from PCMK_XE_STATUS section
 
         parsed_uuid = crm_element_value(result, PCMK_XA_UNAME);
-        if (pcmk__xe_attr_is_true(result, XML_NODE_IS_REMOTE)) {
+        if (pcmk__xe_attr_is_true(result, PCMK__XA_REMOTE_NODE)) {
             parsed_is_remote = TRUE;
         }
     }
@@ -625,7 +625,7 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
         "/" PCMK_XE_PRIMITIVE "/" PCMK_XE_META_ATTRIBUTES "/" PCMK_XE_NVPAIR \
         "[@name='" PCMK_META_REMOTE_NODE "'][translate(@value,'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']" \
     "|/" PCMK_XE_CIB "/" PCMK_XE_STATUS "/" PCMK__XE_NODE_STATE \
-        "[@" XML_NODE_IS_REMOTE "='true'][translate(@" PCMK_XA_ID ",'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']"
+        "[@" PCMK__XA_REMOTE_NODE "='true'][translate(@" PCMK_XA_ID ",'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']"
 
 int
 query_node_uuid(cib_t * the_cib, const char *uname, char **uuid, int *is_remote_node)
