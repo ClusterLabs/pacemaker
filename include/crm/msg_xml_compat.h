@@ -946,6 +946,9 @@ extern "C" {
 //! \deprecated Do not use
 #define F_CRM_DATA "crm_xml"
 
+//! \deprecated Do not use
+#define XML_DIFF_MARKER "__crm_diff_marker__"
+
 #ifdef __cplusplus
 }
 #endif
