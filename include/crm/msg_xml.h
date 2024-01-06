@@ -240,8 +240,6 @@ extern "C" {
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 
-#  define XML_TAG_FENCING_LEVEL         PCMK_XE_FENCING_LEVEL
-
 #  define XML_TAG_DIFF                  "diff"
 #  define XML_DIFF_VERSION              PCMK_XE_VERSION
 #  define XML_DIFF_VSOURCE              "source"
