@@ -218,8 +218,6 @@ extern "C" {
 
 #  define CIB_OPTIONS_FIRST "cib-bootstrap-options"
 
-#  define F_CRM_DATA			"crm_xml"
-
 /*---- Common tags/attrs */
 #  define XML_DIFF_MARKER		"__crm_diff_marker__"
 #  define XML_TAG_FAILED		"failed"

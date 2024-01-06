@@ -943,6 +943,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_POSITION instead
 #define XML_DIFF_POSITION PCMK_XE_POSITION
 
+//! \deprecated Do not use
+#define F_CRM_DATA "crm_xml"
+
 #ifdef __cplusplus
 }
 #endif
