@@ -2966,18 +2966,18 @@ unknown_on_node(pcmk_resource_t *rsc, const char *node_name)
 {
     bool result = false;
     xmlXPathObjectPtr search;
-    GString *xpath = g_string_sized_new(256);
+    char *xpath = NULL;
 
-    pcmk__g_strcat(xpath,
-                   XPATH_NODE_STATE "[@" PCMK_XA_UNAME "='", node_name, "']"
-                   SUB_XPATH_LRM_RESOURCE "[@" PCMK_XA_ID "='", rsc->id, "']"
-                   SUB_XPATH_LRM_RSC_OP
-                   "[@" PCMK__XA_RC_CODE "!='193']",
-                   NULL);
-    search = xpath_search(rsc->cluster->input, (const char *) xpath->str);
+    xpath = crm_strdup_printf(XPATH_NODE_STATE "[@" PCMK_XA_UNAME "='%s']"
+                              SUB_XPATH_LRM_RESOURCE "[@" PCMK_XA_ID "='%s']"
+                              SUB_XPATH_LRM_RSC_OP
+                              "[@" PCMK__XA_RC_CODE "!='%d']",
+                              node_name, rsc->id, PCMK_OCF_UNKNOWN);
+
+    search = xpath_search(rsc->cluster->input, xpath);
     result = (numXpathResults(search) == 0);
     freeXpathObject(search);
-    g_string_free(xpath, TRUE);
+    free(xpath);
     return result;
 }
 
