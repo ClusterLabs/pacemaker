@@ -245,7 +245,6 @@ extern "C" {
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 
-#  define XML_DIFF_LIST                 PCMK_XE_CHANGE_LIST
 #  define XML_DIFF_ATTR                 "change-attr"
 #  define XML_DIFF_RESULT               "change-result"
 #  define XML_DIFF_POSITION             "position"
