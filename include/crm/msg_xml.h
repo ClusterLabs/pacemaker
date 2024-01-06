@@ -67,6 +67,7 @@ extern "C" {
 #define PCMK_XE_CHANGE                      "change"
 #define PCMK_XE_CHANGE_ATTR                 "change-attr"
 #define PCMK_XE_CHANGE_LIST                 "change-list"
+#define PCMK_XE_CHANGE_RESULT               "change-result"
 #define PCMK_XE_CIB                         "cib"
 #define PCMK_XE_CLONE                       "clone"
 #define PCMK_XE_CLUSTER_PROPERTY_SET        "cluster_property_set"
@@ -246,7 +247,7 @@ extern "C" {
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 
-#  define XML_DIFF_RESULT               "change-result"
+#  define XML_DIFF_RESULT               PCMK_XE_CHANGE_RESULT
 #  define XML_DIFF_POSITION             "position"
 
 #  define ID(x) crm_element_value(x, PCMK_XA_ID)

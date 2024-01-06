@@ -431,7 +431,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
                 reason = reason->children;
 
             } else if(strcmp(op, "modify") == 0) {
-                reason = first_named_child(reason, XML_DIFF_RESULT);
+                reason = first_named_child(reason, PCMK_XE_CHANGE_RESULT);
                 if(reason) {
                     reason = reason->children;
                 }

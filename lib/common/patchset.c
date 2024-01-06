@@ -109,7 +109,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
     if (change) {
         xmlNode *result = NULL;
 
-        change = create_xml_node(change->parent, XML_DIFF_RESULT);
+        change = create_xml_node(change->parent, PCMK_XE_CHANGE_RESULT);
         result = create_xml_node(change, (const char *)xml->name);
 
         for (pIter = pcmk__xe_first_attr(xml); pIter != NULL;
@@ -967,10 +967,10 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
             free_xml(match);
 
         } else if (strcmp(op, "modify") == 0) {
-            xmlNode *attrs = NULL;
+            const xmlNode *child = first_named_child(change,
+                                                     PCMK_XE_CHANGE_RESULT);
+            const xmlNode *attrs = pcmk__xml_first_child(child);
 
-            attrs = pcmk__xml_first_child(first_named_child(change,
-                                                            XML_DIFF_RESULT));
             if (attrs == NULL) {
                 rc = ENOMSG;
                 continue;

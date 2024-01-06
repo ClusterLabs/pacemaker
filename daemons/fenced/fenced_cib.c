@@ -554,7 +554,8 @@ update_fencing_topology(const char *event, xmlNode * msg)
                     add_topology_level(change->children);
 
                 } else if(strcmp(op, "modify") == 0) {
-                    xmlNode *match = first_named_child(change, XML_DIFF_RESULT);
+                    xmlNode *match = first_named_child(change,
+                                                       PCMK_XE_CHANGE_RESULT);
 
                     if(match) {
                         remove_topology_level(match->children);

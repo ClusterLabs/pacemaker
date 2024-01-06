@@ -446,7 +446,7 @@ te_update_diff_v2(xmlNode *diff)
             match = change->children;
 
         } else if (strcmp(op, "modify") == 0) {
-            match = first_named_child(change, XML_DIFF_RESULT);
+            match = first_named_child(change, PCMK_XE_CHANGE_RESULT);
             if(match) {
                 match = match->children;
             }
