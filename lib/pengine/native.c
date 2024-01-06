@@ -1020,7 +1020,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
              "blocked", pcmk__flag_text(rsc->flags, pcmk_rsc_blocked),
              "maintenance", pcmk__flag_text(rsc->flags, pcmk_rsc_maintenance),
              "managed", pcmk__flag_text(rsc->flags, pcmk_rsc_managed),
-             "failed", pcmk__flag_text(rsc->flags, pcmk_rsc_failed),
+             PCMK_XA_FAILED, pcmk__flag_text(rsc->flags, pcmk_rsc_failed),
              "failure_ignored", pcmk__flag_text(rsc->flags,
                                                 pcmk_rsc_ignore_failure),
              "nodes_running_on", nodes_running_on,
