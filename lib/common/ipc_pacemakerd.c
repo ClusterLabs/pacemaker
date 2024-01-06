@@ -26,7 +26,7 @@ typedef struct pacemakerd_api_private_s {
 } pacemakerd_api_private_t;
 
 static const char *pacemakerd_state_str[] = {
-    XML_PING_ATTR_PACEMAKERDSTATE_INIT,
+    PCMK__VALUE_INIT,
     XML_PING_ATTR_PACEMAKERDSTATE_STARTINGDAEMONS,
     XML_PING_ATTR_PACEMAKERDSTATE_WAITPING,
     XML_PING_ATTR_PACEMAKERDSTATE_RUNNING,

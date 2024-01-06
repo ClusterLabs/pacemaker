@@ -110,7 +110,7 @@ unsigned int shutdown_complete_state_reported_to = 0;
 gboolean shutdown_complete_state_reported_client_closed = FALSE;
 
 /* state we report when asked via pacemakerd-api status-ping */
-const char *pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_INIT;
+const char *pacemakerd_state = PCMK__VALUE_INIT;
 gboolean running_with_sbd = FALSE; /* local copy */
 
 GMainLoop *mainloop = NULL;
