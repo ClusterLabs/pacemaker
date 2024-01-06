@@ -95,6 +95,7 @@ extern "C" {
 #define PCMK_XE_RSC_EXPRESSION              "rsc_expression"
 #define PCMK_XE_RSC_LOCATION                "rsc_location"
 #define PCMK_XE_RSC_ORDER                   "rsc_order"
+#define PCMK_XE_RSC_TICKET                  "rsc_ticket"
 #define PCMK_XE_SELECT                      "select"
 #define PCMK_XE_SELECT_ATTRIBUTES           "select_attributes"
 #define PCMK_XE_SELECT_FENCING              "select_fencing"
@@ -226,7 +227,7 @@ extern "C" {
 
 #  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
 
-#  define XML_CONS_TAG_RSC_TICKET	"rsc_ticket"
+#  define XML_CONS_TAG_RSC_TICKET	PCMK_XE_RSC_TICKET
 #  define XML_CONS_TAG_RSC_SET		"resource_set"
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"

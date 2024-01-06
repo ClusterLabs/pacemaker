@@ -171,7 +171,7 @@ static GOptionEntry query_entries[] = {
       NULL },
 
     { "constraints", 'c', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
-      "Display the rsc_ticket constraints that apply to ticket(s)",
+      "Display the " PCMK_XE_RSC_TICKET " constraints that apply to ticket(s)",
       NULL },
 
     { NULL }
@@ -403,7 +403,7 @@ find_ticket_constraints(cib_t * the_cib, gchar *ticket_id, xmlNode ** ticket_con
     }
 
     xpath = g_string_sized_new(1024);
-    pcmk__g_strcat(xpath, xpath_base, "/" XML_CONS_TAG_RSC_TICKET, NULL);
+    pcmk__g_strcat(xpath, xpath_base, "/" PCMK_XE_RSC_TICKET, NULL);
 
     if (ticket_id != NULL) {
         pcmk__g_strcat(xpath, "[@" PCMK_XA_TICKET "=\"", ticket_id, "\"]",
@@ -681,7 +681,7 @@ build_arg_context(pcmk__common_args_t *args) {
                               "\tcrm_ticket --details\n\n"
                               "Display the XML of 'ticketA':\n\n"
                               "\tcrm_ticket --ticket ticketA --query-xml\n\n"
-                              "Display the rsc_ticket constraints that apply to 'ticketA':\n\n"
+                              "Display the " PCMK_XE_RSC_TICKET " constraints that apply to 'ticketA':\n\n"
                               "\tcrm_ticket --ticket ticketA --constraints\n\n"
                               "Grant 'ticketA' to this cluster site:\n\n"
                               "\tcrm_ticket --ticket ticketA --grant\n\n"
@@ -810,8 +810,9 @@ main(int argc, char **argv)
 
     cluster_status(scheduler);
 
-    /* For recording the tickets that are referenced in rsc_ticket constraints
-     * but have never been granted yet. */
+    /* For recording the tickets that are referenced in PCMK_XE_RSC_TICKET
+     * constraints but have never been granted yet.
+     */
     pcmk__unpack_constraints(scheduler);
 
     if (options.ticket_cmd == 'l' || options.ticket_cmd == 'L' || options.ticket_cmd == 'w') {
