@@ -208,7 +208,7 @@ pcmk__ttoa(time_t epoch_time)
 static inline const char *
 pcmk__btoa(bool condition)
 {
-    return condition? PCMK_VALUE_TRUE : "false";
+    return condition? PCMK_VALUE_TRUE : PCMK_VALUE_FALSE;
 }
 
 #endif /* PCMK__STRINGS_INTERNAL__H */

@@ -22,7 +22,7 @@ set_attr(void **state)
     pcmk__xe_set_bool_attr(node, "b", false);
 
     assert_string_equal(crm_element_value(node, "a"), PCMK_VALUE_TRUE);
-    assert_string_equal(crm_element_value(node, "b"), XML_BOOLEAN_FALSE);
+    assert_string_equal(crm_element_value(node, "b"), PCMK_VALUE_FALSE);
 
     free_xml(node);
 }

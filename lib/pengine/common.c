@@ -46,7 +46,7 @@ static pcmk__cluster_option_t pe_opts[] = {
     },
     {
         PCMK_OPT_MAINTENANCE_MODE, NULL, "boolean", NULL,
-        "false", pcmk__valid_boolean,
+        PCMK_VALUE_FALSE, pcmk__valid_boolean,
         N_("Whether the cluster should refrain from monitoring, starting, "
             "and stopping resources"),
         NULL
@@ -68,7 +68,7 @@ static pcmk__cluster_option_t pe_opts[] = {
     },
     {
         PCMK_OPT_SHUTDOWN_LOCK, NULL, "boolean", NULL,
-        "false", pcmk__valid_boolean,
+        PCMK_VALUE_FALSE, pcmk__valid_boolean,
         N_("Whether to lock resources to a cleanly shut down node"),
         N_("When true, resources active on a node when it is cleanly shut down "
             "are kept \"locked\" to that node (not allowed to run elsewhere) "
@@ -117,7 +117,7 @@ static pcmk__cluster_option_t pe_opts[] = {
     },
     {
         PCMK_OPT_HAVE_WATCHDOG, NULL, "boolean", NULL,
-        "false", pcmk__valid_boolean,
+        PCMK_VALUE_FALSE, pcmk__valid_boolean,
         N_("Whether watchdog integration is enabled"),
         N_("This is set automatically by the cluster according to whether SBD "
             "is detected to be in use. User-configured values are ignored. "
@@ -197,7 +197,7 @@ static pcmk__cluster_option_t pe_opts[] = {
     /* Orphans and stopping */
     {
         PCMK_OPT_STOP_ALL_RESOURCES, NULL, "boolean", NULL,
-        "false", pcmk__valid_boolean,
+        PCMK_VALUE_FALSE, pcmk__valid_boolean,
         N_("Whether the cluster should stop all active resources"),
         NULL
     },
@@ -215,7 +215,7 @@ static pcmk__cluster_option_t pe_opts[] = {
     },
     {
         PCMK__OPT_REMOVE_AFTER_STOP, NULL, "boolean", NULL,
-        "false", pcmk__valid_boolean,
+        PCMK_VALUE_FALSE, pcmk__valid_boolean,
         N_("*** Deprecated *** Whether to remove stopped resources from "
             "the executor"),
         N_("Values other than default are poorly tested and potentially dangerous."

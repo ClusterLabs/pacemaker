@@ -378,7 +378,7 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
             crm_xml_add(rsc_ref, PCMK_XA_ID, obj_ref);
         }
 
-        /* Set sequential="false" for the resource_set */
+        /* Set sequential=PCMK_VALUE_FALSE for the resource_set */
         pcmk__xe_set_bool_attr(*rsc_set, "sequential", false);
 
     } else if ((rsc != NULL) && convert_rsc) {

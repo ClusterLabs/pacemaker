@@ -466,8 +466,8 @@ create_container_resource(pcmk_resource_t *parent,
 
     crm_create_nvpair_xml(xml_obj, NULL, "image", data->image);
     crm_create_nvpair_xml(xml_obj, NULL, "allow_pull", PCMK_VALUE_TRUE);
-    crm_create_nvpair_xml(xml_obj, NULL, "force_kill", XML_BOOLEAN_FALSE);
-    crm_create_nvpair_xml(xml_obj, NULL, "reuse", XML_BOOLEAN_FALSE);
+    crm_create_nvpair_xml(xml_obj, NULL, "force_kill", PCMK_VALUE_FALSE);
+    crm_create_nvpair_xml(xml_obj, NULL, "reuse", PCMK_VALUE_FALSE);
 
     if (data->agent_type == PE__CONTAINER_AGENT_DOCKER) {
         g_string_append(buffer, " --restart=no");

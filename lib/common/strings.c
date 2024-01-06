@@ -485,10 +485,8 @@ crm_str_to_boolean(const char *s, int *ret)
         return 1;
     }
 
-    if (strcasecmp(s, "false") == 0
-        || strcasecmp(s, "off") == 0
-        || strcasecmp(s, "no") == 0 || strcasecmp(s, "n") == 0 || strcasecmp(s, "0") == 0) {
-
+    if (pcmk__strcase_any_of(s, PCMK_VALUE_FALSE, "off", "no", "n", "0",
+                             NULL)) {
         if (ret != NULL) {
             *ret = FALSE;
         }

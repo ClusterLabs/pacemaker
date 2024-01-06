@@ -959,7 +959,7 @@ cluster_dc_xml(pcmk__output_t *out, va_list args) {
                                      NULL);
     } else {
         pcmk__output_create_xml_node(out, "current_dc",
-                                     "present", "false",
+                                     "present", PCMK_VALUE_FALSE,
                                      NULL);
     }
 
@@ -2761,7 +2761,7 @@ resource_history_xml(pcmk__output_t *out, va_list args) {
     } else if (all || failcount || last_failure > 0) {
         char *migration_s = pcmk__itoa(rsc->migration_threshold);
 
-        pcmk__xe_set_props(node, "orphan", "false",
+        pcmk__xe_set_props(node, "orphan", PCMK_VALUE_FALSE,
                            PCMK_META_MIGRATION_THRESHOLD, migration_s,
                            NULL);
         free(migration_s);
