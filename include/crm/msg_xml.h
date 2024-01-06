@@ -239,7 +239,6 @@ extern "C" {
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 
-#  define XML_TAG_FENCING_TOPOLOGY      PCMK_XE_FENCING_TOPOLOGY
 #  define XML_TAG_FENCING_LEVEL         "fencing-level"
 
 #  define XML_TAG_DIFF                  "diff"

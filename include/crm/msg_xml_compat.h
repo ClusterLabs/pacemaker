@@ -910,6 +910,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_OBJ_REF instead
 #define XML_CIB_TAG_OBJ_REF PCMK_XE_OBJ_REF
 
+//! \deprecated Use \c PCMK_XE_FENCING_TOPOLOGY instead
+#define XML_TAG_FENCING_TOPOLOGY PCMK_XE_FENCING_TOPOLOGY
+
 #ifdef __cplusplus
 }
 #endif
