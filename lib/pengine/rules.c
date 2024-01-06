@@ -940,13 +940,14 @@ accept_attr_expr(const char *l_val, const char *r_val, const char *type,
  * \internal
  * \brief Get correct value according to \c PCMK_XA_VALUE_SOURCE
  *
+ * \param[in] expr_id       Rule expression ID (for logging only)
  * \param[in] value         value given in rule expression
  * \param[in] value_source  \c PCMK_XA_VALUE_SOURCE given in rule expressions
  * \param[in] match_data    If not NULL, resource back-references and params
  */
 static const char *
-expand_value_source(const char *value, const char *value_source,
-                    const pe_match_data_t *match_data)
+expand_value_source(const char *expr_id, const char *value,
+                    const char *value_source, const pe_match_data_t *match_data)
 {
     GHashTable *table = NULL;
 
@@ -960,6 +961,12 @@ expand_value_source(const char *value, const char *value_source,
         table = match_data->meta;
 
     } else { // literal
+        if (!pcmk__str_eq(value_source, "literal",
+                          pcmk__str_null_matches|pcmk__str_casei)) {
+            pcmk__config_warn("Expression %s has invalid " PCMK_XA_VALUE_SOURCE
+                              " value '%s', using default ('literal')",
+                              pcmk__s(expr_id, "without ID"), value_source);
+        }
         return value;
     }
 
@@ -985,25 +992,20 @@ pe__eval_attr_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
     gboolean attr_allocated = FALSE;
     const char *h_val = NULL;
 
-    const char *op = NULL;
-    const char *type = NULL;
-    const char *attr = NULL;
-    const char *value = NULL;
-    const char *value_source = NULL;
-
-    attr = crm_element_value(expr, PCMK_XA_ATTRIBUTE);
-    op = crm_element_value(expr, PCMK_XA_OPERATION);
-    value = crm_element_value(expr, PCMK_XA_VALUE);
-    type = crm_element_value(expr, PCMK_XA_TYPE);
-    value_source = crm_element_value(expr, PCMK_XA_VALUE_SOURCE);
+    const char *id = ID(expr);
+    const char *attr = crm_element_value(expr, PCMK_XA_ATTRIBUTE);
+    const char *op = crm_element_value(expr, PCMK_XA_OPERATION);
+    const char *type = crm_element_value(expr, PCMK_XA_TYPE);
+    const char *value = crm_element_value(expr, PCMK_XA_VALUE);
+    const char *value_source = crm_element_value(expr, PCMK_XA_VALUE_SOURCE);
 
     if (attr == NULL) {
         pcmk__config_err("Expression %s invalid: " PCMK_XA_ATTRIBUTE
-                         " not specified", pcmk__s(ID(expr), "without ID"));
+                         " not specified", pcmk__s(id, "without ID"));
         return FALSE;
     } else if (op == NULL) {
         pcmk__config_err("Expression %s invalid: " PCMK_XA_OPERATION
-                         " not specified", pcmk__s(ID(expr), "without ID"));
+                         " not specified", pcmk__s(id, "without ID"));
         return FALSE;
     }
 
@@ -1019,7 +1021,8 @@ pe__eval_attr_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
         }
 
         // Get value appropriate to PCMK_XA_VALUE_SOURCE
-        value = expand_value_source(value, value_source, rule_data->match_data);
+        value = expand_value_source(id, value, value_source,
+                                    rule_data->match_data);
     }
 
     if (rule_data->node_hash != NULL) {
