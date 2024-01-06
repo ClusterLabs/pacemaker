@@ -400,6 +400,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_VALUE_TRUE instead
 #define XML_BOOLEAN_TRUE PCMK_VALUE_TRUE
 
+//! \deprecated Use \c PCMK_VALUE_FALSE instead
+#define XML_BOOLEAN_FALSE PCMK_VALUE_FALSE
+
 #ifdef __cplusplus
 }
 #endif
