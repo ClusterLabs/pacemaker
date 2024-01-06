@@ -316,7 +316,7 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
                         crm_debug("Unpacking ACLs for user '%s'", id);
                         docpriv->acls = parse_acl_entry(acls, child, docpriv->acls);
                     }
-                } else if (pcmk__xe_is(child, XML_ACL_TAG_GROUP)) {
+                } else if (pcmk__xe_is(child, PCMK_XE_ACL_GROUP)) {
                     const char *id = crm_element_value(child, PCMK_XA_NAME);
 
                     if (id == NULL) {
