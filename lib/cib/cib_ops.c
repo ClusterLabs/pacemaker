@@ -731,7 +731,7 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
                                   answer);
     }
 
-    failed = create_xml_node(NULL, XML_TAG_FAILED);
+    failed = create_xml_node(NULL, PCMK__XE_FAILED);
 
     update_section = pcmk_find_cib_element(*result_cib, section);
     if (pcmk__xe_is(input, section)) {
