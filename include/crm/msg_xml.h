@@ -234,7 +234,6 @@ extern "C" {
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 
-#  define XML_ACL_TAG_PERMISSION	PCMK_XE_ACL_PERMISSION
 #  define XML_ACL_TAG_ROLE_REFv1	"role_ref"
 #  define XML_ACL_TAG_READ		"read"
 #  define XML_ACL_TAG_WRITE		"write"
