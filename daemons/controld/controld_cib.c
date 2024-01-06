@@ -293,8 +293,8 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
                                 "[not(@" PCMK_OPT_SHUTDOWN_LOCK ") "        \
                                     "or " PCMK_OPT_SHUTDOWN_LOCK "<%lld]"
 
-// Node's transient_attributes section (name 1x)
-#define XPATH_NODE_ATTRS        XPATH_NODE_STATE "/" XML_TAG_TRANSIENT_NODEATTRS
+// Node's PCMK__XE_TRANSIENT_ATTRIBUTES section (name 1x)
+#define XPATH_NODE_ATTRS XPATH_NODE_STATE "/" PCMK__XE_TRANSIENT_ATTRIBUTES
 
 // Everything under PCMK__XE_NODE_STATE (name 1x)
 #define XPATH_NODE_ALL          XPATH_NODE_STATE "/*"

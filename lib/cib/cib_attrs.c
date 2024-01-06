@@ -105,7 +105,7 @@ find_attr(cib_t *cib, const char *section, const char *node_uuid,
 
         if (pcmk__str_eq(section, PCMK_XE_STATUS, pcmk__str_casei)) {
             node_type = PCMK__XE_NODE_STATE;
-            set_type = XML_TAG_TRANSIENT_NODEATTRS;
+            set_type = PCMK__XE_TRANSIENT_ATTRIBUTES;
         }
         pcmk__g_strcat(xpath,
                        "//", node_type, "[@" PCMK_XA_ID "='", node_uuid, "']",
@@ -238,7 +238,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
             }
 
         } else if (pcmk__str_eq(section, PCMK_XE_STATUS, pcmk__str_casei)) {
-            tag = XML_TAG_TRANSIENT_NODEATTRS;
+            tag = PCMK__XE_TRANSIENT_ATTRIBUTES;
             if (node_uuid == NULL) {
                 return EINVAL;
             }

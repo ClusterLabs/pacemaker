@@ -167,7 +167,7 @@ attrd_erase_cb(xmlNode *msg, int call_id, int rc, xmlNode *output,
 
 #define XPATH_TRANSIENT "//" PCMK__XE_NODE_STATE    \
                         "[@" PCMK_XA_UNAME "='%s']" \
-                        "/" XML_TAG_TRANSIENT_NODEATTRS
+                        "/" PCMK__XE_TRANSIENT_ATTRIBUTES
 
 /*!
  * \internal
@@ -346,7 +346,7 @@ add_set_attr_update(const attribute_t *attr, const char *attr_id,
     }
     crm_xml_add(child, PCMK_XA_ID, node_id);
 
-    child = create_xml_node(child, XML_TAG_TRANSIENT_NODEATTRS);
+    child = create_xml_node(child, PCMK__XE_TRANSIENT_ATTRIBUTES);
     if (child == NULL) {
         goto done;
     }
@@ -394,7 +394,7 @@ add_unset_attr_update(const attribute_t *attr, const char *attr_id,
                                     "/" PCMK_XE_STATUS
                                     "/" PCMK__XE_NODE_STATE
                                         "[@" PCMK_XA_ID "='%s']"
-                                    "/" XML_TAG_TRANSIENT_NODEATTRS
+                                    "/" PCMK__XE_TRANSIENT_ATTRIBUTES
                                         "[@" PCMK_XA_ID "='%s']"
                                     "/%s[@" PCMK_XA_ID "='%s']"
                                     "/" PCMK_XE_NVPAIR

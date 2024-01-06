@@ -1075,7 +1075,7 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
         this_node->details->unclean = FALSE;
         this_node->details->unseen = FALSE;
     }
-    attrs = find_xml_node(state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
+    attrs = find_xml_node(state, PCMK__XE_TRANSIENT_ATTRIBUTES, FALSE);
     add_node_attrs(attrs, this_node, TRUE, scheduler);
 
     if (pe__shutdown_requested(this_node)) {
@@ -1128,7 +1128,7 @@ unpack_transient_attributes(const xmlNode *state, pcmk_node_t *node,
                             pcmk_scheduler_t *scheduler)
 {
     const char *discovery = NULL;
-    const xmlNode *attrs = find_xml_node(state, XML_TAG_TRANSIENT_NODEATTRS,
+    const xmlNode *attrs = find_xml_node(state, PCMK__XE_TRANSIENT_ATTRIBUTES,
                                          FALSE);
 
     add_node_attrs(attrs, node, TRUE, scheduler);

@@ -714,7 +714,7 @@ simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         pcmk__g_strcat(xpath,
                        "//" PCMK__XE_NODE_STATE
                        "[@" PCMK_XA_UNAME "='", target, "']"
-                       "/" XML_TAG_TRANSIENT_NODEATTRS, NULL);
+                       "/" PCMK__XE_TRANSIENT_ATTRIBUTES, NULL);
         fake_cib->cmds->remove(fake_cib, (const char *) xpath->str, NULL,
                                cib_xpath|cib_sync_call|cib_scope_local);
 

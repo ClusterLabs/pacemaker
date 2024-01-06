@@ -59,9 +59,9 @@ inject_transient_attr(pcmk__output_t *out, xmlNode *cib_node,
 
     out->message(out, "inject-attr", name, value, cib_node);
 
-    attrs = first_named_child(cib_node, XML_TAG_TRANSIENT_NODEATTRS);
+    attrs = first_named_child(cib_node, PCMK__XE_TRANSIENT_ATTRIBUTES);
     if (attrs == NULL) {
-        attrs = create_xml_node(cib_node, XML_TAG_TRANSIENT_NODEATTRS);
+        attrs = create_xml_node(cib_node, PCMK__XE_TRANSIENT_ATTRIBUTES);
         crm_xml_add(attrs, PCMK_XA_ID, node_uuid);
     }
 
@@ -705,7 +705,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
 
         xpath = crm_strdup_printf("//" PCMK__XE_NODE_STATE
                                   "[@" PCMK_XA_UNAME "='%s']"
-                                  "/" XML_TAG_TRANSIENT_NODEATTRS,
+                                  "/" PCMK__XE_TRANSIENT_ATTRIBUTES,
                                   node);
         cib->cmds->remove(cib, xpath, NULL,
                           cib_xpath|cib_sync_call|cib_scope_local);

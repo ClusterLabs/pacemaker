@@ -72,6 +72,7 @@
 #define PCMK__XE_PING_RESPONSE          "ping_response"
 #define PCMK__XE_PSEUDO_EVENT           "pseudo_event"
 #define PCMK__XE_RSC_OP                 "rsc_op"
+#define PCMK__XE_TRANSIENT_ATTRIBUTES   "transient_attributes"
 #define PCMK__XE_TRANSITION_GRAPH       "transition_graph"
 
 // @COMPAT Deprecated since 2.1.7
