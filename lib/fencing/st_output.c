@@ -132,7 +132,8 @@ stonith__history_description(const stonith_history_t *history,
         if (((history->state == st_failed) || (history->state == st_done))
             && (history->delegate != NULL)) {
 
-            pcmk__g_strcat(str, "delegate=", history->delegate, ", ", NULL);
+            pcmk__g_strcat(str, PCMK_XA_DELEGATE "=", history->delegate, ", ",
+                           NULL);
         }
 
         // Add information about originator
@@ -489,7 +490,7 @@ stonith_event_xml(pcmk__output_t *out, va_list args)
     }
 
     if (event->delegate != NULL) {
-        crm_xml_add(node, "delegate", event->delegate);
+        crm_xml_add(node, PCMK_XA_DELEGATE, event->delegate);
     }
 
     if ((event->state == st_failed) || (event->state == st_done)) {
