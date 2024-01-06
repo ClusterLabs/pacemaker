@@ -320,7 +320,7 @@ pcmk__inject_node_state_change(cib_t *cib_conn, const char *node, bool up)
 
     if (up) {
         pcmk__xe_set_props(cib_node,
-                           PCMK__XA_IN_CCM, XML_BOOLEAN_TRUE,
+                           PCMK__XA_IN_CCM, PCMK_VALUE_TRUE,
                            PCMK__XA_CRMD, ONLINESTATUS,
                            PCMK__XA_JOIN, CRMD_JOINSTATE_MEMBER,
                            PCMK__XA_EXPECTED, CRMD_JOINSTATE_MEMBER,

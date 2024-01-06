@@ -871,7 +871,7 @@ xml2list(const xmlNode *parent)
 void
 pcmk__xe_set_bool_attr(xmlNodePtr node, const char *name, bool value)
 {
-    crm_xml_add(node, name, value ? XML_BOOLEAN_TRUE : XML_BOOLEAN_FALSE);
+    crm_xml_add(node, name, value ? PCMK_VALUE_TRUE : XML_BOOLEAN_FALSE);
 }
 
 int

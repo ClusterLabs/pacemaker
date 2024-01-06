@@ -4955,7 +4955,7 @@ add_node_attrs(const xmlNode *xml_obj, pcmk_node_t *node, bool overwrite,
         scheduler->dc_node = node;
         node->details->is_dc = TRUE;
         g_hash_table_insert(node->details->attrs,
-                            strdup(CRM_ATTR_IS_DC), strdup(XML_BOOLEAN_TRUE));
+                            strdup(CRM_ATTR_IS_DC), strdup(PCMK_VALUE_TRUE));
     } else {
         g_hash_table_insert(node->details->attrs,
                             strdup(CRM_ATTR_IS_DC), strdup(XML_BOOLEAN_FALSE));

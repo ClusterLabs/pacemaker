@@ -301,7 +301,7 @@ quorum_xml(pcmk__output_t *out, va_list args) {
     bool have_quorum = va_arg(args, int);
 
     pcmk__output_create_xml_node(out, "cluster-info",
-                                 "quorum", have_quorum ? "true" : "false",
+                                 "quorum", pcmk__btoa(have_quorum),
                                  NULL);
     return pcmk_rc_ok;
 }

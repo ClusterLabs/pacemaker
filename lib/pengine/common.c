@@ -40,7 +40,7 @@ static pcmk__cluster_option_t pe_opts[] = {
     },
     {
         PCMK_OPT_SYMMETRIC_CLUSTER, NULL, "boolean", NULL,
-        "true", pcmk__valid_boolean,
+        PCMK_VALUE_TRUE, pcmk__valid_boolean,
         N_("Whether resources can run on any node by default"),
         NULL
     },
@@ -53,7 +53,7 @@ static pcmk__cluster_option_t pe_opts[] = {
     },
     {
         PCMK_OPT_START_FAILURE_IS_FATAL, NULL, "boolean", NULL,
-        "true", pcmk__valid_boolean,
+        PCMK_VALUE_TRUE, pcmk__valid_boolean,
         N_("Whether a start failure should prevent a resource from being "
             "recovered on the same node"),
         N_("When true, the cluster will immediately ban a resource from a node "
@@ -62,7 +62,7 @@ static pcmk__cluster_option_t pe_opts[] = {
     },
     {
         PCMK_OPT_ENABLE_STARTUP_PROBES, NULL, "boolean", NULL,
-        "true", pcmk__valid_boolean,
+        PCMK_VALUE_TRUE, pcmk__valid_boolean,
         N_("Whether the cluster should check for active resources during start-up"),
         NULL
     },
@@ -93,7 +93,7 @@ static pcmk__cluster_option_t pe_opts[] = {
     // Fencing-related options
     {
         PCMK_OPT_STONITH_ENABLED, NULL, "boolean", NULL,
-        "true", pcmk__valid_boolean,
+        PCMK_VALUE_TRUE, pcmk__valid_boolean,
         N_("*** Advanced Use Only *** "
             "Whether nodes may be fenced as part of recovery"),
         N_("If false, unresponsive nodes are immediately assumed to be harmless, "
@@ -134,7 +134,7 @@ static pcmk__cluster_option_t pe_opts[] = {
     },
     {
         PCMK_OPT_STARTUP_FENCING, NULL, "boolean", NULL,
-        "true", pcmk__valid_boolean,
+        PCMK_VALUE_TRUE, pcmk__valid_boolean,
         N_("*** Advanced Use Only *** Whether to fence unseen nodes at start-up"),
         N_("Setting this to false may lead to a \"split-brain\" situation, "
             "potentially leading to data loss and/or service unavailability.")
@@ -203,13 +203,13 @@ static pcmk__cluster_option_t pe_opts[] = {
     },
     {
         PCMK_OPT_STOP_ORPHAN_RESOURCES, NULL, "boolean", NULL,
-        "true", pcmk__valid_boolean,
+        PCMK_VALUE_TRUE, pcmk__valid_boolean,
         N_("Whether to stop resources that were removed from the configuration"),
         NULL
     },
     {
         PCMK_OPT_STOP_ORPHAN_ACTIONS, NULL, "boolean", NULL,
-        "true", pcmk__valid_boolean,
+        PCMK_VALUE_TRUE, pcmk__valid_boolean,
         N_("Whether to cancel recurring actions removed from the configuration"),
         NULL
     },

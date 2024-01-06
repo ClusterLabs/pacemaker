@@ -894,7 +894,7 @@ pcmk__schedule_probes(pcmk_scheduler_t *scheduler)
                                                        node->details->uname),
                                      CRM_OP_REPROBE, node, FALSE, scheduler);
             add_hash_param(probe_op->meta, XML_ATTR_TE_NOWAIT,
-                           XML_BOOLEAN_TRUE);
+                           PCMK_VALUE_TRUE);
             continue;
         }
 

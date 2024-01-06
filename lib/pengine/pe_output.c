@@ -950,7 +950,7 @@ cluster_dc_xml(pcmk__output_t *out, va_list args) {
 
     if (dc) {
         pcmk__output_create_xml_node(out, "current_dc",
-                                     "present", "true",
+                                     "present", PCMK_VALUE_TRUE,
                                      PCMK_XA_VERSION, pcmk__s(dc_version_s, ""),
                                      PCMK_XA_NAME, dc->details->uname,
                                      PCMK_XA_ID, dc->details->id,

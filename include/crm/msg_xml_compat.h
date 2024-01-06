@@ -253,8 +253,8 @@ extern "C" {
 //! \deprecated Use \c PCMK_META_ALLOW_MIGRATE instead
 #define XML_OP_ATTR_ALLOW_MIGRATE "allow-migrate"
 
-//! \deprecated Use \c XML_BOOLEAN_TRUE instead
-#define XML_BOOLEAN_YES XML_BOOLEAN_TRUE
+//! \deprecated Use \c PCMK_VALUE_TRUE instead
+#define XML_BOOLEAN_YES PCMK_VALUE_TRUE
 
 //! \deprecated Use \c XML_BOOLEAN_FALSE instead
 #define XML_BOOLEAN_NO XML_BOOLEAN_FALSE

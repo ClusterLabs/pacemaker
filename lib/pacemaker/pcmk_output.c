@@ -349,7 +349,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
         && !pcmk_is_set(action->flags, pcmk_action_runnable)) {
         pcmk__xe_set_props(xml,
                            "reason", source->reason,
-                           "blocked", "true",
+                           "blocked", PCMK_VALUE_TRUE,
                            NULL);
 
     } else if (source->reason != NULL) {

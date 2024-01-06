@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2023 the Pacemaker project contributors
+ * Copyright 2015-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -98,7 +98,7 @@ pcmk__xe_set_bool_attr(xmlNodePtr node, const char *name, bool value);
  * \param[in] name XML attribute to get
  *
  * \return True if the given \p name is an attribute on \p node and has
- *         the value "true", False in all other cases
+ *         the value \c PCMK_VALUE_TRUE, False in all other cases
  */
 bool
 pcmk__xe_attr_is_true(const xmlNode *node, const char *name);

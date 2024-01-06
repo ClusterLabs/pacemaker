@@ -317,7 +317,7 @@ main(int argc, char **argv)
     }
 
     // @COMPAT Drop at 3.0.0; likely last used in 1.1.24
-    pcmk__set_env_option(PCMK__ENV_MCP, "true", true);
+    pcmk__set_env_option(PCMK__ENV_MCP, PCMK_VALUE_TRUE, true);
 
     if (options.shutdown) {
         pcmk__cli_init_logging("pacemakerd", args->verbosity);

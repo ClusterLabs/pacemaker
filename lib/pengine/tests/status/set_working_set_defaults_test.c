@@ -28,7 +28,7 @@ check_defaults(void **state) {
             |pcmk_sched_stop_removed_resources
             |pcmk_sched_cancel_removed_actions;
 
-    if (!strcmp(PCMK__CONCURRENT_FENCING_DEFAULT, "true")) {
+    if (!strcmp(PCMK__CONCURRENT_FENCING_DEFAULT, PCMK_VALUE_TRUE)) {
         flags |= pcmk_sched_concurrent_fencing;
     }
 

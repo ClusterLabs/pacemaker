@@ -465,7 +465,7 @@ create_container_resource(pcmk_resource_t *parent,
     crm_xml_set_id(xml_obj, "%s-attributes-%d", data->prefix, replica->offset);
 
     crm_create_nvpair_xml(xml_obj, NULL, "image", data->image);
-    crm_create_nvpair_xml(xml_obj, NULL, "allow_pull", XML_BOOLEAN_TRUE);
+    crm_create_nvpair_xml(xml_obj, NULL, "allow_pull", PCMK_VALUE_TRUE);
     crm_create_nvpair_xml(xml_obj, NULL, "force_kill", XML_BOOLEAN_FALSE);
     crm_create_nvpair_xml(xml_obj, NULL, "reuse", XML_BOOLEAN_FALSE);
 
@@ -1129,7 +1129,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         crm_xml_set_id(xml_set, "%s-%s-meta", bundle_data->prefix, xml_resource->name);
 
         crm_create_nvpair_xml(xml_set, NULL,
-                              PCMK_META_ORDERED, XML_BOOLEAN_TRUE);
+                              PCMK_META_ORDERED, PCMK_VALUE_TRUE);
 
         value = pcmk__itoa(bundle_data->nreplicas);
         crm_create_nvpair_xml(xml_set, NULL, PCMK_META_CLONE_MAX, value);
@@ -1144,7 +1144,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
         if (bundle_data->promoted_max) {
             crm_create_nvpair_xml(xml_set, NULL,
-                                  PCMK_META_PROMOTABLE, XML_BOOLEAN_TRUE);
+                                  PCMK_META_PROMOTABLE, PCMK_VALUE_TRUE);
 
             value = pcmk__itoa(bundle_data->promoted_max);
             crm_create_nvpair_xml(xml_set, NULL, PCMK_META_PROMOTED_MAX, value);

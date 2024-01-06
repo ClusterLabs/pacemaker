@@ -417,7 +417,7 @@ detect_promotable(pcmk_resource_t *rsc)
          *       then drop support in even later version
          */
         g_hash_table_insert(rsc->meta, strdup(PCMK_META_PROMOTABLE),
-                            strdup(XML_BOOLEAN_TRUE));
+                            strdup(PCMK_VALUE_TRUE));
         return TRUE;
     }
     return FALSE;

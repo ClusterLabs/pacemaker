@@ -1475,7 +1475,7 @@ do_lrm_invoke(long long action,
 
     // @COMPAT DCs <1.1.14 in a rolling upgrade might schedule this op
     } else if (pcmk__str_eq(operation, CRM_OP_PROBED, pcmk__str_none)) {
-        update_attrd(lrm_state->node_name, CRM_OP_PROBED, XML_BOOLEAN_TRUE,
+        update_attrd(lrm_state->node_name, CRM_OP_PROBED, PCMK_VALUE_TRUE,
                      user_name, is_remote_node);
 
     } else if (pcmk__str_eq(crm_op, CRM_OP_REPROBE, pcmk__str_none)
