@@ -80,6 +80,7 @@ extern "C" {
 #define PCMK_XE_NODE                        "node"
 #define PCMK_XE_NODES                       "nodes"
 #define PCMK_XE_NVPAIR                      "nvpair"
+#define PCMK_XE_OBJ_REF                     "obj_ref"
 #define PCMK_XE_OP                          "op"
 #define PCMK_XE_OP_DEFAULTS                 "op_defaults"
 #define PCMK_XE_OPERATION                   "operation"
@@ -237,7 +238,7 @@ extern "C" {
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 
-#  define XML_CIB_TAG_OBJ_REF 		"obj_ref"
+#  define XML_CIB_TAG_OBJ_REF 		PCMK_XE_OBJ_REF
 
 #  define XML_TAG_FENCING_TOPOLOGY      "fencing-topology"
 #  define XML_TAG_FENCING_LEVEL         "fencing-level"

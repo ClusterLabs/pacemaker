@@ -2092,7 +2092,7 @@ can_prune_leaf(xmlNode * xml_node)
      * rolling upgrades)
      */
     if (pcmk__strcase_any_of((const char *) xml_node->name,
-                             PCMK_XE_RESOURCE_REF, XML_CIB_TAG_OBJ_REF,
+                             PCMK_XE_RESOURCE_REF, PCMK_XE_OBJ_REF,
                              PCMK_XE_ROLE, PCMK__XE_ROLE_REF,
                              NULL)) {
         return FALSE;
