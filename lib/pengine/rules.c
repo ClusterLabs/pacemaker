@@ -961,10 +961,12 @@ expand_value_source(const char *expr_id, const char *value,
         table = match_data->meta;
 
     } else { // literal
-        if (!pcmk__str_eq(value_source, "literal",
+        if (!pcmk__str_eq(value_source, PCMK_VALUE_LITERAL,
                           pcmk__str_null_matches|pcmk__str_casei)) {
+
             pcmk__config_warn("Expression %s has invalid " PCMK_XA_VALUE_SOURCE
-                              " value '%s', using default ('literal')",
+                              " value '%s', using default "
+                              "('" PCMK_VALUE_LITERAL "')",
                               pcmk__s(expr_id, "without ID"), value_source);
         }
         return value;
