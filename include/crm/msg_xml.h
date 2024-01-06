@@ -172,6 +172,7 @@ extern "C" {
 #define PCMK_XA_OPERATION                   "operation"
 #define PCMK_XA_ORIGIN                      "origin"
 #define PCMK_XA_PATH                        "path"
+#define PCMK_XA_PRESENT                     "present"
 #define PCMK_XA_PROVIDER                    "provider"
 #define PCMK_XA_QUEUE_TIME                  "queue-time"
 #define PCMK_XA_REASON                      "reason"
