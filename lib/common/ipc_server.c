@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -911,7 +911,7 @@ void
 pcmk__serve_attrd_ipc(qb_ipcs_service_t **ipcs,
                       struct qb_ipcs_service_handlers *cb)
 {
-    *ipcs = mainloop_add_ipc_server(T_ATTRD, QB_IPC_NATIVE, cb);
+    *ipcs = mainloop_add_ipc_server(PCMK__VALUE_ATTRD, QB_IPC_NATIVE, cb);
 
     if (*ipcs == NULL) {
         crm_err("Failed to create pacemaker-attrd server: exiting and inhibiting respawn");

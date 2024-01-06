@@ -71,7 +71,7 @@ static pcmk_child_t pcmk_children[] = {
     },
     {
         0, 0, "pacemaker-attrd", CRM_DAEMON_USER,
-        CRM_DAEMON_DIR "/pacemaker-attrd", T_ATTRD,
+        CRM_DAEMON_DIR "/pacemaker-attrd", PCMK__VALUE_ATTRD,
         0, child_respawn | child_needs_cluster
     },
     {

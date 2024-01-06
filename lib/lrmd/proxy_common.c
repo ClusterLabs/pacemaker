@@ -256,7 +256,7 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
             const char *type = crm_element_value(request, PCMK__XA_T);
             int rc = 0;
 
-            if (pcmk__str_eq(type, T_ATTRD, pcmk__str_casei)
+            if (pcmk__str_eq(type, PCMK__VALUE_ATTRD, pcmk__str_none)
                 && crm_element_value(request,
                                      PCMK__XA_ATTR_NODE_NAME) == NULL
                 && pcmk__str_any_of(crm_element_value(request, PCMK__XA_TASK),

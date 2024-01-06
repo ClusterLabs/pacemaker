@@ -48,7 +48,7 @@ attrd_lrmd_connect(void)
         int ret = -ENOTCONN;
 
         for (int fails = 0; fails < max_attempts; ++fails) {
-            ret = the_lrmd->cmds->connect(the_lrmd, T_ATTRD, NULL);
+            ret = the_lrmd->cmds->connect(the_lrmd, PCMK__VALUE_ATTRD, NULL);
             if (ret == pcmk_ok) {
                 break;
             }
