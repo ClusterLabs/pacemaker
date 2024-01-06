@@ -25,10 +25,10 @@
 
 // @TODO Use XML string constants and maybe a real XML object
 #define lsb_metadata_template  \
-    "<?xml version='1.0'?>\n"                                           \
-    "<resource-agent " PCMK_XA_NAME "='%s' "                            \
-                       PCMK_XA_VERSION                                  \
-                           "='" PCMK_DEFAULT_AGENT_VERSION "'>\n"       \
+    "<?xml " PCMK_XA_VERSION "='1.0'?>\n"                               \
+    "<" PCMK_XE_RESOURCE_AGENT " "                                      \
+        PCMK_XA_NAME "='%s' "                                           \
+        PCMK_XA_VERSION "='" PCMK_DEFAULT_AGENT_VERSION "'>\n"          \
     "  <" PCMK_XE_VERSION ">1.0</" PCMK_XE_VERSION ">\n"                \
     "  <longdesc lang='en'>\n"                                          \
     "%s"                                                                \
@@ -53,7 +53,7 @@
     "    <Default-Start>%s</Default-Start>\n"                           \
     "    <Default-Stop>%s</Default-Stop>\n"                             \
     "  </special>\n"                                                    \
-    "</resource-agent>\n"
+    "</" PCMK_XE_RESOURCE_AGENT ">\n"
 
 /* See "Comment Conventions for Init Scripts" in the LSB core specification at:
  * http://refspecs.linuxfoundation.org/lsb.shtml

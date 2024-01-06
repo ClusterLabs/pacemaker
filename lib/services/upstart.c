@@ -373,10 +373,10 @@ parse_status_result(const char *name, const char *state, void *userdata)
 
 // @TODO Use XML string constants and maybe a real XML object
 #define METADATA_FORMAT                                                     \
-    "<?xml version=\"1.0\"?>\n"                                             \
-    "<resource-agent " PCMK_XA_NAME "=\"%s\" "                              \
-                       PCMK_XA_VERSION                                      \
-                           "=\"" PCMK_DEFAULT_AGENT_VERSION "\">\n"         \
+    "<?xml " PCMK_XA_VERSION "=\"1.0\"?>\n"                                 \
+    "<" PCMK_XE_RESOURCE_AGENT " "                                          \
+        PCMK_XA_NAME "='%s' "                                               \
+        PCMK_XA_VERSION "='" PCMK_DEFAULT_AGENT_VERSION "'>\n"              \
     "  <" PCMK_XE_VERSION ">1.1</" PCMK_XE_VERSION ">\n"                    \
     "  <longdesc lang=\"en\">\n"                                            \
     "    Upstart agent for controlling the system %s service\n"             \
@@ -392,7 +392,7 @@ parse_status_result(const char *name, const char *state, void *userdata)
     "    <action name=\"meta-data\" timeout=\"5\" />\n"                     \
     "  </actions>\n"                                                        \
     "  <special tag=\"upstart\"/>\n"                                        \
-    "</resource-agent>\n"
+    "</" PCMK_XE_RESOURCE_AGENT ">\n"
 
 static char *
 upstart_job_metadata(const char *name)

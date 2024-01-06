@@ -32,8 +32,8 @@ static void *lha_agents_lib = NULL;
 
 // @TODO Use XML string constants and maybe a real XML object
 static const char META_TEMPLATE[] =
-    "<?xml version=\"1.0\"?>\n"
-    "<resource-agent " PCMK_XA_NAME "=\"%s\">\n"
+    "<?xml " PCMK_XA_VERSION "=\"1.0\"?>\n"
+    "<" PCMK_XE_RESOURCE_AGENT " " PCMK_XA_NAME "=\"%s\">\n"
     "  <" PCMK_XE_VERSION ">1.0</" PCMK_XE_VERSION ">\n"
     "  <longdesc lang=\"en\">\n"
     "%s\n"
@@ -50,7 +50,7 @@ static const char META_TEMPLATE[] =
     "  <special tag=\"heartbeat\">\n"
     "    <" PCMK_XE_VERSION ">2.0</" PCMK_XE_VERSION ">\n"
     "  </special>\n"
-    "</resource-agent>\n";
+    "</" PCMK_XE_RESOURCE_AGENT ">\n";
 
 static void *
 find_library_function(void **handle, const char *lib, const char *fn)

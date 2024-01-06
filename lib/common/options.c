@@ -502,10 +502,10 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
     GString *s = g_string_sized_new(13000);
 
     pcmk__g_strcat(s,
-                   "<?xml version=\"1.0\"?>\n"
-                   "<resource-agent " PCMK_XA_NAME "=\"", name, "\" "
-                                      PCMK_XA_VERSION
-                                          "=\"" PACEMAKER_VERSION "\">\n"
+                   "<?xml " PCMK_XA_VERSION "=\"1.0\"?>\n"
+                   "<" PCMK_XE_RESOURCE_AGENT " "
+                       PCMK_XA_NAME "=\"", name, "\" "
+                       PCMK_XA_VERSION "=\"" PACEMAKER_VERSION "\">\n"
 
                    "  <" PCMK_XE_VERSION ">" PCMK_OCF_VERSION
                      "</" PCMK_XE_VERSION ">\n", NULL);
@@ -568,7 +568,9 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
 
         g_string_append(s, "    </" PCMK_XE_PARAMETER ">\n");
     }
-    g_string_append(s, "  </" PCMK_XE_PARAMETERS ">\n</resource-agent>\n");
+    g_string_append(s,
+                    "  </" PCMK_XE_PARAMETERS ">\n"
+                    "</" PCMK_XE_RESOURCE_AGENT ">\n");
 
     return g_string_free(s, FALSE);
 }

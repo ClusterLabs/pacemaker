@@ -666,10 +666,10 @@ systemd_unit_exists(const char *name)
 
 // @TODO Use XML string constants and maybe a real XML object
 #define METADATA_FORMAT                                                     \
-    "<?xml version=\"1.0\"?>\n"                                             \
-    "<resource-agent " PCMK_XA_NAME "=\"%s\" "                              \
-                       PCMK_XA_VERSION                                      \
-                           "=\"" PCMK_DEFAULT_AGENT_VERSION "\">\n"         \
+    "<?xml " PCMK_XA_VERSION "=\"1.0\"?>\n"                                 \
+    "<" PCMK_XE_RESOURCE_AGENT " "                                          \
+        PCMK_XA_NAME "='%s' "                                               \
+        PCMK_XA_VERSION "='" PCMK_DEFAULT_AGENT_VERSION "'>\n"              \
     "  <" PCMK_XE_VERSION ">1.1</" PCMK_XE_VERSION ">\n"                    \
     "  <longdesc lang=\"en\">\n"                                            \
     "    %s\n"                                                              \
@@ -684,7 +684,7 @@ systemd_unit_exists(const char *name)
     "    <action name=\"meta-data\" timeout=\"5\"   />\n"                   \
     "  </actions>\n"                                                        \
     "  <special tag=\"systemd\"/>\n"                                        \
-    "</resource-agent>\n"
+    "</" PCMK_XE_RESOURCE_AGENT ">\n"
 
 static char *
 systemd_unit_metadata(const char *name, int timeout)
