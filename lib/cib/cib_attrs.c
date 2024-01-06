@@ -79,10 +79,10 @@ find_attr(cib_t *cib, const char *section, const char *node_uuid,
         node_uuid = NULL;
         set_type = PCMK_XE_META_ATTRIBUTES;
 
-    } else if (pcmk__str_eq(section, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(section, PCMK_XE_TICKETS, pcmk__str_casei)) {
         node_uuid = NULL;
         section = PCMK_XE_STATUS;
-        node_type = XML_CIB_TAG_TICKETS;
+        node_type = PCMK_XE_TICKETS;
 
     } else if (node_uuid == NULL) {
         return EINVAL;
@@ -97,7 +97,7 @@ find_attr(cib_t *cib, const char *section, const char *node_uuid,
     xpath = g_string_sized_new(1024);
     g_string_append(xpath, xpath_base);
 
-    if (pcmk__str_eq(node_type, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
+    if (pcmk__str_eq(node_type, PCMK_XE_TICKETS, pcmk__str_casei)) {
         pcmk__g_strcat(xpath, "//", node_type, NULL);
 
     } else if (node_uuid) {
@@ -213,13 +213,13 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
     } else {
         free_xml(xml_search);
         crm_trace("%s does not exist, create it", attr_name);
-        if (pcmk__str_eq(section, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
+        if (pcmk__str_eq(section, PCMK_XE_TICKETS, pcmk__str_casei)) {
             node_uuid = NULL;
             section = PCMK_XE_STATUS;
-            node_type = XML_CIB_TAG_TICKETS;
+            node_type = PCMK_XE_TICKETS;
 
             xml_top = create_xml_node(xml_obj, PCMK_XE_STATUS);
-            xml_obj = create_xml_node(xml_top, XML_CIB_TAG_TICKETS);
+            xml_obj = create_xml_node(xml_top, PCMK_XE_TICKETS);
 
         } else if (pcmk__str_eq(section, PCMK_XE_NODES, pcmk__str_casei)) {
 
@@ -256,9 +256,10 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
             if (pcmk__str_eq(section, PCMK_XE_CRM_CONFIG, pcmk__str_casei)) {
                 local_set_name = strdup(CIB_OPTIONS_FIRST);
 
-            } else if (pcmk__str_eq(node_type, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
+            } else if (pcmk__str_eq(node_type, PCMK_XE_TICKETS,
+                                    pcmk__str_casei)) {
                 local_set_name = crm_strdup_printf("%s-%s", section,
-                                                   XML_CIB_TAG_TICKETS);
+                                                   PCMK_XE_TICKETS);
 
             } else if (node_uuid) {
                 local_set_name = crm_strdup_printf("%s-%s", section, node_uuid);
@@ -294,7 +295,9 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
             }
         }
 
-        if (node_uuid == NULL && !pcmk__str_eq(node_type, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
+        if ((node_uuid == NULL)
+            && !pcmk__str_eq(node_type, PCMK_XE_TICKETS, pcmk__str_casei)) {
+
             if (pcmk__str_eq(section, PCMK_XE_CRM_CONFIG, pcmk__str_casei)) {
                 xml_obj = create_xml_node(xml_obj,
                                           PCMK_XE_CLUSTER_PROPERTY_SET);

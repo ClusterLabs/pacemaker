@@ -758,7 +758,7 @@ main(int argc, char **argv)
 
     // Use default node if not given (except for cluster options and tickets)
     if (!pcmk__strcase_any_of(options.type,
-                              PCMK_XE_CRM_CONFIG, XML_CIB_TAG_TICKETS, NULL)) {
+                              PCMK_XE_CRM_CONFIG, PCMK_XE_TICKETS, NULL)) {
         /* If we are being called from a resource agent via the cluster,
          * the correct local node name will be passed as an environment
          * variable. Otherwise, we have to ask the cluster.

@@ -1368,7 +1368,8 @@ unpack_status(xmlNode *status, pcmk_scheduler_t *scheduler)
     for (state = pcmk__xe_first_child(status); state != NULL;
          state = pcmk__xe_next(state)) {
 
-        if (pcmk__str_eq((const char *)state->name, XML_CIB_TAG_TICKETS, pcmk__str_none)) {
+        if (pcmk__str_eq((const char *) state->name, PCMK_XE_TICKETS,
+                         pcmk__str_none)) {
             unpack_tickets_state((xmlNode *) state, scheduler);
 
         } else if (pcmk__str_eq((const char *) state->name, PCMK__XE_NODE_STATE,

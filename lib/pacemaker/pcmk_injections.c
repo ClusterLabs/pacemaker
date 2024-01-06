@@ -469,8 +469,7 @@ find_ticket_state(pcmk__output_t *out, cib_t *the_cib, const char *ticket_id,
     *ticket_state_xml = NULL;
 
     g_string_append(xpath,
-                    "/" PCMK_XE_CIB "/" PCMK_XE_STATUS
-                    "/" XML_CIB_TAG_TICKETS);
+                    "/" PCMK_XE_CIB "/" PCMK_XE_STATUS "/" PCMK_XE_TICKETS);
 
     if (ticket_id) {
         pcmk__g_strcat(xpath,
@@ -527,7 +526,7 @@ set_ticket_state_attr(pcmk__output_t *out, const char *ticket_id,
         xmlNode *xml_obj = NULL;
 
         xml_top = create_xml_node(NULL, PCMK_XE_STATUS);
-        xml_obj = create_xml_node(xml_top, XML_CIB_TAG_TICKETS);
+        xml_obj = create_xml_node(xml_top, PCMK_XE_TICKETS);
         ticket_state_xml = create_xml_node(xml_obj, XML_CIB_TAG_TICKET_STATE);
         crm_xml_add(ticket_state_xml, PCMK_XA_ID, ticket_id);
 

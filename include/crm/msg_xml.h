@@ -109,6 +109,7 @@ extern "C" {
 #define PCMK_XE_SHORTDESC                   "shortdesc"
 #define PCMK_XE_STATUS                      "status"
 #define PCMK_XE_TEMPLATE                    "template"
+#define PCMK_XE_TICKETS                     "tickets"
 #define PCMK_XE_UTILIZATION                 "utilization"
 #define PCMK_XE_VERSION                     "version"
 
@@ -234,7 +235,7 @@ extern "C" {
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 
-#  define XML_CIB_TAG_TICKETS		"tickets"
+#  define XML_CIB_TAG_TICKETS		PCMK_XE_TICKETS
 #  define XML_CIB_TAG_TICKET_STATE	"ticket_state"
 
 #  define XML_CIB_TAG_TAGS   		"tags"

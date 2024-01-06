@@ -59,7 +59,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
         xpath_search(diff,
                      "//" F_CIB_UPDATE_RESULT
                      "//" PCMK__XE_DIFF_ADDED
-                     "//" XML_CIB_TAG_TICKETS);
+                     "//" PCMK_XE_TICKETS);
     if (numXpathResults(xpathObj) > 0) {
         xmlNode *aborted = getXpathResult(xpathObj, 0);
 
@@ -75,7 +75,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
         xpath_search(diff,
                      "//" F_CIB_UPDATE_RESULT
                      "//" PCMK__XE_DIFF_REMOVED
-                     "//" XML_CIB_TAG_TICKETS);
+                     "//" PCMK_XE_TICKETS);
     if (numXpathResults(xpathObj) > 0) {
         xmlNode *aborted = getXpathResult(xpathObj, 0);
 
@@ -474,8 +474,8 @@ te_update_diff_v2(xmlNode *diff)
                              "Configuration change", change);
             break; // Won't be packaged with operation results we may be waiting for
 
-        } else if (strstr(xpath, "/" XML_CIB_TAG_TICKETS)
-                   || pcmk__str_eq(name, XML_CIB_TAG_TICKETS, pcmk__str_none)) {
+        } else if (strstr(xpath, "/" PCMK_XE_TICKETS)
+                   || pcmk__str_eq(name, PCMK_XE_TICKETS, pcmk__str_none)) {
             abort_transition(INFINITY, pcmk__graph_restart,
                              "Ticket attribute change", change);
             break; // Won't be packaged with operation results we may be waiting for
