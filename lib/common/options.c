@@ -434,7 +434,8 @@ pcmk__cluster_option(GHashTable *options,
  * \brief Add a description element to a meta-data string
  *
  * \param[in,out] s       Meta-data string to add to
- * \param[in]     tag     Name of element to add ("longdesc" or "shortdesc")
+ * \param[in]     tag     Name of element to add (\c PCMK_XE_LONGDESC or
+ *                        "shortdesc")
  * \param[in]     desc    Textual description to add
  * \param[in]     values  If not \p NULL, the allowed values for the parameter
  * \param[in]     spaces  If not \p NULL, spaces to insert at the beginning of
@@ -510,7 +511,7 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
                    "  <" PCMK_XE_VERSION ">" PCMK_OCF_VERSION
                      "</" PCMK_XE_VERSION ">\n", NULL);
 
-    add_desc(s, "longdesc", desc_long, NULL, "  ");
+    add_desc(s, PCMK_XE_LONGDESC, desc_long, NULL, "  ");
     add_desc(s, "shortdesc", desc_short, NULL, "  ");
 
     g_string_append(s, "  <" PCMK_XE_PARAMETERS ">\n");
@@ -539,7 +540,7 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
                        "    <" PCMK_XE_PARAMETER " "
                                PCMK_XA_NAME "=\"", opt_name, "\">\n", NULL);
 
-        add_desc(s, "longdesc", opt_desc_long, opt_values, "      ");
+        add_desc(s, PCMK_XE_LONGDESC, opt_desc_long, opt_values, "      ");
         add_desc(s, "shortdesc", opt_desc_short, NULL, "      ");
 
         pcmk__g_strcat(s, "      <content type=\"", opt_type, "\"", NULL);

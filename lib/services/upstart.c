@@ -378,9 +378,9 @@ parse_status_result(const char *name, const char *state, void *userdata)
         PCMK_XA_NAME "='%s' "                                               \
         PCMK_XA_VERSION "='" PCMK_DEFAULT_AGENT_VERSION "'>\n"              \
     "  <" PCMK_XE_VERSION ">1.1</" PCMK_XE_VERSION ">\n"                    \
-    "  <longdesc lang=\"en\">\n"                                            \
+    "  <" PCMK_XE_LONGDESC " lang=\"en\">\n"                                \
     "    Upstart agent for controlling the system %s service\n"             \
-    "  </longdesc>\n"                                                       \
+    "  </" PCMK_XE_LONGDESC ">\n"                                           \
     "  <shortdesc lang=\"en\">Upstart job for %s</shortdesc>\n"             \
     "  <" PCMK_XE_PARAMETERS "/>\n"                                         \
     "  <actions>\n"                                                         \

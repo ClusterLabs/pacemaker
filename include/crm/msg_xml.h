@@ -56,6 +56,7 @@ extern "C" {
  */
 
 #define PCMK_XE_DATE_EXPRESSION             "date_expression"
+#define PCMK_XE_LONGDESC                    "longdesc"
 #define PCMK_XE_OP                          "op"
 #define PCMK_XE_OPERATION                   "operation"
 #define PCMK_XE_OP_EXPRESSION               "op_expression"

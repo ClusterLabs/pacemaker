@@ -671,9 +671,9 @@ systemd_unit_exists(const char *name)
         PCMK_XA_NAME "='%s' "                                               \
         PCMK_XA_VERSION "='" PCMK_DEFAULT_AGENT_VERSION "'>\n"              \
     "  <" PCMK_XE_VERSION ">1.1</" PCMK_XE_VERSION ">\n"                    \
-    "  <longdesc lang=\"en\">\n"                                            \
+    "  <" PCMK_XE_LONGDESC " lang=\"en\">\n"                                \
     "    %s\n"                                                              \
-    "  </longdesc>\n"                                                       \
+    "  </" PCMK_XE_LONGDESC ">\n"                                           \
     "  <shortdesc lang=\"en\">systemd unit file for %s</shortdesc>\n"       \
     "  <" PCMK_XE_PARAMETERS "/>\n"                                         \
     "  <actions>\n"                                                         \
