@@ -676,7 +676,7 @@ pe_eval_expr(xmlNode *rule, const pe_rule_eval_data_t *rule_data,
     }
 
     value = crm_element_value(rule, PCMK_XA_BOOLEAN_OP);
-    if (pcmk__str_eq(value, "or", pcmk__str_casei)) {
+    if (pcmk__str_eq(value, PCMK_VALUE_OR, pcmk__str_casei)) {
         do_and = FALSE;
         passed = FALSE;
 

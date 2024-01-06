@@ -150,7 +150,7 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
         }
     }
 
-    if (pcmk__str_eq(boolean, "or", pcmk__str_casei)) {
+    if (pcmk__str_eq(boolean, PCMK_VALUE_OR, pcmk__str_casei)) {
         do_and = false;
 
     } else if (!pcmk__str_eq(boolean, PCMK_VALUE_AND,
