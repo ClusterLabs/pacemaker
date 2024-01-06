@@ -124,6 +124,7 @@ extern "C" {
 #define PCMK_XE_TAGS                        "tags"
 #define PCMK_XE_TARGET                      "target"
 #define PCMK_XE_TEMPLATE                    "template"
+#define PCMK_XE_TICKET                      "ticket"
 #define PCMK_XE_TICKETS                     "tickets"
 #define PCMK_XE_UTILIZATION                 "utilization"
 #define PCMK_XE_VERSION                     "version"

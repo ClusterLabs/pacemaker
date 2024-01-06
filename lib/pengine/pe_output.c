@@ -3093,7 +3093,7 @@ ticket_xml(pcmk__output_t *out, va_list args) {
 
     xmlNodePtr node = NULL;
 
-    node = pcmk__output_create_xml_node(out, "ticket",
+    node = pcmk__output_create_xml_node(out, PCMK_XE_TICKET,
                                         PCMK_XA_ID, ticket->id,
                                         PCMK_XA_STATUS, status,
                                         "standby", pcmk__btoa(ticket->standby),
