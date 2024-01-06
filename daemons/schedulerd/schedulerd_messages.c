@@ -57,7 +57,7 @@ handle_pecalc_request(pcmk__request_t *request)
     };
 
     xmlNode *msg = request->xml;
-    xmlNode *xml_data = get_message_xml(msg, F_CRM_DATA);
+    xmlNode *xml_data = get_message_xml(msg, PCMK__XE_CRM_XML);
 
     static char *last_digest = NULL;
     static char *filename = NULL;

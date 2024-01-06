@@ -77,7 +77,7 @@ create_request_adv(const char *task, xmlNode *msg_data,
     }
 
     if (msg_data != NULL) {
-        add_message_xml(request, F_CRM_DATA, msg_data);
+        add_message_xml(request, PCMK__XE_CRM_XML, msg_data);
     }
     free(reference);
     free(true_from);
@@ -150,7 +150,7 @@ create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
     }
 
     if (xml_response_data != NULL) {
-        add_message_xml(reply, F_CRM_DATA, xml_response_data);
+        add_message_xml(reply, PCMK__XE_CRM_XML, xml_response_data);
     }
 
     return reply;

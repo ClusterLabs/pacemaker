@@ -60,6 +60,7 @@
 
 #define PCMK__XE_ATTRIBUTES             "attributes"
 #define PCMK__XE_CRM_EVENT              "crm_event"
+#define PCMK__XE_CRM_XML                "crm_xml"
 #define PCMK__XE_DOWNED                 "downed"
 #define PCMK__XE_GENERATION_TUPLE       "generation_tuple"
 #define PCMK__XE_LRM                    "lrm"

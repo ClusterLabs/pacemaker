@@ -246,7 +246,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
 
     reply_data.feature_set = crm_element_value(reply, PCMK_XA_VERSION);
     reply_data.host_from = crm_element_value(reply, PCMK__XA_SRC);
-    msg_data = get_message_xml(reply, F_CRM_DATA);
+    msg_data = get_message_xml(reply, PCMK__XE_CRM_XML);
 
     if (!strcmp(value, CRM_OP_REPROBE)) {
         reply_data.reply_type = pcmk_controld_reply_reprobe;
