@@ -236,7 +236,6 @@ extern "C" {
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 
-#  define XML_CIB_TAG_TAGS   		PCMK_XE_TAGS
 #  define XML_CIB_TAG_TAG   		"tag"
 #  define XML_CIB_TAG_OBJ_REF 		"obj_ref"
 

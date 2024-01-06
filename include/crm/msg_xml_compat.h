@@ -901,6 +901,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_CIB_TAG_TICKET_STATE "ticket_state"
 
+//! \deprecated Use \c PCMK_XE_TAGS instead
+#define XML_CIB_TAG_TAGS PCMK_XE_TAGS
+
 #ifdef __cplusplus
 }
 #endif
