@@ -132,6 +132,7 @@ extern "C" {
 #define PCMK_VALUE_FALSE                    "false"
 #define PCMK_VALUE_READ                     "read"
 #define PCMK_VALUE_TRUE                     "true"
+#define PCMK_VALUE_WRITE                    "write"
 
 
 #ifdef __cplusplus
