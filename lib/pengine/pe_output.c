@@ -952,6 +952,7 @@ cluster_dc_xml(pcmk__output_t *out, va_list args) {
 
     if (dc) {
         const char *with_quorum = pcmk__btoa(crm_is_true(quorum));
+        const char *mixed_version_s = pcmk__btoa(mixed_version);
 
         pcmk__output_create_xml_node(out, "current_dc",
                                      PCMK_XA_PRESENT, PCMK_VALUE_TRUE,
@@ -959,7 +960,7 @@ cluster_dc_xml(pcmk__output_t *out, va_list args) {
                                      PCMK_XA_NAME, dc->details->uname,
                                      PCMK_XA_ID, dc->details->id,
                                      PCMK_XA_WITH_QUORUM, with_quorum,
-                                     "mixed_version", pcmk__btoa(mixed_version),
+                                     PCMK_XA_MIXED_VERSION, mixed_version_s,
                                      NULL);
     } else {
         pcmk__output_create_xml_node(out, "current_dc",
