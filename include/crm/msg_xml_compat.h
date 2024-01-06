@@ -995,6 +995,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_CIB_TAG_SECTION_ALL "all"
 
+//! \deprecated Do not use
+#define XML_NODE_IS_REMOTE "remote_node"
+
 #ifdef __cplusplus
 }
 #endif
