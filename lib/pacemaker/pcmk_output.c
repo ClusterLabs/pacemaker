@@ -2143,20 +2143,20 @@ attribute_default(pcmk__output_t *out, va_list args)
     GString *s = g_string_sized_new(50);
 
     if (!pcmk__str_empty(scope)) {
-        pcmk__g_strcat(s, "scope=\"", scope, "\" ", NULL);
+        pcmk__g_strcat(s, PCMK_XA_SCOPE "=\"", scope, "\" ", NULL);
     }
 
     if (!pcmk__str_empty(instance)) {
-        pcmk__g_strcat(s, "id=\"", instance, "\" ", NULL);
+        pcmk__g_strcat(s, PCMK_XA_ID "=\"", instance, "\" ", NULL);
     }
 
-    pcmk__g_strcat(s, "name=\"", pcmk__s(name, ""), "\" ", NULL);
+    pcmk__g_strcat(s, PCMK_XA_NAME "=\"", pcmk__s(name, ""), "\" ", NULL);
 
     if (!pcmk__str_empty(host)) {
-        pcmk__g_strcat(s, "host=\"", host, "\" ", NULL);
+        pcmk__g_strcat(s, PCMK_XA_HOST "=\"", host, "\" ", NULL);
     }
 
-    pcmk__g_strcat(s, "value=\"", pcmk__s(value, ""), "\"", NULL);
+    pcmk__g_strcat(s, PCMK_XA_VALUE "=\"", pcmk__s(value, ""), "\"", NULL);
 
     out->info(out, "%s", s->str);
     g_string_free(s, TRUE);
@@ -2183,7 +2183,7 @@ attribute_xml(pcmk__output_t *out, va_list args)
                                         NULL);
 
     if (!pcmk__str_empty(scope)) {
-        crm_xml_add(node, "scope", scope);
+        crm_xml_add(node, PCMK_XA_SCOPE, scope);
     }
 
     if (!pcmk__str_empty(instance)) {
