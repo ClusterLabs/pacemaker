@@ -180,6 +180,9 @@
 #define PCMK__XA_TRANSITION_MAGIC       "transition-magic"
 #define PCMK__XA_UPTIME                 "uptime"
 
+// @COMPAT Used only with v1 patchsets
+#define PCMK__XA_CRM_DIFF_MARKER        "__crm_diff_marker__"
+
 // @COMPAT Deprecated since 2.1.5
 #define PCMK__XA_FIRST_INSTANCE         "first-instance"
 

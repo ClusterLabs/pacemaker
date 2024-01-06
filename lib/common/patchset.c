@@ -442,9 +442,9 @@ process_v1_removals(xmlNode *target, xmlNode *patch)
     CRM_CHECK(pcmk__xe_is(target, (const char *) patch->name), return);
     CRM_CHECK(pcmk__str_eq(ID(target), ID(patch), pcmk__str_casei), return);
 
-    // Check for XML_DIFF_MARKER in a child
+    // Check for PCMK__XA_CRM_DIFF_MARKER in a child
     id = crm_element_value_copy(target, PCMK_XA_ID);
-    value = crm_element_value(patch, XML_DIFF_MARKER);
+    value = crm_element_value(patch, PCMK__XA_CRM_DIFF_MARKER);
     if ((value != NULL) && (strcmp(value, "removed:top") == 0)) {
         crm_trace("We are the root of the deletion: %s.id=%s",
                   target->name, id);
@@ -486,9 +486,9 @@ process_v1_additions(xmlNode *parent, xmlNode *target, xmlNode *patch)
         return;
     }
 
-    // Check for XML_DIFF_MARKER in a child
+    // Check for PCMK__XA_CRM_DIFF_MARKER in a child
     name = (const char *) patch->name;
-    value = crm_element_value(patch, XML_DIFF_MARKER);
+    value = crm_element_value(patch, PCMK__XA_CRM_DIFF_MARKER);
     if ((target == NULL) && (value != NULL)
         && (strcmp(value, "added:top") == 0)) {
         id = ID(patch);
@@ -1175,7 +1175,7 @@ purge_diff_markers(xmlNode *a_node)
 
     CRM_CHECK(a_node != NULL, return);
 
-    xml_remove_prop(a_node, XML_DIFF_MARKER);
+    xml_remove_prop(a_node, PCMK__XA_CRM_DIFF_MARKER);
     for (child = pcmk__xml_first_child(a_node); child != NULL;
          child = pcmk__xml_next(child)) {
         purge_diff_markers(child);
@@ -1266,7 +1266,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
         crm_trace("Processing <%s " PCMK_XA_ID "=%s> (complete copy)",
                   name, id);
         deleted = add_node_copy(parent, left);
-        crm_xml_add(deleted, XML_DIFF_MARKER, marker);
+        crm_xml_add(deleted, PCMK__XA_CRM_DIFF_MARKER, marker);
 
         *changed = TRUE;
         return deleted;
@@ -1275,8 +1275,8 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
     CRM_CHECK(name != NULL, return NULL);
     CRM_CHECK(pcmk__xe_is(left, (const char *) right->name), return NULL);
 
-    // Check for XML_DIFF_MARKER in a child
-    value = crm_element_value(right, XML_DIFF_MARKER);
+    // Check for PCMK__XA_CRM_DIFF_MARKER in a child
+    value = crm_element_value(right, PCMK__XA_CRM_DIFF_MARKER);
     if ((value != NULL) && (strcmp(value, "removed:top") == 0)) {
         crm_trace("We are the root of the deletion: %s.id=%s", name, id);
         *changed = TRUE;

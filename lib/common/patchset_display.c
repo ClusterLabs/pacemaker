@@ -81,7 +81,7 @@ xml_show_patchset_v1_recursive(pcmk__output_t *out, const char *prefix,
                                const xmlNode *data, int depth, uint32_t options)
 {
     if ((data->children == NULL)
-        || (crm_element_value(data, XML_DIFF_MARKER) != NULL)) {
+        || (crm_element_value(data, PCMK__XA_CRM_DIFF_MARKER) != NULL)) {
 
         // Found a change; clear the pcmk__xml_fmt_diff_short option if set
         options &= ~pcmk__xml_fmt_diff_short;

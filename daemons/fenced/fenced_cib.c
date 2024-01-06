@@ -478,7 +478,7 @@ remove_fencing_topology(xmlXPathObjectPtr xpathObj)
         xmlNode *match = getXpathResult(xpathObj, lpc);
 
         CRM_LOG_ASSERT(match != NULL);
-        if (match && crm_element_value(match, XML_DIFF_MARKER)) {
+        if (match && crm_element_value(match, PCMK__XA_CRM_DIFF_MARKER)) {
             /* Deletion */
             int index = 0;
             char *target = stonith_level_key(match, fenced_target_by_unknown);
