@@ -75,6 +75,9 @@
 #define PCMK__XE_TRANSIENT_ATTRIBUTES   "transient_attributes"
 #define PCMK__XE_TRANSITION_GRAPH       "transition_graph"
 
+// @COMPAT Deprecated since 1.1.12
+#define PCMK__XE_ACL_USER               "acl_user"
+
 // @COMPAT Deprecated since 2.1.7
 #define PCMK__XE_DIFF_ADDED             "diff-added"
 

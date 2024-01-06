@@ -301,8 +301,11 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
             for (child = pcmk__xe_first_child(acls); child;
                  child = pcmk__xe_next(child)) {
 
+                /* @COMPAT PCMK__XE_ACL_USER was deprecated in Pacemaker 1.1.12
+                 * (needed for rolling upgrades)
+                 */
                 if (pcmk__xe_is(child, PCMK_XE_ACL_TARGET)
-                    || pcmk__xe_is(child, XML_ACL_TAG_USERv1)) {
+                    || pcmk__xe_is(child, PCMK__XE_ACL_USER)) {
                     const char *id = crm_element_value(child, PCMK_XA_NAME);
 
                     if (id == NULL) {
