@@ -967,6 +967,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_PING_ATTR_PACEMAKERDSTATE_STARTINGDAEMONS "starting_daemons"
 
+//! \deprecated Do not use
+#define XML_PING_ATTR_PACEMAKERDSTATE_WAITPING "wait_for_ping"
+
 #ifdef __cplusplus
 }
 #endif
