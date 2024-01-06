@@ -138,8 +138,8 @@ stonith__history_description(const stonith_history_t *history,
 
         // Add information about originator
         pcmk__g_strcat(str,
-                       "client=", history->client, ", origin=", history->origin,
-                       NULL);
+                       PCMK_XA_CLIENT "=", history->client, ", "
+                       PCMK_XA_ORIGIN "=", history->origin, NULL);
 
         // For completed actions, add completion time
         if (completed_time_s != NULL) {
@@ -462,7 +462,7 @@ stonith_event_xml(pcmk__output_t *out, va_list args)
     node = pcmk__output_create_xml_node(out, "fence_event",
                                         PCMK_XA_ACTION, event->action,
                                         PCMK_XA_TARGET, event->target,
-                                        "client", event->client,
+                                        PCMK_XA_CLIENT, event->client,
                                         PCMK_XA_ORIGIN, event->origin,
                                         NULL);
 
