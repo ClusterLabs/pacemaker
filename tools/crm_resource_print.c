@@ -695,12 +695,14 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
 
         for (lpc = resources; lpc != NULL; lpc = lpc->next) {
             pcmk_resource_t *rsc = (pcmk_resource_t *) lpc->data;
+            const char *running = NULL;
 
             rsc->fns->location(rsc, &hosts, TRUE);
+            running = pcmk__btoa(hosts != NULL);
 
             pcmk__output_xml_create_parent(out, "resource",
                                            PCMK_XA_ID, rsc->id,
-                                           "running", pcmk__btoa(hosts != NULL),
+                                           PCMK_XA_RUNNING, running,
                                            NULL);
 
             cli_resource_check(out, rsc, NULL);
@@ -732,7 +734,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
 
             pcmk__output_xml_create_parent(out, "resource",
                                            PCMK_XA_ID, rsc->id,
-                                           "running", PCMK_VALUE_TRUE,
+                                           PCMK_XA_RUNNING, PCMK_VALUE_TRUE,
                                            "host", host_uname,
                                            NULL);
 
@@ -745,7 +747,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
 
             pcmk__output_xml_create_parent(out, "resource",
                                            PCMK_XA_ID, rsc->id,
-                                           "running", PCMK_VALUE_FALSE,
+                                           PCMK_XA_RUNNING, PCMK_VALUE_FALSE,
                                            "host", host_uname,
                                            NULL);
 
@@ -762,7 +764,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
         GList *hosts = NULL;
 
         rsc->fns->location(rsc, &hosts, TRUE);
-        crm_xml_add(xml_node, "running", pcmk__btoa(hosts != NULL));
+        crm_xml_add(xml_node, PCMK_XA_RUNNING, pcmk__btoa(hosts != NULL));
         cli_resource_check(out, rsc, NULL);
         g_list_free(hosts);
     }
