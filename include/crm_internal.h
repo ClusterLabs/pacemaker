@@ -89,6 +89,8 @@
  */
 #define PCMK__XE_PROMOTABLE_LEGACY      "master"
 
+// @COMPAT Deprecated since 1.1.12
+#define PCMK__XE_ROLE_REF               "role_ref"
 
 /*
  * XML attribute names used only by internal code
