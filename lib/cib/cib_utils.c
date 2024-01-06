@@ -1081,7 +1081,7 @@ xmlNode *
 cib_get_generation(cib_t * cib)
 {
     xmlNode *the_cib = NULL;
-    xmlNode *generation = create_xml_node(NULL, XML_CIB_TAG_GENERATION_TUPPLE);
+    xmlNode *generation = create_xml_node(NULL, PCMK__XE_GENERATION_TUPLE);
 
     cib->cmds->query(cib, NULL, &the_cib, cib_scope_local | cib_sync_call);
     if (the_cib != NULL) {

@@ -147,7 +147,7 @@ void
 join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
     char *join_id = user_data;
-    xmlNode *generation = create_xml_node(NULL, XML_CIB_TAG_GENERATION_TUPPLE);
+    xmlNode *generation = create_xml_node(NULL, PCMK__XE_GENERATION_TUPLE);
 
     CRM_LOG_ASSERT(join_id != NULL);
 
