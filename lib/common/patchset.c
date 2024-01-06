@@ -284,7 +284,7 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
     CRM_ASSERT(target->doc);
     docpriv = target->doc->_private;
 
-    patchset = create_xml_node(NULL, XML_TAG_DIFF);
+    patchset = create_xml_node(NULL, PCMK_XE_DIFF);
     crm_xml_add_int(patchset, PCMK_XA_FORMAT, 2);
 
     version = create_xml_node(patchset, PCMK_XE_VERSION);
@@ -1186,7 +1186,7 @@ xmlNode *
 diff_xml_object(xmlNode *old, xmlNode *new, gboolean suppress)
 {
     xmlNode *tmp1 = NULL;
-    xmlNode *diff = create_xml_node(NULL, XML_TAG_DIFF);
+    xmlNode *diff = create_xml_node(NULL, PCMK_XE_DIFF);
     xmlNode *removed = create_xml_node(diff, PCMK__XE_DIFF_REMOVED);
     xmlNode *added = create_xml_node(diff, PCMK__XE_DIFF_ADDED);
 

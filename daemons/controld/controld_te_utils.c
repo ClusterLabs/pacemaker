@@ -386,7 +386,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
         const xmlNode *search = NULL;
 
         for(search = reason; search; search = search->parent) {
-            if (pcmk__xe_is(search, XML_TAG_DIFF)) {
+            if (pcmk__xe_is(search, PCMK_XE_DIFF)) {
                 diff = search;
                 break;
             }
