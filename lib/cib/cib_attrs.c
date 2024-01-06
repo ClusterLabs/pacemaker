@@ -709,6 +709,11 @@ query_node_uname(cib_t * the_cib, const char *uuid, char **uname)
     return rc;
 }
 
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/cib/util_compat.h>
+
 int
 set_standby(cib_t * the_cib, const char *uuid, const char *scope, const char *standby_value)
 {
@@ -733,3 +738,6 @@ set_standby(cib_t * the_cib, const char *uuid, const char *scope, const char *st
     free(attr_id);
     return rc;
 }
+
+// LCOV_EXCL_STOP
+// End deprecated API
