@@ -95,6 +95,7 @@ extern "C" {
 #define PCMK_XE_OPTION                      "option"
 #define PCMK_XE_PARAMETER                   "parameter"
 #define PCMK_XE_PARAMETERS                  "parameters"
+#define PCMK_XE_POSITION                    "position"
 #define PCMK_XE_PRIMITIVE                   "primitive"
 #define PCMK_XE_RECIPIENT                   "recipient"
 #define PCMK_XE_RESOURCE_AGENT              "resource-agent"
@@ -247,7 +248,7 @@ extern "C" {
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 
-#  define XML_DIFF_POSITION             "position"
+#  define XML_DIFF_POSITION             PCMK_XE_POSITION
 
 #  define ID(x) crm_element_value(x, PCMK_XA_ID)
 

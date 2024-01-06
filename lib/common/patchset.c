@@ -60,7 +60,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
 
             crm_xml_add(change, PCMK_XA_OPERATION, "create");
             crm_xml_add(change, PCMK_XA_PATH, (const char *) xpath->str);
-            crm_xml_add_int(change, XML_DIFF_POSITION, position);
+            crm_xml_add_int(change, PCMK_XE_POSITION, position);
             add_node_copy(change, xml);
             g_string_free(xpath, TRUE);
         }
@@ -140,7 +140,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
 
             crm_xml_add(change, PCMK_XA_OPERATION, "move");
             crm_xml_add(change, PCMK_XA_PATH, (const char *) xpath->str);
-            crm_xml_add_int(change, XML_DIFF_POSITION,
+            crm_xml_add_int(change, PCMK_XE_POSITION,
                             pcmk__xml_position(xml, pcmk__xf_deleted));
             g_string_free(xpath, TRUE);
         }
@@ -316,7 +316,7 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
         crm_xml_add(change, PCMK_XA_OPERATION, "delete");
         crm_xml_add(change, PCMK_XA_PATH, deleted_obj->path);
         if (deleted_obj->position >= 0) {
-            crm_xml_add_int(change, XML_DIFF_POSITION, deleted_obj->position);
+            crm_xml_add_int(change, PCMK_XE_POSITION, deleted_obj->position);
         }
     }
 
@@ -886,8 +886,8 @@ sort_change_obj_by_position(gconstpointer a, gconstpointer b)
     int position_a = -1;
     int position_b = -1;
 
-    crm_element_value_int(change_obj_a->change, XML_DIFF_POSITION, &position_a);
-    crm_element_value_int(change_obj_b->change, XML_DIFF_POSITION, &position_b);
+    crm_element_value_int(change_obj_a->change, PCMK_XE_POSITION, &position_a);
+    crm_element_value_int(change_obj_b->change, PCMK_XE_POSITION, &position_b);
 
     if (position_a < position_b) {
         return -1;
@@ -929,9 +929,9 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
 
         crm_trace("Processing %s %s", change->name, op);
 
-        // "delete" changes for XML comments are generated with "position"
+        // "delete" changes for XML comments are generated with PCMK_XE_POSITION
         if (strcmp(op, "delete") == 0) {
-            crm_element_value_int(change, XML_DIFF_POSITION, &position);
+            crm_element_value_int(change, PCMK_XE_POSITION, &position);
         }
         match = search_v2_xpath(xml, xpath, position);
         crm_trace("Performing %s on %s with %p", op, xpath, match);
@@ -1013,7 +1013,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
             xmlNode *match_child = NULL;
 
             match_child = match->children;
-            crm_element_value_int(change, XML_DIFF_POSITION, &position);
+            crm_element_value_int(change, PCMK_XE_POSITION, &position);
 
             while ((match_child != NULL)
                    && (position != pcmk__xml_position(match_child, pcmk__xf_skip))) {
@@ -1045,7 +1045,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
         } else if (strcmp(op, "move") == 0) {
             int position = 0;
 
-            crm_element_value_int(change, XML_DIFF_POSITION, &position);
+            crm_element_value_int(change, PCMK_XE_POSITION, &position);
             if (position != pcmk__xml_position(match, pcmk__xf_skip)) {
                 xmlNode *match_child = NULL;
                 int p = position;

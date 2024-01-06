@@ -227,7 +227,7 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
             free(prefix);
 
         } else if (strcmp(op, "move") == 0) {
-            const char *position = crm_element_value(change, XML_DIFF_POSITION);
+            const char *position = crm_element_value(change, PCMK_XE_POSITION);
 
             temp_rc = out->info(out,
                                 PCMK__XML_PREFIX_MOVED " %s moved to offset %s",
@@ -276,7 +276,7 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
         } else if (strcmp(op, "delete") == 0) {
             int position = -1;
 
-            crm_element_value_int(change, XML_DIFF_POSITION, &position);
+            crm_element_value_int(change, PCMK_XE_POSITION, &position);
             if (position >= 0) {
                 temp_rc = out->info(out, "-- %s (%d)", xpath, position);
             } else {
