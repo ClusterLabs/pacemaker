@@ -16,5 +16,10 @@
 
 #define PCMK__NODE_ATTR_SHUTDOWN            "shutdown"
 
+/* @COMPAT Deprecated since 2.1.8. Use a location constraint with
+ * PCMK_XA_RSC_PATTERN=".*" and PCMK_XA_RESOURCE_DISCOVERY="never" instead of
+ * PCMK__NODE_ATTR_RESOURCE_DISCOVERY_ENABLED="false".
+ */
+#define PCMK__NODE_ATTR_RESOURCE_DISCOVERY_ENABLED  "resource-discovery-enabled"
 
 #endif  // PCMK__NODES_INTERNAL__H

@@ -1056,7 +1056,7 @@ static void
 unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
                            pcmk_scheduler_t *scheduler)
 {
-    const char *resource_discovery_enabled = NULL;
+    const char *discovery = NULL;
     const xmlNode *attrs = NULL;
     pcmk_resource_t *rsc = NULL;
 
@@ -1098,11 +1098,20 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
         this_node->details->maintenance = TRUE;
     }
 
-    resource_discovery_enabled = pe_node_attribute_raw(this_node, XML_NODE_ATTR_RSC_DISCOVERY);
-    if (resource_discovery_enabled && !crm_is_true(resource_discovery_enabled)) {
+    discovery =
+        pe_node_attribute_raw(this_node,
+                              PCMK__NODE_ATTR_RESOURCE_DISCOVERY_ENABLED);
+    if ((discovery != NULL) && !crm_is_true(discovery)) {
+        pcmk__warn_once(pcmk__wo_rdisc_enabled,
+                        "Support for the "
+                        PCMK__NODE_ATTR_RESOURCE_DISCOVERY_ENABLED
+                        " node attribute is deprecated and will be removed"
+                        " (and behave as 'true') in a future release.");
+
         if (pe__is_remote_node(this_node)
             && !pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
-            pcmk__config_warn("Ignoring " XML_NODE_ATTR_RSC_DISCOVERY
+            pcmk__config_warn("Ignoring "
+                              PCMK__NODE_ATTR_RESOURCE_DISCOVERY_ENABLED
                               " attribute on Pacemaker Remote node %s"
                               " because fencing is disabled",
                               pcmk__node_name(this_node));
@@ -1147,11 +1156,14 @@ unpack_transient_attributes(const xmlNode *state, pcmk_node_t *node,
         node->details->maintenance = TRUE;
     }
 
-    discovery = pe_node_attribute_raw(node, XML_NODE_ATTR_RSC_DISCOVERY);
+    discovery
+        = pe_node_attribute_raw(node,
+                                PCMK__NODE_ATTR_RESOURCE_DISCOVERY_ENABLED);
     if ((discovery != NULL) && !crm_is_true(discovery)) {
-        pcmk__config_warn("Ignoring " XML_NODE_ATTR_RSC_DISCOVERY " attribute "
-                          "for %s because disabling resource discovery is "
-                          "not allowed for cluster nodes",
+        pcmk__config_warn("Ignoring "
+                          PCMK__NODE_ATTR_RESOURCE_DISCOVERY_ENABLED
+                          " attribute for %s because disabling resource"
+                          " discovery is not allowed for cluster nodes",
                           pcmk__node_name(node));
     }
 }
