@@ -613,7 +613,7 @@ unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
     char *key = NULL;
     const char *id = ID(set);
     const char *action = crm_element_value(set, "action");
-    const char *sequential_s = crm_element_value(set, "sequential");
+    const char *sequential_s = crm_element_value(set, PCMK_XA_SEQUENTIAL);
     const char *kind_s = crm_element_value(set, PCMK_XA_KIND);
 
     if (action == NULL) {
@@ -802,7 +802,7 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
         return pcmk_rc_ok;
     }
 
-    if (pcmk__xe_attr_is_true(set1, "sequential")) {
+    if (pcmk__xe_attr_is_true(set1, PCMK_XA_SEQUENTIAL)) {
         if (symmetry == ordering_symmetric_inverse) {
             // Get the first one
             xml_rsc = first_named_child(set1, PCMK_XE_RESOURCE_REF);
@@ -823,7 +823,7 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
         }
     }
 
-    if (pcmk__xe_attr_is_true(set2, "sequential")) {
+    if (pcmk__xe_attr_is_true(set2, PCMK_XA_SEQUENTIAL)) {
         if (symmetry == ordering_symmetric_inverse) {
             // Get the last one
             const char *rid = NULL;

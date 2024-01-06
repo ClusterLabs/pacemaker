@@ -182,6 +182,7 @@ extern "C" {
 #define PCMK_XA_RSC_ROLE                    "rsc-role"
 #define PCMK_XA_SCORE                       "score"
 #define PCMK_XA_SCORE_ATTRIBUTE             "score-attribute"
+#define PCMK_XA_SEQUENTIAL                  "sequential"
 #define PCMK_XA_SYMMETRICAL                 "symmetrical"
 #define PCMK_XA_TARGET                      "target"
 #define PCMK_XA_TARGET_ATTRIBUTE            "target-attribute"

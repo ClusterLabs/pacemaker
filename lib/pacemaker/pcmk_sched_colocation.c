@@ -474,7 +474,8 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
                         "will be removed in a future release", set_id);
     }
 
-    if ((pcmk__xe_get_bool_attr(set, "sequential", &sequential) == pcmk_rc_ok)
+    if ((pcmk__xe_get_bool_attr(set, PCMK_XA_SEQUENTIAL,
+                                &sequential) == pcmk_rc_ok)
         && !sequential) {
         return;
     }
@@ -585,7 +586,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
         return;
     }
 
-    rc = pcmk__xe_get_bool_attr(set1, "sequential", &sequential);
+    rc = pcmk__xe_get_bool_attr(set1, PCMK_XA_SEQUENTIAL, &sequential);
     if ((rc != pcmk_rc_ok) || sequential) {
         // Get the first one
         xml_rsc = first_named_child(set1, PCMK_XE_RESOURCE_REF);
@@ -603,7 +604,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
         }
     }
 
-    rc = pcmk__xe_get_bool_attr(set2, "sequential", &sequential);
+    rc = pcmk__xe_get_bool_attr(set2, PCMK_XA_SEQUENTIAL, &sequential);
     if ((rc != pcmk_rc_ok) || sequential) {
         // Get the last one
         for (xml_rsc = first_named_child(set2, PCMK_XE_RESOURCE_REF);
