@@ -235,7 +235,6 @@ extern "C" {
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 
-#  define XML_CIB_TAG_TICKETS		PCMK_XE_TICKETS
 #  define XML_CIB_TAG_TICKET_STATE	"ticket_state"
 
 #  define XML_CIB_TAG_TAGS   		"tags"
