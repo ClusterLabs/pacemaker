@@ -183,6 +183,7 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 #define PCMK__VALUE_RESPONSE                "response"
 #define PCMK__VALUE_STARTING_DAEMONS        "starting_daemons"
 #define PCMK__VALUE_UNFENCING               "unfencing"
+#define PCMK__VALUE_WAIT_FOR_PING           "wait_for_ping"
 #define PCMK__VALUE_YELLOW                  "yellow"
 
 #endif // PCMK__OPTIONS_INTERNAL__H

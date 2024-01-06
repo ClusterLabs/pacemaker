@@ -81,7 +81,8 @@ handle_ping_request(pcmk__request_t *request)
 
             shutdown_complete_state_reported_to = request->ipc_client->pid;
 
-        } else if (pcmk__str_eq(pacemakerd_state, XML_PING_ATTR_PACEMAKERDSTATE_WAITPING, pcmk__str_none)) {
+        } else if (pcmk__str_eq(pacemakerd_state, PCMK__VALUE_WAIT_FOR_PING,
+                                pcmk__str_none)) {
             crm_notice("Received startup-trigger from SBD.");
             pacemakerd_state = PCMK__VALUE_STARTING_DAEMONS;
             mainloop_set_trigger(startup_trigger);

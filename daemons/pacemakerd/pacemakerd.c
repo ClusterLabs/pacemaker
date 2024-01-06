@@ -448,7 +448,7 @@ main(int argc, char **argv)
 
     if ((running_with_sbd) && pcmk__get_sbd_sync_resource_startup()) {
         crm_notice("Waiting for startup-trigger from SBD.");
-        pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_WAITPING;
+        pacemakerd_state = PCMK__VALUE_WAIT_FOR_PING;
         startup_trigger = mainloop_add_trigger(G_PRIORITY_HIGH, init_children_processes, NULL);
     } else {
         if (running_with_sbd) {
