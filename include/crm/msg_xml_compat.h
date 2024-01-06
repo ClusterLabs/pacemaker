@@ -925,6 +925,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_SOURCE instead
 #define XML_DIFF_VSOURCE PCMK_XE_SOURCE
 
+//! \deprecated Use \c PCMK_XE_TARGET instead
+#define XML_DIFF_VTARGET PCMK_XE_TARGET
+
 #ifdef __cplusplus
 }
 #endif
