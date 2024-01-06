@@ -237,7 +237,6 @@ extern "C" {
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 
-#  define XML_CIB_TAG_TAG   		PCMK_XE_TAG
 #  define XML_CIB_TAG_OBJ_REF 		"obj_ref"
 
 #  define XML_TAG_FENCING_TOPOLOGY      "fencing-topology"
