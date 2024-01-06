@@ -74,7 +74,8 @@ handle_ping_request(pcmk__request_t *request)
 
     /* just proceed state on sbd pinging us */
     if (from && strstr(from, "sbd")) {
-        if (pcmk__str_eq(pacemakerd_state, XML_PING_ATTR_PACEMAKERDSTATE_SHUTDOWNCOMPLETE, pcmk__str_none)) {
+        if (pcmk__str_eq(pacemakerd_state, PCMK__VALUE_SHUTDOWN_COMPLETE,
+                         pcmk__str_none)) {
             if (pcmk__get_sbd_sync_resource_startup()) {
                 crm_notice("Shutdown-complete-state passed to SBD.");
             }

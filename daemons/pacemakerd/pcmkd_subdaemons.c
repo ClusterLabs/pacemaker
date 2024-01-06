@@ -388,7 +388,7 @@ pcmk_shutdown_worker(gpointer user_data)
     }
 
     crm_notice("Shutdown complete");
-    pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_SHUTDOWNCOMPLETE;
+    pacemakerd_state = PCMK__VALUE_SHUTDOWN_COMPLETE;
     if (!fatal_error && running_with_sbd &&
         pcmk__get_sbd_sync_resource_startup() &&
         !shutdown_complete_state_reported_client_closed) {
