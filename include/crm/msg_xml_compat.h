@@ -862,6 +862,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_RESOURCE_SET instead
 #define XML_CONS_TAG_RSC_SET PCMK_XE_RESOURCE_SET
 
+//! \deprecated Do not use
+#define XML_CIB_TAG_GENERATION_TUPPLE "generation_tuple"
+
 #ifdef __cplusplus
 }
 #endif
