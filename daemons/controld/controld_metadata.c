@@ -167,7 +167,7 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
 
     // Check supported actions
     match = first_named_child(metadata, "actions");
-    for (match = first_named_child(match, "action"); match != NULL;
+    for (match = first_named_child(match, PCMK_XE_ACTION); match != NULL;
          match = crm_next_same_xml(match)) {
 
         const char *action_name = crm_element_value(match, PCMK_XA_NAME);

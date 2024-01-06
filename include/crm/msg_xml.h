@@ -60,6 +60,7 @@ extern "C" {
 #define PCMK_XE_ACL_ROLE                    "acl_role"
 #define PCMK_XE_ACL_TARGET                  "acl_target"
 #define PCMK_XE_ACLS                        "acls"
+#define PCMK_XE_ACTION                      "action"
 #define PCMK_XE_ALERT                       "alert"
 #define PCMK_XE_ALERTS                      "alerts"
 #define PCMK_XE_ATTRIBUTE                   "attribute"
