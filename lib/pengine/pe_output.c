@@ -1513,6 +1513,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     const char *uname = crm_element_value(xml_op, PCMK_XA_UNAME);
     const char *call_id = crm_element_value(xml_op, PCMK__XA_CALL_ID);
     const char *exit_reason = crm_element_value(xml_op, PCMK_XA_EXIT_REASON);
+    const char *status_s = NULL;
 
     time_t epoch = 0;
     char *rc_s = NULL;
@@ -1523,10 +1524,11 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     pcmk__scan_min_int(crm_element_value(xml_op, PCMK__XA_OP_STATUS), &status,
                        0);
 
-    rc_s = pcmk__itoa(rc);
     if (crm_element_value(xml_op, PCMK__XA_OPERATION_KEY) == NULL) {
         op_key_name = PCMK_XA_ID;
     }
+    rc_s = pcmk__itoa(rc);
+    status_s = pcmk_exec_status_str(status);
     node = pcmk__output_create_xml_node(out, "failure",
                                         op_key_name, op_key,
                                         PCMK_XA_NODE, uname,
@@ -1534,7 +1536,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
                                         "exitreason", pcmk__s(reason_s, ""),
                                         "exitcode", rc_s,
                                         "call", call_id,
-                                        "status", pcmk_exec_status_str(status),
+                                        PCMK_XA_STATUS, status_s,
                                         NULL);
     free(rc_s);
 
@@ -2102,6 +2104,7 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
     const char *uname = crm_element_value(xml_op, PCMK_XA_UNAME);
     const char *call_id = crm_element_value(xml_op, PCMK__XA_CALL_ID);
     const char *rc_s = crm_element_value(xml_op, PCMK__XA_RC_CODE);
+    const char *status_s = NULL;
     const char *op_rsc = crm_element_value(xml_op, "resource");
     int status;
     time_t last_change = 0;
@@ -2109,12 +2112,14 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
 
     pcmk__scan_min_int(crm_element_value(xml_op, PCMK__XA_OP_STATUS),
                        &status, PCMK_EXEC_UNKNOWN);
+    status_s = pcmk_exec_status_str(status);
+
     node = pcmk__output_create_xml_node(out, PCMK_XE_OPERATION,
                                         PCMK_XA_OP, pcmk__xe_history_key(xml_op),
                                         PCMK_XA_NODE, uname,
                                         "call", call_id,
                                         "rc", rc_s,
-                                        "status", pcmk_exec_status_str(status),
+                                        PCMK_XA_STATUS, status_s,
                                         NULL);
 
     rsc = pe_find_resource(scheduler->resources, op_rsc);
@@ -3084,12 +3089,13 @@ PCMK__OUTPUT_ARGS("ticket", "pcmk_ticket_t *")
 static int
 ticket_xml(pcmk__output_t *out, va_list args) {
     pcmk_ticket_t *ticket = va_arg(args, pcmk_ticket_t *);
+    const char *status = ticket->granted? "granted" : "revoked";
 
     xmlNodePtr node = NULL;
 
     node = pcmk__output_create_xml_node(out, "ticket",
                                         PCMK_XA_ID, ticket->id,
-                                        "status", ticket->granted ? "granted" : "revoked",
+                                        PCMK_XA_STATUS, status,
                                         "standby", pcmk__btoa(ticket->standby),
                                         NULL);
 

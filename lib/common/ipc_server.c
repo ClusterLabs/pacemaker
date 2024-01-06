@@ -789,7 +789,7 @@ pcmk__ipc_create_ack_as(const char *function, int line, uint32_t flags,
         ack = create_xml_node(NULL, tag);
         crm_xml_add(ack, "function", function);
         crm_xml_add_int(ack, "line", line);
-        crm_xml_add_int(ack, "status", (int) status);
+        crm_xml_add_int(ack, PCMK_XA_STATUS, (int) status);
         crm_xml_add(ack, PCMK__XA_IPC_PROTO_VERSION, ver);
     }
     return ack;
