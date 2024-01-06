@@ -927,7 +927,8 @@ unpack_tags(xmlNode *xml_tags, pcmk_scheduler_t *scheduler)
         xmlNode *xml_obj_ref = NULL;
         const char *tag_id = ID(xml_tag);
 
-        if (!pcmk__str_eq((const char *)xml_tag->name, XML_CIB_TAG_TAG, pcmk__str_none)) {
+        if (!pcmk__str_eq((const char *) xml_tag->name, PCMK_XE_TAG,
+                          pcmk__str_none)) {
             continue;
         }
 

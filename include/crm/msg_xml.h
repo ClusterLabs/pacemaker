@@ -108,6 +108,7 @@ extern "C" {
 #define PCMK_XE_SELECT_RESOURCES            "select_resources"
 #define PCMK_XE_SHORTDESC                   "shortdesc"
 #define PCMK_XE_STATUS                      "status"
+#define PCMK_XE_TAG                         "tag"
 #define PCMK_XE_TAGS                        "tags"
 #define PCMK_XE_TEMPLATE                    "template"
 #define PCMK_XE_TICKETS                     "tickets"
@@ -236,7 +237,7 @@ extern "C" {
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 
-#  define XML_CIB_TAG_TAG   		"tag"
+#  define XML_CIB_TAG_TAG   		PCMK_XE_TAG
 #  define XML_CIB_TAG_OBJ_REF 		"obj_ref"
 
 #  define XML_TAG_FENCING_TOPOLOGY      "fencing-topology"
