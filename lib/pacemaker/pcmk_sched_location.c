@@ -607,7 +607,8 @@ pcmk__new_location(const char *id, pcmk_resource_t *rsc,
                          pcmk__str_null_matches|pcmk__str_casei)) {
             new_con->discover_mode = pcmk_probe_always;
 
-        } else if (pcmk__str_eq(discover_mode, "never", pcmk__str_casei)) {
+        } else if (pcmk__str_eq(discover_mode, PCMK_VALUE_NEVER,
+                                pcmk__str_casei)) {
             new_con->discover_mode = pcmk_probe_never;
 
         } else if (pcmk__str_eq(discover_mode, PCMK_VALUE_EXCLUSIVE,
