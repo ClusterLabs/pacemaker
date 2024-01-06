@@ -235,7 +235,7 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
             rc = pcmk__output_select_rc(rc, temp_rc);
 
         } else if (strcmp(op, "modify") == 0) {
-            xmlNode *clist = first_named_child(change, XML_DIFF_LIST);
+            xmlNode *clist = first_named_child(change, PCMK_XE_CHANGE_LIST);
             GString *buffer_set = NULL;
             GString *buffer_unset = NULL;
 

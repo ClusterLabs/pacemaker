@@ -65,6 +65,7 @@ extern "C" {
 #define PCMK_XE_ATTRIBUTE                   "attribute"
 #define PCMK_XE_BUNDLE                      "bundle"
 #define PCMK_XE_CHANGE                      "change"
+#define PCMK_XE_CHANGE_LIST                 "change-list"
 #define PCMK_XE_CIB                         "cib"
 #define PCMK_XE_CLONE                       "clone"
 #define PCMK_XE_CLUSTER_PROPERTY_SET        "cluster_property_set"
@@ -244,7 +245,7 @@ extern "C" {
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 
-#  define XML_DIFF_LIST                 "change-list"
+#  define XML_DIFF_LIST                 PCMK_XE_CHANGE_LIST
 #  define XML_DIFF_ATTR                 "change-attr"
 #  define XML_DIFF_RESULT               "change-result"
 #  define XML_DIFF_POSITION             "position"

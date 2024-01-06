@@ -87,7 +87,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
                 crm_xml_add(change, PCMK_XA_OPERATION, "modify");
                 crm_xml_add(change, PCMK_XA_PATH, (const char *) xpath->str);
 
-                change = create_xml_node(change, XML_DIFF_LIST);
+                change = create_xml_node(change, PCMK_XE_CHANGE_LIST);
                 g_string_free(xpath, TRUE);
             }
         }
