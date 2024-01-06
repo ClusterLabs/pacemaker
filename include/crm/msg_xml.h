@@ -202,6 +202,7 @@ extern "C" {
 #define PCMK_XA_TARGET_VALUE                "target-value"
 #define PCMK_XA_TEMPLATE                    "template"
 #define PCMK_XA_TICKET                      "ticket"
+#define PCMK_XA_TIME                        "time"
 #define PCMK_XA_THEN                        "then"
 #define PCMK_XA_THEN_ACTION                 "then-action"
 #define PCMK_XA_TYPE                        "type"
