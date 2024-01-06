@@ -148,7 +148,7 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
 
                 for (role = pcmk__xe_first_child(acl_top); role;
                      role = pcmk__xe_next(role)) {
-                    if (!strcmp(XML_ACL_TAG_ROLE, (const char *) role->name)) {
+                    if (!strcmp(PCMK_XE_ACL_ROLE, (const char *) role->name)) {
                         const char *role_id = crm_element_value(role,
                                                                 PCMK_XA_ID);
 

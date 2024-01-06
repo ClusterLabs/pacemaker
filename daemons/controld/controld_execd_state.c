@@ -551,7 +551,7 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
 
         CRM_CHECK(request != NULL, return);
         CRM_CHECK(lrm_state->node_name, return);
-        crm_xml_add(request, XML_ACL_TAG_ROLE, "pacemaker-remote");
+        crm_xml_add(request, PCMK_XE_ACL_ROLE, "pacemaker-remote");
         pcmk__update_acl_user(request, F_LRMD_IPC_USER, lrm_state->node_name);
 
         /* Pacemaker Remote nodes don't know their own names (as known to the
