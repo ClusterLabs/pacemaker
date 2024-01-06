@@ -209,8 +209,6 @@ extern "C" {
  * Older constants that don't follow current naming
  */
 
-#  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
-
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 
 #  define ID(x) crm_element_value(x, PCMK_XA_ID)
