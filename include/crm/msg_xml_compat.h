@@ -397,6 +397,9 @@ extern "C" {
 #define F_XML_TAGNAME "__name__"
 #endif
 
+//! \deprecated Use \c PCMK_VALUE_TRUE instead
+#define XML_BOOLEAN_TRUE PCMK_VALUE_TRUE
+
 #ifdef __cplusplus
 }
 #endif
