@@ -152,6 +152,13 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
 
     if (pcmk__str_eq(boolean, "or", pcmk__str_casei)) {
         do_and = false;
+
+    } else if (!pcmk__str_eq(boolean, PCMK_VALUE_AND,
+                             pcmk__str_null_matches|pcmk__str_casei)) {
+        pcmk__config_warn("Location constraint rule %s has invalid "
+                          PCMK_XA_BOOLEAN_OP " value '%s', using default "
+                          "('" PCMK_VALUE_AND "')",
+                          rule_id, boolean);
     }
 
     location_rule = pcmk__new_location(rule_id, rsc, 0, discovery, NULL);

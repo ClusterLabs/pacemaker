@@ -679,6 +679,12 @@ pe_eval_expr(xmlNode *rule, const pe_rule_eval_data_t *rule_data,
     if (pcmk__str_eq(value, "or", pcmk__str_casei)) {
         do_and = FALSE;
         passed = FALSE;
+
+    } else if (!pcmk__str_eq(value, PCMK_VALUE_AND,
+                             pcmk__str_null_matches|pcmk__str_casei)) {
+        pcmk__config_warn("Rule %s has invalid " PCMK_XA_BOOLEAN_OP
+                          " value '%s', using default ('" PCMK_VALUE_AND "')",
+                          ID(rule), value);
     }
 
     crm_trace("Testing rule %s", ID(rule));
