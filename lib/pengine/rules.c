@@ -957,7 +957,7 @@ expand_value_source(const char *expr_id, const char *value,
     } else if (pcmk__str_eq(value_source, "param", pcmk__str_casei)) {
         table = match_data->params;
 
-    } else if (pcmk__str_eq(value_source, "meta", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value_source, PCMK_VALUE_META, pcmk__str_casei)) {
         table = match_data->meta;
 
     } else { // literal
