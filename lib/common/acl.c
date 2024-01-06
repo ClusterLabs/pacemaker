@@ -132,7 +132,7 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
         const char *tag = (const char *) child->name;
         const char *kind = crm_element_value(child, PCMK_XA_KIND);
 
-        if (pcmk__xe_is(child, XML_ACL_TAG_PERMISSION)) {
+        if (pcmk__xe_is(child, PCMK_XE_ACL_PERMISSION)) {
             CRM_ASSERT(kind != NULL);
             crm_trace("Unpacking ACL <%s> element of kind '%s'", tag, kind);
             tag = kind;

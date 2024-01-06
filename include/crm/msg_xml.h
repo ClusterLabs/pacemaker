@@ -56,6 +56,7 @@ extern "C" {
  */
 
 #define PCMK_XE_ACL_GROUP                   "acl_group"
+#define PCMK_XE_ACL_PERMISSION              "acl_permission"
 #define PCMK_XE_ACL_ROLE                    "acl_role"
 #define PCMK_XE_ACL_TARGET                  "acl_target"
 #define PCMK_XE_ACLS                        "acls"
@@ -233,7 +234,7 @@ extern "C" {
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
 
-#  define XML_ACL_TAG_PERMISSION	"acl_permission"
+#  define XML_ACL_TAG_PERMISSION	PCMK_XE_ACL_PERMISSION
 #  define XML_ACL_TAG_ROLE_REFv1	"role_ref"
 #  define XML_ACL_TAG_READ		"read"
 #  define XML_ACL_TAG_WRITE		"write"
