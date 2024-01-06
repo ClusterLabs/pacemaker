@@ -33,7 +33,7 @@
     "  <" PCMK_XE_LONGDESC " lang='en'>\n"                              \
         "%s"                                                            \
     "  </" PCMK_XE_LONGDESC ">\n"                                       \
-    "  <shortdesc lang='en'>%s</shortdesc>\n"                           \
+    "  <" PCMK_XE_SHORTDESC " lang='en'>%s</" PCMK_XE_SHORTDESC">\n"    \
     "  <" PCMK_XE_PARAMETERS "/>\n"                                     \
     "  <actions>\n"                                                     \
     "    <action name='meta-data'    timeout='5' />\n"                  \

@@ -674,7 +674,8 @@ systemd_unit_exists(const char *name)
     "  <" PCMK_XE_LONGDESC " lang=\"en\">\n"                                \
     "    %s\n"                                                              \
     "  </" PCMK_XE_LONGDESC ">\n"                                           \
-    "  <shortdesc lang=\"en\">systemd unit file for %s</shortdesc>\n"       \
+    "  <" PCMK_XE_SHORTDESC " lang=\"en\">systemd unit file for %s"         \
+      "</" PCMK_XE_SHORTDESC ">\n"       \
     "  <" PCMK_XE_PARAMETERS "/>\n"                                         \
     "  <actions>\n"                                                         \
     "    <action name=\"start\"     timeout=\"100\" />\n"                   \

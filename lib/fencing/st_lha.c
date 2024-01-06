@@ -38,7 +38,7 @@ static const char META_TEMPLATE[] =
     "  <" PCMK_XE_LONGDESC " lang=\"en\">\n"
         "%s\n"
     "  </" PCMK_XE_LONGDESC ">\n"
-    "  <shortdesc lang=\"en\">%s</shortdesc>\n"
+    "  <" PCMK_XE_SHORTDESC " lang=\"en\">%s</" PCMK_XE_SHORTDESC ">\n"
     "%s\n"
     "  <actions>\n"
     "    <action name=\"start\"   timeout=\"%s\" />\n"
