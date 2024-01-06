@@ -218,7 +218,6 @@ extern "C" {
 #  endif
 
 /*---- top level tags/attrs */
-#  define XML_PING_ATTR_PACEMAKERDSTATE_STARTINGDAEMONS "starting_daemons"
 #  define XML_PING_ATTR_PACEMAKERDSTATE_WAITPING "wait_for_ping"
 #  define XML_PING_ATTR_PACEMAKERDSTATE_RUNNING "running"
 #  define XML_PING_ATTR_PACEMAKERDSTATE_SHUTTINGDOWN "shutting_down"

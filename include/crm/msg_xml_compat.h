@@ -964,6 +964,9 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_PING_ATTR_PACEMAKERDSTATE_INIT "init"
 
+//! \deprecated Do not use
+#define XML_PING_ATTR_PACEMAKERDSTATE_STARTINGDAEMONS "starting_daemons"
+
 #ifdef __cplusplus
 }
 #endif
