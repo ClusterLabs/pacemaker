@@ -1099,7 +1099,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     for (xml_child = first_named_child(xml_obj, PCMK_XE_STORAGE_MAPPING);
          xml_child != NULL; xml_child = crm_next_same_xml(xml_child)) {
 
-        const char *source = crm_element_value(xml_child, "source-dir");
+        const char *source = crm_element_value(xml_child, PCMK_XA_SOURCE_DIR);
         const char *target = crm_element_value(xml_child, "target-dir");
         const char *options = crm_element_value(xml_child, PCMK_XA_OPTIONS);
         int flags = pe__bundle_mount_none;
