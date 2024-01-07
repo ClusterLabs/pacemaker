@@ -518,12 +518,14 @@ do_recover(long long action,
 static pcmk__cluster_option_t controller_options[] = {
     /* name, old name, type, allowed values,
      * default value, validator,
+     * context,
      * short description,
      * long description
      */
     {
         PCMK_OPT_DC_VERSION, NULL, "string", NULL,
         PCMK__VALUE_NONE, NULL,
+        pcmk__opt_context_controld,
         N_("Pacemaker version on cluster node elected Designated Controller (DC)"),
         N_("Includes a hash which identifies the exact changeset the code was "
             "built from. Used for diagnostic purposes.")
@@ -531,12 +533,14 @@ static pcmk__cluster_option_t controller_options[] = {
     {
         PCMK_OPT_CLUSTER_INFRASTRUCTURE, NULL, "string", NULL,
         "corosync", NULL,
+        pcmk__opt_context_controld,
         N_("The messaging stack on which Pacemaker is currently running"),
         N_("Used for informational and diagnostic purposes.")
     },
     {
         PCMK_OPT_CLUSTER_NAME, NULL, "string", NULL,
         NULL, NULL,
+        pcmk__opt_context_controld,
         N_("An arbitrary name for the cluster"),
         N_("This optional value is mostly for users' convenience as desired "
             "in administration, but may also be used in Pacemaker "
@@ -546,6 +550,7 @@ static pcmk__cluster_option_t controller_options[] = {
     {
         PCMK_OPT_DC_DEADTIME, NULL, "time", NULL,
         "20s", pcmk__valid_interval_spec,
+        pcmk__opt_context_controld,
         N_("How long to wait for a response from other nodes during start-up"),
         N_("The optimal value will depend on the speed and load of your network "
             "and the type of switches used.")
@@ -555,6 +560,7 @@ static pcmk__cluster_option_t controller_options[] = {
         N_("Zero disables polling, while positive values are an interval in "
             "seconds (unless other units are specified, for example \"5min\")"),
         "15min", pcmk__valid_interval_spec,
+        pcmk__opt_context_controld,
         N_("Polling interval to recheck cluster state and evaluate rules "
             "with date specifications"),
         N_("Pacemaker is primarily event-driven, and looks ahead to know when to "
@@ -566,6 +572,7 @@ static pcmk__cluster_option_t controller_options[] = {
     {
         PCMK_OPT_LOAD_THRESHOLD, NULL, "percentage", NULL,
         "80%", pcmk__valid_percentage,
+        pcmk__opt_context_controld,
         N_("Maximum amount of system load that should be used by cluster nodes"),
         N_("The cluster will slow down its recovery process when the amount of "
             "system resources used (currently CPU) approaches this limit"),
@@ -573,12 +580,14 @@ static pcmk__cluster_option_t controller_options[] = {
     {
         PCMK_OPT_NODE_ACTION_LIMIT, NULL, "integer", NULL,
         "0", pcmk__valid_int,
+        pcmk__opt_context_controld,
         N_("Maximum number of jobs that can be scheduled per node "
             "(defaults to 2x cores)")
     },
     {
         PCMK_OPT_FENCE_REACTION, NULL, "select", "stop, panic",
         "stop", NULL,
+        pcmk__opt_context_controld,
         N_("How a cluster node should react if notified of its own fencing"),
         N_("A cluster node may receive notification of its own fencing if fencing "
             "is misconfigured, or if fabric fencing is in use that doesn't cut "
@@ -590,6 +599,7 @@ static pcmk__cluster_option_t controller_options[] = {
     {
         PCMK_OPT_ELECTION_TIMEOUT, NULL, "time", NULL,
         "2min", pcmk__valid_interval_spec,
+        pcmk__opt_context_controld,
         "*** Advanced Use Only ***",
         N_("Declare an election failed if it is not decided within this much "
             "time. If you need to adjust this value, it probably indicates "
@@ -598,6 +608,7 @@ static pcmk__cluster_option_t controller_options[] = {
     {
         PCMK_OPT_SHUTDOWN_ESCALATION, NULL, "time", NULL,
         "20min", pcmk__valid_interval_spec,
+        pcmk__opt_context_controld,
         "*** Advanced Use Only ***",
         N_("Exit immediately if shutdown does not complete within this much "
             "time. If you need to adjust this value, it probably indicates "
@@ -607,6 +618,7 @@ static pcmk__cluster_option_t controller_options[] = {
         PCMK_OPT_JOIN_INTEGRATION_TIMEOUT, "crmd-integration-timeout", "time",
             NULL,
         "3min", pcmk__valid_interval_spec,
+        pcmk__opt_context_controld,
         "*** Advanced Use Only ***",
         N_("If you need to adjust this value, it probably indicates "
             "the presence of a bug.")
@@ -615,6 +627,7 @@ static pcmk__cluster_option_t controller_options[] = {
         PCMK_OPT_JOIN_FINALIZATION_TIMEOUT, "crmd-finalization-timeout",
             "time", NULL,
         "30min", pcmk__valid_interval_spec,
+        pcmk__opt_context_controld,
         "*** Advanced Use Only ***",
         N_("If you need to adjust this value, it probably indicates "
             "the presence of a bug.")
@@ -622,6 +635,7 @@ static pcmk__cluster_option_t controller_options[] = {
     {
         PCMK_OPT_TRANSITION_DELAY, "crmd-transition-delay", "time", NULL,
         "0s", pcmk__valid_interval_spec,
+        pcmk__opt_context_controld,
         N_("*** Advanced Use Only *** Enabling this option will slow down "
             "cluster recovery under all conditions"),
         N_("Delay cluster recovery for this much time to allow for additional "
@@ -641,6 +655,7 @@ static pcmk__cluster_option_t controller_options[] = {
          */
         PCMK_OPT_STONITH_WATCHDOG_TIMEOUT, NULL, "time", NULL,
         "0", NULL,
+        pcmk__opt_context_controld,
         N_("How long before nodes can be assumed to be safely down when "
            "watchdog-based self-fencing via SBD is in use"),
         N_("If this is set to a positive value, lost nodes are assumed to "
@@ -662,6 +677,7 @@ static pcmk__cluster_option_t controller_options[] = {
     {
         PCMK_OPT_STONITH_MAX_ATTEMPTS, NULL, "integer", NULL,
         "10", pcmk__valid_positive_int,
+        pcmk__opt_context_controld,
         N_("How many times fencing can fail before it will no longer be "
             "immediately re-attempted on a target")
     },
@@ -671,11 +687,13 @@ static pcmk__cluster_option_t controller_options[] = {
         PCMK_OPT_NO_QUORUM_POLICY, NULL, "select",
             "stop, freeze, ignore, demote, suicide",
         "stop", pcmk__valid_no_quorum_policy,
+        pcmk__opt_context_schedulerd,
         N_("What to do when the cluster does not have quorum"), NULL
     },
     {
         PCMK_OPT_SHUTDOWN_LOCK, NULL, "boolean", NULL,
         PCMK_VALUE_FALSE, pcmk__valid_boolean,
+        pcmk__opt_context_schedulerd,
         N_("Whether to lock resources to a cleanly shut down node"),
         N_("When true, resources active on a node when it is cleanly shut down "
             "are kept \"locked\" to that node (not allowed to run elsewhere) "
@@ -689,6 +707,7 @@ static pcmk__cluster_option_t controller_options[] = {
     {
         PCMK_OPT_SHUTDOWN_LOCK_LIMIT, NULL, "time", NULL,
         "0", pcmk__valid_interval_spec,
+        pcmk__opt_context_schedulerd,
         N_("Do not lock resources to a cleanly shut down node longer than "
            "this"),
         N_("If shutdown-lock is true and this is set to a nonzero time "
@@ -699,6 +718,7 @@ static pcmk__cluster_option_t controller_options[] = {
     {
         PCMK_OPT_NODE_PENDING_TIMEOUT, NULL, "time", NULL,
         "0", pcmk__valid_interval_spec,
+        pcmk__opt_context_schedulerd,
         N_("How long to wait for a node that has joined the cluster to join "
            "the controller process group"),
         N_("Fence nodes that do not join the controller process group within "

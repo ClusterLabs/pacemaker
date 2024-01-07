@@ -58,6 +58,9 @@ typedef struct pcmk__cluster_option_s {
 
     bool (*is_valid)(const char *);
 
+    // @COMPAT context is used only for daemon meta-data
+    enum pcmk__opt_context context;
+
     const char *description_short;
     const char *description_long;
 
