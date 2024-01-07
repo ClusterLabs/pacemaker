@@ -1105,7 +1105,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         int flags = pe__bundle_mount_none;
 
         if (source == NULL) {
-            source = crm_element_value(xml_child, "source-dir-root");
+            source = crm_element_value(xml_child, PCMK_XA_SOURCE_DIR_ROOT);
             pe__set_bundle_mount_flags(xml_child, flags,
                                        pe__bundle_mount_subdir);
         }
