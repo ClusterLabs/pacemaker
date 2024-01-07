@@ -1096,7 +1096,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         }
     }
 
-    xml_obj = first_named_child(rsc->xml, "storage");
+    xml_obj = first_named_child(rsc->xml, PCMK_XE_STORAGE);
     for (xmlNode *xml_child = pcmk__xe_first_child(xml_obj); xml_child != NULL;
          xml_child = pcmk__xe_next(xml_child)) {
 

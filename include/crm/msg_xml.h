@@ -122,6 +122,7 @@ extern "C" {
 #define PCMK_XE_SHORTDESC                   "shortdesc"
 #define PCMK_XE_SOURCE                      "source"
 #define PCMK_XE_STATUS                      "status"
+#define PCMK_XE_STORAGE                     "storage"
 #define PCMK_XE_TAG                         "tag"
 #define PCMK_XE_TAGS                        "tags"
 #define PCMK_XE_TARGET                      "target"
