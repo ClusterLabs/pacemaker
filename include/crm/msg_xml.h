@@ -169,6 +169,7 @@ extern "C" {
 #define PCMK_XA_IMAGE                       "image"
 #define PCMK_XA_INDEX                       "index"
 #define PCMK_XA_INFLUENCE                   "influence"
+#define PCMK_XA_INTERNAL_PORT               "internal-port"
 #define PCMK_XA_IP_RANGE_START              "ip-range-start"
 #define PCMK_XA_KIND                        "kind"
 #define PCMK_XA_LANG                        "lang"
