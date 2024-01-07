@@ -349,7 +349,7 @@ valid_network(pe__bundle_variant_data_t *data)
     if(data->control_port) {
         if(data->nreplicas_per_host > 1) {
             pcmk__config_err("Specifying the 'control-port' for %s requires "
-                             "'replicas-per-host=1'", data->prefix);
+                             "'" PCMK_XA_REPLICAS_PER_HOST "=1'", data->prefix);
             data->nreplicas_per_host = 1;
             // @TODO to be sure:
             // pcmk__clear_rsc_flags(rsc, pcmk_rsc_unique);
@@ -1037,7 +1037,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
      * floating IPs only works if the container is started with:
      *   --userland-proxy=false --ip-masq=false
      */
-    value = crm_element_value(xml_obj, "replicas-per-host");
+    value = crm_element_value(xml_obj, PCMK_XA_REPLICAS_PER_HOST);
     pcmk__scan_min_int(value, &bundle_data->nreplicas_per_host, 1);
     if (bundle_data->nreplicas_per_host == 1) {
         pcmk__clear_rsc_flags(rsc, pcmk_rsc_unique);

@@ -183,6 +183,7 @@ extern "C" {
 #define PCMK_XA_REASON                      "reason"
 #define PCMK_XA_REFERENCE                   "reference"
 #define PCMK_XA_REPLICAS                    "replicas"
+#define PCMK_XA_REPLICAS_PER_HOST           "replicas-per-host"
 #define PCMK_XA_REQUEST                     "request"
 #define PCMK_XA_RESOURCE_DISCOVERY          "resource-discovery"
 #define PCMK_XA_RESULT                      "result"
