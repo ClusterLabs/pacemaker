@@ -98,6 +98,7 @@ extern "C" {
 #define PCMK_XE_OPTION                      "option"
 #define PCMK_XE_PARAMETER                   "parameter"
 #define PCMK_XE_PARAMETERS                  "parameters"
+#define PCMK_XE_PORT_MAPPING                "port-mapping"
 #define PCMK_XE_POSITION                    "position"
 #define PCMK_XE_PRIMITIVE                   "primitive"
 #define PCMK_XE_RECIPIENT                   "recipient"

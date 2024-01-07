@@ -1054,6 +1054,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
     xml_obj = first_named_child(rsc->xml, PCMK_XE_NETWORK);
     if(xml_obj) {
+        const xmlNode *xml_child = NULL;
 
         bundle_data->ip_range_start =
             crm_element_value_copy(xml_obj, PCMK_XA_IP_RANGE_START);
@@ -1068,8 +1069,8 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
             bundle_data->add_host = TRUE;
         }
 
-        for (xmlNode *xml_child = pcmk__xe_first_child(xml_obj); xml_child != NULL;
-             xml_child = pcmk__xe_next(xml_child)) {
+        for (xml_child = first_named_child(xml_obj, PCMK_XE_PORT_MAPPING);
+             xml_child != NULL; xml_child = crm_next_same_xml(xml_child)) {
 
             pe__bundle_port_t *port = calloc(1, sizeof(pe__bundle_port_t));
             port->source = crm_element_value_copy(xml_child, "port");
