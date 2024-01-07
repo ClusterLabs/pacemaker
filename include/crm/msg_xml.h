@@ -161,6 +161,7 @@ extern "C" {
 #define PCMK_XA_HOST                        "host"
 #define PCMK_XA_ID                          "id"
 #define PCMK_XA_ID_REF                      "id-ref"
+#define PCMK_XA_IMAGE                       "image"
 #define PCMK_XA_INDEX                       "index"
 #define PCMK_XA_INFLUENCE                   "influence"
 #define PCMK_XA_KIND                        "kind"

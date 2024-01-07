@@ -1047,7 +1047,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         crm_element_value_copy(xml_obj, PCMK_XA_RUN_COMMAND);
     bundle_data->launcher_options = crm_element_value_copy(xml_obj,
                                                            PCMK_XA_OPTIONS);
-    bundle_data->image = crm_element_value_copy(xml_obj, "image");
+    bundle_data->image = crm_element_value_copy(xml_obj, PCMK_XA_IMAGE);
     bundle_data->container_network = crm_element_value_copy(xml_obj,
                                                             PCMK_XA_NETWORK);
 
@@ -1519,7 +1519,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
             rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_BUNDLE, 8,
                      PCMK_XA_ID, rsc->id,
                      PCMK_XA_TYPE, container_agent_str(bundle_data->agent_type),
-                     "image", bundle_data->image,
+                     PCMK_XA_IMAGE, bundle_data->image,
                      "unique", pcmk__flag_text(rsc->flags, pcmk_rsc_unique),
                      "maintenance",
                      pcmk__flag_text(rsc->flags, pcmk_rsc_maintenance),
