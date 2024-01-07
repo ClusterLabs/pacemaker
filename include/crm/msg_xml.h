@@ -177,6 +177,7 @@ extern "C" {
 #define PCMK_XA_OBJECT_TYPE                 "object-type"
 #define PCMK_XA_OP                          "op"
 #define PCMK_XA_OPERATION                   "operation"
+#define PCMK_XA_OPTIONS                     "options"
 #define PCMK_XA_ORIGIN                      "origin"
 #define PCMK_XA_PATH                        "path"
 #define PCMK_XA_PRESENT                     "present"

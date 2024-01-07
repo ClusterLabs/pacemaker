@@ -1045,7 +1045,8 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
     bundle_data->container_command =
         crm_element_value_copy(xml_obj, PCMK_XA_RUN_COMMAND);
-    bundle_data->launcher_options = crm_element_value_copy(xml_obj, "options");
+    bundle_data->launcher_options = crm_element_value_copy(xml_obj,
+                                                           PCMK_XA_OPTIONS);
     bundle_data->image = crm_element_value_copy(xml_obj, "image");
     bundle_data->container_network = crm_element_value_copy(xml_obj,
                                                             PCMK_XA_NETWORK);
@@ -1093,7 +1094,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
         const char *source = crm_element_value(xml_child, "source-dir");
         const char *target = crm_element_value(xml_child, "target-dir");
-        const char *options = crm_element_value(xml_child, "options");
+        const char *options = crm_element_value(xml_child, PCMK_XA_OPTIONS);
         int flags = pe__bundle_mount_none;
 
         if (source == NULL) {
