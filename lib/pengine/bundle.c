@@ -1050,7 +1050,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     bundle_data->container_network = crm_element_value_copy(xml_obj,
                                                             PCMK_XA_NETWORK);
 
-    xml_obj = first_named_child(rsc->xml, "network");
+    xml_obj = first_named_child(rsc->xml, PCMK_XE_NETWORK);
     if(xml_obj) {
 
         bundle_data->ip_range_start = crm_element_value_copy(xml_obj, "ip-range-start");

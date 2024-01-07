@@ -86,6 +86,7 @@ extern "C" {
 #define PCMK_XE_INSTANCE_ATTRIBUTES         "instance_attributes"
 #define PCMK_XE_LONGDESC                    "longdesc"
 #define PCMK_XE_META_ATTRIBUTES             "meta_attributes"
+#define PCMK_XE_NETWORK                     "network"
 #define PCMK_XE_NODE                        "node"
 #define PCMK_XE_NODES                       "nodes"
 #define PCMK_XE_NVPAIR                      "nvpair"
