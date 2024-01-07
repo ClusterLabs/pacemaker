@@ -987,6 +987,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 {
     const char *value = NULL;
     xmlNode *xml_obj = NULL;
+    const xmlNode *xml_child = NULL;
     xmlNode *xml_resource = NULL;
     pe__bundle_variant_data_t *bundle_data = NULL;
     bool need_log_mount = TRUE;
@@ -1054,8 +1055,6 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
     xml_obj = first_named_child(rsc->xml, PCMK_XE_NETWORK);
     if(xml_obj) {
-        const xmlNode *xml_child = NULL;
-
         bundle_data->ip_range_start =
             crm_element_value_copy(xml_obj, PCMK_XA_IP_RANGE_START);
         bundle_data->host_netmask =
@@ -1097,8 +1096,8 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     }
 
     xml_obj = first_named_child(rsc->xml, PCMK_XE_STORAGE);
-    for (xmlNode *xml_child = pcmk__xe_first_child(xml_obj); xml_child != NULL;
-         xml_child = pcmk__xe_next(xml_child)) {
+    for (xml_child = first_named_child(xml_obj, PCMK_XE_STORAGE_MAPPING);
+         xml_child != NULL; xml_child = crm_next_same_xml(xml_child)) {
 
         const char *source = crm_element_value(xml_child, "source-dir");
         const char *target = crm_element_value(xml_child, "target-dir");
