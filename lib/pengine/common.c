@@ -321,9 +321,9 @@ pe_metadata(pcmk__output_t *out)
     const char *desc_short = "Pacemaker scheduler options";
     const char *desc_long = "Cluster options used by Pacemaker's scheduler";
 
-    gchar *s = pcmk__format_option_metadata(name, desc_short, desc_long,
-                                            pcmk__opt_context_schedulerd,
-                                            pe_opts, PCMK__NELEM(pe_opts));
+    gchar *s = pcmk__cluster_option_metadata(name, desc_short, desc_long,
+                                             pcmk__opt_context_schedulerd);
+
     out->output_xml(out, "metadata", s);
     g_free(s);
 }

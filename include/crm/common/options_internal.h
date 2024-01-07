@@ -76,6 +76,10 @@ gchar *pcmk__format_option_metadata(const char *name, const char *desc_short,
                                     pcmk__cluster_option_t *option_list,
                                     int len);
 
+gchar *pcmk__cluster_option_metadata(const char *name, const char *desc_short,
+                                     const char *desc_long,
+                                     enum pcmk__opt_context filter);
+
 void pcmk__validate_cluster_options(GHashTable *options,
                                     pcmk__cluster_option_t *option_list,
                                     int len);

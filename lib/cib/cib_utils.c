@@ -881,9 +881,9 @@ cib_metadata(void)
     const char *desc_long = "Cluster options used by Pacemaker's Cluster "
                             "Information Base manager";
 
-    gchar *s = pcmk__format_option_metadata(name, desc_short, desc_long,
-                                            pcmk__opt_context_based,
-                                            cib_opts, PCMK__NELEM(cib_opts));
+    gchar *s = pcmk__cluster_option_metadata(name, desc_short, desc_long,
+                                             pcmk__opt_context_based);
+
     printf("%s", s);
     g_free(s);
 }

@@ -43,7 +43,6 @@ pcmk__cli_help(char cmd)
  * Option metadata
  */
 
-#if 0
 static pcmk__cluster_option_t cluster_options[] = {
     /* name, old name, type, allowed values,
      * default value, validator,
@@ -534,7 +533,6 @@ static pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
 };
-#endif  // 0
 
 
 /*
@@ -1119,6 +1117,32 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
                     "</" PCMK_XE_RESOURCE_AGENT ">\n");
 
     return g_string_free(s, FALSE);
+}
+
+/*!
+ * \internal
+ * \brief Format cluster option metadata as an OCF-like XML string
+ *
+ * \param[in] name        Daemon name
+ * \param[in] desc_short  Short description of the daemon
+ * \param[in] desc_long   Long description of the daemon
+ * \param[in] filter      If not \c pcmk__opt_context_none, include only
+ *                        those options whose \c context field is equal to
+ *                        \p filter
+ *
+ * \return A string containing OCF-like cluster option metadata XML
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       \c g_free().
+ */
+gchar *
+pcmk__cluster_option_metadata(const char *name, const char *desc_short,
+                              const char *desc_long,
+                              enum pcmk__opt_context filter)
+{
+    return pcmk__format_option_metadata(name, desc_short, desc_long, filter,
+                                        cluster_options,
+                                        PCMK__NELEM(cluster_options));
 }
 
 void
