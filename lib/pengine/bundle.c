@@ -1076,7 +1076,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
             port->source = crm_element_value_copy(xml_child, PCMK_XA_PORT);
 
             if(port->source == NULL) {
-                port->source = crm_element_value_copy(xml_child, "range");
+                port->source = crm_element_value_copy(xml_child, PCMK_XA_RANGE);
             } else {
                 port->target = crm_element_value_copy(xml_child, "internal-port");
             }

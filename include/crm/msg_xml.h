@@ -192,6 +192,7 @@ extern "C" {
 #define PCMK_XA_PROMOTED_MAX                "promoted-max"
 #define PCMK_XA_PROVIDER                    "provider"
 #define PCMK_XA_QUEUE_TIME                  "queue-time"
+#define PCMK_XA_RANGE                       "range"
 #define PCMK_XA_REASON                      "reason"
 #define PCMK_XA_REFERENCE                   "reference"
 #define PCMK_XA_REPLICAS                    "replicas"
