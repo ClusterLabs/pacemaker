@@ -36,6 +36,19 @@ bool pcmk__env_option_enabled(const char *daemon, const char *option);
  * Cluster option handling
  */
 
+/*!
+ * \internal
+ * \enum pcmk__opt_context
+ * \brief Context flags for options
+ */
+enum pcmk__opt_context {
+    // @COMPAT Used only for daemon metadata
+    pcmk__opt_context_none       = 0,           //!< No additional context
+    pcmk__opt_context_based      = (1 << 1),    //!< CIB manager metadata
+    pcmk__opt_context_controld   = (1 << 2),    //!< Controller metadata
+    pcmk__opt_context_schedulerd = (1 << 3),    //!< Scheduler metadata
+};
+
 typedef struct pcmk__cluster_option_s {
     const char *name;
     const char *alt_name;
