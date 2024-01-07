@@ -1057,7 +1057,8 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
         bundle_data->ip_range_start =
             crm_element_value_copy(xml_obj, PCMK_XA_IP_RANGE_START);
-        bundle_data->host_netmask = crm_element_value_copy(xml_obj, "host-netmask");
+        bundle_data->host_netmask =
+            crm_element_value_copy(xml_obj, PCMK_XA_HOST_NETMASK);
         bundle_data->host_network =
             crm_element_value_copy(xml_obj, PCMK_XA_HOST_INTERFACE);
         bundle_data->control_port =
