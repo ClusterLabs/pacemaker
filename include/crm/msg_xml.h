@@ -192,6 +192,7 @@ extern "C" {
 #define PCMK_XA_RSC                         "rsc"
 #define PCMK_XA_RSC_PATTERN                 "rsc-pattern"
 #define PCMK_XA_RSC_ROLE                    "rsc-role"
+#define PCMK_XA_RUN_COMMAND                 "run-command"
 #define PCMK_XA_RUNNING                     "running"
 #define PCMK_XA_SCOPE                       "scope"
 #define PCMK_XA_SCORE                       "score"

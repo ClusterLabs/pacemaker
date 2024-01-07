@@ -1043,7 +1043,8 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         pcmk__clear_rsc_flags(rsc, pcmk_rsc_unique);
     }
 
-    bundle_data->container_command = crm_element_value_copy(xml_obj, "run-command");
+    bundle_data->container_command =
+        crm_element_value_copy(xml_obj, PCMK_XA_RUN_COMMAND);
     bundle_data->launcher_options = crm_element_value_copy(xml_obj, "options");
     bundle_data->image = crm_element_value_copy(xml_obj, "image");
     bundle_data->container_network = crm_element_value_copy(xml_obj, "network");
