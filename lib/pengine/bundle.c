@@ -348,8 +348,9 @@ valid_network(pe__bundle_variant_data_t *data)
     }
     if(data->control_port) {
         if(data->nreplicas_per_host > 1) {
-            pcmk__config_err("Specifying the 'control-port' for %s requires "
-                             "'" PCMK_XA_REPLICAS_PER_HOST "=1'", data->prefix);
+            pcmk__config_err("Specifying the '" PCMK_XA_CONTROL_PORT "' for %s "
+                             "requires '" PCMK_XA_REPLICAS_PER_HOST "=1'",
+                             data->prefix);
             data->nreplicas_per_host = 1;
             // @TODO to be sure:
             // pcmk__clear_rsc_flags(rsc, pcmk_rsc_unique);
@@ -1058,7 +1059,8 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
             crm_element_value_copy(xml_obj, PCMK_XA_IP_RANGE_START);
         bundle_data->host_netmask = crm_element_value_copy(xml_obj, "host-netmask");
         bundle_data->host_network = crm_element_value_copy(xml_obj, "host-interface");
-        bundle_data->control_port = crm_element_value_copy(xml_obj, "control-port");
+        bundle_data->control_port =
+            crm_element_value_copy(xml_obj, PCMK_XA_CONTROL_PORT);
         value = crm_element_value(xml_obj, "add-host");
         if (crm_str_to_boolean(value, &bundle_data->add_host) != 1) {
             bundle_data->add_host = TRUE;
@@ -1160,7 +1162,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
     } else if(xml_obj) {
         pcmk__config_err("Cannot control %s inside %s without either "
-                         PCMK_XA_IP_RANGE_START " or control-port",
+                         PCMK_XA_IP_RANGE_START " or " PCMK_XA_CONTROL_PORT,
                          rsc->id, ID(xml_obj));
         return FALSE;
     }
@@ -1215,7 +1217,8 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
              *
              * However, it gains nothing, since we control both the container
              * environment and the connection resource parameters, and the user
-             * can use a different port if desired by setting control-port.
+             * can use a different port if desired by setting
+             * PCMK_XA_CONTROL_PORT.
              */
             port->source = pcmk__itoa(DEFAULT_REMOTE_PORT);
         }
