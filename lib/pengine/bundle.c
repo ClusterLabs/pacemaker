@@ -1025,7 +1025,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     /* Default replicas to PCMK_META_PROMOTED_MAX if it was specified and 1
      * otherwise
      */
-    value = crm_element_value(xml_obj, "replicas");
+    value = crm_element_value(xml_obj, PCMK_XA_REPLICAS);
     if ((value == NULL) && (bundle_data->promoted_max > 0)) {
         bundle_data->nreplicas = bundle_data->promoted_max;
     } else {
