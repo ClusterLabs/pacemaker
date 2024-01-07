@@ -1047,7 +1047,8 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         crm_element_value_copy(xml_obj, PCMK_XA_RUN_COMMAND);
     bundle_data->launcher_options = crm_element_value_copy(xml_obj, "options");
     bundle_data->image = crm_element_value_copy(xml_obj, "image");
-    bundle_data->container_network = crm_element_value_copy(xml_obj, "network");
+    bundle_data->container_network = crm_element_value_copy(xml_obj,
+                                                            PCMK_XA_NETWORK);
 
     xml_obj = first_named_child(rsc->xml, "network");
     if(xml_obj) {
