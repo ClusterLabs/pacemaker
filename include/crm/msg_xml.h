@@ -219,6 +219,7 @@ extern "C" {
 #define PCMK_XA_SYMMETRICAL                 "symmetrical"
 #define PCMK_XA_TARGET                      "target"
 #define PCMK_XA_TARGET_ATTRIBUTE            "target-attribute"
+#define PCMK_XA_TARGET_DIR                  "target-dir"
 #define PCMK_XA_TARGET_PATTERN              "target-pattern"
 #define PCMK_XA_TARGET_VALUE                "target-value"
 #define PCMK_XA_TEMPLATE                    "template"
