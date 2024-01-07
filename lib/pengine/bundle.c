@@ -1063,7 +1063,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
             crm_element_value_copy(xml_obj, PCMK_XA_HOST_INTERFACE);
         bundle_data->control_port =
             crm_element_value_copy(xml_obj, PCMK_XA_CONTROL_PORT);
-        value = crm_element_value(xml_obj, "add-host");
+        value = crm_element_value(xml_obj, PCMK_XA_ADD_HOST);
         if (crm_str_to_boolean(value, &bundle_data->add_host) != 1) {
             bundle_data->add_host = TRUE;
         }
