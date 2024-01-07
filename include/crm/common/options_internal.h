@@ -70,6 +70,7 @@ bool pcmk__valid_positive_int(const char *value);
 bool pcmk__valid_no_quorum_policy(const char *value);
 bool pcmk__valid_percentage(const char *value);
 bool pcmk__valid_script(const char *value);
+bool pcmk__valid_placement_strategy(const char *value);
 
 // from watchdog.c
 long pcmk__get_sbd_watchdog_timeout(void);

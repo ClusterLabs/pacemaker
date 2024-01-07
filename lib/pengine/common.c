@@ -18,13 +18,6 @@
 #include <crm/common/scheduler_internal.h>
 #include <crm/pengine/internal.h>
 
-static bool
-check_placement_strategy(const char *value)
-{
-    return pcmk__strcase_any_of(value, "default", "utilization", "minimal",
-                           "balanced", NULL);
-}
-
 static pcmk__cluster_option_t pe_opts[] = {
     /* name, old name, type, allowed values,
      * default value, validator,
@@ -283,7 +276,7 @@ static pcmk__cluster_option_t pe_opts[] = {
     {
         PCMK_OPT_PLACEMENT_STRATEGY, NULL, "select",
             "default, utilization, minimal, balanced",
-        "default", check_placement_strategy,
+        "default", pcmk__valid_placement_strategy,
         N_("How the cluster should allocate resources to nodes"),
         NULL
     },

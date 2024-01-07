@@ -324,6 +324,22 @@ pcmk__valid_script(const char *value)
 
 /*!
  * \internal
+ * \brief Check whether a string represents a valid placement strategy
+ *
+ * \param[in] value  String to validate
+ *
+ * \return \c true if \p value is a valid placement strategy, or \c false
+ *         otherwise
+ */
+bool
+pcmk__valid_placement_strategy(const char *value)
+{
+    return pcmk__strcase_any_of(value, "default", "utilization", "minimal",
+                                "balanced", NULL);
+}
+
+/*!
+ * \internal
  * \brief Check a table of configured options for a particular option
  *
  * \param[in,out] options    Name/value pairs for configured options
