@@ -187,6 +187,7 @@ extern "C" {
 #define PCMK_XA_OPTIONS                     "options"
 #define PCMK_XA_ORIGIN                      "origin"
 #define PCMK_XA_PATH                        "path"
+#define PCMK_XA_PORT                        "port"
 #define PCMK_XA_PRESENT                     "present"
 #define PCMK_XA_PROMOTED_MAX                "promoted-max"
 #define PCMK_XA_PROVIDER                    "provider"

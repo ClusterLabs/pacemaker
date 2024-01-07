@@ -1073,7 +1073,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
              xml_child != NULL; xml_child = crm_next_same_xml(xml_child)) {
 
             pe__bundle_port_t *port = calloc(1, sizeof(pe__bundle_port_t));
-            port->source = crm_element_value_copy(xml_child, "port");
+            port->source = crm_element_value_copy(xml_child, PCMK_XA_PORT);
 
             if(port->source == NULL) {
                 port->source = crm_element_value_copy(xml_child, "range");
@@ -1088,7 +1088,8 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
                 bundle_data->ports = g_list_append(bundle_data->ports, port);
 
             } else {
-                pcmk__config_err("Invalid port directive %s", ID(xml_child));
+                pcmk__config_err("Invalid " PCMK_XA_PORT " directive %s",
+                                 ID(xml_child));
                 port_free(port);
             }
         }
