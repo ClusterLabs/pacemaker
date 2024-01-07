@@ -202,6 +202,9 @@
 // @COMPAT Deprecated since 2.1.5
 #define PCMK__XA_FIRST_INSTANCE         "first-instance"
 
+// @COMPAT Deprecated alias for "promoted-max" since 2.0.0
+#define PCMK__XA_PROMOTED_MAX_LEGACY    "masters"
+
 // @COMPAT Deprecated since 1.1.12
 #define PCMK__XA_REF                    "ref"
 

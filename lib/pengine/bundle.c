@@ -1018,7 +1018,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     value = crm_element_value(xml_obj, PCMK_META_PROMOTED_MAX);
     if (value == NULL) {
         // @COMPAT deprecated since 2.0.0
-        value = crm_element_value(xml_obj, "masters");
+        value = crm_element_value(xml_obj, PCMK__XA_PROMOTED_MAX_LEGACY);
     }
     pcmk__scan_min_int(value, &bundle_data->promoted_max, 0);
 
