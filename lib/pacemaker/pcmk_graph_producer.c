@@ -1004,16 +1004,17 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
     GList *iter = NULL;
     const char *value = NULL;
     long long limit = 0LL;
+    GHashTable *config_hash = scheduler->config_hash;
 
     transition_id++;
     crm_trace("Creating transition graph %d", transition_id);
 
     scheduler->graph = create_xml_node(NULL, XML_TAG_GRAPH);
 
-    value = pe_pref(scheduler->config_hash, PCMK_OPT_CLUSTER_DELAY);
+    value = pcmk__cluster_option(config_hash, PCMK_OPT_CLUSTER_DELAY);
     crm_xml_add(scheduler->graph, PCMK_OPT_CLUSTER_DELAY, value);
 
-    value = pe_pref(scheduler->config_hash, PCMK_OPT_STONITH_TIMEOUT);
+    value = pcmk__cluster_option(config_hash, PCMK_OPT_STONITH_TIMEOUT);
     crm_xml_add(scheduler->graph, PCMK_OPT_STONITH_TIMEOUT, value);
 
     crm_xml_add(scheduler->graph, "failed-stop-offset", "INFINITY");
@@ -1024,12 +1025,12 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
         crm_xml_add(scheduler->graph, "failed-start-offset", "1");
     }
 
-    value = pe_pref(scheduler->config_hash, PCMK_OPT_BATCH_LIMIT);
+    value = pcmk__cluster_option(config_hash, PCMK_OPT_BATCH_LIMIT);
     crm_xml_add(scheduler->graph, PCMK_OPT_BATCH_LIMIT, value);
 
     crm_xml_add_int(scheduler->graph, "transition_id", transition_id);
 
-    value = pe_pref(scheduler->config_hash, PCMK_OPT_MIGRATION_LIMIT);
+    value = pcmk__cluster_option(config_hash, PCMK_OPT_MIGRATION_LIMIT);
     if ((pcmk__scan_ll(value, &limit, 0LL) == pcmk_rc_ok) && (limit > 0)) {
         crm_xml_add(scheduler->graph, PCMK_OPT_MIGRATION_LIMIT, value);
     }

@@ -50,7 +50,9 @@ struct action_history {
  * flag is stringified more readably in log messages.
  */
 #define set_config_flag(scheduler, option, flag) do {                         \
-        const char *scf_value = pe_pref((scheduler)->config_hash, (option));  \
+        GHashTable *config_hash = (scheduler)->config_hash;                   \
+        const char *scf_value = pcmk__cluster_option(config_hash, (option));  \
+                                                                              \
         if (scf_value != NULL) {                                              \
             if (crm_is_true(scf_value)) {                                     \
                 (scheduler)->flags = pcmk__set_flags_as(__func__, __LINE__,   \
@@ -239,7 +241,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
         crm_info("Startup probes: disabled (dangerous)");
     }
 
-    value = pe_pref(scheduler->config_hash, PCMK_OPT_HAVE_WATCHDOG);
+    value = pcmk__cluster_option(config_hash, PCMK_OPT_HAVE_WATCHDOG);
     if (value && crm_is_true(value)) {
         crm_info("Watchdog-based self-fencing will be performed via SBD if "
                  "fencing is required and " PCMK_OPT_STONITH_WATCHDOG_TIMEOUT
@@ -253,7 +255,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     set_if_xpath(pcmk_sched_enable_unfencing, XPATH_ENABLE_UNFENCING,
                  scheduler);
 
-    value = pe_pref(scheduler->config_hash, PCMK_OPT_STONITH_TIMEOUT);
+    value = pcmk__cluster_option(config_hash, PCMK_OPT_STONITH_TIMEOUT);
     pcmk_parse_interval_spec(value, &interval_ms);
 
     if (interval_ms >= INT_MAX) {
@@ -271,8 +273,8 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
         crm_debug("STONITH of failed nodes is disabled");
     }
 
-    scheduler->stonith_action = pe_pref(scheduler->config_hash,
-                                        PCMK_OPT_STONITH_ACTION);
+    scheduler->stonith_action = pcmk__cluster_option(config_hash,
+                                                     PCMK_OPT_STONITH_ACTION);
     if (!strcmp(scheduler->stonith_action, "poweroff")) {
         pcmk__warn_once(pcmk__wo_poweroff,
                         "Support for " PCMK_OPT_STONITH_ACTION " of "
@@ -290,8 +292,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
         crm_debug("Concurrent fencing is disabled");
     }
 
-    value = pe_pref(scheduler->config_hash,
-                    PCMK_OPT_PRIORITY_FENCING_DELAY);
+    value = pcmk__cluster_option(config_hash, PCMK_OPT_PRIORITY_FENCING_DELAY);
     if (value) {
         pcmk_parse_interval_spec(value, &interval_ms);
         scheduler->priority_fencing_delay = (int) (interval_ms / 1000);
@@ -310,7 +311,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
         crm_debug("Cluster is symmetric" " - resources can run anywhere by default");
     }
 
-    value = pe_pref(scheduler->config_hash, PCMK_OPT_NO_QUORUM_POLICY);
+    value = pcmk__cluster_option(config_hash, PCMK_OPT_NO_QUORUM_POLICY);
 
     if (pcmk__str_eq(value, "ignore", pcmk__str_casei)) {
         scheduler->no_quorum_policy = pcmk_no_quorum_ignore;
@@ -379,7 +380,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
         crm_trace("Orphan resource actions are ignored");
     }
 
-    value = pe_pref(scheduler->config_hash, PCMK__OPT_REMOVE_AFTER_STOP);
+    value = pcmk__cluster_option(config_hash, PCMK__OPT_REMOVE_AFTER_STOP);
     if (value != NULL) {
         if (crm_is_true(value)) {
             pcmk__set_scheduler_flags(scheduler, pcmk_sched_remove_after_stop);
@@ -421,14 +422,14 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     pe__unpack_node_health_scores(scheduler);
 
-    scheduler->placement_strategy = pe_pref(scheduler->config_hash,
-                                            PCMK_OPT_PLACEMENT_STRATEGY);
+    scheduler->placement_strategy =
+        pcmk__cluster_option(config_hash, PCMK_OPT_PLACEMENT_STRATEGY);
     crm_trace("Placement strategy: %s", scheduler->placement_strategy);
 
     set_config_flag(scheduler, PCMK_OPT_SHUTDOWN_LOCK,
                     pcmk_sched_shutdown_lock);
     if (pcmk_is_set(scheduler->flags, pcmk_sched_shutdown_lock)) {
-        value = pe_pref(scheduler->config_hash, PCMK_OPT_SHUTDOWN_LOCK_LIMIT);
+        value = pcmk__cluster_option(config_hash, PCMK_OPT_SHUTDOWN_LOCK_LIMIT);
         pcmk_parse_interval_spec(value, &(scheduler->shutdown_lock));
         scheduler->shutdown_lock /= 1000;
         crm_trace("Resources will be locked to nodes that were cleanly "
@@ -439,7 +440,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
                   "shut down");
     }
 
-    value = pe_pref(scheduler->config_hash, PCMK_OPT_NODE_PENDING_TIMEOUT);
+    value = pcmk__cluster_option(config_hash, PCMK_OPT_NODE_PENDING_TIMEOUT);
     pcmk_parse_interval_spec(value, &(scheduler->node_pending_timeout));
     scheduler->node_pending_timeout /= 1000;
     if (scheduler->node_pending_timeout == 0) {
