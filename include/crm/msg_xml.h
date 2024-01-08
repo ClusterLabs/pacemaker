@@ -150,6 +150,7 @@ extern "C" {
 #define PCMK_XA_AUTHOR                      "author"
 #define PCMK_XA_BLOCKED                     "blocked"
 #define PCMK_XA_BOOLEAN_OP                  "boolean-op"
+#define PCMK_XA_BUILD                       "build"
 #define PCMK_XA_CIB_LAST_WRITTEN            "cib-last-written"
 #define PCMK_XA_CLASS                       "class"
 #define PCMK_XA_CLIENT                      "client"

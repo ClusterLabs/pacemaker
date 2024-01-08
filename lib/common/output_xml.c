@@ -266,7 +266,7 @@ xml_version(pcmk__output_t *out, bool extended) {
                                  PCMK_XA_PROGRAM, "Pacemaker",
                                  PCMK_XA_VERSION, PACEMAKER_VERSION,
                                  PCMK_XA_AUTHOR, author,
-                                 "build", BUILD_VERSION,
+                                 PCMK_XA_BUILD, BUILD_VERSION,
                                  "features", CRM_FEATURES,
                                  NULL);
 }
