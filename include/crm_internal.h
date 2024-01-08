@@ -133,6 +133,7 @@
 #define PCMK__XA_ATTR_WRITER            "attr_writer"
 #define PCMK__XA_CALL_ID                "call-id"
 #define PCMK__XA_CLIENT_NAME            "client_name"
+#define PCMK__XA_CLIENT_UUID            "client_uuid"
 #define PCMK__XA_CONFIG_ERRORS          "config-errors"
 #define PCMK__XA_CONFIG_WARNINGS        "config-warnings"
 #define PCMK__XA_CONFIRM                "confirm"
