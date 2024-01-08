@@ -789,7 +789,7 @@ pe_eval_subexpr(xmlNode *expr, const pe_rule_eval_data_t *rule_data,
  * \param[in]   r_val   Value on right-hand side of comparison
  * \param[in]   type    How to interpret the values (allowed values:
  *                      \c PCMK_VALUE_STRING, \c PCMK_VALUE_INTEGER,
- *                      \c PCMK_VALUE_NUMBER, \c "version", \c NULL)
+ *                      \c PCMK_VALUE_NUMBER, \c PCMK_VALUE_VERSION, \c NULL)
  * \param[in]   op      Type of comparison
  *
  * \return  -1 if <tt>(l_val < r_val)</tt>,
@@ -868,7 +868,7 @@ compare_attr_expr_vals(const char *l_val, const char *r_val, const char *type,
                                              op);
             }
 
-        } else if (pcmk__str_eq(type, "version", pcmk__str_casei)) {
+        } else if (pcmk__str_eq(type, PCMK_VALUE_VERSION, pcmk__str_casei)) {
             cmp = compare_version(l_val, r_val);
 
         }
@@ -892,7 +892,7 @@ compare_attr_expr_vals(const char *l_val, const char *r_val, const char *type,
  * \param[in]   r_val   Value on right-hand side of comparison
  * \param[in]   type    How to interpret the values (allowed values:
  *                      \c PCMK_VALUE_STRING, \c PCMK_VALUE_INTEGER,
- *                      \c PCMK_VALUE_NUMBER, \c "version", \c NULL)
+ *                      \c PCMK_VALUE_NUMBER, \c PCMK_VALUE_VERSION, \c NULL)
  * \param[in]   op      Type of comparison.
  *
  * \return  \c true if expression evaluates to \c true, \c false
