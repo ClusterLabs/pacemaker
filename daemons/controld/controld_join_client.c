@@ -201,7 +201,7 @@ set_join_state(const char *start_state, const char *node_name, const char *node_
                               NULL, NULL, NULL, "standby", "on", NULL,
                               remote? PCMK_VALUE_REMOTE : NULL);
 
-    } else if (pcmk__str_eq(start_state, "online", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(start_state, PCMK_VALUE_ONLINE, pcmk__str_casei)) {
         crm_notice("Forcing node %s to join in %s state per configured "
                    "environment", node_name, start_state);
         cib__update_node_attr(controld_globals.logger_out,
