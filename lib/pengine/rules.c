@@ -788,7 +788,7 @@ pe_eval_subexpr(xmlNode *expr, const pe_rule_eval_data_t *rule_data,
  * \param[in]   l_val   Value on left-hand side of comparison
  * \param[in]   r_val   Value on right-hand side of comparison
  * \param[in]   type    How to interpret the values (allowed values:
- *                      \c "string", \c "integer", \c "number",
+ *                      \c "string", \c PCMK_VALUE_INTEGER, \c "number",
  *                      \c "version", \c NULL)
  * \param[in]   op      Type of comparison
  *
@@ -810,7 +810,7 @@ compare_attr_expr_vals(const char *l_val, const char *r_val, const char *type,
                 if (pcmk__char_in_any_str('.', l_val, r_val, NULL)) {
                     type = "number";
                 } else {
-                    type = "integer";
+                    type = PCMK_VALUE_INTEGER;
                 }
 
             } else {
@@ -822,7 +822,7 @@ compare_attr_expr_vals(const char *l_val, const char *r_val, const char *type,
         if (pcmk__str_eq(type, "string", pcmk__str_casei)) {
             cmp = strcasecmp(l_val, r_val);
 
-        } else if (pcmk__str_eq(type, "integer", pcmk__str_casei)) {
+        } else if (pcmk__str_eq(type, PCMK_VALUE_INTEGER, pcmk__str_casei)) {
             long long l_val_num;
             int rc1 = pcmk__scan_ll(l_val, &l_val_num, 0LL);
 
@@ -884,12 +884,12 @@ compare_attr_expr_vals(const char *l_val, const char *r_val, const char *type,
 
 /*!
  * \internal
- * \brief   Check whether an attribute expression evaluates to \c true
+ * \brief Check whether an attribute expression evaluates to \c true
  *
  * \param[in]   l_val   Value on left-hand side of comparison
  * \param[in]   r_val   Value on right-hand side of comparison
  * \param[in]   type    How to interpret the values (allowed values:
- *                      \c "string", \c "integer", \c "number",
+ *                      \c "string", \c PCMK_VALUE_INTEGER, \c "number",
  *                      \c "version", \c NULL)
  * \param[in]   op      Type of comparison.
  *

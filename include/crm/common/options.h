@@ -145,6 +145,7 @@ extern "C" {
 #define PCMK_VALUE_GT                       "gt"
 #define PCMK_VALUE_GTE                      "gte"
 #define PCMK_VALUE_IGNORE                   "ignore"
+#define PCMK_VALUE_INTEGER                  "integer"
 #define PCMK_VALUE_LITERAL                  "literal"
 #define PCMK_VALUE_LT                       "lt"
 #define PCMK_VALUE_LTE                      "lte"
