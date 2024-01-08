@@ -469,7 +469,7 @@ stonith_event_xml(pcmk__output_t *out, va_list args)
     switch (event->state) {
         case st_failed:
             pcmk__xe_set_props(node,
-                               PCMK_XA_STATUS, "failed",
+                               PCMK_XA_STATUS, PCMK_VALUE_FAILED,
                                PCMK_XA_EXIT_REASON, event->exit_reason,
                                NULL);
             break;
