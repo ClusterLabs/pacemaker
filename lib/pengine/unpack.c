@@ -1021,7 +1021,7 @@ unpack_ticket_state(xmlNode *xml_ticket, pcmk_scheduler_t *scheduler)
         ticket->last_granted = (time_t) last_granted_ll;
     }
 
-    standby = g_hash_table_lookup(ticket->state, "standby");
+    standby = g_hash_table_lookup(ticket->state, PCMK_XA_STANDBY);
     if (standby && crm_is_true(standby)) {
         ticket->standby = TRUE;
         if (ticket->granted) {

@@ -124,11 +124,11 @@ grant_standby_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
                             strdup(PCMK_VALUE_FALSE));
         modified = true;
     } else if (pcmk__str_any_of(option_name, "--standby", "-s", NULL)) {
-        g_hash_table_insert(attr_set, strdup("standby"),
+        g_hash_table_insert(attr_set, strdup(PCMK_XA_STANDBY),
                             strdup(PCMK_VALUE_TRUE));
         modified = true;
     } else if (pcmk__str_any_of(option_name, "--activate", "-a", NULL)) {
-        g_hash_table_insert(attr_set, strdup("standby"),
+        g_hash_table_insert(attr_set, strdup(PCMK_XA_STANDBY),
                             strdup(PCMK_VALUE_FALSE));
         modified = true;
     }

@@ -240,6 +240,7 @@ extern "C" {
 #define PCMK_XA_SHUTDOWN                    "shutdown"
 #define PCMK_XA_SOURCE_DIR                  "source-dir"
 #define PCMK_XA_SOURCE_DIR_ROOT             "source-dir-root"
+#define PCMK_XA_STANDBY                     "standby"
 #define PCMK_XA_STANDBY_ONFAIL              "standby_onfail"
 #define PCMK_XA_START                       "start"
 #define PCMK_XA_STATUS                      "status"

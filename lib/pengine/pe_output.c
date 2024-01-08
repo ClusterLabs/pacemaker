@@ -1921,6 +1921,7 @@ node_xml(pcmk__output_t *out, va_list args) {
     if (full) {
         const char *node_type = "unknown";
         const char *online = pcmk__btoa(node->details->online);
+        const char *standby = pcmk__btoa(node->details->standby);
         const char *standby_onfail = pcmk__btoa(node->details->standby_onfail);
         const char *pending = pcmk__btoa(node->details->pending);
         const char *unclean = pcmk__btoa(node->details->unclean);
@@ -1948,7 +1949,7 @@ node_xml(pcmk__output_t *out, va_list args) {
                                  PCMK_XA_NAME, node->details->uname,
                                  PCMK_XA_ID, node->details->id,
                                  PCMK_XA_ONLINE, online,
-                                 "standby", pcmk__btoa(node->details->standby),
+                                 PCMK_XA_STANDBY, standby,
                                  PCMK_XA_STANDBY_ONFAIL, standby_onfail,
                                  "maintenance", pcmk__btoa(node->details->maintenance),
                                  PCMK_XA_PENDING, pending,
@@ -3110,13 +3111,14 @@ static int
 ticket_xml(pcmk__output_t *out, va_list args) {
     pcmk_ticket_t *ticket = va_arg(args, pcmk_ticket_t *);
     const char *status = ticket->granted? "granted" : "revoked";
+    const char *standby = pcmk__btoa(ticket->standby);
 
     xmlNodePtr node = NULL;
 
     node = pcmk__output_create_xml_node(out, PCMK_XE_TICKET,
                                         PCMK_XA_ID, ticket->id,
                                         PCMK_XA_STATUS, status,
-                                        "standby", pcmk__btoa(ticket->standby),
+                                        PCMK_XA_STANDBY, standby,
                                         NULL);
 
     if (ticket->last_granted > -1) {

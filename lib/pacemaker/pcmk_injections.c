@@ -750,7 +750,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
 
         out->message(out, "inject-modify-ticket", "Standby", ticket_id);
 
-        rc = set_ticket_state_attr(out, ticket_id, "standby", true, cib);
+        rc = set_ticket_state_attr(out, ticket_id, PCMK_XA_STANDBY, true, cib);
         CRM_ASSERT(rc == pcmk_rc_ok);
     }
 
@@ -759,7 +759,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
 
         out->message(out, "inject-modify-ticket", "Activating", ticket_id);
 
-        rc = set_ticket_state_attr(out, ticket_id, "standby", false, cib);
+        rc = set_ticket_state_attr(out, ticket_id, PCMK_XA_STANDBY, false, cib);
         CRM_ASSERT(rc == pcmk_rc_ok);
     }
 
