@@ -111,6 +111,7 @@ extern "C" {
 #define PCMK_XE_OUTPUT                      "output"
 #define PCMK_XE_OVERRIDE                    "override"
 #define PCMK_XE_OVERRIDES                   "overrides"
+#define PCMK_XE_PACEMAKER_RESULT            "pacemaker-result"
 #define PCMK_XE_PACEMAKERD                  "pacemakerd"
 #define PCMK_XE_PARAMETER                   "parameter"
 #define PCMK_XE_PARAMETERS                  "parameters"

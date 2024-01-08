@@ -142,7 +142,7 @@ xml_init(pcmk__output_t *out) {
         priv->root = create_xml_node(NULL, PCMK_XE_CRM_MON);
         crm_xml_add(priv->root, PCMK_XA_VERSION, PACEMAKER_VERSION);
     } else {
-        priv->root = create_xml_node(NULL, "pacemaker-result");
+        priv->root = create_xml_node(NULL, PCMK_XE_PACEMAKER_RESULT);
         crm_xml_add(priv->root, "api-version", PCMK__API_VERSION);
         crm_xml_add(priv->root, PCMK_XA_REQUEST, out->request);
     }
