@@ -162,6 +162,7 @@ extern "C" {
 #define PCMK_XA_DEFAULT                     "default"
 #define PCMK_XA_DELEGATE                    "delegate"
 #define PCMK_XA_DESCRIPTION                 "description"
+#define PCMK_XA_DEST                        "dest"
 #define PCMK_XA_DEVICES                     "devices"
 #define PCMK_XA_DISABLED                    "disabled"
 #define PCMK_XA_DURATION                    "duration"

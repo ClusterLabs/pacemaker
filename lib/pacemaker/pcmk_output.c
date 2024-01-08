@@ -285,7 +285,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
         pcmk__xe_set_props(xml,
                            PCMK_XA_ROLE, pcmk_role_text(rsc->role),
                            PCMK_XA_NEXT_ROLE, pcmk_role_text(rsc->next_role),
-                           "dest", destination->details->uname,
+                           PCMK_XA_DEST, destination->details->uname,
                            NULL);
 
     } else if (origin == NULL) {
@@ -318,7 +318,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
         /* Moving a promotable clone instance */
         pcmk__xe_set_props(xml,
                            PCMK_XA_SOURCE, origin->details->uname,
-                           "dest", destination->details->uname,
+                           PCMK_XA_DEST, destination->details->uname,
                            PCMK_XA_ROLE, pcmk_role_text(rsc->role),
                            NULL);
 
@@ -326,7 +326,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
         /* Moving a normal resource */
         pcmk__xe_set_props(xml,
                            PCMK_XA_SOURCE, origin->details->uname,
-                           "dest", destination->details->uname,
+                           PCMK_XA_DEST, destination->details->uname,
                            NULL);
 
     } else if (same_host) {
@@ -343,7 +343,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
                            PCMK_XA_ROLE, pcmk_role_text(rsc->role),
                            PCMK_XA_SOURCE, origin->details->uname,
                            PCMK_XA_NEXT_ROLE, pcmk_role_text(rsc->next_role),
-                           "dest", destination->details->uname,
+                           PCMK_XA_DEST, destination->details->uname,
                            NULL);
     }
 
