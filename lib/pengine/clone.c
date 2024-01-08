@@ -875,6 +875,8 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
             const char *managed = pcmk__flag_text(rsc->flags, pcmk_rsc_managed);
             const char *disabled = pcmk__btoa(pe__resource_is_disabled(rsc));
             const char *failed = pcmk__flag_text(rsc->flags, pcmk_rsc_failed);
+            const char *ignored = pcmk__flag_text(rsc->flags,
+                                                  pcmk_rsc_ignore_failure);
 
             printed_header = TRUE;
 
@@ -887,8 +889,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
                     PCMK_XA_MANAGED, managed,
                     PCMK_XA_DISABLED, disabled,
                     PCMK_XA_FAILED, failed,
-                    "failure_ignored",
-                    pcmk__flag_text(rsc->flags, pcmk_rsc_ignore_failure),
+                    PCMK_XA_FAILURE_IGNORED, ignored,
                     "target_role", configured_role_str(rsc),
                     PCMK_XA_DESCRIPTION, desc);
             CRM_ASSERT(rc == pcmk_rc_ok);

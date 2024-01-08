@@ -170,6 +170,7 @@ extern "C" {
 #define PCMK_XA_EXPECTED_UP                 "expected_up"
 #define PCMK_XA_EXTENDED_STATUS             "extended-status"
 #define PCMK_XA_FAILED                      "failed"
+#define PCMK_XA_FAILURE_IGNORED             "failure_ignored"
 #define PCMK_XA_FEATURE_SET                 "feature_set"
 #define PCMK_XA_FIRST                       "first"
 #define PCMK_XA_FIRST_ACTION                "first-action"
