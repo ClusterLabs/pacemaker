@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the Pacemaker project contributors
+ * Copyright 2013-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -157,7 +157,7 @@ enum pcmk__client_flags {
     /*!
      * \brief Client IPC connection accepted
      *
-     * Used only for remote CIB connections via \c remote-tls-port.
+     * Used only for remote CIB connections via \c PCMK_XA_REMOTE_TLS_PORT.
      */
     pcmk__client_authenticated          = (UINT64_C(1) << 43),
 

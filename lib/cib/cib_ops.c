@@ -848,7 +848,7 @@ cib__config_changed_v1(xmlNode *last, xmlNode *next, xmlNode **diff)
             config_changes = true;
             goto done;
         }
-        if (crm_element_value(top, "remote-tls-port") != NULL) {
+        if (crm_element_value(top, PCMK_XA_REMOTE_TLS_PORT) != NULL) {
             config_changes = true;
             goto done;
         }

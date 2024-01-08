@@ -433,7 +433,7 @@ startCib(const char *filename)
 
         cib_read_config(config_hash, cib);
 
-        pcmk__scan_port(crm_element_value(cib, "remote-tls-port"), &port);
+        pcmk__scan_port(crm_element_value(cib, PCMK_XA_REMOTE_TLS_PORT), &port);
         if (port >= 0) {
             remote_tls_fd = init_remote_listener(port, TRUE);
         }

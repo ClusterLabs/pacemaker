@@ -199,6 +199,7 @@ extern "C" {
 #define PCMK_XA_RANGE                       "range"
 #define PCMK_XA_REASON                      "reason"
 #define PCMK_XA_REFERENCE                   "reference"
+#define PCMK_XA_REMOTE_TLS_PORT             "remote-tls-port"
 #define PCMK_XA_REPLICAS                    "replicas"
 #define PCMK_XA_REPLICAS_PER_HOST           "replicas-per-host"
 #define PCMK_XA_REQUEST                     "request"
