@@ -902,7 +902,7 @@ accept_attr_expr(const char *l_val, const char *r_val, const char *type,
 {
     int cmp;
 
-    if (pcmk__str_eq(op, "defined", pcmk__str_casei)) {
+    if (pcmk__str_eq(op, PCMK_VALUE_DEFINED, pcmk__str_casei)) {
         return (l_val != NULL);
 
     } else if (pcmk__str_eq(op, "not_defined", pcmk__str_casei)) {
@@ -1214,7 +1214,7 @@ pe__eval_role_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
 
     op = crm_element_value(expr, PCMK_XA_OPERATION);
 
-    if (pcmk__str_eq(op, "defined", pcmk__str_casei)) {
+    if (pcmk__str_eq(op, PCMK_VALUE_DEFINED, pcmk__str_casei)) {
         if (rule_data->role > pcmk_role_started) {
             return TRUE;
         }
