@@ -164,6 +164,7 @@
 #define PCMK__XA_JOIN                   "join"
 #define PCMK__XA_JOIN_ID                "join_id"
 #define PCMK__XA_LONG_ID                "long-id"
+#define PCMK__XA_MAJOR_VERSION          "major_version"
 #define PCMK__XA_MODE                   "mode"
 #define PCMK__XA_MOON                   "moon"
 #define PCMK__XA_NODE_FENCED            "node_fenced"

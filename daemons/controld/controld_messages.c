@@ -566,8 +566,8 @@ controld_authorize_ipc_message(const xmlNode *client_msg, pcmk__client_t *curr_c
                  CRM_XS " ref=%s uuid=%s", (ref? ref : "none"), uuid);
         goto rejected;
     }
-    if (!authorize_version(message_data, "major_version", client_name, ref,
-                           uuid)) {
+    if (!authorize_version(message_data, PCMK__XA_MAJOR_VERSION, client_name,
+                           ref, uuid)) {
         goto rejected;
     }
     if (!authorize_version(message_data, "minor_version", client_name, ref,
