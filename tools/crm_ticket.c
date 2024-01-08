@@ -305,7 +305,7 @@ print_ticket(pcmk_ticket_t *ticket, bool raw, bool details)
                 fprintf(stdout, ", ");
             }
             fprintf(stdout, "%s=", name);
-            if (pcmk__str_any_of(name, "last-granted", "expires", NULL)) {
+            if (pcmk__str_any_of(name, PCMK_XA_LAST_GRANTED, "expires", NULL)) {
                 long long time_ll;
 
                 pcmk__scan_ll(value, &time_ll, 0);
@@ -320,7 +320,7 @@ print_ticket(pcmk_ticket_t *ticket, bool raw, bool details)
 
     } else {
         if (ticket->last_granted > -1) {
-            fprintf(stdout, " last-granted=");
+            fprintf(stdout, " " PCMK_XA_LAST_GRANTED "=");
             print_date(ticket->last_granted);
         }
         fprintf(stdout, "\n");
@@ -623,7 +623,7 @@ modify_ticket_state(gchar *ticket_id, cib_t *cib, pcmk_scheduler_t *scheduler)
 
             char *now = pcmk__ttoa(time(NULL));
 
-            crm_xml_add(ticket_state_xml, "last-granted", now);
+            crm_xml_add(ticket_state_xml, PCMK_XA_LAST_GRANTED, now);
             free(now);
         }
     }

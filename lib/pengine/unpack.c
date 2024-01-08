@@ -1013,7 +1013,7 @@ unpack_ticket_state(xmlNode *xml_ticket, pcmk_scheduler_t *scheduler)
         crm_info("We do not have ticket '%s'", ticket->id);
     }
 
-    last_granted = g_hash_table_lookup(ticket->state, "last-granted");
+    last_granted = g_hash_table_lookup(ticket->state, PCMK_XA_LAST_GRANTED);
     if (last_granted) {
         long long last_granted_ll;
 

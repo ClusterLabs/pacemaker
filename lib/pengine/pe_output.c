@@ -3089,10 +3089,10 @@ ticket_html(pcmk__output_t *out, va_list args) {
     if (ticket->last_granted > -1) {
         char *epoch_str = pcmk__epoch2str(&(ticket->last_granted), 0);
 
-        out->list_item(out, NULL, "%s:\t%s%s %s=\"%s\"", ticket->id,
-                       ticket->granted ? "granted" : "revoked",
-                       ticket->standby ? " [standby]" : "",
-                       "last-granted", pcmk__s(epoch_str, ""));
+        out->list_item(out, NULL, "%s:\t%s%s last-granted=\"%s\"",
+                       ticket->id, (ticket->granted? "granted" : "revoked"),
+                       (ticket->standby? " [standby]" : ""),
+                       pcmk__s(epoch_str, ""));
         free(epoch_str);
     } else {
         out->list_item(out, NULL, "%s:\t%s%s", ticket->id,
@@ -3111,10 +3111,10 @@ ticket_text(pcmk__output_t *out, va_list args) {
     if (ticket->last_granted > -1) {
         char *epoch_str = pcmk__epoch2str(&(ticket->last_granted), 0);
 
-        out->list_item(out, ticket->id, "%s%s %s=\"%s\"",
-                       ticket->granted ? "granted" : "revoked",
-                       ticket->standby ? " [standby]" : "",
-                       "last-granted", pcmk__s(epoch_str, ""));
+        out->list_item(out, ticket->id, "%s%s last-granted=\"%s\"",
+                       (ticket->granted? "granted" : "revoked"),
+                       (ticket->standby? " [standby]" : ""),
+                       pcmk__s(epoch_str, ""));
         free(epoch_str);
     } else {
         out->list_item(out, ticket->id, "%s%s",
@@ -3145,7 +3145,7 @@ ticket_xml(pcmk__output_t *out, va_list args) {
     if (ticket->last_granted > -1) {
         char *buf = pcmk__epoch2str(&ticket->last_granted, 0);
 
-        crm_xml_add(node, "last-granted", buf);
+        crm_xml_add(node, PCMK_XA_LAST_GRANTED, buf);
         free(buf);
     }
 
