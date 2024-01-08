@@ -995,7 +995,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     desc = pe__resource_description(rsc, show_opts);
 
     if (rsc->meta != NULL) {
-       target_role = g_hash_table_lookup(rsc->meta, PCMK_META_TARGET_ROLE);
+        target_role = g_hash_table_lookup(rsc->meta, PCMK_META_TARGET_ROLE);
     }
 
     CRM_ASSERT(rsc->variant == pcmk_rsc_variant_primitive);
@@ -1019,7 +1019,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
              PCMK_XA_ID, rsc_printable_id(rsc),
              "resource_agent", ra_name,
              PCMK_XA_ROLE, rsc_state,
-             "target_role", target_role,
+             PCMK_XA_TARGET_ROLE, target_role,
              "active", pcmk__btoa(rsc->fns->active(rsc, TRUE)),
              "orphaned", pcmk__flag_text(rsc->flags, pcmk_rsc_removed),
              "blocked", pcmk__flag_text(rsc->flags, pcmk_rsc_blocked),
