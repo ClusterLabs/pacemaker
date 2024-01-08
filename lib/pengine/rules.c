@@ -905,7 +905,7 @@ accept_attr_expr(const char *l_val, const char *r_val, const char *type,
     if (pcmk__str_eq(op, PCMK_VALUE_DEFINED, pcmk__str_casei)) {
         return (l_val != NULL);
 
-    } else if (pcmk__str_eq(op, "not_defined", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK_VALUE_NOT_DEFINED, pcmk__str_casei)) {
         return (l_val == NULL);
 
     }
@@ -1219,7 +1219,7 @@ pe__eval_role_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
             return TRUE;
         }
 
-    } else if (pcmk__str_eq(op, "not_defined", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK_VALUE_NOT_DEFINED, pcmk__str_casei)) {
         if ((rule_data->role > pcmk_role_unknown)
             && (rule_data->role < pcmk_role_unpromoted)) {
             return TRUE;
