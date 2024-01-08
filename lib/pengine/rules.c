@@ -246,7 +246,7 @@ pe_cron_range_satisfied(const crm_time_t *now, const xmlNode *cron_spec)
     CHECK_ONE(cron_spec, "monthdays", d);
 
     crm_time_get_timeofday(now, &h, &m, &s);
-    CHECK_ONE(cron_spec, "hours", h);
+    CHECK_ONE(cron_spec, PCMK_XA_HOURS, h);
     CHECK_ONE(cron_spec, "minutes", m);
     CHECK_ONE(cron_spec, "seconds", s);
 
@@ -293,7 +293,7 @@ parse_xml_duration(const crm_time_t *start, const xmlNode *duration_spec)
     update_field(end, duration_spec, PCMK_XA_MONTHS, crm_time_add_months);
     update_field(end, duration_spec, PCMK_XA_WEEKS, crm_time_add_weeks);
     update_field(end, duration_spec, PCMK_XA_DAYS, crm_time_add_days);
-    update_field(end, duration_spec, "hours", crm_time_add_hours);
+    update_field(end, duration_spec, PCMK_XA_HOURS, crm_time_add_hours);
     update_field(end, duration_spec, "minutes", crm_time_add_minutes);
     update_field(end, duration_spec, "seconds", crm_time_add_seconds);
 
