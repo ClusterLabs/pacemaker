@@ -248,7 +248,7 @@ pe_cron_range_satisfied(const crm_time_t *now, const xmlNode *cron_spec)
     crm_time_get_timeofday(now, &h, &m, &s);
     CHECK_ONE(cron_spec, PCMK_XA_HOURS, h);
     CHECK_ONE(cron_spec, PCMK_XA_MINUTES, m);
-    CHECK_ONE(cron_spec, "seconds", s);
+    CHECK_ONE(cron_spec, PCMK_XA_SECONDS, s);
 
     crm_time_get_ordinal(now, &y, &d);
     CHECK_ONE(cron_spec, "yeardays", d);
@@ -295,7 +295,7 @@ parse_xml_duration(const crm_time_t *start, const xmlNode *duration_spec)
     update_field(end, duration_spec, PCMK_XA_DAYS, crm_time_add_days);
     update_field(end, duration_spec, PCMK_XA_HOURS, crm_time_add_hours);
     update_field(end, duration_spec, PCMK_XA_MINUTES, crm_time_add_minutes);
-    update_field(end, duration_spec, "seconds", crm_time_add_seconds);
+    update_field(end, duration_spec, PCMK_XA_SECONDS, crm_time_add_seconds);
 
     return end;
 }
