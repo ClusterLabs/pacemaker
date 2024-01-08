@@ -1899,6 +1899,7 @@ node_xml(pcmk__output_t *out, va_list args) {
     if (full) {
         const char *node_type = "unknown";
         const char *online = pcmk__btoa(node->details->online);
+        const char *standby_onfail = pcmk__btoa(node->details->standby_onfail);
         const char *pending = pcmk__btoa(node->details->pending);
         char *length_s = pcmk__itoa(g_list_length(node->details->running_rsc));
         int health = pe__node_health(node);
@@ -1932,7 +1933,7 @@ node_xml(pcmk__output_t *out, va_list args) {
                                  PCMK_XA_ID, node->details->id,
                                  PCMK_XA_ONLINE, online,
                                  "standby", pcmk__btoa(node->details->standby),
-                                 "standby_onfail", pcmk__btoa(node->details->standby_onfail),
+                                 PCMK_XA_STANDBY_ONFAIL, standby_onfail,
                                  "maintenance", pcmk__btoa(node->details->maintenance),
                                  PCMK_XA_PENDING, pending,
                                  "unclean", pcmk__btoa(node->details->unclean),
