@@ -500,14 +500,15 @@ pe_create_node(const char *id, const char *uname, const char *type,
         /* @COMPAT 'ping' is the default for backward compatibility, but it
          * should be changed to 'member' at a compatibility break
          */
-        if (!pcmk__str_eq(type, "ping", pcmk__str_casei)) {
+        if (!pcmk__str_eq(type, PCMK__VALUE_PING, pcmk__str_casei)) {
             pcmk__config_warn("Node %s has unrecognized type '%s', "
-                              "assuming 'ping'", pcmk__s(uname, "without name"),
-                              type);
+                              "assuming '" PCMK__VALUE_PING "'",
+                              pcmk__s(uname, "without name"), type);
         }
         pcmk__warn_once(pcmk__wo_ping_node,
-                        "Support for nodes of type 'ping' (such as %s) is "
-                        "deprecated and will be removed in a future release",
+                        "Support for nodes of type '" PCMK__VALUE_PING "' "
+                        "(such as %s) is deprecated and will be removed in a "
+                        "future release",
                         pcmk__s(uname, "unnamed node"));
         new_node->details->type = node_ping;
     }
