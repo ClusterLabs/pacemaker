@@ -88,7 +88,7 @@ ra_param_from_xml(xmlNode *param_xml)
         controld_set_ra_param_flags(p, ra_param_reloadable);
     }
 
-    if (pcmk__xe_attr_is_true(param_xml, "unique")) {
+    if (pcmk__xe_attr_is_true(param_xml, PCMK_XA_UNIQUE)) {
         controld_set_ra_param_flags(p, ra_param_unique);
     }
 

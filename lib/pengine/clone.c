@@ -867,6 +867,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
         }
 
         if (!printed_header) {
+            const char *unique = pcmk__flag_text(rsc->flags, pcmk_rsc_unique);
             const char *maintenance = pcmk__flag_text(rsc->flags,
                                                       pcmk_rsc_maintenance);
 
@@ -877,7 +878,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
                     PCMK_XA_ID, rsc->id,
                     "multi_state",
                     pcmk__flag_text(rsc->flags, pcmk_rsc_promotable),
-                    "unique", pcmk__flag_text(rsc->flags, pcmk_rsc_unique),
+                    PCMK_XA_UNIQUE, unique,
                     PCMK_XA_MAINTENANCE, maintenance,
                     "managed", pcmk__flag_text(rsc->flags, pcmk_rsc_managed),
                     "disabled", pcmk__btoa(pe__resource_is_disabled(rsc)),

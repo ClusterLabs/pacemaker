@@ -1520,6 +1520,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
         }
 
         if (!printed_header) {
+            const char *unique = pcmk__flag_text(rsc->flags, pcmk_rsc_unique);
             const char *maintenance = pcmk__flag_text(rsc->flags,
                                                       pcmk_rsc_maintenance);
 
@@ -1531,7 +1532,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
                      PCMK_XA_ID, rsc->id,
                      PCMK_XA_TYPE, container_agent_str(bundle_data->agent_type),
                      PCMK_XA_IMAGE, bundle_data->image,
-                     "unique", pcmk__flag_text(rsc->flags, pcmk_rsc_unique),
+                     "unique", unique,
                      PCMK_XA_MAINTENANCE, maintenance,
                      "managed", pcmk__flag_text(rsc->flags, pcmk_rsc_managed),
                      PCMK_XA_FAILED, pcmk__flag_text(rsc->flags,
