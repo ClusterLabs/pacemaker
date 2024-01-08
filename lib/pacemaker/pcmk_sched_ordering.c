@@ -95,7 +95,7 @@ get_ordering_type(const xmlNode *xml_obj)
                             "(use '" PCMK_XA_KIND "' instead)");
         }
 
-    } else if (pcmk__str_eq(kind, "Mandatory", pcmk__str_none)) {
+    } else if (pcmk__str_eq(kind, PCMK_VALUE_MANDATORY, pcmk__str_none)) {
         kind_e = pe_order_kind_mandatory;
 
     } else if (pcmk__str_eq(kind, "Optional", pcmk__str_none)) {
@@ -106,7 +106,7 @@ get_ordering_type(const xmlNode *xml_obj)
 
     } else {
         pcmk__config_err("Resetting '" PCMK_XA_KIND "' for constraint %s to "
-                         "'Mandatory' because '%s' is not valid",
+                         "'" PCMK_VALUE_MANDATORY "' because '%s' is not valid",
                          pcmk__s(ID(xml_obj), "missing ID"), kind);
     }
     return kind_e;

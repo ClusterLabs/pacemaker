@@ -141,6 +141,7 @@ extern "C" {
 #define PCMK_VALUE_FREEZE                   "freeze"
 #define PCMK_VALUE_IGNORE                   "ignore"
 #define PCMK_VALUE_LITERAL                  "literal"
+#define PCMK_VALUE_MANDATORY                "Mandatory"
 #define PCMK_VALUE_META                     "meta"
 #define PCMK_VALUE_NEVER                    "never"
 #define PCMK_VALUE_OR                       "or"
