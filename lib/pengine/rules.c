@@ -912,7 +912,7 @@ accept_attr_expr(const char *l_val, const char *r_val, const char *type,
 
     cmp = compare_attr_expr_vals(l_val, r_val, type, op);
 
-    if (pcmk__str_eq(op, "eq", pcmk__str_casei)) {
+    if (pcmk__str_eq(op, PCMK_VALUE_EQ, pcmk__str_casei)) {
         return (cmp == 0);
 
     } else if (pcmk__str_eq(op, "ne", pcmk__str_casei)) {
@@ -1225,7 +1225,7 @@ pe__eval_role_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
             return TRUE;
         }
 
-    } else if (pcmk__str_eq(op, "eq", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK_VALUE_EQ, pcmk__str_casei)) {
         return role_matches(expr, rule_data)? TRUE : FALSE;
 
     } else if (pcmk__str_eq(op, "ne", pcmk__str_casei)
