@@ -254,7 +254,7 @@ pe_cron_range_satisfied(const crm_time_t *now, const xmlNode *cron_spec)
     CHECK_ONE(cron_spec, PCMK_XA_YEARDAYS, d);
 
     crm_time_get_isoweek(now, &y, &w, &d);
-    CHECK_ONE(cron_spec, "weekyears", y);
+    CHECK_ONE(cron_spec, PCMK_XA_WEEKYEARS, y);
     CHECK_ONE(cron_spec, PCMK_XA_WEEKS, w);
     CHECK_ONE(cron_spec, "weekdays", d);
 
