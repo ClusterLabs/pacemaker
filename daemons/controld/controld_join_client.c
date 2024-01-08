@@ -199,7 +199,7 @@ set_join_state(const char *start_state, const char *node_name, const char *node_
                               controld_globals.cib_conn, cib_sync_call,
                               PCMK_XE_NODES, node_uuid,
                               NULL, NULL, NULL, "standby", "on", NULL,
-                              remote ? "remote" : NULL);
+                              remote? PCMK_VALUE_REMOTE : NULL);
 
     } else if (pcmk__str_eq(start_state, "online", pcmk__str_casei)) {
         crm_notice("Forcing node %s to join in %s state per configured "
@@ -208,7 +208,7 @@ set_join_state(const char *start_state, const char *node_name, const char *node_
                               controld_globals.cib_conn, cib_sync_call,
                               PCMK_XE_NODES, node_uuid,
                               NULL, NULL, NULL, "standby", "off", NULL,
-                              remote ? "remote" : NULL);
+                              remote? PCMK_VALUE_REMOTE : NULL);
 
     } else if (pcmk__str_eq(start_state, "default", pcmk__str_casei)) {
         crm_debug("Not forcing a starting state on node %s", node_name);

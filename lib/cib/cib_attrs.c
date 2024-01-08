@@ -227,10 +227,10 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
                 return EINVAL;
             }
 
-            if (pcmk__str_eq(node_type, "remote", pcmk__str_casei)) {
+            if (pcmk__str_eq(node_type, PCMK_VALUE_REMOTE, pcmk__str_casei)) {
                 xml_top = create_xml_node(xml_obj, PCMK_XE_NODES);
                 xml_obj = create_xml_node(xml_top, PCMK_XE_NODE);
-                crm_xml_add(xml_obj, PCMK_XA_TYPE, "remote");
+                crm_xml_add(xml_obj, PCMK_XA_TYPE, PCMK_VALUE_REMOTE);
                 crm_xml_add(xml_obj, PCMK_XA_ID, node_uuid);
                 crm_xml_add(xml_obj, PCMK_XA_UNAME, node_uuid);
             } else {
@@ -562,8 +562,8 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
     if (pcmk__str_eq(tag, PCMK_XE_NODE, pcmk__str_casei)) {
         /* Result is <node> tag from <nodes> section */
 
-        if (pcmk__str_eq(crm_element_value(result, PCMK_XA_TYPE), "remote",
-                         pcmk__str_casei)) {
+        if (pcmk__str_eq(crm_element_value(result, PCMK_XA_TYPE),
+                         PCMK_VALUE_REMOTE, pcmk__str_casei)) {
             parsed_uuid = crm_element_value(result, PCMK_XA_UNAME);
             parsed_is_remote = TRUE;
         } else {

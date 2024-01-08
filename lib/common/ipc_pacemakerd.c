@@ -32,7 +32,7 @@ static const char *pacemakerd_state_str[] = {
     PCMK__VALUE_RUNNING,
     PCMK__VALUE_SHUTTING_DOWN,
     PCMK__VALUE_SHUTDOWN_COMPLETE,
-    PCMK__VALUE_REMOTE,
+    PCMK_VALUE_REMOTE,
 };
 
 enum pcmk_pacemakerd_state

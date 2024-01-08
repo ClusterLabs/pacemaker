@@ -492,7 +492,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
                      pcmk__str_null_matches|pcmk__str_casei)) {
         new_node->details->type = pcmk_node_variant_cluster;
 
-    } else if (pcmk__str_eq(type, "remote", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(type, PCMK_VALUE_REMOTE, pcmk__str_casei)) {
         new_node->details->type = pcmk_node_variant_remote;
         pcmk__set_scheduler_flags(scheduler, pcmk_sched_have_remote_nodes);
 
@@ -728,8 +728,8 @@ unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
                 && (pe_find_node(scheduler->nodes, new_node_id) == NULL)) {
                 crm_trace("Found remote node %s defined by resource %s",
                           new_node_id, ID(xml_obj));
-                pe_create_node(new_node_id, new_node_id, "remote", NULL,
-                               scheduler);
+                pe_create_node(new_node_id, new_node_id, PCMK_VALUE_REMOTE,
+                               NULL, scheduler);
             }
             continue;
         }
@@ -749,8 +749,8 @@ unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
                 && (pe_find_node(scheduler->nodes, new_node_id) == NULL)) {
                 crm_trace("Found guest node %s in resource %s",
                           new_node_id, ID(xml_obj));
-                pe_create_node(new_node_id, new_node_id, "remote", NULL,
-                               scheduler);
+                pe_create_node(new_node_id, new_node_id, PCMK_VALUE_REMOTE,
+                               NULL, scheduler);
             }
             continue;
         }
@@ -771,8 +771,8 @@ unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
                     && (pe_find_node(scheduler->nodes, new_node_id) == NULL)) {
                     crm_trace("Found guest node %s in resource %s inside group %s",
                               new_node_id, ID(xml_obj2), ID(xml_obj));
-                    pe_create_node(new_node_id, new_node_id, "remote", NULL,
-                                   scheduler);
+                    pe_create_node(new_node_id, new_node_id, PCMK_VALUE_REMOTE,
+                                   NULL, scheduler);
                 }
             }
         }
@@ -1979,7 +1979,8 @@ create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
         crm_debug("Detected orphaned remote node %s", rsc_id);
         node = pe_find_node(scheduler->nodes, rsc_id);
         if (node == NULL) {
-	        node = pe_create_node(rsc_id, rsc_id, "remote", NULL, scheduler);
+            node = pe_create_node(rsc_id, rsc_id, PCMK_VALUE_REMOTE, NULL,
+                                  scheduler);
         }
         link_rsc2remotenode(scheduler, rsc);
 
