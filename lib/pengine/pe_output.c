@@ -1926,6 +1926,7 @@ node_xml(pcmk__output_t *out, va_list args) {
         const char *unclean = pcmk__btoa(node->details->unclean);
         const char *health = health_text(pe__node_health(node));
         const char *feature_set = get_node_feature_set(node);
+        const char *shutdown = pcmk__btoa(node->details->shutdown);
         char *length_s = pcmk__itoa(g_list_length(node->details->running_rsc));
 
         switch (node->details->type) {
@@ -1951,7 +1952,7 @@ node_xml(pcmk__output_t *out, va_list args) {
                                  PCMK_XA_UNCLEAN, unclean,
                                  PCMK_XA_HEALTH, health,
                                  PCMK_XA_FEATURE_SET, feature_set,
-                                 "shutdown", pcmk__btoa(node->details->shutdown),
+                                 PCMK_XA_SHUTDOWN, shutdown,
                                  "expected_up", pcmk__btoa(node->details->expected_up),
                                  "is_dc", pcmk__btoa(node->details->is_dc),
                                  "resources_running", length_s,
