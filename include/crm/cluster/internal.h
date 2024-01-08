@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -29,6 +29,21 @@ enum crm_proc_flag {
     crm_proc_fenced     = 0x00100000,
 };
 /* *INDENT-ON* */
+
+// Used with node cache search functions
+enum pcmk__node_search_flags {
+    pcmk__node_search_none      = 0,
+    pcmk__node_search_cluster   = (1 << 0), // Search for cluster nodes
+    pcmk__node_search_remote    = (1 << 1), // Search for remote nodes
+    pcmk__node_search_any       = pcmk__node_search_cluster
+                                  |pcmk__node_search_remote,
+
+    /* @COMPAT The values before this must stay the same until we can drop
+     * support for enum crm_get_peer_flags
+     */
+
+    pcmk__node_search_known     = (1 << 2), // Search previously known nodes
+};
 
 /*!
  * \internal
@@ -129,12 +144,8 @@ crm_node_t *pcmk__search_cluster_node_cache(unsigned int id, const char *uname,
 void pcmk__purge_node_from_cache(const char *node_name, uint32_t node_id);
 
 void pcmk__refresh_node_caches_from_cib(xmlNode *cib);
-crm_node_t *pcmk__search_known_node_cache(unsigned int id, const char *uname,
-                                          uint32_t flags);
 
-crm_node_t *pcmk__get_peer(unsigned int id, const char *uname,
-                           const char *uuid);
-crm_node_t *pcmk__get_peer_full(unsigned int id, const char *uname,
-                                const char *uuid, int flags);
+crm_node_t *pcmk__get_node(unsigned int id, const char *uname,
+                           const char *uuid, uint32_t flags);
 
 #endif // PCMK__CRM_CLUSTER_INTERNAL__H

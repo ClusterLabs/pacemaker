@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,6 +25,19 @@ extern "C" {
  *             header, and the header itself, will be removed in a future
  *             release.
  */
+
+// \deprecated Do not use
+enum crm_get_peer_flags {
+    CRM_GET_PEER_CLUSTER   = 0x0001,
+    CRM_GET_PEER_REMOTE    = 0x0002,
+    CRM_GET_PEER_ANY       = CRM_GET_PEER_CLUSTER|CRM_GET_PEER_REMOTE,
+};
+
+// \deprecated Do not use Pacemaker for cluster node cacheing
+crm_node_t *crm_get_peer(unsigned int id, const char *uname);
+
+// \deprecated Do not use Pacemaker for cluster node cacheing
+crm_node_t *crm_get_peer_full(unsigned int id, const char *uname, int flags);
 
 // \deprecated Use stonith_api_kick() from libstonithd instead
 int crm_terminate_member(int nodeid, const char *uname, void *unused);

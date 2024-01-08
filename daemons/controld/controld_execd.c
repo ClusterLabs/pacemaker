@@ -584,7 +584,7 @@ controld_query_executor_state(void)
         return NULL;
     }
 
-    peer = crm_get_peer_full(0, lrm_state->node_name, CRM_GET_PEER_ANY);
+    peer = pcmk__get_node(0, lrm_state->node_name, NULL, pcmk__node_search_any);
     CRM_CHECK(peer != NULL, return NULL);
 
     xml_state = create_node_state_update(peer,
@@ -1757,7 +1757,8 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
         to_sys = CRM_SYSTEM_TENGINE;
     }
 
-    peer = crm_get_peer(0, controld_globals.our_nodename);
+    peer = pcmk__get_node(0, controld_globals.our_nodename, NULL,
+                          pcmk__node_search_cluster);
     update = create_node_state_update(peer, node_update_none, NULL,
                                       __func__);
 

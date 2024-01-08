@@ -20,6 +20,7 @@
 #include <crm/common/results.h>
 #include <crm/common/strings_internal.h>
 #include <crm/common/xml.h>
+#include <crm/cluster/internal.h>   // pcmk__get_node()
 
 #include "pacemaker-attrd.h"
 
@@ -556,20 +557,26 @@ write_attribute(attribute_t *a, bool ignore_delay)
     /* Iterate over each peer value of this attribute */
     g_hash_table_iter_init(&iter, a->values);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &v)) {
-        crm_node_t *peer = crm_get_peer_full(v->nodeid, v->nodename,
-                                             CRM_GET_PEER_ANY);
+        const char *uuid = NULL;
 
-        /* If the value's peer info does not correspond to a peer, ignore it */
-        if (peer == NULL) {
-            crm_notice("Cannot update %s[%s]=%s because peer not known",
-                       a->id, v->nodename, v->current);
-            continue;
-        }
+        if (pcmk_is_set(v->flags, attrd_value_remote)) {
+            /* If this is a Pacemaker Remote node, the node's UUID is the same
+             * as its name, which we already have.
+             */
+            uuid = v->nodename;
 
-        /* If we're just learning the peer's node id, remember it */
-        if (peer->id && (v->nodeid == 0)) {
-            crm_trace("Learned ID %u for node %s", peer->id, v->nodename);
-            v->nodeid = peer->id;
+        } else {
+            // This will create a cluster node cache entry if none exists
+            crm_node_t *peer = pcmk__get_node(v->nodeid, v->nodename, NULL,
+                                              pcmk__node_search_any);
+
+            uuid = peer->uuid;
+
+            // Remember peer's node ID if we're just now learning it
+            if ((peer->id != 0) && (v->nodeid == 0)) {
+                crm_trace("Learned ID %u for node %s", peer->id, v->nodename);
+                v->nodeid = peer->id;
+            }
         }
 
         /* If this is a private attribute, no update needs to be sent */
@@ -578,29 +585,27 @@ write_attribute(attribute_t *a, bool ignore_delay)
             continue;
         }
 
-        /* If the peer is found, but its uuid is unknown, defer write */
-        if (peer->uuid == NULL) {
+        // Defer write if this is a cluster node that's never been seen
+        if (uuid == NULL) {
             a->unknown_peer_uuids = true;
-            crm_notice("Cannot update %s[%s]=%s because peer UUID not known "
-                       "(will retry if learned)",
+            crm_notice("Cannot update %s[%s]='%s' now because node's UUID is "
+                       "unknown (will retry if learned)",
                        a->id, v->nodename, v->current);
             continue;
         }
 
         // Update this value as part of the CIB transaction we're building
-        rc = add_attr_update(a, v->current, peer->uuid);
+        rc = add_attr_update(a, v->current, uuid);
         if (rc != pcmk_rc_ok) {
-            crm_err("Failed to update %s[%s]=%s (peer known as %s, UUID %s, "
-                    "ID %" PRIu32 "/%" PRIu32 "): %s",
-                    a->id, v->nodename, v->current, peer->uname, peer->uuid,
-                    peer->id, v->nodeid, pcmk_rc_str(rc));
+            crm_err("Failed to update %s[%s]='%s': %s "
+                    CRM_XS " node uuid=%s id=%" PRIu32,
+                    a->id, v->nodename, v->current, pcmk_rc_str(rc),
+                    uuid, v->nodeid);
             continue;
         }
 
-        crm_debug("Updating %s[%s]=%s (peer known as %s, UUID %s, ID "
-                  "%" PRIu32 "/%" PRIu32 ")",
-                  a->id, v->nodename, v->current,
-                  peer->uname, peer->uuid, peer->id, v->nodeid);
+        crm_debug("Updating %s[%s]=%s (node uuid=%s id=%" PRIu32 ")",
+                  a->id, v->nodename, v->current, uuid, v->nodeid);
         cib_updates++;
 
         /* Preservation of the attribute to transmit alert */

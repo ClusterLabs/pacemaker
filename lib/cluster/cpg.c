@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -465,7 +465,8 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
 
         msg->sender.id = nodeid;
         if (msg->sender.size == 0) {
-            crm_node_t *peer = crm_get_peer(nodeid, NULL);
+            crm_node_t *peer = pcmk__get_node(nodeid, NULL, NULL,
+                                              pcmk__node_search_cluster);
 
             if (peer == NULL) {
                 crm_err("Peer with nodeid=%u is unknown", nodeid);
@@ -526,7 +527,8 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
     }
 
     // Is this necessary?
-    crm_get_peer(msg->sender.id, msg->sender.uname);
+    pcmk__get_node(msg->sender.id, msg->sender.uname, NULL,
+                   pcmk__node_search_cluster);
 
     crm_trace("Payload: %.200s", data);
     return data;
@@ -627,8 +629,8 @@ node_left(const char *cpg_group_name, int event_counter,
           const struct cpg_address **sorted_member_list,
           size_t member_list_entries)
 {
-    crm_node_t *peer = pcmk__search_cluster_node_cache(cpg_peer->nodeid,
-                                                       NULL, NULL);
+    crm_node_t *peer = pcmk__search_node_caches(cpg_peer->nodeid, NULL,
+                                                pcmk__node_search_cluster);
     const struct cpg_address **rival = NULL;
 
     /* Most CPG-related Pacemaker code assumes that only one process on a node
@@ -720,7 +722,8 @@ pcmk_cpg_membership(cpg_handle_t handle,
     }
 
     for (i = 0; i < member_list_entries; i++) {
-        crm_node_t *peer = crm_get_peer(member_list[i].nodeid, NULL);
+        crm_node_t *peer = pcmk__get_node(member_list[i].nodeid, NULL, NULL,
+                                          pcmk__node_search_cluster);
 
         if (member_list[i].nodeid == local_nodeid
                 && member_list[i].pid != getpid()) {
@@ -873,7 +876,7 @@ cluster_connect_cpg(crm_cluster_t *cluster)
         return FALSE;
     }
 
-    peer = crm_get_peer(id, NULL);
+    peer = pcmk__get_node(id, NULL, NULL, pcmk__node_search_cluster);
     crm_update_peer_proc(__func__, peer, crm_proc_cpg, ONLINESTATUS);
     return TRUE;
 }

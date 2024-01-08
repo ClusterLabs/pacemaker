@@ -919,6 +919,7 @@ forward_request(xmlNode *request)
     const char *originator = crm_element_value(request, PCMK__XA_SRC);
     const char *client_name = crm_element_value(request, F_CIB_CLIENTNAME);
     const char *call_id = crm_element_value(request, F_CIB_CALLID);
+    crm_node_t *peer = NULL;
 
     int log_level = LOG_INFO;
 
@@ -937,8 +938,10 @@ forward_request(xmlNode *request)
 
     crm_xml_add(request, F_CIB_DELEGATED, OUR_NODENAME);
 
-    send_cluster_message(((host != NULL)? crm_get_peer(0, host) : NULL),
-                         crm_msg_cib, request, FALSE);
+    if (host != NULL) {
+        peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster);
+    }
+    send_cluster_message(peer, crm_msg_cib, request, FALSE);
 
     // Return the request to its original state
     xml_remove_prop(request, F_CIB_DELEGATED);
@@ -995,7 +998,9 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
         /* send reply via HA to originating node */
         crm_trace("Sending request result to %s only", originator);
         crm_xml_add(msg, F_CIB_ISREPLY, originator);
-        return send_cluster_message(crm_get_peer(0, originator), crm_msg_cib, msg, FALSE);
+        return send_cluster_message(pcmk__get_node(0, originator, NULL,
+                                                   pcmk__node_search_cluster),
+                                    crm_msg_cib, msg, FALSE);
     }
 
     return FALSE;

@@ -458,7 +458,8 @@ relay_message(xmlNode * msg, gboolean originated_locally)
                       ref, pcmk__s(host_to, "broadcast"));
             crm_log_xml_trace(msg, "relayed");
             if (!broadcast) {
-                node_to = crm_get_peer(0, host_to);
+                node_to = pcmk__get_node(0, host_to, NULL,
+                                         pcmk__node_search_cluster);
             }
             send_cluster_message(node_to, dest, msg, TRUE);
             return TRUE;
@@ -484,7 +485,8 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     }
 
     if (!broadcast) {
-        node_to = pcmk__search_cluster_node_cache(0, host_to, NULL);
+        node_to = pcmk__search_node_caches(0, host_to,
+                                           pcmk__node_search_cluster);
         if (node_to == NULL) {
             crm_warn("Ignoring message %s because node %s is unknown",
                      ref, host_to);
@@ -903,7 +905,7 @@ handle_node_info_request(const xmlNode *msg)
         value = controld_globals.our_nodename;
     }
 
-    node = pcmk__search_node_caches(node_id, value, CRM_GET_PEER_ANY);
+    node = pcmk__search_node_caches(node_id, value, pcmk__node_search_any);
     if (node) {
         crm_xml_add(reply_data, PCMK_XA_ID, node->uuid);
         crm_xml_add(reply_data, PCMK_XA_UNAME, node->uname);
@@ -1028,7 +1030,8 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
 
     if (strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
         const char *from = crm_element_value(stored_msg, PCMK__XA_SRC);
-        crm_node_t *node = pcmk__search_cluster_node_cache(0, from, NULL);
+        crm_node_t *node = pcmk__search_node_caches(0, from,
+                                                    pcmk__node_search_cluster);
 
         pcmk__update_peer_expected(__func__, node, CRMD_JOINSTATE_DOWN);
         if(AM_I_DC == FALSE) {

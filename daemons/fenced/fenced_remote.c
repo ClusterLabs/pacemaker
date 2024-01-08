@@ -1030,7 +1030,8 @@ merge_duplicates(remote_fencing_op_t *op)
                       op->id, other->id, other->target);
             continue;
         }
-        if (!fencing_peer_active(crm_get_peer(0, other->originator))) {
+        if (!fencing_peer_active(pcmk__get_node(0, other->originator, NULL,
+                                                pcmk__node_search_cluster))) {
             crm_notice("Failing action '%s' targeting %s originating from "
                        "client %s@%s: Originator is dead " CRM_XS " id=%.8s",
                        other->action, other->target, other->client_name,
@@ -1220,7 +1221,9 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
         crm_node_t *node;
 
         pcmk__scan_min_int(op->target, &nodeid, 0);
-        node = pcmk__search_known_node_cache(nodeid, NULL, CRM_GET_PEER_ANY);
+        node = pcmk__search_node_caches(nodeid, NULL,
+                                        pcmk__node_search_any
+                                        |pcmk__node_search_known);
 
         /* Ensure the conversion only happens once */
         stonith__clear_call_options(op->call_options, op->id, st_opt_cs_nodeid);
@@ -1663,7 +1666,9 @@ report_timeout_period(remote_fencing_op_t * op, int op_timeout)
     crm_xml_add(update, F_STONITH_CALLID, call_id);
     crm_xml_add_int(update, F_STONITH_TIMEOUT, op_timeout);
 
-    send_cluster_message(crm_get_peer(0, client_node), crm_msg_stonith_ng, update, FALSE);
+    send_cluster_message(pcmk__get_node(0, client_node, NULL,
+                                        pcmk__node_search_cluster),
+                         crm_msg_stonith_ng, update, FALSE);
 
     free_xml(update);
 
@@ -1916,7 +1921,9 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
             op->op_timer_one = g_timeout_add((1000 * timeout_one), remote_op_timeout_one, op);
         }
 
-        send_cluster_message(crm_get_peer(0, peer->host), crm_msg_stonith_ng, remote_op, FALSE);
+        send_cluster_message(pcmk__get_node(0, peer->host, NULL,
+                                            pcmk__node_search_cluster),
+                             crm_msg_stonith_ng, remote_op, FALSE);
         peer->tried = TRUE;
         free_xml(remote_op);
         return;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -128,13 +128,6 @@ enum crm_ais_msg_types {
     crm_msg_stonith_ng = 9,
 };
 
-/* used with crm_get_peer_full */
-enum crm_get_peer_flags {
-    CRM_GET_PEER_CLUSTER   = 0x0001,
-    CRM_GET_PEER_REMOTE    = 0x0002,
-    CRM_GET_PEER_ANY       = CRM_GET_PEER_CLUSTER|CRM_GET_PEER_REMOTE,
-};
-
 gboolean send_cluster_message(const crm_node_t *node,
                               enum crm_ais_msg_types service,
                               const xmlNode *data, gboolean ordered);
@@ -145,12 +138,6 @@ int crm_remote_peer_cache_size(void);
 void crm_remote_peer_cache_refresh(xmlNode *cib);
 crm_node_t *crm_remote_peer_get(const char *node_name);
 void crm_remote_peer_cache_remove(const char *node_name);
-
-/* allows filtering of remote and cluster nodes using crm_get_peer_flags */
-crm_node_t *crm_get_peer_full(unsigned int id, const char *uname, int flags);
-
-/* only searches cluster nodes */
-crm_node_t *crm_get_peer(unsigned int id, const char *uname);
 
 guint crm_active_peers(void);
 gboolean crm_is_peer_active(const crm_node_t * node);

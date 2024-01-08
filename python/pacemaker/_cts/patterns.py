@@ -1,7 +1,7 @@
 """ Pattern-holding classes for Pacemaker's Cluster Test Suite (CTS) """
 
 __all__ = ["PatternSelector"]
-__copyright__ = "Copyright 2008-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2008-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+)"
 
 import argparse
@@ -32,6 +32,12 @@ class BasePatterns:
             # pcs can log this when node is fenced, but fencing is OK in some
             # tests (and we will catch it in pacemaker logs when not OK)
             r"pcs.daemon:No response from: .* request: get_configs, error:",
+
+            # This is overbroad, but there's no way to say that only certain
+            # transition errors are acceptable. We have to rely on causes of a
+            # transition error logging their own error message, which should
+            # always be the case.
+            r"pacemaker-schedulerd.* Calculated transition .*/pe-error",
         ]
 
         self._commands = {
@@ -239,12 +245,6 @@ class Corosync2Patterns(BasePatterns):
             r"error:.*cib_(shm|rw) IPC provider disconnected while waiting",
             r"error:.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
             r"error: Lost fencer connection",
-            # This is overbroad, but we don't have a way to say that only
-            # certain transition errors are acceptable (if the fencer respawns,
-            # fence devices may appear multiply active). We have to rely on
-            # other causes of a transition error logging their own error
-            # message, which is the usual practice.
-            r"pacemaker-schedulerd.* Calculated transition .*/pe-error",
             ]
 
         self._components["corosync"] = [
@@ -281,12 +281,6 @@ class Corosync2Patterns(BasePatterns):
             r"pacemaker-execd.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
             r"pacemaker-controld.*:\s+Result of .* operation for Fencing.*Error \(Lost connection to fencer\)",
             r"pacemaker-controld.*:Could not connect to attrd: Connection refused",
-            # This is overbroad, but we don't have a way to say that only
-            # certain transition errors are acceptable (if the fencer respawns,
-            # fence devices may appear multiply active). We have to rely on
-            # other causes of a transition error logging their own error
-            # message, which is the usual practice.
-            r"pacemaker-schedulerd.* Calculated transition .*/pe-error",
         ]
 
         self._components["pacemaker-execd"] = [
@@ -338,12 +332,6 @@ class Corosync2Patterns(BasePatterns):
             r"error:.*Lost fencer connection",
             r"error:.*Fencer connection failed \(will retry\)",
             r"pacemaker-controld.*:\s+Result of .* operation for Fencing.*Error \(Lost connection to fencer\)",
-            # This is overbroad, but we don't have a way to say that only
-            # certain transition errors are acceptable (if the fencer respawns,
-            # fence devices may appear multiply active). We have to rely on
-            # other causes of a transition error logging their own error
-            # message, which is the usual practice.
-            r"pacemaker-schedulerd.* Calculated transition .*/pe-error",
         ]
 
         self._components["pacemaker-fenced-ignore"].extend(self._components["common-ignore"])

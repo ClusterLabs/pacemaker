@@ -82,6 +82,7 @@ static gboolean crm_autoreap  = TRUE;
     } while (0)
 
 static void update_peer_uname(crm_node_t *node, const char *uname);
+static crm_node_t *find_known_node(const char *id, const char *uname);
 
 int
 crm_remote_peer_cache_size(void)
@@ -121,7 +122,7 @@ crm_remote_peer_get(const char *node_name)
      * entry unless it has a node ID, which means the name actually is
      * associated with a cluster node. (@TODO return an error in that case?)
      */
-    node = pcmk__search_cluster_node_cache(0, node_name, NULL);
+    node = pcmk__search_node_caches(0, node_name, pcmk__node_search_cluster);
     if ((node != NULL) && (node->uuid == NULL)) {
         /* node_name could be a pointer into the cache entry being removed, so
          * reassign it to a copy before the original gets freed
@@ -539,7 +540,7 @@ hash_find_by_data(gpointer key, gpointer value, gpointer user_data)
  *
  * \param[in] id     If not 0, cluster node ID to search for
  * \param[in] uname  If not NULL, node name to search for
- * \param[in] flags  Bitmask of enum crm_get_peer_flags
+ * \param[in] flags  Group of enum pcmk__node_search_flags
  *
  * \return Node cache entry if found, otherwise NULL
  */
@@ -552,44 +553,21 @@ pcmk__search_node_caches(unsigned int id, const char *uname, uint32_t flags)
 
     crm_peer_init();
 
-    if ((uname != NULL) && pcmk_is_set(flags, CRM_GET_PEER_REMOTE)) {
+    if ((uname != NULL) && pcmk_is_set(flags, pcmk__node_search_remote)) {
         node = g_hash_table_lookup(crm_remote_peer_cache, uname);
     }
 
-    if ((node == NULL) && pcmk_is_set(flags, CRM_GET_PEER_CLUSTER)) {
+    if ((node == NULL) && pcmk_is_set(flags, pcmk__node_search_cluster)) {
         node = pcmk__search_cluster_node_cache(id, uname, NULL);
     }
-    return node;
-}
 
-/*!
- * \brief Get a node cache entry (cluster or Pacemaker Remote)
- *
- * \param[in] id     If not 0, cluster node ID to search for
- * \param[in] uname  If not NULL, node name to search for
- * \param[in] uuid   If not NULL while id is 0, node UUID instead of cluster
- *                   node ID to search for
- * \param[in] flags  Bitmask of enum crm_get_peer_flags
- *
- * \return (Possibly newly created) node cache entry
- */
-crm_node_t *
-pcmk__get_peer_full(unsigned int id, const char *uname, const char *uuid,
-                    int flags)
-{
-    crm_node_t *node = NULL;
+    if ((node == NULL) && pcmk_is_set(flags, pcmk__node_search_known)) {
+        char *id_str = (id == 0)? NULL : crm_strdup_printf("%u", id);
 
-    CRM_ASSERT(id > 0 || uname != NULL);
-
-    crm_peer_init();
-
-    if (pcmk_is_set(flags, CRM_GET_PEER_REMOTE)) {
-        node = g_hash_table_lookup(crm_remote_peer_cache, uname);
+        node = find_known_node(id_str, uname);
+        free(id_str);
     }
 
-    if ((node == NULL) && pcmk_is_set(flags, CRM_GET_PEER_CLUSTER)) {
-        node = pcmk__get_peer(id, uname, uuid);
-    }
     return node;
 }
 
@@ -632,21 +610,6 @@ pcmk__purge_node_from_cache(const char *node_name, uint32_t node_id)
 
     reap_crm_member(node_id, node_name);
     free(node_name_copy);
-}
-
-/*!
- * \brief Get a node cache entry (cluster or Pacemaker Remote)
- *
- * \param[in] id     If not 0, cluster node ID to search for
- * \param[in] uname  If not NULL, node name to search for
- * \param[in] flags  Bitmask of enum crm_get_peer_flags
- *
- * \return (Possibly newly created) node cache entry
- */
-crm_node_t *
-crm_get_peer_full(unsigned int id, const char *uname, int flags)
-{
-    return pcmk__get_peer_full(id, uname, NULL, flags);
 }
 
 /*!
@@ -809,12 +772,14 @@ remove_conflicting_peer(crm_node_t *node)
  * \param[in] uname  If not NULL, node name to search for
  * \param[in] uuid   If not NULL while id is 0, node UUID instead of cluster
  *                   node ID to search for
+ * \param[in] flags  Group of enum pcmk__node_search_flags
  *
  * \return (Possibly newly created) cluster node cache entry
  */
 /* coverity[-alloc] Memory is referenced in one or both hashtables */
 crm_node_t *
-pcmk__get_peer(unsigned int id, const char *uname, const char *uuid)
+pcmk__get_node(unsigned int id, const char *uname, const char *uuid,
+               uint32_t flags)
 {
     crm_node_t *node = NULL;
     char *uname_lookup = NULL;
@@ -822,6 +787,18 @@ pcmk__get_peer(unsigned int id, const char *uname, const char *uuid)
     CRM_ASSERT(id > 0 || uname != NULL);
 
     crm_peer_init();
+
+    // Check the Pacemaker Remote node cache first
+    if (pcmk_is_set(flags, pcmk__node_search_remote)) {
+        node = g_hash_table_lookup(crm_remote_peer_cache, uname);
+        if (node != NULL) {
+            return node;
+        }
+    }
+
+    if (!pcmk_is_set(flags, pcmk__node_search_cluster)) {
+        return NULL;
+    }
 
     node = pcmk__search_cluster_node_cache(id, uname, uuid);
 
@@ -840,7 +817,6 @@ pcmk__get_peer(unsigned int id, const char *uname, const char *uuid)
             node = pcmk__search_cluster_node_cache(id, uname, uuid);
         }
     }
-
 
     if (node == NULL) {
         char *uniqueid = crm_generate_uuid();
@@ -881,21 +857,6 @@ pcmk__get_peer(unsigned int id, const char *uname, const char *uuid)
     free(uname_lookup);
 
     return node;
-}
-
-/*!
- * \brief Get a cluster node cache entry
- *
- * \param[in] id     If not 0, cluster node ID to search for
- * \param[in] uname  If not NULL, node name to search for
- *
- * \return (Possibly newly created) cluster node cache entry
- */
-/* coverity[-alloc] Memory is referenced in one or both hashtables */
-crm_node_t *
-crm_get_peer(unsigned int id, const char *uname)
-{
-    return pcmk__get_peer(id, uname, NULL);
 }
 
 /*!
@@ -1391,42 +1352,6 @@ pcmk__refresh_node_caches_from_cib(xmlNode *cib)
     refresh_known_node_cache(cib);
 }
 
-/*!
- * \internal
- * \brief Search known node cache
- *
- * \param[in] id     If not 0, cluster node ID to search for
- * \param[in] uname  If not NULL, node name to search for
- * \param[in] flags  Bitmask of enum crm_get_peer_flags
- *
- * \return Known node cache entry if found, otherwise NULL
- */
-crm_node_t *
-pcmk__search_known_node_cache(unsigned int id, const char *uname,
-                              uint32_t flags)
-{
-    crm_node_t *node = NULL;
-    char *id_str = NULL;
-
-    CRM_ASSERT(id > 0 || uname != NULL);
-
-    node = pcmk__search_node_caches(id, uname, flags);
-
-    if (node || !(flags & CRM_GET_PEER_CLUSTER)) {
-        return node;
-    }
-
-    if (id > 0) {
-        id_str = crm_strdup_printf("%u", id);
-    }
-
-    node = find_known_node(id_str, uname);
-
-    free(id_str);
-    return node;
-}
-
-
 // Deprecated functions kept only for backward API compatibility
 // LCOV_EXCL_START
 
@@ -1442,6 +1367,18 @@ int
 crm_terminate_member_no_mainloop(int nodeid, const char *uname, int *connection)
 {
     return stonith_api_kick(nodeid, uname, 120, TRUE);
+}
+
+crm_node_t *
+crm_get_peer(unsigned int id, const char *uname)
+{
+    return pcmk__get_node(id, uname, NULL, pcmk__node_search_cluster);
+}
+
+crm_node_t *
+crm_get_peer_full(unsigned int id, const char *uname, int flags)
+{
+    return pcmk__get_node(id, uname, NULL, flags);
 }
 
 // LCOV_EXCL_STOP
