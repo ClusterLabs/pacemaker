@@ -806,7 +806,7 @@ compare_attr_expr_vals(const char *l_val, const char *r_val, const char *type,
         if (type == NULL) {
             if (pcmk__strcase_any_of(op,
                                      PCMK_VALUE_LT, PCMK_VALUE_LTE,
-                                     PCMK_VALUE_GT, "gte", NULL)) {
+                                     PCMK_VALUE_GT, PCMK_VALUE_GTE, NULL)) {
                 if (pcmk__char_in_any_str('.', l_val, r_val, NULL)) {
                     type = "number";
                 } else {
@@ -931,7 +931,7 @@ accept_attr_expr(const char *l_val, const char *r_val, const char *type,
     } else if (pcmk__str_eq(op, PCMK_VALUE_GT, pcmk__str_casei)) {
         return (cmp > 0);
 
-    } else if (pcmk__str_eq(op, "gte", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK_VALUE_GTE, pcmk__str_casei)) {
         return (cmp >= 0);
     }
 
