@@ -642,7 +642,7 @@ create_hello_message(const char *uuid, const char *client_name,
 
     crm_xml_add(hello_node, "major_version", major_version);
     crm_xml_add(hello_node, "minor_version", minor_version);
-    crm_xml_add(hello_node, "client_name", client_name);
+    crm_xml_add(hello_node, PCMK__XA_CLIENT_NAME, client_name);
     crm_xml_add(hello_node, "client_uuid", uuid);
 
     hello = create_request(CRM_OP_HELLO, hello_node, NULL, NULL, client_name, uuid);
