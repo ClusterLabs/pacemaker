@@ -131,6 +131,7 @@ extern "C" {
 
 #define PCMK_VALUE_ALWAYS                   "always"
 #define PCMK_VALUE_AND                      "and"
+#define PCMK_VALUE_BALANCED                 "balanced"
 #define PCMK_VALUE_BLOCK                    "block"
 #define PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS    "cib-bootstrap-options"
 #define PCMK_VALUE_DATE_SPEC                "date_spec"
