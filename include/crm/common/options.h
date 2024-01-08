@@ -143,6 +143,7 @@ extern "C" {
 #define PCMK_VALUE_IGNORE                   "ignore"
 #define PCMK_VALUE_LITERAL                  "literal"
 #define PCMK_VALUE_LT                       "lt"
+#define PCMK_VALUE_LTE                      "lte"
 #define PCMK_VALUE_MANDATORY                "Mandatory"
 #define PCMK_VALUE_MEMBER                   "member"
 #define PCMK_VALUE_META                     "meta"
