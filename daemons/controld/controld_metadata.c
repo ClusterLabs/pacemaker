@@ -84,7 +84,7 @@ ra_param_from_xml(xmlNode *param_xml)
         return NULL;
     }
 
-    if (pcmk__xe_attr_is_true(param_xml, "reloadable")) {
+    if (pcmk__xe_attr_is_true(param_xml, PCMK_XA_RELOADABLE)) {
         controld_set_ra_param_flags(p, ra_param_reloadable);
     }
 

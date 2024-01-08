@@ -229,6 +229,7 @@ extern "C" {
 #define PCMK_XA_RANGE                       "range"
 #define PCMK_XA_REASON                      "reason"
 #define PCMK_XA_REFERENCE                   "reference"
+#define PCMK_XA_RELOADABLE                  "reloadable"
 #define PCMK_XA_REMOTE_CLEAR_PORT           "remote-clear-port"
 #define PCMK_XA_REMOTE_TLS_PORT             "remote-tls-port"
 #define PCMK_XA_REPLICAS                    "replicas"
