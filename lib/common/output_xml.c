@@ -239,7 +239,7 @@ xml_subprocess_output(pcmk__output_t *out, int exit_status,
 
     rc_as_str = pcmk__itoa(exit_status);
 
-    node = pcmk__output_xml_create_parent(out, "command",
+    node = pcmk__output_xml_create_parent(out, PCMK_XE_COMMAND,
                                           "code", rc_as_str,
                                           NULL);
 
