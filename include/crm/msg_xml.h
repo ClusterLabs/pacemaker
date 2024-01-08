@@ -238,6 +238,7 @@ extern "C" {
 #define PCMK_XA_PRESENT                     "present"
 #define PCMK_XA_PROGRAM                     "program"
 #define PCMK_XA_PROMOTED_MAX                "promoted-max"
+#define PCMK_XA_PROMOTED_ONLY               "promoted-only"
 #define PCMK_XA_PROVIDER                    "provider"
 #define PCMK_XA_QUEUE_TIME                  "queue-time"
 #define PCMK_XA_RANGE                       "range"
