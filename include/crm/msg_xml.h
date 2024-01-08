@@ -79,6 +79,7 @@ extern "C" {
 #define PCMK_XE_CRM_CONFIG                  "crm_config"
 #define PCMK_XE_DATE_EXPRESSION             "date_expression"
 #define PCMK_XE_DIFF                        "diff"
+#define PCMK_XE_DURATION                    "duration"
 #define PCMK_XE_EXPRESSION                  "expression"
 #define PCMK_XE_FENCING_LEVEL               "fencing-level"
 #define PCMK_XE_FENCING_TOPOLOGY            "fencing-topology"

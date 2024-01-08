@@ -1070,7 +1070,7 @@ pe__eval_date_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data,
 
     crm_trace("Testing expression: %s", ID(expr));
 
-    duration_spec = first_named_child(expr, "duration");
+    duration_spec = first_named_child(expr, PCMK_XE_DURATION);
     date_spec = first_named_child(expr, "date_spec");
 
     value = crm_element_value(expr, PCMK_XA_START);
