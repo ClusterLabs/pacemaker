@@ -1012,7 +1012,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
         lock_node_name = rsc->lock_node->details->uname;
     }
 
-    rc = pe__name_and_nvpairs_xml(out, true, "resource", 15,
+    rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_RESOURCE, 15,
              PCMK_XA_ID, rsc_printable_id(rsc),
              "resource_agent", ra_name,
              PCMK_XA_ROLE, rsc_state,
