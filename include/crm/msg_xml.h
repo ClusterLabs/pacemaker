@@ -116,6 +116,7 @@ extern "C" {
 #define PCMK_XE_REPLICA                     "replica"
 #define PCMK_XE_RESOURCE                    "resource"
 #define PCMK_XE_RESOURCE_AGENT              "resource-agent"
+#define PCMK_XE_RESOURCE_AGENT_ACTION       "resource-agent-action"
 #define PCMK_XE_RESOURCE_REF                "resource_ref"
 #define PCMK_XE_RESOURCE_SET                "resource_set"
 #define PCMK_XE_RESOURCES                   "resources"

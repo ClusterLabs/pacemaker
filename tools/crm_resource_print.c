@@ -393,11 +393,13 @@ resource_agent_action_xml(pcmk__output_t *out, va_list args) {
     const char *stdout_data = va_arg(args, const char *);
     const char *stderr_data = va_arg(args, const char *);
 
-    xmlNodePtr node = pcmk__output_xml_create_parent(out, "resource-agent-action",
-                                                     PCMK_XA_ACTION, action,
-                                                     PCMK_XA_CLASS, class,
-                                                     PCMK_XA_TYPE, type,
-                                                     NULL);
+    xmlNodePtr node = NULL;
+
+    node = pcmk__output_xml_create_parent(out, PCMK_XE_RESOURCE_AGENT_ACTION,
+                                          PCMK_XA_ACTION, action,
+                                          PCMK_XA_CLASS, class,
+                                          PCMK_XA_TYPE, type,
+                                          NULL);
 
     if (rsc_name) {
         crm_xml_add(node, PCMK_XA_RSC, rsc_name);
