@@ -706,7 +706,7 @@ ban_xml(pcmk__output_t *out, va_list args) {
                                   * which will require an API schema major
                                   * version bump.
                                   */
-                                 "master_only", promoted_only,
+                                 PCMK__XA_PROMOTED_ONLY_LEGACY, promoted_only,
                                  NULL);
 
     free(weight_s);

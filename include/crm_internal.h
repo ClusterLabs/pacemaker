@@ -215,6 +215,9 @@
 // @COMPAT Deprecated alias for PCMK_XA_PROMOTED_MAX since 2.0.0
 #define PCMK__XA_PROMOTED_MAX_LEGACY    "masters"
 
+// @COMPAT Deprecated alias for PCMK_XA_PROMOTED_ONLY since 2.0.0
+#define PCMK__XA_PROMOTED_ONLY_LEGACY   "master_only"
+
 // @COMPAT Deprecated since 1.1.12
 #define PCMK__XA_REF                    "ref"
 
