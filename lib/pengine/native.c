@@ -1029,7 +1029,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
              PCMK_XA_FAILURE_IGNORED, ignored,
              "nodes_running_on", nodes_running_on,
              PCMK_XA_PENDING, (print_pending? native_pending_task(rsc) : NULL),
-             "locked_to", lock_node_name,
+             PCMK_XA_LOCKED_TO, lock_node_name,
              PCMK_XA_DESCRIPTION, desc);
     free(nodes_running_on);
 
