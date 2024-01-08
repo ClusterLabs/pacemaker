@@ -243,7 +243,7 @@ pe_cron_range_satisfied(const crm_time_t *now, const xmlNode *cron_spec)
     crm_time_get_gregorian(now, &y, &m, &d);
     CHECK_ONE(cron_spec, PCMK_XA_YEARS, y);
     CHECK_ONE(cron_spec, PCMK_XA_MONTHS, m);
-    CHECK_ONE(cron_spec, "monthdays", d);
+    CHECK_ONE(cron_spec, PCMK_XA_MONTHDAYS, d);
 
     crm_time_get_timeofday(now, &h, &m, &s);
     CHECK_ONE(cron_spec, PCMK_XA_HOURS, h);
