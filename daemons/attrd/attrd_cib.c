@@ -537,11 +537,10 @@ write_attribute(attribute_t *a, bool ignore_delay)
         }
     }
 
-    /* Attribute will be written shortly, so clear changed flag */
-    attrd_clear_attr_flags(a, attrd_attr_changed);
-
-    /* We will check all peers' uuids shortly, so initialize this to false */
-    a->unknown_peer_uuids = false;
+    /* Attribute will be written shortly, so clear changed flag and initialize
+     * UUID missing flag to false.
+     */
+    attrd_clear_attr_flags(a, attrd_attr_changed|attrd_attr_uuid_missing);
 
     /* Attribute will be written shortly, so clear forced write flag */
     a->force_write = FALSE;
@@ -583,7 +582,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
 
         // Defer write if this is a cluster node that's never been seen
         if (uuid == NULL) {
-            a->unknown_peer_uuids = true;
+            attrd_set_attr_flags(a, attrd_attr_uuid_missing);
             crm_notice("Cannot update %s[%s]='%s' now because node's UUID is "
                        "unknown (will retry if learned)",
                        a->id, v->nodename, v->current);
@@ -665,7 +664,8 @@ attrd_write_attributes(uint32_t options)
               pcmk_is_set(options, attrd_write_all)? "all" : "changed");
     g_hash_table_iter_init(&iter, attributes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & a)) {
-        if (!pcmk_is_set(options, attrd_write_all) && a->unknown_peer_uuids) {
+        if (!pcmk_is_set(options, attrd_write_all) &&
+            pcmk_is_set(a->flags, attrd_attr_uuid_missing)) {
             // Try writing this attribute again, in case peer ID was learned
             attrd_set_attr_flags(a, attrd_attr_changed);
         } else if (a->force_write) {

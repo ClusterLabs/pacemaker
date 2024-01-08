@@ -122,6 +122,7 @@ void attrd_xml_add_writer(xmlNode *xml);
 enum attrd_attr_flags {
     attrd_attr_none         = 0U,
     attrd_attr_changed      = (1U << 0),    // Attribute value has changed since last write
+    attrd_attr_uuid_missing = (1U << 1),    // Whether we know we're missing a peer UUID
 };
 
 typedef struct attribute_s {
@@ -135,7 +136,6 @@ typedef struct attribute_s {
     uint32_t flags;
 
     /* TODO: refactor these three as a bitmask */
-    bool unknown_peer_uuids; /* whether we know we're missing a peer uuid */
     gboolean is_private; /* whether to keep this attribute out of the CIB */
 
     mainloop_timer_t *timer;
