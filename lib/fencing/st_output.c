@@ -482,7 +482,7 @@ stonith_event_xml(pcmk__output_t *out, va_list args)
             char *state = pcmk__itoa(event->state);
             pcmk__xe_set_props(node,
                                PCMK_XA_STATUS, "pending",
-                               "extended-status", state,
+                               PCMK_XA_EXTENDED_STATUS, state,
                                NULL);
             free(state);
             break;
