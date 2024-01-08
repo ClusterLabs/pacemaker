@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2023 the Pacemaker project contributors
+ * Copyright 2014-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -307,7 +307,7 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
     CRM_CHECK(rsc != NULL, return NULL);
 
     // The default placement strategy ignores utilization
-    if (pcmk__str_eq(rsc->cluster->placement_strategy, "default",
+    if (pcmk__str_eq(rsc->cluster->placement_strategy, PCMK_VALUE_DEFAULT,
                      pcmk__str_casei)) {
         return NULL;
     }

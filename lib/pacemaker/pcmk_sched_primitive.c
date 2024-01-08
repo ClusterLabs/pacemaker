@@ -930,7 +930,7 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
     // Whether a non-default placement strategy is used
     check_utilization = (g_hash_table_size(rsc->utilization) > 0)
                          && !pcmk__str_eq(rsc->cluster->placement_strategy,
-                                          "default", pcmk__str_casei);
+                                          PCMK_VALUE_DEFAULT, pcmk__str_casei);
 
     // Order stops before starts (i.e. restart)
     pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_STOP, 0), NULL,

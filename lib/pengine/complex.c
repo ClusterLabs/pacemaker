@@ -758,7 +758,9 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     }
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_IS_MANAGED);
-    if (value != NULL && !pcmk__str_eq("default", value, pcmk__str_casei)) {
+    if ((value != NULL)
+        && !pcmk__str_eq(PCMK_VALUE_DEFAULT, value, pcmk__str_casei)) {
+
         if (crm_is_true(value)) {
             pcmk__set_rsc_flags(*rsc, pcmk_rsc_managed);
         } else {
@@ -836,12 +838,16 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     }
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_RESOURCE_STICKINESS);
-    if (value != NULL && !pcmk__str_eq("default", value, pcmk__str_casei)) {
+    if ((value != NULL)
+        && !pcmk__str_eq(PCMK_VALUE_DEFAULT, value, pcmk__str_casei)) {
+
         (*rsc)->stickiness = char2score(value);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_MIGRATION_THRESHOLD);
-    if (value != NULL && !pcmk__str_eq("default", value, pcmk__str_casei)) {
+    if ((value != NULL)
+        && !pcmk__str_eq(PCMK_VALUE_DEFAULT, value, pcmk__str_casei)) {
+
         (*rsc)->migration_threshold = char2score(value);
         if ((*rsc)->migration_threshold < 0) {
             /* @TODO We use 1 here to preserve previous behavior, but this
