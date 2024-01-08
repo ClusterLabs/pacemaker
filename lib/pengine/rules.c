@@ -1073,7 +1073,7 @@ pe__eval_date_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data,
     duration_spec = first_named_child(expr, "duration");
     date_spec = first_named_child(expr, "date_spec");
 
-    value = crm_element_value(expr, "start");
+    value = crm_element_value(expr, PCMK_XA_START);
     if (value != NULL) {
         start = crm_time_new(value);
     }
