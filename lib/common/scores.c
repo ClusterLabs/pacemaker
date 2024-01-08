@@ -47,7 +47,7 @@ char2score(const char *score)
     } else if (pcmk__str_eq(score, PCMK_VALUE_RED, pcmk__str_casei)) {
         return pcmk__score_red;
 
-    } else if (pcmk__str_eq(score, PCMK__VALUE_YELLOW, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(score, PCMK_VALUE_YELLOW, pcmk__str_casei)) {
         return pcmk__score_yellow;
 
     } else if (pcmk__str_eq(score, PCMK__VALUE_GREEN, pcmk__str_casei)) {

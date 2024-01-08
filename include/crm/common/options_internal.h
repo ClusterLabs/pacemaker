@@ -208,7 +208,6 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 #define PCMK__VALUE_STARTING_DAEMONS        "starting_daemons"
 #define PCMK__VALUE_UNFENCING               "unfencing"
 #define PCMK__VALUE_WAIT_FOR_PING           "wait_for_ping"
-#define PCMK__VALUE_YELLOW                  "yellow"
 
 /* @COMPAT Deprecated since 2.1.7 (used with PCMK__XA_ORDERING attribute of
  * resource sets)
