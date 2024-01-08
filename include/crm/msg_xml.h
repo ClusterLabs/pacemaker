@@ -207,6 +207,7 @@ extern "C" {
 #define PCMK_XA_MULTI_STATE                 "multi_state"
 #define PCMK_XA_NAME                        "name"
 #define PCMK_XA_NETWORK                     "network"
+#define PCMK_XA_NEXT_ROLE                   "next-role"
 #define PCMK_XA_NO_QUORUM_PANIC             "no-quorum-panic"
 #define PCMK_XA_NODE                        "node"
 #define PCMK_XA_NODE_ATTRIBUTE              "node-attribute"

@@ -284,7 +284,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
         /* Starting and promoting a promotable clone instance */
         pcmk__xe_set_props(xml,
                            PCMK_XA_ROLE, pcmk_role_text(rsc->role),
-                           "next-role", pcmk_role_text(rsc->next_role),
+                           PCMK_XA_NEXT_ROLE, pcmk_role_text(rsc->next_role),
                            "dest", destination->details->uname,
                            NULL);
 
@@ -333,7 +333,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
         /* Promoting or demoting a promotable clone instance */
         pcmk__xe_set_props(xml,
                            PCMK_XA_ROLE, pcmk_role_text(rsc->role),
-                           "next-role", pcmk_role_text(rsc->next_role),
+                           PCMK_XA_NEXT_ROLE, pcmk_role_text(rsc->next_role),
                            "source", origin->details->uname,
                            NULL);
 
@@ -342,7 +342,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
         pcmk__xe_set_props(xml,
                            PCMK_XA_ROLE, pcmk_role_text(rsc->role),
                            "source", origin->details->uname,
-                           "next-role", pcmk_role_text(rsc->next_role),
+                           PCMK_XA_NEXT_ROLE, pcmk_role_text(rsc->next_role),
                            "dest", destination->details->uname,
                            NULL);
     }
