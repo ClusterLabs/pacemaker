@@ -274,7 +274,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
     }
 
     change_str = g_ascii_strdown(change, -1);
-    xml = pcmk__output_create_xml_node(out, "rsc_action",
+    xml = pcmk__output_create_xml_node(out, PCMK_XE_RSC_ACTION,
                                        PCMK_XA_ACTION, change_str,
                                        PCMK_XA_RESOURCE, rsc->id,
                                        NULL);
@@ -1761,7 +1761,7 @@ inject_rsc_action_xml(pcmk__output_t *out, va_list args)
         return pcmk_rc_no_output;
     }
 
-    xml_node = pcmk__output_create_xml_node(out, "rsc_action",
+    xml_node = pcmk__output_create_xml_node(out, PCMK_XE_RSC_ACTION,
                                             PCMK_XA_RESOURCE, rsc,
                                             PCMK_XA_OP, operation,
                                             PCMK_XA_NODE, node,
