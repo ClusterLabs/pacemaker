@@ -1920,7 +1920,7 @@ node_xml(pcmk__output_t *out, va_list args) {
         } else if (health == 0) {
             health_s = PCMK_VALUE_YELLOW;
         } else {
-            health_s = "green";
+            health_s = PCMK_VALUE_GREEN;
         }
 
         feature_set = get_node_feature_set(node);

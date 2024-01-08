@@ -139,6 +139,7 @@ extern "C" {
 #define PCMK_VALUE_FALSE                    "false"
 #define PCMK_VALUE_FENCE                    "fence"
 #define PCMK_VALUE_FREEZE                   "freeze"
+#define PCMK_VALUE_GREEN                    "green"
 #define PCMK_VALUE_IGNORE                   "ignore"
 #define PCMK_VALUE_LITERAL                  "literal"
 #define PCMK_VALUE_MANDATORY                "Mandatory"

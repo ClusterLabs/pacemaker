@@ -16,7 +16,7 @@
 /*!
  * \internal
  * \brief Set the node health values to use for \c PCMK_VALUE_RED,
- *        \c PCMK_VALUE_YELLOW, and "green"
+ *        \c PCMK_VALUE_YELLOW, and \c PCMK_VALUE_GREEN
  *
  * \param[in,out] scheduler  Scheduler data
  */
@@ -57,7 +57,7 @@ pe__unpack_node_health_scores(pcmk_scheduler_t *scheduler)
         crm_debug("Values of node health scores: "
                   PCMK_VALUE_RED "=%d "
                   PCMK_VALUE_YELLOW "=%d "
-                  PCMK__VALUE_GREEN "=%d",
+                  PCMK_VALUE_GREEN "=%d",
                   pcmk__score_red, pcmk__score_yellow, pcmk__score_green);
     }
 }
