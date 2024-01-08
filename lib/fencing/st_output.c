@@ -475,7 +475,7 @@ stonith_event_xml(pcmk__output_t *out, va_list args)
             break;
 
         case st_done:
-            crm_xml_add(node, PCMK_XA_STATUS, "success");
+            crm_xml_add(node, PCMK_XA_STATUS, PCMK_VALUE_SUCCESS);
             break;
 
         default: {
