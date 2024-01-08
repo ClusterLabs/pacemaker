@@ -278,7 +278,7 @@ update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
                    pcmk__s(value, "(unset)"), peer->uname,
                    (a->timeout_ms == 0)? "no" : pcmk__readable_interval(a->timeout_ms));
         pcmk__str_update(&v->current, value);
-        a->changed = true;
+        attrd_set_attr_flags(a, attrd_attr_changed);
 
         if (pcmk__str_eq(host, attrd_cluster->uname, pcmk__str_casei)
             && pcmk__str_eq(attr, PCMK__NODE_ATTR_SHUTDOWN, pcmk__str_none)) {

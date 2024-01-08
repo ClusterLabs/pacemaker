@@ -119,6 +119,11 @@ void attrd_declare_winner(void);
 void attrd_remove_voter(const crm_node_t *peer);
 void attrd_xml_add_writer(xmlNode *xml);
 
+enum attrd_attr_flags {
+    attrd_attr_none         = 0U,
+    attrd_attr_changed      = (1U << 0),    // Attribute value has changed since last write
+};
+
 typedef struct attribute_s {
     char *uuid; /* TODO: Remove if at all possible */
     char *id;
@@ -127,9 +132,9 @@ typedef struct attribute_s {
     GHashTable *values;
     int update;
     int timeout_ms;
+    uint32_t flags;
 
     /* TODO: refactor these three as a bitmask */
-    bool changed; /* whether attribute value has changed since last write */
     bool unknown_peer_uuids; /* whether we know we're missing a peer uuid */
     gboolean is_private; /* whether to keep this attribute out of the CIB */
 
@@ -140,6 +145,18 @@ typedef struct attribute_s {
     gboolean force_write; /* Flag for updating attribute by ignoring delay */
 
 } attribute_t;
+
+#define attrd_set_attr_flags(attr, flags_to_set) do {               \
+        (attr)->flags = pcmk__set_flags_as(__func__, __LINE__,      \
+            LOG_TRACE, "Value for attribute", (attr)->id,           \
+            (attr)->flags, (flags_to_set), #flags_to_set);          \
+    } while (0)
+
+#define attrd_clear_attr_flags(attr, flags_to_clear) do {           \
+        (attr)->flags = pcmk__clear_flags_as(__func__, __LINE__,    \
+            LOG_TRACE, "Value for attribute", (attr)->id,           \
+            (attr)->flags, (flags_to_clear), #flags_to_clear);      \
+    } while (0)
 
 enum attrd_value_flags {
     attrd_value_none        = 0U,

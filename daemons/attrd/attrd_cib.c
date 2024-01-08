@@ -288,11 +288,12 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *use
         } else {
             do_crm_log(level, "* Could not write %s[%s]=%s",
                        a->id, peer, pcmk__s(v->requested, "(unset)"));
-            a->changed = true; // Reattempt write below if we are still writer
+            /* Reattempt write below if we are still the writer */
+            attrd_set_attr_flags(a, attrd_attr_changed);
         }
     }
 
-    if (a->changed && attrd_election_won()) {
+    if (pcmk_is_set(a->flags, attrd_attr_changed) && attrd_election_won()) {
         if (rc == pcmk_ok) {
             /* We deferred a write of a new update because this update was in
              * progress. Write out the new value without additional delay.
@@ -537,7 +538,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
     }
 
     /* Attribute will be written shortly, so clear changed flag */
-    a->changed = false;
+    attrd_clear_attr_flags(a, attrd_attr_changed);
 
     /* We will check all peers' uuids shortly, so initialize this to false */
     a->unknown_peer_uuids = false;
@@ -666,13 +667,14 @@ attrd_write_attributes(uint32_t options)
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & a)) {
         if (!pcmk_is_set(options, attrd_write_all) && a->unknown_peer_uuids) {
             // Try writing this attribute again, in case peer ID was learned
-            a->changed = true;
+            attrd_set_attr_flags(a, attrd_attr_changed);
         } else if (a->force_write) {
             /* If the force_write flag is set, write the attribute. */
-            a->changed = true;
+            attrd_set_attr_flags(a, attrd_attr_changed);
         }
 
-        if (pcmk_is_set(options, attrd_write_all) || a->changed) {
+        if (pcmk_is_set(options, attrd_write_all) ||
+            pcmk_is_set(a->flags, attrd_attr_changed)) {
             bool ignore_delay = pcmk_is_set(options, attrd_write_no_delay);
 
             if (a->force_write) {
