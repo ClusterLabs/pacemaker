@@ -376,7 +376,7 @@ pe__group_xml(pcmk__output_t *out, va_list args)
 
             rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_GROUP, 5,
                                           PCMK_XA_ID, rsc->id,
-                                          "number_resources", count,
+                                          PCMK_XA_NUMBER_RESOURCES, count,
                                           PCMK_XA_MAINTENANCE, maintenance,
                                           PCMK_XA_MANAGED, managed,
                                           PCMK_XA_DISABLED, disabled,

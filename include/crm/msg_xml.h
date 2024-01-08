@@ -242,6 +242,7 @@ extern "C" {
 #define PCMK_XA_NODES_RUNNING_ON            "nodes_running_on"
 #define PCMK_XA_NUM_UPDATES                 "num_updates"
 #define PCMK_XA_NUMBER                      "number"
+#define PCMK_XA_NUMBER_RESOURCES            "number_resources"
 #define PCMK_XA_OBJECT_TYPE                 "object-type"
 #define PCMK_XA_ONLINE                      "online"
 #define PCMK_XA_OP                          "op"
