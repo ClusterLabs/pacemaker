@@ -877,7 +877,7 @@ cluster_counts_xml(pcmk__output_t *out, va_list args) {
     free(s);
 
     s = pcmk__itoa(nblocked);
-    crm_xml_add(resources_node, "blocked", s);
+    crm_xml_add(resources_node, PCMK_XA_BLOCKED, s);
     free(s);
 
     return pcmk_rc_ok;

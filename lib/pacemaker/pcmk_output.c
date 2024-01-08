@@ -351,14 +351,14 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
         && !pcmk_is_set(action->flags, pcmk_action_runnable)) {
         pcmk__xe_set_props(xml,
                            PCMK_XA_REASON, source->reason,
-                           "blocked", PCMK_VALUE_TRUE,
+                           PCMK_XA_BLOCKED, PCMK_VALUE_TRUE,
                            NULL);
 
     } else if (source->reason != NULL) {
         crm_xml_add(xml, PCMK_XA_REASON, source->reason);
 
     } else if (!pcmk_is_set(action->flags, pcmk_action_runnable)) {
-        pcmk__xe_set_bool_attr(xml, "blocked", true);
+        pcmk__xe_set_bool_attr(xml, PCMK_XA_BLOCKED, true);
 
     }
 

@@ -988,6 +988,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     const char *target_role = NULL;
     const char *active = pcmk__btoa(rsc->fns->active(rsc, TRUE));
     const char *orphaned = pcmk__flag_text(rsc->flags, pcmk_rsc_removed);
+    const char *blocked = pcmk__flag_text(rsc->flags, pcmk_rsc_blocked);
     const char *maintenance = pcmk__flag_text(rsc->flags, pcmk_rsc_maintenance);
     const char *managed = pcmk__flag_text(rsc->flags, pcmk_rsc_managed);
     const char *failed = pcmk__flag_text(rsc->flags, pcmk_rsc_failed);
@@ -1022,7 +1023,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
              PCMK_XA_TARGET_ROLE, target_role,
              PCMK_XA_ACTIVE, active,
              PCMK_XA_ORPHANED, orphaned,
-             "blocked", pcmk__flag_text(rsc->flags, pcmk_rsc_blocked),
+             PCMK_XA_BLOCKED, blocked,
              PCMK_XA_MAINTENANCE, maintenance,
              PCMK_XA_MANAGED, managed,
              PCMK_XA_FAILED, failed,
