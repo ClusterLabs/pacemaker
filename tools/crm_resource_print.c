@@ -213,12 +213,13 @@ agent_status_xml(pcmk__output_t *out, va_list args) {
     char *exit_s = pcmk__itoa(rc);
     const char *message = services_ocf_exitcode_str((int) rc);
     char *status_s = pcmk__itoa(status);
+    const char *execution_message = pcmk_exec_status_str(status);
 
     pcmk__output_create_xml_node(out, PCMK_XE_AGENT_STATUS,
                                  PCMK_XA_CODE, exit_s,
                                  PCMK_XA_MESSAGE, message,
                                  PCMK_XA_EXECUTION_CODE, status_s,
-                                 "execution_message", pcmk_exec_status_str(status),
+                                 PCMK_XA_EXECUTION_MESSAGE, execution_message,
                                  PCMK_XA_REASON, exit_reason,
                                  NULL);
 
