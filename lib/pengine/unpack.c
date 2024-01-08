@@ -1004,7 +1004,7 @@ unpack_ticket_state(xmlNode *xml_ticket, pcmk_scheduler_t *scheduler)
         g_hash_table_replace(ticket->state, strdup(prop_name), strdup(prop_value));
     }
 
-    granted = g_hash_table_lookup(ticket->state, "granted");
+    granted = g_hash_table_lookup(ticket->state, PCMK__XA_GRANTED);
     if (granted && crm_is_true(granted)) {
         ticket->granted = TRUE;
         crm_info("We have ticket '%s'", ticket->id);
