@@ -202,7 +202,11 @@ static const char *
 get_cluster_stack(pcmk_scheduler_t *scheduler)
 {
     xmlNode *stack = get_xpath_object(XPATH_STACK, scheduler->input, LOG_DEBUG);
-    return (stack != NULL)? crm_element_value(stack, PCMK_XA_VALUE) : "unknown";
+
+    if (stack != NULL) {
+        return crm_element_value(stack, PCMK_XA_VALUE);
+    }
+    return PCMK_VALUE_UNKNOWN;
 }
 
 static char *
@@ -1917,7 +1921,7 @@ health_text(int health)
  * \retval \c PCMK_VALUE_MEMBER if \p node_type is \c pcmk_node_variant_cluster
  * \retval \c PCMK_VALUE_REMOTE if \p node_type is \c pcmk_node_variant_remote
  * \retval \c PCMK__VALUE_PING if \p node_type is \c node_ping
- * \retval \c "unknown" otherwise
+ * \retval \c PCMK_VALUE_UNKNOWN otherwise
  */
 static const char *
 node_type_str(enum node_type type)
@@ -1930,7 +1934,7 @@ node_type_str(enum node_type type)
         case node_ping:
             return PCMK__VALUE_PING;
         default:
-            return "unknown";
+            return PCMK_VALUE_UNKNOWN;
     }
 }
 

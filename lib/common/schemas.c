@@ -1043,11 +1043,7 @@ get_schema_name(int version)
 {
     pcmk__schema_t *schema = g_list_nth_data(known_schemas, version);
 
-    if (schema == NULL) {
-        return "unknown";
-    }
-
-    return schema->name;
+    return (schema != NULL)? schema->name : "unknown";
 }
 
 int

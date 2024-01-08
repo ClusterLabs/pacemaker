@@ -684,7 +684,7 @@ pcmk__unpack_graph(const xmlNode *xml_graph, const char *reference)
         return NULL;
     }
 
-    new_graph->source = strdup((reference == NULL)? "unknown" : reference);
+    new_graph->source = strdup(pcmk__s(reference, "unknown"));
     if (new_graph->source == NULL) {
         free(new_graph);
         return NULL;
