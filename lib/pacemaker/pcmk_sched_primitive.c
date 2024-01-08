@@ -1503,9 +1503,9 @@ pcmk__primitive_add_graph_meta(const pcmk_resource_t *rsc, xmlNode *xml)
      * needed in the transition graph (for example, to tell unique clone
      * instances apart).
      */
-    value = g_hash_table_lookup(rsc->meta, PCMK__META_CLONE_INSTANCE_NUM);
+    value = g_hash_table_lookup(rsc->meta, PCMK__META_CLONE);
     if (value != NULL) {
-        name = crm_meta_name(PCMK__META_CLONE_INSTANCE_NUM);
+        name = crm_meta_name(PCMK__META_CLONE);
         crm_xml_add(xml, name, value);
         free(name);
     }

@@ -305,8 +305,8 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
     new_xml = copy_xml(template);
     xmlNodeSetName(new_xml, xml_obj->name);
     crm_xml_add(new_xml, PCMK_XA_ID, id);
-    crm_xml_add(new_xml, PCMK__META_CLONE_INSTANCE_NUM,
-                crm_element_value(xml_obj, PCMK__META_CLONE_INSTANCE_NUM));
+    crm_xml_add(new_xml, PCMK__META_CLONE,
+                crm_element_value(xml_obj, PCMK__META_CLONE));
 
     template_ops = find_xml_node(new_xml, "operations", FALSE);
 
@@ -680,10 +680,10 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     (*rsc)->allowed_nodes = pcmk__strkey_table(NULL, free);
     (*rsc)->known_on = pcmk__strkey_table(NULL, free);
 
-    value = crm_element_value((*rsc)->xml, PCMK__META_CLONE_INSTANCE_NUM);
+    value = crm_element_value((*rsc)->xml, PCMK__META_CLONE);
     if (value) {
         (*rsc)->id = crm_strdup_printf("%s:%s", id, value);
-        add_hash_param((*rsc)->meta, PCMK__META_CLONE_INSTANCE_NUM, value);
+        add_hash_param((*rsc)->meta, PCMK__META_CLONE, value);
 
     } else {
         (*rsc)->id = strdup(id);
