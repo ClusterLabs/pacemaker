@@ -190,6 +190,7 @@ extern "C" {
 #define PCMK_XA_LANG                        "lang"
 #define PCMK_XA_LAST_RC_CHANGE              "last-rc-change"
 #define PCMK_XA_LOSS_POLICY                 "loss-policy"
+#define PCMK_XA_MAINTENANCE                 "maintenance"
 #define PCMK_XA_MINUTES                     "minutes"
 #define PCMK_XA_MIXED_VERSION               "mixed_version"
 #define PCMK_XA_MONTHDAYS                   "monthdays"

@@ -987,6 +987,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     const char *lock_node_name = NULL;
     int rc = pcmk_rc_no_output;
     const char *target_role = NULL;
+    const char *maintenance = pcmk__flag_text(rsc->flags, pcmk_rsc_maintenance);
 
     desc = pe__resource_description(rsc, show_opts);
 
@@ -1019,7 +1020,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
              "active", pcmk__btoa(rsc->fns->active(rsc, TRUE)),
              "orphaned", pcmk__flag_text(rsc->flags, pcmk_rsc_removed),
              "blocked", pcmk__flag_text(rsc->flags, pcmk_rsc_blocked),
-             "maintenance", pcmk__flag_text(rsc->flags, pcmk_rsc_maintenance),
+             PCMK_XA_MAINTENANCE, maintenance,
              "managed", pcmk__flag_text(rsc->flags, pcmk_rsc_managed),
              PCMK_XA_FAILED, pcmk__flag_text(rsc->flags, pcmk_rsc_failed),
              "failure_ignored", pcmk__flag_text(rsc->flags,

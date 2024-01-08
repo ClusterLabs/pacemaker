@@ -369,8 +369,8 @@ pe__group_xml(pcmk__output_t *out, va_list args)
 
         if (rc == pcmk_rc_no_output) {
             char *count = pcmk__itoa(g_list_length(gIter));
-            const char *maint_s = pcmk__flag_text(rsc->flags,
-                                                  pcmk_rsc_maintenance);
+            const char *maintenance = pcmk__flag_text(rsc->flags,
+                                                      pcmk_rsc_maintenance);
             const char *managed_s = pcmk__flag_text(rsc->flags,
                                                     pcmk_rsc_managed);
             const char *disabled_s = pcmk__btoa(pe__resource_is_disabled(rsc));
@@ -378,7 +378,7 @@ pe__group_xml(pcmk__output_t *out, va_list args)
             rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_GROUP, 5,
                                           PCMK_XA_ID, rsc->id,
                                           "number_resources", count,
-                                          "maintenance", maint_s,
+                                          PCMK_XA_MAINTENANCE, maintenance,
                                           "managed", managed_s,
                                           "disabled", disabled_s,
                                           PCMK_XA_DESCRIPTION, desc);

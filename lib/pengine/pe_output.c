@@ -1908,6 +1908,32 @@ health_text(int health)
     }
 }
 
+/*!
+ * \internal
+ * \brief Convert a node type to a string representation
+ *
+ * \param[in] type  Node type
+ *
+ * \retval \c PCMK_VALUE_MEMBER if \p node_type is \c pcmk_node_variant_cluster
+ * \retval \c PCMK_VALUE_REMOTE if \p node_type is \c pcmk_node_variant_remote
+ * \retval \c PCMK__VALUE_PING if \p node_type is \c node_ping
+ * \retval \c "unknown" otherwise
+ */
+static const char *
+node_type_str(enum node_type type)
+{
+    switch (type) {
+        case pcmk_node_variant_cluster:
+            return PCMK_VALUE_MEMBER;
+        case pcmk_node_variant_remote:
+            return PCMK_VALUE_REMOTE;
+        case node_ping:
+            return PCMK__VALUE_PING;
+        default:
+            return "unknown";
+    }
+}
+
 PCMK__OUTPUT_ARGS("node", "pcmk_node_t *", "uint32_t", "bool", "GList *",
                   "GList *")
 static int
@@ -1919,10 +1945,10 @@ node_xml(pcmk__output_t *out, va_list args) {
     GList *only_rsc = va_arg(args, GList *);
 
     if (full) {
-        const char *node_type = "unknown";
         const char *online = pcmk__btoa(node->details->online);
         const char *standby = pcmk__btoa(node->details->standby);
         const char *standby_onfail = pcmk__btoa(node->details->standby_onfail);
+        const char *maintenance = pcmk__btoa(node->details->maintenance);
         const char *pending = pcmk__btoa(node->details->pending);
         const char *unclean = pcmk__btoa(node->details->unclean);
         const char *health = health_text(pe__node_health(node));
@@ -1932,18 +1958,7 @@ node_xml(pcmk__output_t *out, va_list args) {
         const char *is_dc = pcmk__btoa(node->details->is_dc);
         int length = g_list_length(node->details->running_rsc);
         char *resources_running = pcmk__itoa(length);
-
-        switch (node->details->type) {
-            case pcmk_node_variant_cluster:
-                node_type = PCMK_VALUE_MEMBER;
-                break;
-            case pcmk_node_variant_remote:
-                node_type = PCMK_VALUE_REMOTE;
-                break;
-            case node_ping:
-                node_type = PCMK__VALUE_PING;
-                break;
-        }
+        const char *node_type = node_type_str(node->details->type);
 
         pe__name_and_nvpairs_xml(out, true, PCMK_XE_NODE, 15,
                                  PCMK_XA_NAME, node->details->uname,
@@ -1951,7 +1966,7 @@ node_xml(pcmk__output_t *out, va_list args) {
                                  PCMK_XA_ONLINE, online,
                                  PCMK_XA_STANDBY, standby,
                                  PCMK_XA_STANDBY_ONFAIL, standby_onfail,
-                                 "maintenance", pcmk__btoa(node->details->maintenance),
+                                 PCMK_XA_MAINTENANCE, maintenance,
                                  PCMK_XA_PENDING, pending,
                                  PCMK_XA_UNCLEAN, unclean,
                                  PCMK_XA_HEALTH, health,
