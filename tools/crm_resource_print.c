@@ -338,7 +338,7 @@ resource_agent_action_default(pcmk__output_t *out, va_list args) {
         const char *name = NULL;
         const char *value = NULL;
 
-        out->begin_list(out, NULL, NULL, "overrides");
+        out->begin_list(out, NULL, NULL, PCMK_XE_OVERRIDES);
 
         g_hash_table_iter_init(&iter, overrides);
         while (g_hash_table_iter_next(&iter, (gpointer *) &name, (gpointer *) &value)) {
@@ -412,7 +412,7 @@ resource_agent_action_xml(pcmk__output_t *out, va_list args) {
         const char *name = NULL;
         const char *value = NULL;
 
-        out->begin_list(out, NULL, NULL, "overrides");
+        out->begin_list(out, NULL, NULL, PCMK_XE_OVERRIDES);
 
         g_hash_table_iter_init(&iter, overrides);
         while (g_hash_table_iter_next(&iter, (gpointer *) &name, (gpointer *) &value)) {
