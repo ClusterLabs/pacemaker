@@ -101,7 +101,7 @@ get_ordering_type(const xmlNode *xml_obj)
     } else if (pcmk__str_eq(kind, PCMK_VALUE_OPTIONAL, pcmk__str_none)) {
         kind_e = pe_order_kind_optional;
 
-    } else if (pcmk__str_eq(kind, "Serialize", pcmk__str_none)) {
+    } else if (pcmk__str_eq(kind, PCMK_VALUE_SERIALIZE, pcmk__str_none)) {
         kind_e = pe_order_kind_serialize;
 
     } else {
@@ -151,7 +151,7 @@ get_ordering_symmetry(const xmlNode *xml_obj, enum pe_order_kind parent_kind,
             if (kind == pe_order_kind_serialize) {
                 pcmk__config_warn("Ignoring " PCMK_XA_SYMMETRICAL
                                   " for '%s' because not valid with "
-                                  PCMK_XA_KIND " of 'Serialize'",
+                                  PCMK_XA_KIND " of '" PCMK_VALUE_SERIALIZE "'",
                                   ID(xml_obj));
             } else {
                 return ordering_symmetric;
