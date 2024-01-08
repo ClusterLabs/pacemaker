@@ -946,7 +946,7 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
         on_fail = pcmk_on_fail_stop;
         desc = "stop resource";
 
-    } else if (pcmk__str_eq(value, "restart", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value, PCMK_VALUE_RESTART, pcmk__str_casei)) {
         on_fail = pcmk_on_fail_restart;
         desc = "restart (and possibly migrate)";
 
