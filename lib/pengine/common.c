@@ -33,12 +33,6 @@ pe_metadata(pcmk__output_t *out)
 }
 
 const char *
-pe_pref(GHashTable * options, const char *name)
-{
-    return pcmk__cluster_option(options, name);
-}
-
-const char *
 fail2text(enum action_fail_response fail)
 {
     const char *result = "<unknown>";
@@ -313,6 +307,12 @@ enum rsc_role_e
 text2role(const char *role)
 {
     return pcmk_parse_role(role);
+}
+
+const char *
+pe_pref(GHashTable * options, const char *name)
+{
+    return pcmk__cluster_option(options, name);
 }
 
 // LCOV_EXCL_STOP

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,8 +22,6 @@ extern "C" {
 const char *task2text(enum action_tasks task);
 enum action_tasks text2task(const char *task);
 const char *fail2text(enum action_fail_response fail);
-
-const char *pe_pref(GHashTable * options, const char *name);
 
 typedef struct pe_re_match_data {
     char *string;
