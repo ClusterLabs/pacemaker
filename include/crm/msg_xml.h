@@ -298,6 +298,7 @@ extern "C" {
 #define PCMK_XA_WEEKDAYS                    "weekdays"
 #define PCMK_XA_WEEKS                       "weeks"
 #define PCMK_XA_WEEKYEARS                   "weekyears"
+#define PCMK_XA_WHEN                        "when"
 #define PCMK_XA_WITH_QUORUM                 "with_quorum"
 #define PCMK_XA_WITH_RSC                    "with-rsc"
 #define PCMK_XA_WITH_RSC_ROLE               "with-rsc-role"
