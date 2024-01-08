@@ -848,33 +848,6 @@ cib_native_notify(gpointer data, gpointer user_data)
     crm_trace("Callback invoked...");
 }
 
-#if 0
-static pcmk__cluster_option_t cib_opts[] = {
-    /* name, legacy name, type, allowed values,
-     * default value, validator,
-     * context,
-     * short description,
-     * long description
-     */
-    {
-        PCMK_OPT_ENABLE_ACL, NULL, "boolean", NULL,
-        PCMK_VALUE_FALSE, pcmk__valid_boolean,
-        pcmk__opt_context_based,
-        N_("Enable Access Control Lists (ACLs) for the CIB"),
-        NULL
-    },
-    {
-        PCMK_OPT_CLUSTER_IPC_LIMIT, NULL, "integer", NULL,
-        "500", pcmk__valid_positive_int,
-        pcmk__opt_context_based,
-        N_("Maximum IPC message backlog before disconnecting a cluster daemon"),
-        N_("Raise this if log has \"Evicting client\" messages for cluster daemon"
-            " PIDs (a good value is the number of resources in the cluster"
-            " multiplied by the number of nodes).")
-    },
-};
-#endif  // 0
-
 void
 cib_metadata(void)
 {
