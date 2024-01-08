@@ -393,7 +393,7 @@ cib_digester_cb(gpointer data)
 {
     if (based_is_primary) {
         char buffer[32];
-        xmlNode *ping = create_xml_node(NULL, "ping");
+        xmlNode *ping = create_xml_node(NULL, PCMK__XE_PING);
 
         ping_seq++;
         free(ping_digest);
