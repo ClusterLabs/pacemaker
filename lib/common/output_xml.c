@@ -164,7 +164,7 @@ static void
 add_error_node(gpointer data, gpointer user_data) {
     char *str = (char *) data;
     xmlNodePtr node = (xmlNodePtr) user_data;
-    pcmk_create_xml_text_node(node, "error", str);
+    pcmk_create_xml_text_node(node, PCMK_XE_ERROR, str);
 }
 
 static void
