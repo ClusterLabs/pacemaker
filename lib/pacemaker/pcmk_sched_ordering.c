@@ -310,14 +310,16 @@ get_minimum_first_instances(const pcmk_resource_t *rsc, const xmlNode *xml)
     }
 
     /* @COMPAT 1.1.13:
-     * require-all=false is deprecated equivalent of PCMK_META_CLONE_MIN=1
+     * PCMK_XA_REQUIRE_ALL=PCMK_VALUE_FALSE is deprecated equivalent of
+     * PCMK_META_CLONE_MIN=1
      */
-    if (pcmk__xe_get_bool_attr(xml, "require-all", &require_all) != ENODATA) {
+    if (pcmk__xe_get_bool_attr(xml, PCMK_XA_REQUIRE_ALL,
+                               &require_all) != ENODATA) {
         pcmk__warn_once(pcmk__wo_require_all,
-                        "Support for require-all in ordering constraints "
-                        "is deprecated and will be removed in a future release "
-                        "(use " PCMK_META_CLONE_MIN " clone meta-attribute "
-                        "instead)");
+                        "Support for " PCMK_XA_REQUIRE_ALL " in ordering "
+                        "constraints is deprecated and will be removed in a "
+                        "future release (use " PCMK_META_CLONE_MIN " clone "
+                        "meta-attribute instead)");
         if (!require_all) {
             return 1;
         }
@@ -732,7 +734,7 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
 
     bool require_all = true;
 
-    (void) pcmk__xe_get_bool_attr(set1, "require-all", &require_all);
+    (void) pcmk__xe_get_bool_attr(set1, PCMK_XA_REQUIRE_ALL, &require_all);
 
     if (action_1 == NULL) {
         action_1 = PCMK_ACTION_START;
