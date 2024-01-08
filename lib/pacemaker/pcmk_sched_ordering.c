@@ -98,7 +98,7 @@ get_ordering_type(const xmlNode *xml_obj)
     } else if (pcmk__str_eq(kind, PCMK_VALUE_MANDATORY, pcmk__str_none)) {
         kind_e = pe_order_kind_mandatory;
 
-    } else if (pcmk__str_eq(kind, "Optional", pcmk__str_none)) {
+    } else if (pcmk__str_eq(kind, PCMK_VALUE_OPTIONAL, pcmk__str_none)) {
         kind_e = pe_order_kind_optional;
 
     } else if (pcmk__str_eq(kind, "Serialize", pcmk__str_none)) {
