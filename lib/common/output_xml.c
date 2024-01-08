@@ -245,12 +245,12 @@ xml_subprocess_output(pcmk__output_t *out, int exit_status,
 
     if (proc_stdout != NULL) {
         child_node = pcmk_create_xml_text_node(node, "output", proc_stdout);
-        crm_xml_add(child_node, "source", "stdout");
+        crm_xml_add(child_node, PCMK_XA_SOURCE, "stdout");
     }
 
     if (proc_stderr != NULL) {
         child_node = pcmk_create_xml_text_node(node, "output", proc_stderr);
-        crm_xml_add(child_node, "source", "stderr");
+        crm_xml_add(child_node, PCMK_XA_SOURCE, "stderr");
     }
 
     free(rc_as_str);

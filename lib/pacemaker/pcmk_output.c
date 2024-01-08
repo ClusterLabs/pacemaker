@@ -307,17 +307,17 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
         /* Recovering, restarting or re-promoting a promotable clone instance */
         pcmk__xe_set_props(xml,
                            PCMK_XA_ROLE, pcmk_role_text(rsc->role),
-                           "source", origin->details->uname,
+                           PCMK_XA_SOURCE, origin->details->uname,
                            NULL);
 
     } else if (same_role && same_host) {
         /* Recovering or Restarting a normal resource */
-        crm_xml_add(xml, "source", origin->details->uname);
+        crm_xml_add(xml, PCMK_XA_SOURCE, origin->details->uname);
 
     } else if (need_role && same_role) {
         /* Moving a promotable clone instance */
         pcmk__xe_set_props(xml,
-                           "source", origin->details->uname,
+                           PCMK_XA_SOURCE, origin->details->uname,
                            "dest", destination->details->uname,
                            PCMK_XA_ROLE, pcmk_role_text(rsc->role),
                            NULL);
@@ -325,7 +325,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
     } else if (same_role) {
         /* Moving a normal resource */
         pcmk__xe_set_props(xml,
-                           "source", origin->details->uname,
+                           PCMK_XA_SOURCE, origin->details->uname,
                            "dest", destination->details->uname,
                            NULL);
 
@@ -334,14 +334,14 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
         pcmk__xe_set_props(xml,
                            PCMK_XA_ROLE, pcmk_role_text(rsc->role),
                            PCMK_XA_NEXT_ROLE, pcmk_role_text(rsc->next_role),
-                           "source", origin->details->uname,
+                           PCMK_XA_SOURCE, origin->details->uname,
                            NULL);
 
     } else {
         /* Moving and promoting/demoting */
         pcmk__xe_set_props(xml,
                            PCMK_XA_ROLE, pcmk_role_text(rsc->role),
-                           "source", origin->details->uname,
+                           PCMK_XA_SOURCE, origin->details->uname,
                            PCMK_XA_NEXT_ROLE, pcmk_role_text(rsc->next_role),
                            "dest", destination->details->uname,
                            NULL);
