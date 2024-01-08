@@ -698,7 +698,7 @@ ban_xml(pcmk__output_t *out, va_list args) {
                                  PCMK_XA_ID, location->id,
                                  PCMK_XA_RESOURCE, location->rsc->id,
                                  PCMK_XA_NODE, pe_node->details->uname,
-                                 "weight", weight_s,
+                                 PCMK_XA_WEIGHT, weight_s,
                                  "promoted-only", promoted_only,
                                  /* This is a deprecated alias for
                                   * promoted_only. Removing it will break
