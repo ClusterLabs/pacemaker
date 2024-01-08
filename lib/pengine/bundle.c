@@ -546,8 +546,8 @@ create_container_resource(pcmk_resource_t *parent,
                                    " -p ", replica->ipaddr, ":", port->source,
                                    ":", port->target, NULL);
 
-                } else if (!pcmk__str_eq(data->container_network, "host",
-                                         pcmk__str_none)) {
+                } else if (!pcmk__str_eq(data->container_network,
+                                         PCMK_VALUE_HOST, pcmk__str_none)) {
                     // No need to do port mapping if net == host
                     pcmk__g_strcat(buffer,
                                    " -p ", port->source, ":", port->target,
