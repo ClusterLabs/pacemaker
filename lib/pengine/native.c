@@ -976,15 +976,13 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     GList *only_node G_GNUC_UNUSED = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
+    int rc = pcmk_rc_no_output;
     bool print_pending = pcmk_is_set(show_opts, pcmk_show_pending);
     const char *class = crm_element_value(rsc->xml, PCMK_XA_CLASS);
     const char *prov = crm_element_value(rsc->xml, PCMK_XA_PROVIDER);
-    const char *rsc_state = native_displayable_state(rsc, print_pending);
 
     char ra_name[LINE_MAX];
-    char *nodes_running_on = NULL;
-    const char *lock_node_name = NULL;
-    int rc = pcmk_rc_no_output;
+    const char *rsc_state = native_displayable_state(rsc, print_pending);
     const char *target_role = NULL;
     const char *active = pcmk__btoa(rsc->fns->active(rsc, TRUE));
     const char *orphaned = pcmk__flag_text(rsc->flags, pcmk_rsc_removed);
@@ -993,11 +991,10 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     const char *managed = pcmk__flag_text(rsc->flags, pcmk_rsc_managed);
     const char *failed = pcmk__flag_text(rsc->flags, pcmk_rsc_failed);
     const char *ignored = pcmk__flag_text(rsc->flags, pcmk_rsc_ignore_failure);
+    char *nodes_running_on = NULL;
+    const char *pending = print_pending? native_pending_task(rsc) : NULL;
+    const char *locked_to = NULL;
     const char *desc = pe__resource_description(rsc, show_opts);
-
-    if (rsc->meta != NULL) {
-        target_role = g_hash_table_lookup(rsc->meta, PCMK_META_TARGET_ROLE);
-    }
 
     CRM_ASSERT(rsc->variant == pcmk_rsc_variant_primitive);
 
@@ -1005,33 +1002,37 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
         return pcmk_rc_no_output;
     }
 
-    /* resource information. */
+    // Resource information
     snprintf(ra_name, LINE_MAX, "%s%s%s:%s", class,
             ((prov == NULL)? "" : PROVIDER_SEP), ((prov == NULL)? "" : prov),
             crm_element_value(rsc->xml, PCMK_XA_TYPE));
 
+    if (rsc->meta != NULL) {
+        target_role = g_hash_table_lookup(rsc->meta, PCMK_META_TARGET_ROLE);
+    }
+
     nodes_running_on = pcmk__itoa(g_list_length(rsc->running_on));
 
     if (rsc->lock_node != NULL) {
-        lock_node_name = rsc->lock_node->details->uname;
+        locked_to = rsc->lock_node->details->uname;
     }
 
     rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_RESOURCE, 15,
-             PCMK_XA_ID, rsc_printable_id(rsc),
-             PCMK_XA_RESOURCE_AGENT, ra_name,
-             PCMK_XA_ROLE, rsc_state,
-             PCMK_XA_TARGET_ROLE, target_role,
-             PCMK_XA_ACTIVE, active,
-             PCMK_XA_ORPHANED, orphaned,
-             PCMK_XA_BLOCKED, blocked,
-             PCMK_XA_MAINTENANCE, maintenance,
-             PCMK_XA_MANAGED, managed,
-             PCMK_XA_FAILED, failed,
-             PCMK_XA_FAILURE_IGNORED, ignored,
-             "nodes_running_on", nodes_running_on,
-             PCMK_XA_PENDING, (print_pending? native_pending_task(rsc) : NULL),
-             PCMK_XA_LOCKED_TO, lock_node_name,
-             PCMK_XA_DESCRIPTION, desc);
+                                  PCMK_XA_ID, rsc_printable_id(rsc),
+                                  PCMK_XA_RESOURCE_AGENT, ra_name,
+                                  PCMK_XA_ROLE, rsc_state,
+                                  PCMK_XA_TARGET_ROLE, target_role,
+                                  PCMK_XA_ACTIVE, active,
+                                  PCMK_XA_ORPHANED, orphaned,
+                                  PCMK_XA_BLOCKED, blocked,
+                                  PCMK_XA_MAINTENANCE, maintenance,
+                                  PCMK_XA_MANAGED, managed,
+                                  PCMK_XA_FAILED, failed,
+                                  PCMK_XA_FAILURE_IGNORED, ignored,
+                                  PCMK_XA_NODES_RUNNING_ON, nodes_running_on,
+                                  PCMK_XA_PENDING, pending,
+                                  PCMK_XA_LOCKED_TO, locked_to,
+                                  PCMK_XA_DESCRIPTION, desc);
     free(nodes_running_on);
 
     CRM_ASSERT(rc == pcmk_rc_ok);
