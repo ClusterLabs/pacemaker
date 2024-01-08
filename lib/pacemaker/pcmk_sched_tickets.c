@@ -170,7 +170,7 @@ rsc_ticket_new(const char *id, pcmk_resource_t *rsc, pcmk_ticket_t *ticket,
     new_rsc_ticket->rsc = rsc;
     new_rsc_ticket->role = pcmk_parse_role(state);
 
-    if (pcmk__str_eq(loss_policy, "fence", pcmk__str_casei)) {
+    if (pcmk__str_eq(loss_policy, PCMK_VALUE_FENCE, pcmk__str_casei)) {
         if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)) {
             new_rsc_ticket->loss_policy = loss_ticket_fence;
         } else {

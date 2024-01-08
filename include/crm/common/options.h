@@ -137,6 +137,7 @@ extern "C" {
 #define PCMK_VALUE_DENY                     "deny"
 #define PCMK_VALUE_EXCLUSIVE                "exclusive"
 #define PCMK_VALUE_FALSE                    "false"
+#define PCMK_VALUE_FENCE                    "fence"
 #define PCMK_VALUE_IGNORE                   "ignore"
 #define PCMK_VALUE_LITERAL                  "literal"
 #define PCMK_VALUE_META                     "meta"

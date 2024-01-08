@@ -916,7 +916,7 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
         on_fail = pcmk_on_fail_block;
         desc = "block";
 
-    } else if (pcmk__str_eq(value, "fence", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value, PCMK_VALUE_FENCE, pcmk__str_casei)) {
         if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)) {
             on_fail = pcmk_on_fail_fence_node;
             desc = "node fencing";
@@ -974,7 +974,7 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
     /* Remote node connections are handled specially. Failures that result
      * in dropping an active connection must result in fencing. The only
      * failures that don't are probes and starts. The user can explicitly set
-     * on-fail="fence" to fence after start failures.
+     * PCMK_META_ON_FAIL=PCMK_VALUE_FENCE to fence after start failures.
      */
     if (pe__resource_is_remote_conn(rsc)
         && !pcmk_is_probe(action_name, interval_ms)
