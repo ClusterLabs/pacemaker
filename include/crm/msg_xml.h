@@ -195,6 +195,7 @@ extern "C" {
 #define PCMK_XA_HOST_NETMASK                "host-netmask"
 #define PCMK_XA_HOURS                       "hours"
 #define PCMK_XA_ID                          "id"
+#define PCMK_XA_ID_AS_RESOURCE              "id_as_resource"
 #define PCMK_XA_ID_REF                      "id-ref"
 #define PCMK_XA_IMAGE                       "image"
 #define PCMK_XA_INDEX                       "index"

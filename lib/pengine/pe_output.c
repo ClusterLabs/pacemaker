@@ -1983,7 +1983,8 @@ node_xml(pcmk__output_t *out, va_list args) {
 
         if (pe__is_guest_node(node)) {
             xmlNodePtr xml_node = pcmk__output_xml_peek_parent(out);
-            crm_xml_add(xml_node, "id_as_resource", node->details->remote_rsc->container->id);
+            crm_xml_add(xml_node, PCMK_XA_ID_AS_RESOURCE,
+                        node->details->remote_rsc->container->id);
         }
 
         if (pcmk_is_set(show_opts, pcmk_show_rscs_by_node)) {
