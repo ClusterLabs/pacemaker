@@ -1016,7 +1016,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
 
     rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_RESOURCE, 15,
              PCMK_XA_ID, rsc_printable_id(rsc),
-             "resource_agent", ra_name,
+             PCMK_XA_RESOURCE_AGENT, ra_name,
              PCMK_XA_ROLE, rsc_state,
              PCMK_XA_TARGET_ROLE, target_role,
              "active", pcmk__btoa(rsc->fns->active(rsc, TRUE)),
