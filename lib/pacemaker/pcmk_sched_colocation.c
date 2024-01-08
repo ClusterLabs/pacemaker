@@ -465,14 +465,16 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
      * resources in a positive-score set are colocated with the previous or next
      * resource.
      */
-    if (pcmk__str_eq(crm_element_value(set, PCMK__XA_ORDERING), "group",
+    if (pcmk__str_eq(crm_element_value(set, PCMK__XA_ORDERING),
+                     PCMK__VALUE_GROUP,
                      pcmk__str_null_matches|pcmk__str_casei)) {
         with_previous = true;
     } else {
         pcmk__warn_once(pcmk__wo_set_ordering,
-                        "Support for '" PCMK__XA_ORDERING "' other than "
-                        "'group' in " PCMK_XE_RESOURCE_SET " (such as %s) is "
-                        "deprecated and will be removed in a future release",
+                        "Support for '" PCMK__XA_ORDERING "' other than"
+                        " '" PCMK__VALUE_GROUP "' in " PCMK_XE_RESOURCE_SET
+                        " (such as %s) is deprecated and will be removed in a"
+                        " future release",
                         set_id);
     }
 
