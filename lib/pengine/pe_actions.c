@@ -907,7 +907,7 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
     if (value == NULL) {
         // Use default
 
-    } else if (pcmk__str_eq(value, "block", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value, PCMK_VALUE_BLOCK, pcmk__str_casei)) {
         on_fail = pcmk_on_fail_block;
         desc = "block";
 

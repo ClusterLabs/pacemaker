@@ -84,8 +84,8 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
      * to properly detect on-fail in id-ref, operation meta-attributes, or
      * op_defaults, or evaluate rules.
      *
-     * Also, on-fail defaults to block (in unpack_operation()) for stop actions
-     * when stonith is disabled.
+     * Also, PCMK_META_ON_FAIL defaults to PCMK_VALUE_BLOCK (in
+     * unpack_operation()) for stop actions when stonith is disabled.
      *
      * Ideally, we'd unpack the operation before this point, and pass in a
      * meta-attributes table that takes all that into consideration.
@@ -93,7 +93,8 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
     char *xpath = crm_strdup_printf("//" PCMK_XE_PRIMITIVE
                                     "[@" PCMK_XA_ID "='%s']"
                                     "//" PCMK_XE_OP
-                                    "[@" PCMK_META_ON_FAIL "='block']",
+                                    "[@" PCMK_META_ON_FAIL
+                                        "='" PCMK_VALUE_BLOCK "']",
                                     xml_name);
 
     xmlXPathObject *xpathObj = xpath_search(rsc->xml, xpath);
@@ -384,7 +385,8 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
         && block_failure(node, rsc, xml_op)) {
 
         pcmk__config_warn("Ignoring failure timeout %d for %s "
-                          "because it conflicts with on-fail=block",
+                          "because it conflicts with "
+                          PCMK_META_ON_FAIL "=" PCMK_VALUE_BLOCK,
                           rsc->failure_timeout, rsc->id);
         rsc->failure_timeout = 0;
     }

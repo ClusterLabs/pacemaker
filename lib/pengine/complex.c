@@ -810,7 +810,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         pcmk__rsc_trace(*rsc, "%s multiple running resource recovery: stop only",
                         (*rsc)->id);
 
-    } else if (pcmk__str_eq(value, "block", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value, PCMK_VALUE_BLOCK, pcmk__str_casei)) {
         (*rsc)->recovery_type = pcmk_multiply_active_block;
         pcmk__rsc_trace(*rsc, "%s multiple running resource recovery: block",
                         (*rsc)->id);
