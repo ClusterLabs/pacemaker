@@ -226,6 +226,7 @@ extern "C" {
 #define PCMK_XA_PENDING                     "pending"
 #define PCMK_XA_PORT                        "port"
 #define PCMK_XA_PRESENT                     "present"
+#define PCMK_XA_PROGRAM                     "program"
 #define PCMK_XA_PROMOTED_MAX                "promoted-max"
 #define PCMK_XA_PROVIDER                    "provider"
 #define PCMK_XA_QUEUE_TIME                  "queue-time"
