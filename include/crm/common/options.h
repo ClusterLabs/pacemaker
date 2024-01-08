@@ -133,6 +133,7 @@ extern "C" {
 #define PCMK_VALUE_AND                      "and"
 #define PCMK_VALUE_BLOCK                    "block"
 #define PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS    "cib-bootstrap-options"
+#define PCMK_VALUE_DEMOTE                   "demote"
 #define PCMK_VALUE_DENY                     "deny"
 #define PCMK_VALUE_EXCLUSIVE                "exclusive"
 #define PCMK_VALUE_FALSE                    "false"

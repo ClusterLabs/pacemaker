@@ -159,7 +159,8 @@ static pcmk__cluster_option_t cluster_options[] = {
     },
     {
         PCMK_OPT_NO_QUORUM_POLICY, NULL, "select",
-            "stop, freeze, " PCMK_VALUE_IGNORE ", demote, suicide",
+            "stop, freeze, " PCMK_VALUE_IGNORE ", " PCMK_VALUE_DEMOTE
+                ", suicide",
         "stop", pcmk__valid_no_quorum_policy,
         pcmk__opt_context_schedulerd,
         N_("What to do when the cluster does not have quorum"),
@@ -756,8 +757,8 @@ bool
 pcmk__valid_no_quorum_policy(const char *value)
 {
     return pcmk__strcase_any_of(value,
-                                "stop", "freeze", PCMK_VALUE_IGNORE, "demote",
-                                "suicide", NULL);
+                                "stop", "freeze", PCMK_VALUE_IGNORE,
+                                PCMK_VALUE_DEMOTE, "suicide", NULL);
 }
 
 /*!

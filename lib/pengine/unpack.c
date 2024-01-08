@@ -319,7 +319,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     } else if (pcmk__str_eq(value, "freeze", pcmk__str_casei)) {
         scheduler->no_quorum_policy = pcmk_no_quorum_freeze;
 
-    } else if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value, PCMK_VALUE_DEMOTE, pcmk__str_casei)) {
         scheduler->no_quorum_policy = pcmk_no_quorum_demote;
 
     } else if (pcmk__str_eq(value, "suicide", pcmk__str_casei)) {
@@ -4408,7 +4408,9 @@ update_resource_state(struct action_history *history, int exit_status,
     } else if (pcmk__str_eq(history->task, PCMK_ACTION_DEMOTE,
                             pcmk__str_none)) {
         if (*on_fail == pcmk_on_fail_demote) {
-            // Demote clears an error only if on-fail=demote
+            /* Demote clears an error only if
+             * PCMK_META_ON_FAIL=PCMK_VALUE_DEMOTE
+             */
             clear_past_failure = true;
         }
         history->rsc->role = pcmk_role_unpromoted;

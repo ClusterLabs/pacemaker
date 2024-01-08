@@ -436,7 +436,8 @@ update_resource_flags_for_action(pcmk_resource_t *rsc,
 static bool
 valid_stop_on_fail(const char *value)
 {
-    return !pcmk__strcase_any_of(value, "standby", "demote", "stop", NULL);
+    return !pcmk__strcase_any_of(value,
+                                 "standby", PCMK_VALUE_DEMOTE, "stop", NULL);
 }
 
 /*!
@@ -514,8 +515,11 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
                 continue;
             }
 
-            // Demote actions can't default to on-fail="demote"
-            if (pcmk__str_eq(promote_on_fail, "demote", pcmk__str_casei)) {
+            /* Demote actions can't default to
+             * PCMK_META_ON_FAIL=PCMK_VALUE_DEMOTE
+             */
+            if (pcmk__str_eq(promote_on_fail, PCMK_VALUE_DEMOTE,
+                             pcmk__str_casei)) {
                 continue;
             }
 
@@ -537,8 +541,8 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
         return;
     }
 
-    // on-fail="demote" is allowed only for certain actions
-    if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
+    // PCMK_META_ON_FAIL=PCMK_VALUE_DEMOTE is allowed only for certain actions
+    if (pcmk__str_eq(value, PCMK_VALUE_DEMOTE, pcmk__str_casei)) {
         name = crm_element_value(action_config, PCMK_XA_NAME);
         role = crm_element_value(action_config, PCMK_XA_ROLE);
         interval_spec = crm_element_value(action_config, PCMK_META_INTERVAL);
@@ -956,7 +960,7 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
             desc = "restart container (and possibly migrate)";
         }
 
-    } else if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value, PCMK_VALUE_DEMOTE, pcmk__str_casei)) {
         on_fail = pcmk_on_fail_demote;
         desc = "demote instance";
 
