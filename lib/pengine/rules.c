@@ -804,7 +804,8 @@ compare_attr_expr_vals(const char *l_val, const char *r_val, const char *type,
 
     if (l_val != NULL && r_val != NULL) {
         if (type == NULL) {
-            if (pcmk__strcase_any_of(op, "lt", "lte", "gt", "gte", NULL)) {
+            if (pcmk__strcase_any_of(op,
+                                     PCMK_VALUE_LT, "lte", "gt", "gte", NULL)) {
                 if (pcmk__char_in_any_str('.', l_val, r_val, NULL)) {
                     type = "number";
                 } else {
@@ -920,7 +921,7 @@ accept_attr_expr(const char *l_val, const char *r_val, const char *type,
         // The comparison is meaningless from this point on
         return false;
 
-    } else if (pcmk__str_eq(op, "lt", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK_VALUE_LT, pcmk__str_casei)) {
         return (cmp < 0);
 
     } else if (pcmk__str_eq(op, "lte", pcmk__str_casei)) {
@@ -1116,7 +1117,7 @@ pe__eval_date_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data,
             crm_time_set_if_earlier(next_change, start);
         }
 
-    } else if (pcmk__str_eq(op, "lt", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK_VALUE_LT, pcmk__str_casei)) {
         if (end == NULL) {
             // lt requires end
         } else if (crm_time_compare(rule_data->now, end) < 0) {
