@@ -1544,7 +1544,8 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
         }
 
         id = pcmk__itoa(replica->offset);
-        rc = pe__name_and_nvpairs_xml(out, true, "replica", 1, PCMK_XA_ID, id);
+        rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_REPLICA, 1,
+                                      PCMK_XA_ID, id);
         free(id);
         CRM_ASSERT(rc == pcmk_rc_ok);
 

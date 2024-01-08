@@ -110,6 +110,7 @@ extern "C" {
 #define PCMK_XE_POSITION                    "position"
 #define PCMK_XE_PRIMITIVE                   "primitive"
 #define PCMK_XE_RECIPIENT                   "recipient"
+#define PCMK_XE_REPLICA                     "replica"
 #define PCMK_XE_RESOURCE                    "resource"
 #define PCMK_XE_RESOURCE_AGENT              "resource-agent"
 #define PCMK_XE_RESOURCE_REF                "resource_ref"
