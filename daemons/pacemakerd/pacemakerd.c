@@ -69,7 +69,7 @@ pacemakerd_features_xml(pcmk__output_t *out, va_list args) {
                                    PCMK_XA_BUILD, BUILD_VERSION,
                                    PCMK_XA_FEATURE_SET, CRM_FEATURE_SET,
                                    NULL);
-    out->begin_list(out, NULL, NULL, "features");
+    out->begin_list(out, NULL, NULL, PCMK_XE_FEATURES);
 
     for (char **s = feature_list; *s != NULL; s++) {
         pcmk__output_create_xml_text_node(out, "feature", *s);
