@@ -870,6 +870,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
             const char *unique = pcmk__flag_text(rsc->flags, pcmk_rsc_unique);
             const char *maintenance = pcmk__flag_text(rsc->flags,
                                                       pcmk_rsc_maintenance);
+            const char *managed = pcmk__flag_text(rsc->flags, pcmk_rsc_managed);
 
             printed_header = TRUE;
 
@@ -880,7 +881,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
                     pcmk__flag_text(rsc->flags, pcmk_rsc_promotable),
                     PCMK_XA_UNIQUE, unique,
                     PCMK_XA_MAINTENANCE, maintenance,
-                    "managed", pcmk__flag_text(rsc->flags, pcmk_rsc_managed),
+                    PCMK_XA_MANAGED, managed,
                     "disabled", pcmk__btoa(pe__resource_is_disabled(rsc)),
                     PCMK_XA_FAILED,
                     pcmk__flag_text(rsc->flags, pcmk_rsc_failed),
