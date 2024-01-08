@@ -203,7 +203,7 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
                            NULL);
 
         if (g_slist_length(priv->errors) > 0) {
-            xmlNodePtr errors_node = create_xml_node(node, "errors");
+            xmlNodePtr errors_node = create_xml_node(node, PCMK_XE_ERRORS);
             g_slist_foreach(priv->errors, add_error_node, (gpointer) errors_node);
         }
 

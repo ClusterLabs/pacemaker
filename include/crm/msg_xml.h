@@ -83,6 +83,7 @@ extern "C" {
 #define PCMK_XE_DATE_SPEC                   "date_spec"
 #define PCMK_XE_DIFF                        "diff"
 #define PCMK_XE_DURATION                    "duration"
+#define PCMK_XE_ERRORS                      "errors"
 #define PCMK_XE_EXPRESSION                  "expression"
 #define PCMK_XE_FEATURE                     "feature"
 #define PCMK_XE_FEATURES                    "features"
