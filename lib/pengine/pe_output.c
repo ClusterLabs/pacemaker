@@ -1905,7 +1905,7 @@ node_xml(pcmk__output_t *out, va_list args) {
 
         switch (node->details->type) {
             case pcmk_node_variant_cluster:
-                node_type = "member";
+                node_type = PCMK_VALUE_MEMBER;
                 break;
             case pcmk_node_variant_remote:
                 node_type = "remote";

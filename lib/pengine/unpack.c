@@ -488,7 +488,8 @@ pe_create_node(const char *id, const char *uname, const char *type,
     new_node->details->running_rsc = NULL;
     new_node->details->data_set = scheduler;
 
-    if (pcmk__str_eq(type, "member", pcmk__str_null_matches | pcmk__str_casei)) {
+    if (pcmk__str_eq(type, PCMK_VALUE_MEMBER,
+                     pcmk__str_null_matches|pcmk__str_casei)) {
         new_node->details->type = pcmk_node_variant_cluster;
 
     } else if (pcmk__str_eq(type, "remote", pcmk__str_casei)) {
