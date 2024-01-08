@@ -214,7 +214,7 @@ agent_status_xml(pcmk__output_t *out, va_list args) {
     const char *message = services_ocf_exitcode_str((int) rc);
     char *status_str = pcmk__itoa(status);
 
-    pcmk__output_create_xml_node(out, "agent-status",
+    pcmk__output_create_xml_node(out, PCMK_XE_AGENT_STATUS,
                                  PCMK_XA_CODE, exit_s,
                                  PCMK_XA_MESSAGE, message,
                                  "execution_code", status_str,

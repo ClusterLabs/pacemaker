@@ -62,6 +62,7 @@ extern "C" {
 #define PCMK_XE_ACLS                        "acls"
 #define PCMK_XE_ACTION                      "action"
 #define PCMK_XE_ACTIONS                     "actions"
+#define PCMK_XE_AGENT_STATUS                "agent-status"
 #define PCMK_XE_ALERT                       "alert"
 #define PCMK_XE_ALERTS                      "alerts"
 #define PCMK_XE_ATTRIBUTE                   "attribute"
