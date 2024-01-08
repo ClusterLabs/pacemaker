@@ -497,7 +497,7 @@ stonith_event_xml(pcmk__output_t *out, va_list args)
         char *time_s = timespec_string(event->completed, event->completed_nsec,
                                        true);
 
-        crm_xml_add(node, "completed", time_s);
+        crm_xml_add(node, PCMK_XA_COMPLETED, time_s);
         free(time_s);
     }
 
