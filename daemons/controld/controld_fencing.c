@@ -63,7 +63,7 @@ set_fence_reaction(const char *reaction_s)
         fence_reaction_panic = true;
 
     } else {
-        if (!pcmk__str_eq(reaction_s, "stop", pcmk__str_casei)) {
+        if (!pcmk__str_eq(reaction_s, PCMK_VALUE_STOP, pcmk__str_casei)) {
             crm_warn("Invalid value '%s' for %s, using 'stop'",
                      reaction_s, PCMK_OPT_FENCE_REACTION);
         }

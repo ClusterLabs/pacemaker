@@ -2389,7 +2389,8 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
             break;
 
         case pcmk_on_fail_stop:
-            pe__set_next_role(rsc, pcmk_role_stopped, "on-fail=stop");
+            pe__set_next_role(rsc, pcmk_role_stopped,
+                              PCMK_META_ON_FAIL "=" PCMK_VALUE_STOP);
             break;
 
         case pcmk_on_fail_restart:
@@ -3640,8 +3641,9 @@ ban_from_all_nodes(pcmk_resource_t *rsc)
         pcmk_resource_t *parent = uber_parent(fail_rsc);
 
         if (pe_rsc_is_anon_clone(parent)) {
-            /* For anonymous clones, if an operation with on-fail=stop fails for
-             * any instance, the entire clone must stop.
+            /* For anonymous clones, if an operation with
+             * PCMK_META_ON_FAIL=PCMK_VALUE_STOP fails for any instance, the
+             * entire clone must stop.
              */
             fail_rsc = parent;
         }

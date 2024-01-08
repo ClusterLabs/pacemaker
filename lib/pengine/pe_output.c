@@ -1122,7 +1122,7 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
             break;
 
         case pcmk_no_quorum_stop:
-            no_quorum_policy = "stop";
+            no_quorum_policy = PCMK_VALUE_STOP;
             break;
 
         case pcmk_no_quorum_demote:

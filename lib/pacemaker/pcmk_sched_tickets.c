@@ -175,9 +175,9 @@ rsc_ticket_new(const char *id, pcmk_resource_t *rsc, pcmk_ticket_t *ticket,
             new_rsc_ticket->loss_policy = loss_ticket_fence;
         } else {
             pcmk__config_err("Resetting '" PCMK_XA_LOSS_POLICY "' "
-                             "for ticket '%s' to 'stop' "
+                             "for ticket '%s' to '" PCMK_VALUE_STOP "' "
                              "because fencing is not configured", ticket->id);
-            loss_policy = "stop";
+            loss_policy = PCMK_VALUE_STOP;
         }
     }
 
@@ -192,13 +192,13 @@ rsc_ticket_new(const char *id, pcmk_resource_t *rsc, pcmk_ticket_t *ticket,
                   pcmk_role_text(new_rsc_ticket->role));
         new_rsc_ticket->loss_policy = loss_ticket_freeze;
 
-    } else if (pcmk__str_eq(loss_policy, PCMK_ACTION_DEMOTE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(loss_policy, PCMK_VALUE_DEMOTE, pcmk__str_casei)) {
         crm_debug("On loss of ticket '%s': Demote %s (%s)",
                   new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
                   pcmk_role_text(new_rsc_ticket->role));
         new_rsc_ticket->loss_policy = loss_ticket_demote;
 
-    } else if (pcmk__str_eq(loss_policy, "stop", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(loss_policy, PCMK_VALUE_STOP, pcmk__str_casei)) {
         crm_debug("On loss of ticket '%s': Stop %s (%s)",
                   new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
                   pcmk_role_text(new_rsc_ticket->role));

@@ -437,7 +437,8 @@ static bool
 valid_stop_on_fail(const char *value)
 {
     return !pcmk__strcase_any_of(value,
-                                 "standby", PCMK_VALUE_DEMOTE, "stop", NULL);
+                                 "standby", PCMK_VALUE_DEMOTE, PCMK_VALUE_STOP,
+                                 NULL);
 }
 
 /*!
@@ -941,7 +942,7 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
         on_fail = pcmk_on_fail_ban;
         desc = "force migration";
 
-    } else if (pcmk__str_eq(value, "stop", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value, PCMK_VALUE_STOP, pcmk__str_casei)) {
         on_fail = pcmk_on_fail_stop;
         desc = "stop resource";
 

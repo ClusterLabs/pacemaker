@@ -99,8 +99,8 @@ static pcmk__cluster_option_t cluster_options[] = {
             "and serve as a fail-safe for certain types of scheduler bugs."),
     },
     {
-        PCMK_OPT_FENCE_REACTION, NULL, "select", "stop, panic",
-        "stop", NULL,
+        PCMK_OPT_FENCE_REACTION, NULL, "select", PCMK_VALUE_STOP ", panic",
+        PCMK_VALUE_STOP, NULL,
         pcmk__opt_context_controld,
         N_("How a cluster node should react if notified of its own fencing"),
         N_("A cluster node may receive notification of its own fencing if "
@@ -159,9 +159,9 @@ static pcmk__cluster_option_t cluster_options[] = {
     },
     {
         PCMK_OPT_NO_QUORUM_POLICY, NULL, "select",
-            "stop, freeze, " PCMK_VALUE_IGNORE ", " PCMK_VALUE_DEMOTE
-                ", suicide",
-        "stop", pcmk__valid_no_quorum_policy,
+            PCMK_VALUE_STOP ", freeze, " PCMK_VALUE_IGNORE
+                ", " PCMK_VALUE_DEMOTE ", suicide",
+        PCMK_VALUE_STOP, pcmk__valid_no_quorum_policy,
         pcmk__opt_context_schedulerd,
         N_("What to do when the cluster does not have quorum"),
         NULL,
@@ -757,7 +757,7 @@ bool
 pcmk__valid_no_quorum_policy(const char *value)
 {
     return pcmk__strcase_any_of(value,
-                                "stop", "freeze", PCMK_VALUE_IGNORE,
+                                PCMK_VALUE_STOP, "freeze", PCMK_VALUE_IGNORE,
                                 PCMK_VALUE_DEMOTE, "suicide", NULL);
 }
 
