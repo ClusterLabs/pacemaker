@@ -117,7 +117,7 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
         expr = create_xml_node(rule, PCMK_XE_DATE_EXPRESSION);
         crm_xml_set_id(expr, "cli-ban-%s-on-%s-lifetime", rsc_id, host);
         crm_xml_add(expr, PCMK_XA_OPERATION, PCMK_VALUE_LT);
-        crm_xml_add(expr, "end", later_s);
+        crm_xml_add(expr, PCMK_XA_END, later_s);
     }
 
     crm_log_xml_notice(fragment, "Modify");
@@ -194,7 +194,7 @@ cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
         expr = create_xml_node(rule, PCMK_XE_DATE_EXPRESSION);
         crm_xml_set_id(expr, "cli-prefer-lifetime-end-%s", rsc_id);
         crm_xml_add(expr, PCMK_XA_OPERATION, PCMK_VALUE_LT);
-        crm_xml_add(expr, "end", later_s);
+        crm_xml_add(expr, PCMK_XA_END, later_s);
     }
 
     crm_log_xml_info(fragment, "Modify");
@@ -467,7 +467,7 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, int cib_options,
         /* And then finally, see if the date expression is expired.  If so,
          * clear the constraint.
          */
-        end = crm_time_new(crm_element_value(date_expr_node, "end"));
+        end = crm_time_new(crm_element_value(date_expr_node, PCMK_XA_END));
 
         if (crm_time_compare(now, end) == 1) {
             xmlNode *fragment = NULL;

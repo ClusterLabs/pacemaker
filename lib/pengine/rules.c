@@ -1077,7 +1077,7 @@ pe__eval_date_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data,
     if (value != NULL) {
         start = crm_time_new(value);
     }
-    value = crm_element_value(expr, "end");
+    value = crm_element_value(expr, PCMK_XA_END);
     if (value != NULL) {
         end = crm_time_new(value);
     }
