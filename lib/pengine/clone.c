@@ -867,6 +867,8 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
         }
 
         if (!printed_header) {
+            const char *multi_state = pcmk__flag_text(rsc->flags,
+                                                      pcmk_rsc_promotable);
             const char *unique = pcmk__flag_text(rsc->flags, pcmk_rsc_unique);
             const char *maintenance = pcmk__flag_text(rsc->flags,
                                                       pcmk_rsc_maintenance);
@@ -877,8 +879,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
             desc = pe__resource_description(rsc, show_opts);
             rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_CLONE, 10,
                     PCMK_XA_ID, rsc->id,
-                    "multi_state",
-                    pcmk__flag_text(rsc->flags, pcmk_rsc_promotable),
+                    PCMK_XA_MULTI_STATE, multi_state,
                     PCMK_XA_UNIQUE, unique,
                     PCMK_XA_MAINTENANCE, maintenance,
                     PCMK_XA_MANAGED, managed,

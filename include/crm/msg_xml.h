@@ -198,6 +198,7 @@ extern "C" {
 #define PCMK_XA_MIXED_VERSION               "mixed_version"
 #define PCMK_XA_MONTHDAYS                   "monthdays"
 #define PCMK_XA_MONTHS                      "months"
+#define PCMK_XA_MULTI_STATE                 "multi_state"
 #define PCMK_XA_NAME                        "name"
 #define PCMK_XA_NETWORK                     "network"
 #define PCMK_XA_NO_QUORUM_PANIC             "no-quorum-panic"
