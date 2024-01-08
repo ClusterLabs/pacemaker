@@ -950,7 +950,8 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
         on_fail = pcmk_on_fail_restart;
         desc = "restart (and possibly migrate)";
 
-    } else if (pcmk__str_eq(value, "restart-container", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value, PCMK_VALUE_RESTART_CONTAINER,
+                            pcmk__str_casei)) {
         if (rsc->container == NULL) {
             pcmk__rsc_debug(rsc,
                             "Using default " PCMK_META_ON_FAIL " for %s "
