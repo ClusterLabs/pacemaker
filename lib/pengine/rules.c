@@ -241,7 +241,7 @@ pe_cron_range_satisfied(const crm_time_t *now, const xmlNode *cron_spec)
     CRM_CHECK(now != NULL, return pcmk_rc_op_unsatisfied);
 
     crm_time_get_gregorian(now, &y, &m, &d);
-    CHECK_ONE(cron_spec, "years", y);
+    CHECK_ONE(cron_spec, PCMK_XA_YEARS, y);
     CHECK_ONE(cron_spec, "months", m);
     CHECK_ONE(cron_spec, "monthdays", d);
 
@@ -289,7 +289,7 @@ parse_xml_duration(const crm_time_t *start, const xmlNode *duration_spec)
 {
     crm_time_t *end = pcmk_copy_time(start);
 
-    update_field(end, duration_spec, "years", crm_time_add_years);
+    update_field(end, duration_spec, PCMK_XA_YEARS, crm_time_add_years);
     update_field(end, duration_spec, "months", crm_time_add_months);
     update_field(end, duration_spec, "weeks", crm_time_add_weeks);
     update_field(end, duration_spec, "days", crm_time_add_days);

@@ -250,6 +250,7 @@ extern "C" {
 #define PCMK_XA_WITH_RSC                    "with-rsc"
 #define PCMK_XA_WITH_RSC_ROLE               "with-rsc-role"
 #define PCMK_XA_XPATH                       "xpath"
+#define PCMK_XA_YEARS                       "years"
 
 
 #  define ID(x) crm_element_value(x, PCMK_XA_ID)
