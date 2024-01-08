@@ -527,8 +527,8 @@ static pcmk__cluster_option_t cluster_options[] = {
     // Placement strategy
     {
         PCMK_OPT_PLACEMENT_STRATEGY, NULL, "select",
-            PCMK_VALUE_DEFAULT ", " PCMK_VALUE_UTILIZATION
-                ", minimal, balanced",
+            PCMK_VALUE_DEFAULT ", " PCMK_VALUE_UTILIZATION ", "
+                PCMK_VALUE_MINIMAL ", balanced",
         PCMK_VALUE_DEFAULT, pcmk__valid_placement_strategy,
         pcmk__opt_context_schedulerd,
         N_("How the cluster should allocate resources to nodes"),
@@ -835,7 +835,7 @@ pcmk__valid_placement_strategy(const char *value)
 {
     return pcmk__strcase_any_of(value,
                                 PCMK_VALUE_DEFAULT, PCMK_VALUE_UTILIZATION,
-                                "minimal", "balanced", NULL);
+                                PCMK_VALUE_MINIMAL, "balanced", NULL);
 }
 
 /*!
