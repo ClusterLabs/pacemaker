@@ -1634,17 +1634,18 @@ status_node(pcmk_node_t *node, xmlNodePtr parent, uint32_t show_opts)
 
     // Standby mode
     if (node->details->standby_onfail && (node->details->running_rsc != NULL)) {
-        pcmk_create_html_node(parent, "span", NULL, "standby",
+        pcmk_create_html_node(parent, "span", NULL, PCMK_VALUE_STANDBY,
                               " (in standby due to on-fail,"
                               " with active resources)");
     } else if (node->details->standby_onfail) {
-        pcmk_create_html_node(parent, "span", NULL, "standby",
+        pcmk_create_html_node(parent, "span", NULL, PCMK_VALUE_STANDBY,
                               " (in standby due to on-fail)");
     } else if (node->details->standby && (node->details->running_rsc != NULL)) {
-        pcmk_create_html_node(parent, "span", NULL, "standby",
+        pcmk_create_html_node(parent, "span", NULL, PCMK_VALUE_STANDBY,
                               " (in standby, with active resources)");
     } else if (node->details->standby) {
-        pcmk_create_html_node(parent, "span", NULL, "standby", " (in standby)");
+        pcmk_create_html_node(parent, "span", NULL, PCMK_VALUE_STANDBY,
+                              " (in standby)");
     }
 
     // Maintenance mode

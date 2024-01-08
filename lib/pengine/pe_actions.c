@@ -437,8 +437,8 @@ static bool
 valid_stop_on_fail(const char *value)
 {
     return !pcmk__strcase_any_of(value,
-                                 "standby", PCMK_VALUE_DEMOTE, PCMK_VALUE_STOP,
-                                 NULL);
+                                 PCMK_VALUE_STANDBY, PCMK_VALUE_DEMOTE,
+                                 PCMK_VALUE_STOP, NULL);
 }
 
 /*!
@@ -929,7 +929,7 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
             desc = "stop resource";
         }
 
-    } else if (pcmk__str_eq(value, "standby", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value, PCMK_VALUE_STANDBY, pcmk__str_casei)) {
         on_fail = pcmk_on_fail_standby_node;
         desc = "node standby";
 

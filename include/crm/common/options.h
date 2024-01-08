@@ -145,6 +145,7 @@ extern "C" {
 #define PCMK_VALUE_PARAM                    "param"
 #define PCMK_VALUE_READ                     "read"
 #define PCMK_VALUE_RESTART                  "restart"
+#define PCMK_VALUE_STANDBY                  "standby"
 #define PCMK_VALUE_STOP                     "stop"
 #define PCMK_VALUE_TRUE                     "true"
 #define PCMK_VALUE_WRITE                    "write"

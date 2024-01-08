@@ -192,7 +192,7 @@ void
 set_join_state(const char *start_state, const char *node_name, const char *node_uuid,
                bool remote)
 {
-    if (pcmk__str_eq(start_state, "standby", pcmk__str_casei)) {
+    if (pcmk__str_eq(start_state, PCMK_VALUE_STANDBY, pcmk__str_casei)) {
         crm_notice("Forcing node %s to join in %s state per configured "
                    "environment", node_name, start_state);
         cib__update_node_attr(controld_globals.logger_out,
