@@ -5056,7 +5056,7 @@ extract_operations(const char *node, const char *rsc, xmlNode * rsc_entry, gbool
 
         if (pcmk__str_eq((const char *)rsc_op->name, PCMK__XE_LRM_RSC_OP,
                          pcmk__str_none)) {
-            crm_xml_add(rsc_op, "resource", rsc);
+            crm_xml_add(rsc_op, PCMK_XA_RESOURCE, rsc);
             crm_xml_add(rsc_op, PCMK_XA_UNAME, node);
             op_list = g_list_prepend(op_list, rsc_op);
         }

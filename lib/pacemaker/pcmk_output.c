@@ -276,7 +276,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
     change_str = g_ascii_strdown(change, -1);
     xml = pcmk__output_create_xml_node(out, "rsc_action",
                                        PCMK_XA_ACTION, change_str,
-                                       "resource", rsc->id,
+                                       PCMK_XA_RESOURCE, rsc->id,
                                        NULL);
     g_free(change_str);
 
@@ -1042,7 +1042,7 @@ digests_xml(pcmk__output_t *out, va_list args)
     xmlNode *xml = NULL;
 
     xml = pcmk__output_create_xml_node(out, "digests",
-                                       "resource", pcmk__s(rsc->id, ""),
+                                       PCMK_XA_RESOURCE, pcmk__s(rsc->id, ""),
                                        PCMK_XA_NODE,
                                        pcmk__s(node->details->uname, ""),
                                        "task", pcmk__s(task, ""),
@@ -1762,7 +1762,7 @@ inject_rsc_action_xml(pcmk__output_t *out, va_list args)
     }
 
     xml_node = pcmk__output_create_xml_node(out, "rsc_action",
-                                            "resource", rsc,
+                                            PCMK_XA_RESOURCE, rsc,
                                             PCMK_XA_OP, operation,
                                             PCMK_XA_NODE, node,
                                             NULL);

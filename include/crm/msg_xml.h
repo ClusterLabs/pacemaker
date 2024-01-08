@@ -225,6 +225,7 @@ extern "C" {
 #define PCMK_XA_REPLICAS_PER_HOST           "replicas-per-host"
 #define PCMK_XA_REQUEST                     "request"
 #define PCMK_XA_REQUIRE_ALL                 "require-all"
+#define PCMK_XA_RESOURCE                    "resource"
 #define PCMK_XA_RESOURCE_DISCOVERY          "resource-discovery"
 #define PCMK_XA_RESOURCES_RUNNING           "resources_running"
 #define PCMK_XA_RESULT                      "result"

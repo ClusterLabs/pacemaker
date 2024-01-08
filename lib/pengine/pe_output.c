@@ -696,7 +696,7 @@ ban_xml(pcmk__output_t *out, va_list args) {
 
     pcmk__output_create_xml_node(out, "ban",
                                  PCMK_XA_ID, location->id,
-                                 "resource", location->rsc->id,
+                                 PCMK_XA_RESOURCE, location->rsc->id,
                                  PCMK_XA_NODE, pe_node->details->uname,
                                  "weight", weight_s,
                                  "promoted-only", promoted_only,
@@ -2086,7 +2086,7 @@ node_and_op(pcmk__output_t *out, va_list args) {
     gchar *node_str = NULL;
     char *last_change_str = NULL;
 
-    const char *op_rsc = crm_element_value(xml_op, "resource");
+    const char *op_rsc = crm_element_value(xml_op, PCMK_XA_RESOURCE);
     int status;
     time_t last_change = 0;
 
@@ -2145,7 +2145,7 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
     const char *call_id = crm_element_value(xml_op, PCMK__XA_CALL_ID);
     const char *rc_s = crm_element_value(xml_op, PCMK__XA_RC_CODE);
     const char *status_s = NULL;
-    const char *op_rsc = crm_element_value(xml_op, "resource");
+    const char *op_rsc = crm_element_value(xml_op, PCMK_XA_RESOURCE);
     int status;
     time_t last_change = 0;
     xmlNode *node = NULL;
@@ -3071,11 +3071,13 @@ resource_util_xml(pcmk__output_t *out, va_list args)
     const char *uname = node->details->uname;
     const char *fn = va_arg(args, const char *);
 
-    xmlNodePtr xml_node = pcmk__output_create_xml_node(out, PCMK_XE_UTILIZATION,
-                                                       "resource", rsc->id,
-                                                       PCMK_XA_NODE, uname,
-                                                       "function", fn,
-                                                       NULL);
+    xmlNodePtr xml_node = NULL;
+
+    xml_node = pcmk__output_create_xml_node(out, PCMK_XE_UTILIZATION,
+                                            PCMK_XA_RESOURCE, rsc->id,
+                                            PCMK_XA_NODE, uname,
+                                            "function", fn,
+                                            NULL);
     g_hash_table_foreach(rsc->utilization, add_dump_node, xml_node);
 
     return pcmk_rc_ok;
