@@ -1929,7 +1929,8 @@ node_xml(pcmk__output_t *out, va_list args) {
         const char *shutdown = pcmk__btoa(node->details->shutdown);
         const char *expected_up = pcmk__btoa(node->details->expected_up);
         const char *is_dc = pcmk__btoa(node->details->is_dc);
-        char *length_s = pcmk__itoa(g_list_length(node->details->running_rsc));
+        int length = g_list_length(node->details->running_rsc);
+        char *resources_running = pcmk__itoa(length);
 
         switch (node->details->type) {
             case pcmk_node_variant_cluster:
@@ -1957,7 +1958,7 @@ node_xml(pcmk__output_t *out, va_list args) {
                                  PCMK_XA_SHUTDOWN, shutdown,
                                  PCMK_XA_EXPECTED_UP, expected_up,
                                  PCMK_XA_IS_DC, is_dc,
-                                 "resources_running", length_s,
+                                 PCMK_XA_RESOURCES_RUNNING, resources_running,
                                  PCMK_XA_TYPE, node_type);
 
         if (pe__is_guest_node(node)) {
@@ -1977,7 +1978,7 @@ node_xml(pcmk__output_t *out, va_list args) {
             }
         }
 
-        free(length_s);
+        free(resources_running);
 
         out->end_list(out);
     } else {

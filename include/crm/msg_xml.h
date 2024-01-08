@@ -224,6 +224,7 @@ extern "C" {
 #define PCMK_XA_REQUEST                     "request"
 #define PCMK_XA_REQUIRE_ALL                 "require-all"
 #define PCMK_XA_RESOURCE_DISCOVERY          "resource-discovery"
+#define PCMK_XA_RESOURCES_RUNNING           "resources_running"
 #define PCMK_XA_RESULT                      "result"
 #define PCMK_XA_ROLE                        "role"
 #define PCMK_XA_RSC                         "rsc"
