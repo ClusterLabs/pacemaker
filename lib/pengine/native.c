@@ -986,6 +986,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     const char *lock_node_name = NULL;
     int rc = pcmk_rc_no_output;
     const char *target_role = NULL;
+    const char *active = pcmk__btoa(rsc->fns->active(rsc, TRUE));
     const char *orphaned = pcmk__flag_text(rsc->flags, pcmk_rsc_removed);
     const char *maintenance = pcmk__flag_text(rsc->flags, pcmk_rsc_maintenance);
     const char *managed = pcmk__flag_text(rsc->flags, pcmk_rsc_managed);
@@ -1019,7 +1020,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
              PCMK_XA_RESOURCE_AGENT, ra_name,
              PCMK_XA_ROLE, rsc_state,
              PCMK_XA_TARGET_ROLE, target_role,
-             "active", pcmk__btoa(rsc->fns->active(rsc, TRUE)),
+             PCMK_XA_ACTIVE, active,
              PCMK_XA_ORPHANED, orphaned,
              "blocked", pcmk__flag_text(rsc->flags, pcmk_rsc_blocked),
              PCMK_XA_MAINTENANCE, maintenance,
