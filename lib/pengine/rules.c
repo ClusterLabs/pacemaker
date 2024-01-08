@@ -788,8 +788,8 @@ pe_eval_subexpr(xmlNode *expr, const pe_rule_eval_data_t *rule_data,
  * \param[in]   l_val   Value on left-hand side of comparison
  * \param[in]   r_val   Value on right-hand side of comparison
  * \param[in]   type    How to interpret the values (allowed values:
- *                      \c "string", \c PCMK_VALUE_INTEGER, \c "number",
- *                      \c "version", \c NULL)
+ *                      \c PCMK_VALUE_STRING, \c PCMK_VALUE_INTEGER,
+ *                      \c "number", \c "version", \c NULL)
  * \param[in]   op      Type of comparison
  *
  * \return  -1 if <tt>(l_val < r_val)</tt>,
@@ -814,12 +814,12 @@ compare_attr_expr_vals(const char *l_val, const char *r_val, const char *type,
                 }
 
             } else {
-                type = "string";
+                type = PCMK_VALUE_STRING;
             }
             crm_trace("Defaulting to %s based comparison for '%s' op", type, op);
         }
 
-        if (pcmk__str_eq(type, "string", pcmk__str_casei)) {
+        if (pcmk__str_eq(type, PCMK_VALUE_STRING, pcmk__str_casei)) {
             cmp = strcasecmp(l_val, r_val);
 
         } else if (pcmk__str_eq(type, PCMK_VALUE_INTEGER, pcmk__str_casei)) {
@@ -841,7 +841,8 @@ compare_attr_expr_vals(const char *l_val, const char *r_val, const char *type,
             } else {
                 crm_debug("Integer parse error. Comparing %s and %s as strings",
                           l_val, r_val);
-                cmp = compare_attr_expr_vals(l_val, r_val, "string", op);
+                cmp = compare_attr_expr_vals(l_val, r_val, PCMK_VALUE_STRING,
+                                             op);
             }
 
         } else if (pcmk__str_eq(type, "number", pcmk__str_casei)) {
@@ -863,7 +864,8 @@ compare_attr_expr_vals(const char *l_val, const char *r_val, const char *type,
             } else {
                 crm_debug("Floating-point parse error. Comparing %s and %s as "
                           "strings", l_val, r_val);
-                cmp = compare_attr_expr_vals(l_val, r_val, "string", op);
+                cmp = compare_attr_expr_vals(l_val, r_val, PCMK_VALUE_STRING,
+                                             op);
             }
 
         } else if (pcmk__str_eq(type, "version", pcmk__str_casei)) {
@@ -889,8 +891,8 @@ compare_attr_expr_vals(const char *l_val, const char *r_val, const char *type,
  * \param[in]   l_val   Value on left-hand side of comparison
  * \param[in]   r_val   Value on right-hand side of comparison
  * \param[in]   type    How to interpret the values (allowed values:
- *                      \c "string", \c PCMK_VALUE_INTEGER, \c "number",
- *                      \c "version", \c NULL)
+ *                      \c PCMK_VALUE_STRING, \c PCMK_VALUE_INTEGER,
+ *                      \c "number", \c "version", \c NULL)
  * \param[in]   op      Type of comparison.
  *
  * \return  \c true if expression evaluates to \c true, \c false

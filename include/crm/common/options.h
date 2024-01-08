@@ -165,6 +165,7 @@ extern "C" {
 #define PCMK_VALUE_RESTART_CONTAINER        "restart-container"
 #define PCMK_VALUE_SERIALIZE                "Serialize"
 #define PCMK_VALUE_STANDBY                  "standby"
+#define PCMK_VALUE_STRING                   "string"
 #define PCMK_VALUE_STOP                     "stop"
 #define PCMK_VALUE_TRUE                     "true"
 #define PCMK_VALUE_WRITE                    "write"

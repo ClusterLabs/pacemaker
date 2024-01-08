@@ -112,7 +112,7 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
         crm_xml_add(expr, PCMK_XA_ATTRIBUTE, CRM_ATTR_UNAME);
         crm_xml_add(expr, PCMK_XA_OPERATION, PCMK_VALUE_EQ);
         crm_xml_add(expr, PCMK_XA_VALUE, host);
-        crm_xml_add(expr, PCMK_XA_TYPE, "string");
+        crm_xml_add(expr, PCMK_XA_TYPE, PCMK_VALUE_STRING);
 
         expr = create_xml_node(rule, "date_expression");
         crm_xml_set_id(expr, "cli-ban-%s-on-%s-lifetime", rsc_id, host);
@@ -189,7 +189,7 @@ cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
         crm_xml_add(expr, PCMK_XA_ATTRIBUTE, CRM_ATTR_UNAME);
         crm_xml_add(expr, PCMK_XA_OPERATION, PCMK_VALUE_EQ);
         crm_xml_add(expr, PCMK_XA_VALUE, host);
-        crm_xml_add(expr, PCMK_XA_TYPE, "string");
+        crm_xml_add(expr, PCMK_XA_TYPE, PCMK_VALUE_STRING);
 
         expr = create_xml_node(rule, "date_expression");
         crm_xml_set_id(expr, "cli-prefer-lifetime-end-%s", rsc_id);
