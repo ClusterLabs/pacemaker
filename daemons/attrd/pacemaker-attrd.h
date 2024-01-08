@@ -123,6 +123,7 @@ enum attrd_attr_flags {
     attrd_attr_none         = 0U,
     attrd_attr_changed      = (1U << 0),    // Attribute value has changed since last write
     attrd_attr_uuid_missing = (1U << 1),    // Whether we know we're missing a peer UUID
+    attrd_attr_is_private   = (1U << 2),    // Whether to keep this attribute out of the CIB
 };
 
 typedef struct attribute_s {
@@ -134,9 +135,6 @@ typedef struct attribute_s {
     int update;
     int timeout_ms;
     uint32_t flags;
-
-    /* TODO: refactor these three as a bitmask */
-    gboolean is_private; /* whether to keep this attribute out of the CIB */
 
     mainloop_timer_t *timer;
 
