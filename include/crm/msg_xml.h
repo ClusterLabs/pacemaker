@@ -215,6 +215,7 @@ extern "C" {
 #define PCMK_XA_OPERATION                   "operation"
 #define PCMK_XA_OPTIONS                     "options"
 #define PCMK_XA_ORIGIN                      "origin"
+#define PCMK_XA_ORPHANED                    "orphaned"
 #define PCMK_XA_PATH                        "path"
 #define PCMK_XA_PENDING                     "pending"
 #define PCMK_XA_PORT                        "port"

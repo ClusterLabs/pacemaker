@@ -981,18 +981,17 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     const char *prov = crm_element_value(rsc->xml, PCMK_XA_PROVIDER);
     const char *rsc_state = native_displayable_state(rsc, print_pending);
 
-    const char *desc = NULL;
     char ra_name[LINE_MAX];
     char *nodes_running_on = NULL;
     const char *lock_node_name = NULL;
     int rc = pcmk_rc_no_output;
     const char *target_role = NULL;
+    const char *orphaned = pcmk__flag_text(rsc->flags, pcmk_rsc_removed);
     const char *maintenance = pcmk__flag_text(rsc->flags, pcmk_rsc_maintenance);
     const char *managed = pcmk__flag_text(rsc->flags, pcmk_rsc_managed);
     const char *failed = pcmk__flag_text(rsc->flags, pcmk_rsc_failed);
     const char *ignored = pcmk__flag_text(rsc->flags, pcmk_rsc_ignore_failure);
-
-    desc = pe__resource_description(rsc, show_opts);
+    const char *desc = pe__resource_description(rsc, show_opts);
 
     if (rsc->meta != NULL) {
         target_role = g_hash_table_lookup(rsc->meta, PCMK_META_TARGET_ROLE);
@@ -1021,7 +1020,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
              PCMK_XA_ROLE, rsc_state,
              PCMK_XA_TARGET_ROLE, target_role,
              "active", pcmk__btoa(rsc->fns->active(rsc, TRUE)),
-             "orphaned", pcmk__flag_text(rsc->flags, pcmk_rsc_removed),
+             PCMK_XA_ORPHANED, orphaned,
              "blocked", pcmk__flag_text(rsc->flags, pcmk_rsc_blocked),
              PCMK_XA_MAINTENANCE, maintenance,
              PCMK_XA_MANAGED, managed,
