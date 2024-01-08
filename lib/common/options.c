@@ -159,7 +159,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     },
     {
         PCMK_OPT_NO_QUORUM_POLICY, NULL, "select",
-            PCMK_VALUE_STOP ", freeze, " PCMK_VALUE_IGNORE
+            PCMK_VALUE_STOP ", " PCMK_VALUE_FREEZE ", " PCMK_VALUE_IGNORE
                 ", " PCMK_VALUE_DEMOTE ", suicide",
         PCMK_VALUE_STOP, pcmk__valid_no_quorum_policy,
         pcmk__opt_context_schedulerd,
@@ -757,8 +757,9 @@ bool
 pcmk__valid_no_quorum_policy(const char *value)
 {
     return pcmk__strcase_any_of(value,
-                                PCMK_VALUE_STOP, "freeze", PCMK_VALUE_IGNORE,
-                                PCMK_VALUE_DEMOTE, "suicide", NULL);
+                                PCMK_VALUE_STOP, PCMK_VALUE_FREEZE,
+                                PCMK_VALUE_IGNORE, PCMK_VALUE_DEMOTE, "suicide",
+                                NULL);
 }
 
 /*!

@@ -1118,7 +1118,7 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
 
     switch (scheduler->no_quorum_policy) {
         case pcmk_no_quorum_freeze:
-            no_quorum_policy = "freeze";
+            no_quorum_policy = PCMK_VALUE_FREEZE;
             break;
 
         case pcmk_no_quorum_stop:

@@ -316,7 +316,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     if (pcmk__str_eq(value, PCMK_VALUE_IGNORE, pcmk__str_casei)) {
         scheduler->no_quorum_policy = pcmk_no_quorum_ignore;
 
-    } else if (pcmk__str_eq(value, "freeze", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value, PCMK_VALUE_FREEZE, pcmk__str_casei)) {
         scheduler->no_quorum_policy = pcmk_no_quorum_freeze;
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_DEMOTE, pcmk__str_casei)) {

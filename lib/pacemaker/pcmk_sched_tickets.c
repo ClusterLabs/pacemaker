@@ -186,7 +186,7 @@ rsc_ticket_new(const char *id, pcmk_resource_t *rsc, pcmk_ticket_t *ticket,
                   new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
                   pcmk_role_text(new_rsc_ticket->role));
 
-    } else if (pcmk__str_eq(loss_policy, "freeze", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(loss_policy, PCMK_VALUE_FREEZE, pcmk__str_casei)) {
         crm_debug("On loss of ticket '%s': Freeze %s (%s)",
                   new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
                   pcmk_role_text(new_rsc_ticket->role));
