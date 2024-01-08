@@ -171,6 +171,7 @@ extern "C" {
 #define PCMK_VALUE_STRING                   "string"
 #define PCMK_VALUE_STOP                     "stop"
 #define PCMK_VALUE_TRUE                     "true"
+#define PCMK_VALUE_UTILIZATION              "utilization"
 #define PCMK_VALUE_VERSION                  "version"
 #define PCMK_VALUE_WRITE                    "write"
 #define PCMK_VALUE_YELLOW                   "yellow"
