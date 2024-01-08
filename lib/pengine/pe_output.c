@@ -873,7 +873,7 @@ cluster_counts_xml(pcmk__output_t *out, va_list args) {
     free(s);
 
     s = pcmk__itoa(ndisabled);
-    crm_xml_add(resources_node, "disabled", s);
+    crm_xml_add(resources_node, PCMK_XA_DISABLED, s);
     free(s);
 
     s = pcmk__itoa(nblocked);
