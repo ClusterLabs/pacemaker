@@ -260,9 +260,10 @@ pe_cron_range_satisfied(const crm_time_t *now, const xmlNode *cron_spec)
 
     CHECK_ONE(cron_spec, "moon", phase_of_the_moon(now));
     if (crm_element_value(cron_spec, "moon") != NULL) {
-        pcmk__config_warn("Support for 'moon' in date_spec elements "
-                          "(such as %s) is deprecated and will be removed "
-                          "in a future release of Pacemaker", ID(cron_spec));
+        pcmk__config_warn("Support for 'moon' in " PCMK_XE_DATE_SPEC
+                          " elements (such as %s) is deprecated and will be"
+                          " removed in a future release of Pacemaker",
+                          ID(cron_spec));
     }
 
     /* If we get here, either no fields were specified (which is success), or all
@@ -1071,7 +1072,7 @@ pe__eval_date_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data,
     crm_trace("Testing expression: %s", ID(expr));
 
     duration_spec = first_named_child(expr, PCMK_XE_DURATION);
-    date_spec = first_named_child(expr, "date_spec");
+    date_spec = first_named_child(expr, PCMK_XE_DATE_SPEC);
 
     value = crm_element_value(expr, PCMK_XA_START);
     if (value != NULL) {
