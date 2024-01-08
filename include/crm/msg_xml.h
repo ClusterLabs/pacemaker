@@ -122,6 +122,7 @@ extern "C" {
 #define PCMK_XE_RESOURCE_REF                "resource_ref"
 #define PCMK_XE_RESOURCE_SET                "resource_set"
 #define PCMK_XE_RESOURCES                   "resources"
+#define PCMK_XE_RESULT_CODE                 "result-code"
 #define PCMK_XE_ROLE                        "role"
 #define PCMK_XE_RSC_ACTION                  "rsc_action"
 #define PCMK_XE_RSC_COLOCATION              "rsc_colocation"
