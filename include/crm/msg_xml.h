@@ -89,6 +89,7 @@ extern "C" {
 #define PCMK_XE_FENCING_TOPOLOGY            "fencing-topology"
 #define PCMK_XE_GROUP                       "group"
 #define PCMK_XE_INSTANCE_ATTRIBUTES         "instance_attributes"
+#define PCMK_XE_LAST_FENCED                 "last-fenced"
 #define PCMK_XE_LONGDESC                    "longdesc"
 #define PCMK_XE_META_ATTRIBUTES             "meta_attributes"
 #define PCMK_XE_NETWORK                     "network"

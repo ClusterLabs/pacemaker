@@ -345,7 +345,7 @@ last_fenced_xml(pcmk__output_t *out, va_list args) {
     if (when) {
         char *buf = timespec_string(when, 0, false);
 
-        pcmk__output_create_xml_node(out, "last-fenced",
+        pcmk__output_create_xml_node(out, PCMK_XE_LAST_FENCED,
                                      PCMK_XA_TARGET, target,
                                      PCMK_XA_WHEN, buf,
                                      NULL);
