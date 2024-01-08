@@ -157,6 +157,7 @@ extern "C" {
 #define PCMK_XA_DEVICES                     "devices"
 #define PCMK_XA_EPOCH                       "epoch"
 #define PCMK_XA_EXEC_TIME                   "exec-time"
+#define PCMK_XA_EXECUTION_DATE              "execution-date"
 #define PCMK_XA_EXIT_REASON                 "exit-reason"
 #define PCMK_XA_FAILED                      "failed"
 #define PCMK_XA_FIRST                       "first"
