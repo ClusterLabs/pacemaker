@@ -150,6 +150,7 @@ extern "C" {
 #define PCMK_VALUE_MANDATORY                "Mandatory"
 #define PCMK_VALUE_MEMBER                   "member"
 #define PCMK_VALUE_META                     "meta"
+#define PCMK_VALUE_NE                       "ne"
 #define PCMK_VALUE_NEVER                    "never"
 #define PCMK_VALUE_OPTIONAL                 "Optional"
 #define PCMK_VALUE_OR                       "or"

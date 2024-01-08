@@ -915,7 +915,7 @@ accept_attr_expr(const char *l_val, const char *r_val, const char *type,
     if (pcmk__str_eq(op, PCMK_VALUE_EQ, pcmk__str_casei)) {
         return (cmp == 0);
 
-    } else if (pcmk__str_eq(op, "ne", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK_VALUE_NE, pcmk__str_casei)) {
         return (cmp != 0);
 
     } else if (l_val == NULL || r_val == NULL) {
@@ -1228,8 +1228,8 @@ pe__eval_role_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
     } else if (pcmk__str_eq(op, PCMK_VALUE_EQ, pcmk__str_casei)) {
         return role_matches(expr, rule_data)? TRUE : FALSE;
 
-    } else if (pcmk__str_eq(op, "ne", pcmk__str_casei)
-               // Test "ne" only with promotable clone roles
+    } else if (pcmk__str_eq(op, PCMK_VALUE_NE, pcmk__str_casei)
+               // Test PCMK_VALUE_NE only with promotable clone roles
                && (rule_data->role >= pcmk_role_unpromoted)) {
         return role_matches(expr, rule_data)? FALSE : TRUE;
 
