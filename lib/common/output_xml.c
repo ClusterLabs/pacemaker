@@ -267,7 +267,7 @@ xml_version(pcmk__output_t *out, bool extended) {
                                  PCMK_XA_VERSION, PACEMAKER_VERSION,
                                  PCMK_XA_AUTHOR, author,
                                  PCMK_XA_BUILD, BUILD_VERSION,
-                                 "features", CRM_FEATURES,
+                                 PCMK_XA_FEATURES, CRM_FEATURES,
                                  NULL);
 }
 
