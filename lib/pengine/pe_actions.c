@@ -529,9 +529,9 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
     }
 
     if (pcmk__str_eq(action_name, PCMK_ACTION_LRM_DELETE, pcmk__str_none)
-        && !pcmk__str_eq(value, "ignore", pcmk__str_casei)) {
+        && !pcmk__str_eq(value, PCMK_VALUE_IGNORE, pcmk__str_casei)) {
         key = strdup(PCMK_META_ON_FAIL);
-        new_value = strdup("ignore");
+        new_value = strdup(PCMK_VALUE_IGNORE);
         CRM_ASSERT((key != NULL) && (new_value != NULL));
         g_hash_table_insert(meta, key, new_value);
         return;
@@ -928,7 +928,8 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
         on_fail = pcmk_on_fail_standby_node;
         desc = "node standby";
 
-    } else if (pcmk__strcase_any_of(value, "ignore", PCMK__VALUE_NOTHING,
+    } else if (pcmk__strcase_any_of(value,
+                                    PCMK_VALUE_IGNORE, PCMK__VALUE_NOTHING,
                                     NULL)) {
         desc = "ignore";
 

@@ -313,7 +313,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     value = pcmk__cluster_option(config_hash, PCMK_OPT_NO_QUORUM_POLICY);
 
-    if (pcmk__str_eq(value, "ignore", pcmk__str_casei)) {
+    if (pcmk__str_eq(value, PCMK_VALUE_IGNORE, pcmk__str_casei)) {
         scheduler->no_quorum_policy = pcmk_no_quorum_ignore;
 
     } else if (pcmk__str_eq(value, "freeze", pcmk__str_casei)) {
