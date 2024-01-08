@@ -292,7 +292,7 @@ parse_xml_duration(const crm_time_t *start, const xmlNode *duration_spec)
     update_field(end, duration_spec, PCMK_XA_YEARS, crm_time_add_years);
     update_field(end, duration_spec, PCMK_XA_MONTHS, crm_time_add_months);
     update_field(end, duration_spec, PCMK_XA_WEEKS, crm_time_add_weeks);
-    update_field(end, duration_spec, "days", crm_time_add_days);
+    update_field(end, duration_spec, PCMK_XA_DAYS, crm_time_add_days);
     update_field(end, duration_spec, "hours", crm_time_add_hours);
     update_field(end, duration_spec, "minutes", crm_time_add_minutes);
     update_field(end, duration_spec, "seconds", crm_time_add_seconds);
