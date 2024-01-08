@@ -294,7 +294,7 @@ full_history_xml(pcmk__output_t *out, va_list args)
     } else {
         char *rc_s = pcmk__itoa(history_rc);
 
-        pcmk__output_create_xml_node(out, "fence_history",
+        pcmk__output_create_xml_node(out, PCMK_XE_FENCE_HISTORY,
                                      PCMK_XA_STATUS, rc_s,
                                      NULL);
         free(rc_s);

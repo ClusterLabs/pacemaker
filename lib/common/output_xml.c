@@ -61,7 +61,7 @@ static subst_t substitutions[] = {
     { "Failed Resource Actions",
       "failures", },
     { "Fencing History",
-      "fence_history", },
+      PCMK_XE_FENCE_HISTORY, },
     { "Full List of Resources",
       PCMK_XE_RESOURCES, },
     { "Inactive Resources",
