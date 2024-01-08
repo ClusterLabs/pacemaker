@@ -246,7 +246,7 @@ class Corosync2Patterns(BasePatterns):
             r"error:.*cib_(shm|rw) IPC provider disconnected while waiting",
             r"error:.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
             r"error: Lost fencer connection",
-            ]
+        ]
 
         self._components["corosync"] = [
             # We expect each daemon to lose its cluster connection.
