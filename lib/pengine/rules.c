@@ -256,7 +256,7 @@ pe_cron_range_satisfied(const crm_time_t *now, const xmlNode *cron_spec)
     crm_time_get_isoweek(now, &y, &w, &d);
     CHECK_ONE(cron_spec, PCMK_XA_WEEKYEARS, y);
     CHECK_ONE(cron_spec, PCMK_XA_WEEKS, w);
-    CHECK_ONE(cron_spec, "weekdays", d);
+    CHECK_ONE(cron_spec, PCMK_XA_WEEKDAYS, d);
 
     CHECK_ONE(cron_spec, PCMK__XA_MOON, phase_of_the_moon(now));
     if (crm_element_value(cron_spec, PCMK__XA_MOON) != NULL) {
