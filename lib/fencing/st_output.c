@@ -459,7 +459,7 @@ stonith_event_xml(pcmk__output_t *out, va_list args)
 
     xmlNodePtr node = NULL;
 
-    node = pcmk__output_create_xml_node(out, "fence_event",
+    node = pcmk__output_create_xml_node(out, PCMK_XE_FENCE_EVENT,
                                         PCMK_XA_ACTION, event->action,
                                         PCMK_XA_TARGET, event->target,
                                         PCMK_XA_CLIENT, event->client,
