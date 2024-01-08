@@ -153,7 +153,7 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
 
     if (strcmp(rsc->standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
         xmlChar *content = NULL;
-        xmlNode *version_element = first_named_child(metadata, "version");
+        xmlNode *version_element = first_named_child(metadata, PCMK_XE_VERSION);
 
         if (version_element != NULL) {
             content = xmlNodeGetContent(version_element);

@@ -168,7 +168,7 @@ strip_patch_cib_version(xmlNode *patch, const char **vfields, size_t nvfields)
 
     crm_element_value_int(patch, PCMK_XA_FORMAT, &format);
     if (format == 2) {
-        xmlNode *version_xml = find_xml_node(patch, "version", FALSE);
+        xmlNode *version_xml = find_xml_node(patch, PCMK_XE_VERSION, FALSE);
 
         if (version_xml) {
             free_xml(version_xml);

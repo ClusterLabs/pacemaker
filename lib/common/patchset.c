@@ -555,8 +555,8 @@ find_patch_xml_node(const xmlNode *patchset, int format, bool added,
             }
             break;
         case 2:
-            label = added? "target" : "source";
-            *patch_node = find_xml_node(patchset, "version", FALSE);
+            label = added? PCMK_XE_TARGET : PCMK_XE_SOURCE;
+            *patch_node = find_xml_node(patchset, PCMK_XE_VERSION, FALSE);
             *patch_node = find_xml_node(*patch_node, label, FALSE);
             break;
         default:

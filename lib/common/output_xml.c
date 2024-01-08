@@ -260,7 +260,7 @@ static void
 xml_version(pcmk__output_t *out, bool extended) {
     CRM_ASSERT(out != NULL);
 
-    pcmk__output_create_xml_node(out, "version",
+    pcmk__output_create_xml_node(out, PCMK_XE_VERSION,
                                  "program", "Pacemaker",
                                  PCMK_XA_VERSION, PACEMAKER_VERSION,
                                  "author", "Andrew Beekhof and the "
