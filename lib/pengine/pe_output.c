@@ -1886,6 +1886,28 @@ node_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+/*!
+ * \internal
+ * \brief Convert an integer health value to a string representation
+ *
+ * \param[in] health  Integer health value
+ *
+ * \retval \c PCMK_VALUE_RED if \p health is less than 0
+ * \retval \c PCMK_VALUE_YELLOW if \p health is equal to 0
+ * \retval \c PCMK_VALUE_GREEN if \p health is greater than 0
+ */
+static const char *
+health_text(int health)
+{
+    if (health < 0) {
+        return PCMK_VALUE_RED;
+    } else if (health == 0) {
+        return PCMK_VALUE_YELLOW;
+    } else {
+        return PCMK_VALUE_GREEN;
+    }
+}
+
 PCMK__OUTPUT_ARGS("node", "pcmk_node_t *", "uint32_t", "bool", "GList *",
                   "GList *")
 static int
@@ -1902,10 +1924,9 @@ node_xml(pcmk__output_t *out, va_list args) {
         const char *standby_onfail = pcmk__btoa(node->details->standby_onfail);
         const char *pending = pcmk__btoa(node->details->pending);
         const char *unclean = pcmk__btoa(node->details->unclean);
-        char *length_s = pcmk__itoa(g_list_length(node->details->running_rsc));
-        int health = pe__node_health(node);
-        const char *health_s = NULL;
+        const char *health = health_text(pe__node_health(node));
         const char *feature_set;
+        char *length_s = pcmk__itoa(g_list_length(node->details->running_rsc));
 
         switch (node->details->type) {
             case pcmk_node_variant_cluster:
@@ -1919,14 +1940,6 @@ node_xml(pcmk__output_t *out, va_list args) {
                 break;
         }
 
-        if (health < 0) {
-            health_s = PCMK_VALUE_RED;
-        } else if (health == 0) {
-            health_s = PCMK_VALUE_YELLOW;
-        } else {
-            health_s = PCMK_VALUE_GREEN;
-        }
-
         feature_set = get_node_feature_set(node);
 
         pe__name_and_nvpairs_xml(out, true, PCMK_XE_NODE, 15,
@@ -1938,7 +1951,7 @@ node_xml(pcmk__output_t *out, va_list args) {
                                  "maintenance", pcmk__btoa(node->details->maintenance),
                                  PCMK_XA_PENDING, pending,
                                  PCMK_XA_UNCLEAN, unclean,
-                                 "health", health_s,
+                                 PCMK_XA_HEALTH, health,
                                  "feature_set", feature_set,
                                  "shutdown", pcmk__btoa(node->details->shutdown),
                                  "expected_up", pcmk__btoa(node->details->expected_up),
