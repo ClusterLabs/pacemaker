@@ -1925,7 +1925,7 @@ node_xml(pcmk__output_t *out, va_list args) {
         const char *pending = pcmk__btoa(node->details->pending);
         const char *unclean = pcmk__btoa(node->details->unclean);
         const char *health = health_text(pe__node_health(node));
-        const char *feature_set;
+        const char *feature_set = get_node_feature_set(node);
         char *length_s = pcmk__itoa(g_list_length(node->details->running_rsc));
 
         switch (node->details->type) {
@@ -1940,8 +1940,6 @@ node_xml(pcmk__output_t *out, va_list args) {
                 break;
         }
 
-        feature_set = get_node_feature_set(node);
-
         pe__name_and_nvpairs_xml(out, true, PCMK_XE_NODE, 15,
                                  PCMK_XA_NAME, node->details->uname,
                                  PCMK_XA_ID, node->details->id,
@@ -1952,7 +1950,7 @@ node_xml(pcmk__output_t *out, va_list args) {
                                  PCMK_XA_PENDING, pending,
                                  PCMK_XA_UNCLEAN, unclean,
                                  PCMK_XA_HEALTH, health,
-                                 "feature_set", feature_set,
+                                 PCMK_XA_FEATURE_SET, feature_set,
                                  "shutdown", pcmk__btoa(node->details->shutdown),
                                  "expected_up", pcmk__btoa(node->details->expected_up),
                                  "is_dc", pcmk__btoa(node->details->is_dc),

@@ -167,6 +167,7 @@ extern "C" {
 #define PCMK_XA_EXIT_REASON                 "exit-reason"
 #define PCMK_XA_EXTENDED_STATUS             "extended-status"
 #define PCMK_XA_FAILED                      "failed"
+#define PCMK_XA_FEATURE_SET                 "feature_set"
 #define PCMK_XA_FIRST                       "first"
 #define PCMK_XA_FIRST_ACTION                "first-action"
 #define PCMK_XA_FORMAT                      "format"
