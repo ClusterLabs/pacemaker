@@ -322,7 +322,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     } else if (pcmk__str_eq(value, PCMK_VALUE_DEMOTE, pcmk__str_casei)) {
         scheduler->no_quorum_policy = pcmk_no_quorum_demote;
 
-    } else if (pcmk__str_eq(value, "suicide", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value, PCMK_VALUE_FENCE_LEGACY, pcmk__str_casei)) {
         if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
             int do_panic = 0;
 

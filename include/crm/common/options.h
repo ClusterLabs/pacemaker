@@ -153,6 +153,9 @@ extern "C" {
 #define PCMK_VALUE_TRUE                     "true"
 #define PCMK_VALUE_WRITE                    "write"
 
+// @COMPAT This will become a deprecated alias for PCMK_VALUE_FENCE (see T279)
+#define PCMK_VALUE_FENCE_LEGACY             "suicide"
+
 
 #ifdef __cplusplus
 }

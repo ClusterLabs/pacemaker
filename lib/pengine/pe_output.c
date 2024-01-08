@@ -1134,7 +1134,7 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
             break;
 
         case pcmk_no_quorum_fence:
-            no_quorum_policy = "suicide";
+            no_quorum_policy = PCMK_VALUE_FENCE_LEGACY;
             break;
     }
 
