@@ -182,6 +182,7 @@ extern "C" {
 #define PCMK_XA_LAST_RC_CHANGE              "last-rc-change"
 #define PCMK_XA_LOSS_POLICY                 "loss-policy"
 #define PCMK_XA_MIXED_VERSION               "mixed_version"
+#define PCMK_XA_MONTHS                      "months"
 #define PCMK_XA_NAME                        "name"
 #define PCMK_XA_NETWORK                     "network"
 #define PCMK_XA_NO_QUORUM_PANIC             "no-quorum-panic"
