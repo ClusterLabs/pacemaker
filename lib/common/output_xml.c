@@ -258,13 +258,14 @@ xml_subprocess_output(pcmk__output_t *out, int exit_status,
 
 static void
 xml_version(pcmk__output_t *out, bool extended) {
+    const char *author = "Andrew Beekhof and the Pacemaker project "
+                         "contributors";
     CRM_ASSERT(out != NULL);
 
     pcmk__output_create_xml_node(out, PCMK_XE_VERSION,
                                  PCMK_XA_PROGRAM, "Pacemaker",
                                  PCMK_XA_VERSION, PACEMAKER_VERSION,
-                                 "author", "Andrew Beekhof and the "
-                                           "Pacemaker project contributors",
+                                 PCMK_XA_AUTHOR, author,
                                  "build", BUILD_VERSION,
                                  "features", CRM_FEATURES,
                                  NULL);

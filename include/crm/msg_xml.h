@@ -147,6 +147,7 @@ extern "C" {
 #define PCMK_XA_ADD_HOST                    "add-host"
 #define PCMK_XA_ADMIN_EPOCH                 "admin_epoch"
 #define PCMK_XA_ATTRIBUTE                   "attribute"
+#define PCMK_XA_AUTHOR                      "author"
 #define PCMK_XA_BLOCKED                     "blocked"
 #define PCMK_XA_BOOLEAN_OP                  "boolean-op"
 #define PCMK_XA_CIB_LAST_WRITTEN            "cib-last-written"
