@@ -64,7 +64,7 @@ static int
 pacemakerd_features_xml(pcmk__output_t *out, va_list args) {
     gchar **feature_list = g_strsplit(CRM_FEATURES, " ", 0);
 
-    pcmk__output_xml_create_parent(out, "pacemakerd",
+    pcmk__output_xml_create_parent(out, PCMK_XE_PACEMAKERD,
                                    PCMK_XA_VERSION, PACEMAKER_VERSION,
                                    PCMK_XA_BUILD, BUILD_VERSION,
                                    PCMK_XA_FEATURE_SET, CRM_FEATURE_SET,

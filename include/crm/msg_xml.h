@@ -100,6 +100,7 @@ extern "C" {
 #define PCMK_XE_OPERATION                   "operation"
 #define PCMK_XE_OP_EXPRESSION               "op_expression"
 #define PCMK_XE_OPTION                      "option"
+#define PCMK_XE_PACEMAKERD                  "pacemakerd"
 #define PCMK_XE_PARAMETER                   "parameter"
 #define PCMK_XE_PARAMETERS                  "parameters"
 #define PCMK_XE_PORT_MAPPING                "port-mapping"
