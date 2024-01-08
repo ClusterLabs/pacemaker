@@ -855,7 +855,7 @@ profile_xml(pcmk__output_t *out, va_list args) {
 
     pcmk__output_create_xml_node(out, "timing",
                                  "file", xml_file,
-                                 "duration", duration,
+                                 PCMK_XA_DURATION, duration,
                                  NULL);
 
     free(duration);
