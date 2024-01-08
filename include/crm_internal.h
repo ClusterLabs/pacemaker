@@ -163,6 +163,7 @@
 #define PCMK__XA_JOIN_ID                "join_id"
 #define PCMK__XA_LONG_ID                "long-id"
 #define PCMK__XA_MODE                   "mode"
+#define PCMK__XA_MOON                   "moon"
 #define PCMK__XA_NODE_FENCED            "node_fenced"
 #define PCMK__XA_NODE_IN_MAINTENANCE    "node_in_maintenance"
 #define PCMK__XA_NODE_START_STATE       "node_start_state"

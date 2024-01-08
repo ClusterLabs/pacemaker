@@ -258,11 +258,12 @@ pe_cron_range_satisfied(const crm_time_t *now, const xmlNode *cron_spec)
     CHECK_ONE(cron_spec, PCMK_XA_WEEKS, w);
     CHECK_ONE(cron_spec, "weekdays", d);
 
-    CHECK_ONE(cron_spec, "moon", phase_of_the_moon(now));
-    if (crm_element_value(cron_spec, "moon") != NULL) {
-        pcmk__config_warn("Support for 'moon' in " PCMK_XE_DATE_SPEC
-                          " elements (such as %s) is deprecated and will be"
-                          " removed in a future release of Pacemaker",
+    CHECK_ONE(cron_spec, PCMK__XA_MOON, phase_of_the_moon(now));
+    if (crm_element_value(cron_spec, PCMK__XA_MOON) != NULL) {
+        pcmk__config_warn("Support for '" PCMK__XA_MOON "' in "
+                          PCMK_XE_DATE_SPEC " elements (such as %s) is "
+                          "deprecated and will be removed in a future release "
+                          "of Pacemaker",
                           ID(cron_spec));
     }
 
