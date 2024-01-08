@@ -861,11 +861,11 @@ cluster_counts_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr resources_node = pcmk__output_create_xml_node(out, "resources_configured", NULL);
 
     char *s = pcmk__itoa(nnodes);
-    crm_xml_add(nodes_node, "number", s);
+    crm_xml_add(nodes_node, PCMK_XA_NUMBER, s);
     free(s);
 
     s = pcmk__itoa(nresources);
-    crm_xml_add(resources_node, "number", s);
+    crm_xml_add(resources_node, PCMK_XA_NUMBER, s);
     free(s);
 
     s = pcmk__itoa(ndisabled);
