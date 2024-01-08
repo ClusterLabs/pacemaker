@@ -1916,7 +1916,7 @@ node_xml(pcmk__output_t *out, va_list args) {
         }
 
         if (health < 0) {
-            health_s = "red";
+            health_s = PCMK_VALUE_RED;
         } else if (health == 0) {
             health_s = "yellow";
         } else {

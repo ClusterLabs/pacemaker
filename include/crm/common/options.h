@@ -149,6 +149,7 @@ extern "C" {
 #define PCMK_VALUE_OR                       "or"
 #define PCMK_VALUE_PARAM                    "param"
 #define PCMK_VALUE_READ                     "read"
+#define PCMK_VALUE_RED                      "red"
 #define PCMK_VALUE_REMOTE                   "remote"
 #define PCMK_VALUE_RESTART                  "restart"
 #define PCMK_VALUE_RESTART_CONTAINER        "restart-container"

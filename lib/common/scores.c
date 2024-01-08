@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -44,7 +44,7 @@ char2score(const char *score)
     } else if (pcmk_str_is_infinity(score)) {
         return CRM_SCORE_INFINITY;
 
-    } else if (pcmk__str_eq(score, PCMK__VALUE_RED, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(score, PCMK_VALUE_RED, pcmk__str_casei)) {
         return pcmk__score_red;
 
     } else if (pcmk__str_eq(score, PCMK__VALUE_YELLOW, pcmk__str_casei)) {
