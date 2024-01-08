@@ -438,7 +438,8 @@ startCib(const char *filename)
             remote_tls_fd = init_remote_listener(port, TRUE);
         }
 
-        pcmk__scan_port(crm_element_value(cib, "remote-clear-port"), &port);
+        pcmk__scan_port(crm_element_value(cib, PCMK_XA_REMOTE_CLEAR_PORT),
+                        &port);
         if (port >= 0) {
             remote_fd = init_remote_listener(port, FALSE);
         }
