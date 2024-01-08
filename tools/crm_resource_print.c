@@ -211,11 +211,12 @@ agent_status_xml(pcmk__output_t *out, va_list args) {
     const char *exit_reason = va_arg(args, const char *);
 
     char *exit_s = pcmk__itoa(rc);
+    const char *message = services_ocf_exitcode_str((int) rc);
     char *status_str = pcmk__itoa(status);
 
     pcmk__output_create_xml_node(out, "agent-status",
                                  PCMK_XA_CODE, exit_s,
-                                 "message", services_ocf_exitcode_str((int) rc),
+                                 PCMK_XA_MESSAGE, message,
                                  "execution_code", status_str,
                                  "execution_message", pcmk_exec_status_str(status),
                                  PCMK_XA_REASON, exit_reason,

@@ -199,7 +199,7 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
         node = create_xml_node(priv->root, PCMK_XE_STATUS);
         pcmk__xe_set_props(node,
                            PCMK_XA_CODE, rc_as_str,
-                           "message", crm_exit_str(exit_status),
+                           PCMK_XA_MESSAGE, crm_exit_str(exit_status),
                            NULL);
 
         if (g_slist_length(priv->errors) > 0) {
