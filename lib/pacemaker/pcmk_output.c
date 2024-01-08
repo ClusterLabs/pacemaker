@@ -2329,7 +2329,7 @@ result_code_xml(pcmk__output_t *out, va_list args)
     char *code_str = pcmk__itoa(code);
 
     pcmk__output_create_xml_node(out, "result-code",
-                                 "code", code_str,
+                                 PCMK_XA_CODE, code_str,
                                  PCMK_XA_NAME, name,
                                  PCMK_XA_DESCRIPTION, desc,
                                  NULL);

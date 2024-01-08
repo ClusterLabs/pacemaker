@@ -197,7 +197,8 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
         char *rc_as_str = pcmk__itoa(exit_status);
 
         node = create_xml_node(priv->root, PCMK_XE_STATUS);
-        pcmk__xe_set_props(node, "code", rc_as_str,
+        pcmk__xe_set_props(node,
+                           PCMK_XA_CODE, rc_as_str,
                            "message", crm_exit_str(exit_status),
                            NULL);
 
@@ -240,7 +241,7 @@ xml_subprocess_output(pcmk__output_t *out, int exit_status,
     rc_as_str = pcmk__itoa(exit_status);
 
     node = pcmk__output_xml_create_parent(out, PCMK_XE_COMMAND,
-                                          "code", rc_as_str,
+                                          PCMK_XA_CODE, rc_as_str,
                                           NULL);
 
     if (proc_stdout != NULL) {

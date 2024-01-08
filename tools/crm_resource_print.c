@@ -210,18 +210,18 @@ agent_status_xml(pcmk__output_t *out, va_list args) {
     crm_exit_t rc = va_arg(args, crm_exit_t);
     const char *exit_reason = va_arg(args, const char *);
 
-    char *exit_str = pcmk__itoa(rc);
+    char *exit_s = pcmk__itoa(rc);
     char *status_str = pcmk__itoa(status);
 
     pcmk__output_create_xml_node(out, "agent-status",
-                                 "code", exit_str,
+                                 PCMK_XA_CODE, exit_s,
                                  "message", services_ocf_exitcode_str((int) rc),
                                  "execution_code", status_str,
                                  "execution_message", pcmk_exec_status_str(status),
                                  PCMK_XA_REASON, exit_reason,
                                  NULL);
 
-    free(exit_str);
+    free(exit_s);
     free(status_str);
 
     return pcmk_rc_ok;
