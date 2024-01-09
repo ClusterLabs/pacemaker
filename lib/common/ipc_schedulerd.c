@@ -64,7 +64,7 @@ post_connect(pcmk_ipc_api_t *api)
 static bool
 reply_expected(pcmk_ipc_api_t *api, const xmlNode *request)
 {
-    const char *command = crm_element_value(request, F_CRM_TASK);
+    const char *command = crm_element_value(request, PCMK__XA_CRM_TASK);
 
     if (command == NULL) {
         return false;
@@ -105,13 +105,14 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
 
     // Parse useful info from reply
     msg_data = get_message_xml(reply, F_CRM_DATA);
-    value = crm_element_value(reply, F_CRM_TASK);
+    value = crm_element_value(reply, PCMK__XA_CRM_TASK);
 
     if (pcmk__str_eq(value, CRM_OP_PECALC, pcmk__str_none)) {
         reply_data.reply_type = pcmk_schedulerd_reply_graph;
         reply_data.data.graph.reference = crm_element_value(reply,
                                                             PCMK_XA_REFERENCE);
-        reply_data.data.graph.input = crm_element_value(reply, F_CRM_TGRAPH_INPUT);
+        reply_data.data.graph.input = crm_element_value(reply,
+                                                        PCMK__XA_CRM_TGRAPH_IN);
         reply_data.data.graph.tgraph = msg_data;
     } else {
         crm_info("Unrecognizable message from schedulerd: "

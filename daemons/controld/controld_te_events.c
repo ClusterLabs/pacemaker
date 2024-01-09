@@ -109,7 +109,8 @@ fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node)
                 || pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {
                 continue;
             } else if (action->type == pcmk__cluster_graph_action) {
-                const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+                const char *task = crm_element_value(action->xml,
+                                                     PCMK_XA_OPERATION);
 
                 if (pcmk__str_eq(task, PCMK_ACTION_STONITH, pcmk__str_casei)) {
                     continue;
@@ -315,7 +316,7 @@ get_cancel_action(const char *id, const char *node)
             const char *target = NULL;
             pcmk__graph_action_t *action = (pcmk__graph_action_t *) gIter2->data;
 
-            task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+            task = crm_element_value(action->xml, PCMK_XA_OPERATION);
             if (!pcmk__str_eq(PCMK_ACTION_CANCEL, task, pcmk__str_casei)) {
                 continue;
             }
@@ -535,7 +536,8 @@ process_graph_event(xmlNode *event, const char *event_node)
              * (This is the only case where desc == NULL.)
              */
 
-            if (pcmk__str_eq(crm_meta_value(action->params, XML_OP_ATTR_ON_FAIL), "ignore", pcmk__str_casei)) {
+            if (pcmk__str_eq(crm_meta_value(action->params, PCMK_META_ON_FAIL),
+                             "ignore", pcmk__str_casei)) {
                 ignore_failures = TRUE;
 
             } else if (rc != target_rc) {

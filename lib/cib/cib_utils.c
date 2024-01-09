@@ -172,7 +172,7 @@ element_in_patchset_v2(const xmlNode *patchset, const char *element)
          change != NULL; change = crm_next_same_xml(change)) {
 
         const char *op = crm_element_value(change, F_CIB_OPERATION);
-        const char *diff_xpath = crm_element_value(change, XML_DIFF_PATH);
+        const char *diff_xpath = crm_element_value(change, PCMK_XA_PATH);
 
         if (pcmk__str_eq(diff_xpath, element_regex, pcmk__str_regex)) {
             // Change to an existing element

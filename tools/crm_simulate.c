@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the Pacemaker project contributors
+ * Copyright 2009-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -257,7 +257,7 @@ static GOptionEntry operation_entries[] = {
       "N" },
     /* Deprecated */
     { "pending", 'j', G_OPTION_FLAG_NO_ARG|G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, pending_cb,
-      "Display pending state if 'record-pending' is enabled",
+      "Display pending state if '" PCMK_META_RECORD_PENDING "' is enabled",
       NULL },
 
     { NULL }

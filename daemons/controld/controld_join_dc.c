@@ -188,12 +188,12 @@ create_dc_message(const char *join_op, const char *host_to)
                                   CRM_SYSTEM_DC, NULL);
 
     /* Identify which election this is a part of */
-    crm_xml_add_int(msg, F_CRM_JOIN_ID, current_join_id);
+    crm_xml_add_int(msg, PCMK__XA_JOIN_ID, current_join_id);
 
     /* Add a field specifying whether the DC is shutting down. This keeps the
      * joining node from fencing the old DC if it becomes the new DC.
      */
-    pcmk__xe_set_bool_attr(msg, F_CRM_DC_LEAVING,
+    pcmk__xe_set_bool_attr(msg, PCMK__XA_DC_LEAVING,
                            pcmk_is_set(controld_globals.fsa_input_register,
                                        R_SHUTDOWN));
     return msg;
@@ -399,7 +399,7 @@ do_dc_join_filter_offer(long long action,
     }
     join_node = pcmk__get_node(0, join_from, NULL, pcmk__node_search_cluster);
 
-    crm_element_value_int(join_ack->msg, F_CRM_JOIN_ID, &join_id);
+    crm_element_value_int(join_ack->msg, PCMK__XA_JOIN_ID, &join_id);
     if (join_id != current_join_id) {
         crm_debug("Ignoring join-%d request from %s because we are on join-%d",
                   join_id, join_from, current_join_id);
@@ -699,7 +699,7 @@ do_dc_join_ack(long long action,
     int join_id = -1;
     ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
 
-    const char *op = crm_element_value(join_ack->msg, F_CRM_TASK);
+    const char *op = crm_element_value(join_ack->msg, PCMK__XA_CRM_TASK);
     char *join_from = crm_element_value_copy(join_ack->msg, PCMK__XA_SRC);
     crm_node_t *peer = NULL;
 
@@ -727,7 +727,7 @@ do_dc_join_ack(long long action,
         goto done;
     }
 
-    if (crm_element_value_int(join_ack->msg, F_CRM_JOIN_ID, &join_id) != 0) {
+    if (crm_element_value_int(join_ack->msg, PCMK__XA_JOIN_ID, &join_id) != 0) {
         crm_warn("Ignoring join confirmation from %s without valid join ID",
                  join_from);
         goto done;

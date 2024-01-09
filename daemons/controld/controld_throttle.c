@@ -368,8 +368,8 @@ throttle_send_command(enum throttle_state_e mode)
         last = mode;
 
         xml = create_request(CRM_OP_THROTTLE, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
-        crm_xml_add_int(xml, F_CRM_THROTTLE_MODE, mode);
-        crm_xml_add_int(xml, F_CRM_THROTTLE_MAX, throttle_job_max);
+        crm_xml_add_int(xml, PCMK__XA_CRM_LIMIT_MODE, mode);
+        crm_xml_add_int(xml, PCMK__XA_CRM_LIMIT_MAX, throttle_job_max);
 
         send_cluster_message(NULL, crm_msg_crmd, xml, TRUE);
         free_xml(xml);
@@ -554,8 +554,8 @@ throttle_update(xmlNode *xml)
     struct throttle_record_s *r = NULL;
     const char *from = crm_element_value(xml, PCMK__XA_SRC);
 
-    crm_element_value_int(xml, F_CRM_THROTTLE_MODE, &mode);
-    crm_element_value_int(xml, F_CRM_THROTTLE_MAX, &max);
+    crm_element_value_int(xml, PCMK__XA_CRM_LIMIT_MODE, &mode);
+    crm_element_value_int(xml, PCMK__XA_CRM_LIMIT_MAX, &max);
 
     r = g_hash_table_lookup(throttle_records, from);
 

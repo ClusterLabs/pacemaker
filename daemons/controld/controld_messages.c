@@ -344,11 +344,11 @@ relay_message(xmlNode * msg, gboolean originated_locally)
 
     CRM_CHECK(msg != NULL, return TRUE);
 
-    host_to = crm_element_value(msg, F_CRM_HOST_TO);
-    sys_to = crm_element_value(msg, F_CRM_SYS_TO);
-    sys_from = crm_element_value(msg, F_CRM_SYS_FROM);
+    host_to = crm_element_value(msg, PCMK__XA_CRM_HOST_TO);
+    sys_to = crm_element_value(msg, PCMK__XA_CRM_SYS_TO);
+    sys_from = crm_element_value(msg, PCMK__XA_CRM_SYS_FROM);
     type = crm_element_value(msg, PCMK__XA_T);
-    task = crm_element_value(msg, F_CRM_TASK);
+    task = crm_element_value(msg, PCMK__XA_CRM_TASK);
     ref = crm_element_value(msg, PCMK_XA_REFERENCE);
 
     broadcast = pcmk__str_empty(host_to);
@@ -374,7 +374,8 @@ relay_message(xmlNode * msg, gboolean originated_locally)
 
     // Require a destination subsystem (also set by create_request())
     if (sys_to == NULL) {
-        crm_warn("Ignoring invalid message %s with no " F_CRM_SYS_TO, ref);
+        crm_warn("Ignoring invalid message %s with no " PCMK__XA_CRM_SYS_TO,
+                 ref);
         crm_log_xml_trace(msg, "ignored");
         return TRUE;
     }
@@ -541,7 +542,7 @@ controld_authorize_ipc_message(const xmlNode *client_msg, pcmk__client_t *curr_c
 {
     xmlNode *message_data = NULL;
     const char *client_name = NULL;
-    const char *op = crm_element_value(client_msg, F_CRM_TASK);
+    const char *op = crm_element_value(client_msg, PCMK__XA_CRM_TASK);
     const char *ref = crm_element_value(client_msg, PCMK_XA_REFERENCE);
     const char *uuid = (curr_client? curr_client->id : proxy_session);
 
@@ -687,7 +688,7 @@ handle_lrm_delete(xmlNode *stored_msg)
     mode = crm_element_value(msg_data, PCMK__XA_MODE);
     if ((mode == NULL) || strcmp(mode, XML_TAG_CIB)) {
         // Relay to affected node
-        crm_xml_add(stored_msg, F_CRM_SYS_TO, CRM_SYSTEM_LRMD);
+        crm_xml_add(stored_msg, PCMK__XA_CRM_SYS_TO, CRM_SYSTEM_LRMD);
         return I_ROUTER;
 
     } else {
@@ -703,9 +704,9 @@ handle_lrm_delete(xmlNode *stored_msg)
         CRM_CHECK(rsc_xml != NULL, return I_NULL);
 
         rsc_id = ID(rsc_xml);
-        from_sys = crm_element_value(stored_msg, F_CRM_SYS_FROM);
+        from_sys = crm_element_value(stored_msg, PCMK__XA_CRM_SYS_FROM);
         node = crm_element_value(msg_data, XML_LRM_ATTR_TARGET);
-        user_name = pcmk__update_acl_user(stored_msg, F_CRM_USER, NULL);
+        user_name = pcmk__update_acl_user(stored_msg, PCMK__XA_CRM_USER, NULL);
         crm_debug("Handling " CRM_OP_LRM_DELETE " for %s on %s locally%s%s "
                   "(clearing CIB resource history only)", rsc_id, node,
                   (user_name? " for user " : ""), (user_name? user_name : ""));
@@ -803,17 +804,17 @@ handle_ping(const xmlNode *msg)
     // Build reply
 
     ping = create_xml_node(NULL, XML_CRM_TAG_PING);
-    value = crm_element_value(msg, F_CRM_SYS_TO);
-    crm_xml_add(ping, XML_PING_ATTR_SYSFROM, value);
+    value = crm_element_value(msg, PCMK__XA_CRM_SYS_TO);
+    crm_xml_add(ping, PCMK__XA_CRM_SUBSYSTEM, value);
 
     // Add controller state
     value = fsa_state2string(controld_globals.fsa_state);
-    crm_xml_add(ping, XML_PING_ATTR_CRMDSTATE, value);
+    crm_xml_add(ping, PCMK__XA_CRMD_STATE, value);
     crm_notice("Current ping state: %s", value); // CTS needs this
 
     // Add controller health
     // @TODO maybe do some checks to determine meaningful status
-    crm_xml_add(ping, XML_PING_ATTR_STATUS, "ok");
+    crm_xml_add(ping, PCMK_XA_RESULT, "ok");
 
     // Send reply
     reply = create_reply(msg, ping);
@@ -884,7 +885,7 @@ handle_node_info_request(const xmlNode *msg)
     // Build reply
 
     reply_data = create_xml_node(NULL, XML_CIB_TAG_NODE);
-    crm_xml_add(reply_data, XML_PING_ATTR_SYSFROM, CRM_SYSTEM_CRMD);
+    crm_xml_add(reply_data, PCMK__XA_CRM_SUBSYSTEM, CRM_SYSTEM_CRMD);
 
     // Add whether current partition has quorum
     pcmk__xe_set_bool_attr(reply_data, PCMK_XA_HAVE_QUORUM,
@@ -1016,13 +1017,13 @@ static enum crmd_fsa_input
 handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
 {
     xmlNode *msg = NULL;
-    const char *op = crm_element_value(stored_msg, F_CRM_TASK);
+    const char *op = crm_element_value(stored_msg, PCMK__XA_CRM_TASK);
 
     /* Optimize this for the DC - it has the most to do */
 
     crm_log_xml_trace(stored_msg, "request");
     if (op == NULL) {
-        crm_warn("Ignoring request without " F_CRM_TASK);
+        crm_warn("Ignoring request without " PCMK__XA_CRM_TASK);
         return I_NULL;
     }
 
@@ -1100,11 +1101,13 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
 
     } else if (strcmp(op, CRM_OP_JOIN_OFFER) == 0) {
         verify_feature_set(stored_msg);
-        crm_debug("Raising I_JOIN_OFFER: join-%s", crm_element_value(stored_msg, F_CRM_JOIN_ID));
+        crm_debug("Raising I_JOIN_OFFER: join-%s",
+                  crm_element_value(stored_msg, PCMK__XA_JOIN_ID));
         return I_JOIN_OFFER;
 
     } else if (strcmp(op, CRM_OP_JOIN_ACKNAK) == 0) {
-        crm_debug("Raising I_JOIN_RESULT: join-%s", crm_element_value(stored_msg, F_CRM_JOIN_ID));
+        crm_debug("Raising I_JOIN_RESULT: join-%s",
+                  crm_element_value(stored_msg, PCMK__XA_JOIN_ID));
         return I_JOIN_RESULT;
 
     } else if (strcmp(op, CRM_OP_LRM_DELETE) == 0) {
@@ -1114,7 +1117,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
                || (strcmp(op, CRM_OP_LRM_REFRESH) == 0) // @COMPAT
                || (strcmp(op, CRM_OP_REPROBE) == 0)) {
 
-        crm_xml_add(stored_msg, F_CRM_SYS_TO, CRM_SYSTEM_LRMD);
+        crm_xml_add(stored_msg, PCMK__XA_CRM_SYS_TO, CRM_SYSTEM_LRMD);
         return I_ROUTER;
 
     } else if (strcmp(op, CRM_OP_NOOP) == 0) {
@@ -1178,11 +1181,11 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
 static void
 handle_response(xmlNode *stored_msg)
 {
-    const char *op = crm_element_value(stored_msg, F_CRM_TASK);
+    const char *op = crm_element_value(stored_msg, PCMK__XA_CRM_TASK);
 
     crm_log_xml_trace(stored_msg, "reply");
     if (op == NULL) {
-        crm_warn("Ignoring reply without " F_CRM_TASK);
+        crm_warn("Ignoring reply without " PCMK__XA_CRM_TASK);
 
     } else if (AM_I_DC && strcmp(op, CRM_OP_PECALC) == 0) {
         // Check whether scheduler answer been superseded by subsequent request

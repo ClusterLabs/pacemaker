@@ -348,12 +348,12 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
     if ((source->reason != NULL)
         && !pcmk_is_set(action->flags, pcmk_action_runnable)) {
         pcmk__xe_set_props(xml,
-                           "reason", source->reason,
+                           PCMK_XA_REASON, source->reason,
                            "blocked", PCMK_VALUE_TRUE,
                            NULL);
 
     } else if (source->reason != NULL) {
-        crm_xml_add(xml, "reason", source->reason);
+        crm_xml_add(xml, PCMK_XA_REASON, source->reason);
 
     } else if (!pcmk_is_set(action->flags, pcmk_action_runnable)) {
         pcmk__xe_set_bool_attr(xml, "blocked", true);
@@ -677,7 +677,7 @@ health_xml(pcmk__output_t *out, va_list args)
     pcmk__output_create_xml_node(out, pcmk__s(sys_from, ""),
                                  "node_name", pcmk__s(host_from, ""),
                                  "state", pcmk__s(fsa_state, ""),
-                                 "result", pcmk__s(result, ""),
+                                 PCMK_XA_RESULT, pcmk__s(result, ""),
                                  NULL);
     return pcmk_rc_ok;
 }
@@ -1330,7 +1330,7 @@ node_action_xml(pcmk__output_t *out, va_list args)
         pcmk__output_create_xml_node(out, "node_action",
                                      "task", task,
                                      "node", node_name,
-                                     "reason", reason,
+                                     PCMK_XA_REASON, reason,
                                      NULL);
     } else {
         crm_notice(" * %s %s", task, node_name);

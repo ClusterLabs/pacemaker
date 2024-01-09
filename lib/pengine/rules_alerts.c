@@ -45,7 +45,7 @@ get_meta_attrs_from_cib(xmlNode *basenode, pcmk__alert_t *entry,
         goto done;
     }
 
-    value = g_hash_table_lookup(config_hash, XML_ALERT_ATTR_TIMEOUT);
+    value = g_hash_table_lookup(config_hash, PCMK_META_TIMEOUT);
     if (value) {
         entry->timeout = crm_get_msec(value);
         if (entry->timeout <= 0) {
@@ -67,7 +67,7 @@ get_meta_attrs_from_cib(xmlNode *basenode, pcmk__alert_t *entry,
             *max_timeout = entry->timeout;
         }
     }
-    value = g_hash_table_lookup(config_hash, XML_ALERT_ATTR_TSTAMP_FORMAT);
+    value = g_hash_table_lookup(config_hash, PCMK_META_TIMESTAMP_FORMAT);
     if (value) {
         /* hard to do any checks here as merely anything can
          * can be a valid time-format-string
@@ -224,7 +224,7 @@ pe_unpack_alerts(const xmlNode *alerts)
         xmlNode *recipient;
         int recipients = 0;
         const char *alert_id = ID(alert);
-        const char *alert_path = crm_element_value(alert, XML_ALERT_ATTR_PATH);
+        const char *alert_path = crm_element_value(alert, PCMK_XA_PATH);
 
         /* The schema should enforce this, but to be safe ... */
         if (alert_id == NULL) {
@@ -233,8 +233,7 @@ pe_unpack_alerts(const xmlNode *alerts)
             continue;
         }
         if (alert_path == NULL) {
-            pcmk__config_warn("Ignoring alert %s: No " XML_ALERT_ATTR_PATH,
-                              alert_id);
+            pcmk__config_warn("Ignoring alert %s: No " PCMK_XA_PATH, alert_id);
             continue;
         }
 

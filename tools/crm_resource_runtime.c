@@ -717,13 +717,13 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
 
         // No operation specified means all operations match
         if (operation) {
-            failed_value = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+            failed_value = crm_element_value(xml_op, PCMK_XA_OPERATION);
             if (!pcmk__str_eq(operation, failed_value, pcmk__str_casei)) {
                 continue;
             }
 
             // Interval (if operation was specified) defaults to 0 (not all)
-            failed_value = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL_MS);
+            failed_value = crm_element_value(xml_op, PCMK_META_INTERVAL);
             if (!pcmk__str_eq(interval_ms_s, failed_value, pcmk__str_casei)) {
                 continue;
             }
@@ -1367,7 +1367,7 @@ max_rsc_stop_timeout(pcmk_resource_t *rsc)
      * @TODO This currently ignores node (which might matter for rules)
      */
     meta = pcmk__unpack_action_meta(rsc, NULL, PCMK_ACTION_STOP, 0, config);
-    if ((pcmk__scan_ll(g_hash_table_lookup(meta, XML_ATTR_TIMEOUT),
+    if ((pcmk__scan_ll(g_hash_table_lookup(meta, PCMK_META_TIMEOUT),
                        &result_ll, -1LL) == pcmk_rc_ok)
         && (result_ll >= 0) && (result_ll <= INT_MAX)) {
         max_delay = (int) result_ll;
@@ -1954,7 +1954,7 @@ static void
 set_agent_environment(GHashTable *params, int timeout_ms, int check_level,
                       int verbosity)
 {
-    g_hash_table_insert(params, strdup("CRM_meta_timeout"),
+    g_hash_table_insert(params, crm_meta_name(PCMK_META_TIMEOUT),
                         crm_strdup_printf("%d", timeout_ms));
 
     g_hash_table_insert(params, strdup(PCMK_XA_CRM_FEATURE_SET),

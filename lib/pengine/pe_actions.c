@@ -102,7 +102,7 @@ find_exact_action_config(const pcmk_resource_t *rsc, const char *action_name,
             continue;
         }
 
-        interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
+        interval_spec = crm_element_value(operation, PCMK_META_INTERVAL);
         pcmk_parse_interval_spec(interval_spec, &tmp_ms);
         if (tmp_ms != interval_ms) {
             continue;
@@ -274,8 +274,7 @@ update_action_optional(pcmk_action_t *action, gboolean optional)
     if ((action->rsc != NULL) && (action->node != NULL)
         && !pcmk_is_set(action->flags, pcmk_action_pseudo)
         && !pcmk_is_set(action->rsc->flags, pcmk_rsc_managed)
-        && (g_hash_table_lookup(action->meta,
-                                XML_LRM_ATTR_INTERVAL_MS) == NULL)) {
+        && (g_hash_table_lookup(action->meta, PCMK_META_INTERVAL) == NULL)) {
             pcmk__rsc_debug(action->rsc,
                             "%s on %s is optional (%s is unmanaged)",
                             action->uuid, pe__node_name(action->node),
@@ -455,7 +454,7 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
     const char *name = NULL;
     const char *role = NULL;
     const char *interval_spec = NULL;
-    const char *value = g_hash_table_lookup(meta, XML_OP_ATTR_ON_FAIL);
+    const char *value = g_hash_table_lookup(meta, PCMK_META_ON_FAIL);
     char *key = NULL;
     char *new_value = NULL;
     guint interval_ms = 0U;
@@ -464,10 +463,10 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
     if (pcmk__str_eq(action_name, PCMK_ACTION_STOP, pcmk__str_none)
         && !valid_stop_on_fail(value)) {
 
-        pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for %s stop "
+        pcmk__config_err("Resetting '" PCMK_META_ON_FAIL "' for %s stop "
                          "action to default value because '%s' is not "
                          "allowed for stop", rsc->id, value);
-        g_hash_table_remove(meta, XML_OP_ATTR_ON_FAIL);
+        g_hash_table_remove(meta, PCMK_META_ON_FAIL);
         return;
     }
 
@@ -489,7 +488,7 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
             /* We only care about explicit on-fail (if promote uses default, so
              * can demote)
              */
-            promote_on_fail = crm_element_value(operation, XML_OP_ATTR_ON_FAIL);
+            promote_on_fail = crm_element_value(operation, PCMK_META_ON_FAIL);
             if (promote_on_fail == NULL) {
                 continue;
             }
@@ -502,7 +501,7 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
                                          PCMK__ROLE_PROMOTED_LEGACY, NULL)) {
                 continue;
             }
-            interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
+            interval_spec = crm_element_value(operation, PCMK_META_INTERVAL);
             pcmk_parse_interval_spec(interval_spec, &interval_ms);
             if (interval_ms == 0U) {
                 continue;
@@ -520,7 +519,7 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
             }
 
             // Use value from first applicable promote action found
-            key = strdup(XML_OP_ATTR_ON_FAIL);
+            key = strdup(PCMK_META_ON_FAIL);
             new_value = strdup(promote_on_fail);
             CRM_ASSERT((key != NULL) && (new_value != NULL));
             g_hash_table_insert(meta, key, new_value);
@@ -530,7 +529,7 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
 
     if (pcmk__str_eq(action_name, PCMK_ACTION_LRM_DELETE, pcmk__str_none)
         && !pcmk__str_eq(value, "ignore", pcmk__str_casei)) {
-        key = strdup(XML_OP_ATTR_ON_FAIL);
+        key = strdup(PCMK_META_ON_FAIL);
         new_value = strdup("ignore");
         CRM_ASSERT((key != NULL) && (new_value != NULL));
         g_hash_table_insert(meta, key, new_value);
@@ -541,8 +540,7 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
     if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
         name = crm_element_value(action_config, PCMK_XA_NAME);
         role = crm_element_value(action_config, "role");
-        interval_spec = crm_element_value(action_config,
-                                          XML_LRM_ATTR_INTERVAL);
+        interval_spec = crm_element_value(action_config, PCMK_META_INTERVAL);
         pcmk_parse_interval_spec(interval_spec, &interval_ms);
 
         if (!pcmk__str_eq(name, PCMK_ACTION_PROMOTE, pcmk__str_none)
@@ -551,10 +549,10 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
                 || !pcmk__strcase_any_of(role, PCMK__ROLE_PROMOTED,
                                          PCMK__ROLE_PROMOTED_LEGACY, NULL))) {
 
-            pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for %s %s "
+            pcmk__config_err("Resetting '" PCMK_META_ON_FAIL "' for %s %s "
                              "action to default value because 'demote' is not "
                              "allowed for it", rsc->id, name);
-            g_hash_table_remove(meta, XML_OP_ATTR_ON_FAIL);
+            g_hash_table_remove(meta, PCMK_META_ON_FAIL);
             return;
         }
     }
@@ -589,8 +587,8 @@ unpack_interval_origin(const char *value, const xmlNode *xml_obj,
     // Parse interval origin from text
     origin = crm_time_new(value);
     if (origin == NULL) {
-        pcmk__config_err("Ignoring '" XML_OP_ATTR_ORIGIN "' for operation "
-                         "'%s' because '%s' is not valid",
+        pcmk__config_err("Ignoring '" PCMK_META_INTERVAL_ORIGIN "' for "
+                         "operation '%s' because '%s' is not valid",
                          (ID(xml_obj)? ID(xml_obj) : "(missing ID)"), value);
         return false;
     }
@@ -627,7 +625,7 @@ unpack_start_delay(const char *value, GHashTable *meta)
         }
 
         if (meta) {
-            g_hash_table_replace(meta, strdup(XML_OP_ATTR_START_DELAY),
+            g_hash_table_replace(meta, strdup(PCMK_META_START_DELAY),
                                  pcmk__itoa(start_delay));
         }
     }
@@ -655,7 +653,7 @@ most_frequent_monitor(const pcmk_resource_t *rsc)
         bool enabled = false;
         guint interval_ms = 0U;
         const char *interval_spec = crm_element_value(operation,
-                                                      XML_LRM_ATTR_INTERVAL);
+                                                      PCMK_META_INTERVAL);
 
         // We only care about enabled recurring monitors
         if (!pcmk__str_eq(crm_element_value(operation, PCMK_XA_NAME),
@@ -744,13 +742,13 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
              * blocks (which may also have rules that need to be evaluated).
              */
             timeout_spec = crm_element_value(min_interval_mon,
-                                             XML_ATTR_TIMEOUT);
+                                             PCMK_META_TIMEOUT);
             if (timeout_spec != NULL) {
                 pcmk__rsc_trace(rsc,
                                 "Setting default timeout for %s probe to "
                                 "most frequent monitor's timeout '%s'",
                                 rsc->id, timeout_spec);
-                name = strdup(XML_ATTR_TIMEOUT);
+                name = strdup(PCMK_META_TIMEOUT);
                 value = strdup(timeout_spec);
                 CRM_ASSERT((name != NULL) && (value != NULL));
                 g_hash_table_insert(meta, name, value);
@@ -781,12 +779,12 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
 
     // Normalize interval to milliseconds
     if (interval_ms > 0) {
-        name = strdup(XML_LRM_ATTR_INTERVAL);
+        name = strdup(PCMK_META_INTERVAL);
         CRM_ASSERT(name != NULL);
         value = crm_strdup_printf("%u", interval_ms);
         g_hash_table_insert(meta, name, value);
     } else {
-        g_hash_table_remove(meta, XML_LRM_ATTR_INTERVAL);
+        g_hash_table_remove(meta, PCMK_META_INTERVAL);
     }
 
     /* Timeout order of precedence (highest to lowest):
@@ -813,7 +811,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
                             "Setting timeout for %s %s to "
                             "pcmk_monitor_timeout (%s)",
                             rsc->id, action_name, timeout_spec);
-            name = strdup(XML_ATTR_TIMEOUT);
+            name = strdup(PCMK_META_TIMEOUT);
             value = strdup(timeout_spec);
             CRM_ASSERT((name != NULL) && (value != NULL));
             g_hash_table_insert(meta, name, value);
@@ -821,25 +819,25 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
     }
 
     // Normalize timeout to positive milliseconds
-    name = strdup(XML_ATTR_TIMEOUT);
+    name = strdup(PCMK_META_TIMEOUT);
     CRM_ASSERT(name != NULL);
-    timeout_spec = g_hash_table_lookup(meta, XML_ATTR_TIMEOUT);
+    timeout_spec = g_hash_table_lookup(meta, PCMK_META_TIMEOUT);
     g_hash_table_insert(meta, name, pcmk__itoa(unpack_timeout(timeout_spec)));
 
     // Ensure on-fail has a valid value
     validate_on_fail(rsc, action_name, action_config, meta);
 
-    // Normalize start-delay
-    str = g_hash_table_lookup(meta, XML_OP_ATTR_START_DELAY);
+    // Normalize PCMK_META_START_DELAY
+    str = g_hash_table_lookup(meta, PCMK_META_START_DELAY);
     if (str != NULL) {
         unpack_start_delay(str, meta);
     } else {
         long long start_delay = 0;
 
-        str = g_hash_table_lookup(meta, XML_OP_ATTR_ORIGIN);
+        str = g_hash_table_lookup(meta, PCMK_META_INTERVAL_ORIGIN);
         if (unpack_interval_origin(str, action_config, interval_ms,
                                    rsc->cluster->now, &start_delay)) {
-            name = strdup(XML_OP_ATTR_START_DELAY);
+            name = strdup(PCMK_META_START_DELAY);
             CRM_ASSERT(name != NULL);
             g_hash_table_insert(meta, name,
                                 crm_strdup_printf("%lld", start_delay));
@@ -915,7 +913,7 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
             on_fail = pcmk_on_fail_fence_node;
             desc = "node fencing";
         } else {
-            pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for "
+            pcmk__config_err("Resetting '" PCMK_META_ON_FAIL "' for "
                              "%s of %s to 'stop' because 'fence' is not "
                              "valid when fencing is disabled",
                              action_name, rsc->id);
@@ -946,7 +944,7 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
     } else if (pcmk__str_eq(value, "restart-container", pcmk__str_casei)) {
         if (rsc->container == NULL) {
             pcmk__rsc_debug(rsc,
-                            "Using default " XML_OP_ATTR_ON_FAIL " for %s "
+                            "Using default " PCMK_META_ON_FAIL " for %s "
                             "of %s because it does not have a container",
                             action_name, rsc->id);
         } else {
@@ -959,7 +957,7 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
         desc = "demote instance";
 
     } else {
-        pcmk__config_err("Using default '" XML_OP_ATTR_ON_FAIL "' for "
+        pcmk__config_err("Using default '" PCMK_META_ON_FAIL "' for "
                          "%s of %s because '%s' is not valid",
                          action_name, rsc->id, value);
     }
@@ -1104,7 +1102,7 @@ unpack_operation(pcmk_action_t *action, const xmlNode *xml_obj,
                                             action->task, interval_ms, xml_obj);
     action->needs = pcmk__action_requires(action->rsc, action->task);
 
-    value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ON_FAIL);
+    value = g_hash_table_lookup(action->meta, PCMK_META_ON_FAIL);
     action->on_fail = pcmk__parse_on_fail(action->rsc, action->task,
                                           interval_ms, value);
 
@@ -1439,7 +1437,7 @@ pe_get_configured_timeout(pcmk_resource_t *rsc, const char *action,
          child != NULL; child = crm_next_same_xml(child)) {
         if (pcmk__str_eq(action, crm_element_value(child, PCMK_XA_NAME),
                 pcmk__str_casei)) {
-            timeout_spec = crm_element_value(child, XML_ATTR_TIMEOUT);
+            timeout_spec = crm_element_value(child, PCMK_META_TIMEOUT);
             break;
         }
     }
@@ -1449,7 +1447,7 @@ pe_get_configured_timeout(pcmk_resource_t *rsc, const char *action,
         pe__unpack_dataset_nvpairs(scheduler->op_defaults, XML_TAG_META_SETS,
                                    &rule_data, action_meta, NULL, FALSE,
                                    scheduler);
-        timeout_spec = g_hash_table_lookup(action_meta, XML_ATTR_TIMEOUT);
+        timeout_spec = g_hash_table_lookup(action_meta, PCMK_META_TIMEOUT);
     }
 
     // @TODO check meta-attributes

@@ -27,7 +27,7 @@ void
 crmd_ha_msg_filter(xmlNode * msg)
 {
     if (AM_I_DC) {
-        const char *sys_from = crm_element_value(msg, F_CRM_SYS_FROM);
+        const char *sys_from = crm_element_value(msg, PCMK__XA_CRM_SYS_FROM);
 
         if (pcmk__str_eq(sys_from, CRM_SYSTEM_DC, pcmk__str_casei)) {
             const char *from = crm_element_value(msg, PCMK__XA_SRC);
@@ -35,7 +35,7 @@ crmd_ha_msg_filter(xmlNode * msg)
             if (!pcmk__str_eq(from, controld_globals.our_nodename,
                               pcmk__str_casei)) {
                 int level = LOG_INFO;
-                const char *op = crm_element_value(msg, F_CRM_TASK);
+                const char *op = crm_element_value(msg, PCMK__XA_CRM_TASK);
 
                 /* make sure the election happens NOW */
                 if (controld_globals.fsa_state != S_ELECTION) {
@@ -53,7 +53,7 @@ crmd_ha_msg_filter(xmlNode * msg)
         }
 
     } else {
-        const char *sys_to = crm_element_value(msg, F_CRM_SYS_TO);
+        const char *sys_to = crm_element_value(msg, PCMK__XA_CRM_SYS_TO);
 
         if (pcmk__str_eq(sys_to, CRM_SYSTEM_DC, pcmk__str_casei)) {
             return;
@@ -274,7 +274,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
         }
 
         if (down) {
-            const char *task = crm_element_value(down->xml, XML_LRM_ATTR_TASK);
+            const char *task = crm_element_value(down->xml, PCMK_XA_OPERATION);
 
             if (pcmk__str_eq(task, PCMK_ACTION_STONITH, pcmk__str_casei)) {
 

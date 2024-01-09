@@ -62,18 +62,18 @@ create_request_adv(const char *task, xmlNode *msg_data,
 
     // host_from will get set for us if necessary by the controller when routed
     request = create_xml_node(NULL, __func__);
-    crm_xml_add(request, F_CRM_ORIGIN, origin);
+    crm_xml_add(request, PCMK_XA_ORIGIN, origin);
     crm_xml_add(request, PCMK__XA_T, T_CRM);
-    crm_xml_add(request, F_CRM_VERSION, CRM_FEATURE_SET);
+    crm_xml_add(request, PCMK_XA_VERSION, CRM_FEATURE_SET);
     crm_xml_add(request, PCMK__XA_SUBT, PCMK__VALUE_REQUEST);
     crm_xml_add(request, PCMK_XA_REFERENCE, reference);
-    crm_xml_add(request, F_CRM_TASK, task);
-    crm_xml_add(request, F_CRM_SYS_TO, sys_to);
-    crm_xml_add(request, F_CRM_SYS_FROM, true_from);
+    crm_xml_add(request, PCMK__XA_CRM_TASK, task);
+    crm_xml_add(request, PCMK__XA_CRM_SYS_TO, sys_to);
+    crm_xml_add(request, PCMK__XA_CRM_SYS_FROM, true_from);
 
     /* HOSTTO will be ignored if it is to the DC anyway. */
     if (host_to != NULL && strlen(host_to) > 0) {
-        crm_xml_add(request, F_CRM_HOST_TO, host_to);
+        crm_xml_add(request, PCMK__XA_CRM_HOST_TO, host_to);
     }
 
     if (msg_data != NULL) {
@@ -105,10 +105,13 @@ create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
     xmlNode *reply = NULL;
 
     const char *host_from = crm_element_value(original_request, PCMK__XA_SRC);
-    const char *sys_from = crm_element_value(original_request, F_CRM_SYS_FROM);
-    const char *sys_to = crm_element_value(original_request, F_CRM_SYS_TO);
+    const char *sys_from = crm_element_value(original_request,
+                                             PCMK__XA_CRM_SYS_FROM);
+    const char *sys_to = crm_element_value(original_request,
+                                           PCMK__XA_CRM_SYS_TO);
     const char *type = crm_element_value(original_request, PCMK__XA_SUBT);
-    const char *operation = crm_element_value(original_request, F_CRM_TASK);
+    const char *operation = crm_element_value(original_request,
+                                              PCMK__XA_CRM_TASK);
     const char *crm_msg_reference = crm_element_value(original_request,
                                                       PCMK_XA_REFERENCE);
 
@@ -130,20 +133,20 @@ create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
         return NULL;
     }
 
-    crm_xml_add(reply, F_CRM_ORIGIN, origin);
+    crm_xml_add(reply, PCMK_XA_ORIGIN, origin);
     crm_xml_add(reply, PCMK__XA_T, T_CRM);
-    crm_xml_add(reply, F_CRM_VERSION, CRM_FEATURE_SET);
+    crm_xml_add(reply, PCMK_XA_VERSION, CRM_FEATURE_SET);
     crm_xml_add(reply, PCMK__XA_SUBT, PCMK__VALUE_RESPONSE);
     crm_xml_add(reply, PCMK_XA_REFERENCE, crm_msg_reference);
-    crm_xml_add(reply, F_CRM_TASK, operation);
+    crm_xml_add(reply, PCMK__XA_CRM_TASK, operation);
 
     /* since this is a reply, we reverse the from and to */
-    crm_xml_add(reply, F_CRM_SYS_TO, sys_from);
-    crm_xml_add(reply, F_CRM_SYS_FROM, sys_to);
+    crm_xml_add(reply, PCMK__XA_CRM_SYS_TO, sys_from);
+    crm_xml_add(reply, PCMK__XA_CRM_SYS_FROM, sys_to);
 
     /* HOSTTO will be ignored if it is to the DC anyway. */
     if (host_from != NULL && strlen(host_from) > 0) {
-        crm_xml_add(reply, F_CRM_HOST_TO, host_from);
+        crm_xml_add(reply, PCMK__XA_CRM_HOST_TO, host_from);
     }
 
     if (xml_response_data != NULL) {

@@ -733,18 +733,16 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
                                                dependent_id);
 
     // @COMPAT: Deprecated since 2.1.5
-    primary_instance = crm_element_value(xml_obj,
-                                         XML_COLOC_ATTR_TARGET_INSTANCE);
-    dependent_instance = crm_element_value(xml_obj,
-                                           XML_COLOC_ATTR_SOURCE_INSTANCE);
+    primary_instance = crm_element_value(xml_obj, PCMK__XA_WITH_RSC_INSTANCE);
+    dependent_instance = crm_element_value(xml_obj, PCMK__XA_RSC_INSTANCE);
     if (dependent_instance != NULL) {
         pcmk__warn_once(pcmk__wo_coloc_inst,
-                        "Support for " XML_COLOC_ATTR_SOURCE_INSTANCE " is "
-                        "deprecated and will be removed in a future release");
+                        "Support for " PCMK__XA_RSC_INSTANCE " is deprecated "
+                        "and will be removed in a future release");
     }
     if (primary_instance != NULL) {
         pcmk__warn_once(pcmk__wo_coloc_inst,
-                        "Support for " XML_COLOC_ATTR_TARGET_INSTANCE " is "
+                        "Support for " PCMK__XA_WITH_RSC_INSTANCE " is "
                         "deprecated and will be removed in a future release");
     }
 

@@ -70,8 +70,8 @@ new_data(pcmk_ipc_api_t *api)
 
     /* This is set to the PID because that's how it was always done, but PIDs
      * are not unique because clients can be remote. The value appears to be
-     * unused other than as part of F_CRM_SYS_FROM in IPC requests, which is
-     * only compared against the internal system names (CRM_SYSTEM_TENGINE,
+     * unused other than as part of PCMK__XA_CRM_SYS_FROM in IPC requests, which
+     * is only compared against the internal system names (CRM_SYSTEM_TENGINE,
      * etc.), so it shouldn't be a problem.
      */
     private->client_uuid = pcmk__getpid_s();
@@ -147,10 +147,10 @@ set_ping_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
         return;
     }
     data->data.ping.sys_from = crm_element_value(msg_data,
-                                                 XML_PING_ATTR_SYSFROM);
+                                                 PCMK__XA_CRM_SUBSYSTEM);
     data->data.ping.fsa_state = crm_element_value(msg_data,
-                                                  XML_PING_ATTR_CRMDSTATE);
-    data->data.ping.result = crm_element_value(msg_data, XML_PING_ATTR_STATUS);
+                                                  PCMK__XA_CRMD_STATE);
+    data->data.ping.result = crm_element_value(msg_data, PCMK_XA_RESULT);
 }
 
 static void
@@ -179,7 +179,7 @@ static bool
 reply_expected(pcmk_ipc_api_t *api, const xmlNode *request)
 {
     // We only need to handle commands that API functions can send
-    return pcmk__str_any_of(crm_element_value(request, F_CRM_TASK),
+    return pcmk__str_any_of(crm_element_value(request, PCMK__XA_CRM_TASK),
                             PCMK__CONTROLD_CMD_NODES,
                             CRM_OP_LRM_DELETE,
                             CRM_OP_LRM_FAIL,
@@ -235,7 +235,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         goto done;
     }
 
-    value = crm_element_value(reply, F_CRM_TASK);
+    value = crm_element_value(reply, PCMK__XA_CRM_TASK);
     if (pcmk__str_empty(value)) {
         crm_info("Unrecognizable message from controller: no command name");
         status = CRM_EX_PROTOCOL;
@@ -519,7 +519,7 @@ controller_resource_op(pcmk_ipc_api_t *api, const char *op,
     crm_xml_add(params, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
 
     // The controller parses the timeout from the request
-    key = crm_meta_name(XML_ATTR_TIMEOUT);
+    key = crm_meta_name(PCMK_META_TIMEOUT);
     crm_xml_add(params, key, "60000");  /* 1 minute */ //@TODO pass as arg
     free(key);
 

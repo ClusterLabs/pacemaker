@@ -180,7 +180,7 @@ post_disconnect(pcmk_ipc_api_t *api)
 static bool
 reply_expected(pcmk_ipc_api_t *api, const xmlNode *request)
 {
-    const char *command = crm_element_value(request, F_CRM_TASK);
+    const char *command = crm_element_value(request, PCMK__XA_CRM_TASK);
 
     if (command == NULL) {
         return false;
@@ -223,7 +223,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         goto done;
     }
 
-    value = crm_element_value(reply, F_CRM_TASK);
+    value = crm_element_value(reply, PCMK__XA_CRM_TASK);
 
     // Parse useful info from reply
     msg_data = get_message_xml(reply, F_CRM_DATA);
@@ -233,13 +233,13 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         reply_data.reply_type = pcmk_pacemakerd_reply_ping;
         reply_data.data.ping.state =
             pcmk_pacemakerd_api_daemon_state_text2enum(
-                crm_element_value(msg_data, XML_PING_ATTR_PACEMAKERDSTATE));
+                crm_element_value(msg_data, PCMK__XA_PACEMAKERD_STATE));
         reply_data.data.ping.status =
-            pcmk__str_eq(crm_element_value(msg_data, XML_PING_ATTR_STATUS), "ok",
+            pcmk__str_eq(crm_element_value(msg_data, PCMK_XA_RESULT), "ok",
                          pcmk__str_casei)?pcmk_rc_ok:pcmk_rc_error;
         reply_data.data.ping.last_good = (value_ll < 0)? 0 : (time_t) value_ll;
-        reply_data.data.ping.sys_from = crm_element_value(msg_data,
-                                            XML_PING_ATTR_SYSFROM);
+        reply_data.data.ping.sys_from =
+            crm_element_value(msg_data, PCMK__XA_CRM_SUBSYSTEM);
     } else if (pcmk__str_eq(value, CRM_OP_QUIT, pcmk__str_none)) {
         reply_data.reply_type = pcmk_pacemakerd_reply_shutdown;
         reply_data.data.shutdown.status = atoi(crm_element_value(msg_data, XML_LRM_ATTR_OPSTATUS));

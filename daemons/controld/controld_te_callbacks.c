@@ -407,10 +407,10 @@ te_update_diff_v2(xmlNode *diff)
 
         xmlNode *match = NULL;
         const char *name = NULL;
-        const char *xpath = crm_element_value(change, XML_DIFF_PATH);
+        const char *xpath = crm_element_value(change, PCMK_XA_PATH);
 
         // Possible ops: create, modify, delete, move
-        const char *op = crm_element_value(change, XML_DIFF_OP);
+        const char *op = crm_element_value(change, PCMK_XA_OPERATION);
 
         // Ignore uninteresting updates
         if (op == NULL) {
@@ -583,7 +583,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
     CRM_CHECK(msg != NULL, return);
 
     // Transition requests must specify transition engine as subsystem
-    value = crm_element_value(msg, F_CRM_SYS_TO);
+    value = crm_element_value(msg, PCMK__XA_CRM_SYS_TO);
     if (pcmk__str_empty(value)
         || !pcmk__str_eq(value, CRM_SYSTEM_TENGINE, pcmk__str_none)) {
         crm_info("Received invalid transition request: subsystem '%s' not '"
@@ -592,7 +592,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
     }
 
     // Only the lrm_invoke command is supported as a transition request
-    value = crm_element_value(msg, F_CRM_TASK);
+    value = crm_element_value(msg, PCMK__XA_CRM_TASK);
     if (!pcmk__str_eq(value, CRM_OP_INVOKE_LRM, pcmk__str_none)) {
         crm_info("Received invalid transition request: command '%s' not '"
                  CRM_OP_INVOKE_LRM "'", pcmk__s(value, ""));
@@ -600,7 +600,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
     }
 
     // Transition requests must be marked as coming from the executor
-    value = crm_element_value(msg, F_CRM_SYS_FROM);
+    value = crm_element_value(msg, PCMK__XA_CRM_SYS_FROM);
     if (!pcmk__str_eq(value, CRM_SYSTEM_LRMD, pcmk__str_none)) {
         crm_info("Received invalid transition request: from '%s' not '"
                  CRM_SYSTEM_LRMD "'", pcmk__s(value, ""));
@@ -653,7 +653,7 @@ action_timer_callback(gpointer data)
 
     stop_te_timer(action);
 
-    task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+    task = crm_element_value(action->xml, PCMK_XA_OPERATION);
     on_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
     via_node = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
 

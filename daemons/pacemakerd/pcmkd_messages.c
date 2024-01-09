@@ -42,23 +42,24 @@ handle_ping_request(pcmk__request_t *request)
     const char *value = NULL;
     xmlNode *ping = NULL;
     xmlNode *reply = NULL;
-    const char *from = crm_element_value(msg, F_CRM_SYS_FROM);
+    const char *from = crm_element_value(msg, PCMK__XA_CRM_SYS_FROM);
 
     /* Pinged for status */
-    crm_trace("Pinged from " F_CRM_SYS_FROM "='%s' " F_CRM_ORIGIN "='%s'",
+    crm_trace("Pinged from " PCMK__XA_CRM_SYS_FROM "='%s' "
+              PCMK_XA_ORIGIN "='%s'",
               pcmk__s(from, ""),
-              pcmk__s(crm_element_value(msg, F_CRM_ORIGIN), ""));
+              pcmk__s(crm_element_value(msg, PCMK_XA_ORIGIN), ""));
 
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
                        "ack", NULL, CRM_EX_INDETERMINATE);
 
     ping = create_xml_node(NULL, XML_CRM_TAG_PING);
-    value = crm_element_value(msg, F_CRM_SYS_TO);
-    crm_xml_add(ping, XML_PING_ATTR_SYSFROM, value);
-    crm_xml_add(ping, XML_PING_ATTR_PACEMAKERDSTATE, pacemakerd_state);
+    value = crm_element_value(msg, PCMK__XA_CRM_SYS_TO);
+    crm_xml_add(ping, PCMK__XA_CRM_SUBSYSTEM, value);
+    crm_xml_add(ping, PCMK__XA_PACEMAKERD_STATE, pacemakerd_state);
     crm_xml_add_ll(ping, PCMK_XA_CRM_TIMESTAMP,
                    (long long) subdaemon_check_progress);
-    crm_xml_add(ping, XML_PING_ATTR_STATUS, "ok");
+    crm_xml_add(ping, PCMK_XA_RESULT, "ok");
     reply = create_reply(msg, ping);
 
     free_xml(ping);
@@ -112,7 +113,7 @@ handle_shutdown_request(pcmk__request_t *request)
     if (allowed) {
         crm_notice("Shutting down in response to IPC request %s from %s",
                    crm_element_value(msg, PCMK_XA_REFERENCE),
-                   crm_element_value(msg, F_CRM_ORIGIN));
+                   crm_element_value(msg, PCMK_XA_ORIGIN));
         crm_xml_add_int(shutdown, XML_LRM_ATTR_OPSTATUS, CRM_EX_OK);
     } else {
         crm_warn("Ignoring shutdown request from unprivileged client %s",
@@ -235,7 +236,7 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
             .result         = PCMK__UNKNOWN_RESULT,
         };
 
-        request.op = crm_element_value_copy(request.xml, F_CRM_TASK);
+        request.op = crm_element_value_copy(request.xml, PCMK__XA_CRM_TASK);
         CRM_CHECK(request.op != NULL, return 0);
 
         reply = pcmk__process_request(&request, pcmkd_handlers);

@@ -423,8 +423,8 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
         g_string_free(local_path, TRUE);
 
     } else {
-        const char *op = crm_element_value(change, XML_DIFF_OP);
-        const char *path = crm_element_value(change, XML_DIFF_PATH);
+        const char *op = crm_element_value(change, PCMK_XA_OPERATION);
+        const char *path = crm_element_value(change, PCMK_XA_PATH);
 
         if(change == reason) {
             if(strcmp(op, "create") == 0) {

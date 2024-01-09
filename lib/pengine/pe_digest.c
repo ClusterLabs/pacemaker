@@ -114,8 +114,8 @@ calculate_main_digest(pcmk__op_digest_t *data, pcmk_resource_t *rsc,
 
     if (overrides != NULL) {
         // If interval was overridden, reset it
-        const char *interval_s = g_hash_table_lookup(overrides, CRM_META "_"
-                                                     XML_LRM_ATTR_INTERVAL);
+        const char *meta_name = CRM_META "_" PCMK_META_INTERVAL;
+        const char *interval_s = g_hash_table_lookup(overrides, meta_name);
 
         if (interval_s != NULL) {
             long long value_ll;
@@ -236,7 +236,7 @@ calculate_secure_digest(pcmk__op_digest_t *data, const pcmk_resource_t *rsc,
      * Remove any timeout that made it this far, to match.
      */
     if (old_version) {
-        xml_remove_prop(data->params_secure, CRM_META "_" XML_ATTR_TIMEOUT);
+        xml_remove_prop(data->params_secure, CRM_META "_" PCMK_META_TIMEOUT);
     }
 
     data->digest_secure_calc = calculate_operation_digest(data->params_secure,
@@ -395,7 +395,7 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
     guint interval_ms = 0;
 
     const char *op_version;
-    const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+    const char *task = crm_element_value(xml_op, PCMK_XA_OPERATION);
     const char *digest_all;
     const char *digest_restart;
 
@@ -405,7 +405,7 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
     digest_all = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
     digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
 
-    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
+    crm_element_value_ms(xml_op, PCMK_META_INTERVAL, &interval_ms);
     data = rsc_action_digest(rsc, task, interval_ms, node, xml_op,
                              pcmk_is_set(scheduler->flags,
                                          pcmk_sched_sanitized),

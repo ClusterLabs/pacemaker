@@ -756,7 +756,7 @@ static GOptionEntry display_entries[] = {
       NULL },
 
     { "pending", 'j', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &options.print_pending,
-      "Display pending state if 'record-pending' is enabled",
+      "Display pending state if '" PCMK_META_RECORD_PENDING "' is enabled",
       NULL },
 
     { NULL }
@@ -1921,8 +1921,8 @@ crm_diff_update_v2(const char *event, xmlNode * msg)
     for (change = pcmk__xml_first_child(diff); change != NULL;
          change = pcmk__xml_next(change)) {
         const char *name = NULL;
-        const char *op = crm_element_value(change, XML_DIFF_OP);
-        const char *xpath = crm_element_value(change, XML_DIFF_PATH);
+        const char *op = crm_element_value(change, PCMK_XA_OPERATION);
+        const char *xpath = crm_element_value(change, PCMK_XA_PATH);
         xmlNode *match = NULL;
         const char *node = NULL;
 

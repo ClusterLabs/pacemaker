@@ -107,7 +107,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     }
 
 
-    op = crm_element_value(request, F_CRM_TASK);
+    op = crm_element_value(request, PCMK__XA_CRM_TASK);
     if(pcmk__str_eq(op, CRM_OP_RM_NODE_CACHE, pcmk__str_casei)) {
         crm_xml_add(request, PCMK__XA_T, T_STONITH_NG);
         crm_xml_add(request, F_STONITH_OPERATION, op);

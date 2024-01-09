@@ -218,7 +218,7 @@ agent_status_xml(pcmk__output_t *out, va_list args) {
                                  "message", services_ocf_exitcode_str((int) rc),
                                  "execution_code", status_str,
                                  "execution_message", pcmk_exec_status_str(status),
-                                 "reason", exit_reason,
+                                 PCMK_XA_REASON, exit_reason,
                                  NULL);
 
     free(exit_str);

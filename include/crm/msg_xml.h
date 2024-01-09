@@ -23,17 +23,32 @@ extern "C" {
 /* This file defines constants for various XML syntax (mainly element and
  * attribute names).
  *
- * For consistency, new constants should start with "PCMK_", followed by "XE"
- * for XML element names, "XA" for XML attribute names, and "META" for meta
- * attribute names. Old names that don't follow this policy should eventually be
- * deprecated and replaced with names that do.
+ * For consistency, new constants should start with "PCMK_", followed by:
+ * * "XE" for XML element names
+ * * "XA" for XML attribute names
+ * * "OPT" for cluster option (property) names
+ * * "META" for meta-attribute names
+ * * "VALUE" for enumerated values for various options
+ *
+ * Old names that don't follow this policy should eventually be deprecated and
+ * replaced with names that do.
  *
  * Symbols should be public if the user may specify them somewhere (especially
- * the CIB). They should be internal if they're used only internally to
+ * the CIB) or if they're part of a well-defined structure that a user may need
+ * to parse. They should be internal if they're used only internally to
  * Pacemaker (such as daemon IPC/CPG message XML).
+ *
+ * Constants belong in the following locations:
+ * * Public "XE" and "XA": msg_xml.h
+ * * Internal "XE" and "XA": crm_internal.h
+ * * Public "OPT", "META", and "VALUE": options.h
+ * * Internal "OPT", "META", and "VALUE": options_internal.h
  *
  * For meta-attributes that can be specified as either XML attributes or nvpair
  * names, use "META" unless using both "XA" and "META" constants adds clarity.
+ * An example is operation attributes, which can be specified either as
+ * attributes of the PCMK_XE_OP element or as nvpairs in a meta-attribute set
+ * beneath the PCMK_XE_OP element.
  */
 
 /*
@@ -42,13 +57,9 @@ extern "C" {
 
 #define PCMK_XE_DATE_EXPRESSION             "date_expression"
 #define PCMK_XE_OP                          "op"
+#define PCMK_XE_OPERATION                   "operation"
 #define PCMK_XE_OP_EXPRESSION               "op_expression"
 #define PCMK_XE_RSC_EXPRESSION              "rsc_expression"
-
-/* This has been deprecated as a CIB element (an alias for <clone> with
- * PCMK_META_PROMOTABLE set to "true") since 2.0.0.
- */
-#define PCMK_XE_PROMOTABLE_LEGACY           "master"
 
 
 /*
@@ -74,9 +85,14 @@ extern "C" {
 #define PCMK_XA_NO_QUORUM_PANIC             "no-quorum-panic"
 #define PCMK_XA_NUM_UPDATES                 "num_updates"
 #define PCMK_XA_OP                          "op"
+#define PCMK_XA_OPERATION                   "operation"
+#define PCMK_XA_ORIGIN                      "origin"
+#define PCMK_XA_PATH                        "path"
 #define PCMK_XA_PROVIDER                    "provider"
+#define PCMK_XA_REASON                      "reason"
 #define PCMK_XA_REFERENCE                   "reference"
 #define PCMK_XA_REQUEST                     "request"
+#define PCMK_XA_RESULT                      "result"
 #define PCMK_XA_TARGET                      "target"
 #define PCMK_XA_TARGET_ATTRIBUTE            "target-attribute"
 #define PCMK_XA_TARGET_PATTERN              "target-pattern"
@@ -106,40 +122,16 @@ extern "C" {
 #  define CIB_OPTIONS_FIRST "cib-bootstrap-options"
 
 #  define F_CRM_DATA			"crm_xml"
-#  define F_CRM_TASK			"crm_task"
-#  define F_CRM_HOST_TO			"crm_host_to"
-#  define F_CRM_SYS_TO			"crm_sys_to"
-#  define F_CRM_SYS_FROM		"crm_sys_from"
-#  define F_CRM_VERSION			PCMK_XA_VERSION
-#  define F_CRM_ORIGIN			"origin"
-#  define F_CRM_USER			"crm_user"
-#  define F_CRM_JOIN_ID			"join_id"
-#  define F_CRM_DC_LEAVING      "dc-leaving"
-#  define F_CRM_ELECTION_ID		"election-id"
-#  define F_CRM_ELECTION_AGE_S		"election-age-sec"
-#  define F_CRM_ELECTION_AGE_US		"election-age-nano-sec"
-#  define F_CRM_ELECTION_OWNER		"election-owner"
-#  define F_CRM_TGRAPH			"crm-tgraph-file"
-#  define F_CRM_TGRAPH_INPUT		"crm-tgraph-in"
-
-#  define F_CRM_THROTTLE_MODE		"crm-limit-mode"
-#  define F_CRM_THROTTLE_MAX		"crm-limit-max"
 
 /*---- Common tags/attrs */
 #  define XML_DIFF_MARKER		"__crm_diff_marker__"
 #  define XML_TAG_CIB			"cib"
 #  define XML_TAG_FAILED		"failed"
 
-#  define XML_ATTR_TIMEOUT		"timeout"
-
 #  define XML_TAG_OPTIONS		"options"
 
 /*---- top level tags/attrs */
 #  define XML_CRM_TAG_PING		"ping_response"
-#  define XML_PING_ATTR_STATUS		"result"
-#  define XML_PING_ATTR_SYSFROM		"crm_subsystem"
-#  define XML_PING_ATTR_CRMDSTATE   "crmd_state"
-#  define XML_PING_ATTR_PACEMAKERDSTATE "pacemakerd_state"
 #  define XML_PING_ATTR_PACEMAKERDSTATE_INIT "init"
 #  define XML_PING_ATTR_PACEMAKERDSTATE_STARTINGDAEMONS "starting_daemons"
 #  define XML_PING_ATTR_PACEMAKERDSTATE_WAITPING "wait_for_ping"
@@ -149,10 +141,6 @@ extern "C" {
 #  define XML_PING_ATTR_PACEMAKERDSTATE_REMOTE "remote"
 
 #  define XML_FAIL_TAG_CIB		"failed_update"
-
-#  define XML_FAILCIB_ATTR_OBJTYPE	"object_type"
-#  define XML_FAILCIB_ATTR_OP		"operation"
-#  define XML_FAILCIB_ATTR_REASON	"reason"
 
 /*---- CIB specific tags/attrs */
 #  define XML_CIB_TAG_SECTION_ALL	"all"
@@ -195,10 +183,6 @@ extern "C" {
 
 #  define XML_CIB_TAG_RSC_TEMPLATE	"template"
 
-#  define XML_OP_ATTR_ON_FAIL		"on-fail"
-#  define XML_OP_ATTR_START_DELAY	"start-delay"
-#  define XML_OP_ATTR_ORIGIN		"interval-origin"
-#  define XML_OP_ATTR_PENDING		"record-pending"
 #  define XML_OP_ATTR_DIGESTS_ALL       "digests-all"
 #  define XML_OP_ATTR_DIGESTS_SECURE    "digests-secure"
 
@@ -206,9 +190,6 @@ extern "C" {
 #  define XML_LRM_TAG_RESOURCES     	"lrm_resources"
 #  define XML_LRM_TAG_RESOURCE     	"lrm_resource"
 #  define XML_LRM_TAG_RSC_OP		"lrm_rsc_op"
-
-//! \deprecated Do not use (will be removed in a future release)
-#  define XML_CIB_ATTR_REPLACE       	"replace"
 
 #  define XML_CIB_ATTR_PRIORITY     	"priority"
 
@@ -223,14 +204,6 @@ extern "C" {
  * executor operations.
  */
 
-// XML attribute that takes interval specification (user-facing configuration)
-#  define XML_LRM_ATTR_INTERVAL		"interval"
-
-// XML attribute that takes interval in milliseconds (daemon APIs)
-// (identical value as above, but different constant allows clearer code intent)
-#  define XML_LRM_ATTR_INTERVAL_MS  XML_LRM_ATTR_INTERVAL
-
-#  define XML_LRM_ATTR_TASK		"operation"
 #  define XML_LRM_ATTR_TASK_KEY		"operation_key"
 #  define XML_LRM_ATTR_TARGET		"on_node"
 #  define XML_LRM_ATTR_TARGET_UUID	"on_node_uuid"
@@ -272,7 +245,6 @@ extern "C" {
 
 #  define XML_TAG_EXPRESSION		"expression"
 #  define XML_EXPR_ATTR_ATTRIBUTE	"attribute"
-#  define XML_EXPR_ATTR_OPERATION	"operation"
 #  define XML_EXPR_ATTR_VALUE_SOURCE	"value-source"
 
 #  define XML_CONS_TAG_RSC_DEPEND	"rsc_colocation"
@@ -290,12 +262,6 @@ extern "C" {
 #  define XML_COLOC_ATTR_TARGET_ROLE	"with-rsc-role"
 #  define XML_COLOC_ATTR_NODE_ATTR	"node-attribute"
 #  define XML_COLOC_ATTR_INFLUENCE          "influence"
-
-//! \deprecated Deprecated since 2.1.5
-#  define XML_COLOC_ATTR_SOURCE_INSTANCE	"rsc-instance"
-
-//! \deprecated Deprecated since 2.1.5
-#  define XML_COLOC_ATTR_TARGET_INSTANCE	"with-rsc-instance"
 
 #  define XML_LOC_ATTR_SOURCE           "rsc"
 #  define XML_LOC_ATTR_SOURCE_PATTERN   "rsc-pattern"
@@ -316,10 +282,6 @@ extern "C" {
 #  define XML_TICKET_ATTR_LOSS_POLICY	"loss-policy"
 
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
-
-#  define XML_ALERT_ATTR_PATH		"path"
-#  define XML_ALERT_ATTR_TIMEOUT	"timeout"
-#  define XML_ALERT_ATTR_TSTAMP_FORMAT	"timestamp-format"
 
 #  define XML_CIB_TAG_GENERATION_TUPPLE	"generation_tuple"
 
@@ -368,8 +330,6 @@ extern "C" {
 #  define XML_DIFF_LIST                 "change-list"
 #  define XML_DIFF_ATTR                 "change-attr"
 #  define XML_DIFF_RESULT               "change-result"
-#  define XML_DIFF_OP                   "operation"
-#  define XML_DIFF_PATH                 "path"
 #  define XML_DIFF_POSITION             "position"
 
 #  define ID(x) crm_element_value(x, PCMK_XA_ID)

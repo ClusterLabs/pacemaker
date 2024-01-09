@@ -43,7 +43,10 @@ extern "C" {
 //! \deprecated Use PCMK_STONITH_PROVIDES instead
 #define XML_RSC_ATTR_PROVIDES PCMK_STONITH_PROVIDES
 
-//! \deprecated Use PCMK_XE_PROMOTABLE_LEGACY instead
+//! \deprecated Do not use
+#define PCMK_XE_PROMOTABLE_LEGACY "master"
+
+//! \deprecated Do not use
 #define XML_CIB_TAG_MASTER PCMK_XE_PROMOTABLE_LEGACY
 
 //! \deprecated Do not use
@@ -251,7 +254,7 @@ extern "C" {
 #define XML_RSC_ATTR_CRITICAL PCMK_META_CRITICAL
 
 //! \deprecated Use \c PCMK_META_ALLOW_MIGRATE instead
-#define XML_OP_ATTR_ALLOW_MIGRATE "allow-migrate"
+#define XML_OP_ATTR_ALLOW_MIGRATE PCMK_META_ALLOW_MIGRATE
 
 //! \deprecated Use \c PCMK_VALUE_TRUE instead
 #define XML_BOOLEAN_YES PCMK_VALUE_TRUE
@@ -260,16 +263,16 @@ extern "C" {
 #define XML_BOOLEAN_NO PCMK_VALUE_FALSE
 
 //! \deprecated Use \c PCMK_REMOTE_RA_ADDR instead
-#define XML_RSC_ATTR_REMOTE_RA_ADDR "addr"
+#define XML_RSC_ATTR_REMOTE_RA_ADDR PCMK_REMOTE_RA_ADDR
 
 //! \deprecated Use \c PCMK_REMOTE_RA_SERVER instead
-#define XML_RSC_ATTR_REMOTE_RA_SERVER "server"
+#define XML_RSC_ATTR_REMOTE_RA_SERVER PCMK_REMOTE_RA_SERVER
 
 //! \deprecated Use \c PCMK_REMOTE_RA_PORT instead
-#define XML_RSC_ATTR_REMOTE_RA_PORT "port"
+#define XML_RSC_ATTR_REMOTE_RA_PORT PCMK_REMOTE_RA_PORT
 
 //! \deprecated Use \c PCMK_REMOTE_RA_RECONNECT_INTERVAL instead
-#define XML_REMOTE_ATTR_RECONNECT_INTERVAL "reconnect_interval"
+#define XML_REMOTE_ATTR_RECONNECT_INTERVAL PCMK_REMOTE_RA_RECONNECT_INTERVAL
 
 //! \deprecated Use \c PCMK_XA_NAME instead
 #define XML_ATTR_NAME PCMK_XA_NAME
@@ -402,6 +405,129 @@ extern "C" {
 
 //! \deprecated Use \c PCMK_VALUE_FALSE instead
 #define XML_BOOLEAN_FALSE PCMK_VALUE_FALSE
+
+//! \deprecated Do not use
+#define F_CRM_TASK "crm_task"
+
+//! \deprecated Do not use
+#define F_CRM_HOST_TO "crm_host_to"
+
+//! \deprecated Do not use
+#define F_CRM_SYS_TO "crm_sys_to"
+
+//! \deprecated Do not use
+#define F_CRM_SYS_FROM "crm_sys_from"
+
+//! \deprecated Use \c PCMK_XA_VERSION instead
+#define F_CRM_VERSION PCMK_XA_VERSION
+
+//! \deprecated Use \c PCMK_XA_ORIGIN instead
+#define F_CRM_ORIGIN PCMK_XA_ORIGIN
+
+//! \deprecated Do not use
+#define F_CRM_USER "crm_user"
+
+//! \deprecated Do not use
+#define F_CRM_JOIN_ID "join_id"
+
+//! \deprecated Do not use
+#define F_CRM_DC_LEAVING "dc-leaving"
+
+//! \deprecated Do not use
+#define F_CRM_ELECTION_ID "election-id"
+
+//! \deprecated Do not use
+#define F_CRM_ELECTION_AGE_S "election-age-sec"
+
+//! \deprecated Do not use
+#define F_CRM_ELECTION_AGE_US "election-age-nano-sec"
+
+//! \deprecated Do not use
+#define F_CRM_ELECTION_OWNER "election-owner"
+
+//! \deprecated Do not use
+#define F_CRM_TGRAPH "crm-tgraph-file"
+
+//! \deprecated Do not use
+#define F_CRM_TGRAPH_INPUT "crm-tgraph-in"
+
+//! \deprecated Do not use
+#define F_CRM_THROTTLE_MODE "crm-limit-mode"
+
+//! \deprecated Do not use
+#define F_CRM_THROTTLE_MAX "crm-limit-max"
+
+//! \deprecated Use \c PCMK_XA_RESULT instead
+#define XML_PING_ATTR_STATUS PCMK_XA_RESULT
+
+//! \deprecated Do not use
+#define XML_PING_ATTR_SYSFROM "crm_subsystem"
+
+//! \deprecated Do not use
+#define XML_PING_ATTR_CRMDSTATE "crmd_state"
+
+//! \deprecated Do not use
+#define XML_PING_ATTR_PACEMAKERDSTATE "pacemakerd_state"
+
+//! \deprecated Do not use
+#define XML_FAILCIB_ATTR_OBJTYPE "object_type"
+
+//! \deprecated Use \c PCMK_XA_OPERATION instead
+#define XML_FAILCIB_ATTR_OP PCMK_XA_OPERATION
+
+//! \deprecated Use \c PCMK_XA_OPERATION instead
+#define XML_LRM_ATTR_TASK PCMK_XA_OPERATION
+
+//! \deprecated Use \c PCMK_XA_OPERATION instead
+#define XML_EXPR_ATTR_OPERATION PCMK_XA_OPERATION
+
+//! \deprecated Use \c PCMK_XA_OPERATION instead
+#define XML_DIFF_OP PCMK_XA_OPERATION
+
+//! \deprecated Use \c PCMK_XA_REASON instead
+#define XML_FAILCIB_ATTR_REASON PCMK_XA_REASON
+
+//! \deprecated Use \c PCMK_META_TIMEOUT instead
+#define XML_ATTR_TIMEOUT PCMK_META_TIMEOUT
+
+//! \deprecated Use \c PCMK_META_TIMEOUT instead
+#define XML_ALERT_ATTR_TIMEOUT PCMK_META_TIMEOUT
+
+//! \deprecated Use \c PCMK_XA_PATH instead
+#define XML_ALERT_ATTR_PATH PCMK_XA_PATH
+
+//! \deprecated Use \c PCMK_XA_PATH instead
+#define XML_DIFF_PATH PCMK_XA_PATH
+
+//! \deprecated Use \c PCMK_META_TIMESTAMP_FORMAT instead
+#define XML_ALERT_ATTR_TSTAMP_FORMAT PCMK_META_TIMESTAMP_FORMAT
+
+//! \deprecated Use \c PCMK_META_INTERVAL instead
+#define XML_LRM_ATTR_INTERVAL PCMK_META_INTERVAL
+
+//! \deprecated Use \c PCMK_META_INTERVAL instead
+#define XML_LRM_ATTR_INTERVAL_MS PCMK_META_INTERVAL
+
+//! \deprecated Do not use
+#define XML_CIB_ATTR_REPLACE "replace"
+
+//! \deprecated Do not use
+#define XML_COLOC_ATTR_SOURCE_INSTANCE "rsc-instance"
+
+//! \deprecated Do not use
+#define XML_COLOC_ATTR_TARGET_INSTANCE "with-rsc-instance"
+
+//! \deprecated Use \c PCMK_META_ON_FAIL instead
+#define XML_OP_ATTR_ON_FAIL PCMK_META_ON_FAIL
+
+//! \deprecated Use \c PCMK_META_START_DELAY instead
+#define XML_OP_ATTR_START_DELAY PCMK_META_START_DELAY
+
+//! \deprecated Use \c PCMK_META_INTERVAL_ORIGIN instead
+#define XML_OP_ATTR_ORIGIN PCMK_META_INTERVAL_ORIGIN
+
+//! \deprecated Use \c PCMK_META_RECORD_PENDING instead
+#define XML_OP_ATTR_PENDING PCMK_META_RECORD_PENDING
 
 #ifdef __cplusplus
 }

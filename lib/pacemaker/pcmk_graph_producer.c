@@ -438,13 +438,13 @@ create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
     }
 
     crm_xml_add_int(action_xml, PCMK_XA_ID, action->id);
-    crm_xml_add(action_xml, XML_LRM_ATTR_TASK, action->task);
+    crm_xml_add(action_xml, PCMK_XA_OPERATION, action->task);
 
     if ((action->rsc != NULL) && (action->rsc->clone_name != NULL)) {
         char *clone_key = NULL;
         guint interval_ms;
 
-        if (pcmk__guint_from_hash(action->meta, XML_LRM_ATTR_INTERVAL_MS, 0,
+        if (pcmk__guint_from_hash(action->meta, PCMK_META_INTERVAL, 0,
                                   &interval_ms) != pcmk_rc_ok) {
             interval_ms = 0;
         }
@@ -527,8 +527,7 @@ should_add_action_to_graph(const pcmk_action_t *action)
          * recognize it. The interval has been normalized to milliseconds by
          * this point, so a string comparison is sufficient.
          */
-        interval_ms_s = g_hash_table_lookup(action->meta,
-                                            XML_LRM_ATTR_INTERVAL_MS);
+        interval_ms_s = g_hash_table_lookup(action->meta, PCMK_META_INTERVAL);
         if (pcmk__str_eq(interval_ms_s, "0", pcmk__str_null_matches)) {
             crm_trace("Ignoring action %s (%d): for unmanaged resource (%s)",
                       action->uuid, action->id, action->rsc->id);

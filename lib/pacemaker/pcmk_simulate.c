@@ -68,8 +68,7 @@ create_action_name(const pcmk_action_t *action, bool verbose)
         char *key = NULL;
         guint interval_ms = 0;
 
-        if (pcmk__guint_from_hash(action->meta,
-                                  XML_LRM_ATTR_INTERVAL_MS, 0,
+        if (pcmk__guint_from_hash(action->meta, PCMK_META_INTERVAL, 0,
                                   &interval_ms) != pcmk_rc_ok) {
             interval_ms = 0;
         }
@@ -500,7 +499,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     const char *resource = NULL;
     const char *rprovider = NULL;
     const char *resource_config_name = NULL;
-    const char *operation = crm_element_value(action->xml, "operation");
+    const char *operation = crm_element_value(action->xml, PCMK_XA_OPERATION);
     const char *target_rc_s = crm_meta_value(action->params,
                                              XML_ATTR_TE_TARGET_RC);
 
@@ -663,7 +662,7 @@ static int
 simulate_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     const char *node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-    const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+    const char *task = crm_element_value(action->xml, PCMK_XA_OPERATION);
     xmlNode *rsc = first_named_child(action->xml, XML_CIB_TAG_RESOURCE);
 
     pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);

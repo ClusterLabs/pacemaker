@@ -146,7 +146,7 @@ handle_pecalc_request(pcmk__request_t *request)
                                          series[series_id].name, seq, true);
     }
 
-    crm_xml_add(reply, F_CRM_TGRAPH_INPUT, filename);
+    crm_xml_add(reply, PCMK__XA_CRM_TGRAPH_IN, filename);
     crm_xml_add_int(reply, PCMK__XA_GRAPH_ERRORS, was_processing_error);
     crm_xml_add_int(reply, PCMK__XA_GRAPH_WARNINGS, was_processing_warning);
     crm_xml_add_int(reply, PCMK__XA_CONFIG_ERRORS, crm_config_error);
@@ -244,7 +244,7 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         return 0;
     }
 
-    sys_to = crm_element_value(msg, F_CRM_SYS_TO);
+    sys_to = crm_element_value(msg, PCMK__XA_CRM_SYS_TO);
 
     if (pcmk__str_eq(crm_element_value(msg, PCMK__XA_SUBT),
                      PCMK__VALUE_RESPONSE, pcmk__str_none)) {
@@ -271,7 +271,7 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
             .result         = PCMK__UNKNOWN_RESULT,
         };
 
-        request.op = crm_element_value_copy(request.xml, F_CRM_TASK);
+        request.op = crm_element_value_copy(request.xml, PCMK__XA_CRM_TASK);
         CRM_CHECK(request.op != NULL, return 0);
 
         reply = pcmk__process_request(&request, schedulerd_handlers);

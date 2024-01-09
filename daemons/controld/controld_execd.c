@@ -664,7 +664,7 @@ static void
 notify_deleted(lrm_state_t * lrm_state, ha_msg_input_t * input, const char *rsc_id, int rc)
 {
     lrmd_event_data_t *op = NULL;
-    const char *from_sys = crm_element_value(input->msg, F_CRM_SYS_FROM);
+    const char *from_sys = crm_element_value(input->msg, PCMK__XA_CRM_SYS_FROM);
     const char *from_host = crm_element_value(input->msg, PCMK__XA_SRC);
 
     crm_info("Notifying %s on %s that %s was%s deleted",
@@ -1099,7 +1099,7 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, const xmlNode *action,
                         const char *exit_reason)
 {
     lrmd_event_data_t *op = NULL;
-    const char *operation = crm_element_value(action, XML_LRM_ATTR_TASK);
+    const char *operation = crm_element_value(action, PCMK_XA_OPERATION);
     const char *target_node = crm_element_value(action, XML_LRM_ATTR_TARGET);
     xmlNode *xml_rsc = find_xml_node(action, XML_CIB_TAG_RESOURCE, TRUE);
 
@@ -1249,12 +1249,12 @@ static bool do_lrm_cancel(ha_msg_input_t *input, lrm_state_t *lrm_state,
 
     CRM_CHECK(params != NULL, return FALSE);
 
-    meta_key = crm_meta_name(XML_LRM_ATTR_TASK);
+    meta_key = crm_meta_name(PCMK_XA_OPERATION);
     op_task = crm_element_value(params, meta_key);
     free(meta_key);
     CRM_CHECK(op_task != NULL, return FALSE);
 
-    meta_key = crm_meta_name(XML_LRM_ATTR_INTERVAL_MS);
+    meta_key = crm_meta_name(PCMK_META_INTERVAL);
     if (crm_element_value_ms(params, meta_key, &interval_ms) != pcmk_ok) {
         free(meta_key);
         return FALSE;
@@ -1437,9 +1437,9 @@ do_lrm_invoke(long long action,
     }
     CRM_ASSERT(lrm_state != NULL);
 
-    user_name = pcmk__update_acl_user(input->msg, F_CRM_USER, NULL);
-    crm_op = crm_element_value(input->msg, F_CRM_TASK);
-    from_sys = crm_element_value(input->msg, F_CRM_SYS_FROM);
+    user_name = pcmk__update_acl_user(input->msg, PCMK__XA_CRM_USER, NULL);
+    crm_op = crm_element_value(input->msg, PCMK__XA_CRM_TASK);
+    from_sys = crm_element_value(input->msg, PCMK__XA_CRM_SYS_FROM);
     if (!pcmk__str_eq(from_sys, CRM_SYSTEM_TENGINE, pcmk__str_none)) {
         from_host = crm_element_value(input->msg, PCMK__XA_SRC);
     }
@@ -1451,7 +1451,7 @@ do_lrm_invoke(long long action,
         operation = PCMK_ACTION_DELETE;
 
     } else if (input->xml != NULL) {
-        operation = crm_element_value(input->xml, XML_LRM_ATTR_TASK);
+        operation = crm_element_value(input->xml, PCMK_XA_OPERATION);
     }
 
     CRM_CHECK(!pcmk__str_empty(crm_op) || !pcmk__str_empty(operation), return);
@@ -1646,13 +1646,13 @@ construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
     params = xml2list(rsc_op);
     g_hash_table_remove(params, CRM_META "_op_target_rc");
 
-    op_delay = crm_meta_value(params, XML_OP_ATTR_START_DELAY);
+    op_delay = crm_meta_value(params, PCMK_META_START_DELAY);
     pcmk__scan_min_int(op_delay, &op->start_delay, 0);
 
-    op_timeout = crm_meta_value(params, XML_ATTR_TIMEOUT);
+    op_timeout = crm_meta_value(params, PCMK_META_TIMEOUT);
     pcmk__scan_min_int(op_timeout, &op->timeout, 0);
 
-    if (pcmk__guint_from_hash(params, CRM_META "_" XML_LRM_ATTR_INTERVAL_MS, 0,
+    if (pcmk__guint_from_hash(params, CRM_META "_" PCMK_META_INTERVAL, 0,
                               &(op->interval_ms)) != pcmk_rc_ok) {
         op->interval_ms = 0;
     }
@@ -1922,7 +1922,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
 
     CRM_CHECK((rsc != NULL) && (msg != NULL), return);
 
-    operation = crm_element_value(msg, XML_LRM_ATTR_TASK);
+    operation = crm_element_value(msg, PCMK_XA_OPERATION);
     CRM_CHECK(!pcmk__str_empty(operation), return);
 
     transition = crm_element_value(msg, PCMK__XA_TRANSITION_KEY);

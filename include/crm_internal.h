@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2023 the Pacemaker project contributors
+ * Copyright 2006-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -55,6 +55,16 @@
 
 
 /*
+ * XML element names used only by internal code
+ */
+
+/* @COMPAT Deprecated since 2.0.0; alias for <clone> with PCMK_META_PROMOTABLE
+ * set to "true"
+ */
+#define PCMK__XE_PROMOTABLE_LEGACY      "master"
+
+
+/*
  * XML attribute names used only by internal code
  */
 
@@ -83,17 +93,34 @@
 #define PCMK__XA_CONFIRM                "confirm"
 #define PCMK__XA_CONN_HOST              "connection_host"
 #define PCMK__XA_CRMD                   "crmd"
+#define PCMK__XA_CRMD_STATE             "crmd_state"
+#define PCMK__XA_CRM_HOST_TO            "crm_host_to"
+#define PCMK__XA_CRM_LIMIT_MAX          "crm-limit-max"
+#define PCMK__XA_CRM_LIMIT_MODE         "crm-limit-mode"
+#define PCMK__XA_CRM_SUBSYSTEM          "crm_subsystem"
+#define PCMK__XA_CRM_SYS_FROM           "crm_sys_from"
+#define PCMK__XA_CRM_SYS_TO             "crm_sys_to"
+#define PCMK__XA_CRM_TASK               "crm_task"
+#define PCMK__XA_CRM_TGRAPH_IN          "crm-tgraph-in"
+#define PCMK__XA_CRM_USER               "crm_user"
+#define PCMK__XA_DC_LEAVING             "dc-leaving"
 #define PCMK__XA_DIGEST                 "digest"
+#define PCMK__XA_ELECTION_AGE_SEC       "election-age-sec"
+#define PCMK__XA_ELECTION_AGE_NANO_SEC  "election-age-nano-sec"
+#define PCMK__XA_ELECTION_ID            "election-id"
+#define PCMK__XA_ELECTION_OWNER         "election-owner"
 #define PCMK__XA_EXPECTED               "expected"
 #define PCMK__XA_FILE                   "file"
 #define PCMK__XA_GRAPH_ERRORS           "graph-errors"
 #define PCMK__XA_GRAPH_WARNINGS         "graph-warnings"
 #define PCMK__XA_IN_CCM                 "in_ccm"
 #define PCMK__XA_JOIN                   "join"
+#define PCMK__XA_JOIN_ID                "join_id"
 #define PCMK__XA_LONG_ID                "long-id"
 #define PCMK__XA_MODE                   "mode"
 #define PCMK__XA_NODE_START_STATE       "node_start_state"
-#define PCMK__XA_PATH                   "path"
+#define PCMK__XA_OBJECT_TYPE            "object_type"
+#define PCMK__XA_PACEMAKERD_STATE       "pacemakerd_state"
 #define PCMK__XA_REAP                   "reap"
 #define PCMK__XA_SCHEMA                 "schema"
 #define PCMK__XA_SCHEMAS                "schemas"
@@ -104,6 +131,15 @@
 #define PCMK__XA_TRANSITION_KEY         "transition-key"
 #define PCMK__XA_TRANSITION_MAGIC       "transition-magic"
 #define PCMK__XA_UPTIME                 "uptime"
+
+// @COMPAT Deprecated since 2.1.6
+#define PCMK__XA_REPLACE                "replace"
+
+// @COMPAT Deprecated since 2.1.5
+#define PCMK__XA_RSC_INSTANCE           "rsc-instance"
+
+// @COMPAT Deprecated since 2.1.5
+#define PCMK__XA_WITH_RSC_INSTANCE      "with-rsc-instance"
 
 
 /*

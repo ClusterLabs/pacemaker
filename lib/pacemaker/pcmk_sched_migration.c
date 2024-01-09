@@ -132,10 +132,10 @@ pcmk__create_migration_actions(pcmk_resource_t *rsc, const pcmk_node_t *current)
              *
              * However we know Pacemaker Remote connection resources don't
              * require this, so we skip this for them. (Although it wouldn't
-             * hurt, and now that record-pending defaults to true, skipping it
-             * matters even less.)
+             * hurt, and now that PCMK_META_RECORD_PENDING defaults to true,
+             * skipping it matters even less.)
              */
-            add_hash_param(migrate_to->meta, XML_OP_ATTR_PENDING,
+            add_hash_param(migrate_to->meta, PCMK_META_RECORD_PENDING,
                            PCMK_VALUE_TRUE);
         }
     }

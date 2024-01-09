@@ -310,11 +310,13 @@ election_vote(election_t *e)
     vote = create_request(CRM_OP_VOTE, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
     e->count++;
-    crm_xml_add(vote, F_CRM_ELECTION_OWNER, our_node->uuid);
-    crm_xml_add_int(vote, F_CRM_ELECTION_ID, e->count);
+    crm_xml_add(vote, PCMK__XA_ELECTION_OWNER, our_node->uuid);
+    crm_xml_add_int(vote, PCMK__XA_ELECTION_ID, e->count);
 
+    // Warning: PCMK__XA_ELECTION_AGE_NANO_SEC value is actually microseconds
     get_uptime(&age);
-    crm_xml_add_timeval(vote, F_CRM_ELECTION_AGE_S, F_CRM_ELECTION_AGE_US, &age);
+    crm_xml_add_timeval(vote, PCMK__XA_ELECTION_AGE_SEC,
+                        PCMK__XA_ELECTION_AGE_NANO_SEC, &age);
 
     send_cluster_message(NULL, crm_msg_crmd, vote, TRUE);
     free_xml(vote);
@@ -428,12 +430,12 @@ parse_election_message(const election_t *e, const xmlNode *message,
     vote->age.tv_sec = -1;
     vote->age.tv_usec = -1;
 
-    vote->op = crm_element_value(message, F_CRM_TASK);
+    vote->op = crm_element_value(message, PCMK__XA_CRM_TASK);
     vote->from = crm_element_value(message, PCMK__XA_SRC);
-    vote->version = crm_element_value(message, F_CRM_VERSION);
-    vote->election_owner = crm_element_value(message, F_CRM_ELECTION_OWNER);
+    vote->version = crm_element_value(message, PCMK_XA_VERSION);
+    vote->election_owner = crm_element_value(message, PCMK__XA_ELECTION_OWNER);
 
-    crm_element_value_int(message, F_CRM_ELECTION_ID, &(vote->election_id));
+    crm_element_value_int(message, PCMK__XA_ELECTION_ID, &(vote->election_id));
 
     if ((vote->op == NULL) || (vote->from == NULL) || (vote->version == NULL)
         || (vote->election_owner == NULL) || (vote->election_id < 0)) {
@@ -448,9 +450,11 @@ parse_election_message(const election_t *e, const xmlNode *message,
     // Op-specific validation
 
     if (pcmk__str_eq(vote->op, CRM_OP_VOTE, pcmk__str_none)) {
-        // Only vote ops have uptime
-        crm_element_value_timeval(message, F_CRM_ELECTION_AGE_S,
-                                  F_CRM_ELECTION_AGE_US, &(vote->age));
+        /* Only vote ops have uptime.
+           Warning: PCMK__XA_ELECTION_AGE_NANO_SEC value is in microseconds.
+         */
+        crm_element_value_timeval(message, PCMK__XA_ELECTION_AGE_SEC,
+                                  PCMK__XA_ELECTION_AGE_NANO_SEC, &(vote->age));
         if ((vote->age.tv_sec < 0) || (vote->age.tv_usec < 0)) {
             crm_warn("Cannot count %s %s from %s because it is missing uptime",
                      (e? e->name : "election"), vote->op, vote->from);
@@ -508,8 +512,8 @@ send_no_vote(crm_node_t *peer, struct vote *vote)
     xmlNode *novote = create_request(CRM_OP_NOVOTE, NULL, vote->from,
                                      CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
-    crm_xml_add(novote, F_CRM_ELECTION_OWNER, vote->election_owner);
-    crm_xml_add_int(novote, F_CRM_ELECTION_ID, vote->election_id);
+    crm_xml_add(novote, PCMK__XA_ELECTION_OWNER, vote->election_owner);
+    crm_xml_add_int(novote, PCMK__XA_ELECTION_ID, vote->election_id);
 
     send_cluster_message(peer, crm_msg_crmd, novote, TRUE);
     free_xml(novote);

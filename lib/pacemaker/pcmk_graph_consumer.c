@@ -252,7 +252,7 @@ initiate_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
             return graph_fns->rsc(graph, action);
 
         case pcmk__cluster_graph_action:
-            if (pcmk__str_eq(crm_element_value(action->xml, XML_LRM_ATTR_TASK),
+            if (pcmk__str_eq(crm_element_value(action->xml, PCMK_XA_OPERATION),
                              PCMK_ACTION_STONITH, pcmk__str_none)) {
                 crm_trace("Executing fencing action %d (%s)",
                           action->id, id);
@@ -520,11 +520,13 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
     action->type = action_type;
     action->params = xml2list(action->xml);
 
-    value = g_hash_table_lookup(action->params, "CRM_meta_timeout");
+    value = crm_meta_value(action->params, PCMK_META_TIMEOUT);
     pcmk__scan_min_int(value, &(action->timeout), 0);
 
-    /* Take start-delay into account for the timeout of the action timer */
-    value = g_hash_table_lookup(action->params, "CRM_meta_start_delay");
+    /* Take PCMK_META_START_DELAY into account for the timeout of the action
+     * timer
+     */
+    value = crm_meta_value(action->params, PCMK_META_START_DELAY);
     {
         int start_delay;
 
@@ -532,13 +534,12 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
         action->timeout += start_delay;
     }
 
-    if (pcmk__guint_from_hash(action->params,
-                              CRM_META "_" XML_LRM_ATTR_INTERVAL, 0,
-                              &(action->interval_ms)) != pcmk_rc_ok) {
+    if (pcmk__guint_from_hash(action->params, CRM_META "_" PCMK_META_INTERVAL,
+                              0, &(action->interval_ms)) != pcmk_rc_ok) {
         action->interval_ms = 0;
     }
 
-    value = g_hash_table_lookup(action->params, "CRM_meta_can_fail");
+    value = crm_meta_value(action->params, PCMK__META_CAN_FAIL);
     if (value != NULL) {
         int can_fail = 0;
 
@@ -550,8 +551,8 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
 
 #ifndef PCMK__COMPAT_2_0
         if (pcmk_is_set(action->flags, pcmk__graph_action_can_fail)) {
-            crm_warn("Support for the can_fail meta-attribute is deprecated"
-                     " and will be removed in a future release");
+            crm_warn("Support for the " PCMK__META_CAN_FAIL " meta-attribute "
+                     "is deprecated and will be removed in a future release");
         }
 #endif
     }
@@ -854,7 +855,7 @@ pcmk__event_from_graph_action(const xmlNode *resource,
                                        return NULL);
 
     op = lrmd_new_event(ID(action_resource),
-                        crm_element_value(action->xml, XML_LRM_ATTR_TASK),
+                        crm_element_value(action->xml, PCMK_XA_OPERATION),
                         action->interval_ms);
     lrmd__set_result(op, rc, status, exit_reason);
     op->t_run = time(NULL);

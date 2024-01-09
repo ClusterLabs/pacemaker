@@ -425,7 +425,7 @@ fail_incompletable_stonith(pcmk__graph_t *graph)
                 continue;
             }
 
-            task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+            task = crm_element_value(action->xml, PCMK_XA_OPERATION);
             if (pcmk__str_eq(task, PCMK_ACTION_STONITH, pcmk__str_casei)) {
                 pcmk__set_graph_action_flags(action, pcmk__graph_action_failed);
                 last_action = action->xml;

@@ -564,8 +564,8 @@ update_cib_object(xmlNode * parent, xmlNode * update)
               pcmk__s(object_id, ""),
               ((object_id == NULL)? "" : "'"));
 
-    // @COMPAT: XML_CIB_ATTR_REPLACE is unused internally. Remove at break.
-    replace = crm_element_value(update, XML_CIB_ATTR_REPLACE);
+    // @COMPAT PCMK__XA__REPLACE is deprecated since 2.1.6
+    replace = crm_element_value(update, PCMK__XA_REPLACE);
     if (replace != NULL) {
         int last = 0;
         int len = strlen(replace);
@@ -587,8 +587,8 @@ update_cib_object(xmlNode * parent, xmlNode * update)
                 last = lpc + 1;
             }
         }
-        xml_remove_prop(update, XML_CIB_ATTR_REPLACE);
-        xml_remove_prop(target, XML_CIB_ATTR_REPLACE);
+        xml_remove_prop(update, PCMK__XA_REPLACE);
+        xml_remove_prop(target, PCMK__XA_REPLACE);
     }
 
     copy_in_properties(target, update);
@@ -688,10 +688,10 @@ update_results(xmlNode *failed, xmlNode *target, const char *operation,
         add_node_copy(xml_node, target);
 
         crm_xml_add(xml_node, PCMK_XA_ID, ID(target));
-        crm_xml_add(xml_node, XML_FAILCIB_ATTR_OBJTYPE,
+        crm_xml_add(xml_node, PCMK__XA_OBJECT_TYPE,
                     (const char *) target->name);
-        crm_xml_add(xml_node, XML_FAILCIB_ATTR_OP, operation);
-        crm_xml_add(xml_node, XML_FAILCIB_ATTR_REASON, error_msg);
+        crm_xml_add(xml_node, PCMK_XA_OPERATION, operation);
+        crm_xml_add(xml_node, PCMK_XA_REASON, error_msg);
 
         crm_warn("Action %s failed: %s (cde=%d)",
                  operation, error_msg, return_code);

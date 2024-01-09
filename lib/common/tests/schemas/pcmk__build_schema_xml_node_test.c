@@ -85,7 +85,8 @@ single_schema(void **state)
 
     file_node = pcmk__xml_first_child(schema_node);
     while (file_node != NULL && rngs1[i] != NULL) {
-        assert_string_equal(rngs1[i], crm_element_value(file_node, PCMK__XA_PATH));
+        assert_string_equal(rngs1[i],
+                            crm_element_value(file_node, PCMK_XA_PATH));
         assert_int_equal(pcmk__xml_first_child(file_node)->type, XML_CDATA_SECTION_NODE);
 
         file_node = pcmk__xml_next(file_node);
@@ -120,7 +121,8 @@ multiple_schemas(void **state)
 
     file_node = pcmk__xml_first_child(schema_node);
     while (file_node != NULL && rngs2[i] != NULL) {
-        assert_string_equal(rngs2[i], crm_element_value(file_node, PCMK__XA_PATH));
+        assert_string_equal(rngs2[i],
+                            crm_element_value(file_node, PCMK_XA_PATH));
         assert_int_equal(pcmk__xml_first_child(file_node)->type, XML_CDATA_SECTION_NODE);
 
         file_node = pcmk__xml_next(file_node);
@@ -135,7 +137,8 @@ multiple_schemas(void **state)
     i = 0;
 
     while (file_node != NULL && rngs3[i] != NULL) {
-        assert_string_equal(rngs3[i], crm_element_value(file_node, PCMK__XA_PATH));
+        assert_string_equal(rngs3[i],
+                            crm_element_value(file_node, PCMK_XA_PATH));
         assert_int_equal(pcmk__xml_first_child(file_node)->type, XML_CDATA_SECTION_NODE);
 
         file_node = pcmk__xml_next(file_node);

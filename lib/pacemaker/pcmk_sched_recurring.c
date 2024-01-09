@@ -42,8 +42,8 @@ xe_interval(const xmlNode *xml)
 {
     guint interval_ms = 0U;
 
-    pcmk_parse_interval_spec(crm_element_value(xml, XML_LRM_ATTR_INTERVAL),
-                              &interval_ms);
+    pcmk_parse_interval_spec(crm_element_value(xml, PCMK_META_INTERVAL),
+                             &interval_ms);
     return interval_ms;
 }
 
@@ -654,8 +654,8 @@ pcmk__new_cancel_action(pcmk_resource_t *rsc, const char *task,
     pcmk__str_update(&cancel_op->cancel_task, task);
 
     interval_ms_s = crm_strdup_printf("%u", interval_ms);
-    add_hash_param(cancel_op->meta, XML_LRM_ATTR_TASK, task);
-    add_hash_param(cancel_op->meta, XML_LRM_ATTR_INTERVAL_MS, interval_ms_s);
+    add_hash_param(cancel_op->meta, PCMK_XA_OPERATION, task);
+    add_hash_param(cancel_op->meta, PCMK_META_INTERVAL, interval_ms_s);
     free(interval_ms_s);
 
     return cancel_op;
@@ -729,8 +729,7 @@ pcmk__action_is_recurring(const pcmk_action_t *action)
 {
     guint interval_ms = 0;
 
-    if (pcmk__guint_from_hash(action->meta,
-                              XML_LRM_ATTR_INTERVAL_MS, 0,
+    if (pcmk__guint_from_hash(action->meta, PCMK_META_INTERVAL, 0,
                               &interval_ms) != pcmk_rc_ok) {
         return false;
     }

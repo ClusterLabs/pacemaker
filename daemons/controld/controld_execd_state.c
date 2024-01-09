@@ -453,7 +453,7 @@ crmd_proxy_dispatch(const char *session, xmlNode *msg)
 {
     crm_trace("Processing proxied IPC message from session %s", session);
     crm_log_xml_trace(msg, "controller[inbound]");
-    crm_xml_add(msg, F_CRM_SYS_FROM, session);
+    crm_xml_add(msg, PCMK__XA_CRM_SYS_FROM, session);
     if (controld_authorize_ipc_message(msg, NULL, session)) {
         route_message(C_IPC_MESSAGE, msg);
     }
@@ -559,7 +559,8 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
          * the name, so we don't return info for ourselves instead of the
          * Pacemaker Remote node.
          */
-        if (pcmk__str_eq(crm_element_value(request, F_CRM_TASK), CRM_OP_NODE_INFO, pcmk__str_casei)) {
+        if (pcmk__str_eq(crm_element_value(request, PCMK__XA_CRM_TASK),
+                         CRM_OP_NODE_INFO, pcmk__str_none)) {
             int node_id = 0;
 
             crm_element_value_int(request, PCMK_XA_ID, &node_id);

@@ -39,7 +39,7 @@ attrd_confirmation(int callid)
 static void
 attrd_peer_message(crm_node_t *peer, xmlNode *xml)
 {
-    const char *election_op = crm_element_value(xml, F_CRM_TASK);
+    const char *election_op = crm_element_value(xml, PCMK__XA_CRM_TASK);
 
     if (election_op) {
         attrd_handle_election_op(peer, xml);
