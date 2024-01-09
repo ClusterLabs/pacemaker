@@ -549,7 +549,8 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
         pcmk__g_strcat(s, "      <" PCMK_XE_CONTENT " "
                                     PCMK_XA_TYPE "=\"", opt_type, "\"", NULL);
         if (opt_default != NULL) {
-            pcmk__g_strcat(s, " default=\"", opt_default, "\"", NULL);
+            pcmk__g_strcat(s,
+                           " " PCMK_XA_DEFAULT "=\"", opt_default, "\"", NULL);
         }
 
         if ((opt_values != NULL) && (strcmp(opt_type, "select") == 0)) {

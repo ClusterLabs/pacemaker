@@ -83,6 +83,7 @@ extern "C" {
 #define PCMK_XA_CRM_FEATURE_SET             "crm_feature_set"
 #define PCMK_XA_CRM_TIMESTAMP               "crm-timestamp"
 #define PCMK_XA_DC_UUID                     "dc-uuid"
+#define PCMK_XA_DEFAULT                     "default"
 #define PCMK_XA_DESCRIPTION                 "description"
 #define PCMK_XA_DEVICES                     "devices"
 #define PCMK_XA_EPOCH                       "epoch"
