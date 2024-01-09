@@ -1,4 +1,4 @@
-""" A module for managing and communicating with external processes """
+"""A module for managing and communicating with external processes."""
 
 __all__ = ["killall", "exit_if_proc_running", "pipe_communicate", "stdout_from_command"]
 __copyright__ = "Copyright 2009-2023 the Pacemaker project contributors"
@@ -11,9 +11,9 @@ import psutil
 
 from pacemaker.exitstatus import ExitStatus
 
-def killall(process_names, terminate=False):
-    """ Kill all instances of every process in a list """
 
+def killall(process_names, terminate=False):
+    """Kill all instances of every process in a list."""
     if not process_names:
         return
 
@@ -36,8 +36,7 @@ def killall(process_names, terminate=False):
 
 
 def is_proc_running(process_name):
-    """ Check whether a process with a given name is running """
-
+    """Check whether a process with a given name is running."""
     for proc in psutil.process_iter(["name"]):
         if proc.info["name"] == process_name:
             return True
@@ -45,8 +44,7 @@ def is_proc_running(process_name):
 
 
 def exit_if_proc_running(process_name):
-    """ Exit with error if a given process is running """
-
+    """Exit with error if a given process is running."""
     if is_proc_running(process_name):
         print("Error: %s is already running!" % process_name)
         print("Run %s only when the cluster is stopped." % sys.argv[0])
@@ -54,8 +52,7 @@ def exit_if_proc_running(process_name):
 
 
 def pipe_communicate(pipes, check_stderr=False, stdin=None):
-    """ Get text output from pipes """
-
+    """Get text output from pipes."""
     if stdin is not None:
         pipe_outputs = pipes.communicate(input=stdin.encode())
     else:
@@ -69,8 +66,7 @@ def pipe_communicate(pipes, check_stderr=False, stdin=None):
 
 
 def stdout_from_command(args):
-    """ Execute command and return its standard output """
-
+    """Execute command and return its standard output."""
     with subprocess.Popen(args, stdout=subprocess.PIPE) as p:
         p.wait()
         return pipe_communicate(p).split("\n")

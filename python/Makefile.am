@@ -1,5 +1,5 @@
 #
-# Copyright 2023 the Pacemaker project contributors
+# Copyright 2023-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -24,3 +24,13 @@ check-local:
 .PHONY: pylint
 pylint:
 	pylint $(SUBDIRS)
+
+# Disabled warnings:
+# E501 - Line too long
+#
+# Disable unused imports on __init__.py files (we likely just have them
+# there for re-exporting).
+# Disable docstrings warnings on unit tests.
+.PHONY: pyflake
+pyflake:
+	flake8 --ignore=E501 --per-file-ignores="__init__.py:F401 tests/*:D100,D101,D102,D104" $(SUBDIRS)

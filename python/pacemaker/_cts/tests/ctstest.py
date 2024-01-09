@@ -1,7 +1,7 @@
-""" Base classes for CTS tests """
+"""Base classes for CTS tests."""
 
 __all__ = ["CTSTest"]
-__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import re
@@ -18,25 +18,23 @@ from pacemaker._cts.watcher import LogWatcher
 # possibility that we'll miss some other cause of the same warning, but we'll
 # just have to be careful.
 
-# pylint doesn't understand that self._rsh is callable.
-# pylint: disable=not-callable
-
 
 class CTSTest:
-    """ The base class for all cluster tests.  This implements a basic set of
-        properties and behaviors like setup, tear down, time keeping, and
-        statistics tracking.  It is up to specific tests to implement their own
-        specialized behavior on top of this class.
+    """
+    The base class for all cluster tests.
+
+    This implements a basic set of properties and behaviors like setup, tear
+    down, time keeping, and statistics tracking.  It is up to specific tests
+    to implement their own specialized behavior on top of this class.
     """
 
     def __init__(self, cm):
-        """ Create a new CTSTest instance
-
-            Arguments:
-
-            cm -- A ClusterManager instance
         """
+        Create a new CTSTest instance.
 
+        Arguments:
+        cm -- A ClusterManager instance
+        """
         # pylint: disable=invalid-name
 
         self.audits = []
@@ -68,28 +66,22 @@ class CTSTest:
         self.passed = True
 
     def log(self, args):
-        """ Log a message """
-
+        """Log a message."""
         self._logger.log(args)
 
     def debug(self, args):
-        """ Log a debug message """
-
+        """Log a debug message."""
         self._logger.debug(args)
 
     def get_timer(self, key="test"):
-        """ Get the start time of the given timer """
-
+        """Get the start time of the given timer."""
         try:
             return self._timers[key].start_time
         except KeyError:
             return 0
 
     def set_timer(self, key="test"):
-        """ Set the start time of the given timer to now, and return
-            that time
-        """
-
+        """Set the start time of the given timer to now, and return that time."""
         if key not in self._timers:
             self._timers[key] = Timer(self._logger, self.name, key)
 
@@ -97,8 +89,7 @@ class CTSTest:
         return self._timers[key].start_time
 
     def log_timer(self, key="test"):
-        """ Log the elapsed time of the given timer """
-
+        """Log the elapsed time of the given timer."""
         if key not in self._timers:
             return
 
@@ -107,8 +98,7 @@ class CTSTest:
         del self._timers[key]
 
     def incr(self, name):
-        """ Increment the given stats key """
-
+        """Increment the given stats key."""
         if name not in self.stats:
             self.stats[name] = 0
 
@@ -119,8 +109,7 @@ class CTSTest:
             self.passed = True
 
     def failure(self, reason="none"):
-        """ Increment the failure count, with an optional failure reason """
-
+        """Increment the failure count, with an optional failure reason."""
         self.passed = False
         self.incr("failure")
         self._logger.log(("Test %s" % self.name).ljust(35) + " FAILED: %s" % reason)
@@ -128,27 +117,21 @@ class CTSTest:
         return False
 
     def success(self):
-        """ Increment the success count """
-
+        """Increment the success count."""
         self.incr("success")
         return True
 
     def skipped(self):
-        """ Increment the skipped count """
-
+        """Increment the skipped count."""
         self.incr("skipped")
         return True
 
     def __call__(self, node):
-        """ Perform this test """
-
+        """Perform this test."""
         raise NotImplementedError
 
     def audit(self):
-        """ Perform all the relevant audits (see ClusterAudit), returning
-            whether or not they all passed.
-        """
-
+        """Perform all the relevant audits (see ClusterAudit), returning whether or not they all passed."""
         passed = True
 
         for audit in self.audits:
@@ -160,25 +143,32 @@ class CTSTest:
         return passed
 
     def setup(self, node):
-        """ Setup this test """
-
+        """Set up this test."""
         # node is used in subclasses
         # pylint: disable=unused-argument
 
         return self.success()
 
     def teardown(self, node):
-        """ Tear down this test """
-
+        """Tear down this test."""
         # node is used in subclasses
         # pylint: disable=unused-argument
 
         return self.success()
 
     def create_watch(self, patterns, timeout, name=None):
-        """ Create a new LogWatcher object with the given patterns, timeout,
-            and optional name.  This object can be used to search log files
-            for matching patterns during this test's run.
+        """
+        Create a new LogWatcher object.
+
+        This object can be used to search log files for matching patterns
+        during this test's run.
+
+        Arguments:
+        patterns -- A list of regular expressions to match against the log
+        timeout  -- Default number of seconds to watch a log file at a time;
+                    this can be overridden by the timeout= parameter to
+                    self.look on an as-needed basis
+        name     -- A unique name to use when logging about this watch
         """
         if not name:
             name = self.name
@@ -186,13 +176,17 @@ class CTSTest:
         return LogWatcher(self._env["LogFileName"], patterns, self._env["nodes"], self._env["LogWatcher"], name, timeout)
 
     def local_badnews(self, prefix, watch, local_ignore=None):
-        """ Use the given watch object to search through log files for messages
-            starting with the given prefix.  If no prefix is given, use
-            "LocalBadNews:" by default.  The optional local_ignore list should
-            be a list of regexes that, if found in a line, will cause that line
-            to be ignored.
+        """
+        Search through log files for messages.
 
-            Return the number of matches found.
+        Arguments:
+        prefix       -- The string to look for at the beginning of lines,
+                        or "LocalBadNews:" if None.
+        watch        -- The LogWatcher object to use for searching.
+        local_ignore -- A list of regexes that, if found in a line, will
+                        cause that line to be ignored.
+
+        Return the number of matches found.
         """
         errcount = 0
         if not prefix:
@@ -224,10 +218,11 @@ class CTSTest:
         return errcount
 
     def is_applicable(self):
-        """ Return True if this test is applicable in the current test configuration.
-            This method must be implemented by all subclasses.
         """
+        Return True if this test is applicable in the current test configuration.
 
+        This method must be implemented by all subclasses.
+        """
         if self.is_loop and not self._env["loop-tests"]:
             return False
 
@@ -247,6 +242,5 @@ class CTSTest:
 
     @property
     def errors_to_ignore(self):
-        """ Return list of errors which should be ignored """
-
+        """Return a list of errors which should be ignored."""
         return []

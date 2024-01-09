@@ -1,7 +1,7 @@
-""" Stop all running nodes serially """
+"""Stop all running nodes serially."""
 
 __all__ = ["StopOnebyOne"]
-__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.tests.ctstest import CTSTest
@@ -18,16 +18,15 @@ from pacemaker._cts.tests.stoptest import StopTest
 
 
 class StopOnebyOne(CTSTest):
-    """ A concrete test that stops all running nodes serially """
+    """Stop all running nodes serially."""
 
     def __init__(self, cm):
-        """ Create a new StartOnebyOne instance
-
-            Arguments:
-
-            cm -- A ClusterManager instance
         """
+        Create a new StartOnebyOne instance.
 
+        Arguments:
+        cm -- A ClusterManager instance
+        """
         CTSTest.__init__(self, cm)
 
         self.name = "StopOnebyOne"
@@ -36,8 +35,7 @@ class StopOnebyOne(CTSTest):
         self._stop = StopTest(cm)
 
     def __call__(self, dummy):
-        """ Perform this test """
-
+        """Perform this test."""
         self.incr("calls")
 
         ret = self._startall(None)

@@ -1,7 +1,7 @@
-""" Cause the Pacemaker Remote connection resource to fail """
+"""Cause the Pacemaker Remote connection resource to fail."""
 
 __all__ = ["RemoteRscFailure"]
-__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.tests.remotedriver import RemoteDriver
@@ -16,24 +16,20 @@ from pacemaker._cts.tests.remotedriver import RemoteDriver
 
 
 class RemoteRscFailure(RemoteDriver):
-    """ A concrete test that causes the Pacemaker Remote connection resource
-        to fail
-    """
+    """Cause the Pacemaker Remote connection resource to fail."""
 
     def __init__(self, cm):
-        """ Create a new RemoteRscFailure instance
-
-            Arguments:
-
-            cm -- A ClusterManager instance
         """
+        Create a new RemoteRscFailure instance.
 
+        Arguments:
+        cm -- A ClusterManager instance
+        """
         RemoteDriver.__init__(self, cm)
         self.name = "RemoteRscFailure"
 
     def __call__(self, node):
-        """ Perform this test """
-
+        """Perform this test."""
         if not self.start_new_test(node):
             return self.failure(self.fail_string)
 
@@ -54,16 +50,14 @@ class RemoteRscFailure(RemoteDriver):
 
     @property
     def errors_to_ignore(self):
-        """ Return list of errors which should be ignored """
-
+        """Return list of errors which should be ignored."""
         return [
             r"schedulerd.*: Recover\s+remote-rsc\s+\(.*\)",
             r"Dummy.*: No process state file found"
         ] + super().errors_to_ignore
 
     def is_applicable(self):
-        """ Return True if this test is applicable in the current test configuration. """
-
+        """Return True if this test is applicable in the current test configuration."""
         if not RemoteDriver.is_applicable(self):
             return False
 

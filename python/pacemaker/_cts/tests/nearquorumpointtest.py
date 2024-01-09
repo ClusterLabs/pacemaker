@@ -1,7 +1,7 @@
-""" Randomly start and stop nodes to bring the cluster close to the quorum point """
+"""Randomly start and stop nodes to bring the cluster close to the quorum point."""
 
 __all__ = ["NearQuorumPointTest"]
-__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.tests.ctstest import CTSTest
@@ -18,31 +18,27 @@ from pacemaker._cts.tests.ctstest import CTSTest
 
 
 class NearQuorumPointTest(CTSTest):
-    """ A concrete test that randomly starts and stops nodes to bring the
-        cluster close to the quorum point
-    """
+    """Randomly start and stop nodes to bring the cluster close to the quorum point."""
 
     def __init__(self, cm):
-        """ Create a new NearQuorumPointTest instance
-
-            Arguments:
-
-            cm -- A ClusterManager instance
         """
+        Create a new NearQuorumPointTest instance.
 
+        Arguments:
+        cm -- A ClusterManager instance
+        """
         CTSTest.__init__(self, cm)
 
         self.name = "NearQuorumPoint"
 
     def __call__(self, dummy):
-        """ Perform this test """
-
+        """Perform this test."""
         self.incr("calls")
         startset = []
         stopset = []
 
         stonith = self._cm.prepare_fencing_watcher()
-        #decide what to do with each node
+        # decide what to do with each node
         for node in self._env["nodes"]:
             action = self._env.random_gen.choice(["start", "stop"])
 
@@ -54,7 +50,7 @@ class NearQuorumPointTest(CTSTest):
         self.debug("start nodes:%r" % startset)
         self.debug("stop nodes:%r" % stopset)
 
-        #add search patterns
+        # add search patterns
         watchpats = []
         for node in stopset:
             if self._cm.expected_status[node] == "up":
@@ -78,7 +74,7 @@ class NearQuorumPointTest(CTSTest):
 
         watch.set_watch()
 
-        #begin actions
+        # begin actions
         for node in stopset:
             if self._cm.expected_status[node] == "up":
                 self._cm.stop_cm_async(node)
@@ -87,7 +83,7 @@ class NearQuorumPointTest(CTSTest):
             if self._cm.expected_status[node] == "down":
                 self._cm.start_cm_async(node)
 
-        #get the result
+        # get the result
         if watch.look_for_all():
             self._cm.cluster_stable()
             self._cm.fencing_cleanup("NearQuorumPoint", stonith)
@@ -95,7 +91,7 @@ class NearQuorumPointTest(CTSTest):
 
         self._logger.log("Warn: Patterns not found: %r" % watch.unmatched)
 
-        #get the "bad" nodes
+        # get the "bad" nodes
         upnodes = []
         for node in stopset:
             if self._cm.stat_cm(node):

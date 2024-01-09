@@ -1,7 +1,7 @@
-""" A module providing functions for manipulating corosync """
+"""A module providing functions for manipulating corosync."""
 
 __all__ = ["Corosync", "localname"]
-__copyright__ = "Copyright 2009-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2009-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+)"
 
 import os
@@ -40,14 +40,12 @@ logging {
 
 
 def corosync_cfg_exists():
-    """ Does the corosync config file exist? """
-
+    """Return whether the corosync config file exists."""
     return os.path.exists(BuildOptions.COROSYNC_CONFIG_FILE)
 
 
 def corosync_log_file(cfgfile):
-    """ Where does corosync log to? """
-
+    """Return the path to the corosync log file, or None."""
     with open(cfgfile, "r", encoding="utf-8") as f:
         for line in f.readlines():
             # "to_logfile:" could also be in the config file, so check for a
@@ -59,8 +57,7 @@ def corosync_log_file(cfgfile):
 
 
 def generate_corosync_cfg(logdir, cluster_name, node_name):
-    """ Generate the corosync config file, if it does not already exist """
-
+    """Generate the corosync config file, if it does not already exist."""
     if corosync_cfg_exists():
         return False
 
@@ -73,8 +70,7 @@ def generate_corosync_cfg(logdir, cluster_name, node_name):
 
 
 def localname():
-    """ Return the uname of the local host """
-
+    """Return the uname of the local host."""
     our_uname = stdout_from_command(["uname", "-n"])
     if our_uname:
         our_uname = our_uname[0]
@@ -85,18 +81,17 @@ def localname():
 
 
 class Corosync:
-    """ A class for managing corosync processes and config files """
+    """A class for managing corosync processes and config files."""
 
     def __init__(self, verbose, logdir, cluster_name):
-        """ Create a new Corosync instance.
-
-            Arguments:
-
-            verbose      -- Whether to print the corosync log file
-            logdir       -- The base directory under which to store log files
-            cluster_name -- The name of the cluster
         """
+        Create a new Corosync instance.
 
+        Arguments:
+        verbose      -- Whether to print the corosync log file
+        logdir       -- The base directory under which to store log files
+        cluster_name -- The name of the cluster
+        """
         self.verbose = verbose
         self.logdir = logdir
         self.cluster_name = cluster_name
@@ -104,8 +99,7 @@ class Corosync:
         self._generated_cfg_file = False
 
     def _ready(self, logfile, timeout=10):
-        """ Is corosync ready to go? """
-
+        """Return whether corosync is ready."""
         i = 0
 
         while i < timeout:
@@ -123,16 +117,15 @@ class Corosync:
         raise TimeoutError
 
     def start(self, kill_first=False, timeout=10):
-        """ Start the corosync process
-
-            Arguments:
-
-            kill_first -- Whether to kill any pre-existing corosync processes before
-                          starting a new one
-            timeout    -- If corosync does not start within this many seconds, raise
-                          TimeoutError
         """
+        Start the corosync process.
 
+        Arguments:
+        kill_first -- Whether to kill any pre-existing corosync processes before
+                      starting a new one
+        timeout    -- If corosync does not start within this many seconds, raise
+                      TimeoutError
+        """
         if kill_first:
             killall(["corosync"])
 
@@ -150,8 +143,7 @@ class Corosync:
         self._ready(logfile, timeout=timeout)
 
     def stop(self):
-        """ Stop the corosync process """
-
+        """Stop the corosync process."""
         killall(["corosync"])
 
         # If we did not write out the corosync config file, don't do anything else.

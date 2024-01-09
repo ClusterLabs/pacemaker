@@ -1,7 +1,7 @@
-""" Corosync-specific class for Pacemaker's Cluster Test Suite (CTS) """
+"""Corosync-specific class for Pacemaker's Cluster Test Suite (CTS)."""
 
 __all__ = ["Corosync2"]
-__copyright__ = "Copyright 2007-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2007-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.CTS import Process
@@ -14,14 +14,12 @@ from pacemaker._cts.patterns import PatternSelector
 # self._rsh in environment.py.
 # pylint: disable=unsubscriptable-object
 
+
 class Corosync2(ClusterManager):
-    """ A subclass of ClusterManager specialized to handle corosync2 and later
-        based clusters
-    """
+    """A subclass of ClusterManager specialized to handle corosync2 and later based clusters."""
 
     def __init__(self):
-        """ Create a new Corosync2 instance """
-
+        """Create a new Corosync2 instance."""
         ClusterManager.__init__(self)
 
         self._fullcomplist = {}
@@ -29,10 +27,7 @@ class Corosync2(ClusterManager):
 
     @property
     def components(self):
-        """ A list of all patterns that should be ignored for the cluster's
-            components.
-        """
-
+        """Return a list of patterns that should be ignored for the cluster's components."""
         complist = []
 
         if not self._fullcomplist:

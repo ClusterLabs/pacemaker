@@ -8,6 +8,7 @@ import unittest
 
 from pacemaker.exitstatus import ExitStatus
 
+
 class ExitStatusTestCase(unittest.TestCase):
     def test_min_max(self):
         self.assertEqual(ExitStatus.OK, 0)

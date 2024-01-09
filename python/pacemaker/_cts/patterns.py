@@ -1,4 +1,4 @@
-""" Pattern-holding classes for Pacemaker's Cluster Test Suite (CTS) """
+"""Pattern-holding classes for Pacemaker's Cluster Test Suite (CTS)."""
 
 __all__ = ["PatternSelector"]
 __copyright__ = "Copyright 2008-2024 the Pacemaker project contributors"
@@ -8,17 +8,16 @@ import argparse
 
 from pacemaker.buildoptions import BuildOptions
 
+
 class BasePatterns:
-    """ The base class for holding a stack-specific set of command and log
-        file/stdout patterns.  Stack-specific classes need to be built on top
-        of this one.
+    """
+    The base class for holding a stack-specific set of command and log file/stdout patterns.
+
+    Stack-specific classes need to be built on top of this one.
     """
 
     def __init__(self):
-        """ Create a new BasePatterns instance which holds a very minimal set of
-            basic patterns.
-        """
-
+        """Create a new BasePatterns instance which holds a very minimal set of basic patterns."""
         self._bad_news = []
         self._components = {}
         self._name = "crm-base"
@@ -41,57 +40,58 @@ class BasePatterns:
         ]
 
         self._commands = {
-            "StatusCmd"      : "crmadmin -t 60 -S %s 2>/dev/null",
-            "CibQuery"       : "cibadmin -Ql",
-            "CibAddXml"      : "cibadmin --modify -c --xml-text %s",
-            "CibDelXpath"    : "cibadmin --delete --xpath %s",
-            "RscRunning"     : BuildOptions.DAEMON_DIR + "/cts-exec-helper -R -r %s",
-            "CIBfile"        : "%s:" + BuildOptions.CIB_DIR + "/cib.xml",
-            "TmpDir"         : "/tmp",
+            "StatusCmd": "crmadmin -t 60 -S %s 2>/dev/null",
+            "CibQuery": "cibadmin -Ql",
+            "CibAddXml": "cibadmin --modify -c --xml-text %s",
+            "CibDelXpath": "cibadmin --delete --xpath %s",
+            "RscRunning": BuildOptions.DAEMON_DIR + "/cts-exec-helper -R -r %s",
+            "CIBfile": "%s:" + BuildOptions.CIB_DIR + "/cib.xml",
+            "TmpDir": "/tmp",
 
-            "BreakCommCmd"   : "iptables -A INPUT -s %s -j DROP >/dev/null 2>&1",
-            "FixCommCmd"     : "iptables -D INPUT -s %s -j DROP >/dev/null 2>&1",
+            "BreakCommCmd": "iptables -A INPUT -s %s -j DROP >/dev/null 2>&1",
+            "FixCommCmd": "iptables -D INPUT -s %s -j DROP >/dev/null 2>&1",
 
-            "MaintenanceModeOn"    : "cibadmin --modify -c --xml-text '<cluster_property_set id=\"cib-bootstrap-options\"><nvpair id=\"cts-maintenance-mode-setting\" name=\"maintenance-mode\" value=\"true\"/></cluster_property_set>'",
-            "MaintenanceModeOff"    : "cibadmin --delete --xpath \"//nvpair[@name='maintenance-mode']\"",
+            "MaintenanceModeOn": "cibadmin --modify -c --xml-text '<cluster_property_set id=\"cib-bootstrap-options\"><nvpair id=\"cts-maintenance-mode-setting\" name=\"maintenance-mode\" value=\"true\"/></cluster_property_set>'",
+            "MaintenanceModeOff": "cibadmin --delete --xpath \"//nvpair[@name='maintenance-mode']\"",
 
-            "StandbyCmd"      : "crm_attribute -Vq  -U %s -n standby -l forever -v %s 2>/dev/null",
-            "StandbyQueryCmd" : "crm_attribute -qG -U %s -n standby -l forever -d off 2>/dev/null",
+            "StandbyCmd": "crm_attribute -Vq  -U %s -n standby -l forever -v %s 2>/dev/null",
+            "StandbyQueryCmd": "crm_attribute -qG -U %s -n standby -l forever -d off 2>/dev/null",
         }
 
         self._search = {
-            "Pat:DC_IDLE"      : r"pacemaker-controld.*State transition.*-> S_IDLE",
+            "Pat:DC_IDLE": r"pacemaker-controld.*State transition.*-> S_IDLE",
 
             # This won't work if we have multiple partitions
-            "Pat:Local_started" : r"%s\W.*controller successfully started",
-            "Pat:NonDC_started" : r"%s\W.*State transition.*-> S_NOT_DC",
-            "Pat:DC_started"    : r"%s\W.*State transition.*-> S_IDLE",
-            "Pat:We_stopped"    : r"%s\W.*OVERRIDE THIS PATTERN",
-            "Pat:They_stopped"  : r"%s\W.*LOST:.* %s ",
-            "Pat:They_dead"     : r"node %s.*: is dead",
-            "Pat:They_up"       : r"%s %s\W.*OVERRIDE THIS PATTERN",
-            "Pat:TransitionComplete" : "Transition status: Complete: complete",
+            "Pat:Local_started": r"%s\W.*controller successfully started",
+            "Pat:NonDC_started": r"%s\W.*State transition.*-> S_NOT_DC",
+            "Pat:DC_started": r"%s\W.*State transition.*-> S_IDLE",
+            "Pat:We_stopped": r"%s\W.*OVERRIDE THIS PATTERN",
+            "Pat:They_stopped": r"%s\W.*LOST:.* %s ",
+            "Pat:They_dead": r"node %s.*: is dead",
+            "Pat:They_up": r"%s %s\W.*OVERRIDE THIS PATTERN",
+            "Pat:TransitionComplete": "Transition status: Complete: complete",
 
-            "Pat:Fencing_start"   : r"Requesting peer fencing .* targeting %s",
-            "Pat:Fencing_ok"      : r"pacemaker-fenced.*:\s*Operation .* targeting %s by .* for .*@.*: OK",
-            "Pat:Fencing_recover" : r"pacemaker-schedulerd.*: Recover\s+%s",
-            "Pat:Fencing_active"  : r"stonith resource .* is active on 2 nodes (attempting recovery)",
-            "Pat:Fencing_probe"   : r"pacemaker-controld.* Result of probe operation for %s on .*: Error",
+            "Pat:Fencing_start": r"Requesting peer fencing .* targeting %s",
+            "Pat:Fencing_ok": r"pacemaker-fenced.*:\s*Operation .* targeting %s by .* for .*@.*: OK",
+            "Pat:Fencing_recover": r"pacemaker-schedulerd.*: Recover\s+%s",
+            "Pat:Fencing_active": r"stonith resource .* is active on 2 nodes (attempting recovery)",
+            "Pat:Fencing_probe": r"pacemaker-controld.* Result of probe operation for %s on .*: Error",
 
-            "Pat:RscOpOK"       : r"pacemaker-controld.*:\s+Result of %s operation for %s.*: (0 \()?ok",
-            "Pat:RscOpFail"     : r"pacemaker-schedulerd.*:.*Unexpected result .* recorded for %s of %s ",
-            "Pat:CloneOpFail"   : r"pacemaker-schedulerd.*:.*Unexpected result .* recorded for %s of (%s|%s) ",
-            "Pat:RscRemoteOpOK" : r"pacemaker-controld.*:\s+Result of %s operation for %s on %s: (0 \()?ok",
-            "Pat:NodeFenced"    : r"pacemaker-controld.*:\s* Peer %s was terminated \(.*\) by .* on behalf of .*: OK",
+            "Pat:RscOpOK": r"pacemaker-controld.*:\s+Result of %s operation for %s.*: (0 \()?ok",
+            "Pat:RscOpFail": r"pacemaker-schedulerd.*:.*Unexpected result .* recorded for %s of %s ",
+            "Pat:CloneOpFail": r"pacemaker-schedulerd.*:.*Unexpected result .* recorded for %s of (%s|%s) ",
+            "Pat:RscRemoteOpOK": r"pacemaker-controld.*:\s+Result of %s operation for %s on %s: (0 \()?ok",
+            "Pat:NodeFenced": r"pacemaker-controld.*:\s* Peer %s was terminated \(.*\) by .* on behalf of .*: OK",
         }
 
     def get_component(self, key):
-        """ Return the patterns for a single component as a list, given by key.
-            This is typically the name of some subprogram (pacemaker-based,
-            pacemaker-fenced, etc.) or various special purpose keys.  If key is
-            unknown, return an empty list.
         """
+        Return the patterns for a single component as a list, given by key.
 
+         This is typically the name of some subprogram (pacemaker-based,
+         pacemaker-fenced, etc.) or various special purpose keys.  If key is
+         unknown, return an empty list.
+        """
         if key in self._components:
             return self._components[key]
 
@@ -99,11 +99,12 @@ class BasePatterns:
         return []
 
     def get_patterns(self, key):
-        """ Return various patterns supported by this object, given by key.
-            Depending on the key, this could either be a list or a hash.  If key
-            is unknown, return None.
         """
+        Return various patterns supported by this object, given by key.
 
+        Depending on the key, this could either be a list or a hash.  If key is
+        unknown, return None.
+        """
         if key == "BadNews":
             return self._bad_news
         if key == "BadNewsIgnore":
@@ -131,36 +132,36 @@ class BasePatterns:
 
 
 class Corosync2Patterns(BasePatterns):
-    """ Patterns for Corosync version 2 cluster manager class """
+    """Patterns for Corosync version 2 cluster manager class."""
 
     def __init__(self):
         BasePatterns.__init__(self)
         self._name = "crm-corosync"
 
         self._commands.update({
-            "StartCmd"       : "service corosync start && service pacemaker start",
-            "StopCmd"        : "service pacemaker stop; [ ! -e /usr/sbin/pacemaker-remoted ] || service pacemaker_remote stop; service corosync stop",
+            "StartCmd": "service corosync start && service pacemaker start",
+            "StopCmd": "service pacemaker stop; [ ! -e /usr/sbin/pacemaker-remoted ] || service pacemaker_remote stop; service corosync stop",
 
-            "EpochCmd"       : "crm_node -e",
-            "QuorumCmd"      : "crm_node -q",
-            "PartitionCmd"   : "crm_node -p",
+            "EpochCmd": "crm_node -e",
+            "QuorumCmd": "crm_node -q",
+            "PartitionCmd": "crm_node -p",
         })
 
         self._search.update({
             # Close enough ... "Corosync Cluster Engine exiting normally" isn't
             # printed reliably.
-            "Pat:We_stopped"   : r"%s\W.*Unloading all Corosync service engines",
-            "Pat:They_stopped" : r"%s\W.*pacemaker-controld.*Node %s(\[|\s).*state is now lost",
-            "Pat:They_dead"    : r"pacemaker-controld.*Node %s(\[|\s).*state is now lost",
-            "Pat:They_up"      : r"\W%s\W.*pacemaker-controld.*Node %s state is now member",
+            "Pat:We_stopped": r"%s\W.*Unloading all Corosync service engines",
+            "Pat:They_stopped": r"%s\W.*pacemaker-controld.*Node %s(\[|\s).*state is now lost",
+            "Pat:They_dead": r"pacemaker-controld.*Node %s(\[|\s).*state is now lost",
+            "Pat:They_up": r"\W%s\W.*pacemaker-controld.*Node %s state is now member",
 
-            "Pat:ChildExit"    : r"\[[0-9]+\] exited with status [0-9]+ \(",
+            "Pat:ChildExit": r"\[[0-9]+\] exited with status [0-9]+ \(",
             # "with signal 9" == pcmk_child_exit(), "$" == check_active_before_startup_processes()
-            "Pat:ChildKilled"  : r"%s\W.*pacemakerd.*%s\[[0-9]+\] terminated( with signal 9|$)",
-            "Pat:ChildRespawn" : r"%s\W.*pacemakerd.*Respawning %s subdaemon after unexpected exit",
+            "Pat:ChildKilled": r"%s\W.*pacemakerd.*%s\[[0-9]+\] terminated( with signal 9|$)",
+            "Pat:ChildRespawn": r"%s\W.*pacemakerd.*Respawning %s subdaemon after unexpected exit",
 
-            "Pat:InfraUp"      : r"%s\W.*corosync.*Initializing transport",
-            "Pat:PacemakerUp"  : r"%s\W.*pacemakerd.*Starting Pacemaker",
+            "Pat:InfraUp": r"%s\W.*corosync.*Initializing transport",
+            "Pat:PacemakerUp": r"%s\W.*pacemakerd.*Starting Pacemaker",
         })
 
         self._ignore += [
@@ -245,7 +246,7 @@ class Corosync2Patterns(BasePatterns):
             r"error:.*cib_(shm|rw) IPC provider disconnected while waiting",
             r"error:.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
             r"error: Lost fencer connection",
-            ]
+        ]
 
         self._components["corosync"] = [
             # We expect each daemon to lose its cluster connection.
@@ -344,17 +345,16 @@ patternVariants = {
 
 
 class PatternSelector:
-    """ A class for choosing one of several Pattern objects and then extracting
-        various pieces of information from that object
-    """
+    """Choose from among several Pattern objects and return the information from that object."""
 
     def __init__(self, name="crm-corosync"):
-        """ Create a new PatternSelector object by instantiating whatever class
-            is given by name.  Defaults to Corosync2Patterns for "crm-corosync" or
-            None.  While other objects could be supported in the future, only this
-            and the base object are supported at this time.
         """
+        Create a new PatternSelector object.
 
+        Instantiate whatever class is given by name.  Defaults to Corosync2Patterns
+        for "crm-corosync" or None.  While other objects could be supported in the
+        future, only this and the base object are supported at this time.
+        """
         self._name = name
 
         # If no name was given, use the default.  Otherwise, look up the appropriate
@@ -365,23 +365,23 @@ class PatternSelector:
             self._base = patternVariants[name]()
 
     def get_patterns(self, kind):
-        """ Call get_patterns on the previously instantiated pattern object """
-
+        """Call get_patterns on the previously instantiated pattern object."""
         return self._base.get_patterns(kind)
 
     def get_template(self, key):
-        """ Return a single pattern from the previously instantiated pattern
-            object as a string, or None if no pattern exists for the given key.
         """
+        Return a single pattern from the previously instantiated pattern object.
 
+        If no pattern exists for the given key, return None.
+        """
         return self._base[key]
 
     def get_component(self, kind):
-        """ Call get_component on the previously instantiated pattern object """
-
+        """Call get_component on the previously instantiated pattern object."""
         return self._base.get_component(kind)
 
     def __getitem__(self, key):
+        """Return the pattern for the given key, or None if it does not exist."""
         return self.get_template(key)
 
 

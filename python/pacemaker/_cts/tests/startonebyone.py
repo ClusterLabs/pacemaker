@@ -1,7 +1,7 @@
-""" Start all stopped nodes serially """
+"""Start all stopped nodes serially."""
 
 __all__ = ["StartOnebyOne"]
-__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.tests.ctstest import CTSTest
@@ -18,16 +18,15 @@ from pacemaker._cts.tests.starttest import StartTest
 
 
 class StartOnebyOne(CTSTest):
-    """ A concrete test that starts all stopped nodes serially """
+    """Start all stopped nodes serially."""
 
     def __init__(self, cm):
-        """ Create a new StartOnebyOne instance
-
-            Arguments:
-
-            cm -- A ClusterManager instance
         """
+        Create a new StartOnebyOne instance.
 
+        Arguments:
+        cm -- A ClusterManager instance
+        """
         CTSTest.__init__(self, cm)
         self.name = "StartOnebyOne"
 
@@ -35,8 +34,7 @@ class StartOnebyOne(CTSTest):
         self._stopall = SimulStopLite(cm)
 
     def __call__(self, dummy):
-        """ Perform this test """
-
+        """Perform this test."""
         self.incr("calls")
 
         ret = self._stopall(None)

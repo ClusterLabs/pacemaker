@@ -1,7 +1,7 @@
-""" Start a node and then tell it to stop before it is fully running """
+"""Start a node and then tell it to stop before it is fully running."""
 
 __all__ = ["PartialStart"]
-__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.tests.ctstest import CTSTest
@@ -19,16 +19,15 @@ from pacemaker._cts.tests.stoptest import StopTest
 
 
 class PartialStart(CTSTest):
-    """ A concrete test that interrupts a node before it's finished starting up """
+    """Interrupt a node before it's finished starting up."""
 
     def __init__(self, cm):
-        """ Create a new PartialStart instance
-
-            Arguments:
-
-            cm -- A ClusterManager instance
         """
+        Create a new PartialStart instance.
 
+        Arguments:
+        cm -- A ClusterManager instance
+        """
         CTSTest.__init__(self, cm)
 
         self.name = "PartialStart"
@@ -38,8 +37,7 @@ class PartialStart(CTSTest):
         self._stopall = SimulStopLite(cm)
 
     def __call__(self, node):
-        """ Perform this test """
-
+        """Perform this test."""
         self.incr("calls")
 
         ret = self._stopall(None)
@@ -66,8 +64,7 @@ class PartialStart(CTSTest):
 
     @property
     def errors_to_ignore(self):
-        """ Return list of errors which should be ignored """
-
+        """Return a list of errors which should be ignored."""
         # We might do some fencing in the 2-node case if we make it up far enough
         return [
             r"Executing reboot fencing operation",
