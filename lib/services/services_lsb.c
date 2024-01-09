@@ -30,10 +30,12 @@
         PCMK_XA_NAME "='%s' "                                           \
         PCMK_XA_VERSION "='" PCMK_DEFAULT_AGENT_VERSION "'>\n"          \
     "  <" PCMK_XE_VERSION ">1.0</" PCMK_XE_VERSION ">\n"                \
-    "  <" PCMK_XE_LONGDESC " lang='en'>\n"                              \
+    "  <" PCMK_XE_LONGDESC " " PCMK_XA_LANG "='en'>\n"                  \
         "%s"                                                            \
     "  </" PCMK_XE_LONGDESC ">\n"                                       \
-    "  <" PCMK_XE_SHORTDESC " lang='en'>%s</" PCMK_XE_SHORTDESC">\n"    \
+    "  <" PCMK_XE_SHORTDESC " " PCMK_XA_LANG "='en'>"                   \
+        "%s"                                                            \
+      "</" PCMK_XE_SHORTDESC">\n"                                       \
     "  <" PCMK_XE_PARAMETERS "/>\n"                                     \
     "  <actions>\n"                                                     \
     "    <action name='meta-data'    timeout='5' />\n"                  \

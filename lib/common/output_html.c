@@ -112,7 +112,7 @@ html_init(pcmk__output_t *out) {
     priv->root = create_xml_node(NULL, "html");
     xmlCreateIntSubset(priv->root->doc, (pcmkXmlStr) "html", NULL, NULL);
 
-    crm_xml_add(priv->root, "lang", "en");
+    crm_xml_add(priv->root, PCMK_XA_LANG, "en");
     g_queue_push_tail(priv->parent_q, priv->root);
     priv->errors = NULL;
 
@@ -285,7 +285,7 @@ html_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
     CRM_ASSERT(out != NULL);
 
     node = pcmk__output_create_html_node(out, "pre", NULL, NULL, buf);
-    crm_xml_add(node, "lang", "xml");
+    crm_xml_add(node, PCMK_XA_LANG, "xml");
 }
 
 G_GNUC_PRINTF(4, 5)

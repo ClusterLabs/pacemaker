@@ -93,6 +93,7 @@ extern "C" {
 #define PCMK_XA_ID_REF                      "id-ref"
 #define PCMK_XA_INDEX                       "index"
 #define PCMK_XA_LAST_RC_CHANGE              "last-rc-change"
+#define PCMK_XA_LANG                        "lang"
 #define PCMK_XA_NAME                        "name"
 #define PCMK_XA_NO_QUORUM_PANIC             "no-quorum-panic"
 #define PCMK_XA_NUM_UPDATES                 "num_updates"
