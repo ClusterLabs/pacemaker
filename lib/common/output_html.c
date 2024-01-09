@@ -112,7 +112,7 @@ html_init(pcmk__output_t *out) {
     priv->root = create_xml_node(NULL, "html");
     xmlCreateIntSubset(priv->root->doc, (pcmkXmlStr) "html", NULL, NULL);
 
-    crm_xml_add(priv->root, PCMK_XA_LANG, "en");
+    crm_xml_add(priv->root, PCMK_XA_LANG, PCMK__VALUE_EN);
     g_queue_push_tail(priv->parent_q, priv->root);
     priv->errors = NULL;
 

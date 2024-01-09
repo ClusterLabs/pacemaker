@@ -450,7 +450,9 @@ add_desc(GString *s, const char *tag, const char *desc, const char *values,
     if (spaces != NULL) {
         g_string_append(s, spaces);
     }
-    pcmk__g_strcat(s, "<", tag, " " PCMK_XA_LANG "=\"en\">", escaped_en, NULL);
+    pcmk__g_strcat(s,
+                   "<", tag, " " PCMK_XA_LANG "=\"" PCMK__VALUE_EN "\">",
+                   escaped_en, NULL);
 
     if (values != NULL) {
         // Append a period if desc doesn't end in "." or ".)"
