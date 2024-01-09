@@ -22,8 +22,6 @@
 
 #include <pacemaker-controld.h>
 
-extern void crm_shutdown(int nsig);
-
 static enum crmd_fsa_input handle_message(xmlNode *msg,
                                           enum crmd_fsa_cause cause);
 static void handle_response(xmlNode *stored_msg);
@@ -1120,12 +1118,6 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
         return I_ROUTER;
 
     } else if (strcmp(op, CRM_OP_NOOP) == 0) {
-        return I_NULL;
-
-    } else if (strcmp(op, CRM_OP_LOCAL_SHUTDOWN) == 0) {
-
-        crm_shutdown(SIGTERM);
-        /*return I_SHUTDOWN; */
         return I_NULL;
 
     } else if (strcmp(op, CRM_OP_PING) == 0) {

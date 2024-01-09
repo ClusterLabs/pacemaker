@@ -253,11 +253,11 @@ extern "C" {
 //! \deprecated Use \c PCMK_META_ALLOW_MIGRATE instead
 #define XML_OP_ATTR_ALLOW_MIGRATE "allow-migrate"
 
-//! \deprecated Use \c XML_BOOLEAN_TRUE instead
-#define XML_BOOLEAN_YES XML_BOOLEAN_TRUE
+//! \deprecated Use \c PCMK_VALUE_TRUE instead
+#define XML_BOOLEAN_YES PCMK_VALUE_TRUE
 
-//! \deprecated Use \c XML_BOOLEAN_FALSE instead
-#define XML_BOOLEAN_NO XML_BOOLEAN_FALSE
+//! \deprecated Use \c PCMK_VALUE_FALSE instead
+#define XML_BOOLEAN_NO PCMK_VALUE_FALSE
 
 //! \deprecated Use \c PCMK_REMOTE_RA_ADDR instead
 #define XML_RSC_ATTR_REMOTE_RA_ADDR "addr"
@@ -396,6 +396,12 @@ extern "C" {
 //! \deprecated Do not use
 #define F_XML_TAGNAME "__name__"
 #endif
+
+//! \deprecated Use \c PCMK_VALUE_TRUE instead
+#define XML_BOOLEAN_TRUE PCMK_VALUE_TRUE
+
+//! \deprecated Use \c PCMK_VALUE_FALSE instead
+#define XML_BOOLEAN_FALSE PCMK_VALUE_FALSE
 
 #ifdef __cplusplus
 }

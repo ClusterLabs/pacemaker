@@ -132,9 +132,6 @@ extern "C" {
 
 #  define XML_ATTR_TIMEOUT		"timeout"
 
-#  define XML_BOOLEAN_TRUE		"true"
-#  define XML_BOOLEAN_FALSE		"false"
-
 #  define XML_TAG_OPTIONS		"options"
 
 /*---- top level tags/attrs */

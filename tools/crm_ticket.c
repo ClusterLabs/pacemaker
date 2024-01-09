@@ -116,16 +116,20 @@ get_attr_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError
 static gboolean
 grant_standby_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     if (pcmk__str_any_of(option_name, "--grant", "-g", NULL)) {
-        g_hash_table_insert(attr_set, strdup("granted"), strdup("true"));
+        g_hash_table_insert(attr_set, strdup("granted"),
+                            strdup(PCMK_VALUE_TRUE));
         modified = true;
     } else if (pcmk__str_any_of(option_name, "--revoke", "-r", NULL)) {
-        g_hash_table_insert(attr_set, strdup("granted"), strdup("false"));
+        g_hash_table_insert(attr_set, strdup("granted"),
+                            strdup(PCMK_VALUE_FALSE));
         modified = true;
     } else if (pcmk__str_any_of(option_name, "--standby", "-s", NULL)) {
-        g_hash_table_insert(attr_set, strdup("standby"), strdup("true"));
+        g_hash_table_insert(attr_set, strdup("standby"),
+                            strdup(PCMK_VALUE_TRUE));
         modified = true;
     } else if (pcmk__str_any_of(option_name, "--activate", "-a", NULL)) {
-        g_hash_table_insert(attr_set, strdup("standby"), strdup("false"));
+        g_hash_table_insert(attr_set, strdup("standby"),
+                            strdup(PCMK_VALUE_FALSE));
         modified = true;
     }
 

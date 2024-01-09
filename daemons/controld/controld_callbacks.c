@@ -178,7 +178,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 const char *dc_s = controld_globals.dc_name;
 
                 if ((dc_s == NULL) && AM_I_DC) {
-                    dc_s = "true";
+                    dc_s = PCMK_VALUE_TRUE;
                 }
 
                 crm_info("Node %s is %s a peer " CRM_XS

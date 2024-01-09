@@ -530,184 +530,261 @@ static pcmk__cluster_option_t fencer_options[] = {
      * long description
      */
     {
-        PCMK_STONITH_HOST_ARGUMENT, NULL, "string", NULL, "port", NULL,
-        N_("Advanced use only: An alternate parameter to supply instead of 'port'"),
-        N_("some devices do not support the "
-           "standard 'port' parameter or may provide additional ones. Use "
-           "this to specify an alternate, device-specific, parameter "
-           "that should indicate the machine to be fenced. A value of "
-           "none can be used to tell the cluster not to supply any "
-           "additional parameters.")
+        PCMK_STONITH_HOST_ARGUMENT, NULL, "string", NULL,
+        "port", NULL,
+        N_("*** Advanced Use Only *** "
+            "An alternate parameter to supply instead of 'port'"),
+        N_("Some devices do not support the standard 'port' parameter or may "
+            "provide additional ones. Use this to specify an alternate, device-"
+            "specific, parameter that should indicate the machine to be "
+            "fenced. A value of \"none\" can be used to tell the cluster not "
+            "to supply any additional parameters."),
     },
     {
-        PCMK_STONITH_HOST_MAP,NULL, "string", NULL, "", NULL,
-        N_("A mapping of host names to ports numbers for devices that do not support host names."),
-        N_("Eg. node1:1;node2:2,3 would tell the cluster to use port 1 for node1 and ports 2 and 3 for node2")
+        PCMK_STONITH_HOST_MAP, NULL, "string", NULL,
+        "", NULL,
+        N_("A mapping of node names to port numbers for devices that do not "
+            "support node names."),
+        N_("For example, \"node1:1;node2:2,3\" would tell the cluster to use "
+            "port 1 for node1 and ports 2 and 3 for node2."),
     },
     {
-        PCMK_STONITH_HOST_LIST,NULL, "string", NULL, "", NULL,
-        N_("Eg. node1,node2,node3"),
-        N_("A list of machines controlled by "
-               "this device (Optional unless pcmk_host_list=static-list)")
+        PCMK_STONITH_HOST_LIST, NULL, "string", NULL,
+        "", NULL,
+        N_("A list of nodes that can be targeted by this device (optional "
+            "unless pcmk_host_list=\"static-list\")"),
+        N_("For example, \"node1,node2,node3\"."),
     },
     {
-        PCMK_STONITH_HOST_CHECK,NULL, "string", NULL, "dynamic-list", NULL,
-        N_("How to determine which machines are controlled by the device."),
-        N_("Allowed values: dynamic-list "
-               "(query the device via the 'list' command), static-list "
-               "(check the pcmk_host_list attribute), status "
-               "(query the device via the 'status' command), "
-               "none (assume every device can fence every "
-               "machine)")
+        PCMK_STONITH_HOST_CHECK, NULL, "select",
+            "dynamic-list, static-list, status, none",
+        "dynamic-list", NULL,
+        N_("How to determine which nodes can be targeted by the device"),
+        N_("Use \"dynamic-list\" to query the device via the 'list' command; "
+            "\"static-list\" to check the pcmk_host_list attribute; "
+            "\"status\" to query the device via the 'status' command; or "
+            "\"none\" to assume every device can fence every node."),
     },
     {
-        PCMK_STONITH_DELAY_MAX,NULL, "time", NULL, "0s", NULL,
-        N_("Enable a base delay for fencing actions and specify base delay value."),
-        N_("Enable a delay of no more than the "
-               "time specified before executing fencing actions. Pacemaker "
-               "derives the overall delay by taking the value of "
-               "pcmk_delay_base and adding a random delay value such "
-               "that the sum is kept below this maximum.")
+        PCMK_STONITH_DELAY_MAX, NULL, "time", NULL,
+        "0s", NULL,
+        N_("Enable a base delay for fencing actions and specify base delay "
+            "value."),
+        N_("Enable a delay of no more than the time specified before executing "
+            "fencing actions. Pacemaker derives the overall delay by taking "
+            "the value of pcmk_delay_base and adding a random delay value such "
+            "that the sum is kept below this maximum."),
     },
     {
-        PCMK_STONITH_DELAY_BASE,NULL, "string", NULL, "0s", NULL,
-        N_("Enable a base delay for "
-               "fencing actions and specify base delay value."),
-        N_("This enables a static delay for "
-               "fencing actions, which can help avoid \"death matches\" where "
-               "two nodes try to fence each other at the same time. If "
-               "pcmk_delay_max  is also used, a random delay will be "
-               "added such that the total delay is kept below that value."
-               "This can be set to a single time value to apply to any node "
-               "targeted by this device (useful if a separate device is "
-               "configured for each target), or to a node map (for example, "
-               "\"node1:1s;node2:5\") to set a different value per target.")
+        PCMK_STONITH_DELAY_BASE, NULL, "string", NULL,
+        "0s", NULL,
+        N_("Enable a base delay for fencing actions and specify base delay "
+            "value."),
+        N_("This enables a static delay for fencing actions, which can help "
+            "avoid \"death matches\" where two nodes try to fence each other "
+            "at the same time. If pcmk_delay_max is also used, a random delay "
+            "will be added such that the total delay is kept below that value. "
+            "This can be set to a single time value to apply to any node "
+            "targeted by this device (useful if a separate device is "
+            "configured for each target), or to a node map (for example, "
+            "\"node1:1s;node2:5\") to set a different value for each target."),
     },
     {
-        PCMK_STONITH_ACTION_LIMIT,NULL, "integer", NULL, "1", NULL,
-        N_("The maximum number of actions can be performed in parallel on this device"),
-        N_("Cluster property concurrent-fencing=true needs to be configured first."
-             "Then use this to specify the maximum number of actions can be performed in parallel on this device. -1 is unlimited.")
+        PCMK_STONITH_ACTION_LIMIT, NULL, "integer", NULL,
+        "1", NULL,
+        N_("The maximum number of actions can be performed in parallel on this "
+            "device"),
+        N_("Cluster property concurrent-fencing=\"true\" needs to be "
+            "configured first. Then use this to specify the maximum number of "
+            "actions can be performed in parallel on this device. A value of "
+            "-1 means an unlimited number of actions can be performed in "
+            "parallel."),
     },
     {
         "pcmk_reboot_action", NULL, "string", NULL,
         PCMK_ACTION_REBOOT, NULL,
-        N_("Advanced use only: An alternate command to run instead of 'reboot'"),
-        N_("Some devices do not support the standard commands or may provide additional ones.\n"
-           "Use this to specify an alternate, device-specific, command that implements the \'reboot\' action.")
+        N_("*** Advanced Use Only *** "
+            "An alternate command to run instead of 'reboot'"),
+        N_("Some devices do not support the standard commands or may provide "
+            "additional ones. Use this to specify an alternate, device-"
+            "specific, command that implements the 'reboot' action."),
     },
     {
-	"pcmk_reboot_timeout",NULL, "time", NULL, "60s", NULL,
-	N_("Advanced use only: Specify an alternate timeout to use for reboot actions instead of stonith-timeout"),
-        N_("Some devices need much more/less time to complete than normal."
-	   "Use this to specify an alternate, device-specific, timeout for \'reboot\' actions.")
+        "pcmk_reboot_timeout", NULL, "time", NULL,
+        "60s", NULL,
+        N_("*** Advanced Use Only *** "
+            "Specify an alternate timeout to use for 'reboot' actions instead "
+            "of stonith-timeout"),
+        N_("Some devices need much more/less time to complete than normal. "
+            "Use this to specify an alternate, device-specific, timeout for "
+            "'reboot' actions."),
     },
     {
-	"pcmk_reboot_retries",NULL, "integer", NULL, "2", NULL,
-	N_("Advanced use only: The maximum number of times to retry the 'reboot' command within the timeout period"),
-        N_("Some devices do not support multiple connections."
-           " Operations may 'fail' if the device is busy with another task so Pacemaker will automatically retry the operation,      if there is time remaining."
-           " Use this option to alter the number of times Pacemaker retries \'reboot\' actions before giving up.")
+        "pcmk_reboot_retries", NULL, "integer", NULL,
+        "2", NULL,
+        N_("*** Advanced Use Only *** "
+            "The maximum number of times to try the 'reboot' command within "
+            "the timeout period"),
+        N_("Some devices do not support multiple connections. Operations may "
+            "\"fail\" if the device is busy with another task. In that case, "
+            "Pacemaker will automatically retry the operation if there is time "
+            "remaining. Use this option to alter the number of times Pacemaker "
+            "tries a 'reboot' action before giving up."),
     },
     {
         "pcmk_off_action", NULL, "string", NULL,
         PCMK_ACTION_OFF, NULL,
-        N_("Advanced use only: An alternate command to run instead of \'off\'"),
-        N_("Some devices do not support the standard commands or may provide additional ones."
-           "Use this to specify an alternate, device-specific, command that implements the \'off\' action.")
+        N_("*** Advanced Use Only *** "
+            "An alternate command to run instead of 'off'"),
+        N_("Some devices do not support the standard commands or may provide "
+            "additional ones. Use this to specify an alternate, device-"
+            "specific, command that implements the 'off' action."),
     },
     {
-	"pcmk_off_timeout",NULL, "time", NULL, "60s", NULL,
-	N_("Advanced use only: Specify an alternate timeout to use for off actions instead of stonith-timeout"),
-        N_("Some devices need much more/less time to complete than normal."
-	   "Use this to specify an alternate, device-specific, timeout for \'off\' actions.")
+        "pcmk_off_timeout", NULL, "time", NULL,
+        "60s", NULL,
+        N_("*** Advanced Use Only *** "
+            "Specify an alternate timeout to use for 'off' actions instead of "
+            "stonith-timeout"),
+        N_("Some devices need much more/less time to complete than normal. "
+            "Use this to specify an alternate, device-specific, timeout for "
+            "'off' actions."),
     },
     {
-	"pcmk_off_retries",NULL, "integer", NULL, "2", NULL,
-	N_("Advanced use only: The maximum number of times to retry the 'off' command within the timeout period"),
-        N_("Some devices do not support multiple connections."
-           " Operations may 'fail' if the device is busy with another task so Pacemaker will automatically retry the operation,      if there is time remaining."
-           " Use this option to alter the number of times Pacemaker retries \'off\' actions before giving up.")
+        "pcmk_off_retries", NULL, "integer", NULL,
+        "2", NULL,
+        N_("*** Advanced Use Only *** "
+            "The maximum number of times to try the 'off' command within the "
+            "timeout period"),
+        N_("Some devices do not support multiple connections. Operations may "
+            "\"fail\" if the device is busy with another task. In that case, "
+            "Pacemaker will automatically retry the operation if there is time "
+            "remaining. Use this option to alter the number of times Pacemaker "
+            "tries a 'off' action before giving up."),
     },
     {
         "pcmk_on_action", NULL, "string", NULL,
         PCMK_ACTION_ON, NULL,
-        N_("Advanced use only: An alternate command to run instead of 'on'"),
-        N_("Some devices do not support the standard commands or may provide additional ones."
-           "Use this to specify an alternate, device-specific, command that implements the \'on\' action.")
+        N_("*** Advanced Use Only *** "
+            "An alternate command to run instead of 'on'"),
+        N_("Some devices do not support the standard commands or may provide "
+            "additional ones. Use this to specify an alternate, device-"
+            "specific, command that implements the 'on' action."),
     },
     {
-	"pcmk_on_timeout",NULL, "time", NULL, "60s", NULL,
-	N_("Advanced use only: Specify an alternate timeout to use for on actions instead of stonith-timeout"),
-        N_("Some devices need much more/less time to complete than normal."
-	   "Use this to specify an alternate, device-specific, timeout for \'on\' actions.")
+        "pcmk_on_timeout", NULL, "time", NULL,
+        "60s", NULL,
+        N_("*** Advanced Use Only *** "
+            "Specify an alternate timeout to use for 'on' actions instead of "
+            "stonith-timeout"),
+        N_("Some devices need much more/less time to complete than normal. "
+            "Use this to specify an alternate, device-specific, timeout for "
+            "'on' actions."),
     },
     {
-	"pcmk_on_retries",NULL, "integer", NULL, "2", NULL,
-	N_("Advanced use only: The maximum number of times to retry the 'on' command within the timeout period"),
-        N_("Some devices do not support multiple connections."
-           " Operations may 'fail' if the device is busy with another task so Pacemaker will automatically retry the operation,      if there is time remaining."
-           " Use this option to alter the number of times Pacemaker retries \'on\' actions before giving up.")
+        "pcmk_on_retries", NULL, "integer", NULL,
+        "2", NULL,
+        N_("*** Advanced Use Only *** "
+            "The maximum number of times to try the 'on' command within the "
+            "timeout period"),
+        N_("Some devices do not support multiple connections. Operations may "
+            "\"fail\" if the device is busy with another task. In that case, "
+            "Pacemaker will automatically retry the operation if there is time "
+            "remaining. Use this option to alter the number of times Pacemaker "
+            "tries a 'on' action before giving up."),
     },
     {
-        "pcmk_list_action",NULL, "string", NULL,
+        "pcmk_list_action", NULL, "string", NULL,
         PCMK_ACTION_LIST, NULL,
-        N_("Advanced use only: An alternate command to run instead of \'list\'"),
-        N_("Some devices do not support the standard commands or may provide additional ones."
-           "Use this to specify an alternate, device-specific, command that implements the \'list\' action.")
+        N_("*** Advanced Use Only *** "
+            "An alternate command to run instead of 'list'"),
+        N_("Some devices do not support the standard commands or may provide "
+            "additional ones. Use this to specify an alternate, device-"
+            "specific, command that implements the 'list' action."),
     },
     {
-	"pcmk_list_timeout",NULL, "time", NULL, "60s", NULL,
-	N_("Advanced use only: Specify an alternate timeout to use for list actions instead of stonith-timeout"),
-        N_("Some devices need much more/less time to complete than normal."
-	   "Use this to specify an alternate, device-specific, timeout for \'list\' actions.")
+        "pcmk_list_timeout", NULL, "time", NULL,
+        "60s", NULL,
+        N_("*** Advanced Use Only *** "
+            "Specify an alternate timeout to use for 'list' actions instead of "
+            "stonith-timeout"),
+        N_("Some devices need much more/less time to complete than normal. "
+            "Use this to specify an alternate, device-specific, timeout for "
+            "'list' actions."),
     },
     {
-	"pcmk_list_retries",NULL, "integer", NULL, "2", NULL,
-	N_("Advanced use only: The maximum number of times to retry the \'list\' command within the timeout period"),
-        N_("Some devices do not support multiple connections."
-           " Operations may 'fail' if the device is busy with another task so Pacemaker will automatically retry the operation,      if there is time remaining."
-           " Use this option to alter the number of times Pacemaker retries \'list\' actions before giving up.")
+        "pcmk_list_retries", NULL, "integer", NULL,
+        "2", NULL,
+        N_("*** Advanced Use Only *** "
+            "The maximum number of times to try the 'list' command within the "
+            "timeout period"),
+        N_("Some devices do not support multiple connections. Operations may "
+            "\"fail\" if the device is busy with another task. In that case, "
+            "Pacemaker will automatically retry the operation if there is time "
+            "remaining. Use this option to alter the number of times Pacemaker "
+            "tries a 'list' action before giving up."),
     },
     {
         "pcmk_monitor_action", NULL, "string", NULL,
         PCMK_ACTION_MONITOR, NULL,
-	N_("Advanced use only: An alternate command to run instead of \'monitor\'"),
-        N_("Some devices do not support the standard commands or may provide additional ones."
-                 "Use this to specify an alternate, device-specific, command that implements the \'monitor\' action.")
+        N_("*** Advanced Use Only *** "
+            "An alternate command to run instead of 'monitor'"),
+        N_("Some devices do not support the standard commands or may provide "
+            "additional ones. Use this to specify an alternate, device-"
+            "specific, command that implements the 'monitor' action."),
     },
     {
-	"pcmk_monitor_timeout",NULL, "time", NULL, "60s", NULL,
-	N_("Advanced use only: Specify an alternate timeout to use for monitor actions instead of stonith-timeout"),
-        N_("Some devices need much more/less time to complete than normal.\n"
-	   "Use this to specify an alternate, device-specific, timeout for \'monitor\' actions.")
+        "pcmk_monitor_timeout", NULL, "time", NULL,
+        "60s", NULL,
+        N_("*** Advanced Use Only *** "
+            "Specify an alternate timeout to use for 'monitor' actions instead "
+            "of stonith-timeout"),
+        N_("Some devices need much more/less time to complete than normal. "
+            "Use this to specify an alternate, device-specific, timeout for "
+            "'monitor' actions."),
     },
     {
-	"pcmk_monitor_retries",NULL, "integer", NULL, "2", NULL,
-	N_("Advanced use only: The maximum number of times to retry the \'monitor\' command within the timeout period"),
-        N_("Some devices do not support multiple connections."
-           " Operations may 'fail' if the device is busy with another task so Pacemaker will automatically retry the operation,      if there is time remaining."
-           " Use this option to alter the number of times Pacemaker retries \'monitor\' actions before giving up.")
+        "pcmk_monitor_retries", NULL, "integer", NULL,
+        "2", NULL,
+        N_("*** Advanced Use Only *** "
+            "The maximum number of times to try the 'monitor' command within "
+            "the timeout period"),
+        N_("Some devices do not support multiple connections. Operations may "
+            "\"fail\" if the device is busy with another task. In that case, "
+            "Pacemaker will automatically retry the operation if there is time "
+            "remaining. Use this option to alter the number of times Pacemaker "
+            "tries a 'monitor' action before giving up."),
     },
     {
         "pcmk_status_action", NULL, "string", NULL,
         PCMK_ACTION_STATUS, NULL,
-        N_("Advanced use only: An alternate command to run instead of \'status\'"),
-        N_("Some devices do not support the standard commands or may provide additional ones."
-           "Use this to specify an alternate, device-specific, command that implements the \'status\' action.")
+        N_("*** Advanced Use Only *** "
+            "An alternate command to run instead of 'status'"),
+        N_("Some devices do not support the standard commands or may provide "
+            "additional ones. Use this to specify an alternate, device-"
+            "specific, command that implements the 'status' action."),
     },
     {
-	"pcmk_status_timeout",NULL, "time", NULL, "60s", NULL,
-	N_("Advanced use only: Specify an alternate timeout to use for status actions instead of stonith-timeout"),
-        N_("Some devices need much more/less time to complete than normal."
-	   "Use this to specify an alternate, device-specific, timeout for \'status\' actions.")
+        "pcmk_status_timeout", NULL, "time", NULL,
+        "60s", NULL,
+        N_("*** Advanced Use Only *** "
+            "Specify an alternate timeout to use for 'status' actions instead "
+            "of stonith-timeout"),
+        N_("Some devices need much more/less time to complete than normal. "
+            "Use this to specify an alternate, device-specific, timeout for "
+            "'status' actions."),
     },
     {
-	"pcmk_status_retries",NULL, "integer", NULL, "2", NULL,
-	N_("Advanced use only: The maximum number of times to retry the \'status\' command within the timeout period"),
-        N_("Some devices do not support multiple connections."
-           " Operations may 'fail' if the device is busy with another task so Pacemaker will automatically retry the operation,      if there is time remaining."
-           " Use this option to alter the number of times Pacemaker retries \'status\' actions before giving up.")
+        "pcmk_status_retries", NULL, "integer", NULL,
+        "2", NULL,
+        N_("*** Advanced Use Only *** "
+            "The maximum number of times to try the 'status' command within "
+            "the timeout period"),
+        N_("Some devices do not support multiple connections. Operations may "
+            "\"fail\" if the device is busy with another task. In that case, "
+            "Pacemaker will automatically retry the operation if there is time "
+            "remaining. Use this option to alter the number of times Pacemaker "
+            "tries a 'status' action before giving up."),
     },
 };
 

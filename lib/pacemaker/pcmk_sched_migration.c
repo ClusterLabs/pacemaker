@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -135,7 +135,8 @@ pcmk__create_migration_actions(pcmk_resource_t *rsc, const pcmk_node_t *current)
              * hurt, and now that record-pending defaults to true, skipping it
              * matters even less.)
              */
-            add_hash_param(migrate_to->meta, XML_OP_ATTR_PENDING, "true");
+            add_hash_param(migrate_to->meta, XML_OP_ATTR_PENDING,
+                           PCMK_VALUE_TRUE);
         }
     }
 

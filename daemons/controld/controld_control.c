@@ -30,7 +30,7 @@ static crm_trigger_t *config_read_trigger = NULL;
 extern gboolean crm_connect_corosync(crm_cluster_t * cluster);
 #endif
 
-void crm_shutdown(int nsig);
+static void crm_shutdown(int nsig);
 static gboolean crm_read_options(gpointer user_data);
 
 /*	 A_HA_CONNECT	*/
@@ -665,7 +665,7 @@ static pcmk__cluster_option_t controller_options[] = {
     },
     {
         PCMK_OPT_SHUTDOWN_LOCK, NULL, "boolean", NULL,
-        "false", pcmk__valid_boolean,
+        PCMK_VALUE_FALSE, pcmk__valid_boolean,
         N_("Whether to lock resources to a cleanly shut down node"),
         N_("When true, resources active on a node when it is cleanly shut down "
             "are kept \"locked\" to that node (not allowed to run elsewhere) "
@@ -837,7 +837,7 @@ do_read_config(long long action,
     controld_trigger_config();
 }
 
-void
+static void
 crm_shutdown(int nsig)
 {
     const char *value = NULL;

@@ -870,7 +870,7 @@ static pcmk__cluster_option_t cib_opts[] = {
      */
     {
         PCMK_OPT_ENABLE_ACL, NULL, "boolean", NULL,
-        "false", pcmk__valid_boolean,
+        PCMK_VALUE_FALSE, pcmk__valid_boolean,
         N_("Enable Access Control Lists (ACLs) for the CIB"),
         NULL
     },

@@ -142,24 +142,29 @@
   <shortdesc lang="en">Instance attributes available for all &quot;stonith&quot;-class resources</shortdesc>
   <parameters>
     <parameter name="pcmk_host_argument">
-      <longdesc lang="en">some devices do not support the standard &apos;port&apos; parameter or may provide additional ones. Use this to specify an alternate, device-specific, parameter that should indicate the machine to be fenced. A value of none can be used to tell the cluster not to supply any additional parameters.</longdesc>
-      <shortdesc lang="en">Advanced use only: An alternate parameter to supply instead of &apos;port&apos;</shortdesc>
+      <longdesc lang="en">Some devices do not support the standard &apos;port&apos; parameter or may provide additional ones. Use this to specify an alternate, device-specific, parameter that should indicate the machine to be fenced. A value of &quot;none&quot; can be used to tell the cluster not to supply any additional parameters.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** An alternate parameter to supply instead of &apos;port&apos;</shortdesc>
       <content type="string" default=""/>
     </parameter>
     <parameter name="pcmk_host_map">
-      <longdesc lang="en">Eg. node1:1;node2:2,3 would tell the cluster to use port 1 for node1 and ports 2 and 3 for node2</longdesc>
-      <shortdesc lang="en">A mapping of host names to ports numbers for devices that do not support host names.</shortdesc>
+      <longdesc lang="en">For example, &quot;node1:1;node2:2,3&quot; would tell the cluster to use port 1 for node1 and ports 2 and 3 for node2.</longdesc>
+      <shortdesc lang="en">A mapping of node names to port numbers for devices that do not support node names.</shortdesc>
       <content type="string" default=""/>
     </parameter>
     <parameter name="pcmk_host_list">
-      <longdesc lang="en">A list of machines controlled by this device (Optional unless pcmk_host_list=static-list)</longdesc>
-      <shortdesc lang="en">Eg. node1,node2,node3</shortdesc>
+      <longdesc lang="en">For example, &quot;node1,node2,node3&quot;.</longdesc>
+      <shortdesc lang="en">A list of nodes that can be targeted by this device (optional unless pcmk_host_list=&quot;static-list&quot;)</shortdesc>
       <content type="string" default=""/>
     </parameter>
     <parameter name="pcmk_host_check">
-      <longdesc lang="en">Allowed values: dynamic-list (query the device via the &apos;list&apos; command), static-list (check the pcmk_host_list attribute), status (query the device via the &apos;status&apos; command), none (assume every device can fence every machine)</longdesc>
-      <shortdesc lang="en">How to determine which machines are controlled by the device.</shortdesc>
-      <content type="string" default=""/>
+      <longdesc lang="en">Use &quot;dynamic-list&quot; to query the device via the &apos;list&apos; command; &quot;static-list&quot; to check the pcmk_host_list attribute; &quot;status&quot; to query the device via the &apos;status&apos; command; or &quot;none&quot; to assume every device can fence every node. Allowed values: dynamic-list, static-list, status, none.</longdesc>
+      <shortdesc lang="en">How to determine which nodes can be targeted by the device</shortdesc>
+      <content type="select" default="">
+        <option value="dynamic-list" />
+        <option value="static-list" />
+        <option value="status" />
+        <option value="none" />
+      </content>
     </parameter>
     <parameter name="pcmk_delay_max">
       <longdesc lang="en">Enable a delay of no more than the time specified before executing fencing actions. Pacemaker derives the overall delay by taking the value of pcmk_delay_base and adding a random delay value such that the sum is kept below this maximum.</longdesc>
@@ -167,103 +172,103 @@
       <content type="time" default=""/>
     </parameter>
     <parameter name="pcmk_delay_base">
-      <longdesc lang="en">This enables a static delay for fencing actions, which can help avoid &quot;death matches&quot; where two nodes try to fence each other at the same time. If pcmk_delay_max  is also used, a random delay will be added such that the total delay is kept below that value.This can be set to a single time value to apply to any node targeted by this device (useful if a separate device is configured for each target), or to a node map (for example, &quot;node1:1s;node2:5&quot;) to set a different value per target.</longdesc>
+      <longdesc lang="en">This enables a static delay for fencing actions, which can help avoid &quot;death matches&quot; where two nodes try to fence each other at the same time. If pcmk_delay_max is also used, a random delay will be added such that the total delay is kept below that value. This can be set to a single time value to apply to any node targeted by this device (useful if a separate device is configured for each target), or to a node map (for example, &quot;node1:1s;node2:5&quot;) to set a different value for each target.</longdesc>
       <shortdesc lang="en">Enable a base delay for fencing actions and specify base delay value.</shortdesc>
       <content type="string" default=""/>
     </parameter>
     <parameter name="pcmk_action_limit">
-      <longdesc lang="en">Cluster property concurrent-fencing=true needs to be configured first.Then use this to specify the maximum number of actions can be performed in parallel on this device. -1 is unlimited.</longdesc>
+      <longdesc lang="en">Cluster property concurrent-fencing=&quot;true&quot; needs to be configured first. Then use this to specify the maximum number of actions can be performed in parallel on this device. A value of -1 means an unlimited number of actions can be performed in parallel.</longdesc>
       <shortdesc lang="en">The maximum number of actions can be performed in parallel on this device</shortdesc>
       <content type="integer" default=""/>
     </parameter>
     <parameter name="pcmk_reboot_action">
-      <longdesc lang="en">Some devices do not support the standard commands or may provide additional ones.\nUse this to specify an alternate, device-specific, command that implements the &apos;reboot&apos; action.</longdesc>
-      <shortdesc lang="en">Advanced use only: An alternate command to run instead of &apos;reboot&apos;</shortdesc>
+      <longdesc lang="en">Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the &apos;reboot&apos; action.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** An alternate command to run instead of &apos;reboot&apos;</shortdesc>
       <content type="string" default=""/>
     </parameter>
     <parameter name="pcmk_reboot_timeout">
-      <longdesc lang="en">Some devices need much more/less time to complete than normal.Use this to specify an alternate, device-specific, timeout for &apos;reboot&apos; actions.</longdesc>
-      <shortdesc lang="en">Advanced use only: Specify an alternate timeout to use for reboot actions instead of stonith-timeout</shortdesc>
+      <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for &apos;reboot&apos; actions.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** Specify an alternate timeout to use for &apos;reboot&apos; actions instead of stonith-timeout</shortdesc>
       <content type="time" default=""/>
     </parameter>
     <parameter name="pcmk_reboot_retries">
-      <longdesc lang="en">Some devices do not support multiple connections. Operations may &apos;fail&apos; if the device is busy with another task so Pacemaker will automatically retry the operation,      if there is time remaining. Use this option to alter the number of times Pacemaker retries &apos;reboot&apos; actions before giving up.</longdesc>
-      <shortdesc lang="en">Advanced use only: The maximum number of times to retry the &apos;reboot&apos; command within the timeout period</shortdesc>
+      <longdesc lang="en">Some devices do not support multiple connections. Operations may &quot;fail&quot; if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a &apos;reboot&apos; action before giving up.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** The maximum number of times to try the &apos;reboot&apos; command within the timeout period</shortdesc>
       <content type="integer" default=""/>
     </parameter>
     <parameter name="pcmk_off_action">
-      <longdesc lang="en">Some devices do not support the standard commands or may provide additional ones.Use this to specify an alternate, device-specific, command that implements the &apos;off&apos; action.</longdesc>
-      <shortdesc lang="en">Advanced use only: An alternate command to run instead of &apos;off&apos;</shortdesc>
+      <longdesc lang="en">Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the &apos;off&apos; action.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** An alternate command to run instead of &apos;off&apos;</shortdesc>
       <content type="string" default=""/>
     </parameter>
     <parameter name="pcmk_off_timeout">
-      <longdesc lang="en">Some devices need much more/less time to complete than normal.Use this to specify an alternate, device-specific, timeout for &apos;off&apos; actions.</longdesc>
-      <shortdesc lang="en">Advanced use only: Specify an alternate timeout to use for off actions instead of stonith-timeout</shortdesc>
+      <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for &apos;off&apos; actions.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** Specify an alternate timeout to use for &apos;off&apos; actions instead of stonith-timeout</shortdesc>
       <content type="time" default=""/>
     </parameter>
     <parameter name="pcmk_off_retries">
-      <longdesc lang="en">Some devices do not support multiple connections. Operations may &apos;fail&apos; if the device is busy with another task so Pacemaker will automatically retry the operation,      if there is time remaining. Use this option to alter the number of times Pacemaker retries &apos;off&apos; actions before giving up.</longdesc>
-      <shortdesc lang="en">Advanced use only: The maximum number of times to retry the &apos;off&apos; command within the timeout period</shortdesc>
+      <longdesc lang="en">Some devices do not support multiple connections. Operations may &quot;fail&quot; if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a &apos;off&apos; action before giving up.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** The maximum number of times to try the &apos;off&apos; command within the timeout period</shortdesc>
       <content type="integer" default=""/>
     </parameter>
     <parameter name="pcmk_on_action">
-      <longdesc lang="en">Some devices do not support the standard commands or may provide additional ones.Use this to specify an alternate, device-specific, command that implements the &apos;on&apos; action.</longdesc>
-      <shortdesc lang="en">Advanced use only: An alternate command to run instead of &apos;on&apos;</shortdesc>
+      <longdesc lang="en">Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the &apos;on&apos; action.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** An alternate command to run instead of &apos;on&apos;</shortdesc>
       <content type="string" default=""/>
     </parameter>
     <parameter name="pcmk_on_timeout">
-      <longdesc lang="en">Some devices need much more/less time to complete than normal.Use this to specify an alternate, device-specific, timeout for &apos;on&apos; actions.</longdesc>
-      <shortdesc lang="en">Advanced use only: Specify an alternate timeout to use for on actions instead of stonith-timeout</shortdesc>
+      <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for &apos;on&apos; actions.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** Specify an alternate timeout to use for &apos;on&apos; actions instead of stonith-timeout</shortdesc>
       <content type="time" default=""/>
     </parameter>
     <parameter name="pcmk_on_retries">
-      <longdesc lang="en">Some devices do not support multiple connections. Operations may &apos;fail&apos; if the device is busy with another task so Pacemaker will automatically retry the operation,      if there is time remaining. Use this option to alter the number of times Pacemaker retries &apos;on&apos; actions before giving up.</longdesc>
-      <shortdesc lang="en">Advanced use only: The maximum number of times to retry the &apos;on&apos; command within the timeout period</shortdesc>
+      <longdesc lang="en">Some devices do not support multiple connections. Operations may &quot;fail&quot; if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a &apos;on&apos; action before giving up.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** The maximum number of times to try the &apos;on&apos; command within the timeout period</shortdesc>
       <content type="integer" default=""/>
     </parameter>
     <parameter name="pcmk_list_action">
-      <longdesc lang="en">Some devices do not support the standard commands or may provide additional ones.Use this to specify an alternate, device-specific, command that implements the &apos;list&apos; action.</longdesc>
-      <shortdesc lang="en">Advanced use only: An alternate command to run instead of &apos;list&apos;</shortdesc>
+      <longdesc lang="en">Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the &apos;list&apos; action.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** An alternate command to run instead of &apos;list&apos;</shortdesc>
       <content type="string" default=""/>
     </parameter>
     <parameter name="pcmk_list_timeout">
-      <longdesc lang="en">Some devices need much more/less time to complete than normal.Use this to specify an alternate, device-specific, timeout for &apos;list&apos; actions.</longdesc>
-      <shortdesc lang="en">Advanced use only: Specify an alternate timeout to use for list actions instead of stonith-timeout</shortdesc>
+      <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for &apos;list&apos; actions.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** Specify an alternate timeout to use for &apos;list&apos; actions instead of stonith-timeout</shortdesc>
       <content type="time" default=""/>
     </parameter>
     <parameter name="pcmk_list_retries">
-      <longdesc lang="en">Some devices do not support multiple connections. Operations may &apos;fail&apos; if the device is busy with another task so Pacemaker will automatically retry the operation,      if there is time remaining. Use this option to alter the number of times Pacemaker retries &apos;list&apos; actions before giving up.</longdesc>
-      <shortdesc lang="en">Advanced use only: The maximum number of times to retry the &apos;list&apos; command within the timeout period</shortdesc>
+      <longdesc lang="en">Some devices do not support multiple connections. Operations may &quot;fail&quot; if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a &apos;list&apos; action before giving up.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** The maximum number of times to try the &apos;list&apos; command within the timeout period</shortdesc>
       <content type="integer" default=""/>
     </parameter>
     <parameter name="pcmk_monitor_action">
-      <longdesc lang="en">Some devices do not support the standard commands or may provide additional ones.Use this to specify an alternate, device-specific, command that implements the &apos;monitor&apos; action.</longdesc>
-      <shortdesc lang="en">Advanced use only: An alternate command to run instead of &apos;monitor&apos;</shortdesc>
+      <longdesc lang="en">Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the &apos;monitor&apos; action.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** An alternate command to run instead of &apos;monitor&apos;</shortdesc>
       <content type="string" default=""/>
     </parameter>
     <parameter name="pcmk_monitor_timeout">
-      <longdesc lang="en">Some devices need much more/less time to complete than normal.\nUse this to specify an alternate, device-specific, timeout for &apos;monitor&apos; actions.</longdesc>
-      <shortdesc lang="en">Advanced use only: Specify an alternate timeout to use for monitor actions instead of stonith-timeout</shortdesc>
+      <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for &apos;monitor&apos; actions.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** Specify an alternate timeout to use for &apos;monitor&apos; actions instead of stonith-timeout</shortdesc>
       <content type="time" default=""/>
     </parameter>
     <parameter name="pcmk_monitor_retries">
-      <longdesc lang="en">Some devices do not support multiple connections. Operations may &apos;fail&apos; if the device is busy with another task so Pacemaker will automatically retry the operation,      if there is time remaining. Use this option to alter the number of times Pacemaker retries &apos;monitor&apos; actions before giving up.</longdesc>
-      <shortdesc lang="en">Advanced use only: The maximum number of times to retry the &apos;monitor&apos; command within the timeout period</shortdesc>
+      <longdesc lang="en">Some devices do not support multiple connections. Operations may &quot;fail&quot; if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a &apos;monitor&apos; action before giving up.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** The maximum number of times to try the &apos;monitor&apos; command within the timeout period</shortdesc>
       <content type="integer" default=""/>
     </parameter>
     <parameter name="pcmk_status_action">
-      <longdesc lang="en">Some devices do not support the standard commands or may provide additional ones.Use this to specify an alternate, device-specific, command that implements the &apos;status&apos; action.</longdesc>
-      <shortdesc lang="en">Advanced use only: An alternate command to run instead of &apos;status&apos;</shortdesc>
+      <longdesc lang="en">Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the &apos;status&apos; action.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** An alternate command to run instead of &apos;status&apos;</shortdesc>
       <content type="string" default=""/>
     </parameter>
     <parameter name="pcmk_status_timeout">
-      <longdesc lang="en">Some devices need much more/less time to complete than normal.Use this to specify an alternate, device-specific, timeout for &apos;status&apos; actions.</longdesc>
-      <shortdesc lang="en">Advanced use only: Specify an alternate timeout to use for status actions instead of stonith-timeout</shortdesc>
+      <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for &apos;status&apos; actions.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** Specify an alternate timeout to use for &apos;status&apos; actions instead of stonith-timeout</shortdesc>
       <content type="time" default=""/>
     </parameter>
     <parameter name="pcmk_status_retries">
-      <longdesc lang="en">Some devices do not support multiple connections. Operations may &apos;fail&apos; if the device is busy with another task so Pacemaker will automatically retry the operation,      if there is time remaining. Use this option to alter the number of times Pacemaker retries &apos;status&apos; actions before giving up.</longdesc>
-      <shortdesc lang="en">Advanced use only: The maximum number of times to retry the &apos;status&apos; command within the timeout period</shortdesc>
+      <longdesc lang="en">Some devices do not support multiple connections. Operations may &quot;fail&quot; if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a &apos;status&apos; action before giving up.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** The maximum number of times to try the &apos;status&apos; command within the timeout period</shortdesc>
       <content type="integer" default=""/>
     </parameter>
   </parameters>
