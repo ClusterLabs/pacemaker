@@ -863,12 +863,6 @@ cib_metadata(void)
     g_free(s);
 }
 
-static void
-verify_cib_options(GHashTable *options)
-{
-    pcmk__validate_cluster_options(options);
-}
-
 const char *
 cib_pref(GHashTable * options, const char *name)
 {
@@ -895,7 +889,7 @@ cib_read_config(GHashTable * options, xmlNode * current_cib)
                           NULL, options, CIB_OPTIONS_FIRST, TRUE, now, NULL);
     }
 
-    verify_cib_options(options);
+    pcmk__validate_cluster_options(options);
 
     crm_time_free(now);
 
