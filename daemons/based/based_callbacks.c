@@ -1143,12 +1143,6 @@ cib_process_request(xmlNode *request, gboolean privileged,
         const char *epoch_s = "0";
         const char *num_updates_s = "0";
 
-        if (the_cib != NULL) {
-            admin_epoch_s = crm_element_value(the_cib, PCMK_XA_ADMIN_EPOCH);
-            epoch_s = crm_element_value(the_cib, PCMK_XA_EPOCH);
-            num_updates_s = crm_element_value(the_cib, PCMK_XA_NUM_UPDATES);
-        }
-
         rc = cib_process_command(request, operation, op_function, &op_reply,
                                  &result_diff, privileged);
 
@@ -1171,6 +1165,12 @@ cib_process_request(xmlNode *request, gboolean privileged,
 
         } else if (rc != pcmk_ok) {
             level = LOG_WARNING;
+        }
+
+        if (the_cib != NULL) {
+            admin_epoch_s = crm_element_value(the_cib, PCMK_XA_ADMIN_EPOCH);
+            epoch_s = crm_element_value(the_cib, PCMK_XA_EPOCH);
+            num_updates_s = crm_element_value(the_cib, PCMK_XA_NUM_UPDATES);
         }
 
         do_crm_log(level,
