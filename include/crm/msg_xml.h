@@ -55,6 +55,7 @@ extern "C" {
  * XML elements
  */
 
+#define PCMK_XE_CONTENT                     "content"
 #define PCMK_XE_DATE_EXPRESSION             "date_expression"
 #define PCMK_XE_LONGDESC                    "longdesc"
 #define PCMK_XE_OP                          "op"

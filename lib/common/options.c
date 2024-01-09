@@ -546,7 +546,8 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
         add_desc(s, PCMK_XE_LONGDESC, opt_desc_long, opt_values, "      ");
         add_desc(s, PCMK_XE_SHORTDESC, opt_desc_short, NULL, "      ");
 
-        pcmk__g_strcat(s, "      <content type=\"", opt_type, "\"", NULL);
+        pcmk__g_strcat(s, "      <" PCMK_XE_CONTENT " "
+                                    PCMK_XA_TYPE "=\"", opt_type, "\"", NULL);
         if (opt_default != NULL) {
             pcmk__g_strcat(s, " default=\"", opt_default, "\"", NULL);
         }
@@ -563,7 +564,7 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
                                NULL);
                 ptr = strtok(NULL, delim);
             }
-            g_string_append_printf(s, "      </content>\n");
+            g_string_append(s, "      </" PCMK_XE_CONTENT ">\n");
             free(str);
 
         } else {
