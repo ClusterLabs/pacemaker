@@ -233,7 +233,7 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
                  */
                 if (attrd_election_won()
                     && !pcmk_is_set(peer->flags, crm_remote_node)) {
-                    attrd_peer_sync(peer, NULL);
+                    attrd_peer_sync(peer);
                 }
             } else {
                 // Remove all attribute values associated with lost nodes
@@ -537,8 +537,14 @@ attrd_peer_remove(const char *host, bool uncache, const char *source)
     }
 }
 
+/*!
+ * \internal
+ * \brief Send all known attributes and values to a peer
+ *
+ * \param[in] peer  Peer to send sync to (if NULL, broadcast to all peers)
+ */
 void
-attrd_peer_sync(crm_node_t *peer, xmlNode *xml)
+attrd_peer_sync(crm_node_t *peer)
 {
     GHashTableIter aIter;
     GHashTableIter vIter;
