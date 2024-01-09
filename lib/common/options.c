@@ -561,7 +561,9 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
             g_string_append(s, ">\n");
 
             while (ptr != NULL) {
-                pcmk__g_strcat(s, "        <option value=\"", ptr, "\" />\n",
+                pcmk__g_strcat(s,
+                               "        <" PCMK_XE_OPTION " "
+                                           PCMK_XA_VALUE "=\"", ptr, "\" />\n",
                                NULL);
                 ptr = strtok(NULL, delim);
             }
