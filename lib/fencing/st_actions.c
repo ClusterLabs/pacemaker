@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -449,9 +449,9 @@ stonith__xe_set_result(xmlNode *xml, const pcmk__action_result_t *result)
         rc = pcmk_rc2legacy(stonith__result2rc(result));
     }
 
-    crm_xml_add_int(xml, XML_LRM_ATTR_OPSTATUS, (int) execution_status);
-    crm_xml_add_int(xml, XML_LRM_ATTR_RC, exit_status);
-    crm_xml_add(xml, XML_LRM_ATTR_EXIT_REASON, exit_reason);
+    crm_xml_add_int(xml, PCMK__XA_OP_STATUS, (int) execution_status);
+    crm_xml_add_int(xml, PCMK__XA_RC_CODE, exit_status);
+    crm_xml_add(xml, PCMK_XA_EXIT_REASON, exit_reason);
     crm_xml_add(xml, F_STONITH_OUTPUT, action_stdout);
 
     /* @COMPAT Peers in rolling upgrades, Pacemaker Remote nodes, and external
@@ -472,7 +472,7 @@ stonith__xe_set_result(xmlNode *xml, const pcmk__action_result_t *result)
 xmlNode *
 stonith__find_xe_with_result(xmlNode *xml)
 {
-    xmlNode *match = get_xpath_object("//@" XML_LRM_ATTR_RC, xml, LOG_NEVER);
+    xmlNode *match = get_xpath_object("//@" PCMK__XA_RC_CODE, xml, LOG_NEVER);
 
     if (match == NULL) {
         /* @COMPAT Peers <=2.1.2 in a rolling upgrade provide only a legacy
@@ -500,12 +500,12 @@ stonith__xe_get_result(const xmlNode *xml, pcmk__action_result_t *result)
 
     CRM_CHECK((xml != NULL) && (result != NULL), return);
 
-    exit_reason = crm_element_value(xml, XML_LRM_ATTR_EXIT_REASON);
+    exit_reason = crm_element_value(xml, PCMK_XA_EXIT_REASON);
     action_stdout = crm_element_value_copy(xml, F_STONITH_OUTPUT);
 
     // A result must include an exit status and execution status
-    if ((crm_element_value_int(xml, XML_LRM_ATTR_RC, &exit_status) < 0)
-        || (crm_element_value_int(xml, XML_LRM_ATTR_OPSTATUS,
+    if ((crm_element_value_int(xml, PCMK__XA_RC_CODE, &exit_status) < 0)
+        || (crm_element_value_int(xml, PCMK__XA_OP_STATUS,
                                   &execution_status) < 0)) {
         int rc = pcmk_ok;
         exit_status = CRM_EX_ERROR;

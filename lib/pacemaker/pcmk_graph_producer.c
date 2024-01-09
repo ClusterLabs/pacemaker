@@ -227,10 +227,10 @@ add_node_details(const pcmk_action_t *action, xmlNode *xml)
 {
     pcmk_node_t *router_node = pcmk__connection_host_for_action(action);
 
-    crm_xml_add(xml, XML_LRM_ATTR_TARGET, action->node->details->uname);
-    crm_xml_add(xml, XML_LRM_ATTR_TARGET_UUID, action->node->details->id);
+    crm_xml_add(xml, PCMK__META_ON_NODE, action->node->details->uname);
+    crm_xml_add(xml, PCMK__META_ON_NODE_UUID, action->node->details->id);
     if (router_node != NULL) {
-        crm_xml_add(xml, XML_LRM_ATTR_ROUTER_NODE, router_node->details->uname);
+        crm_xml_add(xml, PCMK__XA_ROUTER_NODE, router_node->details->uname);
     }
 }
 
@@ -449,19 +449,19 @@ create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
             interval_ms = 0;
         }
         clone_key = clone_op_key(action, interval_ms);
-        crm_xml_add(action_xml, XML_LRM_ATTR_TASK_KEY, clone_key);
-        crm_xml_add(action_xml, "internal_" XML_LRM_ATTR_TASK_KEY,
+        crm_xml_add(action_xml, PCMK__XA_OPERATION_KEY, clone_key);
+        crm_xml_add(action_xml, "internal_" PCMK__XA_OPERATION_KEY,
                     action->uuid);
         free(clone_key);
     } else {
-        crm_xml_add(action_xml, XML_LRM_ATTR_TASK_KEY, action->uuid);
+        crm_xml_add(action_xml, PCMK__XA_OPERATION_KEY, action->uuid);
     }
 
     if (needs_node_info && (action->node != NULL)) {
         add_node_details(action, action_xml);
-        g_hash_table_insert(action->meta, strdup(XML_LRM_ATTR_TARGET),
+        g_hash_table_insert(action->meta, strdup(PCMK__META_ON_NODE),
                             strdup(action->node->details->uname));
-        g_hash_table_insert(action->meta, strdup(XML_LRM_ATTR_TARGET_UUID),
+        g_hash_table_insert(action->meta, strdup(PCMK__META_ON_NODE_UUID),
                             strdup(action->node->details->id));
     }
 
@@ -863,7 +863,7 @@ create_graph_synapse(const pcmk_action_t *action, pcmk_scheduler_t *scheduler)
         synapse_priority = action->priority;
     }
     if (synapse_priority > 0) {
-        crm_xml_add_int(syn, XML_CIB_ATTR_PRIORITY, synapse_priority);
+        crm_xml_add_int(syn, PCMK__XA_PRIORITY, synapse_priority);
     }
     return syn;
 }

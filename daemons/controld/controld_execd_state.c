@@ -653,7 +653,7 @@ lrm_state_get_metadata(lrm_state_t * lrm_state,
      * @TODO Make meta-data calls asynchronous. (This will be part of a larger
      * project to make meta-data calls via the executor rather than directly.)
      */
-    params = lrmd_key_value_add(params, CRM_META "_" XML_LRM_ATTR_TARGET,
+    params = lrmd_key_value_add(params, CRM_META "_" PCMK__META_ON_NODE,
                                 lrm_state->node_name);
 
     return ((lrmd_t *) lrm_state->conn)->cmds->get_metadata_params(lrm_state->conn,

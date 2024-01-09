@@ -1838,7 +1838,7 @@ handle_rsc_op(xmlNode *xml, void *userdata)
         goto bail;
     }
 
-    node = crm_element_value(rsc_op, XML_LRM_ATTR_TARGET);
+    node = crm_element_value(rsc_op, PCMK__META_ON_NODE);
 
     while ((n != NULL) && !pcmk__xe_is(n, XML_CIB_TAG_STATE)) {
         n = n->parent;
@@ -2004,7 +2004,8 @@ crm_diff_update_v1(const char *event, xmlNode * msg)
 {
     /* Process operation updates */
     xmlXPathObject *xpathObj = xpath_search(msg,
-                                            "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED
+                                            "//" F_CIB_UPDATE_RESULT
+                                            "//" PCMK__XE_DIFF_ADDED
                                             "//" XML_LRM_TAG_RSC_OP);
     int lpc = 0, max = numXpathResults(xpathObj);
 

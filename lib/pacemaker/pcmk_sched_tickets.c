@@ -250,7 +250,7 @@ unpack_rsc_ticket_set(xmlNode *set, pcmk_ticket_t *ticket,
         return pcmk_rc_unpack_error;
     }
 
-    role = crm_element_value(set, "role");
+    role = crm_element_value(set, PCMK_XA_ROLE);
 
     for (xmlNode *xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
          xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
@@ -413,8 +413,10 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     if (rsc_set != NULL) {
         if (state != NULL) {
-            // Move "rsc-role" into converted resource_set as a "role" attribute
-            crm_xml_add(rsc_set, "role", state);
+            /* Move "rsc-role" into converted resource_set as a PCMK_XA_ROLE
+             * attribute
+             */
+            crm_xml_add(rsc_set, PCMK_XA_ROLE, state);
             xml_remove_prop(*expanded_xml, XML_COLOC_ATTR_SOURCE_ROLE);
         }
 

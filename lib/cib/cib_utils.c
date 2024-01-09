@@ -116,7 +116,7 @@ cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
     return pcmk_rc_ok;
 }
 
-#define XPATH_DIFF_V1 "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED
+#define XPATH_DIFF_V1 "//" F_CIB_UPDATE_RESULT "//" PCMK__XE_DIFF_ADDED
 
 /*!
  * \internal

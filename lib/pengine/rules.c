@@ -106,7 +106,7 @@ find_expression_type(xmlNode * expr)
 {
     const char *attr = NULL;
 
-    attr = crm_element_value(expr, XML_EXPR_ATTR_ATTRIBUTE);
+    attr = crm_element_value(expr, PCMK_XA_ATTRIBUTE);
 
     if (pcmk__xe_is(expr, PCMK_XE_DATE_EXPRESSION)) {
         return pcmk__subexpr_datetime;
@@ -474,7 +474,7 @@ make_pairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
             pair->attr_set = expanded_attr_set;
             pair->overwrite = overwrite;
 
-            score = crm_element_value(expanded_attr_set, XML_RULE_ATTR_SCORE);
+            score = crm_element_value(expanded_attr_set, PCMK_XA_SCORE);
             pair->score = char2score(score);
 
             unsorted = g_list_prepend(unsorted, pair);
@@ -674,7 +674,7 @@ pe_eval_expr(xmlNode *rule, const pe_rule_eval_data_t *rule_data,
         return FALSE; // Not possible with schema validation enabled
     }
 
-    value = crm_element_value(rule, XML_RULE_ATTR_BOOLEAN_OP);
+    value = crm_element_value(rule, PCMK_XA_BOOLEAN_OP);
     if (pcmk__str_eq(value, "or", pcmk__str_casei)) {
         do_and = FALSE;
         passed = FALSE;
@@ -931,10 +931,10 @@ accept_attr_expr(const char *l_val, const char *r_val, const char *type,
 
 /*!
  * \internal
- * \brief Get correct value according to value-source
+ * \brief Get correct value according to \c PCMK_XA_VALUE_SOURCE
  *
  * \param[in] value         value given in rule expression
- * \param[in] value_source  value-source given in rule expressions
+ * \param[in] value_source  \c PCMK_XA_VALUE_SOURCE given in rule expressions
  * \param[in] match_data    If not NULL, resource back-references and params
  */
 static const char *
@@ -984,14 +984,14 @@ pe__eval_attr_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
     const char *value = NULL;
     const char *value_source = NULL;
 
-    attr = crm_element_value(expr, XML_EXPR_ATTR_ATTRIBUTE);
+    attr = crm_element_value(expr, PCMK_XA_ATTRIBUTE);
     op = crm_element_value(expr, PCMK_XA_OPERATION);
     value = crm_element_value(expr, PCMK_XA_VALUE);
     type = crm_element_value(expr, PCMK_XA_TYPE);
-    value_source = crm_element_value(expr, XML_EXPR_ATTR_VALUE_SOURCE);
+    value_source = crm_element_value(expr, PCMK_XA_VALUE_SOURCE);
 
     if (attr == NULL) {
-        pcmk__config_err("Expression %s invalid: " XML_EXPR_ATTR_ATTRIBUTE
+        pcmk__config_err("Expression %s invalid: " PCMK_XA_ATTRIBUTE
                          " not specified", pcmk__s(ID(expr), "without ID"));
         return FALSE;
     } else if (op == NULL) {
@@ -1011,7 +1011,7 @@ pe__eval_attr_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
             }
         }
 
-        // Get value appropriate to value-source
+        // Get value appropriate to PCMK_XA_VALUE_SOURCE
         value = expand_value_source(value, value_source, rule_data->match_data);
     }
 

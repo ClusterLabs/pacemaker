@@ -178,7 +178,7 @@ create_op(const xmlNode *cib_resource, const char *task, guint interval_ms,
 
         int tmp = 0;
 
-        crm_element_value_int(xop, XML_LRM_ATTR_CALLID, &tmp);
+        crm_element_value_int(xop, PCMK__XA_CALL_ID, &tmp);
         if (tmp > op->call_id) {
             op->call_id = tmp;
         }

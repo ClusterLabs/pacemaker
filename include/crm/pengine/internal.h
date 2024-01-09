@@ -524,7 +524,7 @@ pe__xe_history_key(const xmlNode *xml)
          * instead. Checking for that allows us to process old saved CIBs,
          * including some regression tests.
          */
-        const char *key = crm_element_value(xml, XML_LRM_ATTR_TASK_KEY);
+        const char *key = crm_element_value(xml, PCMK__XA_OPERATION_KEY);
 
         return pcmk__str_empty(key)? ID(xml) : key;
     }

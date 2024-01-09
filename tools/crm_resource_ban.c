@@ -89,26 +89,26 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
 
     crm_xml_add(location, XML_LOC_ATTR_SOURCE, rsc_id);
     if(promoted_role_only) {
-        crm_xml_add(location, XML_RULE_ATTR_ROLE, promoted_role);
+        crm_xml_add(location, PCMK_XA_ROLE, promoted_role);
     } else {
-        crm_xml_add(location, XML_RULE_ATTR_ROLE, PCMK__ROLE_STARTED);
+        crm_xml_add(location, PCMK_XA_ROLE, PCMK__ROLE_STARTED);
     }
 
     if (later_s == NULL) {
         /* Short form */
         crm_xml_add(location, XML_CIB_TAG_NODE, host);
-        crm_xml_add(location, XML_RULE_ATTR_SCORE, CRM_MINUS_INFINITY_S);
+        crm_xml_add(location, PCMK_XA_SCORE, CRM_MINUS_INFINITY_S);
 
     } else {
         xmlNode *rule = create_xml_node(location, XML_TAG_RULE);
         xmlNode *expr = create_xml_node(rule, XML_TAG_EXPRESSION);
 
         crm_xml_set_id(rule, "cli-ban-%s-on-%s-rule", rsc_id, host);
-        crm_xml_add(rule, XML_RULE_ATTR_SCORE, CRM_MINUS_INFINITY_S);
-        crm_xml_add(rule, XML_RULE_ATTR_BOOLEAN_OP, "and");
+        crm_xml_add(rule, PCMK_XA_SCORE, CRM_MINUS_INFINITY_S);
+        crm_xml_add(rule, PCMK_XA_BOOLEAN_OP, "and");
 
         crm_xml_set_id(expr, "cli-ban-%s-on-%s-expr", rsc_id, host);
-        crm_xml_add(expr, XML_EXPR_ATTR_ATTRIBUTE, CRM_ATTR_UNAME);
+        crm_xml_add(expr, PCMK_XA_ATTRIBUTE, CRM_ATTR_UNAME);
         crm_xml_add(expr, PCMK_XA_OPERATION, "eq");
         crm_xml_add(expr, PCMK_XA_VALUE, host);
         crm_xml_add(expr, PCMK_XA_TYPE, "string");
@@ -166,26 +166,26 @@ cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
 
     crm_xml_add(location, XML_LOC_ATTR_SOURCE, rsc_id);
     if(promoted_role_only) {
-        crm_xml_add(location, XML_RULE_ATTR_ROLE, promoted_role);
+        crm_xml_add(location, PCMK_XA_ROLE, promoted_role);
     } else {
-        crm_xml_add(location, XML_RULE_ATTR_ROLE, PCMK__ROLE_STARTED);
+        crm_xml_add(location, PCMK_XA_ROLE, PCMK__ROLE_STARTED);
     }
 
     if (later_s == NULL) {
         /* Short form */
         crm_xml_add(location, XML_CIB_TAG_NODE, host);
-        crm_xml_add(location, XML_RULE_ATTR_SCORE, CRM_INFINITY_S);
+        crm_xml_add(location, PCMK_XA_SCORE, CRM_INFINITY_S);
 
     } else {
         xmlNode *rule = create_xml_node(location, XML_TAG_RULE);
         xmlNode *expr = create_xml_node(rule, XML_TAG_EXPRESSION);
 
         crm_xml_set_id(rule, "cli-prefer-rule-%s", rsc_id);
-        crm_xml_add(rule, XML_RULE_ATTR_SCORE, CRM_INFINITY_S);
-        crm_xml_add(rule, XML_RULE_ATTR_BOOLEAN_OP, "and");
+        crm_xml_add(rule, PCMK_XA_SCORE, CRM_INFINITY_S);
+        crm_xml_add(rule, PCMK_XA_BOOLEAN_OP, "and");
 
         crm_xml_set_id(expr, "cli-prefer-expr-%s", rsc_id);
-        crm_xml_add(expr, XML_EXPR_ATTR_ATTRIBUTE, CRM_ATTR_UNAME);
+        crm_xml_add(expr, PCMK_XA_ATTRIBUTE, CRM_ATTR_UNAME);
         crm_xml_add(expr, PCMK_XA_OPERATION, "eq");
         crm_xml_add(expr, PCMK_XA_VALUE, host);
         crm_xml_add(expr, PCMK_XA_TYPE, "string");
@@ -248,7 +248,7 @@ resource_clear_node_in_expr(const char *rsc_id, const char *host, cib_t * cib_co
     "[" XML_TAG_RULE                                                    \
         "[@" PCMK_XA_ID "='cli-prefer-rule-%s']"                        \
         "/" XML_TAG_EXPRESSION                                          \
-        "[@" XML_EXPR_ATTR_ATTRIBUTE "='#uname' "                       \
+        "[@" PCMK_XA_ATTRIBUTE "='" CRM_ATTR_UNAME "' "                 \
         "and @" PCMK_XA_VALUE "='%s']"                                  \
     "]"
 
@@ -353,8 +353,8 @@ build_clear_xpath_string(GString *buf, const xmlNode *constraint_node,
     const char *cons_rsc = crm_element_value(constraint_node,
                                              XML_LOC_ATTR_SOURCE);
     GString *rsc_role_substr = NULL;
-    const char *promoted_role_rule = "@" XML_RULE_ATTR_ROLE "='" PCMK__ROLE_PROMOTED
-                                     "' or @" XML_RULE_ATTR_ROLE "='"
+    const char *promoted_role_rule = "@" PCMK_XA_ROLE "='" PCMK__ROLE_PROMOTED
+                                     "' or @" PCMK_XA_ROLE "='"
                                      PCMK__ROLE_PROMOTED_LEGACY "'";
 
     CRM_ASSERT(buf != NULL);
@@ -408,7 +408,7 @@ build_clear_xpath_string(GString *buf, const xmlNode *constraint_node,
         }
         pcmk__g_strcat(buf,
                        "/" XML_TAG_RULE "[" XML_TAG_EXPRESSION
-                       "[@" XML_EXPR_ATTR_ATTRIBUTE "='" CRM_ATTR_UNAME "' "
+                       "[@" PCMK_XA_ATTRIBUTE "='" CRM_ATTR_UNAME "' "
                        "and @" PCMK_XA_VALUE "='", node, "']]", NULL);
     }
 

@@ -47,7 +47,7 @@ colocations_xml_node(pcmk__output_t *out, pcmk_resource_t *rsc,
                                         PCMK_XA_ID, cons->id,
                                         "rsc", cons->dependent->id,
                                         "with-rsc", cons->primary->id,
-                                        "score",
+                                        PCMK_XA_SCORE,
                                         pcmk_readable_score(cons->score),
                                         NULL);
 
@@ -91,7 +91,7 @@ do_locations_list_xml(pcmk__output_t *out, pcmk_resource_t *rsc,
                                          "node", node->details->uname,
                                          "rsc", rsc->id,
                                          PCMK_XA_ID, cons->id,
-                                         "score",
+                                         PCMK_XA_SCORE,
                                          pcmk_readable_score(node->weight),
                                          NULL);
         }
@@ -281,7 +281,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
     if (need_role && (origin == NULL)) {
         /* Starting and promoting a promotable clone instance */
         pcmk__xe_set_props(xml,
-                           "role", role2text(rsc->role),
+                           PCMK_XA_ROLE, role2text(rsc->role),
                            "next-role", role2text(rsc->next_role),
                            "dest", destination->details->uname,
                            NULL);
@@ -293,7 +293,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
     } else if (need_role && (destination == NULL)) {
         /* Stopping a promotable clone instance */
         pcmk__xe_set_props(xml,
-                           "role", role2text(rsc->role),
+                           PCMK_XA_ROLE, role2text(rsc->role),
                            "node", origin->details->uname,
                            NULL);
 
@@ -304,7 +304,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
     } else if (need_role && same_role && same_host) {
         /* Recovering, restarting or re-promoting a promotable clone instance */
         pcmk__xe_set_props(xml,
-                           "role", role2text(rsc->role),
+                           PCMK_XA_ROLE, role2text(rsc->role),
                            "source", origin->details->uname,
                            NULL);
 
@@ -317,7 +317,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
         pcmk__xe_set_props(xml,
                            "source", origin->details->uname,
                            "dest", destination->details->uname,
-                           "role", role2text(rsc->role),
+                           PCMK_XA_ROLE, role2text(rsc->role),
                            NULL);
 
     } else if (same_role) {
@@ -330,7 +330,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
     } else if (same_host) {
         /* Promoting or demoting a promotable clone instance */
         pcmk__xe_set_props(xml,
-                           "role", role2text(rsc->role),
+                           PCMK_XA_ROLE, role2text(rsc->role),
                            "next-role", role2text(rsc->next_role),
                            "source", origin->details->uname,
                            NULL);
@@ -338,7 +338,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
     } else {
         /* Moving and promoting/demoting */
         pcmk__xe_set_props(xml,
-                           "role", role2text(rsc->role),
+                           PCMK_XA_ROLE, role2text(rsc->role),
                            "source", origin->details->uname,
                            "next-role", role2text(rsc->next_role),
                            "dest", destination->details->uname,

@@ -241,8 +241,10 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         reply_data.data.ping.sys_from =
             crm_element_value(msg_data, PCMK__XA_CRM_SUBSYSTEM);
     } else if (pcmk__str_eq(value, CRM_OP_QUIT, pcmk__str_none)) {
+        const char *op_status = crm_element_value(msg_data, PCMK__XA_OP_STATUS);
+
         reply_data.reply_type = pcmk_pacemakerd_reply_shutdown;
-        reply_data.data.shutdown.status = atoi(crm_element_value(msg_data, XML_LRM_ATTR_OPSTATUS));
+        reply_data.data.shutdown.status = atoi(op_status);
     } else {
         crm_info("Unrecognizable message from %s: unknown command '%s'",
                  pcmk_ipc_name(api, true), pcmk__s(value, ""));

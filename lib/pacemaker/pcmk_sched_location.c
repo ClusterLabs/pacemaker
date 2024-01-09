@@ -95,7 +95,8 @@ parse_location_role(const char *role_spec, enum rsc_role_e *role)
  *
  * \param[in,out] rsc            Resource that constraint is for
  * \param[in]     rule_xml       Rule XML (sub-element of location constraint)
- * \param[in]     discovery      Value of resource-discovery for constraint
+ * \param[in]     discovery      Value of \c PCMK_XA_RESOURCE_DISCOVERY for
+ *                               constraint
  * \param[out]    next_change    Where to set when rule evaluation will change
  * \param[in]     re_match_data  Regular expression submatches
  *
@@ -128,22 +129,22 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
     }
 
     rule_id = crm_element_value(rule_xml, PCMK_XA_ID);
-    boolean = crm_element_value(rule_xml, XML_RULE_ATTR_BOOLEAN_OP);
-    role_spec = crm_element_value(rule_xml, XML_RULE_ATTR_ROLE);
+    boolean = crm_element_value(rule_xml, PCMK_XA_BOOLEAN_OP);
+    role_spec = crm_element_value(rule_xml, PCMK_XA_ROLE);
 
     if (parse_location_role(role_spec, &role)) {
         crm_trace("Setting rule %s role filter to %s", rule_id, role_spec);
     } else {
-        pcmk__config_err("Ignoring rule %s: Invalid " XML_RULE_ATTR_ROLE
-                         " '%s'", rule_id, role_spec);
+        pcmk__config_err("Ignoring rule %s: Invalid " PCMK_XA_ROLE " '%s'",
+                         rule_id, role_spec);
         return NULL;
     }
 
     crm_trace("Processing location constraint rule %s", rule_id);
 
-    score = crm_element_value(rule_xml, XML_RULE_ATTR_SCORE);
+    score = crm_element_value(rule_xml, PCMK_XA_SCORE);
     if (score == NULL) {
-        score = crm_element_value(rule_xml, XML_RULE_ATTR_SCORE_ATTRIBUTE);
+        score = crm_element_value(rule_xml, PCMK_XA_SCORE_ATTRIBUTE);
         if (score != NULL) {
             raw_score = false;
         }
@@ -249,7 +250,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
     const char *id = crm_element_value(xml_obj, PCMK_XA_ID);
     const char *node = crm_element_value(xml_obj, XML_CIB_TAG_NODE);
     const char *discovery = crm_element_value(xml_obj,
-                                              XML_LOCATION_ATTR_DISCOVERY);
+                                              PCMK_XA_RESOURCE_DISCOVERY);
 
     if (rsc == NULL) {
         pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
@@ -258,7 +259,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
     }
 
     if (score == NULL) {
-        score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
+        score = crm_element_value(xml_obj, PCMK_XA_SCORE);
     }
 
     if ((node != NULL) && (score != NULL)) {
@@ -272,7 +273,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
         }
 
         if (role_spec == NULL) {
-            role_spec = crm_element_value(xml_obj, XML_RULE_ATTR_ROLE);
+            role_spec = crm_element_value(xml_obj, PCMK_XA_ROLE);
         }
         if (parse_location_role(role_spec, &role)) {
             crm_trace("Setting location constraint %s role filter: %s",
@@ -446,7 +447,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         return pcmk_rc_ok;
     }
 
-    state = crm_element_value(xml_obj, XML_RULE_ATTR_ROLE);
+    state = crm_element_value(xml_obj, PCMK_XA_ROLE);
 
     *expanded_xml = copy_xml(xml_obj);
 
@@ -460,9 +461,11 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     if (rsc_set != NULL) {
         if (state != NULL) {
-            // Move "rsc-role" into converted resource_set as "role" attribute
-            crm_xml_add(rsc_set, "role", state);
-            xml_remove_prop(*expanded_xml, XML_RULE_ATTR_ROLE);
+            /* Move "rsc-role" into converted resource_set as PCMK_XA_ROLE
+             * attribute
+             */
+            crm_xml_add(rsc_set, PCMK_XA_ROLE, state);
+            xml_remove_prop(*expanded_xml, PCMK_XA_ROLE);
         }
         crm_log_xml_trace(*expanded_xml, "Expanded rsc_location");
 
@@ -496,8 +499,8 @@ unpack_location_set(xmlNode *location, xmlNode *set,
         return pcmk_rc_unpack_error;
     }
 
-    role = crm_element_value(set, "role");
-    local_score = crm_element_value(set, XML_RULE_ATTR_SCORE);
+    role = crm_element_value(set, PCMK_XA_ROLE);
+    local_score = crm_element_value(set, PCMK_XA_SCORE);
 
     for (xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
          xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
@@ -610,7 +613,7 @@ pcmk__new_location(const char *id, pcmk_resource_t *rsc,
             rsc->exclusive_discover = TRUE;
 
         } else {
-            pcmk__config_err("Invalid " XML_LOCATION_ATTR_DISCOVERY " value %s "
+            pcmk__config_err("Invalid " PCMK_XA_RESOURCE_DISCOVERY " value %s "
                              "in location constraint", discover_mode);
         }
 

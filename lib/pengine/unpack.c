@@ -640,7 +640,7 @@ unpack_nodes(xmlNode *xml_nodes, pcmk_scheduler_t *scheduler)
             id = crm_element_value(xml_obj, PCMK_XA_ID);
             uname = crm_element_value(xml_obj, PCMK_XA_UNAME);
             type = crm_element_value(xml_obj, PCMK_XA_TYPE);
-            score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
+            score = crm_element_value(xml_obj, PCMK_XA_SCORE);
             crm_trace("Processing node %s/%s", uname, id);
 
             if (id == NULL) {
@@ -2547,7 +2547,7 @@ process_recurring(pcmk_node_t *node, pcmk_resource_t *rsc,
             continue;
         }
 
-        status = crm_element_value(rsc_op, XML_LRM_ATTR_OPSTATUS);
+        status = crm_element_value(rsc_op, PCMK__XA_OP_STATUS);
         if (pcmk__str_eq(status, "-1", pcmk__str_casei)) {
             pcmk__rsc_trace(rsc, "Skipping %s on %s: status",
                             id, pe__node_name(node));
@@ -2580,7 +2580,7 @@ calculate_active_ops(const GList *sorted_op_list, int *start_index,
         counter++;
 
         task = crm_element_value(rsc_op, PCMK_XA_OPERATION);
-        status = crm_element_value(rsc_op, XML_LRM_ATTR_OPSTATUS);
+        status = crm_element_value(rsc_op, PCMK__XA_OP_STATUS);
 
         if (pcmk__str_eq(task, PCMK_ACTION_STOP, pcmk__str_casei)
             && pcmk__str_eq(status, "0", pcmk__str_casei)) {
@@ -2593,7 +2593,7 @@ calculate_active_ops(const GList *sorted_op_list, int *start_index,
         } else if ((implied_monitor_start <= *stop_index)
                    && pcmk__str_eq(task, PCMK_ACTION_MONITOR,
                                    pcmk__str_casei)) {
-            const char *rc = crm_element_value(rsc_op, XML_LRM_ATTR_RC);
+            const char *rc = crm_element_value(rsc_op, PCMK__XA_RC_CODE);
 
             if (pcmk__strcase_any_of(rc, "0", "8", NULL)) {
                 implied_monitor_start = counter;
@@ -2886,13 +2886,13 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
     /* Need to check against transition_magic too? */
     if ((source != NULL) && (strcmp(op, PCMK_ACTION_MIGRATE_TO) == 0)) {
         pcmk__g_strcat(xpath,
-                       " and @" XML_LRM_ATTR_MIGRATE_TARGET "='", source, "']",
+                       " and @" PCMK__META_MIGRATE_TARGET "='", source, "']",
                        NULL);
 
     } else if ((source != NULL)
                && (strcmp(op, PCMK_ACTION_MIGRATE_FROM) == 0)) {
         pcmk__g_strcat(xpath,
-                       " and @" XML_LRM_ATTR_MIGRATE_SOURCE "='", source, "']",
+                       " and @" PCMK__META_MIGRATE_SOURCE "='", source, "']",
                        NULL);
     } else {
         g_string_append_c(xpath, ']');
@@ -2906,8 +2906,8 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
         int rc = PCMK_OCF_UNKNOWN_ERROR;
         int status = PCMK_EXEC_ERROR;
 
-        crm_element_value_int(xml, XML_LRM_ATTR_RC, &rc);
-        crm_element_value_int(xml, XML_LRM_ATTR_OPSTATUS, &status);
+        crm_element_value_int(xml, PCMK__XA_RC_CODE, &rc);
+        crm_element_value_int(xml, PCMK__XA_OP_STATUS, &status);
         if ((rc != target_rc) || (status != PCMK_EXEC_DONE)) {
             return NULL;
         }
@@ -2956,7 +2956,7 @@ unknown_on_node(pcmk_resource_t *rsc, const char *node_name)
     pcmk__g_strcat(xpath,
                    XPATH_NODE_STATE "[@" PCMK_XA_UNAME "='", node_name, "']"
                    SUB_XPATH_LRM_RESOURCE "[@" PCMK_XA_ID "='", rsc->id, "']"
-                   SUB_XPATH_LRM_RSC_OP "[@" XML_LRM_ATTR_RC "!='193']",
+                   SUB_XPATH_LRM_RSC_OP "[@" PCMK__XA_RC_CODE "!='193']",
                    NULL);
     search = xpath_search(rsc->cluster->input, (const char *) xpath->str);
     result = (numXpathResults(search) == 0);
@@ -3063,8 +3063,8 @@ newer_state_after_migrate(const char *rsc_id, const char *node_name,
         xml_op = migrate_from;
     }
 
-    source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
-    target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
+    source = crm_element_value(xml_op, PCMK__META_MIGRATE_SOURCE);
+    target = crm_element_value(xml_op, PCMK__META_MIGRATE_TARGET);
 
     /* It's preferred to compare to the migrate event on the same node if
      * existing, since call ids are more reliable.
@@ -3114,12 +3114,12 @@ get_migration_node_names(const xmlNode *entry, const pcmk_node_t *source_node,
                          const pcmk_node_t *target_node,
                          const char **source_name, const char **target_name)
 {
-    *source_name = crm_element_value(entry, XML_LRM_ATTR_MIGRATE_SOURCE);
-    *target_name = crm_element_value(entry, XML_LRM_ATTR_MIGRATE_TARGET);
+    *source_name = crm_element_value(entry, PCMK__META_MIGRATE_SOURCE);
+    *target_name = crm_element_value(entry, PCMK__META_MIGRATE_TARGET);
     if ((*source_name == NULL) || (*target_name == NULL)) {
         pcmk__config_err("Ignoring resource history entry %s without "
-                         XML_LRM_ATTR_MIGRATE_SOURCE " and "
-                         XML_LRM_ATTR_MIGRATE_TARGET, ID(entry));
+                         PCMK__META_MIGRATE_SOURCE " and "
+                         PCMK__META_MIGRATE_TARGET, ID(entry));
         return pcmk_rc_unpack_error;
     }
 
@@ -3127,7 +3127,7 @@ get_migration_node_names(const xmlNode *entry, const pcmk_node_t *source_node,
         && !pcmk__str_eq(*source_name, source_node->details->uname,
                          pcmk__str_casei|pcmk__str_null_matches)) {
         pcmk__config_err("Ignoring resource history entry %s because "
-                         XML_LRM_ATTR_MIGRATE_SOURCE "='%s' does not match %s",
+                         PCMK__META_MIGRATE_SOURCE "='%s' does not match %s",
                          ID(entry), *source_name, pe__node_name(source_node));
         return pcmk_rc_unpack_error;
     }
@@ -3136,7 +3136,7 @@ get_migration_node_names(const xmlNode *entry, const pcmk_node_t *source_node,
         && !pcmk__str_eq(*target_name, target_node->details->uname,
                          pcmk__str_casei|pcmk__str_null_matches)) {
         pcmk__config_err("Ignoring resource history entry %s because "
-                         XML_LRM_ATTR_MIGRATE_TARGET "='%s' does not match %s",
+                         PCMK__META_MIGRATE_TARGET "='%s' does not match %s",
                          ID(entry), *target_name, pe__node_name(target_node));
         return pcmk_rc_unpack_error;
     }
@@ -3237,9 +3237,8 @@ unpack_migrate_to_success(struct action_history *history)
              */
             return;
         }
-        crm_element_value_int(migrate_from, XML_LRM_ATTR_RC, &from_rc);
-        crm_element_value_int(migrate_from, XML_LRM_ATTR_OPSTATUS,
-                              &from_status);
+        crm_element_value_int(migrate_from, PCMK__XA_RC_CODE, &from_rc);
+        crm_element_value_int(migrate_from, PCMK__XA_OP_STATUS, &from_status);
     }
 
     /* If the resource has newer state on both the source and target after the
@@ -3471,7 +3470,7 @@ record_failed_op(struct action_history *history)
     crm_trace("Adding entry for %s on %s to failed action list",
               history->key, pe__node_name(history->node));
     crm_xml_add(history->xml, PCMK_XA_UNAME, history->node->details->uname);
-    crm_xml_add(history->xml, XML_LRM_ATTR_RSCID, history->rsc->id);
+    crm_xml_add(history->xml, PCMK__XA_RSC_ID, history->rsc->id);
     add_node_copy(history->rsc->cluster->failed, history->xml);
 }
 
@@ -3481,7 +3480,7 @@ last_change_str(const xmlNode *xml_op)
     time_t when;
     char *result = NULL;
 
-    if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
+    if (crm_element_value_epoch(xml_op, PCMK_XA_LAST_RC_CHANGE,
                                 &when) == pcmk_ok) {
         char *when_s = pcmk__epoch2str(&when, 0);
         const char *p = strchr(when_s, ' ');
@@ -3705,7 +3704,8 @@ unpack_rsc_op_failure(struct action_history *history,
              * didn't know resources will be probed even where they can't run.
              */
             crm_notice("If it is not possible for %s to run on %s, see "
-                       "the resource-discovery option for location constraints",
+                       "the " PCMK_XA_RESOURCE_DISCOVERY " option for location "
+                       "constraints",
                        history->rsc->id, pe__node_name(history->node));
         }
 
@@ -4189,7 +4189,7 @@ check_operation_expiry(struct action_history *history)
     }
 
     if ((history->rsc->failure_timeout > 0)
-        && (crm_element_value_epoch(history->xml, XML_RSC_OP_LAST_CHANGE,
+        && (crm_element_value_epoch(history->xml, PCMK_XA_LAST_RC_CHANGE,
                                     &last_run) == 0)) {
 
         /* Resource has a PCMK_META_FAILURE_TIMEOUT and history entry has a
@@ -4476,21 +4476,21 @@ can_affect_state(struct action_history *history)
 static int
 unpack_action_result(struct action_history *history)
 {
-    if ((crm_element_value_int(history->xml, XML_LRM_ATTR_OPSTATUS,
+    if ((crm_element_value_int(history->xml, PCMK__XA_OP_STATUS,
                                &(history->execution_status)) < 0)
         || (history->execution_status < PCMK_EXEC_PENDING)
         || (history->execution_status > PCMK_EXEC_MAX)
         || (history->execution_status == PCMK_EXEC_CANCELLED)) {
         pcmk__config_err("Ignoring resource history entry %s for %s on %s "
-                         "with invalid " XML_LRM_ATTR_OPSTATUS " '%s'",
+                         "with invalid " PCMK__XA_OP_STATUS " '%s'",
                          history->id, history->rsc->id,
                          pe__node_name(history->node),
                          pcmk__s(crm_element_value(history->xml,
-                                                   XML_LRM_ATTR_OPSTATUS),
+                                                   PCMK__XA_OP_STATUS),
                                  ""));
         return pcmk_rc_unpack_error;
     }
-    if ((crm_element_value_int(history->xml, XML_LRM_ATTR_RC,
+    if ((crm_element_value_int(history->xml, PCMK__XA_RC_CODE,
                                &(history->exit_status)) < 0)
         || (history->exit_status < 0) || (history->exit_status > CRM_EX_MAX)) {
 #if 0
@@ -4499,19 +4499,18 @@ unpack_action_result(struct action_history *history)
          * release.
          */
         pcmk__config_err("Ignoring resource history entry %s for %s on %s "
-                         "with invalid " XML_LRM_ATTR_RC " '%s'",
+                         "with invalid " PCMK__XA_RC_CODE " '%s'",
                          history->id, history->rsc->id,
                          pe__node_name(history->node),
                          pcmk__s(crm_element_value(history->xml,
-                                                   XML_LRM_ATTR_RC),
+                                                   PCMK__XA_RC_CODE),
                                  ""));
         return pcmk_rc_unpack_error;
 #else
         history->exit_status = CRM_EX_ERROR;
 #endif
     }
-    history->exit_reason = crm_element_value(history->xml,
-                                             XML_LRM_ATTR_EXIT_REASON);
+    history->exit_reason = crm_element_value(history->xml, PCMK_XA_EXIT_REASON);
     return pcmk_rc_ok;
 }
 
@@ -4561,7 +4560,7 @@ process_expired_result(struct action_history *history, int orig_exit_status)
          *
          * @TODO We should skip this if there is a newer successful monitor.
          *       Also, this causes rescheduling only if the history entry
-         *       has an op-digest (which the expire-non-blocked-failure
+         *       has a PCMK__XA_OP_DIGEST (which the expire-non-blocked-failure
          *       scheduler regression test doesn't, but that may not be a
          *       realistic scenario in production).
          */
@@ -4569,7 +4568,7 @@ process_expired_result(struct action_history *history, int orig_exit_status)
                    "after failure expired",
                    pcmk__readable_interval(history->interval_ms), history->task,
                    history->rsc->id, pe__node_name(history->node));
-        crm_xml_add(history->xml, XML_LRM_ATTR_RESTART_DIGEST,
+        crm_xml_add(history->xml, PCMK__XA_OP_RESTART_DIGEST,
                     "calculated-failure-timeout");
         return pcmk_rc_ok;
     }
@@ -4644,10 +4643,10 @@ failure_is_newer(const struct action_history *history,
         return false; // last_failure is for action with different interval
     }
 
-    if ((pcmk__scan_ll(crm_element_value(history->xml, XML_RSC_OP_LAST_CHANGE),
+    if ((pcmk__scan_ll(crm_element_value(history->xml, PCMK_XA_LAST_RC_CHANGE),
                        &this_change, 0LL) != pcmk_rc_ok)
         || (pcmk__scan_ll(crm_element_value(last_failure,
-                                            XML_RSC_OP_LAST_CHANGE),
+                                            PCMK_XA_LAST_RC_CHANGE),
                           &failure_change, 0LL) != pcmk_rc_ok)
         || (failure_change < this_change)) {
         return false; // Failure is not known to be newer
@@ -4696,7 +4695,7 @@ process_pending_action(struct action_history *history,
         pcmk_node_t *target = NULL;
 
         migrate_target = crm_element_value(history->xml,
-                                           XML_LRM_ATTR_MIGRATE_TARGET);
+                                           PCMK__META_MIGRATE_TARGET);
         target = pe_find_node(history->rsc->cluster->nodes, migrate_target);
         if (target != NULL) {
             stop_action(history->rsc, target, FALSE);
@@ -4775,7 +4774,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
 
     history.expected_exit_status = pe__target_rc_from_xml(xml_op);
     history.key = pe__xe_history_key(xml_op);
-    crm_element_value_int(xml_op, XML_LRM_ATTR_CALLID, &(history.call_id));
+    crm_element_value_int(xml_op, PCMK__XA_CALL_ID, &(history.call_id));
 
     pcmk__rsc_trace(rsc, "Unpacking %s (%s call %d on %s): %s (%s)",
                     history.id, history.task, history.call_id,

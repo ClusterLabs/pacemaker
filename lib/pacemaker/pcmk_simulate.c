@@ -468,8 +468,8 @@ set_effective_date(pcmk_scheduler_t *scheduler, bool print_original,
 static int
 simulate_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
-    const char *node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-    const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
+    const char *node = crm_element_value(action->xml, PCMK__META_ON_NODE);
+    const char *task = crm_element_value(action->xml, PCMK__XA_OPERATION_KEY);
 
     pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     out->message(out, "inject-pseudo-action", node, task);
@@ -501,16 +501,16 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     const char *resource_config_name = NULL;
     const char *operation = crm_element_value(action->xml, PCMK_XA_OPERATION);
     const char *target_rc_s = crm_meta_value(action->params,
-                                             XML_ATTR_TE_TARGET_RC);
+                                             PCMK__META_OP_TARGET_RC);
 
     xmlNode *cib_node = NULL;
     xmlNode *cib_resource = NULL;
     xmlNode *action_rsc = first_named_child(action->xml, XML_CIB_TAG_RESOURCE);
 
-    char *node = crm_element_value_copy(action->xml, XML_LRM_ATTR_TARGET);
+    char *node = crm_element_value_copy(action->xml, PCMK__META_ON_NODE);
     char *uuid = NULL;
     const char *router_node = crm_element_value(action->xml,
-                                                XML_LRM_ATTR_ROUTER_NODE);
+                                                PCMK__XA_ROUTER_NODE);
 
     // Certain actions don't need to be displayed or history entries
     if (pcmk__str_eq(operation, CRM_OP_REPROBE, pcmk__str_none)) {
@@ -563,7 +563,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                                      cib_sync_call|cib_scope_local) == pcmk_ok);
 
     // Ensure the action node is in the CIB
-    uuid = crm_element_value_copy(action->xml, XML_LRM_ATTR_TARGET_UUID);
+    uuid = crm_element_value_copy(action->xml, PCMK__META_ON_NODE_UUID);
     cib_node = pcmk__inject_node(fake_cib, node,
                                  ((router_node == NULL)? uuid: node));
     free(uuid);
@@ -661,7 +661,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 static int
 simulate_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
-    const char *node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+    const char *node = crm_element_value(action->xml, PCMK__META_ON_NODE);
     const char *task = crm_element_value(action->xml, PCMK_XA_OPERATION);
     xmlNode *rsc = first_named_child(action->xml, XML_CIB_TAG_RESOURCE);
 
@@ -684,7 +684,7 @@ static int
 simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     const char *op = crm_meta_value(action->params, "stonith_action");
-    char *target = crm_element_value_copy(action->xml, XML_LRM_ATTR_TARGET);
+    char *target = crm_element_value_copy(action->xml, PCMK__META_ON_NODE);
 
     out->message(out, "inject-fencing-action", target, op);
 

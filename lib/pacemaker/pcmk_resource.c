@@ -49,7 +49,7 @@ best_op(const pcmk_resource_t *rsc, const pcmk_node_t *node)
          lrm_rsc_op != NULL; lrm_rsc_op = crm_next_same_xml(lrm_rsc_op)) {
 
         const char *digest = crm_element_value(lrm_rsc_op,
-                                               XML_LRM_ATTR_RESTART_DIGEST);
+                                               PCMK__XA_OP_RESTART_DIGEST);
         guint interval_ms = 0;
         const char *task = crm_element_value(lrm_rsc_op, PCMK_XA_OPERATION);
         bool effective_op = false;

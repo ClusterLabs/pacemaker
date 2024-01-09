@@ -264,14 +264,14 @@ stonith_xml_history_to_list(const xmlNode *history)
          * fencers <2.1.3 didn't include results, leading it to assume an error
          * status. Instead, set an unknown status in that case.
          */
-        if ((crm_element_value_int(xml_op, XML_LRM_ATTR_RC, &exit_status) < 0)
-            || (crm_element_value_int(xml_op, XML_LRM_ATTR_OPSTATUS,
+        if ((crm_element_value_int(xml_op, PCMK__XA_RC_CODE, &exit_status) < 0)
+            || (crm_element_value_int(xml_op, PCMK__XA_OP_STATUS,
                                       &execution_status) < 0)) {
             exit_status = CRM_EX_INDETERMINATE;
             execution_status = PCMK_EXEC_UNKNOWN;
         }
         pcmk__set_result(&op->result, exit_status, execution_status,
-                         crm_element_value(xml_op, XML_LRM_ATTR_EXIT_REASON));
+                         crm_element_value(xml_op, PCMK_XA_EXIT_REASON));
         pcmk__set_result_output(&op->result,
                                 crm_element_value_copy(xml_op, F_STONITH_OUTPUT),
                                 NULL);

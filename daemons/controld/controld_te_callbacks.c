@@ -21,7 +21,7 @@
 
 void te_update_confirm(const char *event, xmlNode * msg);
 
-#define RSC_OP_PREFIX "//" XML_TAG_DIFF_ADDED "//" XML_TAG_CIB \
+#define RSC_OP_PREFIX "//" PCMK__XE_DIFF_ADDED "//" XML_TAG_CIB \
                       "//" XML_LRM_TAG_RSC_OP "[@" PCMK_XA_ID "='"
 
 // An explicit PCMK_OPT_SHUTDOWN_LOCK of 0 means the lock has been cleared
@@ -57,7 +57,9 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     /* Tickets Attributes - Added/Updated */
     xpathObj =
         xpath_search(diff,
-                     "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_CIB_TAG_TICKETS);
+                     "//" F_CIB_UPDATE_RESULT
+                     "//" PCMK__XE_DIFF_ADDED
+                     "//" XML_CIB_TAG_TICKETS);
     if (numXpathResults(xpathObj) > 0) {
         xmlNode *aborted = getXpathResult(xpathObj, 0);
 
@@ -71,7 +73,9 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     /* Tickets Attributes - Removed */
     xpathObj =
         xpath_search(diff,
-                     "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_REMOVED "//" XML_CIB_TAG_TICKETS);
+                     "//" F_CIB_UPDATE_RESULT
+                     "//" PCMK__XE_DIFF_REMOVED
+                     "//" XML_CIB_TAG_TICKETS);
     if (numXpathResults(xpathObj) > 0) {
         xmlNode *aborted = getXpathResult(xpathObj, 0);
 
@@ -84,8 +88,9 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     /* Transient Attributes - Removed */
     xpathObj =
         xpath_search(diff,
-                     "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_REMOVED "//"
-                     XML_TAG_TRANSIENT_NODEATTRS);
+                     "//" F_CIB_UPDATE_RESULT
+                     "//" PCMK__XE_DIFF_REMOVED
+                     "//" XML_TAG_TRANSIENT_NODEATTRS);
     if (numXpathResults(xpathObj) > 0) {
         xmlNode *aborted = getXpathResult(xpathObj, 0);
 
@@ -99,7 +104,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     // Check for lrm_resource entries
     xpathObj = xpath_search(diff,
                             "//" F_CIB_UPDATE_RESULT
-                            "//" XML_TAG_DIFF_ADDED
+                            "//" PCMK__XE_DIFF_ADDED
                             "//" XML_LRM_TAG_RESOURCE);
     max = numXpathResults(xpathObj);
 
@@ -137,7 +142,9 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     /* Process operation updates */
     xpathObj =
         xpath_search(diff,
-                     "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_LRM_TAG_RSC_OP);
+                     "//" F_CIB_UPDATE_RESULT
+                     "//" PCMK__XE_DIFF_ADDED
+                     "//" XML_LRM_TAG_RSC_OP);
     max = numXpathResults(xpathObj);
     if (max > 0) {
         int lpc = 0;
@@ -152,7 +159,8 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     freeXpathObject(xpathObj);
 
     /* Detect deleted (as opposed to replaced or added) actions - eg. crm_resource -C */
-    xpathObj = xpath_search(diff, "//" XML_TAG_DIFF_REMOVED "//" XML_LRM_TAG_RSC_OP);
+    xpathObj = xpath_search(diff,
+                            "//" PCMK__XE_DIFF_REMOVED "//" XML_LRM_TAG_RSC_OP);
     max = numXpathResults(xpathObj);
     for (lpc = 0; lpc < max; lpc++) {
         const char *op_id = NULL;
@@ -654,8 +662,8 @@ action_timer_callback(gpointer data)
     stop_te_timer(action);
 
     task = crm_element_value(action->xml, PCMK_XA_OPERATION);
-    on_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-    via_node = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
+    on_node = crm_element_value(action->xml, PCMK__META_ON_NODE);
+    via_node = crm_element_value(action->xml, PCMK__XA_ROUTER_NODE);
 
     if (controld_globals.transition_graph->complete) {
         crm_notice("Node %s did not send %s result (via %s) within %dms "

@@ -114,11 +114,11 @@ handle_shutdown_request(pcmk__request_t *request)
         crm_notice("Shutting down in response to IPC request %s from %s",
                    crm_element_value(msg, PCMK_XA_REFERENCE),
                    crm_element_value(msg, PCMK_XA_ORIGIN));
-        crm_xml_add_int(shutdown, XML_LRM_ATTR_OPSTATUS, CRM_EX_OK);
+        crm_xml_add_int(shutdown, PCMK__XA_OP_STATUS, CRM_EX_OK);
     } else {
         crm_warn("Ignoring shutdown request from unprivileged client %s",
                  pcmk__client_name(request->ipc_client));
-        crm_xml_add_int(shutdown, XML_LRM_ATTR_OPSTATUS, CRM_EX_INSUFFICIENT_PRIV);
+        crm_xml_add_int(shutdown, PCMK__XA_OP_STATUS, CRM_EX_INSUFFICIENT_PRIV);
     }
 
     reply = create_reply(msg, shutdown);

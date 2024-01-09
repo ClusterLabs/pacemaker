@@ -131,7 +131,15 @@ bool pcmk__valid_sbd_timeout(const char *value);
 // Constants for meta-attribute names
 #define PCMK__META_CLONE_INSTANCE_NUM       "clone"
 #define PCMK__META_CONTAINER                "container"
+#define PCMK__META_DIGESTS_ALL              "digests-all"
+#define PCMK__META_DIGESTS_SECURE           "digests-secure"
 #define PCMK__META_INTERNAL_RSC             "internal_rsc"
+#define PCMK__META_MIGRATE_SOURCE           "migrate_source"
+#define PCMK__META_MIGRATE_TARGET           "migrate_target"
+#define PCMK__META_ON_NODE                  "on_node"
+#define PCMK__META_ON_NODE_UUID             "on_node_uuid"
+#define PCMK__META_OP_NO_WAIT               "op_no_wait"
+#define PCMK__META_OP_TARGET_RC             "op_target_rc"
 #define PCMK__META_PHYSICAL_HOST            "physical-host"
 
 /* @TODO Plug these in. Currently, they're never set. These are op attrs for use

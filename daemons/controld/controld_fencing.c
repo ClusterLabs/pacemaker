@@ -831,7 +831,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
         goto bail;
     }
 
-    target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+    target = crm_element_value(action->xml, PCMK__META_ON_NODE);
     if (target == NULL) {
         crm_err("Ignoring fence operation %d result: No target given (bug?)",
                 data->call_id);
@@ -840,7 +840,8 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
 
     stop_te_timer(action);
     if (stonith__exit_status(data) == CRM_EX_OK) {
-        const char *uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
+        const char *uuid = crm_element_value(action->xml,
+                                             PCMK__META_ON_NODE_UUID);
         const char *op = crm_meta_value(action->params, "stonith_action");
 
         crm_info("Fence operation %d for %s succeeded", data->call_id, target);
@@ -866,11 +867,12 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
                              is_remote_node);
                 free(now);
 
-                value = crm_meta_value(action->params, XML_OP_ATTR_DIGESTS_ALL);
+                value = crm_meta_value(action->params, PCMK__META_DIGESTS_ALL);
                 update_attrd(target, CRM_ATTR_DIGESTS_ALL, value, NULL,
                              is_remote_node);
 
-                value = crm_meta_value(action->params, XML_OP_ATTR_DIGESTS_SECURE);
+                value = crm_meta_value(action->params,
+                                       PCMK__META_DIGESTS_SECURE);
                 update_attrd(target, CRM_ATTR_DIGESTS_SECURE, value, NULL,
                              is_remote_node);
 
@@ -955,8 +957,8 @@ controld_execute_fence_action(pcmk__graph_t *graph,
 {
     int rc = 0;
     const char *id = ID(action->xml);
-    const char *uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
-    const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+    const char *uuid = crm_element_value(action->xml, PCMK__META_ON_NODE_UUID);
+    const char *target = crm_element_value(action->xml, PCMK__META_ON_NODE);
     const char *type = crm_meta_value(action->params, "stonith_action");
     char *transition_key = NULL;
     const char *priority_delay = NULL;

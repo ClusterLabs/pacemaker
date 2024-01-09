@@ -1100,13 +1100,13 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, const xmlNode *action,
 {
     lrmd_event_data_t *op = NULL;
     const char *operation = crm_element_value(action, PCMK_XA_OPERATION);
-    const char *target_node = crm_element_value(action, XML_LRM_ATTR_TARGET);
+    const char *target_node = crm_element_value(action, PCMK__META_ON_NODE);
     xmlNode *xml_rsc = find_xml_node(action, XML_CIB_TAG_RESOURCE, TRUE);
 
     if ((xml_rsc == NULL) || (ID(xml_rsc) == NULL)) {
         /* @TODO Should we do something else, like direct ack? */
         crm_info("Can't fake %s failure (%d) on %s without resource configuration",
-                 crm_element_value(action, XML_LRM_ATTR_TASK_KEY), rc,
+                 crm_element_value(action, PCMK__XA_OPERATION_KEY), rc,
                  target_node);
         return;
 
@@ -1149,7 +1149,7 @@ lrm_op_target(const xmlNode *xml)
     const char *target = NULL;
 
     if (xml) {
-        target = crm_element_value(xml, XML_LRM_ATTR_TARGET);
+        target = crm_element_value(xml, PCMK__META_ON_NODE);
     }
     if (target == NULL) {
         target = controld_globals.our_nodename;
@@ -1263,7 +1263,7 @@ static bool do_lrm_cancel(ha_msg_input_t *input, lrm_state_t *lrm_state,
 
     op_key = pcmk__op_key(rsc->id, op_task, interval_ms);
 
-    meta_key = crm_meta_name(XML_LRM_ATTR_CALLID);
+    meta_key = crm_meta_name(PCMK__XA_CALL_ID);
     call_id = crm_element_value(params, meta_key);
     free(meta_key);
 
@@ -1484,7 +1484,7 @@ do_lrm_invoke(long long action,
 
         if (input->xml != NULL) {
             // For CRM_OP_REPROBE, a NULL target means we're targeting all nodes
-            raw_target = crm_element_value(input->xml, XML_LRM_ATTR_TARGET);
+            raw_target = crm_element_value(input->xml, PCMK__META_ON_NODE);
         }
         handle_reprobe_op(lrm_state, from_sys, from_host, user_name,
                           is_remote_node, (raw_target == NULL));
@@ -1644,7 +1644,7 @@ construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
     }
 
     params = xml2list(rsc_op);
-    g_hash_table_remove(params, CRM_META "_op_target_rc");
+    g_hash_table_remove(params, CRM_META "_" PCMK__META_OP_TARGET_RC);
 
     op_delay = crm_meta_value(params, PCMK_META_START_DELAY);
     pcmk__scan_min_int(op_delay, &op->start_delay, 0);
@@ -2276,7 +2276,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
     if (lrm_state) {
         node_name = lrm_state->node_name;
     } else if (action_xml) {
-        node_name = crm_element_value(action_xml, XML_LRM_ATTR_TARGET);
+        node_name = crm_element_value(action_xml, PCMK__META_ON_NODE);
     }
 
     if(pending == NULL) {

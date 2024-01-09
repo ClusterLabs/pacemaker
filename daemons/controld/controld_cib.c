@@ -574,7 +574,9 @@ append_restart_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
     }
 
     if (pcmk_is_set(metadata->ra_flags, ra_supports_reload_agent)) {
-        // Add parameters not marked reloadable to the "op-force-restart" list
+        /* Add parameters not marked reloadable to the PCMK__XA_OP_FORCE_RESTART
+         * list
+         */
         list = build_parameter_list(op, metadata, ra_param_reloadable,
                                     &restart);
 
@@ -583,7 +585,7 @@ append_restart_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
          *
          * Before OCF 1.1, Pacemaker abused "unique=0" to indicate
          * reloadability. Add any parameters with unique="1" to the
-         * "op-force-restart" list.
+         * PCMK__XA_OP_FORCE_RESTART list.
          */
         list = build_parameter_list(op, metadata, ra_param_unique, &restart);
 
@@ -593,11 +595,13 @@ append_restart_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
     }
 
     digest = calculate_operation_digest(restart, version);
-    /* Add "op-force-restart" and "op-restart-digest" to indicate the resource supports reload,
-     * no matter if it actually supports any parameters with unique="1"). */
-    crm_xml_add(update, XML_LRM_ATTR_OP_RESTART,
+    /* Add PCMK__XA_OP_FORCE_RESTART and PCMK__XA_OP_RESTART_DIGEST to indicate
+     * the resource supports reload, no matter if it actually supports any
+     * reloadable parameters
+     */
+    crm_xml_add(update, PCMK__XA_OP_FORCE_RESTART,
                 (list == NULL)? "" : (const char *) list->str);
-    crm_xml_add(update, XML_LRM_ATTR_RESTART_DIGEST, digest);
+    crm_xml_add(update, PCMK__XA_OP_RESTART_DIGEST, digest);
 
     if ((list != NULL) && (list->len > 0)) {
         crm_trace("%s: %s, %s", op->rsc_id, digest, (const char *) list->str);
@@ -622,17 +626,16 @@ append_secure_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
 
     CRM_LOG_ASSERT(op->params != NULL);
 
-    /*
-     * To keep XML_LRM_ATTR_OP_SECURE short, we want it to contain the
-     * secure parameters but XML_LRM_ATTR_SECURE_DIGEST to be based on
-     * the insecure ones
+    /* To keep PCMK__XA_OP_SECURE_PARAMS short, we want it to contain the secure
+     * parameters but PCMK__XA_OP_SECURE_DIGEST to be based on the insecure ones
      */
     list = build_parameter_list(op, metadata, ra_param_private, &secure);
 
     if (list != NULL) {
         digest = calculate_operation_digest(secure, version);
-        crm_xml_add(update, XML_LRM_ATTR_OP_SECURE, (const char *) list->str);
-        crm_xml_add(update, XML_LRM_ATTR_SECURE_DIGEST, digest);
+        crm_xml_add(update, PCMK__XA_OP_SECURE_PARAMS,
+                    (const char *) list->str);
+        crm_xml_add(update, PCMK__XA_OP_SECURE_DIGEST, digest);
 
         crm_trace("%s: %s, %s", op->rsc_id, digest, (const char *) list->str);
         g_string_free(list, TRUE);
@@ -963,7 +966,7 @@ controld_delete_action_history(const lrmd_event_data_t *op)
     CRM_CHECK(op != NULL, return);
 
     xml_top = create_xml_node(NULL, XML_LRM_TAG_RSC_OP);
-    crm_xml_add_int(xml_top, XML_LRM_ATTR_CALLID, op->call_id);
+    crm_xml_add_int(xml_top, PCMK__XA_CALL_ID, op->call_id);
     crm_xml_add(xml_top, PCMK__XA_TRANSITION_KEY, op->user_data);
 
     if (op->interval_ms > 0) {
@@ -997,11 +1000,11 @@ controld_delete_action_history(const lrmd_event_data_t *op)
 
 /* ... and also by operation key and operation call ID */
 #define XPATH_HISTORY_CALL XPATH_HISTORY \
-    "[@" PCMK_XA_ID "='%s' and @" XML_LRM_ATTR_CALLID "='%d']"
+    "[@" PCMK_XA_ID "='%s' and @" PCMK__XA_CALL_ID "='%d']"
 
 /* ... and also by operation key and original operation key */
 #define XPATH_HISTORY_ORIG XPATH_HISTORY \
-    "[@" PCMK_XA_ID "='%s' and @" XML_LRM_ATTR_TASK_KEY "='%s']"
+    "[@" PCMK_XA_ID "='%s' and @" PCMK__XA_OPERATION_KEY "='%s']"
 
 /*!
  * \internal

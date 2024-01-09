@@ -327,9 +327,9 @@ should_filter_for_digest(xmlAttrPtr a, void *user_data)
     return pcmk__str_any_of((const char *) a->name,
                             PCMK_XA_ID,
                             PCMK_XA_CRM_FEATURE_SET,
-                            XML_LRM_ATTR_OP_DIGEST,
-                            XML_LRM_ATTR_TARGET,
-                            XML_LRM_ATTR_TARGET_UUID,
+                            PCMK__XA_OP_DIGEST,
+                            PCMK__META_ON_NODE,
+                            PCMK__META_ON_NODE_UUID,
                             "pcmk_external_ip",
                             NULL);
 }
@@ -524,8 +524,8 @@ pcmk_xe_mask_probe_failure(const xmlNode *xml_op)
         return false;
     }
 
-    crm_element_value_int(xml_op, XML_LRM_ATTR_OPSTATUS, &status);
-    crm_element_value_int(xml_op, XML_LRM_ATTR_RC, &rc);
+    crm_element_value_int(xml_op, PCMK__XA_OP_STATUS, &status);
+    crm_element_value_int(xml_op, PCMK__XA_RC_CODE, &rc);
 
     return rc == PCMK_OCF_NOT_INSTALLED || rc == PCMK_OCF_INVALID_PARAM ||
            status == PCMK_EXEC_NOT_INSTALLED;

@@ -155,7 +155,7 @@ is_recurring_history(const pcmk_resource_t *rsc, const xmlNode *xml,
     }
 
     // Ensure role is valid if specified
-    role = crm_element_value(xml, "role");
+    role = crm_element_value(xml, PCMK_XA_ROLE);
     if (role == NULL) {
         op->role = pcmk_role_unknown;
     } else {
@@ -687,7 +687,7 @@ pcmk__schedule_cancel(pcmk_resource_t *rsc, const char *call_id,
              pcmk__readable_interval(interval_ms), task, rsc->id,
              pe__node_name(node), reason);
     cancel = pcmk__new_cancel_action(rsc, task, interval_ms, node);
-    add_hash_param(cancel->meta, XML_LRM_ATTR_CALLID, call_id);
+    add_hash_param(cancel->meta, PCMK__XA_CALL_ID, call_id);
 
     // Cancellations happen after stops
     pcmk__new_ordering(rsc, stop_key(rsc), NULL, rsc, NULL, cancel,

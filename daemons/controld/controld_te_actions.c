@@ -73,7 +73,7 @@ execute_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *pseudo)
     }
 
     crm_debug("Pseudo-action %d (%s) fired and confirmed", pseudo->id,
-              crm_element_value(pseudo->xml, XML_LRM_ATTR_TASK_KEY));
+              crm_element_value(pseudo->xml, PCMK__XA_OPERATION_KEY));
     te_action_confirmed(pseudo, graph);
     return pcmk_rc_ok;
 }
@@ -83,7 +83,7 @@ get_target_rc(pcmk__graph_action_t *action)
 {
     int exit_status;
 
-    pcmk__scan_min_int(crm_meta_value(action->params, XML_ATTR_TE_TARGET_RC),
+    pcmk__scan_min_int(crm_meta_value(action->params, PCMK__META_OP_TARGET_RC),
                        &exit_status, 0);
     return exit_status;
 }
@@ -119,10 +119,10 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     task = crm_element_value(action->xml, PCMK_XA_OPERATION);
     CRM_CHECK(!pcmk__str_empty(task), return EPROTO);
 
-    on_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+    on_node = crm_element_value(action->xml, PCMK__META_ON_NODE);
     CRM_CHECK(!pcmk__str_empty(on_node), return pcmk_rc_node_unknown);
 
-    router_node = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
+    router_node = crm_element_value(action->xml, PCMK__XA_ROUTER_NODE);
     if (router_node == NULL) {
         router_node = on_node;
         if (pcmk__str_eq(task, PCMK_ACTION_LRM_DELETE, pcmk__str_none)) {
@@ -139,7 +139,7 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         is_local = TRUE;
     }
 
-    value = crm_meta_value(action->params, XML_ATTR_TE_NOWAIT);
+    value = crm_meta_value(action->params, PCMK__META_OP_NO_WAIT);
     if (crm_is_true(value)) {
         no_wait = TRUE;
     }
@@ -216,7 +216,7 @@ static lrmd_event_data_t *
 synthesize_timeout_event(const pcmk__graph_action_t *action, int target_rc)
 {
     lrmd_event_data_t *op = NULL;
-    const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+    const char *target = crm_element_value(action->xml, PCMK__META_ON_NODE);
     const char *reason = NULL;
     char *dynamic_reason = NULL;
 
@@ -225,7 +225,7 @@ synthesize_timeout_event(const pcmk__graph_action_t *action, int target_rc)
     } else {
         const char *router_node = NULL;
 
-        router_node = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
+        router_node = crm_element_value(action->xml, PCMK__XA_ROUTER_NODE);
         if (router_node == NULL) {
             router_node = target;
         }
@@ -257,9 +257,11 @@ controld_record_action_event(pcmk__graph_action_t *action,
     int rc = pcmk_ok;
 
     const char *rsc_id = NULL;
-    const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-    const char *task_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
-    const char *target_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
+    const char *target = crm_element_value(action->xml, PCMK__META_ON_NODE);
+    const char *task_uuid = crm_element_value(action->xml,
+                                              PCMK__XA_OPERATION_KEY);
+    const char *target_uuid = crm_element_value(action->xml,
+                                                PCMK__META_ON_NODE_UUID);
 
     int target_rc = get_target_rc(action);
 
@@ -316,8 +318,9 @@ controld_record_action_timeout(pcmk__graph_action_t *action)
 {
     lrmd_event_data_t *op = NULL;
 
-    const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-    const char *task_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
+    const char *target = crm_element_value(action->xml, PCMK__META_ON_NODE);
+    const char *task_uuid = crm_element_value(action->xml,
+                                              PCMK__XA_OPERATION_KEY);
 
     int target_rc = get_target_rc(action);
 
@@ -365,7 +368,7 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     CRM_ASSERT(action->xml != NULL);
 
     pcmk__clear_graph_action_flags(action, pcmk__graph_action_executed);
-    on_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+    on_node = crm_element_value(action->xml, PCMK__META_ON_NODE);
 
     CRM_CHECK(!pcmk__str_empty(on_node),
               crm_err("Corrupted command(id=%s) %s: no node",
@@ -374,8 +377,8 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
     rsc_op = action->xml;
     task = crm_element_value(rsc_op, PCMK_XA_OPERATION);
-    task_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
-    router_node = crm_element_value(rsc_op, XML_LRM_ATTR_ROUTER_NODE);
+    task_uuid = crm_element_value(action->xml, PCMK__XA_OPERATION_KEY);
+    router_node = crm_element_value(rsc_op, PCMK__XA_ROUTER_NODE);
 
     if (!router_node) {
         router_node = on_node;
@@ -391,7 +394,7 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         is_local = TRUE;
     }
 
-    value = crm_meta_value(action->params, XML_ATTR_TE_NOWAIT);
+    value = crm_meta_value(action->params, PCMK__META_OP_NO_WAIT);
     if (crm_is_true(value)) {
         no_wait = TRUE;
     }
@@ -521,7 +524,7 @@ static void
 te_update_job_count(pcmk__graph_action_t *action, int offset)
 {
     const char *task = crm_element_value(action->xml, PCMK_XA_OPERATION);
-    const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+    const char *target = crm_element_value(action->xml, PCMK__META_ON_NODE);
 
     if ((action->type != pcmk__rsc_graph_action) || (target == NULL)) {
         /* No limit on these */
@@ -532,19 +535,22 @@ te_update_job_count(pcmk__graph_action_t *action, int offset)
      * on a remote node. For now, we count all actions occurring on a
      * remote node against the job list on the cluster node hosting
      * the connection resources */
-    target = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
+    target = crm_element_value(action->xml, PCMK__XA_ROUTER_NODE);
 
     if ((target == NULL)
         && pcmk__strcase_any_of(task, PCMK_ACTION_MIGRATE_TO,
                                 PCMK_ACTION_MIGRATE_FROM, NULL)) {
-        const char *t1 = crm_meta_value(action->params, XML_LRM_ATTR_MIGRATE_SOURCE);
-        const char *t2 = crm_meta_value(action->params, XML_LRM_ATTR_MIGRATE_TARGET);
+
+        const char *t1 = crm_meta_value(action->params,
+                                        PCMK__META_MIGRATE_SOURCE);
+        const char *t2 = crm_meta_value(action->params,
+                                        PCMK__META_MIGRATE_TARGET);
 
         te_update_job_count_on(t1, offset, TRUE);
         te_update_job_count_on(t2, offset, TRUE);
         return;
     } else if (target == NULL) {
-        target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+        target = crm_element_value(action->xml, PCMK__META_ON_NODE);
     }
 
     te_update_job_count_on(target, offset, FALSE);
@@ -567,7 +573,7 @@ allowed_on_node(const pcmk__graph_t *graph, const pcmk__graph_action_t *action,
     int limit = 0;
     struct te_peer_s *r = NULL;
     const char *task = crm_element_value(action->xml, PCMK_XA_OPERATION);
-    const char *id = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
+    const char *id = crm_element_value(action->xml, PCMK__XA_OPERATION_KEY);
 
     if(target == NULL) {
         /* No limit on these */
@@ -629,20 +635,20 @@ graph_action_allowed(pcmk__graph_t *graph, pcmk__graph_action_t *action)
      * on a remote node. For now, we count all actions occurring on a
      * remote node against the job list on the cluster node hosting
      * the connection resources */
-    target = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
+    target = crm_element_value(action->xml, PCMK__XA_ROUTER_NODE);
 
     if ((target == NULL)
         && pcmk__strcase_any_of(task, PCMK_ACTION_MIGRATE_TO,
                                 PCMK_ACTION_MIGRATE_FROM, NULL)) {
-        target = crm_meta_value(action->params, XML_LRM_ATTR_MIGRATE_SOURCE);
+        target = crm_meta_value(action->params, PCMK__META_MIGRATE_SOURCE);
         if (!allowed_on_node(graph, action, target)) {
             return false;
         }
 
-        target = crm_meta_value(action->params, XML_LRM_ATTR_MIGRATE_TARGET);
+        target = crm_meta_value(action->params, PCMK__META_MIGRATE_TARGET);
 
     } else if (target == NULL) {
-        target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+        target = crm_element_value(action->xml, PCMK__META_ON_NODE);
     }
 
     return allowed_on_node(graph, action, target);
@@ -659,7 +665,7 @@ te_action_confirmed(pcmk__graph_action_t *action, pcmk__graph_t *graph)
 {
     if (!pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {
         if ((action->type == pcmk__rsc_graph_action)
-            && (crm_element_value(action->xml, XML_LRM_ATTR_TARGET) != NULL)) {
+            && (crm_element_value(action->xml, PCMK__META_ON_NODE) != NULL)) {
             te_update_job_count(action, -1);
         }
         pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);

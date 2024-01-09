@@ -62,7 +62,7 @@ is_matched_failure(const char *rsc_id, const xmlNode *conf_op_xml,
             int rc = 0;
             int target_rc = pe__target_rc_from_xml(lrm_op_xml);
 
-            crm_element_value_int(lrm_op_xml, XML_LRM_ATTR_RC, &rc);
+            crm_element_value_int(lrm_op_xml, PCMK__XA_RC_CODE, &rc);
             if (rc != target_rc) {
                 matched = TRUE;
             }
@@ -463,7 +463,7 @@ pe__clear_failcount(pcmk_resource_t *rsc, const pcmk_node_t *node,
     key = pcmk__op_key(rsc->id, PCMK_ACTION_CLEAR_FAILCOUNT, 0);
     clear = custom_action(rsc, key, PCMK_ACTION_CLEAR_FAILCOUNT, node, FALSE,
                           scheduler);
-    add_hash_param(clear->meta, XML_ATTR_TE_NOWAIT, PCMK_VALUE_TRUE);
+    add_hash_param(clear->meta, PCMK__META_OP_NO_WAIT, PCMK_VALUE_TRUE);
     crm_notice("Clearing failure of %s on %s because %s " CRM_XS " %s",
                rsc->id, pe__node_name(node), reason, clear->uuid);
     return clear;

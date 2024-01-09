@@ -58,6 +58,12 @@
  * XML element names used only by internal code
  */
 
+// @COMPAT Deprecated since 2.1.7
+#define PCMK__XE_DIFF_ADDED             "diff-added"
+
+// @COMPAT Deprecated since 2.1.7
+#define PCMK__XE_DIFF_REMOVED           "diff-removed"
+
 /* @COMPAT Deprecated since 2.0.0; alias for <clone> with PCMK_META_PROMOTABLE
  * set to "true"
  */
@@ -88,6 +94,7 @@
 #define PCMK__XA_ATTR_VALUE             "attr_value"
 #define PCMK__XA_ATTR_VERSION           "attr_version"
 #define PCMK__XA_ATTR_WRITER            "attr_writer"
+#define PCMK__XA_CALL_ID                "call-id"
 #define PCMK__XA_CONFIG_ERRORS          "config-errors"
 #define PCMK__XA_CONFIG_WARNINGS        "config-warnings"
 #define PCMK__XA_CONFIRM                "confirm"
@@ -120,8 +127,25 @@
 #define PCMK__XA_MODE                   "mode"
 #define PCMK__XA_NODE_START_STATE       "node_start_state"
 #define PCMK__XA_OBJECT_TYPE            "object_type"
+#define PCMK__XA_OPERATION_KEY          "operation_key"
+#define PCMK__XA_OP_DIGEST              "op-digest"
+#define PCMK__XA_OP_FORCE_RESTART       "op-force-restart"
+#define PCMK__XA_OP_RESTART_DIGEST      "op-restart-digest"
+#define PCMK__XA_OP_SECURE_DIGEST       "op-secure-digest"
+#define PCMK__XA_OP_SECURE_PARAMS       "op-secure-params"
+#define PCMK__XA_OP_STATUS              "op-status"
 #define PCMK__XA_PACEMAKERD_STATE       "pacemakerd_state"
+#define PCMK__XA_PRIORITY               "priority"
+#define PCMK__XA_RC_CODE                "rc-code"
 #define PCMK__XA_REAP                   "reap"
+
+/* Actions to be executed on Pacemaker Remote nodes are routed through the
+ * controller on the cluster node hosting the remote connection. That cluster
+ * node is considered the router node for the action.
+ */
+#define PCMK__XA_ROUTER_NODE            "router_node"
+
+#define PCMK__XA_RSC_ID                 "rsc-id"
 #define PCMK__XA_SCHEMA                 "schema"
 #define PCMK__XA_SCHEMAS                "schemas"
 #define PCMK__XA_SRC                    "src"
@@ -132,11 +156,17 @@
 #define PCMK__XA_TRANSITION_MAGIC       "transition-magic"
 #define PCMK__XA_UPTIME                 "uptime"
 
+// @COMPAT Deprecated since 2.1.5
+#define PCMK__XA_FIRST_INSTANCE         "first-instance"
+
 // @COMPAT Deprecated since 2.1.6
 #define PCMK__XA_REPLACE                "replace"
 
 // @COMPAT Deprecated since 2.1.5
 #define PCMK__XA_RSC_INSTANCE           "rsc-instance"
+
+// @COMPAT Deprecated since 2.1.5
+#define PCMK__XA_THEN_INSTANCE          "then-instance"
 
 // @COMPAT Deprecated since 2.1.5
 #define PCMK__XA_WITH_RSC_INSTANCE      "with-rsc-instance"

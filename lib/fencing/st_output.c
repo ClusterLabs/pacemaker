@@ -468,7 +468,7 @@ stonith_event_xml(pcmk__output_t *out, va_list args)
     switch (event->state) {
         case st_failed:
             pcmk__xe_set_props(node, "status", "failed",
-                               XML_LRM_ATTR_EXIT_REASON, event->exit_reason,
+                               PCMK_XA_EXIT_REASON, event->exit_reason,
                                NULL);
             break;
 

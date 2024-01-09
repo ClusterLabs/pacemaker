@@ -529,6 +529,120 @@ extern "C" {
 //! \deprecated Use \c PCMK_META_RECORD_PENDING instead
 #define XML_OP_ATTR_PENDING PCMK_META_RECORD_PENDING
 
+//! \deprecated Do not use
+#define XML_OP_ATTR_DIGESTS_ALL "digests-all"
+
+//! \deprecated Do not use
+#define XML_OP_ATTR_DIGESTS_SECURE "digests-secure"
+
+//! \deprecated Do not use
+#define XML_CIB_ATTR_PRIORITY "priority"
+
+//! \deprecated Do not use
+#define XML_LRM_ATTR_TASK_KEY "operation_key"
+
+//! \deprecated Do not use
+#define XML_LRM_ATTR_TARGET "on_node"
+
+//! \deprecated Do not use
+#define XML_LRM_ATTR_TARGET_UUID "on_node_uuid"
+
+//! \deprecated Do not use
+#define XML_ORDER_ATTR_FIRST_INSTANCE "first-instance"
+
+//! \deprecated Do not use
+#define XML_ORDER_ATTR_THEN_INSTANCE "then-instance"
+
+//! \deprecated Do not use
+#define XML_TAG_DIFF_ADDED "diff-added"
+
+//! \deprecated Do not use
+#define XML_TAG_DIFF_REMOVED "diff-removed"
+
+//! \deprecated Do not use
+#define XML_ATTR_TE_NOWAIT "op_no_wait"
+
+//! \deprecated Do not use
+#define XML_ATTR_TE_TARGET_RC "op_target_rc"
+
+//! \deprecated Do not use
+#define XML_LRM_ATTR_ROUTER_NODE "router_node"
+
+//! \deprecated Do not use
+#define XML_LRM_ATTR_RSCID "rsc-id"
+
+//! \deprecated Do not use
+#define XML_LRM_ATTR_OPSTATUS "op-status"
+
+//! \deprecated Do not use
+#define XML_LRM_ATTR_RC "rc-code"
+
+//! \deprecated Do not use
+#define XML_LRM_ATTR_CALLID "call-id"
+
+//! \deprecated Do not use
+#define XML_LRM_ATTR_OP_DIGEST "op-digest"
+
+//! \deprecated Do not use
+#define XML_LRM_ATTR_OP_RESTART "op-force-restart"
+
+//! \deprecated Do not use
+#define XML_LRM_ATTR_OP_SECURE "op-secure-params"
+
+//! \deprecated Do not use
+#define XML_LRM_ATTR_RESTART_DIGEST "op-restart-digest"
+
+//! \deprecated Do not use
+#define XML_LRM_ATTR_SECURE_DIGEST "op-secure-digest"
+
+//! \deprecated Use \c PCMK_XA_EXIT_REASON instead
+#define XML_LRM_ATTR_EXIT_REASON PCMK_XA_EXIT_REASON
+
+//! \deprecated Use \c PCMK_XA_LAST_RC_CHANGE instead
+#define XML_RSC_OP_LAST_CHANGE PCMK_XA_LAST_RC_CHANGE
+
+//! \deprecated Use \c PCMK_XA_EXEC_TIME instead
+#define XML_RSC_OP_T_EXEC PCMK_XA_EXEC_TIME
+
+//! \deprecated Use \c PCMK_XA_QUEUE_TIME instead
+#define XML_RSC_OP_T_QUEUE PCMK_XA_QUEUE_TIME
+
+//! \deprecated Do not use
+#define XML_LRM_ATTR_MIGRATE_SOURCE "migrate_source"
+
+//! \deprecated Do not use
+#define XML_LRM_ATTR_MIGRATE_TARGET "migrate_target"
+
+//! \deprecated Use \c PCMK_XA_SCORE instead
+#define XML_RULE_ATTR_SCORE PCMK_XA_SCORE
+
+//! \deprecated Use \c PCMK_XA_SCORE_ATTRIBUTE instead
+#define XML_RULE_ATTR_SCORE_ATTRIBUTE PCMK_XA_SCORE_ATTRIBUTE
+
+//! \deprecated Use \c PCMK_XE_ROLE instead
+#define XML_ACL_TAG_ROLE_REF PCMK_XE_ROLE
+
+//! \deprecated Use \c PCMK_XA_ROLE instead
+#define XML_RULE_ATTR_ROLE PCMK_XA_ROLE
+
+//! \deprecated Use \c PCMK_XA_BOOLEAN_OP instead
+#define XML_RULE_ATTR_BOOLEAN_OP PCMK_XA_BOOLEAN_OP
+
+//! \deprecated Use \c PCMK_XA_ATTRIBUTE instead
+#define XML_EXPR_ATTR_ATTRIBUTE PCMK_XA_ATTRIBUTE
+
+//! \deprecated Use \c PCMK_XA_ATTRIBUTE instead
+#define XML_ACL_ATTR_ATTRIBUTE PCMK_XA_ATTRIBUTE
+
+//! \deprecated Use \c PCMK_XA_VALUE_SOURCE instead
+#define XML_EXPR_ATTR_VALUE_SOURCE PCMK_XA_VALUE_SOURCE
+
+//! \deprecated Use \c PCMK_XA_SYMMETRICAL instead
+#define XML_CONS_ATTR_SYMMETRICAL PCMK_XA_SYMMETRICAL
+
+//! \deprecated Use \c PCMK_XA_RESOURCE_DISCOVERY instead
+#define XML_LOCATION_ATTR_DISCOVERY PCMK_XA_RESOURCE_DISCOVERY
+
 #ifdef __cplusplus
 }
 #endif

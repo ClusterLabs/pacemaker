@@ -890,7 +890,7 @@ pe__failed_probe_for_rsc(const pcmk_resource_t *rsc, const char *name)
         /* This resource operation was not run on the given node.  Note that if name is
          * NULL, this will always succeed.
          */
-        value = crm_element_value(xml_op, XML_LRM_ATTR_TARGET);
+        value = crm_element_value(xml_op, PCMK__META_ON_NODE);
         if (value == NULL || !pcmk__str_eq(value, name, pcmk__str_casei|pcmk__str_null_matches)) {
             continue;
         }

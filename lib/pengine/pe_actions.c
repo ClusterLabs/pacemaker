@@ -495,7 +495,7 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
 
             // We only care about recurring monitors for the promoted role
             name = crm_element_value(operation, PCMK_XA_NAME);
-            role = crm_element_value(operation, "role");
+            role = crm_element_value(operation, PCMK_XA_ROLE);
             if (!pcmk__str_eq(name, PCMK_ACTION_MONITOR, pcmk__str_none)
                 || !pcmk__strcase_any_of(role, PCMK__ROLE_PROMOTED,
                                          PCMK__ROLE_PROMOTED_LEGACY, NULL)) {
@@ -539,7 +539,7 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
     // on-fail="demote" is allowed only for certain actions
     if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
         name = crm_element_value(action_config, PCMK_XA_NAME);
-        role = crm_element_value(action_config, "role");
+        role = crm_element_value(action_config, PCMK_XA_ROLE);
         interval_spec = crm_element_value(action_config, PCMK_META_INTERVAL);
         pcmk_parse_interval_spec(interval_spec, &interval_ms);
 
@@ -1294,8 +1294,10 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
         stonith_op = custom_action(NULL, op_key, PCMK_ACTION_STONITH, node,
                                    TRUE, scheduler);
 
-        add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET, node->details->uname);
-        add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET_UUID, node->details->id);
+        add_hash_param(stonith_op->meta, PCMK__META_ON_NODE,
+                       node->details->uname);
+        add_hash_param(stonith_op->meta, PCMK__META_ON_NODE_UUID,
+                       node->details->id);
         add_hash_param(stonith_op->meta, "stonith_action", op);
 
         if (pcmk_is_set(scheduler->flags, pcmk_sched_enable_unfencing)) {
@@ -1338,13 +1340,13 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
                                match->id, ":", agent, ":",
                                data->digest_secure_calc, ",", NULL);
             }
-            key = strdup(XML_OP_ATTR_DIGESTS_ALL);
+            key = strdup(PCMK__META_DIGESTS_ALL);
             value = strdup((const char *) digests_all->str);
             CRM_ASSERT((key != NULL) && (value != NULL));
             g_hash_table_insert(stonith_op->meta, key, value);
             g_string_free(digests_all, TRUE);
 
-            key = strdup(XML_OP_ATTR_DIGESTS_SECURE);
+            key = strdup(PCMK__META_DIGESTS_SECURE);
             value = strdup((const char *) digests_secure->str);
             CRM_ASSERT((key != NULL) && (value != NULL));
             g_hash_table_insert(stonith_op->meta, key, value);
@@ -1707,8 +1709,8 @@ pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b,
     const char *a_xml_id = crm_element_value(xml_a, PCMK_XA_ID);
     const char *b_xml_id = crm_element_value(xml_b, PCMK_XA_ID);
 
-    const char *a_node = crm_element_value(xml_a, XML_LRM_ATTR_TARGET);
-    const char *b_node = crm_element_value(xml_b, XML_LRM_ATTR_TARGET);
+    const char *a_node = crm_element_value(xml_a, PCMK__META_ON_NODE);
+    const char *b_node = crm_element_value(xml_b, PCMK__META_ON_NODE);
     bool same_node = true;
 
     /* @COMPAT The on_node attribute was added to last_failure as of 1.1.13 (via
@@ -1735,8 +1737,8 @@ pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b,
         sort_return(0, "duplicate");
     }
 
-    crm_element_value_int(xml_a, XML_LRM_ATTR_CALLID, &a_call_id);
-    crm_element_value_int(xml_b, XML_LRM_ATTR_CALLID, &b_call_id);
+    crm_element_value_int(xml_a, PCMK__XA_CALL_ID, &a_call_id);
+    crm_element_value_int(xml_b, PCMK__XA_CALL_ID, &b_call_id);
 
     if (a_call_id == -1 && b_call_id == -1) {
         /* both are pending ops so it doesn't matter since
@@ -1752,15 +1754,14 @@ pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b,
 
     } else if (a_call_id >= 0 && b_call_id >= 0
                && (!same_node || a_call_id == b_call_id)) {
-        /*
-         * The op and last_failed_op are the same
-         * Order on last-rc-change
+        /* The op and last_failed_op are the same. Order on
+         * PCMK_XA_LAST_RC_CHANGE.
          */
         time_t last_a = -1;
         time_t last_b = -1;
 
-        crm_element_value_epoch(xml_a, XML_RSC_OP_LAST_CHANGE, &last_a);
-        crm_element_value_epoch(xml_b, XML_RSC_OP_LAST_CHANGE, &last_b);
+        crm_element_value_epoch(xml_a, PCMK_XA_LAST_RC_CHANGE, &last_a);
+        crm_element_value_epoch(xml_b, PCMK_XA_LAST_RC_CHANGE, &last_b);
 
         crm_trace("rc-change: %lld vs %lld",
                   (long long) last_a, (long long) last_b);
@@ -1883,7 +1884,7 @@ pe__add_action_expected_result(pcmk_action_t *action, int expected_result)
 
     CRM_ASSERT((action != NULL) && (action->meta != NULL));
 
-    name = strdup(XML_ATTR_TE_TARGET_RC);
+    name = strdup(PCMK__META_OP_TARGET_RC);
     CRM_ASSERT (name != NULL);
 
     g_hash_table_insert(action->meta, name, pcmk__itoa(expected_result));

@@ -54,7 +54,7 @@ create_acl(const xmlNode *xml, GList *acls, enum xml_private_flags mode)
     const char *tag = crm_element_value(xml, XML_ACL_ATTR_TAG);
     const char *ref = crm_element_value(xml, PCMK_XA_REFERENCE);
     const char *xpath = crm_element_value(xml, XML_ACL_ATTR_XPATH);
-    const char *attr = crm_element_value(xml, XML_ACL_ATTR_ATTRIBUTE);
+    const char *attr = crm_element_value(xml, PCMK_XA_ATTRIBUTE);
 
     if (tag == NULL) {
         // @COMPAT rolling upgrades <=1.1.11
@@ -140,8 +140,7 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
             crm_trace("Unpacking ACL <%s> element", tag);
         }
 
-        if (strcmp(XML_ACL_TAG_ROLE_REF, tag) == 0
-                   || strcmp(XML_ACL_TAG_ROLE_REFv1, tag) == 0) {
+        if (pcmk__str_any_of(tag, PCMK_XE_ROLE, XML_ACL_TAG_ROLE_REFv1, NULL)) {
             const char *ref_role = crm_element_value(child, PCMK_XA_ID);
 
             if (ref_role) {

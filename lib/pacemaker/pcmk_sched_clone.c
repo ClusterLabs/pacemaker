@@ -562,7 +562,7 @@ pcmk__clone_create_probe(pcmk_resource_t *rsc, pcmk_node_t *node)
 
     if (rsc->exclusive_discover) {
         /* The clone is configured to be probed only where a location constraint
-         * exists with resource-discovery set to exclusive.
+         * exists with PCMK_XA_RESOURCE_DISCOVERY set to exclusive.
          *
          * This check is not strictly necessary here since the instance's
          * create_probe() method would also check, but doing it here is more

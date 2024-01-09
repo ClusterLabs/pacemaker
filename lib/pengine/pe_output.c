@@ -148,7 +148,7 @@ get_operation_list(xmlNode *rsc_entry) {
         const char *task = crm_element_value(rsc_op, PCMK_XA_OPERATION);
         const char *interval_ms_s = crm_element_value(rsc_op,
                                                       PCMK_META_INTERVAL);
-        const char *op_rc = crm_element_value(rsc_op, XML_LRM_ATTR_RC);
+        const char *op_rc = crm_element_value(rsc_op, PCMK__XA_RC_CODE);
         int op_rc_i;
 
         pcmk__scan_min_int(op_rc, &op_rc_i, 0);
@@ -224,7 +224,7 @@ last_changed_string(const char *last_written, const char *user,
 static char *
 op_history_string(xmlNode *xml_op, const char *task, const char *interval_ms_s,
                   int rc, bool print_timing) {
-    const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
+    const char *call = crm_element_value(xml_op, PCMK__XA_CALL_ID);
     char *interval_str = NULL;
     char *buf = NULL;
 
@@ -243,26 +243,27 @@ op_history_string(xmlNode *xml_op, const char *task, const char *interval_ms_s,
 
         time_t epoch = 0;
 
-        if ((crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE, &epoch) == pcmk_ok)
+        if ((crm_element_value_epoch(xml_op, PCMK_XA_LAST_RC_CHANGE,
+                                     &epoch) == pcmk_ok)
             && (epoch > 0)) {
             char *epoch_str = pcmk__epoch2str(&epoch, 0);
 
             last_change_str = crm_strdup_printf(" %s=\"%s\"",
-                                                XML_RSC_OP_LAST_CHANGE,
+                                                PCMK_XA_LAST_RC_CHANGE,
                                                 pcmk__s(epoch_str, ""));
             free(epoch_str);
         }
 
-        value = crm_element_value(xml_op, XML_RSC_OP_T_EXEC);
+        value = crm_element_value(xml_op, PCMK_XA_EXEC_TIME);
         if (value) {
-            char *pair = pcmk__format_nvpair(XML_RSC_OP_T_EXEC, value, "ms");
+            char *pair = pcmk__format_nvpair(PCMK_XA_EXEC_TIME, value, "ms");
             exec_str = crm_strdup_printf(" %s", pair);
             free(pair);
         }
 
-        value = crm_element_value(xml_op, XML_RSC_OP_T_QUEUE);
+        value = crm_element_value(xml_op, PCMK_XA_QUEUE_TIME);
         if (value) {
-            char *pair = pcmk__format_nvpair(XML_RSC_OP_T_QUEUE, value, "ms");
+            char *pair = pcmk__format_nvpair(PCMK_XA_QUEUE_TIME, value, "ms");
             queue_str = crm_strdup_printf(" %s", pair);
             free(pair);
         }
@@ -1362,7 +1363,7 @@ failed_action_friendly(pcmk__output_t *out, const xmlNode *xml_op,
     }
 
 
-    if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
+    if (crm_element_value_epoch(xml_op, PCMK_XA_LAST_RC_CHANGE,
                                 &last_change_epoch) == pcmk_ok) {
         char *s = pcmk__epoch2str(&last_change_epoch, 0);
 
@@ -1405,8 +1406,8 @@ failed_action_technical(pcmk__output_t *out, const xmlNode *xml_op,
                         int status, const char *exit_reason,
                         const char *exec_time)
 {
-    const char *call_id = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
-    const char *queue_time = crm_element_value(xml_op, XML_RSC_OP_T_QUEUE);
+    const char *call_id = crm_element_value(xml_op, PCMK__XA_CALL_ID);
+    const char *queue_time = crm_element_value(xml_op, PCMK_XA_QUEUE_TIME);
     const char *exit_status = services_ocf_exitcode_str(rc);
     const char *lrm_status = pcmk_exec_status_str(status);
     time_t last_change_epoch = 0;
@@ -1432,12 +1433,12 @@ failed_action_technical(pcmk__output_t *out, const xmlNode *xml_op,
         pcmk__g_strcat(str, ", exitreason='", exit_reason, "'", NULL);
     }
 
-    if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
+    if (crm_element_value_epoch(xml_op, PCMK_XA_LAST_RC_CHANGE,
                                 &last_change_epoch) == pcmk_ok) {
         char *last_change_str = pcmk__epoch2str(&last_change_epoch, 0);
 
         pcmk__g_strcat(str,
-                       ", " XML_RSC_OP_LAST_CHANGE "="
+                       ", " PCMK_XA_LAST_RC_CHANGE "="
                        "'", last_change_str, "'", NULL);
         free(last_change_str);
     }
@@ -1461,17 +1462,16 @@ failed_action_default(pcmk__output_t *out, va_list args)
 
     const char *op_key = pe__xe_history_key(xml_op);
     const char *node_name = crm_element_value(xml_op, PCMK_XA_UNAME);
-    const char *exit_reason = crm_element_value(xml_op,
-                                                XML_LRM_ATTR_EXIT_REASON);
-    const char *exec_time = crm_element_value(xml_op, XML_RSC_OP_T_EXEC);
+    const char *exit_reason = crm_element_value(xml_op, PCMK_XA_EXIT_REASON);
+    const char *exec_time = crm_element_value(xml_op, PCMK_XA_EXEC_TIME);
 
     int rc;
     int status;
 
-    pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_RC), &rc, 0);
+    pcmk__scan_min_int(crm_element_value(xml_op, PCMK__XA_RC_CODE), &rc, 0);
 
-    pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS),
-                       &status, 0);
+    pcmk__scan_min_int(crm_element_value(xml_op, PCMK__XA_OP_STATUS), &status,
+                       0);
 
     if (pcmk__str_empty(node_name)) {
         node_name = "unknown node";
@@ -1498,19 +1498,20 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     int rc;
     int status;
     const char *uname = crm_element_value(xml_op, PCMK_XA_UNAME);
-    const char *exit_reason = crm_element_value(xml_op, XML_LRM_ATTR_EXIT_REASON);
+    const char *call_id = crm_element_value(xml_op, PCMK__XA_CALL_ID);
+    const char *exit_reason = crm_element_value(xml_op, PCMK_XA_EXIT_REASON);
 
     time_t epoch = 0;
     char *rc_s = NULL;
     char *reason_s = crm_xml_escape(exit_reason ? exit_reason : "none");
     xmlNodePtr node = NULL;
 
-    pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_RC), &rc, 0);
-    pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS),
-                       &status, 0);
+    pcmk__scan_min_int(crm_element_value(xml_op, PCMK__XA_RC_CODE), &rc, 0);
+    pcmk__scan_min_int(crm_element_value(xml_op, PCMK__XA_OP_STATUS), &status,
+                       0);
 
     rc_s = pcmk__itoa(rc);
-    if (crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY) == NULL) {
+    if (crm_element_value(xml_op, PCMK__XA_OPERATION_KEY) == NULL) {
         op_key_name = PCMK_XA_ID;
     }
     node = pcmk__output_create_xml_node(out, "failure",
@@ -1519,13 +1520,15 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
                                         "exitstatus", services_ocf_exitcode_str(rc),
                                         "exitreason", pcmk__s(reason_s, ""),
                                         "exitcode", rc_s,
-                                        "call", crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
+                                        "call", call_id,
                                         "status", pcmk_exec_status_str(status),
                                         NULL);
     free(rc_s);
 
-    if ((crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
+    if ((crm_element_value_epoch(xml_op, PCMK_XA_LAST_RC_CHANGE,
                                  &epoch) == pcmk_ok) && (epoch > 0)) {
+
+        const char *queue_time = crm_element_value(xml_op, PCMK_XA_QUEUE_TIME);
         guint interval_ms = 0;
         char *interval_ms_s = NULL;
         char *rc_change = pcmk__epoch2str(&epoch,
@@ -1536,9 +1539,10 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
         crm_element_value_ms(xml_op, PCMK_META_INTERVAL, &interval_ms);
         interval_ms_s = crm_strdup_printf("%u", interval_ms);
 
-        pcmk__xe_set_props(node, XML_RSC_OP_LAST_CHANGE, rc_change,
-                           "queued", crm_element_value(xml_op, XML_RSC_OP_T_QUEUE),
-                           "exec", crm_element_value(xml_op, XML_RSC_OP_T_EXEC),
+        pcmk__xe_set_props(node,
+                           PCMK_XA_LAST_RC_CHANGE, rc_change,
+                           "queued", queue_time,
+                           "exec", crm_element_value(xml_op, PCMK_XA_EXEC_TIME),
                            "interval", interval_ms_s,
                            "task", crm_element_value(xml_op, PCMK_XA_OPERATION),
                            NULL);
@@ -2031,8 +2035,8 @@ node_and_op(pcmk__output_t *out, va_list args) {
     int status;
     time_t last_change = 0;
 
-    pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS),
-                       &status, PCMK_EXEC_UNKNOWN);
+    pcmk__scan_min_int(crm_element_value(xml_op, PCMK__XA_OP_STATUS), &status,
+                       PCMK_EXEC_UNKNOWN);
 
     rsc = pe_find_resource(scheduler->resources, op_rsc);
 
@@ -2052,19 +2056,21 @@ node_and_op(pcmk__output_t *out, va_list args) {
         node_str = crm_strdup_printf("Unknown resource %s", op_rsc);
     }
 
-    if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
+    if (crm_element_value_epoch(xml_op, PCMK_XA_LAST_RC_CHANGE,
                                 &last_change) == pcmk_ok) {
+        const char *exec_time = crm_element_value(xml_op, PCMK_XA_EXEC_TIME);
+
         last_change_str = crm_strdup_printf(", %s='%s', exec=%sms",
-                                            XML_RSC_OP_LAST_CHANGE,
+                                            PCMK_XA_LAST_RC_CHANGE,
                                             pcmk__trim(ctime(&last_change)),
-                                            crm_element_value(xml_op, XML_RSC_OP_T_EXEC));
+                                            exec_time);
     }
 
     out->list_item(out, NULL, "%s: %s (node=%s, call=%s, rc=%s%s): %s",
                    node_str, pe__xe_history_key(xml_op),
                    crm_element_value(xml_op, PCMK_XA_UNAME),
-                   crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
-                   crm_element_value(xml_op, XML_LRM_ATTR_RC),
+                   crm_element_value(xml_op, PCMK__XA_CALL_ID),
+                   crm_element_value(xml_op, PCMK__XA_RC_CODE),
                    last_change_str ? last_change_str : "",
                    pcmk_exec_status_str(status));
 
@@ -2081,18 +2087,20 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
 
     pcmk_resource_t *rsc = NULL;
     const char *uname = crm_element_value(xml_op, PCMK_XA_UNAME);
+    const char *call_id = crm_element_value(xml_op, PCMK__XA_CALL_ID);
+    const char *rc_s = crm_element_value(xml_op, PCMK__XA_RC_CODE);
     const char *op_rsc = crm_element_value(xml_op, "resource");
     int status;
     time_t last_change = 0;
     xmlNode *node = NULL;
 
-    pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS),
+    pcmk__scan_min_int(crm_element_value(xml_op, PCMK__XA_OP_STATUS),
                        &status, PCMK_EXEC_UNKNOWN);
     node = pcmk__output_create_xml_node(out, PCMK_XE_OPERATION,
                                         PCMK_XA_OP, pe__xe_history_key(xml_op),
                                         "node", uname,
-                                        "call", crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
-                                        "rc", crm_element_value(xml_op, XML_LRM_ATTR_RC),
+                                        "call", call_id,
+                                        "rc", rc_s,
                                         "status", pcmk_exec_status_str(status),
                                         NULL);
 
@@ -2116,11 +2124,14 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
         free(agent_tuple);
     }
 
-    if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
+    if (crm_element_value_epoch(xml_op, PCMK_XA_LAST_RC_CHANGE,
                                 &last_change) == pcmk_ok) {
-        pcmk__xe_set_props(node, XML_RSC_OP_LAST_CHANGE,
-                           pcmk__trim(ctime(&last_change)),
-                           XML_RSC_OP_T_EXEC, crm_element_value(xml_op, XML_RSC_OP_T_EXEC),
+        const char *last_rc_change = pcmk__trim(ctime(&last_change));
+        const char *exec_time = crm_element_value(xml_op, PCMK_XA_EXEC_TIME);
+
+        pcmk__xe_set_props(node,
+                           PCMK_XA_LAST_RC_CHANGE, last_rc_change,
+                           PCMK_XA_EXEC_TIME, exec_time,
                            NULL);
     }
 
@@ -2572,7 +2583,7 @@ node_weight_xml(pcmk__output_t *out, va_list args)
     xmlNodePtr node = pcmk__output_create_xml_node(out, "node_weight",
                                                    "function", prefix,
                                                    "node", uname,
-                                                   "score", score,
+                                                   PCMK_XA_SCORE, score,
                                                    NULL);
 
     if (rsc) {
@@ -2609,9 +2620,10 @@ op_history_xml(pcmk__output_t *out, va_list args) {
     int rc = va_arg(args, int);
     uint32_t show_opts = va_arg(args, uint32_t);
 
+    const char *call_id = crm_element_value(xml_op, PCMK__XA_CALL_ID);
     char *rc_s = pcmk__itoa(rc);
     xmlNodePtr node = pcmk__output_create_xml_node(out, "operation_history",
-                                                   "call", crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
+                                                   "call", call_id,
                                                    "task", task,
                                                    "rc", rc_s,
                                                    "rc_text", services_ocf_exitcode_str(rc),
@@ -2628,23 +2640,23 @@ op_history_xml(pcmk__output_t *out, va_list args) {
         const char *value = NULL;
         time_t epoch = 0;
 
-        if ((crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
+        if ((crm_element_value_epoch(xml_op, PCMK_XA_LAST_RC_CHANGE,
                                      &epoch) == pcmk_ok) && (epoch > 0)) {
             char *s = pcmk__epoch2str(&epoch, 0);
-            crm_xml_add(node, XML_RSC_OP_LAST_CHANGE, s);
+            crm_xml_add(node, PCMK_XA_LAST_RC_CHANGE, s);
             free(s);
         }
 
-        value = crm_element_value(xml_op, XML_RSC_OP_T_EXEC);
+        value = crm_element_value(xml_op, PCMK_XA_EXEC_TIME);
         if (value) {
             char *s = crm_strdup_printf("%sms", value);
-            crm_xml_add(node, XML_RSC_OP_T_EXEC, s);
+            crm_xml_add(node, PCMK_XA_EXEC_TIME, s);
             free(s);
         }
-        value = crm_element_value(xml_op, XML_RSC_OP_T_QUEUE);
+        value = crm_element_value(xml_op, PCMK_XA_QUEUE_TIME);
         if (value) {
             char *s = crm_strdup_printf("%sms", value);
-            crm_xml_add(node, XML_RSC_OP_T_QUEUE, s);
+            crm_xml_add(node, PCMK_XA_QUEUE_TIME, s);
             free(s);
         }
     }
@@ -2679,7 +2691,7 @@ promotion_score_xml(pcmk__output_t *out, va_list args)
 
     xmlNodePtr node = pcmk__output_create_xml_node(out, "promotion_score",
                                                    PCMK_XA_ID, child_rsc->id,
-                                                   "score", score,
+                                                   PCMK_XA_SCORE, score,
                                                    NULL);
 
     if (chosen) {
@@ -2932,7 +2944,7 @@ resource_operation_list(pcmk__output_t *out, va_list args)
         const char *task = crm_element_value(xml_op, PCMK_XA_OPERATION);
         const char *interval_ms_s = crm_element_value(xml_op,
                                                       PCMK_META_INTERVAL);
-        const char *op_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
+        const char *op_rc = crm_element_value(xml_op, PCMK__XA_RC_CODE);
         int op_rc_i;
 
         pcmk__scan_min_int(op_rc, &op_rc_i, 0);

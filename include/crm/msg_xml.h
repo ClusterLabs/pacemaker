@@ -59,6 +59,7 @@ extern "C" {
 #define PCMK_XE_OP                          "op"
 #define PCMK_XE_OPERATION                   "operation"
 #define PCMK_XE_OP_EXPRESSION               "op_expression"
+#define PCMK_XE_ROLE                        "role"
 #define PCMK_XE_RSC_EXPRESSION              "rsc_expression"
 
 
@@ -67,6 +68,8 @@ extern "C" {
  */
 
 #define PCMK_XA_ADMIN_EPOCH                 "admin_epoch"
+#define PCMK_XA_ATTRIBUTE                   "attribute"
+#define PCMK_XA_BOOLEAN_OP                  "boolean-op"
 #define PCMK_XA_CIB_LAST_WRITTEN            "cib-last-written"
 #define PCMK_XA_CLASS                       "class"
 #define PCMK_XA_CRM_DEBUG_ORIGIN            "crm-debug-origin"
@@ -76,11 +79,14 @@ extern "C" {
 #define PCMK_XA_DESCRIPTION                 "description"
 #define PCMK_XA_DEVICES                     "devices"
 #define PCMK_XA_EPOCH                       "epoch"
+#define PCMK_XA_EXEC_TIME                   "exec-time"
+#define PCMK_XA_EXIT_REASON                 "exit-reason"
 #define PCMK_XA_FORMAT                      "format"
 #define PCMK_XA_HAVE_QUORUM                 "have-quorum"
 #define PCMK_XA_ID                          "id"
 #define PCMK_XA_ID_REF                      "id-ref"
 #define PCMK_XA_INDEX                       "index"
+#define PCMK_XA_LAST_RC_CHANGE              "last-rc-change"
 #define PCMK_XA_NAME                        "name"
 #define PCMK_XA_NO_QUORUM_PANIC             "no-quorum-panic"
 #define PCMK_XA_NUM_UPDATES                 "num_updates"
@@ -89,10 +95,16 @@ extern "C" {
 #define PCMK_XA_ORIGIN                      "origin"
 #define PCMK_XA_PATH                        "path"
 #define PCMK_XA_PROVIDER                    "provider"
+#define PCMK_XA_QUEUE_TIME                  "queue-time"
 #define PCMK_XA_REASON                      "reason"
 #define PCMK_XA_REFERENCE                   "reference"
 #define PCMK_XA_REQUEST                     "request"
+#define PCMK_XA_RESOURCE_DISCOVERY          "resource-discovery"
 #define PCMK_XA_RESULT                      "result"
+#define PCMK_XA_ROLE                        "role"
+#define PCMK_XA_SCORE                       "score"
+#define PCMK_XA_SCORE_ATTRIBUTE             "score-attribute"
+#define PCMK_XA_SYMMETRICAL                 "symmetrical"
 #define PCMK_XA_TARGET                      "target"
 #define PCMK_XA_TARGET_ATTRIBUTE            "target-attribute"
 #define PCMK_XA_TARGET_PATTERN              "target-pattern"
@@ -104,6 +116,7 @@ extern "C" {
 #define PCMK_XA_UPDATE_USER                 "update-user"
 #define PCMK_XA_VALIDATE_WITH               "validate-with"
 #define PCMK_XA_VALUE                       "value"
+#define PCMK_XA_VALUE_SOURCE                "value-source"
 #define PCMK_XA_VERSION                     "version"
 
 
@@ -183,52 +196,16 @@ extern "C" {
 
 #  define XML_CIB_TAG_RSC_TEMPLATE	"template"
 
-#  define XML_OP_ATTR_DIGESTS_ALL       "digests-all"
-#  define XML_OP_ATTR_DIGESTS_SECURE    "digests-secure"
-
 #  define XML_CIB_TAG_LRM		"lrm"
 #  define XML_LRM_TAG_RESOURCES     	"lrm_resources"
 #  define XML_LRM_TAG_RESOURCE     	"lrm_resource"
 #  define XML_LRM_TAG_RSC_OP		"lrm_rsc_op"
-
-#  define XML_CIB_ATTR_PRIORITY     	"priority"
 
 #  define XML_NODE_IS_REMOTE    	"remote_node"
 #  define XML_NODE_IS_FENCED		"node_fenced"
 #  define XML_NODE_IS_MAINTENANCE   "node_in_maintenance"
 
 #  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
-
-/* Aside from being an old name for the executor, LRM is a misnomer here because
- * the controller and scheduler use these to track actions, which are not always
- * executor operations.
- */
-
-#  define XML_LRM_ATTR_TASK_KEY		"operation_key"
-#  define XML_LRM_ATTR_TARGET		"on_node"
-#  define XML_LRM_ATTR_TARGET_UUID	"on_node_uuid"
-/*! Actions to be executed on Pacemaker Remote nodes are routed through the
- *  controller on the cluster node hosting the remote connection. That cluster
- *  node is considered the router node for the action.
- */
-#  define XML_LRM_ATTR_ROUTER_NODE  "router_node"
-#  define XML_LRM_ATTR_RSCID		"rsc-id"
-#  define XML_LRM_ATTR_OPSTATUS		"op-status"
-#  define XML_LRM_ATTR_RC		"rc-code"
-#  define XML_LRM_ATTR_CALLID		"call-id"
-#  define XML_LRM_ATTR_OP_DIGEST	"op-digest"
-#  define XML_LRM_ATTR_OP_RESTART	"op-force-restart"
-#  define XML_LRM_ATTR_OP_SECURE	"op-secure-params"
-#  define XML_LRM_ATTR_RESTART_DIGEST	"op-restart-digest"
-#  define XML_LRM_ATTR_SECURE_DIGEST	"op-secure-digest"
-#  define XML_LRM_ATTR_EXIT_REASON	"exit-reason"
-
-#  define XML_RSC_OP_LAST_CHANGE        "last-rc-change"
-#  define XML_RSC_OP_T_EXEC             "exec-time"
-#  define XML_RSC_OP_T_QUEUE            "queue-time"
-
-#  define XML_LRM_ATTR_MIGRATE_SOURCE	"migrate_source"
-#  define XML_LRM_ATTR_MIGRATE_TARGET	"migrate_target"
 
 #  define XML_TAG_GRAPH			"transition_graph"
 #  define XML_GRAPH_TAG_RSC_OP		"rsc_op"
@@ -238,23 +215,14 @@ extern "C" {
 #  define XML_GRAPH_TAG_MAINTENANCE       "maintenance"
 
 #  define XML_TAG_RULE			"rule"
-#  define XML_RULE_ATTR_SCORE		"score"
-#  define XML_RULE_ATTR_SCORE_ATTRIBUTE	"score-attribute"
-#  define XML_RULE_ATTR_ROLE		"role"
-#  define XML_RULE_ATTR_BOOLEAN_OP	"boolean-op"
 
 #  define XML_TAG_EXPRESSION		"expression"
-#  define XML_EXPR_ATTR_ATTRIBUTE	"attribute"
-#  define XML_EXPR_ATTR_VALUE_SOURCE	"value-source"
 
 #  define XML_CONS_TAG_RSC_DEPEND	"rsc_colocation"
 #  define XML_CONS_TAG_RSC_ORDER	"rsc_order"
 #  define XML_CONS_TAG_RSC_LOCATION	"rsc_location"
 #  define XML_CONS_TAG_RSC_TICKET	"rsc_ticket"
 #  define XML_CONS_TAG_RSC_SET		"resource_set"
-#  define XML_CONS_ATTR_SYMMETRICAL	"symmetrical"
-
-#  define XML_LOCATION_ATTR_DISCOVERY	"resource-discovery"
 
 #  define XML_COLOC_ATTR_SOURCE		"rsc"
 #  define XML_COLOC_ATTR_SOURCE_ROLE	"rsc-role"
@@ -272,12 +240,6 @@ extern "C" {
 #  define XML_ORDER_ATTR_THEN_ACTION	"then-action"
 #  define XML_ORDER_ATTR_KIND		"kind"
 
-//! \deprecated Deprecated since 2.1.5
-#  define XML_ORDER_ATTR_FIRST_INSTANCE	"first-instance"
-
-//! \deprecated Deprecated since 2.1.5
-#  define XML_ORDER_ATTR_THEN_INSTANCE	"then-instance"
-
 #  define XML_TICKET_ATTR_TICKET	"ticket"
 #  define XML_TICKET_ATTR_LOSS_POLICY	"loss-policy"
 
@@ -285,22 +247,13 @@ extern "C" {
 
 #  define XML_CIB_TAG_GENERATION_TUPPLE	"generation_tuple"
 
-#  define XML_ATTR_TE_NOWAIT		"op_no_wait"
-#  define XML_ATTR_TE_TARGET_RC		"op_target_rc"
 #  define XML_TAG_TRANSIENT_NODEATTRS	"transient_attributes"
-
-//! \deprecated Do not use (will be removed in a future release)
-#  define XML_TAG_DIFF_ADDED		"diff-added"
-
-//! \deprecated Do not use (will be removed in a future release)
-#  define XML_TAG_DIFF_REMOVED		"diff-removed"
 
 #  define XML_ACL_TAG_USER		"acl_target"
 #  define XML_ACL_TAG_USERv1		"acl_user"
 #  define XML_ACL_TAG_GROUP		"acl_group"
 #  define XML_ACL_TAG_ROLE		"acl_role"
 #  define XML_ACL_TAG_PERMISSION	"acl_permission"
-#  define XML_ACL_TAG_ROLE_REF 		"role"
 #  define XML_ACL_TAG_ROLE_REFv1	"role_ref"
 #  define XML_ACL_ATTR_KIND		"kind"
 #  define XML_ACL_TAG_READ		"read"
@@ -310,7 +263,6 @@ extern "C" {
 #  define XML_ACL_ATTR_TAG		"object-type"
 #  define XML_ACL_ATTR_TAGv1		"tag"
 #  define XML_ACL_ATTR_XPATH		"xpath"
-#  define XML_ACL_ATTR_ATTRIBUTE	"attribute"
 
 #  define XML_CIB_TAG_TICKETS		"tickets"
 #  define XML_CIB_TAG_TICKET_STATE	"ticket_state"

@@ -639,14 +639,14 @@ handle_failcount_op(xmlNode * stored_msg)
                                  &interval_ms);
         }
     }
-    uname = crm_element_value(xml_op, XML_LRM_ATTR_TARGET);
+    uname = crm_element_value(xml_op, PCMK__META_ON_NODE);
 
     if ((rsc == NULL) || (uname == NULL)) {
         crm_log_xml_warn(stored_msg, "invalid failcount op");
         return I_NULL;
     }
 
-    if (crm_element_value(xml_op, XML_LRM_ATTR_ROUTER_NODE)) {
+    if (crm_element_value(xml_op, PCMK__XA_ROUTER_NODE)) {
         is_remote_node = TRUE;
     }
 
@@ -705,7 +705,7 @@ handle_lrm_delete(xmlNode *stored_msg)
 
         rsc_id = ID(rsc_xml);
         from_sys = crm_element_value(stored_msg, PCMK__XA_CRM_SYS_FROM);
-        node = crm_element_value(msg_data, XML_LRM_ATTR_TARGET);
+        node = crm_element_value(msg_data, PCMK__META_ON_NODE);
         user_name = pcmk__update_acl_user(stored_msg, PCMK__XA_CRM_USER, NULL);
         crm_debug("Handling " CRM_OP_LRM_DELETE " for %s on %s locally%s%s "
                   "(clearing CIB resource history only)", rsc_id, node,

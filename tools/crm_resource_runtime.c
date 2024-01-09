@@ -690,7 +690,7 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
          xml_op != NULL;
          xml_op = pcmk__xml_next(xml_op)) {
 
-        failed_id = crm_element_value(xml_op, XML_LRM_ATTR_RSCID);
+        failed_id = crm_element_value(xml_op, PCMK__XA_RSC_ID);
         if (failed_id == NULL) {
             // Malformed history entry, should never happen
             continue;
@@ -1907,8 +1907,10 @@ wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
             }
         }
 
-        search = xpath_search(scheduler->input, "/cib/status/node_state/lrm/lrm_resources/lrm_resource/"
-                                                XML_LRM_TAG_RSC_OP "[@" XML_LRM_ATTR_RC "='193']");
+        search = xpath_search(scheduler->input,
+                              "/cib/status/node_state/lrm/lrm_resources"
+                              "/lrm_resource/" XML_LRM_TAG_RSC_OP
+                              "[@" PCMK__XA_RC_CODE "='193']");
         pending_unknown_state_resources = (numXpathResults(search) > 0);
         freeXpathObject(search);
     } while (actions_are_pending(scheduler->actions) || pending_unknown_state_resources);

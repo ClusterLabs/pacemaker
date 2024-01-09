@@ -31,7 +31,7 @@ attrd_confirmation(int callid)
     crm_xml_add(node, PCMK__XA_T, T_ATTRD);
     crm_xml_add(node, PCMK__XA_SRC, get_local_node_name());
     crm_xml_add(node, PCMK__XA_TASK, PCMK__ATTRD_CMD_CONFIRM);
-    crm_xml_add_int(node, XML_LRM_ATTR_CALLID, callid);
+    crm_xml_add_int(node, PCMK__XA_CALL_ID, callid);
 
     return node;
 }
@@ -81,7 +81,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
              * response so the originating peer knows what they're a confirmation
              * for.
              */
-            crm_element_value_int(xml, XML_LRM_ATTR_CALLID, &callid);
+            crm_element_value_int(xml, PCMK__XA_CALL_ID, &callid);
             reply = attrd_confirmation(callid);
 
             /* And then send the confirmation back to the originating peer.  This
