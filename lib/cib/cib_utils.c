@@ -848,21 +848,6 @@ cib_native_notify(gpointer data, gpointer user_data)
     crm_trace("Callback invoked...");
 }
 
-void
-cib_metadata(void)
-{
-    const char *name = "pacemaker-based";
-    const char *desc_short = "Cluster Information Base manager options";
-    const char *desc_long = "Cluster options used by Pacemaker's Cluster "
-                            "Information Base manager";
-
-    gchar *s = pcmk__cluster_option_metadata(name, desc_short, desc_long,
-                                             pcmk__opt_context_based);
-
-    printf("%s", s);
-    g_free(s);
-}
-
 gboolean
 cib_read_config(GHashTable * options, xmlNode * current_cib)
 {
@@ -1080,6 +1065,21 @@ const char *
 cib_pref(GHashTable * options, const char *name)
 {
     return pcmk__cluster_option(options, name);
+}
+
+void
+cib_metadata(void)
+{
+    const char *name = "pacemaker-based";
+    const char *desc_short = "Cluster Information Base manager options";
+    const char *desc_long = "Cluster options used by Pacemaker's Cluster "
+                            "Information Base manager";
+
+    gchar *s = pcmk__cluster_option_metadata(name, desc_short, desc_long,
+                                             pcmk__opt_context_based);
+
+    printf("%s", s);
+    g_free(s);
 }
 
 // LCOV_EXCL_STOP

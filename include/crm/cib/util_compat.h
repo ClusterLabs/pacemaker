@@ -50,6 +50,9 @@ xmlNode *cib_get_generation(cib_t *cib);
 //! \deprecated Do not use
 const char *cib_pref(GHashTable * options, const char *name);
 
+//! \deprecated Do not use
+void cib_metadata(void);
+
 #ifdef __cplusplus
 }
 #endif
