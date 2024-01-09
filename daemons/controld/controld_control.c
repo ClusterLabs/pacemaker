@@ -515,20 +515,6 @@ do_recover(long long action,
     register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
 }
 
-void
-crmd_metadata(void)
-{
-    const char *name = "pacemaker-controld";
-    const char *desc_short = "Pacemaker controller options";
-    const char *desc_long = "Cluster options used by Pacemaker's controller";
-
-    gchar *s = pcmk__cluster_option_metadata(name, desc_short, desc_long,
-                                             pcmk__opt_context_controld);
-
-    printf("%s", s);
-    g_free(s);
-}
-
 static void
 config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
