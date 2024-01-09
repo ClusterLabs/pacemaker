@@ -62,7 +62,6 @@ pcmk_node_t *native_location(const pcmk_resource_t *rsc, GList **list,
                              int current);
 
 void pe_metadata(pcmk__output_t *out);
-void verify_pe_options(GHashTable * options);
 
 void native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                         pcmk_scheduler_t *scheduler, gboolean failed);

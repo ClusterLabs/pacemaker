@@ -231,7 +231,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
                                config_hash, CIB_OPTIONS_FIRST, FALSE,
                                scheduler);
 
-    verify_pe_options(scheduler->config_hash);
+    pcmk__validate_cluster_options(config_hash);
 
     set_config_flag(scheduler, PCMK_OPT_ENABLE_STARTUP_PROBES,
                     pcmk_sched_probe_resources);

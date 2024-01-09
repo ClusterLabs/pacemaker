@@ -32,12 +32,6 @@ pe_metadata(pcmk__output_t *out)
     g_free(s);
 }
 
-void
-verify_pe_options(GHashTable * options)
-{
-    pcmk__validate_cluster_options(options);
-}
-
 const char *
 pe_pref(GHashTable * options, const char *name)
 {
