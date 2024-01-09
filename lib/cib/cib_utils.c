@@ -266,7 +266,7 @@ cib_acl_enabled(xmlNode *xml, const char *user)
         GHashTable *options = pcmk__strkey_table(free, free);
 
         cib_read_config(options, xml);
-        value = cib_pref(options, PCMK_OPT_ENABLE_ACL);
+        value = pcmk__cluster_option(options, PCMK_OPT_ENABLE_ACL);
         rc = crm_is_true(value);
         g_hash_table_destroy(options);
     }
