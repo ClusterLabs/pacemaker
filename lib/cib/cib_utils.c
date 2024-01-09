@@ -863,12 +863,6 @@ cib_metadata(void)
     g_free(s);
 }
 
-const char *
-cib_pref(GHashTable * options, const char *name)
-{
-    return pcmk__cluster_option(options, name);
-}
-
 gboolean
 cib_read_config(GHashTable * options, xmlNode * current_cib)
 {
@@ -1080,6 +1074,12 @@ xmlNode *
 get_object_root(const char *object_type, xmlNode *the_root)
 {
     return pcmk_find_cib_element(the_root, object_type);
+}
+
+const char *
+cib_pref(GHashTable * options, const char *name)
+{
+    return pcmk__cluster_option(options, name);
 }
 
 // LCOV_EXCL_STOP
