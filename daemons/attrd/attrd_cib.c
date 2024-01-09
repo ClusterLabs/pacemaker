@@ -537,13 +537,10 @@ write_attribute(attribute_t *a, bool ignore_delay)
         }
     }
 
-    /* Attribute will be written shortly, so clear changed flag and initialize
-     * UUID missing flag to false.
+    /* Attribute will be written shortly, so clear changed flag and force
+     * write flag, and initialize UUID missing flag to false.
      */
-    attrd_clear_attr_flags(a, attrd_attr_changed|attrd_attr_uuid_missing);
-
-    /* Attribute will be written shortly, so clear forced write flag */
-    a->force_write = FALSE;
+    attrd_clear_attr_flags(a, attrd_attr_changed|attrd_attr_uuid_missing|attrd_attr_force_write);
 
     /* Make the table for the attribute trap */
     alert_attribute_value = pcmk__strikey_table(NULL,
@@ -668,7 +665,7 @@ attrd_write_attributes(uint32_t options)
             pcmk_is_set(a->flags, attrd_attr_uuid_missing)) {
             // Try writing this attribute again, in case peer ID was learned
             attrd_set_attr_flags(a, attrd_attr_changed);
-        } else if (a->force_write) {
+        } else if (pcmk_is_set(a->flags, attrd_attr_force_write)) {
             /* If the force_write flag is set, write the attribute. */
             attrd_set_attr_flags(a, attrd_attr_changed);
         }
@@ -677,7 +674,7 @@ attrd_write_attributes(uint32_t options)
             pcmk_is_set(a->flags, attrd_attr_changed)) {
             bool ignore_delay = pcmk_is_set(options, attrd_write_no_delay);
 
-            if (a->force_write) {
+            if (pcmk_is_set(a->flags, attrd_attr_force_write)) {
                 // Always ignore delay when forced write flag is set
                 ignore_delay = true;
             }

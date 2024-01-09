@@ -311,7 +311,7 @@ update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
             /* The actual attribute is written by Writer after election. */
             crm_trace("%s[%s] from %s is unchanged (%s), forcing write",
                       attr, host, peer->uname, pcmk__s(value, "unset"));
-            a->force_write = TRUE;
+            attrd_set_attr_flags(a, attrd_attr_force_write);
         } else {
             crm_trace("%s[%s] from %s is unchanged (%s)",
                       attr, host, peer->uname, pcmk__s(value, "unset"));

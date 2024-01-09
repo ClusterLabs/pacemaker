@@ -124,6 +124,7 @@ enum attrd_attr_flags {
     attrd_attr_changed      = (1U << 0),    // Attribute value has changed since last write
     attrd_attr_uuid_missing = (1U << 1),    // Whether we know we're missing a peer UUID
     attrd_attr_is_private   = (1U << 2),    // Whether to keep this attribute out of the CIB
+    attrd_attr_force_write  = (1U << 3),    // Update attribute by ignoring delay
 };
 
 typedef struct attribute_s {
@@ -139,9 +140,6 @@ typedef struct attribute_s {
     mainloop_timer_t *timer;
 
     char *user;
-
-    gboolean force_write; /* Flag for updating attribute by ignoring delay */
-
 } attribute_t;
 
 #define attrd_set_attr_flags(attr, flags_to_set) do {               \
