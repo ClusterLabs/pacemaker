@@ -1,7 +1,7 @@
 /*
  * Original copyright 2010 Senko Rasic <senko.rasic@dobarkod.hr>
  *                         and Ante Karamatic <ivoks@init.hr>
- * Later changes copyright 2012-2023 the Pacemaker project contributors
+ * Later changes copyright 2012-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -370,9 +370,9 @@ parse_status_result(const char *name, const char *state, void *userdata)
     }
 }
 
+// @TODO Use XML string constants and maybe a real XML object
 #define METADATA_FORMAT                                                     \
     "<?xml version=\"1.0\"?>\n"                                             \
-    "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"                   \
     "<resource-agent name=\"%s\" version=\"" PCMK_DEFAULT_AGENT_VERSION "\">\n" \
     "  <version>1.1</version>\n"                                            \
     "  <longdesc lang=\"en\">\n"                                            \

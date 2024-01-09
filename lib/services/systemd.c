@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 the Pacemaker project contributors
+ * Copyright 2012-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -663,9 +663,9 @@ systemd_unit_exists(const char *name)
     return FALSE;
 }
 
+// @TODO Use XML string constants and maybe a real XML object
 #define METADATA_FORMAT                                                     \
     "<?xml version=\"1.0\"?>\n"                                             \
-    "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"                   \
     "<resource-agent name=\"%s\" version=\"" PCMK_DEFAULT_AGENT_VERSION "\">\n" \
     "  <version>1.1</version>\n"                                            \
     "  <longdesc lang=\"en\">\n"                                            \

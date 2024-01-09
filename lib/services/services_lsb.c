@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2023 the Pacemaker project contributors
+ * Copyright 2010-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,9 +22,9 @@
 #include "services_private.h"
 #include "services_lsb.h"
 
+// @TODO Use XML string constants and maybe a real XML object
 #define lsb_metadata_template  \
     "<?xml version='1.0'?>\n"                                           \
-    "<!DOCTYPE resource-agent SYSTEM 'ra-api-1.dtd'>\n"                 \
     "<resource-agent name='%s' version='" PCMK_DEFAULT_AGENT_VERSION "'>\n" \
     "  <version>1.0</version>\n"                                        \
     "  <longdesc lang='en'>\n"                                          \

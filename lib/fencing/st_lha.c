@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -30,9 +30,9 @@
 
 static void *lha_agents_lib = NULL;
 
+// @TODO Use XML string constants and maybe a real XML object
 static const char META_TEMPLATE[] =
     "<?xml version=\"1.0\"?>\n"
-    "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
     "<resource-agent name=\"%s\">\n"
     "  <version>1.0</version>\n"
     "  <longdesc lang=\"en\">\n"
