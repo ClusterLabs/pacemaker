@@ -457,9 +457,9 @@ process_ping_reply(xmlNode *reply)
         crm_trace("Processing ping reply %s from %s (%s)", seq_s, host, digest);
         if (!pcmk__str_eq(ping_digest, digest, pcmk__str_casei)) {
             xmlNode *remote_cib = get_message_xml(pong, F_CIB_CALLDATA);
-            const char *admin_epoch_s = "_";
-            const char *epoch_s = "_";
-            const char *num_updates_s = "_";
+            const char *admin_epoch_s = NULL;
+            const char *epoch_s = NULL;
+            const char *num_updates_s = NULL;
 
             if (remote_cib != NULL) {
                 admin_epoch_s = crm_element_value(remote_cib,
@@ -474,7 +474,9 @@ process_ping_reply(xmlNode *reply)
                        crm_element_value(the_cib, PCMK_XA_EPOCH),
                        crm_element_value(the_cib, PCMK_XA_NUM_UPDATES),
                        ping_digest, host,
-                       admin_epoch_s, epoch_s, num_updates_s,
+                       pcmk__s(admin_epoch_s, "_"),
+                       pcmk__s(epoch_s, "_"),
+                       pcmk__s(num_updates_s, "_"),
                        digest, remote_cib);
 
             if(remote_cib && remote_cib->children) {
@@ -1139,15 +1141,9 @@ cib_process_request(xmlNode *request, gboolean privileged,
         time_t now = time(NULL);
         int level = LOG_INFO;
         const char *section = crm_element_value(request, F_CIB_SECTION);
-        const char *admin_epoch_s = "0";
-        const char *epoch_s = "0";
-        const char *num_updates_s = "0";
-
-        if (the_cib != NULL) {
-            admin_epoch_s = crm_element_value(the_cib, PCMK_XA_ADMIN_EPOCH);
-            epoch_s = crm_element_value(the_cib, PCMK_XA_EPOCH);
-            num_updates_s = crm_element_value(the_cib, PCMK_XA_NUM_UPDATES);
-        }
+        const char *admin_epoch_s = NULL;
+        const char *epoch_s = NULL;
+        const char *num_updates_s = NULL;
 
         rc = cib_process_command(request, operation, op_function, &op_reply,
                                  &result_diff, privileged);
@@ -1173,11 +1169,19 @@ cib_process_request(xmlNode *request, gboolean privileged,
             level = LOG_WARNING;
         }
 
+        if (the_cib != NULL) {
+            admin_epoch_s = crm_element_value(the_cib, PCMK_XA_ADMIN_EPOCH);
+            epoch_s = crm_element_value(the_cib, PCMK_XA_EPOCH);
+            num_updates_s = crm_element_value(the_cib, PCMK_XA_NUM_UPDATES);
+        }
+
         do_crm_log(level,
                    "Completed %s operation for section %s: %s (rc=%d, origin=%s/%s/%s, version=%s.%s.%s)",
                    op, section ? section : "'all'", pcmk_strerror(rc), rc,
                    originator ? originator : "local", client_name, call_id,
-                   admin_epoch_s, epoch_s, num_updates_s);
+                   pcmk__s(admin_epoch_s, "0"),
+                   pcmk__s(epoch_s, "0"),
+                   pcmk__s(num_updates_s, "0"));
 
         finished = time(NULL);
         if ((finished - now) > 3) {
