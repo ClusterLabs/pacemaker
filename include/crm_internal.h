@@ -259,7 +259,6 @@
 #define PCMK__ATTRD_CMD_QUERY           "query"
 #define PCMK__ATTRD_CMD_REFRESH         "refresh"
 #define PCMK__ATTRD_CMD_FLUSH           "flush"
-#define PCMK__ATTRD_CMD_SYNC            "sync"
 #define PCMK__ATTRD_CMD_SYNC_RESPONSE   "sync-response"
 #define PCMK__ATTRD_CMD_CLEAR_FAILURE   "clear-failure"
 #define PCMK__ATTRD_CMD_CONFIRM         "confirm"
