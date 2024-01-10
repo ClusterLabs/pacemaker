@@ -208,7 +208,7 @@ update_stonith_watchdog_timeout_ms(xmlNode *cib)
     }
 
     if (timeout_ms < 0) {
-        timeout_ms = pcmk__auto_watchdog_timeout();
+        timeout_ms = pcmk__auto_stonith_watchdog_timeout();
     }
 
     stonith_watchdog_timeout_ms = timeout_ms;
