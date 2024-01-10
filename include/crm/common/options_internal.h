@@ -72,10 +72,10 @@ bool pcmk__valid_percentage(const char *value);
 bool pcmk__valid_script(const char *value);
 
 // from watchdog.c
-long pcmk__get_sbd_timeout(void);
+long pcmk__get_sbd_watchdog_timeout(void);
 bool pcmk__get_sbd_sync_resource_startup(void);
-long pcmk__auto_watchdog_timeout(void);
-bool pcmk__valid_sbd_timeout(const char *value);
+long pcmk__auto_stonith_watchdog_timeout(void);
+bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 
 // Constants for environment variable names
 #define PCMK__ENV_AUTHKEY_LOCATION          "authkey_location"
@@ -166,6 +166,7 @@ bool pcmk__valid_sbd_timeout(const char *value);
 // Constants for enumerated values for various options
 #define PCMK__VALUE_CLUSTER                 "cluster"
 #define PCMK__VALUE_CUSTOM                  "custom"
+#define PCMK__VALUE_EN                      "en"
 #define PCMK__VALUE_FENCING                 "fencing"
 #define PCMK__VALUE_GREEN                   "green"
 #define PCMK__VALUE_LOCAL                   "local"

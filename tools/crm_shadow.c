@@ -291,7 +291,7 @@ shadow_xml(pcmk__output_t *out, va_list args)
     if (content != NULL) {
         char *buf = dump_xml_formatted_with_text(content);
 
-        out->output_xml(out, "content", buf);
+        out->output_xml(out, PCMK_XE_CONTENT, buf);
         free(buf);
     }
 

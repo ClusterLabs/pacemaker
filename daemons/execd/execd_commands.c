@@ -1892,9 +1892,11 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
     } else if (pcmk__str_eq(op, LRMD_OP_CHECK, pcmk__str_none)) {
         if (allowed) {
             xmlNode *data = get_message_xml(request, F_LRMD_CALLDATA);
+            const char *timeout = NULL;
 
             CRM_LOG_ASSERT(data != NULL);
-            pcmk__valid_sbd_timeout(crm_element_value(data, F_LRMD_WATCHDOG));
+            timeout = crm_element_value(data, F_LRMD_WATCHDOG);
+            pcmk__valid_stonith_watchdog_timeout(timeout);
         } else {
             rc = -EACCES;
         }

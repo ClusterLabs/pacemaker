@@ -55,12 +55,20 @@ extern "C" {
  * XML elements
  */
 
+#define PCMK_XE_CONTENT                     "content"
 #define PCMK_XE_DATE_EXPRESSION             "date_expression"
+#define PCMK_XE_LONGDESC                    "longdesc"
 #define PCMK_XE_OP                          "op"
 #define PCMK_XE_OPERATION                   "operation"
 #define PCMK_XE_OP_EXPRESSION               "op_expression"
+#define PCMK_XE_OPTION                      "option"
 #define PCMK_XE_ROLE                        "role"
+#define PCMK_XE_PARAMETER                   "parameter"
+#define PCMK_XE_PARAMETERS                  "parameters"
+#define PCMK_XE_RESOURCE_AGENT              "resource-agent"
 #define PCMK_XE_RSC_EXPRESSION              "rsc_expression"
+#define PCMK_XE_SHORTDESC                   "shortdesc"
+#define PCMK_XE_VERSION                     "version"
 
 
 /*
@@ -76,6 +84,7 @@ extern "C" {
 #define PCMK_XA_CRM_FEATURE_SET             "crm_feature_set"
 #define PCMK_XA_CRM_TIMESTAMP               "crm-timestamp"
 #define PCMK_XA_DC_UUID                     "dc-uuid"
+#define PCMK_XA_DEFAULT                     "default"
 #define PCMK_XA_DESCRIPTION                 "description"
 #define PCMK_XA_DEVICES                     "devices"
 #define PCMK_XA_EPOCH                       "epoch"
@@ -87,6 +96,7 @@ extern "C" {
 #define PCMK_XA_ID_REF                      "id-ref"
 #define PCMK_XA_INDEX                       "index"
 #define PCMK_XA_LAST_RC_CHANGE              "last-rc-change"
+#define PCMK_XA_LANG                        "lang"
 #define PCMK_XA_NAME                        "name"
 #define PCMK_XA_NO_QUORUM_PANIC             "no-quorum-panic"
 #define PCMK_XA_NUM_UPDATES                 "num_updates"
@@ -184,7 +194,6 @@ extern "C" {
 #  define XML_TAG_ATTR_SETS	   	"instance_attributes"
 #  define XML_TAG_META_SETS	   	"meta_attributes"
 #  define XML_TAG_ATTRS			"attributes"
-#  define XML_TAG_PARAMS		"parameters"
 #  define XML_TAG_PARAM			"param"
 #  define XML_TAG_UTILIZATION		"utilization"
 
@@ -275,7 +284,7 @@ extern "C" {
 #  define XML_TAG_FENCING_LEVEL         "fencing-level"
 
 #  define XML_TAG_DIFF                  "diff"
-#  define XML_DIFF_VERSION              "version"
+#  define XML_DIFF_VERSION              PCMK_XE_VERSION
 #  define XML_DIFF_VSOURCE              "source"
 #  define XML_DIFF_VTARGET              "target"
 #  define XML_DIFF_CHANGE               "change"

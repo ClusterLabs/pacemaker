@@ -1,7 +1,7 @@
 /*
  * Original copyright 2010 Senko Rasic <senko.rasic@dobarkod.hr>
  *                         and Ante Karamatic <ivoks@init.hr>
- * Later changes copyright 2012-2023 the Pacemaker project contributors
+ * Later changes copyright 2012-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,6 +14,7 @@
 #include <stdio.h>
 
 #include <crm/crm.h>
+#include <crm/msg_xml.h>
 #include <crm/services.h>
 #include <crm/common/mainloop.h>
 
@@ -370,16 +371,20 @@ parse_status_result(const char *name, const char *state, void *userdata)
     }
 }
 
+// @TODO Use XML string constants and maybe a real XML object
 #define METADATA_FORMAT                                                     \
-    "<?xml version=\"1.0\"?>\n"                                             \
-    "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"                   \
-    "<resource-agent name=\"%s\" version=\"" PCMK_DEFAULT_AGENT_VERSION "\">\n" \
-    "  <version>1.1</version>\n"                                            \
-    "  <longdesc lang=\"en\">\n"                                            \
+    "<?xml " PCMK_XA_VERSION "=\"1.0\"?>\n"                                 \
+    "<" PCMK_XE_RESOURCE_AGENT " "                                          \
+        PCMK_XA_NAME "='%s' "                                               \
+        PCMK_XA_VERSION "='" PCMK_DEFAULT_AGENT_VERSION "'>\n"              \
+    "  <" PCMK_XE_VERSION ">1.1</" PCMK_XE_VERSION ">\n"                    \
+    "  <" PCMK_XE_LONGDESC " " PCMK_XA_LANG "=\"" PCMK__VALUE_EN "\">\n"    \
     "    Upstart agent for controlling the system %s service\n"             \
-    "  </longdesc>\n"                                                       \
-    "  <shortdesc lang=\"en\">Upstart job for %s</shortdesc>\n"             \
-    "  <parameters/>\n"                                                     \
+    "  </" PCMK_XE_LONGDESC ">\n"                                           \
+    "  <" PCMK_XE_SHORTDESC " " PCMK_XA_LANG "=\"" PCMK__VALUE_EN "\">"     \
+        "Upstart job for %s"                                                \
+      "</" PCMK_XE_SHORTDESC ">\n"                                          \
+    "  <" PCMK_XE_PARAMETERS "/>\n"                                         \
     "  <actions>\n"                                                         \
     "    <action name=\"start\"     timeout=\"15\" />\n"                    \
     "    <action name=\"stop\"      timeout=\"15\" />\n"                    \
@@ -389,7 +394,7 @@ parse_status_result(const char *name, const char *state, void *userdata)
     "    <action name=\"meta-data\" timeout=\"5\" />\n"                     \
     "  </actions>\n"                                                        \
     "  <special tag=\"upstart\"/>\n"                                        \
-    "</resource-agent>\n"
+    "</" PCMK_XE_RESOURCE_AGENT ">\n"
 
 static char *
 upstart_job_metadata(const char *name)

@@ -1098,7 +1098,7 @@ add_op_digest_to_xml(const lrmd_event_data_t *op, xmlNode *update)
     if (op->params == NULL) {
         return;
     }
-    args_xml = create_xml_node(NULL, XML_TAG_PARAMS);
+    args_xml = create_xml_node(NULL, PCMK_XE_PARAMETERS);
     g_hash_table_foreach(op->params, hash2field, args_xml);
     pcmk__filter_op_for_digest(args_xml);
     digest = calculate_operation_digest(args_xml, NULL);

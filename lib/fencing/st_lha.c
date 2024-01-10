@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -30,15 +30,17 @@
 
 static void *lha_agents_lib = NULL;
 
+// @TODO Use XML string constants and maybe a real XML object
 static const char META_TEMPLATE[] =
-    "<?xml version=\"1.0\"?>\n"
-    "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
-    "<resource-agent name=\"%s\">\n"
-    "  <version>1.0</version>\n"
-    "  <longdesc lang=\"en\">\n"
-    "%s\n"
-    "  </longdesc>\n"
-    "  <shortdesc lang=\"en\">%s</shortdesc>\n"
+    "<?xml " PCMK_XA_VERSION "=\"1.0\"?>\n"
+    "<" PCMK_XE_RESOURCE_AGENT " " PCMK_XA_NAME "=\"%s\">\n"
+    "  <" PCMK_XE_VERSION ">1.0</" PCMK_XE_VERSION ">\n"
+    "  <" PCMK_XE_LONGDESC " " PCMK_XA_LANG "=\"" PCMK__VALUE_EN "\">\n"
+        "%s\n"
+    "  </" PCMK_XE_LONGDESC ">\n"
+    "  <" PCMK_XE_SHORTDESC " " PCMK_XA_LANG "=\"" PCMK__VALUE_EN "\">"
+        "%s"
+      "</" PCMK_XE_SHORTDESC ">\n"
     "%s\n"
     "  <actions>\n"
     "    <action name=\"start\"   timeout=\"%s\" />\n"
@@ -48,7 +50,9 @@ static const char META_TEMPLATE[] =
     "    <action name=\"meta-data\"  timeout=\"15\" />\n"
     "  </actions>\n"
     "  <special tag=\"heartbeat\">\n"
-    "    <version>2.0</version>\n" "  </special>\n" "</resource-agent>\n";
+    "    <" PCMK_XE_VERSION ">2.0</" PCMK_XE_VERSION ">\n"
+    "  </special>\n"
+    "</" PCMK_XE_RESOURCE_AGENT ">\n";
 
 static void *
 find_library_function(void **handle, const char *lib, const char *fn)

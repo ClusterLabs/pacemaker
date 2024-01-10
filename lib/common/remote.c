@@ -1206,6 +1206,9 @@ pcmk__accept_remote_connection(int ssock, int *csock)
     struct sockaddr_storage addr;
     socklen_t laddr = sizeof(addr);
     char addr_str[INET6_ADDRSTRLEN];
+#ifdef TCP_USER_TIMEOUT
+    long sbd_timeout = 0;
+#endif
 
     /* accept the connection */
     memset(&addr, 0, sizeof(addr));
@@ -1229,9 +1232,11 @@ pcmk__accept_remote_connection(int ssock, int *csock)
     }
 
 #ifdef TCP_USER_TIMEOUT
-    if (pcmk__get_sbd_timeout() > 0) {
+    sbd_timeout = pcmk__get_sbd_watchdog_timeout();
+    if (sbd_timeout > 0) {
         // Time to fail and retry before watchdog
-        unsigned int optval = (unsigned int) pcmk__get_sbd_timeout() / 2;
+        long half = sbd_timeout / 2;
+        unsigned int optval = (half <= UINT_MAX)? half : UINT_MAX;
 
         rc = setsockopt(*csock, SOL_TCP, TCP_USER_TIMEOUT,
                         &optval, sizeof(optval));

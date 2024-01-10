@@ -287,7 +287,7 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
     patchset = create_xml_node(NULL, XML_TAG_DIFF);
     crm_xml_add_int(patchset, PCMK_XA_FORMAT, 2);
 
-    version = create_xml_node(patchset, XML_DIFF_VERSION);
+    version = create_xml_node(patchset, PCMK_XE_VERSION);
 
     v = create_xml_node(version, XML_DIFF_VSOURCE);
     for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {

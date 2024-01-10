@@ -20,6 +20,7 @@
 #include <sys/stat.h>
 
 #include <crm/crm.h>
+#include <crm/msg_xml.h>
 
 void
 pcmk__cli_help(char cmd)
@@ -433,7 +434,8 @@ pcmk__cluster_option(GHashTable *options,
  * \brief Add a description element to a meta-data string
  *
  * \param[in,out] s       Meta-data string to add to
- * \param[in]     tag     Name of element to add ("longdesc" or "shortdesc")
+ * \param[in]     tag     Name of element to add (\c PCMK_XE_LONGDESC or
+ *                        \c PCMK_XE_SHORTDESC)
  * \param[in]     desc    Textual description to add
  * \param[in]     values  If not \p NULL, the allowed values for the parameter
  * \param[in]     spaces  If not \p NULL, spaces to insert at the beginning of
@@ -448,7 +450,9 @@ add_desc(GString *s, const char *tag, const char *desc, const char *values,
     if (spaces != NULL) {
         g_string_append(s, spaces);
     }
-    pcmk__g_strcat(s, "<", tag, " lang=\"en\">", escaped_en, NULL);
+    pcmk__g_strcat(s,
+                   "<", tag, " " PCMK_XA_LANG "=\"" PCMK__VALUE_EN "\">",
+                   escaped_en, NULL);
 
     if (values != NULL) {
         // Append a period if desc doesn't end in "." or ".)"
@@ -477,8 +481,9 @@ add_desc(GString *s, const char *tag, const char *desc, const char *values,
             if (spaces != NULL) {
                 g_string_append(s, spaces);
             }
-            pcmk__g_strcat(s, "<", tag, " lang=\"", locale, "\">", localized,
-                           NULL);
+            pcmk__g_strcat(s,
+                           "<", tag, " " PCMK_XA_LANG "=\"", locale, "\">",
+                           localized, NULL);
 
             if (values != NULL) {
                 pcmk__g_strcat(s, _("  Allowed values: "), _(values), NULL);
@@ -501,15 +506,18 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
     GString *s = g_string_sized_new(13000);
 
     pcmk__g_strcat(s,
-                   "<?xml version=\"1.0\"?>\n"
-                   "<resource-agent name=\"", name, "\" "
-                                   "version=\"" PACEMAKER_VERSION "\">\n"
-                   "  <version>" PCMK_OCF_VERSION "</version>\n", NULL);
+                   "<?xml " PCMK_XA_VERSION "=\"1.0\"?>\n"
+                   "<" PCMK_XE_RESOURCE_AGENT " "
+                       PCMK_XA_NAME "=\"", name, "\" "
+                       PCMK_XA_VERSION "=\"" PACEMAKER_VERSION "\">\n"
 
-    add_desc(s, "longdesc", desc_long, NULL, "  ");
-    add_desc(s, "shortdesc", desc_short, NULL, "  ");
+                   "  <" PCMK_XE_VERSION ">" PCMK_OCF_VERSION
+                     "</" PCMK_XE_VERSION ">\n", NULL);
 
-    g_string_append(s, "  <parameters>\n");
+    add_desc(s, PCMK_XE_LONGDESC, desc_long, NULL, "  ");
+    add_desc(s, PCMK_XE_SHORTDESC, desc_short, NULL, "  ");
+
+    g_string_append(s, "  <" PCMK_XE_PARAMETERS ">\n");
 
     for (int lpc = 0; lpc < len; lpc++) {
         const char *opt_name = option_list[lpc].name;
@@ -531,14 +539,18 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
         // The standard requires a parameter type
         CRM_ASSERT(opt_type != NULL);
 
-        pcmk__g_strcat(s, "    <parameter name=\"", opt_name, "\">\n", NULL);
+        pcmk__g_strcat(s,
+                       "    <" PCMK_XE_PARAMETER " "
+                               PCMK_XA_NAME "=\"", opt_name, "\">\n", NULL);
 
-        add_desc(s, "longdesc", opt_desc_long, opt_values, "      ");
-        add_desc(s, "shortdesc", opt_desc_short, NULL, "      ");
+        add_desc(s, PCMK_XE_LONGDESC, opt_desc_long, opt_values, "      ");
+        add_desc(s, PCMK_XE_SHORTDESC, opt_desc_short, NULL, "      ");
 
-        pcmk__g_strcat(s, "      <content type=\"", opt_type, "\"", NULL);
+        pcmk__g_strcat(s, "      <" PCMK_XE_CONTENT " "
+                                    PCMK_XA_TYPE "=\"", opt_type, "\"", NULL);
         if (opt_default != NULL) {
-            pcmk__g_strcat(s, " default=\"", opt_default, "\"", NULL);
+            pcmk__g_strcat(s,
+                           " " PCMK_XA_DEFAULT "=\"", opt_default, "\"", NULL);
         }
 
         if ((opt_values != NULL) && (strcmp(opt_type, "select") == 0)) {
@@ -549,20 +561,24 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
             g_string_append(s, ">\n");
 
             while (ptr != NULL) {
-                pcmk__g_strcat(s, "        <option value=\"", ptr, "\" />\n",
+                pcmk__g_strcat(s,
+                               "        <" PCMK_XE_OPTION " "
+                                           PCMK_XA_VALUE "=\"", ptr, "\" />\n",
                                NULL);
                 ptr = strtok(NULL, delim);
             }
-            g_string_append_printf(s, "      </content>\n");
+            g_string_append(s, "      </" PCMK_XE_CONTENT ">\n");
             free(str);
 
         } else {
             g_string_append(s, "/>\n");
         }
 
-        g_string_append(s, "    </parameter>\n");
+        g_string_append(s, "    </" PCMK_XE_PARAMETER ">\n");
     }
-    g_string_append(s, "  </parameters>\n</resource-agent>\n");
+    g_string_append(s,
+                    "  </" PCMK_XE_PARAMETERS ">\n"
+                    "</" PCMK_XE_RESOURCE_AGENT ">\n");
 
     return g_string_free(s, FALSE);
 }

@@ -911,7 +911,8 @@ is_nodeid_required(xmlNode * xml)
         return FALSE;
     }
 
-    xpath = xpath_search(xml, "//parameter[@name='nodeid']");
+    xpath = xpath_search(xml,
+                         "//" PCMK_XE_PARAMETER "[@" PCMK_XA_NAME "='nodeid']");
     if (numXpathResults(xpath)  <= 0) {
         freeXpathObject(xpath);
         return FALSE;
