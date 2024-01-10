@@ -31,8 +31,7 @@
  * --------  ---------  -------------------
  *     1       1.1.11   PCMK__ATTRD_CMD_UPDATE (PCMK__XA_ATTR_NAME only),
  *                      PCMK__ATTRD_CMD_PEER_REMOVE, PCMK__ATTRD_CMD_REFRESH,
- *                      PCMK__ATTRD_CMD_FLUSH, PCMK__ATTRD_CMD_SYNC,
- *                      PCMK__ATTRD_CMD_SYNC_RESPONSE
+ *                      PCMK__ATTRD_CMD_FLUSH, PCMK__ATTRD_CMD_SYNC_RESPONSE
  *     1       1.1.13   PCMK__ATTRD_CMD_UPDATE (with PCMK__XA_ATTR_REGEX),
  *                      PCMK__ATTRD_CMD_QUERY
  *     1       1.1.15   PCMK__ATTRD_CMD_UPDATE_BOTH,
