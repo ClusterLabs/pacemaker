@@ -167,7 +167,7 @@ pe__node_is_bundle_instance(const pcmk_resource_t *bundle,
     for (GList *iter = bundle_data->replicas; iter != NULL; iter = iter->next) {
         pcmk__bundle_replica_t *replica = iter->data;
 
-        if (pe__same_node(node, replica->node)) {
+        if (pcmk__same_node(node, replica->node)) {
             return true;
         }
     }
@@ -958,7 +958,7 @@ pe__add_bundle_remote_name(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler,
         /* If it won't be running anywhere after the
          * transition, go with where it's running now.
          */
-        node = pe__current_node(replica->container);
+        node = pcmk__current_node(replica->container);
     }
 
     if(node == NULL) {
@@ -967,7 +967,7 @@ pe__add_bundle_remote_name(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler,
     }
 
     crm_trace("Setting address for bundle connection %s to bundle host %s",
-              rsc->id, pe__node_name(node));
+              rsc->id, pcmk__node_name(node));
     if(xml != NULL && field != NULL) {
         crm_xml_add(xml, field, node->details->uname);
     }
@@ -1383,7 +1383,7 @@ pe__find_bundle_replica(const pcmk_resource_t *bundle, const pcmk_node_t *node)
         pcmk__bundle_replica_t *replica = gIter->data;
 
         CRM_ASSERT(replica && replica->node);
-        if (replica->node->details == node->details) {
+        if (pcmk__same_node(replica->node, node)) {
             return replica->child;
         }
     }
@@ -1432,10 +1432,12 @@ bundle_print_xml(pcmk_resource_t *rsc, const char *pre_text, long options,
     status_print(PCMK_XA_ID "=\"%s\" ", rsc->id);
     status_print("type=\"%s\" ", container_agent_str(bundle_data->agent_type));
     status_print("image=\"%s\" ", bundle_data->image);
-    status_print("unique=\"%s\" ", pe__rsc_bool_str(rsc, pcmk_rsc_unique));
+    status_print("unique=\"%s\" ",
+                 pcmk__flag_text(rsc->flags, pcmk_rsc_unique));
     status_print("managed=\"%s\" ",
-                 pe__rsc_bool_str(rsc, pcmk_rsc_managed));
-    status_print("failed=\"%s\" ", pe__rsc_bool_str(rsc, pcmk_rsc_failed));
+                 pcmk__flag_text(rsc->flags, pcmk_rsc_managed));
+    status_print("failed=\"%s\" ",
+                 pcmk__flag_text(rsc->flags, pcmk_rsc_failed));
     status_print(">\n");
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
@@ -1515,11 +1517,11 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
                      PCMK_XA_ID, rsc->id,
                      PCMK_XA_TYPE, container_agent_str(bundle_data->agent_type),
                      "image", bundle_data->image,
-                     "unique", pe__rsc_bool_str(rsc, pcmk_rsc_unique),
+                     "unique", pcmk__flag_text(rsc->flags, pcmk_rsc_unique),
                      "maintenance",
-                     pe__rsc_bool_str(rsc, pcmk_rsc_maintenance),
-                     "managed", pe__rsc_bool_str(rsc, pcmk_rsc_managed),
-                     "failed", pe__rsc_bool_str(rsc, pcmk_rsc_failed),
+                     pcmk__flag_text(rsc->flags, pcmk_rsc_maintenance),
+                     "managed", pcmk__flag_text(rsc->flags, pcmk_rsc_managed),
+                     "failed", pcmk__flag_text(rsc->flags, pcmk_rsc_failed),
                      PCMK_XA_DESCRIPTION, desc);
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
@@ -1706,7 +1708,8 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
                                      desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
                                      get_unmanaged_str(rsc));
 
-            pe__bundle_replica_output_html(out, replica, pe__current_node(replica->container),
+            pe__bundle_replica_output_html(out, replica,
+                                           pcmk__current_node(replica->container),
                                            show_opts);
         }
     }
@@ -1841,7 +1844,8 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
                                      desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
                                      get_unmanaged_str(rsc));
 
-            pe__bundle_replica_output_text(out, replica, pe__current_node(replica->container),
+            pe__bundle_replica_output_text(out, replica,
+                                           pcmk__current_node(replica->container),
                                            show_opts);
         }
     }
@@ -1880,7 +1884,7 @@ print_bundle_replica(pcmk__bundle_replica_t *replica, const char *pre_text,
                            replica->ipaddr);
     }
 
-    node = pe__current_node(replica->container);
+    node = pcmk__current_node(replica->container);
     common_print(rsc, pre_text, buffer, node, options, print_data);
 }
 

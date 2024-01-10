@@ -236,6 +236,22 @@ pcmk__clear_flags_as(const char *function, int line, uint8_t log_level,
     return result;
 }
 
+/*!
+ * \internal
+ * \brief Get readable string for whether specified flags are set
+ *
+ * \param[in] flag_group    Group of flags to check
+ * \param[in] flags         Which flags in \p flag_group should be checked
+ *
+ * \return "true" if all \p flags are set in \p flag_group, otherwise "false"
+ */
+static inline const char *
+pcmk__flag_text(uint64_t flag_group, uint64_t flags)
+{
+    return pcmk__btoa(pcmk_all_flags_set(flag_group, flags));
+}
+
+
 // miscellaneous utilities (from utils.c)
 
 void pcmk__daemonize(const char *name, const char *pidfile);

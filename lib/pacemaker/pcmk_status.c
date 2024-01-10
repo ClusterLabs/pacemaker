@@ -329,7 +329,7 @@ pcmk__output_simple_status(pcmk__output_t *out,
             nodes_online++;
         } else {
             pcmk__add_word(&offline_nodes, 1024, "offline node:");
-            pcmk__add_word(&offline_nodes, 0, pe__node_name(node));
+            pcmk__add_word(&offline_nodes, 0, pcmk__node_name(node));
             has_warnings = true;
             offline = true;
         }

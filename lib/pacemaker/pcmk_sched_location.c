@@ -40,12 +40,12 @@ get_node_score(const char *rule, const char *score, bool raw,
 
         if (attr_score == NULL) {
             crm_debug("Rule %s: %s did not have a value for %s",
-                      rule, pe__node_name(node), score);
+                      rule, pcmk__node_name(node), score);
             score_f = -INFINITY;
 
         } else {
             crm_debug("Rule %s: %s had value %s for %s",
-                      rule, pe__node_name(node), attr_score, score);
+                      rule, pcmk__node_name(node), attr_score, score);
             score_f = char2score(attr_score);
         }
     }
@@ -193,7 +193,7 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
                               rsc->cluster->now, next_change, &match_data);
 
         crm_trace("Rule %s %s on %s", ID(rule_xml), accept? "passed" : "failed",
-                  pe__node_name(node));
+                  pcmk__node_name(node));
 
         score_f = get_node_score(rule_id, score, raw_score, node, rsc);
 
@@ -211,7 +211,7 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
             if (!do_and) {
                 local->weight = pcmk__add_scores(local->weight, score_f);
             }
-            crm_trace("%s has score %s after %s", pe__node_name(node),
+            crm_trace("%s has score %s after %s", pcmk__node_name(node),
                       pcmk_readable_score(local->weight), rule_id);
 
         } else if (do_and && !accept) {
@@ -220,7 +220,7 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
 
             if (delete != NULL) {
                 nodes = g_list_remove(nodes, delete);
-                crm_trace("%s did not match", pe__node_name(node));
+                crm_trace("%s did not match", pcmk__node_name(node));
             }
             free(delete);
         }
@@ -694,14 +694,14 @@ pcmk__apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
 
         if (allowed_node == NULL) {
             pcmk__rsc_trace(rsc, "* = %d on %s",
-                            node->weight, pe__node_name(node));
+                            node->weight, pcmk__node_name(node));
             allowed_node = pe__copy_node(node);
             g_hash_table_insert(rsc->allowed_nodes,
                                 (gpointer) allowed_node->details->id,
                                 allowed_node);
         } else {
             pcmk__rsc_trace(rsc, "* + %d on %s",
-                            node->weight, pe__node_name(node));
+                            node->weight, pcmk__node_name(node));
             allowed_node->weight = pcmk__add_scores(allowed_node->weight,
                                                     node->weight);
         }

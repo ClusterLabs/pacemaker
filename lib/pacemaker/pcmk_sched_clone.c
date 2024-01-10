@@ -330,7 +330,7 @@ pcmk__clone_apply_coloc_score(pcmk_resource_t *dependent,
             if ((chosen != NULL)
                 && !is_set_recursive(instance, pcmk_rsc_blocked, TRUE)) {
                 pcmk__rsc_trace(primary, "Allowing %s: %s %d",
-                                colocation->id, pe__node_name(chosen),
+                                colocation->id, pcmk__node_name(chosen),
                                 chosen->weight);
                 primary_nodes = g_list_prepend(primary_nodes, chosen);
             }
@@ -481,7 +481,7 @@ rsc_probed_on(const pcmk_resource_t *rsc, const pcmk_node_t *node)
 
         g_hash_table_iter_init(&iter, rsc->known_on);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &known_node)) {
-            if (pe__same_node(node, known_node)) {
+            if (pcmk__same_node(node, known_node)) {
                 return true;
             }
         }
@@ -532,7 +532,7 @@ probe_anonymous_clone(pcmk_resource_t *clone, pcmk_node_t *node)
         const pcmk_node_t *instance_node = NULL;
 
         instance_node = instance->fns->location(instance, NULL, 0);
-        if (pe__same_node(instance_node, node)) {
+        if (pcmk__same_node(instance_node, node)) {
             child = instance;
         }
     }
@@ -582,7 +582,7 @@ pcmk__clone_create_probe(pcmk_resource_t *rsc, pcmk_node_t *node)
             pcmk__rsc_trace(rsc,
                             "Skipping probe for %s on %s because resource has "
                             "exclusive discovery but is not allowed on node",
-                            rsc->id, pe__node_name(node));
+                            rsc->id, pcmk__node_name(node));
             g_hash_table_remove(rsc->allowed_nodes, node->details->id);
             return false;
         }
@@ -613,11 +613,11 @@ pcmk__clone_add_graph_meta(const pcmk_resource_t *rsc, xmlNode *xml)
     CRM_ASSERT(pe_rsc_is_clone(rsc) && (xml != NULL));
 
     name = crm_meta_name(PCMK_META_GLOBALLY_UNIQUE);
-    crm_xml_add(xml, name, pe__rsc_bool_str(rsc, pcmk_rsc_unique));
+    crm_xml_add(xml, name, pcmk__flag_text(rsc->flags, pcmk_rsc_unique));
     free(name);
 
     name = crm_meta_name(PCMK_META_NOTIFY);
-    crm_xml_add(xml, name, pe__rsc_bool_str(rsc, pcmk_rsc_notify));
+    crm_xml_add(xml, name, pcmk__flag_text(rsc->flags, pcmk_rsc_notify));
     free(name);
 
     name = crm_meta_name(PCMK_META_CLONE_MAX);

@@ -1819,7 +1819,7 @@ handle_rsc_op(xmlNode *xml, void *userdata)
         return pcmk_rc_ok;
     }
 
-    id = pe__xe_history_key(rsc_op);
+    id = pcmk__xe_history_key(rsc_op);
 
     magic = crm_element_value(rsc_op, PCMK__XA_TRANSITION_MAGIC);
     if (magic == NULL) {

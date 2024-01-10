@@ -145,7 +145,7 @@ apply_promoted_locations(pcmk_resource_t *child,
                             "Applying location %s to %s promotion priority on "
                             "%s: %s + %s = %s",
                             location->id, child->id,
-                            pe__node_name(constraint_node),
+                            pcmk__node_name(constraint_node),
                             pcmk_readable_score(child->priority),
                             pcmk_readable_score(constraint_node->weight),
                             pcmk_readable_score(new_priority));
@@ -190,7 +190,7 @@ node_to_be_promoted_on(const pcmk_resource_t *rsc)
     } else if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
         if (rsc->fns->state(rsc, TRUE) == pcmk_role_promoted) {
             crm_notice("Unmanaged instance %s will be left promoted on %s",
-                       rsc->id, pe__node_name(node));
+                       rsc->id, pcmk__node_name(node));
         } else {
             pcmk__rsc_trace(rsc, "%s can't be promoted because it is unmanaged",
                             rsc->id);
@@ -207,7 +207,7 @@ node_to_be_promoted_on(const pcmk_resource_t *rsc)
     } else if (!pcmk__node_available(node, false, true)) {
         pcmk__rsc_trace(rsc,
                         "%s can't be promoted because %s can't run resources",
-                        rsc->id, pe__node_name(node));
+                        rsc->id, pcmk__node_name(node));
         return NULL;
     }
 
@@ -222,7 +222,7 @@ node_to_be_promoted_on(const pcmk_resource_t *rsc)
         if (pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
             pcmk__sched_err("%s can't be promoted because %s is not allowed "
                             "on %s (scheduler bug?)",
-                            rsc->id, parent->id, pe__node_name(node));
+                            rsc->id, parent->id, pcmk__node_name(node));
         } // else the instance is unmanaged and already promoted
         return NULL;
 
@@ -231,7 +231,7 @@ node_to_be_promoted_on(const pcmk_resource_t *rsc)
         pcmk__rsc_trace(rsc,
                         "%s can't be promoted because %s has "
                         "maximum promoted instances already",
-                        rsc->id, pe__node_name(node));
+                        rsc->id, pcmk__node_name(node));
         return NULL;
     }
 
@@ -337,7 +337,7 @@ add_sort_index_to_node_score(gpointer data, gpointer user_data)
                     "Added cumulative priority of %s (%s) to score on %s "
                     "(now %s)",
                     child->id, pcmk_readable_score(child->sort_index),
-                    pe__node_name(node), pcmk_readable_score(node->weight));
+                    pcmk__node_name(node), pcmk_readable_score(node->weight));
 }
 
 /*!
@@ -627,7 +627,7 @@ promotion_score_applies(const pcmk_resource_t *rsc, const pcmk_node_t *node)
         pcmk__rsc_trace(rsc,
                         "Ignoring %s promotion score (for %s) on %s: "
                         "not probed",
-                        rsc->id, id, pe__node_name(node));
+                        rsc->id, id, pcmk__node_name(node));
         free(id);
         return false;
     }
@@ -635,14 +635,14 @@ promotion_score_applies(const pcmk_resource_t *rsc, const pcmk_node_t *node)
 check_allowed:
     if (is_allowed(rsc, node)) {
         pcmk__rsc_trace(rsc, "Counting %s promotion score (for %s) on %s: %s",
-                        rsc->id, id, pe__node_name(node), reason);
+                        rsc->id, id, pcmk__node_name(node), reason);
         free(id);
         return true;
     }
 
     pcmk__rsc_trace(rsc,
                     "Ignoring %s promotion score (for %s) on %s: not allowed",
-                    rsc->id, id, pe__node_name(node));
+                    rsc->id, id, pcmk__node_name(node));
     free(id);
     return false;
 }
@@ -733,7 +733,7 @@ promotion_score(const pcmk_resource_t *rsc, const pcmk_node_t *node,
     attr_value = promotion_attr_value(rsc, node, name);
     if (attr_value != NULL) {
         pcmk__rsc_trace(rsc, "Promotion score for %s on %s = %s",
-                        name, pe__node_name(node),
+                        name, pcmk__node_name(node),
                         pcmk__s(attr_value, "(unset)"));
     } else if (!pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
         /* If we don't have any resource history yet, we won't have clone_name.
@@ -744,7 +744,7 @@ promotion_score(const pcmk_resource_t *rsc, const pcmk_node_t *node,
         if (strcmp(rsc->id, name) != 0) {
             attr_value = promotion_attr_value(rsc, node, name);
             pcmk__rsc_trace(rsc, "Promotion score for %s on %s (for %s) = %s",
-                            name, pe__node_name(node), rsc->id,
+                            name, pcmk__node_name(node), rsc->id,
                             pcmk__s(attr_value, "(unset)"));
         }
         free(name);
@@ -799,7 +799,7 @@ pcmk__add_promotion_scores(pcmk_resource_t *rsc)
                                     "Added %s promotion priority (%s) to score "
                                     "on %s (now %s)",
                                     child_rsc->id, pcmk_readable_score(score),
-                                    pe__node_name(node),
+                                    pcmk__node_name(node),
                                     pcmk_readable_score(new_score));
                 }
             }
@@ -897,7 +897,7 @@ show_promotion_score(pcmk_resource_t *instance)
         pcmk__rsc_debug(pe__const_top_resource(instance, false),
                         "%s promotion score on %s: sort=%s priority=%s",
                         instance->id,
-                        ((chosen == NULL)? "none" : pe__node_name(chosen)),
+                        ((chosen == NULL)? "none" : pcmk__node_name(chosen)),
                         pcmk_readable_score(instance->sort_index),
                         pcmk_readable_score(instance->priority));
     }
@@ -1040,7 +1040,7 @@ set_instance_role(gpointer data, gpointer user_data)
     chosen->count++;
     pcmk__rsc_info(clone, "Choosing %s (%s) on %s for promotion",
                    instance->id, role2text(instance->role),
-                   pe__node_name(chosen));
+                   pcmk__node_name(chosen));
     set_next_role_promoted(instance, NULL);
     (*count)++;
 }
@@ -1193,8 +1193,8 @@ update_dependent_allowed_nodes(pcmk_resource_t *dependent,
     pcmk__rsc_trace(colocation->primary,
                     "Applying %s (%s with %s on %s by %s @%d) to %s",
                     colocation->id, colocation->dependent->id,
-                    colocation->primary->id, pe__node_name(primary_node), attr,
-                    colocation->score, dependent->id);
+                    colocation->primary->id, pcmk__node_name(primary_node),
+                    attr, colocation->score, dependent->id);
 
     g_hash_table_iter_init(&iter, dependent->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
@@ -1207,7 +1207,7 @@ update_dependent_allowed_nodes(pcmk_resource_t *dependent,
                             "Added %s score (%s) to %s (now %s)",
                             colocation->id,
                             pcmk_readable_score(colocation->score),
-                            pe__node_name(node),
+                            pcmk__node_name(node),
                             pcmk_readable_score(node->weight));
         }
     }

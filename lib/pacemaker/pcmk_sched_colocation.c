@@ -1218,22 +1218,22 @@ pcmk__colocation_affects(const pcmk_resource_t *dependent,
         } else if (colocation->score >= INFINITY) {
             // Dependent resource must colocate with primary resource
 
-            if (!pe__same_node(primary_node, dependent->allocated_to)) {
+            if (!pcmk__same_node(primary_node, dependent->allocated_to)) {
                 pcmk__sched_err("%s must be colocated with %s but is not "
                                 "(%s vs. %s)",
                                 dependent->id, primary->id,
-                                pe__node_name(dependent->allocated_to),
-                                pe__node_name(primary_node));
+                                pcmk__node_name(dependent->allocated_to),
+                                pcmk__node_name(primary_node));
             }
 
         } else if (colocation->score <= -CRM_SCORE_INFINITY) {
             // Dependent resource must anti-colocate with primary resource
 
-            if (pe__same_node(dependent->allocated_to, primary_node)) {
+            if (pcmk__same_node(dependent->allocated_to, primary_node)) {
                 pcmk__sched_err("%s and %s must be anti-colocated but are "
                                 "assigned to the same node (%s)",
                                 dependent->id, primary->id,
-                                pe__node_name(primary_node));
+                                pcmk__node_name(primary_node));
             }
         }
         return pcmk__coloc_affects_nothing;
@@ -1304,7 +1304,8 @@ pcmk__apply_coloc_to_scores(pcmk_resource_t *dependent,
             pcmk__rsc_trace(dependent,
                             "Applied %s to %s score on %s (now %s after "
                             "subtracting %s because primary %s inactive)",
-                            colocation->id, dependent->id, pe__node_name(node),
+                            colocation->id, dependent->id,
+                            pcmk__node_name(node),
                             pcmk_readable_score(node->weight),
                             pcmk_readable_score(colocation->score), primary->id);
             continue;
@@ -1326,7 +1327,7 @@ pcmk__apply_coloc_to_scores(pcmk_resource_t *dependent,
                                 "Applied %s to %s score on %s (now %s after "
                                 "adding %s)",
                                 colocation->id, dependent->id,
-                                pe__node_name(node),
+                                pcmk__node_name(node),
                                 pcmk_readable_score(node->weight),
                                 pcmk_readable_score(colocation->score));
             }
@@ -1343,8 +1344,8 @@ pcmk__apply_coloc_to_scores(pcmk_resource_t *dependent,
             pcmk__rsc_trace(dependent,
                             "Banned %s from %s because colocation %s attribute %s "
                             "does not match",
-                            dependent->id, pe__node_name(node), colocation->id,
-                            attr);
+                            dependent->id, pcmk__node_name(node),
+                            colocation->id, attr);
         }
     }
 
@@ -1580,14 +1581,14 @@ add_node_scores_matching_attr(GHashTable *nodes,
                 || !allowed_on_one(colocation->dependent)) {
                 crm_trace("%s: Filtering %d + %f * %d "
                           "(double negative disallowed)",
-                          pe__node_name(node), node->weight, factor, score);
+                          pcmk__node_name(node), node->weight, factor, score);
                 continue;
             }
         }
 
         if (node->weight == INFINITY_HACK) {
             crm_trace("%s: Filtering %d + %f * %d (node was marked unusable)",
-                      pe__node_name(node), node->weight, factor, score);
+                      pcmk__node_name(node), node->weight, factor, score);
             continue;
         }
 
@@ -1613,7 +1614,7 @@ add_node_scores_matching_attr(GHashTable *nodes,
         if (only_positive && (new_score < 0) && (node->weight > 0)) {
             crm_trace("%s: Filtering %d + %f * %d = %d "
                       "(negative disallowed, marking node unusable)",
-                      pe__node_name(node), node->weight, factor, score,
+                      pcmk__node_name(node), node->weight, factor, score,
                       new_score);
             node->weight = INFINITY_HACK;
             continue;
@@ -1621,12 +1622,12 @@ add_node_scores_matching_attr(GHashTable *nodes,
 
         if (only_positive && (new_score < 0) && (node->weight == 0)) {
             crm_trace("%s: Filtering %d + %f * %d = %d (negative disallowed)",
-                      pe__node_name(node), node->weight, factor, score,
+                      pcmk__node_name(node), node->weight, factor, score,
                       new_score);
             continue;
         }
 
-        crm_trace("%s: %d + %f * %d = %d", pe__node_name(node),
+        crm_trace("%s: %d + %f * %d = %d", pcmk__node_name(node),
                   node->weight, factor, score, new_score);
         node->weight = new_score;
     }
@@ -1851,7 +1852,7 @@ pcmk__colocation_intersect_nodes(pcmk_resource_t *dependent,
             dependent_node->weight = -INFINITY;
             pcmk__rsc_trace(dependent,
                             "Banning %s from %s (no primary instance) for %s",
-                            dependent->id, pe__node_name(dependent_node),
+                            dependent->id, pcmk__node_name(dependent_node),
                             colocation->id);
 
         } else if (merge_scores) {
@@ -1861,7 +1862,7 @@ pcmk__colocation_intersect_nodes(pcmk_resource_t *dependent,
                             "Added %s's score %s to %s's score for %s (now %s) "
                             "for colocation %s",
                             primary->id, pcmk_readable_score(primary_node->weight),
-                            dependent->id, pe__node_name(dependent_node),
+                            dependent->id, pcmk__node_name(dependent_node),
                             pcmk_readable_score(dependent_node->weight),
                             colocation->id);
         }

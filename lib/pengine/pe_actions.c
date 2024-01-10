@@ -216,7 +216,7 @@ new_action(char *key, const char *task, pcmk_resource_t *rsc,
                     (optional? "optional" : "required"),
                     scheduler->action_id, key, task,
                     ((rsc == NULL)? "no resource" : rsc->id),
-                    pe__node_name(node));
+                    pcmk__node_name(node));
     action->id = scheduler->action_id++;
 
     scheduler->actions = g_list_prepend(scheduler->actions, action);
@@ -277,7 +277,7 @@ update_action_optional(pcmk_action_t *action, gboolean optional)
         && (g_hash_table_lookup(action->meta, PCMK_META_INTERVAL) == NULL)) {
             pcmk__rsc_debug(action->rsc,
                             "%s on %s is optional (%s is unmanaged)",
-                            action->uuid, pe__node_name(action->node),
+                            action->uuid, pcmk__node_name(action->node),
                             action->rsc->id);
             pcmk__set_action_flags(action, pcmk_action_optional);
             // We shouldn't clear runnable here because ... something
@@ -342,7 +342,7 @@ update_resource_action_runnable(pcmk_action_t *action,
                    || action->node->details->remote_requires_reset)) {
         pcmk__clear_action_flags(action, pcmk_action_runnable);
         do_crm_log(LOG_WARNING, "%s on %s is unrunnable (node is offline)",
-                   action->uuid, pe__node_name(action->node));
+                   action->uuid, pcmk__node_name(action->node));
         if (pcmk_is_set(action->rsc->flags, pcmk_rsc_managed)
             && pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_casei)
             && !(action->node->details->unclean)) {
@@ -354,7 +354,7 @@ update_resource_action_runnable(pcmk_action_t *action,
         pcmk__clear_action_flags(action, pcmk_action_runnable);
         do_crm_log(LOG_WARNING,
                    "Action %s on %s is unrunnable (node is pending)",
-                   action->uuid, pe__node_name(action->node));
+                   action->uuid, pcmk__node_name(action->node));
 
     } else if (action->needs == pcmk_requires_nothing) {
         pe_action_set_reason(action, NULL, TRUE);
@@ -368,12 +368,12 @@ update_resource_action_runnable(pcmk_action_t *action,
             pcmk__rsc_debug(action->rsc,
                             "%s on %s is unrunnable "
                             "(node's host cannot be fenced)",
-                            action->uuid, pe__node_name(action->node));
+                            action->uuid, pcmk__node_name(action->node));
             pcmk__clear_action_flags(action, pcmk_action_runnable);
         } else {
             pcmk__rsc_trace(action->rsc,
                             "%s on %s does not require fencing or quorum",
-                            action->uuid, pe__node_name(action->node));
+                            action->uuid, pcmk__node_name(action->node));
             pcmk__set_action_flags(action, pcmk_action_runnable);
         }
 
@@ -382,7 +382,7 @@ update_resource_action_runnable(pcmk_action_t *action,
             case pcmk_no_quorum_stop:
                 pcmk__rsc_debug(action->rsc,
                                 "%s on %s is unrunnable (no quorum)",
-                                action->uuid, pe__node_name(action->node));
+                                action->uuid, pcmk__node_name(action->node));
                 pcmk__clear_action_flags(action, pcmk_action_runnable);
                 pe_action_set_reason(action, "no quorum", true);
                 break;
@@ -392,7 +392,8 @@ update_resource_action_runnable(pcmk_action_t *action,
                     || (action->rsc->next_role > action->rsc->role)) {
                     pcmk__rsc_debug(action->rsc,
                                     "%s on %s is unrunnable (no quorum)",
-                                    action->uuid, pe__node_name(action->node));
+                                    action->uuid,
+                                    pcmk__node_name(action->node));
                     pcmk__clear_action_flags(action, pcmk_action_runnable);
                     pe_action_set_reason(action, "quorum freeze", true);
                 }
@@ -1322,14 +1323,14 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
                 if (data->rc == pcmk__digest_mismatch) {
                     optional = FALSE;
                     crm_notice("Unfencing node %s because the definition of "
-                               "%s changed", pe__node_name(node), match->id);
+                               "%s changed", pcmk__node_name(node), match->id);
                     if (!pcmk__is_daemon && scheduler->priv != NULL) {
                         pcmk__output_t *out = scheduler->priv;
 
                         out->info(out,
                                   "notice: Unfencing node %s because the "
                                   "definition of %s changed",
-                                  pe__node_name(node), match->id);
+                                  pcmk__node_name(node), match->id);
                     }
                 }
 
@@ -1520,7 +1521,7 @@ find_first_action(const GList *input, const char *uuid, const char *task,
         } else if (action->node == NULL) {
             continue;
 
-        } else if (on_node->details == action->node->details) {
+        } else if (pcmk__same_node(on_node, action->node)) {
             return action;
         }
     }
@@ -1548,13 +1549,13 @@ find_actions(GList *input, const char *key, const pcmk_node_t *on_node)
 
         } else if (action->node == NULL) {
             crm_trace("Action %s matches (unallocated, assigning to %s)",
-                      key, pe__node_name(on_node));
+                      key, pcmk__node_name(on_node));
 
             action->node = pe__copy_node(on_node);
             result = g_list_prepend(result, action);
 
-        } else if (on_node->details == action->node->details) {
-            crm_trace("Action %s on %s matches", key, pe__node_name(on_node));
+        } else if (pcmk__same_node(on_node, action->node)) {
+            crm_trace("Action %s on %s matches", key, pcmk__node_name(on_node));
             result = g_list_prepend(result, action);
         }
     }
@@ -1581,7 +1582,7 @@ find_actions_exact(GList *input, const char *key, const pcmk_node_t *on_node)
             && pcmk__str_eq(on_node->details->id, action->node->details->id,
                             pcmk__str_casei)) {
 
-            crm_trace("Action %s on %s matches", key, pe__node_name(on_node));
+            crm_trace("Action %s on %s matches", key, pcmk__node_name(on_node));
             result = g_list_prepend(result, action);
         }
     }

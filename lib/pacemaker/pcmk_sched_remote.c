@@ -94,7 +94,7 @@ get_remote_node_state(const pcmk_node_t *node)
     remote_rsc = node->details->remote_rsc;
     CRM_ASSERT(remote_rsc != NULL);
 
-    cluster_node = pe__current_node(remote_rsc);
+    cluster_node = pcmk__current_node(remote_rsc);
 
     /* If the cluster node the remote connection resource resides on
      * is unclean or went offline, we can't process any operations
@@ -267,7 +267,7 @@ apply_remote_ordering(pcmk_action_t *action)
                                         pcmk__ar_first_implies_then);
 
             } else {
-                pcmk_node_t *cluster_node = pe__current_node(remote_rsc);
+                pcmk_node_t *cluster_node = pcmk__current_node(remote_rsc);
 
                 if ((task == pcmk_action_monitor) && (state == remote_state_failed)) {
                     /* We would only be here if we do not know the state of the
@@ -465,7 +465,7 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
                  item = item->next) {
                 pcmk_action_t *rsc_action = item->data;
 
-                if (!pe__same_node(rsc_action->node, action->node)
+                if (!pcmk__same_node(rsc_action->node, action->node)
                     && pcmk__str_eq(rsc_action->task, PCMK_ACTION_STOP,
                                     pcmk__str_none)) {
                     pcmk__new_ordering(remote, start_key(remote), NULL,
@@ -558,7 +558,7 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
 
     CRM_ASSERT(action->node->details->remote_rsc != NULL);
 
-    began_on = pe__current_node(action->node->details->remote_rsc);
+    began_on = pcmk__current_node(action->node->details->remote_rsc);
     ended_on = action->node->details->remote_rsc->allocated_to;
     if (action->node->details->remote_rsc
         && (action->node->details->remote_rsc->container == NULL)
@@ -584,7 +584,7 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
         return began_on;
     }
 
-    if (pe__same_node(began_on, ended_on)) {
+    if (pcmk__same_node(began_on, ended_on)) {
         crm_trace("Routing %s for %s through remote connection's "
                   "current node %s (not moving)%s",
                   action->task, (action->rsc? action->rsc->id : "no resource"),
@@ -705,7 +705,7 @@ pcmk__add_guest_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
         case pcmk_action_demote:
         case pcmk_action_demoted:
             // "Down" actions take place on guest's current host
-            host = pe__current_node(guest->details->remote_rsc->container);
+            host = pcmk__current_node(guest->details->remote_rsc->container);
             break;
 
         case pcmk_action_start:

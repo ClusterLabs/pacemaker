@@ -1988,8 +1988,8 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
         crm_notice("Discarding attempt to perform action %s on %s in state %s "
                    "(shutdown=%s)", operation, rsc->id,
                    fsa_state2string(controld_globals.fsa_state),
-                   pcmk__btoa(pcmk_is_set(controld_globals.fsa_input_register,
-                                          R_SHUTDOWN)));
+                   pcmk__flag_text(controld_globals.fsa_input_register,
+                                   R_SHUTDOWN));
 
         lrmd__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_INVALID,
                          nack_reason);

@@ -111,12 +111,7 @@ void pe__order_notifs_after_fencing(const pcmk_action_t *action,
                                     pcmk_action_t *stonith_op);
 
 
-static inline const char *
-pe__rsc_bool_str(const pcmk_resource_t *rsc, uint64_t rsc_flag)
-{
-    return pcmk__btoa(pcmk_is_set(rsc->flags, rsc_flag));
-}
-
+// Resource output methods
 int pe__clone_xml(pcmk__output_t *out, va_list args);
 int pe__clone_default(pcmk__output_t *out, va_list args);
 int pe__group_xml(pcmk__output_t *out, va_list args);
@@ -171,13 +166,6 @@ bool pe__count_active_node(const pcmk_resource_t *rsc, pcmk_node_t *node,
 
 pcmk_node_t *pe__find_active_requires(const pcmk_resource_t *rsc,
                                     unsigned int *count);
-
-static inline pcmk_node_t *
-pe__current_node(const pcmk_resource_t *rsc)
-{
-    return (rsc == NULL)? NULL : rsc->fns->active_node(rsc, NULL, NULL);
-}
-
 
 /* Binary like operators for lists of nodes */
 GHashTable *pe__node_list2table(const GList *list);
@@ -461,73 +449,6 @@ static inline int
 pe__health_score(const char *option, pcmk_scheduler_t *scheduler)
 {
     return char2score(pe_pref(scheduler->config_hash, option));
-}
-
-/*!
- * \internal
- * \brief Return a string suitable for logging as a node name
- *
- * \param[in] node  Node to return a node name string for
- *
- * \return Node name if available, otherwise node ID if available,
- *         otherwise "unspecified node" if node is NULL or "unidentified node"
- *         if node has neither a name nor ID.
- */
-static inline const char *
-pe__node_name(const pcmk_node_t *node)
-{
-    if (node == NULL) {
-        return "unspecified node";
-
-    } else if (node->details->uname != NULL) {
-        return node->details->uname;
-
-    } else if (node->details->id != NULL) {
-        return node->details->id;
-
-    } else {
-        return "unidentified node";
-    }
-}
-
-/*!
- * \internal
- * \brief Check whether two node objects refer to the same node
- *
- * \param[in] node1  First node object to compare
- * \param[in] node2  Second node object to compare
- *
- * \return true if \p node1 and \p node2 refer to the same node
- */
-static inline bool
-pe__same_node(const pcmk_node_t *node1, const pcmk_node_t *node2)
-{
-    return (node1 != NULL) && (node2 != NULL)
-           && (node1->details == node2->details);
-}
-
-/*!
- * \internal
- * \brief Get the operation key from an action history entry
- *
- * \param[in] xml  Action history entry
- *
- * \return Entry's operation key
- */
-static inline const char *
-pe__xe_history_key(const xmlNode *xml)
-{
-    if (xml == NULL) {
-        return NULL;
-    } else {
-        /* @COMPAT Pacemaker <= 1.1.5 did not add the key, and used the ID
-         * instead. Checking for that allows us to process old saved CIBs,
-         * including some regression tests.
-         */
-        const char *key = crm_element_value(xml, PCMK__XA_OPERATION_KEY);
-
-        return pcmk__str_empty(key)? ID(xml) : key;
-    }
 }
 
 #endif

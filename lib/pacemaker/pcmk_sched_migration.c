@@ -52,8 +52,8 @@ pcmk__create_migration_actions(pcmk_resource_t *rsc, const pcmk_node_t *current)
 
     pcmk__rsc_trace(rsc, "Creating actions to %smigrate %s from %s to %s",
                     ((rsc->partial_migration_target == NULL)? "" : "partially "),
-                    rsc->id, pe__node_name(current),
-                    pe__node_name(rsc->allocated_to));
+                    rsc->id, pcmk__node_name(current),
+                    pcmk__node_name(rsc->allocated_to));
     start = start_action(rsc, rsc->allocated_to, TRUE);
     stop = stop_action(rsc, current, TRUE);
 
@@ -163,7 +163,7 @@ pcmk__abort_dangling_migration(void *data, void *user_data)
     pcmk__rsc_trace(rsc,
                     "Scheduling stop%s for %s on %s due to dangling migration",
                     (cleanup? " and cleanup" : ""), rsc->id,
-                    pe__node_name(dangling_source));
+                    pcmk__node_name(dangling_source));
     stop = stop_action(rsc, dangling_source, FALSE);
     pcmk__set_action_flags(stop, pcmk_action_migration_abort);
     if (cleanup) {
@@ -213,7 +213,7 @@ pcmk__rsc_can_migrate(const pcmk_resource_t *rsc, const pcmk_node_t *current)
         pcmk__rsc_trace(rsc,
                         "%s cannot migrate because "
                         "its current node (%s) is unclean",
-                        rsc->id, pe__node_name(current));
+                        rsc->id, pcmk__node_name(current));
         return false;
     }
 
@@ -221,7 +221,7 @@ pcmk__rsc_can_migrate(const pcmk_resource_t *rsc, const pcmk_node_t *current)
         pcmk__rsc_trace(rsc,
                         "%s cannot migrate because "
                         "its next node (%s) is unclean",
-                        rsc->id, pe__node_name(rsc->allocated_to));
+                        rsc->id, pcmk__node_name(rsc->allocated_to));
         return false;
     }
 

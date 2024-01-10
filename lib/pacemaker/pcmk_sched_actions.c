@@ -270,7 +270,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                         "%s then %s: mapped "
                         "pcmk__ar_first_implies_same_node_then to "
                         "pcmk__ar_first_implies_then on %s",
-                        first->uuid, then->uuid, pe__node_name(node));
+                        first->uuid, then->uuid, pcmk__node_name(node));
     }
 
     if (pcmk_is_set(order->type, pcmk__ar_first_implies_then)) {
@@ -557,7 +557,7 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
             first_node = first->rsc->fns->location(first->rsc, NULL, FALSE);
             if (first_node != NULL) {
                 pcmk__rsc_trace(first->rsc, "Found %s for 'first' %s",
-                                pe__node_name(first_node), first->uuid);
+                                pcmk__node_name(first_node), first->uuid);
             }
         }
 
@@ -568,20 +568,20 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
             then_node = then->rsc->fns->location(then->rsc, NULL, FALSE);
             if (then_node != NULL) {
                 pcmk__rsc_trace(then->rsc, "Found %s for 'then' %s",
-                                pe__node_name(then_node), then->uuid);
+                                pcmk__node_name(then_node), then->uuid);
             }
         }
 
         // Disable constraint if it only applies when on same node, but isn't
         if (pcmk_is_set(other->type, pcmk__ar_if_on_same_node)
             && (first_node != NULL) && (then_node != NULL)
-            && !pe__same_node(first_node, then_node)) {
+            && !pcmk__same_node(first_node, then_node)) {
 
             pcmk__rsc_trace(then->rsc,
                             "Disabled ordering %s on %s then %s on %s: "
                             "not same node",
-                            other->action->uuid, pe__node_name(first_node),
-                            then->uuid, pe__node_name(then_node));
+                            other->action->uuid, pcmk__node_name(first_node),
+                            then->uuid, pcmk__node_name(then_node));
             other->type = (enum pe_ordering) pcmk__ar_none;
             continue;
         }
@@ -939,7 +939,7 @@ pcmk__update_ordered_actions(pcmk_action_t *first, pcmk_action_t *then,
         pcmk__rsc_trace(then->rsc,
                         "%s on %s: flags are now %#.6x (was %#.6x) "
                         "because of 'first' %s (%#.6x)",
-                        then->uuid, pe__node_name(then->node),
+                        then->uuid, pcmk__node_name(then->node),
                         then->flags, then_flags, first->uuid, first->flags);
 
         if ((then->rsc != NULL) && (then->rsc->parent != NULL)) {
@@ -953,7 +953,7 @@ pcmk__update_ordered_actions(pcmk_action_t *first, pcmk_action_t *then,
         pcmk__rsc_trace(first->rsc,
                         "%s on %s: flags are now %#.6x (was %#.6x) "
                         "because of 'then' %s (%#.6x)",
-                        first->uuid, pe__node_name(first->node),
+                        first->uuid, pcmk__node_name(first->node),
                         first->flags, first_flags, then->uuid, then->flags);
     }
 
@@ -1312,7 +1312,7 @@ pcmk__action_locks_rsc_to_node(const pcmk_action_t *action)
 {
     // Only resource actions taking place on resource's lock node are locked
     if ((action == NULL) || (action->rsc == NULL)
-        || !pe__same_node(action->node, action->rsc->lock_node)) {
+        || !pcmk__same_node(action->node, action->rsc->lock_node)) {
         return false;
     }
 
@@ -1436,10 +1436,10 @@ pcmk__output_actions(pcmk_scheduler_t *scheduler)
             const pcmk_resource_t *remote = action->node->details->remote_rsc;
 
             node_name = crm_strdup_printf("%s (resource: %s)",
-                                          pe__node_name(action->node),
+                                          pcmk__node_name(action->node),
                                           remote->container->id);
         } else if (action->node != NULL) {
-            node_name = crm_strdup_printf("%s", pe__node_name(action->node));
+            node_name = crm_strdup_printf("%s", pcmk__node_name(action->node));
         }
 
         out->message(out, "node-action", task, node_name, action->reason);
@@ -1632,7 +1632,7 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
             pcmk__rsc_trace(rsc,
                             "%s-interval %s for %s on %s is in configuration",
                             pcmk__readable_interval(interval_ms), task, rsc->id,
-                            pe__node_name(node));
+                            pcmk__node_name(node));
         } else if (pcmk_is_set(rsc->cluster->flags,
                                pcmk_sched_cancel_removed_actions)) {
             pcmk__schedule_cancel(rsc,
@@ -1642,14 +1642,14 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
         } else {
             pcmk__rsc_debug(rsc, "%s-interval %s for %s on %s is orphaned",
                             pcmk__readable_interval(interval_ms), task, rsc->id,
-                            pe__node_name(node));
+                            pcmk__node_name(node));
             return true;
         }
     }
 
     crm_trace("Checking %s-interval %s for %s on %s for configuration changes",
               pcmk__readable_interval(interval_ms), task, rsc->id,
-              pe__node_name(node));
+              pcmk__node_name(node));
     task = task_for_digest(task, interval_ms);
     digest_data = rsc_action_digest_cmp(rsc, xml_op, node, rsc->cluster);
 
@@ -1661,7 +1661,7 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
                       "Only 'private' parameters to %s-interval %s for %s "
                       "on %s changed: %s",
                       pcmk__readable_interval(interval_ms), task, rsc->id,
-                      pe__node_name(node),
+                      pcmk__node_name(node),
                       crm_element_value(xml_op, PCMK__XA_TRANSITION_MAGIC));
         }
         return false;
@@ -1778,12 +1778,12 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
         pcmk__rsc_trace(rsc,
                         "Skipping configuration check for %s "
                         "because no longer active on %s",
-                        rsc->id, pe__node_name(node));
+                        rsc->id, pcmk__node_name(node));
         return;
     }
 
     pcmk__rsc_trace(rsc, "Checking for configuration changes for %s on %s",
-                    rsc->id, pe__node_name(node));
+                    rsc->id, pcmk__node_name(node));
 
     if (pcmk__rsc_agent_changed(rsc, node, rsc_entry, true)) {
         pcmk__schedule_cleanup(rsc, node, false);
@@ -1862,7 +1862,7 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
 static void
 process_node_history(pcmk_node_t *node, const xmlNode *lrm_rscs)
 {
-    crm_trace("Processing node history for %s", pe__node_name(node));
+    crm_trace("Processing node history for %s", pcmk__node_name(node));
     for (const xmlNode *rsc_entry = first_named_child(lrm_rscs,
                                                       XML_LRM_TAG_RESOURCE);
          rsc_entry != NULL; rsc_entry = crm_next_same_xml(rsc_entry)) {

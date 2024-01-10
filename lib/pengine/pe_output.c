@@ -560,7 +560,7 @@ pe__node_display_name(pcmk_node_t *node, bool print_detail)
     /* Host is displayed only if this is a guest node and detail is requested */
     if (print_detail && pe__is_guest_node(node)) {
         const pcmk_resource_t *container = node->details->remote_rsc->container;
-        const pcmk_node_t *host_node = pe__current_node(container);
+        const pcmk_node_t *host_node = pcmk__current_node(container);
 
         if (host_node && host_node->details) {
             node_host = host_node->details->uname;
@@ -1103,8 +1103,6 @@ cluster_options_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-#define bv(flag) pcmk__btoa(pcmk_is_set(scheduler->flags, (flag)))
-
 PCMK__OUTPUT_ARGS("cluster-options", "pcmk_scheduler_t *")
 static int
 cluster_options_xml(pcmk__output_t *out, va_list args) {
@@ -1138,18 +1136,29 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
 
     pcmk__output_create_xml_node(out, "cluster_options",
                                  PCMK_OPT_STONITH_ENABLED,
-                                    bv(pcmk_sched_fencing_enabled),
+                                 pcmk__flag_text(scheduler->flags,
+                                                 pcmk_sched_fencing_enabled),
+
                                  PCMK_OPT_SYMMETRIC_CLUSTER,
-                                    bv(pcmk_sched_symmetric_cluster),
+                                 pcmk__flag_text(scheduler->flags,
+                                                 pcmk_sched_symmetric_cluster),
+
                                  PCMK_OPT_NO_QUORUM_POLICY, no_quorum_policy,
+
                                  PCMK_OPT_MAINTENANCE_MODE,
-                                    bv(pcmk_sched_in_maintenance),
+                                 pcmk__flag_text(scheduler->flags,
+                                                 pcmk_sched_in_maintenance),
+
                                  PCMK_OPT_STOP_ALL_RESOURCES,
-                                    bv(pcmk_sched_stop_all),
+                                 pcmk__flag_text(scheduler->flags,
+                                                 pcmk_sched_stop_all),
+
                                  PCMK_OPT_STONITH_TIMEOUT "-ms",
-                                    stonith_timeout_str,
+                                 stonith_timeout_str,
+
                                  PCMK_OPT_PRIORITY_FENCING_DELAY "-ms",
-                                    priority_fencing_delay_str,
+                                 priority_fencing_delay_str,
+
                                  NULL);
     free(stonith_timeout_str);
     free(priority_fencing_delay_str);
@@ -1460,7 +1469,7 @@ failed_action_default(pcmk__output_t *out, va_list args)
     xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
     uint32_t show_opts = va_arg(args, uint32_t);
 
-    const char *op_key = pe__xe_history_key(xml_op);
+    const char *op_key = pcmk__xe_history_key(xml_op);
     const char *node_name = crm_element_value(xml_op, PCMK_XA_UNAME);
     const char *exit_reason = crm_element_value(xml_op, PCMK_XA_EXIT_REASON);
     const char *exec_time = crm_element_value(xml_op, PCMK_XA_EXEC_TIME);
@@ -1493,7 +1502,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
     uint32_t show_opts G_GNUC_UNUSED = va_arg(args, uint32_t);
 
-    const char *op_key = pe__xe_history_key(xml_op);
+    const char *op_key = pcmk__xe_history_key(xml_op);
     const char *op_key_name = "op_key";
     int rc;
     int status;
@@ -1586,7 +1595,7 @@ failed_action_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (!parse_op_key(pe__xe_history_key(xml_op), &rsc, NULL, NULL)) {
+        if (!parse_op_key(pcmk__xe_history_key(xml_op), &rsc, NULL, NULL)) {
             continue;
         }
 
@@ -2041,7 +2050,7 @@ node_and_op(pcmk__output_t *out, va_list args) {
     rsc = pe_find_resource(scheduler->resources, op_rsc);
 
     if (rsc) {
-        const pcmk_node_t *node = pe__current_node(rsc);
+        const pcmk_node_t *node = pcmk__current_node(rsc);
         const char *target_role = g_hash_table_lookup(rsc->meta,
                                                       PCMK_META_TARGET_ROLE);
         uint32_t show_opts = pcmk_show_rsc_only | pcmk_show_pending;
@@ -2067,7 +2076,7 @@ node_and_op(pcmk__output_t *out, va_list args) {
     }
 
     out->list_item(out, NULL, "%s: %s (node=%s, call=%s, rc=%s%s): %s",
-                   node_str, pe__xe_history_key(xml_op),
+                   node_str, pcmk__xe_history_key(xml_op),
                    crm_element_value(xml_op, PCMK_XA_UNAME),
                    crm_element_value(xml_op, PCMK__XA_CALL_ID),
                    crm_element_value(xml_op, PCMK__XA_RC_CODE),
@@ -2097,7 +2106,7 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
     pcmk__scan_min_int(crm_element_value(xml_op, PCMK__XA_OP_STATUS),
                        &status, PCMK_EXEC_UNKNOWN);
     node = pcmk__output_create_xml_node(out, PCMK_XE_OPERATION,
-                                        PCMK_XA_OP, pe__xe_history_key(xml_op),
+                                        PCMK_XA_OP, pcmk__xe_history_key(xml_op),
                                         "node", uname,
                                         "call", call_id,
                                         "rc", rc_s,
@@ -2234,7 +2243,7 @@ node_capacity(pcmk__output_t *out, va_list args)
     const char *comment = va_arg(args, const char *);
 
     char *dump_text = crm_strdup_printf("%s: %s capacity:",
-                                        comment, pe__node_name(node));
+                                        comment, pcmk__node_name(node));
 
     g_hash_table_foreach(node->details->utilization, append_dump_text, &dump_text);
     out->list_item(out, NULL, "%s", dump_text);
@@ -2988,7 +2997,7 @@ resource_util(pcmk__output_t *out, va_list args)
     const char *fn = va_arg(args, const char *);
 
     char *dump_text = crm_strdup_printf("%s: %s utilization on %s:",
-                                        fn, rsc->id, pe__node_name(node));
+                                        fn, rsc->id, pcmk__node_name(node));
 
     g_hash_table_foreach(rsc->utilization, append_dump_text, &dump_text);
     out->list_item(out, NULL, "%s", dump_text);

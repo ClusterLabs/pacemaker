@@ -369,8 +369,10 @@ pe__group_xml(pcmk__output_t *out, va_list args)
 
         if (rc == pcmk_rc_no_output) {
             char *count = pcmk__itoa(g_list_length(gIter));
-            const char *maint_s = pe__rsc_bool_str(rsc, pcmk_rsc_maintenance);
-            const char *managed_s = pe__rsc_bool_str(rsc, pcmk_rsc_managed);
+            const char *maint_s = pcmk__flag_text(rsc->flags,
+                                                  pcmk_rsc_maintenance);
+            const char *managed_s = pcmk__flag_text(rsc->flags,
+                                                    pcmk_rsc_managed);
             const char *disabled_s = pcmk__btoa(pe__resource_is_disabled(rsc));
 
             rc = pe__name_and_nvpairs_xml(out, true, "group", 5,

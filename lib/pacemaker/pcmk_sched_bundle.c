@@ -71,7 +71,7 @@ assign_replica(pcmk__bundle_replica_t *replica, void *user_data)
 
         g_hash_table_iter_init(&iter, replica->child->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-            if (!pe__same_node(node, replica->node)) {
+            if (!pcmk__same_node(node, replica->node)) {
                 node->weight = -INFINITY;
             } else if (!pcmk__threshold_reached(replica->child, node, NULL)) {
                 node->weight = INFINITY;
@@ -494,7 +494,7 @@ replica_apply_coloc_score(const pcmk__bundle_replica_t *replica,
 
     pcmk__rsc_trace(pe__const_top_resource(replica->container, true),
                     "Allowing mandatory colocation %s using %s @%d",
-                    coloc_data->colocation->id, pe__node_name(chosen),
+                    coloc_data->colocation->id, pcmk__node_name(chosen),
                     chosen->weight);
     coloc_data->container_hosts = g_list_prepend(coloc_data->container_hosts,
                                                  chosen);
@@ -909,7 +909,7 @@ create_replica_probes(pcmk__bundle_replica_t *replica, void *user_data)
         probe_data->any_created = true;
     }
     if ((replica->child != NULL)
-        && pe__same_node(probe_data->node, replica->node)
+        && pcmk__same_node(probe_data->node, replica->node)
         && replica->child->cmds->create_probe(replica->child,
                                               probe_data->node)) {
         probe_data->any_created = true;
@@ -954,7 +954,7 @@ create_replica_probes(pcmk__bundle_replica_t *replica, void *user_data)
             probe_data->any_created = true;
             pcmk__rsc_trace(probe_data->bundle, "Ordering %s probe on %s",
                             replica->remote->id,
-                            pe__node_name(probe_data->node));
+                            pcmk__node_name(probe_data->node));
             pcmk__new_ordering(replica->container,
                                pcmk__op_key(replica->container->id,
                                             PCMK_ACTION_START, 0),

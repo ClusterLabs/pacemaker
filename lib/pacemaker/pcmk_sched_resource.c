@@ -129,7 +129,7 @@ pcmk__rsc_agent_changed(pcmk_resource_t *rsc, pcmk_node_t *node,
             if (active_on_node) {
                 crm_notice("Forcing restart of %s on %s "
                            "because %s changed from '%s' to '%s'",
-                           rsc->id, pe__node_name(node), attr_list[i],
+                           rsc->id, pcmk__node_name(node), attr_list[i],
                            pcmk__s(old_value, ""), pcmk__s(value, ""));
             }
         }
@@ -334,7 +334,7 @@ pcmk__output_resource_actions(pcmk_resource_t *rsc)
 
     next = rsc->allocated_to;
     if (rsc->running_on) {
-        current = pe__current_node(rsc);
+        current = pcmk__current_node(rsc);
         if (rsc->role == pcmk_role_stopped) {
             /* This can occur when resources are being recovered because
              * the current role can change in pcmk__primitive_create_actions()
@@ -429,7 +429,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
         pcmk__rsc_debug(rsc,
                         "All nodes for resource %s are unavailable, unclean or "
                         "shutting down (%s can%s run resources, with score %s)",
-                        rsc->id, pe__node_name(node),
+                        rsc->id, pcmk__node_name(node),
                         (pcmk__node_available(node, true, false)? "" : "not"),
                         pcmk_readable_score(node->weight));
 
@@ -440,7 +440,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
     }
 
     if (rsc->allocated_to != NULL) {
-        changed = !pe__same_node(rsc->allocated_to, node);
+        changed = !pcmk__same_node(rsc->allocated_to, node);
     } else {
         changed = (node != NULL);
     }
@@ -494,7 +494,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
         return changed;
     }
 
-    pcmk__rsc_debug(rsc, "Assigning %s to %s", rsc->id, pe__node_name(node));
+    pcmk__rsc_debug(rsc, "Assigning %s to %s", rsc->id, pcmk__node_name(node));
     rsc->allocated_to = pe__copy_node(node);
 
     add_assigned_resource(node, rsc);
@@ -529,7 +529,7 @@ pcmk__unassign_resource(pcmk_resource_t *rsc)
     if (old == NULL) {
         crm_info("Unassigning %s", rsc->id);
     } else {
-        crm_info("Unassigning %s from %s", rsc->id, pe__node_name(old));
+        crm_info("Unassigning %s from %s", rsc->id, pcmk__node_name(old));
     }
 
     pcmk__set_rsc_flags(rsc, pcmk_rsc_unassigned);
@@ -604,7 +604,7 @@ pcmk__threshold_reached(pcmk_resource_t *rsc, const pcmk_node_t *node,
                          "threshold (clean up resource to allow again)"
                          CRM_XS " failures=%d "
                          PCMK_META_MIGRATION_THRESHOLD "=%d",
-                         rsc_to_ban->id, pe__node_name(node), fail_count,
+                         rsc_to_ban->id, pcmk__node_name(node), fail_count,
                          rsc->migration_threshold);
         if (failed != NULL) {
             *failed = rsc_to_ban;
@@ -615,7 +615,7 @@ pcmk__threshold_reached(pcmk_resource_t *rsc, const pcmk_node_t *node,
     crm_info("%s can fail %d more time%s on "
              "%s before reaching migration threshold (%d)",
              rsc_to_ban->id, remaining_tries, pcmk__plural_s(remaining_tries),
-             pe__node_name(node), rsc->migration_threshold);
+             pcmk__node_name(node), rsc->migration_threshold);
     return false;
 }
 
@@ -704,10 +704,10 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
     // The resource with highest score on its current node goes first
     reason = "current location";
     if (resource1->running_on != NULL) {
-        r1_node = pe__current_node(resource1);
+        r1_node = pcmk__current_node(resource1);
     }
     if (resource2->running_on != NULL) {
-        r2_node = pe__current_node(resource2);
+        r2_node = pcmk__current_node(resource2);
     }
     r1_score = get_node_score(r1_node, r1_nodes);
     r2_score = get_node_score(r2_node, r2_nodes);

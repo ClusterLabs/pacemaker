@@ -228,14 +228,14 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
 
     if (node1_score > node2_score) {
         crm_trace("%s before %s (score %d > %d)",
-                  pe__node_name(node1), pe__node_name(node2),
+                  pcmk__node_name(node1), pcmk__node_name(node2),
                   node1_score, node2_score);
         return -1;
     }
 
     if (node1_score < node2_score) {
         crm_trace("%s after %s (score %d < %d)",
-                  pe__node_name(node1), pe__node_name(node2),
+                  pcmk__node_name(node1), pcmk__node_name(node2),
                   node1_score, node2_score);
         return 1;
     }
@@ -252,11 +252,12 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
         result = pcmk__compare_node_capacities(node1, node2);
         if (result < 0) {
             crm_trace("%s before %s (greater capacity by %d attributes)",
-                      pe__node_name(node1), pe__node_name(node2), result * -1);
+                      pcmk__node_name(node1), pcmk__node_name(node2),
+                      result * -1);
             return -1;
         } else if (result > 0) {
             crm_trace("%s after %s (lower capacity by %d attributes)",
-                      pe__node_name(node1), pe__node_name(node2), result);
+                      pcmk__node_name(node1), pcmk__node_name(node2), result);
             return 1;
         }
     }
@@ -265,13 +266,13 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
 
     if (node1->details->num_resources < node2->details->num_resources) {
         crm_trace("%s before %s (%d resources < %d)",
-                  pe__node_name(node1), pe__node_name(node2),
+                  pcmk__node_name(node1), pcmk__node_name(node2),
                   node1->details->num_resources, node2->details->num_resources);
         return -1;
 
     } else if (node1->details->num_resources > node2->details->num_resources) {
         crm_trace("%s after %s (%d resources > %d)",
-                  pe__node_name(node1), pe__node_name(node2),
+                  pcmk__node_name(node1), pcmk__node_name(node2),
                   node1->details->num_resources, node2->details->num_resources);
         return 1;
     }
@@ -279,13 +280,13 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
     // Check whether one node is already running desired resource
 
     if (preferred != NULL) {
-        if (pe__same_node(preferred, node1)) {
+        if (pcmk__same_node(preferred, node1)) {
             crm_trace("%s before %s (preferred node)",
-                      pe__node_name(node1), pe__node_name(node2));
+                      pcmk__node_name(node1), pcmk__node_name(node2));
             return -1;
-        } else if (pe__same_node(preferred, node2)) {
+        } else if (pcmk__same_node(preferred, node2)) {
             crm_trace("%s after %s (not preferred node)",
-                      pe__node_name(node1), pe__node_name(node2));
+                      pcmk__node_name(node1), pcmk__node_name(node2));
             return 1;
         }
     }
@@ -295,15 +296,15 @@ equal:
     result = strcmp(node1->details->uname, node2->details->uname);
     if (result < 0) {
         crm_trace("%s before %s (name)",
-                  pe__node_name(node1), pe__node_name(node2));
+                  pcmk__node_name(node1), pcmk__node_name(node2));
         return -1;
     } else if (result > 0) {
         crm_trace("%s after %s (name)",
-                  pe__node_name(node1), pe__node_name(node2));
+                  pcmk__node_name(node1), pcmk__node_name(node2));
         return 1;
     }
 
-    crm_trace("%s == %s", pe__node_name(node1), pe__node_name(node2));
+    crm_trace("%s == %s", pcmk__node_name(node1), pcmk__node_name(node2));
     return 0;
 }
 
@@ -383,7 +384,7 @@ pcmk__apply_node_health(pcmk_scheduler_t *scheduler)
             continue;
         }
         crm_info("Overall system health of %s is %d",
-                 pe__node_name(node), health);
+                 pcmk__node_name(node), health);
 
         // Use node health as a location score for each resource on the node
         for (GList *r = scheduler->resources; r != NULL; r = r->next) {
@@ -402,7 +403,7 @@ pcmk__apply_node_health(pcmk_scheduler_t *scheduler)
                 pcmk__new_location(strategy_str, rsc, health, NULL, node);
             } else {
                 pcmk__rsc_trace(rsc, "%s is immune from health ban on %s",
-                                rsc->id, pe__node_name(node));
+                                rsc->id, pcmk__node_name(node));
             }
         }
     }

@@ -67,7 +67,7 @@ cli_resource_print_cts(pcmk_resource_t *rsc, pcmk__output_t *out)
     const char *rtype = crm_element_value(rsc->xml, PCMK_XA_TYPE);
     const char *rprov = crm_element_value(rsc->xml, PCMK_XA_PROVIDER);
     const char *rclass = crm_element_value(rsc->xml, PCMK_XA_CLASS);
-    pcmk_node_t *node = pe__current_node(rsc);
+    pcmk_node_t *node = pcmk__current_node(rsc);
 
     if (pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         needs_quorum = FALSE;
