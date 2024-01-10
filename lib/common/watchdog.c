@@ -274,7 +274,7 @@ pcmk__auto_watchdog_timeout(void)
 }
 
 bool
-pcmk__valid_sbd_timeout(const char *value)
+pcmk__valid_stonith_watchdog_timeout(const char *value)
 {
     long st_timeout = value? crm_get_msec(value) : 0;
 
