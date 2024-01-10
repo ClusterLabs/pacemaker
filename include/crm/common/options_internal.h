@@ -72,7 +72,7 @@ bool pcmk__valid_percentage(const char *value);
 bool pcmk__valid_script(const char *value);
 
 // from watchdog.c
-long pcmk__get_sbd_timeout(void);
+long pcmk__get_sbd_watchdog_timeout(void);
 bool pcmk__get_sbd_sync_resource_startup(void);
 long pcmk__auto_watchdog_timeout(void);
 bool pcmk__valid_stonith_watchdog_timeout(const char *value);
