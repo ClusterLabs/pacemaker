@@ -353,7 +353,6 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
     xmlNode *patchset_cib = NULL;
     xmlNode *local_diff = NULL;
 
-    const char *new_version = NULL;
     const char *user = crm_element_value(req, F_CIB_USER);
     bool with_digest = false;
 
@@ -470,12 +469,13 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
     }
 
     if (scratch) {
-        new_version = crm_element_value(scratch, PCMK_XA_CRM_FEATURE_SET);
+        const char *new_version = crm_element_value(scratch, PCMK_XA_CRM_FEATURE_SET);
 
-        if (new_version && compare_version(new_version, CRM_FEATURE_SET) > 0) {
-            crm_err("Discarding update with feature set '%s' greater than our own '%s'",
-                    new_version, CRM_FEATURE_SET);
-            rc = -EPROTONOSUPPORT;
+        rc = pcmk__check_feature_set(new_version);
+        if (rc != pcmk_rc_ok) {
+            pcmk__config_err("Discarding update with feature set '%s' greater than our own '%s'",
+                             new_version, CRM_FEATURE_SET);
+            rc = pcmk_rc2legacy(rc);
             goto done;
         }
     }
