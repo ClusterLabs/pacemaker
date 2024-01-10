@@ -629,8 +629,18 @@ static pcmk__cluster_option_t controller_options[] = {
             "the order in which ping updates arrive.")
     },
     {
+        /* @COMPAT Currently unparsable values default to -1 (auto-calculate),
+         * while missing values default to 0 (disable). All values are accepted
+         * (unless the controller finds that the value conflicts with the
+         * SBD_WATCHDOG_TIMEOUT).
+         *
+         * At a compatibility break: properly validate as a timeout, let
+         * either negative values or a particular string like "auto" mean auto-
+         * calculate, and use 0 as the single default for when the option either
+         * is unset or fails to validate.
+         */
         PCMK_OPT_STONITH_WATCHDOG_TIMEOUT, NULL, "time", NULL,
-        "0", controld_verify_stonith_watchdog_timeout,
+        "0", NULL,
         N_("How long before nodes can be assumed to be safely down when "
            "watchdog-based self-fencing via SBD is in use"),
         N_("If this is set to a positive value, lost nodes are assumed to "
@@ -754,6 +764,19 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     // Validate all options, and use defaults if not already present in hash
     pcmk__validate_cluster_options(config_hash, controller_options,
                                    PCMK__NELEM(controller_options));
+
+    /* Validate the watchdog timeout in the context of the local node
+     * environment. If invalid, the controller will exit with a fatal error.
+     *
+     * We do this via a wrapper in the controller, so that we call
+     * pcmk__valid_stonith_watchdog_timeout() only if watchdog fencing is
+     * enabled for the local node. Otherwise, we may exit unnecessarily.
+     *
+     * A validator function in libcrmcommon can't act as such a wrapper, because
+     * it doesn't have a stonith API connection or the local node name.
+     */
+    value = g_hash_table_lookup(config_hash, PCMK_OPT_STONITH_WATCHDOG_TIMEOUT);
+    controld_verify_stonith_watchdog_timeout(value);
 
     value = g_hash_table_lookup(config_hash, PCMK_OPT_NO_QUORUM_POLICY);
     if (pcmk__str_eq(value, "suicide", pcmk__str_casei) && pcmk__locate_sbd()) {
