@@ -26,7 +26,8 @@ static attribute_t *
 attrd_create_attribute(xmlNode *xml)
 {
     int is_private = 0;
-    int dampen = 0;
+    long long dampen = 0;
+    const char *readable_delay = "no";
     const char *name = crm_element_value(xml, PCMK__XA_ATTR_NAME);
     const char *set_type = crm_element_value(xml, PCMK__XA_ATTR_SET_TYPE);
     const char *dampen_s = crm_element_value(xml, PCMK__XA_ATTR_DAMPENING);
@@ -66,15 +67,17 @@ attrd_create_attribute(xmlNode *xml)
     if (dampen_s != NULL) {
         dampen = crm_get_msec(dampen_s);
     }
-    crm_trace("Created attribute %s with %s write delay", a->id,
-              (a->timeout_ms == 0)? "no" : pcmk__readable_interval(a->timeout_ms));
 
-    if(dampen > 0) {
-        a->timeout_ms = dampen;
+    if (dampen > 0) {
+        a->timeout_ms = (int) QB_MIN(dampen, INT_MAX);
         a->timer = attrd_add_timer(a->id, a->timeout_ms, a);
+        readable_delay = pcmk__readable_interval(a->timeout_ms);
     } else if (dampen < 0) {
         crm_warn("Ignoring invalid delay %s for attribute %s", dampen_s, a->id);
     }
+
+    crm_trace("Created attribute %s with %s write delay",
+              a->id, readable_delay);
 
     g_hash_table_replace(attributes, a->id, a);
     return a;
@@ -84,7 +87,7 @@ static int
 attrd_update_dampening(attribute_t *a, xmlNode *xml, const char *attr)
 {
     const char *dvalue = crm_element_value(xml, PCMK__XA_ATTR_DAMPENING);
-    int dampen = 0;
+    long long dampen = 0;
 
     if (dvalue == NULL) {
         crm_warn("Could not update %s: peer did not specify value for delay",
@@ -101,7 +104,7 @@ attrd_update_dampening(attribute_t *a, xmlNode *xml, const char *attr)
 
     if (a->timeout_ms != dampen) {
         mainloop_timer_del(a->timer);
-        a->timeout_ms = dampen;
+        a->timeout_ms = (int) QB_MIN(dampen, INT_MAX);
         if (dampen > 0) {
             a->timer = attrd_add_timer(attr, a->timeout_ms, a);
             crm_info("Update attribute %s delay to %dms (%s)",

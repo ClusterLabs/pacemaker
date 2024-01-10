@@ -562,12 +562,12 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
 static int
 unpack_timeout(const char *value)
 {
-    int timeout_ms = crm_get_msec(value);
+    long long timeout_ms = crm_get_msec(value);
 
     if (timeout_ms < 0) {
         timeout_ms = PCMK_DEFAULT_ACTION_TIMEOUT_MS;
     }
-    return timeout_ms;
+    return (int) QB_MIN(timeout_ms, INT_MAX);
 }
 
 // true if value contains valid, non-NULL interval origin for recurring op
@@ -616,22 +616,24 @@ unpack_interval_origin(const char *value, const xmlNode *xml_obj,
 static int
 unpack_start_delay(const char *value, GHashTable *meta)
 {
-    int start_delay = 0;
+    long long start_delay_ms = 0;
 
-    if (value != NULL) {
-        start_delay = crm_get_msec(value);
-
-        if (start_delay < 0) {
-            start_delay = 0;
-        }
-
-        if (meta) {
-            g_hash_table_replace(meta, strdup(PCMK_META_START_DELAY),
-                                 pcmk__itoa(start_delay));
-        }
+    if (value == NULL) {
+        return 0;
     }
 
-    return start_delay;
+    start_delay_ms = crm_get_msec(value);
+    start_delay_ms = QB_MIN(start_delay_ms, INT_MAX);
+    if (start_delay_ms < 0) {
+        start_delay_ms = 0;
+    }
+
+    if (meta != NULL) {
+        g_hash_table_replace(meta, strdup(PCMK_META_START_DELAY),
+                             pcmk__itoa(start_delay_ms));
+    }
+
+    return (int) start_delay_ms;
 }
 
 /*!
@@ -1427,7 +1429,7 @@ pe_get_configured_timeout(pcmk_resource_t *rsc, const char *action,
     xmlNode *child = NULL;
     GHashTable *action_meta = NULL;
     const char *timeout_spec = NULL;
-    int timeout_ms = 0;
+    long long timeout_ms = 0;
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
@@ -1466,7 +1468,7 @@ pe_get_configured_timeout(pcmk_resource_t *rsc, const char *action,
     if (action_meta != NULL) {
         g_hash_table_destroy(action_meta);
     }
-    return timeout_ms;
+    return (int) QB_MIN(timeout_ms, INT_MAX);
 }
 
 enum action_tasks

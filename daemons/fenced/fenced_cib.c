@@ -195,7 +195,7 @@ remove_cib_device(xmlXPathObjectPtr xpathObj)
 static void
 update_stonith_watchdog_timeout_ms(xmlNode *cib)
 {
-    long timeout_ms = 0;
+    long long timeout_ms = 0;
     xmlNode *stonith_watchdog_xml = NULL;
     const char *value = NULL;
 
@@ -212,7 +212,7 @@ update_stonith_watchdog_timeout_ms(xmlNode *cib)
         timeout_ms = pcmk__auto_stonith_watchdog_timeout();
     }
 
-    stonith_watchdog_timeout_ms = timeout_ms;
+    stonith_watchdog_timeout_ms = (long) QB_MIN(timeout_ms, LONG_MAX);
 }
 
 /*!

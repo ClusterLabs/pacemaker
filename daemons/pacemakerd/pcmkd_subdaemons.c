@@ -400,8 +400,12 @@ pcmk_shutdown_worker(gpointer user_data)
     {
         const char *delay = pcmk__env_option(PCMK__ENV_SHUTDOWN_DELAY);
         if(delay) {
+            long long delay_ms = crm_get_msec(delay);
+
             sync();
-            pcmk__sleep_ms(crm_get_msec(delay));
+            if (delay_ms > 0) {
+                pcmk__sleep_ms((unsigned int) QB_MIN(delay_ms, UINT_MAX));
+            }
         }
     }
 

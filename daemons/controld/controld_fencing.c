@@ -1006,7 +1006,7 @@ controld_execute_fence_action(pcmk__graph_t *graph,
 bool
 controld_verify_stonith_watchdog_timeout(const char *value)
 {
-    long st_timeout = value? crm_get_msec(value) : 0;
+    long long st_timeout = (value != NULL)? crm_get_msec(value) : 0;
     const char *our_nodename = controld_globals.our_nodename;
 
     if (st_timeout == 0
