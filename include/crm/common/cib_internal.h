@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 the Pacemaker project contributors
+ * Copyright 2023-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,6 +15,8 @@ extern "C" {
 #endif
 
 const char *pcmk__cib_abs_xpath_for(const char *element);
+
+int pcmk__check_feature_set(const char *cib_version);
 
 #ifdef __cplusplus
 }

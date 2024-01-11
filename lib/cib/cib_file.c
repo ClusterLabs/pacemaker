@@ -245,7 +245,7 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
         data = pcmk_find_cib_element(data, section);
     }
 
-    rc = cib_perform_op(op, call_options, op_function, read_only, section,
+    rc = cib_perform_op(cib, op, call_options, op_function, read_only, section,
                         request, data, true, &changed, &private->cib_xml,
                         &result_cib, &cib_diff, output);
 

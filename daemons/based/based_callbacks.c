@@ -1382,7 +1382,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     input = prepare_input(request, operation->type, &section);
 
     if (!pcmk_is_set(operation->flags, cib__op_attr_modifies)) {
-        rc = cib_perform_op(op, call_options, op_function, true, section,
+        rc = cib_perform_op(NULL, op, call_options, op_function, true, section,
                             request, input, false, &config_changed, &the_cib,
                             &result_cib, NULL, &output);
 
@@ -1415,7 +1415,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     }
 
     // result_cib must not be modified after cib_perform_op() returns
-    rc = cib_perform_op(op, call_options, op_function, false, section,
+    rc = cib_perform_op(NULL, op, call_options, op_function, false, section,
                         request, input, manage_counters, &config_changed,
                         &the_cib, &result_cib, cib_diff, &output);
 

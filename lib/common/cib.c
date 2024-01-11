@@ -173,3 +173,19 @@ pcmk_find_cib_element(xmlNode *cib, const char *element_name)
 {
     return get_xpath_object(pcmk_cib_xpath_for(element_name), cib, LOG_TRACE);
 }
+
+/*!
+ * \internal
+ * \brief Check that the feature set in the CIB is supported on this node
+ *
+ * \param[in] new_version   PCMK_XA_CRM_FEATURE_SET attribute from the CIB
+ */
+int
+pcmk__check_feature_set(const char *cib_version)
+{
+    if (cib_version && compare_version(cib_version, CRM_FEATURE_SET) > 0) {
+        return EPROTONOSUPPORT;
+    }
+
+    return pcmk_rc_ok;
+}

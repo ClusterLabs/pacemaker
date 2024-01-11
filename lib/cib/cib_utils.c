@@ -324,11 +324,10 @@ should_copy_cib(const char *op, const char *section, int call_options)
 }
 
 int
-cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
-               const char *section, xmlNode *req, xmlNode *input,
-               bool manage_counters, bool *config_changed,
-               xmlNode **current_cib, xmlNode **result_cib, xmlNode **diff,
-               xmlNode **output)
+cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
+               bool is_query, const char *section, xmlNode *req, xmlNode *input,
+               bool manage_counters, bool *config_changed, xmlNode **current_cib,
+               xmlNode **result_cib, xmlNode **diff, xmlNode **output)
 {
     int rc = pcmk_ok;
     bool check_schema = true;
@@ -338,7 +337,6 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
     xmlNode *patchset_cib = NULL;
     xmlNode *local_diff = NULL;
 
-    const char *new_version = NULL;
     const char *user = crm_element_value(req, F_CIB_USER);
     bool with_digest = false;
 
@@ -454,13 +452,18 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
         goto done;
     }
 
-    if (scratch) {
-        new_version = crm_element_value(scratch, PCMK_XA_CRM_FEATURE_SET);
+    /* If the CIB is from a file, we don't need to check that the feature set is
+     * supported.  All we care about in that case is the schema version, which
+     * is checked elsewhere.
+     */
+    if (scratch && (cib == NULL || cib->variant != cib_file)) {
+        const char *new_version = crm_element_value(scratch, PCMK_XA_CRM_FEATURE_SET);
 
-        if (new_version && compare_version(new_version, CRM_FEATURE_SET) > 0) {
-            crm_err("Discarding update with feature set '%s' greater than our own '%s'",
-                    new_version, CRM_FEATURE_SET);
-            rc = -EPROTONOSUPPORT;
+        rc = pcmk__check_feature_set(new_version);
+        if (rc != pcmk_rc_ok) {
+            pcmk__config_err("Discarding update with feature set '%s' greater than our own '%s'",
+                             new_version, CRM_FEATURE_SET);
+            rc = pcmk_rc2legacy(rc);
             goto done;
         }
     }

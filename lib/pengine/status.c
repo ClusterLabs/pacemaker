@@ -14,6 +14,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/common/cib_internal.h>
 
 #include <glib.h>
 
@@ -70,9 +71,18 @@ pe_free_working_set(pcmk_scheduler_t *scheduler)
 gboolean
 cluster_status(pcmk_scheduler_t * scheduler)
 {
+    const char *new_version = NULL;
     xmlNode *section = NULL;
 
     if ((scheduler == NULL) || (scheduler->input == NULL)) {
+        return FALSE;
+    }
+
+    new_version = crm_element_value(scheduler->input, PCMK_XA_CRM_FEATURE_SET);
+
+    if (pcmk__check_feature_set(new_version) != pcmk_rc_ok) {
+        pcmk__config_err("Can't process CIB with feature set '%s' greater than our own '%s'",
+                         new_version, CRM_FEATURE_SET);
         return FALSE;
     }
 
