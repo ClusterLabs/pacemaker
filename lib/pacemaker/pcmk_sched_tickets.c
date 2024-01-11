@@ -13,6 +13,7 @@
 #include <glib.h>
 
 #include <crm/crm.h>
+#include <crm/common/scheduler.h>
 #include <crm/common/scheduler_internal.h>
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
@@ -153,30 +154,26 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
 
 static void
 rsc_ticket_new(const char *id, pcmk_resource_t *rsc, pcmk__ticket_t *ticket,
-               const char *state, const char *loss_policy)
+               const char *role_spec, const char *loss_policy)
 {
     rsc_ticket_t *new_rsc_ticket = NULL;
+    enum rsc_role_e role = pcmk_role_unknown;
 
     if (rsc == NULL) {
         pcmk__config_err("Ignoring ticket '%s' because resource "
                          "does not exist", id);
         return;
     }
-
-    new_rsc_ticket = calloc(1, sizeof(rsc_ticket_t));
-    if (new_rsc_ticket == NULL) {
+    if (pcmk__parse_constraint_role(id, role_spec, &role) != pcmk_rc_ok) {
+        // Not possible with schema validation enabled (error already logged)
         return;
     }
 
-    if (pcmk__str_eq(state, PCMK_ROLE_STARTED,
-                     pcmk__str_null_matches|pcmk__str_casei)) {
-        state = PCMK__ROLE_UNKNOWN;
-    }
-
+    new_rsc_ticket = pcmk__assert_alloc(1, sizeof(rsc_ticket_t));
     new_rsc_ticket->id = id;
     new_rsc_ticket->ticket = ticket;
     new_rsc_ticket->rsc = rsc;
-    new_rsc_ticket->role = pcmk_parse_role(state);
+    new_rsc_ticket->role = role;
 
     if (pcmk__str_eq(loss_policy, PCMK_VALUE_FENCE, pcmk__str_casei)) {
         if (pcmk_is_set(rsc->priv->scheduler->flags,
