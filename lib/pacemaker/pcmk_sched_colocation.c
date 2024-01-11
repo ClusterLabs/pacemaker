@@ -384,8 +384,8 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
     new_con->dependent = dependent;
     new_con->primary = primary;
     new_con->score = score;
-    new_con->dependent_role = text2role(dependent_role);
-    new_con->primary_role = text2role(primary_role);
+    new_con->dependent_role = pcmk_parse_role(dependent_role);
+    new_con->primary_role = pcmk_parse_role(primary_role);
     new_con->node_attribute = pcmk__s(node_attr, CRM_ATTR_UNAME);
     new_con->flags = flags;
 

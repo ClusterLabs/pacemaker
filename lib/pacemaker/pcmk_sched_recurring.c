@@ -159,7 +159,7 @@ is_recurring_history(const pcmk_resource_t *rsc, const xmlNode *xml,
     if (role == NULL) {
         op->role = pcmk_role_unknown;
     } else {
-        op->role = text2role(role);
+        op->role = pcmk_parse_role(role);
         if (op->role == pcmk_role_unknown) {
             pcmk__config_err("Ignoring %s role because %s is not a valid role",
                              op->id, role);

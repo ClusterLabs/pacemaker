@@ -646,7 +646,7 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
         }
     }
     if (target_role != NULL) {
-        switch (text2role(target_role)) {
+        switch (pcmk_parse_role(target_role)) {
             case pcmk_role_unknown:
                 pcmk__config_err("Invalid " PCMK_META_TARGET_ROLE
                                  " %s for resource %s", target_role, rsc->id);

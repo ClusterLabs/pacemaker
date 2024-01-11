@@ -47,3 +47,30 @@ pcmk_role_text(enum rsc_role_e role)
             return PCMK__ROLE_UNKNOWN;
     }
 }
+
+/*!
+ * \brief Parse a resource role from a string role specification
+ *
+ * \param[in] role  Role specification
+ *
+ * \return Resource role corresponding to \p role
+ */
+enum rsc_role_e
+pcmk_parse_role(const char *role)
+{
+    if (pcmk__str_eq(role, PCMK__ROLE_UNKNOWN,
+                     pcmk__str_casei|pcmk__str_null_matches)) {
+        return pcmk_role_unknown;
+    } else if (pcmk__str_eq(role, PCMK__ROLE_STOPPED, pcmk__str_casei)) {
+        return pcmk_role_stopped;
+    } else if (pcmk__str_eq(role, PCMK__ROLE_STARTED, pcmk__str_casei)) {
+        return pcmk_role_started;
+    } else if (pcmk__strcase_any_of(role, PCMK__ROLE_UNPROMOTED,
+                                    PCMK__ROLE_UNPROMOTED_LEGACY, NULL)) {
+        return pcmk_role_unpromoted;
+    } else if (pcmk__strcase_any_of(role, PCMK__ROLE_PROMOTED,
+                                    PCMK__ROLE_PROMOTED_LEGACY, NULL)) {
+        return pcmk_role_promoted;
+    }
+    return pcmk_role_unknown; // Invalid role given
+}

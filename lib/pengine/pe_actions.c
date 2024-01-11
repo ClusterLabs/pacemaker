@@ -1061,7 +1061,7 @@ pcmk__role_after_failure(const pcmk_resource_t *rsc, const char *action_name,
                         "Support for " PCMK__META_ROLE_AFTER_FAILURE " is "
                         "deprecated and will be removed in a future release");
         if (role == pcmk_role_unknown) {
-            role = text2role(value);
+            role = pcmk_parse_role(value);
             if (role == pcmk_role_unknown) {
                 pcmk__config_err("Ignoring invalid value %s for "
                                  PCMK__META_ROLE_AFTER_FAILURE,

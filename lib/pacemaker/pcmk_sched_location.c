@@ -69,7 +69,7 @@ parse_location_role(const char *role_spec, enum rsc_role_e *role)
         return true;
     }
 
-    *role = text2role(role_spec);
+    *role = pcmk_parse_role(role_spec);
     switch (*role) {
         case pcmk_role_unknown:
             return false;
