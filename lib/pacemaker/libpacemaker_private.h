@@ -467,6 +467,10 @@ pcmk_resource_t *pcmk__find_constraint_resource(GList *rsc_list,
                                                 const char *id);
 
 G_GNUC_INTERNAL
+int pcmk__parse_constraint_role(const char *id, const char *role_spec,
+                                enum rsc_role_e *role);
+
+G_GNUC_INTERNAL
 xmlNode *pcmk__expand_tags_in_sets(xmlNode *xml_obj,
                                    const pcmk_scheduler_t *scheduler);
 
@@ -577,8 +581,8 @@ GList *pcmk__this_with_colocations(const pcmk_resource_t *rsc);
 G_GNUC_INTERNAL
 void pcmk__new_colocation(const char *id, const char *node_attr, int score,
                           pcmk_resource_t *dependent, pcmk_resource_t *primary,
-                          const char *dependent_role, const char *primary_role,
-                          uint32_t flags);
+                          const char *dependent_role_spec,
+                          const char *primary_role_spec, uint32_t flags);
 
 G_GNUC_INTERNAL
 void pcmk__block_colocation_dependents(pcmk_action_t *action);
