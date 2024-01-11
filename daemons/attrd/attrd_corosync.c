@@ -168,40 +168,6 @@ broadcast_local_value(const attribute_t *a)
 
 #define state_text(state) pcmk__s((state), "in unknown state")
 
-/*!
- * \internal
- * \brief Return a node's value from hash table (creating one if needed)
- *
- * \param[in,out] values     Hash table of values
- * \param[in]     node_name  Name of node to look up
- * \param[in]     xml        XML describing the attribute
- *
- * \return Pointer to new or existing hash table entry
- */
-static attribute_value_t *
-attrd_lookup_or_create_value(GHashTable *values, const char *node_name,
-                             const xmlNode *xml)
-{
-    attribute_value_t *v = g_hash_table_lookup(values, node_name);
-    int is_remote = 0;
-
-    if (v == NULL) {
-        v = calloc(1, sizeof(attribute_value_t));
-        CRM_ASSERT(v != NULL);
-
-        pcmk__str_update(&v->nodename, node_name);
-        g_hash_table_replace(values, v->nodename, v);
-    }
-
-    crm_element_value_int(xml, PCMK__XA_ATTR_IS_REMOTE, &is_remote);
-    if (is_remote) {
-        attrd_set_value_flags(v, attrd_value_remote);
-        CRM_ASSERT(crm_remote_peer_get(node_name) != NULL);
-    }
-
-    return(v);
-}
-
 static void
 attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *data)
 {
@@ -268,18 +234,38 @@ update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
                     const char *attr, const char *value, const char *host,
                     bool filter)
 {
+    int is_remote = 0;
+    bool changed = false;
     attribute_value_t *v = NULL;
 
-    v = attrd_lookup_or_create_value(a->values, host, xml);
+    // Create entry for value if not already existing
+    v = g_hash_table_lookup(a->values, host);
+    if (v == NULL) {
+        v = calloc(1, sizeof(attribute_value_t));
+        CRM_ASSERT(v != NULL);
 
-    if (filter && !pcmk__str_eq(v->current, value, pcmk__str_casei)
-        && pcmk__str_eq(host, attrd_cluster->uname, pcmk__str_casei)) {
+        pcmk__str_update(&v->nodename, host);
+        g_hash_table_replace(a->values, v->nodename, v);
+    }
+
+    // If value is for a Pacemaker Remote node, remember that
+    crm_element_value_int(xml, PCMK__XA_ATTR_IS_REMOTE, &is_remote);
+    if (is_remote) {
+        attrd_set_value_flags(v, attrd_value_remote);
+        CRM_ASSERT(crm_remote_peer_get(host) != NULL);
+    }
+
+    // Check whether the value changed
+    changed = !pcmk__str_eq(v->current, value, pcmk__str_casei);
+
+    if (changed && filter && pcmk__str_eq(host, attrd_cluster->uname,
+                                          pcmk__str_casei)) {
 
         crm_notice("%s[%s]: local value '%s' takes priority over '%s' from %s",
                    attr, host, v->current, value, peer->uname);
         v = broadcast_local_value(a);
 
-    } else if (!pcmk__str_eq(v->current, value, pcmk__str_casei)) {
+    } else if (changed) {
         crm_notice("Setting %s[%s]%s%s: %s -> %s "
                    CRM_XS " from %s with %s write delay",
                    attr, host, a->set_type ? " in " : "",
