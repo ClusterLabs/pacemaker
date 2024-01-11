@@ -19,7 +19,6 @@
 extern "C" {
 #endif
 
-enum action_tasks text2task(const char *task);
 const char *fail2text(enum action_fail_response fail);
 
 typedef struct pe_re_match_data {

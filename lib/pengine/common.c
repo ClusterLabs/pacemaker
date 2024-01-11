@@ -58,12 +58,6 @@ fail2text(enum action_fail_response fail)
     return result;
 }
 
-enum action_tasks
-text2task(const char *task)
-{
-    return pcmk_parse_action(task);
-}
-
 void
 add_hash_param(GHashTable * hash, const char *name, const char *value)
 {
@@ -208,6 +202,12 @@ const char *
 task2text(enum action_tasks task)
 {
     return pcmk_action_text(task);
+}
+
+enum action_tasks
+text2task(const char *task)
+{
+    return pcmk_parse_action(task);
 }
 
 const char *
