@@ -196,16 +196,16 @@ group_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     set_group_flag(rsc, "collocated", pcmk__group_colocated,
                    pcmk__wo_group_coloc);
 
-    clone_id = crm_element_value(rsc->xml, PCMK__META_CLONE_INSTANCE_NUM);
+    clone_id = crm_element_value(rsc->xml, PCMK__META_CLONE);
 
     for (xml_native_rsc = pcmk__xe_first_child(xml_obj); xml_native_rsc != NULL;
          xml_native_rsc = pcmk__xe_next(xml_native_rsc)) {
 
         if (pcmk__str_eq((const char *)xml_native_rsc->name,
-                         XML_CIB_TAG_RESOURCE, pcmk__str_none)) {
+                         PCMK_XE_PRIMITIVE, pcmk__str_none)) {
             pcmk_resource_t *new_rsc = NULL;
 
-            crm_xml_add(xml_native_rsc, PCMK__META_CLONE_INSTANCE_NUM, clone_id);
+            crm_xml_add(xml_native_rsc, PCMK__META_CLONE, clone_id);
             if (pe__unpack_resource(xml_native_rsc, &new_rsc, rsc,
                                     scheduler) != pcmk_rc_ok) {
                 continue;
@@ -375,7 +375,7 @@ pe__group_xml(pcmk__output_t *out, va_list args)
                                                     pcmk_rsc_managed);
             const char *disabled_s = pcmk__btoa(pe__resource_is_disabled(rsc));
 
-            rc = pe__name_and_nvpairs_xml(out, true, "group", 5,
+            rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_GROUP, 5,
                                           PCMK_XA_ID, rsc->id,
                                           "number_resources", count,
                                           "maintenance", maint_s,

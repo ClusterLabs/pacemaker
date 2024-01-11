@@ -98,12 +98,12 @@ cluster_status(pcmk_scheduler_t * scheduler)
         pcmk__clear_scheduler_flags(scheduler, pcmk_sched_quorate);
     }
 
-    scheduler->op_defaults = get_xpath_object("//" XML_CIB_TAG_OPCONFIG,
+    scheduler->op_defaults = get_xpath_object("//" PCMK_XE_OP_DEFAULTS,
                                               scheduler->input, LOG_NEVER);
-    scheduler->rsc_defaults = get_xpath_object("//" XML_CIB_TAG_RSCCONFIG,
+    scheduler->rsc_defaults = get_xpath_object("//" PCMK_XE_RSC_DEFAULTS,
                                                scheduler->input, LOG_NEVER);
 
-    section = get_xpath_object("//" XML_CIB_TAG_CRMCONFIG, scheduler->input,
+    section = get_xpath_object("//" PCMK_XE_CRM_CONFIG, scheduler->input,
                                LOG_TRACE);
     unpack_config(section, scheduler);
 
@@ -114,11 +114,10 @@ cluster_status(pcmk_scheduler_t * scheduler)
                          "due to lack of quorum");
     }
 
-    section = get_xpath_object("//" XML_CIB_TAG_NODES, scheduler->input,
-                               LOG_TRACE);
+    section = get_xpath_object("//" PCMK_XE_NODES, scheduler->input, LOG_TRACE);
     unpack_nodes(section, scheduler);
 
-    section = get_xpath_object("//" XML_CIB_TAG_RESOURCES, scheduler->input,
+    section = get_xpath_object("//" PCMK_XE_RESOURCES, scheduler->input,
                                LOG_TRACE);
     if (!pcmk_is_set(scheduler->flags, pcmk_sched_location_only)) {
         unpack_remote_nodes(section, scheduler);
@@ -130,7 +129,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
     unpack_tags(section, scheduler);
 
     if (!pcmk_is_set(scheduler->flags, pcmk_sched_location_only)) {
-        section = get_xpath_object("//"XML_CIB_TAG_STATUS, scheduler->input,
+        section = get_xpath_object("//" PCMK_XE_STATUS, scheduler->input,
                                    LOG_TRACE);
         unpack_status(section, scheduler);
     }

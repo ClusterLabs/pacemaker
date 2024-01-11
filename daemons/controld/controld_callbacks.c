@@ -362,7 +362,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
         if (update == NULL) {
             crm_debug("Node state update not yet possible for %s", node->uname);
         } else {
-            fsa_cib_anon_update(XML_CIB_TAG_STATUS, update);
+            fsa_cib_anon_update(PCMK_XE_STATUS, update);
         }
         free_xml(update);
     }

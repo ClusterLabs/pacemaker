@@ -193,7 +193,7 @@ append_dump_text(gpointer key, gpointer value, gpointer user_data)
     *dump_text = new_text;
 }
 
-#define XPATH_STACK "//" XML_CIB_TAG_NVPAIR \
+#define XPATH_STACK "//" PCMK_XE_NVPAIR     \
                     "[@" PCMK_XA_NAME "='"  \
                         PCMK_OPT_CLUSTER_INFRASTRUCTURE "']"
 
@@ -390,7 +390,7 @@ formatted_xml_buf(const pcmk_resource_t *rsc, bool raw)
     }
 }
 
-#define XPATH_DC_VERSION "//" XML_CIB_TAG_NVPAIR    \
+#define XPATH_DC_VERSION "//" PCMK_XE_NVPAIR    \
                          "[@" PCMK_XA_NAME "='" PCMK_OPT_DC_VERSION "']"
 
 PCMK__OUTPUT_ARGS("cluster-summary", "pcmk_scheduler_t *",
@@ -692,7 +692,7 @@ ban_xml(pcmk__output_t *out, va_list args) {
     pcmk__output_create_xml_node(out, "ban",
                                  PCMK_XA_ID, location->id,
                                  "resource", location->rsc->id,
-                                 "node", pe_node->details->uname,
+                                 PCMK_XA_NODE, pe_node->details->uname,
                                  "weight", weight_s,
                                  "promoted-only", promoted_only,
                                  /* This is a deprecated alias for
@@ -1525,7 +1525,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     }
     node = pcmk__output_create_xml_node(out, "failure",
                                         op_key_name, op_key,
-                                        "node", uname,
+                                        PCMK_XA_NODE, uname,
                                         "exitstatus", services_ocf_exitcode_str(rc),
                                         "exitreason", pcmk__s(reason_s, ""),
                                         "exitcode", rc_s,
@@ -1918,7 +1918,7 @@ node_xml(pcmk__output_t *out, va_list args) {
 
         feature_set = get_node_feature_set(node);
 
-        pe__name_and_nvpairs_xml(out, true, "node", 15,
+        pe__name_and_nvpairs_xml(out, true, PCMK_XE_NODE, 15,
                                  PCMK_XA_NAME, node->details->uname,
                                  PCMK_XA_ID, node->details->id,
                                  "online", pcmk__btoa(node->details->online),
@@ -1956,7 +1956,7 @@ node_xml(pcmk__output_t *out, va_list args) {
 
         out->end_list(out);
     } else {
-        pcmk__output_xml_create_parent(out, "node",
+        pcmk__output_xml_create_parent(out, PCMK_XE_NODE,
                                        PCMK_XA_NAME, node->details->uname,
                                        NULL);
     }
@@ -2107,7 +2107,7 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
                        &status, PCMK_EXEC_UNKNOWN);
     node = pcmk__output_create_xml_node(out, PCMK_XE_OPERATION,
                                         PCMK_XA_OP, pcmk__xe_history_key(xml_op),
-                                        "node", uname,
+                                        PCMK_XA_NODE, uname,
                                         "call", call_id,
                                         "rc", rc_s,
                                         "status", pcmk_exec_status_str(status),
@@ -2127,7 +2127,8 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
                                               (has_provider? provider : ""),
                                               kind);
 
-        pcmk__xe_set_props(node, "rsc", rsc_printable_id(rsc),
+        pcmk__xe_set_props(node,
+                           PCMK_XA_RSC, rsc_printable_id(rsc),
                            "agent", agent_tuple,
                            NULL);
         free(agent_tuple);
@@ -2155,7 +2156,7 @@ node_attribute_xml(pcmk__output_t *out, va_list args) {
     bool add_extra = va_arg(args, int);
     int expected_score = va_arg(args, int);
 
-    xmlNodePtr node = pcmk__output_create_xml_node(out, "attribute",
+    xmlNodePtr node = pcmk__output_create_xml_node(out, PCMK_XE_ATTRIBUTE,
                                                    PCMK_XA_NAME, name,
                                                    PCMK_XA_VALUE, value,
                                                    NULL);
@@ -2257,10 +2258,11 @@ static int
 node_capacity_xml(pcmk__output_t *out, va_list args)
 {
     const pcmk_node_t *node = va_arg(args, pcmk_node_t *);
+    const char *uname = node->details->uname;
     const char *comment = va_arg(args, const char *);
 
     xmlNodePtr xml_node = pcmk__output_create_xml_node(out, "capacity",
-                                                       "node", node->details->uname,
+                                                       PCMK_XA_NODE, uname,
                                                        "comment", comment,
                                                        NULL);
     g_hash_table_foreach(node->details->utilization, add_dump_node, xml_node);
@@ -2499,7 +2501,11 @@ node_list_xml(pcmk__output_t *out, va_list args) {
     uint32_t show_opts = va_arg(args, uint32_t);
     bool print_spacer G_GNUC_UNUSED = va_arg(args, int);
 
-    out->begin_list(out, NULL, NULL, "nodes");
+    /* PCMK_XE_NODES acts as the list's element name for CLI tools that force
+     * --xml-simple-list. Otherwise PCMK_XE_NODES is the value of the list's
+     * PCMK_XA_NAME attribute.
+     */
+    out->begin_list(out, NULL, NULL, PCMK_XE_NODES);
     for (GList *gIter = nodes; gIter != NULL; gIter = gIter->next) {
         pcmk_node_t *node = (pcmk_node_t *) gIter->data;
 
@@ -2528,14 +2534,14 @@ node_summary(pcmk__output_t *out, va_list args) {
 
     xmlNode *node_state = NULL;
     xmlNode *cib_status = pcmk_find_cib_element(scheduler->input,
-                                                XML_CIB_TAG_STATUS);
+                                                PCMK_XE_STATUS);
     int rc = pcmk_rc_no_output;
 
     if (xmlChildElementCount(cib_status) == 0) {
         return rc;
     }
 
-    for (node_state = first_named_child(cib_status, XML_CIB_TAG_STATE);
+    for (node_state = first_named_child(cib_status, PCMK__XE_NODE_STATE);
          node_state != NULL; node_state = crm_next_same_xml(node_state)) {
         pcmk_node_t *node = pe_find_node_id(scheduler->nodes, ID(node_state));
 
@@ -2591,7 +2597,7 @@ node_weight_xml(pcmk__output_t *out, va_list args)
 
     xmlNodePtr node = pcmk__output_create_xml_node(out, "node_weight",
                                                    "function", prefix,
-                                                   "node", uname,
+                                                   PCMK_XA_NODE, uname,
                                                    PCMK_XA_SCORE, score,
                                                    NULL);
 
@@ -2704,7 +2710,7 @@ promotion_score_xml(pcmk__output_t *out, va_list args)
                                                    NULL);
 
     if (chosen) {
-        crm_xml_add(node, "node", chosen->details->uname);
+        crm_xml_add(node, PCMK_XA_NODE, chosen->details->uname);
     }
 
     return pcmk_rc_ok;
@@ -3013,11 +3019,12 @@ resource_util_xml(pcmk__output_t *out, va_list args)
 {
     pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     pcmk_node_t *node = va_arg(args, pcmk_node_t *);
+    const char *uname = node->details->uname;
     const char *fn = va_arg(args, const char *);
 
-    xmlNodePtr xml_node = pcmk__output_create_xml_node(out, "utilization",
+    xmlNodePtr xml_node = pcmk__output_create_xml_node(out, PCMK_XE_UTILIZATION,
                                                        "resource", rsc->id,
-                                                       "node", node->details->uname,
+                                                       PCMK_XA_NODE, uname,
                                                        "function", fn,
                                                        NULL);
     g_hash_table_foreach(rsc->utilization, add_dump_node, xml_node);

@@ -92,9 +92,9 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
         return ENOTCONN;
     }
 
-    xpath_base = pcmk_cib_xpath_for(XML_CIB_TAG_RESOURCES);
+    xpath_base = pcmk_cib_xpath_for(PCMK_XE_RESOURCES);
     if (xpath_base == NULL) {
-        crm_err(XML_CIB_TAG_RESOURCES " CIB element not known (bug?)");
+        crm_err(PCMK_XE_RESOURCES " CIB element not known (bug?)");
         return ENOMSG;
     }
 
@@ -110,7 +110,7 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
         }
     }
 
-    g_string_append(xpath, "//" XML_CIB_TAG_NVPAIR "[");
+    g_string_append(xpath, "//" PCMK_XE_NVPAIR "[");
     if (attr_id != NULL) {
         pcmk__g_strcat(xpath, "@" PCMK_XA_ID "=\"", attr_id, "\"", NULL);
     }
@@ -277,10 +277,11 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                            attr_name, NULL);
     }
 
-    if (pcmk__str_eq(attr_set_type, XML_TAG_ATTR_SETS, pcmk__str_casei)) {
+    if (pcmk__str_eq(attr_set_type, PCMK_XE_INSTANCE_ATTRIBUTES,
+                     pcmk__str_casei)) {
         if (!force) {
             rc = find_resource_attr(out, cib, PCMK_XA_ID, top_id,
-                                    XML_TAG_META_SETS, attr_set, attr_id,
+                                    PCMK_XE_META_ATTRIBUTES, attr_set, attr_id,
                                     attr_name, &found_attr_id);
             if ((rc == pcmk_rc_ok) && !out->is_quiet(out)) {
                 out->err(out,
@@ -301,8 +302,7 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
     } else if (pcmk__str_eq(attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
         crm_xml_add(rsc->xml, attr_name, attr_value);
         CRM_ASSERT(cib != NULL);
-        rc = cib->cmds->replace(cib, XML_CIB_TAG_RESOURCES, rsc->xml,
-                                cib_options);
+        rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc->xml, cib_options);
         rc = pcmk_legacy2rc(rc);
         if (rc == pcmk_rc_ok) {
             out->info(out, "Set attribute: name=%s value=%s",
@@ -385,8 +385,7 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
 
         crm_log_xml_debug(xml_top, "Update");
 
-        rc = cib->cmds->modify(cib, XML_CIB_TAG_RESOURCES, xml_top,
-                               cib_options);
+        rc = cib->cmds->modify(cib, PCMK_XE_RESOURCES, xml_top, cib_options);
         rc = pcmk_legacy2rc(rc);
         if (rc == pcmk_rc_ok) {
             out->info(out, "Set '%s' option: id=%s%s%s%s%s value=%s",
@@ -404,7 +403,7 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
         free(local_attr_set);
 
         if (recursive
-            && pcmk__str_eq(attr_set_type, XML_TAG_META_SETS,
+            && pcmk__str_eq(attr_set_type, PCMK_XE_META_ATTRIBUTES,
                             pcmk__str_casei)) {
             GList *lpc = NULL;
             static bool need_init = true;
@@ -460,7 +459,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
                            NULL, NULL, attr_name, NULL);
     }
 
-    if (pcmk__str_eq(attr_set_type, XML_TAG_META_SETS, pcmk__str_casei)) {
+    if (pcmk__str_eq(attr_set_type, PCMK_XE_META_ATTRIBUTES, pcmk__str_casei)) {
         resources = find_matching_attr_resources(out, rsc, requested_name,
                                                  attr_set, attr_set_type,
                                                  attr_id, attr_name, cib,
@@ -469,8 +468,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
     } else if (pcmk__str_eq(attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
         xml_remove_prop(rsc->xml, attr_name);
         CRM_ASSERT(cib != NULL);
-        rc = cib->cmds->replace(cib, XML_CIB_TAG_RESOURCES, rsc->xml,
-                                cib_options);
+        rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc->xml, cib_options);
         rc = pcmk_legacy2rc(rc);
         if (rc == pcmk_rc_ok) {
             out->info(out, "Deleted attribute: %s", attr_name);
@@ -515,8 +513,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
         crm_log_xml_debug(xml_obj, "Delete");
 
         CRM_ASSERT(cib);
-        rc = cib->cmds->remove(cib, XML_CIB_TAG_RESOURCES, xml_obj,
-                               cib_options);
+        rc = cib->cmds->remove(cib, PCMK_XE_RESOURCES, xml_obj, cib_options);
         rc = pcmk_legacy2rc(rc);
 
         if (rc == pcmk_rc_ok) {
@@ -1577,8 +1574,9 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
 
         find_resource_attr(out, cib, PCMK_XA_VALUE, lookup_id, NULL, NULL, NULL,
                            PCMK_META_TARGET_ROLE, &orig_target_role);
-        rc = cli_resource_update_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS,
-                                           NULL, PCMK_META_TARGET_ROLE,
+        rc = cli_resource_update_attribute(rsc, rsc_id, NULL,
+                                           PCMK_XE_META_ATTRIBUTES, NULL,
+                                           PCMK_META_TARGET_ROLE,
                                            PCMK_ACTION_STOPPED, FALSE, cib,
                                            cib_options, force);
     }
@@ -1657,15 +1655,17 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         rc = cli_resource_clear(lookup_id, host, NULL, cib, cib_options, true, force);
 
     } else if (orig_target_role) {
-        rc = cli_resource_update_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS,
-                                           NULL, PCMK_META_TARGET_ROLE,
+        rc = cli_resource_update_attribute(rsc, rsc_id, NULL,
+                                           PCMK_XE_META_ATTRIBUTES, NULL,
+                                           PCMK_META_TARGET_ROLE,
                                            orig_target_role, FALSE, cib,
                                            cib_options, force);
         free(orig_target_role);
         orig_target_role = NULL;
     } else {
-        rc = cli_resource_delete_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS,
-                                           NULL, PCMK_META_TARGET_ROLE, cib,
+        rc = cli_resource_delete_attribute(rsc, rsc_id, NULL,
+                                           PCMK_XE_META_ATTRIBUTES, NULL,
+                                           PCMK_META_TARGET_ROLE, cib,
                                            cib_options, force);
     }
 
@@ -1739,14 +1739,16 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
     if (stop_via_ban) {
         cli_resource_clear(lookup_id, host, NULL, cib, cib_options, true, force);
     } else if (orig_target_role) {
-        cli_resource_update_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS, NULL,
+        cli_resource_update_attribute(rsc, rsc_id, NULL,
+                                      PCMK_XE_META_ATTRIBUTES, NULL,
                                       PCMK_META_TARGET_ROLE, orig_target_role,
                                       FALSE, cib, cib_options, force);
         free(orig_target_role);
     } else {
-        cli_resource_delete_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS,
-                                      NULL, PCMK_META_TARGET_ROLE, cib,
-                                      cib_options, force);
+        cli_resource_delete_attribute(rsc, rsc_id, NULL,
+                                      PCMK_XE_META_ATTRIBUTES, NULL,
+                                      PCMK_META_TARGET_ROLE, cib, cib_options,
+                                      force);
     }
 
 done:
@@ -1908,8 +1910,10 @@ wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
         }
 
         search = xpath_search(scheduler->input,
-                              "/cib/status/node_state/lrm/lrm_resources"
-                              "/lrm_resource/" XML_LRM_TAG_RSC_OP
+                              "/" PCMK_XE_CIB "/" PCMK_XE_STATUS
+                              "/" PCMK__XE_NODE_STATE "/" XML_CIB_TAG_LRM
+                              "/" XML_LRM_TAG_RESOURCES "/" XML_LRM_TAG_RESOURCE
+                              "/" XML_LRM_TAG_RSC_OP
                               "[@" PCMK__XA_RC_CODE "='193']");
         pending_unknown_state_resources = (numXpathResults(search) > 0);
         freeXpathObject(search);

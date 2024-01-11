@@ -177,7 +177,7 @@ cibadmin: The supplied command is considered dangerous. To prevent accidental de
 =#=#=#= Begin test: Create operation should fail =#=#=#=
 Call failed: File exists
 <failed>
-  <failed_update id="cib-bootstrap-options" object_type="cluster_property_set" operation="cib_create" reason="File exists">
+  <failed_update id="cib-bootstrap-options" object-type="cluster_property_set" operation="cib_create" reason="File exists">
     <cluster_property_set id="cib-bootstrap-options">
       <nvpair id="cib-bootstrap-options-cluster-delay" name="cluster-delay" value="60s"/>
     </cluster_property_set>

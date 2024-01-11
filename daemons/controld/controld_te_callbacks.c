@@ -21,7 +21,7 @@
 
 void te_update_confirm(const char *event, xmlNode * msg);
 
-#define RSC_OP_PREFIX "//" PCMK__XE_DIFF_ADDED "//" XML_TAG_CIB \
+#define RSC_OP_PREFIX "//" PCMK__XE_DIFF_ADDED "//" PCMK_XE_CIB \
                       "//" XML_LRM_TAG_RSC_OP "[@" PCMK_XA_ID "='"
 
 // An explicit PCMK_OPT_SHUTDOWN_LOCK of 0 means the lock has been cleared
@@ -275,12 +275,12 @@ static char *extract_node_uuid(const char *xpath)
     char *search = NULL;
     char *match = NULL;
 
-    match = strstr(mutable_path, "node_state[@" PCMK_XA_ID "=\'");
+    match = strstr(mutable_path, PCMK__XE_NODE_STATE "[@" PCMK_XA_ID "=\'");
     if (match == NULL) {
         free(mutable_path);
         return NULL;
     }
-    match += strlen("node_state[@" PCMK_XA_ID "=\'");
+    match += strlen(PCMK__XE_NODE_STATE "[@" PCMK_XA_ID "=\'");
 
     search = strchr(match, '\'');
     if (search == NULL) {
@@ -362,7 +362,7 @@ process_delete_diff(const char *xpath, const char *op, xmlNode *change)
     } else if (strstr(xpath, "/" XML_CIB_TAG_LRM "[")) {
         abort_unless_down(xpath, op, change, "Resource state removal");
 
-    } else if (strstr(xpath, "/" XML_CIB_TAG_STATE "[")) {
+    } else if (strstr(xpath, "/" PCMK__XE_NODE_STATE "[")) {
         abort_unless_down(xpath, op, change, "Node state removal");
 
     } else {
@@ -393,8 +393,8 @@ static void
 process_cib_diff(xmlNode *cib, xmlNode *change, const char *op,
                  const char *xpath)
 {
-    xmlNode *status = first_named_child(cib, XML_CIB_TAG_STATUS);
-    xmlNode *config = first_named_child(cib, XML_CIB_TAG_CONFIGURATION);
+    xmlNode *status = first_named_child(cib, PCMK_XE_STATUS);
+    xmlNode *config = first_named_child(cib, PCMK_XE_CONFIGURATION);
 
     if (status) {
         process_status_diff(status, change, op, xpath);
@@ -430,8 +430,8 @@ te_update_diff_v2(xmlNode *diff)
 
         } else if ((strcmp(op, "move") == 0)
                    && (strstr(xpath,
-                              "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION
-                              "/" XML_CIB_TAG_RESOURCES) == NULL)) {
+                              "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION
+                              "/" PCMK_XE_RESOURCES) == NULL)) {
             /* We still need to consider moves within the resources section,
              * since they affect placement order.
              */
@@ -467,7 +467,7 @@ te_update_diff_v2(xmlNode *diff)
                   op, (xpath? xpath : "CIB"),
                   (name? " matched by " : ""), (name? name : ""));
 
-        if (strstr(xpath, "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION)) {
+        if (strstr(xpath, "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION)) {
             abort_transition(INFINITY, pcmk__graph_restart,
                              "Configuration change", change);
             break; // Won't be packaged with operation results we may be waiting for
@@ -491,13 +491,13 @@ te_update_diff_v2(xmlNode *diff)
             crm_warn("Ignoring malformed CIB update (%s at %s has no result)",
                      op, xpath);
 
-        } else if (strcmp(name, XML_TAG_CIB) == 0) {
+        } else if (strcmp(name, PCMK_XE_CIB) == 0) {
             process_cib_diff(match, change, op, xpath);
 
-        } else if (strcmp(name, XML_CIB_TAG_STATUS) == 0) {
+        } else if (strcmp(name, PCMK_XE_STATUS) == 0) {
             process_status_diff(match, change, op, xpath);
 
-        } else if (strcmp(name, XML_CIB_TAG_STATE) == 0) {
+        } else if (strcmp(name, PCMK__XE_NODE_STATE) == 0) {
             process_node_state_diff(match, change, op, xpath);
 
         } else if (strcmp(name, XML_CIB_TAG_LRM) == 0) {

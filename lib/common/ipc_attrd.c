@@ -30,7 +30,7 @@ set_pairs_data(pcmk__attrd_api_reply_t *data, xmlNode *msg_data)
 
     name = crm_element_value(msg_data, PCMK__XA_ATTR_NAME);
 
-    for (xmlNode *node = first_named_child(msg_data, XML_CIB_TAG_NODE);
+    for (xmlNode *node = first_named_child(msg_data, PCMK_XE_NODE);
          node != NULL; node = crm_next_same_xml(node)) {
         pair = calloc(1, sizeof(pcmk__attrd_query_pair_t));
 
@@ -350,9 +350,9 @@ populate_update_op(xmlNode *op, const char *node, const char *name, const char *
     }
 
     if (pcmk_is_set(options, pcmk__node_attr_utilization)) {
-        crm_xml_add(op, PCMK__XA_ATTR_SET_TYPE, XML_TAG_UTILIZATION);
+        crm_xml_add(op, PCMK__XA_ATTR_SET_TYPE, PCMK_XE_UTILIZATION);
     } else {
-        crm_xml_add(op, PCMK__XA_ATTR_SET_TYPE, XML_TAG_ATTR_SETS);
+        crm_xml_add(op, PCMK__XA_ATTR_SET_TYPE, PCMK_XE_INSTANCE_ATTRIBUTES);
     }
 
     add_op_attr(op, options);

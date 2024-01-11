@@ -51,18 +51,18 @@ create_acl(const xmlNode *xml, GList *acls, enum xml_private_flags mode)
 {
     xml_acl_t *acl = NULL;
 
-    const char *tag = crm_element_value(xml, XML_ACL_ATTR_TAG);
+    const char *tag = crm_element_value(xml, PCMK_XA_OBJECT_TYPE);
     const char *ref = crm_element_value(xml, PCMK_XA_REFERENCE);
-    const char *xpath = crm_element_value(xml, XML_ACL_ATTR_XPATH);
+    const char *xpath = crm_element_value(xml, PCMK_XA_XPATH);
     const char *attr = crm_element_value(xml, PCMK_XA_ATTRIBUTE);
 
     if (tag == NULL) {
-        // @COMPAT rolling upgrades <=1.1.11
-        tag = crm_element_value(xml, XML_ACL_ATTR_TAGv1);
+        // @COMPAT Deprecated since 1.1.12 (needed for rolling upgrades)
+        tag = crm_element_value(xml, PCMK__XA_TAG);
     }
     if (ref == NULL) {
-        // @COMPAT rolling upgrades <=1.1.11
-        ref = crm_element_value(xml, XML_ACL_ATTR_REFv1);
+        // @COMPAT Deprecated since 1.1.12 (needed for rolling upgrades)
+        ref = crm_element_value(xml, PCMK__XA_REF);
     }
 
     if ((tag == NULL) && (ref == NULL) && (xpath == NULL)) {
@@ -130,7 +130,7 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
     for (child = pcmk__xe_first_child(acl_entry); child;
          child = pcmk__xe_next(child)) {
         const char *tag = (const char *) child->name;
-        const char *kind = crm_element_value(child, XML_ACL_ATTR_KIND);
+        const char *kind = crm_element_value(child, PCMK_XA_KIND);
 
         if (pcmk__xe_is(child, XML_ACL_TAG_PERMISSION)) {
             CRM_ASSERT(kind != NULL);
@@ -291,8 +291,7 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
                   user);
 
     } else if (docpriv->acls == NULL) {
-        xmlNode *acls = get_xpath_object("//" XML_CIB_TAG_ACLS,
-                                         source, LOG_NEVER);
+        xmlNode *acls = get_xpath_object("//" PCMK_XE_ACLS, source, LOG_NEVER);
 
         pcmk__str_update(&docpriv->user, user);
 
@@ -532,7 +531,7 @@ implicitly_allowed(const xmlNode *xml)
     path = pcmk__element_xpath(xml);
     CRM_ASSERT(path != NULL);
 
-    if (strstr((const char *) path->str, "/" XML_CIB_TAG_ACLS "/") != NULL) {
+    if (strstr((const char *) path->str, "/" PCMK_XE_ACLS "/") != NULL) {
         g_string_free(path, TRUE);
         return false;
     }

@@ -159,7 +159,7 @@ set_nodes_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
     pcmk_controld_api_node_t *node_info;
 
     data->reply_type = pcmk_controld_reply_nodes;
-    for (xmlNode *node = first_named_child(msg_data, XML_CIB_TAG_NODE);
+    for (xmlNode *node = first_named_child(msg_data, PCMK_XE_NODE);
          node != NULL; node = crm_next_same_xml(node)) {
 
         long long id_ll = 0;
@@ -505,17 +505,17 @@ controller_resource_op(pcmk_ipc_api_t *api, const char *op,
 
     if (cib_only) {
         // Indicate that only the CIB needs to be cleaned
-        crm_xml_add(msg_data, PCMK__XA_MODE, XML_TAG_CIB);
+        crm_xml_add(msg_data, PCMK__XA_MODE, PCMK__VALUE_CIB);
     }
 
-    xml_rsc = create_xml_node(msg_data, XML_CIB_TAG_RESOURCE);
+    xml_rsc = create_xml_node(msg_data, PCMK_XE_PRIMITIVE);
     crm_xml_add(xml_rsc, PCMK_XA_ID, rsc_id);
     crm_xml_add(xml_rsc, PCMK__XA_LONG_ID, rsc_long_id);
     crm_xml_add(xml_rsc, PCMK_XA_CLASS, standard);
     crm_xml_add(xml_rsc, PCMK_XA_PROVIDER, provider);
     crm_xml_add(xml_rsc, PCMK_XA_TYPE, type);
 
-    params = create_xml_node(msg_data, XML_TAG_ATTRS);
+    params = create_xml_node(msg_data, PCMK__XE_ATTRIBUTES);
     crm_xml_add(params, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
 
     // The controller parses the timeout from the request

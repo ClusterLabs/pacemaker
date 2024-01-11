@@ -113,7 +113,7 @@ struct {
     gchar **remainder;            // Positional arguments as given
     GHashTable *override_params;  // Resource parameter values that override config
 } options = {
-    .attr_set_type = XML_TAG_ATTR_SETS,
+    .attr_set_type = PCMK_XE_INSTANCE_ATTRIBUTES,
     .check_level = -1,
     .cib_options = cib_sync_call,
     .require_cib = TRUE,
@@ -326,7 +326,7 @@ build_constraint_list(xmlNode *root)
     xmlXPathObjectPtr xpathObj = NULL;
     int ndx = 0;
 
-    cib_constraints = pcmk_find_cib_element(root, XML_CIB_TAG_CONSTRAINTS);
+    cib_constraints = pcmk_find_cib_element(root, PCMK_XE_CONSTRAINTS);
     xpathObj = xpath_search(cib_constraints, "//" XML_CONS_TAG_RSC_LOCATION);
 
     for (ndx = 0; ndx < numXpathResults(xpathObj); ndx++) {
@@ -673,9 +673,9 @@ agent_provider_cb(const gchar *option_name, const gchar *optarg, gpointer data, 
 gboolean
 attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     if (pcmk__str_any_of(option_name, "-m", "--meta", NULL)) {
-        options.attr_set_type = XML_TAG_META_SETS;
+        options.attr_set_type = PCMK_XE_META_ATTRIBUTES;
     } else if (pcmk__str_any_of(option_name, "-z", "--utilization", NULL)) {
-        options.attr_set_type = XML_TAG_UTILIZATION;
+        options.attr_set_type = PCMK_XE_UTILIZATION;
     } else if (pcmk__str_eq(option_name, "--element", pcmk__str_casei)) {
         options.attr_set_type = ATTR_SET_ELEMENT;
     }
@@ -1249,7 +1249,7 @@ set_property(void)
     crm_xml_add(msg_data, PCMK_XA_ID, options.rsc_id);
     crm_xml_add(msg_data, options.prop_name, options.prop_value);
 
-    rc = cib_conn->cmds->modify(cib_conn, XML_CIB_TAG_RESOURCES, msg_data,
+    rc = cib_conn->cmds->modify(cib_conn, PCMK_XE_RESOURCES, msg_data,
                                 options.cib_options);
     rc = pcmk_legacy2rc(rc);
     free_xml(msg_data);
@@ -1910,13 +1910,15 @@ main(int argc, char **argv)
 
             crm_debug("Looking up %s in %s", options.prop_name, rsc->id);
 
-            if (pcmk__str_eq(options.attr_set_type, XML_TAG_ATTR_SETS, pcmk__str_none)) {
+            if (pcmk__str_eq(options.attr_set_type, PCMK_XE_INSTANCE_ATTRIBUTES,
+                             pcmk__str_none)) {
                 params = pe_rsc_params(rsc, current, scheduler);
                 free_params = false;
 
                 value = g_hash_table_lookup(params, options.prop_name);
 
-            } else if (pcmk__str_eq(options.attr_set_type, XML_TAG_META_SETS, pcmk__str_none)) {
+            } else if (pcmk__str_eq(options.attr_set_type,
+                                    PCMK_XE_META_ATTRIBUTES, pcmk__str_none)) {
                 params = pcmk__strkey_table(free, free);
                 get_meta_attributes(params, rsc, current, scheduler);
 
@@ -1929,8 +1931,8 @@ main(int argc, char **argv)
 
             } else {
                 params = pcmk__strkey_table(free, free);
-                pe__unpack_dataset_nvpairs(rsc->xml, XML_TAG_UTILIZATION, NULL, params,
-                                           NULL, FALSE, scheduler);
+                pe__unpack_dataset_nvpairs(rsc->xml, PCMK_XE_UTILIZATION, NULL,
+                                           params, NULL, FALSE, scheduler);
 
                 value = g_hash_table_lookup(params, options.prop_name);
             }

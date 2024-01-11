@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,6 +23,7 @@
 #  include <libxml/xpath.h>
 
 #  include <crm/crm.h>
+#  include <crm/msg_xml.h>
 #  include <crm/common/nvpair.h>
 
 #ifdef __cplusplus
@@ -171,6 +172,9 @@ xmlNode *get_xpath_object_relative(const char *xpath, xmlNode * xml_obj, int err
 static inline const char *
 crm_map_element_name(const xmlNode *xml)
 {
+    /* Can't use PCMK__XE_PROMOTED_LEGACY or PCMK_XE_CLONE because this header
+     * is included in msg_xml.h
+     */
     if (xml == NULL) {
         return NULL;
     } else if (strcmp((const char *) xml->name, "master") == 0) {

@@ -177,7 +177,7 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
     } else {
         char *rc_as_str = pcmk__itoa(exit_status);
 
-        node = create_xml_node(priv->root, "status");
+        node = create_xml_node(priv->root, PCMK_XE_STATUS);
         pcmk__xe_set_props(node, "code", rc_as_str,
                            "message", crm_exit_str(exit_status),
                            NULL);

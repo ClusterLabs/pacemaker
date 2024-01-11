@@ -801,7 +801,7 @@ do_dc_join_ack(long long action,
                   join_from, current_join_id);
     }
 
-    rc = cib->cmds->modify(cib, XML_CIB_TAG_STATUS, state,
+    rc = cib->cmds->modify(cib, PCMK_XE_STATUS, state,
                            cib_scope_local|cib_can_create|cib_transaction);
     free_xml(execd_state);
     if (rc != pcmk_ok) {
@@ -855,10 +855,10 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
      * weren't known before
      */
     crm_trace("Updating node name and UUID in CIB for %s", join_to);
-    tmp1 = create_xml_node(NULL, XML_CIB_TAG_NODE);
+    tmp1 = create_xml_node(NULL, PCMK_XE_NODE);
     crm_xml_add(tmp1, PCMK_XA_ID, crm_peer_uuid(join_node));
     crm_xml_add(tmp1, PCMK_XA_UNAME, join_to);
-    fsa_cib_anon_update(XML_CIB_TAG_NODES, tmp1);
+    fsa_cib_anon_update(PCMK_XE_NODES, tmp1);
     free_xml(tmp1);
 
     if (join_node->join == crm_join_nack_quiet) {
@@ -900,7 +900,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
         if (crm_remote_peer_cache_size() != 0) {
             GHashTableIter iter;
             crm_node_t *node = NULL;
-            xmlNode *remotes = create_xml_node(acknak, XML_CIB_TAG_NODES);
+            xmlNode *remotes = create_xml_node(acknak, PCMK_XE_NODES);
 
             g_hash_table_iter_init(&iter, crm_remote_peer_cache);
             while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
@@ -910,10 +910,10 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
                     continue;
                 }
 
-                remote = create_xml_node(remotes, XML_CIB_TAG_NODE);
+                remote = create_xml_node(remotes, PCMK_XE_NODE);
                 pcmk__xe_set_props(remote,
                                    PCMK_XA_ID, node->uname,
-                                   XML_CIB_TAG_STATE, node->state,
+                                   PCMK__XA_NODE_STATE, node->state,
                                    PCMK__XA_CONN_HOST, node->conn_host,
                                    NULL);
             }

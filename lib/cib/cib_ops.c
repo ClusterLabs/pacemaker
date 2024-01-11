@@ -336,7 +336,7 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
         section = NULL;
     }
 
-    if (pcmk__xe_is(input, XML_TAG_CIB)) {
+    if (pcmk__xe_is(input, PCMK_XE_CIB)) {
         int updates = 0;
         int epoch = 0;
         int admin_epoch = 0;
@@ -688,8 +688,7 @@ update_results(xmlNode *failed, xmlNode *target, const char *operation,
         add_node_copy(xml_node, target);
 
         crm_xml_add(xml_node, PCMK_XA_ID, ID(target));
-        crm_xml_add(xml_node, PCMK__XA_OBJECT_TYPE,
-                    (const char *) target->name);
+        crm_xml_add(xml_node, PCMK_XA_OBJECT_TYPE, (const char *) target->name);
         crm_xml_add(xml_node, PCMK_XA_OPERATION, operation);
         crm_xml_add(xml_node, PCMK_XA_REASON, error_msg);
 
@@ -713,10 +712,10 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
     if (pcmk__str_eq(XML_CIB_TAG_SECTION_ALL, section, pcmk__str_casei)) {
         section = NULL;
 
-    } else if (pcmk__str_eq(XML_TAG_CIB, section, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(section, PCMK_XE_CIB, pcmk__str_casei)) {
         section = NULL;
 
-    } else if (pcmk__xe_is(input, XML_TAG_CIB)) {
+    } else if (pcmk__xe_is(input, PCMK_XE_CIB)) {
         section = NULL;
     }
 
@@ -810,7 +809,7 @@ cib__config_changed_v1(xmlNode *last, xmlNode *next, xmlNode **diff)
     crm_element_value_int(*diff, PCMK_XA_FORMAT, &format);
     CRM_LOG_ASSERT(format == 1);
 
-    xpathObj = xpath_search(*diff, "//" XML_CIB_TAG_CONFIGURATION);
+    xpathObj = xpath_search(*diff, "//" PCMK_XE_CONFIGURATION);
     if (numXpathResults(xpathObj) > 0) {
         config_changes = true;
         goto done;
@@ -818,11 +817,11 @@ cib__config_changed_v1(xmlNode *last, xmlNode *next, xmlNode **diff)
     freeXpathObject(xpathObj);
 
     /*
-     * Do not check PCMK__XE_DIFF_ADDED "//" XML_TAG_CIB
+     * Do not check PCMK__XE_DIFF_ADDED "//" PCMK_XE_CIB
      * This always contains every field and would produce a false positive
      * every time if the checked value existed
      */
-    xpathObj = xpath_search(*diff, "//" PCMK__XE_DIFF_REMOVED "//" XML_TAG_CIB);
+    xpathObj = xpath_search(*diff, "//" PCMK__XE_DIFF_REMOVED "//" PCMK_XE_CIB);
     max = numXpathResults(xpathObj);
 
     for (lpc = 0; lpc < max; lpc++) {

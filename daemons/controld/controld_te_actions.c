@@ -128,7 +128,7 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         if (pcmk__str_eq(task, PCMK_ACTION_LRM_DELETE, pcmk__str_none)) {
             const char *mode = crm_element_value(action->xml, PCMK__XA_MODE);
 
-            if (pcmk__str_eq(mode, XML_TAG_CIB, pcmk__str_none)) {
+            if (pcmk__str_eq(mode, PCMK__VALUE_CIB, pcmk__str_none)) {
                 router_node = controld_globals.our_nodename;
             }
         }
@@ -265,7 +265,7 @@ controld_record_action_event(pcmk__graph_action_t *action,
 
     int target_rc = get_target_rc(action);
 
-    action_rsc = find_xml_node(action->xml, XML_CIB_TAG_RESOURCE, TRUE);
+    action_rsc = find_xml_node(action->xml, PCMK_XE_PRIMITIVE, TRUE);
     if (action_rsc == NULL) {
         return;
     }
@@ -283,7 +283,7 @@ controld_record_action_event(pcmk__graph_action_t *action,
           <lrm_resource id="rsc2" last_op="start" op_code="0" target="hadev"/>
 */
 
-    state = create_xml_node(NULL, XML_CIB_TAG_STATE);
+    state = create_xml_node(NULL, PCMK__XE_NODE_STATE);
 
     crm_xml_add(state, PCMK_XA_ID, target_uuid);
     crm_xml_add(state, PCMK_XA_UNAME, target);
@@ -303,7 +303,7 @@ controld_record_action_event(pcmk__graph_action_t *action,
     pcmk__create_history_xml(rsc, op, CRM_FEATURE_SET, target_rc, target,
                              __func__);
 
-    rc = cib_conn->cmds->modify(cib_conn, XML_CIB_TAG_STATUS, state,
+    rc = cib_conn->cmds->modify(cib_conn, PCMK_XE_STATUS, state,
                                 cib_scope_local);
     fsa_register_cib_callback(rc, NULL, cib_action_updated);
     free_xml(state);

@@ -735,21 +735,20 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     }
 
     crmconfig = output;
-    if ((crmconfig != NULL)
-        && !pcmk__xe_is(crmconfig, XML_CIB_TAG_CRMCONFIG)) {
-        crmconfig = first_named_child(crmconfig, XML_CIB_TAG_CRMCONFIG);
+    if ((crmconfig != NULL) && !pcmk__xe_is(crmconfig, PCMK_XE_CRM_CONFIG)) {
+        crmconfig = first_named_child(crmconfig, PCMK_XE_CRM_CONFIG);
     }
     if (!crmconfig) {
         fsa_data_t *msg_data = NULL;
 
-        crm_err("Local CIB query for " XML_CIB_TAG_CRMCONFIG " section failed");
+        crm_err("Local CIB query for " PCMK_XE_CRM_CONFIG " section failed");
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
         goto bail;
     }
 
     crm_debug("Call %d : Parsing CIB options", call_id);
     config_hash = pcmk__strkey_table(free, free);
-    pe_unpack_nvpairs(crmconfig, crmconfig, XML_CIB_TAG_PROPSET, NULL,
+    pe_unpack_nvpairs(crmconfig, crmconfig, PCMK_XE_CLUSTER_PROPERTY_SET, NULL,
                       config_hash, CIB_OPTIONS_FIRST, FALSE, now, NULL);
 
     // Validate all options, and use defaults if not already present in hash
@@ -785,7 +784,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     controld_configure_fsa_timers(config_hash);
     controld_configure_throttle(config_hash);
 
-    alerts = first_named_child(output, XML_CIB_TAG_ALERTS);
+    alerts = first_named_child(output, PCMK_XE_ALERTS);
     crmd_unpack_alerts(alerts);
 
     controld_set_fsa_input_flags(R_READ_CONFIG);
@@ -817,8 +816,8 @@ crm_read_options(gpointer user_data)
 {
     cib_t *cib_conn = controld_globals.cib_conn;
     int call_id = cib_conn->cmds->query(cib_conn,
-                                        "//" XML_CIB_TAG_CRMCONFIG
-                                        " | //" XML_CIB_TAG_ALERTS,
+                                        "//" PCMK_XE_CRM_CONFIG
+                                        " | //" PCMK_XE_ALERTS,
                                         NULL, cib_xpath|cib_scope_local);
 
     fsa_register_cib_callback(call_id, NULL, config_query_callback);

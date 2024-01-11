@@ -650,13 +650,14 @@ crm_element_value_copy(const xmlNode *data, const char *name)
 }
 
 /*!
- * \brief Add hash table entry to XML as (possibly legacy) name/value
+ * \brief Safely add hash table entry to XML as attribute or name-value pair
  *
  * Suitable for \c g_hash_table_foreach(), this function takes a hash table key
  * and value, with an XML node passed as user data, and adds an XML attribute
  * with the specified name and value if it does not already exist. If the key
- * name starts with a digit, this will instead add a \<param name=NAME
- * value=VALUE/> child to the XML (for legacy compatibility with heartbeat).
+ * name starts with a digit, then it's not a valid XML attribute name. In that
+ * case, this will instead add a <tt><param name=NAME value=VALUE/></tt> child
+ * to the XML.
  *
  * \param[in]     key        Key of hash table entry
  * \param[in]     value      Value of hash table entry
@@ -665,13 +666,21 @@ crm_element_value_copy(const xmlNode *data, const char *name)
 void
 hash2smartfield(gpointer key, gpointer value, gpointer user_data)
 {
+    /* @TODO Generate PCMK__XE_PARAM nodes for all keys that aren't valid XML
+     * attribute names (not just those that start with digits), or possibly for
+     * all keys to simplify parsing.
+     *
+     * Consider either deprecating as public API or exposing PCMK__XE_PARAM.
+     * PCMK__XE_PARAM is currently private because it doesn't appear in any
+     * output that Pacemaker generates.
+     */
     const char *name = key;
     const char *s_value = value;
 
     xmlNode *xml_node = user_data;
 
     if (isdigit(name[0])) {
-        xmlNode *tmp = create_xml_node(xml_node, XML_TAG_PARAM);
+        xmlNode *tmp = create_xml_node(xml_node, PCMK__XE_PARAM);
 
         crm_xml_add(tmp, PCMK_XA_NAME, name);
         crm_xml_add(tmp, PCMK_XA_VALUE, s_value);
@@ -770,16 +779,13 @@ crm_create_nvpair_xml(xmlNode *parent, const char *id, const char *name,
      */
     CRM_CHECK(id || name, return NULL);
 
-    nvp = create_xml_node(parent, XML_CIB_TAG_NVPAIR);
+    nvp = create_xml_node(parent, PCMK_XE_NVPAIR);
     CRM_CHECK(nvp, return NULL);
 
     if (id) {
         crm_xml_add(nvp, PCMK_XA_ID, id);
     } else {
-        const char *parent_id = ID(parent);
-
-        crm_xml_set_id(nvp, "%s-%s",
-                       (parent_id? parent_id : XML_CIB_TAG_NVPAIR), name);
+        crm_xml_set_id(nvp, "%s-%s", pcmk__s(ID(parent), PCMK_XE_NVPAIR), name);
     }
     crm_xml_add(nvp, PCMK_XA_NAME, name);
     crm_xml_add(nvp, PCMK_XA_VALUE, value);
@@ -832,7 +838,7 @@ xml2list(const xmlNode *parent)
 
     CRM_CHECK(parent != NULL, return nvpair_hash);
 
-    nvpair_list = find_xml_node(parent, XML_TAG_ATTRS, FALSE);
+    nvpair_list = find_xml_node(parent, PCMK__XE_ATTRIBUTES, FALSE);
     if (nvpair_list == NULL) {
         crm_trace("No attributes in %s", parent->name);
         crm_log_xml_trace(parent, "No attributes for resource op");
@@ -854,7 +860,7 @@ xml2list(const xmlNode *parent)
     for (child = pcmk__xml_first_child(nvpair_list); child != NULL;
          child = pcmk__xml_next(child)) {
 
-        if (strcmp((const char *)child->name, XML_TAG_PARAM) == 0) {
+        if (strcmp((const char *) child->name, PCMK__XE_PARAM) == 0) {
             const char *key = crm_element_value(child, PCMK_XA_NAME);
             const char *value = crm_element_value(child, PCMK_XA_VALUE);
 

@@ -42,11 +42,11 @@ print_constraint(xmlNode *xml_obj, void *userdata)
     out->info(out, "Constraint %s %s %s %s %s %s %s",
               xml_obj->name,
               cons_string(crm_element_value(xml_obj, PCMK_XA_ID)),
-              cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE)),
-              cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET)),
+              cons_string(crm_element_value(xml_obj, PCMK_XA_RSC)),
+              cons_string(crm_element_value(xml_obj, PCMK_XA_WITH_RSC)),
               cons_string(crm_element_value(xml_obj, PCMK_XA_SCORE)),
-              cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE)),
-              cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_ROLE)));
+              cons_string(crm_element_value(xml_obj, PCMK_XA_RSC_ROLE)),
+              cons_string(crm_element_value(xml_obj, PCMK_XA_WITH_RSC_ROLE)));
 
     return pcmk_rc_ok;
 }
@@ -55,7 +55,7 @@ void
 cli_resource_print_cts_constraints(pcmk_scheduler_t *scheduler)
 {
     pcmk__xe_foreach_child(pcmk_find_cib_element(scheduler->input,
-                                                 XML_CIB_TAG_CONSTRAINTS),
+                                                 PCMK_XE_CONSTRAINTS),
                            NULL, print_constraint, scheduler);
 }
 
@@ -274,7 +274,7 @@ override_xml(pcmk__output_t *out, va_list args) {
                                                    NULL);
 
     if (rsc_name != NULL) {
-        crm_xml_add(node, "rsc", rsc_name);
+        crm_xml_add(node, PCMK_XA_RSC, rsc_name);
     }
 
     return pcmk_rc_ok;
@@ -398,7 +398,7 @@ resource_agent_action_xml(pcmk__output_t *out, va_list args) {
                                                      NULL);
 
     if (rsc_name) {
-        crm_xml_add(node, "rsc", rsc_name);
+        crm_xml_add(node, PCMK_XA_RSC, rsc_name);
     }
 
     crm_xml_add(node, PCMK_XA_PROVIDER, provider);
@@ -574,13 +574,15 @@ resource_search_list_xml(pcmk__output_t *out, va_list args)
     GList *nodes = va_arg(args, GList *);
     const char *requested_name = va_arg(args, const char *);
 
-    pcmk__output_xml_create_parent(out, "nodes",
+    pcmk__output_xml_create_parent(out, PCMK_XE_NODES,
                                    "resource", requested_name,
                                    NULL);
 
     for (GList *lpc = nodes; lpc != NULL; lpc = lpc->next) {
         node_info_t *ni = (node_info_t *) lpc->data;
-        xmlNodePtr sub_node = pcmk__output_create_xml_text_node(out, "node", ni->node_name);
+        xmlNodePtr sub_node = pcmk__output_create_xml_text_node(out,
+                                                                PCMK_XE_NODE,
+                                                                ni->node_name);
 
         if (ni->promoted) {
             crm_xml_add(sub_node, "state", "promoted");
@@ -689,7 +691,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
         GList *lpc = NULL;
         GList *hosts = NULL;
 
-        pcmk__output_xml_create_parent(out, "resources", NULL);
+        pcmk__output_xml_create_parent(out, PCMK_XE_RESOURCES, NULL);
 
         for (lpc = resources; lpc != NULL; lpc = lpc->next) {
             pcmk_resource_t *rsc = (pcmk_resource_t *) lpc->data;
@@ -723,7 +725,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
         GList *unactiveResources = pcmk__subtract_lists(allResources, activeResources, (GCompareFunc) strcmp);
         GList *lpc = NULL;
 
-        pcmk__output_xml_create_parent(out, "resources", NULL);
+        pcmk__output_xml_create_parent(out, PCMK_XE_RESOURCES, NULL);
 
         for (lpc = activeResources; lpc != NULL; lpc = lpc->next) {
             pcmk_resource_t *rsc = (pcmk_resource_t *) lpc->data;

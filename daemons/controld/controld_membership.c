@@ -132,7 +132,7 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
        return NULL;
     }
 
-    node_state = create_xml_node(parent, XML_CIB_TAG_STATE);
+    node_state = create_xml_node(parent, PCMK__XE_NODE_STATE);
 
     if (pcmk_is_set(node->flags, crm_remote_node)) {
         pcmk__xe_set_bool_attr(node_state, XML_NODE_IS_REMOTE, true);
@@ -222,7 +222,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
         return;
     }
 
-    if (pcmk__xe_is(output, XML_CIB_TAG_NODE)) {
+    if (pcmk__xe_is(output, PCMK_XE_NODE)) {
         node_xml = output;
 
     } else {
@@ -236,7 +236,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
         crm_node_t *node = NULL;
         gboolean known = FALSE;
 
-        if (!pcmk__xe_is(node_xml, XML_CIB_TAG_NODE)) {
+        if (!pcmk__xe_is(node_xml, PCMK_XE_NODE)) {
             continue;
         }
 
@@ -267,17 +267,16 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
             crm_notice("Deleting unknown node %s/%s which has conflicting uname with %s",
                        node_uuid, node_uname, new_node_uuid);
 
-            delete_call_id = cib_conn->cmds->remove(cib_conn, XML_CIB_TAG_NODES,
+            delete_call_id = cib_conn->cmds->remove(cib_conn, PCMK_XE_NODES,
                                                     node_xml, cib_scope_local);
             fsa_register_cib_callback(delete_call_id, strdup(node_uuid),
                                       remove_conflicting_node_callback);
 
-            node_state_xml = create_xml_node(NULL, XML_CIB_TAG_STATE);
+            node_state_xml = create_xml_node(NULL, PCMK__XE_NODE_STATE);
             crm_xml_add(node_state_xml, PCMK_XA_ID, node_uuid);
             crm_xml_add(node_state_xml, PCMK_XA_UNAME, node_uname);
 
-            delete_call_id = cib_conn->cmds->remove(cib_conn,
-                                                    XML_CIB_TAG_STATUS,
+            delete_call_id = cib_conn->cmds->remove(cib_conn, PCMK_XE_STATUS,
                                                     node_state_xml,
                                                     cib_scope_local);
             fsa_register_cib_callback(delete_call_id, strdup(node_uuid),
@@ -311,7 +310,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
 
     int call_id = 0;
     gboolean from_hashtable = TRUE;
-    xmlNode *node_list = create_xml_node(NULL, XML_CIB_TAG_NODES);
+    xmlNode *node_list = create_xml_node(NULL, PCMK_XE_NODES);
 
 #if SUPPORT_COROSYNC
     if (!pcmk_is_set(flags, node_update_quick) && is_corosync_cluster()) {
@@ -337,14 +336,14 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
                 }
 
                 /* We need both to be valid */
-                new_node = create_xml_node(node_list, XML_CIB_TAG_NODE);
+                new_node = create_xml_node(node_list, PCMK_XE_NODE);
                 crm_xml_add(new_node, PCMK_XA_ID, node->uuid);
                 crm_xml_add(new_node, PCMK_XA_UNAME, node->uname);
 
                 /* Search and remove unknown nodes with the conflicting uname from CIB */
                 pcmk__g_strcat(xpath,
-                               "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION
-                               "/" XML_CIB_TAG_NODES "/" XML_CIB_TAG_NODE
+                               "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION
+                               "/" PCMK_XE_NODES "/" PCMK_XE_NODE
                                "[@" PCMK_XA_UNAME "='", node->uname, "']"
                                "[@" PCMK_XA_ID "!='", node->uuid, "']", NULL);
 
@@ -364,7 +363,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
 
     crm_trace("Populating <nodes> section from %s", from_hashtable ? "hashtable" : "cluster");
 
-    if ((controld_update_cib(XML_CIB_TAG_NODES, node_list, cib_scope_local,
+    if ((controld_update_cib(PCMK_XE_NODES, node_list, cib_scope_local,
                              node_list_update_callback) == pcmk_rc_ok)
          && (crm_peer_cache != NULL) && AM_I_DC) {
         /*
@@ -375,7 +374,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
         crm_node_t *node = NULL;
 
         free_xml(node_list);
-        node_list = create_xml_node(NULL, XML_CIB_TAG_STATUS);
+        node_list = create_xml_node(NULL, PCMK_XE_STATUS);
 
         g_hash_table_iter_init(&iter, crm_peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
@@ -389,7 +388,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
             }
         }
 
-        controld_update_cib(XML_CIB_TAG_STATUS, node_list, cib_scope_local,
+        controld_update_cib(PCMK_XE_STATUS, node_list, cib_scope_local,
                             crmd_node_update_complete);
     }
     free_xml(node_list);
@@ -429,12 +428,12 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
             || force_update)) {
         xmlNode *update = NULL;
 
-        update = create_xml_node(NULL, XML_TAG_CIB);
+        update = create_xml_node(NULL, PCMK_XE_CIB);
         crm_xml_add_int(update, PCMK_XA_HAVE_QUORUM, quorum);
         crm_xml_add(update, PCMK_XA_DC_UUID, controld_globals.our_uuid);
 
         crm_debug("Updating quorum status to %s", pcmk__btoa(quorum));
-        controld_update_cib(XML_TAG_CIB, update, cib_scope_local,
+        controld_update_cib(PCMK_XE_CIB, update, cib_scope_local,
                             cib_quorum_update_complete);
         free_xml(update);
 

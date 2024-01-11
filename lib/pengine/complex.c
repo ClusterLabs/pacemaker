@@ -85,13 +85,13 @@ pcmk_rsc_methods_t resource_class_functions[] = {
 static enum pe_obj_types
 get_resource_type(const char *name)
 {
-    if (pcmk__str_eq(name, XML_CIB_TAG_RESOURCE, pcmk__str_casei)) {
+    if (pcmk__str_eq(name, PCMK_XE_PRIMITIVE, pcmk__str_casei)) {
         return pcmk_rsc_variant_primitive;
 
-    } else if (pcmk__str_eq(name, XML_CIB_TAG_GROUP, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(name, PCMK_XE_GROUP, pcmk__str_casei)) {
         return pcmk_rsc_variant_group;
 
-    } else if (pcmk__str_eq(name, XML_CIB_TAG_INCARNATION, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(name, PCMK_XE_CLONE, pcmk__str_casei)) {
         return pcmk_rsc_variant_clone;
 
     } else if (pcmk__str_eq(name, PCMK__XE_PROMOTABLE_LEGACY,
@@ -99,7 +99,7 @@ get_resource_type(const char *name)
         // @COMPAT deprecated since 2.0.0
         return pcmk_rsc_variant_clone;
 
-    } else if (pcmk__str_eq(name, XML_CIB_TAG_CONTAINER, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(name, PCMK_XE_BUNDLE, pcmk__str_casei)) {
         return pcmk_rsc_variant_bundle;
     }
 
@@ -124,16 +124,21 @@ expand_parents_fixed_nvpairs(pcmk_resource_t *rsc,
         return ;
     }
 
-    /* Search all parent resources, get the fixed value of "meta_attributes" set only in the original xml, and stack it in the hash table. */
-    /* The fixed value of the lower parent resource takes precedence and is not overwritten. */
+    /* Search all parent resources, get the fixed value of
+     * PCMK_XE_META_ATTRIBUTES set only in the original xml, and stack it in the
+     * hash table. The fixed value of the lower parent resource takes precedence
+     * and is not overwritten.
+     */
     while(p != NULL) {
         /* A hash table for comparison is generated, including the id-ref. */
-        pe__unpack_dataset_nvpairs(p->xml, XML_TAG_META_SETS, rule_data,
+        pe__unpack_dataset_nvpairs(p->xml, PCMK_XE_META_ATTRIBUTES, rule_data,
                                    parent_orig_meta, NULL, FALSE, scheduler);
         p = p->parent; 
     }
 
-    /* If there is a fixed value of "meta_attributes" of the parent resource, it will be processed. */
+    /* If there is a fixed value of PCMK_XE_META_ATTRIBUTES of the parent
+     * resource, it will be processed.
+     */
     if (parent_orig_meta != NULL) {
         GHashTableIter iter;
         char *key = NULL;
@@ -184,21 +189,25 @@ get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
         add_hash_param(meta_hash, prop_name, prop_value);
     }
 
-    pe__unpack_dataset_nvpairs(rsc->xml, XML_TAG_META_SETS, &rule_data,
+    pe__unpack_dataset_nvpairs(rsc->xml, PCMK_XE_META_ATTRIBUTES, &rule_data,
                                meta_hash, NULL, FALSE, scheduler);
 
-    /* Set the "meta_attributes" explicitly set in the parent resource to the hash table of the child resource. */
-    /* If it is already explicitly set as a child, it will not be overwritten. */
+    /* Set the PCMK_XE_META_ATTRIBUTES explicitly set in the parent resource to
+     * the hash table of the child resource. If it is already explicitly set as
+     * a child, it will not be overwritten.
+     */
     if (rsc->parent != NULL) {
         expand_parents_fixed_nvpairs(rsc, &rule_data, meta_hash, scheduler);
     }
 
     /* check the defaults */
-    pe__unpack_dataset_nvpairs(scheduler->rsc_defaults, XML_TAG_META_SETS,
+    pe__unpack_dataset_nvpairs(scheduler->rsc_defaults, PCMK_XE_META_ATTRIBUTES,
                                &rule_data, meta_hash, NULL, FALSE, scheduler);
 
-    /* If there is "meta_attributes" that the parent resource has not explicitly set, set a value that is not set from rsc_default either. */
-    /* The values already set up to this point will not be overwritten. */
+    /* If there is PCMK_XE_META_ATTRIBUTES that the parent resource has not
+     * explicitly set, set a value that is not set from PCMK_XE_RSC_DEFAULTS
+     * either. The values already set up to this point will not be overwritten.
+     */
     if (rsc->parent) {
         g_hash_table_foreach(rsc->parent->meta, dup_attr, meta_hash);
     }
@@ -221,8 +230,8 @@ get_rsc_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
         rule_data.node_hash = node->details->attrs;
     }
 
-    pe__unpack_dataset_nvpairs(rsc->xml, XML_TAG_ATTR_SETS, &rule_data,
-                               meta_hash, NULL, FALSE, scheduler);
+    pe__unpack_dataset_nvpairs(rsc->xml, PCMK_XE_INSTANCE_ATTRIBUTES,
+                               &rule_data, meta_hash, NULL, FALSE, scheduler);
 
     /* set anything else based on the parent */
     if (rsc->parent != NULL) {
@@ -230,9 +239,9 @@ get_rsc_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
 
     } else {
         /* and finally check the defaults */
-        pe__unpack_dataset_nvpairs(scheduler->rsc_defaults, XML_TAG_ATTR_SETS,
-                                   &rule_data, meta_hash, NULL, FALSE,
-                                   scheduler);
+        pe__unpack_dataset_nvpairs(scheduler->rsc_defaults,
+                                   PCMK_XE_INSTANCE_ATTRIBUTES, &rule_data,
+                                   meta_hash, NULL, FALSE, scheduler);
     }
 }
 
@@ -271,7 +280,7 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
         return FALSE;
     }
 
-    template_ref = crm_element_value(xml_obj, XML_CIB_TAG_RSC_TEMPLATE);
+    template_ref = crm_element_value(xml_obj, PCMK_XA_TEMPLATE);
     if (template_ref == NULL) {
         return TRUE;
     }
@@ -288,14 +297,14 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
         return FALSE;
     }
 
-    cib_resources = get_xpath_object("//" XML_CIB_TAG_RESOURCES,
-                                     scheduler->input, LOG_TRACE);
+    cib_resources = get_xpath_object("//" PCMK_XE_RESOURCES, scheduler->input,
+                                     LOG_TRACE);
     if (cib_resources == NULL) {
         pcmk__config_err("No resources configured");
         return FALSE;
     }
 
-    template = pcmk__xe_match(cib_resources, XML_CIB_TAG_RSC_TEMPLATE,
+    template = pcmk__xe_match(cib_resources, PCMK_XE_TEMPLATE,
                               PCMK_XA_ID, template_ref);
     if (template == NULL) {
         pcmk__config_err("No template named '%s'", template_ref);
@@ -305,8 +314,8 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
     new_xml = copy_xml(template);
     xmlNodeSetName(new_xml, xml_obj->name);
     crm_xml_add(new_xml, PCMK_XA_ID, id);
-    crm_xml_add(new_xml, PCMK__META_CLONE_INSTANCE_NUM,
-                crm_element_value(xml_obj, PCMK__META_CLONE_INSTANCE_NUM));
+    crm_xml_add(new_xml, PCMK__META_CLONE,
+                crm_element_value(xml_obj, PCMK__META_CLONE));
 
     template_ops = find_xml_node(new_xml, "operations", FALSE);
 
@@ -378,7 +387,7 @@ add_template_rsc(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         return FALSE;
     }
 
-    template_ref = crm_element_value(xml_obj, XML_CIB_TAG_RSC_TEMPLATE);
+    template_ref = crm_element_value(xml_obj, PCMK_XA_TEMPLATE);
     if (template_ref == NULL) {
         return TRUE;
     }
@@ -680,10 +689,10 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     (*rsc)->allowed_nodes = pcmk__strkey_table(NULL, free);
     (*rsc)->known_on = pcmk__strkey_table(NULL, free);
 
-    value = crm_element_value((*rsc)->xml, PCMK__META_CLONE_INSTANCE_NUM);
+    value = crm_element_value((*rsc)->xml, PCMK__META_CLONE);
     if (value) {
         (*rsc)->id = crm_strdup_printf("%s:%s", id, value);
-        add_hash_param((*rsc)->meta, PCMK__META_CLONE_INSTANCE_NUM, value);
+        add_hash_param((*rsc)->meta, PCMK__META_CLONE, value);
 
     } else {
         (*rsc)->id = strdup(id);
@@ -912,7 +921,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     (*rsc)->utilization = pcmk__strkey_table(free, free);
 
-    pe__unpack_dataset_nvpairs((*rsc)->xml, XML_TAG_UTILIZATION, &rule_data,
+    pe__unpack_dataset_nvpairs((*rsc)->xml, PCMK_XE_UTILIZATION, &rule_data,
                                (*rsc)->utilization, NULL, FALSE, scheduler);
 
     if (expanded_xml) {

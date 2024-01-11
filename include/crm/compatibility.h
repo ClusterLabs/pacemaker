@@ -201,17 +201,17 @@ extern "C" {
 static inline enum pe_obj_types
 get_resource_type(const char *name)
 {
-    if (safe_str_eq(name, XML_CIB_TAG_RESOURCE)) {
+    if (safe_str_eq(name, PCMK_XE_PRIMITIVE)) {
         return pcmk_rsc_variant_primitive;
 
-    } else if (safe_str_eq(name, XML_CIB_TAG_GROUP)) {
+    } else if (safe_str_eq(name, PCMK_XE_GROUP)) {
         return pcmk_rsc_variant_group;
 
-    } else if (safe_str_eq(name, XML_CIB_TAG_INCARNATION)
+    } else if (safe_str_eq(name, PCMK_XE_CLONE)
                 || safe_str_eq(name, PCMK_XE_PROMOTABLE_LEGACY)) {
         return pcmk_rsc_variant_clone;
 
-    } else if (safe_str_eq(name, XML_CIB_TAG_CONTAINER)) {
+    } else if (safe_str_eq(name, PCMK_XE_BUNDLE)) {
         return pcmk_rsc_variant_bundle;
     }
 
@@ -223,13 +223,13 @@ get_resource_typename(enum pe_obj_types type)
 {
     switch (type) {
         case pcmk_rsc_variant_primitive:
-            return XML_CIB_TAG_RESOURCE;
+            return PCMK_XE_PRIMITIVE;
         case pcmk_rsc_variant_group:
-            return XML_CIB_TAG_GROUP;
+            return PCMK_XE_GROUP;
         case pcmk_rsc_variant_clone:
-            return XML_CIB_TAG_INCARNATION;
+            return PCMK_XE_CLONE;
         case pcmk_rsc_variant_bundle:
-            return XML_CIB_TAG_CONTAINER;
+            return PCMK_XE_BUNDLE;
         case pcmk_rsc_variant_unknown:
             return "unknown";
     }

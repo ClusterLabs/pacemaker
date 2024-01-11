@@ -246,9 +246,9 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
                     const char *role_spec, const char *score,
                     pe_re_match_data_t *re_match_data)
 {
-    const char *rsc_id = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
+    const char *rsc_id = crm_element_value(xml_obj, PCMK_XA_RSC);
     const char *id = crm_element_value(xml_obj, PCMK_XA_ID);
-    const char *node = crm_element_value(xml_obj, XML_CIB_TAG_NODE);
+    const char *node = crm_element_value(xml_obj, PCMK_XE_NODE);
     const char *discovery = crm_element_value(xml_obj,
                                               PCMK_XA_RESOURCE_DISCOVERY);
 
@@ -331,7 +331,7 @@ static void
 unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 {
     const char *id = crm_element_value(xml_obj, PCMK_XA_ID);
-    const char *value = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
+    const char *value = crm_element_value(xml_obj, PCMK_XA_RSC);
 
     if (value) {
         pcmk_resource_t *rsc;
@@ -340,7 +340,7 @@ unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         unpack_rsc_location(xml_obj, rsc, NULL, NULL, NULL);
     }
 
-    value = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE_PATTERN);
+    value = crm_element_value(xml_obj, PCMK_XA_RSC_PATTERN);
     if (value) {
         regex_t *r_patt = calloc(1, sizeof(regex_t));
         bool invert = false;
@@ -352,7 +352,7 @@ unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 
         if (regcomp(r_patt, value, REG_EXTENDED) != 0) {
             pcmk__config_err("Ignoring constraint '%s' because "
-                             XML_LOC_ATTR_SOURCE_PATTERN
+                             PCMK_XA_RSC_PATTERN
                              " has invalid value '%s'", id, value);
             free(r_patt);
             return;
@@ -432,7 +432,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         return pcmk_rc_ok;
     }
 
-    rsc_id = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
+    rsc_id = crm_element_value(xml_obj, PCMK_XA_RSC);
     if (rsc_id == NULL) {
         return pcmk_rc_ok;
     }
@@ -452,7 +452,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     *expanded_xml = copy_xml(xml_obj);
 
     // Convert any template or tag reference into constraint resource_set
-    if (!pcmk__tag_to_set(*expanded_xml, &rsc_set, XML_LOC_ATTR_SOURCE,
+    if (!pcmk__tag_to_set(*expanded_xml, &rsc_set, PCMK_XA_RSC,
                           false, scheduler)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
@@ -461,7 +461,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     if (rsc_set != NULL) {
         if (state != NULL) {
-            /* Move "rsc-role" into converted resource_set as PCMK_XA_ROLE
+            /* Move PCMK_XA_RSC_ROLE into converted resource_set as PCMK_XA_ROLE
              * attribute
              */
             crm_xml_add(rsc_set, PCMK_XA_ROLE, state);
@@ -502,7 +502,7 @@ unpack_location_set(xmlNode *location, xmlNode *set,
     role = crm_element_value(set, PCMK_XA_ROLE);
     local_score = crm_element_value(set, PCMK_XA_SCORE);
 
-    for (xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
+    for (xml_rsc = first_named_child(set, PCMK_XE_RESOURCE_REF);
          xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
         resource = pcmk__find_constraint_resource(scheduler->resources,

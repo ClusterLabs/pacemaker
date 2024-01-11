@@ -58,6 +58,11 @@
  * XML element names used only by internal code
  */
 
+#define PCMK__XE_ATTRIBUTES             "attributes"
+#define PCMK__XE_NODE_STATE             "node_state"
+#define PCMK__XE_PARAM                  "param"
+#define PCMK__XE_PING_RESPONSE          "ping_response"
+
 // @COMPAT Deprecated since 2.1.7
 #define PCMK__XE_DIFF_ADDED             "diff-added"
 
@@ -126,7 +131,7 @@
 #define PCMK__XA_LONG_ID                "long-id"
 #define PCMK__XA_MODE                   "mode"
 #define PCMK__XA_NODE_START_STATE       "node_start_state"
-#define PCMK__XA_OBJECT_TYPE            "object_type"
+#define PCMK__XA_NODE_STATE             "node_state"
 #define PCMK__XA_OPERATION_KEY          "operation_key"
 #define PCMK__XA_OP_DIGEST              "op-digest"
 #define PCMK__XA_OP_FORCE_RESTART       "op-force-restart"
@@ -159,11 +164,17 @@
 // @COMPAT Deprecated since 2.1.5
 #define PCMK__XA_FIRST_INSTANCE         "first-instance"
 
+// @COMPAT Deprecated since 1.1.12
+#define PCMK__XA_REF                    "ref"
+
 // @COMPAT Deprecated since 2.1.6
 #define PCMK__XA_REPLACE                "replace"
 
 // @COMPAT Deprecated since 2.1.5
 #define PCMK__XA_RSC_INSTANCE           "rsc-instance"
+
+// @COMPAT Deprecated since 1.1.12
+#define PCMK__XA_TAG                    "tag"
 
 // @COMPAT Deprecated since 2.1.5
 #define PCMK__XA_THEN_INSTANCE          "then-instance"

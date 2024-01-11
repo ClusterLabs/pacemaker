@@ -138,18 +138,18 @@ static inline bool
 scope_is_valid(const char *scope)
 {
     return pcmk__str_any_of(scope,
-                            XML_CIB_TAG_CONFIGURATION,
-                            XML_CIB_TAG_NODES,
-                            XML_CIB_TAG_RESOURCES,
-                            XML_CIB_TAG_CONSTRAINTS,
-                            XML_CIB_TAG_CRMCONFIG,
-                            XML_CIB_TAG_RSCCONFIG,
-                            XML_CIB_TAG_OPCONFIG,
-                            XML_CIB_TAG_ACLS,
+                            PCMK_XE_CONFIGURATION,
+                            PCMK_XE_NODES,
+                            PCMK_XE_RESOURCES,
+                            PCMK_XE_CONSTRAINTS,
+                            PCMK_XE_CRM_CONFIG,
+                            PCMK_XE_RSC_DEFAULTS,
+                            PCMK_XE_OP_DEFAULTS,
+                            PCMK_XE_ACLS,
                             XML_TAG_FENCING_TOPOLOGY,
                             XML_CIB_TAG_TAGS,
-                            XML_CIB_TAG_ALERTS,
-                            XML_CIB_TAG_STATUS,
+                            PCMK_XE_ALERTS,
+                            PCMK_XE_STATUS,
                             NULL);
 }
 
@@ -350,12 +350,12 @@ static GOptionEntry addl_entries[] = {
 
     { "scope", 'o', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, section_cb,
       "Limit scope of operation to specific section of CIB\n"
-      INDENT "Valid values: " XML_CIB_TAG_CONFIGURATION ", " XML_CIB_TAG_NODES
-      ", " XML_CIB_TAG_RESOURCES ", " XML_CIB_TAG_CONSTRAINTS
-      ", " XML_CIB_TAG_CRMCONFIG ", " XML_CIB_TAG_RSCCONFIG ",\n"
-      INDENT "              " XML_CIB_TAG_OPCONFIG ", " XML_CIB_TAG_ACLS
+      INDENT "Valid values: " PCMK_XE_CONFIGURATION ", " PCMK_XE_NODES
+      ", " PCMK_XE_RESOURCES ", " PCMK_XE_CONSTRAINTS
+      ", " PCMK_XE_CRM_CONFIG ", " PCMK_XE_RSC_DEFAULTS ",\n"
+      INDENT "              " PCMK_XE_OP_DEFAULTS ", " PCMK_XE_ACLS
       ", " XML_TAG_FENCING_TOPOLOGY ", " XML_CIB_TAG_TAGS
-      ", " XML_CIB_TAG_ALERTS ", " XML_CIB_TAG_STATUS "\n"
+      ", " PCMK_XE_ALERTS ", " PCMK_XE_STATUS "\n"
       INDENT "If both --scope/-o and --xpath/-a are specified, the last one to "
       "appear takes effect",
       "value" },
@@ -370,10 +370,10 @@ static GOptionEntry addl_entries[] = {
       &options.get_node_path,
       "When performing XPath queries, return paths of any matches found\n"
       INDENT "(for example, "
-      "\"/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION
-      "/" XML_CIB_TAG_RESOURCES "/" XML_CIB_TAG_INCARNATION
+      "\"/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION
+      "/" PCMK_XE_RESOURCES "/" PCMK_XE_CLONE
       "[@" PCMK_XA_ID "='dummy-clone']"
-      "/" XML_CIB_TAG_RESOURCE "[@" PCMK_XA_ID "='dummy']\")",
+      "/" PCMK_XE_PRIMITIVE "[@" PCMK_XA_ID "='dummy']\")",
       NULL },
 
     { "show-access", 'S', G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK,
@@ -430,33 +430,32 @@ build_arg_context(pcmk__common_args_t *args)
            "Query the configuration from the local node:\n\n"
            "\t# cibadmin --query --local\n\n"
            "Query just the cluster options configuration:\n\n"
-           "\t# cibadmin --query --scope " XML_CIB_TAG_CRMCONFIG "\n\n"
+           "\t# cibadmin --query --scope " PCMK_XE_CRM_CONFIG "\n\n"
            "Query all '" PCMK_META_TARGET_ROLE "' settings:\n\n"
            "\t# cibadmin --query --xpath "
-               "\"//" XML_CIB_TAG_NVPAIR
-               "[@" PCMK_XA_NAME "='" PCMK_META_TARGET_ROLE"']\""
-               "\n\n"
+               "\"//" PCMK_XE_NVPAIR
+               "[@" PCMK_XA_NAME "='" PCMK_META_TARGET_ROLE"']\"\n\n"
            "Remove all '" PCMK_META_IS_MANAGED "' settings:\n\n"
            "\t# cibadmin --delete-all --xpath "
-               "\"//" XML_CIB_TAG_NVPAIR
+               "\"//" PCMK_XE_NVPAIR
                "[@" PCMK_XA_NAME "='" PCMK_META_IS_MANAGED "']\"\n\n"
            "Remove the resource named 'old':\n\n"
            "\t# cibadmin --delete --xml-text "
-               "'<" XML_CIB_TAG_RESOURCE " " PCMK_XA_ID "=\"old\"/>'\n\n"
+               "'<" PCMK_XE_PRIMITIVE " " PCMK_XA_ID "=\"old\"/>'\n\n"
            "Remove all resources from the configuration:\n\n"
-           "\t# cibadmin --replace --scope " XML_CIB_TAG_RESOURCES
-               " --xml-text '<" XML_CIB_TAG_RESOURCES "/>'\n\n"
+           "\t# cibadmin --replace --scope " PCMK_XE_RESOURCES
+               " --xml-text '<" PCMK_XE_RESOURCES "/>'\n\n"
            "Replace complete configuration with contents of "
                "$HOME/pacemaker.xml:\n\n"
            "\t# cibadmin --replace --xml-file $HOME/pacemaker.xml\n\n"
-           "Replace " XML_CIB_TAG_CONSTRAINTS " section of configuration with "
+           "Replace " PCMK_XE_CONSTRAINTS " section of configuration with "
                "contents of $HOME/constraints.xml:\n\n"
-           "\t# cibadmin --replace --scope " XML_CIB_TAG_CONSTRAINTS
+           "\t# cibadmin --replace --scope " PCMK_XE_CONSTRAINTS
                " --xml-file $HOME/constraints.xml\n\n"
            "Increase configuration version to prevent old configurations from "
                "being loaded accidentally:\n\n"
            "\t# cibadmin --modify --xml-text "
-               "'<" XML_TAG_CIB " " PCMK_XA_ADMIN_EPOCH
+               "'<" PCMK_XE_CIB " " PCMK_XA_ADMIN_EPOCH
                    "=\"" PCMK_XA_ADMIN_EPOCH "++\"/>'\n\n"
            "Edit the configuration with your favorite $EDITOR:\n\n"
            "\t# cibadmin --query > $HOME/local.xml\n\n"
@@ -883,11 +882,11 @@ do_work(xmlNode *input, xmlNode **output)
     /* construct the request */
     the_cib->call_timeout = options.message_timeout_sec;
     if ((strcmp(options.cib_action, PCMK__CIB_REQUEST_REPLACE) == 0)
-        && pcmk__xe_is(input, XML_TAG_CIB)) {
-        xmlNode *status = pcmk_find_cib_element(input, XML_CIB_TAG_STATUS);
+        && pcmk__xe_is(input, PCMK_XE_CIB)) {
+        xmlNode *status = pcmk_find_cib_element(input, PCMK_XE_STATUS);
 
         if (status == NULL) {
-            create_xml_node(input, XML_CIB_TAG_STATUS);
+            create_xml_node(input, PCMK_XE_STATUS);
         }
     }
 

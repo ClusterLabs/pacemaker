@@ -132,7 +132,7 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
 
     /* Rules are under the constraints node in the XML, so first find that. */
     cib_constraints = pcmk_find_cib_element(scheduler->input,
-                                            XML_CIB_TAG_CONSTRAINTS);
+                                            PCMK_XE_CONSTRAINTS);
 
     /* Get all rules matching the given ID that are also simple enough for us
      * to check. For the moment, these rules must only have a single

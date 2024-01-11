@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 the Pacemaker project contributors
+ * Copyright 2021-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,10 @@
 
 #ifndef PCMK__CRM_CIB_UTIL_COMPAT__H
 #  define PCMK__CRM_CIB_UTIL_COMPAT__H
+
+#include <libxml/tree.h>        // xmlNode
+
+#include <crm/cib/cib_types.h>  // cib_t
 
 #include <crm/common/xml.h>
 #ifdef __cplusplus
@@ -32,6 +36,16 @@ const char *get_object_parent(const char *object_type);
 
 //! \deprecated Use pcmk_cib_xpath_for() instead
 xmlNode *get_object_root(const char *object_type, xmlNode *the_root);
+
+//! \deprecated Do not use
+int set_standby(cib_t *the_cib, const char *uuid, const char *scope,
+                const char *standby_value);
+
+//! \deprecated Do not use
+int query_node_uname(cib_t * the_cib, const char *uuid, char **uname);
+
+//! \deprecated Do not use
+xmlNode *cib_get_generation(cib_t *cib);
 
 #ifdef __cplusplus
 }

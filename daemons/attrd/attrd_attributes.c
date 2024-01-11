@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the Pacemaker project contributors
+ * Copyright 2013-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -33,7 +33,7 @@ attrd_create_attribute(xmlNode *xml)
     attribute_t *a = NULL;
 
     if (set_type == NULL) {
-        set_type = XML_TAG_ATTR_SETS;
+        set_type = PCMK_XE_INSTANCE_ATTRIBUTES;
     }
 
     /* Set type is meaningful only when writing to the CIB. Private
@@ -41,7 +41,8 @@ attrd_create_attribute(xmlNode *xml)
      */
     crm_element_value_int(xml, PCMK__XA_ATTR_IS_PRIVATE, &is_private);
     if ((is_private != 0)
-        && !pcmk__str_any_of(set_type, XML_TAG_ATTR_SETS, XML_TAG_UTILIZATION,
+        && !pcmk__str_any_of(set_type,
+                             PCMK_XE_INSTANCE_ATTRIBUTES, PCMK_XE_UTILIZATION,
                              NULL)) {
         crm_warn("Ignoring attribute %s with invalid set type %s",
                  pcmk__s(name, "(unidentified)"), set_type);

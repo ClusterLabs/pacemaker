@@ -266,7 +266,7 @@ pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
     child_copy = copy_xml(clone_data->xml_obj_child);
 
-    crm_xml_add(child_copy, PCMK__META_CLONE_INSTANCE_NUM, inc_num);
+    crm_xml_add(child_copy, PCMK__META_CLONE, inc_num);
 
     if (pe__unpack_resource(child_copy, &child_rsc, rsc,
                             scheduler) != pcmk_rc_ok) {
@@ -391,7 +391,8 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     for (a_child = pcmk__xe_first_child(xml_obj); a_child != NULL;
          a_child = pcmk__xe_next(a_child)) {
 
-        if (pcmk__str_any_of((const char *)a_child->name, XML_CIB_TAG_RESOURCE, XML_CIB_TAG_GROUP, NULL)) {
+        if (pcmk__str_any_of((const char *) a_child->name,
+                             PCMK_XE_PRIMITIVE, PCMK_XE_GROUP, NULL)) {
             clone_data->xml_obj_child = a_child;
             break;
         }
@@ -869,7 +870,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
             printed_header = TRUE;
 
             desc = pe__resource_description(rsc, show_opts);
-            rc = pe__name_and_nvpairs_xml(out, true, "clone", 10,
+            rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_CLONE, 10,
                     PCMK_XA_ID, rsc->id,
                     "multi_state",
                     pcmk__flag_text(rsc->flags, pcmk_rsc_promotable),

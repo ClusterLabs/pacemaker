@@ -168,24 +168,24 @@ int pcmk__xml_show_changes(pcmk__output_t *out, const xmlNode *xml);
 /* XML search strings for guest, remote and pacemaker_remote nodes */
 
 /* search string to find CIB resources entries for cluster nodes */
-#define PCMK__XP_MEMBER_NODE_CONFIG \
-    "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_NODES \
-    "/" XML_CIB_TAG_NODE "[not(@type) or @type='member']"
+#define PCMK__XP_MEMBER_NODE_CONFIG                                 \
+    "//" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_NODES    \
+    "/" PCMK_XE_NODE "[not(@type) or @type='member']"
 
 /* search string to find CIB resources entries for guest nodes */
 #define PCMK__XP_GUEST_NODE_CONFIG \
-    "//" XML_TAG_CIB "//" XML_CIB_TAG_CONFIGURATION "//" XML_CIB_TAG_RESOURCE \
-    "//" XML_TAG_META_SETS "//" XML_CIB_TAG_NVPAIR \
+    "//" PCMK_XE_CIB "//" PCMK_XE_CONFIGURATION "//" PCMK_XE_PRIMITIVE  \
+    "//" PCMK_XE_META_ATTRIBUTES "//" PCMK_XE_NVPAIR                    \
     "[@name='" PCMK_META_REMOTE_NODE "']"
 
 /* search string to find CIB resources entries for remote nodes */
-#define PCMK__XP_REMOTE_NODE_CONFIG \
-    "//" XML_TAG_CIB "//" XML_CIB_TAG_CONFIGURATION "//" XML_CIB_TAG_RESOURCE \
+#define PCMK__XP_REMOTE_NODE_CONFIG                                     \
+    "//" PCMK_XE_CIB "//" PCMK_XE_CONFIGURATION "//" PCMK_XE_PRIMITIVE  \
     "[@type='remote'][@provider='pacemaker']"
 
 /* search string to find CIB node status entries for pacemaker_remote nodes */
-#define PCMK__XP_REMOTE_NODE_STATUS \
-    "//" XML_TAG_CIB "//" XML_CIB_TAG_STATUS "//" XML_CIB_TAG_STATE \
+#define PCMK__XP_REMOTE_NODE_STATUS                                 \
+    "//" PCMK_XE_CIB "//" PCMK_XE_STATUS "//" PCMK__XE_NODE_STATE   \
     "[@" XML_NODE_IS_REMOTE "='true']"
 /*!
  * \internal

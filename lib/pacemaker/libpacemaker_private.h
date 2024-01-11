@@ -630,7 +630,7 @@ pcmk__colocation_has_influence(const pcmk__colocation_t *colocation,
     }
 
     /* The dependent in a colocation influences the primary's location
-     * if the influence option is true or the primary is not yet active.
+     * if the PCMK_XA_INFLUENCE option is true or the primary is not yet active.
      */
     return pcmk_is_set(colocation->flags, pcmk__coloc_influence)
            || (rsc->running_on == NULL);

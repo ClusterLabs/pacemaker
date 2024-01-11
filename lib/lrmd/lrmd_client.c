@@ -2029,7 +2029,7 @@ lrmd_api_exec(lrmd_t *lrmd, const char *rsc_id, const char *action,
 {
     int rc = pcmk_ok;
     xmlNode *data = create_xml_node(NULL, F_LRMD_RSC);
-    xmlNode *args = create_xml_node(data, XML_TAG_ATTRS);
+    xmlNode *args = create_xml_node(data, PCMK__XE_ATTRIBUTES);
     lrmd_key_value_t *tmp = NULL;
 
     crm_xml_add(data, F_LRMD_ORIGIN, __func__);
@@ -2058,7 +2058,7 @@ lrmd_api_exec_alert(lrmd_t *lrmd, const char *alert_id, const char *alert_path,
 {
     int rc = pcmk_ok;
     xmlNode *data = create_xml_node(NULL, F_LRMD_ALERT);
-    xmlNode *args = create_xml_node(data, XML_TAG_ATTRS);
+    xmlNode *args = create_xml_node(data, PCMK__XE_ATTRIBUTES);
     lrmd_key_value_t *tmp = NULL;
 
     crm_xml_add(data, F_LRMD_ORIGIN, __func__);

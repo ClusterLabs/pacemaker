@@ -318,7 +318,7 @@ allocate_ip(pe__bundle_variant_data_t *data, pcmk__bundle_replica_t *replica,
 static xmlNode *
 create_resource(const char *name, const char *provider, const char *kind)
 {
-    xmlNode *rsc = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
+    xmlNode *rsc = create_xml_node(NULL, PCMK_XE_PRIMITIVE);
 
     crm_xml_add(rsc, PCMK_XA_ID, name);
     crm_xml_add(rsc, PCMK_XA_CLASS, PCMK_RESOURCE_CLASS_OCF);
@@ -373,7 +373,7 @@ create_ip_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         xml_ip = create_resource(id, "heartbeat", "IPaddr2");
         free(id);
 
-        xml_obj = create_xml_node(xml_ip, XML_TAG_ATTR_SETS);
+        xml_obj = create_xml_node(xml_ip, PCMK_XE_INSTANCE_ATTRIBUTES);
         crm_xml_set_id(xml_obj, "%s-attributes-%d",
                        data->prefix, replica->offset);
 
@@ -461,7 +461,7 @@ create_container_resource(pcmk_resource_t *parent,
     xml_container = create_resource(id, "heartbeat", agent_str);
     free(id);
 
-    xml_obj = create_xml_node(xml_container, XML_TAG_ATTR_SETS);
+    xml_obj = create_xml_node(xml_container, PCMK_XE_INSTANCE_ATTRIBUTES);
     crm_xml_set_id(xml_obj, "%s-attributes-%d", data->prefix, replica->offset);
 
     crm_create_nvpair_xml(xml_obj, NULL, "image", data->image);
@@ -1110,12 +1110,12 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         }
     }
 
-    xml_obj = first_named_child(rsc->xml, "primitive");
+    xml_obj = first_named_child(rsc->xml, PCMK_XE_PRIMITIVE);
     if (xml_obj && valid_network(bundle_data)) {
         char *value = NULL;
         xmlNode *xml_set = NULL;
 
-        xml_resource = create_xml_node(NULL, XML_CIB_TAG_INCARNATION);
+        xml_resource = create_xml_node(NULL, PCMK_XE_CLONE);
 
         /* @COMPAT We no longer use the <master> tag, but we need to keep it as
          * part of the resource name, so that bundles don't restart in a rolling
@@ -1125,7 +1125,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
                       (bundle_data->promoted_max? "master"
                       : (const char *)xml_resource->name));
 
-        xml_set = create_xml_node(xml_resource, XML_TAG_META_SETS);
+        xml_set = create_xml_node(xml_resource, PCMK_XE_META_ATTRIBUTES);
         crm_xml_set_id(xml_set, "%s-%s-meta", bundle_data->prefix, xml_resource->name);
 
         crm_create_nvpair_xml(xml_set, NULL,
@@ -1513,7 +1513,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
 
             desc = pe__resource_description(rsc, show_opts);
 
-            rc = pe__name_and_nvpairs_xml(out, true, "bundle", 8,
+            rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_BUNDLE, 8,
                      PCMK_XA_ID, rsc->id,
                      PCMK_XA_TYPE, container_agent_str(bundle_data->agent_type),
                      "image", bundle_data->image,

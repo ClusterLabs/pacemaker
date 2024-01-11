@@ -429,7 +429,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         xmlNode *msg_data = get_message_xml(msg, F_CRM_DATA);
         const char *mode = crm_element_value(msg_data, PCMK__XA_MODE);
 
-        if (pcmk__str_eq(mode, XML_TAG_CIB, pcmk__str_casei)) {
+        if (pcmk__str_eq(mode, PCMK__VALUE_CIB, pcmk__str_none)) {
             // Local delete of an offline node's resource history
             is_local = true;
         }
@@ -625,8 +625,8 @@ handle_failcount_op(xmlNode * stored_msg)
     xmlNode *xml_op = get_message_xml(stored_msg, F_CRM_DATA);
 
     if (xml_op) {
-        xmlNode *xml_rsc = first_named_child(xml_op, XML_CIB_TAG_RESOURCE);
-        xmlNode *xml_attrs = first_named_child(xml_op, XML_TAG_ATTRS);
+        xmlNode *xml_rsc = first_named_child(xml_op, PCMK_XE_PRIMITIVE);
+        xmlNode *xml_attrs = first_named_child(xml_op, PCMK__XE_ATTRIBUTES);
 
         if (xml_rsc) {
             rsc = ID(xml_rsc);
@@ -681,12 +681,12 @@ handle_lrm_delete(xmlNode *stored_msg)
      * CIB, and do some bookkeeping in the controller.
      *
      * However, if the affected node is offline, the client will specify
-     * mode="cib" which means the controller receiving the operation should
-     * clear the resource's history from the CIB and nothing else. This is used
-     * to clear shutdown locks.
+     * mode=PCMK__VALUE_CIB which means the controller receiving the operation
+     * should clear the resource's history from the CIB and nothing else. This
+     * is used to clear shutdown locks.
      */
     mode = crm_element_value(msg_data, PCMK__XA_MODE);
-    if ((mode == NULL) || strcmp(mode, XML_TAG_CIB)) {
+    if (!pcmk__str_eq(mode, PCMK__VALUE_CIB, pcmk__str_none)) {
         // Relay to affected node
         crm_xml_add(stored_msg, PCMK__XA_CRM_SYS_TO, CRM_SYSTEM_LRMD);
         return I_ROUTER;
@@ -700,7 +700,7 @@ handle_lrm_delete(xmlNode *stored_msg)
         xmlNode *rsc_xml = NULL;
         int rc = pcmk_rc_ok;
 
-        rsc_xml = first_named_child(msg_data, XML_CIB_TAG_RESOURCE);
+        rsc_xml = first_named_child(msg_data, PCMK_XE_PRIMITIVE);
         CRM_CHECK(rsc_xml != NULL, return I_NULL);
 
         rsc_id = ID(rsc_xml);
@@ -717,7 +717,9 @@ handle_lrm_delete(xmlNode *stored_msg)
                                                   crmd_cib_smart_opt());
         }
 
-        //Notify client and tengine.(Only notify tengine if mode = "cib" and CRM_OP_LRM_DELETE.)
+        /* Notify client. Also notify tengine if mode=PCMK__VALUE_CIB and
+         * op=CRM_OP_LRM_DELETE.
+         */
         if (from_sys) {
             lrmd_event_data_t *op = NULL;
             const char *from_host = crm_element_value(stored_msg, PCMK__XA_SRC);
@@ -803,7 +805,7 @@ handle_ping(const xmlNode *msg)
 
     // Build reply
 
-    ping = create_xml_node(NULL, XML_CRM_TAG_PING);
+    ping = create_xml_node(NULL, PCMK__XE_PING_RESPONSE);
     value = crm_element_value(msg, PCMK__XA_CRM_SYS_TO);
     crm_xml_add(ping, PCMK__XA_CRM_SUBSYSTEM, value);
 
@@ -844,10 +846,10 @@ handle_node_list(const xmlNode *request)
     xmlNode *reply_data = NULL;
 
     // Create message data for reply
-    reply_data = create_xml_node(NULL, XML_CIB_TAG_NODES);
+    reply_data = create_xml_node(NULL, PCMK_XE_NODES);
     g_hash_table_iter_init(&iter, crm_peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
-        xmlNode *xml = create_xml_node(reply_data, XML_CIB_TAG_NODE);
+        xmlNode *xml = create_xml_node(reply_data, PCMK_XE_NODE);
 
         crm_xml_add_ll(xml, PCMK_XA_ID, (long long) node->id); // uint32_t
         crm_xml_add(xml, PCMK_XA_UNAME, node->uname);
@@ -884,7 +886,7 @@ handle_node_info_request(const xmlNode *msg)
 
     // Build reply
 
-    reply_data = create_xml_node(NULL, XML_CIB_TAG_NODE);
+    reply_data = create_xml_node(NULL, PCMK_XE_NODE);
     crm_xml_add(reply_data, PCMK__XA_CRM_SUBSYSTEM, CRM_SYSTEM_CRMD);
 
     // Add whether current partition has quorum

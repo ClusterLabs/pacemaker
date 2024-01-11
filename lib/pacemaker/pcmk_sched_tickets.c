@@ -174,8 +174,8 @@ rsc_ticket_new(const char *id, pcmk_resource_t *rsc, pcmk_ticket_t *ticket,
         if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)) {
             new_rsc_ticket->loss_policy = loss_ticket_fence;
         } else {
-            pcmk__config_err("Resetting '" XML_TICKET_ATTR_LOSS_POLICY
-                             "' for ticket '%s' to 'stop' "
+            pcmk__config_err("Resetting '" PCMK_XA_LOSS_POLICY "' "
+                             "for ticket '%s' to 'stop' "
                              "because fencing is not configured", ticket->id);
             loss_policy = "stop";
         }
@@ -252,7 +252,7 @@ unpack_rsc_ticket_set(xmlNode *set, pcmk_ticket_t *ticket,
 
     role = crm_element_value(set, PCMK_XA_ROLE);
 
-    for (xmlNode *xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
+    for (xmlNode *xml_rsc = first_named_child(set, PCMK_XE_RESOURCE_REF);
          xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
         pcmk_resource_t *resource = NULL;
@@ -276,15 +276,13 @@ static void
 unpack_simple_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 {
     const char *id = NULL;
-    const char *ticket_str = crm_element_value(xml_obj, XML_TICKET_ATTR_TICKET);
-    const char *loss_policy = crm_element_value(xml_obj,
-                                                XML_TICKET_ATTR_LOSS_POLICY);
+    const char *ticket_str = crm_element_value(xml_obj, PCMK_XA_TICKET);
+    const char *loss_policy = crm_element_value(xml_obj, PCMK_XA_LOSS_POLICY);
 
     pcmk_ticket_t *ticket = NULL;
 
-    const char *rsc_id = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
-    const char *state = crm_element_value(xml_obj,
-                                             XML_COLOC_ATTR_SOURCE_ROLE);
+    const char *rsc_id = crm_element_value(xml_obj, PCMK_XA_RSC);
+    const char *state = crm_element_value(xml_obj, PCMK_XA_RSC_ROLE);
 
     // @COMPAT: Deprecated since 2.1.5
     const char *instance = crm_element_value(xml_obj, PCMK__XA_RSC_INSTANCE);
@@ -384,7 +382,7 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         return pcmk_rc_ok;
     }
 
-    rsc_id = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
+    rsc_id = crm_element_value(xml_obj, PCMK_XA_RSC);
     if (rsc_id == NULL) {
         return pcmk_rc_ok;
     }
@@ -399,13 +397,13 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         return pcmk_rc_ok;
     }
 
-    state = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE);
+    state = crm_element_value(xml_obj, PCMK_XA_RSC_ROLE);
 
     *expanded_xml = copy_xml(xml_obj);
 
     // Convert any template or tag reference in "rsc" into ticket resource_set
-    if (!pcmk__tag_to_set(*expanded_xml, &rsc_set, XML_COLOC_ATTR_SOURCE,
-                          false, scheduler)) {
+    if (!pcmk__tag_to_set(*expanded_xml, &rsc_set, PCMK_XA_RSC, false,
+                          scheduler)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_unpack_error;
@@ -413,11 +411,11 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     if (rsc_set != NULL) {
         if (state != NULL) {
-            /* Move "rsc-role" into converted resource_set as a PCMK_XA_ROLE
-             * attribute
+            /* Move PCMK_XA_RSC_ROLE into converted resource_set as a
+             * PCMK_XA_ROLE attribute
              */
             crm_xml_add(rsc_set, PCMK_XA_ROLE, state);
-            xml_remove_prop(*expanded_xml, XML_COLOC_ATTR_SOURCE_ROLE);
+            xml_remove_prop(*expanded_xml, PCMK_XA_RSC_ROLE);
         }
 
     } else {
@@ -455,7 +453,7 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         scheduler->tickets = pcmk__strkey_table(free, destroy_ticket);
     }
 
-    ticket_str = crm_element_value(xml_obj, XML_TICKET_ATTR_TICKET);
+    ticket_str = crm_element_value(xml_obj, PCMK_XA_TICKET);
     if (ticket_str == NULL) {
         pcmk__config_err("Ignoring constraint '%s' without ticket", id);
         return;
@@ -486,7 +484,7 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 
         any_sets = true;
         set = expand_idref(set, scheduler->input);
-        loss_policy = crm_element_value(xml_obj, XML_TICKET_ATTR_LOSS_POLICY);
+        loss_policy = crm_element_value(xml_obj, PCMK_XA_LOSS_POLICY);
 
         if ((set == NULL) // Configuration error, message already logged
             || (unpack_rsc_ticket_set(set, ticket, loss_policy,

@@ -409,7 +409,7 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
  *
  * \param[in] coloc_id     Colocation XML ID (for error logging)
  * \param[in] rsc          Resource involved in constraint (for default)
- * \param[in] influence_s  String value of influence option
+ * \param[in] influence_s  String value of \c PCMK_XA_INFLUENCE option
  *
  * \return \c pcmk__coloc_influence if string evaluates true, or string is
  *         \c NULL or invalid and resource's \c PCMK_META_CRITICAL option
@@ -424,7 +424,7 @@ unpack_influence(const char *coloc_id, const pcmk_resource_t *rsc,
 
         if (crm_str_to_boolean(influence_s, &influence_i) < 0) {
             pcmk__config_err("Constraint '%s' has invalid value for "
-                             XML_COLOC_ATTR_INFLUENCE " (using default)",
+                             PCMK_XA_INFLUENCE " (using default)",
                              coloc_id);
         } else {
             return (influence_i == 0)? pcmk__coloc_none : pcmk__coloc_influence;
@@ -480,7 +480,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
     }
 
     if (local_score > 0) {
-        for (xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
+        for (xml_rsc = first_named_child(set, PCMK_XE_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
             xml_rsc_id = ID(xml_rsc);
@@ -516,7 +516,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
          * (i.e. that no one in the set can run with anyone else in the set)
          */
 
-        for (xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
+        for (xml_rsc = first_named_child(set, PCMK_XE_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
             xmlNode *xml_rsc_with = NULL;
@@ -532,7 +532,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
             }
             flags = pcmk__coloc_explicit
                     | unpack_influence(coloc_id, resource, influence_s);
-            for (xml_rsc_with = first_named_child(set, XML_TAG_RESOURCE_REF);
+            for (xml_rsc_with = first_named_child(set, PCMK_XE_RESOURCE_REF);
                  xml_rsc_with != NULL;
                  xml_rsc_with = crm_next_same_xml(xml_rsc_with)) {
 
@@ -558,7 +558,8 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
  * \param[in]     set1         Dependent set
  * \param[in]     set2         Primary set
  * \param[in]     score        Colocation score
- * \param[in]     influence_s  Value of colocation's "influence" attribute
+ * \param[in]     influence_s  Value of colocation's \c PCMK_XA_INFLUENCE
+ *                             attribute
  * \param[in,out] scheduler    Scheduler data
  */
 static void
@@ -587,7 +588,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
     rc = pcmk__xe_get_bool_attr(set1, "sequential", &sequential);
     if ((rc != pcmk_rc_ok) || sequential) {
         // Get the first one
-        xml_rsc = first_named_child(set1, XML_TAG_RESOURCE_REF);
+        xml_rsc = first_named_child(set1, PCMK_XE_RESOURCE_REF);
         if (xml_rsc != NULL) {
             xml_rsc_id = ID(xml_rsc);
             rsc_1 = pcmk__find_constraint_resource(scheduler->resources,
@@ -605,7 +606,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
     rc = pcmk__xe_get_bool_attr(set2, "sequential", &sequential);
     if ((rc != pcmk_rc_ok) || sequential) {
         // Get the last one
-        for (xml_rsc = first_named_child(set2, XML_TAG_RESOURCE_REF);
+        for (xml_rsc = first_named_child(set2, PCMK_XE_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
             xml_rsc_id = ID(xml_rsc);
@@ -628,7 +629,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
 
     } else if (rsc_1 != NULL) { // Only set1 is sequential
         flags = pcmk__coloc_explicit | unpack_influence(id, rsc_1, influence_s);
-        for (xml_rsc = first_named_child(set2, XML_TAG_RESOURCE_REF);
+        for (xml_rsc = first_named_child(set2, PCMK_XE_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
             xml_rsc_id = ID(xml_rsc);
@@ -646,7 +647,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
         }
 
     } else if (rsc_2 != NULL) { // Only set2 is sequential
-        for (xml_rsc = first_named_child(set1, XML_TAG_RESOURCE_REF);
+        for (xml_rsc = first_named_child(set1, PCMK_XE_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
             xml_rsc_id = ID(xml_rsc);
@@ -666,7 +667,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
         }
 
     } else { // Neither set is sequential
-        for (xml_rsc = first_named_child(set1, XML_TAG_RESOURCE_REF);
+        for (xml_rsc = first_named_child(set1, PCMK_XE_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
             xmlNode *xml_rsc_2 = NULL;
@@ -684,7 +685,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
 
             flags = pcmk__coloc_explicit
                     | unpack_influence(id, rsc_1, influence_s);
-            for (xml_rsc_2 = first_named_child(set2, XML_TAG_RESOURCE_REF);
+            for (xml_rsc_2 = first_named_child(set2, PCMK_XE_RESOURCE_REF);
                  xml_rsc_2 != NULL;
                  xml_rsc_2 = crm_next_same_xml(xml_rsc_2)) {
 
@@ -714,14 +715,12 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
     uint32_t flags = pcmk__coloc_none;
 
     const char *score = crm_element_value(xml_obj, PCMK_XA_SCORE);
-    const char *dependent_id = crm_element_value(xml_obj,
-                                                 XML_COLOC_ATTR_SOURCE);
-    const char *primary_id = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET);
-    const char *dependent_role = crm_element_value(xml_obj,
-                                                   XML_COLOC_ATTR_SOURCE_ROLE);
+    const char *dependent_id = crm_element_value(xml_obj, PCMK_XA_RSC);
+    const char *primary_id = crm_element_value(xml_obj, PCMK_XA_WITH_RSC);
+    const char *dependent_role = crm_element_value(xml_obj, PCMK_XA_RSC_ROLE);
     const char *primary_role = crm_element_value(xml_obj,
-                                                 XML_COLOC_ATTR_TARGET_ROLE);
-    const char *attr = crm_element_value(xml_obj, XML_COLOC_ATTR_NODE_ATTR);
+                                                 PCMK_XA_WITH_RSC_ROLE);
+    const char *attr = crm_element_value(xml_obj, PCMK_XA_NODE_ATTRIBUTE);
 
     const char *primary_instance = NULL;
     const char *dependent_instance = NULL;
@@ -843,8 +842,8 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         return pcmk_rc_ok;
     }
 
-    dependent_id = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
-    primary_id = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET);
+    dependent_id = crm_element_value(xml_obj, PCMK_XA_RSC);
+    primary_id = crm_element_value(xml_obj, PCMK_XA_WITH_RSC);
     if ((dependent_id == NULL) || (primary_id == NULL)) {
         return pcmk_rc_ok;
     }
@@ -875,14 +874,14 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         return pcmk_rc_unpack_error;
     }
 
-    dependent_role = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE);
-    primary_role = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_ROLE);
+    dependent_role = crm_element_value(xml_obj, PCMK_XA_RSC_ROLE);
+    primary_role = crm_element_value(xml_obj, PCMK_XA_WITH_RSC_ROLE);
 
     *expanded_xml = copy_xml(xml_obj);
 
     // Convert dependent's template/tag reference into constraint resource_set
-    if (!pcmk__tag_to_set(*expanded_xml, &dependent_set, XML_COLOC_ATTR_SOURCE,
-                          true, scheduler)) {
+    if (!pcmk__tag_to_set(*expanded_xml, &dependent_set, PCMK_XA_RSC, true,
+                          scheduler)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_unpack_error;
@@ -890,16 +889,16 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     if (dependent_set != NULL) {
         if (dependent_role != NULL) {
-            // Move "rsc-role" into converted resource_set as PCMK_XA_ROLE
+            // Move PCMK_XA_RSC_ROLE into converted resource_set as PCMK_XA_ROLE
             crm_xml_add(dependent_set, PCMK_XA_ROLE, dependent_role);
-            xml_remove_prop(*expanded_xml, XML_COLOC_ATTR_SOURCE_ROLE);
+            xml_remove_prop(*expanded_xml, PCMK_XA_RSC_ROLE);
         }
         any_sets = true;
     }
 
     // Convert primary's template/tag reference into constraint resource_set
-    if (!pcmk__tag_to_set(*expanded_xml, &primary_set, XML_COLOC_ATTR_TARGET,
-                          true, scheduler)) {
+    if (!pcmk__tag_to_set(*expanded_xml, &primary_set, PCMK_XA_WITH_RSC, true,
+                          scheduler)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_unpack_error;
@@ -907,9 +906,11 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     if (primary_set != NULL) {
         if (primary_role != NULL) {
-            // Move "with-rsc-role" into converted resource_set as PCMK_XA_ROLE
+            /* Move PCMK_XA_WITH_RSC_ROLE into converted resource_set as
+             * PCMK_XA_ROLE
+             */
             crm_xml_add(primary_set, PCMK_XA_ROLE, primary_role);
-            xml_remove_prop(*expanded_xml, XML_COLOC_ATTR_TARGET_ROLE);
+            xml_remove_prop(*expanded_xml, PCMK_XA_WITH_RSC_ROLE);
         }
         any_sets = true;
     }
@@ -964,7 +965,7 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     if (score != NULL) {
         score_i = char2score(score);
     }
-    influence_s = crm_element_value(xml_obj, XML_COLOC_ATTR_INFLUENCE);
+    influence_s = crm_element_value(xml_obj, PCMK_XA_INFLUENCE);
 
     for (set = first_named_child(xml_obj, XML_CONS_TAG_RSC_SET); set != NULL;
          set = crm_next_same_xml(set)) {

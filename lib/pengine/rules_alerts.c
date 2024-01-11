@@ -34,8 +34,8 @@ get_meta_attrs_from_cib(xmlNode *basenode, pcmk__alert_t *entry,
     const char *value = NULL;
     int rc = pcmk_rc_ok;
 
-    pe_unpack_nvpairs(basenode, basenode, XML_TAG_META_SETS, NULL, config_hash,
-                      NULL, FALSE, now, NULL);
+    pe_unpack_nvpairs(basenode, basenode, PCMK_XE_META_ATTRIBUTES, NULL,
+                      config_hash, NULL, FALSE, now, NULL);
     crm_time_free(now);
 
     value = g_hash_table_lookup(config_hash, PCMK_META_ENABLED);
@@ -91,7 +91,7 @@ get_envvars_from_cib(xmlNode *basenode, pcmk__alert_t *entry)
         return;
     }
 
-    child = first_named_child(basenode, XML_TAG_ATTR_SETS);
+    child = first_named_child(basenode, PCMK_XE_INSTANCE_ATTRIBUTES);
     if (child == NULL) {
         return;
     }
@@ -100,7 +100,7 @@ get_envvars_from_cib(xmlNode *basenode, pcmk__alert_t *entry)
         entry->envvars = pcmk__strkey_table(free, free);
     }
 
-    for (child = first_named_child(child, XML_CIB_TAG_NVPAIR); child != NULL;
+    for (child = first_named_child(child, PCMK_XE_NVPAIR); child != NULL;
          child = crm_next_same_xml(child)) {
 
         const char *name = crm_element_value(child, PCMK_XA_NAME);
@@ -118,29 +118,29 @@ get_envvars_from_cib(xmlNode *basenode, pcmk__alert_t *entry)
 static void
 unpack_alert_filter(xmlNode *basenode, pcmk__alert_t *entry)
 {
-    xmlNode *select = first_named_child(basenode, XML_CIB_TAG_ALERT_SELECT);
+    xmlNode *select = first_named_child(basenode, PCMK_XE_SELECT);
     xmlNode *event_type = NULL;
     uint32_t flags = pcmk__alert_none;
 
     for (event_type = pcmk__xe_first_child(select); event_type != NULL;
          event_type = pcmk__xe_next(event_type)) {
 
-        if (pcmk__xe_is(event_type, XML_CIB_TAG_ALERT_FENCING)) {
+        if (pcmk__xe_is(event_type, PCMK_XE_SELECT_FENCING)) {
             flags |= pcmk__alert_fencing;
 
-        } else if (pcmk__xe_is(event_type, XML_CIB_TAG_ALERT_NODES)) {
+        } else if (pcmk__xe_is(event_type, PCMK_XE_SELECT_NODES)) {
             flags |= pcmk__alert_node;
 
-        } else if (pcmk__xe_is(event_type, XML_CIB_TAG_ALERT_RESOURCES)) {
+        } else if (pcmk__xe_is(event_type, PCMK_XE_SELECT_RESOURCES)) {
             flags |= pcmk__alert_resource;
 
-        } else if (pcmk__xe_is(event_type, XML_CIB_TAG_ALERT_ATTRIBUTES)) {
+        } else if (pcmk__xe_is(event_type, PCMK_XE_SELECT_ATTRIBUTES)) {
             xmlNode *attr;
             const char *attr_name;
             int nattrs = 0;
 
             flags |= pcmk__alert_attribute;
-            for (attr = first_named_child(event_type, XML_CIB_TAG_ALERT_ATTR);
+            for (attr = first_named_child(event_type, PCMK_XE_ATTRIBUTE);
                  attr != NULL;
                  attr = crm_next_same_xml(attr)) {
 
@@ -218,8 +218,8 @@ pe_unpack_alerts(const xmlNode *alerts)
         return alert_list;
     }
 
-    for (alert = first_named_child(alerts, XML_CIB_TAG_ALERT);
-         alert != NULL; alert = crm_next_same_xml(alert)) {
+    for (alert = first_named_child(alerts, PCMK_XE_ALERT); alert != NULL;
+         alert = crm_next_same_xml(alert)) {
 
         xmlNode *recipient;
         int recipients = 0;
@@ -254,7 +254,7 @@ pe_unpack_alerts(const xmlNode *alerts)
                   entry->id, entry->path, entry->timeout, entry->tstamp_format,
                   (entry->envvars? g_hash_table_size(entry->envvars) : 0));
 
-        for (recipient = first_named_child(alert, XML_CIB_TAG_ALERT_RECIPIENT);
+        for (recipient = first_named_child(alert, PCMK_XE_RECIPIENT);
              recipient != NULL; recipient = crm_next_same_xml(recipient)) {
 
             pcmk__alert_t *recipient_entry = pcmk__dup_alert(entry);

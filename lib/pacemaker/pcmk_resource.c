@@ -23,9 +23,10 @@
 #include <pacemaker-internal.h>
 
 // Search path for resource operation history (takes node name and resource ID)
-#define XPATH_OP_HISTORY "//" XML_CIB_TAG_STATUS                            \
-                         "/" XML_CIB_TAG_STATE "[@" PCMK_XA_UNAME "='%s']"  \
-                         "/" XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES      \
+#define XPATH_OP_HISTORY "//" PCMK_XE_STATUS                            \
+                         "/" PCMK__XE_NODE_STATE                        \
+                         "[@" PCMK_XA_UNAME "='%s']"                    \
+                         "/" XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES  \
                          "/" XML_LRM_TAG_RESOURCE "[@" PCMK_XA_ID "='%s']"
 
 static xmlNode *
@@ -133,7 +134,7 @@ pcmk__resource_delete(cib_t *cib, uint32_t cib_opts, const char *rsc_id,
     msg_data = create_xml_node(NULL, rsc_type);
     crm_xml_add(msg_data, PCMK_XA_ID, rsc_id);
 
-    rc = cib->cmds->remove(cib, XML_CIB_TAG_RESOURCES, msg_data, cib_opts);
+    rc = cib->cmds->remove(cib, PCMK_XE_RESOURCES, msg_data, cib_opts);
     rc = pcmk_legacy2rc(rc);
 
     free_xml(msg_data);

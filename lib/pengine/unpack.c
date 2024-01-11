@@ -183,17 +183,17 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
 // @TODO xpaths can't handle templates, rules, or id-refs
 
 // nvpair with provides or requires set to unfencing
-#define XPATH_UNFENCING_NVPAIR XML_CIB_TAG_NVPAIR       \
+#define XPATH_UNFENCING_NVPAIR PCMK_XE_NVPAIR           \
     "[(@" PCMK_XA_NAME "='" PCMK_STONITH_PROVIDES "'"   \
     "or @" PCMK_XA_NAME "='" PCMK_META_REQUIRES "') "   \
     "and @" PCMK_XA_VALUE "='" PCMK__VALUE_UNFENCING "']"
 
 // unfencing in rsc_defaults or any resource
 #define XPATH_ENABLE_UNFENCING \
-    "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_RESOURCES   \
-    "//" XML_TAG_META_SETS "/" XPATH_UNFENCING_NVPAIR                                               \
-    "|/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_RSCCONFIG  \
-    "/" XML_TAG_META_SETS "/" XPATH_UNFENCING_NVPAIR
+    "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_RESOURCES     \
+    "//" PCMK_XE_META_ATTRIBUTES "/" XPATH_UNFENCING_NVPAIR             \
+    "|/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_RSC_DEFAULTS \
+    "/" PCMK_XE_META_ATTRIBUTES "/" XPATH_UNFENCING_NVPAIR
 
 static void
 set_if_xpath(uint64_t flag, const char *xpath, pcmk_scheduler_t *scheduler)
@@ -227,8 +227,9 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     scheduler->config_hash = config_hash;
 
-    pe__unpack_dataset_nvpairs(config, XML_CIB_TAG_PROPSET, &rule_data, config_hash,
-                               CIB_OPTIONS_FIRST, FALSE, scheduler);
+    pe__unpack_dataset_nvpairs(config, PCMK_XE_CLUSTER_PROPERTY_SET, &rule_data,
+                               config_hash, CIB_OPTIONS_FIRST, FALSE,
+                               scheduler);
 
     verify_pe_options(scheduler->config_hash);
 
@@ -545,8 +546,8 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pcmk_scheduler_t *data
     for (attr_set = pcmk__xe_first_child(xml_obj); attr_set != NULL;
          attr_set = pcmk__xe_next(attr_set)) {
 
-        if (!pcmk__str_eq((const char *)attr_set->name, XML_TAG_META_SETS,
-                          pcmk__str_casei)) {
+        if (!pcmk__str_eq((const char *) attr_set->name,
+                          PCMK_XE_META_ATTRIBUTES, pcmk__str_casei)) {
             continue;
         }
 
@@ -633,7 +634,8 @@ unpack_nodes(xmlNode *xml_nodes, pcmk_scheduler_t *scheduler)
     for (xml_obj = pcmk__xe_first_child(xml_nodes); xml_obj != NULL;
          xml_obj = pcmk__xe_next(xml_obj)) {
 
-        if (pcmk__str_eq((const char *)xml_obj->name, XML_CIB_TAG_NODE, pcmk__str_none)) {
+        if (pcmk__str_eq((const char *) xml_obj->name, PCMK_XE_NODE,
+                         pcmk__str_none)) {
             new_node = NULL;
 
             id = crm_element_value(xml_obj, PCMK_XA_ID);
@@ -643,7 +645,7 @@ unpack_nodes(xmlNode *xml_nodes, pcmk_scheduler_t *scheduler)
             crm_trace("Processing node %s/%s", uname, id);
 
             if (id == NULL) {
-                pcmk__config_err("Ignoring <" XML_CIB_TAG_NODE
+                pcmk__config_err("Ignoring <" PCMK_XE_NODE
                                  "> entry in configuration without id");
                 continue;
             }
@@ -733,7 +735,8 @@ unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
         /* Check for guest nodes, which are defined by special meta-attributes
          * of a primitive of any type (for example, VirtualDomain or Xen).
          */
-        if (pcmk__str_eq((const char *)xml_obj->name, XML_CIB_TAG_RESOURCE, pcmk__str_none)) {
+        if (pcmk__str_eq((const char *) xml_obj->name, PCMK_XE_PRIMITIVE,
+                         pcmk__str_none)) {
             /* This will add an ocf:pacemaker:remote primitive to the
              * configuration for the guest node's connection, to be unpacked
              * later.
@@ -753,7 +756,8 @@ unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
         /* Check for guest nodes inside a group. Clones are currently not
          * supported as guest nodes.
          */
-        if (pcmk__str_eq((const char *)xml_obj->name, XML_CIB_TAG_GROUP, pcmk__str_none)) {
+        if (pcmk__str_eq((const char *) xml_obj->name, PCMK_XE_GROUP,
+                         pcmk__str_none)) {
             xmlNode *xml_obj2 = NULL;
             for (xml_obj2 = pcmk__xe_first_child(xml_obj); xml_obj2 != NULL;
                  xml_obj2 = pcmk__xe_next(xml_obj2)) {
@@ -862,7 +866,7 @@ unpack_resources(const xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
             continue;
         }
 
-        if (pcmk__str_eq((const char *) xml_obj->name, XML_CIB_TAG_RSC_TEMPLATE,
+        if (pcmk__str_eq((const char *) xml_obj->name, PCMK_XE_TEMPLATE,
                          pcmk__str_none)) {
             if (g_hash_table_lookup_extended(scheduler->template_rsc_sets, id,
                                              NULL, NULL) == FALSE) {
@@ -1052,7 +1056,8 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
     const xmlNode *attrs = NULL;
     pcmk_resource_t *rsc = NULL;
 
-    if (!pcmk__str_eq((const char *)state->name, XML_CIB_TAG_STATE, pcmk__str_none)) {
+    if (!pcmk__str_eq((const char *) state->name, PCMK__XE_NODE_STATE,
+                      pcmk__str_none)) {
         return;
     }
 
@@ -1152,9 +1157,9 @@ unpack_transient_attributes(const xmlNode *state, pcmk_node_t *node,
  * \brief Unpack a node state entry (first pass)
  *
  * Unpack one node state entry from status. This unpacks information from the
- * node_state element itself and node attributes inside it, but not the
- * resource history inside it. Multiple passes through the status are needed to
- * fully unpack everything.
+ * \C PCMK__XE_NODE_STATE element itself and node attributes inside it, but not
+ * the resource history inside it. Multiple passes through the status are needed
+ * to fully unpack everything.
  *
  * \param[in]     state      CIB node state XML
  * \param[in,out] scheduler  Scheduler data
@@ -1168,7 +1173,7 @@ unpack_node_state(const xmlNode *state, pcmk_scheduler_t *scheduler)
 
     id = crm_element_value(state, PCMK_XA_ID);
     if (id == NULL) {
-        pcmk__config_err("Ignoring invalid " XML_CIB_TAG_STATE " entry without "
+        pcmk__config_err("Ignoring invalid " PCMK__XE_NODE_STATE " entry without "
                          PCMK_XA_ID);
         crm_log_xml_info(state, "missing-id");
         return;
@@ -1178,12 +1183,13 @@ unpack_node_state(const xmlNode *state, pcmk_scheduler_t *scheduler)
     if (uname == NULL) {
         /* If a joining peer makes the cluster acquire the quorum from corosync
          * meanwhile it has not joined CPG membership of pacemaker-controld yet,
-         * it's possible that the created node_state entry doesn't have an uname
-         * yet. We should recognize the node as `pending` and wait for it to
-         * join CPG.
+         * it's possible that the created PCMK__XE_NODE_STATE entry doesn't have
+         * a PCMK_XA_UNAME yet. We should recognize the node as `pending` and
+         * wait for it to join CPG.
          */
-        crm_trace("Handling " XML_CIB_TAG_STATE " entry with id=\"%s\" without "
-                  PCMK_XA_UNAME, id);
+        crm_trace("Handling " PCMK__XE_NODE_STATE " entry with id=\"%s\" "
+                  "without " PCMK_XA_UNAME,
+                  id);
     }
 
     this_node = pe_find_node_any(scheduler->nodes, id, uname);
@@ -1252,8 +1258,8 @@ unpack_node_history(const xmlNode *status, bool fence,
 {
     int rc = pcmk_rc_ok;
 
-    // Loop through all node_state entries in CIB status
-    for (const xmlNode *state = first_named_child(status, XML_CIB_TAG_STATE);
+    // Loop through all PCMK__XE_NODE_STATE entries in CIB status
+    for (const xmlNode *state = first_named_child(status, PCMK__XE_NODE_STATE);
          state != NULL; state = crm_next_same_xml(state)) {
 
         const char *id = ID(state);
@@ -1263,7 +1269,7 @@ unpack_node_history(const xmlNode *status, bool fence,
         if ((id == NULL) || (uname == NULL)) {
             // Warning already logged in first pass through status section
             crm_trace("Not unpacking resource history from malformed "
-                      XML_CIB_TAG_STATE " without id and/or uname");
+                      PCMK__XE_NODE_STATE " without id and/or uname");
             continue;
         }
 
@@ -1365,7 +1371,8 @@ unpack_status(xmlNode *status, pcmk_scheduler_t *scheduler)
         if (pcmk__str_eq((const char *)state->name, XML_CIB_TAG_TICKETS, pcmk__str_none)) {
             unpack_tickets_state((xmlNode *) state, scheduler);
 
-        } else if (pcmk__str_eq((const char *)state->name, XML_CIB_TAG_STATE, pcmk__str_none)) {
+        } else if (pcmk__str_eq((const char *) state->name, PCMK__XE_NODE_STATE,
+                                pcmk__str_none)) {
             unpack_node_state(state, scheduler);
         }
     }
@@ -1423,7 +1430,7 @@ unpack_status(xmlNode *status, pcmk_scheduler_t *scheduler)
  * \internal
  * \brief Unpack node's time when it became a member at the cluster layer
  *
- * \param[in]     node_state  Node's node_state entry
+ * \param[in]     node_state  Node's \c PCMK__XE_NODE_STATE entry
  * \param[in,out] scheduler   Scheduler data
  *
  * \return Epoch time when node became a cluster member
@@ -1457,7 +1464,7 @@ unpack_node_member(const xmlNode *node_state, pcmk_scheduler_t *scheduler)
         if ((pcmk__scan_ll(member_time, &when_member,
                            0LL) != pcmk_rc_ok) || (when_member < 0LL)) {
             crm_warn("Unrecognized value '%s' for " PCMK__XA_IN_CCM
-                     " in " XML_CIB_TAG_STATE " entry", member_time);
+                     " in " PCMK__XE_NODE_STATE " entry", member_time);
             return -1LL;
         }
         return when_member;
@@ -1468,7 +1475,7 @@ unpack_node_member(const xmlNode *node_state, pcmk_scheduler_t *scheduler)
  * \internal
  * \brief Unpack node's time when it became online in process group
  *
- * \param[in] node_state  Node's node_state entry
+ * \param[in] node_state  Node's \c PCMK__XE_NODE_STATE entry
  *
  * \return Epoch time when node became online in process group (or 0 if not
  *         online, or 1 for legacy online entries)
@@ -1492,7 +1499,7 @@ unpack_node_online(const xmlNode *node_state)
         if ((pcmk__scan_ll(peer_time, &when_online, 0LL) != pcmk_rc_ok)
             || (when_online < 0)) {
             crm_warn("Unrecognized value '%s' for " PCMK__XA_CRMD " in "
-                     XML_CIB_TAG_STATE " entry, assuming offline", peer_time);
+                     PCMK__XE_NODE_STATE " entry, assuming offline", peer_time);
             return 0LL;
         }
         return when_online;
@@ -1504,7 +1511,7 @@ unpack_node_online(const xmlNode *node_state)
  * \brief Unpack node attribute for user-requested fencing
  *
  * \param[in] node        Node to check
- * \param[in] node_state  Node's node_state entry in CIB status
+ * \param[in] node_state  Node's \c PCMK__XE_NODE_STATE entry in CIB status
  *
  * \return \c true if fencing has been requested for \p node, otherwise \c false
  */
@@ -1938,7 +1945,7 @@ create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
                      pcmk_scheduler_t *scheduler)
 {
     pcmk_resource_t *rsc = NULL;
-    xmlNode *xml_rsc = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
+    xmlNode *xml_rsc = create_xml_node(NULL, PCMK_XE_PRIMITIVE);
 
     copy_in_properties(xml_rsc, rsc_entry);
     crm_xml_add(xml_rsc, PCMK_XA_ID, rsc_id);
@@ -2863,8 +2870,8 @@ set_node_score(gpointer key, gpointer value, gpointer user_data)
     node->weight = *score;
 }
 
-#define XPATH_NODE_STATE "/" XML_TAG_CIB "/" XML_CIB_TAG_STATUS     \
-                         "/" XML_CIB_TAG_STATE
+#define XPATH_NODE_STATE "/" PCMK_XE_CIB "/" PCMK_XE_STATUS \
+                         "/" PCMK__XE_NODE_STATE
 #define SUB_XPATH_LRM_RESOURCE "/" XML_CIB_TAG_LRM              \
                                "/" XML_LRM_TAG_RESOURCES        \
                                "/" XML_LRM_TAG_RESOURCE
@@ -4971,11 +4978,11 @@ add_node_attrs(const xmlNode *xml_obj, pcmk_node_t *node, bool overwrite,
                             strdup(cluster_name));
     }
 
-    pe__unpack_dataset_nvpairs(xml_obj, XML_TAG_ATTR_SETS, &rule_data,
+    pe__unpack_dataset_nvpairs(xml_obj, PCMK_XE_INSTANCE_ATTRIBUTES, &rule_data,
                                node->details->attrs, NULL, overwrite,
                                scheduler);
 
-    pe__unpack_dataset_nvpairs(xml_obj, XML_TAG_UTILIZATION, &rule_data,
+    pe__unpack_dataset_nvpairs(xml_obj, PCMK_XE_UTILIZATION, &rule_data,
                                node->details->utilization, NULL,
                                FALSE, scheduler);
 
@@ -5068,7 +5075,7 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
     GList *intermediate = NULL;
 
     xmlNode *tmp = NULL;
-    xmlNode *status = find_xml_node(scheduler->input, XML_CIB_TAG_STATUS, TRUE);
+    xmlNode *status = find_xml_node(scheduler->input, PCMK_XE_STATUS, TRUE);
 
     pcmk_node_t *this_node = NULL;
 
@@ -5077,7 +5084,8 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
     for (node_state = pcmk__xe_first_child(status); node_state != NULL;
          node_state = pcmk__xe_next(node_state)) {
 
-        if (pcmk__str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, pcmk__str_none)) {
+        if (pcmk__str_eq((const char *) node_state->name, PCMK__XE_NODE_STATE,
+                         pcmk__str_none)) {
             const char *uname = crm_element_value(node_state, PCMK_XA_UNAME);
 
             if (node != NULL && !pcmk__str_eq(uname, node, pcmk__str_casei)) {

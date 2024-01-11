@@ -197,7 +197,7 @@ set_join_state(const char *start_state, const char *node_name, const char *node_
                    "environment", node_name, start_state);
         cib__update_node_attr(controld_globals.logger_out,
                               controld_globals.cib_conn, cib_sync_call,
-                              XML_CIB_TAG_NODES, node_uuid,
+                              PCMK_XE_NODES, node_uuid,
                               NULL, NULL, NULL, "standby", "on", NULL,
                               remote ? "remote" : NULL);
 
@@ -206,7 +206,7 @@ set_join_state(const char *start_state, const char *node_name, const char *node_
                    "environment", node_name, start_state);
         cib__update_node_attr(controld_globals.logger_out,
                               controld_globals.cib_conn, cib_sync_call,
-                              XML_CIB_TAG_NODES, node_uuid,
+                              PCMK_XE_NODES, node_uuid,
                               NULL, NULL, NULL, "standby", "off", NULL,
                               remote ? "remote" : NULL);
 
@@ -224,7 +224,7 @@ update_conn_host_cache(xmlNode *node, void *userdata)
 {
     const char *remote = crm_element_value(node, PCMK_XA_ID);
     const char *conn_host = crm_element_value(node, PCMK__XA_CONN_HOST);
-    const char *state = crm_element_value(node, XML_CIB_TAG_STATE);
+    const char *state = crm_element_value(node, PCMK__XA_NODE_STATE);
 
     crm_node_t *remote_peer = crm_remote_peer_get(remote);
 
@@ -350,9 +350,10 @@ do_cl_join_finalize_respond(long long action,
         /* Update the remote node cache with information about which node
          * is hosting the connection.
          */
-        remotes = pcmk__xe_match(input->msg, XML_CIB_TAG_NODES, NULL, NULL);
+        remotes = pcmk__xe_match(input->msg, PCMK_XE_NODES, NULL, NULL);
         if (remotes != NULL) {
-            pcmk__xe_foreach_child(remotes, XML_CIB_TAG_NODE, update_conn_host_cache, NULL);
+            pcmk__xe_foreach_child(remotes, PCMK_XE_NODE,
+                                   update_conn_host_cache, NULL);
         }
 
     } else {

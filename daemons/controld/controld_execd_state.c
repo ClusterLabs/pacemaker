@@ -477,7 +477,7 @@ remote_config_check(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
 
         crm_debug("Call %d : Parsing CIB options", call_id);
 
-        pe_unpack_nvpairs(output, output, XML_CIB_TAG_PROPSET, NULL,
+        pe_unpack_nvpairs(output, output, PCMK_XE_CLUSTER_PROPERTY_SET, NULL,
                           config_hash, CIB_OPTIONS_FIRST, FALSE, now, NULL);
 
         /* Now send it to the remote peer */
@@ -507,7 +507,7 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
                 /* Look up PCMK_OPT_STONITH_WATCHDOG_TIMEOUT and send to the
                  * remote peer for validation
                  */
-                int rc = cib_conn->cmds->query(cib_conn, XML_CIB_TAG_CRMCONFIG,
+                int rc = cib_conn->cmds->query(cib_conn, PCMK_XE_CRM_CONFIG,
                                                NULL, cib_scope_local);
                 cib_conn->cmds->register_callback_full(cib_conn, rc, 10, FALSE,
                                                        lrmd,

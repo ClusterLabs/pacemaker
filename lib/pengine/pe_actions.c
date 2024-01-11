@@ -254,7 +254,7 @@ pcmk__unpack_action_rsc_params(const xmlNode *action_xml,
         .op_data = NULL
     };
 
-    pe__unpack_dataset_nvpairs(action_xml, XML_TAG_ATTR_SETS,
+    pe__unpack_dataset_nvpairs(action_xml, PCMK_XE_INSTANCE_ATTRIBUTES,
                                &rule_data, params, NULL,
                                FALSE, scheduler);
     return params;
@@ -731,16 +731,18 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
     meta = pcmk__strkey_table(free, free);
 
     // Cluster-wide <op_defaults> <meta_attributes>
-    pe__unpack_dataset_nvpairs(rsc->cluster->op_defaults, XML_TAG_META_SETS,
-                               &rule_data, meta, NULL, FALSE, rsc->cluster);
+    pe__unpack_dataset_nvpairs(rsc->cluster->op_defaults,
+                               PCMK_XE_META_ATTRIBUTES, &rule_data, meta, NULL,
+                               FALSE, rsc->cluster);
 
     // Derive default timeout for probes from recurring monitor timeouts
     if (pcmk_is_probe(action_name, interval_ms)) {
         xmlNode *min_interval_mon = most_frequent_monitor(rsc);
 
         if (min_interval_mon != NULL) {
-            /* @TODO This does not consider timeouts set in meta_attributes
-             * blocks (which may also have rules that need to be evaluated).
+            /* @TODO This does not consider timeouts set in
+             * PCMK_XE_META_ATTRIBUTES blocks (which may also have rules that
+             * need to be evaluated).
              */
             timeout_spec = crm_element_value(min_interval_mon,
                                              PCMK_META_TIMEOUT);
@@ -759,8 +761,8 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
 
     if (action_config != NULL) {
         // <op> <meta_attributes> take precedence over defaults
-        pe__unpack_dataset_nvpairs(action_config, XML_TAG_META_SETS, &rule_data,
-                                   meta, NULL, TRUE, rsc->cluster);
+        pe__unpack_dataset_nvpairs(action_config, PCMK_XE_META_ATTRIBUTES,
+                                   &rule_data, meta, NULL, TRUE, rsc->cluster);
 
         /* Anything set as an <op> XML property has highest precedence.
          * This ensures we use the name and interval from the <op> tag.
@@ -1447,9 +1449,9 @@ pe_get_configured_timeout(pcmk_resource_t *rsc, const char *action,
 
     if (timeout_spec == NULL && scheduler->op_defaults) {
         action_meta = pcmk__strkey_table(free, free);
-        pe__unpack_dataset_nvpairs(scheduler->op_defaults, XML_TAG_META_SETS,
-                                   &rule_data, action_meta, NULL, FALSE,
-                                   scheduler);
+        pe__unpack_dataset_nvpairs(scheduler->op_defaults,
+                                   PCMK_XE_META_ATTRIBUTES, &rule_data,
+                                   action_meta, NULL, FALSE, scheduler);
         timeout_spec = g_hash_table_lookup(action_meta, PCMK_META_TIMEOUT);
     }
 

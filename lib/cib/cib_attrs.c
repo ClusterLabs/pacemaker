@@ -66,21 +66,22 @@ find_attr(cib_t *cib, const char *section, const char *node_uuid,
     if (attr_set_type) {
         set_type = attr_set_type;
     } else {
-        set_type = XML_TAG_ATTR_SETS;
+        set_type = PCMK_XE_INSTANCE_ATTRIBUTES;
     }
 
-    if (pcmk__str_eq(section, XML_CIB_TAG_CRMCONFIG, pcmk__str_casei)) {
+    if (pcmk__str_eq(section, PCMK_XE_CRM_CONFIG, pcmk__str_casei)) {
         node_uuid = NULL;
-        set_type = XML_CIB_TAG_PROPSET;
+        set_type = PCMK_XE_CLUSTER_PROPERTY_SET;
 
-    } else if (pcmk__strcase_any_of(section, XML_CIB_TAG_OPCONFIG, XML_CIB_TAG_RSCCONFIG,
+    } else if (pcmk__strcase_any_of(section,
+                                    PCMK_XE_OP_DEFAULTS, PCMK_XE_RSC_DEFAULTS,
                                     NULL)) {
         node_uuid = NULL;
-        set_type = XML_TAG_META_SETS;
+        set_type = PCMK_XE_META_ATTRIBUTES;
 
     } else if (pcmk__str_eq(section, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
         node_uuid = NULL;
-        section = XML_CIB_TAG_STATUS;
+        section = PCMK_XE_STATUS;
         node_type = XML_CIB_TAG_TICKETS;
 
     } else if (node_uuid == NULL) {
@@ -100,10 +101,10 @@ find_attr(cib_t *cib, const char *section, const char *node_uuid,
         pcmk__g_strcat(xpath, "//", node_type, NULL);
 
     } else if (node_uuid) {
-        const char *node_type = XML_CIB_TAG_NODE;
+        const char *node_type = PCMK_XE_NODE;
 
-        if (pcmk__str_eq(section, XML_CIB_TAG_STATUS, pcmk__str_casei)) {
-            node_type = XML_CIB_TAG_STATE;
+        if (pcmk__str_eq(section, PCMK_XE_STATUS, pcmk__str_casei)) {
+            node_type = PCMK__XE_NODE_STATE;
             set_type = XML_TAG_TRANSIENT_NODEATTRS;
         }
         pcmk__g_strcat(xpath,
@@ -214,35 +215,35 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
         crm_trace("%s does not exist, create it", attr_name);
         if (pcmk__str_eq(section, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
             node_uuid = NULL;
-            section = XML_CIB_TAG_STATUS;
+            section = PCMK_XE_STATUS;
             node_type = XML_CIB_TAG_TICKETS;
 
-            xml_top = create_xml_node(xml_obj, XML_CIB_TAG_STATUS);
+            xml_top = create_xml_node(xml_obj, PCMK_XE_STATUS);
             xml_obj = create_xml_node(xml_top, XML_CIB_TAG_TICKETS);
 
-        } else if (pcmk__str_eq(section, XML_CIB_TAG_NODES, pcmk__str_casei)) {
+        } else if (pcmk__str_eq(section, PCMK_XE_NODES, pcmk__str_casei)) {
 
             if (node_uuid == NULL) {
                 return EINVAL;
             }
 
             if (pcmk__str_eq(node_type, "remote", pcmk__str_casei)) {
-                xml_top = create_xml_node(xml_obj, XML_CIB_TAG_NODES);
-                xml_obj = create_xml_node(xml_top, XML_CIB_TAG_NODE);
+                xml_top = create_xml_node(xml_obj, PCMK_XE_NODES);
+                xml_obj = create_xml_node(xml_top, PCMK_XE_NODE);
                 crm_xml_add(xml_obj, PCMK_XA_TYPE, "remote");
                 crm_xml_add(xml_obj, PCMK_XA_ID, node_uuid);
                 crm_xml_add(xml_obj, PCMK_XA_UNAME, node_uuid);
             } else {
-                tag = XML_CIB_TAG_NODE;
+                tag = PCMK_XE_NODE;
             }
 
-        } else if (pcmk__str_eq(section, XML_CIB_TAG_STATUS, pcmk__str_casei)) {
+        } else if (pcmk__str_eq(section, PCMK_XE_STATUS, pcmk__str_casei)) {
             tag = XML_TAG_TRANSIENT_NODEATTRS;
             if (node_uuid == NULL) {
                 return EINVAL;
             }
 
-            xml_top = create_xml_node(xml_obj, XML_CIB_TAG_STATE);
+            xml_top = create_xml_node(xml_obj, PCMK__XE_NODE_STATE);
             crm_xml_add(xml_top, PCMK_XA_ID, node_uuid);
             xml_obj = xml_top;
 
@@ -252,7 +253,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
         }
 
         if (set_name == NULL) {
-            if (pcmk__str_eq(section, XML_CIB_TAG_CRMCONFIG, pcmk__str_casei)) {
+            if (pcmk__str_eq(section, PCMK_XE_CRM_CONFIG, pcmk__str_casei)) {
                 local_set_name = strdup(CIB_OPTIONS_FIRST);
 
             } else if (pcmk__str_eq(node_type, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
@@ -294,17 +295,18 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
         }
 
         if (node_uuid == NULL && !pcmk__str_eq(node_type, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
-            if (pcmk__str_eq(section, XML_CIB_TAG_CRMCONFIG, pcmk__str_casei)) {
-                xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_PROPSET);
+            if (pcmk__str_eq(section, PCMK_XE_CRM_CONFIG, pcmk__str_casei)) {
+                xml_obj = create_xml_node(xml_obj,
+                                          PCMK_XE_CLUSTER_PROPERTY_SET);
             } else {
-                xml_obj = create_xml_node(xml_obj, XML_TAG_META_SETS);
+                xml_obj = create_xml_node(xml_obj, PCMK_XE_META_ATTRIBUTES);
             }
 
         } else if (set_type) {
             xml_obj = create_xml_node(xml_obj, set_type);
 
         } else {
-            xml_obj = create_xml_node(xml_obj, XML_TAG_ATTR_SETS);
+            xml_obj = create_xml_node(xml_obj, PCMK_XE_INSTANCE_ATTRIBUTES);
         }
         crm_xml_add(xml_obj, PCMK_XA_ID, set_name);
 
@@ -554,7 +556,7 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
         tag = (const char *) (result->name);
     }
 
-    if (pcmk__str_eq(tag, XML_CIB_TAG_NODE, pcmk__str_casei)) {
+    if (pcmk__str_eq(tag, PCMK_XE_NODE, pcmk__str_casei)) {
         /* Result is <node> tag from <nodes> section */
 
         if (pcmk__str_eq(crm_element_value(result, PCMK_XA_TYPE), "remote",
@@ -566,13 +568,13 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
             parsed_is_remote = FALSE;
         }
 
-    } else if (pcmk__str_eq(tag, XML_CIB_TAG_RESOURCE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(tag, PCMK_XE_PRIMITIVE, pcmk__str_casei)) {
         /* Result is <primitive> for ocf:pacemaker:remote resource */
 
         parsed_uuid = ID(result);
         parsed_is_remote = TRUE;
 
-    } else if (pcmk__str_eq(tag, XML_CIB_TAG_NVPAIR, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(tag, PCMK_XE_NVPAIR, pcmk__str_casei)) {
         /* Result is PCMK_META_REMOTE_NODE parameter of <primitive> for guest
          * node
          */
@@ -580,8 +582,8 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
         parsed_uuid = crm_element_value(result, PCMK_XA_VALUE);
         parsed_is_remote = TRUE;
 
-    } else if (pcmk__str_eq(tag, XML_CIB_TAG_STATE, pcmk__str_casei)) {
-        /* Result is <node_state> tag from <status> section */
+    } else if (pcmk__str_eq(tag, PCMK__XE_NODE_STATE, pcmk__str_casei)) {
+        // Result is PCMK__XE_NODE_STATE tag from PCMK_XE_STATUS section
 
         parsed_uuid = crm_element_value(result, PCMK_XA_UNAME);
         if (pcmk__xe_attr_is_true(result, XML_NODE_IS_REMOTE)) {
@@ -611,15 +613,15 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
 #define XPATH_UPPER_TRANS "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 #define XPATH_LOWER_TRANS "abcdefghijklmnopqrstuvwxyz"
 #define XPATH_NODE \
-    "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_NODES \
-        "/" XML_CIB_TAG_NODE "[translate(@" PCMK_XA_UNAME ",'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']" \
-    "|/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_RESOURCES \
-        "/" XML_CIB_TAG_RESOURCE \
+    "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_NODES \
+        "/" PCMK_XE_NODE "[translate(@" PCMK_XA_UNAME ",'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']" \
+    "|/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_RESOURCES \
+        "/" PCMK_XE_PRIMITIVE \
         "[@class='ocf'][@provider='pacemaker'][@type='remote'][translate(@id,'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']" \
-    "|/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_RESOURCES \
-        "/" XML_CIB_TAG_RESOURCE "/" XML_TAG_META_SETS "/" XML_CIB_TAG_NVPAIR \
+    "|/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_RESOURCES \
+        "/" PCMK_XE_PRIMITIVE "/" PCMK_XE_META_ATTRIBUTES "/" PCMK_XE_NVPAIR \
         "[@name='" PCMK_META_REMOTE_NODE "'][translate(@value,'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']" \
-    "|/" XML_TAG_CIB "/" XML_CIB_TAG_STATUS "/" XML_CIB_TAG_STATE \
+    "|/" PCMK_XE_CIB "/" PCMK_XE_STATUS "/" PCMK__XE_NODE_STATE \
         "[@" XML_NODE_IS_REMOTE "='true'][translate(@" PCMK_XA_ID ",'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']"
 
 int
@@ -663,6 +665,11 @@ query_node_uuid(cib_t * the_cib, const char *uname, char **uuid, int *is_remote_
     return rc;
 }
 
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/cib/util_compat.h>
+
 int
 query_node_uname(cib_t * the_cib, const char *uuid, char **uname)
 {
@@ -675,14 +682,14 @@ query_node_uname(cib_t * the_cib, const char *uuid, char **uname)
     CRM_ASSERT(uname != NULL);
     CRM_ASSERT(uuid != NULL);
 
-    rc = the_cib->cmds->query(the_cib, XML_CIB_TAG_NODES, &fragment,
+    rc = the_cib->cmds->query(the_cib, PCMK_XE_NODES, &fragment,
                               cib_sync_call | cib_scope_local);
     if (rc != pcmk_ok) {
         return rc;
     }
 
     xml_obj = fragment;
-    CRM_CHECK(pcmk__xe_is(xml_obj, XML_CIB_TAG_NODES), return -ENOMSG);
+    CRM_CHECK(pcmk__xe_is(xml_obj, PCMK_XE_NODES), return -ENOMSG);
     crm_log_xml_trace(xml_obj, "Result section");
 
     rc = -ENXIO;
@@ -691,7 +698,7 @@ query_node_uname(cib_t * the_cib, const char *uuid, char **uname)
     for (a_child = pcmk__xml_first_child(xml_obj); a_child != NULL;
          a_child = pcmk__xml_next(a_child)) {
 
-        if (pcmk__str_eq((const char *)a_child->name, XML_CIB_TAG_NODE,
+        if (pcmk__str_eq((const char *) a_child->name, PCMK_XE_NODE,
                          pcmk__str_none)) {
             child_name = ID(a_child);
             if (pcmk__str_eq(uuid, child_name, pcmk__str_casei)) {
@@ -718,12 +725,12 @@ set_standby(cib_t * the_cib, const char *uuid, const char *scope, const char *st
     CRM_CHECK(uuid != NULL, return -EINVAL);
     CRM_CHECK(standby_value != NULL, return -EINVAL);
 
-    if (pcmk__strcase_any_of(scope, "reboot", XML_CIB_TAG_STATUS, NULL)) {
-        scope = XML_CIB_TAG_STATUS;
+    if (pcmk__strcase_any_of(scope, "reboot", PCMK_XE_STATUS, NULL)) {
+        scope = PCMK_XE_STATUS;
         attr_id = crm_strdup_printf("transient-standby-%.256s", uuid);
 
     } else {
-        scope = XML_CIB_TAG_NODES;
+        scope = PCMK_XE_NODES;
         attr_id = crm_strdup_printf("standby-%.256s", uuid);
     }
 
@@ -733,3 +740,6 @@ set_standby(cib_t * the_cib, const char *uuid, const char *scope, const char *st
     free(attr_id);
     return rc;
 }
+
+// LCOV_EXCL_STOP
+// End deprecated API

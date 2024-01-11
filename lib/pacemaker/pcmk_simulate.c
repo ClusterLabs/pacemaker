@@ -339,8 +339,8 @@ profile_file(const char *xml_file, long long repeat,
     cib_object = filename2xml(xml_file);
     start = clock();
 
-    if (pcmk_find_cib_element(cib_object, XML_CIB_TAG_STATUS) == NULL) {
-        create_xml_node(cib_object, XML_CIB_TAG_STATUS);
+    if (pcmk_find_cib_element(cib_object, PCMK_XE_STATUS) == NULL) {
+        create_xml_node(cib_object, PCMK_XE_STATUS);
     }
 
     if (cli_config_update(&cib_object, NULL, FALSE) == FALSE) {
@@ -505,7 +505,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
     xmlNode *cib_node = NULL;
     xmlNode *cib_resource = NULL;
-    xmlNode *action_rsc = first_named_child(action->xml, XML_CIB_TAG_RESOURCE);
+    xmlNode *action_rsc = first_named_child(action->xml, PCMK_XE_PRIMITIVE);
 
     char *node = crm_element_value_copy(action->xml, PCMK__META_ON_NODE);
     char *uuid = NULL;
@@ -637,7 +637,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
     pcmk__inject_action_result(cib_resource, op, target_outcome);
     lrmd_free_event(op);
-    rc = fake_cib->cmds->modify(fake_cib, XML_CIB_TAG_STATUS, cib_node,
+    rc = fake_cib->cmds->modify(fake_cib, PCMK_XE_STATUS, cib_node,
                                 cib_sync_call|cib_scope_local);
     CRM_ASSERT(rc == pcmk_ok);
 
@@ -663,7 +663,7 @@ simulate_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     const char *node = crm_element_value(action->xml, PCMK__META_ON_NODE);
     const char *task = crm_element_value(action->xml, PCMK_XA_OPERATION);
-    xmlNode *rsc = first_named_child(action->xml, XML_CIB_TAG_RESOURCE);
+    xmlNode *rsc = first_named_child(action->xml, PCMK_XE_PRIMITIVE);
 
     pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     out->message(out, "inject-cluster-action", node, task, rsc);
@@ -698,13 +698,13 @@ simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
         CRM_ASSERT(cib_node != NULL);
         crm_xml_add(cib_node, PCMK_XA_CRM_DEBUG_ORIGIN, __func__);
-        rc = fake_cib->cmds->replace(fake_cib, XML_CIB_TAG_STATUS, cib_node,
+        rc = fake_cib->cmds->replace(fake_cib, PCMK_XE_STATUS, cib_node,
                                      cib_sync_call|cib_scope_local);
         CRM_ASSERT(rc == pcmk_ok);
 
         // Simulate controller clearing node's resource history and attributes
         pcmk__g_strcat(xpath,
-                       "//" XML_CIB_TAG_STATE
+                       "//" PCMK__XE_NODE_STATE
                        "[@" PCMK_XA_UNAME "='", target, "']/" XML_CIB_TAG_LRM,
                        NULL);
         fake_cib->cmds->remove(fake_cib, (const char *) xpath->str, NULL,
@@ -712,7 +712,7 @@ simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
         g_string_truncate(xpath, 0);
         pcmk__g_strcat(xpath,
-                       "//" XML_CIB_TAG_STATE
+                       "//" PCMK__XE_NODE_STATE
                        "[@" PCMK_XA_UNAME "='", target, "']"
                        "/" XML_TAG_TRANSIENT_NODEATTRS, NULL);
         fake_cib->cmds->remove(fake_cib, (const char *) xpath->str, NULL,

@@ -25,21 +25,6 @@
 #include <crm/common/xml_internal.h>
 #include <crm/pengine/rules.h>
 
-xmlNode *
-cib_get_generation(cib_t * cib)
-{
-    xmlNode *the_cib = NULL;
-    xmlNode *generation = create_xml_node(NULL, XML_CIB_TAG_GENERATION_TUPPLE);
-
-    cib->cmds->query(cib, NULL, &the_cib, cib_scope_local | cib_sync_call);
-    if (the_cib != NULL) {
-        copy_in_properties(generation, the_cib);
-        free_xml(the_cib);
-    }
-
-    return generation;
-}
-
 gboolean
 cib_version_details(xmlNode * cib, int *admin_epoch, int *epoch, int *updates)
 {
@@ -124,7 +109,7 @@ cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
  *
  * \param[in] patchset  CIB XML patchset
  * \param[in] element   XML tag of CIB element to check (\c NULL is equivalent
- *                      to \c XML_TAG_CIB)
+ *                      to \c PCMK_XE_CIB)
  *
  * \return \c true if \p element was modified, or \c false otherwise
  */
@@ -132,7 +117,7 @@ static bool
 element_in_patchset_v1(const xmlNode *patchset, const char *element)
 {
     char *xpath = crm_strdup_printf(XPATH_DIFF_V1 "//%s",
-                                    pcmk__s(element, XML_TAG_CIB));
+                                    pcmk__s(element, PCMK_XE_CIB));
     xmlXPathObject *xpath_obj = xpath_search(patchset, xpath);
 
     free(xpath);
@@ -150,7 +135,7 @@ element_in_patchset_v1(const xmlNode *patchset, const char *element)
  *
  * \param[in] patchset  CIB XML patchset
  * \param[in] element   XML tag of CIB element to check (\c NULL is equivalent
- *                      to \c XML_TAG_CIB). Supported values include any CIB
+ *                      to \c PCMK_XE_CIB). Supported values include any CIB
  *                      element supported by \c pcmk__cib_abs_xpath_for().
  *
  * \return \c true if \p element was modified, or \c false otherwise
@@ -200,7 +185,7 @@ element_in_patchset_v2(const xmlNode *patchset, const char *element)
  *
  * \param[in] patchset  CIB XML patchset
  * \param[in] element   XML tag of CIB element to check (\c NULL is equivalent
- *                      to \c XML_TAG_CIB). Supported values include any CIB
+ *                      to \c PCMK_XE_CIB). Supported values include any CIB
  *                      element supported by \c pcmk__cib_abs_xpath_for().
  *
  * \return \c true if \p element was modified, or \c false otherwise
@@ -239,7 +224,7 @@ createEmptyCib(int cib_epoch)
 {
     xmlNode *cib_root = NULL, *config = NULL;
 
-    cib_root = create_xml_node(NULL, XML_TAG_CIB);
+    cib_root = create_xml_node(NULL, PCMK_XE_CIB);
     crm_xml_add(cib_root, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
     crm_xml_add(cib_root, PCMK_XA_VALIDATE_WITH, xml_latest_schema());
 
@@ -247,19 +232,19 @@ createEmptyCib(int cib_epoch)
     crm_xml_add_int(cib_root, PCMK_XA_NUM_UPDATES, 0);
     crm_xml_add_int(cib_root, PCMK_XA_ADMIN_EPOCH, 0);
 
-    config = create_xml_node(cib_root, XML_CIB_TAG_CONFIGURATION);
-    create_xml_node(cib_root, XML_CIB_TAG_STATUS);
+    config = create_xml_node(cib_root, PCMK_XE_CONFIGURATION);
+    create_xml_node(cib_root, PCMK_XE_STATUS);
 
-    create_xml_node(config, XML_CIB_TAG_CRMCONFIG);
-    create_xml_node(config, XML_CIB_TAG_NODES);
-    create_xml_node(config, XML_CIB_TAG_RESOURCES);
-    create_xml_node(config, XML_CIB_TAG_CONSTRAINTS);
+    create_xml_node(config, PCMK_XE_CRM_CONFIG);
+    create_xml_node(config, PCMK_XE_NODES);
+    create_xml_node(config, PCMK_XE_RESOURCES);
+    create_xml_node(config, PCMK_XE_CONSTRAINTS);
 
 #if PCMK__RESOURCE_STICKINESS_DEFAULT != 0
     {
-        xmlNode *rsc_defaults = create_xml_node(config, XML_CIB_TAG_RSCCONFIG);
-        xmlNode *meta = create_xml_node(rsc_defaults, XML_TAG_META_SETS);
-        xmlNode *nvpair = create_xml_node(meta, XML_CIB_TAG_NVPAIR);
+        xmlNode *rsc_defaults = create_xml_node(config, PCMK_XE_RSC_DEFAULTS);
+        xmlNode *meta = create_xml_node(rsc_defaults, PCMK_XE_META_ATTRIBUTES);
+        xmlNode *nvpair = create_xml_node(meta, PCMK_XE_NVPAIR);
 
         crm_xml_add(meta, PCMK_XA_ID, "build-resource-defaults");
         crm_xml_add(nvpair, PCMK_XA_ID, "build-" PCMK_META_RESOURCE_STICKINESS);
@@ -324,7 +309,7 @@ should_copy_cib(const char *op, const char *section, int call_options)
         return false;
     }
 
-    if (pcmk__str_eq(section, XML_CIB_TAG_STATUS, pcmk__str_none)) {
+    if (pcmk__str_eq(section, PCMK_XE_STATUS, pcmk__str_none)) {
         /* Copying large CIBs accounts for a huge percentage of our CIB usage,
          * and this avoids some of it.
          *
@@ -512,7 +497,8 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
     fix_plus_plus_recursive(scratch);
 
     if (!make_copy) {
-        /* At this point, patchset_cib is just the "cib" tag and its properties.
+        /* At this point, patchset_cib is just the PCMK_XE_CIB tag and its
+         * properties.
          *
          * The v1 format would barf on this, but we know the v2 patch
          * format only needs it for the top-level version fields
@@ -571,7 +557,7 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
         );
     }
 
-    if (pcmk__str_eq(section, XML_CIB_TAG_STATUS, pcmk__str_casei)) {
+    if (pcmk__str_eq(section, PCMK_XE_STATUS, pcmk__str_casei)) {
         /* Throttle the amount of costly validation we perform due to status updates
          * a) we don't really care whats in the status section
          * b) we don't validate any of its contents at the moment anyway
@@ -925,10 +911,10 @@ cib_read_config(GHashTable * options, xmlNode * current_cib)
 
     g_hash_table_remove_all(options);
 
-    config = pcmk_find_cib_element(current_cib, XML_CIB_TAG_CRMCONFIG);
+    config = pcmk_find_cib_element(current_cib, PCMK_XE_CRM_CONFIG);
     if (config) {
-        pe_unpack_nvpairs(current_cib, config, XML_CIB_TAG_PROPSET, NULL,
-                          options, CIB_OPTIONS_FIRST, TRUE, now, NULL);
+        pe_unpack_nvpairs(current_cib, config, PCMK_XE_CLUSTER_PROPERTY_SET,
+                          NULL, options, CIB_OPTIONS_FIRST, TRUE, now, NULL);
     }
 
     verify_cib_options(options);
@@ -1090,6 +1076,21 @@ cib__clean_up_connection(cib_t **cib)
 // LCOV_EXCL_START
 
 #include <crm/cib/util_compat.h>
+
+xmlNode *
+cib_get_generation(cib_t * cib)
+{
+    xmlNode *the_cib = NULL;
+    xmlNode *generation = create_xml_node(NULL, XML_CIB_TAG_GENERATION_TUPPLE);
+
+    cib->cmds->query(cib, NULL, &the_cib, cib_scope_local | cib_sync_call);
+    if (the_cib != NULL) {
+        copy_in_properties(generation, the_cib);
+        free_xml(the_cib);
+    }
+
+    return generation;
+}
 
 const char *
 get_object_path(const char *object_type)

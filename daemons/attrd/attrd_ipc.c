@@ -67,7 +67,7 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
         /* If a specific node was requested, add its value */
         if (host) {
             v = g_hash_table_lookup(a->values, host);
-            host_value = create_xml_node(reply, XML_CIB_TAG_NODE);
+            host_value = create_xml_node(reply, PCMK_XE_NODE);
             if (host_value == NULL) {
                 free_xml(reply);
                 return NULL;
@@ -82,7 +82,7 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
 
             g_hash_table_iter_init(&iter, a->values);
             while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &v)) {
-                host_value = create_xml_node(reply, XML_CIB_TAG_NODE);
+                host_value = create_xml_node(reply, PCMK_XE_NODE);
                 if (host_value == NULL) {
                     free_xml(reply);
                     return NULL;

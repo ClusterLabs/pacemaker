@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 the Pacemaker project contributors
+ * Copyright 2012-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -656,7 +656,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
         char *value = NULL;
         GHashTableIter iter;
 
-        xmlNode *args = create_xml_node(notify, XML_TAG_ATTRS);
+        xmlNode *args = create_xml_node(notify, PCMK__XE_ATTRIBUTES);
 
         g_hash_table_iter_init(&iter, cmd->params);
         while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {

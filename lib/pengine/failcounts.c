@@ -90,7 +90,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
      * Ideally, we'd unpack the operation before this point, and pass in a
      * meta-attributes table that takes all that into consideration.
      */
-    char *xpath = crm_strdup_printf("//" XML_CIB_TAG_RESOURCE
+    char *xpath = crm_strdup_printf("//" PCMK_XE_PRIMITIVE
                                     "[@" PCMK_XA_ID "='%s']"
                                     "//" PCMK_XE_OP
                                     "[@" PCMK_META_ON_FAIL "='block']",
@@ -128,7 +128,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                 pcmk_parse_interval_spec(conf_op_interval_spec,
                                          &conf_op_interval_ms);
 
-#define XPATH_FMT "//" XML_CIB_TAG_STATE "[@" PCMK_XA_UNAME "='%s']"        \
+#define XPATH_FMT "//" PCMK__XE_NODE_STATE "[@" PCMK_XA_UNAME "='%s']"      \
                   "//" XML_LRM_TAG_RESOURCE "[@" PCMK_XA_ID "='%s']"        \
                   "/" XML_LRM_TAG_RSC_OP "[@" PCMK_XA_OPERATION "='%s']"    \
                   "[@" PCMK_META_INTERVAL "='%u']"

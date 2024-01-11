@@ -202,7 +202,7 @@ feature_update_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, vo
 #define dc_takeover_update_attr(name, value) do {                           \
        cib__update_node_attr(controld_globals.logger_out,                   \
                              controld_globals.cib_conn, cib_none,           \
-                             XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL, \
+                             PCMK_XE_CRM_CONFIG, NULL, NULL, NULL, NULL,    \
                              name, value, NULL, NULL);                      \
     } while (0)
 
@@ -227,9 +227,9 @@ do_dc_takeover(long long action,
     controld_globals.cib_conn->cmds->set_primary(controld_globals.cib_conn,
                                                  cib_scope_local);
 
-    cib = create_xml_node(NULL, XML_TAG_CIB);
+    cib = create_xml_node(NULL, PCMK_XE_CIB);
     crm_xml_add(cib, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
-    controld_update_cib(XML_TAG_CIB, cib, cib_none, feature_update_callback);
+    controld_update_cib(PCMK_XE_CIB, cib, cib_none, feature_update_callback);
 
     dc_takeover_update_attr(PCMK_OPT_HAVE_WATCHDOG, pcmk__btoa(watchdog));
     dc_takeover_update_attr(PCMK_OPT_DC_VERSION,
@@ -274,7 +274,7 @@ do_dc_release(long long action,
             update = create_node_state_update(node, node_update_expected, NULL,
                                               __func__);
             /* Don't need a based response because controld will stop. */
-            fsa_cib_anon_update_discard_reply(XML_CIB_TAG_STATUS, update);
+            fsa_cib_anon_update_discard_reply(PCMK_XE_STATUS, update);
             free_xml(update);
         }
         register_fsa_input(C_FSA_INTERNAL, I_RELEASE_SUCCESS, NULL);

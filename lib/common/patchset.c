@@ -153,7 +153,7 @@ is_config_change(xmlNode *xml)
     GList *gIter = NULL;
     xml_node_private_t *nodepriv = NULL;
     xml_doc_private_t *docpriv;
-    xmlNode *config = first_named_child(xml, XML_CIB_TAG_CONFIGURATION);
+    xmlNode *config = first_named_child(xml, PCMK_XE_CONFIGURATION);
 
     if (config) {
         nodepriv = config->_private;
@@ -168,7 +168,7 @@ is_config_change(xmlNode *xml)
             pcmk__deleted_xml_t *deleted_obj = gIter->data;
 
             if (strstr(deleted_obj->path,
-                       "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION) != NULL) {
+                       "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION) != NULL) {
                 return TRUE;
             }
         }
@@ -203,7 +203,7 @@ xml_repair_v1_diff(xmlNode *last, xmlNode *next, xmlNode *local_diff,
         diff_child = create_xml_node(local_diff, tag);
     }
 
-    tag = XML_TAG_CIB;
+    tag = PCMK_XE_CIB;
     cib = find_xml_node(diff_child, tag, FALSE);
     if (cib == NULL) {
         cib = create_xml_node(diff_child, tag);
@@ -224,7 +224,7 @@ xml_repair_v1_diff(xmlNode *last, xmlNode *next, xmlNode *local_diff,
         diff_child = create_xml_node(local_diff, tag);
     }
 
-    tag = XML_TAG_CIB;
+    tag = PCMK_XE_CIB;
     cib = find_xml_node(diff_child, tag, FALSE);
     if (cib == NULL) {
         cib = create_xml_node(diff_child, tag);
@@ -549,7 +549,7 @@ find_patch_xml_node(const xmlNode *patchset, int format, bool added,
         case 1:
             label = added? PCMK__XE_DIFF_ADDED : PCMK__XE_DIFF_REMOVED;
             *patch_node = find_xml_node(patchset, label, FALSE);
-            cib_node = find_xml_node(*patch_node, "cib", FALSE);
+            cib_node = find_xml_node(*patch_node, PCMK_XE_CIB, FALSE);
             if (cib_node != NULL) {
                 *patch_node = cib_node;
             }

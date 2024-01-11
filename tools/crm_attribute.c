@@ -147,8 +147,8 @@ utilization_cb(const gchar *option_name, const gchar *optarg, gpointer data, GEr
         g_free(options.type);
     }
 
-    options.type = g_strdup(XML_CIB_TAG_NODES);
-    pcmk__str_update(&options.set_type, XML_TAG_UTILIZATION);
+    options.type = g_strdup(PCMK_XE_NODES);
+    pcmk__str_update(&options.set_type, PCMK_XE_UTILIZATION);
     return TRUE;
 }
 
@@ -589,22 +589,22 @@ set_type(void)
     if (options.type == NULL) {
         if (options.promotion_score) {
             // Updating a promotion score node attribute
-            options.type = g_strdup(XML_CIB_TAG_STATUS);
+            options.type = g_strdup(PCMK_XE_STATUS);
 
         } else if (options.dest_uname != NULL) {
             // Updating some other node attribute
-            options.type = g_strdup(XML_CIB_TAG_NODES);
+            options.type = g_strdup(PCMK_XE_NODES);
 
         } else {
             // Updating cluster options
-            options.type = g_strdup(XML_CIB_TAG_CRMCONFIG);
+            options.type = g_strdup(PCMK_XE_CRM_CONFIG);
         }
 
     } else if (pcmk__str_eq(options.type, "reboot", pcmk__str_casei)) {
-        options.type = g_strdup(XML_CIB_TAG_STATUS);
+        options.type = g_strdup(PCMK_XE_STATUS);
 
     } else if (pcmk__str_eq(options.type, "forever", pcmk__str_casei)) {
-        options.type = g_strdup(XML_CIB_TAG_NODES);
+        options.type = g_strdup(PCMK_XE_NODES);
     }
 }
 
@@ -614,7 +614,7 @@ use_attrd(void)
     /* Only go through the attribute manager for transient attributes, and
      * then only if we're not using a file as the CIB.
      */
-    return pcmk__str_eq(options.type, XML_CIB_TAG_STATUS, pcmk__str_casei) &&
+    return pcmk__str_eq(options.type, PCMK_XE_STATUS, pcmk__str_casei) &&
            getenv("CIB_file") == NULL && getenv("CIB_shadow") == NULL;
 }
 
@@ -757,8 +757,8 @@ main(int argc, char **argv)
     set_type();
 
     // Use default node if not given (except for cluster options and tickets)
-    if (!pcmk__strcase_any_of(options.type, XML_CIB_TAG_CRMCONFIG, XML_CIB_TAG_TICKETS,
-                              NULL)) {
+    if (!pcmk__strcase_any_of(options.type,
+                              PCMK_XE_CRM_CONFIG, XML_CIB_TAG_TICKETS, NULL)) {
         /* If we are being called from a resource agent via the cluster,
          * the correct local node name will be passed as an environment
          * variable. Otherwise, we have to ask the cluster.
@@ -828,7 +828,7 @@ main(int argc, char **argv)
         options.attr_options |= pcmk__node_attr_remote;
     }
 
-    if (pcmk__str_eq(options.set_type, XML_TAG_UTILIZATION, pcmk__str_none)) {
+    if (pcmk__str_eq(options.set_type, PCMK_XE_UTILIZATION, pcmk__str_none)) {
         options.attr_options |= pcmk__node_attr_utilization;
     }
 

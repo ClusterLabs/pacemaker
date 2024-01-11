@@ -258,14 +258,14 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
         crm_err("*** Disabling disk writes to avoid confusing Valgrind ***");
     }
 
-    status = find_xml_node(root, XML_CIB_TAG_STATUS, FALSE);
+    status = find_xml_node(root, PCMK_XE_STATUS, FALSE);
     if (discard_status && status != NULL) {
-        /* strip out the status section if there is one */
+        // Strip out the PCMK_XE_STATUS section if there is one
         free_xml(status);
         status = NULL;
     }
     if (status == NULL) {
-        create_xml_node(root, XML_CIB_TAG_STATUS);
+        create_xml_node(root, PCMK_XE_STATUS);
     }
 
     /* Do this before schema validation happens */

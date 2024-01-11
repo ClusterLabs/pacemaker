@@ -55,9 +55,10 @@ node_has_attr(const char *node, const char *name, const char *value)
      */
     xpath = g_string_sized_new(256);
     pcmk__g_strcat(xpath,
-                   "//" XML_CIB_TAG_NODES "/" XML_CIB_TAG_NODE
-                   "[@" PCMK_XA_UNAME "='", node, "']/" XML_TAG_ATTR_SETS
-                   "/" XML_CIB_TAG_NVPAIR
+                   "//" PCMK_XE_NODES "/" PCMK_XE_NODE
+                   "[@" PCMK_XA_UNAME "='", node, "']"
+                   "/" PCMK_XE_INSTANCE_ATTRIBUTES
+                   "/" PCMK_XE_NVPAIR
                    "[@" PCMK_XA_NAME "='", name, "' "
                    "and @" PCMK_XA_VALUE "='", value, "']", NULL);
 
@@ -187,8 +188,8 @@ remove_cib_device(xmlXPathObjectPtr xpathObj)
     }
 }
 
-#define XPATH_WATCHDOG_TIMEOUT "//" XML_CIB_TAG_NVPAIR         \
-                               "[@" PCMK_XA_NAME "='"  \
+#define XPATH_WATCHDOG_TIMEOUT "//" PCMK_XE_NVPAIR      \
+                               "[@" PCMK_XA_NAME "='"   \
                                     PCMK_OPT_STONITH_WATCHDOG_TIMEOUT "']"
 
 static void
@@ -280,7 +281,7 @@ update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
     xpath_obj = xpath_search(msg,
                              "//" F_CIB_UPDATE_RESULT
                              "//" PCMK__XE_DIFF_REMOVED
-                             "//" XML_CIB_TAG_RESOURCE);
+                             "//" PCMK_XE_PRIMITIVE);
     if (numXpathResults(xpath_obj) > 0) {
         remove_cib_device(xpath_obj);
     }
@@ -290,7 +291,7 @@ update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
     xpath_obj = xpath_search(msg,
                              "//" F_CIB_UPDATE_RESULT
                              "//" PCMK__XE_DIFF_ADDED
-                             "//" XML_CIB_TAG_RESOURCE);
+                             "//" PCMK_XE_PRIMITIVE);
     if (numXpathResults(xpath_obj) > 0) {
         int max = numXpathResults(xpath_obj), lpc = 0;
 
@@ -333,17 +334,17 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
         const char *xpath = crm_element_value(change, PCMK_XA_PATH);
         const char *shortpath = NULL;
 
-        if ((op == NULL) ||
-            (strcmp(op, "move") == 0) ||
-            strstr(xpath, "/"XML_CIB_TAG_STATUS)) {
+        if (pcmk__str_eq(op, "move", pcmk__str_null_matches)
+            || (strstr(xpath, "/" PCMK_XE_STATUS) != NULL)) {
             continue;
-        } else if (pcmk__str_eq(op, "delete", pcmk__str_casei) && strstr(xpath, "/"XML_CIB_TAG_RESOURCE)) {
+        } else if (pcmk__str_eq(op, "delete", pcmk__str_casei)
+                   && (strstr(xpath, "/" PCMK_XE_PRIMITIVE) != NULL)) {
             const char *rsc_id = NULL;
             char *search = NULL;
             char *mutable = NULL;
 
-            if (strstr(xpath, XML_TAG_ATTR_SETS) ||
-                strstr(xpath, XML_TAG_META_SETS)) {
+            if ((strstr(xpath, PCMK_XE_INSTANCE_ATTRIBUTES) != NULL)
+                || (strstr(xpath, PCMK_XE_META_ATTRIBUTES) != NULL)) {
                 needs_update = TRUE;
                 pcmk__str_update(&reason,
                                  "(meta) attribute deleted from resource");
@@ -365,9 +366,9 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
             }
             free(mutable);
 
-        } else if (strstr(xpath, "/"XML_CIB_TAG_RESOURCES) ||
-                   strstr(xpath, "/"XML_CIB_TAG_CONSTRAINTS) ||
-                   strstr(xpath, "/"XML_CIB_TAG_RSCCONFIG)) {
+        } else if (strstr(xpath, "/" PCMK_XE_RESOURCES)
+                   || strstr(xpath, "/" PCMK_XE_CONSTRAINTS)
+                   || strstr(xpath, "/" PCMK_XE_RSC_DEFAULTS)) {
             shortpath = strrchr(xpath, '/'); CRM_ASSERT(shortpath);
             reason = crm_strdup_printf("%s %s", op, shortpath+1);
             needs_update = TRUE;
@@ -573,7 +574,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
                 fencing_topology_init();
                 return;
 
-            } else if (strstr(xpath, "/" XML_CIB_TAG_CONFIGURATION)) {
+            } else if (strstr(xpath, "/" PCMK_XE_CONFIGURATION)) {
                 /* Changes to the whole config section, possibly including the topology as a whild */
                 if(first_named_child(change, XML_TAG_FENCING_TOPOLOGY) == NULL) {
                     crm_trace("Nothing for us in %s operation %d.%d.%d for %s.",

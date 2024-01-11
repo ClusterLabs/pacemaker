@@ -167,7 +167,7 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
     xmlNode *remote;
     xmlNode *xml_sub;
 
-    remote = create_xml_node(parent, XML_CIB_TAG_RESOURCE);
+    remote = create_xml_node(parent, PCMK_XE_PRIMITIVE);
 
     // Add identity
     crm_xml_add(remote, PCMK_XA_ID, uname);
@@ -176,8 +176,8 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
     crm_xml_add(remote, PCMK_XA_TYPE, "remote");
 
     // Add meta-attributes
-    xml_sub = create_xml_node(remote, XML_TAG_META_SETS);
-    crm_xml_set_id(xml_sub, "%s-%s", uname, XML_TAG_META_SETS);
+    xml_sub = create_xml_node(remote, PCMK_XE_META_ATTRIBUTES);
+    crm_xml_set_id(xml_sub, "%s-%s", uname, PCMK_XE_META_ATTRIBUTES);
     crm_create_nvpair_xml(xml_sub, NULL,
                           PCMK__META_INTERNAL_RSC, PCMK_VALUE_TRUE);
     if (container_id) {
@@ -194,8 +194,8 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
 
     // Add instance attributes
     if (port || server) {
-        xml_sub = create_xml_node(remote, XML_TAG_ATTR_SETS);
-        crm_xml_set_id(xml_sub, "%s-%s", uname, XML_TAG_ATTR_SETS);
+        xml_sub = create_xml_node(remote, PCMK_XE_INSTANCE_ATTRIBUTES);
+        crm_xml_set_id(xml_sub, "%s-%s", uname, PCMK_XE_INSTANCE_ATTRIBUTES);
         if (server) {
             crm_create_nvpair_xml(xml_sub, NULL, PCMK_REMOTE_RA_ADDR, server);
         }

@@ -363,14 +363,15 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
     xmlNode *list = nvpair_list;
     xmlNode *an_attr = NULL;
 
-    if (pcmk__xe_is(list->children, XML_TAG_ATTRS)) {
+    if (pcmk__xe_is(list->children, PCMK__XE_ATTRIBUTES)) {
         list = list->children;
     }
 
     for (an_attr = pcmk__xe_first_child(list); an_attr != NULL;
          an_attr = pcmk__xe_next(an_attr)) {
 
-        if (pcmk__str_eq((const char *)an_attr->name, XML_CIB_TAG_NVPAIR, pcmk__str_none)) {
+        if (pcmk__str_eq((const char *) an_attr->name, PCMK_XE_NVPAIR,
+                         pcmk__str_none)) {
             xmlNode *ref_nvpair = expand_idref(an_attr, top);
 
             name = crm_element_value(an_attr, PCMK_XA_NAME);

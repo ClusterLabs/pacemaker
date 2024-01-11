@@ -449,7 +449,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
                        add[0], add[1], add[2], fn, line, path,
                        pcmk__btoa(controld_globals.transition_graph->complete));
 
-        } else if (pcmk__xe_is(reason, XML_CIB_TAG_NVPAIR)) {
+        } else if (pcmk__xe_is(reason, PCMK_XE_NVPAIR)) {
             do_crm_log(level, "Transition %d aborted by %s doing %s %s=%s: %s "
                        CRM_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",
                        controld_globals.transition_graph->id,
@@ -473,7 +473,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
                        pcmk__btoa(controld_globals.transition_graph->complete));
 
         } else if (pcmk__str_any_of((const char *) reason->name,
-                   XML_CIB_TAG_STATE, XML_CIB_TAG_NODE, NULL)) {
+                   PCMK__XE_NODE_STATE, PCMK_XE_NODE, NULL)) {
             const char *uname = crm_peer_uname(ID(reason));
 
             do_crm_log(level, "Transition %d aborted by %s '%s' on %s: %s "

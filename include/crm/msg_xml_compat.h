@@ -646,6 +646,171 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_PARAMETERS instead
 #define XML_TAG_PARAMS PCMK_XE_PARAMETERS
 
+//! \deprecated Use \c PCMK_XA_RSC instead
+#define XML_COLOC_ATTR_SOURCE PCMK_XA_RSC
+
+//! \deprecated Use \c PCMK_XA_RSC instead
+#define XML_LOC_ATTR_SOURCE PCMK_XA_RSC
+
+//! \deprecated Use \c PCMK_XA_RSC_ROLE instead
+#define XML_COLOC_ATTR_SOURCE_ROLE PCMK_XA_RSC_ROLE
+
+//! \deprecated Use \c PCMK_XA_WITH_RSC instead
+#define XML_COLOC_ATTR_TARGET PCMK_XA_WITH_RSC
+
+//! \deprecated Use \c PCMK_XA_WITH_RSC_ROLE instead
+#define XML_COLOC_ATTR_TARGET_ROLE PCMK_XA_WITH_RSC_ROLE
+
+//! \deprecated Use \c PCMK_XA_NODE_ATTRIBUTE instead
+#define XML_COLOC_ATTR_NODE_ATTR PCMK_XA_NODE_ATTRIBUTE
+
+//! \deprecated Use \c PCMK_XA_INFLUENCE instead
+#define XML_COLOC_ATTR_INFLUENCE PCMK_XA_INFLUENCE
+
+//! \deprecated Use \c PCMK_XA_RSC_PATTERN instead
+#define XML_LOC_ATTR_SOURCE_PATTERN PCMK_XA_RSC_PATTERN
+
+//! \deprecated Use \c PCMK_XA_FIRST instead
+#define XML_ORDER_ATTR_FIRST PCMK_XA_FIRST
+
+//! \deprecated Use \c PCMK_XA_THEN instead
+#define XML_ORDER_ATTR_THEN PCMK_XA_THEN
+
+//! \deprecated Use \c PCMK_XA_FIRST_ACTION instead
+#define XML_ORDER_ATTR_FIRST_ACTION PCMK_XA_FIRST_ACTION
+
+//! \deprecated Use \c PCMK_XA_THEN_ACTION instead
+#define XML_ORDER_ATTR_THEN_ACTION PCMK_XA_THEN_ACTION
+
+//! \deprecated Use \c PCMK_XA_KIND instead
+#define XML_ORDER_ATTR_KIND PCMK_XA_KIND
+
+//! \deprecated Use \c PCMK_XA_KIND instead
+#define XML_ACL_ATTR_KIND PCMK_XA_KIND
+
+//! \deprecated Use \c PCMK_XA_TICKET instead
+#define XML_TICKET_ATTR_TICKET PCMK_XA_TICKET
+
+//! \deprecated Use \c PCMK_XA_LOSS_POLICY instead
+#define XML_TICKET_ATTR_LOSS_POLICY PCMK_XA_LOSS_POLICY
+
+//! \deprecated Do not use
+#define XML_ACL_ATTR_REFv1 "ref"
+
+//! \deprecated Use \c PCMK_XA_OBJECT_TYPE instead
+#define XML_ACL_ATTR_TAG PCMK_XA_OBJECT_TYPE
+
+//! \deprecated Do not use
+#define XML_ACL_ATTR_TAGv1 "tag"
+
+//! \deprecated Use \c PCMK_XA_XPATH instead
+#define XML_ACL_ATTR_XPATH PCMK_XA_XPATH
+
+//! \deprecated Do not use
+#define XML_CRM_TAG_PING "ping_response"
+
+//! \deprecated Use \c PCMK_XE_CIB instead
+#define XML_TAG_CIB PCMK_XE_CIB
+
+//! \deprecated Use \c PCMK_XE_CONFIGURATION instead
+#define XML_CIB_TAG_CONFIGURATION PCMK_XE_CONFIGURATION
+
+//! \deprecated Use \c PCMK_XE_STATUS instead
+#define XML_CIB_TAG_STATUS PCMK_XE_STATUS
+
+//! \deprecated Use \c PCMK_XE_RESOURCES instead
+#define XML_CIB_TAG_RESOURCES PCMK_XE_RESOURCES
+
+//! \deprecated Use \c PCMK_XE_NODES instead
+#define XML_CIB_TAG_NODES PCMK_XE_NODES
+
+//! \deprecated Use \c PCMK_XE_CONSTRAINTS instead
+#define XML_CIB_TAG_CONSTRAINTS PCMK_XE_CONSTRAINTS
+
+//! \deprecated Use \c PCMK_XE_CRM_CONFIG instead
+#define XML_CIB_TAG_CRMCONFIG PCMK_XE_CRM_CONFIG
+
+//! \deprecated Use \c PCMK_XE_OP_DEFAULTS instead
+#define XML_CIB_TAG_OPCONFIG PCMK_XE_OP_DEFAULTS
+
+//! \deprecated Use \c PCMK_XE_RSC_DEFAULTS instead
+#define XML_CIB_TAG_RSCCONFIG PCMK_XE_RSC_DEFAULTS
+
+//! \deprecated Use \c PCMK_XE_ACLS instead
+#define XML_CIB_TAG_ACLS PCMK_XE_ACLS
+
+//! \deprecated Use \c PCMK_XE_ALERTS instead
+#define XML_CIB_TAG_ALERTS PCMK_XE_ALERTS
+
+//! \deprecated Use \c PCMK_XE_ALERT instead
+#define XML_CIB_TAG_ALERT PCMK_XE_ALERT
+
+//! \deprecated Use \c PCMK_XE_RECIPIENT instead
+#define XML_CIB_TAG_ALERT_RECIPIENT PCMK_XE_RECIPIENT
+
+//! \deprecated Use \c PCMK_XE_SELECT instead
+#define XML_CIB_TAG_ALERT_SELECT PCMK_XE_SELECT
+
+//! \deprecated Use \c PCMK_XE_SELECT_ATTRIBUTES instead
+#define XML_CIB_TAG_ALERT_ATTRIBUTES PCMK_XE_SELECT_ATTRIBUTES
+
+//! \deprecated Use \c PCMK_XE_SELECT_FENCING instead
+#define XML_CIB_TAG_ALERT_FENCING PCMK_XE_SELECT_FENCING
+
+//! \deprecated Use \c PCMK_XE_SELECT_NODES instead
+#define XML_CIB_TAG_ALERT_NODES PCMK_XE_SELECT_NODES
+
+//! \deprecated Use \c PCMK_XE_SELECT_RESOURCES instead
+#define XML_CIB_TAG_ALERT_RESOURCES PCMK_XE_SELECT_RESOURCES
+
+//! \deprecated Use \c PCMK_XE_ATTRIBUTE instead
+#define XML_CIB_TAG_ALERT_ATTR PCMK_XE_ATTRIBUTE
+
+//! \deprecated Do not use
+#define XML_CIB_TAG_STATE "node_state"
+
+//! \deprecated Use \c PCMK_XE_NODE instead
+#define XML_CIB_TAG_NODE PCMK_XE_NODE
+
+//! \deprecated Use \c PCMK_XE_NVPAIR instead
+#define XML_CIB_TAG_NVPAIR PCMK_XE_NVPAIR
+
+//! \deprecated Use \c PCMK_XE_CLUSTER_PROPERTY_SET instead
+#define XML_CIB_TAG_PROPSET PCMK_XE_CLUSTER_PROPERTY_SET
+
+//! \deprecated Use \c PCMK_XE_INSTANCE_ATTRIBUTES instead
+#define XML_TAG_ATTR_SETS PCMK_XE_INSTANCE_ATTRIBUTES
+
+//! \deprecated Use \c PCMK_XE_META_ATTRIBUTES instead
+#define XML_TAG_META_SETS PCMK_XE_META_ATTRIBUTES
+
+//! \deprecated Do not use
+#define XML_TAG_ATTRS "attributes"
+
+//! \deprecated Do not use
+#define XML_TAG_PARAM "param"
+
+//! \deprecated Use \c PCMK_XE_UTILIZATION instead
+#define XML_TAG_UTILIZATION PCMK_XE_UTILIZATION
+
+//! \deprecated Use \c PCMK_XE_RESOURCE_REF instead
+#define XML_TAG_RESOURCE_REF PCMK_XE_RESOURCE_REF
+
+//! \deprecated Use \c PCMK_XE_PRIMITIVE instead
+#define XML_CIB_TAG_RESOURCE PCMK_XE_PRIMITIVE
+
+//! \deprecated Use \c PCMK_XE_GROUP instead
+#define XML_CIB_TAG_GROUP PCMK_XE_GROUP
+
+//! \deprecated Use \c PCMK_XE_CLONE instead
+#define XML_CIB_TAG_INCARNATION PCMK_XE_CLONE
+
+//! \deprecated Use \c PCMK_XE_BUNDLE instead
+#define XML_CIB_TAG_CONTAINER PCMK_XE_BUNDLE
+
+//! \deprecated Use \c PCMK_XE_TEMPLATE instead
+#define XML_CIB_TAG_RSC_TEMPLATE PCMK_XE_TEMPLATE
+
 #ifdef __cplusplus
 }
 #endif

@@ -379,14 +379,14 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
     char *xpath_string = NULL;
     xmlXPathObjectPtr xpathObj = NULL;
 
-    xpath_base = pcmk_cib_xpath_for(XML_CIB_TAG_CRMCONFIG);
+    xpath_base = pcmk_cib_xpath_for(PCMK_XE_CRM_CONFIG);
     if (xpath_base == NULL) {
-        crm_err(XML_CIB_TAG_CRMCONFIG " CIB element not known (bug?)");
+        crm_err(PCMK_XE_CRM_CONFIG " CIB element not known (bug?)");
         return;
     }
 
     xpath_string = crm_strdup_printf("%s//%s//nvpair[@name='%s']",
-                                     xpath_base, XML_CIB_TAG_PROPSET,
+                                     xpath_base, PCMK_XE_CLUSTER_PROPERTY_SET,
                                      attr_name);
     xpathObj = xpath_search(xml, xpath_string);
     max = numXpathResults(xpathObj);
@@ -406,26 +406,27 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
         crm_trace("Creating %s-%s for %s=%s",
                   CIB_OPTIONS_FIRST, attr_name, attr_name, attr_value);
 
-        configuration = pcmk__xe_match(xml, XML_CIB_TAG_CONFIGURATION, NULL,
-                                       NULL);
+        configuration = pcmk__xe_match(xml, PCMK_XE_CONFIGURATION, NULL, NULL);
         if (configuration == NULL) {
-            configuration = create_xml_node(xml, XML_CIB_TAG_CONFIGURATION);
+            configuration = create_xml_node(xml, PCMK_XE_CONFIGURATION);
         }
 
-        crm_config = pcmk__xe_match(configuration, XML_CIB_TAG_CRMCONFIG, NULL,
+        crm_config = pcmk__xe_match(configuration, PCMK_XE_CRM_CONFIG, NULL,
                                     NULL);
         if (crm_config == NULL) {
-            crm_config = create_xml_node(configuration, XML_CIB_TAG_CRMCONFIG);
+            crm_config = create_xml_node(configuration, PCMK_XE_CRM_CONFIG);
         }
 
-        cluster_property_set = pcmk__xe_match(crm_config, XML_CIB_TAG_PROPSET,
+        cluster_property_set = pcmk__xe_match(crm_config,
+                                              PCMK_XE_CLUSTER_PROPERTY_SET,
                                               NULL, NULL);
         if (cluster_property_set == NULL) {
-            cluster_property_set = create_xml_node(crm_config, XML_CIB_TAG_PROPSET);
+            cluster_property_set =
+                create_xml_node(crm_config, PCMK_XE_CLUSTER_PROPERTY_SET);
             crm_xml_add(cluster_property_set, PCMK_XA_ID, CIB_OPTIONS_FIRST);
         }
 
-        xml = create_xml_node(cluster_property_set, XML_CIB_TAG_NVPAIR);
+        xml = create_xml_node(cluster_property_set, PCMK_XE_NVPAIR);
 
         crm_xml_set_id(xml, "%s-%s", CIB_OPTIONS_FIRST, attr_name);
         crm_xml_add(xml, PCMK_XA_NAME, attr_name);

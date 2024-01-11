@@ -47,7 +47,7 @@ add_node_to_xml_by_id(const char *id, xmlNode *xml)
 {
     xmlNode *node_xml;
 
-    node_xml = create_xml_node(xml, XML_CIB_TAG_NODE);
+    node_xml = create_xml_node(xml, PCMK_XE_NODE);
     crm_xml_add(node_xml, PCMK_XA_ID, id);
 
     return node_xml;
@@ -334,7 +334,7 @@ add_action_attributes(pcmk_action_t *action, xmlNode *action_xml)
      * before adding it to action_xml, which keeps the scheduler regression
      * test graphs comparable.
      */
-    args_xml = create_xml_node(NULL, XML_TAG_ATTRS);
+    args_xml = create_xml_node(NULL, PCMK__XE_ATTRIBUTES);
 
     crm_xml_add(args_xml, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
     g_hash_table_foreach(action->extra, hash2field, args_xml);
@@ -423,7 +423,7 @@ create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
                             pcmk__str_none)) {
         // CIB-only clean-up for shutdown locks
         action_xml = create_xml_node(parent, XML_GRAPH_TAG_CRM_EVENT);
-        crm_xml_add(action_xml, PCMK__XA_MODE, XML_TAG_CIB);
+        crm_xml_add(action_xml, PCMK__XA_MODE, PCMK__VALUE_CIB);
 
     } else if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
         if (pcmk__str_eq(action->task, PCMK_ACTION_MAINTENANCE_NODES,

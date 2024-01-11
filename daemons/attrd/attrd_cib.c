@@ -60,7 +60,7 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
         return;
     }
 
-    if (cib__element_in_patchset(patchset, XML_CIB_TAG_ALERTS)) {
+    if (cib__element_in_patchset(patchset, PCMK_XE_ALERTS)) {
         mainloop_set_trigger(attrd_config_read);
     }
 
@@ -75,11 +75,12 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
         return;
     }
 
-    if (cib__element_in_patchset(patchset, XML_CIB_TAG_NODES)
-        || cib__element_in_patchset(patchset, XML_CIB_TAG_STATUS)) {
+    if (cib__element_in_patchset(patchset, PCMK_XE_NODES)
+        || cib__element_in_patchset(patchset, PCMK_XE_STATUS)) {
 
-        /* An unsafe client modified the nodes or status section. Write
-         * transient attributes to ensure they're up-to-date in the CIB.
+        /* An unsafe client modified the PCMK_XE_NODES or PCMK_XE_STATUS
+         * section. Write transient attributes to ensure they're up-to-date in
+         * the CIB.
          */
         if (client_name == NULL) {
             client_name = crm_element_value(msg, F_CIB_CLIENTID);
@@ -164,7 +165,9 @@ attrd_erase_cb(xmlNode *msg, int call_id, int rc, xmlNode *output,
     }
 }
 
-#define XPATH_TRANSIENT "//node_state[@uname='%s']/" XML_TAG_TRANSIENT_NODEATTRS
+#define XPATH_TRANSIENT "//" PCMK__XE_NODE_STATE    \
+                        "[@" PCMK_XA_UNAME "='%s']" \
+                        "/" XML_TAG_TRANSIENT_NODEATTRS
 
 /*!
  * \internal
@@ -334,7 +337,7 @@ static int
 add_set_attr_update(const attribute_t *attr, const char *attr_id,
                     const char *node_id, const char *set_id, const char *value)
 {
-    xmlNode *update = create_xml_node(NULL, XML_CIB_TAG_STATE);
+    xmlNode *update = create_xml_node(NULL, PCMK__XE_NODE_STATE);
     xmlNode *child = update;
     int rc = ENOMEM;
 
@@ -355,7 +358,7 @@ add_set_attr_update(const attribute_t *attr, const char *attr_id,
     }
     crm_xml_add(child, PCMK_XA_ID, set_id);
 
-    child = create_xml_node(child, XML_CIB_TAG_NVPAIR);
+    child = create_xml_node(child, PCMK_XE_NVPAIR);
     if (child == NULL) {
         goto done;
     }
@@ -363,7 +366,7 @@ add_set_attr_update(const attribute_t *attr, const char *attr_id,
     crm_xml_add(child, PCMK_XA_NAME, attr->id);
     crm_xml_add(child, PCMK_XA_VALUE, value);
 
-    rc = the_cib->cmds->modify(the_cib, XML_CIB_TAG_STATUS, update,
+    rc = the_cib->cmds->modify(the_cib, PCMK_XE_STATUS, update,
                                cib_can_create|cib_transaction);
     rc = pcmk_legacy2rc(rc);
 
@@ -387,14 +390,14 @@ static int
 add_unset_attr_update(const attribute_t *attr, const char *attr_id,
                       const char *node_id, const char *set_id)
 {
-    char *xpath = crm_strdup_printf("/" XML_TAG_CIB
-                                    "/" XML_CIB_TAG_STATUS
-                                    "/" XML_CIB_TAG_STATE
+    char *xpath = crm_strdup_printf("/" PCMK_XE_CIB
+                                    "/" PCMK_XE_STATUS
+                                    "/" PCMK__XE_NODE_STATE
                                         "[@" PCMK_XA_ID "='%s']"
                                     "/" XML_TAG_TRANSIENT_NODEATTRS
                                         "[@" PCMK_XA_ID "='%s']"
                                     "/%s[@" PCMK_XA_ID "='%s']"
-                                    "/" XML_CIB_TAG_NVPAIR
+                                    "/" PCMK_XE_NVPAIR
                                         "[@" PCMK_XA_ID "='%s' "
                                          "and @" PCMK_XA_NAME "='%s']",
                                     node_id, node_id, attr->set_type, set_id,
@@ -427,7 +430,7 @@ add_attr_update(const attribute_t *attr, const char *value, const char *node_id)
     if (attr->set_id != NULL) {
         pcmk__str_update(&set_id, attr->set_id);
     } else {
-        set_id = crm_strdup_printf("%s-%s", XML_CIB_TAG_STATUS, node_id);
+        set_id = crm_strdup_printf("%s-%s", PCMK_XE_STATUS, node_id);
     }
     crm_xml_sanitize_id(set_id);
 
