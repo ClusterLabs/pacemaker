@@ -29,7 +29,8 @@ colocations_header(pcmk_resource_t *rsc, pcmk__colocation_t *cons,
         retval = crm_strdup_printf("%s (score=%s, %s role=%s, id=%s)",
                                    rsc->id, pcmk_readable_score(cons->score),
                                    (dependents? "needs" : "with"),
-                                   role2text(cons->primary_role), cons->id);
+                                   pcmk_role_text(cons->primary_role),
+                                   cons->id);
     } else {
         retval = crm_strdup_printf("%s (score=%s, id=%s)",
                                    rsc->id, pcmk_readable_score(cons->score),
@@ -58,12 +59,12 @@ colocations_xml_node(pcmk__output_t *out, pcmk_resource_t *rsc,
 
     if (cons->dependent_role != pcmk_role_unknown) {
         xmlSetProp(node, (pcmkXmlStr) PCMK_XA_RSC_ROLE,
-                   (pcmkXmlStr) role2text(cons->dependent_role));
+                   (pcmkXmlStr) pcmk_role_text(cons->dependent_role));
     }
 
     if (cons->primary_role != pcmk_role_unknown) {
         xmlSetProp(node, (pcmkXmlStr) PCMK_XA_WITH_RSC_ROLE,
-                   (pcmkXmlStr) role2text(cons->primary_role));
+                   (pcmkXmlStr) pcmk_role_text(cons->primary_role));
     }
 }
 
@@ -154,8 +155,8 @@ rsc_action_item(pcmk__output_t *out, va_list args)
 
     if (need_role && (origin == NULL)) {
         /* Starting and promoting a promotable clone instance */
-        details = crm_strdup_printf("%s -> %s %s", role2text(rsc->role),
-                                    role2text(rsc->next_role),
+        details = crm_strdup_printf("%s -> %s %s", pcmk_role_text(rsc->role),
+                                    pcmk_role_text(rsc->next_role),
                                     pcmk__node_name(destination));
 
     } else if (origin == NULL) {
@@ -164,7 +165,7 @@ rsc_action_item(pcmk__output_t *out, va_list args)
 
     } else if (need_role && (destination == NULL)) {
         /* Stopping a promotable clone instance */
-        details = crm_strdup_printf("%s %s", role2text(rsc->role),
+        details = crm_strdup_printf("%s %s", pcmk_role_text(rsc->role),
                                     pcmk__node_name(origin));
 
     } else if (destination == NULL) {
@@ -173,7 +174,7 @@ rsc_action_item(pcmk__output_t *out, va_list args)
 
     } else if (need_role && same_role && same_host) {
         /* Recovering, restarting or re-promoting a promotable clone instance */
-        details = crm_strdup_printf("%s %s", role2text(rsc->role),
+        details = crm_strdup_printf("%s %s", pcmk_role_text(rsc->role),
                                     pcmk__node_name(origin));
 
     } else if (same_role && same_host) {
@@ -184,7 +185,7 @@ rsc_action_item(pcmk__output_t *out, va_list args)
         /* Moving a promotable clone instance */
         details = crm_strdup_printf("%s -> %s %s", pcmk__node_name(origin),
                                     pcmk__node_name(destination),
-                                    role2text(rsc->role));
+                                    pcmk_role_text(rsc->role));
 
     } else if (same_role) {
         /* Moving a normal resource */
@@ -193,15 +194,16 @@ rsc_action_item(pcmk__output_t *out, va_list args)
 
     } else if (same_host) {
         /* Promoting or demoting a promotable clone instance */
-        details = crm_strdup_printf("%s -> %s %s", role2text(rsc->role),
-                                    role2text(rsc->next_role),
+        details = crm_strdup_printf("%s -> %s %s", pcmk_role_text(rsc->role),
+                                    pcmk_role_text(rsc->next_role),
                                     pcmk__node_name(origin));
 
     } else {
         /* Moving and promoting/demoting */
-        details = crm_strdup_printf("%s %s -> %s %s", role2text(rsc->role),
+        details = crm_strdup_printf("%s %s -> %s %s",
+                                    pcmk_role_text(rsc->role),
                                     pcmk__node_name(origin),
-                                    role2text(rsc->next_role),
+                                    pcmk_role_text(rsc->next_role),
                                     pcmk__node_name(destination));
     }
 
@@ -281,8 +283,8 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
     if (need_role && (origin == NULL)) {
         /* Starting and promoting a promotable clone instance */
         pcmk__xe_set_props(xml,
-                           PCMK_XA_ROLE, role2text(rsc->role),
-                           "next-role", role2text(rsc->next_role),
+                           PCMK_XA_ROLE, pcmk_role_text(rsc->role),
+                           "next-role", pcmk_role_text(rsc->next_role),
                            "dest", destination->details->uname,
                            NULL);
 
@@ -293,7 +295,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
     } else if (need_role && (destination == NULL)) {
         /* Stopping a promotable clone instance */
         pcmk__xe_set_props(xml,
-                           PCMK_XA_ROLE, role2text(rsc->role),
+                           PCMK_XA_ROLE, pcmk_role_text(rsc->role),
                            PCMK_XA_NODE, origin->details->uname,
                            NULL);
 
@@ -304,7 +306,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
     } else if (need_role && same_role && same_host) {
         /* Recovering, restarting or re-promoting a promotable clone instance */
         pcmk__xe_set_props(xml,
-                           PCMK_XA_ROLE, role2text(rsc->role),
+                           PCMK_XA_ROLE, pcmk_role_text(rsc->role),
                            "source", origin->details->uname,
                            NULL);
 
@@ -317,7 +319,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
         pcmk__xe_set_props(xml,
                            "source", origin->details->uname,
                            "dest", destination->details->uname,
-                           PCMK_XA_ROLE, role2text(rsc->role),
+                           PCMK_XA_ROLE, pcmk_role_text(rsc->role),
                            NULL);
 
     } else if (same_role) {
@@ -330,17 +332,17 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
     } else if (same_host) {
         /* Promoting or demoting a promotable clone instance */
         pcmk__xe_set_props(xml,
-                           PCMK_XA_ROLE, role2text(rsc->role),
-                           "next-role", role2text(rsc->next_role),
+                           PCMK_XA_ROLE, pcmk_role_text(rsc->role),
+                           "next-role", pcmk_role_text(rsc->next_role),
                            "source", origin->details->uname,
                            NULL);
 
     } else {
         /* Moving and promoting/demoting */
         pcmk__xe_set_props(xml,
-                           PCMK_XA_ROLE, role2text(rsc->role),
+                           PCMK_XA_ROLE, pcmk_role_text(rsc->role),
                            "source", origin->details->uname,
-                           "next-role", role2text(rsc->next_role),
+                           "next-role", pcmk_role_text(rsc->next_role),
                            "dest", destination->details->uname,
                            NULL);
     }
@@ -1098,7 +1100,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
         const bool managed = pcmk_is_set(rsc->flags, pcmk_rsc_managed);
 
         pcmk__rsc_info(rsc, "Leave   %s\t(%s%s)",
-                       rsc->id, role2text(rsc->role),
+                       rsc->id, pcmk_role_text(rsc->role),
                        (managed? "" : " unmanaged"));
         return rc;
     }
@@ -1181,7 +1183,8 @@ rsc_action_default(pcmk__output_t *out, va_list args)
                                   current, next, promote, demote);
             } else {
                 pcmk__rsc_info(rsc, "Leave   %s\t(%s %s)", rsc->id,
-                               role2text(rsc->role), pcmk__node_name(next));
+                               pcmk_role_text(rsc->role),
+                               pcmk__node_name(next));
             }
 
         } else if (!pcmk_is_set(start->flags, pcmk_action_runnable)) {

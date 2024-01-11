@@ -55,6 +55,9 @@ enum rsc_role_e {
 #endif
 };
 
+const char *pcmk_role_text(enum rsc_role_e role);
+enum rsc_role_e pcmk_parse_role(const char *role);
+
 #ifdef __cplusplus
 }
 #endif

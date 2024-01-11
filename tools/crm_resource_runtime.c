@@ -945,7 +945,7 @@ check_role(resource_checks_t *checks)
     if (role_s == NULL) {
         return;
     }
-    switch (text2role(role_s)) {
+    switch (pcmk_parse_role(role_s)) {
         case pcmk_role_stopped:
             checks->flags |= rsc_remain_stopped;
             break;

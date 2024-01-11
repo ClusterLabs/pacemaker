@@ -452,7 +452,7 @@ native_displayable_state(const pcmk_resource_t *rsc, bool print_pending)
         rsc_state = native_pending_state(rsc);
     }
     if (rsc_state == NULL) {
-        rsc_state = role2text(native_displayable_role(rsc));
+        rsc_state = pcmk_role_text(native_displayable_role(rsc));
     }
     return rsc_state;
 }
@@ -607,7 +607,7 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
 
         g_string_append(outstr, " FAILED");
         if (role > pcmk_role_unpromoted) {
-            pcmk__add_word(&outstr, 0, role2text(role));
+            pcmk__add_word(&outstr, 0, pcmk_role_text(role));
         }
     } else {
         bool show_pending = pcmk_is_set(show_opts, pcmk_show_pending);
@@ -646,7 +646,7 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
         }
     }
     if (target_role != NULL) {
-        switch (text2role(target_role)) {
+        switch (pcmk_parse_role(target_role)) {
             case pcmk_role_unknown:
                 pcmk__config_err("Invalid " PCMK_META_TARGET_ROLE
                                  " %s for resource %s", target_role, rsc->id);
@@ -1114,7 +1114,7 @@ native_resource_state(const pcmk_resource_t * rsc, gboolean current)
     if (current) {
         role = rsc->role;
     }
-    pcmk__rsc_trace(rsc, "%s state: %s", rsc->id, role2text(role));
+    pcmk__rsc_trace(rsc, "%s state: %s", rsc->id, pcmk_role_text(role));
     return role;
 }
 

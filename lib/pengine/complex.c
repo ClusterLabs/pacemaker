@@ -897,7 +897,8 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     get_target_role(*rsc, &((*rsc)->next_role));
     pcmk__rsc_trace(*rsc, "%s desired next state: %s", (*rsc)->id,
-                    (*rsc)->next_role != pcmk_role_unknown? role2text((*rsc)->next_role) : "default");
+                    ((*rsc)->next_role == pcmk_role_unknown)?
+                        "default" : pcmk_role_text((*rsc)->next_role));
 
     if ((*rsc)->fns->unpack(*rsc, scheduler) == FALSE) {
         (*rsc)->fns->free(*rsc);
@@ -1205,8 +1206,8 @@ pe__set_next_role(pcmk_resource_t *rsc, enum rsc_role_e role, const char *why)
     CRM_ASSERT((rsc != NULL) && (why != NULL));
     if (rsc->next_role != role) {
         pcmk__rsc_trace(rsc, "Resetting next role for %s from %s to %s (%s)",
-                        rsc->id, role2text(rsc->next_role), role2text(role),
-                        why);
+                        rsc->id, pcmk_role_text(rsc->next_role),
+                        pcmk_role_text(role), why);
         rsc->next_role = role;
     }
 }

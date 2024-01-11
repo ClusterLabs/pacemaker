@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <crm/common/scheduler.h>
+#include <crm/common/scheduler_internal.h>
 
 /*!
  * \brief Get readable description of a multiply-active recovery type

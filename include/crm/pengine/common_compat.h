@@ -28,20 +28,20 @@ extern "C" {
 //! \deprecated Use (pcmk_role_promoted + 1) instead
 #define RSC_ROLE_MAX    (pcmk_role_promoted + 1)
 
-//! \deprecated Use role2text(pcmk_role_unknown) instead
-#define RSC_ROLE_UNKNOWN_S      role2text(pcmk_role_unknown)
+//! \deprecated Use pcmk_role_text(pcmk_role_unknown) instead
+#define RSC_ROLE_UNKNOWN_S      pcmk_role_text(pcmk_role_unknown)
 
-//! \deprecated Use role2text(pcmk_role_stopped) instead
-#define RSC_ROLE_STOPPED_S      role2text(pcmk_role_stopped)
+//! \deprecated Use pcmk_role_text(pcmk_role_stopped) instead
+#define RSC_ROLE_STOPPED_S      pcmk_role_text(pcmk_role_stopped)
 
-//! \deprecated Use role2text(pcmk_role_started) instead
-#define RSC_ROLE_STARTED_S      role2text(pcmk_role_started)
+//! \deprecated Use pcmk_role_text(pcmk_role_started) instead
+#define RSC_ROLE_STARTED_S      pcmk_role_text(pcmk_role_started)
 
-//! \deprecated Use role2text(pcmk_role_unpromoted) instead
-#define RSC_ROLE_UNPROMOTED_S   role2text(pcmk_role_unpromoted)
+//! \deprecated Use pcmk_role_text(pcmk_role_unpromoted) instead
+#define RSC_ROLE_UNPROMOTED_S   pcmk_role_text(pcmk_role_unpromoted)
 
-//! \deprecated Use role2text(pcmk_role_promoted) instead
-#define RSC_ROLE_PROMOTED_S     role2text(pcmk_role_promoted)
+//! \deprecated Use pcmk_role_text(pcmk_role_promoted) instead
+#define RSC_ROLE_PROMOTED_S     pcmk_role_text(pcmk_role_promoted)
 
 //! \deprecated Do not use
 #define RSC_ROLE_UNPROMOTED_LEGACY_S    "Slave"
@@ -54,6 +54,12 @@ extern "C" {
 
 //! \deprecated Do not use
 #define RSC_ROLE_MASTER_S               RSC_ROLE_PROMOTED_LEGACY_S
+
+//! \deprecated Use pcmk_role_text() instead
+const char *role2text(enum rsc_role_e role);
+
+//! \deprecated Use pcmk_parse_role() instead
+enum rsc_role_e text2role(const char *role);
 
 //! \deprecated Use pcmk_multiply_active_text() instead
 static inline const char *

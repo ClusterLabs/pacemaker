@@ -69,7 +69,7 @@ parse_location_role(const char *role_spec, enum rsc_role_e *role)
         return true;
     }
 
-    *role = text2role(role_spec);
+    *role = pcmk_parse_role(role_spec);
     switch (*role) {
         case pcmk_role_unknown:
             return false;
@@ -671,8 +671,8 @@ pcmk__apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
     if (need_role && (location->role_filter != rsc->next_role)) {
         pcmk__rsc_trace(rsc,
                         "Not applying %s to %s because role will be %s not %s",
-                        location->id, rsc->id, role2text(rsc->next_role),
-                        role2text(location->role_filter));
+                        location->id, rsc->id, pcmk_role_text(rsc->next_role),
+                        pcmk_role_text(location->role_filter));
         return;
     }
 
@@ -684,7 +684,7 @@ pcmk__apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
 
     pcmk__rsc_trace(rsc, "Applying %s%s%s to %s", location->id,
                     (need_role? " for role " : ""),
-                    (need_role? role2text(location->role_filter) : ""),
+                    (need_role? pcmk_role_text(location->role_filter) : ""),
                     rsc->id);
 
     for (GList *iter = location->nodes; iter != NULL; iter = iter->next) {

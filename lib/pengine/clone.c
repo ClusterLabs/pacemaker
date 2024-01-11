@@ -517,7 +517,7 @@ configured_role(pcmk_resource_t *rsc)
     const char *target_role = configured_role_str(rsc);
 
     if (target_role != NULL) {
-        role = text2role(target_role);
+        role = pcmk_parse_role(target_role);
         if (role == pcmk_role_unknown) {
             pcmk__config_err("Invalid " PCMK_META_TARGET_ROLE
                              " for resource %s", rsc->id);
@@ -1241,7 +1241,7 @@ clone_resource_state(const pcmk_resource_t * rsc, gboolean current)
         }
     }
 
-    pcmk__rsc_trace(rsc, "%s role: %s", rsc->id, role2text(clone_role));
+    pcmk__rsc_trace(rsc, "%s role: %s", rsc->id, pcmk_role_text(clone_role));
     return clone_role;
 }
 

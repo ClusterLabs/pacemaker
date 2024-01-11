@@ -420,7 +420,7 @@ get_target_role(const pcmk_resource_t *rsc, enum rsc_role_e *role)
         return FALSE;
     }
 
-    local_role = text2role(value);
+    local_role = pcmk_parse_role(value);
     if (local_role == pcmk_role_unknown) {
         pcmk__config_err("Ignoring '" PCMK_META_TARGET_ROLE "' for %s "
                          "because '%s' is not valid", rsc->id, value);
@@ -731,7 +731,7 @@ pe__resource_is_disabled(const pcmk_resource_t *rsc)
     target_role = g_hash_table_lookup(rsc->meta, PCMK_META_TARGET_ROLE);
     if (target_role) {
         // If invalid, we've already logged an error when unpacking
-        enum rsc_role_e target_role_e = text2role(target_role);
+        enum rsc_role_e target_role_e = pcmk_parse_role(target_role);
 
         if ((target_role_e == pcmk_role_stopped)
             || ((target_role_e == pcmk_role_unpromoted)

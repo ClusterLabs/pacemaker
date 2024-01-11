@@ -920,7 +920,7 @@ set_instance_priority(gpointer data, gpointer user_data)
     GList *list = NULL;
 
     pcmk__rsc_trace(clone, "Assigning priority for %s: %s", instance->id,
-                    role2text(instance->next_role));
+                    pcmk_role_text(instance->next_role));
 
     if (instance->fns->state(instance, TRUE) == pcmk_role_started) {
         set_current_role_unpromoted(instance, NULL);
@@ -1039,7 +1039,7 @@ set_instance_role(gpointer data, gpointer user_data)
 
     chosen->count++;
     pcmk__rsc_info(clone, "Choosing %s (%s) on %s for promotion",
-                   instance->id, role2text(instance->role),
+                   instance->id, pcmk_role_text(instance->role),
                    pcmk__node_name(chosen));
     set_next_role_promoted(instance, NULL);
     (*count)++;

@@ -1084,7 +1084,7 @@ pcmk__instance_matches(const pcmk_resource_t *instance, const pcmk_node_t *node,
         && (role != instance->fns->state(instance, current))) {
         pcmk__rsc_trace(instance,
                         "%s is not a compatible instance (role is not %s)",
-                        instance->id, role2text(role));
+                        instance->id, pcmk_role_text(role));
         return false;
     }
 
@@ -1112,6 +1112,9 @@ pcmk__instance_matches(const pcmk_resource_t *instance, const pcmk_node_t *node,
 
     return true;
 }
+
+#define display_role(r) \
+    (((r) == pcmk_role_unknown)? "matching" : pcmk_role_text(r))
 
 /*!
  * \internal
@@ -1141,9 +1144,8 @@ find_compatible_instance_on_node(const pcmk_resource_t *match_rsc,
         if (pcmk__instance_matches(instance, node, role, current)) {
             pcmk__rsc_trace(match_rsc,
                             "Found %s %s instance %s compatible with %s on %s",
-                            role == pcmk_role_unknown? "matching" : role2text(role),
-                            rsc->id, instance->id, match_rsc->id,
-                            pcmk__node_name(node));
+                            display_role(role), rsc->id, instance->id,
+                            match_rsc->id, pcmk__node_name(node));
             free_instance_list(rsc, instances); // Only frees list, not contents
             return instance;
         }
@@ -1152,8 +1154,8 @@ find_compatible_instance_on_node(const pcmk_resource_t *match_rsc,
 
     pcmk__rsc_trace(match_rsc,
                     "No %s %s instance found compatible with %s on %s",
-                    ((role == pcmk_role_unknown)? "matching" : role2text(role)),
-                    rsc->id, match_rsc->id, pcmk__node_name(node));
+                    display_role(role), rsc->id, match_rsc->id,
+                    pcmk__node_name(node));
     return NULL;
 }
 

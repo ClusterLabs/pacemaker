@@ -1167,7 +1167,7 @@ static bool
 role_matches(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
 {
     const char *value = crm_element_value(expr, PCMK_XA_VALUE);
-    enum rsc_role_e role = text2role(value);
+    enum rsc_role_e role = pcmk_parse_role(value);
 
     if (role == pcmk_role_unknown) {
         pcmk__config_err("Invalid role %s in rule expression", value);

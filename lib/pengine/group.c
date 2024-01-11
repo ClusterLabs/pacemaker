@@ -490,7 +490,7 @@ group_resource_state(const pcmk_resource_t * rsc, gboolean current)
         }
     }
 
-    pcmk__rsc_trace(rsc, "%s role: %s", rsc->id, role2text(group_role));
+    pcmk__rsc_trace(rsc, "%s role: %s", rsc->id, pcmk_role_text(group_role));
     return group_role;
 }
 

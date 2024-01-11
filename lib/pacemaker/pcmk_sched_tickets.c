@@ -51,7 +51,7 @@ ticket_role_matches(const pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
         return true;
     }
     pcmk__rsc_trace(rsc, "Skipping constraint: \"%s\" state filter",
-                    role2text(rsc_ticket->role));
+                    pcmk_role_text(rsc_ticket->role));
     return false;
 }
 
@@ -82,7 +82,7 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
 
     pcmk__rsc_trace(rsc, "%s: Processing ticket dependency on %s (%s, %s)",
                     rsc->id, rsc_ticket->ticket->id, rsc_ticket->id,
-                    role2text(rsc_ticket->role));
+                    pcmk_role_text(rsc_ticket->role));
 
     if (!rsc_ticket->ticket->granted && (rsc->running_on != NULL)) {
 
@@ -168,7 +168,7 @@ rsc_ticket_new(const char *id, pcmk_resource_t *rsc, pcmk_ticket_t *ticket,
     new_rsc_ticket->id = id;
     new_rsc_ticket->ticket = ticket;
     new_rsc_ticket->rsc = rsc;
-    new_rsc_ticket->role = text2role(state);
+    new_rsc_ticket->role = pcmk_parse_role(state);
 
     if (pcmk__str_eq(loss_policy, "fence", pcmk__str_casei)) {
         if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)) {
@@ -184,43 +184,43 @@ rsc_ticket_new(const char *id, pcmk_resource_t *rsc, pcmk_ticket_t *ticket,
     if (new_rsc_ticket->loss_policy == loss_ticket_fence) {
         crm_debug("On loss of ticket '%s': Fence the nodes running %s (%s)",
                   new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
-                  role2text(new_rsc_ticket->role));
+                  pcmk_role_text(new_rsc_ticket->role));
 
     } else if (pcmk__str_eq(loss_policy, "freeze", pcmk__str_casei)) {
         crm_debug("On loss of ticket '%s': Freeze %s (%s)",
                   new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
-                  role2text(new_rsc_ticket->role));
+                  pcmk_role_text(new_rsc_ticket->role));
         new_rsc_ticket->loss_policy = loss_ticket_freeze;
 
     } else if (pcmk__str_eq(loss_policy, PCMK_ACTION_DEMOTE, pcmk__str_casei)) {
         crm_debug("On loss of ticket '%s': Demote %s (%s)",
                   new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
-                  role2text(new_rsc_ticket->role));
+                  pcmk_role_text(new_rsc_ticket->role));
         new_rsc_ticket->loss_policy = loss_ticket_demote;
 
     } else if (pcmk__str_eq(loss_policy, "stop", pcmk__str_casei)) {
         crm_debug("On loss of ticket '%s': Stop %s (%s)",
                   new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
-                  role2text(new_rsc_ticket->role));
+                  pcmk_role_text(new_rsc_ticket->role));
         new_rsc_ticket->loss_policy = loss_ticket_stop;
 
     } else {
         if (new_rsc_ticket->role == pcmk_role_promoted) {
             crm_debug("On loss of ticket '%s': Default to demote %s (%s)",
                       new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
-                      role2text(new_rsc_ticket->role));
+                      pcmk_role_text(new_rsc_ticket->role));
             new_rsc_ticket->loss_policy = loss_ticket_demote;
 
         } else {
             crm_debug("On loss of ticket '%s': Default to stop %s (%s)",
                       new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
-                      role2text(new_rsc_ticket->role));
+                      pcmk_role_text(new_rsc_ticket->role));
             new_rsc_ticket->loss_policy = loss_ticket_stop;
         }
     }
 
     pcmk__rsc_trace(rsc, "%s (%s) ==> %s",
-                    rsc->id, role2text(new_rsc_ticket->role), ticket->id);
+                    rsc->id, pcmk_role_text(new_rsc_ticket->role), ticket->id);
 
     rsc->rsc_tickets = g_list_append(rsc->rsc_tickets, new_rsc_ticket);
 
