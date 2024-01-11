@@ -229,6 +229,11 @@ record_peer_nodeid(attribute_value_t *v, const char *host)
     }
 }
 
+#define readable_value(rv_v) pcmk__s((rv_v)->current, "(unset)")
+
+#define readable_peer(p)    \
+    (((p) == NULL)? "all peers" : pcmk__s((p)->uname, "unknown peer"))
+
 static void
 update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
                     const char *attr, const char *value, const char *host,
@@ -262,14 +267,14 @@ update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
                                           pcmk__str_casei)) {
 
         crm_notice("%s[%s]: local value '%s' takes priority over '%s' from %s",
-                   attr, host, v->current, value, peer->uname);
+                   attr, host, readable_value(v), value, peer->uname);
         v = broadcast_local_value(a);
 
     } else if (changed) {
         crm_notice("Setting %s[%s]%s%s: %s -> %s "
                    CRM_XS " from %s with %s write delay",
                    attr, host, a->set_type ? " in " : "",
-                   pcmk__s(a->set_type, ""), pcmk__s(v->current, "(unset)"),
+                   pcmk__s(a->set_type, ""), readable_value(v),
                    pcmk__s(value, "(unset)"), peer->uname,
                    (a->timeout_ms == 0)? "no" : pcmk__readable_interval(a->timeout_ms));
         pcmk__str_update(&v->current, value);
@@ -545,12 +550,14 @@ attrd_peer_sync(crm_node_t *peer)
     while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
         g_hash_table_iter_init(&vIter, a->values);
         while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & v)) {
-            crm_debug("Syncing %s[%s] = %s to %s", a->id, v->nodename, v->current, peer?peer->uname:"everyone");
+            crm_debug("Syncing %s[%s]='%s' to %s",
+                      a->id, v->nodename, readable_value(v),
+                      readable_peer(peer));
             attrd_add_value_xml(sync, a, v, false);
         }
     }
 
-    crm_debug("Syncing values to %s", peer?peer->uname:"everyone");
+    crm_debug("Syncing values to %s", readable_peer(peer));
     attrd_send_message(peer, sync, false);
     free_xml(sync);
 }
