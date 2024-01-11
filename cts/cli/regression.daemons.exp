@@ -51,16 +51,6 @@
       <shortdesc lang="en">Polling interval to recheck cluster state and evaluate rules with date specifications</shortdesc>
       <content type="time" default=""/>
     </parameter>
-    <parameter name="load-threshold">
-      <longdesc lang="en">The cluster will slow down its recovery process when the amount of system resources used (currently CPU) approaches this limit</longdesc>
-      <shortdesc lang="en">Maximum amount of system load that should be used by cluster nodes</shortdesc>
-      <content type="percentage" default=""/>
-    </parameter>
-    <parameter name="node-action-limit">
-      <longdesc lang="en">Maximum number of jobs that can be scheduled per node (defaults to 2x cores)</longdesc>
-      <shortdesc lang="en">Maximum number of jobs that can be scheduled per node (defaults to 2x cores)</shortdesc>
-      <content type="integer" default=""/>
-    </parameter>
     <parameter name="fence-reaction">
       <longdesc lang="en">A cluster node may receive notification of its own fencing if fencing is misconfigured, or if fabric fencing is in use that doesn&apos;t cut cluster communication. Use &quot;stop&quot; to attempt to immediately stop Pacemaker and stay stopped, or &quot;panic&quot; to attempt to immediately reboot the local node, falling back to stop on failure. Allowed values: stop, panic.</longdesc>
       <shortdesc lang="en">How a cluster node should react if notified of its own fencing</shortdesc>
@@ -102,6 +92,16 @@
     <parameter name="stonith-max-attempts">
       <longdesc lang="en">How many times fencing can fail before it will no longer be immediately re-attempted on a target</longdesc>
       <shortdesc lang="en">How many times fencing can fail before it will no longer be immediately re-attempted on a target</shortdesc>
+      <content type="integer" default=""/>
+    </parameter>
+    <parameter name="load-threshold">
+      <longdesc lang="en">The cluster will slow down its recovery process when the amount of system resources used (currently CPU) approaches this limit</longdesc>
+      <shortdesc lang="en">Maximum amount of system load that should be used by cluster nodes</shortdesc>
+      <content type="percentage" default=""/>
+    </parameter>
+    <parameter name="node-action-limit">
+      <longdesc lang="en">Maximum number of jobs that can be scheduled per node (defaults to 2x cores)</longdesc>
+      <shortdesc lang="en">Maximum number of jobs that can be scheduled per node (defaults to 2x cores)</shortdesc>
       <content type="integer" default=""/>
     </parameter>
   </parameters>
@@ -267,6 +267,16 @@
         <option value="suicide" />
       </content>
     </parameter>
+    <parameter name="shutdown-lock">
+      <longdesc lang="en">When true, resources active on a node when it is cleanly shut down are kept &quot;locked&quot; to that node (not allowed to run elsewhere) until they start again on that node after it rejoins (or for at most shutdown-lock-limit, if set). Stonith resources and Pacemaker Remote connections are never locked. Clone and bundle instances and the promoted role of promotable clones are currently never locked, though support could be added in a future release.</longdesc>
+      <shortdesc lang="en">Whether to lock resources to a cleanly shut down node</shortdesc>
+      <content type="boolean" default=""/>
+    </parameter>
+    <parameter name="shutdown-lock-limit">
+      <longdesc lang="en">If shutdown-lock is true and this is set to a nonzero time duration, shutdown locks will expire after this much time has passed since the shutdown was initiated, even if the node has not rejoined.</longdesc>
+      <shortdesc lang="en">Do not lock resources to a cleanly shut down node longer than this</shortdesc>
+      <content type="time" default=""/>
+    </parameter>
     <parameter name="symmetric-cluster">
       <longdesc lang="en">Whether resources can run on any node by default</longdesc>
       <shortdesc lang="en">Whether resources can run on any node by default</shortdesc>
@@ -286,16 +296,6 @@
       <longdesc lang="en">Whether the cluster should check for active resources during start-up</longdesc>
       <shortdesc lang="en">Whether the cluster should check for active resources during start-up</shortdesc>
       <content type="boolean" default=""/>
-    </parameter>
-    <parameter name="shutdown-lock">
-      <longdesc lang="en">When true, resources active on a node when it is cleanly shut down are kept &quot;locked&quot; to that node (not allowed to run elsewhere) until they start again on that node after it rejoins (or for at most shutdown-lock-limit, if set). Stonith resources and Pacemaker Remote connections are never locked. Clone and bundle instances and the promoted role of promotable clones are currently never locked, though support could be added in a future release.</longdesc>
-      <shortdesc lang="en">Whether to lock resources to a cleanly shut down node</shortdesc>
-      <content type="boolean" default=""/>
-    </parameter>
-    <parameter name="shutdown-lock-limit">
-      <longdesc lang="en">If shutdown-lock is true and this is set to a nonzero time duration, shutdown locks will expire after this much time has passed since the shutdown was initiated, even if the node has not rejoined.</longdesc>
-      <shortdesc lang="en">Do not lock resources to a cleanly shut down node longer than this</shortdesc>
-      <content type="time" default=""/>
     </parameter>
     <parameter name="stonith-enabled">
       <longdesc lang="en">If false, unresponsive nodes are immediately assumed to be harmless, and resources that were active on them may be recovered elsewhere. This can result in a &quot;split-brain&quot; situation, potentially leading to data loss and/or service unavailability.</longdesc>
