@@ -817,14 +817,17 @@ static pcmk__cluster_option_t fencer_options[] = {
 void
 fencer_metadata(void)
 {
+    const char *name = "pacemaker-fenced";
     const char *desc_short = N_("Instance attributes available for all "
-                             "\"stonith\"-class resources");
-    const char *desc_long = N_("Instance attributes available for all \"stonith\"-"
-                            "class resources and used by Pacemaker's fence "
-                            "daemon, formerly known as stonithd");
+                                "\"stonith\"-class resources");
+    const char *desc_long = N_("Instance attributes available for all "
+                               "\"stonith\"-class resources and used by "
+                               "Pacemaker's fence daemon, formerly known as "
+                               "stonithd");
 
-    gchar *s = pcmk__format_option_metadata("pacemaker-fenced", desc_short,
-                                            desc_long, fencer_options,
+    gchar *s = pcmk__format_option_metadata(name, desc_short, desc_long,
+                                            pcmk__opt_context_none,
+                                            fencer_options,
                                             PCMK__NELEM(fencer_options));
     printf("%s", s);
     g_free(s);

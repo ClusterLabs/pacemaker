@@ -1011,13 +1011,32 @@ add_desc(GString *s, const char *tag, const char *desc, const char *values,
     free(escaped_en);
 }
 
+/*!
+ * \internal
+ * \brief Format option metadata as an OCF-like XML string
+ *
+ * \param[in] name         Daemon name
+ * \param[in] desc_short   Short description of the daemon
+ * \param[in] desc_long    Long description of the daemon
+ * \param[in] filter       If not \c pcmk__opt_context_none, include only
+ *                         those options whose \c context field is equal to
+ *                         \p filter
+ * \param[in] option_list  Options whose metadata to format
+ * \param[in] len          Number of items in \p option_list
+ *
+ * \return A string containing OCF-like option metadata XML
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       \c g_free().
+ */
 gchar *
 pcmk__format_option_metadata(const char *name, const char *desc_short,
                              const char *desc_long,
+                             enum pcmk__opt_context filter,
                              pcmk__cluster_option_t *option_list, int len)
 {
-    /* big enough to hold "pacemaker-schedulerd metadata" output */
-    GString *s = g_string_sized_new(13000);
+    // Large enough to hold current cluster options with room for growth (2^15)
+    GString *s = g_string_sized_new(32768);
 
     pcmk__g_strcat(s,
                    "<?xml " PCMK_XA_VERSION "=\"1.0\"?>\n"
@@ -1040,6 +1059,11 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
         const char *opt_default = option_list[lpc].default_value;
         const char *opt_desc_short = option_list[lpc].description_short;
         const char *opt_desc_long = option_list[lpc].description_long;
+
+        if ((filter != pcmk__opt_context_none)
+            && (filter != option_list[lpc].context)) {
+            continue;
+        }
 
         // The standard requires long and short parameter descriptions
         CRM_ASSERT((opt_desc_short != NULL) || (opt_desc_long != NULL));
