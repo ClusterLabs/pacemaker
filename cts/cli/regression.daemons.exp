@@ -104,32 +104,6 @@
       <shortdesc lang="en">How many times fencing can fail before it will no longer be immediately re-attempted on a target</shortdesc>
       <content type="integer" default=""/>
     </parameter>
-    <parameter name="no-quorum-policy">
-      <longdesc lang="en">What to do when the cluster does not have quorum. Allowed values: stop, freeze, ignore, demote, suicide.</longdesc>
-      <shortdesc lang="en">What to do when the cluster does not have quorum</shortdesc>
-      <content type="select" default="">
-        <option value="stop" />
-        <option value="freeze" />
-        <option value="ignore" />
-        <option value="demote" />
-        <option value="suicide" />
-      </content>
-    </parameter>
-    <parameter name="shutdown-lock">
-      <longdesc lang="en">When true, resources active on a node when it is cleanly shut down are kept &quot;locked&quot; to that node (not allowed to run elsewhere) until they start again on that node after it rejoins (or for at most shutdown-lock-limit, if set). Stonith resources and Pacemaker Remote connections are never locked. Clone and bundle instances and the promoted role of promotable clones are currently never locked, though support could be added in a future release.</longdesc>
-      <shortdesc lang="en">Whether to lock resources to a cleanly shut down node</shortdesc>
-      <content type="boolean" default=""/>
-    </parameter>
-    <parameter name="shutdown-lock-limit">
-      <longdesc lang="en">If shutdown-lock is true and this is set to a nonzero time duration, shutdown locks will expire after this much time has passed since the shutdown was initiated, even if the node has not rejoined.</longdesc>
-      <shortdesc lang="en">Do not lock resources to a cleanly shut down node longer than this</shortdesc>
-      <content type="time" default=""/>
-    </parameter>
-    <parameter name="node-pending-timeout">
-      <longdesc lang="en">Fence nodes that do not join the controller process group within this much time after joining the cluster, to allow the cluster to continue managing resources. A value of 0 means never fence pending nodes. Setting the value to 2h means fence nodes after 2 hours.</longdesc>
-      <shortdesc lang="en">How long to wait for a node that has joined the cluster to join the controller process group</shortdesc>
-      <content type="time" default=""/>
-    </parameter>
   </parameters>
 </resource-agent>
 =#=#=#= End test: Get controller metadata - OK (0) =#=#=#=
