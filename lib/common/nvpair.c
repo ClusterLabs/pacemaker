@@ -650,13 +650,14 @@ crm_element_value_copy(const xmlNode *data, const char *name)
 }
 
 /*!
- * \brief Add hash table entry to XML as (possibly legacy) name/value
+ * \brief Safely add hash table entry to XML as attribute or name-value pair
  *
  * Suitable for \c g_hash_table_foreach(), this function takes a hash table key
  * and value, with an XML node passed as user data, and adds an XML attribute
  * with the specified name and value if it does not already exist. If the key
- * name starts with a digit, this will instead add a \<param name=NAME
- * value=VALUE/> child to the XML (for legacy compatibility with heartbeat).
+ * name starts with a digit, then it's not a valid XML attribute name. In that
+ * case, this will instead add a <tt><param name=NAME value=VALUE/></tt> child
+ * to the XML.
  *
  * \param[in]     key        Key of hash table entry
  * \param[in]     value      Value of hash table entry
@@ -665,6 +666,14 @@ crm_element_value_copy(const xmlNode *data, const char *name)
 void
 hash2smartfield(gpointer key, gpointer value, gpointer user_data)
 {
+    /* @TODO Generate PCMK__XE_PARAM nodes for all keys that aren't valid XML
+     * attribute names (not just those that start with digits), or possibly for
+     * all keys to simplify parsing.
+     *
+     * Consider either deprecating as public API or exposing PCMK__XE_PARAM.
+     * PCMK__XE_PARAM is currently private because it doesn't appear in any
+     * output that Pacemaker generates.
+     */
     const char *name = key;
     const char *s_value = value;
 
