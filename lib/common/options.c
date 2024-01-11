@@ -914,27 +914,21 @@ cluster_option_value(GHashTable *options, bool (*validate)(const char *),
  * \internal
  * \brief Get the value of a cluster option
  *
- * \param[in,out] options      Name/value pairs for configured options
- * \param[in]     option_list  Possible cluster options
- * \param[in]     len          Length of \p option_list
- * \param[in]     name         (Primary) option name to look for
+ * \param[in,out] options  Name/value pairs for configured options
+ * \param[in]     name     (Primary) option name to look for
  *
  * \return Option value
  */
 const char *
-pcmk__cluster_option(GHashTable *options,
-                     const pcmk__cluster_option_t *option_list,
-                     int len, const char *name)
+pcmk__cluster_option(GHashTable *options, const char *name)
 {
-    const char *value = NULL;
-
-    for (int lpc = 0; lpc < len; lpc++) {
-        if (pcmk__str_eq(name, option_list[lpc].name, pcmk__str_casei)) {
-            value = cluster_option_value(options, option_list[lpc].is_valid,
-                                         option_list[lpc].name,
-                                         option_list[lpc].alt_name,
-                                         option_list[lpc].default_value);
-            return value;
+    for (int lpc = 0; lpc < PCMK__NELEM(cluster_options); lpc++) {
+        if (pcmk__str_eq(name, cluster_options[lpc].name, pcmk__str_casei)) {
+            return cluster_option_value(options,
+                                        cluster_options[lpc].is_valid,
+                                        cluster_options[lpc].name,
+                                        cluster_options[lpc].alt_name,
+                                        cluster_options[lpc].default_value);
         }
     }
     CRM_CHECK(FALSE, crm_err("Bug: looking for unknown option '%s'", name));
@@ -1146,13 +1140,13 @@ pcmk__cluster_option_metadata(const char *name, const char *desc_short,
 }
 
 void
-pcmk__validate_cluster_options(GHashTable *options,
-                               pcmk__cluster_option_t *option_list, int len)
+pcmk__validate_cluster_options(GHashTable *options)
 {
-    for (int lpc = 0; lpc < len; lpc++) {
-        cluster_option_value(options, option_list[lpc].is_valid,
-                             option_list[lpc].name,
-                             option_list[lpc].alt_name,
-                             option_list[lpc].default_value);
+    for (int lpc = 0; lpc < PCMK__NELEM(cluster_options); lpc++) {
+        cluster_option_value(options,
+                             cluster_options[lpc].is_valid,
+                             cluster_options[lpc].name,
+                             cluster_options[lpc].alt_name,
+                             cluster_options[lpc].default_value);
     }
 }

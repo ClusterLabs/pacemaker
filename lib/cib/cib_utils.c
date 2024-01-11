@@ -848,6 +848,7 @@ cib_native_notify(gpointer data, gpointer user_data)
     crm_trace("Callback invoked...");
 }
 
+#if 0
 static pcmk__cluster_option_t cib_opts[] = {
     /* name, legacy name, type, allowed values,
      * default value, validator,
@@ -872,6 +873,7 @@ static pcmk__cluster_option_t cib_opts[] = {
             " multiplied by the number of nodes).")
     },
 };
+#endif  // 0
 
 void
 cib_metadata(void)
@@ -891,14 +893,13 @@ cib_metadata(void)
 static void
 verify_cib_options(GHashTable *options)
 {
-    pcmk__validate_cluster_options(options, cib_opts, PCMK__NELEM(cib_opts));
+    pcmk__validate_cluster_options(options);
 }
 
 const char *
 cib_pref(GHashTable * options, const char *name)
 {
-    return pcmk__cluster_option(options, cib_opts, PCMK__NELEM(cib_opts),
-                                name);
+    return pcmk__cluster_option(options, name);
 }
 
 gboolean

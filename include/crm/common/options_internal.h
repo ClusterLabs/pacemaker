@@ -66,9 +66,7 @@ typedef struct pcmk__cluster_option_s {
 
 } pcmk__cluster_option_t;
 
-const char *pcmk__cluster_option(GHashTable *options,
-                                 const pcmk__cluster_option_t *option_list,
-                                 int len, const char *name);
+const char *pcmk__cluster_option(GHashTable *options, const char *name);
 
 gchar *pcmk__format_option_metadata(const char *name, const char *desc_short,
                                     const char *desc_long,
@@ -80,9 +78,7 @@ gchar *pcmk__cluster_option_metadata(const char *name, const char *desc_short,
                                      const char *desc_long,
                                      enum pcmk__opt_context filter);
 
-void pcmk__validate_cluster_options(GHashTable *options,
-                                    pcmk__cluster_option_t *option_list,
-                                    int len);
+void pcmk__validate_cluster_options(GHashTable *options);
 
 bool pcmk__valid_interval_spec(const char *value);
 bool pcmk__valid_boolean(const char *value);

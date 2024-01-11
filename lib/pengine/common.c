@@ -18,6 +18,7 @@
 #include <crm/common/scheduler_internal.h>
 #include <crm/pengine/internal.h>
 
+#if 0
 static pcmk__cluster_option_t pe_opts[] = {
     /* name, old name, type, allowed values,
      * default value, validator,
@@ -313,6 +314,7 @@ static pcmk__cluster_option_t pe_opts[] = {
         NULL
     },
 };
+#endif  // 0
 
 void
 pe_metadata(pcmk__output_t *out)
@@ -331,13 +333,13 @@ pe_metadata(pcmk__output_t *out)
 void
 verify_pe_options(GHashTable * options)
 {
-    pcmk__validate_cluster_options(options, pe_opts, PCMK__NELEM(pe_opts));
+    pcmk__validate_cluster_options(options);
 }
 
 const char *
 pe_pref(GHashTable * options, const char *name)
 {
-    return pcmk__cluster_option(options, pe_opts, PCMK__NELEM(pe_opts), name);
+    return pcmk__cluster_option(options, name);
 }
 
 const char *

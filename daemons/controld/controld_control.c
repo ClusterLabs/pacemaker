@@ -515,6 +515,7 @@ do_recover(long long action,
     register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
 }
 
+#if 0
 static pcmk__cluster_option_t controller_options[] = {
     /* name, old name, type, allowed values,
      * default value, validator,
@@ -728,6 +729,7 @@ static pcmk__cluster_option_t controller_options[] = {
            "2 hours.")
     },
 };
+#endif  // 0
 
 void
 crmd_metadata(void)
@@ -783,8 +785,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
                       config_hash, CIB_OPTIONS_FIRST, FALSE, now, NULL);
 
     // Validate all options, and use defaults if not already present in hash
-    pcmk__validate_cluster_options(config_hash, controller_options,
-                                   PCMK__NELEM(controller_options));
+    pcmk__validate_cluster_options(config_hash);
 
     /* Validate the watchdog timeout in the context of the local node
      * environment. If invalid, the controller will exit with a fatal error.
@@ -907,9 +908,7 @@ crm_shutdown(int nsig)
      * config_query_callback() has been run at least once, it doesn't look like
      * anything could have changed the timer period since then.
      */
-    value = pcmk__cluster_option(NULL, controller_options,
-                                 PCMK__NELEM(controller_options),
-                                 PCMK_OPT_SHUTDOWN_ESCALATION);
+    value = pcmk__cluster_option(NULL, PCMK_OPT_SHUTDOWN_ESCALATION);
     pcmk_parse_interval_spec(value, &default_period_ms);
     controld_shutdown_start_countdown(default_period_ms);
 }
