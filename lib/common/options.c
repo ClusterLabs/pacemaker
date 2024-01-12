@@ -99,7 +99,8 @@ static pcmk__cluster_option_t cluster_options[] = {
             "and serve as a fail-safe for certain types of scheduler bugs."),
     },
     {
-        PCMK_OPT_FENCE_REACTION, NULL, "select", PCMK_VALUE_STOP ", panic",
+        PCMK_OPT_FENCE_REACTION, NULL, "select",
+            PCMK_VALUE_STOP ", " PCMK_VALUE_PANIC,
         PCMK_VALUE_STOP, NULL,
         pcmk__opt_context_controld,
         N_("How a cluster node should react if notified of its own fencing"),
