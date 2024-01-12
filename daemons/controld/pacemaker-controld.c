@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -45,6 +45,20 @@ static pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_XML,
     { NULL, NULL, NULL }
 };
+
+static void
+controld_metadata(void)
+{
+    const char *name = "pacemaker-controld";
+    const char *desc_short = "Pacemaker controller options";
+    const char *desc_long = "Cluster options used by Pacemaker's controller";
+
+    gchar *s = pcmk__cluster_option_metadata(name, desc_short, desc_long,
+                                             pcmk__opt_context_controld);
+
+    printf("%s", s);
+    g_free(s);
+}
 
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
@@ -96,7 +110,7 @@ main(int argc, char **argv)
 
     if ((g_strv_length(processed_args) >= 2)
         && pcmk__str_eq(processed_args[1], "metadata", pcmk__str_none)) {
-        crmd_metadata();
+        controld_metadata();
         initialize = false;
         goto done;
     }

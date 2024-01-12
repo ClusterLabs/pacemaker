@@ -126,6 +126,21 @@ setup_stand_alone(GError **error)
     return pcmk_rc_ok;
 }
 
+static void
+based_metadata(void)
+{
+    const char *name = "pacemaker-based";
+    const char *desc_short = "Cluster Information Base manager options";
+    const char *desc_long = "Cluster options used by Pacemaker's Cluster "
+                            "Information Base manager";
+
+    gchar *s = pcmk__cluster_option_metadata(name, desc_short, desc_long,
+                                             pcmk__opt_context_based);
+
+    printf("%s", s);
+    g_free(s);
+}
+
 static GOptionEntry entries[] = {
     { "stand-alone", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &stand_alone,
       "(Advanced use only) Run in stand-alone mode", NULL },
@@ -204,7 +219,7 @@ main(int argc, char **argv)
 
     if ((g_strv_length(processed_args) >= 2)
         && pcmk__str_eq(processed_args[1], "metadata", pcmk__str_none)) {
-        cib_metadata();
+        based_metadata();
         goto done;
     }
 

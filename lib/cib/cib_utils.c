@@ -266,7 +266,7 @@ cib_acl_enabled(xmlNode *xml, const char *user)
         GHashTable *options = pcmk__strkey_table(free, free);
 
         cib_read_config(options, xml);
-        value = cib_pref(options, PCMK_OPT_ENABLE_ACL);
+        value = pcmk__cluster_option(options, PCMK_OPT_ENABLE_ACL);
         rc = crm_is_true(value);
         g_hash_table_destroy(options);
     }
@@ -851,55 +851,6 @@ cib_native_notify(gpointer data, gpointer user_data)
     crm_trace("Callback invoked...");
 }
 
-static pcmk__cluster_option_t cib_opts[] = {
-    /* name, legacy name, type, allowed values,
-     * default value, validator,
-     * short description,
-     * long description
-     */
-    {
-        PCMK_OPT_ENABLE_ACL, NULL, "boolean", NULL,
-        PCMK_VALUE_FALSE, pcmk__valid_boolean,
-        N_("Enable Access Control Lists (ACLs) for the CIB"),
-        NULL
-    },
-    {
-        PCMK_OPT_CLUSTER_IPC_LIMIT, NULL, "integer", NULL,
-        "500", pcmk__valid_positive_int,
-        N_("Maximum IPC message backlog before disconnecting a cluster daemon"),
-        N_("Raise this if log has \"Evicting client\" messages for cluster daemon"
-            " PIDs (a good value is the number of resources in the cluster"
-            " multiplied by the number of nodes).")
-    },
-};
-
-void
-cib_metadata(void)
-{
-    const char *desc_short = "Cluster Information Base manager options";
-    const char *desc_long = "Cluster options used by Pacemaker's Cluster "
-                            "Information Base manager";
-
-    gchar *s = pcmk__format_option_metadata("pacemaker-based", desc_short,
-                                            desc_long, cib_opts,
-                                            PCMK__NELEM(cib_opts));
-    printf("%s", s);
-    g_free(s);
-}
-
-static void
-verify_cib_options(GHashTable *options)
-{
-    pcmk__validate_cluster_options(options, cib_opts, PCMK__NELEM(cib_opts));
-}
-
-const char *
-cib_pref(GHashTable * options, const char *name)
-{
-    return pcmk__cluster_option(options, cib_opts, PCMK__NELEM(cib_opts),
-                                name);
-}
-
 gboolean
 cib_read_config(GHashTable * options, xmlNode * current_cib)
 {
@@ -920,7 +871,7 @@ cib_read_config(GHashTable * options, xmlNode * current_cib)
                           NULL, options, CIB_OPTIONS_FIRST, TRUE, now, NULL);
     }
 
-    verify_cib_options(options);
+    pcmk__validate_cluster_options(options);
 
     crm_time_free(now);
 
@@ -1111,6 +1062,27 @@ xmlNode *
 get_object_root(const char *object_type, xmlNode *the_root)
 {
     return pcmk_find_cib_element(the_root, object_type);
+}
+
+const char *
+cib_pref(GHashTable * options, const char *name)
+{
+    return pcmk__cluster_option(options, name);
+}
+
+void
+cib_metadata(void)
+{
+    const char *name = "pacemaker-based";
+    const char *desc_short = "Cluster Information Base manager options";
+    const char *desc_long = "Cluster options used by Pacemaker's Cluster "
+                            "Information Base manager";
+
+    gchar *s = pcmk__cluster_option_metadata(name, desc_short, desc_long,
+                                             pcmk__opt_context_based);
+
+    printf("%s", s);
+    g_free(s);
 }
 
 // LCOV_EXCL_STOP

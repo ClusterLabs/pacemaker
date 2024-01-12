@@ -361,8 +361,9 @@ pcmk__apply_node_health(pcmk_scheduler_t *scheduler)
 {
     int base_health = 0;
     enum pcmk__health_strategy strategy;
-    const char *strategy_str = pe_pref(scheduler->config_hash,
-                                       PCMK_OPT_NODE_HEALTH_STRATEGY);
+    const char *strategy_str =
+        pcmk__cluster_option(scheduler->config_hash,
+                             PCMK_OPT_NODE_HEALTH_STRATEGY);
 
     strategy = pcmk__parse_health_strategy(strategy_str);
     if (strategy == pcmk__health_strategy_none) {

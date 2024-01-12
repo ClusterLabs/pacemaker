@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -67,6 +67,9 @@ recovery2text(enum rsc_recovery_type type)
 {
     return pcmk_multiply_active_text(type);
 }
+
+//! \deprecated Do not use
+const char *pe_pref(GHashTable * options, const char *name);
 
 #ifdef __cplusplus
 }

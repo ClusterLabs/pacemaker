@@ -276,6 +276,10 @@ pcmk__auto_stonith_watchdog_timeout(void)
 bool
 pcmk__valid_stonith_watchdog_timeout(const char *value)
 {
+    /* @COMPAT At a compatibility break, accept either negative values or a
+     * specific string like "auto" (but not both) to mean "auto-calculate the
+     * timeout." Reject other values that aren't parsable as timeouts.
+     */
     long st_timeout = value? crm_get_msec(value) : 0;
 
     if (st_timeout < 0) {

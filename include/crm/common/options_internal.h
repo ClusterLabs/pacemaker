@@ -36,6 +36,19 @@ bool pcmk__env_option_enabled(const char *daemon, const char *option);
  * Cluster option handling
  */
 
+/*!
+ * \internal
+ * \enum pcmk__opt_context
+ * \brief Context flags for options
+ */
+enum pcmk__opt_context {
+    // @COMPAT Used only for daemon metadata
+    pcmk__opt_context_none       = 0,           //!< No additional context
+    pcmk__opt_context_based      = (1 << 1),    //!< CIB manager metadata
+    pcmk__opt_context_controld   = (1 << 2),    //!< Controller metadata
+    pcmk__opt_context_schedulerd = (1 << 3),    //!< Scheduler metadata
+};
+
 typedef struct pcmk__cluster_option_s {
     const char *name;
     const char *alt_name;
@@ -45,23 +58,27 @@ typedef struct pcmk__cluster_option_s {
 
     bool (*is_valid)(const char *);
 
+    // @COMPAT context is used only for daemon meta-data
+    enum pcmk__opt_context context;
+
     const char *description_short;
     const char *description_long;
 
 } pcmk__cluster_option_t;
 
-const char *pcmk__cluster_option(GHashTable *options,
-                                 const pcmk__cluster_option_t *option_list,
-                                 int len, const char *name);
+const char *pcmk__cluster_option(GHashTable *options, const char *name);
 
 gchar *pcmk__format_option_metadata(const char *name, const char *desc_short,
                                     const char *desc_long,
+                                    enum pcmk__opt_context filter,
                                     pcmk__cluster_option_t *option_list,
                                     int len);
 
-void pcmk__validate_cluster_options(GHashTable *options,
-                                    pcmk__cluster_option_t *option_list,
-                                    int len);
+gchar *pcmk__cluster_option_metadata(const char *name, const char *desc_short,
+                                     const char *desc_long,
+                                     enum pcmk__opt_context filter);
+
+void pcmk__validate_cluster_options(GHashTable *options);
 
 bool pcmk__valid_interval_spec(const char *value);
 bool pcmk__valid_boolean(const char *value);
@@ -70,6 +87,7 @@ bool pcmk__valid_positive_int(const char *value);
 bool pcmk__valid_no_quorum_policy(const char *value);
 bool pcmk__valid_percentage(const char *value);
 bool pcmk__valid_script(const char *value);
+bool pcmk__valid_placement_strategy(const char *value);
 
 // from watchdog.c
 long pcmk__get_sbd_watchdog_timeout(void);

@@ -515,203 +515,6 @@ do_recover(long long action,
     register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
 }
 
-static pcmk__cluster_option_t controller_options[] = {
-    /* name, old name, type, allowed values,
-     * default value, validator,
-     * short description,
-     * long description
-     */
-    {
-        PCMK_OPT_DC_VERSION, NULL, "string", NULL,
-        PCMK__VALUE_NONE, NULL,
-        N_("Pacemaker version on cluster node elected Designated Controller (DC)"),
-        N_("Includes a hash which identifies the exact changeset the code was "
-            "built from. Used for diagnostic purposes.")
-    },
-    {
-        PCMK_OPT_CLUSTER_INFRASTRUCTURE, NULL, "string", NULL,
-        "corosync", NULL,
-        N_("The messaging stack on which Pacemaker is currently running"),
-        N_("Used for informational and diagnostic purposes.")
-    },
-    {
-        PCMK_OPT_CLUSTER_NAME, NULL, "string", NULL,
-        NULL, NULL,
-        N_("An arbitrary name for the cluster"),
-        N_("This optional value is mostly for users' convenience as desired "
-            "in administration, but may also be used in Pacemaker "
-            "configuration rules via the #cluster-name node attribute, and "
-            "by higher-level tools and resource agents.")
-    },
-    {
-        PCMK_OPT_DC_DEADTIME, NULL, "time", NULL,
-        "20s", pcmk__valid_interval_spec,
-        N_("How long to wait for a response from other nodes during start-up"),
-        N_("The optimal value will depend on the speed and load of your network "
-            "and the type of switches used.")
-    },
-    {
-        PCMK_OPT_CLUSTER_RECHECK_INTERVAL, NULL, "time",
-        N_("Zero disables polling, while positive values are an interval in "
-            "seconds (unless other units are specified, for example \"5min\")"),
-        "15min", pcmk__valid_interval_spec,
-        N_("Polling interval to recheck cluster state and evaluate rules "
-            "with date specifications"),
-        N_("Pacemaker is primarily event-driven, and looks ahead to know when to "
-            "recheck cluster state for failure timeouts and most time-based "
-            "rules. However, it will also recheck the cluster after this "
-            "amount of inactivity, to evaluate rules with date specifications "
-            "and serve as a fail-safe for certain types of scheduler bugs.")
-    },
-    {
-        PCMK_OPT_LOAD_THRESHOLD, NULL, "percentage", NULL,
-        "80%", pcmk__valid_percentage,
-        N_("Maximum amount of system load that should be used by cluster nodes"),
-        N_("The cluster will slow down its recovery process when the amount of "
-            "system resources used (currently CPU) approaches this limit"),
-    },
-    {
-        PCMK_OPT_NODE_ACTION_LIMIT, NULL, "integer", NULL,
-        "0", pcmk__valid_int,
-        N_("Maximum number of jobs that can be scheduled per node "
-            "(defaults to 2x cores)")
-    },
-    {
-        PCMK_OPT_FENCE_REACTION, NULL, "select", "stop, panic",
-        "stop", NULL,
-        N_("How a cluster node should react if notified of its own fencing"),
-        N_("A cluster node may receive notification of its own fencing if fencing "
-            "is misconfigured, or if fabric fencing is in use that doesn't cut "
-            "cluster communication. Use \"stop\" to attempt to immediately "
-            "stop Pacemaker and stay stopped, or \"panic\" to attempt to "
-            "immediately reboot the local node, falling back to stop on "
-            "failure.")
-    },
-    {
-        PCMK_OPT_ELECTION_TIMEOUT, NULL, "time", NULL,
-        "2min", pcmk__valid_interval_spec,
-        "*** Advanced Use Only ***",
-        N_("Declare an election failed if it is not decided within this much "
-            "time. If you need to adjust this value, it probably indicates "
-            "the presence of a bug.")
-    },
-    {
-        PCMK_OPT_SHUTDOWN_ESCALATION, NULL, "time", NULL,
-        "20min", pcmk__valid_interval_spec,
-        "*** Advanced Use Only ***",
-        N_("Exit immediately if shutdown does not complete within this much "
-            "time. If you need to adjust this value, it probably indicates "
-            "the presence of a bug.")
-    },
-    {
-        PCMK_OPT_JOIN_INTEGRATION_TIMEOUT, "crmd-integration-timeout", "time",
-            NULL,
-        "3min", pcmk__valid_interval_spec,
-        "*** Advanced Use Only ***",
-        N_("If you need to adjust this value, it probably indicates "
-            "the presence of a bug.")
-    },
-    {
-        PCMK_OPT_JOIN_FINALIZATION_TIMEOUT, "crmd-finalization-timeout",
-            "time", NULL,
-        "30min", pcmk__valid_interval_spec,
-        "*** Advanced Use Only ***",
-        N_("If you need to adjust this value, it probably indicates "
-            "the presence of a bug.")
-    },
-    {
-        PCMK_OPT_TRANSITION_DELAY, "crmd-transition-delay", "time", NULL,
-        "0s", pcmk__valid_interval_spec,
-        N_("*** Advanced Use Only *** Enabling this option will slow down "
-            "cluster recovery under all conditions"),
-        N_("Delay cluster recovery for this much time to allow for additional "
-            "events to occur. Useful if your configuration is sensitive to "
-            "the order in which ping updates arrive.")
-    },
-    {
-        PCMK_OPT_STONITH_WATCHDOG_TIMEOUT, NULL, "time", NULL,
-        "0", controld_verify_stonith_watchdog_timeout,
-        N_("How long before nodes can be assumed to be safely down when "
-           "watchdog-based self-fencing via SBD is in use"),
-        N_("If this is set to a positive value, lost nodes are assumed to "
-           "self-fence using watchdog-based SBD within this much time. This "
-           "does not require a fencing resource to be explicitly configured, "
-           "though a fence_watchdog resource can be configured, to limit use "
-           "to specific nodes. If this is set to 0 (the default), the cluster "
-           "will never assume watchdog-based self-fencing. If this is set to a "
-           "negative value, the cluster will use twice the local value of the "
-           "`SBD_WATCHDOG_TIMEOUT` environment variable if that is positive, "
-           "or otherwise treat this as 0. WARNING: When used, this timeout "
-           "must be larger than `SBD_WATCHDOG_TIMEOUT` on all nodes that use "
-           "watchdog-based SBD, and Pacemaker will refuse to start on any of "
-           "those nodes where this is not true for the local value or SBD is "
-           "not active. When this is set to a negative value, "
-           "`SBD_WATCHDOG_TIMEOUT` must be set to the same value on all nodes "
-           "that use SBD, otherwise data corruption or loss could occur.")
-    },
-    {
-        PCMK_OPT_STONITH_MAX_ATTEMPTS, NULL, "integer", NULL,
-        "10", pcmk__valid_positive_int,
-        N_("How many times fencing can fail before it will no longer be "
-            "immediately re-attempted on a target")
-    },
-
-    // Already documented in libpe_status (other values must be kept identical)
-    {
-        PCMK_OPT_NO_QUORUM_POLICY, NULL, "select",
-            "stop, freeze, ignore, demote, suicide",
-        "stop", pcmk__valid_no_quorum_policy,
-        N_("What to do when the cluster does not have quorum"), NULL
-    },
-    {
-        PCMK_OPT_SHUTDOWN_LOCK, NULL, "boolean", NULL,
-        PCMK_VALUE_FALSE, pcmk__valid_boolean,
-        N_("Whether to lock resources to a cleanly shut down node"),
-        N_("When true, resources active on a node when it is cleanly shut down "
-            "are kept \"locked\" to that node (not allowed to run elsewhere) "
-            "until they start again on that node after it rejoins (or for at "
-            "most shutdown-lock-limit, if set). Stonith resources and "
-            "Pacemaker Remote connections are never locked. Clone and bundle "
-            "instances and the promoted role of promotable clones are "
-            "currently never locked, though support could be added in a future "
-            "release.")
-    },
-    {
-        PCMK_OPT_SHUTDOWN_LOCK_LIMIT, NULL, "time", NULL,
-        "0", pcmk__valid_interval_spec,
-        N_("Do not lock resources to a cleanly shut down node longer than "
-           "this"),
-        N_("If shutdown-lock is true and this is set to a nonzero time "
-            "duration, shutdown locks will expire after this much time has "
-            "passed since the shutdown was initiated, even if the node has not "
-            "rejoined.")
-    },
-    {
-        PCMK_OPT_NODE_PENDING_TIMEOUT, NULL, "time", NULL,
-        "0", pcmk__valid_interval_spec,
-        N_("How long to wait for a node that has joined the cluster to join "
-           "the controller process group"),
-        N_("Fence nodes that do not join the controller process group within "
-           "this much time after joining the cluster, to allow the cluster "
-           "to continue managing resources. A value of 0 means never fence " 
-           "pending nodes. Setting the value to 2h means fence nodes after "
-           "2 hours.")
-    },
-};
-
-void
-crmd_metadata(void)
-{
-    const char *desc_short = "Pacemaker controller options";
-    const char *desc_long = "Cluster options used by Pacemaker's controller";
-
-    gchar *s = pcmk__format_option_metadata("pacemaker-controld", desc_short,
-                                            desc_long, controller_options,
-                                            PCMK__NELEM(controller_options));
-    printf("%s", s);
-    g_free(s);
-}
-
 static void
 config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
@@ -752,8 +555,20 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
                       config_hash, CIB_OPTIONS_FIRST, FALSE, now, NULL);
 
     // Validate all options, and use defaults if not already present in hash
-    pcmk__validate_cluster_options(config_hash, controller_options,
-                                   PCMK__NELEM(controller_options));
+    pcmk__validate_cluster_options(config_hash);
+
+    /* Validate the watchdog timeout in the context of the local node
+     * environment. If invalid, the controller will exit with a fatal error.
+     *
+     * We do this via a wrapper in the controller, so that we call
+     * pcmk__valid_stonith_watchdog_timeout() only if watchdog fencing is
+     * enabled for the local node. Otherwise, we may exit unnecessarily.
+     *
+     * A validator function in libcrmcommon can't act as such a wrapper, because
+     * it doesn't have a stonith API connection or the local node name.
+     */
+    value = g_hash_table_lookup(config_hash, PCMK_OPT_STONITH_WATCHDOG_TIMEOUT);
+    controld_verify_stonith_watchdog_timeout(value);
 
     value = g_hash_table_lookup(config_hash, PCMK_OPT_NO_QUORUM_POLICY);
     if (pcmk__str_eq(value, "suicide", pcmk__str_casei) && pcmk__locate_sbd()) {
@@ -863,9 +678,7 @@ crm_shutdown(int nsig)
      * config_query_callback() has been run at least once, it doesn't look like
      * anything could have changed the timer period since then.
      */
-    value = pcmk__cluster_option(NULL, controller_options,
-                                 PCMK__NELEM(controller_options),
-                                 PCMK_OPT_SHUTDOWN_ESCALATION);
+    value = pcmk__cluster_option(NULL, PCMK_OPT_SHUTDOWN_ESCALATION);
     pcmk_parse_interval_spec(value, &default_period_ms);
     controld_shutdown_start_countdown(default_period_ms);
 }
