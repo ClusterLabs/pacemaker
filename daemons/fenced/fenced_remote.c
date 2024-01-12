@@ -1535,7 +1535,7 @@ static int
 get_op_total_timeout(const remote_fencing_op_t *op,
                      const peer_device_info_t *chosen_peer)
 {
-    int total_timeout = 0;
+    long long total_timeout = 0;
     stonith_topology_t *tp = find_topology_for_host(op->target);
 
     if (pcmk_is_set(op->call_options, st_opt_topology) && tp) {
@@ -1619,11 +1619,17 @@ get_op_total_timeout(const remote_fencing_op_t *op,
         total_timeout = op->base_timeout;
     }
 
+    if (total_timeout <= 0) {
+        total_timeout = op->base_timeout;
+    }
+
     /* Take any requested fencing delay into account to prevent it from eating
      * up the total timeout.
      */
-    return ((total_timeout ? total_timeout : op->base_timeout)
-            + ((op->client_delay > 0)? op->client_delay : 0));
+    if (op->client_delay > 0) {
+        total_timeout += op->client_delay;
+    }
+    return (int) QB_MIN(total_timeout, INT_MAX);
 }
 
 static void
@@ -1747,17 +1753,18 @@ static gboolean
 check_watchdog_fencing_and_wait(remote_fencing_op_t * op)
 {
     if (node_does_watchdog_fencing(op->target)) {
+        guint timeout_ms = QB_MIN(stonith_watchdog_timeout_ms, UINT_MAX);
 
-        crm_notice("Waiting %lds for %s to self-fence (%s) for "
+        crm_notice("Waiting %s for %s to self-fence (%s) for "
                    "client %s " CRM_XS " id=%.8s",
-                   (stonith_watchdog_timeout_ms / 1000),
-                   op->target, op->action, op->client_name, op->id);
+                   pcmk__readable_interval(timeout_ms), op->target, op->action,
+                   op->client_name, op->id);
 
         if (op->op_timer_one) {
             g_source_remove(op->op_timer_one);
         }
-        op->op_timer_one = g_timeout_add(stonith_watchdog_timeout_ms,
-                                         remote_op_watchdog_done, op);
+        op->op_timer_one = g_timeout_add(timeout_ms, remote_op_watchdog_done,
+                                         op);
         return TRUE;
     } else {
         crm_debug("Skipping fallback to watchdog-fencing as %s is "

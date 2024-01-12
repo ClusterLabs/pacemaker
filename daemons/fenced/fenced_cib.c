@@ -212,7 +212,7 @@ update_stonith_watchdog_timeout_ms(xmlNode *cib)
         timeout_ms = pcmk__auto_stonith_watchdog_timeout();
     }
 
-    stonith_watchdog_timeout_ms = (long) QB_MIN(timeout_ms, LONG_MAX);
+    stonith_watchdog_timeout_ms = timeout_ms;
 }
 
 /*!
@@ -601,7 +601,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
 static void
 update_cib_cache_cb(const char *event, xmlNode * msg)
 {
-    long timeout_ms_saved = stonith_watchdog_timeout_ms;
+    long long timeout_ms_saved = stonith_watchdog_timeout_ms;
     bool need_full_refresh = false;
 
     if(!have_cib_devices) {

@@ -327,7 +327,7 @@ extern char *stonith_our_uname;
 extern gboolean stand_alone;
 extern GHashTable *device_list;
 extern GHashTable *topology;
-extern long stonith_watchdog_timeout_ms;
+extern long long stonith_watchdog_timeout_ms;
 extern GList *stonith_watchdog_targets;
 extern GHashTable *stonith_remote_op_list;
 extern crm_exit_t exit_code;
