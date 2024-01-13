@@ -69,7 +69,7 @@ lrmd__agents_list_xml(pcmk__output_t *out, va_list args) {
     const char *agent_spec = va_arg(args, const char *);
     const char *provider = va_arg(args, const char *);
 
-    xmlNodePtr node = pcmk__output_xml_create_parent(out, "agents",
+    xmlNodePtr node = pcmk__output_xml_create_parent(out, PCMK_XE_AGENTS,
                                                      "standard", agent_spec,
                                                      NULL);
 
