@@ -1046,7 +1046,7 @@ digests_xml(pcmk__output_t *out, va_list args)
                                        PCMK_XA_NODE,
                                        pcmk__s(node->details->uname, ""),
                                        "task", pcmk__s(task, ""),
-                                       "interval", interval_s,
+                                       PCMK_XA_INTERVAL, interval_s,
                                        NULL);
     free(interval_s);
     if (digests != NULL) {
@@ -1770,7 +1770,7 @@ inject_rsc_action_xml(pcmk__output_t *out, va_list args)
     if (interval_ms) {
         char *interval_s = pcmk__itoa(interval_ms);
 
-        crm_xml_add(xml_node, "interval", interval_s);
+        crm_xml_add(xml_node, PCMK_XA_INTERVAL, interval_s);
         free(interval_s);
     }
 
