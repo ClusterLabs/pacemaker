@@ -370,7 +370,7 @@ xml_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
     CRM_ASSERT(len >= 0);
     va_end(ap);
 
-    item_node = pcmk__output_create_xml_text_node(out, "item", buf);
+    item_node = pcmk__output_create_xml_text_node(out, PCMK_XE_ITEM, buf);
 
     if (name != NULL) {
         crm_xml_add(item_node, PCMK_XA_NAME, name);
