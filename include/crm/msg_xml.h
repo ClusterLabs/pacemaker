@@ -93,6 +93,7 @@ extern "C" {
 #define PCMK_XE_CRM_CONFIG                  "crm_config"
 #define PCMK_XE_CRM_MON                     "crm_mon"
 #define PCMK_XE_CRM_MON_DISCONNECTED        "crm-mon-disconnected"
+#define PCMK_XE_CURRENT_DC                  "current_dc"
 #define PCMK_XE_DATE_EXPRESSION             "date_expression"
 #define PCMK_XE_DATE_SPEC                   "date_spec"
 #define PCMK_XE_DIFF                        "diff"
