@@ -1041,7 +1041,7 @@ digests_xml(pcmk__output_t *out, va_list args)
     char *interval_s = crm_strdup_printf("%ums", interval_ms);
     xmlNode *xml = NULL;
 
-    xml = pcmk__output_create_xml_node(out, "digests",
+    xml = pcmk__output_create_xml_node(out, PCMK_XE_DIGESTS,
                                        PCMK_XA_RESOURCE, pcmk__s(rsc->id, ""),
                                        PCMK_XA_NODE,
                                        pcmk__s(node->details->uname, ""),

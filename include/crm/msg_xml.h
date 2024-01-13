@@ -99,6 +99,7 @@ extern "C" {
 #define PCMK_XE_DC                          "dc"
 #define PCMK_XE_DIFF                        "diff"
 #define PCMK_XE_DIGEST                      "digest"
+#define PCMK_XE_DIGESTS                     "digests"
 #define PCMK_XE_DURATION                    "duration"
 #define PCMK_XE_ERROR                       "error"
 #define PCMK_XE_ERRORS                      "errors"
