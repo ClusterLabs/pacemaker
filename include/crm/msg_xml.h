@@ -68,6 +68,7 @@ extern "C" {
 #define PCMK_XE_ALERT                       "alert"
 #define PCMK_XE_ALERTS                      "alerts"
 #define PCMK_XE_ALLOCATIONS                 "allocations"
+#define PCMK_XE_ALLOCATIONS_UTILIZATIONS    "allocations_utilizations"
 #define PCMK_XE_ATTRIBUTE                   "attribute"
 #define PCMK_XE_BAN                         "ban"
 #define PCMK_XE_BANS                        "bans"

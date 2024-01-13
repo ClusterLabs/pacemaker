@@ -51,7 +51,7 @@ static subst_t substitutions[] = {
     { "Assignment Scores",
       PCMK_XE_ALLOCATIONS, },
     { "Assignment Scores and Utilization Information",
-      "allocations_utilizations", },
+      PCMK_XE_ALLOCATIONS_UTILIZATIONS, },
     { "Cluster Summary",
       "summary", },
     { "Current cluster status",
