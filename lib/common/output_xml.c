@@ -69,7 +69,7 @@ static subst_t substitutions[] = {
     { "Migration Summary",
       "node_history", },
     { "Negative Location Constraints",
-      "bans", },
+      PCMK_XE_BANS, },
     { "Node Attributes",
       "node_attributes", },
     { "Operations",

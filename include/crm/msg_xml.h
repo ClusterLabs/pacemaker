@@ -69,6 +69,7 @@ extern "C" {
 #define PCMK_XE_ALERTS                      "alerts"
 #define PCMK_XE_ATTRIBUTE                   "attribute"
 #define PCMK_XE_BAN                         "ban"
+#define PCMK_XE_BANS                        "bans"
 #define PCMK_XE_BUNDLE                      "bundle"
 #define PCMK_XE_CHANGE                      "change"
 #define PCMK_XE_CHANGE_ATTR                 "change-attr"
