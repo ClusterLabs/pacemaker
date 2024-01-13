@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2022 the Pacemaker project contributors
+ * Copyright 2005-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -864,7 +864,8 @@ crm_time_parse(const char *time_str, crm_time_t *a_time)
  * \internal
  * \brief Parse a time object from an ISO 8601 date/time specification
  *
- * \param[in] date_str  ISO 8601 date/time specification (or "epoch")
+ * \param[in] date_str  ISO 8601 date/time specification (or
+ *                      \c PCMK__VALUE_EPOCH)
  *
  * \return New time object on success, NULL (and set errno) otherwise
  */
@@ -898,8 +899,10 @@ parse_date(const char *date_str)
 
     dt = crm_time_new_undefined();
 
-    if (!strncasecmp("epoch", date_str, 5)
-        && ((date_str[5] == '\0') || (date_str[5] == '/') || isspace(date_str[5]))) {
+    if ((strncasecmp(PCMK__VALUE_EPOCH, date_str, 5) == 0)
+        && ((date_str[5] == '\0')
+            || (date_str[5] == '/')
+            || isspace(date_str[5]))) {
         dt->days = 1;
         dt->years = 1970;
         crm_time_log(LOG_TRACE, "Unpacked", dt, crm_time_log_date | crm_time_log_timeofday);
