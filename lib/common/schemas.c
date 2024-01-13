@@ -1475,7 +1475,7 @@ add_schema_file_to_xml(xmlNode *parent, const char *file, GList **already_includ
     /* Create a new <file path="..."> node with the contents of the file
      * as a CDATA block underneath it.
      */
-    file_node = create_xml_node(parent, PCMK__XA_FILE);
+    file_node = create_xml_node(parent, PCMK_XA_FILE);
     if (file_node == NULL) {
         free(contents);
         free(path);

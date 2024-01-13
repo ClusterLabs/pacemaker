@@ -181,7 +181,8 @@ get_schema_files(void)
          * than what the cluster supports, we'll get back an empty <schemas> node,
          * so all this will continue to work.  It just won't do anything.
          */
-        crm_foreach_xpath_result(reply, "//" PCMK__XA_FILE, write_extra_schema_file, NULL);
+        crm_foreach_xpath_result(reply, "//" PCMK_XA_FILE,
+                                 write_extra_schema_file, NULL);
     }
 
     cib__clean_up_connection(&cib);

@@ -285,7 +285,7 @@ shadow_xml(pcmk__output_t *out, va_list args)
 
     pcmk__output_xml_create_parent(out, "shadow",
                                    "instance", instance,
-                                   "file", filename,
+                                   PCMK_XA_FILE, filename,
                                    NULL);
 
     if (content != NULL) {

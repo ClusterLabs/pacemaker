@@ -854,7 +854,7 @@ profile_xml(pcmk__output_t *out, va_list args) {
     char *duration = pcmk__ftoa((end - start) / (float) CLOCKS_PER_SEC);
 
     pcmk__output_create_xml_node(out, "timing",
-                                 "file", xml_file,
+                                 PCMK_XA_FILE, xml_file,
                                  PCMK_XA_DURATION, duration,
                                  NULL);
 
