@@ -1142,7 +1142,7 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
             break;
     }
 
-    pcmk__output_create_xml_node(out, "cluster_options",
+    pcmk__output_create_xml_node(out, PCMK_XE_CLUSTER_OPTIONS,
                                  PCMK_OPT_STONITH_ENABLED,
                                  pcmk__flag_text(scheduler->flags,
                                                  pcmk_sched_fencing_enabled),
