@@ -1538,7 +1538,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
                                         PCMK_XA_NODE, uname,
                                         "exitstatus", services_ocf_exitcode_str(rc),
                                         "exitreason", pcmk__s(reason_s, ""),
-                                        "exitcode", rc_s,
+                                        PCMK_XA_EXITCODE, rc_s,
                                         PCMK_XA_CALL, call_id,
                                         PCMK_XA_STATUS, status_s,
                                         NULL);

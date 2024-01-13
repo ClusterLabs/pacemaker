@@ -231,6 +231,7 @@ extern "C" {
 #define PCMK_XA_EXECUTION_DATE              "execution-date"
 #define PCMK_XA_EXECUTION_MESSAGE           "execution_message"
 #define PCMK_XA_EXIT_REASON                 "exit-reason"
+#define PCMK_XA_EXITCODE                    "exitcode"
 #define PCMK_XA_EXPECTED_UP                 "expected_up"
 #define PCMK_XA_EXTENDED_STATUS             "extended-status"
 #define PCMK_XA_FAILED                      "failed"
