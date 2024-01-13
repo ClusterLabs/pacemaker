@@ -284,7 +284,7 @@ shadow_xml(pcmk__output_t *out, va_list args)
         (enum shadow_disp_flags) va_arg(args, int);
 
     pcmk__output_xml_create_parent(out, "shadow",
-                                   "instance", instance,
+                                   PCMK_XA_INSTANCE, instance,
                                    PCMK_XA_FILE, filename,
                                    NULL);
 
