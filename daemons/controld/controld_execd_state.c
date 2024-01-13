@@ -579,7 +579,7 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
             int msg_id = 0;
             xmlNode *op_reply = create_xml_node(NULL, "ack");
 
-            crm_xml_add(op_reply, "function", __func__);
+            crm_xml_add(op_reply, PCMK_XA_FUNCTION, __func__);
             crm_xml_add_int(op_reply, "line", __LINE__);
 
             crm_element_value_int(msg, F_LRMD_IPC_MSG_ID, &msg_id);

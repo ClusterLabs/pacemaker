@@ -2651,7 +2651,7 @@ node_weight_xml(pcmk__output_t *out, va_list args)
     const char *score = va_arg(args, const char *);
 
     xmlNodePtr node = pcmk__output_create_xml_node(out, "node_weight",
-                                                   "function", prefix,
+                                                   PCMK_XA_FUNCTION, prefix,
                                                    PCMK_XA_NODE, uname,
                                                    PCMK_XA_SCORE, score,
                                                    NULL);
@@ -3082,7 +3082,7 @@ resource_util_xml(pcmk__output_t *out, va_list args)
     xml_node = pcmk__output_create_xml_node(out, PCMK_XE_UTILIZATION,
                                             PCMK_XA_RESOURCE, rsc->id,
                                             PCMK_XA_NODE, uname,
-                                            "function", fn,
+                                            PCMK_XA_FUNCTION, fn,
                                             NULL);
     g_hash_table_foreach(rsc->utilization, add_dump_node, xml_node);
 
