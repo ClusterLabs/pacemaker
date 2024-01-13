@@ -1510,7 +1510,7 @@ inject_attr_xml(pcmk__output_t *out, va_list args)
 
     node_path = xmlGetNodePath(cib_node);
 
-    pcmk__output_create_xml_node(out, "inject_attr",
+    pcmk__output_create_xml_node(out, PCMK_XE_INJECT_ATTR,
                                  PCMK_XA_NAME, name,
                                  PCMK_XA_VALUE, value,
                                  "node_path", node_path,
