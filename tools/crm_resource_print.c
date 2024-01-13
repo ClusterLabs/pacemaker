@@ -496,7 +496,7 @@ resource_check_list_xml(pcmk__output_t *out, va_list args) {
 
     const pcmk_resource_t *parent = pe__const_top_resource(checks->rsc, false);
 
-    xmlNodePtr node = pcmk__output_create_xml_node(out, "check",
+    xmlNodePtr node = pcmk__output_create_xml_node(out, PCMK_XE_CHECK,
                                                    PCMK_XA_ID, parent->id,
                                                    NULL);
 

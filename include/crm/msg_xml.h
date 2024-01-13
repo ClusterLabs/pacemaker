@@ -78,6 +78,7 @@ extern "C" {
 #define PCMK_XE_CHANGE_ATTR                 "change-attr"
 #define PCMK_XE_CHANGE_LIST                 "change-list"
 #define PCMK_XE_CHANGE_RESULT               "change-result"
+#define PCMK_XE_CHECK                       "check"
 #define PCMK_XE_CIB                         "cib"
 #define PCMK_XE_CLONE                       "clone"
 #define PCMK_XE_CLUSTER_PROPERTY_SET        "cluster_property_set"
