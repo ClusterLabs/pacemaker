@@ -111,6 +111,7 @@ extern "C" {
 #define PCMK_XE_FEATURES                    "features"
 #define PCMK_XE_FENCE_EVENT                 "fence_event"
 #define PCMK_XE_FENCE_HISTORY               "fence_history"
+#define PCMK_XE_FENCING_ACTION              "fencing_action"
 #define PCMK_XE_FENCING_LEVEL               "fencing-level"
 #define PCMK_XE_FENCING_TOPOLOGY            "fencing-topology"
 #define PCMK_XE_GROUP                       "group"
