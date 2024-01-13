@@ -1017,7 +1017,7 @@ add_digest_xml(xmlNode *parent, const char *type, const char *digest,
                xmlNode *digest_source)
 {
     if (digest != NULL) {
-        xmlNodePtr digest_xml = create_xml_node(parent, "digest");
+        xmlNodePtr digest_xml = create_xml_node(parent, PCMK_XE_DIGEST);
 
         crm_xml_add(digest_xml, PCMK_XA_TYPE, pcmk__s(type, "unspecified"));
         crm_xml_add(digest_xml, "hash", digest);
