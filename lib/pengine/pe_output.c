@@ -1524,6 +1524,8 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     char *reason_s = crm_xml_escape(exit_reason ? exit_reason : "none");
     xmlNodePtr node = NULL;
 
+    exit_reason = pcmk__s(reason_s, "");
+
     pcmk__scan_min_int(crm_element_value(xml_op, PCMK__XA_RC_CODE), &rc, 0);
     pcmk__scan_min_int(crm_element_value(xml_op, PCMK__XA_OP_STATUS), &status,
                        0);
@@ -1537,7 +1539,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
                                         op_key_name, op_key,
                                         PCMK_XA_NODE, uname,
                                         "exitstatus", services_ocf_exitcode_str(rc),
-                                        "exitreason", pcmk__s(reason_s, ""),
+                                        PCMK_XA_EXITREASON, exit_reason,
                                         PCMK_XA_EXITCODE, rc_s,
                                         PCMK_XA_CALL, call_id,
                                         PCMK_XA_STATUS, status_s,
