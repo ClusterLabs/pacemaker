@@ -1681,7 +1681,7 @@ main(int argc, char **argv)
 
         pcmk__html_add_header(PCMK__XE_META,
                               "http-equiv", "refresh",
-                              "content", content,
+                              PCMK__XA_CONTENT, content,
                               NULL);
         free(content);
     }
