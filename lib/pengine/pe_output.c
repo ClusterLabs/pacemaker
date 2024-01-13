@@ -1516,6 +1516,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     int status;
     const char *uname = crm_element_value(xml_op, PCMK_XA_UNAME);
     const char *call_id = crm_element_value(xml_op, PCMK__XA_CALL_ID);
+    const char *exitstatus = NULL;
     const char *exit_reason = crm_element_value(xml_op, PCMK_XA_EXIT_REASON);
     const char *status_s = NULL;
 
@@ -1533,12 +1534,13 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     if (crm_element_value(xml_op, PCMK__XA_OPERATION_KEY) == NULL) {
         op_key_name = PCMK_XA_ID;
     }
+    exitstatus = services_ocf_exitcode_str(rc);
     rc_s = pcmk__itoa(rc);
     status_s = pcmk_exec_status_str(status);
     node = pcmk__output_create_xml_node(out, "failure",
                                         op_key_name, op_key,
                                         PCMK_XA_NODE, uname,
-                                        "exitstatus", services_ocf_exitcode_str(rc),
+                                        PCMK_XA_EXITSTATUS, exitstatus,
                                         PCMK_XA_EXITREASON, exit_reason,
                                         PCMK_XA_EXITCODE, rc_s,
                                         PCMK_XA_CALL, call_id,
