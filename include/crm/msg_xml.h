@@ -201,6 +201,7 @@ extern "C" {
 #define PCMK_XA_CLASS                       "class"
 #define PCMK_XA_CLIENT                      "client"
 #define PCMK_XA_CODE                        "code"
+#define PCMK_XA_COMMENT                     "comment"
 #define PCMK_XA_COMPLETED                   "completed"
 #define PCMK_XA_CONTROL_PORT                "control-port"
 #define PCMK_XA_CRM_DEBUG_ORIGIN            "crm-debug-origin"

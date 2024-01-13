@@ -2313,7 +2313,7 @@ node_capacity_xml(pcmk__output_t *out, va_list args)
 
     xmlNodePtr xml_node = pcmk__output_create_xml_node(out, PCMK_XE_CAPACITY,
                                                        PCMK_XA_NODE, uname,
-                                                       "comment", comment,
+                                                       PCMK_XA_COMMENT, comment,
                                                        NULL);
     g_hash_table_foreach(node->details->utilization, add_dump_node, xml_node);
 
