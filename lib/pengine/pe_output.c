@@ -316,8 +316,8 @@ resource_history_string(pcmk_resource_t *rsc, const char *rsc_id, bool all,
         char *lastfail_s = NULL;
 
         if (failcount > 0) {
-            failcount_s = crm_strdup_printf(" %s=%d", PCMK__FAIL_COUNT_PREFIX,
-                                            failcount);
+            failcount_s = crm_strdup_printf(" %s=%d",
+                                            PCMK_XA_FAIL_COUNT, failcount);
         } else {
             failcount_s = strdup("");
         }
@@ -2851,7 +2851,7 @@ resource_history_xml(pcmk__output_t *out, va_list args) {
         if (failcount > 0) {
             char *s = pcmk__itoa(failcount);
 
-            crm_xml_add(node, PCMK__FAIL_COUNT_PREFIX, s);
+            crm_xml_add(node, PCMK_XA_FAIL_COUNT, s);
             free(s);
         }
 
