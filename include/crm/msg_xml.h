@@ -73,6 +73,7 @@ extern "C" {
 #define PCMK_XE_BAN                         "ban"
 #define PCMK_XE_BANS                        "bans"
 #define PCMK_XE_BUNDLE                      "bundle"
+#define PCMK_XE_CAPACITY                    "capacity"
 #define PCMK_XE_CHANGE                      "change"
 #define PCMK_XE_CHANGE_ATTR                 "change-attr"
 #define PCMK_XE_CHANGE_LIST                 "change-list"
