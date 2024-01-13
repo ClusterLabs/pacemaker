@@ -326,14 +326,14 @@ pcmk__inject_node_state_change(cib_t *cib_conn, const char *node, bool up)
                            PCMK__XA_IN_CCM, PCMK_VALUE_TRUE,
                            PCMK__XA_CRMD, ONLINESTATUS,
                            PCMK__XA_JOIN, CRMD_JOINSTATE_MEMBER,
-                           PCMK__XA_EXPECTED, CRMD_JOINSTATE_MEMBER,
+                           PCMK_XA_EXPECTED, CRMD_JOINSTATE_MEMBER,
                            NULL);
     } else {
         pcmk__xe_set_props(cib_node,
                            PCMK__XA_IN_CCM, PCMK_VALUE_FALSE,
                            PCMK__XA_CRMD, OFFLINESTATUS,
                            PCMK__XA_JOIN, CRMD_JOINSTATE_DOWN,
-                           PCMK__XA_EXPECTED, CRMD_JOINSTATE_DOWN,
+                           PCMK_XA_EXPECTED, CRMD_JOINSTATE_DOWN,
                            NULL);
     }
     crm_xml_add(cib_node, PCMK_XA_CRM_DEBUG_ORIGIN, crm_system_name);

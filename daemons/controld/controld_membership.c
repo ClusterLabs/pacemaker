@@ -184,7 +184,7 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
         }
 
         if (flags & node_update_expected) {
-            crm_xml_add(node_state, PCMK__XA_EXPECTED, node->expected);
+            crm_xml_add(node_state, PCMK_XA_EXPECTED, node->expected);
         }
     }
 

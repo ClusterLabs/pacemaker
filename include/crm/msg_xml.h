@@ -234,6 +234,7 @@ extern "C" {
 #define PCMK_XA_EXITCODE                    "exitcode"
 #define PCMK_XA_EXITREASON                  "exitreason"
 #define PCMK_XA_EXITSTATUS                  "exitstatus"
+#define PCMK_XA_EXPECTED                    "expected"
 #define PCMK_XA_EXPECTED_UP                 "expected_up"
 #define PCMK_XA_EXTENDED_STATUS             "extended-status"
 #define PCMK_XA_FAILED                      "failed"

@@ -1560,7 +1560,7 @@ determine_online_status_no_fencing(pcmk_scheduler_t *scheduler,
 {
     gboolean online = FALSE;
     const char *join = crm_element_value(node_state, PCMK__XA_JOIN);
-    const char *exp_state = crm_element_value(node_state, PCMK__XA_EXPECTED);
+    const char *exp_state = crm_element_value(node_state, PCMK_XA_EXPECTED);
     long long when_member = unpack_node_member(node_state, scheduler);
     long long when_online = unpack_node_online(node_state);
 
@@ -1632,13 +1632,13 @@ determine_online_status_fencing(pcmk_scheduler_t *scheduler,
 {
     bool termination_requested = unpack_node_terminate(this_node, node_state);
     const char *join = crm_element_value(node_state, PCMK__XA_JOIN);
-    const char *exp_state = crm_element_value(node_state, PCMK__XA_EXPECTED);
+    const char *exp_state = crm_element_value(node_state, PCMK_XA_EXPECTED);
     long long when_member = unpack_node_member(node_state, scheduler);
     long long when_online = unpack_node_online(node_state);
 
 /*
   - PCMK__XA_JOIN          ::= member|down|pending|banned
-  - PCMK__XA_EXPECTED      ::= member|down
+  - PCMK_XA_EXPECTED       ::= member|down
 
   @COMPAT with entries recorded for DCs < 2.1.7
   - PCMK__XA_IN_CCM        ::= true|false
@@ -1810,7 +1810,7 @@ determine_online_status(const xmlNode *node_state, pcmk_node_t *this_node,
                         pcmk_scheduler_t *scheduler)
 {
     gboolean online = FALSE;
-    const char *exp_state = crm_element_value(node_state, PCMK__XA_EXPECTED);
+    const char *exp_state = crm_element_value(node_state, PCMK_XA_EXPECTED);
 
     CRM_CHECK(this_node != NULL, return);
 

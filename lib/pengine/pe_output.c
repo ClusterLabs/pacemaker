@@ -2218,7 +2218,7 @@ node_attribute_xml(pcmk__output_t *out, va_list args) {
 
     if (add_extra) {
         char *buf = pcmk__itoa(expected_score);
-        crm_xml_add(node, "expected", buf);
+        crm_xml_add(node, PCMK_XA_EXPECTED, buf);
         free(buf);
     }
 
