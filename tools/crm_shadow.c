@@ -577,7 +577,7 @@ shadow_setup(pcmk__output_t *out, bool do_switch, GError **error)
         setenv("PS1", new_prompt, 1);
         setenv("CIB_shadow", options.instance, 1);
 
-        out->message(out, "instruction",
+        out->message(out, PCMK_XE_INSTRUCTION,
                      "Press Ctrl+D to exit the crm_shadow shell");
 
         if (pcmk__str_eq(shell, "(^|/)bash$", pcmk__str_regex)) {
