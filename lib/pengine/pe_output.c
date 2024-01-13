@@ -1537,7 +1537,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     exitstatus = services_ocf_exitcode_str(rc);
     rc_s = pcmk__itoa(rc);
     status_s = pcmk_exec_status_str(status);
-    node = pcmk__output_create_xml_node(out, "failure",
+    node = pcmk__output_create_xml_node(out, PCMK_XE_FAILURE,
                                         op_key_name, op_key,
                                         PCMK_XA_NODE, uname,
                                         PCMK_XA_EXITSTATUS, exitstatus,
