@@ -165,6 +165,7 @@ extern "C" {
 #define PCMK_XA_ACTIVE                      "active"
 #define PCMK_XA_ADD_HOST                    "add-host"
 #define PCMK_XA_ADMIN_EPOCH                 "admin_epoch"
+#define PCMK_XA_AGENT                       "agent"
 #define PCMK_XA_API_VERSION                 "api-version"
 #define PCMK_XA_ATTRIBUTE                   "attribute"
 #define PCMK_XA_AUTHOR                      "author"

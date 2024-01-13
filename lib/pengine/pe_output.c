@@ -2179,7 +2179,7 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
 
         pcmk__xe_set_props(node,
                            PCMK_XA_RSC, rsc_printable_id(rsc),
-                           "agent", agent_tuple,
+                           PCMK_XA_AGENT, agent_tuple,
                            NULL);
         free(agent_tuple);
     }

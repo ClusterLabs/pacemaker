@@ -106,7 +106,7 @@ lrmd__providers_list_xml(pcmk__output_t *out, va_list args) {
                                                      NULL);
 
     if (agent_spec != NULL) {
-        crm_xml_add(node, "agent", agent_spec);
+        crm_xml_add(node, PCMK_XA_AGENT, agent_spec);
     }
 
     return xml_list(out, list, "provider");
