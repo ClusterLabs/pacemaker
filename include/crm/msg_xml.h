@@ -225,6 +225,7 @@ extern "C" {
 #define PCMK_XA_DURATION                    "duration"
 #define PCMK_XA_END                         "end"
 #define PCMK_XA_EPOCH                       "epoch"
+#define PCMK_XA_EXEC                        "exec"
 #define PCMK_XA_EXEC_TIME                   "exec-time"
 #define PCMK_XA_EXECUTION_CODE              "execution_code"
 #define PCMK_XA_EXECUTION_DATE              "execution-date"

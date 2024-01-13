@@ -1548,6 +1548,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
                                  &epoch) == pcmk_ok) && (epoch > 0)) {
 
         const char *queue_time = crm_element_value(xml_op, PCMK_XA_QUEUE_TIME);
+        const char *exec = crm_element_value(xml_op, PCMK_XA_EXEC_TIME);
         guint interval_ms = 0;
         char *interval_ms_s = NULL;
         char *rc_change = pcmk__epoch2str(&epoch,
@@ -1561,7 +1562,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
         pcmk__xe_set_props(node,
                            PCMK_XA_LAST_RC_CHANGE, rc_change,
                            "queued", queue_time,
-                           "exec", crm_element_value(xml_op, PCMK_XA_EXEC_TIME),
+                           PCMK_XA_EXEC, exec,
                            "interval", interval_ms_s,
                            "task", crm_element_value(xml_op, PCMK_XA_OPERATION),
                            NULL);
