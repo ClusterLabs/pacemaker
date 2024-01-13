@@ -694,7 +694,7 @@ ban_xml(pcmk__output_t *out, va_list args) {
     const char *promoted_only = pcmk__btoa(location->role_filter == pcmk_role_promoted);
     char *weight_s = pcmk__itoa(pe_node->weight);
 
-    pcmk__output_create_xml_node(out, "ban",
+    pcmk__output_create_xml_node(out, PCMK_XE_BAN,
                                  PCMK_XA_ID, location->id,
                                  PCMK_XA_RESOURCE, location->rsc->id,
                                  PCMK_XA_NODE, pe_node->details->uname,
