@@ -77,7 +77,7 @@ lrmd__agents_list_xml(pcmk__output_t *out, va_list args) {
         crm_xml_add(node, PCMK_XA_PROVIDER, provider);
     }
 
-    return xml_list(out, list, "agent");
+    return xml_list(out, list, PCMK_XE_AGENT);
 }
 
 PCMK__OUTPUT_ARGS("agents-list", "lrmd_list_t *", "const char *", "const char *")
