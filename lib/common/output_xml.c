@@ -59,7 +59,7 @@ static subst_t substitutions[] = {
     { "Executing Cluster Transition",
       PCMK_XE_TRANSITION, },
     { "Failed Resource Actions",
-      "failures", },
+      PCMK_XE_FAILURES, },
     { "Fencing History",
       PCMK_XE_FENCE_HISTORY, },
     { "Full List of Resources",

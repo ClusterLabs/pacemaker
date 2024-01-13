@@ -94,6 +94,7 @@ extern "C" {
 #define PCMK_XE_ERROR                       "error"
 #define PCMK_XE_ERRORS                      "errors"
 #define PCMK_XE_EXPRESSION                  "expression"
+#define PCMK_XE_FAILURES                    "failures"
 #define PCMK_XE_FEATURE                     "feature"
 #define PCMK_XE_FEATURES                    "features"
 #define PCMK_XE_FENCE_EVENT                 "fence_event"
