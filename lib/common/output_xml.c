@@ -79,7 +79,7 @@ static subst_t substitutions[] = {
     { "Resource Operations",
       PCMK_XE_OPERATIONS, },
     { "Revised Cluster Status",
-      "revised_cluster_status", },
+      PCMK_XE_REVISED_CLUSTER_STATUS, },
     { "Transition Summary",
       PCMK_XE_ACTIONS, },
     { "Utilization Information",
