@@ -106,6 +106,7 @@ extern "C" {
 #define PCMK_XE_INSTANCE_ATTRIBUTES         "instance_attributes"
 #define PCMK_XE_ITEM                        "item"
 #define PCMK_XE_LAST_FENCED                 "last-fenced"
+#define PCMK_XE_LIST                        "list"
 #define PCMK_XE_LONGDESC                    "longdesc"
 #define PCMK_XE_META_ATTRIBUTES             "meta_attributes"
 #define PCMK_XE_NETWORK                     "network"

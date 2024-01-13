@@ -346,7 +346,7 @@ xml_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plura
     if (legacy_xml || simple_list) {
         pcmk__output_xml_create_parent(out, name, NULL);
     } else {
-        pcmk__output_xml_create_parent(out, "list",
+        pcmk__output_xml_create_parent(out, PCMK_XE_LIST,
                                        PCMK_XA_NAME, name,
                                        NULL);
     }
