@@ -1426,7 +1426,7 @@ inject_cluster_action_xml(pcmk__output_t *out, va_list args)
         return pcmk_rc_no_output;
     }
 
-    xml_node = pcmk__output_create_xml_node(out, "cluster_action",
+    xml_node = pcmk__output_create_xml_node(out, PCMK_XE_CLUSTER_ACTION,
                                             "task", task,
                                             PCMK_XA_NODE, node,
                                             NULL);

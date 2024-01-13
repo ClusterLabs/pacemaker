@@ -81,6 +81,7 @@ extern "C" {
 #define PCMK_XE_CHECK                       "check"
 #define PCMK_XE_CIB                         "cib"
 #define PCMK_XE_CLONE                       "clone"
+#define PCMK_XE_CLUSTER_ACTION              "cluster_action"
 #define PCMK_XE_CLUSTER_PROPERTY_SET        "cluster_property_set"
 #define PCMK_XE_CLUSTER_STATUS              "cluster_status"
 #define PCMK_XE_COMMAND                     "command"
