@@ -33,6 +33,7 @@ good_input(void **state) {
     assert_int_equal(crm_get_msec("\t100\n"), 100000);
 
     assert_int_equal(crm_get_msec("100ms"), 100);
+    assert_int_equal(crm_get_msec(" 100 ms "), 100);
     assert_int_equal(crm_get_msec("100 MSEC"), 100);
     assert_int_equal(crm_get_msec("1000US"), 1);
     assert_int_equal(crm_get_msec("1000usec"), 1);
@@ -55,6 +56,15 @@ good_input(void **state) {
     assert_int_equal(crm_get_msec("  3.14.159  "), 3000);
     assert_int_equal(crm_get_msec("3.14.159ms"), 3);
     assert_int_equal(crm_get_msec("  3.14.159  ms  "), 3);
+
+    // Questionable
+    assert_int_equal(crm_get_msec(" 100 mshr "), 100);
+    assert_int_equal(crm_get_msec(" 100 ms hr "), 100);
+    assert_int_equal(crm_get_msec(" 100 sasdf "), 100000);
+    assert_int_equal(crm_get_msec(" 100 s asdf "), 100000);
+    assert_int_equal(crm_get_msec(" 3.14 shour "), 3000);
+    assert_int_equal(crm_get_msec(" 3.14 s hour "), 3000);
+    assert_int_equal(crm_get_msec(" 3.14 ms!@#$ "), 3);
 }
 
 static void
