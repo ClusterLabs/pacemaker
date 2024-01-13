@@ -55,7 +55,7 @@ static subst_t substitutions[] = {
     { "Cluster Summary",
       PCMK_XE_SUMMARY, },
     { "Current cluster status",
-      "cluster_status", },
+      PCMK_XE_CLUSTER_STATUS, },
     { "Executing Cluster Transition",
       "transition", },
     { "Failed Resource Actions",

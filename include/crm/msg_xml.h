@@ -80,6 +80,7 @@ extern "C" {
 #define PCMK_XE_CIB                         "cib"
 #define PCMK_XE_CLONE                       "clone"
 #define PCMK_XE_CLUSTER_PROPERTY_SET        "cluster_property_set"
+#define PCMK_XE_CLUSTER_STATUS              "cluster_status"
 #define PCMK_XE_COMMAND                     "command"
 #define PCMK_XE_CONFIGURATION               "configuration"
 #define PCMK_XE_CONSTRAINTS                 "constraints"
