@@ -116,6 +116,7 @@ extern "C" {
 #define PCMK_XE_FENCING_TOPOLOGY            "fencing-topology"
 #define PCMK_XE_GROUP                       "group"
 #define PCMK_XE_INJECT_ATTR                 "inject_attr"
+#define PCMK_XE_INJECT_SPEC                 "inject_spec"
 #define PCMK_XE_INSTANCE_ATTRIBUTES         "instance_attributes"
 #define PCMK_XE_ITEM                        "item"
 #define PCMK_XE_LAST_FENCED                 "last-fenced"

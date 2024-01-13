@@ -1544,7 +1544,7 @@ inject_spec_xml(pcmk__output_t *out, va_list args)
         return pcmk_rc_no_output;
     }
 
-    pcmk__output_create_xml_node(out, "inject_spec",
+    pcmk__output_create_xml_node(out, PCMK_XE_INJECT_SPEC,
                                  "spec", spec,
                                  NULL);
     return pcmk_rc_ok;
