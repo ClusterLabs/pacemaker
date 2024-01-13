@@ -108,6 +108,7 @@ extern "C" {
 #define PCMK_XE_META_ATTRIBUTES             "meta_attributes"
 #define PCMK_XE_NETWORK                     "network"
 #define PCMK_XE_NODE                        "node"
+#define PCMK_XE_NODE_ATTRIBUTES             "node_attributes"
 #define PCMK_XE_NODE_HISTORY                "node_history"
 #define PCMK_XE_NODES                       "nodes"
 #define PCMK_XE_NVPAIR                      "nvpair"

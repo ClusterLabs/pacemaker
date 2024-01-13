@@ -71,7 +71,7 @@ static subst_t substitutions[] = {
     { "Negative Location Constraints",
       PCMK_XE_BANS, },
     { "Node Attributes",
-      "node_attributes", },
+      PCMK_XE_NODE_ATTRIBUTES, },
     { "Operations",
       PCMK_XE_NODE_HISTORY, },
     { "Resource Config",
