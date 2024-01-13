@@ -896,7 +896,7 @@ dc_xml(pcmk__output_t *out, va_list args)
 {
     const char *dc = va_arg(args, const char *);
 
-    pcmk__output_create_xml_node(out, "dc",
+    pcmk__output_create_xml_node(out, PCMK_XE_DC,
                                  "node_name", pcmk__s(dc, ""),
                                  NULL);
     return pcmk_rc_ok;
