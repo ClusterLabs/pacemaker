@@ -1514,7 +1514,7 @@ inject_attr_xml(pcmk__output_t *out, va_list args)
                                  PCMK_XA_NAME, name,
                                  PCMK_XA_VALUE, value,
                                  "node_path", node_path,
-                                 "cib_node", ID(cib_node),
+                                 PCMK_XA_CIB_NODE, ID(cib_node),
                                  NULL);
     free(node_path);
     return pcmk_rc_ok;

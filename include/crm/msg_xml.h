@@ -194,6 +194,7 @@ extern "C" {
 #define PCMK_XA_CACHED                      "cached"
 #define PCMK_XA_CALL                        "call"
 #define PCMK_XA_CIB_LAST_WRITTEN            "cib-last-written"
+#define PCMK_XA_CIB_NODE                    "cib_node"
 #define PCMK_XA_CLASS                       "class"
 #define PCMK_XA_CLIENT                      "client"
 #define PCMK_XA_CODE                        "code"
