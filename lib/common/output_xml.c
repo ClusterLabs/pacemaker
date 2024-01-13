@@ -77,7 +77,7 @@ static subst_t substitutions[] = {
     { "Resource Config",
       PCMK_XE_RESOURCE_CONFIG, },
     { "Resource Operations",
-      "operations", },
+      PCMK_XE_OPERATIONS, },
     { "Revised Cluster Status",
       "revised_cluster_status", },
     { "Transition Summary",

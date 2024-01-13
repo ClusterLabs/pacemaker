@@ -391,7 +391,7 @@ create_ip_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
             crm_create_nvpair_xml(xml_obj, NULL, "cidr_netmask", "32");
         }
 
-        xml_obj = create_xml_node(xml_ip, "operations");
+        xml_obj = create_xml_node(xml_ip, PCMK_XE_OPERATIONS);
         crm_create_op_xml(xml_obj, ID(xml_ip), PCMK_ACTION_MONITOR, "60s",
                           NULL);
 
@@ -643,7 +643,7 @@ create_container_resource(pcmk_resource_t *parent,
         crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd", "/bin/true");
     }
 
-    xml_obj = create_xml_node(xml_container, "operations");
+    xml_obj = create_xml_node(xml_container, PCMK_XE_OPERATIONS);
     crm_create_op_xml(xml_obj, ID(xml_container), PCMK_ACTION_MONITOR, "60s",
                       NULL);
 
