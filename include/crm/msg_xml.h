@@ -152,6 +152,7 @@ extern "C" {
 #define PCMK_XE_STATUS                      "status"
 #define PCMK_XE_STORAGE                     "storage"
 #define PCMK_XE_STORAGE_MAPPING             "storage-mapping"
+#define PCMK_XE_SUMMARY                     "summary"
 #define PCMK_XE_TAG                         "tag"
 #define PCMK_XE_TAGS                        "tags"
 #define PCMK_XE_TARGET                      "target"
