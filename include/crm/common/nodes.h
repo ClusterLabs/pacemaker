@@ -27,7 +27,8 @@ extern "C" {
 
 // Special node attributes
 
-#define PCMK_NODE_ATTR_TERMINATE    "terminate"
+#define PCMK_NODE_ATTR_MAINTENANCE          "maintenance"
+#define PCMK_NODE_ATTR_TERMINATE            "terminate"
 
 
 //! Possible node types

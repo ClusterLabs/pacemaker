@@ -1094,8 +1094,10 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
         this_node->details->standby = TRUE;
     }
 
-    if (crm_is_true(pe_node_attribute_raw(this_node, "maintenance")) ||
-        ((rsc != NULL) && !pcmk_is_set(rsc->flags, pcmk_rsc_managed))) {
+    if (crm_is_true(pe_node_attribute_raw(this_node,
+                                          PCMK_NODE_ATTR_MAINTENANCE))
+        || ((rsc != NULL) && !pcmk_is_set(rsc->flags, pcmk_rsc_managed))) {
+
         crm_info("%s is in maintenance mode", pcmk__node_name(this_node));
         this_node->details->maintenance = TRUE;
     }
@@ -1153,7 +1155,7 @@ unpack_transient_attributes(const xmlNode *state, pcmk_node_t *node,
         node->details->standby = TRUE;
     }
 
-    if (crm_is_true(pe_node_attribute_raw(node, "maintenance"))) {
+    if (crm_is_true(pe_node_attribute_raw(node, PCMK_NODE_ATTR_MAINTENANCE))) {
         crm_info("%s is in maintenance mode", pcmk__node_name(node));
         node->details->maintenance = TRUE;
     }
