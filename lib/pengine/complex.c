@@ -512,7 +512,7 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
                               rsc->id);
         }
 
-    } else if (pcmk__str_eq(value, PCMK__VALUE_UNFENCING, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value, PCMK_VALUE_UNFENCING, pcmk__str_casei)) {
         if (pcmk_is_set(rsc->flags, pcmk_rsc_fence_device)) {
             pcmk__config_warn("Resetting \"" PCMK_META_REQUIRES "\" for %s "
                               "to \"" PCMK_VALUE_QUORUM "\" because fencing "
@@ -545,7 +545,7 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
 
         } else if (pcmk_is_set(rsc->cluster->flags,
                                pcmk_sched_enable_unfencing)) {
-            value = PCMK__VALUE_UNFENCING;
+            value = PCMK_VALUE_UNFENCING;
 
         } else if (pcmk_is_set(rsc->cluster->flags,
                                pcmk_sched_fencing_enabled)) {
