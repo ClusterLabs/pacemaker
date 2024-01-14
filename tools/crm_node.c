@@ -159,7 +159,7 @@ node_id_xml(pcmk__output_t *out, va_list args) {
 
     char *id_s = crm_strdup_printf("%" PRIu32, node_id);
 
-    pcmk__output_create_xml_node(out, "node-info",
+    pcmk__output_create_xml_node(out, PCMK_XE_NODE_INFO,
                                  PCMK_XA_NODEID, id_s,
                                  NULL);
 
@@ -226,7 +226,7 @@ node_name_xml(pcmk__output_t *out, va_list args) {
 
     char *id_s = crm_strdup_printf("%" PRIu32, node_id);
 
-    pcmk__output_create_xml_node(out, "node-info",
+    pcmk__output_create_xml_node(out, PCMK_XE_NODE_INFO,
                                  PCMK_XA_NODEID, id_s,
                                  PCMK_XA_UNAME, node_name,
                                  NULL);
