@@ -867,7 +867,8 @@ cluster_counts_xml(pcmk__output_t *out, va_list args) {
 
     nodes_node = pcmk__output_create_xml_node(out, PCMK_XE_NODES_CONFIGURED,
                                               NULL);
-    resources_node = pcmk__output_create_xml_node(out, "resources_configured",
+    resources_node = pcmk__output_create_xml_node(out,
+                                                  PCMK_XE_RESOURCES_CONFIGURED,
                                                   NULL);
 
     s = pcmk__itoa(nnodes);

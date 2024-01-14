@@ -165,6 +165,7 @@ extern "C" {
 #define PCMK_XE_RESOURCE_REF                "resource_ref"
 #define PCMK_XE_RESOURCE_SET                "resource_set"
 #define PCMK_XE_RESOURCES                   "resources"
+#define PCMK_XE_RESOURCES_CONFIGURED        "resources_configured"
 #define PCMK_XE_RESULT_CODE                 "result-code"
 #define PCMK_XE_REVISED_CLUSTER_STATUS      "revised_cluster_status"
 #define PCMK_XE_ROLE                        "role"
