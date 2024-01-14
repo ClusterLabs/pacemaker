@@ -99,6 +99,9 @@
 // @COMPAT Deprecated since 2.1.7
 #define PCMK__XE_DIFF_REMOVED           "diff-removed"
 
+// @COMPAT Deprecated since 1.0.8 (commit 4cb100f)
+#define PCMK__XE_LIFETIME               "lifetime"
+
 /* @COMPAT Deprecated since 2.0.0; alias for <clone> with PCMK_META_PROMOTABLE
  * set to "true"
  */

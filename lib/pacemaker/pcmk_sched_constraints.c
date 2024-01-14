@@ -73,11 +73,11 @@ pcmk__unpack_constraints(pcmk_scheduler_t *scheduler)
 
         crm_trace("Unpacking %s constraint '%s'", tag, id);
 
-        lifetime = first_named_child(xml_obj, "lifetime");
+        lifetime = first_named_child(xml_obj, PCMK__XE_LIFETIME);
         if (lifetime != NULL) {
-            pcmk__config_warn("Support for 'lifetime' attribute (in %s) is "
-                              "deprecated (the rules it contains should "
-                              "instead be direct descendants of the "
+            pcmk__config_warn("Support for '" PCMK__XE_LIFETIME "' element "
+                              "(in %s) is deprecated (the rules it contains "
+                              "should instead be direct descendants of the "
                               "constraint object)", id);
         }
 
