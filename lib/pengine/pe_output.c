@@ -1278,7 +1278,7 @@ cluster_times_xml(pcmk__output_t *out, va_list args) {
 
     char *time_s = pcmk__epoch2str(NULL, 0);
 
-    pcmk__output_create_xml_node(out, "last_update",
+    pcmk__output_create_xml_node(out, PCMK_XE_LAST_UPDATE,
                                  PCMK_XA_TIME, time_s,
                                  PCMK_XA_ORIGIN, our_nodename,
                                  NULL);
