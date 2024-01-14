@@ -1116,6 +1116,8 @@ static int
 cluster_options_xml(pcmk__output_t *out, va_list args) {
     pcmk_scheduler_t *scheduler = va_arg(args, pcmk_scheduler_t *);
 
+    const char *stonith_enabled = pcmk__flag_text(scheduler->flags,
+                                                  pcmk_sched_fencing_enabled);
     const char *no_quorum_policy = NULL;
     char *stonith_timeout_str = pcmk__itoa(scheduler->stonith_timeout);
     char *priority_fencing_delay_str = pcmk__itoa(scheduler->priority_fencing_delay * 1000);
@@ -1143,9 +1145,7 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
     }
 
     pcmk__output_create_xml_node(out, PCMK_XE_CLUSTER_OPTIONS,
-                                 PCMK_OPT_STONITH_ENABLED,
-                                 pcmk__flag_text(scheduler->flags,
-                                                 pcmk_sched_fencing_enabled),
+                                 PCMK_XA_STONITH_ENABLED, stonith_enabled,
 
                                  PCMK_OPT_SYMMETRIC_CLUSTER,
                                  pcmk__flag_text(scheduler->flags,

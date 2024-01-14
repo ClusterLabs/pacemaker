@@ -350,6 +350,7 @@ extern "C" {
 #define PCMK_XA_STANDBY_ONFAIL              "standby_onfail"
 #define PCMK_XA_START                       "start"
 #define PCMK_XA_STATUS                      "status"
+#define PCMK_XA_STONITH_ENABLED             "stonith-enabled"
 #define PCMK_XA_SYMMETRICAL                 "symmetrical"
 #define PCMK_XA_TARGET                      "target"
 #define PCMK_XA_TARGET_ATTRIBUTE            "target-attribute"
