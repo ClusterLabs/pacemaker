@@ -129,6 +129,7 @@ extern "C" {
 #define PCMK_XE_METADATA                    "metadata"
 #define PCMK_XE_MODIFICATIONS               "modifications"
 #define PCMK_XE_MODIFY_NODE                 "modify_node"
+#define PCMK_XE_MODIFY_TICKET               "modify_ticket"
 #define PCMK_XE_NETWORK                     "network"
 #define PCMK_XE_NODE                        "node"
 #define PCMK_XE_NODE_ATTRIBUTES             "node_attributes"
