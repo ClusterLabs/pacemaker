@@ -689,7 +689,8 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
 
     const char *host_uname = (node == NULL)? NULL : node->details->uname;
 
-    xmlNodePtr xml_node = pcmk__output_xml_create_parent(out, "reason", NULL);
+    xmlNodePtr xml_node = pcmk__output_xml_create_parent(out, PCMK_XE_REASON,
+                                                         NULL);
 
     if ((rsc == NULL) && (host_uname == NULL)) {
         GList *lpc = NULL;

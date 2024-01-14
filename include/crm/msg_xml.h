@@ -163,6 +163,7 @@ extern "C" {
 #define PCMK_XE_PROVIDER                    "provider"
 #define PCMK_XE_PROVIDERS                   "providers"
 #define PCMK_XE_PSEUDO_ACTION               "pseudo_action"
+#define PCMK_XE_REASON                      "reason"
 #define PCMK_XE_RECIPIENT                   "recipient"
 #define PCMK_XE_REPLICA                     "replica"
 #define PCMK_XE_RESOURCE                    "resource"
