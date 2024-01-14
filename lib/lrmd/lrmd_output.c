@@ -50,7 +50,7 @@ lrmd__alternatives_list_xml(pcmk__output_t *out, va_list args) {
     pcmk__output_xml_create_parent(out, "providers",
                                    PCMK_XA_FOR, agent_spec,
                                    NULL);
-    return xml_list(out, list, "provider");
+    return xml_list(out, list, PCMK_XE_PROVIDER);
 }
 
 PCMK__OUTPUT_ARGS("alternatives-list", "lrmd_list_t *", "const char *")
@@ -109,7 +109,7 @@ lrmd__providers_list_xml(pcmk__output_t *out, va_list args) {
         crm_xml_add(node, PCMK_XA_AGENT, agent_spec);
     }
 
-    return xml_list(out, list, "provider");
+    return xml_list(out, list, PCMK_XE_PROVIDER);
 }
 
 PCMK__OUTPUT_ARGS("providers-list", "lrmd_list_t *", "const char *")
