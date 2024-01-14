@@ -283,6 +283,7 @@ extern "C" {
 #define PCMK_XA_LOCKED_TO_HYPHEN            "locked-to"
 #define PCMK_XA_LOSS_POLICY                 "loss-policy"
 #define PCMK_XA_MAINTENANCE                 "maintenance"
+#define PCMK_XA_MAINTENANCE_MODE            "maintenance-mode"
 #define PCMK_XA_MANAGED                     "managed"
 #define PCMK_XA_MESSAGE                     "message"
 #define PCMK_XA_MINUTES                     "minutes"
