@@ -2776,7 +2776,7 @@ promotion_score_xml(pcmk__output_t *out, va_list args)
     pcmk_node_t *chosen = va_arg(args, pcmk_node_t *);
     const char *score = va_arg(args, const char *);
 
-    xmlNodePtr node = pcmk__output_create_xml_node(out, "promotion_score",
+    xmlNodePtr node = pcmk__output_create_xml_node(out, PCMK_XE_PROMOTION_SCORE,
                                                    PCMK_XA_ID, child_rsc->id,
                                                    PCMK_XA_SCORE, score,
                                                    NULL);

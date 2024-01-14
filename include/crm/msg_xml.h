@@ -159,6 +159,7 @@ extern "C" {
 #define PCMK_XE_PORT_MAPPING                "port-mapping"
 #define PCMK_XE_POSITION                    "position"
 #define PCMK_XE_PRIMITIVE                   "primitive"
+#define PCMK_XE_PROMOTION_SCORE             "promotion_score"
 #define PCMK_XE_RECIPIENT                   "recipient"
 #define PCMK_XE_REPLICA                     "replica"
 #define PCMK_XE_RESOURCE                    "resource"
