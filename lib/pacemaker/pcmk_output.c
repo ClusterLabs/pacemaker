@@ -822,7 +822,7 @@ pacemakerd_health_xml(pcmk__output_t *out, va_list args)
                                          |crm_time_log_with_timezone);
     }
 
-    pcmk__output_create_xml_node(out, "pacemakerd",
+    pcmk__output_create_xml_node(out, PCMK_XE_PACEMAKERD,
                                  "sys_from", sys_from,
                                  "state", state_s,
                                  PCMK_XA_LAST_UPDATED, last_updated_s,
