@@ -2856,11 +2856,12 @@ resource_history_xml(pcmk__output_t *out, va_list args) {
                                                      NULL);
 
     if (rsc == NULL) {
-        pcmk__xe_set_bool_attr(node, "orphan", true);
+        pcmk__xe_set_bool_attr(node, PCMK_XA_ORPHAN, true);
     } else if (all || failcount || last_failure > 0) {
         char *migration_s = pcmk__itoa(rsc->migration_threshold);
 
-        pcmk__xe_set_props(node, "orphan", PCMK_VALUE_FALSE,
+        pcmk__xe_set_props(node,
+                           PCMK_XA_ORPHAN, PCMK_VALUE_FALSE,
                            PCMK_META_MIGRATION_THRESHOLD, migration_s,
                            NULL);
         free(migration_s);
