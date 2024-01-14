@@ -166,7 +166,7 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
 
             } else {
                 // @COMPAT DCs < 2.1.7 use online/offline rather than timestamp
-                value = OFFLINESTATUS;
+                value = PCMK_VALUE_OFFLINE;
                 if (pcmk_is_set(node->processes, crm_get_cluster_proc())) {
                     value = PCMK_VALUE_ONLINE;
                 }

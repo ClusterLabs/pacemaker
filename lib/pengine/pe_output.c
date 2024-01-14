@@ -1651,7 +1651,8 @@ status_node(pcmk_node_t *node, xmlNodePtr parent, uint32_t show_opts)
         pcmk_create_html_node(parent, "span", NULL, PCMK_VALUE_ONLINE,
                               " online");
     } else {
-        pcmk_create_html_node(parent, "span", NULL, "offline", " OFFLINE");
+        pcmk_create_html_node(parent, "span", NULL, PCMK_VALUE_OFFLINE,
+                              " OFFLINE");
     }
 
     // Standby mode

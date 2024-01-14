@@ -658,7 +658,7 @@ node_left(const char *cpg_group_name, int event_counter,
                  cpgreason2str(cpg_peer->reason));
         if (peer != NULL) {
             crm_update_peer_proc(__func__, peer, crm_proc_cpg,
-                                 OFFLINESTATUS);
+                                 PCMK_VALUE_OFFLINE);
         }
     } else if (cpg_peer->nodeid == local_nodeid) {
         crm_warn("Group %s event %d: duplicate local pid %u left%s",

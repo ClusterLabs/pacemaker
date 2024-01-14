@@ -1507,7 +1507,7 @@ unpack_node_online(const xmlNode *node_state)
     const char *peer_time = crm_element_value(node_state, PCMK_XA_CRMD);
 
     // @COMPAT Entries recorded for DCs < 2.1.7 have "online" or "offline"
-    if (pcmk__str_eq(peer_time, OFFLINESTATUS,
+    if (pcmk__str_eq(peer_time, PCMK_VALUE_OFFLINE,
                      pcmk__str_casei|pcmk__str_null_matches)) {
         return 0LL;
 

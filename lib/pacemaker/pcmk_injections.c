@@ -331,7 +331,7 @@ pcmk__inject_node_state_change(cib_t *cib_conn, const char *node, bool up)
     } else {
         pcmk__xe_set_props(cib_node,
                            PCMK__XA_IN_CCM, PCMK_VALUE_FALSE,
-                           PCMK_XA_CRMD, OFFLINESTATUS,
+                           PCMK_XA_CRMD, PCMK_VALUE_OFFLINE,
                            PCMK__XA_JOIN, CRMD_JOINSTATE_DOWN,
                            PCMK_XA_EXPECTED, CRMD_JOINSTATE_DOWN,
                            NULL);
