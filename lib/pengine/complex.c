@@ -491,10 +491,10 @@ pe_rsc_params(pcmk_resource_t *rsc, const pcmk_node_t *node,
 
 /*!
  * \internal
- * \brief Unpack a resource's "requires" meta-attribute
+ * \brief Unpack a resource's \c PCMK_META_REQUIRES meta-attribute
  *
  * \param[in,out] rsc         Resource being unpacked
- * \param[in]     value       Value of "requires" meta-attribute
+ * \param[in]     value       Value of \c PCMK_META_REQUIRES meta-attribute
  * \param[in]     is_default  Whether \p value was selected by default
  */
 static void
@@ -1151,7 +1151,7 @@ active_node(const pcmk_resource_t *rsc, unsigned int *count_all,
 
 /*!
  * \brief
- * \internal Find and count active nodes according to "requires"
+ * \internal Find and count active nodes according to \c PCMK_META_REQUIRES
  *
  * \param[in]  rsc    Resource to check
  * \param[out] count  If not NULL, will be set to count of active nodes
@@ -1160,7 +1160,7 @@ active_node(const pcmk_resource_t *rsc, unsigned int *count_all,
  *
  * \note This is a convenience wrapper for active_node() where the count of all
  *       active nodes or only clean active nodes is desired according to the
- *       "requires" meta-attribute.
+ *       \c PCMK_META_REQUIRES meta-attribute.
  */
 pcmk_node_t *
 pe__find_active_requires(const pcmk_resource_t *rsc, unsigned int *count)
