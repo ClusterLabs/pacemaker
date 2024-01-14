@@ -382,8 +382,10 @@ confirmation_timeout_cb(gpointer data)
             }
 
             crm_trace("Timed out waiting for confirmations for client %s", client->id);
-            pcmk__ipc_send_ack(client, action->ipc_id, action->flags | crm_ipc_client_response,
-                               "ack", ATTRD_PROTOCOL_VERSION, CRM_EX_TIMEOUT);
+            pcmk__ipc_send_ack(client, action->ipc_id,
+                               action->flags|crm_ipc_client_response,
+                               PCMK__XE_ACK, ATTRD_PROTOCOL_VERSION,
+                               CRM_EX_TIMEOUT);
 
             g_hash_table_iter_remove(&iter);
             crm_trace("%d requests now in expected confirmations table", g_hash_table_size(expected_confirmations));

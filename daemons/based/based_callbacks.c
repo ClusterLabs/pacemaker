@@ -312,7 +312,7 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
             }
         }
 
-        pcmk__ipc_send_ack(cib_client, id, flags, "ack", NULL, status);
+        pcmk__ipc_send_ack(cib_client, id, flags, PCMK__XE_ACK, NULL, status);
         return;
     }
 

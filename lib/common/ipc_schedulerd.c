@@ -84,7 +84,8 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
     };
     const char *value = NULL;
 
-    if (pcmk__str_eq((const char *) reply->name, "ack", pcmk__str_casei)) {
+    if (pcmk__str_eq((const char *) reply->name, PCMK__XE_ACK,
+                     pcmk__str_none)) {
         return false;
     }
 

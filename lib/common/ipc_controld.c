@@ -202,7 +202,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         pcmk_controld_reply_unknown, NULL, NULL,
     };
 
-    if (pcmk__xe_is(reply, "ack")) {
+    if (pcmk__xe_is(reply, PCMK__XE_ACK)) {
         /* ACKs are trivial responses that do not count toward expected replies,
          * and do not have all the fields that validation requires, so skip that
          * processing.

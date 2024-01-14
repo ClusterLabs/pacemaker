@@ -75,7 +75,7 @@ handle_pecalc_request(pcmk__request_t *request)
     pcmk_scheduler_t *scheduler = init_working_set();
 
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
-                       "ack", NULL, CRM_EX_INDETERMINATE);
+                       PCMK__XE_ACK, NULL, CRM_EX_INDETERMINATE);
 
     digest = calculate_xml_versioned_digest(xml_data, FALSE, FALSE,
                                             CRM_FEATURE_SET);
@@ -183,7 +183,7 @@ static xmlNode *
 handle_unknown_request(pcmk__request_t *request)
 {
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
-                       "ack", NULL, CRM_EX_INVALID_PARAM);
+                       PCMK__XE_ACK, NULL, CRM_EX_INVALID_PARAM);
 
     pcmk__format_result(&request->result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
                         "Unknown IPC request type '%s' (bug?)",
@@ -195,7 +195,7 @@ static xmlNode *
 handle_hello_request(pcmk__request_t *request)
 {
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
-                       "ack", NULL, CRM_EX_INDETERMINATE);
+                       PCMK__XE_ACK, NULL, CRM_EX_INDETERMINATE);
 
     crm_trace("Received IPC hello from %s", pcmk__client_name(request->ipc_client));
 
@@ -242,7 +242,7 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
     msg = pcmk__client_data2xml(c, data, &id, &flags);
     if (msg == NULL) {
-        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_PROTOCOL);
+        pcmk__ipc_send_ack(c, id, flags, PCMK__XE_ACK, NULL, CRM_EX_PROTOCOL);
         return 0;
     }
 
@@ -250,11 +250,13 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
     if (pcmk__str_eq(crm_element_value(msg, PCMK__XA_SUBT),
                      PCMK__VALUE_RESPONSE, pcmk__str_none)) {
-        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
+        pcmk__ipc_send_ack(c, id, flags, PCMK__XE_ACK, NULL,
+                           CRM_EX_INDETERMINATE);
         crm_info("Ignoring IPC reply from %s", pcmk__client_name(c));
 
     } else if (!pcmk__str_eq(sys_to, CRM_SYSTEM_PENGINE, pcmk__str_none)) {
-        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
+        pcmk__ipc_send_ack(c, id, flags, PCMK__XE_ACK, NULL,
+                           CRM_EX_INDETERMINATE);
         crm_info("Ignoring invalid IPC message: to '%s' not "
                  CRM_SYSTEM_PENGINE, pcmk__s(sys_to, ""));
 

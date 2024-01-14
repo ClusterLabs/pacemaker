@@ -201,7 +201,8 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
     const char *value = NULL;
     long long value_ll = 0;
 
-    if (pcmk__str_eq((const char *) reply->name, "ack", pcmk__str_none)) {
+    if (pcmk__str_eq((const char *) reply->name, PCMK__XE_ACK,
+                     pcmk__str_none)) {
         long long int ack_status = 0;
         pcmk__scan_ll(crm_element_value(reply, PCMK_XA_STATUS), &ack_status,
                       CRM_EX_OK);
