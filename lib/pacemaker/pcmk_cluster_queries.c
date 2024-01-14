@@ -840,7 +840,11 @@ pcmk__list_nodes(pcmk__output_t *out, const char *node_types, bool bash_export)
             .bash_export = bash_export
         };
 
-        out->begin_list(out, NULL, NULL, "nodes");
+        /* PCMK_XE_NODES acts as the list's element name for CLI tools that
+         * force --xml-simple-list. Otherwise PCMK_XE_NODES is the value of the
+         * list's PCMK_XA_NAME attribute.
+         */
+        out->begin_list(out, NULL, NULL, PCMK_XE_NODES);
 
         if (!pcmk__str_empty(node_types) && strstr(node_types, "all")) {
             node_types = NULL;
