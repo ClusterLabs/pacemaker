@@ -502,7 +502,7 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
 {
     if (pcmk__str_eq(value, PCMK_VALUE_NOTHING, pcmk__str_casei)) {
 
-    } else if (pcmk__str_eq(value, PCMK__VALUE_QUORUM, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value, PCMK_VALUE_QUORUM, pcmk__str_casei)) {
         pcmk__set_rsc_flags(rsc, pcmk_rsc_needs_quorum);
 
     } else if (pcmk__str_eq(value, PCMK__VALUE_FENCING, pcmk__str_casei)) {
@@ -515,17 +515,17 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
     } else if (pcmk__str_eq(value, PCMK__VALUE_UNFENCING, pcmk__str_casei)) {
         if (pcmk_is_set(rsc->flags, pcmk_rsc_fence_device)) {
             pcmk__config_warn("Resetting \"" PCMK_META_REQUIRES "\" for %s "
-                              "to \"" PCMK__VALUE_QUORUM "\" because fencing "
+                              "to \"" PCMK_VALUE_QUORUM "\" because fencing "
                               "devices cannot require unfencing", rsc->id);
-            unpack_requires(rsc, PCMK__VALUE_QUORUM, true);
+            unpack_requires(rsc, PCMK_VALUE_QUORUM, true);
             return;
 
         } else if (!pcmk_is_set(rsc->cluster->flags,
                                 pcmk_sched_fencing_enabled)) {
             pcmk__config_warn("Resetting \"" PCMK_META_REQUIRES "\" for %s "
-                              "to \"" PCMK__VALUE_QUORUM "\" because fencing "
-                              "is disabled", rsc->id);
-            unpack_requires(rsc, PCMK__VALUE_QUORUM, true);
+                              "to \"" PCMK_VALUE_QUORUM "\" because fencing is "
+                              "disabled", rsc->id);
+            unpack_requires(rsc, PCMK_VALUE_QUORUM, true);
             return;
 
         } else {
@@ -537,11 +537,11 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
         const char *orig_value = value;
 
         if (pcmk_is_set(rsc->flags, pcmk_rsc_fence_device)) {
-            value = PCMK__VALUE_QUORUM;
+            value = PCMK_VALUE_QUORUM;
 
         } else if ((rsc->variant == pcmk_rsc_variant_primitive)
                    && xml_contains_remote_node(rsc->xml)) {
-            value = PCMK__VALUE_QUORUM;
+            value = PCMK_VALUE_QUORUM;
 
         } else if (pcmk_is_set(rsc->cluster->flags,
                                pcmk_sched_enable_unfencing)) {
@@ -555,7 +555,7 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
             value = PCMK_VALUE_NOTHING;
 
         } else {
-            value = PCMK__VALUE_QUORUM;
+            value = PCMK_VALUE_QUORUM;
         }
 
         if (orig_value != NULL) {

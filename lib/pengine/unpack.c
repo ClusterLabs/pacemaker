@@ -2144,7 +2144,7 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
         rsc = inactive_instance;
     }
 
-    /* If the resource has PCMK_META_REQUIRES set to "quorum" or
+    /* If the resource has PCMK_META_REQUIRES set to PCMK_VALUE_QUORUM or
      * PCMK_VALUE_NOTHING, and we don't have a clone instance for every node, we
      * don't want to consume a valid instance number for unclean nodes. Such
      * instances may appear to be active according to the history, but should be

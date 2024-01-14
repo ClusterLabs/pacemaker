@@ -378,8 +378,8 @@ typedef struct resource_object_functions_s {
      *
      * \return A node where the resource is active, preferring the source node
      *         if the resource is involved in a partial migration, or a clean,
-     *         online node if the resource's \c PCMK_META_REQUIRES is "quorum",
-     *         or \c PCMK_VALUE_NOTHING, otherwise \c NULL.
+     *         online node if the resource's \c PCMK_META_REQUIRES is
+     *         \c PCMK_VALUE_QUORUM or \c PCMK_VALUE_NOTHING, otherwise \c NULL.
      */
     pcmk_node_t *(*active_node)(const pcmk_resource_t *rsc,
                                 unsigned int *count_all,
