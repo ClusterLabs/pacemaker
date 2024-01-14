@@ -137,7 +137,7 @@ set_node_info_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
 
     data->data.node_info.uuid = crm_element_value(msg_data, PCMK_XA_ID);
     data->data.node_info.uname = crm_element_value(msg_data, PCMK_XA_UNAME);
-    data->data.node_info.state = crm_element_value(msg_data, PCMK__XA_CRMD);
+    data->data.node_info.state = crm_element_value(msg_data, PCMK_XA_CRMD);
 }
 
 static void

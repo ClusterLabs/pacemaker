@@ -1504,7 +1504,7 @@ unpack_node_member(const xmlNode *node_state, pcmk_scheduler_t *scheduler)
 static long long
 unpack_node_online(const xmlNode *node_state)
 {
-    const char *peer_time = crm_element_value(node_state, PCMK__XA_CRMD);
+    const char *peer_time = crm_element_value(node_state, PCMK_XA_CRMD);
 
     // @COMPAT Entries recorded for DCs < 2.1.7 have "online" or "offline"
     if (pcmk__str_eq(peer_time, OFFLINESTATUS,
@@ -1519,7 +1519,7 @@ unpack_node_online(const xmlNode *node_state)
 
         if ((pcmk__scan_ll(peer_time, &when_online, 0LL) != pcmk_rc_ok)
             || (when_online < 0)) {
-            crm_warn("Unrecognized value '%s' for " PCMK__XA_CRMD " in "
+            crm_warn("Unrecognized value '%s' for " PCMK_XA_CRMD " in "
                      PCMK__XE_NODE_STATE " entry, assuming offline", peer_time);
             return 0LL;
         }
@@ -1644,14 +1644,14 @@ determine_online_status_fencing(pcmk_scheduler_t *scheduler,
 
   @COMPAT with entries recorded for DCs < 2.1.7
   - PCMK__XA_IN_CCM        ::= true|false
-  - PCMK__XA_CRMD          ::= online|offline
+  - PCMK_XA_CRMD           ::= online|offline
 
   Since crm_feature_set 3.18.0 (pacemaker-2.1.7):
   - PCMK__XA_IN_CCM        ::= <timestamp>|0
   Since when node has been a cluster member. A value 0 of means the node is not
   a cluster member.
 
-  - PCMK__XA_CRMD          ::= <timestamp>|0
+  - PCMK_XA_CRMD           ::= <timestamp>|0
   Since when peer has been online in CPG. A value 0 means the peer is offline
   in CPG.
 */
