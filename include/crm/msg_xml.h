@@ -187,6 +187,7 @@ extern "C" {
 #define PCMK_XE_RSC_ORDER                   "rsc_order"
 #define PCMK_XE_RSC_TICKET                  "rsc_ticket"
 #define PCMK_XE_RULE                        "rule"
+#define PCMK_XE_RULE_CHECK                  "rule-check"
 #define PCMK_XE_SELECT                      "select"
 #define PCMK_XE_SELECT_ATTRIBUTES           "select_attributes"
 #define PCMK_XE_SELECT_FENCING              "select_fencing"
