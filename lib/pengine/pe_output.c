@@ -2713,7 +2713,7 @@ op_history_xml(pcmk__output_t *out, va_list args) {
                                         PCMK_XA_CALL, call_id,
                                         "task", task,
                                         PCMK_XA_RC, rc_s,
-                                        "rc_text", rc_text,
+                                        PCMK_XA_RC_TEXT, rc_text,
                                         NULL);
     free(rc_s);
 

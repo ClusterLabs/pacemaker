@@ -346,6 +346,7 @@ extern "C" {
 #define PCMK_XA_QUORUM                      "quorum"
 #define PCMK_XA_RANGE                       "range"
 #define PCMK_XA_RC                          "rc"
+#define PCMK_XA_RC_TEXT                     "rc_text"
 #define PCMK_XA_REASON                      "reason"
 #define PCMK_XA_REFERENCE                   "reference"
 #define PCMK_XA_RELOADABLE                  "reloadable"
