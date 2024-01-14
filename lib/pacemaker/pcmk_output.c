@@ -1330,7 +1330,7 @@ node_action_xml(pcmk__output_t *out, va_list args)
     if (task == NULL) {
         return pcmk_rc_no_output;
     } else if (reason) {
-        pcmk__output_create_xml_node(out, "node_action",
+        pcmk__output_create_xml_node(out, PCMK_XE_NODE_ACTION,
                                      "task", task,
                                      PCMK_XA_NODE, node_name,
                                      PCMK_XA_REASON, reason,
