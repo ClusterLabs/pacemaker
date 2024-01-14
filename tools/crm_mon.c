@@ -284,7 +284,7 @@ struct {
     { "dc", pcmk_section_dc },
     { "failcounts", pcmk_section_failcounts },
     { "failures", pcmk_section_failures },
-    { PCMK__VALUE_FENCING, pcmk_section_fencing_all },
+    { PCMK_VALUE_FENCING, pcmk_section_fencing_all },
     { "fencing-failed", pcmk_section_fence_failed },
     { "fencing-pending", pcmk_section_fence_pending },
     { "fencing-succeeded", pcmk_section_fence_worked },
@@ -471,13 +471,13 @@ fence_history_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
         case 3:
             options.fence_connect = TRUE;
             fence_history = pcmk__fence_history_full;
-            return include_exclude_cb("--include", PCMK__VALUE_FENCING, data,
+            return include_exclude_cb("--include", PCMK_VALUE_FENCING, data,
                                       err);
 
         case 2:
             options.fence_connect = TRUE;
             fence_history = pcmk__fence_history_full;
-            return include_exclude_cb("--include", PCMK__VALUE_FENCING, data,
+            return include_exclude_cb("--include", PCMK_VALUE_FENCING, data,
                                       err);
 
         case 1:
@@ -488,7 +488,7 @@ fence_history_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
         case 0:
             options.fence_connect = FALSE;
             fence_history = pcmk__fence_history_none;
-            return include_exclude_cb("--exclude", PCMK__VALUE_FENCING, data,
+            return include_exclude_cb("--exclude", PCMK_VALUE_FENCING, data,
                                       err);
 
         default:
