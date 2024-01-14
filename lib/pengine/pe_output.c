@@ -1648,7 +1648,8 @@ status_node(pcmk_node_t *node, xmlNodePtr parent, uint32_t show_opts)
 
     // Cluster membership
     if (node->details->online) {
-        pcmk_create_html_node(parent, "span", NULL, "online", " online");
+        pcmk_create_html_node(parent, "span", NULL, PCMK_VALUE_ONLINE,
+                              " online");
     } else {
         pcmk_create_html_node(parent, "span", NULL, "offline", " OFFLINE");
     }

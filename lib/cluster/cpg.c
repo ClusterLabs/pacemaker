@@ -740,7 +740,7 @@ pcmk_cpg_membership(cpg_handle_t handle,
          * state to member.
          */
         peer = crm_update_peer_proc(__func__, peer, crm_proc_cpg,
-                                    ONLINESTATUS);
+                                    PCMK_VALUE_ONLINE);
 
         if (peer && peer->state && strcmp(peer->state, CRM_NODE_MEMBER)) {
             /* The node is a CPG member, but we currently think it's not a
@@ -877,7 +877,7 @@ cluster_connect_cpg(crm_cluster_t *cluster)
     }
 
     peer = pcmk__get_node(id, NULL, NULL, pcmk__node_search_cluster);
-    crm_update_peer_proc(__func__, peer, crm_proc_cpg, ONLINESTATUS);
+    crm_update_peer_proc(__func__, peer, crm_proc_cpg, PCMK_VALUE_ONLINE);
     return TRUE;
 }
 

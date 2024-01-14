@@ -56,7 +56,7 @@ crmd_cs_dispatch(cpg_handle_t handle, const struct cpg_name *groupName,
             crm_warn("Receiving messages from a node we think is dead: %s[%d]",
                      peer->uname, peer->id);
             crm_update_peer_proc(__func__, peer, crm_proc_cpg,
-                                 ONLINESTATUS);
+                                 PCMK_VALUE_ONLINE);
         }
         crmd_ha_msg_filter(xml);
         free_xml(xml);

@@ -1511,7 +1511,7 @@ unpack_node_online(const xmlNode *node_state)
                      pcmk__str_casei|pcmk__str_null_matches)) {
         return 0LL;
 
-    } else if (pcmk__str_eq(peer_time, ONLINESTATUS, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(peer_time, PCMK_VALUE_ONLINE, pcmk__str_casei)) {
         return 1LL;
 
     } else {
