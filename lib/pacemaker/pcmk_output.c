@@ -1382,7 +1382,7 @@ node_info_xml(pcmk__output_t *out, va_list args)
                                  PCMK_XA_ID, uuid,
                                  PCMK_XA_CRMD, state,
                                  PCMK_XA_HAVE_QUORUM, pcmk__btoa(have_quorum),
-                                 PCMK__XA_REMOTE_NODE, pcmk__btoa(is_remote),
+                                 PCMK_XA_REMOTE_NODE, pcmk__btoa(is_remote),
                                  NULL);
     free(id_s);
     return pcmk_rc_ok;

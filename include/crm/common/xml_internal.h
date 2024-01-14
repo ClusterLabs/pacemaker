@@ -186,7 +186,7 @@ int pcmk__xml_show_changes(pcmk__output_t *out, const xmlNode *xml);
 /* search string to find CIB node status entries for pacemaker_remote nodes */
 #define PCMK__XP_REMOTE_NODE_STATUS                                 \
     "//" PCMK_XE_CIB "//" PCMK_XE_STATUS "//" PCMK__XE_NODE_STATE   \
-    "[@" PCMK__XA_REMOTE_NODE "='true']"
+    "[@" PCMK_XA_REMOTE_NODE "='true']"
 /*!
  * \internal
  * \brief Serialize XML (using libxml) into provided descriptor

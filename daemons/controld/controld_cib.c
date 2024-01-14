@@ -902,7 +902,7 @@ controld_update_resource_history(const char *node_name,
         node_id = controld_globals.our_uuid;
     } else {
         node_id = node_name;
-        pcmk__xe_set_bool_attr(xml, PCMK__XA_REMOTE_NODE, true);
+        pcmk__xe_set_bool_attr(xml, PCMK_XA_REMOTE_NODE, true);
     }
     crm_xml_add(xml, PCMK_XA_ID, node_id);
     crm_xml_add(xml, PCMK_XA_UNAME, node_name);

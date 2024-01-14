@@ -185,7 +185,6 @@
 #define PCMK__XA_PRIORITY               "priority"
 #define PCMK__XA_RC_CODE                "rc-code"
 #define PCMK__XA_REAP                   "reap"
-#define PCMK__XA_REMOTE_NODE            "remote_node"
 
 /* Actions to be executed on Pacemaker Remote nodes are routed through the
  * controller on the cluster node hosting the remote connection. That cluster
