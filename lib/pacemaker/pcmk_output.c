@@ -2236,7 +2236,7 @@ rule_check_xml(pcmk__output_t *out, va_list args)
     char *rc_str = pcmk__itoa(pcmk_rc2exitc(result));
 
     pcmk__output_create_xml_node(out, PCMK_XE_RULE_CHECK,
-                                 "rule-id", rule_id,
+                                 PCMK_XA_RULE_ID, rule_id,
                                  PCMK_XA_RC, rc_str,
                                  NULL);
     free(rc_str);
