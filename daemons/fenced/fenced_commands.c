@@ -2552,14 +2552,16 @@ log_async_result(const async_command_t *cmd,
     if (pcmk__result_ok(result)) {
         log_level = (cmd->target == NULL)? LOG_DEBUG : LOG_NOTICE;
         if ((result->action_stdout != NULL)
-            && !pcmk__str_eq(cmd->action, "metadata", pcmk__str_none)) {
+            && !pcmk__str_eq(cmd->action, PCMK_ACTION_METADATA,
+                             pcmk__str_none)) {
             output_log_level = LOG_DEBUG;
         }
         next = NULL;
     } else {
         log_level = (cmd->target == NULL)? LOG_NOTICE : LOG_ERR;
         if ((result->action_stdout != NULL)
-            && !pcmk__str_eq(cmd->action, "metadata", pcmk__str_none)) {
+            && !pcmk__str_eq(cmd->action, PCMK_ACTION_METADATA,
+                             pcmk__str_none)) {
             output_log_level = LOG_WARNING;
         }
     }
