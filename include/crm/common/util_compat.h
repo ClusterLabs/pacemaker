@@ -170,6 +170,9 @@ guint crm_parse_interval_spec(const char *input);
 //! \deprecated Use \c PCMK_VALUE_ONLINE instead
 #define ONLINESTATUS PCMK_VALUE_ONLINE
 
+//! \deprecated Use \c PCMK_VALUE_OFFLINE instead
+#define OFFLINESTATUS PCMK_VALUE_OFFLINE
+
 #ifdef __cplusplus
 }
 #endif

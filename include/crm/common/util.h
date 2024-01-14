@@ -33,9 +33,6 @@ extern "C" {
  * \ingroup core
  */
 
-
-#  define OFFLINESTATUS "offline" // Status of an offline client
-
 /* public node attribute functions (from attrd_client.c) */
 char *pcmk_promotion_score_name(const char *rsc_id);
 
