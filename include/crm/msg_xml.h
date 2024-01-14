@@ -274,6 +274,7 @@ extern "C" {
 #define PCMK_XA_IS_DC                       "is_dc"
 #define PCMK_XA_KIND                        "kind"
 #define PCMK_XA_LANG                        "lang"
+#define PCMK_XA_LAST_FAILURE                "last-failure"
 #define PCMK_XA_LAST_GRANTED                "last-granted"
 #define PCMK_XA_LAST_RC_CHANGE              "last-rc-change"
 #define PCMK_XA_LOCKED_TO                   "locked_to"

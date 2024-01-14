@@ -324,7 +324,7 @@ resource_history_string(pcmk_resource_t *rsc, const char *rsc_id, bool all,
         if (last_failure > 0) {
             buf = pcmk__epoch2str(&last_failure, 0);
             lastfail_s = crm_strdup_printf(" %s='%s'",
-                                           PCMK__LAST_FAILURE_PREFIX, buf);
+                                           PCMK_XA_LAST_FAILURE, buf);
             free(buf);
         }
 
@@ -2858,7 +2858,7 @@ resource_history_xml(pcmk__output_t *out, va_list args) {
         if (last_failure > 0) {
             char *s = pcmk__epoch2str(&last_failure, 0);
 
-            crm_xml_add(node, PCMK__LAST_FAILURE_PREFIX, s);
+            crm_xml_add(node, PCMK_XA_LAST_FAILURE, s);
             free(s);
         }
     }
