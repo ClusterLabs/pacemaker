@@ -2144,11 +2144,12 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
         rsc = inactive_instance;
     }
 
-    /* If the resource has "requires" set to "quorum" or "nothing", and we don't
-     * have a clone instance for every node, we don't want to consume a valid
-     * instance number for unclean nodes. Such instances may appear to be active
-     * according to the history, but should be considered inactive, so we can
-     * start an instance elsewhere. Treat such instances as orphans.
+    /* If the resource has PCMK_META_REQUIRES set to "quorum" or
+     * PCMK_VALUE_NOTHING, and we don't have a clone instance for every node, we
+     * don't want to consume a valid instance number for unclean nodes. Such
+     * instances may appear to be active according to the history, but should be
+     * considered inactive, so we can start an instance elsewhere. Treat such
+     * instances as orphans.
      *
      * An exception is instances running on guest nodes -- since guest node
      * "fencing" is actually just a resource stop, requires shouldn't apply.

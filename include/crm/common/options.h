@@ -162,6 +162,7 @@ extern "C" {
 #define PCMK_VALUE_NE                       "ne"
 #define PCMK_VALUE_NEVER                    "never"
 #define PCMK_VALUE_NOT_DEFINED              "not_defined"
+#define PCMK_VALUE_NOTHING                  "nothing"
 #define PCMK_VALUE_NUMBER                   "number"
 #define PCMK_VALUE_OFFLINE                  "offline"
 #define PCMK_VALUE_ONLINE                   "online"

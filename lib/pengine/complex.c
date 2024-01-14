@@ -500,7 +500,7 @@ pe_rsc_params(pcmk_resource_t *rsc, const pcmk_node_t *node,
 static void
 unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
 {
-    if (pcmk__str_eq(value, PCMK__VALUE_NOTHING, pcmk__str_casei)) {
+    if (pcmk__str_eq(value, PCMK_VALUE_NOTHING, pcmk__str_casei)) {
 
     } else if (pcmk__str_eq(value, PCMK__VALUE_QUORUM, pcmk__str_casei)) {
         pcmk__set_rsc_flags(rsc, pcmk_rsc_needs_quorum);
@@ -552,7 +552,7 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
             value = PCMK__VALUE_FENCING;
 
         } else if (rsc->cluster->no_quorum_policy == pcmk_no_quorum_ignore) {
-            value = PCMK__VALUE_NOTHING;
+            value = PCMK_VALUE_NOTHING;
 
         } else {
             value = PCMK__VALUE_QUORUM;

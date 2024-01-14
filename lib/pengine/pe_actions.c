@@ -936,7 +936,7 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
         desc = "node standby";
 
     } else if (pcmk__strcase_any_of(value,
-                                    PCMK_VALUE_IGNORE, PCMK__VALUE_NOTHING,
+                                    PCMK_VALUE_IGNORE, PCMK_VALUE_NOTHING,
                                     NULL)) {
         desc = "ignore";
 
