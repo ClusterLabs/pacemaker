@@ -1111,6 +1111,38 @@ cluster_options_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+/*!
+ * \internal
+ * \brief Get readable string representation of a no-quorum policy
+ *
+ * \param[in] policy  No-quorum policy
+ *
+ * \return String representation of \p policy
+ */
+static const char *
+no_quorum_policy_text(enum pe_quorum_policy policy)
+{
+    switch (policy) {
+        case pcmk_no_quorum_freeze:
+            return PCMK_VALUE_FREEZE;
+
+        case pcmk_no_quorum_stop:
+            return PCMK_VALUE_STOP;
+
+        case pcmk_no_quorum_demote:
+            return PCMK_VALUE_DEMOTE;
+
+        case pcmk_no_quorum_ignore:
+            return PCMK_VALUE_IGNORE;
+
+        case pcmk_no_quorum_fence:
+            return PCMK_VALUE_FENCE_LEGACY;
+
+        default:
+            return PCMK_VALUE_UNKNOWN;
+    }
+}
+
 PCMK__OUTPUT_ARGS("cluster-options", "pcmk_scheduler_t *")
 static int
 cluster_options_xml(pcmk__output_t *out, va_list args) {
@@ -1120,36 +1152,15 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
                                                   pcmk_sched_fencing_enabled);
     const char *symmetric_cluster =
         pcmk__flag_text(scheduler->flags, pcmk_sched_symmetric_cluster);
-    const char *no_quorum_policy = NULL;
+    const char *no_quorum_policy =
+        no_quorum_policy_text(scheduler->no_quorum_policy);
     char *stonith_timeout_str = pcmk__itoa(scheduler->stonith_timeout);
     char *priority_fencing_delay_str = pcmk__itoa(scheduler->priority_fencing_delay * 1000);
-
-    switch (scheduler->no_quorum_policy) {
-        case pcmk_no_quorum_freeze:
-            no_quorum_policy = PCMK_VALUE_FREEZE;
-            break;
-
-        case pcmk_no_quorum_stop:
-            no_quorum_policy = PCMK_VALUE_STOP;
-            break;
-
-        case pcmk_no_quorum_demote:
-            no_quorum_policy = PCMK_VALUE_DEMOTE;
-            break;
-
-        case pcmk_no_quorum_ignore:
-            no_quorum_policy = PCMK_VALUE_IGNORE;
-            break;
-
-        case pcmk_no_quorum_fence:
-            no_quorum_policy = PCMK_VALUE_FENCE_LEGACY;
-            break;
-    }
 
     pcmk__output_create_xml_node(out, PCMK_XE_CLUSTER_OPTIONS,
                                  PCMK_XA_STONITH_ENABLED, stonith_enabled,
                                  PCMK_XA_SYMMETRIC_CLUSTER, symmetric_cluster,
-                                 PCMK_OPT_NO_QUORUM_POLICY, no_quorum_policy,
+                                 PCMK_XA_NO_QUORUM_POLICY, no_quorum_policy,
 
                                  PCMK_OPT_MAINTENANCE_MODE,
                                  pcmk__flag_text(scheduler->flags,
