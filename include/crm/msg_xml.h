@@ -145,6 +145,7 @@ extern "C" {
 #define PCMK_XE_OP_DEFAULTS                 "op_defaults"
 #define PCMK_XE_OP_EXPRESSION               "op_expression"
 #define PCMK_XE_OPERATION                   "operation"
+#define PCMK_XE_OPERATION_HISTORY           "operation_history"
 #define PCMK_XE_OPERATIONS                  "operations"
 #define PCMK_XE_OPTION                      "option"
 #define PCMK_XE_OUTPUT                      "output"

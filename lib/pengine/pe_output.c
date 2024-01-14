@@ -2706,12 +2706,15 @@ op_history_xml(pcmk__output_t *out, va_list args) {
 
     const char *call_id = crm_element_value(xml_op, PCMK__XA_CALL_ID);
     char *rc_s = pcmk__itoa(rc);
-    xmlNodePtr node = pcmk__output_create_xml_node(out, "operation_history",
-                                                   PCMK_XA_CALL, call_id,
-                                                   "task", task,
-                                                   "rc", rc_s,
-                                                   "rc_text", services_ocf_exitcode_str(rc),
-                                                   NULL);
+    const char *rc_text = services_ocf_exitcode_str(rc);
+    xmlNodePtr node = NULL;
+
+    node = pcmk__output_create_xml_node(out, PCMK_XE_OPERATION_HISTORY,
+                                        PCMK_XA_CALL, call_id,
+                                        "task", task,
+                                        "rc", rc_s,
+                                        "rc_text", rc_text,
+                                        NULL);
     free(rc_s);
 
     if (interval_ms_s && !pcmk__str_eq(interval_ms_s, "0", pcmk__str_casei)) {
