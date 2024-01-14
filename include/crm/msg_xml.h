@@ -351,6 +351,7 @@ extern "C" {
 #define PCMK_XA_START                       "start"
 #define PCMK_XA_STATUS                      "status"
 #define PCMK_XA_STONITH_ENABLED             "stonith-enabled"
+#define PCMK_XA_SYMMETRIC_CLUSTER           "symmetric-cluster"
 #define PCMK_XA_SYMMETRICAL                 "symmetrical"
 #define PCMK_XA_TARGET                      "target"
 #define PCMK_XA_TARGET_ATTRIBUTE            "target-attribute"
