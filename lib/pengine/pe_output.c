@@ -2178,7 +2178,7 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
                                         PCMK_XA_OP, pcmk__xe_history_key(xml_op),
                                         PCMK_XA_NODE, uname,
                                         PCMK_XA_CALL, call_id,
-                                        "rc", rc_s,
+                                        PCMK_XA_RC, rc_s,
                                         PCMK_XA_STATUS, status_s,
                                         NULL);
 
@@ -2712,7 +2712,7 @@ op_history_xml(pcmk__output_t *out, va_list args) {
     node = pcmk__output_create_xml_node(out, PCMK_XE_OPERATION_HISTORY,
                                         PCMK_XA_CALL, call_id,
                                         "task", task,
-                                        "rc", rc_s,
+                                        PCMK_XA_RC, rc_s,
                                         "rc_text", rc_text,
                                         NULL);
     free(rc_s);
