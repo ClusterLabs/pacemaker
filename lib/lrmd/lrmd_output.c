@@ -47,7 +47,7 @@ lrmd__alternatives_list_xml(pcmk__output_t *out, va_list args) {
     lrmd_list_t *list = va_arg(args, lrmd_list_t *);
     const char *agent_spec = va_arg(args, const char *);
 
-    pcmk__output_xml_create_parent(out, "providers",
+    pcmk__output_xml_create_parent(out, PCMK_XE_PROVIDERS,
                                    PCMK_XA_FOR, agent_spec,
                                    NULL);
     return xml_list(out, list, PCMK_XE_PROVIDER);
@@ -101,7 +101,7 @@ lrmd__providers_list_xml(pcmk__output_t *out, va_list args) {
     lrmd_list_t *list = va_arg(args, lrmd_list_t *);
     const char *agent_spec = va_arg(args, const char *);
 
-    xmlNodePtr node = pcmk__output_xml_create_parent(out, "providers",
+    xmlNodePtr node = pcmk__output_xml_create_parent(out, PCMK_XE_PROVIDERS,
                                                      "standard", "ocf",
                                                      NULL);
 
