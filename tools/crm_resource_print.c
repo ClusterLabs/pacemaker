@@ -513,7 +513,7 @@ resource_check_list_xml(pcmk__output_t *out, va_list args) {
     }
 
     if (pcmk_is_set(checks->flags, rsc_locked)) {
-        crm_xml_add(node, "locked-to", checks->lock_node);
+        crm_xml_add(node, PCMK_XA_LOCKED_TO_HYPHEN, checks->lock_node);
     }
 
     if (pcmk_is_set(checks->flags, rsc_node_health)) {
