@@ -861,10 +861,16 @@ cluster_counts_xml(pcmk__output_t *out, va_list args) {
     int ndisabled = va_arg(args, int);
     int nblocked = va_arg(args, int);
 
-    xmlNodePtr nodes_node = pcmk__output_create_xml_node(out, "nodes_configured", NULL);
-    xmlNodePtr resources_node = pcmk__output_create_xml_node(out, "resources_configured", NULL);
+    xmlNodePtr nodes_node = NULL;
+    xmlNodePtr resources_node = NULL;
+    char *s = NULL;
 
-    char *s = pcmk__itoa(nnodes);
+    nodes_node = pcmk__output_create_xml_node(out, PCMK_XE_NODES_CONFIGURED,
+                                              NULL);
+    resources_node = pcmk__output_create_xml_node(out, "resources_configured",
+                                                  NULL);
+
+    s = pcmk__itoa(nnodes);
     crm_xml_add(nodes_node, PCMK_XA_NUMBER, s);
     free(s);
 

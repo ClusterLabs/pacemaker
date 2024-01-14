@@ -137,6 +137,7 @@ extern "C" {
 #define PCMK_XE_NODE_HISTORY                "node_history"
 #define PCMK_XE_NODE_INFO                   "node-info"
 #define PCMK_XE_NODES                       "nodes"
+#define PCMK_XE_NODES_CONFIGURED            "nodes_configured"
 #define PCMK_XE_NVPAIR                      "nvpair"
 #define PCMK_XE_OBJ_REF                     "obj_ref"
 #define PCMK_XE_OP                          "op"
