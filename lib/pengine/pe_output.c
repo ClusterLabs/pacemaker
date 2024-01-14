@@ -1239,7 +1239,7 @@ cluster_stack_xml(pcmk__output_t *out, va_list args) {
 
     pcmk__output_create_xml_node(out, "stack",
                                  PCMK_XA_TYPE, stack_s,
-                                 "pacemakerd-state", state_s,
+                                 PCMK_XA_PACEMAKERD_STATE, state_s,
                                  NULL);
 
     return pcmk_rc_ok;

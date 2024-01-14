@@ -187,7 +187,7 @@ crm_mon_disconnected_xml(pcmk__output_t *out, va_list args)
 
     pcmk__output_create_xml_node(out, PCMK_XE_CRM_MON_DISCONNECTED,
                                  PCMK_XA_DESCRIPTION, desc,
-                                 "pacemakerd-state", state_s,
+                                 PCMK_XA_PACEMAKERD_STATE, state_s,
                                  NULL);
 
     out->finish(out, CRM_EX_DISCONNECT, true, NULL);

@@ -325,6 +325,7 @@ extern "C" {
 #define PCMK_XA_ORIGIN                      "origin"
 #define PCMK_XA_ORPHAN                      "orphan"
 #define PCMK_XA_ORPHANED                    "orphaned"
+#define PCMK_XA_PACEMAKERD_STATE            "pacemakerd-state"
 #define PCMK_XA_PATH                        "path"
 #define PCMK_XA_PENDING                     "pending"
 #define PCMK_XA_PORT                        "port"
