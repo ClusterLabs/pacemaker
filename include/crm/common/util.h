@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -34,7 +34,6 @@ extern "C" {
  */
 
 
-#  define ONLINESTATUS  "online"  // Status of an online client
 #  define OFFLINESTATUS "offline" // Status of an offline client
 
 /* public node attribute functions (from attrd_client.c) */

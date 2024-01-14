@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -166,6 +166,9 @@ char *score2char_stack(int score, char *buf, size_t len);
 
 //! \deprecated Use \c pcmk_parse_interval_spec() instead
 guint crm_parse_interval_spec(const char *input);
+
+//! \deprecated Use \c PCMK_VALUE_ONLINE instead
+#define ONLINESTATUS PCMK_VALUE_ONLINE
 
 #ifdef __cplusplus
 }
