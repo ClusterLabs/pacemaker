@@ -165,6 +165,7 @@
 #define PCMK__XA_IN_CCM                 "in_ccm"
 #define PCMK__XA_JOIN                   "join"
 #define PCMK__XA_JOIN_ID                "join_id"
+#define PCMK__XA_LINE                   "line"
 #define PCMK__XA_LONG_ID                "long-id"
 #define PCMK__XA_MAJOR_VERSION          "major_version"
 #define PCMK__XA_MINOR_VERSION          "minor_version"

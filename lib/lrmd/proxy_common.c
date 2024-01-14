@@ -276,7 +276,7 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
 
                 /* Send a n'ack so the caller doesn't block */
                 crm_xml_add(op_reply, PCMK_XA_FUNCTION, __func__);
-                crm_xml_add_int(op_reply, "line", __LINE__);
+                crm_xml_add_int(op_reply, PCMK__XA_LINE, __LINE__);
                 crm_xml_add_int(op_reply, PCMK_XA_RC, rc);
                 remote_proxy_relay_response(proxy, op_reply, msg_id);
                 free_xml(op_reply);
