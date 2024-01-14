@@ -303,6 +303,7 @@ extern "C" {
 #define PCMK_XA_NO_QUORUM_POLICY            "no-quorum-policy"
 #define PCMK_XA_NODE                        "node"
 #define PCMK_XA_NODE_ATTRIBUTE              "node-attribute"
+#define PCMK_XA_NODEID                      "nodeid"
 #define PCMK_XA_NODES_RUNNING_ON            "nodes_running_on"
 #define PCMK_XA_NUM_UPDATES                 "num_updates"
 #define PCMK_XA_NUMBER                      "number"
