@@ -319,6 +319,7 @@ extern "C" {
 #define PCMK_XA_OBJECT_TYPE                 "object-type"
 #define PCMK_XA_ONLINE                      "online"
 #define PCMK_XA_OP                          "op"
+#define PCMK_XA_OP_KEY                      "op_key"
 #define PCMK_XA_OPERATION                   "operation"
 #define PCMK_XA_OPTIONS                     "options"
 #define PCMK_XA_ORIGIN                      "origin"

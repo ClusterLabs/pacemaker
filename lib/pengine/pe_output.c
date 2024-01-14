@@ -1523,7 +1523,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     uint32_t show_opts G_GNUC_UNUSED = va_arg(args, uint32_t);
 
     const char *op_key = pcmk__xe_history_key(xml_op);
-    const char *op_key_name = "op_key";
+    const char *op_key_name = PCMK_XA_OP_KEY;
     int rc;
     int status;
     const char *uname = crm_element_value(xml_op, PCMK_XA_UNAME);
