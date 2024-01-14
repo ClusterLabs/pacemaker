@@ -2662,7 +2662,7 @@ node_weight_xml(pcmk__output_t *out, va_list args)
     const char *uname = va_arg(args, const char *);
     const char *score = va_arg(args, const char *);
 
-    xmlNodePtr node = pcmk__output_create_xml_node(out, "node_weight",
+    xmlNodePtr node = pcmk__output_create_xml_node(out, PCMK_XE_NODE_WEIGHT,
                                                    PCMK_XA_FUNCTION, prefix,
                                                    PCMK_XA_NODE, uname,
                                                    PCMK_XA_SCORE, score,

@@ -136,6 +136,7 @@ extern "C" {
 #define PCMK_XE_NODE_ATTRIBUTES             "node_attributes"
 #define PCMK_XE_NODE_HISTORY                "node_history"
 #define PCMK_XE_NODE_INFO                   "node-info"
+#define PCMK_XE_NODE_WEIGHT                 "node_weight"
 #define PCMK_XE_NODES                       "nodes"
 #define PCMK_XE_NODES_CONFIGURED            "nodes_configured"
 #define PCMK_XE_NVPAIR                      "nvpair"
