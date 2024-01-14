@@ -677,7 +677,7 @@ health_xml(pcmk__output_t *out, va_list args)
     const char *result = va_arg(args, const char *);
 
     pcmk__output_create_xml_node(out, pcmk__s(sys_from, ""),
-                                 "node_name", pcmk__s(host_from, ""),
+                                 PCMK_XA_NODE_NAME, pcmk__s(host_from, ""),
                                  "state", pcmk__s(fsa_state, ""),
                                  PCMK_XA_RESULT, pcmk__s(result, ""),
                                  NULL);
@@ -897,7 +897,7 @@ dc_xml(pcmk__output_t *out, va_list args)
     const char *dc = va_arg(args, const char *);
 
     pcmk__output_create_xml_node(out, PCMK_XE_DC,
-                                 "node_name", pcmk__s(dc, ""),
+                                 PCMK_XA_NODE_NAME, pcmk__s(dc, ""),
                                  NULL);
     return pcmk_rc_ok;
 }
