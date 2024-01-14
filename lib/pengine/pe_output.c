@@ -1577,7 +1577,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
 
         pcmk__xe_set_props(node,
                            PCMK_XA_LAST_RC_CHANGE, rc_change,
-                           "queued", queue_time,
+                           PCMK_XA_QUEUED, queue_time,
                            PCMK_XA_EXEC, exec,
                            PCMK_XA_INTERVAL, interval_ms_s,
                            "task", crm_element_value(xml_op, PCMK_XA_OPERATION),

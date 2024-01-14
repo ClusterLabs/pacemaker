@@ -342,6 +342,7 @@ extern "C" {
 #define PCMK_XA_PROMOTED_ONLY               "promoted-only"
 #define PCMK_XA_PROVIDER                    "provider"
 #define PCMK_XA_QUEUE_TIME                  "queue-time"
+#define PCMK_XA_QUEUED                      "queued"
 #define PCMK_XA_RANGE                       "range"
 #define PCMK_XA_REASON                      "reason"
 #define PCMK_XA_REFERENCE                   "reference"
