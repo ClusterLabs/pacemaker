@@ -505,7 +505,7 @@ resource_check_list_xml(pcmk__output_t *out, va_list args) {
     }
 
     if (pcmk_is_set(checks->flags, rsc_unpromotable)) {
-        pcmk__xe_set_bool_attr(node, "promotable", false);
+        pcmk__xe_set_bool_attr(node, PCMK_XA_PROMOTABLE, false);
     }
 
     if (pcmk_is_set(checks->flags, rsc_unmanaged)) {
