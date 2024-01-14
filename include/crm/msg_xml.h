@@ -170,6 +170,7 @@ extern "C" {
 #define PCMK_XE_RESOURCE_AGENT              "resource-agent"
 #define PCMK_XE_RESOURCE_AGENT_ACTION       "resource-agent-action"
 #define PCMK_XE_RESOURCE_CONFIG             "resource_config"
+#define PCMK_XE_RESOURCE_HISTORY            "resource_history"
 #define PCMK_XE_RESOURCE_REF                "resource_ref"
 #define PCMK_XE_RESOURCE_SET                "resource_set"
 #define PCMK_XE_RESOURCES                   "resources"

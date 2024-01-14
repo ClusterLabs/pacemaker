@@ -2851,7 +2851,8 @@ resource_history_xml(pcmk__output_t *out, va_list args) {
     time_t last_failure = va_arg(args, time_t);
     bool as_header = va_arg(args, int);
 
-    xmlNodePtr node = pcmk__output_xml_create_parent(out, "resource_history",
+    xmlNodePtr node = pcmk__output_xml_create_parent(out,
+                                                     PCMK_XE_RESOURCE_HISTORY,
                                                      PCMK_XA_ID, rsc_id,
                                                      NULL);
 
