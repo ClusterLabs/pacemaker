@@ -1590,7 +1590,7 @@ inject_modify_config_xml(pcmk__output_t *out, va_list args)
     node = pcmk__output_xml_create_parent(out, PCMK_XE_MODIFICATIONS, NULL);
 
     if (quorum) {
-        crm_xml_add(node, "quorum", quorum);
+        crm_xml_add(node, PCMK_XA_QUORUM, quorum);
     }
 
     if (watchdog) {
