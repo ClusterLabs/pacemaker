@@ -501,7 +501,7 @@ resource_check_list_xml(pcmk__output_t *out, va_list args) {
                                                    NULL);
 
     if (pcmk_is_set(checks->flags, rsc_remain_stopped)) {
-        pcmk__xe_set_bool_attr(node, "remain_stopped", true);
+        pcmk__xe_set_bool_attr(node, PCMK_XA_REMAIN_STOPPED, true);
     }
 
     if (pcmk_is_set(checks->flags, rsc_unpromotable)) {
