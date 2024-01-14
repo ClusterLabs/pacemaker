@@ -1710,7 +1710,7 @@ inject_pseudo_action_xml(pcmk__output_t *out, va_list args)
         return pcmk_rc_no_output;
     }
 
-    xml_node = pcmk__output_create_xml_node(out, "pseudo_action",
+    xml_node = pcmk__output_create_xml_node(out, PCMK_XE_PSEUDO_ACTION,
                                             "task", task,
                                             NULL);
     if (node) {
