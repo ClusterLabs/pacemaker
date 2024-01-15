@@ -1316,7 +1316,7 @@ prepare_input(const xmlNode *request, enum cib__op_type type,
 // v1 and v2 patch formats
 #define XPATH_CONFIG_CHANGE         \
     "//" PCMK_XE_CRM_CONFIG " | "   \
-    "//" XML_DIFF_CHANGE            \
+    "//" PCMK_XE_CHANGE             \
     "[contains(@" PCMK_XA_PATH ",'/" PCMK_XE_CRM_CONFIG "/')]"
 
 static bool

@@ -132,7 +132,7 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
         const char *tag = (const char *) child->name;
         const char *kind = crm_element_value(child, PCMK_XA_KIND);
 
-        if (pcmk__xe_is(child, XML_ACL_TAG_PERMISSION)) {
+        if (pcmk__xe_is(child, PCMK_XE_ACL_PERMISSION)) {
             CRM_ASSERT(kind != NULL);
             crm_trace("Unpacking ACL <%s> element of kind '%s'", tag, kind);
             tag = kind;
@@ -140,7 +140,10 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
             crm_trace("Unpacking ACL <%s> element", tag);
         }
 
-        if (pcmk__str_any_of(tag, PCMK_XE_ROLE, XML_ACL_TAG_ROLE_REFv1, NULL)) {
+        /* @COMPAT PCMK__XE_ROLE_REF was deprecated in Pacemaker 1.1.12 (needed
+         * for rolling upgrades)
+         */
+        if (pcmk__str_any_of(tag, PCMK_XE_ROLE, PCMK__XE_ROLE_REF, NULL)) {
             const char *ref_role = crm_element_value(child, PCMK_XA_ID);
 
             if (ref_role) {
@@ -148,7 +151,7 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
 
                 for (role = pcmk__xe_first_child(acl_top); role;
                      role = pcmk__xe_next(role)) {
-                    if (!strcmp(XML_ACL_TAG_ROLE, (const char *) role->name)) {
+                    if (!strcmp(PCMK_XE_ACL_ROLE, (const char *) role->name)) {
                         const char *role_id = crm_element_value(role,
                                                                 PCMK_XA_ID);
 
@@ -162,13 +165,19 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
                 }
             }
 
-        } else if (strcmp(XML_ACL_TAG_READ, tag) == 0) {
+        /* @COMPAT Use of a tag instead of a PCMK_XA_KIND attribute was
+         * deprecated in 1.1.12. We still need to look for tags named
+         * PCMK_VALUE_READ, etc., to support rolling upgrades. However,
+         * eventually we can clean this up and make the variables more intuitive
+         * (for example, don't assign a PCMK_XA_KIND value to the tag variable).
+         */
+        } else if (strcmp(tag, PCMK_VALUE_READ) == 0) {
             acls = create_acl(child, acls, pcmk__xf_acl_read);
 
-        } else if (strcmp(XML_ACL_TAG_WRITE, tag) == 0) {
+        } else if (strcmp(tag, PCMK_VALUE_WRITE) == 0) {
             acls = create_acl(child, acls, pcmk__xf_acl_write);
 
-        } else if (strcmp(XML_ACL_TAG_DENY, tag) == 0) {
+        } else if (strcmp(tag, PCMK_VALUE_DENY) == 0) {
             acls = create_acl(child, acls, pcmk__xf_acl_deny);
 
         } else {
@@ -301,8 +310,11 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
             for (child = pcmk__xe_first_child(acls); child;
                  child = pcmk__xe_next(child)) {
 
-                if (pcmk__xe_is(child, XML_ACL_TAG_USER)
-                    || pcmk__xe_is(child, XML_ACL_TAG_USERv1)) {
+                /* @COMPAT PCMK__XE_ACL_USER was deprecated in Pacemaker 1.1.12
+                 * (needed for rolling upgrades)
+                 */
+                if (pcmk__xe_is(child, PCMK_XE_ACL_TARGET)
+                    || pcmk__xe_is(child, PCMK__XE_ACL_USER)) {
                     const char *id = crm_element_value(child, PCMK_XA_NAME);
 
                     if (id == NULL) {
@@ -313,7 +325,7 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
                         crm_debug("Unpacking ACLs for user '%s'", id);
                         docpriv->acls = parse_acl_entry(acls, child, docpriv->acls);
                     }
-                } else if (pcmk__xe_is(child, XML_ACL_TAG_GROUP)) {
+                } else if (pcmk__xe_is(child, PCMK_XE_ACL_GROUP)) {
                     const char *id = crm_element_value(child, PCMK_XA_NAME);
 
                     if (id == NULL) {
@@ -801,19 +813,19 @@ pcmk__update_acl_user(xmlNode *request, const char *field,
         }
     }
 
-    requested_user = crm_element_value(request, XML_ACL_TAG_USER);
+    requested_user = crm_element_value(request, PCMK_XE_ACL_TARGET);
     if (requested_user == NULL) {
         /* @COMPAT rolling upgrades <=1.1.11
          *
          * field is checked for backward compatibility with older versions that
-         * did not use XML_ACL_TAG_USER.
+         * did not use PCMK_XE_ACL_TARGET.
          */
         requested_user = crm_element_value(request, field);
     }
 
     if (!pcmk__is_privileged(effective_user)) {
         /* We're not running as a privileged user, set or overwrite any existing
-         * value for $XML_ACL_TAG_USER
+         * value for PCMK_XE_ACL_TARGET
          */
         user = effective_user;
 
@@ -829,7 +841,7 @@ pcmk__update_acl_user(xmlNode *request, const char *field,
 
     } else if (!pcmk__is_privileged(peer_user)) {
         /* The peer is not a privileged user, set or overwrite any existing
-         * value for $XML_ACL_TAG_USER
+         * value for PCMK_XE_ACL_TARGET
          */
         user = peer_user;
 
@@ -843,8 +855,8 @@ pcmk__update_acl_user(xmlNode *request, const char *field,
     }
 
     // This requires pointer comparison, not string comparison
-    if (user != crm_element_value(request, XML_ACL_TAG_USER)) {
-        crm_xml_add(request, XML_ACL_TAG_USER, user);
+    if (user != crm_element_value(request, PCMK_XE_ACL_TARGET)) {
+        crm_xml_add(request, PCMK_XE_ACL_TARGET, user);
     }
 
     if (field != NULL && user != crm_element_value(request, field)) {

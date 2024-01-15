@@ -2088,9 +2088,12 @@ can_prune_leaf(xmlNode * xml_node)
 
     CRM_CHECK(xml_node != NULL, return FALSE);
 
+    /* @COMPAT PCMK__XE_ROLE_REF was deprecated in Pacemaker 1.1.12 (needed for
+     * rolling upgrades)
+     */
     if (pcmk__strcase_any_of((const char *) xml_node->name,
-                             PCMK_XE_RESOURCE_REF, XML_CIB_TAG_OBJ_REF,
-                             PCMK_XE_ROLE, XML_ACL_TAG_ROLE_REFv1,
+                             PCMK_XE_RESOURCE_REF, PCMK_XE_OBJ_REF,
+                             PCMK_XE_ROLE, PCMK__XE_ROLE_REF,
                              NULL)) {
         return FALSE;
     }

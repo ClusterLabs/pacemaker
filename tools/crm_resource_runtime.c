@@ -1859,22 +1859,32 @@ wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
     time_t expire_time = time(NULL) + timeout_s;
     time_t time_diff;
     bool printed_version_warning = out->is_quiet(out); // i.e. don't print if quiet
+    char *xpath = NULL;
 
     scheduler = pe_new_working_set();
     if (scheduler == NULL) {
         return ENOMEM;
     }
 
+    xpath = crm_strdup_printf("/" PCMK_XE_CIB "/" PCMK_XE_STATUS
+                              "/" PCMK__XE_NODE_STATE "/" PCMK__XE_LRM
+                              "/" PCMK__XE_LRM_RESOURCES
+                              "/" PCMK__XE_LRM_RESOURCE
+                              "/" PCMK__XE_LRM_RSC_OP
+                              "[@" PCMK__XA_RC_CODE "='%d']",
+                              PCMK_OCF_UNKNOWN);
     do {
         /* Abort if timeout is reached */
         time_diff = expire_time - time(NULL);
-        if (time_diff > 0) {
-            crm_info("Waiting up to %lld seconds for cluster actions to complete", (long long) time_diff);
-        } else {
+        if (time_diff <= 0) {
             print_pending_actions(out, scheduler->actions);
-            pe_free_working_set(scheduler);
-            return ETIME;
+            rc = ETIME;
+            break;
         }
+
+        crm_info("Waiting up to %lld seconds for cluster actions to complete",
+                 (long long) time_diff);
+
         if (rc == pcmk_rc_ok) { /* this avoids sleep on first loop iteration */
             sleep(WAIT_SLEEP_S);
         }
@@ -1883,8 +1893,7 @@ wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
         pe_reset_working_set(scheduler);
         rc = update_scheduler_input_to_cib(out, scheduler, cib);
         if (rc != pcmk_rc_ok) {
-            pe_free_working_set(scheduler);
-            return rc;
+            break;
         }
         pcmk__schedule_actions(scheduler->input,
                                pcmk_sched_no_counts|pcmk_sched_no_compat,
@@ -1909,17 +1918,13 @@ wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
             }
         }
 
-        search = xpath_search(scheduler->input,
-                              "/" PCMK_XE_CIB "/" PCMK_XE_STATUS
-                              "/" PCMK__XE_NODE_STATE "/" XML_CIB_TAG_LRM
-                              "/" XML_LRM_TAG_RESOURCES "/" XML_LRM_TAG_RESOURCE
-                              "/" XML_LRM_TAG_RSC_OP
-                              "[@" PCMK__XA_RC_CODE "='193']");
+        search = xpath_search(scheduler->input, xpath);
         pending_unknown_state_resources = (numXpathResults(search) > 0);
         freeXpathObject(search);
     } while (actions_are_pending(scheduler->actions) || pending_unknown_state_resources);
 
     pe_free_working_set(scheduler);
+    free(xpath);
     return rc;
 }
 

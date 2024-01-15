@@ -22,7 +22,7 @@
 void te_update_confirm(const char *event, xmlNode * msg);
 
 #define RSC_OP_PREFIX "//" PCMK__XE_DIFF_ADDED "//" PCMK_XE_CIB \
-                      "//" XML_LRM_TAG_RSC_OP "[@" PCMK_XA_ID "='"
+                      "//" PCMK__XE_LRM_RSC_OP "[@" PCMK_XA_ID "='"
 
 // An explicit PCMK_OPT_SHUTDOWN_LOCK of 0 means the lock has been cleared
 static bool
@@ -59,7 +59,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
         xpath_search(diff,
                      "//" F_CIB_UPDATE_RESULT
                      "//" PCMK__XE_DIFF_ADDED
-                     "//" XML_CIB_TAG_TICKETS);
+                     "//" PCMK_XE_TICKETS);
     if (numXpathResults(xpathObj) > 0) {
         xmlNode *aborted = getXpathResult(xpathObj, 0);
 
@@ -75,7 +75,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
         xpath_search(diff,
                      "//" F_CIB_UPDATE_RESULT
                      "//" PCMK__XE_DIFF_REMOVED
-                     "//" XML_CIB_TAG_TICKETS);
+                     "//" PCMK_XE_TICKETS);
     if (numXpathResults(xpathObj) > 0) {
         xmlNode *aborted = getXpathResult(xpathObj, 0);
 
@@ -90,7 +90,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
         xpath_search(diff,
                      "//" F_CIB_UPDATE_RESULT
                      "//" PCMK__XE_DIFF_REMOVED
-                     "//" XML_TAG_TRANSIENT_NODEATTRS);
+                     "//" PCMK__XE_TRANSIENT_ATTRIBUTES);
     if (numXpathResults(xpathObj) > 0) {
         xmlNode *aborted = getXpathResult(xpathObj, 0);
 
@@ -101,11 +101,11 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     }
     freeXpathObject(xpathObj);
 
-    // Check for lrm_resource entries
+    // Check for PCMK__XE_LRM_RESOURCE entries
     xpathObj = xpath_search(diff,
                             "//" F_CIB_UPDATE_RESULT
                             "//" PCMK__XE_DIFF_ADDED
-                            "//" XML_LRM_TAG_RESOURCE);
+                            "//" PCMK__XE_LRM_RESOURCE);
     max = numXpathResults(xpathObj);
 
     /*
@@ -144,7 +144,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
         xpath_search(diff,
                      "//" F_CIB_UPDATE_RESULT
                      "//" PCMK__XE_DIFF_ADDED
-                     "//" XML_LRM_TAG_RSC_OP);
+                     "//" PCMK__XE_LRM_RSC_OP);
     max = numXpathResults(xpathObj);
     if (max > 0) {
         int lpc = 0;
@@ -160,7 +160,8 @@ te_update_diff_v1(const char *event, xmlNode *diff)
 
     /* Detect deleted (as opposed to replaced or added) actions - eg. crm_resource -C */
     xpathObj = xpath_search(diff,
-                            "//" PCMK__XE_DIFF_REMOVED "//" XML_LRM_TAG_RSC_OP);
+                            "//" PCMK__XE_DIFF_REMOVED
+                            "//" PCMK__XE_LRM_RSC_OP);
     max = numXpathResults(xpathObj);
     for (lpc = 0; lpc < max; lpc++) {
         const char *op_id = NULL;
@@ -194,7 +195,8 @@ te_update_diff_v1(const char *event, xmlNode *diff)
                 goto bail;
 
             } else {
-                crm_debug("Deleted lrm_rsc_op %s on %s was for graph event %d",
+                crm_debug("Deleted " PCMK__XE_LRM_RSC_OP " %s on %s was for "
+                          "graph event %d",
                           op_id, node, cancelled->id);
             }
         }
@@ -233,12 +235,12 @@ process_resource_updates(const char *node, xmlNode *xml, xmlNode *change,
         return;
     }
 
-    if (pcmk__xe_is(xml, XML_CIB_TAG_LRM)) {
-        xml = first_named_child(xml, XML_LRM_TAG_RESOURCES);
+    if (pcmk__xe_is(xml, PCMK__XE_LRM)) {
+        xml = first_named_child(xml, PCMK__XE_LRM_RESOURCES);
         CRM_CHECK(xml != NULL, return);
     }
 
-    CRM_CHECK(pcmk__xe_is(xml, XML_LRM_TAG_RESOURCES), return);
+    CRM_CHECK(pcmk__xe_is(xml, PCMK__XE_LRM_RESOURCES), return);
 
     /*
      * Updates by, or in response to, TE actions will never contain updates
@@ -356,10 +358,10 @@ process_op_deletion(const char *xpath, xmlNode *change)
 static void
 process_delete_diff(const char *xpath, const char *op, xmlNode *change)
 {
-    if (strstr(xpath, "/" XML_LRM_TAG_RSC_OP "[")) {
+    if (strstr(xpath, "/" PCMK__XE_LRM_RSC_OP "[")) {
         process_op_deletion(xpath, change);
 
-    } else if (strstr(xpath, "/" XML_CIB_TAG_LRM "[")) {
+    } else if (strstr(xpath, "/" PCMK__XE_LRM "[")) {
         abort_unless_down(xpath, op, change, "Resource state removal");
 
     } else if (strstr(xpath, "/" PCMK__XE_NODE_STATE "[")) {
@@ -374,7 +376,7 @@ static void
 process_node_state_diff(xmlNode *state, xmlNode *change, const char *op,
                         const char *xpath)
 {
-    xmlNode *lrm = first_named_child(state, XML_CIB_TAG_LRM);
+    xmlNode *lrm = first_named_child(state, PCMK__XE_LRM);
 
     process_resource_updates(ID(state), lrm, change, op, xpath);
 }
@@ -444,7 +446,7 @@ te_update_diff_v2(xmlNode *diff)
             match = change->children;
 
         } else if (strcmp(op, "modify") == 0) {
-            match = first_named_child(change, XML_DIFF_RESULT);
+            match = first_named_child(change, PCMK_XE_CHANGE_RESULT);
             if(match) {
                 match = match->children;
             }
@@ -472,14 +474,14 @@ te_update_diff_v2(xmlNode *diff)
                              "Configuration change", change);
             break; // Won't be packaged with operation results we may be waiting for
 
-        } else if (strstr(xpath, "/" XML_CIB_TAG_TICKETS)
-                   || pcmk__str_eq(name, XML_CIB_TAG_TICKETS, pcmk__str_none)) {
+        } else if (strstr(xpath, "/" PCMK_XE_TICKETS)
+                   || pcmk__str_eq(name, PCMK_XE_TICKETS, pcmk__str_none)) {
             abort_transition(INFINITY, pcmk__graph_restart,
                              "Ticket attribute change", change);
             break; // Won't be packaged with operation results we may be waiting for
 
-        } else if (strstr(xpath, "/" XML_TAG_TRANSIENT_NODEATTRS "[")
-                   || pcmk__str_eq(name, XML_TAG_TRANSIENT_NODEATTRS,
+        } else if (strstr(xpath, "/" PCMK__XE_TRANSIENT_ATTRIBUTES "[")
+                   || pcmk__str_eq(name, PCMK__XE_TRANSIENT_ATTRIBUTES,
                                    pcmk__str_none)) {
             abort_unless_down(xpath, op, change, "Transient attribute change");
             break; // Won't be packaged with operation results we may be waiting for
@@ -500,23 +502,23 @@ te_update_diff_v2(xmlNode *diff)
         } else if (strcmp(name, PCMK__XE_NODE_STATE) == 0) {
             process_node_state_diff(match, change, op, xpath);
 
-        } else if (strcmp(name, XML_CIB_TAG_LRM) == 0) {
+        } else if (strcmp(name, PCMK__XE_LRM) == 0) {
             process_resource_updates(ID(match), match, change, op, xpath);
 
-        } else if (strcmp(name, XML_LRM_TAG_RESOURCES) == 0) {
-            char *local_node = pcmk__xpath_node_id(xpath, "lrm");
+        } else if (strcmp(name, PCMK__XE_LRM_RESOURCES) == 0) {
+            char *local_node = pcmk__xpath_node_id(xpath, PCMK__XE_LRM);
 
             process_resource_updates(local_node, match, change, op, xpath);
             free(local_node);
 
-        } else if (strcmp(name, XML_LRM_TAG_RESOURCE) == 0) {
-            char *local_node = pcmk__xpath_node_id(xpath, "lrm");
+        } else if (strcmp(name, PCMK__XE_LRM_RESOURCE) == 0) {
+            char *local_node = pcmk__xpath_node_id(xpath, PCMK__XE_LRM);
 
             process_lrm_resource_diff(match, local_node);
             free(local_node);
 
-        } else if (strcmp(name, XML_LRM_TAG_RSC_OP) == 0) {
-            char *local_node = pcmk__xpath_node_id(xpath, "lrm");
+        } else if (strcmp(name, PCMK__XE_LRM_RSC_OP) == 0) {
+            char *local_node = pcmk__xpath_node_id(xpath, PCMK__XE_LRM);
 
             process_graph_event(match, local_node);
             free(local_node);
@@ -619,7 +621,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
               pcmk__s(crm_element_value(msg, PCMK_XA_REFERENCE), ""),
               pcmk__s(crm_element_value(msg, PCMK__XA_SRC), ""));
 
-    xpathObj = xpath_search(xml_data, "//" XML_LRM_TAG_RSC_OP);
+    xpathObj = xpath_search(xml_data, "//" PCMK__XE_LRM_RSC_OP);
     nmatches = numXpathResults(xpathObj);
     if (nmatches == 0) {
         crm_err("Received transition request with no results (bug?)");

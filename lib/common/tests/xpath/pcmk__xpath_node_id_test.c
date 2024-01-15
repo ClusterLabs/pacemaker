@@ -15,8 +15,8 @@
 
 static void
 empty_input(void **state) {
-    assert_null(pcmk__xpath_node_id(NULL, "lrm"));
-    assert_null(pcmk__xpath_node_id("", "lrm"));
+    assert_null(pcmk__xpath_node_id(NULL, PCMK__XE_LRM));
+    assert_null(pcmk__xpath_node_id("", PCMK__XE_LRM));
     assert_null(pcmk__xpath_node_id("/blah/blah", NULL));
     assert_null(pcmk__xpath_node_id("/blah/blah", ""));
     assert_null(pcmk__xpath_node_id(NULL, NULL));
@@ -24,30 +24,31 @@ empty_input(void **state) {
 
 static void
 no_quotes(void **state) {
-    const char *xpath = "/some/xpath/lrm[@" PCMK_XA_ID "=xyz]";
-    pcmk__assert_asserts(pcmk__xpath_node_id(xpath, "lrm"));
+    const char *xpath = "/some/xpath/" PCMK__XE_LRM "[@" PCMK_XA_ID "=xyz]";
+    pcmk__assert_asserts(pcmk__xpath_node_id(xpath, PCMK__XE_LRM));
 }
 
 static void
 not_present(void **state) {
     const char *xpath = "/some/xpath/string[@" PCMK_XA_ID "='xyz']";
-    assert_null(pcmk__xpath_node_id(xpath, "lrm"));
+    assert_null(pcmk__xpath_node_id(xpath, PCMK__XE_LRM));
 
-    xpath = "/some/xpath/containing[@" PCMK_XA_ID "='lrm']";
-    assert_null(pcmk__xpath_node_id(xpath, "lrm"));
+    xpath = "/some/xpath/containing[@" PCMK_XA_ID "='" PCMK__XE_LRM "']";
+    assert_null(pcmk__xpath_node_id(xpath, PCMK__XE_LRM));
 }
 
 static void
 present(void **state) {
     char *s = NULL;
-    const char *xpath = "/some/xpath/containing/lrm[@" PCMK_XA_ID "='xyz']";
+    const char *xpath = "/some/xpath/containing"
+                        "/" PCMK__XE_LRM "[@" PCMK_XA_ID "='xyz']";
 
-    s = pcmk__xpath_node_id(xpath, "lrm");
+    s = pcmk__xpath_node_id(xpath, PCMK__XE_LRM);
     assert_int_equal(strcmp(s, "xyz"), 0);
     free(s);
 
-    xpath = "/some/other/lrm[@" PCMK_XA_ID "='xyz']/xpath";
-    s = pcmk__xpath_node_id(xpath, "lrm");
+    xpath = "/some/other/" PCMK__XE_LRM "[@" PCMK_XA_ID "='xyz']/xpath";
+    s = pcmk__xpath_node_id(xpath, PCMK__XE_LRM);
     assert_int_equal(strcmp(s, "xyz"), 0);
     free(s);
 }

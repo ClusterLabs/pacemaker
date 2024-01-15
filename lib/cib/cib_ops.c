@@ -183,7 +183,7 @@ cib_process_query(const char *op, int options, const char *section, xmlNode * re
     CRM_CHECK(*answer == NULL, free_xml(*answer));
     *answer = NULL;
 
-    if (pcmk__str_eq(XML_CIB_TAG_SECTION_ALL, section, pcmk__str_casei)) {
+    if (pcmk__str_eq(PCMK__XE_ALL, section, pcmk__str_casei)) {
         section = NULL;
     }
 
@@ -329,7 +329,7 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
         return -EINVAL;
     }
 
-    if (pcmk__str_eq(XML_CIB_TAG_SECTION_ALL, section, pcmk__str_casei)) {
+    if (pcmk__str_eq(PCMK__XE_ALL, section, pcmk__str_casei)) {
         section = NULL;
 
     } else if (pcmk__xe_is(input, section)) {
@@ -684,7 +684,7 @@ update_results(xmlNode *failed, xmlNode *target, const char *operation,
         error_msg = pcmk_strerror(return_code);
 
         was_error = true;
-        xml_node = create_xml_node(failed, XML_FAIL_TAG_CIB);
+        xml_node = create_xml_node(failed, PCMK__XE_FAILED_UPDATE);
         add_node_copy(xml_node, target);
 
         crm_xml_add(xml_node, PCMK_XA_ID, ID(target));
@@ -709,7 +709,7 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
 
     crm_trace("Processing %s for %s section",
               op, pcmk__s(section, "unspecified"));
-    if (pcmk__str_eq(XML_CIB_TAG_SECTION_ALL, section, pcmk__str_casei)) {
+    if (pcmk__str_eq(PCMK__XE_ALL, section, pcmk__str_casei)) {
         section = NULL;
 
     } else if (pcmk__str_eq(section, PCMK_XE_CIB, pcmk__str_casei)) {
@@ -731,7 +731,7 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
                                   answer);
     }
 
-    failed = create_xml_node(NULL, XML_TAG_FAILED);
+    failed = create_xml_node(NULL, PCMK__XE_FAILED);
 
     update_section = pcmk_find_cib_element(*result_cib, section);
     if (pcmk__xe_is(input, section)) {

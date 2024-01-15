@@ -32,8 +32,8 @@ static qb_ipcs_service_t *ipcs = NULL;
  * \internal
  * \brief Build the XML reply to a client query
  *
- * param[in] attr Name of requested attribute
- * param[in] host Name of requested host (or NULL for all hosts)
+ * \param[in] attr Name of requested attribute
+ * \param[in] host Name of requested host (or NULL for all hosts)
  *
  * \return New XML reply
  * \note Caller is responsible for freeing the resulting XML
@@ -46,7 +46,7 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
     if (reply == NULL) {
         return NULL;
     }
-    crm_xml_add(reply, PCMK__XA_T, T_ATTRD);
+    crm_xml_add(reply, PCMK__XA_T, PCMK__VALUE_ATTRD);
     crm_xml_add(reply, PCMK__XA_SUBT, PCMK__ATTRD_CMD_QUERY);
     crm_xml_add(reply, PCMK__XA_ATTR_VERSION, ATTRD_PROTOCOL_VERSION);
 

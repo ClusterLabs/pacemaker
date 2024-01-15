@@ -149,7 +149,7 @@ handle_reply(pcmk_schedulerd_api_reply_t *reply)
         crm_xml_add(fsa_input.msg, PCMK__XA_CRM_TGRAPH_IN,
                     reply->data.graph.input);
 
-        crm_data_node = create_xml_node(fsa_input.msg, F_CRM_DATA);
+        crm_data_node = create_xml_node(fsa_input.msg, PCMK__XE_CRM_XML);
         add_node_copy(crm_data_node, reply->data.graph.tgraph);
         register_fsa_input_later(C_IPC_MESSAGE, I_PE_SUCCESS, &fsa_input);
 
@@ -404,7 +404,8 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
         xmlNode *cluster_property_set = NULL;
 
         crm_trace("Creating %s-%s for %s=%s",
-                  CIB_OPTIONS_FIRST, attr_name, attr_name, attr_value);
+                  PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, attr_name, attr_name,
+                  attr_value);
 
         configuration = pcmk__xe_match(xml, PCMK_XE_CONFIGURATION, NULL, NULL);
         if (configuration == NULL) {
@@ -423,12 +424,14 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
         if (cluster_property_set == NULL) {
             cluster_property_set =
                 create_xml_node(crm_config, PCMK_XE_CLUSTER_PROPERTY_SET);
-            crm_xml_add(cluster_property_set, PCMK_XA_ID, CIB_OPTIONS_FIRST);
+            crm_xml_add(cluster_property_set, PCMK_XA_ID,
+                        PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS);
         }
 
         xml = create_xml_node(cluster_property_set, PCMK_XE_NVPAIR);
 
-        crm_xml_set_id(xml, "%s-%s", CIB_OPTIONS_FIRST, attr_name);
+        crm_xml_set_id(xml, "%s-%s",
+                       PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, attr_name);
         crm_xml_add(xml, PCMK_XA_NAME, attr_name);
         crm_xml_add(xml, PCMK_XA_VALUE, attr_value);
     }

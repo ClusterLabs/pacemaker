@@ -89,9 +89,10 @@ get_ordering_type(const xmlNode *xml_obj)
                 kind_e = pe_order_kind_optional;
             }
             pcmk__warn_once(pcmk__wo_order_score,
-                            "Support for 'score' in rsc_order is deprecated "
-                            "and will be removed in a future release "
-                            "(use 'kind' instead)");
+                            "Support for '" PCMK_XA_SCORE "' in "
+                            PCMK_XE_RSC_ORDER " is deprecated and will be "
+                            "removed in a future release "
+                            "(use '" PCMK_XA_KIND "' instead)");
         }
 
     } else if (pcmk__str_eq(kind, "Mandatory", pcmk__str_none)) {
@@ -586,9 +587,10 @@ pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
  * \brief Unpack a set in an ordering constraint
  *
  * \param[in]     set                   Set XML to unpack
- * \param[in]     parent_kind           rsc_order XML \c PCMK_XA_KIND attribute
- * \param[in]     parent_symmetrical_s  rsc_order XML \c PCMK_XA_SYMMETRICAL
+ * \param[in]     parent_kind           \c PCMK_XE_RSC_ORDER XML \c PCMK_XA_KIND
  *                                      attribute
+ * \param[in]     parent_symmetrical_s  \c PCMK_XE_RSC_ORDER XML
+ *                                      \c PCMK_XA_SYMMETRICAL attribute
  * \param[in,out] scheduler             Scheduler data
  *
  * \return Standard Pacemaker return code
@@ -915,7 +917,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     // Check whether there are any resource sets with template or tag references
     *expanded_xml = pcmk__expand_tags_in_sets(xml_obj, scheduler);
     if (*expanded_xml != NULL) {
-        crm_log_xml_trace(*expanded_xml, "Expanded rsc_order");
+        crm_log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_ORDER);
         return pcmk_rc_ok;
     }
 
@@ -950,7 +952,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     *expanded_xml = copy_xml(xml_obj);
 
     /* Convert template/tag reference in PCMK_XA_FIRST into constraint
-     * resource_set
+     * PCMK_XE_RESOURCE_SET
      */
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set_first, PCMK_XA_FIRST, true,
                           scheduler)) {
@@ -961,7 +963,9 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     if (rsc_set_first != NULL) {
         if (action_first != NULL) {
-            // Move PCMK_XA_FIRST_ACTION into converted resource_set as "action"
+            /* Move PCMK_XA_FIRST_ACTION into converted PCMK_XE_RESOURCE_SET as
+             * "action"
+             */
             crm_xml_add(rsc_set_first, "action", action_first);
             xml_remove_prop(*expanded_xml, PCMK_XA_FIRST_ACTION);
         }
@@ -969,7 +973,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     }
 
     /* Convert template/tag reference in PCMK_XA_THEN into constraint
-     * resource_set
+     * PCMK_XE_RESOURCE_SET
      */
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set_then, PCMK_XA_THEN, true,
                           scheduler)) {
@@ -980,7 +984,9 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     if (rsc_set_then != NULL) {
         if (action_then != NULL) {
-            // Move PCMK_XA_THEN_ACTION into converted resource_set as "action"
+            /* Move PCMK_XA_THEN_ACTION into converted PCMK_XE_RESOURCE_SET as
+             * "action"
+             */
             crm_xml_add(rsc_set_then, "action", action_then);
             xml_remove_prop(*expanded_xml, PCMK_XA_THEN_ACTION);
         }
@@ -988,7 +994,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     }
 
     if (any_sets) {
-        crm_log_xml_trace(*expanded_xml, "Expanded rsc_order");
+        crm_log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_ORDER);
     } else {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
@@ -1030,7 +1036,7 @@ pcmk__unpack_ordering(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     }
 
     // If the constraint has resource sets, unpack them
-    for (set = first_named_child(xml_obj, XML_CONS_TAG_RSC_SET);
+    for (set = first_named_child(xml_obj, PCMK_XE_RESOURCE_SET);
          set != NULL; set = crm_next_same_xml(set)) {
 
         set = expand_idref(set, scheduler->input);

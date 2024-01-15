@@ -74,16 +74,18 @@ handle_ping_request(pcmk__request_t *request)
 
     /* just proceed state on sbd pinging us */
     if (from && strstr(from, "sbd")) {
-        if (pcmk__str_eq(pacemakerd_state, XML_PING_ATTR_PACEMAKERDSTATE_SHUTDOWNCOMPLETE, pcmk__str_none)) {
+        if (pcmk__str_eq(pacemakerd_state, PCMK__VALUE_SHUTDOWN_COMPLETE,
+                         pcmk__str_none)) {
             if (pcmk__get_sbd_sync_resource_startup()) {
                 crm_notice("Shutdown-complete-state passed to SBD.");
             }
 
             shutdown_complete_state_reported_to = request->ipc_client->pid;
 
-        } else if (pcmk__str_eq(pacemakerd_state, XML_PING_ATTR_PACEMAKERDSTATE_WAITPING, pcmk__str_none)) {
+        } else if (pcmk__str_eq(pacemakerd_state, PCMK__VALUE_WAIT_FOR_PING,
+                                pcmk__str_none)) {
             crm_notice("Received startup-trigger from SBD.");
-            pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_STARTINGDAEMONS;
+            pacemakerd_state = PCMK__VALUE_STARTING_DAEMONS;
             mainloop_set_trigger(startup_trigger);
         }
     }

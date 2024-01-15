@@ -1206,9 +1206,9 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     }
 
   again:
-    xml_op = pcmk__xe_match(parent, XML_LRM_TAG_RSC_OP, PCMK_XA_ID, op_id);
+    xml_op = pcmk__xe_match(parent, PCMK__XE_LRM_RSC_OP, PCMK_XA_ID, op_id);
     if (xml_op == NULL) {
-        xml_op = create_xml_node(parent, XML_LRM_TAG_RSC_OP);
+        xml_op = create_xml_node(parent, PCMK__XE_LRM_RSC_OP);
     }
 
     if (op->user_data == NULL) {
@@ -1715,7 +1715,7 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
  * \internal
  * \brief Create a list of resource's action history entries, sorted by call ID
  *
- * \param[in]  rsc_entry    Resource's <lrm_rsc_op> status XML
+ * \param[in]  rsc_entry    Resource's \c PCMK__XE_LRM_RSC_OP status XML
  * \param[out] start_index  Where to store index of start-like action, if any
  * \param[out] stop_index   Where to store index of stop action, if any
  */
@@ -1724,7 +1724,7 @@ rsc_history_as_list(const xmlNode *rsc_entry, int *start_index, int *stop_index)
 {
     GList *ops = NULL;
 
-    for (xmlNode *rsc_op = first_named_child(rsc_entry, XML_LRM_TAG_RSC_OP);
+    for (xmlNode *rsc_op = first_named_child(rsc_entry, PCMK__XE_LRM_RSC_OP);
          rsc_op != NULL; rsc_op = crm_next_same_xml(rsc_op)) {
         ops = g_list_prepend(ops, rsc_op);
     }
@@ -1743,7 +1743,7 @@ rsc_history_as_list(const xmlNode *rsc_entry, int *start_index, int *stop_index)
  * (This also cancels recurring actions for maintenance mode, which is not
  * entirely related but convenient to do here.)
  *
- * \param[in]     rsc_entry  Resource's <lrm_rsc_op> status XML
+ * \param[in]     rsc_entry  Resource's \c PCMK__XE_LRM_RSC_OP status XML
  * \param[in,out] rsc        Resource whose history is being processed
  * \param[in,out] node       Node whose history is being processed
  */
@@ -1857,14 +1857,14 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
  * entirely related but convenient to do here.)
  *
  * \param[in,out] node      Node whose history is being processed
- * \param[in]     lrm_rscs  Node's <lrm_resources> from CIB status XML
+ * \param[in]     lrm_rscs  Node's \c PCMK__XE_LRM_RESOURCES from CIB status XML
  */
 static void
 process_node_history(pcmk_node_t *node, const xmlNode *lrm_rscs)
 {
     crm_trace("Processing node history for %s", pcmk__node_name(node));
     for (const xmlNode *rsc_entry = first_named_child(lrm_rscs,
-                                                      XML_LRM_TAG_RESOURCE);
+                                                      PCMK__XE_LRM_RESOURCE);
          rsc_entry != NULL; rsc_entry = crm_next_same_xml(rsc_entry)) {
 
         if (rsc_entry->children != NULL) {
@@ -1887,7 +1887,7 @@ process_node_history(pcmk_node_t *node, const xmlNode *lrm_rscs)
 #define XPATH_NODE_HISTORY "/" PCMK_XE_CIB "/" PCMK_XE_STATUS   \
                            "/" PCMK__XE_NODE_STATE              \
                            "[@" PCMK_XA_UNAME "='%s']"          \
-                           "/" XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES
+                           "/" PCMK__XE_LRM "/" PCMK__XE_LRM_RESOURCES
 
 /*!
  * \internal

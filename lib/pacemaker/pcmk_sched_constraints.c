@@ -84,17 +84,16 @@ pcmk__unpack_constraints(pcmk_scheduler_t *scheduler)
         if ((lifetime != NULL) && !evaluate_lifetime(lifetime, scheduler)) {
             crm_info("Constraint %s %s is not active", tag, id);
 
-        } else if (pcmk__str_eq(XML_CONS_TAG_RSC_ORDER, tag, pcmk__str_none)) {
+        } else if (pcmk__str_eq(PCMK_XE_RSC_ORDER, tag, pcmk__str_none)) {
             pcmk__unpack_ordering(xml_obj, scheduler);
 
-        } else if (pcmk__str_eq(XML_CONS_TAG_RSC_DEPEND, tag, pcmk__str_none)) {
+        } else if (pcmk__str_eq(PCMK_XE_RSC_COLOCATION, tag, pcmk__str_none)) {
             pcmk__unpack_colocation(xml_obj, scheduler);
 
-        } else if (pcmk__str_eq(XML_CONS_TAG_RSC_LOCATION, tag,
-                                pcmk__str_none)) {
+        } else if (pcmk__str_eq(PCMK_XE_RSC_LOCATION, tag, pcmk__str_none)) {
             pcmk__unpack_location(xml_obj, scheduler);
 
-        } else if (pcmk__str_eq(XML_CONS_TAG_RSC_TICKET, tag, pcmk__str_none)) {
+        } else if (pcmk__str_eq(PCMK_XE_RSC_TICKET, tag, pcmk__str_none)) {
             pcmk__unpack_rsc_ticket(xml_obj, scheduler);
 
         } else {
@@ -222,13 +221,13 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *scheduler)
     bool any_refs = false;
 
     // Short-circuit if there are no sets
-    if (first_named_child(xml_obj, XML_CONS_TAG_RSC_SET) == NULL) {
+    if (first_named_child(xml_obj, PCMK_XE_RESOURCE_SET) == NULL) {
         return NULL;
     }
 
     new_xml = copy_xml(xml_obj);
 
-    for (xmlNode *set = first_named_child(new_xml, XML_CONS_TAG_RSC_SET);
+    for (xmlNode *set = first_named_child(new_xml, PCMK_XE_RESOURCE_SET);
          set != NULL; set = crm_next_same_xml(set)) {
 
         GList *tag_refs = NULL;
@@ -252,8 +251,8 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *scheduler)
                 continue;
 
             } else if (tag) {
-                /* PCMK_XE_RESOURCE_REF under resource_set references template
-                 * or tag
+                /* PCMK_XE_RESOURCE_REF under PCMK_XE_RESOURCE_SET references
+                 * template or tag
                  */
                 xmlNode *last_ref = xml_rsc;
 
@@ -368,10 +367,10 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
 
     } else if (tag) {
         /* The "attr" attribute (for a resource in a constraint) specifies a
-         * template or tag. Add the corresponding resource_set containing the
-         * resources derived from or tagged with it.
+         * template or tag. Add the corresponding PCMK_XE_RESOURCE_SET
+         * containing the resources derived from or tagged with it.
          */
-        *rsc_set = create_xml_node(xml_obj, XML_CONS_TAG_RSC_SET);
+        *rsc_set = create_xml_node(xml_obj, PCMK_XE_RESOURCE_SET);
         crm_xml_add(*rsc_set, PCMK_XA_ID, id);
 
         for (GList *iter = tag->refs; iter != NULL; iter = iter->next) {
@@ -382,17 +381,17 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
             crm_xml_add(rsc_ref, PCMK_XA_ID, obj_ref);
         }
 
-        /* Set sequential=PCMK_VALUE_FALSE for the resource_set */
+        // Set sequential=PCMK_VALUE_FALSE for the PCMK_XE_RESOURCE_SET
         pcmk__xe_set_bool_attr(*rsc_set, "sequential", false);
 
     } else if ((rsc != NULL) && convert_rsc) {
         /* Even if a regular resource is referenced by "attr", convert it into a
-         * resource_set, because the other resource reference in the constraint
-         * could be a template or tag.
+         * PCMK_XE_RESOURCE_SET, because the other resource reference in the
+         * constraint could be a template or tag.
          */
         xmlNode *rsc_ref = NULL;
 
-        *rsc_set = create_xml_node(xml_obj, XML_CONS_TAG_RSC_SET);
+        *rsc_set = create_xml_node(xml_obj, PCMK_XE_RESOURCE_SET);
         crm_xml_add(*rsc_set, PCMK_XA_ID, id);
 
         rsc_ref = create_xml_node(*rsc_set, PCMK_XE_RESOURCE_REF);

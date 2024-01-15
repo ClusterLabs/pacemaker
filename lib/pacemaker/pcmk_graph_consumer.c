@@ -490,13 +490,13 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
         return NULL;
     }
 
-    if (pcmk__xe_is(xml_action, XML_GRAPH_TAG_RSC_OP)) {
+    if (pcmk__xe_is(xml_action, PCMK__XE_RSC_OP)) {
         action_type = pcmk__rsc_graph_action;
 
-    } else if (pcmk__xe_is(xml_action, XML_GRAPH_TAG_PSEUDO_EVENT)) {
+    } else if (pcmk__xe_is(xml_action, PCMK__XE_PSEUDO_EVENT)) {
         action_type = pcmk__pseudo_graph_action;
 
-    } else if (pcmk__xe_is(xml_action, XML_GRAPH_TAG_CRM_EVENT)) {
+    } else if (pcmk__xe_is(xml_action, PCMK__XE_CRM_EVENT)) {
         action_type = pcmk__cluster_graph_action;
 
     } else {
@@ -696,7 +696,7 @@ pcmk__unpack_graph(const xmlNode *xml_graph, const char *reference)
     new_graph->stonith_timeout = 0;
     new_graph->completion_action = pcmk__graph_done;
 
-    // Parse top-level attributes from <transition_graph>
+    // Parse top-level attributes from PCMK__XE_TRANSITION_GRAPH
     if (xml_graph != NULL) {
         const char *buf = crm_element_value(xml_graph, "transition_id");
 

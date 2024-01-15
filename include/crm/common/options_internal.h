@@ -182,12 +182,15 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 #define PCMK__META_ROLE_AFTER_FAILURE       "role_after_failure"
 
 // Constants for enumerated values for various options
+#define PCMK__VALUE_ATTRD                   "attrd"
 #define PCMK__VALUE_CIB                     "cib"
 #define PCMK__VALUE_CLUSTER                 "cluster"
+#define PCMK__VALUE_CRMD                    "crmd"
 #define PCMK__VALUE_CUSTOM                  "custom"
 #define PCMK__VALUE_EN                      "en"
 #define PCMK__VALUE_FENCING                 "fencing"
 #define PCMK__VALUE_GREEN                   "green"
+#define PCMK__VALUE_INIT                    "init"
 #define PCMK__VALUE_LOCAL                   "local"
 #define PCMK__VALUE_MIGRATE_ON_RED          "migrate-on-red"
 #define PCMK__VALUE_NONE                    "none"
@@ -196,9 +199,15 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 #define PCMK__VALUE_PROGRESSIVE             "progressive"
 #define PCMK__VALUE_QUORUM                  "quorum"
 #define PCMK__VALUE_RED                     "red"
+#define PCMK__VALUE_REMOTE                  "remote"
 #define PCMK__VALUE_REQUEST                 "request"
 #define PCMK__VALUE_RESPONSE                "response"
+#define PCMK__VALUE_RUNNING                 "running"
+#define PCMK__VALUE_SHUTDOWN_COMPLETE       "shutdown_complete"
+#define PCMK__VALUE_SHUTTING_DOWN           "shutting_down"
+#define PCMK__VALUE_STARTING_DAEMONS        "starting_daemons"
 #define PCMK__VALUE_UNFENCING               "unfencing"
+#define PCMK__VALUE_WAIT_FOR_PING           "wait_for_ping"
 #define PCMK__VALUE_YELLOW                  "yellow"
 
 #endif // PCMK__OPTIONS_INTERNAL__H

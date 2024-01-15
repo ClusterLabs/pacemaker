@@ -134,8 +134,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
     }
     unpack_resources(section, scheduler);
 
-    section = get_xpath_object("//" XML_CIB_TAG_TAGS, scheduler->input,
-                               LOG_NEVER);
+    section = get_xpath_object("//" PCMK_XE_TAGS, scheduler->input, LOG_NEVER);
     unpack_tags(section, scheduler);
 
     if (!pcmk_is_set(scheduler->flags, pcmk_sched_location_only)) {

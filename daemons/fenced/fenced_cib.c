@@ -87,7 +87,7 @@ topology_remove_helper(const char *node, int level)
 {
     char *desc = NULL;
     pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
-    xmlNode *data = create_xml_node(NULL, XML_TAG_FENCING_LEVEL);
+    xmlNode *data = create_xml_node(NULL, PCMK_XE_FENCING_LEVEL);
 
     crm_xml_add(data, F_STONITH_ORIGIN, __func__);
     crm_xml_add_int(data, PCMK_XA_INDEX, level);
@@ -150,7 +150,7 @@ void
 fencing_topology_init(void)
 {
     xmlXPathObjectPtr xpathObj = NULL;
-    const char *xpath = "//" XML_TAG_FENCING_LEVEL;
+    const char *xpath = "//" PCMK_XE_FENCING_LEVEL;
 
     crm_trace("Full topology refresh");
     free_topology_list();
@@ -261,7 +261,9 @@ update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
     xmlXPathObjectPtr xpath_obj = NULL;
 
     /* process new constraints */
-    xpath_obj = xpath_search(msg, "//" F_CIB_UPDATE_RESULT "//" XML_CONS_TAG_RSC_LOCATION);
+    xpath_obj = xpath_search(msg,
+                             "//" F_CIB_UPDATE_RESULT
+                             "//" PCMK_XE_RSC_LOCATION);
     if (numXpathResults(xpath_obj) > 0) {
         int max = numXpathResults(xpath_obj), lpc = 0;
 
@@ -476,7 +478,7 @@ remove_fencing_topology(xmlXPathObjectPtr xpathObj)
         xmlNode *match = getXpathResult(xpathObj, lpc);
 
         CRM_LOG_ASSERT(match != NULL);
-        if (match && crm_element_value(match, XML_DIFF_MARKER)) {
+        if (match && crm_element_value(match, PCMK__XA_CRM_DIFF_MARKER)) {
             /* Deletion */
             int index = 0;
             char *target = stonith_level_key(match, fenced_target_by_unknown);
@@ -511,7 +513,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
         /* Process deletions (only) */
         xpath = "//" F_CIB_UPDATE_RESULT
                 "//" PCMK__XE_DIFF_REMOVED
-                "//" XML_TAG_FENCING_LEVEL;
+                "//" PCMK_XE_FENCING_LEVEL;
         xpathObj = xpath_search(msg, xpath);
 
         remove_fencing_topology(xpathObj);
@@ -520,7 +522,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
         /* Process additions and changes */
         xpath = "//" F_CIB_UPDATE_RESULT
                 "//" PCMK__XE_DIFF_ADDED
-                "//" XML_TAG_FENCING_LEVEL;
+                "//" PCMK_XE_FENCING_LEVEL;
         xpathObj = xpath_search(msg, xpath);
 
         register_fencing_topology(xpathObj);
@@ -541,7 +543,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
             if(op == NULL) {
                 continue;
 
-            } else if(strstr(xpath, "/" XML_TAG_FENCING_LEVEL) != NULL) {
+            } else if(strstr(xpath, "/" PCMK_XE_FENCING_LEVEL) != NULL) {
                 /* Change to a specific entry */
 
                 crm_trace("Handling %s operation %d.%d.%d for %s", op, add[0], add[1], add[2], xpath);
@@ -552,7 +554,8 @@ update_fencing_topology(const char *event, xmlNode * msg)
                     add_topology_level(change->children);
 
                 } else if(strcmp(op, "modify") == 0) {
-                    xmlNode *match = first_named_child(change, XML_DIFF_RESULT);
+                    xmlNode *match = first_named_child(change,
+                                                       PCMK_XE_CHANGE_RESULT);
 
                     if(match) {
                         remove_topology_level(match->children);
@@ -567,7 +570,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
                     return;
                 }
 
-            } else if (strstr(xpath, "/" XML_TAG_FENCING_TOPOLOGY) != NULL) {
+            } else if (strstr(xpath, "/" PCMK_XE_FENCING_TOPOLOGY) != NULL) {
                 /* Change to the topology in general */
                 crm_info("Re-initializing fencing topology after top-level %s operation  %d.%d.%d for %s",
                          op, add[0], add[1], add[2], xpath);
@@ -576,7 +579,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
 
             } else if (strstr(xpath, "/" PCMK_XE_CONFIGURATION)) {
                 /* Changes to the whole config section, possibly including the topology as a whild */
-                if(first_named_child(change, XML_TAG_FENCING_TOPOLOGY) == NULL) {
+                if(first_named_child(change, PCMK_XE_FENCING_TOPOLOGY) == NULL) {
                     crm_trace("Nothing for us in %s operation %d.%d.%d for %s.",
                               op, add[0], add[1], add[2], xpath);
 

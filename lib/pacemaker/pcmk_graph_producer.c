@@ -83,7 +83,7 @@ add_maintenance_nodes(xmlNode *xml, const pcmk_scheduler_t *scheduler)
     int count = 0;
 
     if (xml != NULL) {
-        maintenance = create_xml_node(xml, XML_GRAPH_TAG_MAINTENANCE);
+        maintenance = create_xml_node(xml, PCMK__XE_MAINTENANCE);
     }
     for (const GList *iter = scheduler->nodes;
          iter != NULL; iter = iter->next) {
@@ -143,7 +143,7 @@ add_downed_nodes(xmlNode *xml, const pcmk_action_t *action)
     if (pcmk__str_eq(action->task, PCMK_ACTION_DO_SHUTDOWN, pcmk__str_none)) {
 
         /* Shutdown makes the action's node down */
-        xmlNode *downed = create_xml_node(xml, XML_GRAPH_TAG_DOWNED);
+        xmlNode *downed = create_xml_node(xml, PCMK__XE_DOWNED);
         add_node_to_xml_by_id(action->node->details->id, downed);
 
     } else if (pcmk__str_eq(action->task, PCMK_ACTION_STONITH,
@@ -153,7 +153,7 @@ add_downed_nodes(xmlNode *xml, const pcmk_action_t *action)
         const char *fence = g_hash_table_lookup(action->meta, "stonith_action");
 
         if (pcmk__is_fencing_action(fence)) {
-            xmlNode *downed = create_xml_node(xml, XML_GRAPH_TAG_DOWNED);
+            xmlNode *downed = create_xml_node(xml, PCMK__XE_DOWNED);
             add_node_to_xml_by_id(action->node->details->id, downed);
             pe_foreach_guest_node(action->node->details->data_set,
                                   action->node, add_node_to_xml, downed);
@@ -181,7 +181,7 @@ add_downed_nodes(xmlNode *xml, const pcmk_action_t *action)
             }
         }
         if (!migrating) {
-            xmlNode *downed = create_xml_node(xml, XML_GRAPH_TAG_DOWNED);
+            xmlNode *downed = create_xml_node(xml, PCMK__XE_DOWNED);
             add_node_to_xml_by_id(action->rsc->id, downed);
         }
     }
@@ -409,20 +409,20 @@ create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
     if (pcmk__str_eq(action->task, PCMK_ACTION_STONITH, pcmk__str_none)) {
         /* All fences need node info; guest node fences are pseudo-events */
         if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
-            action_xml = create_xml_node(parent, XML_GRAPH_TAG_PSEUDO_EVENT);
+            action_xml = create_xml_node(parent, PCMK__XE_PSEUDO_EVENT);
         } else {
-            action_xml = create_xml_node(parent, XML_GRAPH_TAG_CRM_EVENT);
+            action_xml = create_xml_node(parent, PCMK__XE_CRM_EVENT);
         }
 
     } else if (pcmk__str_any_of(action->task,
                                 PCMK_ACTION_DO_SHUTDOWN,
                                 PCMK_ACTION_CLEAR_FAILCOUNT, NULL)) {
-        action_xml = create_xml_node(parent, XML_GRAPH_TAG_CRM_EVENT);
+        action_xml = create_xml_node(parent, PCMK__XE_CRM_EVENT);
 
     } else if (pcmk__str_eq(action->task, PCMK_ACTION_LRM_DELETE,
                             pcmk__str_none)) {
         // CIB-only clean-up for shutdown locks
-        action_xml = create_xml_node(parent, XML_GRAPH_TAG_CRM_EVENT);
+        action_xml = create_xml_node(parent, PCMK__XE_CRM_EVENT);
         crm_xml_add(action_xml, PCMK__XA_MODE, PCMK__VALUE_CIB);
 
     } else if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
@@ -430,11 +430,11 @@ create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
                          pcmk__str_none)) {
             needs_maintenance_info = true;
         }
-        action_xml = create_xml_node(parent, XML_GRAPH_TAG_PSEUDO_EVENT);
+        action_xml = create_xml_node(parent, PCMK__XE_PSEUDO_EVENT);
         needs_node_info = false;
 
     } else {
-        action_xml = create_xml_node(parent, XML_GRAPH_TAG_RSC_OP);
+        action_xml = create_xml_node(parent, PCMK__XE_RSC_OP);
     }
 
     crm_xml_add_int(action_xml, PCMK_XA_ID, action->id);
@@ -1009,7 +1009,7 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
     transition_id++;
     crm_trace("Creating transition graph %d", transition_id);
 
-    scheduler->graph = create_xml_node(NULL, XML_TAG_GRAPH);
+    scheduler->graph = create_xml_node(NULL, PCMK__XE_TRANSITION_GRAPH);
 
     value = pcmk__cluster_option(config_hash, PCMK_OPT_CLUSTER_DELAY);
     crm_xml_add(scheduler->graph, PCMK_OPT_CLUSTER_DELAY, value);

@@ -28,7 +28,7 @@ attrd_confirmation(int callid)
 {
     xmlNode *node = create_xml_node(NULL, __func__);
 
-    crm_xml_add(node, PCMK__XA_T, T_ATTRD);
+    crm_xml_add(node, PCMK__XA_T, PCMK__VALUE_ATTRD);
     crm_xml_add(node, PCMK__XA_SRC, get_local_node_name());
     crm_xml_add(node, PCMK__XA_TASK, PCMK__ATTRD_CMD_CONFIRM);
     crm_xml_add_int(node, PCMK__XA_CALL_ID, callid);

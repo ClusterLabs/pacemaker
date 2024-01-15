@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 the Pacemaker project contributors
+ * Copyright 2012-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -117,7 +117,7 @@ crmd_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 static int32_t
 attrd_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
-    return ipc_proxy_accept(c, uid, gid, T_ATTRD);
+    return ipc_proxy_accept(c, uid, gid, PCMK__VALUE_ATTRD);
 }
 
 static int32_t

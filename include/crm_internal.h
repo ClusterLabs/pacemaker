@@ -59,9 +59,34 @@
  */
 
 #define PCMK__XE_ATTRIBUTES             "attributes"
+#define PCMK__XE_CRM_EVENT              "crm_event"
+#define PCMK__XE_CRM_XML                "crm_xml"
+#define PCMK__XE_DOWNED                 "downed"
+#define PCMK__XE_FAILED                 "failed"
+#define PCMK__XE_FAILED_UPDATE          "failed_update"
+#define PCMK__XE_GENERATION_TUPLE       "generation_tuple"
+#define PCMK__XE_LRM                    "lrm"
+#define PCMK__XE_LRM_RESOURCE           "lrm_resource"
+#define PCMK__XE_LRM_RESOURCES          "lrm_resources"
+#define PCMK__XE_LRM_RSC_OP             "lrm_rsc_op"
+#define PCMK__XE_MAINTENANCE            "maintenance"
 #define PCMK__XE_NODE_STATE             "node_state"
+#define PCMK__XE_OPTIONS                "options"
 #define PCMK__XE_PARAM                  "param"
 #define PCMK__XE_PING_RESPONSE          "ping_response"
+#define PCMK__XE_PSEUDO_EVENT           "pseudo_event"
+#define PCMK__XE_RSC_OP                 "rsc_op"
+#define PCMK__XE_TICKET_STATE           "ticket_state"
+#define PCMK__XE_TRANSIENT_ATTRIBUTES   "transient_attributes"
+#define PCMK__XE_TRANSITION_GRAPH       "transition_graph"
+
+// @COMPAT Deprecated since 1.1.12
+#define PCMK__XE_ACL_USER               "acl_user"
+
+/* @TODO Deprecate somehow. It's undocumented and behaves the same as
+ * PCMK__XE_CIB in places where it's recognized.
+ */
+#define PCMK__XE_ALL                    "all"
 
 // @COMPAT Deprecated since 2.1.7
 #define PCMK__XE_DIFF_ADDED             "diff-added"
@@ -74,6 +99,8 @@
  */
 #define PCMK__XE_PROMOTABLE_LEGACY      "master"
 
+// @COMPAT Deprecated since 1.1.12
+#define PCMK__XE_ROLE_REF               "role_ref"
 
 /*
  * XML attribute names used only by internal code
@@ -160,6 +187,9 @@
 #define PCMK__XA_TRANSITION_KEY         "transition-key"
 #define PCMK__XA_TRANSITION_MAGIC       "transition-magic"
 #define PCMK__XA_UPTIME                 "uptime"
+
+// @COMPAT Used only with v1 patchsets
+#define PCMK__XA_CRM_DIFF_MARKER        "__crm_diff_marker__"
 
 // @COMPAT Deprecated since 2.1.5
 #define PCMK__XA_FIRST_INSTANCE         "first-instance"

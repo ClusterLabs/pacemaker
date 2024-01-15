@@ -811,6 +811,190 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_TEMPLATE instead
 #define XML_CIB_TAG_RSC_TEMPLATE PCMK_XE_TEMPLATE
 
+//! \deprecated Do not use
+#define XML_CIB_TAG_LRM "lrm"
+
+//! \deprecated Do not use
+#define XML_LRM_TAG_RESOURCES "lrm_resources"
+
+//! \deprecated Do not use
+#define XML_LRM_TAG_RESOURCE "lrm_resource"
+
+//! \deprecated Do not use
+#define XML_LRM_TAG_RSC_OP "lrm_rsc_op"
+
+//! \deprecated Do not use
+#define XML_TAG_GRAPH "transition_graph"
+
+//! \deprecated Do not use
+#define XML_GRAPH_TAG_RSC_OP "rsc_op"
+
+//! \deprecated Do not use
+#define XML_GRAPH_TAG_PSEUDO_EVENT "pseudo_event"
+
+//! \deprecated Do not use
+#define XML_GRAPH_TAG_CRM_EVENT "crm_event"
+
+//! \deprecated Do not use
+#define XML_GRAPH_TAG_DOWNED "downed"
+
+//! \deprecated Do not use
+#define XML_GRAPH_TAG_MAINTENANCE "maintenance"
+
+//! \deprecated Use \c PCMK_XE_RULE instead
+#define XML_TAG_RULE PCMK_XE_RULE
+
+//! \deprecated Use \c PCMK_XE_EXPRESSION instead
+#define XML_TAG_EXPRESSION PCMK_XE_EXPRESSION
+
+//! \deprecated Use \c PCMK_XE_RSC_COLOCATION instead
+#define XML_CONS_TAG_RSC_DEPEND PCMK_XE_RSC_COLOCATION
+
+//! \deprecated Use \c PCMK_XE_RSC_ORDER instead
+#define XML_CONS_TAG_RSC_ORDER PCMK_XE_RSC_ORDER
+
+//! \deprecated Use \c PCMK_XE_RSC_LOCATION instead
+#define XML_CONS_TAG_RSC_LOCATION PCMK_XE_RSC_LOCATION
+
+//! \deprecated Use \c PCMK_XE_RSC_TICKET instead
+#define XML_CONS_TAG_RSC_TICKET PCMK_XE_RSC_TICKET
+
+//! \deprecated Use \c PCMK_XE_RESOURCE_SET instead
+#define XML_CONS_TAG_RSC_SET PCMK_XE_RESOURCE_SET
+
+//! \deprecated Do not use
+#define XML_CIB_TAG_GENERATION_TUPPLE "generation_tuple"
+
+//! \deprecated Do not use
+#define XML_TAG_TRANSIENT_NODEATTRS "transient_attributes"
+
+//! \deprecated Use \c PCMK_XE_ACL_TARGET instead
+#define XML_ACL_TAG_USER PCMK_XE_ACL_TARGET
+
+//! \deprecated Do not use
+#define XML_ACL_TAG_USERv1 "acl_user"
+
+//! \deprecated Use \c PCMK_XE_ACL_GROUP instead
+#define XML_ACL_TAG_GROUP PCMK_XE_ACL_GROUP
+
+//! \deprecated Use \c PCMK_XE_ACL_ROLE instead
+#define XML_ACL_TAG_ROLE PCMK_XE_ACL_ROLE
+
+//! \deprecated Use \c PCMK_XE_ACL_PERMISSION instead
+#define XML_ACL_TAG_PERMISSION PCMK_XE_ACL_PERMISSION
+
+//! \deprecated Do not use
+#define XML_ACL_TAG_ROLE_REFv1 "role_ref"
+
+//! \deprecated Do not use
+#define XML_ACL_TAG_READ "read"
+
+//! \deprecated Do not use
+#define XML_ACL_TAG_WRITE "write"
+
+//! \deprecated Do not use
+#define XML_ACL_TAG_DENY "deny"
+
+//! \deprecated Use \c PCMK_XE_TICKETS instead
+#define XML_CIB_TAG_TICKETS PCMK_XE_TICKETS
+
+//! \deprecated Do not use
+#define XML_CIB_TAG_TICKET_STATE "ticket_state"
+
+//! \deprecated Use \c PCMK_XE_TAGS instead
+#define XML_CIB_TAG_TAGS PCMK_XE_TAGS
+
+//! \deprecated Use \c PCMK_XE_TAG instead
+#define XML_CIB_TAG_TAG PCMK_XE_TAG
+
+//! \deprecated Use \c PCMK_XE_OBJ_REF instead
+#define XML_CIB_TAG_OBJ_REF PCMK_XE_OBJ_REF
+
+//! \deprecated Use \c PCMK_XE_FENCING_TOPOLOGY instead
+#define XML_TAG_FENCING_TOPOLOGY PCMK_XE_FENCING_TOPOLOGY
+
+//! \deprecated Use \c PCMK_XE_FENCING_LEVEL instead
+#define XML_TAG_FENCING_LEVEL PCMK_XE_FENCING_LEVEL
+
+//! \deprecated Use \c PCMK_XE_DIFF instead
+#define XML_TAG_DIFF PCMK_XE_DIFF
+
+//! \deprecated Use \c PCMK_XE_VERSION instead
+#define XML_DIFF_VERSION PCMK_XE_VERSION
+
+//! \deprecated Use \c PCMK_XE_SOURCE instead
+#define XML_DIFF_VSOURCE PCMK_XE_SOURCE
+
+//! \deprecated Use \c PCMK_XE_TARGET instead
+#define XML_DIFF_VTARGET PCMK_XE_TARGET
+
+//! \deprecated Use \c PCMK_XE_CHANGE instead
+#define XML_DIFF_CHANGE PCMK_XE_CHANGE
+
+//! \deprecated Use \c PCMK_XE_CHANGE_LIST instead
+#define XML_DIFF_LIST PCMK_XE_CHANGE_LIST
+
+//! \deprecated Use \c PCMK_XE_CHANGE_ATTR instead
+#define XML_DIFF_ATTR PCMK_XE_CHANGE_ATTR
+
+//! \deprecated Use \c PCMK_XE_CHANGE_RESULT instead
+#define XML_DIFF_RESULT PCMK_XE_CHANGE_RESULT
+
+//! \deprecated Use \c PCMK_XE_POSITION instead
+#define XML_DIFF_POSITION PCMK_XE_POSITION
+
+//! \deprecated Do not use
+#define F_CRM_DATA "crm_xml"
+
+//! \deprecated Do not use
+#define XML_DIFF_MARKER "__crm_diff_marker__"
+
+//! \deprecated Do not use
+#define XML_TAG_FAILED "failed"
+
+//! \deprecated Do not use
+#define XML_TAG_OPTIONS "options"
+
+//! \deprecated Do not use
+#define XML_FAIL_TAG_CIB "failed_update"
+
+//! \deprecated Use \c PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS instead
+#define CIB_OPTIONS_FIRST "cib-bootstrap-options"
+
+//! \deprecated Do not use
+#define XML_PING_ATTR_PACEMAKERDSTATE_INIT "init"
+
+//! \deprecated Do not use
+#define XML_PING_ATTR_PACEMAKERDSTATE_STARTINGDAEMONS "starting_daemons"
+
+//! \deprecated Do not use
+#define XML_PING_ATTR_PACEMAKERDSTATE_WAITPING "wait_for_ping"
+
+//! \deprecated Do not use
+#define XML_PING_ATTR_PACEMAKERDSTATE_RUNNING "running"
+
+//! \deprecated Do not use
+#define XML_PING_ATTR_PACEMAKERDSTATE_SHUTTINGDOWN "shutting_down"
+
+//! \deprecated Do not use
+#define XML_PING_ATTR_PACEMAKERDSTATE_SHUTDOWNCOMPLETE "shutdown_complete"
+
+//! \deprecated Do not use
+#define XML_PING_ATTR_PACEMAKERDSTATE_REMOTE "remote"
+
+#ifndef T_CRM
+//! \deprecated Do not use
+#define T_CRM "crmd"
+#endif
+
+#ifndef T_ATTRD
+//! \deprecated Do not use
+#define T_ATTRD "attrd"
+#endif
+
+//! \deprecated Do not use
+#define XML_CIB_TAG_SECTION_ALL "all"
+
 #ifdef __cplusplus
 }
 #endif

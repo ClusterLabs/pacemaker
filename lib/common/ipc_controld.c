@@ -246,7 +246,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
 
     reply_data.feature_set = crm_element_value(reply, PCMK_XA_VERSION);
     reply_data.host_from = crm_element_value(reply, PCMK__XA_SRC);
-    msg_data = get_message_xml(reply, F_CRM_DATA);
+    msg_data = get_message_xml(reply, PCMK__XE_CRM_XML);
 
     if (!strcmp(value, CRM_OP_REPROBE)) {
         reply_data.reply_type = pcmk_controld_reply_reprobe;
@@ -487,7 +487,7 @@ controller_resource_op(pcmk_ipc_api_t *api, const char *op,
         router_node = target_node;
     }
 
-    msg_data = create_xml_node(NULL, XML_GRAPH_TAG_RSC_OP);
+    msg_data = create_xml_node(NULL, PCMK__XE_RSC_OP);
 
     /* The controller logs the transition key from resource op requests, so we
      * need to have *something* for it.
@@ -632,7 +632,7 @@ create_hello_message(const char *uuid, const char *client_name,
         return NULL;
     }
 
-    hello_node = create_xml_node(NULL, XML_TAG_OPTIONS);
+    hello_node = create_xml_node(NULL, PCMK__XE_OPTIONS);
     if (hello_node == NULL) {
         crm_err("Could not create IPC hello message from %s (UUID %s): "
                 "Message data creation failed", client_name, uuid);

@@ -1521,7 +1521,8 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
                      "maintenance",
                      pcmk__flag_text(rsc->flags, pcmk_rsc_maintenance),
                      "managed", pcmk__flag_text(rsc->flags, pcmk_rsc_managed),
-                     "failed", pcmk__flag_text(rsc->flags, pcmk_rsc_failed),
+                     PCMK_XA_FAILED, pcmk__flag_text(rsc->flags,
+                                                     pcmk_rsc_failed),
                      PCMK_XA_DESCRIPTION, desc);
             CRM_ASSERT(rc == pcmk_rc_ok);
         }

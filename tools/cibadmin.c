@@ -146,8 +146,8 @@ scope_is_valid(const char *scope)
                             PCMK_XE_RSC_DEFAULTS,
                             PCMK_XE_OP_DEFAULTS,
                             PCMK_XE_ACLS,
-                            XML_TAG_FENCING_TOPOLOGY,
-                            XML_CIB_TAG_TAGS,
+                            PCMK_XE_FENCING_TOPOLOGY,
+                            PCMK_XE_TAGS,
                             PCMK_XE_ALERTS,
                             PCMK_XE_STATUS,
                             NULL);
@@ -354,8 +354,8 @@ static GOptionEntry addl_entries[] = {
       ", " PCMK_XE_RESOURCES ", " PCMK_XE_CONSTRAINTS
       ", " PCMK_XE_CRM_CONFIG ", " PCMK_XE_RSC_DEFAULTS ",\n"
       INDENT "              " PCMK_XE_OP_DEFAULTS ", " PCMK_XE_ACLS
-      ", " XML_TAG_FENCING_TOPOLOGY ", " XML_CIB_TAG_TAGS
-      ", " PCMK_XE_ALERTS ", " PCMK_XE_STATUS "\n"
+      ", " PCMK_XE_FENCING_TOPOLOGY ", " PCMK_XE_TAGS ", " PCMK_XE_ALERTS
+      ", " PCMK_XE_STATUS "\n"
       INDENT "If both --scope/-o and --xpath/-a are specified, the last one to "
       "appear takes effect",
       "value" },

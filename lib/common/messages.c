@@ -63,7 +63,7 @@ create_request_adv(const char *task, xmlNode *msg_data,
     // host_from will get set for us if necessary by the controller when routed
     request = create_xml_node(NULL, __func__);
     crm_xml_add(request, PCMK_XA_ORIGIN, origin);
-    crm_xml_add(request, PCMK__XA_T, T_CRM);
+    crm_xml_add(request, PCMK__XA_T, PCMK__VALUE_CRMD);
     crm_xml_add(request, PCMK_XA_VERSION, CRM_FEATURE_SET);
     crm_xml_add(request, PCMK__XA_SUBT, PCMK__VALUE_REQUEST);
     crm_xml_add(request, PCMK_XA_REFERENCE, reference);
@@ -77,7 +77,7 @@ create_request_adv(const char *task, xmlNode *msg_data,
     }
 
     if (msg_data != NULL) {
-        add_message_xml(request, F_CRM_DATA, msg_data);
+        add_message_xml(request, PCMK__XE_CRM_XML, msg_data);
     }
     free(reference);
     free(true_from);
@@ -134,7 +134,7 @@ create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
     }
 
     crm_xml_add(reply, PCMK_XA_ORIGIN, origin);
-    crm_xml_add(reply, PCMK__XA_T, T_CRM);
+    crm_xml_add(reply, PCMK__XA_T, PCMK__VALUE_CRMD);
     crm_xml_add(reply, PCMK_XA_VERSION, CRM_FEATURE_SET);
     crm_xml_add(reply, PCMK__XA_SUBT, PCMK__VALUE_RESPONSE);
     crm_xml_add(reply, PCMK_XA_REFERENCE, crm_msg_reference);
@@ -150,7 +150,7 @@ create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
     }
 
     if (xml_response_data != NULL) {
-        add_message_xml(reply, F_CRM_DATA, xml_response_data);
+        add_message_xml(reply, PCMK__XE_CRM_XML, xml_response_data);
     }
 
     return reply;

@@ -26,13 +26,13 @@ typedef struct pacemakerd_api_private_s {
 } pacemakerd_api_private_t;
 
 static const char *pacemakerd_state_str[] = {
-    XML_PING_ATTR_PACEMAKERDSTATE_INIT,
-    XML_PING_ATTR_PACEMAKERDSTATE_STARTINGDAEMONS,
-    XML_PING_ATTR_PACEMAKERDSTATE_WAITPING,
-    XML_PING_ATTR_PACEMAKERDSTATE_RUNNING,
-    XML_PING_ATTR_PACEMAKERDSTATE_SHUTTINGDOWN,
-    XML_PING_ATTR_PACEMAKERDSTATE_SHUTDOWNCOMPLETE,
-    XML_PING_ATTR_PACEMAKERDSTATE_REMOTE,
+    PCMK__VALUE_INIT,
+    PCMK__VALUE_STARTING_DAEMONS,
+    PCMK__VALUE_WAIT_FOR_PING,
+    PCMK__VALUE_RUNNING,
+    PCMK__VALUE_SHUTTING_DOWN,
+    PCMK__VALUE_SHUTDOWN_COMPLETE,
+    PCMK__VALUE_REMOTE,
 };
 
 enum pcmk_pacemakerd_state
@@ -226,7 +226,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
     value = crm_element_value(reply, PCMK__XA_CRM_TASK);
 
     // Parse useful info from reply
-    msg_data = get_message_xml(reply, F_CRM_DATA);
+    msg_data = get_message_xml(reply, PCMK__XE_CRM_XML);
     crm_element_value_ll(msg_data, PCMK_XA_CRM_TIMESTAMP, &value_ll);
 
     if (pcmk__str_eq(value, CRM_OP_PING, pcmk__str_none)) {

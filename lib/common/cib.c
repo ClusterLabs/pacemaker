@@ -79,14 +79,14 @@ static struct {
         "//" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_ACLS
     },
     {
-        XML_TAG_FENCING_TOPOLOGY,
+        PCMK_XE_FENCING_TOPOLOGY,
         "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION,
-        "//" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" XML_TAG_FENCING_TOPOLOGY
+        "//" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_FENCING_TOPOLOGY
     },
     {
-        XML_CIB_TAG_TAGS,
+        PCMK_XE_TAGS,
         "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION,
-        "//" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" XML_CIB_TAG_TAGS
+        "//" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_TAGS
     },
     {
         PCMK_XE_ALERTS,
@@ -94,7 +94,7 @@ static struct {
         "//" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_ALERTS
     },
     {
-        XML_CIB_TAG_SECTION_ALL,
+        PCMK__XE_ALL,
         NULL,
         "//" PCMK_XE_CIB
     },

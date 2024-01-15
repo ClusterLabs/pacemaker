@@ -336,7 +336,7 @@ attrd_broadcast_protocol(void)
 {
     xmlNode *attrd_op = create_xml_node(NULL, __func__);
 
-    crm_xml_add(attrd_op, PCMK__XA_T, T_ATTRD);
+    crm_xml_add(attrd_op, PCMK__XA_T, PCMK__VALUE_ATTRD);
     crm_xml_add(attrd_op, PCMK__XA_SRC, crm_system_name);
     crm_xml_add(attrd_op, PCMK__XA_TASK, PCMK__ATTRD_CMD_UPDATE);
     crm_xml_add(attrd_op, PCMK__XA_ATTR_NAME, CRM_ATTR_PROTOCOL);
@@ -357,7 +357,7 @@ attrd_send_message(crm_node_t *node, xmlNode *data, bool confirm)
 {
     const char *op = crm_element_value(data, PCMK__XA_TASK);
 
-    crm_xml_add(data, PCMK__XA_T, T_ATTRD);
+    crm_xml_add(data, PCMK__XA_T, PCMK__VALUE_ATTRD);
     crm_xml_add(data, PCMK__XA_ATTR_VERSION, ATTRD_PROTOCOL_VERSION);
 
     /* Request a confirmation from the destination peer node (which could

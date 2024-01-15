@@ -171,7 +171,7 @@ static GOptionEntry query_entries[] = {
       NULL },
 
     { "constraints", 'c', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
-      "Display the rsc_ticket constraints that apply to ticket(s)",
+      "Display the " PCMK_XE_RSC_TICKET " constraints that apply to ticket(s)",
       NULL },
 
     { NULL }
@@ -355,11 +355,11 @@ find_ticket_state(cib_t * the_cib, gchar *ticket_id, xmlNode ** ticket_state_xml
 
     xpath = g_string_sized_new(1024);
     g_string_append(xpath,
-                    "/" PCMK_XE_CIB "/" PCMK_XE_STATUS "/" XML_CIB_TAG_TICKETS);
+                    "/" PCMK_XE_CIB "/" PCMK_XE_STATUS "/" PCMK_XE_TICKETS);
 
     if (ticket_id != NULL) {
         pcmk__g_strcat(xpath,
-                       "/" XML_CIB_TAG_TICKET_STATE
+                       "/" PCMK__XE_TICKET_STATE
                        "[@" PCMK_XA_ID "=\"", ticket_id, "\"]", NULL);
     }
 
@@ -375,7 +375,9 @@ find_ticket_state(cib_t * the_cib, gchar *ticket_id, xmlNode ** ticket_state_xml
     crm_log_xml_debug(xml_search, "Match");
     if (xml_search->children != NULL) {
         if (ticket_id) {
-            fprintf(stdout, "Multiple ticket_states match ticket_id=%s\n", ticket_id);
+            fprintf(stdout,
+                    "Multiple " PCMK__XE_TICKET_STATE "s match ticket_id=%s\n",
+                    ticket_id);
         }
         *ticket_state_xml = xml_search;
     } else {
@@ -403,7 +405,7 @@ find_ticket_constraints(cib_t * the_cib, gchar *ticket_id, xmlNode ** ticket_con
     }
 
     xpath = g_string_sized_new(1024);
-    pcmk__g_strcat(xpath, xpath_base, "/" XML_CONS_TAG_RSC_TICKET, NULL);
+    pcmk__g_strcat(xpath, xpath_base, "/" PCMK_XE_RSC_TICKET, NULL);
 
     if (ticket_id != NULL) {
         pcmk__g_strcat(xpath, "[@" PCMK_XA_TICKET "=\"", ticket_id, "\"]",
@@ -598,8 +600,8 @@ modify_ticket_state(gchar *ticket_id, cib_t *cib, pcmk_scheduler_t *scheduler)
         xmlNode *xml_obj = NULL;
 
         xml_top = create_xml_node(NULL, PCMK_XE_STATUS);
-        xml_obj = create_xml_node(xml_top, XML_CIB_TAG_TICKETS);
-        ticket_state_xml = create_xml_node(xml_obj, XML_CIB_TAG_TICKET_STATE);
+        xml_obj = create_xml_node(xml_top, PCMK_XE_TICKETS);
+        ticket_state_xml = create_xml_node(xml_obj, PCMK__XE_TICKET_STATE);
         crm_xml_add(ticket_state_xml, PCMK_XA_ID, ticket_id);
     }
 
@@ -681,7 +683,7 @@ build_arg_context(pcmk__common_args_t *args) {
                               "\tcrm_ticket --details\n\n"
                               "Display the XML of 'ticketA':\n\n"
                               "\tcrm_ticket --ticket ticketA --query-xml\n\n"
-                              "Display the rsc_ticket constraints that apply to 'ticketA':\n\n"
+                              "Display the " PCMK_XE_RSC_TICKET " constraints that apply to 'ticketA':\n\n"
                               "\tcrm_ticket --ticket ticketA --constraints\n\n"
                               "Grant 'ticketA' to this cluster site:\n\n"
                               "\tcrm_ticket --ticket ticketA --grant\n\n"
@@ -810,8 +812,9 @@ main(int argc, char **argv)
 
     cluster_status(scheduler);
 
-    /* For recording the tickets that are referenced in rsc_ticket constraints
-     * but have never been granted yet. */
+    /* For recording the tickets that are referenced in PCMK_XE_RSC_TICKET
+     * constraints but have never been granted yet.
+     */
     pcmk__unpack_constraints(scheduler);
 
     if (options.ticket_cmd == 'l' || options.ticket_cmd == 'L' || options.ticket_cmd == 'w') {

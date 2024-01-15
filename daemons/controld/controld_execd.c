@@ -539,7 +539,7 @@ build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list)
     while (g_hash_table_iter_next(&iter, NULL, (void **)&entry)) {
 
         GList *gIter = NULL;
-        xmlNode *xml_rsc = create_xml_node(rsc_list, XML_LRM_TAG_RESOURCE);
+        xmlNode *xml_rsc = create_xml_node(rsc_list, PCMK__XE_LRM_RESOURCE);
 
         crm_xml_add(xml_rsc, PCMK_XA_ID, entry->id);
         crm_xml_add(xml_rsc, PCMK_XA_TYPE, entry->rsc.type);
@@ -594,9 +594,9 @@ controld_query_executor_state(void)
         return NULL;
     }
 
-    xml_data = create_xml_node(xml_state, XML_CIB_TAG_LRM);
+    xml_data = create_xml_node(xml_state, PCMK__XE_LRM);
     crm_xml_add(xml_data, PCMK_XA_ID, peer->uuid);
-    rsc_list = create_xml_node(xml_data, XML_LRM_TAG_RESOURCES);
+    rsc_list = create_xml_node(xml_data, PCMK__XE_LRM_RESOURCES);
 
     /* Build a list of active (not always running) resources */
     build_active_RAs(lrm_state, rsc_list);
@@ -1762,10 +1762,10 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
     update = create_node_state_update(peer, node_update_none, NULL,
                                       __func__);
 
-    iter = create_xml_node(update, XML_CIB_TAG_LRM);
+    iter = create_xml_node(update, PCMK__XE_LRM);
     crm_xml_add(iter, PCMK_XA_ID, controld_globals.our_uuid);
-    iter = create_xml_node(iter, XML_LRM_TAG_RESOURCES);
-    iter = create_xml_node(iter, XML_LRM_TAG_RESOURCE);
+    iter = create_xml_node(iter, PCMK__XE_LRM_RESOURCES);
+    iter = create_xml_node(iter, PCMK__XE_LRM_RESOURCE);
 
     crm_xml_add(iter, PCMK_XA_ID, op->rsc_id);
 

@@ -55,11 +55,19 @@ extern "C" {
  * XML elements
  */
 
+#define PCMK_XE_ACL_GROUP                   "acl_group"
+#define PCMK_XE_ACL_PERMISSION              "acl_permission"
+#define PCMK_XE_ACL_ROLE                    "acl_role"
+#define PCMK_XE_ACL_TARGET                  "acl_target"
 #define PCMK_XE_ACLS                        "acls"
 #define PCMK_XE_ALERT                       "alert"
 #define PCMK_XE_ALERTS                      "alerts"
 #define PCMK_XE_ATTRIBUTE                   "attribute"
 #define PCMK_XE_BUNDLE                      "bundle"
+#define PCMK_XE_CHANGE                      "change"
+#define PCMK_XE_CHANGE_ATTR                 "change-attr"
+#define PCMK_XE_CHANGE_LIST                 "change-list"
+#define PCMK_XE_CHANGE_RESULT               "change-result"
 #define PCMK_XE_CIB                         "cib"
 #define PCMK_XE_CLONE                       "clone"
 #define PCMK_XE_CLUSTER_PROPERTY_SET        "cluster_property_set"
@@ -68,6 +76,10 @@ extern "C" {
 #define PCMK_XE_CONTENT                     "content"
 #define PCMK_XE_CRM_CONFIG                  "crm_config"
 #define PCMK_XE_DATE_EXPRESSION             "date_expression"
+#define PCMK_XE_DIFF                        "diff"
+#define PCMK_XE_EXPRESSION                  "expression"
+#define PCMK_XE_FENCING_LEVEL               "fencing-level"
+#define PCMK_XE_FENCING_TOPOLOGY            "fencing-topology"
 #define PCMK_XE_GROUP                       "group"
 #define PCMK_XE_INSTANCE_ATTRIBUTES         "instance_attributes"
 #define PCMK_XE_LONGDESC                    "longdesc"
@@ -75,6 +87,7 @@ extern "C" {
 #define PCMK_XE_NODE                        "node"
 #define PCMK_XE_NODES                       "nodes"
 #define PCMK_XE_NVPAIR                      "nvpair"
+#define PCMK_XE_OBJ_REF                     "obj_ref"
 #define PCMK_XE_OP                          "op"
 #define PCMK_XE_OP_DEFAULTS                 "op_defaults"
 #define PCMK_XE_OPERATION                   "operation"
@@ -82,22 +95,34 @@ extern "C" {
 #define PCMK_XE_OPTION                      "option"
 #define PCMK_XE_PARAMETER                   "parameter"
 #define PCMK_XE_PARAMETERS                  "parameters"
+#define PCMK_XE_POSITION                    "position"
 #define PCMK_XE_PRIMITIVE                   "primitive"
 #define PCMK_XE_RECIPIENT                   "recipient"
 #define PCMK_XE_RESOURCE_AGENT              "resource-agent"
 #define PCMK_XE_RESOURCE_REF                "resource_ref"
+#define PCMK_XE_RESOURCE_SET                "resource_set"
 #define PCMK_XE_RESOURCES                   "resources"
 #define PCMK_XE_ROLE                        "role"
+#define PCMK_XE_RULE                        "rule"
+#define PCMK_XE_RSC_COLOCATION              "rsc_colocation"
 #define PCMK_XE_RSC_DEFAULTS                "rsc_defaults"
 #define PCMK_XE_RSC_EXPRESSION              "rsc_expression"
+#define PCMK_XE_RSC_LOCATION                "rsc_location"
+#define PCMK_XE_RSC_ORDER                   "rsc_order"
+#define PCMK_XE_RSC_TICKET                  "rsc_ticket"
 #define PCMK_XE_SELECT                      "select"
 #define PCMK_XE_SELECT_ATTRIBUTES           "select_attributes"
 #define PCMK_XE_SELECT_FENCING              "select_fencing"
 #define PCMK_XE_SELECT_NODES                "select_nodes"
 #define PCMK_XE_SELECT_RESOURCES            "select_resources"
 #define PCMK_XE_SHORTDESC                   "shortdesc"
+#define PCMK_XE_SOURCE                      "source"
 #define PCMK_XE_STATUS                      "status"
+#define PCMK_XE_TAG                         "tag"
+#define PCMK_XE_TAGS                        "tags"
+#define PCMK_XE_TARGET                      "target"
 #define PCMK_XE_TEMPLATE                    "template"
+#define PCMK_XE_TICKETS                     "tickets"
 #define PCMK_XE_UTILIZATION                 "utilization"
 #define PCMK_XE_VERSION                     "version"
 
@@ -121,6 +146,7 @@ extern "C" {
 #define PCMK_XA_EPOCH                       "epoch"
 #define PCMK_XA_EXEC_TIME                   "exec-time"
 #define PCMK_XA_EXIT_REASON                 "exit-reason"
+#define PCMK_XA_FAILED                      "failed"
 #define PCMK_XA_FIRST                       "first"
 #define PCMK_XA_FIRST_ACTION                "first-action"
 #define PCMK_XA_FORMAT                      "format"
@@ -183,101 +209,13 @@ extern "C" {
  * Older constants that don't follow current naming
  */
 
-#  ifndef T_CRM
-#    define T_CRM     "crmd"
-#  endif
-
-#  ifndef T_ATTRD
-#    define T_ATTRD     "attrd"
-#  endif
-
-#  define CIB_OPTIONS_FIRST "cib-bootstrap-options"
-
-#  define F_CRM_DATA			"crm_xml"
-
-/*---- Common tags/attrs */
-#  define XML_DIFF_MARKER		"__crm_diff_marker__"
-#  define XML_TAG_FAILED		"failed"
-
-#  define XML_TAG_OPTIONS		"options"
-
-/*---- top level tags/attrs */
-#  define XML_PING_ATTR_PACEMAKERDSTATE_INIT "init"
-#  define XML_PING_ATTR_PACEMAKERDSTATE_STARTINGDAEMONS "starting_daemons"
-#  define XML_PING_ATTR_PACEMAKERDSTATE_WAITPING "wait_for_ping"
-#  define XML_PING_ATTR_PACEMAKERDSTATE_RUNNING "running"
-#  define XML_PING_ATTR_PACEMAKERDSTATE_SHUTTINGDOWN "shutting_down"
-#  define XML_PING_ATTR_PACEMAKERDSTATE_SHUTDOWNCOMPLETE "shutdown_complete"
-#  define XML_PING_ATTR_PACEMAKERDSTATE_REMOTE "remote"
-
-#  define XML_FAIL_TAG_CIB		"failed_update"
-
-/*---- CIB specific tags/attrs */
-#  define XML_CIB_TAG_SECTION_ALL	"all"
-
-#  define XML_CIB_TAG_LRM		"lrm"
-#  define XML_LRM_TAG_RESOURCES     	"lrm_resources"
-#  define XML_LRM_TAG_RESOURCE     	"lrm_resource"
-#  define XML_LRM_TAG_RSC_OP		"lrm_rsc_op"
-
 #  define XML_NODE_IS_REMOTE    	"remote_node"
 #  define XML_NODE_IS_FENCED		"node_fenced"
 #  define XML_NODE_IS_MAINTENANCE   "node_in_maintenance"
 
 #  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
 
-#  define XML_TAG_GRAPH			"transition_graph"
-#  define XML_GRAPH_TAG_RSC_OP		"rsc_op"
-#  define XML_GRAPH_TAG_PSEUDO_EVENT	"pseudo_event"
-#  define XML_GRAPH_TAG_CRM_EVENT	"crm_event"
-#  define XML_GRAPH_TAG_DOWNED            "downed"
-#  define XML_GRAPH_TAG_MAINTENANCE       "maintenance"
-
-#  define XML_TAG_RULE			"rule"
-
-#  define XML_TAG_EXPRESSION		"expression"
-
-#  define XML_CONS_TAG_RSC_DEPEND	"rsc_colocation"
-#  define XML_CONS_TAG_RSC_ORDER	"rsc_order"
-#  define XML_CONS_TAG_RSC_LOCATION	"rsc_location"
-#  define XML_CONS_TAG_RSC_TICKET	"rsc_ticket"
-#  define XML_CONS_TAG_RSC_SET		"resource_set"
-
 #  define XML_NODE_ATTR_RSC_DISCOVERY   "resource-discovery-enabled"
-
-#  define XML_CIB_TAG_GENERATION_TUPPLE	"generation_tuple"
-
-#  define XML_TAG_TRANSIENT_NODEATTRS	"transient_attributes"
-
-#  define XML_ACL_TAG_USER		"acl_target"
-#  define XML_ACL_TAG_USERv1		"acl_user"
-#  define XML_ACL_TAG_GROUP		"acl_group"
-#  define XML_ACL_TAG_ROLE		"acl_role"
-#  define XML_ACL_TAG_PERMISSION	"acl_permission"
-#  define XML_ACL_TAG_ROLE_REFv1	"role_ref"
-#  define XML_ACL_TAG_READ		"read"
-#  define XML_ACL_TAG_WRITE		"write"
-#  define XML_ACL_TAG_DENY		"deny"
-
-#  define XML_CIB_TAG_TICKETS		"tickets"
-#  define XML_CIB_TAG_TICKET_STATE	"ticket_state"
-
-#  define XML_CIB_TAG_TAGS   		"tags"
-#  define XML_CIB_TAG_TAG   		"tag"
-#  define XML_CIB_TAG_OBJ_REF 		"obj_ref"
-
-#  define XML_TAG_FENCING_TOPOLOGY      "fencing-topology"
-#  define XML_TAG_FENCING_LEVEL         "fencing-level"
-
-#  define XML_TAG_DIFF                  "diff"
-#  define XML_DIFF_VERSION              PCMK_XE_VERSION
-#  define XML_DIFF_VSOURCE              "source"
-#  define XML_DIFF_VTARGET              "target"
-#  define XML_DIFF_CHANGE               "change"
-#  define XML_DIFF_LIST                 "change-list"
-#  define XML_DIFF_ATTR                 "change-attr"
-#  define XML_DIFF_RESULT               "change-result"
-#  define XML_DIFF_POSITION             "position"
 
 #  define ID(x) crm_element_value(x, PCMK_XA_ID)
 

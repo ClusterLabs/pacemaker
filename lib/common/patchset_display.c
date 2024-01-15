@@ -81,7 +81,7 @@ xml_show_patchset_v1_recursive(pcmk__output_t *out, const char *prefix,
                                const xmlNode *data, int depth, uint32_t options)
 {
     if ((data->children == NULL)
-        || (crm_element_value(data, XML_DIFF_MARKER) != NULL)) {
+        || (crm_element_value(data, PCMK__XA_CRM_DIFF_MARKER) != NULL)) {
 
         // Found a change; clear the pcmk__xml_fmt_diff_short option if set
         options &= ~pcmk__xml_fmt_diff_short;
@@ -227,7 +227,7 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
             free(prefix);
 
         } else if (strcmp(op, "move") == 0) {
-            const char *position = crm_element_value(change, XML_DIFF_POSITION);
+            const char *position = crm_element_value(change, PCMK_XE_POSITION);
 
             temp_rc = out->info(out,
                                 PCMK__XML_PREFIX_MOVED " %s moved to offset %s",
@@ -235,7 +235,7 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
             rc = pcmk__output_select_rc(rc, temp_rc);
 
         } else if (strcmp(op, "modify") == 0) {
-            xmlNode *clist = first_named_child(change, XML_DIFF_LIST);
+            xmlNode *clist = first_named_child(change, PCMK_XE_CHANGE_LIST);
             GString *buffer_set = NULL;
             GString *buffer_unset = NULL;
 
@@ -276,7 +276,7 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
         } else if (strcmp(op, "delete") == 0) {
             int position = -1;
 
-            crm_element_value_int(change, XML_DIFF_POSITION, &position);
+            crm_element_value_int(change, PCMK_XE_POSITION, &position);
             if (position >= 0) {
                 temp_rc = out->info(out, "-- %s (%d)", xpath, position);
             } else {

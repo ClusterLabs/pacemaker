@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -948,12 +948,11 @@ set_instance_priority(gpointer data, gpointer user_data)
                 instance->priority = promotion_score(instance, chosen,
                                                       &is_default);
                 if (is_default) {
-                    /*
-                     * Default to -1 if no value is set. This allows
-                     * instances eligible for promotion to be specified
-                     * based solely on rsc_location constraints, but
-                     * prevents any instance from being promoted if neither
-                     * a constraint nor a promotion score is present
+                    /* Default to -1 if no value is set. This allows instances
+                     * eligible for promotion to be specified based solely on
+                     * PCMK_XE_RSC_LOCATION constraints, but prevents any
+                     * instance from being promoted if neither a constraint nor
+                     * a promotion score is present.
                      */
                     instance->priority = -1;
                 }

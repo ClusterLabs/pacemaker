@@ -74,18 +74,19 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
 
     fragment = create_xml_node(NULL, PCMK_XE_CONSTRAINTS);
 
-    location = create_xml_node(fragment, XML_CONS_TAG_RSC_LOCATION);
+    location = create_xml_node(fragment, PCMK_XE_RSC_LOCATION);
     crm_xml_set_id(location, "cli-ban-%s-on-%s", rsc_id, host);
 
-    out->info(out, "WARNING: Creating rsc_location constraint '%s' with a "
-                   "score of -INFINITY for resource %s on %s.\n\tThis will "
-                   "prevent %s from %s on %s until the constraint is removed "
-                   "using the clear option or by editing the CIB with an "
-                   "appropriate tool\n\tThis will be the case even if %s "
-                   "is the last node in the cluster",
-                   ID(location), rsc_id, host, rsc_id,
-                   (promoted_role_only? "being promoted" : "running"),
-                   host, host);
+    out->info(out,
+              "WARNING: Creating " PCMK_XE_RSC_LOCATION " constraint '%s' with "
+              "a score of " CRM_MINUS_INFINITY_S " for resource %s on %s.\n"
+              "\tThis will prevent %s from %s on %s until the constraint is "
+              "removed using the clear option or by editing the CIB with an "
+              "appropriate tool.\n"
+              "\tThis will be the case even if %s is the last node in the "
+              "cluster",
+              ID(location), rsc_id, host, rsc_id,
+              (promoted_role_only? "being promoted" : "running"), host, host);
 
     crm_xml_add(location, PCMK_XA_RSC, rsc_id);
     if(promoted_role_only) {
@@ -100,8 +101,8 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
         crm_xml_add(location, PCMK_XA_SCORE, CRM_MINUS_INFINITY_S);
 
     } else {
-        xmlNode *rule = create_xml_node(location, XML_TAG_RULE);
-        xmlNode *expr = create_xml_node(rule, XML_TAG_EXPRESSION);
+        xmlNode *rule = create_xml_node(location, PCMK_XE_RULE);
+        xmlNode *expr = create_xml_node(rule, PCMK_XE_EXPRESSION);
 
         crm_xml_set_id(rule, "cli-ban-%s-on-%s-rule", rsc_id, host);
         crm_xml_add(rule, PCMK_XA_SCORE, CRM_MINUS_INFINITY_S);
@@ -161,7 +162,7 @@ cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
 
     fragment = create_xml_node(NULL, PCMK_XE_CONSTRAINTS);
 
-    location = create_xml_node(fragment, XML_CONS_TAG_RSC_LOCATION);
+    location = create_xml_node(fragment, PCMK_XE_RSC_LOCATION);
     crm_xml_set_id(location, "cli-prefer-%s", rsc_id);
 
     crm_xml_add(location, PCMK_XA_RSC, rsc_id);
@@ -177,8 +178,8 @@ cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
         crm_xml_add(location, PCMK_XA_SCORE, CRM_INFINITY_S);
 
     } else {
-        xmlNode *rule = create_xml_node(location, XML_TAG_RULE);
-        xmlNode *expr = create_xml_node(rule, XML_TAG_EXPRESSION);
+        xmlNode *rule = create_xml_node(location, PCMK_XE_RULE);
+        xmlNode *expr = create_xml_node(rule, PCMK_XE_EXPRESSION);
 
         crm_xml_set_id(rule, "cli-prefer-rule-%s", rsc_id);
         crm_xml_add(rule, PCMK_XA_SCORE, CRM_INFINITY_S);
@@ -229,8 +230,9 @@ cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
  *   </rule>
  * </rsc_location>
  *
- * (2) The mode could be given by node= in an rsc_location XML node.  That's
- * what resource_clear_node_in_location handles.  That XML looks like this:
+ * (2) The node could be given by node= in a PCMK_XE_RSC_LOCATION XML node.
+ * That's what resource_clear_node_in_location handles. That XML looks like
+ * this:
  *
  * <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
  *
@@ -243,13 +245,13 @@ resource_clear_node_in_expr(const char *rsc_id, const char *host, cib_t * cib_co
     int rc = pcmk_rc_ok;
     char *xpath_string = NULL;
 
-#define XPATH_FMT                                                       \
-    "//" XML_CONS_TAG_RSC_LOCATION "[@" PCMK_XA_ID "='cli-prefer-%s']"  \
-    "[" XML_TAG_RULE                                                    \
-        "[@" PCMK_XA_ID "='cli-prefer-rule-%s']"                        \
-        "/" XML_TAG_EXPRESSION                                          \
-        "[@" PCMK_XA_ATTRIBUTE "='" CRM_ATTR_UNAME "' "                 \
-        "and @" PCMK_XA_VALUE "='%s']"                                  \
+#define XPATH_FMT                                                   \
+    "//" PCMK_XE_RSC_LOCATION "[@" PCMK_XA_ID "='cli-prefer-%s']"   \
+    "[" PCMK_XE_RULE                                                \
+        "[@" PCMK_XA_ID "='cli-prefer-rule-%s']"                    \
+        "/" PCMK_XE_EXPRESSION                                      \
+        "[@" PCMK_XA_ATTRIBUTE "='" CRM_ATTR_UNAME "' "             \
+        "and @" PCMK_XA_VALUE "='%s']"                              \
     "]"
 
     xpath_string = crm_strdup_printf(XPATH_FMT, rsc_id, rsc_id, host);
@@ -277,11 +279,11 @@ resource_clear_node_in_location(const char *rsc_id, const char *host, cib_t * ci
     fragment = create_xml_node(NULL, PCMK_XE_CONSTRAINTS);
 
     if (clear_ban_constraints == TRUE) {
-        location = create_xml_node(fragment, XML_CONS_TAG_RSC_LOCATION);
+        location = create_xml_node(fragment, PCMK_XE_RSC_LOCATION);
         crm_xml_set_id(location, "cli-ban-%s-on-%s", rsc_id, host);
     }
 
-    location = create_xml_node(fragment, XML_CONS_TAG_RSC_LOCATION);
+    location = create_xml_node(fragment, PCMK_XE_RSC_LOCATION);
     crm_xml_set_id(location, "cli-prefer-%s", rsc_id);
     if (force == FALSE) {
         crm_xml_add(location, PCMK_XE_NODE, host);
@@ -365,7 +367,7 @@ build_clear_xpath_string(GString *buf, const xmlNode *constraint_node,
         return;
     }
 
-    g_string_append(buf, "//" XML_CONS_TAG_RSC_LOCATION);
+    g_string_append(buf, "//" PCMK_XE_RSC_LOCATION);
 
     if ((node != NULL) || (rsc != NULL) || promoted_role_only) {
         g_string_append_c(buf, '[');
@@ -401,13 +403,13 @@ build_clear_xpath_string(GString *buf, const xmlNode *constraint_node,
     }
 
     if (node != NULL) {
-        g_string_append(buf, "|//" XML_CONS_TAG_RSC_LOCATION);
+        g_string_append(buf, "|//" PCMK_XE_RSC_LOCATION);
 
         if (rsc_role_substr != NULL) {
             pcmk__g_strcat(buf, "[", rsc_role_substr, "]", NULL);
         }
         pcmk__g_strcat(buf,
-                       "/" XML_TAG_RULE "[" XML_TAG_EXPRESSION
+                       "/" PCMK_XE_RULE "[" PCMK_XE_EXPRESSION
                        "[@" PCMK_XA_ATTRIBUTE "='" CRM_ATTR_UNAME "' "
                        "and @" PCMK_XA_VALUE "='", node, "']]", NULL);
     }
@@ -439,7 +441,7 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, int cib_options,
     int rc = pcmk_rc_ok;
 
     cib_constraints = pcmk_find_cib_element(root, PCMK_XE_CONSTRAINTS);
-    xpathObj = xpath_search(cib_constraints, "//" XML_CONS_TAG_RSC_LOCATION);
+    xpathObj = xpath_search(cib_constraints, "//" PCMK_XE_RSC_LOCATION);
 
     for (i = 0; i < numXpathResults(xpathObj); i++) {
         xmlNode *constraint_node = getXpathResult(xpathObj, i);
@@ -472,7 +474,7 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, int cib_options,
             xmlNode *location = NULL;
 
             fragment = create_xml_node(NULL, PCMK_XE_CONSTRAINTS);
-            location = create_xml_node(fragment, XML_CONS_TAG_RSC_LOCATION);
+            location = create_xml_node(fragment, PCMK_XE_RSC_LOCATION);
             crm_xml_set_id(location, "%s", ID(constraint_node));
             crm_log_xml_info(fragment, "Delete");
 

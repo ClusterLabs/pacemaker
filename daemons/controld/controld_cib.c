@@ -281,19 +281,20 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
 #define XPATH_NODE_STATE "//" PCMK__XE_NODE_STATE "[@" PCMK_XA_UNAME "='%s']"
 
 // Node's lrm section (name 1x)
-#define XPATH_NODE_LRM          XPATH_NODE_STATE "/" XML_CIB_TAG_LRM
+#define XPATH_NODE_LRM XPATH_NODE_STATE "/" PCMK__XE_LRM
 
-/* Node's lrm_rsc_op entries and lrm_resource entries without unexpired lock
+/* Node's PCMK__XE_LRM_RSC_OP entries and PCMK__XE_LRM_RESOURCE entries without
+ * unexpired lock
  * (name 2x, (seconds_since_epoch - PCMK_OPT_SHUTDOWN_LOCK_LIMIT) 1x)
  */
-#define XPATH_NODE_LRM_UNLOCKED XPATH_NODE_STATE "//" XML_LRM_TAG_RSC_OP    \
+#define XPATH_NODE_LRM_UNLOCKED XPATH_NODE_STATE "//" PCMK__XE_LRM_RSC_OP   \
                                 "|" XPATH_NODE_STATE                        \
-                                "//" XML_LRM_TAG_RESOURCE                   \
-                                "[not(@" PCMK_OPT_SHUTDOWN_LOCK ") "       \
+                                "//" PCMK__XE_LRM_RESOURCE                  \
+                                "[not(@" PCMK_OPT_SHUTDOWN_LOCK ") "        \
                                     "or " PCMK_OPT_SHUTDOWN_LOCK "<%lld]"
 
-// Node's transient_attributes section (name 1x)
-#define XPATH_NODE_ATTRS        XPATH_NODE_STATE "/" XML_TAG_TRANSIENT_NODEATTRS
+// Node's PCMK__XE_TRANSIENT_ATTRIBUTES section (name 1x)
+#define XPATH_NODE_ATTRS XPATH_NODE_STATE "/" PCMK__XE_TRANSIENT_ATTRIBUTES
 
 // Everything under PCMK__XE_NODE_STATE (name 1x)
 #define XPATH_NODE_ALL          XPATH_NODE_STATE "/*"
@@ -390,10 +391,10 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
 }
 
 // Takes node name and resource ID
-#define XPATH_RESOURCE_HISTORY "//" PCMK__XE_NODE_STATE                     \
-                               "[@" PCMK_XA_UNAME "='%s']/"                 \
-                               XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES    \
-                               "/" XML_LRM_TAG_RESOURCE                     \
+#define XPATH_RESOURCE_HISTORY "//" PCMK__XE_NODE_STATE                 \
+                               "[@" PCMK_XA_UNAME "='%s']/"             \
+                               PCMK__XE_LRM "/" PCMK__XE_LRM_RESOURCES  \
+                               "/" PCMK__XE_LRM_RESOURCE                \
                                "[@" PCMK_XA_ID "='%s']"
 // @TODO could add "and @PCMK_OPT_SHUTDOWN_LOCK" to limit to locks
 
@@ -908,14 +909,14 @@ controld_update_resource_history(const char *node_name,
     crm_xml_add(xml, PCMK_XA_CRM_DEBUG_ORIGIN, __func__);
 
     //     <lrm ...>
-    xml = create_xml_node(xml, XML_CIB_TAG_LRM);
+    xml = create_xml_node(xml, PCMK__XE_LRM);
     crm_xml_add(xml, PCMK_XA_ID, node_id);
 
     //       <lrm_resources>
-    xml = create_xml_node(xml, XML_LRM_TAG_RESOURCES);
+    xml = create_xml_node(xml, PCMK__XE_LRM_RESOURCES);
 
     //         <lrm_resource ...>
-    xml = create_xml_node(xml, XML_LRM_TAG_RESOURCE);
+    xml = create_xml_node(xml, PCMK__XE_LRM_RESOURCE);
     crm_xml_add(xml, PCMK_XA_ID, op->rsc_id);
     crm_xml_add(xml, PCMK_XA_CLASS, rsc->standard);
     crm_xml_add(xml, PCMK_XA_PROVIDER, rsc->provider);
@@ -964,7 +965,7 @@ controld_delete_action_history(const lrmd_event_data_t *op)
 
     CRM_CHECK(op != NULL, return);
 
-    xml_top = create_xml_node(NULL, XML_LRM_TAG_RSC_OP);
+    xml_top = create_xml_node(NULL, PCMK__XE_LRM_RSC_OP);
     crm_xml_add_int(xml_top, PCMK__XA_CALL_ID, op->call_id);
     crm_xml_add(xml_top, PCMK__XA_TRANSITION_KEY, op->user_data);
 
@@ -989,9 +990,9 @@ controld_delete_action_history(const lrmd_event_data_t *op)
 #define XPATH_HISTORY                                   \
     "/" PCMK_XE_CIB "/" PCMK_XE_STATUS                  \
     "/" PCMK__XE_NODE_STATE "[@" PCMK_XA_UNAME "='%s']" \
-    "/" XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES       \
-    "/" XML_LRM_TAG_RESOURCE "[@" PCMK_XA_ID "='%s']"   \
-    "/" XML_LRM_TAG_RSC_OP
+    "/" PCMK__XE_LRM "/" PCMK__XE_LRM_RESOURCES         \
+    "/" PCMK__XE_LRM_RESOURCE "[@" PCMK_XA_ID "='%s']"  \
+    "/" PCMK__XE_LRM_RSC_OP
 
 /* ... and also by operation key */
 #define XPATH_HISTORY_ID XPATH_HISTORY "[@" PCMK_XA_ID "='%s']"

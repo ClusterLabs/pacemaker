@@ -71,7 +71,7 @@ static pcmk_child_t pcmk_children[] = {
     },
     {
         0, 0, "pacemaker-attrd", CRM_DAEMON_USER,
-        CRM_DAEMON_DIR "/pacemaker-attrd", T_ATTRD,
+        CRM_DAEMON_DIR "/pacemaker-attrd", PCMK__VALUE_ATTRD,
         0, child_respawn | child_needs_cluster
     },
     {
@@ -110,7 +110,7 @@ unsigned int shutdown_complete_state_reported_to = 0;
 gboolean shutdown_complete_state_reported_client_closed = FALSE;
 
 /* state we report when asked via pacemakerd-api status-ping */
-const char *pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_INIT;
+const char *pacemakerd_state = PCMK__VALUE_INIT;
 gboolean running_with_sbd = FALSE; /* local copy */
 
 GMainLoop *mainloop = NULL;
@@ -343,7 +343,7 @@ pcmk_shutdown_worker(gpointer user_data)
 
     if (phase == PCMK__NELEM(pcmk_children) - 1) {
         crm_notice("Shutting down Pacemaker");
-        pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_SHUTTINGDOWN;
+        pacemakerd_state = PCMK__VALUE_SHUTTING_DOWN;
     }
 
     for (; phase >= 0; phase--) {
@@ -388,7 +388,7 @@ pcmk_shutdown_worker(gpointer user_data)
     }
 
     crm_notice("Shutdown complete");
-    pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_SHUTDOWNCOMPLETE;
+    pacemakerd_state = PCMK__VALUE_SHUTDOWN_COMPLETE;
     if (!fatal_error && running_with_sbd &&
         pcmk__get_sbd_sync_resource_startup() &&
         !shutdown_complete_state_reported_client_closed) {
@@ -833,7 +833,7 @@ init_children_processes(void *user_data)
      * This may be useful for the daemons to know
      */
     pcmk__set_env_option(PCMK__ENV_RESPAWNED, PCMK_VALUE_TRUE, false);
-    pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_RUNNING;
+    pacemakerd_state = PCMK__VALUE_RUNNING;
     return TRUE;
 }
 

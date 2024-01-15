@@ -117,10 +117,10 @@ find_expression_type(xmlNode * expr)
     } else if (pcmk__xe_is(expr, PCMK_XE_OP_EXPRESSION)) {
         return pcmk__subexpr_operation;
 
-    } else if (pcmk__xe_is(expr, XML_TAG_RULE)) {
+    } else if (pcmk__xe_is(expr, PCMK_XE_RULE)) {
         return pcmk__subexpr_rule;
 
-    } else if (!pcmk__xe_is(expr, XML_TAG_EXPRESSION)) {
+    } else if (!pcmk__xe_is(expr, PCMK_XE_EXPRESSION)) {
         return pcmk__subexpr_unknown;
 
     } else if (pcmk__str_any_of(attr, CRM_ATTR_UNAME, CRM_ATTR_KIND, CRM_ATTR_ID, NULL)) {
@@ -632,7 +632,7 @@ pe_eval_rules(xmlNode *ruleset, const pe_rule_eval_data_t *rule_data,
     // If there are no rules, pass by default
     gboolean ruleset_default = TRUE;
 
-    for (xmlNode *rule = first_named_child(ruleset, XML_TAG_RULE);
+    for (xmlNode *rule = first_named_child(ruleset, PCMK_XE_RULE);
          rule != NULL; rule = crm_next_same_xml(rule)) {
 
         ruleset_default = FALSE;

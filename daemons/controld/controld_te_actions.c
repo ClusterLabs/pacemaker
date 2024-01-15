@@ -288,11 +288,11 @@ controld_record_action_event(pcmk__graph_action_t *action,
     crm_xml_add(state, PCMK_XA_ID, target_uuid);
     crm_xml_add(state, PCMK_XA_UNAME, target);
 
-    rsc = create_xml_node(state, XML_CIB_TAG_LRM);
+    rsc = create_xml_node(state, PCMK__XE_LRM);
     crm_xml_add(rsc, PCMK_XA_ID, target_uuid);
 
-    rsc = create_xml_node(rsc, XML_LRM_TAG_RESOURCES);
-    rsc = create_xml_node(rsc, XML_LRM_TAG_RESOURCE);
+    rsc = create_xml_node(rsc, PCMK__XE_LRM_RESOURCES);
+    rsc = create_xml_node(rsc, PCMK__XE_LRM_RESOURCE);
     crm_xml_add(rsc, PCMK_XA_ID, rsc_id);
 
 

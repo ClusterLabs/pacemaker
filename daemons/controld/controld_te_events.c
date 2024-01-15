@@ -369,7 +369,7 @@ confirm_cancel_action(const char *id, const char *node_id)
 }
 
 /* downed nodes are listed like: <downed> <node id="UUID1" /> ... </downed> */
-#define XPATH_DOWNED "//" XML_GRAPH_TAG_DOWNED \
+#define XPATH_DOWNED "//" PCMK__XE_DOWNED \
                      "/" PCMK_XE_NODE "[@" PCMK_XA_ID "='%s']"
 
 /*!

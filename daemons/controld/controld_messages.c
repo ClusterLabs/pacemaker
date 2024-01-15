@@ -193,7 +193,7 @@ copy_ha_msg_input(ha_msg_input_t * orig)
 
     CRM_ASSERT(copy != NULL);
     copy->msg = (orig && orig->msg)? copy_xml(orig->msg) : NULL;
-    copy->xml = get_message_xml(copy->msg, F_CRM_DATA);
+    copy->xml = get_message_xml(copy->msg, PCMK__XE_CRM_XML);
     return copy;
 }
 
@@ -365,8 +365,9 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     }
 
     // Require message type (set by create_request())
-    if (!pcmk__str_eq(type, T_CRM, pcmk__str_casei)) {
-        crm_warn("Ignoring invalid message %s with type '%s' (not '" T_CRM "')",
+    if (!pcmk__str_eq(type, PCMK__VALUE_CRMD, pcmk__str_none)) {
+        crm_warn("Ignoring invalid message %s with type '%s' "
+                 "(not '" PCMK__VALUE_CRMD "')",
                  ref, pcmk__s(type, ""));
         crm_log_xml_trace(msg, "ignored");
         return TRUE;
@@ -426,7 +427,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         is_local = true;
 
     } else if (is_for_crm && pcmk__str_eq(task, CRM_OP_LRM_DELETE, pcmk__str_casei)) {
-        xmlNode *msg_data = get_message_xml(msg, F_CRM_DATA);
+        xmlNode *msg_data = get_message_xml(msg, PCMK__XE_CRM_XML);
         const char *mode = crm_element_value(msg_data, PCMK__XA_MODE);
 
         if (pcmk__str_eq(mode, PCMK__VALUE_CIB, pcmk__str_none)) {
@@ -557,7 +558,7 @@ controld_authorize_ipc_message(const xmlNode *client_msg, pcmk__client_t *curr_c
         return true;
     }
 
-    message_data = get_message_xml(client_msg, F_CRM_DATA);
+    message_data = get_message_xml(client_msg, PCMK__XE_CRM_XML);
 
     client_name = crm_element_value(message_data, "client_name");
     if (pcmk__str_empty(client_name)) {
@@ -622,7 +623,7 @@ handle_failcount_op(xmlNode * stored_msg)
     char *interval_spec = NULL;
     guint interval_ms = 0;
     gboolean is_remote_node = FALSE;
-    xmlNode *xml_op = get_message_xml(stored_msg, F_CRM_DATA);
+    xmlNode *xml_op = get_message_xml(stored_msg, PCMK__XE_CRM_XML);
 
     if (xml_op) {
         xmlNode *xml_rsc = first_named_child(xml_op, PCMK_XE_PRIMITIVE);
@@ -671,7 +672,7 @@ static enum crmd_fsa_input
 handle_lrm_delete(xmlNode *stored_msg)
 {
     const char *mode = NULL;
-    xmlNode *msg_data = get_message_xml(stored_msg, F_CRM_DATA);
+    xmlNode *msg_data = get_message_xml(stored_msg, PCMK__XE_CRM_XML);
 
     CRM_CHECK(msg_data != NULL, return I_NULL);
 
@@ -1158,7 +1159,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
         }
 
     } else if (strcmp(op, CRM_OP_MAINTENANCE_NODES) == 0) {
-        xmlNode *xml = get_message_xml(stored_msg, F_CRM_DATA);
+        xmlNode *xml = get_message_xml(stored_msg, PCMK__XE_CRM_XML);
 
         remote_ra_process_maintenance_nodes(xml);
 
@@ -1267,7 +1268,7 @@ send_msg_via_ipc(xmlNode * msg, const char *sys)
         pcmk__ipc_send_xml(client_channel, 0, msg, crm_ipc_server_event);
 
     } else if (pcmk__str_eq(sys, CRM_SYSTEM_TENGINE, pcmk__str_none)) {
-        xmlNode *data = get_message_xml(msg, F_CRM_DATA);
+        xmlNode *data = get_message_xml(msg, PCMK__XE_CRM_XML);
 
         process_te_message(msg, data);
 
@@ -1276,7 +1277,7 @@ send_msg_via_ipc(xmlNode * msg, const char *sys)
         ha_msg_input_t fsa_input;
 
         fsa_input.msg = msg;
-        fsa_input.xml = get_message_xml(msg, F_CRM_DATA);
+        fsa_input.xml = get_message_xml(msg, PCMK__XE_CRM_XML);
 
         fsa_data.id = 0;
         fsa_data.actions = 0;

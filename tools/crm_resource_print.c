@@ -35,7 +35,7 @@ print_constraint(xmlNode *xml_obj, void *userdata)
         return pcmk_rc_ok;
     }
 
-    if (!pcmk__xe_is(xml_obj, XML_CONS_TAG_RSC_DEPEND)) {
+    if (!pcmk__xe_is(xml_obj, PCMK_XE_RSC_COLOCATION)) {
         return pcmk_rc_ok;
     }
 

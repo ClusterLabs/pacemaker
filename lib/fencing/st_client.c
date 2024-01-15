@@ -369,7 +369,7 @@ stonith_api_remove_level_full(stonith_t *st, int options,
 
     CRM_CHECK(node || pattern || (attr && value), return -EINVAL);
 
-    data = create_xml_node(NULL, XML_TAG_FENCING_LEVEL);
+    data = create_xml_node(NULL, PCMK_XE_FENCING_LEVEL);
     crm_xml_add(data, F_STONITH_ORIGIN, __func__);
 
     if (node) {
@@ -422,7 +422,7 @@ create_level_registration_xml(const char *node, const char *pattern,
 
     CRM_CHECK(node || pattern || (attr && value), return NULL);
 
-    data = create_xml_node(NULL, XML_TAG_FENCING_LEVEL);
+    data = create_xml_node(NULL, PCMK_XE_FENCING_LEVEL);
     CRM_CHECK(data, return NULL);
 
     crm_xml_add(data, F_STONITH_ORIGIN, __func__);

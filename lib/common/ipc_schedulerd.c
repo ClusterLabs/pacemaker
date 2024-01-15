@@ -104,7 +104,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
     }
 
     // Parse useful info from reply
-    msg_data = get_message_xml(reply, F_CRM_DATA);
+    msg_data = get_message_xml(reply, PCMK__XE_CRM_XML);
     value = crm_element_value(reply, PCMK__XA_CRM_TASK);
 
     if (pcmk__str_eq(value, CRM_OP_PECALC, pcmk__str_none)) {

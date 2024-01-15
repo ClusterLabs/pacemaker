@@ -127,7 +127,7 @@ cib_notify_send(const xmlNode *xml)
 static void
 attach_cib_generation(xmlNode *msg, const char *field, xmlNode *a_cib)
 {
-    xmlNode *generation = create_xml_node(NULL, XML_CIB_TAG_GENERATION_TUPPLE);
+    xmlNode *generation = create_xml_node(NULL, PCMK__XE_GENERATION_TUPLE);
 
     if (a_cib != NULL) {
         copy_in_properties(generation, a_cib);

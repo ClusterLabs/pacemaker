@@ -327,7 +327,7 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     if (rc != pcmk_ok) {
         return rc;
     }
-    crm_xml_add(request, XML_ACL_TAG_USER, user_name);
+    crm_xml_add(request, PCMK_XE_ACL_TARGET, user_name);
     crm_xml_add(request, F_CIB_CLIENTID, private->id);
 
     if (pcmk_is_set(call_options, cib_transaction)) {
@@ -437,8 +437,8 @@ cib_file_signon(cib_t *cib, const char *name, enum cib_conn_type type)
  * \internal
  * \brief Write out the in-memory CIB to a live CIB file
  *
- * param[in]     cib_root  Root of XML tree to write
- * param[in,out] path      Full path to file to write
+ * \param[in]     cib_root  Root of XML tree to write
+ * \param[in,out] path      Full path to file to write
  *
  * \return 0 on success, -1 on failure
  */

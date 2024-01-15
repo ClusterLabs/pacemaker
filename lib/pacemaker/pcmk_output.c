@@ -44,7 +44,7 @@ colocations_xml_node(pcmk__output_t *out, pcmk_resource_t *rsc,
                      pcmk__colocation_t *cons) {
     xmlNodePtr node = NULL;
 
-    node = pcmk__output_create_xml_node(out, XML_CONS_TAG_RSC_DEPEND,
+    node = pcmk__output_create_xml_node(out, PCMK_XE_RSC_COLOCATION,
                                         PCMK_XA_ID, cons->id,
                                         PCMK_XA_RSC, cons->dependent->id,
                                         PCMK_XA_WITH_RSC, cons->primary->id,
@@ -88,7 +88,7 @@ do_locations_list_xml(pcmk__output_t *out, pcmk_resource_t *rsc,
                 PCMK__OUTPUT_LIST_HEADER(out, false, rc, "locations");
             }
 
-            pcmk__output_create_xml_node(out, XML_CONS_TAG_RSC_LOCATION,
+            pcmk__output_create_xml_node(out, PCMK_XE_RSC_LOCATION,
                                          PCMK_XA_NODE, node->details->uname,
                                          PCMK_XA_RSC, rsc->id,
                                          PCMK_XA_ID, cons->id,

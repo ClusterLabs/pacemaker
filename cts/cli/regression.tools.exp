@@ -2083,7 +2083,7 @@ Error performing operation: No such object
 * Passed: crm_resource   - Try to move a resource that doesn't exist
 =#=#=#= Begin test: Move a resource from its existing location =#=#=#=
 WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score of -INFINITY for resource dummy on node1.
-	This will prevent dummy from running on node1 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool
+	This will prevent dummy from running on node1 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool.
 	This will be the case even if node1 is the last node in the cluster
 =#=#=#= Current cib after: Move a resource from its existing location =#=#=#=
 <cib epoch="28" num_updates="0" admin_epoch="0">
@@ -2813,7 +2813,7 @@ Revised Cluster Status:
 * Passed: crm_simulate   - Create two more nodes and bring them online
 =#=#=#= Begin test: Ban dummy from node1 =#=#=#=
 WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score of -INFINITY for resource dummy on node1.
-	This will prevent dummy from running on node1 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool
+	This will prevent dummy from running on node1 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool.
 	This will be the case even if node1 is the last node in the cluster
 =#=#=#= Current cib after: Ban dummy from node1 =#=#=#=
 <cib epoch="32" num_updates="0" admin_epoch="0">
@@ -4291,7 +4291,7 @@ Migration will take effect until:
 =#=#=#= Begin test: Ban dummy from node1 for a short time =#=#=#=
 Migration will take effect until:
 WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score of -INFINITY for resource dummy on node1.
-	This will prevent dummy from running on node1 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool
+	This will prevent dummy from running on node1 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool.
 	This will be the case even if node1 is the last node in the cluster
 =#=#=#= Current cib after: Ban dummy from node1 for a short time =#=#=#=
 <cib epoch="60" num_updates="0" admin_epoch="0">

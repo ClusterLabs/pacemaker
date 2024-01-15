@@ -166,7 +166,8 @@ get_operation_list(xmlNode *rsc_entry) {
             continue;
         }
 
-        if (pcmk__str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP, pcmk__str_none)) {
+        if (pcmk__str_eq((const char *) rsc_op->name, PCMK__XE_LRM_RSC_OP,
+                         pcmk__str_none)) {
             op_list = g_list_append(op_list, rsc_op);
         }
     }
@@ -2286,11 +2287,11 @@ node_history_list(pcmk__output_t *out, va_list args) {
     xmlNode *rsc_entry = NULL;
     int rc = pcmk_rc_no_output;
 
-    lrm_rsc = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
-    lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
+    lrm_rsc = find_xml_node(node_state, PCMK__XE_LRM, FALSE);
+    lrm_rsc = find_xml_node(lrm_rsc, PCMK__XE_LRM_RESOURCES, FALSE);
 
     /* Print history of each of the node's resources */
-    for (rsc_entry = first_named_child(lrm_rsc, XML_LRM_TAG_RESOURCE);
+    for (rsc_entry = first_named_child(lrm_rsc, PCMK__XE_LRM_RESOURCE);
          rsc_entry != NULL; rsc_entry = crm_next_same_xml(rsc_entry)) {
         const char *rsc_id = crm_element_value(rsc_entry, PCMK_XA_ID);
         pcmk_resource_t *rsc = pe_find_resource(scheduler->resources, rsc_id);

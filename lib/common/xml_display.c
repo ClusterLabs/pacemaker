@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -120,7 +120,7 @@ show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
             if (pcmk_any_flags_set(options,
                                    pcmk__xml_fmt_diff_plus
                                    |pcmk__xml_fmt_diff_minus)
-                && (strcmp(XML_DIFF_MARKER, p_name) == 0)) {
+                && (strcmp(PCMK__XA_CRM_DIFF_MARKER, p_name) == 0)) {
                 continue;
             }
 
@@ -477,7 +477,7 @@ log_data_element(int log_level, const char *file, const char *function,
 
     if (pcmk_is_set(options, pcmk__xml_fmt_pretty)
         && ((data->children == NULL)
-            || (crm_element_value(data, XML_DIFF_MARKER) != NULL))) {
+            || (crm_element_value(data, PCMK__XA_CRM_DIFF_MARKER) != NULL))) {
 
         if (pcmk_is_set(options, pcmk__xml_fmt_diff_plus)) {
             legacy_options |= xml_log_option_diff_all;

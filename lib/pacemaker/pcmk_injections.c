@@ -37,7 +37,7 @@ bool pcmk__simulate_node_config = false;
 #define XPATH_NODE_STATE    "//" PCMK__XE_NODE_STATE "[@" PCMK_XA_UNAME "='%s']"
 #define XPATH_NODE_STATE_BY_ID "//" PCMK__XE_NODE_STATE "[@" PCMK_XA_ID "='%s']"
 #define XPATH_RSC_HISTORY   XPATH_NODE_STATE \
-                            "//" XML_LRM_TAG_RESOURCE "[@" PCMK_XA_ID "='%s']"
+                            "//" PCMK__XE_LRM_RESOURCE "[@" PCMK_XA_ID "='%s']"
 
 
 /*!
@@ -59,9 +59,9 @@ inject_transient_attr(pcmk__output_t *out, xmlNode *cib_node,
 
     out->message(out, "inject-attr", name, value, cib_node);
 
-    attrs = first_named_child(cib_node, XML_TAG_TRANSIENT_NODEATTRS);
+    attrs = first_named_child(cib_node, PCMK__XE_TRANSIENT_ATTRIBUTES);
     if (attrs == NULL) {
-        attrs = create_xml_node(cib_node, XML_TAG_TRANSIENT_NODEATTRS);
+        attrs = create_xml_node(cib_node, PCMK__XE_TRANSIENT_ATTRIBUTES);
         crm_xml_add(attrs, PCMK_XA_ID, node_uuid);
     }
 
@@ -347,8 +347,8 @@ pcmk__inject_node_state_change(cib_t *cib_conn, const char *node, bool up)
  * \param[in,out] cib_node  Node state XML to check
  * \param[in]     resource  Resource name to check for
  *
- * \return Resource's lrm_resource XML entry beneath \p cib_node if found,
- *         otherwise NULL
+ * \return Resource's \c PCMK__XE_LRM_RESOURCE XML entry beneath \p cib_node if
+ *         found, otherwise \c NULL
  */
 static xmlNode *
 find_resource_xml(xmlNode *cib_node, const char *resource)
@@ -431,20 +431,20 @@ pcmk__inject_resource_history(pcmk__output_t *out, xmlNode *cib_node,
     crm_info("Injecting new resource %s into node state '%s'",
              lrm_name, ID(cib_node));
 
-    lrm = first_named_child(cib_node, XML_CIB_TAG_LRM);
+    lrm = first_named_child(cib_node, PCMK__XE_LRM);
     if (lrm == NULL) {
         const char *node_uuid = ID(cib_node);
 
-        lrm = create_xml_node(cib_node, XML_CIB_TAG_LRM);
+        lrm = create_xml_node(cib_node, PCMK__XE_LRM);
         crm_xml_add(lrm, PCMK_XA_ID, node_uuid);
     }
 
-    container = first_named_child(lrm, XML_LRM_TAG_RESOURCES);
+    container = first_named_child(lrm, PCMK__XE_LRM_RESOURCES);
     if (container == NULL) {
-        container = create_xml_node(lrm, XML_LRM_TAG_RESOURCES);
+        container = create_xml_node(lrm, PCMK__XE_LRM_RESOURCES);
     }
 
-    cib_resource = create_xml_node(container, XML_LRM_TAG_RESOURCE);
+    cib_resource = create_xml_node(container, PCMK__XE_LRM_RESOURCE);
 
     // If we're creating a new entry, use the preferred name
     crm_xml_add(cib_resource, PCMK_XA_ID, lrm_name);
@@ -469,12 +469,11 @@ find_ticket_state(pcmk__output_t *out, cib_t *the_cib, const char *ticket_id,
     *ticket_state_xml = NULL;
 
     g_string_append(xpath,
-                    "/" PCMK_XE_CIB "/" PCMK_XE_STATUS
-                    "/" XML_CIB_TAG_TICKETS);
+                    "/" PCMK_XE_CIB "/" PCMK_XE_STATUS "/" PCMK_XE_TICKETS);
 
     if (ticket_id) {
         pcmk__g_strcat(xpath,
-                       "/" XML_CIB_TAG_TICKET_STATE
+                       "/" PCMK__XE_TICKET_STATE
                        "[@" PCMK_XA_ID "=\"", ticket_id, "\"]", NULL);
     }
     rc = the_cib->cmds->query(the_cib, (const char *) xpath->str, &xml_search,
@@ -487,7 +486,8 @@ find_ticket_state(pcmk__output_t *out, cib_t *the_cib, const char *ticket_id,
 
     crm_log_xml_debug(xml_search, "Match");
     if ((xml_search->children != NULL) && (ticket_id != NULL)) {
-        out->err(out, "Multiple ticket_states match ticket_id=%s", ticket_id);
+        out->err(out, "Multiple " PCMK__XE_TICKET_STATE "s match ticket_id=%s",
+                 ticket_id);
     }
     *ticket_state_xml = xml_search;
 
@@ -527,8 +527,8 @@ set_ticket_state_attr(pcmk__output_t *out, const char *ticket_id,
         xmlNode *xml_obj = NULL;
 
         xml_top = create_xml_node(NULL, PCMK_XE_STATUS);
-        xml_obj = create_xml_node(xml_top, XML_CIB_TAG_TICKETS);
-        ticket_state_xml = create_xml_node(xml_obj, XML_CIB_TAG_TICKET_STATE);
+        xml_obj = create_xml_node(xml_top, PCMK_XE_TICKETS);
+        ticket_state_xml = create_xml_node(xml_obj, PCMK__XE_TICKET_STATE);
         crm_xml_add(ticket_state_xml, PCMK_XA_ID, ticket_id);
 
     } else { // Error
@@ -697,7 +697,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
 
         xpath = crm_strdup_printf("//" PCMK__XE_NODE_STATE
                                   "[@" PCMK_XA_UNAME "='%s']"
-                                  "/" XML_CIB_TAG_LRM,
+                                  "/" PCMK__XE_LRM,
                                   node);
         cib->cmds->remove(cib, xpath, NULL,
                           cib_xpath|cib_sync_call|cib_scope_local);
@@ -705,7 +705,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
 
         xpath = crm_strdup_printf("//" PCMK__XE_NODE_STATE
                                   "[@" PCMK_XA_UNAME "='%s']"
-                                  "/" XML_TAG_TRANSIENT_NODEATTRS,
+                                  "/" PCMK__XE_TRANSIENT_ATTRIBUTES,
                                   node);
         cib->cmds->remove(cib, xpath, NULL,
                           cib_xpath|cib_sync_call|cib_scope_local);

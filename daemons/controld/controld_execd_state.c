@@ -478,7 +478,8 @@ remote_config_check(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
         crm_debug("Call %d : Parsing CIB options", call_id);
 
         pe_unpack_nvpairs(output, output, PCMK_XE_CLUSTER_PROPERTY_SET, NULL,
-                          config_hash, CIB_OPTIONS_FIRST, FALSE, now, NULL);
+                          config_hash, PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, FALSE,
+                          now, NULL);
 
         /* Now send it to the remote peer */
         lrmd__validate_remote_settings(lrmd, config_hash);
@@ -551,7 +552,7 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
 
         CRM_CHECK(request != NULL, return);
         CRM_CHECK(lrm_state->node_name, return);
-        crm_xml_add(request, XML_ACL_TAG_ROLE, "pacemaker-remote");
+        crm_xml_add(request, PCMK_XE_ACL_ROLE, "pacemaker-remote");
         pcmk__update_acl_user(request, F_LRMD_IPC_USER, lrm_state->node_name);
 
         /* Pacemaker Remote nodes don't know their own names (as known to the
