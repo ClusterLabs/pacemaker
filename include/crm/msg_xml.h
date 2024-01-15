@@ -211,6 +211,7 @@ extern "C" {
 #define PCMK_XE_TRANSITION                  "transition"
 #define PCMK_XE_UTILIZATION                 "utilization"
 #define PCMK_XE_UTILIZATIONS                "utilizations"
+#define PCMK_XE_VALIDATE                    "validate"
 #define PCMK_XE_VERSION                     "version"
 
 

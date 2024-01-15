@@ -563,7 +563,7 @@ validate_agent_xml(pcmk__output_t *out, va_list args) {
     int rc = va_arg(args, int);
 
     const char *valid = pcmk__btoa(rc == pcmk_ok);
-    xmlNodePtr node = pcmk__output_create_xml_node(out, "validate",
+    xmlNodePtr node = pcmk__output_create_xml_node(out, PCMK_XE_VALIDATE,
                                                    PCMK_XA_AGENT, agent,
                                                    PCMK_XA_VALID, valid,
                                                    NULL);
