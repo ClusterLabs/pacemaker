@@ -417,6 +417,7 @@ extern "C" {
 #define PCMK_XA_UNCLEAN                     "unclean"
 #define PCMK_XA_UNHEALTHY                   "unhealthy"
 #define PCMK_XA_UNIQUE                      "unique"
+#define PCMK_XA_UNMANAGED                   "unmanaged"
 #define PCMK_XA_UPDATE_CLIENT               "update-client"
 #define PCMK_XA_UPDATE_ORIGIN               "update-origin"
 #define PCMK_XA_UPDATE_USER                 "update-user"
