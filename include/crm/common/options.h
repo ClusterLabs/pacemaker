@@ -162,6 +162,7 @@ extern "C" {
 #define PCMK_VALUE_MEMBER                   "member"
 #define PCMK_VALUE_META                     "meta"
 #define PCMK_VALUE_MINIMAL                  "minimal"
+#define PCMK_VALUE_MODIFY                   "modify"
 #define PCMK_VALUE_NE                       "ne"
 #define PCMK_VALUE_NEVER                    "never"
 #define PCMK_VALUE_NOT_DEFINED              "not_defined"

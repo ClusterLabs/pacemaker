@@ -84,7 +84,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
             if (xpath != NULL) {
                 change = create_xml_node(patchset, PCMK_XE_CHANGE);
 
-                crm_xml_add(change, PCMK_XA_OPERATION, "modify");
+                crm_xml_add(change, PCMK_XA_OPERATION, PCMK_VALUE_MODIFY);
                 crm_xml_add(change, PCMK_XA_PATH, (const char *) xpath->str);
 
                 change = create_xml_node(change, PCMK_XE_CHANGE_LIST);
@@ -969,7 +969,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
         } else if (strcmp(op, PCMK_VALUE_DELETE) == 0) {
             free_xml(match);
 
-        } else if (strcmp(op, "modify") == 0) {
+        } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
             const xmlNode *child = first_named_child(change,
                                                      PCMK_XE_CHANGE_RESULT);
             const xmlNode *attrs = pcmk__xml_first_child(child);

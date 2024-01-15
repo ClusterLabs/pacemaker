@@ -444,7 +444,7 @@ te_update_diff_v2(xmlNode *diff)
         if (strcmp(op, PCMK_VALUE_CREATE) == 0) {
             match = change->children;
 
-        } else if (strcmp(op, "modify") == 0) {
+        } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
             match = first_named_child(change, PCMK_XE_CHANGE_RESULT);
             if(match) {
                 match = match->children;

@@ -430,7 +430,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
             if (strcmp(op, PCMK_VALUE_CREATE) == 0) {
                 reason = reason->children;
 
-            } else if(strcmp(op, "modify") == 0) {
+            } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
                 reason = first_named_child(reason, PCMK_XE_CHANGE_RESULT);
                 if(reason) {
                     reason = reason->children;

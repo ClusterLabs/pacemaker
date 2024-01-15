@@ -1947,7 +1947,7 @@ crm_diff_update_v2(const char *event, xmlNode * msg)
         } else if (pcmk__str_any_of(op, "move", PCMK_VALUE_DELETE, NULL)) {
             continue;
 
-        } else if(strcmp(op, "modify") == 0) {
+        } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
             match = first_named_child(change, PCMK_XE_CHANGE_RESULT);
             if(match) {
                 match = match->children;
