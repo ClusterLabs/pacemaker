@@ -391,6 +391,7 @@ extern "C" {
 #define PCMK_XA_STANDBY                     "standby"
 #define PCMK_XA_STANDBY_ONFAIL              "standby_onfail"
 #define PCMK_XA_START                       "start"
+#define PCMK_XA_STATE                       "state"
 #define PCMK_XA_STATUS                      "status"
 #define PCMK_XA_STONITH_ENABLED             "stonith-enabled"
 #define PCMK_XA_STONITH_TIMEOUT_MS          "stonith-timeout-ms"

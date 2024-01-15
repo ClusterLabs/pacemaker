@@ -589,7 +589,7 @@ resource_search_list_xml(pcmk__output_t *out, va_list args)
                                                                 ni->node_name);
 
         if (ni->promoted) {
-            crm_xml_add(sub_node, "state", "promoted");
+            crm_xml_add(sub_node, PCMK_XA_STATE, "promoted");
         }
     }
 

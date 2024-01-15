@@ -678,7 +678,7 @@ health_xml(pcmk__output_t *out, va_list args)
 
     pcmk__output_create_xml_node(out, pcmk__s(sys_from, ""),
                                  PCMK_XA_NODE_NAME, pcmk__s(host_from, ""),
-                                 "state", pcmk__s(fsa_state, ""),
+                                 PCMK_XA_STATE, pcmk__s(fsa_state, ""),
                                  PCMK_XA_RESULT, pcmk__s(result, ""),
                                  NULL);
     return pcmk_rc_ok;
@@ -824,7 +824,7 @@ pacemakerd_health_xml(pcmk__output_t *out, va_list args)
 
     pcmk__output_create_xml_node(out, PCMK_XE_PACEMAKERD,
                                  "sys_from", sys_from,
-                                 "state", state_s,
+                                 PCMK_XA_STATE, state_s,
                                  PCMK_XA_LAST_UPDATED, last_updated_s,
                                  NULL);
     free(last_updated_s);
