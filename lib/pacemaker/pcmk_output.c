@@ -1594,7 +1594,7 @@ inject_modify_config_xml(pcmk__output_t *out, va_list args)
     }
 
     if (watchdog) {
-        crm_xml_add(node, "watchdog", watchdog);
+        crm_xml_add(node, PCMK_XA_WATCHDOG, watchdog);
     }
 
     return pcmk_rc_ok;

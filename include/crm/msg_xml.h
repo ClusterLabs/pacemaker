@@ -428,6 +428,7 @@ extern "C" {
 #define PCMK_XA_VALUE                       "value"
 #define PCMK_XA_VALUE_SOURCE                "value-source"
 #define PCMK_XA_VERSION                     "version"
+#define PCMK_XA_WATCHDOG                    "watchdog"
 #define PCMK_XA_WEEKDAYS                    "weekdays"
 #define PCMK_XA_WEEKS                       "weeks"
 #define PCMK_XA_WEEKYEARS                   "weekyears"
