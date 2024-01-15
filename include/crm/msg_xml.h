@@ -193,6 +193,7 @@ extern "C" {
 #define PCMK_XE_SELECT_FENCING              "select_fencing"
 #define PCMK_XE_SELECT_NODES                "select_nodes"
 #define PCMK_XE_SELECT_RESOURCES            "select_resources"
+#define PCMK_XE_SHADOW                      "shadow"
 #define PCMK_XE_SHORTDESC                   "shortdesc"
 #define PCMK_XE_SOURCE                      "source"
 #define PCMK_XE_STATUS                      "status"
