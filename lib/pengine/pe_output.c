@@ -31,8 +31,8 @@ pe__resource_description(const pcmk_resource_t *rsc, uint32_t show_opts)
 
 /* Never display node attributes whose name starts with one of these prefixes */
 #define FILTER_STR { PCMK__FAIL_COUNT_PREFIX, PCMK__LAST_FAILURE_PREFIX,    \
-                     "shutdown", PCMK_NODE_ATTR_TERMINATE, "standby", "#",  \
-                     NULL }
+                     PCMK__NODE_ATTR_SHUTDOWN, PCMK_NODE_ATTR_TERMINATE,    \
+                     "standby", "#", NULL }
 
 static int
 compare_attribute(gconstpointer a, gconstpointer b)

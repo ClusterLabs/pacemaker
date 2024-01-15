@@ -58,11 +58,12 @@ attrd_clear_requesting_shutdown(void)
  * \internal
  * \brief Check whether local attribute manager is shutting down
  *
- * \param[in] if_requested  Also consider presence of "shutdown" attribute
+ * \param[in] if_requested  If \c true, also consider presence of
+ *                          \c PCMK__NODE_ATTR_SHUTDOWN attribute
  *
  * \return \c true if local attribute manager has begun shutdown sequence
  *         or (if \p if_requested is \c true) whether local node has a nonzero
- *         "shutdown" attribute set, otherwise \c false
+ *         \c PCMK__NODE_ATTR_SHUTDOWN attribute set, otherwise \c false
  * \note Most callers should pass \c false for \p if_requested, because the
  *       attribute manager needs to continue performing while the controller is
  *       shutting down, and even needs to be eligible for election in case all
