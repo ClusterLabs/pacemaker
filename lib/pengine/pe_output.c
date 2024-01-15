@@ -2796,7 +2796,7 @@ resource_config(pcmk__output_t *out, va_list args) {
 
     char *rsc_xml = formatted_xml_buf(rsc, raw);
 
-    out->output_xml(out, "xml", rsc_xml);
+    out->output_xml(out, PCMK_XE_XML, rsc_xml);
 
     free(rsc_xml);
     return pcmk_rc_ok;
@@ -2811,7 +2811,7 @@ resource_config_text(pcmk__output_t *out, va_list args) {
     char *rsc_xml = formatted_xml_buf(rsc, raw);
 
     pcmk__formatted_printf(out, "Resource XML:\n");
-    out->output_xml(out, "xml", rsc_xml);
+    out->output_xml(out, PCMK_XE_XML, rsc_xml);
 
     free(rsc_xml);
     return pcmk_rc_ok;
