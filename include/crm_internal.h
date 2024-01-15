@@ -41,6 +41,7 @@
 #  include <crm/common/options_internal.h>
 #  include <crm/common/output_internal.h>
 #  include <crm/common/xml_internal.h>
+#  include <crm/common/xml_names_internal.h>
 #  include <crm/common/internal.h>
 #  include <locale.h>
 #  include <gettext.h>
@@ -161,7 +162,6 @@
 #define PCMK__XA_NODE_IN_MAINTENANCE    "node_in_maintenance"
 #define PCMK__XA_NODE_START_STATE       "node_start_state"
 #define PCMK__XA_NODE_STATE             "node_state"
-#define PCMK__XA_OPERATION_KEY          "operation_key"
 #define PCMK__XA_OP_DIGEST              "op-digest"
 #define PCMK__XA_OP_FORCE_RESTART       "op-force-restart"
 #define PCMK__XA_OP_RESTART_DIGEST      "op-restart-digest"
