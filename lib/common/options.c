@@ -943,46 +943,48 @@ pcmk__cluster_option(GHashTable *options, const char *name)
 
 /*!
  * \internal
- * \brief Add a description element to a meta-data string
+ * \brief Add a description element to an OCF-like metadata XML node
  *
- * \param[in,out] s       Meta-data string to add to
+ * Include a translation based on the current locale if \c ENABLE_NLS is
+ * defined.
+ *
+ * \param[in,out] parent  Parent XML node
  * \param[in]     tag     Name of element to add (\c PCMK_XE_LONGDESC or
  *                        \c PCMK_XE_SHORTDESC)
  * \param[in]     desc    Textual description to add
- * \param[in]     spaces  If not \p NULL, spaces to insert at the beginning of
- *                        each line
+ *
+ * \return Standard Pacemaker return code
  */
-static void
-add_desc(GString *s, const char *tag, const char *desc, const char *spaces)
+static int
+add_desc(xmlNode *parent, const char *tag, const char *desc)
 {
-    char *escaped_en = pcmk__xml_escape(desc, false);
+    xmlNode *node = pcmk_create_xml_text_node(parent, tag, desc);
 
-    pcmk__g_strcat(s,
-                   pcmk__s(spaces, ""),
-                   "<", tag, " " PCMK_XA_LANG "=\"" PCMK__VALUE_EN "\">",
-                   escaped_en, "</", tag, ">\n", NULL);
+    if (node == NULL) {
+        return ENOMEM;
+    }
+    crm_xml_add(node, PCMK_XA_LANG, PCMK__VALUE_EN);
 
 #ifdef ENABLE_NLS
     {
         static const char *locale = NULL;
 
-        char *localized = pcmk__xml_escape(_(desc), false);
-
-        if (strcmp(escaped_en, localized) != 0) {
-            if (locale == NULL) {
-                locale = strtok(setlocale(LC_ALL, NULL), "_");
-            }
-
-            pcmk__g_strcat(s,
-                           pcmk__s(spaces, ""),
-                           "<", tag, " " PCMK_XA_LANG "=\"", locale, "\">",
-                           localized, "</", tag, ">\n", NULL);
+        if (strcmp(desc, _(desc)) == 0) {
+            return pcmk_rc_ok;
         }
-        free(localized);
+
+        if (locale == NULL) {
+            locale = strtok(setlocale(LC_ALL, NULL), "_");
+        }
+
+        node = pcmk_create_xml_text_node(parent, tag, _(desc));
+        if (node == NULL) {
+            return ENOMEM;
+        }
+        crm_xml_add(node, PCMK_XA_LANG, locale);
     }
 #endif
-
-    free(escaped_en);
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -1000,31 +1002,39 @@ add_desc(GString *s, const char *tag, const char *desc, const char *spaces)
  *
  * \return A string containing OCF-like option metadata XML
  *
- * \note The caller is responsible for freeing the return value using
- *       \c g_free().
+ * \note The caller is responsible for freeing the return value using \c free().
  */
-gchar *
+char *
 pcmk__format_option_metadata(const char *name, const char *desc_short,
                              const char *desc_long,
                              enum pcmk__opt_context filter,
                              pcmk__cluster_option_t *option_list, int len)
 {
-    // Large enough to hold current cluster options with room for growth (2^15)
-    GString *s = g_string_sized_new(32768);
+    xmlNode *top = create_xml_node(NULL, PCMK_XE_RESOURCE_AGENT);
+    xmlNode *parameters = NULL;
+    char *result = NULL;
 
-    pcmk__g_strcat(s,
-                   "<?xml " PCMK_XA_VERSION "=\"1.0\"?>\n"
-                   "<" PCMK_XE_RESOURCE_AGENT " "
-                       PCMK_XA_NAME "=\"", name, "\" "
-                       PCMK_XA_VERSION "=\"" PACEMAKER_VERSION "\">\n"
+    if (top == NULL) {
+        goto done;
+    }
+    crm_xml_add(top, PCMK_XA_NAME, name);
+    crm_xml_add(top, PCMK_XA_VERSION, PACEMAKER_VERSION);
 
-                   "  <" PCMK_XE_VERSION ">" PCMK_OCF_VERSION
-                     "</" PCMK_XE_VERSION ">\n", NULL);
+    if (pcmk_create_xml_text_node(top, PCMK_XE_VERSION,
+                                  PCMK_OCF_VERSION) == NULL) {
+        goto done;
+    }
 
-    add_desc(s, PCMK_XE_LONGDESC, desc_long, "  ");
-    add_desc(s, PCMK_XE_SHORTDESC, desc_short, "  ");
+    if ((desc_long != NULL)
+        && (add_desc(top, PCMK_XE_LONGDESC, desc_long) != pcmk_rc_ok)) {
+        goto done;
+    }
+    if ((desc_short != NULL)
+        && (add_desc(top, PCMK_XE_SHORTDESC, desc_short) != pcmk_rc_ok)) {
+        goto done;
+    }
 
-    g_string_append(s, "  <" PCMK_XE_PARAMETERS ">\n");
+    parameters = create_xml_node(top, PCMK_XE_PARAMETERS);
 
     for (int lpc = 0; lpc < len; lpc++) {
         const char *opt_name = option_list[lpc].name;
@@ -1033,6 +1043,9 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
         const char *opt_default = option_list[lpc].default_value;
         const char *opt_desc_short = option_list[lpc].description_short;
         const char *opt_desc_long = option_list[lpc].description_long;
+
+        xmlNode *parameter = NULL;
+        xmlNode *content = NULL;
 
         if ((filter != pcmk__opt_context_none)
             && (filter != option_list[lpc].context)) {
@@ -1051,48 +1064,57 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
         // The standard requires a parameter type
         CRM_ASSERT(opt_type != NULL);
 
-        pcmk__g_strcat(s,
-                       "    <" PCMK_XE_PARAMETER " "
-                               PCMK_XA_NAME "=\"", opt_name, "\">\n", NULL);
-
-        add_desc(s, PCMK_XE_LONGDESC, opt_desc_long, "      ");
-        add_desc(s, PCMK_XE_SHORTDESC, opt_desc_short, "      ");
-
-        pcmk__g_strcat(s, "      <" PCMK_XE_CONTENT " "
-                                    PCMK_XA_TYPE "=\"", opt_type, "\"", NULL);
-        if (opt_default != NULL) {
-            pcmk__g_strcat(s,
-                           " " PCMK_XA_DEFAULT "=\"", opt_default, "\"", NULL);
+        parameter = create_xml_node(parameters, PCMK_XE_PARAMETER);
+        if (parameter == NULL) {
+            goto done;
         }
+
+        crm_xml_add(parameter, PCMK_XA_NAME, opt_name);
+
+        if (add_desc(parameter, PCMK_XE_LONGDESC,
+                     opt_desc_long) != pcmk_rc_ok) {
+            goto done;
+        }
+        if (add_desc(parameter, PCMK_XE_SHORTDESC,
+                     opt_desc_short) != pcmk_rc_ok) {
+            goto done;
+        }
+
+        content = create_xml_node(parameter, PCMK_XE_CONTENT);
+        if (content == NULL) {
+            goto done;
+        }
+
+        crm_xml_add(content, PCMK_XA_TYPE, opt_type);
+        crm_xml_add(content, PCMK_XA_DEFAULT, opt_default);
 
         if ((opt_values != NULL) && (strcmp(opt_type, "select") == 0)) {
-            char *str = strdup(opt_values);
             const char *delim = ", ";
-            char *ptr = strtok(str, delim);
+            char *str = NULL;
+            char *ptr = NULL;
 
-            g_string_append(s, ">\n");
+            pcmk__str_update(&str, opt_values);
+            ptr = strtok(str, delim);
 
             while (ptr != NULL) {
-                pcmk__g_strcat(s,
-                               "        <" PCMK_XE_OPTION " "
-                                           PCMK_XA_VALUE "=\"", ptr, "\" />\n",
-                               NULL);
+                xmlNode *option = create_xml_node(content, PCMK_XE_OPTION);
+
+                if (option == NULL) {
+                    free(str);
+                    goto done;
+                }
+                crm_xml_add(option, PCMK_XA_VALUE, ptr);
                 ptr = strtok(NULL, delim);
             }
-            g_string_append(s, "      </" PCMK_XE_CONTENT ">\n");
             free(str);
-
-        } else {
-            g_string_append(s, "/>\n");
         }
-
-        g_string_append(s, "    </" PCMK_XE_PARAMETER ">\n");
     }
-    g_string_append(s,
-                    "  </" PCMK_XE_PARAMETERS ">\n"
-                    "</" PCMK_XE_RESOURCE_AGENT ">\n");
 
-    return g_string_free(s, FALSE);
+    result = dump_xml_formatted_with_text(top);
+
+done:
+    free_xml(top);
+    return result;
 }
 
 /*!
@@ -1108,10 +1130,9 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
  *
  * \return A string containing OCF-like cluster option metadata XML
  *
- * \note The caller is responsible for freeing the return value using
- *       \c g_free().
+ * \note The caller is responsible for freeing the return value using \c free().
  */
-gchar *
+char *
 pcmk__cluster_option_metadata(const char *name, const char *desc_short,
                               const char *desc_long,
                               enum pcmk__opt_context filter)

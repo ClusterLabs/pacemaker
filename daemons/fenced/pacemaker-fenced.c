@@ -821,12 +821,12 @@ fencer_metadata(void)
                                "Pacemaker's fence daemon, formerly known as "
                                "stonithd");
 
-    gchar *s = pcmk__format_option_metadata(name, desc_short, desc_long,
-                                            pcmk__opt_context_none,
-                                            fencer_options,
-                                            PCMK__NELEM(fencer_options));
+    char *s = pcmk__format_option_metadata(name, desc_short, desc_long,
+                                           pcmk__opt_context_none,
+                                           fencer_options,
+                                           PCMK__NELEM(fencer_options));
     printf("%s", s);
-    g_free(s);
+    free(s);
 }
 
 static GOptionEntry entries[] = {
