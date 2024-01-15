@@ -1938,10 +1938,10 @@ crm_diff_update_v2(const char *event, xmlNode * msg)
         xmlNode *match = NULL;
         const char *node = NULL;
 
-        if(op == NULL) {
+        if (op == NULL) {
             continue;
 
-        } else if(strcmp(op, "create") == 0) {
+        } else if (strcmp(op, PCMK_VALUE_CREATE) == 0) {
             match = change->children;
 
         } else if(strcmp(op, "move") == 0) {

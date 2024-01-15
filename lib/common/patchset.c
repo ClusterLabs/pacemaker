@@ -58,7 +58,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
 
             change = create_xml_node(patchset, PCMK_XE_CHANGE);
 
-            crm_xml_add(change, PCMK_XA_OPERATION, "create");
+            crm_xml_add(change, PCMK_XA_OPERATION, PCMK_VALUE_CREATE);
             crm_xml_add(change, PCMK_XA_PATH, (const char *) xpath->str);
             crm_xml_add_int(change, PCMK_XE_POSITION, position);
             add_node_copy(change, xml);
@@ -945,8 +945,9 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
             rc = pcmk_rc_diff_failed;
             continue;
 
-        } else if ((strcmp(op, "create") == 0) || (strcmp(op, "move") == 0)) {
-            // Delay the adding of a "create" object
+        } else if ((strcmp(op, PCMK_VALUE_CREATE) == 0)
+                   || (strcmp(op, "move") == 0)) {
+            // Delay the adding of a PCMK_VALUE_CREATE object
             xml_change_obj_t *change_obj = calloc(1, sizeof(xml_change_obj_t));
 
             CRM_ASSERT(change_obj != NULL);
@@ -1007,7 +1008,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
 
         crm_trace("Continue performing %s on %s with %p", op, xpath, match);
 
-        if (strcmp(op, "create") == 0) {
+        if (strcmp(op, PCMK_VALUE_CREATE) == 0) {
             int position = 0;
             xmlNode *child = NULL;
             xmlNode *match_child = NULL;

@@ -550,7 +550,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
                 if(strcmp(op, "move") == 0) {
                     continue;
 
-                } else if(strcmp(op, "create") == 0) {
+                } else if (strcmp(op, PCMK_VALUE_CREATE) == 0) {
                     add_topology_level(change->children);
 
                 } else if(strcmp(op, "modify") == 0) {
@@ -583,7 +583,8 @@ update_fencing_topology(const char *event, xmlNode * msg)
                     crm_trace("Nothing for us in %s operation %d.%d.%d for %s.",
                               op, add[0], add[1], add[2], xpath);
 
-                } else if(strcmp(op, "delete") == 0 || strcmp(op, "create") == 0) {
+                } else if ((strcmp(op, "delete") == 0)
+                           || (strcmp(op, PCMK_VALUE_CREATE) == 0)) {
                     crm_info("Re-initializing fencing topology after top-level %s operation %d.%d.%d for %s.",
                              op, add[0], add[1], add[2], xpath);
                     fencing_topology_init();

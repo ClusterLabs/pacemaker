@@ -441,7 +441,7 @@ te_update_diff_v2(xmlNode *diff)
         }
 
         // Find the result of create/modify ops
-        if (strcmp(op, "create") == 0) {
+        if (strcmp(op, PCMK_VALUE_CREATE) == 0) {
             match = change->children;
 
         } else if (strcmp(op, "modify") == 0) {

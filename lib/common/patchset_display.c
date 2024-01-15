@@ -206,7 +206,7 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
             continue;
         }
 
-        if (strcmp(op, "create") == 0) {
+        if (strcmp(op, PCMK_VALUE_CREATE) == 0) {
             char *prefix = crm_strdup_printf(PCMK__XML_PREFIX_CREATED " %s: ",
                                              xpath);
 

@@ -427,7 +427,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
         const char *path = crm_element_value(change, PCMK_XA_PATH);
 
         if(change == reason) {
-            if(strcmp(op, "create") == 0) {
+            if (strcmp(op, PCMK_VALUE_CREATE) == 0) {
                 reason = reason->children;
 
             } else if(strcmp(op, "modify") == 0) {
