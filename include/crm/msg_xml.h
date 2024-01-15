@@ -214,6 +214,7 @@ extern "C" {
 #define PCMK_XE_VALIDATE                    "validate"
 #define PCMK_XE_VERSION                     "version"
 #define PCMK_XE_XML                         "xml"
+#define PCMK_XE_XML_PATCHSET                "xml-patchset"
 
 
 /*

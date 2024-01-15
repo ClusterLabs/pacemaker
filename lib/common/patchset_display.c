@@ -413,7 +413,7 @@ xml_patchset_xml(pcmk__output_t *out, va_list args)
     if (patchset != NULL) {
         char *buf = dump_xml_formatted_with_text(patchset);
 
-        out->output_xml(out, "xml-patchset", buf);
+        out->output_xml(out, PCMK_XE_XML_PATCHSET, buf);
         free(buf);
         return pcmk_rc_ok;
     }
