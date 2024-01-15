@@ -1237,7 +1237,7 @@ cluster_stack_xml(pcmk__output_t *out, va_list args) {
         state_s = pcmk_pacemakerd_api_daemon_state_enum2text(pcmkd_state);
     }
 
-    pcmk__output_create_xml_node(out, "stack",
+    pcmk__output_create_xml_node(out, PCMK_XE_STACK,
                                  PCMK_XA_TYPE, stack_s,
                                  PCMK_XA_PACEMAKERD_STATE, state_s,
                                  NULL);
