@@ -115,7 +115,7 @@ attrd_client_clear_failure(pcmk__request_t *request)
     interval_spec = crm_element_value(xml, PCMK__XA_ATTR_INTERVAL);
 
     /* Map this to an update */
-    crm_xml_add(xml, PCMK__XA_TASK, PCMK__ATTRD_CMD_UPDATE);
+    crm_xml_add(xml, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
 
     /* Add regular expression matching desired attributes */
 
@@ -593,7 +593,7 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         CRM_ASSERT(client->user != NULL);
         pcmk__update_acl_user(xml, PCMK__XA_ATTR_USER, client->user);
 
-        request.op = crm_element_value_copy(request.xml, PCMK__XA_TASK);
+        request.op = crm_element_value_copy(request.xml, PCMK_XA_TASK);
         CRM_CHECK(request.op != NULL, return 0);
 
         attrd_handle_request(&request);

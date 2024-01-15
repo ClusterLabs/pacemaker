@@ -1045,7 +1045,7 @@ digests_xml(pcmk__output_t *out, va_list args)
                                        PCMK_XA_RESOURCE, pcmk__s(rsc->id, ""),
                                        PCMK_XA_NODE,
                                        pcmk__s(node->details->uname, ""),
-                                       "task", pcmk__s(task, ""),
+                                       PCMK_XA_TASK, pcmk__s(task, ""),
                                        PCMK_XA_INTERVAL, interval_s,
                                        NULL);
     free(interval_s);
@@ -1331,7 +1331,7 @@ node_action_xml(pcmk__output_t *out, va_list args)
         return pcmk_rc_no_output;
     } else if (reason) {
         pcmk__output_create_xml_node(out, PCMK_XE_NODE_ACTION,
-                                     "task", task,
+                                     PCMK_XA_TASK, task,
                                      PCMK_XA_NODE, node_name,
                                      PCMK_XA_REASON, reason,
                                      NULL);
@@ -1427,7 +1427,7 @@ inject_cluster_action_xml(pcmk__output_t *out, va_list args)
     }
 
     xml_node = pcmk__output_create_xml_node(out, PCMK_XE_CLUSTER_ACTION,
-                                            "task", task,
+                                            PCMK_XA_TASK, task,
                                             PCMK_XA_NODE, node,
                                             NULL);
 
@@ -1711,7 +1711,7 @@ inject_pseudo_action_xml(pcmk__output_t *out, va_list args)
     }
 
     xml_node = pcmk__output_create_xml_node(out, PCMK_XE_PSEUDO_ACTION,
-                                            "task", task,
+                                            PCMK_XA_TASK, task,
                                             NULL);
     if (node) {
         crm_xml_add(xml_node, PCMK_XA_NODE, node);

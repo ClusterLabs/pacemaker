@@ -204,7 +204,6 @@
 #define PCMK__XA_SRC                    "src"
 #define PCMK__XA_SUBT                   "subt"                  // subtype
 #define PCMK__XA_T                      "t"                     // type
-#define PCMK__XA_TASK                   "task"
 #define PCMK__XA_TRANSITION_KEY         "transition-key"
 #define PCMK__XA_TRANSITION_MAGIC       "transition-magic"
 #define PCMK__XA_UPTIME                 "uptime"

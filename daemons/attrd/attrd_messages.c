@@ -338,7 +338,7 @@ attrd_broadcast_protocol(void)
 
     crm_xml_add(attrd_op, PCMK__XA_T, PCMK__VALUE_ATTRD);
     crm_xml_add(attrd_op, PCMK__XA_SRC, crm_system_name);
-    crm_xml_add(attrd_op, PCMK__XA_TASK, PCMK__ATTRD_CMD_UPDATE);
+    crm_xml_add(attrd_op, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
     crm_xml_add(attrd_op, PCMK__XA_ATTR_NAME, CRM_ATTR_PROTOCOL);
     crm_xml_add(attrd_op, PCMK__XA_ATTR_VALUE, ATTRD_PROTOCOL_VERSION);
     crm_xml_add_int(attrd_op, PCMK__XA_ATTR_IS_PRIVATE, 1);
@@ -355,7 +355,7 @@ attrd_broadcast_protocol(void)
 gboolean
 attrd_send_message(crm_node_t *node, xmlNode *data, bool confirm)
 {
-    const char *op = crm_element_value(data, PCMK__XA_TASK);
+    const char *op = crm_element_value(data, PCMK_XA_TASK);
 
     crm_xml_add(data, PCMK__XA_T, PCMK__VALUE_ATTRD);
     crm_xml_add(data, PCMK__XA_ATTR_VERSION, ATTRD_PROTOCOL_VERSION);

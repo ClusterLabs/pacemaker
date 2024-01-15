@@ -1564,6 +1564,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
 
         const char *queue_time = crm_element_value(xml_op, PCMK_XA_QUEUE_TIME);
         const char *exec = crm_element_value(xml_op, PCMK_XA_EXEC_TIME);
+        const char *task = crm_element_value(xml_op, PCMK_XA_OPERATION);
         guint interval_ms = 0;
         char *interval_ms_s = NULL;
         char *rc_change = pcmk__epoch2str(&epoch,
@@ -1579,7 +1580,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
                            PCMK_XA_QUEUED, queue_time,
                            PCMK_XA_EXEC, exec,
                            PCMK_XA_INTERVAL, interval_ms_s,
-                           "task", crm_element_value(xml_op, PCMK_XA_OPERATION),
+                           PCMK_XA_TASK, task,
                            NULL);
 
         free(interval_ms_s);
@@ -2710,7 +2711,7 @@ op_history_xml(pcmk__output_t *out, va_list args) {
 
     node = pcmk__output_create_xml_node(out, PCMK_XE_OPERATION_HISTORY,
                                         PCMK_XA_CALL, call_id,
-                                        "task", task,
+                                        PCMK_XA_TASK, task,
                                         PCMK_XA_RC, rc_s,
                                         PCMK_XA_RC_TEXT, rc_text,
                                         NULL);

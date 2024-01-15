@@ -180,9 +180,9 @@ attrd_populate_attribute(xmlNode *xml, const char *attr)
     attribute_t *a = NULL;
     bool update_both = false;
 
-    const char *op = crm_element_value(xml, PCMK__XA_TASK);
+    const char *op = crm_element_value(xml, PCMK_XA_TASK);
 
-    // NULL because PCMK__ATTRD_CMD_SYNC_RESPONSE has no PCMK__XA_TASK
+    // NULL because PCMK__ATTRD_CMD_SYNC_RESPONSE has no PCMK_XA_TASK
     update_both = pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_BOTH,
                                pcmk__str_null_matches);
 

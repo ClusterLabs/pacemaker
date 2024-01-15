@@ -404,6 +404,7 @@ extern "C" {
 #define PCMK_XA_TARGET_PATTERN              "target-pattern"
 #define PCMK_XA_TARGET_ROLE                 "target_role"
 #define PCMK_XA_TARGET_VALUE                "target-value"
+#define PCMK_XA_TASK                        "task"
 #define PCMK_XA_TEMPLATE                    "template"
 #define PCMK_XA_TICKET                      "ticket"
 #define PCMK_XA_TIME                        "time"
