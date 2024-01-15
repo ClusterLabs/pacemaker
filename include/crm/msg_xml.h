@@ -29,6 +29,7 @@ extern "C" {
  * * "OPT" for cluster option (property) names
  * * "META" for meta-attribute names
  * * "VALUE" for enumerated values for various options
+ * * "NODE_ATTR" for node attribute names
  *
  * Old names that don't follow this policy should eventually be deprecated and
  * replaced with names that do.
@@ -39,10 +40,9 @@ extern "C" {
  * Pacemaker (such as daemon IPC/CPG message XML).
  *
  * Constants belong in the following locations:
- * * Public "XE" and "XA": msg_xml.h
- * * Internal "XE" and "XA": crm_internal.h
- * * Public "OPT", "META", and "VALUE": options.h
- * * Internal "OPT", "META", and "VALUE": options_internal.h
+ * * "XE" and "XA": msg_xml.h and crm_internal.h
+ * * "OPT", "META", and "VALUE": options.h and options_internal.h
+ * * "NODE_ATTR": nodes.h and nodes_internal.h
  *
  * For meta-attributes that can be specified as either XML attributes or nvpair
  * names, use "META" unless using both "XA" and "META" constants adds clarity.
