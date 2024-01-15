@@ -80,6 +80,8 @@ static subst_t substitutions[] = {
       PCMK_XE_OPERATIONS, },
     { "Revised Cluster Status",
       PCMK_XE_REVISED_CLUSTER_STATUS, },
+    { "Timings",
+      PCMK_XE_TIMINGS, },
     { "Transition Summary",
       PCMK_XE_ACTIONS, },
     { "Utilization Information",
