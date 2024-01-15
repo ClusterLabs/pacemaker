@@ -1944,10 +1944,7 @@ crm_diff_update_v2(const char *event, xmlNode * msg)
         } else if (strcmp(op, PCMK_VALUE_CREATE) == 0) {
             match = change->children;
 
-        } else if(strcmp(op, "move") == 0) {
-            continue;
-
-        } else if(strcmp(op, "delete") == 0) {
+        } else if (pcmk__str_any_of(op, "move", PCMK_VALUE_DELETE, NULL)) {
             continue;
 
         } else if(strcmp(op, "modify") == 0) {
@@ -1967,7 +1964,7 @@ crm_diff_update_v2(const char *event, xmlNode * msg)
 
         } else if(name == NULL) {
             crm_debug("No result for %s operation to %s", op, xpath);
-            CRM_ASSERT(strcmp(op, "delete") == 0 || strcmp(op, "move") == 0);
+            CRM_ASSERT(pcmk__str_any_of(op, "move", PCMK_VALUE_DELETE, NULL));
 
         } else if (strcmp(name, PCMK_XE_CIB) == 0) {
             pcmk__xe_foreach_child(first_named_child(match, PCMK_XE_STATUS),

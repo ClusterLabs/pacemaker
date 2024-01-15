@@ -313,7 +313,7 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
         pcmk__deleted_xml_t *deleted_obj = gIter->data;
         xmlNode *change = create_xml_node(patchset, PCMK_XE_CHANGE);
 
-        crm_xml_add(change, PCMK_XA_OPERATION, "delete");
+        crm_xml_add(change, PCMK_XA_OPERATION, PCMK_VALUE_DELETE);
         crm_xml_add(change, PCMK_XA_PATH, deleted_obj->path);
         if (deleted_obj->position >= 0) {
             crm_xml_add_int(change, PCMK_XE_POSITION, deleted_obj->position);
@@ -929,14 +929,16 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
 
         crm_trace("Processing %s %s", change->name, op);
 
-        // "delete" changes for XML comments are generated with PCMK_XE_POSITION
-        if (strcmp(op, "delete") == 0) {
+        /* PCMK_VALUE_DELETE changes for XML comments are generated with
+         * PCMK_XE_POSITION
+         */
+        if (strcmp(op, PCMK_VALUE_DELETE) == 0) {
             crm_element_value_int(change, PCMK_XE_POSITION, &position);
         }
         match = search_v2_xpath(xml, xpath, position);
         crm_trace("Performing %s on %s with %p", op, xpath, match);
 
-        if ((match == NULL) && (strcmp(op, "delete") == 0)) {
+        if ((match == NULL) && (strcmp(op, PCMK_VALUE_DELETE) == 0)) {
             crm_debug("No %s match for %s in %p", op, xpath, xml->doc);
             continue;
 
@@ -964,7 +966,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
                 }
             }
 
-        } else if (strcmp(op, "delete") == 0) {
+        } else if (strcmp(op, PCMK_VALUE_DELETE) == 0) {
             free_xml(match);
 
         } else if (strcmp(op, "modify") == 0) {

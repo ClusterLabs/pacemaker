@@ -439,7 +439,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
             CRM_CHECK(reason != NULL, goto done);
         }
 
-        if(strcmp(op, "delete") == 0) {
+        if (strcmp(op, PCMK_VALUE_DELETE) == 0) {
             const char *shortpath = strrchr(path, '/');
 
             do_crm_log(level, "Transition %d aborted by deletion of %s: %s "

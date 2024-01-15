@@ -273,7 +273,7 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
                 g_string_free(buffer_unset, TRUE);
             }
 
-        } else if (strcmp(op, "delete") == 0) {
+        } else if (strcmp(op, PCMK_VALUE_DELETE) == 0) {
             int position = -1;
 
             crm_element_value_int(change, PCMK_XE_POSITION, &position);

@@ -302,7 +302,7 @@ abort_unless_down(const char *xpath, const char *op, xmlNode *change,
     char *node_uuid = NULL;
     pcmk__graph_action_t *down = NULL;
 
-    if(!pcmk__str_eq(op, "delete", pcmk__str_casei)) {
+    if (!pcmk__str_eq(op, PCMK_VALUE_DELETE, pcmk__str_none)) {
         abort_transition(INFINITY, pcmk__graph_restart, reason, change);
         return;
     }
@@ -450,7 +450,7 @@ te_update_diff_v2(xmlNode *diff)
                 match = match->children;
             }
 
-        } else if (!pcmk__str_any_of(op, "delete", "move", NULL)) {
+        } else if (!pcmk__str_any_of(op, PCMK_VALUE_DELETE, "move", NULL)) {
             crm_warn("Ignoring malformed CIB update (%s operation on %s is unrecognized)",
                      op, xpath);
             continue;
@@ -485,7 +485,7 @@ te_update_diff_v2(xmlNode *diff)
             abort_unless_down(xpath, op, change, "Transient attribute change");
             break; // Won't be packaged with operation results we may be waiting for
 
-        } else if (strcmp(op, "delete") == 0) {
+        } else if (strcmp(op, PCMK_VALUE_DELETE) == 0) {
             process_delete_diff(xpath, op, change);
 
         } else if (name == NULL) {

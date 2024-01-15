@@ -138,6 +138,7 @@ extern "C" {
 #define PCMK_VALUE_DATE_SPEC                "date_spec"
 #define PCMK_VALUE_DEFAULT                  "default"
 #define PCMK_VALUE_DEFINED                  "defined"
+#define PCMK_VALUE_DELETE                   "delete"
 #define PCMK_VALUE_DEMOTE                   "demote"
 #define PCMK_VALUE_DENY                     "deny"
 #define PCMK_VALUE_EQ                       "eq"

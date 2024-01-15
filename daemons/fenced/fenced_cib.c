@@ -339,8 +339,10 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
         if (pcmk__str_eq(op, "move", pcmk__str_null_matches)
             || (strstr(xpath, "/" PCMK_XE_STATUS) != NULL)) {
             continue;
-        } else if (pcmk__str_eq(op, "delete", pcmk__str_casei)
-                   && (strstr(xpath, "/" PCMK_XE_PRIMITIVE) != NULL)) {
+        }
+
+        if (pcmk__str_eq(op, PCMK_VALUE_DELETE, pcmk__str_none)
+            && (strstr(xpath, "/" PCMK_XE_PRIMITIVE) != NULL)) {
             const char *rsc_id = NULL;
             char *search = NULL;
             char *mutable = NULL;
@@ -353,9 +355,9 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
                 break;
             }
             pcmk__str_update(&mutable, xpath);
-            rsc_id = strstr(mutable, "primitive[@" PCMK_XA_ID "=\'");
+            rsc_id = strstr(mutable, PCMK_XE_PRIMITIVE "[@" PCMK_XA_ID "=\'");
             if (rsc_id != NULL) {
-                rsc_id += strlen("primitive[@" PCMK_XA_ID "=\'");
+                rsc_id += strlen(PCMK_XE_PRIMITIVE "[@" PCMK_XA_ID "=\'");
                 search = strchr(rsc_id, '\'');
             }
             if (search != NULL) {
@@ -562,7 +564,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
                         add_topology_level(match->children);
                     }
 
-                } else if(strcmp(op, "delete") == 0) {
+                } else if (strcmp(op, PCMK_VALUE_DELETE) == 0) {
                     /* Nuclear option, all we have is the path and an id... not enough to remove a specific entry */
                     crm_info("Re-initializing fencing topology after %s operation %d.%d.%d for %s",
                              op, add[0], add[1], add[2], xpath);
@@ -583,8 +585,9 @@ update_fencing_topology(const char *event, xmlNode * msg)
                     crm_trace("Nothing for us in %s operation %d.%d.%d for %s.",
                               op, add[0], add[1], add[2], xpath);
 
-                } else if ((strcmp(op, "delete") == 0)
-                           || (strcmp(op, PCMK_VALUE_CREATE) == 0)) {
+                } else if (pcmk__str_any_of(op,
+                                            PCMK_VALUE_DELETE,
+                                            PCMK_VALUE_CREATE, NULL)) {
                     crm_info("Re-initializing fencing topology after top-level %s operation %d.%d.%d for %s.",
                              op, add[0], add[1], add[2], xpath);
                     fencing_topology_init();
