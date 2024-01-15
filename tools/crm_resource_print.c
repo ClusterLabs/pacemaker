@@ -720,7 +720,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
 
     } else if ((rsc != NULL) && (host_uname != NULL)) {
         if (resource_is_running_on(rsc, host_uname)) {
-            crm_xml_add(xml_node, "running_on", host_uname);
+            crm_xml_add(xml_node, PCMK_XA_RUNNING_ON, host_uname);
         }
 
         cli_resource_check(out, rsc, node);

@@ -374,6 +374,7 @@ extern "C" {
 #define PCMK_XA_RULE_ID                     "rule-id"
 #define PCMK_XA_RUN_COMMAND                 "run-command"
 #define PCMK_XA_RUNNING                     "running"
+#define PCMK_XA_RUNNING_ON                  "running_on"
 #define PCMK_XA_SCOPE                       "scope"
 #define PCMK_XA_SCORE                       "score"
 #define PCMK_XA_SCORE_ATTRIBUTE             "score-attribute"
