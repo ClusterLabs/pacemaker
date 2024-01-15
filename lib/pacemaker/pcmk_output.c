@@ -823,7 +823,7 @@ pacemakerd_health_xml(pcmk__output_t *out, va_list args)
     }
 
     pcmk__output_create_xml_node(out, PCMK_XE_PACEMAKERD,
-                                 "sys_from", sys_from,
+                                 PCMK_XA_SYS_FROM, sys_from,
                                  PCMK_XA_STATE, state_s,
                                  PCMK_XA_LAST_UPDATED, last_updated_s,
                                  NULL);
