@@ -1090,7 +1090,7 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
         this_node->details->shutdown = TRUE;
     }
  
-    if (crm_is_true(pe_node_attribute_raw(this_node, "standby"))) {
+    if (crm_is_true(pe_node_attribute_raw(this_node, PCMK_NODE_ATTR_STANDBY))) {
         crm_info("%s is in standby mode", pcmk__node_name(this_node));
         this_node->details->standby = TRUE;
     }
@@ -1151,7 +1151,7 @@ unpack_transient_attributes(const xmlNode *state, pcmk_node_t *node,
 
     add_node_attrs(attrs, node, TRUE, scheduler);
 
-    if (crm_is_true(pe_node_attribute_raw(node, "standby"))) {
+    if (crm_is_true(pe_node_attribute_raw(node, PCMK_NODE_ATTR_STANDBY))) {
         crm_info("%s is in standby mode", pcmk__node_name(node));
         node->details->standby = TRUE;
     }

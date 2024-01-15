@@ -28,6 +28,7 @@ extern "C" {
 // Special node attributes
 
 #define PCMK_NODE_ATTR_MAINTENANCE          "maintenance"
+#define PCMK_NODE_ATTR_STANDBY              "standby"
 #define PCMK_NODE_ATTR_TERMINATE            "terminate"
 
 

@@ -738,7 +738,8 @@ set_standby(cib_t * the_cib, const char *uuid, const char *scope, const char *st
     }
 
     rc = update_attr_delegate(the_cib, cib_sync_call, scope, uuid, NULL, NULL,
-                              attr_id, "standby", standby_value, TRUE, NULL, NULL);
+                              attr_id, PCMK_NODE_ATTR_STANDBY, standby_value,
+                              TRUE, NULL, NULL);
 
     free(attr_id);
     return rc;
