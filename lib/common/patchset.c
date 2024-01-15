@@ -138,7 +138,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
         if (xpath != NULL) {
             change = create_xml_node(patchset, PCMK_XE_CHANGE);
 
-            crm_xml_add(change, PCMK_XA_OPERATION, "move");
+            crm_xml_add(change, PCMK_XA_OPERATION, PCMK_VALUE_MOVE);
             crm_xml_add(change, PCMK_XA_PATH, (const char *) xpath->str);
             crm_xml_add_int(change, PCMK_XE_POSITION,
                             pcmk__xml_position(xml, pcmk__xf_deleted));
@@ -947,8 +947,8 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
             rc = pcmk_rc_diff_failed;
             continue;
 
-        } else if ((strcmp(op, PCMK_VALUE_CREATE) == 0)
-                   || (strcmp(op, "move") == 0)) {
+        } else if (pcmk__str_any_of(op,
+                                    PCMK_VALUE_CREATE, PCMK_VALUE_MOVE, NULL)) {
             // Delay the adding of a PCMK_VALUE_CREATE object
             xml_change_obj_t *change_obj = calloc(1, sizeof(xml_change_obj_t));
 
@@ -959,8 +959,8 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
 
             change_objs = g_list_append(change_objs, change_obj);
 
-            if (strcmp(op, "move") == 0) {
-                // Temporarily put the "move" object after the last sibling
+            if (strcmp(op, PCMK_VALUE_MOVE) == 0) {
+                // Temporarily put the PCMK_VALUE_MOVE object after the last sibling
                 if ((match->parent != NULL) && (match->parent->last != NULL)) {
                     xmlAddNextSibling(match->parent->last, match);
                 }
@@ -1045,7 +1045,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
             }
             pcmk__mark_xml_created(child);
 
-        } else if (strcmp(op, "move") == 0) {
+        } else if (strcmp(op, PCMK_VALUE_MOVE) == 0) {
             int position = 0;
 
             crm_element_value_int(change, PCMK_XE_POSITION, &position);

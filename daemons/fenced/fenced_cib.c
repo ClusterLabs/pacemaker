@@ -336,7 +336,7 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
         const char *xpath = crm_element_value(change, PCMK_XA_PATH);
         const char *shortpath = NULL;
 
-        if (pcmk__str_eq(op, "move", pcmk__str_null_matches)
+        if (pcmk__str_eq(op, PCMK_VALUE_MOVE, pcmk__str_null_matches)
             || (strstr(xpath, "/" PCMK_XE_STATUS) != NULL)) {
             continue;
         }
@@ -549,7 +549,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
                 /* Change to a specific entry */
 
                 crm_trace("Handling %s operation %d.%d.%d for %s", op, add[0], add[1], add[2], xpath);
-                if(strcmp(op, "move") == 0) {
+                if (strcmp(op, PCMK_VALUE_MOVE) == 0) {
                     continue;
 
                 } else if (strcmp(op, PCMK_VALUE_CREATE) == 0) {

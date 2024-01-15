@@ -226,7 +226,7 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
             rc = pcmk__output_select_rc(rc, temp_rc);
             free(prefix);
 
-        } else if (strcmp(op, "move") == 0) {
+        } else if (strcmp(op, PCMK_VALUE_MOVE) == 0) {
             const char *position = crm_element_value(change, PCMK_XE_POSITION);
 
             temp_rc = out->info(out,

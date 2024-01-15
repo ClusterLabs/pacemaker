@@ -429,7 +429,7 @@ te_update_diff_v2(xmlNode *diff)
             crm_trace("Ignoring %s change for version field", op);
             continue;
 
-        } else if ((strcmp(op, "move") == 0)
+        } else if ((strcmp(op, PCMK_VALUE_MOVE) == 0)
                    && (strstr(xpath,
                               "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION
                               "/" PCMK_XE_RESOURCES) == NULL)) {
@@ -450,7 +450,9 @@ te_update_diff_v2(xmlNode *diff)
                 match = match->children;
             }
 
-        } else if (!pcmk__str_any_of(op, PCMK_VALUE_DELETE, "move", NULL)) {
+        } else if (!pcmk__str_any_of(op,
+                                     PCMK_VALUE_DELETE, PCMK_VALUE_MOVE,
+                                     NULL)) {
             crm_warn("Ignoring malformed CIB update (%s operation on %s is unrecognized)",
                      op, xpath);
             continue;
