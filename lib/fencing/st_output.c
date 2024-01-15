@@ -562,12 +562,11 @@ validate_agent_xml(pcmk__output_t *out, va_list args) {
     const char *error_output = va_arg(args, const char *);
     int rc = va_arg(args, int);
 
-    xmlNodePtr node = NULL;
-
-    node = pcmk__output_create_xml_node(out, "validate",
-                                        PCMK_XA_AGENT, agent,
-                                        "valid", pcmk__btoa(rc == pcmk_ok),
-                                        NULL);
+    const char *valid = pcmk__btoa(rc == pcmk_ok);
+    xmlNodePtr node = pcmk__output_create_xml_node(out, "validate",
+                                                   PCMK_XA_AGENT, agent,
+                                                   PCMK_XA_VALID, valid,
+                                                   NULL);
 
     if (device != NULL) {
         crm_xml_add(node, "device", device);

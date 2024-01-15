@@ -422,6 +422,7 @@ extern "C" {
 #define PCMK_XA_UPDATE_ORIGIN               "update-origin"
 #define PCMK_XA_UPDATE_USER                 "update-user"
 #define PCMK_XA_USER                        "user"
+#define PCMK_XA_VALID                       "valid"
 #define PCMK_XA_VALIDATE_WITH               "validate-with"
 #define PCMK_XA_VALUE                       "value"
 #define PCMK_XA_VALUE_SOURCE                "value-source"
