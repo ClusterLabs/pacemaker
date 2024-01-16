@@ -427,23 +427,16 @@ static int
 add_attr_update(const attribute_t *attr, const char *value, const char *node_id)
 {
     char *set_id = attrd_set_id(attr, node_id);
-    char *attr_id = NULL;
+    char *nvpair_id = attrd_nvpair_id(attr, node_id);
     int rc = pcmk_rc_ok;
 
-    if (attr->uuid != NULL) {
-        pcmk__str_update(&attr_id, attr->uuid);
+    if (value == NULL) {
+        rc = add_unset_attr_update(attr, nvpair_id, node_id, set_id);
     } else {
-        attr_id = crm_strdup_printf("%s-%s", set_id, attr->id);
-    }
-    crm_xml_sanitize_id(attr_id);
-
-    if (value != NULL) {
-        rc = add_set_attr_update(attr, attr_id, node_id, set_id, value);
-    } else {
-        rc = add_unset_attr_update(attr, attr_id, node_id, set_id);
+        rc = add_set_attr_update(attr, nvpair_id, node_id, set_id, value);
     }
     free(set_id);
-    free(attr_id);
+    free(nvpair_id);
     return rc;
 }
 

@@ -251,3 +251,31 @@ attrd_set_id(const attribute_t *attr, const char *node_state_id)
     crm_xml_sanitize_id(set_id);
     return set_id;
 }
+
+/*!
+ * \internal
+ * \brief Get the XML ID used to write out an attribute value
+ *
+ * \param[in] attr           Attribute to get value XML ID for
+ * \param[in] node_state_id  UUID of node that attribute value is for
+ *
+ * \return Newly allocated string with XML ID of \p attr value
+ */
+char *
+attrd_nvpair_id(const attribute_t *attr, const char *node_state_id)
+{
+    char *nvpair_id = NULL;
+
+    if (attr->uuid != NULL) {
+        pcmk__str_update(&nvpair_id, attr->uuid);
+
+    } else if (attr->set_id != NULL) {
+        nvpair_id = crm_strdup_printf("%s-%s", attr->set_id, attr->id);
+
+    } else {
+        nvpair_id = crm_strdup_printf(PCMK_XE_STATUS "-%s-%s",
+                                      node_state_id, attr->id);
+    }
+    crm_xml_sanitize_id(nvpair_id);
+    return nvpair_id;
+}
