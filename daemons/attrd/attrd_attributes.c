@@ -213,3 +213,41 @@ attrd_populate_attribute(xmlNode *xml, const char *attr)
 
     return a;
 }
+
+/*!
+ * \internal
+ * \brief Get the XML ID used to write out an attribute set
+ *
+ * \param[in] attr           Attribute to get set ID for
+ * \param[in] node_state_id  XML ID of node state that attribute value is for
+ *
+ * \return Newly allocated string with XML ID to use for \p attr set
+ */
+char *
+attrd_set_id(const attribute_t *attr, const char *node_state_id)
+{
+    char *set_id = NULL;
+
+    CRM_ASSERT((attr != NULL) && (node_state_id != NULL));
+
+    if (attr->set_id == NULL) {
+        /* @COMPAT This should really take the set type into account. Currently
+         * we use the same XML ID for transient attributes and utilization
+         * attributes. It doesn't cause problems because the status section is
+         * not limited by the schema in any way, but it's still unfortunate.
+         * For backward compatibility reasons, we can't change this.
+         */
+        set_id = crm_strdup_printf("%s-%s", PCMK_XE_STATUS, node_state_id);
+    } else {
+        /* @COMPAT When the user specifies a set ID for an attribute, it is the
+         * same for every node. That is less than ideal, but again, the schema
+         * doesn't enforce anything for the status section. We couldn't change
+         * it without allowing the set ID to vary per value rather than per
+         * attribute, which would break backward compatibility, pose design
+         * challenges, and potentially cause problems in rolling upgrades.
+         */
+        pcmk__str_update(&set_id, attr->set_id);
+    }
+    crm_xml_sanitize_id(set_id);
+    return set_id;
+}

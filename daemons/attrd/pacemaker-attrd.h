@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the Pacemaker project contributors
+ * Copyright 2013-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -195,6 +195,7 @@ void attrd_clear_value_seen(void);
 void attrd_free_attribute(gpointer data);
 void attrd_free_attribute_value(gpointer data);
 attribute_t *attrd_populate_attribute(xmlNode *xml, const char *attr);
+char *attrd_set_id(const attribute_t *attr, const char *node_state_id);
 
 enum attrd_write_options {
     attrd_write_changed         = 0,

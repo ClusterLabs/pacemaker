@@ -426,16 +426,9 @@ add_unset_attr_update(const attribute_t *attr, const char *attr_id,
 static int
 add_attr_update(const attribute_t *attr, const char *value, const char *node_id)
 {
-    char *set_id = NULL;
+    char *set_id = attrd_set_id(attr, node_id);
     char *attr_id = NULL;
     int rc = pcmk_rc_ok;
-
-    if (attr->set_id != NULL) {
-        pcmk__str_update(&set_id, attr->set_id);
-    } else {
-        set_id = crm_strdup_printf("%s-%s", PCMK_XE_STATUS, node_id);
-    }
-    crm_xml_sanitize_id(set_id);
 
     if (attr->uuid != NULL) {
         pcmk__str_update(&attr_id, attr->uuid);
