@@ -241,28 +241,30 @@ pe_cron_range_satisfied(const crm_time_t *now, const xmlNode *cron_spec)
     CRM_CHECK(now != NULL, return pcmk_rc_op_unsatisfied);
 
     crm_time_get_gregorian(now, &y, &m, &d);
-    CHECK_ONE(cron_spec, "years", y);
-    CHECK_ONE(cron_spec, "months", m);
-    CHECK_ONE(cron_spec, "monthdays", d);
+    CHECK_ONE(cron_spec, PCMK_XA_YEARS, y);
+    CHECK_ONE(cron_spec, PCMK_XA_MONTHS, m);
+    CHECK_ONE(cron_spec, PCMK_XA_MONTHDAYS, d);
 
     crm_time_get_timeofday(now, &h, &m, &s);
-    CHECK_ONE(cron_spec, "hours", h);
-    CHECK_ONE(cron_spec, "minutes", m);
-    CHECK_ONE(cron_spec, "seconds", s);
+    CHECK_ONE(cron_spec, PCMK_XA_HOURS, h);
+    CHECK_ONE(cron_spec, PCMK_XA_MINUTES, m);
+    CHECK_ONE(cron_spec, PCMK_XA_SECONDS, s);
 
     crm_time_get_ordinal(now, &y, &d);
-    CHECK_ONE(cron_spec, "yeardays", d);
+    CHECK_ONE(cron_spec, PCMK_XA_YEARDAYS, d);
 
     crm_time_get_isoweek(now, &y, &w, &d);
-    CHECK_ONE(cron_spec, "weekyears", y);
-    CHECK_ONE(cron_spec, "weeks", w);
-    CHECK_ONE(cron_spec, "weekdays", d);
+    CHECK_ONE(cron_spec, PCMK_XA_WEEKYEARS, y);
+    CHECK_ONE(cron_spec, PCMK_XA_WEEKS, w);
+    CHECK_ONE(cron_spec, PCMK_XA_WEEKDAYS, d);
 
-    CHECK_ONE(cron_spec, "moon", phase_of_the_moon(now));
-    if (crm_element_value(cron_spec, "moon") != NULL) {
-        pcmk__config_warn("Support for 'moon' in date_spec elements "
-                          "(such as %s) is deprecated and will be removed "
-                          "in a future release of Pacemaker", ID(cron_spec));
+    CHECK_ONE(cron_spec, PCMK__XA_MOON, phase_of_the_moon(now));
+    if (crm_element_value(cron_spec, PCMK__XA_MOON) != NULL) {
+        pcmk__config_warn("Support for '" PCMK__XA_MOON "' in "
+                          PCMK_XE_DATE_SPEC " elements (such as %s) is "
+                          "deprecated and will be removed in a future release "
+                          "of Pacemaker",
+                          ID(cron_spec));
     }
 
     /* If we get here, either no fields were specified (which is success), or all
@@ -289,13 +291,13 @@ parse_xml_duration(const crm_time_t *start, const xmlNode *duration_spec)
 {
     crm_time_t *end = pcmk_copy_time(start);
 
-    update_field(end, duration_spec, "years", crm_time_add_years);
-    update_field(end, duration_spec, "months", crm_time_add_months);
-    update_field(end, duration_spec, "weeks", crm_time_add_weeks);
-    update_field(end, duration_spec, "days", crm_time_add_days);
-    update_field(end, duration_spec, "hours", crm_time_add_hours);
-    update_field(end, duration_spec, "minutes", crm_time_add_minutes);
-    update_field(end, duration_spec, "seconds", crm_time_add_seconds);
+    update_field(end, duration_spec, PCMK_XA_YEARS, crm_time_add_years);
+    update_field(end, duration_spec, PCMK_XA_MONTHS, crm_time_add_months);
+    update_field(end, duration_spec, PCMK_XA_WEEKS, crm_time_add_weeks);
+    update_field(end, duration_spec, PCMK_XA_DAYS, crm_time_add_days);
+    update_field(end, duration_spec, PCMK_XA_HOURS, crm_time_add_hours);
+    update_field(end, duration_spec, PCMK_XA_MINUTES, crm_time_add_minutes);
+    update_field(end, duration_spec, PCMK_XA_SECONDS, crm_time_add_seconds);
 
     return end;
 }
@@ -676,9 +678,15 @@ pe_eval_expr(xmlNode *rule, const pe_rule_eval_data_t *rule_data,
     }
 
     value = crm_element_value(rule, PCMK_XA_BOOLEAN_OP);
-    if (pcmk__str_eq(value, "or", pcmk__str_casei)) {
+    if (pcmk__str_eq(value, PCMK_VALUE_OR, pcmk__str_casei)) {
         do_and = FALSE;
         passed = FALSE;
+
+    } else if (!pcmk__str_eq(value, PCMK_VALUE_AND,
+                             pcmk__str_null_matches|pcmk__str_casei)) {
+        pcmk__config_warn("Rule %s has invalid " PCMK_XA_BOOLEAN_OP
+                          " value '%s', using default ('" PCMK_VALUE_AND "')",
+                          ID(rule), value);
     }
 
     crm_trace("Testing rule %s", ID(rule));
@@ -782,8 +790,8 @@ pe_eval_subexpr(xmlNode *expr, const pe_rule_eval_data_t *rule_data,
  * \param[in]   l_val   Value on left-hand side of comparison
  * \param[in]   r_val   Value on right-hand side of comparison
  * \param[in]   type    How to interpret the values (allowed values:
- *                      \c "string", \c "integer", \c "number",
- *                      \c "version", \c NULL)
+ *                      \c PCMK_VALUE_STRING, \c PCMK_VALUE_INTEGER,
+ *                      \c PCMK_VALUE_NUMBER, \c PCMK_VALUE_VERSION, \c NULL)
  * \param[in]   op      Type of comparison
  *
  * \return  -1 if <tt>(l_val < r_val)</tt>,
@@ -798,23 +806,25 @@ compare_attr_expr_vals(const char *l_val, const char *r_val, const char *type,
 
     if (l_val != NULL && r_val != NULL) {
         if (type == NULL) {
-            if (pcmk__strcase_any_of(op, "lt", "lte", "gt", "gte", NULL)) {
+            if (pcmk__strcase_any_of(op,
+                                     PCMK_VALUE_LT, PCMK_VALUE_LTE,
+                                     PCMK_VALUE_GT, PCMK_VALUE_GTE, NULL)) {
                 if (pcmk__char_in_any_str('.', l_val, r_val, NULL)) {
-                    type = "number";
+                    type = PCMK_VALUE_NUMBER;
                 } else {
-                    type = "integer";
+                    type = PCMK_VALUE_INTEGER;
                 }
 
             } else {
-                type = "string";
+                type = PCMK_VALUE_STRING;
             }
             crm_trace("Defaulting to %s based comparison for '%s' op", type, op);
         }
 
-        if (pcmk__str_eq(type, "string", pcmk__str_casei)) {
+        if (pcmk__str_eq(type, PCMK_VALUE_STRING, pcmk__str_casei)) {
             cmp = strcasecmp(l_val, r_val);
 
-        } else if (pcmk__str_eq(type, "integer", pcmk__str_casei)) {
+        } else if (pcmk__str_eq(type, PCMK_VALUE_INTEGER, pcmk__str_casei)) {
             long long l_val_num;
             int rc1 = pcmk__scan_ll(l_val, &l_val_num, 0LL);
 
@@ -833,10 +843,11 @@ compare_attr_expr_vals(const char *l_val, const char *r_val, const char *type,
             } else {
                 crm_debug("Integer parse error. Comparing %s and %s as strings",
                           l_val, r_val);
-                cmp = compare_attr_expr_vals(l_val, r_val, "string", op);
+                cmp = compare_attr_expr_vals(l_val, r_val, PCMK_VALUE_STRING,
+                                             op);
             }
 
-        } else if (pcmk__str_eq(type, "number", pcmk__str_casei)) {
+        } else if (pcmk__str_eq(type, PCMK_VALUE_NUMBER, pcmk__str_casei)) {
             double l_val_num;
             double r_val_num;
 
@@ -855,10 +866,11 @@ compare_attr_expr_vals(const char *l_val, const char *r_val, const char *type,
             } else {
                 crm_debug("Floating-point parse error. Comparing %s and %s as "
                           "strings", l_val, r_val);
-                cmp = compare_attr_expr_vals(l_val, r_val, "string", op);
+                cmp = compare_attr_expr_vals(l_val, r_val, PCMK_VALUE_STRING,
+                                             op);
             }
 
-        } else if (pcmk__str_eq(type, "version", pcmk__str_casei)) {
+        } else if (pcmk__str_eq(type, PCMK_VALUE_VERSION, pcmk__str_casei)) {
             cmp = compare_version(l_val, r_val);
 
         }
@@ -876,13 +888,13 @@ compare_attr_expr_vals(const char *l_val, const char *r_val, const char *type,
 
 /*!
  * \internal
- * \brief   Check whether an attribute expression evaluates to \c true
+ * \brief Check whether an attribute expression evaluates to \c true
  *
  * \param[in]   l_val   Value on left-hand side of comparison
  * \param[in]   r_val   Value on right-hand side of comparison
  * \param[in]   type    How to interpret the values (allowed values:
- *                      \c "string", \c "integer", \c "number",
- *                      \c "version", \c NULL)
+ *                      \c PCMK_VALUE_STRING, \c PCMK_VALUE_INTEGER,
+ *                      \c PCMK_VALUE_NUMBER, \c PCMK_VALUE_VERSION, \c NULL)
  * \param[in]   op      Type of comparison.
  *
  * \return  \c true if expression evaluates to \c true, \c false
@@ -894,36 +906,36 @@ accept_attr_expr(const char *l_val, const char *r_val, const char *type,
 {
     int cmp;
 
-    if (pcmk__str_eq(op, "defined", pcmk__str_casei)) {
+    if (pcmk__str_eq(op, PCMK_VALUE_DEFINED, pcmk__str_casei)) {
         return (l_val != NULL);
 
-    } else if (pcmk__str_eq(op, "not_defined", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK_VALUE_NOT_DEFINED, pcmk__str_casei)) {
         return (l_val == NULL);
 
     }
 
     cmp = compare_attr_expr_vals(l_val, r_val, type, op);
 
-    if (pcmk__str_eq(op, "eq", pcmk__str_casei)) {
+    if (pcmk__str_eq(op, PCMK_VALUE_EQ, pcmk__str_casei)) {
         return (cmp == 0);
 
-    } else if (pcmk__str_eq(op, "ne", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK_VALUE_NE, pcmk__str_casei)) {
         return (cmp != 0);
 
     } else if (l_val == NULL || r_val == NULL) {
         // The comparison is meaningless from this point on
         return false;
 
-    } else if (pcmk__str_eq(op, "lt", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK_VALUE_LT, pcmk__str_casei)) {
         return (cmp < 0);
 
-    } else if (pcmk__str_eq(op, "lte", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK_VALUE_LTE, pcmk__str_casei)) {
         return (cmp <= 0);
 
-    } else if (pcmk__str_eq(op, "gt", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK_VALUE_GT, pcmk__str_casei)) {
         return (cmp > 0);
 
-    } else if (pcmk__str_eq(op, "gte", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK_VALUE_GTE, pcmk__str_casei)) {
         return (cmp >= 0);
     }
 
@@ -934,26 +946,35 @@ accept_attr_expr(const char *l_val, const char *r_val, const char *type,
  * \internal
  * \brief Get correct value according to \c PCMK_XA_VALUE_SOURCE
  *
+ * \param[in] expr_id       Rule expression ID (for logging only)
  * \param[in] value         value given in rule expression
  * \param[in] value_source  \c PCMK_XA_VALUE_SOURCE given in rule expressions
  * \param[in] match_data    If not NULL, resource back-references and params
  */
 static const char *
-expand_value_source(const char *value, const char *value_source,
-                    const pe_match_data_t *match_data)
+expand_value_source(const char *expr_id, const char *value,
+                    const char *value_source, const pe_match_data_t *match_data)
 {
     GHashTable *table = NULL;
 
     if (pcmk__str_empty(value)) {
         return NULL; // value_source is irrelevant
 
-    } else if (pcmk__str_eq(value_source, "param", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value_source, PCMK_VALUE_PARAM, pcmk__str_casei)) {
         table = match_data->params;
 
-    } else if (pcmk__str_eq(value_source, "meta", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value_source, PCMK_VALUE_META, pcmk__str_casei)) {
         table = match_data->meta;
 
     } else { // literal
+        if (!pcmk__str_eq(value_source, PCMK_VALUE_LITERAL,
+                          pcmk__str_null_matches|pcmk__str_casei)) {
+
+            pcmk__config_warn("Expression %s has invalid " PCMK_XA_VALUE_SOURCE
+                              " value '%s', using default "
+                              "('" PCMK_VALUE_LITERAL "')",
+                              pcmk__s(expr_id, "without ID"), value_source);
+        }
         return value;
     }
 
@@ -979,25 +1000,20 @@ pe__eval_attr_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
     gboolean attr_allocated = FALSE;
     const char *h_val = NULL;
 
-    const char *op = NULL;
-    const char *type = NULL;
-    const char *attr = NULL;
-    const char *value = NULL;
-    const char *value_source = NULL;
-
-    attr = crm_element_value(expr, PCMK_XA_ATTRIBUTE);
-    op = crm_element_value(expr, PCMK_XA_OPERATION);
-    value = crm_element_value(expr, PCMK_XA_VALUE);
-    type = crm_element_value(expr, PCMK_XA_TYPE);
-    value_source = crm_element_value(expr, PCMK_XA_VALUE_SOURCE);
+    const char *id = ID(expr);
+    const char *attr = crm_element_value(expr, PCMK_XA_ATTRIBUTE);
+    const char *op = crm_element_value(expr, PCMK_XA_OPERATION);
+    const char *type = crm_element_value(expr, PCMK_XA_TYPE);
+    const char *value = crm_element_value(expr, PCMK_XA_VALUE);
+    const char *value_source = crm_element_value(expr, PCMK_XA_VALUE_SOURCE);
 
     if (attr == NULL) {
         pcmk__config_err("Expression %s invalid: " PCMK_XA_ATTRIBUTE
-                         " not specified", pcmk__s(ID(expr), "without ID"));
+                         " not specified", pcmk__s(id, "without ID"));
         return FALSE;
     } else if (op == NULL) {
         pcmk__config_err("Expression %s invalid: " PCMK_XA_OPERATION
-                         " not specified", pcmk__s(ID(expr), "without ID"));
+                         " not specified", pcmk__s(id, "without ID"));
         return FALSE;
     }
 
@@ -1013,7 +1029,8 @@ pe__eval_attr_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
         }
 
         // Get value appropriate to PCMK_XA_VALUE_SOURCE
-        value = expand_value_source(value, value_source, rule_data->match_data);
+        value = expand_value_source(id, value, value_source,
+                                    rule_data->match_data);
     }
 
     if (rule_data->node_hash != NULL) {
@@ -1055,14 +1072,14 @@ pe__eval_date_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data,
 
     crm_trace("Testing expression: %s", ID(expr));
 
-    duration_spec = first_named_child(expr, "duration");
-    date_spec = first_named_child(expr, "date_spec");
+    duration_spec = first_named_child(expr, PCMK_XE_DURATION);
+    date_spec = first_named_child(expr, PCMK_XE_DATE_SPEC);
 
-    value = crm_element_value(expr, "start");
+    value = crm_element_value(expr, PCMK_XA_START);
     if (value != NULL) {
         start = crm_time_new(value);
     }
-    value = crm_element_value(expr, "end");
+    value = crm_element_value(expr, PCMK_XA_END);
     if (value != NULL) {
         end = crm_time_new(value);
     }
@@ -1088,11 +1105,11 @@ pe__eval_date_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data,
             }
         }
 
-    } else if (pcmk__str_eq(op, "date_spec", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK_VALUE_DATE_SPEC, pcmk__str_casei)) {
         rc = pe_cron_range_satisfied(rule_data->now, date_spec);
         // @TODO set next_change appropriately
 
-    } else if (pcmk__str_eq(op, "gt", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK_VALUE_GT, pcmk__str_casei)) {
         if (start == NULL) {
             // gt requires start
         } else if (crm_time_compare(rule_data->now, start) > 0) {
@@ -1105,7 +1122,7 @@ pe__eval_date_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data,
             crm_time_set_if_earlier(next_change, start);
         }
 
-    } else if (pcmk__str_eq(op, "lt", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK_VALUE_LT, pcmk__str_casei)) {
         if (end == NULL) {
             // lt requires end
         } else if (crm_time_compare(rule_data->now, end) < 0) {
@@ -1201,22 +1218,22 @@ pe__eval_role_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
 
     op = crm_element_value(expr, PCMK_XA_OPERATION);
 
-    if (pcmk__str_eq(op, "defined", pcmk__str_casei)) {
+    if (pcmk__str_eq(op, PCMK_VALUE_DEFINED, pcmk__str_casei)) {
         if (rule_data->role > pcmk_role_started) {
             return TRUE;
         }
 
-    } else if (pcmk__str_eq(op, "not_defined", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK_VALUE_NOT_DEFINED, pcmk__str_casei)) {
         if ((rule_data->role > pcmk_role_unknown)
             && (rule_data->role < pcmk_role_unpromoted)) {
             return TRUE;
         }
 
-    } else if (pcmk__str_eq(op, "eq", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK_VALUE_EQ, pcmk__str_casei)) {
         return role_matches(expr, rule_data)? TRUE : FALSE;
 
-    } else if (pcmk__str_eq(op, "ne", pcmk__str_casei)
-               // Test "ne" only with promotable clone roles
+    } else if (pcmk__str_eq(op, PCMK_VALUE_NE, pcmk__str_casei)
+               // Test PCMK_VALUE_NE only with promotable clone roles
                && (rule_data->role >= pcmk_role_unpromoted)) {
         return role_matches(expr, rule_data)? FALSE : TRUE;
 

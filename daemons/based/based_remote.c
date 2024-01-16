@@ -236,8 +236,8 @@ cib_remote_auth(xmlNode * login)
         return FALSE;
     }
 
-    user = crm_element_value(login, "user");
-    pass = crm_element_value(login, "password");
+    user = crm_element_value(login, PCMK_XA_USER);
+    pass = crm_element_value(login, PCMK__XA_PASSWORD);
 
     if (!user || !pass) {
         crm_err("missing auth credentials");
@@ -510,7 +510,7 @@ cib_remote_msg(gpointer data)
         client->remote->auth_timeout = 0;
         client->name = crm_element_value_copy(command, PCMK_XA_NAME);
 
-        user = crm_element_value(command, "user");
+        user = crm_element_value(command, PCMK_XA_USER);
         if (user) {
             client->user = strdup(user);
         }

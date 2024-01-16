@@ -15,7 +15,8 @@
 
 /*!
  * \internal
- * \brief Set the node health values to use for "red", "yellow", and "green"
+ * \brief Set the node health values to use for \c PCMK_VALUE_RED,
+ *        \c PCMK_VALUE_YELLOW, and \c PCMK_VALUE_GREEN
  *
  * \param[in,out] scheduler  Scheduler data
  */
@@ -54,9 +55,9 @@ pe__unpack_node_health_scores(pcmk_scheduler_t *scheduler)
     if ((pcmk__score_red != 0) || (pcmk__score_yellow != 0)
         || (pcmk__score_green != 0)) {
         crm_debug("Values of node health scores: "
-                  PCMK__VALUE_RED "=%d "
-                  PCMK__VALUE_YELLOW "=%d "
-                  PCMK__VALUE_GREEN "=%d",
+                  PCMK_VALUE_RED "=%d "
+                  PCMK_VALUE_YELLOW "=%d "
+                  PCMK_VALUE_GREEN "=%d",
                   pcmk__score_red, pcmk__score_yellow, pcmk__score_green);
     }
 }
@@ -135,9 +136,9 @@ pe__node_health(pcmk_node_t *node)
              * or pcmk__score_yellow equals pcmk__score_green, so check the
              * textual value first to be able to distinguish those.
              */
-            if (pcmk__str_eq(value, PCMK__VALUE_RED, pcmk__str_casei)) {
+            if (pcmk__str_eq(value, PCMK_VALUE_RED, pcmk__str_casei)) {
                 return -1;
-            } else if (pcmk__str_eq(value, PCMK__VALUE_YELLOW,
+            } else if (pcmk__str_eq(value, PCMK_VALUE_YELLOW,
                                     pcmk__str_casei)) {
                 rc = 0;
                 continue;

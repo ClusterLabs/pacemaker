@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,6 +19,7 @@
 #include <crm/common/group_internal.h>
 #include <crm/common/history_internal.h>
 #include <crm/common/location_internal.h>
+#include <crm/common/nodes_internal.h>
 #include <crm/common/roles_internal.h>
 
 #ifdef __cplusplus
@@ -47,6 +48,7 @@ enum pcmk__sched_warnings {
     pcmk__wo_upstart        = (1 << 13),
     pcmk__wo_nagios         = (1 << 14),
     pcmk__wo_set_ordering   = (1 << 15),
+    pcmk__wo_rdisc_enabled  = (1 << 16),
 };
 
 enum pcmk__check_parameters {

@@ -132,13 +132,14 @@ stonith__history_description(const stonith_history_t *history,
         if (((history->state == st_failed) || (history->state == st_done))
             && (history->delegate != NULL)) {
 
-            pcmk__g_strcat(str, "delegate=", history->delegate, ", ", NULL);
+            pcmk__g_strcat(str, PCMK_XA_DELEGATE "=", history->delegate, ", ",
+                           NULL);
         }
 
         // Add information about originator
         pcmk__g_strcat(str,
-                       "client=", history->client, ", origin=", history->origin,
-                       NULL);
+                       PCMK_XA_CLIENT "=", history->client, ", "
+                       PCMK_XA_ORIGIN "=", history->origin, NULL);
 
         // For completed actions, add completion time
         if (completed_time_s != NULL) {
@@ -294,7 +295,7 @@ full_history_xml(pcmk__output_t *out, va_list args)
         char *rc_s = pcmk__itoa(history_rc);
 
         pcmk__output_create_xml_node(out, "fence_history",
-                                     "status", rc_s,
+                                     PCMK_XA_STATUS, rc_s,
                                      NULL);
         free(rc_s);
 
@@ -459,26 +460,28 @@ stonith_event_xml(pcmk__output_t *out, va_list args)
     xmlNodePtr node = NULL;
 
     node = pcmk__output_create_xml_node(out, "fence_event",
-                                        "action", event->action,
+                                        PCMK_XA_ACTION, event->action,
                                         PCMK_XA_TARGET, event->target,
-                                        "client", event->client,
+                                        PCMK_XA_CLIENT, event->client,
                                         PCMK_XA_ORIGIN, event->origin,
                                         NULL);
 
     switch (event->state) {
         case st_failed:
-            pcmk__xe_set_props(node, "status", "failed",
+            pcmk__xe_set_props(node,
+                               PCMK_XA_STATUS, "failed",
                                PCMK_XA_EXIT_REASON, event->exit_reason,
                                NULL);
             break;
 
         case st_done:
-            crm_xml_add(node, "status", "success");
+            crm_xml_add(node, PCMK_XA_STATUS, "success");
             break;
 
         default: {
             char *state = pcmk__itoa(event->state);
-            pcmk__xe_set_props(node, "status", "pending",
+            pcmk__xe_set_props(node,
+                               PCMK_XA_STATUS, "pending",
                                "extended-status", state,
                                NULL);
             free(state);
@@ -487,7 +490,7 @@ stonith_event_xml(pcmk__output_t *out, va_list args)
     }
 
     if (event->delegate != NULL) {
-        crm_xml_add(node, "delegate", event->delegate);
+        crm_xml_add(node, PCMK_XA_DELEGATE, event->delegate);
     }
 
     if ((event->state == st_failed) || (event->state == st_done)) {

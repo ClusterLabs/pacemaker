@@ -290,7 +290,7 @@ update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
         a->changed = true;
 
         if (pcmk__str_eq(host, attrd_cluster->uname, pcmk__str_casei)
-            && pcmk__str_eq(attr, XML_CIB_ATTR_SHUTDOWN, pcmk__str_none)) {
+            && pcmk__str_eq(attr, PCMK__NODE_ATTR_SHUTDOWN, pcmk__str_none)) {
 
             if (!pcmk__str_eq(value, "0", pcmk__str_null_matches)) {
                 attrd_set_requesting_shutdown();

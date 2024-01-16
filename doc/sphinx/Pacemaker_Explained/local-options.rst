@@ -55,6 +55,14 @@ of the following types:
        enumeration
      - Text that must be one of a set of defined values (which will be listed
        in the description)
+   * - .. _epoch_time:
+
+       .. index::
+          pair: type; epoch_time
+
+       epoch_time
+     - Time as the integer number of seconds since the Unix epoch,
+       ``1970-01-01 00:00:00 +0000 (UTC)``.
    * - .. _integer:
 
        .. index::

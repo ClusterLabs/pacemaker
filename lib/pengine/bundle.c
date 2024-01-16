@@ -348,8 +348,9 @@ valid_network(pe__bundle_variant_data_t *data)
     }
     if(data->control_port) {
         if(data->nreplicas_per_host > 1) {
-            pcmk__config_err("Specifying the 'control-port' for %s requires "
-                             "'replicas-per-host=1'", data->prefix);
+            pcmk__config_err("Specifying the '" PCMK_XA_CONTROL_PORT "' for %s "
+                             "requires '" PCMK_XA_REPLICAS_PER_HOST "=1'",
+                             data->prefix);
             data->nreplicas_per_host = 1;
             // @TODO to be sure:
             // pcmk__clear_rsc_flags(rsc, pcmk_rsc_unique);
@@ -735,8 +736,8 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
          */
         node = pe_find_node(parent->cluster->nodes, uname);
         if (node == NULL) {
-            node = pe_create_node(uname, uname, "remote", "-INFINITY",
-                                  parent->cluster);
+            node = pe_create_node(uname, uname, PCMK_VALUE_REMOTE,
+                                  CRM_MINUS_INFINITY_S, parent->cluster);
         } else {
             node->weight = -INFINITY;
         }
@@ -986,6 +987,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 {
     const char *value = NULL;
     xmlNode *xml_obj = NULL;
+    const xmlNode *xml_child = NULL;
     xmlNode *xml_resource = NULL;
     pe__bundle_variant_data_t *bundle_data = NULL;
     bool need_log_mount = TRUE;
@@ -1014,18 +1016,18 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         }
     }
 
-    // Use 0 for default, minimum, and invalid PCMK_META_PROMOTED_MAX
-    value = crm_element_value(xml_obj, PCMK_META_PROMOTED_MAX);
+    // Use 0 for default, minimum, and invalid PCMK_XA_PROMOTED_MAX
+    value = crm_element_value(xml_obj, PCMK_XA_PROMOTED_MAX);
     if (value == NULL) {
         // @COMPAT deprecated since 2.0.0
-        value = crm_element_value(xml_obj, "masters");
+        value = crm_element_value(xml_obj, PCMK__XA_PROMOTED_MAX_LEGACY);
     }
     pcmk__scan_min_int(value, &bundle_data->promoted_max, 0);
 
-    /* Default replicas to PCMK_META_PROMOTED_MAX if it was specified and 1
+    /* Default replicas to PCMK_XA_PROMOTED_MAX if it was specified and 1
      * otherwise
      */
-    value = crm_element_value(xml_obj, "replicas");
+    value = crm_element_value(xml_obj, PCMK_XA_REPLICAS);
     if ((value == NULL) && (bundle_data->promoted_max > 0)) {
         bundle_data->nreplicas = bundle_data->promoted_max;
     } else {
@@ -1037,39 +1039,46 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
      * floating IPs only works if the container is started with:
      *   --userland-proxy=false --ip-masq=false
      */
-    value = crm_element_value(xml_obj, "replicas-per-host");
+    value = crm_element_value(xml_obj, PCMK_XA_REPLICAS_PER_HOST);
     pcmk__scan_min_int(value, &bundle_data->nreplicas_per_host, 1);
     if (bundle_data->nreplicas_per_host == 1) {
         pcmk__clear_rsc_flags(rsc, pcmk_rsc_unique);
     }
 
-    bundle_data->container_command = crm_element_value_copy(xml_obj, "run-command");
-    bundle_data->launcher_options = crm_element_value_copy(xml_obj, "options");
-    bundle_data->image = crm_element_value_copy(xml_obj, "image");
-    bundle_data->container_network = crm_element_value_copy(xml_obj, "network");
+    bundle_data->container_command =
+        crm_element_value_copy(xml_obj, PCMK_XA_RUN_COMMAND);
+    bundle_data->launcher_options = crm_element_value_copy(xml_obj,
+                                                           PCMK_XA_OPTIONS);
+    bundle_data->image = crm_element_value_copy(xml_obj, PCMK_XA_IMAGE);
+    bundle_data->container_network = crm_element_value_copy(xml_obj,
+                                                            PCMK_XA_NETWORK);
 
-    xml_obj = first_named_child(rsc->xml, "network");
+    xml_obj = first_named_child(rsc->xml, PCMK_XE_NETWORK);
     if(xml_obj) {
-
-        bundle_data->ip_range_start = crm_element_value_copy(xml_obj, "ip-range-start");
-        bundle_data->host_netmask = crm_element_value_copy(xml_obj, "host-netmask");
-        bundle_data->host_network = crm_element_value_copy(xml_obj, "host-interface");
-        bundle_data->control_port = crm_element_value_copy(xml_obj, "control-port");
-        value = crm_element_value(xml_obj, "add-host");
+        bundle_data->ip_range_start =
+            crm_element_value_copy(xml_obj, PCMK_XA_IP_RANGE_START);
+        bundle_data->host_netmask =
+            crm_element_value_copy(xml_obj, PCMK_XA_HOST_NETMASK);
+        bundle_data->host_network =
+            crm_element_value_copy(xml_obj, PCMK_XA_HOST_INTERFACE);
+        bundle_data->control_port =
+            crm_element_value_copy(xml_obj, PCMK_XA_CONTROL_PORT);
+        value = crm_element_value(xml_obj, PCMK_XA_ADD_HOST);
         if (crm_str_to_boolean(value, &bundle_data->add_host) != 1) {
             bundle_data->add_host = TRUE;
         }
 
-        for (xmlNode *xml_child = pcmk__xe_first_child(xml_obj); xml_child != NULL;
-             xml_child = pcmk__xe_next(xml_child)) {
+        for (xml_child = first_named_child(xml_obj, PCMK_XE_PORT_MAPPING);
+             xml_child != NULL; xml_child = crm_next_same_xml(xml_child)) {
 
             pe__bundle_port_t *port = calloc(1, sizeof(pe__bundle_port_t));
-            port->source = crm_element_value_copy(xml_child, "port");
+            port->source = crm_element_value_copy(xml_child, PCMK_XA_PORT);
 
             if(port->source == NULL) {
-                port->source = crm_element_value_copy(xml_child, "range");
+                port->source = crm_element_value_copy(xml_child, PCMK_XA_RANGE);
             } else {
-                port->target = crm_element_value_copy(xml_child, "internal-port");
+                port->target = crm_element_value_copy(xml_child,
+                                                      PCMK_XA_INTERNAL_PORT);
             }
 
             if(port->source != NULL && strlen(port->source) > 0) {
@@ -1079,23 +1088,24 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
                 bundle_data->ports = g_list_append(bundle_data->ports, port);
 
             } else {
-                pcmk__config_err("Invalid port directive %s", ID(xml_child));
+                pcmk__config_err("Invalid " PCMK_XA_PORT " directive %s",
+                                 ID(xml_child));
                 port_free(port);
             }
         }
     }
 
-    xml_obj = first_named_child(rsc->xml, "storage");
-    for (xmlNode *xml_child = pcmk__xe_first_child(xml_obj); xml_child != NULL;
-         xml_child = pcmk__xe_next(xml_child)) {
+    xml_obj = first_named_child(rsc->xml, PCMK_XE_STORAGE);
+    for (xml_child = first_named_child(xml_obj, PCMK_XE_STORAGE_MAPPING);
+         xml_child != NULL; xml_child = crm_next_same_xml(xml_child)) {
 
-        const char *source = crm_element_value(xml_child, "source-dir");
-        const char *target = crm_element_value(xml_child, "target-dir");
-        const char *options = crm_element_value(xml_child, "options");
+        const char *source = crm_element_value(xml_child, PCMK_XA_SOURCE_DIR);
+        const char *target = crm_element_value(xml_child, PCMK_XA_TARGET_DIR);
+        const char *options = crm_element_value(xml_child, PCMK_XA_OPTIONS);
         int flags = pe__bundle_mount_none;
 
         if (source == NULL) {
-            source = crm_element_value(xml_child, "source-dir-root");
+            source = crm_element_value(xml_child, PCMK_XA_SOURCE_DIR_ROOT);
             pe__set_bundle_mount_flags(xml_child, flags,
                                        pe__bundle_mount_subdir);
         }
@@ -1156,7 +1166,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
     } else if(xml_obj) {
         pcmk__config_err("Cannot control %s inside %s without either "
-                         "ip-range-start or control-port",
+                         PCMK_XA_IP_RANGE_START " or " PCMK_XA_CONTROL_PORT,
                          rsc->id, ID(xml_obj));
         return FALSE;
     }
@@ -1211,7 +1221,8 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
              *
              * However, it gains nothing, since we control both the container
              * environment and the connection resource parameters, and the user
-             * can use a different port if desired by setting control-port.
+             * can use a different port if desired by setting
+             * PCMK_XA_CONTROL_PORT.
              */
             port->source = pcmk__itoa(DEFAULT_REMOTE_PORT);
         }
@@ -1516,7 +1527,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
             rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_BUNDLE, 8,
                      PCMK_XA_ID, rsc->id,
                      PCMK_XA_TYPE, container_agent_str(bundle_data->agent_type),
-                     "image", bundle_data->image,
+                     PCMK_XA_IMAGE, bundle_data->image,
                      "unique", pcmk__flag_text(rsc->flags, pcmk_rsc_unique),
                      "maintenance",
                      pcmk__flag_text(rsc->flags, pcmk_rsc_maintenance),

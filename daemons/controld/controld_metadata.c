@@ -153,7 +153,7 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
 
     if (strcmp(rsc->standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
         xmlChar *content = NULL;
-        xmlNode *version_element = first_named_child(metadata, "version");
+        xmlNode *version_element = first_named_child(metadata, PCMK_XE_VERSION);
 
         if (version_element != NULL) {
             content = xmlNodeGetContent(version_element);
@@ -166,8 +166,8 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
     }
 
     // Check supported actions
-    match = first_named_child(metadata, "actions");
-    for (match = first_named_child(match, "action"); match != NULL;
+    match = first_named_child(metadata, PCMK_XE_ACTIONS);
+    for (match = first_named_child(match, PCMK_XE_ACTION); match != NULL;
          match = crm_next_same_xml(match)) {
 
         const char *action_name = crm_element_value(match, PCMK_XA_NAME);

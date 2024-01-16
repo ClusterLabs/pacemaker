@@ -329,15 +329,15 @@ remote_node_up(const char *node_name)
     state = create_node_state_update(node, node_update_cluster, update,
                                      __func__);
 
-    /* Clear the XML_NODE_IS_FENCED flag in the node state. If the node ever
+    /* Clear the PCMK__XA_NODE_FENCED flag in the node state. If the node ever
      * needs to be fenced, this flag will allow various actions to determine
      * whether the fencing has happened yet.
      */
-    crm_xml_add(state, XML_NODE_IS_FENCED, "0");
+    crm_xml_add(state, PCMK__XA_NODE_FENCED, "0");
 
     /* TODO: If the remote connection drops, and this (async) CIB update either
      * failed or has not yet completed, later actions could mistakenly think the
-     * node has already been fenced (if the XML_NODE_IS_FENCED attribute was
+     * node has already been fenced (if the PCMK__XA_NODE_FENCED attribute was
      * previously set, because it won't have been cleared). This could prevent
      * actual fencing or allow recurring monitor failures to be cleared too
      * soon. Ideally, we wouldn't rely on the CIB for the fenced status.
@@ -1408,7 +1408,7 @@ remote_ra_maintenance(lrm_state_t * lrm_state, gboolean maintenance)
     update = create_xml_node(NULL, PCMK_XE_STATUS);
     state = create_node_state_update(node, node_update_none, update,
                                      __func__);
-    crm_xml_add(state, XML_NODE_IS_MAINTENANCE, maintenance?"1":"0");
+    crm_xml_add(state, PCMK__XA_NODE_IN_MAINTENANCE, (maintenance? "1" : "0"));
     if (controld_update_cib(PCMK_XE_STATUS, update, call_opt,
                             NULL) == pcmk_rc_ok) {
         /* TODO: still not 100% sure that async update will succeed ... */
@@ -1448,12 +1448,15 @@ remote_ra_process_maintenance_nodes(xmlNode *xml)
             cnt++;
             if (lrm_state && lrm_state->remote_ra_data &&
                 pcmk_is_set(((remote_ra_data_t *) lrm_state->remote_ra_data)->status, remote_active)) {
-                int is_maint;
+
+                const char *in_maint_s = NULL;
+                int in_maint;
 
                 cnt_remote++;
-                pcmk__scan_min_int(crm_element_value(node, XML_NODE_IS_MAINTENANCE),
-                                   &is_maint, 0);
-                remote_ra_maintenance(lrm_state, is_maint);
+                in_maint_s = crm_element_value(node,
+                                               PCMK__XA_NODE_IN_MAINTENANCE);
+                pcmk__scan_min_int(in_maint_s, &in_maint, 0);
+                remote_ra_maintenance(lrm_state, in_maint);
             }
         }
         crm_trace("Action holds %d nodes (%d remotes found) adjusting "

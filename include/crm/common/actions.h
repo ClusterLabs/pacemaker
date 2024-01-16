@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -261,7 +261,8 @@ enum pe_action_flags {
     /*!
      * Whether action is an ordering point for minimum required instances
      * (used to implement ordering after clones with \c PCMK_META_CLONE_MIN
-     * configured, and ordered sets with require-all=false)
+     * configured, and ordered sets with \c PCMK_XA_REQUIRE_ALL set to
+     * \c PCMK_VALUE_FALSE).
      */
     pcmk_action_min_runnable         = (1 << 12),
 

@@ -484,10 +484,11 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
                && !pcmk_is_set(rsc->cluster->flags, pcmk_sched_quorate)
                && (rsc->cluster->no_quorum_policy == pcmk_no_quorum_freeze)) {
         crm_notice("Resource %s cannot be elevated from %s to %s due to "
-                   PCMK_OPT_NO_QUORUM_POLICY "=freeze",
+                   PCMK_OPT_NO_QUORUM_POLICY "=" PCMK_VALUE_FREEZE,
                    rsc->id, pcmk_role_text(rsc->role),
                    pcmk_role_text(rsc->next_role));
-        pe__set_next_role(rsc, rsc->role, PCMK_OPT_NO_QUORUM_POLICY "=freeze");
+        pe__set_next_role(rsc, rsc->role,
+                          PCMK_OPT_NO_QUORUM_POLICY "=" PCMK_VALUE_FREEZE);
     }
 
     pe__show_node_scores(!pcmk_is_set(rsc->cluster->flags,
@@ -1573,7 +1574,8 @@ pcmk__primitive_add_utilization(const pcmk_resource_t *rsc,
 static time_t
 shutdown_time(pcmk_node_t *node)
 {
-    const char *shutdown = pe_node_attribute_raw(node, XML_CIB_ATTR_SHUTDOWN);
+    const char *shutdown = pe_node_attribute_raw(node,
+                                                 PCMK__NODE_ATTR_SHUTDOWN);
     time_t result = 0;
 
     if (shutdown != NULL) {

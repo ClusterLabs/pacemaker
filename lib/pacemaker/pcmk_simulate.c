@@ -415,14 +415,14 @@ pcmk__profile_dir(const char *dir, long long repeat,
 
 /*!
  * \brief Set the date of the cluster, either to the value given by
- *        \p use_date, or to the "execution-date" value in the CIB.
+ *        \p use_date, or to the \c PCMK_XA_EXECUTION_DATE value in the CIB.
  *
  * \note \p scheduler->priv must have been set to a valid \p pcmk__output_t
  *       object before this function is called.
  *
  * \param[in,out] scheduler       Scheduler data
- * \param[in]     print_original  If \p true, the "execution-date" should
- *                                also be printed
+ * \param[in]     print_original  If \p true, the \c PCMK_XA_EXECUTION_DATE
+ *                                should also be printed
  * \param[in]     use_date        The date to set the cluster's time to
  *                                (may be NULL)
  */
@@ -435,7 +435,8 @@ set_effective_date(pcmk_scheduler_t *scheduler, bool print_original,
 
     CRM_ASSERT(out != NULL);
 
-    crm_element_value_epoch(scheduler->input, "execution-date", &original_date);
+    crm_element_value_epoch(scheduler->input, PCMK_XA_EXECUTION_DATE,
+                            &original_date);
 
     if (use_date) {
         scheduler->now = crm_time_new(use_date);

@@ -150,8 +150,15 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
         }
     }
 
-    if (pcmk__str_eq(boolean, "or", pcmk__str_casei)) {
+    if (pcmk__str_eq(boolean, PCMK_VALUE_OR, pcmk__str_casei)) {
         do_and = false;
+
+    } else if (!pcmk__str_eq(boolean, PCMK_VALUE_AND,
+                             pcmk__str_null_matches|pcmk__str_casei)) {
+        pcmk__config_warn("Location constraint rule %s has invalid "
+                          PCMK_XA_BOOLEAN_OP " value '%s', using default "
+                          "('" PCMK_VALUE_AND "')",
+                          rule_id, boolean);
     }
 
     location_rule = pcmk__new_location(rule_id, rsc, 0, discovery, NULL);
@@ -603,14 +610,16 @@ pcmk__new_location(const char *id, pcmk_resource_t *rsc,
         new_con->nodes = NULL;
         new_con->role_filter = pcmk_role_unknown;
 
-        if (pcmk__str_eq(discover_mode, "always",
+        if (pcmk__str_eq(discover_mode, PCMK_VALUE_ALWAYS,
                          pcmk__str_null_matches|pcmk__str_casei)) {
             new_con->discover_mode = pcmk_probe_always;
 
-        } else if (pcmk__str_eq(discover_mode, "never", pcmk__str_casei)) {
+        } else if (pcmk__str_eq(discover_mode, PCMK_VALUE_NEVER,
+                                pcmk__str_casei)) {
             new_con->discover_mode = pcmk_probe_never;
 
-        } else if (pcmk__str_eq(discover_mode, "exclusive", pcmk__str_casei)) {
+        } else if (pcmk__str_eq(discover_mode, PCMK_VALUE_EXCLUSIVE,
+                                pcmk__str_casei)) {
             new_con->discover_mode = pcmk_probe_exclusive;
             rsc->exclusive_discover = TRUE;
 

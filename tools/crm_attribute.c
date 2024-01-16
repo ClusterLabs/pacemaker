@@ -450,7 +450,7 @@ update_attr_on_node(xmlNode *child, void *userdata)
                                  options.dest_node, options.set_type,
                                  options.set_name, options.attr_id,
                                  attr_name, options.attr_value, NULL,
-                                 ud->is_remote_node ? "remote" : NULL);
+                                 ud->is_remote_node? PCMK_VALUE_REMOTE : NULL);
 }
 
 static int
@@ -487,8 +487,8 @@ command_update(pcmk__output_t *out, cib_t *cib, int is_remote_node)
         rc = cib__update_node_attr(out, cib, cib_opts, options.type,
                                    options.dest_node, options.set_type,
                                    options.set_name, options.attr_id,
-                                   options.attr_name, options.attr_value,
-                                   NULL, is_remote_node ? "remote" : NULL);
+                                   options.attr_name, options.attr_value, NULL,
+                                   is_remote_node? PCMK_VALUE_REMOTE : NULL);
     }
 
 done_updating:

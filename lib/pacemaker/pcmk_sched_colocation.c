@@ -461,20 +461,25 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
         return;
     }
 
-    /* @COMPAT The deprecated "ordering" attribute specifies whether resources
-     * in a positive-score set are colocated with the previous or next resource.
+    /* @COMPAT The deprecated PCMK__XA_ORDERING attribute specifies whether
+     * resources in a positive-score set are colocated with the previous or next
+     * resource.
      */
-    if (pcmk__str_eq(crm_element_value(set, "ordering"), "group",
+    if (pcmk__str_eq(crm_element_value(set, PCMK__XA_ORDERING),
+                     PCMK__VALUE_GROUP,
                      pcmk__str_null_matches|pcmk__str_casei)) {
         with_previous = true;
     } else {
         pcmk__warn_once(pcmk__wo_set_ordering,
-                        "Support for 'ordering' other than 'group' in "
-                        PCMK_XE_RESOURCE_SET " (such as %s) is deprecated and "
-                        "will be removed in a future release", set_id);
+                        "Support for '" PCMK__XA_ORDERING "' other than"
+                        " '" PCMK__VALUE_GROUP "' in " PCMK_XE_RESOURCE_SET
+                        " (such as %s) is deprecated and will be removed in a"
+                        " future release",
+                        set_id);
     }
 
-    if ((pcmk__xe_get_bool_attr(set, "sequential", &sequential) == pcmk_rc_ok)
+    if ((pcmk__xe_get_bool_attr(set, PCMK_XA_SEQUENTIAL,
+                                &sequential) == pcmk_rc_ok)
         && !sequential) {
         return;
     }
@@ -585,7 +590,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
         return;
     }
 
-    rc = pcmk__xe_get_bool_attr(set1, "sequential", &sequential);
+    rc = pcmk__xe_get_bool_attr(set1, PCMK_XA_SEQUENTIAL, &sequential);
     if ((rc != pcmk_rc_ok) || sequential) {
         // Get the first one
         xml_rsc = first_named_child(set1, PCMK_XE_RESOURCE_REF);
@@ -603,7 +608,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
         }
     }
 
-    rc = pcmk__xe_get_bool_attr(set2, "sequential", &sequential);
+    rc = pcmk__xe_get_bool_attr(set2, PCMK_XA_SEQUENTIAL, &sequential);
     if ((rc != pcmk_rc_ok) || sequential) {
         // Get the last one
         for (xml_rsc = first_named_child(set2, PCMK_XE_RESOURCE_REF);

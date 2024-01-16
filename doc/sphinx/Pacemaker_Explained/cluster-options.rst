@@ -184,6 +184,15 @@ holds. So the decision was made to place them in an easy-to-find location.
      -
      - Node ID of the cluster's current designated controller (DC). Used and
        maintained by the cluster.
+   * - .. _execution_date:
+       
+       .. index::
+          pair: execution-date; cib
+       
+       execution-date
+     - :ref:`epoch time <epoch_time>`
+     -
+     - Time to use when evaluating rules.
 
 
 .. _cluster_options:

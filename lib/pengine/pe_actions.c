@@ -436,7 +436,9 @@ update_resource_flags_for_action(pcmk_resource_t *rsc,
 static bool
 valid_stop_on_fail(const char *value)
 {
-    return !pcmk__strcase_any_of(value, "standby", "demote", "stop", NULL);
+    return !pcmk__strcase_any_of(value,
+                                 PCMK_VALUE_STANDBY, PCMK_VALUE_DEMOTE,
+                                 PCMK_VALUE_STOP, NULL);
 }
 
 /*!
@@ -514,8 +516,11 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
                 continue;
             }
 
-            // Demote actions can't default to on-fail="demote"
-            if (pcmk__str_eq(promote_on_fail, "demote", pcmk__str_casei)) {
+            /* Demote actions can't default to
+             * PCMK_META_ON_FAIL=PCMK_VALUE_DEMOTE
+             */
+            if (pcmk__str_eq(promote_on_fail, PCMK_VALUE_DEMOTE,
+                             pcmk__str_casei)) {
                 continue;
             }
 
@@ -529,16 +534,16 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
     }
 
     if (pcmk__str_eq(action_name, PCMK_ACTION_LRM_DELETE, pcmk__str_none)
-        && !pcmk__str_eq(value, "ignore", pcmk__str_casei)) {
+        && !pcmk__str_eq(value, PCMK_VALUE_IGNORE, pcmk__str_casei)) {
         key = strdup(PCMK_META_ON_FAIL);
-        new_value = strdup("ignore");
+        new_value = strdup(PCMK_VALUE_IGNORE);
         CRM_ASSERT((key != NULL) && (new_value != NULL));
         g_hash_table_insert(meta, key, new_value);
         return;
     }
 
-    // on-fail="demote" is allowed only for certain actions
-    if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
+    // PCMK_META_ON_FAIL=PCMK_VALUE_DEMOTE is allowed only for certain actions
+    if (pcmk__str_eq(value, PCMK_VALUE_DEMOTE, pcmk__str_casei)) {
         name = crm_element_value(action_config, PCMK_XA_NAME);
         role = crm_element_value(action_config, PCMK_XA_ROLE);
         interval_spec = crm_element_value(action_config, PCMK_META_INTERVAL);
@@ -907,11 +912,11 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
     if (value == NULL) {
         // Use default
 
-    } else if (pcmk__str_eq(value, "block", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value, PCMK_VALUE_BLOCK, pcmk__str_casei)) {
         on_fail = pcmk_on_fail_block;
         desc = "block";
 
-    } else if (pcmk__str_eq(value, "fence", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value, PCMK_VALUE_FENCE, pcmk__str_casei)) {
         if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)) {
             on_fail = pcmk_on_fail_fence_node;
             desc = "node fencing";
@@ -924,11 +929,12 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
             desc = "stop resource";
         }
 
-    } else if (pcmk__str_eq(value, "standby", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value, PCMK_VALUE_STANDBY, pcmk__str_casei)) {
         on_fail = pcmk_on_fail_standby_node;
         desc = "node standby";
 
-    } else if (pcmk__strcase_any_of(value, "ignore", PCMK__VALUE_NOTHING,
+    } else if (pcmk__strcase_any_of(value,
+                                    PCMK_VALUE_IGNORE, PCMK__VALUE_NOTHING,
                                     NULL)) {
         desc = "ignore";
 
@@ -936,15 +942,16 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
         on_fail = pcmk_on_fail_ban;
         desc = "force migration";
 
-    } else if (pcmk__str_eq(value, "stop", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value, PCMK_VALUE_STOP, pcmk__str_casei)) {
         on_fail = pcmk_on_fail_stop;
         desc = "stop resource";
 
-    } else if (pcmk__str_eq(value, "restart", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value, PCMK_VALUE_RESTART, pcmk__str_casei)) {
         on_fail = pcmk_on_fail_restart;
         desc = "restart (and possibly migrate)";
 
-    } else if (pcmk__str_eq(value, "restart-container", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value, PCMK_VALUE_RESTART_CONTAINER,
+                            pcmk__str_casei)) {
         if (rsc->container == NULL) {
             pcmk__rsc_debug(rsc,
                             "Using default " PCMK_META_ON_FAIL " for %s "
@@ -955,7 +962,7 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
             desc = "restart container (and possibly migrate)";
         }
 
-    } else if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value, PCMK_VALUE_DEMOTE, pcmk__str_casei)) {
         on_fail = pcmk_on_fail_demote;
         desc = "demote instance";
 
@@ -968,7 +975,7 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
     /* Remote node connections are handled specially. Failures that result
      * in dropping an active connection must result in fencing. The only
      * failures that don't are probes and starts. The user can explicitly set
-     * on-fail="fence" to fence after start failures.
+     * PCMK_META_ON_FAIL=PCMK_VALUE_FENCE to fence after start failures.
      */
     if (pe__resource_is_remote_conn(rsc)
         && !pcmk_is_probe(action_name, interval_ms)

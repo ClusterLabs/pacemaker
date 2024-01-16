@@ -96,7 +96,7 @@ show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
     int rc = pcmk_rc_no_output;
 
     if (pcmk_is_set(options, pcmk__xml_fmt_open)) {
-        const char *hidden = crm_element_value(data, "hidden");
+        const char *hidden = crm_element_value(data, PCMK__XA_HIDDEN);
 
         g_string_truncate(buffer, 0);
 

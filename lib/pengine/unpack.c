@@ -313,16 +313,16 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     value = pcmk__cluster_option(config_hash, PCMK_OPT_NO_QUORUM_POLICY);
 
-    if (pcmk__str_eq(value, "ignore", pcmk__str_casei)) {
+    if (pcmk__str_eq(value, PCMK_VALUE_IGNORE, pcmk__str_casei)) {
         scheduler->no_quorum_policy = pcmk_no_quorum_ignore;
 
-    } else if (pcmk__str_eq(value, "freeze", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value, PCMK_VALUE_FREEZE, pcmk__str_casei)) {
         scheduler->no_quorum_policy = pcmk_no_quorum_freeze;
 
-    } else if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value, PCMK_VALUE_DEMOTE, pcmk__str_casei)) {
         scheduler->no_quorum_policy = pcmk_no_quorum_demote;
 
-    } else if (pcmk__str_eq(value, "suicide", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value, PCMK_VALUE_FENCE_LEGACY, pcmk__str_casei)) {
         if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
             int do_panic = 0;
 
@@ -488,10 +488,11 @@ pe_create_node(const char *id, const char *uname, const char *type,
     new_node->details->running_rsc = NULL;
     new_node->details->data_set = scheduler;
 
-    if (pcmk__str_eq(type, "member", pcmk__str_null_matches | pcmk__str_casei)) {
+    if (pcmk__str_eq(type, PCMK_VALUE_MEMBER,
+                     pcmk__str_null_matches|pcmk__str_casei)) {
         new_node->details->type = pcmk_node_variant_cluster;
 
-    } else if (pcmk__str_eq(type, "remote", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(type, PCMK_VALUE_REMOTE, pcmk__str_casei)) {
         new_node->details->type = pcmk_node_variant_remote;
         pcmk__set_scheduler_flags(scheduler, pcmk_sched_have_remote_nodes);
 
@@ -499,14 +500,15 @@ pe_create_node(const char *id, const char *uname, const char *type,
         /* @COMPAT 'ping' is the default for backward compatibility, but it
          * should be changed to 'member' at a compatibility break
          */
-        if (!pcmk__str_eq(type, "ping", pcmk__str_casei)) {
+        if (!pcmk__str_eq(type, PCMK__VALUE_PING, pcmk__str_casei)) {
             pcmk__config_warn("Node %s has unrecognized type '%s', "
-                              "assuming 'ping'", pcmk__s(uname, "without name"),
-                              type);
+                              "assuming '" PCMK__VALUE_PING "'",
+                              pcmk__s(uname, "without name"), type);
         }
         pcmk__warn_once(pcmk__wo_ping_node,
-                        "Support for nodes of type 'ping' (such as %s) is "
-                        "deprecated and will be removed in a future release",
+                        "Support for nodes of type '" PCMK__VALUE_PING "' "
+                        "(such as %s) is deprecated and will be removed in a "
+                        "future release",
                         pcmk__s(uname, "unnamed node"));
         new_node->details->type = node_ping;
     }
@@ -727,8 +729,8 @@ unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
                 && (pe_find_node(scheduler->nodes, new_node_id) == NULL)) {
                 crm_trace("Found remote node %s defined by resource %s",
                           new_node_id, ID(xml_obj));
-                pe_create_node(new_node_id, new_node_id, "remote", NULL,
-                               scheduler);
+                pe_create_node(new_node_id, new_node_id, PCMK_VALUE_REMOTE,
+                               NULL, scheduler);
             }
             continue;
         }
@@ -748,8 +750,8 @@ unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
                 && (pe_find_node(scheduler->nodes, new_node_id) == NULL)) {
                 crm_trace("Found guest node %s in resource %s",
                           new_node_id, ID(xml_obj));
-                pe_create_node(new_node_id, new_node_id, "remote", NULL,
-                               scheduler);
+                pe_create_node(new_node_id, new_node_id, PCMK_VALUE_REMOTE,
+                               NULL, scheduler);
             }
             continue;
         }
@@ -770,8 +772,8 @@ unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
                     && (pe_find_node(scheduler->nodes, new_node_id) == NULL)) {
                     crm_trace("Found guest node %s in resource %s inside group %s",
                               new_node_id, ID(xml_obj2), ID(xml_obj));
-                    pe_create_node(new_node_id, new_node_id, "remote", NULL,
-                                   scheduler);
+                    pe_create_node(new_node_id, new_node_id, PCMK_VALUE_REMOTE,
+                                   NULL, scheduler);
                 }
             }
         }
@@ -1056,7 +1058,7 @@ static void
 unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
                            pcmk_scheduler_t *scheduler)
 {
-    const char *resource_discovery_enabled = NULL;
+    const char *discovery = NULL;
     const xmlNode *attrs = NULL;
     pcmk_resource_t *rsc = NULL;
 
@@ -1071,7 +1073,7 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
     crm_trace("Processing Pacemaker Remote node %s",
               pcmk__node_name(this_node));
 
-    pcmk__scan_min_int(crm_element_value(state, XML_NODE_IS_MAINTENANCE),
+    pcmk__scan_min_int(crm_element_value(state, PCMK__XA_NODE_IN_MAINTENANCE),
                        &(this_node->details->remote_maintenance), 0);
 
     rsc = this_node->details->remote_rsc;
@@ -1098,11 +1100,20 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
         this_node->details->maintenance = TRUE;
     }
 
-    resource_discovery_enabled = pe_node_attribute_raw(this_node, XML_NODE_ATTR_RSC_DISCOVERY);
-    if (resource_discovery_enabled && !crm_is_true(resource_discovery_enabled)) {
+    discovery =
+        pe_node_attribute_raw(this_node,
+                              PCMK__NODE_ATTR_RESOURCE_DISCOVERY_ENABLED);
+    if ((discovery != NULL) && !crm_is_true(discovery)) {
+        pcmk__warn_once(pcmk__wo_rdisc_enabled,
+                        "Support for the "
+                        PCMK__NODE_ATTR_RESOURCE_DISCOVERY_ENABLED
+                        " node attribute is deprecated and will be removed"
+                        " (and behave as 'true') in a future release.");
+
         if (pe__is_remote_node(this_node)
             && !pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
-            pcmk__config_warn("Ignoring " XML_NODE_ATTR_RSC_DISCOVERY
+            pcmk__config_warn("Ignoring "
+                              PCMK__NODE_ATTR_RESOURCE_DISCOVERY_ENABLED
                               " attribute on Pacemaker Remote node %s"
                               " because fencing is disabled",
                               pcmk__node_name(this_node));
@@ -1147,11 +1158,14 @@ unpack_transient_attributes(const xmlNode *state, pcmk_node_t *node,
         node->details->maintenance = TRUE;
     }
 
-    discovery = pe_node_attribute_raw(node, XML_NODE_ATTR_RSC_DISCOVERY);
+    discovery
+        = pe_node_attribute_raw(node,
+                                PCMK__NODE_ATTR_RESOURCE_DISCOVERY_ENABLED);
     if ((discovery != NULL) && !crm_is_true(discovery)) {
-        pcmk__config_warn("Ignoring " XML_NODE_ATTR_RSC_DISCOVERY " attribute "
-                          "for %s because disabling resource discovery is "
-                          "not allowed for cluster nodes",
+        pcmk__config_warn("Ignoring "
+                          PCMK__NODE_ATTR_RESOURCE_DISCOVERY_ENABLED
+                          " attribute for %s because disabling resource"
+                          " discovery is not allowed for cluster nodes",
                           pcmk__node_name(node));
     }
 }
@@ -1210,7 +1224,7 @@ unpack_node_state(const xmlNode *state, pcmk_scheduler_t *scheduler)
          * do need to mark whether the node has been fenced, as this plays a
          * role during unpacking cluster node resource state.
          */
-        pcmk__scan_min_int(crm_element_value(state, XML_NODE_IS_FENCED),
+        pcmk__scan_min_int(crm_element_value(state, PCMK__XA_NODE_FENCED),
                            &(this_node->details->remote_was_fenced), 0);
         return;
     }
@@ -1966,7 +1980,8 @@ create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
         crm_debug("Detected orphaned remote node %s", rsc_id);
         node = pe_find_node(scheduler->nodes, rsc_id);
         if (node == NULL) {
-	        node = pe_create_node(rsc_id, rsc_id, "remote", NULL, scheduler);
+            node = pe_create_node(rsc_id, rsc_id, PCMK_VALUE_REMOTE, NULL,
+                                  scheduler);
         }
         link_rsc2remotenode(scheduler, rsc);
 
@@ -2377,7 +2392,8 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
             break;
 
         case pcmk_on_fail_stop:
-            pe__set_next_role(rsc, pcmk_role_stopped, "on-fail=stop");
+            pe__set_next_role(rsc, pcmk_role_stopped,
+                              PCMK_META_ON_FAIL "=" PCMK_VALUE_STOP);
             break;
 
         case pcmk_on_fail_restart:
@@ -3628,8 +3644,9 @@ ban_from_all_nodes(pcmk_resource_t *rsc)
         pcmk_resource_t *parent = uber_parent(fail_rsc);
 
         if (pe_rsc_is_anon_clone(parent)) {
-            /* For anonymous clones, if an operation with on-fail=stop fails for
-             * any instance, the entire clone must stop.
+            /* For anonymous clones, if an operation with
+             * PCMK_META_ON_FAIL=PCMK_VALUE_STOP fails for any instance, the
+             * entire clone must stop.
              */
             fail_rsc = parent;
         }
@@ -4396,7 +4413,9 @@ update_resource_state(struct action_history *history, int exit_status,
     } else if (pcmk__str_eq(history->task, PCMK_ACTION_DEMOTE,
                             pcmk__str_none)) {
         if (*on_fail == pcmk_on_fail_demote) {
-            // Demote clears an error only if on-fail=demote
+            /* Demote clears an error only if
+             * PCMK_META_ON_FAIL=PCMK_VALUE_DEMOTE
+             */
             clear_past_failure = true;
         }
         history->rsc->role = pcmk_role_unpromoted;

@@ -275,7 +275,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
 
     change_str = g_ascii_strdown(change, -1);
     xml = pcmk__output_create_xml_node(out, "rsc_action",
-                                       "action", change_str,
+                                       PCMK_XA_ACTION, change_str,
                                        "resource", rsc->id,
                                        NULL);
     g_free(change_str);
@@ -855,7 +855,7 @@ profile_xml(pcmk__output_t *out, va_list args) {
 
     pcmk__output_create_xml_node(out, "timing",
                                  "file", xml_file,
-                                 "duration", duration,
+                                 PCMK_XA_DURATION, duration,
                                  NULL);
 
     free(duration);
@@ -1382,7 +1382,7 @@ node_info_xml(pcmk__output_t *out, va_list args)
                                  PCMK_XA_ID, uuid,
                                  PCMK__XA_CRMD, state,
                                  PCMK_XA_HAVE_QUORUM, pcmk__btoa(have_quorum),
-                                 XML_NODE_IS_REMOTE, pcmk__btoa(is_remote),
+                                 PCMK__XA_REMOTE_NODE, pcmk__btoa(is_remote),
                                  NULL);
     free(id_s);
     return pcmk_rc_ok;
@@ -1637,7 +1637,7 @@ inject_modify_node_xml(pcmk__output_t *out, va_list args)
     }
 
     pcmk__output_create_xml_node(out, "modify_node",
-                                 "action", action,
+                                 PCMK_XA_ACTION, action,
                                  PCMK_XA_NODE, node,
                                  NULL);
     return pcmk_rc_ok;
@@ -1675,7 +1675,7 @@ inject_modify_ticket_xml(pcmk__output_t *out, va_list args)
     }
 
     pcmk__output_create_xml_node(out, "modify_ticket",
-                                 "action", action,
+                                 PCMK_XA_ACTION, action,
                                  PCMK_XA_TICKET, ticket,
                                  NULL);
     return pcmk_rc_ok;
@@ -2143,20 +2143,20 @@ attribute_default(pcmk__output_t *out, va_list args)
     GString *s = g_string_sized_new(50);
 
     if (!pcmk__str_empty(scope)) {
-        pcmk__g_strcat(s, "scope=\"", scope, "\" ", NULL);
+        pcmk__g_strcat(s, PCMK_XA_SCOPE "=\"", scope, "\" ", NULL);
     }
 
     if (!pcmk__str_empty(instance)) {
-        pcmk__g_strcat(s, "id=\"", instance, "\" ", NULL);
+        pcmk__g_strcat(s, PCMK_XA_ID "=\"", instance, "\" ", NULL);
     }
 
-    pcmk__g_strcat(s, "name=\"", pcmk__s(name, ""), "\" ", NULL);
+    pcmk__g_strcat(s, PCMK_XA_NAME "=\"", pcmk__s(name, ""), "\" ", NULL);
 
     if (!pcmk__str_empty(host)) {
-        pcmk__g_strcat(s, "host=\"", host, "\" ", NULL);
+        pcmk__g_strcat(s, PCMK_XA_HOST "=\"", host, "\" ", NULL);
     }
 
-    pcmk__g_strcat(s, "value=\"", pcmk__s(value, ""), "\"", NULL);
+    pcmk__g_strcat(s, PCMK_XA_VALUE "=\"", pcmk__s(value, ""), "\"", NULL);
 
     out->info(out, "%s", s->str);
     g_string_free(s, TRUE);
@@ -2183,7 +2183,7 @@ attribute_xml(pcmk__output_t *out, va_list args)
                                         NULL);
 
     if (!pcmk__str_empty(scope)) {
-        crm_xml_add(node, "scope", scope);
+        crm_xml_add(node, PCMK_XA_SCOPE, scope);
     }
 
     if (!pcmk__str_empty(instance)) {
@@ -2191,7 +2191,7 @@ attribute_xml(pcmk__output_t *out, va_list args)
     }
 
     if (!pcmk__str_empty(host)) {
-        crm_xml_add(node, "host", host);
+        crm_xml_add(node, PCMK_XA_HOST, host);
     }
 
     return pcmk_rc_ok;

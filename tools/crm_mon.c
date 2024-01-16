@@ -1672,7 +1672,7 @@ main(int argc, char **argv)
 
     if ((output_format == mon_output_html || output_format == mon_output_cgi) &&
         out->dest != stdout) {
-        pcmk__html_add_header("meta", "http-equiv", "refresh", "content",
+        pcmk__html_add_header(PCMK__XE_META, "http-equiv", "refresh", "content",
                               pcmk__itoa(options.reconnect_ms / 1000), NULL);
     }
 

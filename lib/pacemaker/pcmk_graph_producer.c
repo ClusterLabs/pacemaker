@@ -95,7 +95,7 @@ add_maintenance_nodes(xmlNode *xml, const pcmk_scheduler_t *scheduler)
             if (maintenance != NULL) {
                 crm_xml_add(add_node_to_xml_by_id(node->details->id,
                                                   maintenance),
-                            XML_NODE_IS_MAINTENANCE,
+                            PCMK__XA_NODE_IN_MAINTENANCE,
                             (node->details->maintenance? "1" : "0"));
             }
             count++;

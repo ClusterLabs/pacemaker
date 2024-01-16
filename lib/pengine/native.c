@@ -157,7 +157,8 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                 pcmk__set_rsc_flags(rsc, pcmk_rsc_blocked);
 
                 /* If the resource belongs to a group or bundle configured with
-                 * PCMK_META_MULTIPLE_ACTIVE=block, block the entire entity.
+                 * PCMK_META_MULTIPLE_ACTIVE=PCMK_VALUE_BLOCK, block the entire
+                 * entity.
                  */
                 if (rsc->parent
                     && ((rsc->parent->variant == pcmk_rsc_variant_group)

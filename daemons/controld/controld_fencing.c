@@ -63,7 +63,7 @@ set_fence_reaction(const char *reaction_s)
         fence_reaction_panic = true;
 
     } else {
-        if (!pcmk__str_eq(reaction_s, "stop", pcmk__str_casei)) {
+        if (!pcmk__str_eq(reaction_s, PCMK_VALUE_STOP, pcmk__str_casei)) {
             crm_warn("Invalid value '%s' for %s, using 'stop'",
                      reaction_s, PCMK_OPT_FENCE_REACTION);
         }
@@ -248,7 +248,7 @@ send_stonith_update(pcmk__graph_action_t *action, const char *target,
     if (peer->flags & crm_remote_node) {
         char *now_s = pcmk__ttoa(time(NULL));
 
-        crm_xml_add(node_state, XML_NODE_IS_FENCED, now_s);
+        crm_xml_add(node_state, PCMK__XA_NODE_FENCED, now_s);
         free(now_s);
     }
 

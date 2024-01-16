@@ -912,7 +912,7 @@ handle_node_info_request(const xmlNode *msg)
         crm_xml_add(reply_data, PCMK_XA_ID, node->uuid);
         crm_xml_add(reply_data, PCMK_XA_UNAME, node->uname);
         crm_xml_add(reply_data, PCMK__XA_CRMD, node->state);
-        pcmk__xe_set_bool_attr(reply_data, XML_NODE_IS_REMOTE,
+        pcmk__xe_set_bool_attr(reply_data, PCMK__XA_REMOTE_NODE,
                                pcmk_is_set(node->flags, crm_remote_node));
     }
 
@@ -1243,7 +1243,7 @@ handle_shutdown_request(xmlNode * stored_msg)
     crm_log_xml_trace(stored_msg, "message");
 
     now_s = pcmk__ttoa(time(NULL));
-    update_attrd(host_from, XML_CIB_ATTR_SHUTDOWN, now_s, NULL, FALSE);
+    update_attrd(host_from, PCMK__NODE_ATTR_SHUTDOWN, now_s, NULL, FALSE);
     free(now_s);
 
     /* will be picked up by the TE as long as its running */

@@ -32,7 +32,7 @@ static const char *pacemakerd_state_str[] = {
     PCMK__VALUE_RUNNING,
     PCMK__VALUE_SHUTTING_DOWN,
     PCMK__VALUE_SHUTDOWN_COMPLETE,
-    PCMK__VALUE_REMOTE,
+    PCMK_VALUE_REMOTE,
 };
 
 enum pcmk_pacemakerd_state
@@ -203,7 +203,8 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
 
     if (pcmk__str_eq((const char *) reply->name, "ack", pcmk__str_none)) {
         long long int ack_status = 0;
-        pcmk__scan_ll(crm_element_value(reply, "status"), &ack_status, CRM_EX_OK);
+        pcmk__scan_ll(crm_element_value(reply, PCMK_XA_STATUS), &ack_status,
+                      CRM_EX_OK);
         return ack_status == CRM_EX_INDETERMINATE;
     }
 

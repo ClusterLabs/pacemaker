@@ -196,10 +196,10 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 #define PCMK__VALUE_NONE                    "none"
 #define PCMK__VALUE_NOTHING                 "nothing"
 #define PCMK__VALUE_ONLY_GREEN              "only-green"
+#define PCMK__VALUE_PASSWORD                "password"
+#define PCMK__VALUE_PING                    "ping"
 #define PCMK__VALUE_PROGRESSIVE             "progressive"
 #define PCMK__VALUE_QUORUM                  "quorum"
-#define PCMK__VALUE_RED                     "red"
-#define PCMK__VALUE_REMOTE                  "remote"
 #define PCMK__VALUE_REQUEST                 "request"
 #define PCMK__VALUE_RESPONSE                "response"
 #define PCMK__VALUE_RUNNING                 "running"
@@ -208,6 +208,10 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 #define PCMK__VALUE_STARTING_DAEMONS        "starting_daemons"
 #define PCMK__VALUE_UNFENCING               "unfencing"
 #define PCMK__VALUE_WAIT_FOR_PING           "wait_for_ping"
-#define PCMK__VALUE_YELLOW                  "yellow"
+
+/* @COMPAT Deprecated since 2.1.7 (used with PCMK__XA_ORDERING attribute of
+ * resource sets)
+ */
+#define PCMK__VALUE_GROUP                   "group"
 
 #endif // PCMK__OPTIONS_INTERNAL__H

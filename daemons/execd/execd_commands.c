@@ -320,7 +320,8 @@ create_lrmd_cmd(xmlNode *msg, pcmk__client_t *client)
 
     cmd->params = xml2list(rsc_xml);
 
-    if (pcmk__str_eq(g_hash_table_lookup(cmd->params, "CRM_meta_on_fail"), "block", pcmk__str_casei)) {
+    if (pcmk__str_eq(g_hash_table_lookup(cmd->params, "CRM_meta_on_fail"),
+                     PCMK_VALUE_BLOCK, pcmk__str_casei)) {
         crm_debug("Setting flag to leave pid group on timeout and "
                   "only kill action pid for " PCMK__OP_FMT,
                   cmd->rsc_id, cmd->action, cmd->interval_ms);

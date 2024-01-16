@@ -40,7 +40,9 @@
 #  include <crm/common/ipc_internal.h>
 #  include <crm/common/options_internal.h>
 #  include <crm/common/output_internal.h>
+#  include <crm/common/scheduler_internal.h>
 #  include <crm/common/xml_internal.h>
+#  include <crm/common/xml_names_internal.h>
 #  include <crm/common/internal.h>
 #  include <locale.h>
 #  include <gettext.h>
@@ -70,12 +72,15 @@
 #define PCMK__XE_LRM_RESOURCES          "lrm_resources"
 #define PCMK__XE_LRM_RSC_OP             "lrm_rsc_op"
 #define PCMK__XE_MAINTENANCE            "maintenance"
+#define PCMK__XE_META                   "meta"
 #define PCMK__XE_NODE_STATE             "node_state"
 #define PCMK__XE_OPTIONS                "options"
 #define PCMK__XE_PARAM                  "param"
+#define PCMK__XE_PING                   "ping"
 #define PCMK__XE_PING_RESPONSE          "ping_response"
 #define PCMK__XE_PSEUDO_EVENT           "pseudo_event"
 #define PCMK__XE_RSC_OP                 "rsc_op"
+#define PCMK__XE_SHUTDOWN               "shutdown"
 #define PCMK__XE_TICKET_STATE           "ticket_state"
 #define PCMK__XE_TRANSIENT_ATTRIBUTES   "transient_attributes"
 #define PCMK__XE_TRANSITION_GRAPH       "transition_graph"
@@ -152,14 +157,17 @@
 #define PCMK__XA_FILE                   "file"
 #define PCMK__XA_GRAPH_ERRORS           "graph-errors"
 #define PCMK__XA_GRAPH_WARNINGS         "graph-warnings"
+#define PCMK__XA_HIDDEN                 "hidden"
 #define PCMK__XA_IN_CCM                 "in_ccm"
 #define PCMK__XA_JOIN                   "join"
 #define PCMK__XA_JOIN_ID                "join_id"
 #define PCMK__XA_LONG_ID                "long-id"
 #define PCMK__XA_MODE                   "mode"
+#define PCMK__XA_MOON                   "moon"
+#define PCMK__XA_NODE_FENCED            "node_fenced"
+#define PCMK__XA_NODE_IN_MAINTENANCE    "node_in_maintenance"
 #define PCMK__XA_NODE_START_STATE       "node_start_state"
 #define PCMK__XA_NODE_STATE             "node_state"
-#define PCMK__XA_OPERATION_KEY          "operation_key"
 #define PCMK__XA_OP_DIGEST              "op-digest"
 #define PCMK__XA_OP_FORCE_RESTART       "op-force-restart"
 #define PCMK__XA_OP_RESTART_DIGEST      "op-restart-digest"
@@ -167,9 +175,11 @@
 #define PCMK__XA_OP_SECURE_PARAMS       "op-secure-params"
 #define PCMK__XA_OP_STATUS              "op-status"
 #define PCMK__XA_PACEMAKERD_STATE       "pacemakerd_state"
+#define PCMK__XA_PASSWORD               "password"
 #define PCMK__XA_PRIORITY               "priority"
 #define PCMK__XA_RC_CODE                "rc-code"
 #define PCMK__XA_REAP                   "reap"
+#define PCMK__XA_REMOTE_NODE            "remote_node"
 
 /* Actions to be executed on Pacemaker Remote nodes are routed through the
  * controller on the cluster node hosting the remote connection. That cluster
@@ -193,6 +203,12 @@
 
 // @COMPAT Deprecated since 2.1.5
 #define PCMK__XA_FIRST_INSTANCE         "first-instance"
+
+// @COMPAT Deprecated since 2.1.7
+#define PCMK__XA_ORDERING               "ordering"
+
+// @COMPAT Deprecated alias for PCMK_XA_PROMOTED_MAX since 2.0.0
+#define PCMK__XA_PROMOTED_MAX_LEGACY    "masters"
 
 // @COMPAT Deprecated since 1.1.12
 #define PCMK__XA_REF                    "ref"

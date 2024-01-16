@@ -95,18 +95,18 @@ get_ordering_type(const xmlNode *xml_obj)
                             "(use '" PCMK_XA_KIND "' instead)");
         }
 
-    } else if (pcmk__str_eq(kind, "Mandatory", pcmk__str_none)) {
+    } else if (pcmk__str_eq(kind, PCMK_VALUE_MANDATORY, pcmk__str_none)) {
         kind_e = pe_order_kind_mandatory;
 
-    } else if (pcmk__str_eq(kind, "Optional", pcmk__str_none)) {
+    } else if (pcmk__str_eq(kind, PCMK_VALUE_OPTIONAL, pcmk__str_none)) {
         kind_e = pe_order_kind_optional;
 
-    } else if (pcmk__str_eq(kind, "Serialize", pcmk__str_none)) {
+    } else if (pcmk__str_eq(kind, PCMK_VALUE_SERIALIZE, pcmk__str_none)) {
         kind_e = pe_order_kind_serialize;
 
     } else {
         pcmk__config_err("Resetting '" PCMK_XA_KIND "' for constraint %s to "
-                         "'Mandatory' because '%s' is not valid",
+                         "'" PCMK_VALUE_MANDATORY "' because '%s' is not valid",
                          pcmk__s(ID(xml_obj), "missing ID"), kind);
     }
     return kind_e;
@@ -151,7 +151,7 @@ get_ordering_symmetry(const xmlNode *xml_obj, enum pe_order_kind parent_kind,
             if (kind == pe_order_kind_serialize) {
                 pcmk__config_warn("Ignoring " PCMK_XA_SYMMETRICAL
                                   " for '%s' because not valid with "
-                                  PCMK_XA_KIND " of 'Serialize'",
+                                  PCMK_XA_KIND " of '" PCMK_VALUE_SERIALIZE "'",
                                   ID(xml_obj));
             } else {
                 return ordering_symmetric;
@@ -310,14 +310,16 @@ get_minimum_first_instances(const pcmk_resource_t *rsc, const xmlNode *xml)
     }
 
     /* @COMPAT 1.1.13:
-     * require-all=false is deprecated equivalent of PCMK_META_CLONE_MIN=1
+     * PCMK_XA_REQUIRE_ALL=PCMK_VALUE_FALSE is deprecated equivalent of
+     * PCMK_META_CLONE_MIN=1
      */
-    if (pcmk__xe_get_bool_attr(xml, "require-all", &require_all) != ENODATA) {
+    if (pcmk__xe_get_bool_attr(xml, PCMK_XA_REQUIRE_ALL,
+                               &require_all) != ENODATA) {
         pcmk__warn_once(pcmk__wo_require_all,
-                        "Support for require-all in ordering constraints "
-                        "is deprecated and will be removed in a future release "
-                        "(use " PCMK_META_CLONE_MIN " clone meta-attribute "
-                        "instead)");
+                        "Support for " PCMK_XA_REQUIRE_ALL " in ordering "
+                        "constraints is deprecated and will be removed in a "
+                        "future release (use " PCMK_META_CLONE_MIN " clone "
+                        "meta-attribute instead)");
         if (!require_all) {
             return 1;
         }
@@ -612,8 +614,8 @@ unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
 
     char *key = NULL;
     const char *id = ID(set);
-    const char *action = crm_element_value(set, "action");
-    const char *sequential_s = crm_element_value(set, "sequential");
+    const char *action = crm_element_value(set, PCMK_XA_ACTION);
+    const char *sequential_s = crm_element_value(set, PCMK_XA_SEQUENTIAL);
     const char *kind_s = crm_element_value(set, PCMK_XA_KIND);
 
     if (action == NULL) {
@@ -725,14 +727,14 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
     pcmk_resource_t *rsc_1 = NULL;
     pcmk_resource_t *rsc_2 = NULL;
 
-    const char *action_1 = crm_element_value(set1, "action");
-    const char *action_2 = crm_element_value(set2, "action");
+    const char *action_1 = crm_element_value(set1, PCMK_XA_ACTION);
+    const char *action_2 = crm_element_value(set2, PCMK_XA_ACTION);
 
     uint32_t flags = pcmk__ar_none;
 
     bool require_all = true;
 
-    (void) pcmk__xe_get_bool_attr(set1, "require-all", &require_all);
+    (void) pcmk__xe_get_bool_attr(set1, PCMK_XA_REQUIRE_ALL, &require_all);
 
     if (action_1 == NULL) {
         action_1 = PCMK_ACTION_START;
@@ -802,7 +804,7 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
         return pcmk_rc_ok;
     }
 
-    if (pcmk__xe_attr_is_true(set1, "sequential")) {
+    if (pcmk__xe_attr_is_true(set1, PCMK_XA_SEQUENTIAL)) {
         if (symmetry == ordering_symmetric_inverse) {
             // Get the first one
             xml_rsc = first_named_child(set1, PCMK_XE_RESOURCE_REF);
@@ -823,7 +825,7 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
         }
     }
 
-    if (pcmk__xe_attr_is_true(set2, "sequential")) {
+    if (pcmk__xe_attr_is_true(set2, PCMK_XA_SEQUENTIAL)) {
         if (symmetry == ordering_symmetric_inverse) {
             // Get the last one
             const char *rid = NULL;
@@ -964,9 +966,9 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     if (rsc_set_first != NULL) {
         if (action_first != NULL) {
             /* Move PCMK_XA_FIRST_ACTION into converted PCMK_XE_RESOURCE_SET as
-             * "action"
+             * PCMK_XA_ACTION
              */
-            crm_xml_add(rsc_set_first, "action", action_first);
+            crm_xml_add(rsc_set_first, PCMK_XA_ACTION, action_first);
             xml_remove_prop(*expanded_xml, PCMK_XA_FIRST_ACTION);
         }
         any_sets = true;
@@ -985,9 +987,9 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     if (rsc_set_then != NULL) {
         if (action_then != NULL) {
             /* Move PCMK_XA_THEN_ACTION into converted PCMK_XE_RESOURCE_SET as
-             * "action"
+             * PCMK_XA_ACTION
              */
-            crm_xml_add(rsc_set_then, "action", action_then);
+            crm_xml_add(rsc_set_then, PCMK_XA_ACTION, action_then);
             xml_remove_prop(*expanded_xml, PCMK_XA_THEN_ACTION);
         }
         any_sets = true;

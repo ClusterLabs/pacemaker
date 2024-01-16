@@ -172,25 +172,27 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
         return -pcmk_err_schema_validation;
     }
 
-    xpathObj = xpath_search(xml, "//actions");
+    xpathObj = xpath_search(xml, "//" PCMK_XE_ACTIONS);
     if (numXpathResults(xpathObj) > 0) {
         actions = getXpathResult(xpathObj, 0);
     }
     freeXpathObject(xpathObj);
 
     // Add start and stop (implemented by pacemaker, not agent) to meta-data
-    xpathObj = xpath_search(xml, "//action[@name='stop']");
+    xpathObj = xpath_search(xml,
+                            "//" PCMK_XE_ACTION
+                            "[@" PCMK_XA_NAME "='" PCMK_ACTION_STOP "']");
     if (numXpathResults(xpathObj) <= 0) {
         xmlNode *tmp = NULL;
         const char *timeout_str = NULL;
 
         timeout_str = pcmk__readable_interval(PCMK_DEFAULT_ACTION_TIMEOUT_MS);
 
-        tmp = create_xml_node(actions, "action");
+        tmp = create_xml_node(actions, PCMK_XE_ACTION);
         crm_xml_add(tmp, PCMK_XA_NAME, PCMK_ACTION_STOP);
         crm_xml_add(tmp, PCMK_META_TIMEOUT, timeout_str);
 
-        tmp = create_xml_node(actions, "action");
+        tmp = create_xml_node(actions, PCMK_XE_ACTION);
         crm_xml_add(tmp, PCMK_XA_NAME, PCMK_ACTION_START);
         crm_xml_add(tmp, PCMK_META_TIMEOUT, timeout_str);
     }

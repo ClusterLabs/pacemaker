@@ -861,11 +861,11 @@ cluster_counts_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr resources_node = pcmk__output_create_xml_node(out, "resources_configured", NULL);
 
     char *s = pcmk__itoa(nnodes);
-    crm_xml_add(nodes_node, "number", s);
+    crm_xml_add(nodes_node, PCMK_XA_NUMBER, s);
     free(s);
 
     s = pcmk__itoa(nresources);
-    crm_xml_add(resources_node, "number", s);
+    crm_xml_add(resources_node, PCMK_XA_NUMBER, s);
     free(s);
 
     s = pcmk__itoa(ndisabled);
@@ -951,17 +951,20 @@ cluster_dc_xml(pcmk__output_t *out, va_list args) {
     bool mixed_version = va_arg(args, int);
 
     if (dc) {
+        const char *with_quorum = pcmk__btoa(crm_is_true(quorum));
+        const char *mixed_version_s = pcmk__btoa(mixed_version);
+
         pcmk__output_create_xml_node(out, "current_dc",
-                                     "present", PCMK_VALUE_TRUE,
+                                     PCMK_XA_PRESENT, PCMK_VALUE_TRUE,
                                      PCMK_XA_VERSION, pcmk__s(dc_version_s, ""),
                                      PCMK_XA_NAME, dc->details->uname,
                                      PCMK_XA_ID, dc->details->id,
-                                     "with_quorum", pcmk__btoa(crm_is_true(quorum)),
-                                     "mixed_version", pcmk__btoa(mixed_version),
+                                     PCMK_XA_WITH_QUORUM, with_quorum,
+                                     PCMK_XA_MIXED_VERSION, mixed_version_s,
                                      NULL);
     } else {
         pcmk__output_create_xml_node(out, "current_dc",
-                                     "present", PCMK_VALUE_FALSE,
+                                     PCMK_XA_PRESENT, PCMK_VALUE_FALSE,
                                      NULL);
     }
 
@@ -1115,23 +1118,23 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
 
     switch (scheduler->no_quorum_policy) {
         case pcmk_no_quorum_freeze:
-            no_quorum_policy = "freeze";
+            no_quorum_policy = PCMK_VALUE_FREEZE;
             break;
 
         case pcmk_no_quorum_stop:
-            no_quorum_policy = "stop";
+            no_quorum_policy = PCMK_VALUE_STOP;
             break;
 
         case pcmk_no_quorum_demote:
-            no_quorum_policy = "demote";
+            no_quorum_policy = PCMK_VALUE_DEMOTE;
             break;
 
         case pcmk_no_quorum_ignore:
-            no_quorum_policy = "ignore";
+            no_quorum_policy = PCMK_VALUE_IGNORE;
             break;
 
         case pcmk_no_quorum_fence:
-            no_quorum_policy = "suicide";
+            no_quorum_policy = PCMK_VALUE_FENCE_LEGACY;
             break;
     }
 
@@ -1272,14 +1275,14 @@ cluster_times_xml(pcmk__output_t *out, va_list args) {
     char *time_s = pcmk__epoch2str(NULL, 0);
 
     pcmk__output_create_xml_node(out, "last_update",
-                                 "time", time_s,
+                                 PCMK_XA_TIME, time_s,
                                  PCMK_XA_ORIGIN, our_nodename,
                                  NULL);
 
     pcmk__output_create_xml_node(out, "last_change",
-                                 "time", last_written ? last_written : "",
-                                 "user", user ? user : "",
-                                 "client", client ? client : "",
+                                 PCMK_XA_TIME, pcmk__s(last_written, ""),
+                                 PCMK_XA_USER, pcmk__s(user, ""),
+                                 PCMK_XA_CLIENT, pcmk__s(client, ""),
                                  PCMK_XA_ORIGIN, pcmk__s(origin, ""),
                                  NULL);
 
@@ -1510,6 +1513,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     const char *uname = crm_element_value(xml_op, PCMK_XA_UNAME);
     const char *call_id = crm_element_value(xml_op, PCMK__XA_CALL_ID);
     const char *exit_reason = crm_element_value(xml_op, PCMK_XA_EXIT_REASON);
+    const char *status_s = NULL;
 
     time_t epoch = 0;
     char *rc_s = NULL;
@@ -1520,10 +1524,11 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     pcmk__scan_min_int(crm_element_value(xml_op, PCMK__XA_OP_STATUS), &status,
                        0);
 
-    rc_s = pcmk__itoa(rc);
     if (crm_element_value(xml_op, PCMK__XA_OPERATION_KEY) == NULL) {
         op_key_name = PCMK_XA_ID;
     }
+    rc_s = pcmk__itoa(rc);
+    status_s = pcmk_exec_status_str(status);
     node = pcmk__output_create_xml_node(out, "failure",
                                         op_key_name, op_key,
                                         PCMK_XA_NODE, uname,
@@ -1531,7 +1536,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
                                         "exitreason", pcmk__s(reason_s, ""),
                                         "exitcode", rc_s,
                                         "call", call_id,
-                                        "status", pcmk_exec_status_str(status),
+                                        PCMK_XA_STATUS, status_s,
                                         NULL);
     free(rc_s);
 
@@ -1629,17 +1634,18 @@ status_node(pcmk_node_t *node, xmlNodePtr parent, uint32_t show_opts)
 
     // Standby mode
     if (node->details->standby_onfail && (node->details->running_rsc != NULL)) {
-        pcmk_create_html_node(parent, "span", NULL, "standby",
+        pcmk_create_html_node(parent, "span", NULL, PCMK_VALUE_STANDBY,
                               " (in standby due to on-fail,"
                               " with active resources)");
     } else if (node->details->standby_onfail) {
-        pcmk_create_html_node(parent, "span", NULL, "standby",
+        pcmk_create_html_node(parent, "span", NULL, PCMK_VALUE_STANDBY,
                               " (in standby due to on-fail)");
     } else if (node->details->standby && (node->details->running_rsc != NULL)) {
-        pcmk_create_html_node(parent, "span", NULL, "standby",
+        pcmk_create_html_node(parent, "span", NULL, PCMK_VALUE_STANDBY,
                               " (in standby, with active resources)");
     } else if (node->details->standby) {
-        pcmk_create_html_node(parent, "span", NULL, "standby", " (in standby)");
+        pcmk_create_html_node(parent, "span", NULL, PCMK_VALUE_STANDBY,
+                              " (in standby)");
     }
 
     // Maintenance mode
@@ -1899,22 +1905,22 @@ node_xml(pcmk__output_t *out, va_list args) {
 
         switch (node->details->type) {
             case pcmk_node_variant_cluster:
-                node_type = "member";
+                node_type = PCMK_VALUE_MEMBER;
                 break;
             case pcmk_node_variant_remote:
-                node_type = "remote";
+                node_type = PCMK_VALUE_REMOTE;
                 break;
             case node_ping:
-                node_type = "ping";
+                node_type = PCMK__VALUE_PING;
                 break;
         }
 
         if (health < 0) {
-            health_s = "red";
+            health_s = PCMK_VALUE_RED;
         } else if (health == 0) {
-            health_s = "yellow";
+            health_s = PCMK_VALUE_YELLOW;
         } else {
-            health_s = "green";
+            health_s = PCMK_VALUE_GREEN;
         }
 
         feature_set = get_node_feature_set(node);
@@ -2099,6 +2105,7 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
     const char *uname = crm_element_value(xml_op, PCMK_XA_UNAME);
     const char *call_id = crm_element_value(xml_op, PCMK__XA_CALL_ID);
     const char *rc_s = crm_element_value(xml_op, PCMK__XA_RC_CODE);
+    const char *status_s = NULL;
     const char *op_rsc = crm_element_value(xml_op, "resource");
     int status;
     time_t last_change = 0;
@@ -2106,12 +2113,14 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
 
     pcmk__scan_min_int(crm_element_value(xml_op, PCMK__XA_OP_STATUS),
                        &status, PCMK_EXEC_UNKNOWN);
+    status_s = pcmk_exec_status_str(status);
+
     node = pcmk__output_create_xml_node(out, PCMK_XE_OPERATION,
                                         PCMK_XA_OP, pcmk__xe_history_key(xml_op),
                                         PCMK_XA_NODE, uname,
                                         "call", call_id,
                                         "rc", rc_s,
-                                        "status", pcmk_exec_status_str(status),
+                                        PCMK_XA_STATUS, status_s,
                                         NULL);
 
     rsc = pe_find_resource(scheduler->resources, op_rsc);
@@ -3081,12 +3090,13 @@ PCMK__OUTPUT_ARGS("ticket", "pcmk_ticket_t *")
 static int
 ticket_xml(pcmk__output_t *out, va_list args) {
     pcmk_ticket_t *ticket = va_arg(args, pcmk_ticket_t *);
+    const char *status = ticket->granted? "granted" : "revoked";
 
     xmlNodePtr node = NULL;
 
-    node = pcmk__output_create_xml_node(out, "ticket",
+    node = pcmk__output_create_xml_node(out, PCMK_XE_TICKET,
                                         PCMK_XA_ID, ticket->id,
-                                        "status", ticket->granted ? "granted" : "revoked",
+                                        PCMK_XA_STATUS, status,
                                         "standby", pcmk__btoa(ticket->standby),
                                         NULL);
 

@@ -180,8 +180,10 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
     }
 
     /* Then, check that it's something we actually support. */
-    xpath = crm_strdup_printf(XPATH_NODE_RULE "//date_expression["
-                              "@" PCMK_XA_OPERATION "!='date_spec']",
+    xpath = crm_strdup_printf(XPATH_NODE_RULE
+                              "//" PCMK_XE_DATE_EXPRESSION
+                              "[@" PCMK_XA_OPERATION
+                                  "!='" PCMK_VALUE_DATE_SPEC "']",
                               rule_id);
     xpath_obj = xpath_search(cib_constraints, xpath);
     num_results = numXpathResults(xpath_obj);
@@ -191,10 +193,15 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
     if (num_results == 0) {
         freeXpathObject(xpath_obj);
 
-        xpath = crm_strdup_printf(XPATH_NODE_RULE "//date_expression["
-                                  "@" PCMK_XA_OPERATION "='date_spec' "
-                                  "and date_spec/@years "
-                                  "and not(date_spec/@moon)]", rule_id);
+        xpath = crm_strdup_printf(XPATH_NODE_RULE
+                                  "//" PCMK_XE_DATE_EXPRESSION
+                                  "[@" PCMK_XA_OPERATION
+                                      "='" PCMK_VALUE_DATE_SPEC "' "
+                                  "and " PCMK_XE_DATE_SPEC
+                                      "/@" PCMK_XA_YEARS " "
+                                  "and not(" PCMK_XE_DATE_SPEC
+                                      "/@" PCMK__XA_MOON ")]",
+                                  rule_id);
         xpath_obj = xpath_search(cib_constraints, xpath);
         num_results = numXpathResults(xpath_obj);
 
@@ -202,8 +209,9 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
 
         if (num_results == 0) {
             freeXpathObject(xpath_obj);
-            *error = "Rule must either not use date_spec, or use date_spec "
-                     "with years= but not moon=";
+            *error = "Rule must either not use " PCMK_XE_DATE_SPEC ", or use "
+                     PCMK_XE_DATE_SPEC " with " PCMK_XA_YEARS "= but not "
+                     PCMK__XA_MOON "=";
             return EOPNOTSUPP;
         }
     }

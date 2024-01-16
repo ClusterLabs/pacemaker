@@ -995,6 +995,21 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_CIB_TAG_SECTION_ALL "all"
 
+//! \deprecated Do not use
+#define XML_NODE_IS_REMOTE "remote_node"
+
+//! \deprecated Do not use
+#define XML_NODE_IS_FENCED "node_fenced"
+
+//! \deprecated Do not use
+#define XML_NODE_IS_MAINTENANCE "node_in_maintenance"
+
+//! \deprecated Do not use
+#define XML_CIB_ATTR_SHUTDOWN "shutdown"
+
+//! \deprecated Do not use
+#define XML_NODE_ATTR_RSC_DISCOVERY "resource-discovery-enabled"
+
 #ifdef __cplusplus
 }
 #endif
