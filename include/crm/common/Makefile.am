@@ -42,6 +42,7 @@ header_HEADERS = acl.h 			\
 		 util.h 		\
 		 util_compat.h 		\
 		 xml.h 			\
-		 xml_compat.h
+		 xml_compat.h		\
+		 xml_names.h
 
 noinst_HEADERS = $(wildcard *internal.h)

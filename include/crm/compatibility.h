@@ -9,7 +9,8 @@
 #ifndef PCMK__CRM_COMPATIBILITY__H
 #  define PCMK__CRM_COMPATIBILITY__H
 
-#include <crm/msg_xml.h>
+#include <crm/msg_xml_compat.h>   // PCMK_XE_PROMOTABLE_LEGACY
+#include <crm/common/xml.h>
 #include <crm/pengine/pe_types.h> // enum pe_obj_types
 
 #ifdef __cplusplus

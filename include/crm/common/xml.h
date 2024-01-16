@@ -173,7 +173,7 @@ static inline const char *
 crm_map_element_name(const xmlNode *xml)
 {
     /* Can't use PCMK__XE_PROMOTED_LEGACY or PCMK_XE_CLONE because this header
-     * is included in msg_xml.h
+     * is included in xml_names.h
      */
     if (xml == NULL) {
         return NULL;
