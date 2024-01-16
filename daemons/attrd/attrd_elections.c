@@ -23,7 +23,7 @@ attrd_election_cb(gpointer user_data)
     attrd_declare_winner();
 
     /* Update the peers after an election */
-    attrd_peer_sync(NULL, NULL);
+    attrd_peer_sync(NULL);
 
     /* After winning an election, update the CIB with the values of all
      * attributes as the winner knows them.

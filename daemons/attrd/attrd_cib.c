@@ -51,6 +51,7 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
 {
     const xmlNode *patchset = NULL;
     const char *client_name = NULL;
+    bool status_changed = false;
 
     if (attrd_shutting_down(true)) {
         return;
@@ -64,20 +65,22 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
         mainloop_set_trigger(attrd_config_read);
     }
 
+    status_changed = cib__element_in_patchset(patchset, PCMK_XE_STATUS);
+
+    client_name = crm_element_value(msg, F_CIB_CLIENTNAME);
+    if (!cib__client_triggers_refresh(client_name)) {
+        /* This change came from a source that ensured the CIB is consistent
+         * with our attributes table, so we don't need to write anything out.
+         */
+        return;
+    }
+
     if (!attrd_election_won()) {
         // Don't write attributes if we're not the writer
         return;
     }
 
-    client_name = crm_element_value(msg, F_CIB_CLIENTNAME);
-    if (!cib__client_triggers_refresh(client_name)) {
-        // The CIB is still accurate
-        return;
-    }
-
-    if (cib__element_in_patchset(patchset, PCMK_XE_NODES)
-        || cib__element_in_patchset(patchset, PCMK_XE_STATUS)) {
-
+    if (status_changed || cib__element_in_patchset(patchset, PCMK_XE_NODES)) {
         /* An unsafe client modified the PCMK_XE_NODES or PCMK_XE_STATUS
          * section. Write transient attributes to ensure they're up-to-date in
          * the CIB.

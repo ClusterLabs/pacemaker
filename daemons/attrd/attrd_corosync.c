@@ -168,40 +168,6 @@ broadcast_local_value(const attribute_t *a)
 
 #define state_text(state) pcmk__s((state), "in unknown state")
 
-/*!
- * \internal
- * \brief Return a node's value from hash table (creating one if needed)
- *
- * \param[in,out] values     Hash table of values
- * \param[in]     node_name  Name of node to look up
- * \param[in]     xml        XML describing the attribute
- *
- * \return Pointer to new or existing hash table entry
- */
-static attribute_value_t *
-attrd_lookup_or_create_value(GHashTable *values, const char *node_name,
-                             const xmlNode *xml)
-{
-    attribute_value_t *v = g_hash_table_lookup(values, node_name);
-    int is_remote = 0;
-
-    if (v == NULL) {
-        v = calloc(1, sizeof(attribute_value_t));
-        CRM_ASSERT(v != NULL);
-
-        pcmk__str_update(&v->nodename, node_name);
-        g_hash_table_replace(values, v->nodename, v);
-    }
-
-    crm_element_value_int(xml, PCMK__XA_ATTR_IS_REMOTE, &is_remote);
-    if (is_remote) {
-        attrd_set_value_flags(v, attrd_value_remote);
-        CRM_ASSERT(crm_remote_peer_get(node_name) != NULL);
-    }
-
-    return(v);
-}
-
 static void
 attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *data)
 {
@@ -233,7 +199,7 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
                  */
                 if (attrd_election_won()
                     && !pcmk_is_set(peer->flags, crm_remote_node)) {
-                    attrd_peer_sync(peer, NULL);
+                    attrd_peer_sync(peer);
                 }
             } else {
                 // Remove all attribute values associated with lost nodes
@@ -263,27 +229,52 @@ record_peer_nodeid(attribute_value_t *v, const char *host)
     }
 }
 
+#define readable_value(rv_v) pcmk__s((rv_v)->current, "(unset)")
+
+#define readable_peer(p)    \
+    (((p) == NULL)? "all peers" : pcmk__s((p)->uname, "unknown peer"))
+
 static void
 update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
                     const char *attr, const char *value, const char *host,
-                    bool filter, int is_force_write)
+                    bool filter)
 {
+    int is_remote = 0;
+    bool changed = false;
     attribute_value_t *v = NULL;
 
-    v = attrd_lookup_or_create_value(a->values, host, xml);
+    // Create entry for value if not already existing
+    v = g_hash_table_lookup(a->values, host);
+    if (v == NULL) {
+        v = calloc(1, sizeof(attribute_value_t));
+        CRM_ASSERT(v != NULL);
 
-    if (filter && !pcmk__str_eq(v->current, value, pcmk__str_casei)
-        && pcmk__str_eq(host, attrd_cluster->uname, pcmk__str_casei)) {
+        pcmk__str_update(&v->nodename, host);
+        g_hash_table_replace(a->values, v->nodename, v);
+    }
+
+    // If value is for a Pacemaker Remote node, remember that
+    crm_element_value_int(xml, PCMK__XA_ATTR_IS_REMOTE, &is_remote);
+    if (is_remote) {
+        attrd_set_value_flags(v, attrd_value_remote);
+        CRM_ASSERT(crm_remote_peer_get(host) != NULL);
+    }
+
+    // Check whether the value changed
+    changed = !pcmk__str_eq(v->current, value, pcmk__str_casei);
+
+    if (changed && filter && pcmk__str_eq(host, attrd_cluster->uname,
+                                          pcmk__str_casei)) {
 
         crm_notice("%s[%s]: local value '%s' takes priority over '%s' from %s",
-                   attr, host, v->current, value, peer->uname);
+                   attr, host, readable_value(v), value, peer->uname);
         v = broadcast_local_value(a);
 
-    } else if (!pcmk__str_eq(v->current, value, pcmk__str_casei)) {
+    } else if (changed) {
         crm_notice("Setting %s[%s]%s%s: %s -> %s "
                    CRM_XS " from %s with %s write delay",
                    attr, host, a->set_type ? " in " : "",
-                   pcmk__s(a->set_type, ""), pcmk__s(v->current, "(unset)"),
+                   pcmk__s(a->set_type, ""), readable_value(v),
                    pcmk__s(value, "(unset)"), peer->uname,
                    (a->timeout_ms == 0)? "no" : pcmk__readable_interval(a->timeout_ms));
         pcmk__str_update(&v->current, value);
@@ -309,6 +300,10 @@ update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
         }
 
     } else {
+        int is_force_write = 0;
+
+        crm_element_value_int(xml, PCMK__XA_ATTR_FORCE, &is_force_write);
+
         if (is_force_write == 1 && a->timeout_ms && a->timer) {
             /* Save forced writing and set change flag. */
             /* The actual attribute is written by Writer after election. */
@@ -338,14 +333,11 @@ attrd_peer_update_one(const crm_node_t *peer, xmlNode *xml, bool filter)
     const char *attr = crm_element_value(xml, PCMK__XA_ATTR_NAME);
     const char *value = crm_element_value(xml, PCMK__XA_ATTR_VALUE);
     const char *host = crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME);
-    int is_force_write = 0;
 
     if (attr == NULL) {
         crm_warn("Could not update attribute: peer did not specify name");
         return;
     }
-
-    crm_element_value_int(xml, PCMK__XA_ATTR_FORCE, &is_force_write);
 
     a = attrd_populate_attribute(xml, attr);
     if (a == NULL) {
@@ -361,12 +353,12 @@ attrd_peer_update_one(const crm_node_t *peer, xmlNode *xml, bool filter)
         g_hash_table_iter_init(&vIter, a->values);
 
         while (g_hash_table_iter_next(&vIter, (gpointer *) & host, NULL)) {
-            update_attr_on_host(a, peer, xml, attr, value, host, filter, is_force_write);
+            update_attr_on_host(a, peer, xml, attr, value, host, filter);
         }
 
     } else {
         // Update attribute value for the given host
-        update_attr_on_host(a, peer, xml, attr, value, host, filter, is_force_write);
+        update_attr_on_host(a, peer, xml, attr, value, host, filter);
     }
 
     /* If this is a message from some attrd instance broadcasting its protocol
@@ -536,8 +528,14 @@ attrd_peer_remove(const char *host, bool uncache, const char *source)
     }
 }
 
+/*!
+ * \internal
+ * \brief Send all known attributes and values to a peer
+ *
+ * \param[in] peer  Peer to send sync to (if NULL, broadcast to all peers)
+ */
 void
-attrd_peer_sync(crm_node_t *peer, xmlNode *xml)
+attrd_peer_sync(crm_node_t *peer)
 {
     GHashTableIter aIter;
     GHashTableIter vIter;
@@ -552,12 +550,14 @@ attrd_peer_sync(crm_node_t *peer, xmlNode *xml)
     while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
         g_hash_table_iter_init(&vIter, a->values);
         while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & v)) {
-            crm_debug("Syncing %s[%s] = %s to %s", a->id, v->nodename, v->current, peer?peer->uname:"everyone");
+            crm_debug("Syncing %s[%s]='%s' to %s",
+                      a->id, v->nodename, readable_value(v),
+                      readable_peer(peer));
             attrd_add_value_xml(sync, a, v, false);
         }
     }
 
-    crm_debug("Syncing values to %s", peer?peer->uname:"everyone");
+    crm_debug("Syncing values to %s", readable_peer(peer));
     attrd_send_message(peer, sync, false);
     free_xml(sync);
 }

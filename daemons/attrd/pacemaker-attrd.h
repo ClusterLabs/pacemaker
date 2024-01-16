@@ -175,7 +175,7 @@ extern GHashTable *peer_protocol_vers;
 int attrd_cluster_connect(void);
 void attrd_peer_update(const crm_node_t *peer, xmlNode *xml, const char *host,
                        bool filter);
-void attrd_peer_sync(crm_node_t *peer, xmlNode *xml);
+void attrd_peer_sync(crm_node_t *peer);
 void attrd_peer_remove(const char *host, bool uncache, const char *source);
 void attrd_peer_clear_failure(pcmk__request_t *request);
 void attrd_peer_sync_response(const crm_node_t *peer, bool peer_won,

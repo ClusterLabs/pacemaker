@@ -181,7 +181,7 @@ handle_sync_request(pcmk__request_t *request)
         crm_node_t *peer = pcmk__get_node(0, request->peer, NULL,
                                           pcmk__node_search_cluster);
 
-        attrd_peer_sync(peer, request->xml);
+        attrd_peer_sync(peer);
         pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
         return NULL;
     } else {
