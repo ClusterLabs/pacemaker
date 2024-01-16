@@ -56,14 +56,14 @@ static pcmk__cluster_option_t cluster_options[] = {
         pcmk__opt_context_controld,
         N_("Pacemaker version on cluster node elected Designated Controller "
             "(DC)"),
-        N_("Includes a hash which identifies the exact changeset the code was "
+        N_("Includes a hash which identifies the exact revision the code was "
             "built from. Used for diagnostic purposes."),
     },
     {
         PCMK_OPT_CLUSTER_INFRASTRUCTURE, NULL, "string", NULL,
         "corosync", NULL,
         pcmk__opt_context_controld,
-        N_("The messaging stack on which Pacemaker is currently running"),
+        N_("The messaging layer on which Pacemaker is currently running"),
         N_("Used for informational and diagnostic purposes."),
     },
     {
@@ -93,22 +93,23 @@ static pcmk__cluster_option_t cluster_options[] = {
         N_("Polling interval to recheck cluster state and evaluate rules "
             "with date specifications"),
         N_("Pacemaker is primarily event-driven, and looks ahead to know when "
-            "to recheck cluster state for failure timeouts and most time-based "
-            "rules. However, it will also recheck the cluster after this "
-            "amount of inactivity, to evaluate rules with date specifications "
-            "and serve as a fail-safe for certain types of scheduler bugs."),
+            "to recheck cluster state for failure-timeout settings and most "
+            "time-based rules. However, it will also recheck the cluster after "
+            "this amount of inactivity, to evaluate rules with date "
+            "specifications and serve as a fail-safe for certain types of "
+            "scheduler bugs."),
     },
     {
         PCMK_OPT_FENCE_REACTION, NULL, "select", PCMK_VALUE_STOP ", panic",
         PCMK_VALUE_STOP, NULL,
         pcmk__opt_context_controld,
         N_("How a cluster node should react if notified of its own fencing"),
-        N_("A cluster node may receive notification of its own fencing if "
-            "fencing is misconfigured, or if fabric fencing is in use that "
-            "doesn't cut cluster communication. Use \"stop\" to attempt to "
-            "immediately stop Pacemaker and stay stopped, or \"panic\" to "
-            "attempt to immediately reboot the local node, falling back to "
-            "stop on failure."),
+        N_("A cluster node may receive notification of a \"succeeded\" "
+            "fencing that targeted it if fencing is misconfigured, or if "
+            "fabric fencing is in use that doesn't cut cluster communication. "
+            "Use \"stop\" to attempt to immediately stop Pacemaker and stay "
+            "stopped, or \"panic\" to attempt to immediately reboot the local "
+            "node, falling back to stop on failure."),
     },
     {
         PCMK_OPT_ELECTION_TIMEOUT, NULL, "time", NULL,
@@ -289,18 +290,18 @@ static pcmk__cluster_option_t cluster_options[] = {
         N_("How long before nodes can be assumed to be safely down when "
            "watchdog-based self-fencing via SBD is in use"),
         N_("If this is set to a positive value, lost nodes are assumed to "
-           "self-fence using watchdog-based SBD within this much time. This "
-           "does not require a fencing resource to be explicitly configured, "
-           "though a fence_watchdog resource can be configured, to limit use "
-           "to specific nodes. If this is set to 0 (the default), the cluster "
-           "will never assume watchdog-based self-fencing. If this is set to a "
-           "negative value, the cluster will use twice the local value of the "
-           "`SBD_WATCHDOG_TIMEOUT` environment variable if that is positive, "
-           "or otherwise treat this as 0. WARNING: When used, this timeout "
-           "must be larger than `SBD_WATCHDOG_TIMEOUT` on all nodes that use "
-           "watchdog-based SBD, and Pacemaker will refuse to start on any of "
-           "those nodes where this is not true for the local value or SBD is "
-           "not active. When this is set to a negative value, "
+           "achieve self-fencing using watchdog-based SBD within this much "
+           "time. This does not require a fencing resource to be explicitly "
+           "configured, though a fence_watchdog resource can be configured, to "
+           "limit use to specific nodes. If this is set to 0 (the default), "
+           "the cluster will never assume watchdog-based self-fencing. If this "
+           "is set to a negative value, the cluster will use twice the local "
+           "value of the `SBD_WATCHDOG_TIMEOUT` environment variable if that "
+           "is positive, or otherwise treat this as 0. WARNING: When used, "
+           "this timeout must be larger than `SBD_WATCHDOG_TIMEOUT` on all "
+           "nodes that use watchdog-based SBD, and Pacemaker will refuse to "
+           "start on any of those nodes where this is not true for the local "
+           "value or SBD is not active. When this is set to a negative value, "
            "`SBD_WATCHDOG_TIMEOUT` must be set to the same value on all nodes "
            "that use SBD, otherwise data corruption or loss could occur."),
     },

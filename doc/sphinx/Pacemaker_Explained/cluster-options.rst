@@ -479,23 +479,29 @@ values, by running the ``man pacemaker-schedulerd`` and
      - 0
      - If nonzero, and the cluster detects ``have-watchdog`` as ``true``, then
        watchdog-based self-fencing will be performed via SBD when fencing is
-       required, without requiring a fencing resource explicitly configured.
+       required.
        
-       If this is set to a positive value, unseen nodes are assumed to
-       self-fence within this much time.
+       If this is set to a positive value, lost nodes are assumed to achieve
+       self-fencing within this much time.
+
+       This does not require a fencing resource to be explicitly configured,
+       though a fence_watchdog resource can be configured, to limit use to
+       specific nodes.
+
+       If this is set to 0 (the default), the cluster will never assume
+       watchdog-based self-fencing.
+
+       If this is set to a negative value, the cluster will use twice the local
+       value of the ``SBD_WATCHDOG_TIMEOUT`` environment variable if that is
+       positive, or otherwise treat this as 0.
        
-       **Warning:** It must be ensured that this value is larger than the
-       ``SBD_WATCHDOG_TIMEOUT`` environment variable on all nodes. Pacemaker
-       verifies the settings individually on all nodes and prevents startup or
-       shuts down if configured wrongly on the fly. It is strongly recommended
-       that ``SBD_WATCHDOG_TIMEOUT`` be set to the same value on all nodes.
+       **Warning:** When used, this timeout must be larger than
+       ``SBD_WATCHDOG_TIMEOUT`` on all nodes that use watchdog-based SBD, and
+       Pacemaker will refuse to start on any of those nodes where this is not
+       true for the local value or SBD is not active. When this is set to a
+       negative value, ``SBD_WATCHDOG_TIMEOUT`` must be set to the same value
+       on all nodes that use SBD, otherwise data corruption or loss could occur.
        
-       If this is set to a negative value, and ``SBD_WATCHDOG_TIMEOUT`` is set,
-       twice that value will be used.
-       
-       **Warning:** In this case, it is essential (and currently not verified
-       by pacemaker) that ``SBD_WATCHDOG_TIMEOUT`` is set to the same value on
-       all nodes.
    * - .. _concurrent-fencing:
       
        .. index::
@@ -518,12 +524,13 @@ values, by running the ``man pacemaker-schedulerd`` and
      - :ref:`enumeration <enumeration>`
      - stop
      - How should a cluster node react if notified of its own fencing? A
-       cluster node may receive notification of its own fencing if fencing is
-       misconfigured, or if fabric fencing is in use that doesn't cut cluster
-       communication. Allowed values are ``stop`` to attempt to immediately
-       stop Pacemaker and stay stopped, or ``panic`` to attempt to immediately
-       reboot the local node, falling back to stop on failure. The default is
-       likely to be changed to ``panic`` in a future release. *(since 2.0.3)*
+       cluster node may receive notification of a "succeeded" fencing that
+       targeted it if fencing is misconfigured, or if fabric fencing is in use
+       that doesn't cut cluster communication. Allowed values are ``stop`` to
+       attempt to immediately stop Pacemaker and stay stopped, or ``panic`` to
+       attempt to immediately reboot the local node, falling back to stop on
+       failure. The default is likely to be changed to ``panic`` in a future
+       release. *(since 2.0.3)*
    * - .. _priority_fencing_delay:
       
        .. index::
@@ -708,10 +715,10 @@ values, by running the ``man pacemaker-schedulerd`` and
      - :ref:`duration <duration>`
      - 15min
      - Pacemaker is primarily event-driven, and looks ahead to know when to
-       recheck the cluster for failure timeouts and most time-based rules
-       *(since 2.0.3)*. However, it will also recheck the cluster after this
-       amount of inactivity. This has two goals: rules with ``date_spec`` are
-       only guaranteed to be checked this often, and it also serves as a
+       recheck the cluster for failure-timeout settings and most time-based
+       rules *(since 2.0.3)*. However, it will also recheck the cluster after
+       this amount of inactivity. This has two goals: rules with ``date_spec``
+       are only guaranteed to be checked this often, and it also serves as a
        fail-safe for some kinds of scheduler bugs. A value of 0 disables this
        polling.
    * - .. _shutdown_lock:
