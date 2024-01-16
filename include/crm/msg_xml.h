@@ -40,7 +40,7 @@ extern "C" {
  * Pacemaker (such as daemon IPC/CPG message XML).
  *
  * Constants belong in the following locations:
- * * "XE" and "XA": msg_xml.h and crm_internal.h
+ * * "XE" and "XA": msg_xml.h and xml_names_internal.h
  * * "OPT", "META", and "VALUE": options.h and options_internal.h
  * * "NODE_ATTR": nodes.h and nodes_internal.h
  *
