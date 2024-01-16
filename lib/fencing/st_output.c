@@ -312,7 +312,7 @@ last_fenced_html(pcmk__output_t *out, va_list args) {
 
     if (when) {
         char *buf = crm_strdup_printf("Node %s last fenced at: %s", target, ctime(&when));
-        pcmk__output_create_html_node(out, "div", NULL, NULL, buf);
+        pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL, buf);
         free(buf);
         return pcmk_rc_ok;
     } else {
@@ -516,12 +516,12 @@ validate_agent_html(pcmk__output_t *out, va_list args) {
     if (device) {
         char *buf = crm_strdup_printf("Validation of %s on %s %s", agent, device,
                                       rc ? "failed" : "succeeded");
-        pcmk__output_create_html_node(out, "div", NULL, NULL, buf);
+        pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL, buf);
         free(buf);
     } else {
         char *buf = crm_strdup_printf("Validation of %s %s", agent,
                                       rc ? "failed" : "succeeded");
-        pcmk__output_create_html_node(out, "div", NULL, NULL, buf);
+        pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL, buf);
         free(buf);
     }
 

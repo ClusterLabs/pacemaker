@@ -22,6 +22,7 @@ extern "C" {
 #define PCMK__XE_ATTRIBUTES             "attributes"
 #define PCMK__XE_CRM_EVENT              "crm_event"
 #define PCMK__XE_CRM_XML                "crm_xml"
+#define PCMK__XE_DIV                    "div"
 #define PCMK__XE_DOWNED                 "downed"
 #define PCMK__XE_FAILED                 "failed"
 #define PCMK__XE_FAILED_UPDATE          "failed_update"
