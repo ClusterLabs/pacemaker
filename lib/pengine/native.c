@@ -16,7 +16,7 @@
 #include <crm/pengine/status.h>
 #include <crm/pengine/complex.h>
 #include <crm/pengine/internal.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <pe_status_private.h>
 
 #ifdef PCMK__COMPAT_2_0

@@ -17,7 +17,6 @@
 #include <crm/crm.h>
 #include <crm/lrmd.h>           // lrmd_event_data_t, lrmd_rsc_info_t, etc.
 #include <crm/services.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/pengine/rules.h>
 #include <crm/lrmd_internal.h>

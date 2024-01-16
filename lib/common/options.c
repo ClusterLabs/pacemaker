@@ -20,7 +20,7 @@
 #include <sys/stat.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 
 void
 pcmk__cli_help(char cmd)

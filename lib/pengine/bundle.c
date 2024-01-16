@@ -15,7 +15,7 @@
 #include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/common/output.h>
 #include <crm/common/xml_internal.h>
 #include <pe_status_private.h>

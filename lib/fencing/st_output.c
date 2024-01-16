@@ -12,7 +12,6 @@
 #include <stdint.h>
 
 #include <crm/stonith-ng.h>
-#include <crm/msg_xml.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/util.h>
 #include <crm/common/xml.h>

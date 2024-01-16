@@ -25,7 +25,7 @@
 #include <sys/resource.h>
 
 #include "crm/crm.h"
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include "crm/common/mainloop.h"
 #include "crm/services.h"
 

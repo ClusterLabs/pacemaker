@@ -16,7 +16,6 @@
 #include <md5.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include "crmcommon_private.h"
 

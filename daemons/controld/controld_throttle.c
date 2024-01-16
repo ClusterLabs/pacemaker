@@ -17,7 +17,7 @@
 #include <dirent.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/cluster.h>
 
 #include <pacemaker-controld.h>

@@ -23,8 +23,8 @@
 #  include <libxml/xpath.h>
 
 #  include <crm/crm.h>
-#  include <crm/msg_xml.h>
 #  include <crm/common/nvpair.h>
+#  include <crm/common/xml_names.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -16,13 +16,13 @@
 
 #include <crm/cluster.h>
 #include <crm/cluster/internal.h>
-#include <crm/msg_xml.h>
 #include <crm/common/acl_internal.h>
 #include <crm/common/ipc_internal.h>
 #include <crm/common/logging.h>
 #include <crm/common/results.h>
 #include <crm/common/strings_internal.h>
 #include <crm/common/util.h>
+#include <crm/common/xml.h>
 
 #include "pacemaker-attrd.h"
 

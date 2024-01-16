@@ -21,7 +21,6 @@
 
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
-#include <crm/msg_xml.h>
 #include <crm/pengine/rules.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/iso8601.h>

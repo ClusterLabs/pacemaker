@@ -15,7 +15,7 @@
 
 #include <stdio.h>
 
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/common/attrd_internal.h>
 
 #define OCF_RESKEY_PREFIX "OCF_RESKEY_"

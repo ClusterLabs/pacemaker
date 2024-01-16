@@ -27,8 +27,8 @@
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
 
-#include <crm/msg_xml.h>
 #include <crm/common/mainloop.h>
+#include <crm/common/xml.h>
 
 typedef struct cib_native_opaque_s {
     char *token;

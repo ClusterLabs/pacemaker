@@ -15,7 +15,7 @@
 #include <libxml/tree.h>            // xmlNode
 
 #include <crm/common/options.h>     // PCMK_META_INTERVAL
-#include <crm/msg_xml.h>            // PCMK_XA_OPERATION
+#include <crm/common/xml.h>         // PCMK_XA_OPERATION
 
 /*!
  * \brief Check whether an action name and interval represent a probe

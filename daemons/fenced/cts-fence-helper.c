@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the Pacemaker project contributors
+ * Copyright 2009-2024 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -20,7 +20,6 @@
 #include <fcntl.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
 #include <crm/cluster/internal.h>
 

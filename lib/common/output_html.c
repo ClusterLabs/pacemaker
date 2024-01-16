@@ -15,7 +15,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <crm/msg_xml.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/xml.h>
 

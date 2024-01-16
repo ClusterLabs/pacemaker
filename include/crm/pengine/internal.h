@@ -13,7 +13,7 @@
 #  include <stdbool.h>
 #  include <stdint.h>
 #  include <string.h>
-#  include <crm/msg_xml.h>
+#  include <crm/common/xml.h>
 #  include <crm/pengine/status.h>
 #  include <crm/pengine/remote_internal.h>
 #  include <crm/common/internal.h>

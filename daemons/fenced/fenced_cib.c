@@ -15,7 +15,6 @@
 #include <libxml/xpath.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
 #include <crm/cluster/internal.h>

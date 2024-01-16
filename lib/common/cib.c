@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <libxml/tree.h>    // xmlNode
 
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/common/cib.h>
 #include <crm/common/cib_internal.h>
 

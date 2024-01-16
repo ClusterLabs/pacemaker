@@ -25,7 +25,7 @@
 #include <unistd.h>
 
 #include <crm/cluster.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 
 enum child_daemon_flags {
     child_none                  = 0,

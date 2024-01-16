@@ -21,7 +21,7 @@
 #include <crm/crm.h>
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/services_internal.h>
 
 #include "fencing_private.h"

@@ -12,7 +12,6 @@
 
 #include <crm/common/agents.h>      // PCMK_STONITH_PROVIDES
 #include <crm/common/xml.h>
-#include <crm/common/xml_names.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -28,7 +28,7 @@
 #include <corosync/hdb.h>
 #include <corosync/cpg.h>
 
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 
 #include <crm/common/ipc_internal.h>  /* PCMK__SPECIAL_PID* */
 #include "crmcluster_private.h"

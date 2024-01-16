@@ -26,7 +26,6 @@
 #include <signal.h>
 #include <sys/utsname.h>
 
-#include <crm/msg_xml.h>
 #include <crm/services.h>
 #include <crm/lrmd.h>
 #include <crm/common/cmdline_internal.h>

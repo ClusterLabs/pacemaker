@@ -18,7 +18,6 @@
 #include <crm/crm.h>
 #include <crm/lrmd.h>
 #include <crm/cib.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/cluster/election_internal.h>
 #include <crm/cluster.h>

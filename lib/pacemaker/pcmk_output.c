@@ -10,7 +10,7 @@
 #include <crm_internal.h>
 #include <crm/common/output.h>
 #include <crm/common/results.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
 #include <crm/pengine/internal.h>

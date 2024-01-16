@@ -12,7 +12,7 @@
 #include <stdbool.h>
 #include <stdint.h>                 // uint8_t, uint32_t
 
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <pacemaker-internal.h>
 
 #include "libpacemaker_private.h"

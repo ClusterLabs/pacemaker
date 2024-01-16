@@ -20,7 +20,6 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <crm/msg_xml.h>
 
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/ipc.h>

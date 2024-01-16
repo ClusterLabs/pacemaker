@@ -14,7 +14,6 @@
 #include <crm/common/alerts_internal.h>
 #include <crm/common/xml.h>
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/lrmd_internal.h>
 
 #include <pacemaker-controld.h>

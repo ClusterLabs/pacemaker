@@ -13,7 +13,7 @@
 #include <stdbool.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/pengine/rules.h>
 #include <crm/pengine/internal.h>
 

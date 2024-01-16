@@ -12,8 +12,8 @@
 #include <errno.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/iso8601.h>
+#include <crm/common/xml.h>
 #include <crm/pengine/rules.h>
 #include <crm/pengine/rules_internal.h>
 #include <crm/lrmd_internal.h>

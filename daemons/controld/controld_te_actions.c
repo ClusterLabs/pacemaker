@@ -13,7 +13,6 @@
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/lrmd.h>               // lrmd_event_data_t, lrmd_free_event()
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/cluster.h>
 

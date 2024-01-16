@@ -12,6 +12,8 @@
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 #include <crm/msg_xml_compat.h>
+#else
+#error Include xml.h instead of msg_xml.h
 #endif
 
 #endif  // PCMK__CRM_MSG_XML__H

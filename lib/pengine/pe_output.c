@@ -15,7 +15,7 @@
 #include <crm/common/output.h>
 #include <crm/common/scheduler_internal.h>
 #include <crm/cib/util.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/pengine/internal.h>
 
 const char *

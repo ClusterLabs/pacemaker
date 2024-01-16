@@ -14,7 +14,6 @@
 #include <stdlib.h>
 #include <glib.h>
 
-#include <crm/msg_xml.h>
 #include <crm/common/logging.h>
 #include <crm/common/results.h>
 #include <crm/common/strings_internal.h>

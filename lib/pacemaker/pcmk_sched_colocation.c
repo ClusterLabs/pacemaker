@@ -19,7 +19,7 @@
 
 #include "crm/common/util.h"
 #include "crm/common/xml_internal.h"
-#include "crm/msg_xml.h"
+#include "crm/common/xml.h"
 #include "libpacemaker_private.h"
 
 // Used to temporarily mark a node as unusable

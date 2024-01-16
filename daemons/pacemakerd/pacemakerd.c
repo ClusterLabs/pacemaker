@@ -25,8 +25,8 @@
 #include <sys/resource.h>
 
 #include <crm/crm.h>  /* indirectly: CRM_EX_* */
-#include <crm/msg_xml.h>
 #include <crm/common/mainloop.h>
+#include <crm/common/xml.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/ipc_pacemakerd.h>
 #include <crm/common/output_internal.h>

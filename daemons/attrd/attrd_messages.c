@@ -13,7 +13,7 @@
 
 #include <crm/common/messages_internal.h>
 #include <crm/cluster/internal.h>   // pcmk__get_node()
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 
 #include "pacemaker-attrd.h"
 

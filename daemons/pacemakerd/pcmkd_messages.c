@@ -11,7 +11,7 @@
 #include "pacemakerd.h"
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 
 #include <errno.h>
 #include <stdbool.h>

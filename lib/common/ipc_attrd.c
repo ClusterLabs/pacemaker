@@ -19,7 +19,7 @@
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_attrd_internal.h>
 #include <crm/common/attrd_internal.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include "crmcommon_private.h"
 
 static void
