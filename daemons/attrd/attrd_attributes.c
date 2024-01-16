@@ -41,10 +41,9 @@ attrd_create_attribute(xmlNode *xml)
      * attributes are not written.
      */
     crm_element_value_int(xml, PCMK__XA_ATTR_IS_PRIVATE, &is_private);
-    if ((is_private != 0)
-        && !pcmk__str_any_of(set_type,
-                             PCMK_XE_INSTANCE_ATTRIBUTES, PCMK_XE_UTILIZATION,
-                             NULL)) {
+    if (!is_private && !pcmk__str_any_of(set_type,
+                                         PCMK_XE_INSTANCE_ATTRIBUTES,
+                                         PCMK_XE_UTILIZATION, NULL)) {
         crm_warn("Ignoring attribute %s with invalid set type %s",
                  pcmk__s(name, "(unidentified)"), set_type);
         return NULL;
