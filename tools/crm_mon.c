@@ -1681,7 +1681,7 @@ main(int argc, char **argv)
         char *content = pcmk__itoa(options.reconnect_ms / 1000);
 
         pcmk__html_add_header(PCMK__XE_META,
-                              "http-equiv", "refresh",
+                              PCMK__XA_HTTP_EQUIV, "refresh",
                               PCMK__XA_CONTENT, content,
                               NULL);
         free(content);

@@ -126,6 +126,7 @@ extern "C" {
 #define PCMK__XA_GRAPH_ERRORS           "graph-errors"
 #define PCMK__XA_GRAPH_WARNINGS         "graph-warnings"
 #define PCMK__XA_HIDDEN                 "hidden"
+#define PCMK__XA_HTTP_EQUIV             "http-equiv"
 #define PCMK__XA_IN_CCM                 "in_ccm"
 #define PCMK__XA_JOIN                   "join"
 #define PCMK__XA_JOIN_ID                "join_id"

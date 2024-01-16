@@ -898,7 +898,7 @@ pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, con
  *
  * \code
  * pcmk__html_add_header(PCMK__XE_META,
- *                       "http-equiv", "refresh",
+ *                       PCMK__XA_HTTP_EQUIV, "refresh",
  *                       PCMK__XA_CONTENT, "19",
  *                       NULL);
  * \endcode
