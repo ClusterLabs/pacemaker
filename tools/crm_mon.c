@@ -120,19 +120,20 @@ crm_mon_disconnected_html(pcmk__output_t *out, va_list args)
         out->reset(out);
     }
 
-    pcmk__output_create_xml_text_node(out, "span", "Not connected to CIB");
+    pcmk__output_create_xml_text_node(out, PCMK__XE_SPAN,
+                                      "Not connected to CIB");
 
     if (desc != NULL) {
-        pcmk__output_create_xml_text_node(out, "span", ": ");
-        pcmk__output_create_xml_text_node(out, "span", desc);
+        pcmk__output_create_xml_text_node(out, PCMK__XE_SPAN, ": ");
+        pcmk__output_create_xml_text_node(out, PCMK__XE_SPAN, desc);
     }
 
     if (state != pcmk_pacemakerd_state_invalid) {
         const char *state_s = pcmk__pcmkd_state_enum2friendly(state);
 
-        pcmk__output_create_xml_text_node(out, "span", " (");
-        pcmk__output_create_xml_text_node(out, "span", state_s);
-        pcmk__output_create_xml_text_node(out, "span", ")");
+        pcmk__output_create_xml_text_node(out, PCMK__XE_SPAN, " (");
+        pcmk__output_create_xml_text_node(out, PCMK__XE_SPAN, state_s);
+        pcmk__output_create_xml_text_node(out, PCMK__XE_SPAN, ")");
     }
 
     out->finish(out, CRM_EX_DISCONNECT, true, NULL);
