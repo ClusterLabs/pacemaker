@@ -3129,10 +3129,12 @@ PCMK__OUTPUT_ARGS("ticket", "pcmk_ticket_t *")
 static int
 ticket_xml(pcmk__output_t *out, va_list args) {
     pcmk_ticket_t *ticket = va_arg(args, pcmk_ticket_t *);
-    const char *status = ticket->granted? PCMK_VALUE_GRANTED : "revoked";
+    const char *status = NULL;
     const char *standby = pcmk__btoa(ticket->standby);
 
     xmlNodePtr node = NULL;
+
+    status = ticket->granted? PCMK_VALUE_GRANTED : PCMK_VALUE_REVOKED;
 
     node = pcmk__output_create_xml_node(out, PCMK_XE_TICKET,
                                         PCMK_XA_ID, ticket->id,

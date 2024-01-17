@@ -172,6 +172,7 @@ extern "C" {
 #define PCMK_VALUE_REMOTE                   "remote"
 #define PCMK_VALUE_RESTART                  "restart"
 #define PCMK_VALUE_RESTART_CONTAINER        "restart-container"
+#define PCMK_VALUE_REVOKED                  "revoked"
 #define PCMK_VALUE_SERIALIZE                "Serialize"
 #define PCMK_VALUE_STANDBY                  "standby"
 #define PCMK_VALUE_STRING                   "string"
