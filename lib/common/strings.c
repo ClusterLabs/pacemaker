@@ -342,14 +342,6 @@ pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
     return pcmk_rc_ok;
 }
 
-#ifndef NUMCHARS
-#  define	NUMCHARS	"0123456789."
-#endif
-
-#ifndef WHITESPACE
-#  define	WHITESPACE	" \t\n\r\f"
-#endif
-
 /*!
  * \brief Parse a time+units string and return milliseconds equivalent
  *
@@ -363,53 +355,82 @@ pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
 long long
 crm_get_msec(const char *input)
 {
-    const char *num_start = NULL;
-    const char *units;
+    char *units = NULL; // Do not free; will point to part of input
     long long multiplier = 1000;
     long long divisor = 1;
     long long msec = PCMK__PARSE_INT_DEFAULT;
-    size_t num_len = 0;
-    char *end_text = NULL;
 
     if (input == NULL) {
         return PCMK__PARSE_INT_DEFAULT;
     }
 
-    num_start = input + strspn(input, WHITESPACE);
-    num_len = strspn(num_start, NUMCHARS);
-    if (num_len < 1) {
+    // Skip initial whitespace
+    while (isspace(*input)) {
+        input++;
+    }
+
+    // Reject negative and unparsable inputs
+    scan_ll(input, &msec, -1, &units);
+    if (msec < 0) {
         return PCMK__PARSE_INT_DEFAULT;
     }
-    units = num_start + num_len;
-    units += strspn(units, WHITESPACE);
 
-    if (!strncasecmp(units, "ms", 2) || !strncasecmp(units, "msec", 4)) {
-        multiplier = 1;
-        divisor = 1;
-    } else if (!strncasecmp(units, "us", 2) || !strncasecmp(units, "usec", 4)) {
-        multiplier = 1;
-        divisor = 1000;
-    } else if (!strncasecmp(units, "s", 1) || !strncasecmp(units, "sec", 3)) {
+    /* If the number is a decimal, scan_ll() reads only the integer part. Skip
+     * any remaining digits or decimal characters.
+     *
+     * @COMPAT Well-formed and malformed decimals are both accepted inputs. For
+     * example, "3.14 ms" and "3.1.4 ms" are treated the same as "3ms" and
+     * parsed successfully. At a compatibility break, decide if this is still
+     * desired.
+     */
+    while (isdigit(*units) || (*units == '.')) {
+        units++;
+    }
+
+    // Skip any additional whitespace after the number
+    while (isspace(*units)) {
+        units++;
+    }
+
+    /* @COMPAT Use exact comparisons. Currently, we match too liberally, and the
+     * second strncasecmp() in each case is redundant.
+     */
+    if ((*units == '\0')
+        || (strncasecmp(units, "s", 1) == 0)
+        || (strncasecmp(units, "sec", 3) == 0)) {
         multiplier = 1000;
         divisor = 1;
-    } else if (!strncasecmp(units, "m", 1) || !strncasecmp(units, "min", 3)) {
+
+    } else if ((strncasecmp(units, "ms", 2) == 0)
+               || (strncasecmp(units, "msec", 4) == 0)) {
+        multiplier = 1;
+        divisor = 1;
+
+    } else if ((strncasecmp(units, "us", 2) == 0)
+               || (strncasecmp(units, "usec", 4) == 0)) {
+        multiplier = 1;
+        divisor = 1000;
+
+    } else if ((strncasecmp(units, "m", 1) == 0)
+               || (strncasecmp(units, "min", 3) == 0)) {
         multiplier = 60 * 1000;
         divisor = 1;
-    } else if (!strncasecmp(units, "h", 1) || !strncasecmp(units, "hr", 2)) {
+
+    } else if ((strncasecmp(units, "h", 1) == 0)
+               || (strncasecmp(units, "hr", 2) == 0)) {
         multiplier = 60 * 60 * 1000;
         divisor = 1;
-    } else if ((*units != '\0') && (*units != '\n') && (*units != '\r')) {
+
+    } else {
+        // Invalid units
         return PCMK__PARSE_INT_DEFAULT;
     }
 
-    scan_ll(num_start, &msec, PCMK__PARSE_INT_DEFAULT, &end_text);
+    // Apply units, capping at LLONG_MAX
     if (msec > (LLONG_MAX / multiplier)) {
-        // Arithmetics overflow while multiplier/divisor mutually exclusive
         return LLONG_MAX;
     }
-    msec *= multiplier;
-    msec /= divisor;
-    return msec;
+    return (msec * multiplier) / divisor;
 }
 
 /*!
