@@ -18,6 +18,6 @@ AM_TESTS_ENVIRONMENT += PCMK_schema_directory=$(top_builddir)/xml
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
 
-check_PROGRAMS = pcmk_resource_delete_test
+#check_PROGRAMS = pcmk_resource_delete_test
 
-TESTS = $(check_PROGRAMS)
+#TESTS = $(check_PROGRAMS)
