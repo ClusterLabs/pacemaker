@@ -245,12 +245,12 @@ xml_subprocess_output(pcmk__output_t *out, int exit_status,
 
     if (proc_stdout != NULL) {
         child_node = pcmk_create_xml_text_node(node, "output", proc_stdout);
-        crm_xml_add(child_node, "source", "stdout");
+        crm_xml_add(child_node, PCMK_XA_SOURCE, "stdout");
     }
 
     if (proc_stderr != NULL) {
         child_node = pcmk_create_xml_text_node(node, "output", proc_stderr);
-        crm_xml_add(child_node, "source", "stderr");
+        crm_xml_add(child_node, PCMK_XA_SOURCE, "stderr");
     }
 
     free(rc_as_str);
@@ -258,15 +258,16 @@ xml_subprocess_output(pcmk__output_t *out, int exit_status,
 
 static void
 xml_version(pcmk__output_t *out, bool extended) {
+    const char *author = "Andrew Beekhof and the Pacemaker project "
+                         "contributors";
     CRM_ASSERT(out != NULL);
 
     pcmk__output_create_xml_node(out, PCMK_XE_VERSION,
-                                 "program", "Pacemaker",
+                                 PCMK_XA_PROGRAM, "Pacemaker",
                                  PCMK_XA_VERSION, PACEMAKER_VERSION,
-                                 "author", "Andrew Beekhof and the "
-                                           "Pacemaker project contributors",
-                                 "build", BUILD_VERSION,
-                                 "features", CRM_FEATURES,
+                                 PCMK_XA_AUTHOR, author,
+                                 PCMK_XA_BUILD, BUILD_VERSION,
+                                 PCMK_XA_FEATURES, CRM_FEATURES,
                                  NULL);
 }
 

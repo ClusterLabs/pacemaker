@@ -469,20 +469,20 @@ stonith_event_xml(pcmk__output_t *out, va_list args)
     switch (event->state) {
         case st_failed:
             pcmk__xe_set_props(node,
-                               PCMK_XA_STATUS, "failed",
+                               PCMK_XA_STATUS, PCMK_VALUE_FAILED,
                                PCMK_XA_EXIT_REASON, event->exit_reason,
                                NULL);
             break;
 
         case st_done:
-            crm_xml_add(node, PCMK_XA_STATUS, "success");
+            crm_xml_add(node, PCMK_XA_STATUS, PCMK_VALUE_SUCCESS);
             break;
 
         default: {
             char *state = pcmk__itoa(event->state);
             pcmk__xe_set_props(node,
-                               PCMK_XA_STATUS, "pending",
-                               "extended-status", state,
+                               PCMK_XA_STATUS, PCMK_VALUE_PENDING,
+                               PCMK_XA_EXTENDED_STATUS, state,
                                NULL);
             free(state);
             break;
@@ -497,7 +497,7 @@ stonith_event_xml(pcmk__output_t *out, va_list args)
         char *time_s = timespec_string(event->completed, event->completed_nsec,
                                        true);
 
-        crm_xml_add(node, "completed", time_s);
+        crm_xml_add(node, PCMK_XA_COMPLETED, time_s);
         free(time_s);
     }
 

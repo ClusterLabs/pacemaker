@@ -836,15 +836,11 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
-
-    const char *desc = NULL;
     GList *gIter = rsc->children;
     GList *all = NULL;
     int rc = pcmk_rc_no_output;
     gboolean printed_header = FALSE;
     gboolean print_everything = TRUE;
-
-    
 
     if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
         return rc;
@@ -867,24 +863,32 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
         }
 
         if (!printed_header) {
+            const char *multi_state = pcmk__flag_text(rsc->flags,
+                                                      pcmk_rsc_promotable);
+            const char *unique = pcmk__flag_text(rsc->flags, pcmk_rsc_unique);
+            const char *maintenance = pcmk__flag_text(rsc->flags,
+                                                      pcmk_rsc_maintenance);
+            const char *managed = pcmk__flag_text(rsc->flags, pcmk_rsc_managed);
+            const char *disabled = pcmk__btoa(pe__resource_is_disabled(rsc));
+            const char *failed = pcmk__flag_text(rsc->flags, pcmk_rsc_failed);
+            const char *ignored = pcmk__flag_text(rsc->flags,
+                                                  pcmk_rsc_ignore_failure);
+            const char *target_role = configured_role_str(rsc);
+            const char *desc = pe__resource_description(rsc, show_opts);
+
             printed_header = TRUE;
 
-            desc = pe__resource_description(rsc, show_opts);
             rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_CLONE, 10,
-                    PCMK_XA_ID, rsc->id,
-                    "multi_state",
-                    pcmk__flag_text(rsc->flags, pcmk_rsc_promotable),
-                    "unique", pcmk__flag_text(rsc->flags, pcmk_rsc_unique),
-                    "maintenance",
-                    pcmk__flag_text(rsc->flags, pcmk_rsc_maintenance),
-                    "managed", pcmk__flag_text(rsc->flags, pcmk_rsc_managed),
-                    "disabled", pcmk__btoa(pe__resource_is_disabled(rsc)),
-                    PCMK_XA_FAILED,
-                    pcmk__flag_text(rsc->flags, pcmk_rsc_failed),
-                    "failure_ignored",
-                    pcmk__flag_text(rsc->flags, pcmk_rsc_ignore_failure),
-                    "target_role", configured_role_str(rsc),
-                    PCMK_XA_DESCRIPTION, desc);
+                                          PCMK_XA_ID, rsc->id,
+                                          PCMK_XA_MULTI_STATE, multi_state,
+                                          PCMK_XA_UNIQUE, unique,
+                                          PCMK_XA_MAINTENANCE, maintenance,
+                                          PCMK_XA_MANAGED, managed,
+                                          PCMK_XA_DISABLED, disabled,
+                                          PCMK_XA_FAILED, failed,
+                                          PCMK_XA_FAILURE_IGNORED, ignored,
+                                          PCMK_XA_TARGET_ROLE, target_role,
+                                          PCMK_XA_DESCRIPTION, desc);
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
 

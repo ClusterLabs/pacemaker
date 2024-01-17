@@ -362,7 +362,7 @@ apply_include(const gchar *includes, GError **error) {
             if (strlen(*s) > 4 && (*s)[4] == ':') {
                 options.neg_location_prefix = strdup(*s+5);
             }
-        } else if (pcmk__str_any_of(*s, "default", "defaults", NULL)) {
+        } else if (pcmk__str_any_of(*s, PCMK_VALUE_DEFAULT, "defaults", NULL)) {
             show |= default_includes(output_format);
         } else if (pcmk__str_eq(*s, PCMK__VALUE_NONE, pcmk__str_none)) {
             show = 0;
@@ -371,10 +371,10 @@ apply_include(const gchar *includes, GError **error) {
         } else {
             g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                         "--include options: all, attributes, bans[:PREFIX], counts, dc, "
-                        "default, failcounts, failures, fencing, fencing-failed, "
-                        "fencing-pending, fencing-succeeded, maint-mode, nodes, "
-                        PCMK__VALUE_NONE ", operations, options, resources, "
-                        "stack, summary, tickets, times");
+                        PCMK_VALUE_DEFAULT ", failcounts, failures, fencing, "
+                        "fencing-failed, fencing-pending, fencing-succeeded, "
+                        "maint-mode, nodes, " PCMK__VALUE_NONE ", operations, "
+                        "options, resources, stack, summary, tickets, times");
             result = FALSE;
             break;
         }

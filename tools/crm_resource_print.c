@@ -575,7 +575,7 @@ resource_search_list_xml(pcmk__output_t *out, va_list args)
     const char *requested_name = va_arg(args, const char *);
 
     pcmk__output_xml_create_parent(out, PCMK_XE_NODES,
-                                   "resource", requested_name,
+                                   PCMK_XA_RESOURCE, requested_name,
                                    NULL);
 
     for (GList *lpc = nodes; lpc != NULL; lpc = lpc->next) {
@@ -700,7 +700,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
             rsc->fns->location(rsc, &hosts, TRUE);
             running = pcmk__btoa(hosts != NULL);
 
-            pcmk__output_xml_create_parent(out, "resource",
+            pcmk__output_xml_create_parent(out, PCMK_XE_RESOURCE,
                                            PCMK_XA_ID, rsc->id,
                                            PCMK_XA_RUNNING, running,
                                            NULL);
@@ -732,7 +732,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
         for (lpc = activeResources; lpc != NULL; lpc = lpc->next) {
             pcmk_resource_t *rsc = (pcmk_resource_t *) lpc->data;
 
-            pcmk__output_xml_create_parent(out, "resource",
+            pcmk__output_xml_create_parent(out, PCMK_XE_RESOURCE,
                                            PCMK_XA_ID, rsc->id,
                                            PCMK_XA_RUNNING, PCMK_VALUE_TRUE,
                                            PCMK_XA_HOST, host_uname,
@@ -745,7 +745,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
         for(lpc = unactiveResources; lpc != NULL; lpc = lpc->next) {
             pcmk_resource_t *rsc = (pcmk_resource_t *) lpc->data;
 
-            pcmk__output_xml_create_parent(out, "resource",
+            pcmk__output_xml_create_parent(out, PCMK_XE_RESOURCE,
                                            PCMK_XA_ID, rsc->id,
                                            PCMK_XA_RUNNING, PCMK_VALUE_FALSE,
                                            PCMK_XA_HOST, host_uname,
@@ -776,7 +776,11 @@ static void
 add_resource_name(pcmk_resource_t *rsc, pcmk__output_t *out)
 {
     if (rsc->children == NULL) {
-        out->list_item(out, "resource", "%s", rsc->id);
+        /* Sometimes PCMK_XE_RESOURCE might act as a PCMK_XA_NAME instead of an
+         * XML element name, depending on whether the command line causes
+         * --xml-simple-list to be forced.
+         */
+        out->list_item(out, PCMK_XE_RESOURCE, "%s", rsc->id);
     } else {
         g_list_foreach(rsc->children, (GFunc) add_resource_name, out);
     }

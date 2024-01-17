@@ -201,7 +201,7 @@ set_join_state(const char *start_state, const char *node_name, const char *node_
                               NULL, NULL, NULL, "standby", "on", NULL,
                               remote? PCMK_VALUE_REMOTE : NULL);
 
-    } else if (pcmk__str_eq(start_state, "online", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(start_state, PCMK_VALUE_ONLINE, pcmk__str_casei)) {
         crm_notice("Forcing node %s to join in %s state per configured "
                    "environment", node_name, start_state);
         cib__update_node_attr(controld_globals.logger_out,
@@ -210,11 +210,12 @@ set_join_state(const char *start_state, const char *node_name, const char *node_
                               NULL, NULL, NULL, "standby", "off", NULL,
                               remote? PCMK_VALUE_REMOTE : NULL);
 
-    } else if (pcmk__str_eq(start_state, "default", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(start_state, PCMK_VALUE_DEFAULT, pcmk__str_casei)) {
         crm_debug("Not forcing a starting state on node %s", node_name);
 
     } else {
-        crm_warn("Unrecognized start state '%s', using 'default' (%s)",
+        crm_warn("Unrecognized start state '%s', using "
+                 "'" PCMK_VALUE_DEFAULT "' (%s)",
                  start_state, node_name);
     }
 }

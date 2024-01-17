@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2023 the Pacemaker project contributors
+ * Copyright 2017-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -203,7 +203,7 @@ remoted_spawn_pidone(int argc, char **argv, char **envp)
      *   from /etc/pacemaker/pcmk-init.env, which could be useful for testing or
      *   containers with a custom PID 1 script that launches pacemaker-remoted.
      */
-    const char *pid1 = "default";
+    const char *pid1 = PCMK_VALUE_DEFAULT;
 
     if (getpid() != 1) {
         pid1 = pcmk__env_option(PCMK__ENV_REMOTE_PID1);

@@ -307,7 +307,7 @@ assign_resources(pcmk_scheduler_t *scheduler)
 
     crm_trace("Assigning resources to nodes");
 
-    if (!pcmk__str_eq(scheduler->placement_strategy, "default",
+    if (!pcmk__str_eq(scheduler->placement_strategy, PCMK_VALUE_DEFAULT,
                       pcmk__str_casei)) {
         pcmk__sort_resources(scheduler);
     }

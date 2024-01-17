@@ -242,13 +242,14 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
 
     // If appropriate, compare node utilization
 
-    if (pcmk__str_eq(node1->details->data_set->placement_strategy, "minimal",
-                     pcmk__str_casei)) {
+    if (pcmk__str_eq(node1->details->data_set->placement_strategy,
+                     PCMK_VALUE_MINIMAL, pcmk__str_casei)) {
         goto equal;
     }
 
-    if (pcmk__str_eq(node1->details->data_set->placement_strategy, "balanced",
-                     pcmk__str_casei)) {
+    if (pcmk__str_eq(node1->details->data_set->placement_strategy,
+                     PCMK_VALUE_BALANCED, pcmk__str_casei)) {
+
         result = pcmk__compare_node_capacities(node1, node2);
         if (result < 0) {
             crm_trace("%s before %s (greater capacity by %d attributes)",

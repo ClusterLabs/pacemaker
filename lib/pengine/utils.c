@@ -416,7 +416,7 @@ get_target_role(const pcmk_resource_t *rsc, enum rsc_role_e *role)
     CRM_CHECK(role != NULL, return FALSE);
 
     if (pcmk__str_eq(value, "started", pcmk__str_null_matches | pcmk__str_casei)
-        || pcmk__str_eq("default", value, pcmk__str_casei)) {
+        || pcmk__str_eq(PCMK_VALUE_DEFAULT, value, pcmk__str_casei)) {
         return FALSE;
     }
 

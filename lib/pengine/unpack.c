@@ -1004,7 +1004,7 @@ unpack_ticket_state(xmlNode *xml_ticket, pcmk_scheduler_t *scheduler)
         g_hash_table_replace(ticket->state, strdup(prop_name), strdup(prop_value));
     }
 
-    granted = g_hash_table_lookup(ticket->state, "granted");
+    granted = g_hash_table_lookup(ticket->state, PCMK__XA_GRANTED);
     if (granted && crm_is_true(granted)) {
         ticket->granted = TRUE;
         crm_info("We have ticket '%s'", ticket->id);
@@ -1013,7 +1013,7 @@ unpack_ticket_state(xmlNode *xml_ticket, pcmk_scheduler_t *scheduler)
         crm_info("We do not have ticket '%s'", ticket->id);
     }
 
-    last_granted = g_hash_table_lookup(ticket->state, "last-granted");
+    last_granted = g_hash_table_lookup(ticket->state, PCMK_XA_LAST_GRANTED);
     if (last_granted) {
         long long last_granted_ll;
 
@@ -1021,7 +1021,7 @@ unpack_ticket_state(xmlNode *xml_ticket, pcmk_scheduler_t *scheduler)
         ticket->last_granted = (time_t) last_granted_ll;
     }
 
-    standby = g_hash_table_lookup(ticket->state, "standby");
+    standby = g_hash_table_lookup(ticket->state, PCMK_XA_STANDBY);
     if (standby && crm_is_true(standby)) {
         ticket->standby = TRUE;
         if (ticket->granted) {
@@ -5056,7 +5056,7 @@ extract_operations(const char *node, const char *rsc, xmlNode * rsc_entry, gbool
 
         if (pcmk__str_eq((const char *)rsc_op->name, PCMK__XE_LRM_RSC_OP,
                          pcmk__str_none)) {
-            crm_xml_add(rsc_op, "resource", rsc);
+            crm_xml_add(rsc_op, PCMK_XA_RESOURCE, rsc);
             crm_xml_add(rsc_op, PCMK_XA_UNAME, node);
             op_list = g_list_prepend(op_list, rsc_op);
         }

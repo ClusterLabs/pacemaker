@@ -123,10 +123,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     if (c->name == NULL) {
         const char *value = crm_element_value(request, F_STONITH_CLIENTNAME);
 
-        if (value == NULL) {
-            value = "unknown";
-        }
-        c->name = crm_strdup_printf("%s.%u", value, c->pid);
+        c->name = crm_strdup_printf("%s.%u", pcmk__s(value, "unknown"), c->pid);
     }
 
     crm_element_value_int(request, F_STONITH_CALLOPTS, &call_options);

@@ -274,9 +274,9 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
     }
 
     change_str = g_ascii_strdown(change, -1);
-    xml = pcmk__output_create_xml_node(out, "rsc_action",
+    xml = pcmk__output_create_xml_node(out, PCMK_XE_RSC_ACTION,
                                        PCMK_XA_ACTION, change_str,
-                                       "resource", rsc->id,
+                                       PCMK_XA_RESOURCE, rsc->id,
                                        NULL);
     g_free(change_str);
 
@@ -284,8 +284,8 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
         /* Starting and promoting a promotable clone instance */
         pcmk__xe_set_props(xml,
                            PCMK_XA_ROLE, pcmk_role_text(rsc->role),
-                           "next-role", pcmk_role_text(rsc->next_role),
-                           "dest", destination->details->uname,
+                           PCMK_XA_NEXT_ROLE, pcmk_role_text(rsc->next_role),
+                           PCMK_XA_DEST, destination->details->uname,
                            NULL);
 
     } else if (origin == NULL) {
@@ -307,43 +307,43 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
         /* Recovering, restarting or re-promoting a promotable clone instance */
         pcmk__xe_set_props(xml,
                            PCMK_XA_ROLE, pcmk_role_text(rsc->role),
-                           "source", origin->details->uname,
+                           PCMK_XA_SOURCE, origin->details->uname,
                            NULL);
 
     } else if (same_role && same_host) {
         /* Recovering or Restarting a normal resource */
-        crm_xml_add(xml, "source", origin->details->uname);
+        crm_xml_add(xml, PCMK_XA_SOURCE, origin->details->uname);
 
     } else if (need_role && same_role) {
         /* Moving a promotable clone instance */
         pcmk__xe_set_props(xml,
-                           "source", origin->details->uname,
-                           "dest", destination->details->uname,
+                           PCMK_XA_SOURCE, origin->details->uname,
+                           PCMK_XA_DEST, destination->details->uname,
                            PCMK_XA_ROLE, pcmk_role_text(rsc->role),
                            NULL);
 
     } else if (same_role) {
         /* Moving a normal resource */
         pcmk__xe_set_props(xml,
-                           "source", origin->details->uname,
-                           "dest", destination->details->uname,
+                           PCMK_XA_SOURCE, origin->details->uname,
+                           PCMK_XA_DEST, destination->details->uname,
                            NULL);
 
     } else if (same_host) {
         /* Promoting or demoting a promotable clone instance */
         pcmk__xe_set_props(xml,
                            PCMK_XA_ROLE, pcmk_role_text(rsc->role),
-                           "next-role", pcmk_role_text(rsc->next_role),
-                           "source", origin->details->uname,
+                           PCMK_XA_NEXT_ROLE, pcmk_role_text(rsc->next_role),
+                           PCMK_XA_SOURCE, origin->details->uname,
                            NULL);
 
     } else {
         /* Moving and promoting/demoting */
         pcmk__xe_set_props(xml,
                            PCMK_XA_ROLE, pcmk_role_text(rsc->role),
-                           "source", origin->details->uname,
-                           "next-role", pcmk_role_text(rsc->next_role),
-                           "dest", destination->details->uname,
+                           PCMK_XA_SOURCE, origin->details->uname,
+                           PCMK_XA_NEXT_ROLE, pcmk_role_text(rsc->next_role),
+                           PCMK_XA_DEST, destination->details->uname,
                            NULL);
     }
 
@@ -351,14 +351,14 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
         && !pcmk_is_set(action->flags, pcmk_action_runnable)) {
         pcmk__xe_set_props(xml,
                            PCMK_XA_REASON, source->reason,
-                           "blocked", PCMK_VALUE_TRUE,
+                           PCMK_XA_BLOCKED, PCMK_VALUE_TRUE,
                            NULL);
 
     } else if (source->reason != NULL) {
         crm_xml_add(xml, PCMK_XA_REASON, source->reason);
 
     } else if (!pcmk_is_set(action->flags, pcmk_action_runnable)) {
-        pcmk__xe_set_bool_attr(xml, "blocked", true);
+        pcmk__xe_set_bool_attr(xml, PCMK_XA_BLOCKED, true);
 
     }
 
@@ -1042,7 +1042,7 @@ digests_xml(pcmk__output_t *out, va_list args)
     xmlNode *xml = NULL;
 
     xml = pcmk__output_create_xml_node(out, "digests",
-                                       "resource", pcmk__s(rsc->id, ""),
+                                       PCMK_XA_RESOURCE, pcmk__s(rsc->id, ""),
                                        PCMK_XA_NODE,
                                        pcmk__s(node->details->uname, ""),
                                        "task", pcmk__s(task, ""),
@@ -1761,8 +1761,8 @@ inject_rsc_action_xml(pcmk__output_t *out, va_list args)
         return pcmk_rc_no_output;
     }
 
-    xml_node = pcmk__output_create_xml_node(out, "rsc_action",
-                                            "resource", rsc,
+    xml_node = pcmk__output_create_xml_node(out, PCMK_XE_RSC_ACTION,
+                                            PCMK_XA_RESOURCE, rsc,
                                             PCMK_XA_OP, operation,
                                             PCMK_XA_NODE, node,
                                             NULL);

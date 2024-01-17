@@ -113,7 +113,7 @@ sync_point_str(enum attrd_sync_point sync_point)
     } else if  (sync_point == attrd_sync_point_cluster) {
         return PCMK__VALUE_CLUSTER;
     } else {
-        return "unknown";
+        return PCMK_VALUE_UNKNOWN;
     }
 }
 

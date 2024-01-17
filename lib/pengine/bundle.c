@@ -1520,21 +1520,26 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
         }
 
         if (!printed_header) {
+            const char *type = container_agent_str(bundle_data->agent_type);
+            const char *unique = pcmk__flag_text(rsc->flags, pcmk_rsc_unique);
+            const char *maintenance = pcmk__flag_text(rsc->flags,
+                                                      pcmk_rsc_maintenance);
+            const char *managed = pcmk__flag_text(rsc->flags, pcmk_rsc_managed);
+            const char *failed = pcmk__flag_text(rsc->flags, pcmk_rsc_failed);
+
             printed_header = TRUE;
 
             desc = pe__resource_description(rsc, show_opts);
 
             rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_BUNDLE, 8,
-                     PCMK_XA_ID, rsc->id,
-                     PCMK_XA_TYPE, container_agent_str(bundle_data->agent_type),
-                     PCMK_XA_IMAGE, bundle_data->image,
-                     "unique", pcmk__flag_text(rsc->flags, pcmk_rsc_unique),
-                     "maintenance",
-                     pcmk__flag_text(rsc->flags, pcmk_rsc_maintenance),
-                     "managed", pcmk__flag_text(rsc->flags, pcmk_rsc_managed),
-                     PCMK_XA_FAILED, pcmk__flag_text(rsc->flags,
-                                                     pcmk_rsc_failed),
-                     PCMK_XA_DESCRIPTION, desc);
+                                          PCMK_XA_ID, rsc->id,
+                                          PCMK_XA_TYPE, type,
+                                          PCMK_XA_IMAGE, bundle_data->image,
+                                          PCMK_XA_UNIQUE, unique,
+                                          PCMK_XA_MAINTENANCE, maintenance,
+                                          PCMK_XA_MANAGED, managed,
+                                          PCMK_XA_FAILED, failed,
+                                          PCMK_XA_DESCRIPTION, desc);
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
 

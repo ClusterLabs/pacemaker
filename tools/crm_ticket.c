@@ -116,19 +116,19 @@ get_attr_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError
 static gboolean
 grant_standby_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     if (pcmk__str_any_of(option_name, "--grant", "-g", NULL)) {
-        g_hash_table_insert(attr_set, strdup("granted"),
+        g_hash_table_insert(attr_set, strdup(PCMK__XA_GRANTED),
                             strdup(PCMK_VALUE_TRUE));
         modified = true;
     } else if (pcmk__str_any_of(option_name, "--revoke", "-r", NULL)) {
-        g_hash_table_insert(attr_set, strdup("granted"),
+        g_hash_table_insert(attr_set, strdup(PCMK__XA_GRANTED),
                             strdup(PCMK_VALUE_FALSE));
         modified = true;
     } else if (pcmk__str_any_of(option_name, "--standby", "-s", NULL)) {
-        g_hash_table_insert(attr_set, strdup("standby"),
+        g_hash_table_insert(attr_set, strdup(PCMK_XA_STANDBY),
                             strdup(PCMK_VALUE_TRUE));
         modified = true;
     } else if (pcmk__str_any_of(option_name, "--activate", "-a", NULL)) {
-        g_hash_table_insert(attr_set, strdup("standby"),
+        g_hash_table_insert(attr_set, strdup(PCMK_XA_STANDBY),
                             strdup(PCMK_VALUE_FALSE));
         modified = true;
     }
@@ -305,7 +305,7 @@ print_ticket(pcmk_ticket_t *ticket, bool raw, bool details)
                 fprintf(stdout, ", ");
             }
             fprintf(stdout, "%s=", name);
-            if (pcmk__str_any_of(name, "last-granted", "expires", NULL)) {
+            if (pcmk__str_any_of(name, PCMK_XA_LAST_GRANTED, "expires", NULL)) {
                 long long time_ll;
 
                 pcmk__scan_ll(value, &time_ll, 0);
@@ -320,7 +320,7 @@ print_ticket(pcmk_ticket_t *ticket, bool raw, bool details)
 
     } else {
         if (ticket->last_granted > -1) {
-            fprintf(stdout, " last-granted=");
+            fprintf(stdout, " " PCMK_XA_LAST_GRANTED "=");
             print_date(ticket->last_granted);
         }
         fprintf(stdout, "\n");
@@ -545,7 +545,8 @@ allow_modification(gchar *ticket_id)
         return true;
     }
 
-    if (g_hash_table_lookup_extended(attr_set, "granted", NULL, (gpointer *) & value)) {
+    if (g_hash_table_lookup_extended(attr_set, PCMK__XA_GRANTED, NULL,
+                                     (gpointer *) &value)) {
         if (crm_is_true(value)) {
             ticket_warning(ticket_id, "grant");
             return false;
@@ -559,7 +560,7 @@ allow_modification(gchar *ticket_id)
     for(list_iter = attr_delete; list_iter; list_iter = list_iter->next) {
         const char *key = (const char *)list_iter->data;
 
-        if (pcmk__str_eq(key, "granted", pcmk__str_casei)) {
+        if (pcmk__str_eq(key, PCMK__XA_GRANTED, pcmk__str_none)) {
             ticket_warning(ticket_id, "revoke");
             return false;
         }
@@ -616,13 +617,13 @@ modify_ticket_state(gchar *ticket_id, cib_t *cib, pcmk_scheduler_t *scheduler)
     while (g_hash_table_iter_next(&hash_iter, (gpointer *) & key, (gpointer *) & value)) {
         crm_xml_add(ticket_state_xml, key, value);
 
-        if (pcmk__str_eq(key, "granted", pcmk__str_casei)
+        if (pcmk__str_eq(key, PCMK__XA_GRANTED, pcmk__str_none)
             && (ticket == NULL || ticket->granted == FALSE)
             && crm_is_true(value)) {
 
             char *now = pcmk__ttoa(time(NULL));
 
-            crm_xml_add(ticket_state_xml, "last-granted", now);
+            crm_xml_add(ticket_state_xml, PCMK_XA_LAST_GRANTED, now);
             free(now);
         }
     }
