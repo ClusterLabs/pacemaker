@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 the Pacemaker project contributors
+ * Copyright 2021-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,6 +19,11 @@ bad_input(void **state) {
     assert_int_equal(crm_get_msec("100xs"), PCMK__PARSE_INT_DEFAULT);
     assert_int_equal(crm_get_msec(" 100 xs "), PCMK__PARSE_INT_DEFAULT);
     assert_int_equal(crm_get_msec("-100ms"), PCMK__PARSE_INT_DEFAULT);
+
+    assert_int_equal(crm_get_msec("3.xs"), PCMK__PARSE_INT_DEFAULT);
+    assert_int_equal(crm_get_msec("  3.   xs  "), PCMK__PARSE_INT_DEFAULT);
+    assert_int_equal(crm_get_msec("3.14xs"), PCMK__PARSE_INT_DEFAULT);
+    assert_int_equal(crm_get_msec("  3.14  xs  "), PCMK__PARSE_INT_DEFAULT);
 }
 
 static void
@@ -28,6 +33,7 @@ good_input(void **state) {
     assert_int_equal(crm_get_msec("\t100\n"), 100000);
 
     assert_int_equal(crm_get_msec("100ms"), 100);
+    assert_int_equal(crm_get_msec(" 100 ms "), 100);
     assert_int_equal(crm_get_msec("100 MSEC"), 100);
     assert_int_equal(crm_get_msec("1000US"), 1);
     assert_int_equal(crm_get_msec("1000usec"), 1);
@@ -37,6 +43,28 @@ good_input(void **state) {
     assert_int_equal(crm_get_msec("13 min"), 780000);
     assert_int_equal(crm_get_msec("2\th"), 7200000);
     assert_int_equal(crm_get_msec("1 hr"), 3600000);
+
+    assert_int_equal(crm_get_msec("3."), 3000);
+    assert_int_equal(crm_get_msec("  3.  ms  "), 3);
+    assert_int_equal(crm_get_msec("3.14"), 3000);
+    assert_int_equal(crm_get_msec("  3.14  ms  "), 3);
+
+    // Questionable
+    assert_int_equal(crm_get_msec("3.14."), 3000);
+    assert_int_equal(crm_get_msec("  3.14.  ms  "), 3);
+    assert_int_equal(crm_get_msec("3.14.159"), 3000);
+    assert_int_equal(crm_get_msec("  3.14.159  "), 3000);
+    assert_int_equal(crm_get_msec("3.14.159ms"), 3);
+    assert_int_equal(crm_get_msec("  3.14.159  ms  "), 3);
+
+    // Questionable
+    assert_int_equal(crm_get_msec(" 100 mshr "), 100);
+    assert_int_equal(crm_get_msec(" 100 ms hr "), 100);
+    assert_int_equal(crm_get_msec(" 100 sasdf "), 100000);
+    assert_int_equal(crm_get_msec(" 100 s asdf "), 100000);
+    assert_int_equal(crm_get_msec(" 3.14 shour "), 3000);
+    assert_int_equal(crm_get_msec(" 3.14 s hour "), 3000);
+    assert_int_equal(crm_get_msec(" 3.14 ms!@#$ "), 3);
 }
 
 static void

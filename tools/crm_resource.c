@@ -97,7 +97,7 @@ struct {
     char *prop_name;              // Attribute name
     gchar *prop_set;              // --set-name (attribute block XML ID)
     gchar *prop_value;            // --parameter-value (attribute value)
-    int timeout_ms;               // Parsed from --timeout value
+    long long timeout_ms;         // Parsed from --timeout value
     char *agent_spec;             // Standard and/or provider and/or agent
     gchar *xml_file;              // Value of (deprecated) --xml-file
     int check_level;              // Optional value of --validate or --force-check
@@ -898,6 +898,13 @@ set_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError
 gboolean
 timeout_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.timeout_ms = crm_get_msec(optarg);
+
+    if (options.timeout_ms < 0) {
+        crm_warn("Ignoring invalid timeout '%s'", optarg);
+        options.timeout_ms = 0;
+    } else {
+        options.timeout_ms = QB_MIN(options.timeout_ms, INT_MAX);
+    }
     return TRUE;
 }
 

@@ -195,7 +195,7 @@ remove_cib_device(xmlXPathObjectPtr xpathObj)
 static void
 update_stonith_watchdog_timeout_ms(xmlNode *cib)
 {
-    long timeout_ms = 0;
+    long long timeout_ms = 0;
     xmlNode *stonith_watchdog_xml = NULL;
     const char *value = NULL;
 
@@ -604,7 +604,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
 static void
 update_cib_cache_cb(const char *event, xmlNode * msg)
 {
-    long timeout_ms_saved = stonith_watchdog_timeout_ms;
+    long long timeout_ms_saved = stonith_watchdog_timeout_ms;
     bool need_full_refresh = false;
 
     if(!have_cib_devices) {

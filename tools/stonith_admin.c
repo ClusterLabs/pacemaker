@@ -53,7 +53,7 @@ struct {
     stonith_key_value_t *params;
     int fence_level;
     int timeout ;
-    int tolerance;
+    long long tolerance_ms;
     int delay;
     char *agent;
     char *confirm_host;
@@ -265,7 +265,15 @@ add_stonith_device(const gchar *option_name, const gchar *optarg, gpointer data,
 
 gboolean
 add_tolerance(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.tolerance = crm_get_msec(optarg) / 1000;
+    // pcmk__request_fencing() expects an unsigned int
+    options.tolerance_ms = crm_get_msec(optarg);
+
+    if (options.tolerance_ms < 0) {
+        crm_warn("Ignoring invalid tolerance '%s'", optarg);
+        options.tolerance_ms = 0;
+    } else {
+        options.tolerance_ms = QB_MIN(options.tolerance_ms, UINT_MAX);
+    }
     return TRUE;
 }
 
@@ -339,8 +347,8 @@ request_fencing(stonith_t *st, const char *target, const char *command,
     char *reason = NULL;
     int rc = pcmk__request_fencing(st, target, command, name,
                                    options.timeout * 1000,
-                                   options.tolerance * 1000,
-                                   options.delay, &reason);
+                                   options.tolerance_ms, options.delay,
+                                   &reason);
 
     if (rc != pcmk_rc_ok) {
         const char *rc_str = pcmk_rc_str(rc);

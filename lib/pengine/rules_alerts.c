@@ -47,7 +47,9 @@ get_meta_attrs_from_cib(xmlNode *basenode, pcmk__alert_t *entry,
 
     value = g_hash_table_lookup(config_hash, PCMK_META_TIMEOUT);
     if (value) {
-        entry->timeout = crm_get_msec(value);
+        long long timeout_ms = crm_get_msec(value);
+
+        entry->timeout = (int) QB_MIN(timeout_ms, INT_MAX);
         if (entry->timeout <= 0) {
             if (entry->timeout == 0) {
                 crm_trace("Alert %s uses default timeout of %dmsec",
