@@ -854,8 +854,12 @@ mon_cib_connection_destroy(gpointer user_data)
     /* the client API won't properly reconnect notifications if they are still
      * in the table - so remove them
      */
-    stonith_api_delete(st);
-    st = NULL;
+    if (st != NULL) {
+        if (st->state != stonith_disconnected) {
+            st->cmds->disconnect(st);
+        }
+        st->cmds->remove_notification(st, NULL);
+    }
 
     if (cib) {
         cib->cmds->signoff(cib);
