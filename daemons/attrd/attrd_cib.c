@@ -54,6 +54,7 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
     bool status_changed = false;
 
     if (attrd_shutting_down(true)) {
+        crm_debug("Ignoring CIB change during shutdown");
         return;
     }
 
@@ -281,11 +282,13 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *use
 
     g_hash_table_iter_init(&iter, a->values);
     while (g_hash_table_iter_next(&iter, (gpointer *) & peer, (gpointer *) & v)) {
-        do_crm_log(level, "* %s[%s]=%s",
-                   a->id, peer, pcmk__s(v->requested, "(null)"));
         if (rc == pcmk_ok) {
+            crm_info("* Wrote %s[%s]=%s",
+                     a->id, peer, pcmk__s(v->requested, "(unset)"));
             pcmk__str_update(&(v->requested), NULL);
         } else {
+            do_crm_log(level, "* Could not write %s[%s]=%s",
+                       a->id, peer, pcmk__s(v->requested, "(unset)"));
             a->changed = true; // Reattempt write below if we are still writer
         }
     }
@@ -295,6 +298,7 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *use
             /* We deferred a write of a new update because this update was in
              * progress. Write out the new value without additional delay.
              */
+            crm_debug("Pending update for %s can be written now", a->id);
             write_attribute(a, false);
 
         /* We're re-attempting a write because the original failed; delay
@@ -596,8 +600,9 @@ write_attribute(attribute_t *a, bool ignore_delay)
             continue;
         }
 
-        crm_debug("Updating %s[%s]=%s (node uuid=%s id=%" PRIu32 ")",
-                  a->id, v->nodename, v->current, uuid, v->nodeid);
+        crm_debug("Writing %s[%s]=%s (node-state-id=%s node-id=%" PRIu32 ")",
+                  a->id, v->nodename, pcmk__s(v->current, "(unset)"),
+                  uuid, v->nodeid);
         cib_updates++;
 
         /* Preservation of the attribute to transmit alert */

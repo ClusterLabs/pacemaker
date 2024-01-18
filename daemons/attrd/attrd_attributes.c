@@ -27,7 +27,6 @@ attrd_create_attribute(xmlNode *xml)
 {
     int is_private = 0;
     long long dampen = 0;
-    const char *readable_delay = "no";
     const char *name = crm_element_value(xml, PCMK__XA_ATTR_NAME);
     const char *set_type = crm_element_value(xml, PCMK__XA_ATTR_SET_TYPE);
     const char *dampen_s = crm_element_value(xml, PCMK__XA_ATTR_DAMPENING);
@@ -61,7 +60,6 @@ attrd_create_attribute(xmlNode *xml)
     a->values = pcmk__strikey_table(NULL, attrd_free_attribute_value);
 
     a->user = crm_element_value_copy(xml, PCMK__XA_ATTR_USER);
-    crm_trace("Performing all %s operations as user '%s'", a->id, a->user);
 
     if (dampen_s != NULL) {
         dampen = crm_get_msec(dampen_s);
@@ -70,13 +68,14 @@ attrd_create_attribute(xmlNode *xml)
     if (dampen > 0) {
         a->timeout_ms = (int) QB_MIN(dampen, INT_MAX);
         a->timer = attrd_add_timer(a->id, a->timeout_ms, a);
-        readable_delay = pcmk__readable_interval(a->timeout_ms);
     } else if (dampen < 0) {
         crm_warn("Ignoring invalid delay %s for attribute %s", dampen_s, a->id);
     }
 
-    crm_trace("Created attribute %s with %s write delay",
-              a->id, readable_delay);
+    crm_trace("Created attribute %s with %s write delay and %s CIB user",
+              a->id,
+              ((dampen > 0)? pcmk__readable_interval(a->timeout_ms) : "no"),
+              pcmk__s(a->user, "default"));
 
     g_hash_table_replace(attributes, a->id, a);
     return a;
