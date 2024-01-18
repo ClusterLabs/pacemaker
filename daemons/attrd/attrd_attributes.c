@@ -282,3 +282,188 @@ attrd_nvpair_id(const attribute_t *attr, const char *node_state_id)
     crm_xml_sanitize_id(nvpair_id);
     return nvpair_id;
 }
+
+/*!
+ * \internal
+ * \brief Get node CIB ID for an attribute value
+ *
+ * \param[in] v  Attribute value to check
+ *
+ * \return Node CIB ID used to write \p v
+ */
+static const char *
+get_node_cib_id(const attribute_value_t *v)
+{
+    if (pcmk_is_set(v->flags, attrd_value_remote)) {
+       return v->nodename;
+    }
+    return v->node_cib_id;
+}
+
+/*!
+ * \internal
+ * \brief Drop removed attribute values according to given function
+ *
+ * \param[in] set_type  If not NULL, drop only attributes with this set type
+ * \param[in] func      Function to call (should return 0 to keep value,
+ *                      1 to drop value, or 2 to drop value and stop checking)
+ * \param[in] cib_id    ID of element that was removed from CIB
+ */
+static void
+drop_removed_values(const char *set_type,
+                    int (*func)(const attribute_t *, const attribute_value_t *,
+                                const char *),
+                    const char *cib_id)
+{
+    attribute_t *a = NULL;
+    GHashTableIter attr_iter;
+    const char *entry_type = pcmk__s(set_type, "status entry"); // for log
+
+    // Check every attribute ...
+    g_hash_table_iter_init(&attr_iter, attributes);
+    while (g_hash_table_iter_next(&attr_iter, NULL, (gpointer *) &a)) {
+        attribute_value_t *v = NULL;
+        GHashTableIter value_iter;
+
+        if (a->is_private) {
+            continue; // Private attributes are never marked as removed
+        }
+        if ((set_type != NULL)
+            && !pcmk__str_eq(a->set_type, set_type, pcmk__str_none)) {
+            continue;
+        }
+
+        // Check every value of the attribute ...
+        g_hash_table_iter_init(&value_iter, a->values);
+        while (g_hash_table_iter_next(&value_iter, NULL, (gpointer *) &v)) {
+            int rc = 0;
+
+            if (!pcmk_is_set(v->flags, attrd_value_removed)) {
+                continue;
+            }
+
+            if (get_node_cib_id(v) == NULL) {
+                crm_trace("Ignoring %s[%s] after CIB removal of %s %s because "
+                          "it has no node state ID (never written?)",
+                          a->id, v->nodename, entry_type, cib_id);
+                continue;
+            }
+
+            rc = func(a, v, cib_id);
+            if (rc > 0) {
+                crm_debug("Dropping %s[%s] after CIB removal of %s %s",
+                          a->id, v->nodename, entry_type, cib_id);
+                g_hash_table_iter_remove(&value_iter);
+                if (rc > 1) {
+                    return;
+                }
+            }
+        }
+    }
+}
+
+/*!
+ * \internal
+ * \brief Check whether an attribute value has a given XML ID
+ *
+ * \param[in] a       Attribute being checked
+ * \param[in] v       Attribute value being checked
+ * \param[in] cib_id  ID of name/value pair element that was removed from CIB
+ *
+ * \return 2 if value matches XML ID, otherwise 0
+ */
+static int
+nvpair_matches(const attribute_t *a, const attribute_value_t *v,
+               const char *cib_id)
+{
+    char *id = attrd_nvpair_id(a, get_node_cib_id(v));
+
+    /* We don't enforce uniqueness for value XML IDs, but in practice they
+     * should be, so we can stop looping if we find one that matches. We
+     * currently use the same default ID for a value whether it is in instance
+     * attributes or utilization attributes, but any given attribute must be one
+     * or the other, so there should never be both.
+     */
+    int rc = pcmk__str_eq(id, cib_id, pcmk__str_none)? 2 : 0;
+
+    free(id);
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Drop attribute value corresponding to removed CIB entry
+ *
+ * \param[in] cib_id  ID of name/value pair element that was removed from CIB
+ */
+void
+attrd_drop_removed_value(const char *cib_id)
+{
+    CRM_CHECK(cib_id != NULL, return);
+    drop_removed_values(NULL, nvpair_matches, cib_id);
+}
+
+/*!
+ * \internal
+ * \brief Check whether an attribute value has a given attribute set ID
+ *
+ * \param[in] a       Attribute being checked
+ * \param[in] v       Attribute value being checked
+ * \param[in] cib_id  ID of attribute set that was removed from CIB
+ *
+ * \return 1 if value matches XML ID, otherwise 0
+ */
+static int
+set_matches(const attribute_t *a, const attribute_value_t *v,
+            const char *cib_id)
+{
+    char *id = attrd_set_id(a, get_node_cib_id(v));
+    int rc = pcmk__str_eq(id, cib_id, pcmk__str_none)? 1: 0;
+
+    free(id);
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Drop all removed attribute values for an attribute set
+ *
+ * \param[in] element  XML element name of set that was removed
+ * \param[in] cib_id   ID of attribute set that was removed from CIB
+ */
+void
+attrd_drop_removed_set(const char *set_type, const char *cib_id)
+{
+    CRM_CHECK((set_type != NULL) && (cib_id != NULL), return);
+    drop_removed_values(set_type, set_matches, cib_id);
+}
+
+/*!
+ * \internal
+ * \brief Check whether an attribute value has a given node state XML ID
+ *
+ * \param[in] a       Attribute being checked
+ * \param[in] v       Attribute value being checked
+ * \param[in] cib_id  ID of node state that was removed from CIB
+ *
+ * \return 1 if value matches removed ID, otherwise 0
+ */
+static int
+node_matches(const attribute_t *a, const attribute_value_t *v,
+             const char *cib_id)
+{
+    return pcmk__str_eq(get_node_cib_id(v), cib_id, pcmk__str_none)? 1 : 0;
+}
+
+/*!
+ * \internal
+ * \brief Drop all removed attribute values for a node
+ *
+ * \param[in] cib_id  ID of node state that was removed from CIB
+ */
+void
+attrd_drop_removed_values(const char *cib_id)
+{
+    CRM_CHECK(cib_id != NULL, return);
+    drop_removed_values(NULL, node_matches, cib_id);
+}

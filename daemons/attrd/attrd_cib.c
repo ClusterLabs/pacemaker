@@ -9,7 +9,10 @@
 
 #include <crm_internal.h>
 
+#include <sys/types.h>  // for regex.h
 #include <errno.h>
+#include <string.h>     // strndup()
+#include <regex.h>      // regcomp(), regexec(), regex_t, regmatch_t, regoff_t
 #include <inttypes.h>   // PRIu32
 #include <stdbool.h>
 #include <stdlib.h>
@@ -46,6 +49,133 @@ attrd_cib_destroy_cb(gpointer user_data)
     }
 }
 
+/* In a patchset, deletions have the XPath to the deleted element, like:
+ *
+ *     /cib/status/node_state[@id='X']
+ *
+ * We need to check whether a node state was deleted, or transient attributes
+ * beneath that, or an attribute set beneath that, or a name/value pair
+ * beneath that.
+ */
+#define DELETION_REGEX "/" PCMK_XE_CIB "/" PCMK_XE_STATUS                   \
+    "/" PCMK__XE_NODE_STATE "\\[@" PCMK_XA_ID "='([0-9]+)'\\]"              \
+    "(/" PCMK__XE_TRANSIENT_ATTRIBUTES "\\[@" PCMK_XA_ID "='[^']+'\\])?"    \
+    "(/([^[/]+)\\[@" PCMK_XA_ID "='([^']+)'\\])?"                           \
+    "(/" PCMK_XE_NVPAIR "\\[@" PCMK_XA_ID "='([^']+)'\\])?$"
+
+// Number of submatches in DELETION_REGEX + 1 for entire match
+#define DELETION_NMATCH 8
+
+/*!
+ * \internal
+ * \brief Duplicate a regular expression submatch
+ *
+ * \param[in] string    String being matched against regular expression
+ * \param[in] matches   Submatches (as determined by regexec())
+ * \param[in] submatch  Desired index into \p matches[]
+ *
+ * \return Newly allocated string with desired submatch
+ * \note This asserts on allocation failure, so the result is guaranteed to be
+ *       non-NULL.
+ */
+static char *
+re_submatch(const char *string, regmatch_t matches[], size_t submatch)
+{
+    const regoff_t start = matches[submatch].rm_so;
+    char *match = strndup(string + start, matches[submatch].rm_eo - start);
+
+    CRM_ASSERT(match != NULL);
+    return match;
+}
+
+/*!
+ * \internal
+ * \brief Check a patchset change for deletion of a transient attribute
+ *
+ * \param[in] xml    Patchset change element
+ * \param[in] data  Ignored
+ *
+ * \return pcmk_rc_ok (always continue to next patchset change)
+ */
+static int
+check_deletion(xmlNode *xml, void *data)
+{
+    const char *value = NULL;
+    char *id = NULL;
+    regmatch_t matches[DELETION_NMATCH];
+
+    static regex_t re;
+    static bool re_compiled = false;
+
+    // We're only interested in deletions
+    value = crm_element_value(xml, PCMK_XA_OPERATION);
+    if (!pcmk__str_eq(value, "delete", pcmk__str_none)) {
+        return pcmk_rc_ok;
+    }
+    value = crm_element_value(xml, PCMK_XA_PATH);
+    if (value == NULL) {
+        crm_warn("Ignoring malformed deletion in "
+                 "CIB change notification: No " PCMK_XA_PATH);
+        return pcmk_rc_ok;
+    }
+
+    // Compare deletion XPath against our monster regular expression
+    if (!re_compiled) {
+        CRM_CHECK(regcomp(&re, DELETION_REGEX, REG_EXTENDED) == 0,
+                  return pcmk_rc_ok);
+        re_compiled = true;
+    }
+    if (regexec(&re, value, DELETION_NMATCH, matches, 0) != 0) {
+        return pcmk_rc_ok; // No match (not an attribute deletion)
+    }
+
+    /* matches[0] = entire node state match
+     * matches[1] = node state ID
+     * matches[2] = transient attributes with ID
+     * matches[3] = attribute set with ID
+     * matches[4] = attribute set element name
+     * matches[5] = attribute set ID
+     * matches[6] = name/value pair with ID
+     * matches[7] = name/value pair ID
+     */
+
+    // If we get here, we must have matched at least node state and its ID
+    CRM_CHECK((matches[0].rm_so == 0) && (matches[1].rm_so > 0),
+              return pcmk_rc_ok);
+
+    // Check whether all of node's transient attributes were deleted
+    if ((matches[2].rm_so < 0) || (matches[3].rm_so < 0)) {
+        id = re_submatch(value, matches, 1);
+        attrd_drop_removed_values(id);
+        free(id);
+        return pcmk_rc_ok;
+    }
+
+    // We matched an attribute set, so we must have its element name and ID
+    CRM_CHECK((matches[4].rm_so > 0) && (matches[5].rm_so > 0),
+              return pcmk_rc_ok);
+
+    // Check whether the entire set was deleted
+    if (matches[6].rm_so < 0) {
+        char *set_type = re_submatch(value, matches, 4);
+
+        id = re_submatch(value, matches, 5);
+        attrd_drop_removed_set(set_type, id);
+        free(id);
+        free(set_type);
+        return pcmk_rc_ok;
+    }
+
+    // We matched a single name/value pair, so we must have its ID
+    CRM_CHECK(matches[7].rm_so > 0, return pcmk_rc_ok);
+
+    // Drop the one value
+    id = re_submatch(value, matches, 7);
+    attrd_drop_removed_value(id);
+    free(id);
+    return pcmk_rc_ok;
+}
+
 static void
 attrd_cib_updated_cb(const char *event, xmlNode *msg)
 {
@@ -72,7 +202,21 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
     if (!cib__client_triggers_refresh(client_name)) {
         /* This change came from a source that ensured the CIB is consistent
          * with our attributes table, so we don't need to write anything out.
+         * If a removed attribute has been erased, we can forget it now.
          */
+        int format = 1;
+
+        if ((crm_element_value_int(patchset, PCMK_XA_FORMAT, &format) != 0)
+            || (format < 2)) {
+            crm_warn("Can't handle CIB diff format %d", format);
+            return;
+        }
+
+        /* This won't modify patchset, but we need to break const to match the
+         * function signature.
+         */
+        pcmk__xe_foreach_child((xmlNode *) patchset, PCMK_XE_CHANGE,
+                               check_deletion, NULL);
         return;
     }
 
@@ -283,9 +427,19 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *use
     g_hash_table_iter_init(&iter, a->values);
     while (g_hash_table_iter_next(&iter, (gpointer *) & peer, (gpointer *) & v)) {
         if (rc == pcmk_ok) {
-            crm_info("* Wrote %s[%s]=%s",
-                     a->id, peer, pcmk__s(v->requested, "(unset)"));
+            const bool removed = pcmk_is_set(v->flags, attrd_value_removed);
+
+            crm_info("* Wrote %s[%s]=%s%s",
+                     a->id, peer, pcmk__s(v->requested, "(unset)"),
+                     (removed? " and dropped" : ""));
             pcmk__str_update(&(v->requested), NULL);
+            if (removed) {
+                /* The attribute has been successfully wiped from the CIB,
+                 * so we can forget it now. Peers will drop it via their
+                 * CIB notification callback.
+                 */
+                g_hash_table_iter_remove(&iter);
+            }
         } else {
             do_crm_log(level, "* Could not write %s[%s]=%s",
                        a->id, peer, pcmk__s(v->requested, "(unset)"));
@@ -554,6 +708,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
     g_hash_table_iter_init(&iter, a->values);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &v)) {
         const char *uuid = NULL;
+        crm_node_t *peer = NULL;
 
         if (pcmk_is_set(v->flags, attrd_value_remote)) {
             /* If this is a Pacemaker Remote node, the node's UUID is the same
@@ -561,12 +716,28 @@ write_attribute(attribute_t *a, bool ignore_delay)
              */
             uuid = v->nodename;
 
+        } else if (pcmk_is_set(v->flags, attrd_value_removed)) {
+            /* If a value was removed, we have the node state ID used to write
+             * it, if it was written. If not, it may be an attribute with a
+             * write delay that was written just before the writer's shutdown --
+             * in that case, check the node caches, but don't create a node
+             * cache entry for a removal, to avoid re-creating a purged node.
+             */
+            uuid = v->node_cib_id;
+            if (uuid == NULL) {
+                peer = pcmk__search_node_caches(v->nodeid, v->nodename,
+                                                pcmk__node_search_any
+                                                |pcmk__node_search_known);
+            }
+
         } else {
             // This will create a cluster node cache entry if none exists
-            crm_node_t *peer = pcmk__get_node(v->nodeid, v->nodename, NULL,
-                                              pcmk__node_search_any);
+            peer = pcmk__get_node(v->nodeid, v->nodename, NULL,
+                                  pcmk__node_search_any);
+        }
 
-            uuid = peer->uuid;
+        if ((uuid == NULL) && (peer != NULL)) {
+            uuid = crm_peer_uuid(peer);
 
             // Remember peer's node ID if we're just now learning it
             if ((peer->id != 0) && (v->nodeid == 0)) {
@@ -586,7 +757,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
             a->unknown_peer_uuids = true;
             crm_notice("Cannot update %s[%s]='%s' now because node's UUID is "
                        "unknown (will retry if learned)",
-                       a->id, v->nodename, v->current);
+                       a->id, v->nodename, pcmk__s(v->current, "(unset)"));
             continue;
         }
 

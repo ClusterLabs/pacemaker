@@ -554,7 +554,9 @@ attrd_peer_remove(const char *host, bool uncache, const char *source)
                           a->id, host, source);
             }
 
-        // Otherwise, mark the value as removed
+        /* Otherwise, mark the value as removed. We'll drop it once we get
+         * confirmation that it was erased from the CIB.
+         */
         } else {
             attribute_value_t *v = g_hash_table_lookup(a->values, host);
 

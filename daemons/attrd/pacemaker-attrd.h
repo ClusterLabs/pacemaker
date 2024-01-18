@@ -201,6 +201,9 @@ void attrd_free_attribute_value(gpointer data);
 attribute_t *attrd_populate_attribute(xmlNode *xml, const char *attr);
 char *attrd_set_id(const attribute_t *attr, const char *node_state_id);
 char *attrd_nvpair_id(const attribute_t *attr, const char *node_state_id);
+void attrd_drop_removed_value(const char *cib_id);
+void attrd_drop_removed_set(const char *set_type, const char *cib_id);
+void attrd_drop_removed_values(const char *cib_id);
 
 enum attrd_write_options {
     attrd_write_changed         = 0,
