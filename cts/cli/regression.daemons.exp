@@ -27,13 +27,13 @@
   <shortdesc lang="en">Pacemaker controller options</shortdesc>
   <parameters>
     <parameter name="dc-version">
-      <longdesc lang="en">Includes a hash which identifies the exact changeset the code was built from. Used for diagnostic purposes.</longdesc>
+      <longdesc lang="en">Includes a hash which identifies the exact revision the code was built from. Used for diagnostic purposes.</longdesc>
       <shortdesc lang="en">Pacemaker version on cluster node elected Designated Controller (DC)</shortdesc>
       <content type="string" default=""/>
     </parameter>
     <parameter name="cluster-infrastructure">
       <longdesc lang="en">Used for informational and diagnostic purposes.</longdesc>
-      <shortdesc lang="en">The messaging stack on which Pacemaker is currently running</shortdesc>
+      <shortdesc lang="en">The messaging layer on which Pacemaker is currently running</shortdesc>
       <content type="string" default=""/>
     </parameter>
     <parameter name="cluster-name">
@@ -47,12 +47,12 @@
       <content type="time" default=""/>
     </parameter>
     <parameter name="cluster-recheck-interval">
-      <longdesc lang="en">Pacemaker is primarily event-driven, and looks ahead to know when to recheck cluster state for failure timeouts and most time-based rules. However, it will also recheck the cluster after this amount of inactivity, to evaluate rules with date specifications and serve as a fail-safe for certain types of scheduler bugs. Allowed values: Zero disables polling, while positive values are an interval in seconds (unless other units are specified, for example "5min").</longdesc>
+      <longdesc lang="en">Pacemaker is primarily event-driven, and looks ahead to know when to recheck cluster state for failure-timeout settings and most time-based rules. However, it will also recheck the cluster after this amount of inactivity, to evaluate rules with date specifications and serve as a fail-safe for certain types of scheduler bugs. Allowed values: Zero disables polling, while positive values are an interval in seconds (unless other units are specified, for example "5min").</longdesc>
       <shortdesc lang="en">Polling interval to recheck cluster state and evaluate rules with date specifications</shortdesc>
       <content type="time" default=""/>
     </parameter>
     <parameter name="fence-reaction">
-      <longdesc lang="en">A cluster node may receive notification of its own fencing if fencing is misconfigured, or if fabric fencing is in use that doesn&apos;t cut cluster communication. Use &quot;stop&quot; to attempt to immediately stop Pacemaker and stay stopped, or &quot;panic&quot; to attempt to immediately reboot the local node, falling back to stop on failure. Allowed values: stop, panic.</longdesc>
+      <longdesc lang="en">A cluster node may receive notification of a &quot;succeeded&quot; fencing that targeted it if fencing is misconfigured, or if fabric fencing is in use that doesn&apos;t cut cluster communication. Use &quot;stop&quot; to attempt to immediately stop Pacemaker and stay stopped, or &quot;panic&quot; to attempt to immediately reboot the local node, falling back to stop on failure. Allowed values: stop, panic.</longdesc>
       <shortdesc lang="en">How a cluster node should react if notified of its own fencing</shortdesc>
       <content type="select" default="">
         <option value="stop" />
@@ -85,7 +85,7 @@
       <content type="time" default=""/>
     </parameter>
     <parameter name="stonith-watchdog-timeout">
-      <longdesc lang="en">If this is set to a positive value, lost nodes are assumed to self-fence using watchdog-based SBD within this much time. This does not require a fencing resource to be explicitly configured, though a fence_watchdog resource can be configured, to limit use to specific nodes. If this is set to 0 (the default), the cluster will never assume watchdog-based self-fencing. If this is set to a negative value, the cluster will use twice the local value of the `SBD_WATCHDOG_TIMEOUT` environment variable if that is positive, or otherwise treat this as 0. WARNING: When used, this timeout must be larger than `SBD_WATCHDOG_TIMEOUT` on all nodes that use watchdog-based SBD, and Pacemaker will refuse to start on any of those nodes where this is not true for the local value or SBD is not active. When this is set to a negative value, `SBD_WATCHDOG_TIMEOUT` must be set to the same value on all nodes that use SBD, otherwise data corruption or loss could occur.</longdesc>
+      <longdesc lang="en">If this is set to a positive value, lost nodes are assumed to achieve self-fencing using watchdog-based SBD within this much time. This does not require a fencing resource to be explicitly configured, though a fence_watchdog resource can be configured, to limit use to specific nodes. If this is set to 0 (the default), the cluster will never assume watchdog-based self-fencing. If this is set to a negative value, the cluster will use twice the local value of the `SBD_WATCHDOG_TIMEOUT` environment variable if that is positive, or otherwise treat this as 0. WARNING: When used, this timeout must be larger than `SBD_WATCHDOG_TIMEOUT` on all nodes that use watchdog-based SBD, and Pacemaker will refuse to start on any of those nodes where this is not true for the local value or SBD is not active. When this is set to a negative value, `SBD_WATCHDOG_TIMEOUT` must be set to the same value on all nodes that use SBD, otherwise data corruption or loss could occur.</longdesc>
       <shortdesc lang="en">How long before nodes can be assumed to be safely down when watchdog-based self-fencing via SBD is in use</shortdesc>
       <content type="time" default=""/>
     </parameter>
