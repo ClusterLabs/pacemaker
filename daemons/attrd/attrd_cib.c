@@ -353,8 +353,8 @@ void
 attrd_cib_init(void)
 {
     /* We have no attribute values in memory, so wipe the CIB to match. This is
-     * normally done by the DC's controller when this node leaves the cluster, but
-     * this handles the case where the node restarted so quickly that the
+     * normally done by the writer when this node leaves the cluster, but this
+     * handles the case where the node restarted so quickly that the
      * cluster layer didn't notice.
      *
      * \todo If pacemaker-attrd respawns after crashing (see PCMK_ENV_RESPAWNED),

@@ -570,6 +570,12 @@ attrd_peer_remove(const char *host, bool uncache, const char *source)
         }
     }
 
+    if (attrd_election_won()) {
+        attrd_cib_erase_transient_attrs(host); // Wipe from CIB
+    } else {
+        attrd_start_election_if_needed(); // Make sure CIB gets updated
+    }
+
     // Remove node from caches if requested
     if (uncache) {
         pcmk__purge_node_from_cache(host, 0);
