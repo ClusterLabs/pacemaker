@@ -149,6 +149,9 @@ attrd_add_value_xml(xmlNode *parent, const attribute_t *a,
     if (pcmk_is_set(v->flags, attrd_value_remote)) {
         crm_xml_add_int(xml, PCMK__XA_ATTR_IS_REMOTE, 1);
     }
+    if (pcmk_is_set(v->flags, attrd_value_removed)) {
+        crm_xml_add_int(xml, PCMK__XA_REMOVED, 1);
+    }
     crm_xml_add(xml, PCMK__XA_ATTR_VALUE, v->current);
     crm_xml_add(xml, PCMK__XA_NODE_STATE, v->node_cib_id);
     crm_xml_add_int(xml, PCMK__XA_ATTR_DAMPENING, a->timeout_ms / 1000);

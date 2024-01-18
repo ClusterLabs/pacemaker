@@ -145,6 +145,7 @@ enum attrd_value_flags {
     attrd_value_none        = 0U,
     attrd_value_remote      = (1U << 0),  // Value is for Pacemaker Remote node
     attrd_value_from_peer   = (1U << 1),  // Value is from peer sync response
+    attrd_value_removed     = (1U << 2),  // Value should be erased from CIB
 };
 
 typedef struct attribute_value_s {

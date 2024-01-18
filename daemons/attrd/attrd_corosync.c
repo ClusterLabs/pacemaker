@@ -222,7 +222,9 @@ record_peer_nodeid(attribute_value_t *v, const char *host)
     }
 }
 
-#define readable_value(rv_v) pcmk__s((rv_v)->current, "(unset)")
+#define readable_value(rv_v) (                                      \
+    pcmk_is_set((rv_v)->flags, attrd_value_removed)? "(removed)"    \
+        : pcmk__s((rv_v)->current, "(unset)"))
 
 #define readable_peer(p)    \
     (((p) == NULL)? "all peers" : pcmk__s((p)->uname, "unknown peer"))
@@ -236,6 +238,7 @@ update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
     bool changed = false;
     attribute_value_t *v = NULL;
     const char *node_cib_id = NULL;
+    int is_removed = 0;
 
     // Create entry for value if not already existing
     v = g_hash_table_lookup(a->values, host);
@@ -263,8 +266,13 @@ update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
         CRM_ASSERT(crm_remote_peer_get(host) != NULL);
     }
 
-    // Check whether the value changed
-    changed = !pcmk__str_eq(v->current, value, pcmk__str_casei);
+    // Check whether the value or its removed flag changed
+    if (crm_element_value_int(xml, PCMK__XA_REMOVED, &is_removed) < 0) {
+        is_removed = 0;
+    }
+    changed = !pcmk__str_eq(v->current, value, pcmk__str_casei)
+              || (is_removed && !pcmk_is_set(v->flags, attrd_value_removed))
+              || (!is_removed && pcmk_is_set(v->flags, attrd_value_removed));
 
     if (changed && filter && pcmk__str_eq(host, attrd_cluster->uname,
                                           pcmk__str_casei)) {
@@ -275,7 +283,9 @@ update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
          */
         v = g_hash_table_lookup(a->values, attrd_cluster->uname);
         crm_notice("%s[%s]: local value '%s' takes priority over '%s' from %s",
-                   attr, host, readable_value(v), value, peer->uname);
+                   attr, host, readable_value(v),
+                   (is_removed? "(removed)" : pcmk__s(value, "(unset)")),
+                   peer->uname);
         attrd_broadcast_value(a, v);
 
     } else if (changed) {
@@ -286,6 +296,11 @@ update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
                    pcmk__s(value, "(unset)"), peer->uname,
                    (a->timeout_ms == 0)? "no" : pcmk__readable_interval(a->timeout_ms));
         pcmk__str_update(&v->current, value);
+        if (is_removed) {
+            attrd_set_value_flags(v, attrd_value_removed);
+        } else {
+            attrd_clear_value_flags(v, attrd_value_removed);
+        }
         a->changed = true;
 
         if (pcmk__str_eq(host, attrd_cluster->uname, pcmk__str_casei)
@@ -531,12 +546,29 @@ attrd_peer_remove(const char *host, bool uncache, const char *source)
                host, source, (uncache? "and" : "without"));
 
     g_hash_table_iter_init(&aIter, attributes);
-    while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
-        if(g_hash_table_remove(a->values, host)) {
-            crm_debug("Removed %s[%s] for peer %s", a->id, host, source);
+    while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) &a)) {
+        // Drop private attributes now, since they will not be written to CIB
+        if (a->is_private) {
+            if (g_hash_table_remove(a->values, host)) {
+                crm_debug("Removed %s[%s] (private) for %s",
+                          a->id, host, source);
+            }
+
+        // Otherwise, mark the value as removed
+        } else {
+            attribute_value_t *v = g_hash_table_lookup(a->values, host);
+
+            if ((v != NULL) && !pcmk_is_set(v->flags, attrd_value_removed)) {
+                crm_debug("Removed %s[%s] (by marking) for %s",
+                          a->id, host, source);
+                pcmk__str_update(&(v->current), NULL);
+                attrd_set_value_flags(v, attrd_value_removed);
+                a->changed = true;
+            }
         }
     }
 
+    // Remove node from caches if requested
     if (uncache) {
         pcmk__purge_node_from_cache(host, 0);
     }
