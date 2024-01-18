@@ -310,7 +310,7 @@ create_device_registration_xml(const char *id, enum stonith_namespace namespace,
 
     crm_xml_add(data, PCMK_XA_ID, id);
     crm_xml_add(data, F_STONITH_ORIGIN, __func__);
-    crm_xml_add(data, "agent", agent);
+    crm_xml_add(data, PCMK_XA_AGENT, agent);
     if ((namespace != st_namespace_any) && (namespace != st_namespace_invalid)) {
         crm_xml_add(data, "namespace", stonith_namespace2text(namespace));
     }

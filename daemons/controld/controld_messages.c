@@ -560,18 +560,18 @@ controld_authorize_ipc_message(const xmlNode *client_msg, pcmk__client_t *curr_c
 
     message_data = get_message_xml(client_msg, PCMK__XE_CRM_XML);
 
-    client_name = crm_element_value(message_data, "client_name");
+    client_name = crm_element_value(message_data, PCMK__XA_CLIENT_NAME);
     if (pcmk__str_empty(client_name)) {
         crm_warn("IPC hello from client rejected: No client name",
                  CRM_XS " ref=%s uuid=%s", (ref? ref : "none"), uuid);
         goto rejected;
     }
-    if (!authorize_version(message_data, "major_version", client_name, ref,
-                           uuid)) {
+    if (!authorize_version(message_data, PCMK__XA_MAJOR_VERSION, client_name,
+                           ref, uuid)) {
         goto rejected;
     }
-    if (!authorize_version(message_data, "minor_version", client_name, ref,
-                           uuid)) {
+    if (!authorize_version(message_data, PCMK__XA_MINOR_VERSION, client_name,
+                           ref, uuid)) {
         goto rejected;
     }
 

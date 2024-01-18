@@ -28,7 +28,7 @@
  * If given NULL, "auto", or "localhost" as an argument, check the environment
  * to detect the node name that should be used to set node attributes. (The
  * caller might not know the correct name, for example if the target is part of
- * a bundle with \c PCMK_META_CONTAINER_ATTR_TARGET set to "host".)
+ * a bundle with \c PCMK_META_CONTAINER_ATTR_TARGET set to \c PCMK_VALUE_HOST.)
  *
  * \param[in] name  NULL, "auto" or "localhost" to check environment variables,
  *                  or anything else to return NULL
@@ -54,7 +54,8 @@ pcmk__node_attr_target(const char *name)
         host_physical = getenv(buf);
 
         // It is important to use the name by which the scheduler knows us
-        if (host_physical && pcmk__str_eq(target, "host", pcmk__str_casei)) {
+        if (host_physical
+            && pcmk__str_eq(target, PCMK_VALUE_HOST, pcmk__str_casei)) {
             name = host_physical;
 
         } else {

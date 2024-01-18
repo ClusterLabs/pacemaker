@@ -317,7 +317,7 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
     crm_xml_add(new_xml, PCMK__META_CLONE,
                 crm_element_value(xml_obj, PCMK__META_CLONE));
 
-    template_ops = find_xml_node(new_xml, "operations", FALSE);
+    template_ops = find_xml_node(new_xml, PCMK_XE_OPERATIONS, FALSE);
 
     for (child_xml = pcmk__xe_first_child(xml_obj); child_xml != NULL;
          child_xml = pcmk__xe_next(child_xml)) {
@@ -325,7 +325,8 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
 
         new_child = add_node_copy(new_xml, child_xml);
 
-        if (pcmk__str_eq((const char *)new_child->name, "operations", pcmk__str_none)) {
+        if (pcmk__str_eq((const char *) new_child->name, PCMK_XE_OPERATIONS,
+                         pcmk__str_none)) {
             rsc_ops = new_child;
         }
     }
@@ -669,7 +670,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     (*rsc)->parent = parent;
 
-    ops = find_xml_node((*rsc)->xml, "operations", FALSE);
+    ops = find_xml_node((*rsc)->xml, PCMK_XE_OPERATIONS, FALSE);
     (*rsc)->ops_xml = expand_idref(ops, scheduler->input);
 
     (*rsc)->variant = get_resource_type((const char *) (*rsc)->xml->name);

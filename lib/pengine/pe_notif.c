@@ -754,7 +754,7 @@ add_notif_keys(const pcmk_resource_t *rsc, notify_data_t *n_data)
     g_list_free(nodes);
 
     source = g_hash_table_lookup(rsc->meta, PCMK_META_CONTAINER_ATTR_TARGET);
-    if (pcmk__str_eq("host", source, pcmk__str_none)) {
+    if (pcmk__str_eq(PCMK_VALUE_HOST, source, pcmk__str_none)) {
         get_node_names(rsc->cluster->nodes, &node_list, &metal_list);
         add_notify_env_free_gs(n_data, "notify_all_hosts", metal_list);
     } else {

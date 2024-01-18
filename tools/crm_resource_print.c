@@ -210,19 +210,21 @@ agent_status_xml(pcmk__output_t *out, va_list args) {
     crm_exit_t rc = va_arg(args, crm_exit_t);
     const char *exit_reason = va_arg(args, const char *);
 
-    char *exit_str = pcmk__itoa(rc);
-    char *status_str = pcmk__itoa(status);
+    char *exit_s = pcmk__itoa(rc);
+    const char *message = services_ocf_exitcode_str((int) rc);
+    char *status_s = pcmk__itoa(status);
+    const char *execution_message = pcmk_exec_status_str(status);
 
-    pcmk__output_create_xml_node(out, "agent-status",
-                                 "code", exit_str,
-                                 "message", services_ocf_exitcode_str((int) rc),
-                                 "execution_code", status_str,
-                                 "execution_message", pcmk_exec_status_str(status),
+    pcmk__output_create_xml_node(out, PCMK_XE_AGENT_STATUS,
+                                 PCMK_XA_CODE, exit_s,
+                                 PCMK_XA_MESSAGE, message,
+                                 PCMK_XA_EXECUTION_CODE, status_s,
+                                 PCMK_XA_EXECUTION_MESSAGE, execution_message,
                                  PCMK_XA_REASON, exit_reason,
                                  NULL);
 
-    free(exit_str);
-    free(status_str);
+    free(exit_s);
+    free(status_s);
 
     return pcmk_rc_ok;
 }
@@ -268,7 +270,7 @@ override_xml(pcmk__output_t *out, va_list args) {
     const char *name = va_arg(args, const char *);
     const char *value = va_arg(args, const char *);
 
-    xmlNodePtr node = pcmk__output_create_xml_node(out, "override",
+    xmlNodePtr node = pcmk__output_create_xml_node(out, PCMK_XE_OVERRIDE,
                                                    PCMK_XA_NAME, name,
                                                    PCMK_XA_VALUE, value,
                                                    NULL);
@@ -336,7 +338,7 @@ resource_agent_action_default(pcmk__output_t *out, va_list args) {
         const char *name = NULL;
         const char *value = NULL;
 
-        out->begin_list(out, NULL, NULL, "overrides");
+        out->begin_list(out, NULL, NULL, PCMK_XE_OVERRIDES);
 
         g_hash_table_iter_init(&iter, overrides);
         while (g_hash_table_iter_next(&iter, (gpointer *) &name, (gpointer *) &value)) {
@@ -362,7 +364,7 @@ resource_agent_action_default(pcmk__output_t *out, va_list args) {
             doc = string2xml(stdout_data);
         }
         if (doc != NULL) {
-            out->output_xml(out, "command", stdout_data);
+            out->output_xml(out, PCMK_XE_COMMAND, stdout_data);
             xmlFreeNode(doc);
         } else {
             out->subprocess_output(out, rc, stdout_data, stderr_data);
@@ -391,11 +393,13 @@ resource_agent_action_xml(pcmk__output_t *out, va_list args) {
     const char *stdout_data = va_arg(args, const char *);
     const char *stderr_data = va_arg(args, const char *);
 
-    xmlNodePtr node = pcmk__output_xml_create_parent(out, "resource-agent-action",
-                                                     PCMK_XA_ACTION, action,
-                                                     PCMK_XA_CLASS, class,
-                                                     PCMK_XA_TYPE, type,
-                                                     NULL);
+    xmlNodePtr node = NULL;
+
+    node = pcmk__output_xml_create_parent(out, PCMK_XE_RESOURCE_AGENT_ACTION,
+                                          PCMK_XA_ACTION, action,
+                                          PCMK_XA_CLASS, class,
+                                          PCMK_XA_TYPE, type,
+                                          NULL);
 
     if (rsc_name) {
         crm_xml_add(node, PCMK_XA_RSC, rsc_name);
@@ -408,7 +412,7 @@ resource_agent_action_xml(pcmk__output_t *out, va_list args) {
         const char *name = NULL;
         const char *value = NULL;
 
-        out->begin_list(out, NULL, NULL, "overrides");
+        out->begin_list(out, NULL, NULL, PCMK_XE_OVERRIDES);
 
         g_hash_table_iter_init(&iter, overrides);
         while (g_hash_table_iter_next(&iter, (gpointer *) &name, (gpointer *) &value)) {
@@ -428,7 +432,7 @@ resource_agent_action_xml(pcmk__output_t *out, va_list args) {
             doc = string2xml(stdout_data);
         }
         if (doc != NULL) {
-            out->output_xml(out, "command", stdout_data);
+            out->output_xml(out, PCMK_XE_COMMAND, stdout_data);
             xmlFreeNode(doc);
         } else {
             out->subprocess_output(out, rc, stdout_data, stderr_data);
@@ -492,7 +496,7 @@ resource_check_list_xml(pcmk__output_t *out, va_list args) {
 
     const pcmk_resource_t *parent = pe__const_top_resource(checks->rsc, false);
 
-    xmlNodePtr node = pcmk__output_create_xml_node(out, "check",
+    xmlNodePtr node = pcmk__output_create_xml_node(out, PCMK_XE_CHECK,
                                                    PCMK_XA_ID, parent->id,
                                                    NULL);
 

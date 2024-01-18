@@ -49,41 +49,41 @@ static subst_t substitutions[] = {
     { "Active Resources",
       PCMK_XE_RESOURCES, },
     { "Assignment Scores",
-      "allocations", },
+      PCMK_XE_ALLOCATIONS, },
     { "Assignment Scores and Utilization Information",
-      "allocations_utilizations", },
+      PCMK_XE_ALLOCATIONS_UTILIZATIONS, },
     { "Cluster Summary",
-      "summary", },
+      PCMK_XE_SUMMARY, },
     { "Current cluster status",
-      "cluster_status", },
+      PCMK_XE_CLUSTER_STATUS, },
     { "Executing Cluster Transition",
-      "transition", },
+      PCMK_XE_TRANSITION, },
     { "Failed Resource Actions",
-      "failures", },
+      PCMK_XE_FAILURES, },
     { "Fencing History",
-      "fence_history", },
+      PCMK_XE_FENCE_HISTORY, },
     { "Full List of Resources",
       PCMK_XE_RESOURCES, },
     { "Inactive Resources",
       PCMK_XE_RESOURCES, },
     { "Migration Summary",
-      "node_history", },
+      PCMK_XE_NODE_HISTORY, },
     { "Negative Location Constraints",
-      "bans", },
+      PCMK_XE_BANS, },
     { "Node Attributes",
-      "node_attributes", },
+      PCMK_XE_NODE_ATTRIBUTES, },
     { "Operations",
-      "node_history", },
+      PCMK_XE_NODE_HISTORY, },
     { "Resource Config",
-      "resource_config", },
+      PCMK_XE_RESOURCE_CONFIG, },
     { "Resource Operations",
-      "operations", },
+      PCMK_XE_OPERATIONS, },
     { "Revised Cluster Status",
-      "revised_cluster_status", },
+      PCMK_XE_REVISED_CLUSTER_STATUS, },
     { "Transition Summary",
       PCMK_XE_ACTIONS, },
     { "Utilization Information",
-      "utilizations", },
+      PCMK_XE_UTILIZATIONS, },
 
     { NULL, NULL }
 };
@@ -139,11 +139,11 @@ xml_init(pcmk__output_t *out) {
     }
 
     if (legacy_xml) {
-        priv->root = create_xml_node(NULL, "crm_mon");
+        priv->root = create_xml_node(NULL, PCMK_XE_CRM_MON);
         crm_xml_add(priv->root, PCMK_XA_VERSION, PACEMAKER_VERSION);
     } else {
-        priv->root = create_xml_node(NULL, "pacemaker-result");
-        crm_xml_add(priv->root, "api-version", PCMK__API_VERSION);
+        priv->root = create_xml_node(NULL, PCMK_XE_PACEMAKER_RESULT);
+        crm_xml_add(priv->root, PCMK_XA_API_VERSION, PCMK__API_VERSION);
         crm_xml_add(priv->root, PCMK_XA_REQUEST, out->request);
     }
 
@@ -164,7 +164,7 @@ static void
 add_error_node(gpointer data, gpointer user_data) {
     char *str = (char *) data;
     xmlNodePtr node = (xmlNodePtr) user_data;
-    pcmk_create_xml_text_node(node, "error", str);
+    pcmk_create_xml_text_node(node, PCMK_XE_ERROR, str);
 }
 
 static void
@@ -197,12 +197,13 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
         char *rc_as_str = pcmk__itoa(exit_status);
 
         node = create_xml_node(priv->root, PCMK_XE_STATUS);
-        pcmk__xe_set_props(node, "code", rc_as_str,
-                           "message", crm_exit_str(exit_status),
+        pcmk__xe_set_props(node,
+                           PCMK_XA_CODE, rc_as_str,
+                           PCMK_XA_MESSAGE, crm_exit_str(exit_status),
                            NULL);
 
         if (g_slist_length(priv->errors) > 0) {
-            xmlNodePtr errors_node = create_xml_node(node, "errors");
+            xmlNodePtr errors_node = create_xml_node(node, PCMK_XE_ERRORS);
             g_slist_foreach(priv->errors, add_error_node, (gpointer) errors_node);
         }
 
@@ -239,17 +240,19 @@ xml_subprocess_output(pcmk__output_t *out, int exit_status,
 
     rc_as_str = pcmk__itoa(exit_status);
 
-    node = pcmk__output_xml_create_parent(out, "command",
-                                          "code", rc_as_str,
+    node = pcmk__output_xml_create_parent(out, PCMK_XE_COMMAND,
+                                          PCMK_XA_CODE, rc_as_str,
                                           NULL);
 
     if (proc_stdout != NULL) {
-        child_node = pcmk_create_xml_text_node(node, "output", proc_stdout);
+        child_node = pcmk_create_xml_text_node(node, PCMK_XE_OUTPUT,
+                                               proc_stdout);
         crm_xml_add(child_node, PCMK_XA_SOURCE, "stdout");
     }
 
     if (proc_stderr != NULL) {
-        child_node = pcmk_create_xml_text_node(node, "output", proc_stderr);
+        child_node = pcmk_create_xml_text_node(node, PCMK_XE_OUTPUT,
+                                               proc_stderr);
         crm_xml_add(child_node, PCMK_XA_SOURCE, "stderr");
     }
 
@@ -343,7 +346,7 @@ xml_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plura
     if (legacy_xml || simple_list) {
         pcmk__output_xml_create_parent(out, name, NULL);
     } else {
-        pcmk__output_xml_create_parent(out, "list",
+        pcmk__output_xml_create_parent(out, PCMK_XE_LIST,
                                        PCMK_XA_NAME, name,
                                        NULL);
     }
@@ -367,7 +370,7 @@ xml_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
     CRM_ASSERT(len >= 0);
     va_end(ap);
 
-    item_node = pcmk__output_create_xml_text_node(out, "item", buf);
+    item_node = pcmk__output_create_xml_text_node(out, PCMK_XE_ITEM, buf);
 
     if (name != NULL) {
         crm_xml_add(item_node, PCMK_XA_NAME, name);

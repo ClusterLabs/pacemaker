@@ -294,7 +294,7 @@ full_history_xml(pcmk__output_t *out, va_list args)
     } else {
         char *rc_s = pcmk__itoa(history_rc);
 
-        pcmk__output_create_xml_node(out, "fence_history",
+        pcmk__output_create_xml_node(out, PCMK_XE_FENCE_HISTORY,
                                      PCMK_XA_STATUS, rc_s,
                                      NULL);
         free(rc_s);
@@ -345,9 +345,9 @@ last_fenced_xml(pcmk__output_t *out, va_list args) {
     if (when) {
         char *buf = timespec_string(when, 0, false);
 
-        pcmk__output_create_xml_node(out, "last-fenced",
+        pcmk__output_create_xml_node(out, PCMK_XE_LAST_FENCED,
                                      PCMK_XA_TARGET, target,
-                                     "when", buf,
+                                     PCMK_XA_WHEN, buf,
                                      NULL);
 
         free(buf);
@@ -459,7 +459,7 @@ stonith_event_xml(pcmk__output_t *out, va_list args)
 
     xmlNodePtr node = NULL;
 
-    node = pcmk__output_create_xml_node(out, "fence_event",
+    node = pcmk__output_create_xml_node(out, PCMK_XE_FENCE_EVENT,
                                         PCMK_XA_ACTION, event->action,
                                         PCMK_XA_TARGET, event->target,
                                         PCMK_XA_CLIENT, event->client,
@@ -562,9 +562,12 @@ validate_agent_xml(pcmk__output_t *out, va_list args) {
     const char *error_output = va_arg(args, const char *);
     int rc = va_arg(args, int);
 
-    xmlNodePtr node = pcmk__output_create_xml_node(
-        out, "validate", "agent", agent, "valid", pcmk__btoa(rc == pcmk_ok),
-        NULL);
+    xmlNodePtr node = NULL;
+
+    node = pcmk__output_create_xml_node(out, "validate",
+                                        PCMK_XA_AGENT, agent,
+                                        "valid", pcmk__btoa(rc == pcmk_ok),
+                                        NULL);
 
     if (device != NULL) {
         crm_xml_add(node, "device", device);

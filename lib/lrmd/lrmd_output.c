@@ -69,7 +69,7 @@ lrmd__agents_list_xml(pcmk__output_t *out, va_list args) {
     const char *agent_spec = va_arg(args, const char *);
     const char *provider = va_arg(args, const char *);
 
-    xmlNodePtr node = pcmk__output_xml_create_parent(out, "agents",
+    xmlNodePtr node = pcmk__output_xml_create_parent(out, PCMK_XE_AGENTS,
                                                      "standard", agent_spec,
                                                      NULL);
 
@@ -77,7 +77,7 @@ lrmd__agents_list_xml(pcmk__output_t *out, va_list args) {
         crm_xml_add(node, PCMK_XA_PROVIDER, provider);
     }
 
-    return xml_list(out, list, "agent");
+    return xml_list(out, list, PCMK_XE_AGENT);
 }
 
 PCMK__OUTPUT_ARGS("agents-list", "lrmd_list_t *", "const char *", "const char *")
@@ -106,7 +106,7 @@ lrmd__providers_list_xml(pcmk__output_t *out, va_list args) {
                                                      NULL);
 
     if (agent_spec != NULL) {
-        crm_xml_add(node, "agent", agent_spec);
+        crm_xml_add(node, PCMK_XA_AGENT, agent_spec);
     }
 
     return xml_list(out, list, "provider");

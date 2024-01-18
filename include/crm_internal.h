@@ -132,6 +132,8 @@
 #define PCMK__XA_ATTR_VERSION           "attr_version"
 #define PCMK__XA_ATTR_WRITER            "attr_writer"
 #define PCMK__XA_CALL_ID                "call-id"
+#define PCMK__XA_CLIENT_NAME            "client_name"
+#define PCMK__XA_CLIENT_UUID            "client_uuid"
 #define PCMK__XA_CONFIG_ERRORS          "config-errors"
 #define PCMK__XA_CONFIG_WARNINGS        "config-warnings"
 #define PCMK__XA_CONFIRM                "confirm"
@@ -163,6 +165,8 @@
 #define PCMK__XA_JOIN                   "join"
 #define PCMK__XA_JOIN_ID                "join_id"
 #define PCMK__XA_LONG_ID                "long-id"
+#define PCMK__XA_MAJOR_VERSION          "major_version"
+#define PCMK__XA_MINOR_VERSION          "minor_version"
 #define PCMK__XA_MODE                   "mode"
 #define PCMK__XA_MOON                   "moon"
 #define PCMK__XA_NODE_FENCED            "node_fenced"
@@ -210,6 +214,9 @@
 
 // @COMPAT Deprecated alias for PCMK_XA_PROMOTED_MAX since 2.0.0
 #define PCMK__XA_PROMOTED_MAX_LEGACY    "masters"
+
+// @COMPAT Deprecated alias for PCMK_XA_PROMOTED_ONLY since 2.0.0
+#define PCMK__XA_PROMOTED_ONLY_LEGACY   "master_only"
 
 // @COMPAT Deprecated since 1.1.12
 #define PCMK__XA_REF                    "ref"

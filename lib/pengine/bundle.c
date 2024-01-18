@@ -391,7 +391,7 @@ create_ip_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
             crm_create_nvpair_xml(xml_obj, NULL, "cidr_netmask", "32");
         }
 
-        xml_obj = create_xml_node(xml_ip, "operations");
+        xml_obj = create_xml_node(xml_ip, PCMK_XE_OPERATIONS);
         crm_create_op_xml(xml_obj, ID(xml_ip), PCMK_ACTION_MONITOR, "60s",
                           NULL);
 
@@ -546,8 +546,8 @@ create_container_resource(pcmk_resource_t *parent,
                                    " -p ", replica->ipaddr, ":", port->source,
                                    ":", port->target, NULL);
 
-                } else if (!pcmk__str_eq(data->container_network, "host",
-                                         pcmk__str_none)) {
+                } else if (!pcmk__str_eq(data->container_network,
+                                         PCMK_VALUE_HOST, pcmk__str_none)) {
                     // No need to do port mapping if net == host
                     pcmk__g_strcat(buffer,
                                    " -p ", port->source, ":", port->target,
@@ -643,7 +643,7 @@ create_container_resource(pcmk_resource_t *parent,
         crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd", "/bin/true");
     }
 
-    xml_obj = create_xml_node(xml_container, "operations");
+    xml_obj = create_xml_node(xml_container, PCMK_XE_OPERATIONS);
     crm_create_op_xml(xml_obj, ID(xml_container), PCMK_ACTION_MONITOR, "60s",
                       NULL);
 
@@ -1544,7 +1544,8 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
         }
 
         id = pcmk__itoa(replica->offset);
-        rc = pe__name_and_nvpairs_xml(out, true, "replica", 1, PCMK_XA_ID, id);
+        rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_REPLICA, 1,
+                                      PCMK_XA_ID, id);
         free(id);
         CRM_ASSERT(rc == pcmk_rc_ok);
 

@@ -179,9 +179,9 @@ add_hash_param(GHashTable * hash, const char *name, const char *value)
  * \brief Look up an attribute value on the appropriate node
  *
  * If \p node is a guest node and either the \c PCMK_META_CONTAINER_ATTR_TARGET
- * meta attribute is set to "host" for \p rsc or \p force_host is \c true, query
- * the attribute on the node's host. Otherwise, query the attribute on \p node
- * itself.
+ * meta attribute is set to \c PCMK_VALUE_HOST for \p rsc or \p force_host is
+ * \c true, query the attribute on the node's host. Otherwise, query the
+ * attribute on \p node itself.
  *
  * \param[in] node        Node to query attribute value on by default
  * \param[in] name        Name of attribute to query
@@ -220,7 +220,8 @@ pe__node_attribute_calculated(const pcmk_node_t *node, const char *name,
      */
     source = g_hash_table_lookup(rsc->meta, PCMK_META_CONTAINER_ATTR_TARGET);
     if (!force_host
-        && (!is_guest || !pcmk__str_eq(source, "host", pcmk__str_casei))) {
+        && (!is_guest
+            || !pcmk__str_eq(source, PCMK_VALUE_HOST, pcmk__str_casei))) {
 
         return g_hash_table_lookup(node->details->attrs, name);
     }

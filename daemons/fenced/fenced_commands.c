@@ -1075,7 +1075,7 @@ build_device_from_xml(xmlNode *dev)
 {
     const char *value;
     stonith_device_t *device = NULL;
-    char *agent = crm_element_value_copy(dev, "agent");
+    char *agent = crm_element_value_copy(dev, PCMK_XA_AGENT);
 
     CRM_CHECK(agent != NULL, return device);
 
@@ -2454,7 +2454,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
         dev = create_xml_node(list, F_STONITH_DEVICE);
         crm_xml_add(dev, PCMK_XA_ID, device->id);
         crm_xml_add(dev, "namespace", device->namespace);
-        crm_xml_add(dev, "agent", device->agent);
+        crm_xml_add(dev, PCMK_XA_AGENT, device->agent);
         crm_xml_add_int(dev, F_STONITH_DEVICE_VERIFIED, device->verified);
         crm_xml_add_int(dev, F_STONITH_DEVICE_SUPPORT_FLAGS, device->flags);
 

@@ -694,19 +694,19 @@ ban_xml(pcmk__output_t *out, va_list args) {
     const char *promoted_only = pcmk__btoa(location->role_filter == pcmk_role_promoted);
     char *weight_s = pcmk__itoa(pe_node->weight);
 
-    pcmk__output_create_xml_node(out, "ban",
+    pcmk__output_create_xml_node(out, PCMK_XE_BAN,
                                  PCMK_XA_ID, location->id,
                                  PCMK_XA_RESOURCE, location->rsc->id,
                                  PCMK_XA_NODE, pe_node->details->uname,
-                                 "weight", weight_s,
-                                 "promoted-only", promoted_only,
+                                 PCMK_XA_WEIGHT, weight_s,
+                                 PCMK_XA_PROMOTED_ONLY, promoted_only,
                                  /* This is a deprecated alias for
                                   * promoted_only. Removing it will break
                                   * backward compatibility of the API schema,
                                   * which will require an API schema major
                                   * version bump.
                                   */
-                                 "master_only", promoted_only,
+                                 PCMK__XA_PROMOTED_ONLY_LEGACY, promoted_only,
                                  NULL);
 
     free(weight_s);
@@ -1539,7 +1539,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
                                         "exitstatus", services_ocf_exitcode_str(rc),
                                         "exitreason", pcmk__s(reason_s, ""),
                                         "exitcode", rc_s,
-                                        "call", call_id,
+                                        PCMK_XA_CALL, call_id,
                                         PCMK_XA_STATUS, status_s,
                                         NULL);
     free(rc_s);
@@ -1983,7 +1983,8 @@ node_xml(pcmk__output_t *out, va_list args) {
 
         if (pe__is_guest_node(node)) {
             xmlNodePtr xml_node = pcmk__output_xml_peek_parent(out);
-            crm_xml_add(xml_node, "id_as_resource", node->details->remote_rsc->container->id);
+            crm_xml_add(xml_node, PCMK_XA_ID_AS_RESOURCE,
+                        node->details->remote_rsc->container->id);
         }
 
         if (pcmk_is_set(show_opts, pcmk_show_rscs_by_node)) {
@@ -2157,7 +2158,7 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
     node = pcmk__output_create_xml_node(out, PCMK_XE_OPERATION,
                                         PCMK_XA_OP, pcmk__xe_history_key(xml_op),
                                         PCMK_XA_NODE, uname,
-                                        "call", call_id,
+                                        PCMK_XA_CALL, call_id,
                                         "rc", rc_s,
                                         PCMK_XA_STATUS, status_s,
                                         NULL);
@@ -2178,7 +2179,7 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
 
         pcmk__xe_set_props(node,
                            PCMK_XA_RSC, rsc_printable_id(rsc),
-                           "agent", agent_tuple,
+                           PCMK_XA_AGENT, agent_tuple,
                            NULL);
         free(agent_tuple);
     }
@@ -2310,7 +2311,7 @@ node_capacity_xml(pcmk__output_t *out, va_list args)
     const char *uname = node->details->uname;
     const char *comment = va_arg(args, const char *);
 
-    xmlNodePtr xml_node = pcmk__output_create_xml_node(out, "capacity",
+    xmlNodePtr xml_node = pcmk__output_create_xml_node(out, PCMK_XE_CAPACITY,
                                                        PCMK_XA_NODE, uname,
                                                        "comment", comment,
                                                        NULL);
@@ -2687,7 +2688,7 @@ op_history_xml(pcmk__output_t *out, va_list args) {
     const char *call_id = crm_element_value(xml_op, PCMK__XA_CALL_ID);
     char *rc_s = pcmk__itoa(rc);
     xmlNodePtr node = pcmk__output_create_xml_node(out, "operation_history",
-                                                   "call", call_id,
+                                                   PCMK_XA_CALL, call_id,
                                                    "task", task,
                                                    "rc", rc_s,
                                                    "rc_text", services_ocf_exitcode_str(rc),
