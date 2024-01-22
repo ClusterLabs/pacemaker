@@ -72,5 +72,6 @@ See [CONTRIBUTING.md](https://github.com/ClusterLabs/pacemaker/blob/main/CONTRIB
 * [ClusterLabs website](https://www.clusterlabs.org/)
 * [Documentation](https://www.clusterlabs.org/pacemaker/doc/)
 * [Issues/Bugs](https://bugs.clusterlabs.org/)
-* [Mailing lists](https://wiki.clusterlabs.org/wiki/Mailing_lists) for users and developers
-* [ClusterLabs IRC channel](https://wiki.clusterlabs.org/wiki/ClusterLabs_IRC_channel)
+* [Mailing lists](https://projects.clusterlabs.org/w/clusterlabs/clusterlabs_mailing_lists/)
+  for users and developers
+* [ClusterLabs IRC channel](https://projects.clusterlabs.org/w/clusterlabs/clusterlabs_irc_channel/)

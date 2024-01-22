@@ -163,9 +163,5 @@ Frequently Asked Questions
 
 :Q: What if I still have questions?
 :A: Ask on the
-    `developers@ClusterLabs.org <https://lists.ClusterLabs.org/mailman/listinfo/developers>`_
-    mailing list for development-related questions, or on the
-    `users@ClusterLabs.org <https://lists.ClusterLabs.org/mailman/listinfo/users>`_
-    mailing list for general questions about using Pacemaker.
-    Developers often also hang out on the
-    [ClusterLabs IRC channel](https://wiki.clusterlabs.org/wiki/ClusterLabs_IRC_channel).
+    `ClusterLabs mailing lists
+    <https://projects.clusterlabs.org/w/clusterlabs/clusterlabs_mailing_lists/>`_.

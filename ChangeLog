@@ -1606,7 +1606,7 @@
   + resources: drop broken configdir parameter from ocf:pacemaker:controld
 
 - For further details, see:
-  https://wiki.clusterlabs.org/wiki/Pacemaker_2.0_Changes
+  https://projects.clusterlabs.org/w/projects/pacemaker/pacemaker_2.0_changes/
 
 
 * Tue Nov 14 2017 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.18
