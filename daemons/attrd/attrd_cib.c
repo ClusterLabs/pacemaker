@@ -54,6 +54,7 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
     bool status_changed = false;
 
     if (attrd_shutting_down(true)) {
+        crm_debug("Ignoring CIB change during shutdown");
         return;
     }
 
@@ -281,11 +282,13 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *use
 
     g_hash_table_iter_init(&iter, a->values);
     while (g_hash_table_iter_next(&iter, (gpointer *) & peer, (gpointer *) & v)) {
-        do_crm_log(level, "* %s[%s]=%s",
-                   a->id, peer, pcmk__s(v->requested, "(null)"));
         if (rc == pcmk_ok) {
+            crm_info("* Wrote %s[%s]=%s",
+                     a->id, peer, pcmk__s(v->requested, "(unset)"));
             pcmk__str_update(&(v->requested), NULL);
         } else {
+            do_crm_log(level, "* Could not write %s[%s]=%s",
+                       a->id, peer, pcmk__s(v->requested, "(unset)"));
             a->changed = true; // Reattempt write below if we are still writer
         }
     }
@@ -295,6 +298,7 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *use
             /* We deferred a write of a new update because this update was in
              * progress. Write out the new value without additional delay.
              */
+            crm_debug("Pending update for %s can be written now", a->id);
             write_attribute(a, false);
 
         /* We're re-attempting a write because the original failed; delay
@@ -426,31 +430,17 @@ add_unset_attr_update(const attribute_t *attr, const char *attr_id,
 static int
 add_attr_update(const attribute_t *attr, const char *value, const char *node_id)
 {
-    char *set_id = NULL;
-    char *attr_id = NULL;
+    char *set_id = attrd_set_id(attr, node_id);
+    char *nvpair_id = attrd_nvpair_id(attr, node_id);
     int rc = pcmk_rc_ok;
 
-    if (attr->set_id != NULL) {
-        pcmk__str_update(&set_id, attr->set_id);
+    if (value == NULL) {
+        rc = add_unset_attr_update(attr, nvpair_id, node_id, set_id);
     } else {
-        set_id = crm_strdup_printf("%s-%s", PCMK_XE_STATUS, node_id);
-    }
-    crm_xml_sanitize_id(set_id);
-
-    if (attr->uuid != NULL) {
-        pcmk__str_update(&attr_id, attr->uuid);
-    } else {
-        attr_id = crm_strdup_printf("%s-%s", set_id, attr->id);
-    }
-    crm_xml_sanitize_id(attr_id);
-
-    if (value != NULL) {
-        rc = add_set_attr_update(attr, attr_id, node_id, set_id, value);
-    } else {
-        rc = add_unset_attr_update(attr, attr_id, node_id, set_id);
+        rc = add_set_attr_update(attr, nvpair_id, node_id, set_id, value);
     }
     free(set_id);
-    free(attr_id);
+    free(nvpair_id);
     return rc;
 }
 
@@ -610,8 +600,9 @@ write_attribute(attribute_t *a, bool ignore_delay)
             continue;
         }
 
-        crm_debug("Updating %s[%s]=%s (node uuid=%s id=%" PRIu32 ")",
-                  a->id, v->nodename, v->current, uuid, v->nodeid);
+        crm_debug("Writing %s[%s]=%s (node-state-id=%s node-id=%" PRIu32 ")",
+                  a->id, v->nodename, pcmk__s(v->current, "(unset)"),
+                  uuid, v->nodeid);
         cib_updates++;
 
         /* Preservation of the attribute to transmit alert */

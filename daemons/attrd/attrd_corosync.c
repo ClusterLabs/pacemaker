@@ -293,7 +293,8 @@ update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
 
         // Write out new value or start dampening timer
         if (a->timeout_ms && a->timer) {
-            crm_trace("Delayed write out (%dms) for %s", a->timeout_ms, attr);
+            crm_trace("Delaying write of %s %s for dampening",
+                      attr, pcmk__readable_interval(a->timeout_ms));
             mainloop_timer_start(a->timer);
         } else {
             attrd_write_or_elect_attribute(a);
@@ -307,11 +308,12 @@ update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
         if (is_force_write == 1 && a->timeout_ms && a->timer) {
             /* Save forced writing and set change flag. */
             /* The actual attribute is written by Writer after election. */
-            crm_trace("Unchanged %s[%s] from %s is %s(Set the forced write flag)",
-                      attr, host, peer->uname, value);
+            crm_trace("%s[%s] from %s is unchanged (%s), forcing write",
+                      attr, host, peer->uname, pcmk__s(value, "unset"));
             a->force_write = TRUE;
         } else {
-            crm_trace("Unchanged %s[%s] from %s is %s", attr, host, peer->uname, value);
+            crm_trace("%s[%s] from %s is unchanged (%s)",
+                      attr, host, peer->uname, pcmk__s(value, "unset"));
         }
     }
 

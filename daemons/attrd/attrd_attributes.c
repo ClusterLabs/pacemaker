@@ -27,7 +27,6 @@ attrd_create_attribute(xmlNode *xml)
 {
     int is_private = 0;
     long long dampen = 0;
-    const char *readable_delay = "no";
     const char *name = crm_element_value(xml, PCMK__XA_ATTR_NAME);
     const char *set_type = crm_element_value(xml, PCMK__XA_ATTR_SET_TYPE);
     const char *dampen_s = crm_element_value(xml, PCMK__XA_ATTR_DAMPENING);
@@ -41,10 +40,9 @@ attrd_create_attribute(xmlNode *xml)
      * attributes are not written.
      */
     crm_element_value_int(xml, PCMK__XA_ATTR_IS_PRIVATE, &is_private);
-    if ((is_private != 0)
-        && !pcmk__str_any_of(set_type,
-                             PCMK_XE_INSTANCE_ATTRIBUTES, PCMK_XE_UTILIZATION,
-                             NULL)) {
+    if (!is_private && !pcmk__str_any_of(set_type,
+                                         PCMK_XE_INSTANCE_ATTRIBUTES,
+                                         PCMK_XE_UTILIZATION, NULL)) {
         crm_warn("Ignoring attribute %s with invalid set type %s",
                  pcmk__s(name, "(unidentified)"), set_type);
         return NULL;
@@ -62,7 +60,6 @@ attrd_create_attribute(xmlNode *xml)
     a->values = pcmk__strikey_table(NULL, attrd_free_attribute_value);
 
     a->user = crm_element_value_copy(xml, PCMK__XA_ATTR_USER);
-    crm_trace("Performing all %s operations as user '%s'", a->id, a->user);
 
     if (dampen_s != NULL) {
         dampen = crm_get_msec(dampen_s);
@@ -71,13 +68,14 @@ attrd_create_attribute(xmlNode *xml)
     if (dampen > 0) {
         a->timeout_ms = (int) QB_MIN(dampen, INT_MAX);
         a->timer = attrd_add_timer(a->id, a->timeout_ms, a);
-        readable_delay = pcmk__readable_interval(a->timeout_ms);
     } else if (dampen < 0) {
         crm_warn("Ignoring invalid delay %s for attribute %s", dampen_s, a->id);
     }
 
-    crm_trace("Created attribute %s with %s write delay",
-              a->id, readable_delay);
+    crm_trace("Created attribute %s with %s write delay and %s CIB user",
+              a->id,
+              ((dampen > 0)? pcmk__readable_interval(a->timeout_ms) : "no"),
+              pcmk__s(a->user, "default"));
 
     g_hash_table_replace(attributes, a->id, a);
     return a;
@@ -143,6 +141,7 @@ attrd_add_value_xml(xmlNode *parent, const attribute_t *a,
     xmlNode *xml = create_xml_node(parent, __func__);
 
     crm_xml_add(xml, PCMK__XA_ATTR_NAME, a->id);
+    crm_xml_add(xml, PCMK__XA_ATTR_SET_TYPE, a->set_type);
     crm_xml_add(xml, PCMK__XA_ATTR_SET, a->set_id);
     crm_xml_add(xml, PCMK__XA_ATTR_UUID, a->uuid);
     crm_xml_add(xml, PCMK__XA_ATTR_USER, a->user);
@@ -212,4 +211,70 @@ attrd_populate_attribute(xmlNode *xml, const char *attr)
     }
 
     return a;
+}
+
+/*!
+ * \internal
+ * \brief Get the XML ID used to write out an attribute set
+ *
+ * \param[in] attr           Attribute to get set ID for
+ * \param[in] node_state_id  XML ID of node state that attribute value is for
+ *
+ * \return Newly allocated string with XML ID to use for \p attr set
+ */
+char *
+attrd_set_id(const attribute_t *attr, const char *node_state_id)
+{
+    char *set_id = NULL;
+
+    CRM_ASSERT((attr != NULL) && (node_state_id != NULL));
+
+    if (attr->set_id == NULL) {
+        /* @COMPAT This should really take the set type into account. Currently
+         * we use the same XML ID for transient attributes and utilization
+         * attributes. It doesn't cause problems because the status section is
+         * not limited by the schema in any way, but it's still unfortunate.
+         * For backward compatibility reasons, we can't change this.
+         */
+        set_id = crm_strdup_printf("%s-%s", PCMK_XE_STATUS, node_state_id);
+    } else {
+        /* @COMPAT When the user specifies a set ID for an attribute, it is the
+         * same for every node. That is less than ideal, but again, the schema
+         * doesn't enforce anything for the status section. We couldn't change
+         * it without allowing the set ID to vary per value rather than per
+         * attribute, which would break backward compatibility, pose design
+         * challenges, and potentially cause problems in rolling upgrades.
+         */
+        pcmk__str_update(&set_id, attr->set_id);
+    }
+    crm_xml_sanitize_id(set_id);
+    return set_id;
+}
+
+/*!
+ * \internal
+ * \brief Get the XML ID used to write out an attribute value
+ *
+ * \param[in] attr           Attribute to get value XML ID for
+ * \param[in] node_state_id  UUID of node that attribute value is for
+ *
+ * \return Newly allocated string with XML ID of \p attr value
+ */
+char *
+attrd_nvpair_id(const attribute_t *attr, const char *node_state_id)
+{
+    char *nvpair_id = NULL;
+
+    if (attr->uuid != NULL) {
+        pcmk__str_update(&nvpair_id, attr->uuid);
+
+    } else if (attr->set_id != NULL) {
+        nvpair_id = crm_strdup_printf("%s-%s", attr->set_id, attr->id);
+
+    } else {
+        nvpair_id = crm_strdup_printf(PCMK_XE_STATUS "-%s-%s",
+                                      node_state_id, attr->id);
+    }
+    crm_xml_sanitize_id(nvpair_id);
+    return nvpair_id;
 }
