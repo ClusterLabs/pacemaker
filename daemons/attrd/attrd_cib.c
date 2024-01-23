@@ -590,6 +590,15 @@ write_attribute(attribute_t *a, bool ignore_delay)
             continue;
         }
 
+        // Remember where we saved this value, in case it gets removed later
+        if (!pcmk__str_eq(v->node_cib_id, uuid, pcmk__str_none)) {
+            crm_trace("Setting %s[%s] node CIB ID to %s (was %s)",
+                      a->id, v->nodename, pcmk__s(uuid, "unknown"),
+                      pcmk__s(v->node_cib_id, "unknown"));
+            pcmk__str_update(&(v->node_cib_id), uuid);
+            attrd_broadcast_value(a, v); // Peers need to know ID
+        }
+
         // Update this value as part of the CIB transaction we're building
         rc = add_attr_update(a, v->current, uuid);
         if (rc != pcmk_rc_ok) {

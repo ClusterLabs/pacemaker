@@ -148,11 +148,12 @@ enum attrd_value_flags {
 };
 
 typedef struct attribute_value_s {
-        uint32_t nodeid;
-        char *nodename;
-        char *current;
-        char *requested;
-        uint32_t flags;     // Group of attrd_value_flags
+    uint32_t nodeid;    // Node ID of node that value is for (if known)
+    char *nodename;     // Name of node that value is for
+    char *current;      // Current value of attribute
+    char *requested;    // Value last written to CIB
+    char *node_cib_id;  // XML ID used for node in CIB
+    uint32_t flags;     // Group of attrd_value_flags
 } attribute_value_t;
 
 #define attrd_set_value_flags(attr_value, flags_to_set) do {            \

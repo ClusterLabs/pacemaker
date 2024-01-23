@@ -235,6 +235,7 @@ update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
     int is_remote = 0;
     bool changed = false;
     attribute_value_t *v = NULL;
+    const char *node_cib_id = NULL;
 
     // Create entry for value if not already existing
     v = g_hash_table_lookup(a->values, host);
@@ -244,6 +245,15 @@ update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
 
         pcmk__str_update(&v->nodename, host);
         g_hash_table_replace(a->values, v->nodename, v);
+    }
+
+    node_cib_id = crm_element_value(xml, PCMK__XA_NODE_STATE);
+    if ((node_cib_id != NULL)
+        && !pcmk__str_eq(v->node_cib_id, node_cib_id, pcmk__str_none)) {
+        crm_trace("Learned %s[%s] node CIB ID is %s (was %s)",
+                  a->id, v->nodename, node_cib_id,
+                  pcmk__s(v->node_cib_id, "unknown"));
+        pcmk__str_update(&(v->node_cib_id), node_cib_id);
     }
 
     // If value is for a Pacemaker Remote node, remember that

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -228,6 +228,7 @@ attrd_free_attribute_value(gpointer data)
     free(v->nodename);
     free(v->current);
     free(v->requested);
+    free(v->node_cib_id);
     free(v);
 }
 
