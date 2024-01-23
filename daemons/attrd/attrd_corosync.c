@@ -143,27 +143,20 @@ attrd_cpg_destroy(gpointer unused)
 
 /*!
  * \internal
- * \brief Override an attribute sync with a local value
+ * \brief Broadcast an update for a single attribute value
  *
- * Broadcast the local node's value for an attribute that's different from the
- * value provided in a peer's attribute synchronization response. This ensures a
- * node's values for itself take precedence and all peers are kept in sync.
- *
- * \param[in] a          Attribute entry to override
- *
- * \return Local instance of attribute value
+ * \param[in] a  Attribute to broadcast
+ * \param[in] v  Attribute value to broadcast
  */
-static attribute_value_t *
-broadcast_local_value(const attribute_t *a)
+void
+attrd_broadcast_value(const attribute_t *a, const attribute_value_t *v)
 {
-    attribute_value_t *v = g_hash_table_lookup(a->values, attrd_cluster->uname);
-    xmlNode *sync = create_xml_node(NULL, __func__);
+    xmlNode *op = create_xml_node(NULL, PCMK_XE_OP);
 
-    crm_xml_add(sync, PCMK_XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
-    attrd_add_value_xml(sync, a, v, false);
-    attrd_send_message(NULL, sync, false);
-    free_xml(sync);
-    return v;
+    crm_xml_add(op, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
+    attrd_add_value_xml(op, a, v, false);
+    attrd_send_message(NULL, op, false);
+    free_xml(op);
 }
 
 #define state_text(state) pcmk__s((state), "in unknown state")
@@ -265,10 +258,15 @@ update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
 
     if (changed && filter && pcmk__str_eq(host, attrd_cluster->uname,
                                           pcmk__str_casei)) {
-
+        /* Broadcast the local value for an attribute that differs from the
+         * value provided in a peer's attribute synchronization response. This
+         * ensures a node's values for itself take precedence and all peers are
+         * kept in sync.
+         */
+        v = g_hash_table_lookup(a->values, attrd_cluster->uname);
         crm_notice("%s[%s]: local value '%s' takes priority over '%s' from %s",
                    attr, host, readable_value(v), value, peer->uname);
-        v = broadcast_local_value(a);
+        attrd_broadcast_value(a, v);
 
     } else if (changed) {
         crm_notice("Setting %s[%s]%s%s: %s -> %s "
