@@ -99,6 +99,9 @@
 // @COMPAT Deprecated since 2.1.7
 #define PCMK__XE_DIFF_REMOVED           "diff-removed"
 
+// @COMPAT Deprecated since 1.0.8 (commit 4cb100f)
+#define PCMK__XE_LIFETIME               "lifetime"
+
 /* @COMPAT Deprecated since 2.0.0; alias for <clone> with PCMK_META_PROMOTABLE
  * set to "true"
  */
@@ -138,7 +141,7 @@
 #define PCMK__XA_CONFIG_WARNINGS        "config-warnings"
 #define PCMK__XA_CONFIRM                "confirm"
 #define PCMK__XA_CONN_HOST              "connection_host"
-#define PCMK__XA_CRMD                   "crmd"
+#define PCMK__XA_CONTENT                "content"
 #define PCMK__XA_CRMD_STATE             "crmd_state"
 #define PCMK__XA_CRM_HOST_TO            "crm_host_to"
 #define PCMK__XA_CRM_LIMIT_MAX          "crm-limit-max"
@@ -155,8 +158,6 @@
 #define PCMK__XA_ELECTION_AGE_NANO_SEC  "election-age-nano-sec"
 #define PCMK__XA_ELECTION_ID            "election-id"
 #define PCMK__XA_ELECTION_OWNER         "election-owner"
-#define PCMK__XA_EXPECTED               "expected"
-#define PCMK__XA_FILE                   "file"
 #define PCMK__XA_GRANTED                "granted"
 #define PCMK__XA_GRAPH_ERRORS           "graph-errors"
 #define PCMK__XA_GRAPH_WARNINGS         "graph-warnings"

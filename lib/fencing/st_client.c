@@ -2471,8 +2471,9 @@ stonith__metadata_async(const char *agent, int timeout_sec,
                 stonith_action_t *action = NULL;
                 int rc = pcmk_ok;
 
-                action = stonith__action_create(agent, "metadata", NULL, 0,
-                                                timeout_sec, NULL, NULL, NULL);
+                action = stonith__action_create(agent, PCMK_ACTION_METADATA,
+                                                NULL, 0, timeout_sec, NULL,
+                                                NULL, NULL);
 
                 rc = stonith__execute_async(action, user_data, callback, NULL);
                 if (rc != pcmk_ok) {

@@ -999,7 +999,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     rsc->variant_opaque = bundle_data;
     bundle_data->prefix = strdup(rsc->id);
 
-    xml_obj = first_named_child(rsc->xml, PE__CONTAINER_AGENT_DOCKER_S);
+    xml_obj = first_named_child(rsc->xml, PCMK_XE_DOCKER);
     if (xml_obj != NULL) {
         bundle_data->agent_type = PE__CONTAINER_AGENT_DOCKER;
     } else {

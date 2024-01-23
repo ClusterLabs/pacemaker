@@ -825,7 +825,7 @@ pacemakerd_health_xml(pcmk__output_t *out, va_list args)
     pcmk__output_create_xml_node(out, "pacemakerd",
                                  "sys_from", sys_from,
                                  "state", state_s,
-                                 "last_updated", last_updated_s,
+                                 PCMK_XA_LAST_UPDATED, last_updated_s,
                                  NULL);
     free(last_updated_s);
     return pcmk_rc_ok;
@@ -854,7 +854,7 @@ profile_xml(pcmk__output_t *out, va_list args) {
     char *duration = pcmk__ftoa((end - start) / (float) CLOCKS_PER_SEC);
 
     pcmk__output_create_xml_node(out, "timing",
-                                 "file", xml_file,
+                                 PCMK_XA_FILE, xml_file,
                                  PCMK_XA_DURATION, duration,
                                  NULL);
 
@@ -896,7 +896,7 @@ dc_xml(pcmk__output_t *out, va_list args)
 {
     const char *dc = va_arg(args, const char *);
 
-    pcmk__output_create_xml_node(out, "dc",
+    pcmk__output_create_xml_node(out, PCMK_XE_DC,
                                  "node_name", pcmk__s(dc, ""),
                                  NULL);
     return pcmk_rc_ok;
@@ -1017,10 +1017,10 @@ add_digest_xml(xmlNode *parent, const char *type, const char *digest,
                xmlNode *digest_source)
 {
     if (digest != NULL) {
-        xmlNodePtr digest_xml = create_xml_node(parent, "digest");
+        xmlNodePtr digest_xml = create_xml_node(parent, PCMK_XE_DIGEST);
 
         crm_xml_add(digest_xml, PCMK_XA_TYPE, pcmk__s(type, "unspecified"));
-        crm_xml_add(digest_xml, "hash", digest);
+        crm_xml_add(digest_xml, PCMK_XA_HASH, digest);
         if (digest_source != NULL) {
             add_node_copy(digest_xml, digest_source);
         }
@@ -1041,12 +1041,12 @@ digests_xml(pcmk__output_t *out, va_list args)
     char *interval_s = crm_strdup_printf("%ums", interval_ms);
     xmlNode *xml = NULL;
 
-    xml = pcmk__output_create_xml_node(out, "digests",
+    xml = pcmk__output_create_xml_node(out, PCMK_XE_DIGESTS,
                                        PCMK_XA_RESOURCE, pcmk__s(rsc->id, ""),
                                        PCMK_XA_NODE,
                                        pcmk__s(node->details->uname, ""),
                                        "task", pcmk__s(task, ""),
-                                       "interval", interval_s,
+                                       PCMK_XA_INTERVAL, interval_s,
                                        NULL);
     free(interval_s);
     if (digests != NULL) {
@@ -1330,7 +1330,7 @@ node_action_xml(pcmk__output_t *out, va_list args)
     if (task == NULL) {
         return pcmk_rc_no_output;
     } else if (reason) {
-        pcmk__output_create_xml_node(out, "node_action",
+        pcmk__output_create_xml_node(out, PCMK_XE_NODE_ACTION,
                                      "task", task,
                                      PCMK_XA_NODE, node_name,
                                      PCMK_XA_REASON, reason,
@@ -1376,11 +1376,11 @@ node_info_xml(pcmk__output_t *out, va_list args)
 
     char *id_s = crm_strdup_printf("%" PRIu32, node_id);
 
-    pcmk__output_create_xml_node(out, "node-info",
-                                 "nodeid", id_s,
+    pcmk__output_create_xml_node(out, PCMK_XE_NODE_INFO,
+                                 PCMK_XA_NODEID, id_s,
                                  PCMK_XA_UNAME, node_name,
                                  PCMK_XA_ID, uuid,
-                                 PCMK__XA_CRMD, state,
+                                 PCMK_XA_CRMD, state,
                                  PCMK_XA_HAVE_QUORUM, pcmk__btoa(have_quorum),
                                  PCMK__XA_REMOTE_NODE, pcmk__btoa(is_remote),
                                  NULL);
@@ -1426,7 +1426,7 @@ inject_cluster_action_xml(pcmk__output_t *out, va_list args)
         return pcmk_rc_no_output;
     }
 
-    xml_node = pcmk__output_create_xml_node(out, "cluster_action",
+    xml_node = pcmk__output_create_xml_node(out, PCMK_XE_CLUSTER_ACTION,
                                             "task", task,
                                             PCMK_XA_NODE, node,
                                             NULL);
@@ -1464,7 +1464,7 @@ inject_fencing_action_xml(pcmk__output_t *out, va_list args)
         return pcmk_rc_no_output;
     }
 
-    pcmk__output_create_xml_node(out, "fencing_action",
+    pcmk__output_create_xml_node(out, PCMK_XE_FENCING_ACTION,
                                  PCMK_XA_TARGET, target,
                                  PCMK_XA_OP, op,
                                  NULL);
@@ -1510,7 +1510,7 @@ inject_attr_xml(pcmk__output_t *out, va_list args)
 
     node_path = xmlGetNodePath(cib_node);
 
-    pcmk__output_create_xml_node(out, "inject_attr",
+    pcmk__output_create_xml_node(out, PCMK_XE_INJECT_ATTR,
                                  PCMK_XA_NAME, name,
                                  PCMK_XA_VALUE, value,
                                  "node_path", node_path,
@@ -1544,7 +1544,7 @@ inject_spec_xml(pcmk__output_t *out, va_list args)
         return pcmk_rc_no_output;
     }
 
-    pcmk__output_create_xml_node(out, "inject_spec",
+    pcmk__output_create_xml_node(out, PCMK_XE_INJECT_SPEC,
                                  "spec", spec,
                                  NULL);
     return pcmk_rc_ok;
@@ -1587,7 +1587,7 @@ inject_modify_config_xml(pcmk__output_t *out, va_list args)
         return pcmk_rc_no_output;
     }
 
-    node = pcmk__output_xml_create_parent(out, "modifications", NULL);
+    node = pcmk__output_xml_create_parent(out, PCMK_XE_MODIFICATIONS, NULL);
 
     if (quorum) {
         crm_xml_add(node, "quorum", quorum);
@@ -1636,7 +1636,7 @@ inject_modify_node_xml(pcmk__output_t *out, va_list args)
         return pcmk_rc_no_output;
     }
 
-    pcmk__output_create_xml_node(out, "modify_node",
+    pcmk__output_create_xml_node(out, PCMK_XE_MODIFY_NODE,
                                  PCMK_XA_ACTION, action,
                                  PCMK_XA_NODE, node,
                                  NULL);
@@ -1674,7 +1674,7 @@ inject_modify_ticket_xml(pcmk__output_t *out, va_list args)
         return pcmk_rc_no_output;
     }
 
-    pcmk__output_create_xml_node(out, "modify_ticket",
+    pcmk__output_create_xml_node(out, PCMK_XE_MODIFY_TICKET,
                                  PCMK_XA_ACTION, action,
                                  PCMK_XA_TICKET, ticket,
                                  NULL);
@@ -1770,7 +1770,7 @@ inject_rsc_action_xml(pcmk__output_t *out, va_list args)
     if (interval_ms) {
         char *interval_s = pcmk__itoa(interval_ms);
 
-        crm_xml_add(xml_node, "interval", interval_s);
+        crm_xml_add(xml_node, PCMK_XA_INTERVAL, interval_s);
         free(interval_s);
     }
 

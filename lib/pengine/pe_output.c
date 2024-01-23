@@ -234,7 +234,7 @@ op_history_string(xmlNode *xml_op, const char *task, const char *interval_ms_s,
     char *buf = NULL;
 
     if (interval_ms_s && !pcmk__str_eq(interval_ms_s, "0", pcmk__str_casei)) {
-        char *pair = pcmk__format_nvpair("interval", interval_ms_s, "ms");
+        char *pair = pcmk__format_nvpair(PCMK_XA_INTERVAL, interval_ms_s, "ms");
         interval_str = crm_strdup_printf(" %s", pair);
         free(pair);
     }
@@ -316,15 +316,15 @@ resource_history_string(pcmk_resource_t *rsc, const char *rsc_id, bool all,
         char *lastfail_s = NULL;
 
         if (failcount > 0) {
-            failcount_s = crm_strdup_printf(" %s=%d", PCMK__FAIL_COUNT_PREFIX,
-                                            failcount);
+            failcount_s = crm_strdup_printf(" %s=%d",
+                                            PCMK_XA_FAIL_COUNT, failcount);
         } else {
             failcount_s = strdup("");
         }
         if (last_failure > 0) {
             buf = pcmk__epoch2str(&last_failure, 0);
             lastfail_s = crm_strdup_printf(" %s='%s'",
-                                           PCMK__LAST_FAILURE_PREFIX, buf);
+                                           PCMK_XA_LAST_FAILURE, buf);
             free(buf);
         }
 
@@ -958,7 +958,7 @@ cluster_dc_xml(pcmk__output_t *out, va_list args) {
         const char *with_quorum = pcmk__btoa(crm_is_true(quorum));
         const char *mixed_version_s = pcmk__btoa(mixed_version);
 
-        pcmk__output_create_xml_node(out, "current_dc",
+        pcmk__output_create_xml_node(out, PCMK_XE_CURRENT_DC,
                                      PCMK_XA_PRESENT, PCMK_VALUE_TRUE,
                                      PCMK_XA_VERSION, pcmk__s(dc_version_s, ""),
                                      PCMK_XA_NAME, dc->details->uname,
@@ -967,7 +967,7 @@ cluster_dc_xml(pcmk__output_t *out, va_list args) {
                                      PCMK_XA_MIXED_VERSION, mixed_version_s,
                                      NULL);
     } else {
-        pcmk__output_create_xml_node(out, "current_dc",
+        pcmk__output_create_xml_node(out, PCMK_XE_CURRENT_DC,
                                      PCMK_XA_PRESENT, PCMK_VALUE_FALSE,
                                      NULL);
     }
@@ -1111,65 +1111,70 @@ cluster_options_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+/*!
+ * \internal
+ * \brief Get readable string representation of a no-quorum policy
+ *
+ * \param[in] policy  No-quorum policy
+ *
+ * \return String representation of \p policy
+ */
+static const char *
+no_quorum_policy_text(enum pe_quorum_policy policy)
+{
+    switch (policy) {
+        case pcmk_no_quorum_freeze:
+            return PCMK_VALUE_FREEZE;
+
+        case pcmk_no_quorum_stop:
+            return PCMK_VALUE_STOP;
+
+        case pcmk_no_quorum_demote:
+            return PCMK_VALUE_DEMOTE;
+
+        case pcmk_no_quorum_ignore:
+            return PCMK_VALUE_IGNORE;
+
+        case pcmk_no_quorum_fence:
+            return PCMK_VALUE_FENCE_LEGACY;
+
+        default:
+            return PCMK_VALUE_UNKNOWN;
+    }
+}
+
 PCMK__OUTPUT_ARGS("cluster-options", "pcmk_scheduler_t *")
 static int
 cluster_options_xml(pcmk__output_t *out, va_list args) {
     pcmk_scheduler_t *scheduler = va_arg(args, pcmk_scheduler_t *);
 
-    const char *no_quorum_policy = NULL;
-    char *stonith_timeout_str = pcmk__itoa(scheduler->stonith_timeout);
-    char *priority_fencing_delay_str = pcmk__itoa(scheduler->priority_fencing_delay * 1000);
+    const char *stonith_enabled = pcmk__flag_text(scheduler->flags,
+                                                  pcmk_sched_fencing_enabled);
+    const char *symmetric_cluster =
+        pcmk__flag_text(scheduler->flags, pcmk_sched_symmetric_cluster);
+    const char *no_quorum_policy =
+        no_quorum_policy_text(scheduler->no_quorum_policy);
+    const char *maintenance_mode = pcmk__flag_text(scheduler->flags,
+                                                   pcmk_sched_in_maintenance);
+    const char *stop_all_resources = pcmk__flag_text(scheduler->flags,
+                                                     pcmk_sched_stop_all);
+    char *stonith_timeout_ms_s = pcmk__itoa(scheduler->stonith_timeout);
+    char *priority_fencing_delay_ms_s =
+        pcmk__itoa(scheduler->priority_fencing_delay * 1000);
 
-    switch (scheduler->no_quorum_policy) {
-        case pcmk_no_quorum_freeze:
-            no_quorum_policy = PCMK_VALUE_FREEZE;
-            break;
-
-        case pcmk_no_quorum_stop:
-            no_quorum_policy = PCMK_VALUE_STOP;
-            break;
-
-        case pcmk_no_quorum_demote:
-            no_quorum_policy = PCMK_VALUE_DEMOTE;
-            break;
-
-        case pcmk_no_quorum_ignore:
-            no_quorum_policy = PCMK_VALUE_IGNORE;
-            break;
-
-        case pcmk_no_quorum_fence:
-            no_quorum_policy = PCMK_VALUE_FENCE_LEGACY;
-            break;
-    }
-
-    pcmk__output_create_xml_node(out, "cluster_options",
-                                 PCMK_OPT_STONITH_ENABLED,
-                                 pcmk__flag_text(scheduler->flags,
-                                                 pcmk_sched_fencing_enabled),
-
-                                 PCMK_OPT_SYMMETRIC_CLUSTER,
-                                 pcmk__flag_text(scheduler->flags,
-                                                 pcmk_sched_symmetric_cluster),
-
-                                 PCMK_OPT_NO_QUORUM_POLICY, no_quorum_policy,
-
-                                 PCMK_OPT_MAINTENANCE_MODE,
-                                 pcmk__flag_text(scheduler->flags,
-                                                 pcmk_sched_in_maintenance),
-
-                                 PCMK_OPT_STOP_ALL_RESOURCES,
-                                 pcmk__flag_text(scheduler->flags,
-                                                 pcmk_sched_stop_all),
-
-                                 PCMK_OPT_STONITH_TIMEOUT "-ms",
-                                 stonith_timeout_str,
-
-                                 PCMK_OPT_PRIORITY_FENCING_DELAY "-ms",
-                                 priority_fencing_delay_str,
-
+    pcmk__output_create_xml_node(out, PCMK_XE_CLUSTER_OPTIONS,
+                                 PCMK_XA_STONITH_ENABLED, stonith_enabled,
+                                 PCMK_XA_SYMMETRIC_CLUSTER, symmetric_cluster,
+                                 PCMK_XA_NO_QUORUM_POLICY, no_quorum_policy,
+                                 PCMK_XA_MAINTENANCE_MODE, maintenance_mode,
+                                 PCMK_XA_STOP_ALL_RESOURCES, stop_all_resources,
+                                 PCMK_XA_STONITH_TIMEOUT_MS,
+                                     stonith_timeout_ms_s,
+                                 PCMK_XA_PRIORITY_FENCING_DELAY_MS,
+                                     priority_fencing_delay_ms_s,
                                  NULL);
-    free(stonith_timeout_str);
-    free(priority_fencing_delay_str);
+    free(stonith_timeout_ms_s);
+    free(priority_fencing_delay_ms_s);
 
     return pcmk_rc_ok;
 }
@@ -1278,12 +1283,12 @@ cluster_times_xml(pcmk__output_t *out, va_list args) {
 
     char *time_s = pcmk__epoch2str(NULL, 0);
 
-    pcmk__output_create_xml_node(out, "last_update",
+    pcmk__output_create_xml_node(out, PCMK_XE_LAST_UPDATE,
                                  PCMK_XA_TIME, time_s,
                                  PCMK_XA_ORIGIN, our_nodename,
                                  NULL);
 
-    pcmk__output_create_xml_node(out, "last_change",
+    pcmk__output_create_xml_node(out, PCMK_XE_LAST_CHANGE,
                                  PCMK_XA_TIME, pcmk__s(last_written, ""),
                                  PCMK_XA_USER, pcmk__s(user, ""),
                                  PCMK_XA_CLIENT, pcmk__s(client, ""),
@@ -1516,6 +1521,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     int status;
     const char *uname = crm_element_value(xml_op, PCMK_XA_UNAME);
     const char *call_id = crm_element_value(xml_op, PCMK__XA_CALL_ID);
+    const char *exitstatus = NULL;
     const char *exit_reason = crm_element_value(xml_op, PCMK_XA_EXIT_REASON);
     const char *status_s = NULL;
 
@@ -1524,6 +1530,8 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     char *reason_s = crm_xml_escape(exit_reason ? exit_reason : "none");
     xmlNodePtr node = NULL;
 
+    exit_reason = pcmk__s(reason_s, "");
+
     pcmk__scan_min_int(crm_element_value(xml_op, PCMK__XA_RC_CODE), &rc, 0);
     pcmk__scan_min_int(crm_element_value(xml_op, PCMK__XA_OP_STATUS), &status,
                        0);
@@ -1531,14 +1539,15 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     if (crm_element_value(xml_op, PCMK__XA_OPERATION_KEY) == NULL) {
         op_key_name = PCMK_XA_ID;
     }
+    exitstatus = services_ocf_exitcode_str(rc);
     rc_s = pcmk__itoa(rc);
     status_s = pcmk_exec_status_str(status);
-    node = pcmk__output_create_xml_node(out, "failure",
+    node = pcmk__output_create_xml_node(out, PCMK_XE_FAILURE,
                                         op_key_name, op_key,
                                         PCMK_XA_NODE, uname,
-                                        "exitstatus", services_ocf_exitcode_str(rc),
-                                        "exitreason", pcmk__s(reason_s, ""),
-                                        "exitcode", rc_s,
+                                        PCMK_XA_EXITSTATUS, exitstatus,
+                                        PCMK_XA_EXITREASON, exit_reason,
+                                        PCMK_XA_EXITCODE, rc_s,
                                         PCMK_XA_CALL, call_id,
                                         PCMK_XA_STATUS, status_s,
                                         NULL);
@@ -1548,6 +1557,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
                                  &epoch) == pcmk_ok) && (epoch > 0)) {
 
         const char *queue_time = crm_element_value(xml_op, PCMK_XA_QUEUE_TIME);
+        const char *exec = crm_element_value(xml_op, PCMK_XA_EXEC_TIME);
         guint interval_ms = 0;
         char *interval_ms_s = NULL;
         char *rc_change = pcmk__epoch2str(&epoch,
@@ -1561,8 +1571,8 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
         pcmk__xe_set_props(node,
                            PCMK_XA_LAST_RC_CHANGE, rc_change,
                            "queued", queue_time,
-                           "exec", crm_element_value(xml_op, PCMK_XA_EXEC_TIME),
-                           "interval", interval_ms_s,
+                           PCMK_XA_EXEC, exec,
+                           PCMK_XA_INTERVAL, interval_ms_s,
                            "task", crm_element_value(xml_op, PCMK_XA_OPERATION),
                            NULL);
 
@@ -2213,7 +2223,7 @@ node_attribute_xml(pcmk__output_t *out, va_list args) {
 
     if (add_extra) {
         char *buf = pcmk__itoa(expected_score);
-        crm_xml_add(node, "expected", buf);
+        crm_xml_add(node, PCMK_XA_EXPECTED, buf);
         free(buf);
     }
 
@@ -2313,7 +2323,7 @@ node_capacity_xml(pcmk__output_t *out, va_list args)
 
     xmlNodePtr xml_node = pcmk__output_create_xml_node(out, PCMK_XE_CAPACITY,
                                                        PCMK_XA_NODE, uname,
-                                                       "comment", comment,
+                                                       PCMK_XA_COMMENT, comment,
                                                        NULL);
     g_hash_table_foreach(node->details->utilization, add_dump_node, xml_node);
 
@@ -2646,7 +2656,7 @@ node_weight_xml(pcmk__output_t *out, va_list args)
     const char *score = va_arg(args, const char *);
 
     xmlNodePtr node = pcmk__output_create_xml_node(out, "node_weight",
-                                                   "function", prefix,
+                                                   PCMK_XA_FUNCTION, prefix,
                                                    PCMK_XA_NODE, uname,
                                                    PCMK_XA_SCORE, score,
                                                    NULL);
@@ -2697,7 +2707,7 @@ op_history_xml(pcmk__output_t *out, va_list args) {
 
     if (interval_ms_s && !pcmk__str_eq(interval_ms_s, "0", pcmk__str_casei)) {
         char *s = crm_strdup_printf("%sms", interval_ms_s);
-        crm_xml_add(node, "interval", s);
+        crm_xml_add(node, PCMK_XA_INTERVAL, s);
         free(s);
     }
 
@@ -2846,14 +2856,14 @@ resource_history_xml(pcmk__output_t *out, va_list args) {
         if (failcount > 0) {
             char *s = pcmk__itoa(failcount);
 
-            crm_xml_add(node, PCMK__FAIL_COUNT_PREFIX, s);
+            crm_xml_add(node, PCMK_XA_FAIL_COUNT, s);
             free(s);
         }
 
         if (last_failure > 0) {
             char *s = pcmk__epoch2str(&last_failure, 0);
 
-            crm_xml_add(node, PCMK__LAST_FAILURE_PREFIX, s);
+            crm_xml_add(node, PCMK_XA_LAST_FAILURE, s);
             free(s);
         }
     }
@@ -3077,7 +3087,7 @@ resource_util_xml(pcmk__output_t *out, va_list args)
     xml_node = pcmk__output_create_xml_node(out, PCMK_XE_UTILIZATION,
                                             PCMK_XA_RESOURCE, rsc->id,
                                             PCMK_XA_NODE, uname,
-                                            "function", fn,
+                                            PCMK_XA_FUNCTION, fn,
                                             NULL);
     g_hash_table_foreach(rsc->utilization, add_dump_node, xml_node);
 

@@ -54,6 +54,7 @@ extern "C" {
 #define PCMK_ACTION_LOAD_STOPPED        "load_stopped"
 #define PCMK_ACTION_MAINTENANCE_NODES   "maintenance_nodes"
 #define PCMK_ACTION_META_DATA           "meta-data"
+#define PCMK_ACTION_METADATA            "metadata"
 #define PCMK_ACTION_MIGRATE_FROM        "migrate_from"
 #define PCMK_ACTION_MIGRATE_TO          "migrate_to"
 #define PCMK_ACTION_MONITOR             "monitor"

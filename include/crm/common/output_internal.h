@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the Pacemaker project contributors
+ * Copyright 2019-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -893,10 +893,14 @@ pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, con
  *
  * The arguments after name are a NULL-terminated list of keys and values,
  * all of which will be added as attributes to the given tag.  For instance,
- * the following code would generate the tag "<meta http-equiv='refresh' content='19'>":
+ * the following code would generate the tag
+ * "<meta http-equiv='refresh' content='19'>":
  *
  * \code
- * pcmk__html_add_header("meta", "http-equiv", "refresh", "content", "19", NULL);
+ * pcmk__html_add_header(PCMK__XE_META,
+ *                       "http-equiv", "refresh",
+ *                       PCMK__XA_CONTENT, "19",
+ *                       NULL);
  * \endcode
  *
  * \param[in]     name   The HTML tag for the new node.

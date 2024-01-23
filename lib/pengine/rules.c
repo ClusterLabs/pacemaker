@@ -639,11 +639,11 @@ pe_eval_rules(xmlNode *ruleset, const pe_rule_eval_data_t *rule_data,
 
         ruleset_default = FALSE;
         if (pe_eval_expr(rule, rule_data, next_change)) {
-            /* Only the deprecated "lifetime" element of location constraints
-             * may contain more than one rule at the top level -- the schema
-             * limits a block of nvpairs to a single top-level rule. So, this
-             * effectively means that a lifetime is active if any rule it
-             * contains is active.
+            /* Only the deprecated PCMK__XE_LIFETIME element of location
+             * constraints may contain more than one rule at the top level --
+             * the schema limits a block of nvpairs to a single top-level rule.
+             * So, this effectively means that a lifetime is active if any rule
+             * it contains is active.
              */
             return TRUE;
         }

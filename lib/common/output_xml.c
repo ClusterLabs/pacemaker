@@ -399,7 +399,7 @@ xml_end_list(pcmk__output_t *out) {
 
         node = g_queue_pop_tail(priv->parent_q);
         buf = crm_strdup_printf("%lu", xmlChildElementCount(node));
-        crm_xml_add(node, "count", buf);
+        crm_xml_add(node, PCMK_XA_COUNT, buf);
         free(buf);
     }
 }

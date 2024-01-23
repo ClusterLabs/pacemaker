@@ -127,9 +127,10 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
     xmlNode *xml = NULL;
     xmlNode *actions = NULL;
     xmlXPathObject *xpathObj = NULL;
-    stonith_action_t *action = stonith__action_create(agent, "metadata", NULL,
-                                                      0, timeout_sec, NULL,
-                                                      NULL, NULL);
+    stonith_action_t *action = stonith__action_create(agent,
+                                                      PCMK_ACTION_METADATA,
+                                                      NULL, 0, timeout_sec,
+                                                      NULL, NULL, NULL);
     int rc = stonith__execute(action);
     pcmk__action_result_t *result = stonith__action_result(action);
 

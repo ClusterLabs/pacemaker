@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the Pacemaker project contributors
+ * Copyright 2009-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -466,7 +466,7 @@ pcmk__fence_metadata(pcmk__output_t *out, stonith_t *st, const char *agent,
         return pcmk_legacy2rc(rc);
     }
 
-    out->output_xml(out, "metadata", buffer);
+    out->output_xml(out, PCMK_XE_METADATA, buffer);
     free(buffer);
     return rc;
 }

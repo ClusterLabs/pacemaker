@@ -1292,7 +1292,7 @@ show_metadata(pcmk__output_t *out, const char *agent_spec)
         rc = pcmk_legacy2rc(rc);
 
         if (metadata) {
-            out->output_xml(out, "metadata", metadata);
+            out->output_xml(out, PCMK_XE_METADATA, metadata);
             free(metadata);
         } else {
             /* We were given a validly formatted spec, but it doesn't necessarily

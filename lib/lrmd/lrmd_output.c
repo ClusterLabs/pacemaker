@@ -48,7 +48,7 @@ lrmd__alternatives_list_xml(pcmk__output_t *out, va_list args) {
     const char *agent_spec = va_arg(args, const char *);
 
     pcmk__output_xml_create_parent(out, "providers",
-                                   "for", agent_spec,
+                                   PCMK_XA_FOR, agent_spec,
                                    NULL);
     return xml_list(out, list, "provider");
 }

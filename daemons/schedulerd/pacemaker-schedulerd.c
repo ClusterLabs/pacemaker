@@ -56,7 +56,7 @@ scheduler_metadata(pcmk__output_t *out)
     gchar *s = pcmk__cluster_option_metadata(name, desc_short, desc_long,
                                              pcmk__opt_context_schedulerd);
 
-    out->output_xml(out, "metadata", s);
+    out->output_xml(out, PCMK_XE_METADATA, s);
     g_free(s);
 }
 

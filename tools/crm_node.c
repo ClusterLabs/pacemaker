@@ -159,8 +159,8 @@ node_id_xml(pcmk__output_t *out, va_list args) {
 
     char *id_s = crm_strdup_printf("%" PRIu32, node_id);
 
-    pcmk__output_create_xml_node(out, "node-info",
-                                 "nodeid", id_s,
+    pcmk__output_create_xml_node(out, PCMK_XE_NODE_INFO,
+                                 PCMK_XA_NODEID, id_s,
                                  NULL);
 
     free(id_s);
@@ -226,8 +226,8 @@ node_name_xml(pcmk__output_t *out, va_list args) {
 
     char *id_s = crm_strdup_printf("%" PRIu32, node_id);
 
-    pcmk__output_create_xml_node(out, "node-info",
-                                 "nodeid", id_s,
+    pcmk__output_create_xml_node(out, PCMK_XE_NODE_INFO,
+                                 PCMK_XA_NODEID, id_s,
                                  PCMK_XA_UNAME, node_name,
                                  NULL);
 
@@ -300,7 +300,7 @@ static int
 quorum_xml(pcmk__output_t *out, va_list args) {
     bool have_quorum = va_arg(args, int);
 
-    pcmk__output_create_xml_node(out, "cluster-info",
+    pcmk__output_create_xml_node(out, PCMK_XE_CLUSTER_INFO,
                                  "quorum", pcmk__btoa(have_quorum),
                                  NULL);
     return pcmk_rc_ok;

@@ -185,7 +185,7 @@ crm_mon_disconnected_xml(pcmk__output_t *out, va_list args)
         state_s = pcmk_pacemakerd_api_daemon_state_enum2text(state);
     }
 
-    pcmk__output_create_xml_node(out, "crm-mon-disconnected",
+    pcmk__output_create_xml_node(out, PCMK_XE_CRM_MON_DISCONNECTED,
                                  PCMK_XA_DESCRIPTION, desc,
                                  "pacemakerd-state", state_s,
                                  NULL);
@@ -1674,10 +1674,16 @@ main(int argc, char **argv)
         show_opts |= pcmk_show_inactive_rscs | pcmk_show_timing;
     }
 
-    if ((output_format == mon_output_html || output_format == mon_output_cgi) &&
-        out->dest != stdout) {
-        pcmk__html_add_header(PCMK__XE_META, "http-equiv", "refresh", "content",
-                              pcmk__itoa(options.reconnect_ms / 1000), NULL);
+    if ((output_format == mon_output_html || output_format == mon_output_cgi)
+        && (out->dest != stdout)) {
+
+        char *content = pcmk__itoa(options.reconnect_ms / 1000);
+
+        pcmk__html_add_header(PCMK__XE_META,
+                              "http-equiv", "refresh",
+                              PCMK__XA_CONTENT, content,
+                              NULL);
+        free(content);
     }
 
 #ifdef PCMK__COMPAT_2_0

@@ -1094,8 +1094,10 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
         this_node->details->standby = TRUE;
     }
 
-    if (crm_is_true(pe_node_attribute_raw(this_node, "maintenance")) ||
-        ((rsc != NULL) && !pcmk_is_set(rsc->flags, pcmk_rsc_managed))) {
+    if (crm_is_true(pe_node_attribute_raw(this_node,
+                                          PCMK_NODE_ATTR_MAINTENANCE))
+        || ((rsc != NULL) && !pcmk_is_set(rsc->flags, pcmk_rsc_managed))) {
+
         crm_info("%s is in maintenance mode", pcmk__node_name(this_node));
         this_node->details->maintenance = TRUE;
     }
@@ -1153,7 +1155,7 @@ unpack_transient_attributes(const xmlNode *state, pcmk_node_t *node,
         node->details->standby = TRUE;
     }
 
-    if (crm_is_true(pe_node_attribute_raw(node, "maintenance"))) {
+    if (crm_is_true(pe_node_attribute_raw(node, PCMK_NODE_ATTR_MAINTENANCE))) {
         crm_info("%s is in maintenance mode", pcmk__node_name(node));
         node->details->maintenance = TRUE;
     }
@@ -1502,7 +1504,7 @@ unpack_node_member(const xmlNode *node_state, pcmk_scheduler_t *scheduler)
 static long long
 unpack_node_online(const xmlNode *node_state)
 {
-    const char *peer_time = crm_element_value(node_state, PCMK__XA_CRMD);
+    const char *peer_time = crm_element_value(node_state, PCMK_XA_CRMD);
 
     // @COMPAT Entries recorded for DCs < 2.1.7 have "online" or "offline"
     if (pcmk__str_eq(peer_time, OFFLINESTATUS,
@@ -1517,7 +1519,7 @@ unpack_node_online(const xmlNode *node_state)
 
         if ((pcmk__scan_ll(peer_time, &when_online, 0LL) != pcmk_rc_ok)
             || (when_online < 0)) {
-            crm_warn("Unrecognized value '%s' for " PCMK__XA_CRMD " in "
+            crm_warn("Unrecognized value '%s' for " PCMK_XA_CRMD " in "
                      PCMK__XE_NODE_STATE " entry, assuming offline", peer_time);
             return 0LL;
         }
@@ -1560,7 +1562,7 @@ determine_online_status_no_fencing(pcmk_scheduler_t *scheduler,
 {
     gboolean online = FALSE;
     const char *join = crm_element_value(node_state, PCMK__XA_JOIN);
-    const char *exp_state = crm_element_value(node_state, PCMK__XA_EXPECTED);
+    const char *exp_state = crm_element_value(node_state, PCMK_XA_EXPECTED);
     long long when_member = unpack_node_member(node_state, scheduler);
     long long when_online = unpack_node_online(node_state);
 
@@ -1632,24 +1634,24 @@ determine_online_status_fencing(pcmk_scheduler_t *scheduler,
 {
     bool termination_requested = unpack_node_terminate(this_node, node_state);
     const char *join = crm_element_value(node_state, PCMK__XA_JOIN);
-    const char *exp_state = crm_element_value(node_state, PCMK__XA_EXPECTED);
+    const char *exp_state = crm_element_value(node_state, PCMK_XA_EXPECTED);
     long long when_member = unpack_node_member(node_state, scheduler);
     long long when_online = unpack_node_online(node_state);
 
 /*
   - PCMK__XA_JOIN          ::= member|down|pending|banned
-  - PCMK__XA_EXPECTED      ::= member|down
+  - PCMK_XA_EXPECTED       ::= member|down
 
   @COMPAT with entries recorded for DCs < 2.1.7
   - PCMK__XA_IN_CCM        ::= true|false
-  - PCMK__XA_CRMD          ::= online|offline
+  - PCMK_XA_CRMD           ::= online|offline
 
   Since crm_feature_set 3.18.0 (pacemaker-2.1.7):
   - PCMK__XA_IN_CCM        ::= <timestamp>|0
   Since when node has been a cluster member. A value 0 of means the node is not
   a cluster member.
 
-  - PCMK__XA_CRMD          ::= <timestamp>|0
+  - PCMK_XA_CRMD           ::= <timestamp>|0
   Since when peer has been online in CPG. A value 0 means the peer is offline
   in CPG.
 */
@@ -1810,7 +1812,7 @@ determine_online_status(const xmlNode *node_state, pcmk_node_t *this_node,
                         pcmk_scheduler_t *scheduler)
 {
     gboolean online = FALSE;
-    const char *exp_state = crm_element_value(node_state, PCMK__XA_EXPECTED);
+    const char *exp_state = crm_element_value(node_state, PCMK_XA_EXPECTED);
 
     CRM_CHECK(this_node != NULL, return);
 
