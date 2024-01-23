@@ -85,9 +85,7 @@ static pcmk__cluster_option_t cluster_options[] = {
             "network and the type of switches used."),
     },
     {
-        PCMK_OPT_CLUSTER_RECHECK_INTERVAL, NULL, "time",
-        N_("Zero disables polling, while positive values are an interval in "
-            "seconds (unless other units are specified, for example \"5min\")"),
+        PCMK_OPT_CLUSTER_RECHECK_INTERVAL, NULL, "time", NULL,
         "15min", pcmk__valid_interval_spec,
         pcmk__opt_context_controld,
         N_("Polling interval to recheck cluster state and evaluate rules "
@@ -97,7 +95,9 @@ static pcmk__cluster_option_t cluster_options[] = {
             "time-based rules. However, it will also recheck the cluster after "
             "this amount of inactivity, to evaluate rules with date "
             "specifications and serve as a fail-safe for certain types of "
-            "scheduler bugs."),
+            "scheduler bugs. A value of 0 disables polling. A positive value "
+            "sets an interval in seconds, unless other units are specified "
+            "(for example, \"5min\")."),
     },
     {
         PCMK_OPT_FENCE_REACTION, NULL, "select",
@@ -949,35 +949,18 @@ pcmk__cluster_option(GHashTable *options, const char *name)
  * \param[in]     tag     Name of element to add (\c PCMK_XE_LONGDESC or
  *                        \c PCMK_XE_SHORTDESC)
  * \param[in]     desc    Textual description to add
- * \param[in]     values  If not \p NULL, the allowed values for the parameter
  * \param[in]     spaces  If not \p NULL, spaces to insert at the beginning of
  *                        each line
  */
 static void
-add_desc(GString *s, const char *tag, const char *desc, const char *values,
-         const char *spaces)
+add_desc(GString *s, const char *tag, const char *desc, const char *spaces)
 {
     char *escaped_en = pcmk__xml_escape(desc, false);
 
-    if (spaces != NULL) {
-        g_string_append(s, spaces);
-    }
     pcmk__g_strcat(s,
+                   pcmk__s(spaces, ""),
                    "<", tag, " " PCMK_XA_LANG "=\"" PCMK__VALUE_EN "\">",
-                   escaped_en, NULL);
-
-    if (values != NULL) {
-        // Append a period if desc doesn't end in "." or ".)"
-        if (!pcmk__str_empty(escaped_en)
-            && (s->str[s->len - 1] != '.')
-            && ((s->str[s->len - 2] != '.') || (s->str[s->len - 1] != ')'))) {
-
-            g_string_append_c(s, '.');
-        }
-        pcmk__g_strcat(s, " Allowed values: ", values, NULL);
-        g_string_append_c(s, '.');
-    }
-    pcmk__g_strcat(s, "</", tag, ">\n", NULL);
+                   escaped_en, "</", tag, ">\n", NULL);
 
 #ifdef ENABLE_NLS
     {
@@ -990,17 +973,10 @@ add_desc(GString *s, const char *tag, const char *desc, const char *values,
                 locale = strtok(setlocale(LC_ALL, NULL), "_");
             }
 
-            if (spaces != NULL) {
-                g_string_append(s, spaces);
-            }
             pcmk__g_strcat(s,
+                           pcmk__s(spaces, ""),
                            "<", tag, " " PCMK_XA_LANG "=\"", locale, "\">",
-                           localized, NULL);
-
-            if (values != NULL) {
-                pcmk__g_strcat(s, _("  Allowed values: "), _(values), NULL);
-            }
-            pcmk__g_strcat(s, "</", tag, ">\n", NULL);
+                           localized, "</", tag, ">\n", NULL);
         }
         free(localized);
     }
@@ -1045,8 +1021,8 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
                    "  <" PCMK_XE_VERSION ">" PCMK_OCF_VERSION
                      "</" PCMK_XE_VERSION ">\n", NULL);
 
-    add_desc(s, PCMK_XE_LONGDESC, desc_long, NULL, "  ");
-    add_desc(s, PCMK_XE_SHORTDESC, desc_short, NULL, "  ");
+    add_desc(s, PCMK_XE_LONGDESC, desc_long, "  ");
+    add_desc(s, PCMK_XE_SHORTDESC, desc_short, "  ");
 
     g_string_append(s, "  <" PCMK_XE_PARAMETERS ">\n");
 
@@ -1079,8 +1055,8 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
                        "    <" PCMK_XE_PARAMETER " "
                                PCMK_XA_NAME "=\"", opt_name, "\">\n", NULL);
 
-        add_desc(s, PCMK_XE_LONGDESC, opt_desc_long, opt_values, "      ");
-        add_desc(s, PCMK_XE_SHORTDESC, opt_desc_short, NULL, "      ");
+        add_desc(s, PCMK_XE_LONGDESC, opt_desc_long, "      ");
+        add_desc(s, PCMK_XE_SHORTDESC, opt_desc_short, "      ");
 
         pcmk__g_strcat(s, "      <" PCMK_XE_CONTENT " "
                                     PCMK_XA_TYPE "=\"", opt_type, "\"", NULL);
