@@ -989,6 +989,85 @@ add_desc(xmlNode *parent, const char *tag, const char *desc)
 
 /*!
  * \internal
+ * \brief Add a \c PCMK_XE_PARAMETER element to an OCF-like metadata XML node
+ *
+ * \param[in,out] parent  Parent \c PCMK_XE_PARAMETERS node
+ * \param[in]     option  Option to add as a \c PCMK_XE_PARAMETER element
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+add_option_metadata(xmlNode *parent, const pcmk__cluster_option_t *option)
+{
+    const char *desc_long = option->description_long;
+    const char *desc_short = option->description_short;
+    xmlNode *parameter = NULL;
+    xmlNode *content = NULL;
+    int rc = pcmk_rc_ok;
+
+    // The standard requires long and short parameter descriptions
+    CRM_ASSERT((desc_long != NULL) || (desc_short != NULL));
+
+    if (desc_long == NULL) {
+        desc_long = desc_short;
+    } else if (desc_short == NULL) {
+        desc_short = desc_long;
+    }
+
+    // The standard requires a parameter type
+    CRM_ASSERT(option->type != NULL);
+
+    parameter = create_xml_node(parent, PCMK_XE_PARAMETER);
+    if (parameter == NULL) {
+        return ENOMEM;
+    }
+
+    crm_xml_add(parameter, PCMK_XA_NAME, option->name);
+
+    rc = add_desc(parameter, PCMK_XE_LONGDESC, desc_long);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    rc = add_desc(parameter, PCMK_XE_SHORTDESC, desc_short);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    content = create_xml_node(parameter, PCMK_XE_CONTENT);
+    if (content == NULL) {
+        return ENOMEM;
+    }
+
+    crm_xml_add(content, PCMK_XA_TYPE, option->type);
+    crm_xml_add(content, PCMK_XA_DEFAULT, option->default_value);
+
+    if ((option->values != NULL) && (strcmp(option->type, "select") == 0)) {
+        const char *delim = ", ";
+        char *str = NULL;
+        char *ptr = NULL;
+
+        pcmk__str_update(&str, option->values);
+        ptr = strtok(str, delim);
+
+        while (ptr != NULL) {
+            xmlNode *allowed_value = create_xml_node(content, PCMK_XE_OPTION);
+
+            if (allowed_value == NULL) {
+                free(str);
+                return ENOMEM;
+            }
+            crm_xml_add(allowed_value, PCMK_XA_VALUE, ptr);
+            ptr = strtok(NULL, delim);
+        }
+        free(str);
+    }
+
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
  * \brief Format option metadata as an OCF-like XML string
  *
  * \param[in] name         Daemon name
@@ -1035,78 +1114,18 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
     }
 
     parameters = create_xml_node(top, PCMK_XE_PARAMETERS);
+    if (parameters == NULL) {
+        goto done;
+    }
 
     for (int lpc = 0; lpc < len; lpc++) {
-        const char *opt_name = option_list[lpc].name;
-        const char *opt_type = option_list[lpc].type;
-        const char *opt_values = option_list[lpc].values;
-        const char *opt_default = option_list[lpc].default_value;
-        const char *opt_desc_short = option_list[lpc].description_short;
-        const char *opt_desc_long = option_list[lpc].description_long;
-
-        xmlNode *parameter = NULL;
-        xmlNode *content = NULL;
-
         if ((filter != pcmk__opt_context_none)
             && (filter != option_list[lpc].context)) {
             continue;
         }
 
-        // The standard requires long and short parameter descriptions
-        CRM_ASSERT((opt_desc_short != NULL) || (opt_desc_long != NULL));
-
-        if (opt_desc_short == NULL) {
-            opt_desc_short = opt_desc_long;
-        } else if (opt_desc_long == NULL) {
-            opt_desc_long = opt_desc_short;
-        }
-
-        // The standard requires a parameter type
-        CRM_ASSERT(opt_type != NULL);
-
-        parameter = create_xml_node(parameters, PCMK_XE_PARAMETER);
-        if (parameter == NULL) {
+        if (add_option_metadata(parameters, &option_list[lpc]) != pcmk_rc_ok) {
             goto done;
-        }
-
-        crm_xml_add(parameter, PCMK_XA_NAME, opt_name);
-
-        if (add_desc(parameter, PCMK_XE_LONGDESC,
-                     opt_desc_long) != pcmk_rc_ok) {
-            goto done;
-        }
-        if (add_desc(parameter, PCMK_XE_SHORTDESC,
-                     opt_desc_short) != pcmk_rc_ok) {
-            goto done;
-        }
-
-        content = create_xml_node(parameter, PCMK_XE_CONTENT);
-        if (content == NULL) {
-            goto done;
-        }
-
-        crm_xml_add(content, PCMK_XA_TYPE, opt_type);
-        crm_xml_add(content, PCMK_XA_DEFAULT, opt_default);
-
-        if ((opt_values != NULL) && (strcmp(opt_type, "select") == 0)) {
-            const char *delim = ", ";
-            char *str = NULL;
-            char *ptr = NULL;
-
-            pcmk__str_update(&str, opt_values);
-            ptr = strtok(str, delim);
-
-            while (ptr != NULL) {
-                xmlNode *option = create_xml_node(content, PCMK_XE_OPTION);
-
-                if (option == NULL) {
-                    free(str);
-                    goto done;
-                }
-                crm_xml_add(option, PCMK_XA_VALUE, ptr);
-                ptr = strtok(NULL, delim);
-            }
-            free(str);
         }
     }
 
