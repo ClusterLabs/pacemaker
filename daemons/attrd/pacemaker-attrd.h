@@ -174,6 +174,7 @@ extern GHashTable *peer_protocol_vers;
 #define CIB_OP_TIMEOUT_S 120
 
 int attrd_cluster_connect(void);
+void attrd_broadcast_value(const attribute_t *a, const attribute_value_t *v);
 void attrd_peer_update(const crm_node_t *peer, xmlNode *xml, const char *host,
                        bool filter);
 void attrd_peer_sync(crm_node_t *peer);
