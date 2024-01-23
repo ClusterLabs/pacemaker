@@ -782,8 +782,9 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
         pcmk__sched_err("%s resource %s might be active on %u nodes (%s)",
                         pcmk__s(class, "Untyped"), rsc->id, num_all_active,
                         pcmk_multiply_active_text(rsc->recovery_type));
-        crm_notice("See https://wiki.clusterlabs.org/wiki/FAQ"
-                   "#Resource_is_Too_Active for more information");
+        crm_notice("For more information, see \"What are multiply active "
+                   "resources?\" at "
+                   "https://projects.clusterlabs.org/w/clusterlabs/faq/");
 
         switch (rsc->recovery_type) {
             case pcmk_multiply_active_restart:
