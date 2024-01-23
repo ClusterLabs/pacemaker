@@ -166,8 +166,7 @@ get_operation_list(xmlNode *rsc_entry) {
             continue;
         }
 
-        if (pcmk__str_eq((const char *) rsc_op->name, PCMK__XE_LRM_RSC_OP,
-                         pcmk__str_none)) {
+        if (pcmk__xe_is(rsc_op, PCMK__XE_LRM_RSC_OP)) {
             op_list = g_list_append(op_list, rsc_op);
         }
     }

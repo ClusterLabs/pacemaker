@@ -325,8 +325,7 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
 
         new_child = add_node_copy(new_xml, child_xml);
 
-        if (pcmk__str_eq((const char *) new_child->name, PCMK_XE_OPERATIONS,
-                         pcmk__str_none)) {
+        if (pcmk__xe_is(new_child, PCMK_XE_OPERATIONS)) {
             rsc_ops = new_child;
         }
     }

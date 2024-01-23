@@ -201,8 +201,7 @@ group_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     for (xml_native_rsc = pcmk__xe_first_child(xml_obj); xml_native_rsc != NULL;
          xml_native_rsc = pcmk__xe_next(xml_native_rsc)) {
 
-        if (pcmk__str_eq((const char *)xml_native_rsc->name,
-                         PCMK_XE_PRIMITIVE, pcmk__str_none)) {
+        if (pcmk__xe_is(xml_native_rsc, PCMK_XE_PRIMITIVE)) {
             pcmk_resource_t *new_rsc = NULL;
 
             crm_xml_add(xml_native_rsc, PCMK__META_CLONE, clone_id);

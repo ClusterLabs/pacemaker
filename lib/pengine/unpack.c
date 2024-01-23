@@ -550,8 +550,7 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pcmk_scheduler_t *data
     for (attr_set = pcmk__xe_first_child(xml_obj); attr_set != NULL;
          attr_set = pcmk__xe_next(attr_set)) {
 
-        if (!pcmk__str_eq((const char *) attr_set->name,
-                          PCMK_XE_META_ATTRIBUTES, pcmk__str_casei)) {
+        if (!pcmk__xe_is(attr_set, PCMK_XE_META_ATTRIBUTES)) {
             continue;
         }
 
@@ -638,8 +637,7 @@ unpack_nodes(xmlNode *xml_nodes, pcmk_scheduler_t *scheduler)
     for (xml_obj = pcmk__xe_first_child(xml_nodes); xml_obj != NULL;
          xml_obj = pcmk__xe_next(xml_obj)) {
 
-        if (pcmk__str_eq((const char *) xml_obj->name, PCMK_XE_NODE,
-                         pcmk__str_none)) {
+        if (pcmk__xe_is(xml_obj, PCMK_XE_NODE)) {
             new_node = NULL;
 
             id = crm_element_value(xml_obj, PCMK_XA_ID);
@@ -739,8 +737,7 @@ unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
         /* Check for guest nodes, which are defined by special meta-attributes
          * of a primitive of any type (for example, VirtualDomain or Xen).
          */
-        if (pcmk__str_eq((const char *) xml_obj->name, PCMK_XE_PRIMITIVE,
-                         pcmk__str_none)) {
+        if (pcmk__xe_is(xml_obj, PCMK_XE_PRIMITIVE)) {
             /* This will add an ocf:pacemaker:remote primitive to the
              * configuration for the guest node's connection, to be unpacked
              * later.
@@ -760,8 +757,7 @@ unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
         /* Check for guest nodes inside a group. Clones are currently not
          * supported as guest nodes.
          */
-        if (pcmk__str_eq((const char *) xml_obj->name, PCMK_XE_GROUP,
-                         pcmk__str_none)) {
+        if (pcmk__xe_is(xml_obj, PCMK_XE_GROUP)) {
             xmlNode *xml_obj2 = NULL;
             for (xml_obj2 = pcmk__xe_first_child(xml_obj); xml_obj2 != NULL;
                  xml_obj2 = pcmk__xe_next(xml_obj2)) {
@@ -870,8 +866,7 @@ unpack_resources(const xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
             continue;
         }
 
-        if (pcmk__str_eq((const char *) xml_obj->name, PCMK_XE_TEMPLATE,
-                         pcmk__str_none)) {
+        if (pcmk__xe_is(xml_obj, PCMK_XE_TEMPLATE)) {
             if (g_hash_table_lookup_extended(scheduler->template_rsc_sets, id,
                                              NULL, NULL) == FALSE) {
                 /* Record the template's ID for the knowledge of its existence anyway. */
@@ -931,8 +926,7 @@ unpack_tags(xmlNode *xml_tags, pcmk_scheduler_t *scheduler)
         xmlNode *xml_obj_ref = NULL;
         const char *tag_id = ID(xml_tag);
 
-        if (!pcmk__str_eq((const char *) xml_tag->name, PCMK_XE_TAG,
-                          pcmk__str_none)) {
+        if (!pcmk__xe_is(xml_tag, PCMK_XE_TAG)) {
             continue;
         }
 
@@ -947,8 +941,7 @@ unpack_tags(xmlNode *xml_tags, pcmk_scheduler_t *scheduler)
 
             const char *obj_ref = ID(xml_obj_ref);
 
-            if (!pcmk__str_eq((const char *) xml_obj_ref->name, PCMK_XE_OBJ_REF,
-                              pcmk__str_none)) {
+            if (!pcmk__xe_is(xml_obj_ref, PCMK_XE_OBJ_REF)) {
                 continue;
             }
 
@@ -1045,8 +1038,7 @@ unpack_tickets_state(xmlNode *xml_tickets, pcmk_scheduler_t *scheduler)
     for (xml_obj = pcmk__xe_first_child(xml_tickets); xml_obj != NULL;
          xml_obj = pcmk__xe_next(xml_obj)) {
 
-        if (!pcmk__str_eq((const char *) xml_obj->name, PCMK__XE_TICKET_STATE,
-                          pcmk__str_none)) {
+        if (!pcmk__xe_is(xml_obj, PCMK__XE_TICKET_STATE)) {
             continue;
         }
         unpack_ticket_state(xml_obj, scheduler);
@@ -1063,8 +1055,7 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
     const xmlNode *attrs = NULL;
     pcmk_resource_t *rsc = NULL;
 
-    if (!pcmk__str_eq((const char *) state->name, PCMK__XE_NODE_STATE,
-                      pcmk__str_none)) {
+    if (!pcmk__xe_is(state, PCMK__XE_NODE_STATE)) {
         return;
     }
 
@@ -1389,12 +1380,10 @@ unpack_status(xmlNode *status, pcmk_scheduler_t *scheduler)
     for (state = pcmk__xe_first_child(status); state != NULL;
          state = pcmk__xe_next(state)) {
 
-        if (pcmk__str_eq((const char *) state->name, PCMK_XE_TICKETS,
-                         pcmk__str_none)) {
+        if (pcmk__xe_is(state, PCMK_XE_TICKETS)) {
             unpack_tickets_state((xmlNode *) state, scheduler);
 
-        } else if (pcmk__str_eq((const char *) state->name, PCMK__XE_NODE_STATE,
-                                pcmk__str_none)) {
+        } else if (pcmk__xe_is(state, PCMK__XE_NODE_STATE)) {
             unpack_node_state(state, scheduler);
         }
     }
@@ -2804,8 +2793,7 @@ handle_orphaned_container_fillers(const xmlNode *lrm_rsc_list,
         const char *rsc_id;
         const char *container_id;
 
-        if (!pcmk__str_eq((const char *) rsc_entry->name, PCMK__XE_LRM_RESOURCE,
-                          pcmk__str_casei)) {
+        if (!pcmk__xe_is(rsc_entry, PCMK__XE_LRM_RESOURCE)) {
             continue;
         }
 
@@ -5058,8 +5046,7 @@ extract_operations(const char *node, const char *rsc, xmlNode * rsc_entry, gbool
     for (rsc_op = pcmk__xe_first_child(rsc_entry);
          rsc_op != NULL; rsc_op = pcmk__xe_next(rsc_op)) {
 
-        if (pcmk__str_eq((const char *)rsc_op->name, PCMK__XE_LRM_RSC_OP,
-                         pcmk__str_none)) {
+        if (pcmk__xe_is(rsc_op, PCMK__XE_LRM_RSC_OP)) {
             crm_xml_add(rsc_op, PCMK_XA_RESOURCE, rsc);
             crm_xml_add(rsc_op, PCMK_XA_UNAME, node);
             op_list = g_list_prepend(op_list, rsc_op);
@@ -5119,8 +5106,7 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
     for (node_state = pcmk__xe_first_child(status); node_state != NULL;
          node_state = pcmk__xe_next(node_state)) {
 
-        if (pcmk__str_eq((const char *) node_state->name, PCMK__XE_NODE_STATE,
-                         pcmk__str_none)) {
+        if (pcmk__xe_is(node_state, PCMK__XE_NODE_STATE)) {
             const char *uname = crm_element_value(node_state, PCMK_XA_UNAME);
 
             if (node != NULL && !pcmk__str_eq(uname, node, pcmk__str_casei)) {
@@ -5153,9 +5139,7 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
                 for (lrm_rsc = pcmk__xe_first_child(tmp); lrm_rsc != NULL;
                      lrm_rsc = pcmk__xe_next(lrm_rsc)) {
 
-                    if (pcmk__str_eq((const char *) lrm_rsc->name,
-                                     PCMK__XE_LRM_RESOURCE, pcmk__str_none)) {
-
+                    if (pcmk__xe_is(lrm_rsc, PCMK__XE_LRM_RESOURCE)) {
                         const char *rsc_id = crm_element_value(lrm_rsc,
                                                                PCMK_XA_ID);
 
