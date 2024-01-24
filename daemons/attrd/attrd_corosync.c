@@ -382,11 +382,15 @@ broadcast_unseen_local_values(void)
 
     g_hash_table_iter_init(&aIter, attributes);
     while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
+
         g_hash_table_iter_init(&vIter, a->values);
         while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & v)) {
+
             if (!pcmk_is_set(v->flags, attrd_value_from_peer)
                 && pcmk__str_eq(v->nodename, attrd_cluster->uname,
                                 pcmk__str_casei)) {
+                crm_trace("* %s[%s]='%s' is local-only",
+                          a->id, v->nodename, readable_value(v));
                 if (sync == NULL) {
                     sync = create_xml_node(NULL, __func__);
                     crm_xml_add(sync, PCMK__XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
@@ -466,7 +470,7 @@ attrd_peer_clear_failure(pcmk__request_t *request)
  * \internal
  * \brief Load attributes from a peer sync response
  *
- * \param[in]     peer      Peer that sent clear request
+ * \param[in]     peer      Peer that sent sync response
  * \param[in]     peer_won  Whether peer is the attribute writer
  * \param[in,out] xml       Request XML
  */
