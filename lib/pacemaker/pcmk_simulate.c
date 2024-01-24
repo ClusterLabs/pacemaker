@@ -152,7 +152,8 @@ print_cluster_status(pcmk_scheduler_t *scheduler, uint32_t show_opts,
     out->begin_list(out, NULL, NULL, "%s", title);
     out->message(out, "cluster-status",
                  scheduler, state, stonith_rc, NULL,
-                 false, section_opts, show_opts, NULL, all, all);
+                 pcmk__fence_history_none, section_opts, show_opts, NULL,
+                 all, all);
     out->end_list(out);
 
     g_list_free(all);
