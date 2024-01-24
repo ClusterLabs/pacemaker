@@ -1709,10 +1709,11 @@ main(int argc, char **argv)
     switch (options.rsc_cmd) {
         case cmd_list_resources: {
             GList *all = NULL;
+            uint32_t show_opts = pcmk_show_inactive_rscs | pcmk_show_rsc_only | pcmk_show_pending;
+
             all = g_list_prepend(all, (gpointer) "*");
             rc = out->message(out, "resource-list", scheduler,
-                              pcmk_show_inactive_rscs | pcmk_show_rsc_only | pcmk_show_pending,
-                              true, all, all, false);
+                              show_opts, true, all, all, false);
             g_list_free(all);
 
             if (rc == pcmk_rc_no_output) {

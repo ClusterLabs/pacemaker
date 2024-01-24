@@ -469,7 +469,7 @@ print_node_name(uint32_t nodeid)
                                   PCMK__META_ON_NODE);
 
         if (name != NULL) {
-            rc = out->message(out, "node-name", 0, name);
+            rc = out->message(out, "node-name", 0UL, name);
             goto done;
         }
     }
@@ -486,7 +486,7 @@ print_node_name(uint32_t nodeid)
         return;
     }
 
-    rc = out->message(out, "node-name", 0, node_name);
+    rc = out->message(out, "node-name", 0UL, node_name);
 
 done:
     if (node_name != NULL) {
