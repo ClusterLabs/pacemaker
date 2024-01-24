@@ -989,6 +989,42 @@ add_desc(xmlNode *parent, const char *tag, const char *desc)
 
 /*!
  * \internal
+ * \brief Add a \c PCMK_XE_OPTION element for each of an option's allowed values
+ *
+ * \param[in,out] parent  Parent \c PCMK_XE_CONTENT node
+ * \param[in]     option  Option whose allowed values to add
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+add_allowed_values(xmlNode *parent, const pcmk__cluster_option_t *option)
+{
+    const char *delim = ", ";
+    char *str = NULL;
+    char *ptr = NULL;
+    int rc = pcmk_rc_ok;
+
+    pcmk__str_update(&str, option->values);
+    ptr = strtok(str, delim);
+
+    while (ptr != NULL) {
+        xmlNode *allowed_value = create_xml_node(parent, PCMK_XE_OPTION);
+
+        if (allowed_value == NULL) {
+            rc = ENOMEM;
+            goto done;
+        }
+        crm_xml_add(allowed_value, PCMK_XA_VALUE, ptr);
+        ptr = strtok(NULL, delim);
+    }
+
+done:
+    free(str);
+    return rc;
+}
+
+/*!
+ * \internal
  * \brief Add a \c PCMK_XE_PARAMETER element to an OCF-like metadata XML node
  *
  * \param[in,out] parent  Parent \c PCMK_XE_PARAMETERS node
@@ -1043,24 +1079,7 @@ add_option_metadata(xmlNode *parent, const pcmk__cluster_option_t *option)
     crm_xml_add(content, PCMK_XA_DEFAULT, option->default_value);
 
     if ((option->values != NULL) && (strcmp(option->type, "select") == 0)) {
-        const char *delim = ", ";
-        char *str = NULL;
-        char *ptr = NULL;
-
-        pcmk__str_update(&str, option->values);
-        ptr = strtok(str, delim);
-
-        while (ptr != NULL) {
-            xmlNode *allowed_value = create_xml_node(content, PCMK_XE_OPTION);
-
-            if (allowed_value == NULL) {
-                free(str);
-                return ENOMEM;
-            }
-            crm_xml_add(allowed_value, PCMK_XA_VALUE, ptr);
-            ptr = strtok(NULL, delim);
-        }
-        free(str);
+        return add_allowed_values(content, option);
     }
 
     return pcmk_rc_ok;
