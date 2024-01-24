@@ -135,7 +135,7 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
     node_state = create_xml_node(parent, PCMK__XE_NODE_STATE);
 
     if (pcmk_is_set(node->flags, crm_remote_node)) {
-        pcmk__xe_set_bool_attr(node_state, PCMK__XA_REMOTE_NODE, true);
+        pcmk__xe_set_bool_attr(node_state, PCMK_XA_REMOTE_NODE, true);
     }
 
     if (crm_xml_add(node_state, PCMK_XA_ID, crm_peer_uuid(node)) == NULL) {
@@ -166,9 +166,9 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
 
             } else {
                 // @COMPAT DCs < 2.1.7 use online/offline rather than timestamp
-                value = OFFLINESTATUS;
+                value = PCMK_VALUE_OFFLINE;
                 if (pcmk_is_set(node->processes, crm_get_cluster_proc())) {
-                    value = ONLINESTATUS;
+                    value = PCMK_VALUE_ONLINE;
                 }
                 crm_xml_add(node_state, PCMK_XA_CRMD, value);
             }

@@ -126,7 +126,7 @@ set_node_info_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
     data->data.node_info.have_quorum =
         pcmk__xe_attr_is_true(msg_data, PCMK_XA_HAVE_QUORUM);
     data->data.node_info.is_remote =
-        pcmk__xe_attr_is_true(msg_data, PCMK__XA_REMOTE_NODE);
+        pcmk__xe_attr_is_true(msg_data, PCMK_XA_REMOTE_NODE);
 
     /* Integer node_info.id is currently valid only for Corosync nodes.
      *
@@ -202,7 +202,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         pcmk_controld_reply_unknown, NULL, NULL,
     };
 
-    if (pcmk__xe_is(reply, "ack")) {
+    if (pcmk__xe_is(reply, PCMK__XE_ACK)) {
         /* ACKs are trivial responses that do not count toward expected replies,
          * and do not have all the fields that validation requires, so skip that
          * processing.

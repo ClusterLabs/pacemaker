@@ -483,13 +483,14 @@ crm_op_needs_metadata(const char *rsc_class, const char *op)
  *
  * \param[in] action  Action name to check
  *
- * \return true if \p action is "off", "reboot", or "poweroff", otherwise false
+ * \return \c true if \p action is \c PCMK_ACTION_OFF, \c PCMK_ACTION_REBOOT,
+ *         or \c PCMK__ACTION_POWEROFF, otherwise \c false
  */
 bool
 pcmk__is_fencing_action(const char *action)
 {
     return pcmk__str_any_of(action, PCMK_ACTION_OFF, PCMK_ACTION_REBOOT,
-                            "poweroff", NULL);
+                            PCMK__ACTION_POWEROFF, NULL);
 }
 
 bool

@@ -1131,7 +1131,7 @@ build_device_from_xml(xmlNode *dev)
     }
 
     value = crm_element_value(dev, "rsc_provides");
-    if (pcmk__str_eq(value, PCMK__VALUE_UNFENCING, pcmk__str_casei)) {
+    if (pcmk__str_eq(value, PCMK_VALUE_UNFENCING, pcmk__str_casei)) {
         device->automatic_unfencing = TRUE;
     }
 
@@ -3287,7 +3287,8 @@ handle_notify_request(pcmk__request_t *request)
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     pcmk__set_request_flags(request, pcmk__request_reuse_options);
 
-    return pcmk__ipc_create_ack(request->ipc_flags, "ack", NULL, CRM_EX_OK);
+    return pcmk__ipc_create_ack(request->ipc_flags, PCMK__XE_ACK, NULL,
+                                CRM_EX_OK);
 }
 
 // STONITH_OP_RELAY

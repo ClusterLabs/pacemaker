@@ -30,7 +30,7 @@ handle_node_cache_request(pcmk__request_t *request)
               pcmk__client_name(request->ipc_client));
 
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
-                       "ack", NULL, CRM_EX_OK);
+                       PCMK__XE_ACK, NULL, CRM_EX_OK);
     return NULL;
 }
 
@@ -51,7 +51,7 @@ handle_ping_request(pcmk__request_t *request)
               pcmk__s(crm_element_value(msg, PCMK_XA_ORIGIN), ""));
 
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
-                       "ack", NULL, CRM_EX_INDETERMINATE);
+                       PCMK__XE_ACK, NULL, CRM_EX_INDETERMINATE);
 
     ping = create_xml_node(NULL, PCMK__XE_PING_RESPONSE);
     value = crm_element_value(msg, PCMK__XA_CRM_SYS_TO);
@@ -108,7 +108,7 @@ handle_shutdown_request(pcmk__request_t *request)
     bool allowed = pcmk_is_set(request->ipc_client->flags, pcmk__client_privileged);
 
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
-                       "ack", NULL, CRM_EX_INDETERMINATE);
+                       PCMK__XE_ACK, NULL, CRM_EX_INDETERMINATE);
 
     shutdown = create_xml_node(NULL, PCMK__XE_SHUTDOWN);
 
@@ -145,7 +145,7 @@ static xmlNode *
 handle_unknown_request(pcmk__request_t *request)
 {
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
-                       "ack", NULL, CRM_EX_INVALID_PARAM);
+                       PCMK__XE_ACK, NULL, CRM_EX_INVALID_PARAM);
 
     pcmk__format_result(&request->result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
                         "Unknown IPC request type '%s' (bug?)",
@@ -220,7 +220,7 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
     msg = pcmk__client_data2xml(c, data, &id, &flags);
     if (msg == NULL) {
-        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_PROTOCOL);
+        pcmk__ipc_send_ack(c, id, flags, PCMK__XE_ACK, NULL, CRM_EX_PROTOCOL);
         return 0;
 
     } else {

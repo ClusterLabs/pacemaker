@@ -912,7 +912,7 @@ handle_node_info_request(const xmlNode *msg)
         crm_xml_add(reply_data, PCMK_XA_ID, node->uuid);
         crm_xml_add(reply_data, PCMK_XA_UNAME, node->uname);
         crm_xml_add(reply_data, PCMK_XA_CRMD, node->state);
-        pcmk__xe_set_bool_attr(reply_data, PCMK__XA_REMOTE_NODE,
+        pcmk__xe_set_bool_attr(reply_data, PCMK_XA_REMOTE_NODE,
                                pcmk_is_set(node->flags, crm_remote_node));
     }
 

@@ -380,7 +380,7 @@ fencing_result2xml(const remote_fencing_op_t *op)
 {
     xmlNode *notify_data = create_xml_node(NULL, T_STONITH_NOTIFY_FENCE);
 
-    crm_xml_add_int(notify_data, "state", op->state);
+    crm_xml_add_int(notify_data, PCMK_XA_STATE, op->state);
     crm_xml_add(notify_data, F_STONITH_TARGET, op->target);
     crm_xml_add(notify_data, F_STONITH_ACTION, op->action);
     crm_xml_add(notify_data, F_STONITH_DELEGATE, op->delegate);
@@ -447,7 +447,7 @@ handle_local_reply_and_notify(remote_fencing_op_t *op, xmlNode *data)
     }
 
     /* Do notification with a clean data object */
-    crm_xml_add_int(data, "state", op->state);
+    crm_xml_add_int(data, PCMK_XA_STATE, op->state);
     crm_xml_add(data, F_STONITH_TARGET, op->target);
     crm_xml_add(data, F_STONITH_OPERATION, op->action);
 

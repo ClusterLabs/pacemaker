@@ -1003,11 +1003,11 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     if (xml_obj != NULL) {
         bundle_data->agent_type = PE__CONTAINER_AGENT_DOCKER;
     } else {
-        xml_obj = first_named_child(rsc->xml, PE__CONTAINER_AGENT_RKT_S);
+        xml_obj = first_named_child(rsc->xml, PCMK_XE_RKT);
         if (xml_obj != NULL) {
             bundle_data->agent_type = PE__CONTAINER_AGENT_RKT;
         } else {
-            xml_obj = first_named_child(rsc->xml, PE__CONTAINER_AGENT_PODMAN_S);
+            xml_obj = first_named_child(rsc->xml, PCMK_XE_PODMAN);
             if (xml_obj != NULL) {
                 bundle_data->agent_type = PE__CONTAINER_AGENT_PODMAN;
             } else {

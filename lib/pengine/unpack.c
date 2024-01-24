@@ -188,7 +188,7 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
 #define XPATH_UNFENCING_NVPAIR PCMK_XE_NVPAIR           \
     "[(@" PCMK_XA_NAME "='" PCMK_STONITH_PROVIDES "'"   \
     "or @" PCMK_XA_NAME "='" PCMK_META_REQUIRES "') "   \
-    "and @" PCMK_XA_VALUE "='" PCMK__VALUE_UNFENCING "']"
+    "and @" PCMK_XA_VALUE "='" PCMK_VALUE_UNFENCING "']"
 
 // unfencing in rsc_defaults or any resource
 #define XPATH_ENABLE_UNFENCING \
@@ -275,11 +275,12 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     scheduler->stonith_action = pcmk__cluster_option(config_hash,
                                                      PCMK_OPT_STONITH_ACTION);
-    if (!strcmp(scheduler->stonith_action, "poweroff")) {
+    if (!strcmp(scheduler->stonith_action, PCMK__ACTION_POWEROFF)) {
         pcmk__warn_once(pcmk__wo_poweroff,
                         "Support for " PCMK_OPT_STONITH_ACTION " of "
-                        "'poweroff' is deprecated and will be removed in a "
-                        "future release (use 'off' instead)");
+                        "'" PCMK__ACTION_POWEROFF "' is deprecated and will be "
+                        "removed in a future release "
+                        "(use '" PCMK_ACTION_OFF "' instead)");
         scheduler->stonith_action = PCMK_ACTION_OFF;
     }
     crm_trace("STONITH will %s nodes", scheduler->stonith_action);
@@ -549,8 +550,7 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pcmk_scheduler_t *data
     for (attr_set = pcmk__xe_first_child(xml_obj); attr_set != NULL;
          attr_set = pcmk__xe_next(attr_set)) {
 
-        if (!pcmk__str_eq((const char *) attr_set->name,
-                          PCMK_XE_META_ATTRIBUTES, pcmk__str_casei)) {
+        if (!pcmk__xe_is(attr_set, PCMK_XE_META_ATTRIBUTES)) {
             continue;
         }
 
@@ -637,8 +637,7 @@ unpack_nodes(xmlNode *xml_nodes, pcmk_scheduler_t *scheduler)
     for (xml_obj = pcmk__xe_first_child(xml_nodes); xml_obj != NULL;
          xml_obj = pcmk__xe_next(xml_obj)) {
 
-        if (pcmk__str_eq((const char *) xml_obj->name, PCMK_XE_NODE,
-                         pcmk__str_none)) {
+        if (pcmk__xe_is(xml_obj, PCMK_XE_NODE)) {
             new_node = NULL;
 
             id = crm_element_value(xml_obj, PCMK_XA_ID);
@@ -738,8 +737,7 @@ unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
         /* Check for guest nodes, which are defined by special meta-attributes
          * of a primitive of any type (for example, VirtualDomain or Xen).
          */
-        if (pcmk__str_eq((const char *) xml_obj->name, PCMK_XE_PRIMITIVE,
-                         pcmk__str_none)) {
+        if (pcmk__xe_is(xml_obj, PCMK_XE_PRIMITIVE)) {
             /* This will add an ocf:pacemaker:remote primitive to the
              * configuration for the guest node's connection, to be unpacked
              * later.
@@ -759,8 +757,7 @@ unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
         /* Check for guest nodes inside a group. Clones are currently not
          * supported as guest nodes.
          */
-        if (pcmk__str_eq((const char *) xml_obj->name, PCMK_XE_GROUP,
-                         pcmk__str_none)) {
+        if (pcmk__xe_is(xml_obj, PCMK_XE_GROUP)) {
             xmlNode *xml_obj2 = NULL;
             for (xml_obj2 = pcmk__xe_first_child(xml_obj); xml_obj2 != NULL;
                  xml_obj2 = pcmk__xe_next(xml_obj2)) {
@@ -869,8 +866,7 @@ unpack_resources(const xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
             continue;
         }
 
-        if (pcmk__str_eq((const char *) xml_obj->name, PCMK_XE_TEMPLATE,
-                         pcmk__str_none)) {
+        if (pcmk__xe_is(xml_obj, PCMK_XE_TEMPLATE)) {
             if (g_hash_table_lookup_extended(scheduler->template_rsc_sets, id,
                                              NULL, NULL) == FALSE) {
                 /* Record the template's ID for the knowledge of its existence anyway. */
@@ -930,8 +926,7 @@ unpack_tags(xmlNode *xml_tags, pcmk_scheduler_t *scheduler)
         xmlNode *xml_obj_ref = NULL;
         const char *tag_id = ID(xml_tag);
 
-        if (!pcmk__str_eq((const char *) xml_tag->name, PCMK_XE_TAG,
-                          pcmk__str_none)) {
+        if (!pcmk__xe_is(xml_tag, PCMK_XE_TAG)) {
             continue;
         }
 
@@ -946,8 +941,7 @@ unpack_tags(xmlNode *xml_tags, pcmk_scheduler_t *scheduler)
 
             const char *obj_ref = ID(xml_obj_ref);
 
-            if (!pcmk__str_eq((const char *) xml_obj_ref->name, PCMK_XE_OBJ_REF,
-                              pcmk__str_none)) {
+            if (!pcmk__xe_is(xml_obj_ref, PCMK_XE_OBJ_REF)) {
                 continue;
             }
 
@@ -1044,8 +1038,7 @@ unpack_tickets_state(xmlNode *xml_tickets, pcmk_scheduler_t *scheduler)
     for (xml_obj = pcmk__xe_first_child(xml_tickets); xml_obj != NULL;
          xml_obj = pcmk__xe_next(xml_obj)) {
 
-        if (!pcmk__str_eq((const char *) xml_obj->name, PCMK__XE_TICKET_STATE,
-                          pcmk__str_none)) {
+        if (!pcmk__xe_is(xml_obj, PCMK__XE_TICKET_STATE)) {
             continue;
         }
         unpack_ticket_state(xml_obj, scheduler);
@@ -1062,8 +1055,7 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
     const xmlNode *attrs = NULL;
     pcmk_resource_t *rsc = NULL;
 
-    if (!pcmk__str_eq((const char *) state->name, PCMK__XE_NODE_STATE,
-                      pcmk__str_none)) {
+    if (!pcmk__xe_is(state, PCMK__XE_NODE_STATE)) {
         return;
     }
 
@@ -1089,7 +1081,7 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
         this_node->details->shutdown = TRUE;
     }
  
-    if (crm_is_true(pe_node_attribute_raw(this_node, "standby"))) {
+    if (crm_is_true(pe_node_attribute_raw(this_node, PCMK_NODE_ATTR_STANDBY))) {
         crm_info("%s is in standby mode", pcmk__node_name(this_node));
         this_node->details->standby = TRUE;
     }
@@ -1150,7 +1142,7 @@ unpack_transient_attributes(const xmlNode *state, pcmk_node_t *node,
 
     add_node_attrs(attrs, node, TRUE, scheduler);
 
-    if (crm_is_true(pe_node_attribute_raw(node, "standby"))) {
+    if (crm_is_true(pe_node_attribute_raw(node, PCMK_NODE_ATTR_STANDBY))) {
         crm_info("%s is in standby mode", pcmk__node_name(node));
         node->details->standby = TRUE;
     }
@@ -1388,12 +1380,10 @@ unpack_status(xmlNode *status, pcmk_scheduler_t *scheduler)
     for (state = pcmk__xe_first_child(status); state != NULL;
          state = pcmk__xe_next(state)) {
 
-        if (pcmk__str_eq((const char *) state->name, PCMK_XE_TICKETS,
-                         pcmk__str_none)) {
+        if (pcmk__xe_is(state, PCMK_XE_TICKETS)) {
             unpack_tickets_state((xmlNode *) state, scheduler);
 
-        } else if (pcmk__str_eq((const char *) state->name, PCMK__XE_NODE_STATE,
-                                pcmk__str_none)) {
+        } else if (pcmk__xe_is(state, PCMK__XE_NODE_STATE)) {
             unpack_node_state(state, scheduler);
         }
     }
@@ -1507,11 +1497,11 @@ unpack_node_online(const xmlNode *node_state)
     const char *peer_time = crm_element_value(node_state, PCMK_XA_CRMD);
 
     // @COMPAT Entries recorded for DCs < 2.1.7 have "online" or "offline"
-    if (pcmk__str_eq(peer_time, OFFLINESTATUS,
+    if (pcmk__str_eq(peer_time, PCMK_VALUE_OFFLINE,
                      pcmk__str_casei|pcmk__str_null_matches)) {
         return 0LL;
 
-    } else if (pcmk__str_eq(peer_time, ONLINESTATUS, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(peer_time, PCMK_VALUE_ONLINE, pcmk__str_casei)) {
         return 1LL;
 
     } else {
@@ -2144,11 +2134,12 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
         rsc = inactive_instance;
     }
 
-    /* If the resource has "requires" set to "quorum" or "nothing", and we don't
-     * have a clone instance for every node, we don't want to consume a valid
-     * instance number for unclean nodes. Such instances may appear to be active
-     * according to the history, but should be considered inactive, so we can
-     * start an instance elsewhere. Treat such instances as orphans.
+    /* If the resource has PCMK_META_REQUIRES set to PCMK_VALUE_QUORUM or
+     * PCMK_VALUE_NOTHING, and we don't have a clone instance for every node, we
+     * don't want to consume a valid instance number for unclean nodes. Such
+     * instances may appear to be active according to the history, but should be
+     * considered inactive, so we can start an instance elsewhere. Treat such
+     * instances as orphans.
      *
      * An exception is instances running on guest nodes -- since guest node
      * "fencing" is actually just a resource stop, requires shouldn't apply.
@@ -2802,8 +2793,7 @@ handle_orphaned_container_fillers(const xmlNode *lrm_rsc_list,
         const char *rsc_id;
         const char *container_id;
 
-        if (!pcmk__str_eq((const char *) rsc_entry->name, PCMK__XE_LRM_RESOURCE,
-                          pcmk__str_casei)) {
+        if (!pcmk__xe_is(rsc_entry, PCMK__XE_LRM_RESOURCE)) {
             continue;
         }
 
@@ -5056,8 +5046,7 @@ extract_operations(const char *node, const char *rsc, xmlNode * rsc_entry, gbool
     for (rsc_op = pcmk__xe_first_child(rsc_entry);
          rsc_op != NULL; rsc_op = pcmk__xe_next(rsc_op)) {
 
-        if (pcmk__str_eq((const char *)rsc_op->name, PCMK__XE_LRM_RSC_OP,
-                         pcmk__str_none)) {
+        if (pcmk__xe_is(rsc_op, PCMK__XE_LRM_RSC_OP)) {
             crm_xml_add(rsc_op, PCMK_XA_RESOURCE, rsc);
             crm_xml_add(rsc_op, PCMK_XA_UNAME, node);
             op_list = g_list_prepend(op_list, rsc_op);
@@ -5117,8 +5106,7 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
     for (node_state = pcmk__xe_first_child(status); node_state != NULL;
          node_state = pcmk__xe_next(node_state)) {
 
-        if (pcmk__str_eq((const char *) node_state->name, PCMK__XE_NODE_STATE,
-                         pcmk__str_none)) {
+        if (pcmk__xe_is(node_state, PCMK__XE_NODE_STATE)) {
             const char *uname = crm_element_value(node_state, PCMK_XA_UNAME);
 
             if (node != NULL && !pcmk__str_eq(uname, node, pcmk__str_casei)) {
@@ -5151,9 +5139,7 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
                 for (lrm_rsc = pcmk__xe_first_child(tmp); lrm_rsc != NULL;
                      lrm_rsc = pcmk__xe_next(lrm_rsc)) {
 
-                    if (pcmk__str_eq((const char *) lrm_rsc->name,
-                                     PCMK__XE_LRM_RESOURCE, pcmk__str_none)) {
-
+                    if (pcmk__xe_is(lrm_rsc, PCMK__XE_LRM_RESOURCE)) {
                         const char *rsc_id = crm_element_value(lrm_rsc,
                                                                PCMK_XA_ID);
 

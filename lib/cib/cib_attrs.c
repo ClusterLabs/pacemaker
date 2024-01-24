@@ -589,7 +589,7 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
         // Result is PCMK__XE_NODE_STATE tag from PCMK_XE_STATUS section
 
         parsed_uuid = crm_element_value(result, PCMK_XA_UNAME);
-        if (pcmk__xe_attr_is_true(result, PCMK__XA_REMOTE_NODE)) {
+        if (pcmk__xe_attr_is_true(result, PCMK_XA_REMOTE_NODE)) {
             parsed_is_remote = TRUE;
         }
     }
@@ -625,7 +625,7 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
         "/" PCMK_XE_PRIMITIVE "/" PCMK_XE_META_ATTRIBUTES "/" PCMK_XE_NVPAIR \
         "[@name='" PCMK_META_REMOTE_NODE "'][translate(@value,'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']" \
     "|/" PCMK_XE_CIB "/" PCMK_XE_STATUS "/" PCMK__XE_NODE_STATE \
-        "[@" PCMK__XA_REMOTE_NODE "='true'][translate(@" PCMK_XA_ID ",'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']"
+        "[@" PCMK_XA_REMOTE_NODE "='true'][translate(@" PCMK_XA_ID ",'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']"
 
 int
 query_node_uuid(cib_t * the_cib, const char *uname, char **uuid, int *is_remote_node)
@@ -701,8 +701,7 @@ query_node_uname(cib_t * the_cib, const char *uuid, char **uname)
     for (a_child = pcmk__xml_first_child(xml_obj); a_child != NULL;
          a_child = pcmk__xml_next(a_child)) {
 
-        if (pcmk__str_eq((const char *) a_child->name, PCMK_XE_NODE,
-                         pcmk__str_none)) {
+        if (pcmk__xe_is(a_child, PCMK_XE_NODE)) {
             child_name = ID(a_child);
             if (pcmk__str_eq(uuid, child_name, pcmk__str_casei)) {
                 child_name = crm_element_value(a_child, PCMK_XA_UNAME);
@@ -738,7 +737,8 @@ set_standby(cib_t * the_cib, const char *uuid, const char *scope, const char *st
     }
 
     rc = update_attr_delegate(the_cib, cib_sync_call, scope, uuid, NULL, NULL,
-                              attr_id, "standby", standby_value, TRUE, NULL, NULL);
+                              attr_id, PCMK_NODE_ATTR_STANDBY, standby_value,
+                              TRUE, NULL, NULL);
 
     free(attr_id);
     return rc;

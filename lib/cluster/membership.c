@@ -985,7 +985,7 @@ crm_update_peer_proc(const char *source, crm_node_t * node, uint32_t flag, const
             changed = TRUE;
         }
 
-    } else if (pcmk__str_eq(status, ONLINESTATUS, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(status, PCMK_VALUE_ONLINE, pcmk__str_casei)) {
         if ((node->processes & flag) != flag) {
             node->processes = pcmk__set_flags_as(__func__, __LINE__,
                                                  LOG_TRACE, "Peer process",

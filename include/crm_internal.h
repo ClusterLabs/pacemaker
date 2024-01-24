@@ -60,6 +60,7 @@
  * XML element names used only by internal code
  */
 
+#define PCMK__XE_ACK                    "ack"
 #define PCMK__XE_ATTRIBUTES             "attributes"
 #define PCMK__XE_CRM_EVENT              "crm_event"
 #define PCMK__XE_CRM_XML                "crm_xml"
@@ -73,6 +74,7 @@
 #define PCMK__XE_LRM_RSC_OP             "lrm_rsc_op"
 #define PCMK__XE_MAINTENANCE            "maintenance"
 #define PCMK__XE_META                   "meta"
+#define PCMK__XE_NACK                   "nack"
 #define PCMK__XE_NODE_STATE             "node_state"
 #define PCMK__XE_OPTIONS                "options"
 #define PCMK__XE_PARAM                  "param"
@@ -165,6 +167,7 @@
 #define PCMK__XA_IN_CCM                 "in_ccm"
 #define PCMK__XA_JOIN                   "join"
 #define PCMK__XA_JOIN_ID                "join_id"
+#define PCMK__XA_LINE                   "line"
 #define PCMK__XA_LONG_ID                "long-id"
 #define PCMK__XA_MAJOR_VERSION          "major_version"
 #define PCMK__XA_MINOR_VERSION          "minor_version"
@@ -185,7 +188,6 @@
 #define PCMK__XA_PRIORITY               "priority"
 #define PCMK__XA_RC_CODE                "rc-code"
 #define PCMK__XA_REAP                   "reap"
-#define PCMK__XA_REMOTE_NODE            "remote_node"
 
 /* Actions to be executed on Pacemaker Remote nodes are routed through the
  * controller on the cluster node hosting the remote connection. That cluster

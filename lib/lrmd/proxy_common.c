@@ -269,15 +269,15 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
             rc = crm_ipc_send(proxy->ipc, request, flags, 5000, NULL);
 
             if(rc < 0) {
-                xmlNode *op_reply = create_xml_node(NULL, "nack");
+                xmlNode *op_reply = create_xml_node(NULL, PCMK__XE_NACK);
 
                 crm_err("Could not relay %s request %d from %s to %s for %s: %s (%d)",
                          op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc), name, pcmk_strerror(rc), rc);
 
                 /* Send a n'ack so the caller doesn't block */
                 crm_xml_add(op_reply, PCMK_XA_FUNCTION, __func__);
-                crm_xml_add_int(op_reply, "line", __LINE__);
-                crm_xml_add_int(op_reply, "rc", rc);
+                crm_xml_add_int(op_reply, PCMK__XA_LINE, __LINE__);
+                crm_xml_add_int(op_reply, PCMK_XA_RC, rc);
                 remote_proxy_relay_response(proxy, op_reply, msg_id);
                 free_xml(op_reply);
 

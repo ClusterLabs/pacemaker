@@ -936,7 +936,7 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
         desc = "node standby";
 
     } else if (pcmk__strcase_any_of(value,
-                                    PCMK_VALUE_IGNORE, PCMK__VALUE_NOTHING,
+                                    PCMK_VALUE_IGNORE, PCMK_VALUE_NOTHING,
                                     NULL)) {
         desc = "ignore";
 
@@ -1210,8 +1210,7 @@ find_unfencing_devices(GList *candidates, GList *matches)
 
         } else if (pcmk__str_eq(g_hash_table_lookup(candidate->meta,
                                                     PCMK_STONITH_PROVIDES),
-                                PCMK__VALUE_UNFENCING,
-                                pcmk__str_casei)) {
+                                PCMK_VALUE_UNFENCING, pcmk__str_casei)) {
             matches = g_list_prepend(matches, candidate);
         }
     }

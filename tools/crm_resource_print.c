@@ -501,11 +501,11 @@ resource_check_list_xml(pcmk__output_t *out, va_list args) {
                                                    NULL);
 
     if (pcmk_is_set(checks->flags, rsc_remain_stopped)) {
-        pcmk__xe_set_bool_attr(node, "remain_stopped", true);
+        pcmk__xe_set_bool_attr(node, PCMK_XA_REMAIN_STOPPED, true);
     }
 
     if (pcmk_is_set(checks->flags, rsc_unpromotable)) {
-        pcmk__xe_set_bool_attr(node, "promotable", false);
+        pcmk__xe_set_bool_attr(node, PCMK_XA_PROMOTABLE, false);
     }
 
     if (pcmk_is_set(checks->flags, rsc_unmanaged)) {
@@ -589,7 +589,7 @@ resource_search_list_xml(pcmk__output_t *out, va_list args)
                                                                 ni->node_name);
 
         if (ni->promoted) {
-            crm_xml_add(sub_node, "state", "promoted");
+            crm_xml_add(sub_node, PCMK_XA_STATE, "promoted");
         }
     }
 
@@ -689,7 +689,8 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
 
     const char *host_uname = (node == NULL)? NULL : node->details->uname;
 
-    xmlNodePtr xml_node = pcmk__output_xml_create_parent(out, "reason", NULL);
+    xmlNodePtr xml_node = pcmk__output_xml_create_parent(out, PCMK_XE_REASON,
+                                                         NULL);
 
     if ((rsc == NULL) && (host_uname == NULL)) {
         GList *lpc = NULL;
@@ -719,7 +720,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
 
     } else if ((rsc != NULL) && (host_uname != NULL)) {
         if (resource_is_running_on(rsc, host_uname)) {
-            crm_xml_add(xml_node, "running_on", host_uname);
+            crm_xml_add(xml_node, PCMK_XA_RUNNING_ON, host_uname);
         }
 
         cli_resource_check(out, rsc, node);

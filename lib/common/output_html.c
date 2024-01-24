@@ -229,11 +229,13 @@ html_subprocess_output(pcmk__output_t *out, int exit_status,
 
     if (proc_stdout != NULL) {
         pcmk__output_create_html_node(out, "div", NULL, NULL, "Stdout");
-        pcmk__output_create_html_node(out, "div", NULL, "output", proc_stdout);
+        pcmk__output_create_html_node(out, "div", NULL, PCMK__VALUE_OUTPUT,
+                                      proc_stdout);
     }
     if (proc_stderr != NULL) {
         pcmk__output_create_html_node(out, "div", NULL, NULL, "Stderr");
-        pcmk__output_create_html_node(out, "div", NULL, "output", proc_stderr);
+        pcmk__output_create_html_node(out, "div", NULL, PCMK__VALUE_OUTPUT,
+                                      proc_stderr);
     }
 
     free(rc_buf);

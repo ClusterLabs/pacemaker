@@ -435,8 +435,7 @@ pcmk__xe_match(const xmlNode *parent, const char *node_name,
 
     for (xmlNode *child = pcmk__xml_first_child(parent); child != NULL;
          child = pcmk__xml_next(child)) {
-        if (pcmk__str_eq(node_name, (const char *) (child->name),
-                         pcmk__str_null_matches)
+        if (((node_name == NULL) || pcmk__xe_is(child, node_name))
             && ((attr_n == NULL) ||
                 (attr_v == NULL && xmlHasProp(child, (pcmkXmlStr) attr_n)) ||
                 (attr_v != NULL && attr_matches(child, attr_n, attr_v)))) {
@@ -2496,7 +2495,7 @@ first_named_child(const xmlNode *parent, const char *name)
          * semantically incorrect in this function, but may be necessary
          * due to prior use of xml_child_iter_filter
          */
-        if (pcmk__str_eq(name, (const char *)match->name, pcmk__str_null_matches)) {
+        if ((name == NULL) || pcmk__xe_is(match, name)) {
             return match;
         }
     }
@@ -2699,8 +2698,9 @@ pcmk__xe_foreach_child(xmlNode *xml, const char *child_element_name,
     CRM_ASSERT(handler != NULL);
 
     for (xmlNode *node = children; node != NULL; node = node->next) {
-        if (node->type == XML_ELEMENT_NODE &&
-            pcmk__str_eq(child_element_name, (const char *) node->name, pcmk__str_null_matches)) {
+        if ((node->type == XML_ELEMENT_NODE)
+            && ((child_element_name == NULL)
+                || pcmk__xe_is(node, child_element_name))) {
             int rc = handler(node, userdata);
 
             if (rc != pcmk_rc_ok) {

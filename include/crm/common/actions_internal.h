@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,6 +20,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+// Action names as strings
+
+// @COMPAT Deprecated since 2.0.0
+#define PCMK__ACTION_POWEROFF               "poweroff"
+
 
 //! printf-style format to create operation key from resource, action, interval
 #define PCMK__OP_FMT "%s_%s_%u"

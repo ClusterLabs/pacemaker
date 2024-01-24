@@ -372,8 +372,7 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
     for (an_attr = pcmk__xe_first_child(list); an_attr != NULL;
          an_attr = pcmk__xe_next(an_attr)) {
 
-        if (pcmk__str_eq((const char *) an_attr->name, PCMK_XE_NVPAIR,
-                         pcmk__str_none)) {
+        if (pcmk__xe_is(an_attr, PCMK_XE_NVPAIR)) {
             xmlNode *ref_nvpair = expand_idref(an_attr, top);
 
             name = crm_element_value(an_attr, PCMK_XA_NAME);
@@ -461,8 +460,7 @@ make_pairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
     for (xmlNode *attr_set = pcmk__xe_first_child(xml_obj); attr_set != NULL;
          attr_set = pcmk__xe_next(attr_set)) {
 
-        if (pcmk__str_eq(set_name, (const char *) attr_set->name,
-                         pcmk__str_null_matches)) {
+        if ((set_name == NULL) || pcmk__xe_is(attr_set, set_name)) {
             const char *score = NULL;
             sorted_set_t *pair = NULL;
             xmlNode *expanded_attr_set = expand_idref(attr_set, top);

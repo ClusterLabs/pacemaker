@@ -197,7 +197,7 @@ node_list_xml(pcmk__output_t *out, va_list args)
         pcmk__output_create_xml_node(out, PCMK_XE_NODE,
                                      PCMK_XA_ID, id_s,
                                      PCMK_XA_NAME, node->uname,
-                                     "state", node->state,
+                                     PCMK_XA_STATE, node->state,
                                      NULL);
 
         free(id_s);
@@ -276,7 +276,7 @@ partition_list_xml(pcmk__output_t *out, va_list args)
             pcmk__output_create_xml_node(out, PCMK_XE_NODE,
                                          PCMK_XA_ID, id_s,
                                          PCMK_XA_NAME, node->uname,
-                                         "state", node->state,
+                                         PCMK_XA_STATE, node->state,
                                          NULL);
             free(id_s);
         }
@@ -301,7 +301,7 @@ quorum_xml(pcmk__output_t *out, va_list args) {
     bool have_quorum = va_arg(args, int);
 
     pcmk__output_create_xml_node(out, PCMK_XE_CLUSTER_INFO,
-                                 "quorum", pcmk__btoa(have_quorum),
+                                 PCMK_XA_QUORUM, pcmk__btoa(have_quorum),
                                  NULL);
     return pcmk_rc_ok;
 }

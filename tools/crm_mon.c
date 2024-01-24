@@ -187,7 +187,7 @@ crm_mon_disconnected_xml(pcmk__output_t *out, va_list args)
 
     pcmk__output_create_xml_node(out, PCMK_XE_CRM_MON_DISCONNECTED,
                                  PCMK_XA_DESCRIPTION, desc,
-                                 "pacemakerd-state", state_s,
+                                 PCMK_XA_PACEMAKERD_STATE, state_s,
                                  NULL);
 
     out->finish(out, CRM_EX_DISCONNECT, true, NULL);
@@ -284,7 +284,7 @@ struct {
     { "dc", pcmk_section_dc },
     { "failcounts", pcmk_section_failcounts },
     { "failures", pcmk_section_failures },
-    { PCMK__VALUE_FENCING, pcmk_section_fencing_all },
+    { PCMK_VALUE_FENCING, pcmk_section_fencing_all },
     { "fencing-failed", pcmk_section_fence_failed },
     { "fencing-pending", pcmk_section_fence_pending },
     { "fencing-succeeded", pcmk_section_fence_worked },
@@ -471,13 +471,13 @@ fence_history_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
         case 3:
             options.fence_connect = TRUE;
             fence_history = pcmk__fence_history_full;
-            return include_exclude_cb("--include", PCMK__VALUE_FENCING, data,
+            return include_exclude_cb("--include", PCMK_VALUE_FENCING, data,
                                       err);
 
         case 2:
             options.fence_connect = TRUE;
             fence_history = pcmk__fence_history_full;
-            return include_exclude_cb("--include", PCMK__VALUE_FENCING, data,
+            return include_exclude_cb("--include", PCMK_VALUE_FENCING, data,
                                       err);
 
         case 1:
@@ -488,7 +488,7 @@ fence_history_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
         case 0:
             options.fence_connect = FALSE;
             fence_history = pcmk__fence_history_none;
-            return include_exclude_cb("--exclude", PCMK__VALUE_FENCING, data,
+            return include_exclude_cb("--exclude", PCMK_VALUE_FENCING, data,
                                       err);
 
         default:

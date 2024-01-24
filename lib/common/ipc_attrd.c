@@ -68,7 +68,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         pcmk__attrd_reply_unknown
     };
 
-    if (pcmk__str_eq((const char *) reply->name, "ack", pcmk__str_none)) {
+    if (pcmk__xe_is(reply, PCMK__XE_ACK)) {
         return false;
     }
 
