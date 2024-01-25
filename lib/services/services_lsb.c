@@ -29,7 +29,7 @@
     "<" PCMK_XE_RESOURCE_AGENT " "                                      \
         PCMK_XA_NAME "='%s' "                                           \
         PCMK_XA_VERSION "='" PCMK_DEFAULT_AGENT_VERSION "'>\n"          \
-    "  <" PCMK_XE_VERSION ">1.0</" PCMK_XE_VERSION ">\n"                \
+    "  <" PCMK_XE_VERSION ">1.1</" PCMK_XE_VERSION ">\n"                \
     "  <" PCMK_XE_LONGDESC " " PCMK_XA_LANG "='" PCMK__VALUE_EN "'>\n"  \
         "%s"                                                            \
     "  </" PCMK_XE_LONGDESC ">\n"                                       \

@@ -34,7 +34,7 @@ static void *lha_agents_lib = NULL;
 static const char META_TEMPLATE[] =
     "<?xml " PCMK_XA_VERSION "=\"1.0\"?>\n"
     "<" PCMK_XE_RESOURCE_AGENT " " PCMK_XA_NAME "=\"%s\">\n"
-    "  <" PCMK_XE_VERSION ">1.0</" PCMK_XE_VERSION ">\n"
+    "  <" PCMK_XE_VERSION ">1.1</" PCMK_XE_VERSION ">\n"
     "  <" PCMK_XE_LONGDESC " " PCMK_XA_LANG "=\"" PCMK__VALUE_EN "\">\n"
         "%s\n"
     "  </" PCMK_XE_LONGDESC ">\n"
