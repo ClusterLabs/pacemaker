@@ -1481,7 +1481,7 @@ failed_action_technical(pcmk__output_t *out, const xmlNode *xml_op,
     g_string_free(str, TRUE);
 }
 
-PCMK__OUTPUT_ARGS("failed-action", "xmlNodePtr", "uint32_t")
+PCMK__OUTPUT_ARGS("failed-action", "xmlNode *", "uint32_t")
 static int
 failed_action_default(pcmk__output_t *out, va_list args)
 {
@@ -1515,7 +1515,7 @@ failed_action_default(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("failed-action", "xmlNodePtr", "uint32_t")
+PCMK__OUTPUT_ARGS("failed-action", "xmlNode *", "uint32_t")
 static int
 failed_action_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
@@ -2095,7 +2095,7 @@ node_attribute_html(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("node-and-op", "pcmk_scheduler_t *", "xmlNodePtr")
+PCMK__OUTPUT_ARGS("node-and-op", "pcmk_scheduler_t *", "xmlNode *")
 static int
 node_and_op(pcmk__output_t *out, va_list args) {
     pcmk_scheduler_t *scheduler = va_arg(args, pcmk_scheduler_t *);
@@ -2153,7 +2153,7 @@ node_and_op(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("node-and-op", "pcmk_scheduler_t *", "xmlNodePtr")
+PCMK__OUTPUT_ARGS("node-and-op", "pcmk_scheduler_t *", "xmlNode *")
 static int
 node_and_op_xml(pcmk__output_t *out, va_list args) {
     pcmk_scheduler_t *scheduler = va_arg(args, pcmk_scheduler_t *);
@@ -2339,7 +2339,7 @@ node_capacity_xml(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("node-history-list", "pcmk_scheduler_t *", "pcmk_node_t *",
-                  "xmlNodePtr", "GList *", "GList *", "uint32_t", "uint32_t")
+                  "xmlNode *", "GList *", "GList *", "uint32_t", "uint32_t")
 static int
 node_history_list(pcmk__output_t *out, va_list args) {
     pcmk_scheduler_t *scheduler = va_arg(args, pcmk_scheduler_t *);
@@ -2676,7 +2676,7 @@ node_weight_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("op-history", "xmlNodePtr", "const char *", "const char *", "int", "uint32_t")
+PCMK__OUTPUT_ARGS("op-history", "xmlNode *", "const char *", "const char *", "int", "uint32_t")
 static int
 op_history_text(pcmk__output_t *out, va_list args) {
     xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
@@ -2694,7 +2694,7 @@ op_history_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("op-history", "xmlNodePtr", "const char *", "const char *", "int", "uint32_t")
+PCMK__OUTPUT_ARGS("op-history", "xmlNode *", "const char *", "const char *", "int", "uint32_t")
 static int
 op_history_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr xml_op = va_arg(args, xmlNodePtr);

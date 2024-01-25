@@ -167,9 +167,9 @@ node_id_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("node-list", "GList *")
+PCMK__OUTPUT_ARGS("simple-node-list", "GList *")
 static int
-node_list_default(pcmk__output_t *out, va_list args)
+simple_node_list_default(pcmk__output_t *out, va_list args)
 {
     GList *nodes = va_arg(args, GList *);
 
@@ -182,9 +182,9 @@ node_list_default(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("node-list", "GList *")
+PCMK__OUTPUT_ARGS("simple-node-list", "GList *")
 static int
-node_list_xml(pcmk__output_t *out, va_list args)
+simple_node_list_xml(pcmk__output_t *out, va_list args)
 {
     GList *nodes = va_arg(args, GList *);
 
@@ -309,14 +309,14 @@ quorum_xml(pcmk__output_t *out, va_list args) {
 static pcmk__message_entry_t fmt_functions[] = {
     { "node-id", "default", node_id_default },
     { "node-id", "xml", node_id_xml },
-    { "node-list", "default", node_list_default },
-    { "node-list", "xml", node_list_xml },
     { "node-name", "default", node_name_default },
     { "node-name", "xml", node_name_xml },
-    { "quorum", "default", quorum_default },
-    { "quorum", "xml", quorum_xml },
     { "partition-list", "default", partition_list_default },
     { "partition-list", "xml", partition_list_xml },
+    { "quorum", "default", quorum_default },
+    { "quorum", "xml", quorum_xml },
+    { "simple-node-list", "default", simple_node_list_default },
+    { "simple-node-list", "xml", simple_node_list_xml },
 
     { NULL, NULL, NULL }
 };
@@ -374,7 +374,7 @@ controller_event_cb(pcmk_ipc_api_t *controld_api,
     if (options.command == 'p') {
         out->message(out, "partition-list", reply->data.nodes);
     } else if (options.command == 'l') {
-        out->message(out, "node-list", reply->data.nodes);
+        out->message(out, "simple-node-list", reply->data.nodes);
     }
 
     // Success
@@ -469,7 +469,7 @@ print_node_name(uint32_t nodeid)
                                   PCMK__META_ON_NODE);
 
         if (name != NULL) {
-            rc = out->message(out, "node-name", 0, name);
+            rc = out->message(out, "node-name", 0UL, name);
             goto done;
         }
     }
@@ -486,7 +486,7 @@ print_node_name(uint32_t nodeid)
         return;
     }
 
-    rc = out->message(out, "node-name", 0, node_name);
+    rc = out->message(out, "node-name", 0UL, node_name);
 
 done:
     if (node_name != NULL) {

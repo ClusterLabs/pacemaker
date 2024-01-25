@@ -284,7 +284,7 @@ node_info_event_cb(pcmk_ipc_api_t *controld_api, enum pcmk_ipc_event event_type,
 
     if (data->show_output) {
         out->message(out, "node-info",
-                     reply->data.node_info.id, reply->data.node_info.uname,
+                     (uint32_t) reply->data.node_info.id, reply->data.node_info.uname,
                      reply->data.node_info.uuid, reply->data.node_info.state,
                      reply->data.node_info.have_quorum,
                      reply->data.node_info.is_remote);
