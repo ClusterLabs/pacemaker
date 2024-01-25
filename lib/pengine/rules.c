@@ -41,7 +41,6 @@ pe_evaluate_rules(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now,
 {
     pe_rule_eval_data_t rule_data = {
         .node_hash = node_hash,
-        .role = pcmk_role_unknown,
         .now = now,
         .match_data = NULL,
         .rsc_data = NULL,
@@ -58,7 +57,6 @@ pe_test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
 {
     pe_rule_eval_data_t rule_data = {
         .node_hash = node_hash,
-        .role = role,
         .now = now,
         .match_data = match_data,
         .rsc_data = NULL,
@@ -77,7 +75,7 @@ pe_test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
  *
  * \param[in,out] expr         Rule subelement XML
  * \param[in]     node_hash    Node attributes to use when evaluating expression
- * \param[in]     role         Resource role to use when evaluating expression
+ * \param[in]     role         Ignored (deprecated)
  * \param[in]     now          Time to use when evaluating expression
  * \param[out]    next_change  If not NULL, set to when evaluation will change
  * \param[in]     match_data   If not NULL, resource back-references and params
@@ -91,7 +89,6 @@ pe_test_expression(xmlNode *expr, GHashTable *node_hash, enum rsc_role_e role,
 {
     pe_rule_eval_data_t rule_data = {
         .node_hash = node_hash,
-        .role = role,
         .now = now,
         .match_data = match_data,
         .rsc_data = NULL,
@@ -125,9 +122,6 @@ find_expression_type(xmlNode * expr)
 
     } else if (pcmk__str_any_of(attr, CRM_ATTR_UNAME, CRM_ATTR_KIND, CRM_ATTR_ID, NULL)) {
         return pcmk__subexpr_location;
-
-    } else if (pcmk__str_eq(attr, CRM_ATTR_ROLE, pcmk__str_none)) {
-        return pcmk__subexpr_role;
     }
 
     return pcmk__subexpr_attribute;
@@ -539,7 +533,6 @@ pe_unpack_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
 {
     pe_rule_eval_data_t rule_data = {
         .node_hash = node_hash,
-        .role = pcmk_role_unknown,
         .now = now,
         .match_data = NULL,
         .rsc_data = NULL,
@@ -754,10 +747,6 @@ pe_eval_subexpr(xmlNode *expr, const pe_rule_eval_data_t *rule_data,
                     accept = FALSE;
                     break;
             }
-            break;
-
-        case pcmk__subexpr_role:
-            accept = pe__eval_role_expr(expr, rule_data);
             break;
 
         case pcmk__subexpr_resource:
@@ -1169,79 +1158,6 @@ pe__eval_op_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
     return TRUE;
 }
 
-/*!
- * \internal
- * \brief Check whether a resource role matches a rule role
- *
- * \param[in] expr       XML of rule expression
- * \param[in] rule_data  Only the role member is used
- *
- * \return true if role matches, otherwise false
- */
-static bool
-role_matches(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
-{
-    const char *value = crm_element_value(expr, PCMK_XA_VALUE);
-    enum rsc_role_e role = pcmk_parse_role(value);
-
-    if (role == pcmk_role_unknown) {
-        pcmk__config_err("Invalid role %s in rule expression", value);
-        return false;
-    }
-    return role == rule_data->role;
-}
-
-/*!
- * \internal
- * \brief Evaluate a node attribute expression based on #role
- *
- * \param[in] expr       XML of rule expression
- * \param[in] rule_data  Only the role member is used
- *
- * \return TRUE if rule_data->role satisfies the expression, FALSE otherwise
- * \todo Drop this whole code. The #role attribute was never implemented
- *       (rule_data->role is always pcmk_role_unknown), and it would be a poor
- *       design anyway, since a unique promotable clone could have multiple
- *       instances with different roles on a given node.
- */
-gboolean
-pe__eval_role_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
-{
-    const char *op = NULL;
-
-    // A known role must be given to compare against
-    if (rule_data->role == pcmk_role_unknown) {
-        return FALSE;
-    }
-
-    op = crm_element_value(expr, PCMK_XA_OPERATION);
-
-    if (pcmk__str_eq(op, PCMK_VALUE_DEFINED, pcmk__str_casei)) {
-        if (rule_data->role > pcmk_role_started) {
-            return TRUE;
-        }
-
-    } else if (pcmk__str_eq(op, PCMK_VALUE_NOT_DEFINED, pcmk__str_casei)) {
-        if ((rule_data->role > pcmk_role_unknown)
-            && (rule_data->role < pcmk_role_unpromoted)) {
-            return TRUE;
-        }
-
-    } else if (pcmk__str_eq(op, PCMK_VALUE_EQ, pcmk__str_casei)) {
-        return role_matches(expr, rule_data)? TRUE : FALSE;
-
-    } else if (pcmk__str_eq(op, PCMK_VALUE_NE, pcmk__str_casei)
-               // Test PCMK_VALUE_NE only with promotable clone roles
-               && (rule_data->role >= pcmk_role_unpromoted)) {
-        return role_matches(expr, rule_data)? FALSE : TRUE;
-
-    } else {
-        pcmk__config_err("Operation '%s' is not valid with " CRM_ATTR_ROLE
-                         " comparisons", op);
-    }
-    return FALSE;
-}
-
 gboolean
 pe__eval_rsc_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
 {
@@ -1346,7 +1262,6 @@ unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj, const char *set_name,
 {
     pe_rule_eval_data_t rule_data = {
         .node_hash = node_hash,
-        .role = pcmk_role_unknown,
         .now = now,
         .match_data = NULL,
         .rsc_data = NULL,

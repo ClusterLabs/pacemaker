@@ -247,7 +247,6 @@ pcmk__unpack_action_rsc_params(const xmlNode *action_xml,
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = node_attrs,
-        .role = pcmk_role_unknown,
         .now = scheduler->now,
         .match_data = NULL,
         .rsc_data = NULL,
@@ -728,7 +727,6 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = (node == NULL)? NULL : node->details->attrs,
-        .role = pcmk_role_unknown,
         .now = rsc->cluster->now,
         .match_data = NULL,
         .rsc_data = &rsc_rule_data,
@@ -1439,7 +1437,6 @@ pe_get_configured_timeout(pcmk_resource_t *rsc, const char *action,
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
-        .role = pcmk_role_unknown,
         .now = scheduler->now,
         .match_data = NULL,
         .rsc_data = NULL,

@@ -31,7 +31,6 @@ eval_date_expression(const xmlNode *expr, crm_time_t *now)
 {
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
-        .role = pcmk_role_unknown,
         .now = now,
         .match_data = NULL,
         .rsc_data = NULL,
