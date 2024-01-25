@@ -1005,6 +1005,10 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     } else {
         xml_obj = first_named_child(rsc->xml, PCMK_XE_RKT);
         if (xml_obj != NULL) {
+            pcmk__warn_once(pcmk__wo_rkt,
+                            "Support for " PCMK_XE_RKT " in bundles "
+                            "(such as %s) is deprecated and will be "
+                            "removed in a future release", rsc->id);
             bundle_data->agent_type = PE__CONTAINER_AGENT_RKT;
         } else {
             xml_obj = first_named_child(rsc->xml, PCMK_XE_PODMAN);
