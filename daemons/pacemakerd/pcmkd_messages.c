@@ -171,7 +171,7 @@ pcmk_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
     crm_trace("Connection %p", c);
     if (pcmk__new_client(c, uid, gid) == NULL) {
-        return -EIO;
+        return -ENOMEM;
     }
     return 0;
 }
