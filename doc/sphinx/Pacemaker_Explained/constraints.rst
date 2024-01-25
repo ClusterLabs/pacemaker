@@ -121,6 +121,25 @@ ___________________
        node (a value of **-INFINITY** changes "should" to "must"). A location
        constraint must either have a ``node`` and ``score``, or contain at
        least one rule.
+   * - .. rsc_location_role:
+       
+       .. index::
+          single: rsc_location; attribute, role
+          single: attribute; role (rsc_location)
+          single: role; rsc_location attribute
+       
+       role
+     - :ref:`enumeration <enumeration>`
+     - ``Started``
+     - The constraint applies only to resource instances in this role;
+       significant only for :ref:`promotable clones <s-resource-promotable>`.
+       Allowed values:
+       
+       * ``Started`` or ``Unpromoted``: any active role (a promoted instance
+         must start in the unpromoted role before being promoted, and must be
+         demoted to the unpromoted role before being stopped, so any location
+         constraint for unpromoted instances also affects promoted instances)
+       * ``Promoted``: the promoted role
    * - .. resource_discovery:
        
        .. index::
