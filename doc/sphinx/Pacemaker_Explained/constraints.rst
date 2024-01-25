@@ -40,10 +40,11 @@ ___________________
 
 .. list-table:: **Attributes of a rsc_location Element**
    :class: longtable
-   :widths: 1 1 4
+   :widths: 1 1 1 4
    :header-rows: 1
 
    * - Name
+     - Type
      - Default
      - Description
    * - .. rsc_location_id:
@@ -54,6 +55,7 @@ ___________________
           single: id; rsc_location attribute
        
        id
+     - :ref:`id <id>`
      -
      - A unique name for the constraint (required)
    * - .. rsc_location_rsc:
@@ -64,6 +66,7 @@ ___________________
           single: rsc; rsc_location attribute
        
        rsc
+     - :ref:`id <id>`
      -
      - The name of the resource to which this constraint applies. A location
        constraint must either have a ``rsc``, have a ``rsc-pattern``, or
@@ -76,6 +79,7 @@ ___________________
           single: rsc-pattern; rsc_location attribute
        
        rsc-pattern
+     - :ref:`text <text>`
      -
      - A pattern matching the names of resources to which this constraint
        applies.  The syntax is the same as `POSIX
@@ -96,6 +100,7 @@ ___________________
           single: node; rsc_location attribute
        
        node
+     - :ref:`text <text>`
      -
      - The name of the node to which this constraint applies. A location
        constraint must either have a ``node`` and ``score``, or contain at
@@ -108,6 +113,7 @@ ___________________
           single: score; rsc_location attribute
        
        score
+     - :ref:`score <score>`
      -
      - Positive values indicate a preference for running the affected
        resource(s) on ``node`` -- the higher the value, the stronger the
@@ -123,6 +129,7 @@ ___________________
           single: resource-discovery; rsc_location attribute
        
        resource-discovery
+     - :ref:`enumeration <enumeration>`
      - always
      - Whether Pacemaker should perform resource discovery (that is, check
        whether the resource is already running) for this resource on this node.
