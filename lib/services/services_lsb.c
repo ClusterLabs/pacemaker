@@ -238,8 +238,6 @@ services__get_lsb_metadata(const char *type, char **output)
     lsb_meta_helper_free_value(should_stop);
     lsb_meta_helper_free_value(default_start);
     lsb_meta_helper_free_value(default_stop);
-
-    crm_trace("Created fake metadata: %zu", strlen(*output));
     return pcmk_ok;
 }
 
