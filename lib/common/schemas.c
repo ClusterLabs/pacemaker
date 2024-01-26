@@ -1545,7 +1545,7 @@ pcmk__build_schema_xml_node(xmlNode *parent, const char *name, GList **already_i
 const char *
 pcmk__remote_schema_dir(void)
 {
-    const char *dir = pcmk__env_option(PCMK__ENV_REMOTE_SCHEMA_DIR);
+    const char *dir = pcmk__env_option(PCMK__ENV_REMOTE_SCHEMA_DIRECTORY);
 
     if (pcmk__str_empty(dir)) {
         return PCMK__REMOTE_SCHEMA_DIR;

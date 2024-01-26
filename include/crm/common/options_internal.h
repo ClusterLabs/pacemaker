@@ -114,7 +114,7 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 #define PCMK__ENV_NODE_START_STATE          "node_start_state"
 #define PCMK__ENV_PANIC_ACTION              "panic_action"
 #define PCMK__ENV_REMOTE_ADDRESS            "remote_address"
-#define PCMK__ENV_REMOTE_SCHEMA_DIR         "remote_schema_directory"
+#define PCMK__ENV_REMOTE_SCHEMA_DIRECTORY   "remote_schema_directory"
 #define PCMK__ENV_REMOTE_PID1               "remote_pid1"
 #define PCMK__ENV_REMOTE_PORT               "remote_port"
 #define PCMK__ENV_RESPAWNED                 "respawned"
