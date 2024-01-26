@@ -345,7 +345,7 @@ populate_update_op(xmlNode *op, const char *node, const char *name, const char *
                    const char *dampen, const char *set, uint32_t options)
 {
     if (pcmk_is_set(options, pcmk__node_attr_pattern)) {
-        crm_xml_add(op, PCMK__XA_ATTR_PATTERN, name);
+        crm_xml_add(op, PCMK__XA_ATTR_REGEX, name);
     } else {
         crm_xml_add(op, PCMK__XA_ATTR_NAME, name);
     }

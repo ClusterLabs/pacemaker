@@ -133,11 +133,11 @@ attrd_client_clear_failure(pcmk__request_t *request)
                                         rsc, op, interval_ms);
         }
 
-        crm_xml_add(xml, PCMK__XA_ATTR_PATTERN, pattern);
+        crm_xml_add(xml, PCMK__XA_ATTR_REGEX, pattern);
         free(pattern);
 
     } else {
-        crm_xml_add(xml, PCMK__XA_ATTR_PATTERN, ATTRD_RE_CLEAR_ALL);
+        crm_xml_add(xml, PCMK__XA_ATTR_REGEX, ATTRD_RE_CLEAR_ALL);
     }
 
     /* Make sure attribute and value are not set, so we delete via regex */
@@ -281,7 +281,7 @@ expand_regexes(xmlNode *xml, const char *attr, const char *value, const char *re
                  * regex and replace it with the name.
                  */
                 attrd_copy_xml_attributes(xml, child);
-                xml_remove_prop(child, PCMK__XA_ATTR_PATTERN);
+                xml_remove_prop(child, PCMK__XA_ATTR_REGEX);
                 crm_xml_add(child, PCMK__XA_ATTR_NAME, attr);
             }
         }
@@ -312,7 +312,7 @@ handle_regexes(pcmk__request_t *request)
 
     const char *attr = crm_element_value(xml, PCMK__XA_ATTR_NAME);
     const char *value = crm_element_value(xml, PCMK__XA_ATTR_VALUE);
-    const char *regex = crm_element_value(xml, PCMK__XA_ATTR_PATTERN);
+    const char *regex = crm_element_value(xml, PCMK__XA_ATTR_REGEX);
 
     rc = expand_regexes(xml, attr, value, regex);
 
@@ -455,7 +455,7 @@ attrd_client_update(pcmk__request_t *request)
 
     attr = crm_element_value(xml, PCMK__XA_ATTR_NAME);
     value = crm_element_value(xml, PCMK__XA_ATTR_VALUE);
-    regex = crm_element_value(xml, PCMK__XA_ATTR_PATTERN);
+    regex = crm_element_value(xml, PCMK__XA_ATTR_REGEX);
 
     if (handle_regexes(request) != pcmk_rc_ok) {
         /* Error handling was already dealt with in handle_regexes, so just return. */
