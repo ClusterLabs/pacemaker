@@ -428,7 +428,7 @@ attrd_peer_clear_failure(pcmk__request_t *request)
     xmlNode *xml = request->xml;
     const char *rsc = crm_element_value(xml, PCMK__XA_ATTR_RESOURCE);
     const char *host = crm_element_value(xml, PCMK__XA_ATTR_HOST);
-    const char *op = crm_element_value(xml, PCMK__XA_ATTR_OPERATION);
+    const char *op = crm_element_value(xml, PCMK__XA_ATTR_CLEAR_OPERATION);
     const char *interval_spec = crm_element_value(xml,
                                                   PCMK__XA_ATTR_CLEAR_INTERVAL);
     guint interval_ms = 0U;
