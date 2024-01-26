@@ -153,7 +153,7 @@ attrd_client_peer_remove(pcmk__request_t *request)
     xmlNode *xml = request->xml;
 
     // Host and ID are not used in combination, rather host has precedence
-    const char *host = crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME);
+    const char *host = crm_element_value(xml, PCMK__XA_ATTR_HOST);
     char *host_alloc = NULL;
 
     attrd_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags);
@@ -213,8 +213,8 @@ attrd_client_query(pcmk__request_t *request)
     }
 
     /* Build the XML reply */
-    reply = build_query_reply(attr, crm_element_value(query,
-                                                      PCMK__XA_ATTR_NODE_NAME));
+    reply = build_query_reply(attr,
+                              crm_element_value(query, PCMK__XA_ATTR_HOST));
     if (reply == NULL) {
         pcmk__format_result(&request->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
                             "Could not respond to query from %s: could not create XML reply",
@@ -243,7 +243,7 @@ attrd_client_refresh(pcmk__request_t *request)
 static void
 handle_missing_host(xmlNode *xml)
 {
-    const char *host = crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME);
+    const char *host = crm_element_value(xml, PCMK__XA_ATTR_HOST);
 
     if (host == NULL) {
         crm_trace("Inferring host");
@@ -346,7 +346,7 @@ handle_value_expansion(const char **value, xmlNode *xml, const char *op,
         attribute_value_t *v = NULL;
 
         if (a) {
-            const char *host = crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME);
+            const char *host = crm_element_value(xml, PCMK__XA_ATTR_HOST);
             v = g_hash_table_lookup(a->values, host);
         }
 
@@ -476,7 +476,8 @@ attrd_client_update(pcmk__request_t *request)
         return NULL;
     }
 
-    crm_debug("Broadcasting %s[%s]=%s%s", attr, crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME),
+    crm_debug("Broadcasting %s[%s]=%s%s",
+              attr, crm_element_value(xml, PCMK__XA_ATTR_HOST),
               value, (attrd_election_won()? " (writer)" : ""));
 
     send_update_msg_to_cluster(request, xml);

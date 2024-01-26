@@ -36,7 +36,7 @@ set_pairs_data(pcmk__attrd_api_reply_t *data, xmlNode *msg_data)
 
         CRM_ASSERT(pair != NULL);
 
-        pair->node = crm_element_value(node, PCMK__XA_ATTR_NODE_NAME);
+        pair->node = crm_element_value(node, PCMK__XA_ATTR_HOST);
         pair->name = name;
         pair->value = crm_element_value(node, PCMK__XA_ATTR_VALUE);
         data->data.pairs = g_list_prepend(data->data.pairs, pair);

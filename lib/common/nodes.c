@@ -17,7 +17,7 @@ pcmk__xe_add_node(xmlNode *xml, const char *node, int nodeid)
     CRM_ASSERT(xml != NULL);
 
     if (node != NULL) {
-        crm_xml_add(xml, PCMK__XA_ATTR_NODE_NAME, node);
+        crm_xml_add(xml, PCMK__XA_ATTR_HOST, node);
     }
 
     if (nodeid > 0) {

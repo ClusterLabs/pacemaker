@@ -335,7 +335,7 @@ attrd_peer_update_one(const crm_node_t *peer, xmlNode *xml, bool filter)
     attribute_t *a = NULL;
     const char *attr = crm_element_value(xml, PCMK__XA_ATTR_NAME);
     const char *value = crm_element_value(xml, PCMK__XA_ATTR_VALUE);
-    const char *host = crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME);
+    const char *host = crm_element_value(xml, PCMK__XA_ATTR_HOST);
 
     if (attr == NULL) {
         crm_warn("Could not update attribute: peer did not specify name");
@@ -427,7 +427,7 @@ attrd_peer_clear_failure(pcmk__request_t *request)
 {
     xmlNode *xml = request->xml;
     const char *rsc = crm_element_value(xml, PCMK__XA_ATTR_RESOURCE);
-    const char *host = crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME);
+    const char *host = crm_element_value(xml, PCMK__XA_ATTR_HOST);
     const char *op = crm_element_value(xml, PCMK__XA_ATTR_OPERATION);
     const char *interval_spec = crm_element_value(xml,
                                                   PCMK__XA_ATTR_CLEAR_INTERVAL);
@@ -489,8 +489,7 @@ attrd_peer_sync_response(const crm_node_t *peer, bool peer_won, xmlNode *xml)
     for (xmlNode *child = pcmk__xml_first_child(xml); child != NULL;
          child = pcmk__xml_next(child)) {
         attrd_peer_update(peer, child,
-                          crm_element_value(child, PCMK__XA_ATTR_NODE_NAME),
-                          true);
+                          crm_element_value(child, PCMK__XA_ATTR_HOST), true);
     }
 
     if (peer_won) {
