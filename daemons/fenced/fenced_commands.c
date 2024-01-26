@@ -1062,7 +1062,7 @@ target_list_type(stonith_device_t * dev)
         } else if (pcmk_is_set(dev->flags, st_device_supports_status)) {
             check_type = "status";
         } else {
-            check_type = PCMK__VALUE_NONE;
+            check_type = PCMK_VALUE_NONE;
         }
     }
 
@@ -2162,7 +2162,7 @@ can_fence_host_with_device(stonith_device_t *dev,
     // Check eligibility as specified by pcmk_host_check
     check_type = target_list_type(dev);
     alias = g_hash_table_lookup(dev->aliases, target);
-    if (pcmk__str_eq(check_type, PCMK__VALUE_NONE, pcmk__str_casei)) {
+    if (pcmk__str_eq(check_type, PCMK_VALUE_NONE, pcmk__str_casei)) {
         can = TRUE;
 
     } else if (pcmk__str_eq(check_type, "static-list", pcmk__str_casei)) {

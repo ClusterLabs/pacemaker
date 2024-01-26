@@ -495,7 +495,7 @@ main(int argc, char **argv, char **envp)
 
     // ocf_log() (in resource-agents) uses the capitalized env options below
     option = pcmk__env_option(PCMK__ENV_LOGFACILITY);
-    if (!pcmk__str_eq(option, PCMK__VALUE_NONE,
+    if (!pcmk__str_eq(option, PCMK_VALUE_NONE,
                       pcmk__str_casei|pcmk__str_null_matches)
         && !pcmk__str_eq(option, "/dev/null", pcmk__str_none)) {
 
@@ -503,7 +503,7 @@ main(int argc, char **argv, char **envp)
     }
 
     option = pcmk__env_option(PCMK__ENV_LOGFILE);
-    if (!pcmk__str_eq(option, PCMK__VALUE_NONE,
+    if (!pcmk__str_eq(option, PCMK_VALUE_NONE,
                       pcmk__str_casei|pcmk__str_null_matches)) {
         pcmk__set_env_option("LOGFILE", option, true);
 

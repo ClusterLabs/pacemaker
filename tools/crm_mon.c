@@ -322,7 +322,7 @@ apply_exclude(const gchar *excludes, GError **error) {
 
         if (pcmk__str_eq(*s, "all", pcmk__str_none)) {
             show = 0;
-        } else if (pcmk__str_eq(*s, PCMK__VALUE_NONE, pcmk__str_none)) {
+        } else if (pcmk__str_eq(*s, PCMK_VALUE_NONE, pcmk__str_none)) {
             show = all_includes(output_format);
         } else if (bit != 0) {
             show &= ~bit;
@@ -331,7 +331,7 @@ apply_exclude(const gchar *excludes, GError **error) {
                         "--exclude options: all, attributes, bans, counts, dc, "
                         "failcounts, failures, fencing, fencing-failed, "
                         "fencing-pending, fencing-succeeded, maint-mode, nodes, "
-                        PCMK__VALUE_NONE ", operations, options, resources, "
+                        PCMK_VALUE_NONE ", operations, options, resources, "
                         "stack, summary, tickets, times");
             result = FALSE;
             break;
@@ -364,7 +364,7 @@ apply_include(const gchar *includes, GError **error) {
             }
         } else if (pcmk__str_any_of(*s, PCMK_VALUE_DEFAULT, "defaults", NULL)) {
             show |= default_includes(output_format);
-        } else if (pcmk__str_eq(*s, PCMK__VALUE_NONE, pcmk__str_none)) {
+        } else if (pcmk__str_eq(*s, PCMK_VALUE_NONE, pcmk__str_none)) {
             show = 0;
         } else if (bit != 0) {
             show |= bit;
@@ -373,7 +373,7 @@ apply_include(const gchar *includes, GError **error) {
                         "--include options: all, attributes, bans[:PREFIX], counts, dc, "
                         PCMK_VALUE_DEFAULT ", failcounts, failures, fencing, "
                         "fencing-failed, fencing-pending, fencing-succeeded, "
-                        "maint-mode, nodes, " PCMK__VALUE_NONE ", operations, "
+                        "maint-mode, nodes, " PCMK_VALUE_NONE ", operations, "
                         "options, resources, stack, summary, tickets, times");
             result = FALSE;
             break;

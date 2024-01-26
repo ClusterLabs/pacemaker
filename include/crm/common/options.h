@@ -168,6 +168,7 @@ extern     "C" {
 #define PCMK_VALUE_MOVE                         "move"
 #define PCMK_VALUE_NE                           "ne"
 #define PCMK_VALUE_NEVER                        "never"
+#define PCMK_VALUE_NONE                         "none"
 #define PCMK_VALUE_NOT_DEFINED                  "not_defined"
 #define PCMK_VALUE_NOTHING                      "nothing"
 #define PCMK_VALUE_NUMBER                       "number"

@@ -21,7 +21,7 @@ bool
 pcmk__validate_health_strategy(const char *value)
 {
     return pcmk__strcase_any_of(value,
-                                PCMK__VALUE_NONE,
+                                PCMK_VALUE_NONE,
                                 PCMK_VALUE_CUSTOM,
                                 PCMK_VALUE_ONLY_GREEN,
                                 PCMK_VALUE_PROGRESSIVE,
@@ -40,7 +40,7 @@ pcmk__validate_health_strategy(const char *value)
 enum pcmk__health_strategy
 pcmk__parse_health_strategy(const char *value)
 {
-    if (pcmk__str_eq(value, PCMK__VALUE_NONE,
+    if (pcmk__str_eq(value, PCMK_VALUE_NONE,
                      pcmk__str_null_matches|pcmk__str_casei)) {
         return pcmk__health_strategy_none;
     }
@@ -56,7 +56,7 @@ pcmk__parse_health_strategy(const char *value)
     if (pcmk__str_eq(value, PCMK_VALUE_CUSTOM, pcmk__str_casei)) {
         return pcmk__health_strategy_custom;
     } else {
-        pcmk__config_err("Using default of \"" PCMK__VALUE_NONE "\" for "
+        pcmk__config_err("Using default of \"" PCMK_VALUE_NONE "\" for "
                          PCMK_OPT_NODE_HEALTH_STRATEGY
                          " because '%s' is not a valid value",
                          value);

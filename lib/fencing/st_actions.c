@@ -170,7 +170,7 @@ make_args(const char *agent, const char *action, const char *target,
         // Check whether target must be specified in some other way
         param = g_hash_table_lookup(device_args, PCMK_STONITH_HOST_ARGUMENT);
         if (!pcmk__str_eq(agent, "fence_legacy", pcmk__str_none)
-            && !pcmk__str_eq(param, PCMK__VALUE_NONE, pcmk__str_casei)) {
+            && !pcmk__str_eq(param, PCMK_VALUE_NONE, pcmk__str_casei)) {
 
             if (param == NULL) {
                 /* Use the caller's default for pcmk_host_argument, or "port" if
