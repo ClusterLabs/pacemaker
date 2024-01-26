@@ -55,7 +55,7 @@ attrd_create_attribute(xmlNode *xml)
     pcmk__str_update(&a->set_type, set_type);
 
     a->set_id = crm_element_value_copy(xml, PCMK__XA_ATTR_SET);
-    a->uuid = crm_element_value_copy(xml, PCMK__XA_ATTR_UUID);
+    a->uuid = crm_element_value_copy(xml, PCMK__XA_ATTR_KEY);
     a->values = pcmk__strikey_table(NULL, attrd_free_attribute_value);
 
     a->user = crm_element_value_copy(xml, PCMK__XA_ATTR_USER);
@@ -142,7 +142,7 @@ attrd_add_value_xml(xmlNode *parent, const attribute_t *a,
     crm_xml_add(xml, PCMK__XA_ATTR_NAME, a->id);
     crm_xml_add(xml, PCMK__XA_ATTR_SET_TYPE, a->set_type);
     crm_xml_add(xml, PCMK__XA_ATTR_SET, a->set_id);
-    crm_xml_add(xml, PCMK__XA_ATTR_UUID, a->uuid);
+    crm_xml_add(xml, PCMK__XA_ATTR_KEY, a->uuid);
     crm_xml_add(xml, PCMK__XA_ATTR_USER, a->user);
     pcmk__xe_add_node(xml, v->nodename, v->nodeid);
     if (pcmk_is_set(v->flags, attrd_value_remote)) {
