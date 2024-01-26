@@ -205,7 +205,7 @@ pcmk__attrd_api_clear_failures(pcmk_ipc_api_t *api, const char *node,
     pcmk__xe_add_node(request, node, 0);
     crm_xml_add(request, PCMK__XA_ATTR_RESOURCE, resource);
     crm_xml_add(request, PCMK__XA_ATTR_OPERATION, operation);
-    crm_xml_add(request, PCMK__XA_ATTR_INTERVAL, interval_spec);
+    crm_xml_add(request, PCMK__XA_ATTR_CLEAR_INTERVAL, interval_spec);
     crm_xml_add_int(request, PCMK__XA_ATTR_IS_REMOTE,
                     pcmk_is_set(options, pcmk__node_attr_remote));
 

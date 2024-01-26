@@ -80,8 +80,8 @@ extern "C" {
  * XML attribute names used only by internal code
  */
 
+#define PCMK__XA_ATTR_CLEAR_INTERVAL    "attr_clear_interval"
 #define PCMK__XA_ATTR_DAMPENING         "attr_dampening"
-#define PCMK__XA_ATTR_INTERVAL          "attr_clear_interval"
 #define PCMK__XA_ATTR_IS_PRIVATE        "attr_is_private"
 #define PCMK__XA_ATTR_IS_REMOTE         "attr_is_remote"
 #define PCMK__XA_ATTR_NAME              "attr_name"

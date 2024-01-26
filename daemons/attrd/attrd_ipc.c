@@ -112,7 +112,7 @@ attrd_client_clear_failure(pcmk__request_t *request)
 
     rsc = crm_element_value(xml, PCMK__XA_ATTR_RESOURCE);
     op = crm_element_value(xml, PCMK__XA_ATTR_OPERATION);
-    interval_spec = crm_element_value(xml, PCMK__XA_ATTR_INTERVAL);
+    interval_spec = crm_element_value(xml, PCMK__XA_ATTR_CLEAR_INTERVAL);
 
     /* Map this to an update */
     crm_xml_add(xml, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);

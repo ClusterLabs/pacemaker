@@ -429,7 +429,8 @@ attrd_peer_clear_failure(pcmk__request_t *request)
     const char *rsc = crm_element_value(xml, PCMK__XA_ATTR_RESOURCE);
     const char *host = crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME);
     const char *op = crm_element_value(xml, PCMK__XA_ATTR_OPERATION);
-    const char *interval_spec = crm_element_value(xml, PCMK__XA_ATTR_INTERVAL);
+    const char *interval_spec = crm_element_value(xml,
+                                                  PCMK__XA_ATTR_CLEAR_INTERVAL);
     guint interval_ms = 0U;
     char *attr = NULL;
     GHashTableIter iter;
