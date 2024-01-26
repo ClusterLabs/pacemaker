@@ -913,7 +913,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
                 pcmk__xe_set_props(remote,
                                    PCMK_XA_ID, node->uname,
                                    PCMK__XA_NODE_STATE, node->state,
-                                   PCMK__XA_CONN_HOST, node->conn_host,
+                                   PCMK__XA_CONNECTION_HOST, node->conn_host,
                                    NULL);
             }
         }

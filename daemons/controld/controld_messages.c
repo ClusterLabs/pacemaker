@@ -778,7 +778,7 @@ handle_remote_state(const xmlNode *msg)
                             remote_is_up ? CRM_NODE_MEMBER : CRM_NODE_LOST,
                             0);
 
-    conn_host = crm_element_value(msg, PCMK__XA_CONN_HOST);
+    conn_host = crm_element_value(msg, PCMK__XA_CONNECTION_HOST);
     if (conn_host) {
         pcmk__str_update(&remote_peer->conn_host, conn_host);
     } else if (remote_peer->conn_host) {
@@ -1327,7 +1327,8 @@ broadcast_remote_state_message(const char *node_name, bool node_up)
     pcmk__xe_set_bool_attr(msg, PCMK__XA_IN_CCM, node_up);
 
     if (node_up) {
-        crm_xml_add(msg, PCMK__XA_CONN_HOST, controld_globals.our_nodename);
+        crm_xml_add(msg, PCMK__XA_CONNECTION_HOST,
+                    controld_globals.our_nodename);
     }
 
     send_cluster_message(NULL, crm_msg_crmd, msg, TRUE);
