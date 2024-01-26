@@ -135,6 +135,7 @@ extern     "C" {
 #define PCMK_VALUE_BLOCK                        "block"
 #define PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS        "cib-bootstrap-options"
 #define PCMK_VALUE_CREATE                       "create"
+#define PCMK_VALUE_CUSTOM                       "custom"
 #define PCMK_VALUE_DATE_SPEC                    "date_spec"
 #define PCMK_VALUE_DEFAULT                      "default"
 #define PCMK_VALUE_DEFINED                      "defined"
