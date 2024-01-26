@@ -81,7 +81,6 @@ extern "C" {
  */
 
 #define PCMK__XA_ATTR_DAMPENING         "attr_dampening"
-#define PCMK__XA_ATTR_FORCE             "attrd_is_force_write"
 #define PCMK__XA_ATTR_INTERVAL          "attr_clear_interval"
 #define PCMK__XA_ATTR_IS_PRIVATE        "attr_is_private"
 #define PCMK__XA_ATTR_IS_REMOTE         "attr_is_remote"
@@ -100,6 +99,7 @@ extern "C" {
 #define PCMK__XA_ATTR_VALUE             "attr_value"
 #define PCMK__XA_ATTR_VERSION           "attr_version"
 #define PCMK__XA_ATTR_WRITER            "attr_writer"
+#define PCMK__XA_ATTRD_IS_FORCE_WRITE   "attrd_is_force_write"
 #define PCMK__XA_CALL_ID                "call-id"
 #define PCMK__XA_CLIENT_NAME            "client_name"
 #define PCMK__XA_CLIENT_UUID            "client_uuid"

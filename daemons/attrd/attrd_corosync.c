@@ -303,7 +303,8 @@ update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
     } else {
         int is_force_write = 0;
 
-        crm_element_value_int(xml, PCMK__XA_ATTR_FORCE, &is_force_write);
+        crm_element_value_int(xml, PCMK__XA_ATTRD_IS_FORCE_WRITE,
+                              &is_force_write);
 
         if (is_force_write == 1 && a->timeout_ms && a->timer) {
             /* Save forced writing and set change flag. */
