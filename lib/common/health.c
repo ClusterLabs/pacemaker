@@ -23,7 +23,7 @@ pcmk__validate_health_strategy(const char *value)
     return pcmk__strcase_any_of(value,
                                 PCMK__VALUE_NONE,
                                 PCMK__VALUE_CUSTOM,
-                                PCMK__VALUE_ONLY_GREEN,
+                                PCMK_VALUE_ONLY_GREEN,
                                 PCMK__VALUE_PROGRESSIVE,
                                 PCMK_VALUE_MIGRATE_ON_RED,
                                 NULL);
@@ -46,9 +46,8 @@ pcmk__parse_health_strategy(const char *value)
     }
     if (pcmk__str_eq(value, PCMK_VALUE_MIGRATE_ON_RED, pcmk__str_casei)) {
         return pcmk__health_strategy_no_red;
-
-    } else if (pcmk__str_eq(value, PCMK__VALUE_ONLY_GREEN,
-                            pcmk__str_casei)) {
+    }
+    if (pcmk__str_eq(value, PCMK_VALUE_ONLY_GREEN, pcmk__str_casei)) {
         return pcmk__health_strategy_only_green;
 
     } else if (pcmk__str_eq(value, PCMK__VALUE_PROGRESSIVE,

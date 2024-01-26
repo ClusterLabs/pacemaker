@@ -172,6 +172,7 @@ extern     "C" {
 #define PCMK_VALUE_NUMBER                       "number"
 #define PCMK_VALUE_OFFLINE                      "offline"
 #define PCMK_VALUE_ONLINE                       "online"
+#define PCMK_VALUE_ONLY_GREEN                   "only-green"
 #define PCMK_VALUE_OPTIONAL                     "Optional"
 #define PCMK_VALUE_OR                           "or"
 #define PCMK_VALUE_PANIC                        "panic"

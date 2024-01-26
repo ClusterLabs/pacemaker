@@ -481,7 +481,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_NODE_HEALTH_STRATEGY, NULL, "select",
             PCMK__VALUE_NONE ", " PCMK_VALUE_MIGRATE_ON_RED ", "
-                PCMK__VALUE_ONLY_GREEN ", " PCMK__VALUE_PROGRESSIVE ", "
+                PCMK_VALUE_ONLY_GREEN ", " PCMK__VALUE_PROGRESSIVE ", "
                 PCMK__VALUE_CUSTOM,
         PCMK__VALUE_NONE, pcmk__validate_health_strategy,
         pcmk__opt_context_schedulerd,
