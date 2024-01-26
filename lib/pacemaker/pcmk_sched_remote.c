@@ -672,8 +672,8 @@ pcmk__substitute_remote_addr(pcmk_resource_t *rsc, GHashTable *params)
  *
  * If a given action will be executed on a guest node, add the following as XML
  * attributes (using meta-attribute naming):
- * * The resource's \c PCMK_META_CONTAINER_ATTR_TARGET meta-attribute (usually
- *   set only for bundles), as \c PCMK_META_CONTAINER_ATTR_TARGET
+ * * The resource's \c PCMK_META_CONTAINER_ATTRIBUTE_TARGET meta-attribute
+ *   (usually set only for bundles), as \c PCMK_META_CONTAINER_ATTRIBUTE_TARGET
  * * The guest's physical host (current host for "down" actions, next host for
  *   "up" actions), as \c PCMK__META_PHYSICAL_HOST
  *
@@ -721,10 +721,11 @@ pcmk__add_guest_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
     }
 
     if (host != NULL) {
-        gpointer target = g_hash_table_lookup(action->rsc->meta,
-                                              PCMK_META_CONTAINER_ATTR_TARGET);
+        gpointer target =
+            g_hash_table_lookup(action->rsc->meta,
+                                PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
 
-        hash2metafield((gpointer) PCMK_META_CONTAINER_ATTR_TARGET,
+        hash2metafield((gpointer) PCMK_META_CONTAINER_ATTRIBUTE_TARGET,
                        target,
                        (gpointer) args_xml);
         hash2metafield((gpointer) PCMK__META_PHYSICAL_HOST,
