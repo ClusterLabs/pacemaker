@@ -21,6 +21,6 @@ pcmk__xe_add_node(xmlNode *xml, const char *node, int nodeid)
     }
 
     if (nodeid > 0) {
-        crm_xml_add_int(xml, PCMK__XA_ATTR_NODE_ID, nodeid);
+        crm_xml_add_int(xml, PCMK__XA_ATTR_HOST_ID, nodeid);
     }
 }

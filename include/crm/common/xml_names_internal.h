@@ -82,10 +82,10 @@ extern "C" {
 
 #define PCMK__XA_ATTR_CLEAR_INTERVAL    "attr_clear_interval"
 #define PCMK__XA_ATTR_DAMPENING         "attr_dampening"
+#define PCMK__XA_ATTR_HOST_ID           "attr_host_id"
 #define PCMK__XA_ATTR_IS_PRIVATE        "attr_is_private"
 #define PCMK__XA_ATTR_IS_REMOTE         "attr_is_remote"
 #define PCMK__XA_ATTR_NAME              "attr_name"
-#define PCMK__XA_ATTR_NODE_ID           "attr_host_id"
 #define PCMK__XA_ATTR_NODE_NAME         "attr_host"
 #define PCMK__XA_ATTR_OPERATION         "attr_clear_operation"
 #define PCMK__XA_ATTR_PATTERN           "attr_regex"

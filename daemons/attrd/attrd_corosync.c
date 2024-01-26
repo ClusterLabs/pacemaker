@@ -323,7 +323,7 @@ update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
 
     /* If this is a cluster node whose node ID we are learning, remember it */
     if ((v->nodeid == 0) && !pcmk_is_set(v->flags, attrd_value_remote)
-        && (crm_element_value_int(xml, PCMK__XA_ATTR_NODE_ID,
+        && (crm_element_value_int(xml, PCMK__XA_ATTR_HOST_ID,
                                   (int*)&v->nodeid) == 0) && (v->nodeid > 0)) {
         record_peer_nodeid(v, host);
     }
@@ -352,7 +352,7 @@ attrd_peer_update_one(const crm_node_t *peer, xmlNode *xml, bool filter)
         GHashTableIter vIter;
 
         crm_debug("Setting %s for all hosts to %s", attr, value);
-        xml_remove_prop(xml, PCMK__XA_ATTR_NODE_ID);
+        xml_remove_prop(xml, PCMK__XA_ATTR_HOST_ID);
         g_hash_table_iter_init(&vIter, a->values);
 
         while (g_hash_table_iter_next(&vIter, (gpointer *) & host, NULL)) {
