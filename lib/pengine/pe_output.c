@@ -1689,7 +1689,7 @@ status_node(pcmk_node_t *node, xmlNodePtr parent, uint32_t show_opts)
 
     // Maintenance mode
     if (node->details->maintenance) {
-        pcmk_create_html_node(parent, PCMK__XE_SPAN, NULL, "maint",
+        pcmk_create_html_node(parent, PCMK__XE_SPAN, NULL, PCMK__VALUE_MAINT,
                               " (in maintenance mode)");
     }
 
