@@ -1162,7 +1162,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
     op = calloc(1, sizeof(remote_fencing_op_t));
     CRM_ASSERT(op != NULL);
 
-    crm_element_value_int(request, F_STONITH_TIMEOUT, &(op->base_timeout));
+    crm_element_value_int(request, PCMK__XA_ST_TIMEOUT, &(op->base_timeout));
     // Value -1 means disable any static/random fencing delays
     crm_element_value_int(request, F_STONITH_DELAY, &(op->client_delay));
 
@@ -1322,7 +1322,7 @@ initiate_remote_stonith_op(const pcmk__client_t *client, xmlNode *request,
     crm_xml_add(query, F_STONITH_ORIGIN, op->originator);
     crm_xml_add(query, PCMK__XA_ST_CLIENTID, op->client_id);
     crm_xml_add(query, F_STONITH_CLIENTNAME, op->client_name);
-    crm_xml_add_int(query, F_STONITH_TIMEOUT, op->base_timeout);
+    crm_xml_add_int(query, PCMK__XA_ST_TIMEOUT, op->base_timeout);
 
     /* In case of RELAY operation, RELAY information is added to the query to delete the original operation of RELAY. */
     operation = crm_element_value(request, PCMK__XA_ST_OP);
@@ -1670,7 +1670,7 @@ report_timeout_period(remote_fencing_op_t * op, int op_timeout)
     crm_xml_add(update, PCMK__XA_ST_REMOTE_OP, op->id);
     crm_xml_add(update, PCMK__XA_ST_CLIENTID, client_id);
     crm_xml_add(update, PCMK__XA_ST_CALLID, call_id);
-    crm_xml_add_int(update, F_STONITH_TIMEOUT, op_timeout);
+    crm_xml_add_int(update, PCMK__XA_ST_TIMEOUT, op_timeout);
 
     send_cluster_message(pcmk__get_node(0, client_node, NULL,
                                         pcmk__node_search_cluster),
@@ -1872,7 +1872,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
         crm_xml_add(remote_op, F_STONITH_ORIGIN, op->originator);
         crm_xml_add(remote_op, PCMK__XA_ST_CLIENTID, op->client_id);
         crm_xml_add(remote_op, F_STONITH_CLIENTNAME, op->client_name);
-        crm_xml_add_int(remote_op, F_STONITH_TIMEOUT, timeout);
+        crm_xml_add_int(remote_op, PCMK__XA_ST_TIMEOUT, timeout);
         crm_xml_add_int(remote_op, PCMK__XA_ST_CALLOPT, op->call_options);
         crm_xml_add_int(remote_op, F_STONITH_DELAY, op->client_delay);
 

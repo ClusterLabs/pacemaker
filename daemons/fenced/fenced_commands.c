@@ -366,7 +366,7 @@ create_async_command(xmlNode *msg)
     crm_element_value_int(msg, PCMK__XA_ST_CALLID, &(cmd->id));
     crm_element_value_int(msg, PCMK__XA_ST_CALLOPT, &(cmd->options));
     crm_element_value_int(msg, F_STONITH_DELAY, &(cmd->start_delay));
-    crm_element_value_int(msg, F_STONITH_TIMEOUT, &(cmd->default_timeout));
+    crm_element_value_int(msg, PCMK__XA_ST_TIMEOUT, &(cmd->default_timeout));
     cmd->timeout = cmd->default_timeout;
 
     cmd->origin = crm_element_value_copy(msg, PCMK__XA_SRC);
@@ -3212,7 +3212,7 @@ handle_update_timeout_request(pcmk__request_t *request)
                                               PCMK__XA_ST_CLIENTID);
     int op_timeout = 0;
 
-    crm_element_value_int(request->xml, F_STONITH_TIMEOUT, &op_timeout);
+    crm_element_value_int(request->xml, PCMK__XA_ST_TIMEOUT, &op_timeout);
     do_stonith_async_timeout_update(client_id, call_id, op_timeout);
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     return NULL;
@@ -3263,7 +3263,7 @@ handle_query_request(pcmk__request_t *request)
     pcmk__str_update(&query->action, action);
     query->call_options = request->call_options;
 
-    crm_element_value_int(request->xml, F_STONITH_TIMEOUT, &timeout);
+    crm_element_value_int(request->xml, PCMK__XA_ST_TIMEOUT, &timeout);
     get_capable_devices(target, action, timeout,
                         pcmk_is_set(query->call_options, st_opt_allow_suicide),
                         query, stonith_query_capable_device_cb, st_device_supports_none);

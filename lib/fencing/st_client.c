@@ -675,7 +675,7 @@ stonith_api_fence_with_delay(stonith_t * stonith, int call_options, const char *
     data = create_xml_node(NULL, __func__);
     crm_xml_add(data, PCMK__XA_ST_TARGET, node);
     crm_xml_add(data, F_STONITH_ACTION, action);
-    crm_xml_add_int(data, F_STONITH_TIMEOUT, timeout);
+    crm_xml_add_int(data, PCMK__XA_ST_TIMEOUT, timeout);
     crm_xml_add_int(data, F_STONITH_TOLERANCE, tolerance);
     crm_xml_add_int(data, F_STONITH_DELAY, delay);
 
@@ -1074,7 +1074,7 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
         int call_id = 0;
         int timeout = 0;
 
-        crm_element_value_int(blob.xml, F_STONITH_TIMEOUT, &timeout);
+        crm_element_value_int(blob.xml, PCMK__XA_ST_TIMEOUT, &timeout);
         crm_element_value_int(blob.xml, PCMK__XA_ST_CALLID, &call_id);
 
         update_callback_timeout(call_id, timeout, st);
@@ -1577,7 +1577,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
         return -EINVAL;
     }
 
-    crm_xml_add_int(op_msg, F_STONITH_TIMEOUT, timeout);
+    crm_xml_add_int(op_msg, PCMK__XA_ST_TIMEOUT, timeout);
     crm_trace("Sending %s message to fencer with timeout %ds", op, timeout);
 
     if (data) {

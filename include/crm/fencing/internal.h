@@ -102,8 +102,6 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 
 #  define ST_LEVEL_MAX 10
 
-/*! Timeout period per a device execution */
-#  define F_STONITH_TIMEOUT       "st_timeout"
 #  define F_STONITH_TOLERANCE     "st_tolerance"
 #  define F_STONITH_DELAY         "st_delay"
 /*! Action specific timeout period returned in query of fencing devices. */

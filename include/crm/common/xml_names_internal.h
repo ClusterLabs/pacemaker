@@ -179,6 +179,7 @@ extern "C" {
 #define PCMK__XA_ST_REMOTE_OP           "st_remote_op"
 #define PCMK__XA_ST_REMOTE_OP_RELAY     "st_remote_op_relay"
 #define PCMK__XA_ST_TARGET              "st_target"
+#define PCMK__XA_ST_TIMEOUT             "st_timeout"
 #define PCMK__XA_SUBT                   "subt"                  // subtype
 #define PCMK__XA_T                      "t"                     // type
 #define PCMK__XA_TRANSITION_KEY         "transition-key"
