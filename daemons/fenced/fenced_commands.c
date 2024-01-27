@@ -363,7 +363,7 @@ create_async_command(xmlNode *msg)
         return NULL;
     }
 
-    crm_element_value_int(msg, F_STONITH_CALLID, &(cmd->id));
+    crm_element_value_int(msg, PCMK__XA_ST_CALLID, &(cmd->id));
     crm_element_value_int(msg, PCMK__XA_ST_CALLOPT, &(cmd->options));
     crm_element_value_int(msg, F_STONITH_DELAY, &(cmd->start_delay));
     crm_element_value_int(msg, F_STONITH_TIMEOUT, &(cmd->default_timeout));
@@ -2997,7 +2997,7 @@ fenced_construct_reply(const xmlNode *request, xmlNode *data,
         // Attributes to copy from request to reply
         const char *names[] = {
             F_STONITH_OPERATION,
-            F_STONITH_CALLID,
+            PCMK__XA_ST_CALLID,
             PCMK__XA_ST_CLIENTID,
             F_STONITH_CLIENTNAME,
             F_STONITH_REMOTE_OP_ID,
@@ -3039,7 +3039,7 @@ construct_async_reply(const async_command_t *cmd,
     crm_xml_add(reply, F_STONITH_TARGET, cmd->target);
     crm_xml_add(reply, F_STONITH_ACTION, cmd->op);
     crm_xml_add(reply, F_STONITH_ORIGIN, cmd->origin);
-    crm_xml_add_int(reply, F_STONITH_CALLID, cmd->id);
+    crm_xml_add_int(reply, PCMK__XA_ST_CALLID, cmd->id);
     crm_xml_add_int(reply, PCMK__XA_ST_CALLOPT, cmd->options);
 
     stonith__xe_set_result(reply, result);
@@ -3207,7 +3207,7 @@ handle_agent_request(pcmk__request_t *request)
 static xmlNode *
 handle_update_timeout_request(pcmk__request_t *request)
 {
-    const char *call_id = crm_element_value(request->xml, F_STONITH_CALLID);
+    const char *call_id = crm_element_value(request->xml, PCMK__XA_ST_CALLID);
     const char *client_id = crm_element_value(request->xml,
                                               PCMK__XA_ST_CLIENTID);
     int op_timeout = 0;

@@ -1206,7 +1206,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
     crm_element_value_int(request, PCMK__XA_ST_CALLOPT, &call_options);
     op->call_options = call_options;
 
-    crm_element_value_int(request, F_STONITH_CALLID, &(op->client_callid));
+    crm_element_value_int(request, PCMK__XA_ST_CALLID, &(op->client_callid));
 
     crm_trace("%s new fencing op %s ('%s' targeting %s for client %s, "
               "base timeout %d, %u %s expected)",
@@ -1652,7 +1652,7 @@ report_timeout_period(remote_fencing_op_t * op, int op_timeout)
 
     crm_trace("Reporting timeout for %s (id=%.8s)", op->client_name, op->id);
     client_node = crm_element_value(op->request, F_STONITH_CLIENTNODE);
-    call_id = crm_element_value(op->request, F_STONITH_CALLID);
+    call_id = crm_element_value(op->request, PCMK__XA_ST_CALLID);
     client_id = crm_element_value(op->request, PCMK__XA_ST_CLIENTID);
     if (!client_node || !call_id || !client_id) {
         return;
@@ -1668,7 +1668,7 @@ report_timeout_period(remote_fencing_op_t * op, int op_timeout)
     update = stonith_create_op(op->client_callid, op->id, STONITH_OP_TIMEOUT_UPDATE, NULL, 0);
     crm_xml_add(update, F_STONITH_REMOTE_OP_ID, op->id);
     crm_xml_add(update, PCMK__XA_ST_CLIENTID, client_id);
-    crm_xml_add(update, F_STONITH_CALLID, call_id);
+    crm_xml_add(update, PCMK__XA_ST_CALLID, call_id);
     crm_xml_add_int(update, F_STONITH_TIMEOUT, op_timeout);
 
     send_cluster_message(pcmk__get_node(0, client_node, NULL,

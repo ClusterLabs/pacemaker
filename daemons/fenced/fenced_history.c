@@ -478,18 +478,19 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
     }
 
     if (options & st_opt_cleanup) {
+        const char *call_id = crm_element_value(msg, PCMK__XA_ST_CALLID);
+
         crm_trace("Cleaning up operations on %s in %p", target,
                   stonith_remote_op_list);
+        stonith_fence_history_cleanup(target, (call_id != NULL));
 
-        stonith_fence_history_cleanup(target,
-            crm_element_value(msg, F_STONITH_CALLID) != NULL);
     } else if (options & st_opt_broadcast) {
         /* there is no clear sign atm for when a history sync
            is done so send a notification for anything
            that smells like history-sync
          */
         fenced_send_notification(T_STONITH_NOTIFY_HISTORY_SYNCED, NULL, NULL);
-        if (crm_element_value(msg, F_STONITH_CALLID)) {
+        if (crm_element_value(msg, PCMK__XA_ST_CALLID) != NULL) {
             /* this is coming from the stonith-API
             *
             * craft a broadcast with node's history
