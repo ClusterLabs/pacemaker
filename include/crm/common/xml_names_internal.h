@@ -46,6 +46,7 @@ extern "C" {
 #define PCMK__XE_TICKET_STATE           "ticket_state"
 #define PCMK__XE_TRANSIENT_ATTRIBUTES   "transient_attributes"
 #define PCMK__XE_TRANSITION_GRAPH       "transition_graph"
+#define PCMK__XE_XPATH_QUERY            "xpath-query"
 
 // @COMPAT Deprecated since 1.1.12
 #define PCMK__XE_ACL_USER               "acl_user"

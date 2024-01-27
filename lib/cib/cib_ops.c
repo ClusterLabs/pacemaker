@@ -898,7 +898,7 @@ cib_process_xpath(const char *op, int options, const char *section,
 
     } else if (is_query) {
         if (max > 1) {
-            *answer = create_xml_node(NULL, "xpath-query");
+            *answer = create_xml_node(NULL, PCMK__XE_XPATH_QUERY);
         }
     }
 
@@ -979,7 +979,7 @@ cib_process_xpath(const char *op, int options, const char *section,
                 crm_trace("Got: %s", path);
 
                 if (*answer == NULL) {
-                    *answer = create_xml_node(NULL, "xpath-query");
+                    *answer = create_xml_node(NULL, PCMK__XE_XPATH_QUERY);
                 }
                 parent = create_xml_node(*answer, "xpath-query-path");
                 crm_xml_add(parent, PCMK_XA_ID, path);
