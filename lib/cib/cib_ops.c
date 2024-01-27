@@ -981,7 +981,7 @@ cib_process_xpath(const char *op, int options, const char *section,
                 if (*answer == NULL) {
                     *answer = create_xml_node(NULL, PCMK__XE_XPATH_QUERY);
                 }
-                parent = create_xml_node(*answer, "xpath-query-path");
+                parent = create_xml_node(*answer, PCMK__XE_XPATH_QUERY_PATH);
                 crm_xml_add(parent, PCMK_XA_ID, path);
                 free(path);
 
