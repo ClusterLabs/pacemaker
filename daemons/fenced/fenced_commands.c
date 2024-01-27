@@ -3359,7 +3359,7 @@ handle_fence_request(pcmk__request_t *request)
             crm_notice("Client %s wants to fence (%s) %s using %s",
                        pcmk__request_origin(request), action,
                        target, (device? device : "any device"));
-            crm_element_value_int(dev, F_STONITH_TOLERANCE, &tolerance);
+            crm_element_value_int(dev, PCMK__XA_ST_TOLERANCE, &tolerance);
             if (stonith_check_fence_tolerance(tolerance, target, action)) {
                 pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE,
                                  NULL);
