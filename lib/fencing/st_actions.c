@@ -458,7 +458,7 @@ stonith__xe_set_result(xmlNode *xml, const pcmk__action_result_t *result)
      * code that use libstonithd <=2.1.2 don't check for the full result, and
      * need a legacy return code instead.
      */
-    crm_xml_add_int(xml, F_STONITH_RC, rc);
+    crm_xml_add_int(xml, PCMK__XA_ST_RC, rc);
 }
 
 /*!
@@ -478,7 +478,7 @@ stonith__find_xe_with_result(xmlNode *xml)
         /* @COMPAT Peers <=2.1.2 in a rolling upgrade provide only a legacy
          * return code, not a full result, so check for that.
          */
-        match = get_xpath_object("//@" F_STONITH_RC, xml, LOG_ERR);
+        match = get_xpath_object("//@" PCMK__XA_ST_RC, xml, LOG_ERR);
     }
     return match;
 }
@@ -513,7 +513,7 @@ stonith__xe_get_result(const xmlNode *xml, pcmk__action_result_t *result)
         /* @COMPAT Peers <=2.1.2 in rolling upgrades provide only a legacy
          * return code, not a full result, so check for that.
          */
-        if (crm_element_value_int(xml, F_STONITH_RC, &rc) == 0) {
+        if (crm_element_value_int(xml, PCMK__XA_ST_RC, &rc) == 0) {
             if ((rc == pcmk_ok) || (rc == -EINPROGRESS)) {
                 exit_status = CRM_EX_OK;
             }
