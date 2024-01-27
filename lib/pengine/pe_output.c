@@ -915,19 +915,20 @@ cluster_dc_html(pcmk__output_t *out, va_list args) {
         free(buf);
 
         if (mixed_version) {
-            pcmk_create_html_node(node, PCMK__XE_SPAN, NULL, "warning",
-                                  " MIXED-VERSION");
+            pcmk_create_html_node(node, PCMK__XE_SPAN, NULL,
+                                  PCMK__VALUE_WARNING, " MIXED-VERSION");
         }
         pcmk_create_html_node(node, PCMK__XE_SPAN, NULL, NULL, " partition");
         if (crm_is_true(quorum)) {
             pcmk_create_html_node(node, PCMK__XE_SPAN, NULL, NULL, " with");
         } else {
-            pcmk_create_html_node(node, PCMK__XE_SPAN, NULL, "warning",
-                                  " WITHOUT");
+            pcmk_create_html_node(node, PCMK__XE_SPAN, NULL,
+                                  PCMK__VALUE_WARNING, " WITHOUT");
         }
         pcmk_create_html_node(node, PCMK__XE_SPAN, NULL, NULL, " quorum");
     } else {
-        pcmk_create_html_node(node, PCMK__XE_SPAN, NULL, "warning", "NONE");
+        pcmk_create_html_node(node, PCMK__XE_SPAN, NULL, PCMK__VALUE_WARNING,
+                              "NONE");
     }
 
     return pcmk_rc_ok;
