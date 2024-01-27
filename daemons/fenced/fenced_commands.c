@@ -2339,7 +2339,7 @@ add_action_specific_attributes(xmlNode *xml, const char *action,
 
     delay_base = get_action_delay_base(device, action, target);
     if (delay_base > 0) {
-        crm_xml_add_int(xml, F_STONITH_DELAY_BASE, delay_base);
+        crm_xml_add_int(xml, PCMK__XA_ST_DELAY_BASE, delay_base);
     }
 
     if ((delay_max > 0) && (delay_base == 0)) {

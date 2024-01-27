@@ -2107,7 +2107,8 @@ parse_action_specific(const xmlNode *xml, const char *peer, const char *device,
     }
 
     props->delay_base[phase] = 0;
-    crm_element_value_int(xml, F_STONITH_DELAY_BASE, &props->delay_base[phase]);
+    crm_element_value_int(xml, PCMK__XA_ST_DELAY_BASE,
+                          &props->delay_base[phase]);
     if (props->delay_base[phase]) {
         crm_trace("Peer %s with device %s returned base delay %d for %s",
                   peer, device, props->delay_base[phase], action);
