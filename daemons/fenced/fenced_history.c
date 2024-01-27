@@ -45,7 +45,7 @@ stonith_send_broadcast_history(xmlNode *history,
     xmlNode *data = create_xml_node(NULL, __func__);
 
     if (target) {
-        crm_xml_add(data, F_STONITH_TARGET, target);
+        crm_xml_add(data, PCMK__XA_ST_TARGET, target);
     }
     crm_xml_add(bcast, PCMK__XA_T, T_STONITH_NG);
     crm_xml_add(bcast, PCMK__XA_SUBT, "broadcast");
@@ -247,7 +247,7 @@ stonith_xml_history_to_list(const xmlNode *history)
         op = calloc(1, sizeof(remote_fencing_op_t));
 
         op->id = id;
-        op->target = crm_element_value_copy(xml_op, F_STONITH_TARGET);
+        op->target = crm_element_value_copy(xml_op, PCMK__XA_ST_TARGET);
         op->action = crm_element_value_copy(xml_op, F_STONITH_ACTION);
         op->originator = crm_element_value_copy(xml_op, F_STONITH_ORIGIN);
         op->delegate = crm_element_value_copy(xml_op, F_STONITH_DELEGATE);
@@ -364,7 +364,7 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
                 if (add_id) {
                     crm_xml_add(entry, F_STONITH_REMOTE_OP_ID, op->id);
                 }
-                crm_xml_add(entry, F_STONITH_TARGET, op->target);
+                crm_xml_add(entry, PCMK__XA_ST_TARGET, op->target);
                 crm_xml_add(entry, F_STONITH_ACTION, op->action);
                 crm_xml_add(entry, F_STONITH_ORIGIN, op->originator);
                 crm_xml_add(entry, F_STONITH_DELEGATE, op->delegate);
@@ -458,11 +458,11 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
                       const char *remote_peer, int options)
 {
     const char *target = NULL;
-    xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, msg, LOG_NEVER);
+    xmlNode *dev = get_xpath_object("//@" PCMK__XA_ST_TARGET, msg, LOG_NEVER);
     xmlNode *out_history = NULL;
 
     if (dev) {
-        target = crm_element_value(dev, F_STONITH_TARGET);
+        target = crm_element_value(dev, PCMK__XA_ST_TARGET);
         if (target && (options & st_opt_cs_nodeid)) {
             int nodeid;
             crm_node_t *node;

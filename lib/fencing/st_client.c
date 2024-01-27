@@ -555,7 +555,7 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
 
     data = create_xml_node(NULL, F_STONITH_DEVICE);
     crm_xml_add(data, F_STONITH_ORIGIN, __func__);
-    crm_xml_add(data, F_STONITH_TARGET, target);
+    crm_xml_add(data, PCMK__XA_ST_TARGET, target);
     crm_xml_add(data, F_STONITH_ACTION, PCMK_ACTION_OFF);
     rc = stonith_send_command(stonith, STONITH_OP_QUERY, data, &output, call_options, timeout);
 
@@ -614,7 +614,7 @@ stonith_api_call(stonith_t *stonith, int call_options, const char *id,
     crm_xml_add(data, F_STONITH_ORIGIN, __func__);
     crm_xml_add(data, F_STONITH_DEVICE, id);
     crm_xml_add(data, F_STONITH_ACTION, action);
-    crm_xml_add(data, F_STONITH_TARGET, target);
+    crm_xml_add(data, PCMK__XA_ST_TARGET, target);
 
     rc = stonith_send_command(stonith, STONITH_OP_EXEC, data, output,
                               call_options, timeout_sec);
@@ -673,7 +673,7 @@ stonith_api_fence_with_delay(stonith_t * stonith, int call_options, const char *
     xmlNode *data = NULL;
 
     data = create_xml_node(NULL, __func__);
-    crm_xml_add(data, F_STONITH_TARGET, node);
+    crm_xml_add(data, PCMK__XA_ST_TARGET, node);
     crm_xml_add(data, F_STONITH_ACTION, action);
     crm_xml_add_int(data, F_STONITH_TIMEOUT, timeout);
     crm_xml_add_int(data, F_STONITH_TOLERANCE, tolerance);
@@ -714,7 +714,7 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
 
     if (node) {
         data = create_xml_node(NULL, __func__);
-        crm_xml_add(data, F_STONITH_TARGET, node);
+        crm_xml_add(data, PCMK__XA_ST_TARGET, node);
     }
 
     stonith__set_call_options(call_options, node, st_opt_sync_call);
@@ -734,7 +734,7 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
             long long completed_nsec = 0L;
 
             kvp = calloc(1, sizeof(stonith_history_t));
-            kvp->target = crm_element_value_copy(op, F_STONITH_TARGET);
+            kvp->target = crm_element_value_copy(op, PCMK__XA_ST_TARGET);
             kvp->action = crm_element_value_copy(op, F_STONITH_ACTION);
             kvp->origin = crm_element_value_copy(op, F_STONITH_ORIGIN);
             kvp->delegate = crm_element_value_copy(op, F_STONITH_DELEGATE);
@@ -1442,7 +1442,7 @@ xml_to_event(xmlNode *msg)
         } else {
             event->origin = crm_element_value_copy(data, F_STONITH_ORIGIN);
             event->action = crm_element_value_copy(data, F_STONITH_ACTION);
-            event->target = crm_element_value_copy(data, F_STONITH_TARGET);
+            event->target = crm_element_value_copy(data, PCMK__XA_ST_TARGET);
             event->executioner = crm_element_value_copy(data, F_STONITH_DELEGATE);
             event->id = crm_element_value_copy(data, F_STONITH_REMOTE_OP_ID);
             event->client_origin = crm_element_value_copy(data, F_STONITH_CLIENTNAME);
