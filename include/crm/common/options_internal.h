@@ -181,7 +181,7 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 // @COMPAT Deprecated meta-attribute since 2.0.0
 #define PCMK__META_ROLE_AFTER_FAILURE       "role_after_failure"
 
-// Constants for enumerated values for various options
+// Constants for enumerated values
 #define PCMK__VALUE_ATTRD                   "attrd"
 #define PCMK__VALUE_CIB                     "cib"
 #define PCMK__VALUE_CLUSTER                 "cluster"

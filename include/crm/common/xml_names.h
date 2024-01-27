@@ -21,7 +21,7 @@ extern "C" {
  * * "XA" for XML attribute names
  * * "OPT" for cluster option (property) names
  * * "META" for meta-attribute names
- * * "VALUE" for enumerated values for various options
+ * * "VALUE" for enumerated values (such as for options or for XML attributes)
  * * "NODE_ATTR" for node attribute names
  *
  * Old names that don't follow this policy should eventually be deprecated and
