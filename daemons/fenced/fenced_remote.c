@@ -383,7 +383,7 @@ fencing_result2xml(const remote_fencing_op_t *op)
     crm_xml_add(notify_data, PCMK__XA_ST_TARGET, op->target);
     crm_xml_add(notify_data, F_STONITH_ACTION, op->action);
     crm_xml_add(notify_data, F_STONITH_DELEGATE, op->delegate);
-    crm_xml_add(notify_data, F_STONITH_REMOTE_OP_ID, op->id);
+    crm_xml_add(notify_data, PCMK__XA_ST_REMOTE_OP, op->id);
     crm_xml_add(notify_data, F_STONITH_ORIGIN, op->originator);
     crm_xml_add(notify_data, PCMK__XA_ST_CLIENTID, op->client_id);
     crm_xml_add(notify_data, F_STONITH_CLIENTNAME, op->client_name);
@@ -1147,7 +1147,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
     /* If this operation is owned by another node, check to make
      * sure we haven't already created this operation. */
     if (peer && dev) {
-        const char *op_id = crm_element_value(dev, F_STONITH_REMOTE_OP_ID);
+        const char *op_id = crm_element_value(dev, PCMK__XA_ST_REMOTE_OP);
 
         CRM_CHECK(op_id != NULL, return NULL);
 
@@ -1167,7 +1167,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
     crm_element_value_int(request, F_STONITH_DELAY, &(op->client_delay));
 
     if (peer && dev) {
-        op->id = crm_element_value_copy(dev, F_STONITH_REMOTE_OP_ID);
+        op->id = crm_element_value_copy(dev, PCMK__XA_ST_REMOTE_OP);
     } else {
         op->id = crm_generate_uuid();
     }
@@ -1316,7 +1316,7 @@ initiate_remote_stonith_op(const pcmk__client_t *client, xmlNode *request,
     query = stonith_create_op(op->client_callid, op->id, STONITH_OP_QUERY,
                               NULL, op->call_options);
 
-    crm_xml_add(query, F_STONITH_REMOTE_OP_ID, op->id);
+    crm_xml_add(query, PCMK__XA_ST_REMOTE_OP, op->id);
     crm_xml_add(query, PCMK__XA_ST_TARGET, op->target);
     crm_xml_add(query, F_STONITH_ACTION, op_requested_action(op));
     crm_xml_add(query, F_STONITH_ORIGIN, op->originator);
@@ -1327,7 +1327,7 @@ initiate_remote_stonith_op(const pcmk__client_t *client, xmlNode *request,
     /* In case of RELAY operation, RELAY information is added to the query to delete the original operation of RELAY. */
     operation = crm_element_value(request, PCMK__XA_ST_OP);
     if (pcmk__str_eq(operation, STONITH_OP_RELAY, pcmk__str_none)) {
-        relay_op_id = crm_element_value(request, F_STONITH_REMOTE_OP_ID);
+        relay_op_id = crm_element_value(request, PCMK__XA_ST_REMOTE_OP);
         if (relay_op_id) {
             crm_xml_add(query, F_STONITH_REMOTE_OP_ID_RELAY, relay_op_id);
         }
@@ -1667,7 +1667,7 @@ report_timeout_period(remote_fencing_op_t * op, int op_timeout)
 
     /* The client is connected to another node, relay this update to them */
     update = stonith_create_op(op->client_callid, op->id, STONITH_OP_TIMEOUT_UPDATE, NULL, 0);
-    crm_xml_add(update, F_STONITH_REMOTE_OP_ID, op->id);
+    crm_xml_add(update, PCMK__XA_ST_REMOTE_OP, op->id);
     crm_xml_add(update, PCMK__XA_ST_CLIENTID, client_id);
     crm_xml_add(update, PCMK__XA_ST_CALLID, call_id);
     crm_xml_add_int(update, F_STONITH_TIMEOUT, op_timeout);
@@ -1866,7 +1866,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
             timeout_one = TIMEOUT_MULTIPLY_FACTOR * op->client_delay;
         }
 
-        crm_xml_add(remote_op, F_STONITH_REMOTE_OP_ID, op->id);
+        crm_xml_add(remote_op, PCMK__XA_ST_REMOTE_OP, op->id);
         crm_xml_add(remote_op, PCMK__XA_ST_TARGET, op->target);
         crm_xml_add(remote_op, F_STONITH_ACTION, op->action);
         crm_xml_add(remote_op, F_STONITH_ORIGIN, op->originator);
@@ -2257,11 +2257,11 @@ process_remote_stonith_query(xmlNode *msg)
     remote_fencing_op_t *op = NULL;
     peer_device_info_t *peer = NULL;
     uint32_t replies_expected;
-    xmlNode *dev = get_xpath_object("//@" F_STONITH_REMOTE_OP_ID, msg, LOG_ERR);
+    xmlNode *dev = get_xpath_object("//@" PCMK__XA_ST_REMOTE_OP, msg, LOG_ERR);
 
     CRM_CHECK(dev != NULL, return -EPROTO);
 
-    id = crm_element_value(dev, F_STONITH_REMOTE_OP_ID);
+    id = crm_element_value(dev, PCMK__XA_ST_REMOTE_OP);
     CRM_CHECK(id != NULL, return -EPROTO);
 
     dev = get_xpath_object("//@" F_STONITH_AVAILABLE_DEVICES, msg, LOG_ERR);
@@ -2355,12 +2355,12 @@ fenced_process_fencing_reply(xmlNode *msg)
     const char *id = NULL;
     const char *device = NULL;
     remote_fencing_op_t *op = NULL;
-    xmlNode *dev = get_xpath_object("//@" F_STONITH_REMOTE_OP_ID, msg, LOG_ERR);
+    xmlNode *dev = get_xpath_object("//@" PCMK__XA_ST_REMOTE_OP, msg, LOG_ERR);
     pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 
     CRM_CHECK(dev != NULL, return);
 
-    id = crm_element_value(dev, F_STONITH_REMOTE_OP_ID);
+    id = crm_element_value(dev, PCMK__XA_ST_REMOTE_OP);
     CRM_CHECK(id != NULL, return);
 
     dev = stonith__find_xe_with_result(msg);

@@ -230,7 +230,7 @@ stonith_xml_history_to_list(const xmlNode *history)
     for (xml_op = pcmk__xml_first_child(history); xml_op != NULL;
          xml_op = pcmk__xml_next(xml_op)) {
         remote_fencing_op_t *op = NULL;
-        char *id = crm_element_value_copy(xml_op, F_STONITH_REMOTE_OP_ID);
+        char *id = crm_element_value_copy(xml_op, PCMK__XA_ST_REMOTE_OP);
         int state;
         int exit_status = CRM_EX_OK;
         int execution_status = PCMK_EXEC_DONE;
@@ -362,7 +362,7 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
                 crm_trace("Attaching op %s", op->id);
                 entry = create_xml_node(history, STONITH_OP_EXEC);
                 if (add_id) {
-                    crm_xml_add(entry, F_STONITH_REMOTE_OP_ID, op->id);
+                    crm_xml_add(entry, PCMK__XA_ST_REMOTE_OP, op->id);
                 }
                 crm_xml_add(entry, PCMK__XA_ST_TARGET, op->target);
                 crm_xml_add(entry, F_STONITH_ACTION, op->action);

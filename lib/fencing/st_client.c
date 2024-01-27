@@ -1444,7 +1444,7 @@ xml_to_event(xmlNode *msg)
             event->action = crm_element_value_copy(data, F_STONITH_ACTION);
             event->target = crm_element_value_copy(data, PCMK__XA_ST_TARGET);
             event->executioner = crm_element_value_copy(data, F_STONITH_DELEGATE);
-            event->id = crm_element_value_copy(data, F_STONITH_REMOTE_OP_ID);
+            event->id = crm_element_value_copy(data, PCMK__XA_ST_REMOTE_OP);
             event->client_origin = crm_element_value_copy(data, F_STONITH_CLIENTNAME);
             event->device = crm_element_value_copy(data, F_STONITH_DEVICE);
         }
