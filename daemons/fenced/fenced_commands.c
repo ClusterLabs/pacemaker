@@ -365,7 +365,7 @@ create_async_command(xmlNode *msg)
 
     crm_element_value_int(msg, PCMK__XA_ST_CALLID, &(cmd->id));
     crm_element_value_int(msg, PCMK__XA_ST_CALLOPT, &(cmd->options));
-    crm_element_value_int(msg, F_STONITH_DELAY, &(cmd->start_delay));
+    crm_element_value_int(msg, PCMK__XA_ST_DELAY, &(cmd->start_delay));
     crm_element_value_int(msg, PCMK__XA_ST_TIMEOUT, &(cmd->default_timeout));
     cmd->timeout = cmd->default_timeout;
 

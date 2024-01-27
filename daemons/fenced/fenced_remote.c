@@ -1164,7 +1164,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
 
     crm_element_value_int(request, PCMK__XA_ST_TIMEOUT, &(op->base_timeout));
     // Value -1 means disable any static/random fencing delays
-    crm_element_value_int(request, F_STONITH_DELAY, &(op->client_delay));
+    crm_element_value_int(request, PCMK__XA_ST_DELAY, &(op->client_delay));
 
     if (peer && dev) {
         op->id = crm_element_value_copy(dev, PCMK__XA_ST_REMOTE_OP);
@@ -1874,7 +1874,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
         crm_xml_add(remote_op, F_STONITH_CLIENTNAME, op->client_name);
         crm_xml_add_int(remote_op, PCMK__XA_ST_TIMEOUT, timeout);
         crm_xml_add_int(remote_op, PCMK__XA_ST_CALLOPT, op->call_options);
-        crm_xml_add_int(remote_op, F_STONITH_DELAY, op->client_delay);
+        crm_xml_add_int(remote_op, PCMK__XA_ST_DELAY, op->client_delay);
 
         if (device) {
             timeout_one += TIMEOUT_MULTIPLY_FACTOR *
