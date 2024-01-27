@@ -1129,7 +1129,7 @@ build_device_from_xml(xmlNode *dev)
         device->include_nodeid = is_nodeid_required(device->agent_metadata);
     }
 
-    value = crm_element_value(dev, "rsc_provides");
+    value = crm_element_value(dev, PCMK__XA_RSC_PROVIDES);
     if (pcmk__str_eq(value, PCMK_VALUE_UNFENCING, pcmk__str_casei)) {
         device->automatic_unfencing = TRUE;
     }

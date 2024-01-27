@@ -316,7 +316,7 @@ create_device_registration_xml(const char *id, enum stonith_namespace namespace,
                     stonith_namespace2text(namespace));
     }
     if (rsc_provides) {
-        crm_xml_add(data, "rsc_provides", rsc_provides);
+        crm_xml_add(data, PCMK__XA_RSC_PROVIDES, rsc_provides);
     }
 
     for (; params; params = params->next) {
