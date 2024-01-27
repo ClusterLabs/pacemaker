@@ -32,7 +32,7 @@ static const char *stylesheet_default =
     "." PCMK__VALUE_RSC_FAILURE_IGNORED " { color: DarkGreen }\n"
     "." PCMK__VALUE_RSC_MANAGED " { color: blue }\n"
     "." PCMK__VALUE_RSC_MULTIPLE " { color: orange }\n"
-    ".rsc-ok { color: green }\n"
+    "." PCMK__VALUE_RSC_OK " { color: green }\n"
 
     "." PCMK__VALUE_WARNING " { color: red; font-weight: bold }";
 

@@ -772,7 +772,7 @@ pe__common_output_html(pcmk__output_t *out, const pcmk_resource_t *rsc,
         cl = PCMK__VALUE_RSC_FAILURE_IGNORED;
 
     } else {
-        cl = "rsc-ok";
+        cl = PCMK__VALUE_RSC_OK;
     }
 
     {

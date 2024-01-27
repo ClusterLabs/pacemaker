@@ -204,6 +204,7 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 #define PCMK__VALUE_RSC_FAILURE_IGNORED     "rsc-failure-ignored"
 #define PCMK__VALUE_RSC_MANAGED             "rsc-managed"
 #define PCMK__VALUE_RSC_MULTIPLE            "rsc-multiple"
+#define PCMK__VALUE_RSC_OK                  "rsc-ok"
 #define PCMK__VALUE_RUNNING                 "running"
 #define PCMK__VALUE_SHUTDOWN_COMPLETE       "shutdown_complete"
 #define PCMK__VALUE_SHUTTING_DOWN           "shutting_down"
