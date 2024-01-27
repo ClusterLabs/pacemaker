@@ -959,9 +959,12 @@ read_action_metadata(stonith_device_t *device)
             stonith__set_device_flags(device->flags, device->id,
                                       st_device_supports_reboot);
         } else if (pcmk__str_eq(action, PCMK_ACTION_ON, pcmk__str_none)) {
-            /* "automatic" means the cluster will unfence node when it joins */
-            /* "required" is a deprecated synonym for "automatic" */
-            if (pcmk__xe_attr_is_true(match, "automatic") || pcmk__xe_attr_is_true(match, "required")) {
+            /* PCMK_XA_AUTOMATIC means the cluster will unfence a node when it
+             * joins.
+             * "required" is a deprecated synonym for PCMK_XA_AUTOMATIC.
+             */
+            if (pcmk__xe_attr_is_true(match, PCMK_XA_AUTOMATIC)
+                || pcmk__xe_attr_is_true(match, "required")) {
                 device->automatic_unfencing = TRUE;
             }
             stonith__set_device_flags(device->flags, device->id,

@@ -222,6 +222,7 @@ extern "C" {
 #define PCMK_XA_API_VERSION                 "api-version"
 #define PCMK_XA_ATTRIBUTE                   "attribute"
 #define PCMK_XA_AUTHOR                      "author"
+#define PCMK_XA_AUTOMATIC                   "automatic"
 #define PCMK_XA_BLOCKED                     "blocked"
 #define PCMK_XA_BOOLEAN_OP                  "boolean-op"
 #define PCMK_XA_BUILD                       "build"
