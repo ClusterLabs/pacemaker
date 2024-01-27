@@ -364,7 +364,7 @@ create_async_command(xmlNode *msg)
     }
 
     crm_element_value_int(msg, F_STONITH_CALLID, &(cmd->id));
-    crm_element_value_int(msg, F_STONITH_CALLOPTS, &(cmd->options));
+    crm_element_value_int(msg, PCMK__XA_ST_CALLOPT, &(cmd->options));
     crm_element_value_int(msg, F_STONITH_DELAY, &(cmd->start_delay));
     crm_element_value_int(msg, F_STONITH_TIMEOUT, &(cmd->default_timeout));
     cmd->timeout = cmd->default_timeout;
@@ -3001,7 +3001,7 @@ fenced_construct_reply(const xmlNode *request, xmlNode *data,
             PCMK__XA_ST_CLIENTID,
             F_STONITH_CLIENTNAME,
             F_STONITH_REMOTE_OP_ID,
-            F_STONITH_CALLOPTS
+            PCMK__XA_ST_CALLOPT,
         };
 
         for (int lpc = 0; lpc < PCMK__NELEM(names); lpc++) {
@@ -3040,7 +3040,7 @@ construct_async_reply(const async_command_t *cmd,
     crm_xml_add(reply, F_STONITH_ACTION, cmd->op);
     crm_xml_add(reply, F_STONITH_ORIGIN, cmd->origin);
     crm_xml_add_int(reply, F_STONITH_CALLID, cmd->id);
-    crm_xml_add_int(reply, F_STONITH_CALLOPTS, cmd->options);
+    crm_xml_add_int(reply, PCMK__XA_ST_CALLOPT, cmd->options);
 
     stonith__xe_set_result(reply, result);
     return reply;
@@ -3663,7 +3663,7 @@ stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
     if (get_xpath_object("//" T_STONITH_REPLY, message, LOG_NEVER) != NULL) {
         is_reply = true;
     }
-    crm_element_value_int(message, F_STONITH_CALLOPTS, &call_options);
+    crm_element_value_int(message, PCMK__XA_ST_CALLOPT, &call_options);
     crm_debug("Processing %ssynchronous %s %s %u from %s %s",
               pcmk_is_set(call_options, st_opt_sync_call)? "" : "a",
               crm_element_value(message, F_STONITH_OPERATION),

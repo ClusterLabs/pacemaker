@@ -125,7 +125,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         c->name = crm_strdup_printf("%s.%u", pcmk__s(value, "unknown"), c->pid);
     }
 
-    crm_element_value_int(request, F_STONITH_CALLOPTS, &call_options);
+    crm_element_value_int(request, PCMK__XA_ST_CALLOPT, &call_options);
     crm_trace("Flags %#08" PRIx32 "/%#08x for command %" PRIu32
               " from client %s", flags, call_options, id, pcmk__client_name(c));
 

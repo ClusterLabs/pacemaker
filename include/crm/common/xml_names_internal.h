@@ -169,6 +169,7 @@ extern "C" {
 #define PCMK__XA_SCHEMA                 "schema"
 #define PCMK__XA_SCHEMAS                "schemas"
 #define PCMK__XA_SRC                    "src"
+#define PCMK__XA_ST_CALLOPT             "st_callopt"
 #define PCMK__XA_ST_CLIENTID            "st_clientid"
 #define PCMK__XA_SUBT                   "subt"                  // subtype
 #define PCMK__XA_T                      "t"                     // type

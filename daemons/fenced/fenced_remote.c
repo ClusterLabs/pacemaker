@@ -1203,7 +1203,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
 
     op->target = crm_element_value_copy(dev, F_STONITH_TARGET);
     op->request = copy_xml(request);    /* TODO: Figure out how to avoid this */
-    crm_element_value_int(request, F_STONITH_CALLOPTS, &call_options);
+    crm_element_value_int(request, PCMK__XA_ST_CALLOPT, &call_options);
     op->call_options = call_options;
 
     crm_element_value_int(request, F_STONITH_CALLID, &(op->client_callid));
@@ -1872,7 +1872,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
         crm_xml_add(remote_op, PCMK__XA_ST_CLIENTID, op->client_id);
         crm_xml_add(remote_op, F_STONITH_CLIENTNAME, op->client_name);
         crm_xml_add_int(remote_op, F_STONITH_TIMEOUT, timeout);
-        crm_xml_add_int(remote_op, F_STONITH_CALLOPTS, op->call_options);
+        crm_xml_add_int(remote_op, PCMK__XA_ST_CALLOPT, op->call_options);
         crm_xml_add_int(remote_op, F_STONITH_DELAY, op->client_delay);
 
         if (device) {
