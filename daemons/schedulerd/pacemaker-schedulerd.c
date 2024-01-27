@@ -46,18 +46,14 @@ pcmk__supported_format_t formats[] = {
 
 void pengine_shutdown(int nsig);
 
-static void
+static int
 scheduler_metadata(pcmk__output_t *out)
 {
-    const char *name = "pacemaker-schedulerd";
-    const char *desc_short = "Pacemaker scheduler options";
-    const char *desc_long = "Cluster options used by Pacemaker's scheduler";
-
-    char *s = pcmk__cluster_option_metadata(name, desc_short, desc_long,
-                                            pcmk__opt_context_schedulerd);
-
-    out->output_xml(out, PCMK_XE_METADATA, s);
-    free(s);
+    return pcmk__daemon_metadata(out, "pacemaker-schedulerd",
+                                 "Pacemaker scheduler options",
+                                 "Cluster options used by Pacemaker's "
+                                 "scheduler",
+                                 pcmk__opt_context_schedulerd);
 }
 
 static GOptionContext *
@@ -112,14 +108,20 @@ main(int argc, char **argv)
     if (options.remainder) {
         if (g_strv_length(options.remainder) == 1 &&
             pcmk__str_eq("metadata", options.remainder[0], pcmk__str_casei)) {
-            scheduler_metadata(out);
-            goto done;
+
+            rc = scheduler_metadata(out);
+            if (rc != pcmk_rc_ok) {
+                exit_code = CRM_EX_FATAL;
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                            "Unable to display metadata: %s", pcmk_rc_str(rc));
+            }
+
         } else {
             exit_code = CRM_EX_USAGE;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                         "Unsupported extra command line parameters");
-            goto done;
         }
+        goto done;
     }
 
     if (args->version) {

@@ -948,21 +948,16 @@ pcmk__cluster_option(GHashTable *options, const char *name)
  * Include a translation based on the current locale if \c ENABLE_NLS is
  * defined.
  *
- * \param[in,out] parent  Parent XML node
- * \param[in]     tag     Name of element to add (\c PCMK_XE_LONGDESC or
- *                        \c PCMK_XE_SHORTDESC)
- * \param[in]     desc    Textual description to add
- *
- * \return Standard Pacemaker return code
+ * \param[in,out] out   Output object
+ * \param[in]     tag   Name of element to add (\c PCMK_XE_LONGDESC or
+ *                      \c PCMK_XE_SHORTDESC)
+ * \param[in]     desc  Textual description to add
  */
-static int
-add_desc(xmlNode *parent, const char *tag, const char *desc)
+static void
+add_desc(pcmk__output_t *out, const char *tag, const char *desc)
 {
-    xmlNode *node = pcmk_create_xml_text_node(parent, tag, desc);
+    xmlNode *node = pcmk__output_create_xml_text_node(out, tag, desc);
 
-    if (node == NULL) {
-        return ENOMEM;
-    }
     crm_xml_add(node, PCMK_XA_LANG, PCMK__VALUE_EN);
 
 #ifdef ENABLE_NLS
@@ -970,76 +965,56 @@ add_desc(xmlNode *parent, const char *tag, const char *desc)
         static const char *locale = NULL;
 
         if (strcmp(desc, _(desc)) == 0) {
-            return pcmk_rc_ok;
+            return;
         }
 
         if (locale == NULL) {
             locale = strtok(setlocale(LC_ALL, NULL), "_");
         }
-
-        node = pcmk_create_xml_text_node(parent, tag, _(desc));
-        if (node == NULL) {
-            return ENOMEM;
-        }
+        node = pcmk__output_create_xml_text_node(out, tag, _(desc));
         crm_xml_add(node, PCMK_XA_LANG, locale);
     }
 #endif
-    return pcmk_rc_ok;
 }
 
 /*!
  * \internal
  * \brief Add a \c PCMK_XE_OPTION element for each of an option's allowed values
  *
- * \param[in,out] parent  Parent \c PCMK_XE_CONTENT node
+ * \param[in,out] out     Output object
  * \param[in]     option  Option whose allowed values to add
- *
- * \return Standard Pacemaker return code
  */
-static int
-add_allowed_values(xmlNode *parent, const pcmk__cluster_option_t *option)
+static void
+add_allowed_values(pcmk__output_t *out, const pcmk__cluster_option_t *option)
 {
     const char *delim = ", ";
     char *str = NULL;
     char *ptr = NULL;
-    int rc = pcmk_rc_ok;
 
     pcmk__str_update(&str, option->values);
     ptr = strtok(str, delim);
 
     while (ptr != NULL) {
-        xmlNode *allowed_value = create_xml_node(parent, PCMK_XE_OPTION);
-
-        if (allowed_value == NULL) {
-            rc = ENOMEM;
-            goto done;
-        }
-        crm_xml_add(allowed_value, PCMK_XA_VALUE, ptr);
+        pcmk__output_create_xml_node(out, PCMK_XE_OPTION,
+                                     PCMK_XA_VALUE, ptr,
+                                     NULL);
         ptr = strtok(NULL, delim);
     }
-
-done:
     free(str);
-    return rc;
 }
 
 /*!
  * \internal
  * \brief Add a \c PCMK_XE_PARAMETER element to an OCF-like metadata XML node
  *
- * \param[in,out] parent  Parent \c PCMK_XE_PARAMETERS node
+ * \param[in,out] out     Output object
  * \param[in]     option  Option to add as a \c PCMK_XE_PARAMETER element
- *
- * \return Standard Pacemaker return code
  */
-static int
-add_option_metadata(xmlNode *parent, const pcmk__cluster_option_t *option)
+static void
+add_option_metadata(pcmk__output_t *out, const pcmk__cluster_option_t *option)
 {
     const char *desc_long = option->description_long;
     const char *desc_short = option->description_short;
-    xmlNode *parameter = NULL;
-    xmlNode *content = NULL;
-    int rc = pcmk_rc_ok;
 
     // The standard requires long and short parameter descriptions
     CRM_ASSERT((desc_long != NULL) || (desc_short != NULL));
@@ -1053,131 +1028,135 @@ add_option_metadata(xmlNode *parent, const pcmk__cluster_option_t *option)
     // The standard requires a parameter type
     CRM_ASSERT(option->type != NULL);
 
-    parameter = create_xml_node(parent, PCMK_XE_PARAMETER);
-    if (parameter == NULL) {
-        return ENOMEM;
-    }
+    pcmk__output_xml_create_parent(out, PCMK_XE_PARAMETER,
+                                   PCMK_XA_NAME, option->name,
+                                   NULL);
+    add_desc(out, PCMK_XE_LONGDESC, desc_long);
+    add_desc(out, PCMK_XE_SHORTDESC, desc_short);
 
-    crm_xml_add(parameter, PCMK_XA_NAME, option->name);
-
-    rc = add_desc(parameter, PCMK_XE_LONGDESC, desc_long);
-    if (rc != pcmk_rc_ok) {
-        return rc;
-    }
-
-    rc = add_desc(parameter, PCMK_XE_SHORTDESC, desc_short);
-    if (rc != pcmk_rc_ok) {
-        return rc;
-    }
-
-    content = create_xml_node(parameter, PCMK_XE_CONTENT);
-    if (content == NULL) {
-        return ENOMEM;
-    }
-
-    crm_xml_add(content, PCMK_XA_TYPE, option->type);
-    crm_xml_add(content, PCMK_XA_DEFAULT, option->default_value);
+    pcmk__output_xml_create_parent(out, PCMK_XE_CONTENT,
+                                   PCMK_XA_TYPE, option->type,
+                                   PCMK_XA_DEFAULT, option->default_value,
+                                   NULL);
 
     if ((option->values != NULL) && (strcmp(option->type, "select") == 0)) {
-        return add_allowed_values(content, option);
+        add_allowed_values(out, option);
     }
-
-    return pcmk_rc_ok;
+    pcmk__output_xml_pop_parent(out);
+    pcmk__output_xml_pop_parent(out);
 }
 
 /*!
  * \internal
- * \brief Format option metadata as an OCF-like XML string
+ * \brief Format option metadata as OCF-like XML
  *
- * \param[in] name         Daemon name
- * \param[in] desc_short   Short description of the daemon
- * \param[in] desc_long    Long description of the daemon
- * \param[in] filter       If not \c pcmk__opt_context_none, include only
- *                         those options whose \c context field is equal to
- *                         \p filter
- * \param[in] option_list  Options whose metadata to format
- * \param[in] len          Number of items in \p option_list
+ * \param[in,out] out          Output object
+ * \param[in]     name         Fake resource agent name for the option list
+ * \param[in]     desc_short   Short description of the option list
+ * \param[in]     desc_long    Long description of the option list
+ * \param[in]     filter       If not \c pcmk__opt_context_none, include only
+ *                             those options whose \c context field is equal to
+ *                             \p filter
+ * \param[in]     option_list  Options whose metadata to format
+ * \param[in]     len          Number of items in \p option_list
  *
- * \return A string containing OCF-like option metadata XML
- *
- * \note The caller is responsible for freeing the return value using \c free().
+ * \note This currently supports only XML output objects.
  */
-char *
-pcmk__format_option_metadata(const char *name, const char *desc_short,
-                             const char *desc_long,
+void
+pcmk__format_option_metadata(pcmk__output_t *out, const char *name,
+                             const char *desc_short, const char *desc_long,
                              enum pcmk__opt_context filter,
-                             pcmk__cluster_option_t *option_list, int len)
+                             const pcmk__cluster_option_t *option_list, int len)
 {
-    xmlNode *top = create_xml_node(NULL, PCMK_XE_RESOURCE_AGENT);
-    xmlNode *parameters = NULL;
-    char *result = NULL;
+    CRM_ASSERT((out != NULL) && (name != NULL) && (desc_short != NULL)
+               && (desc_long != NULL) && (option_list != NULL));
 
-    if (top == NULL) {
-        goto done;
-    }
-    crm_xml_add(top, PCMK_XA_NAME, name);
-    crm_xml_add(top, PCMK_XA_VERSION, PACEMAKER_VERSION);
+    pcmk__output_xml_create_parent(out, PCMK_XE_RESOURCE_AGENT,
+                                   PCMK_XA_NAME, name,
+                                   PCMK_XA_VERSION, PACEMAKER_VERSION,
+                                   NULL);
 
-    if (pcmk_create_xml_text_node(top, PCMK_XE_VERSION,
-                                  PCMK_OCF_VERSION) == NULL) {
-        goto done;
-    }
+    pcmk__output_create_xml_text_node(out, PCMK_XE_VERSION, PCMK_OCF_VERSION);
+    add_desc(out, PCMK_XE_LONGDESC, desc_long);
+    add_desc(out, PCMK_XE_SHORTDESC, desc_short);
 
-    if ((desc_long != NULL)
-        && (add_desc(top, PCMK_XE_LONGDESC, desc_long) != pcmk_rc_ok)) {
-        goto done;
-    }
-    if ((desc_short != NULL)
-        && (add_desc(top, PCMK_XE_SHORTDESC, desc_short) != pcmk_rc_ok)) {
-        goto done;
-    }
-
-    parameters = create_xml_node(top, PCMK_XE_PARAMETERS);
-    if (parameters == NULL) {
-        goto done;
-    }
+    pcmk__output_xml_create_parent(out, PCMK_XE_PARAMETERS, NULL);
 
     for (int lpc = 0; lpc < len; lpc++) {
-        if ((filter != pcmk__opt_context_none)
-            && (filter != option_list[lpc].context)) {
-            continue;
-        }
+        if ((filter == pcmk__opt_context_none)
+            || (filter == option_list[lpc].context)) {
 
-        if (add_option_metadata(parameters, &option_list[lpc]) != pcmk_rc_ok) {
-            goto done;
+            add_option_metadata(out, &option_list[lpc]);
         }
     }
-
-    result = dump_xml_formatted_with_text(top);
-
-done:
-    free_xml(top);
-    return result;
+    pcmk__output_xml_pop_parent(out);
+    pcmk__output_xml_pop_parent(out);
 }
 
 /*!
  * \internal
- * \brief Format cluster option metadata as an OCF-like XML string
+ * \brief Format cluster option metadata as OCF-like XML
  *
- * \param[in] name        Daemon name
- * \param[in] desc_short  Short description of the daemon
- * \param[in] desc_long   Long description of the daemon
- * \param[in] filter      If not \c pcmk__opt_context_none, include only
- *                        those options whose \c context field is equal to
- *                        \p filter
+ * \param[in,out] out         Output object
+ * \param[in]     name        Fake resource agent name for the option list
+ * \param[in]     desc_short  Short description of the option list
+ * \param[in]     desc_long   Long description of the option list
+ * \param[in]     filter      If not \c pcmk__opt_context_none, include only
+ *                            those options whose \c context field is equal to
+ *                            \p filter
  *
- * \return A string containing OCF-like cluster option metadata XML
- *
- * \note The caller is responsible for freeing the return value using \c free().
+ * \note This currently supports only XML output objects.
  */
-char *
-pcmk__cluster_option_metadata(const char *name, const char *desc_short,
-                              const char *desc_long,
+void
+pcmk__cluster_option_metadata(pcmk__output_t *out, const char *name,
+                              const char *desc_short, const char *desc_long,
                               enum pcmk__opt_context filter)
 {
-    return pcmk__format_option_metadata(name, desc_short, desc_long, filter,
-                                        cluster_options,
-                                        PCMK__NELEM(cluster_options));
+    pcmk__format_option_metadata(out, name, desc_short, desc_long, filter,
+                                 cluster_options, PCMK__NELEM(cluster_options));
+}
+
+/*!
+ * \internal
+ * \brief Output a list of cluster options for a daemon
+ *
+ * \brief[in,out] out         Output object
+ * \brief[in]     name        Daemon name
+ * \brief[in]     desc_short  Short description of the option list
+ * \brief[in]     desc_long   Long description of the option list
+ * \brief[in]     context     Option context corresponding to daemon
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__daemon_metadata(pcmk__output_t *out, const char *name,
+                      const char *desc_short, const char *desc_long,
+                      enum pcmk__opt_context context)
+{
+    // @COMPAT Drop this function when we drop daemon metadata
+    pcmk__output_t *tmp_out = NULL;
+    xmlNode *top = NULL;
+    const xmlNode *metadata = NULL;
+    char *metadata_s = NULL;
+
+    int rc = pcmk__output_new(&tmp_out, "xml", "/dev/null", NULL);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    pcmk__cluster_option_metadata(tmp_out, name, desc_short, desc_long,
+                                  context);
+
+    tmp_out->finish(tmp_out, CRM_EX_OK, false, (void **) &top);
+    metadata = first_named_child(top, PCMK_XE_RESOURCE_AGENT);
+    metadata_s = dump_xml_formatted_with_text(metadata);
+
+    out->output_xml(out, PCMK_XE_METADATA, metadata_s);
+
+    pcmk__output_free(tmp_out);
+    free_xml(top);
+    free(metadata_s);
+    return pcmk_rc_ok;
 }
 
 void

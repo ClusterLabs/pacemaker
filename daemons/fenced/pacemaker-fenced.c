@@ -777,9 +777,10 @@ static pcmk__cluster_option_t fencer_options[] = {
     },
 };
 
-void
+static int
 fencer_metadata(void)
 {
+    // @TODO Use pcmk__daemon_metadata when fencer_options moves to options.c
     const char *name = "pacemaker-fenced";
     const char *desc_short = N_("Instance attributes available for all "
                                 "\"stonith\"-class resources");
@@ -788,12 +789,30 @@ fencer_metadata(void)
                                "Pacemaker's fence daemon, formerly known as "
                                "stonithd");
 
-    char *s = pcmk__format_option_metadata(name, desc_short, desc_long,
-                                           pcmk__opt_context_none,
-                                           fencer_options,
-                                           PCMK__NELEM(fencer_options));
-    printf("%s", s);
-    free(s);
+    pcmk__output_t *tmp_out = NULL;
+    xmlNode *top = NULL;
+    const xmlNode *metadata = NULL;
+    char *metadata_s = NULL;
+
+    int rc = pcmk__output_new(&tmp_out, "xml", "/dev/null", NULL);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    pcmk__format_option_metadata(tmp_out, name, desc_short, desc_long,
+                                 pcmk__opt_context_none,
+                                 fencer_options, PCMK__NELEM(fencer_options));
+
+    tmp_out->finish(tmp_out, CRM_EX_OK, false, (void **) &top);
+    metadata = first_named_child(top, PCMK_XE_RESOURCE_AGENT);
+    metadata_s = dump_xml_formatted_with_text(metadata);
+
+    out->output_xml(out, PCMK_XE_METADATA, metadata_s);
+
+    pcmk__output_free(tmp_out);
+    free_xml(top);
+    free(metadata_s);
+    return pcmk_rc_ok;
 }
 
 static GOptionEntry entries[] = {
@@ -858,7 +877,13 @@ main(int argc, char **argv)
 
     if ((g_strv_length(processed_args) >= 2)
         && pcmk__str_eq(processed_args[1], "metadata", pcmk__str_none)) {
-        fencer_metadata();
+
+        rc = fencer_metadata();
+        if (rc != pcmk_rc_ok) {
+            exit_code = CRM_EX_FATAL;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Unable to display metadata: %s", pcmk_rc_str(rc));
+        }
         goto done;
     }
 
