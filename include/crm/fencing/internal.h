@@ -102,7 +102,6 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 
 #  define ST_LEVEL_MAX 10
 
-#  define F_STONITH_OUTPUT        "st_output"
 /*! Timeout period per a device execution */
 #  define F_STONITH_TIMEOUT       "st_timeout"
 #  define F_STONITH_TOLERANCE     "st_tolerance"

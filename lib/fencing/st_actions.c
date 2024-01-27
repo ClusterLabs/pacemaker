@@ -452,7 +452,7 @@ stonith__xe_set_result(xmlNode *xml, const pcmk__action_result_t *result)
     crm_xml_add_int(xml, PCMK__XA_OP_STATUS, (int) execution_status);
     crm_xml_add_int(xml, PCMK__XA_RC_CODE, exit_status);
     crm_xml_add(xml, PCMK_XA_EXIT_REASON, exit_reason);
-    crm_xml_add(xml, F_STONITH_OUTPUT, action_stdout);
+    crm_xml_add(xml, PCMK__XA_ST_OUTPUT, action_stdout);
 
     /* @COMPAT Peers in rolling upgrades, Pacemaker Remote nodes, and external
      * code that use libstonithd <=2.1.2 don't check for the full result, and
@@ -501,7 +501,7 @@ stonith__xe_get_result(const xmlNode *xml, pcmk__action_result_t *result)
     CRM_CHECK((xml != NULL) && (result != NULL), return);
 
     exit_reason = crm_element_value(xml, PCMK_XA_EXIT_REASON);
-    action_stdout = crm_element_value_copy(xml, F_STONITH_OUTPUT);
+    action_stdout = crm_element_value_copy(xml, PCMK__XA_ST_OUTPUT);
 
     // A result must include an exit status and execution status
     if ((crm_element_value_int(xml, PCMK__XA_RC_CODE, &exit_status) < 0)

@@ -272,7 +272,8 @@ stonith_xml_history_to_list(const xmlNode *history)
         pcmk__set_result(&op->result, exit_status, execution_status,
                          crm_element_value(xml_op, PCMK_XA_EXIT_REASON));
         pcmk__set_result_output(&op->result,
-                                crm_element_value_copy(xml_op, F_STONITH_OUTPUT),
+                                crm_element_value_copy(xml_op,
+                                                       PCMK__XA_ST_OUTPUT),
                                 NULL);
 
 
