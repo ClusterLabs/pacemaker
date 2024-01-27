@@ -19,7 +19,7 @@
 #include <crm/common/xml.h>
 
 static const char *stylesheet_default =
-    ".bold { font-weight: bold }\n"
+    "." PCMK__VALUE_BOLD " { font-weight: bold }\n"
 
     ".online { color: green }\n"
     ".offline { color: red }\n"

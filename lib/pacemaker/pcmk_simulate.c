@@ -242,7 +242,7 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
         }
 
         if (pcmk_is_set(action->flags, pcmk_action_added_to_graph)) {
-            style = "bold";
+            style = PCMK__VALUE_BOLD;
             color = "green";
 
         } else if ((action->rsc != NULL)
@@ -286,7 +286,7 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
 
             if (before->state == pe_link_dumped) {
                 optional = false;
-                style = "bold";
+                style = PCMK__VALUE_BOLD;
             } else if ((uint32_t) before->type == pcmk__ar_none) {
                 continue;
             } else if (pcmk_is_set(before->action->flags,

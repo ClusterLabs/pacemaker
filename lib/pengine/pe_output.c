@@ -780,15 +780,15 @@ cluster_counts_html(pcmk__output_t *out, va_list args) {
         pcmk_create_html_node(resources_node, PCMK__XE_SPAN, NULL, NULL, s);
         free(s);
 
-        pcmk_create_html_node(resources_node, PCMK__XE_SPAN, NULL, "bold",
-                              "DISABLED");
+        pcmk_create_html_node(resources_node, PCMK__XE_SPAN, NULL,
+                              PCMK__VALUE_BOLD, "DISABLED");
 
         s = crm_strdup_printf(", %d ", nblocked);
         pcmk_create_html_node(resources_node, PCMK__XE_SPAN, NULL, NULL, s);
         free(s);
 
-        pcmk_create_html_node(resources_node, PCMK__XE_SPAN, NULL, "bold",
-                              "BLOCKED");
+        pcmk_create_html_node(resources_node, PCMK__XE_SPAN, NULL,
+                              PCMK__VALUE_BOLD, "BLOCKED");
         pcmk_create_html_node(resources_node, PCMK__XE_SPAN, NULL, NULL,
                               " from further action due to failure)");
     } else if (ndisabled && !nblocked) {
@@ -798,8 +798,8 @@ cluster_counts_html(pcmk__output_t *out, va_list args) {
         pcmk_create_html_node(resources_node, PCMK__XE_SPAN, NULL, NULL, s);
         free(s);
 
-        pcmk_create_html_node(resources_node, PCMK__XE_SPAN, NULL, "bold",
-                              "DISABLED");
+        pcmk_create_html_node(resources_node, PCMK__XE_SPAN, NULL,
+                              PCMK__VALUE_BOLD, "DISABLED");
         pcmk_create_html_node(resources_node, PCMK__XE_SPAN, NULL, NULL, ")");
     } else if (!ndisabled && nblocked) {
         char *s = crm_strdup_printf("%d resource instance%s configured (%d ",
@@ -808,8 +808,8 @@ cluster_counts_html(pcmk__output_t *out, va_list args) {
         pcmk_create_html_node(resources_node, PCMK__XE_SPAN, NULL, NULL, s);
         free(s);
 
-        pcmk_create_html_node(resources_node, PCMK__XE_SPAN, NULL, "bold",
-                              "BLOCKED");
+        pcmk_create_html_node(resources_node, PCMK__XE_SPAN, NULL,
+                              PCMK__VALUE_BOLD, "BLOCKED");
         pcmk_create_html_node(resources_node, PCMK__XE_SPAN, NULL, NULL,
                               " from further action due to failure)");
     } else {
@@ -905,7 +905,8 @@ cluster_dc_html(pcmk__output_t *out, va_list args) {
 
     xmlNodePtr node = pcmk__output_create_xml_node(out, "li", NULL);
 
-    pcmk_create_html_node(node, PCMK__XE_SPAN, NULL, "bold", "Current DC: ");
+    pcmk_create_html_node(node, PCMK__XE_SPAN, NULL, PCMK__VALUE_BOLD,
+                          "Current DC: ");
 
     if (dc) {
         char *buf = crm_strdup_printf("%s (version %s) -", dc_name,
@@ -1049,7 +1050,8 @@ cluster_options_html(pcmk__output_t *out, va_list args) {
 
         pcmk_create_html_node(node, PCMK__XE_SPAN, NULL, NULL,
                               "Resource management: ");
-        pcmk_create_html_node(node, PCMK__XE_SPAN, NULL, "bold", "DISABLED");
+        pcmk_create_html_node(node, PCMK__XE_SPAN, NULL, PCMK__VALUE_BOLD,
+                              "DISABLED");
         pcmk_create_html_node(node, PCMK__XE_SPAN, NULL, NULL,
                               " (the cluster will not attempt to start, stop,"
                               " or recover services)");
@@ -1058,7 +1060,8 @@ cluster_options_html(pcmk__output_t *out, va_list args) {
 
         pcmk_create_html_node(node, PCMK__XE_SPAN, NULL, NULL,
                               "Resource management: ");
-        pcmk_create_html_node(node, PCMK__XE_SPAN, NULL, "bold", "STOPPED");
+        pcmk_create_html_node(node, PCMK__XE_SPAN, NULL, PCMK__VALUE_BOLD,
+                              "STOPPED");
         pcmk_create_html_node(node, PCMK__XE_SPAN, NULL, NULL,
                               " (the cluster will keep all resources stopped)");
     } else {
@@ -1202,7 +1205,8 @@ cluster_stack_html(pcmk__output_t *out, va_list args) {
 
     xmlNodePtr node = pcmk__output_create_xml_node(out, "li", NULL);
 
-    pcmk_create_html_node(node, PCMK__XE_SPAN, NULL, "bold", "Stack: ");
+    pcmk_create_html_node(node, PCMK__XE_SPAN, NULL, PCMK__VALUE_BOLD,
+                          "Stack: ");
     pcmk_create_html_node(node, PCMK__XE_SPAN, NULL, NULL, stack_s);
 
     if (pcmkd_state != pcmk_pacemakerd_state_invalid) {
@@ -1267,7 +1271,7 @@ cluster_times_html(pcmk__output_t *out, va_list args) {
 
     char *time_s = pcmk__epoch2str(NULL, 0);
 
-    pcmk_create_html_node(updated_node, PCMK__XE_SPAN, NULL, "bold",
+    pcmk_create_html_node(updated_node, PCMK__XE_SPAN, NULL, PCMK__VALUE_BOLD,
                           "Last updated: ");
     pcmk_create_html_node(updated_node, PCMK__XE_SPAN, NULL, NULL, time_s);
 
@@ -1280,7 +1284,7 @@ cluster_times_html(pcmk__output_t *out, va_list args) {
     free(time_s);
     time_s = last_changed_string(last_written, user, client, origin);
 
-    pcmk_create_html_node(changed_node, PCMK__XE_SPAN, NULL, "bold",
+    pcmk_create_html_node(changed_node, PCMK__XE_SPAN, NULL, PCMK__VALUE_BOLD,
                           "Last change: ");
     pcmk_create_html_node(changed_node, PCMK__XE_SPAN, NULL, NULL, time_s);
 
@@ -1769,7 +1773,8 @@ node_html(pcmk__output_t *out, va_list args) {
             char *buf = crm_strdup_printf("%s:", node_name);
 
             item_node = pcmk__output_create_xml_node(out, "li", NULL);
-            pcmk_create_html_node(item_node, PCMK__XE_SPAN, NULL, "bold", buf);
+            pcmk_create_html_node(item_node, PCMK__XE_SPAN, NULL,
+                                  PCMK__VALUE_BOLD, buf);
             status_node(node, item_node, show_opts);
 
             free(buf);
@@ -2096,11 +2101,12 @@ node_attribute_html(pcmk__output_t *out, va_list args) {
         free(s);
 
         if (v <= 0) {
-            pcmk_create_html_node(item_node, PCMK__XE_SPAN, NULL, "bold",
-                                  "(connectivity is lost)");
+            pcmk_create_html_node(item_node, PCMK__XE_SPAN, NULL,
+                                  PCMK__VALUE_BOLD, "(connectivity is lost)");
         } else if (v < expected_score) {
             char *buf = crm_strdup_printf("(connectivity is degraded -- expected %d", expected_score);
-            pcmk_create_html_node(item_node, PCMK__XE_SPAN, NULL, "bold", buf);
+            pcmk_create_html_node(item_node, PCMK__XE_SPAN, NULL,
+                                  PCMK__VALUE_BOLD, buf);
             free(buf);
         }
     } else {

@@ -183,6 +183,7 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 
 // Constants for enumerated values
 #define PCMK__VALUE_ATTRD                   "attrd"
+#define PCMK__VALUE_BOLD                    "bold"
 #define PCMK__VALUE_CIB                     "cib"
 #define PCMK__VALUE_CLUSTER                 "cluster"
 #define PCMK__VALUE_CRMD                    "crmd"
