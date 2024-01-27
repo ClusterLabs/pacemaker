@@ -97,7 +97,8 @@ create_action_name(const pcmk_action_t *action, bool verbose)
 
     } else if (pcmk__str_eq(action->task, PCMK_ACTION_STONITH,
                             pcmk__str_none)) {
-        const char *op = g_hash_table_lookup(action->meta, "stonith_action");
+        const char *op = g_hash_table_lookup(action->meta,
+                                             PCMK__META_STONITH_ACTION);
 
         action_name = crm_strdup_printf("%s%s '%s' %s",
                                         prefix, action->task, op, action_host);
@@ -685,7 +686,7 @@ simulate_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 static int
 simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
-    const char *op = crm_meta_value(action->params, "stonith_action");
+    const char *op = crm_meta_value(action->params, PCMK__META_STONITH_ACTION);
     char *target = crm_element_value_copy(action->xml, PCMK__META_ON_NODE);
 
     out->message(out, "inject-fencing-action", target, op);

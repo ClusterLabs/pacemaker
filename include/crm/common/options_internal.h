@@ -159,6 +159,7 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 #define PCMK__META_OP_NO_WAIT               "op_no_wait"
 #define PCMK__META_OP_TARGET_RC             "op_target_rc"
 #define PCMK__META_PHYSICAL_HOST            "physical-host"
+#define PCMK__META_STONITH_ACTION           "stonith_action"
 
 /* @TODO Plug these in. Currently, they're never set. These are op attrs for use
  * with https://projects.clusterlabs.org/T382.

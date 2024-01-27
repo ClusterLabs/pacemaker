@@ -841,7 +841,8 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
     if (stonith__exit_status(data) == CRM_EX_OK) {
         const char *uuid = crm_element_value(action->xml,
                                              PCMK__META_ON_NODE_UUID);
-        const char *op = crm_meta_value(action->params, "stonith_action");
+        const char *op = crm_meta_value(action->params,
+                                        PCMK__META_STONITH_ACTION);
 
         crm_info("Fence operation %d for %s succeeded", data->call_id, target);
         if (!(pcmk_is_set(action->flags, pcmk__graph_action_confirmed))) {
@@ -958,7 +959,8 @@ controld_execute_fence_action(pcmk__graph_t *graph,
     const char *id = pcmk__xe_id(action->xml);
     const char *uuid = crm_element_value(action->xml, PCMK__META_ON_NODE_UUID);
     const char *target = crm_element_value(action->xml, PCMK__META_ON_NODE);
-    const char *type = crm_meta_value(action->params, "stonith_action");
+    const char *type = crm_meta_value(action->params,
+                                      PCMK__META_STONITH_ACTION);
     char *transition_key = NULL;
     const char *priority_delay = NULL;
     int delay_i = 0;

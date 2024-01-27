@@ -1424,7 +1424,7 @@ pcmk__output_actions(pcmk_scheduler_t *scheduler)
         } else if (pcmk__str_eq(action->task, PCMK_ACTION_STONITH,
                                 pcmk__str_none)) {
             const char *op = g_hash_table_lookup(action->meta,
-                                                 "stonith_action");
+                                                 PCMK__META_STONITH_ACTION);
 
             task = crm_strdup_printf("Fence (%s)", op);
 

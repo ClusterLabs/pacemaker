@@ -149,7 +149,8 @@ add_downed_nodes(xmlNode *xml, const pcmk_action_t *action)
                             pcmk__str_none)) {
 
         /* Fencing makes the action's node and any hosted guest nodes down */
-        const char *fence = g_hash_table_lookup(action->meta, "stonith_action");
+        const char *fence = g_hash_table_lookup(action->meta,
+                                                PCMK__META_STONITH_ACTION);
 
         if (pcmk__is_fencing_action(fence)) {
             xmlNode *downed = create_xml_node(xml, PCMK__XE_DOWNED);
