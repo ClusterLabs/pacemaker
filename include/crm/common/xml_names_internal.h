@@ -169,6 +169,7 @@ extern "C" {
 #define PCMK__XA_SCHEMA                 "schema"
 #define PCMK__XA_SCHEMAS                "schemas"
 #define PCMK__XA_SRC                    "src"
+#define PCMK__XA_ST_ACTION_TIMEOUT      "st_action_timeout"
 #define PCMK__XA_ST_CALLID              "st_callid"
 #define PCMK__XA_ST_CALLDATA            "st_calldata"
 #define PCMK__XA_ST_CALLOPT             "st_callopt"

@@ -102,8 +102,6 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 
 #  define ST_LEVEL_MAX 10
 
-/*! Action specific timeout period returned in query of fencing devices. */
-#  define F_STONITH_ACTION_TIMEOUT       "st_action_timeout"
 /*! Host in query result is not allowed to run this action */
 #  define F_STONITH_ACTION_DISALLOWED     "st_action_disallowed"
 /*! Has this device been verified using a monitor type

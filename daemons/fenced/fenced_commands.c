@@ -2323,11 +2323,13 @@ add_action_specific_attributes(xmlNode *xml, const char *action,
         crm_xml_add_int(xml, F_STONITH_DEVICE_REQUIRED, 1);
     }
 
+    // pcmk_<action>_timeout if configured
     action_specific_timeout = get_action_timeout(device, action, 0);
     if (action_specific_timeout) {
         crm_trace("Action '%s' has timeout %dms using %s",
                   action, action_specific_timeout, device->id);
-        crm_xml_add_int(xml, F_STONITH_ACTION_TIMEOUT, action_specific_timeout);
+        crm_xml_add_int(xml, PCMK__XA_ST_ACTION_TIMEOUT,
+                        action_specific_timeout);
     }
 
     delay_max = get_action_delay_max(device, action);

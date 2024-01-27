@@ -2092,7 +2092,7 @@ parse_action_specific(const xmlNode *xml, const char *peer, const char *device,
                       enum st_remap_phase phase, device_properties_t *props)
 {
     props->custom_action_timeout[phase] = 0;
-    crm_element_value_int(xml, F_STONITH_ACTION_TIMEOUT,
+    crm_element_value_int(xml, PCMK__XA_ST_ACTION_TIMEOUT,
                           &props->custom_action_timeout[phase]);
     if (props->custom_action_timeout[phase]) {
         crm_trace("Peer %s with device %s returned %s action timeout %d",
