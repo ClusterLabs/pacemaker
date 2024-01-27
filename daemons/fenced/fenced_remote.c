@@ -418,7 +418,7 @@ fenced_broadcast_op_result(const remote_fencing_op_t *op, bool op_merged)
 
     stonith__xe_set_result(notify_data, &op->result);
 
-    add_message_xml(bcast, F_STONITH_CALLDATA, notify_data);
+    add_message_xml(bcast, PCMK__XA_ST_CALLDATA, notify_data);
     send_cluster_message(NULL, crm_msg_stonith_ng, bcast, FALSE);
     free_xml(notify_data);
     free_xml(bcast);
