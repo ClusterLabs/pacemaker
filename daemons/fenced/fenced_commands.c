@@ -2334,7 +2334,7 @@ add_action_specific_attributes(xmlNode *xml, const char *action,
     if (delay_max > 0) {
         crm_trace("Action '%s' has maximum random delay %ds using %s",
                   action, delay_max, device->id);
-        crm_xml_add_int(xml, F_STONITH_DELAY_MAX, delay_max);
+        crm_xml_add_int(xml, PCMK__XA_ST_DELAY_MAX, delay_max);
     }
 
     delay_base = get_action_delay_base(device, action, target);

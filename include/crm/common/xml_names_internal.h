@@ -174,6 +174,7 @@ extern "C" {
 #define PCMK__XA_ST_CALLOPT             "st_callopt"
 #define PCMK__XA_ST_CLIENTID            "st_clientid"
 #define PCMK__XA_ST_DELAY               "st_delay"
+#define PCMK__XA_ST_DELAY_MAX           "st_delay_max"
 #define PCMK__XA_ST_OP                  "st_op"
 #define PCMK__XA_ST_OUTPUT              "st_output"
 #define PCMK__XA_ST_RC                  "st_rc"
