@@ -21,10 +21,10 @@
 static const char *stylesheet_default =
     "." PCMK__VALUE_BOLD " { font-weight: bold }\n"
 
-    ".online { color: green }\n"
-    ".offline { color: red }\n"
+    "." PCMK_VALUE_ONLINE " { color: green }\n"
+    "." PCMK_VALUE_OFFLINE " { color: red }\n"
     "." PCMK__VALUE_MAINT " { color: blue }\n"
-    ".standby { color: blue }\n"
+    "." PCMK_VALUE_STANDBY " { color: blue }\n"
     "." PCMK__VALUE_HEALTH_RED " { color: red }\n"
     "." PCMK__VALUE_HEALTH_YELLOW " { color: GoldenRod }\n"
 
