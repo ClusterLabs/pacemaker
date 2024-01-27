@@ -769,7 +769,7 @@ pe__common_output_html(pcmk__output_t *out, const pcmk_resource_t *rsc,
         cl = "rsc-multiple";
 
     } else if (pcmk_is_set(rsc->flags, pcmk_rsc_ignore_failure)) {
-        cl = "rsc-failure-ignored";
+        cl = PCMK__VALUE_RSC_FAILURE_IGNORED;
 
     } else {
         cl = "rsc-ok";
