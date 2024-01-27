@@ -409,7 +409,7 @@ fenced_broadcast_op_result(const remote_fencing_op_t *op, bool op_merged)
     crm_trace("Broadcasting result to peers");
     crm_xml_add(bcast, PCMK__XA_T, T_STONITH_NOTIFY);
     crm_xml_add(bcast, PCMK__XA_SUBT, "broadcast");
-    crm_xml_add(bcast, F_STONITH_OPERATION, T_STONITH_NOTIFY);
+    crm_xml_add(bcast, PCMK__XA_ST_OP, T_STONITH_NOTIFY);
     crm_xml_add_int(bcast, PCMK_XA_COUNT, count);
 
     if (op_merged) {
@@ -448,7 +448,7 @@ handle_local_reply_and_notify(remote_fencing_op_t *op, xmlNode *data)
     /* Do notification with a clean data object */
     crm_xml_add_int(data, PCMK_XA_STATE, op->state);
     crm_xml_add(data, F_STONITH_TARGET, op->target);
-    crm_xml_add(data, F_STONITH_OPERATION, op->action);
+    crm_xml_add(data, PCMK__XA_ST_OP, op->action);
 
     reply = fenced_construct_reply(op->request, data, &op->result);
     crm_xml_add(reply, F_STONITH_DELEGATE, op->delegate);
@@ -1192,7 +1192,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
 
 
     /* For a RELAY operation, set fenced on the client. */
-    operation = crm_element_value(request, F_STONITH_OPERATION);
+    operation = crm_element_value(request, PCMK__XA_ST_OP);
 
     if (pcmk__str_eq(operation, STONITH_OP_RELAY, pcmk__str_none)) {
         op->client_name = crm_strdup_printf("%s.%lu", crm_system_name,
@@ -1324,7 +1324,7 @@ initiate_remote_stonith_op(const pcmk__client_t *client, xmlNode *request,
     crm_xml_add_int(query, F_STONITH_TIMEOUT, op->base_timeout);
 
     /* In case of RELAY operation, RELAY information is added to the query to delete the original operation of RELAY. */
-    operation = crm_element_value(request, F_STONITH_OPERATION);
+    operation = crm_element_value(request, PCMK__XA_ST_OP);
     if (pcmk__str_eq(operation, STONITH_OP_RELAY, pcmk__str_none)) {
         relay_op_id = crm_element_value(request, F_STONITH_REMOTE_OP_ID);
         if (relay_op_id) {

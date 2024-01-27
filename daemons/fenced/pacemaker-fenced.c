@@ -109,7 +109,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     op = crm_element_value(request, PCMK__XA_CRM_TASK);
     if(pcmk__str_eq(op, CRM_OP_RM_NODE_CACHE, pcmk__str_casei)) {
         crm_xml_add(request, PCMK__XA_T, T_STONITH_NG);
-        crm_xml_add(request, F_STONITH_OPERATION, op);
+        crm_xml_add(request, PCMK__XA_ST_OP, op);
         crm_xml_add(request, PCMK__XA_ST_CLIENTID, c->id);
         crm_xml_add(request, F_STONITH_CLIENTNAME, pcmk__client_name(c));
         crm_xml_add(request, F_STONITH_CLIENTNODE, stonith_our_uname);
@@ -174,7 +174,7 @@ static void
 stonith_peer_callback(xmlNode * msg, void *private_data)
 {
     const char *remote_peer = crm_element_value(msg, PCMK__XA_SRC);
-    const char *op = crm_element_value(msg, F_STONITH_OPERATION);
+    const char *op = crm_element_value(msg, PCMK__XA_ST_OP);
 
     if (pcmk__str_eq(op, "poke", pcmk__str_none)) {
         return;
@@ -353,7 +353,7 @@ fenced_send_notification(const char *type, const pcmk__action_result_t *result,
 
     crm_xml_add(update_msg, PCMK__XA_T, T_STONITH_NOTIFY);
     crm_xml_add(update_msg, PCMK__XA_SUBT, type);
-    crm_xml_add(update_msg, F_STONITH_OPERATION, type);
+    crm_xml_add(update_msg, PCMK__XA_ST_OP, type);
     stonith__xe_set_result(update_msg, result);
 
     if (data != NULL) {
@@ -510,7 +510,7 @@ st_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void
         xmlNode *query = create_xml_node(NULL, "stonith_command");
 
         crm_xml_add(query, PCMK__XA_T, T_STONITH_NG);
-        crm_xml_add(query, F_STONITH_OPERATION, "poke");
+        crm_xml_add(query, PCMK__XA_ST_OP, "poke");
 
         crm_debug("Broadcasting our uname because of node %u", node->id);
         send_cluster_message(NULL, crm_msg_stonith_ng, query, FALSE);

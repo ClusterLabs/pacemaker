@@ -102,7 +102,6 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 
 #  define ST_LEVEL_MAX 10
 
-#  define F_STONITH_OPERATION     "st_op"
 #  define F_STONITH_TARGET        "st_target"
 #  define F_STONITH_REMOTE_OP_ID  "st_remote_op"
 #  define F_STONITH_REMOTE_OP_ID_RELAY  "st_remote_op_relay"

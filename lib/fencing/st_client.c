@@ -816,7 +816,7 @@ stonith_create_op(int call_id, const char *token, const char *op, xmlNode * data
 
     crm_xml_add(op_msg, PCMK__XA_T, T_STONITH_NG);
     crm_xml_add(op_msg, F_STONITH_CALLBACK_TOKEN, token);
-    crm_xml_add(op_msg, F_STONITH_OPERATION, op);
+    crm_xml_add(op_msg, PCMK__XA_ST_OP, op);
     crm_xml_add_int(op_msg, PCMK__XA_ST_CALLID, call_id);
     crm_trace("Sending call options: %.8lx, %d", (long)call_options, call_options);
     crm_xml_add_int(op_msg, PCMK__XA_ST_CALLOPT, call_options);
@@ -1141,7 +1141,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
         xmlNode *hello = create_xml_node(NULL, "stonith_command");
 
         crm_xml_add(hello, PCMK__XA_T, T_STONITH_NG);
-        crm_xml_add(hello, F_STONITH_OPERATION, CRM_OP_REGISTER);
+        crm_xml_add(hello, PCMK__XA_ST_OP, CRM_OP_REGISTER);
         crm_xml_add(hello, F_STONITH_CLIENTNAME, name);
         rc = crm_ipc_send(native->ipc, hello, crm_ipc_client_response, -1, &reply);
 
@@ -1155,7 +1155,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
             rc = -EPROTO;
 
         } else {
-            const char *msg_type = crm_element_value(reply, F_STONITH_OPERATION);
+            const char *msg_type = crm_element_value(reply, PCMK__XA_ST_OP);
 
             native->token = crm_element_value_copy(reply, PCMK__XA_ST_CLIENTID);
             if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_none)) {
@@ -1197,7 +1197,7 @@ stonith_set_notification(stonith_t * stonith, const char *callback, int enabled)
 
     if (stonith->state != stonith_disconnected) {
 
-        crm_xml_add(notify_msg, F_STONITH_OPERATION, T_STONITH_NOTIFY);
+        crm_xml_add(notify_msg, PCMK__XA_ST_OP, T_STONITH_NOTIFY);
         if (enabled) {
             crm_xml_add(notify_msg, F_STONITH_NOTIFY_ACTIVATE, callback);
         } else {
@@ -1425,7 +1425,7 @@ xml_to_event(xmlNode *msg)
 
     // All notification types have the operation result and notification subtype
     stonith__xe_get_result(msg, &event_private->result);
-    event->operation = crm_element_value_copy(msg, F_STONITH_OPERATION);
+    event->operation = crm_element_value_copy(msg, PCMK__XA_ST_OP);
 
     // @COMPAT The API originally provided the result as a legacy return code
     event->result = pcmk_rc2legacy(stonith__result2rc(&event_private->result));

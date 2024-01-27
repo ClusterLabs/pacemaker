@@ -173,6 +173,7 @@ extern "C" {
 #define PCMK__XA_ST_CALLDATA            "st_calldata"
 #define PCMK__XA_ST_CALLOPT             "st_callopt"
 #define PCMK__XA_ST_CLIENTID            "st_clientid"
+#define PCMK__XA_ST_OP                  "st_op"
 #define PCMK__XA_SUBT                   "subt"                  // subtype
 #define PCMK__XA_T                      "t"                     // type
 #define PCMK__XA_TRANSITION_KEY         "transition-key"
