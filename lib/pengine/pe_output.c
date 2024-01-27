@@ -1698,8 +1698,8 @@ status_node(pcmk_node_t *node, xmlNodePtr parent, uint32_t show_opts)
         pcmk_create_html_node(parent, PCMK__XE_SPAN, NULL,
                               PCMK__VALUE_HEALTH_RED, " (health is RED)");
     } else if (health == 0) {
-        pcmk_create_html_node(parent, PCMK__XE_SPAN, NULL, "health_yellow",
-                              " (health is YELLOW)");
+        pcmk_create_html_node(parent, PCMK__XE_SPAN, NULL,
+                              PCMK__VALUE_HEALTH_YELLOW, " (health is YELLOW)");
     }
 
     // Feature set

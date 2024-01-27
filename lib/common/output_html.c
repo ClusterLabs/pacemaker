@@ -26,7 +26,7 @@ static const char *stylesheet_default =
     "." PCMK__VALUE_MAINT " { color: blue }\n"
     ".standby { color: blue }\n"
     "." PCMK__VALUE_HEALTH_RED " { color: red }\n"
-    ".health_yellow { color: GoldenRod }\n"
+    "." PCMK__VALUE_HEALTH_YELLOW " { color: GoldenRod }\n"
 
     ".rsc-failed { color: red }\n"
     ".rsc-failure-ignored { color: DarkGreen }\n"

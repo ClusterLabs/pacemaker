@@ -190,6 +190,7 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 #define PCMK__VALUE_EN                      "en"
 #define PCMK__VALUE_EPOCH                   "epoch"
 #define PCMK__VALUE_HEALTH_RED              "health_red"
+#define PCMK__VALUE_HEALTH_YELLOW           "health_yellow"
 #define PCMK__VALUE_INIT                    "init"
 #define PCMK__VALUE_LOCAL                   "local"
 #define PCMK__VALUE_MAINT                   "maint"
