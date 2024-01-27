@@ -110,7 +110,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     if(pcmk__str_eq(op, CRM_OP_RM_NODE_CACHE, pcmk__str_casei)) {
         crm_xml_add(request, PCMK__XA_T, T_STONITH_NG);
         crm_xml_add(request, F_STONITH_OPERATION, op);
-        crm_xml_add(request, F_STONITH_CLIENTID, c->id);
+        crm_xml_add(request, PCMK__XA_ST_CLIENTID, c->id);
         crm_xml_add(request, F_STONITH_CLIENTNAME, pcmk__client_name(c));
         crm_xml_add(request, F_STONITH_CLIENTNODE, stonith_our_uname);
 
@@ -135,7 +135,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         c->request_id = id;     /* Reply only to the last one */
     }
 
-    crm_xml_add(request, F_STONITH_CLIENTID, c->id);
+    crm_xml_add(request, PCMK__XA_ST_CLIENTID, c->id);
     crm_xml_add(request, F_STONITH_CLIENTNAME, pcmk__client_name(c));
     crm_xml_add(request, F_STONITH_CLIENTNODE, stonith_our_uname);
 

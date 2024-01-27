@@ -1157,7 +1157,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
         } else {
             const char *msg_type = crm_element_value(reply, F_STONITH_OPERATION);
 
-            native->token = crm_element_value_copy(reply, F_STONITH_CLIENTID);
+            native->token = crm_element_value_copy(reply, PCMK__XA_ST_CLIENTID);
             if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_none)) {
                 crm_debug("Couldn't register with the fencer: invalid reply type '%s'",
                           (msg_type? msg_type : "(missing)"));

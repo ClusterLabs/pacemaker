@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2022 the Pacemaker project contributors
+ * Copyright 2011-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -102,7 +102,6 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 
 #  define ST_LEVEL_MAX 10
 
-#  define F_STONITH_CLIENTID      "st_clientid"
 #  define F_STONITH_CALLOPTS      "st_callopt"
 #  define F_STONITH_CALLID        "st_callid"
 #  define F_STONITH_CALLDATA      "st_calldata"
