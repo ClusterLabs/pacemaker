@@ -188,6 +188,7 @@ extern "C" {
 #define PCMK_XE_SHADOW                      "shadow"
 #define PCMK_XE_SHORTDESC                   "shortdesc"
 #define PCMK_XE_SOURCE                      "source"
+#define PCMK_XE_SPECIAL                     "special"
 #define PCMK_XE_STACK                       "stack"
 #define PCMK_XE_STATUS                      "status"
 #define PCMK_XE_STORAGE                     "storage"

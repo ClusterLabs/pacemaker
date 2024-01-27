@@ -54,7 +54,7 @@
                            " " PCMK_META_TIMEOUT "='15s'"                     \
                            " " PCMK_META_INTERVAL "='15s' />\n"               \
     "  </" PCMK_XE_ACTIONS ">\n"                                              \
-    "  <special tag='LSB'>\n"                                                 \
+    "  <" PCMK_XE_SPECIAL " tag='LSB'>\n"                                     \
     "    <Provides>%s</Provides>\n"                                           \
     "    <Required-Start>%s</Required-Start>\n"                               \
     "    <Required-Stop>%s</Required-Stop>\n"                                 \
@@ -62,7 +62,7 @@
     "    <Should-Stop>%s</Should-Stop>\n"                                     \
     "    <Default-Start>%s</Default-Start>\n"                                 \
     "    <Default-Stop>%s</Default-Stop>\n"                                   \
-    "  </special>\n"                                                          \
+    "  </" PCMK_XE_SPECIAL ">\n"                                              \
     "</" PCMK_XE_RESOURCE_AGENT ">\n"
 
 /* See "Comment Conventions for Init Scripts" in the LSB core specification at:
