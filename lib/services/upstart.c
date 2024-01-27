@@ -401,7 +401,7 @@ parse_status_result(const char *name, const char *state, void *userdata)
     "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "=\"" PCMK_ACTION_META_DATA "\""  \
                            " " PCMK_META_TIMEOUT "=\"5s\" />\n"               \
     "  </" PCMK_XE_ACTIONS ">\n"                                              \
-    "  <" PCMK_XE_SPECIAL " tag=\"upstart\"/>\n"                              \
+    "  <" PCMK_XE_SPECIAL " " PCMK_XA_TAG "=\"upstart\"/>\n"                  \
     "</" PCMK_XE_RESOURCE_AGENT ">\n"
 
 static char *

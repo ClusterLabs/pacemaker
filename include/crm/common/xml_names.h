@@ -399,6 +399,7 @@ extern "C" {
 #define PCMK_XA_SYMMETRIC_CLUSTER           "symmetric-cluster"
 #define PCMK_XA_SYMMETRICAL                 "symmetrical"
 #define PCMK_XA_SYS_FROM                    "sys_from"
+#define PCMK_XA_TAG                         "tag"
 #define PCMK_XA_TARGET                      "target"
 #define PCMK_XA_TARGET_ATTRIBUTE            "target-attribute"
 #define PCMK_XA_TARGET_DIR                  "target-dir"

@@ -54,7 +54,7 @@
                            " " PCMK_META_TIMEOUT "='15s'"                     \
                            " " PCMK_META_INTERVAL "='15s' />\n"               \
     "  </" PCMK_XE_ACTIONS ">\n"                                              \
-    "  <" PCMK_XE_SPECIAL " tag='LSB'>\n"                                     \
+    "  <" PCMK_XE_SPECIAL " " PCMK_XA_TAG "='LSB'>\n"                         \
     "    <Provides>%s</Provides>\n"                                           \
     "    <Required-Start>%s</Required-Start>\n"                               \
     "    <Required-Stop>%s</Required-Stop>\n"                                 \

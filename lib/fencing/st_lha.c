@@ -54,7 +54,7 @@ static const char META_TEMPLATE[] =
     "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "=\"" PCMK_ACTION_META_DATA "\""
                            " " PCMK_META_TIMEOUT "=\"15s\" />\n"
     "  </" PCMK_XE_ACTIONS ">\n"
-    "  <" PCMK_XE_SPECIAL " tag=\"heartbeat\">\n"
+    "  <" PCMK_XE_SPECIAL " " PCMK_XA_TAG "=\"heartbeat\">\n"
     "    <" PCMK_XE_VERSION ">2.0</" PCMK_XE_VERSION ">\n"
     "  </" PCMK_XE_SPECIAL ">\n"
     "</" PCMK_XE_RESOURCE_AGENT ">\n";

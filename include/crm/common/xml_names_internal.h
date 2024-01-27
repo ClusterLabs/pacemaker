@@ -202,9 +202,6 @@ extern "C" {
 // @COMPAT Deprecated since 2.1.5
 #define PCMK__XA_RSC_INSTANCE           "rsc-instance"
 
-// @COMPAT Deprecated since 1.1.12
-#define PCMK__XA_TAG                    "tag"
-
 // @COMPAT Deprecated since 2.1.5
 #define PCMK__XA_THEN_INSTANCE          "then-instance"
 
