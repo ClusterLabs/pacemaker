@@ -756,7 +756,7 @@ pe__common_output_html(pcmk__output_t *out, const pcmk_resource_t *rsc,
     }
 
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
-        cl = "rsc-managed";
+        cl = PCMK__VALUE_RSC_MANAGED;
 
     } else if (pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
         cl = PCMK__VALUE_RSC_FAILED;

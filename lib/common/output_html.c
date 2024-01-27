@@ -30,7 +30,7 @@ static const char *stylesheet_default =
 
     "." PCMK__VALUE_RSC_FAILED " { color: red }\n"
     "." PCMK__VALUE_RSC_FAILURE_IGNORED " { color: DarkGreen }\n"
-    ".rsc-managed { color: blue }\n"
+    "." PCMK__VALUE_RSC_MANAGED " { color: blue }\n"
     ".rsc-multiple { color: orange }\n"
     ".rsc-ok { color: green }\n"
 
