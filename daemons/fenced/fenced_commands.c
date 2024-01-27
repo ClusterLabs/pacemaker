@@ -961,10 +961,12 @@ read_action_metadata(stonith_device_t *device)
         } else if (pcmk__str_eq(action, PCMK_ACTION_ON, pcmk__str_none)) {
             /* PCMK_XA_AUTOMATIC means the cluster will unfence a node when it
              * joins.
-             * "required" is a deprecated synonym for PCMK_XA_AUTOMATIC.
+             *
+             * @COMPAT PCMK__XA_REQUIRED is a deprecated synonym for
+             * PCMK_XA_AUTOMATIC.
              */
             if (pcmk__xe_attr_is_true(match, PCMK_XA_AUTOMATIC)
-                || pcmk__xe_attr_is_true(match, "required")) {
+                || pcmk__xe_attr_is_true(match, PCMK__XA_REQUIRED)) {
                 device->automatic_unfencing = TRUE;
             }
             stonith__set_device_flags(device->flags, device->id,

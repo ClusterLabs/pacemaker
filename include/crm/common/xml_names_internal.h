@@ -196,6 +196,9 @@ extern "C" {
 // @COMPAT Deprecated since 2.1.6
 #define PCMK__XA_REPLACE                "replace"
 
+// @COMPAT Deprecated alias for \c PCMK_XA_AUTOMATIC since 1.1.14
+#define PCMK__XA_REQUIRED               "required"
+
 // @COMPAT Deprecated since 2.1.5
 #define PCMK__XA_RSC_INSTANCE           "rsc-instance"
 
