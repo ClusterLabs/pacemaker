@@ -1329,7 +1329,7 @@ initiate_remote_stonith_op(const pcmk__client_t *client, xmlNode *request,
     if (pcmk__str_eq(operation, STONITH_OP_RELAY, pcmk__str_none)) {
         relay_op_id = crm_element_value(request, PCMK__XA_ST_REMOTE_OP);
         if (relay_op_id) {
-            crm_xml_add(query, F_STONITH_REMOTE_OP_ID_RELAY, relay_op_id);
+            crm_xml_add(query, PCMK__XA_ST_REMOTE_OP_RELAY, relay_op_id);
         }
     }
 

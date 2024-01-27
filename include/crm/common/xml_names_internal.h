@@ -175,6 +175,7 @@ extern "C" {
 #define PCMK__XA_ST_CLIENTID            "st_clientid"
 #define PCMK__XA_ST_OP                  "st_op"
 #define PCMK__XA_ST_REMOTE_OP           "st_remote_op"
+#define PCMK__XA_ST_REMOTE_OP_RELAY     "st_remote_op_relay"
 #define PCMK__XA_ST_TARGET              "st_target"
 #define PCMK__XA_SUBT                   "subt"                  // subtype
 #define PCMK__XA_T                      "t"                     // type

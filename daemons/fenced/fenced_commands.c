@@ -3112,7 +3112,7 @@ remove_relay_op(xmlNode * request)
         target = crm_element_value(dev, PCMK__XA_ST_TARGET);
     }
 
-    relay_op_id = crm_element_value(request, F_STONITH_REMOTE_OP_ID_RELAY);
+    relay_op_id = crm_element_value(request, PCMK__XA_ST_REMOTE_OP_RELAY);
     op_id = crm_element_value(request, PCMK__XA_ST_REMOTE_OP);
     client_name = crm_element_value(request, F_STONITH_CLIENTNAME);
 

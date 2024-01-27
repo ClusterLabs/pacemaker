@@ -102,7 +102,6 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 
 #  define ST_LEVEL_MAX 10
 
-#  define F_STONITH_REMOTE_OP_ID_RELAY  "st_remote_op_relay"
 #  define F_STONITH_RC            "st_rc"
 #  define F_STONITH_OUTPUT        "st_output"
 /*! Timeout period per a device execution */
