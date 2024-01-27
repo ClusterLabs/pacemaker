@@ -973,7 +973,9 @@ read_action_metadata(stonith_device_t *device)
                                       st_device_supports_on);
         }
 
-        if ((action != NULL) && pcmk__xe_attr_is_true(match, "on_target")) {
+        if ((action != NULL)
+            && pcmk__xe_attr_is_true(match, PCMK_XA_ON_TARGET)) {
+
             pcmk__add_word(&(device->on_target_actions), 64, action);
         }
     }

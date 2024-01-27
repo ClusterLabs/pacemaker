@@ -326,6 +326,7 @@ extern "C" {
 #define PCMK_XA_NUMBER                      "number"
 #define PCMK_XA_NUMBER_RESOURCES            "number_resources"
 #define PCMK_XA_OBJECT_TYPE                 "object-type"
+#define PCMK_XA_ON_TARGET                   "on_target"
 #define PCMK_XA_ONLINE                      "online"
 #define PCMK_XA_OP                          "op"
 #define PCMK_XA_OP_KEY                      "op_key"
