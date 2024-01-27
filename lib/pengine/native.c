@@ -759,11 +759,11 @@ pe__common_output_html(pcmk__output_t *out, const pcmk_resource_t *rsc,
         cl = "rsc-managed";
 
     } else if (pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
-        cl = "rsc-failed";
+        cl = PCMK__VALUE_RSC_FAILED;
 
     } else if ((rsc->variant == pcmk_rsc_variant_primitive)
                && (rsc->running_on == NULL)) {
-        cl = "rsc-failed";
+        cl = PCMK__VALUE_RSC_FAILED;
 
     } else if (pcmk__list_of_multiple(rsc->running_on)) {
         cl = "rsc-multiple";
