@@ -846,73 +846,69 @@ pcmk__valid_placement_strategy(const char *value)
  * \internal
  * \brief Check a table of configured options for a particular option
  *
- * \param[in,out] options    Name/value pairs for configured options
- * \param[in]     validate   If not NULL, validator function for option value
- * \param[in]     name       Option name to look for
- * \param[in]     old_name   Alternative option name to look for
- * \param[in]     def_value  Default to use if option not configured
+ * \param[in,out] table   Name/value pairs for configured options
+ * \param[in]     option  Option to look up
  *
  * \return Option value (from supplied options table or default value)
  */
 static const char *
-cluster_option_value(GHashTable *options, bool (*validate)(const char *),
-                     const char *name, const char *old_name,
-                     const char *def_value)
+cluster_option_value(GHashTable *table, const pcmk__cluster_option_t *option)
 {
     const char *value = NULL;
     char *new_value = NULL;
 
-    CRM_ASSERT(name != NULL);
+    CRM_ASSERT((option != NULL) && (option->name != NULL));
 
-    if (options) {
-        value = g_hash_table_lookup(options, name);
+    if (table != NULL) {
+        value = g_hash_table_lookup(table, option->name);
 
-        if ((value == NULL) && old_name) {
-            value = g_hash_table_lookup(options, old_name);
+        if ((value == NULL) && (option->alt_name != NULL)) {
+            value = g_hash_table_lookup(table, option->alt_name);
             if (value != NULL) {
                 pcmk__config_warn("Support for legacy name '%s' for cluster "
                                   "option '%s' is deprecated and will be "
                                   "removed in a future release",
-                                  old_name, name);
+                                  option->alt_name, option->name);
 
                 // Inserting copy with current name ensures we only warn once
                 new_value = strdup(value);
-                g_hash_table_insert(options, strdup(name), new_value);
+                g_hash_table_insert(table, strdup(option->name), new_value);
                 value = new_value;
             }
         }
 
-        if (value && validate && (validate(value) == FALSE)) {
+        if ((value != NULL) && (option->is_valid != NULL)
+            && !option->is_valid(value)) {
+
             pcmk__config_err("Using default value for cluster option '%s' "
-                             "because '%s' is invalid", name, value);
+                             "because '%s' is invalid", option->name, value);
             value = NULL;
         }
 
-        if (value) {
+        if (value != NULL) {
             return value;
         }
     }
 
     // No value found, use default
-    value = def_value;
+    value = option->default_value;
 
     if (value == NULL) {
         crm_trace("No value or default provided for cluster option '%s'",
-                  name);
+                  option->name);
         return NULL;
     }
 
-    if (validate) {
-        CRM_CHECK(validate(value) != FALSE,
-                  crm_err("Bug: default value for cluster option '%s' is invalid", name);
-                  return NULL);
-    }
+    CRM_CHECK((option->is_valid == NULL) || option->is_valid(value),
+              crm_err("Bug: default value for cluster option '%s' is invalid",
+                      option->name);
+              return NULL);
 
     crm_trace("Using default value '%s' for cluster option '%s'",
-              value, name);
-    if (options) {
+              value, option->name);
+    if (table != NULL) {
         new_value = strdup(value);
-        g_hash_table_insert(options, strdup(name), new_value);
+        g_hash_table_insert(table, strdup(option->name), new_value);
         value = new_value;
     }
     return value;
@@ -934,9 +930,7 @@ pcmk__cluster_option(GHashTable *options, const char *name)
          option->name != NULL; option++) {
 
         if (pcmk__str_eq(name, option->name, pcmk__str_casei)) {
-            return cluster_option_value(options, option->is_valid, option->name,
-                                        option->alt_name,
-                                        option->default_value);
+            return cluster_option_value(options, option);
         }
     }
     CRM_CHECK(FALSE, crm_err("Bug: looking for unknown option '%s'", name));
@@ -1169,7 +1163,6 @@ pcmk__validate_cluster_options(GHashTable *options)
     for (const pcmk__cluster_option_t *option = cluster_options;
          option->name != NULL; option++) {
 
-        cluster_option_value(options, option->is_valid, option->name,
-                             option->alt_name, option->default_value);
+        cluster_option_value(options, option);
     }
 }
