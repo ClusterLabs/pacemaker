@@ -801,8 +801,8 @@ fencer_metadata(void)
         return rc;
     }
 
-    pcmk__format_option_metadata(tmp_out, name, desc_short, desc_long,
-                                 pcmk__opt_context_none, fencer_options);
+    out->message(tmp_out, "option-list", name, desc_short, desc_long,
+                 pcmk__opt_context_none, fencer_options);
 
     tmp_out->finish(tmp_out, CRM_EX_OK, false, (void **) &top);
     metadata = first_named_child(top, PCMK_XE_RESOURCE_AGENT);
