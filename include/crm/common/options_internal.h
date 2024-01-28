@@ -71,8 +71,7 @@ const char *pcmk__cluster_option(GHashTable *options, const char *name);
 void pcmk__format_option_metadata(pcmk__output_t *out, const char *name,
                                   const char *desc_short, const char *desc_long,
                                   enum pcmk__opt_context filter,
-                                  const pcmk__cluster_option_t *option_list,
-                                  int len);
+                                  const pcmk__cluster_option_t *option_list);
 
 void pcmk__cluster_option_metadata(pcmk__output_t *out, const char *name,
                                    const char *desc_short,

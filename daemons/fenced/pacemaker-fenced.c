@@ -775,6 +775,8 @@ static pcmk__cluster_option_t fencer_options[] = {
             "remaining. Use this option to alter the number of times Pacemaker "
             "tries a 'status' action before giving up."),
     },
+
+    { NULL, },
 };
 
 static int
@@ -800,8 +802,7 @@ fencer_metadata(void)
     }
 
     pcmk__format_option_metadata(tmp_out, name, desc_short, desc_long,
-                                 pcmk__opt_context_none,
-                                 fencer_options, PCMK__NELEM(fencer_options));
+                                 pcmk__opt_context_none, fencer_options);
 
     tmp_out->finish(tmp_out, CRM_EX_OK, false, (void **) &top);
     metadata = first_named_child(top, PCMK_XE_RESOURCE_AGENT);

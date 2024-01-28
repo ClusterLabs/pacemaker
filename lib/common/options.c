@@ -536,6 +536,8 @@ static pcmk__cluster_option_t cluster_options[] = {
         N_("How the cluster should allocate resources to nodes"),
         NULL,
     },
+
+    { NULL, },
 };
 
 
@@ -928,13 +930,13 @@ cluster_option_value(GHashTable *options, bool (*validate)(const char *),
 const char *
 pcmk__cluster_option(GHashTable *options, const char *name)
 {
-    for (int lpc = 0; lpc < PCMK__NELEM(cluster_options); lpc++) {
-        if (pcmk__str_eq(name, cluster_options[lpc].name, pcmk__str_casei)) {
-            return cluster_option_value(options,
-                                        cluster_options[lpc].is_valid,
-                                        cluster_options[lpc].name,
-                                        cluster_options[lpc].alt_name,
-                                        cluster_options[lpc].default_value);
+    for (const pcmk__cluster_option_t *option = cluster_options;
+         option->name != NULL; option++) {
+
+        if (pcmk__str_eq(name, option->name, pcmk__str_casei)) {
+            return cluster_option_value(options, option->is_valid, option->name,
+                                        option->alt_name,
+                                        option->default_value);
         }
     }
     CRM_CHECK(FALSE, crm_err("Bug: looking for unknown option '%s'", name));
@@ -1057,8 +1059,8 @@ add_option_metadata(pcmk__output_t *out, const pcmk__cluster_option_t *option)
  * \param[in]     filter       If not \c pcmk__opt_context_none, include only
  *                             those options whose \c context field is equal to
  *                             \p filter
- * \param[in]     option_list  Options whose metadata to format
- * \param[in]     len          Number of items in \p option_list
+ * \param[in]     option_list  <tt>NULL</tt>-terminated list of options whose
+ *                             metadata to format
  *
  * \note This currently supports only XML output objects.
  */
@@ -1066,7 +1068,7 @@ void
 pcmk__format_option_metadata(pcmk__output_t *out, const char *name,
                              const char *desc_short, const char *desc_long,
                              enum pcmk__opt_context filter,
-                             const pcmk__cluster_option_t *option_list, int len)
+                             const pcmk__cluster_option_t *option_list)
 {
     CRM_ASSERT((out != NULL) && (name != NULL) && (desc_short != NULL)
                && (desc_long != NULL) && (option_list != NULL));
@@ -1082,11 +1084,13 @@ pcmk__format_option_metadata(pcmk__output_t *out, const char *name,
 
     pcmk__output_xml_create_parent(out, PCMK_XE_PARAMETERS, NULL);
 
-    for (int lpc = 0; lpc < len; lpc++) {
-        if ((filter == pcmk__opt_context_none)
-            || (filter == option_list[lpc].context)) {
+    for (const pcmk__cluster_option_t *option = option_list;
+         option->name != NULL; option++) {
 
-            add_option_metadata(out, &option_list[lpc]);
+        if ((filter == pcmk__opt_context_none)
+            || (filter == option->context)) {
+
+            add_option_metadata(out, option);
         }
     }
     pcmk__output_xml_pop_parent(out);
@@ -1113,7 +1117,7 @@ pcmk__cluster_option_metadata(pcmk__output_t *out, const char *name,
                               enum pcmk__opt_context filter)
 {
     pcmk__format_option_metadata(out, name, desc_short, desc_long, filter,
-                                 cluster_options, PCMK__NELEM(cluster_options));
+                                 cluster_options);
 }
 
 /*!
@@ -1162,11 +1166,10 @@ pcmk__daemon_metadata(pcmk__output_t *out, const char *name,
 void
 pcmk__validate_cluster_options(GHashTable *options)
 {
-    for (int lpc = 0; lpc < PCMK__NELEM(cluster_options); lpc++) {
-        cluster_option_value(options,
-                             cluster_options[lpc].is_valid,
-                             cluster_options[lpc].name,
-                             cluster_options[lpc].alt_name,
-                             cluster_options[lpc].default_value);
+    for (const pcmk__cluster_option_t *option = cluster_options;
+         option->name != NULL; option++) {
+
+        cluster_option_value(options, option->is_valid, option->name,
+                             option->alt_name, option->default_value);
     }
 }
