@@ -80,6 +80,7 @@ libcrmcommon_la_SOURCES	+= messages.c
 libcrmcommon_la_SOURCES	+= nodes.c
 libcrmcommon_la_SOURCES	+= nvpair.c
 libcrmcommon_la_SOURCES	+= options.c
+libcrmcommon_la_SOURCES	+= options_display.c
 libcrmcommon_la_SOURCES	+= output.c
 libcrmcommon_la_SOURCES	+= output_html.c
 libcrmcommon_la_SOURCES	+= output_log.c
