@@ -31,8 +31,8 @@ struct {
 } options;
 
 pcmk__output_t *logger_out = NULL;
-pcmk__output_t *out = NULL;
 
+static pcmk__output_t *out = NULL;
 static GMainLoop *mainloop = NULL;
 static qb_ipcs_service_t *ipcs = NULL;
 static crm_exit_t exit_code = CRM_EX_OK;
