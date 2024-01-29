@@ -29,7 +29,7 @@
     "<" PCMK_XE_RESOURCE_AGENT " "                                      \
         PCMK_XA_NAME "='%s' "                                           \
         PCMK_XA_VERSION "='" PCMK_DEFAULT_AGENT_VERSION "'>\n"          \
-    "  <" PCMK_XE_VERSION ">1.0</" PCMK_XE_VERSION ">\n"                \
+    "  <" PCMK_XE_VERSION ">1.1</" PCMK_XE_VERSION ">\n"                \
     "  <" PCMK_XE_LONGDESC " " PCMK_XA_LANG "='" PCMK__VALUE_EN "'>\n"  \
         "%s"                                                            \
     "  </" PCMK_XE_LONGDESC ">\n"                                       \
@@ -238,8 +238,6 @@ services__get_lsb_metadata(const char *type, char **output)
     lsb_meta_helper_free_value(should_stop);
     lsb_meta_helper_free_value(default_start);
     lsb_meta_helper_free_value(default_stop);
-
-    crm_trace("Created fake metadata: %zu", strlen(*output));
     return pcmk_ok;
 }
 

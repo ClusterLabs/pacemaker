@@ -48,7 +48,7 @@ typedef struct pe_op_eval_data {
 
 typedef struct pe_rule_eval_data {
     GHashTable *node_hash;          // Only used with g_hash_table_lookup()
-    enum rsc_role_e role;
+    enum rsc_role_e role;           //!< \deprecated Ignored
     crm_time_t *now;                // @COMPAT could be const
     pe_match_data_t *match_data;    // @COMPAT could be const
     pe_rsc_eval_data_t *rsc_data;   // @COMPAT could be const

@@ -177,7 +177,6 @@ extern "C" {
 #define PCMK_XE_RESOURCES_CONFIGURED        "resources_configured"
 #define PCMK_XE_RESULT_CODE                 "result-code"
 #define PCMK_XE_REVISED_CLUSTER_STATUS      "revised_cluster_status"
-#define PCMK_XE_RKT                         "rkt"
 #define PCMK_XE_ROLE                        "role"
 #define PCMK_XE_RSC_ACTION                  "rsc_action"
 #define PCMK_XE_RSC_COLOCATION              "rsc_colocation"

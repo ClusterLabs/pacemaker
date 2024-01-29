@@ -75,11 +75,11 @@ st_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
     if (stonith_shutdown_flag) {
         crm_info("Ignoring new client [%d] during shutdown",
                  pcmk__client_pid(c));
-        return -EPERM;
+        return -ECONNREFUSED;
     }
 
     if (pcmk__new_client(c, uid, gid) == NULL) {
-        return -EIO;
+        return -ENOMEM;
     }
     return 0;
 }

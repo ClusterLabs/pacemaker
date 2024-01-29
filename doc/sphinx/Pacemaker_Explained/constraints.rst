@@ -38,109 +38,142 @@ configuration might be simpler.
 Location Properties
 ___________________
 
-.. table:: **Attributes of a rsc_location Element**
+.. list-table:: **Attributes of a rsc_location Element**
    :class: longtable
-   :widths: 1 1 4
+   :widths: 1 1 1 4
+   :header-rows: 1
 
-   +--------------------+---------+----------------------------------------------------------------------------------------------+
-   | Attribute          | Default | Description                                                                                  |
-   +====================+=========+==============================================================================================+
-   | id                 |         | .. index::                                                                                   |
-   |                    |         |    single: rsc_location; attribute, id                                                       |
-   |                    |         |    single: attribute; id (rsc_location)                                                      |
-   |                    |         |    single: id; rsc_location attribute                                                        |
-   |                    |         |                                                                                              |
-   |                    |         | A unique name for the constraint (required)                                                  |
-   +--------------------+---------+----------------------------------------------------------------------------------------------+
-   | rsc                |         | .. index::                                                                                   |
-   |                    |         |    single: rsc_location; attribute, rsc                                                      |
-   |                    |         |    single: attribute; rsc (rsc_location)                                                     |
-   |                    |         |    single: rsc; rsc_location attribute                                                       |
-   |                    |         |                                                                                              |
-   |                    |         | The name of the resource to which this constraint                                            |
-   |                    |         | applies. A location constraint must either have a                                            |
-   |                    |         | ``rsc``, have a ``rsc-pattern``, or contain at                                               |
-   |                    |         | least one resource set.                                                                      |
-   +--------------------+---------+----------------------------------------------------------------------------------------------+
-   | rsc-pattern        |         | .. index::                                                                                   |
-   |                    |         |    single: rsc_location; attribute, rsc-pattern                                              |
-   |                    |         |    single: attribute; rsc-pattern (rsc_location)                                             |
-   |                    |         |    single: rsc-pattern; rsc_location attribute                                               |
-   |                    |         |                                                                                              |
-   |                    |         | A pattern matching the names of resources to which                                           |
-   |                    |         | this constraint applies.  The syntax is the same as                                          |
-   |                    |         | `POSIX <http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap09.html#tag_09_04>`_ |
-   |                    |         | extended regular expressions, with the addition of an                                        |
-   |                    |         | initial ``!`` indicating that resources *not* matching                                       |
-   |                    |         | the pattern are selected. If the regular expression                                          |
-   |                    |         | contains submatches, and the constraint is governed by                                       |
-   |                    |         | a :ref:`rule <rules>`, the submatches can be                                                 |
-   |                    |         | referenced as ``%1`` through ``%9`` in the rule's                                            |
-   |                    |         | ``score-attribute`` or a rule expression's ``attribute``                                     |
-   |                    |         | (see :ref:`s-rsc-pattern-rules`). A location constraint                                      |
-   |                    |         | must either have a ``rsc``, have a ``rsc-pattern``, or                                       |
-   |                    |         | contain at least one resource set.                                                           |
-   +--------------------+---------+----------------------------------------------------------------------------------------------+
-   | node               |         | .. index::                                                                                   |
-   |                    |         |    single: rsc_location; attribute, node                                                     |
-   |                    |         |    single: attribute; node (rsc_location)                                                    |
-   |                    |         |    single: node; rsc_location attribute                                                      |
-   |                    |         |                                                                                              |
-   |                    |         | The name of the node to which this constraint applies.                                       |
-   |                    |         | A location constraint must either have a ``node`` and                                        |
-   |                    |         | ``score``, or contain at least one rule.                                                     |
-   +--------------------+---------+----------------------------------------------------------------------------------------------+
-   | score              |         | .. index::                                                                                   |
-   |                    |         |    single: rsc_location; attribute, score                                                    |
-   |                    |         |    single: attribute; score (rsc_location)                                                   |
-   |                    |         |    single: score; rsc_location attribute                                                     |
-   |                    |         |                                                                                              |
-   |                    |         | Positive values indicate a preference for running the                                        |
-   |                    |         | affected resource(s) on ``node`` -- the higher the value,                                    |
-   |                    |         | the stronger the preference. Negative values indicate                                        |
-   |                    |         | the resource(s) should avoid this node (a value of                                           |
-   |                    |         | **-INFINITY** changes "should" to "must"). A location                                        |
-   |                    |         | constraint must either have a ``node`` and ``score``,                                        |
-   |                    |         | or contain at least one rule.                                                                |
-   +--------------------+---------+----------------------------------------------------------------------------------------------+
-   | resource-discovery | always  | .. index::                                                                                   |
-   |                    |         |    single: rsc_location; attribute, resource-discovery                                       |
-   |                    |         |    single: attribute; resource-discovery (rsc_location)                                      |
-   |                    |         |    single: resource-discovery; rsc_location attribute                                        |
-   |                    |         |                                                                                              |
-   |                    |         | Whether Pacemaker should perform resource discovery                                          |
-   |                    |         | (that is, check whether the resource is already running)                                     |
-   |                    |         | for this resource on this node. This should normally be                                      |
-   |                    |         | left as the default, so that rogue instances of a                                            |
-   |                    |         | service can be stopped when they are running where they                                      |
-   |                    |         | are not supposed to be. However, there are two                                               |
-   |                    |         | situations where disabling resource discovery is a good                                      |
-   |                    |         | idea: when a service is not installed on a node,                                             |
-   |                    |         | discovery might return an error (properly written OCF                                        |
-   |                    |         | agents will not, so this is usually only seen with other                                     |
-   |                    |         | agent types); and when Pacemaker Remote is used to scale                                     |
-   |                    |         | a cluster to hundreds of nodes, limiting resource                                            |
-   |                    |         | discovery to allowed nodes can significantly boost                                           |
-   |                    |         | performance.                                                                                 |
-   |                    |         |                                                                                              |
-   |                    |         | * ``always:`` Always perform resource discovery for                                          |
-   |                    |         |   the specified resource on this node.                                                       |
-   |                    |         |                                                                                              |
-   |                    |         | * ``never:`` Never perform resource discovery for the                                        |
-   |                    |         |   specified resource on this node.  This option should                                       |
-   |                    |         |   generally be used with a -INFINITY score, although                                         |
-   |                    |         |   that is not strictly required.                                                             |
-   |                    |         |                                                                                              |
-   |                    |         | * ``exclusive:`` Perform resource discovery for the                                          |
-   |                    |         |   specified resource only on this node (and other nodes                                      |
-   |                    |         |   similarly marked as ``exclusive``). Multiple location                                      |
-   |                    |         |   constraints using ``exclusive`` discovery for the                                          |
-   |                    |         |   same resource across different nodes creates a subset                                      |
-   |                    |         |   of nodes resource-discovery is exclusive to.  If a                                         |
-   |                    |         |   resource is marked for ``exclusive`` discovery on one                                      |
-   |                    |         |   or more nodes, that resource is only allowed to be                                         |
-   |                    |         |   placed within that subset of nodes.                                                        |
-   +--------------------+---------+----------------------------------------------------------------------------------------------+
+   * - Name
+     - Type
+     - Default
+     - Description
+   * - .. rsc_location_id:
+       
+       .. index::
+          single: rsc_location; attribute, id
+          single: attribute; id (rsc_location)
+          single: id; rsc_location attribute
+       
+       id
+     - :ref:`id <id>`
+     -
+     - A unique name for the constraint (required)
+   * - .. rsc_location_rsc:
+       
+       .. index::
+          single: rsc_location; attribute, rsc
+          single: attribute; rsc (rsc_location)
+          single: rsc; rsc_location attribute
+       
+       rsc
+     - :ref:`id <id>`
+     -
+     - The name of the resource to which this constraint applies. A location
+       constraint must either have a ``rsc``, have a ``rsc-pattern``, or
+       contain at least one resource set.
+   * - .. rsc_pattern:
+       
+       .. index::
+          single: rsc_location; attribute, rsc-pattern
+          single: attribute; rsc-pattern (rsc_location)
+          single: rsc-pattern; rsc_location attribute
+       
+       rsc-pattern
+     - :ref:`text <text>`
+     -
+     - A pattern matching the names of resources to which this constraint
+       applies.  The syntax is the same as `POSIX
+       <http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap09.html#tag_09_04>`_
+       extended regular expressions, with the addition of an initial ``!``
+       indicating that resources *not* matching the pattern are selected. If
+       the regular expression contains submatches, and the constraint is
+       governed by a :ref:`rule <rules>`, the submatches can be referenced as
+       ``%1`` through ``%9`` in the rule's ``score-attribute`` or a rule
+       expression's ``attribute`` (see :ref:`s-rsc-pattern-rules`). A location
+       constraint must either have a ``rsc``, have a ``rsc-pattern``, or
+       contain at least one resource set.
+   * - .. rsc_location_node:
+       
+       .. index::
+          single: rsc_location; attribute, node
+          single: attribute; node (rsc_location)
+          single: node; rsc_location attribute
+       
+       node
+     - :ref:`text <text>`
+     -
+     - The name of the node to which this constraint applies. A location
+       constraint must either have a ``node`` and ``score``, or contain at
+       least one rule.
+   * - .. rsc_location_score:
+       
+       .. index::
+          single: rsc_location; attribute, score
+          single: attribute; score (rsc_location)
+          single: score; rsc_location attribute
+       
+       score
+     - :ref:`score <score>`
+     -
+     - Positive values indicate a preference for running the affected
+       resource(s) on ``node`` -- the higher the value, the stronger the
+       preference. Negative values indicate the resource(s) should avoid this
+       node (a value of **-INFINITY** changes "should" to "must"). A location
+       constraint must either have a ``node`` and ``score``, or contain at
+       least one rule.
+   * - .. rsc_location_role:
+       
+       .. index::
+          single: rsc_location; attribute, role
+          single: attribute; role (rsc_location)
+          single: role; rsc_location attribute
+       
+       role
+     - :ref:`enumeration <enumeration>`
+     - ``Started``
+     - The constraint applies only to resource instances in this role;
+       significant only for :ref:`promotable clones <s-resource-promotable>`.
+       Allowed values:
+       
+       * ``Started`` or ``Unpromoted``: any active role (a promoted instance
+         must start in the unpromoted role before being promoted, and must be
+         demoted to the unpromoted role before being stopped, so any location
+         constraint for unpromoted instances also affects promoted instances)
+       * ``Promoted``: the promoted role
+   * - .. resource_discovery:
+       
+       .. index::
+          single: rsc_location; attribute, resource-discovery
+          single: attribute; resource-discovery (rsc_location)
+          single: resource-discovery; rsc_location attribute
+       
+       resource-discovery
+     - :ref:`enumeration <enumeration>`
+     - always
+     - Whether Pacemaker should perform resource discovery (that is, check
+       whether the resource is already running) for this resource on this node.
+       This should normally be left as the default, so that rogue instances of
+       a service can be stopped when they are running where they are not
+       supposed to be. However, there are two situations where disabling
+       resource discovery is a good idea: when a service is not installed on a
+       node, discovery might return an error (properly written OCF agents will
+       not, so this is usually only seen with other agent types); and when
+       Pacemaker Remote is used to scale a cluster to hundreds of nodes,
+       limiting resource discovery to allowed nodes can significantly boost
+       performance. Allowed values:
+       
+       * ``always:`` Always perform resource discovery for the specified
+         resource on this node.
+       * ``never:`` Never perform resource discovery for the specified resource
+         on this node.  This option should generally be used with a -INFINITY
+         score, although that is not strictly required.
+       * ``exclusive:`` Perform resource discovery for the specified resource
+         only on this node (and other nodes similarly marked as ``exclusive``).
+         Multiple location constraints using ``exclusive`` discovery for the
+         same resource across different nodes creates a subset of nodes
+         resource-discovery is exclusive to.  If a resource is marked for
+         ``exclusive`` discovery on one or more nodes, that resource is only
+         allowed to be placed within that subset of nodes.
 
 .. warning::
 

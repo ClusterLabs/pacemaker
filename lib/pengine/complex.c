@@ -171,7 +171,6 @@ get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
-        .role = pcmk_role_unknown,
         .now = scheduler->now,
         .match_data = NULL,
         .rsc_data = &rsc_rule_data,
@@ -219,7 +218,6 @@ get_rsc_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
 {
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
-        .role = pcmk_role_unknown,
         .now = scheduler->now,
         .match_data = NULL,
         .rsc_data = NULL,
@@ -621,7 +619,6 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
-        .role = pcmk_role_unknown,
         .now = NULL,
         .match_data = NULL,
         .rsc_data = NULL,

@@ -210,10 +210,6 @@ in rule expressions.
    | #site-name    | The value of the ``site-name`` node attribute, if set,    |
    |               | otherwise identical to ``#cluster-name``                  |
    +---------------+-----------------------------------------------------------+
-   | #role         | The role the relevant promotable clone resource has on    |
-   |               | this node. Valid only within a rule for a location        |
-   |               | constraint for a promotable clone resource.               |
-   +---------------+-----------------------------------------------------------+
 
 .. Add_to_above_table_if_released:
 

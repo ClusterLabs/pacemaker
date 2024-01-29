@@ -81,7 +81,7 @@ ipc_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid, const char *ipc
      */
     client = pcmk__new_client(c, uid, gid);
     if (client == NULL) {
-        return -EREMOTEIO;
+        return -ENOMEM;
     }
 
     /* This ipc client is bound to a single ipc provider. If the

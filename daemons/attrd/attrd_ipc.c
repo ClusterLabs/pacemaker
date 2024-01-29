@@ -501,11 +501,11 @@ attrd_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
     if (attrd_shutting_down(false)) {
         crm_info("Ignoring new connection from pid %d during shutdown",
                  pcmk__client_pid(c));
-        return -EPERM;
+        return -ECONNREFUSED;
     }
 
     if (pcmk__new_client(c, uid, gid) == NULL) {
-        return -EIO;
+        return -ENOMEM;
     }
     return pcmk_ok;
 }

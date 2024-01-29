@@ -63,6 +63,16 @@ of the following types:
        epoch_time
      - Time as the integer number of seconds since the Unix epoch,
        ``1970-01-01 00:00:00 +0000 (UTC)``.
+   * - .. _id:
+
+       .. index::
+          pair: type; id
+
+       id
+     - A text string starting with a letter or underbar, followed by any
+       combination of letters, numbers, dashes, dots, and/or underbars; when
+       used for a property named ``id``, the string must be unique across all
+       ``id`` properties in the CIB
    * - .. _integer:
 
        .. index::
