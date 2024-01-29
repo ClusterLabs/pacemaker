@@ -125,6 +125,9 @@ setup_stand_alone(GError **error)
     return pcmk_rc_ok;
 }
 
+/* @COMPAT Deprecated since 2.1.8; use pcmk_cluster_list_options() or
+ * crm_attribute --list-options instead of querying daemon metadata.
+ */
 static int
 based_metadata(pcmk__output_t *out)
 {
@@ -163,8 +166,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
 {
     GOptionContext *context = NULL;
 
-    context = pcmk__build_arg_context(args, "text (default), xml", group,
-                                      "[metadata]");
+    context = pcmk__build_arg_context(args, "text (default), xml", group, NULL);
     pcmk__add_main_args(context, entries);
     return context;
 }
