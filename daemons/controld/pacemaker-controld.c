@@ -46,6 +46,9 @@ static pcmk__supported_format_t formats[] = {
     { NULL, NULL, NULL }
 };
 
+/* @COMPAT Deprecated since 2.1.8; use pcmk_cluster_list_options() or
+ * crm_attribute --list-options instead of querying daemon metadata.
+ */
 static int
 controld_metadata(pcmk__output_t *out)
 {
@@ -59,8 +62,7 @@ controld_metadata(pcmk__output_t *out)
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
 {
-    return pcmk__build_arg_context(args, "text (default), xml", group,
-                                   "[metadata]");
+    return pcmk__build_arg_context(args, "text (default), xml", group, NULL);
 }
 
 int
