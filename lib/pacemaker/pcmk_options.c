@@ -9,6 +9,8 @@
 
 #include <crm_internal.h>
 
+#include <libxml/tree.h>    // xmlNode
+
 #include <pacemaker.h>
 #include <pacemaker-internal.h>
 
@@ -37,4 +39,24 @@ pcmk__list_cluster_options(pcmk__output_t *out)
 
     return pcmk__output_cluster_options(out, name, desc_short, desc_long,
                                         pcmk__opt_context_none);
+}
+
+// Documented in header
+int
+pcmk_list_cluster_options(xmlNode **xml)
+{
+    pcmk__output_t *out = NULL;
+    int rc = pcmk_rc_ok;
+
+    rc = pcmk__xml_output_new(&out, xml);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    pcmk__register_lib_messages(out);
+
+    rc = pcmk__list_cluster_options(out);
+
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
+    return rc;
 }

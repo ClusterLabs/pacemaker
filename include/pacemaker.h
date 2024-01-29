@@ -406,6 +406,17 @@ int pcmk_list_providers(xmlNodePtr *xml, const char *agent_spec);
  */
 int pcmk_list_standards(xmlNodePtr *xml);
 
+/*!
+ * \brief List all available cluster options
+ *
+ * These are options that affect the entire cluster.
+ *
+ * \param[in,out] xml  The destination for the result, as an XML tree
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_list_cluster_options(xmlNode **xml);
+
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
 
 /*!
