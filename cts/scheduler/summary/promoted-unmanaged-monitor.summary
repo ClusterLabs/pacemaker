@@ -29,16 +29,6 @@ Current cluster status:
 Transition Summary:
 
 Executing Cluster Transition:
-  * Resource action: lsb-dummy       monitor=5000 on pcmk-3
-  * Resource action: migrator        monitor=10000 on pcmk-4
-  * Resource action: ping-1:0        monitor=60000 on pcmk-2
-  * Resource action: ping-1:0        monitor=60000 on pcmk-3
-  * Resource action: ping-1:0        monitor=60000 on pcmk-4
-  * Resource action: ping-1:0        monitor=60000 on pcmk-1
-  * Resource action: stateful-1:0    monitor=15000 on pcmk-2
-  * Resource action: stateful-1:0    monitor on pcmk-1
-  * Resource action: stateful-1:0    monitor=16000 on pcmk-3
-  * Resource action: stateful-1:0    monitor=15000 on pcmk-4
 
 Revised Cluster Status:
   * Node List:

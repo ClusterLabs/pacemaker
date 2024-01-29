@@ -10,8 +10,6 @@ Transition Summary:
   * Recover    rsc3    ( node2 )
 
 Executing Cluster Transition:
-  * Resource action: rsc3            stop on node2
-  * Resource action: rsc3            start on node2
 
 Revised Cluster Status:
   * Node List:
@@ -19,4 +17,4 @@ Revised Cluster Status:
     * Online: [ node2 ]
 
   * Full List of Resources:
-    * rsc3	(ocf:heartbeat:apache):	 Started node2
+    * rsc3	(ocf:heartbeat:apache):	 FAILED node2

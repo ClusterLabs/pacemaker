@@ -85,11 +85,20 @@ Current cluster status:
       * Stopped: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
     * Clone Set: openstack-nova-conductor-clone [openstack-nova-conductor]:
       * Stopped: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
+Found verification errors! Run crm_verify for more information.
 
 Transition Summary:
   * Start      openstack-cinder-volume     ( overcloud-controller-2 )  due to unrunnable openstack-cinder-scheduler-clone running (blocked)
+  * Stop       openstack-aodh-listener:0   ( overcloud-controller-1 )  due to colocation with openstack-aodh-evaluator-clone
+  * Stop       openstack-aodh-listener:1   ( overcloud-controller-0 )  due to colocation with openstack-aodh-evaluator-clone
+  * Stop       openstack-aodh-listener:2   ( overcloud-controller-2 )  due to colocation with openstack-aodh-evaluator-clone
 
 Executing Cluster Transition:
+  * Pseudo action:   openstack-aodh-listener-clone_stop_0
+  * Resource action: openstack-aodh-listener stop on overcloud-controller-1
+  * Resource action: openstack-aodh-listener stop on overcloud-controller-0
+  * Resource action: openstack-aodh-listener stop on overcloud-controller-2
+  * Pseudo action:   openstack-aodh-listener-clone_stopped_0
 
 Revised Cluster Status:
   * Node List:
@@ -129,7 +138,7 @@ Revised Cluster Status:
     * Clone Set: openstack-ceilometer-api-clone [openstack-ceilometer-api]:
       * Stopped: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
     * Clone Set: openstack-aodh-listener-clone [openstack-aodh-listener]:
-      * Started: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
+      * Stopped: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
     * Clone Set: neutron-metadata-agent-clone [neutron-metadata-agent]:
       * Stopped: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
     * Clone Set: openstack-aodh-notifier-clone [openstack-aodh-notifier]:
@@ -176,3 +185,4 @@ Revised Cluster Status:
       * Stopped: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
     * Clone Set: openstack-nova-conductor-clone [openstack-nova-conductor]:
       * Stopped: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
+Found verification errors! Run crm_verify for more information.

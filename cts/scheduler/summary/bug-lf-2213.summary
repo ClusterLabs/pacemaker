@@ -11,14 +11,6 @@ Transition Summary:
   * Start      test:1     (  web2 )
 
 Executing Cluster Transition:
-  * Pseudo action:   cl-test_start_0
-  * Pseudo action:   gr-test:0_start_0
-  * Resource action: test:0          start on web1
-  * Pseudo action:   gr-test:1_start_0
-  * Resource action: test:1          start on web2
-  * Pseudo action:   gr-test:0_running_0
-  * Pseudo action:   gr-test:1_running_0
-  * Pseudo action:   cl-test_running_0
 
 Revised Cluster Status:
   * Node List:
@@ -26,5 +18,4 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Clone Set: cl-test [gr-test]:
-      * Started: [ web1 web2 ]
-      * Stopped: [ fs1 fs2 ]
+      * Stopped: [ fs1 fs2 web1 web2 ]

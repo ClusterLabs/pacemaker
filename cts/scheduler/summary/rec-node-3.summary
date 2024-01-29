@@ -12,10 +12,6 @@ Transition Summary:
   * Start      rsc2    ( node2 )
 
 Executing Cluster Transition:
-  * Resource action: rsc1            monitor on node2
-  * Resource action: rsc2            monitor on node2
-  * Resource action: rsc1            start on node2
-  * Resource action: rsc2            start on node2
 
 Revised Cluster Status:
   * Node List:
@@ -23,5 +19,5 @@ Revised Cluster Status:
     * OFFLINE: [ node1 ]
 
   * Full List of Resources:
-    * rsc1	(ocf:heartbeat:apache):	 Started node2
-    * rsc2	(ocf:heartbeat:apache):	 Started node2
+    * rsc1	(ocf:heartbeat:apache):	 Stopped
+    * rsc2	(ocf:heartbeat:apache):	 Stopped

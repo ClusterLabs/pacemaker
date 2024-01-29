@@ -14,9 +14,6 @@ Transition Summary:
   * Stop       ClusterIP:0     ( fc16-builder )  due to node availability
 
 Executing Cluster Transition:
-  * Pseudo action:   clone1_stop_0
-  * Resource action: ClusterIP:0     stop on fc16-builder
-  * Pseudo action:   clone1_stopped_0
 
 Revised Cluster Status:
   * Node List:
@@ -24,6 +21,6 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Clone Set: clone1 [ClusterIP] (disabled):
-      * Stopped (disabled): [ fc16-builder ]
+      * Started: [ fc16-builder ]
     * Clone Set: clone2 [ClusterIP2]:
       * Started: [ fc16-builder ]

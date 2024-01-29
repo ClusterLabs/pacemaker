@@ -19,13 +19,6 @@ Transition Summary:
   * Start      rscC    ( node1 )  due to unrunnable rscA start (blocked)
 
 Executing Cluster Transition:
-  * Resource action: rsc2            monitor on node1
-  * Resource action: rsc3            monitor on node1
-  * Resource action: rscB            monitor on node1
-  * Resource action: rscC            monitor on node1
-  * Resource action: rsc2            start on node1
-  * Resource action: rsc3            start on node1
-  * Resource action: rscB            start on node1
 
 Revised Cluster Status:
   * Node List:
@@ -33,8 +26,8 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * rsc1	(ocf:heartbeat:apache):	 Started node1
-    * rsc2	(ocf:heartbeat:apache):	 Started node1
-    * rsc3	(ocf:heartbeat:apache):	 Started node1
+    * rsc2	(ocf:heartbeat:apache):	 Stopped
+    * rsc3	(ocf:heartbeat:apache):	 Stopped
     * rscA	(ocf:heartbeat:apache):	 FAILED node1 (blocked)
-    * rscB	(ocf:heartbeat:apache):	 Started node1
+    * rscB	(ocf:heartbeat:apache):	 Stopped
     * rscC	(ocf:heartbeat:apache):	 Stopped

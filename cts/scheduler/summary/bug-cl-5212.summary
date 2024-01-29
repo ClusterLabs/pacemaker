@@ -19,6 +19,7 @@ Current cluster status:
       * prmPingd	(ocf:pacemaker:ping):	 Started srv02 (UNCLEAN)
       * prmPingd	(ocf:pacemaker:ping):	 Started srv01 (UNCLEAN)
       * Started: [ srv03 ]
+Found verification errors! Run crm_verify for more information.
 
 Transition Summary:
   * Stop       prmStonith1-1     (            srv02 )  blocked
@@ -30,21 +31,9 @@ Transition Summary:
   * Stop       prmPingd:1        (            srv01 )  due to node availability (blocked)
 
 Executing Cluster Transition:
-  * Pseudo action:   grpStonith1_stop_0
-  * Pseudo action:   grpStonith1_start_0
-  * Pseudo action:   grpStonith2_stop_0
-  * Pseudo action:   grpStonith2_start_0
-  * Pseudo action:   grpStonith3_stop_0
-  * Pseudo action:   msPostgresql_pre_notify_stop_0
-  * Pseudo action:   clnPingd_stop_0
-  * Resource action: pgsql           notify on srv03
-  * Pseudo action:   msPostgresql_confirmed-pre_notify_stop_0
-  * Pseudo action:   msPostgresql_stop_0
-  * Pseudo action:   clnPingd_stopped_0
-  * Pseudo action:   msPostgresql_stopped_0
-  * Pseudo action:   msPostgresql_post_notify_stopped_0
-  * Resource action: pgsql           notify on srv03
-  * Pseudo action:   msPostgresql_confirmed-post_notify_stopped_0
+  * Pseudo action:   grpStonith3_start_0
+Transition failed: terminated
+An invalid transition was produced
 
 Revised Cluster Status:
   * Node List:
@@ -67,3 +56,4 @@ Revised Cluster Status:
       * prmPingd	(ocf:pacemaker:ping):	 Started srv02 (UNCLEAN)
       * prmPingd	(ocf:pacemaker:ping):	 Started srv01 (UNCLEAN)
       * Started: [ srv03 ]
+Found verification errors! Run crm_verify for more information.

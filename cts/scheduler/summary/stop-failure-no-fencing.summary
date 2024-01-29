@@ -10,6 +10,7 @@ Current cluster status:
     * Clone Set: dlm-clone [dlm]:
       * Stopped: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
     * ClusterIP	(ocf:heartbeat:IPaddr2):	 Stopped
+Found verification errors! Run crm_verify for more information.
 
 Transition Summary:
 
@@ -25,3 +26,4 @@ Revised Cluster Status:
     * Clone Set: dlm-clone [dlm]:
       * Stopped: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
     * ClusterIP	(ocf:heartbeat:IPaddr2):	 Stopped
+Found verification errors! Run crm_verify for more information.

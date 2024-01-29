@@ -12,9 +12,6 @@ Transition Summary:
   * Stop       resource_nfs     ( jamesltc )  due to node availability
 
 Executing Cluster Transition:
-  * Pseudo action:   nfs_stop_0
-  * Resource action: resource_nfs    stop on jamesltc
-  * Pseudo action:   nfs_stopped_0
 
 Revised Cluster Status:
   * Node List:
@@ -22,6 +19,6 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Resource Group: nfs:
-      * resource_nfs	(lsb:nfs):	 Stopped
+      * resource_nfs	(lsb:nfs):	 Started jamesltc
     * Resource Group: fs:
       * resource_fs	(ocf:heartbeat:Filesystem):	 Stopped

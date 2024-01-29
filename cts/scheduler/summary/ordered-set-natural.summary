@@ -21,6 +21,7 @@ Current cluster status:
     * dummy3-5	(ocf:heartbeat:Dummy):	 Stopped
     * dummy2-4	(ocf:heartbeat:Dummy):	 Stopped
     * dummy2-5	(ocf:heartbeat:Dummy):	 Stopped
+Found verification errors! Run crm_verify for more information.
 
 Transition Summary:
   * Start      dummy1-1     ( node1 )  due to no quorum (blocked)
@@ -53,3 +54,4 @@ Revised Cluster Status:
     * dummy3-5	(ocf:heartbeat:Dummy):	 Stopped
     * dummy2-4	(ocf:heartbeat:Dummy):	 Stopped
     * dummy2-5	(ocf:heartbeat:Dummy):	 Stopped
+Found verification errors! Run crm_verify for more information.

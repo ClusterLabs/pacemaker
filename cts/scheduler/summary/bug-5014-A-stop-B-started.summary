@@ -12,12 +12,11 @@ Transition Summary:
   * Stop       ClusterIP     ( fc16-builder )  due to node availability
 
 Executing Cluster Transition:
-  * Resource action: ClusterIP       stop on fc16-builder
 
 Revised Cluster Status:
   * Node List:
     * Online: [ fc16-builder ]
 
   * Full List of Resources:
-    * ClusterIP	(ocf:heartbeat:IPaddr2):	 Stopped (disabled)
+    * ClusterIP	(ocf:heartbeat:IPaddr2):	 Started fc16-builder (disabled)
     * ClusterIP2	(ocf:heartbeat:IPaddr2):	 Started fc16-builder

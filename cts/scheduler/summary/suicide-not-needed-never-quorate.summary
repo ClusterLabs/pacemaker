@@ -10,9 +10,6 @@ Transition Summary:
   * Start      Fencing     ( node1 )  due to no quorum (blocked)
 
 Executing Cluster Transition:
-  * Resource action: Fencing         monitor on node3
-  * Resource action: Fencing         monitor on node2
-  * Resource action: Fencing         monitor on node1
 Using the original execution date of: 2017-08-21 17:12:54Z
 
 Revised Cluster Status:

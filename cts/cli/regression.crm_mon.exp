@@ -591,6 +591,7 @@ Operations:
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
+No verification errors
 =#=#=#= End test: Complete text output - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output
 =#=#=#= Begin test: Complete text output with detail =#=#=#=
@@ -715,6 +716,7 @@ Operations:
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01 (1)
+No verification errors
 =#=#=#= End test: Complete text output with detail - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output with detail
 =#=#=#= Begin test: Complete brief text output =#=#=#=
@@ -817,6 +819,7 @@ Operations:
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
+No verification errors
 =#=#=#= End test: Complete brief text output - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete brief text output
 =#=#=#= Begin test: Complete text output grouped by node =#=#=#=
@@ -925,6 +928,7 @@ Operations:
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
+No verification errors
 =#=#=#= End test: Complete text output grouped by node - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output grouped by node
 =#=#=#= Begin test: Complete brief text output grouped by node =#=#=#=
@@ -1033,6 +1037,7 @@ Operations:
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
+No verification errors
 =#=#=#= End test: Complete brief text output grouped by node - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete brief text output grouped by node
 =#=#=#= Begin test: XML output grouped by node =#=#=#=
@@ -1345,6 +1350,7 @@ Operations:
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
+No verification errors
 =#=#=#= End test: Complete text output filtered by node - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output filtered by node
 =#=#=#= Begin test: XML output filtered by node =#=#=#=
@@ -1536,6 +1542,7 @@ Operations:
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
+No verification errors
 =#=#=#= End test: Complete text output filtered by tag - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output filtered by tag
 =#=#=#= Begin test: XML output filtered by tag =#=#=#=
@@ -1704,6 +1711,7 @@ Operations:
     * Fencing: migration-threshold=1000000:
       * (15) start
       * (20) monitor: interval="60000ms"
+No verification errors
 =#=#=#= End test: Complete text output filtered by resource tag - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output filtered by resource tag
 =#=#=#= Begin test: XML output filtered by resource tag =#=#=#=
@@ -1890,6 +1898,7 @@ Operations:
     * Fencing: migration-threshold=1000000:
       * (15) start
       * (20) monitor: interval="60000ms"
+No verification errors
 =#=#=#= End test: Complete text output filtered by primitive resource - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output filtered by primitive resource
 =#=#=#= Begin test: XML output filtered by primitive resource =#=#=#=
@@ -1967,6 +1976,7 @@ Operations:
       * (2) start
     * Email: migration-threshold=1000000:
       * (2) start
+No verification errors
 =#=#=#= End test: Complete text output filtered by group resource - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output filtered by group resource
 =#=#=#= Begin test: XML output filtered by group resource =#=#=#=
@@ -2048,6 +2058,7 @@ Operations:
   * Node: cluster02:
     * Public-IP: migration-threshold=1000000:
       * (2) start
+No verification errors
 =#=#=#= End test: Complete text output filtered by group resource member - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output filtered by group resource member
 =#=#=#= Begin test: XML output filtered by group resource member =#=#=#=
@@ -2128,6 +2139,7 @@ Operations:
     * ping: migration-threshold=1000000:
       * (17) start
       * (18) monitor: interval="10000ms"
+No verification errors
 =#=#=#= End test: Complete text output filtered by clone resource - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output filtered by clone resource
 =#=#=#= Begin test: XML output filtered by clone resource =#=#=#=
@@ -2218,6 +2230,7 @@ Operations:
     * ping: migration-threshold=1000000:
       * (17) start
       * (18) monitor: interval="10000ms"
+No verification errors
 =#=#=#= End test: Complete text output filtered by clone resource instance - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output filtered by clone resource instance
 =#=#=#= Begin test: XML output filtered by clone resource instance =#=#=#=
@@ -2311,6 +2324,7 @@ Operations:
     * ping: migration-threshold=1000000:
       * (17) start
       * (18) monitor: interval="10000ms"
+No verification errors
 =#=#=#= End test: Complete text output filtered by exact clone resource instance - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output filtered by exact clone resource instance
 =#=#=#= Begin test: XML output filtered by exact clone resource instance =#=#=#=
@@ -3010,6 +3024,7 @@ Operations:
     * mysql-proxy: migration-threshold=1000000:
       * (2) start
       * (3) monitor: interval="10000ms"
+No verification errors
 =#=#=#= End test: Complete text output, filtered by clone name in cloned group - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output, filtered by clone name in cloned group
 =#=#=#= Begin test: XML output, filtered by clone name in cloned group =#=#=#=
@@ -3119,6 +3134,7 @@ Operations:
     * mysql-proxy: migration-threshold=1000000:
       * (2) start
       * (3) monitor: interval="10000ms"
+No verification errors
 =#=#=#= End test: Complete text output, filtered by group name in cloned group - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output, filtered by group name in cloned group
 =#=#=#= Begin test: XML output, filtered by group name in cloned group =#=#=#=
@@ -3226,6 +3242,7 @@ Operations:
     * mysql-proxy: migration-threshold=1000000:
       * (2) start
       * (3) monitor: interval="10000ms"
+No verification errors
 =#=#=#= End test: Complete text output, filtered by exact group instance name in cloned group - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output, filtered by exact group instance name in cloned group
 =#=#=#= Begin test: XML output, filtered by exact group instance name in cloned group =#=#=#=
@@ -3321,6 +3338,7 @@ Operations:
     * mysql-proxy: migration-threshold=1000000:
       * (2) start
       * (3) monitor: interval="10000ms"
+No verification errors
 =#=#=#= End test: Complete text output, filtered by primitive name in cloned group - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output, filtered by primitive name in cloned group
 =#=#=#= Begin test: XML output, filtered by primitive name in cloned group =#=#=#=
@@ -3428,6 +3446,7 @@ Operations:
     * mysql-proxy: migration-threshold=1000000:
       * (2) start
       * (3) monitor: interval="10000ms"
+No verification errors
 =#=#=#= End test: Complete text output, filtered by exact primitive instance name in cloned group - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output, filtered by exact primitive instance name in cloned group
 =#=#=#= Begin test: XML output, filtered by exact primitive instance name in cloned group =#=#=#=
@@ -3807,6 +3826,7 @@ Operations:
 
 Failed Resource Actions:
   * dummy-2_monitor_0 on cluster02 'unimplemented feature' (3): call=2, status='complete', queued=0ms, exec=33ms
+No verification errors
 =#=#=#= End test: Complete brief text output, with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete brief text output, with inactive resources
 =#=#=#= Begin test: Text output of partially active group =#=#=#=
@@ -3990,6 +4010,7 @@ Operations:
 
 Failed Resource Actions:
   * dummy-2_monitor_0 on cluster02 'unimplemented feature' (3): call=2, status='complete', queued=0ms, exec=33ms
+No verification errors
 =#=#=#= End test: Complete brief text output grouped by node, with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete brief text output grouped by node, with inactive resources
 =#=#=#= Begin test: Text output of partially active resources, with inactive resources, filtered by node =#=#=#=

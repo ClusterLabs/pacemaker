@@ -10,9 +10,6 @@ Current cluster status:
 Transition Summary:
 
 Executing Cluster Transition:
-  * Resource action: test-vm         stop on hex-14
-  * Pseudo action:   load_stopped_hex-14
-  * Pseudo action:   load_stopped_hex-13
 
 Revised Cluster Status:
   * Node List:

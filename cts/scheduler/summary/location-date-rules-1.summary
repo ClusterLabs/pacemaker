@@ -16,12 +16,6 @@ Transition Summary:
   * Start      rsc3    ( rhel7-4 )
 
 Executing Cluster Transition:
-  * Resource action: rsc1            start on rhel7-3
-  * Resource action: rsc2            start on rhel7-4
-  * Resource action: rsc3            start on rhel7-4
-  * Resource action: rsc1            monitor=10000 on rhel7-3
-  * Resource action: rsc2            monitor=10000 on rhel7-4
-  * Resource action: rsc3            monitor=10000 on rhel7-4
 Using the original execution date of: 2019-09-20 15:10:52Z
 
 Revised Cluster Status:
@@ -31,6 +25,6 @@ Revised Cluster Status:
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Started rhel7-1
     * FencingPass	(stonith:fence_dummy):	 Started rhel7-2
-    * rsc1	(ocf:pacemaker:Dummy):	 Started rhel7-3
-    * rsc2	(ocf:pacemaker:Dummy):	 Started rhel7-4
-    * rsc3	(ocf:pacemaker:Dummy):	 Started rhel7-4
+    * rsc1	(ocf:pacemaker:Dummy):	 Stopped
+    * rsc2	(ocf:pacemaker:Dummy):	 Stopped
+    * rsc3	(ocf:pacemaker:Dummy):	 Stopped

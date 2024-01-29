@@ -13,7 +13,7 @@ Transition Summary:
   * Stop       rsc1    ( yingying.site )  due to node availability (blocked)
 
 Executing Cluster Transition:
-  * Pseudo action:   group1_stop_0
+  * Pseudo action:   group1_start_0
 
 Revised Cluster Status:
   * Node List:

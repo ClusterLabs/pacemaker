@@ -8,7 +8,6 @@ Current cluster status:
 Transition Summary:
 
 Executing Cluster Transition:
-  * Resource action: resD            monitor=3600000 on node1
 
 Revised Cluster Status:
   * Node List:

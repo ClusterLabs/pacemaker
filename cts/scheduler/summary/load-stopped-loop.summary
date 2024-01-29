@@ -151,46 +151,13 @@ Transition Summary:
   * Reload     vds-ok-pool-1-iscsi:0                       (         mgmt01 )
   * Reload     vds-ok-pool-1-iscsi:1                       (          v03-b )
   * Reload     vds-ok-pool-1-iscsi:2                       (          v03-a )
-  * Restart    stonith-v03-b                               (          v03-a )  due to resource definition change
   * Restart    stonith-v03-a                               (          v03-b )  due to resource definition change
+  * Restart    stonith-v03-b                               (          v03-a )  due to resource definition change
   * Migrate    license.anbriz.vds-ok.com-vm                ( v03-b -> v03-a )
   * Migrate    terminal0.anbriz.vds-ok.com-vm              ( v03-a -> v03-b )
   * Start      vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm     (          v03-a )
 
 Executing Cluster Transition:
-  * Resource action: vds-ok-pool-0-iscsi:1 reload-agent on mgmt01
-  * Resource action: vds-ok-pool-0-iscsi:1 monitor=30000 on mgmt01
-  * Resource action: vds-ok-pool-0-iscsi:0 reload-agent on v03-b
-  * Resource action: vds-ok-pool-0-iscsi:0 monitor=30000 on v03-b
-  * Resource action: vds-ok-pool-0-iscsi:2 reload-agent on v03-a
-  * Resource action: vds-ok-pool-0-iscsi:2 monitor=30000 on v03-a
-  * Resource action: vds-ok-pool-1-iscsi:1 reload-agent on mgmt01
-  * Resource action: vds-ok-pool-1-iscsi:1 monitor=30000 on mgmt01
-  * Resource action: vds-ok-pool-1-iscsi:0 reload-agent on v03-b
-  * Resource action: vds-ok-pool-1-iscsi:0 monitor=30000 on v03-b
-  * Resource action: vds-ok-pool-1-iscsi:2 reload-agent on v03-a
-  * Resource action: vds-ok-pool-1-iscsi:2 monitor=30000 on v03-a
-  * Resource action: stonith-v03-b   stop on v03-a
-  * Resource action: stonith-v03-b   start on v03-a
-  * Resource action: stonith-v03-b   monitor=60000 on v03-a
-  * Resource action: stonith-v03-a   stop on v03-b
-  * Resource action: stonith-v03-a   start on v03-b
-  * Resource action: stonith-v03-a   monitor=60000 on v03-b
-  * Resource action: terminal0.anbriz.vds-ok.com-vm migrate_to on v03-a
-  * Pseudo action:   load_stopped_mgmt01
-  * Resource action: terminal0.anbriz.vds-ok.com-vm migrate_from on v03-b
-  * Resource action: terminal0.anbriz.vds-ok.com-vm stop on v03-a
-  * Pseudo action:   load_stopped_v03-a
-  * Resource action: license.anbriz.vds-ok.com-vm migrate_to on v03-b
-  * Resource action: vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm start on v03-a
-  * Resource action: license.anbriz.vds-ok.com-vm migrate_from on v03-a
-  * Resource action: license.anbriz.vds-ok.com-vm stop on v03-b
-  * Resource action: vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm monitor=10000 on v03-a
-  * Pseudo action:   load_stopped_v03-b
-  * Pseudo action:   license.anbriz.vds-ok.com-vm_start_0
-  * Pseudo action:   terminal0.anbriz.vds-ok.com-vm_start_0
-  * Resource action: license.anbriz.vds-ok.com-vm monitor=10000 on v03-a
-  * Resource action: terminal0.anbriz.vds-ok.com-vm monitor=10000 on v03-b
 
 Revised Cluster Status:
   * Node List:
@@ -276,7 +243,7 @@ Revised Cluster Status:
     * vd01-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-a
     * vd01-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-a
     * vd01-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-b
-    * vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-a
+    * vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped
     * vd02-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
     * vd02-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
     * vd02-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
@@ -321,7 +288,7 @@ Revised Cluster Status:
       * Started: [ v03-a v03-b ]
       * Stopped: [ mgmt01 ]
     * gw.anbriz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-b
-    * license.anbriz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-a
+    * license.anbriz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-b
     * terminal.anbriz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
     * lustre01-left.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-a
     * lustre02-left.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-b
@@ -331,7 +298,7 @@ Revised Cluster Status:
       * Stopped: [ mgmt01 ]
     * gw.gleb.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
     * gw.gotin.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * terminal0.anbriz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-b
+    * terminal0.anbriz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-a
     * Clone Set: cl-mcast-gleb-net [mcast-gleb-net]:
       * Started: [ v03-a v03-b ]
       * Stopped: [ mgmt01 ]
