@@ -68,10 +68,9 @@ typedef struct pcmk__cluster_option_s {
 
 const char *pcmk__cluster_option(GHashTable *options, const char *name);
 
-void pcmk__cluster_option_metadata(pcmk__output_t *out, const char *name,
-                                   const char *desc_short,
-                                   const char *desc_long,
-                                   enum pcmk__opt_context filter);
+int pcmk__output_cluster_options(pcmk__output_t *out, const char *name,
+                                 const char *desc_short, const char *desc_long,
+                                 enum pcmk__opt_context filter);
 
 int pcmk__daemon_metadata(pcmk__output_t *out, const char *name,
                           const char *short_desc, const char *long_desc,

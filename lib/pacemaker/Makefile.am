@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2023 the Pacemaker project contributors
+# Copyright 2004-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -42,6 +42,7 @@ libpacemaker_la_SOURCES += pcmk_graph_consumer.c
 libpacemaker_la_SOURCES += pcmk_graph_logging.c
 libpacemaker_la_SOURCES += pcmk_graph_producer.c
 libpacemaker_la_SOURCES += pcmk_injections.c
+libpacemaker_la_SOURCES += pcmk_options.c
 libpacemaker_la_SOURCES += pcmk_output.c
 libpacemaker_la_SOURCES += pcmk_resource.c
 libpacemaker_la_SOURCES += pcmk_result_code.c

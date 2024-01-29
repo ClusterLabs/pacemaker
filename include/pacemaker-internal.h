@@ -14,6 +14,7 @@
 #  include <pcmki/pcmki_agents.h>
 #  include <pcmki/pcmki_cluster_queries.h>
 #  include <pcmki/pcmki_fence.h>
+#  include <pcmki/pcmki_options.h>
 #  include <pcmki/pcmki_output.h>
 #  include <pcmki/pcmki_resource.h>
 #  include <pcmki/pcmki_result_code.h>

@@ -934,7 +934,7 @@ pcmk__cluster_option(GHashTable *options, const char *name)
 
 /*!
  * \internal
- * \brief Format cluster option metadata as OCF-like XML
+ * \brief Output cluster option metadata as OCF-like XML
  *
  * \param[in,out] out         Output object
  * \param[in]     name        Fake resource agent name for the option list
@@ -943,14 +943,16 @@ pcmk__cluster_option(GHashTable *options, const char *name)
  * \param[in]     filter      If not \c pcmk__opt_context_none, include only
  *                            those options whose \c context field is equal to
  *                            \p filter
+ *
+ * \return Standard Pacemaker return code
  */
-void
-pcmk__cluster_option_metadata(pcmk__output_t *out, const char *name,
-                              const char *desc_short, const char *desc_long,
-                              enum pcmk__opt_context filter)
+int
+pcmk__output_cluster_options(pcmk__output_t *out, const char *name,
+                             const char *desc_short, const char *desc_long,
+                             enum pcmk__opt_context filter)
 {
-    out->message(out, "option-list", name, desc_short, desc_long, filter,
-                 cluster_options);
+    return out->message(out, "option-list", name, desc_short, desc_long, filter,
+                        cluster_options);
 }
 
 /*!
@@ -981,8 +983,7 @@ pcmk__daemon_metadata(pcmk__output_t *out, const char *name,
         return rc;
     }
 
-    pcmk__cluster_option_metadata(tmp_out, name, desc_short, desc_long,
-                                  context);
+    pcmk__output_cluster_options(tmp_out, name, desc_short, desc_long, context);
 
     tmp_out->finish(tmp_out, CRM_EX_OK, false, (void **) &top);
     metadata = first_named_child(top, PCMK_XE_RESOURCE_AGENT);
