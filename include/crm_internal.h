@@ -109,6 +109,9 @@
  */
 #define PCMK__XE_PROMOTABLE_LEGACY      "master"
 
+// @COMPAT Support for rkt is deprecated since 2.1.8
+#define PCMK__XE_RKT                    "rkt"
+
 // @COMPAT Deprecated since 1.1.12
 #define PCMK__XE_ROLE_REF               "role_ref"
 
