@@ -943,8 +943,6 @@ pcmk__cluster_option(GHashTable *options, const char *name)
  * \param[in]     filter      If not \c pcmk__opt_context_none, include only
  *                            those options whose \c context field is equal to
  *                            \p filter
- *
- * \note This currently supports only XML output objects.
  */
 void
 pcmk__cluster_option_metadata(pcmk__output_t *out, const char *name,

@@ -13,19 +13,160 @@
 
 /*!
  * \internal
+ * \brief Output an option's possible values
+ *
+ * \param[in,out] out     Output object
+ * \param[in]     option  Option whose possible values to add
+ */
+static void
+add_possible_values_default(pcmk__output_t *out,
+                            const pcmk__cluster_option_t *option)
+{
+    GString *buf = g_string_sized_new(256);
+
+    CRM_ASSERT(option->type != NULL);
+
+    if ((option->values != NULL) && (strcmp(option->type, "select") == 0)) {
+        const char *delim = ", ";
+        char *str = NULL;
+        bool found_default = (option->default_value == NULL);
+
+        pcmk__str_update(&str, option->values);
+
+        for (const char *value = strtok(str, delim); value != NULL;
+             value = strtok(NULL, delim)) {
+
+            if (buf->len > 0) {
+                g_string_append(buf, delim);
+            }
+            g_string_append_c(buf, '"');
+            g_string_append(buf, value);
+            g_string_append_c(buf, '"');
+
+            if (!found_default && (strcmp(value, option->default_value) == 0)) {
+                found_default = true;
+                g_string_append(buf, _(" (default)"));
+            }
+        }
+        free(str);
+
+    } else if (option->default_value != NULL) {
+        pcmk__g_strcat(buf,
+                       option->type, _(" (default: \""), option->default_value,
+                       "\")", NULL);
+
+    } else {
+        pcmk__g_strcat(buf, option->type, _(" (no default)"), NULL);
+    }
+
+    out->list_item(out, _("Possible values"), "%s", buf->str);
+    g_string_free(buf, TRUE);
+}
+
+/*!
+ * \internal
+ * \brief Output a single option's metadata
+ *
+ * \param[in,out] out     Output object
+ * \param[in]     option  Option to add
+ */
+static void
+add_option_metadata_default(pcmk__output_t *out,
+                            const pcmk__cluster_option_t *option)
+{
+    const char *desc_short = option->description_short;
+    const char *desc_long = option->description_long;
+
+    CRM_ASSERT((desc_short != NULL) || (desc_long != NULL));
+
+    if (desc_short == NULL) {
+        desc_short = desc_long;
+        desc_long = NULL;
+    }
+
+    out->list_item(out, option->name, "%s", _(desc_short));
+
+    out->begin_list(out, NULL, NULL, NULL);
+
+    if (desc_long != NULL) {
+        out->list_item(out, NULL, "%s", _(desc_long));
+    }
+    add_possible_values_default(out, option);
+    out->end_list(out);
+}
+
+/*!
+ * \internal
+ * \brief Output the metadata for a list of options
+ *
+ * \param[in,out] out   Output object
+ * \param[in]     args  Message-specific arguments
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note \p args should contain the following:
+ *       -# Fake resource agent name for the option list (ignored)
+ *       -# Short description of option list
+ *       -# Long description of option list
+ *       -# Filter: If not \c pcmk__opt_context_none, include only those options
+ *          whose \c context field is equal to this filter.
+ *       -# <tt>NULL</tt>-terminated list of options whose metadata to format
+ */
+PCMK__OUTPUT_ARGS("option-list", "const char *", "const char *", "const char *",
+                  "enum pcmk__opt_context", "const pcmk__cluster_option_t *")
+static int
+option_list_default(pcmk__output_t *out, va_list args)
+{
+    const char *name G_GNUC_UNUSED = va_arg(args, const char *);
+    const char *desc_short = va_arg(args, const char *);
+    const char *desc_long = va_arg(args, const char *);
+    enum pcmk__opt_context filter = (enum pcmk__opt_context) va_arg(args, int);
+    const pcmk__cluster_option_t *option_list =
+        va_arg(args, const pcmk__cluster_option_t *);
+
+    bool old_fancy = false;
+
+    CRM_ASSERT((out != NULL) && (desc_short != NULL) && (desc_long != NULL)
+               && (option_list != NULL));
+
+    old_fancy = pcmk__output_text_get_fancy(out);
+    pcmk__output_text_set_fancy(out, true);
+
+    out->info(out, "%s", _(desc_short));
+    out->spacer(out);
+    out->info(out, "%s", _(desc_long));
+    out->begin_list(out, NULL, NULL, NULL);
+
+    for (const pcmk__cluster_option_t *option = option_list;
+         option->name != NULL; option++) {
+
+        if ((filter == pcmk__opt_context_none) || (filter == option->context)) {
+            out->spacer(out);
+            add_option_metadata_default(out, option);
+        }
+    }
+    out->end_list(out);
+
+    pcmk__output_text_set_fancy(out, old_fancy);
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
  * \brief Add a description element to an OCF-like metadata XML node
  *
  * Include a translation based on the current locale if \c ENABLE_NLS is
  * defined.
  *
- * \param[in,out] out   Output object
- * \param[in]     tag   Name of element to add (\c PCMK_XE_LONGDESC or
- *                      \c PCMK_XE_SHORTDESC)
- * \param[in]     desc  Textual description to add
+ * \param[in,out] out       Output object
+ * \param[in]     for_long  If \c true, add long description; otherwise, add
+ *                          short description
+ * \param[in]     desc      Textual description to add
  */
 static void
-add_desc_xml(pcmk__output_t *out, const char *tag, const char *desc)
+add_desc_xml(pcmk__output_t *out, bool for_long, const char *desc)
 {
+    const char *tag = (for_long? PCMK_XE_LONGDESC : PCMK_XE_SHORTDESC);
     xmlNode *node = pcmk__output_create_xml_text_node(out, tag, desc);
 
     crm_xml_add(node, PCMK_XA_LANG, PCMK__VALUE_EN);
@@ -107,8 +248,8 @@ add_option_metadata_xml(pcmk__output_t *out,
     pcmk__output_xml_create_parent(out, PCMK_XE_PARAMETER,
                                    PCMK_XA_NAME, option->name,
                                    NULL);
-    add_desc_xml(out, PCMK_XE_LONGDESC, desc_long);
-    add_desc_xml(out, PCMK_XE_SHORTDESC, desc_short);
+    add_desc_xml(out, true, desc_long);
+    add_desc_xml(out, false, desc_short);
 
     pcmk__output_xml_create_parent(out, PCMK_XE_CONTENT,
                                    PCMK_XA_TYPE, option->type,
@@ -159,8 +300,8 @@ option_list_xml(pcmk__output_t *out, va_list args)
                                    NULL);
 
     pcmk__output_create_xml_text_node(out, PCMK_XE_VERSION, PCMK_OCF_VERSION);
-    add_desc_xml(out, PCMK_XE_LONGDESC, desc_long);
-    add_desc_xml(out, PCMK_XE_SHORTDESC, desc_short);
+    add_desc_xml(out, true, desc_long);
+    add_desc_xml(out, false, desc_short);
 
     pcmk__output_xml_create_parent(out, PCMK_XE_PARAMETERS, NULL);
 
@@ -178,6 +319,7 @@ option_list_xml(pcmk__output_t *out, va_list args)
 }
 
 static pcmk__message_entry_t fmt_functions[] = {
+    { "option-list", "default", option_list_default },
     { "option-list", "xml", option_list_xml },
 
     { NULL, NULL, NULL }
