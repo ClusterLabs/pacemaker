@@ -43,6 +43,7 @@
 enum attr_cmd {
     attr_cmd_none,
     attr_cmd_delete,
+    attr_cmd_list,
     attr_cmd_query,
     attr_cmd_update,
 };
@@ -104,6 +105,7 @@ struct {
     gchar *set_name;
     char *set_type;
     gchar *type;
+    char *opt_list;
     gboolean promotion_score;
 } options = {
     .command = attr_cmd_query,
@@ -111,6 +113,14 @@ struct {
 };
 
 #define INDENT "                               "
+
+static gboolean
+list_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+        GError **error) {
+    options.command = attr_cmd_list;
+    pcmk__str_update(&options.opt_list, optarg);
+    return TRUE;
+}
 
 static gboolean
 delete_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
@@ -223,6 +233,12 @@ static GOptionEntry selecting_entries[] = {
 };
 
 static GOptionEntry command_entries[] = {
+    { "list-options", 'L', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, list_cb,
+      "List all available options of the given type.\n"
+      INDENT "Allowed values: " PCMK__VALUE_CLUSTER,
+      "TYPE"
+    },
+
     { "delete", 'D', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, delete_cb,
       "Delete the attribute/option",
       NULL
@@ -391,6 +407,22 @@ delete_attr_on_node(xmlNode *child, void *userdata)
     }
 
     return rc;
+}
+
+static void
+command_list(pcmk__output_t *out)
+{
+    if (pcmk__str_eq(options.opt_list, PCMK__VALUE_CLUSTER, pcmk__str_none)) {
+        exit_code = pcmk_rc2exitc(pcmk__list_cluster_options(out));
+
+    } else {
+        // @TODO Improve usage messages to reduce duplication
+        exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                    "Invalid --list-options value '%s'. Allowed values: "
+                    PCMK__VALUE_CLUSTER,
+                    pcmk__s(options.opt_list, "(BUG: none)"));
+    }
 }
 
 static int
@@ -750,6 +782,11 @@ main(int argc, char **argv)
     }
 
     out->quiet = args->quiet;
+
+    if (options.command == attr_cmd_list) {
+        command_list(out);
+        goto done;
+    }
 
     if (options.promotion_score && options.attr_name == NULL) {
         exit_code = CRM_EX_USAGE;
