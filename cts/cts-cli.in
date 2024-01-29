@@ -812,6 +812,22 @@ function test_tools() {
     cmd="cibadmin -Q"
     test_assert $CRM_EX_OK
 
+    desc="List all available cluster options"
+    cmd="crm_attribute --list-options=cluster"
+    test_assert $CRM_EX_OK 0
+
+    desc="List all available cluster options (XML)"
+    cmd="crm_attribute --list-options=cluster --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="List all available options (invalid value)"
+    cmd="crm_attribute --list-options=asdf"
+    test_assert $CRM_EX_USAGE 0
+
+    desc="List all available cluster options (invalid value) (XML)"
+    cmd="crm_attribute --list-options=asdf --output-as=xml"
+    test_assert_validate $CRM_EX_USAGE 0
+
     desc="Query the value of an attribute that does not exist"
     cmd="crm_attribute -n ABCD --query --quiet"
     test_assert $CRM_EX_NOSUCH 0
@@ -3354,6 +3370,7 @@ for t in $tests; do
         -e 's/last_change time=\".*\"/last_change time=\"\"/' \
         -e 's/ api-version="[^"]*"/ api-version="X"/' \
         -e 's/ default="[^"]*"/ default=""/' \
+        -e 's/\(\* Possible values.*: .*\)(default: [^)]*)/\1(default: )/g' \
         -e 's/ version="[^"]*"/ version=""/' \
         -e 's/request=\".*\(crm_[a-zA-Z0-9]*\)/request=\"\1/' \
         -e 's/crm_feature_set="[^"]*" //'\
