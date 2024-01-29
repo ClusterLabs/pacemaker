@@ -766,8 +766,23 @@ main(int argc, char **argv)
         const char *target = pcmk__node_attr_target(options.dest_uname);
 
         if (target != NULL) {
-            g_free(options.dest_uname);
-            options.dest_uname = g_strdup(target);
+            /* If options.dest_uname is "auto" or "localhost", then
+             * pcmk__node_attr_target() may return it, depending on environment
+             * variables. In that case, attribute lookups will fail for "auto"
+             * (unless there's a node named "auto"). attrd maps "localhost" to
+             * the true local node name for queries.
+             *
+             * @TODO
+             * * Investigate whether "localhost" is mapped to a real node name
+             *   for non-query commands. If not, possibly modify it so that it
+             *   is.
+             * * Map "auto" to "localhost" (probably).
+             */
+            if (target != (const char *) options.dest_uname) {
+                g_free(options.dest_uname);
+                options.dest_uname = g_strdup(target);
+            }
+
         } else if (getenv("CIB_file") != NULL && options.dest_uname == NULL) {
             get_node_name_from_local();
         }
