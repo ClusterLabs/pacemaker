@@ -110,18 +110,19 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
         }
     }
 
-    g_string_append(xpath, "//" PCMK_XE_NVPAIR "[");
-    if (attr_id != NULL) {
-        pcmk__g_strcat(xpath, "@" PCMK_XA_ID "=\"", attr_id, "\"", NULL);
-    }
+    g_string_append(xpath, "//" PCMK_XE_NVPAIR);
 
-    if (attr_name != NULL) {
-        if (attr_id != NULL) {
-            g_string_append(xpath, " and ");
-        }
-        pcmk__g_strcat(xpath, "@" PCMK_XA_NAME "=\"", attr_name, "\"", NULL);
+    if (attr_id != NULL && attr_name!= NULL) {
+        pcmk__g_strcat(xpath,
+                       "[@" PCMK_XA_ID "='", attr_id, "' "
+                       "and @" PCMK_XA_NAME "='", attr_name, "']", NULL);
+
+    } else if (attr_id != NULL) {
+        pcmk__g_strcat(xpath, "[@" PCMK_XA_ID "='", attr_id, "']", NULL);
+
+    } else if (attr_name != NULL) {
+        pcmk__g_strcat(xpath, "[@" PCMK_XA_NAME "='", attr_name, "']", NULL);
     }
-    g_string_append_c(xpath, ']');
 
     rc = the_cib->cmds->query(the_cib, (const char *) xpath->str, &xml_search,
                               cib_sync_call | cib_scope_local | cib_xpath);
