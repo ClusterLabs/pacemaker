@@ -1,5 +1,5 @@
 #
-# Copyright 2003-2023 the Pacemaker project contributors
+# Copyright 2003-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -21,8 +21,7 @@ MKDIR_P                 ?= mkdir -p
 include $(top_srcdir)/mk/common.mk
 include $(top_srcdir)/mk/release.mk
 
-EXTRA_DIST		= pacemaker.spec.in	\
-			  rpmlintrc
+EXTRA_DIST		= pacemaker.spec.in
 
 # Extra options to pass to rpmbuild (this can be used to override the location
 # options this file normally passes, or to override macros used by the spec)
@@ -190,10 +189,6 @@ rpm:	srpm
 .PHONY: rpm-clean
 rpm-clean: spec-clean srpm-clean
 	-if [ -n "$(RPM_CLEAN)" ]; then rm -rf $(RPM_CLEAN); fi
-
-.PHONY: rpmlint
-rpmlint: $(RPM_SPEC_DIR)/$(PACKAGE).spec
-	rpmlint -f rpmlintrc "$<"
 
 .PHONY: rpm-dep
 rpm-dep: $(RPM_SPEC_DIR)/$(PACKAGE).spec
