@@ -1507,21 +1507,20 @@ static void
 dump_xml_text(const xmlNode *data, uint32_t options, GString *buffer,
               int depth)
 {
-    /* @COMPAT: Remove when log_data_element() is removed. There are no internal
-     * code paths to this, except through the deprecated log_data_element().
-     */
     bool pretty = pcmk_is_set(options, pcmk__xml_fmt_pretty);
     int spaces = pretty? (2 * depth) : 0;
+    char *content = pcmk__xml_escape((const char *) data->content, false);
 
     for (int lpc = 0; lpc < spaces; lpc++) {
         g_string_append_c(buffer, ' ');
     }
 
-    g_string_append(buffer, (const gchar *) data->content);
+    g_string_append(buffer, content);
 
     if (pretty) {
         g_string_append_c(buffer, '\n');
     }
+    free(content);
 }
 
 /*!
