@@ -1,5 +1,5 @@
 #
-# Copyright 2006-2023 the Pacemaker project contributors
+# Copyright 2006-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -19,4 +19,5 @@ header_HEADERS		= common.h 		\
 			  status.h 		\
 			  common_compat.h	\
 			  pe_types_compat.h	\
-			  rules_compat.h
+			  rules_compat.h	\
+			  status_compat.h

@@ -2043,7 +2043,7 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
     gboolean skip_inactive = FALSE;
 
     CRM_ASSERT(parent != NULL);
-    CRM_ASSERT(pe_rsc_is_clone(parent));
+    CRM_ASSERT(pcmk__is_clone(parent));
     CRM_ASSERT(!pcmk_is_set(parent->flags, pcmk_rsc_unique));
 
     // Check for active (or partially active, for cloned groups) instance
@@ -2199,9 +2199,9 @@ unpack_find_resource(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
         parent = uber_parent(rsc);
     }
 
-    if (pe_rsc_is_anon_clone(parent)) {
+    if (pcmk__is_anonymous_clone(parent)) {
 
-        if (pe_rsc_is_bundled(parent)) {
+        if (pcmk__is_bundled(parent)) {
             rsc = pe__find_bundle_replica(parent->parent, node);
         } else {
             char *base = clone_strip(rsc_id);
@@ -2399,7 +2399,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
 
         case pcmk_on_fail_restart_container:
             pcmk__set_rsc_flags(rsc, pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
-            if (rsc->container && pe_rsc_is_bundled(rsc)) {
+            if ((rsc->container != NULL) && pcmk__is_bundled(rsc)) {
                 /* A bundle's remote connection can run on a different node than
                  * the bundle's container. We don't necessarily know where the
                  * container is running yet, so remember it and add a stop
@@ -3634,7 +3634,7 @@ ban_from_all_nodes(pcmk_resource_t *rsc)
     if (fail_rsc->parent != NULL) {
         pcmk_resource_t *parent = uber_parent(fail_rsc);
 
-        if (pe_rsc_is_anon_clone(parent)) {
+        if (pcmk__is_anonymous_clone(parent)) {
             /* For anonymous clones, if an operation with
              * PCMK_META_ON_FAIL=PCMK_VALUE_STOP fails for any instance, the
              * entire clone must stop.
@@ -3907,7 +3907,7 @@ remap_operation(struct action_history *history,
         }
     }
 
-    if (!pe_rsc_is_bundled(history->rsc)
+    if (!pcmk__is_bundled(history->rsc)
         && pcmk_xe_mask_probe_failure(history->xml)
         && ((history->execution_status != PCMK_EXEC_DONE)
             || (history->exit_status != PCMK_OCF_NOT_RUNNING))) {
@@ -4370,7 +4370,7 @@ update_resource_state(struct action_history *history, int exit_status,
     bool clear_past_failure = false;
 
     if ((exit_status == PCMK_OCF_NOT_INSTALLED)
-        || (!pe_rsc_is_bundled(history->rsc)
+        || (!pcmk__is_bundled(history->rsc)
             && pcmk_xe_mask_probe_failure(history->xml))) {
         history->rsc->role = pcmk_role_stopped;
 
@@ -4558,7 +4558,7 @@ unpack_action_result(struct action_history *history)
 static int
 process_expired_result(struct action_history *history, int orig_exit_status)
 {
-    if (!pe_rsc_is_bundled(history->rsc)
+    if (!pcmk__is_bundled(history->rsc)
         && pcmk_xe_mask_probe_failure(history->xml)
         && (orig_exit_status != history->expected_exit_status)) {
 
@@ -4831,7 +4831,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
         goto done;
     }
 
-    if (!pe_rsc_is_bundled(rsc) && pcmk_xe_mask_probe_failure(xml_op)) {
+    if (!pcmk__is_bundled(rsc) && pcmk_xe_mask_probe_failure(xml_op)) {
         mask_probe_failure(&history, old_rc, *last_failure, on_fail);
         goto done;
     }

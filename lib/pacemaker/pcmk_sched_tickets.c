@@ -330,7 +330,7 @@ unpack_simple_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
                          "does not exist", id, rsc_id);
         return;
 
-    } else if ((instance != NULL) && !pe_rsc_is_clone(rsc)) {
+    } else if ((instance != NULL) && !pcmk__is_clone(rsc)) {
         pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
                          "is not a clone but instance '%s' was requested",
                          id, rsc_id, instance);

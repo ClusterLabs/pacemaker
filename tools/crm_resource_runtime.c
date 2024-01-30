@@ -47,11 +47,11 @@ cli_resource_search(pcmk_resource_t *rsc, const char *requested_name,
     GList *retval = NULL;
     const pcmk_resource_t *parent = pe__const_top_resource(rsc, false);
 
-    if (pe_rsc_is_clone(rsc)) {
+    if (pcmk__is_clone(rsc)) {
         retval = build_node_info_list(rsc);
 
     /* The anonymous clone children's common ID is supplied */
-    } else if (pe_rsc_is_clone(parent)
+    } else if (pcmk__is_clone(parent)
                && !pcmk_is_set(rsc->flags, pcmk_rsc_unique)
                && rsc->clone_name
                && pcmk__str_eq(requested_name, rsc->clone_name, pcmk__str_casei)
@@ -1470,14 +1470,14 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
     /* If the implicit resource or primitive resource of a bundle is given, operate on the
      * bundle itself instead.
      */
-    if (pe_rsc_is_bundled(rsc)) {
+    if (pcmk__is_bundled(rsc)) {
         rsc = parent->parent;
     }
 
     running = resource_is_running_on(rsc, host);
 
-    if (pe_rsc_is_clone(parent) && !running) {
-        if (pe_rsc_is_unique_clone(parent)) {
+    if (pcmk__is_clone(parent) && !running) {
+        if (pcmk__is_unique_clone(parent)) {
             lookup_id = strdup(rsc->id);
         } else {
             lookup_id = clone_strip(rsc->id);
@@ -1506,16 +1506,16 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
 
     rsc_id = strdup(rsc->id);
 
-    if (pe_rsc_is_unique_clone(parent)) {
+    if (pcmk__is_unique_clone(parent)) {
         lookup_id = strdup(rsc->id);
     } else {
         lookup_id = clone_strip(rsc->id);
     }
 
     if (host) {
-        if (pe_rsc_is_clone(rsc) || pe_bundle_replicas(rsc)) {
+        if (pcmk__is_clone(rsc) || pe_bundle_replicas(rsc)) {
             stop_via_ban = true;
-        } else if (pe_rsc_is_clone(parent)) {
+        } else if (pcmk__is_clone(parent)) {
             stop_via_ban = true;
             free(lookup_id);
             lookup_id = strdup(parent->id);
@@ -2095,7 +2095,7 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
 
     if (pcmk__strcase_any_of(rsc_action, "force-start", "force-demote",
                                     "force-promote", NULL)) {
-        if(pe_rsc_is_clone(rsc)) {
+        if (pcmk__is_clone(rsc)) {
             GList *nodes = cli_resource_search(rsc, requested_name, scheduler);
             if(nodes != NULL && force == FALSE) {
                 out->err(out, "It is not safe to %s %s here: the cluster claims it is already active",
@@ -2111,7 +2111,7 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
         }
     }
 
-    if(pe_rsc_is_clone(rsc)) {
+    if (pcmk__is_clone(rsc)) {
         /* Grab the first child resource in the hope it's not a group */
         rsc = rsc->children->data;
     }
@@ -2119,7 +2119,7 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
     if (rsc->variant == pcmk_rsc_variant_group) {
         out->err(out, "Sorry, the %s option doesn't support group resources", rsc_action);
         return CRM_EX_UNIMPLEMENT_FEATURE;
-    } else if (pe_rsc_is_bundled(rsc)) {
+    } else if (pcmk__is_bundled(rsc)) {
         out->err(out, "Sorry, the %s option doesn't support bundled resources", rsc_action);
         return CRM_EX_UNIMPLEMENT_FEATURE;
     }
@@ -2136,7 +2136,7 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
                                                scheduler);
     }
 
-    rid = pe_rsc_is_anon_clone(rsc->parent)? requested_name : rsc->id;
+    rid = pcmk__is_anonymous_clone(rsc->parent)? requested_name : rsc->id;
 
     exit_code = cli_resource_execute_from_params(out, rid, rclass, rprov, rtype, rsc_action,
                                                  params, override_hash, timeout_ms,
@@ -2203,7 +2203,7 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
     }
 
     if (count > 1) {
-        if (pe_rsc_is_clone(rsc)) {
+        if (pcmk__is_clone(rsc)) {
             current = NULL;
         } else {
             return pcmk_rc_multiple;

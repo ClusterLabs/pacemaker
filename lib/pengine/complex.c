@@ -775,7 +775,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         pcmk__set_rsc_flags(*rsc, pcmk_rsc_maintenance);
     }
 
-    if (pe_rsc_is_clone(pe__const_top_resource(*rsc, false))) {
+    if (pcmk__is_clone(pe__const_top_resource(*rsc, false))) {
         value = g_hash_table_lookup((*rsc)->meta, PCMK_META_GLOBALLY_UNIQUE);
         if (crm_is_true(value)) {
             pcmk__set_rsc_flags(*rsc, pcmk_rsc_unique);

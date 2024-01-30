@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2023 the Pacemaker project contributors
+ * Copyright 2017-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -26,6 +26,26 @@ typedef struct {
     pcmk_resource_t *container; //!< Container associated with this instance
     pcmk_resource_t *remote;    //!< Pacemaker Remote connection into container
 } pcmk__bundle_replica_t;
+
+/*!
+ * \internal
+ * \brief Check whether a resource is part of a bundle
+ *
+ * \param[in] rsc  Resource to check
+ *
+ * \return true if \p rsc is part of a bundle, otherwise false
+ */
+static inline bool
+pcmk__is_bundled(const pcmk_resource_t *rsc)
+{
+    if (rsc == NULL) {
+        return false;
+    }
+    while (rsc->parent != NULL) {
+        rsc = rsc->parent;
+    }
+    return rsc->variant == pcmk_rsc_variant_bundle;
+}
 
 #ifdef __cplusplus
 }

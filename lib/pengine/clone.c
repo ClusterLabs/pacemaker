@@ -210,7 +210,7 @@ void
 pe__force_anon(const char *standard, pcmk_resource_t *rsc, const char *rid,
                pcmk_scheduler_t *scheduler)
 {
-    if (pe_rsc_is_clone(rsc)) {
+    if (pcmk__is_clone(rsc)) {
         clone_variant_data_t *clone_data = rsc->variant_opaque;
 
         pcmk__config_warn("Ignoring " PCMK_META_GLOBALLY_UNIQUE " for %s "
@@ -1261,7 +1261,7 @@ bool
 pe__is_universal_clone(const pcmk_resource_t *rsc,
                        const pcmk_scheduler_t *scheduler)
 {
-    if (pe_rsc_is_clone(rsc)) {
+    if (pcmk__is_clone(rsc)) {
         clone_variant_data_t *clone_data = rsc->variant_opaque;
 
         if (clone_data->clone_max == g_list_length(scheduler->nodes)) {

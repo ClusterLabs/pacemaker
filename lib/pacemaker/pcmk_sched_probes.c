@@ -262,7 +262,7 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
      * just the instance. Otherwise, the start or reload is for the resource
      * itself.
      */
-    if (!pe_rsc_is_clone(top)) {
+    if (!pcmk__is_clone(top)) {
         top = rsc;
     }
 
@@ -817,8 +817,8 @@ order_then_probes(pcmk_scheduler_t *scheduler)
                 crm_trace("Same parent %s for %s", first_rsc->id, start->uuid);
                 continue;
 
-            } else if (!pe_rsc_is_clone(pe__const_top_resource(first_rsc,
-                                                               false))) {
+            } else if (!pcmk__is_clone(pe__const_top_resource(first_rsc,
+                                                              false))) {
                 crm_trace("Not a clone %s for %s", first_rsc->id, start->uuid);
                 continue;
             }

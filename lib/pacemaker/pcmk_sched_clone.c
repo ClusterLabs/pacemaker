@@ -39,7 +39,7 @@ pcmk__clone_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
 {
     GList *colocations = NULL;
 
-    CRM_ASSERT(pe_rsc_is_clone(rsc));
+    CRM_ASSERT(pcmk__is_clone(rsc));
 
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_unassigned)) {
         return NULL; // Assignment has already been done
@@ -100,7 +100,7 @@ pcmk__clone_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
 void
 pcmk__clone_create_actions(pcmk_resource_t *rsc)
 {
-    CRM_ASSERT(pe_rsc_is_clone(rsc));
+    CRM_ASSERT(pcmk__is_clone(rsc));
 
     pcmk__rsc_trace(rsc, "Creating actions for clone %s", rsc->id);
     pcmk__create_instance_actions(rsc, rsc->children);
@@ -120,7 +120,7 @@ pcmk__clone_internal_constraints(pcmk_resource_t *rsc)
 {
     bool ordered = false;
 
-    CRM_ASSERT(pe_rsc_is_clone(rsc));
+    CRM_ASSERT(pcmk__is_clone(rsc));
 
     pcmk__rsc_trace(rsc, "Creating internal constraints for clone %s", rsc->id);
 
@@ -255,7 +255,7 @@ pcmk__clone_apply_coloc_score(pcmk_resource_t *dependent,
      */
     CRM_ASSERT(!for_dependent);
 
-    CRM_ASSERT((colocation != NULL) && pe_rsc_is_clone(primary)
+    CRM_ASSERT((colocation != NULL) && pcmk__is_clone(primary)
                && (dependent != NULL)
                && (dependent->variant == pcmk_rsc_variant_primitive));
 
@@ -390,7 +390,7 @@ pcmk__clone_with_colocations(const pcmk_resource_t *rsc,
 uint32_t
 pcmk__clone_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
 {
-    CRM_ASSERT((action != NULL) && pe_rsc_is_clone(action->rsc));
+    CRM_ASSERT((action != NULL) && pcmk__is_clone(action->rsc));
 
     return pcmk__collective_action_flags(action, action->rsc->children, node);
 }
@@ -405,7 +405,7 @@ pcmk__clone_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
 void
 pcmk__clone_apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
 {
-    CRM_CHECK((location != NULL) && pe_rsc_is_clone(rsc), return);
+    CRM_CHECK((location != NULL) && pcmk__is_clone(rsc), return);
 
     pcmk__apply_location(rsc, location);
 
@@ -434,7 +434,7 @@ call_action_flags(gpointer data, gpointer user_data)
 void
 pcmk__clone_add_actions_to_graph(pcmk_resource_t *rsc)
 {
-    CRM_ASSERT(pe_rsc_is_clone(rsc));
+    CRM_ASSERT(pcmk__is_clone(rsc));
 
     g_list_foreach(rsc->actions, call_action_flags, rsc);
     pe__create_clone_notifications(rsc);
@@ -558,7 +558,7 @@ probe_anonymous_clone(pcmk_resource_t *clone, pcmk_node_t *node)
 bool
 pcmk__clone_create_probe(pcmk_resource_t *rsc, pcmk_node_t *node)
 {
-    CRM_ASSERT((node != NULL) && pe_rsc_is_clone(rsc));
+    CRM_ASSERT((node != NULL) && pcmk__is_clone(rsc));
 
     if (rsc->exclusive_discover) {
         /* The clone is configured to be probed only where a location constraint
@@ -610,7 +610,7 @@ pcmk__clone_add_graph_meta(const pcmk_resource_t *rsc, xmlNode *xml)
 {
     char *name = NULL;
 
-    CRM_ASSERT(pe_rsc_is_clone(rsc) && (xml != NULL));
+    CRM_ASSERT(pcmk__is_clone(rsc) && (xml != NULL));
 
     name = crm_meta_name(PCMK_META_GLOBALLY_UNIQUE);
     crm_xml_add(xml, name, pcmk__flag_text(rsc->flags, pcmk_rsc_unique));
@@ -662,7 +662,7 @@ pcmk__clone_add_utilization(const pcmk_resource_t *rsc,
     bool existing = false;
     pcmk_resource_t *child = NULL;
 
-    CRM_ASSERT(pe_rsc_is_clone(rsc) && (orig_rsc != NULL)
+    CRM_ASSERT(pcmk__is_clone(rsc) && (orig_rsc != NULL)
                && (utilization != NULL));
 
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_unassigned)) {
@@ -704,6 +704,6 @@ pcmk__clone_add_utilization(const pcmk_resource_t *rsc,
 void
 pcmk__clone_shutdown_lock(pcmk_resource_t *rsc)
 {
-    CRM_ASSERT(pe_rsc_is_clone(rsc));
+    CRM_ASSERT(pcmk__is_clone(rsc));
     return; // Clones currently don't support shutdown locks
 }

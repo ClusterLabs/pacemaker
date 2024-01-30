@@ -732,7 +732,7 @@ should_add_input_to_graph(const pcmk_action_t *action,
                && pcmk_is_set(input->action->rsc->flags, pcmk_rsc_failed)
                && !pcmk_is_set(input->action->rsc->flags, pcmk_rsc_managed)
                && pcmk__ends_with(input->action->uuid, "_stop_0")
-               && action->rsc && pe_rsc_is_clone(action->rsc)) {
+               && pcmk__is_clone(action->rsc)) {
         crm_warn("Ignoring requirement that %s complete before %s:"
                  " unmanaged failed resources cannot prevent clone shutdown",
                  input->action->uuid, action->uuid);

@@ -44,7 +44,7 @@ action_flags_for_ordering(pcmk_action_t *action, const pcmk_node_t *node)
      * specified.
      */
     flags = action->rsc->cmds->action_flags(action, NULL);
-    if ((node == NULL) || !pe_rsc_is_clone(action->rsc)) {
+    if ((node == NULL) || !pcmk__is_clone(action->rsc)) {
         return flags;
     }
 
@@ -142,7 +142,7 @@ action_uuid_for_ordering(const char *first_uuid,
          * relative to when notifications have been sent for the remapped task.
          */
         if (pcmk_is_set(first_rsc->flags, pcmk_rsc_notify)
-            && (pe_rsc_is_clone(first_rsc) || pe_rsc_is_bundled(first_rsc))) {
+            && (pcmk__is_clone(first_rsc) || pcmk__is_bundled(first_rsc))) {
             uuid = pcmk__notify_key(rid, "confirmed-post",
                                     task2text(remapped_task));
         } else {
@@ -1757,7 +1757,7 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
     GList *sorted_op_list = NULL;
 
     if (pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
-        if (pe_rsc_is_anon_clone(pe__const_top_resource(rsc, false))) {
+        if (pcmk__is_anonymous_clone(pe__const_top_resource(rsc, false))) {
             pcmk__rsc_trace(rsc,
                             "Skipping configuration check "
                             "for orphaned clone instance %s",

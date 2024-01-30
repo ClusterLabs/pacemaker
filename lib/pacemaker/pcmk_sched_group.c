@@ -659,7 +659,7 @@ pcmk__group_colocated_resources(const pcmk_resource_t *rsc,
     }
 
     if (pe__group_flag_is_set(rsc, pcmk__group_colocated)
-        || pe_rsc_is_clone(rsc->parent)) {
+        || pcmk__is_clone(rsc->parent)) {
         /* This group has colocated members and/or is cloned -- either way,
          * add every child's colocated resources to the list. The first and last
          * members will include the group's own colocations.
@@ -913,7 +913,7 @@ pcmk__group_add_utilization(const pcmk_resource_t *rsc,
     pcmk__rsc_trace(orig_rsc, "%s: Adding group %s as colocated utilization",
                     orig_rsc->id, rsc->id);
     if (pe__group_flag_is_set(rsc, pcmk__group_colocated)
-        || pe_rsc_is_clone(rsc->parent)) {
+        || pcmk__is_clone(rsc->parent)) {
         // Every group member will be on same node, so sum all members
         for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
             member = (pcmk_resource_t *) iter->data;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -32,7 +32,7 @@ rsc_is_known_on(const pcmk_resource_t *rsc, const pcmk_node_t *node)
        return TRUE;
 
    } else if ((rsc->variant == pcmk_rsc_variant_primitive)
-              && pe_rsc_is_anon_clone(rsc->parent)
+              && pcmk__is_anonymous_clone(rsc->parent)
               && (g_hash_table_lookup(rsc->parent->known_on,
                                       node->details->id) != NULL)) {
        /* We check only the parent, not the uber-parent, because we cannot
@@ -158,7 +158,7 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
              * cluster and thus immune to that check (and is irrelevant if
              * target is not a guest).
              */
-            if (!pe_rsc_is_bundled(rsc)) {
+            if (!pcmk__is_bundled(rsc)) {
                 order_actions(stonith_op, action, pcmk__ar_guest_allowed);
             }
             order_actions(stonith_op, parent_stop, pcmk__ar_guest_allowed);
@@ -232,7 +232,7 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
             pcmk__set_action_flags(action,
                                    pcmk_action_pseudo|pcmk_action_runnable);
 
-            if (pe_rsc_is_bundled(rsc)) {
+            if (pcmk__is_bundled(rsc)) {
                 // Recovery will be ordered as usual after parent's implied stop
 
             } else if (order_implicit) {
