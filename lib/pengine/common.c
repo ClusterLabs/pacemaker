@@ -21,41 +21,7 @@
 const char *
 fail2text(enum action_fail_response fail)
 {
-    const char *result = "<unknown>";
-
-    switch (fail) {
-        case pcmk_on_fail_ignore:
-            result = "ignore";
-            break;
-        case pcmk_on_fail_demote:
-            result = "demote";
-            break;
-        case pcmk_on_fail_block:
-            result = "block";
-            break;
-        case pcmk_on_fail_restart:
-            result = "recover";
-            break;
-        case pcmk_on_fail_ban:
-            result = "migrate";
-            break;
-        case pcmk_on_fail_stop:
-            result = "stop";
-            break;
-        case pcmk_on_fail_fence_node:
-            result = "fence";
-            break;
-        case pcmk_on_fail_standby_node:
-            result = "standby";
-            break;
-        case pcmk_on_fail_restart_container:
-            result = "restart-container";
-            break;
-        case pcmk_on_fail_reset_remote:
-            result = "reset-remote";
-            break;
-    }
-    return result;
+    return pcmk_on_fail_text(fail);
 }
 
 void

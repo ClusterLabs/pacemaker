@@ -138,6 +138,50 @@ pcmk_parse_action(const char *action_name)
 }
 
 /*!
+ * \brief Get string equivalent of a failure handling type
+ *
+ * \param[in] on_fail  Failure handling type
+ *
+ * \return Static string describing \p on_fail
+ */
+const char *
+pcmk_on_fail_text(enum action_fail_response on_fail)
+{
+    switch (on_fail) {
+        case pcmk_on_fail_ignore:
+            return "ignore";
+
+        case pcmk_on_fail_demote:
+            return "demote";
+
+        case pcmk_on_fail_block:
+            return "block";
+
+        case pcmk_on_fail_restart:
+            return "recover";
+
+        case pcmk_on_fail_ban:
+            return "migrate";
+
+        case pcmk_on_fail_stop:
+            return "stop";
+
+        case pcmk_on_fail_fence_node:
+            return "fence";
+
+        case pcmk_on_fail_standby_node:
+            return "standby";
+
+        case pcmk_on_fail_restart_container:
+            return "restart-container";
+
+        case pcmk_on_fail_reset_remote:
+            return "reset-remote";
+    }
+    return "<unknown>";
+}
+
+/*!
  * \brief Generate an operation key (RESOURCE_ACTION_INTERVAL)
  *
  * \param[in] rsc_id       ID of resource being operated on
