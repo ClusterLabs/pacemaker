@@ -162,10 +162,9 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
 static void
 find_matching_attr_resources_recursive(pcmk__output_t *out,
                                        GList /* <pcmk_resource_t*> */ **result,
-                                       pcmk_resource_t *rsc, const char *rsc_id,
-                                       const char * attr_set, const char * attr_set_type,
-                                       const char * attr_id, const char * attr_name,
-                                       cib_t * cib, const char * cmd, int depth)
+                                       pcmk_resource_t *rsc, const char * attr_set,
+                                       const char * attr_set_type, const char * attr_id,
+                                       const char * attr_name, cib_t * cib, int depth)
 {
     int rc = pcmk_rc_ok;
     char *lookup_id = clone_strip(rsc->id);
@@ -174,8 +173,8 @@ find_matching_attr_resources_recursive(pcmk__output_t *out,
     for(GList *gIter = rsc->children; gIter; gIter = gIter->next) {
         find_matching_attr_resources_recursive(out, result,
                                                (pcmk_resource_t *) gIter->data,
-                                               rsc_id, attr_set, attr_set_type,
-                                               attr_id, attr_name, cib, cmd, depth+1);
+                                               attr_set, attr_set_type, attr_id,
+                                               attr_name, cib, depth+1);
         /* do it only once for clones */
         if (rsc->variant == pcmk_rsc_variant_clone) {
             break;
@@ -245,9 +244,9 @@ find_matching_attr_resources(pcmk__output_t *out, pcmk_resource_t *rsc,
         return g_list_append(result, rsc);
     }
     /* If the resource is a group ==> children inherit the attribute if defined. */
-    find_matching_attr_resources_recursive(out, &result, rsc, rsc_id, attr_set,
+    find_matching_attr_resources_recursive(out, &result, rsc, attr_set,
                                            attr_set_type, attr_id, attr_name,
-                                           cib, cmd, 0);
+                                           cib, 0);
     return result;
 }
 
