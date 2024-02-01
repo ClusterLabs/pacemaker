@@ -89,7 +89,7 @@ pcmk_readable_score(int score)
     static char score_s[sizeof(CRM_MINUS_INFINITY_S)];
 
     if (score >= CRM_SCORE_INFINITY) {
-        strcpy(score_s, CRM_INFINITY_S);
+        strcpy(score_s, PCMK_VALUE_INFINITY);
 
     } else if (score <= -CRM_SCORE_INFINITY) {
         strcpy(score_s, CRM_MINUS_INFINITY_S);

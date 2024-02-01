@@ -463,7 +463,7 @@ pcmk_hostname(void)
 
 bool
 pcmk_str_is_infinity(const char *s) {
-    return pcmk__str_any_of(s, CRM_INFINITY_S, CRM_PLUS_INFINITY_S, NULL);
+    return pcmk__str_any_of(s, PCMK_VALUE_INFINITY, CRM_PLUS_INFINITY_S, NULL);
 }
 
 bool

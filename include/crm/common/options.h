@@ -155,6 +155,7 @@ extern     "C" {
 #define PCMK_VALUE_GTE                          "gte"
 #define PCMK_VALUE_HOST                         "host"
 #define PCMK_VALUE_IGNORE                       "ignore"
+#define PCMK_VALUE_INFINITY                     "INFINITY"
 #define PCMK_VALUE_INTEGER                      "integer"
 #define PCMK_VALUE_LITERAL                      "literal"
 #define PCMK_VALUE_LT                           "lt"

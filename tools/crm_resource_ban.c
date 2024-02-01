@@ -175,14 +175,14 @@ cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
     if (later_s == NULL) {
         /* Short form */
         crm_xml_add(location, PCMK_XE_NODE, host);
-        crm_xml_add(location, PCMK_XA_SCORE, CRM_INFINITY_S);
+        crm_xml_add(location, PCMK_XA_SCORE, PCMK_VALUE_INFINITY);
 
     } else {
         xmlNode *rule = create_xml_node(location, PCMK_XE_RULE);
         xmlNode *expr = create_xml_node(rule, PCMK_XE_EXPRESSION);
 
         crm_xml_set_id(rule, "cli-prefer-rule-%s", rsc_id);
-        crm_xml_add(rule, PCMK_XA_SCORE, CRM_INFINITY_S);
+        crm_xml_add(rule, PCMK_XA_SCORE, PCMK_VALUE_INFINITY);
         crm_xml_add(rule, PCMK_XA_BOOLEAN_OP, PCMK_VALUE_AND);
 
         crm_xml_set_id(expr, "cli-prefer-expr-%s", rsc_id);

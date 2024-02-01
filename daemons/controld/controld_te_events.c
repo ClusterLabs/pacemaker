@@ -211,12 +211,12 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
     } else if (pcmk__str_eq(task, PCMK_ACTION_START, pcmk__str_none)) {
         do_update = TRUE;
         value = pcmk__s(controld_globals.transition_graph->failed_start_offset,
-                        CRM_INFINITY_S);
+                        PCMK_VALUE_INFINITY);
 
     } else if (pcmk__str_eq(task, PCMK_ACTION_STOP, pcmk__str_none)) {
         do_update = TRUE;
         value = pcmk__s(controld_globals.transition_graph->failed_stop_offset,
-                        CRM_INFINITY_S);
+                        PCMK_VALUE_INFINITY);
     }
 
     if (do_update) {
