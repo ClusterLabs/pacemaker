@@ -14,13 +14,6 @@
 #include <glib.h>
 
 bool
-pe__resource_is_remote_conn(const pcmk_resource_t *rsc)
-{
-    return (rsc != NULL) && rsc->is_remote_node
-           && pcmk__is_remote_node(pe_find_node(rsc->cluster->nodes, rsc->id));
-}
-
-bool
 pe__is_guest_node(const pcmk_node_t *node)
 {
     return (node != NULL) && (node->details->type == pcmk_node_variant_remote)

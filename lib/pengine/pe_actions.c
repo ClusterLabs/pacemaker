@@ -965,7 +965,8 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
      * failures that don't are probes and starts. The user can explicitly set
      * PCMK_META_ON_FAIL=PCMK_VALUE_FENCE to fence after start failures.
      */
-    if (pe__resource_is_remote_conn(rsc)
+    if (rsc->is_remote_node
+        && pcmk__is_remote_node(pe_find_node(rsc->cluster->nodes, rsc->id))
         && !pcmk_is_probe(action_name, interval_ms)
         && !pcmk__str_eq(action_name, PCMK_ACTION_START, pcmk__str_none)) {
         needs_remote_reset = true;
