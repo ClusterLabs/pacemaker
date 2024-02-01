@@ -22,6 +22,7 @@
 #  include <crm/common/actions.h>
 #  include <crm/common/agents.h>
 #  include <crm/common/results.h>
+#  include <crm/common/scores.h>
 #  include <crm/common/nvpair.h>
 
 #ifdef __cplusplus
@@ -39,11 +40,6 @@ char *pcmk_promotion_score_name(const char *rsc_id);
 
 /* public Pacemaker Remote functions (from remote.c) */
 int crm_default_remote_port(void);
-
-/* public score-related functions (from scores.c) */
-const char *pcmk_readable_score(int score);
-int char2score(const char *score);
-int pcmk__add_scores(int score1, int score2);
 
 /* public string functions (from strings.c) */
 gboolean crm_is_true(const char *s);
