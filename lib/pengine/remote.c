@@ -13,13 +13,6 @@
 #include <crm/pengine/internal.h>
 #include <glib.h>
 
-bool
-pe__is_bundle_node(const pcmk_node_t *node)
-{
-    return pcmk__is_guest_or_bundle_node(node)
-           && pcmk__is_bundled(node->details->remote_rsc);
-}
-
 /*!
  * \internal
  * \brief Check whether a resource creates a guest node

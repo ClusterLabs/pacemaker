@@ -395,7 +395,7 @@ match_replica_container(const pcmk__bundle_replica_t *replica, void *user_data)
 static const pcmk_node_t *
 get_bundle_node_host(const pcmk_node_t *node)
 {
-    if (pe__is_bundle_node(node)) {
+    if (pcmk__is_bundle_node(node)) {
         const pcmk_resource_t *container = node->details->remote_rsc->container;
 
         return container->fns->location(container, NULL, 0);

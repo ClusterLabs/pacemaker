@@ -512,7 +512,7 @@ pcmk__colocation_node_attr(const pcmk_node_t *node, const char *attr,
                            const pcmk_resource_t *rsc)
 {
     const pcmk_resource_t *top = pe__const_top_resource(rsc, false);
-    const bool force_host = pe__is_bundle_node(node) && pcmk__is_bundled(rsc)
+    const bool force_host = pcmk__is_bundle_node(node) && pcmk__is_bundled(rsc)
                             && (top == pe__bundled_resource(rsc));
 
     return pe__node_attribute_calculated(node, attr, rsc,
