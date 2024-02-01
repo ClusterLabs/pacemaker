@@ -583,7 +583,7 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
                 cib_only = true;
             }
         }
-        if (!cib_only && pe__is_guest_or_remote_node(node)) {
+        if (!cib_only && pcmk__is_pacemaker_remote_node(node)) {
             node = pcmk__current_node(node->details->remote_rsc);
             if (node == NULL) {
                 out->err(out, "No cluster connection to Pacemaker Remote node %s detected",
@@ -753,7 +753,7 @@ clear_rsc_fail_attrs(const pcmk_resource_t *rsc, const char *operation,
     int attr_options = pcmk__node_attr_none;
     char *rsc_name = rsc_fail_name(rsc);
 
-    if (pe__is_guest_or_remote_node(node)) {
+    if (pcmk__is_pacemaker_remote_node(node)) {
         attr_options |= pcmk__node_attr_remote;
     }
 
@@ -898,7 +898,7 @@ cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
             out->err(out, "Unknown node: %s", node_name);
             return ENXIO;
         }
-        if (pe__is_guest_or_remote_node(node)) {
+        if (pcmk__is_pacemaker_remote_node(node)) {
             attr_options |= pcmk__node_attr_remote;
         }
     }

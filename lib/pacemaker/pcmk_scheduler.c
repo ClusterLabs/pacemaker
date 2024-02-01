@@ -485,7 +485,7 @@ needs_fencing(const pcmk_node_t *node, bool have_managed)
 static bool
 needs_shutdown(const pcmk_node_t *node)
 {
-    if (pe__is_guest_or_remote_node(node)) {
+    if (pcmk__is_pacemaker_remote_node(node)) {
        /* Do not send shutdown actions for Pacemaker Remote nodes.
         * @TODO We might come up with a good use for this in the future.
         */

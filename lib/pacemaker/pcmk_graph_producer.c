@@ -88,7 +88,7 @@ add_maintenance_nodes(xmlNode *xml, const pcmk_scheduler_t *scheduler)
          iter != NULL; iter = iter->next) {
         const pcmk_node_t *node = iter->data;
 
-        if (pe__is_guest_or_remote_node(node) &&
+        if (pcmk__is_pacemaker_remote_node(node) &&
             (node->details->maintenance != node->details->remote_maintenance)) {
 
             if (maintenance != NULL) {

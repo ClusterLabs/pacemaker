@@ -50,7 +50,7 @@ assign_replica(pcmk__bundle_replica_t *replica, void *user_data)
 
     container_host = replica->container->allocated_to;
     if (replica->remote != NULL) {
-        if (pe__is_guest_or_remote_node(container_host)) {
+        if (pcmk__is_pacemaker_remote_node(container_host)) {
             /* REMOTE_CONTAINER_HACK: "Nested" connection resources must be on
              * the same host because Pacemaker Remote only supports a single
              * active connection.

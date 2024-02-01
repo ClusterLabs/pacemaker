@@ -88,11 +88,11 @@ is_dangling_guest_node(pcmk_node_t *node)
     /* we are looking for a remote-node that was supposed to be mapped to a
      * container resource, but all traces of that container have disappeared 
      * from both the config and the status section. */
-    if (pe__is_guest_or_remote_node(node) &&
-        node->details->remote_rsc &&
-        node->details->remote_rsc->container == NULL &&
-        pcmk_is_set(node->details->remote_rsc->flags,
-                    pcmk_rsc_removed_filler)) {
+    if (pcmk__is_pacemaker_remote_node(node)
+        && (node->details->remote_rsc != NULL)
+        && (node->details->remote_rsc->container == NULL)
+        && pcmk_is_set(node->details->remote_rsc->flags,
+                       pcmk_rsc_removed_filler)) {
         return TRUE;
     }
 
@@ -514,7 +514,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
 
     new_node->details->attrs = pcmk__strkey_table(free, free);
 
-    if (pe__is_guest_or_remote_node(new_node)) {
+    if (pcmk__is_pacemaker_remote_node(new_node)) {
         pcmk__insert_dup(new_node->details->attrs, CRM_ATTR_KIND, "remote");
     } else {
         pcmk__insert_dup(new_node->details->attrs, CRM_ATTR_KIND, "cluster");
@@ -1055,7 +1055,7 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
         return;
     }
 
-    if ((this_node == NULL) || !pe__is_guest_or_remote_node(this_node)) {
+    if ((this_node == NULL) || !pcmk__is_pacemaker_remote_node(this_node)) {
         return;
     }
     crm_trace("Processing Pacemaker Remote node %s",
@@ -1208,7 +1208,7 @@ unpack_node_state(const xmlNode *state, pcmk_scheduler_t *scheduler)
         return;
     }
 
-    if (pe__is_guest_or_remote_node(this_node)) {
+    if (pcmk__is_pacemaker_remote_node(this_node)) {
         /* We can't determine the online status of Pacemaker Remote nodes until
          * after all resource history has been unpacked. In this first pass, we
          * do need to mark whether the node has been fenced, as this plays a
@@ -1343,7 +1343,7 @@ unpack_node_history(const xmlNode *status, bool fence,
             continue;
         }
 
-        if (pe__is_guest_or_remote_node(this_node)) {
+        if (pcmk__is_pacemaker_remote_node(this_node)) {
             determine_remote_online_status(scheduler, this_node);
             unpack_handle_remote_attrs(this_node, state, scheduler);
         }
@@ -1417,7 +1417,7 @@ unpack_status(xmlNode *status, pcmk_scheduler_t *scheduler)
     for (GList *gIter = scheduler->nodes; gIter != NULL; gIter = gIter->next) {
         pcmk_node_t *this_node = gIter->data;
 
-        if (!pe__is_guest_or_remote_node(this_node)) {
+        if (!pcmk__is_pacemaker_remote_node(this_node)) {
             continue;
         }
         if (this_node->details->shutdown
@@ -4870,7 +4870,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
             goto done;
 
         case PCMK_EXEC_NOT_CONNECTED:
-            if (pe__is_guest_or_remote_node(node)
+            if (pcmk__is_pacemaker_remote_node(node)
                 && pcmk_is_set(node->details->remote_rsc->flags,
                                pcmk_rsc_managed)) {
                 /* We should never get into a situation where a managed remote
@@ -5112,7 +5112,7 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
                 CRM_LOG_ASSERT(this_node != NULL);
                 continue;
 
-            } else if (pe__is_guest_or_remote_node(this_node)) {
+            } else if (pcmk__is_pacemaker_remote_node(this_node)) {
                 determine_remote_online_status(scheduler, this_node);
 
             } else {

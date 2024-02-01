@@ -353,7 +353,7 @@ static const char *
 get_node_feature_set(const pcmk_node_t *node)
 {
     if (node->details->online && node->details->expected_up
-        && !pe__is_guest_or_remote_node(node)) {
+        && !pcmk__is_pacemaker_remote_node(node)) {
 
         const char *feature_set = g_hash_table_lookup(node->details->attrs,
                                                       CRM_ATTR_FEATURE_SET);

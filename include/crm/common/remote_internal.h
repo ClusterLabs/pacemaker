@@ -31,6 +31,20 @@ void pcmk__sockaddr2str(const void *sa, char *s);
 
 /*!
  * \internal
+ * \brief Check whether a node is a Pacemaker Remote node of any kind
+ *
+ * \param[in] node  Node to check
+ *
+ * \return true if \p node is a remote, guest, or bundle node, otherwise false
+ */
+static inline bool
+pcmk__is_pacemaker_remote_node(const pcmk_node_t *node)
+{
+    return (node != NULL) && (node->details->type == pcmk_node_variant_remote);
+}
+
+/*!
+ * \internal
  * \brief Check whether a node is a remote node
  *
  * \param[in] node  Node to check
@@ -40,7 +54,7 @@ void pcmk__sockaddr2str(const void *sa, char *s);
 static inline bool
 pcmk__is_remote_node(const pcmk_node_t *node)
 {
-    return (node != NULL) && (node->details->type == pcmk_node_variant_remote)
+    return pcmk__is_pacemaker_remote_node(node)
            && ((node->details->remote_rsc == NULL)
                || (node->details->remote_rsc->container == NULL));
 }
@@ -56,7 +70,7 @@ pcmk__is_remote_node(const pcmk_node_t *node)
 static inline bool
 pcmk__is_guest_or_bundle_node(const pcmk_node_t *node)
 {
-    return (node != NULL) && (node->details->type == pcmk_node_variant_remote)
+    return pcmk__is_pacemaker_remote_node(node)
            && (node->details->remote_rsc != NULL)
            && (node->details->remote_rsc->container != NULL);
 }
