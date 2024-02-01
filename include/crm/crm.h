@@ -92,7 +92,6 @@ extern char *crm_system_name;
  * code that includes this header.
  */
 #  undef INFINITY
-#  define MINUS_INFINITY_S "-INFINITY"
 #  define INFINITY        1000000
 
 /* Sub-systems */
