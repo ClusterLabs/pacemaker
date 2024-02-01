@@ -79,8 +79,8 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
 
     out->info(out,
               "WARNING: Creating " PCMK_XE_RSC_LOCATION " constraint '%s' with "
-              "a score of " CRM_MINUS_INFINITY_S " for resource %s on %s.\n"
-              "\tThis will prevent %s from %s on %s until the constraint is "
+              "a score of " PCMK_VALUE_MINUS_INFINITY " for resource %s on %s."
+              "\n\tThis will prevent %s from %s on %s until the constraint is "
               "removed using the clear option or by editing the CIB with an "
               "appropriate tool.\n"
               "\tThis will be the case even if %s is the last node in the "
@@ -98,14 +98,14 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
     if (later_s == NULL) {
         /* Short form */
         crm_xml_add(location, PCMK_XE_NODE, host);
-        crm_xml_add(location, PCMK_XA_SCORE, CRM_MINUS_INFINITY_S);
+        crm_xml_add(location, PCMK_XA_SCORE, PCMK_VALUE_MINUS_INFINITY);
 
     } else {
         xmlNode *rule = create_xml_node(location, PCMK_XE_RULE);
         xmlNode *expr = create_xml_node(rule, PCMK_XE_EXPRESSION);
 
         crm_xml_set_id(rule, "cli-ban-%s-on-%s-rule", rsc_id, host);
-        crm_xml_add(rule, PCMK_XA_SCORE, CRM_MINUS_INFINITY_S);
+        crm_xml_add(rule, PCMK_XA_SCORE, PCMK_VALUE_MINUS_INFINITY);
         crm_xml_add(rule, PCMK_XA_BOOLEAN_OP, PCMK_VALUE_AND);
 
         crm_xml_set_id(expr, "cli-ban-%s-on-%s-expr", rsc_id, host);

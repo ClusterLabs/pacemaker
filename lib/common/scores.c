@@ -86,13 +86,13 @@ const char *
 pcmk_readable_score(int score)
 {
     // The longest possible result is "-INFINITY"
-    static char score_s[sizeof(CRM_MINUS_INFINITY_S)];
+    static char score_s[sizeof(PCMK_VALUE_MINUS_INFINITY)];
 
     if (score >= CRM_SCORE_INFINITY) {
         strcpy(score_s, PCMK_VALUE_INFINITY);
 
     } else if (score <= -CRM_SCORE_INFINITY) {
-        strcpy(score_s, CRM_MINUS_INFINITY_S);
+        strcpy(score_s, PCMK_VALUE_MINUS_INFINITY);
 
     } else {
         // Range is limited to +/-1000000, so no chance of overflow
@@ -156,7 +156,7 @@ score2char(int score)
 char *
 score2char_stack(int score, char *buf, size_t len)
 {
-    CRM_CHECK((buf != NULL) && (len >= sizeof(CRM_MINUS_INFINITY_S)),
+    CRM_CHECK((buf != NULL) && (len >= sizeof(PCMK_VALUE_MINUS_INFINITY)),
               return NULL);
     strcpy(buf, pcmk_readable_score(score));
     return buf;

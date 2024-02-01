@@ -165,6 +165,7 @@ extern     "C" {
 #define PCMK_VALUE_META                         "meta"
 #define PCMK_VALUE_MIGRATE_ON_RED               "migrate-on-red"
 #define PCMK_VALUE_MINIMAL                      "minimal"
+#define PCMK_VALUE_MINUS_INFINITY               "-" PCMK_VALUE_INFINITY
 #define PCMK_VALUE_MODIFY                       "modify"
 #define PCMK_VALUE_MOVE                         "move"
 #define PCMK_VALUE_NE                           "ne"

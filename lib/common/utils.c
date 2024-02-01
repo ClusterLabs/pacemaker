@@ -469,7 +469,7 @@ pcmk_str_is_infinity(const char *s) {
 
 bool
 pcmk_str_is_minus_infinity(const char *s) {
-    return pcmk__str_eq(s, CRM_MINUS_INFINITY_S, pcmk__str_none);
+    return pcmk__str_eq(s, PCMK_VALUE_MINUS_INFINITY, pcmk__str_none);
 }
 
 /*!
