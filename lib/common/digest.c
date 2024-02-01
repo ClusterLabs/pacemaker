@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2023 the Pacemaker project contributors
+ * Copyright 2015-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -275,4 +275,64 @@ crm_md5sum(const char *buffer)
         crm_err("Could not create digest");
     }
     return digest;
+}
+
+// Return true if a is an attribute that should be filtered
+static bool
+should_filter_for_digest(xmlAttrPtr a, void *user_data)
+{
+    if (strncmp((const char *) a->name, CRM_META "_",
+                sizeof(CRM_META " ") - 1) == 0) {
+        return true;
+    }
+    return pcmk__str_any_of((const char *) a->name,
+                            PCMK_XA_ID,
+                            PCMK_XA_CRM_FEATURE_SET,
+                            PCMK__XA_OP_DIGEST,
+                            PCMK__META_ON_NODE,
+                            PCMK__META_ON_NODE_UUID,
+                            "pcmk_external_ip",
+                            NULL);
+}
+
+/*!
+ * \internal
+ * \brief Remove XML attributes not needed for operation digest
+ *
+ * \param[in,out] param_set  XML with operation parameters
+ */
+void
+pcmk__filter_op_for_digest(xmlNode *param_set)
+{
+    char *key = NULL;
+    char *timeout = NULL;
+    guint interval_ms = 0;
+
+    if (param_set == NULL) {
+        return;
+    }
+
+    /* Timeout is useful for recurring operation digests, so grab it before
+     * removing meta-attributes
+     */
+    key = crm_meta_name(PCMK_META_INTERVAL);
+    if (crm_element_value_ms(param_set, key, &interval_ms) != pcmk_ok) {
+        interval_ms = 0;
+    }
+    free(key);
+    key = NULL;
+    if (interval_ms != 0) {
+        key = crm_meta_name(PCMK_META_TIMEOUT);
+        timeout = crm_element_value_copy(param_set, key);
+    }
+
+    // Remove all CRM_meta_* attributes and certain other attributes
+    pcmk__xe_remove_matching_attrs(param_set, should_filter_for_digest, NULL);
+
+    // Add timeout back for recurring operation digests
+    if (timeout != NULL) {
+        crm_xml_add(param_set, key, timeout);
+    }
+    free(timeout);
+    free(key);
 }

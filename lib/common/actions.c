@@ -316,66 +316,6 @@ decode_transition_key(const char *key, char **uuid, int *transition_id, int *act
     return TRUE;
 }
 
-// Return true if a is an attribute that should be filtered
-static bool
-should_filter_for_digest(xmlAttrPtr a, void *user_data)
-{
-    if (strncmp((const char *) a->name, CRM_META "_",
-                sizeof(CRM_META " ") - 1) == 0) {
-        return true;
-    }
-    return pcmk__str_any_of((const char *) a->name,
-                            PCMK_XA_ID,
-                            PCMK_XA_CRM_FEATURE_SET,
-                            PCMK__XA_OP_DIGEST,
-                            PCMK__META_ON_NODE,
-                            PCMK__META_ON_NODE_UUID,
-                            "pcmk_external_ip",
-                            NULL);
-}
-
-/*!
- * \internal
- * \brief Remove XML attributes not needed for operation digest
- *
- * \param[in,out] param_set  XML with operation parameters
- */
-void
-pcmk__filter_op_for_digest(xmlNode *param_set)
-{
-    char *key = NULL;
-    char *timeout = NULL;
-    guint interval_ms = 0;
-
-    if (param_set == NULL) {
-        return;
-    }
-
-    /* Timeout is useful for recurring operation digests, so grab it before
-     * removing meta-attributes
-     */
-    key = crm_meta_name(PCMK_META_INTERVAL);
-    if (crm_element_value_ms(param_set, key, &interval_ms) != pcmk_ok) {
-        interval_ms = 0;
-    }
-    free(key);
-    key = NULL;
-    if (interval_ms != 0) {
-        key = crm_meta_name(PCMK_META_TIMEOUT);
-        timeout = crm_element_value_copy(param_set, key);
-    }
-
-    // Remove all CRM_meta_* attributes and certain other attributes
-    pcmk__xe_remove_matching_attrs(param_set, should_filter_for_digest, NULL);
-
-    // Add timeout back for recurring operation digests
-    if (timeout != NULL) {
-        crm_xml_add(param_set, key, timeout);
-    }
-    free(timeout);
-    free(key);
-}
-
 int
 rsc_op_expected_rc(const lrmd_event_data_t *op)
 {
@@ -491,43 +431,4 @@ pcmk__is_fencing_action(const char *action)
 {
     return pcmk__str_any_of(action, PCMK_ACTION_OFF, PCMK_ACTION_REBOOT,
                             PCMK__ACTION_POWEROFF, NULL);
-}
-
-bool
-pcmk_is_probe(const char *task, guint interval)
-{
-    if (task == NULL) {
-        return false;
-    }
-
-    return (interval == 0)
-           && pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_none);
-}
-
-bool
-pcmk_xe_is_probe(const xmlNode *xml_op)
-{
-    const char *task = crm_element_value(xml_op, PCMK_XA_OPERATION);
-    const char *interval_ms_s = crm_element_value(xml_op, PCMK_META_INTERVAL);
-    int interval_ms;
-
-    pcmk__scan_min_int(interval_ms_s, &interval_ms, 0);
-    return pcmk_is_probe(task, interval_ms);
-}
-
-bool
-pcmk_xe_mask_probe_failure(const xmlNode *xml_op)
-{
-    int status = PCMK_EXEC_UNKNOWN;
-    int rc = PCMK_OCF_OK;
-
-    if (!pcmk_xe_is_probe(xml_op)) {
-        return false;
-    }
-
-    crm_element_value_int(xml_op, PCMK__XA_OP_STATUS, &status);
-    crm_element_value_int(xml_op, PCMK__XA_RC_CODE, &rc);
-
-    return rc == PCMK_OCF_NOT_INSTALLED || rc == PCMK_OCF_INVALID_PARAM ||
-           status == PCMK_EXEC_NOT_INSTALLED;
 }
