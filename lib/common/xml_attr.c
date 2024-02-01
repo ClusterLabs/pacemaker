@@ -77,13 +77,19 @@ pcmk__dump_xml_attr(const xmlAttr *attr, GString *buffer)
 
     name = (const char *) attr->name;
     value = (const char *) attr->children->content;
+    if (value == NULL) {
+        /* Don't print anything for unset attribute. Any null-indicator value,
+         * including the empty string, could also be a real value that needs to
+         * be treated differently from "unset".
+         */
+        return;
+    }
+
     if (pcmk__xml_needs_escape(value, true)) {
         value_esc = pcmk__xml_escape(value, true);
         value = value_esc;
     }
 
-    pcmk__g_strcat(buffer, " ", name, "=\"", pcmk__s(value, "<null>"), "\"",
-                   NULL);
-
+    pcmk__g_strcat(buffer, " ", name, "=\"", value, "\"", NULL);
     free(value_esc);
 }
