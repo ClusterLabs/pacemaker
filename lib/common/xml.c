@@ -1435,91 +1435,6 @@ pcmk__xml_escape(const char *text, bool escape_quote)
 }
 
 /*!
- * \brief Replace special characters with their XML escape sequences
- *
- * \param[in] text  Text to escape
- *
- * \return Newly allocated string equivalent to \p text but with special
- *         characters replaced with XML escape sequences (or NULL if \p text
- *         is NULL)
- */
-char *
-crm_xml_escape(const char *text)
-{
-    size_t length = 0;
-    char *copy = NULL;
-
-    /*
-     * When xmlCtxtReadDoc() parses &lt; and friends in a
-     * value, it converts them to their human readable
-     * form.
-     *
-     * If one uses xmlNodeDump() to convert it back to a
-     * string, all is well, because special characters are
-     * converted back to their escape sequences.
-     *
-     * However xmlNodeDump() is randomly dog slow, even with the same
-     * input. So we need to replicate the escaping in our custom
-     * version so that the result can be re-parsed by xmlCtxtReadDoc()
-     * when necessary.
-     */
-
-    if (text == NULL) {
-        return NULL;
-    }
-
-    length = strlen(text);
-    copy = strdup(text);
-    CRM_ASSERT(copy != NULL);
-    for (size_t index = 0; index <= length; index++) {
-        if(copy[index] & 0x80 && copy[index+1] & 0x80){
-            // @TODO Is this a valid test for Unicode characters?
-            index++;
-            continue;
-        }
-        switch (copy[index]) {
-            case 0:
-                // Sanity only; loop should stop at the last non-null byte
-                break;
-            case '<':
-                copy = replace_text(copy, index, &length, "&lt;");
-                break;
-            case '>':
-                copy = replace_text(copy, index, &length, "&gt;");
-                break;
-            case '"':
-                copy = replace_text(copy, index, &length, "&quot;");
-                break;
-            case '\'':
-                copy = replace_text(copy, index, &length, "&apos;");
-                break;
-            case '&':
-                copy = replace_text(copy, index, &length, "&amp;");
-                break;
-            case '\t':
-                /* Might as well just expand to a few spaces... */
-                copy = replace_text(copy, index, &length, "    ");
-                break;
-            case '\n':
-                copy = replace_text(copy, index, &length, "\\n");
-                break;
-            case '\r':
-                copy = replace_text(copy, index, &length, "\\r");
-                break;
-            default:
-                /* Check for and replace non-printing characters with their octal equivalent */
-                if(copy[index] < ' ' || copy[index] > '~') {
-                    char *replace = crm_strdup_printf("\\%.3o", copy[index]);
-
-                    copy = replace_text(copy, index, &length, replace);
-                    free(replace);
-                }
-        }
-    }
-    return copy;
-}
-
-/*!
  * \internal
  * \brief Append a string representation of an XML element to a buffer
  *
@@ -2882,6 +2797,66 @@ xml_has_children(const xmlNode * xml_root)
         return TRUE;
     }
     return FALSE;
+}
+
+char *
+crm_xml_escape(const char *text)
+{
+    size_t length = 0;
+    char *copy = NULL;
+
+    if (text == NULL) {
+        return NULL;
+    }
+
+    length = strlen(text);
+    copy = strdup(text);
+    CRM_ASSERT(copy != NULL);
+    for (size_t index = 0; index <= length; index++) {
+        if(copy[index] & 0x80 && copy[index+1] & 0x80){
+            index++;
+            continue;
+        }
+        switch (copy[index]) {
+            case 0:
+                // Sanity only; loop should stop at the last non-null byte
+                break;
+            case '<':
+                copy = replace_text(copy, index, &length, "&lt;");
+                break;
+            case '>':
+                copy = replace_text(copy, index, &length, "&gt;");
+                break;
+            case '"':
+                copy = replace_text(copy, index, &length, "&quot;");
+                break;
+            case '\'':
+                copy = replace_text(copy, index, &length, "&apos;");
+                break;
+            case '&':
+                copy = replace_text(copy, index, &length, "&amp;");
+                break;
+            case '\t':
+                /* Might as well just expand to a few spaces... */
+                copy = replace_text(copy, index, &length, "    ");
+                break;
+            case '\n':
+                copy = replace_text(copy, index, &length, "\\n");
+                break;
+            case '\r':
+                copy = replace_text(copy, index, &length, "\\r");
+                break;
+            default:
+                /* Check for and replace non-printing characters with their octal equivalent */
+                if(copy[index] < ' ' || copy[index] > '~') {
+                    char *replace = crm_strdup_printf("\\%.3o", copy[index]);
+
+                    copy = replace_text(copy, index, &length, replace);
+                    free(replace);
+                }
+        }
+    }
+    return copy;
 }
 
 // LCOV_EXCL_STOP
