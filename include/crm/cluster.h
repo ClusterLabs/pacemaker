@@ -57,7 +57,26 @@ enum crm_node_flags {
 
 typedef struct crm_peer_node_s {
     char *uname;                // Node name as known to cluster
-    char *uuid;                 // Node UUID to ensure uniqueness
+
+    /* @COMPAT This is less than ideal since the value is not a valid XML ID
+     * (for Corosync, it's the string equivalent of the node's numeric node ID,
+     * but XML IDs can't start with a number) and the three elements should have
+     * different IDs.
+     *
+     * Ideally, we would use something like node-NODEID, node_state-NODEID, and
+     * transient_attributes-NODEID as the element IDs. Unfortunately changing it
+     * would be impractical due to backward compatibility; older nodes in a
+     * rolling upgrade will always write and expect the value in the old format.
+     *
+     * This is also named poorly, since the value is not a UUID, but at least
+     * that can be changed at an API compatibility break.
+     */
+    /*! Value of the PCMK_XA_ID XML attribute to use with the node's
+     * PCMK_XE_NODE, PCMK_XE_NODE_STATE, and PCMK_XE_TRANSIENT_ATTRIBUTES
+     * XML elements in the CIB
+     */
+    char *uuid;
+
     char *state;                // @TODO change to enum
     uint64_t flags;             // Bitmask of crm_node_flags
     uint64_t last_seen;         // Only needed by cluster nodes
