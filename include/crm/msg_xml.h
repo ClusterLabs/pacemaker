@@ -443,9 +443,6 @@ extern "C" {
 #define PCMK_XA_YEARDAYS                    "yeardays"
 #define PCMK_XA_YEARS                       "years"
 
-
-#  define ID(x) crm_element_value(x, PCMK_XA_ID)
-
 #ifdef __cplusplus
 }
 #endif
