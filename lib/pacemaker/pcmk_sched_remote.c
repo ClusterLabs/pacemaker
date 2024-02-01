@@ -505,7 +505,7 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
 bool
 pcmk__is_failed_remote_node(const pcmk_node_t *node)
 {
-    return pe__is_remote_node(node) && (node->details->remote_rsc != NULL)
+    return pcmk__is_remote_node(node) && (node->details->remote_rsc != NULL)
            && (get_remote_node_state(node) == remote_state_failed);
 }
 

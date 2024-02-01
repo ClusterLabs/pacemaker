@@ -1859,7 +1859,7 @@ node_text(pcmk__output_t *out, va_list args) {
         // Create a summary line with node type, name, and status
         if (pe__is_guest_node(node)) {
             g_string_append(str, "GuestNode");
-        } else if (pe__is_remote_node(node)) {
+        } else if (pcmk__is_remote_node(node)) {
             g_string_append(str, "RemoteNode");
         } else {
             g_string_append(str, "Node");
@@ -2522,7 +2522,7 @@ node_list_text(pcmk__output_t *out, va_list args) {
             if (pe__is_guest_node(node)) {
                 pcmk__add_word(&online_guest_nodes, 1024, node_name);
 
-            } else if (pe__is_remote_node(node)) {
+            } else if (pcmk__is_remote_node(node)) {
                 pcmk__add_word(&online_remote_nodes, 1024, node_name);
 
             } else {
@@ -2533,7 +2533,7 @@ node_list_text(pcmk__output_t *out, va_list args) {
 
         } else {
             // Display offline node in a list
-            if (pe__is_remote_node(node)) {
+            if (pcmk__is_remote_node(node)) {
                 pcmk__add_word(&offline_remote_nodes, 1024, node_name);
 
             } else if (pe__is_guest_node(node)) {

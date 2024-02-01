@@ -17,15 +17,7 @@ bool
 pe__resource_is_remote_conn(const pcmk_resource_t *rsc)
 {
     return (rsc != NULL) && rsc->is_remote_node
-           && pe__is_remote_node(pe_find_node(rsc->cluster->nodes, rsc->id));
-}
-
-bool
-pe__is_remote_node(const pcmk_node_t *node)
-{
-    return (node != NULL) && (node->details->type == pcmk_node_variant_remote)
-           && ((node->details->remote_rsc == NULL)
-               || (node->details->remote_rsc->container == NULL));
+           && pcmk__is_remote_node(pe_find_node(rsc->cluster->nodes, rsc->id));
 }
 
 bool

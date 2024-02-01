@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the Pacemaker project contributors
+ * Copyright 2013-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,7 +19,6 @@ extern "C" {
 #include <crm/pengine/status.h>
 
 bool xml_contains_remote_node(xmlNode *xml);
-bool pe__is_remote_node(const pcmk_node_t *node);
 bool pe__is_guest_node(const pcmk_node_t *node);
 bool pe__is_guest_or_remote_node(const pcmk_node_t *node);
 bool pe__is_bundle_node(const pcmk_node_t *node);

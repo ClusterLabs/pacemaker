@@ -147,7 +147,7 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
         pcmk__set_rsc_flags(node->details->remote_rsc,
                             pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
 
-    } else if (pe__is_remote_node(node)) {
+    } else if (pcmk__is_remote_node(node)) {
         pcmk_resource_t *rsc = node->details->remote_rsc;
 
         if ((rsc != NULL) && !pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
@@ -1100,7 +1100,7 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
                         " node attribute is deprecated and will be removed"
                         " (and behave as 'true') in a future release.");
 
-        if (pe__is_remote_node(this_node)
+        if (pcmk__is_remote_node(this_node)
             && !pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
             pcmk__config_warn("Ignoring "
                               PCMK__NODE_ATTR_RESOURCE_DISCOVERY_ENABLED
@@ -1313,7 +1313,7 @@ unpack_node_history(const xmlNode *status, bool fence,
                 continue;
             }
 
-        } else if (pe__is_remote_node(this_node)) {
+        } else if (pcmk__is_remote_node(this_node)) {
             /* We can unpack a remote node's history only after we've unpacked
              * other resource history to the point that we know that the node's
              * connection is up, with the exception of when shutdown locks are
@@ -2302,7 +2302,8 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
 
         } else if (pcmk_is_set(rsc->cluster->flags,
                                pcmk_sched_fencing_enabled)) {
-            if (pe__is_remote_node(node) && node->details->remote_rsc
+            if (pcmk__is_remote_node(node)
+                && (node->details->remote_rsc != NULL)
                 && !pcmk_is_set(node->details->remote_rsc->flags,
                                 pcmk_rsc_failed)) {
 
@@ -2419,10 +2420,8 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
                 if (rsc->is_remote_node) {
                     tmpnode = pe_find_node(rsc->cluster->nodes, rsc->id);
                 }
-                if (tmpnode &&
-                    pe__is_remote_node(tmpnode) &&
-                    tmpnode->details->remote_was_fenced == 0) {
-
+                if (pcmk__is_remote_node(tmpnode)
+                    && !(tmpnode->details->remote_was_fenced)) {
                     /* The remote connection resource failed in a way that
                      * should result in fencing the remote node.
                      */
